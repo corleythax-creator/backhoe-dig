@@ -15,7 +15,7 @@ function frame(now){
   st.a2=clamp(st.a2+stickIn*0.8*dt*res,...LIM.a2);
   st.a3=clamp(st.a3+bucketIn*1.3*dt*res,...LIM.a3);
   if(bench.on){benchTick(dt);driveIn=0;turnIn=0;tThr=0;tSteer=0;tBed=0}
-  updateTruck(dt,tThr,tSteer,tBed);updateHeapClods();
+  updateTruck(dt,tThr,tSteer,tBed);updateSound(dt,Math.abs(swingIn)+Math.abs(stickIn)+Math.abs(boomIn)+Math.abs(bucketIn)+Math.abs(driveIn)+Math.abs(turnIn));updateHeapClods();
   // drive
   st.yaw-=turnIn*0.8*dt;
   st.x=clamp(st.x+Math.sin(st.yaw)*driveIn*2.6*dt,-60,60);
