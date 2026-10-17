@@ -1,7 +1,7 @@
 // Backhoe Dig build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Backhoe Dig",
- "updated": "2026-10-17T07:40:00Z",
+ "updated": "2026-10-17T07:50:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 160,
+   "dh": 168,
    "act": 3.0,
-   "versions": 16
+   "versions": 17
   }
  ],
  "extra": [
@@ -232,11 +232,20 @@ window.EFFORT = {
   {
    "v": 23,
    "asked": "2026-10-17T02:14:00-05:00",
-   "live": "2026-10-17T02:45:00-05:00",
+   "live": "2026-10-17T02:22:00-05:00",
    "dh": 6,
    "tris": 490576,
    "chars": 102646,
    "what": "Cave-ins: walls cut deeper than about 4 ft, or with spoil within 2 ft of the edge, cave in after a warning trickle; shake, rumble and a cave-in count on the finish."
+  },
+  {
+   "v": 24,
+   "asked": "2026-10-17T02:22:00-05:00",
+   "live": "2026-10-17T02:50:00-05:00",
+   "dh": 8,
+   "tris": 490576,
+   "chars": 107065,
+   "what": "Trench box: hook it with the bucket (T, controller X or the Hook box button), swing it into the trench and set it; walls between its panels cannot slump or cave in. Shown on the maps."
   }
  ]
 };
