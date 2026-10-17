@@ -1,7 +1,7 @@
 // Backhoe Dig build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Backhoe Dig",
- "updated": "2026-10-17T17:31:00Z",
+ "updated": "2026-10-17T17:38:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 377,
+   "dh": 378,
    "act": 8.5,
-   "versions": 56
+   "versions": 57
   }
  ],
  "extra": [
@@ -597,6 +597,15 @@ window.EFFORT = {
    "tris": 1154238,
    "chars": 342689,
    "what": "Road editing in the map editor (Roads tool): every road point shows as a dot; tap a road to pick it, drag its dots to move them, tap the picked road between dots to add a point, or tap New road and lay one point by point. The road's card sets the width (6 to 26 ft), grass up the middle, and grading: a graded road is cut and filled to a height at each point, like the ramp, with a Point height slider for the picked dot; otherwise it follows the ground. Delete point and Delete road, all with Undo. The ground, colours, steep-ground stops and grass follow each change, and the roads save with the map."
+  },
+  {
+   "v": 64,
+   "asked": "2026-10-17T12:29:00-05:00",
+   "live": "2026-10-17T12:38:00-05:00",
+   "dh": 1,
+   "tris": 1154238,
+   "chars": 343655,
+   "what": "Touch Sprint button next to Jump in Walk mode: tap to sprint, and it switches itself off once you stop, on a second tap or when you leave Walk mode."
   }
  ]
 };
