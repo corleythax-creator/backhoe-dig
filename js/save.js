@@ -56,7 +56,7 @@ function rigSig(){return [st.x,st.z,st.yaw,st.swing,st.a1,st.a2,st.a3,st.load,tr
   .map(v=>Math.round(v*100)).join(',')}
 // the ground is written at most every 4 s while it changes, the machines every 2 s while they move, both when the page is hidden
 function siteTick(){if(bench.on)return;const now=performance.now();
-  if(waterAny)site.dirty=true;
+  if(waterMoved)site.dirty=true;
   if(site.dirty&&now-site.saveT>4000)siteSave();
   if(now-site.rigT>2000){const s=rigSig();if(s!==site.rigSig){site.rigSig=s;rigSave()}else site.rigT=now}}
 function siteSaveAll(){if(bench.on)return;siteSave();rigSave()}

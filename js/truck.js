@@ -310,7 +310,7 @@ function updateTruck(dt,thr,steerIn,bedIn){
   tr.spV+=spring(tr.sp,tr.spV,clamp(-tr.aL*0.008*cg,-0.035,0.035));tr.sp+=tr.spV*dt;
   tr.srV+=spring(tr.sr,tr.srV,clamp(tr.v*yawRate*0.011*cg,-0.05,0.05));tr.sr+=tr.srV*dt;
   tr.bumpCd-=dt;if(Math.abs(dy)>0.05&&tr.bumpCd<=0&&mode==='truck'){rumble(120,Math.min(1,Math.abs(dy)*6));tr.bumpCd=0.3}
-  // tyres rut loose fill and crush clods; they pick up mud there
+  // tyres rut loose fill and mud and crush clods; they pick up mud there
   if(Math.abs(tr.v)>0.1&&!bench.on){let r=false;for(const w of wheels){const u=w.userData,wx=tr.x+u.lx*cy+u.lz*sy,wz=tr.z-u.lx*sy+u.lz*cy;if(stampRut(wx,wz,tr.yaw,0.3,0.32,dt))r=true}
     if(r||mudAt(tr.x,tr.z)>0.3)tr.mud=Math.min(1,tr.mud+dt*0.08)}
   truck.position.set(tr.x,tr.y,tr.z);truck.rotation.set(tr.pitch,tr.yaw,tr.roll);

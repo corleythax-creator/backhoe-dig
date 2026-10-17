@@ -43,9 +43,9 @@ function frame(now){
   if(wallCount(st.x,st.z,st.yaw,EX_P)>w0){st.x=ox;st.z=oz}
   blkPush(st,EX_C,EX_R);
   const sy=Math.sin(st.yaw),cy=Math.cos(st.yaw);
-  // tracks rut loose fill, crush clods, pick up mud and kick up a little dust
+  // tracks rut loose fill and mud, crush clods, pick up mud and kick up a little dust (not off mud)
   if(!bench.on&&(Math.abs(driveIn)>0.05||Math.abs(turnIn)>0.05))for(const sd of [-1,1]){const tx=st.x+sd*1.1*cy,tz=st.z-sd*1.1*sy;
-    if(stampRut(tx,tz,st.yaw,0.26,1.6,dt)){st.mud=Math.min(1,st.mud+dt*0.06);dustPuff(tx,hAt(tx,tz)+0.1,tz,dt*4)}}
+    const r=stampRut(tx,tz,st.yaw,0.26,1.6,dt);if(r){st.mud=Math.min(1,st.mud+dt*(r===2?0.2:0.06));if(r===1)dustPuff(tx,hAt(tx,tz)+0.1,tz,dt*4)}}
   if(crushT<=0)crushT=0.1;
   const sample=(lx,lz)=>surfAt(st.x+lx*cy+lz*sy,st.z-lx*sy+lz*cy);
   const hf=(sample(-1.1,1.8)+sample(1.1,1.8))/2,hb=(sample(-1.1,-1.8)+sample(1.1,-1.8))/2;
