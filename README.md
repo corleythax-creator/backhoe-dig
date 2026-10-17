@@ -22,6 +22,7 @@ A 3D low-poly excavator game in plain HTML, CSS and JavaScript (three.js r128, n
 | `js/trenchbox.js` | Trench box model, hooking, setting, wall mask |
 | `js/dirt.js` | Loose dirt: clods, flying dirt, lumpy bucket load and truck heap, ruts (loose fill packs down; mud sinks up to 9 in and heaps berms), the Dirt detail setting |
 | `js/mud.js` | Mud outside the dig zone and getting stuck: soak (`soakAt`, painted Mud for now, soil and rain later), 2 in mud tiles made where ruts start (they punch holes in the 0.5 m mesh and save with the site), their puddles, bogging down and rocking free (`bogTick`), flung mud |
+| `js/rain.js` | Rain and wet ground: the weather (☰ Weather: Auto, Rain, Dry), a 1 m grid of soil water that soaks and dries by surface (`rainBase`), its soak (`rainSoakAt`, `rainSoakK`) feeding the mud rules, the wet-ground texture the ground shader reads (`wetU`), raindrops (count by Graphics), the grey sky, drying while closed |
 | `js/water.js` | Groundwater and puddles: seeping, levelling pools, saturated mud (painted Mud), the puddle surface (drawn finer and with sky reflections on Medium and High), the pump |
 | `js/dirtsound.js` | Dirt sounds: digging, pouring, thuds, rattles, cave-ins, trickling water |
 | `js/blocks.js` | Concrete blocks (1×1, 2×2, 3×3 ft): placing under the bucket or in front of the worker, lifting, stacking, settling, machine collisions; `surfAt()` (ground or block top) |
@@ -85,11 +86,12 @@ Maps save on the device as you edit (`localStorage.bhd_map`). The claude.ai vers
 
   | Key | What | File |
   | --- | --- | --- |
-  | `bhd_site` | Dug and dumped ground (`H − H0` per changed vertex), dirt colour, mud, groundwater | `js/save.js` |
+  | `bhd_site` | Dug and dumped ground (`H − H0` per changed vertex), dirt colour, mud, groundwater, mud tiles, wet soil and weather | `js/save.js` |
   | `bhd_rigs` | Excavator, truck and load, trench box, blocks, worker | `js/save.js` |
   | `bhd_lawn` | Mowing and regrowth | `js/mower.js` |
   | `bhd_map` | Map editor edits: heights, paint, assets, roads | `js/terrain.js`, `js/editor.js` |
   | `bhd_keys` | Key bindings | `js/keys.js` |
+  | `bhd_weather` | Weather setting (Auto, Rain, Dry) | `js/rain.js` |
   | `bhd_gfx`, `bhd_dirt`, `bhd_ui`, `bhd_hudmin`, `bhd_sndcfg` | Graphics, Dirt detail, UI size, folded status card, sound | `js/gfx.js`, `js/dirt.js`, `js/controls.js`, `js/sound.js` |
   | `bhd_sync`, `bhd_sync_t`, `bhd_sync_h` | Sync code, time of the last synced save, hash of what was last sent | `js/sync.js` |
   | `bhd_seen`, `bhd_glresets` | Start card seen, graphics resets counted for the speed test | `js/controls.js`, `js/core.js` |

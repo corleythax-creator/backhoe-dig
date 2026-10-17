@@ -9,7 +9,7 @@ function resetState(){
   cI0=N+1;cI1=-1;cJ0=N+1;cJ1=-1;
   H.set(H0);dI0=0;dI1=N;dJ0=0;dJ1=N;winOn=true;Object.assign(tr,TR_START);tr.loadC=[...SOIL[SPOIL].c];tr.loadMix=[...CRUMB_MIX];tr.stuck=0;tr.mud=0;tr.sink=0;tr.spin=0;tr.loadWet=0;tr.pourRate=0;tr.pourP=new THREE.Vector3();
   for(let k=0;k<V*V;k++)spoilC.set(SOIL[SPOIL].c,k*3);
-  clearClods();wetT.fill(-1e4);comp.fill(0);clearDust();waterClear();mudReset();
+  clearClods();wetT.fill(-1e4);comp.fill(0);clearDust();waterClear();mudReset();rainReset();
   blkReset();mowReset();walkReset();Object.assign(TB,TB_START,{hooked:false,seated:false});TB.y=TB.ty=boxRest();prot.fill(0);chain.visible=false;
 }
 resetState();
