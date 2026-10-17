@@ -1,4 +1,4 @@
-// Backhoe Dig: the Graphics setting (☰ menu): Low for phones, Medium for laptops, High for desktop PCs. Each device keeps
+// Corley's Island: the Graphics setting (☰ menu): Low for phones, Medium for laptops, High for desktop PCs. Each device keeps
 // its own choice. The first time, it picks from the device: phones get Low, Intel graphics Medium, anything else High.
 // Low is from the iPhone speed test (Oct 17): shadows, filmic lighting and ground detail each cost it 9-16 FPS.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.

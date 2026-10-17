@@ -1,4 +1,4 @@
-# Backhoe Dig: notes for Claude
+# Corley's Island: notes for Claude
 
 - Start with the README: "How it fits together" (scripts, units, ground, saves) and "Working on it" (running, headless checks, the release steps). Before touching the ground, roads, trees or the editor, read `docs/map-editor.md`.
 - Pushes to `main` deploy to Vercel (project `backhoe-dig`, Corley team). The claude.ai artifact (https://claude.ai/artifact/6nxYC5EK3422JouxaZx2DF) is the same game. Keep both in step: publish the artifact from `main` only, as the page from `<title>` to before `</html>` of `index.html`, with `css/game.css`, every `js/*.js` and `data/effort.js` (the game shows its version from it) passed in `files` at the same paths (the jpg textures and `shots/` are already there).
@@ -15,3 +15,4 @@
 - Headless Chromium (Playwright with SwiftShader) renders a frame in a second or more. Test behaviour by calling the game's functions from `page.evaluate`, and give screenshots a long timeout.
 - Keyboard: every key goes through `js/keys.js`. A new key action is an entry in `KEY_ACTIONS` (group, name, what it does in each mode, default keys, and `s:'walk'` or `s:'ride'` if it only works on foot or in a machine, which lets it share a key with the other kind) plus a handler in `KEY_RUN` in `controls.js`; hold actions are read with `held(id)`. Don't test `e.code` directly (the map editor's own fixed keys are the exception). Tips and captions name keys with `keyLabel(id)`, so they follow the player's own keys.
 - A machine the worker can climb into needs an entry in `WK_RIDES` and `rideOf` (`walker.js`) and in the inside list in `save.js`; anything that rides on the ground or lands on it should use `surfAt()` so blocks count.
+- Idea board: https://claude.ai/artifact/FMrDEa4VsKvPS5Z3ktTrS3 (source `docs/idea-board.html`, ids and scores in `docs/IDEAS.md`). Picks sent from it arrive as a message listing ids; when an idea ships, mark it in the board's `DONE` and republish.

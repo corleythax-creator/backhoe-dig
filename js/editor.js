@@ -1,4 +1,4 @@
-// Backhoe Dig: the map editor (☰ menu, or G). Shape the ground (raise, lower, flatten, smooth), paint dirt or grass, lay
+// Corley's Island: the map editor (☰ menu, or G). Shape the ground (raise, lower, flatten, smooth), paint dirt or grass, lay
 // out and grade roads, and place, move, turn, resize, copy, query and remove trees and boulders; the machines can be
 // moved and turned too. Edits are layers over the generated mesa (ED_H, ED_P, ROADS and the asset list, terrain.js and
 // scenery.js), saved on this device
@@ -311,7 +311,7 @@ $('#edCopy').onclick=()=>{edSave();const t=mapEncode(),box=$('#edCopyBox');
   try{navigator.clipboard.writeText(t).then(()=>toast(`Map copied (${Math.round(t.length/1024)} KB of text). Paste it anywhere to keep it.`,'good',3500),show)}catch(e){show()}};
 $('#edPasteBtn').onclick=()=>{$('#edPasteBox').hidden=false;$('#edCopyBox').hidden=true;$('#edPaste').focus()};
 $('#edLoad').onclick=()=>{const t=$('#edPaste').value.trim();
-  try{mapDecode(t)}catch(e){toast('That is not a Backhoe Dig map. Copy one with Copy map first.','bad',3500);return}
+  try{mapDecode(t)}catch(e){toast('That is not a Corley\'s Island map. Copy one with Copy map first.','bad',3500);return}
   try{localStorage.setItem('bhd_map',t)}catch(e){toast('Could not save the map on this device.','bad');return}
   location.reload()};
 let edResetArm=0;

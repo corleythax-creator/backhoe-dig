@@ -1,4 +1,4 @@
-// Backhoe Dig: dig-zone heightmap, the road, soil layers, digging, dumping, slumping and cave-ins.
+// Corley's Island: dig-zone heightmap, the road, soil layers, digging, dumping, slumping and cave-ins.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 // ---------- terrain heightmap ----------
 // dig grid: 64 m square at 0.16 m (about 6 in) per cell. GRID_K = cells per 0.32 m, the old 1 ft cell, so reaches and
@@ -33,7 +33,7 @@ function mapEncode(){const doc={game:'backhoe-dig',v:1},h=edBox(ED_H,100,Int16Ar
   if(mapRoads)doc.roads=mapRoads.map(r=>[+r.w.toFixed(2),r.mid,r.pts.map(q=>q.map(v=>+v.toFixed(2)))]);
   return JSON.stringify(doc)}
 // reads a map into new layers; throws on anything that is not one
-function mapDecode(text){const doc=JSON.parse(text);if(!doc||doc.game!=='backhoe-dig'||doc.v!==1)throw new Error('not a Backhoe Dig map');
+function mapDecode(text){const doc=JSON.parse(text);if(!doc||doc.game!=='backhoe-dig'||doc.v!==1)throw new Error('not a Corley\'s Island map');
   const h=new Float32Array(ED_H.length),p=new Float32Array(ED_P.length);edUnbox(doc.h,h,100,Int16Array);edUnbox(doc.p,p,100,Int8Array);
   for(let j=0;j<ED_NZ;j++)for(let i=0;i<ED_NX;i++)if(i<3||j<3||i>ED_NX-4||j>ED_NZ-4){h[j*ED_NX+i]=0;p[j*ED_NX+i]=0}
   const as=Array.isArray(doc.assets)?doc.assets.filter(a=>Array.isArray(a)&&['pine','leafy','rock'].includes(a[0])&&isFinite(a[1])&&isFinite(a[2]))

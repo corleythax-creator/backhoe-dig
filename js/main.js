@@ -1,4 +1,4 @@
-// Backhoe Dig: the frame loop: inputs, machines, digging, spills, gas main, terrain, HUD and camera.
+// Corley's Island: the frame loop: inputs, machines, digging, spills, gas main, terrain, HUD and camera.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 // the machines catch their own shadows (cab under the boom, bed under the load); glass stays clear
 for(const g of [machine,truck])g.traverse(o=>{if(o.isMesh&&!o.material.transparent)o.receiveShadow=true});

@@ -1,4 +1,4 @@
-// Backhoe Dig: a patch of tall grass on the mesa and a zero-turn mower to cut it: lap-bar steering, swivel casters,
+// Corley's Island: a patch of tall grass on the mesa and a zero-turn mower to cut it: lap-bar steering, swivel casters,
 // clippings out the side chute and lawn stripes that follow the direction of each pass and change with the view.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 // ---------- tall grass ----------
