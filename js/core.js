@@ -6,7 +6,10 @@ const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
 // ---------- renderer / scene ----------
 const canvas=$('#view');
 const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
-const maxPR=Math.min(devicePixelRatio||1,2);let pr=maxPR,lowN=0,hiN=0,prHold=0,viewDirty=false;
+// phones (touch-first, short side 1000 CSS px or less) are held back by pixels, not triangles (speed test, Oct 17: 43 fps
+// at 1x scene load and still 39 at three times the triangles): cap them at 1.5x and give them cheaper shadows
+const PHONE=matchMedia('(pointer: coarse)').matches&&Math.min(screen.width,screen.height)<=1000;
+const maxPR=Math.min(devicePixelRatio||1,PHONE?1.5:2);let pr=maxPR,lowN=0,hiN=0,prHold=0,viewDirty=false;
 renderer.setPixelRatio(pr);
 // resizing the canvas wipes it, so resolution changes and window resizes only set viewDirty; the frame loop applies them
 // just before it draws (applying them after a draw left that frame black, which flashed on phones)
@@ -14,7 +17,7 @@ renderer.setPixelRatio(pr);
 let glResets=0;try{glResets=+localStorage.getItem('bhd_glresets')||0}catch(e){}
 canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();glResets++;try{localStorage.setItem('bhd_glresets',glResets)}catch(e){}
   if(typeof toast==='function')toast('The phone reset the graphics (low on memory). A lower Dirt detail helps.','bad',4500)});
-renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
+renderer.shadowMap.enabled=true; renderer.shadowMap.type=PHONE?THREE.PCFShadowMap:THREE.PCFSoftShadowMap;
 // lighting is done in linear space and tone mapped like a camera; colours stay written as the sRGB values they were
 // picked as, and the patched chunks below turn them linear before lighting
 renderer.outputEncoding=THREE.sRGBEncoding;
@@ -54,7 +57,7 @@ const camera=new THREE.PerspectiveCamera(60,1,0.05,1700);
 // warm sun as the key, a cooler and much dimmer sky fill, so shade reads blue-grey and lit faces stand out
 scene.add(new THREE.HemisphereLight(0xb8d0ea,0x5b5a3c,0.5));
 const sun=new THREE.DirectionalLight(0xfff0dc,1.6);
-sun.castShadow=true; sun.shadow.mapSize.set(2048,2048);
+sun.castShadow=true; sun.shadow.mapSize.set(PHONE?1024:2048,PHONE?1024:2048);
 Object.assign(sun.shadow.camera,{left:-14,right:14,top:14,bottom:-14,near:1,far:70});
 sun.shadow.bias=-0.0004; sun.shadow.normalBias=0.02;
 scene.add(sun); scene.add(sun.target);
