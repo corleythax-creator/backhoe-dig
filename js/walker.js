@@ -40,6 +40,8 @@ function wkFloor(x,z,y,lim){let f=-1e9;const r=WK_R*0.7;
   return f}
 // blocks are walls from a step above the feet to the top of the head; push the body out of them
 function wkPushBlocks(){let bump=false;
+  for(const s of SOLIDS){const dx=wk.x-s.x,dz=wk.z-s.z,nx=dx-clamp(dx,-s.hx,s.hx),nz=dz-clamp(dz,-s.hz,s.hz),d=Math.hypot(nx,nz);
+    if(d>=WK_R)continue;if(d>1e-4){wk.x+=nx/d*(WK_R-d);wk.z+=nz/d*(WK_R-d)}else if(s.hx-Math.abs(dx)<s.hz-Math.abs(dz))wk.x=s.x+Math.sign(dx||1)*(s.hx+WK_R);else wk.z=s.z+Math.sign(dz||1)*(s.hz+WK_R)}
   for(const b of blocks){if(b.y+b.s<=wk.y+WK_STEP||b.y>=wk.y+WK_H)continue;const h=b.s/2,dx=wk.x-b.x,dz=wk.z-b.z;
     const nx=dx-clamp(dx,-h,h),nz=dz-clamp(dz,-h,h),d=Math.hypot(nx,nz);
     if(d>=WK_R)continue;bump=true;
@@ -69,7 +71,7 @@ function updateWalker(dt,mx,mz,lookX,lookY){
   // steep ground (a trench wall) stops you on foot; jump to get up it
   const ox=wk.x,oz=wk.z,g0=hAt(ox,oz);wk.x+=vx*dt;wk.z+=vz*dt;
   {const g1=hAt(wk.x,wk.z),run=Math.hypot(wk.x-ox,wk.z-oz);if(run>1e-5&&g1>wk.y+0.02&&(g1-g0)/run>1.3){wk.x=ox;wk.z=oz}}
-  {const rr=mesaR(wk.x,wk.z),lim=EDGE-1.2;if(rr>lim){const k=lim/rr;wk.x*=k;wk.z=MZ+(wk.z-MZ)*k}}
+  [wk.x,wk.z]=landClamp(wk.x,wk.z,1.2,0.45);
   wkPushBlocks();wkPushRound(st,EX_C,EX_R);wkPushRound(tr,TR_C,TR_R);wkPushRound(mw,MW_C,MW_R);
   // jump, gravity, landing on the ground or a block; bump your head on a block above
   wk.jumpQ-=dt;
@@ -111,7 +113,7 @@ function wkNear(){let best=null,bd=1.3;
 function wkPlaceOut(k){const R=WK_RIDES[k],o=R.o,sy=Math.sin(o.yaw),cy=Math.cos(o.yaw),gap=R.r+WK_R+0.3,len=Math.max(...R.c.map(Math.abs));
   const spots=[[gap,0],[-gap,0],[gap,R.c[0]],[-gap,R.c[0]],[0,len+gap],[0,-len-gap]];
   for(const [sx,sz] of spots){const x=o.x+cy*sx+sy*sz,z=o.z-sy*sx+cy*sz;
-    if(mesaR(x,z)>EDGE-1.5)continue;const f=wkFloor(x,z,0,1e9);
+    if(!landIn(x,z,1.5,0.45)||SOLIDS.some(s=>Math.abs(x-s.x)<s.hx+WK_R&&Math.abs(z-s.z)<s.hz+WK_R))continue;const f=wkFloor(x,z,0,1e9);
     if(blocks.some(b=>Math.abs(x-b.x)<b.s/2+WK_R&&Math.abs(z-b.z)<b.s/2+WK_R&&b.y<f+WK_H&&b.y+b.s>f+WK_STEP))continue;
     let clear=true;for(const j in WK_RIDES){if(j===k)continue;const Q=WK_RIDES[j];
       for(const lz of Q.c)if(Math.hypot(x-Q.o.x-Math.sin(Q.o.yaw)*lz,z-Q.o.z-Math.cos(Q.o.yaw)*lz)<Q.r+WK_R+0.1)clear=false}
