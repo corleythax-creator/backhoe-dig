@@ -23,7 +23,7 @@ A 3D low-poly excavator game in plain HTML, CSS and JavaScript (three.js r128, n
 | `js/mower.js` | Tall grass patch, zero-turn mower, mowing, clippings and lawn stripes |
 | `js/controls.js` | Game state and reset, touch sticks, keyboard, game controller, modes, menu |
 | `js/effects.js` | Shared per-frame vectors, resize |
-| `js/sound.js` | Synthesized diesel engines for both machines and the truck's backup alarm; Sound on/off |
+| `js/sound.js` | All sound, rendered in the browser: diesel engine loops, turbo, tires, air brakes, hydraulics, relief valve, tracks, bucket scrape, pouring dirt, backup alarm; stereo, distance and cliff echo; the Sound panel (on/off, Master, Engines, Backup alarm, Effects) |
 | `js/maps.js` | Minimap and big map |
 | `js/bench.js` | Speed test |
 | `js/main.js` | Frame loop |

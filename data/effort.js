@@ -1,7 +1,7 @@
 // Backhoe Dig build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Backhoe Dig",
- "updated": "2026-10-17T09:13:00Z",
+ "updated": "2026-10-17T09:15:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 258.5,
+   "dh": 266.5,
    "act": 4.5,
-   "versions": 31
+   "versions": 32
   }
  ],
  "extra": [
@@ -366,12 +366,21 @@ window.EFFORT = {
   },
   {
    "v": 38,
+   "asked": "2026-10-17T03:45:00-05:00",
+   "live": "2026-10-17T04:15:00-05:00",
+   "dh": 8,
+   "tris": 757440,
+   "chars": 188408,
+   "what": "Sound panel (on/off, Master, Engines, Backup alarm, Effects sliders) and rebuilt sound: diesel loops rendered from cylinder firings with exhaust crack, knock and pipe resonance, tuned to carry on phone speakers; turbo, tires and gravel, air brakes, bed hydraulics, tailgate, pump whine, relief valve, bucket scrape, track clank and pouring dirt; stereo, distance and a cliff echo."
+  },
+  {
+   "v": 39,
    "asked": "2026-10-17T03:50:00-05:00",
-   "live": "2026-10-17T04:13:00-05:00",
+   "live": "2026-10-17T04:15:00-05:00",
    "dh": 14,
    "tris": 821848,
-   "chars": 189203,
-   "what": "Tall grass and a zero-turn mower: a 52 by 39 ft patch of knee-high grass north of the trench that sways in the wind and bends away from the machines, and a red zero-turn with a 52 in deck, lap bars, swivel casters and a roll bar. Mow mode puts a lap bar on each stick (both up drives straight, opposite spins in place). Cutting leaves stubble with light and dark stripes by pass direction and throws clippings out the chute; Lawn row with percent mowed and time, mower engine sound, seat view, patch and mower on the maps."
+   "chars": 212572,
+   "what": "Tall grass and a zero-turn mower: a 52 by 39 ft patch of knee-high grass north of the trench that sways in the wind and bends away from the machines, and a red zero-turn with a 52 in deck, lap bars, swivel casters and a roll bar. Mow mode puts a lap bar on each stick (both up drives straight, opposite spins in place). Cutting leaves stubble with light and dark stripes by pass direction and throws clippings out the chute; Lawn row with percent mowed and time; a rendered V-twin with blade whine and grass chop in the sound mixer; seat view; patch and mower on the maps."
   }
  ]
 };
