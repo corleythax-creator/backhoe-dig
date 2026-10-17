@@ -1,7 +1,7 @@
 // Backhoe Dig build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Backhoe Dig",
- "updated": "2026-10-17T17:02:00Z",
+ "updated": "2026-10-17T17:11:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 337.5,
+   "dh": 338.5,
    "act": 8.5,
-   "versions": 49
+   "versions": 50
   }
  ],
  "extra": [
@@ -534,7 +534,15 @@ window.EFFORT = {
    "tris": 1152810,
    "chars": 270576,
    "what": "Start card picker: four screenshot tiles (Excavator, Dump truck, Mower, On foot) at the top of the start card; tap one to start in that mode. It shows on every visit and from How to play, with the current mode outlined; tapping outside keeps the current mode."
+  },
+  {
+   "v": 57,
+   "asked": "2026-10-17T11:55:00-05:00",
+   "live": "2026-10-17T12:11:00-05:00",
+   "dh": 1,
+   "tris": 1152810,
+   "chars": 272301,
+   "what": "Auto update, for the Home Screen app that never reloads on its own: the game re-reads its build log when it comes back to the front, when it is restored from the back-forward cache and every 10 minutes. A newer version reloads straight away if nothing is under way (the start card is up or nothing has been touched) or after more than 10 minutes in the background; mid-game a yellow 'Version N is out · tap to update' button waits instead, so a half-dug trench is never lost. The lawn is saved before it reloads."
   }
  ]
 };
-
