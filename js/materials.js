@@ -1,4 +1,4 @@
-// Backhoe Dig: the material library the map editor paints onto the ground (Materials tool): ground covers, concrete
+// Corley's Island: the material library the map editor paints onto the ground (Paint tool): ground covers, concrete
 // and paving, steel, brick and stone, wood and more. Each is a seamless 512 px texture in textures/ (OpenAI GPT Image,
 // made tileable by tools/textures.py) with its mean colour, which the ground's vertex colours take everywhere and the
 // texture's detail rides on (Medium and High graphics, WebGL2). The painted ids live in ED_M (terrain.js).

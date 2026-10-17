@@ -1,4 +1,4 @@
-// Backhoe Dig: shared per-frame vectors and resize.
+// Corley's Island: shared per-frame vectors and resize.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 // ---------- loop ----------
 const tip=new THREE.Vector3(),mid=new THREE.Vector3(),q=new THREE.Quaternion(),tmp=new THREE.Vector3(),camT=new THREE.Vector3(),look=new THREE.Vector3();

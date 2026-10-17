@@ -1,4 +1,4 @@
-// Backhoe Dig: the excavator: tracks, house, cab, boom, stick, bucket, linkage, rams and hoses.
+// Corley's Island: the excavator: tracks, house, cab, boom, stick, bucket, linkage, rams and hoses.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 // ---------- machine ----------
 // semi-gloss paint: a tight highlight and a faint sky sheen toward the edges

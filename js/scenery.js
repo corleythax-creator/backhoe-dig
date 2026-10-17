@@ -1,4 +1,4 @@
-// Backhoe Dig: lake, mountains, grass tufts, outer ground, gas main, stakes and trees.
+// Corley's Island: lake, mountains, grass tufts, outer ground, gas main, stakes and trees.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 // ---------- scenery ----------
 const timeU={value:0};
@@ -51,10 +51,11 @@ function updateTufts(i0,i1,j0,j1){
   tufts.instanceMatrix.needsUpdate=true;
 }
 const ZERO_M=new THREE.Matrix4().makeScale(0,0,0);
-// after the map editor reshapes or repaints an area (metres): tufts follow the ground and keep off dirt and steep ground
+// after the map editor reshapes, repaints or lays a road over an area (metres): tufts follow the ground and keep off
+// dirt, roads and steep ground
 function tuftsRefresh(x0,x1,z0,z1){
   for(let n=0;n<TUFTS;n++){const x=tX[n],z=tZ[n];if(x<x0||x>x1||z<z0||z>z1)continue;const i=tI[n],k=tJ[n]*V+i;
-    if((i>=0&&Math.abs(H[k]-H0[k])>0.04)||yardAt(x,z)>0.3||wallAt(x,z)||paintAt(x,z)){tufts.setMatrixAt(n,ZERO_M);continue}
+    if((i>=0&&Math.abs(H[k]-H0[k])>0.04)||yardAt(x,z)>0.3||roadAmt(x,z)>0.1||wallAt(x,z)||paintAt(x,z)){tufts.setMatrixAt(n,ZERO_M);continue}
     tO.position.set(x,hAt(x,z)-0.02,z);tO.rotation.set(0,tR[n],0);tO.scale.setScalar(tS[n]);tO.updateMatrix();tufts.setMatrixAt(n,tO.matrix)}
   tufts.instanceMatrix.needsUpdate=true}
 for(let n=0;n<TUFTS;n++){tO.position.set(tX[n],hAt(tX[n],tZ[n])-0.02,tZ[n]);tO.rotation.set(0,tR[n],0);tO.scale.setScalar(tS[n]);tO.updateMatrix();tufts.setMatrixAt(n,tO.matrix)}

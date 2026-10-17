@@ -1,4 +1,4 @@
-// Backhoe Dig: sound. Diesel engines are pre-rendered loops built from cylinder firings (combustion pulse, injector
+// Corley's Island: sound. Diesel engines are pre-rendered loops built from cylinder firings (combustion pulse, injector
 // knock, exhaust pipe and muffler resonances, valve-train tick) at a low and a high rev, cross-faded and re-pitched with
 // the revs; load opens a filter. Around them: turbo, tires on gravel, air brakes, bed and pump hydraulics, the relief
 // valve, track clank, bucket scrape, pouring dirt and the backup alarm. Each machine is panned and faded by distance

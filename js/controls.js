@@ -1,4 +1,4 @@
-// Backhoe Dig: game state, reset, touch sticks, keyboard, game controller, mode switch and menu.
+// Corley's Island: game state, reset, touch sticks, keyboard, game controller, mode switch and menu.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 // ---------- state ----------
 const CAP=1.0;
@@ -103,7 +103,7 @@ function setCaps(){const m=mode,two=(a,b)=>`${keyLabel(a)} ${keyLabel(b)}`,lh=kb
   $('#capL').innerHTML=m==='dig'?`<b>${lh}</b> Swing<br><b>${lv}</b> Stick out / in`:m==='drive'?`<b>${lh}</b> Turn<br><b>${lv}</b> Drive fwd / back`:m==='mow'?`<b>${lv}</b> Left lap bar<br><b>${lh}</b> Spin`:m==='walk'?`<b>${lv}</b> Walk / back<br><b>${lh}</b> Step left / right`:`<b>${lh}</b> Steer<br><b>${lv}</b> Gas / reverse`;
   $('#capR').innerHTML=m==='truck'?`<b>${rv}</b> Bed up / down<br>&nbsp;`:m==='mow'?`<b>${rv}</b> Right lap bar<br>&nbsp;`:m==='walk'?`<b>${rh}</b> Turn<br><b>${rv}</b> Look up / down`:`<b>${rh}</b> Curl / dump<br><b>${rv}</b> Boom down / up`;}
 function setMode(m){if(m===mode)return;mode=m;for(const [id,k] of [['#modeDig','dig'],['#modeDrive','drive'],['#modeTruck','truck'],['#modeMow','mow'],['#modeWalk','walk']])$(id).setAttribute('aria-pressed',m===k);
-  $('#jumpBtn').hidden=m!=='walk';$('#capR').hidden=m==='walk';
+  $('#walkBtns').hidden=m!=='walk';if(m!=='walk')setSprint(false);$('#capR').hidden=m==='walk';
   // switching to Walk from a machine you climbed into sets you down beside it
   if(m==='walk'){if(wk.inside){wkPlaceOut(wk.inside);wk.inside=null}wk.view=wk.yaw}
   setCaps();markTile();firstCam=true;if(m==='mow'&&!lawn.startT&&!lawn.done)toast('Mower running. Push both sticks up to drive, one up and one back to spin.','',3800);

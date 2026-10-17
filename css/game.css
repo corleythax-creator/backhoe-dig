@@ -76,8 +76,12 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 .seg button{border:0;border-radius:0;height:36px;font-size:13px;padding:0 12px}
 .seg button+button{border-top:1px solid var(--hud-line)}
 .seg button[aria-pressed="true"]{background:var(--machine);color:#1c1309}
-/* Jump takes the right stick's caption spot in Walk mode */
-#jumpBtn{height:44px;min-width:100px;font-size:18px;border-radius:22px;background:var(--machine);color:#1c1309;border:0;box-shadow:0 3px 0 rgba(0,0,0,.35);zoom:var(--cs)}
+/* Sprint and Jump take the right stick's caption spot in Walk mode; Sprint lights up while it is on */
+.walkbtns{display:flex;gap:8px;zoom:var(--cs);align-self:flex-end}.walkbtns[hidden]{display:none}
+@media (orientation:portrait){#hud.lg .walkbtns{zoom:1}}
+#jumpBtn,#sprintBtn{height:44px;min-width:76px;padding:0 12px;font-size:17px;border-radius:22px;box-shadow:0 3px 0 rgba(0,0,0,.35)}
+#jumpBtn{background:var(--machine);color:#1c1309;border:0}
+#sprintBtn{border:2px solid var(--machine);color:var(--machine)}#sprintBtn[aria-pressed="true"]{background:var(--machine);color:#1c1309}
 #seatBtn{min-width:100px;font-size:16px;border-radius:20px;background:var(--machine);color:#1c1309;border:0;box-shadow:0 3px 0 rgba(0,0,0,.35);zoom:var(--cs)}
 #jumpBtn:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.35)}
 .kb .seg button::before{content:attr(data-k) " ";opacity:.6}
@@ -197,7 +201,6 @@ body.editing #hud .top,body.editing #hud .sticks{display:none}
 .edopt output{min-width:44px;font-variant-numeric:tabular-nums}
 #editor input[type=range]{width:min(150px,30vw);accent-color:var(--machine)}
 .edtools{pointer-events:auto;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;width:min(100%,640px)}
-@media (min-width:820px){.edtools{grid-template-columns:repeat(11,minmax(0,1fr));width:min(100%,900px)}#edOpts{width:min(100%,900px);max-width:900px}}
 .edmats{max-height:min(40vh,420px);overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:6px;padding-right:4px}
 .edmats h3 small{font:600 14px/1 var(--f-display);color:var(--muted);letter-spacing:0;margin-left:6px}
 .edmats h4{margin:4px 0 0;font:700 13px/1 var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
@@ -206,8 +209,11 @@ body.editing #hud .top,body.editing #hud .sticks{display:none}
 .edmat i{display:block;aspect-ratio:1;border-radius:6px;background:url(../textures/thumbs.jpg) 0 0/100% 100%}
 .edmat i.nat{background:linear-gradient(135deg,#5b8a3a,#4a7a30 60%,#8a6a3f)}
 #editor button.edmat[aria-pressed="true"]{background:var(--machine);color:#1c1309}
-.edtools button{height:46px;padding:0 4px;font-size:15px}
-.edtools button[aria-pressed="true"],.edkind button[aria-pressed="true"],.edshape button[aria-pressed="true"],#editor button.go{background:var(--machine);color:#1c1309}
+@media (min-width:820px){.edtools{grid-template-columns:repeat(12,minmax(0,1fr));width:min(100%,980px)}#edOpts{width:min(100%,980px);max-width:980px}}
+.edtools button{height:46px;padding:0 2px;font-size:15px;letter-spacing:.02em}
+@media (max-width:420px){.edtools button{font-size:13px}}
+#editor .row button[aria-pressed="true"]{background:var(--machine);color:#1c1309}
+.edtools button[aria-pressed="true"],.edkind button[aria-pressed="true"],#editor button.go{background:var(--machine);color:#1c1309}
 #editor button.danger{color:var(--danger)}
 #editor button:disabled{opacity:.4}
 #editor textarea{width:100%;box-sizing:border-box;height:96px;font:12px/1.3 ui-monospace,Menlo,monospace;color:var(--ink);background:#111410;border:1px solid var(--hud-line);border-radius:8px;padding:6px;-webkit-user-select:text;user-select:text}

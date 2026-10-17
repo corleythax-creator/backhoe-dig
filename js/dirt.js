@@ -1,4 +1,4 @@
-// Backhoe Dig: loose dirt: clods on spoil, trench floors and cave-ins, flying dirt, and the lumpy bucket load and truck
+// Corley's Island: loose dirt: clods on spoil, trench floors and cave-ins, flying dirt, and the lumpy bucket load and truck
 // heap, all scaled by the Dirt detail setting (1x, 2x, 4x in the menu).
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 let DIRT=1;

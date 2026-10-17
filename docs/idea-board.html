@@ -1,0 +1,571 @@
+<title>Corley's Island Idea Board</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Archivo+Black&family=Barlow:wght@400;500;600;700&display=swap">
+<style>
+/* Layout: a mesa-at-sundown hero (the lake, the scarp, a yellow excavator), a filter strip, colour-coded group chips, one sortable
+   spreadsheet in its own scroll box, a fixed bottom bar with the ranked picks. One committed job-site-at-dusk look in both schemes. */
+:root,:root[data-theme="light"],:root[data-theme="dark"]{
+  --bg:#13110d; --bg2:#1d1913; --panel:rgba(36,30,22,.86); --panel-solid:#241e16; --fg:#f5eee2; --muted:#bcae98; --line:rgba(245,220,170,.14); --head:#2c2419;
+  --amber:#f5b800; --amber-ink:#231900; --amber-deep:#9a7300; --gold:#ffd968;
+  --pick:rgba(245,184,0,.12); --bar-bg:rgba(245,230,200,.12);
+  --s:#7fe0a0; --m:#ffd27a; --l:#ff8a6b;
+  --f-disp:"Archivo Black","Arial Black",Impact,sans-serif;
+  --f-body:"Barlow",system-ui,-apple-system,sans-serif;
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html{background:var(--bg)}
+body{background:radial-gradient(120% 60% at 50% 0%,#3a2a18 0%,var(--bg2) 40%,var(--bg) 100%) fixed,var(--bg);color:var(--fg);font-family:var(--f-body);font-size:15px;line-height:1.4;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:10px 84px;min-height:100vh}
+.wrap{max-width:1280px;margin:0 auto;display:flex;flex-direction:column;gap:10px}
+header.hero{position:relative;overflow:hidden;border-radius:14px;padding:14px 16px;display:flex;flex-wrap:wrap;align-items:flex-end;gap:6px 16px;min-height:130px;border:1px solid rgba(255,220,160,.22);box-shadow:0 20px 50px rgba(0,0,0,.5)}
+header.hero svg{position:absolute;inset:0;width:100%;height:100%;z-index:0}
+header.hero > *:not(svg){position:relative;z-index:1}
+.ttl{flex:1 1 260px}
+.kicker{font-weight:700;letter-spacing:.2em;text-transform:uppercase;font-size:12px;color:var(--gold);margin:0 0 4px;text-shadow:0 1px 3px rgba(0,0,0,.8)}
+header.hero h1{font:400 clamp(22px,4.2vw,32px)/1.05 var(--f-disp);margin:0;letter-spacing:.01em;text-wrap:balance;color:#fff6e0;text-shadow:0 3px 0 #5a3d10,0 8px 24px rgba(0,0,0,.6)}
+.stats{display:flex;flex-wrap:wrap;gap:6px;margin:0}
+.stat{background:rgba(20,16,10,.66);border:1px solid rgba(255,230,180,.25);border-radius:999px;padding:4px 12px;font-size:13px;font-weight:600;backdrop-filter:blur(4px)}
+.stat b{font-family:var(--f-disp);font-weight:400;color:var(--amber);margin-right:4px}
+.legend{display:flex;flex-direction:column;gap:6px;color:var(--muted);font-size:14px}
+.legend b{color:var(--gold);font-weight:700}
+.tools{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.sortl{display:flex;gap:6px;align-items:center;font-size:14px;color:var(--muted)}
+.tgl{display:flex;flex-wrap:wrap;gap:6px}
+.tbtn{font:inherit;font-size:14px;font-weight:600;color:var(--fg);background:var(--panel-solid);border:1px solid rgba(255,225,170,.28);border-radius:10px;padding:7px 12px;cursor:pointer;display:inline-flex;gap:6px;align-items:center}
+.tbtn[aria-expanded="true"]{border-color:var(--amber);color:var(--amber)}
+.badge{background:var(--amber);color:var(--amber-ink);border-radius:999px;font-size:12px;padding:0 7px;font-weight:700}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;gap:10px}
+.frow{display:flex;flex-wrap:wrap;gap:8px 14px;align-items:center}
+.frow label{display:flex;gap:6px;align-items:center;font-size:14px;color:var(--muted)}
+select,input[type=search],input[type=number]{font:inherit;font-size:14px;padding:6px 10px;border:1px solid rgba(255,225,170,.28);border-radius:10px;background:var(--panel-solid);color:var(--fg)}
+input[type=search]::placeholder{color:#8f826d}
+#q{flex:1 1 200px;min-width:0}
+.count{font-size:13px;color:var(--muted);font-variant-numeric:tabular-nums}
+.tbox{overflow:auto;max-height:70vh;border:1px solid var(--line);border-radius:14px;background:var(--panel)}
+table{border-collapse:separate;border-spacing:0;width:100%;min-width:640px;font-variant-numeric:tabular-nums}
+td.ic{min-width:260px;width:52%}
+#tb .desc{display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden;-webkit-line-clamp:2}
+#tb tr.open .desc{-webkit-line-clamp:unset;display:block}
+#tb tr{cursor:pointer}
+td.cost{white-space:nowrap;font-size:14px}
+.cl{font-weight:700}
+.cs{color:var(--muted);font-size:12px}
+td.score{min-width:130px}
+.sr{display:grid;grid-template-columns:12px 28px 1fr;align-items:center;gap:4px;font-size:13px;line-height:1.35}
+.sr .sl{color:var(--muted);font-weight:700}
+.sr .sv{font-weight:700;text-align:right}
+.sr .pbar{width:auto;height:6px}
+.tid{display:none;color:var(--gc);font-size:12px}
+td.pri{text-align:right;white-space:nowrap}
+.pn{font:400 22px var(--f-disp);color:var(--gold)}
+.pri .pbar{width:44px;margin:4px 0 0 auto;height:6px}
+.pri .pbar i{background:var(--amber)}
+.seen{font-size:12px;color:var(--muted);margin-top:2px}
+.tagph{display:inline-block;font-size:11px;font-weight:700;border-radius:999px;padding:1px 7px;margin-top:3px;background:rgba(255,138,107,.18);color:var(--l)}
+.tagph.low{background:rgba(255,210,122,.14);color:var(--m)}
+.deps{font-size:12px;color:var(--muted);margin-top:2px}
+.meta{display:none;font-size:12px;color:var(--muted);margin-top:2px}
+th,td{padding:7px 6px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+th{position:sticky;top:0;z-index:1;background:var(--head);font-weight:700;font-size:12px;letter-spacing:.05em;text-transform:uppercase;white-space:nowrap;user-select:none;color:var(--gold)}
+th button{all:unset;cursor:pointer;display:inline-flex;gap:4px;align-items:center}
+th button:focus-visible,button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible{outline:2px solid var(--amber);outline-offset:2px}
+th .arr{opacity:.35;font-size:10px}
+th.sorted .arr,th button.sorted .arr{opacity:1;color:var(--amber)}
+th .two{display:flex;flex-direction:column;gap:2px}
+td.num,th.num{text-align:right}
+tr.on td{background:var(--pick)}
+tbody tr:hover td{background:rgba(245,184,0,.07)}
+#tb td:first-child{box-shadow:inset 4px 0 0 var(--gc,transparent)}
+.id{font-size:12px;font-weight:700;color:var(--gc,var(--muted));white-space:nowrap;letter-spacing:.04em}
+.gsh{display:flex;align-items:center;gap:5px;margin-top:4px;font-size:12px;font-weight:600;color:var(--gc);white-space:nowrap}
+.dot{width:8px;height:8px;border-radius:50%;background:var(--gc);flex:none;box-shadow:0 0 6px var(--gc)}
+.t{font-weight:700;font-size:15px}
+.desc{color:var(--muted);font-size:14px;max-width:60ch}
+.pbar{width:32px;height:7px;border-radius:4px;background:var(--bar-bg);overflow:hidden}
+.pbar i{display:block;height:100%}
+.empty{color:var(--muted);padding:16px}
+.built{display:inline-block;margin:4px 0 2px;font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;border-radius:999px;padding:2px 8px;color:#13110d;background:var(--s)}
+.built.part{background:var(--m)}
+.bnote{color:var(--s);font-size:13px;max-width:60ch}
+.bnote.part{color:var(--m)}
+tr.done td{opacity:.6}
+.bar{position:fixed;left:0;right:0;bottom:0;background:linear-gradient(180deg,rgba(40,32,22,.96),rgba(18,15,10,.98));border-top:1px solid rgba(245,184,0,.5);padding:8px max(16px,env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));box-shadow:0 -10px 30px rgba(0,0,0,.45);z-index:5}
+.bar .in{max-width:1280px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 12px}
+.sum{display:flex;flex-wrap:wrap;gap:4px 18px;font-variant-numeric:tabular-nums;font-size:14px;align-items:baseline;color:var(--muted)}
+.sum b{font-family:var(--f-disp);font-weight:400;font-size:18px;color:var(--gold)}
+.gbtn{font:inherit;font-size:14px;font-weight:600;background:none;border:none;color:var(--amber);cursor:pointer;padding:0}
+.acts{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+#note{width:100%;font:inherit;font-size:15px;padding:8px 12px;border:1px solid rgba(255,225,170,.28);border-radius:12px;background:rgba(10,8,5,.6);color:var(--fg);resize:vertical;min-height:40px;max-height:120px}
+#note::placeholder{color:#8f826d}
+.btn{font:400 15px var(--f-disp);letter-spacing:.02em;border-radius:12px;padding:7px 14px;cursor:pointer;border:0;background:var(--amber);color:var(--amber-ink);box-shadow:0 4px 0 var(--amber-deep)}
+.btn:active{transform:translateY(2px);box-shadow:0 2px 0 var(--amber-deep)}
+.btn.ghost{background:rgba(255,240,210,.08);color:var(--fg);box-shadow:inset 0 0 0 1px rgba(255,235,200,.35)}
+.btn:disabled{opacity:.4;cursor:default;transform:none}
+#status{font-size:14px;color:var(--muted)}
+#status:empty{display:none}
+.bar>textarea,.bar>#status{display:block;max-width:1280px;margin:6px auto 0}
+.rin{width:2.6em;height:34px;text-align:center;font:400 17px var(--f-disp);color:var(--amber);background:var(--panel-solid);border:1px solid rgba(255,225,170,.3);border-radius:8px;padding:0}
+.rin::placeholder{color:#6d6150}
+.rin:disabled{opacity:.6;color:var(--s)}
+tr.on .rin{background:var(--amber);color:var(--amber-ink);border-color:var(--amber)}
+.chips{display:flex;flex-wrap:wrap;gap:7px;align-items:center}
+.clab{font-size:14px;color:var(--muted);margin-right:4px}
+.chip{font:inherit;font-size:14px;font-weight:600;display:inline-flex;align-items:center;gap:7px;border:1px solid color-mix(in srgb,var(--gc) 45%,transparent);background:color-mix(in srgb,var(--gc) 10%,rgba(20,16,10,.6));color:var(--fg);border-radius:999px;padding:5px 12px;cursor:pointer}
+.chip[aria-pressed="true"]{background:var(--gc);border-color:var(--gc);color:#13110d}
+.chip[aria-pressed="true"] .dot{background:#13110d;box-shadow:none}
+.chip small{opacity:.7;font-size:12px}
+.gsum .tbox{max-height:none;background:rgba(10,8,5,.35)}
+.gsum table{min-width:700px}
+.gsum tfoot td{font-weight:700;background:var(--head);border-bottom:none;color:var(--gold)}
+.gsum .glink{all:unset;cursor:pointer;display:inline-flex;align-items:center;gap:7px;font-weight:700;color:var(--gc)}
+.hint{font-size:13px;color:var(--muted);margin:0}
+#copybox{width:100%;font-family:var(--f-body);font-size:13px;min-height:90px;background:rgba(10,8,5,.6);color:var(--fg);border:1px solid var(--line);border-radius:10px;padding:8px}
+@media (max-width:700px){
+  table{min-width:0}
+  td.ic{min-width:0;width:auto}
+  #tb tr>td:nth-child(2),thead th:nth-child(2),#tb tr>td:nth-child(4),thead th:nth-child(4),#tb tr>td:nth-child(5),thead th:nth-child(5){display:none}
+  .meta{display:block}
+  .tid{display:inline}
+  .rin{width:2.1em;height:30px;font-size:15px}
+  th,td{padding:6px 4px}
+  .stats{display:none}
+  .tbtn{padding:6px 10px;font-size:14px}
+  #sortp{max-width:58vw}
+  .sum{font-size:14px;gap:2px 12px}.sum b{font-size:17px}.sum .xs{display:none}
+  #note{min-height:38px;height:38px}
+  body{padding-bottom:104px}
+}
+@media (prefers-reduced-motion:no-preference){.chip,tr{transition:background .15s}}
+</style>
+
+<div class="wrap">
+  <header class="hero">
+    <svg viewBox="0 0 1200 300" preserveAspectRatio="xMidYMax slice" aria-hidden="true">
+      <defs>
+        <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#1c2a44"/><stop offset=".45" stop-color="#6b4a5e"/><stop offset=".78" stop-color="#e08a4a"/><stop offset="1" stop-color="#ffc66b"/></linearGradient>
+        <radialGradient id="sun" cx=".5" cy=".5" r=".5"><stop offset="0" stop-color="#fff4d6"/><stop offset=".5" stop-color="#ffcf6a"/><stop offset="1" stop-color="#ff9a3a" stop-opacity="0"/></radialGradient>
+        <linearGradient id="lake" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#e8a060"/><stop offset=".25" stop-color="#4f5d70"/><stop offset="1" stop-color="#1d2836"/></linearGradient>
+        <linearGradient id="shade" x1="0" y1="0" x2="0" y2="1"><stop offset=".35" stop-color="#13110d" stop-opacity="0"/><stop offset="1" stop-color="#13110d" stop-opacity=".85"/></linearGradient>
+      </defs>
+      <rect width="1200" height="300" fill="url(#sky)"/>
+      <circle cx="880" cy="170" r="120" fill="url(#sun)"/>
+      <circle cx="880" cy="170" r="34" fill="#ffe8b8"/>
+      <path d="M0 190 L90 120 L160 165 L260 90 L360 160 L440 125 L540 175 L620 140 L720 178 L820 150 L960 182 L1060 130 L1140 165 L1200 140 L1200 205 L0 205Z" fill="#5b4a64" opacity=".85"/>
+      <path d="M0 200 L120 160 L210 190 L330 150 L470 195 L600 170 L760 198 L900 176 L1040 196 L1200 170 L1200 210 L0 210Z" fill="#3e3550"/>
+      <rect y="200" width="1200" height="40" fill="url(#lake)"/>
+      <g stroke="#ffd59a" stroke-width="2" opacity=".55"><line x1="830" y1="208" x2="930" y2="208"/><line x1="850" y1="216" x2="910" y2="216"/><line x1="865" y1="224" x2="895" y2="224"/></g>
+      <path d="M0 300 L0 214 C120 210 260 216 380 222 L470 226 L500 252 L540 262 L1200 262 L1200 300Z" fill="#4a3a22"/>
+      <path d="M0 214 C120 210 260 216 380 222 L470 226 L1200 232 L1200 262 L540 262 L500 252Z" fill="#5c7a36"/>
+      <path d="M470 226 L500 252 L540 262 L560 300 L430 300Z" fill="#6b4a2a"/>
+      <g fill="#2a2a1a"><path d="M40 214 l10 -30 l10 30Z"/><path d="M62 214 l12 -40 l12 40Z"/><path d="M90 216 l9 -26 l9 26Z"/><path d="M1110 234 l12 -42 l12 42Z"/><path d="M1138 234 l9 -28 l9 28Z"/><path d="M1160 236 l14 -50 l14 50Z"/></g>
+      <path d="M560 262 C600 248 640 246 690 262Z" fill="#8a5a30"/>
+      <rect x="610" y="262" width="80" height="6" fill="#3d2a18"/>
+      <g transform="translate(700 214)">
+        <rect x="0" y="40" width="110" height="14" rx="7" fill="#262119"/>
+        <circle cx="10" cy="47" r="6" fill="#3a3326"/><circle cx="100" cy="47" r="6" fill="#3a3326"/>
+        <rect x="12" y="16" width="86" height="24" rx="3" fill="#f2b100"/>
+        <rect x="58" y="-4" width="34" height="22" rx="3" fill="#f2b100"/>
+        <rect x="63" y="0" width="24" height="13" rx="2" fill="#ffd98a" opacity=".55"/>
+        <rect x="12" y="22" width="22" height="18" fill="#c48d00"/>
+        <path d="M58 20 L28 -34 L36 -38 L68 14Z" fill="#f2b100"/>
+        <path d="M28 -34 L-30 6 L-24 12 L34 -28Z" fill="#e3a400"/>
+        <path d="M-30 6 L-46 18 L-38 34 L-18 26 L-22 12Z" fill="#3a3326"/>
+        <path d="M44 -6 L32 -28" stroke="#888" stroke-width="3"/>
+      </g>
+      <rect width="1200" height="300" fill="url(#shade)"/>
+    </svg>
+    <div class="ttl">
+      <p class="kicker">The mesa dig site and island life</p>
+      <h1>Corley's Island Idea Board</h1>
+    </div>
+    <div class="stats" id="stats"></div>
+  </header>
+
+  <div class="panel uway" id="uway" hidden></div>
+
+  <div class="tools">
+    <input id="q" type="search" placeholder="Search ideas" aria-label="Search ideas">
+    <label class="sortl">Sort <select id="sortp"><option value="pr:-1">Priority</option><option value="r:1">My ranking (1 first)</option><option value="p:-1">Most realistic</option><option value="f:-1">Most fun</option><option value="se:-1">Seen most often</option><option value="c:1">Cheapest first</option><option value="c">Custom (column tapped)</option></select></label>
+    <label class="sortl">Realism weight <select id="wt"><option value="0.3">30%</option><option value="0.4">40%</option><option value="0.5">50%</option><option value="0.6">60%</option><option value="0.7">70%</option><option value="0.8">80%</option></select></label>
+    <div class="tgl">
+      <button class="tbtn" data-p="pfil" aria-expanded="false">Filters <span id="fcount" class="badge" hidden></span></button>
+      <button class="tbtn" data-p="pgsum" aria-expanded="false">Totals</button>
+      <button class="tbtn" data-p="phelp" aria-expanded="false">Help</button>
+    </div>
+    <span class="count" id="count"></span>
+  </div>
+
+  <div class="panel" id="pfil" hidden>
+    <div class="frow">
+      <label>Cost <select id="fs"><option value="">All</option><option value="1">1 session</option><option value="2">2-3 sessions</option><option value="3">4+ sessions</option></select></label>
+      <label>Realism at least <select id="fp"><option value="0">Any</option><option>3</option><option>5</option><option>6</option><option>7</option><option>8</option></select></label>
+      <label>Fun at least <select id="ff"><option value="0">Any</option><option>3</option><option>5</option><option>6</option><option>7</option><option>8</option></select></label>
+      <label>Status <select id="fd"><option value="">All</option><option value="open">Not built</option><option value="done">Built or started</option></select></label>
+      <label><input id="fo" type="checkbox"> Ranked only</label>
+      <label><input id="fph" type="checkbox"> Hide high phone cost</label>
+      <button class="gbtn" id="reset">Reset filters</button>
+    </div>
+    <div class="chips" id="fg" role="group" aria-label="Groups"><span class="clab">Groups (none = all):</span></div>
+  </div>
+
+  <div class="panel gsum" id="pgsum" hidden>
+    <div class="tbox">
+      <table>
+        <thead><tr>
+          <th><button data-gk="g">Group <span class="arr">▲</span></button></th>
+          <th class="num"><button data-gk="n">Ideas <span class="arr">▲</span></button></th>
+          <th class="num"><button data-gk="pk">Ranked <span class="arr">▲</span></button></th>
+          <th class="num"><button data-gk="ses">Sessions <span class="arr">▲</span></button></th>
+          <th class="num"><button data-gk="pc">% of week <span class="arr">▲</span></button></th>
+          <th class="num"><button data-gk="avg">Avg realism <span class="arr">▲</span></button></th>
+          <th class="num"><button data-gk="favg">Avg fun <span class="arr">▲</span></button></th>
+          <th class="num"><button data-gk="pr">Avg priority <span class="arr">▲</span></button></th>
+        </tr></thead>
+        <tbody id="gb"></tbody>
+        <tfoot id="gf"></tfoot>
+      </table>
+    </div>
+    <p class="hint">Tap a group's name to filter the list to it. Totals cover every idea in the group, whatever the filters.</p>
+  </div>
+
+  <div class="panel legend" id="phelp" hidden>
+    <span><b>Realism</b> 1-10: how much more real the job site and island life feel. 9 = locate paint and flags before a dig, 7 = the hydraulic hammer, 5 = a cab radio, 3 = buried treasure, 1 = badges.</span>
+    <span><b>Fun</b> 1-10: how much it adds to play. 9 = the backhoe loader, 8 = mud you get stuck in, 6 = rain, 4 = track prints, 2 = ambient occlusion.</span>
+    <span><b>Seen</b>: how often you meet it: every session, most sessions, sometimes, rare.</span>
+    <span><b>Phone</b>: risk to staying above 30 FPS on your phone (Low graphics): none, low, high. High sinks it in Priority.</span>
+    <span><b>Cost</b>: Claude sessions to build it: 1, 2-3, 4+.</span>
+    <span><b>Priority</b> 0-100 = (realism weight x Realism + the rest x Fun) x how often it's seen x phone factor. Cost is shown beside it, not divided in, so big features aren't buried under touch-ups.</span>
+    <span><b>% of week</b>: estimated hours over your weekly Claude hours:
+      <select id="plan" aria-label="Your weekly Claude hours"><option value="88">88 h</option><option value="40">40 h</option><option value="25">25 h</option><option value="c">Custom</option></select>
+      <input id="wk" type="number" min="1" step="1" inputmode="numeric" aria-label="Weekly hours of Claude work" style="width:4.5em"> h.</span>
+    <span><b>Rank</b>: type 1, 2, 3... in the first column for the ideas you want. Typing a number another idea already has slots this one in there and moves the rest down; clear the box to drop it. Send to Claude passes the list on in that order.</span>
+  </div>
+
+  <div class="tbox">
+    <table>
+      <thead><tr>
+        <th><button data-k="r">Rank <span class="arr">▲</span></button></th>
+        <th><span class="two"><button data-k="id">ID <span class="arr">▲</span></button><button data-k="g">Group <span class="arr">▲</span></button></span></th>
+        <th><button data-k="t">Idea <span class="arr">▲</span></button></th>
+        <th><span class="two"><button data-k="c">Cost <span class="arr">▲</span></button><button data-k="ph">Phone <span class="arr">▲</span></button></span></th>
+        <th><span class="two"><button data-k="p">Real <span class="arr">▲</span></button><button data-k="f">Fun <span class="arr">▲</span></button><button data-k="se">Seen <span class="arr">▲</span></button></span></th>
+        <th class="num"><button data-k="pr">Priority <span class="arr">▲</span></button></th>
+      </tr></thead>
+      <tbody id="tb"></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="bar">
+  <div class="in">
+    <div class="sum"><span><b id="nPick">0</b> ranked</span><span>~<b id="hPick">0</b> sessions</span><span class="xs">~<b id="tPick">0</b> h</span><span>~<b id="pPick">0%</b> of week</span><span class="xs"><b id="rPick">0</b> realism</span><span class="xs"><b id="fPick">0</b> fun</span><button class="gbtn" id="clear">Clear</button></div>
+    <div class="acts">
+      <button class="btn ghost" id="notebtn" aria-expanded="false">Note</button>
+      <button class="btn ghost" id="copy" disabled>Copy</button>
+      <button class="btn" id="send" disabled>Send to Claude</button>
+    </div>
+  </div>
+  <textarea id="note" hidden placeholder="Note for Claude (optional): what matters most..." aria-label="Note for Claude"></textarea>
+  <div id="status" role="status"></div>
+  <textarea id="copybox" hidden readonly aria-label="List to copy"></textarea>
+</div>
+
+<script>
+const SID="session_01SBwjwGFjYHoJFXKYC4CmB8";
+const G={J:"Jobs and work orders",M:"New machines",X:"Excavator and attachments",D:"Dirt and digging",U:"Buried utilities",W:"Weather and time of day",S:"Site and scenery",L:"Crew and people",A:"Sound",C:"Controls and camera",Q:"Graphics and phone speed",E:"Map editor",Y:"Gameplay and challenges",H:"Cozy home life",K:"Yard work",B:"The bridge and the drive",T:"The mountain town",R:"Days and routine"};
+const GS={J:"Jobs",M:"Machines",X:"Excavator",D:"Dirt",U:"Utilities",W:"Weather",S:"Site",L:"Crew",A:"Sound",C:"Controls",Q:"Graphics",E:"Editor",Y:"Gameplay",H:"Home",K:"Yard",B:"Bridge",T:"Town",R:"Routine"};
+// [id, group, title, description, realism 1-10, fun 1-10, seen, phone, cost 1|2|3, hour guess, deps]
+const I=[
+["J01","J","Work orders","A job card each session (dig to a line and depth, lay pipe, backfill), with pay and a finish check.",4,8,"every","none",2,6,[]],
+["J02","J","Locate paint and flags","811 marks sprayed on the grass before a dig: yellow gas, red power, blue water, orange phone, green sewer, with the 18 in tolerance zone either side.",9,5,"most","none",1,3,[]],
+["J03","J","Pothole by hand","Inside the tolerance zone, hop out in Walk mode and dig with a shovel or a vacuum truck to find the line before the bucket goes in.",8,6,"some","low",2,6,["J02"]],
+["J04","J","Lay pipe","Lower sticks of PVC or ductile iron pipe into the trench from the bucket on a chain and push the joints home.",7,7,"some","low",2,8,[]],
+["J05","J","Backfill and compact","Push the spoil back in lifts and tamp each one; a density check passes or fails the backfill.",7,6,"some","none",2,6,[]],
+["J06","J","Grade to a laser","A rotating laser on a tripod, a grade rod, and a cut or fill readout in the cab to dig a trench floor flat to the inch.",8,6,"most","none",2,5,[]],
+["J07","J","Cabin footings","Dig footings to a string line, set forms and pour concrete from a mixer truck.",6,7,"rare","low",3,12,["J06"]],
+["J08","J","Septic system","Dig the tank hole and drain-field trenches on a slope.",6,5,"rare","low",2,7,[]],
+["J09","J","Dig a pond","Dig a farm pond that fills from rain and groundwater over a few minutes.",6,8,"some","low",2,6,[]],
+["J10","J","Stumps and boulders","Rip stumps out root ball and all, roll and carry boulders off the site.",7,7,"most","low",2,6,[]],
+["J11","J","Clear a lot","Push over small trees, pile the brush and light a burn pile.",6,7,"some","low",2,7,[]],
+["J12","J","Dig a basement","A big square hole with benched walls and a ramp to drive out.",6,6,"rare","none",2,5,[]],
+["J13","J","Culvert under the rim road","Cut the road, set a culvert pipe on bedding, backfill and drive over it.",7,6,"some","low",2,6,["J04"]],
+["J14","J","Inspector visit","An inspector walks the trench, checks the slope and the trench box, and signs off or shuts you down.",7,5,"some","low",2,5,[]],
+["J15","J","Pay and the day's log","Yards moved, fuel burned, hours on the meter and what the day paid.",4,6,"every","none",1,3,[]],
+["M01","M","Backhoe loader","A CAT 420-class backhoe with a loader bucket up front, outriggers and a swivel seat for the hoe.",7,9,"every","low",3,14,[]],
+["M02","M","Skid steer","Bucket and pallet forks; spins in place, lifts blocks and pipe.",7,8,"most","low",2,8,[]],
+["M03","M","Wheel loader","Loads the dump truck from a stockpile in two scoops.",6,7,"some","low",2,8,[]],
+["M04","M","Mini excavator","A 3-ton machine for tight spots next to the gas main.",7,7,"some","low",2,6,[]],
+["M05","M","Bulldozer","Blade and ripper; push spoil off the cliff and level the Lower Bench.",7,8,"some","low",3,10,[]],
+["M06","M","Motor grader","Keeps the rim road crowned and the ruts filled.",6,6,"some","low",3,10,[]],
+["M07","M","Roller and plate compactor","Smooth-drum roller for the road and a walk-behind plate tamper for the trench.",6,5,"some","low",2,6,["J05"]],
+["M08","M","Pickup and lowboy trailer","Haul the mini excavator on a trailer, chain it down and unload at the site.",7,7,"most","low",3,10,["M04"]],
+["M09","M","Water truck","Sprays the road to keep the dust down.",7,5,"some","low",2,6,[]],
+["M10","M","Fuel and refuelling","Machines burn diesel; fill up from a fuel tank or the fuel truck.",7,5,"most","none",2,5,[]],
+["M11","M","Articulated hauler","A 6-wheel-drive dump that climbs the scarp ramp loaded.",6,7,"some","low",2,8,[]],
+["M12","M","Concrete mixer truck","A drum that turns and a chute you swing.",6,6,"rare","low",2,8,["J07"]],
+["M13","M","Crane truck","Sets pipe, the trench box and blocks from up high.",5,6,"rare","low",3,12,[]],
+["M14","M","Side-by-side","A UTV to zip around the island on foot's behalf.",5,8,"most","low",2,6,[]],
+["M15","M","Boat on the lake","A johnboat at a dock below the cliffs.",4,8,"some","low",2,8,[]],
+["M16","M","Wear and breakdowns","Broken teeth, a blown hose spraying oil, a flat on the truck; fix it or call the shop.",6,6,"some","none",2,6,[]],
+["X01","X","Quick coupler","Swap the bucket for other tools from a rack at the site.",7,8,"most","low",3,10,[]],
+["X02","X","Hydraulic thumb","Grab logs, boulders and pipe.",7,8,"most","low",2,6,["X01"]],
+["X03","X","Hydraulic hammer","Break the rock layer, with chips, dust and the loud chatter.",7,8,"some","low",2,6,["X01"]],
+["X04","X","Ditching bucket","A wide smooth-lip bucket for slopes and finish grade.",6,5,"some","none",1,3,["X01"]],
+["X05","X","Auger","Drill post holes for a fence around the site.",5,6,"rare","low",2,5,["X01"]],
+["X06","X","Work lights and beacon","Lights on the boom and cab, an amber beacon on top.",7,6,"some","low",1,3,["W02"]],
+["X07","X","Cab monitor","Bucket depth and slope readout, rear camera view.",7,5,"every","none",1,3,[]],
+["X08","X","Control pattern switch","ISO or SAE (John Deere) pattern, like the selector valve on a real machine.",6,4,"every","none",1,2,[]],
+["X09","X","Lift mode and overload","A lift chart and a warning when a block or pipe is too heavy at that reach.",7,5,"some","none",1,3,[]],
+["X10","X","Horn and travel alarm","A horn, a travel alarm and a swing lock.",5,4,"most","none",1,2,[]],
+["X11","X","Mud-packed tracks","Clay packs into the undercarriage and drops off in clumps.",6,4,"most","low",1,3,[]],
+["D01","D","Sticky clay","Wet red clay sticks in the bucket; shake it out with the curl.",7,6,"most","none",1,3,[]],
+["D02","D","Mud you get stuck in","After rain the tracks sink and the truck spins; push it out with the bucket.",7,8,"some","low",2,6,["W01"]],
+["D03","D","Buried boulders","Rocks you uncover and have to pry out or break.",7,7,"most","low",2,5,[]],
+["D04","D","Buried finds","Old bottles, a horseshoe, an arrowhead, a time capsule; collect them in a case in the trailer.",3,8,"some","low",1,4,[]],
+["D05","D","Topsoil stockpile","Strip topsoil to its own pile and spread it back last.",7,4,"some","none",1,3,[]],
+["D06","D","Better pile slopes","Each soil settles to its own angle, wet or dry, as piles grow.",7,5,"every","none",2,5,[]],
+["D07","D","Dirt tracked onto the road","Clods drop off the tyres onto the rim road after leaving the dig.",6,4,"every","low",1,3,[]],
+["D08","D","Bucket angle matters","Teeth pointed in fill fast; dragging flat skims.",7,6,"every","none",1,3,[]],
+["D09","D","Roots in the cut","Tree roots in the trench wall near the trees that the bucket snaps.",7,5,"most","low",1,4,[]],
+["D10","D","Frozen ground","A hard crust in winter that needs ripping.",5,4,"rare","none",1,3,["W04"]],
+["D11","D","Deeper dig zone","Dig past the rock into a deeper layer, with a bigger dig grid.",3,6,"some","high",2,6,[]],
+["U01","U","More buried lines","A water main, a power conduit, fibre and a sewer, each with its own depth and strike.",7,7,"most","low",2,6,["J02"]],
+["U02","U","Gas leak after a strike","A hissing plume, everyone back off, call it in and wait for the gas company.",7,7,"some","low",1,4,[]],
+["U03","U","Water main break","A geyser that floods the trench until you shut the valve.",6,9,"some","low",2,5,["U01"]],
+["U04","U","Power line strike","Sparks, a bang and the work lights go out.",6,7,"rare","low",1,4,["U01"]],
+["U05","U","Repair a break","Clamp or replace the section you broke; a crew truck shows up.",7,6,"some","low",2,6,[]],
+["U06","U","Overhead power lines","Poles across the site; the boom must stay 10 ft clear or it beeps.",8,5,"most","low",1,4,[]],
+["U07","U","Locator wand","Walk the site with a pipe locator that beeps over buried lines.",7,6,"some","none",1,4,[]],
+["U08","U","Abandoned lines","Old clay tile and rusty pipe nobody marked.",6,5,"some","low",1,3,[]],
+["W01","W","Rain","Showers that wet the ground, fill the trench and run the cab wipers.",8,6,"some","low",2,6,[]],
+["W02","W","Day and night","The sun sets over the lake, stars come out, the site goes dark.",8,7,"every","low",2,6,[]],
+["W03","W","Wind gusts","Dust blows off the piles, grass and trees sway harder.",6,4,"most","none",1,3,[]],
+["W04","W","Seasons","Fall colour on the broadleaf trees, snow on the mesa in winter.",6,6,"some","high",3,10,[]],
+["W05","W","Thunderstorm","Lightning stops work; get off the machine and wait it out.",6,7,"rare","low",2,5,["W01"]],
+["W06","W","Morning fog","Fog lying on the lake that burns off.",7,4,"some","low",1,3,[]],
+["W07","W","Hot afternoons","Heat shimmer and the engine temperature climbing on long digs.",5,3,"some","none",1,2,[]],
+["S01","S","Job trailer and site stuff","An office trailer, porta-john, fuel tank, pipe rack and job sign.",8,4,"every","low",1,4,[]],
+["S02","S","Cones and barricades","Cones, barricades and caution tape you can knock over or move.",7,5,"every","low",1,3,[]],
+["S03","S","Quarry pit","A deep benched rock pit to dig in, from the mesa layout plans.",6,7,"some","low",3,10,[]],
+["S04","S","Light towers","Diesel light towers for night work.",7,5,"some","low",1,3,["W02"]],
+["S05","S","Dock and boat ramp","A dock and a gravel ramp down to the lake.",6,5,"some","low",1,4,[]],
+["S06","S","Cliff dump pile","The spoil you tip over the edge builds a real pile at the bottom.",6,6,"most","low",1,4,[]],
+["S07","S","Waterfall and creek","A creek down the scarp into the lake.",6,5,"every","low",2,5,[]],
+["S08","S","Lights across the lake","Houses on the far shore whose windows light up at night.",5,2,"every","low",1,3,[]],
+["S09","S","Wildlife","Deer at the treeline, geese on the lake, an eagle over the cliffs.",6,4,"most","low",2,5,[]],
+["S10","S","Wildflowers and weeds","Clover, dandelions and taller weeds around the site edges.",6,3,"every","high",1,3,[]],
+["S11","S","Cabin on Lookout Knoll","A cabin that goes up stage by stage as you finish jobs.",5,7,"every","low",3,10,["J07"]],
+["S12","S","Dirt jumps","Build dirt ramps and launch the side-by-side or the truck off them.",3,8,"some","low",2,5,[]],
+["L01","L","Spotter","A ground man who waves the truck back and holds up a fist to stop.",8,5,"most","low",2,6,[]],
+["L02","L","Crew in the trench","Laborers with shovels and a grade checker with a rod.",8,5,"most","high",2,8,[]],
+["L03","L","Foreman on the radio","Calls out the next task, praises a clean cut and yells after a strike.",5,6,"every","none",1,4,[]],
+["L04","L","AI truck driver","A dump truck that pulls up to load, honks when full and hauls it off.",7,7,"most","low",2,6,[]],
+["L05","L","Lunch break","The crew on the tailgate at noon.",6,3,"some","low",1,3,[]],
+["L06","L","Two players","One on the excavator, one driving the truck, online.",5,9,"some","low",3,14,[]],
+["A01","A","Cab radio","A country station and the weather, louder with the door shut.",5,6,"every","none",1,3,[]],
+["A02","A","Lake and wind sounds","Waves, wind over the cliff, birds and frogs at dusk.",7,4,"every","none",1,2,[]],
+["A03","A","Track squeal","Idler clatter and squealing tracks as speed picks up.",6,3,"every","none",1,2,[]],
+["A04","A","Attachment sounds","Hammer chatter, coupler clunks, the thumb clamping.",7,5,"some","none",1,2,["X01"]],
+["C01","C","Free camera","Orbit, pinch to zoom and look from anywhere.",5,6,"every","none",1,3,[]],
+["C02","C","Photo mode","Hide the HUD, pick an angle and save a picture.",2,6,"some","none",1,3,[]],
+["C03","C","Replay","Watch the last minute again from any angle.",2,6,"some","none",2,6,[]],
+["C04","C","Phone buzz","Vibration for strikes, cave-ins and bucket hits.",5,5,"every","none",1,2,[]],
+["C05","C","Tilt to steer","Steer the truck by tilting the phone.",2,5,"most","none",1,2,[]],
+["C06","C","Swap the sticks","Mirror the stick layout for left-handed play.",1,3,"every","none",1,1,[]],
+["C07","C","First-dig tutorial","A guided first trench with arrows and tips.",2,5,"rare","none",1,4,[]],
+["Q01","Q","Exhaust smoke","Black puffs from the stacks when the engine loads up.",8,4,"every","low",1,2,[]],
+["Q02","Q","Tread and track prints","Track and tyre marks in the dirt and flattened grass.",8,4,"every","low",1,3,[]],
+["Q03","Q","Drifting dust","Dust clouds that drift with the wind and settle.",7,4,"most","low",1,3,["W03"]],
+["Q04","Q","Dirt that builds up","Machines get muddier as you work and wash clean in rain or at a wash spot.",6,5,"every","low",1,3,[]],
+["Q05","Q","Sparks on rock","Teeth scraping rock throw sparks.",7,5,"some","low",1,2,["D03"]],
+["Q06","Q","Lake reflections","The cliffs and sky mirrored in calm water.",7,3,"every","high",2,5,[]],
+["Q07","Q","Ambient occlusion","Soft dark creases in the trench and under the machines.",7,2,"every","high",2,5,[]],
+["Q08","Q","Exhaust heat haze","Wavy air above the stacks.",6,2,"every","low",1,2,[]],
+["Q09","Q","Phone 60 FPS mode","A lighter preset that holds 60 on the phone.",2,4,"every","none",1,3,[]],
+["E01","E","Bury utilities in the editor","Draw where lines run and how deep.",5,6,"rare","none",1,4,["U01"]],
+["E02","E","Paint soil layers","Set the clay, sand and rock depths per spot.",5,4,"rare","none",1,4,[]],
+["E03","E","Place site props","Cones, trailers, pipe stacks and signs.",4,5,"rare","none",1,3,["S02"]],
+["E04","E","Ponds and creeks","Add water in the editor.",5,5,"rare","low",2,5,[]],
+["E05","E","Share maps by link","Open a friend's map from a link, and a gallery of maps.",2,6,"rare","none",2,6,[]],
+["Y01","Y","Badges","First strike-free trench, 100 yards hauled, a clean cave-in-free week.",1,6,"every","none",1,3,[]],
+["Y02","Y","Timed challenges","Load 10 yards in 3 minutes, dig to grade in 5.",2,8,"some","none",1,4,[]],
+["Y03","Y","Operator skill games","Knock a ball off a cone, ring toss with the teeth, pick up an egg without breaking it.",2,8,"some","low",1,4,[]],
+["Y04","Y","Career","Earn job pay, buy and upgrade machines.",2,8,"every","none",3,10,["J01","J15"]],
+["Y05","Y","Safety score","Cave-ins, strikes and near misses dock points; a clean day earns them.",6,5,"every","none",1,3,[]],
+["Y06","Y","Leaderboards","Best times on the challenges, online.",1,5,"some","none",2,5,["Y02"]],
+["Y07","Y","Daily dig","A new site layout and job every day.",3,7,"most","none",2,6,[]],
+["Y08","Y","Kids mode","No strikes or cave-ins, giant toy blocks.",1,5,"rare","none",1,2,[]],
+["H01","H","Your cabin on the island","A small home by the lake: porch, kitchen, bed, a woodstove; the place every day starts and ends.",6,7,"every","low",3,10,[]],
+["H02","H","Morning coffee on the porch","Wake up, sip coffee as the sun comes up over the lake, and look over the day's jobs.",6,6,"every","low",1,4,["H01"]],
+["H03","H","Sleep to end the day","Turn in at night; the game saves and the next morning starts fresh.",5,5,"every","none",1,3,["H01"]],
+["H04","H","Vegetable garden","Plant tomatoes, okra and peppers, water them, and pick them when they ripen over the days.",6,7,"most","low",2,6,[]],
+["H05","H","A dog","Rides in the truck with its head out the window, follows you on foot and naps in the shade.",6,8,"every","low",2,6,[]],
+["H06","H","Chickens","A coop and a run; eggs to collect each morning.",5,6,"most","low",2,5,[]],
+["H07","H","Porch swing and fire pit","Sit and watch the lake: a rocking chair, a swing and a fire pit at night.",6,5,"most","low",1,3,[]],
+["H08","H","Fishing off the dock","Cast for bass and bream at dawn and dusk.",6,7,"some","low",2,6,[]],
+["H09","H","Furnish the cabin","Buy and place furniture, rugs and pictures with what you earn.",3,6,"some","low",2,7,["H01"]],
+["H10","H","Barn and workshop","Park and wash the machines, tools on the wall, a radio on the bench.",7,5,"most","low",2,6,[]],
+["H11","H","Simple cooking","Breakfast from your eggs, supper from the garden.",4,5,"most","none",2,5,["H04"]],
+["H12","H","Holidays at home","Pumpkins on the porch in fall, lights on the cabin at Christmas.",5,5,"rare","low",1,4,["H01"]],
+["H13","H","Home projects with your machines","Dig your own pond, cut a driveway, terrace a garden with the excavator.",5,8,"most","low",2,6,[]],
+["K01","K","String trimmer","Weed-eat along fences, trees, rocks and edges the mower can't reach; the line wears down and you bump it out.",8,7,"every","low",2,6,[]],
+["K02","K","Edger","Crisp edges along the drive and walk.",7,5,"most","low",1,3,[]],
+["K03","K","Leaf blower","Blow clippings off the drive and porch, and leaves in fall.",7,6,"most","low",1,4,[]],
+["K04","K","More mowers","A push mower and a riding mower, with the zero-turn as the upgrade.",6,6,"most","low",2,6,[]],
+["K05","K","Hedge trimmer","Shrubs that grow shaggy and get shaped back.",6,5,"some","low",1,4,[]],
+["K06","K","Mulch beds","Haul mulch in the truck and spread it by wheelbarrow.",6,5,"some","low",2,5,[]],
+["K07","K","Pressure washer","Wash the porch, the drive and muddy machines clean in stripes.",6,8,"some","low",2,5,[]],
+["K08","K","Weeds that come back","Grass along fences and in cracks grows back a little each day.",7,4,"every","low",1,4,["K01"]],
+["K09","K","Mower upkeep","Gas, oil and blade sharpening; dull blades leave a ragged cut.",7,4,"most","none",1,3,[]],
+["K10","K","Lawn health","Brown patches, fertilizer and a sprinkler; the grass greens up over days.",6,4,"most","low",2,5,[]],
+["K11","K","Lawn care business","Mow customers' yards in town on a weekly route for pay.",5,7,"most","low",3,10,["T01"]],
+["K12","K","Bagger and compost pile","Catch clippings and dump them on a compost pile.",6,4,"some","low",1,3,[]],
+["B01","B","The long bridge","A two-lane bridge about a mile long across the lake to the mainland, with rails, lights and joints that thump under the tyres.",7,8,"every","low",3,10,[]],
+["B02","B","Pickup truck","Your daily driver for town trips, with a bed for mulch, tools and groceries.",7,8,"every","low",2,8,[]],
+["B03","B","Towing a trailer","Hitch the mower or a machine to a trailer and haul it to a job.",7,7,"most","low",2,7,["B02"]],
+["B04","B","The mountain road","Switchbacks climbing from the bridge to the city in the mountains, with overlooks.",7,7,"most","high",3,12,["B01"]],
+["B05","B","Traffic on the road","A few cars, a school bus and logging trucks on the bridge and road.",7,5,"most","low",2,6,["B01"]],
+["B06","B","The view on the drive","Look back at the island from the bridge while the mountains grow ahead.",7,6,"every","high",2,6,["B01"]],
+["B07","B","Swing span","A section of the bridge that swings open for sailboats while you wait.",5,6,"some","low",2,5,["B01"]],
+["B08","B","Skip the drive","Fast travel to town once you've driven it.",1,4,"most","none",1,2,["T01"]],
+["B09","B","Bridge repair job","Rebuild a washed-out bridge approach with your machines.",6,6,"rare","low",2,6,["B01"]],
+["T01","T","The city in the mountains","A small town at the end of the road: a main street and a few blocks to drive.",7,8,"every","high",3,14,["B01"]],
+["T02","T","Hardware store","Buy trimmer line, gas, seed and tools.",6,5,"most","low",2,5,["T01"]],
+["T03","T","Diner","Breakfast or lunch with the regulars at the counter.",6,5,"most","low",2,5,["T01"]],
+["T04","T","Equipment dealer and rental yard","Rent a dozer for a big job or buy a new machine.",6,7,"some","low",2,6,["T01"]],
+["T05","T","Gas station","Fill the pickup and the gas cans.",7,4,"most","low",1,4,["T01"]],
+["T06","T","Customers who hire you","Folks in town who need a ditch, a driveway or a pond dug.",6,8,"most","low",3,10,["T01","J01"]],
+["T07","T","Neighbors","People you get to know by name who wave and ask small favors.",6,6,"most","low",2,7,[]],
+["T08","T","Saturday market","Sell your vegetables and eggs.",5,6,"some","low",2,6,["H04","T01"]],
+["T09","T","Feed and landscape store","Feed, fertilizer, and mulch by the yard loaded into your truck by a loader.",6,5,"some","low",2,5,["T01"]],
+["T10","T","Town lights at night","The city glowing in the mountains across the lake.",6,3,"every","low",1,2,[]],
+["T11","T","Town works jobs","A water line dug on Main Street, a sidewalk to tear out.",7,7,"some","low",3,10,["T01"]],
+["R01","R","Days and the chore list","Days pass, weekdays and weekends, with today's chores on a note on the fridge.",5,6,"every","none",1,4,[]],
+["R02","R","Money","Earn from jobs, spend on fuel, seed and upgrades.",4,6,"every","none",1,4,[]],
+["R03","R","Weather forecast","The radio forecast shapes the day: rain means a shop day.",6,5,"every","none",1,3,["W01"]],
+["R04","R","Phone texts","Customers and neighbors text you jobs and favors.",5,6,"every","none",1,4,[]],
+["R05","R","Relaxed mode","No timers and no failing, just the chores.",2,6,"every","none",1,2,[]],
+["R06","R","Chores by season","Mowing in summer, leaves in fall, plowing snow in winter.",6,7,"most","low",2,6,["W04"]],
+["R07","R","Snow plowing","Clear the road and the bridge with a loader in winter.",6,7,"rare","low",2,5,["W04"]],
+["R08","R","End-of-day summary","What you did, what you earned, the lawn and the yards dug.",3,5,"every","none",1,2,[]],
+];
+// built (or partly built) ideas: date and what is in the game; part: more steps left (still pickable); pc: percent done
+const DONE={};
+const SEEN={every:[1,"Every session"],most:[.85,"Most sessions"],some:[.65,"Sometimes"],rare:[.45,"Rare"]};
+const PHN={none:[1,"None"],low:[.92,"Low"],high:[.75,"High"]};
+const COST=[null,["1 session",1],["2-3 sessions",2.5],["4+ sessions",5]];
+const CAL=.5;   // real builds run at about half the hour guesses
+function N(r){return{R:r[4],F:r[5],se:r[6],ph:r[7],c:r[8],dp:r[10]||[]}}
+const hrs=r=>r[9]*CAL;
+const GC={};Object.keys(G).forEach((k,i,a)=>GC[k]="hsl("+Math.round(i*360/a.length+40)+",78%,66%)");
+const IDS=new Map(I.map(r=>[r[0],r]));
+let picks=new Set(), WK=88, PL="88", W=.5, sortK="pr", sortD=-1;
+const $=id=>document.getElementById(id);
+try{const s=JSON.parse(localStorage.getItem("bd-ideas")||"{}");(s.p||[]).forEach(id=>IDS.has(id)&&!(DONE[id]&&!DONE[id].part)&&picks.add(id));if(s.n)$("note").value=s.n;
+  if(s.h>0){WK=s.h;PL=s.pl||"c"}if(s.w)W=s.w;if(s.sk){sortK=s.sk;sortD=s.sd||-1}}catch(e){}
+function save(){try{localStorage.setItem("bd-ideas",JSON.stringify({p:[...picks],n:$("note").value,h:WK,pl:PL,w:W,sk:sortK,sd:sortD}))}catch(e){}}
+function pct(h){const v=h/WK*100;return (v<10?v.toFixed(1):Math.round(v))+"%"}
+function prio(r){const n=N(r);return Math.round(100*((W*n.R+(1-W)*n.F)/10)*SEEN[n.se][0]*PHN[n.ph][0])}
+// red (low) -> yellow (middle) -> green (high) on the 1-10 scale
+function rzCol(p,a){const h=Math.max(0,Math.min(120,(p-1)/8*120));return "hsla("+h.toFixed(0)+",75%,45%,"+a+")"}
+const FG=new Set();
+for(const k of Object.keys(G)){const b=document.createElement("button");b.className="chip";b.dataset.g=k;b.style.setProperty("--gc",GC[k]);b.setAttribute("aria-pressed","false");const dt=document.createElement("span");dt.className="dot";b.append(dt,G[k]);const sm=document.createElement("small");sm.textContent=I.filter(r=>r[1]===k).length;b.appendChild(sm);$("fg").appendChild(b)}
+function setGroups(ks){FG.clear();ks.forEach(k=>FG.add(k));document.querySelectorAll("#fg .chip").forEach(b=>b.setAttribute("aria-pressed",FG.has(b.dataset.g)));render()}
+$("fg").addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;const k=b.dataset.g;FG.has(k)?FG.delete(k):FG.add(k);b.setAttribute("aria-pressed",FG.has(k));render()});
+let gK="pr",gD=-1;
+document.querySelectorAll("th button[data-gk]").forEach(b=>b.addEventListener("click",()=>{const k=b.dataset.gk;if(gK===k)gD=-gD;else{gK=k;gD=k==="g"?1:-1}groupTable()}));
+function agg(rows){const n=rows.length,ns=rows.map(N),h=rows.reduce((a,r)=>a+hrs(r),0);return{n,pk:rows.filter(r=>picks.has(r[0])).length,ses:rows.reduce((a,r,i)=>a+COST[ns[i].c][1],0),pc:h,
+  avg:n?ns.reduce((a,x)=>a+x.R,0)/n:0,favg:n?ns.reduce((a,x)=>a+x.F,0)/n:0,pr:n?rows.reduce((a,r)=>a+prio(r),0)/n:0}}
+function groupTable(){
+  const rows=Object.keys(G).map(k=>({k,g:G[k],...agg(I.filter(r=>r[1]===k))}));
+  rows.sort((a,b)=>{const x=a[gK],y=b[gK];return (typeof x==="string"?x.localeCompare(y):x-y)*gD});
+  document.querySelectorAll("th button[data-gk]").forEach(b=>{const on=b.dataset.gk===gK;b.parentElement.classList.toggle("sorted",on);b.querySelector(".arr").textContent=on&&gD<0?"▼":"▲"});
+  const cells=o=>[o.n,o.pk,Math.round(o.ses),pct(o.pc),o.avg.toFixed(1),o.favg.toFixed(1),Math.round(o.pr)];
+  const gb=$("gb");gb.textContent="";
+  for(const o of rows){const tr=el("tr"),td=el("td"),a=el("button","glink");a.style.setProperty("--gc",GC[o.k]);a.append(el("span","dot"),o.g);a.addEventListener("click",()=>{setGroups([o.k]);$("tb").closest(".tbox").scrollIntoView({behavior:"smooth",block:"start"})});td.appendChild(a);tr.appendChild(td);cells(o).forEach((v,i)=>{const c=el("td","num",v);if(i===4)c.style.background=rzCol(o.avg,.2);if(i===5)c.style.background=rzCol(o.favg,.2);tr.appendChild(c)});gb.appendChild(tr)}
+  const t=agg(I),gf=$("gf");gf.textContent="";const tr=el("tr");tr.appendChild(el("td",null,"All groups"));cells(t).forEach(v=>tr.appendChild(el("td","num",v)));gf.appendChild(tr);
+}
+$("wk").value=WK;$("plan").value=[...$("plan").options].some(o=>o.value===PL)?PL:"c";$("wt").value=String(W);
+$("plan").addEventListener("change",()=>{PL=$("plan").value;if(PL!=="c"){WK=+PL;$("wk").value=WK}save();render()});
+$("wk").addEventListener("input",()=>{const v=+$("wk").value;if(v>0){WK=v;PL=(v===88||v===40||v===25)?String(v):"c";$("plan").value=PL;save();render()}});
+$("wt").addEventListener("change",()=>{W=+$("wt").value;save();render()});
+["q","fs","fp","ff","fo","fd","fph"].forEach(id=>$(id).addEventListener(id==="q"?"input":"change",render));
+document.querySelectorAll(".tbtn").forEach(b=>b.addEventListener("click",()=>{const p=$(b.dataset.p),open=p.hidden;p.hidden=!open;b.setAttribute("aria-expanded",open)}));
+$("reset").addEventListener("click",()=>{$("q").value="";$("fs").value="";$("fp").value="0";$("ff").value="0";$("fo").checked=false;$("fph").checked=false;$("fd").value="";setGroups([])});
+$("sortp").addEventListener("change",()=>{const v=$("sortp").value;if(v==="c")return;const [k,d]=v.split(":");sortK=k;sortD=+d;save();render()});
+function syncSortp(){const v=sortK+":"+sortD;$("sortp").value=[...$("sortp").options].some(o=>o.value===v)?v:"c"}
+document.querySelectorAll("th button[data-k]").forEach(b=>b.addEventListener("click",()=>{const k=b.dataset.k;if(sortK===k)sortD=-sortD;else{sortK=k;sortD=(k==="r"||k==="id"||k==="g"||k==="t"||k==="c"||k==="ph")?1:-1}save();render()}));
+function key(r){const n=N(r);switch(sortK){case "r":return RK.get(r[0])||1e9;case "id":return r[0];case "g":return G[r[1]];case "t":return r[2];case "c":return n.c;case "ph":return 1-PHN[n.ph][0];case "p":return n.R;case "f":return n.F;case "se":return SEEN[n.se][0];default:return prio(r)}}
+let shown=[],RK=new Map();
+function idCell(r){const td=el("td"),s=el("div","gsh");s.title=G[r[1]];s.append(el("span","dot"),GS[r[1]]);td.append(el("div","id",r[0]),s);return td}
+function el(t,c,x){const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
+function bar(l,v){const w=el("div","sr"),b=el("div","pbar"),i=el("i");i.style.width=(v*10)+"%";i.style.background=rzCol(v,1);b.appendChild(i);w.append(el("span","sl",l),el("span","sv",String(v)),b);return w}
+function render(){
+  const q=$("q").value.trim().toLowerCase(),s=$("fs").value,mp=+$("fp").value,mf=+$("ff").value,only=$("fo").checked,fd=$("fd").value,nph=$("fph").checked;
+  RK=new Map([...picks].map((id,i)=>[id,i+1]));
+  const nf=(s?1:0)+(mp?1:0)+(mf?1:0)+(only?1:0)+(fd?1:0)+(nph?1:0)+FG.size;$("fcount").textContent=nf;$("fcount").hidden=!nf;
+  shown=I.filter(r=>{const n=N(r);return(!FG.size||FG.has(r[1]))&&(!s||n.c===+s)&&n.R>=mp&&n.F>=mf&&(!only||picks.has(r[0]))&&(!nph||n.ph!=="high")&&(!fd||(fd==="done")===!!DONE[r[0]])&&(!q||(r[0]+" "+r[2]+" "+r[3]+" "+G[r[1]]).toLowerCase().includes(q))});
+  shown.sort((a,b)=>{const x=key(a),y=key(b);const c=typeof x==="string"?x.localeCompare(y):x-y;if(c)return c*sortD;const t=prio(b)-prio(a);if(t)return t;return a[0].localeCompare(b[0])});
+  document.querySelectorAll("th button[data-k]").forEach(b=>{const on=b.dataset.k===sortK;b.classList.toggle("sorted",on);b.querySelector(".arr").textContent=on&&sortD<0?"▼":"▲"});
+  new Set([...document.querySelectorAll("th button[data-k]")].map(b=>b.closest("th"))).forEach(th=>th.setAttribute("aria-sort",th.querySelector("button.sorted")?(sortD<0?"descending":"ascending"):"none"));
+  const tb=$("tb");tb.textContent="";
+  if(!shown.length){const tr=el("tr"),td=el("td","empty","No ideas match these filters.");td.colSpan=6;tr.appendChild(td);tb.appendChild(tr)}
+  for(const r of shown){
+    const n=N(r),P=prio(r),B=DONE[r[0]],tr=el("tr",(picks.has(r[0])?"on":"")+(B&&!B.part?" done":""));tr.style.setProperty("--gc",GC[r[1]]);const c0=el("td"),cb=el("input");cb.type="text";cb.inputMode="numeric";cb.className="rin";cb.id="c-"+r[0];cb.value=RK.get(r[0])||"";cb.placeholder="–";cb.setAttribute("aria-label","Rank for "+r[2]);if(B&&!B.part){cb.disabled=true;cb.title="Built";cb.value="✓"}
+    cb.addEventListener("change",()=>{const k=parseInt(cb.value,10),x=[...picks].filter(i=>i!==r[0]);if(k>0)x.splice(Math.min(k,x.length+1)-1,0,r[0]);picks=new Set(x);save();render()});
+    cb.addEventListener("keydown",e=>{if(e.key==="Enter")cb.blur()});
+    c0.appendChild(cb);
+    const ci=el("td","ic"),tt=el("div","t"),tid=el("span","tid",r[0]+" ");tt.append(tid,r[2]);const dd=el("div","desc",r[3]),mt=el("div","meta");
+    mt.textContent="R "+n.R+" · F "+n.F+" · "+SEEN[n.se][1]+" · "+COST[n.c][0]+(n.ph!=="none"?" · phone "+PHN[n.ph][1].toLowerCase():"");ci.append(tt,dd,mt);
+    if(n.dp.length)ci.appendChild(el("div","deps","Needs: "+n.dp.map(d=>d+" "+(IDS.get(d)?IDS.get(d)[2]:"")+(DONE[d]&&!DONE[d].part?" (built)":"")).join(", ")));
+    if(B){ci.append(el("span","built"+(B.part?" part":""),(B.part?"Started ":"Built ")+B.d+(B.part&&B.pc!=null?" · "+B.pc+"% done":"")));ci.appendChild(el("div","bnote"+(B.part?" part":""),B.n))}
+    const cc=el("td","cost");cc.append(el("div","cl",COST[n.c][0]),el("div","cs","~"+pct(hrs(r))+" of wk"));if(n.ph!=="none")cc.appendChild(el("span","tagph"+(n.ph==="low"?" low":""),"Phone: "+PHN[n.ph][1].toLowerCase()));
+    const sc=el("td","score");sc.append(bar("R",n.R),bar("F",n.F),el("div","seen",SEEN[n.se][1]));
+    const pc=el("td","pri"),pb=el("div","pbar"),pi=el("i");pi.style.width=P+"%";pb.appendChild(pi);pc.append(el("div","pn",String(P)),pb);
+    tr.addEventListener("click",e=>{if(e.target.closest("input,button"))return;tr.classList.toggle("open")});
+    tr.append(c0,idCell(r),ci,cc,sc,pc);
+    tb.appendChild(tr)
+  }
+  syncSortp();$("count").textContent=shown.length+" of "+I.length+" shown";
+  totals()
+}
+function totals(){
+  const p=[...picks].map(id=>IDS.get(id)),h=p.reduce((a,r)=>a+hrs(r),0);
+  $("nPick").textContent=p.length;$("hPick").textContent=Math.round(p.reduce((a,r)=>a+COST[N(r).c][1],0));
+  $("tPick").textContent=Math.round(h);$("pPick").textContent=pct(h);
+  $("rPick").textContent=p.reduce((a,r)=>a+N(r).R,0);$("fPick").textContent=p.reduce((a,r)=>a+N(r).F,0);
+  $("send").disabled=!p.length||!MCP;$("copy").disabled=!p.length;
+  groupTable();
+}
+$("clear").addEventListener("click",()=>{picks.clear();save();render()});
+$("note").addEventListener("input",save);
+function noteLbl(){$("notebtn").textContent=$("note").value.trim()?"Note ✓":"Note"}
+$("notebtn").addEventListener("click",()=>{const n=$("note"),o=n.hidden;n.hidden=!o;$("notebtn").setAttribute("aria-expanded",o);if(o)n.focus()});
+$("note").addEventListener("input",noteLbl);noteLbl();
+function message(){
+  const p=[...picks].map(id=>IDS.get(id)),n=$("note").value.trim(),h=p.reduce((a,r)=>a+hrs(r),0);
+  let m="Corley's Island idea board picks, in my ranked order, 1 = most wanted ("+p.length+", ~"+Math.round(p.reduce((a,r)=>a+COST[N(r).c][1],0))+" sessions, ~"+pct(h)+" of a week):\n";
+  m+=p.map((r,i)=>{const x=N(r);return (i+1)+". "+r[0]+" "+r[2]+": "+r[3]+" ["+COST[x.c][0]+", realism "+x.R+", fun "+x.F+", seen "+SEEN[x.se][1].toLowerCase()+", phone "+x.ph+", priority "+prio(r)+(x.dp.length?", needs "+x.dp.join(" "):"")+"]"}).join("\n");
+  if(n)m+="\n\nNote: "+n;
+  return m+"\n\nPlease build these for Corley's Island (repo corleythax-creator/backhoe-dig; ids match docs/IDEAS.md).";
+}
+const st=$("status");
+$("copy").addEventListener("click",async()=>{
+  const t=message(),box=$("copybox");
+  try{await navigator.clipboard.writeText(t);st.textContent="Copied. Paste it into your chat with Claude.";box.hidden=true}
+  catch(e){box.value=t;box.hidden=false;box.focus();box.select();st.textContent="Copy the selected text below and paste it into your chat with Claude."}
+});
+let MCP=null,sending=false;
+$("send").addEventListener("click",async()=>{
+  if(sending||!MCP)return;sending=true;$("send").disabled=true;st.textContent="Sending...";
+  try{await MCP.callTool("Claude Code Remote","send_message",{session_id:SID,message:message()});st.textContent="Sent to Claude. The work starts in your Corley's Island session."}
+  catch(e){const c=e&&e.code;st.textContent=(c==="consent_denied"||c==="not_granted"?"Sending needs your OK for the Claude Code Remote connector. ":"Couldn't send ("+(c||"error")+"). ")+"Use Copy and paste it into a chat instead."}
+  sending=false;totals()
+});
+(function(){const st=$("stats"),add=(b,t)=>{const x=el("span","stat");x.append(el("b",null,b),t);st.appendChild(x)};add(I.length,"ideas");add(Object.keys(G).length,"groups");add("~"+Math.round(I.reduce((a,r)=>a+COST[N(r).c][1],0)),"sessions in all")})();
+render();
+if(window.claude&&window.claude.use)window.claude.use("mcp").then(m=>{MCP=m;if(!m)$("send").hidden=true;totals()}).catch(()=>{$("send").hidden=true});
+else $("send").hidden=true;
+</script>

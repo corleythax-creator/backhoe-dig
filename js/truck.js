@@ -1,4 +1,4 @@
-// Backhoe Dig: the dump truck and its driving, plus texture hookup once the images load.
+// Corley's Island: the dump truck and its driving, plus texture hookup once the images load.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 // ---------- dump truck ----------
 const WHITE=M(0xe9ecea,PAINT),WHITE_DS=M(0xe9ecea,Object.assign({side:THREE.DoubleSide},PAINT)),BEDM=M(0x6c7378),BED_D=M(0x4c5257),TGLASS=new THREE.MeshPhongMaterial({color:0x5f7f93,shininess:90,flatShading:true,transparent:true,opacity:0.35,depthWrite:false,envMap:skyEnv,combine:THREE.MixOperation,reflectivity:0.9}),TAIL=M(0xd0281c,{emissive:0x400804}),REV=M(0xf4f1e6,{emissive:0x202018});

@@ -1,4 +1,4 @@
-// Backhoe Dig: minimap and big site map.
+// Corley's Island: minimap and big site map.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 // ---------- maps ----------
 const MAP_HALF=120,BG_PX=480;let mapBg=null,digLayer=null,mapDirty=true,mapT=0;
