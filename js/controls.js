@@ -57,13 +57,13 @@ addEventListener('blur',clearKeys);document.addEventListener('visibilitychange',
 const held=id=>keyBind[id].some(c=>c&&keys[c]),kv=(a,b)=>(held(a)?1:0)-(held(b)?1:0);
 // keys ease in over ~0.2 s and out over ~0.1 s so a tap nudges and a hold runs smooth; Fine control (Shift) is a slow gear
 const KA={lx:0,ly:0,rx:0,ry:0};
-function keyAxes(dt){const f=held('fine')?0.3:1;
+function keyAxes(dt){const f=mode!=='walk'&&held('fine')?0.3:1;
   const t={lx:kv('lRight','lLeft'),ly:kv('lUp','lDown'),rx:kv('rRight','rLeft'),ry:kv('rUp','rDown')};
   for(const k in t){const g=clamp(t[k],-1,1)*f,r=(g===0?10:5)*dt;KA[k]+=clamp(g-KA[k],-r,r)}}
 // game controller (standard mapping): sticks = the two on-screen sticks, triggers = gas / reverse when driving,
 // LB/RB switch machine, Y cab view, View map, Menu help, B closes (or gets in and out of machines), A sets a block,
 // D-pad runs blocks (in Walk mode A jumps and X sets a block); a line strike rumbles
-const PA={lx:0,ly:0,rx:0,ry:0,thr:0},padPrev=[];let padIdx=-1,padUsed=false;
+const PA={lx:0,ly:0,rx:0,ry:0,thr:0,sprint:false},padPrev=[];let padIdx=-1,padUsed=false;
 addEventListener('gamepadconnected',e=>{padIdx=e.gamepad.index;toast('Controller ready. LB / RB switch machine, Y cab view.','good',3500)});
 addEventListener('gamepaddisconnected',e=>{if(e.gamepad.index===padIdx)padIdx=-1;for(const k in PA)PA[k]=0;padPrev.length=0});
 function getPad(){if(!navigator.getGamepads)return null;const all=navigator.getGamepads();
@@ -82,9 +82,9 @@ function padButton(i){usePad();
   else if(i===8)toggleMap();
   else if(i===9)help.hidden=!help.hidden;
   else if(i===1){const open=!help.hidden||!$('#bigmap').hidden;help.hidden=true;toggleMap(false);if(!open&&(mode==='walk'||wk.inside))seatToggle()}}
-function pollPad(){for(const k in PA)PA[k]=0;const gp=getPad();if(!gp)return;
+function pollPad(){for(const k in PA)PA[k]=0;PA.sprint=false;const gp=getPad();if(!gp)return;
   const dz=v=>Math.abs(v)<0.15?0:(v-Math.sign(v)*0.15)/0.85,ax=gp.axes,b=gp.buttons,bv=i=>b[i]?b[i].value:0;
-  PA.lx=dz(ax[0]||0);PA.ly=-dz(ax[1]||0);PA.rx=dz(ax[2]||0);PA.ry=-dz(ax[3]||0);PA.thr=bv(7)-bv(6);
+  PA.lx=dz(ax[0]||0);PA.ly=-dz(ax[1]||0);PA.rx=dz(ax[2]||0);PA.ry=-dz(ax[3]||0);PA.thr=bv(7)-bv(6);PA.sprint=!!(b[10]&&b[10].pressed);
   for(let i=0;i<b.length;i++){const on=b[i].pressed;if(on&&!padPrev[i])padButton(i);padPrev[i]=on}
   if(PA.lx||PA.ly||PA.rx||PA.ry||Math.abs(PA.thr)>0.05)usePad()}
 function rumble(ms,mag){const gp=getPad(),va=gp&&gp.vibrationActuator;

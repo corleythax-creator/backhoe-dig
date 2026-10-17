@@ -2,7 +2,8 @@
 // and the Keys panel (☰ menu) that lists what each key does and lets any of them be changed.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 // ---------- actions ----------
-// g: group in the panel, n: name, d: what it does in each mode, k: default keys (up to two)
+// g: group in the panel, n: name, d: what it does in each mode, k: default keys (up to two), s: where it works ('walk' on
+// foot, 'ride' in a machine, otherwise everywhere). One key can do one job on foot and another in a machine
 const KEY_ACTIONS=[
   {id:'lUp',g:'Sticks',n:'Left stick up',d:'Stick out · drive forward · gas · left lap bar forward · walk forward',k:['KeyW','ArrowUp']},
   {id:'lDown',g:'Sticks',n:'Left stick down',d:'Stick in · drive back · brake and reverse · left lap bar back · walk back',k:['KeyS','ArrowDown']},
@@ -12,7 +13,7 @@ const KEY_ACTIONS=[
   {id:'rDown',g:'Sticks',n:'Right stick down',d:'Boom up · bed down · right lap bar back · look down',k:['KeyK']},
   {id:'rLeft',g:'Sticks',n:'Right stick left',d:'Curl the bucket in (scoop) · turn left on foot',k:['KeyJ']},
   {id:'rRight',g:'Sticks',n:'Right stick right',d:'Dump the bucket · turn right on foot',k:['KeyL']},
-  {id:'fine',g:'Sticks',n:'Fine control',d:'Hold for slow, careful moves',k:['ShiftLeft','ShiftRight']},
+  {id:'fine',g:'Sticks',n:'Fine control',d:'Hold for slow, careful moves in a machine',k:['ShiftLeft','ShiftRight'],s:'ride'},
   {id:'dig',g:'Modes',n:'Dig',d:'Run the excavator arm',k:['Digit1']},
   {id:'drive',g:'Modes',n:'Drive',d:'Drive the excavator on its tracks',k:['Digit2']},
   {id:'truck',g:'Modes',n:'Truck',d:'Drive the dump truck',k:['Digit3']},
@@ -20,7 +21,8 @@ const KEY_ACTIONS=[
   {id:'walk',g:'Modes',n:'Walk',d:'Get out and walk',k:['Digit5']},
   {id:'nextMode',g:'Modes',n:'Next mode',d:'With Shift held, the one before',k:['Tab']},
   {id:'enter',g:'On foot',n:'Get in / get out',d:'Climb into the machine you are standing next to; press again to climb out',k:['KeyF']},
-  {id:'jump',g:'On foot',n:'Jump',d:'About 6 ft: onto blocks and up stacks',k:['Space']},
+  {id:'jump',g:'On foot',n:'Jump',d:'About 6 ft: onto blocks and up stacks',k:['Space'],s:'walk'},
+  {id:'sprint',g:'On foot',n:'Sprint',d:'Hold to run flat out, about 12 mph',k:['ShiftLeft','ShiftRight'],s:'walk'},
   {id:'blocks',g:'Blocks',n:'Blocks on / off',d:'Show the block bar and the outline where one lands',k:['KeyB']},
   {id:'place',g:'Blocks',n:'Place block',d:'Under the bucket, or in front of you on foot',k:['KeyE']},
   {id:'lift',g:'Blocks',n:'Lift block',d:'The top block under the bucket, or the one in front of you',k:['KeyX']},
@@ -49,9 +51,11 @@ function keyName(c){if(!c)return '—';
   if(n)return n;if(/^Key[A-Z]$/.test(c))return c.slice(3);if(/^Digit\d$/.test(c))return c.slice(5);if(/^Numpad/.test(c))return 'Num '+c.slice(6);return c}
 // the first key bound to an action, for captions and tips
 function keyLabel(id){const b=keyBind[id];return keyName(b[0]||b[1])}
-// give a key to an action (taking it from any other); returns the name of the action it came from, if any
+// two actions clash on a key unless one only works on foot and the other only in a machine
+function keyClash(a,b){const x=KEY_BY[a].s,y=KEY_BY[b].s;return !x||!y||x===y}
+// give a key to an action (taking it from any other it would clash with); returns the name of the action it came from, if any
 function keyAssign(id,slot,code){let from='';
-  if(code)for(const o in keyBind){const i=keyBind[o].indexOf(code);if(i>=0&&!(o===id&&i===slot)){keyBind[o][i]='';from=KEY_BY[o].n}}
+  if(code)for(const o in keyBind){const i=keyBind[o].indexOf(code);if(i>=0&&!(o===id&&i===slot)&&keyClash(o,id)){keyBind[o][i]='';from=KEY_BY[o].n}}
   keyBind[id][slot]=code;keySave();return from}
 // ---------- Keys panel ----------
 const keysBox=$('#keysBox');let keyCap=null;
