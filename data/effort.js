@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-17T23:14:35Z",
+ "updated": "2026-10-17T23:32:34Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 443,
-   "act": 10.5,
-   "versions": 63
+   "dh": 464,
+   "act": 11.0,
+   "versions": 66
   }
  ],
  "extra": [
@@ -660,6 +660,33 @@ window.EFFORT = {
    "tris": 1154238,
    "chars": 389546,
    "what": "Mower keys: on a keyboard W and S (or the arrows) now drive the zero-turn straight and A and D turn it, instead of working only the left lap bar so it spun on its own. The number pad works the lap bars: 8 and 2 both forward or back, 4 and 6 spin in place, 7 and 1 the left bar, 9 and 3 the right bar, all changeable in the Keys panel. Touch and controller sticks still work one lap bar each."
+  },
+  {
+   "v": 71,
+   "asked": "2026-10-17T18:12:00-05:00",
+   "live": "2026-10-17T18:22:23-05:00",
+   "dh": 1,
+   "tris": 1154238,
+   "chars": 389790,
+   "what": "Fix: a puddle in a rut on a slope could spread over the untouched ground below it and cover the dig area with a flat slab of water. Water now only stands where the ground is dug or rutted below grade, and slabs already in saved sites drain away on load."
+  },
+  {
+   "v": 72,
+   "asked": "2026-10-17T18:16:00-05:00",
+   "live": "2026-10-17T18:40:00-05:00",
+   "dh": 4,
+   "tris": 1154238,
+   "chars": 391968,
+   "what": "Ground texture pack: new seamless grass, dirt and machine grime, each at 512, 1024 and 2048 px and loaded by the Graphics setting (Low, Medium, High), plus a soft macro map that breaks up the repeat across the lawns and yards. The neutral textures take the island's own colours; the grime is brightened so the machines keep their paint."
+  },
+  {
+   "v": 73,
+   "asked": "2026-10-17T17:45:00-05:00",
+   "live": "2026-10-17T18:32:34-05:00",
+   "dh": 16,
+   "tris": 1154238,
+   "chars": 406502,
+   "what": "Rain: showers roll through now and then (or set Weather to Rain or Dry in the menu). Rain soaks the soil by what is there: dug dirt, dirt yards, clay and topsoil turn to mud first, dirt roads and grass get soft, sand and gravel drain, rock and paving stay hard, and low ground soaks fastest. The soaked ground ruts, holds puddles and bogs machines down like painted mud, and rain fills holes and ruts. When it stops the soil dries over several minutes (sand fast, clay slow), the puddles drain and wet spoil dries, and it keeps drying while the game is closed. The sky greys over, rain streaks fall (fewer on phones), the ground takes a wet sheen and there is a rain hiss. Wet ground and weather sync between devices."
   }
  ]
 };

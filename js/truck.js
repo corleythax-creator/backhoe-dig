@@ -359,7 +359,7 @@ function applyTextures(){
   const grey=greyDetail(texDirt);heap.material.map=grey;heap.material.needsUpdate=true;
   ORANGE.color.setHex(0xf27a22);ORANGE_D.color.setHex(0xc85e1c);
   loadMesh.material.map=grey;loadMesh.material.needsUpdate=true;
-  pMat.map=texDirt;pMat.color.setHex(0xd0b8a6);pMat.needsUpdate=true;
+  pMat.map=texDirt;pMat.color.setHex(0xc26330);pMat.needsUpdate=true;
   matTexUpdate();
   // concrete blocks wear the poured concrete texture and boulders the bedrock (materials.js), brightened back to their colours
   const lib=(id,mean,mt)=>new THREE.TextureLoader().load(`textures/${id}.jpg`,t=>{const g=greyDetail(t,mean);if(!g)return;
