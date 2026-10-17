@@ -206,7 +206,9 @@ function texTierSet(k){if(!['low','med','high'].includes(k))return;macroSet(k);i
 // texture repeats per metre (grass, dirt) and how strongly the macro map (one tile per 40 m) lightens and darkens
 const TEX_K={grass:0.22,dirt:0.45,macro:1.5};
 macroSet(texTier);
-const texMixU={value:0};
+// texMixU gates the extras (cut-face detail, material library, machine grime); texBaseU is the plain grass and dirt
+// texture on the ground, which Low keeps at 512 px
+const texMixU={value:0},texBaseU={value:0};
 // cut-face detail painted on dug and dumped dirt, by layer (the same depths as layerAt): roots and runners in topsoil,
 // grey mottles and pebbles in clay, fine streaks in sand, cracks in rock, crumbs in loose fill, and on steep cuts the
 // grooves the bucket's five teeth leave, about 7 in apart. vSD is depth below original grade (negative for fill).
@@ -233,14 +235,14 @@ vec3 faceDetail(vec3 wp,float d,float pz){
 const groundOcc={value:[new THREE.Vector4(0,0,0,0),new THREE.Vector4(1.4,2.0,0,0),new THREE.Vector4(0,0,0,0),new THREE.Vector4(1.2,3.9,0.0,0)]};
 const groundMat=M(0xffffff,{vertexColors:true});
 groundMat.onBeforeCompile=sh=>{
-  sh.uniforms.tGrass={value:texGrass};sh.uniforms.tDirt={value:texDirt};sh.uniforms.tMacro={value:texMacro};sh.uniforms.uMacro=macroU;sh.uniforms.texMix=texMixU;sh.uniforms.uTime=timeU;sh.uniforms.uPipeZ={value:PIPE_Z};
+  sh.uniforms.tGrass={value:texGrass};sh.uniforms.tDirt={value:texDirt};sh.uniforms.tMacro={value:texMacro};sh.uniforms.uMacro=macroU;sh.uniforms.texMix=texMixU;sh.uniforms.texBase=texBaseU;sh.uniforms.uTime=timeU;sh.uniforms.uPipeZ={value:PIPE_Z};
   // wetT: when this ground was last cut or dumped; fresh dirt shows dark and damp and dries over a few minutes
   sh.vertexShader='attribute float dirt;\nattribute float wetT;\nattribute float soilD;\nattribute float matA;\nattribute float mudW;\nuniform float uTime;\nvarying float vMud;\nvarying float vDirt;\nvarying float vWet;\nvarying float vSD;\nvarying float vMatA;\nvarying vec2 vWXZ;\nvarying vec3 vWP;\n'+sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvDirt=dirt;\nvMud=mudW;\nvSD=soilD;\nvMatA=matA;\nvWet=exp(-max(0.0,uTime-wetT)/100.0);\nvWP=(modelMatrix*vec4(transformed,1.0)).xyz;\nvWXZ=vWP.xz;');
   // texture detail goes in ahead of the vertex colour so it is turned linear with it. groundOcc: sky light under the
   // excavator and truck, dimmed by distance to each footprint (x, z, yaw, unused; half width, half length, forward offset, unused)
   sh.uniforms.uOcc=groundOcc;Object.assign(sh.uniforms,matU);
-  sh.fragmentShader=`#define GRASS_K ${TEX_K.grass.toFixed(3)}\n#define DIRT_K ${TEX_K.dirt.toFixed(3)}\n`+'uniform sampler2D tGrass;\nuniform sampler2D tDirt;\nuniform sampler2D tMacro;\nuniform float uMacro;\nuniform float texMix;\nuniform float uPipeZ;\nuniform vec4 uOcc[4];\nvarying float vMud;\nvarying float vDirt;\nvarying float vWet;\nvarying float vSD;\nvarying float vMatA;\nvarying vec2 vWXZ;\nvarying vec3 vWP;\n'+MAT_GLSL_HEAD+FACE_GLSL+sh.fragmentShader.replace('#include <specularmap_fragment>','#include <specularmap_fragment>\nspecularStrength*=1.0+7.0*vWet*vDirt*(1.0-vMud)+2.0*vMud;').replace('#include <color_fragment>',
-    'vec3 tg=texture2D(tGrass,vWXZ*GRASS_K).rgb/vec3(0.443,0.486,0.385);\nvec3 td=texture2D(tDirt,vWXZ*DIRT_K).rgb/vec3(0.491,0.467,0.431);\nvec3 gd=clamp(mix(tg,td,vDirt),0.0,2.2)*(uMacro>0.0?mix(1.0,texture2D(tMacro,vWXZ*0.025).r/0.502,uMacro):1.0);float gk=0.8;\n'+matGlsl()+'diffuseColor.rgb*=mix(vec3(1.0),gd,gk*texMix);\ndiffuseColor.rgb*=1.0-0.32*max(vWet*vDirt,0.6*vMud);\nif(vDirt>0.01&&texMix>0.5)diffuseColor.rgb*=mix(vec3(1.0),faceDetail(vWP,vSD,uPipeZ),vDirt);\n#include <color_fragment>').replace('#include <lights_fragment_end>',
+  sh.fragmentShader=`#define GRASS_K ${TEX_K.grass.toFixed(3)}\n#define DIRT_K ${TEX_K.dirt.toFixed(3)}\n`+'uniform sampler2D tGrass;\nuniform sampler2D tDirt;\nuniform sampler2D tMacro;\nuniform float uMacro;\nuniform float texMix;\nuniform float texBase;\nuniform float uPipeZ;\nuniform vec4 uOcc[4];\nvarying float vMud;\nvarying float vDirt;\nvarying float vWet;\nvarying float vSD;\nvarying float vMatA;\nvarying vec2 vWXZ;\nvarying vec3 vWP;\n'+MAT_GLSL_HEAD+FACE_GLSL+sh.fragmentShader.replace('#include <specularmap_fragment>','#include <specularmap_fragment>\nspecularStrength*=1.0+7.0*vWet*vDirt*(1.0-vMud)+2.0*vMud;').replace('#include <color_fragment>',
+    'vec3 tg=texture2D(tGrass,vWXZ*GRASS_K).rgb/vec3(0.443,0.486,0.385);\nvec3 td=texture2D(tDirt,vWXZ*DIRT_K).rgb/vec3(0.491,0.467,0.431);\nvec3 gd=clamp(mix(tg,td,vDirt),0.0,2.2)*(uMacro>0.0?mix(1.0,texture2D(tMacro,vWXZ*0.025).r/0.502,uMacro):1.0);float gk=0.8;\n'+matGlsl()+'diffuseColor.rgb*=mix(vec3(1.0),gd,gk*texBase);\ndiffuseColor.rgb*=1.0-0.32*max(vWet*vDirt,0.6*vMud);\nif(vDirt>0.01&&texMix>0.5)diffuseColor.rgb*=mix(vec3(1.0),faceDetail(vWP,vSD,uPipeZ),vDirt);\n#include <color_fragment>').replace('#include <lights_fragment_end>',
     'float skyO=1.0;\nfor(int m=0;m<4;m+=2){vec2 d=vWXZ-uOcc[m].xy;float c=cos(uOcc[m].z),s=sin(uOcc[m].z);vec2 l=vec2(d.x*c-d.y*s,d.x*s+d.y*c-uOcc[m+1].z);vec2 q=abs(l)-uOcc[m+1].xy;\nfloat dist=length(max(q,0.0))+min(max(q.x,q.y),0.0);skyO*=1.0-0.75*(1.0-smoothstep(-0.4,1.6,dist));}\nirradiance*=skyO;\n#include <lights_fragment_end>');
 };
 const geo=new THREE.PlaneGeometry(S,S,N,N); geo.rotateX(-Math.PI/2);

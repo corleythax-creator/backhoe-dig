@@ -3,9 +3,9 @@
 // Low is from the iPhone speed test (Oct 17): shadows, filmic lighting and ground detail each cost it 9-16 FPS.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 const GFX={
-  low:{name:'Low',pr:1.5,sh:1024,soft:false,filmic:false,detail:0,dirt:1,lawnFar:6,wmFine:false},
-  med:{name:'Medium',pr:1.5,sh:2048,soft:false,filmic:true,detail:1,dirt:2,lawnFar:15,wmFine:true},
-  high:{name:'High',pr:2,sh:2048,soft:true,filmic:true,detail:1,dirt:4,lawnFar:1e9,wmFine:true}};
+  low:{name:'Low',pr:1.5,sh:1024,soft:false,filmic:false,detail:0,base:1,dirt:1,lawnFar:6,wmFine:false},
+  med:{name:'Medium',pr:1.5,sh:2048,soft:false,filmic:true,detail:1,base:1,dirt:2,lawnFar:15,wmFine:true},
+  high:{name:'High',pr:2,sh:2048,soft:true,filmic:true,detail:1,base:1,dirt:4,lawnFar:1e9,wmFine:true}};
 let gfxKey='high';
 function gfxGuess(){if(PHONE)return 'low';
   try{const gl=renderer.getContext(),ext=gl.getExtension('WEBGL_debug_renderer_info'),r=ext?gl.getParameter(ext.UNMASKED_RENDERER_WEBGL):'';if(/intel/i.test(r))return 'med'}catch(e){}
@@ -21,8 +21,8 @@ function setGfx(k,picked){const g=GFX[k]?GFX[k]:GFX[gfxGuess()];gfxKey=GFX[k]?k:
   if(renderer.shadowMap.type!==st||renderer.toneMapping!==tm){renderer.shadowMap.type=st;renderer.toneMapping=tm;
     scene.traverse(o=>{if(o.material)for(const m of [].concat(o.material))m.needsUpdate=true})}
   renderer.toneMappingExposure=te;
-  // ground detail: the dirt and grass textures and the cut-face detail
-  gfxDetail=g.detail;if(texOn){texMixU.value=gfxDetail;matTexUpdate()}
+  // ground detail: the cut-face detail, material library and machine grime (detail), and the grass and dirt textures (base: all three tiers)
+  gfxDetail=g.detail;gfxBase=g.base;if(texOn){texMixU.value=gfxDetail;texBaseU.value=gfxBase;matTexUpdate()}
   // the ground pack's size for this setting (terrain.js)
   texTierSet(gfxKey);
   // puddles: a finer water surface with sky reflections, or a 1 ft one without (water.js); the water itself is the same

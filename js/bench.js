@@ -10,7 +10,7 @@ function benchMats(){scene.traverse(o=>{if(o.material)for(const m of [].concat(o
 const DIAG_OFF={
   shadows:on=>{sun.castShadow=!on},
   lighting:on=>{if(on){benchSaved.set('tm',renderer.toneMapping);renderer.toneMapping=THREE.NoToneMapping}else if(benchSaved.has('tm')){renderer.toneMapping=benchSaved.get('tm');benchSaved.delete('tm')}benchMats()},
-  ground:on=>{if(on){benchSaved.set('tex',texMixU.value);texMixU.value=0}else if(benchSaved.has('tex')){texMixU.value=benchSaved.get('tex');benchSaved.delete('tex')}},
+  ground:on=>{if(on){benchSaved.set('tex',[texMixU.value,texBaseU.value]);texMixU.value=0;texBaseU.value=0}else if(benchSaved.has('tex')){[texMixU.value,texBaseU.value]=benchSaved.get('tex');benchSaved.delete('tex')}},
   grass:on=>{for(const m of [tufts,lawnClumps,lawnFar,clipMesh]){if(on){benchSaved.set(m,m.visible);m.visible=false}else if(benchSaved.has(m)){m.visible=benchSaved.get(m);benchSaved.delete(m)}}},
   clear:on=>{if(on){const hid=[];scene.traverse(o=>{if(o.visible&&o.material&&[].concat(o.material).some(m=>m.transparent)){hid.push(o);o.visible=false}});benchSaved.set('clear',hid)}
     else if(benchSaved.has('clear')){for(const o of benchSaved.get('clear'))o.visible=true;benchSaved.delete('clear')}},

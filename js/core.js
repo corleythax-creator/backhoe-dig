@@ -10,7 +10,7 @@ const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
 // at 1x scene load and still 39 at three times the triangles): cap them at 1.5x and give them cheaper shadows
 const PHONE=matchMedia('(pointer: coarse)').matches&&Math.min(screen.width,screen.height)<=1000;
 // gfx.js sets these from the Graphics setting (Low, Medium, High); these are the defaults until it loads
-let maxPR=Math.min(devicePixelRatio||1,PHONE?1.5:2),gfxDetail=1,texOn=false;let pr=maxPR,lowN=0,hiN=0,prHold=0,viewDirty=false;
+let maxPR=Math.min(devicePixelRatio||1,PHONE?1.5:2),gfxDetail=1,gfxBase=1,texOn=false;let pr=maxPR,lowN=0,hiN=0,prHold=0,viewDirty=false;
 renderer.setPixelRatio(pr);
 // resizing the canvas wipes it, so resolution changes and window resizes only set viewDirty; the frame loop applies them
 // just before it draws (applying them after a draw left that frame black, which flashed on phones)
