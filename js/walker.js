@@ -3,7 +3,7 @@
 // ---------- worker ----------
 // about 5 ft 10 in: hard hat, hi-vis vest over a grey shirt, jeans and work boots. Arms and legs swing from the
 // shoulders and hips; knees bend on the back swing and tuck in the air
-const WK_H=1.78,WK_R=0.28,WK_STEP=0.2,WK_JUMP=6.2,WK_RUN=2.8,WK_REACH=2.3;
+const WK_H=1.78,WK_R=0.28,WK_STEP=0.2,WK_JUMP=6.2,WK_RUN=2.8,WK_SPRINT=5.6,WK_REACH=2.3;
 const WK_SKIN=M(0xc68a62),WK_VEST=M(0xd8f02a,{emissive:0x1d2400}),WK_SHIRT=M(0x6d7378),WK_JEAN=M(0x34507a),WK_BOOT=M(0x4a3020),WK_HAT=M(0xf5c518,{shininess:40}),WK_STRIPE=M(0xd8dcd6,{emissive:0x2a2a2a});
 const walker=new THREE.Group();scene.add(walker);
 const wkBody=new THREE.Group();walker.add(wkBody);
@@ -48,7 +48,8 @@ function wkPushBlocks(){let bump=false;
 // the machines are solid too (a row of circles each, as for blocks)
 function wkPushRound(o,lzs,r){for(const lz of lzs){const cx=o.x+Math.sin(o.yaw)*lz,cz=o.z+Math.cos(o.yaw)*lz,dx=wk.x-cx,dz=wk.z-cz,d=Math.hypot(dx,dz),m=r+WK_R;
   if(d<m&&d>1e-4){wk.x+=dx/d*(m-d);wk.z+=dz/d*(m-d)}}}
-// mx, mz: move input (stick right, stick up); lookX, lookY: right stick; jump: a press waiting to be used
+// mx, mz: move input (stick right, stick up); lookX, lookY: right stick. Sprint (Shift, controller left stick click) doubles
+// the jog to about 12 mph
 function updateWalker(dt,mx,mz,lookX,lookY){
   // in a cab he rides along out of sight
   if(wk.inside){walker.visible=false;return}
@@ -57,7 +58,8 @@ function updateWalker(dt,mx,mz,lookX,lookY){
   // moves relative to where the camera looks; the worker turns to face the way he walks
   let vx=0,vz=0;
   if(on){const cyaw=camMode==='cab'?wk.view:wk.view+orbitYaw,fx=Math.sin(cyaw),fz=Math.cos(cyaw),m=Math.min(1,Math.hypot(mx,mz));
-    if(m>0.02){vx=(fx*mz-fz*mx)*WK_RUN;vz=(fz*mz+fx*mx)*WK_RUN;
+    const top=held('sprint')||PA.sprint?WK_SPRINT:WK_RUN;
+    if(m>0.02){vx=(fx*mz-fz*mx)*top;vz=(fz*mz+fx*mx)*top;
       if(camMode!=='cab'){let a=Math.atan2(vx,vz)-wk.yaw;a=Math.atan2(Math.sin(a),Math.cos(a));wk.yaw+=a*Math.min(1,dt*12)}}
     if(camMode==='cab')wk.yaw=wk.view}
   const sp=Math.hypot(vx,vz);wk.spd+=(sp-wk.spd)*Math.min(1,dt*10);
@@ -78,13 +80,14 @@ function updateWalker(dt,mx,mz,lookX,lookY){
     if(wk.y<=f2&&wk.vy<=0){if(wk.vy<-8){shake=reduceMotion?0:0.1}wk.y=f2;wk.vy=0;wk.ground=true;wk.landT=0.18;wk.airT=0}}
   wk.landT=Math.max(0,wk.landT-dt);
   // pose: a walk cycle that lengthens into a jog, arms counter-swinging; legs tuck in the air, a dip on landing
-  const run=Math.min(1,wk.spd/WK_RUN);if(wk.ground)wk.phase+=dt*(4+6*run)*Math.min(1,wk.spd*2);
-  const sw=Math.sin(wk.phase)*(0.25+0.55*run)*Math.min(1,wk.spd*1.5);
+  // sprinting quickens the stride, swings the limbs wider and leans him further forward
+  const run=Math.min(1,wk.spd/WK_RUN),fast=clamp((wk.spd-WK_RUN)/(WK_SPRINT-WK_RUN),0,1);if(wk.ground)wk.phase+=dt*(4+6*run+4*fast)*Math.min(1,wk.spd*2);
+  const sw=Math.sin(wk.phase)*(0.25+0.55*run+0.25*fast)*Math.min(1,wk.spd*1.5);
   for(let s=0;s<2;s++){const a=s?sw:-sw,L=wkLegs[s],A=wkArms[s];
     if(wk.ground){L.top.rotation.x=a;L.low.rotation.x=Math.max(0,-a)*1.3+0.05;A.top.rotation.x=-a*0.9;A.low.rotation.x=-0.25-run*0.6}
     else{const t=Math.min(1,wk.airT*4);L.top.rotation.x=-0.7*t+(s?0.25:-0.1)*t;L.low.rotation.x=1.2*t;A.top.rotation.x=-2.2*t*(s?1:0.85);A.low.rotation.x=-0.3}}
   const bob=wk.ground?Math.abs(Math.cos(wk.phase))*0.04*run-wk.landT*0.5:0;
-  wkBody.position.y=bob;wkBody.rotation.x=0.12*run;wkHead.rotation.x=-0.1*run;
+  wkBody.position.y=bob;wkBody.rotation.x=0.12*run+0.14*fast;wkHead.rotation.x=-0.1*run;
   walker.position.set(wk.x,wk.y,wk.z);walker.rotation.y=wk.yaw;
   walker.visible=!(on&&camMode==='cab')}
 function walkJump(){if(mode!=='walk')return;wk.jumpQ=0.15;started()}
