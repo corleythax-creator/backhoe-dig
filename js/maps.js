@@ -59,6 +59,7 @@ function drawMap(cv,cx,cz,half,big){
     g.fillStyle=fill;g.strokeStyle='#14161a';g.lineWidth=1.5*dpr;g.beginPath();g.moveTo(L/2,0);g.lineTo(-L/2,-Wd/2);g.lineTo(-L/2,Wd/2);g.closePath();g.fill();g.stroke();g.restore()};
   const hy=st.yaw+st.swing;
   g.strokeStyle='#f07a22';g.lineWidth=Math.max(2,0.3*sc);g.beginPath();g.moveTo(X(st.x),Y(st.z));g.lineTo(X(tip.x),Y(tip.z));g.stroke();
+  g.beginPath();g.arc(X(wk.x),Y(wk.z),Math.max((big?5:4)*dpr,0.4*sc)*(mode==='walk'?1.3:1),0,Math.PI*2);g.fillStyle='#2fb7e8';g.fill();g.strokeStyle='#14161a';g.lineWidth=1.5*dpr;g.stroke();
   icon(mw.x,mw.z,Math.atan2(Math.cos(mw.yaw),Math.sin(mw.yaw)),'#d8352a',2.2,1.4,mode==='mow');
   icon(tr.x,tr.z,Math.atan2(Math.cos(tr.yaw),Math.sin(tr.yaw)),'#e9ecea',9.1,2.6,mode==='truck');
   icon(st.x,st.z,Math.atan2(Math.cos(hy),Math.sin(hy)),'#f07a22',4.2,3,mode==='dig'||mode==='drive');
@@ -67,7 +68,7 @@ function drawMap(cv,cx,cz,half,big){
 }
 function mapsTick(dt){
   mapT-=dt;if(mapDirty&&mapT<=0){if(!mapBg)buildMapBg();updateDigLayer();mapDirty=false;mapT=0.5}
-  const fv=mode==='truck'?tr:mode==='mow'?mw:st;
+  const fv=mode==='truck'?tr:mode==='mow'?mw:mode==='walk'?wk:st;
   drawMap($('#mini'),fv.x,fv.z,42,false);
   if(!$('#bigmap').hidden)drawMap($('#big'),0,0,MAP_HALF,true);
 }

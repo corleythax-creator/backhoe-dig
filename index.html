@@ -74,8 +74,10 @@
       <button id="modeDrive" data-k="2" aria-pressed="false">Drive</button>
       <button id="modeTruck" data-k="3" aria-pressed="false">Truck</button>
       <button id="modeMow" data-k="4" aria-pressed="false">Mow</button>
+      <button id="modeWalk" data-k="5" aria-pressed="false">Walk</button>
     </div>
     <div class="stickwrap">
+      <button id="jumpBtn" hidden>Jump</button>
       <div class="cap" id="capR"><b>◀ ▶</b> Curl / dump<br><b>▲ ▼</b> Boom down / up</div>
       <div class="stick" id="stickR"><div class="knob"></div></div>
     </div>
@@ -89,7 +91,7 @@
     <div class="legend">
       <span><i style="background:#f07a22"></i>Excavator</span><span><i style="background:#e9ecea"></i>Dump truck</span>
       <span><i style="background:#f2f2ee;height:3px"></i>Trench paint</span><span><i style="background:#f5c518;height:3px"></i>Gas main</span>
-      <span><i style="background:#b89a6b"></i>Dirt road</span><span><i style="background:#7a5232"></i>Dug or dumped</span><span><i style="background:#d8a514"></i>Trench box</span><span><i style="background:#b9b6ae"></i>Block</span><span><i style="background:#2d7a94"></i>Lake</span><span><i style="background:#a3a64c"></i>Tall grass</span><span><i style="background:#d8352a"></i>Mower</span>
+      <span><i style="background:#b89a6b"></i>Dirt road</span><span><i style="background:#7a5232"></i>Dug or dumped</span><span><i style="background:#d8a514"></i>Trench box</span><span><i style="background:#b9b6ae"></i>Block</span><span><i style="background:#2d7a94"></i>Lake</span><span><i style="background:#a3a64c"></i>Tall grass</span><span><i style="background:#d8352a"></i>Mower</span><span><i style="background:#2fb7e8;border-radius:50%;width:12px"></i>You on foot</span>
     </div>
   </div>
 </div>
@@ -136,12 +138,13 @@
       <dt>Cave-ins</dt><dd>Walls deeper than about 5 ft, or with spoil piled within 2 ft of the edge, cave in after a while. Dirt trickling off the lip means get the bucket out.</dd>
       <dt>Groundwater</dt><dd>Below about 6 ft the hole meets the water table and slowly fills with muddy water. Dirt dug from under it comes up as mud: it sticks in the bucket and truck bed, and wet spoil bogs the truck and slows the tracks. Tap Pump (or P) to dewater the hole.</dd>
       <dt>Trench box</dt><dd>Swing the bucket over the yellow box and press T (controller X, or the Hook box button). It hangs from the bucket and turns with the swing. Lower it into the trench and press again to set it. Walls between its panels can't slump or cave in, so dig deep inside it and leapfrog it along the trench.</dd>
-      <dt>Blocks</dt><dd>Tap Blocks (or press B) and pick a size: 1×1, 2×2 or 3×3 ft concrete cubes. A yellow outline shows where one lands under the bucket; tap Place (Space) to set it. They snap to a 1 ft grid and stack. Lift (X) picks up the top block under the bucket. Tracks and tires roll over a 1 ft block; taller ones stop them.</dd>
+      <dt>Walk</dt><dd>Tap Walk (or press 5) to get out and walk around as the site worker. The left stick walks the way the camera faces; push it all the way to jog. The right stick turns the camera and looks up and down. Tap Jump (Space) to jump: you can jump onto a 1 ft block, a 2 ft one or a 3 ft one, and up a stack one block at a time. Trench walls are too steep to walk up, so jump out. Cab view looks through his eyes.</dd>
+      <dt>Blocks</dt><dd>Tap Blocks (or press B) and pick a size: 1×1, 2×2 or 3×3 ft concrete cubes. A yellow outline shows where one lands under the bucket, or right in front of you in Walk mode; tap Place (Space, or E in Walk mode) to set it. They snap to a 1 ft grid and stack. Lift (X) picks up the top block under the bucket, or the one in front of you. Tracks and tires roll over a 1 ft block; taller ones stop them.</dd>
       <dt>Look</dt><dd>Drag the scene to look around.</dd>
       <dt>Map</dt><dd>Tap the minimap or press M for the big map.</dd>
       <dt>Screen</dt><dd>Tap the status card to fold it down. Speed test, Reset, Sound (on/off and volume sliders), Graphics (Low for phones, Medium for laptops, High for desktop PCs; each device remembers its own), UI size (1x, 1.5x, 2x) and Dirt detail (1x, 2x, 4x, 16x: more clods, flying dirt and lumpier loads; 16x is for screenshots and fast computers, turn it down if the game slows) are in the ☰ menu.</dd>
-      <dt>Controller</dt><dd>Sticks work like the two on-screen sticks. Triggers are gas and reverse when driving. LB / RB switch machine · Y cab view · A place block · D-pad up blocks on/off, left/right block size, down pick up · View map · Menu this help · B closes.</dd>
-      <dt>Keys</dt><dd>WASD (or arrows) is always the left stick, IJKL is always the right stick, in every mode. 1 Dig · 2 Drive · 3 Truck · 4 Mow (Tab cycles). Hold Shift for slow, fine moves. C cab view · M map · P pump · N sound on/off · H this help. Blocks: B on/off · Space place · V size · X pick up.</dd>
+      <dt>Controller</dt><dd>Sticks work like the two on-screen sticks. Triggers are gas and reverse when driving. LB / RB switch machine · Y cab view · A place block (in Walk mode A jumps and X places) · D-pad up blocks on/off, left/right block size, down pick up · View map · Menu this help · B closes.</dd>
+      <dt>Keys</dt><dd>WASD (or arrows) is always the left stick, IJKL is always the right stick, in every mode. 1 Dig · 2 Drive · 3 Truck · 4 Mow · 5 Walk (Tab cycles). Hold Shift for slow, fine moves. C cab view · M map · P pump · N sound on/off · H this help. Blocks: B on/off · Space place · V size · X pick up. Walk: Space jump · E place block.</dd>
     </dl>
     <p>To scoop: boom down until the teeth bite, curl in while pulling the stick toward you, boom up, swing, then dump.</p>
     <p class="buildlink"><a href="https://backhoe-dig.vercel.app/build.html" target="_blank" rel="noopener">See how long this took to build</a></p>
@@ -162,6 +165,7 @@
 <script src="js/gfx.js"></script>
 <script src="js/blocks.js"></script>
 <script src="js/mower.js"></script>
+<script src="js/walker.js"></script>
 <script src="js/controls.js"></script>
 <script src="js/effects.js"></script>
 <script src="js/sound.js"></script>

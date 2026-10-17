@@ -45,7 +45,7 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 /* big UI: buttons stack beside the map; the block bar shows only the chosen size, tap it to cycle */
 #hud.lg .side .row{flex-direction:column;align-items:flex-end}#hud.lg .bseg button[aria-pressed="false"]{display:none}
 #hud.lg .seg{flex-direction:row}#hud.lg .seg button{padding:0 7px}#hud.lg .seg button+button{border-top:0;border-left:1px solid var(--hud-line)}
-@media (orientation:portrait){#hud.lg .seg{position:absolute;left:50%;bottom:100%;transform:translateX(-50%);margin-bottom:6px}
+@media (orientation:portrait){#hud.lg .seg{position:absolute;left:50%;bottom:100%;transform:translateX(-50%);margin-bottom:6px;zoom:min(var(--s),1.3)}
   #hud.lg .stick{--sz:min(calc(124px*var(--s)),calc((100vw - 32px)/2))}}
 @media (orientation:landscape){#hud.lg .status .sub,#hud.lg .status .stats{display:none}
   #hud.lg .stick{--sz:min(calc(124px*var(--s)),calc(100vh - 96px*var(--ms) - 34px*var(--cs) - 40px))}}
@@ -76,6 +76,9 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 .seg button{border:0;border-radius:0;height:36px;font-size:13px;padding:0 12px}
 .seg button+button{border-top:1px solid var(--hud-line)}
 .seg button[aria-pressed="true"]{background:var(--machine);color:#1c1309}
+/* Jump takes the right stick's caption spot in Walk mode */
+#jumpBtn{height:44px;min-width:100px;font-size:18px;border-radius:22px;background:var(--machine);color:#1c1309;border:0;box-shadow:0 3px 0 rgba(0,0,0,.35);zoom:var(--cs)}
+#jumpBtn:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.35)}
 .kb .seg button::before{content:attr(data-k) " ";opacity:.6}
 #toast{position:absolute;left:0;right:0;top:32%;display:flex;justify-content:center}
 #toast span{font:800 19px/1.2 var(--f-display);letter-spacing:.03em;background:var(--hud);border:2px solid var(--machine);padding:8px 14px;border-radius:10px;text-align:center;max-width:80%;opacity:0;transition:opacity .25s}
