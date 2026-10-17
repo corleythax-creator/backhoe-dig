@@ -1,7 +1,7 @@
 // Backhoe Dig build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Backhoe Dig",
- "updated": "2026-10-17T07:05:00Z",
+ "updated": "2026-10-17T07:17:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 144,
+   "dh": 162,
    "act": 2.5,
-   "versions": 14
+   "versions": 16
   }
  ],
  "extra": [
@@ -214,11 +214,29 @@ window.EFFORT = {
   {
    "v": 21,
    "asked": "2026-10-17T01:55:00-05:00",
-   "live": "2026-10-17T02:05:00-05:00",
+   "live": "2026-10-17T01:58:00-05:00",
    "dh": 4,
    "tris": 490576,
    "chars": 95623,
    "what": "Game controller support: sticks match the on-screen sticks, triggers are gas and reverse, LB/RB switch machine, Y cab view, View map, Menu help; a line strike rumbles."
+  },
+  {
+   "v": 22,
+   "asked": "2026-10-17T01:59:00-05:00",
+   "live": "2026-10-17T02:12:00-05:00",
+   "dh": 10,
+   "tris": 490576,
+   "chars": 99643,
+   "what": "Soil layers: topsoil, red clay, sand bedding around the gas main, rock below; each digs at its own speed, holds its own slope and swells when dug; spoil keeps its colour; the HUD names the soil at the teeth."
+  },
+  {
+   "v": 23,
+   "asked": "2026-10-17T02:03:00-05:00",
+   "live": "2026-10-17T02:17:00-05:00",
+   "dh": 8,
+   "tris": 490600,
+   "chars": 103749,
+   "what": "Dump truck driving realism: weight-based acceleration and braking, grades pull on it, opposite stick brakes then shifts D/R at a stop, governed 20 mph (6 in reverse or bed up), rear tandem off-tracks in turns, tires scrub wide at speed, sprung body squats, dives, leans and sags under load, wheels follow the ground, brake and reverse lights, mph and gear on the HUD, see-through cab glass."
   }
  ]
 };

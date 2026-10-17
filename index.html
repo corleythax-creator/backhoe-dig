@@ -218,6 +218,7 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
       <dt>Right stick</dt><dd>Left curls the bucket in (scoop), right dumps. Push up for boom down, pull for boom up.</dd>
       <dt>Drive</dt><dd>Tap Drive and the left stick moves the tracks.</dd>
       <dt>Truck</dt><dd>Swing a full bucket over the truck bed and dump. Tap Truck to drive it: left stick steers and gives gas, right stick raises the bed. Pull back to brake; hold it at a stop to shift into reverse. A full load is heavy: it pulls slowly, stops long and leans in turns. Back up to the cliff edge and dump it over to haul it off.</dd>
+      <dt>Soil</dt><dd>Dark topsoil, then red clay that holds a steep wall. Sand means the gas main is close, and it slumps. Grey rock is past trench depth and slow going. Dug dirt fluffs up about a quarter, so it fills the truck faster than the hole it came from.</dd>
       <dt>Look</dt><dd>Drag the scene to look around.</dd>
       <dt>Map</dt><dd>Tap the minimap or press M for the big map.</dd>
       <dt>Screen</dt><dd>Tap the status card to fold it down. Speed test, Reset and UI size (1x, 1.5x, 2x) are in the ☰ menu.</dd>
@@ -329,8 +330,8 @@ function updateTerrain(){
     const t=ss(0.02,0.16,ad);dirtA[k]=Math.max(t,rockA[k]);
     if(t>0){
       let dr,dg,db;
-      if(d<0){const deep=ss(0.2,1.4,-d);dr=0.47-0.15*deep;dg=0.31-0.10*deep;db=0.18-0.06*deep}
-      else{dr=0.52;dg=0.36;db=0.22}
+      if(d<0){const c=SOIL[layerAt((k%V)*CELL-S/2,((k/V)|0)*CELL-S/2,-d,nz[k])].c,sh=1-0.12*ss(0.3,2.5,-d);dr=c[0]*sh;dg=c[1]*sh;db=c[2]*sh}
+      else{dr=spoilC[k*3];dg=spoilC[k*3+1];db=spoilC[k*3+2]}
       const cn=0.82+0.34*nz[k];dr*=cn;dg*=cn;db*=cn;
       r+=(dr-r)*t;g+=(dg-g)*t;b+=(db-b)*t;
     }
@@ -354,8 +355,31 @@ function h0At(x,z){
   const i=Math.max(0,Math.min(N,Math.round((x+S/2)/CELL))),j=Math.max(0,Math.min(N,Math.round((z+S/2)/CELL)));
   return H0[j*V+i];
 }
+// ---------- soil ----------
+// layers by depth below original grade, with wavy boundaries; sand bedding wraps the gas main.
+// h: arm speed while the teeth bite, sw: swell (loose volume per bank volume), rp: steepest slope it holds (rise per run)
+const SOIL=[
+  {n:'Topsoil',c:[0.30,0.21,0.13],h:0.7,sw:1.25,rp:0.9},
+  {n:'Clay',c:[0.64,0.36,0.21],h:0.45,sw:1.3,rp:1.6},
+  {n:'Sand',c:[0.80,0.70,0.48],h:0.85,sw:1.12,rp:0.62},
+  {n:'Rock',c:[0.47,0.46,0.44],h:0.12,sw:1.5,rp:3.0},
+  {n:'Loose fill',c:[0.50,0.34,0.21],h:0.9,sw:1.0,rp:0.75}];
+const SPOIL=4,spoilC=new Float32Array(V*V*3);
+function layerAt(x,z,d,nn){
+  const w=0.06*Math.sin(x*1.7+z*0.9)+0.05*(nn-0.5);
+  if(d<0.3+w)return 0;
+  if(Math.abs(x)<12.5&&Math.abs(z-PIPE_Z)<0.55+0.08*Math.sin(x*0.8)&&d>0.95+w&&d<1.62+w)return 2;
+  return d<1.95+2*w?1:3;
+}
+// material at height y over grid vertex k: loose fill above original grade, a native layer below
+function matAt(k,y){const d=H0[k]-y;return d<0?SPOIL:layerAt((k%V)*CELL-S/2,((k/V)|0)*CELL-S/2,d,nz[k])}
+function matColor(k,m){return m===SPOIL?[spoilC[k*3],spoilC[k*3+1],spoilC[k*3+2]]:SOIL[m].c}
+// blend material of colour c and height a into the loose fill on vertex k
+function mixSpoil(k,c,a){const above=H[k]-H0[k];if(above<=0||a<=0)return;const f=Math.min(1,a/above);
+  for(let q=0;q<3;q++)spoilC[k*3+q]+=(c[q]-spoilC[k*3+q])*f}
+const digC=[0,0,0];
 function dig(tip,cap){
-  const r=0.55,list=[];let vol=0;
+  const r=0.55,list=[];let vol=0,cr=0,cg=0,cb=0;
   const i0=Math.max(0,Math.floor((tip.x-r+S/2)/CELL)),i1=Math.min(N,Math.ceil((tip.x+r+S/2)/CELL));
   const j0=Math.max(0,Math.floor((tip.z-r+S/2)/CELL)),j1=Math.min(N,Math.ceil((tip.z+r+S/2)/CELL));
   for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){
@@ -364,15 +388,16 @@ function dig(tip,cap){
     const k=j*V+i;
     const t=Math.max(tip.y+(d/r)*(d/r)*0.35,H0[k]-FLOOR);
     const dh=H[k]-t;
-    if(dh>0){list.push(k,dh);vol+=dh*CA}
+    if(dh>0){const m=matAt(k,H[k]-dh/2),c=matColor(k,m),v=dh*CA*SOIL[m].sw;list.push(k,dh);vol+=v;cr+=c[0]*v;cg+=c[1]*v;cb+=c[2]*v}
   }
   if(vol<=0)return 0;
   touch(i0,i1,j0,j1);
   const s=Math.min(1,cap/vol);
   for(let n=0;n<list.length;n+=2)H[list[n]]-=list[n+1]*s;
+  digC[0]=cr/vol;digC[1]=cg/vol;digC[2]=cb/vol;
   return vol*s;
 }
-function deposit(x,z,vol){
+function deposit(x,z,vol,col){
   const r=0.9,list=[];let sum=0;
   const i0=Math.max(0,Math.floor((x-r+S/2)/CELL)),i1=Math.min(N,Math.ceil((x+r+S/2)/CELL));
   const j0=Math.max(0,Math.floor((z-r+S/2)/CELL)),j1=Math.min(N,Math.ceil((z+r+S/2)/CELL));
@@ -382,17 +407,23 @@ function deposit(x,z,vol){
   }
   if(!sum)return;
   touch(i0,i1,j0,j1);
-  for(let n=0;n<list.length;n+=2)H[list[n]]+=vol*list[n+1]/sum/CA;
+  for(let n=0;n<list.length;n+=2){const k=list[n],a=vol*list[n+1]/sum/CA;H[k]+=a;mixSpoil(k,col||SOIL[SPOIL].c,a)}
+}
+// each layer holds its own slope: sand runs, clay stands steep, rock barely moves; what slides keeps its colour as loose fill
+const RP_MIN=0.62*CELL,M0=1.1*CELL;
+function slumpPair(k,k2){
+  if((H[k]===H0[k]&&H[k2]===H0[k2])||Math.abs(H0[k]-H0[k2])>M0)return false;
+  const df=H[k]-H[k2],ad=Math.abs(df);if(ad<=RP_MIN)return false;
+  const hi=df>0?k:k2,lo=df>0?k2:k,m=matAt(hi,H[hi]-0.03),lim=SOIL[m].rp*CELL;if(ad<=lim)return false;
+  const t=(ad-lim)*0.25,c=matColor(hi,m);H[hi]-=t;H[lo]+=t;mixSpoil(lo,c,t);return true;
 }
 function slump(){
-  const m=1.1*CELL;let moved=false;
+  let moved=false;
   const ja=Math.max(0,dJ0-2),jb=Math.min(N,dJ1+2),ia=Math.max(0,dI0-2),ib=Math.min(N,dI1+2);
   for(let j=ja;j<=jb;j++)for(let i=ia;i<=ib;i++){
     const k=j*V+i;
-    if(i<N){const k2=k+1; if((H[k]!==H0[k]||H[k2]!==H0[k2])&&Math.abs(H0[k]-H0[k2])<=m){const df=H[k]-H[k2];
-      if(df>m){const t=(df-m)*0.25;H[k]-=t;H[k2]+=t;moved=true}else if(df<-m){const t=(-df-m)*0.25;H[k]+=t;H[k2]-=t;moved=true}}}
-    if(j<N){const k2=k+V; if((H[k]!==H0[k]||H[k2]!==H0[k2])&&Math.abs(H0[k]-H0[k2])<=m){const df=H[k]-H[k2];
-      if(df>m){const t=(df-m)*0.25;H[k]-=t;H[k2]+=t;moved=true}else if(df<-m){const t=(-df-m)*0.25;H[k]+=t;H[k2]-=t;moved=true}}}
+    if(i<N&&slumpPair(k,k+1))moved=true;
+    if(j<N&&slumpPair(k,k+V))moved=true;
   }
   if(moved){dI0=ia;dI1=ib;dJ0=ja;dJ1=jb}
   return moved;
@@ -847,7 +878,7 @@ function inBed(p){tl.copy(p);bedG.worldToLocal(tl);return tl.x>-1.1&&tl.x<1.1&&t
 function heapTop(){return 0.12+(heap.visible?heap.scale.y*0.5+0.5*heap.scale.y:0)}
 const G=9.8,WB=5.3,REAR=-2.2;
 function updateTruck(dt,thr,steerIn,bedIn){
-  const f=tr.load/TRUCK_CAP,mass=15000+tr.load*1600,vPrev=tr.v;
+  const f=tr.load/TRUCK_CAP,mass=15000+tr.load*1400,vPrev=tr.v;
   // ground: disturbed dirt rolls heavier and grips less than the packed pad
   const soft=Math.abs(hAt(tr.x,tr.z)-h0At(tr.x,tr.z))>0.04,crr=soft?0.1:0.045;
   // transmission: opposite stick brakes; come to a stop and hold it to shift between D and R
@@ -907,24 +938,31 @@ function updateTruck(dt,thr,steerIn,bedIn){
   // clods off the rear tires in loose dirt
   if(soft&&Math.abs(tr.v)>2&&Math.random()<Math.abs(tr.v)*dt*1.2){truck.localToWorld(tv.set(Math.random()<0.5?0.95:-0.95,0.2,REAR-Math.sign(tr.v)*0.9));spawn(tv,0.9)}
   bedG.rotation.x=-tr.bed;tailP.rotation.x=tr.bed*1.35;
-  heap.visible=tr.load>0.01;if(heap.visible){const f=tr.load/TRUCK_CAP;heap.scale.set(0.55+0.45*Math.min(1,f*1.5),0.08+0.95*f,0.6+0.4*Math.min(1,f*1.5))}heap.position.y=0.12+0.5*heap.scale.y;
+  heap.visible=tr.load>0.01;if(heap.visible){const f=tr.load/TRUCK_CAP;tintLoad(heap.material,tr.loadC);heap.scale.set(0.55+0.45*Math.min(1,f*1.5),0.08+0.95*f,0.6+0.4*Math.min(1,f*1.5))}heap.position.y=0.12+0.5*heap.scale.y;
   truck.updateMatrixWorld(true);
   // tipping the bed pours the load out the back
   if(tr.bed>0.32&&tr.load>0.0005){
     const out=Math.min(tr.load,(tr.bed-0.32)*3.2*dt);tr.load-=out;if(tr.load<0.0005)tr.load=0;
     truck.localToWorld(tv.set(0,0.3,-4.3));
-    if(mesaR(tv.x,tv.z)<EDGE-1.2&&Math.abs(tv.x)<S/2-0.8&&Math.abs(tv.z)<S/2-0.8){deposit(tv.x,tv.z,out);st.dirty=true;st.slumpT=2.5}
+    if(mesaR(tv.x,tv.z)<EDGE-1.2&&Math.abs(tv.x)<S/2-0.8&&Math.abs(tv.z)<S/2-0.8){deposit(tv.x,tv.z,out,tr.loadC);st.dirty=true;st.slumpT=2.5}
     else{tr.hauled+=out;if(!tr.haulWarned&&tr.load<=0){tr.haulWarned=true;toast('Load hauled off site.','good')}}
     bedG.localToWorld(tv.set(0,0.4,0.2));for(let n=0;n<Math.ceil(out*40);n++)spawn(tv,1.2);
   }
   if(tr.load<TRUCK_CAP*0.95)tr.fullWarned=false;
 }
+// a grey copy of the dirt texture (mean 0.8) so the bucket load and truck heap can take any soil colour
+function greyDetail(t){try{const im=t.image,c=document.createElement('canvas');c.width=im.width;c.height=im.height;
+  const x2=c.getContext('2d');x2.drawImage(im,0,0);const d=x2.getImageData(0,0,c.width,c.height),p=d.data;let sum=0;
+  for(let i=0;i<p.length;i+=4)sum+=p[i]*0.3+p[i+1]*0.59+p[i+2]*0.11;const k=0.8*255/(sum/(p.length/4));
+  for(let i=0;i<p.length;i+=4){const l=Math.min(255,(p[i]*0.3+p[i+1]*0.59+p[i+2]*0.11)*k);p[i]=p[i+1]=p[i+2]=l}
+  x2.putImageData(d,0,0);const g=new THREE.CanvasTexture(c);g.wrapS=g.wrapT=THREE.RepeatWrapping;return g}catch(e){return null}}
+function tintLoad(mat,c){const k=mat.map?1.25:1;mat.color.setRGB(Math.min(1,c[0]*k),Math.min(1,c[1]*k),Math.min(1,c[2]*k))}
 texManager.onLoad=()=>{
   texMixU.value=1;
   for(const mt of [ORANGE,ORANGE_D,STEEL,STEEL_L,RUBBER,WHITE,WHITE_DS,BEDM,BED_D]){mt.map=texGrime;mt.needsUpdate=true}
-  heap.material.map=texDirt;heap.material.color.setHex(0xd8c2b0);heap.material.needsUpdate=true;
+  const grey=greyDetail(texDirt);heap.material.map=grey;heap.material.needsUpdate=true;
   ORANGE.color.setHex(0xf27a22);ORANGE_D.color.setHex(0xc85e1c);
-  loadMesh.material.map=texDirt;loadMesh.material.color.setHex(0xd8c2b0);loadMesh.material.needsUpdate=true;
+  loadMesh.material.map=grey;loadMesh.material.needsUpdate=true;
   pMat.map=texDirt;pMat.color.setHex(0xd0b8a6);pMat.needsUpdate=true;
 };
 
@@ -933,8 +971,9 @@ const CAP=1.0;
 const START={x:0.42,z:0,yaw:Math.PI,swing:0,a1:0.5,a2:-1.8,a3:-1.2};
 const st={};
 function resetState(){
-  Object.assign(st,START,{y:0,pitch:0,roll:0,load:0,strikes:0,exposed:false,done:false,startT:0,doneT:0,below:false,strikeCd:0,slumpT:0,dirty:true});
-  H.set(H0);dI0=0;dI1=N;dJ0=0;dJ1=N;winOn=true;Object.assign(tr,TR_START);
+  Object.assign(st,START,{y:0,pitch:0,roll:0,load:0,strikes:0,exposed:false,done:false,startT:0,doneT:0,below:false,strikeCd:0,slumpT:0,dirty:true,res:1,soil:-1,seenSand:false,seenRock:false,rumT:0,loadC:[...SOIL[SPOIL].c]});
+  H.set(H0);dI0=0;dI1=N;dJ0=0;dJ1=N;winOn=true;Object.assign(tr,TR_START);tr.loadC=[...SOIL[SPOIL].c];
+  for(let k=0;k<V*V;k++)spoilC.set(SOIL[SPOIL].c,k*3);
 }
 resetState();
 const LIM={a1:[-0.65,1.15],a2:[-2.65,-0.45],a3:[-2.85,0.35]};
@@ -1216,7 +1255,7 @@ function frame(now){
   if(mode==='dig'){swingIn=Lx;stickIn=Ly}else if(mode==='drive'){driveIn=Ly;turnIn=Lx}
   let tThr=0,tSteer=0,tBed=0;
   if(mode==='truck'){tThr=Ly;tSteer=Lx;tBed=Ry;boomIn=0;bucketIn=0}
-  const res=st.below?0.5:1;
+  const res=st.res;
   st.swing-=swingIn*0.85*dt*res;
   st.a1=clamp(st.a1+boomIn*0.6*dt*res,...LIM.a1);
   st.a2=clamp(st.a2+stickIn*0.8*dt*res,...LIM.a2);
@@ -1243,10 +1282,18 @@ function frame(now){
   // dig
   const g=hAt(tip.x,tip.z);
   st.below=tip.y<g;
+  // soil at the teeth sets how hard the arm works; a full bucket pushing on barely moves
+  {const ti=Math.max(0,Math.min(N,Math.round((tip.x+S/2)/CELL))),tj=Math.max(0,Math.min(N,Math.round((tip.z+S/2)/CELL)));
+    st.soil=st.below?matAt(tj*V+ti,tip.y):-1;
+    st.res=st.soil<0?1:SOIL[st.soil].h*(st.load>=CAP-0.002?0.5:1);
+    if(st.soil===2&&!st.seenSand){st.seenSand=true;toast('Sand bedding. The gas main is right below. Go easy.','',3200)}
+    if(st.soil===3&&!st.seenRock){st.seenRock=true;toast('Rock. You are past trench depth.','',3000)}
+    st.rumT-=dt;if(padUsed&&st.soil>=0&&st.rumT<=0&&(Math.abs(swingIn)+Math.abs(stickIn)+Math.abs(boomIn)+Math.abs(bucketIn))>0.1){st.rumT=0.12;rumble(140,0.15+0.55*(1-SOIL[st.soil].h))}}
   if(st.below&&!bench.on){
     if(st.load<CAP-0.002){
       const got=dig(tip,CAP-st.load);
-      if(got>0){st.load+=got;st.dirty=true;st.slumpT=2.5;if(Math.random()<0.5)spawn(tip.clone().setY(g+0.05),1.2)}
+      if(got>0){const f=got/(st.load+got);for(let q=0;q<3;q++)st.loadC[q]+=(digC[q]-st.loadC[q])*f;
+        st.load+=got;st.dirty=true;st.slumpT=2.5;if(Math.random()<0.5)spawn(tip.clone().setY(g+0.05),1.2)}
     }else if(!fullWarned){toast('Bucket full. Boom up, swing, dump.');fullWarned=true}
   }
   if(st.load<CAP*0.9)fullWarned=false;
@@ -1256,11 +1303,11 @@ function frame(now){
   if(f>0&&st.load>0.0005){
     const out=Math.min(st.load,f*(0.35+st.load*1.6)*dt);
     st.load-=out;
-    if(inBed(mid)&&tr.load<TRUCK_CAP){const take=Math.min(out,TRUCK_CAP-tr.load);tr.load+=take;
-      if(out-take>0){deposit(mid.x,mid.z,out-take);st.dirty=true;st.slumpT=2.5}
+    if(inBed(mid)&&tr.load<TRUCK_CAP){const take=Math.min(out,TRUCK_CAP-tr.load);if(take>0){const f=take/(tr.load+take);for(let q=0;q<3;q++)tr.loadC[q]+=(st.loadC[q]-tr.loadC[q])*f}tr.load+=take;
+      if(out-take>0){deposit(mid.x,mid.z,out-take,st.loadC);st.dirty=true;st.slumpT=2.5}
       if(!tr.loadedOnce){tr.loadedOnce=true;toast('Dirt in the truck.','good')}
       if(tr.load>=TRUCK_CAP*0.99&&!tr.fullWarned){tr.fullWarned=true;toast('Truck full. Tap Truck, back it to the cliff edge and raise the bed.','',3500)}}
-    else{deposit(mid.x,mid.z,out); st.dirty=true; st.slumpT=2.5}
+    else{deposit(mid.x,mid.z,out,st.loadC); st.dirty=true; st.slumpT=2.5}
     for(let n=0;n<Math.ceil(out*80);n++)spawn(mid,0.8);
     if(st.load<0.0005)st.load=0;
   }
@@ -1292,7 +1339,7 @@ function frame(now){
     $('#bucketBar').style.width=pct+'%';
     $('#bucketPanel').classList.toggle('full',pct>=99);
     const dep=h0At(tip.x,tip.z)-tip.y;
-    $('#tipVal').textContent=dep>0?`Tip ${(dep*3.281).toFixed(1)} ft below grade`:`Tip ${(-dep*3.281).toFixed(1)} ft above grade`;
+    $('#tipVal').textContent=(dep>0?`Tip ${(dep*3.281).toFixed(1)} ft below grade`:`Tip ${(-dep*3.281).toFixed(1)} ft above grade`)+(st.soil>=0?` · ${SOIL[st.soil].n}`:'');
     let c=0;for(const kk of trenchK)if(H0[kk]-H[kk]>=0.85)c++;
     const tp=Math.round(c/trenchK.length*100);
     if(tp>=100&&!st.done){st.done=true;st.doneT=now;const s=Math.round((now-(st.startT||now))/1000);
@@ -1314,7 +1361,7 @@ function frame(now){
   pInst.instanceMatrix.needsUpdate=true;
   // bucket load visual
   loadMesh.visible=st.load>0.01;
-  if(loadMesh.visible){const s=0.35+0.75*Math.sqrt(st.load/CAP);loadMesh.scale.set(s,s*0.6,s*1.15)}
+  if(loadMesh.visible){const s=0.35+0.75*Math.sqrt(st.load/CAP);loadMesh.scale.set(s,s*0.6,s*1.15);tintLoad(loadMesh.material,st.loadC)}
   // camera
   const hy=st.yaw+st.swing;
   if(camMode==='chase'){
