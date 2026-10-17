@@ -59,6 +59,10 @@ const held=id=>keyBind[id].some(c=>c&&keys[c]),kv=(a,b)=>(held(a)?1:0)-(held(b)?
 const KA={lx:0,ly:0,rx:0,ry:0};
 function keyAxes(dt){const f=mode!=='walk'&&held('fine')?0.3:1;
   const t={lx:kv('lRight','lLeft'),ly:kv('lUp','lDown'),rx:kv('rRight','rLeft'),ry:kv('rUp','rDown')};
+  // mower: ly / ry are the left / right lap bars. Up and down drive both (A / D still spin, as the left stick does), and the
+  // numpad has both bars together (8 2), a spin in place (4 6) and each bar on its own (7 1 left, 9 3 right)
+  if(mode==='mow'){const go=t.ly+kv('mwFwd','mwBack'),sp=kv('mwSpinR','mwSpinL');
+    t.ly=go+sp+kv('mwLF','mwLB');t.ry=go-sp+kv('mwRF','mwRB');t.rx=0}
   for(const k in t){const g=clamp(t[k],-1,1)*f,r=(g===0?10:5)*dt;KA[k]+=clamp(g-KA[k],-r,r)}}
 // game controller (standard mapping): sticks = the two on-screen sticks, triggers = gas / reverse when driving,
 // LB/RB switch machine, Y cab view, View map, Menu help, B closes (or gets in and out of machines), A sets a block,
@@ -100,13 +104,13 @@ canvas.addEventListener('wheel',e=>{if(edOn)return;e.preventDefault();camDist=cl
 
 function setCaps(){const m=mode,two=(a,b)=>`${keyLabel(a)} ${keyLabel(b)}`,lh=kbUsed?two('lLeft','lRight'):'◀ ▶',lv=kbUsed?two('lUp','lDown'):'▲ ▼',rh=kbUsed?two('rLeft','rRight'):'◀ ▶',rv=kbUsed?two('rUp','rDown'):'▲ ▼';
   for(const b of document.querySelectorAll('.seg button'))b.dataset.k=keyLabel(b.id.slice(4).toLowerCase());
-  $('#capL').innerHTML=m==='dig'?`<b>${lh}</b> Swing<br><b>${lv}</b> Stick out / in`:m==='drive'?`<b>${lh}</b> Turn<br><b>${lv}</b> Drive fwd / back`:m==='mow'?`<b>${lv}</b> Left lap bar<br><b>${lh}</b> Spin`:m==='walk'?`<b>${lv}</b> Walk / back<br><b>${lh}</b> Step left / right`:`<b>${lh}</b> Steer<br><b>${lv}</b> Gas / reverse`;
-  $('#capR').innerHTML=m==='truck'?`<b>${rv}</b> Bed up / down<br>&nbsp;`:m==='mow'?`<b>${rv}</b> Right lap bar<br>&nbsp;`:m==='walk'?`<b>${rh}</b> Turn<br><b>${rv}</b> Look up / down`:`<b>${rh}</b> Curl / dump<br><b>${rv}</b> Boom down / up`;}
+  $('#capL').innerHTML=m==='dig'?`<b>${lh}</b> Swing<br><b>${lv}</b> Stick out / in`:m==='drive'?`<b>${lh}</b> Turn<br><b>${lv}</b> Drive fwd / back`:m==='mow'?(kbUsed?`<b>${lv}</b> Drive fwd / back<br><b>${lh}</b> Turn`:`<b>${lv}</b> Left lap bar<br><b>${lh}</b> Spin`):m==='walk'?`<b>${lv}</b> Walk / back<br><b>${lh}</b> Step left / right`:`<b>${lh}</b> Steer<br><b>${lv}</b> Gas / reverse`;
+  $('#capR').innerHTML=m==='truck'?`<b>${rv}</b> Bed up / down<br>&nbsp;`:m==='mow'?(kbUsed?`<b>${keyLabel('mwLF')} ${keyLabel('mwLB')}</b> Left bar · <b>${keyLabel('mwRF')} ${keyLabel('mwRB')}</b> Right bar<br><b>${keyLabel('mwSpinL')} ${keyLabel('mwSpinR')}</b> Spin in place`:`<b>${rv}</b> Right lap bar<br>&nbsp;`):m==='walk'?`<b>${rh}</b> Turn<br><b>${rv}</b> Look up / down`:`<b>${rh}</b> Curl / dump<br><b>${rv}</b> Boom down / up`;}
 function setMode(m){if(m===mode)return;mode=m;for(const [id,k] of [['#modeDig','dig'],['#modeDrive','drive'],['#modeTruck','truck'],['#modeMow','mow'],['#modeWalk','walk']])$(id).setAttribute('aria-pressed',m===k);
   $('#walkBtns').hidden=m!=='walk';if(m!=='walk')setSprint(false);$('#capR').hidden=m==='walk';
   // switching to Walk from a machine you climbed into sets you down beside it
   if(m==='walk'){if(wk.inside){wkPlaceOut(wk.inside);wk.inside=null}wk.view=wk.yaw}
-  setCaps();markTile();firstCam=true;if(m==='mow'&&!lawn.startT&&!lawn.done)toast('Mower running. Push both sticks up to drive, one up and one back to spin.','',3800);
+  setCaps();markTile();firstCam=true;if(m==='mow'&&!lawn.startT&&!lawn.done)toast(kbUsed?`Mower running. ${keyLabel('lUp')} drives straight, ${keyLabel('lLeft')} ${keyLabel('lRight')} turn; the number pad works each lap bar.`:'Mower running. Push both sticks up to drive, one up and one back to spin.','',3800);
   if(m==='walk')toast(padUsed?'On foot. A jumps, X sets a block, B gets into a machine.':kbUsed?`On foot. ${keyLabel('jump')} jumps, ${keyLabel('place')} sets a block, ${keyLabel('enter')} gets into a machine.`:'On foot. Tap Jump to jump. Walk up to a machine and tap Get in.','',3800)}
 $('#modeDig').onclick=()=>setMode('dig'); $('#modeDrive').onclick=()=>setMode('drive'); $('#modeTruck').onclick=()=>setMode('truck'); $('#modeMow').onclick=()=>setMode('mow'); $('#modeWalk').onclick=()=>setMode('walk');
 $('#camBtn').onclick=()=>{camMode=camMode==='chase'?'cab':'chase';$('#camBtn').textContent=camMode==='chase'?'Cab view':'Chase view'};

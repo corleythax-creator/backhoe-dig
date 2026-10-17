@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-17T22:17:36Z",
+ "updated": "2026-10-17T23:14:35Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 440,
-   "act": 10.0,
-   "versions": 62
+   "dh": 443,
+   "act": 10.5,
+   "versions": 63
   }
  ],
  "extra": [
@@ -651,6 +651,15 @@ window.EFFORT = {
    "tris": 1154238,
    "chars": 387762,
    "what": "Mud anywhere on the mesa: Mud painted with the map editor now ruts and fills with puddles outside the dig zone too, on fine ground tiles made only where a machine first churns it (saved and synced with the site). Getting stuck: pushing on in deep mud digs the tracks or tires in until they spin and throw mud; rock it free by going forward, then back, then forward again. Phones (Low graphics) throw fewer blobs and draw puddles more simply; the mud behaves the same on every device. How wet the ground is now comes from one place, ready for soil and rain to drive it later."
+  },
+  {
+   "v": 70,
+   "asked": "2026-10-17T17:55:00-05:00",
+   "live": "2026-10-17T18:14:35-05:00",
+   "dh": 3,
+   "tris": 1154238,
+   "chars": 389546,
+   "what": "Mower keys: on a keyboard W and S (or the arrows) now drive the zero-turn straight and A and D turn it, instead of working only the left lap bar so it spun on its own. The number pad works the lap bars: 8 and 2 both forward or back, 4 and 6 spin in place, 7 and 1 the left bar, 9 and 3 the right bar, all changeable in the Keys panel. Touch and controller sticks still work one lap bar each."
   }
  ]
 };
