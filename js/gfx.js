@@ -23,6 +23,8 @@ function setGfx(k,picked){const g=GFX[k]?GFX[k]:GFX[gfxGuess()];gfxKey=GFX[k]?k:
   renderer.toneMappingExposure=te;
   // ground detail: the dirt and grass textures and the cut-face detail
   gfxDetail=g.detail;if(texOn){texMixU.value=gfxDetail;matTexUpdate()}
+  // the ground pack's size for this setting (terrain.js)
+  texTierSet(gfxKey);
   // puddles: a finer water surface with sky reflections, or a 1 ft one without (water.js); the water itself is the same
   if(WM_K!==(g.wmFine?1:GRID_K))wmSet(g.wmFine);
   mudGfx(g.wmFine);
