@@ -1,0 +1,137 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Backhoe Dig Build Time</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@600;700;800&family=Saira:wght@400;500;600&display=swap">
+<style>
+/* Layout: one reading column; a summary strip, two charts, then the version log and the method */
+:root{
+  --bg:#f3f1ec; --panel:#ffffff; --ink:#1b1d1a; --muted:#545a52; --line:#d6d3cb;
+  --machine:#d9631a; --machine-soft:#f6dcc8; --ok:#2f7d4a; --sky:#3d7896; --grid:#e6e3dc;
+  --f-display:"Saira Condensed","Arial Narrow",system-ui,sans-serif; --f-body:"Saira",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#141613; --panel:#1d201c; --ink:#eef0ea; --muted:#b4bbae; --line:#343a33;
+  --machine:#f28a3c; --machine-soft:#4a2c17; --ok:#86d98f; --sky:#7fb7d4; --grid:#2a2f29; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141613; --panel:#1d201c; --ink:#eef0ea; --muted:#b4bbae; --line:#343a33;
+  --machine:#f28a3c; --machine-soft:#4a2c17; --ok:#86d98f; --sky:#7fb7d4; --grid:#2a2f29; color-scheme:dark}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:18px;line-height:1.5}
+main{max-width:980px;margin:0 auto;padding-block:28px 60px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:28px}
+h1{margin:0;font:800 clamp(38px,7vw,60px)/1 var(--f-display);letter-spacing:.01em;text-wrap:balance}
+h1 span{color:var(--machine)}
+h2{margin:0 0 12px;font:800 28px/1.1 var(--f-display);letter-spacing:.02em}
+.lede{margin:10px 0 0;color:var(--muted);max-width:62ch;font-size:19px}
+.lede a{color:var(--machine);font-weight:600}
+.strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;min-width:0}
+.stat .k{font:700 14px/1.2 var(--f-display);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.stat .v{font:800 38px/1.05 var(--f-display);margin-top:6px;font-variant-numeric:tabular-nums}
+.stat .s{font-size:16px;color:var(--muted);margin-top:4px}
+.stat.hot{border-color:var(--machine);background:linear-gradient(var(--panel),var(--panel)) padding-box}
+.stat.hot .v{color:var(--machine)}
+section{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 18px 14px;min-width:0}
+.sub{color:var(--muted);margin:-6px 0 12px;font-size:16px}
+.chart{overflow-x:auto}
+.chart svg{display:block;width:100%;min-width:620px;height:auto}
+.chart text{fill:var(--muted);font:600 13px var(--f-display)}
+.tablewrap{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:16px;min-width:720px}
+th{font:700 13px/1.2 var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-align:left;padding:8px 10px;border-bottom:2px solid var(--line)}
+td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
+td.v{font:800 18px var(--f-display);color:var(--machine)}
+.method{display:grid;gap:10px;font-size:17px}
+.method p{margin:0;max-width:72ch}
+.method b{font-family:var(--f-display);letter-spacing:.03em}
+footer{color:var(--muted);font-size:15px}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Backhoe Dig <span>build time</span></h1>
+    <p class="lede">How long the game took to build, version by version, and what it would take one developer working by hand. <a href="./">Play Backhoe Dig</a></p>
+  </header>
+  <div class="strip" id="strip"></div>
+  <section>
+    <h2>Ask to live, every version</h2>
+    <p class="sub">Each bar runs from the ask in chat to the version going live. Central time.</p>
+    <div class="chart" id="timeline"></div>
+  </section>
+  <section>
+    <h2>Triangles and code size</h2>
+    <p class="sub">Bars are triangles in the scene; the line is the size of the game file. Early versions weren't counted.</p>
+    <div class="chart" id="growth"></div>
+  </section>
+  <section>
+    <h2>Version log</h2>
+    <div class="tablewrap"><table id="log"></table></div>
+  </section>
+  <section>
+    <h2>How these are worked out</h2>
+    <div class="method" id="method"></div>
+  </section>
+  <footer id="foot"></footer>
+</main>
+<script src="data/effort.js"></script>
+<script>
+(function(){
+const E=window.EFFORT;if(!E)return;
+const V=E.versions,$=id=>document.getElementById(id);
+const t=s=>new Date(s).getTime(),fmt=ms=>new Date(ms).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',timeZone:'America/Chicago'});
+const turn=V.map(v=>(t(v.live)-t(v.asked))/60000),sorted=turn.slice().sort((a,b)=>a-b),med=sorted[Math.floor(sorted.length/2)];
+const first=t(V[0].asked),last=t(V[V.length-1].live),span=(last-first)/60000;
+const dev=E.days.reduce((a,d)=>a+d.dh,0),ai=E.days.reduce((a,d)=>a+d.act,0);
+const stat=(k,v,s,hot)=>`<div class="stat${hot?' hot':''}"><div class="k">${k}</div><div class="v">${v}</div><div class="s">${s}</div></div>`;
+$('strip').innerHTML=
+  stat('First ask to latest',`${Math.floor(span/60)?Math.floor(span/60)+' h ':''}${Math.round(span%60)} min`,`${fmt(first)} to ${fmt(last)}`)+
+  stat('Versions shipped',V.length,`about one every ${(span/V.length).toFixed(1)} min`)+
+  stat('Ask to live',`${med.toFixed(1)} min`,`median; fastest ${sorted[0].toFixed(1)}, slowest ${sorted[sorted.length-1].toFixed(1)}`)+
+  stat('Developer hours',dev.toLocaleString(),`by hand, without AI · about $${(dev*E.rateUsd).toLocaleString()} at $${E.rateUsd}/h`,true)+
+  stat('Active AI hours',ai,`about ${Math.round(dev/ai)}× faster than by hand`);
+// timeline chart
+(function(){
+  const W=900,H=60+V.length*26,L=56,R=20,T=26,x0=Math.floor(first/1800000)*1800000,x1=Math.ceil(last/1800000)*1800000+60000,X=m=>L+(m-x0)/(x1-x0)*(W-L-R);
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Ask to live timeline for each version">`;
+  for(let m=x0;m<=x1;m+=600000){const x=X(m);s+=`<line x1="${x}" x2="${x}" y1="${T-6}" y2="${H-24}" stroke="var(--grid)"/><text x="${x}" y="${H-6}" text-anchor="middle">${fmt(m)}</text>`}
+  V.forEach((v,i)=>{const y=T+i*26,a=X(t(v.asked)),b=X(t(v.live));
+    s+=`<text x="${L-10}" y="${y+5}" text-anchor="end">v${v.v}</text>`;
+    s+=`<rect x="${a}" y="${y-6}" width="${Math.max(3,b-a)}" height="12" rx="3" fill="var(--machine-soft)" stroke="var(--machine)"/>`;
+    s+=`<circle cx="${b}" cy="${y}" r="5" fill="var(--machine)"/><text x="${b+10}" y="${y+5}" fill="var(--ink)">${turn[i].toFixed(1)} min</text>`});
+  $('timeline').innerHTML=s+'</svg>';
+})();
+// growth chart
+(function(){
+  const W=900,H=300,L=58,R=58,T=20,B=40,n=V.length,bw=(W-L-R)/n,maxT=Math.max(...V.map(v=>v.tris||0))*1.1,maxC=Math.max(...V.map(v=>v.chars||0))*1.15;
+  const Y=v=>T+(1-v/maxT)*(H-T-B),YC=v=>T+(1-v/maxC)*(H-T-B);
+  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Triangles and code size by version">`;
+  for(let k=0;k<=5;k++){const v=maxT/1.1*k/5,y=Y(v);s+=`<line x1="${L}" x2="${W-R}" y1="${y}" y2="${y}" stroke="var(--grid)"/><text x="${L-8}" y="${y+4}" text-anchor="end">${Math.round(v/1000)}k</text>`;
+    const c=maxC/1.15*k/5;s+=`<text x="${W-R+8}" y="${YC(c)+4}">${Math.round(c/1000)} KB</text>`}
+  let path='';
+  V.forEach((v,i)=>{const cx=L+bw*i+bw/2;
+    if(v.tris)s+=`<rect x="${cx-bw*0.32}" y="${Y(v.tris)}" width="${bw*0.64}" height="${H-B-Y(v.tris)}" rx="3" fill="var(--sky)" opacity=".85"><title>v${v.v}: ${v.tris.toLocaleString()} triangles</title></rect>`;
+    else s+=`<text x="${cx}" y="${H-B-6}" text-anchor="middle" opacity=".6">–</text>`;
+    s+=`<text x="${cx}" y="${H-B+18}" text-anchor="middle">v${v.v}</text>`;
+    if(v.chars)path+=(path?'L':'M')+cx+' '+YC(v.chars)});
+  s+=`<path d="${path}" fill="none" stroke="var(--machine)" stroke-width="3"/>`;
+  V.forEach((v,i)=>{if(v.chars){const cx=L+bw*i+bw/2;s+=`<circle cx="${cx}" cy="${YC(v.chars)}" r="4.5" fill="var(--machine)"><title>v${v.v}: ${(v.chars/1000).toFixed(1)} KB</title></circle>`}});
+  s+=`<text x="${L}" y="${T-6}">Triangles</text><text x="${W-R}" y="${T-6}" text-anchor="end">File size</text>`;
+  $('growth').innerHTML=s+'</svg>';
+})();
+// version log
+let rows='<tr><th>Ver</th><th>Asked</th><th class="n">To live</th><th>What changed</th><th class="n">Dev h</th><th class="n">Triangles</th></tr>';
+V.slice().reverse().forEach((v,j)=>{const i=V.length-1-j;
+  rows+=`<tr><td class="v">${v.v}</td><td class="n">${fmt(t(v.asked))}</td><td class="n">${turn[i].toFixed(1)} min</td><td>${v.what}</td><td class="n">${v.dh}</td><td class="n">${v.tris?Math.round(v.tris/1000)+'k':'–'}</td></tr>`});
+(E.extra||[]).forEach(x=>{rows+=`<tr><td class="v">+</td><td class="n">–</td><td class="n">–</td><td>${x.what}</td><td class="n">${x.dh}</td><td class="n">–</td></tr>`});
+$('log').innerHTML=rows;
+const M=E.method;
+$('method').innerHTML=`<p><b>Developer hours.</b> ${M.dh}</p><p><b>Active AI hours.</b> ${M.act}</p><p><b>Ask to live.</b> ${M.turnaround}</p><p><b>Triangles.</b> ${M.tris}</p>`;
+$('foot').textContent=`Data from data/effort.js, updated ${new Date(E.updated).toLocaleString('en-US',{dateStyle:'medium',timeStyle:'short',timeZone:'America/Chicago'})} Central.`;
+})();
+</script>
+</body>
+</html>

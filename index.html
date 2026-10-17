@@ -99,6 +99,8 @@ button:focus-visible{outline:3px solid var(--gas);outline-offset:2px}
 .keys{display:grid;grid-template-columns:auto 1fr;gap:8px 14px;font-size:17px;line-height:1.3}
 .keys dt{font:700 17px/1.3 var(--f-display);color:var(--machine);letter-spacing:.04em;text-transform:uppercase}
 .keys dd{margin:0}
+.buildlink{text-align:center;font-size:17px!important}
+.buildlink a{color:var(--machine);font-weight:600}
 .card button{background:var(--machine);color:#1c1309;height:54px;font-size:21px;border:0}
 @media (max-width:380px){.stick{width:132px;height:132px}.val{font-size:21px}}
 @media (prefers-reduced-motion:reduce){#toast span,#flash,.bar>i{transition:none}}
@@ -190,6 +192,7 @@ button:focus-visible{outline:3px solid var(--gas);outline-offset:2px}
     </dl>
     <p>To scoop: boom down until the teeth bite, curl in while pulling the stick toward you, boom up, swing, then dump.</p>
     <button id="startBtn">Start digging</button>
+    <p class="buildlink"><a href="https://backhoe-dig.vercel.app/build.html" target="_blank" rel="noopener">See how long this took to build</a></p>
   </div>
 </div>
 
@@ -722,7 +725,7 @@ function mergeStatic(group,skip){
 }
 [machine,house,cab,boomP,stickP,bucketP].forEach(g=>mergeStatic(g,[glass,loadMesh,sideL[0],sideL[1],hLink,jPin]));
 // ---------- dump truck ----------
-const WHITE=M(0xe9ecea),BEDM=M(0x6c7378),BED_D=M(0x4c5257),TGLASS=new THREE.MeshPhongMaterial({color:0x5f7f93,shininess:90,flatShading:true});
+const WHITE=M(0xe9ecea),WHITE_DS=M(0xe9ecea,{side:THREE.DoubleSide}),BEDM=M(0x6c7378),BED_D=M(0x4c5257),TGLASS=new THREE.MeshPhongMaterial({color:0x5f7f93,shininess:90,flatShading:true});
 const TRUCK_CAP=10/1.308,TR_START={x:-7,z:1,yaw:-Math.PI/2,v:0,steer:0,bed:0,load:0,hauled:0,rollA:0,y:0,pitch:0,roll:0,loadedOnce:false,fullWarned:false,haulWarned:false};
 const tr=Object.assign({},TR_START);
 const truck=new THREE.Group();truck.rotation.order='YXZ';scene.add(truck);
@@ -745,8 +748,8 @@ for(const x of [-0.8,0.8]){const hl=cyl(0.11,0.11,0.06,20,LENS,tBody);hl.rotatio
 for(const x of [-1.05,1.05]){box(0.55,0.08,1.25,WHITE,x,1.42,3.1,tBody);box(0.55,0.35,0.08,WHITE,x,1.26,3.72,tBody);
   box(0.06,0.06,0.5,STEEL,x*1.18,2.6,2.75,tBody);box(0.08,0.45,0.22,STEEL,x*1.33,2.45,2.95,tBody);
   box(0.4,0.06,0.3,STEEL_L,x,1.2,1.6,tBody);box(0.4,0.06,0.3,STEEL_L,x,0.85,1.6,tBody)}
-const tank=cyl(0.28,0.28,0.95,24,CHROME,tBody);tank.rotation.x=Math.PI/2;tank.position.set(1.0,1.15,0.6);
-const stack=cyl(0.08,0.08,1.9,16,CHROME,tBody);stack.position.set(-1.0,2.4,1.0);
+const tank=cyl(0.28,0.28,0.95,48,CHROME,tBody);tank.rotation.x=Math.PI/2;tank.position.set(1.0,1.15,0.6);
+const stack=cyl(0.08,0.08,1.9,32,CHROME,tBody);stack.position.set(-1.0,2.4,1.0);
 for(const z of [-2.2,-1.6,-2.8]){const ax=cyl(0.07,0.07,1.9,10,STEEL,tBody);ax.rotation.z=Math.PI/2;ax.position.set(0,0.55,z)}
 const ax2=cyl(0.07,0.07,2.0,10,STEEL,tBody);ax2.rotation.z=Math.PI/2;ax2.position.set(0,0.55,3.1);
 for(const x of [-1.15,1.15])box(0.06,0.5,1.9,BED_D,x,1.15,-2.2,tBody);
@@ -754,10 +757,14 @@ for(const x of [-1.15,1.15])box(0.06,0.5,1.9,BED_D,x,1.15,-2.2,tBody);
 const wheels=[],frontWheels=[];
 function makeWheel(x,z,dual){const g=new THREE.Group();g.rotation.order='YXZ';g.position.set(x,0.55,z);truck.add(g);
   const offs=dual?[-0.21,0.21]:[0];
-  for(const o of offs){const t=cyl(0.55,0.55,0.38,32,RUBBER,g);t.rotation.z=Math.PI/2;t.position.x=o;
-    for(let k=0;k<16;k++){const an=k/16*Math.PI*2,tb=box(0.36,0.06,0.1,RUBBER,o,Math.sin(an)*0.56,Math.cos(an)*0.56,g);tb.rotation.x=-an}}
-  const rim=cyl(0.3,0.3,dual?0.84:0.4,20,STEEL_L,g);rim.rotation.z=Math.PI/2;
-  const hub=cyl(0.12,0.12,dual?0.9:0.46,12,CHROME,g);hub.rotation.z=Math.PI/2;
+  for(const o of offs){const t=new THREE.Mesh(new THREE.CylinderGeometry(0.55,0.55,0.38,40,1),RUBBER);t.castShadow=true;g.add(t);t.rotation.z=Math.PI/2;t.position.x=o;
+    for(const sd of [-1,1]){const sw=new THREE.Mesh(new THREE.TorusGeometry(0.46,0.075,5,28),RUBBER);sw.rotation.y=Math.PI/2;sw.position.x=o+sd*0.17;sw.castShadow=true;g.add(sw)}
+    for(let k=0;k<22;k++){const an=k/22*Math.PI*2,tb=box(0.34,0.05,0.09,RUBBER,o+(k%2?0.03:-0.03),Math.sin(an)*0.565,Math.cos(an)*0.565,g);tb.rotation.x=-an}}
+  const rim=new THREE.Mesh(new THREE.CylinderGeometry(0.3,0.3,dual?0.84:0.4,32,1),STEEL_L);rim.castShadow=true;g.add(rim);rim.rotation.z=Math.PI/2;
+  const hub=cyl(0.12,0.12,dual?0.9:0.46,32,CHROME,g);hub.rotation.z=Math.PI/2;
+  const face=dual?0.43:0.21;
+  for(const sd of [-1,1]){const ring=new THREE.Mesh(new THREE.TorusGeometry(0.22,0.025,4,28),STEEL);ring.rotation.y=Math.PI/2;ring.position.x=sd*face;g.add(ring);
+    for(let k=0;k<10;k++){const an=k/10*Math.PI*2,lug=cyl(0.028,0.028,0.06,6,CHROME,g);lug.rotation.z=Math.PI/2;lug.position.set(sd*(face+0.02),Math.sin(an)*0.17,Math.cos(an)*0.17)}}
   mergeStatic(g,[]);wheels.push(g);if(!dual)frontWheels.push(g);return g}
 makeWheel(-1.05,3.1,false);makeWheel(1.05,3.1,false);
 for(const z of [-1.6,-2.8])for(const x of [-0.95,0.95])makeWheel(x,z,true);
@@ -765,18 +772,40 @@ for(const z of [-1.6,-2.8])for(const x of [-0.95,0.95])makeWheel(x,z,true);
 const bedG=new THREE.Group();bedG.position.set(0,1.3,-3.4);truck.add(bedG);
 box(2.3,0.12,4.3,BEDM,0,0.06,2.15,bedG);
 for(const x of [-1.15,1.15]){box(0.1,1.0,4.3,BEDM,x,0.56,2.15,bedG);box(0.18,0.1,4.36,BED_D,x,1.08,2.15,bedG);
-  for(let z=0.3;z<4.3;z+=0.6)box(0.06,0.9,0.1,BED_D,x*1.04,0.5,z,bedG)}
+  for(let z=0.15;z<4.3;z+=0.3)box(0.06,0.9,0.08,BED_D,x*1.04,0.5,z,bedG);edges(0.1,1.0,bedG,BEDM,0.56,0,0.56,4.3)}
 for(const x of [-0.5,0.5])box(0.15,0.2,4.3,STEEL,x,-0.1,2.15,bedG);
 box(2.3,1.15,0.1,BEDM,0,0.6,4.3,bedG);box(2.4,0.08,0.95,BED_D,0,1.2,4.72,bedG);
 for(let i=-2;i<=2;i++)box(0.06,0.06,0.9,BEDM,i*0.5,1.26,4.72,bedG);
 const tailP=new THREE.Group();tailP.position.set(0,1.1,0.0);bedG.add(tailP);
 box(2.3,1.0,0.1,BED_D,0,-0.52,-0.03,tailP);for(let i=-2;i<=2;i++)box(0.08,0.9,0.05,BEDM,i*0.45,-0.52,-0.1,tailP);
-const heapGeo=(function(){const g=new THREE.BoxGeometry(2.1,1,4.1,8,1,14),pa=g.attributes.position;
+const heapGeo=(function(){const g=new THREE.BoxGeometry(2.1,1,4.1,18,1,32),pa=g.attributes.position;
   for(let i=0;i<pa.count;i++){if(pa.getY(i)>0){const x=pa.getX(i),z=pa.getZ(i),e=Math.max(Math.abs(x)/1.05,Math.abs(z)/2.05);
     pa.setY(i,-0.5+(1-0.65*e*e)+0.07*Math.sin(x*5.1+z*3.7)+0.05*Math.cos(z*6.3))}}g.computeVertexNormals();return g})();
 const heap=new THREE.Mesh(heapGeo,M(0x7a5232));heap.position.set(0,0.12,2.15);heap.visible=false;heap.castShadow=true;bedG.add(heap);
+edges(2.35,1.4,tBody,WHITE,2.15,1.1,2.15,2.6);edges(2.0,0.75,tBody,WHITE,1.75,2.6,1.75,4.05);
+for(const sd of [-1,1]){
+  // arched front fenders, mud flaps, door seams and handles, steps, air tanks, mirrors
+  const fg=new THREE.CylinderGeometry(0.74,0.74,0.52,40,1,true,0,Math.PI);fg.rotateZ(Math.PI/2);
+  const fe=new THREE.Mesh(fg,WHITE_DS);fe.position.set(sd*1.05,0.55,3.1);fe.castShadow=true;tBody.add(fe);
+  box(0.5,0.6,0.03,RUBBER,sd*0.95,0.5,-3.35,tBody);box(0.5,0.08,0.04,STEEL,sd*0.95,0.82,-3.35,tBody);
+  for(const z of [1.15,2.55])box(0.02,1.25,0.03,STEEL,sd*1.18,2.1,z,tBody);
+  box(0.02,0.03,1.4,STEEL,sd*1.18,1.48,1.85,tBody);
+  box(0.03,0.04,0.18,CHROME,sd*1.2,2.15,1.35,tBody);
+  for(const y of [1.25,1.9]){const gh=cyl(0.02,0.02,0.55,12,CHROME,tBody);gh.position.set(sd*1.2,y+0.1,1.05)}
+  const at=cyl(0.17,0.17,0.85,32,STEEL_L,tBody);at.rotation.x=Math.PI/2;at.position.set(sd*0.85,0.95,-0.4);
+  for(const z of [-0.8,0.0]){const band=cyl(0.18,0.18,0.03,32,STEEL,tBody);band.rotation.x=Math.PI/2;band.position.set(sd*0.85,0.95,z)}
+  const arm=box(0.04,0.04,0.55,STEEL,sd*1.35,2.3,2.8,tBody);arm.rotation.y=sd*0.4;
+  box(0.06,0.6,0.28,STEEL,sd*1.5,2.3,2.95,tBody);box(0.07,0.22,0.24,M(0x9aa9b4,{shininess:90}),sd*1.5,1.88,2.95,tBody);
+  box(0.25,0.12,0.06,REDL,sd*0.9,1.0,-3.42,tBody);box(0.1,0.12,0.06,AMBER,sd*0.62,1.0,-3.42,tBody);
+  for(let i=0;i<6;i++)box(0.02,0.03,0.7,STEEL,sd*1.005,1.62+i*0.07,3.35,tBody);
+}
+box(0.9,0.5,0.6,STEEL_L,1.0,1.05,-0.45+0.0,tBody);
+for(const x of [-0.25,0.25]){const hn=new THREE.Mesh(new THREE.ConeGeometry(0.06,0.45,20,2,true),CHROME);hn.rotation.x=-Math.PI/2;hn.position.set(x,2.95,1.6);tBody.add(hn)}
+const shield=cyl(0.11,0.11,0.9,32,STEEL_L,tBody);shield.position.set(-1.0,2.1,1.0);
+for(let i=0;i<4;i++)box(2.0,0.02,0.02,STEEL,0,2.18,3.0+i*0.25,tBody);
 mergeStatic(tBody,[]);mergeStatic(bedG,[heap]);mergeStatic(tailP,[]);
 ram(tBody,[0,1.05,0.4],bedG,[0,-0.05,3.75],0.13,0.065,1.3);
+ram(tBody,[0,1.05,0.4],bedG,[0,-0.05,3.75],0.1,0.05,0.9);
 const tl=new THREE.Vector3(),tv=new THREE.Vector3();
 function inBed(p){tl.copy(p);bedG.worldToLocal(tl);return tl.x>-1.1&&tl.x<1.1&&tl.z>0.1&&tl.z<4.2&&tl.y>-0.3&&tl.y<3.2}
 function heapTop(){return 0.12+(heap.visible?heap.scale.y*0.5+0.5*heap.scale.y:0)}
@@ -813,7 +842,7 @@ function updateTruck(dt,thr,steerIn,bedIn){
 }
 texManager.onLoad=()=>{
   texMixU.value=1;
-  for(const mt of [ORANGE,ORANGE_D,STEEL,STEEL_L,RUBBER,WHITE,BEDM,BED_D]){mt.map=texGrime;mt.needsUpdate=true}
+  for(const mt of [ORANGE,ORANGE_D,STEEL,STEEL_L,RUBBER,WHITE,WHITE_DS,BEDM,BED_D]){mt.map=texGrime;mt.needsUpdate=true}
   heap.material.map=texDirt;heap.material.color.setHex(0xd8c2b0);heap.material.needsUpdate=true;
   ORANGE.color.setHex(0xf27a22);ORANGE_D.color.setHex(0xc85e1c);
   loadMesh.material.map=texDirt;loadMesh.material.color.setHex(0xd8c2b0);loadMesh.material.needsUpdate=true;
@@ -964,19 +993,22 @@ addEventListener('keydown',e=>{if(e.code==='KeyM')toggleMap();else if(e.code==='
 addEventListener('resize',()=>{if(!$('#bigmap').hidden)sizeBig()});
 
 // ---------- speed test ----------
-const LEVELS=[0,4,12,28,60,124],LEVEL_S=5,WARM=1;
+const LEVELS=[0,8,24,56,120,248],LEVEL_S=5,WARM=1;
 const bench={on:false,t:0,lvl:-1,stats:[],clones:[],built:false,barT:0};
 function buildClones(){
   machine.updateMatrixWorld(true);
   const inv=new THREE.Matrix4().copy(machine.matrixWorld).invert(),rel=new THREE.Matrix4(),P=new THREE.Matrix4(),q=new THREE.Quaternion(),o=new THREE.Vector3(),sc=new THREE.Vector3(1,1,1),out=new THREE.Matrix4();
   const max=LEVELS[LEVELS.length-1],places=[];
-  for(let i=0;i<max;i++){const r=9+(i%6)*3.1+Math.floor(i/60)*1.4,a=i*2.39996;const x=Math.cos(a)*r,z=Math.sin(a)*r;
+  for(let i=0;i<max;i++){const r=11+(i%8)*4.2+Math.floor(i/80)*2.1,a=i*2.39996;const x=Math.cos(a)*r,z=Math.sin(a)*r;
     q.setFromAxisAngle(new THREE.Vector3(0,1,0),a*1.7);o.set(x,baseHeight(x,z),z);places.push(new THREE.Matrix4().compose(o.clone(),q.clone(),sc))}
-  machine.traverse(m=>{if(!m.isMesh)return;
-    rel.multiplyMatrices(inv,m.matrixWorld);
-    const im=new THREE.InstancedMesh(m.geometry,m.material,max);im.castShadow=true;im.receiveShadow=false;im.frustumCulled=false;
-    for(let i=0;i<max;i++){out.multiplyMatrices(places[i],rel);im.setMatrixAt(i,out)}
-    im.count=0;scene.add(im);bench.clones.push(im)});
+  const cloneOf=(root,offset)=>{root.updateMatrixWorld(true);const rinv=new THREE.Matrix4().copy(root.matrixWorld).invert();
+    root.traverse(m=>{if(!m.isMesh)return;
+      rel.multiplyMatrices(rinv,m.matrixWorld);
+      const im=new THREE.InstancedMesh(m.geometry,m.material,max);im.castShadow=true;im.receiveShadow=false;im.frustumCulled=false;
+      for(let i=0;i<max;i++){out.multiplyMatrices(places[i],offset).multiply(rel);im.setMatrixAt(i,out)}
+      im.count=0;scene.add(im);bench.clones.push(im)})};
+  cloneOf(machine,new THREE.Matrix4());
+  cloneOf(truck,new THREE.Matrix4().makeRotationY(Math.PI/2).setPosition(-6.5,0,1.5));
   bench.built=true;
 }
 function setClones(n){for(const im of bench.clones)im.count=n}
@@ -1000,8 +1032,8 @@ function showBenchResults(){
     const avg=tot>0?ft.length/tot:0,p99=ft.length?ft[Math.min(ft.length-1,Math.floor(ft.length*0.99))]:0;
     return{machines:1+s.n,tris:s.k?s.tris/s.k:0,calls:s.k?s.calls/s.k:0,avg,low:p99>0?1/p99:0}});
   const cls=f=>f>=55?'fps-good':f>=30?'fps-mid':'fps-bad';
-  let html='<tr><th>Machines</th><th>Tris</th><th>Avg FPS</th><th>1% low</th></tr>';
-  for(const r of rows)html+=`<tr><td>${r.machines}</td><td>${fmtTris(r.tris)}</td><td class="${cls(r.avg)}">${r.avg.toFixed(1)}</td><td class="${cls(r.low)}">${r.low.toFixed(0)}</td></tr>`;
+  let html='<tr><th>Excavators + trucks</th><th>Tris</th><th>Avg FPS</th><th>1% low</th></tr>';
+  for(const r of rows)html+=`<tr><td>${r.machines} + ${r.machines}</td><td>${fmtTris(r.tris)}</td><td class="${cls(r.avg)}">${r.avg.toFixed(1)}</td><td class="${cls(r.low)}">${r.low.toFixed(0)}</td></tr>`;
   $('#benchTable').innerHTML=html;
   const best=lim=>{let t=0;for(const r of rows)if(r.avg>=lim)t=Math.max(t,r.tris);return t};
   const t55=best(55),t30=best(30),base=rows[0].avg;
@@ -1012,8 +1044,8 @@ function showBenchResults(){
   $('#benchSummary').innerHTML=sum;
   const w=renderer.domElement.width,h=renderer.domElement.height,gpu=gpuName();
   $('#benchDevice').textContent=`${gpu} · ${w}×${h} px at ${maxPR}x · ${navigator.platform||''}`;
-  $('#benchText').value=['Backhoe Dig speed test',`GPU: ${gpu}`,`Resolution: ${w}x${h} (${maxPR}x)`,`Smooth 55+ FPS up to: ${t55?fmtTris(t55):'not reached'}`,`Playable 30+ FPS up to: ${t30?fmtTris(t30):'not reached'}`,
-    ...rows.map(r=>`${r.machines} machines | ${fmtTris(r.tris)} tris | ${Math.round(r.calls)} draws | ${r.avg.toFixed(1)} avg FPS | ${r.low.toFixed(0)} 1% low`)].join('\n');
+  $('#benchText').value=['Backhoe Dig speed test (v2: excavator + truck pairs)',`GPU: ${gpu}`,`Resolution: ${w}x${h} (${maxPR}x)`,`Smooth 55+ FPS up to: ${t55?fmtTris(t55):'not reached'}`,`Playable 30+ FPS up to: ${t30?fmtTris(t30):'not reached'}`,
+    ...rows.map(r=>`${r.machines} excavators + ${r.machines} trucks | ${fmtTris(r.tris)} tris | ${Math.round(r.calls)} draws | ${r.avg.toFixed(1)} avg FPS | ${r.low.toFixed(0)} 1% low`)].join('\n');
   $('#bench').hidden=false;
 }
 function benchTick(dt){
@@ -1036,7 +1068,7 @@ function benchSample(dt){
   if(bench.t-bench.lvl*LEVEL_S>=WARM){s.ft.push(dt);s.tris+=renderer.info.render.triangles;s.calls+=renderer.info.render.calls;s.k++}
   bench.barT-=dt;
   if(bench.barT<=0){bench.barT=0.2;const left=Math.max(0,Math.ceil(LEVEL_S*LEVELS.length-bench.t));
-    $('#benchBar').innerHTML=`SPEED TEST · ${left} s left<small>Level ${bench.lvl+1} of ${LEVELS.length} · ${1+LEVELS[bench.lvl]} machines · ${fmtTris(renderer.info.render.triangles)} tris</small>`}
+    $('#benchBar').innerHTML=`SPEED TEST · ${left} s left<small>Level ${bench.lvl+1} of ${LEVELS.length} · ${1+LEVELS[bench.lvl]} excavators + trucks · ${fmtTris(renderer.info.render.triangles)} tris</small>`}
 }
 $('#benchBtn').onclick=startBench;
 $('#benchClose').onclick=()=>{$('#bench').hidden=true};
