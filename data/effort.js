@@ -1,7 +1,7 @@
 // Backhoe Dig build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Backhoe Dig",
- "updated": "2026-10-17T06:39:00Z",
+ "updated": "2026-10-17T06:53:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 136,
+   "dh": 140,
    "act": 2.0,
-   "versions": 12
+   "versions": 13
   }
  ],
  "extra": [
@@ -201,6 +201,15 @@ window.EFFORT = {
    "tris": 490576,
    "chars": 92332,
    "what": "UI size option in the menu (1x, 1.5x, 2x); the HUD reflows to fit at the larger sizes."
+  },
+  {
+   "v": 20,
+   "asked": "2026-10-17T01:41:00-05:00",
+   "live": "2026-10-17T01:54:00-05:00",
+   "dh": 4,
+   "tris": 490576,
+   "chars": 93566,
+   "what": "One keyboard layout for every machine: WASD/arrows = left stick, IJKL = right stick; 1/2/3 or Tab switch machine, Shift for fine moves, keys ease in and out, captions show the keys."
   }
  ]
 };
