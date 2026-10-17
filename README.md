@@ -1,4 +1,4 @@
-# Backhoe Dig
+# Corley's Island (Backhoe Dig)
 
 A 3D low-poly excavator game in plain HTML, CSS and JavaScript (three.js r128, no build step). Dig a 3 ft trench on a grassy mesa above a mountain lake (about 295 ft across: a high top with Lookout Knoll and West Rise, and a ramp down a 24 ft rocky scarp to the Lower Bench dirt yard), expose the gas main without hitting it, load the dump truck and haul the spoil over the cliff edge. Then mow the patch of tall grass with the zero-turn mower.
 
@@ -26,6 +26,7 @@ A 3D low-poly excavator game in plain HTML, CSS and JavaScript (three.js r128, n
 | `js/mower.js` | Tall grass patch, zero-turn mower, mowing, clippings, lawn stripes, regrowth and the saved lawn |
 | `js/walker.js` | Walk mode: the site worker, walking, jumping, climbing blocks, collisions |
 | `js/controls.js` | Game state and reset, touch sticks, keyboard, game controller, modes, menu |
+| `js/save.js` | Saves the site in the browser and loads it on start: the dug and dumped ground, groundwater, excavator, truck and load, trench box, blocks, worker (the lawn saves itself in `js/mower.js`) |
 | `js/effects.js` | Shared per-frame vectors, resize |
 | `js/sound.js` | All sound, rendered in the browser: diesel engine loops, turbo, tires, air brakes, hydraulics, relief valve, tracks, bucket scrape, pouring dirt, backup alarm; stereo, distance and cliff echo; the Sound panel (on/off, Master, Engines, Backup alarm, Effects) |
 | `js/maps.js` | Minimap and big map |

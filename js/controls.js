@@ -114,7 +114,7 @@ $('#modeDig').onclick=()=>setMode('dig'); $('#modeDrive').onclick=()=>setMode('d
 $('#camBtn').onclick=()=>{camMode=camMode==='chase'?'cab':'chase';$('#camBtn').textContent=camMode==='chase'?'Cab view':'Chase view'};
 let resetArm=0;
 $('#resetBtn').onclick=()=>{const b=$('#resetBtn');
-  if(resetArm&&performance.now()-resetArm<2500){resetState();resetArm=0;b.textContent='Reset';b.classList.remove('arm');toast('Fresh ground. Paint is back.','good');return}
+  if(resetArm&&performance.now()-resetArm<2500){resetState();siteSaveAll();resetArm=0;b.textContent='Reset';b.classList.remove('arm');toast('Fresh ground. Paint is back.','good');return}
   resetArm=performance.now();b.textContent='Tap again';b.classList.add('arm');
   setTimeout(()=>{if(resetArm&&performance.now()-resetArm>=2400){resetArm=0;b.textContent='Reset';b.classList.remove('arm')}},2500);};
 const help=$('#help');
@@ -137,27 +137,29 @@ for(const t of tiles)t.onclick=()=>startIn(t.dataset.m);
 function markTile(){const m=mode==='drive'?'dig':mode;for(const t of tiles)t.setAttribute('aria-pressed',t.dataset.m===m)}
 markTile();
 help.addEventListener('click',e=>{if(e.target===help)startIn(mode)});
+$('#ctrlBtn').onclick=()=>{const b=$('#ctrlBtn'),box=$('#ctrlBox'),on=box.hidden;box.hidden=!on;b.setAttribute('aria-expanded',on);b.textContent=on?'Hide controls':'Controls';if(on)box.scrollIntoView({block:'start',behavior:'smooth'})};
 function started(){if(!st.startT)st.startT=performance.now()}
 // the version in the menu and on the help card is the last entry in data/effort.js (the build log), so it is never stale
 {const E=window.EFFORT,v=E&&E.versions&&E.versions[E.versions.length-1];
   if(v){const d=new Date(v.live).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit',timeZone:'America/Chicago'});
     $('#verMenu').textContent=`Version ${v.v}`;$('#verHelp').textContent=`Version ${v.v} · went live ${d} Central`}}
 // updates: a Home Screen app can stay open for days without reloading, so the game re-reads the build log when it comes
-// back to the front, when it is restored from the back-forward cache, and every 10 minutes while it is open. A newer
-// version reloads at once if nothing is under way (help card up or nothing touched yet) or the game sat in the background
-// over 10 minutes; otherwise an Update button waits, since a half-dug trench is not saved (the lawn is, on the way out)
+// back to the front, when it is restored from the back-forward cache, and every 10 minutes while it is open. The site and
+// lawn are saved on the way out (save.js, mower.js), so a newer version reloads at once when the game comes back from the
+// background or nothing is under way yet; one that lands mid-play waits behind a tap-to-update button instead of
+// reloading under the player's thumbs
 const GAME_V=(()=>{const E=window.EFFORT,v=E&&E.versions&&E.versions[E.versions.length-1];return v?v.v:0})();
-let verHidT=0,verBusy=false;
-function verReload(){try{lawnSave()}catch(e){}location.reload()}
-function verCheck(away){if(verBusy||!GAME_V||!window.fetch)return;verBusy=true;
+let verBusy=false;
+function verReload(){try{siteSaveAll()}catch(e){}try{lawnSave()}catch(e){}location.reload()}
+function verCheck(back){if(verBusy||!GAME_V||!window.fetch)return;verBusy=true;
   fetch('data/effort.js?t='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.text():'').then(t=>{let n=0;for(const m of t.matchAll(/"v":\s*(\d+)/g))n=Math.max(n,+m[1]);
     if(n<=GAME_V)return;
-    if(!help.hidden||!st.startT||away>600000)verReload();
+    if(!bench.on&&(back||!help.hidden||!st.startT))verReload();
     else{const b=$('#updBtn');b.textContent=`Version ${n} is out · tap to update`;b.hidden=false}}).catch(()=>{}).finally(()=>{verBusy=false})}
 $('#updBtn').onclick=verReload;
-document.addEventListener('visibilitychange',()=>{if(document.hidden)verHidT=performance.now();else{verCheck(verHidT?performance.now()-verHidT:0);verHidT=0}});
-addEventListener('pageshow',e=>{if(e.persisted)verCheck(1e9)});
-setInterval(()=>{if(!document.hidden)verCheck(0)},600000);
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)verCheck(true)});
+addEventListener('pageshow',e=>{if(e.persisted)verCheck(true)});
+setInterval(()=>{if(!document.hidden)verCheck(false)},600000);
 
 let toastTimer=0;
 function toast(t,kind,ms){const el=$('#toastText');el.textContent=t;el.className='show '+(kind||'');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.className=kind||'',ms||2200)}
