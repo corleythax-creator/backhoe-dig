@@ -36,8 +36,13 @@
     <canvas id="mini" title="Tap for the big map (M)"></canvas>
     <div class="row">
       <button id="boxBtn" class="sm" hidden>Hook box</button>
+      <button id="blkBtn" class="sm" aria-pressed="false">Blocks</button>
       <button id="camBtn" class="sm">Cab view</button>
       <button id="menuBtn" class="sm sq" aria-label="Menu" aria-expanded="false">☰</button>
+    </div>
+    <div id="blkBar" hidden>
+      <div class="bseg" role="group" aria-label="Block size"><button class="sm" data-b="1" aria-pressed="false">1×1</button><button class="sm" data-b="2" aria-pressed="true">2×2</button><button class="sm" data-b="3" aria-pressed="false">3×3</button></div>
+      <div class="row"><button id="blkRemove" class="sm">Lift</button><button id="blkPlace" class="sm">Place</button></div>
     </div>
     <div id="menu" hidden>
       <button id="helpBtn">How to play</button>
@@ -74,7 +79,7 @@
     <div class="legend">
       <span><i style="background:#f07a22"></i>Excavator</span><span><i style="background:#e9ecea"></i>Dump truck</span>
       <span><i style="background:#f2f2ee;height:3px"></i>Trench paint</span><span><i style="background:#f5c518;height:3px"></i>Gas main</span>
-      <span><i style="background:#b89a6b"></i>Dirt road</span><span><i style="background:#7a5232"></i>Dug or dumped</span><span><i style="background:#d8a514"></i>Trench box</span><span><i style="background:#2d7a94"></i>Lake</span>
+      <span><i style="background:#b89a6b"></i>Dirt road</span><span><i style="background:#7a5232"></i>Dug or dumped</span><span><i style="background:#d8a514"></i>Trench box</span><span><i style="background:#b9b6ae"></i>Block</span><span><i style="background:#2d7a94"></i>Lake</span>
     </div>
   </div>
 </div>
@@ -103,11 +108,12 @@
       <dt>Soil</dt><dd>Dark topsoil, then red clay that holds a steep wall. Sand means the gas main is close, and it slumps. Grey rock is past trench depth and slow going. Dug dirt fluffs up about a quarter, so it fills the truck faster than the hole it came from.</dd>
       <dt>Cave-ins</dt><dd>Walls deeper than about 5 ft, or with spoil piled within 2 ft of the edge, cave in after a while. Dirt trickling off the lip means get the bucket out.</dd>
       <dt>Trench box</dt><dd>Swing the bucket over the yellow box and press T (controller X, or the Hook box button). It hangs from the bucket and turns with the swing. Lower it into the trench and press again to set it. Walls between its panels can't slump or cave in, so dig deep inside it and leapfrog it along the trench.</dd>
+      <dt>Blocks</dt><dd>Tap Blocks (or press B) and pick a size: 1×1, 2×2 or 3×3 ft concrete cubes. A yellow outline shows where one lands under the bucket; tap Place (Space) to set it. They snap to a 1 ft grid and stack. Lift (X) picks up the top block under the bucket. Tracks and tires roll over a 1 ft block; taller ones stop them.</dd>
       <dt>Look</dt><dd>Drag the scene to look around.</dd>
       <dt>Map</dt><dd>Tap the minimap or press M for the big map.</dd>
       <dt>Screen</dt><dd>Tap the status card to fold it down. Speed test, Reset, UI size (1x, 1.5x, 2x) and Dirt detail (1x, 2x, 4x: more clods, flying dirt and lumpier loads; turn it down if the game slows) are in the ☰ menu.</dd>
-      <dt>Controller</dt><dd>Sticks work like the two on-screen sticks. Triggers are gas and reverse when driving. LB / RB switch machine · Y cab view · View map · Menu this help · B closes.</dd>
-      <dt>Keys</dt><dd>WASD (or arrows) is always the left stick, IJKL is always the right stick, in every mode. 1 Dig · 2 Drive · 3 Truck (Tab cycles). Hold Shift for slow, fine moves. C cab view · M map · H this help.</dd>
+      <dt>Controller</dt><dd>Sticks work like the two on-screen sticks. Triggers are gas and reverse when driving. LB / RB switch machine · Y cab view · A place block · D-pad up blocks on/off, left/right block size, down pick up · View map · Menu this help · B closes.</dd>
+      <dt>Keys</dt><dd>WASD (or arrows) is always the left stick, IJKL is always the right stick, in every mode. 1 Dig · 2 Drive · 3 Truck (Tab cycles). Hold Shift for slow, fine moves. C cab view · M map · H this help. Blocks: B on/off · Space place · V size · X pick up.</dd>
     </dl>
     <p>To scoop: boom down until the teeth bite, curl in while pulling the stick toward you, boom up, swing, then dump.</p>
     <button id="startBtn">Start digging</button>
@@ -123,6 +129,7 @@
 <script src="js/truck.js"></script>
 <script src="js/trenchbox.js"></script>
 <script src="js/dirt.js"></script>
+<script src="js/blocks.js"></script>
 <script src="js/controls.js"></script>
 <script src="js/effects.js"></script>
 <script src="js/maps.js"></script>

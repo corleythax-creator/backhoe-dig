@@ -21,8 +21,9 @@ function frame(now){
   st.x=clamp(st.x+Math.sin(st.yaw)*driveIn*2.6*dt,-60,60);
   st.z=clamp(st.z+Math.cos(st.yaw)*driveIn*2.6*dt,-60,60);
   {const rr=mesaR(st.x,st.z),lim=EDGE-3.5;if(rr>lim){const f=lim/rr;st.x*=f;st.z=MZ+(st.z-MZ)*f}}
+  blkPush(st,EX_C,EX_R);
   const sy=Math.sin(st.yaw),cy=Math.cos(st.yaw);
-  const sample=(lx,lz)=>hAt(st.x+lx*cy+lz*sy,st.z-lx*sy+lz*cy);
+  const sample=(lx,lz)=>surfAt(st.x+lx*cy+lz*sy,st.z-lx*sy+lz*cy);
   const hf=(sample(-1,1.7)+sample(1,1.7))/2,hb=(sample(-1,-1.7)+sample(1,-1.7))/2;
   const hr=(sample(1,1.7)+sample(1,-1.7))/2,hl=(sample(-1,1.7)+sample(-1,-1.7))/2;
   const k=Math.min(1,dt*8);
@@ -32,11 +33,11 @@ function frame(now){
   boomP.rotation.x=-st.a1; stickP.rotation.x=-st.a2; bucketP.rotation.x=-st.a3;
   machine.updateMatrixWorld(true); updateLinkage(); jointJ.updateMatrixWorld(); updateRams(); updateHoses();
   tipMark.getWorldPosition(tip); midMark.getWorldPosition(mid); bucketP.getWorldQuaternion(q);
-  updateBox(dt);
+  updateBox(dt);blkTick(dt);
 
   // dig
   const g=hAt(tip.x,tip.z);
-  st.below=tip.y<g;
+  st.below=tip.y<g&&!blkHit(tip.x,tip.y,tip.z);
   // soil at the teeth sets how hard the arm works; a full bucket pushing on barely moves
   {const ti=Math.max(0,Math.min(N,Math.round((tip.x+S/2)/CELL))),tj=Math.max(0,Math.min(N,Math.round((tip.z+S/2)/CELL)));
     st.soil=st.below?matAt(tj*V+ti,tip.y):-1;
@@ -78,7 +79,7 @@ function frame(now){
   if(st.slumpT>0){st.slumpT-=dt;for(let n=0;n<3*GRID_K;n++)if(slump())st.dirty=true}
   if(st.dirty){
     updateTufts(dI0-1,dI1+1,dJ0-1,dJ1+1);
-    updateTerrain();st.dirty=false;mapDirty=true;
+    updateTerrain();st.dirty=false;mapDirty=true;blkTerrainMoved();
     if(st.slumpT<=0){winOn=false}
     if(!st.exposed){
       const jz=Math.round((PIPE_Z+S/2)/CELL);
@@ -123,7 +124,7 @@ function frame(now){
     if(mode==='truck'){look.set(tr.x,tr.y+1.6,tr.z);cyaw=tr.yaw+Math.PI+orbitYaw;cd=camDist+3}
     else{const fx=Math.sin(hy),fz=Math.cos(hy);look.set(st.x+fx*4,st.y+0.8,st.z+fz*4);cyaw=hy+Math.PI+orbitYaw}
     camT.set(look.x+Math.sin(cyaw)*Math.cos(orbitPitch)*cd,look.y+Math.sin(orbitPitch)*cd,look.z+Math.cos(cyaw)*Math.cos(orbitPitch)*cd);
-    camT.y=Math.max(camT.y,hAt(camT.x,camT.z)+1.2);
+    camT.y=Math.max(camT.y,surfAt(camT.x,camT.z)+1.2);
     if(firstCam){camera.position.copy(camT);firstCam=false}else camera.position.lerp(camT,Math.min(1,dt*5));
     camera.lookAt(look);
   }else{

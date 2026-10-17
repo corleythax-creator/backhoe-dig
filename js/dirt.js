@@ -104,7 +104,7 @@ function particlesTick(dt){
   let n=0;
   for(const p of parts){if(!p.on)continue;p.v.y-=9.8*dt;const pp=p.m.position;pp.addScaledVector(p.v,dt);
     if(inBed(pp)&&tl.y<heapTop()){p.on=false;continue}
-    if(pp.y<hAt(pp.x,pp.z)){p.on=false;
+    if(pp.y<surfAt(pp.x,pp.z)){p.on=false;if(pp.y>hAt(pp.x,pp.z)+0.02)continue;
       if(Math.random()<0.35){const k=Math.round((pp.z+S/2)/CELL)*V+Math.round((pp.x+S/2)/CELL);
         if(k>=0&&k<V*V){const m=matAt(k,H[k]-0.01);if(m!==2)addClod(CRUMB,pp.x,pp.z,0.02+Math.random()*0.04,matColor(k,m))}}
       continue}
