@@ -276,8 +276,11 @@ function updateTruck(dt,thr,steerIn,bedIn){
   if(v2*Math.abs(curv)>latMax)curv=Math.sign(curv)*latMax/v2;
   // the rear tandem rolls along its heading and the cab swings around it, so the back end cuts inside the turn
   const sy0=Math.sin(tr.yaw),cy0=Math.cos(tr.yaw),rx=tr.x+sy0*REAR+sy0*tr.v*dt,rz=tr.z+cy0*REAR+cy0*tr.v*dt;
+  const ox=tr.x,oz=tr.z,oyaw=tr.yaw,w0=wallCount(tr.x,tr.z,tr.yaw,TR_P);
   const yawRate=-tr.v*curv;tr.yaw+=yawRate*dt;
   tr.x=rx-Math.sin(tr.yaw)*REAR;tr.z=rz-Math.cos(tr.yaw)*REAR;
+  // the scarp face, ramp banks and stockpiles are too steep to climb: the truck stops against them
+  if(wallCount(tr.x,tr.z,tr.yaw,TR_P)>w0){tr.x=ox;tr.z=oz;tr.yaw=oyaw;if(Math.abs(tr.v)>1.2){shake=reduceMotion?0:0.12;rumble(200,0.5)}tr.v=0}
   // the rim berm keeps both axles on the mesa (the tail can still hang over the edge to dump): head-on it stops
   // the truck, at a glancing angle it scrapes along and keeps most of its speed
   for(const lz of [3.1,REAR]){const sy=Math.sin(tr.yaw),cy=Math.cos(tr.yaw),px=tr.x+sy*lz,pz=tr.z+cy*lz,rr=mesaR(px,pz),lim=EDGE-1.0;
@@ -329,7 +332,7 @@ function updateTruck(dt,thr,steerIn,bedIn){
     const out=Math.min(tr.load,(tr.bed-0.32)*3.2*dt);tr.load-=out;sndIn.dump=out/dt;if(tr.load<0.0005){tr.load=0;tr.stuck=TRUCK_CAP*0.025*(0.4+1.6*tr.loadMix[CLAY])*(1+2*tr.loadWet)}
     truck.localToWorld(tv.set(0,0.3,-4.9));tr.pourRate=out/dt;tr.pourP.copy(tv);
     if(mesaR(tv.x,tv.z)<EDGE-1.2&&Math.abs(tv.x)<S/2-0.8&&Math.abs(tv.z)<S/2-0.8){deposit(tv.x,tv.z,out,tr.loadC,tr.loadMix,dropSpread(tv.y-hAt(tv.x,tv.z)),tr.loadWet);st.dirty=true;st.slumpT=2.5}
-    else{tr.hauled+=out;if(!tr.haulWarned&&tr.load<=0){tr.haulWarned=true;toast('Load hauled off site.','good')}}
+    else{tr.hauled+=out;if(!tr.haulWarned&&tr.load<=0){tr.haulWarned=true;toast(mesaR(tv.x,tv.z)<EDGE-1.2?'Load dumped in the yard.':'Load hauled off site.','good')}}
     bedG.localToWorld(tv.set(0,0.4,0.2));for(let n=0;n<Math.ceil(out*40);n++)spawn(tv,1.2);
   }
   if(tr.load<TRUCK_CAP*0.95)tr.fullWarned=false;

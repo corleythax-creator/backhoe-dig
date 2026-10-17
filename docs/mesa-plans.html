@@ -1,0 +1,408 @@
+<title>Mesa Layout Plans</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a site-plan set. One sheet per plan, drawn map beside its numbers; stacks to one column on phones. */
+:root{
+  --bg:#eceee8; --sheet:#f6f7f3; --fg:#1d231f; --muted:#59645b; --line:#c8cdc3;
+  --accent:#c9601c; --accent-soft:#f3dccb; --ok:#3f7a3a;
+  --f-display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --f-body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121613; --sheet:#1a1f1b; --fg:#e3e8e1; --muted:#9aa59b; --line:#2e3630;
+  --accent:#f0884a; --accent-soft:#3a2618; --ok:#8cc47f; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121613; --sheet:#1a1f1b; --fg:#e3e8e1; --muted:#9aa59b; --line:#2e3630;
+  --accent:#f0884a; --accent-soft:#3a2618; --ok:#8cc47f; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 56px}
+.wrap{max-width:1180px;margin:0 auto;display:grid;gap:28px}
+h1,h2,h3{font-family:var(--f-display);font-weight:600;line-height:1.1;margin:0;text-wrap:balance}
+h1{font-size:clamp(34px,6vw,54px);letter-spacing:.01em}
+h2{font-size:clamp(28px,4.4vw,38px)}
+h3{font-size:20px;letter-spacing:.02em}
+p{margin:0;max-width:68ch}
+.eyebrow{font-family:var(--f-display);font-size:14px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+.muted{color:var(--muted)}
+.mono{font-family:var(--f-mono);font-size:.88em;font-variant-numeric:tabular-nums}
+header{display:grid;gap:12px}
+.lede{font-size:18px}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.fact{background:var(--sheet);padding:14px 16px;display:grid;gap:2px;min-width:0}
+.fact b{font-family:var(--f-display);font-size:28px;font-weight:600;font-variant-numeric:tabular-nums}
+.fact span{font-size:14px;color:var(--muted)}
+.legend{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:14px;color:var(--muted)}
+.legend i{display:inline-block;width:14px;height:14px;border-radius:2px;vertical-align:-2px;margin-right:6px;border:1px solid rgba(0,0,0,.18)}
+.sheet{background:var(--sheet);border:1px solid var(--line);border-radius:8px;padding:22px clamp(16px,2.4vw,28px);display:grid;gap:20px}
+.sheet-head{display:grid;gap:6px}
+.sheet-body{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:26px;align-items:start}
+@media (max-width:860px){.sheet-body{grid-template-columns:minmax(0,1fr)}}
+.mapbox{display:grid;gap:10px;min-width:0}
+canvas.map{width:100%;height:auto;border-radius:4px;border:1px solid var(--line);display:block;background:#2d5c6e}
+.profile{width:100%;height:auto;display:block}
+.cap{font-size:13px;color:var(--muted)}
+.detail{display:grid;gap:18px;min-width:0}
+.kv{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.kv div{background:var(--bg);padding:10px 12px;display:grid;gap:1px;min-width:0}
+.kv b{font-family:var(--f-display);font-size:22px;font-weight:600;font-variant-numeric:tabular-nums;white-space:nowrap}
+.kv span{font-size:12.5px;color:var(--muted);line-height:1.3}
+.mix{display:flex;height:12px;border-radius:3px;overflow:hidden;border:1px solid var(--line)}
+.mix div{height:100%}
+ul{margin:0;padding-left:20px;display:grid;gap:6px}
+li{max-width:66ch}
+.tablebox{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:14.5px}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-family:var(--f-display);font-weight:600;font-size:15px;letter-spacing:.04em;color:var(--muted)}
+td.n{font-family:var(--f-mono);font-size:13.5px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.pick{border:2px solid var(--accent);background:var(--accent-soft);border-radius:8px;padding:18px 20px;display:grid;gap:8px}
+.cols2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:22px}
+.cols2>div{display:grid;gap:10px;min-width:0}
+</style>
+
+<div class="wrap">
+<header>
+  <div class="eyebrow">Backhoe Dig · site planning</div>
+  <h1>Mesa Layout Plans</h1>
+  <p class="lede">Three ways to grow the mesa to 1.5 times its size. Each one mixes grass, worked dirt and haul roads, adds hills, and gives the machines a road down to a lower level. The maps below are drawn from the same terrain formulas the game would use, so the heights, grades and areas are measured, not guessed.</p>
+</header>
+
+<section class="facts" id="facts"></section>
+
+<div class="cols2">
+  <div>
+    <h3>Common to all three</h3>
+    <ul>
+      <li>The mesa grows from about <b>197 ft</b> across to about <b>295 ft</b> across (1.5×). The extra ground goes south, east and west.</li>
+      <li>The north rim stays where it is, so the trench, the gas main, the tall-grass patch, the start spots and the truck's dump-over-the-cliff spot don't move.</li>
+      <li>The north rim road stays as the dump road. The single ring road is replaced by a road network: haul roads at 12 ft wide and narrower dirt tracks at 8 ft.</li>
+      <li>The cliffs still drop about 150 ft to the meadows and lake on every side the plan doesn't change.</li>
+    </ul>
+  </div>
+  <div>
+    <h3>Reading the maps</h3>
+    <div class="legend" id="legend"></div>
+    <p class="cap">North is up. Thin lines are contours every 5 ft, heavier every 25 ft. The dashed white line is today's mesa rim. The red mark is the trench, the yellow dashes are the gas main and the outlined box is the tall-grass patch. The section line A–A′ is the cut shown in the profile under each map.</p>
+  </div>
+</div>
+
+<div id="plans" class="wrap" style="gap:28px"></div>
+
+<section class="sheet">
+  <div class="sheet-head"><div class="eyebrow">Side by side</div><h2>How the three compare</h2></div>
+  <div class="tablebox"><table id="compare"></table></div>
+  <p class="cap">Developer hours are a judgment for one experienced three.js developer working by hand, as in the build log. Each includes about 10 hours of shared groundwork (listed below). Triangle cost is added on top of today's scene of about 991,000.</p>
+</section>
+
+<section class="sheet">
+  <div class="sheet-head"><div class="eyebrow">Shared groundwork</div><h2>What changes in the code for any plan</h2></div>
+  <div class="cols2">
+    <div>
+      <h3>Terrain</h3>
+      <ul>
+        <li><span class="mono">EDGE</span> goes from 30 m to 45 m and the mesa centre <span class="mono">MZ</span> moves from 16 to 30, so the north rim stays put.</li>
+        <li><span class="mono">baseHeight</span> gains the plan's hills, levels and graded roads. The 210 ft dig grid stays where it is, around the trench.</li>
+        <li>The rest of the mesa needs its own ground mesh at about 1.6 ft spacing (cut out around the dig grid, like the outer ground is now). Hills and road edges look blocky on the 6.5 ft outer mesh.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Roads and driving</h3>
+      <ul>
+        <li><span class="mono">roadOff</span> and <span class="mono">roadTint</span> change from one ring to a list of road centrelines, each with a height profile for the graded ramps.</li>
+        <li>The four "stay on the mesa" checks (excavator, truck, mower, blocks) use one shared test of driveable ground instead of the distance from the centre, so the lower levels count as ground and the cliff edges still stop the machines.</li>
+        <li>The truck already rolls back on a grade; it needs a check that it can climb a loaded ramp in low gear.</li>
+      </ul>
+    </div>
+    <div>
+      <h3>Scenery and maps</h3>
+      <ul>
+        <li>Grass tufts spread over the bigger area: about 14,000 instead of 9,000 to keep the same density, and none on dirt or roads.</li>
+        <li>Tree placement learns about hills and the lower levels.</li>
+        <li>The minimap and big map pick up the new roads and shade the hills; the big map's 790 ft view already covers the bigger mesa.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="pick" id="pick"></section>
+</div>
+
+<script>
+// ---------- shared terrain model (metres internally, feet on screen) ----------
+const FT=3.28084, E=45, MZ2=30, E_OLD=30, MZ_OLD=16, WATER=-58;
+const ss=(a,b,x)=>{const t=Math.min(1,Math.max(0,(x-a)/(b-a)));return t*t*(3-2*t)};
+const wob=a=>1+0.06*Math.sin(a*5+0.7)+0.035*Math.sin(a*11+2.1);
+const rAt=(x,z,cz)=>{z-=cz;return Math.pow(x**4+z**4,0.25)*wob(Math.atan2(z,x))};
+const rNew=(x,z)=>rAt(x,z,MZ2), rOld=(x,z)=>rAt(x,z,MZ_OLD);
+const hash=(i,j)=>{const s=Math.sin(i*127.1+j*311.7)*43758.5453;return s-Math.floor(s)};
+function bump(x,z,cx,cz,rx,rz,h){const t=Math.hypot((x-cx)/rx,(z-cz)/rz);return t>=1?0:h*0.5*(1+Math.cos(Math.PI*t))}
+function segD(x,z,ax,az,bx,bz){const dx=bx-ax,dz=bz-az,L2=dx*dx+dz*dz;let t=((x-ax)*dx+(z-az)*dz)/L2;t=Math.max(0,Math.min(1,t));return [Math.hypot(x-ax-dx*t,z-az-dz*t),t]}
+function ridge(x,z,ax,az,bx,bz,hw,h){const [d,t]=segD(x,z,ax,az,bx,bz);if(d>=hw)return 0;return h*(0.8+0.2*Math.sin(t*Math.PI))*0.5*(1+Math.cos(Math.PI*d/hw))}
+const rolls=(x,z,a)=>a*(0.6*Math.sin(x*0.09+1.3)*Math.cos(z*0.08)+0.4*Math.sin(x*0.21+z*0.17));
+// the game's cliff, meadows and lake outside the rim (from baseHeight in js/terrain.js)
+function cliff(d,x,z){
+  const c=-46*ss(0,7,d)-1.6*Math.sin(d*1.9)*ss(0,1,d)*(1-ss(6,9,d));
+  const low=-14*ss(7,60,d)-9*ss(40,95,d);
+  const bumps=(Math.sin(x*0.07+z*0.05)*3+Math.sin(x*0.17-z*0.13)*1.5+Math.sin(x*0.031-z*0.027+1)*4)*ss(8,22,d);
+  return c+low+bumps+0.5*(1-ss(0,2,d));
+}
+
+// ---------- the three plans ----------
+const NORTH_ROAD=[[-30,-6],[-14,-12],[0,-13],[16,-12],[32,-6]];
+const PLANS=[
+{
+  key:'A', name:'Two Benches', tag:'Step down inside the mesa',
+  frame:[-70,70,-30,96],
+  blurb:'The north part of the mesa stays the high, grassy top where the trench is. Across the middle a rocky scarp drops 24 ft to a Lower Bench that covers the south third: a dirt yard with stockpiles. One graded ramp runs down the face of the scarp on a diagonal.',
+  top(x,z){
+    let h=rolls(x,z,0.3)+bump(x,z,26,20,11.5,11.5,5.5)+bump(x,z,-22,22,9,9,3);
+    const zs=45+2.5*Math.sin(x*0.09+0.5),lo=ss(zs-4,zs+5,z);
+    const bench=-7.3+rolls(x,z,0.15)+bump(x,z,-8,62,4.5,4,2.4)+bump(x,z,9,62,5,4,2.4)+bump(x,z,22,60,3.5,3,1.5);
+    return h+(bench-h)*lo;
+  },
+  dirt(x,z,r){const zs=45+2.5*Math.sin(x*0.09+0.5);
+    return Math.max(ss(zs+3,zs+6,z)*(1-ss(36,41,r)), bump(x,z,-22,4,9,6,1)>0.2?1:0, bump(x,z,31,48,7,4,1)>0.3&&z>46?1:0)},
+  roads:[
+    {name:'North rim road (dump road)',kind:'haul',pts:[[-40,16],...NORTH_ROAD,[40,6],[41,22],[40,36],[24,39],[0,39],[-24,39],[-38,34],[-40,16]]},
+    {name:'Scarp ramp to the Lower Bench',kind:'haul',graded:true,pts:[[40,36,0],[20,44.5,-2.4],[0,49,-4.8],[-22,53,-7.3]]},
+    {name:'Lower Bench loop',kind:'haul',pts:[[-22,53],[-33,60],[-20,68],[0,68],[20,66],[30,59],[18,54],[0,55],[-22,53]]},
+    {name:'Track up Lookout Knoll',kind:'track',pts:[[41,12],[33,9],[24,11],[19,18],[22,24],[26,20]]},
+  ],
+  labels:[[26,13,'Lookout Knoll'],[26,16.6,'18 ft',1],[-22,16,'West Rise'],[-22,19.6,'10 ft',1],[-10,30,'Upper mesa · 0 ft'],[0,61,'Lower Bench · −24 ft'],[-24,5,'Laydown',1],[46,52,'Scarp ramp',1],[46,55.6,'1 in 9',1],[-50,91,'Meadows 150 ft below',1]],
+  section:[[26,-24],[26,20],[0,90]],
+  levels:'Upper mesa 0 ft · Lower Bench −24 ft',
+  down:'A 12 ft graded ramp cut diagonally down the scarp, from the east end of the top road to the west end of the bench.',
+  play:['The truck can dump on the bench yard as well as over the cliff, so spoil piles grow where you can still reach them.','Two levels to plan around: dig up top, haul down the ramp, and stockpile below.','Lookout Knoll gives a high view over the trench and the lake for the camera.'],
+  build:['Smallest change: the bench is one more term in the mesa-top height.','The ramp is one graded road; the scarp is steep enough to read as rock on its own.','The bench stays inside the 1.5× rim, so the cliff and lake code is untouched.'],
+  hours:16, tris:'about +70,000',
+},
+{
+  key:'B', name:'Ridge and Switchbacks', tag:'Drive down off the mesa',
+  frame:[-70,70,-30,158],
+  blurb:'The top rolls: a long Spine Ridge across the southeast, a West Hill, and a dry wash with a gravel floor between them. The south cliff is replaced by a long grassy slope, and a switchback road with two hairpins zigzags 60 ft down it to a Lower Landing on a shoulder above the lake.',
+  top(x,z){
+    let h=rolls(x,z,0.45)+ridge(x,z,6,52,34,34,14,7.6)+bump(x,z,-24,36,11,11,4.6);
+    const [dw,tw]=segD(x,z,0,24,-8,70),wash=dw<5?1.2*0.5*(1+Math.cos(Math.PI*dw/5))*ss(0,0.15,tw):0;
+    return h-wash;
+  },
+  outside(x,z,d,h){
+    const sw=ss(0.35,0.8,(z-MZ2)/Math.hypot(x,z-MZ2));if(sw<=0)return h;
+    let sp=d<48?-18*(0.5*Math.min(1,d/48)+0.5*ss(0,48,d)):-18+rolls(x,z,0.25)*ss(48,54,d);
+    sp=sp+(h-sp)*ss(72,84,d);
+    return h+(sp-h)*sw;
+  },
+  area(x,z,r,h){if(r<E)return true;const d=r-E,sw=ss(0.35,0.8,(z-MZ2)/Math.hypot(x,z-MZ2));return sw>0.6&&d<74&&h>-18.7},
+  dirt(x,z,r,h){const [dw,tw]=segD(x,z,0,24,-8,70);
+    return Math.max(dw<5.2&&tw>0.08?1:0, bump(x,z,20,138,40,14,1)>0.12?1:0, bump(x,z,-33,20,9,8,1)>0.2?1:0, bump(x,z,-30,61,7,6,1)>0.2?1:0)},
+  roads:[
+    {name:'North rim road (dump road)',kind:'haul',pts:[[-36,40],[-38,20],...NORTH_ROAD,[40,8],[40,22],[22,25],[8,30],[5,46],[-8,60],[-24,70],[-36,56],[-36,40]]},
+    {name:'Switchbacks to the Lower Landing',kind:'haul',graded:true,pts:[[-24,70,0],[28,84,-5.2],[36,93,-6.8],[-26,112,-11.6],[-32,122,-13.6],[16,132,-18]]},
+    {name:'Landing track',kind:'track',pts:[[16,132],[34,138],[48,130]]},
+    {name:'Track up the Spine',kind:'track',pts:[[8,30],[14,38],[19,44]]},
+  ],
+  labels:[[24,40,'Spine Ridge'],[24,43.6,'25 ft',1],[-24,30,'West Hill'],[-24,33.6,'15 ft',1],[-13,50,'Dry wash',1],[0,6,'',1],[48,100,'Switchbacks',1],[48,103.6,'1 in 11',1],[-24,143,'Lower Landing · −60 ft'],[-40,24,'Borrow cut',1]],
+  section:[[14,-24],[17,45],[12,146]],
+  levels:'Top 0 ft · ridge +25 ft · Lower Landing −60 ft',
+  down:'A 12 ft graded road with two hairpins down the new south slope, about 630 ft long, ending on a flat shoulder 60 ft below the top.',
+  play:['A real drive: loaded truck down the switchbacks, empty truck back up, with the hairpins as the tricky part.','The Landing is a big dirt yard above the lake, a second place to dump that looks over the water.','The ridge and wash break up the open top so the mower has slopes and edges to follow.'],
+  build:['The south slope and landing replace part of the cliff, so the outer ground mesh changes, not just the mesa top.','Hairpins need a 40 ft turning circle for the truck; the road widens there.','Trees move onto the slope between the switchback legs.'],
+  hours:20, tris:'about +85,000',
+},
+{
+  key:'C', name:'Quarry Pit', tag:'Dig down into the mesa',
+  frame:[-70,70,-30,96],
+  blurb:'An old quarry pit sits in the south half: three benches stepping down 12 ft each to a floor 36 ft below the top, with a small pond in the bottom. A ramp spirals down the pit walls. Grassed-over spoil makes an East Hill and a Northwest Knoll, and a stockpile pad sits by the pit.',
+  pitT(x,z){return Math.hypot(x/19,(z-50)/14)*(1+0.03*Math.sin(Math.atan2(z-50,x)*6))},
+  top(x,z){
+    const t=this.pitT(x,z);
+    let h=rolls(x,z,0.3)+bump(x,z,31,40,11,11,6.1)+bump(x,z,-22,14,7,7,3)+ridge(x,z,-16,69,14,69,4,1.6)+bump(x,z,-33,42,3.4,3,1.6)+bump(x,z,-31,48,3,3,1.2);
+    if(t<1.06){const pit=-3.66*((1-ss(0.94,1.0,t))+(1-ss(0.74,0.8,t))+(1-ss(0.54,0.6,t)))-0.4*(1-ss(0,0.5,t));
+      const k=ss(1,1.06,t);h=pit+(h-pit)*k}
+    return h;
+  },
+  water(x,z){return Math.hypot((x+3)/4.5,(z-50)/3.5)<1},
+  dirt(x,z){const t=this.pitT(x,z);return Math.max(t<1.13?1:0, bump(x,z,-32,45,7,11,1)>0.15?1:0, bump(x,z,16,33,6,4,1)>0.2?1:0)},
+  roads:[
+    {name:'North rim road (dump road)',kind:'haul',pts:[[-36,12],...NORTH_ROAD,[38,8],[36,22],[22,27],[10,29]]},
+    {name:'West road',kind:'haul',pts:[[-36,12],[-30,24],[-12,25],[2,26.5],[10,29]]},
+    {name:'Spiral ramp to the pit floor',kind:'haul',graded:true,pts:[[10,29,0],[-6,31,-1.2],[-18,40,-2.6],[-20,52,-4.2],[-12,62,-6],[2,65,-7.8],[13,59,-9.6],[9,51,-11]]},
+    {name:'Track up East Hill',kind:'track',pts:[[36,22],[40,32],[36,38],[32,40]]},
+  ],
+  labels:[[32,33,'East Hill'],[32,36.6,'20 ft',1],[-22,7.5,'NW Knoll'],[-22,11,'10 ft',1],[2,40,'Quarry · floor −36 ft'],[-3,56.2,'Pond',1],[-32,53,'Stockpiles',1],[0,73.5,'Spoil berm',1],[44,58,'Spiral ramp',1],[44,61.6,'1 in 8',1],[-50,91,'Meadows 150 ft below',1]],
+  section:[[4,-24],[4,90]],
+  levels:'Top 0 ft · benches −12 / −24 ft · pit floor −36 ft',
+  down:'A 12 ft graded ramp that spirals almost a full lap down the pit walls, crossing each bench on its way to the floor.',
+  play:['The pit is the obvious next dig site: move the dig grid there later and the benches become places to dig and load.','The pond ties into the groundwater and pump already in the game.','Lots of edges: bench lips, the pit rim and the ramp all need care with the truck.'],
+  build:['The stepped walls need the finer ground mesh to look crisp; the bench faces read as rock.','The pond is a second small water surface at the pit floor.','Machines need the edge check on every bench lip, not only on the outer rim.'],
+  hours:22, tris:'about +80,000',
+},
+];
+
+// ---------- sampling ----------
+function roadSample(plan,x,z){ // nearest road: distance, graded height, kind
+  let best={d:1e9,hr:null,kind:null,w:3.6};
+  for(const rd of plan.roads){const p=rd.pts,w=rd.kind==='track'?2.4:3.6;
+    for(let i=0;i<p.length-1;i++){const [d,t]=segD(x,z,p[i][0],p[i][1],p[i+1][0],p[i+1][1]);
+      if(d-w/2<best.d-best.w/2){best={d,w,kind:rd.kind,hr:rd.graded?p[i][2]+(p[i+1][2]-p[i][2])*t:null,graded:!!rd.graded}}}}
+  return best;
+}
+function heightAt(plan,x,z){
+  const r=rNew(x,z);let h;
+  if(r<E)h=plan.top(x,z);else{const d=r-E;h=cliff(d,x,z)+plan.top(x,z)*(1-ss(0,3,d));if(plan.outside)h=plan.outside(x,z,d,h)}
+  for(const rd of plan.roads){if(!rd.graded)continue;const p=rd.pts;let bd=1e9,bh=0;
+    for(let i=0;i<p.length-1;i++){const [d,t]=segD(x,z,p[i][0],p[i][1],p[i+1][0],p[i+1][1]);if(d<bd){bd=d;bh=p[i][2]+(p[i+1][2]-p[i][2])*t}}
+    if(bd<4.3){h=bh+(h-bh)*ss(1.8,4.3,bd)}}
+  return h;
+}
+const PX=4; // pixels per metre
+const COL={grass:[0.40,0.60,0.30],meadow:[0.36,0.53,0.29],dirt:[0.63,0.49,0.34],road:[0.80,0.69,0.50],track:[0.69,0.56,0.38],rock:[0.55,0.50,0.45],water:[0.20,0.46,0.58],sand:[0.82,0.75,0.55]};
+
+function render(plan,cv){
+  const [x0,x1,z0,z1]=plan.frame,W=Math.round((x1-x0)*PX),Hh=Math.round((z1-z0)*PX);
+  cv.width=W;cv.height=Hh;const ctx=cv.getContext('2d'),img=ctx.createImageData(W,Hh),D=img.data;
+  const hs=new Float32Array(W*Hh),cls=new Uint8Array(W*Hh);
+  for(let py=0;py<Hh;py++)for(let px=0;px<W;px++){const x=x0+(px+0.5)/PX,z=z0+(py+0.5)/PX;hs[py*W+px]=heightAt(plan,x,z)}
+  const st={n:0,grass:0,dirt:0,road:0,steep:0,water:0,maxH:-1e9,minH:1e9};
+  const m=1/PX;
+  for(let py=0;py<Hh;py++)for(let px=0;px<W;px++){
+    const k=py*W+px,x=x0+(px+0.5)/PX,z=z0+(py+0.5)/PX,h=hs[k];
+    const hx=(hs[py*W+Math.min(W-1,px+1)]-hs[py*W+Math.max(0,px-1)])/(2*m),hz=(hs[Math.min(Hh-1,py+1)*W+px]-hs[Math.max(0,py-1)*W+px])/(2*m);
+    const sl=Math.hypot(hx,hz),r=rNew(x,z),n=hash(px*0.31|0,py*0.29|0),n2=hash(px,py);
+    const inArea=plan.area?plan.area(x,z,r,h):r<E;
+    let c,kind;
+    const pond=plan.water&&plan.water(x,z)&&h<-10;
+    if(h<WATER||pond){const dp=pond?0.3:Math.min(1,(WATER-h)/12);c=[COL.water[0]-0.08*dp,COL.water[1]-0.12*dp,COL.water[2]-0.1*dp];kind='water'}
+    else if(h<WATER+2.5){c=COL.sand.slice();kind='sand'}
+    else{
+      const rs=roadSample(plan,x,z),ro=rs.d-rs.w/2;
+      if(ro<0){c=(rs.kind==='track'?COL.track:COL.road).slice();if(ro>-0.35)c=c.map(v=>v*0.82);kind='road'}
+      else if(sl>1.05){c=COL.rock.map(v=>v*(0.94+0.1*n));kind='steep'}
+      else{
+        const dirt=plan.dirt?plan.dirt(x,z,r,h):0;
+        const base=(r<E||inArea)?COL.grass:COL.meadow;
+        c=base.map((v,i)=>v*(0.93+0.12*n)+0.02*n2);
+        if(dirt>0){const a=Math.min(1,dirt);c=c.map((v,i)=>v+(COL.dirt[i]*(0.92+0.12*n)-v)*a);kind=a>0.5?'dirt':'grass'}else kind='grass';
+        if(sl>0.7){const a=ss(0.7,1.05,sl);c=c.map((v,i)=>v+(COL.rock[i]-v)*a);if(a>0.5)kind='steep'}
+      }
+    }
+    // hillshade from the northwest, contours every 5 ft
+    let shade=1;
+    if(kind!=='water'){const nx=-hx*1.4,nz=-hz*1.4,len=Math.hypot(nx,1,nz);shade=Math.max(0.5,Math.min(1.3,((-0.55*nx-0.55*nz+1)/len)/0.83*0.9+0.1))}
+    if(kind!=='water'&&h>-26){const ci=Math.floor(h*FT/5),cr=Math.floor(hs[py*W+Math.min(W-1,px+1)]*FT/5),cd=Math.floor(hs[Math.min(Hh-1,py+1)*W+px]*FT/5);
+      if(sl<1.6&&(ci!==cr||ci!==cd)){const maj=Math.floor(h*FT/25)!==Math.floor(hs[py*W+Math.min(W-1,px+1)]*FT/25)||Math.floor(h*FT/25)!==Math.floor(hs[Math.min(Hh-1,py+1)*W+px]*FT/25);shade*=maj?0.62:0.8}}
+    D[k*4]=Math.min(255,c[0]*shade*255);D[k*4+1]=Math.min(255,c[1]*shade*255);D[k*4+2]=Math.min(255,c[2]*shade*255);D[k*4+3]=255;
+    if(inArea){st.n++;st[kind==='sand'?'dirt':kind]++;if(kind!=='water'){st.maxH=Math.max(st.maxH,h);st.minH=Math.min(st.minH,h)}}
+  }
+  ctx.putImageData(img,0,0);
+  const T=(x,z)=>[(x-x0)*PX,(z-z0)*PX];
+  // today's rim, dashed
+  ctx.save();ctx.setLineDash([9,7]);ctx.lineWidth=2.2;ctx.strokeStyle='rgba(255,255,255,0.92)';ctx.beginPath();
+  for(let i=0;i<=360;i++){const a=i/360*Math.PI*2,c=Math.cos(a),s=Math.sin(a),t=E_OLD/(Math.pow(c**4+s**4,0.25)*wob(a));const [px,py]=T(c*t,MZ_OLD+s*t);i?ctx.lineTo(px,py):ctx.moveTo(px,py)}
+  ctx.stroke();ctx.restore();
+  // dig site: gas main, trench, tall-grass patch
+  ctx.save();ctx.setLineDash([6,5]);ctx.strokeStyle='#ffd23f';ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(...T(-12,-5.5));ctx.lineTo(...T(12,-5.5));ctx.stroke();ctx.restore();
+  ctx.fillStyle='#d8322a';{const [a,b]=T(-0.5,-8.5);ctx.fillRect(a,b,1*PX,5.5*PX)}
+  ctx.strokeStyle='rgba(255,255,255,0.85)';ctx.lineWidth=1.6;{const [a,b]=T(-1,11);ctx.strokeRect(a,b,16*PX,12*PX)}
+  // section line
+  ctx.save();ctx.setLineDash([12,5,3,5]);ctx.strokeStyle='rgba(20,20,20,0.85)';ctx.lineWidth=2;ctx.beginPath();
+  plan.section.forEach((p,i)=>{const [a,b]=T(p[0],p[1]);i?ctx.lineTo(a,b):ctx.moveTo(a,b)});ctx.stroke();ctx.restore();
+  const tag=(x,z,t)=>{const [a,b]=T(x,z);ctx.fillStyle='#1d231f';ctx.beginPath();ctx.arc(a,b,13,0,7);ctx.fill();ctx.fillStyle='#fff';ctx.font='700 16px "Barlow Condensed",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(t,a,b+1)};
+  const s0=plan.section[0],s1=plan.section[plan.section.length-1];tag(s0[0],s0[1],'A');tag(s1[0],s1[1],'A′');
+  // labels
+  for(const [x,z,t,small] of plan.labels){if(!t)continue;const [a,b]=T(x,z);ctx.font=(small?'600 16px':'700 21px')+' "Barlow Condensed",sans-serif';ctx.textAlign='center';ctx.textBaseline='middle';
+    ctx.lineWidth=4;ctx.strokeStyle='rgba(20,26,22,0.75)';ctx.lineJoin='round';ctx.strokeText(t,a,b);ctx.fillStyle='#fff';ctx.fillText(t,a,b)}
+  {const [a,b]=T(-4,-10);ctx.font='600 16px "Barlow Condensed",sans-serif';ctx.textAlign='right';ctx.lineWidth=4;ctx.strokeStyle='rgba(20,26,22,0.75)';ctx.strokeText('Trench',a,b);ctx.fillStyle='#fff';ctx.fillText('Trench',a,b)}
+  // scale bar (100 ft) and north arrow
+  {const L=100/FT*PX,a=W-L-22,b=48;ctx.fillStyle='rgba(20,26,22,0.7)';ctx.fillRect(a-10,b-26,L+20,38);ctx.fillStyle='#fff';ctx.fillRect(a,b,L,4);ctx.fillRect(a,b-6,2,10);ctx.fillRect(a+L-2,b-6,2,10);
+    ctx.font='600 15px "Barlow Condensed",sans-serif';ctx.textAlign='center';ctx.textBaseline='alphabetic';ctx.fillText('100 ft',a+L/2,b-8)}
+  {const a=30,b=34;ctx.fillStyle='rgba(20,26,22,0.7)';ctx.beginPath();ctx.arc(a,b,20,0,7);ctx.fill();ctx.fillStyle='#fff';ctx.beginPath();ctx.moveTo(a,b-14);ctx.lineTo(a+7,b+4);ctx.lineTo(a-7,b+4);ctx.fill();
+    ctx.font='700 13px "Barlow Condensed",sans-serif';ctx.textAlign='center';ctx.fillText('N',a,b+15)}
+  return st;
+}
+
+function roadStats(plan){return plan.roads.map(rd=>{let L=0;const p=rd.pts;for(let i=0;i<p.length-1;i++)L+=Math.hypot(p[i+1][0]-p[i][0],p[i+1][1]-p[i][1]);
+  const drop=rd.graded?p[0][2]-p[p.length-1][2]:null;return {name:rd.name,kind:rd.kind,L,drop,grade:drop?drop/L:null}})}
+
+function profile(plan){
+  const pts=plan.section,samples=[];let acc=0;
+  for(let i=0;i<pts.length-1;i++){const [ax,az]=pts[i],[bx,bz]=pts[i+1],L=Math.hypot(bx-ax,bz-az),n=Math.ceil(L/0.5);
+    for(let j=(i?1:0);j<=n;j++){const t=j/n;samples.push([acc+L*t,heightAt(plan,ax+(bx-ax)*t,az+(bz-az)*t)])}acc+=L}
+  const W=640,H=230,ml=46,mr=14,mt=14,mb=34,yMax=Math.max(10,Math.ceil(Math.max(...samples.map(s=>s[1]))*FT/10)*10+10),yMin=-80;
+  const X=d=>ml+d/acc*(W-ml-mr),Y=f=>mt+(yMax-Math.max(yMin,f))/(yMax-yMin)*(H-mt-mb);
+  let g='';
+  for(let f=yMin;f<=yMax;f+=20){g+=`<line x1="${ml}" x2="${W-mr}" y1="${Y(f)}" y2="${Y(f)}" stroke="var(--line)" stroke-width="1"/><text x="${ml-6}" y="${Y(f)+4}" text-anchor="end" font-size="11" fill="var(--muted)" font-family="var(--f-mono)">${f>0?'+':''}${f}</text>`}
+  const tot=acc*FT;for(let f=0;f<=tot;f+=100)g+=`<text x="${X(f/FT)}" y="${H-12}" text-anchor="middle" font-size="11" fill="var(--muted)" font-family="var(--f-mono)">${f}</text>`;
+  let path=`M${X(0)},${Y(yMin)}`;for(const [d,h] of samples)path+=`L${X(d).toFixed(1)},${Y(h*FT).toFixed(1)}`;path+=`L${X(acc)},${Y(yMin)}Z`;
+  let line='';samples.forEach(([d,h],i)=>{line+=(i?'L':'M')+X(d).toFixed(1)+','+Y(h*FT).toFixed(1)});
+  return `<svg class="profile" viewBox="0 0 ${W} ${H}" role="img" aria-label="Elevation profile along section A to A-prime">
+  ${g}<line x1="${ml}" x2="${W-mr}" y1="${Y(0)}" y2="${Y(0)}" stroke="var(--accent)" stroke-width="1.2" stroke-dasharray="4 4"/>
+  <path d="${path}" fill="var(--accent-soft)" stroke="none"/><path d="${line}" fill="none" stroke="var(--fg)" stroke-width="2"/>
+  <text x="${ml+4}" y="${mt+12}" font-size="13" font-weight="700" fill="var(--fg)" font-family="var(--f-display)">A</text>
+  <text x="${W-mr-4}" y="${mt+12}" text-anchor="end" font-size="13" font-weight="700" fill="var(--fg)" font-family="var(--f-display)">A′</text>
+  <text x="${W-mr}" y="${H-1}" text-anchor="end" font-size="10.5" fill="var(--muted)" font-family="var(--f-body)">feet along the section · height in feet from the mesa top · drops past −80 ft are cut off</text>
+  </svg>`;
+}
+
+const acres=m2=>m2*10.7639/43560;
+function mesaArea(cz,R){let n=0;const s=0.5;for(let x=-R*1.3;x<R*1.3;x+=s)for(let z=cz-R*1.3;z<cz+R*1.3;z+=s)if(rAt(x,z,cz)<R)n++;return n*s*s}
+
+async function build(){
+  try{await document.fonts.ready}catch(e){}
+  const aOld=mesaArea(MZ_OLD,E_OLD),aNew=mesaArea(MZ2,E);
+  document.getElementById('facts').innerHTML=[
+    [`${Math.round(2*E_OLD*FT)} → ${Math.round(2*E*FT)} ft`,'across the mesa, today → every plan'],
+    [`${acres(aOld).toFixed(2)} → ${acres(aNew).toFixed(2)} ac`,'mesa top area (1.5× across is 2.25× the ground)'],
+    ['150 ft','cliff drop to the meadows, kept on the sides a plan leaves alone'],
+    ['0 ft moved','trench, gas main, tall grass and start spots stay put'],
+  ].map(([b,s])=>`<div class="fact"><b>${b}</b><span>${s}</span></div>`).join('');
+  const sw=c=>`rgb(${c.map(v=>Math.round(v*255)).join(',')})`;
+  document.getElementById('legend').innerHTML=[['Grass',COL.grass],['Worked dirt',COL.dirt],['Haul road, 12 ft',COL.road],['Dirt track, 8 ft',COL.track],['Steep rock',COL.rock],['Meadow below',COL.meadow],['Water',COL.water]]
+    .map(([t,c])=>`<span><i style="background:${sw(c)}"></i>${t}</span>`).join('');
+  const host=document.getElementById('plans'),rows=[];
+  for(const p of PLANS){
+    const sec=document.createElement('section');sec.className='sheet';sec.id='plan-'+p.key.toLowerCase();
+    sec.innerHTML=`<div class="sheet-head"><div class="eyebrow">Plan ${p.key} · ${p.tag}</div><h2>${p.name}</h2><p>${p.blurb}</p></div>
+    <div class="sheet-body"><div class="mapbox"><canvas class="map" aria-label="Site map for plan ${p.key}"></canvas><div class="prof"></div></div><div class="detail"></div></div>`;
+    host.appendChild(sec);
+    const st=render(p,sec.querySelector('canvas'));
+    sec.querySelector('.prof').innerHTML=profile(p);
+    const rs=roadStats(p),ramp=rs.find(r=>r.grade),cell=1/(PX*PX),area=st.n*cell;
+    const pct=k=>st[k]/st.n*100,g=pct('grass'),dI=pct('dirt'),r=pct('road'),o=100-g-dI-r;
+    const roadFt=rs.reduce((a,r)=>a+r.L,0)*FT;
+    sec.querySelector('.detail').innerHTML=`
+      <div class="kv">
+        <div><b>${acres(area).toFixed(2)} ac</b><span>${p.key==='B'?'top, slope and landing':'mesa top and lower levels'}</span></div>
+        <div><b>+${Math.round(st.maxH*FT)} ft</b><span>highest hilltop</span></div>
+        <div><b>${Math.round(st.minH*FT)} ft</b><span>lowest level reached</span></div>
+        <div><b>${Math.round(g)}%</b><span>grass</span></div>
+        <div><b>${Math.round(dI)}%</b><span>worked dirt</span></div>
+        <div><b>${Math.round(r)}%</b><span>roads and tracks</span></div>
+      </div>
+      <div><div class="mix" aria-hidden="true"><div style="width:${g}%;background:${sw(COL.grass)}"></div><div style="width:${dI}%;background:${sw(COL.dirt)}"></div><div style="width:${r}%;background:${sw(COL.road)}"></div><div style="width:${o}%;background:${sw(COL.rock)}"></div></div>
+      <p class="cap" style="margin-top:6px">Ground mix. The last ${Math.round(o)}% is steep rock faces and water.</p></div>
+      <div><h3>Getting further down</h3><p>${p.down}</p></div>
+      <div class="tablebox"><table><tr><th>Road</th><th>Length</th><th>Grade</th></tr>
+        ${rs.map(x=>`<tr><td>${x.name}</td><td class="n">${Math.round(x.L*FT)} ft</td><td class="n">${x.grade?`${(x.grade*100).toFixed(1)}% · drops ${Math.round(x.drop*FT)} ft`:(x.kind==='track'?'follows the hill':'follows the ground')}</td></tr>`).join('')}
+      </table></div>
+      <div><h3>How it plays</h3><ul>${p.play.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+      <div><h3>Build notes</h3><ul>${p.build.map(x=>`<li>${x}</li>`).join('')}</ul></div>`;
+    rows.push({p,g,dI,r,st,ramp,roadFt,area});
+  }
+  document.getElementById('compare').innerHTML=`<tr><th></th>${rows.map(x=>`<th>Plan ${x.p.key}: ${x.p.name}</th>`).join('')}</tr>
+    <tr><td>Way down</td>${rows.map(x=>`<td>${x.p.tag}</td>`).join('')}</tr>
+    <tr><td>Levels</td>${rows.map(x=>`<td>${x.p.levels}</td>`).join('')}</tr>
+    <tr><td>Ground to work</td>${rows.map(x=>`<td class="n">${acres(x.area).toFixed(2)} ac</td>`).join('')}</tr>
+    <tr><td>Grass / dirt / road</td>${rows.map(x=>`<td class="n">${Math.round(x.g)} / ${Math.round(x.dI)} / ${Math.round(x.r)} %</td>`).join('')}</tr>
+    <tr><td>Ramp down</td>${rows.map(x=>`<td class="n">${Math.round(x.ramp.L*FT)} ft at ${(x.ramp.grade*100).toFixed(1)}%</td>`).join('')}</tr>
+    <tr><td>All roads</td>${rows.map(x=>`<td class="n">${(Math.round(x.roadFt/10)*10).toLocaleString()} ft</td>`).join('')}</tr>
+    <tr><td>Developer hours</td>${rows.map(x=>`<td class="n">about ${x.p.hours} h</td>`).join('')}</tr>
+    <tr><td>Triangles added</td>${rows.map(x=>`<td class="n">${x.p.tris}</td>`).join('')}</tr>`;
+  document.getElementById('pick').innerHTML=`<div class="eyebrow">Recommendation</div><h2>Start with Plan A, keep the pit in mind</h2>
+    <p>Plan A gets every ask (1.5× size, grass and dirt, roads, hills and a lower level) for the least work and the smallest hit to frame rate on the phone, and it stays inside the bigger rim so the cliffs and lake don't change. Its Lower Bench is also the natural spot for Plan C's quarry later: cut the pit into the bench and the ramp is already there. Plan B is the most scenic drive, but its switchbacks add ground outside the 1.5× rim and change the cliff, so it costs the most to get looking right.</p>`;
+}
+build();
+</script>

@@ -7,28 +7,86 @@ const S=64,N=400,CELL=S/N,V=N+1,CA=CELL*CELL,FLOOR=3.5,GRID_K=Math.round(0.32/CE
 const H=new Float32Array(V*V),H0=new Float32Array(V*V),grass=new Float32Array(V*V*3),paint=new Uint8Array(V*V),nz=new Float32Array(V*V),rockA=new Float32Array(V*V);
 const ss=(a,b,x)=>{const t=Math.min(1,Math.max(0,(x-a)/(b-a)));return t*t*(3-2*t)};
 const hash=(i,j)=>{const s=Math.sin(i*127.1+j*311.7)*43758.5453;return s-Math.floor(s)};
-// the site sits on a flat grassy mesa; cliffs drop about 150 ft to meadows and a lake
-const EDGE=30,WATER=-58,MZ=16;
+// the site sits on a grassy mesa; cliffs drop about 150 ft to meadows and a lake. It is about 295 ft across, centred
+// south of the dig so the north rim (the truck's dump spot) stays put. The north part is the high top with two hills;
+// across the middle a rocky scarp drops 24 ft to the Lower Bench, a dirt yard with stockpiles, and a ramp runs down it
+const EDGE=45,WATER=-58,MZ=30,BENCH_H=-7.3;
 function mesaR(x,z){z-=MZ;const a=Math.atan2(z,x);return Math.pow(Math.pow(Math.abs(x),4)+Math.pow(Math.abs(z),4),0.25)*(1+0.06*Math.sin(a*5+0.7)+0.035*Math.sin(a*11+2.1))}
-// a graded dirt road loops the mesa just inside the rim; roadOff is metres across it from the centreline
-const ROAD_R=26.8,ROAD_W=3.6;
-function roadOff(x,z){const r=mesaR(x,z);if(Math.abs(r-ROAD_R)>6)return 99;const e=0.05,gx=mesaR(x+e,z)-mesaR(x-e,z),gz=mesaR(x,z+e)-mesaR(x,z-e);return (r-ROAD_R)*2*e/Math.max(0.03,Math.hypot(gx,gz))}
+// roads: centrelines in metres and widths; a third number on every point grades the road to that height (the ramp)
+const ROAD_W=3.6;
+const ROADS=[
+  {w:3.6,mid:1,pts:[[-40,16],[-30,-6],[-14,-12],[0,-13],[16,-12],[32,-6],[40,6],[41,22],[40,34],[28,35],[12,38.5],[0,39.5],[-24,37.5],[-38,33],[-40,16]]},
+  {w:4.8,mid:0,pts:[[40,34,0],[38,36.5,-0.2],[20,44.5,-2.4],[0,49,-4.8],[-22,53,-7.3]]},
+  {w:3.6,mid:1,pts:[[-22,53],[-33,59.5],[-20,66.5],[0,66.5],[20,65],[30,58.5],[18,55],[2,57],[-14,56.5],[-22,53]]},
+  {w:2.4,mid:0,pts:[[41,12],[33,9],[24,10.5],[19,17],[21,23.5],[27,20]]},
+];
+// segments bucketed on a 4 m grid so a lookup only checks the few nearby; roadAt leaves its answer in RD_*
+const RG_X0=-60,RG_Z0=-32,RG_C=4,RG_NX=30,RG_NZ=32,RG=[],RSEG=[];
+for(const r of ROADS)for(let i=0;i<r.pts.length-1;i++){const a=r.pts[i],b=r.pts[i+1],dx=b[0]-a[0],dz=b[1]-a[1];
+  RSEG.push({ax:a[0],az:a[1],dx,dz,il:1/(dx*dx+dz*dz),ha:a[2],hb:b[2],w:r.w,mid:r.mid,g:a.length>2})}
+for(let j=0;j<RG_NZ;j++)for(let i=0;i<RG_NX;i++){const cx=RG_X0+(i+0.5)*RG_C,cz=RG_Z0+(j+0.5)*RG_C,l=[];
+  RSEG.forEach((q,n)=>{let t=((cx-q.ax)*q.dx+(cz-q.az)*q.dz)*q.il;t=Math.max(0,Math.min(1,t));
+    if(Math.hypot(cx-q.ax-q.dx*t,cz-q.az-q.dz*t)<RG_C*0.71+q.w/2+3.5)l.push(q)});RG.push(l)}
+// RD_o: metres out from the edge of a standard-width road (roadOff's old meaning), RD_mid: grass up the middle;
+// RD_gd, RD_h, RD_gw: distance to the nearest graded road, its height there and its width
+let RD_o=99,RD_mid=0,RD_gd=99,RD_h=0,RD_gw=0;
+function roadAt(x,z){RD_o=99;RD_gd=99;
+  const i=Math.floor((x-RG_X0)/RG_C),j=Math.floor((z-RG_Z0)/RG_C);if(i<0||j<0||i>=RG_NX||j>=RG_NZ)return;
+  for(const q of RG[j*RG_NX+i]){let t=((x-q.ax)*q.dx+(z-q.az)*q.dz)*q.il;t=t<0?0:t>1?1:t;
+    const d=Math.hypot(x-q.ax-q.dx*t,z-q.az-q.dz*t),o=d-(q.w-ROAD_W)/2;
+    if(o<RD_o){RD_o=o;RD_mid=q.mid}
+    if(q.g&&d<RD_gd){RD_gd=d;RD_h=q.ha+(q.hb-q.ha)*t;RD_gw=q.w}}}
+// roadOff is metres across a standard-width road from its centreline
+function roadOff(x,z){roadAt(x,z);return RD_o}
 function roadAmt(x,z){return 1-ss(ROAD_W/2-0.35,ROAD_W/2+0.45,Math.abs(roadOff(x,z)))}
 // packed tan dirt, darker in the two wheel tracks, a little grass up the middle; blends colour c (rgb array) toward it, returns the amount
 function roadTint(x,z,c,n){const o=Math.abs(roadOff(x,z)),a=1-ss(ROAD_W/2-0.35,ROAD_W/2+0.45,o);if(a<=0)return 0;
-  const rut=1-0.17*Math.exp(-((o-0.95)/0.32)*((o-0.95)/0.32)),mid=0.35*(1-ss(0.15,0.45,o)),v=0.92+0.16*n;
+  const rut=1-0.17*Math.exp(-((o-0.95)/0.32)*((o-0.95)/0.32)),mid=0.35*(1-ss(0.15,0.45,o))*RD_mid,v=0.92+0.16*n;
   const rc=[0.58*v*rut,0.47*v*rut,0.33*v*rut];rc[0]+=(0.36-rc[0])*mid;rc[1]+=(0.5-rc[1])*mid;rc[2]+=(0.26-rc[2])*mid;
   for(let q=0;q<3;q++)c[q]+=(rc[q]-c[q])*a;return a*(1-mid)}
+// the scarp's centre line, and smooth round hills
+function scarpZ(x){return 45+2.5*Math.sin(x*0.09+0.5)}
+function hill(x,z,cx,cz,rx,rz,h){const t=Math.hypot((x-cx)/rx,(z-cz)/rz);return t>=1?0:h*0.5*(1+Math.cos(Math.PI*t))}
+// worked dirt: the Lower Bench yard and a laydown pad west of the dig; 0 to 1
+function yardAt(x,z){const r=mesaR(x,z),zs=scarpZ(x);
+  return Math.max(ss(zs+3,zs+6,z)*(1-ss(37,42,r)),ss(0.15,0.4,hill(x,z,-22,4,9,6,1)))}
+// colour c (rgb array) toward packed dirt by the yard amount; returns the amount
+function yardTint(x,z,c,n){const a=yardAt(x,z);if(a<=0)return 0;const v=0.86+0.2*n;
+  c[0]+=(0.55*v-c[0])*a;c[1]+=(0.42*v-c[1])*a;c[2]+=(0.29*v-c[2])*a;return a}
 function baseHeight(x,z){
-  const top=0.35*Math.sin(x*0.13+1.3)*Math.cos(z*0.11)+0.2*Math.sin(x*0.31+z*0.23);
-  const r=mesaR(x,z);
-  if(r<EDGE){const lip=ss(EDGE-6,EDGE,r)*0.4*(0.5+0.5*Math.sin(Math.atan2(z-MZ,x)*7));return top*0.15+(lip>0?lip*(1-roadAmt(x,z)):0)}
+  const r=mesaR(x,z);let h;
+  if(r<EDGE+3){
+    // gentle rolls, flatter round the dig; Lookout Knoll (18 ft) and West Rise (10 ft) on the top; the bench and its stockpiles
+    const roll=(0.012+0.025*ss(16,34,Math.hypot(x,z+4)))*(6*Math.sin(x*0.09+1.3)*Math.cos(z*0.08)+4*Math.sin(x*0.21+z*0.17));
+    const top=roll+hill(x,z,27,20,12.5,12.5,5.5)+hill(x,z,-22,22,9,9,3);
+    const zs=scarpZ(x),lo=ss(zs-4,zs+5,z);
+    const bench=BENCH_H+roll*0.5+hill(x,z,-8,61.5,4.5,3.4,2.4)+hill(x,z,9,61.3,5,3.4,2.4)+hill(x,z,22,60,3.5,3,1.5);
+    h=top+(bench-top)*lo;
+    roadAt(x,z);
+    const lip=ss(EDGE-6,EDGE,r)*0.4*(0.5+0.5*Math.sin(Math.atan2(z-MZ,x)*7));
+    if(lip>0)h+=lip*(1-ss(ROAD_W/2-0.35,ROAD_W/2+0.45,Math.abs(RD_o)));
+    // the ramp is graded into the scarp, with cut and fill banks either side
+    if(RD_gd<RD_gw/2+2.5)h=RD_h+(h-RD_h)*ss(RD_gw/2,RD_gw/2+2.5,RD_gd);
+    if(r<EDGE)return h;
+  }
   const d=r-EDGE;
   const cliff=-46*ss(0,7,d)-1.6*Math.sin(d*1.9)*ss(0,1,d)*(1-ss(6,9,d));
   const low=-14*ss(7,60,d)-9*ss(40,95,d);
   const bumps=(Math.sin(x*0.07+z*0.05)*3+Math.sin(x*0.17-z*0.13)*1.5+Math.sin(x*0.031-z*0.027+1)*4)*ss(8,22,d);
-  return cliff+low+bumps+0.5*(1-ss(0,2,d));
+  const out=cliff+low+bumps+0.5*(1-ss(0,2,d));
+  // the cliff starts from the ground at the rim (the bench is lower than the top)
+  return d<3?out+(h-0.5)*(1-ss(0,3,d)):out;
 }
+// ground too steep to drive onto (the scarp, ramp banks, stockpiles), on a 0.5 m grid over the mesa from the original grade
+const WG_X0=-48,WG_Z0=-20,WG_C=0.5,WG_NX=193,WG_NZ=197,WALL=new Uint8Array(WG_NX*WG_NZ);
+{const hh=new Float32Array(WG_NX*WG_NZ);
+  for(let j=0;j<WG_NZ;j++)for(let i=0;i<WG_NX;i++)hh[j*WG_NX+i]=baseHeight(WG_X0+i*WG_C,WG_Z0+j*WG_C);
+  for(let j=1;j<WG_NZ-1;j++)for(let i=1;i<WG_NX-1;i++){const k=j*WG_NX+i;
+    if(mesaR(WG_X0+i*WG_C,WG_Z0+j*WG_C)>EDGE-1)continue;
+    const sl=Math.hypot(hh[k+1]-hh[k-1],hh[k+WG_NX]-hh[k-WG_NX])/(2*WG_C);if(sl>0.85)WALL[k]=1}}
+function wallAt(x,z){const i=Math.round((x-WG_X0)/WG_C),j=Math.round((z-WG_Z0)/WG_C);return i>=0&&j>=0&&i<WG_NX&&j<WG_NZ&&WALL[j*WG_NX+i]===1}
+// how many of a machine's probe points (local [side, forward] offsets) stand on ground too steep to drive
+function wallCount(x,z,yaw,P){const s=Math.sin(yaw),c=Math.cos(yaw);let n=0;for(const [lx,lz] of P)if(wallAt(x+lx*c+lz*s,z-lx*s+lz*c))n++;return n}
 const PIPE_Z=-5.5, TRENCH_Z0=-8.5, TRENCH_Z1=-3.0;
 for(let j=0;j<V;j++)for(let i=0;i<V;i++){
   const k=j*V+i,x=i*CELL-S/2,z=j*CELL-S/2;
@@ -38,8 +96,8 @@ for(let j=0;j<V;j++)for(let i=0;i<V;i++){
   {const h=H0[k],sl=(Math.abs(baseHeight(x+0.5,z)-baseHeight(x-0.5,z))+Math.abs(baseHeight(x,z+0.5)-baseHeight(x,z-0.5))),rock=ss(0.55,1.1,sl),sand=1-ss(WATER+0.6,WATER+2.8,h),st2=0.06*Math.sin(h*1.4+n);
     if(rock>0){grass[k*3]+=(0.50+0.06*n+st2-grass[k*3])*rock;grass[k*3+1]+=(0.44+0.05*n+st2-grass[k*3+1])*rock;grass[k*3+2]+=(0.38+0.04*n+st2-grass[k*3+2])*rock}
     if(sand>0){grass[k*3]+=(0.80-grass[k*3])*sand;grass[k*3+1]+=(0.72-grass[k*3+1])*sand;grass[k*3+2]+=(0.52-grass[k*3+2])*sand}
-    const rc=[grass[k*3],grass[k*3+1],grass[k*3+2]],ra=roadTint(x,z,rc,n);if(ra>0){grass[k*3]=rc[0];grass[k*3+1]=rc[1];grass[k*3+2]=rc[2]}
-    rockA[k]=Math.min(1,Math.max(rock*0.95+sand*0.4,ra*0.9))}
+    const rc=[grass[k*3],grass[k*3+1],grass[k*3+2]],ya=yardTint(x,z,rc,n),ra=roadTint(x,z,rc,n);grass[k*3]=rc[0];grass[k*3+1]=rc[1];grass[k*3+2]=rc[2];
+    rockA[k]=Math.min(1,Math.max(rock*0.95+sand*0.4,ra*0.9,ya*0.85))}
   const hc=CELL/2+0.001,onSide=Math.abs(Math.abs(x)-0.5)<hc&&z>=TRENCH_Z0-hc&&z<=TRENCH_Z1+hc;
   const onEnd=(Math.abs(z-TRENCH_Z0)<hc||Math.abs(z-TRENCH_Z1)<hc)&&Math.abs(x)<=0.5+hc;
   if(onSide||onEnd)paint[k]=1;

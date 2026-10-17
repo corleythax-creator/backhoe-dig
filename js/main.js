@@ -32,10 +32,12 @@ function frame(now){
     sndIn.relief=end(st.a1,LIM.a1,boomIn)||end(st.a2,LIM.a2,stickIn)||end(st.a3,LIM.a3,bucketIn);sndIn.track=Math.min(1,Math.abs(driveIn)+Math.abs(turnIn)*0.7);sndIn.pour=0}updateHeapClods();
   // drive
   st.yaw-=turnIn*0.8*dt;
-  const mudK=1-0.5*mudAt(st.x,st.z);
-  st.x=clamp(st.x+Math.sin(st.yaw)*driveIn*2.6*mudK*dt,-60,60);
-  st.z=clamp(st.z+Math.cos(st.yaw)*driveIn*2.6*mudK*dt,-60,60);
+  const mudK=1-0.5*mudAt(st.x,st.z),ox=st.x,oz=st.z,w0=wallCount(st.x,st.z,st.yaw,EX_P);
+  st.x=clamp(st.x+Math.sin(st.yaw)*driveIn*2.6*mudK*dt,-90,90);
+  st.z=clamp(st.z+Math.cos(st.yaw)*driveIn*2.6*mudK*dt,-90,90);
   {const rr=mesaR(st.x,st.z),lim=EDGE-3.5;if(rr>lim){const f=lim/rr;st.x*=f;st.z=MZ+(st.z-MZ)*f}}
+  // the scarp face, ramp banks and stockpiles are too steep to climb: the tracks stop at their foot
+  if(wallCount(st.x,st.z,st.yaw,EX_P)>w0){st.x=ox;st.z=oz}
   blkPush(st,EX_C,EX_R);
   const sy=Math.sin(st.yaw),cy=Math.cos(st.yaw);
   // tracks rut loose fill, crush clods, pick up mud and kick up a little dust

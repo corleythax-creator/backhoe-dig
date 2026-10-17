@@ -12,7 +12,8 @@ function buildMapBg(){
     if(h<WATER){const dp=Math.min(1,(WATER-h)/12);r=0.2-0.08*dp;g=0.5-0.15*dp;b=0.62-0.12*dp}
     else if(h<WATER+2.5){r=0.82;g=0.75;b=0.55}
     else if(sl>0.9){r=0.52;g=0.47;b=0.42}
-    else if(h>-3){r=0.38;g=0.6;b=0.3;const ra=roadAmt(px*mpp-MAP_HALF,py*mpp-MAP_HALF);if(ra>0.3){r=0.72;g=0.6;b=0.42}}else{r=0.42;g=0.58;b=0.32}
+    else if(mesaR(px*mpp-MAP_HALF,py*mpp-MAP_HALF)<EDGE){const x=px*mpp-MAP_HALF,z=py*mpp-MAP_HALF;r=0.38;g=0.6;b=0.3;
+      if(yardAt(x,z)>0.4){r=0.6;g=0.47;b=0.33}if(roadAmt(x,z)>0.3){r=0.72;g=0.6;b=0.42}}else{r=0.42;g=0.58;b=0.32}
     const shade=h<WATER?1:Math.max(0.55,Math.min(1.25,1+(-hx-hz)*0.35/mpp*0.5));
     d[k*4]=Math.min(255,r*shade*255);d[k*4+1]=Math.min(255,g*shade*255);d[k*4+2]=Math.min(255,b*shade*255);d[k*4+3]=255;
   }

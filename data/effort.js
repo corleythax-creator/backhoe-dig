@@ -1,7 +1,7 @@
 // Backhoe Dig build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Backhoe Dig",
- "updated": "2026-10-17T15:30:00Z",
+ "updated": "2026-10-17T16:50:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 309.5,
+   "dh": 335.5,
    "act": 8.0,
-   "versions": 46
+   "versions": 48
   }
  ],
  "extra": [
@@ -507,6 +507,25 @@ window.EFFORT = {
    "tris": 991332,
    "chars": 251080,
    "what": "Lighter tall grass, the top cost left on the iPhone: the lawn patch is skipped whenever it is out of view (on every Graphics level), and on Low (beyond 20 ft) and Medium (beyond 50 ft) a distant patch draws every other clump each way at twice the width, 55k triangles instead of 221k, matched to the full lawn's mowing and growth. Mowing always shows the full lawn."
+  },
+  {
+   "v": 54,
+   "asked": "2026-10-17T11:14:00-05:00",
+   "live": "2026-10-17T11:37:00-05:00",
+   "dh": 14,
+   "tris": 1152420,
+   "chars": 257693,
+   "what": "Mesa plan A: the mesa is 1.5 times as wide (about 295 ft across instead of 197) and grows south, so the trench, gas main, tall grass and the cliff dump spot stay put. The top rolls gently and has Lookout Knoll (18 ft) and West Rise (10 ft). A rocky 24 ft scarp across the middle drops to the Lower Bench, a dirt yard with three stockpiles, reached by a 16 ft wide ramp cut diagonally down the scarp at about 11%; the truck can dump there. The ring road becomes a network: the top loop, the ramp, a loop round the bench and a track up the knoll, plus a dirt laydown pad by the dig. The excavator, truck and mower stop against the scarp face, the ramp banks and the stockpiles. The rest of the mesa gets its own finer ground mesh, and grass tufts (15,000) and trees spread over it, off the roads and yards."
+  },
+  {
+   "v": 55,
+   "asked": "2026-10-17T11:25:00-05:00",
+   "live": "2026-10-17T11:50:00-05:00",
+   "dh": 12,
+   "tris": 1152798,
+   "chars": 268484,
+   "what": "Walk mode: a low-poly site worker (hard hat, hi-vis vest) with a walk and jog cycle and a jump. The left stick walks the way the camera faces, the right stick looks; Jump clears about 3.5 ft, so 1, 2 and 3 ft blocks and stacks can be climbed. Blocks and machines are solid, trench walls need a jump, and cab view is first person. On foot, Place sets a block just in front of him and Lift takes the one in front. Walk button and key 5, a Jump button, a dot on the maps."
   }
  ]
 };
+

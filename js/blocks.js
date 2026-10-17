@@ -38,6 +38,8 @@ function blkPush(o,lzs,r){let hit=false;
       hit=true}}
   return hit}
 const EX_C=[0.85,-0.85],EX_R=1.25,TR_C=[2.2,-0.4,-2.6,-3.6],TR_R=1.25;
+// points round each machine's footprint ([side, forward] metres) that must stay off ground too steep to drive
+const EX_P=[[-1.1,1.9],[1.1,1.9],[-1.1,-1.9],[1.1,-1.9],[0,2.1],[0,-2.1]],TR_P=[[-1.1,3.6],[1.1,3.6],[0,3.8],[-1.1,-3.3],[1.1,-3.3]],MW_P=[[-0.5,1.6],[0.5,1.6],[-0.6,-0.3],[0.6,-0.3]];
 // where a block of the chosen size would land (under the bucket, or in Walk mode just in front of the worker's feet),
 // and whether it may go there
 function blkTarget(n){const s=n*FT;if(mode!=='walk')return [tip.x,tip.z];const d=WK_R+s/2+0.12;return [wk.x+Math.sin(wk.yaw)*d,wk.z+Math.cos(wk.yaw)*d]}
