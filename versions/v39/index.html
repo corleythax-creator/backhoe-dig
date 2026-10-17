@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="en">
+<head>
+<script>(function(){try{var P='bhd-v39:',S=Storage.prototype,g=S.getItem,s=S.setItem,r=S.removeItem;S.getItem=function(k){return g.call(this,P+k)};S.setItem=function(k,x){return s.call(this,P+k,x)};S.removeItem=function(k){return r.call(this,P+k)}}catch(e){}})();</script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>[hidden]{display:none!important}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}</style>
+<title>Backhoe Dig</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@600;700;800&family=Saira:wght@500;600&display=swap">
+<link rel="stylesheet" href="css/game.css">
+
+<canvas id="view" aria-label="3D jobsite with an excavator"></canvas>
+<div id="flash"></div>
+<div id="hud">
+  <div class="top">
+  <div class="status" id="status" title="Tap to show less or more">
+    <div class="srow" id="bucketPanel">
+      <div class="line"><span class="lbl">Bucket</span><span class="val" id="bucketVal">0.00 yd³ · 0%</span></div>
+      <div class="bar"><i id="bucketBar"></i></div>
+      <div class="sub" id="tipVal">Tip 2.0 ft above grade</div>
+    </div>
+    <div class="srow">
+      <div class="line"><span class="lbl">Trench</span><span class="val" id="trenchVal">0% · 0:00</span></div>
+      <div class="bar" id="trenchBar"><i></i></div>
+      <div class="sub" id="gasVal">Gas main: buried</div>
+    </div>
+    <div class="srow">
+      <div class="line"><span class="lbl">Truck</span><span class="val" id="truckVal">0.0 / 10 yd³</span></div>
+      <div class="bar"><i id="truckBar"></i></div>
+      <div class="sub" id="haulVal">Hauled 0.0 yd³</div>
+    </div>
+    <div class="srow" id="lawnRow" hidden>
+      <div class="line"><span class="lbl">Lawn</span><span class="val" id="lawnVal">0% · 0:00</span></div>
+      <div class="bar" id="lawnBar"><i></i></div>
+      <div class="sub" id="mowVal">0.0 mph · blades on</div>
+    </div>
+    <div class="stats" aria-live="off"><b id="fpsVal">--</b> fps · <b id="triVal">--</b> tris · <b id="resVal">--</b></div>
+  </div>
+  <div class="side">
+    <canvas id="mini" title="Tap for the big map (M)"></canvas>
+    <div class="row">
+      <button id="boxBtn" class="sm" hidden>Hook box</button>
+      <button id="blkBtn" class="sm" aria-pressed="false">Blocks</button>
+      <button id="camBtn" class="sm">Cab view</button>
+      <button id="menuBtn" class="sm sq" aria-label="Menu" aria-expanded="false">☰</button>
+    </div>
+    <div id="blkBar" hidden>
+      <div class="bseg" role="group" aria-label="Block size"><button class="sm" data-b="1" aria-pressed="false">1×1</button><button class="sm" data-b="2" aria-pressed="true">2×2</button><button class="sm" data-b="3" aria-pressed="false">3×3</button></div>
+      <div class="row"><button id="blkRemove" class="sm">Lift</button><button id="blkPlace" class="sm">Place</button></div>
+    </div>
+    <div id="menu" hidden>
+      <button id="helpBtn">How to play</button>
+      <button id="benchBtn">Speed test</button>
+      <button id="resetBtn">Reset</button>
+      <button id="soundBtn">Sound</button>
+      <div class="sizes"><span>UI size</span><button data-s="1">1x</button><button data-s="1.5">1.5x</button><button data-s="2">2x</button></div>
+      <div class="sizes"><span>Dirt detail</span><button data-d="1">1x</button><button data-d="2">2x</button><button data-d="4">4x</button><button data-d="16">16x</button></div>
+    </div>
+  </div>
+  </div>
+  <div id="benchBar" hidden></div>
+  <div id="toast"><span id="toastText"></span></div>
+  <div class="sticks">
+    <div class="stickwrap">
+      <div class="cap" id="capL"><b>◀ ▶</b> Swing<br><b>▲ ▼</b> Stick out / in</div>
+      <div class="stick" id="stickL"><div class="knob"></div></div>
+    </div>
+    <div class="seg" role="group" aria-label="Control mode">
+      <button id="modeDig" data-k="1" aria-pressed="true">Dig</button>
+      <button id="modeDrive" data-k="2" aria-pressed="false">Drive</button>
+      <button id="modeTruck" data-k="3" aria-pressed="false">Truck</button>
+      <button id="modeMow" data-k="4" aria-pressed="false">Mow</button>
+    </div>
+    <div class="stickwrap">
+      <div class="cap" id="capR"><b>◀ ▶</b> Curl / dump<br><b>▲ ▼</b> Boom down / up</div>
+      <div class="stick" id="stickR"><div class="knob"></div></div>
+    </div>
+  </div>
+</div>
+
+<div id="bigmap" hidden>
+  <div class="mapcard">
+    <div class="maphead"><h2>Site map</h2><button id="mapClose">Close</button></div>
+    <canvas id="big"></canvas>
+    <div class="legend">
+      <span><i style="background:#f07a22"></i>Excavator</span><span><i style="background:#e9ecea"></i>Dump truck</span>
+      <span><i style="background:#f2f2ee;height:3px"></i>Trench paint</span><span><i style="background:#f5c518;height:3px"></i>Gas main</span>
+      <span><i style="background:#b89a6b"></i>Dirt road</span><span><i style="background:#7a5232"></i>Dug or dumped</span><span><i style="background:#d8a514"></i>Trench box</span><span><i style="background:#b9b6ae"></i>Block</span><span><i style="background:#2d7a94"></i>Lake</span><span><i style="background:#a3a64c"></i>Tall grass</span><span><i style="background:#d8352a"></i>Mower</span>
+    </div>
+  </div>
+</div>
+<div id="bench" hidden>
+  <div class="card">
+    <h1>Speed test results</h1>
+    <div id="benchSummary" class="ticket"></div>
+    <div class="tablewrap"><table id="benchTable"></table></div>
+    <p id="benchDevice" class="devline"></p>
+    <div class="row"><button id="benchCopy">Copy results</button><button id="benchClose" class="ghost">Close</button></div>
+    <textarea id="benchText" readonly hidden></textarea>
+  </div>
+</div>
+<div id="sndBox" hidden>
+  <div class="card">
+    <h1>Sound</h1>
+    <button id="sndOn" class="ghost" aria-pressed="true">Sound on</button>
+    <div class="sliders">
+      <label for="snd_master">Master</label><output id="snd_master_v"></output><input id="snd_master" type="range" min="0" max="100" step="5">
+      <label for="snd_eng">Engines</label><output id="snd_eng_v"></output><input id="snd_eng" type="range" min="0" max="100" step="5">
+      <label for="snd_alarm">Backup alarm</label><output id="snd_alarm_v"></output><input id="snd_alarm" type="range" min="0" max="100" step="5">
+      <label for="snd_fx">Hydraulics, tires and dirt</label><output id="snd_fx_v"></output><input id="snd_fx" type="range" min="0" max="100" step="5">
+    </div>
+    <p class="devline">N turns sound on and off. Phones in silent mode may mute the game.</p>
+    <div class="row"><button id="sndDone">Done</button><button id="sndReset" class="ghost">Defaults</button></div>
+  </div>
+</div>
+<div id="help">
+  <div class="card">
+    <h1>Backhoe Dig</h1>
+    <div class="ticket">
+      <div class="lbl">Work order</div>
+      <p>Dig a 3 ft wide trench along the <b>white paint</b>, 3 ft deep. A gas main crosses at the <b style="color:var(--gas)">yellow paint</b> about 4 ft down. Load the spoil into the dump truck and haul it off. Expose it. Don't hit it.</p>
+    </div>
+    <dl class="keys">
+      <dt>Left stick</dt><dd>Swing left/right. Push up to reach the stick out, pull down to bring it in.</dd>
+      <dt>Right stick</dt><dd>Left curls the bucket in (scoop), right dumps. Push up for boom down, pull for boom up.</dd>
+      <dt>Drive</dt><dd>Tap Drive and the left stick moves the tracks.</dd>
+      <dt>Truck</dt><dd>Swing a full bucket over the truck bed and dump. It starts parked on the dirt road that loops the mesa. Tap Truck to drive it: left stick steers and gives gas, right stick raises the bed. Pull back to brake; hold it at a stop to shift into reverse. A full load is heavy: it pulls slowly, stops long and leans in turns. Back up to the cliff edge and dump it over to haul it off.</dd>
+      <dt>Mow</dt><dd>A patch of tall grass grows north of the trench, with a zero-turn mower parked beside it. Tap Mow: each stick is a lap bar. Left stick up/down drives the left wheel, right stick up/down the right wheel. Both up goes straight, one up and one back spins it in place; the left stick sideways also turns it. The blades run in Mow mode. Passes heading north or east leave light stripes, south or west dark ones.</dd>
+      <dt>Soil</dt><dd>Dark topsoil, then red clay that holds a steep wall. Sand means the gas main is close, and it slumps. Grey rock is past trench depth and slow going. Dug dirt fluffs up about a quarter, so it fills the truck faster than the hole it came from.</dd>
+      <dt>Cave-ins</dt><dd>Walls deeper than about 5 ft, or with spoil piled within 2 ft of the edge, cave in after a while. Dirt trickling off the lip means get the bucket out.</dd>
+      <dt>Trench box</dt><dd>Swing the bucket over the yellow box and press T (controller X, or the Hook box button). It hangs from the bucket and turns with the swing. Lower it into the trench and press again to set it. Walls between its panels can't slump or cave in, so dig deep inside it and leapfrog it along the trench.</dd>
+      <dt>Blocks</dt><dd>Tap Blocks (or press B) and pick a size: 1×1, 2×2 or 3×3 ft concrete cubes. A yellow outline shows where one lands under the bucket; tap Place (Space) to set it. They snap to a 1 ft grid and stack. Lift (X) picks up the top block under the bucket. Tracks and tires roll over a 1 ft block; taller ones stop them.</dd>
+      <dt>Look</dt><dd>Drag the scene to look around.</dd>
+      <dt>Map</dt><dd>Tap the minimap or press M for the big map.</dd>
+      <dt>Screen</dt><dd>Tap the status card to fold it down. Speed test, Reset, Sound (on/off and volume sliders), UI size (1x, 1.5x, 2x) and Dirt detail (1x, 2x, 4x, 16x: more clods, flying dirt and lumpier loads; 16x is for screenshots and fast computers, turn it down if the game slows) are in the ☰ menu.</dd>
+      <dt>Controller</dt><dd>Sticks work like the two on-screen sticks. Triggers are gas and reverse when driving. LB / RB switch machine · Y cab view · A place block · D-pad up blocks on/off, left/right block size, down pick up · View map · Menu this help · B closes.</dd>
+      <dt>Keys</dt><dd>WASD (or arrows) is always the left stick, IJKL is always the right stick, in every mode. 1 Dig · 2 Drive · 3 Truck · 4 Mow (Tab cycles). Hold Shift for slow, fine moves. C cab view · M map · N sound on/off · H this help. Blocks: B on/off · Space place · V size · X pick up.</dd>
+    </dl>
+    <p>To scoop: boom down until the teeth bite, curl in while pulling the stick toward you, boom up, swing, then dump.</p>
+    <button id="startBtn">Start digging</button>
+    <p class="buildlink"><a href="https://backhoe-dig.vercel.app/build.html" target="_blank" rel="noopener">See how long this took to build</a></p>
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="js/core.js"></script>
+<script src="js/terrain.js"></script>
+<script src="js/scenery.js"></script>
+<script src="js/excavator.js"></script>
+<script src="js/truck.js"></script>
+<script src="js/trenchbox.js"></script>
+<script src="js/dirt.js"></script>
+<script src="js/blocks.js"></script>
+<script src="js/mower.js"></script>
+<script src="js/controls.js"></script>
+<script src="js/effects.js"></script>
+<script src="js/sound.js"></script>
+<script src="js/maps.js"></script>
+<script src="js/bench.js"></script>
+<script src="js/main.js"></script>
+
+<a id="verPill" href="../" aria-label="Version 39. Back to all versions">&#9664; v39</a><style>#verPill{position:fixed;left:0;top:50%;transform:translateY(-50%);z-index:2147483000;padding:12px 12px 12px calc(env(safe-area-inset-left,0px) + 10px);font:800 18px/1 "Saira Condensed","Arial Narrow",sans-serif;letter-spacing:.04em;color:#1c1309;background:#f5c518;border-radius:0 12px 12px 0;text-decoration:none;box-shadow:0 3px 10px rgba(0,0,0,.35)}</style>
+</html>

@@ -124,7 +124,12 @@
 <div id="help">
   <div class="card">
     <h1>Backhoe Dig</h1>
-    <button id="startBtn">Start digging</button>
+    <div class="pick" role="group" aria-label="Pick what to run">
+      <button class="tile" data-m="dig"><img src="shots/dig.jpg" alt="" width="800" height="500"><span class="tn">Excavator</span><span class="ts">Dig and load the truck</span></button>
+      <button class="tile" data-m="truck"><img src="shots/truck.jpg" alt="" width="800" height="500"><span class="tn">Dump truck</span><span class="ts">Haul to the cliff</span></button>
+      <button class="tile" data-m="mow"><img src="shots/mow.jpg" alt="" width="800" height="500"><span class="tn">Mower</span><span class="ts">Cut the tall grass</span></button>
+      <button class="tile" data-m="walk"><img src="shots/walk.jpg" alt="" width="800" height="500"><span class="tn">On foot</span><span class="ts">Walk, jump, build</span></button>
+    </div>
     <div class="ticket">
       <div class="lbl">Work order</div>
       <p>Dig a 3 ft wide trench along the <b>white paint</b>, 3 ft deep. A gas main crosses at the <b style="color:var(--gas)">yellow paint</b> about 4 ft down. Load the spoil into the dump truck and haul it off. Expose it. Don't hit it.</p>

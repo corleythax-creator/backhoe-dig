@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Backhoe Dig Versions</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@600;700;800&family=Saira:wght@400;500;600&display=swap">
+<style>
+/* Layout: one column of version rows, newest first; each row is one big tap target */
+:root{
+  --bg:#f3f1ec; --panel:#ffffff; --ink:#1b1d1a; --muted:#545a52; --line:#d6d3cb; --machine:#c9561a; --tag:#f5c518;
+  --f-display:"Saira Condensed","Arial Narrow",system-ui,sans-serif; --f-body:"Saira",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#141613;--panel:#1d201c;--ink:#eef0ea;--muted:#b4bbae;--line:#343a33;--machine:#f28a3c;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#141613;--panel:#1d201c;--ink:#eef0ea;--muted:#b4bbae;--line:#343a33;--machine:#f28a3c;color-scheme:dark}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:18px;line-height:1.45}
+main{max-width:760px;margin:0 auto;padding-block:28px 60px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:18px}
+h1{margin:0;font:800 clamp(38px,8vw,56px)/1 var(--f-display);text-wrap:balance}
+h1 span{color:var(--machine)}
+.lede{margin:0;color:var(--muted);font-size:19px;max-width:60ch}
+.lede a{color:var(--machine);font-weight:600}
+.jump{display:flex;flex-wrap:wrap;gap:8px}
+.jump a{font:700 17px/1 var(--f-display);letter-spacing:.04em;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:9px 14px;text-decoration:none}
+.day{margin:10px 0 0;font:800 26px/1.1 var(--f-display);letter-spacing:.02em}
+ol{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
+a.row{display:grid;grid-template-columns:64px 1fr auto;gap:4px 14px;align-items:center;text-decoration:none;color:var(--ink);background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+a.row:hover,a.row:focus-visible{border-color:var(--machine);outline:none}
+.v{font:800 34px/1 var(--f-display);color:var(--machine);grid-row:span 2;font-variant-numeric:tabular-nums}
+.when{font:700 15px/1.2 var(--f-display);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.what{font-size:18px;min-width:0;display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.go{font:800 18px/1 var(--f-display);letter-spacing:.05em;text-transform:uppercase;color:var(--machine);grid-row:span 2}
+.tag{font:800 13px/1 var(--f-display);letter-spacing:.08em;text-transform:uppercase;background:var(--tag);color:#1c1309;border-radius:6px;padding:3px 6px;margin-left:6px;vertical-align:2px}
+.note{color:var(--muted);font-size:16px;margin:0}
+@media (max-width:420px){a.row{grid-template-columns:50px 1fr}.go{display:none}.v{font-size:28px}}
+</style>
+</head>
+<body>
+<main>
+  <header><h1>Backhoe Dig <span>versions</span></h1></header>
+  <p class="lede">Every version of the game, playable exactly as it shipped. Tap one to play it, and tap the yellow tab on the left edge to come back. <a href="../">Play the latest</a> · <a href="../build.html">Build time</a></p>
+  <div class="jump" id="jump"></div>
+  <div id="list"></div>
+  <p class="note">Each old version keeps its own settings and saved lawn, so playing one won't change your save in the latest game. Versions 1 to 6 were rebuilt from the original chat, step for step.</p>
+</main>
+<script src="../data/effort.js"></script>
+<script src="list.js"></script>
+<script>
+(function(){
+  const E=window.EFFORT,SNAP=window.SNAPSHOTS||{},out=document.getElementById('list');
+  if(!E){out.textContent='The version list could not load. Refresh to try again.';return}
+  const tz='America/Chicago';
+  const day=s=>new Date(s).toLocaleDateString('en-US',{weekday:'long',month:'short',day:'numeric',timeZone:tz});
+  const tm=s=>new Date(s).toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit',timeZone:tz});
+  const vs=E.versions.filter(v=>SNAP[v.v]!==undefined).sort((a,b)=>b.v-a.v),newest=vs.length?vs[0].v:0;
+  let html='',cur='',jumps='';
+  for(const v of vs){
+    const d=day(v.live||v.asked);
+    if(d!==cur){if(cur)html+='</ol>';cur=d;const id='d'+jumps.length;jumps+=`<a href="#${id}">${d}</a>`;html+=`<h2 class="day" id="${id}">${d}</h2><ol>`}
+    html+=`<li><a class="row" href="v${v.v}/"><span class="v">v${v.v}</span><span class="when">${tm(v.live||v.asked)}${v.v===newest?'<span class="tag">Latest</span>':''}</span><span class="go">Play</span><span class="what">${v.what||''}</span></a></li>`;
+  }
+  out.innerHTML=html+(cur?'</ol>':'');
+  document.getElementById('jump').innerHTML=jumps;
+})();
+</script>
+</body>
+</html>
