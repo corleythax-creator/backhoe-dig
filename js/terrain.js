@@ -51,13 +51,18 @@ const texManager=new THREE.LoadingManager(),texLoader=new THREE.TextureLoader(te
 function loadTex(url){const t=texLoader.load(url);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());return t}
 const texGrass=loadTex('grass.jpg'),texDirt=loadTex('dirt.jpg'),texGrime=loadTex('grime.jpg');
 const texMixU={value:0};
+const groundOcc={value:[new THREE.Vector4(0,0,0,0),new THREE.Vector4(1.3,1.9,0,0),new THREE.Vector4(0,0,0,0),new THREE.Vector4(1.2,3.6,0.3,0)]};
 const groundMat=M(0xffffff,{vertexColors:true});
 groundMat.onBeforeCompile=sh=>{
   sh.uniforms.tGrass={value:texGrass};sh.uniforms.tDirt={value:texDirt};sh.uniforms.texMix=texMixU;sh.uniforms.uTime=timeU;
   // wetT: when this ground was last cut or dumped; fresh dirt shows dark and damp and dries over a few minutes
   sh.vertexShader='attribute float dirt;\nattribute float wetT;\nuniform float uTime;\nvarying float vDirt;\nvarying float vWet;\nvarying vec2 vWXZ;\n'+sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvDirt=dirt;\nvWet=exp(-max(0.0,uTime-wetT)/100.0);\nvWXZ=(modelMatrix*vec4(transformed,1.0)).xz;');
-  sh.fragmentShader='uniform sampler2D tGrass;\nuniform sampler2D tDirt;\nuniform float texMix;\nvarying float vDirt;\nvarying float vWet;\nvarying vec2 vWXZ;\n'+sh.fragmentShader.replace('#include <specularmap_fragment>','#include <specularmap_fragment>\nspecularStrength*=1.0+7.0*vWet*vDirt;').replace('#include <color_fragment>',
-    '#include <color_fragment>\nvec3 tg=texture2D(tGrass,vWXZ*0.22).rgb/vec3(0.36,0.468,0.178);\nvec3 td=texture2D(tDirt,vWXZ*0.45).rgb/vec3(0.461,0.255,0.123);\ndiffuseColor.rgb*=mix(vec3(1.0),clamp(mix(tg,td,vDirt),0.0,2.2),0.8*texMix);\ndiffuseColor.rgb*=1.0-0.32*vWet*vDirt;');
+  // texture detail goes in ahead of the vertex colour so it is turned linear with it. groundOcc: sky light under the
+  // excavator and truck, dimmed by distance to each footprint (x, z, yaw, unused; half width, half length, forward offset, unused)
+  sh.uniforms.uOcc=groundOcc;
+  sh.fragmentShader='uniform sampler2D tGrass;\nuniform sampler2D tDirt;\nuniform float texMix;\nuniform vec4 uOcc[4];\nvarying float vDirt;\nvarying float vWet;\nvarying vec2 vWXZ;\n'+sh.fragmentShader.replace('#include <specularmap_fragment>','#include <specularmap_fragment>\nspecularStrength*=1.0+7.0*vWet*vDirt;').replace('#include <color_fragment>',
+    'vec3 tg=texture2D(tGrass,vWXZ*0.22).rgb/vec3(0.36,0.468,0.178);\nvec3 td=texture2D(tDirt,vWXZ*0.45).rgb/vec3(0.461,0.255,0.123);\ndiffuseColor.rgb*=mix(vec3(1.0),clamp(mix(tg,td,vDirt),0.0,2.2),0.8*texMix);\ndiffuseColor.rgb*=1.0-0.32*vWet*vDirt;\n#include <color_fragment>').replace('#include <lights_fragment_end>',
+    'float skyO=1.0;\nfor(int m=0;m<4;m+=2){vec2 d=vWXZ-uOcc[m].xy;float c=cos(uOcc[m].z),s=sin(uOcc[m].z);vec2 l=vec2(d.x*c-d.y*s,d.x*s+d.y*c-uOcc[m+1].z);vec2 q=abs(l)-uOcc[m+1].xy;\nfloat dist=length(max(q,0.0))+min(max(q.x,q.y),0.0);skyO*=1.0-0.75*(1.0-smoothstep(-0.4,1.6,dist));}\nirradiance*=skyO;\n#include <lights_fragment_end>');
 };
 const geo=new THREE.PlaneGeometry(S,S,N,N); geo.rotateX(-Math.PI/2);
 const colors=new Float32Array(V*V*3);
@@ -160,6 +165,8 @@ function dig(tip,cap){
   digC[0]=cr/vol;digC[1]=cg/vol;digC[2]=cb/vol;for(let q=0;q<4;q++)digMix[q]=vk[q]/vol;
   const mg=3*GRID_K;cI0=Math.max(0,Math.min(cI0,i0-mg));cI1=Math.min(N,Math.max(cI1,i1+mg));cJ0=Math.max(0,Math.min(cJ0,j0-mg));cJ1=Math.min(N,Math.max(cJ1,j1+mg));
   clodsDug(tip.x,tip.z,r);dropMix(tip.x,tip.z,0.75,vol*s*DIRT,digMix,digC,'bite');
+  // dry topsoil kicks up a little dust; the bucket picks up dirt as it works
+  dustPuff(tip.x,tip.y+0.3,tip.z,vol*s*(digMix[SOD]+digMix[CRUMB])*25,digC);st.grime=Math.min(0.85,st.grime+vol*s*0.08);
   return vol*s;
 }
 function deposit(x,z,vol,col,mix){
@@ -172,8 +179,9 @@ function deposit(x,z,vol,col,mix){
   }
   if(!sum)return;
   touch(i0,i1,j0,j1);
-  for(let n=0;n<list.length;n+=2){const k=list[n],a=vol*list[n+1]/sum/CA;H[k]+=a;mixSpoil(k,col||SOIL[SPOIL].c,a);if(a>0.002)wetT[k]=timeU.value}
+  for(let n=0;n<list.length;n+=2){const k=list[n],a=vol*list[n+1]/sum/CA;H[k]+=a;mixSpoil(k,col||SOIL[SPOIL].c,a);if(a>0.002){wetT[k]=timeU.value;comp[k]=0}}
   dropMix(x,z,r,vol*DIRT,mix||CRUMB_MIX,col||SOIL[SPOIL].c,'dump');
+  dustPuff(x,hAt(x,z)+0.2,z,vol*30,col);
 }
 // each layer holds its own slope: sand runs, clay stands steep, rock barely moves; what slides keeps its colour as loose fill
 const RP_MIN=0.62*CELL,M0=1.1*CELL;
@@ -216,7 +224,7 @@ function collapse(k,sur){
     if(i<i1)slumpPair(kk,kk+1,true);if(j<j1)slumpPair(kk,kk+V,true)}
   touch(i0,i1,j0,j1);st.dirty=true;st.slumpT=2.5;st.caves++;
   const p=new THREE.Vector3(ci*CELL-S/2,H[k]+0.1,cj*CELL-S/2);for(let n=0;n<40;n++)spawn(p,1.6);
-  {const m=matAt(k,H[k]-0.05),ck=clodKind(m,H0[k]-H[k]+0.05);dropClods(ck,p.x,p.z,1.4,60*DIRT,ck===CRUMB?matColor(k,m):KIND_COL[Math.max(0,ck)],ck===SOD?1:1.4)}
+  {const m=matAt(k,H[k]-0.05),ck=clodKind(m,H0[k]-H[k]+0.05);dropClods(ck,p.x,p.z,1.4,60*DIRT,ck===CRUMB?matColor(k,m):KIND_COL[Math.max(0,ck)],ck===SOD?1:1.4);dustPuff(p.x,p.y,p.z,25,matColor(k,m))}
   shake=reduceMotion?0:0.35;rumble(500,0.8);
   toast(sur?'Cave-in! Spoil too close to the edge. Keep piles 2 ft back.':'Cave-in! Walls past 5 ft deep need a slope or a trench box.','bad',3600);
 }
