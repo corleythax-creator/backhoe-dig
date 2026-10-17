@@ -1,7 +1,7 @@
 // Backhoe Dig build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Backhoe Dig",
- "updated": "2026-10-17T07:50:00Z",
+ "updated": "2026-10-17T08:10:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 181,
+   "dh": 184,
    "act": 3.0,
-   "versions": 19
+   "versions": 20
   }
  ],
  "extra": [
@@ -264,6 +264,15 @@ window.EFFORT = {
    "tris": 491144,
    "chars": 112960,
    "what": "Dirt road around the mesa rim: graded loop with wheel ruts, a grassy crown and a berm on the cliff side, on the map and legend; packed road rolls and grips better than grass; the berm scrapes instead of stopping the truck dead; the truck starts parked on the road."
+  },
+  {
+   "v": 27,
+   "asked": "2026-10-17T02:50:00-05:00",
+   "live": "2026-10-17T02:49:00-05:00",
+   "dh": 3,
+   "tris": 491144,
+   "chars": 115189,
+   "what": "Code split into files so sessions can work in parallel: css/game.css and eleven js/ scripts (core, terrain, scenery, excavator, truck, trench box, controls, effects, maps, speed test, main loop). No change to play."
   }
  ]
 };
