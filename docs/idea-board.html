@@ -177,7 +177,7 @@ tr.on .rin{background:var(--amber);color:var(--amber-ink);border-color:var(--amb
       <rect width="1200" height="300" fill="url(#shade)"/>
     </svg>
     <div class="ttl">
-      <p class="kicker">Corley's Island · the mesa dig site</p>
+      <p class="kicker">Corley's Island · dig site and island life</p>
       <h1>Backhoe Dig Idea Board</h1>
     </div>
     <div class="stats" id="stats"></div>
@@ -231,7 +231,7 @@ tr.on .rin{background:var(--amber);color:var(--amber-ink);border-color:var(--amb
   </div>
 
   <div class="panel legend" id="phelp" hidden>
-    <span><b>Realism</b> 1-10: how much more like a real job site it feels. 9 = locate paint and flags before a dig, 7 = the hydraulic hammer, 5 = a cab radio, 3 = buried treasure, 1 = badges.</span>
+    <span><b>Realism</b> 1-10: how much more real the job site and island life feel. 9 = locate paint and flags before a dig, 7 = the hydraulic hammer, 5 = a cab radio, 3 = buried treasure, 1 = badges.</span>
     <span><b>Fun</b> 1-10: how much it adds to play. 9 = the backhoe loader, 8 = mud you get stuck in, 6 = rain, 4 = track prints, 2 = ambient occlusion.</span>
     <span><b>Seen</b>: how often you meet it: every session, most sessions, sometimes, rare.</span>
     <span><b>Phone</b>: risk to staying above 30 FPS on your phone (Low graphics): none, low, high. High sinks it in Priority.</span>
@@ -274,8 +274,8 @@ tr.on .rin{background:var(--amber);color:var(--amber-ink);border-color:var(--amb
 
 <script>
 const SID="session_01SBwjwGFjYHoJFXKYC4CmB8";
-const G={J:"Jobs and work orders",M:"New machines",X:"Excavator and attachments",D:"Dirt and digging",U:"Buried utilities",W:"Weather and time of day",S:"Site and scenery",L:"Crew and people",A:"Sound",C:"Controls and camera",Q:"Graphics and phone speed",E:"Map editor",Y:"Gameplay and challenges"};
-const GS={J:"Jobs",M:"Machines",X:"Excavator",D:"Dirt",U:"Utilities",W:"Weather",S:"Site",L:"Crew",A:"Sound",C:"Controls",Q:"Graphics",E:"Editor",Y:"Gameplay"};
+const G={J:"Jobs and work orders",M:"New machines",X:"Excavator and attachments",D:"Dirt and digging",U:"Buried utilities",W:"Weather and time of day",S:"Site and scenery",L:"Crew and people",A:"Sound",C:"Controls and camera",Q:"Graphics and phone speed",E:"Map editor",Y:"Gameplay and challenges",H:"Cozy home life",K:"Yard work",B:"The bridge and the drive",T:"The mountain town",R:"Days and routine"};
+const GS={J:"Jobs",M:"Machines",X:"Excavator",D:"Dirt",U:"Utilities",W:"Weather",S:"Site",L:"Crew",A:"Sound",C:"Controls",Q:"Graphics",E:"Editor",Y:"Gameplay",H:"Home",K:"Yard",B:"Bridge",T:"Town",R:"Routine"};
 // [id, group, title, description, realism 1-10, fun 1-10, seen, phone, cost 1|2|3, hour guess, deps]
 const I=[
 ["J01","J","Work orders","A job card each session (dig to a line and depth, lay pipe, backfill), with pay and a finish check.",4,8,"every","none",2,6,[]],
@@ -397,6 +397,59 @@ const I=[
 ["Y06","Y","Leaderboards","Best times on the challenges, online.",1,5,"some","none",2,5,["Y02"]],
 ["Y07","Y","Daily dig","A new site layout and job every day.",3,7,"most","none",2,6,[]],
 ["Y08","Y","Kids mode","No strikes or cave-ins, giant toy blocks.",1,5,"rare","none",1,2,[]],
+["H01","H","Your cabin on the island","A small home by the lake: porch, kitchen, bed, a woodstove; the place every day starts and ends.",6,7,"every","low",3,10,[]],
+["H02","H","Morning coffee on the porch","Wake up, sip coffee as the sun comes up over the lake, and look over the day's jobs.",6,6,"every","low",1,4,["H01"]],
+["H03","H","Sleep to end the day","Turn in at night; the game saves and the next morning starts fresh.",5,5,"every","none",1,3,["H01"]],
+["H04","H","Vegetable garden","Plant tomatoes, okra and peppers, water them, and pick them when they ripen over the days.",6,7,"most","low",2,6,[]],
+["H05","H","A dog","Rides in the truck with its head out the window, follows you on foot and naps in the shade.",6,8,"every","low",2,6,[]],
+["H06","H","Chickens","A coop and a run; eggs to collect each morning.",5,6,"most","low",2,5,[]],
+["H07","H","Porch swing and fire pit","Sit and watch the lake: a rocking chair, a swing and a fire pit at night.",6,5,"most","low",1,3,[]],
+["H08","H","Fishing off the dock","Cast for bass and bream at dawn and dusk.",6,7,"some","low",2,6,[]],
+["H09","H","Furnish the cabin","Buy and place furniture, rugs and pictures with what you earn.",3,6,"some","low",2,7,["H01"]],
+["H10","H","Barn and workshop","Park and wash the machines, tools on the wall, a radio on the bench.",7,5,"most","low",2,6,[]],
+["H11","H","Simple cooking","Breakfast from your eggs, supper from the garden.",4,5,"most","none",2,5,["H04"]],
+["H12","H","Holidays at home","Pumpkins on the porch in fall, lights on the cabin at Christmas.",5,5,"rare","low",1,4,["H01"]],
+["H13","H","Home projects with your machines","Dig your own pond, cut a driveway, terrace a garden with the excavator.",5,8,"most","low",2,6,[]],
+["K01","K","String trimmer","Weed-eat along fences, trees, rocks and edges the mower can't reach; the line wears down and you bump it out.",8,7,"every","low",2,6,[]],
+["K02","K","Edger","Crisp edges along the drive and walk.",7,5,"most","low",1,3,[]],
+["K03","K","Leaf blower","Blow clippings off the drive and porch, and leaves in fall.",7,6,"most","low",1,4,[]],
+["K04","K","More mowers","A push mower and a riding mower, with the zero-turn as the upgrade.",6,6,"most","low",2,6,[]],
+["K05","K","Hedge trimmer","Shrubs that grow shaggy and get shaped back.",6,5,"some","low",1,4,[]],
+["K06","K","Mulch beds","Haul mulch in the truck and spread it by wheelbarrow.",6,5,"some","low",2,5,[]],
+["K07","K","Pressure washer","Wash the porch, the drive and muddy machines clean in stripes.",6,8,"some","low",2,5,[]],
+["K08","K","Weeds that come back","Grass along fences and in cracks grows back a little each day.",7,4,"every","low",1,4,["K01"]],
+["K09","K","Mower upkeep","Gas, oil and blade sharpening; dull blades leave a ragged cut.",7,4,"most","none",1,3,[]],
+["K10","K","Lawn health","Brown patches, fertilizer and a sprinkler; the grass greens up over days.",6,4,"most","low",2,5,[]],
+["K11","K","Lawn care business","Mow customers' yards in town on a weekly route for pay.",5,7,"most","low",3,10,["T01"]],
+["K12","K","Bagger and compost pile","Catch clippings and dump them on a compost pile.",6,4,"some","low",1,3,[]],
+["B01","B","The long bridge","A two-lane bridge about a mile long across the lake to the mainland, with rails, lights and joints that thump under the tyres.",7,8,"every","low",3,10,[]],
+["B02","B","Pickup truck","Your daily driver for town trips, with a bed for mulch, tools and groceries.",7,8,"every","low",2,8,[]],
+["B03","B","Towing a trailer","Hitch the mower or a machine to a trailer and haul it to a job.",7,7,"most","low",2,7,["B02"]],
+["B04","B","The mountain road","Switchbacks climbing from the bridge to the city in the mountains, with overlooks.",7,7,"most","high",3,12,["B01"]],
+["B05","B","Traffic on the road","A few cars, a school bus and logging trucks on the bridge and road.",7,5,"most","low",2,6,["B01"]],
+["B06","B","The view on the drive","Look back at the island from the bridge while the mountains grow ahead.",7,6,"every","high",2,6,["B01"]],
+["B07","B","Swing span","A section of the bridge that swings open for sailboats while you wait.",5,6,"some","low",2,5,["B01"]],
+["B08","B","Skip the drive","Fast travel to town once you've driven it.",1,4,"most","none",1,2,["T01"]],
+["B09","B","Bridge repair job","Rebuild a washed-out bridge approach with your machines.",6,6,"rare","low",2,6,["B01"]],
+["T01","T","The city in the mountains","A small town at the end of the road: a main street and a few blocks to drive.",7,8,"every","high",3,14,["B01"]],
+["T02","T","Hardware store","Buy trimmer line, gas, seed and tools.",6,5,"most","low",2,5,["T01"]],
+["T03","T","Diner","Breakfast or lunch with the regulars at the counter.",6,5,"most","low",2,5,["T01"]],
+["T04","T","Equipment dealer and rental yard","Rent a dozer for a big job or buy a new machine.",6,7,"some","low",2,6,["T01"]],
+["T05","T","Gas station","Fill the pickup and the gas cans.",7,4,"most","low",1,4,["T01"]],
+["T06","T","Customers who hire you","Folks in town who need a ditch, a driveway or a pond dug.",6,8,"most","low",3,10,["T01","J01"]],
+["T07","T","Neighbors","People you get to know by name who wave and ask small favors.",6,6,"most","low",2,7,[]],
+["T08","T","Saturday market","Sell your vegetables and eggs.",5,6,"some","low",2,6,["H04","T01"]],
+["T09","T","Feed and landscape store","Feed, fertilizer, and mulch by the yard loaded into your truck by a loader.",6,5,"some","low",2,5,["T01"]],
+["T10","T","Town lights at night","The city glowing in the mountains across the lake.",6,3,"every","low",1,2,[]],
+["T11","T","Town works jobs","A water line dug on Main Street, a sidewalk to tear out.",7,7,"some","low",3,10,["T01"]],
+["R01","R","Days and the chore list","Days pass, weekdays and weekends, with today's chores on a note on the fridge.",5,6,"every","none",1,4,[]],
+["R02","R","Money","Earn from jobs, spend on fuel, seed and upgrades.",4,6,"every","none",1,4,[]],
+["R03","R","Weather forecast","The radio forecast shapes the day: rain means a shop day.",6,5,"every","none",1,3,["W01"]],
+["R04","R","Phone texts","Customers and neighbors text you jobs and favors.",5,6,"every","none",1,4,[]],
+["R05","R","Relaxed mode","No timers and no failing, just the chores.",2,6,"every","none",1,2,[]],
+["R06","R","Chores by season","Mowing in summer, leaves in fall, plowing snow in winter.",6,7,"most","low",2,6,["W04"]],
+["R07","R","Snow plowing","Clear the road and the bridge with a loader in winter.",6,7,"rare","low",2,5,["W04"]],
+["R08","R","End-of-day summary","What you did, what you earned, the lawn and the yards dug.",3,5,"every","none",1,2,[]],
 ];
 // built (or partly built) ideas: date and what is in the game; part: more steps left (still pickable); pc: percent done
 const DONE={};

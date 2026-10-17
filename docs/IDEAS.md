@@ -166,3 +166,71 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - Y06 Leaderboards: Best times on the challenges, online. (R1 F5 some none c2 5h needs Y02)
 - Y07 Daily dig: A new site layout and job every day. (R3 F7 most none c2 6h)
 - Y08 Kids mode: No strikes or cave-ins, giant toy blocks. (R1 F5 rare none c1 2h)
+
+## H: Cozy home life
+
+- H01 Your cabin on the island: A small home by the lake: porch, kitchen, bed, a woodstove; the place every day starts and ends. (R6 F7 every low c3 10h)
+- H02 Morning coffee on the porch: Wake up, sip coffee as the sun comes up over the lake, and look over the day's jobs. (R6 F6 every low c1 4h needs H01)
+- H03 Sleep to end the day: Turn in at night; the game saves and the next morning starts fresh. (R5 F5 every none c1 3h needs H01)
+- H04 Vegetable garden: Plant tomatoes, okra and peppers, water them, and pick them when they ripen over the days. (R6 F7 most low c2 6h)
+- H05 A dog: Rides in the truck with its head out the window, follows you on foot and naps in the shade. (R6 F8 every low c2 6h)
+- H06 Chickens: A coop and a run; eggs to collect each morning. (R5 F6 most low c2 5h)
+- H07 Porch swing and fire pit: Sit and watch the lake: a rocking chair, a swing and a fire pit at night. (R6 F5 most low c1 3h)
+- H08 Fishing off the dock: Cast for bass and bream at dawn and dusk. (R6 F7 some low c2 6h)
+- H09 Furnish the cabin: Buy and place furniture, rugs and pictures with what you earn. (R3 F6 some low c2 7h needs H01)
+- H10 Barn and workshop: Park and wash the machines, tools on the wall, a radio on the bench. (R7 F5 most low c2 6h)
+- H11 Simple cooking: Breakfast from your eggs, supper from the garden. (R4 F5 most none c2 5h needs H04)
+- H12 Holidays at home: Pumpkins on the porch in fall, lights on the cabin at Christmas. (R5 F5 rare low c1 4h needs H01)
+- H13 Home projects with your machines: Dig your own pond, cut a driveway, terrace a garden with the excavator. (R5 F8 most low c2 6h)
+
+## K: Yard work
+
+- K01 String trimmer: Weed-eat along fences, trees, rocks and edges the mower can't reach; the line wears down and you bump it out. (R8 F7 every low c2 6h)
+- K02 Edger: Crisp edges along the drive and walk. (R7 F5 most low c1 3h)
+- K03 Leaf blower: Blow clippings off the drive and porch, and leaves in fall. (R7 F6 most low c1 4h)
+- K04 More mowers: A push mower and a riding mower, with the zero-turn as the upgrade. (R6 F6 most low c2 6h)
+- K05 Hedge trimmer: Shrubs that grow shaggy and get shaped back. (R6 F5 some low c1 4h)
+- K06 Mulch beds: Haul mulch in the truck and spread it by wheelbarrow. (R6 F5 some low c2 5h)
+- K07 Pressure washer: Wash the porch, the drive and muddy machines clean in stripes. (R6 F8 some low c2 5h)
+- K08 Weeds that come back: Grass along fences and in cracks grows back a little each day. (R7 F4 every low c1 4h needs K01)
+- K09 Mower upkeep: Gas, oil and blade sharpening; dull blades leave a ragged cut. (R7 F4 most none c1 3h)
+- K10 Lawn health: Brown patches, fertilizer and a sprinkler; the grass greens up over days. (R6 F4 most low c2 5h)
+- K11 Lawn care business: Mow customers' yards in town on a weekly route for pay. (R5 F7 most low c3 10h needs T01)
+- K12 Bagger and compost pile: Catch clippings and dump them on a compost pile. (R6 F4 some low c1 3h)
+
+## B: The bridge and the drive
+
+- B01 The long bridge: A two-lane bridge about a mile long across the lake to the mainland, with rails, lights and joints that thump under the tyres. (R7 F8 every low c3 10h)
+- B02 Pickup truck: Your daily driver for town trips, with a bed for mulch, tools and groceries. (R7 F8 every low c2 8h)
+- B03 Towing a trailer: Hitch the mower or a machine to a trailer and haul it to a job. (R7 F7 most low c2 7h needs B02)
+- B04 The mountain road: Switchbacks climbing from the bridge to the city in the mountains, with overlooks. (R7 F7 most high c3 12h needs B01)
+- B05 Traffic on the road: A few cars, a school bus and logging trucks on the bridge and road. (R7 F5 most low c2 6h needs B01)
+- B06 The view on the drive: Look back at the island from the bridge while the mountains grow ahead. (R7 F6 every high c2 6h needs B01)
+- B07 Swing span: A section of the bridge that swings open for sailboats while you wait. (R5 F6 some low c2 5h needs B01)
+- B08 Skip the drive: Fast travel to town once you've driven it. (R1 F4 most none c1 2h needs T01)
+- B09 Bridge repair job: Rebuild a washed-out bridge approach with your machines. (R6 F6 rare low c2 6h needs B01)
+
+## T: The mountain town
+
+- T01 The city in the mountains: A small town at the end of the road: a main street and a few blocks to drive. (R7 F8 every high c3 14h needs B01)
+- T02 Hardware store: Buy trimmer line, gas, seed and tools. (R6 F5 most low c2 5h needs T01)
+- T03 Diner: Breakfast or lunch with the regulars at the counter. (R6 F5 most low c2 5h needs T01)
+- T04 Equipment dealer and rental yard: Rent a dozer for a big job or buy a new machine. (R6 F7 some low c2 6h needs T01)
+- T05 Gas station: Fill the pickup and the gas cans. (R7 F4 most low c1 4h needs T01)
+- T06 Customers who hire you: Folks in town who need a ditch, a driveway or a pond dug. (R6 F8 most low c3 10h needs T01 J01)
+- T07 Neighbors: People you get to know by name who wave and ask small favors. (R6 F6 most low c2 7h)
+- T08 Saturday market: Sell your vegetables and eggs. (R5 F6 some low c2 6h needs H04 T01)
+- T09 Feed and landscape store: Feed, fertilizer, and mulch by the yard loaded into your truck by a loader. (R6 F5 some low c2 5h needs T01)
+- T10 Town lights at night: The city glowing in the mountains across the lake. (R6 F3 every low c1 2h)
+- T11 Town works jobs: A water line dug on Main Street, a sidewalk to tear out. (R7 F7 some low c3 10h needs T01)
+
+## R: Days and routine
+
+- R01 Days and the chore list: Days pass, weekdays and weekends, with today's chores on a note on the fridge. (R5 F6 every none c1 4h)
+- R02 Money: Earn from jobs, spend on fuel, seed and upgrades. (R4 F6 every none c1 4h)
+- R03 Weather forecast: The radio forecast shapes the day: rain means a shop day. (R6 F5 every none c1 3h needs W01)
+- R04 Phone texts: Customers and neighbors text you jobs and favors. (R5 F6 every none c1 4h)
+- R05 Relaxed mode: No timers and no failing, just the chores. (R2 F6 every none c1 2h)
+- R06 Chores by season: Mowing in summer, leaves in fall, plowing snow in winter. (R6 F7 most low c2 6h needs W04)
+- R07 Snow plowing: Clear the road and the bridge with a loader in winter. (R6 F7 rare low c2 5h needs W04)
+- R08 End-of-day summary: What you did, what you earned, the lawn and the yards dug. (R3 F5 every none c1 2h)
