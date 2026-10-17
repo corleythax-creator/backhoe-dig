@@ -1,7 +1,7 @@
 // Backhoe Dig build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Backhoe Dig",
- "updated": "2026-10-17T15:06:00Z",
+ "updated": "2026-10-17T15:12:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 297,
+   "dh": 301,
    "act": 6.0,
-   "versions": 39
+   "versions": 40
   }
  ],
  "extra": [
@@ -444,6 +444,15 @@ window.EFFORT = {
    "tris": 772000,
    "chars": 233098,
    "what": "The game shows its version (from the build log) at the bottom of the menu and on the How to play card."
+  },
+  {
+   "v": 47,
+   "asked": "2026-10-17T10:00:00-05:00",
+   "live": "2026-10-17T10:12:00-05:00",
+   "dh": 4,
+   "tris": 991332,
+   "chars": 237196,
+   "what": "Grass realism: mowing stripes depend on where you look from (each pass lays the grass the way the mower drove, light looking along it and dark looking against it, so the stripes swap as you walk round, softer from overhead); wind comes in gusts that roll across the tall grass, bending it over and showing its paler side; looking toward the sun the blades glow where light comes through them; and deep in the clumps the grass is dark where the grass around stands taller, so tall grass beside stubble casts a soft shade. Lawn saves keep each cell's mowing direction."
   }
  ]
 };
