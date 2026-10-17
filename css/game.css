@@ -76,8 +76,12 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 .seg button{border:0;border-radius:0;height:36px;font-size:13px;padding:0 12px}
 .seg button+button{border-top:1px solid var(--hud-line)}
 .seg button[aria-pressed="true"]{background:var(--machine);color:#1c1309}
-/* Jump takes the right stick's caption spot in Walk mode */
-#jumpBtn{height:44px;min-width:100px;font-size:18px;border-radius:22px;background:var(--machine);color:#1c1309;border:0;box-shadow:0 3px 0 rgba(0,0,0,.35);zoom:var(--cs)}
+/* Sprint and Jump take the right stick's caption spot in Walk mode; Sprint lights up while it is on */
+.walkbtns{display:flex;gap:8px;zoom:var(--cs);align-self:flex-end}.walkbtns[hidden]{display:none}
+@media (orientation:portrait){#hud.lg .walkbtns{zoom:1}}
+#jumpBtn,#sprintBtn{height:44px;min-width:76px;padding:0 12px;font-size:17px;border-radius:22px;box-shadow:0 3px 0 rgba(0,0,0,.35)}
+#jumpBtn{background:var(--machine);color:#1c1309;border:0}
+#sprintBtn{border:2px solid var(--machine);color:var(--machine)}#sprintBtn[aria-pressed="true"]{background:var(--machine);color:#1c1309}
 #seatBtn{min-width:100px;font-size:16px;border-radius:20px;background:var(--machine);color:#1c1309;border:0;box-shadow:0 3px 0 rgba(0,0,0,.35);zoom:var(--cs)}
 #jumpBtn:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.35)}
 .kb .seg button::before{content:attr(data-k) " ";opacity:.6}
