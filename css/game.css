@@ -111,7 +111,7 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 .card .row button{flex:1}
 .card button.ghost{background:transparent;color:var(--ink);border:1px solid var(--hud-line)}
 #flash{position:fixed;inset:0;background:var(--danger);opacity:0;pointer-events:none;transition:opacity .4s}
-#help,#sndBox{position:fixed;inset:0;background:rgba(10,12,9,.72);display:flex;align-items:center;justify-content:center;pointer-events:auto;box-sizing:border-box;
+#help,#sndBox,#syncBox{position:fixed;inset:0;background:rgba(10,12,9,.72);display:flex;align-items:center;justify-content:center;pointer-events:auto;box-sizing:border-box;
   padding-block:calc(env(safe-area-inset-top,0px) + 16px) calc(env(safe-area-inset-bottom,0px) + 16px);
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .card{background:#1d211b;border:1px solid var(--hud-line);border-radius:14px;padding:20px;max-width:440px;width:100%;max-height:100%;overflow:auto;box-sizing:border-box;display:flex;flex-direction:column;gap:14px}
@@ -159,3 +159,11 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 @media (min-width:480px){.sliders{grid-template-columns:auto 1fr 3.2em;align-items:center;gap:8px 12px}
   .sliders label{margin-top:0;align-self:center}.sliders input{grid-column:2}.sliders output{grid-column:3;align-self:center;text-align:right}}
 #sndOn[aria-pressed="false"]{color:var(--danger);border-color:var(--danger)}
+/* Sync panel: the code in big type, the code box and Join on one row */
+#syncBox{z-index:7}
+#syncOff,#syncOn{display:flex;flex-direction:column;gap:14px}#syncOff[hidden],#syncOn[hidden]{display:none}
+.synccode{font:800 46px/1 var(--f-display);letter-spacing:.08em;text-align:center;color:var(--gas);padding:14px 0;border:2px dashed rgba(255,255,255,.3);border-radius:10px;user-select:all}
+#syncIn{flex:1.4;min-width:0;height:54px;box-sizing:border-box;border-radius:10px;border:1px solid var(--hud-line);background:#0f120e;color:var(--ink);
+  font:700 24px/1 var(--f-display);letter-spacing:.08em;text-transform:uppercase;padding:0 12px}
+#syncIn::placeholder{color:var(--muted);opacity:.6}
+#syncJoin{flex:1}

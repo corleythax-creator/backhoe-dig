@@ -1,4 +1,4 @@
-// Backhoe Dig: the trench box: model, hooking to the bucket, setting it and the wall mask.
+// Corley's Island: the trench box: model, hooking to the bucket, setting it and the wall mask.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 // ---------- trench box ----------
 // a steel trench shield: two side panels held apart by spreaders at the ends. Hooked to the bucket it swings with the

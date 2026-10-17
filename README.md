@@ -2,9 +2,9 @@
 
 A 3D low-poly excavator game in plain HTML, CSS and JavaScript (three.js r128, no build step). Dig a 3 ft trench on a grassy mesa above a mountain lake (about 295 ft across: a high top with Lookout Knoll and West Rise, and a ramp down a 24 ft rocky scarp to the Lower Bench dirt yard), expose the gas main without hitting it, load the dump truck and haul the spoil over the cliff edge. Then mow the patch of tall grass with the zero-turn mower.
 
-- Live: https://backhoe-dig.vercel.app
-- Build time: https://backhoe-dig.vercel.app/build.html (reads `data/effort.js`)
-- Every version, playable: https://backhoe-dig.vercel.app/versions/
+- Live: https://corleys-island.vercel.app (https://backhoe-dig.vercel.app still works)
+- Build time: https://corleys-island.vercel.app/build.html (reads `data/effort.js`)
+- Every version, playable: https://corleys-island.vercel.app/versions/
 - Claude version: https://claude.ai/artifact/6nxYC5EK3422JouxaZx2DF
 
 ## Files

@@ -1,4 +1,4 @@
-// Backhoe Dig: shared helpers, renderer, scene, sky, camera, lights and the flat-shaded material maker M().
+// Corley's Island: shared helpers, renderer, scene, sky, camera, lights and the flat-shaded material maker M().
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 const $=s=>document.querySelector(s);
 const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;

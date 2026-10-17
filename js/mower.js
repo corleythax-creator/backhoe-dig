@@ -1,4 +1,4 @@
-// Backhoe Dig: a patch of tall grass on the mesa and a zero-turn mower to cut it: lap-bar steering, swivel casters,
+// Corley's Island: a patch of tall grass on the mesa and a zero-turn mower to cut it: lap-bar steering, swivel casters,
 // clippings out the side chute and lawn stripes that follow the direction of each pass and change with the view.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 // ---------- tall grass ----------
@@ -157,7 +157,7 @@ function lawnReset(){for(let n=0;n<LAWN_N;n++)if(lawn.dug[n]){lawn.ct[n]=-1e9;la
 // lawn clock (0 full grown) and the heading it was mown in (its grain), plus the mowing time, the mower's spot and the wall-clock time of the save.
 // Grass grows while the game runs, not while it is closed. Written at most every 2 s while it changes and when the page is hidden
 const LAWN_KEY='bhd_lawn',LAWN_LIFE=LAWN_WAIT+LAWN_GROW;let mwSaved=null;
-function lawnSave(){lawn.sDirty=false;lawn.saveT=performance.now();const b=new Uint8Array(LAWN_N*2);
+function lawnSave(){if(window.syncHold)return;lawn.sDirty=false;lawn.saveT=performance.now();const b=new Uint8Array(LAWN_N*2);
   for(let n=0;n<LAWN_N;n++){const a=lawn.t-lawn.ct[n];if(lawn.dug[n]||a>=LAWN_LIFE)continue;
     b[n*2]=1+Math.round(Math.max(0,a)/LAWN_LIFE*254);const h=lawn.ga[n]/(Math.PI*2);b[n*2+1]=Math.round((h-Math.floor(h))*255)&255}
   let bin='';for(let k=0;k<b.length;k+=4096)bin+=String.fromCharCode.apply(null,b.subarray(k,k+4096));

@@ -1,4 +1,4 @@
-# Backhoe Dig: notes for Claude
+# Corley's Island (Backhoe Dig): notes for Claude
 
 - Pushes to `main` deploy to Vercel (project `backhoe-dig`, Corley team). The claude.ai artifact (https://claude.ai/artifact/6nxYC5EK3422JouxaZx2DF) is the same game. Keep both in step: publish the artifact from `main` only, as the page from `<title>` to before `</html>` of `index.html`, with `css/game.css`, every `js/*.js` and `data/effort.js` (the game shows its version from it) passed in `files` at the same paths (the jpg textures are already there).
 - Code layout (README has the table): markup in `index.html`, styles in `css/game.css`, game code in `js/*.js`. The scripts are classic scripts sharing one global scope and load in the order of the script tags; top-level code may only call functions from its own file or earlier files. Before adding a top-level name, grep `(const|let|function) NAME\b` across `js/` (and avoid browser globals like `top`, `name`, `status`).
@@ -6,4 +6,4 @@
 - Owner preferences for this game: flat-shaded low-poly look, imperial units in everything shown, large readable HUD text, runs above 30 FPS on his phone.
 - When a version ships, add an entry to `versions` in `data/effort.js` (asked/live times in Central, estimated developer hours, triangles from a headless scene count, file size) and add its hours to that day in `days` (`dh`, and `act` as half-hour blocks holding a release). The master dashboard (`corley-master-dashboard`, `LIVE`) and `build.html` both read it.
 - Dev hours are a feature-by-feature judgment of one experienced three.js developer working by hand.
-- `versions/` holds a playable snapshot of every version (https://backhoe-dig.vercel.app/versions/). After a version merges to `main`, run `python3 tools/versions.py` and commit `versions/` with it. v1 to v6 were rebuilt by replaying the original chat's steps (the replay reproduced the saved v7 byte for byte); the script never touches them. Don't hand-edit other snapshots.
+- `versions/` holds a playable snapshot of every version (https://corleys-island.vercel.app/versions/). After a version merges to `main`, run `python3 tools/versions.py` and commit `versions/` with it. v1 to v6 were rebuilt by replaying the original chat's steps (the replay reproduced the saved v7 byte for byte); the script never touches them. Don't hand-edit other snapshots.

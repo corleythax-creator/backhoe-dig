@@ -1,4 +1,4 @@
-// Backhoe Dig: cheaper shadows. The machines are built from about 130 small meshes, and each one cast its own shadow,
+// Corley's Island: cheaper shadows. The machines are built from about 130 small meshes, and each one cast its own shadow,
 // so the shadow pass drew them one by one. Here the parts that sit still on one parent are merged into one shadow-only
 // mesh per parent (a handful of draws). A part that later moves, scales or hides on its own goes back to casting itself.
 // Trees cast only from the few near the shadow area, not all 230 round the mesa. The shadow-only meshes are switched on

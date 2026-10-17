@@ -1,17 +1,17 @@
-// Backhoe Dig: the job site is saved in this browser, so a reload picks up where you left off. Two saves:
+// Corley's Island: the job site is saved in this browser, so a reload picks up where you left off. Two saves:
 // the ground (bhd_site: every grid vertex that differs from the untouched mesa, with the colour of dumped dirt, ruts and
 // groundwater) and the machines (bhd_rigs: excavator, dump truck and its load, trench box, blocks, the worker on foot).
 // The lawn has its own save in mower.js. Reset writes a fresh site. Loose clods, dust and flying dirt are not kept.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 const SITE_KEY='bhd_site',RIG_KEY='bhd_rigs';
-const site={dirty:false,saveT:0,rigT:0,rigSig:''};
+const site={dirty:false,saveT:0,rigT:0,rigSig:'',lastD:null};
 const ST_KEYS=['x','z','y','yaw','pitch','roll','swing','a1','a2','a3','load','loadC','loadMix','loadWet','stuck','strikes','exposed','done','seenSand','seenRock','grime','mud','caves'];
 const TR_KEYS=['x','z','y','yaw','pitch','roll','bed','load','hauled','loadC','loadMix','loadWet','stuck','mud','gear','loadedOnce','fullWarned','haulWarned','bedWarned'];
 function siteB64(u8){let s='';for(let k=0;k<u8.length;k+=4096)s+=String.fromCharCode.apply(null,u8.subarray(k,k+4096));return btoa(s)}
 function siteUnB64(s){const b=atob(s),u=new Uint8Array(b.length);for(let k=0;k<b.length;k++)u[k]=b.charCodeAt(k);return u}
 // ground: for each changed vertex, the gap since the last one (varint), height above or below the original (float),
 // dumped-dirt colour, compaction and mud (bytes), then a flag and the water surface where there is standing water
-function siteSave(){site.dirty=false;site.saveT=performance.now();
+function siteSave(){if(window.syncHold)return;site.dirty=false;site.saveT=performance.now();
   const ks=[];for(let k=0;k<V*V;k++)if(H[k]!==H0[k]||comp[k]>0||Wt[k]>-1e8||mudA[k]>0)ks.push(k);
   const buf=new Uint8Array(ks.length*20+16),dv=new DataView(buf.buffer);let o=0,last=-1;
   for(const k of ks){let g=k-last;last=k;while(g>=128){buf[o++]=(g&127)|128;g>>>=7}buf[o++]=g;
@@ -19,9 +19,11 @@ function siteSave(){site.dirty=false;site.saveT=performance.now();
     for(let q=0;q<3;q++)buf[o++]=Math.round(Math.min(1,Math.max(0,spoilC[k*3+q]))*255);
     buf[o++]=Math.round(Math.min(1,comp[k])*255);buf[o++]=Math.round(Math.min(1,Math.max(0,mudA[k]))*255);
     if(Wt[k]>-1e8){buf[o++]=1;dv.setFloat32(o,Wt[k],true);o+=4}else buf[o++]=0}
-  try{localStorage.setItem(SITE_KEY,JSON.stringify({v:1,V,n:ks.length,t:Date.now(),d:siteB64(buf.subarray(0,o))}))}catch(e){}}
+  // unchanged ground is not written again, so an idle device does not look changed to the sync
+  const d=siteB64(buf.subarray(0,o));if(d===site.lastD)return;site.lastD=d;
+  try{localStorage.setItem(SITE_KEY,JSON.stringify({v:1,V,n:ks.length,t:Date.now(),d}))}catch(e){}}
 function siteLoad(){let d=null;try{d=JSON.parse(localStorage.getItem(SITE_KEY))}catch(e){}
-  if(!d||d.v!==1||d.V!==V||typeof d.d!=='string')return false;let buf;try{buf=siteUnB64(d.d)}catch(e){return false}
+  if(!d||d.v!==1||d.V!==V||typeof d.d!=='string')return false;site.lastD=d.d;let buf;try{buf=siteUnB64(d.d)}catch(e){return false}
   const dv=new DataView(buf.buffer);let o=0,k=-1,any=false,i0=N+1,i1=-1,j0=N+1,j1=-1;
   try{for(let c=0;c<d.n;c++){let g=0,sh=0,b;do{b=buf[o++];g|=(b&127)<<sh;sh+=7}while(b&128);k+=g;if(k>=V*V)break;
     H[k]=H0[k]+dv.getFloat32(o,true);o+=4;for(let q=0;q<3;q++)spoilC[k*3+q]=buf[o++]/255;
@@ -33,7 +35,7 @@ function siteLoad(){let d=null;try{d=JSON.parse(localStorage.getItem(SITE_KEY))}
   dI0=0;dI1=N;dJ0=0;dJ1=N;winOn=true;st.dirty=true;return true}
 // machines: small, so saved whenever any of them has moved
 function sitePick(o,keys){const r={};for(const k of keys){const v=o[k];r[k]=Array.isArray(v)?v.map(x=>+x.toFixed(4)):typeof v==='number'?+v.toFixed(4):v}return r}
-function rigSave(){site.rigT=performance.now();const now=performance.now();
+function rigSave(){if(window.syncHold)return;site.rigT=performance.now();site.rigSig=rigSig();const now=performance.now();
   const S0=sitePick(st,ST_KEYS);S0.el=st.startT?Math.round(((st.done?st.doneT:now)-st.startT)/1000):0;
   try{localStorage.setItem(RIG_KEY,JSON.stringify({v:1,t:Date.now(),st:S0,tr:sitePick(tr,TR_KEYS),
     tb:sitePick(TB,['x','z','y','ty','yaw','hooked','seated']),wk:sitePick(wk,['x','z','yaw']),

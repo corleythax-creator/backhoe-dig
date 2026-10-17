@@ -1,4 +1,4 @@
-// Backhoe Dig: walk mode: a site worker on foot who walks, jogs, jumps, climbs onto blocks and sets blocks by hand.
+// Corley's Island: walk mode: a site worker on foot who walks, jogs, jumps, climbs onto blocks and sets blocks by hand.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 // ---------- worker ----------
 // about 5 ft 10 in: hard hat, hi-vis vest over a grey shirt, jeans and work boots. Arms and legs swing from the

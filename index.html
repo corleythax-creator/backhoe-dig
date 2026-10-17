@@ -55,6 +55,7 @@
       <button id="benchBtn">Speed test</button>
       <button id="resetBtn">Reset</button>
       <button id="soundBtn">Sound</button>
+      <button id="syncBtn" hidden>Sync devices</button>
       <div class="sizes"><span>Graphics</span><button data-g="low">Low</button><button data-g="med">Med</button><button data-g="high">High</button></div>
       <div class="sizes"><span>UI size</span><button data-s="1">1x</button><button data-s="1.5">1.5x</button><button data-s="2">2x</button></div>
       <div class="sizes"><span>Dirt detail</span><button data-d="1">1x</button><button data-d="2">2x</button><button data-d="4">4x</button><button data-d="16">16x</button></div>
@@ -120,6 +121,24 @@
     <div class="row"><button id="sndDone">Done</button><button id="sndReset" class="ghost">Defaults</button></div>
   </div>
 </div>
+<div id="syncBox" hidden>
+  <div class="card">
+    <h1>Sync devices</h1>
+    <div id="syncOff">
+      <p>Play the same site on your phone and computer: the dig, the machines and the lawn.</p>
+      <button id="syncNew">Get a sync code</button>
+      <p class="devline">Already have a code from your other device? Type it here. Your other device's site replaces the one on this device.</p>
+      <div class="row"><input id="syncIn" type="text" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="12" placeholder="7Q4K-M2XP" aria-label="Sync code"><button id="syncJoin">Join</button></div>
+      <button id="syncDone2" class="ghost">Close</button>
+    </div>
+    <div id="syncOn" hidden>
+      <p>Type this code on your other device, in ☰ then Sync devices:</p>
+      <div id="syncCode" class="synccode"></div>
+      <div class="row"><button id="syncDone">Done</button><button id="syncStop" class="ghost">Stop syncing here</button></div>
+    </div>
+    <p id="syncMsg" class="devline" aria-live="polite"></p>
+  </div>
+</div>
 <div id="help">
   <div class="card">
     <h1>Corley's Island</h1>
@@ -151,7 +170,7 @@
     </dl>
     <p>To scoop: boom down until the teeth bite, curl in while pulling the stick toward you, boom up, swing, then dump.</p>
     </div>
-    <p class="buildlink"><a href="https://backhoe-dig.vercel.app/build.html" target="_blank" rel="noopener">See how long this took to build</a></p>
+    <p class="buildlink"><a href="https://corleys-island.vercel.app/build.html" target="_blank" rel="noopener">See how long this took to build</a></p>
     <p class="ver" id="verHelp"></p>
   </div>
 </div>
@@ -172,6 +191,7 @@
 <script src="js/walker.js"></script>
 <script src="js/controls.js"></script>
 <script src="js/save.js"></script>
+<script src="js/sync.js"></script>
 <script src="js/effects.js"></script>
 <script src="js/sound.js"></script>
 <script src="js/dirtsound.js"></script>

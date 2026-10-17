@@ -1,4 +1,4 @@
-// Backhoe Dig: game state, reset, touch sticks, keyboard, game controller, mode switch and menu.
+// Corley's Island: game state, reset, touch sticks, keyboard, game controller, mode switch and menu.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 // ---------- state ----------
 const CAP=1.0;

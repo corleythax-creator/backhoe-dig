@@ -1,4 +1,4 @@
-// Backhoe Dig: dig-zone heightmap, the road, soil layers, digging, dumping, slumping and cave-ins.
+// Corley's Island: dig-zone heightmap, the road, soil layers, digging, dumping, slumping and cave-ins.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 // ---------- terrain heightmap ----------
 // dig grid: 64 m square at 0.16 m (about 6 in) per cell. GRID_K = cells per 0.32 m, the old 1 ft cell, so reaches and
