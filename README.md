@@ -1,6 +1,6 @@
 # Backhoe Dig
 
-A 3D low-poly excavator game in plain HTML, CSS and JavaScript (three.js r128, no build step). Dig a 3 ft trench on a grassy mesa above a mountain lake, expose the gas main without hitting it, load the dump truck and haul the spoil over the cliff edge.
+A 3D low-poly excavator game in plain HTML, CSS and JavaScript (three.js r128, no build step). Dig a 3 ft trench on a grassy mesa above a mountain lake, expose the gas main without hitting it, load the dump truck and haul the spoil over the cliff edge. Then mow the patch of tall grass with the zero-turn mower.
 
 - Live: https://backhoe-dig.vercel.app
 - Build time: https://backhoe-dig.vercel.app/build.html (reads `data/effort.js`)
@@ -22,9 +22,10 @@ A 3D low-poly excavator game in plain HTML, CSS and JavaScript (three.js r128, n
 | `js/water.js` | Groundwater: seeping, levelling pools, mud, the pump |
 | `js/dirtsound.js` | Dirt sounds: digging, pouring, thuds, rattles, cave-ins, trickling water |
 | `js/blocks.js` | Concrete blocks (1×1, 2×2, 3×3 ft): placing under the bucket, stacking, settling, machine collisions |
+| `js/mower.js` | Tall grass patch, zero-turn mower, mowing, clippings and lawn stripes |
 | `js/controls.js` | Game state and reset, touch sticks, keyboard, game controller, modes, menu |
 | `js/effects.js` | Shared per-frame vectors, resize |
-| `js/sound.js` | Synthesized diesel engines for both machines and the truck's backup alarm; Sound on/off |
+| `js/sound.js` | All sound, rendered in the browser: diesel engine loops, turbo, tires, air brakes, hydraulics, relief valve, tracks, bucket scrape, pouring dirt, backup alarm; stereo, distance and cliff echo; the Sound panel (on/off, Master, Engines, Backup alarm, Effects) |
 | `js/maps.js` | Minimap and big map |
 | `js/bench.js` | Speed test |
 | `js/main.js` | Frame loop |
@@ -34,4 +35,4 @@ A 3D low-poly excavator game in plain HTML, CSS and JavaScript (three.js r128, n
 
 ## Controls
 
-Left stick swings and moves the stick; right stick moves the boom and curls the bucket. Drive and Truck modes put the left stick on the tracks or the truck, and the right stick raises the truck bed. Keyboard: WASD or arrows are the left stick and IJKL the right stick in every mode; 1/2/3 or Tab switch machine, Shift for fine moves, T hooks the trench box, C cab view, B blocks on/off (Space place, V size, X pick up), M map, N sound on/off, H help. Game controllers work too (sticks, triggers for gas, LB/RB machine, X box, Y cab view, A place block, D-pad for blocks).
+Left stick swings and moves the stick; right stick moves the boom and curls the bucket. Drive and Truck modes put the left stick on the tracks or the truck, and the right stick raises the truck bed. Mow mode drives the zero-turn mower: each stick is a lap bar for the wheel on its side (left stick sideways spins it too). Keyboard: WASD or arrows are the left stick and IJKL the right stick in every mode; 1/2/3/4 or Tab switch machine, Shift for fine moves, T hooks the trench box, C cab view, B blocks on/off (Space place, V size, X pick up), M map, N sound on/off, H help. Game controllers work too (sticks, triggers for gas, LB/RB machine, X box, Y cab view, A place block, D-pad for blocks).
