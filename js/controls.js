@@ -13,7 +13,7 @@ function resetState(){
   blkReset();Object.assign(TB,TB_START,{hooked:false,seated:false});TB.y=TB.ty=boxRest();prot.fill(0);chain.visible=false;
 }
 resetState();
-const LIM={a1:[-0.65,1.15],a2:[-2.65,-0.45],a3:[-2.85,0.35]};
+const LIM={a1:[-0.55,1.3],a2:[-2.65,-0.45],a3:[-2.85,0.35]};
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 
 // ---------- input ----------
