@@ -1,7 +1,7 @@
 // Backhoe Dig build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Backhoe Dig",
- "updated": "2026-10-17T14:54:00Z",
+ "updated": "2026-10-17T15:04:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 294.5,
-   "act": 5.5,
-   "versions": 37
+   "dh": 296.5,
+   "act": 6.0,
+   "versions": 38
   }
  ],
  "extra": [
@@ -426,6 +426,15 @@ window.EFFORT = {
    "tris": 772000,
    "chars": 231857,
    "what": "Fix: the screen flashed black on phones. Auto resolution and window resizes resized the canvas right after a frame was drawn, blanking it; they now apply just before drawing, and resolution waits 30 s before stepping back up. A graphics reset from low memory now says so and is counted in the speed test."
+  },
+  {
+   "v": 45,
+   "asked": "2026-10-17T10:04:00-05:00",
+   "live": "2026-10-17T10:04:00-05:00",
+   "dh": 2,
+   "tris": 772000,
+   "chars": 232330,
+   "what": "Phone speed: phones are held back by pixels, not triangles, so they now render at most 1.5x (44% fewer pixels than 2x) with 1024 shadow maps and the lighter PCF filter. Computers keep 2x and soft 2048 shadows. The speed test notes phone settings."
   }
  ]
 };

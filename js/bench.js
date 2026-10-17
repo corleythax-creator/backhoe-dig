@@ -51,8 +51,8 @@ function showBenchResults(){
   if(rows[rows.length-1].avg>=55)sum+=`<p style="margin-top:8px;color:var(--ok)">Still smooth at the heaviest level. This device has more headroom than the test reaches.</p>`;
   $('#benchSummary').innerHTML=sum;
   const w=renderer.domElement.width,h=renderer.domElement.height,gpu=gpuName();
-  $('#benchDevice').textContent=`${gpu} · ${w}×${h} px at ${maxPR}x · ${navigator.platform||''}`+(glResets?` · ${glResets} graphics reset${glResets>1?'s':''} on this device`:'');
-  $('#benchText').value=['Backhoe Dig speed test (v2: excavator + truck pairs)',`GPU: ${gpu}`,`Resolution: ${w}x${h} (${maxPR}x)`,`Smooth 55+ FPS up to: ${t55?fmtTris(t55):'not reached'}`,`Playable 30+ FPS up to: ${t30?fmtTris(t30):'not reached'}`,
+  $('#benchDevice').textContent=`${gpu} · ${w}×${h} px at ${maxPR}x${PHONE?' (phone settings)':''} · ${navigator.platform||''}`+(glResets?` · ${glResets} graphics reset${glResets>1?'s':''} on this device`:'');
+  $('#benchText').value=['Backhoe Dig speed test (v2: excavator + truck pairs)',`GPU: ${gpu}`,`Resolution: ${w}x${h} (${maxPR}x${PHONE?', phone settings: 1.5x cap, 1024 shadows':''})`,`Smooth 55+ FPS up to: ${t55?fmtTris(t55):'not reached'}`,`Playable 30+ FPS up to: ${t30?fmtTris(t30):'not reached'}`,
     ...rows.map(r=>`${r.machines} excavators + ${r.machines} trucks | ${fmtTris(r.tris)} tris | ${Math.round(r.calls)} draws | ${r.avg.toFixed(1)} avg FPS | ${r.low.toFixed(0)} 1% low`)].join('\n');
   $('#bench').hidden=false;
 }
