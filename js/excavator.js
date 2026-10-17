@@ -1,7 +1,9 @@
 // Backhoe Dig: the excavator: tracks, house, cab, boom, stick, bucket, linkage, rams and hoses.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 // ---------- machine ----------
-const ORANGE=M(0xe8701d),ORANGE_D=M(0xb8561a),STEEL=M(0x2b2d2c),STEEL_L=M(0x55595a),CHROME=M(0xc9ccc8,{shininess:60}),RUBBER=M(0x1b1c1b),REDL=M(0xd0281c,{emissive:0x400804}),AMBER=M(0xffa21a,{emissive:0x402400}),HOSE=M(0x141414,{shininess:20}),LENS=M(0xfff6d8,{emissive:0x554a30});
+// semi-gloss paint: a tight highlight and a faint sky sheen toward the edges
+const PAINT={shininess:28,specular:0x2e2e2e,envMap:skyEnv,combine:THREE.MixOperation,reflectivity:0.3};
+const ORANGE=M(0xe8701d,PAINT),ORANGE_D=M(0xb8561a,PAINT),STEEL=M(0x2b2d2c),STEEL_L=M(0x55595a),CHROME=M(0xc9ccc8,{shininess:60,specular:0x777777,envMap:skyEnv,combine:THREE.MixOperation,reflectivity:0.9}),RUBBER=M(0x1b1c1b),REDL=M(0xd0281c,{emissive:0x400804}),AMBER=M(0xffa21a,{emissive:0x402400}),HOSE=M(0x141414,{shininess:20}),LENS=M(0xfff6d8,{emissive:0x554a30});
 function box(w,h,d,mat,x,y,z,parent){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);m.position.set(x,y,z);m.castShadow=true;parent.add(m);return m}
 function cyl(rt,rb,h,seg,mat,parent){const m=new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,seg),mat);m.castShadow=true;parent.add(m);return m}
 function pinX(r,len,mat,parent,y,z){const m=cyl(r,r,len,32,mat,parent);m.rotation.z=Math.PI/2;m.position.set(0,y,z);return m}
@@ -59,7 +61,7 @@ for(const x of [-0.52,0.52])box(0.04,0.07,1.42,STEEL,x,1.64,0.02,cab);
 const wiper=box(0.018,0.6,0.018,STEEL,0.12,0.98,0.645,cab);wiper.rotation.z=0.45;
 for(const y of [0.55,1.0]){const gh=cyl(0.018,0.018,0.42,12,STEEL,cab);gh.position.set(-0.51,y+0.21,0.6)}
 box(0.14,0.03,0.03,STEEL,-0.48,0.85,-0.2,cab);box(0.3,0.04,0.25,STEEL,-0.25,-0.1,0.5,cab);
-const glass=new THREE.Mesh(new THREE.BoxGeometry(0.9,1.45,1.24),new THREE.MeshPhongMaterial({color:0x8fb4c8,transparent:true,opacity:0.3,shininess:80}));
+const glass=new THREE.Mesh(new THREE.BoxGeometry(0.9,1.45,1.24),new THREE.MeshPhongMaterial({color:0x8fb4c8,transparent:true,opacity:0.2,depthWrite:false,shininess:80,envMap:skyEnv,combine:THREE.MixOperation,reflectivity:0.45}));
 glass.position.y=0.78; cab.add(glass);
 box(0.5,0.12,0.5,STEEL,0,0.42,-0.15,cab); box(0.5,0.55,0.12,STEEL,0,0.72,-0.4,cab);
 for(const x of [-0.33,0.33]){box(0.16,0.3,0.4,STEEL_L,x,0.42,0.0,cab);const j=cyl(0.025,0.025,0.16,10,STEEL,cab);j.position.set(x,0.64,0.08)}
@@ -69,7 +71,7 @@ const lamp2=cyl(0.07,0.09,0.1,28,STEEL,cab);lamp2.rotation.x=Math.PI/2;lamp2.pos
 const lens2=cyl(0.06,0.06,0.02,28,LENS,cab);lens2.rotation.x=Math.PI/2;lens2.position.set(-0.3,1.66,0.66);
 box(0.03,0.03,0.45,STEEL,-0.62,1.1,0.75,cab).rotation.y=0.6;
 const mirror=cyl(0.15,0.15,0.03,48,STEEL,cab);mirror.rotation.set(Math.PI/2,0,0.5);mirror.position.set(-0.78,1.12,0.95);
-const mGlass=cyl(0.13,0.13,0.01,48,M(0x9aa9b4,{shininess:90}),cab);mGlass.rotation.set(Math.PI/2,0,0.5);mGlass.position.set(-0.77,1.12,0.97);
+const mGlass=cyl(0.13,0.13,0.01,48,M(0x9aa9b4,{shininess:90,envMap:skyEnv,combine:THREE.MixOperation,reflectivity:1}),cab);mGlass.rotation.set(Math.PI/2,0,0.5);mGlass.position.set(-0.77,1.12,0.97);
 // boom (bent)
 const L1=4.2,L2=2.6,L3=1.1;
 const boomP=new THREE.Group(); boomP.position.set(0.42,1.0,0.95); house.add(boomP);

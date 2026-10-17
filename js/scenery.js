@@ -5,7 +5,7 @@ const timeU={value:0};
 (function(){
   // lake: low-poly water with gentle animated swells
   const wg=new THREE.PlaneGeometry(2600,2600,120,120);wg.rotateX(-Math.PI/2);
-  const wm=new THREE.MeshPhongMaterial({color:0x2d7a94,specular:0xcfe8f0,shininess:70,flatShading:true});
+  const wm=new THREE.MeshPhongMaterial({color:0x1f5d72,specular:0xfff2dc,shininess:90,flatShading:true,envMap:skyEnv,combine:THREE.MixOperation,reflectivity:0.7});
   wm.onBeforeCompile=sh=>{sh.uniforms.uTime=timeU;sh.vertexShader='uniform float uTime;\n'+sh.vertexShader.replace('#include <begin_vertex>',
     '#include <begin_vertex>\nvec4 wpos=modelMatrix*vec4(transformed,1.0);\ntransformed.y+=sin(wpos.x*0.09+uTime*1.1)*0.35+cos(wpos.z*0.11+uTime*0.8)*0.3+sin((wpos.x+wpos.z)*0.23+uTime*1.7)*0.12;')};
   const water=new THREE.Mesh(wg,wm);water.position.y=WATER;water.receiveShadow=true;scene.add(water);
@@ -25,8 +25,8 @@ const timeU={value:0};
     for(let ri=0;ri<NR;ri++)for(let ai=0;ai<NA;ai++){const q=ri*(NA+1)+ai;ix.push(q,q+1,q+NA+1,q+1,q+NA+2,q+NA+1)}
     const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pp,3));g.setAttribute('color',new THREE.Float32BufferAttribute(cc,3));
     g.setAttribute('normal',new THREE.Float32BufferAttribute(new Float32Array(pp.length),3));g.setIndex(ix);
-    const mat=unlit?new THREE.MeshBasicMaterial({vertexColors:true,fog:false,side:THREE.DoubleSide})
-      :new THREE.MeshPhongMaterial({vertexColors:true,flatShading:true,fog:false,side:THREE.DoubleSide,shininess:2,specular:0x000000,emissive:0x2a3038});
+    const mat=unlit?new THREE.MeshBasicMaterial({vertexColors:true,fog:false,side:THREE.DoubleSide,toneMapped:false})
+      :new THREE.MeshPhongMaterial({vertexColors:true,flatShading:true,fog:false,side:THREE.DoubleSide,shininess:2,specular:0x000000,emissive:0x6a7686});
     const m=new THREE.Mesh(g,mat);m.renderOrder=-0.5;scene.add(m);
   }
   range(470,820,40,220,30,240,0.42,0.66,0,false);
@@ -35,8 +35,10 @@ const timeU={value:0};
 // grass tufts that disappear wherever the ground gets dug or buried
 const TUFTS=9000,tX=new Float32Array(TUFTS),tZ=new Float32Array(TUFTS),tS=new Float32Array(TUFTS),tR=new Float32Array(TUFTS),tI=new Int32Array(TUFTS),tJ=new Int32Array(TUFTS);
 const tuftGeo=(function(){const bp=[];for(let b=0;b<4;b++){const a=b*1.6+0.3,c=Math.cos(a),s=Math.sin(a),w=0.05,h=0.26+0.08*(b%2),ln=0.09;
-  bp.push(-c*w,0,-s*w, c*w,0,s*w, -s*ln,h,c*ln)}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(bp,3));g.computeVertexNormals();return g})();
-const tufts=new THREE.InstancedMesh(tuftGeo,M(0xffffff,{side:THREE.DoubleSide}),TUFTS);tufts.receiveShadow=true;tufts.frustumCulled=false;scene.add(tufts);
+  bp.push(-c*w,0,-s*w, c*w,0,s*w, -s*ln,h,c*ln)}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(bp,3));g.computeVertexNormals();
+  // shaded at the root where the blades crowd together, sunlit at the tips
+  g.setAttribute('color',new THREE.Float32BufferAttribute(bp.map((_,i)=>bp[i-i%3+1]>0?1.12:0.5),3));return g})();
+const tufts=new THREE.InstancedMesh(tuftGeo,M(0xffffff,{side:THREE.DoubleSide,vertexColors:true}),TUFTS);tufts.receiveShadow=true;tufts.frustumCulled=false;scene.add(tufts);
 (function(){const c=new THREE.Color();for(let n=0;n<TUFTS;n++){let gx,gz,q=0;do{gx=(Math.random()-0.5)*66;gz=-18+Math.random()*64}while((mesaR(gx,gz)>EDGE-0.8||roadAmt(gx,gz)>0.1)&&++q<60);
   tX[n]=gx;tZ[n]=gz;tS[n]=0.7+Math.random()*0.8;tR[n]=Math.random()*6.3;
   tI[n]=Math.round((tX[n]+S/2)/CELL);tJ[n]=Math.round((tZ[n]+S/2)/CELL);if(tI[n]<0||tI[n]>N||tJ[n]<0||tJ[n]>N){tI[n]=-1;tJ[n]=-1}

@@ -1,5 +1,7 @@
 // Backhoe Dig: the frame loop: inputs, machines, digging, spills, gas main, terrain, HUD and camera.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
+// the machines catch their own shadows (cab under the boom, bed under the load); glass stays clear
+for(const g of [machine,truck])g.traverse(o=>{if(o.isMesh&&!o.material.transparent)o.receiveShadow=true});
 function frame(now){
   const dt=Math.min(0.05,(now-last)/1000);last=now;crushT-=dt;
   // inputs
@@ -155,7 +157,8 @@ function frame(now){
   if(bench.on)benchCamera();
   if(shake>0){shake-=dt;camera.position.x+=(Math.random()-0.5)*0.25;camera.position.y+=(Math.random()-0.5)*0.25}
   sky.position.copy(camera.position);
-  const fv=mode==='truck'?tr:st;sun.position.set(fv.x+12,fv.y+20,fv.z+8); sun.target.position.set(fv.x,fv.y,fv.z);
+  const fv=mode==='truck'?tr:st;sun.position.set(fv.x,fv.y,fv.z).addScaledVector(SUN_DIR,25); sun.target.position.set(fv.x,fv.y,fv.z);
+  {const o=groundOcc.value;o[0].set(st.x,st.z,st.yaw,0);o[2].set(tr.x,tr.z,tr.yaw,0)}
   timeU.value=now/1000;
   renderer.render(scene,camera);
   if(bench.on)benchSample(dt);
