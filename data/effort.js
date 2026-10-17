@@ -1,7 +1,7 @@
 // Backhoe Dig build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Backhoe Dig",
- "updated": "2026-10-17T15:19:00Z",
+ "updated": "2026-10-17T15:28:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 301.5,
+   "dh": 302,
    "act": 6.0,
-   "versions": 41
+   "versions": 42
   }
  ],
  "extra": [
@@ -462,6 +462,15 @@ window.EFFORT = {
    "tris": 991332,
    "chars": 237584,
    "what": "Start digging is back in reach on phones: the button moved from the bottom of the long help card to just under the title and stays pinned there while the instructions scroll beneath it; tapping the dark area around the card starts the game too."
+  },
+  {
+   "v": 49,
+   "asked": "2026-10-17T10:22:00-05:00",
+   "live": "2026-10-17T10:28:00-05:00",
+   "dh": 0.5,
+   "tris": 991332,
+   "chars": 237741,
+   "what": "Fix: the game could not start for anyone with a lawn saved before v47. Loading the old save called a helper that is only defined by a later script, which stopped the setup before the Start digging button was wired up, so tapping it did nothing. The load no longer needs it, and a save that cannot be read is now dropped instead of stopping the game."
   }
  ]
 };
