@@ -1,7 +1,7 @@
 // Backhoe Dig build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Backhoe Dig",
- "updated": "2026-10-17T08:42:00Z",
+ "updated": "2026-10-17T08:38:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 207,
+   "dh": 219,
    "act": 4.0,
-   "versions": 24
+   "versions": 25
   }
  ],
  "extra": [
@@ -309,6 +309,15 @@ window.EFFORT = {
    "tris": 753381,
    "chars": 133818,
    "what": "Engine sound and a backup beeper: synthesized six-cylinder diesels for the truck (revs climb through five gears and drop on each upshift) and the excavator (revs with hydraulic demand, lugs in hard soil); the truck beeps in reverse; volume falls off with distance; Sound on/off in the menu and on N. Fix: the rim berm now keeps both truck axles on the mesa, so a head-on hit no longer leaves it stuck nose-down over the cliff."
+  },
+  {
+   "v": 32,
+   "asked": "2026-10-17T03:27:00-05:00",
+   "live": "2026-10-17T03:46:00-05:00",
+   "dh": 12,
+   "tris": 747000,
+   "chars": 136279,
+   "what": "Clods roll down pile faces (big ones farthest); tracks and tyres rut loose fill and crush clods; dust when dumping, digging dry topsoil, driving on dirt and in cave-ins; the bucket gets dirty, tracks and tyres muddy, and clay sticks in the bucket and truck bed; a heaped bucket dribbles when swung fast; Dirt detail 16x. Fixed textures sometimes not loading since the file split."
   }
  ]
 };
