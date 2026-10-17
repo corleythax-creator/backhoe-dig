@@ -1,7 +1,7 @@
 // Backhoe Dig build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Backhoe Dig",
- "updated": "2026-10-17T07:17:00Z",
+ "updated": "2026-10-17T07:40:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 162,
-   "act": 2.5,
-   "versions": 16
+   "dh": 173,
+   "act": 3.0,
+   "versions": 18
   }
  ],
  "extra": [
@@ -231,12 +231,30 @@ window.EFFORT = {
   },
   {
    "v": 23,
+   "asked": "2026-10-17T02:14:00-05:00",
+   "live": "2026-10-17T02:45:00-05:00",
+   "dh": 6,
+   "tris": 490576,
+   "chars": 102646,
+   "what": "Cave-ins: walls cut deeper than about 4 ft, or with spoil within 2 ft of the edge, cave in after a warning trickle; shake, rumble and a cave-in count on the finish."
+  },
+  {
+   "v": 24,
    "asked": "2026-10-17T02:03:00-05:00",
    "live": "2026-10-17T02:17:00-05:00",
    "dh": 8,
    "tris": 490600,
    "chars": 103749,
    "what": "Dump truck driving realism: weight-based acceleration and braking, grades pull on it, opposite stick brakes then shifts D/R at a stop, governed 20 mph (6 in reverse or bed up), rear tandem off-tracks in turns, tires scrub wide at speed, sprung body squats, dives, leans and sags under load, wheels follow the ground, brake and reverse lights, mph and gear on the HUD, see-through cab glass."
+  },
+  {
+   "v": 25,
+   "asked": "2026-10-17T02:19:00-05:00",
+   "live": "2026-10-17T02:38:00-05:00",
+   "dh": 5,
+   "tris": 490600,
+   "chars": 108541,
+   "what": "Dirt road around the mesa rim: graded loop with wheel ruts, a grassy crown and a berm on the cliff side, on the map and legend; packed road rolls and grips better than grass; the berm scrapes instead of stopping the truck dead; the truck starts parked on the road."
   }
  ]
 };
