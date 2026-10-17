@@ -1,7 +1,7 @@
 // Backhoe Dig build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Backhoe Dig",
- "updated": "2026-10-17T09:15:00Z",
+ "updated": "2026-10-17T09:25:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 266.5,
+   "dh": 268,
    "act": 4.5,
-   "versions": 32
+   "versions": 33
   }
  ],
  "extra": [
@@ -381,6 +381,15 @@ window.EFFORT = {
    "tris": 821848,
    "chars": 212572,
    "what": "Tall grass and a zero-turn mower: a 52 by 39 ft patch of knee-high grass north of the trench that sways in the wind and bends away from the machines, and a red zero-turn with a 52 in deck, lap bars, swivel casters and a roll bar. Mow mode puts a lap bar on each stick (both up drives straight, opposite spins in place). Cutting leaves stubble with light and dark stripes by pass direction and throws clippings out the chute; Lawn row with percent mowed and time; a rendered V-twin with blade whine and grass chop in the sound mixer; seat view; patch and mower on the maps."
+  },
+  {
+   "v": 40,
+   "asked": "2026-10-17T04:16:00-05:00",
+   "live": "2026-10-17T04:25:00-05:00",
+   "dh": 1.5,
+   "tris": 821848,
+   "chars": 214582,
+   "what": "The mowed lawn stays mowed: which grass is cut and its stripes, the mowing time and where the mower was left are saved in the browser and come back on reload. Reset restores the ground but no longer regrows mowed grass; the save carries its time so grass growth can catch up on time away."
   }
  ]
 };
