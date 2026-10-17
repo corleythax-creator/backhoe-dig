@@ -5,7 +5,7 @@ for(const g of [machine,truck])g.traverse(o=>{if(o.isMesh&&!o.material.transpare
 function frame(now){
   const dt=Math.min(0.05,(now-last)/1000);last=now;crushT-=dt;
   // resolution changes and window resizes land here, before anything is drawn this frame
-  if(viewDirty){viewDirty=false;const want=bench.on?maxPR:pr;if(renderer.getPixelRatio()!==want)renderer.setPixelRatio(want);resize()}
+  if(viewDirty){viewDirty=false;const want=bench.on?(bench.pr||maxPR):pr;if(renderer.getPixelRatio()!==want)renderer.setPixelRatio(want);resize()}
   // inputs
   keyAxes(dt);pollPad();
   const Lx=clamp(SL.x+KA.lx+PA.lx,-1,1),Ly=clamp(SL.y+KA.ly+PA.ly+(mode==='dig'||mode==='mow'?0:PA.thr),-1,1),Rx=clamp(SR.x+KA.rx+PA.rx,-1,1),Ry=clamp(SR.y+KA.ry+PA.ry,-1,1);

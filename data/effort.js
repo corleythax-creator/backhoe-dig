@@ -1,7 +1,7 @@
 // Backhoe Dig build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Backhoe Dig",
- "updated": "2026-10-17T15:28:00Z",
+ "updated": "2026-10-17T15:30:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 302,
-   "act": 6.0,
-   "versions": 42
+   "dh": 304,
+   "act": 6.5,
+   "versions": 43
   }
  ],
  "extra": [
@@ -465,11 +465,20 @@ window.EFFORT = {
   },
   {
    "v": 49,
+   "asked": "2026-10-17T10:08:00-05:00",
+   "live": "2026-10-17T10:30:00-05:00",
+   "dh": 2,
+   "tris": 991332,
+   "chars": 240944,
+   "what": "Speed test diagnosis: before the load levels, the test measures the plain scene with one feature switched off at a time (shadows, filmic lighting, ground detail, grass, see-through glass, water and dust, full resolution) and then everything at once, and the results show how many frames each one costs this device and which costs the most."
+  },
+  {
+   "v": 50,
    "asked": "2026-10-17T10:22:00-05:00",
-   "live": "2026-10-17T10:28:00-05:00",
+   "live": "2026-10-17T10:30:00-05:00",
    "dh": 0.5,
    "tris": 991332,
-   "chars": 237741,
+   "chars": 241101,
    "what": "Fix: the game could not start for anyone with a lawn saved before v47. Loading the old save called a helper that is only defined by a later script, which stopped the setup before the Start digging button was wired up, so tapping it did nothing. The load no longer needs it, and a save that cannot be read is now dropped instead of stopping the game."
   }
  ]
