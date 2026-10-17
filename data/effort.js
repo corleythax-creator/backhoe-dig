@@ -1,7 +1,7 @@
 // Backhoe Dig build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Backhoe Dig",
- "updated": "2026-10-17T09:02:00Z",
+ "updated": "2026-10-17T09:07:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 244,
+   "dh": 244.5,
    "act": 4.5,
-   "versions": 29
+   "versions": 30
   }
  ],
  "extra": [
@@ -354,6 +354,15 @@ window.EFFORT = {
    "tris": 757440,
    "chars": 166271,
    "what": "See-through dump truck cab: the solid cab block becomes a shell of roof, floor, walls and pillars with real window openings, so the seats, dash and steering wheel show through the glass from outside."
+  },
+  {
+   "v": 37,
+   "asked": "2026-10-17T04:02:00-05:00",
+   "live": "2026-10-17T04:07:00-05:00",
+   "dh": 0.5,
+   "tris": 757440,
+   "chars": 166289,
+   "what": "Clearer excavator cab glass: thinner tint and softer sky reflections so the seat and controls read from outside at chase-camera angles, and the glass no longer hides see-through things behind it."
   }
  ]
 };
