@@ -1,7 +1,7 @@
 // Backhoe Dig build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Backhoe Dig",
- "updated": "2026-10-17T17:02:00Z",
+ "updated": "2026-10-17T17:08:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 337.5,
+   "dh": 341.5,
    "act": 8.5,
-   "versions": 49
+   "versions": 50
   }
  ],
  "extra": [
@@ -534,6 +534,15 @@ window.EFFORT = {
    "tris": 1152810,
    "chars": 270576,
    "what": "Start card picker: four screenshot tiles (Excavator, Dump truck, Mower, On foot) at the top of the start card; tap one to start in that mode. It shows on every visit and from How to play, with the current mode outlined; tapping outside keeps the current mode."
+  },
+  {
+   "v": 57,
+   "asked": "2026-10-17T11:56:00-05:00",
+   "live": "2026-10-17T12:08:00-05:00",
+   "dh": 4,
+   "tris": 1152810,
+   "chars": 276749,
+   "what": "The whole site is saved in the browser: the dug and dumped ground with its dirt colours, ruts and groundwater, the excavator's spot, pose, bucket load and strikes, the dump truck's spot, load and yards hauled, the trench box, the blocks, the worker on foot and the job timer all come back on reload. The ground saves every 4 seconds while it changes and the machines every 2 seconds while they move, both when the page is hidden; Reset starts fresh ground."
   }
  ]
 };
