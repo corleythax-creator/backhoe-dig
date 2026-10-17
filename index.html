@@ -221,6 +221,7 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
       <dt>Look</dt><dd>Drag the scene to look around.</dd>
       <dt>Map</dt><dd>Tap the minimap or press M for the big map.</dd>
       <dt>Screen</dt><dd>Tap the status card to fold it down. Speed test, Reset and UI size (1x, 1.5x, 2x) are in the ☰ menu.</dd>
+      <dt>Controller</dt><dd>Sticks work like the two on-screen sticks. Triggers are gas and reverse when driving. LB / RB switch machine · Y cab view · View map · Menu this help · B closes.</dd>
       <dt>Keys</dt><dd>WASD (or arrows) is always the left stick, IJKL is always the right stick, in every mode. 1 Dig · 2 Drive · 3 Truck (Tab cycles). Hold Shift for slow, fine moves. C cab view · M map · H this help.</dd>
     </dl>
     <p>To scoop: boom down until the teeth bite, curl in while pulling the stick toward you, boom up, swing, then dump.</p>
@@ -923,7 +924,7 @@ addEventListener('keydown',e=>{if(e.ctrlKey||e.metaKey||e.altKey)return;
     else if(c==='KeyC')$('#camBtn').click();
     else if(c==='KeyH')help.hidden=!help.hidden;
     else if(c==='Escape')help.hidden=true;}
-  if(!kbUsed){kbUsed=true;document.body.classList.add('kb');setCaps()}
+  if(!kbUsed){kbUsed=true;padUsed=false;document.body.classList.add('kb');setCaps()}
   started()});
 addEventListener('keyup',e=>{keys[e.code]=false});
 const clearKeys=()=>{for(const k in keys)keys[k]=false};
@@ -934,6 +935,27 @@ const KA={lx:0,ly:0,rx:0,ry:0};
 function keyAxes(dt){const f=keys.ShiftLeft||keys.ShiftRight?0.3:1;
   const t={lx:kv('KeyD','KeyA')+kv('ArrowRight','ArrowLeft'),ly:kv('KeyW','KeyS')+kv('ArrowUp','ArrowDown'),rx:kv('KeyL','KeyJ'),ry:kv('KeyI','KeyK')};
   for(const k in t){const g=clamp(t[k],-1,1)*f,r=(g===0?10:5)*dt;KA[k]+=clamp(g-KA[k],-r,r)}}
+// game controller (standard mapping): sticks = the two on-screen sticks, triggers = gas / reverse when driving,
+// LB/RB switch machine, Y cab view, View map, Menu help, B closes; a line strike rumbles
+const PA={lx:0,ly:0,rx:0,ry:0,thr:0},padPrev=[];let padIdx=-1,padUsed=false;
+addEventListener('gamepadconnected',e=>{padIdx=e.gamepad.index;toast('Controller ready. LB / RB switch machine, Y cab view.','good',3500)});
+addEventListener('gamepaddisconnected',e=>{if(e.gamepad.index===padIdx)padIdx=-1;for(const k in PA)PA[k]=0;padPrev.length=0});
+function getPad(){if(!navigator.getGamepads)return null;const all=navigator.getGamepads();
+  if(padIdx<0||!all[padIdx])padIdx=[...all].findIndex(g=>g&&g.connected);return padIdx<0?null:all[padIdx]}
+function usePad(){if(!padUsed){padUsed=true;kbUsed=false;document.body.classList.remove('kb');setCaps()}started()}
+function padButton(i){usePad();
+  if(i===4||i===5)setMode(MODES[(MODES.indexOf(mode)+(i===5?1:2))%3]);
+  else if(i===3)$('#camBtn').click();
+  else if(i===8)toggleMap();
+  else if(i===9)help.hidden=!help.hidden;
+  else if(i===1){help.hidden=true;toggleMap(false)}}
+function pollPad(){for(const k in PA)PA[k]=0;const gp=getPad();if(!gp)return;
+  const dz=v=>Math.abs(v)<0.15?0:(v-Math.sign(v)*0.15)/0.85,ax=gp.axes,b=gp.buttons,bv=i=>b[i]?b[i].value:0;
+  PA.lx=dz(ax[0]||0);PA.ly=-dz(ax[1]||0);PA.rx=dz(ax[2]||0);PA.ry=-dz(ax[3]||0);PA.thr=bv(7)-bv(6);
+  for(let i=0;i<b.length;i++){const on=b[i].pressed;if(on&&!padPrev[i])padButton(i);padPrev[i]=on}
+  if(PA.lx||PA.ly||PA.rx||PA.ry||Math.abs(PA.thr)>0.05)usePad()}
+function rumble(ms,mag){const gp=getPad(),va=gp&&gp.vibrationActuator;
+  if(va&&va.playEffect)va.playEffect('dual-rumble',{duration:ms,strongMagnitude:mag,weakMagnitude:mag*0.6}).catch(()=>{})}
 // orbit drag on the scene
 let orbitYaw=0,orbitPitch=0.42,camDist=9.5,drag=null;
 canvas.addEventListener('pointerdown',e=>{drag={id:e.pointerId,x:e.clientX,y:e.clientY};canvas.setPointerCapture(e.pointerId)});
@@ -1143,8 +1165,8 @@ $('#benchCopy').onclick=()=>{const t=$('#benchText').value,b=$('#benchCopy');
 function frame(now){
   const dt=Math.min(0.05,(now-last)/1000);last=now;
   // inputs
-  keyAxes(dt);
-  const Lx=clamp(SL.x+KA.lx,-1,1),Ly=clamp(SL.y+KA.ly,-1,1),Rx=clamp(SR.x+KA.rx,-1,1),Ry=clamp(SR.y+KA.ry,-1,1);
+  keyAxes(dt);pollPad();
+  const Lx=clamp(SL.x+KA.lx+PA.lx,-1,1),Ly=clamp(SL.y+KA.ly+PA.ly+(mode==='dig'?0:PA.thr),-1,1),Rx=clamp(SR.x+KA.rx+PA.rx,-1,1),Ry=clamp(SR.y+KA.ry+PA.ry,-1,1);
   let swingIn=0,stickIn=0,driveIn=0,turnIn=0,boomIn=-Ry,bucketIn=Rx;
   if(mode==='dig'){swingIn=Lx;stickIn=Ly}else if(mode==='drive'){driveIn=Ly;turnIn=Lx}
   let tThr=0,tSteer=0,tBed=0;
@@ -1202,7 +1224,7 @@ function frame(now){
   if(Math.abs(tip.x)<12&&Math.hypot(tip.y-PIPE_Y,tip.z-PIPE_Z)<PIPE_R+0.07&&st.strikeCd<=0){
     st.strikes++;st.strikeCd=2.5;shake=reduceMotion?0:0.45;
     const fl=$('#flash');fl.style.opacity='0.45';setTimeout(()=>fl.style.opacity='0',180);
-    toast('LINE STRIKE! You hit the gas main.','bad',3000);
+    toast('LINE STRIKE! You hit the gas main.','bad',3000);rumble(600,1);
   }
   // terrain
   if(st.slumpT>0){st.slumpT-=dt;if(slump())st.dirty=true;if(slump())st.dirty=true;if(slump())st.dirty=true}
