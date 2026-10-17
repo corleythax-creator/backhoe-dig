@@ -10,8 +10,8 @@ const blkMesh=new THREE.InstancedMesh(new THREE.BoxGeometry(1,1,1),M(0xffffff),B
 blkMesh.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(BLK_MAX*3),3);
 blkMesh.castShadow=blkMesh.receiveShadow=true;blkMesh.frustumCulled=false;blkMesh.count=0;scene.add(blkMesh);
 // placement preview: a see-through box with bright edges where the block will land; red when it can't go there
-const blkGhost=new THREE.Group(),ghostFill=new THREE.MeshBasicMaterial({color:0xf5c518,transparent:true,opacity:0.22,depthWrite:false}),
-  ghostLine=new THREE.LineBasicMaterial({color:0xf5c518});
+const blkGhost=new THREE.Group(),ghostFill=new THREE.MeshBasicMaterial({color:0xf5c518,transparent:true,opacity:0.22,depthWrite:false,toneMapped:false}),
+  ghostLine=new THREE.LineBasicMaterial({color:0xf5c518,toneMapped:false});
 blkGhost.add(new THREE.Mesh(new THREE.BoxGeometry(1,1,1),ghostFill),new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(1,1,1)),ghostLine));
 blkGhost.visible=false;scene.add(blkGhost);
 const blkO=new THREE.Object3D(),blkCol=new THREE.Color(),blkP={x:0,z:0,y:0,s:FT,ok:false,why:''};
