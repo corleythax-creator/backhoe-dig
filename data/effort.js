@@ -1,7 +1,7 @@
 // Backhoe Dig build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Backhoe Dig",
- "updated": "2026-10-17T08:55:00Z",
+ "updated": "2026-10-17T09:02:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 243,
-   "act": 4.0,
-   "versions": 28
+   "dh": 244,
+   "act": 4.5,
+   "versions": 29
   }
  ],
  "extra": [
@@ -345,6 +345,15 @@ window.EFFORT = {
    "tris": 757236,
    "chars": 165601,
    "what": "Dump truck detail, twice the triangles (37,600 to 75,500): a polished fuel tank with domed ends, straps and brackets, filler neck and green diesel cap, vent, gauge sender, drain and fuel lines; DEF tank; battery box lid; driveline with shafts, U-joints and tandem diffs; leaf springs, shocks and steering linkage; grille surround, fog lights, tow hooks, plates, mud flaps; wipers, beacon, antenna, hood mirrors and a cab interior; exhaust clamps and flex pipe; hoist and air lines; rear under-ride bar and hitch; bed sills, hinge pins, marker lights, ladder, tarp roller and tailgate hardware; wheels with two tread rows, rim lips, hand holes and hub domes."
+  },
+  {
+   "v": 36,
+   "asked": "2026-10-17T03:57:00-05:00",
+   "live": "2026-10-17T04:02:00-05:00",
+   "dh": 1,
+   "tris": 757440,
+   "chars": 166271,
+   "what": "See-through dump truck cab: the solid cab block becomes a shell of roof, floor, walls and pillars with real window openings, so the seats, dash and steering wheel show through the glass from outside."
   }
  ]
 };
