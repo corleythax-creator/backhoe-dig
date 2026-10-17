@@ -1,7 +1,7 @@
 // Backhoe Dig build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Backhoe Dig",
- "updated": "2026-10-17T17:14:00Z",
+ "updated": "2026-10-17T17:20:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 342.5,
+   "dh": 349.5,
    "act": 8.5,
-   "versions": 51
+   "versions": 52
   }
  ],
  "extra": [
@@ -552,6 +552,15 @@ window.EFFORT = {
    "tris": 1152810,
    "chars": 277321,
    "what": "Renamed the game Corley's Island. The start card drops the work order and folds the controls list behind a Controls button, so it fits a phone screen; on a phone held sideways the four tiles sit in one row."
+  },
+  {
+   "v": 59,
+   "asked": "2026-10-17T11:52:00-05:00",
+   "live": "2026-10-17T12:20:00-05:00",
+   "dh": 7,
+   "tris": 1152810,
+   "chars": 290436,
+   "what": "Jump clears about 6 ft. Get in and out of machines on foot: walk up to the excavator, dump truck or mower and press F (Get in button, controller B) to drive it; press again to climb out beside it; the site save remembers when you are in one. Keys panel in the menu: every keyboard action with what it does in each mode, two keys each, rebind any of them, saved per device, Defaults to reset; captions and tips show your keys. Place block is E in every mode."
   }
  ]
 };

@@ -24,7 +24,8 @@ A 3D low-poly excavator game in plain HTML, CSS and JavaScript (three.js r128, n
 | `js/dirtsound.js` | Dirt sounds: digging, pouring, thuds, rattles, cave-ins, trickling water |
 | `js/blocks.js` | Concrete blocks (1×1, 2×2, 3×3 ft): placing under the bucket, stacking, settling, machine collisions |
 | `js/mower.js` | Tall grass patch, zero-turn mower, mowing, clippings, lawn stripes, regrowth and the saved lawn |
-| `js/walker.js` | Walk mode: the site worker, walking, jumping, climbing blocks, collisions |
+| `js/walker.js` | Walk mode: the site worker, walking, jumping, climbing blocks, collisions, getting in and out of machines |
+| `js/keys.js` | Key bindings: every keyboard action, its default keys, the player's saved keys and the Keys panel |
 | `js/controls.js` | Game state and reset, touch sticks, keyboard, game controller, modes, menu |
 | `js/save.js` | Saves the site in the browser and loads it on start: the dug and dumped ground, groundwater, excavator, truck and load, trench box, blocks, worker (the lawn saves itself in `js/mower.js`) |
 | `js/effects.js` | Shared per-frame vectors, resize |
@@ -42,4 +43,4 @@ A 3D low-poly excavator game in plain HTML, CSS and JavaScript (three.js r128, n
 
 ## Controls
 
-Left stick swings and moves the stick; right stick moves the boom and curls the bucket. Drive and Truck modes put the left stick on the tracks or the truck, and the right stick raises the truck bed. Mow mode drives the zero-turn mower: each stick is a lap bar for the wheel on its side (left stick sideways spins it too). Walk mode puts you on foot: left stick walks the way the camera faces, right stick looks around, Jump jumps (onto blocks too). Keyboard: WASD or arrows are the left stick and IJKL the right stick in every mode; 1/2/3/4/5 or Tab switch machine, Shift for fine moves, T hooks the trench box, C cab view, B blocks on/off (Space place, V size, X pick up; in Walk mode Space jumps and E places), M map, N sound on/off, H help. Game controllers work too (sticks, triggers for gas, LB/RB machine, X box, Y cab view, A place block or jump in Walk mode, D-pad for blocks).
+Left stick swings and moves the stick; right stick moves the boom and curls the bucket. Drive and Truck modes put the left stick on the tracks or the truck, and the right stick raises the truck bed. Mow mode drives the zero-turn mower: each stick is a lap bar for the wheel on its side (left stick sideways spins it too). Walk mode puts you on foot: left stick walks the way the camera faces, right stick looks around, Jump jumps (onto blocks too). Keyboard: WASD or arrows are the left stick and IJKL the right stick in every mode; 1/2/3/4/5 or Tab switch machine, Shift for fine moves, T hooks the trench box, C cab view, B blocks on/off (E place, V size, X pick up), Space jump and F get in or out of a machine on foot, M map, N sound on/off, H help. Every key can be changed in the Keys panel (☰ menu), which also lists what each key does; the choice is saved per device. Game controllers work too (sticks, triggers for gas, LB/RB machine, X box, Y cab view, A place block or jump in Walk mode, B get in or out, D-pad for blocks).
