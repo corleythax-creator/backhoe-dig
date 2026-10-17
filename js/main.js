@@ -1,5 +1,7 @@
 // Backhoe Dig: the frame loop: inputs, machines, digging, spills, gas main, terrain, HUD and camera.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
+// the machines catch their own shadows (cab under the boom, bed under the load); glass stays clear
+for(const g of [machine,truck])g.traverse(o=>{if(o.isMesh&&!o.material.transparent)o.receiveShadow=true});
 function frame(now){
   const dt=Math.min(0.05,(now-last)/1000);last=now;crushT-=dt;
   // inputs
@@ -25,12 +27,13 @@ function frame(now){
   st.x=clamp(st.x+Math.sin(st.yaw)*driveIn*2.6*dt,-60,60);
   st.z=clamp(st.z+Math.cos(st.yaw)*driveIn*2.6*dt,-60,60);
   {const rr=mesaR(st.x,st.z),lim=EDGE-3.5;if(rr>lim){const f=lim/rr;st.x*=f;st.z=MZ+(st.z-MZ)*f}}
+  blkPush(st,EX_C,EX_R);
   const sy=Math.sin(st.yaw),cy=Math.cos(st.yaw);
   // tracks rut loose fill, crush clods, pick up mud and kick up a little dust
   if(!bench.on&&(Math.abs(driveIn)>0.05||Math.abs(turnIn)>0.05))for(const sd of [-1,1]){const tx=st.x+sd*1.05*cy,tz=st.z-sd*1.05*sy;
     if(stampRut(tx,tz,st.yaw,0.28,1.5,dt)){st.mud=Math.min(1,st.mud+dt*0.06);dustPuff(tx,hAt(tx,tz)+0.1,tz,dt*4)}}
   if(crushT<=0)crushT=0.1;
-  const sample=(lx,lz)=>hAt(st.x+lx*cy+lz*sy,st.z-lx*sy+lz*cy);
+  const sample=(lx,lz)=>surfAt(st.x+lx*cy+lz*sy,st.z-lx*sy+lz*cy);
   const hf=(sample(-1,1.7)+sample(1,1.7))/2,hb=(sample(-1,-1.7)+sample(1,-1.7))/2;
   const hr=(sample(1,1.7)+sample(1,-1.7))/2,hl=(sample(-1,1.7)+sample(-1,-1.7))/2;
   const k=Math.min(1,dt*8);
@@ -40,11 +43,11 @@ function frame(now){
   boomP.rotation.x=-st.a1; stickP.rotation.x=-st.a2; bucketP.rotation.x=-st.a3;
   machine.updateMatrixWorld(true); updateLinkage(); jointJ.updateMatrixWorld(); updateRams(); updateHoses();
   tipMark.getWorldPosition(tip); midMark.getWorldPosition(mid); bucketP.getWorldQuaternion(q);
-  updateBox(dt);
+  updateBox(dt);blkTick(dt);
 
   // dig
   const g=hAt(tip.x,tip.z);
-  st.below=tip.y<g;
+  st.below=tip.y<g&&!blkHit(tip.x,tip.y,tip.z);
   // soil at the teeth sets how hard the arm works; a full bucket pushing on barely moves
   {const ti=Math.max(0,Math.min(N,Math.round((tip.x+S/2)/CELL))),tj=Math.max(0,Math.min(N,Math.round((tip.z+S/2)/CELL)));
     st.soil=st.below?matAt(tj*V+ti,tip.y):-1;
@@ -91,7 +94,7 @@ function frame(now){
   if(st.slumpT>0){st.slumpT-=dt;for(let n=0;n<3*GRID_K;n++)if(slump())st.dirty=true}
   if(st.dirty){
     updateTufts(dI0-1,dI1+1,dJ0-1,dJ1+1);
-    updateTerrain();st.dirty=false;mapDirty=true;
+    updateTerrain();st.dirty=false;mapDirty=true;blkTerrainMoved();
     if(st.slumpT<=0){winOn=false}
     if(!st.exposed){
       const jz=Math.round((PIPE_Z+S/2)/CELL);
@@ -136,7 +139,7 @@ function frame(now){
     if(mode==='truck'){look.set(tr.x,tr.y+1.6,tr.z);cyaw=tr.yaw+Math.PI+orbitYaw;cd=camDist+3}
     else{const fx=Math.sin(hy),fz=Math.cos(hy);look.set(st.x+fx*4,st.y+0.8,st.z+fz*4);cyaw=hy+Math.PI+orbitYaw}
     camT.set(look.x+Math.sin(cyaw)*Math.cos(orbitPitch)*cd,look.y+Math.sin(orbitPitch)*cd,look.z+Math.cos(cyaw)*Math.cos(orbitPitch)*cd);
-    camT.y=Math.max(camT.y,hAt(camT.x,camT.z)+1.2);
+    camT.y=Math.max(camT.y,surfAt(camT.x,camT.z)+1.2);
     if(firstCam){camera.position.copy(camT);firstCam=false}else camera.position.lerp(camT,Math.min(1,dt*5));
     camera.lookAt(look);
   }else{
@@ -148,7 +151,8 @@ function frame(now){
   updateSound(dt);
   if(shake>0){shake-=dt;camera.position.x+=(Math.random()-0.5)*0.25;camera.position.y+=(Math.random()-0.5)*0.25}
   sky.position.copy(camera.position);
-  const fv=mode==='truck'?tr:st;sun.position.set(fv.x+12,fv.y+20,fv.z+8); sun.target.position.set(fv.x,fv.y,fv.z);
+  const fv=mode==='truck'?tr:st;sun.position.set(fv.x,fv.y,fv.z).addScaledVector(SUN_DIR,25); sun.target.position.set(fv.x,fv.y,fv.z);
+  {const o=groundOcc.value;o[0].set(st.x,st.z,st.yaw,0);o[2].set(tr.x,tr.z,tr.yaw,0)}
   timeU.value=now/1000;
   renderer.render(scene,camera);
   if(bench.on)benchSample(dt);

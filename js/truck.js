@@ -1,7 +1,7 @@
 // Backhoe Dig: the dump truck and its driving, plus texture hookup once the images load.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 // ---------- dump truck ----------
-const WHITE=M(0xe9ecea),WHITE_DS=M(0xe9ecea,{side:THREE.DoubleSide}),BEDM=M(0x6c7378),BED_D=M(0x4c5257),TGLASS=new THREE.MeshPhongMaterial({color:0x5f7f93,shininess:90,flatShading:true,transparent:true,opacity:0.35,depthWrite:false}),TAIL=M(0xd0281c,{emissive:0x400804}),REV=M(0xf4f1e6,{emissive:0x202018});
+const WHITE=M(0xe9ecea,PAINT),WHITE_DS=M(0xe9ecea,Object.assign({side:THREE.DoubleSide},PAINT)),BEDM=M(0x6c7378),BED_D=M(0x4c5257),TGLASS=new THREE.MeshPhongMaterial({color:0x5f7f93,shininess:90,flatShading:true,transparent:true,opacity:0.35,depthWrite:false,envMap:skyEnv,combine:THREE.MixOperation,reflectivity:0.9}),TAIL=M(0xd0281c,{emissive:0x400804}),REV=M(0xf4f1e6,{emissive:0x202018});
 const TRUCK_CAP=10/1.308,TR_START={x:-9,z:-11.6,yaw:1.47,v:0,steer:0,bed:0,load:0,hauled:0,rollA:0,y:0,pitch:0,roll:0,gear:1,shiftT:0,aL:0,brakeOn:false,sh:0,shV:0,sp:0,spV:0,sr:0,srV:0,bumpCd:0,loadedOnce:false,fullWarned:false,haulWarned:false,bedWarned:false};
 const tr=Object.assign({},TR_START);
 const truck=new THREE.Group();truck.rotation.order='YXZ';scene.add(truck);
@@ -10,7 +10,13 @@ const sprung=new THREE.Group();sprung.position.y=1.0;truck.add(sprung);
 const tBody=new THREE.Group();tBody.position.y=-1.0;sprung.add(tBody);
 for(const x of [-0.5,0.5])box(0.18,0.28,7.2,STEEL,x,0.95,0.3,tBody);
 for(let z=-3.2;z<=3.81;z+=0.75)box(1.0,0.1,0.12,STEEL,0,0.95,z,tBody);
-box(2.35,1.4,1.5,WHITE,0,2.15,1.85,tBody);
+// cab shell: roof, floor and walls with real window openings, so the glass shows the cab inside
+box(2.35,0.05,1.5,WHITE,0,2.825,1.85,tBody);box(2.35,0.05,1.5,WHITE,0,1.475,1.85,tBody);
+box(2.35,0.775,0.04,WHITE,0,1.8375,2.58,tBody);box(2.35,0.075,0.04,WHITE,0,2.8125,2.58,tBody);
+box(2.35,0.775,0.04,WHITE,0,1.8375,1.12,tBody);box(2.35,0.175,0.04,WHITE,0,2.7625,1.12,tBody);
+for(const sd of [-1,1]){box(0.175,0.55,0.04,WHITE,sd*1.0875,2.5,2.58,tBody);box(0.225,0.45,0.04,WHITE,sd*1.0625,2.45,1.12,tBody);
+  box(0.04,0.8,1.5,WHITE,sd*1.155,1.85,1.85,tBody);box(0.04,0.1,1.5,WHITE,sd*1.155,2.8,1.85,tBody);
+  box(0.04,0.5,0.225,WHITE,sd*1.155,2.5,2.4875,tBody);box(0.04,0.5,0.425,WHITE,sd*1.155,2.5,1.3125,tBody)}
 box(2.37,0.12,1.52,STEEL_L,0,1.5,1.85,tBody);
 box(2.0,0.55,0.05,TGLASS,0,2.5,2.61,tBody);
 for(const x of [-1.185,1.185])box(0.04,0.5,0.85,TGLASS,x,2.5,1.95,tBody);
@@ -26,7 +32,6 @@ for(const x of [-0.8,0.8]){const hl=cyl(0.11,0.11,0.06,20,LENS,tBody);hl.rotatio
 for(const x of [-1.05,1.05]){box(0.55,0.08,1.25,WHITE,x,1.42,3.1,tBody);box(0.55,0.35,0.08,WHITE,x,1.26,3.72,tBody);
   box(0.06,0.06,0.5,STEEL,x*1.18,2.6,2.75,tBody);box(0.08,0.45,0.22,STEEL,x*1.33,2.45,2.95,tBody);
   box(0.4,0.06,0.3,STEEL_L,x,1.2,1.6,tBody);box(0.4,0.06,0.3,STEEL_L,x,0.85,1.6,tBody)}
-const tank=cyl(0.28,0.28,0.95,48,CHROME,tBody);tank.rotation.x=Math.PI/2;tank.position.set(1.0,1.15,0.6);
 const stack=cyl(0.08,0.08,1.9,32,CHROME,tBody);stack.position.set(-1.0,2.4,1.0);
 for(const z of [-2.2,-1.6,-2.8]){const ax=cyl(0.07,0.07,1.9,10,STEEL,tBody);ax.rotation.z=Math.PI/2;ax.position.set(0,0.55,z)}
 const ax2=cyl(0.07,0.07,2.0,10,STEEL,tBody);ax2.rotation.z=Math.PI/2;ax2.position.set(0,0.55,3.1);
@@ -35,14 +40,18 @@ for(const x of [-1.15,1.15])box(0.06,0.5,1.9,BED_D,x,1.15,-2.2,tBody);
 const wheels=[],frontWheels=[];
 function makeWheel(x,z,dual){const g=new THREE.Group();g.rotation.order='YXZ';g.position.set(x,0.55,z);g.userData={lx:x,lz:z,off:0};truck.add(g);
   const offs=dual?[-0.21,0.21]:[0];
-  for(const o of offs){const t=new THREE.Mesh(new THREE.CylinderGeometry(0.55,0.55,0.38,40,1),RUBBER);t.castShadow=true;g.add(t);t.rotation.z=Math.PI/2;t.position.x=o;
+  for(const o of offs){const t=new THREE.Mesh(new THREE.CylinderGeometry(0.55,0.55,0.38,48,1),RUBBER);t.castShadow=true;g.add(t);t.rotation.z=Math.PI/2;t.position.x=o;
     for(const sd of [-1,1]){const sw=new THREE.Mesh(new THREE.TorusGeometry(0.46,0.075,5,28),RUBBER);sw.rotation.y=Math.PI/2;sw.position.x=o+sd*0.17;sw.castShadow=true;g.add(sw)}
-    for(let k=0;k<22;k++){const an=k/22*Math.PI*2,tb=box(0.34,0.05,0.09,RUBBER,o+(k%2?0.03:-0.03),Math.sin(an)*0.565,Math.cos(an)*0.565,g);tb.rotation.x=-an}}
+    for(const row of [-1,1])for(let k=0;k<22;k++){const an=(k+(row>0?0.5:0))/22*Math.PI*2,tb=box(0.16,0.05,0.1,RUBBER,o+row*0.095,Math.sin(an)*0.565,Math.cos(an)*0.565,g);tb.rotation.x=-an}}
   const rim=new THREE.Mesh(new THREE.CylinderGeometry(0.3,0.3,dual?0.84:0.4,32,1),STEEL_L);rim.castShadow=true;g.add(rim);rim.rotation.z=Math.PI/2;
   const hub=cyl(0.12,0.12,dual?0.9:0.46,32,CHROME,g);hub.rotation.z=Math.PI/2;
   const face=dual?0.43:0.21;
   for(const sd of [-1,1]){const ring=new THREE.Mesh(new THREE.TorusGeometry(0.22,0.025,4,28),STEEL);ring.rotation.y=Math.PI/2;ring.position.x=sd*face;g.add(ring);
+    const lip=new THREE.Mesh(new THREE.TorusGeometry(0.31,0.02,4,28),STEEL_L);lip.rotation.y=Math.PI/2;lip.position.x=sd*(face-0.01);g.add(lip);
+    for(let k=0;k<8;k++){const an=(k+0.5)/8*Math.PI*2,hh=cyl(0.035,0.035,0.01,6,STEEL,g);hh.rotation.z=Math.PI/2;hh.position.set(sd*(face+0.005),Math.sin(an)*0.26,Math.cos(an)*0.26)}
+    const dm=new THREE.Mesh(new THREE.SphereGeometry(0.1,12,4,0,Math.PI*2,0,Math.PI/2),CHROME);dm.rotation.z=-sd*Math.PI/2;dm.scale.set(1,0.6,1);dm.position.x=sd*(face+0.03);g.add(dm);
     for(let k=0;k<10;k++){const an=k/10*Math.PI*2,lug=cyl(0.028,0.028,0.06,6,CHROME,g);lug.rotation.z=Math.PI/2;lug.position.set(sd*(face+0.02),Math.sin(an)*0.17,Math.cos(an)*0.17)}}
+  const vs=cyl(0.01,0.01,0.07,6,CHROME,g);vs.rotation.z=Math.PI/2;vs.position.set(face+0.02,0.24,0.08);
   mergeStatic(g,[]);wheels.push(g);if(!dual)frontWheels.push(g);return g}
 makeWheel(-1.05,3.1,false);makeWheel(1.05,3.1,false);
 for(const z of [-1.6,-2.8])for(const x of [-0.95,0.95])makeWheel(x,z,true);
@@ -81,6 +90,158 @@ box(0.9,0.5,0.6,STEEL_L,1.0,1.05,-0.45+0.0,tBody);
 for(const x of [-0.25,0.25]){const hn=new THREE.Mesh(new THREE.ConeGeometry(0.06,0.45,20,2,true),CHROME);hn.rotation.x=-Math.PI/2;hn.position.set(x,2.95,1.6);tBody.add(hn)}
 const shield=cyl(0.11,0.11,0.9,32,STEEL_L,tBody);shield.position.set(-1.0,2.1,1.0);
 for(let i=0;i<4;i++)box(2.0,0.02,0.02,STEEL,0,2.18,3.0+i*0.25,tBody);
+// ---------- truck detail: fuel tank, DEF tank, driveline, springs, cab interior, lights and fittings ----------
+{
+  const SEATM=M(0x34373a),DEFB=M(0x1f5fb4),FCAP=M(0x2e7d32),PLATE=M(0xf2f0e4),BLACK=M(0x111213,{shininess:30});
+  const add=(geo,mat,x,y,z,parent,rx,ry,rz)=>{const m=new THREE.Mesh(geo,mat);m.position.set(x,y,z);m.rotation.set(rx||0,ry||0,rz||0);m.castShadow=true;parent.add(m);return m};
+  const cylX=(r,h,seg,mat,x,y,z,p)=>add(new THREE.CylinderGeometry(r,r,h,seg),mat,x,y,z,p,0,0,Math.PI/2);
+  const cylZ=(r,h,seg,mat,x,y,z,p)=>add(new THREE.CylinderGeometry(r,r,h,seg),mat,x,y,z,p,Math.PI/2,0,0);
+  const tube=(pts,r,seg,mat,p)=>add(new THREE.TubeGeometry(new THREE.CatmullRomCurve3(pts.map(q=>new THREE.Vector3(...q))),seg,r,6,false),mat,0,0,0,p);
+  // a spring leaf: a thin plank bowed upward in the middle
+  const leafGeo=(L,bow)=>{const g=new THREE.BoxGeometry(0.11,0.024,L,1,1,8),pa=g.attributes.position;
+    for(let i=0;i<pa.count;i++){const z=pa.getZ(i)/(L/2);pa.setY(i,pa.getY(i)+bow*(1-z*z))}g.computeVertexNormals();return g};
+  const springPack=(x,y,z,L,n,bow)=>{for(let i=0;i<n;i++)add(leafGeo(L*(1-i*0.13),bow),STEEL,x,y-i*0.026,z,tBody);
+    for(const d of [-0.12,0.12]){box(0.14,0.03,0.05,STEEL_L,x,y+0.02,z+d,tBody);for(const sx of [-0.06,0.06])add(new THREE.CylinderGeometry(0.012,0.012,0.22,8),STEEL_L,x+sx,y-0.06,z+d,tBody)}
+    for(const e of [-1,1])cylX(0.035,0.14,16,STEEL_L,x,y+bow*0.1,z+e*L/2,tBody)};
+
+  // fuel tank (right side, between the cab steps and the air tanks): polished drum, rolled ends, straps, filler and cap, sender, drain, feed lines
+  {const tx=1.0,ty=1.15,tz=0.6,R=0.29,L=0.86;
+    cylZ(R,L,48,CHROME,tx,ty,tz,tBody);
+    for(const e of [-1,1]){const d=add(new THREE.SphereGeometry(R,48,8,0,Math.PI*2,0,Math.PI/2),CHROME,tx,ty,tz+e*L/2,tBody,e*Math.PI/2,0,0);d.scale.set(1,0.18,1);
+      add(new THREE.TorusGeometry(R,0.022,6,48),CHROME,tx,ty,tz+e*L/2,tBody)}
+    for(const dz of [-0.26,0.26]){add(new THREE.TorusGeometry(R+0.012,0.016,6,48),STEEL,tx,ty,tz+dz,tBody);
+      box(0.3,0.05,0.07,STEEL,0.73,ty-R+0.03,tz+dz,tBody);box(0.06,0.34,0.07,STEEL,0.62,ty-0.1,tz+dz,tBody);
+      box(0.24,0.05,0.07,STEEL,0.75,ty+R-0.03,tz+dz,tBody);cylX(0.016,0.1,10,CHROME,0.65,ty+R-0.03,tz+dz,tBody);
+      add(new THREE.BoxGeometry(0.08,0.03,0.04),RUBBER,tx,ty-R-0.012,tz+dz,tBody)}
+    // filler neck and green diesel cap with a knurled rim, a vent and the fuel gauge sender
+    add(new THREE.CylinderGeometry(0.055,0.065,0.08,24),CHROME,tx+0.06,ty+R+0.02,tz+0.33,tBody);
+    add(new THREE.CylinderGeometry(0.075,0.075,0.035,32),FCAP,tx+0.06,ty+R+0.075,tz+0.33,tBody);
+    for(let k=0;k<16;k++){const an=k/16*Math.PI*2;box(0.012,0.03,0.012,FCAP,tx+0.06+Math.cos(an)*0.077,ty+R+0.075,tz+0.33+Math.sin(an)*0.077,tBody)}
+    add(new THREE.TorusGeometry(0.03,0.006,4,16),CHROME,tx+0.06,ty+R+0.1,tz+0.33,tBody,Math.PI/2);
+    add(new THREE.CylinderGeometry(0.045,0.045,0.025,24),STEEL_L,tx-0.04,ty+R+0.005,tz-0.18,tBody);
+    for(let k=0;k<6;k++){const an=k/6*Math.PI*2;add(new THREE.CylinderGeometry(0.008,0.008,0.02,6),CHROME,tx-0.04+Math.cos(an)*0.036,ty+R+0.02,tz-0.18+Math.sin(an)*0.036,tBody)}
+    add(new THREE.CylinderGeometry(0.02,0.02,0.04,12),STEEL,tx,ty-R-0.01,tz,tBody);
+    tube([[tx-0.04,ty+R,tz-0.18],[0.85,ty+R+0.05,tz-0.25],[0.62,ty+0.2,tz-0.35],[0.5,1.0,0.0]],0.014,24,HOSE,tBody);
+    tube([[tx-0.07,ty+R,tz-0.14],[0.88,ty+R+0.06,tz-0.2],[0.66,ty+0.25,tz-0.3],[0.55,1.02,0.1]],0.012,24,HOSE,tBody);
+    box(0.012,0.06,0.16,AMBER,tx+R*0.93,ty+0.12,tz+0.33,tBody).rotation.z=-0.4;
+  }
+  // DEF tank (left side): white plastic drum with blue cap and a level sender, on a cradle
+  {const x=-1.0,y=1.05,z=0.55;
+    cylZ(0.21,0.55,48,WHITE,x,y,z,tBody);
+    for(const e of [-1,1]){const d=add(new THREE.SphereGeometry(0.21,32,6,0,Math.PI*2,0,Math.PI/2),WHITE,x,y,z+e*0.275,tBody,e*Math.PI/2,0,0);d.scale.set(1,0.2,1)}
+    for(const dz of [-0.17,0.17]){add(new THREE.TorusGeometry(0.218,0.014,6,32),STEEL,x,y,z+dz,tBody);box(0.36,0.05,0.06,STEEL,-0.71,y-0.2,z+dz,tBody)}
+    add(new THREE.CylinderGeometry(0.06,0.06,0.04,32),DEFB,x-0.05,y+0.225,z+0.18,tBody);
+    add(new THREE.CylinderGeometry(0.035,0.035,0.02,16),STEEL_L,x+0.02,y+0.215,z-0.12,tBody);
+    tube([[x+0.02,y+0.22,z-0.12],[-0.8,y+0.24,z-0.2],[-0.6,y,z-0.25],[-0.5,1.0,0.1]],0.01,20,HOSE,tBody);
+  }
+  // battery box lid with latches and cables (right, behind the tank)
+  box(0.92,0.04,0.62,STEEL,1.0,1.32,-0.45,tBody);
+  for(const dz of [-0.18,0.0,0.18])box(0.9,0.02,0.04,STEEL_L,1.0,1.345,-0.45+dz,tBody);
+  for(const dz of [-0.2,0.2]){box(0.03,0.12,0.05,BLACK,1.47,1.22,-0.45+dz,tBody);add(new THREE.TorusGeometry(0.03,0.008,4,12),CHROME,1.48,1.16,-0.45+dz,tBody,0,Math.PI/2)}
+  tube([[0.6,1.1,-0.3],[0.52,1.0,-0.1],[0.45,0.9,0.4],[0.35,0.88,1.0]],0.02,24,BLACK,tBody);
+  tube([[0.6,1.1,-0.6],[0.5,0.95,-0.7],[0.4,0.85,-0.75]],0.02,16,M(0xb81f18),tBody);
+
+  // driveline: engine sump and transmission under the cab, shafts with U-joints to the tandem diffs, axle hubs
+  box(0.62,0.32,0.9,STEEL_L,0,0.92,2.9,tBody);
+  add(new THREE.CylinderGeometry(0.26,0.3,0.25,40),STEEL_L,0,0.92,2.25,tBody,Math.PI/2);
+  box(0.42,0.36,0.85,STEEL_L,0,0.9,1.65,tBody);for(let i=0;i<4;i++)box(0.44,0.02,0.02,STEEL,0,0.9,1.35+i*0.2,tBody);
+  add(new THREE.CylinderGeometry(0.12,0.16,0.18,32),STEEL,0,0.86,1.15,tBody,Math.PI/2);
+  const shaft=(z0,z1,y0,y1)=>{const dz=z1-z0,dy=y1-y0,Ls=Math.hypot(dz,dy),a=Math.atan2(dy,dz);
+    add(new THREE.CylinderGeometry(0.05,0.05,Ls-0.12,24),STEEL_L,0,(y0+y1)/2,(z0+z1)/2,tBody,Math.PI/2-a);
+    for(const [zz,yy] of [[z0,y0],[z1,y1]]){add(new THREE.CylinderGeometry(0.07,0.07,0.06,24),STEEL,0,yy,zz,tBody,Math.PI/2-a);
+      box(0.16,0.025,0.025,STEEL,0,yy,zz,tBody);box(0.025,0.16,0.025,STEEL,0,yy,zz,tBody)}};
+  shaft(1.04,-1.42,0.84,0.62);shaft(-1.78,-2.62,0.62,0.62);
+  for(const z of [-1.6,-2.8]){
+    const pk=add(new THREE.SphereGeometry(0.22,24,12),STEEL_L,0.08,0.55,z,tBody);pk.scale.set(1,0.95,0.85);
+    add(new THREE.CylinderGeometry(0.17,0.17,0.08,40),STEEL,0.08,0.55,z+(z>-2?0.17:-0.17),tBody,Math.PI/2);
+    for(let k=0;k<10;k++){const an=k/10*Math.PI*2;cylZ(0.012,0.04,8,CHROME,0.08+Math.cos(an)*0.15,0.55+Math.sin(an)*0.15,z+(z>-2?0.21:-0.21),tBody)}
+    for(const sd of [-1,1]){add(new THREE.CylinderGeometry(0.09,0.12,0.35,24),STEEL,sd*0.6,0.55,z,tBody,0,0,Math.PI/2);
+      add(new THREE.CylinderGeometry(0.15,0.15,0.12,24),STEEL_L,sd*0.68,0.55,z,tBody,0,0,Math.PI/2)}
+  }
+  // tandem: long leaf packs on a center trunnion, torque rods to the axles
+  for(const sd of [-1,1]){springPack(sd*0.5,0.78,-2.2,1.5,6,0.05);
+    add(new THREE.CylinderGeometry(0.09,0.09,0.2,32),STEEL,sd*0.5,0.66,-2.2,tBody,0,0,Math.PI/2);
+    box(0.16,0.3,0.36,STEEL,sd*0.5,0.86,-2.2,tBody);
+    for(const z of [-1.6,-2.8])cylZ(0.03,0.5,16,STEEL_L,sd*0.32,0.38,(z+(-2.2))/2+(z>-2?0.05:-0.05),tBody)}
+  // front: leaf springs, shocks, steering knuckles, tie rod, drag link and steering box
+  for(const sd of [-1,1]){springPack(sd*0.5,0.74,3.1,1.25,5,0.06);
+    box(0.14,0.1,0.18,STEEL,sd*0.5,0.66,3.1,tBody);
+    const sh=add(new THREE.CylinderGeometry(0.04,0.04,0.45,20),STEEL_L,sd*0.62,0.82,2.85,tBody,0.35);
+    add(new THREE.CylinderGeometry(0.025,0.025,0.25,16),CHROME,sd*0.62,1.0,2.79,tBody,0.35);
+    add(new THREE.CylinderGeometry(0.06,0.06,0.3,24),STEEL,sd*0.88,0.55,3.1,tBody);
+    box(0.06,0.05,0.28,STEEL,sd*0.86,0.45,2.95,tBody)}
+  cylX(0.025,1.7,16,STEEL_L,0,0.45,2.82,tBody);for(const sd of [-1,1])add(new THREE.SphereGeometry(0.04,16,8),STEEL,sd*0.85,0.45,2.82,tBody);
+  box(0.24,0.2,0.22,STEEL,-0.62,1.05,3.85,tBody);tube([[-0.62,0.92,3.75],[-0.72,0.7,3.4],[-0.86,0.5,3.0]],0.022,16,STEEL_L,tBody);
+  // front: grille surround, badge, headlight bezels, turn signals, fog lights, bumper bolts, tow hooks, plate, mud flaps
+  box(1.58,0.06,0.06,CHROME,0,2.04,4.08,tBody);box(1.58,0.06,0.06,CHROME,0,1.41,4.08,tBody);
+  for(const sd of [-1,1])box(0.06,0.69,0.06,CHROME,sd*0.77,1.72,4.08,tBody);
+  for(let i=0;i<5;i++)box(0.03,0.58,0.03,STEEL_L,(i-2)*0.3,1.72,4.09,tBody);
+  add(new THREE.CylinderGeometry(0.08,0.08,0.02,32),CHROME,0,2.12,4.07,tBody,Math.PI/2);
+  for(const sd of [-1,1]){
+    add(new THREE.TorusGeometry(0.12,0.018,6,40),CHROME,sd*0.8,1.85,4.075,tBody);
+    box(0.12,0.1,0.04,AMBER,sd*0.95,1.85,4.06,tBody);box(0.08,0.06,0.03,AMBER,sd*1.0,2.06,4.05,tBody);
+    cylZ(0.07,0.06,28,LENS,sd*1.0,1.0,4.35,tBody);add(new THREE.TorusGeometry(0.07,0.012,4,28),CHROME,sd*1.0,1.0,4.38,tBody);
+    for(const bx of [0.35,0.6])cylZ(0.022,0.03,12,CHROME,sd*bx,1.0,4.35,tBody);
+    const hk=add(new THREE.TorusGeometry(0.06,0.018,8,20,Math.PI*1.3),STEEL,sd*0.7,0.84,4.36,tBody,0,Math.PI/2,Math.PI*0.85);
+    box(0.5,0.55,0.03,RUBBER,sd*1.05,0.48,2.32,tBody);box(0.5,0.06,0.04,STEEL,sd*1.05,0.78,2.32,tBody);
+  }
+  box(0.5,0.22,0.02,PLATE,0,1.0,4.345,tBody);
+  // cab: two-piece windshield post, wipers, door window trim and hinges, beacon, antenna, hood spot mirrors
+  box(0.05,0.55,0.03,WHITE,0,2.5,2.635,tBody);
+  for(const sd of [-1,1]){const w=box(0.7,0.015,0.015,BLACK,sd*0.5,2.265,2.645,tBody);w.rotation.z=sd*0.08;box(0.04,0.04,0.04,BLACK,sd*0.15,2.245,2.64,tBody);
+    box(0.02,0.04,0.88,CHROME,sd*1.19,2.77,1.95,tBody);box(0.02,0.04,0.88,CHROME,sd*1.19,2.23,1.95,tBody);
+    for(const y of [1.75,2.4])cylX(0.03,0.04,12,STEEL,sd*1.19,y,2.58,tBody);
+    tube([[sd*1.0,2.12,3.7],[sd*1.12,2.2,3.85],[sd*1.18,2.12,3.95]],0.012,12,STEEL,tBody);
+    const sm=add(new THREE.SphereGeometry(0.075,16,6,0,Math.PI*2,0,Math.PI/2),BLACK,sd*1.2,2.1,3.97,tBody,-Math.PI/2);sm.scale.set(1,0.5,1);
+  }
+  add(new THREE.CylinderGeometry(0.1,0.12,0.06,32),BLACK,0.6,2.89,1.35,tBody);
+  const bc=add(new THREE.SphereGeometry(0.09,24,8,0,Math.PI*2,0,Math.PI/2),AMBER,0.6,2.92,1.35,tBody);bc.scale.set(1,1.4,1);
+  add(new THREE.CylinderGeometry(0.008,0.004,1.1,6),BLACK,-1.5,3.15,2.95,tBody);add(new THREE.CylinderGeometry(0.03,0.03,0.06,12),BLACK,-1.5,2.62,2.95,tBody);
+  // cab interior (seen from the cab view): seats, dash with gauges, steering wheel and column, shifter
+  for(const sx of [-0.55,0.55]){box(0.52,0.14,0.5,SEATM,sx,1.95,1.6,tBody);box(0.52,0.7,0.12,SEATM,sx,2.33,1.3,tBody);box(0.3,0.2,0.1,SEATM,sx,2.78,1.28,tBody);
+    for(const ex of [-0.27,0.27])box(0.04,0.14,0.42,SEATM,sx+ex,2.05,1.6,tBody);box(0.3,0.3,0.3,STEEL,sx,1.72,1.6,tBody)}
+  box(2.2,0.3,0.32,SEATM,0,2.05,2.42,tBody);box(2.2,0.04,0.36,BLACK,0,2.205,2.4,tBody);
+  for(const gx of [-0.72,-0.55,-0.38]){cylZ(0.055,0.02,24,LENS,gx,2.12,2.255,tBody);add(new THREE.TorusGeometry(0.055,0.01,4,24),CHROME,gx,2.12,2.25,tBody)}
+  for(let i=0;i<6;i++)box(0.05,0.03,0.02,i%2?AMBER:STEEL_L,0.05+i*0.09,2.12,2.255,tBody);
+  {const sw=new THREE.Group();sw.position.set(-0.55,2.22,2.15);sw.rotation.x=0.65;tBody.add(sw);
+    add(new THREE.TorusGeometry(0.2,0.025,8,36),BLACK,0,0,0,sw);add(new THREE.CylinderGeometry(0.05,0.05,0.04,24),BLACK,0,0,0,sw,Math.PI/2);
+    for(const a of [0,2.1,4.2]){const sp=box(0.18,0.025,0.02,BLACK,Math.cos(a)*0.11,Math.sin(a)*0.11,0,sw);sp.rotation.z=a}
+    sw.updateMatrix();for(const c of [...sw.children]){c.updateMatrix();c.matrix.premultiply(sw.matrix);c.matrix.decompose(c.position,c.quaternion,c.scale);sw.remove(c);tBody.add(c)}tBody.remove(sw)}
+  add(new THREE.CylinderGeometry(0.035,0.04,0.42,16),BLACK,-0.55,2.094,2.318,tBody,2.214);
+  add(new THREE.CylinderGeometry(0.012,0.012,0.3,8),CHROME,-0.15,1.95,2.05,tBody,0.3);add(new THREE.SphereGeometry(0.035,12,8),BLACK,-0.15,2.1,2.1,tBody);
+  // exhaust: rain cap, clamps, stand-off brackets, flex pipe down under the cab
+  {const sx=-1.0,sz=1.0;
+    for(const y of [1.62,2.58])add(new THREE.TorusGeometry(0.115,0.015,6,40),CHROME,sx,y,sz,tBody,Math.PI/2);
+    for(const y of [1.75,2.45]){box(0.04,0.04,0.12,STEEL,sx,y,sz+0.15,tBody);box(0.2,0.08,0.02,STEEL,sx,y,sz+0.1,tBody)}
+    add(new THREE.CylinderGeometry(0.09,0.09,0.012,32),CHROME,sx-0.03,3.36,sz,tBody,0,0,0.5);
+    add(new THREE.CylinderGeometry(0.01,0.01,0.12,8),STEEL,sx+0.06,3.35,sz,tBody,0,0,Math.PI/2);
+    tube([[sx,1.48,sz],[sx,1.2,sz+0.05],[-0.8,0.95,sz+0.3],[-0.55,0.9,1.8]],0.075,32,STEEL_L,tBody);
+  }
+  // bed hoist hydraulic lines along the frame, air tank drains and air lines
+  tube([[0.12,0.98,0.45],[0.2,0.95,1.0],[0.25,0.9,1.4]],0.022,20,HOSE,tBody);tube([[-0.12,0.98,0.45],[-0.2,0.95,1.0],[-0.25,0.9,1.4]],0.022,20,HOSE,tBody);
+  for(const sd of [-1,1]){add(new THREE.CylinderGeometry(0.015,0.015,0.05,10),CHROME,sd*0.85,0.77,-0.4,tBody);
+    for(const e of [-1,1])add(new THREE.SphereGeometry(0.17,24,4,0,Math.PI*2,0,Math.PI/2),STEEL_L,sd*0.85,0.95,-0.4+e*0.425,tBody,e*Math.PI/2).scale.set(1,0.25,1);
+    tube([[sd*0.85,1.12,-0.1],[sd*0.7,1.12,0.0],[sd*0.55,1.08,0.3]],0.01,12,HOSE,tBody)}
+  // rear: under-ride bar, light bar, plate with its lamp, pintle hitch, reflectors
+  box(2.1,0.12,0.1,STEEL,0,0.62,-3.5,tBody);for(const sd of [-1,1])box(0.08,0.35,0.08,STEEL,sd*0.5,0.8,-3.45,tBody);
+  box(2.1,0.18,0.05,STEEL,0,1.0,-3.4,tBody);box(0.38,0.2,0.02,PLATE,0,0.62,-3.56,tBody);cylZ(0.025,0.03,12,LENS,0,0.75,-3.56,tBody);
+  add(new THREE.TorusGeometry(0.06,0.02,8,24),STEEL,0,0.48,-3.6,tBody,Math.PI/2);box(0.2,0.18,0.1,STEEL,0,0.55,-3.52,tBody);
+  for(const sd of [-1,1])for(const y of [0.62])box(0.1,0.05,0.02,TAIL,sd*0.85,y,-3.56,tBody);
+
+  // bed: cross sills, hinge pins, top-rail marker lights, front-corner ladder, tarp roller
+  for(let z=0.3;z<4.3;z+=0.45)box(1.0,0.1,0.08,STEEL,0,-0.09,z,bedG);
+  for(const sd of [-1,1]){cylX(0.06,0.18,24,STEEL_L,sd*0.5,-0.15,0.05,bedG);box(0.14,0.2,0.16,STEEL,sd*0.5,-0.08,0.12,bedG);
+    for(const z of [0.35,2.15,3.95]){box(0.04,0.07,0.12,AMBER,sd*1.255,0.92,z,bedG);box(0.02,0.09,0.14,STEEL,sd*1.24,0.92,z,bedG)}
+    box(0.04,0.07,0.1,TAIL,sd*1.255,0.92,0.08,bedG)}
+  for(const sd of [-1,1])box(0.05,1.0,0.05,STEEL_L,-1.27,0.45,4.05+sd*0.14,bedG);for(let i=0;i<5;i++)box(0.04,0.04,0.32,STEEL_L,-1.27,0.05+i*0.2,4.05,bedG);
+  cylX(0.07,2.3,40,BLACK,0,1.34,4.32,bedG);for(const sd of [-1,1])add(new THREE.CylinderGeometry(0.09,0.09,0.05,32),STEEL,sd*1.17,1.34,4.32,bedG,0,0,Math.PI/2);
+  tube([[1.2,1.34,4.32],[1.3,0.9,3.2],[1.3,0.5,1.8],[1.27,0.3,0.6]],0.02,32,STEEL_L,bedG);
+  // tailgate: top hinge eyes, bottom latch pins and hooks, reflectors
+  for(const sd of [-1,1]){cylX(0.04,0.12,24,STEEL_L,sd*1.08,0,-0.05,tailP);add(new THREE.TorusGeometry(0.05,0.015,6,24),STEEL,sd*1.08,0,-0.05,tailP,0,Math.PI/2);
+    cylX(0.03,0.16,20,STEEL,sd*1.06,-1.0,-0.06,tailP);box(0.05,0.14,0.08,STEEL,sd*1.06,-0.95,-0.12,tailP);
+    box(0.25,0.06,0.02,TAIL,sd*0.8,-0.92,-0.1,tailP)}
+  for(let i=0;i<3;i++)box(2.2,0.05,0.04,BEDM,0,-0.2-i*0.3,-0.1,tailP);
+}
 mergeStatic(tBody,[]);mergeStatic(bedG,[heap]);mergeStatic(tailP,[]);
 ram(tBody,[0,1.05,0.4],bedG,[0,-0.05,3.75],0.13,0.065,1.3);
 ram(tBody,[0,1.05,0.4],bedG,[0,-0.05,3.75],0.1,0.05,0.9);
@@ -123,17 +284,18 @@ function updateTruck(dt,thr,steerIn,bedIn){
     if(rr>lim){const k=lim/rr;tr.x+=px*k-px;tr.z+=MZ+(pz-MZ)*k-pz;
       const nz=pz-MZ,nl=Math.hypot(px,nz)||1,c=(sy*px+cy*nz)/nl*Math.sign(tr.v);
       if(c>0)tr.v*=Math.exp(-c*dt*40)}}
-  // keep the truck from driving through the excavator
+  // keep the truck from driving through the excavator or blocks it can't roll over
   const sy=Math.sin(tr.yaw),cy=Math.cos(tr.yaw);
   for(const lz of [2.2,-0.4,-2.6]){const cx=tr.x+sy*lz,cz=tr.z+cy*lz,dx=cx-st.x,dz=cz-st.z,d=Math.hypot(dx,dz),min=1.5+2.3;
     if(d<min&&d>1e-3){tr.x+=dx/d*(min-d);tr.z+=dz/d*(min-d);
       if(Math.abs(tr.v)>1.2){shake=reduceMotion?0:0.15;rumble(250,0.7)}tr.v*=-0.15}}
+  if(blkPush(tr,TR_C,TR_R)){if(Math.abs(tr.v)>1.2){shake=reduceMotion?0:0.15;rumble(250,0.7)}tr.v*=-0.15}
   tr.aL+=((tr.v-vPrev)/Math.max(dt,1e-3)-tr.aL)*Math.min(1,dt*6);
   // hydraulics lift slower under load; the bed comes down on its own weight
   tr.bed=clamp(tr.bed+bedIn*(bedIn>0?0.4*(1-0.4*f):0.55)*dt,0,0.9);
   tr.rollA+=tr.v*dt/0.55;
   // axles follow the ground (the rear tandem averages its two axles like a walking beam)
-  const smp=(lx,lz)=>hAt(tr.x+lx*cy+lz*sy,tr.z-lx*sy+lz*cy);
+  const smp=(lx,lz)=>surfAt(tr.x+lx*cy+lz*sy,tr.z-lx*sy+lz*cy);
   const fL=smp(1.05,3.1),fR=smp(-1.05,3.1),bL=(smp(0.95,-1.6)+smp(0.95,-2.8))/2,bR=(smp(-0.95,-1.6)+smp(-0.95,-2.8))/2;
   const hf=(fL+fR)/2,hb=(bL+bR)/2,k=Math.min(1,dt*14);
   const dy=((hf+hb)/2-tr.y)*k,dp=(-Math.atan2(hf-hb,WB)-tr.pitch)*k,dr=(Math.atan2((fL+bL)/2-(fR+bR)/2,2.0)-tr.roll)*k;

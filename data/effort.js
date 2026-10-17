@@ -1,7 +1,7 @@
 // Backhoe Dig build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Backhoe Dig",
- "updated": "2026-10-17T08:38:00Z",
+ "updated": "2026-10-17T09:02:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 219,
-   "act": 4.0,
-   "versions": 25
+   "dh": 244,
+   "act": 4.5,
+   "versions": 29
   }
  ],
  "extra": [
@@ -318,6 +318,42 @@ window.EFFORT = {
    "tris": 747000,
    "chars": 136279,
    "what": "Clods roll down pile faces (big ones farthest); tracks and tyres rut loose fill and crush clods; dust when dumping, digging dry topsoil, driving on dirt and in cave-ins; the bucket gets dirty, tracks and tyres muddy, and clay sticks in the bucket and truck bed; a heaped bucket dribbles when swung fast; Dirt detail 16x. Fixed textures sometimes not loading since the file split."
+  },
+  {
+   "v": 33,
+   "asked": "2026-10-17T03:25:00-05:00",
+   "live": "2026-10-17T03:48:00-05:00",
+   "dh": 8,
+   "tris": 747000,
+   "chars": 146028,
+   "what": "Concrete blocks: 1×1, 2×2 and 3×3 ft cubes set from the bucket. A placement outline shows where one lands; they snap to a 1 ft grid, stack, and drop when dug under or lifted. Tracks and tires roll over a 1 ft block, taller ones stop the excavator and truck. Blocks button with size, Lift and Place in the HUD; B, Space, V, X on the keyboard; A and the D-pad on a controller; shown on the maps."
+  },
+  {
+   "v": 34,
+   "asked": "2026-10-17T03:25:00-05:00",
+   "live": "2026-10-17T03:47:00-05:00",
+   "dh": 10,
+   "tris": 719332,
+   "chars": 150481,
+   "what": "Lighting pass: linear lighting with filmic tone mapping; a warm afternoon sun about 40 degrees up as the key light with a dim cool sky fill, so shade reads blue-grey; a sun disc and glow in the sky; Fresnel sky reflections on cab glass, chrome, mirror, paint and the lake; the excavator and truck catch their own shadows; ground darkens under both machines; grass tufts shade dark at the root; hazier mountain shadow sides."
+  },
+  {
+   "v": 35,
+   "asked": "2026-10-17T03:28:00-05:00",
+   "live": "2026-10-17T03:55:00-05:00",
+   "dh": 6,
+   "tris": 757236,
+   "chars": 165601,
+   "what": "Dump truck detail, twice the triangles (37,600 to 75,500): a polished fuel tank with domed ends, straps and brackets, filler neck and green diesel cap, vent, gauge sender, drain and fuel lines; DEF tank; battery box lid; driveline with shafts, U-joints and tandem diffs; leaf springs, shocks and steering linkage; grille surround, fog lights, tow hooks, plates, mud flaps; wipers, beacon, antenna, hood mirrors and a cab interior; exhaust clamps and flex pipe; hoist and air lines; rear under-ride bar and hitch; bed sills, hinge pins, marker lights, ladder, tarp roller and tailgate hardware; wheels with two tread rows, rim lips, hand holes and hub domes."
+  },
+  {
+   "v": 36,
+   "asked": "2026-10-17T03:57:00-05:00",
+   "live": "2026-10-17T04:02:00-05:00",
+   "dh": 1,
+   "tris": 757440,
+   "chars": 166271,
+   "what": "See-through dump truck cab: the solid cab block becomes a shell of roof, floor, walls and pillars with real window openings, so the seats, dash and steering wheel show through the glass from outside."
   }
  ]
 };
