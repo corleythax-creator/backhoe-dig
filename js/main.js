@@ -177,7 +177,7 @@ function frame(now){
   const fv=mode==='truck'?tr:mode==='mow'?mw:st;sun.position.set(fv.x,fv.y,fv.z).addScaledVector(SUN_DIR,25); sun.target.position.set(fv.x,fv.y,fv.z);
   {const o=groundOcc.value;o[0].set(st.x,st.z,st.yaw,0);o[2].set(tr.x,tr.z,tr.yaw,0)}
   timeU.value=now/1000;
-  shadowProxyTick();renderer.render(scene,camera);
+  shadowProxyTick();lawnLod();renderer.render(scene,camera);
   if(bench.on)benchSample(dt);
   fpsFrames++;fpsTime+=dt;
   if(fpsTime>=0.5){const f=Math.round(fpsFrames/fpsTime);const fe=$('#fpsVal');fe.textContent=f;fe.style.color=f>=50?'var(--ok)':f>=30?'var(--gas)':'var(--danger)';

@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 308,
-   "act": 7.5,
-   "versions": 45
+   "dh": 309.5,
+   "act": 8.0,
+   "versions": 46
   }
  ],
  "extra": [
@@ -498,6 +498,15 @@ window.EFFORT = {
    "tris": 991332,
    "chars": 248519,
    "what": "Graphics setting in the menu: Low, Medium or High, remembered separately on each device. Low (phones; the default on an iPhone) renders at up to 1.5x with 1024 shadows, plain lighting at a matched brightness and flat ground without the dirt and grass textures, the three costs the iPhone speed test found. Medium (laptops; the default on Intel graphics) keeps the textures and filmic lighting with 2048 shadows at 1.5x. High (desktop PCs) is everything at 2x with soft shadows. Picking one also sets Dirt detail (1x, 2x, 4x), which can still be changed on its own. The speed test reports the level."
+  },
+  {
+   "v": 53,
+   "asked": "2026-10-17T11:28:00-05:00",
+   "live": "2026-10-17T11:40:00-05:00",
+   "dh": 1.5,
+   "tris": 991332,
+   "chars": 251080,
+   "what": "Lighter tall grass, the top cost left on the iPhone: the lawn patch is skipped whenever it is out of view (on every Graphics level), and on Low (beyond 20 ft) and Medium (beyond 50 ft) a distant patch draws every other clump each way at twice the width, 55k triangles instead of 221k, matched to the full lawn's mowing and growth. Mowing always shows the full lawn."
   }
  ]
 };
