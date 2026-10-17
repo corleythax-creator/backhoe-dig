@@ -142,3 +142,32 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 @media (min-width:480px){.sliders{grid-template-columns:auto 1fr 3.2em;align-items:center;gap:8px 12px}
   .sliders label{margin-top:0;align-self:center}.sliders input{grid-column:2}.sliders output{grid-column:3;align-self:center;text-align:right}}
 #sndOn[aria-pressed="false"]{color:var(--danger);border-color:var(--danger)}
+/* Map editor: title and file/info cards top left, tool options and a 10-tool grid at the bottom; the game HUD hides */
+body.editing #hud .top,body.editing #hud .sticks{display:none}
+#editor{position:fixed;inset:0;z-index:4;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;gap:8px;box-sizing:border-box;
+  padding:calc(env(safe-area-inset-top,0px) + 8px) max(10px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 10px) max(10px,env(safe-area-inset-left,0px))}
+#editor[hidden]{display:none}
+.edtop{display:flex;flex-direction:column;align-items:flex-start;gap:8px;min-height:0}
+.edbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;width:100%}
+.edbar h2{margin:0;font:800 24px/1 var(--f-display);letter-spacing:.05em;text-transform:uppercase;text-shadow:0 1px 4px rgba(0,0,0,.7)}
+.edbar .row{pointer-events:auto}
+.edpanel{pointer-events:auto;box-sizing:border-box;max-width:min(100%,460px);background:var(--hud);border:1px solid var(--hud-line);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:8px;font:600 16px/1.3 var(--f-display)}
+.edpanel p{margin:0}.edpanel .hint{color:var(--muted);font-size:15px}
+.edpanel h3{margin:0;font:800 19px/1.1 var(--f-display);letter-spacing:.03em;color:var(--machine)}
+#edInfo dl{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;margin:0}
+#edInfo dt{font:700 13px/1.5 var(--f-display);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+#edInfo dd{margin:0;font-variant-numeric:tabular-nums}
+.edfoot{display:flex;flex-direction:column;align-items:center;gap:8px}
+#edOpts{width:min(100%,640px);max-width:640px}
+.edopt{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
+.edopt label{font:700 13px/1 var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.edopt output{min-width:44px;font-variant-numeric:tabular-nums}
+#editor input[type=range]{width:min(150px,30vw);accent-color:var(--machine)}
+.edtools{pointer-events:auto;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;width:min(100%,640px)}
+@media (min-width:820px){.edtools{grid-template-columns:repeat(10,minmax(0,1fr));width:min(100%,900px)}#edOpts{width:min(100%,900px);max-width:900px}}
+.edtools button{height:46px;padding:0 4px;font-size:15px}
+.edtools button[aria-pressed="true"],.edkind button[aria-pressed="true"],#editor button.go{background:var(--machine);color:#1c1309}
+#editor button.danger{color:var(--danger)}
+#editor button:disabled{opacity:.4}
+#editor textarea{width:100%;box-sizing:border-box;height:96px;font:12px/1.3 ui-monospace,Menlo,monospace;color:var(--ink);background:#111410;border:1px solid var(--hud-line);border-radius:8px;padding:6px;-webkit-user-select:text;user-select:text}
+#edPasteBox{display:flex;flex-direction:column;gap:6px}#edPasteBox[hidden]{display:none}

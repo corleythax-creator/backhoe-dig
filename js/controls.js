@@ -17,7 +17,7 @@ const LIM={a1:[-0.55,1.3],a2:[-2.65,-0.45],a3:[-2.85,0.35]};
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 
 // ---------- input ----------
-let mode='dig',camMode='chase';
+let mode='dig',camMode='chase',edOn=false;
 function makeStick(el){
   const s={x:0,y:0,id:null},knob=el.querySelector('.knob');
   const move=e=>{const r=el.getBoundingClientRect(),R=r.width/2;
@@ -39,6 +39,7 @@ const MODES=['dig','drive','truck','mow','walk'];let kbUsed=false;
 addEventListener('keydown',e=>{if(e.ctrlKey||e.metaKey||e.altKey)return;
   const c=e.code;keys[c]=true;
   if(c.startsWith('Arrow')||c==='Tab'||c==='Space')e.preventDefault();
+  if(edOn)return;
   if(!e.repeat){
     if(c==='Digit1')setMode('dig');else if(c==='Digit2')setMode('drive');else if(c==='Digit3')setMode('truck');else if(c==='Digit4')setMode('mow');else if(c==='Digit5')setMode('walk');
     else if(c==='Tab')setMode(MODES[(MODES.indexOf(mode)+(e.shiftKey?MODES.length-1:1))%MODES.length]);
@@ -96,12 +97,12 @@ function rumble(ms,mag){const gp=getPad(),va=gp&&gp.vibrationActuator;
   if(va&&va.playEffect)va.playEffect('dual-rumble',{duration:ms,strongMagnitude:mag,weakMagnitude:mag*0.6}).catch(()=>{})}
 // orbit drag on the scene
 let orbitYaw=0,orbitPitch=0.42,camDist=9.5,drag=null;
-canvas.addEventListener('pointerdown',e=>{drag={id:e.pointerId,x:e.clientX,y:e.clientY};canvas.setPointerCapture(e.pointerId)});
+canvas.addEventListener('pointerdown',e=>{if(edOn)return;drag={id:e.pointerId,x:e.clientX,y:e.clientY};canvas.setPointerCapture(e.pointerId)});
 canvas.addEventListener('pointermove',e=>{if(!drag||e.pointerId!==drag.id)return;
   orbitYaw-=(e.clientX-drag.x)*0.006;orbitPitch=clamp(orbitPitch+(e.clientY-drag.y)*0.005,0.08,1.3);drag.x=e.clientX;drag.y=e.clientY});
 const dend=e=>{if(drag&&e.pointerId===drag.id)drag=null};
 canvas.addEventListener('pointerup',dend);canvas.addEventListener('pointercancel',dend);
-canvas.addEventListener('wheel',e=>{e.preventDefault();camDist=clamp(camDist+e.deltaY*0.01,5,22)},{passive:false});
+canvas.addEventListener('wheel',e=>{if(edOn)return;e.preventDefault();camDist=clamp(camDist+e.deltaY*0.01,5,22)},{passive:false});
 
 function setCaps(){const m=mode,lh=kbUsed?'A D':'◀ ▶',lv=kbUsed?'W S':'▲ ▼',rh=kbUsed?'J L':'◀ ▶',rv=kbUsed?'I K':'▲ ▼';
   $('#capL').innerHTML=m==='dig'?`<b>${lh}</b> Swing<br><b>${lv}</b> Stick out / in`:m==='drive'?`<b>${lh}</b> Turn<br><b>${lv}</b> Drive fwd / back`:m==='mow'?`<b>${lv}</b> Left lap bar<br><b>${lh}</b> Spin`:m==='walk'?`<b>${lv}</b> Walk / back<br><b>${lh}</b> Step left / right`:`<b>${lh}</b> Steer<br><b>${lv}</b> Gas / reverse`;
