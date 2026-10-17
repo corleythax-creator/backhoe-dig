@@ -8,6 +8,7 @@
 }
 html,body{height:100%;margin:0;overflow:hidden;background:var(--sky);color:var(--ink);font-family:var(--f-body);-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 canvas#view{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+#aim{position:fixed;left:50%;top:50%;width:6px;height:6px;margin:-3px 0 0 -3px;border-radius:50%;background:rgba(255,255,255,.85);box-shadow:0 0 0 1.5px rgba(0,0,0,.55);pointer-events:none;z-index:1}#aim[hidden]{display:none}
 #hud{position:fixed;inset:0;pointer-events:none;box-sizing:border-box;
   --pt:calc(env(safe-area-inset-top,0px) + 8px);--pb:calc(env(safe-area-inset-bottom,0px) + 10px);
   --pl:max(10px,env(safe-area-inset-left,0px));--pr:max(10px,env(safe-area-inset-right,0px))}

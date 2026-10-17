@@ -2,6 +2,10 @@
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 // the machines catch their own shadows (cab under the boom, bed under the load); glass stays clear
 for(const g of [machine,truck])g.traverse(o=>{if(o.isMesh&&!o.material.transparent)o.receiveShadow=true});
+// first person in a machine: the eye at (px,py,pz) in the machine's frame, looking along (dx,dy,dz) turned by fpl
+function fpEye(o,px,py,pz,dx,dy,dz){o.localToWorld(camera.position.set(px,py,pz));
+  const y=Math.atan2(dx,dz)+fpl.yaw,p=clamp(Math.atan2(dy,Math.hypot(dx,dz))+fpl.pitch,-1.45,1.45),c=Math.cos(p)*10;
+  o.localToWorld(look.set(px+Math.sin(y)*c,py+Math.sin(p)*10,pz+Math.cos(y)*c))}
 function frame(now){
   const dt=Math.min(0.05,(now-last)/1000);last=now;crushT-=dt;
   // resolution changes and window resizes land here, before anything is drawn this frame
@@ -179,13 +183,15 @@ function frame(now){
     if(firstCam){camera.position.copy(camT);firstCam=false}else camera.position.lerp(camT,Math.min(1,dt*5));
     camera.lookAt(look);
   }else{
-    if(mode==='truck'){sprung.localToWorld(camera.position.set(-0.55,1.6,1.95));sprung.localToWorld(look.set(-0.3,0.6,14))}
-    else if(mode==='mow'){mower.localToWorld(camera.position.set(0,1.42,0.02));mower.localToWorld(look.set(0,0.1,4.5))}
-    else if(mode==='walk'){const p=(0.42-orbitPitch)*1.6,fx=Math.sin(wk.view),fz=Math.cos(wk.view);camera.position.set(wk.x+fx*0.1,wk.y+WK_H-0.12+wkBody.position.y,wk.z+fz*0.1);
+    // the seat's eye point and its straight-ahead look, turned by where you have turned your head (fpl)
+    if(mode==='truck')fpEye(sprung,-0.55,1.6,1.95,0.25,-1,12.05);
+    else if(mode==='mow')fpEye(mower,0,1.42,0.02,0,-1.32,4.48);
+    else if(mode==='walk'){const p=fpl.pitch,fx=Math.sin(wk.view),fz=Math.cos(wk.view);camera.position.set(wk.x+fx*0.1,wk.y+WK_H-0.12+wkBody.position.y,wk.z+fz*0.1);
       look.set(camera.position.x+fx*Math.cos(p)*5,camera.position.y+Math.sin(p)*5,camera.position.z+fz*Math.cos(p)*5)}
-    else{house.localToWorld(camera.position.set(-0.72,2.2,0.5));house.localToWorld(look.set(-0.1,-0.4,6))}
+    else fpEye(house,-0.72,2.2,0.5,0.62,-2.6,5.5);
     camera.lookAt(look); firstCam=true;
   }
+  fpTick(dt);
   if(bench.on)benchCamera();
   updateSound(dt);
   if(shake>0){shake-=dt;camera.position.x+=(Math.random()-0.5)*0.25;camera.position.y+=(Math.random()-0.5)*0.25}

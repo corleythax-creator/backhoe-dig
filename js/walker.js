@@ -57,7 +57,7 @@ function updateWalker(dt,mx,mz,lookX,lookY){
   // in a cab he rides along out of sight
   if(wk.inside){walker.visible=false;return}
   const on=mode==='walk'&&!bench.on;
-  if(on){wk.view-=lookX*2.2*dt;orbitPitch=clamp(orbitPitch-lookY*1.2*dt,0.08,1.3)}
+  if(on){const z=camMode==='cab'?1/fpl.zoom:1;wk.view-=lookX*2.2*dt*z;if(camMode==='cab'){fpl.pitch=clamp(fpl.pitch+lookY*1.2*dt*z,-FP_DOWN,FP_UP);if(lookX||lookY)fpl.home=false}else orbitPitch=clamp(orbitPitch-lookY*1.2*dt,0.08,1.3)}
   // moves relative to where the camera looks; the worker turns to face the way he walks
   let vx=0,vz=0;
   if(on){const cyaw=camMode==='cab'?wk.view:wk.view+orbitYaw,fx=Math.sin(cyaw),fz=Math.cos(cyaw),m=Math.min(1,Math.hypot(mx,mz));
