@@ -27,6 +27,7 @@ A 3D low-poly excavator game in plain HTML, CSS and JavaScript (three.js r128, n
 | `js/walker.js` | Walk mode: the site worker, walking, jumping, climbing blocks, collisions, getting in and out of machines |
 | `js/keys.js` | Key bindings: every keyboard action, its default keys, the player's saved keys and the Keys panel |
 | `js/controls.js` | Game state and reset, touch sticks, keyboard, game controller, modes, menu |
+| `js/save.js` | Saves the site in the browser and loads it on start: the dug and dumped ground, groundwater, excavator, truck and load, trench box, blocks, worker (the lawn saves itself in `js/mower.js`) |
 | `js/effects.js` | Shared per-frame vectors, resize |
 | `js/sound.js` | All sound, rendered in the browser: diesel engine loops, turbo, tires, air brakes, hydraulics, relief valve, tracks, bucket scrape, pouring dirt, backup alarm; stereo, distance and cliff echo; the Sound panel (on/off, Master, Engines, Backup alarm, Effects) |
 | `js/maps.js` | Minimap and big map |
