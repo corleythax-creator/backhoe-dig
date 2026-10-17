@@ -4,6 +4,8 @@
 for(const g of [machine,truck])g.traverse(o=>{if(o.isMesh&&!o.material.transparent)o.receiveShadow=true});
 function frame(now){
   const dt=Math.min(0.05,(now-last)/1000);last=now;crushT-=dt;
+  // resolution changes and window resizes land here, before anything is drawn this frame
+  if(viewDirty){viewDirty=false;const want=bench.on?maxPR:pr;if(renderer.getPixelRatio()!==want)renderer.setPixelRatio(want);resize()}
   // inputs
   keyAxes(dt);pollPad();
   const Lx=clamp(SL.x+KA.lx+PA.lx,-1,1),Ly=clamp(SL.y+KA.ly+PA.ly+(mode==='dig'||mode==='mow'?0:PA.thr),-1,1),Rx=clamp(SR.x+KA.rx+PA.rx,-1,1),Ry=clamp(SR.y+KA.ry+PA.ry,-1,1);
@@ -179,8 +181,9 @@ function frame(now){
   if(bench.on)benchSample(dt);
   fpsFrames++;fpsTime+=dt;
   if(fpsTime>=0.5){const f=Math.round(fpsFrames/fpsTime);const fe=$('#fpsVal');fe.textContent=f;fe.style.color=f>=50?'var(--ok)':f>=30?'var(--gas)':'var(--danger)';
-    if(!bench.on&&f<48&&pr>1){if(++lowN>=3){pr=Math.max(1,pr-0.25);renderer.setPixelRatio(pr);resize();lowN=0}}else lowN=0;
-    if(!bench.on&&f>=58&&pr<maxPR){if(++hiN>=8){pr=Math.min(maxPR,pr+0.25);renderer.setPixelRatio(pr);resize();hiN=0}}else hiN=0;
+    // auto resolution: step down when slow; step back up only after a long steady run, and never within 30 s of a step down
+    if(!bench.on&&f<48&&pr>1){if(++lowN>=3){pr=Math.max(1,pr-0.25);viewDirty=true;lowN=0;prHold=now+30000}}else lowN=0;
+    if(!bench.on&&f>=58&&pr<maxPR&&now>prHold){if(++hiN>=8){pr=Math.min(maxPR,pr+0.25);viewDirty=true;hiN=0}}else hiN=0;
     $('#resVal').textContent=pr.toFixed(2).replace(/0$/,'')+'x';
     const t=renderer.info.render.triangles;$('#triVal').textContent=t>=1e6?(t/1e6).toFixed(2)+'M':t>=1e3?Math.round(t/1e3)+'k':t;fpsFrames=0;fpsTime=0}
   requestAnimationFrame(frame);

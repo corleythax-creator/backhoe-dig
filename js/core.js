@@ -6,8 +6,14 @@ const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
 // ---------- renderer / scene ----------
 const canvas=$('#view');
 const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
-const maxPR=Math.min(devicePixelRatio||1,2);let pr=maxPR,lowN=0,hiN=0;
+const maxPR=Math.min(devicePixelRatio||1,2);let pr=maxPR,lowN=0,hiN=0,prHold=0,viewDirty=false;
 renderer.setPixelRatio(pr);
+// resizing the canvas wipes it, so resolution changes and window resizes only set viewDirty; the frame loop applies them
+// just before it draws (applying them after a draw left that frame black, which flashed on phones)
+// a phone short on memory can reset the graphics, which shows black; say so, and keep a count for the speed test
+let glResets=0;try{glResets=+localStorage.getItem('bhd_glresets')||0}catch(e){}
+canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();glResets++;try{localStorage.setItem('bhd_glresets',glResets)}catch(e){}
+  if(typeof toast==='function')toast('The phone reset the graphics (low on memory). A lower Dirt detail helps.','bad',4500)});
 renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 // lighting is done in linear space and tone mapped like a camera; colours stay written as the sRGB values they were
 // picked as, and the patched chunks below turn them linear before lighting

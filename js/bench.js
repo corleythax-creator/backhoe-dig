@@ -24,13 +24,13 @@ function startBench(){
   if(bench.on)return;
   if(!bench.built)buildClones();
   bench.on=true;bench.t=0;bench.lvl=-1;bench.stats=LEVELS.map(n=>({n,ft:[],tris:0,calls:0,k:0}));
-  renderer.setPixelRatio(maxPR);resize();
+  viewDirty=true;
   help.hidden=true;$('#bench').hidden=true;$('#benchBar').hidden=false;
   st.load=0;
 }
 function endBench(){
   bench.on=false;setClones(0);$('#benchBar').hidden=true;firstCam=true;
-  renderer.setPixelRatio(pr);resize();
+  viewDirty=true;
   showBenchResults();
 }
 function fmtTris(t){return t>=1e6?(t/1e6).toFixed(2)+'M':t>=1e3?Math.round(t/1e3)+'k':String(Math.round(t))}
@@ -51,7 +51,7 @@ function showBenchResults(){
   if(rows[rows.length-1].avg>=55)sum+=`<p style="margin-top:8px;color:var(--ok)">Still smooth at the heaviest level. This device has more headroom than the test reaches.</p>`;
   $('#benchSummary').innerHTML=sum;
   const w=renderer.domElement.width,h=renderer.domElement.height,gpu=gpuName();
-  $('#benchDevice').textContent=`${gpu} · ${w}×${h} px at ${maxPR}x · ${navigator.platform||''}`;
+  $('#benchDevice').textContent=`${gpu} · ${w}×${h} px at ${maxPR}x · ${navigator.platform||''}`+(glResets?` · ${glResets} graphics reset${glResets>1?'s':''} on this device`:'');
   $('#benchText').value=['Backhoe Dig speed test (v2: excavator + truck pairs)',`GPU: ${gpu}`,`Resolution: ${w}x${h} (${maxPR}x)`,`Smooth 55+ FPS up to: ${t55?fmtTris(t55):'not reached'}`,`Playable 30+ FPS up to: ${t30?fmtTris(t30):'not reached'}`,
     ...rows.map(r=>`${r.machines} excavators + ${r.machines} trucks | ${fmtTris(r.tris)} tris | ${Math.round(r.calls)} draws | ${r.avg.toFixed(1)} avg FPS | ${r.low.toFixed(0)} 1% low`)].join('\n');
   $('#bench').hidden=false;
