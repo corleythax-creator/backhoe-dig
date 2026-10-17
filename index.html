@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <style>[hidden]{display:none!important}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}</style>
-<title>Backhoe Dig</title>
+<title>Corley's Island</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@600;700;800&family=Saira:wght@500;600&display=swap">
@@ -133,17 +133,15 @@
 </div>
 <div id="help">
   <div class="card">
-    <h1>Backhoe Dig</h1>
+    <h1>Corley's Island</h1>
     <div class="pick" role="group" aria-label="Pick what to run">
       <button class="tile" data-m="dig"><img src="shots/dig.jpg" alt="" width="800" height="500"><span class="tn">Excavator</span><span class="ts">Dig and load the truck</span></button>
       <button class="tile" data-m="truck"><img src="shots/truck.jpg" alt="" width="800" height="500"><span class="tn">Dump truck</span><span class="ts">Haul to the cliff</span></button>
       <button class="tile" data-m="mow"><img src="shots/mow.jpg" alt="" width="800" height="500"><span class="tn">Mower</span><span class="ts">Cut the tall grass</span></button>
       <button class="tile" data-m="walk"><img src="shots/walk.jpg" alt="" width="800" height="500"><span class="tn">On foot</span><span class="ts">Walk, jump, build</span></button>
     </div>
-    <div class="ticket">
-      <div class="lbl">Work order</div>
-      <p>Dig a 3 ft wide trench along the <b>white paint</b>, 3 ft deep. A gas main crosses at the <b style="color:var(--gas)">yellow paint</b> about 4 ft down. Load the spoil into the dump truck and haul it off. Expose it. Don't hit it.</p>
-    </div>
+    <button id="ctrlBtn" class="ghost" aria-expanded="false" aria-controls="ctrlBox">Controls</button>
+    <div id="ctrlBox" hidden>
     <dl class="keys">
       <dt>Left stick</dt><dd>Swing left/right. Push up to reach the stick out, pull down to bring it in.</dd>
       <dt>Right stick</dt><dd>Left curls the bucket in (scoop), right dumps. Push up for boom down, pull for boom up.</dd>
@@ -163,6 +161,7 @@
       <dt>Keys</dt><dd>Every key can be changed under Keys in the ☰ menu, which also lists what each one does. The standard keys: WASD (or arrows) is always the left stick, IJKL is always the right stick, in every mode. 1 Dig · 2 Drive · 3 Truck · 4 Mow · 5 Walk (Tab cycles). Hold Shift for slow, fine moves. C cab view · M map · P pump · N sound on/off · H this help. Blocks: B on/off · E place · V size · X pick up. Walk: Space jump · E place block · F get in and out.</dd>
     </dl>
     <p>To scoop: boom down until the teeth bite, curl in while pulling the stick toward you, boom up, swing, then dump.</p>
+    </div>
     <p class="buildlink"><a href="https://backhoe-dig.vercel.app/build.html" target="_blank" rel="noopener">See how long this took to build</a></p>
     <p class="ver" id="verHelp"></p>
   </div>
