@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 301.5,
-   "act": 6.0,
-   "versions": 41
+   "dh": 303.5,
+   "act": 6.5,
+   "versions": 42
   }
  ],
  "extra": [
@@ -462,6 +462,15 @@ window.EFFORT = {
    "tris": 991332,
    "chars": 237584,
    "what": "Start digging is back in reach on phones: the button moved from the bottom of the long help card to just under the title and stays pinned there while the instructions scroll beneath it; tapping the dark area around the card starts the game too."
+  },
+  {
+   "v": 49,
+   "asked": "2026-10-17T10:08:00-05:00",
+   "live": "2026-10-17T10:30:00-05:00",
+   "dh": 2,
+   "tris": 991332,
+   "chars": 240944,
+   "what": "Speed test diagnosis: before the load levels, the test measures the plain scene with one feature switched off at a time (shadows, filmic lighting, ground detail, grass, see-through glass, water and dust, full resolution) and then everything at once, and the results show how many frames each one costs this device and which costs the most."
   }
  ]
 };
