@@ -63,6 +63,7 @@ function placeClod(k,i){
 }
 function addClod(kind,x,z,size,c){
   if(Math.abs(x)>S/2-0.2||Math.abs(z)>S/2-0.2)return;
+  [x,z]=rollClod(x,z,size,kind);
   const k=CLODS[kind],i=k.head;k.head=(k.head+1)%k.x.length;if(k.n<k.x.length)k.n++;
   k.x[i]=x;k.z[i]=z;k.sz[i]=size;k.r[i]=Math.random()*6.283;
   const v=kind===SOD?0.85+0.25*Math.random():0.7+0.42*Math.random();k.mesh.setColorAt(i,dCol.setRGB(c[0]*v,c[1]*v,c[2]*v));k.mesh.instanceColor.needsUpdate=true;
@@ -113,7 +114,7 @@ function particlesTick(dt){
 }
 
 // ---------- bucket load and truck heap ----------
-const LOAD_DETAIL={1:7,2:10,4:15};
+const LOAD_DETAIL={1:7,2:10,4:15,16:31};
 function heapY(x,z){const e=Math.max(Math.abs(x)/1.05,Math.abs(z)/2.05);
   return -0.5+(1-0.65*e*e)+0.07*Math.sin(x*5.1+z*3.7)+0.05*Math.cos(z*6.3)
     +0.035*Math.sin(x*13.1+z*2.3)*Math.sin(z*11.7-x*1.9)+0.02*Math.sin(x*29.3+z*23.9)}
@@ -131,7 +132,7 @@ function buildHeapClods(){
   hcLast=-1;
 }
 function updateHeapClods(){
-  const f=heap.visible?tr.load/TRUCK_CAP:0;if(Math.abs(f-hcLast)<0.004)return;hcLast=f;
+  const f=heap.visible?Math.max(tr.load,tr.stuck||0)/TRUCK_CAP:0;if(Math.abs(f-hcLast)<0.004)return;hcLast=f;
   const sx=heap.scale.x,sy=heap.scale.y,sz=heap.scale.z,y0=heap.position.y,c=tr.loadC;
   for(let i=0;i<hcU.length;i++){
     if(f<=0.04+hcT[i]*0.85){heapClods.setMatrixAt(i,ZERO);continue}
@@ -143,12 +144,86 @@ function updateHeapClods(){
 
 // ---------- the setting ----------
 function setDirtLevel(L){
-  DIRT=[1,2,4].includes(+L)?+L:1;
-  buildClods();buildParticles();buildHeapClods();
+  DIRT=[1,2,4,16].includes(+L)?+L:1;
+  buildClods();buildParticles();buildHeapClods();buildDust();
   const lg=lumpGeo(LOAD_DETAIL[DIRT],0.2,0.6);lg.scale(0.42,0.42,0.42);loadMesh.geometry.dispose();loadMesh.geometry=lg;
   heap.geometry.dispose();heap.geometry=heapGeometry();
   document.querySelectorAll('.sizes button[data-d]').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.d===DIRT));
   try{localStorage.setItem('bhd_dirt',DIRT)}catch(e){}
 }
+
+// ---------- rolling and ruts ----------
+// a clod dropped on a face steeper than about 27 degrees rolls downhill; big ones roll farther, so piles sort themselves
+function rollClod(x,z,size,k){const steps=Math.round(size/0.1*(k===SOD?5:14));
+  for(let n=0;n<steps;n++){const e=0.12,gx=(hAt(x+e,z)-hAt(x-e,z))/(2*e),gz=(hAt(x,z+e)-hAt(x,z-e))/(2*e),g=Math.hypot(gx,gz);
+    if(g<0.5)break;x-=gx/g*0.08;z-=gz/g*0.08}
+  return [x,z]}
+// tracks and tyres press loose fill down by up to 30% of its height (comp: how much of that each point has had; fresh fill
+// resets it) and crush the clods under them
+const comp=new Float32Array(V*V);let crushT=0;
+function stampRut(x,z,yaw,hw,hl,dt){
+  const s=Math.sin(yaw),c=Math.cos(yaw),R=Math.hypot(hw,hl);let any=false;
+  const i0=Math.max(0,Math.floor((x-R+S/2)/CELL)),i1=Math.min(N,Math.ceil((x+R+S/2)/CELL)),j0=Math.max(0,Math.floor((z-R+S/2)/CELL)),j1=Math.min(N,Math.ceil((z+R+S/2)/CELL));
+  for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const dx=i*CELL-S/2-x,dz=j*CELL-S/2-z,u=dx*s+dz*c,v=dx*c-dz*s;
+    if(Math.abs(u)>hl||Math.abs(v)>hw)continue;const k=j*V+i,loose=H[k]-H0[k];if(loose<0.02||comp[k]>=1)continue;
+    const full=loose/(1-0.3*comp[k])*0.3,d=Math.min(0.25*dt,full*(1-comp[k]));H[k]-=d;comp[k]=Math.min(1,comp[k]+d/full);any=true}
+  if(any){touch(i0,i1,j0,j1);st.dirty=true}
+  if(crushT<=0){for(const kd of CLODS){let hit=false;
+    for(let n=0;n<kd.n;n++){if(!kd.sz[n])continue;const dx=kd.x[n]-x,dz=kd.z[n]-z;if(dx*dx+dz*dz>R*R)continue;
+      const u=dx*s+dz*c,v=dx*c-dz*s;if(Math.abs(u)<hl&&Math.abs(v)<hw){kd.sz[n]=0;kd.mesh.setMatrixAt(n,ZERO);hit=true}}
+    if(hit)kd.mesh.instanceMatrix.needsUpdate=true}}
+  return any}
+
+// ---------- dust ----------
+// soft round puffs that rise, spread and drift downwind as they fade; one draw for all of them, capped at the 4x amount
+const DUST_BASE=300,WIND=[0.35,0,0.12];
+let dustN=0,dustPts=null,dP,dV,dA,dS,dC,dLife,dAge,dHead=0,dustAcc=0;
+const dustMat=new THREE.ShaderMaterial({transparent:true,depthWrite:false,uniforms:{uScale:{value:400}},
+  vertexShader:'attribute float aA;attribute float aS;attribute vec3 aC;varying float vA;varying vec3 vC;uniform float uScale;\nvoid main(){vA=aA;vC=aC;vec4 mv=modelViewMatrix*vec4(position,1.0);gl_PointSize=aS*uScale/max(0.1,-mv.z);gl_Position=projectionMatrix*mv;}',
+  fragmentShader:'varying float vA;varying vec3 vC;\nvoid main(){vec2 d=gl_PointCoord-0.5;float r=dot(d,d)*4.0;if(r>1.0)discard;gl_FragColor=vec4(vC,vA*(1.0-r)*(1.0-r));}'});
+function buildDust(){
+  if(dustPts){scene.remove(dustPts);dustPts.geometry.dispose()}
+  dustN=DUST_BASE*Math.min(DIRT,4);const g=new THREE.BufferGeometry();
+  dP=new Float32Array(dustN*3);dA=new Float32Array(dustN);dS=new Float32Array(dustN);dC=new Float32Array(dustN*3);
+  dV=new Float32Array(dustN*3);dLife=new Float32Array(dustN);dAge=new Float32Array(dustN).fill(1e9);
+  g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(dustN*3),3));g.setAttribute('aA',new THREE.BufferAttribute(new Float32Array(dustN),1));
+  g.setAttribute('aS',new THREE.BufferAttribute(new Float32Array(dustN),1));g.setAttribute('aC',new THREE.BufferAttribute(new Float32Array(dustN*3),3));
+  g.setDrawRange(0,0);dustPts=new THREE.Points(g,dustMat);dustPts.frustumCulled=false;dustPts.renderOrder=2;scene.add(dustPts);dHead=0;
+}
+function clearDust(){if(dAge)dAge.fill(1e9);dustAcc=0}
+// n puffs (fractions carry over) at x,y,z, tinted toward soil colour c
+function dustPuff(x,y,z,n,c){
+  dustAcc+=n*Math.min(DIRT,4);
+  while(dustAcc>=1){dustAcc--;const i=dHead;dHead=(dHead+1)%dustN;
+    dP[i*3]=x+(Math.random()-0.5)*0.6;dP[i*3+1]=y+Math.random()*0.3;dP[i*3+2]=z+(Math.random()-0.5)*0.6;
+    dV[i*3]=(Math.random()-0.5)*0.5;dV[i*3+1]=0.2+Math.random()*0.35;dV[i*3+2]=(Math.random()-0.5)*0.5;
+    dAge[i]=0;dLife[i]=2.2+Math.random()*2;const cc=c||SOIL[SPOIL].c;
+    dC[i*3]=0.55+cc[0]*0.45;dC[i*3+1]=0.48+cc[1]*0.45;dC[i*3+2]=0.4+cc[2]*0.45}
+}
+function dustTick(dt){
+  const g=dustPts.geometry,P=g.attributes.position.array,A=g.attributes.aA.array,Sz=g.attributes.aS.array,C=g.attributes.aC.array;let n=0;
+  for(let i=0;i<dustN;i++){if(dAge[i]>=dLife[i])continue;dAge[i]+=dt;const t=dAge[i]/dLife[i];if(t>=1)continue;
+    for(let a=0;a<3;a++){dV[i*3+a]+=(WIND[a]-dV[i*3+a])*Math.min(1,dt*0.8);dP[i*3+a]+=dV[i*3+a]*dt}
+    P[n*3]=dP[i*3];P[n*3+1]=dP[i*3+1];P[n*3+2]=dP[i*3+2];C[n*3]=dC[i*3];C[n*3+1]=dC[i*3+1];C[n*3+2]=dC[i*3+2];
+    A[n]=0.22*Math.min(1,t*6)*(1-t);Sz[n]=0.3+1.2*Math.sqrt(t);n++}
+  g.setDrawRange(0,n);
+  if(n){g.attributes.position.needsUpdate=true;g.attributes.aA.needsUpdate=true;g.attributes.aS.needsUpdate=true;g.attributes.aC.needsUpdate=true}
+  dustMat.uniforms.uScale.value=renderer.domElement.height/(2*Math.tan(camera.fov*Math.PI/360));
+}
+
+// ---------- dirt that sticks ----------
+// the bucket, the tracks and the truck tyres get their own copies of their materials so dirt can build up on them
+const MUD=new THREE.Color(0.36,0.26,0.17);let grimeMats=null;
+function grimeTick(){
+  if(!grimeMats){if(!texMixU.value)return;grimeMats=[];
+    const own=(mesh,base,kind)=>{const m=base.clone();mesh.material=m;grimeMats.push({m,base,kind})};
+    for(const c of bucketP.children)if(c.isMesh&&(c.material===STEEL||c.material===STEEL_L))own(c,c.material,'bucket');
+    for(const c of machine.children)if(c.isMesh&&c.material===RUBBER)own(c,RUBBER,'track');
+    for(const w of wheels)for(const c of w.children)if(c.isMesh&&c.material===RUBBER)own(c,RUBBER,'tire')}
+  for(const g of grimeMats){const a=g.kind==='bucket'?st.grime*0.65:g.kind==='track'?st.mud*0.7:tr.mud*0.7;
+    g.m.color.copy(g.base.color).lerp(MUD,a)}
+}
+
+// apply the saved Dirt detail last, once everything above exists
 document.querySelectorAll('.sizes button[data-d]').forEach(b=>b.onclick=()=>setDirtLevel(b.dataset.d));
 try{setDirtLevel(localStorage.getItem('bhd_dirt')||1)}catch(e){setDirtLevel(1)}
