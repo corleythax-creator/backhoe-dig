@@ -1,4 +1,5 @@
-// Backhoe Dig: walk mode: a site worker on foot who walks, jogs, jumps, climbs onto blocks and sets blocks by hand.
+// Backhoe Dig: walk mode: a site worker on foot who walks, jogs, sprints, jumps, climbs onto blocks, sets blocks by hand
+// and climbs into and out of the excavator, dump truck and mower (WK_RIDES; save.js keeps which one he is in).
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 // ---------- worker ----------
 // about 5 ft 10 in: hard hat, hi-vis vest over a grey shirt, jeans and work boots. Arms and legs swing from the
