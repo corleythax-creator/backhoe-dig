@@ -72,7 +72,7 @@ def main():
             continue
         dest = os.path.join(OUT, f'v{v}')
         for path in git('ls-tree', '-r', '--name-only', sha).splitlines():
-            if path.startswith(SKIP) or '/' in path and path.split('/')[0] not in ('js', 'css', 'data'):
+            if path.startswith(SKIP) or '/' in path and path.split('/')[0] not in ('js', 'css', 'data', 'shots'):
                 continue
             blob = git('show', f'{sha}:{path}', text=False)
             if path == 'index.html':
