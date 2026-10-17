@@ -39,6 +39,8 @@ scene.fog=new THREE.Fog(0xbfd2dd,90,760);
 // gradient sky dome and a hazy mountain ring past the fog
 // afternoon sun from the south-east of the dig, about 40 degrees up
 const SUN_DIR=new THREE.Vector3(13,15,9).normalize();
+// skySunVis: how much of the sun disc shows (rain.js clouds it over)
+const skySunVis={value:1};
 const sky=(function(){
   const g=new THREE.SphereGeometry(1300,64,32),p=g.attributes.position,c=new Float32Array(p.count*3);
   const top=new THREE.Color(0x4f86bd),hor=new THREE.Color(0xbfd2dd),col=new THREE.Color();
@@ -46,10 +48,10 @@ const sky=(function(){
   g.setAttribute('color',new THREE.BufferAttribute(c,3));
   const mat=new THREE.MeshBasicMaterial({vertexColors:true,side:THREE.BackSide,fog:false,depthWrite:false,toneMapped:false});
   // sun disc and glow drawn per pixel over the gradient
-  mat.onBeforeCompile=sh=>{sh.uniforms.uSun={value:SUN_DIR};
+  mat.onBeforeCompile=sh=>{sh.uniforms.uSun={value:SUN_DIR};sh.uniforms.uSunVis=skySunVis;
     sh.vertexShader='varying vec3 vDir;\n'+sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvDir=position;');
-    sh.fragmentShader='uniform vec3 uSun;\nvarying vec3 vDir;\n'+sh.fragmentShader.replace('#include <color_fragment>',
-      '#include <color_fragment>\nvec3 sd=normalize(vDir);float cs=max(0.0,dot(sd,uSun));\ndiffuseColor.rgb+=vec3(1.0,0.86,0.62)*(0.32*pow(cs,10.0)+0.5*pow(cs,180.0))*(0.6+0.4*smoothstep(0.0,0.3,sd.y))+vec3(12.0,10.5,8.5)*smoothstep(0.99955,0.9997,cs);\ndiffuseColor.rgb*=1.0-0.25*smoothstep(0.0,-0.08,sd.y);')};
+    sh.fragmentShader='uniform vec3 uSun;\nuniform float uSunVis;\nvarying vec3 vDir;\n'+sh.fragmentShader.replace('#include <color_fragment>',
+      '#include <color_fragment>\nvec3 sd=normalize(vDir);float cs=max(0.0,dot(sd,uSun));\ndiffuseColor.rgb+=uSunVis*vec3(1.0,0.86,0.62)*(0.32*pow(cs,10.0)+0.5*pow(cs,180.0))*(0.6+0.4*smoothstep(0.0,0.3,sd.y))+uSunVis*vec3(12.0,10.5,8.5)*smoothstep(0.99955,0.9997,cs);\ndiffuseColor.rgb*=1.0-0.25*smoothstep(0.0,-0.08,sd.y);')};
   const m=new THREE.Mesh(g,mat);
   m.renderOrder=-1;scene.add(m);return m;
 })();

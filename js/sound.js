@@ -3,7 +3,7 @@
 // the revs; load opens a filter. Around them: turbo, tires on gravel, air brakes, bed and pump hydraulics, the relief
 // valve, track clank, bucket scrape, pouring dirt and the backup alarm. Each machine is panned and faded by distance
 // from the camera, with a short echo off the cliffs. The mower is a small gas V-twin with blade whine and the chop of
-// cut grass. No sound files: everything is rendered on the first tap or key.
+// cut grass, and rain. No sound files: everything is rendered on the first tap or key.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 const SND_DEF={on:true,master:70,eng:80,alarm:60,fx:70};
 const sndCfg=Object.assign({},SND_DEF);
@@ -134,6 +134,9 @@ function* sndBuild(){
   // mower: three blades whooshing through the deck, and the chop of tall grass going through them
   snd.bladeG=sndGain(0,Mw.fx);snd.bladeF=sndFilter('bandpass',650,2.2,snd.bladeG);sndLoopSrc(noise,snd.bladeF,0.7);
   snd.chopG=sndGain(0,Mw.fx);sndLoopSrc(gravel,sndFilter('bandpass',2600,0.9,snd.chopG),1.3);
+  // rain: a soft hiss all around (not placed on a machine), with a little low patter
+  snd.rainG=sndGain(0,snd.dry);sndLoopSrc(noise,sndFilter('highpass',900,0.5,sndFilter('lowpass',6500,0.5,snd.rainG)),0.9);
+  snd.rainLoG=sndGain(0,snd.dry);sndLoopSrc(gravel,sndFilter('lowpass',700,0.6,snd.rainLoG),1.6);
   // one-shots
   snd.clank=[toBuf(c,renderClank(sr,31,[[430,0.05,1],[1010,0.035,0.7],[1690,0.025,0.5],[2760,0.018,0.3]],0.16)),
              toBuf(c,renderClank(sr,32,[[380,0.05,1],[920,0.04,0.6],[1820,0.022,0.5],[3100,0.015,0.25]],0.16))];
@@ -209,6 +212,7 @@ function updateSound(dt){
   snd.bedMax=Math.max(snd.bedMax,tr.bed);if(tr.bed<0.015&&snd.bedMax>0.25){sndShot(snd.gate,snd.T.fx,t,0.9+0.1*Math.random(),0.9*quiet);snd.bedMax=0}
   if(tr.bed<0.015)snd.bedMax=0;
   snd.dumpG.gain.setTargetAtTime(quiet*Math.min(1,sndIn.dump*0.8),t,0.06);
+  {const r=quiet*sndVol(sndCfg.fx)*ss(0,0.7,weather.r);snd.rainG.gain.setTargetAtTime(r*0.2,t,0.3);snd.rainLoG.gain.setTargetAtTime(r*0.12,t,0.3)}
   // backup alarm, scheduled on the audio clock: half a second on, half off, as long as it is in reverse
   const rev=tr.gear<0&&tr.shiftT<=0&&!bench.on;
   if(rev){if(snd.beepT<t)snd.beepT=t+0.05;while(snd.beepT<t+0.15){sndShot(snd.beep,snd.T.alarm,snd.beepT,1,1);snd.beepT+=1}}
