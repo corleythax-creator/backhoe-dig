@@ -27,6 +27,9 @@ function waterTick(dt){
     // level out with wetter neighbours (water runs into any low ground next to a pool, never above the table)
     if(i>cI0&&i<cI1&&j>cJ0&&j<cJ1){const m=Math.max(Wt[k-1],Wt[k+1],Wt[k-V],Wt[k+V]);if(m>Wt[k]&&m>h)Wt[k]=Math.min(m,Math.max(Wt[k],g,m-0.002))}
     if(pumpOn&&Wt[k]>-1e8)Wt[k]-=PUMP*step;
+    // water only stands in ground dug or rutted below grade: never higher than 2 in under the original surface, so a
+    // pool on a slope can't level out over the untouched ground below it
+    if(Wt[k]>H0[k]-SAT_DEPTH)Wt[k]=H0[k]-SAT_DEPTH;
     if(Wt[k]<=h+0.001)Wt[k]=-1e9;else{any=true;if(Wt[k]<H0[k]-1)hole=true;mudA[k]=1;wetT[k]=timeU.value}
     if(Math.abs(Wt[k]-w0)>1e-4)moved=true}
   // waterAny: a flooded hole (the Pump button); puddleAny: any water at all

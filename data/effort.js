@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-17T23:32:00Z",
+ "updated": "2026-10-17T23:40:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 447,
+   "dh": 448,
    "act": 11.0,
-   "versions": 64
+   "versions": 65
   }
  ],
  "extra": [
@@ -663,11 +663,20 @@ window.EFFORT = {
   },
   {
    "v": 71,
+   "asked": "2026-10-17T18:12:00-05:00",
+   "live": "2026-10-17T18:22:23-05:00",
+   "dh": 1,
+   "tris": 1154238,
+   "chars": 389790,
+   "what": "Fix: a puddle in a rut on a slope could spread over the untouched ground below it and cover the dig area with a flat slab of water. Water now only stands where the ground is dug or rutted below grade, and slabs already in saved sites drain away on load."
+  },
+  {
+   "v": 72,
    "asked": "2026-10-17T18:16:00-05:00",
-   "live": "2026-10-17T18:32:00-05:00",
+   "live": "2026-10-17T18:40:00-05:00",
    "dh": 4,
    "tris": 1154238,
-   "chars": 391724,
+   "chars": 391968,
    "what": "Ground texture pack: new seamless grass, dirt and machine grime, each at 512, 1024 and 2048 px and loaded by the Graphics setting (Low, Medium, High), plus a soft macro map that breaks up the repeat across the lawns and yards. The neutral textures take the island's own colours; the grime is brightened so the machines keep their paint."
   }
  ]
