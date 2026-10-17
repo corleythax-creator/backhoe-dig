@@ -115,10 +115,10 @@ function particlesTick(dt){
 
 // ---------- bucket load and truck heap ----------
 const LOAD_DETAIL={1:7,2:10,4:15,16:31};
-function heapY(x,z){const e=Math.max(Math.abs(x)/1.05,Math.abs(z)/2.05);
+function heapY(x,z){const e=Math.max(Math.abs(x)/1.05,Math.abs(z)/(BED_L/2-0.1));
   return -0.5+(1-0.65*e*e)+0.07*Math.sin(x*5.1+z*3.7)+0.05*Math.cos(z*6.3)
     +0.035*Math.sin(x*13.1+z*2.3)*Math.sin(z*11.7-x*1.9)+0.02*Math.sin(x*29.3+z*23.9)}
-function heapGeometry(){const k=Math.sqrt(DIRT),g=new THREE.BoxGeometry(2.1,1,4.1,Math.round(36*k),1,Math.round(64*k)),pa=g.attributes.position;
+function heapGeometry(){const k=Math.sqrt(DIRT),g=new THREE.BoxGeometry(2.1,1,BED_L-0.2,Math.round(36*k),1,Math.round(64*k)),pa=g.attributes.position;
   for(let i=0;i<pa.count;i++)if(pa.getY(i)>0)pa.setY(i,heapY(pa.getX(i),pa.getZ(i)));
   g.computeVertexNormals();return g}
 // clods riding the truck heap: each shows once the load passes its own fill level
@@ -127,7 +127,7 @@ function buildHeapClods(){
   if(heapClods){bedG.remove(heapClods);heapClods.geometry.dispose()}
   const n=200*DIRT;heapClods=new THREE.InstancedMesh(lumpGeo(0,0.3,4.2),CLODS[CRUMB].mat,n);heapClods.frustumCulled=false;bedG.add(heapClods);
   hcU=new Float32Array(n);hcV=new Float32Array(n);hcS=new Float32Array(n);hcT=new Float32Array(n);
-  for(let i=0;i<n;i++){let u,v;do{u=(Math.random()*2-1)*1.0;v=(Math.random()*2-1)*2.0}while(Math.max(Math.abs(u)/1.05,Math.abs(v)/2.05)>0.92);
+  for(let i=0;i<n;i++){let u,v;do{u=(Math.random()*2-1)*1.0;v=(Math.random()*2-1)*(BED_L/2-0.15)}while(Math.max(Math.abs(u)/1.05,Math.abs(v)/(BED_L/2-0.1))>0.92);
     hcU[i]=u;hcV[i]=v;hcS[i]=0.04+Math.random()*0.09;hcT[i]=Math.random();heapClods.setColorAt(i,dCol.setRGB(0.5,0.35,0.2))}
   hcLast=-1;
 }

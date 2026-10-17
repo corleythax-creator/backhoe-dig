@@ -1,7 +1,7 @@
 // Backhoe Dig build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Backhoe Dig",
- "updated": "2026-10-17T09:15:00Z",
+ "updated": "2026-10-17T09:28:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 266.5,
+   "dh": 276,
    "act": 4.5,
-   "versions": 32
+   "versions": 35
   }
  ],
  "extra": [
@@ -381,6 +381,33 @@ window.EFFORT = {
    "tris": 821848,
    "chars": 212572,
    "what": "Tall grass and a zero-turn mower: a 52 by 39 ft patch of knee-high grass north of the trench that sways in the wind and bends away from the machines, and a red zero-turn with a 52 in deck, lap bars, swivel casters and a roll bar. Mow mode puts a lap bar on each stick (both up drives straight, opposite spins in place). Cutting leaves stubble with light and dark stripes by pass direction and throws clippings out the chute; Lawn row with percent mowed and time; a rendered V-twin with blade whine and grass chop in the sound mixer; seat view; patch and mower on the maps."
+  },
+  {
+   "v": 40,
+   "asked": "2026-10-17T04:05:00-05:00",
+   "live": "2026-10-17T04:25:00-05:00",
+   "dh": 5,
+   "tris": 822372,
+   "chars": 212849,
+   "what": "Real-scale machines from CAT 320 and tri-axle dump truck specs. Excavator: 18.7 ft boom and 9.5 ft stick (was 13.8 and 8.5) with rams and hoses refitted, 7.2 ft track gauge, 24 in shoes, 10.8 ft of track on the ground, and a longer deck and counterweight for a 9 ft tail swing; reach along the ground 34 ft, dig depth 17 ft, top height 35 ft. Truck: 16 ft dump body (was 14 ft) hung farther past the tandem, frame and rear lighting moved back, capacity 12 yd³."
+  },
+  {
+   "v": 41,
+   "asked": "2026-10-17T04:17:00-05:00",
+   "live": "2026-10-17T04:23:00-05:00",
+   "dh": 3,
+   "tris": 991332,
+   "chars": 215752,
+   "what": "Grass grows back: a mowed patch stays stubble for about 45 seconds, then rises back to full height over about four minutes while its stripes fade into the tall-grass colour; the Lawn percent drops as it grows, and a lawn left long enough becomes a fresh job. Four times the grass triangles (55,300 to 220,800): clumps every 8 in instead of 10, eight tapered blades per clump that arch and twist with their own shades of green, two seed stalks with straw heads, and drifts of grass gone to seed."
+  },
+  {
+   "v": 42,
+   "asked": "2026-10-17T04:16:00-05:00",
+   "live": "2026-10-17T04:28:00-05:00",
+   "dh": 1.5,
+   "tris": 991332,
+   "chars": 218102,
+   "what": "The mowed lawn stays mowed: how long ago each patch was cut and its stripe, the mowing time and where the mower was left are saved in the browser and come back on reload, so grass keeps growing back from where it was (it grows while the game runs, not while it is closed). Reset restores the ground but no longer regrows mowed grass."
   }
  ]
 };

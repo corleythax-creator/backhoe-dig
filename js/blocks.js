@@ -37,7 +37,7 @@ function blkPush(o,lzs,r){let hit=false;
       else if(px<pz)o.x+=Math.sign(dx||1)*px;else o.z+=Math.sign(dz||1)*pz;
       hit=true}}
   return hit}
-const EX_C=[0.75,-0.75],EX_R=1.2,TR_C=[2.2,-0.4,-2.6],TR_R=1.25;
+const EX_C=[0.85,-0.85],EX_R=1.25,TR_C=[2.2,-0.4,-2.6,-3.6],TR_R=1.25;
 // where a block of the chosen size would land under the bucket, and whether it may go there
 function blkAim(){const n=blkSize,s=n*FT,x=blkSnap(tip.x,n),z=blkSnap(tip.z,n);let y=blkGround(x,z,s);
   for(const b of blocks)if(blkOver(b,x,z,s))y=Math.max(y,b.y+b.s);

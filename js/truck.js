@@ -2,14 +2,14 @@
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 // ---------- dump truck ----------
 const WHITE=M(0xe9ecea,PAINT),WHITE_DS=M(0xe9ecea,Object.assign({side:THREE.DoubleSide},PAINT)),BEDM=M(0x6c7378),BED_D=M(0x4c5257),TGLASS=new THREE.MeshPhongMaterial({color:0x5f7f93,shininess:90,flatShading:true,transparent:true,opacity:0.35,depthWrite:false,envMap:skyEnv,combine:THREE.MixOperation,reflectivity:0.9}),TAIL=M(0xd0281c,{emissive:0x400804}),REV=M(0xf4f1e6,{emissive:0x202018});
-const TRUCK_CAP=10/1.308,TR_START={x:-9,z:-11.6,yaw:1.47,v:0,steer:0,bed:0,load:0,hauled:0,rollA:0,y:0,pitch:0,roll:0,gear:1,shiftT:0,aL:0,brakeOn:false,sh:0,shV:0,sp:0,spV:0,sr:0,srV:0,bumpCd:0,loadedOnce:false,fullWarned:false,haulWarned:false,bedWarned:false};
+const TRUCK_CAP=12/1.308,BED_L=4.9,TR_START={x:-9,z:-11.6,yaw:1.47,v:0,steer:0,bed:0,load:0,hauled:0,rollA:0,y:0,pitch:0,roll:0,gear:1,shiftT:0,aL:0,brakeOn:false,sh:0,shV:0,sp:0,spV:0,sr:0,srV:0,bumpCd:0,loadedOnce:false,fullWarned:false,haulWarned:false,bedWarned:false};
 const tr=Object.assign({},TR_START);
 const truck=new THREE.Group();truck.rotation.order='YXZ';scene.add(truck);
 // sprung: cab, frame and bed ride on the springs above the axles, pivoting near frame height
 const sprung=new THREE.Group();sprung.position.y=1.0;truck.add(sprung);
 const tBody=new THREE.Group();tBody.position.y=-1.0;sprung.add(tBody);
-for(const x of [-0.5,0.5])box(0.18,0.28,7.2,STEEL,x,0.95,0.3,tBody);
-for(let z=-3.2;z<=3.81;z+=0.75)box(1.0,0.1,0.12,STEEL,0,0.95,z,tBody);
+for(const x of [-0.5,0.5])box(0.18,0.28,7.8,STEEL,x,0.95,0.0,tBody);
+for(let z=-3.8;z<=3.81;z+=0.75)box(1.0,0.1,0.12,STEEL,0,0.95,z,tBody);
 // cab shell: roof, floor and walls with real window openings, so the glass shows the cab inside
 box(2.35,0.05,1.5,WHITE,0,2.825,1.85,tBody);box(2.35,0.05,1.5,WHITE,0,1.475,1.85,tBody);
 box(2.35,0.775,0.04,WHITE,0,1.8375,2.58,tBody);box(2.35,0.075,0.04,WHITE,0,2.8125,2.58,tBody);
@@ -55,26 +55,26 @@ function makeWheel(x,z,dual){const g=new THREE.Group();g.rotation.order='YXZ';g.
   mergeStatic(g,[]);wheels.push(g);if(!dual)frontWheels.push(g);return g}
 makeWheel(-1.05,3.1,false);makeWheel(1.05,3.1,false);
 for(const z of [-1.6,-2.8])for(const x of [-0.95,0.95])makeWheel(x,z,true);
-// bed, hinged at the rear
-const bedG=new THREE.Group();bedG.position.set(0,0.3,-3.4);sprung.add(bedG);
-box(2.3,0.12,4.3,BEDM,0,0.06,2.15,bedG);
-for(const x of [-1.15,1.15]){box(0.1,1.0,4.3,BEDM,x,0.56,2.15,bedG);box(0.18,0.1,4.36,BED_D,x,1.08,2.15,bedG);
-  for(let z=0.15;z<4.3;z+=0.3)box(0.06,0.9,0.08,BED_D,x*1.04,0.5,z,bedG);edges(0.1,1.0,bedG,BEDM,0.56,0,0.56,4.3)}
-for(const x of [-0.5,0.5])box(0.15,0.2,4.3,STEEL,x,-0.1,2.15,bedG);
-box(2.3,1.15,0.1,BEDM,0,0.6,4.3,bedG);box(2.4,0.08,0.95,BED_D,0,1.2,4.72,bedG);
-for(let i=-2;i<=2;i++)box(0.06,0.06,0.9,BEDM,i*0.5,1.26,4.72,bedG);
+// bed: a 16 ft body hinged at the rear, hanging about 6 ft past the tandem
+const bedG=new THREE.Group();bedG.position.set(0,0.3,-4.0);sprung.add(bedG);
+box(2.3,0.12,BED_L,BEDM,0,0.06,BED_L/2,bedG);
+for(const x of [-1.15,1.15]){box(0.1,1.0,BED_L,BEDM,x,0.56,BED_L/2,bedG);box(0.18,0.1,BED_L+0.06,BED_D,x,1.08,BED_L/2,bedG);
+  for(let z=0.15;z<BED_L;z+=0.3)box(0.06,0.9,0.08,BED_D,x*1.04,0.5,z,bedG);edges(0.1,1.0,bedG,BEDM,0.56,0,0.56,BED_L)}
+for(const x of [-0.5,0.5])box(0.15,0.2,BED_L,STEEL,x,-0.1,BED_L/2,bedG);
+box(2.3,1.15,0.1,BEDM,0,0.6,BED_L,bedG);box(2.4,0.08,0.95,BED_D,0,1.2,BED_L+0.42,bedG);
+for(let i=-2;i<=2;i++)box(0.06,0.06,0.9,BEDM,i*0.5,1.26,BED_L+0.42,bedG);
 const tailP=new THREE.Group();tailP.position.set(0,1.1,0.0);bedG.add(tailP);
 box(2.3,1.0,0.1,BED_D,0,-0.52,-0.03,tailP);for(let i=-2;i<=2;i++)box(0.08,0.9,0.05,BEDM,i*0.45,-0.52,-0.1,tailP);
-const heapGeo=(function(){const g=new THREE.BoxGeometry(2.1,1,4.1,18,1,32),pa=g.attributes.position;
-  for(let i=0;i<pa.count;i++){if(pa.getY(i)>0){const x=pa.getX(i),z=pa.getZ(i),e=Math.max(Math.abs(x)/1.05,Math.abs(z)/2.05);
+const heapGeo=(function(){const g=new THREE.BoxGeometry(2.1,1,BED_L-0.2,18,1,32),pa=g.attributes.position;
+  for(let i=0;i<pa.count;i++){if(pa.getY(i)>0){const x=pa.getX(i),z=pa.getZ(i),e=Math.max(Math.abs(x)/1.05,Math.abs(z)/(BED_L/2-0.1));
     pa.setY(i,-0.5+(1-0.65*e*e)+0.07*Math.sin(x*5.1+z*3.7)+0.05*Math.cos(z*6.3))}}g.computeVertexNormals();return g})();
-const heap=new THREE.Mesh(heapGeo,M(0x7a5232));heap.position.set(0,0.12,2.15);heap.visible=false;heap.castShadow=true;bedG.add(heap);
+const heap=new THREE.Mesh(heapGeo,M(0x7a5232));heap.position.set(0,0.12,BED_L/2);heap.visible=false;heap.castShadow=true;bedG.add(heap);
 edges(2.35,1.4,tBody,WHITE,2.15,1.1,2.15,2.6);edges(2.0,0.75,tBody,WHITE,1.75,2.6,1.75,4.05);
 for(const sd of [-1,1]){
   // arched front fenders, mud flaps, door seams and handles, steps, air tanks, mirrors
   const fg=new THREE.CylinderGeometry(0.74,0.74,0.52,40,1,true,0,Math.PI);fg.rotateZ(Math.PI/2);
   const fe=new THREE.Mesh(fg,WHITE_DS);fe.position.set(sd*1.05,0.55,3.1);fe.castShadow=true;tBody.add(fe);
-  box(0.5,0.6,0.03,RUBBER,sd*0.95,0.5,-3.35,tBody);box(0.5,0.08,0.04,STEEL,sd*0.95,0.82,-3.35,tBody);
+  box(0.5,0.6,0.03,RUBBER,sd*0.95,0.5,-3.4,tBody);box(0.5,0.08,0.04,STEEL,sd*0.95,0.82,-3.4,tBody);
   for(const z of [1.15,2.55])box(0.02,1.25,0.03,STEEL,sd*1.18,2.1,z,tBody);
   box(0.02,0.03,1.4,STEEL,sd*1.18,1.48,1.85,tBody);
   box(0.03,0.04,0.18,CHROME,sd*1.2,2.15,1.35,tBody);
@@ -83,7 +83,7 @@ for(const sd of [-1,1]){
   for(const z of [-0.8,0.0]){const band=cyl(0.18,0.18,0.03,32,STEEL,tBody);band.rotation.x=Math.PI/2;band.position.set(sd*0.85,0.95,z)}
   const arm=box(0.04,0.04,0.55,STEEL,sd*1.35,2.3,2.8,tBody);arm.rotation.y=sd*0.4;
   box(0.06,0.6,0.28,STEEL,sd*1.5,2.3,2.95,tBody);box(0.07,0.22,0.24,M(0x9aa9b4,{shininess:90}),sd*1.5,1.88,2.95,tBody);
-  box(0.25,0.12,0.06,TAIL,sd*0.9,1.0,-3.42,tBody);box(0.1,0.12,0.06,AMBER,sd*0.62,1.0,-3.42,tBody);box(0.12,0.1,0.06,REV,sd*0.36,1.0,-3.42,tBody);
+  box(0.25,0.12,0.06,TAIL,sd*0.9,1.0,-4.02,tBody);box(0.1,0.12,0.06,AMBER,sd*0.62,1.0,-4.02,tBody);box(0.12,0.1,0.06,REV,sd*0.36,1.0,-4.02,tBody);
   for(let i=0;i<6;i++)box(0.02,0.03,0.7,STEEL,sd*1.005,1.62+i*0.07,3.35,tBody);
 }
 box(0.9,0.5,0.6,STEEL_L,1.0,1.05,-0.45+0.0,tBody);
@@ -223,19 +223,19 @@ for(let i=0;i<4;i++)box(2.0,0.02,0.02,STEEL,0,2.18,3.0+i*0.25,tBody);
     for(const e of [-1,1])add(new THREE.SphereGeometry(0.17,24,4,0,Math.PI*2,0,Math.PI/2),STEEL_L,sd*0.85,0.95,-0.4+e*0.425,tBody,e*Math.PI/2).scale.set(1,0.25,1);
     tube([[sd*0.85,1.12,-0.1],[sd*0.7,1.12,0.0],[sd*0.55,1.08,0.3]],0.01,12,HOSE,tBody)}
   // rear: under-ride bar, light bar, plate with its lamp, pintle hitch, reflectors
-  box(2.1,0.12,0.1,STEEL,0,0.62,-3.5,tBody);for(const sd of [-1,1])box(0.08,0.35,0.08,STEEL,sd*0.5,0.8,-3.45,tBody);
-  box(2.1,0.18,0.05,STEEL,0,1.0,-3.4,tBody);box(0.38,0.2,0.02,PLATE,0,0.62,-3.56,tBody);cylZ(0.025,0.03,12,LENS,0,0.75,-3.56,tBody);
-  add(new THREE.TorusGeometry(0.06,0.02,8,24),STEEL,0,0.48,-3.6,tBody,Math.PI/2);box(0.2,0.18,0.1,STEEL,0,0.55,-3.52,tBody);
-  for(const sd of [-1,1])for(const y of [0.62])box(0.1,0.05,0.02,TAIL,sd*0.85,y,-3.56,tBody);
+  box(2.1,0.12,0.1,STEEL,0,0.62,-4.1,tBody);for(const sd of [-1,1])box(0.08,0.35,0.08,STEEL,sd*0.5,0.8,-4.05,tBody);
+  box(2.1,0.18,0.05,STEEL,0,1.0,-4.0,tBody);box(0.38,0.2,0.02,PLATE,0,0.62,-4.16,tBody);cylZ(0.025,0.03,12,LENS,0,0.75,-4.16,tBody);
+  add(new THREE.TorusGeometry(0.06,0.02,8,24),STEEL,0,0.48,-4.2,tBody,Math.PI/2);box(0.2,0.18,0.1,STEEL,0,0.55,-4.12,tBody);
+  for(const sd of [-1,1])box(0.1,0.05,0.02,TAIL,sd*0.85,0.62,-4.16,tBody);
 
   // bed: cross sills, hinge pins, top-rail marker lights, front-corner ladder, tarp roller
-  for(let z=0.3;z<4.3;z+=0.45)box(1.0,0.1,0.08,STEEL,0,-0.09,z,bedG);
+  for(let z=0.3;z<BED_L;z+=0.45)box(1.0,0.1,0.08,STEEL,0,-0.09,z,bedG);
   for(const sd of [-1,1]){cylX(0.06,0.18,24,STEEL_L,sd*0.5,-0.15,0.05,bedG);box(0.14,0.2,0.16,STEEL,sd*0.5,-0.08,0.12,bedG);
-    for(const z of [0.35,2.15,3.95]){box(0.04,0.07,0.12,AMBER,sd*1.255,0.92,z,bedG);box(0.02,0.09,0.14,STEEL,sd*1.24,0.92,z,bedG)}
+    for(const z of [0.35,BED_L/2,BED_L-0.35]){box(0.04,0.07,0.12,AMBER,sd*1.255,0.92,z,bedG);box(0.02,0.09,0.14,STEEL,sd*1.24,0.92,z,bedG)}
     box(0.04,0.07,0.1,TAIL,sd*1.255,0.92,0.08,bedG)}
-  for(const sd of [-1,1])box(0.05,1.0,0.05,STEEL_L,-1.27,0.45,4.05+sd*0.14,bedG);for(let i=0;i<5;i++)box(0.04,0.04,0.32,STEEL_L,-1.27,0.05+i*0.2,4.05,bedG);
-  cylX(0.07,2.3,40,BLACK,0,1.34,4.32,bedG);for(const sd of [-1,1])add(new THREE.CylinderGeometry(0.09,0.09,0.05,32),STEEL,sd*1.17,1.34,4.32,bedG,0,0,Math.PI/2);
-  tube([[1.2,1.34,4.32],[1.3,0.9,3.2],[1.3,0.5,1.8],[1.27,0.3,0.6]],0.02,32,STEEL_L,bedG);
+  for(const sd of [-1,1])box(0.05,1.0,0.05,STEEL_L,-1.27,0.45,BED_L-0.25+sd*0.14,bedG);for(let i=0;i<5;i++)box(0.04,0.04,0.32,STEEL_L,-1.27,0.05+i*0.2,BED_L-0.25,bedG);
+  cylX(0.07,2.3,40,BLACK,0,1.34,BED_L+0.02,bedG);for(const sd of [-1,1])add(new THREE.CylinderGeometry(0.09,0.09,0.05,32),STEEL,sd*1.17,1.34,BED_L+0.02,bedG,0,0,Math.PI/2);
+  tube([[1.2,1.34,BED_L+0.02],[1.3,0.9,BED_L-1.1],[1.3,0.5,BED_L-2.5],[1.27,0.3,0.6]],0.02,32,STEEL_L,bedG);
   // tailgate: top hinge eyes, bottom latch pins and hooks, reflectors
   for(const sd of [-1,1]){cylX(0.04,0.12,24,STEEL_L,sd*1.08,0,-0.05,tailP);add(new THREE.TorusGeometry(0.05,0.015,6,24),STEEL,sd*1.08,0,-0.05,tailP,0,Math.PI/2);
     cylX(0.03,0.16,20,STEEL,sd*1.06,-1.0,-0.06,tailP);box(0.05,0.14,0.08,STEEL,sd*1.06,-0.95,-0.12,tailP);
@@ -243,10 +243,10 @@ for(let i=0;i<4;i++)box(2.0,0.02,0.02,STEEL,0,2.18,3.0+i*0.25,tBody);
   for(let i=0;i<3;i++)box(2.2,0.05,0.04,BEDM,0,-0.2-i*0.3,-0.1,tailP);
 }
 mergeStatic(tBody,[]);mergeStatic(bedG,[heap]);mergeStatic(tailP,[]);
-ram(tBody,[0,1.05,0.4],bedG,[0,-0.05,3.75],0.13,0.065,1.3);
-ram(tBody,[0,1.05,0.4],bedG,[0,-0.05,3.75],0.1,0.05,0.9);
+ram(tBody,[0,1.05,0.4],bedG,[0,-0.05,BED_L-0.55],0.13,0.065,1.3);
+ram(tBody,[0,1.05,0.4],bedG,[0,-0.05,BED_L-0.55],0.1,0.05,0.9);
 const tl=new THREE.Vector3(),tv=new THREE.Vector3();
-function inBed(p){tl.copy(p);bedG.worldToLocal(tl);return tl.x>-1.1&&tl.x<1.1&&tl.z>0.1&&tl.z<4.2&&tl.y>-0.3&&tl.y<3.2}
+function inBed(p){tl.copy(p);bedG.worldToLocal(tl);return tl.x>-1.1&&tl.x<1.1&&tl.z>0.1&&tl.z<BED_L-0.1&&tl.y>-0.3&&tl.y<3.2}
 function heapTop(){return 0.12+(heap.visible?heap.scale.y*0.5+0.5*heap.scale.y:0)}
 const G=9.8,WB=5.3,REAR=-2.2;
 function updateTruck(dt,thr,steerIn,bedIn){
@@ -286,7 +286,7 @@ function updateTruck(dt,thr,steerIn,bedIn){
       if(c>0)tr.v*=Math.exp(-c*dt*40)}}
   // keep the truck from driving through the excavator or blocks it can't roll over
   const sy=Math.sin(tr.yaw),cy=Math.cos(tr.yaw);
-  for(const lz of [2.2,-0.4,-2.6]){const cx=tr.x+sy*lz,cz=tr.z+cy*lz,dx=cx-st.x,dz=cz-st.z,d=Math.hypot(dx,dz),min=1.5+2.3;
+  for(const lz of [2.2,-0.4,-2.6,-3.6]){const cx=tr.x+sy*lz,cz=tr.z+cy*lz,dx=cx-st.x,dz=cz-st.z,d=Math.hypot(dx,dz),min=1.5+2.7;
     if(d<min&&d>1e-3){tr.x+=dx/d*(min-d);tr.z+=dz/d*(min-d);
       if(Math.abs(tr.v)>1.2){shake=reduceMotion?0:0.15;rumble(250,0.7)}tr.v*=-0.15}}
   if(blkPush(tr,TR_C,TR_R)){if(Math.abs(tr.v)>1.2){shake=reduceMotion?0:0.15;rumble(250,0.7)}tr.v*=-0.15}
@@ -327,7 +327,7 @@ function updateTruck(dt,thr,steerIn,bedIn){
   tr.pourRate=0;
   if(tr.bed>0.32&&tr.load>0.0005){
     const out=Math.min(tr.load,(tr.bed-0.32)*3.2*dt);tr.load-=out;sndIn.dump=out/dt;if(tr.load<0.0005){tr.load=0;tr.stuck=TRUCK_CAP*0.025*(0.4+1.6*tr.loadMix[CLAY])*(1+2*tr.loadWet)}
-    truck.localToWorld(tv.set(0,0.3,-4.3));tr.pourRate=out/dt;tr.pourP.copy(tv);
+    truck.localToWorld(tv.set(0,0.3,-4.9));tr.pourRate=out/dt;tr.pourP.copy(tv);
     if(mesaR(tv.x,tv.z)<EDGE-1.2&&Math.abs(tv.x)<S/2-0.8&&Math.abs(tv.z)<S/2-0.8){deposit(tv.x,tv.z,out,tr.loadC,tr.loadMix,dropSpread(tv.y-hAt(tv.x,tv.z)),tr.loadWet);st.dirty=true;st.slumpT=2.5}
     else{tr.hauled+=out;if(!tr.haulWarned&&tr.load<=0){tr.haulWarned=true;toast('Load hauled off site.','good')}}
     bedG.localToWorld(tv.set(0,0.4,0.2));for(let n=0;n<Math.ceil(out*40);n++)spawn(tv,1.2);

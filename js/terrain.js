@@ -74,7 +74,7 @@ vec3 faceDetail(vec3 wp,float d,float pz){
   if(d>0.0)m*=1.0-0.2*smoothstep(0.35,0.8,steep)*smoothstep(0.55,1.0,0.5+0.5*sin(fc.x*34.9));
   return m;}
 `;
-const groundOcc={value:[new THREE.Vector4(0,0,0,0),new THREE.Vector4(1.3,1.9,0,0),new THREE.Vector4(0,0,0,0),new THREE.Vector4(1.2,3.6,0.3,0)]};
+const groundOcc={value:[new THREE.Vector4(0,0,0,0),new THREE.Vector4(1.4,2.0,0,0),new THREE.Vector4(0,0,0,0),new THREE.Vector4(1.2,3.9,0.0,0)]};
 const groundMat=M(0xffffff,{vertexColors:true});
 groundMat.onBeforeCompile=sh=>{
   sh.uniforms.tGrass={value:texGrass};sh.uniforms.tDirt={value:texDirt};sh.uniforms.texMix=texMixU;sh.uniforms.uTime=timeU;sh.uniforms.uPipeZ={value:PIPE_Z};
