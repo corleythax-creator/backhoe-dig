@@ -22,7 +22,7 @@ A 3D low-poly excavator game in plain HTML, CSS and JavaScript (three.js r128, n
 | `js/water.js` | Groundwater: seeping, levelling pools, mud, the pump |
 | `js/dirtsound.js` | Dirt sounds: digging, pouring, thuds, rattles, cave-ins, trickling water |
 | `js/blocks.js` | Concrete blocks (1×1, 2×2, 3×3 ft): placing under the bucket, stacking, settling, machine collisions |
-| `js/mower.js` | Tall grass patch, zero-turn mower, mowing, clippings, lawn stripes and regrowth |
+| `js/mower.js` | Tall grass patch, zero-turn mower, mowing, clippings, lawn stripes, regrowth and the saved lawn |
 | `js/controls.js` | Game state and reset, touch sticks, keyboard, game controller, modes, menu |
 | `js/effects.js` | Shared per-frame vectors, resize |
 | `js/sound.js` | All sound, rendered in the browser: diesel engine loops, turbo, tires, air brakes, hydraulics, relief valve, tracks, bucket scrape, pouring dirt, backup alarm; stereo, distance and cliff echo; the Sound panel (on/off, Master, Engines, Backup alarm, Effects) |
