@@ -274,8 +274,8 @@ tr.on .rin{background:var(--amber);color:var(--amber-ink);border-color:var(--amb
 
 <script>
 const SID="session_01SBwjwGFjYHoJFXKYC4CmB8";
-const G={J:"Jobs and work orders",M:"New machines",X:"Excavator and attachments",D:"Dirt and digging",U:"Buried utilities",W:"Weather and time of day",S:"Site and scenery",L:"Crew and people",A:"Sound",C:"Controls and camera",Q:"Graphics and phone speed",E:"Map editor",Y:"Gameplay and challenges",H:"Cozy home life",K:"Yard work",B:"The bridge and the drive",T:"The mountain town",R:"Days and routine"};
-const GS={J:"Jobs",M:"Machines",X:"Excavator",D:"Dirt",U:"Utilities",W:"Weather",S:"Site",L:"Crew",A:"Sound",C:"Controls",Q:"Graphics",E:"Editor",Y:"Gameplay",H:"Home",K:"Yard",B:"Bridge",T:"Town",R:"Routine"};
+const G={J:"Jobs and work orders",M:"New machines",X:"Excavator and attachments",D:"Dirt and digging",U:"Buried utilities",W:"Weather and time of day",S:"Site and scenery",L:"Crew and people",A:"Sound",C:"Controls and camera",Q:"Graphics and phone speed",E:"Map editor",Y:"Gameplay and challenges",H:"Cozy home life",K:"Yard work",B:"The bridge and the drive",T:"The mountain town",R:"Days and routine",I:"Islands and the family"};
+const GS={J:"Jobs",M:"Machines",X:"Excavator",D:"Dirt",U:"Utilities",W:"Weather",S:"Site",L:"Crew",A:"Sound",C:"Controls",Q:"Graphics",E:"Editor",Y:"Gameplay",H:"Home",K:"Yard",B:"Bridge",T:"Town",R:"Routine",I:"Islands"};
 // [id, group, title, description, realism 1-10, fun 1-10, seen, phone, cost 1|2|3, hour guess, deps]
 const I=[
 ["J01","J","Work orders","A job card each session (dig to a line and depth, lay pipe, backfill), with pay and a finish check.",4,8,"every","none",2,6,[]],
@@ -451,6 +451,31 @@ const I=[
 ["R06","R","Chores by season","Mowing in summer, leaves in fall, plowing snow in winter.",6,7,"most","low",2,6,["W04"]],
 ["R07","R","Snow plowing","Clear the road and the bridge with a loader in winter.",6,7,"rare","low",2,5,["W04"]],
 ["R08","R","End-of-day summary","What you did, what you earned, the lawn and the yards dug.",3,5,"every","none",1,2,[]],
+["I01","I","The island chain","Several small islands across the lake, each its own place to work and live, with the dig mesa as one of them. Only the island you are on is drawn in full; the others are low-poly shapes on the water.",5,8,"every","low",3,14,[]],
+["I02","I","Family Island in the middle","A central island where the whole family lives: a big white farmhouse, a long shared dock and a lawn, with a dock path to every other island.",6,8,"every","low",3,14,["I01"]],
+["I03","I","Ferry and boat crossings","A pontoon ferry runs a loop between the islands; ride it, or take your own boat to any dock.",6,8,"every","low",2,8,["I01"]],
+["I04","I","Island map and travel","The big map shows every island and its dock; tap one to sail there, with a short fade on the water while it loads.",3,6,"every","none",2,5,["I01"]],
+["I05","I","Each island keeps its own save","The dig, the lawn and what you built stay put on each island, so you can leave a job half done and come back to it.",4,5,"every","none",2,6,["I01"]],
+["I06","I","The family","Grandparents, a spouse, kids and cousins with names, who wander the islands, wave, and ask for a hand with small things.",5,8,"every","low",3,10,["I02"]],
+["I07","I","Sunday family dinner","A long table on the farmhouse lawn at sunset; bring vegetables from the garden and the day's fish, and everyone comes over by boat.",5,7,"some","low",2,6,["I02"]],
+["I08","I","Treehouse and playground","Build the grandkids a treehouse, a swing set and a sandbox on Family Island, using the machines to set the posts and spread the sand.",4,8,"most","low",2,7,["I02"]],
+["I09","I","Orchard Island","Apple and peach trees to prune and pick, with crates hauled home by boat.",6,6,"some","low",2,6,["I01"]],
+["I10","I","Farm Island","A small farm with a tractor, a hay field to cut and bale, and cows that walk up to the fence.",7,8,"most","low",3,12,["I01"]],
+["I11","I","Wild Island","An untouched wooded island with a hiking trail, a fire lookout tower and a campsite.",6,6,"some","low",2,8,["I01"]],
+["I12","I","Lighthouse Island","A rocky islet with an old lighthouse to fix up; once restored, its beam sweeps the lake at night.",6,6,"some","low",2,6,["I01"]],
+["I13","I","Build a home for family","Clear and grade a lot on an empty island and put up a cabin for a family member, stage by stage, until they move in.",6,9,"some","low",3,12,["I01"]],
+["I14","I","Jobs for the family","Family and neighbors ask for work on their islands: a ditch for a water line, a pond, a new driveway, a boat ramp.",6,8,"most","low",2,7,["I02"]],
+["I15","I","Barge for the machines","Drive the excavator or truck onto a flat barge, chain it down and push it across to another island's ramp.",8,8,"some","low",2,8,["I03"]],
+["I16","I","The beach and swimming","A sandy beach on Family Island with a rope swing off a big oak and a floating raft to swim out to.",5,7,"some","low",2,5,["I02"]],
+["I17","I","Campfire night","The family around a fire on the beach under the stars, with s'mores and someone playing guitar.",5,6,"some","low",1,4,["I02"]],
+["I18","I","Family photo wall","Snapshots of what you built and the days you spent together fill frames along the farmhouse hall.",3,5,"some","none",1,3,["I02"]],
+["I19","I","Greenhouse and flower beds","A greenhouse on Family Island that grows all year, and flower beds the family plants along the walk.",5,5,"some","low",2,5,["I02"]],
+["I20","I","Family fishing derby","A contest off the docks one weekend; the biggest bass wins a trophy for the farmhouse mantel.",4,7,"rare","low",1,4,["H08","I02"]],
+["I21","I","Holidays together","Fourth of July fireworks over the lake, Thanksgiving at the farmhouse, a lit Christmas tree at the end of the dock.",5,7,"rare","low",2,6,["I02"]],
+["I22","I","Golf cart on Family Island","A golf cart to get around Family Island, with a grandkid riding on the back.",5,7,"most","low",2,5,["I02"]],
+["I23","I","Mail boat","A little boat stops at every dock each morning with letters, packages and the seed you ordered.",6,5,"every","low",1,4,["I01"]],
+["I24","I","Island upgrades","Earn and spend to bring each island a dock, power, a well and a gravel road over time.",5,7,"most","none",2,6,["I01","R02"]],
+["I25","I","Visit family online","Play on a family member's island together over the internet, or have them sail over to yours.",3,8,"some","low",3,14,["I01","L06"]],
 ];
 // built (or partly built) ideas: date and what is in the game; part: more steps left (still pickable); pc: percent done
 const DONE={};
