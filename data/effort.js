@@ -1,7 +1,7 @@
 // Backhoe Dig build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Backhoe Dig",
- "updated": "2026-10-17T07:05:00Z",
+ "updated": "2026-10-17T07:15:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 144,
-   "act": 2.5,
-   "versions": 14
+   "dh": 154,
+   "act": 3.0,
+   "versions": 15
   }
  ],
  "extra": [
@@ -219,6 +219,15 @@ window.EFFORT = {
    "tris": 490576,
    "chars": 95623,
    "what": "Game controller support: sticks match the on-screen sticks, triggers are gas and reverse, LB/RB switch machine, Y cab view, View map, Menu help; a line strike rumbles."
+  },
+  {
+   "v": 22,
+   "asked": "2026-10-17T02:07:00-05:00",
+   "live": "2026-10-17T02:15:00-05:00",
+   "dh": 10,
+   "tris": 490576,
+   "chars": 99643,
+   "what": "Soil layers: topsoil, red clay, sand bedding around the gas main, rock below; each digs at its own speed, holds its own slope and swells when dug; spoil keeps its colour; the HUD names the soil at the teeth."
   }
  ]
 };
