@@ -27,6 +27,7 @@ A 3D low-poly excavator game in plain HTML, CSS and JavaScript (three.js r128, n
 | `js/effects.js` | Shared per-frame vectors, resize |
 | `js/sound.js` | All sound, rendered in the browser: diesel engine loops, turbo, tires, air brakes, hydraulics, relief valve, tracks, bucket scrape, pouring dirt, backup alarm; stereo, distance and cliff echo; the Sound panel (on/off, Master, Engines, Backup alarm, Effects) |
 | `js/maps.js` | Minimap and big map |
+| `js/shadowproxy.js` | Cheaper shadows: merged shadow-only meshes for the machines, near trees only |
 | `js/bench.js` | Speed test |
 | `js/main.js` | Frame loop |
 | `grass.jpg`, `dirt.jpg`, `grime.jpg` | Seamless textures (OpenAI GPT Image, made tileable) |

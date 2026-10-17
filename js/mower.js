@@ -146,11 +146,11 @@ function lawnLoad(){let d=null;try{d=JSON.parse(localStorage.getItem(LAWN_KEY))}
   if(b.length!==LAWN_N*2)return;let cut=0;
   for(let n=0;n<LAWN_N;n++){const a=b.charCodeAt(n*2);if(!a)continue;
     lawn.ct[n]=lawn.t-(a-1)/254*LAWN_LIFE;const q=b.charCodeAt(n*2+1);
-    lawn.ga[n]=d.v===3?q/255*Math.PI*2:q>=128?Math.PI/4:Math.PI*1.25;lawn.str[n]=clamp((Math.cos(lawn.ga[n])+Math.sin(lawn.ga[n]))*0.8,-1,1);lawn.gd[n]=lawnG(n);cut++}
+    lawn.ga[n]=d.v===3?q/255*Math.PI*2:q>=128?Math.PI/4:Math.PI*1.25;lawn.str[n]=Math.max(-1,Math.min(1,(Math.cos(lawn.ga[n])+Math.sin(lawn.ga[n]))*0.8));lawn.gd[n]=lawnG(n);cut++}
   if(cut&&d.el>0){const now=performance.now();lawn.startT=now-d.el*1000;if(d.done){lawn.done=true;lawn.doneT=now}}
   lawnCount();if(lawn.pct>=0.97)lawn.done=true;
   if(d.mw&&isFinite(d.mw.x)&&isFinite(d.mw.z)&&isFinite(d.mw.yaw))mwSaved=d.mw}
-lawnLoad();
+try{lawnLoad()}catch(e){lawn.ct.fill(-1e9);lawn.gd.fill(1);lawn.str.fill(0);lawn.ga.fill(0);mwSaved=null;try{localStorage.removeItem(LAWN_KEY)}catch(e2){}}
 addEventListener('pagehide',lawnSave);
 document.addEventListener('visibilitychange',()=>{if(document.hidden)lawnSave()});
 // share of the patch that counts as mowed: below half its height (refreshed a few times a second)
