@@ -108,7 +108,7 @@ function setCaps(){const m=mode,lh=kbUsed?'A D':'◀ ▶',lv=kbUsed?'W S':'▲ �
   $('#capR').innerHTML=m==='truck'?`<b>${rv}</b> Bed up / down<br>&nbsp;`:m==='mow'?`<b>${rv}</b> Right lap bar<br>&nbsp;`:m==='walk'?`<b>${rh}</b> Turn<br><b>${rv}</b> Look up / down`:`<b>${rh}</b> Curl / dump<br><b>${rv}</b> Boom down / up`;}
 function setMode(m){if(m===mode)return;mode=m;for(const [id,k] of [['#modeDig','dig'],['#modeDrive','drive'],['#modeTruck','truck'],['#modeMow','mow'],['#modeWalk','walk']])$(id).setAttribute('aria-pressed',m===k);
   $('#jumpBtn').hidden=m!=='walk';$('#capR').hidden=m==='walk';if(m==='walk')wk.view=wk.yaw;
-  setCaps();firstCam=true;if(m==='mow'&&!lawn.startT&&!lawn.done)toast('Mower running. Push both sticks up to drive, one up and one back to spin.','',3800);
+  setCaps();markTile();firstCam=true;if(m==='mow'&&!lawn.startT&&!lawn.done)toast('Mower running. Push both sticks up to drive, one up and one back to spin.','',3800);
   if(m==='walk')toast(padUsed?'On foot. A jumps, X sets a block in front of you.':kbUsed?'On foot. Space jumps, E sets a block in front of you.':'On foot. Tap Jump to jump. Blocks, then Place, sets a block in front of you.','',3800)}
 $('#modeDig').onclick=()=>setMode('dig'); $('#modeDrive').onclick=()=>setMode('drive'); $('#modeTruck').onclick=()=>setMode('truck'); $('#modeMow').onclick=()=>setMode('mow'); $('#modeWalk').onclick=()=>setMode('walk');
 $('#camBtn').onclick=()=>{camMode=camMode==='chase'?'cab':'chase';$('#camBtn').textContent=camMode==='chase'?'Cab view':'Chase view'};
@@ -130,9 +130,13 @@ document.querySelectorAll('.sizes button[data-s]').forEach(b=>b.onclick=()=>setU
 try{setUiScale(localStorage.getItem('bhd_ui')||1)}catch(e){setUiScale(1)}
 const statusEl=$('#status');try{statusEl.classList.toggle('min',localStorage.getItem('bhd_hudmin')==='1')}catch(e){}
 statusEl.onclick=()=>{const m=statusEl.classList.toggle('min');try{localStorage.setItem('bhd_hudmin',m?'1':'0')}catch(e){}};
-$('#startBtn').onclick=()=>{help.hidden=true;try{localStorage.setItem('bhd_seen','1')}catch(e){}};
-help.addEventListener('click',e=>{if(e.target===help)$('#startBtn').click()});
-try{if(localStorage.getItem('bhd_seen'))help.hidden=true}catch(e){}
+// the start card: tap a machine (or On foot) to start in that mode; tapping outside the card keeps the current one
+function startIn(m){setMode(m);help.hidden=true;try{localStorage.setItem('bhd_seen','1')}catch(e){}}
+const tiles=[...document.querySelectorAll('.tile')];
+for(const t of tiles)t.onclick=()=>startIn(t.dataset.m);
+function markTile(){const m=mode==='drive'?'dig':mode;for(const t of tiles)t.setAttribute('aria-pressed',t.dataset.m===m)}
+markTile();
+help.addEventListener('click',e=>{if(e.target===help)startIn(mode)});
 function started(){if(!st.startT)st.startT=performance.now()}
 // the version in the menu and on the help card is the last entry in data/effort.js (the build log), so it is never stale
 {const E=window.EFFORT,v=E&&E.versions&&E.versions[E.versions.length-1];

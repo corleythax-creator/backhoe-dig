@@ -33,6 +33,7 @@ A 3D low-poly excavator game in plain HTML, CSS and JavaScript (three.js r128, n
 | `js/bench.js` | Speed test |
 | `js/main.js` | Frame loop |
 | `grass.jpg`, `dirt.jpg`, `grime.jpg` | Seamless textures (OpenAI GPT Image, made tileable) |
+| `shots/*.jpg` | Start-card tiles: in-game screenshots of the excavator, dump truck, mower and the worker on foot |
 | `build.html` | Build-time page: ask-to-live per version, triangles, developer-hour estimate |
 | `data/effort.js` | Build-time data. The master dashboard reads it for hours |
 
