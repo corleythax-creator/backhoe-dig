@@ -10,7 +10,13 @@ const sprung=new THREE.Group();sprung.position.y=1.0;truck.add(sprung);
 const tBody=new THREE.Group();tBody.position.y=-1.0;sprung.add(tBody);
 for(const x of [-0.5,0.5])box(0.18,0.28,7.2,STEEL,x,0.95,0.3,tBody);
 for(let z=-3.2;z<=3.81;z+=0.75)box(1.0,0.1,0.12,STEEL,0,0.95,z,tBody);
-box(2.35,1.4,1.5,WHITE,0,2.15,1.85,tBody);
+// cab shell: roof, floor and walls with real window openings, so the glass shows the cab inside
+box(2.35,0.05,1.5,WHITE,0,2.825,1.85,tBody);box(2.35,0.05,1.5,WHITE,0,1.475,1.85,tBody);
+box(2.35,0.775,0.04,WHITE,0,1.8375,2.58,tBody);box(2.35,0.075,0.04,WHITE,0,2.8125,2.58,tBody);
+box(2.35,0.775,0.04,WHITE,0,1.8375,1.12,tBody);box(2.35,0.175,0.04,WHITE,0,2.7625,1.12,tBody);
+for(const sd of [-1,1]){box(0.175,0.55,0.04,WHITE,sd*1.0875,2.5,2.58,tBody);box(0.225,0.45,0.04,WHITE,sd*1.0625,2.45,1.12,tBody);
+  box(0.04,0.8,1.5,WHITE,sd*1.155,1.85,1.85,tBody);box(0.04,0.1,1.5,WHITE,sd*1.155,2.8,1.85,tBody);
+  box(0.04,0.5,0.225,WHITE,sd*1.155,2.5,2.4875,tBody);box(0.04,0.5,0.425,WHITE,sd*1.155,2.5,1.3125,tBody)}
 box(2.37,0.12,1.52,STEEL_L,0,1.5,1.85,tBody);
 box(2.0,0.55,0.05,TGLASS,0,2.5,2.61,tBody);
 for(const x of [-1.185,1.185])box(0.04,0.5,0.85,TGLASS,x,2.5,1.95,tBody);
