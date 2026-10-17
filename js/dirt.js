@@ -205,7 +205,7 @@ function dustTick(dt){
   for(let i=0;i<dustN;i++){if(dAge[i]>=dLife[i])continue;dAge[i]+=dt;const t=dAge[i]/dLife[i];if(t>=1)continue;
     for(let a=0;a<3;a++){dV[i*3+a]+=(WIND[a]-dV[i*3+a])*Math.min(1,dt*0.8);dP[i*3+a]+=dV[i*3+a]*dt}
     P[n*3]=dP[i*3];P[n*3+1]=dP[i*3+1];P[n*3+2]=dP[i*3+2];C[n*3]=dC[i*3];C[n*3+1]=dC[i*3+1];C[n*3+2]=dC[i*3+2];
-    A[n]=0.32*Math.min(1,t*6)*(1-t);Sz[n]=0.35+1.6*Math.sqrt(t);n++}
+    A[n]=0.22*Math.min(1,t*6)*(1-t);Sz[n]=0.3+1.2*Math.sqrt(t);n++}
   g.setDrawRange(0,n);
   if(n){g.attributes.position.needsUpdate=true;g.attributes.aA.needsUpdate=true;g.attributes.aS.needsUpdate=true;g.attributes.aC.needsUpdate=true}
   dustMat.uniforms.uScale.value=renderer.domElement.height/(2*Math.tan(camera.fov*Math.PI/360));

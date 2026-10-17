@@ -1,7 +1,7 @@
 // Backhoe Dig build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Backhoe Dig",
- "updated": "2026-10-17T08:23:00Z",
+ "updated": "2026-10-17T08:37:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 201,
-   "act": 3.5,
-   "versions": 23
+   "dh": 213,
+   "act": 4.0,
+   "versions": 24
   }
  ],
  "extra": [
@@ -300,6 +300,15 @@ window.EFFORT = {
    "tris": 753381,
    "chars": 128181,
    "what": "Trench shading: dug and dumped dirt darkens by how much ground rises around it; fresh cuts and spoil look damp and dry lighter over a few minutes. Soil-matched chunks: sod with grass from the first bite, crumbs, blocky clay lumps and sharp rock pieces, no clods from sand; loads remember what they hold."
+  },
+  {
+   "v": 31,
+   "asked": "2026-10-17T03:27:00-05:00",
+   "live": "2026-10-17T03:37:00-05:00",
+   "dh": 12,
+   "tris": 747000,
+   "chars": 136279,
+   "what": "Clods roll down pile faces (big ones farthest); tracks and tyres rut loose fill and crush clods; dust when dumping, digging dry topsoil, driving on dirt and in cave-ins; the bucket gets dirty, tracks and tyres muddy, and clay sticks in the bucket and truck bed; a heaped bucket dribbles when swung fast; Dirt detail 16x. Fixed textures sometimes not loading since the file split."
   }
  ]
 };
