@@ -196,9 +196,11 @@ body.editing #hud .top,body.editing #hud .sticks{display:none}
 .edopt label{font:700 13px/1 var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
 .edopt output{min-width:44px;font-variant-numeric:tabular-nums}
 #editor input[type=range]{width:min(150px,30vw);accent-color:var(--machine)}
-.edtools{pointer-events:auto;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;width:min(100%,640px)}
-@media (min-width:820px){.edtools{grid-template-columns:repeat(10,minmax(0,1fr));width:min(100%,900px)}#edOpts{width:min(100%,900px);max-width:900px}}
-.edtools button{height:46px;padding:0 4px;font-size:15px}
+.edtools{pointer-events:auto;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;width:min(100%,640px)}
+@media (min-width:820px){.edtools{grid-template-columns:repeat(11,minmax(0,1fr));width:min(100%,980px)}#edOpts{width:min(100%,980px);max-width:980px}}
+.edtools button{height:46px;padding:0 2px;font-size:15px;letter-spacing:.02em}
+@media (max-width:420px){.edtools button{font-size:13px}}
+#editor .row button[aria-pressed="true"]{background:var(--machine);color:#1c1309}
 .edtools button[aria-pressed="true"],.edkind button[aria-pressed="true"],#editor button.go{background:var(--machine);color:#1c1309}
 #editor button.danger{color:var(--danger)}
 #editor button:disabled{opacity:.4}
