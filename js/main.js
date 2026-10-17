@@ -35,7 +35,8 @@ function frame(now){
     sndIn.relief=end(st.a1,LIM.a1,boomIn)||end(st.a2,LIM.a2,stickIn)||end(st.a3,LIM.a3,bucketIn);sndIn.track=Math.min(1,Math.abs(driveIn)+Math.abs(turnIn)*0.7);sndIn.pour=0}updateHeapClods();
   // drive
   st.yaw-=turnIn*0.8*dt;
-  const mudK=1-0.5*mudAt(st.x,st.z),ox=st.x,oz=st.z,w0=wallCount(st.x,st.z,st.yaw,EX_P);
+  // mud slows the tracks, and pushing on in it digs them in until they spin (bogTick, mud.js)
+  const mudN=mudAt(st.x,st.z),mudK=(1-0.5*mudN)*bogTick(st,mudN,bench.on?0:driveIn,0.03,dt),ox=st.x,oz=st.z,w0=wallCount(st.x,st.z,st.yaw,EX_P);
   st.x=clamp(st.x+Math.sin(st.yaw)*driveIn*2.6*mudK*dt,-90,90);
   st.z=clamp(st.z+Math.cos(st.yaw)*driveIn*2.6*mudK*dt,-90,90);
   {const rr=mesaR(st.x,st.z),lim=EDGE-3.5;if(rr>lim){const f=lim/rr;st.x*=f;st.z=MZ+(st.z-MZ)*f}}
@@ -45,13 +46,15 @@ function frame(now){
   const sy=Math.sin(st.yaw),cy=Math.cos(st.yaw);
   // tracks rut loose fill and mud, crush clods, pick up mud and kick up a little dust (not off mud)
   if(!bench.on&&(Math.abs(driveIn)>0.05||Math.abs(turnIn)>0.05))for(const sd of [-1,1]){const tx=st.x+sd*1.1*cy,tz=st.z-sd*1.1*sy;
-    const r=stampRut(tx,tz,st.yaw,0.26,1.6,dt);if(r){st.mud=Math.min(1,st.mud+dt*(r===2?0.2:0.06));if(r===1)dustPuff(tx,hAt(tx,tz)+0.1,tz,dt*4)}}
+    const r=stampRut(tx,tz,st.yaw,0.26,1.6,dt*(1+2*st.spin));if(r){st.mud=Math.min(1,st.mud+dt*(r===2?0.2+0.6*st.spin:0.06));if(r===1)dustPuff(tx,hAt(tx,tz)+0.1,tz,dt*4)}
+    // spinning tracks throw mud off the back; driving through it flicks a little
+    if(mudN>RUT_MUD){const bk=-Math.sign(driveIn||1)*1.7;flingMud(tx+sy*bk,hAt(tx,tz)+0.25,tz+cy*bk,st.yaw+(driveIn<0?Math.PI:0),2+5*st.spin,(st.spin*40+Math.abs(driveIn)*4)*mudN,dt)}}
   if(crushT<=0)crushT=0.1;
   const sample=(lx,lz)=>surfAt(st.x+lx*cy+lz*sy,st.z-lx*sy+lz*cy);
   const hf=(sample(-1.1,1.8)+sample(1.1,1.8))/2,hb=(sample(-1.1,-1.8)+sample(1.1,-1.8))/2;
   const hr=(sample(1.1,1.8)+sample(1.1,-1.8))/2,hl=(sample(-1.1,1.8)+sample(-1.1,-1.8))/2;
   const k=Math.min(1,dt*8);
-  st.y+=((hf+hb)/2-st.y)*k; st.pitch+=(-Math.atan2(hf-hb,3.6)-st.pitch)*k; st.roll+=(Math.atan2(hr-hl,2.2)-st.roll)*k;
+  st.y+=((hf+hb)/2-0.18*st.sink-st.y)*k; st.pitch+=(-Math.atan2(hf-hb,3.6)-st.pitch)*k; st.roll+=(Math.atan2(hr-hl,2.2)-st.roll)*k;
   machine.position.set(st.x,st.y,st.z); machine.rotation.set(st.pitch,st.yaw,st.roll);
   house.rotation.y=st.swing;
   boomP.rotation.x=-st.a1; stickP.rotation.x=-st.a2; bucketP.rotation.x=-st.a3;
@@ -156,7 +159,7 @@ function frame(now){
   // flying dirt
   particlesTick(dt);dustTick(dt);grimeTick();
   // groundwater, the tailgate stream and the dirt sounds
-  if(!bench.on)waterTick(dt);
+  if(!bench.on)waterTick(dt);mudTick(dt);
   pourStream(streams[1],tr.pourP,hAt(tr.pourP.x,tr.pourP.z),tr.pourRate,tr.loadC,now/1000);
   dirtSndTick(dt);
   // bucket load visual

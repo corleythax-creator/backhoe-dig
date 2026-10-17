@@ -25,6 +25,7 @@ function setGfx(k,picked){const g=GFX[k]?GFX[k]:GFX[gfxGuess()];gfxKey=GFX[k]?k:
   gfxDetail=g.detail;if(texOn){texMixU.value=gfxDetail;matTexUpdate()}
   // puddles: a finer water surface with sky reflections, or a 1 ft one without (water.js); the water itself is the same
   if(WM_K!==(g.wmFine?1:GRID_K))wmSet(g.wmFine);
+  mudGfx(g.wmFine);
   // dirt detail follows the setting when picked (or the first time), and stays its own setting after that
   let saved=null;try{saved=localStorage.getItem('bhd_dirt')}catch(e){}
   if(picked||saved===null)setDirtLevel(g.dirt,picked);

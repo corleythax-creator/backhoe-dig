@@ -2,7 +2,7 @@
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 // ---------- dump truck ----------
 const WHITE=M(0xe9ecea,PAINT),WHITE_DS=M(0xe9ecea,Object.assign({side:THREE.DoubleSide},PAINT)),BEDM=M(0x6c7378),BED_D=M(0x4c5257),TGLASS=new THREE.MeshPhongMaterial({color:0x5f7f93,shininess:90,flatShading:true,transparent:true,opacity:0.35,depthWrite:false,envMap:skyEnv,combine:THREE.MixOperation,reflectivity:0.9}),TAIL=M(0xd0281c,{emissive:0x400804}),REV=M(0xf4f1e6,{emissive:0x202018});
-const TRUCK_CAP=12/1.308,BED_L=4.9,TR_START={x:-9,z:-11.6,yaw:1.47,v:0,steer:0,bed:0,load:0,hauled:0,rollA:0,y:0,pitch:0,roll:0,gear:1,shiftT:0,aL:0,brakeOn:false,sh:0,shV:0,sp:0,spV:0,sr:0,srV:0,bumpCd:0,loadedOnce:false,fullWarned:false,haulWarned:false,bedWarned:false};
+const TRUCK_CAP=12/1.308,BED_L=4.9,TR_START={x:-9,z:-11.6,yaw:1.47,v:0,sink:0,spin:0,steer:0,bed:0,load:0,hauled:0,rollA:0,y:0,pitch:0,roll:0,gear:1,shiftT:0,aL:0,brakeOn:false,sh:0,shV:0,sp:0,spV:0,sr:0,srV:0,bumpCd:0,loadedOnce:false,fullWarned:false,haulWarned:false,bedWarned:false};
 const tr=Object.assign({},TR_START);
 const truck=new THREE.Group();truck.rotation.order='YXZ';scene.add(truck);
 // sprung: cab, frame and bed ride on the springs above the axles, pivoting near frame height
@@ -252,7 +252,9 @@ const G=9.8,WB=5.3,REAR=-2.2;
 function updateTruck(dt,thr,steerIn,bedIn){
   const f=tr.load/TRUCK_CAP,mass=15000+tr.load*1400,vPrev=tr.v;
   // ground: the packed road rolls easiest and grips best, grass drags more, dug dirt most
-  const soft=Math.abs(hAt(tr.x,tr.z)-h0At(tr.x,tr.z))>0.04,road=!soft&&roadAmt(tr.x,tr.z)>0.5,crr=(soft?0.1:road?0.03:0.06)+0.12*mudAt(tr.x,tr.z);
+  // mud drags, and pushing on in it digs the tyres in until they spin (bogTick, mud.js); bogged down it drags far more
+  const mudN=mudAt(tr.x,tr.z),grip=bogTick(tr,mudN,thr,0.06,dt);
+  const soft=Math.abs(hAt(tr.x,tr.z)-h0At(tr.x,tr.z))>0.04,road=!soft&&roadAmt(tr.x,tr.z)>0.5,crr=(soft?0.1:road?0.03:0.06)+0.06*mudN+0.06*tr.sink;
   // transmission: opposite stick brakes; come to a stop and hold it to shift between D and R
   let drive=0,brake=0;
   if(tr.shiftT>0){tr.shiftT-=dt;brake=1;if(tr.shiftT<=0)tr.gear=-tr.gear}
@@ -265,7 +267,7 @@ function updateTruck(dt,thr,steerIn,bedIn){
   if(tr.bed<0.02)tr.bedWarned=false;
   // diesel: traction-limited at low speed, power-limited above, governed top speed (20 mph, 6 mph in reverse or with the bed up)
   const vTop=tr.gear>0&&tr.bed<0.06?8.9:2.7,along=tr.v*tr.gear;
-  const Fd=drive*Math.min(36000,230000/Math.max(1,Math.abs(tr.v)))*clamp(vTop-along,0,1);
+  const Fd=drive*Math.min(36000,230000/Math.max(1,Math.abs(tr.v)))*clamp(vTop-along,0,1)*grip;
   tr.v+=(tr.gear*Fd/mass+G*Math.sin(tr.pitch))*dt;
   const dec=(crr*G+(drive?0:0.35)+brake*65000/mass)*dt;
   tr.v=Math.abs(tr.v)<=dec?0:tr.v-Math.sign(tr.v)*dec;
@@ -296,12 +298,13 @@ function updateTruck(dt,thr,steerIn,bedIn){
   tr.aL+=((tr.v-vPrev)/Math.max(dt,1e-3)-tr.aL)*Math.min(1,dt*6);
   // hydraulics lift slower under load; the bed comes down on its own weight
   tr.bed=clamp(tr.bed+bedIn*(bedIn>0?0.4*(1-0.4*f):0.55)*dt,0,0.9);
-  tr.rollA+=tr.v*dt/0.55;
+  // spinning tyres turn faster than the truck moves
+  tr.rollA+=(tr.v+tr.gear*tr.spin*5)*dt/0.55;
   // axles follow the ground (the rear tandem averages its two axles like a walking beam)
   const smp=(lx,lz)=>surfAt(tr.x+lx*cy+lz*sy,tr.z-lx*sy+lz*cy);
   const fL=smp(1.05,3.1),fR=smp(-1.05,3.1),bL=(smp(0.95,-1.6)+smp(0.95,-2.8))/2,bR=(smp(-0.95,-1.6)+smp(-0.95,-2.8))/2;
   const hf=(fL+fR)/2,hb=(bL+bR)/2,k=Math.min(1,dt*14);
-  const dy=((hf+hb)/2-tr.y)*k,dp=(-Math.atan2(hf-hb,WB)-tr.pitch)*k,dr=(Math.atan2((fL+bL)/2-(fR+bR)/2,2.0)-tr.roll)*k;
+  const dy=((hf+hb)/2-0.15*tr.sink-tr.y)*k,dp=(-Math.atan2(hf-hb,WB)-tr.pitch)*k,dr=(Math.atan2((fL+bL)/2-(fR+bR)/2,2.0)-tr.roll)*k;
   tr.y+=dy;tr.pitch+=dp;tr.roll+=dr;
   // the sprung body lags the axles over bumps, squats and dives with the throttle and brakes, leans out of turns, and sags under load
   tr.sh=clamp(tr.sh-dy,-0.16,0.16);tr.sp=clamp(tr.sp-dp,-0.06,0.06);tr.sr=clamp(tr.sr-dr,-0.06,0.06);
@@ -310,9 +313,12 @@ function updateTruck(dt,thr,steerIn,bedIn){
   tr.spV+=spring(tr.sp,tr.spV,clamp(-tr.aL*0.008*cg,-0.035,0.035));tr.sp+=tr.spV*dt;
   tr.srV+=spring(tr.sr,tr.srV,clamp(tr.v*yawRate*0.011*cg,-0.05,0.05));tr.sr+=tr.srV*dt;
   tr.bumpCd-=dt;if(Math.abs(dy)>0.05&&tr.bumpCd<=0&&mode==='truck'){rumble(120,Math.min(1,Math.abs(dy)*6));tr.bumpCd=0.3}
-  // tyres rut loose fill and mud and crush clods; they pick up mud there
-  if(Math.abs(tr.v)>0.1&&!bench.on){let r=false;for(const w of wheels){const u=w.userData,wx=tr.x+u.lx*cy+u.lz*sy,wz=tr.z-u.lx*sy+u.lz*cy;if(stampRut(wx,wz,tr.yaw,0.3,0.32,dt))r=true}
+  // tyres rut loose fill and mud (deeper while they spin) and crush clods; they pick up mud there
+  if((Math.abs(tr.v)>0.1||tr.spin>0.1)&&!bench.on){let r=false;for(const w of wheels){const u=w.userData,wx=tr.x+u.lx*cy+u.lz*sy,wz=tr.z-u.lx*sy+u.lz*cy;if(stampRut(wx,wz,tr.yaw,0.3,0.32,dt*(1+2*tr.spin)))r=true}
     if(r||mudAt(tr.x,tr.z)>0.3)tr.mud=Math.min(1,tr.mud+dt*0.08)}
+  // spinning or fast tyres throw mud off the back
+  if(mudN>RUT_MUD&&(tr.spin>0.05||Math.abs(tr.v)>1)&&!bench.on)for(const w of wheels){const u=w.userData;if(u.lz>0)continue;const wx=tr.x+u.lx*cy+u.lz*sy,wz=tr.z-u.lx*sy+u.lz*cy;
+    flingMud(wx,hAt(wx,wz)+0.3,wz,tr.yaw+(tr.gear<0?Math.PI:0),2+6*tr.spin+Math.abs(tr.v)*0.6,(tr.spin*30+Math.min(4,Math.abs(tr.v))*2)*mudN,dt)}
   truck.position.set(tr.x,tr.y,tr.z);truck.rotation.set(tr.pitch,tr.yaw,tr.roll);
   sprung.position.y=1.0+tr.sh;sprung.rotation.set(tr.sp,0,tr.sr);
   const sP=Math.sin(tr.pitch),sR=Math.sin(tr.roll),kw=Math.min(1,dt*20);
