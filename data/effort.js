@@ -1,7 +1,7 @@
 // Backhoe Dig build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Backhoe Dig",
- "updated": "2026-10-17T07:40:00Z",
+ "updated": "2026-10-17T07:50:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 173,
+   "dh": 181,
    "act": 3.0,
-   "versions": 18
+   "versions": 19
   }
  ],
  "extra": [
@@ -232,7 +232,7 @@ window.EFFORT = {
   {
    "v": 23,
    "asked": "2026-10-17T02:14:00-05:00",
-   "live": "2026-10-17T02:45:00-05:00",
+   "live": "2026-10-17T02:22:00-05:00",
    "dh": 6,
    "tris": 490576,
    "chars": 102646,
@@ -240,6 +240,15 @@ window.EFFORT = {
   },
   {
    "v": 24,
+   "asked": "2026-10-17T02:22:00-05:00",
+   "live": "2026-10-17T02:50:00-05:00",
+   "dh": 8,
+   "tris": 490576,
+   "chars": 107065,
+   "what": "Trench box: hook it with the bucket (T, controller X or the Hook box button), swing it into the trench and set it; walls between its panels cannot slump or cave in. Shown on the maps."
+  },
+  {
+   "v": 25,
    "asked": "2026-10-17T02:03:00-05:00",
    "live": "2026-10-17T02:17:00-05:00",
    "dh": 8,
@@ -248,12 +257,12 @@ window.EFFORT = {
    "what": "Dump truck driving realism: weight-based acceleration and braking, grades pull on it, opposite stick brakes then shifts D/R at a stop, governed 20 mph (6 in reverse or bed up), rear tandem off-tracks in turns, tires scrub wide at speed, sprung body squats, dives, leans and sags under load, wheels follow the ground, brake and reverse lights, mph and gear on the HUD, see-through cab glass."
   },
   {
-   "v": 25,
+   "v": 26,
    "asked": "2026-10-17T02:19:00-05:00",
    "live": "2026-10-17T02:38:00-05:00",
    "dh": 5,
-   "tris": 490600,
-   "chars": 108541,
+   "tris": 491144,
+   "chars": 112960,
    "what": "Dirt road around the mesa rim: graded loop with wheel ruts, a grassy crown and a berm on the cliff side, on the map and legend; packed road rolls and grips better than grass; the berm scrapes instead of stopping the truck dead; the truck starts parked on the road."
   }
  ]

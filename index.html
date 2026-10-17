@@ -155,6 +155,7 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
   <div class="side">
     <canvas id="mini" title="Tap for the big map (M)"></canvas>
     <div class="row">
+      <button id="boxBtn" class="sm" hidden>Hook box</button>
       <button id="camBtn" class="sm">Cab view</button>
       <button id="menuBtn" class="sm sq" aria-label="Menu" aria-expanded="false">☰</button>
     </div>
@@ -192,7 +193,7 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
     <div class="legend">
       <span><i style="background:#f07a22"></i>Excavator</span><span><i style="background:#e9ecea"></i>Dump truck</span>
       <span><i style="background:#f2f2ee;height:3px"></i>Trench paint</span><span><i style="background:#f5c518;height:3px"></i>Gas main</span>
-      <span><i style="background:#b89a6b"></i>Dirt road</span><span><i style="background:#7a5232"></i>Dug or dumped</span><span><i style="background:#2d7a94"></i>Lake</span>
+      <span><i style="background:#b89a6b"></i>Dirt road</span><span><i style="background:#7a5232"></i>Dug or dumped</span><span><i style="background:#d8a514"></i>Trench box</span><span><i style="background:#2d7a94"></i>Lake</span>
     </div>
   </div>
 </div>
@@ -220,6 +221,7 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
       <dt>Truck</dt><dd>Swing a full bucket over the truck bed and dump. It starts parked on the dirt road that loops the mesa. Tap Truck to drive it: left stick steers and gives gas, right stick raises the bed. Pull back to brake; hold it at a stop to shift into reverse. A full load is heavy: it pulls slowly, stops long and leans in turns. Back up to the cliff edge and dump it over to haul it off.</dd>
       <dt>Soil</dt><dd>Dark topsoil, then red clay that holds a steep wall. Sand means the gas main is close, and it slumps. Grey rock is past trench depth and slow going. Dug dirt fluffs up about a quarter, so it fills the truck faster than the hole it came from.</dd>
       <dt>Cave-ins</dt><dd>Walls deeper than about 5 ft, or with spoil piled within 2 ft of the edge, cave in after a while. Dirt trickling off the lip means get the bucket out.</dd>
+      <dt>Trench box</dt><dd>Swing the bucket over the yellow box and press T (controller X, or the Hook box button). It hangs from the bucket and turns with the swing. Lower it into the trench and press again to set it. Walls between its panels can't slump or cave in, so dig deep inside it and leapfrog it along the trench.</dd>
       <dt>Look</dt><dd>Drag the scene to look around.</dd>
       <dt>Map</dt><dd>Tap the minimap or press M for the big map.</dd>
       <dt>Screen</dt><dd>Tap the status card to fold it down. Speed test, Reset and UI size (1x, 1.5x, 2x) are in the ☰ menu.</dd>
@@ -427,6 +429,7 @@ function deposit(x,z,vol,col){
 // each layer holds its own slope: sand runs, clay stands steep, rock barely moves; what slides keeps its colour as loose fill
 const RP_MIN=0.62*CELL,M0=1.1*CELL;
 function slumpPair(k,k2,long){
+  if(prot[k]||prot[k2])return false;
   if((H[k]===H0[k]&&H[k2]===H0[k2])||Math.abs(H0[k]-H0[k2])>M0)return false;
   const df=H[k]-H[k2],ad=Math.abs(df);if(ad<=RP_MIN)return false;
   const hi=df>0?k:k2,lo=df>0?k2:k,m=matAt(hi,H[hi]-0.03),lim=(long?SOIL[m].rl:SOIL[m].rp)*CELL;if(ad<=lim)return false;
@@ -448,7 +451,7 @@ function slump(){
 const CDIR=[[1,0],[-1,0],[0,1],[0,-1]];
 function caveScan(){
   let best=0,bk=-1,bs=false;
-  for(let j=cJ0;j<=cJ1;j++)for(let i=cI0;i<=cI1;i++){const k=j*V+i;
+  for(let j=cJ0;j<=cJ1;j++)for(let i=cI0;i<=cI1;i++){const k=j*V+i;if(prot[k])continue;
     for(const [di,dj] of CDIR){const i2=i+di,j2=j+dj;if(i2<0||i2>N||j2<0||j2>N)continue;const k2=j2*V+i2;
       const dep=H0[k2]-H[k2];if(dep<0.75)continue;
       const df=H[k]-H[k2];if(df<=0.62*CELL||Math.abs(H0[k]-H0[k2])>M0)continue;
@@ -470,6 +473,7 @@ function collapse(k,sur){
 // risk builds while a bad wall stands, then dirt trickles off the lip for 2 s before it lets go
 const lipP=new THREE.Vector3();
 function caveTick(dt){
+  if(st.cave&&prot[st.cave.k]){st.cave=null;st.caveRisk=0}
   if(st.cave){const c=st.cave;c.t-=dt;c.dT-=dt;
     if(c.dT<=0){c.dT=0.07;lipP.set((c.k%V)*CELL-S/2+(Math.random()-0.5)*0.6,H[c.k]+0.05,((c.k/V)|0)*CELL-S/2+(Math.random()-0.5)*0.6);spawn(lipP,0.25)}
     if(c.t<=0){st.cave=null;st.caveRisk=0;collapse(c.k,c.sur)}}
@@ -1017,6 +1021,47 @@ texManager.onLoad=()=>{
   pMat.map=texDirt;pMat.color.setHex(0xd0b8a6);pMat.needsUpdate=true;
 };
 
+// ---------- trench box ----------
+// a steel trench shield: two side panels held apart by spreaders at the ends. Hooked to the bucket it swings with the
+// arm; set down in a cut it holds the walls between its panels, so they cannot slump or cave in (prot mask)
+const BX_L=2.4,BX_W=1.1,BX_H=1.5,BOXM=M(0xd8a514),BOXD=M(0x3a3d3e);
+const tbox=new THREE.Group();scene.add(tbox);
+for(const sd of [-1,1]){const x=sd*BX_W/2;
+  box(0.08,BX_H,BX_L,BOXM,x,BX_H/2,0,tbox);
+  for(let z=-BX_L/2+0.2;z<=BX_L/2-0.19;z+=0.4)box(0.05,BX_H-0.12,0.07,BOXD,x+sd*0.06,BX_H/2,z,tbox);
+  box(0.14,0.08,BX_L,BOXD,x,BX_H,0,tbox);box(0.14,0.08,BX_L,BOXD,x,0.04,0,tbox);
+  for(const z of [-BX_L/2+0.12,BX_L/2-0.12])box(0.06,0.2,0.14,BOXD,x,BX_H+0.12,z,tbox)}
+for(const z of [-BX_L/2+0.15,BX_L/2-0.15])for(const y of [0.35,BX_H-0.25]){const sp=cyl(0.06,0.06,BX_W,16,STEEL_L,tbox);sp.rotation.z=Math.PI/2;sp.position.set(0,y,z)}
+mergeStatic(tbox,[]);
+const chain=new THREE.Mesh(new THREE.CylinderGeometry(0.025,0.025,1,6),BOXD);chain.visible=false;scene.add(chain);
+const TB_START={x:2.8,z:-5.8,yaw:Math.PI},TB={x:0,z:0,y:0,ty:0,yaw:0,hooked:false,seated:false},prot=new Uint8Array(V*V),boxTop=new THREE.Vector3();
+// the box rests on the highest ground under its centre line; a crossing gas main holds it up
+function boxRest(){const s=Math.sin(TB.yaw),c=Math.cos(TB.yaw);let y=-1e9;
+  for(let q=-4;q<=4;q++){const u=q/4*(BX_L/2-0.1);y=Math.max(y,hAt(TB.x+s*u,TB.z+c*u))}
+  const za=TB.z-c*BX_L/2,zb=TB.z+c*BX_L/2;
+  if(Math.abs(TB.x)<12&&Math.min(za,zb)-0.3<PIPE_Z&&Math.max(za,zb)+0.3>PIPE_Z)y=Math.max(y,PIPE_Y+PIPE_R+0.02);
+  return y}
+// grid vertices inside the panels, plus the wall band just outside them, are held while the box sits in a cut
+function boxMask(){prot.fill(0);if(TB.hooked||!TB.seated)return;
+  const s=Math.sin(TB.yaw),c=Math.cos(TB.yaw),n=Math.ceil(2/CELL),ci=Math.round((TB.x+S/2)/CELL),cj=Math.round((TB.z+S/2)/CELL);
+  for(let j=Math.max(0,cj-n);j<=Math.min(N,cj+n);j++)for(let i=Math.max(0,ci-n);i<=Math.min(N,ci+n);i++){
+    const dx=i*CELL-S/2-TB.x,dz=j*CELL-S/2-TB.z,u=dx*s+dz*c,v=dx*c-dz*s;
+    if(Math.abs(u)<BX_L/2+0.15&&Math.abs(v)<BX_W/2+0.5)prot[j*V+i]=1}}
+function boxNear(){return mode==='dig'&&tip.distanceTo(boxTop.set(TB.x,TB.y+BX_H,TB.z))<1.6}
+function hookBox(){
+  if(TB.hooked){TB.hooked=false;chain.visible=false;TB.ty=boxRest();TB.seated=h0At(TB.x,TB.z)-TB.ty>0.3;boxMask();
+    toast(TB.seated?'Trench box set. The walls between its panels are safe.':'Box set down. Set it in a cut to hold the walls.','good',3000);return}
+  if(!boxNear()){toast(mode==='dig'?'Bring the bucket over the box to hook it.':'Switch to Dig to handle the box.');return}
+  TB.hooked=true;TB.seated=false;boxMask();chain.visible=true;
+  toast(`Box hooked. Swing it over the trench and press ${padUsed?'X':kbUsed?'T':'Drop box'} to set it.`,'',3200)}
+function updateBox(dt){
+  if(TB.hooked){TB.x=tip.x;TB.z=tip.z;TB.yaw=st.yaw+st.swing;TB.y=TB.ty=Math.max(tip.y-0.45-BX_H,boxRest());
+    boxTop.set(TB.x,TB.y+BX_H+0.15,TB.z);rD.subVectors(tip,boxTop);const d=Math.max(0.01,rD.length());
+    chain.quaternion.setFromUnitVectors(UPY,rD.divideScalar(d));chain.position.copy(boxTop).addScaledVector(rD,d/2);chain.scale.y=d}
+  else TB.y=Math.max(TB.ty,TB.y-4*dt);
+  tbox.position.set(TB.x,TB.y,TB.z);tbox.rotation.y=TB.yaw}
+$('#boxBtn').onclick=hookBox;
+
 // ---------- state ----------
 const CAP=1.0;
 const START={x:0.42,z:0,yaw:Math.PI,swing:0,a1:0.5,a2:-1.8,a3:-1.2};
@@ -1026,6 +1071,7 @@ function resetState(){
   cI0=N+1;cI1=-1;cJ0=N+1;cJ1=-1;
   H.set(H0);dI0=0;dI1=N;dJ0=0;dJ1=N;winOn=true;Object.assign(tr,TR_START);tr.loadC=[...SOIL[SPOIL].c];
   for(let k=0;k<V*V;k++)spoilC.set(SOIL[SPOIL].c,k*3);
+  Object.assign(TB,TB_START,{hooked:false,seated:false});TB.y=TB.ty=boxRest();prot.fill(0);chain.visible=false;
 }
 resetState();
 const LIM={a1:[-0.65,1.15],a2:[-2.65,-0.45],a3:[-2.85,0.35]};
@@ -1058,6 +1104,7 @@ addEventListener('keydown',e=>{if(e.ctrlKey||e.metaKey||e.altKey)return;
     if(c==='Digit1')setMode('dig');else if(c==='Digit2')setMode('drive');else if(c==='Digit3')setMode('truck');
     else if(c==='Tab')setMode(MODES[(MODES.indexOf(mode)+(e.shiftKey?2:1))%3]);
     else if(c==='KeyC')$('#camBtn').click();
+    else if(c==='KeyT')hookBox();
     else if(c==='KeyH')help.hidden=!help.hidden;
     else if(c==='Escape')help.hidden=true;}
   if(!kbUsed){kbUsed=true;padUsed=false;document.body.classList.add('kb');setCaps()}
@@ -1082,6 +1129,7 @@ function usePad(){if(!padUsed){padUsed=true;kbUsed=false;document.body.classList
 function padButton(i){usePad();
   if(i===4||i===5)setMode(MODES[(MODES.indexOf(mode)+(i===5?1:2))%3]);
   else if(i===3)$('#camBtn').click();
+  else if(i===2)hookBox();
   else if(i===8)toggleMap();
   else if(i===9)help.hidden=!help.hidden;
   else if(i===1){help.hidden=true;toggleMap(false)}}
@@ -1188,6 +1236,7 @@ function drawMap(cv,cx,cz,half,big){
   g.drawImage(digLayer,X(-S/2),Y(-S/2),S*sc,S*sc);
   g.lineWidth=Math.max(1.5,0.18*sc);g.strokeStyle='#f2f2ee';g.strokeRect(X(-0.5),Y(TRENCH_Z0),1*sc,(TRENCH_Z1-TRENCH_Z0)*sc);
   g.setLineDash([6*dpr,5*dpr]);g.strokeStyle='#f5c518';g.lineWidth=Math.max(2,0.2*sc);g.beginPath();g.moveTo(X(-12),Y(PIPE_Z));g.lineTo(X(12),Y(PIPE_Z));g.stroke();g.setLineDash([]);
+  g.save();g.translate(X(TB.x),Y(TB.z));g.rotate(-TB.yaw);g.fillStyle='#d8a514';g.fillRect(-BX_W/2*sc-1,-BX_L/2*sc,BX_W*sc+2,BX_L*sc);g.restore();
   if(big){g.strokeStyle='rgba(255,255,255,.35)';g.lineWidth=1.5*dpr;g.setLineDash([4*dpr,4*dpr]);g.strokeRect(X(-S/2),Y(-S/2),S*sc,S*sc);g.setLineDash([]);}
   const icon=(x,z,ang,fill,len,wid,active)=>{g.save();g.translate(X(x),Y(z));g.rotate(ang);
     const L=Math.max(len*sc,big?14*dpr:10*dpr),Wd=Math.max(wid*sc,big?9*dpr:7*dpr);
@@ -1330,6 +1379,7 @@ function frame(now){
   boomP.rotation.x=-st.a1; stickP.rotation.x=-st.a2; bucketP.rotation.x=-st.a3;
   machine.updateMatrixWorld(true); updateLinkage(); jointJ.updateMatrixWorld(); updateRams(); updateHoses();
   tipMark.getWorldPosition(tip); midMark.getWorldPosition(mid); bucketP.getWorldQuaternion(q);
+  updateBox(dt);
 
   // dig
   const g=hAt(tip.x,tip.z);
@@ -1387,6 +1437,7 @@ function frame(now){
   hudT-=dt;
   if(hudT<=0)mapsTick(0.1);
   if(hudT<=0){hudT=0.1;
+    {const bb=$('#boxBtn'),show=TB.hooked||boxNear();if(bb.hidden===show)bb.hidden=!show;const t=TB.hooked?'Drop box':'Hook box';if(bb.textContent!==t)bb.textContent=t}
     const pct=Math.round(st.load/CAP*100);
     $('#bucketVal').textContent=`${(st.load*1.308).toFixed(2)} yd³ · ${pct}%`;
     $('#bucketBar').style.width=pct+'%';
