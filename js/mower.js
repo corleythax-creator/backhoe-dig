@@ -6,7 +6,7 @@
 const LAWN_X0=-1,LAWN_Z0=11,LAWN_GS=0.25,LAWN_NX=64,LAWN_NZ=48,LAWN_N=LAWN_NX*LAWN_NZ,LAWN_BH=0.75,LAWN_CUT=0.09;
 const lawn={cut:new Uint8Array(LAWN_N),dug:new Uint8Array(LAWN_N),str:new Float32Array(LAWN_N),x:new Float32Array(LAWN_N),z:new Float32Array(LAWN_N),
   r:new Float32Array(LAWN_N),s:new Float32Array(LAWN_N),h:new Float32Array(LAWN_N),tc:new Float32Array(LAWN_N*3),nz:new Float32Array(LAWN_N),
-  nCut:0,nDug:0,startT:0,doneT:0,done:false,mDirty:false,cDirty:false,gDirty:false,mapDirty:true};
+  nCut:0,nDug:0,startT:0,doneT:0,done:false,mDirty:false,cDirty:false,gDirty:false,mapDirty:true,sDirty:false,saveT:0};
 // grid cells of the dig zone the patch covers, so terrain edits elsewhere skip it
 const LAWN_I0=Math.floor((LAWN_X0+S/2)/CELL)-1,LAWN_I1=Math.ceil((LAWN_X0+LAWN_NX*LAWN_GS+S/2)/CELL)+1,LAWN_J0=Math.floor((LAWN_Z0+S/2)/CELL)-1,LAWN_J1=Math.ceil((LAWN_Z0+LAWN_NZ*LAWN_GS+S/2)/CELL)+1;
 // one clump: six bent blades, dark at the root and sunlit at the tips
@@ -65,20 +65,40 @@ function lawnSet(n){
   lwO.scale.set(lawn.s[n],lawn.cut[n]?LAWN_CUT/LAWN_BH*(0.8+0.4*lawn.nz[n]):lawn.h[n],lawn.s[n]);lwO.updateMatrix();lawnClumps.setMatrixAt(n,lwO.matrix);
   if(lawn.cut[n]){const t=0.5+0.5*lawn.str[n],k=0.9+0.2*lawn.nz[n];lwC.setRGB((0.36+0.2*t)*k,(0.55+0.22*t)*k,(0.21+0.11*t)*k)}else lwC.setRGB(lawn.tc[n*3],lawn.tc[n*3+1],lawn.tc[n*3+2]);
   lawnClumps.setColorAt(n,lwC)}
-function lawnPaint(n){lawnSet(n);const i=n%LAWN_NX,j=(n/LAWN_NX)|0;for(let jj=j;jj<=j+1;jj++)for(let ii=i;ii<=i+1;ii++)lawnVert(ii,jj);lawn.mDirty=lawn.cDirty=lawn.gDirty=lawn.mapDirty=true}
+function lawnPaint(n){lawnSet(n);const i=n%LAWN_NX,j=(n/LAWN_NX)|0;for(let jj=j;jj<=j+1;jj++)for(let ii=i;ii<=i+1;ii++)lawnVert(ii,jj);lawn.mDirty=lawn.cDirty=lawn.gDirty=lawn.mapDirty=lawn.sDirty=true}
 // follow the terrain: grass goes where the ground was dug or dumped on, and the stripe ground sinks out of sight there
 function lawnTerrain(){
   if(dI1<LAWN_I0||dI0>LAWN_I1||dJ1<LAWN_J0||dJ0>LAWN_J1)return;
   for(let n=0;n<LAWN_N;n++){const x=lawn.x[n],z=lawn.z[n],d=Math.abs(hAt(x,z)-h0At(x,z))>0.04?1:0;
-    if(d&&!lawn.dug[n]){lawn.dug[n]=1;lawn.nDug++;if(lawn.cut[n]){lawn.cut[n]=0;lawn.nCut--}}
+    if(d&&!lawn.dug[n]){lawn.dug[n]=1;lawn.nDug++;if(lawn.cut[n]){lawn.cut[n]=0;lawn.nCut--;lawn.sDirty=true}}
     lawnSet(n)}
   const p=lawnGround.geometry.attributes.position.array;
   for(let k=0;k<LAWN_VN;k++){const x=p[k*3],z=p[k*3+2],h=hAt(x,z);p[k*3+1]=Math.abs(h-h0At(x,z))>0.04?h-0.4:h+0.015}
   lawn.mDirty=lawn.cDirty=lawn.gDirty=lawn.mapDirty=true;lawnGround.geometry.attributes.position.needsUpdate=true}
-function lawnReset(){lawn.cut.fill(0);lawn.dug.fill(0);lawn.str.fill(0);lawn.nCut=lawn.nDug=0;lawn.startT=lawn.doneT=0;lawn.done=false;
+// Reset brings back fresh ground (dug cells grow back as tall sod) but mowed grass stays mowed: the lawn only comes back by growing
+function lawnReset(){lawn.dug.fill(0);lawn.nDug=0;
   const sv=[dI0,dI1,dJ0,dJ1];dI0=LAWN_I0;dI1=LAWN_I1;dJ0=LAWN_J0;dJ1=LAWN_J1;lawnTerrain();[dI0,dI1,dJ0,dJ1]=sv;
   for(let j=0;j<=LAWN_NZ;j++)for(let i=0;i<=LAWN_NX;i++)lawnVert(i,j);
   for(const c of clips)c.t=c.life}
+// the lawn is saved in this browser so it is still mowed after a reload: one byte per cell (0 tall, 1-255 cut with its stripe),
+// the mowing time, the mower's spot and when it was saved (t, ms since 1970) so grass growth can catch up on time away.
+// Anything that changes lawn.cut or lawn.str sets lawn.sDirty; it is written at most every 2 s and when the page is hidden.
+const LAWN_KEY='bhd_lawn';let mwSaved=null;
+function lawnSave(){lawn.sDirty=false;lawn.saveT=performance.now();const b=new Uint8Array(LAWN_N);
+  for(let n=0;n<LAWN_N;n++)if(lawn.cut[n])b[n]=1+Math.round((clamp(lawn.str[n],-1,1)+1)*127);
+  const el=lawn.startT?Math.round(((lawn.done?lawn.doneT:performance.now())-lawn.startT)/1000):0;
+  try{localStorage.setItem(LAWN_KEY,JSON.stringify({v:1,t:Date.now(),cut:btoa(String.fromCharCode.apply(null,b)),el,done:lawn.done,
+    mw:{x:+mw.x.toFixed(2),z:+mw.z.toFixed(2),yaw:+mw.yaw.toFixed(3)}}))}catch(e){}}
+function lawnLoad(){let d=null;try{d=JSON.parse(localStorage.getItem(LAWN_KEY))}catch(e){}
+  if(!d||d.v!==1||typeof d.cut!=='string')return;let b;try{b=atob(d.cut)}catch(e){return}
+  if(b.length!==LAWN_N)return;
+  for(let n=0;n<LAWN_N;n++){const c=b.charCodeAt(n);lawn.cut[n]=c?1:0;lawn.str[n]=c?(c-1)/127-1:0;if(c)lawn.nCut++}
+  if(lawn.nCut&&d.el>0){const now=performance.now();lawn.startT=now-d.el*1000;if(d.done){lawn.done=true;lawn.doneT=now}}
+  if(lawnPct()>=0.97)lawn.done=true;
+  if(d.mw&&isFinite(d.mw.x)&&isFinite(d.mw.z)&&isFinite(d.mw.yaw))mwSaved=d.mw}
+lawnLoad();
+addEventListener('pagehide',()=>{if(lawn.sDirty)lawnSave()});
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&lawn.sDirty)lawnSave()});
 function lawnPct(){const live=LAWN_N-lawn.nDug;return live>0?lawn.nCut/live:1}
 // push the per-cell changes to the GPU once a frame
 function lawnFlush(){
@@ -142,7 +162,8 @@ for(const sd of [1,-1]){const sw=new THREE.Group();sw.position.set(sd*0.46,0,1.5
 mergeStatic(mower,[...mwBars,...mwWheels,...mwCasters.map(c=>c.sw)]);
 mower.traverse(o=>{if(o.isMesh&&!o.material.transparent)o.receiveShadow=true});
 const MW_C=[0.0,0.85],MW_R=0.72;
-function mowReset(){Object.assign(mw,MW_START,{l:0,r:0,vl:0,vr:0,v:0,w:0,load:0,blades:0});mw.y=surfAt(mw.x,mw.z);lawnReset()}
+// the first reset (page load) puts the mower where it was left; the Reset button sends it home
+function mowReset(){Object.assign(mw,MW_START,mwSaved||{},{l:0,r:0,vl:0,vr:0,v:0,w:0,load:0,blades:0});mwSaved=null;mw.y=surfAt(mw.x,mw.z);lawnReset()}
 
 // ---------- clippings out the chute ----------
 const CLIP_N=160,clips=[],clipGeo=new THREE.TetrahedronGeometry(0.03);clipGeo.scale(1,0.4,1.6);
@@ -217,4 +238,6 @@ function updateMower(dt,inL,inR){
   const P=lawnPush.value;P[0].set(mw.x+sy*0.7,mw.z+cy*0.7,0.95,0);P[1].set(st.x,st.z,2.2,0);
   P[2].set(tr.x+Math.sin(tr.yaw)*2.0,tr.z+Math.cos(tr.yaw)*2.0,1.6,0);P[3].set(tr.x-Math.sin(tr.yaw)*1.8,tr.z-Math.cos(tr.yaw)*1.8,1.6,0);
   clipTick(dt);lawnFlush();
+  if(Math.abs(mw.v)>0.01||Math.abs(mw.w)>0.01)lawn.sDirty=true;
+  if(lawn.sDirty&&performance.now()-lawn.saveT>2000)lawnSave();
 }
