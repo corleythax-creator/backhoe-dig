@@ -57,6 +57,7 @@
       <button id="soundBtn">Sound</button>
       <div class="sizes"><span>UI size</span><button data-s="1">1x</button><button data-s="1.5">1.5x</button><button data-s="2">2x</button></div>
       <div class="sizes"><span>Dirt detail</span><button data-d="1">1x</button><button data-d="2">2x</button><button data-d="4">4x</button><button data-d="16">16x</button></div>
+      <div class="ver" id="verMenu"></div>
     </div>
   </div>
   </div>
@@ -142,10 +143,12 @@
     <p>To scoop: boom down until the teeth bite, curl in while pulling the stick toward you, boom up, swing, then dump.</p>
     <button id="startBtn">Start digging</button>
     <p class="buildlink"><a href="https://backhoe-dig.vercel.app/build.html" target="_blank" rel="noopener">See how long this took to build</a></p>
+    <p class="ver" id="verHelp"></p>
   </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<script src="data/effort.js"></script>
 <script src="js/core.js"></script>
 <script src="js/terrain.js"></script>
 <script src="js/scenery.js"></script>
