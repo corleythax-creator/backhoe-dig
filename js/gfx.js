@@ -22,7 +22,7 @@ function setGfx(k,picked){const g=GFX[k]?GFX[k]:GFX[gfxGuess()];gfxKey=GFX[k]?k:
     scene.traverse(o=>{if(o.material)for(const m of [].concat(o.material))m.needsUpdate=true})}
   renderer.toneMappingExposure=te;
   // ground detail: the dirt and grass textures and the cut-face detail
-  gfxDetail=g.detail;if(texOn)texMixU.value=gfxDetail;
+  gfxDetail=g.detail;if(texOn){texMixU.value=gfxDetail;matTexUpdate()}
   // dirt detail follows the setting when picked (or the first time), and stays its own setting after that
   let saved=null;try{saved=localStorage.getItem('bhd_dirt')}catch(e){}
   if(picked||saved===null)setDirtLevel(g.dirt,picked);

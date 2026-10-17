@@ -196,10 +196,18 @@ body.editing #hud .top,body.editing #hud .sticks{display:none}
 .edopt label{font:700 13px/1 var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
 .edopt output{min-width:44px;font-variant-numeric:tabular-nums}
 #editor input[type=range]{width:min(150px,30vw);accent-color:var(--machine)}
-.edtools{pointer-events:auto;display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:4px;width:min(100%,640px)}
-@media (min-width:820px){.edtools{grid-template-columns:repeat(10,minmax(0,1fr));width:min(100%,900px)}#edOpts{width:min(100%,900px);max-width:900px}}
+.edtools{pointer-events:auto;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;width:min(100%,640px)}
+@media (min-width:820px){.edtools{grid-template-columns:repeat(11,minmax(0,1fr));width:min(100%,900px)}#edOpts{width:min(100%,900px);max-width:900px}}
+.edmats{max-height:min(40vh,420px);overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:6px;padding-right:4px}
+.edmats h3 small{font:600 14px/1 var(--f-display);color:var(--muted);letter-spacing:0;margin-left:6px}
+.edmats h4{margin:4px 0 0;font:700 13px/1 var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.edmatgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:6px}
+#editor button.edmat{height:auto;padding:4px;display:flex;flex-direction:column;align-items:stretch;gap:4px;font:700 14px/1.15 var(--f-display);text-align:center}
+.edmat i{display:block;aspect-ratio:1;border-radius:6px;background:url(../textures/thumbs.jpg) 0 0/100% 100%}
+.edmat i.nat{background:linear-gradient(135deg,#5b8a3a,#4a7a30 60%,#8a6a3f)}
+#editor button.edmat[aria-pressed="true"]{background:var(--machine);color:#1c1309}
 .edtools button{height:46px;padding:0 4px;font-size:15px}
-.edtools button[aria-pressed="true"],.edkind button[aria-pressed="true"],#editor button.go{background:var(--machine);color:#1c1309}
+.edtools button[aria-pressed="true"],.edkind button[aria-pressed="true"],.edshape button[aria-pressed="true"],#editor button.go{background:var(--machine);color:#1c1309}
 #editor button.danger{color:var(--danger)}
 #editor button:disabled{opacity:.4}
 #editor textarea{width:100%;box-sizing:border-box;height:96px;font:12px/1.3 ui-monospace,Menlo,monospace;color:var(--ink);background:#111410;border:1px solid var(--hud-line);border-radius:8px;padding:6px;-webkit-user-select:text;user-select:text}

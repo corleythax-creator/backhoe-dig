@@ -4,21 +4,33 @@
 // dig grid: 64 m square at 0.16 m (about 6 in) per cell. GRID_K = cells per 0.32 m, the old 1 ft cell, so reaches and
 // settling speeds written in cells stay the same in feet
 const S=64,N=400,CELL=S/N,V=N+1,CA=CELL*CELL,FLOOR=3.5,GRID_K=Math.round(0.32/CELL);
-const H=new Float32Array(V*V),H0=new Float32Array(V*V),grass=new Float32Array(V*V*3),paint=new Uint8Array(V*V),nz=new Float32Array(V*V),rockA=new Float32Array(V*V);
+const H=new Float32Array(V*V),H0=new Float32Array(V*V),grass=new Float32Array(V*V*3),matCov=new Float32Array(V*V),paint=new Uint8Array(V*V),nz=new Float32Array(V*V),rockA=new Float32Array(V*V);
 const ss=(a,b,x)=>{const t=Math.min(1,Math.max(0,(x-a)/(b-a)));return t*t*(3-2*t)};
 const hash=(i,j)=>{const s=Math.sin(i*127.1+j*311.7)*43758.5453;return s-Math.floor(s)};
 // ---------- map edits ----------
 // the map editor's layers over the generated ground, on a 0.5 m grid over the mesa and its cliffs: ED_H raises or
-// lowers the ground (metres), ED_P paints it toward dirt (+) or grass (-). The outer cells stay 0 so the edges meet the
-// coarse ground. Saved on this device as bhd_map, with the placed assets (trees and boulders); see editor.js
-const ED_X0=-58,ED_Z0=-32,ED_C=0.5,ED_NX=233,ED_NZ=249,ED_H=new Float32Array(ED_NX*ED_NZ),ED_P=new Float32Array(ED_NX*ED_NZ);
+// lowers the ground (metres), ED_P paints it toward dirt (+) or grass (-), ED_M covers it with a material from the
+// library (materials.js; 0 is the natural ground). The outer cells stay 0 so the edges meet the coarse ground. Saved on
+// this device as bhd_map, with the placed assets (trees and boulders); see editor.js
+const ED_X0=-58,ED_Z0=-32,ED_C=0.5,ED_NX=233,ED_NZ=249,ED_H=new Float32Array(ED_NX*ED_NZ),ED_P=new Float32Array(ED_NX*ED_NZ),ED_M=new Uint8Array(ED_NX*ED_NZ);
 let mapAssets=null;
 function edSample(A,x,z){const fx=(x-ED_X0)/ED_C,fz=(z-ED_Z0)/ED_C;if(fx<0||fz<0||fx>=ED_NX-1||fz>=ED_NZ-1)return 0;
   const i=fx|0,j=fz|0,u=fx-i,v=fz-j,k=j*ED_NX+i;return A[k]*(1-u)*(1-v)+A[k+1]*u*(1-v)+A[k+ED_NX]*(1-u)*v+A[k+ED_NX+1]*u*v}
+// the material painted on the cell nearest a point (0: natural ground)
+function paintAt(x,z){const i=Math.round((x-ED_X0)/ED_C),j=Math.round((z-ED_Z0)/ED_C);return i<0||j<0||i>=ED_NX||j>=ED_NZ?0:ED_M[j*ED_NX+i]}
+// a ground vertex's colour c (rgb array) under the painted materials: blended toward each nearby cell's material colour
+// as the cells' corners blend, tightened so an edge turns over about 0.25 m, as built surfaces have crisp edges. Returns
+// how much of it is covered (0 to 1)
+function matTint(x,z,c){const fx=(x-ED_X0)/ED_C,fz=(z-ED_Z0)/ED_C;if(fx<0||fz<0||fx>=ED_NX-1||fz>=ED_NZ-1)return 0;
+  const i=fx|0,j=fz|0,u=fx-i,v=fz-j,k=j*ED_NX+i;let cov=0,r=0,g=0,b=0;
+  for(const [q,w] of [[k,(1-u)*(1-v)],[k+1,u*(1-v)],[k+ED_NX,(1-u)*v],[k+ED_NX+1,u*v]]){const m=ED_M[q];if(!m||w<=0)continue;const mc=MAT_LIST[m-1].c;cov+=w;r+=mc[0]*w;g+=mc[1]*w;b+=mc[2]*w}
+  if(cov<=0)return 0;const sc=ss(0.25,0.75,cov),f=sc/cov;
+  c[0]=c[0]*(1-sc)+r*f;c[1]=c[1]*(1-sc)+g*f;c[2]=c[2]*(1-sc)+b*f;
+  return sc}
 function b64Bytes(b){let s='';for(let i=0;i<b.length;i+=0x8000)s+=String.fromCharCode.apply(null,b.subarray(i,i+0x8000));return btoa(s)}
 function bytesB64(t){const s=atob(t),b=new Uint8Array(s.length);for(let i=0;i<s.length;i++)b[i]=s.charCodeAt(i);return b}
-// a map as text: each edit layer as the smallest box holding its edits (heights in centimetres, paint in hundredths),
-// and the assets as [type, x, z, turn, size, tint]
+// a map as text: each edit layer as the smallest box holding its edits (heights in centimetres, paint in hundredths,
+// materials as ids), and the assets as [type, x, z, turn, size, tint]
 function edBox(A,scale,Arr){let i0=ED_NX,i1=-1,j0=ED_NZ,j1=-1;
   for(let j=0;j<ED_NZ;j++)for(let i=0;i<ED_NX;i++)if(Math.round(A[j*ED_NX+i]*scale)!==0){if(i<i0)i0=i;if(i>i1)i1=i;if(j<j0)j0=j;if(j>j1)j1=j}
   if(i1<0)return null;const w=i1-i0+1,h=j1-j0+1,q=new Arr(w*h),lim=Arr===Int8Array?127:32767;
@@ -28,17 +40,21 @@ function edUnbox(o,A,scale,Arr){if(!o)return;const [i0,j0,w,h]=o.r,q=new Arr(byt
   if(!(w>0&&h>0&&i0>=0&&j0>=0&&i0+w<=ED_NX&&j0+h<=ED_NZ&&q.length===w*h))throw new Error('bad layer');
   for(let j=0;j<h;j++)for(let i=0;i<w;i++)A[(j+j0)*ED_NX+i+i0]=q[j*w+i]/scale}
 function mapEncode(){const doc={game:'backhoe-dig',v:1},h=edBox(ED_H,100,Int16Array),p=edBox(ED_P,100,Int8Array);
-  if(h)doc.h=h;if(p)doc.p=p;
+  const m=edBox(ED_M,1,Uint8Array);if(h)doc.h=h;if(p)doc.p=p;if(m)doc.m=m;
   if(mapAssets)doc.assets=mapAssets.map(a=>[a.t,+a.x.toFixed(2),+a.z.toFixed(2),+a.yaw.toFixed(2),+a.s.toFixed(2),a.c]);
   return JSON.stringify(doc)}
 // reads a map into new layers; throws on anything that is not one
 function mapDecode(text){const doc=JSON.parse(text);if(!doc||doc.game!=='backhoe-dig'||doc.v!==1)throw new Error('not a Backhoe Dig map');
-  const h=new Float32Array(ED_H.length),p=new Float32Array(ED_P.length);edUnbox(doc.h,h,100,Int16Array);edUnbox(doc.p,p,100,Int8Array);
-  for(let j=0;j<ED_NZ;j++)for(let i=0;i<ED_NX;i++)if(i<3||j<3||i>ED_NX-4||j>ED_NZ-4){h[j*ED_NX+i]=0;p[j*ED_NX+i]=0}
+  const h=new Float32Array(ED_H.length),p=new Float32Array(ED_P.length),m=new Uint8Array(ED_M.length);edUnbox(doc.h,h,100,Int16Array);edUnbox(doc.p,p,100,Int8Array);edUnbox(doc.m,m,1,Uint8Array);
+  for(let q=0;q<m.length;q++)if(m[q]>MAT_LIST.length)m[q]=0;
+  for(let j=0;j<ED_NZ;j++)for(let i=0;i<ED_NX;i++)if(i<3||j<3||i>ED_NX-4||j>ED_NZ-4){h[j*ED_NX+i]=0;p[j*ED_NX+i]=0;m[j*ED_NX+i]=0}
   const as=Array.isArray(doc.assets)?doc.assets.filter(a=>Array.isArray(a)&&['pine','leafy','rock'].includes(a[0])&&isFinite(a[1])&&isFinite(a[2]))
     .map(a=>({t:a[0],x:+a[1],z:+a[2],yaw:+a[3]||0,s:Math.max(0.3,Math.min(3,+a[4]||1)),c:(a[5]|0)>=0?a[5]|0:0})):null;
-  return {h,p,as}}
-try{const t=localStorage.getItem('bhd_map');if(t){const m=mapDecode(t);ED_H.set(m.h);ED_P.set(m.p);mapAssets=m.as}}catch(e){}
+  return {h,p,m,as}}
+try{const t=localStorage.getItem('bhd_map');if(t){const m=mapDecode(t);ED_H.set(m.h);ED_P.set(m.p);ED_M.set(m.m);mapAssets=m.as}}catch(e){}
+// the painted ids for the ground shader, one texel per cell (materials.js); editor.js flags it when they change
+matU.tMatId.value=new THREE.DataTexture(ED_M,ED_NX,ED_NZ,THREE.LuminanceFormat,THREE.UnsignedByteType);
+matU.tMatId.value.unpackAlignment=1;matU.tMatId.value.needsUpdate=true;
 // the site sits on a grassy mesa; cliffs drop about 150 ft to meadows and a lake. It is about 295 ft across, centred
 // south of the dig so the north rim (the truck's dump spot) stays put. The north part is the high top with two hills;
 // across the middle a rocky scarp drops 24 ft to the Lower Bench, a dirt yard with stockpiles, and a ramp runs down it
@@ -126,15 +142,16 @@ function wallAt(x,z){const i=Math.round((x-WG_X0)/WG_C),j=Math.round((z-WG_Z0)/W
 // how many of a machine's probe points (local [side, forward] offsets) stand on ground too steep to drive
 function wallCount(x,z,yaw,P){const s=Math.sin(yaw),c=Math.cos(yaw);let n=0;for(const [lx,lz] of P)if(wallAt(x+lx*c+lz*s,z-lx*s+lz*c))n++;return n}
 const PIPE_Z=-5.5, TRENCH_Z0=-8.5, TRENCH_Z1=-3.0;
-// a dig-grid vertex's undug colour (grass, rock on steep ground, sand, the yards and roads) and its dirt-texture amount
+// a dig-grid vertex's undug colour (grass, rock on steep ground, sand, the yards and roads, painted materials), its
+// dirt-texture amount and how much material covers it
 function digBase(k){const i=k%V,j=(k/V)|0,x=i*CELL-S/2,z=j*CELL-S/2;
   const n=hash(i,j),n2=hash(i*0.37|0,j*0.37|0);
   grass[k*3]=0.30+0.07*n+0.05*n2; grass[k*3+1]=0.50+0.08*n+0.04*n2; grass[k*3+2]=0.24+0.04*n;
   const h=H0[k],sl=(Math.abs(baseHeight(x+0.5,z)-baseHeight(x-0.5,z))+Math.abs(baseHeight(x,z+0.5)-baseHeight(x,z-0.5))),rock=ss(0.55,1.1,sl),sand=1-ss(WATER+0.6,WATER+2.8,h),st2=0.06*Math.sin(h*1.4+n);
   if(rock>0){grass[k*3]+=(0.50+0.06*n+st2-grass[k*3])*rock;grass[k*3+1]+=(0.44+0.05*n+st2-grass[k*3+1])*rock;grass[k*3+2]+=(0.38+0.04*n+st2-grass[k*3+2])*rock}
   if(sand>0){grass[k*3]+=(0.80-grass[k*3])*sand;grass[k*3+1]+=(0.72-grass[k*3+1])*sand;grass[k*3+2]+=(0.52-grass[k*3+2])*sand}
-  const rc=[grass[k*3],grass[k*3+1],grass[k*3+2]],ya=yardTint(x,z,rc,n),ra=roadTint(x,z,rc,n);grass[k*3]=rc[0];grass[k*3+1]=rc[1];grass[k*3+2]=rc[2];
-  rockA[k]=Math.min(1,Math.max(rock*0.95+sand*0.4,ra*0.9,ya*0.85))}
+  const rc=[grass[k*3],grass[k*3+1],grass[k*3+2]],ya=yardTint(x,z,rc,n),ra=roadTint(x,z,rc,n),mc=matTint(x,z,rc);grass[k*3]=rc[0];grass[k*3+1]=rc[1];grass[k*3+2]=rc[2];
+  rockA[k]=Math.min(1,Math.max(rock*0.95+sand*0.4,ra*0.9,ya*0.85))*(1-mc);matCov[k]=mc}
 for(let j=0;j<V;j++)for(let i=0;i<V;i++){
   const k=j*V+i,x=i*CELL-S/2,z=j*CELL-S/2;
   H0[k]=H[k]=baseHeight(x,z); nz[k]=hash(i*1.7+3,j*2.3+1);
@@ -178,12 +195,12 @@ const groundMat=M(0xffffff,{vertexColors:true});
 groundMat.onBeforeCompile=sh=>{
   sh.uniforms.tGrass={value:texGrass};sh.uniforms.tDirt={value:texDirt};sh.uniforms.texMix=texMixU;sh.uniforms.uTime=timeU;sh.uniforms.uPipeZ={value:PIPE_Z};
   // wetT: when this ground was last cut or dumped; fresh dirt shows dark and damp and dries over a few minutes
-  sh.vertexShader='attribute float dirt;\nattribute float wetT;\nattribute float soilD;\nuniform float uTime;\nvarying float vDirt;\nvarying float vWet;\nvarying float vSD;\nvarying vec2 vWXZ;\nvarying vec3 vWP;\n'+sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvDirt=dirt;\nvSD=soilD;\nvWet=exp(-max(0.0,uTime-wetT)/100.0);\nvWP=(modelMatrix*vec4(transformed,1.0)).xyz;\nvWXZ=vWP.xz;');
+  sh.vertexShader='attribute float dirt;\nattribute float wetT;\nattribute float soilD;\nattribute float matA;\nuniform float uTime;\nvarying float vDirt;\nvarying float vWet;\nvarying float vSD;\nvarying float vMatA;\nvarying vec2 vWXZ;\nvarying vec3 vWP;\n'+sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvDirt=dirt;\nvSD=soilD;\nvMatA=matA;\nvWet=exp(-max(0.0,uTime-wetT)/100.0);\nvWP=(modelMatrix*vec4(transformed,1.0)).xyz;\nvWXZ=vWP.xz;');
   // texture detail goes in ahead of the vertex colour so it is turned linear with it. groundOcc: sky light under the
   // excavator and truck, dimmed by distance to each footprint (x, z, yaw, unused; half width, half length, forward offset, unused)
-  sh.uniforms.uOcc=groundOcc;
-  sh.fragmentShader='uniform sampler2D tGrass;\nuniform sampler2D tDirt;\nuniform float texMix;\nuniform float uPipeZ;\nuniform vec4 uOcc[4];\nvarying float vDirt;\nvarying float vWet;\nvarying float vSD;\nvarying vec2 vWXZ;\nvarying vec3 vWP;\n'+FACE_GLSL+sh.fragmentShader.replace('#include <specularmap_fragment>','#include <specularmap_fragment>\nspecularStrength*=1.0+7.0*vWet*vDirt;').replace('#include <color_fragment>',
-    'vec3 tg=texture2D(tGrass,vWXZ*0.22).rgb/vec3(0.36,0.468,0.178);\nvec3 td=texture2D(tDirt,vWXZ*0.45).rgb/vec3(0.461,0.255,0.123);\ndiffuseColor.rgb*=mix(vec3(1.0),clamp(mix(tg,td,vDirt),0.0,2.2),0.8*texMix);\ndiffuseColor.rgb*=1.0-0.32*vWet*vDirt;\nif(vDirt>0.01&&texMix>0.5)diffuseColor.rgb*=mix(vec3(1.0),faceDetail(vWP,vSD,uPipeZ),vDirt);\n#include <color_fragment>').replace('#include <lights_fragment_end>',
+  sh.uniforms.uOcc=groundOcc;Object.assign(sh.uniforms,matU);
+  sh.fragmentShader='uniform sampler2D tGrass;\nuniform sampler2D tDirt;\nuniform float texMix;\nuniform float uPipeZ;\nuniform vec4 uOcc[4];\nvarying float vDirt;\nvarying float vWet;\nvarying float vSD;\nvarying float vMatA;\nvarying vec2 vWXZ;\nvarying vec3 vWP;\n'+MAT_GLSL_HEAD+FACE_GLSL+sh.fragmentShader.replace('#include <specularmap_fragment>','#include <specularmap_fragment>\nspecularStrength*=1.0+7.0*vWet*vDirt;').replace('#include <color_fragment>',
+    'vec3 tg=texture2D(tGrass,vWXZ*0.22).rgb/vec3(0.36,0.468,0.178);\nvec3 td=texture2D(tDirt,vWXZ*0.45).rgb/vec3(0.461,0.255,0.123);\nvec3 gd=clamp(mix(tg,td,vDirt),0.0,2.2);float gk=0.8;\n'+matGlsl()+'diffuseColor.rgb*=mix(vec3(1.0),gd,gk*texMix);\ndiffuseColor.rgb*=1.0-0.32*vWet*vDirt;\nif(vDirt>0.01&&texMix>0.5)diffuseColor.rgb*=mix(vec3(1.0),faceDetail(vWP,vSD,uPipeZ),vDirt);\n#include <color_fragment>').replace('#include <lights_fragment_end>',
     'float skyO=1.0;\nfor(int m=0;m<4;m+=2){vec2 d=vWXZ-uOcc[m].xy;float c=cos(uOcc[m].z),s=sin(uOcc[m].z);vec2 l=vec2(d.x*c-d.y*s,d.x*s+d.y*c-uOcc[m+1].z);vec2 q=abs(l)-uOcc[m+1].xy;\nfloat dist=length(max(q,0.0))+min(max(q.x,q.y),0.0);skyO*=1.0-0.75*(1.0-smoothstep(-0.4,1.6,dist));}\nirradiance*=skyO;\n#include <lights_fragment_end>');
 };
 const geo=new THREE.PlaneGeometry(S,S,N,N); geo.rotateX(-Math.PI/2);
@@ -192,6 +209,7 @@ geo.setAttribute('color',new THREE.BufferAttribute(colors,3));
 const dirtA=new Float32Array(V*V);geo.setAttribute('dirt',new THREE.BufferAttribute(dirtA,1));
 const wetT=new Float32Array(V*V).fill(-1e4);geo.setAttribute('wetT',new THREE.BufferAttribute(wetT,1));
 const soilDA=new Float32Array(V*V);geo.setAttribute('soilD',new THREE.BufferAttribute(soilDA,1));
+const matAA=new Float32Array(V*V);geo.setAttribute('matA',new THREE.BufferAttribute(matAA,1));
 // sky view: for dug and dumped dirt, how high the ground rises around it (8 directions, about 1 ft and 3 ft out)
 // darkens trench floors and lower walls, since the ground casts no shadows on itself
 const AO_S=[],AO_R=Math.round(0.95/CELL);
@@ -213,7 +231,7 @@ function updateTerrain(){
     p[k*3+1]=h;soilDA[k]=-d;
     let r=grass[k*3],g=grass[k*3+1],b=grass[k*3+2];
     if(paint[k]&&ad<0.04){ if(paint[k]===1){r=0.93;g=0.93;b=0.9}else{r=0.96;g=0.78;b=0.1} }
-    const t=ss(0.02,0.16,ad);dirtA[k]=Math.max(t,rockA[k]);
+    const t=ss(0.02,0.16,ad);dirtA[k]=Math.max(t,rockA[k]);matAA[k]=matCov[k]*(1-t);
     if(t>0){
       let dr,dg,db;
       if(d<0){const c=SOIL[layerAt((k%V)*CELL-S/2,((k/V)|0)*CELL-S/2,-d,nz[k])].c,sh=1-0.12*ss(0.3,2.5,-d);dr=c[0]*sh;dg=c[1]*sh;db=c[2]*sh}
@@ -229,6 +247,7 @@ function updateTerrain(){
   const da=geo.attributes.dirt;da.updateRange.offset=off/3;da.updateRange.count=cnt/3;da.needsUpdate=true;
   const wa=geo.attributes.wetT;wa.updateRange.offset=off/3;wa.updateRange.count=cnt/3;wa.needsUpdate=true;
   const sa=geo.attributes.soilD;sa.updateRange.offset=off/3;sa.updateRange.count=cnt/3;sa.needsUpdate=true;
+  const ma=geo.attributes.matA;ma.updateRange.offset=off/3;ma.updateRange.count=cnt/3;ma.needsUpdate=true;
   pos.needsUpdate=true; ca.needsUpdate=true;
   snapClods(ja,jb);updateShadowCaster();
 }
