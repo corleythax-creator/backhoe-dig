@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-17T23:39:46Z",
+ "updated": "2026-10-17T23:49:07Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 490,
+   "dh": 490.5,
    "act": 11.0,
-   "versions": 67
+   "versions": 68
   }
  ],
  "extra": [
@@ -696,6 +696,15 @@ window.EFFORT = {
    "tris": 1282998,
    "chars": 429826,
    "what": "The Family Island: a dark green steel truss bridge (about 340 ft) runs from the Lower Bench south across the water to a new, larger mesa about 525 ft across. On it: the family house with a stone base, a steep roof, a chimney and a wraparound porch with rocking chairs; a picnic pavilion with two tables; a fire pit with log benches; a flagpole and a bench looking back at Corley's; a roundabout with a big tree in the middle; groves of pines and autumn trees. The excavator, truck, mower and the worker can all cross and drive around it, and the railings keep them on the deck. The roads west and east stop at barriers where Dexter's and Jessica's bridges will go, and the mainland bridge runs about 335 ft south to a barrier, with bare piers and a crane beyond. The site map now shows both islands."
+  },
+  {
+   "v": 75,
+   "asked": "2026-10-17T18:44:00-05:00",
+   "live": "2026-10-17T18:49:07-05:00",
+   "dh": 0.5,
+   "tris": 1282998,
+   "chars": 429953,
+   "what": "The Keys line in How to play now gives the mower's own keys: W and S drive it straight, A and D turn it, and the number pad works the lap bars (8 and 2 both, 4 and 6 spin in place, 7 and 1 the left bar, 9 and 3 the right bar), instead of saying IJKL is the right stick in every mode."
   }
  ]
 };
