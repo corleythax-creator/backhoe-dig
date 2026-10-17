@@ -182,6 +182,7 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - H11 Simple cooking: Breakfast from your eggs, supper from the garden. (R4 F5 most none c2 5h needs H04)
 - H12 Holidays at home: Pumpkins on the porch in fall, lights on the cabin at Christmas. (R5 F5 rare low c1 4h needs H01)
 - H13 Home projects with your machines: Dig your own pond, cut a driveway, terrace a garden with the excavator. (R5 F8 most low c2 6h)
+- H14 Chess and checkers table: A low-poly picnic table with a board on it. Sit down and the island saves and switches to Mesa Chess or Checkers at full quality, straight onto the board (the chess page preloads as you walk up); Get out brings you back standing beside the table. On the claude.ai version it opens in a new tab. (R4 F7 some none c1 6h)
 
 ## K: Yard work
 
