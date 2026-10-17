@@ -1,7 +1,7 @@
 // Backhoe Dig build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Backhoe Dig",
- "updated": "2026-10-17T09:25:00Z",
+ "updated": "2026-10-17T09:28:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 273,
+   "dh": 276,
    "act": 4.5,
-   "versions": 34
+   "versions": 35
   }
  ],
  "extra": [
@@ -393,12 +393,21 @@ window.EFFORT = {
   },
   {
    "v": 41,
+   "asked": "2026-10-17T04:17:00-05:00",
+   "live": "2026-10-17T04:23:00-05:00",
+   "dh": 3,
+   "tris": 991332,
+   "chars": 215752,
+   "what": "Grass grows back: a mowed patch stays stubble for about 45 seconds, then rises back to full height over about four minutes while its stripes fade into the tall-grass colour; the Lawn percent drops as it grows, and a lawn left long enough becomes a fresh job. Four times the grass triangles (55,300 to 220,800): clumps every 8 in instead of 10, eight tapered blades per clump that arch and twist with their own shades of green, two seed stalks with straw heads, and drifts of grass gone to seed."
+  },
+  {
+   "v": 42,
    "asked": "2026-10-17T04:16:00-05:00",
-   "live": "2026-10-17T04:25:00-05:00",
+   "live": "2026-10-17T04:28:00-05:00",
    "dh": 1.5,
-   "tris": 822372,
-   "chars": 214859,
-   "what": "The mowed lawn stays mowed: which grass is cut and its stripes, the mowing time and where the mower was left are saved in the browser and come back on reload. Reset restores the ground but no longer regrows mowed grass; the save carries its time so grass growth can catch up on time away."
+   "tris": 991332,
+   "chars": 218102,
+   "what": "The mowed lawn stays mowed: how long ago each patch was cut and its stripe, the mowing time and where the mower was left are saved in the browser and come back on reload, so grass keeps growing back from where it was (it grows while the game runs, not while it is closed). Reset restores the ground but no longer regrows mowed grass."
   }
  ]
 };

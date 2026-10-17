@@ -34,7 +34,7 @@ function updateLawnMap(){
   if(!lawnMap){lawnMap=document.createElement('canvas');lawnMap.width=LAWN_NX;lawnMap.height=LAWN_NZ}
   const x2=lawnMap.getContext('2d'),img=x2.createImageData(LAWN_NX,LAWN_NZ),d=img.data;
   for(let n=0;n<LAWN_N;n++){const o=n*4;if(lawn.dug[n])continue;
-    if(lawn.cut[n]){const t=0.5+0.5*lawn.str[n];d[o]=70+50*t;d[o+1]=120+70*t;d[o+2]=45+30*t}else{d[o]=163;d[o+1]=166;d[o+2]=76}d[o+3]=235}
+    const t=0.5+0.5*lawn.str[n],f=ss(0,0.6,lawn.gd[n]);d[o]=70+50*t+(163-70-50*t)*f;d[o+1]=120+70*t+(166-120-70*t)*f;d[o+2]=45+30*t+(76-45-30*t)*f;d[o+3]=235}
   x2.putImageData(img,0,0)}
 function drawMap(cv,cx,cz,half,big){
   if(!mapBg)buildMapBg();
