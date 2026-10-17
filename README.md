@@ -31,7 +31,7 @@ A 3D low-poly excavator game in plain HTML, CSS and JavaScript (three.js r128, n
 | `js/effects.js` | Shared per-frame vectors, resize |
 | `js/sound.js` | All sound, rendered in the browser: diesel engine loops, turbo, tires, air brakes, hydraulics, relief valve, tracks, bucket scrape, pouring dirt, backup alarm; stereo, distance and cliff echo; the Sound panel (on/off, Master, Engines, Backup alarm, Effects) |
 | `js/maps.js` | Minimap and big map |
-| `js/editor.js` | Map editor (☰ menu or G): sculpt and paint the ground, place, move, turn, resize, copy, query and delete trees, boulders and machines; undo; save on the device, copy out and load maps |
+| `js/editor.js` | Map editor (☰ menu or G): sculpt and paint the ground, lay out and grade roads, place, move, turn, resize, copy, query and delete trees, boulders and machines; undo; save on the device, copy out and load maps |
 | `js/gfx.js` | Graphics setting: Low (phones), Medium (laptops), High (desktop PCs), saved per device |
 | `js/shadowproxy.js` | Cheaper shadows: merged shadow-only meshes for the machines, near trees only |
 | `js/bench.js` | Speed test |
