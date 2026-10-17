@@ -108,7 +108,7 @@ function updateTruck(dt,thr,steerIn,bedIn){
   tr.v+=(tr.gear*Fd/mass+G*Math.sin(tr.pitch))*dt;
   const dec=(crr*G+(drive?0:0.35)+brake*65000/mass)*dt;
   tr.v=Math.abs(tr.v)<=dec?0:tr.v-Math.sign(tr.v)*dec;
-  tr.brakeOn=brake>0.2&&(Math.abs(tr.v)>0.05||tr.shiftT>0||!!thr);
+  tr.drive=drive;tr.brakeOn=brake>0.2&&(Math.abs(tr.v)>0.05||tr.shiftT>0||!!thr);
   // steering: the wheels turn at a hydraulic rate, and tires scrub wide when the turn asks for more grip than they have
   tr.steer+=clamp(steerIn*0.6-tr.steer,-1.1*dt,1.1*dt);
   let curv=Math.tan(tr.steer)/WB;const v2=tr.v*tr.v,latMax=(soft?2.8:road?4.2:3.5)*(1-0.25*f);
@@ -117,10 +117,12 @@ function updateTruck(dt,thr,steerIn,bedIn){
   const sy0=Math.sin(tr.yaw),cy0=Math.cos(tr.yaw),rx=tr.x+sy0*REAR+sy0*tr.v*dt,rz=tr.z+cy0*REAR+cy0*tr.v*dt;
   const yawRate=-tr.v*curv;tr.yaw+=yawRate*dt;
   tr.x=rx-Math.sin(tr.yaw)*REAR;tr.z=rz-Math.cos(tr.yaw)*REAR;
-  // the rim berm: head-on it stops the truck, at a glancing angle it scrapes along and keeps most of its speed
-  {const rr=mesaR(tr.x,tr.z),lim=EDGE-1.4;if(rr>lim){const k=lim/rr;tr.x*=k;tr.z=MZ+(tr.z-MZ)*k;
-    const nx=tr.x,nz=tr.z-MZ,nl=Math.hypot(nx,nz)||1,c=(Math.sin(tr.yaw)*nx+Math.cos(tr.yaw)*nz)/nl*Math.sign(tr.v);
-    if(c>0)tr.v*=Math.exp(-c*dt*40)}}
+  // the rim berm keeps both axles on the mesa (the tail can still hang over the edge to dump): head-on it stops
+  // the truck, at a glancing angle it scrapes along and keeps most of its speed
+  for(const lz of [3.1,REAR]){const sy=Math.sin(tr.yaw),cy=Math.cos(tr.yaw),px=tr.x+sy*lz,pz=tr.z+cy*lz,rr=mesaR(px,pz),lim=EDGE-1.0;
+    if(rr>lim){const k=lim/rr;tr.x+=px*k-px;tr.z+=MZ+(pz-MZ)*k-pz;
+      const nz=pz-MZ,nl=Math.hypot(px,nz)||1,c=(sy*px+cy*nz)/nl*Math.sign(tr.v);
+      if(c>0)tr.v*=Math.exp(-c*dt*40)}}
   // keep the truck from driving through the excavator
   const sy=Math.sin(tr.yaw),cy=Math.cos(tr.yaw);
   for(const lz of [2.2,-0.4,-2.6]){const cx=tr.x+sy*lz,cz=tr.z+cy*lz,dx=cx-st.x,dz=cz-st.z,d=Math.hypot(dx,dz),min=1.5+2.3;
