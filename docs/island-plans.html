@@ -1,0 +1,281 @@
+<title>Four Islands Plans</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: a site-plan set like docs/mesa-plans.html. Shared brief first, then one sheet per idea (map beside its numbers), then what all three share. */
+:root{
+  --bg:#eceee8; --sheet:#f6f7f3; --fg:#1d231f; --muted:#59645b; --line:#c8cdc3;
+  --accent:#c9601c; --accent-soft:#f3dccb; --ok:#3f7a3a; --warn:#9a6a00;
+  --f-display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --f-body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121613; --sheet:#1a1f1b; --fg:#e3e8e1; --muted:#9aa59b; --line:#2e3630;
+  --accent:#f0884a; --accent-soft:#3a2618; --ok:#8cc47f; --warn:#e0b24a; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121613; --sheet:#1a1f1b; --fg:#e3e8e1; --muted:#9aa59b; --line:#2e3630;
+  --accent:#f0884a; --accent-soft:#3a2618; --ok:#8cc47f; --warn:#e0b24a; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 56px}
+.wrap{max-width:1180px;margin:0 auto;display:grid;gap:28px}
+h1,h2,h3{font-family:var(--f-display);font-weight:600;line-height:1.1;margin:0;text-wrap:balance}
+h1{font-size:clamp(34px,6vw,54px);letter-spacing:.01em}
+h2{font-size:clamp(28px,4.4vw,38px)}
+h3{font-size:20px;letter-spacing:.02em}
+p{margin:0;max-width:68ch}
+ul{margin:0;padding-left:20px;display:grid;gap:4px}
+.eyebrow{font-family:var(--f-display);font-size:14px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+.muted{color:var(--muted)}
+.mono{font-family:var(--f-mono);font-size:.88em;font-variant-numeric:tabular-nums}
+header{display:grid;gap:12px}
+.lede{font-size:18px}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.fact{background:var(--sheet);padding:14px 16px;display:grid;gap:2px;min-width:0}
+.fact b{font-family:var(--f-display);font-size:24px;font-weight:600}
+.fact span{font-size:14px;color:var(--muted)}
+.sheet{background:var(--sheet);border:1px solid var(--line);border-radius:8px;padding:22px clamp(16px,2.4vw,28px);display:grid;gap:20px}
+.sheet-head{display:grid;gap:6px}
+.sheet-body{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:26px;align-items:start}
+@media (max-width:860px){.sheet-body{grid-template-columns:minmax(0,1fr)}}
+.mapbox{display:grid;gap:8px;min-width:0}
+canvas.map{width:100%;height:auto;border-radius:4px;border:1px solid var(--line);display:block;background:#2d5c6e}
+.cap{font-size:13px;color:var(--muted)}
+.detail{display:grid;gap:18px;min-width:0}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:6px}
+table{border-collapse:collapse;width:100%;font-size:14.5px;min-width:440px}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-family:var(--f-display);font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-size:13px;color:var(--muted);background:var(--bg)}
+tr:last-child td{border-bottom:0}
+td.num{font-family:var(--f-mono);font-size:13.5px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.pc{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media (max-width:520px){.pc{grid-template-columns:minmax(0,1fr)}}
+.pc h3{font-size:16px;margin-bottom:6px}
+.pc .pro h3{color:var(--ok)} .pc .con h3{color:var(--warn)}
+.pc ul{font-size:15px}
+.tag{display:inline-block;font-family:var(--f-display);font-weight:600;font-size:13px;letter-spacing:.08em;text-transform:uppercase;background:var(--accent-soft);color:var(--accent);padding:2px 8px;border-radius:3px}
+.cost{font-family:var(--f-mono);font-size:14px;color:var(--muted)}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}
+.card{display:grid;gap:8px;align-content:start;min-width:0}
+.card h3{border-bottom:2px solid var(--accent);padding-bottom:4px}
+.card ul{font-size:15px}
+.rec{border-left:4px solid var(--accent);padding:4px 0 4px 16px;display:grid;gap:8px}
+</style>
+
+<div class="wrap">
+<header>
+  <div class="eyebrow">Corley's Island · planning record</div>
+  <h1>Four Islands: three layout ideas</h1>
+  <p class="lede">One large Family Island in the middle, three personal mesas around it (Corley's, the one you play on now, plus Dexter's and Jessica's), bridges and docks between them, and one long bridge heading off across the lake toward the mainland.</p>
+  <p class="muted">All three ideas leave Corley's Island exactly where and as it is, and it stays the only island with digging, mud and the gas main. Dexter's and Jessica's start as flat mesas the same size as Corley's (about 295 ft across, cliffs about 150 ft to the water). Maps are to scale, north up, in feet.</p>
+</header>
+
+<section class="facts" aria-label="The brief">
+  <div class="fact"><b>Family Island</b><span>Central and largest: about 395 to 525 ft across, the meeting place and the start of the mainland bridge</span></div>
+  <div class="fact"><b>Corley's</b><span>Unchanged: the dig site, the excavator, truck and mower</span></div>
+  <div class="fact"><b>Dexter's</b><span>Flat mesa with equipment: a machine yard and shed</span></div>
+  <div class="fact"><b>Jessica's</b><span>Flat mesa made as cozy as possible: a forest cottage with a library</span></div>
+  <div class="fact"><b>Mainland bridge</b><span>Runs out to the fog (about 2,500 ft) for now; the idea board's B01 continues it</span></div>
+</section>
+
+<!-- the three idea sheets are filled from PLANS below -->
+<div id="plans" class="wrap" style="gap:28px"></div>
+
+<section class="sheet">
+  <div class="sheet-head">
+    <div class="eyebrow">Same in every idea</div>
+    <h2>What goes on each island</h2>
+  </div>
+  <div class="grid3">
+    <div class="card">
+      <h3>Family Island</h3>
+      <ul>
+        <li>A big timber family house with a wraparound porch facing the lake</li>
+        <li>An open lawn with a picnic pavilion, fire pit and string lights</li>
+        <li>A flagpole and a lookout at the north rim facing Corley's</li>
+        <li>A stair down the cliff to the docks: a boathouse, a pontoon boat and kayaks</li>
+        <li>A roundabout where all the bridges meet, and the gate to the mainland bridge</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Dexter's Island</h3>
+      <ul>
+        <li>Flat gravel top, graded so machines can go anywhere</li>
+        <li>An equipment shed with roll-up doors and a fuel tank</li>
+        <li>Parked machines: a skid steer, a small dozer, a wheel loader and a lowboy trailer (each one drivable later, one at a time)</li>
+        <li>A practice yard of stockpiles and cones</li>
+        <li>A wide steel bridge rated for machines, so Dexter's equipment can drive to Corley's dig</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Jessica's Island</h3>
+      <ul>
+        <li>Dense pine and leafy forest with a winding gravel footpath and lanterns</li>
+        <li>A stone and timber cottage with a mossy roof and a smoking chimney</li>
+        <li>A library inside: shelves floor to ceiling, a rolling ladder, a window seat, armchairs by the fireplace, a reading lamp</li>
+        <li>Warm window glow at dusk, a herb garden and a bench at the cliff edge</li>
+        <li>Machines park where the forest starts; the path to the cottage is on foot</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="sheet">
+  <div class="sheet-head">
+    <div class="eyebrow">How it gets built</div>
+    <h2>Notes for the code</h2>
+  </div>
+  <div class="grid3">
+    <div class="card">
+      <h3>Ground</h3>
+      <ul>
+        <li><span class="mono">groundHeight</span> grows a list of islands (centre, size, top height). Corley's mesa math stays as it is; the new ones are flat mesas with the same cliff profile.</li>
+        <li>The 0.5 m dig grid and editor layers stay on Corley's. The new islands get a coarse ground mesh and their own editor layer later.</li>
+        <li>Bridge decks are surfaces for <span class="mono">surfAt()</span>, so walking, driving and blocks all work on them.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Phone speed</h3>
+      <ul>
+        <li>Far islands draw as low-detail meshes with merged, instanced trees; full detail only for the island you are on.</li>
+        <li>The library interior loads as you walk to the cottage door.</li>
+        <li>Shadows stay near the player (as now), so the extra islands cost little on Low graphics.</li>
+      </ul>
+    </div>
+    <div class="card">
+      <h3>Saves, maps and editor</h3>
+      <ul>
+        <li>Machines on Dexter's join the save list and <span class="mono">WK_RIDES</span> as they become drivable.</li>
+        <li>The minimap and big map zoom out to show all four islands.</li>
+        <li>Trees and buildings on the new islands are placed assets, so the map editor can move them.</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<section class="sheet">
+  <div class="sheet-head">
+    <div class="eyebrow">Recommendation</div>
+    <h2>Build Idea C, in three steps</h2>
+  </div>
+  <div class="rec">
+    <p><b>Idea C (the Gateway Line)</b> gives each person a bridge that suits them: a heavy truss for Corley's trucks, a machine-rated steel bridge for Dexter, a covered wooden footbridge for Jessica. It also puts the mainland bridge in a straight line through the Family Island, which is where B01 wants to go next.</p>
+    <p>Steps: (1) the Family Island and the bridge from Corley's, with the mainland bridge stub; (2) Dexter's mesa, shed and parked machines; (3) Jessica's forest, cottage and library. Each step is a release on its own.</p>
+    <p><span class="tag">Chosen</span> Idea C was picked. Step 1 shipped in v74: the Family Island, the truss bridge from the Lower Bench and the first stretch of the mainland bridge. It stops at a barrier about 335 ft out, with bare piers and a crane beyond, because the mountains begin about 1,540 ft from Corley's. The docks come later.</p>
+    <p class="muted">Bridges from Corley's leave from the Lower Bench (24 ft below the top), so they run level to the new islands. Idea A is the better pick if the islands should feel equal and grand; Idea B if you want the islands close enough to see each other's work and drive a loop.</p>
+  </div>
+</section>
+</div>
+
+<script>
+// World units are metres like the game (x east, z south, Corley's mesa centred at 0,30). Shown in feet.
+const FT=3.28084, ft=m=>Math.round(m*FT/5)*5;
+const COR={id:'cor',name:"Corley's",c:[0,30],r:45,top:0,bt:-24,col:'#7fa65a'};
+const PLANS=[
+ {key:'A',name:'The Hub',tag:'Spokes from the middle',
+  sum:'The Family Island sits due south of Corley\'s, and the three personal mesas are spread evenly around it like spokes. Every bridge goes to the Family Island, so it is the crossroads of the whole place. Three matching steel arch bridges, each the same length, span the gaps at mesa-top height. The mainland bridge leaves from the far south side.',
+  isl:[COR,{id:'fam',name:'Family',c:[0,230],r:75,top:-24,col:'#c9b56a'},{id:'dex',name:"Dexter's",c:[-173,330],r:45,top:-24,col:'#a88a63'},{id:'jes',name:"Jessica's",c:[173,330],r:45,top:-24,col:'#4f8a4a'}],
+  br:[['cor','fam','Steel arch, 2 lanes',4.8],['fam','dex','Steel arch, 2 lanes',4.8],['fam','jes','Steel arch, 2 lanes',4.8]],
+  docks:[[-60,300],[60,300]],main:{from:'fam',ang:90},
+  pros:['Every island is the same trip from the middle, so it feels fair','Three identical bridges: one model built once, used three times','Big, dramatic spans and views down to the docks'],
+  cons:['Corley\'s to Dexter\'s means crossing two bridges','The longest bridges of the three ideas to model and light','The Family Island has to be lowered to the bench height (24 ft below Corley\'s top) so the bridge from the Lower Bench runs level'],
+  hrs:56},
+ {key:'B',name:'The Ring',tag:'Close cluster with a loop',
+  sum:'The islands huddle close: short spoke bridges join each mesa to a smaller Family Island, and three longer ring bridges join the personal islands to each other, so you can drive a loop round all four. You can see Dexter\'s yard and Jessica\'s chimney from Corley\'s dig. The mainland bridge leaves south between Dexter\'s and Jessica\'s.',
+  isl:[COR,{id:'fam',name:'Family',c:[0,185],r:60,top:-24,col:'#c9b56a'},{id:'dex',name:"Dexter's",c:[-130,260],r:45,top:-24,col:'#a88a63'},{id:'jes',name:"Jessica's",c:[130,260],r:45,top:-24,col:'#4f8a4a'}],
+  br:[['cor','fam','Concrete girder, 2 lanes',4.8],['fam','dex','Concrete girder, 2 lanes',4.8],['fam','jes','Concrete girder, 2 lanes',4.8],['cor','dex','Curved steel ring bridge',4.2],['cor','jes','Curved steel ring bridge',4.2],['dex','jes','Curved steel ring bridge',4.2]],
+  docks:[[0,258],[-40,250]],main:{from:'fam',ang:90,gap:true},
+  pros:['Shortest spokes: a few seconds\' walk between neighbours','A drivable loop round the whole archipelago','The islands are always in view of each other'],
+  cons:['Six bridges to build, and the most to draw on the phone','The Family Island is the smallest of the three ideas','Crowded: less open lake between the islands'],
+  hrs:68},
+ {key:'C',name:'The Gateway Line',tag:'Recommended',
+  sum:'Corley\'s, the Family Island and the mainland bridge all line up north to south, so the road home runs straight through the middle of the family. Dexter\'s mesa sits west and Jessica\'s east, each on its own bridge that suits its owner: a machine-rated steel bridge for Dexter, a covered wooden footbridge for Jessica. Docks on the Family Island\'s east shore give a boat route to Jessica\'s too.',
+  isl:[COR,{id:'fam',name:'Family',c:[0,245],r:80,top:-24,col:'#c9b56a'},{id:'dex',name:"Dexter's",c:[-215,235],r:45,top:-24,col:'#a88a63'},{id:'jes',name:"Jessica's",c:[200,260],r:45,top:-14,col:'#4f8a4a'}],
+  br:[['cor','fam','Steel truss, 2 lanes',4.8],['fam','dex','Wide steel haul bridge',6],['fam','jes','Covered wooden footbridge',2.4]],
+  docks:[[95,300],[160,300]],main:{from:'fam',ang:95},
+  pros:['Each bridge has its owner\'s character','The mainland bridge is the natural end of the main road','The largest Family Island; Dexter\'s machines reach Corley\'s dig in two crossings'],
+  cons:['Three different bridge models instead of one','Dexter\'s and Jessica\'s are far apart (two bridges across the Family Island)','Jessica\'s footbridge climbs 10 ft to her higher, quieter mesa'],
+  hrs:60},
+];
+// distance from an island's centre to its rim in a direction (the game's rounded-square mesa shape)
+function rimR(is,a){const c=Math.abs(Math.cos(a)),s=Math.abs(Math.sin(a));return is.r/Math.pow(c**4+s**4,0.25)}
+function rimPt(is,to){const a=Math.atan2(to[1]-is.c[1],to[0]-is.c[0]),r=rimR(is,a);return [is.c[0]+Math.cos(a)*r,is.c[1]+Math.sin(a)*r]}
+function bridgeOf(p,b){const A=p.isl.find(i=>i.id===b[0]),B=p.isl.find(i=>i.id===b[1]);
+  const pa=rimPt(A,B.c),pb=rimPt(B,A.c),len=Math.hypot(pb[0]-pa[0],pb[1]-pa[1]);
+  const h=i=>i.bt??i.top;return {A,B,pa,pb,len,kind:b[2],w:b[3],rise:h(B)-h(A)}}
+function css(v){return getComputedStyle(document.documentElement).getPropertyValue(v).trim()}
+
+function drawMap(cv,p){
+  const W=cv.width,H=cv.height,g=cv.getContext('2d');
+  const X0=-330,X1=330,Z0=-60,Z1=Z0+(X1-X0)*H/W,k=W/(X1-X0),P=(x,z)=>[(x-X0)*k,(z-Z0)*k];
+  // lake with soft swells
+  const lg=g.createLinearGradient(0,0,0,H);lg.addColorStop(0,'#2f6577');lg.addColorStop(1,'#204e60');g.fillStyle=lg;g.fillRect(0,0,W,H);
+  g.strokeStyle='rgba(255,255,255,.05)';g.lineWidth=1;
+  for(let y=8;y<H;y+=14){g.beginPath();for(let x=0;x<=W;x+=12)g.lineTo(x,y+Math.sin(x*0.05+y)*2);g.stroke()}
+  const shape=(is,grow)=>{g.beginPath();for(let i=0;i<=96;i++){const a=i/96*Math.PI*2,w=1+(is.id==='cor'?0.06*Math.sin(a*5+0.7)+0.035*Math.sin(a*11+2.1):0.03*Math.sin(a*7+is.c[0]));
+    const r=rimR(is,a)*w+grow,[x,y]=P(is.c[0]+Math.cos(a)*r,is.c[1]+Math.sin(a)*r);i?g.lineTo(x,y):g.moveTo(x,y)}g.closePath()};
+  // mainland bridge first, under everything
+  const F=p.isl.find(i=>i.id===p.main.from),ma=p.main.ang*Math.PI/180,m0=rimPt(F,[F.c[0]+Math.cos(ma)*500,F.c[1]+Math.sin(ma)*500]);
+  const m1=[m0[0]+Math.cos(ma)*800,m0[1]+Math.sin(ma)*800];
+  const mg=g.createLinearGradient(...P(...m0),...P(...[m0[0]+Math.cos(ma)*(Z1-m0[1]),Z1]));mg.addColorStop(0,'#d9d3c4');mg.addColorStop(1,'rgba(217,211,196,0)');
+  g.strokeStyle=mg;g.lineWidth=7*k;g.lineCap='butt';g.beginPath();g.moveTo(...P(...m0));g.lineTo(...P(...m1));g.stroke();
+  // cliffs and meadows, then tops
+  for(const is of p.isl){shape(is,9);g.fillStyle='#5d5a48';g.fill();shape(is,0);g.fillStyle=is.col;g.fill();g.strokeStyle='rgba(0,0,0,.28)';g.lineWidth=1.2;g.stroke()}
+  // Jessica's forest and Dexter's yard, as dots and squares
+  for(const is of p.isl){
+    if(is.id==='jes'){for(let i=0;i<70;i++){const a=i*2.399,rr=Math.sqrt((i+.5)/70)*is.r*0.9,x=is.c[0]+Math.cos(a)*rr,z=is.c[1]+Math.sin(a)*rr;
+      if(Math.hypot(x-is.c[0],z-is.c[1])<11)continue;const [px,py]=P(x,z);g.fillStyle=i%3?'#2e5d33':'#3d7040';g.beginPath();g.arc(px,py,3.6*k*1.2,0,7);g.fill()}
+      const [cx,cy]=P(is.c[0]-3,is.c[1]-3);g.fillStyle='#e8c27a';g.fillRect(cx,cy,9*k,7*k)}
+    if(is.id==='dex'){g.fillStyle='#8f9294';const [sx,sy]=P(is.c[0]-20,is.c[1]-22);g.fillRect(sx,sy,18*k,11*k);
+      g.fillStyle='#f0b429';[[5,-4],[12,6],[-8,10],[-15,2]].forEach(([dx,dz])=>{const [x,y]=P(is.c[0]+dx,is.c[1]+dz);g.fillRect(x,y,4*k,3*k)})}
+    if(is.id==='fam'){const [hx,hy]=P(is.c[0]-12,is.c[1]-8);g.fillStyle='#a05a36';g.fillRect(hx,hy,24*k,14*k);
+      const [rx,ry]=P(is.c[0],is.c[1]+22);g.strokeStyle='rgba(60,50,30,.55)';g.lineWidth=3;g.beginPath();g.arc(rx,ry,9*k,0,7);g.stroke()}
+    if(is.id==='cor'){g.strokeStyle='rgba(60,45,30,.5)';g.lineWidth=2;g.beginPath();g.ellipse(...P(0,30),38*k,40*k,0,0,7);g.stroke()}
+  }
+  // bridges
+  for(const b of p.br.map(x=>bridgeOf(p,x))){
+    g.lineCap='butt';g.strokeStyle='#2a2a2a';g.lineWidth=(b.w+1.6)*k;g.beginPath();g.moveTo(...P(...b.pa));g.lineTo(...P(...b.pb));g.stroke();
+    g.strokeStyle=b.kind.includes('ooden')?'#b98a52':'#e3ddd0';g.lineWidth=b.w*k;g.stroke();
+    const mx=(b.pa[0]+b.pb[0])/2,mz=(b.pa[1]+b.pb[1])/2,[lx,ly]=P(mx,mz),t=ft(b.len)+' ft';
+    g.font='600 '+Math.round(W/46)+'px "JetBrains Mono",monospace';const tw=g.measureText(t).width;
+    g.fillStyle='rgba(20,30,34,.82)';g.fillRect(lx-tw/2-5,ly-11,tw+10,20);g.fillStyle='#fff';g.textAlign='center';g.textBaseline='middle';g.fillText(t,lx,ly)}
+  // docks at lake level
+  for(const d of p.docks){const [x,y]=P(...d);g.fillStyle='#c79a5e';g.fillRect(x-1.5*k,y-1*k,3*k,12*k);g.fillRect(x-5*k,y+9*k,10*k,2*k);g.fillStyle='#fff';g.beginPath();g.ellipse(x+7*k,y+5*k,2*k,5*k,0,0,7);g.fill()}
+  // labels
+  g.textAlign='center';g.textBaseline='middle';
+  for(const is of p.isl){const [x,y]=P(is.c[0],is.c[1]-is.r*0.45);g.font='700 '+Math.round(W/30)+'px "Barlow Condensed",Arial,sans-serif';
+    g.lineWidth=4;g.strokeStyle='rgba(0,0,0,.55)';g.strokeText(is.name,x,y);g.fillStyle='#fff';g.fillText(is.name,x,y)}
+  const [tx,ty]=P(m0[0]+Math.cos(ma)*150,Math.min(Z1-30,m0[1]+Math.sin(ma)*150));g.font='600 '+Math.round(W/40)+'px "Barlow Condensed",Arial,sans-serif';
+  g.textAlign='left';g.fillStyle='rgba(255,255,255,.9)';g.fillText('to the mainland ↓',tx+10*k,ty);
+  // scale bar and north arrow
+  const sb=500/FT,[bx,by]=[16,H-20];g.fillStyle='#fff';g.fillRect(bx,by,sb*k,4);g.font='500 '+Math.round(W/52)+'px "JetBrains Mono",monospace';g.textAlign='left';g.fillText('500 ft',bx,by-10);
+  g.textAlign='center';g.fillText('N',W-22,22);g.beginPath();g.moveTo(W-22,32);g.lineTo(W-28,46);g.lineTo(W-16,46);g.closePath();g.fill();
+}
+
+const host=document.getElementById('plans');
+for(const p of PLANS){
+  const bs=p.br.map(x=>bridgeOf(p,x)),fam=p.isl.find(i=>i.id==='fam');
+  const s=document.createElement('section');s.className='sheet';s.id='idea-'+p.key;
+  s.innerHTML=`<div class="sheet-head"><div class="eyebrow">Idea ${p.key}${p.key==='C'?' · <span class="tag">Recommended</span>':''}</div><h2>${p.name}</h2><p class="muted">${p.key==='C'?'One straight road from the dig to the mainland':p.tag}</p></div>
+  <div class="sheet-body">
+    <div class="mapbox"><canvas class="map" width="900" height="760" aria-label="Map of Idea ${p.key}"></canvas>
+      <div class="cap">Green Corley's, tan Family, brown Dexter's (shed and machines), dark green Jessica's (forest and cottage). Bridge labels are deck lengths; small tan piers are docks at lake level.</div></div>
+    <div class="detail">
+      <p>${p.sum}</p>
+      <div class="tablewrap"><table><thead><tr><th>Bridge</th><th>Type</th><th>Length</th><th>Grade</th></tr></thead><tbody>
+      ${bs.map(b=>`<tr><td>${b.A.name} – ${b.B.name}</td><td>${b.kind}</td><td class="num">${ft(b.len)} ft</td><td class="num">${b.rise?(Math.abs(b.rise/(b.len*FT))*100).toFixed(1)+'%':'level'}</td></tr>`).join('')}
+      <tr><td>Mainland</td><td>Long 2-lane bridge, fades into the fog</td><td class="num">2,000+ ft</td><td class="num">level</td></tr>
+      </tbody></table></div>
+      <p class="mono">Family Island ${ft(fam.r*2)} ft across · tops ${[...new Set(p.isl.map(i=>i.top))].sort((a,b)=>b-a).map(t=>t+' ft').join(', ')} · ${bs.length} island bridges, ${ft(bs.reduce((a,b)=>a+b.len,0)).toLocaleString()} ft of deck</p>
+      <div class="pc"><div class="pro"><h3>Good</h3><ul>${p.pros.map(x=>`<li>${x}</li>`).join('')}</ul></div>
+        <div class="con"><h3>Watch out</h3><ul>${p.cons.map(x=>`<li>${x}</li>`).join('')}</ul></div></div>
+      <p class="cost">About ${p.hrs} developer hours for all four islands, the bridges and the mainland stub</p>
+    </div>
+  </div>`;
+  host.appendChild(s);
+  const cv=s.querySelector('canvas');drawMap(cv,p);
+  if(document.fonts)document.fonts.ready.then(()=>drawMap(cv,p));
+}
+</script>

@@ -73,22 +73,23 @@ function groundColor(x,z,h,c){const n=hash(x*3.55+0.3,z*2.65+0.7);
   r+=(0.80-r)*sand;g+=(0.72-g)*sand;b+=(0.52-b)*sand;
   c[0]=r;c[1]=g;c[2]=b;const ya=yardTint(x,z,c,n),ra=roadTint(x,z,c,n),mc=matTint(x,z,c);c[3]=mc;return Math.min(1,Math.max(rock*0.95+sand*0.4,ra*0.9,ya*0.85))*(1-mc)}
 let midPatch=null,skirtMesh=null;
-(function(){
-  function patch(X0,X1,Z0,Z1,CO,hole){
-    const NX=Math.round((X1-X0)/CO),NZ=Math.round((Z1-Z0)/CO),VX=NX+1,pp=[],cc=[],ix=[],rk=[],ma=[],c=[0,0,0,0];
-    for(let j=0;j<=NZ;j++)for(let i=0;i<=NX;i++){const x=X0+i*CO,z=Z0+j*CO,h=baseHeight(x,z);pp.push(x,h,z);rk.push(groundColor(x,z,h,c));cc.push(c[0],c[1],c[2]);ma.push(c[3])}
-    for(let j=0;j<NZ;j++)for(let i=0;i<NX;i++){const x0=X0+i*CO,z0=Z0+j*CO;
-      if(x0>=hole[0]-1e-6&&x0+CO<=hole[1]+1e-6&&z0>=hole[2]-1e-6&&z0+CO<=hole[3]+1e-6)continue;const a=j*VX+i;ix.push(a,a+VX,a+1,a+1,a+VX,a+VX+1)}
-    const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pp,3));g.setAttribute('color',new THREE.Float32BufferAttribute(cc,3));
-    g.setAttribute('normal',new THREE.Float32BufferAttribute(new Float32Array(pp.length),3));g.setIndex(ix);
-    g.setAttribute('dirt',new THREE.Float32BufferAttribute(rk,1));g.setAttribute('wetT',new THREE.Float32BufferAttribute(new Float32Array(rk.length).fill(-1e4),1));g.setAttribute('soilD',new THREE.Float32BufferAttribute(new Float32Array(rk.length),1));g.setAttribute('matA',new THREE.Float32BufferAttribute(ma,1));
-    const m=new THREE.Mesh(g,groundMat);m.receiveShadow=true;scene.add(m);
-    return {g,X0,Z0,CO,VX,NX,NZ};
-  }
-  patch(-160,160,-160,160,2,MID);
-  midPatch=patch(MID[0],MID[1],MID[2],MID[3],0.5,[-S/2,S/2,-S/2,S/2]);
-  buildSkirts();
-})();
+// a ground mesh over a rectangle at CO metres, leaving out the cells inside any of the holes (where a finer mesh sits)
+function groundPatch(X0,X1,Z0,Z1,CO,holes){
+  const NX=Math.round((X1-X0)/CO),NZ=Math.round((Z1-Z0)/CO),VX=NX+1,pp=[],cc=[],ix=[],rk=[],ma=[],c=[0,0,0,0];
+  for(let j=0;j<=NZ;j++)for(let i=0;i<=NX;i++){const x=X0+i*CO,z=Z0+j*CO,h=baseHeight(x,z);pp.push(x,h,z);rk.push(groundColor(x,z,h,c));cc.push(c[0],c[1],c[2]);ma.push(c[3])}
+  for(let j=0;j<NZ;j++)for(let i=0;i<NX;i++){const x0=X0+i*CO,z0=Z0+j*CO;
+    if(holes.some(h=>x0>=h[0]-1e-6&&x0+CO<=h[1]+1e-6&&z0>=h[2]-1e-6&&z0+CO<=h[3]+1e-6))continue;const a=j*VX+i;ix.push(a,a+VX,a+1,a+1,a+VX,a+VX+1)}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pp,3));g.setAttribute('color',new THREE.Float32BufferAttribute(cc,3));
+  g.setAttribute('normal',new THREE.Float32BufferAttribute(new Float32Array(pp.length),3));g.setIndex(ix);
+  g.setAttribute('dirt',new THREE.Float32BufferAttribute(rk,1));g.setAttribute('wetT',new THREE.Float32BufferAttribute(new Float32Array(rk.length).fill(-1e4),1));g.setAttribute('soilD',new THREE.Float32BufferAttribute(new Float32Array(rk.length),1));g.setAttribute('matA',new THREE.Float32BufferAttribute(ma,1));
+  const m=new THREE.Mesh(g,groundMat);m.receiveShadow=true;scene.add(m);
+  return {g,m,X0,Z0,CO,VX,NX,NZ};
+}
+// the Family Island gets its own 1.5 m mesh (family.js)
+const FAM_PATCH=[-111,111,136,352];
+groundPatch(-160,160,-160,160,2,[MID,[FAM_PATCH[0],FAM_PATCH[1],FAM_PATCH[2],160]]);
+midPatch=groundPatch(MID[0],MID[1],MID[2],MID[3],0.5,[[-S/2,S/2,-S/2,S/2]]);
+buildSkirts();
 // after the map editor reshapes or repaints an area (metres): the 0.5 m ground there takes the new heights and colours
 function midUpdate(x0,x1,z0,z1){const P=midPatch,g=P.g,pa=g.attributes.position,ca=g.attributes.color,da=g.attributes.dirt,ma=g.attributes.matA,c=[0,0,0,0];
   const i0=Math.max(0,Math.floor((x0-P.X0)/P.CO)),i1=Math.min(P.NX,Math.ceil((x1-P.X0)/P.CO)),j0=Math.max(0,Math.floor((z0-P.Z0)/P.CO)),j1=Math.min(P.NZ,Math.ceil((z1-P.Z0)/P.CO));
