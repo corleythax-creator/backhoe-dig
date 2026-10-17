@@ -1,4 +1,4 @@
-// Backhoe Dig: key bindings: every keyboard action with its default keys, the player's own keys (saved on this device)
+// Corley's Island: key bindings: every keyboard action with its default keys, the player's own keys (saved on this device)
 // and the Keys panel (☰ menu) that lists what each key does and lets any of them be changed.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 // ---------- actions ----------

@@ -1,4 +1,4 @@
-# Backhoe Dig idea board
+# Corley's Island idea board
 
 Ids match the idea board artifact (https://claude.ai/artifact/FMrDEa4VsKvPS5Z3ktTrS3). Source: docs/idea-board.html (publish it as the
 artifact page with capabilities {mcp: Claude Code Remote send_message}). When the owner sends picks, find them here. None are started
@@ -29,7 +29,7 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 
 ## M: New machines
 
-- M01 Backhoe loader: The game's namesake: a CAT 420-class backhoe with a loader bucket up front, outriggers and a swivel seat for the hoe. (R7 F9 every low c3 14h)
+- M01 Backhoe loader: A CAT 420-class backhoe with a loader bucket up front, outriggers and a swivel seat for the hoe. (R7 F9 every low c3 14h)
 - M02 Skid steer: Bucket and pallet forks; spins in place, lifts blocks and pipe. (R7 F8 most low c2 8h)
 - M03 Wheel loader: Loads the dump truck from a stockpile in two scoops. (R6 F7 some low c2 8h)
 - M04 Mini excavator: A 3-ton machine for tight spots next to the gas main. (R7 F7 some low c2 6h)

@@ -1,4 +1,4 @@
-// Backhoe Dig: lake, mountains, grass tufts, outer ground, gas main, stakes and trees.
+// Corley's Island: lake, mountains, grass tufts, outer ground, gas main, stakes and trees.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 // ---------- scenery ----------
 const timeU={value:0};

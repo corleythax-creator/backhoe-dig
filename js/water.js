@@ -1,4 +1,4 @@
-// Backhoe Dig: groundwater and mud. Below about 6 ft the cut meets the water table: water seeps into the hole, levels
+// Corley's Island: groundwater and mud. Below about 6 ft the cut meets the water table: water seeps into the hole, levels
 // across connected pools and muddies the ground around them. Dirt dug from under water comes up as mud: it sticks in
 // the bucket and truck bed, and wet spoil and puddles bog the truck and slow the tracks. The Pump button dewaters.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.

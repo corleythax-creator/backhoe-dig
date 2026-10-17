@@ -1,4 +1,4 @@
-<title>Backhoe Dig Idea Board</title>
+<title>Corley's Island Idea Board</title>
 <meta name="claude:viewport-fit-sides" content="cover">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -177,8 +177,8 @@ tr.on .rin{background:var(--amber);color:var(--amber-ink);border-color:var(--amb
       <rect width="1200" height="300" fill="url(#shade)"/>
     </svg>
     <div class="ttl">
-      <p class="kicker">Corley's Island · dig site and island life</p>
-      <h1>Backhoe Dig Idea Board</h1>
+      <p class="kicker">The mesa dig site and island life</p>
+      <h1>Corley's Island Idea Board</h1>
     </div>
     <div class="stats" id="stats"></div>
   </header>
@@ -293,7 +293,7 @@ const I=[
 ["J13","J","Culvert under the rim road","Cut the road, set a culvert pipe on bedding, backfill and drive over it.",7,6,"some","low",2,6,["J04"]],
 ["J14","J","Inspector visit","An inspector walks the trench, checks the slope and the trench box, and signs off or shuts you down.",7,5,"some","low",2,5,[]],
 ["J15","J","Pay and the day's log","Yards moved, fuel burned, hours on the meter and what the day paid.",4,6,"every","none",1,3,[]],
-["M01","M","Backhoe loader","The game's namesake: a CAT 420-class backhoe with a loader bucket up front, outriggers and a swivel seat for the hoe.",7,9,"every","low",3,14,[]],
+["M01","M","Backhoe loader","A CAT 420-class backhoe with a loader bucket up front, outriggers and a swivel seat for the hoe.",7,9,"every","low",3,14,[]],
 ["M02","M","Skid steer","Bucket and pallet forks; spins in place, lifts blocks and pipe.",7,8,"most","low",2,8,[]],
 ["M03","M","Wheel loader","Loads the dump truck from a stockpile in two scoops.",6,7,"some","low",2,8,[]],
 ["M04","M","Mini excavator","A 3-ton machine for tight spots next to the gas main.",7,7,"some","low",2,6,[]],
@@ -546,10 +546,10 @@ $("notebtn").addEventListener("click",()=>{const n=$("note"),o=n.hidden;n.hidden
 $("note").addEventListener("input",noteLbl);noteLbl();
 function message(){
   const p=[...picks].map(id=>IDS.get(id)),n=$("note").value.trim(),h=p.reduce((a,r)=>a+hrs(r),0);
-  let m="Backhoe Dig idea board picks, in my ranked order, 1 = most wanted ("+p.length+", ~"+Math.round(p.reduce((a,r)=>a+COST[N(r).c][1],0))+" sessions, ~"+pct(h)+" of a week):\n";
+  let m="Corley's Island idea board picks, in my ranked order, 1 = most wanted ("+p.length+", ~"+Math.round(p.reduce((a,r)=>a+COST[N(r).c][1],0))+" sessions, ~"+pct(h)+" of a week):\n";
   m+=p.map((r,i)=>{const x=N(r);return (i+1)+". "+r[0]+" "+r[2]+": "+r[3]+" ["+COST[x.c][0]+", realism "+x.R+", fun "+x.F+", seen "+SEEN[x.se][1].toLowerCase()+", phone "+x.ph+", priority "+prio(r)+(x.dp.length?", needs "+x.dp.join(" "):"")+"]"}).join("\n");
   if(n)m+="\n\nNote: "+n;
-  return m+"\n\nPlease build these for Backhoe Dig (repo corleythax-creator/backhoe-dig; ids match docs/IDEAS.md).";
+  return m+"\n\nPlease build these for Corley's Island (repo corleythax-creator/backhoe-dig; ids match docs/IDEAS.md).";
 }
 const st=$("status");
 $("copy").addEventListener("click",async()=>{
@@ -560,7 +560,7 @@ $("copy").addEventListener("click",async()=>{
 let MCP=null,sending=false;
 $("send").addEventListener("click",async()=>{
   if(sending||!MCP)return;sending=true;$("send").disabled=true;st.textContent="Sending...";
-  try{await MCP.callTool("Claude Code Remote","send_message",{session_id:SID,message:message()});st.textContent="Sent to Claude. The work starts in your Backhoe Dig session."}
+  try{await MCP.callTool("Claude Code Remote","send_message",{session_id:SID,message:message()});st.textContent="Sent to Claude. The work starts in your Corley's Island session."}
   catch(e){const c=e&&e.code;st.textContent=(c==="consent_denied"||c==="not_granted"?"Sending needs your OK for the Claude Code Remote connector. ":"Couldn't send ("+(c||"error")+"). ")+"Use Copy and paste it into a chat instead."}
   sending=false;totals()
 });

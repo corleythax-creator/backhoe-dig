@@ -1,4 +1,4 @@
-// Backhoe Dig: speed test.
+// Corley's Island: speed test.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 // ---------- speed test ----------
 const LEVELS=[0,8,24,56,120,248],LEVEL_S=5,WARM=1.5;

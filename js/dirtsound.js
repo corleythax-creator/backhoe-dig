@@ -1,4 +1,4 @@
-// Backhoe Dig: dirt sounds added to sound.js's mixer: a thud when a load lands, clods knocking down a pile, a rumble
+// Corley's Island: dirt sounds added to sound.js's mixer: a thud when a load lands, clods knocking down a pile, a rumble
 // when a wall caves in, and a trickle while groundwater seeps. (Bucket scrape, pouring and dumping are in sound.js.)
 // They play through the excavator's effects bus (snd.X.fx), so they follow its distance, panning and the Effects slider.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.

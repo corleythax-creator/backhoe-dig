@@ -1,4 +1,4 @@
-// Backhoe Dig: the job site is saved in this browser, so a reload picks up where you left off. Two saves:
+// Corley's Island: the job site is saved in this browser, so a reload picks up where you left off. Two saves:
 // the ground (bhd_site: every grid vertex that differs from the untouched mesa, with the colour of dumped dirt, ruts and
 // groundwater) and the machines (bhd_rigs: excavator, dump truck and its load, trench box, blocks, the worker on foot or the machine he is in).
 // The lawn has its own save in mower.js. Reset writes a fresh site. Loose clods, dust and flying dirt are not kept.

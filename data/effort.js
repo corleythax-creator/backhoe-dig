@@ -1,6 +1,6 @@
-// Backhoe Dig build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
+// Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
- "project": "Backhoe Dig",
+ "project": "Corley's Island",
  "updated": "2026-10-17T17:38:00Z",
  "rateUsd": 100,
  "method": {

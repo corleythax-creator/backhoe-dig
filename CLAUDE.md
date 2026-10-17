@@ -1,4 +1,4 @@
-# Backhoe Dig: notes for Claude
+# Corley's Island: notes for Claude
 
 - Start with the README: "How it fits together" (scripts, units, ground, saves) and "Working on it" (running, headless checks, the release steps). Before touching the ground, roads, trees or the editor, read `docs/map-editor.md`.
 - Pushes to `main` deploy to Vercel (project `backhoe-dig`, Corley team). The claude.ai artifact (https://claude.ai/artifact/6nxYC5EK3422JouxaZx2DF) is the same game. Keep both in step: publish the artifact from `main` only, as the page from `<title>` to before `</html>` of `index.html`, with `css/game.css`, every `js/*.js` and `data/effort.js` (the game shows its version from it) passed in `files` at the same paths (the jpg textures and `shots/` are already there).
