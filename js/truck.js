@@ -343,7 +343,7 @@ function greyDetail(t){try{const im=t.image,c=document.createElement('canvas');c
 function tintLoad(mat,c){const k=mat.map?1.25:1;mat.color.setRGB(Math.min(1,c[0]*k),Math.min(1,c[1]*k),Math.min(1,c[2]*k))}
 // called by main.js once every script has loaded (the images can finish before the later scripts arrive)
 function applyTextures(){
-  texMixU.value=1;
+  texOn=true;texMixU.value=gfxDetail;
   for(const mt of [ORANGE,ORANGE_D,STEEL,STEEL_L,RUBBER,WHITE,WHITE_DS,BEDM,BED_D]){mt.map=texGrime;mt.needsUpdate=true}
   const grey=greyDetail(texDirt);heap.material.map=grey;heap.material.needsUpdate=true;
   ORANGE.color.setHex(0xf27a22);ORANGE_D.color.setHex(0xc85e1c);

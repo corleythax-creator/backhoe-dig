@@ -77,9 +77,9 @@ function showBenchResults(){
   else if(top)sum+=`<p style="margin-top:8px">Biggest single gain: <b>${top.name}</b> (${sg(gain(top))} FPS).</p>`;
   $('#benchSummary').innerHTML=sum;
   const w=renderer.domElement.width,h=renderer.domElement.height,gpu=gpuName();
-  $('#benchDevice').textContent=`${gpu} · ${w}×${h} px at ${maxPR}x${PHONE?' (phone settings)':''} · ${navigator.platform||''}`+(glResets?` · ${glResets} graphics reset${glResets>1?'s':''} on this device`:'');
+  $('#benchDevice').textContent=`${gpu} · ${w}×${h} px at ${maxPR}x · Graphics ${GFX[gfxKey].name} · ${navigator.platform||''}`+(glResets?` · ${glResets} graphics reset${glResets>1?'s':''} on this device`:'');
   const ver=window.EFFORT&&EFFORT.versions?EFFORT.versions[EFFORT.versions.length-1].v:'?';
-  $('#benchText').value=[`Backhoe Dig speed test (v3: diagnosis + excavator + truck pairs), game version ${ver}`,`GPU: ${gpu}`,`Resolution: ${w}x${h} (${maxPR}x${PHONE?', phone settings: 1.5x cap, 1024 shadows':''})`,`Smooth 55+ FPS up to: ${t55?fmtTris(t55):'not reached'}`,`Playable 30+ FPS up to: ${t30?fmtTris(t30):'not reached'}`,
+  $('#benchText').value=[`Backhoe Dig speed test (v3: diagnosis + excavator + truck pairs), game version ${ver}`,`GPU: ${gpu}`,`Graphics: ${GFX[gfxKey].name}${PHONE?' (phone)':''}`,`Resolution: ${w}x${h} (${maxPR}x)`,`Smooth 55+ FPS up to: ${t55?fmtTris(t55):'not reached'}`,`Playable 30+ FPS up to: ${t30?fmtTris(t30):'not reached'}`,
     'Diagnosis, plain scene, one feature off at a time (gain vs the average of the two Normal runs):',...diag.map(r=>`${r.name} | ${r.avg.toFixed(1)} avg FPS | ${r.low.toFixed(0)} 1% low${r.name.startsWith('Normal')?'':' | '+sg(gain(r))}`),
     'Load levels:',...rows.map(r=>`${r.machines} excavators + ${r.machines} trucks | ${fmtTris(r.tris)} tris | ${Math.round(r.calls)} draws | ${r.avg.toFixed(1)} avg FPS | ${r.low.toFixed(0)} 1% low`)].join('\n');
   $('#bench').hidden=false;

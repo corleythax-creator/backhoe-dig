@@ -143,13 +143,13 @@ function updateHeapClods(){
 }
 
 // ---------- the setting ----------
-function setDirtLevel(L){
+function setDirtLevel(L,save){
   DIRT=[1,2,4,16].includes(+L)?+L:1;
   buildClods();buildParticles();buildHeapClods();buildDust();
   const lg=lumpGeo(LOAD_DETAIL[DIRT],0.2,0.6);lg.scale(0.42,0.42,0.42);loadMesh.geometry.dispose();loadMesh.geometry=lg;
   heap.geometry.dispose();heap.geometry=heapGeometry();
   document.querySelectorAll('.sizes button[data-d]').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.d===DIRT));
-  try{localStorage.setItem('bhd_dirt',DIRT)}catch(e){}
+  if(save!==false)try{localStorage.setItem('bhd_dirt',DIRT)}catch(e){}
 }
 
 // ---------- rolling and ruts ----------
@@ -226,7 +226,7 @@ function grimeTick(){
 
 // apply the saved Dirt detail last, once everything above exists
 document.querySelectorAll('.sizes button[data-d]').forEach(b=>b.onclick=()=>setDirtLevel(b.dataset.d));
-try{setDirtLevel(localStorage.getItem('bhd_dirt')||1)}catch(e){setDirtLevel(1)}
+try{setDirtLevel(localStorage.getItem('bhd_dirt')||1,false)}catch(e){setDirtLevel(1,false)}
 
 // ---------- pouring ----------
 // dirt leaving the bucket or the truck bed falls as one wobbling stream that thins and breaks up near the ground
