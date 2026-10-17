@@ -1,7 +1,7 @@
 // Backhoe Dig build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Backhoe Dig",
- "updated": "2026-10-17T15:12:00Z",
+ "updated": "2026-10-17T15:19:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 301,
+   "dh": 301.5,
    "act": 6.0,
-   "versions": 40
+   "versions": 41
   }
  ],
  "extra": [
@@ -453,6 +453,15 @@ window.EFFORT = {
    "tris": 991332,
    "chars": 237196,
    "what": "Grass realism: mowing stripes depend on where you look from (each pass lays the grass the way the mower drove, light looking along it and dark looking against it, so the stripes swap as you walk round, softer from overhead); wind comes in gusts that roll across the tall grass, bending it over and showing its paler side; looking toward the sun the blades glow where light comes through them; and deep in the clumps the grass is dark where the grass around stands taller, so tall grass beside stubble casts a soft shade. Lawn saves keep each cell's mowing direction."
+  },
+  {
+   "v": 48,
+   "asked": "2026-10-17T10:15:00-05:00",
+   "live": "2026-10-17T10:19:00-05:00",
+   "dh": 0.5,
+   "tris": 991332,
+   "chars": 237584,
+   "what": "Start digging is back in reach on phones: the button moved from the bottom of the long help card to just under the title and stays pinned there while the instructions scroll beneath it; tapping the dark area around the card starts the game too."
   }
  ]
 };

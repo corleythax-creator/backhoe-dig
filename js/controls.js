@@ -124,6 +124,7 @@ try{setUiScale(localStorage.getItem('bhd_ui')||1)}catch(e){setUiScale(1)}
 const statusEl=$('#status');try{statusEl.classList.toggle('min',localStorage.getItem('bhd_hudmin')==='1')}catch(e){}
 statusEl.onclick=()=>{const m=statusEl.classList.toggle('min');try{localStorage.setItem('bhd_hudmin',m?'1':'0')}catch(e){}};
 $('#startBtn').onclick=()=>{help.hidden=true;try{localStorage.setItem('bhd_seen','1')}catch(e){}};
+help.addEventListener('click',e=>{if(e.target===help)$('#startBtn').click()});
 try{if(localStorage.getItem('bhd_seen'))help.hidden=true}catch(e){}
 function started(){if(!st.startT)st.startT=performance.now()}
 // the version in the menu and on the help card is the last entry in data/effort.js (the build log), so it is never stale
