@@ -10,7 +10,7 @@ function buildClones(){
   for(let i=0;i<max;i++){const r=11+(i%8)*4.2+Math.floor(i/80)*2.1,a=i*2.39996;const x=Math.cos(a)*r,z=Math.sin(a)*r;
     q.setFromAxisAngle(new THREE.Vector3(0,1,0),a*1.7);o.set(x,baseHeight(x,z),z);places.push(new THREE.Matrix4().compose(o.clone(),q.clone(),sc))}
   const cloneOf=(root,offset)=>{root.updateMatrixWorld(true);const rinv=new THREE.Matrix4().copy(root.matrixWorld).invert();
-    root.traverse(m=>{if(!m.isMesh)return;
+    root.traverse(m=>{if(!m.isMesh||m.isInstancedMesh)return;
       rel.multiplyMatrices(rinv,m.matrixWorld);
       const im=new THREE.InstancedMesh(m.geometry,m.material,max);im.castShadow=true;im.receiveShadow=false;im.frustumCulled=false;
       for(let i=0;i<max;i++){out.multiplyMatrices(places[i],offset).multiply(rel);im.setMatrixAt(i,out)}
