@@ -1,6 +1,6 @@
 // Backhoe Dig: the job site is saved in this browser, so a reload picks up where you left off. Two saves:
 // the ground (bhd_site: every grid vertex that differs from the untouched mesa, with the colour of dumped dirt, ruts and
-// groundwater) and the machines (bhd_rigs: excavator, dump truck and its load, trench box, blocks, the worker on foot or the machine he is in).
+// groundwater) and the machines (bhd_rigs: excavator, dump truck and its load, trench box, blocks, the worker on foot).
 // The lawn has its own save in mower.js. Reset writes a fresh site. Loose clods, dust and flying dirt are not kept.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 const SITE_KEY='bhd_site',RIG_KEY='bhd_rigs';
@@ -36,7 +36,7 @@ function sitePick(o,keys){const r={};for(const k of keys){const v=o[k];r[k]=Arra
 function rigSave(){site.rigT=performance.now();const now=performance.now();
   const S0=sitePick(st,ST_KEYS);S0.el=st.startT?Math.round(((st.done?st.doneT:now)-st.startT)/1000):0;
   try{localStorage.setItem(RIG_KEY,JSON.stringify({v:1,t:Date.now(),st:S0,tr:sitePick(tr,TR_KEYS),
-    tb:sitePick(TB,['x','z','y','ty','yaw','hooked','seated']),wk:Object.assign(sitePick(wk,['x','z','yaw']),{in:wk.inside}),
+    tb:sitePick(TB,['x','z','y','ty','yaw','hooked','seated']),wk:sitePick(wk,['x','z','yaw']),
     blocks:blocks.map(b=>({x:b.x,z:b.z,y:+b.y.toFixed(4),s:b.s,n:b.n,c:b.c.map(x=>+x.toFixed(3))}))}))}catch(e){}}
 function rigLoad(){let d=null;try{d=JSON.parse(localStorage.getItem(RIG_KEY))}catch(e){}
   if(!d||d.v!==1)return;const ok=v=>typeof v==='number'?isFinite(v):typeof v==='boolean'||Array.isArray(v)&&v.every(isFinite);
@@ -48,9 +48,9 @@ function rigLoad(){let d=null;try{d=JSON.parse(localStorage.getItem(RIG_KEY))}ca
   if(blocks.length)blkWake=1.5;
   put(TB,d.tb,['x','z','y','ty','yaw','hooked','seated']);
   if(TB.hooked)chain.visible=true;else{TB.ty=boxRest();TB.y=Math.max(TB.y,TB.ty);boxMask()}
-  if(d.wk&&[d.wk.x,d.wk.z,d.wk.yaw].every(isFinite)){Object.assign(wk,{x:d.wk.x,z:d.wk.z,yaw:d.wk.yaw,view:d.wk.yaw});wk.y=wkFloor(wk.x,wk.z,0,1e9);wk.inside=['ex','truck','mow'].includes(d.wk.in)?d.wk.in:null}
+  if(d.wk&&[d.wk.x,d.wk.z,d.wk.yaw].every(isFinite)){Object.assign(wk,{x:d.wk.x,z:d.wk.z,yaw:d.wk.yaw,view:d.wk.yaw});wk.y=wkFloor(wk.x,wk.z,0,1e9)}
   site.rigSig=rigSig()}
-function rigSig(){return [st.x,st.z,st.yaw,st.swing,st.a1,st.a2,st.a3,st.load,tr.x,tr.z,tr.yaw,tr.bed,tr.load,tr.hauled,TB.x,TB.z,TB.y,wk.x,wk.z,wk.inside?1:0,blocks.length]
+function rigSig(){return [st.x,st.z,st.yaw,st.swing,st.a1,st.a2,st.a3,st.load,tr.x,tr.z,tr.yaw,tr.bed,tr.load,tr.hauled,TB.x,TB.z,TB.y,wk.x,wk.z,blocks.length]
   .map(v=>Math.round(v*100)).join(',')}
 // the ground is written at most every 4 s while it changes, the machines every 2 s while they move, both when the page is hidden
 function siteTick(){if(bench.on)return;const now=performance.now();

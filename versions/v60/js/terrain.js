@@ -7,38 +7,6 @@ const S=64,N=400,CELL=S/N,V=N+1,CA=CELL*CELL,FLOOR=3.5,GRID_K=Math.round(0.32/CE
 const H=new Float32Array(V*V),H0=new Float32Array(V*V),grass=new Float32Array(V*V*3),paint=new Uint8Array(V*V),nz=new Float32Array(V*V),rockA=new Float32Array(V*V);
 const ss=(a,b,x)=>{const t=Math.min(1,Math.max(0,(x-a)/(b-a)));return t*t*(3-2*t)};
 const hash=(i,j)=>{const s=Math.sin(i*127.1+j*311.7)*43758.5453;return s-Math.floor(s)};
-// ---------- map edits ----------
-// the map editor's layers over the generated ground, on a 0.5 m grid over the mesa and its cliffs: ED_H raises or
-// lowers the ground (metres), ED_P paints it toward dirt (+) or grass (-). The outer cells stay 0 so the edges meet the
-// coarse ground. Saved on this device as bhd_map, with the placed assets (trees and boulders); see editor.js
-const ED_X0=-58,ED_Z0=-32,ED_C=0.5,ED_NX=233,ED_NZ=249,ED_H=new Float32Array(ED_NX*ED_NZ),ED_P=new Float32Array(ED_NX*ED_NZ);
-let mapAssets=null;
-function edSample(A,x,z){const fx=(x-ED_X0)/ED_C,fz=(z-ED_Z0)/ED_C;if(fx<0||fz<0||fx>=ED_NX-1||fz>=ED_NZ-1)return 0;
-  const i=fx|0,j=fz|0,u=fx-i,v=fz-j,k=j*ED_NX+i;return A[k]*(1-u)*(1-v)+A[k+1]*u*(1-v)+A[k+ED_NX]*(1-u)*v+A[k+ED_NX+1]*u*v}
-function b64Bytes(b){let s='';for(let i=0;i<b.length;i+=0x8000)s+=String.fromCharCode.apply(null,b.subarray(i,i+0x8000));return btoa(s)}
-function bytesB64(t){const s=atob(t),b=new Uint8Array(s.length);for(let i=0;i<s.length;i++)b[i]=s.charCodeAt(i);return b}
-// a map as text: each edit layer as the smallest box holding its edits (heights in centimetres, paint in hundredths),
-// and the assets as [type, x, z, turn, size, tint]
-function edBox(A,scale,Arr){let i0=ED_NX,i1=-1,j0=ED_NZ,j1=-1;
-  for(let j=0;j<ED_NZ;j++)for(let i=0;i<ED_NX;i++)if(Math.round(A[j*ED_NX+i]*scale)!==0){if(i<i0)i0=i;if(i>i1)i1=i;if(j<j0)j0=j;if(j>j1)j1=j}
-  if(i1<0)return null;const w=i1-i0+1,h=j1-j0+1,q=new Arr(w*h),lim=Arr===Int8Array?127:32767;
-  for(let j=0;j<h;j++)for(let i=0;i<w;i++)q[j*w+i]=Math.max(-lim,Math.min(lim,Math.round(A[(j+j0)*ED_NX+i+i0]*scale)));
-  return {r:[i0,j0,w,h],d:b64Bytes(new Uint8Array(q.buffer))}}
-function edUnbox(o,A,scale,Arr){if(!o)return;const [i0,j0,w,h]=o.r,q=new Arr(bytesB64(o.d).buffer);
-  if(!(w>0&&h>0&&i0>=0&&j0>=0&&i0+w<=ED_NX&&j0+h<=ED_NZ&&q.length===w*h))throw new Error('bad layer');
-  for(let j=0;j<h;j++)for(let i=0;i<w;i++)A[(j+j0)*ED_NX+i+i0]=q[j*w+i]/scale}
-function mapEncode(){const doc={game:'backhoe-dig',v:1},h=edBox(ED_H,100,Int16Array),p=edBox(ED_P,100,Int8Array);
-  if(h)doc.h=h;if(p)doc.p=p;
-  if(mapAssets)doc.assets=mapAssets.map(a=>[a.t,+a.x.toFixed(2),+a.z.toFixed(2),+a.yaw.toFixed(2),+a.s.toFixed(2),a.c]);
-  return JSON.stringify(doc)}
-// reads a map into new layers; throws on anything that is not one
-function mapDecode(text){const doc=JSON.parse(text);if(!doc||doc.game!=='backhoe-dig'||doc.v!==1)throw new Error('not a Backhoe Dig map');
-  const h=new Float32Array(ED_H.length),p=new Float32Array(ED_P.length);edUnbox(doc.h,h,100,Int16Array);edUnbox(doc.p,p,100,Int8Array);
-  for(let j=0;j<ED_NZ;j++)for(let i=0;i<ED_NX;i++)if(i<3||j<3||i>ED_NX-4||j>ED_NZ-4){h[j*ED_NX+i]=0;p[j*ED_NX+i]=0}
-  const as=Array.isArray(doc.assets)?doc.assets.filter(a=>Array.isArray(a)&&['pine','leafy','rock'].includes(a[0])&&isFinite(a[1])&&isFinite(a[2]))
-    .map(a=>({t:a[0],x:+a[1],z:+a[2],yaw:+a[3]||0,s:Math.max(0.3,Math.min(3,+a[4]||1)),c:(a[5]|0)>=0?a[5]|0:0})):null;
-  return {h,p,as}}
-try{const t=localStorage.getItem('bhd_map');if(t){const m=mapDecode(t);ED_H.set(m.h);ED_P.set(m.p);mapAssets=m.as}}catch(e){}
 // the site sits on a grassy mesa; cliffs drop about 150 ft to meadows and a lake. It is about 295 ft across, centred
 // south of the dig so the north rim (the truck's dump spot) stays put. The north part is the high top with two hills;
 // across the middle a rocky scarp drops 24 ft to the Lower Bench, a dirt yard with stockpiles, and a ramp runs down it
@@ -81,13 +49,11 @@ function scarpZ(x){return 45+2.5*Math.sin(x*0.09+0.5)}
 function hill(x,z,cx,cz,rx,rz,h){const t=Math.hypot((x-cx)/rx,(z-cz)/rz);return t>=1?0:h*0.5*(1+Math.cos(Math.PI*t))}
 // worked dirt: the Lower Bench yard and a laydown pad west of the dig; 0 to 1
 function yardAt(x,z){const r=mesaR(x,z),zs=scarpZ(x);
-  return Math.max(0,Math.min(1,Math.max(ss(zs+3,zs+6,z)*(1-ss(37,42,r)),ss(0.15,0.4,hill(x,z,-22,4,9,6,1)))+edSample(ED_P,x,z)))}
+  return Math.max(ss(zs+3,zs+6,z)*(1-ss(37,42,r)),ss(0.15,0.4,hill(x,z,-22,4,9,6,1)))}
 // colour c (rgb array) toward packed dirt by the yard amount; returns the amount
 function yardTint(x,z,c,n){const a=yardAt(x,z);if(a<=0)return 0;const v=0.86+0.2*n;
   c[0]+=(0.55*v-c[0])*a;c[1]+=(0.42*v-c[1])*a;c[2]+=(0.29*v-c[2])*a;return a}
-// the generated ground plus the editor's raise and lower
-function baseHeight(x,z){return groundHeight(x,z)+edSample(ED_H,x,z)}
-function groundHeight(x,z){
+function baseHeight(x,z){
   const r=mesaR(x,z);let h;
   if(r<EDGE+3){
     // gentle rolls, flatter round the dig; Lookout Knoll (18 ft) and West Rise (10 ft) on the top; the bench and its stockpiles
@@ -113,32 +79,25 @@ function groundHeight(x,z){
 }
 // ground too steep to drive onto (the scarp, ramp banks, stockpiles), on a 0.5 m grid over the mesa from the original grade
 const WG_X0=-48,WG_Z0=-20,WG_C=0.5,WG_NX=193,WG_NZ=197,WALL=new Uint8Array(WG_NX*WG_NZ);
-// rebuilt over an area (metres) after the editor reshapes it
-function wallBuild(x0,x1,z0,z1){
-  const i0=Math.max(1,Math.floor((x0-WG_X0)/WG_C)-1),i1=Math.min(WG_NX-2,Math.ceil((x1-WG_X0)/WG_C)+1),j0=Math.max(1,Math.floor((z0-WG_Z0)/WG_C)-1),j1=Math.min(WG_NZ-2,Math.ceil((z1-WG_Z0)/WG_C)+1);
-  const W=i1-i0+3,hh=new Float32Array(W*(j1-j0+3)),hv=(i,j)=>hh[(j-j0+1)*W+i-i0+1];
-  for(let j=j0-1;j<=j1+1;j++)for(let i=i0-1;i<=i1+1;i++)hh[(j-j0+1)*W+i-i0+1]=baseHeight(WG_X0+i*WG_C,WG_Z0+j*WG_C);
-  for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const k=j*WG_NX+i;WALL[k]=0;
+{const hh=new Float32Array(WG_NX*WG_NZ);
+  for(let j=0;j<WG_NZ;j++)for(let i=0;i<WG_NX;i++)hh[j*WG_NX+i]=baseHeight(WG_X0+i*WG_C,WG_Z0+j*WG_C);
+  for(let j=1;j<WG_NZ-1;j++)for(let i=1;i<WG_NX-1;i++){const k=j*WG_NX+i;
     if(mesaR(WG_X0+i*WG_C,WG_Z0+j*WG_C)>EDGE-1)continue;
-    const sl=Math.hypot(hv(i+1,j)-hv(i-1,j),hv(i,j+1)-hv(i,j-1))/(2*WG_C);if(sl>0.85)WALL[k]=1}}
-wallBuild(WG_X0,WG_X0+(WG_NX-1)*WG_C,WG_Z0,WG_Z0+(WG_NZ-1)*WG_C);
+    const sl=Math.hypot(hh[k+1]-hh[k-1],hh[k+WG_NX]-hh[k-WG_NX])/(2*WG_C);if(sl>0.85)WALL[k]=1}}
 function wallAt(x,z){const i=Math.round((x-WG_X0)/WG_C),j=Math.round((z-WG_Z0)/WG_C);return i>=0&&j>=0&&i<WG_NX&&j<WG_NZ&&WALL[j*WG_NX+i]===1}
 // how many of a machine's probe points (local [side, forward] offsets) stand on ground too steep to drive
 function wallCount(x,z,yaw,P){const s=Math.sin(yaw),c=Math.cos(yaw);let n=0;for(const [lx,lz] of P)if(wallAt(x+lx*c+lz*s,z-lx*s+lz*c))n++;return n}
 const PIPE_Z=-5.5, TRENCH_Z0=-8.5, TRENCH_Z1=-3.0;
-// a dig-grid vertex's undug colour (grass, rock on steep ground, sand, the yards and roads) and its dirt-texture amount
-function digBase(k){const i=k%V,j=(k/V)|0,x=i*CELL-S/2,z=j*CELL-S/2;
-  const n=hash(i,j),n2=hash(i*0.37|0,j*0.37|0);
-  grass[k*3]=0.30+0.07*n+0.05*n2; grass[k*3+1]=0.50+0.08*n+0.04*n2; grass[k*3+2]=0.24+0.04*n;
-  const h=H0[k],sl=(Math.abs(baseHeight(x+0.5,z)-baseHeight(x-0.5,z))+Math.abs(baseHeight(x,z+0.5)-baseHeight(x,z-0.5))),rock=ss(0.55,1.1,sl),sand=1-ss(WATER+0.6,WATER+2.8,h),st2=0.06*Math.sin(h*1.4+n);
-  if(rock>0){grass[k*3]+=(0.50+0.06*n+st2-grass[k*3])*rock;grass[k*3+1]+=(0.44+0.05*n+st2-grass[k*3+1])*rock;grass[k*3+2]+=(0.38+0.04*n+st2-grass[k*3+2])*rock}
-  if(sand>0){grass[k*3]+=(0.80-grass[k*3])*sand;grass[k*3+1]+=(0.72-grass[k*3+1])*sand;grass[k*3+2]+=(0.52-grass[k*3+2])*sand}
-  const rc=[grass[k*3],grass[k*3+1],grass[k*3+2]],ya=yardTint(x,z,rc,n),ra=roadTint(x,z,rc,n);grass[k*3]=rc[0];grass[k*3+1]=rc[1];grass[k*3+2]=rc[2];
-  rockA[k]=Math.min(1,Math.max(rock*0.95+sand*0.4,ra*0.9,ya*0.85))}
 for(let j=0;j<V;j++)for(let i=0;i<V;i++){
   const k=j*V+i,x=i*CELL-S/2,z=j*CELL-S/2;
   H0[k]=H[k]=baseHeight(x,z); nz[k]=hash(i*1.7+3,j*2.3+1);
-  digBase(k);
+  const n=hash(i,j),n2=hash(i*0.37|0,j*0.37|0);
+  grass[k*3]=0.30+0.07*n+0.05*n2; grass[k*3+1]=0.50+0.08*n+0.04*n2; grass[k*3+2]=0.24+0.04*n;
+  {const h=H0[k],sl=(Math.abs(baseHeight(x+0.5,z)-baseHeight(x-0.5,z))+Math.abs(baseHeight(x,z+0.5)-baseHeight(x,z-0.5))),rock=ss(0.55,1.1,sl),sand=1-ss(WATER+0.6,WATER+2.8,h),st2=0.06*Math.sin(h*1.4+n);
+    if(rock>0){grass[k*3]+=(0.50+0.06*n+st2-grass[k*3])*rock;grass[k*3+1]+=(0.44+0.05*n+st2-grass[k*3+1])*rock;grass[k*3+2]+=(0.38+0.04*n+st2-grass[k*3+2])*rock}
+    if(sand>0){grass[k*3]+=(0.80-grass[k*3])*sand;grass[k*3+1]+=(0.72-grass[k*3+1])*sand;grass[k*3+2]+=(0.52-grass[k*3+2])*sand}
+    const rc=[grass[k*3],grass[k*3+1],grass[k*3+2]],ya=yardTint(x,z,rc,n),ra=roadTint(x,z,rc,n);grass[k*3]=rc[0];grass[k*3+1]=rc[1];grass[k*3+2]=rc[2];
+    rockA[k]=Math.min(1,Math.max(rock*0.95+sand*0.4,ra*0.9,ya*0.85))}
   const hc=CELL/2+0.001,onSide=Math.abs(Math.abs(x)-0.5)<hc&&z>=TRENCH_Z0-hc&&z<=TRENCH_Z1+hc;
   const onEnd=(Math.abs(z-TRENCH_Z0)<hc||Math.abs(z-TRENCH_Z1)<hc)&&Math.abs(x)<=0.5+hc;
   if(onSide||onEnd)paint[k]=1;

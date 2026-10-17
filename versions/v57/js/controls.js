@@ -114,7 +114,7 @@ $('#modeDig').onclick=()=>setMode('dig'); $('#modeDrive').onclick=()=>setMode('d
 $('#camBtn').onclick=()=>{camMode=camMode==='chase'?'cab':'chase';$('#camBtn').textContent=camMode==='chase'?'Cab view':'Chase view'};
 let resetArm=0;
 $('#resetBtn').onclick=()=>{const b=$('#resetBtn');
-  if(resetArm&&performance.now()-resetArm<2500){resetState();siteSaveAll();resetArm=0;b.textContent='Reset';b.classList.remove('arm');toast('Fresh ground. Paint is back.','good');return}
+  if(resetArm&&performance.now()-resetArm<2500){resetState();resetArm=0;b.textContent='Reset';b.classList.remove('arm');toast('Fresh ground. Paint is back.','good');return}
   resetArm=performance.now();b.textContent='Tap again';b.classList.add('arm');
   setTimeout(()=>{if(resetArm&&performance.now()-resetArm>=2400){resetArm=0;b.textContent='Reset';b.classList.remove('arm')}},2500);};
 const help=$('#help');
@@ -142,6 +142,22 @@ function started(){if(!st.startT)st.startT=performance.now()}
 {const E=window.EFFORT,v=E&&E.versions&&E.versions[E.versions.length-1];
   if(v){const d=new Date(v.live).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit',timeZone:'America/Chicago'});
     $('#verMenu').textContent=`Version ${v.v}`;$('#verHelp').textContent=`Version ${v.v} · went live ${d} Central`}}
+// updates: a Home Screen app can stay open for days without reloading, so the game re-reads the build log when it comes
+// back to the front, when it is restored from the back-forward cache, and every 10 minutes while it is open. A newer
+// version reloads at once if nothing is under way (help card up or nothing touched yet) or the game sat in the background
+// over 10 minutes; otherwise an Update button waits, since a half-dug trench is not saved (the lawn is, on the way out)
+const GAME_V=(()=>{const E=window.EFFORT,v=E&&E.versions&&E.versions[E.versions.length-1];return v?v.v:0})();
+let verHidT=0,verBusy=false;
+function verReload(){try{lawnSave()}catch(e){}location.reload()}
+function verCheck(away){if(verBusy||!GAME_V||!window.fetch)return;verBusy=true;
+  fetch('data/effort.js?t='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.text():'').then(t=>{let n=0;for(const m of t.matchAll(/"v":\s*(\d+)/g))n=Math.max(n,+m[1]);
+    if(n<=GAME_V)return;
+    if(!help.hidden||!st.startT||away>600000)verReload();
+    else{const b=$('#updBtn');b.textContent=`Version ${n} is out · tap to update`;b.hidden=false}}).catch(()=>{}).finally(()=>{verBusy=false})}
+$('#updBtn').onclick=verReload;
+document.addEventListener('visibilitychange',()=>{if(document.hidden)verHidT=performance.now();else{verCheck(verHidT?performance.now()-verHidT:0);verHidT=0}});
+addEventListener('pageshow',e=>{if(e.persisted)verCheck(1e9)});
+setInterval(()=>{if(!document.hidden)verCheck(0)},600000);
 
 let toastTimer=0;
 function toast(t,kind,ms){const el=$('#toastText');el.textContent=t;el.className='show '+(kind||'');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.className=kind||'',ms||2200)}

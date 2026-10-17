@@ -26,11 +26,9 @@ function shpProxies(root){const by=new Map();
   for(const G of by.values()){if(G.src.length<2)continue;for(const s of G.src)s.m.castShadow=false;shpBuild(G);shpGroups.push(G)}}
 for(const r of [machine,truck,mower,tbox])shpProxies(r);
 // trees: a shadow-only copy holding the instances near the shadow camera
-for(const im of treeIMs){im.castShadow=false;const near=new THREE.InstancedMesh(im.geometry,shpMat(THREE.FrontSide),im.instanceMatrix.count);near.count=0;near.castShadow=true;near.visible=false;near.frustumCulled=false;near.userData.shProxy=true;
-  scene.add(near);shpTrees.push({im,M:[],near,x:1e9,z:1e9})}
-// the instances' matrices, read again after the map editor moves, adds or removes trees and boulders
-function shpTreesRefresh(){for(const T of shpTrees){const n=T.im.count;T.M.length=0;for(let i=0;i<n;i++){const m=new THREE.Matrix4();T.im.getMatrixAt(i,m);T.M.push(m)}T.x=1e9}}
-shpTreesRefresh();
+for(const im of treeIMs){im.castShadow=false;const n=im.count,M=[];for(let i=0;i<n;i++){const m=new THREE.Matrix4();im.getMatrixAt(i,m);M.push(m)}
+  const near=new THREE.InstancedMesh(im.geometry,shpMat(THREE.FrontSide),n);near.count=0;near.castShadow=true;near.visible=false;near.frustumCulled=false;near.userData.shProxy=true;
+  scene.add(near);shpTrees.push({M,near,x:1e9,z:1e9})}
 // every frame: give back any part that has moved since it was merged, and refill the near trees when the shadow moves
 function shadowProxyTick(){
   for(const G of shpGroups){let ch=false;

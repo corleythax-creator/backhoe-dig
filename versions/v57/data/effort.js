@@ -1,7 +1,7 @@
 // Backhoe Dig build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Backhoe Dig",
- "updated": "2026-10-17T17:08:00Z",
+ "updated": "2026-10-17T17:11:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,7 +18,7 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 341.5,
+   "dh": 338.5,
    "act": 8.5,
    "versions": 50
   }
@@ -537,13 +537,12 @@ window.EFFORT = {
   },
   {
    "v": 57,
-   "asked": "2026-10-17T11:56:00-05:00",
-   "live": "2026-10-17T12:08:00-05:00",
-   "dh": 4,
+   "asked": "2026-10-17T11:55:00-05:00",
+   "live": "2026-10-17T12:11:00-05:00",
+   "dh": 1,
    "tris": 1152810,
-   "chars": 276749,
-   "what": "The whole site is saved in the browser: the dug and dumped ground with its dirt colours, ruts and groundwater, the excavator's spot, pose, bucket load and strikes, the dump truck's spot, load and yards hauled, the trench box, the blocks, the worker on foot and the job timer all come back on reload. The ground saves every 4 seconds while it changes and the machines every 2 seconds while they move, both when the page is hidden; Reset starts fresh ground."
+   "chars": 272301,
+   "what": "Auto update, for the Home Screen app that never reloads on its own: the game re-reads its build log when it comes back to the front, when it is restored from the back-forward cache and every 10 minutes. A newer version reloads straight away if nothing is under way (the start card is up or nothing has been touched) or after more than 10 minutes in the background; mid-game a yellow 'Version N is out · tap to update' button waits instead, so a half-dug trench is never lost. The lawn is saved before it reloads."
   }
  ]
 };
-

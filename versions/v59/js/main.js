@@ -124,7 +124,6 @@ function frame(now){
   if(hudT<=0)mapsTick(0.1);
   if(hudT<=0){hudT=0.1;
     {const pb=$('#pumpBtn');if(pb.hidden===waterAny)pb.hidden=!waterAny}
-    {const sb=$('#seatBtn'),walk=mode==='walk',show=walk?!!wkNear():!!wk.inside;if(sb.hidden===show)sb.hidden=!show;const t=walk?'Get in':'Get out';if(sb.textContent!==t)sb.textContent=t}
     {const bb=$('#boxBtn'),show=TB.hooked||boxNear();if(bb.hidden===show)bb.hidden=!show;const t=TB.hooked?'Drop box':'Hook box';if(bb.textContent!==t)bb.textContent=t}
     const pct=Math.round(st.load/CAP*100);
     $('#bucketVal').textContent=`${(st.load*1.308).toFixed(2)} yd³ · ${pct}%`;
