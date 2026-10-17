@@ -1,7 +1,7 @@
 // Backhoe Dig build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Backhoe Dig",
- "updated": "2026-10-17T08:23:00Z",
+ "updated": "2026-10-17T08:42:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 201,
-   "act": 3.5,
-   "versions": 23
+   "dh": 207,
+   "act": 4.0,
+   "versions": 24
   }
  ],
  "extra": [
@@ -300,6 +300,15 @@ window.EFFORT = {
    "tris": 753381,
    "chars": 128181,
    "what": "Trench shading: dug and dumped dirt darkens by how much ground rises around it; fresh cuts and spoil look damp and dry lighter over a few minutes. Soil-matched chunks: sod with grass from the first bite, crumbs, blocky clay lumps and sharp rock pieces, no clods from sand; loads remember what they hold."
+  },
+  {
+   "v": 31,
+   "asked": "2026-10-17T03:27:00-05:00",
+   "live": "2026-10-17T03:42:00-05:00",
+   "dh": 6,
+   "tris": 753381,
+   "chars": 133818,
+   "what": "Engine sound and a backup beeper: synthesized six-cylinder diesels for the truck (revs climb through five gears and drop on each upshift) and the excavator (revs with hydraulic demand, lugs in hard soil); the truck beeps in reverse; volume falls off with distance; Sound on/off in the menu and on N. Fix: the rim berm now keeps both truck axles on the mesa, so a head-on hit no longer leaves it stuck nose-down over the cliff."
   }
  ]
 };
