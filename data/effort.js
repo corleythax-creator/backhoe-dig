@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-17T23:49:07Z",
+ "updated": "2026-10-17T23:57:18Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 490.5,
-   "act": 11.0,
-   "versions": 68
+   "dh": 496.5,
+   "act": 11.5,
+   "versions": 69
   }
  ],
  "extra": [
@@ -705,6 +705,15 @@ window.EFFORT = {
    "tris": 1282998,
    "chars": 429953,
    "what": "The Keys line in How to play now gives the mower's own keys: W and S drive it straight, A and D turn it, and the number pad works the lap bars (8 and 2 both, 4 and 6 spin in place, 7 and 1 the left bar, 9 and 3 the right bar), instead of saying IJKL is the right stick in every mode."
+  },
+  {
+   "v": 76,
+   "asked": "2026-10-17T18:40:00-05:00",
+   "live": "2026-10-17T18:57:34-05:00",
+   "dh": 6,
+   "tris": 1286910,
+   "chars": 433848,
+   "what": "Chess and checkers at the Family Island's picnic pavilion: a chess board set up to start on the west table and a checkers board on the east one. Walk up to a table and Get in (F on a keyboard) becomes Play chess or Play checkers: the island saves and switches to Mesa Chess or Mesa Checkers at full quality, and their Corley's Island link brings you straight back on foot beside the table, with no start card. The Mesa pages load ahead as you walk up to the pavilion. In the claude.ai version the game opens in a new tab."
   }
  ]
 };
