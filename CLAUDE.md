@@ -1,6 +1,8 @@
 # Backhoe Dig: notes for Claude
 
-- Pushes to `main` deploy to Vercel (project `backhoe-dig`, Corley team). The claude.ai artifact (https://claude.ai/artifact/6nxYC5EK3422JouxaZx2DF) is the same game; `index.html` here is the artifact file wrapped in a doctype and head. Keep both in step.
+- Pushes to `main` deploy to Vercel (project `backhoe-dig`, Corley team). The claude.ai artifact (https://claude.ai/artifact/6nxYC5EK3422JouxaZx2DF) is the same game. Keep both in step: publish the artifact from `main` only, as the page from `<title>` to before `</html>` of `index.html`, with `css/game.css` and every `js/*.js` passed in `files` at the same paths (the jpg textures are already there).
+- Code layout (README has the table): markup in `index.html`, styles in `css/game.css`, game code in `js/*.js`. The scripts are classic scripts sharing one global scope and load in the order of the script tags; top-level code may only call functions from its own file or earlier files. Before adding a top-level name, grep `(const|let|function) NAME\b` across `js/` (and avoid browser globals like `top`, `name`, `status`).
+- One session at a time merges to `main` and publishes the artifact; other sessions push branches and open PRs. Pick the version number when the work merges (next after `main`'s last `versions` entry), not when it starts.
 - Owner preferences for this game: flat-shaded low-poly look, imperial units in everything shown, large readable HUD text, runs above 30 FPS on his phone.
 - When a version ships, add an entry to `versions` in `data/effort.js` (asked/live times in Central, estimated developer hours, triangles from a headless scene count, file size) and add its hours to that day in `days` (`dh`, and `act` as half-hour blocks holding a release). The master dashboard (`corley-master-dashboard`, `LIVE`) and `build.html` both read it.
 - Dev hours are a feature-by-feature judgment of one experienced three.js developer working by hand.
