@@ -52,7 +52,30 @@ lawnMat.onBeforeCompile=sh=>{sh.uniforms.uTime=timeU;sh.uniforms.uPush=lawnPush;
     'mvPosition=modelViewMatrix*mvPosition;\ngl_Position=projectionMatrix*mvPosition;');
   sh.fragmentShader='uniform vec3 uSun;\nvarying vec3 vLW;\nvarying float vTip;\n'+sh.fragmentShader.replace('#include <emissivemap_fragment>',
     '#include <emissivemap_fragment>\nfloat bl=pow(max(0.0,dot(normalize(vLW-cameraPosition),uSun)),3.0);\ntotalEmissiveRadiance+=diffuseColor.rgb*vec3(1.0,1.15,0.4)*bl*vTip*1.1;')};
-const lawnClumps=new THREE.InstancedMesh(lawnGeo,lawnMat,LAWN_N);lawnClumps.receiveShadow=true;lawnClumps.frustumCulled=false;scene.add(lawnClumps);
+const lawnClumps=new THREE.InstancedMesh(lawnGeo,lawnMat,LAWN_N);lawnClumps.receiveShadow=true;lawnClumps.frustumCulled=true;scene.add(lawnClumps);
+// far away (Graphics Low and Medium) the patch draws a quarter of the clumps, every other one each way and twice as wide,
+// so it reads the same for a quarter of the triangles; both versions are skipped when the patch is out of view (an
+// InstancedMesh starts with culling off, so it is switched on, with a bounding sphere round the whole patch)
+const LAWN_FN=(LAWN_NX>>1)*(LAWN_NZ>>1),lawnFarGeo=new THREE.BufferGeometry();
+for(const k of ['position','color','normal'])lawnFarGeo.setAttribute(k,lawnGeo.attributes[k]);
+lawnFarGeo.setAttribute('aLawn',new THREE.InstancedBufferAttribute(new Float32Array(LAWN_FN*4),4));
+const lawnFar=new THREE.InstancedMesh(lawnFarGeo,lawnMat,LAWN_FN);lawnFar.receiveShadow=true;lawnFar.frustumCulled=true;lawnFar.count=0;scene.add(lawnFar);
+lawnFar.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(LAWN_FN*3),3);
+{const cx=LAWN_X0+LAWN_NX*LAWN_GS/2,cz=LAWN_Z0+LAWN_NZ*LAWN_GS/2,r=Math.hypot(LAWN_NX,LAWN_NZ)*LAWN_GS/2+1.5;
+  for(const g of [lawnGeo,lawnFarGeo])g.boundingSphere=new THREE.Sphere(new THREE.Vector3(cx,baseHeight(cx,cz)+0.4,cz),r)}
+let lawnFarOn=false,lawnFarStale=true;
+// copy every other clump into the far version, widened
+function lawnFarSync(){const M=lawnClumps.instanceMatrix.array,F=lawnFar.instanceMatrix.array,A=lawnGeo.attributes.aLawn.array,FA=lawnFarGeo.attributes.aLawn.array,
+    C=lawnClumps.instanceColor&&lawnClumps.instanceColor.array;let m=0;
+  for(let j=0;j+1<LAWN_NZ;j+=2)for(let i=0;i+1<LAWN_NX;i+=2,m++){const n=j*LAWN_NX+i;
+    for(let e=0;e<16;e++)F[m*16+e]=M[n*16+e]*(e===0||e===1||e===2||e===8||e===9||e===10?2:1);
+    for(let e=0;e<4;e++)FA[m*4+e]=A[n*4+e];if(C)for(let e=0;e<3;e++)lawnFar.instanceColor.array[m*3+e]=C[n*3+e]}
+  lawnFar.instanceMatrix.needsUpdate=true;lawnFarGeo.attributes.aLawn.needsUpdate=true;if(C)lawnFar.instanceColor.needsUpdate=true;lawnFarStale=false}
+// every frame: near or far version, by the camera's distance to the patch and the Graphics setting (always near while mowing)
+function lawnLod(){const d=Math.hypot(Math.max(0,LAWN_X0-camera.position.x,camera.position.x-LAWN_X0-LAWN_NX*LAWN_GS),Math.max(0,LAWN_Z0-camera.position.z,camera.position.z-LAWN_Z0-LAWN_NZ*LAWN_GS));
+  const far=mode!=='mow'&&d>(typeof gfxKey!=='undefined'?GFX[gfxKey].lawnFar:1e9);
+  if(far&&lawnFarStale)lawnFarSync();
+  if(far!==lawnFarOn){lawnFarOn=far;lawnClumps.count=far?0:LAWN_N;lawnFar.count=far?LAWN_FN:0}}
 const lwO=new THREE.Object3D(),lwC=new THREE.Color();
 for(let j=0;j<LAWN_NZ;j++)for(let i=0;i<LAWN_NX;i++){const n=j*LAWN_NX+i,e=Math.min(i+0.5,j+0.5,LAWN_NX-i-0.5,LAWN_NZ-j-0.5)*LAWN_GS;
   lawn.x[n]=LAWN_X0+(i+0.5+(Math.random()-0.5)*0.8)*LAWN_GS;lawn.z[n]=LAWN_Z0+(j+0.5+(Math.random()-0.5)*0.8)*LAWN_GS;
@@ -158,6 +181,7 @@ function lawnCount(){let c=0;for(let n=0;n<LAWN_N;n++)if(!lawn.dug[n]&&lawnG(n)<
 function lawnPct(){return lawn.pct}
 // push the per-cell changes to the GPU once a frame
 function lawnFlush(){
+  if(lawn.mDirty||lawn.cDirty||lawn.aDirty){lawnFarStale=true;if(lawnFarOn)lawnFarSync()}
   if(lawn.mDirty){lawnClumps.instanceMatrix.needsUpdate=true;lawn.mDirty=false}
   if(lawn.cDirty&&lawnClumps.instanceColor){lawnClumps.instanceColor.needsUpdate=true;lawn.cDirty=false}
   if(lawn.gDirty){const ga=lawnGround.geometry.attributes;ga.color.needsUpdate=true;ga.aGrain.needsUpdate=true;lawn.gDirty=false}

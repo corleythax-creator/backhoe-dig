@@ -3,9 +3,9 @@
 // Low is from the iPhone speed test (Oct 17): shadows, filmic lighting and ground detail each cost it 9-16 FPS.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 const GFX={
-  low:{name:'Low',pr:1.5,sh:1024,soft:false,filmic:false,detail:0,dirt:1},
-  med:{name:'Medium',pr:1.5,sh:2048,soft:false,filmic:true,detail:1,dirt:2},
-  high:{name:'High',pr:2,sh:2048,soft:true,filmic:true,detail:1,dirt:4}};
+  low:{name:'Low',pr:1.5,sh:1024,soft:false,filmic:false,detail:0,dirt:1,lawnFar:6},
+  med:{name:'Medium',pr:1.5,sh:2048,soft:false,filmic:true,detail:1,dirt:2,lawnFar:15},
+  high:{name:'High',pr:2,sh:2048,soft:true,filmic:true,detail:1,dirt:4,lawnFar:1e9}};
 let gfxKey='high';
 function gfxGuess(){if(PHONE)return 'low';
   try{const gl=renderer.getContext(),ext=gl.getExtension('WEBGL_debug_renderer_info'),r=ext?gl.getParameter(ext.UNMASKED_RENDERER_WEBGL):'';if(/intel/i.test(r))return 'med'}catch(e){}
