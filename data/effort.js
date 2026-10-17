@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-17T21:38:39Z",
+ "updated": "2026-10-17T22:17:36Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 420,
-   "act": 9.5,
-   "versions": 61
+   "dh": 440,
+   "act": 10.0,
+   "versions": 62
   }
  ],
  "extra": [
@@ -642,6 +642,15 @@ window.EFFORT = {
    "tris": 1154238,
    "chars": 370460,
    "what": "Mud ruts and puddles: the excavator's tracks and the truck's tyres sink up to 9 in into mud and squeeze it out into ragged berms along both edges, so driving back and forth churns the ground. Ground painted Mud in the map editor is saturated: ruts and dips there fill with puddles that reflect the sky. Mud bogs the machines and coats them. Phones (Low graphics) draw the puddles more simply; the mud and water themselves are the same on every device."
+  },
+  {
+   "v": 69,
+   "asked": "2026-10-17T16:45:00-05:00",
+   "live": "2026-10-17T17:17:36-05:00",
+   "dh": 20,
+   "tris": 1154238,
+   "chars": 387762,
+   "what": "Mud anywhere on the mesa: Mud painted with the map editor now ruts and fills with puddles outside the dig zone too, on fine ground tiles made only where a machine first churns it (saved and synced with the site). Getting stuck: pushing on in deep mud digs the tracks or tires in until they spin and throw mud; rock it free by going forward, then back, then forward again. Phones (Low graphics) throw fewer blobs and draw puddles more simply; the mud behaves the same on every device. How wet the ground is now comes from one place, ready for soil and rain to drive it later."
   }
  ]
 };
