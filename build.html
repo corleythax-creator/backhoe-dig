@@ -36,10 +36,17 @@ h2{margin:0 0 12px;font:800 28px/1.1 var(--f-display);letter-spacing:.02em}
 section{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px 18px 14px;min-width:0}
 .sub{color:var(--muted);margin:-6px 0 12px;font-size:16px}
 .chart{overflow-x:auto}
-.chart svg{display:block;width:100%;min-width:620px;height:auto}
+.chart svg{display:block;width:100%;height:auto}
+.tl{display:grid;grid-template-columns:auto 1fr auto;gap:6px 10px;align-items:center;font:600 16px/1.2 var(--f-display);font-variant-numeric:tabular-nums}
+.tl .lab{color:var(--machine);font-weight:800}
+.tl .track{position:relative;height:16px;background:var(--grid);border-radius:4px}
+.tl .bar{position:absolute;top:2px;bottom:2px;min-width:5px;border-radius:3px;background:var(--machine-soft);border:1px solid var(--machine)}
+.tl .min{min-width:4.2em;text-align:right}
+.axis{display:flex;justify-content:space-between;margin:8px 0 0 calc(2.2em + 10px);margin-right:calc(4.2em + 10px);color:var(--muted);font:600 14px var(--f-display)}
 .chart text{fill:var(--muted);font:600 13px var(--f-display)}
 .tablewrap{overflow-x:auto}
-table{border-collapse:collapse;width:100%;font-size:16px;min-width:720px}
+table{border-collapse:collapse;width:100%;font-size:16px}
+@media (max-width:640px){.wide{display:none}}
 th{font:700 13px/1.2 var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-align:left;padding:8px 10px;border-bottom:2px solid var(--line)}
 td{padding:9px 10px;border-bottom:1px solid var(--line);vertical-align:top}
 td.n,th.n{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap}
@@ -59,7 +66,7 @@ footer{color:var(--muted);font-size:15px}
   <div class="strip" id="strip"></div>
   <section>
     <h2>Ask to live, every version</h2>
-    <p class="sub">Each bar runs from the ask in chat to the version going live. Central time.</p>
+    <p class="sub">Each bar runs from the ask in chat to the version going live, on one shared clock. Central time.</p>
     <div class="chart" id="timeline"></div>
   </section>
   <section>
@@ -93,20 +100,18 @@ $('strip').innerHTML=
   stat('Ask to live',`${med.toFixed(1)} min`,`median; fastest ${sorted[0].toFixed(1)}, slowest ${sorted[sorted.length-1].toFixed(1)}`)+
   stat('Developer hours',dev.toLocaleString(),`by hand, without AI · about $${(dev*E.rateUsd).toLocaleString()} at $${E.rateUsd}/h`,true)+
   stat('Active AI hours',ai,`about ${Math.round(dev/ai)}× faster than by hand`);
-// timeline chart
+// timeline: one row per version, bar from ask to live on a shared time scale
 (function(){
-  const W=900,H=60+V.length*26,L=56,R=20,T=26,x0=Math.floor(first/1800000)*1800000,x1=Math.ceil(last/1800000)*1800000+60000,X=m=>L+(m-x0)/(x1-x0)*(W-L-R);
-  let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Ask to live timeline for each version">`;
-  for(let m=x0;m<=x1;m+=600000){const x=X(m);s+=`<line x1="${x}" x2="${x}" y1="${T-6}" y2="${H-24}" stroke="var(--grid)"/><text x="${x}" y="${H-6}" text-anchor="middle">${fmt(m)}</text>`}
-  V.forEach((v,i)=>{const y=T+i*26,a=X(t(v.asked)),b=X(t(v.live));
-    s+=`<text x="${L-10}" y="${y+5}" text-anchor="end">v${v.v}</text>`;
-    s+=`<rect x="${a}" y="${y-6}" width="${Math.max(3,b-a)}" height="12" rx="3" fill="var(--machine-soft)" stroke="var(--machine)"/>`;
-    s+=`<circle cx="${b}" cy="${y}" r="5" fill="var(--machine)"/><text x="${b+10}" y="${y+5}" fill="var(--ink)">${turn[i].toFixed(1)} min</text>`});
-  $('timeline').innerHTML=s+'</svg>';
+  const x0=first,x1=last,P=m=>(m-x0)/(x1-x0)*100;
+  let h='<div class="tl">';
+  V.forEach((v,i)=>{const a=P(t(v.asked)),b=P(t(v.live));
+    h+=`<span class="lab">v${v.v}</span><span class="track"><span class="bar" style="left:${a}%;width:${Math.max(0.8,b-a)}%"></span></span><span class="min">${turn[i].toFixed(1)} min</span>`});
+  h+='</div><div class="axis"><span>'+fmt(x0)+'</span><span>'+fmt((x0+x1)/2)+'</span><span>'+fmt(x1)+'</span></div>';
+  $('timeline').innerHTML=h;
 })();
 // growth chart
 (function(){
-  const W=900,H=300,L=58,R=58,T=20,B=40,n=V.length,bw=(W-L-R)/n,maxT=Math.max(...V.map(v=>v.tris||0))*1.1,maxC=Math.max(...V.map(v=>v.chars||0))*1.15;
+  const W=Math.max(340,$('growth').clientWidth||900),H=300,L=50,R=58,T=20,B=40,n=V.length,bw=(W-L-R)/n,maxT=Math.max(...V.map(v=>v.tris||0))*1.1,maxC=Math.max(...V.map(v=>v.chars||0))*1.15;
   const Y=v=>T+(1-v/maxT)*(H-T-B),YC=v=>T+(1-v/maxC)*(H-T-B);
   let s=`<svg viewBox="0 0 ${W} ${H}" role="img" aria-label="Triangles and code size by version">`;
   for(let k=0;k<=5;k++){const v=maxT/1.1*k/5,y=Y(v);s+=`<line x1="${L}" x2="${W-R}" y1="${y}" y2="${y}" stroke="var(--grid)"/><text x="${L-8}" y="${y+4}" text-anchor="end">${Math.round(v/1000)}k</text>`;
@@ -115,7 +120,7 @@ $('strip').innerHTML=
   V.forEach((v,i)=>{const cx=L+bw*i+bw/2;
     if(v.tris)s+=`<rect x="${cx-bw*0.32}" y="${Y(v.tris)}" width="${bw*0.64}" height="${H-B-Y(v.tris)}" rx="3" fill="var(--sky)" opacity=".85"><title>v${v.v}: ${v.tris.toLocaleString()} triangles</title></rect>`;
     else s+=`<text x="${cx}" y="${H-B-6}" text-anchor="middle" opacity=".6">–</text>`;
-    s+=`<text x="${cx}" y="${H-B+18}" text-anchor="middle">v${v.v}</text>`;
+    if(bw>30||i%2===0)s+=`<text x="${cx}" y="${H-B+18}" text-anchor="middle">v${v.v}</text>`;
     if(v.chars)path+=(path?'L':'M')+cx+' '+YC(v.chars)});
   s+=`<path d="${path}" fill="none" stroke="var(--machine)" stroke-width="3"/>`;
   V.forEach((v,i)=>{if(v.chars){const cx=L+bw*i+bw/2;s+=`<circle cx="${cx}" cy="${YC(v.chars)}" r="4.5" fill="var(--machine)"><title>v${v.v}: ${(v.chars/1000).toFixed(1)} KB</title></circle>`}});
@@ -123,10 +128,10 @@ $('strip').innerHTML=
   $('growth').innerHTML=s+'</svg>';
 })();
 // version log
-let rows='<tr><th>Ver</th><th>Asked</th><th class="n">To live</th><th>What changed</th><th class="n">Dev h</th><th class="n">Triangles</th></tr>';
+let rows='<tr><th>Ver</th><th class="wide">Asked</th><th class="n">To live</th><th>What changed</th><th class="n">Dev h</th><th class="n wide">Triangles</th></tr>';
 V.slice().reverse().forEach((v,j)=>{const i=V.length-1-j;
-  rows+=`<tr><td class="v">${v.v}</td><td class="n">${fmt(t(v.asked))}</td><td class="n">${turn[i].toFixed(1)} min</td><td>${v.what}</td><td class="n">${v.dh}</td><td class="n">${v.tris?Math.round(v.tris/1000)+'k':'–'}</td></tr>`});
-(E.extra||[]).forEach(x=>{rows+=`<tr><td class="v">+</td><td class="n">–</td><td class="n">–</td><td>${x.what}</td><td class="n">${x.dh}</td><td class="n">–</td></tr>`});
+  rows+=`<tr><td class="v">${v.v}</td><td class="n wide">${fmt(t(v.asked))}</td><td class="n">${turn[i].toFixed(1)} min</td><td>${v.what}</td><td class="n">${v.dh}</td><td class="n wide">${v.tris?Math.round(v.tris/1000)+'k':'–'}</td></tr>`});
+(E.extra||[]).forEach(x=>{rows+=`<tr><td class="v">+</td><td class="n wide">–</td><td class="n">–</td><td>${x.what}</td><td class="n">${x.dh}</td><td class="n wide">–</td></tr>`});
 $('log').innerHTML=rows;
 const M=E.method;
 $('method').innerHTML=`<p><b>Developer hours.</b> ${M.dh}</p><p><b>Active AI hours.</b> ${M.act}</p><p><b>Ask to live.</b> ${M.turnaround}</p><p><b>Triangles.</b> ${M.tris}</p>`;
