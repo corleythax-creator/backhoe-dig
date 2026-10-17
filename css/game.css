@@ -124,6 +124,9 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 .ver{font:600 14px/1.2 var(--f-display);letter-spacing:.05em;color:var(--muted);text-align:right;padding:4px 6px 2px}
 .card .ver{text-align:center;font-size:15px!important;margin-top:-6px}
 .card button{background:var(--machine);color:#1c1309;height:54px;font-size:21px;border:0}
+/* Start digging sits under the title and stays pinned there while the instructions scroll beneath it */
+#startBtn{position:sticky;top:-12px;z-index:1;flex:none;box-shadow:0 -20px 0 #1d211b,0 10px 12px -4px #1d211b}
+#help .card{overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y}
 @media (max-width:360px){.stick{width:112px;height:112px}.status{width:160px}}
 @media (max-height:420px){.stick{width:112px;height:112px}#benchBar{top:var(--pt)}}
 @media (prefers-reduced-motion:reduce){#toast span,#flash,.bar>i{transition:none}}
