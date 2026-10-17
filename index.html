@@ -30,6 +30,11 @@
       <div class="bar"><i id="truckBar"></i></div>
       <div class="sub" id="haulVal">Hauled 0.0 yd³</div>
     </div>
+    <div class="srow" id="lawnRow" hidden>
+      <div class="line"><span class="lbl">Lawn</span><span class="val" id="lawnVal">0% · 0:00</span></div>
+      <div class="bar" id="lawnBar"><i></i></div>
+      <div class="sub" id="mowVal">0.0 mph · blades on</div>
+    </div>
     <div class="stats" aria-live="off"><b id="fpsVal">--</b> fps · <b id="triVal">--</b> tris · <b id="resVal">--</b></div>
   </div>
   <div class="side">
@@ -65,6 +70,7 @@
       <button id="modeDig" data-k="1" aria-pressed="true">Dig</button>
       <button id="modeDrive" data-k="2" aria-pressed="false">Drive</button>
       <button id="modeTruck" data-k="3" aria-pressed="false">Truck</button>
+      <button id="modeMow" data-k="4" aria-pressed="false">Mow</button>
     </div>
     <div class="stickwrap">
       <div class="cap" id="capR"><b>◀ ▶</b> Curl / dump<br><b>▲ ▼</b> Boom down / up</div>
@@ -80,7 +86,7 @@
     <div class="legend">
       <span><i style="background:#f07a22"></i>Excavator</span><span><i style="background:#e9ecea"></i>Dump truck</span>
       <span><i style="background:#f2f2ee;height:3px"></i>Trench paint</span><span><i style="background:#f5c518;height:3px"></i>Gas main</span>
-      <span><i style="background:#b89a6b"></i>Dirt road</span><span><i style="background:#7a5232"></i>Dug or dumped</span><span><i style="background:#d8a514"></i>Trench box</span><span><i style="background:#b9b6ae"></i>Block</span><span><i style="background:#2d7a94"></i>Lake</span>
+      <span><i style="background:#b89a6b"></i>Dirt road</span><span><i style="background:#7a5232"></i>Dug or dumped</span><span><i style="background:#d8a514"></i>Trench box</span><span><i style="background:#b9b6ae"></i>Block</span><span><i style="background:#2d7a94"></i>Lake</span><span><i style="background:#a3a64c"></i>Tall grass</span><span><i style="background:#d8352a"></i>Mower</span>
     </div>
   </div>
 </div>
@@ -106,6 +112,7 @@
       <dt>Right stick</dt><dd>Left curls the bucket in (scoop), right dumps. Push up for boom down, pull for boom up.</dd>
       <dt>Drive</dt><dd>Tap Drive and the left stick moves the tracks.</dd>
       <dt>Truck</dt><dd>Swing a full bucket over the truck bed and dump. It starts parked on the dirt road that loops the mesa. Tap Truck to drive it: left stick steers and gives gas, right stick raises the bed. Pull back to brake; hold it at a stop to shift into reverse. A full load is heavy: it pulls slowly, stops long and leans in turns. Back up to the cliff edge and dump it over to haul it off.</dd>
+      <dt>Mow</dt><dd>A patch of tall grass grows north of the trench, with a zero-turn mower parked beside it. Tap Mow: each stick is a lap bar. Left stick up/down drives the left wheel, right stick up/down the right wheel. Both up goes straight, one up and one back spins it in place; the left stick sideways also turns it. The blades run in Mow mode. Passes heading north or east leave light stripes, south or west dark ones.</dd>
       <dt>Soil</dt><dd>Dark topsoil, then red clay that holds a steep wall. Sand means the gas main is close, and it slumps. Grey rock is past trench depth and slow going. Dug dirt fluffs up about a quarter, so it fills the truck faster than the hole it came from.</dd>
       <dt>Cave-ins</dt><dd>Walls deeper than about 5 ft, or with spoil piled within 2 ft of the edge, cave in after a while. Dirt trickling off the lip means get the bucket out.</dd>
       <dt>Trench box</dt><dd>Swing the bucket over the yellow box and press T (controller X, or the Hook box button). It hangs from the bucket and turns with the swing. Lower it into the trench and press again to set it. Walls between its panels can't slump or cave in, so dig deep inside it and leapfrog it along the trench.</dd>
@@ -114,7 +121,7 @@
       <dt>Map</dt><dd>Tap the minimap or press M for the big map.</dd>
       <dt>Screen</dt><dd>Tap the status card to fold it down. Speed test, Reset, Sound on/off, UI size (1x, 1.5x, 2x) and Dirt detail (1x, 2x, 4x, 16x: more clods, flying dirt and lumpier loads; 16x is for screenshots and fast computers, turn it down if the game slows) are in the ☰ menu.</dd>
       <dt>Controller</dt><dd>Sticks work like the two on-screen sticks. Triggers are gas and reverse when driving. LB / RB switch machine · Y cab view · A place block · D-pad up blocks on/off, left/right block size, down pick up · View map · Menu this help · B closes.</dd>
-      <dt>Keys</dt><dd>WASD (or arrows) is always the left stick, IJKL is always the right stick, in every mode. 1 Dig · 2 Drive · 3 Truck (Tab cycles). Hold Shift for slow, fine moves. C cab view · M map · N sound on/off · H this help. Blocks: B on/off · Space place · V size · X pick up.</dd>
+      <dt>Keys</dt><dd>WASD (or arrows) is always the left stick, IJKL is always the right stick, in every mode. 1 Dig · 2 Drive · 3 Truck · 4 Mow (Tab cycles). Hold Shift for slow, fine moves. C cab view · M map · N sound on/off · H this help. Blocks: B on/off · Space place · V size · X pick up.</dd>
     </dl>
     <p>To scoop: boom down until the teeth bite, curl in while pulling the stick toward you, boom up, swing, then dump.</p>
     <button id="startBtn">Start digging</button>
@@ -131,6 +138,7 @@
 <script src="js/trenchbox.js"></script>
 <script src="js/dirt.js"></script>
 <script src="js/blocks.js"></script>
+<script src="js/mower.js"></script>
 <script src="js/controls.js"></script>
 <script src="js/effects.js"></script>
 <script src="js/sound.js"></script>

@@ -1,7 +1,7 @@
 // Backhoe Dig: diesel engines for both machines and the truck's backup alarm, synthesized with Web Audio (no sound files).
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 // Browsers only start audio after a tap or key press, so the graph is built on the first one.
-let actx=null,sndMaster=null,sndOn=true,sndEngT=null,sndEngX=null,sndBeep=null,sndGear=0,sndGearT=0;
+let actx=null,sndMaster=null,sndOn=true,sndEngT=null,sndEngX=null,sndEngM=null,sndBeep=null,sndGear=0,sndGearT=0;
 try{sndOn=localStorage.getItem('bhd_snd')!=='0'}catch(e){}
 function sndCurve(k){const c=new Float32Array(256);for(let i=0;i<256;i++){const x=i/127.5-1;c[i]=Math.tanh(k*x)/Math.tanh(k)}return c}
 // one diesel: a sawtooth at the firing rate, a detuned half-rate square for the uneven lope, and band-passed
@@ -27,7 +27,7 @@ function sndStart(){
   try{actx=new AC()}catch(e){actx=null;return}
   sndMaster=actx.createGain();sndMaster.gain.value=sndOn?0.5:0;sndMaster.connect(actx.destination);
   const nb=actx.createBuffer(1,actx.sampleRate*2,actx.sampleRate),d=nb.getChannelData(0);for(let i=0;i<d.length;i++)d[i]=Math.random()*2-1;
-  sndEngT=makeEngine(nb);sndEngX=makeEngine(nb);
+  sndEngT=makeEngine(nb);sndEngX=makeEngine(nb);sndEngM=makeEngine(nb);
   // backup alarm: a harsh ~1.1 kHz square, half a second on, half off
   const o=actx.createOscillator();o.type='square';o.frequency.value=1120;
   const lp=actx.createBiquadFilter();lp.type='lowpass';lp.frequency.value=3200;
@@ -70,4 +70,9 @@ function updateSound(dt,hyd){
   const xT=850+1050*work-260*lug;
   sndEngX.rpm+=(xT-sndEngX.rpm)*Math.min(1,dt*3);
   engineTo(sndEngX,sndEngX.rpm,Math.min(1,work*0.8+lug*0.6),quiet*0.85*sndNear(st.x,st.y+1.2,st.z),t);
+  // mower: a small gas V-twin held at the governor; it runs with the blades and dips when they bite tall grass
+  // (engineTo's rpm is a diesel's, so 1150 here gives the twin's 57 Hz firing beat)
+  const mT=980+170*mw.blades-120*mw.load+40*Math.min(1,Math.abs(mw.v));
+  sndEngM.rpm+=(mT-sndEngM.rpm)*Math.min(1,dt*4);
+  engineTo(sndEngM,sndEngM.rpm,Math.min(1,0.2+mw.load*0.8),quiet*0.55*mw.blades*sndNear(mw.x,mw.y+0.6,mw.z),t);
 }
