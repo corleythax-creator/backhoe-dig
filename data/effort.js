@@ -1,7 +1,7 @@
 // Backhoe Dig build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Backhoe Dig",
- "updated": "2026-10-17T08:10:00Z",
+ "updated": "2026-10-17T08:23:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 194,
+   "dh": 201,
    "act": 3.5,
-   "versions": 22
+   "versions": 23
   }
  ],
  "extra": [
@@ -291,6 +291,15 @@ window.EFFORT = {
    "tris": 764740,
    "chars": 122399,
    "what": "Chunkier loose dirt: instanced clods on spoil piles, trench floors and cave-ins (and where falling dirt lands), four times the flying dirt, a lumpy bucket load and truck heap with clods on it, and a Dirt detail setting (1x, 2x, 4x) in the menu."
+  },
+  {
+   "v": 30,
+   "asked": "2026-10-17T03:16:00-05:00",
+   "live": "2026-10-17T03:23:00-05:00",
+   "dh": 7,
+   "tris": 753381,
+   "chars": 128181,
+   "what": "Trench shading: dug and dumped dirt darkens by how much ground rises around it; fresh cuts and spoil look damp and dry lighter over a few minutes. Soil-matched chunks: sod with grass from the first bite, crumbs, blocky clay lumps and sharp rock pieces, no clods from sand; loads remember what they hold."
   }
  ]
 };

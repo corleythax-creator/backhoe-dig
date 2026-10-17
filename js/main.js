@@ -47,7 +47,7 @@ function frame(now){
   if(st.below&&!bench.on){
     if(st.load<CAP-0.002){
       const got=dig(tip,CAP-st.load);
-      if(got>0){const f=got/(st.load+got);for(let q=0;q<3;q++)st.loadC[q]+=(digC[q]-st.loadC[q])*f;
+      if(got>0){const f=got/(st.load+got);for(let q=0;q<3;q++)st.loadC[q]+=(digC[q]-st.loadC[q])*f;for(let q=0;q<4;q++)st.loadMix[q]+=(digMix[q]-st.loadMix[q])*f;
         st.load+=got;st.dirty=true;st.slumpT=2.5;if(Math.random()<0.5)spawn(tip.clone().setY(g+0.05),1.2)}
     }else if(!fullWarned){toast('Bucket full. Boom up, swing, dump.');fullWarned=true}
   }
@@ -58,11 +58,11 @@ function frame(now){
   if(f>0&&st.load>0.0005){
     const out=Math.min(st.load,f*(0.35+st.load*1.6)*dt);
     st.load-=out;
-    if(inBed(mid)&&tr.load<TRUCK_CAP){const take=Math.min(out,TRUCK_CAP-tr.load);if(take>0){const f=take/(tr.load+take);for(let q=0;q<3;q++)tr.loadC[q]+=(st.loadC[q]-tr.loadC[q])*f}tr.load+=take;
-      if(out-take>0){deposit(mid.x,mid.z,out-take,st.loadC);st.dirty=true;st.slumpT=2.5}
+    if(inBed(mid)&&tr.load<TRUCK_CAP){const take=Math.min(out,TRUCK_CAP-tr.load);if(take>0){const f=take/(tr.load+take);for(let q=0;q<3;q++)tr.loadC[q]+=(st.loadC[q]-tr.loadC[q])*f;for(let q=0;q<4;q++)tr.loadMix[q]+=(st.loadMix[q]-tr.loadMix[q])*f}tr.load+=take;
+      if(out-take>0){deposit(mid.x,mid.z,out-take,st.loadC,st.loadMix);st.dirty=true;st.slumpT=2.5}
       if(!tr.loadedOnce){tr.loadedOnce=true;toast('Dirt in the truck.','good')}
       if(tr.load>=TRUCK_CAP*0.99&&!tr.fullWarned){tr.fullWarned=true;toast('Truck full. Tap Truck, back it to the cliff edge and raise the bed.','',3500)}}
-    else{deposit(mid.x,mid.z,out,st.loadC); st.dirty=true; st.slumpT=2.5}
+    else{deposit(mid.x,mid.z,out,st.loadC,st.loadMix); st.dirty=true; st.slumpT=2.5}
     for(let n=0;n<Math.ceil(out*80);n++)spawn(mid,0.8);
     if(st.load<0.0005)st.load=0;
   }
