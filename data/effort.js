@@ -1,7 +1,7 @@
 // Backhoe Dig build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Backhoe Dig",
- "updated": "2026-10-17T09:07:00Z",
+ "updated": "2026-10-17T09:15:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 244.5,
+   "dh": 252.5,
    "act": 4.5,
-   "versions": 30
+   "versions": 31
   }
  ],
  "extra": [
@@ -363,6 +363,15 @@ window.EFFORT = {
    "tris": 757440,
    "chars": 166289,
    "what": "Clearer excavator cab glass: thinner tint and softer sky reflections so the seat and controls read from outside at chase-camera angles, and the glass no longer hides see-through things behind it."
+  },
+  {
+   "v": 38,
+   "asked": "2026-10-17T03:45:00-05:00",
+   "live": "2026-10-17T04:15:00-05:00",
+   "dh": 8,
+   "tris": 757440,
+   "chars": 188408,
+   "what": "Sound panel (on/off, Master, Engines, Backup alarm, Effects sliders) and rebuilt sound: diesel loops rendered from cylinder firings with exhaust crack, knock and pipe resonance, tuned to carry on phone speakers; turbo, tires and gravel, air brakes, bed hydraulics, tailgate, pump whine, relief valve, bucket scrape, track clank and pouring dirt; stereo, distance and a cliff echo."
   }
  ]
 };

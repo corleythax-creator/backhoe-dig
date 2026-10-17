@@ -269,7 +269,7 @@ function updateTruck(dt,thr,steerIn,bedIn){
   tr.v+=(tr.gear*Fd/mass+G*Math.sin(tr.pitch))*dt;
   const dec=(crr*G+(drive?0:0.35)+brake*65000/mass)*dt;
   tr.v=Math.abs(tr.v)<=dec?0:tr.v-Math.sign(tr.v)*dec;
-  tr.drive=drive;tr.brakeOn=brake>0.2&&(Math.abs(tr.v)>0.05||tr.shiftT>0||!!thr);
+  tr.drive=drive;tr.soft=soft;tr.road=road;tr.bedIn=bedIn;sndIn.dump=0;tr.brakeOn=brake>0.2&&(Math.abs(tr.v)>0.05||tr.shiftT>0||!!thr);
   // steering: the wheels turn at a hydraulic rate, and tires scrub wide when the turn asks for more grip than they have
   tr.steer+=clamp(steerIn*0.6-tr.steer,-1.1*dt,1.1*dt);
   let curv=Math.tan(tr.steer)/WB;const v2=tr.v*tr.v,latMax=(soft?2.8:road?4.2:3.5)*(1-0.25*f);
@@ -325,7 +325,7 @@ function updateTruck(dt,thr,steerIn,bedIn){
   truck.updateMatrixWorld(true);
   // tipping the bed pours the load out the back
   if(tr.bed>0.32&&tr.load>0.0005){
-    const out=Math.min(tr.load,(tr.bed-0.32)*3.2*dt);tr.load-=out;if(tr.load<0.0005){tr.load=0;tr.stuck=TRUCK_CAP*0.025*(0.4+1.6*tr.loadMix[CLAY])}
+    const out=Math.min(tr.load,(tr.bed-0.32)*3.2*dt);tr.load-=out;sndIn.dump=out/dt;if(tr.load<0.0005){tr.load=0;tr.stuck=TRUCK_CAP*0.025*(0.4+1.6*tr.loadMix[CLAY])}
     truck.localToWorld(tv.set(0,0.3,-4.3));
     if(mesaR(tv.x,tv.z)<EDGE-1.2&&Math.abs(tv.x)<S/2-0.8&&Math.abs(tv.z)<S/2-0.8){deposit(tv.x,tv.z,out,tr.loadC,tr.loadMix);st.dirty=true;st.slumpT=2.5}
     else{tr.hauled+=out;if(!tr.haulWarned&&tr.load<=0){tr.haulWarned=true;toast('Load hauled off site.','good')}}

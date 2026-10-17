@@ -17,7 +17,11 @@ function frame(now){
   st.a2=clamp(st.a2+stickIn*0.8*dt*res,...LIM.a2);
   st.a3=clamp(st.a3+bucketIn*1.3*dt*res,...LIM.a3);
   if(bench.on){benchTick(dt);driveIn=0;turnIn=0;tThr=0;tSteer=0;tBed=0}
-  updateTruck(dt,tThr,tSteer,tBed);updateSound(dt,Math.abs(swingIn)+Math.abs(stickIn)+Math.abs(boomIn)+Math.abs(bucketIn)+Math.abs(driveIn)+Math.abs(turnIn));updateHeapClods();
+  updateTruck(dt,tThr,tSteer,tBed);
+  // what the mixer hears: hydraulic demand, a ram pushed against its stop (relief valve), tracks moving
+  {const end=(v,l,i)=>(i>0.1&&v>=l[1]-1e-4)||(i<-0.1&&v<=l[0]+1e-4);
+    sndIn.hyd=Math.abs(swingIn)+Math.abs(stickIn)+Math.abs(boomIn)+Math.abs(bucketIn)+Math.abs(driveIn)+Math.abs(turnIn);
+    sndIn.relief=end(st.a1,LIM.a1,boomIn)||end(st.a2,LIM.a2,stickIn)||end(st.a3,LIM.a3,bucketIn);sndIn.track=Math.min(1,Math.abs(driveIn)+Math.abs(turnIn)*0.7);sndIn.pour=0}updateHeapClods();
   // drive
   st.yaw-=turnIn*0.8*dt;
   st.x=clamp(st.x+Math.sin(st.yaw)*driveIn*2.6*dt,-60,60);
@@ -63,7 +67,7 @@ function frame(now){
   const up=tmp.set(0,-1,0).applyQuaternion(q).y;
   const f=clamp((0.25-up)/0.5,0,1);
   if(f>0&&st.load>0.0005){
-    const out=Math.min(st.load,f*(0.35+st.load*1.6)*dt);
+    const out=Math.min(st.load,f*(0.35+st.load*1.6)*dt);sndIn.pour=out/dt;
     st.load-=out;
     if(inBed(mid)&&tr.load<TRUCK_CAP){const take=Math.min(out,TRUCK_CAP-tr.load);if(take>0){const f=take/(tr.load+take);for(let q=0;q<3;q++)tr.loadC[q]+=(st.loadC[q]-tr.loadC[q])*f;for(let q=0;q<4;q++)tr.loadMix[q]+=(st.loadMix[q]-tr.loadMix[q])*f}tr.load+=take;
       if(out-take>0){deposit(mid.x,mid.z,out-take,st.loadC,st.loadMix);st.dirty=true;st.slumpT=2.5}
@@ -144,6 +148,7 @@ function frame(now){
     camera.lookAt(look); firstCam=true;
   }
   if(bench.on)benchCamera();
+  updateSound(dt);
   if(shake>0){shake-=dt;camera.position.x+=(Math.random()-0.5)*0.25;camera.position.y+=(Math.random()-0.5)*0.25}
   sky.position.copy(camera.position);
   const fv=mode==='truck'?tr:st;sun.position.set(fv.x,fv.y,fv.z).addScaledVector(SUN_DIR,25); sun.target.position.set(fv.x,fv.y,fv.z);
