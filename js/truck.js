@@ -123,17 +123,18 @@ function updateTruck(dt,thr,steerIn,bedIn){
     if(rr>lim){const k=lim/rr;tr.x+=px*k-px;tr.z+=MZ+(pz-MZ)*k-pz;
       const nz=pz-MZ,nl=Math.hypot(px,nz)||1,c=(sy*px+cy*nz)/nl*Math.sign(tr.v);
       if(c>0)tr.v*=Math.exp(-c*dt*40)}}
-  // keep the truck from driving through the excavator
+  // keep the truck from driving through the excavator or blocks it can't roll over
   const sy=Math.sin(tr.yaw),cy=Math.cos(tr.yaw);
   for(const lz of [2.2,-0.4,-2.6]){const cx=tr.x+sy*lz,cz=tr.z+cy*lz,dx=cx-st.x,dz=cz-st.z,d=Math.hypot(dx,dz),min=1.5+2.3;
     if(d<min&&d>1e-3){tr.x+=dx/d*(min-d);tr.z+=dz/d*(min-d);
       if(Math.abs(tr.v)>1.2){shake=reduceMotion?0:0.15;rumble(250,0.7)}tr.v*=-0.15}}
+  if(blkPush(tr,TR_C,TR_R)){if(Math.abs(tr.v)>1.2){shake=reduceMotion?0:0.15;rumble(250,0.7)}tr.v*=-0.15}
   tr.aL+=((tr.v-vPrev)/Math.max(dt,1e-3)-tr.aL)*Math.min(1,dt*6);
   // hydraulics lift slower under load; the bed comes down on its own weight
   tr.bed=clamp(tr.bed+bedIn*(bedIn>0?0.4*(1-0.4*f):0.55)*dt,0,0.9);
   tr.rollA+=tr.v*dt/0.55;
   // axles follow the ground (the rear tandem averages its two axles like a walking beam)
-  const smp=(lx,lz)=>hAt(tr.x+lx*cy+lz*sy,tr.z-lx*sy+lz*cy);
+  const smp=(lx,lz)=>surfAt(tr.x+lx*cy+lz*sy,tr.z-lx*sy+lz*cy);
   const fL=smp(1.05,3.1),fR=smp(-1.05,3.1),bL=(smp(0.95,-1.6)+smp(0.95,-2.8))/2,bR=(smp(-0.95,-1.6)+smp(-0.95,-2.8))/2;
   const hf=(fL+fR)/2,hb=(bL+bR)/2,k=Math.min(1,dt*14);
   const dy=((hf+hb)/2-tr.y)*k,dp=(-Math.atan2(hf-hb,WB)-tr.pitch)*k,dr=(Math.atan2((fL+bL)/2-(fR+bR)/2,2.0)-tr.roll)*k;

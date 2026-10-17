@@ -19,6 +19,7 @@ A 3D low-poly excavator game in plain HTML, CSS and JavaScript (three.js r128, n
 | `js/truck.js` | Dump truck model and driving; texture hookup |
 | `js/trenchbox.js` | Trench box model, hooking, setting, wall mask |
 | `js/dirt.js` | Loose dirt: clods, flying dirt, lumpy bucket load and truck heap, the Dirt detail setting |
+| `js/blocks.js` | Concrete blocks (1×1, 2×2, 3×3 ft): placing under the bucket, stacking, settling, machine collisions |
 | `js/controls.js` | Game state and reset, touch sticks, keyboard, game controller, modes, menu |
 | `js/effects.js` | Shared per-frame vectors, resize |
 | `js/sound.js` | Synthesized diesel engines for both machines and the truck's backup alarm; Sound on/off |
@@ -31,4 +32,4 @@ A 3D low-poly excavator game in plain HTML, CSS and JavaScript (three.js r128, n
 
 ## Controls
 
-Left stick swings and moves the stick; right stick moves the boom and curls the bucket. Drive and Truck modes put the left stick on the tracks or the truck, and the right stick raises the truck bed. Keyboard: WASD or arrows are the left stick and IJKL the right stick in every mode; 1/2/3 or Tab switch machine, Shift for fine moves, T hooks the trench box, C cab view, M map, N sound on/off, H help. Game controllers work too (sticks, triggers for gas, LB/RB machine, X box, Y cab view).
+Left stick swings and moves the stick; right stick moves the boom and curls the bucket. Drive and Truck modes put the left stick on the tracks or the truck, and the right stick raises the truck bed. Keyboard: WASD or arrows are the left stick and IJKL the right stick in every mode; 1/2/3 or Tab switch machine, Shift for fine moves, T hooks the trench box, C cab view, B blocks on/off (Space place, V size, X pick up), M map, N sound on/off, H help. Game controllers work too (sticks, triggers for gas, LB/RB machine, X box, Y cab view, A place block, D-pad for blocks).
