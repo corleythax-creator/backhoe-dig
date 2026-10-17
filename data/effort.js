@@ -1,7 +1,7 @@
 // Backhoe Dig build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Backhoe Dig",
- "updated": "2026-10-17T15:04:00Z",
+ "updated": "2026-10-17T15:06:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 296.5,
+   "dh": 297,
    "act": 6.0,
-   "versions": 38
+   "versions": 39
   }
  ],
  "extra": [
@@ -435,6 +435,15 @@ window.EFFORT = {
    "tris": 772000,
    "chars": 232330,
    "what": "Phone speed: phones are held back by pixels, not triangles, so they now render at most 1.5x (44% fewer pixels than 2x) with 1024 shadow maps and the lighter PCF filter. Computers keep 2x and soft 2048 shadows. The speed test notes phone settings."
+  },
+  {
+   "v": 46,
+   "asked": "2026-10-17T10:06:00-05:00",
+   "live": "2026-10-17T10:06:00-05:00",
+   "dh": 0.5,
+   "tris": 772000,
+   "chars": 233098,
+   "what": "The game shows its version (from the build log) at the bottom of the menu and on the How to play card."
   }
  ]
 };

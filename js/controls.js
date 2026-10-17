@@ -126,6 +126,10 @@ statusEl.onclick=()=>{const m=statusEl.classList.toggle('min');try{localStorage.
 $('#startBtn').onclick=()=>{help.hidden=true;try{localStorage.setItem('bhd_seen','1')}catch(e){}};
 try{if(localStorage.getItem('bhd_seen'))help.hidden=true}catch(e){}
 function started(){if(!st.startT)st.startT=performance.now()}
+// the version in the menu and on the help card is the last entry in data/effort.js (the build log), so it is never stale
+{const E=window.EFFORT,v=E&&E.versions&&E.versions[E.versions.length-1];
+  if(v){const d=new Date(v.live).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit',timeZone:'America/Chicago'});
+    $('#verMenu').textContent=`Version ${v.v}`;$('#verHelp').textContent=`Version ${v.v} · went live ${d} Central`}}
 
 let toastTimer=0;
 function toast(t,kind,ms){const el=$('#toastText');el.textContent=t;el.className='show '+(kind||'');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.className=kind||'',ms||2200)}
