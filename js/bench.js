@@ -17,7 +17,7 @@ const DIAG_OFF={
   res:on=>{bench.pr=on?1:0;viewDirty=true}
 };
 const DIAG=[['Normal',[]],['No shadows',['shadows']],['Plain lighting (no filmic)',['lighting']],['No ground detail',['ground']],
-  ['No grass',['grass']],['No see-through (glass, water, dust)',['clear']],['1x resolution',['res']],['Everything above off',['shadows','lighting','ground','grass','clear','res']]];
+  ['No grass',['grass']],['No see-through (glass, water, dust)',['clear']],['1x resolution',['res']],['Everything above off',['shadows','lighting','ground','grass','clear','res']],['Normal again',[]]];
 function benchStep(i){const a=bench.steps[bench.lvl],b=bench.steps[i];
   if(a&&a.off)for(const k of a.off)DIAG_OFF[k](false);
   bench.lvl=i;if(!b)return;setClones(b.n||0);if(b.off)for(const k of b.off)DIAG_OFF[k](true)}
@@ -28,7 +28,7 @@ function buildClones(){
   for(let i=0;i<max;i++){const r=11+(i%8)*4.2+Math.floor(i/80)*2.1,a=i*2.39996;const x=Math.cos(a)*r,z=Math.sin(a)*r;
     q.setFromAxisAngle(new THREE.Vector3(0,1,0),a*1.7);o.set(x,baseHeight(x,z),z);places.push(new THREE.Matrix4().compose(o.clone(),q.clone(),sc))}
   const cloneOf=(root,offset)=>{root.updateMatrixWorld(true);const rinv=new THREE.Matrix4().copy(root.matrixWorld).invert();
-    root.traverse(m=>{if(!m.isMesh||m.isInstancedMesh)return;
+    root.traverse(m=>{if(!m.isMesh||m.isInstancedMesh||m.userData.shProxy)return;
       rel.multiplyMatrices(rinv,m.matrixWorld);
       const im=new THREE.InstancedMesh(m.geometry,m.material,max);im.castShadow=true;im.receiveShadow=false;im.frustumCulled=false;
       for(let i=0;i<max;i++){out.multiplyMatrices(places[i],offset).multiply(rel);im.setMatrixAt(i,out)}
@@ -58,12 +58,12 @@ function showBenchResults(){
   const all=bench.steps.map(s=>{const ft=s.ft.slice().sort((a,b)=>a-b),tot=ft.reduce((a,b)=>a+b,0);
     const avg=tot>0?ft.length/tot:0,p99=ft.length?ft[Math.min(ft.length-1,Math.floor(ft.length*0.99))]:0;
     return{name:s.name,machines:1+s.n,tris:s.k?s.tris/s.k:0,calls:s.k?s.calls/s.k:0,avg,low:p99>0?1/p99:0}});
-  const diag=all.filter(r=>r.name),rows=all.filter(r=>!r.name),d0=diag[0].avg;
+  const diag=all.filter(r=>r.name),rows=all.filter(r=>!r.name),d0=(diag[0].avg+diag[diag.length-1].avg)/2;
   const cls=f=>f>=55?'fps-good':f>=30?'fps-mid':'fps-bad',gain=r=>r.avg-d0,sg=g=>(g>=0?'+':'')+g.toFixed(1);
   let dh='<tr><th>Diagnosis: switched off</th><th>Avg FPS</th><th>1% low</th><th>Gain</th></tr>';
-  for(const r of diag)dh+=`<tr><td>${r.name}</td><td class="${cls(r.avg)}">${r.avg.toFixed(1)}</td><td class="${cls(r.low)}">${r.low.toFixed(0)}</td><td>${r===diag[0]?'':sg(gain(r))}</td></tr>`;
+  for(const r of diag)dh+=`<tr><td>${r.name}</td><td class="${cls(r.avg)}">${r.avg.toFixed(1)}</td><td class="${cls(r.low)}">${r.low.toFixed(0)}</td><td>${r.name.startsWith('Normal')?'':sg(gain(r))}</td></tr>`;
   $('#benchDiag').innerHTML=dh;
-  const top=diag.slice(1,-1).sort((a,b)=>gain(b)-gain(a))[0],allOff=diag[diag.length-1];
+  const top=diag.slice(1,-2).sort((a,b)=>gain(b)-gain(a))[0],allOff=diag[diag.length-2];
   let html='<tr><th>Excavators + trucks</th><th>Tris</th><th>Avg FPS</th><th>1% low</th></tr>';
   for(const r of rows)html+=`<tr><td>${r.machines} + ${r.machines}</td><td>${fmtTris(r.tris)}</td><td class="${cls(r.avg)}">${r.avg.toFixed(1)}</td><td class="${cls(r.low)}">${r.low.toFixed(0)}</td></tr>`;
   $('#benchTable').innerHTML=html;
@@ -80,7 +80,7 @@ function showBenchResults(){
   $('#benchDevice').textContent=`${gpu} · ${w}×${h} px at ${maxPR}x${PHONE?' (phone settings)':''} · ${navigator.platform||''}`+(glResets?` · ${glResets} graphics reset${glResets>1?'s':''} on this device`:'');
   const ver=window.EFFORT&&EFFORT.versions?EFFORT.versions[EFFORT.versions.length-1].v:'?';
   $('#benchText').value=[`Backhoe Dig speed test (v3: diagnosis + excavator + truck pairs), game version ${ver}`,`GPU: ${gpu}`,`Resolution: ${w}x${h} (${maxPR}x${PHONE?', phone settings: 1.5x cap, 1024 shadows':''})`,`Smooth 55+ FPS up to: ${t55?fmtTris(t55):'not reached'}`,`Playable 30+ FPS up to: ${t30?fmtTris(t30):'not reached'}`,
-    'Diagnosis, plain scene, one feature off at a time:',...diag.map(r=>`${r.name} | ${r.avg.toFixed(1)} avg FPS | ${r.low.toFixed(0)} 1% low${r===diag[0]?'':' | '+sg(gain(r))}`),
+    'Diagnosis, plain scene, one feature off at a time (gain vs the average of the two Normal runs):',...diag.map(r=>`${r.name} | ${r.avg.toFixed(1)} avg FPS | ${r.low.toFixed(0)} 1% low${r.name.startsWith('Normal')?'':' | '+sg(gain(r))}`),
     'Load levels:',...rows.map(r=>`${r.machines} excavators + ${r.machines} trucks | ${fmtTris(r.tris)} tris | ${Math.round(r.calls)} draws | ${r.avg.toFixed(1)} avg FPS | ${r.low.toFixed(0)} 1% low`)].join('\n');
   $('#bench').hidden=false;
 }
