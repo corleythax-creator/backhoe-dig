@@ -78,6 +78,7 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 .seg button[aria-pressed="true"]{background:var(--machine);color:#1c1309}
 /* Jump takes the right stick's caption spot in Walk mode */
 #jumpBtn{height:44px;min-width:100px;font-size:18px;border-radius:22px;background:var(--machine);color:#1c1309;border:0;box-shadow:0 3px 0 rgba(0,0,0,.35);zoom:var(--cs)}
+#seatBtn{min-width:100px;font-size:16px;border-radius:20px;background:var(--machine);color:#1c1309;border:0;box-shadow:0 3px 0 rgba(0,0,0,.35);zoom:var(--cs)}
 #jumpBtn:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.35)}
 .kb .seg button::before{content:attr(data-k) " ";opacity:.6}
 #updBtn{position:absolute;left:50%;top:22%;transform:translateX(-50%);z-index:6;background:var(--gas);color:#1c1309;border:0;height:46px;font-size:18px;white-space:nowrap;box-shadow:0 3px 10px rgba(0,0,0,.35)}
@@ -153,6 +154,20 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 @media (prefers-reduced-motion:reduce){#toast span,#flash,.bar>i{transition:none}}
 /* Sound panel: label and value over a full-width slider on phones, one row each when there is room; thumbs sized for thumbs */
 #sndBox{z-index:7}
+/* Keys panel: one row per action, its name and what it does, then two key boxes */
+#keysBox{position:fixed;inset:0;z-index:7;background:rgba(10,12,9,.72);display:flex;align-items:center;justify-content:center;pointer-events:auto;box-sizing:border-box;
+  padding-block:calc(env(safe-area-inset-top,0px) + 16px) calc(env(safe-area-inset-bottom,0px) + 16px);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#keysBox .card{max-width:560px;overscroll-behavior:contain}
+#keysList h2{margin:10px 0 2px;font:800 15px/1 var(--f-display);letter-spacing:.12em;text-transform:uppercase;color:var(--gas)}
+.krow{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.07)}
+.kname{font:700 18px/1.2 var(--f-display);letter-spacing:.02em}
+.kname small{display:block;font:600 14px/1.25 var(--f-body);color:var(--muted);letter-spacing:0;margin-top:2px}
+#keysBox .kbtn{height:42px;min-width:78px;padding:0 10px;font-size:16px;background:#2a2f27;color:var(--ink);border:1px solid var(--hud-line);text-transform:none}
+#keysBox .kbtn.none{color:var(--muted);font-weight:600}
+#keysBox .kbtn.cap{background:var(--gas);color:#1c1309;border-color:var(--gas)}
+#keysNote:empty{display:none}
+#keysNote{color:var(--gas)!important}
 .sliders{display:grid;grid-template-columns:1fr auto;grid-auto-flow:dense;gap:2px 12px;font:700 18px/1.2 var(--f-display);letter-spacing:.03em}
 .sliders label{grid-column:1;color:var(--muted);text-transform:uppercase;font-size:15px;letter-spacing:.08em;margin-top:8px;align-self:end}
 .sliders output{grid-column:2;align-self:end;font-variant-numeric:tabular-nums;color:var(--ink)}

@@ -3,7 +3,7 @@
 // ---------- worker ----------
 // about 5 ft 10 in: hard hat, hi-vis vest over a grey shirt, jeans and work boots. Arms and legs swing from the
 // shoulders and hips; knees bend on the back swing and tuck in the air
-const WK_H=1.78,WK_R=0.28,WK_STEP=0.2,WK_JUMP=4.6,WK_RUN=2.8,WK_REACH=2.3;
+const WK_H=1.78,WK_R=0.28,WK_STEP=0.2,WK_JUMP=6.2,WK_RUN=2.8,WK_REACH=2.3;
 const WK_SKIN=M(0xc68a62),WK_VEST=M(0xd8f02a,{emissive:0x1d2400}),WK_SHIRT=M(0x6d7378),WK_JEAN=M(0x34507a),WK_BOOT=M(0x4a3020),WK_HAT=M(0xf5c518,{shininess:40}),WK_STRIPE=M(0xd8dcd6,{emissive:0x2a2a2a});
 const walker=new THREE.Group();scene.add(walker);
 const wkBody=new THREE.Group();walker.add(wkBody);
@@ -26,10 +26,11 @@ const wkLegs=[-0.09,0.09].map(x=>wkLimb(x,0.86,0.15,0.42,0.38,WK_JEAN,WK_JEAN,WK
 const wkArms=[-0.23,0.23].map(x=>wkLimb(x,1.4,0.1,0.3,0.27,WK_VEST,WK_SHIRT,WK_SKIN,[0.09,0.1,0.09],wkBody));
 mergeStatic(wkBody,[wkHead,...wkArms.map(a=>a.top)]);
 walker.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
+// a jump clears about 6 ft: onto a 3 ft block with room to spare, or two blocks up a stack
 // starts beside the excavator, facing the trench
 const WK_START={x:2.7,z:1.6,yaw:Math.PI};
-const wk={x:0,z:0,y:0,vy:0,yaw:0,view:0,ground:true,phase:0,spd:0,airT:0,jumpQ:0,landT:0};
-function walkReset(){Object.assign(wk,WK_START,{vy:0,ground:true,phase:0,spd:0,airT:0,jumpQ:0,landT:0,view:WK_START.yaw});wk.y=wkFloor(wk.x,wk.z,0,1e9)}
+const wk={x:0,z:0,y:0,vy:0,yaw:0,view:0,ground:true,phase:0,spd:0,airT:0,jumpQ:0,landT:0,inside:null};
+function walkReset(){Object.assign(wk,WK_START,{vy:0,ground:true,phase:0,spd:0,airT:0,jumpQ:0,landT:0,view:WK_START.yaw,inside:null});wk.y=wkFloor(wk.x,wk.z,0,1e9)}
 // the highest ground or block top under the feet that is no higher than a step above y: a 5 point foot
 function wkFloor(x,z,y,lim){let f=-1e9;const r=WK_R*0.7;
   for(const [dx,dz] of [[0,0],[r,0],[-r,0],[0,r],[0,-r]]){const px=x+dx,pz=z+dz;let h=hAt(px,pz);
@@ -49,6 +50,8 @@ function wkPushRound(o,lzs,r){for(const lz of lzs){const cx=o.x+Math.sin(o.yaw)*
   if(d<m&&d>1e-4){wk.x+=dx/d*(m-d);wk.z+=dz/d*(m-d)}}}
 // mx, mz: move input (stick right, stick up); lookX, lookY: right stick; jump: a press waiting to be used
 function updateWalker(dt,mx,mz,lookX,lookY){
+  // in a cab he rides along out of sight
+  if(wk.inside){walker.visible=false;return}
   const on=mode==='walk'&&!bench.on;
   if(on){wk.view-=lookX*2.2*dt;orbitPitch=clamp(orbitPitch-lookY*1.2*dt,0.08,1.3)}
   // moves relative to where the camera looks; the worker turns to face the way he walks
@@ -72,7 +75,7 @@ function updateWalker(dt,mx,mz,lookX,lookY){
     if(wk.vy>0)for(const b of blocks){const h=b.s/2+WK_R*0.6;if(Math.abs(wk.x-b.x)<h&&Math.abs(wk.z-b.z)<h&&b.y>=wk.y+WK_H-0.05&&b.y<ny+WK_H){wk.vy=0;break}}
     wk.y+=wk.vy*dt;wk.airT+=dt;
     const f2=wkFloor(wk.x,wk.z,wk.y,wk.y+WK_STEP);
-    if(wk.y<=f2&&wk.vy<=0){if(wk.vy<-5.5){shake=reduceMotion?0:0.1}wk.y=f2;wk.vy=0;wk.ground=true;wk.landT=0.18;wk.airT=0}}
+    if(wk.y<=f2&&wk.vy<=0){if(wk.vy<-8){shake=reduceMotion?0:0.1}wk.y=f2;wk.vy=0;wk.ground=true;wk.landT=0.18;wk.airT=0}}
   wk.landT=Math.max(0,wk.landT-dt);
   // pose: a walk cycle that lengthens into a jog, arms counter-swinging; legs tuck in the air, a dip on landing
   const run=Math.min(1,wk.spd/WK_RUN);if(wk.ground)wk.phase+=dt*(4+6*run)*Math.min(1,wk.spd*2);
@@ -86,3 +89,33 @@ function updateWalker(dt,mx,mz,lookX,lookY){
   walker.visible=!(on&&camMode==='cab')}
 function walkJump(){if(mode!=='walk')return;wk.jumpQ=0.15;started()}
 $('#jumpBtn').addEventListener('pointerdown',e=>{e.preventDefault();walkJump()});
+// ---------- getting in and out ----------
+// each machine: its state (looked up when used: the excavator's is made in controls.js), the circles that make up its
+// body, the mode that drives it and what to call it
+const WK_RIDES={ex:{get o(){return st},c:EX_C,r:EX_R,m:'dig',n:'excavator'},truck:{get o(){return tr},c:TR_C,r:TR_R,m:'truck',n:'dump truck'},mow:{get o(){return mw},c:MW_C,r:MW_R,m:'mow',n:'mower'}};
+const rideOf=m=>m==='dig'||m==='drive'?'ex':m==='truck'?'truck':m==='mow'?'mow':null;
+// the machine within an arm's length of the worker, nearest first
+function wkNear(){let best=null,bd=1.3;
+  for(const k in WK_RIDES){const R=WK_RIDES[k];
+    for(const lz of R.c){const d=Math.hypot(wk.x-R.o.x-Math.sin(R.o.yaw)*lz,wk.z-R.o.z-Math.cos(R.o.yaw)*lz)-R.r-WK_R;if(d<bd){bd=d;best=k}}}
+  return best}
+// climbing out: the first clear spot beside the machine (driver's side, then the other side, then front and back)
+function wkPlaceOut(k){const R=WK_RIDES[k],o=R.o,sy=Math.sin(o.yaw),cy=Math.cos(o.yaw),gap=R.r+WK_R+0.3,len=Math.max(...R.c.map(Math.abs));
+  const spots=[[gap,0],[-gap,0],[gap,R.c[0]],[-gap,R.c[0]],[0,len+gap],[0,-len-gap]];
+  for(const [sx,sz] of spots){const x=o.x+cy*sx+sy*sz,z=o.z-sy*sx+cy*sz;
+    if(mesaR(x,z)>EDGE-1.5)continue;const f=wkFloor(x,z,0,1e9);
+    if(blocks.some(b=>Math.abs(x-b.x)<b.s/2+WK_R&&Math.abs(z-b.z)<b.s/2+WK_R&&b.y<f+WK_H&&b.y+b.s>f+WK_STEP))continue;
+    let clear=true;for(const j in WK_RIDES){if(j===k)continue;const Q=WK_RIDES[j];
+      for(const lz of Q.c)if(Math.hypot(x-Q.o.x-Math.sin(Q.o.yaw)*lz,z-Q.o.z-Math.cos(Q.o.yaw)*lz)<Q.r+WK_R+0.1)clear=false}
+    if(!clear)continue;
+    Object.assign(wk,{x,z,y:f,vy:0,ground:true,yaw:o.yaw+(k==='ex'?st.swing:0),airT:0});return true}
+  return false}
+// F (or Get in / Get out, or controller B): on foot it climbs into the machine at hand; driving, it climbs out
+function seatToggle(){
+  if(mode==='walk'){const k=wkNear();
+    if(!k){toast('Walk up to the excavator, the truck or the mower to get in.');return}
+    wk.inside=k;walker.visible=false;setMode(WK_RIDES[k].m);toast(`In the ${WK_RIDES[k].n}. ${kbUsed?keyLabel('enter'):padUsed?'B':'Get out'} to climb out.`,'',2600);return}
+  const k=rideOf(mode);if(!k)return;
+  if(!wkPlaceOut(k)){toast('No room to climb out here. Move the machine a little.');return}
+  wk.inside=null;setMode('walk')}
+$('#seatBtn').onclick=seatToggle;

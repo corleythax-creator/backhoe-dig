@@ -1,7 +1,7 @@
 // Backhoe Dig build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Backhoe Dig",
- "updated": "2026-10-17T17:17:00Z",
+ "updated": "2026-10-17T17:23:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 343.5,
+   "dh": 350.5,
    "act": 8.5,
-   "versions": 52
+   "versions": 53
   }
  ],
  "extra": [
@@ -555,11 +555,20 @@ window.EFFORT = {
   },
   {
    "v": 59,
+   "asked": "2026-10-17T11:52:00-05:00",
+   "live": "2026-10-17T12:20:00-05:00",
+   "dh": 7,
+   "tris": 1152810,
+   "chars": 290436,
+   "what": "Jump clears about 6 ft. Get in and out of machines on foot: walk up to the excavator, dump truck or mower and press F (Get in button, controller B) to drive it; press again to climb out beside it; the site save remembers when you are in one. Keys panel in the menu: every keyboard action with what it does in each mode, two keys each, rebind any of them, saved per device, Defaults to reset; captions and tips show your keys. Place block is E in every mode."
+  },
+  {
+   "v": 60,
    "asked": "2026-10-17T11:55:00-05:00",
-   "live": "2026-10-17T12:17:00-05:00",
+   "live": "2026-10-17T12:23:00-05:00",
    "dh": 1,
    "tris": 1152810,
-   "chars": 279142,
+   "chars": 292234,
    "what": "Auto update, for the Home Screen app that never reloads on its own: the game re-reads its build log when it comes back to the front, when it is restored from the back-forward cache and every 10 minutes. A newer version reloads straight away when the game comes back from the background or nothing is under way yet (the site and lawn are saved on the way out, so nothing is lost); one that lands while you are playing waits behind a yellow 'Version N is out · tap to update' button instead of reloading mid-move."
   }
  ]
