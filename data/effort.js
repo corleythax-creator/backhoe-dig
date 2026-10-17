@@ -1,7 +1,7 @@
 // Backhoe Dig build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Backhoe Dig",
- "updated": "2026-10-17T08:10:00Z",
+ "updated": "2026-10-17T08:35:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 184,
-   "act": 3.0,
-   "versions": 20
+   "dh": 186,
+   "act": 3.5,
+   "versions": 21
   }
  ],
  "extra": [
@@ -273,6 +273,15 @@ window.EFFORT = {
    "tris": 491144,
    "chars": 115189,
    "what": "Code split into files so sessions can work in parallel: css/game.css and eleven js/ scripts (core, terrain, scenery, excavator, truck, trench box, controls, effects, maps, speed test, main loop). No change to play."
+  },
+  {
+   "v": 28,
+   "asked": "2026-10-17T02:52:00-05:00",
+   "live": "2026-10-17T03:01:00-05:00",
+   "dh": 2,
+   "tris": 731144,
+   "chars": 115415,
+   "what": "Dig ground 4x finer: a point every 6 in instead of 1 ft (80,000 to 320,000 triangles), so trench walls, edges and spoil piles hold their shape; settling, cave-in and spoil reaches keep the same distances in feet."
   }
  ]
 };

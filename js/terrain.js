@@ -1,7 +1,9 @@
 // Backhoe Dig: dig-zone heightmap, the road, soil layers, digging, dumping, slumping and cave-ins.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 // ---------- terrain heightmap ----------
-const S=64,N=200,CELL=S/N,V=N+1,CA=CELL*CELL,FLOOR=3.5;
+// dig grid: 64 m square at 0.16 m (about 6 in) per cell. GRID_K = cells per 0.32 m, the old 1 ft cell, so reaches and
+// settling speeds written in cells stay the same in feet
+const S=64,N=400,CELL=S/N,V=N+1,CA=CELL*CELL,FLOOR=3.5,GRID_K=Math.round(0.32/CELL);
 const H=new Float32Array(V*V),H0=new Float32Array(V*V),grass=new Float32Array(V*V*3),paint=new Uint8Array(V*V),nz=new Float32Array(V*V),rockA=new Float32Array(V*V);
 const ss=(a,b,x)=>{const t=Math.min(1,Math.max(0,(x-a)/(b-a)));return t*t*(3-2*t)};
 const hash=(i,j)=>{const s=Math.sin(i*127.1+j*311.7)*43758.5453;return s-Math.floor(s)};
@@ -143,7 +145,7 @@ function dig(tip,cap){
   const s=Math.min(1,cap/vol);
   for(let n=0;n<list.length;n+=2)H[list[n]]-=list[n+1]*s;
   digC[0]=cr/vol;digC[1]=cg/vol;digC[2]=cb/vol;
-  cI0=Math.max(0,Math.min(cI0,i0-3));cI1=Math.min(N,Math.max(cI1,i1+3));cJ0=Math.max(0,Math.min(cJ0,j0-3));cJ1=Math.min(N,Math.max(cJ1,j1+3));
+  const mg=3*GRID_K;cI0=Math.max(0,Math.min(cI0,i0-mg));cI1=Math.min(N,Math.max(cI1,i1+mg));cJ0=Math.max(0,Math.min(cJ0,j0-mg));cJ1=Math.min(N,Math.max(cJ1,j1+mg));
   return vol*s;
 }
 function deposit(x,z,vol,col){
@@ -188,14 +190,14 @@ function caveScan(){
       const dep=H0[k2]-H[k2];if(dep<0.75)continue;
       const df=H[k]-H[k2];if(df<=0.62*CELL||Math.abs(H0[k]-H0[k2])>M0)continue;
       if(df<=SOIL[matAt(k,H[k]-0.03)].rl*CELL)continue;
-      let sur=H[k]-H0[k];for(let q=1;q<=2;q++){const i3=i-di*q,j3=j-dj*q;if(i3>=0&&i3<=N&&j3>=0&&j3<=N)sur=Math.max(sur,H[j3*V+i3]-H0[j3*V+i3])}
+      let sur=H[k]-H0[k];for(let q=1;q<=2*GRID_K;q++){const i3=i-di*q,j3=j-dj*q;if(i3>=0&&i3<=N&&j3>=0&&j3<=N)sur=Math.max(sur,H[j3*V+i3]-H0[j3*V+i3])}
       const deep=Math.max(0,dep-1.2)*2,load=sur>0.08?sur*3:0,risk=deep+load;
       if(risk>best){best=risk;bk=k;bs=load>deep}}}
   return {best,bk,bs};
 }
 function collapse(k,sur){
-  const ci=k%V,cj=(k/V)|0,R=5,i0=Math.max(0,ci-R),i1=Math.min(N,ci+R),j0=Math.max(0,cj-R),j1=Math.min(N,cj+R);
-  for(let it=0;it<24;it++)for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const kk=j*V+i;
+  const ci=k%V,cj=(k/V)|0,R=5*GRID_K,i0=Math.max(0,ci-R),i1=Math.min(N,ci+R),j0=Math.max(0,cj-R),j1=Math.min(N,cj+R);
+  for(let it=0;it<24*GRID_K;it++)for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const kk=j*V+i;
     if(i<i1)slumpPair(kk,kk+1,true);if(j<j1)slumpPair(kk,kk+V,true)}
   touch(i0,i1,j0,j1);st.dirty=true;st.slumpT=2.5;st.caves++;
   const p=new THREE.Vector3(ci*CELL-S/2,H[k]+0.1,cj*CELL-S/2);for(let n=0;n<40;n++)spawn(p,1.6);

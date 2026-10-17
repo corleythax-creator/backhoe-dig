@@ -75,7 +75,7 @@ function frame(now){
   }
   if(!bench.on)caveTick(dt);
   // terrain
-  if(st.slumpT>0){st.slumpT-=dt;if(slump())st.dirty=true;if(slump())st.dirty=true;if(slump())st.dirty=true}
+  if(st.slumpT>0){st.slumpT-=dt;for(let n=0;n<3*GRID_K;n++)if(slump())st.dirty=true}
   if(st.dirty){
     updateTufts(dI0-1,dI1+1,dJ0-1,dJ1+1);
     updateTerrain();st.dirty=false;mapDirty=true;
