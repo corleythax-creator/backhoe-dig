@@ -13,6 +13,9 @@ import json, os, re, shutil, subprocess
 OUT = 'versions'
 SKIP = ('versions/', 'tools/', 'build.html', 'README.md', 'CLAUDE.md', '.git')
 KEEP = range(1, 7)          # hand-recovered snapshots, not in git
+# versions whose last first-parent commit on main is a later branch's work in progress (that branch was
+# fast-forwarded onto main), pinned to the commit that shipped them
+PIN = {55: '8b58bd4'}
 
 
 def git(*a, text=True):
@@ -67,6 +70,8 @@ def main():
         m = re.fullmatch(r'v(\d+)', d)
         if m and int(m.group(1)) not in KEEP:
             shutil.rmtree(os.path.join(OUT, d))
+    for v, c in PIN.items():
+        last[v] = (git('rev-parse', c).strip(), '')
     for v, (sha, when, *_) in sorted(last.items()):
         if v in KEEP:
             continue
