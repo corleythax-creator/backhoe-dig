@@ -1,7 +1,7 @@
 // Backhoe Dig build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Backhoe Dig",
- "updated": "2026-10-17T16:50:00Z",
+ "updated": "2026-10-17T17:02:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 335.5,
-   "act": 8.0,
-   "versions": 48
+   "dh": 337.5,
+   "act": 8.5,
+   "versions": 49
   }
  ],
  "extra": [
@@ -525,6 +525,15 @@ window.EFFORT = {
    "tris": 1152798,
    "chars": 268484,
    "what": "Walk mode: a low-poly site worker (hard hat, hi-vis vest) with a walk and jog cycle and a jump. The left stick walks the way the camera faces, the right stick looks; Jump clears about 3.5 ft, so 1, 2 and 3 ft blocks and stacks can be climbed. Blocks and machines are solid, trench walls need a jump, and cab view is first person. On foot, Place sets a block just in front of him and Lift takes the one in front. Walk button and key 5, a Jump button, a dot on the maps."
+  },
+  {
+   "v": 56,
+   "asked": "2026-10-17T11:52:00-05:00",
+   "live": "2026-10-17T12:02:00-05:00",
+   "dh": 2,
+   "tris": 1152810,
+   "chars": 270576,
+   "what": "Start card picker: four screenshot tiles (Excavator, Dump truck, Mower, On foot) at the top of the start card; tap one to start in that mode. It shows on every visit and from How to play, with the current mode outlined; tapping outside keeps the current mode."
   }
  ]
 };
