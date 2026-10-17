@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 304,
-   "act": 6.5,
-   "versions": 43
+   "dh": 306.5,
+   "act": 7.0,
+   "versions": 44
   }
  ],
  "extra": [
@@ -480,6 +480,15 @@ window.EFFORT = {
    "tris": 991332,
    "chars": 241101,
    "what": "Fix: the game could not start for anyone with a lawn saved before v47. Loading the old save called a helper that is only defined by a later script, which stopped the setup before the Start digging button was wired up, so tapping it did nothing. The load no longer needs it, and a save that cannot be read is now dropped instead of stopping the game."
+  },
+  {
+   "v": 51,
+   "asked": "2026-10-17T10:40:00-05:00",
+   "live": "2026-10-17T10:55:00-05:00",
+   "dh": 2.5,
+   "tris": 991332,
+   "chars": 245439,
+   "what": "Cheaper shadows, from the iPhone speed test diagnosis (shadows cost the most, about 16 FPS): the machines' 100 still parts now cast through 23 merged shadow-only meshes, and trees cast only near the shadow area instead of all 230 round the mesa. The shadow pass drops from 137 draws and 283k triangles to 60 draws and 94k, with a pixel-identical shadow map. The speed test measures Normal twice (start and end) and compares against their average, so warm-up and heat do not inflate the gains."
   }
  ]
 };

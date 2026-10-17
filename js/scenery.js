@@ -88,6 +88,8 @@ function stake(x,z,flagColor){
 }
 [[0.8,TRENCH_Z0-0.3],[-0.8,TRENCH_Z0-0.3],[0.8,TRENCH_Z1+0.3],[-0.8,TRENCH_Z1+0.3]].forEach(p=>stake(p[0],p[1],0xf2f2ee));
 [[-3,PIPE_Z],[3,PIPE_Z],[-7,PIPE_Z],[7,PIPE_Z]].forEach(p=>stake(p[0],p[1],0xf5c518));
+// the tree instance meshes, for shadowproxy.js
+const treeIMs=[];
 (function trees(){
   function colorize(g,fn){if(g.index)g=g.toNonIndexed();const p=g.attributes.position,c=new Float32Array(p.count*3);
     for(let i=0;i<p.count;i++){const col=fn(p.getX(i),p.getY(i),p.getZ(i));c[i*3]=col[0];c[i*3+1]=col[1];c[i*3+2]=col[2]}
@@ -147,5 +149,5 @@ function stake(x,z,flagColor){
       const t=PT[Math.floor(Math.random()*PT.length)],v=0.88+Math.random()*0.24;c.setRGB(t[0]*v,t[1]*v,t[2]*v);pines.setColorAt(ip,c);ip++}
     else if(ib<NB){o.scale.set(s2,s2,s2);o.updateMatrix();woods.setMatrixAt(ib,o.matrix);crowns.setMatrixAt(ib,o.matrix);
       const t=LT[Math.floor(Math.random()*LT.length)],v=0.9+Math.random()*0.2;c.setRGB(t[0]*v,t[1]*v,t[2]*v);crowns.setColorAt(ib,c);c.setRGB(1,1,1);woods.setColorAt(ib,c);ib++}}
-  pines.count=ip;woods.count=crowns.count=ib;scene.add(pines);scene.add(woods);scene.add(crowns);
+  pines.count=ip;woods.count=crowns.count=ib;scene.add(pines);scene.add(woods);scene.add(crowns);treeIMs.push(pines,woods,crowns);
 })();
