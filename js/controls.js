@@ -17,7 +17,7 @@ const LIM={a1:[-0.55,1.3],a2:[-2.65,-0.45],a3:[-2.85,0.35]};
 const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
 
 // ---------- input ----------
-let mode='dig',camMode='chase';
+let mode='dig',camMode='chase',edOn=false;
 function makeStick(el){
   const s={x:0,y:0,id:null},knob=el.querySelector('.knob');
   const move=e=>{const r=el.getBoundingClientRect(),R=r.width/2;
@@ -47,6 +47,7 @@ addEventListener('keydown',e=>{const c=e.code;
   if(!keysBox.hidden)return;
   const acts=keyActs(c);keys[c]=true;
   if(acts.length||c.startsWith('Arrow')||c==='Space'||c==='Tab')e.preventDefault();
+  if(edOn)return;
   if(!kbUsed){kbUsed=true;padUsed=false;document.body.classList.add('kb');setCaps()}
   if(!e.repeat)for(const id of acts)if(KEY_RUN[id])KEY_RUN[id](e);
   started()});
@@ -90,12 +91,12 @@ function rumble(ms,mag){const gp=getPad(),va=gp&&gp.vibrationActuator;
   if(va&&va.playEffect)va.playEffect('dual-rumble',{duration:ms,strongMagnitude:mag,weakMagnitude:mag*0.6}).catch(()=>{})}
 // orbit drag on the scene
 let orbitYaw=0,orbitPitch=0.42,camDist=9.5,drag=null;
-canvas.addEventListener('pointerdown',e=>{drag={id:e.pointerId,x:e.clientX,y:e.clientY};canvas.setPointerCapture(e.pointerId)});
+canvas.addEventListener('pointerdown',e=>{if(edOn)return;drag={id:e.pointerId,x:e.clientX,y:e.clientY};canvas.setPointerCapture(e.pointerId)});
 canvas.addEventListener('pointermove',e=>{if(!drag||e.pointerId!==drag.id)return;
   orbitYaw-=(e.clientX-drag.x)*0.006;orbitPitch=clamp(orbitPitch+(e.clientY-drag.y)*0.005,0.08,1.3);drag.x=e.clientX;drag.y=e.clientY});
 const dend=e=>{if(drag&&e.pointerId===drag.id)drag=null};
 canvas.addEventListener('pointerup',dend);canvas.addEventListener('pointercancel',dend);
-canvas.addEventListener('wheel',e=>{e.preventDefault();camDist=clamp(camDist+e.deltaY*0.01,5,22)},{passive:false});
+canvas.addEventListener('wheel',e=>{if(edOn)return;e.preventDefault();camDist=clamp(camDist+e.deltaY*0.01,5,22)},{passive:false});
 
 function setCaps(){const m=mode,two=(a,b)=>`${keyLabel(a)} ${keyLabel(b)}`,lh=kbUsed?two('lLeft','lRight'):'◀ ▶',lv=kbUsed?two('lUp','lDown'):'▲ ▼',rh=kbUsed?two('rLeft','rRight'):'◀ ▶',rv=kbUsed?two('rUp','rDown'):'▲ ▼';
   for(const b of document.querySelectorAll('.seg button'))b.dataset.k=keyLabel(b.id.slice(4).toLowerCase());
