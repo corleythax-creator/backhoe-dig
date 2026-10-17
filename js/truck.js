@@ -108,7 +108,7 @@ function updateTruck(dt,thr,steerIn,bedIn){
   tr.v+=(tr.gear*Fd/mass+G*Math.sin(tr.pitch))*dt;
   const dec=(crr*G+(drive?0:0.35)+brake*65000/mass)*dt;
   tr.v=Math.abs(tr.v)<=dec?0:tr.v-Math.sign(tr.v)*dec;
-  tr.brakeOn=brake>0.2&&(Math.abs(tr.v)>0.05||tr.shiftT>0||!!thr);
+  tr.drive=drive;tr.brakeOn=brake>0.2&&(Math.abs(tr.v)>0.05||tr.shiftT>0||!!thr);
   // steering: the wheels turn at a hydraulic rate, and tires scrub wide when the turn asks for more grip than they have
   tr.steer+=clamp(steerIn*0.6-tr.steer,-1.1*dt,1.1*dt);
   let curv=Math.tan(tr.steer)/WB;const v2=tr.v*tr.v,latMax=(soft?2.8:road?4.2:3.5)*(1-0.25*f);
@@ -117,10 +117,12 @@ function updateTruck(dt,thr,steerIn,bedIn){
   const sy0=Math.sin(tr.yaw),cy0=Math.cos(tr.yaw),rx=tr.x+sy0*REAR+sy0*tr.v*dt,rz=tr.z+cy0*REAR+cy0*tr.v*dt;
   const yawRate=-tr.v*curv;tr.yaw+=yawRate*dt;
   tr.x=rx-Math.sin(tr.yaw)*REAR;tr.z=rz-Math.cos(tr.yaw)*REAR;
-  // the rim berm: head-on it stops the truck, at a glancing angle it scrapes along and keeps most of its speed
-  {const rr=mesaR(tr.x,tr.z),lim=EDGE-1.4;if(rr>lim){const k=lim/rr;tr.x*=k;tr.z=MZ+(tr.z-MZ)*k;
-    const nx=tr.x,nz=tr.z-MZ,nl=Math.hypot(nx,nz)||1,c=(Math.sin(tr.yaw)*nx+Math.cos(tr.yaw)*nz)/nl*Math.sign(tr.v);
-    if(c>0)tr.v*=Math.exp(-c*dt*40)}}
+  // the rim berm keeps both axles on the mesa (the tail can still hang over the edge to dump): head-on it stops
+  // the truck, at a glancing angle it scrapes along and keeps most of its speed
+  for(const lz of [3.1,REAR]){const sy=Math.sin(tr.yaw),cy=Math.cos(tr.yaw),px=tr.x+sy*lz,pz=tr.z+cy*lz,rr=mesaR(px,pz),lim=EDGE-1.0;
+    if(rr>lim){const k=lim/rr;tr.x+=px*k-px;tr.z+=MZ+(pz-MZ)*k-pz;
+      const nz=pz-MZ,nl=Math.hypot(px,nz)||1,c=(sy*px+cy*nz)/nl*Math.sign(tr.v);
+      if(c>0)tr.v*=Math.exp(-c*dt*40)}}
   // keep the truck from driving through the excavator or blocks it can't roll over
   const sy=Math.sin(tr.yaw),cy=Math.cos(tr.yaw);
   for(const lz of [2.2,-0.4,-2.6]){const cx=tr.x+sy*lz,cz=tr.z+cy*lz,dx=cx-st.x,dz=cz-st.z,d=Math.hypot(dx,dz),min=1.5+2.3;
@@ -144,6 +146,9 @@ function updateTruck(dt,thr,steerIn,bedIn){
   tr.spV+=spring(tr.sp,tr.spV,clamp(-tr.aL*0.008*cg,-0.035,0.035));tr.sp+=tr.spV*dt;
   tr.srV+=spring(tr.sr,tr.srV,clamp(tr.v*yawRate*0.011*cg,-0.05,0.05));tr.sr+=tr.srV*dt;
   tr.bumpCd-=dt;if(Math.abs(dy)>0.05&&tr.bumpCd<=0&&mode==='truck'){rumble(120,Math.min(1,Math.abs(dy)*6));tr.bumpCd=0.3}
+  // tyres rut loose fill and crush clods; they pick up mud there
+  if(Math.abs(tr.v)>0.1&&!bench.on){let r=false;for(const w of wheels){const u=w.userData,wx=tr.x+u.lx*cy+u.lz*sy,wz=tr.z-u.lx*sy+u.lz*cy;if(stampRut(wx,wz,tr.yaw,0.3,0.32,dt))r=true}
+    if(r)tr.mud=Math.min(1,tr.mud+dt*0.08)}
   truck.position.set(tr.x,tr.y,tr.z);truck.rotation.set(tr.pitch,tr.yaw,tr.roll);
   sprung.position.y=1.0+tr.sh;sprung.rotation.set(tr.sp,0,tr.sr);
   const sP=Math.sin(tr.pitch),sR=Math.sin(tr.roll),kw=Math.min(1,dt*20);
@@ -152,12 +157,14 @@ function updateTruck(dt,thr,steerIn,bedIn){
   TAIL.emissive.setHex(tr.brakeOn?0xff2a10:0x400804);REV.emissive.setHex(tr.gear<0&&tr.shiftT<=0?0xfff0c0:0x202018);
   // clods off the rear tires in loose dirt
   if(soft&&Math.abs(tr.v)>2&&Math.random()<Math.abs(tr.v)*dt*1.2){truck.localToWorld(tv.set(Math.random()<0.5?0.95:-0.95,0.2,REAR-Math.sign(tr.v)*0.9));spawn(tv,0.9)}
+  // dust behind the rear tyres on the dry road and over loose dirt
+  if((soft||road)&&Math.abs(tr.v)>2.5){truck.localToWorld(tv.set(0,0.3,REAR-Math.sign(tr.v)*1.2));dustPuff(tv.x,tv.y,tv.z,Math.abs(tr.v)*dt*(soft?1.2:0.6),soft?tr.loadC:null)}
   bedG.rotation.x=-tr.bed;tailP.rotation.x=tr.bed*1.35;
-  heap.visible=tr.load>0.01;if(heap.visible){const f=tr.load/TRUCK_CAP;tintLoad(heap.material,tr.loadC);heap.scale.set(0.55+0.45*Math.min(1,f*1.5),0.08+0.95*f,0.6+0.4*Math.min(1,f*1.5))}heap.position.y=0.12+0.5*heap.scale.y;
+  const hv=Math.max(tr.load,tr.stuck);heap.visible=hv>0.01;if(heap.visible){const f=hv/TRUCK_CAP;tintLoad(heap.material,tr.loadC);heap.scale.set(0.55+0.45*Math.min(1,f*1.5),0.08+0.95*f,0.6+0.4*Math.min(1,f*1.5))}heap.position.y=0.12+0.5*heap.scale.y;
   truck.updateMatrixWorld(true);
   // tipping the bed pours the load out the back
   if(tr.bed>0.32&&tr.load>0.0005){
-    const out=Math.min(tr.load,(tr.bed-0.32)*3.2*dt);tr.load-=out;if(tr.load<0.0005)tr.load=0;
+    const out=Math.min(tr.load,(tr.bed-0.32)*3.2*dt);tr.load-=out;if(tr.load<0.0005){tr.load=0;tr.stuck=TRUCK_CAP*0.025*(0.4+1.6*tr.loadMix[CLAY])}
     truck.localToWorld(tv.set(0,0.3,-4.3));
     if(mesaR(tv.x,tv.z)<EDGE-1.2&&Math.abs(tv.x)<S/2-0.8&&Math.abs(tv.z)<S/2-0.8){deposit(tv.x,tv.z,out,tr.loadC,tr.loadMix);st.dirty=true;st.slumpT=2.5}
     else{tr.hauled+=out;if(!tr.haulWarned&&tr.load<=0){tr.haulWarned=true;toast('Load hauled off site.','good')}}
@@ -172,11 +179,12 @@ function greyDetail(t){try{const im=t.image,c=document.createElement('canvas');c
   for(let i=0;i<p.length;i+=4){const l=Math.min(255,(p[i]*0.3+p[i+1]*0.59+p[i+2]*0.11)*k);p[i]=p[i+1]=p[i+2]=l}
   x2.putImageData(d,0,0);const g=new THREE.CanvasTexture(c);g.wrapS=g.wrapT=THREE.RepeatWrapping;return g}catch(e){return null}}
 function tintLoad(mat,c){const k=mat.map?1.25:1;mat.color.setRGB(Math.min(1,c[0]*k),Math.min(1,c[1]*k),Math.min(1,c[2]*k))}
-texManager.onLoad=()=>{
+// called by main.js once every script has loaded (the images can finish before the later scripts arrive)
+function applyTextures(){
   texMixU.value=1;
   for(const mt of [ORANGE,ORANGE_D,STEEL,STEEL_L,RUBBER,WHITE,WHITE_DS,BEDM,BED_D]){mt.map=texGrime;mt.needsUpdate=true}
   const grey=greyDetail(texDirt);heap.material.map=grey;heap.material.needsUpdate=true;
   ORANGE.color.setHex(0xf27a22);ORANGE_D.color.setHex(0xc85e1c);
   loadMesh.material.map=grey;loadMesh.material.needsUpdate=true;
   pMat.map=texDirt;pMat.color.setHex(0xd0b8a6);pMat.needsUpdate=true;
-};
+}

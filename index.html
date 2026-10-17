@@ -48,8 +48,9 @@
       <button id="helpBtn">How to play</button>
       <button id="benchBtn">Speed test</button>
       <button id="resetBtn">Reset</button>
+      <button id="soundBtn">Sound: on</button>
       <div class="sizes"><span>UI size</span><button data-s="1">1x</button><button data-s="1.5">1.5x</button><button data-s="2">2x</button></div>
-      <div class="sizes"><span>Dirt detail</span><button data-d="1">1x</button><button data-d="2">2x</button><button data-d="4">4x</button></div>
+      <div class="sizes"><span>Dirt detail</span><button data-d="1">1x</button><button data-d="2">2x</button><button data-d="4">4x</button><button data-d="16">16x</button></div>
     </div>
   </div>
   </div>
@@ -111,9 +112,9 @@
       <dt>Blocks</dt><dd>Tap Blocks (or press B) and pick a size: 1×1, 2×2 or 3×3 ft concrete cubes. A yellow outline shows where one lands under the bucket; tap Place (Space) to set it. They snap to a 1 ft grid and stack. Lift (X) picks up the top block under the bucket. Tracks and tires roll over a 1 ft block; taller ones stop them.</dd>
       <dt>Look</dt><dd>Drag the scene to look around.</dd>
       <dt>Map</dt><dd>Tap the minimap or press M for the big map.</dd>
-      <dt>Screen</dt><dd>Tap the status card to fold it down. Speed test, Reset, UI size (1x, 1.5x, 2x) and Dirt detail (1x, 2x, 4x: more clods, flying dirt and lumpier loads; turn it down if the game slows) are in the ☰ menu.</dd>
+      <dt>Screen</dt><dd>Tap the status card to fold it down. Speed test, Reset, Sound on/off, UI size (1x, 1.5x, 2x) and Dirt detail (1x, 2x, 4x, 16x: more clods, flying dirt and lumpier loads; 16x is for screenshots and fast computers, turn it down if the game slows) are in the ☰ menu.</dd>
       <dt>Controller</dt><dd>Sticks work like the two on-screen sticks. Triggers are gas and reverse when driving. LB / RB switch machine · Y cab view · A place block · D-pad up blocks on/off, left/right block size, down pick up · View map · Menu this help · B closes.</dd>
-      <dt>Keys</dt><dd>WASD (or arrows) is always the left stick, IJKL is always the right stick, in every mode. 1 Dig · 2 Drive · 3 Truck (Tab cycles). Hold Shift for slow, fine moves. C cab view · M map · H this help. Blocks: B on/off · Space place · V size · X pick up.</dd>
+      <dt>Keys</dt><dd>WASD (or arrows) is always the left stick, IJKL is always the right stick, in every mode. 1 Dig · 2 Drive · 3 Truck (Tab cycles). Hold Shift for slow, fine moves. C cab view · M map · N sound on/off · H this help. Blocks: B on/off · Space place · V size · X pick up.</dd>
     </dl>
     <p>To scoop: boom down until the teeth bite, curl in while pulling the stick toward you, boom up, swing, then dump.</p>
     <button id="startBtn">Start digging</button>
@@ -132,6 +133,7 @@
 <script src="js/blocks.js"></script>
 <script src="js/controls.js"></script>
 <script src="js/effects.js"></script>
+<script src="js/sound.js"></script>
 <script src="js/maps.js"></script>
 <script src="js/bench.js"></script>
 <script src="js/main.js"></script>

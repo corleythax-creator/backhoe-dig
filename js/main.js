@@ -1,7 +1,7 @@
 // Backhoe Dig: the frame loop: inputs, machines, digging, spills, gas main, terrain, HUD and camera.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 function frame(now){
-  const dt=Math.min(0.05,(now-last)/1000);last=now;
+  const dt=Math.min(0.05,(now-last)/1000);last=now;crushT-=dt;
   // inputs
   keyAxes(dt);pollPad();
   const Lx=clamp(SL.x+KA.lx+PA.lx,-1,1),Ly=clamp(SL.y+KA.ly+PA.ly+(mode==='dig'?0:PA.thr),-1,1),Rx=clamp(SR.x+KA.rx+PA.rx,-1,1),Ry=clamp(SR.y+KA.ry+PA.ry,-1,1);
@@ -15,7 +15,7 @@ function frame(now){
   st.a2=clamp(st.a2+stickIn*0.8*dt*res,...LIM.a2);
   st.a3=clamp(st.a3+bucketIn*1.3*dt*res,...LIM.a3);
   if(bench.on){benchTick(dt);driveIn=0;turnIn=0;tThr=0;tSteer=0;tBed=0}
-  updateTruck(dt,tThr,tSteer,tBed);updateHeapClods();
+  updateTruck(dt,tThr,tSteer,tBed);updateSound(dt,Math.abs(swingIn)+Math.abs(stickIn)+Math.abs(boomIn)+Math.abs(bucketIn)+Math.abs(driveIn)+Math.abs(turnIn));updateHeapClods();
   // drive
   st.yaw-=turnIn*0.8*dt;
   st.x=clamp(st.x+Math.sin(st.yaw)*driveIn*2.6*dt,-60,60);
@@ -23,6 +23,10 @@ function frame(now){
   {const rr=mesaR(st.x,st.z),lim=EDGE-3.5;if(rr>lim){const f=lim/rr;st.x*=f;st.z=MZ+(st.z-MZ)*f}}
   blkPush(st,EX_C,EX_R);
   const sy=Math.sin(st.yaw),cy=Math.cos(st.yaw);
+  // tracks rut loose fill, crush clods, pick up mud and kick up a little dust
+  if(!bench.on&&(Math.abs(driveIn)>0.05||Math.abs(turnIn)>0.05))for(const sd of [-1,1]){const tx=st.x+sd*1.05*cy,tz=st.z-sd*1.05*sy;
+    if(stampRut(tx,tz,st.yaw,0.28,1.5,dt)){st.mud=Math.min(1,st.mud+dt*0.06);dustPuff(tx,hAt(tx,tz)+0.1,tz,dt*4)}}
+  if(crushT<=0)crushT=0.1;
   const sample=(lx,lz)=>surfAt(st.x+lx*cy+lz*sy,st.z-lx*sy+lz*cy);
   const hf=(sample(-1,1.7)+sample(1,1.7))/2,hb=(sample(-1,-1.7)+sample(1,-1.7))/2;
   const hr=(sample(1,1.7)+sample(1,-1.7))/2,hl=(sample(-1,1.7)+sample(-1,-1.7))/2;
@@ -65,8 +69,13 @@ function frame(now){
       if(tr.load>=TRUCK_CAP*0.99&&!tr.fullWarned){tr.fullWarned=true;toast('Truck full. Tap Truck, back it to the cliff edge and raise the bed.','',3500)}}
     else{deposit(mid.x,mid.z,out,st.loadC,st.loadMix); st.dirty=true; st.slumpT=2.5}
     for(let n=0;n<Math.ceil(out*80);n++)spawn(mid,0.8);
-    if(st.load<0.0005)st.load=0;
+    if(st.load<0.0005){st.load=0;st.stuck=0.03*(0.3+st.loadMix[CLAY])}
   }
+  // a heaped bucket swung or lifted fast loses crumbs over the rim
+  {const armV=Math.abs(swingIn)*0.85+Math.abs(boomIn)*0.6+Math.abs(stickIn)*0.8;
+    if(f===0&&!st.below&&!bench.on&&st.load>CAP*0.7&&armV>0.2){const out=Math.min(st.load,(st.load/CAP-0.7)/0.3*armV*0.006*dt);st.load-=out;
+      if(inBed(mid))tr.load=Math.min(TRUCK_CAP,tr.load+out);else{deposit(mid.x,mid.z,out,st.loadC,st.loadMix);st.dirty=true}
+      if(Math.random()<armV*dt*8)spawn(mid,0.4)}}
   // gas main
   st.strikeCd-=dt;
   if(Math.abs(tip.x)<12&&Math.hypot(tip.y-PIPE_Y,tip.z-PIPE_Z)<PIPE_R+0.07&&st.strikeCd<=0){
@@ -113,10 +122,10 @@ function frame(now){
     gv.style.color=st.strikes?'var(--danger)':st.exposed?'var(--ok)':'';
   }
   // flying dirt
-  particlesTick(dt);
+  particlesTick(dt);dustTick(dt);grimeTick();
   // bucket load visual
-  loadMesh.visible=st.load>0.01;
-  if(loadMesh.visible){const s=0.35+0.75*Math.sqrt(st.load/CAP);loadMesh.scale.set(s,s*0.6,s*1.15);tintLoad(loadMesh.material,st.loadC)}
+  const lv=Math.max(st.load,st.stuck);loadMesh.visible=lv>0.01;
+  if(loadMesh.visible){const s=0.35+0.75*Math.sqrt(lv/CAP);loadMesh.scale.set(s,s*0.6,s*1.15);tintLoad(loadMesh.material,st.loadC)}
   // camera
   const hy=st.yaw+st.swing;
   if(camMode==='chase'){
@@ -147,4 +156,6 @@ function frame(now){
     const t=renderer.info.render.triangles;$('#triVal').textContent=t>=1e6?(t/1e6).toFixed(2)+'M':t>=1e3?Math.round(t/1e3)+'k':t;fpsFrames=0;fpsTime=0}
   requestAnimationFrame(frame);
 }
+// textures may finish loading before the later scripts arrive: apply them now if they are in, otherwise when they are
+if([texGrass,texDirt,texGrime].every(t=>t.image&&t.image.width))applyTextures();else texManager.onLoad=applyTextures;
 requestAnimationFrame(frame);
