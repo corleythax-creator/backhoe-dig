@@ -1,11 +1,12 @@
-// Backhoe Dig: the map editor (☰ menu, or G). Shape the ground (raise, lower, flatten, smooth), paint dirt or grass, and
-// place, move, turn, resize, copy, query and remove trees and boulders; the machines can be moved and turned too. Edits
-// are layers over the generated mesa (ED_H, ED_P and the asset list, terrain.js and scenery.js), saved on this device
+// Backhoe Dig: the map editor (☰ menu, or G). Shape the ground (raise, lower, flatten, smooth), paint dirt or grass, lay
+// out and grade roads, and place, move, turn, resize, copy, query and remove trees and boulders; the machines can be
+// moved and turned too. Edits are layers over the generated mesa (ED_H, ED_P, ROADS and the asset list, terrain.js and
+// scenery.js), saved on this device
 // as you go; the map can be copied out as text and loaded back. While it is open the game stands still.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 const ed={tool:'raise',size:15*FT,str:5,kind:'pine',x:0,z:10,yaw:0,pitch:0.95,dist:45,
-  stroke:null,flatH:0,bx:0,bz:0,hover:false,pend:null,refT:0,sel:null,drag:null,snap:null,changed:false,saveT:0,undo:[],redo:[]};
-const ED_TOOLS={look:'Look',raise:'Raise',lower:'Lower',flatten:'Flatten',smooth:'Smooth',dirt:'Dirt',grass:'Grass',select:'Select',add:'Add',query:'Query'};
+  stroke:null,flatH:0,road:null,rpt:-1,drawing:false,roadSnap:null,bx:0,bz:0,hover:false,pend:null,refT:0,sel:null,drag:null,snap:null,changed:false,saveT:0,undo:[],redo:[]};
+const ED_TOOLS={look:'Look',raise:'Raise',lower:'Lower',flatten:'Flatten',smooth:'Smooth',dirt:'Dirt',grass:'Grass',select:'Select',add:'Add',query:'Query',roads:'Roads'};
 const ED_BRUSH=['raise','lower','flatten','smooth','dirt','grass'];
 const ED_KINDS={pine:'Pine tree',leafy:'Leafy tree',rock:'Boulder'};
 // the machines and the walker can be picked and moved: their state, scene object and pick radius
@@ -26,17 +27,17 @@ function editorOpen(){if(edOn||bench.on)return;edOn=true;mapAssets=assets;
   const fv=mode==='truck'?tr:mode==='mow'?mw:mode==='walk'?wk:st;ed.x=fv.x;ed.z=fv.z;
   ed.yaw=Math.atan2(camera.position.x-fv.x,camera.position.z-fv.z);ed.dist=45;ed.pitch=0.95;
   edTool(ed.tool);edInfo(null);toast('Map editor. The game is paused while you edit.','',2600)}
-function editorClose(){if(!edOn)return;edStrokeEnd();edOn=false;document.body.classList.remove('editing');$('#editor').hidden=true;
-  edBrushRing.visible=edSelRing.visible=false;ed.sel=null;clearKeys();firstCam=true;last=performance.now();
+function editorClose(){if(!edOn)return;edStrokeEnd();edRoadFinish();edOn=false;document.body.classList.remove('editing');$('#editor').hidden=true;
+  edBrushRing.visible=edSelRing.visible=false;ed.sel=null;ed.road=null;ed.rpt=-1;edRoadsDraw();clearKeys();firstCam=true;last=performance.now();
   if(ed.changed){edSave();mapBg=null;mapDirty=true;ed.changed=false}}
 $('#edDone').onclick=editorClose;
 $('#editBtn').onclick=editorOpen;
 
 // ---------- tools ----------
-function edTool(t){ed.tool=t;ed.sel=t==='select'?ed.sel:null;edSelRing.visible=!!ed.sel;
+function edTool(t){if(t!=='roads'){edRoadFinish();ed.road=null;ed.rpt=-1}ed.tool=t;ed.sel=t==='select'?ed.sel:null;edSelRing.visible=!!ed.sel;
   document.querySelectorAll('.edtools button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.t===t));
   document.querySelectorAll('#edOpts [data-for]').forEach(el=>el.hidden=!el.dataset.for.split(' ').includes(t));
-  if(t!=='query'&&t!=='select')edInfo(null);edBrushRing.visible=false}
+  if(t!=='query'&&t!=='select')edInfo(null);edBrushRing.visible=false;if(t==='roads')edRoadCard();edRoadsDraw()}
 document.querySelectorAll('.edtools button').forEach(b=>b.onclick=()=>edTool(b.dataset.t));
 document.querySelectorAll('.edkind button').forEach(b=>b.onclick=()=>{ed.kind=b.dataset.k;document.querySelectorAll('.edkind button').forEach(c=>c.setAttribute('aria-pressed',c===b))});
 const edSizeIn=$('#edSize'),edStrIn=$('#edStr');
@@ -102,6 +103,7 @@ function edSwap(u){
   if(u.g){const [i0,i1,j0,j1]=u.g,w=i1-i0+1;
     for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const q=j*ED_NX+i,o=(j-j0)*w+i-i0,a=ED_H[q],b=ED_P[q];ED_H[q]=u.h[o];ED_P[q]=u.p[o];u.h[o]=a;u.p[o]=b}
     edRefresh([ED_X0+i0*ED_C-0.6,ED_X0+i1*ED_C+0.6,ED_Z0+j0*ED_C-0.6,ED_Z0+j1*ED_C+0.6],true)}
+  else if(u.roads){const now=edRoadsSnap();edRoadsSet(u.roads);u.roads=now;ed.road=null;ed.rpt=-1;edRoadCard();edRoadsDraw();edRefresh(u.rect,true)}
   else{const now=JSON.stringify(assets);assets.length=0;assets.push(...JSON.parse(u.a));u.a=now;ed.sel=null;edSelRing.visible=false;edInfo(null);assetsBuild();shpTreesRefresh()}
   ed.changed=true;edQueueSave()}
 function edUndo(){const u=ed.undo.pop();if(!u)return;edStrokeEnd();edSwap(u);ed.redo.push(u);edUndoBtns()}
@@ -147,6 +149,102 @@ function edDelete(){const s=ed.sel;if(!s||!s.a)return;const b=edAssetsSnap(),i=a
 function edPlaceMachine(m,x,z){const o=m.o(),r=mesaR(x,z),lim=EDGE-4;if(r>lim){const f=lim/r;x*=f;z=MZ+(z-MZ)*f}
   o.x=x;o.z=z;if(o===tr)tr.v=0;const y=surfAt(x,z);o.y=y;m.m().position.set(x,y,z)}
 
+// ---------- roads ----------
+// Roads tool: tap a road to pick it, drag its points (dots) to move them, tap the picked road between points to add one,
+// or lay a new road point by point. Its card sets the width, grass up the middle, grading (cut and filled to a height
+// at each point, like the ramp; otherwise it follows the ground), the picked point's height, and deletes
+const edRoadsSnap=()=>JSON.stringify(ROADS);
+function edRoadsSet(json){ROADS.length=0;ROADS.push(...JSON.parse(json));roadsBuild();ed.roadsEdited=true}
+// the area a road (or the points i0..i1 of it) reaches, with its banks
+function edRoadBox(r,i0,i1){let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9;const m=r.w/2+3.2;
+  for(let i=Math.max(0,i0===undefined?0:i0);i<=Math.min(r.pts.length-1,i1===undefined?1e9:i1);i++){const q=r.pts[i];x0=Math.min(x0,q[0]);x1=Math.max(x1,q[0]);z0=Math.min(z0,q[1]);z1=Math.max(z1,q[1])}
+  return x0>x1?null:[x0-m,x1+m,z0-m,z1+m]}
+const edUnion=(a,b)=>!a?b:!b?a:[Math.min(a[0],b[0]),Math.max(a[1],b[1]),Math.min(a[2],b[2]),Math.max(a[3],b[3])];
+// a change to roads: rebuild the lookup, redraw, and bring the ground over the area up to date (now, or a few times a second while dragging)
+function edRoadsChanged(rect,now){roadsBuild();ed.roadsEdited=true;ed.changed=true;edRoadsDraw();
+  if(now)edRefresh(rect,true);else ed.pend=edUnion(ed.pend,rect)}
+function edRoadCommit(rect){edPush({roads:ed.roadSnap,rect});ed.roadSnap=null;edQueueSave()}
+// handles: every road point as a dot, the picked road's brighter, the picked point biggest, and the picked road's line
+const edDotTex=(function(){const c=document.createElement('canvas');c.width=c.height=32;const g=c.getContext('2d');
+  g.beginPath();g.arc(16,16,11,0,7);g.fillStyle='#fff';g.fill();g.lineWidth=5;g.strokeStyle='rgba(20,23,19,.9)';g.stroke();return new THREE.CanvasTexture(c)})();
+function edDots(color,size,cap){const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(cap*3),3));g.setDrawRange(0,0);
+  const p=new THREE.Points(g,new THREE.PointsMaterial({color,size,sizeAttenuation:false,map:edDotTex,transparent:true,alphaTest:0.3,depthTest:false,fog:false,toneMapped:false}));
+  p.renderOrder=22;p.frustumCulled=false;p.visible=false;p.userData.px=size;scene.add(p);return p}
+const edAllDots=edDots(0xe8ece4,13,1500),edRoadDots=edDots(0xf07a22,19,256),edPtDot=edDots(0xffd23f,27,1);
+const edRoadLine=(function(){const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(6000*3),3));g.setDrawRange(0,0);
+  const l=new THREE.Line(g,new THREE.LineBasicMaterial({color:0xf07a22,depthTest:false,transparent:true,fog:false,toneMapped:false}));l.renderOrder=21;l.frustumCulled=false;l.visible=false;scene.add(l);return l})();
+function edDotsSet(P,list){const a=P.geometry.attributes.position,n=Math.min(list.length,a.count);
+  for(let i=0;i<n;i++){const q=list[i];a.array[i*3]=q[0];a.array[i*3+1]=hAt(q[0],q[1])+0.3;a.array[i*3+2]=q[1]}
+  a.needsUpdate=true;P.geometry.setDrawRange(0,n);P.material.size=P.userData.px*renderer.getPixelRatio();P.visible=n>0}
+function edRoadsDraw(){const on=edOn&&ed.tool==='roads',r=on?ed.road:null;
+  edDotsSet(edAllDots,on?ROADS.flatMap(o=>o===r?[]:o.pts):[]);edDotsSet(edRoadDots,r?r.pts:[]);edDotsSet(edPtDot,r&&ed.rpt>=0?[r.pts[ed.rpt]]:[]);
+  const a=edRoadLine.geometry.attributes.position;let n=0;
+  if(r)for(let i=0;i<r.pts.length-1;i++){const p=r.pts[i],q=r.pts[i+1],L=Math.hypot(q[0]-p[0],q[1]-p[1]),k=Math.max(1,Math.ceil(L));
+    for(let j=(i?1:0);j<=k&&n<a.count;j++){const x=p[0]+(q[0]-p[0])*j/k,z=p[1]+(q[1]-p[1])*j/k;a.array[n*3]=x;a.array[n*3+1]=hAt(x,z)+0.25;a.array[n*3+2]=z;n++}}
+  a.needsUpdate=true;edRoadLine.geometry.setDrawRange(0,n);edRoadLine.visible=n>1}
+// the road point under a screen spot (within about a fingertip), then the road under a ground spot
+const edV=new THREE.Vector3();
+function edRoadPtAt(cx,cy){const rc=canvas.getBoundingClientRect();let best=null,bd=26*26;
+  for(const r of ROADS)r.pts.forEach((q,i)=>{edV.set(q[0],hAt(q[0],q[1])+0.3,q[1]).project(camera);if(edV.z>1)return;
+    const sx=(edV.x+1)/2*rc.width+rc.left,sy=(1-edV.y)/2*rc.height+rc.top,d=(sx-cx)**2+(sy-cy)**2;
+    if(d<bd||(d===bd&&r===ed.road)){bd=d;best={r,i}}});return best}
+function edRoadSegAt(x,z,only){let best=null,bd=1e9;
+  for(const r of only?[only]:ROADS)for(let i=0;i<r.pts.length-1;i++){const a=r.pts[i],b=r.pts[i+1],[d,t]=edSegD(x,z,a,b);
+    if(d<r.w/2+1.2&&d<bd){bd=d;best={r,i,t}}}return best}
+function edSegD(x,z,a,b){const dx=b[0]-a[0],dz=b[1]-a[1],L2=dx*dx+dz*dz||1;let t=((x-a[0])*dx+(z-a[1])*dz)/L2;t=Math.max(0,Math.min(1,t));return [Math.hypot(x-a[0]-dx*t,z-a[1]-dz*t),t]}
+const edGraded=r=>r.pts.every(q=>q.length>2);
+const edClampXZ=(x,z)=>[clamp(x,ED_X0+3,ED_X0+(ED_NX-4)*ED_C),clamp(z,ED_Z0+3,ED_Z0+(ED_NZ-4)*ED_C)];
+function edRoadDown(p,cx,cy){
+  if(ed.drawing){const r=ed.road,[x,z]=edClampXZ(p.x,p.z);r.pts.push(edGraded(r)&&r.pts.length?[x,z,baseHeight(x,z)]:[x,z]);ed.rpt=r.pts.length-1;
+    edRoadsChanged(edRoadBox(r,ed.rpt-1,ed.rpt),true);edRoadCard();ed.drag={road:r,i:ed.rpt,moved:false,drawing:true};return}
+  const hp=edRoadPtAt(cx,cy);
+  if(hp){ed.road=hp.r;ed.rpt=hp.i;ed.roadSnap=edRoadsSnap();ed.drag={road:hp.r,i:hp.i,moved:false,box:edRoadBox(hp.r,hp.i-1,hp.i+1)};edRoadCard();edRoadsDraw();return}
+  // tapping the picked road between its points adds a point there, ready to drag
+  const sg=ed.road&&edRoadSegAt(p.x,p.z,ed.road);
+  if(sg){const r=sg.r,a=r.pts[sg.i],b=r.pts[sg.i+1],[x,z]=edClampXZ(p.x,p.z);ed.roadSnap=edRoadsSnap();
+    r.pts.splice(sg.i+1,0,edGraded(r)?[x,z,a[2]+(b[2]-a[2])*sg.t]:[x,z]);ed.rpt=sg.i+1;
+    ed.drag={road:r,i:ed.rpt,moved:true,box:edRoadBox(r,sg.i,sg.i+2)};edRoadsChanged(ed.drag.box,false);edRoadCard();return}
+  const any=edRoadSegAt(p.x,p.z);
+  if(any){ed.road=any.r;ed.rpt=-1;edRoadCard();edRoadsDraw();return}
+  ed.road=null;ed.rpt=-1;edRoadCard();edRoadsDraw();edMouse={pan:true,x:cx,y:cy}}
+function edRoadDrag(d,p){const r=d.road,q=r.pts[d.i],old=edRoadBox(r,d.i-1,d.i+1),[x,z]=edClampXZ(p.x,p.z);
+  q[0]=x;q[1]=z;d.moved=true;d.box=edUnion(d.box,edUnion(old,edRoadBox(r,d.i-1,d.i+1)));edRoadsChanged(edUnion(old,edRoadBox(r,d.i-1,d.i+1)),false)}
+function edRoadUp(d){if(d.drawing){edRefresh(ed.pend,true);ed.pend=null;return}
+  if(d.moved){edRefresh(ed.pend,true);ed.pend=null;edRoadCommit(d.box)}else ed.roadSnap=null;edRoadCard()}
+function edRoadNew(){edRoadFinish();ed.roadSnap=edRoadsSnap();const r={w:3.6,mid:1,pts:[]};ROADS.push(r);ed.road=r;ed.rpt=-1;ed.drawing=true;
+  edRoadCard();toast('Tap the ground to lay the road, point by point. Tap Finish when it is done.','',3600)}
+function edRoadFinish(){if(!ed.drawing)return;ed.drawing=false;const r=ed.road;
+  if(!r||r.pts.length<2){const i=ROADS.indexOf(r);if(i>=0)ROADS.splice(i,1);ed.road=null;ed.rpt=-1;edRoadsChanged(r&&edRoadBox(r),true);ed.roadSnap=null}
+  else edRoadCommit(edRoadBox(r));edRoadCard();edRoadsDraw()}
+function edRoadDelete(whole){const r=ed.road;if(!r||ed.drawing&&!whole)return;const box=edRoadBox(r);
+  // deleting a road still being laid just drops it: nothing was committed yet
+  if(ed.drawing){ROADS.splice(ROADS.indexOf(r),1);ed.drawing=false;ed.road=null;ed.rpt=-1;ed.roadSnap=null;edRoadsChanged(box,true);edRoadCard();return}
+  ed.roadSnap=edRoadsSnap();
+  if(!whole&&ed.rpt>=0&&r.pts.length>2){r.pts.splice(ed.rpt,1);ed.rpt=Math.min(ed.rpt,r.pts.length-1)}
+  else{ROADS.splice(ROADS.indexOf(r),1);ed.road=null;ed.rpt=-1;ed.drawing=false}
+  edRoadsChanged(box,true);edRoadCommit(box);edRoadCard()}
+// the picked road's card
+function edRoadCard(){const ob=$('#edRoadNew'),fb=$('#edRoadFin');if(ob){ob.hidden=ed.drawing;fb.hidden=!ed.drawing}
+  if(ed.tool!=='roads')return;const r=ed.road;if(!r){edInfo(null);return}
+  let L=0,steep=0;for(let i=0;i<r.pts.length-1;i++){const a=r.pts[i],b=r.pts[i+1],l=Math.hypot(b[0]-a[0],b[1]-a[1]);L+=l;if(a.length>2&&b.length>2&&l>0.1)steep=Math.max(steep,Math.abs(b[2]-a[2])/l)}
+  const g=edGraded(r),q=ed.rpt>=0?r.pts[ed.rpt]:null;
+  edInfo(`<h3>${ed.drawing?'New road':g?'Graded road (cut and filled to each point\u2019s height)':r.mid?'Road (follows the ground)':'Track (follows the ground)'}</h3><dl><dt>Length</dt><dd id="edRdLen">${edFmt(L,0)} ft · ${r.pts.length} points</dd>${g?`<dt>Steepest</dt><dd>${Math.round(steep*100)}%</dd>`:''}</dl>
+    <div class="edopt"><label for="edRdW">Width</label><input id="edRdW" type="range" min="6" max="26" step="1" value="${Math.round(edFt(r.w))}"><output id="edRdWV">${Math.round(edFt(r.w))} ft</output></div>
+    <div class="row"><button id="edRdMid" class="sm" aria-pressed="${!!r.mid}">Grass up the middle</button><button id="edRdGrade" class="sm" aria-pressed="${g}">Graded</button></div>
+    ${g&&q?`<div class="edopt"><label for="edRdH">Point height</label><input id="edRdH" type="range" min="-80" max="40" step="0.5" value="${edFt(q[2]).toFixed(1)}"><output id="edRdHV">${edFt(q[2]).toFixed(1)} ft</output></div>`:''}
+    <div class="row">${q&&r.pts.length>2?'<button id="edRdDelPt" class="sm danger">Delete point</button>':''}<button id="edRdDel" class="sm danger">Delete road</button></div>`);
+  const box=()=>edRoadBox(r);
+  const w=$('#edRdW');w.oninput=()=>{if(!ed.roadSnap)ed.roadSnap=edRoadsSnap();const b0=box();r.w=+w.value*FT;$('#edRdWV').textContent=w.value+' ft';roadsBuild();ed.roadsEdited=true;edRoadsDraw();ed.wBox=edUnion(ed.wBox,edUnion(b0,box()))};
+  w.onchange=()=>{edRoadsChanged(ed.wBox,true);edRoadCommit(ed.wBox);ed.wBox=null};
+  $('#edRdMid').onclick=()=>{ed.roadSnap=edRoadsSnap();r.mid=r.mid?0:1;edRoadsChanged(box(),true);edRoadCommit(box());edRoadCard()};
+  // grading takes each point's height from the ground there now; ungrading lets the road follow the ground again
+  $('#edRdGrade').onclick=()=>{ed.roadSnap=edRoadsSnap();if(g)r.pts.forEach(p=>p.length=2);else r.pts.forEach(p=>{p[2]=baseHeight(p[0],p[1])});edRoadsChanged(box(),true);edRoadCommit(box());edRoadCard()};
+  const h=$('#edRdH');if(h){h.oninput=()=>{if(!ed.roadSnap)ed.roadSnap=edRoadsSnap();q[2]=+h.value*FT;$('#edRdHV').textContent=(+h.value).toFixed(1)+' ft';edRoadsChanged(edRoadBox(r,ed.rpt-1,ed.rpt+1),false)};
+    h.onchange=()=>{edRefresh(ed.pend,true);ed.pend=null;edRoadCommit(edRoadBox(r,ed.rpt-1,ed.rpt+1));edRoadCard()}}
+  const dp=$('#edRdDelPt');if(dp)dp.onclick=()=>edRoadDelete(false);
+  $('#edRdDel').onclick=()=>edRoadDelete(true)}
+$('#edRoadNew').onclick=edRoadNew;$('#edRoadFin').onclick=edRoadFinish;
+
 // ---------- pointer: tools, and look around with two fingers, the right mouse button or the Look tool ----------
 const edPtrs=new Map();let edGest=null,edMouse=null;
 function edPan(dx,dy){const s=ed.dist*0.0019*(720/Math.max(320,innerHeight)),c=Math.cos(ed.yaw),n=Math.sin(ed.yaw);
@@ -154,6 +252,7 @@ function edPan(dx,dy){const s=ed.dist*0.0019*(720/Math.max(320,innerHeight)),c=M
 function edDown(x,y){const p=edPick(x,y),t=ed.tool;
   if(t==='look'||!p){edMouse={pan:true,x,y};return}
   if(ED_BRUSH.includes(t)){edStrokeStart(p.x,p.z);edRingAt(edBrushRing,p.x,p.z,ed.size);return}
+  if(t==='roads'){edRoadDown(p,x,y);return}
   if(t==='query'){edQuery(p.x,p.z);edRingAt(edBrushRing,p.x,p.z,0.5);ed.drag={query:true};return}
   if(t==='add'){const b=edAssetsSnap(),a={t:ed.kind,x:p.x,z:p.z,yaw:Math.random()*6.28,s:ed.kind==='rock'?0.7+Math.random()*0.6:0.85+Math.random()*0.4,c:Math.floor(Math.random()*6)};
     assets.push(a);assetsBuild();shpTreesRefresh();ed.drag={a,dx:0,dz:0,snap:b,added:true};edSelect({a});ed.changed=true;return}
@@ -165,10 +264,12 @@ function edMove(x,y){
   if(ed.stroke){ed.bx=p.x;ed.bz=p.z;edRingAt(edBrushRing,p.x,p.z,ed.size);return}
   const d=ed.drag;
   if(d&&d.query){edQuery(p.x,p.z);edRingAt(edBrushRing,p.x,p.z,0.5);return}
+  if(d&&d.road){edRoadDrag(d,p);return}
   if(d&&d.a){d.a.x=clamp(p.x+d.dx,-118,118);d.a.z=clamp(p.z+d.dz,-118,118);d.moved=true;assetsBuild();shpTreesRefresh();edRingSel();return}
   if(d&&d.m){edPlaceMachine(d.m,p.x+d.dx,p.z+d.dz);d.moved=true;edRingSel();return}
   if(ED_BRUSH.includes(ed.tool)){edRingAt(edBrushRing,p.x,p.z,ed.size)}}
 function edUp(){edMouse=null;edStrokeEnd();const d=ed.drag;ed.drag=null;
+  if(d&&d.road){edRoadUp(d);return}
   if(d&&d.a&&(d.moved||d.added)){edPush({a:d.snap});ed.changed=true;edQueueSave();edSelect({a:d.a})}
   else if(d&&d.m&&d.moved)edSelect({m:d.m})}
 function edGestStart(){const [a,b]=[...edPtrs.values()];
@@ -197,12 +298,13 @@ addEventListener('keydown',e=>{const tg=e.target&&e.target.tagName;if(tg==='TEXT
   if(mod&&c==='KeyY'){e.preventDefault();edRedo();return}
   if(e.repeat)return;
   if(c==='KeyG'||c==='Escape')editorClose();
-  else if(c==='Delete'||c==='Backspace')edDelete();
+  else if(c==='Delete'||c==='Backspace'){if(ed.tool==='roads')edRoadDelete(ed.rpt<0);else edDelete()}
+  else if(c==='Enter'&&ed.drawing)edRoadFinish();
   else{const i=['Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7','Digit8','Digit9','Digit0'].indexOf(c);if(i>=0)edTool(Object.keys(ED_TOOLS)[i])}});
 
 // ---------- saving, copying and loading ----------
 function edQueueSave(){clearTimeout(ed.saveT);ed.saveT=setTimeout(edSave,800)}
-function edSave(){clearTimeout(ed.saveT);mapAssets=assets;try{localStorage.setItem('bhd_map',mapEncode())}catch(e){toast('Could not save the map on this device (storage is full or blocked).','bad',4000)}}
+function edSave(){clearTimeout(ed.saveT);mapAssets=assets;if(ed.roadsEdited)mapRoads=ROADS;try{localStorage.setItem('bhd_map',mapEncode())}catch(e){toast('Could not save the map on this device (storage is full or blocked).','bad',4000)}}
 $('#edFileBtn').onclick=()=>{const f=$('#edFile'),on=f.hidden;f.hidden=!on;$('#edFileBtn').setAttribute('aria-expanded',on);$('#edPasteBox').hidden=true;$('#edCopyBox').hidden=true};
 $('#edCopy').onclick=()=>{edSave();const t=mapEncode(),box=$('#edCopyBox');
   const show=()=>{box.value=t;box.hidden=false;box.focus();box.select();toast('Select all of the text and copy it.','',3000)};
@@ -225,7 +327,8 @@ function editorFrame(dt,now){
   if(kx||kz)edPan(-kx*dt*700,-kz*dt*700);
   ed.yaw+=ek('KeyQ','KeyE')*dt*1.6;ed.dist=clamp(ed.dist*Math.exp(ek('KeyF','KeyR')*dt*1.5),8,220);
   // the brush works while held; the ground catches up a few times a second, and fully when the stroke ends
-  if(ed.stroke){edBrush(dt);if(now-ed.refT>110){ed.refT=now;edRefresh(ed.pend,false);ed.pend=null}}
+  if(ed.stroke)edBrush(dt);
+  if(ed.pend&&(ed.stroke||(ed.drag&&ed.drag.road))&&now-ed.refT>110){ed.refT=now;edRefresh(ed.pend,false);ed.pend=null}
   if(ed.sel&&ed.sel.m)edRingSel();
   const fy=hAt(ed.x,ed.z);edLook.set(ed.x,fy,ed.z);
   camera.position.set(ed.x+Math.sin(ed.yaw)*Math.cos(ed.pitch)*ed.dist,fy+Math.sin(ed.pitch)*ed.dist,ed.z+Math.cos(ed.yaw)*Math.cos(ed.pitch)*ed.dist);
