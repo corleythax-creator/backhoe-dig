@@ -1,7 +1,7 @@
 // Backhoe Dig build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Backhoe Dig",
- "updated": "2026-10-17T09:31:00Z",
+ "updated": "2026-10-17T14:54:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 293,
-   "act": 5.0,
-   "versions": 36
+   "dh": 294.5,
+   "act": 5.5,
+   "versions": 37
   }
  ],
  "extra": [
@@ -417,6 +417,15 @@ window.EFFORT = {
    "tris": 772000,
    "chars": 230763,
    "what": "Real shadows in the trench (a 1 ft shadow-only copy of the dug area); cut-face detail by layer (roots, mottles and pebbles, sand streaks, rock cracks, tooth grooves); groundwater below 6 ft that seeps, levels and makes mud, with a pump; a pouring stream from the bucket and tailgate, and higher drops spread wider; load thuds, clods rattling, cave-in rumble and a seeping trickle in the sound mix."
+  },
+  {
+   "v": 44,
+   "asked": "2026-10-17T09:54:00-05:00",
+   "live": "2026-10-17T09:54:00-05:00",
+   "dh": 1.5,
+   "tris": 772000,
+   "chars": 231857,
+   "what": "Fix: the screen flashed black on phones. Auto resolution and window resizes resized the canvas right after a frame was drawn, blanking it; they now apply just before drawing, and resolution waits 30 s before stepping back up. A graphics reset from low memory now says so and is counted in the speed test."
   }
  ]
 };
