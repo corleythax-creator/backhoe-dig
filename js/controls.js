@@ -10,7 +10,7 @@ function resetState(){
   H.set(H0);dI0=0;dI1=N;dJ0=0;dJ1=N;winOn=true;Object.assign(tr,TR_START);tr.loadC=[...SOIL[SPOIL].c];tr.loadMix=[...CRUMB_MIX];tr.stuck=0;tr.mud=0;
   for(let k=0;k<V*V;k++)spoilC.set(SOIL[SPOIL].c,k*3);
   clearClods();wetT.fill(-1e4);comp.fill(0);clearDust();
-  blkReset();Object.assign(TB,TB_START,{hooked:false,seated:false});TB.y=TB.ty=boxRest();prot.fill(0);chain.visible=false;
+  blkReset();mowReset();Object.assign(TB,TB_START,{hooked:false,seated:false});TB.y=TB.ty=boxRest();prot.fill(0);chain.visible=false;
 }
 resetState();
 const LIM={a1:[-0.55,1.3],a2:[-2.65,-0.45],a3:[-2.85,0.35]};
@@ -35,20 +35,20 @@ function makeStick(el){
 const SL=makeStick($('#stickL')),SR=makeStick($('#stickR'));
 const keys={};
 // keyboard: WASD/arrows = left stick, IJKL = right stick in every mode; the sticks' captions show the keys once one is pressed
-const MODES=['dig','drive','truck'];let kbUsed=false;
+const MODES=['dig','drive','truck','mow'];let kbUsed=false;
 addEventListener('keydown',e=>{if(e.ctrlKey||e.metaKey||e.altKey)return;
   const c=e.code;keys[c]=true;
   if(c.startsWith('Arrow')||c==='Tab'||c==='Space')e.preventDefault();
   if(!e.repeat){
-    if(c==='Digit1')setMode('dig');else if(c==='Digit2')setMode('drive');else if(c==='Digit3')setMode('truck');
-    else if(c==='Tab')setMode(MODES[(MODES.indexOf(mode)+(e.shiftKey?2:1))%3]);
+    if(c==='Digit1')setMode('dig');else if(c==='Digit2')setMode('drive');else if(c==='Digit3')setMode('truck');else if(c==='Digit4')setMode('mow');
+    else if(c==='Tab')setMode(MODES[(MODES.indexOf(mode)+(e.shiftKey?MODES.length-1:1))%MODES.length]);
     else if(c==='KeyC')$('#camBtn').click();
     else if(c==='KeyT')hookBox();
     else if(c==='KeyB')setBlocks(!blkOn);
     else if(c==='Space'&&blkOn)placeBlock();
     else if(c==='KeyV')setBlkSize(blkSize%3+1);
     else if(c==='KeyX'&&blkOn)removeBlock();
-    else if(c==='KeyN')setSound(!sndOn);
+    else if(c==='KeyN')setSound(!sndCfg.on);
     else if(c==='KeyH')help.hidden=!help.hidden;
     else if(c==='Escape')help.hidden=true;}
   if(!kbUsed){kbUsed=true;padUsed=false;document.body.classList.add('kb');setCaps()}
@@ -71,7 +71,7 @@ function getPad(){if(!navigator.getGamepads)return null;const all=navigator.getG
   if(padIdx<0||!all[padIdx])padIdx=[...all].findIndex(g=>g&&g.connected);return padIdx<0?null:all[padIdx]}
 function usePad(){if(!padUsed){padUsed=true;kbUsed=false;document.body.classList.remove('kb');setCaps()}started()}
 function padButton(i){usePad();
-  if(i===4||i===5)setMode(MODES[(MODES.indexOf(mode)+(i===5?1:2))%3]);
+  if(i===4||i===5)setMode(MODES[(MODES.indexOf(mode)+(i===5?1:MODES.length-1))%MODES.length]);
   else if(i===3)$('#camBtn').click();
   else if(i===2)hookBox();
   else if(i===0)placeBlock();
@@ -98,11 +98,11 @@ canvas.addEventListener('pointerup',dend);canvas.addEventListener('pointercancel
 canvas.addEventListener('wheel',e=>{e.preventDefault();camDist=clamp(camDist+e.deltaY*0.01,5,22)},{passive:false});
 
 function setCaps(){const m=mode,lh=kbUsed?'A D':'◀ ▶',lv=kbUsed?'W S':'▲ ▼',rh=kbUsed?'J L':'◀ ▶',rv=kbUsed?'I K':'▲ ▼';
-  $('#capL').innerHTML=m==='dig'?`<b>${lh}</b> Swing<br><b>${lv}</b> Stick out / in`:m==='drive'?`<b>${lh}</b> Turn<br><b>${lv}</b> Drive fwd / back`:`<b>${lh}</b> Steer<br><b>${lv}</b> Gas / reverse`;
-  $('#capR').innerHTML=m==='truck'?`<b>${rv}</b> Bed up / down<br>&nbsp;`:`<b>${rh}</b> Curl / dump<br><b>${rv}</b> Boom down / up`;}
-function setMode(m){if(m===mode)return;mode=m;for(const [id,k] of [['#modeDig','dig'],['#modeDrive','drive'],['#modeTruck','truck']])$(id).setAttribute('aria-pressed',m===k);
-  setCaps();firstCam=true;}
-$('#modeDig').onclick=()=>setMode('dig'); $('#modeDrive').onclick=()=>setMode('drive'); $('#modeTruck').onclick=()=>setMode('truck');
+  $('#capL').innerHTML=m==='dig'?`<b>${lh}</b> Swing<br><b>${lv}</b> Stick out / in`:m==='drive'?`<b>${lh}</b> Turn<br><b>${lv}</b> Drive fwd / back`:m==='mow'?`<b>${lv}</b> Left lap bar<br><b>${lh}</b> Spin`:`<b>${lh}</b> Steer<br><b>${lv}</b> Gas / reverse`;
+  $('#capR').innerHTML=m==='truck'?`<b>${rv}</b> Bed up / down<br>&nbsp;`:m==='mow'?`<b>${rv}</b> Right lap bar<br>&nbsp;`:`<b>${rh}</b> Curl / dump<br><b>${rv}</b> Boom down / up`;}
+function setMode(m){if(m===mode)return;mode=m;for(const [id,k] of [['#modeDig','dig'],['#modeDrive','drive'],['#modeTruck','truck'],['#modeMow','mow']])$(id).setAttribute('aria-pressed',m===k);
+  setCaps();firstCam=true;if(m==='mow'&&!lawn.nCut)toast('Mower running. Push both sticks up to drive, one up and one back to spin.','',3800)}
+$('#modeDig').onclick=()=>setMode('dig'); $('#modeDrive').onclick=()=>setMode('drive'); $('#modeTruck').onclick=()=>setMode('truck'); $('#modeMow').onclick=()=>setMode('mow');
 $('#camBtn').onclick=()=>{camMode=camMode==='chase'?'cab':'chase';$('#camBtn').textContent=camMode==='chase'?'Cab view':'Chase view'};
 let resetArm=0;
 $('#resetBtn').onclick=()=>{const b=$('#resetBtn');
@@ -111,7 +111,7 @@ $('#resetBtn').onclick=()=>{const b=$('#resetBtn');
   setTimeout(()=>{if(resetArm&&performance.now()-resetArm>=2400){resetArm=0;b.textContent='Reset';b.classList.remove('arm')}},2500);};
 const help=$('#help');
 $('#helpBtn').onclick=()=>{help.hidden=false;showMenu(false)};
-$('#soundBtn').onclick=()=>setSound(!sndOn);
+$('#soundBtn').onclick=()=>{showSound(true);showMenu(false)};
 function showMenu(on){$('#menu').hidden=!on;$('#menuBtn').setAttribute('aria-expanded',on)}
 $('#menuBtn').onclick=()=>showMenu($('#menu').hidden);
 $('#view').addEventListener('pointerdown',()=>showMenu(false));
