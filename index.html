@@ -57,6 +57,7 @@
       <button id="resetBtn">Reset</button>
       <button id="soundBtn">Sound</button>
       <button id="keysBtn">Keys</button>
+      <button id="syncBtn" hidden>Sync devices</button>
       <div class="sizes"><span>Graphics</span><button data-g="low">Low</button><button data-g="med">Med</button><button data-g="high">High</button></div>
       <div class="sizes"><span>UI size</span><button data-s="1">1x</button><button data-s="1.5">1.5x</button><button data-s="2">2x</button></div>
       <div class="sizes"><span>Dirt detail</span><button data-d="1">1x</button><button data-d="2">2x</button><button data-d="4">4x</button><button data-d="16">16x</button></div>
@@ -174,6 +175,24 @@
     <div class="row"><button id="sndDone">Done</button><button id="sndReset" class="ghost">Defaults</button></div>
   </div>
 </div>
+<div id="syncBox" hidden>
+  <div class="card">
+    <h1>Sync devices</h1>
+    <div id="syncOff">
+      <p>Play the same site on your phone and computer: the dig, the machines and the lawn.</p>
+      <button id="syncNew">Get a sync code</button>
+      <p class="devline">Already have a code from your other device? Type it here. Your other device's site replaces the one on this device.</p>
+      <div class="row"><input id="syncIn" type="text" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="12" placeholder="7Q4K-M2XP" aria-label="Sync code"><button id="syncJoin">Join</button></div>
+      <button id="syncDone2" class="ghost">Close</button>
+    </div>
+    <div id="syncOn" hidden>
+      <p>Type this code on your other device, in ☰ then Sync devices:</p>
+      <div id="syncCode" class="synccode"></div>
+      <div class="row"><button id="syncDone">Done</button><button id="syncStop" class="ghost">Stop syncing here</button></div>
+    </div>
+    <p id="syncMsg" class="devline" aria-live="polite"></p>
+  </div>
+</div>
 <div id="help">
   <div class="card">
     <h1>Corley's Island</h1>
@@ -200,13 +219,13 @@
       <dt>Look</dt><dd>Drag the scene to look around.</dd>
       <dt>Map</dt><dd>Tap the minimap or press M for the big map.</dd>
       <dt>Map editor</dt><dd>☰ menu, then Map editor (or G). The game pauses while you edit. Raise, Lower, Flatten and Smooth reshape the ground under a round brush; Dirt and Grass paint it. Paint lays a material from the library (gravel, concrete, steel plate, brick, wood and more) under a round or square brush; Natural ground clears it, and digging cuts through it. Select picks a tree, boulder or machine: drag it to move it, and turn, resize, copy or delete it on its card. Add places pine trees, leafy trees or boulders. Query reads the height, slope and surface of any spot. Roads lays out the road network: tap a road to pick it, drag its dots to move them, tap the picked road between dots to add one, or tap New road and lay one point by point. Its card sets the width, grass up the middle and grading (cut and filled to a height at each point, like the ramp) and deletes points or the road. Look moves the view: drag, pinch to zoom, twist to turn (mouse: right button turns, wheel zooms; keys WASD, Q E, R F). Undo and Redo step through your edits. The map saves on this device as you edit; Map file copies it as text to keep or share, loads a copied map, or starts over.</dd>
-      <dt>Screen</dt><dd>Tap the status card to fold it down. Speed test, Reset, Sound (on/off and volume sliders), Graphics (Low for phones, Medium for laptops, High for desktop PCs; each device remembers its own), UI size (1x, 1.5x, 2x) and Dirt detail (1x, 2x, 4x, 16x: more clods, flying dirt and lumpier loads; 16x is for screenshots and fast computers, turn it down if the game slows) are in the ☰ menu. The site is saved in this browser: the dig, the dumped dirt, the excavator, the truck and its load, the trench box, blocks and the mowing are all still there when you come back. Reset starts fresh ground.</dd>
+      <dt>Screen</dt><dd>Tap the status card to fold it down. Speed test, Reset, Sound (on/off and volume sliders), Graphics (Low for phones, Medium for laptops, High for desktop PCs; each device remembers its own), UI size (1x, 1.5x, 2x) and Dirt detail (1x, 2x, 4x, 16x: more clods, flying dirt and lumpier loads; 16x is for screenshots and fast computers, turn it down if the game slows) are in the ☰ menu. The site is saved in this browser: the dig, the dumped dirt, the excavator, the truck and its load, the trench box, blocks and the mowing are all still there when you come back. Reset starts fresh ground. To play the same site on your phone and computer, open ☰ then Sync devices: get a code on one and type it on the other.</dd>
       <dt>Controller</dt><dd>Sticks work like the two on-screen sticks. Triggers are gas and reverse when driving. LB / RB switch machine · Y cab view · A place block (in Walk mode A jumps, X places and a left stick click sprints) · D-pad up blocks on/off, left/right block size, down pick up · View map · Menu this help · B closes, or gets you in and out of machines.</dd>
       <dt>Keys</dt><dd>Every key can be changed under Keys in the ☰ menu, which also lists what each one does. The standard keys: WASD (or arrows) is always the left stick, IJKL is always the right stick, in every mode. 1 Dig · 2 Drive · 3 Truck · 4 Mow · 5 Walk (Tab cycles). Hold Shift for slow, fine moves in a machine (on foot it sprints). C cab view · M map · P pump · N sound on/off · H this help. Blocks: B on/off · E place · V size · X pick up. Walk: Space jump · Shift sprint · E place block · F get in and out.</dd>
     </dl>
     <p>To scoop: boom down until the teeth bite, curl in while pulling the stick toward you, boom up, swing, then dump.</p>
     </div>
-    <p class="buildlink"><a href="https://backhoe-dig.vercel.app/build.html" target="_blank" rel="noopener">See how long this took to build</a></p>
+    <p class="buildlink"><a href="https://corleys-island.vercel.app/build.html" target="_blank" rel="noopener">See how long this took to build</a></p>
     <p class="ver" id="verHelp"></p>
   </div>
 </div>
@@ -229,6 +248,7 @@
 <script src="js/keys.js"></script>
 <script src="js/controls.js"></script>
 <script src="js/save.js"></script>
+<script src="js/sync.js"></script>
 <script src="js/effects.js"></script>
 <script src="js/sound.js"></script>
 <script src="js/dirtsound.js"></script>

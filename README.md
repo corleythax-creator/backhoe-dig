@@ -2,9 +2,9 @@
 
 A 3D low-poly excavator game in plain HTML, CSS and JavaScript (three.js r128, no build step). Dig a 3 ft trench on a grassy mesa above a mountain lake (about 295 ft across: a high top with Lookout Knoll and West Rise, and a ramp down a 24 ft rocky scarp to the Lower Bench dirt yard), expose the gas main without hitting it, load the dump truck and haul the spoil over the cliff edge. Then mow the patch of tall grass with the zero-turn mower.
 
-- Live: https://backhoe-dig.vercel.app
-- Build time: https://backhoe-dig.vercel.app/build.html (reads `data/effort.js`)
-- Every version, playable: https://backhoe-dig.vercel.app/versions/
+- Live: https://corleys-island.vercel.app (https://backhoe-dig.vercel.app still works)
+- Build time: https://corleys-island.vercel.app/build.html (reads `data/effort.js`)
+- Every version, playable: https://corleys-island.vercel.app/versions/
 - Claude version: https://claude.ai/artifact/6nxYC5EK3422JouxaZx2DF
 
 ## Files
@@ -29,6 +29,7 @@ A 3D low-poly excavator game in plain HTML, CSS and JavaScript (three.js r128, n
 | `js/keys.js` | Key bindings: every keyboard action (`KEY_ACTIONS`), its default keys, where it works (on foot, in a machine or everywhere), the player's saved keys and the Keys panel |
 | `js/controls.js` | Game state and reset, touch sticks, keyboard, game controller, modes, menu |
 | `js/save.js` | Saves the site in the browser and loads it on start: the dug and dumped ground, groundwater, excavator, truck and load, trench box, blocks, worker (the lawn saves itself in `js/mower.js`) |
+| `js/sync.js` | Sync devices: a sync code that keeps the saves in step between phone and computer through Supabase |
 | `js/effects.js` | Shared per-frame vectors, resize |
 | `js/sound.js` | All sound, rendered in the browser: diesel engine loops, turbo, tires, air brakes, hydraulics, relief valve, tracks, bucket scrape, pouring dirt, backup alarm; stereo, distance and cliff echo; the Sound panel (on/off, Master, Engines, Backup alarm, Effects) |
 | `js/maps.js` | Minimap and big map |
@@ -89,7 +90,10 @@ Maps save on the device as you edit (`localStorage.bhd_map`). The claude.ai vers
   | `bhd_map` | Map editor edits: heights, paint, assets, roads | `js/terrain.js`, `js/editor.js` |
   | `bhd_keys` | Key bindings | `js/keys.js` |
   | `bhd_gfx`, `bhd_dirt`, `bhd_ui`, `bhd_hudmin`, `bhd_sndcfg` | Graphics, Dirt detail, UI size, folded status card, sound | `js/gfx.js`, `js/dirt.js`, `js/controls.js`, `js/sound.js` |
+  | `bhd_sync`, `bhd_sync_t`, `bhd_sync_h` | Sync code, time of the last synced save, hash of what was last sent | `js/sync.js` |
   | `bhd_seen`, `bhd_glresets` | Start card seen, graphics resets counted for the speed test | `js/controls.js`, `js/core.js` |
+
+  **Sync devices** (☰, Vercel site only) carries `bhd_site`, `bhd_rigs`, `bhd_lawn` and `bhd_map` between devices under an 8-character code, through the `island_peek`, `island_get` and `island_put` functions in Supabase (the `island_saves` table, for now in the fuel-model project; `supabase/island_sync.sql` sets it up). Pulls on open and on coming back into view, pushes every 15 s and on hide; the first save to reach the server wins.
 
   Snapshots in `versions/` prefix their keys (`bhd-vN:`) so playing an old version can't touch the live save.
 - **Updates.** The game re-reads `data/effort.js` when it comes back to the front and every 10 minutes; a newer version reloads at once if nothing is under way, otherwise it shows a tap-to-update button (`js/controls.js`).
