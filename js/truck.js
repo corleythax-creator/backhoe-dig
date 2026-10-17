@@ -1,7 +1,7 @@
 // Backhoe Dig: the dump truck and its driving, plus texture hookup once the images load.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 // ---------- dump truck ----------
-const WHITE=M(0xe9ecea),WHITE_DS=M(0xe9ecea,{side:THREE.DoubleSide}),BEDM=M(0x6c7378),BED_D=M(0x4c5257),TGLASS=new THREE.MeshPhongMaterial({color:0x5f7f93,shininess:90,flatShading:true,transparent:true,opacity:0.35,depthWrite:false}),TAIL=M(0xd0281c,{emissive:0x400804}),REV=M(0xf4f1e6,{emissive:0x202018});
+const WHITE=M(0xe9ecea,PAINT),WHITE_DS=M(0xe9ecea,Object.assign({side:THREE.DoubleSide},PAINT)),BEDM=M(0x6c7378),BED_D=M(0x4c5257),TGLASS=new THREE.MeshPhongMaterial({color:0x5f7f93,shininess:90,flatShading:true,transparent:true,opacity:0.35,depthWrite:false,envMap:skyEnv,combine:THREE.MixOperation,reflectivity:0.9}),TAIL=M(0xd0281c,{emissive:0x400804}),REV=M(0xf4f1e6,{emissive:0x202018});
 const TRUCK_CAP=10/1.308,TR_START={x:-9,z:-11.6,yaw:1.47,v:0,steer:0,bed:0,load:0,hauled:0,rollA:0,y:0,pitch:0,roll:0,gear:1,shiftT:0,aL:0,brakeOn:false,sh:0,shV:0,sp:0,spV:0,sr:0,srV:0,bumpCd:0,loadedOnce:false,fullWarned:false,haulWarned:false,bedWarned:false};
 const tr=Object.assign({},TR_START);
 const truck=new THREE.Group();truck.rotation.order='YXZ';scene.add(truck);
