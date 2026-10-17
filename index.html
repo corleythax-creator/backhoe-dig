@@ -23,7 +23,8 @@ canvas#view{position:fixed;inset:0;width:100%;height:100%;display:block;touch-ac
   --pt:calc(env(safe-area-inset-top,0px) + 8px);--pb:calc(env(safe-area-inset-bottom,0px) + 10px);
   --pl:max(10px,env(safe-area-inset-left,0px));--pr:max(10px,env(safe-area-inset-right,0px))}
 /* Status card, top left: one compact row per job; tap it to hide the detail lines */
-.status{position:absolute;top:var(--pt);left:var(--pl);width:172px;box-sizing:border-box;background:var(--hud);border:1px solid var(--hud-line);border-radius:10px;padding:7px 9px 6px;display:flex;flex-direction:column;gap:6px;pointer-events:auto;cursor:pointer}
+.top{position:absolute;top:var(--pt);left:var(--pl);right:var(--pr);display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:6px;z-index:2}
+.status{position:relative;width:172px;box-sizing:border-box;background:var(--hud);border:1px solid var(--hud-line);border-radius:10px;padding:7px 9px 6px;display:flex;flex-direction:column;gap:6px;pointer-events:auto;cursor:pointer}
 .srow{display:flex;flex-direction:column;gap:3px}
 .line{display:flex;align-items:baseline;justify-content:space-between;gap:6px}
 .lbl{font:700 12px/1 var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
@@ -43,14 +44,20 @@ button:focus-visible{outline:3px solid var(--gas);outline-offset:2px}
 button.sm{height:34px;padding:0 10px;font-size:13px}
 button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 /* Map and buttons, top right */
-.side{position:absolute;top:var(--pt);right:var(--pr);display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.side{position:relative;margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:6px}
 .side .row{flex-wrap:nowrap}
-#mini{display:block;width:96px;height:96px;border-radius:10px;border:1px solid rgba(255,255,255,.35);background:#1e2a30;pointer-events:auto;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.3)}
-/* UI size (menu): everything but the sticks zooms; the sticks grow up to what fits */
-#hud{--s:1}
-.status,.side,#toast,#benchBar,.cap,.seg{zoom:var(--s)}
-@media (orientation:portrait){#hud.lg .sticks{position:absolute}#hud.lg .seg{position:absolute;left:50%;bottom:100%;transform:translateX(-50%);flex-direction:row;margin-bottom:6px}
-  #hud.lg .seg button+button{border-top:0;border-left:1px solid var(--hud-line)}#hud.lg .stick{--sz:min(calc(124px*var(--s)),calc((100vw - 32px)/2))}}
+#mini{display:block;width:calc(96px*var(--ms));height:calc(96px*var(--ms));border-radius:10px;border:1px solid rgba(255,255,255,.35);background:#1e2a30;pointer-events:auto;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+/* UI size (menu): --s for text, --ms for the map and its buttons, --cs for stick captions; sticks grow up to what fits */
+#hud{--s:1;--ms:1;--cs:1}
+.status,#toast,#benchBar,#menu,.seg{zoom:var(--s)}
+.side .row{zoom:var(--ms)}.cap{zoom:var(--cs)}
+#menu{position:absolute;top:100%;right:0;margin-top:6px;z-index:3}
+#hud.lg .side{flex-direction:row-reverse;align-items:flex-start}
+#hud.lg .seg{flex-direction:row}#hud.lg .seg button+button{border-top:0;border-left:1px solid var(--hud-line)}
+@media (orientation:portrait){#hud.lg .seg{position:absolute;left:50%;bottom:100%;transform:translateX(-50%);margin-bottom:6px}
+  #hud.lg .stick{--sz:min(calc(124px*var(--s)),calc((100vw - 32px)/2))}}
+@media (orientation:landscape){#hud.lg .status{position:absolute;left:0;right:0;margin:0 auto}#hud.lg .status .sub,#hud.lg .status .stats{display:none}
+  #hud.lg .stick{--sz:min(calc(124px*var(--s)),calc(100vh - 96px*var(--ms) - 34px*var(--cs) - 40px))}}
 .sizes{display:flex;align-items:center;gap:4px;justify-content:flex-end;padding:2px 4px}
 .sizes span{font:700 12px/1 var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-right:4px}
 #menu .sizes button{height:32px;padding:0 8px;font-size:13px;border:1px solid var(--hud-line);text-align:center}
@@ -125,6 +132,7 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 <canvas id="view" aria-label="3D jobsite with an excavator"></canvas>
 <div id="flash"></div>
 <div id="hud">
+  <div class="top">
   <div class="status" id="status" title="Tap to show less or more">
     <div class="srow" id="bucketPanel">
       <div class="line"><span class="lbl">Bucket</span><span class="val" id="bucketVal">0.00 yd³ · 0%</span></div>
@@ -155,6 +163,7 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
       <button id="resetBtn">Reset</button>
       <div class="sizes"><span>UI size</span><button data-s="1">1x</button><button data-s="1.5">1.5x</button><button data-s="2">2x</button></div>
     </div>
+  </div>
   </div>
   <div id="benchBar" hidden></div>
   <div id="toast"><span id="toastText"></span></div>
@@ -930,7 +939,7 @@ function showMenu(on){$('#menu').hidden=!on;$('#menuBtn').setAttribute('aria-exp
 $('#menuBtn').onclick=()=>showMenu($('#menu').hidden);
 $('#view').addEventListener('pointerdown',()=>showMenu(false));
 let uiScale=1;
-function setUiScale(v){uiScale=+v||1;const h=$('#hud');h.style.setProperty('--s',uiScale);h.classList.toggle('lg',uiScale>1.2);
+function setUiScale(v){uiScale=+v||1;const h=$('#hud');h.style.setProperty('--s',uiScale);h.style.setProperty('--ms',Math.min(uiScale,1.5));h.style.setProperty('--cs',Math.min(uiScale,1.3));h.classList.toggle('lg',uiScale>1.2);
   document.querySelectorAll('.sizes button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.s===uiScale));try{localStorage.setItem('bhd_ui',uiScale)}catch(e){}}
 document.querySelectorAll('.sizes button').forEach(b=>b.onclick=()=>setUiScale(b.dataset.s));
 try{setUiScale(localStorage.getItem('bhd_ui')||1)}catch(e){setUiScale(1)}
@@ -989,7 +998,7 @@ function updateDigLayer(){
 }
 function drawMap(cv,cx,cz,half,big){
   if(!mapBg)buildMapBg();
-  const dpr=Math.min(2,devicePixelRatio||1),W=Math.round(cv.clientWidth*dpr*(cv.id==='mini'?uiScale:1));if(!W)return;
+  const dpr=Math.min(2,devicePixelRatio||1),W=Math.round(cv.clientWidth*dpr);if(!W)return;
   if(cv.width!==W){cv.width=cv.height=W}
   const g=cv.getContext('2d'),sc=W/(2*half),X=x=>(x-cx)*sc+W/2,Y=z=>(z-cz)*sc+W/2;
   g.fillStyle='#1d4f63';g.fillRect(0,0,W,W);
