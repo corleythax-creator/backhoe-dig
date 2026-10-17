@@ -53,22 +53,33 @@ const texGrass=loadTex('grass.jpg'),texDirt=loadTex('dirt.jpg'),texGrime=loadTex
 const texMixU={value:0};
 const groundMat=M(0xffffff,{vertexColors:true});
 groundMat.onBeforeCompile=sh=>{
-  sh.uniforms.tGrass={value:texGrass};sh.uniforms.tDirt={value:texDirt};sh.uniforms.texMix=texMixU;
-  sh.vertexShader='attribute float dirt;\nvarying float vDirt;\nvarying vec2 vWXZ;\n'+sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvDirt=dirt;\nvWXZ=(modelMatrix*vec4(transformed,1.0)).xz;');
-  sh.fragmentShader='uniform sampler2D tGrass;\nuniform sampler2D tDirt;\nuniform float texMix;\nvarying float vDirt;\nvarying vec2 vWXZ;\n'+sh.fragmentShader.replace('#include <color_fragment>',
-    '#include <color_fragment>\nvec3 tg=texture2D(tGrass,vWXZ*0.22).rgb/vec3(0.36,0.468,0.178);\nvec3 td=texture2D(tDirt,vWXZ*0.45).rgb/vec3(0.461,0.255,0.123);\ndiffuseColor.rgb*=mix(vec3(1.0),clamp(mix(tg,td,vDirt),0.0,2.2),0.8*texMix);');
+  sh.uniforms.tGrass={value:texGrass};sh.uniforms.tDirt={value:texDirt};sh.uniforms.texMix=texMixU;sh.uniforms.uTime=timeU;
+  // wetT: when this ground was last cut or dumped; fresh dirt shows dark and damp and dries over a few minutes
+  sh.vertexShader='attribute float dirt;\nattribute float wetT;\nuniform float uTime;\nvarying float vDirt;\nvarying float vWet;\nvarying vec2 vWXZ;\n'+sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvDirt=dirt;\nvWet=exp(-max(0.0,uTime-wetT)/100.0);\nvWXZ=(modelMatrix*vec4(transformed,1.0)).xz;');
+  sh.fragmentShader='uniform sampler2D tGrass;\nuniform sampler2D tDirt;\nuniform float texMix;\nvarying float vDirt;\nvarying float vWet;\nvarying vec2 vWXZ;\n'+sh.fragmentShader.replace('#include <specularmap_fragment>','#include <specularmap_fragment>\nspecularStrength*=1.0+7.0*vWet*vDirt;').replace('#include <color_fragment>',
+    '#include <color_fragment>\nvec3 tg=texture2D(tGrass,vWXZ*0.22).rgb/vec3(0.36,0.468,0.178);\nvec3 td=texture2D(tDirt,vWXZ*0.45).rgb/vec3(0.461,0.255,0.123);\ndiffuseColor.rgb*=mix(vec3(1.0),clamp(mix(tg,td,vDirt),0.0,2.2),0.8*texMix);\ndiffuseColor.rgb*=1.0-0.32*vWet*vDirt;');
 };
 const geo=new THREE.PlaneGeometry(S,S,N,N); geo.rotateX(-Math.PI/2);
 const colors=new Float32Array(V*V*3);
 geo.setAttribute('color',new THREE.BufferAttribute(colors,3));
 const dirtA=new Float32Array(V*V);geo.setAttribute('dirt',new THREE.BufferAttribute(dirtA,1));
+const wetT=new Float32Array(V*V).fill(-1e4);geo.setAttribute('wetT',new THREE.BufferAttribute(wetT,1));
+// sky view: for dug and dumped dirt, how high the ground rises around it (8 directions, about 1 ft and 3 ft out)
+// darkens trench floors and lower walls, since the ground casts no shadows on itself
+const AO_S=[],AO_R=Math.round(0.95/CELL);
+for(const [di,dj] of [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]])for(const rc of [Math.round(0.33/CELL),AO_R])AO_S.push(di*rc,dj*rc,rc*CELL*Math.hypot(di,dj));
+function skyOcc(k,h){const i=k%V,j=(k/V)|0;let occ=0;
+  for(let n=0;n<AO_S.length;n+=6){let s=0;
+    for(let q=n;q<n+6;q+=3){const ii=i+AO_S[q],jj=j+AO_S[q+1];if(ii<0||ii>N||jj<0||jj>N)continue;const e=(H[jj*V+ii]-h)/AO_S[q+2];if(e>s)s=e}
+    occ+=Math.atan(s)}
+  return occ/(8*1.5708)}
 const terrain=new THREE.Mesh(geo,groundMat);
 terrain.receiveShadow=true; terrain.frustumCulled=false; scene.add(terrain);
 const pos=geo.attributes.position;
 let dI0=0,dI1=N,dJ0=0,dJ1=N,winOn=true;
 function touch(i0,i1,j0,j1){if(!winOn){dI0=i0;dI1=i1;dJ0=j0;dJ1=j1;winOn=true}else{dI0=Math.min(dI0,i0);dI1=Math.max(dI1,i1);dJ0=Math.min(dJ0,j0);dJ1=Math.max(dJ1,j1)}}
 function updateTerrain(){
-  const p=pos.array,ja=Math.max(0,dJ0-1),jb=Math.min(N,dJ1+1);
+  const p=pos.array,ja=Math.max(0,dJ0-1-AO_R),jb=Math.min(N,dJ1+1+AO_R);
   for(let k=ja*V;k<(jb+1)*V;k++){
     const h=H[k],d=h-H0[k],ad=Math.abs(d);
     p[k*3+1]=h;
@@ -79,7 +90,7 @@ function updateTerrain(){
       let dr,dg,db;
       if(d<0){const c=SOIL[layerAt((k%V)*CELL-S/2,((k/V)|0)*CELL-S/2,-d,nz[k])].c,sh=1-0.12*ss(0.3,2.5,-d);dr=c[0]*sh;dg=c[1]*sh;db=c[2]*sh}
       else{dr=spoilC[k*3];dg=spoilC[k*3+1];db=spoilC[k*3+2]}
-      const cn=0.82+0.34*nz[k];dr*=cn;dg*=cn;db*=cn;
+      const cn=(0.82+0.34*nz[k])*(1-0.7*skyOcc(k,h));dr*=cn;dg*=cn;db*=cn;
       r+=(dr-r)*t;g+=(dg-g)*t;b+=(db-b)*t;
     }
     colors[k*3]=r;colors[k*3+1]=g;colors[k*3+2]=b;
@@ -88,6 +99,7 @@ function updateTerrain(){
   pos.updateRange.offset=off;pos.updateRange.count=cnt;
   const ca=geo.attributes.color;ca.updateRange.offset=off;ca.updateRange.count=cnt;
   const da=geo.attributes.dirt;da.updateRange.offset=off/3;da.updateRange.count=cnt/3;da.needsUpdate=true;
+  const wa=geo.attributes.wetT;wa.updateRange.offset=off/3;wa.updateRange.count=cnt/3;wa.needsUpdate=true;
   pos.needsUpdate=true; ca.needsUpdate=true;
   snapClods(ja,jb);
 }
@@ -126,11 +138,11 @@ function matColor(k,m){return m===SPOIL?[spoilC[k*3],spoilC[k*3+1],spoilC[k*3+2]
 // blend material of colour c and height a into the loose fill on vertex k
 function mixSpoil(k,c,a){const above=H[k]-H0[k];if(above<=0||a<=0)return;const f=Math.min(1,a/above);
   for(let q=0;q<3;q++)spoilC[k*3+q]+=(c[q]-spoilC[k*3+q])*f}
-const digC=[0,0,0];
+const digC=[0,0,0],digMix=[0,1,0,0];
 // grid box holding every hole dug so far, scanned for walls that could cave in
 let cI0=N+1,cI1=-1,cJ0=N+1,cJ1=-1;
 function dig(tip,cap){
-  const r=0.55,list=[];let vol=0,cr=0,cg=0,cb=0;
+  const r=0.55,list=[],vk=[0,0,0,0];let vol=0,cr=0,cg=0,cb=0;
   const i0=Math.max(0,Math.floor((tip.x-r+S/2)/CELL)),i1=Math.min(N,Math.ceil((tip.x+r+S/2)/CELL));
   const j0=Math.max(0,Math.floor((tip.z-r+S/2)/CELL)),j1=Math.min(N,Math.ceil((tip.z+r+S/2)/CELL));
   for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){
@@ -139,18 +151,18 @@ function dig(tip,cap){
     const k=j*V+i;
     const t=Math.max(tip.y+(d/r)*(d/r)*0.35,H0[k]-FLOOR);
     const dh=H[k]-t;
-    if(dh>0){const m=matAt(k,H[k]-dh/2),c=matColor(k,m),v=dh*CA*SOIL[m].sw;list.push(k,dh);vol+=v;cr+=c[0]*v;cg+=c[1]*v;cb+=c[2]*v}
+    if(dh>0){const y=H[k]-dh/2,m=matAt(k,y),c=matColor(k,m),v=dh*CA*SOIL[m].sw,ck=clodKind(m,H0[k]-y);list.push(k,dh);vol+=v;cr+=c[0]*v;cg+=c[1]*v;cb+=c[2]*v;if(ck>=0)vk[ck]+=v}
   }
   if(vol<=0)return 0;
   touch(i0,i1,j0,j1);
   const s=Math.min(1,cap/vol);
-  for(let n=0;n<list.length;n+=2)H[list[n]]-=list[n+1]*s;
-  digC[0]=cr/vol;digC[1]=cg/vol;digC[2]=cb/vol;
+  for(let n=0;n<list.length;n+=2){H[list[n]]-=list[n+1]*s;wetT[list[n]]=timeU.value}
+  digC[0]=cr/vol;digC[1]=cg/vol;digC[2]=cb/vol;for(let q=0;q<4;q++)digMix[q]=vk[q]/vol;
   const mg=3*GRID_K;cI0=Math.max(0,Math.min(cI0,i0-mg));cI1=Math.min(N,Math.max(cI1,i1+mg));cJ0=Math.max(0,Math.min(cJ0,j0-mg));cJ1=Math.min(N,Math.max(cJ1,j1+mg));
-  clodsDug(tip.x,tip.z,r);dropClods(tip.x,tip.z,0.75,vol*s*60*DIRT,digC);
+  clodsDug(tip.x,tip.z,r);dropMix(tip.x,tip.z,0.75,vol*s*DIRT,digMix,digC,'bite');
   return vol*s;
 }
-function deposit(x,z,vol,col){
+function deposit(x,z,vol,col,mix){
   const r=0.9,list=[];let sum=0;
   const i0=Math.max(0,Math.floor((x-r+S/2)/CELL)),i1=Math.min(N,Math.ceil((x+r+S/2)/CELL));
   const j0=Math.max(0,Math.floor((z-r+S/2)/CELL)),j1=Math.min(N,Math.ceil((z+r+S/2)/CELL));
@@ -160,8 +172,8 @@ function deposit(x,z,vol,col){
   }
   if(!sum)return;
   touch(i0,i1,j0,j1);
-  for(let n=0;n<list.length;n+=2){const k=list[n],a=vol*list[n+1]/sum/CA;H[k]+=a;mixSpoil(k,col||SOIL[SPOIL].c,a)}
-  dropClods(x,z,r,vol*150*DIRT,col||SOIL[SPOIL].c);
+  for(let n=0;n<list.length;n+=2){const k=list[n],a=vol*list[n+1]/sum/CA;H[k]+=a;mixSpoil(k,col||SOIL[SPOIL].c,a);if(a>0.002)wetT[k]=timeU.value}
+  dropMix(x,z,r,vol*DIRT,mix||CRUMB_MIX,col||SOIL[SPOIL].c,'dump');
 }
 // each layer holds its own slope: sand runs, clay stands steep, rock barely moves; what slides keeps its colour as loose fill
 const RP_MIN=0.62*CELL,M0=1.1*CELL;
@@ -204,7 +216,7 @@ function collapse(k,sur){
     if(i<i1)slumpPair(kk,kk+1,true);if(j<j1)slumpPair(kk,kk+V,true)}
   touch(i0,i1,j0,j1);st.dirty=true;st.slumpT=2.5;st.caves++;
   const p=new THREE.Vector3(ci*CELL-S/2,H[k]+0.1,cj*CELL-S/2);for(let n=0;n<40;n++)spawn(p,1.6);
-  dropClods(p.x,p.z,1.4,60*DIRT,matColor(k,matAt(k,H[k]-0.05)),1.4);
+  {const m=matAt(k,H[k]-0.05),ck=clodKind(m,H0[k]-H[k]+0.05);dropClods(ck,p.x,p.z,1.4,60*DIRT,ck===CRUMB?matColor(k,m):KIND_COL[Math.max(0,ck)],ck===SOD?1:1.4)}
   shake=reduceMotion?0:0.35;rumble(500,0.8);
   toast(sur?'Cave-in! Spoil too close to the edge. Keep piles 2 ft back.':'Cave-in! Walls past 5 ft deep need a slope or a trench box.','bad',3600);
 }

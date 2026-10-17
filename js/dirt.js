@@ -11,46 +11,80 @@ function lumpGeo(detail,amp,seed){const g=new THREE.IcosahedronGeometry(1,detail
   g.computeVertexNormals();return g}
 
 // ---------- clods ----------
-// a ring buffer of instanced clods; each sits on the ground under it and hides once that ground is back to grade
-const CLOD_BASE=4000,clodMat=M(0xffffff);
-let clods=null,cX,cZ,cS,cR,cN=0,cHead=0,clodAcc=0;
+// each soil breaks its own way: the top few inches of topsoil come up as sod with grass on it, deeper topsoil and loose
+// fill as crumbs, clay as blocky lumps, rock as sharp pieces, and sand runs without clods. Each kind is a ring buffer of
+// instanced clods that sit on the ground under them and hide once that ground is back to grade.
+const SOD=0,CRUMB=1,CLAY=2,ROCK=3,CRUMB_MIX=[0,1,0,0];
+// clod kind for soil m dug at depth d below grade (-1: sand, no clods)
+function clodKind(m,d){return m===0?(d<0.12?SOD:CRUMB):m===1?CLAY:m===2?-1:m===3?ROCK:CRUMB}
+// a geometry with every vertex moved by a function of its position (so shared corners stay shared) and flat normals
+function warpGeo(g,f){g=g.index?g.toNonIndexed():g;const p=g.attributes.position;
+  for(let i=0;i<p.count;i++){const v=f(p.getX(i),p.getY(i),p.getZ(i));p.setXYZ(i,v[0],v[1],v[2])}g.computeVertexNormals();return g}
+const jit=(x,y,z,a)=>a*Math.sin(x*12.9+y*78.2+z*37.7)*0.5;
+function colorGeo(g,fn){const p=g.attributes.position,c=new Float32Array(p.count*3);
+  for(let i=0;i<p.count;i++){const col=fn(p.getX(i),p.getY(i),p.getZ(i));c.set(col,i*3)}g.setAttribute('color',new THREE.BufferAttribute(c,3));return g}
+function joinGeo(list){let n=0;for(const g of list)n+=g.attributes.position.count;
+  const P=new Float32Array(n*3),Nn=new Float32Array(n*3),C=new Float32Array(n*3);let o=0;
+  for(const g of list){P.set(g.attributes.position.array,o*3);Nn.set(g.attributes.normal.array,o*3);C.set(g.attributes.color.array,o*3);o+=g.attributes.position.count}
+  const m=new THREE.BufferGeometry();m.setAttribute('position',new THREE.BufferAttribute(P,3));m.setAttribute('normal',new THREE.BufferAttribute(Nn,3));m.setAttribute('color',new THREE.BufferAttribute(C,3));return m}
+// sod: a flat lump of dark topsoil with a mat of grass blades on top (vertex coloured, so instances tint it lightly)
+function sodGeo(){
+  const base=colorGeo(warpGeo(new THREE.IcosahedronGeometry(1,0),(x,y,z)=>{const n=1+0.25*Math.sin(x*3.1+z*4.7);return [x*n,Math.min(y,0.35)*0.5*n,z*n]}),
+    (x,y)=>y>0.15?[0.24,0.34,0.15]:[0.30,0.21,0.13]);
+  const bp=[];for(let b=0;b<9;b++){const a=b*2.4,r=0.25+0.45*((b*0.37)%1),x=Math.cos(a)*r,z=Math.sin(a)*r,w=0.09,h=0.35+0.25*((b*0.61)%1),c=Math.cos(a+1),s=Math.sin(a+1);
+    bp.push(x-c*w,0.16,z-s*w, x+c*w,0.16,z+s*w, x+0.08,0.16+h,z+0.05)}
+  const blades=new THREE.BufferGeometry();blades.setAttribute('position',new THREE.Float32BufferAttribute(bp,3));blades.computeVertexNormals();
+  colorGeo(blades,(x,y)=>y>0.3?[0.36,0.56,0.25]:[0.28,0.46,0.2]);
+  return joinGeo([base,blades])}
+const CLODS=[
+  {geo:sodGeo,mat:M(0xffffff,{vertexColors:true,side:THREE.DoubleSide}),pool:500,s:[0.12,0.22],dump:70,bite:20,flat:true},
+  {geo:()=>lumpGeo(0,0.3,1.7),mat:M(0xffffff),pool:4000,s:[0.03,0.11],dump:150,bite:60},
+  {geo:()=>warpGeo(new THREE.BoxGeometry(1,0.7,0.9,2,1,2),(x,y,z)=>[x+jit(x,y,z,0.35),y+jit(z,x,y,0.3),z+jit(y,z,x,0.35)]),mat:M(0xffffff),pool:1200,s:[0.06,0.17],dump:45,bite:12},
+  {geo:()=>warpGeo(new THREE.DodecahedronGeometry(1,0),(x,y,z)=>{const n=1+jit(x,y,z,0.6);return [x*n,y*n*0.7,z*n]}),mat:M(0xffffff,{shininess:20}),pool:500,s:[0.04,0.12],dump:60,bite:30}];
+const KIND_COL=[[1,1,1],null,SOIL[1].c,SOIL[3].c];
+let clodAcc=[0,0,0,0];
 function buildClods(){
-  if(clods){scene.remove(clods);clods.geometry.dispose()}
-  const n=CLOD_BASE*DIRT;
-  clods=new THREE.InstancedMesh(lumpGeo(0,0.3,1.7),clodMat,n);clods.receiveShadow=true;clods.frustumCulled=false;scene.add(clods);
-  cX=new Float32Array(n);cZ=new Float32Array(n);cS=new Float32Array(n);cR=new Float32Array(n);
-  for(let i=0;i<n;i++){clods.setMatrixAt(i,ZERO);clods.setColorAt(i,dCol.setRGB(0.5,0.35,0.2))}
+  for(const k of CLODS){
+    if(k.mesh){scene.remove(k.mesh);k.mesh.geometry.dispose()}
+    const n=k.pool*DIRT;k.mesh=new THREE.InstancedMesh(k.geo(),k.mat,n);k.mesh.receiveShadow=true;k.mesh.frustumCulled=false;scene.add(k.mesh);
+    k.x=new Float32Array(n);k.z=new Float32Array(n);k.sz=new Float32Array(n);k.r=new Float32Array(n);
+    for(let i=0;i<n;i++){k.mesh.setMatrixAt(i,ZERO);k.mesh.setColorAt(i,dCol.setRGB(1,1,1))}
+  }
   clearClods();
 }
-function clearClods(){cN=0;cHead=0;clodAcc=0;if(clods)clods.count=0}
-function placeClod(i){
-  const x=cX[i],z=cZ[i],s=cS[i],k=Math.round((z+S/2)/CELL)*V+Math.round((x+S/2)/CELL);
-  if(!s||Math.abs(H[k]-H0[k])<0.02){clods.setMatrixAt(i,ZERO);return}
-  dO.position.set(x,hAt(x,z)+s*0.25,z);dO.rotation.set(cR[i]*0.7,cR[i],cR[i]*1.3);dO.scale.set(s,s*0.75,s*1.1);dO.updateMatrix();
-  clods.setMatrixAt(i,dO.matrix);
+function clearClods(){for(const k of CLODS){k.n=0;k.head=0;if(k.mesh)k.mesh.count=0}clodAcc=[0,0,0,0]}
+function placeClod(k,i){
+  const x=k.x[i],z=k.z[i],s=k.sz[i],g=Math.round((z+S/2)/CELL)*V+Math.round((x+S/2)/CELL);
+  if(!s||Math.abs(H[g]-H0[g])<0.02){k.mesh.setMatrixAt(i,ZERO);return}
+  const r=k.r[i];dO.position.set(x,hAt(x,z)+s*(k.flat?0.1:0.25),z);
+  // sod mostly lands grass up; about one in four flips
+  if(k.flat)dO.rotation.set((r%1)<0.25?Math.PI+r*0.2:r*0.25-0.4,r*7,r*0.3-0.2);else dO.rotation.set(r*0.7,r,r*1.3);
+  dO.scale.set(s,s*0.75,s*1.1);dO.updateMatrix();k.mesh.setMatrixAt(i,dO.matrix);
 }
-function addClod(x,z,size,c){
+function addClod(kind,x,z,size,c){
   if(Math.abs(x)>S/2-0.2||Math.abs(z)>S/2-0.2)return;
-  const i=cHead;cHead=(cHead+1)%cX.length;if(cN<cX.length)cN++;
-  cX[i]=x;cZ[i]=z;cS[i]=size;cR[i]=Math.random()*6.283;
-  const v=0.7+0.42*Math.random();clods.setColorAt(i,dCol.setRGB(c[0]*v,c[1]*v,c[2]*v));clods.instanceColor.needsUpdate=true;
-  placeClod(i);clods.count=cN;clods.instanceMatrix.needsUpdate=true;
+  const k=CLODS[kind],i=k.head;k.head=(k.head+1)%k.x.length;if(k.n<k.x.length)k.n++;
+  k.x[i]=x;k.z[i]=z;k.sz[i]=size;k.r[i]=Math.random()*6.283;
+  const v=kind===SOD?0.85+0.25*Math.random():0.7+0.42*Math.random();k.mesh.setColorAt(i,dCol.setRGB(c[0]*v,c[1]*v,c[2]*v));k.mesh.instanceColor.needsUpdate=true;
+  placeClod(k,i);k.mesh.count=k.n;k.mesh.instanceMatrix.needsUpdate=true;
 }
-// n clods (fractions carry over) scattered within r of x,z; big scales their size
-function dropClods(x,z,r,n,c,big){
-  clodAcc+=n;
-  while(clodAcc>=1){clodAcc--;const a=Math.random()*6.283,d=r*Math.sqrt(Math.random())*0.9;
-    addClod(x+Math.cos(a)*d,z+Math.sin(a)*d,(0.03+Math.random()*0.08)*(big||1),c)}
+// n clods of one kind (fractions carry over) scattered within r of x,z; big scales their size
+function dropClods(kind,x,z,r,n,c,big){
+  if(kind<0)return;const k=CLODS[kind];clodAcc[kind]+=n;
+  while(clodAcc[kind]>=1){clodAcc[kind]--;const a=Math.random()*6.283,d=r*Math.sqrt(Math.random())*0.9;
+    addClod(kind,x+Math.cos(a)*d,z+Math.sin(a)*d,(k.s[0]+Math.random()*(k.s[1]-k.s[0]))*(big||1),c)}
 }
+// clods for a volume v of dirt whose make-up is mix (shares of sod, crumb, clay, rock; the rest is sand); crumbs take col
+function dropMix(x,z,r,v,mix,col,rate){for(let q=0;q<4;q++)if(mix[q]>0.001)dropClods(q,x,z,r,v*mix[q]*CLODS[q][rate],q===CRUMB?col:KIND_COL[q])}
 // the bucket takes the clods it digs through
-function clodsDug(x,z,r){let any=false;
-  for(let i=0;i<cN;i++){if(!cS[i])continue;const dx=cX[i]-x,dz=cZ[i]-z;if(dx*dx+dz*dz<r*r){cS[i]=0;clods.setMatrixAt(i,ZERO);any=true}}
-  if(any)clods.instanceMatrix.needsUpdate=true}
+function clodsDug(x,z,r){for(const k of CLODS){let any=false;
+  for(let i=0;i<k.n;i++){if(!k.sz[i])continue;const dx=k.x[i]-x,dz=k.z[i]-z;if(dx*dx+dz*dz<r*r){k.sz[i]=0;k.mesh.setMatrixAt(i,ZERO);any=true}}
+  if(any)k.mesh.instanceMatrix.needsUpdate=true}}
 // after the ground under rows ja..jb changes, set those clods back on it
-function snapClods(ja,jb){if(!cN)return;
-  const z0=ja*CELL-S/2-CELL,z1=jb*CELL-S/2+CELL;let any=false;
-  for(let i=0;i<cN;i++){const z=cZ[i];if(z<z0||z>z1)continue;placeClod(i);any=true}
-  if(any)clods.instanceMatrix.needsUpdate=true}
+function snapClods(ja,jb){const z0=ja*CELL-S/2-CELL,z1=jb*CELL-S/2+CELL;
+  for(const k of CLODS){if(!k.n)continue;let any=false;
+    for(let i=0;i<k.n;i++){const z=k.z[i];if(z<z0||z>z1)continue;placeClod(k,i);any=true}
+    if(any)k.mesh.instanceMatrix.needsUpdate=true}}
 
 // ---------- flying dirt ----------
 // only live particles are drawn (packed to the front each frame); a third of those that land become clods
@@ -72,7 +106,7 @@ function particlesTick(dt){
     if(inBed(pp)&&tl.y<heapTop()){p.on=false;continue}
     if(pp.y<hAt(pp.x,pp.z)){p.on=false;
       if(Math.random()<0.35){const k=Math.round((pp.z+S/2)/CELL)*V+Math.round((pp.x+S/2)/CELL);
-        if(k>=0&&k<V*V)addClod(pp.x,pp.z,0.02+Math.random()*0.04,matColor(k,matAt(k,H[k]-0.01)))}
+        if(k>=0&&k<V*V){const m=matAt(k,H[k]-0.01);if(m!==2)addClod(CRUMB,pp.x,pp.z,0.02+Math.random()*0.04,matColor(k,m))}}
       continue}
     p.m.rotation.x+=dt*4;p.m.updateMatrix();pInst.setMatrixAt(n++,p.m.matrix)}
   pInst.count=n;if(n)pInst.instanceMatrix.needsUpdate=true;
@@ -90,7 +124,7 @@ function heapGeometry(){const k=Math.sqrt(DIRT),g=new THREE.BoxGeometry(2.1,1,4.
 let heapClods=null,hcU,hcV,hcS,hcT,hcLast=-1;
 function buildHeapClods(){
   if(heapClods){bedG.remove(heapClods);heapClods.geometry.dispose()}
-  const n=200*DIRT;heapClods=new THREE.InstancedMesh(lumpGeo(0,0.3,4.2),clodMat,n);heapClods.frustumCulled=false;bedG.add(heapClods);
+  const n=200*DIRT;heapClods=new THREE.InstancedMesh(lumpGeo(0,0.3,4.2),CLODS[CRUMB].mat,n);heapClods.frustumCulled=false;bedG.add(heapClods);
   hcU=new Float32Array(n);hcV=new Float32Array(n);hcS=new Float32Array(n);hcT=new Float32Array(n);
   for(let i=0;i<n;i++){let u,v;do{u=(Math.random()*2-1)*1.0;v=(Math.random()*2-1)*2.0}while(Math.max(Math.abs(u)/1.05,Math.abs(v)/2.05)>0.92);
     hcU[i]=u;hcV[i]=v;hcS[i]=0.04+Math.random()*0.09;hcT[i]=Math.random();heapClods.setColorAt(i,dCol.setRGB(0.5,0.35,0.2))}

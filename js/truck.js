@@ -158,7 +158,7 @@ function updateTruck(dt,thr,steerIn,bedIn){
   if(tr.bed>0.32&&tr.load>0.0005){
     const out=Math.min(tr.load,(tr.bed-0.32)*3.2*dt);tr.load-=out;if(tr.load<0.0005)tr.load=0;
     truck.localToWorld(tv.set(0,0.3,-4.3));
-    if(mesaR(tv.x,tv.z)<EDGE-1.2&&Math.abs(tv.x)<S/2-0.8&&Math.abs(tv.z)<S/2-0.8){deposit(tv.x,tv.z,out,tr.loadC);st.dirty=true;st.slumpT=2.5}
+    if(mesaR(tv.x,tv.z)<EDGE-1.2&&Math.abs(tv.x)<S/2-0.8&&Math.abs(tv.z)<S/2-0.8){deposit(tv.x,tv.z,out,tr.loadC,tr.loadMix);st.dirty=true;st.slumpT=2.5}
     else{tr.hauled+=out;if(!tr.haulWarned&&tr.load<=0){tr.haulWarned=true;toast('Load hauled off site.','good')}}
     bedG.localToWorld(tv.set(0,0.4,0.2));for(let n=0;n<Math.ceil(out*40);n++)spawn(tv,1.2);
   }
