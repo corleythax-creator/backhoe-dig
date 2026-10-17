@@ -1,7 +1,7 @@
 // Backhoe Dig build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Backhoe Dig",
- "updated": "2026-10-17T05:52:00Z",
+ "updated": "2026-10-17T06:39:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 133,
-   "act": 1.5,
-   "versions": 11
+   "dh": 136,
+   "act": 2.0,
+   "versions": 12
   }
  ],
  "extra": [
@@ -192,6 +192,15 @@ window.EFFORT = {
    "tris": 490576,
    "chars": 89963,
    "what": "Compact HUD: small status card (tap to fold), map and menu top right, smaller sticks with the mode switch between them."
+  },
+  {
+   "v": 19,
+   "asked": "2026-10-17T01:00:00-05:00",
+   "live": "2026-10-17T01:39:00-05:00",
+   "dh": 3,
+   "tris": 490576,
+   "chars": 92332,
+   "what": "UI size option in the menu (1x, 1.5x, 2x); the HUD reflows to fit at the larger sizes."
   }
  ]
 };
