@@ -46,17 +46,26 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 .side{position:absolute;top:var(--pt);right:var(--pr);display:flex;flex-direction:column;align-items:flex-end;gap:6px}
 .side .row{flex-wrap:nowrap}
 #mini{display:block;width:96px;height:96px;border-radius:10px;border:1px solid rgba(255,255,255,.35);background:#1e2a30;pointer-events:auto;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+/* UI size (menu): everything but the sticks zooms; the sticks grow up to what fits */
+#hud{--s:1}
+.status,.side,#toast,#benchBar,.cap,.seg{zoom:var(--s)}
+@media (orientation:portrait){#hud.lg .sticks{position:absolute}#hud.lg .seg{position:absolute;left:50%;bottom:100%;transform:translateX(-50%);flex-direction:row;margin-bottom:6px}
+  #hud.lg .seg button+button{border-top:0;border-left:1px solid var(--hud-line)}#hud.lg .stick{--sz:min(calc(124px*var(--s)),calc((100vw - 32px)/2))}}
+.sizes{display:flex;align-items:center;gap:4px;justify-content:flex-end;padding:2px 4px}
+.sizes span{font:700 12px/1 var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-right:4px}
+#menu .sizes button{height:32px;padding:0 8px;font-size:13px;border:1px solid var(--hud-line);text-align:center}
+#menu .sizes button[aria-pressed="true"]{background:var(--machine);color:#1c1309}
 #menu{display:flex;flex-direction:column;gap:4px;background:var(--hud);border:1px solid var(--hud-line);border-radius:10px;padding:5px}
 #menu button{height:38px;font-size:14px;border:0;background:transparent;text-align:right}
 #resetBtn.arm{background:var(--danger);color:#fff}
 /* Sticks in the thumb zones, the mode switch stacked between them */
 .sticks{position:absolute;left:var(--pl);right:var(--pr);bottom:var(--pb);display:flex;justify-content:space-between;align-items:flex-end;gap:8px}
 .stickwrap{display:flex;flex-direction:column;align-items:center;gap:6px}
-.stick{width:124px;height:124px;border-radius:50%;background:rgba(20,23,19,.38);border:2px solid rgba(255,255,255,.28);position:relative;pointer-events:auto;touch-action:none}
+.stick{--sz:min(calc(124px*var(--s)),calc((100vw - 40px)/2),calc(100vh - 150px*var(--s)));width:var(--sz);height:var(--sz);border-radius:50%;background:rgba(20,23,19,.38);border:2px solid rgba(255,255,255,.28);position:relative;pointer-events:auto;touch-action:none}
 .stick::before,.stick::after{content:"";position:absolute;background:rgba(255,255,255,.16)}
 .stick::before{left:50%;top:12px;bottom:12px;width:2px;margin-left:-1px}
 .stick::after{top:50%;left:12px;right:12px;height:2px;margin-top:-1px}
-.knob{position:absolute;left:50%;top:50%;width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:50%;background:var(--machine);box-shadow:0 3px 0 rgba(0,0,0,.35);z-index:1}
+.knob{position:absolute;left:50%;top:50%;width:42%;height:42%;margin:-21% 0 0 -21%;border-radius:50%;background:var(--machine);box-shadow:0 3px 0 rgba(0,0,0,.35);z-index:1}
 .cap{font:600 12px/1.3 var(--f-display);color:var(--ink);text-shadow:0 1px 2px rgba(0,0,0,.9);text-align:center;letter-spacing:.03em;white-space:nowrap;opacity:.9}
 .cap b{color:var(--machine);font-weight:800}
 .seg{display:flex;flex-direction:column;border-radius:10px;overflow:hidden;border:1px solid var(--hud-line);pointer-events:auto;margin-bottom:10px}
@@ -144,6 +153,7 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
       <button id="helpBtn">How to play</button>
       <button id="benchBtn">Speed test</button>
       <button id="resetBtn">Reset</button>
+      <div class="sizes"><span>UI size</span><button data-s="1">1x</button><button data-s="1.5">1.5x</button><button data-s="2">2x</button></div>
     </div>
   </div>
   <div id="benchBar" hidden></div>
@@ -200,7 +210,7 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
       <dt>Truck</dt><dd>Swing a full bucket over the truck bed and dump. Tap Truck to drive it: left stick steers and gives gas, right stick raises the bed. Back up to the cliff edge and dump it over to haul it off.</dd>
       <dt>Look</dt><dd>Drag the scene to look around.</dd>
       <dt>Map</dt><dd>Tap the minimap or press M for the big map.</dd>
-      <dt>Screen</dt><dd>Tap the status card to fold it down. Speed test and Reset are in the ☰ menu.</dd>
+      <dt>Screen</dt><dd>Tap the status card to fold it down. Speed test, Reset and UI size (1x, 1.5x, 2x) are in the ☰ menu.</dd>
       <dt>Keys</dt><dd>Dig: A/D swing · W/S stick · I/K boom · J/L bucket. Drive or Truck: WASD or arrows to drive, I/K raises the truck bed.</dd>
     </dl>
     <p>To scoop: boom down until the teeth bite, curl in while pulling the stick toward you, boom up, swing, then dump.</p>
@@ -919,6 +929,11 @@ $('#helpBtn').onclick=()=>{help.hidden=false;showMenu(false)};
 function showMenu(on){$('#menu').hidden=!on;$('#menuBtn').setAttribute('aria-expanded',on)}
 $('#menuBtn').onclick=()=>showMenu($('#menu').hidden);
 $('#view').addEventListener('pointerdown',()=>showMenu(false));
+let uiScale=1;
+function setUiScale(v){uiScale=+v||1;const h=$('#hud');h.style.setProperty('--s',uiScale);h.classList.toggle('lg',uiScale>1.2);
+  document.querySelectorAll('.sizes button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.s===uiScale));try{localStorage.setItem('bhd_ui',uiScale)}catch(e){}}
+document.querySelectorAll('.sizes button').forEach(b=>b.onclick=()=>setUiScale(b.dataset.s));
+try{setUiScale(localStorage.getItem('bhd_ui')||1)}catch(e){setUiScale(1)}
 const statusEl=$('#status');try{statusEl.classList.toggle('min',localStorage.getItem('bhd_hudmin')==='1')}catch(e){}
 statusEl.onclick=()=>{const m=statusEl.classList.toggle('min');try{localStorage.setItem('bhd_hudmin',m?'1':'0')}catch(e){}};
 $('#startBtn').onclick=()=>{help.hidden=true;try{localStorage.setItem('bhd_seen','1')}catch(e){}};
@@ -974,7 +989,7 @@ function updateDigLayer(){
 }
 function drawMap(cv,cx,cz,half,big){
   if(!mapBg)buildMapBg();
-  const dpr=Math.min(2,devicePixelRatio||1),W=Math.round(cv.clientWidth*dpr);if(!W)return;
+  const dpr=Math.min(2,devicePixelRatio||1),W=Math.round(cv.clientWidth*dpr*(cv.id==='mini'?uiScale:1));if(!W)return;
   if(cv.width!==W){cv.width=cv.height=W}
   const g=cv.getContext('2d'),sc=W/(2*half),X=x=>(x-cx)*sc+W/2,Y=z=>(z-cz)*sc+W/2;
   g.fillStyle='#1d4f63';g.fillRect(0,0,W,W);
