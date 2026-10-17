@@ -49,20 +49,20 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 #mini{display:block;width:calc(96px*var(--ms));height:calc(96px*var(--ms));border-radius:10px;border:1px solid rgba(255,255,255,.35);background:#1e2a30;pointer-events:auto;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.3)}
 /* UI size (menu): --s for text, --ms for the map and its buttons, --cs for stick captions; sticks grow up to what fits */
 #hud{--s:1;--ms:1;--cs:1}
-.status,#toast,#benchBar,#menu,.seg{zoom:var(--s)}
-.side .row{zoom:var(--ms)}.cap{zoom:var(--cs)}
+.status,#toast,#benchBar,.seg{zoom:var(--s)}
+.side .row,#menu{zoom:var(--ms)}.cap{zoom:var(--cs)}
 #menu{position:absolute;top:100%;right:0;margin-top:6px;z-index:3}
 #hud.lg .side{flex-direction:row-reverse;align-items:flex-start}
 #hud.lg .seg{flex-direction:row}#hud.lg .seg button+button{border-top:0;border-left:1px solid var(--hud-line)}
 @media (orientation:portrait){#hud.lg .seg{position:absolute;left:50%;bottom:100%;transform:translateX(-50%);margin-bottom:6px}
   #hud.lg .stick{--sz:min(calc(124px*var(--s)),calc((100vw - 32px)/2))}}
-@media (orientation:landscape){#hud.lg .status{position:absolute;left:0;right:0;margin:0 auto}#hud.lg .status .sub,#hud.lg .status .stats{display:none}
+@media (orientation:landscape){#hud.lg .status .sub,#hud.lg .status .stats{display:none}
   #hud.lg .stick{--sz:min(calc(124px*var(--s)),calc(100vh - 96px*var(--ms) - 34px*var(--cs) - 40px))}}
 .sizes{display:flex;align-items:center;gap:4px;justify-content:flex-end;padding:2px 4px}
-.sizes span{font:700 12px/1 var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-right:4px}
+.sizes span{white-space:nowrap;font:700 12px/1 var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-right:4px}
 #menu .sizes button{height:32px;padding:0 8px;font-size:13px;border:1px solid var(--hud-line);text-align:center}
 #menu .sizes button[aria-pressed="true"]{background:var(--machine);color:#1c1309}
-#menu{display:flex;flex-direction:column;gap:4px;background:var(--hud);border:1px solid var(--hud-line);border-radius:10px;padding:5px}
+#menu{display:flex;flex-direction:column;gap:4px;background:#1d211b;box-shadow:0 4px 14px rgba(0,0,0,.45);border:1px solid var(--hud-line);border-radius:10px;padding:5px}
 #menu button{height:38px;font-size:14px;border:0;background:transparent;text-align:right}
 #resetBtn.arm{background:var(--danger);color:#fff}
 /* Sticks in the thumb zones, the mode switch stacked between them */
