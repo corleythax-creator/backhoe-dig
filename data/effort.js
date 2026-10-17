@@ -1,7 +1,7 @@
 // Backhoe Dig build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Backhoe Dig",
- "updated": "2026-10-17T09:28:00Z",
+ "updated": "2026-10-17T09:31:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 276,
-   "act": 4.5,
-   "versions": 35
+   "dh": 293,
+   "act": 5.0,
+   "versions": 36
   }
  ],
  "extra": [
@@ -408,6 +408,15 @@ window.EFFORT = {
    "tris": 991332,
    "chars": 218242,
    "what": "The mowed lawn stays mowed: how long ago each patch was cut and its stripe, the mowing time and where the mower was left are saved in the browser and come back on reload, so grass keeps growing back from where it was (it grows while the game runs, not while it is closed). Reset restores the ground but no longer regrows mowed grass."
+  },
+  {
+   "v": 43,
+   "asked": "2026-10-17T03:52:00-05:00",
+   "live": "2026-10-17T04:31:00-05:00",
+   "dh": 17,
+   "tris": 772000,
+   "chars": 230763,
+   "what": "Real shadows in the trench (a 1 ft shadow-only copy of the dug area); cut-face detail by layer (roots, mottles and pebbles, sand streaks, rock cracks, tooth grooves); groundwater below 6 ft that seeps, levels and makes mud, with a pump; a pouring stream from the bucket and tailgate, and higher drops spread wider; load thuds, clods rattling, cave-in rumble and a seeping trickle in the sound mix."
   }
  ]
 };

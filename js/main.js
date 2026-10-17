@@ -27,8 +27,9 @@ function frame(now){
     sndIn.relief=end(st.a1,LIM.a1,boomIn)||end(st.a2,LIM.a2,stickIn)||end(st.a3,LIM.a3,bucketIn);sndIn.track=Math.min(1,Math.abs(driveIn)+Math.abs(turnIn)*0.7);sndIn.pour=0}updateHeapClods();
   // drive
   st.yaw-=turnIn*0.8*dt;
-  st.x=clamp(st.x+Math.sin(st.yaw)*driveIn*2.6*dt,-60,60);
-  st.z=clamp(st.z+Math.cos(st.yaw)*driveIn*2.6*dt,-60,60);
+  const mudK=1-0.5*mudAt(st.x,st.z);
+  st.x=clamp(st.x+Math.sin(st.yaw)*driveIn*2.6*mudK*dt,-60,60);
+  st.z=clamp(st.z+Math.cos(st.yaw)*driveIn*2.6*mudK*dt,-60,60);
   {const rr=mesaR(st.x,st.z),lim=EDGE-3.5;if(rr>lim){const f=lim/rr;st.x*=f;st.z=MZ+(st.z-MZ)*f}}
   blkPush(st,EX_C,EX_R);
   const sy=Math.sin(st.yaw),cy=Math.cos(st.yaw);
@@ -62,6 +63,7 @@ function frame(now){
     if(st.load<CAP-0.002){
       const got=dig(tip,CAP-st.load);
       if(got>0){const f=got/(st.load+got);for(let q=0;q<3;q++)st.loadC[q]+=(digC[q]-st.loadC[q])*f;for(let q=0;q<4;q++)st.loadMix[q]+=(digMix[q]-st.loadMix[q])*f;
+        st.loadWet+=((underWater(tip)?1:mudAt(tip.x,tip.z))-st.loadWet)*f;
         st.load+=got;st.dirty=true;st.slumpT=2.5;if(Math.random()<0.5)spawn(tip.clone().setY(g+0.05),1.2)}
     }else if(!fullWarned){toast('Bucket full. Boom up, swing, dump.');fullWarned=true}
   }
@@ -69,21 +71,25 @@ function frame(now){
   // spill: bucket interior points along local -y
   const up=tmp.set(0,-1,0).applyQuaternion(q).y;
   const f=clamp((0.25-up)/0.5,0,1);
+  let pourA=0,pourY=0;
   if(f>0&&st.load>0.0005){
-    const out=Math.min(st.load,f*(0.35+st.load*1.6)*dt);sndIn.pour=out/dt;
-    st.load-=out;
-    if(inBed(mid)&&tr.load<TRUCK_CAP){const take=Math.min(out,TRUCK_CAP-tr.load);if(take>0){const f=take/(tr.load+take);for(let q=0;q<3;q++)tr.loadC[q]+=(st.loadC[q]-tr.loadC[q])*f;for(let q=0;q<4;q++)tr.loadMix[q]+=(st.loadMix[q]-tr.loadMix[q])*f}tr.load+=take;
-      if(out-take>0){deposit(mid.x,mid.z,out-take,st.loadC,st.loadMix);st.dirty=true;st.slumpT=2.5}
+    const out=Math.min(st.load,f*(0.35+st.load*1.6)*dt);
+    st.load-=out;pourA=out/dt;sndIn.pour=out/dt;
+    const bed=inBed(mid);pourY=bed?mid.y-(tl.y-heapTop()):hAt(mid.x,mid.z);const spr=dropSpread(mid.y-pourY);
+    if(!st.pouring){st.pouring=true;dirtThud(mid,0.3+st.load/CAP)}
+    if(inBed(mid)&&tr.load<TRUCK_CAP){const take=Math.min(out,TRUCK_CAP-tr.load);if(take>0){const f=take/(tr.load+take);for(let q=0;q<3;q++)tr.loadC[q]+=(st.loadC[q]-tr.loadC[q])*f;for(let q=0;q<4;q++)tr.loadMix[q]+=(st.loadMix[q]-tr.loadMix[q])*f;tr.loadWet+=(st.loadWet-tr.loadWet)*f}tr.load+=take;
+      if(out-take>0){deposit(mid.x,mid.z,out-take,st.loadC,st.loadMix,spr,st.loadWet);st.dirty=true;st.slumpT=2.5}
       if(!tr.loadedOnce){tr.loadedOnce=true;toast('Dirt in the truck.','good')}
       if(tr.load>=TRUCK_CAP*0.99&&!tr.fullWarned){tr.fullWarned=true;toast('Truck full. Tap Truck, back it to the cliff edge and raise the bed.','',3500)}}
-    else{deposit(mid.x,mid.z,out,st.loadC,st.loadMix); st.dirty=true; st.slumpT=2.5}
+    else{deposit(mid.x,mid.z,out,st.loadC,st.loadMix,spr,st.loadWet); st.dirty=true; st.slumpT=2.5}
     for(let n=0;n<Math.ceil(out*80);n++)spawn(mid,0.8);
-    if(st.load<0.0005){st.load=0;st.stuck=0.03*(0.3+st.loadMix[CLAY])}
-  }
+    if(st.load<0.0005){st.load=0;st.stuck=0.03*(0.3+st.loadMix[CLAY])*(1+2*st.loadWet)}
+  }else st.pouring=false;
+  pourStream(streams[0],mid,pourY,pourA,st.loadC,now/1000);
   // a heaped bucket swung or lifted fast loses crumbs over the rim
   {const armV=Math.abs(swingIn)*0.85+Math.abs(boomIn)*0.6+Math.abs(stickIn)*0.8;
     if(f===0&&!st.below&&!bench.on&&st.load>CAP*0.7&&armV>0.2){const out=Math.min(st.load,(st.load/CAP-0.7)/0.3*armV*0.006*dt);st.load-=out;
-      if(inBed(mid))tr.load=Math.min(TRUCK_CAP,tr.load+out);else{deposit(mid.x,mid.z,out,st.loadC,st.loadMix);st.dirty=true}
+      if(inBed(mid))tr.load=Math.min(TRUCK_CAP,tr.load+out);else{deposit(mid.x,mid.z,out,st.loadC,st.loadMix,1,st.loadWet);st.dirty=true}
       if(Math.random()<armV*dt*8)spawn(mid,0.4)}}
   // gas main
   st.strikeCd-=dt;
@@ -109,6 +115,7 @@ function frame(now){
   hudT-=dt;
   if(hudT<=0)mapsTick(0.1);
   if(hudT<=0){hudT=0.1;
+    {const pb=$('#pumpBtn');if(pb.hidden===waterAny)pb.hidden=!waterAny}
     {const bb=$('#boxBtn'),show=TB.hooked||boxNear();if(bb.hidden===show)bb.hidden=!show;const t=TB.hooked?'Drop box':'Hook box';if(bb.textContent!==t)bb.textContent=t}
     const pct=Math.round(st.load/CAP*100);
     $('#bucketVal').textContent=`${(st.load*1.308).toFixed(2)} yd³ · ${pct}%`;
@@ -137,6 +144,10 @@ function frame(now){
   }
   // flying dirt
   particlesTick(dt);dustTick(dt);grimeTick();
+  // groundwater, the tailgate stream and the dirt sounds
+  if(!bench.on)waterTick(dt);
+  pourStream(streams[1],tr.pourP,hAt(tr.pourP.x,tr.pourP.z),tr.pourRate,tr.loadC,now/1000);
+  dirtSndTick(dt);
   // bucket load visual
   const lv=Math.max(st.load,st.stuck);loadMesh.visible=lv>0.01;
   if(loadMesh.visible){const s=0.35+0.75*Math.sqrt(lv/CAP);loadMesh.scale.set(s,s*0.6,s*1.15);tintLoad(loadMesh.material,st.loadC)}

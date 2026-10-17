@@ -156,7 +156,7 @@ function setDirtLevel(L){
 // a clod dropped on a face steeper than about 27 degrees rolls downhill; big ones roll farther, so piles sort themselves
 function rollClod(x,z,size,k){const steps=Math.round(size/0.1*(k===SOD?5:14));
   for(let n=0;n<steps;n++){const e=0.12,gx=(hAt(x+e,z)-hAt(x-e,z))/(2*e),gz=(hAt(x,z+e)-hAt(x,z-e))/(2*e),g=Math.hypot(gx,gz);
-    if(g<0.5)break;x-=gx/g*0.08;z-=gz/g*0.08}
+    if(g<0.5)break;x-=gx/g*0.08;z-=gz/g*0.08;if(n===3)dirtRattle({x,y:hAt(x,z),z})}
   return [x,z]}
 // tracks and tyres press loose fill down by up to 30% of its height (comp: how much of that each point has had; fresh fill
 // resets it) and crush the clods under them
@@ -227,3 +227,20 @@ function grimeTick(){
 // apply the saved Dirt detail last, once everything above exists
 document.querySelectorAll('.sizes button[data-d]').forEach(b=>b.onclick=()=>setDirtLevel(b.dataset.d));
 try{setDirtLevel(localStorage.getItem('bhd_dirt')||1)}catch(e){setDirtLevel(1)}
+
+// ---------- pouring ----------
+// dirt leaving the bucket or the truck bed falls as one wobbling stream that thins and breaks up near the ground
+// (the flying bits and clods do the breaking); streams[0] is the bucket, streams[1] the tailgate
+function makeStream(){const g=new THREE.CylinderGeometry(1,1,1,9,14,true),m=new THREE.Mesh(g,M(0x8a5a36,{side:THREE.DoubleSide}));
+  m.visible=false;m.frustumCulled=false;m.castShadow=true;scene.add(m);return {m,g,base:g.attributes.position.array.slice()}}
+const streams=[makeStream(),makeStream()];
+function pourStream(s,top,bottomY,rate,col,t){
+  if(rate<0.03||top.y-bottomY<0.05){s.m.visible=false;return}
+  const h=top.y-bottomY,rad=Math.min(0.32,0.05+Math.sqrt(rate)*0.2),p=s.g.attributes.position.array,b=s.base;
+  for(let i=0;i<p.length;i+=3){const v=0.5-b[i+1],r=rad*(1-0.45*v)*(1+0.35*Math.sin(t*13+v*17+b[i+2]*5)*v),wob=0.12*Math.sin(t*9+v*11)*v;
+    p[i]=b[i]*r+wob;p[i+1]=-v*h;p[i+2]=b[i+2]*r+wob*0.6}
+  s.g.attributes.position.needsUpdate=true;s.g.computeVertexNormals();
+  s.m.position.copy(top);s.m.visible=true;tintLoad(s.m.material,col);if(pMat.map&&s.m.material.map!==pMat.map){s.m.material.map=pMat.map;s.m.material.needsUpdate=true}
+}
+// dirt dropped from higher up spreads wider: deposit radius scale for a drop of h metres
+const dropSpread=h=>Math.max(0.75,Math.min(1.8,0.6+0.25*h));

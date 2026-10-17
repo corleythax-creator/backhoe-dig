@@ -68,7 +68,7 @@ for(let n=0;n<TUFTS;n++){tO.position.set(tX[n],hAt(tX[n],tZ[n])-0.02,tZ[n]);tO.r
     if(x0>=-S/2&&x0+CO<=S/2&&z0>=-S/2&&z0+CO<=S/2)continue;const a=j*VO+i;ix.push(a,a+VO,a+1,a+1,a+VO,a+VO+1)}
   const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pp,3));g.setAttribute('color',new THREE.Float32BufferAttribute(cc,3));
   g.setAttribute('normal',new THREE.Float32BufferAttribute(new Float32Array(pp.length),3));g.setIndex(ix);
-  g.setAttribute('dirt',new THREE.Float32BufferAttribute(rk,1));g.setAttribute('wetT',new THREE.Float32BufferAttribute(new Float32Array(rk.length).fill(-1e4),1));
+  g.setAttribute('dirt',new THREE.Float32BufferAttribute(rk,1));g.setAttribute('wetT',new THREE.Float32BufferAttribute(new Float32Array(rk.length).fill(-1e4),1));g.setAttribute('soilD',new THREE.Float32BufferAttribute(new Float32Array(rk.length),1));
   const m=new THREE.Mesh(g,groundMat);m.receiveShadow=true;scene.add(m);
   // skirt hides any hairline gap where the fine and coarse grids meet
   const sp=[],si=[];let q=0;const st=0.5,E=S/2;

@@ -252,7 +252,7 @@ const G=9.8,WB=5.3,REAR=-2.2;
 function updateTruck(dt,thr,steerIn,bedIn){
   const f=tr.load/TRUCK_CAP,mass=15000+tr.load*1400,vPrev=tr.v;
   // ground: the packed road rolls easiest and grips best, grass drags more, dug dirt most
-  const soft=Math.abs(hAt(tr.x,tr.z)-h0At(tr.x,tr.z))>0.04,road=!soft&&roadAmt(tr.x,tr.z)>0.5,crr=soft?0.1:road?0.03:0.06;
+  const soft=Math.abs(hAt(tr.x,tr.z)-h0At(tr.x,tr.z))>0.04,road=!soft&&roadAmt(tr.x,tr.z)>0.5,crr=(soft?0.1:road?0.03:0.06)+0.12*mudAt(tr.x,tr.z);
   // transmission: opposite stick brakes; come to a stop and hold it to shift between D and R
   let drive=0,brake=0;
   if(tr.shiftT>0){tr.shiftT-=dt;brake=1;if(tr.shiftT<=0)tr.gear=-tr.gear}
@@ -272,7 +272,7 @@ function updateTruck(dt,thr,steerIn,bedIn){
   tr.drive=drive;tr.soft=soft;tr.road=road;tr.bedIn=bedIn;sndIn.dump=0;tr.brakeOn=brake>0.2&&(Math.abs(tr.v)>0.05||tr.shiftT>0||!!thr);
   // steering: the wheels turn at a hydraulic rate, and tires scrub wide when the turn asks for more grip than they have
   tr.steer+=clamp(steerIn*0.6-tr.steer,-1.1*dt,1.1*dt);
-  let curv=Math.tan(tr.steer)/WB;const v2=tr.v*tr.v,latMax=(soft?2.8:road?4.2:3.5)*(1-0.25*f);
+  let curv=Math.tan(tr.steer)/WB;const v2=tr.v*tr.v,latMax=(soft?2.8:road?4.2:3.5)*(1-0.25*f)*(1-0.35*mudAt(tr.x,tr.z));
   if(v2*Math.abs(curv)>latMax)curv=Math.sign(curv)*latMax/v2;
   // the rear tandem rolls along its heading and the cab swings around it, so the back end cuts inside the turn
   const sy0=Math.sin(tr.yaw),cy0=Math.cos(tr.yaw),rx=tr.x+sy0*REAR+sy0*tr.v*dt,rz=tr.z+cy0*REAR+cy0*tr.v*dt;
@@ -309,7 +309,7 @@ function updateTruck(dt,thr,steerIn,bedIn){
   tr.bumpCd-=dt;if(Math.abs(dy)>0.05&&tr.bumpCd<=0&&mode==='truck'){rumble(120,Math.min(1,Math.abs(dy)*6));tr.bumpCd=0.3}
   // tyres rut loose fill and crush clods; they pick up mud there
   if(Math.abs(tr.v)>0.1&&!bench.on){let r=false;for(const w of wheels){const u=w.userData,wx=tr.x+u.lx*cy+u.lz*sy,wz=tr.z-u.lx*sy+u.lz*cy;if(stampRut(wx,wz,tr.yaw,0.3,0.32,dt))r=true}
-    if(r)tr.mud=Math.min(1,tr.mud+dt*0.08)}
+    if(r||mudAt(tr.x,tr.z)>0.3)tr.mud=Math.min(1,tr.mud+dt*0.08)}
   truck.position.set(tr.x,tr.y,tr.z);truck.rotation.set(tr.pitch,tr.yaw,tr.roll);
   sprung.position.y=1.0+tr.sh;sprung.rotation.set(tr.sp,0,tr.sr);
   const sP=Math.sin(tr.pitch),sR=Math.sin(tr.roll),kw=Math.min(1,dt*20);
@@ -324,10 +324,11 @@ function updateTruck(dt,thr,steerIn,bedIn){
   const hv=Math.max(tr.load,tr.stuck);heap.visible=hv>0.01;if(heap.visible){const f=hv/TRUCK_CAP;tintLoad(heap.material,tr.loadC);heap.scale.set(0.55+0.45*Math.min(1,f*1.5),0.08+0.95*f,0.6+0.4*Math.min(1,f*1.5))}heap.position.y=0.12+0.5*heap.scale.y;
   truck.updateMatrixWorld(true);
   // tipping the bed pours the load out the back
+  tr.pourRate=0;
   if(tr.bed>0.32&&tr.load>0.0005){
-    const out=Math.min(tr.load,(tr.bed-0.32)*3.2*dt);tr.load-=out;sndIn.dump=out/dt;if(tr.load<0.0005){tr.load=0;tr.stuck=TRUCK_CAP*0.025*(0.4+1.6*tr.loadMix[CLAY])}
-    truck.localToWorld(tv.set(0,0.3,-4.9));
-    if(mesaR(tv.x,tv.z)<EDGE-1.2&&Math.abs(tv.x)<S/2-0.8&&Math.abs(tv.z)<S/2-0.8){deposit(tv.x,tv.z,out,tr.loadC,tr.loadMix);st.dirty=true;st.slumpT=2.5}
+    const out=Math.min(tr.load,(tr.bed-0.32)*3.2*dt);tr.load-=out;sndIn.dump=out/dt;if(tr.load<0.0005){tr.load=0;tr.stuck=TRUCK_CAP*0.025*(0.4+1.6*tr.loadMix[CLAY])*(1+2*tr.loadWet)}
+    truck.localToWorld(tv.set(0,0.3,-4.9));tr.pourRate=out/dt;tr.pourP.copy(tv);
+    if(mesaR(tv.x,tv.z)<EDGE-1.2&&Math.abs(tv.x)<S/2-0.8&&Math.abs(tv.z)<S/2-0.8){deposit(tv.x,tv.z,out,tr.loadC,tr.loadMix,dropSpread(tv.y-hAt(tv.x,tv.z)),tr.loadWet);st.dirty=true;st.slumpT=2.5}
     else{tr.hauled+=out;if(!tr.haulWarned&&tr.load<=0){tr.haulWarned=true;toast('Load hauled off site.','good')}}
     bedG.localToWorld(tv.set(0,0.4,0.2));for(let n=0;n<Math.ceil(out*40);n++)spawn(tv,1.2);
   }
