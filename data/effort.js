@@ -1,7 +1,7 @@
 // Backhoe Dig build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Backhoe Dig",
- "updated": "2026-10-17T17:20:00Z",
+ "updated": "2026-10-17T17:19:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 349.5,
+   "dh": 366.5,
    "act": 8.5,
-   "versions": 52
+   "versions": 53
   }
  ],
  "extra": [
@@ -561,6 +561,16 @@ window.EFFORT = {
    "tris": 1152810,
    "chars": 290436,
    "what": "Jump clears about 6 ft. Get in and out of machines on foot: walk up to the excavator, dump truck or mower and press F (Get in button, controller B) to drive it; press again to climb out beside it; the site save remembers when you are in one. Keys panel in the menu: every keyboard action with what it does in each mode, two keys each, rebind any of them, saved per device, Defaults to reset; captions and tips show your keys. Place block is E in every mode."
+  },
+  {
+   "v": 60,
+   "asked": "2026-10-17T11:45:00-05:00",
+   "live": "2026-10-17T12:19:00-05:00",
+   "dh": 17,
+   "tris": 1154238,
+   "chars": 326903,
+   "what": "Map editor (menu, or G), the first version: the game pauses and an overhead camera takes over (drag, pinch and twist on a phone; right mouse button, wheel and WASD/Q E/R F on a computer). Raise, Lower, Flatten and Smooth reshape the ground under a round brush (5 to 40 ft, strength 1 to 10) and Dirt and Grass paint it; the dig grid, ground mesh, steep-ground stops, grass, tall grass and trees all follow, and dug holes keep their depth. Trees are now saved assets in a fixed default layout, joined by boulders: Select moves, turns, resizes, copies and deletes them and moves the machines, Add places new ones, and Query reads any spot's height, slope, surface, driveability and edits in feet. Undo and Redo (30 steps). The map saves on the device as you edit, and Map file copies it out as a few KB of text, loads a copied map or starts over."
   }
  ]
 };
+
