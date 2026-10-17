@@ -114,7 +114,7 @@ function wkPlaceOut(k){const R=WK_RIDES[k],o=R.o,sy=Math.sin(o.yaw),cy=Math.cos(
 function seatToggle(){
   if(mode==='walk'){const k=wkNear();
     if(!k){toast('Walk up to the excavator, the truck or the mower to get in.');return}
-    wk.inside=k;setMode(WK_RIDES[k].m);toast(`In the ${WK_RIDES[k].n}. ${kbUsed?keyLabel('enter'):padUsed?'B':'Get out'} to climb out.`,'',2600);return}
+    wk.inside=k;walker.visible=false;setMode(WK_RIDES[k].m);toast(`In the ${WK_RIDES[k].n}. ${kbUsed?keyLabel('enter'):padUsed?'B':'Get out'} to climb out.`,'',2600);return}
   const k=rideOf(mode);if(!k)return;
   if(!wkPlaceOut(k)){toast('No room to climb out here. Move the machine a little.');return}
   wk.inside=null;setMode('walk')}
