@@ -14,6 +14,7 @@ A 3D low-poly excavator game in plain HTML, CSS and JavaScript (three.js r128, n
 | `index.html` | Page markup (HUD, sticks, menus, help card) and the script tags, in load order |
 | `css/game.css` | All game styles |
 | `js/core.js` | Shared helpers, renderer, scene, sky, camera, lights, material maker `M()` |
+| `js/materials.js` | Material library for the map editor's Paint tool (31 textures: ground covers, concrete and paving, steel, brick and stone, wood and more): ids, names, tile sizes, mean colours, and the texture array the ground shader reads |
 | `js/terrain.js` | Mesa layout (hills, scarp, Lower Bench), the map editor's layers and the map save format, road network and ramp, ground too steep to drive, dig-zone heightmap, soil layers, digging, dumping, slumping, cave-ins |
 | `js/scenery.js` | Lake, mountains, grass tufts, mesa and outer ground meshes (updated in place by the editor), gas main, stakes, trees and boulders (placed assets) |
 | `js/excavator.js` | Excavator model, linkage, rams, hoses |
@@ -31,12 +32,14 @@ A 3D low-poly excavator game in plain HTML, CSS and JavaScript (three.js r128, n
 | `js/effects.js` | Shared per-frame vectors, resize |
 | `js/sound.js` | All sound, rendered in the browser: diesel engine loops, turbo, tires, air brakes, hydraulics, relief valve, tracks, bucket scrape, pouring dirt, backup alarm; stereo, distance and cliff echo; the Sound panel (on/off, Master, Engines, Backup alarm, Effects) |
 | `js/maps.js` | Minimap and big map |
-| `js/editor.js` | Map editor (☰ menu or G): sculpt and paint the ground, lay out and grade roads, place, move, turn, resize, copy, query and delete trees, boulders and machines; undo; save on the device, copy out and load maps |
+| `js/editor.js` | Map editor (☰ menu or G): sculpt and paint the ground, lay out and grade roads, lay materials from the library, place, move, turn, resize, copy, query and delete trees, boulders and machines; undo; save on the device, copy out and load maps |
 | `js/gfx.js` | Graphics setting: Low (phones), Medium (laptops), High (desktop PCs), saved per device |
 | `js/shadowproxy.js` | Cheaper shadows: merged shadow-only meshes for the machines, near trees only |
 | `js/bench.js` | Speed test |
 | `js/main.js` | Frame loop |
 | `grass.jpg`, `dirt.jpg`, `grime.jpg` | Seamless textures (OpenAI GPT Image, made tileable) |
+| `textures/*.jpg` | The material library: one seamless 512 px texture per material (OpenAI GPT Image, made tileable by `tools/textures.py`), and `thumbs.jpg`, the swatches the editor shows |
+| `tools/textures.py` | Turns the raw 1024 px renders into the library textures, the swatch sheet and the mean colours in `js/materials.js` |
 | `shots/*.jpg` | Start-card tiles: in-game screenshots of the excavator, dump truck, mower and the worker on foot |
 | `build.html` | Build-time page: ask-to-live per version, triangles, developer-hour estimate |
 | `versions/` | A playable snapshot of every version (`versions/vN/`), the list page, and `list.js`. Made by `tools/versions.py` |
