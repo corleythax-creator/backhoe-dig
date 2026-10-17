@@ -100,6 +100,6 @@ While the brush is held or a road point is dragged, the layer changes every fram
 - Only the dig grid around the trench can be dug. Sculpting works anywhere in the `MID` area, but the bucket only digs in the dig grid.
 - The scarp, the hills and the stockpiles are part of the generated mesa. They can be sculpted over or flattened, not deleted.
 - A graded road's banks are too steep to drive. Laying or widening a graded road across another road can block the one it crosses.
-- The Family Island, its roads (`ISLAND_ROADS`), buildings, trees and the bridges are fixed for now: the editor layers cover only the `MID` area, and the island's trees are not editor assets. The editor camera can pan over to look at it.
+- The Family Island and Jessica's Island, their roads (`ISLAND_ROADS`), buildings, trees and the bridges are fixed for now: the editor layers cover only the `MID` area, and the island's trees are not editor assets. The editor camera can pan over to look at it.
 - The machines' start spots (used by Reset), the trench, the gas main and the tall-grass patch are fixed.
 - Ideas: multi-select and move for assets, a road "follow the ground but smooth it" mode, a slope-limited flatten for building ramps, a shipped default map, and dig-grid placement anywhere on the mesa.

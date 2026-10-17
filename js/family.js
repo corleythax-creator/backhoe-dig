@@ -150,8 +150,8 @@ function famBridge(b,K,o){
     for(const s of [-1,1])K.box(0.1,0.48,0.5,0x55595c,BX+s*0.95,by+0.24,BZ)}
   // a stone curb round the roundabout's middle
   for(let i=0;i<24;i++){const a=i/24*Math.PI*2;K.box(2.3,0.25,0.35,0x9b9890,FAM_X+Math.sin(a)*8.3,FAM_Y+0.1,FAM_Z-Math.cos(a)*8.3,-a)}
-  // the west and east arms stop at barriers where Dexter's and Jessica's bridges will go
-  for(const s of [-1,1]){const x=s*70.5,y=G(x,245);
+  // the west arm stops at a barrier where Dexter's bridge will go (the east arm runs on to Jessica's footbridge)
+  for(const s of [-1]){const x=s*70.5,y=G(x,245);
     for(let i=-2;i<=2;i++){K.box(0.12,1.1,0.12,0x8a8a86,x,y+0.55,245+i*1.05);K.box(0.08,0.2,0.95,i%2?0xf2f2ee:0xe0661e,x,y+1.0,245+i*1.05);K.box(0.08,0.2,0.95,i%2?0xe0661e:0xf2f2ee,x,y+0.7,245+i*1.05)}
     SOLIDS.push({x,z:245,hx:0.3,hz:2.8});
     K.box(0.12,2.6,0.12,0x8a8a86,x-s*0.6,y+1.3,242.2);K.box(0.12,2.6,0.12,0x8a8a86,x-s*0.6,y+1.3,247.8);
