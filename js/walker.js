@@ -29,7 +29,7 @@ walker.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
 // a jump clears about 6 ft: onto a 3 ft block with room to spare, or two blocks up a stack
 // starts beside the excavator, facing the trench
 const WK_START={x:2.7,z:1.6,yaw:Math.PI};
-const wk={x:0,z:0,y:0,vy:0,yaw:0,view:0,ground:true,phase:0,spd:0,airT:0,jumpQ:0,landT:0,inside:null};
+const wk={x:0,z:0,y:0,vy:0,yaw:0,view:0,ground:true,phase:0,spd:0,airT:0,jumpQ:0,landT:0,inside:null,sprint:false,stillT:0};
 function walkReset(){Object.assign(wk,WK_START,{vy:0,ground:true,phase:0,spd:0,airT:0,jumpQ:0,landT:0,view:WK_START.yaw,inside:null});wk.y=wkFloor(wk.x,wk.z,0,1e9)}
 // the highest ground or block top under the feet that is no higher than a step above y: a 5 point foot
 function wkFloor(x,z,y,lim){let f=-1e9;const r=WK_R*0.7;
@@ -58,7 +58,9 @@ function updateWalker(dt,mx,mz,lookX,lookY){
   // moves relative to where the camera looks; the worker turns to face the way he walks
   let vx=0,vz=0;
   if(on){const cyaw=camMode==='cab'?wk.view:wk.view+orbitYaw,fx=Math.sin(cyaw),fz=Math.cos(cyaw),m=Math.min(1,Math.hypot(mx,mz));
-    const top=held('sprint')||PA.sprint?WK_SPRINT:WK_RUN;
+    const top=held('sprint')||PA.sprint||wk.sprint?WK_SPRINT:WK_RUN;
+    // the touch Sprint button stays on while you keep moving and switches itself off once you stop
+    wk.stillT=m>0.02?0:wk.stillT+dt;if(wk.sprint&&wk.stillT>0.6)setSprint(false);
     if(m>0.02){vx=(fx*mz-fz*mx)*top;vz=(fz*mz+fx*mx)*top;
       if(camMode!=='cab'){let a=Math.atan2(vx,vz)-wk.yaw;a=Math.atan2(Math.sin(a),Math.cos(a));wk.yaw+=a*Math.min(1,dt*12)}}
     if(camMode==='cab')wk.yaw=wk.view}
@@ -92,6 +94,8 @@ function updateWalker(dt,mx,mz,lookX,lookY){
   walker.visible=!(on&&camMode==='cab')}
 function walkJump(){if(mode!=='walk')return;wk.jumpQ=0.15;started()}
 $('#jumpBtn').addEventListener('pointerdown',e=>{e.preventDefault();walkJump()});
+function setSprint(on){wk.sprint=on;wk.stillT=0;$('#sprintBtn').setAttribute('aria-pressed',on)}
+$('#sprintBtn').addEventListener('pointerdown',e=>{e.preventDefault();setSprint(!wk.sprint);started()});
 // ---------- getting in and out ----------
 // each machine: its state (looked up when used: the excavator's is made in controls.js), the circles that make up its
 // body, the mode that drives it and what to call it
