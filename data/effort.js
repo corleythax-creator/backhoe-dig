@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-17T23:14:35Z",
+ "updated": "2026-10-17T23:32:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 443,
-   "act": 10.5,
-   "versions": 63
+   "dh": 447,
+   "act": 11.0,
+   "versions": 64
   }
  ],
  "extra": [
@@ -660,6 +660,15 @@ window.EFFORT = {
    "tris": 1154238,
    "chars": 389546,
    "what": "Mower keys: on a keyboard W and S (or the arrows) now drive the zero-turn straight and A and D turn it, instead of working only the left lap bar so it spun on its own. The number pad works the lap bars: 8 and 2 both forward or back, 4 and 6 spin in place, 7 and 1 the left bar, 9 and 3 the right bar, all changeable in the Keys panel. Touch and controller sticks still work one lap bar each."
+  },
+  {
+   "v": 71,
+   "asked": "2026-10-17T18:16:00-05:00",
+   "live": "2026-10-17T18:32:00-05:00",
+   "dh": 4,
+   "tris": 1154238,
+   "chars": 391724,
+   "what": "Ground texture pack: new seamless grass, dirt and machine grime, each at 512, 1024 and 2048 px and loaded by the Graphics setting (Low, Medium, High), plus a soft macro map that breaks up the repeat across the lawns and yards. The neutral textures take the island's own colours; the grime is brightened so the machines keep their paint."
   }
  ]
 };
