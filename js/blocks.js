@@ -40,37 +40,42 @@ function blkPush(o,lzs,r){let hit=false;
 const EX_C=[0.85,-0.85],EX_R=1.25,TR_C=[2.2,-0.4,-2.6,-3.6],TR_R=1.25;
 // points round each machine's footprint ([side, forward] metres) that must stay off ground too steep to drive
 const EX_P=[[-1.1,1.9],[1.1,1.9],[-1.1,-1.9],[1.1,-1.9],[0,2.1],[0,-2.1]],TR_P=[[-1.1,3.6],[1.1,3.6],[0,3.8],[-1.1,-3.3],[1.1,-3.3]],MW_P=[[-0.5,1.6],[0.5,1.6],[-0.6,-0.3],[0.6,-0.3]];
-// where a block of the chosen size would land under the bucket, and whether it may go there
-function blkAim(){const n=blkSize,s=n*FT,x=blkSnap(tip.x,n),z=blkSnap(tip.z,n);let y=blkGround(x,z,s);
+// where a block of the chosen size would land (under the bucket, or in Walk mode just in front of the worker's feet),
+// and whether it may go there
+function blkTarget(n){const s=n*FT;if(mode!=='walk')return [tip.x,tip.z];const d=WK_R+s/2+0.12;return [wk.x+Math.sin(wk.yaw)*d,wk.z+Math.cos(wk.yaw)*d]}
+function blkAim(){const n=blkSize,s=n*FT,[ax,az]=blkTarget(n),x=blkSnap(ax,n),z=blkSnap(az,n);let y=blkGround(x,z,s);
   for(const b of blocks)if(blkOver(b,x,z,s))y=Math.max(y,b.y+b.s);
   const p=blkP;p.x=x;p.z=z;p.y=y;p.s=s;p.ok=false;
   const t={x,z,s};
   if(Math.abs(x)>S/2-s||Math.abs(z)>S/2-s||mesaR(x,z)>EDGE-2)p.why='Too close to the edge for a block.';
   else if(blocks.length>=BLK_MAX)p.why=`That's all ${BLK_MAX} blocks. Pick some up first.`;
-  else if(y>tip.y+0.6)p.why='Raise the bucket above the stack to set a block on it.';
+  else if(mode!=='walk'&&y>tip.y+0.6)p.why='Raise the bucket above the stack to set a block on it.';
+  else if(mode==='walk'&&y+s>wk.y+WK_REACH)p.why='Too high to reach. Climb up first.';
+  else if(mode==='walk'&&Math.abs(wk.x-x)<s/2+WK_R&&Math.abs(wk.z-z)<s/2+WK_R&&y<wk.y+WK_H&&y+s>wk.y+0.02)p.why='You are standing there. Step back.';
   else if(EX_C.some(lz=>blkCircleD(st,lz,t)<EX_R+0.05))p.why='Too close to the excavator. Reach out farther.';
   else if(TR_C.some(lz=>blkCircleD(tr,lz,t)<TR_R+0.05))p.why='That spot is under the truck.';
   else{p.ok=true;p.why=''}
   return p}
 function placeBlock(){
-  if(mode!=='dig'){toast('Switch to Dig to set blocks with the bucket.');return}
+  if(mode!=='dig'&&mode!=='walk'){toast('Switch to Dig or Walk to set blocks.');return}
   if(!blkOn)setBlocks(true);
   const p=blkAim();if(!p.ok){toast(p.why);return}
-  const v=0.88+Math.random()*0.12,y=Math.max(p.y,Math.min(tip.y-0.25-p.s,p.y+4));
+  const v=0.88+Math.random()*0.12,y=mode==='walk'?p.y+0.05:Math.max(p.y,Math.min(tip.y-0.25-p.s,p.y+4));
   blocks.push({x:p.x,z:p.z,y,s:p.s,n:blkSize,vy:0,c:[0.66*v,0.65*v,0.62*v]});
   blkWake=1.5;started();
   toast(`${blkSize}×${blkSize} ft block set · ${blocks.length} on site`,'good',1600)}
-// the highest block the bucket is over or touching comes away
+// the highest block the bucket is over or touching comes away; on foot, the highest one within reach just in front
 function removeBlock(){
-  if(mode!=='dig'){toast('Switch to Dig to pick up blocks.');return}
-  let best=-1,top=-1e9;
-  for(let i=0;i<blocks.length;i++){const b=blocks[i],h=b.s/2+0.2;
-    if(Math.abs(tip.x-b.x)<h&&Math.abs(tip.z-b.z)<h&&tip.y>b.y-0.3&&tip.y<b.y+b.s+1.5&&b.y+b.s>top){top=b.y+b.s;best=i}}
-  if(best<0){toast(blocks.length?'Bring the bucket onto a block to pick it up.':'No blocks set yet.');return}
+  if(mode!=='dig'&&mode!=='walk'){toast('Switch to Dig or Walk to pick up blocks.');return}
+  let best=-1,top=-1e9;const walk=mode==='walk',fx=walk?wk.x+Math.sin(wk.yaw)*(WK_R+0.3):tip.x,fz=walk?wk.z+Math.cos(wk.yaw)*(WK_R+0.3):tip.z;
+  for(let i=0;i<blocks.length;i++){const b=blocks[i],h=b.s/2+(walk?0.12:0.2),t=b.y+b.s;
+    const inY=walk?t<=wk.y+WK_REACH+0.3&&t>wk.y-0.8:tip.y>b.y-0.3&&tip.y<t+1.5;
+    if(Math.abs(fx-b.x)<h&&Math.abs(fz-b.z)<h&&inY&&t>top){top=t;best=i}}
+  if(best<0){toast(!blocks.length?'No blocks set yet.':walk?'Face a block within reach to pick it up.':'Bring the bucket onto a block to pick it up.');return}
   const b=blocks.splice(best,1)[0];blkWake=1.5;
   toast(`${b.n}×${b.n} ft block picked up · ${blocks.length} on site`,'good',1600)}
 function setBlocks(on){blkOn=on;const btn=$('#blkBtn');btn.setAttribute('aria-pressed',on);$('#blkBar').hidden=!on;
-  if(on&&mode!=='dig')setMode('dig')}
+  if(on&&mode!=='dig'&&mode!=='walk')setMode('dig')}
 function setBlkSize(n){blkSize=n;document.querySelectorAll('#blkBar button[data-b]').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.b===n))}
 function blkTerrainMoved(){if(blocks.length)blkWake=Math.max(blkWake,0.3)}
 // settle bottom-up: each block sits on the ground or the blocks already settled under it; dirt pushed under one lifts it
@@ -86,7 +91,7 @@ function blkTick(dt){
     for(let i=0;i<blocks.length;i++){const b=blocks[i];blkO.position.set(b.x,b.y+b.s/2,b.z);blkO.scale.setScalar(b.s);blkO.updateMatrix();
       blkMesh.setMatrixAt(i,blkO.matrix);blkMesh.setColorAt(i,blkCol.setRGB(b.c[0],b.c[1],b.c[2]))}
     blkMesh.count=blocks.length;blkMesh.instanceMatrix.needsUpdate=true;blkMesh.instanceColor.needsUpdate=true}
-  blkGhost.visible=blkOn&&mode==='dig'&&!bench.on;
+  blkGhost.visible=blkOn&&(mode==='dig'||mode==='walk')&&!bench.on;
   if(blkGhost.visible){const p=blkAim(),c=p.ok?0xf5c518:0xff5143;
     blkGhost.position.set(p.x,p.y+p.s/2+0.005,p.z);blkGhost.scale.setScalar(p.s+0.01);ghostFill.color.setHex(c);ghostLine.color.setHex(c)}}
 $('#blkBtn').onclick=()=>setBlocks(!blkOn);

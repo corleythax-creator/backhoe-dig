@@ -10,7 +10,7 @@ function resetState(){
   H.set(H0);dI0=0;dI1=N;dJ0=0;dJ1=N;winOn=true;Object.assign(tr,TR_START);tr.loadC=[...SOIL[SPOIL].c];tr.loadMix=[...CRUMB_MIX];tr.stuck=0;tr.mud=0;tr.loadWet=0;tr.pourRate=0;tr.pourP=new THREE.Vector3();
   for(let k=0;k<V*V;k++)spoilC.set(SOIL[SPOIL].c,k*3);
   clearClods();wetT.fill(-1e4);comp.fill(0);clearDust();waterClear();
-  blkReset();mowReset();Object.assign(TB,TB_START,{hooked:false,seated:false});TB.y=TB.ty=boxRest();prot.fill(0);chain.visible=false;
+  blkReset();mowReset();walkReset();Object.assign(TB,TB_START,{hooked:false,seated:false});TB.y=TB.ty=boxRest();prot.fill(0);chain.visible=false;
 }
 resetState();
 const LIM={a1:[-0.55,1.3],a2:[-2.65,-0.45],a3:[-2.85,0.35]};
@@ -35,17 +35,19 @@ function makeStick(el){
 const SL=makeStick($('#stickL')),SR=makeStick($('#stickR'));
 const keys={};
 // keyboard: WASD/arrows = left stick, IJKL = right stick in every mode; the sticks' captions show the keys once one is pressed
-const MODES=['dig','drive','truck','mow'];let kbUsed=false;
+const MODES=['dig','drive','truck','mow','walk'];let kbUsed=false;
 addEventListener('keydown',e=>{if(e.ctrlKey||e.metaKey||e.altKey)return;
   const c=e.code;keys[c]=true;
   if(c.startsWith('Arrow')||c==='Tab'||c==='Space')e.preventDefault();
   if(!e.repeat){
-    if(c==='Digit1')setMode('dig');else if(c==='Digit2')setMode('drive');else if(c==='Digit3')setMode('truck');else if(c==='Digit4')setMode('mow');
+    if(c==='Digit1')setMode('dig');else if(c==='Digit2')setMode('drive');else if(c==='Digit3')setMode('truck');else if(c==='Digit4')setMode('mow');else if(c==='Digit5')setMode('walk');
     else if(c==='Tab')setMode(MODES[(MODES.indexOf(mode)+(e.shiftKey?MODES.length-1:1))%MODES.length]);
     else if(c==='KeyC')$('#camBtn').click();
     else if(c==='KeyT')hookBox();
     else if(c==='KeyP')setPump(!pumpOn);
     else if(c==='KeyB')setBlocks(!blkOn);
+    else if(c==='Space'&&mode==='walk')walkJump();
+    else if(c==='KeyE'&&(mode==='walk'||blkOn))placeBlock();
     else if(c==='Space'&&blkOn)placeBlock();
     else if(c==='KeyV')setBlkSize(blkSize%3+1);
     else if(c==='KeyX'&&blkOn)removeBlock();
@@ -64,7 +66,8 @@ function keyAxes(dt){const f=keys.ShiftLeft||keys.ShiftRight?0.3:1;
   const t={lx:kv('KeyD','KeyA')+kv('ArrowRight','ArrowLeft'),ly:kv('KeyW','KeyS')+kv('ArrowUp','ArrowDown'),rx:kv('KeyL','KeyJ'),ry:kv('KeyI','KeyK')};
   for(const k in t){const g=clamp(t[k],-1,1)*f,r=(g===0?10:5)*dt;KA[k]+=clamp(g-KA[k],-r,r)}}
 // game controller (standard mapping): sticks = the two on-screen sticks, triggers = gas / reverse when driving,
-// LB/RB switch machine, Y cab view, View map, Menu help, B closes, A sets a block, D-pad runs blocks; a line strike rumbles
+// LB/RB switch machine, Y cab view, View map, Menu help, B closes, A sets a block, D-pad runs blocks (in Walk mode A jumps
+// and X sets a block); a line strike rumbles
 const PA={lx:0,ly:0,rx:0,ry:0,thr:0},padPrev=[];let padIdx=-1,padUsed=false;
 addEventListener('gamepadconnected',e=>{padIdx=e.gamepad.index;toast('Controller ready. LB / RB switch machine, Y cab view.','good',3500)});
 addEventListener('gamepaddisconnected',e=>{if(e.gamepad.index===padIdx)padIdx=-1;for(const k in PA)PA[k]=0;padPrev.length=0});
@@ -74,6 +77,8 @@ function usePad(){if(!padUsed){padUsed=true;kbUsed=false;document.body.classList
 function padButton(i){usePad();
   if(i===4||i===5)setMode(MODES[(MODES.indexOf(mode)+(i===5?1:MODES.length-1))%MODES.length]);
   else if(i===3)$('#camBtn').click();
+  else if(i===0&&mode==='walk')walkJump();
+  else if(i===2&&mode==='walk')placeBlock();
   else if(i===2)hookBox();
   else if(i===0)placeBlock();
   else if(i===12)setBlocks(!blkOn);
@@ -99,11 +104,13 @@ canvas.addEventListener('pointerup',dend);canvas.addEventListener('pointercancel
 canvas.addEventListener('wheel',e=>{e.preventDefault();camDist=clamp(camDist+e.deltaY*0.01,5,22)},{passive:false});
 
 function setCaps(){const m=mode,lh=kbUsed?'A D':'◀ ▶',lv=kbUsed?'W S':'▲ ▼',rh=kbUsed?'J L':'◀ ▶',rv=kbUsed?'I K':'▲ ▼';
-  $('#capL').innerHTML=m==='dig'?`<b>${lh}</b> Swing<br><b>${lv}</b> Stick out / in`:m==='drive'?`<b>${lh}</b> Turn<br><b>${lv}</b> Drive fwd / back`:m==='mow'?`<b>${lv}</b> Left lap bar<br><b>${lh}</b> Spin`:`<b>${lh}</b> Steer<br><b>${lv}</b> Gas / reverse`;
-  $('#capR').innerHTML=m==='truck'?`<b>${rv}</b> Bed up / down<br>&nbsp;`:m==='mow'?`<b>${rv}</b> Right lap bar<br>&nbsp;`:`<b>${rh}</b> Curl / dump<br><b>${rv}</b> Boom down / up`;}
-function setMode(m){if(m===mode)return;mode=m;for(const [id,k] of [['#modeDig','dig'],['#modeDrive','drive'],['#modeTruck','truck'],['#modeMow','mow']])$(id).setAttribute('aria-pressed',m===k);
-  setCaps();firstCam=true;if(m==='mow'&&!lawn.startT&&!lawn.done)toast('Mower running. Push both sticks up to drive, one up and one back to spin.','',3800)}
-$('#modeDig').onclick=()=>setMode('dig'); $('#modeDrive').onclick=()=>setMode('drive'); $('#modeTruck').onclick=()=>setMode('truck'); $('#modeMow').onclick=()=>setMode('mow');
+  $('#capL').innerHTML=m==='dig'?`<b>${lh}</b> Swing<br><b>${lv}</b> Stick out / in`:m==='drive'?`<b>${lh}</b> Turn<br><b>${lv}</b> Drive fwd / back`:m==='mow'?`<b>${lv}</b> Left lap bar<br><b>${lh}</b> Spin`:m==='walk'?`<b>${lv}</b> Walk / back<br><b>${lh}</b> Step left / right`:`<b>${lh}</b> Steer<br><b>${lv}</b> Gas / reverse`;
+  $('#capR').innerHTML=m==='truck'?`<b>${rv}</b> Bed up / down<br>&nbsp;`:m==='mow'?`<b>${rv}</b> Right lap bar<br>&nbsp;`:m==='walk'?`<b>${rh}</b> Turn<br><b>${rv}</b> Look up / down`:`<b>${rh}</b> Curl / dump<br><b>${rv}</b> Boom down / up`;}
+function setMode(m){if(m===mode)return;mode=m;for(const [id,k] of [['#modeDig','dig'],['#modeDrive','drive'],['#modeTruck','truck'],['#modeMow','mow'],['#modeWalk','walk']])$(id).setAttribute('aria-pressed',m===k);
+  $('#jumpBtn').hidden=m!=='walk';$('#capR').hidden=m==='walk';if(m==='walk')wk.view=wk.yaw;
+  setCaps();firstCam=true;if(m==='mow'&&!lawn.startT&&!lawn.done)toast('Mower running. Push both sticks up to drive, one up and one back to spin.','',3800);
+  if(m==='walk')toast(padUsed?'On foot. A jumps, X sets a block in front of you.':kbUsed?'On foot. Space jumps, E sets a block in front of you.':'On foot. Tap Jump to jump. Blocks, then Place, sets a block in front of you.','',3800)}
+$('#modeDig').onclick=()=>setMode('dig'); $('#modeDrive').onclick=()=>setMode('drive'); $('#modeTruck').onclick=()=>setMode('truck'); $('#modeMow').onclick=()=>setMode('mow'); $('#modeWalk').onclick=()=>setMode('walk');
 $('#camBtn').onclick=()=>{camMode=camMode==='chase'?'cab':'chase';$('#camBtn').textContent=camMode==='chase'?'Cab view':'Chase view'};
 let resetArm=0;
 $('#resetBtn').onclick=()=>{const b=$('#resetBtn');

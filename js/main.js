@@ -8,7 +8,7 @@ function frame(now){
   if(viewDirty){viewDirty=false;const want=bench.on?(bench.pr||maxPR):pr;if(renderer.getPixelRatio()!==want)renderer.setPixelRatio(want);resize()}
   // inputs
   keyAxes(dt);pollPad();
-  const Lx=clamp(SL.x+KA.lx+PA.lx,-1,1),Ly=clamp(SL.y+KA.ly+PA.ly+(mode==='dig'||mode==='mow'?0:PA.thr),-1,1),Rx=clamp(SR.x+KA.rx+PA.rx,-1,1),Ry=clamp(SR.y+KA.ry+PA.ry,-1,1);
+  const Lx=clamp(SL.x+KA.lx+PA.lx,-1,1),Ly=clamp(SL.y+KA.ly+PA.ly+(mode==='dig'||mode==='mow'||mode==='walk'?0:PA.thr),-1,1),Rx=clamp(SR.x+KA.rx+PA.rx,-1,1),Ry=clamp(SR.y+KA.ry+PA.ry,-1,1);
   let swingIn=0,stickIn=0,driveIn=0,turnIn=0,boomIn=-Ry,bucketIn=Rx;
   if(mode==='dig'){swingIn=Lx;stickIn=Ly}else if(mode==='drive'){driveIn=Ly;turnIn=Lx}
   let tThr=0,tSteer=0,tBed=0;
@@ -16,6 +16,8 @@ function frame(now){
   // mower: one stick per lap bar; the left stick sideways spins it as well
   let mL=0,mR=0;
   if(mode==='mow'){mL=clamp(Ly+Lx*0.7,-1,1);mR=clamp(Ry-Lx*0.7,-1,1);boomIn=0;bucketIn=0}
+  // on foot: the left stick walks, the right stick looks around
+  if(mode==='walk'){boomIn=0;bucketIn=0}
   const res=st.res;
   st.swing-=swingIn*0.85*dt*res;
   st.a1=clamp(st.a1+boomIn*0.6*dt*res,...LIM.a1);
@@ -23,6 +25,7 @@ function frame(now){
   st.a3=clamp(st.a3+bucketIn*1.3*dt*res,...LIM.a3);
   if(bench.on){benchTick(dt);driveIn=0;turnIn=0;tThr=0;tSteer=0;tBed=0;mL=0;mR=0}
   updateTruck(dt,tThr,tSteer,tBed);updateMower(dt,mL,mR);
+  if(mode==='walk'&&!bench.on)updateWalker(dt,Lx,Ly,Rx,Ry);else updateWalker(dt,0,0,0,0);
   // what the mixer hears: hydraulic demand, a ram pushed against its stop (relief valve), tracks moving
   {const end=(v,l,i)=>(i>0.1&&v>=l[1]-1e-4)||(i<-0.1&&v<=l[0]+1e-4);
     sndIn.hyd=Math.abs(swingIn)+Math.abs(stickIn)+Math.abs(boomIn)+Math.abs(bucketIn)+Math.abs(driveIn)+Math.abs(turnIn);
@@ -161,6 +164,7 @@ function frame(now){
     let cyaw,cd=camDist;
     if(mode==='truck'){look.set(tr.x,tr.y+1.6,tr.z);cyaw=tr.yaw+Math.PI+orbitYaw;cd=camDist+3}
     else if(mode==='mow'){look.set(mw.x+Math.sin(mw.yaw)*0.8,mw.y+0.7,mw.z+Math.cos(mw.yaw)*0.8);cyaw=mw.yaw+Math.PI+orbitYaw;cd=camDist*0.6}
+    else if(mode==='walk'){look.set(wk.x,wk.y+1.35,wk.z);cyaw=wk.view+Math.PI+orbitYaw;cd=camDist*0.5}
     else{const fx=Math.sin(hy),fz=Math.cos(hy);look.set(st.x+fx*4,st.y+0.8,st.z+fz*4);cyaw=hy+Math.PI+orbitYaw}
     camT.set(look.x+Math.sin(cyaw)*Math.cos(orbitPitch)*cd,look.y+Math.sin(orbitPitch)*cd,look.z+Math.cos(cyaw)*Math.cos(orbitPitch)*cd);
     camT.y=Math.max(camT.y,surfAt(camT.x,camT.z)+1.2);
@@ -169,6 +173,8 @@ function frame(now){
   }else{
     if(mode==='truck'){sprung.localToWorld(camera.position.set(-0.55,1.6,1.95));sprung.localToWorld(look.set(-0.3,0.6,14))}
     else if(mode==='mow'){mower.localToWorld(camera.position.set(0,1.42,0.02));mower.localToWorld(look.set(0,0.1,4.5))}
+    else if(mode==='walk'){const p=(0.42-orbitPitch)*1.6,fx=Math.sin(wk.view),fz=Math.cos(wk.view);camera.position.set(wk.x+fx*0.1,wk.y+WK_H-0.12+wkBody.position.y,wk.z+fz*0.1);
+      look.set(camera.position.x+fx*Math.cos(p)*5,camera.position.y+Math.sin(p)*5,camera.position.z+fz*Math.cos(p)*5)}
     else{house.localToWorld(camera.position.set(-0.72,2.2,0.5));house.localToWorld(look.set(-0.1,-0.4,6))}
     camera.lookAt(look); firstCam=true;
   }
@@ -176,7 +182,7 @@ function frame(now){
   updateSound(dt);
   if(shake>0){shake-=dt;camera.position.x+=(Math.random()-0.5)*0.25;camera.position.y+=(Math.random()-0.5)*0.25}
   sky.position.copy(camera.position);
-  const fv=mode==='truck'?tr:mode==='mow'?mw:st;sun.position.set(fv.x,fv.y,fv.z).addScaledVector(SUN_DIR,25); sun.target.position.set(fv.x,fv.y,fv.z);
+  const fv=mode==='truck'?tr:mode==='mow'?mw:mode==='walk'?wk:st;sun.position.set(fv.x,fv.y,fv.z).addScaledVector(SUN_DIR,25); sun.target.position.set(fv.x,fv.y,fv.z);
   {const o=groundOcc.value;o[0].set(st.x,st.z,st.yaw,0);o[2].set(tr.x,tr.z,tr.yaw,0)}
   timeU.value=now/1000;
   shadowProxyTick();lawnLod();renderer.render(scene,camera);
