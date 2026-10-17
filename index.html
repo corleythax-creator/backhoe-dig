@@ -19,49 +19,55 @@
 }
 html,body{height:100%;margin:0;overflow:hidden;background:var(--sky);color:var(--ink);font-family:var(--f-body);-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
 canvas#view{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
-#hud{position:fixed;inset:0;pointer-events:none;box-sizing:border-box;display:flex;flex-direction:column;gap:10px;
-  padding-top:calc(env(safe-area-inset-top,0px) + 12px);padding-bottom:calc(env(safe-area-inset-bottom,0px) + 14px);
-  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-.stats{display:flex;gap:8px;justify-content:center}
-.stats span{font:700 18px/1 var(--f-display);letter-spacing:.06em;text-transform:uppercase;color:var(--muted);background:var(--hud);border:1px solid var(--hud-line);border-radius:8px;padding:7px 12px;font-variant-numeric:tabular-nums}
-.stats b{color:var(--ink);font-weight:800}
-.top{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.panel{background:var(--hud);border:1px solid var(--hud-line);border-radius:10px;padding:10px 12px;min-width:0}
-.lbl{font:700 14px/1 var(--f-display);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
-.val{font:700 23px/1.1 var(--f-display);font-variant-numeric:tabular-nums;margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.sub{font:600 16px/1.2 var(--f-display);font-variant-numeric:tabular-nums;margin-top:6px;color:var(--ink)}
-.panel.wide{grid-column:1/-1;padding-block:8px}
-.trow{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
-.trow .val,.trow .sub{margin-top:0}
-.trow .sub{margin-left:auto;color:var(--muted)}
+#hud{position:fixed;inset:0;pointer-events:none;box-sizing:border-box;
+  --pt:calc(env(safe-area-inset-top,0px) + 8px);--pb:calc(env(safe-area-inset-bottom,0px) + 10px);
+  --pl:max(10px,env(safe-area-inset-left,0px));--pr:max(10px,env(safe-area-inset-right,0px))}
+/* Status card, top left: one compact row per job; tap it to hide the detail lines */
+.status{position:absolute;top:var(--pt);left:var(--pl);width:172px;box-sizing:border-box;background:var(--hud);border:1px solid var(--hud-line);border-radius:10px;padding:7px 9px 6px;display:flex;flex-direction:column;gap:6px;pointer-events:auto;cursor:pointer}
+.srow{display:flex;flex-direction:column;gap:3px}
+.line{display:flex;align-items:baseline;justify-content:space-between;gap:6px}
+.lbl{font:700 12px/1 var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.val{font:700 16px/1 var(--f-display);font-variant-numeric:tabular-nums;white-space:nowrap}
+.sub{font:600 13px/1.1 var(--f-display);font-variant-numeric:tabular-nums;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stats{font:600 11px/1 var(--f-display);letter-spacing:.04em;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;opacity:.8}
+.stats b{color:var(--ink);font-weight:700}
+.status.min{gap:5px}.status.min .sub,.status.min .stats{display:none}
 #truckBar{background:#9fb7c6}
-.bar{height:10px;border-radius:5px;background:rgba(255,255,255,.14);margin-top:8px;overflow:hidden}
+.bar{height:4px;border-radius:2px;background:rgba(255,255,255,.14);overflow:hidden}
 .bar>i{display:block;height:100%;width:0;background:var(--machine);transition:width .15s}
 #trenchBar>i{background:var(--ok)}
 .full .val{color:var(--gas)}
-.row{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-button{pointer-events:auto;touch-action:manipulation;font:700 17px/1 var(--f-display);letter-spacing:.06em;text-transform:uppercase;color:var(--ink);background:var(--hud);border:1px solid var(--hud-line);border-radius:10px;height:46px;padding:0 14px;cursor:pointer}
+.row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+button{pointer-events:auto;touch-action:manipulation;font:700 15px/1 var(--f-display);letter-spacing:.05em;text-transform:uppercase;color:var(--ink);background:var(--hud);border:1px solid var(--hud-line);border-radius:9px;height:40px;padding:0 12px;cursor:pointer}
 button:focus-visible{outline:3px solid var(--gas);outline-offset:2px}
-.seg{display:flex;border-radius:10px;overflow:hidden;border:1px solid var(--hud-line);pointer-events:auto}
-.seg button{border:0;border-radius:0}
-.seg button[aria-pressed="true"]{background:var(--machine);color:#1c1309}
+button.sm{height:34px;padding:0 10px;font-size:13px}
+button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
+/* Map and buttons, top right */
+.side{position:absolute;top:var(--pt);right:var(--pr);display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.side .row{flex-wrap:nowrap}
+#mini{display:block;width:96px;height:96px;border-radius:10px;border:1px solid rgba(255,255,255,.35);background:#1e2a30;pointer-events:auto;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+#menu{display:flex;flex-direction:column;gap:4px;background:var(--hud);border:1px solid var(--hud-line);border-radius:10px;padding:5px}
+#menu button{height:38px;font-size:14px;border:0;background:transparent;text-align:right}
 #resetBtn.arm{background:var(--danger);color:#fff}
-.spacer{flex:1;position:relative}
-.sticks{display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
-.stickwrap{display:flex;flex-direction:column;align-items:center;gap:8px}
-.stick{width:150px;height:150px;border-radius:50%;background:rgba(20,23,19,.5);border:2px solid rgba(255,255,255,.3);position:relative;pointer-events:auto;touch-action:none}
-.stick::before,.stick::after{content:"";position:absolute;background:rgba(255,255,255,.18)}
-.stick::before{left:50%;top:14px;bottom:14px;width:2px;margin-left:-1px}
-.stick::after{top:50%;left:14px;right:14px;height:2px;margin-top:-1px}
-.knob{position:absolute;left:50%;top:50%;width:66px;height:66px;margin:-33px 0 0 -33px;border-radius:50%;background:var(--machine);box-shadow:0 4px 0 rgba(0,0,0,.35);z-index:1}
-.cap{font:600 16px/1.3 var(--f-display);background:var(--hud);border:1px solid var(--hud-line);padding:6px 10px;border-radius:8px;text-align:center;letter-spacing:.03em;white-space:nowrap}
+/* Sticks in the thumb zones, the mode switch stacked between them */
+.sticks{position:absolute;left:var(--pl);right:var(--pr);bottom:var(--pb);display:flex;justify-content:space-between;align-items:flex-end;gap:8px}
+.stickwrap{display:flex;flex-direction:column;align-items:center;gap:6px}
+.stick{width:124px;height:124px;border-radius:50%;background:rgba(20,23,19,.38);border:2px solid rgba(255,255,255,.28);position:relative;pointer-events:auto;touch-action:none}
+.stick::before,.stick::after{content:"";position:absolute;background:rgba(255,255,255,.16)}
+.stick::before{left:50%;top:12px;bottom:12px;width:2px;margin-left:-1px}
+.stick::after{top:50%;left:12px;right:12px;height:2px;margin-top:-1px}
+.knob{position:absolute;left:50%;top:50%;width:52px;height:52px;margin:-26px 0 0 -26px;border-radius:50%;background:var(--machine);box-shadow:0 3px 0 rgba(0,0,0,.35);z-index:1}
+.cap{font:600 12px/1.3 var(--f-display);color:var(--ink);text-shadow:0 1px 2px rgba(0,0,0,.9);text-align:center;letter-spacing:.03em;white-space:nowrap;opacity:.9}
 .cap b{color:var(--machine);font-weight:800}
-#toast{position:absolute;left:0;right:0;top:18%;display:flex;justify-content:center}
-#toast span{font:800 24px/1.15 var(--f-display);letter-spacing:.04em;background:var(--hud);border:2px solid var(--machine);padding:10px 16px;border-radius:10px;text-align:center;max-width:90%;opacity:0;transition:opacity .25s}
+.seg{display:flex;flex-direction:column;border-radius:10px;overflow:hidden;border:1px solid var(--hud-line);pointer-events:auto;margin-bottom:10px}
+.seg button{border:0;border-radius:0;height:36px;font-size:13px;padding:0 12px}
+.seg button+button{border-top:1px solid var(--hud-line)}
+.seg button[aria-pressed="true"]{background:var(--machine);color:#1c1309}
+#toast{position:absolute;left:0;right:0;top:32%;display:flex;justify-content:center}
+#toast span{font:800 19px/1.2 var(--f-display);letter-spacing:.03em;background:var(--hud);border:2px solid var(--machine);padding:8px 14px;border-radius:10px;text-align:center;max-width:80%;opacity:0;transition:opacity .25s}
 #toast span.show{opacity:1}
 #toast span.bad{border-color:var(--danger);color:#ffd9d5}
 #toast span.good{border-color:var(--ok)}
-#mini{position:absolute;right:0;bottom:0;width:136px;height:136px;border-radius:12px;border:2px solid rgba(255,255,255,.35);background:#1e2a30;pointer-events:auto;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.3)}
 #bigmap{position:fixed;inset:0;background:rgba(10,12,9,.8);display:flex;align-items:center;justify-content:center;z-index:6;pointer-events:auto;box-sizing:border-box;
   padding-block:calc(env(safe-area-inset-top,0px) + 12px) calc(env(safe-area-inset-bottom,0px) + 12px);
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
@@ -72,8 +78,8 @@ button:focus-visible{outline:3px solid var(--gas);outline-offset:2px}
 .legend{display:flex;flex-wrap:wrap;gap:8px 16px;font:600 17px/1.2 var(--f-display);letter-spacing:.03em}
 .legend span{display:flex;align-items:center;gap:7px}
 .legend i{display:inline-block;width:18px;height:12px;border-radius:3px}
-#benchBar{position:absolute;left:0;right:0;top:0;margin:0 auto;width:max-content;max-width:100%;box-sizing:border-box;font:800 20px/1.25 var(--f-display);letter-spacing:.04em;text-align:center;background:var(--hud);border:2px solid var(--gas);border-radius:10px;padding:8px 14px;font-variant-numeric:tabular-nums}
-#benchBar small{display:block;font:600 16px/1.2 var(--f-display);color:var(--muted);letter-spacing:.03em}
+#benchBar{position:absolute;left:0;right:0;top:calc(var(--pt) + 210px);z-index:2;margin:0 auto;width:max-content;max-width:100%;box-sizing:border-box;font:800 16px/1.25 var(--f-display);letter-spacing:.04em;text-align:center;background:var(--hud);border:2px solid var(--gas);border-radius:10px;padding:8px 14px;font-variant-numeric:tabular-nums}
+#benchBar small{display:block;font:600 13px/1.2 var(--f-display);color:var(--muted);letter-spacing:.03em}
 #bench{position:fixed;inset:0;background:rgba(10,12,9,.78);display:flex;align-items:center;justify-content:center;pointer-events:auto;box-sizing:border-box;z-index:5;
   padding-block:calc(env(safe-area-inset-top,0px) + 16px) calc(env(safe-area-inset-bottom,0px) + 16px);
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
@@ -102,49 +108,55 @@ button:focus-visible{outline:3px solid var(--gas);outline-offset:2px}
 .buildlink{text-align:center;font-size:17px!important}
 .buildlink a{color:var(--machine);font-weight:600}
 .card button{background:var(--machine);color:#1c1309;height:54px;font-size:21px;border:0}
-@media (max-width:380px){.stick{width:132px;height:132px}.val{font-size:21px}}
+@media (max-width:360px){.stick{width:112px;height:112px}.status{width:160px}}
+@media (max-height:420px){.stick{width:112px;height:112px}#benchBar{top:var(--pt)}}
 @media (prefers-reduced-motion:reduce){#toast span,#flash,.bar>i{transition:none}}
 </style>
 
 <canvas id="view" aria-label="3D jobsite with an excavator"></canvas>
 <div id="flash"></div>
 <div id="hud">
-  <div class="stats" aria-live="off"><span><b id="fpsVal">--</b> FPS</span><span><b id="triVal">--</b> tris</span><span><b id="resVal">--</b> res</span></div>
-  <div class="top">
-    <div class="panel" id="bucketPanel">
-      <div class="lbl">Bucket</div>
-      <div class="val" id="bucketVal">0.00 yd³ · 0%</div>
+  <div class="status" id="status" title="Tap to show less or more">
+    <div class="srow" id="bucketPanel">
+      <div class="line"><span class="lbl">Bucket</span><span class="val" id="bucketVal">0.00 yd³ · 0%</span></div>
       <div class="bar"><i id="bucketBar"></i></div>
-      <div class="sub" id="tipVal">Tip 0.0 ft above grade</div>
+      <div class="sub" id="tipVal">Tip 2.0 ft above grade</div>
     </div>
-    <div class="panel">
-      <div class="lbl">Trench · 3 ft deep</div>
-      <div class="val" id="trenchVal">0%</div>
+    <div class="srow">
+      <div class="line"><span class="lbl">Trench</span><span class="val" id="trenchVal">0% · 0:00</span></div>
       <div class="bar" id="trenchBar"><i></i></div>
       <div class="sub" id="gasVal">Gas main: buried</div>
     </div>
-    <div class="panel wide">
-      <div class="trow"><span class="lbl">Dump truck</span><span class="val" id="truckVal">0.0 / 10.0 yd³</span><span class="sub" id="haulVal">Hauled 0.0 yd³</span></div>
+    <div class="srow">
+      <div class="line"><span class="lbl">Truck</span><span class="val" id="truckVal">0.0 / 10 yd³</span></div>
       <div class="bar"><i id="truckBar"></i></div>
+      <div class="sub" id="haulVal">Hauled 0.0 yd³</div>
+    </div>
+    <div class="stats" aria-live="off"><b id="fpsVal">--</b> fps · <b id="triVal">--</b> tris · <b id="resVal">--</b></div>
+  </div>
+  <div class="side">
+    <canvas id="mini" title="Tap for the big map (M)"></canvas>
+    <div class="row">
+      <button id="camBtn" class="sm">Cab view</button>
+      <button id="menuBtn" class="sm sq" aria-label="Menu" aria-expanded="false">☰</button>
+    </div>
+    <div id="menu" hidden>
+      <button id="helpBtn">How to play</button>
+      <button id="benchBtn">Speed test</button>
+      <button id="resetBtn">Reset</button>
     </div>
   </div>
-  <div class="row">
-    <div class="seg" role="group" aria-label="Control mode">
-      <button id="modeDig" aria-pressed="true">Dig</button>
-      <button id="modeDrive" aria-pressed="false">Drive</button>
-      <button id="modeTruck" aria-pressed="false">Truck</button>
-    </div>
-    <button id="camBtn">Cab view</button>
-    <span style="flex:1"></span>
-    <button id="benchBtn">Speed test</button>
-    <button id="resetBtn">Reset</button>
-    <button id="helpBtn" aria-label="Help">?</button>
-  </div>
-  <div class="spacer"><canvas id="mini" title="Tap for the big map (M)"></canvas><div id="benchBar" hidden></div><div id="toast"><span id="toastText"></span></div></div>
+  <div id="benchBar" hidden></div>
+  <div id="toast"><span id="toastText"></span></div>
   <div class="sticks">
     <div class="stickwrap">
       <div class="cap" id="capL"><b>◀ ▶</b> Swing<br><b>▲ ▼</b> Stick out / in</div>
       <div class="stick" id="stickL"><div class="knob"></div></div>
+    </div>
+    <div class="seg" role="group" aria-label="Control mode">
+      <button id="modeDig" aria-pressed="true">Dig</button>
+      <button id="modeDrive" aria-pressed="false">Drive</button>
+      <button id="modeTruck" aria-pressed="false">Truck</button>
     </div>
     <div class="stickwrap">
       <div class="cap" id="capR"><b>◀ ▶</b> Curl / dump<br><b>▲ ▼</b> Boom down / up</div>
@@ -188,6 +200,7 @@ button:focus-visible{outline:3px solid var(--gas);outline-offset:2px}
       <dt>Truck</dt><dd>Swing a full bucket over the truck bed and dump. Tap Truck to drive it: left stick steers and gives gas, right stick raises the bed. Back up to the cliff edge and dump it over to haul it off.</dd>
       <dt>Look</dt><dd>Drag the scene to look around.</dd>
       <dt>Map</dt><dd>Tap the minimap or press M for the big map.</dd>
+      <dt>Screen</dt><dd>Tap the status card to fold it down. Speed test and Reset are in the ☰ menu.</dd>
       <dt>Keys</dt><dd>Dig: A/D swing · W/S stick · I/K boom · J/L bucket. Drive or Truck: WASD or arrows to drive, I/K raises the truck bed.</dd>
     </dl>
     <p>To scoop: boom down until the teeth bite, curl in while pulling the stick toward you, boom up, swing, then dump.</p>
@@ -902,7 +915,12 @@ $('#resetBtn').onclick=()=>{const b=$('#resetBtn');
   resetArm=performance.now();b.textContent='Tap again';b.classList.add('arm');
   setTimeout(()=>{if(resetArm&&performance.now()-resetArm>=2400){resetArm=0;b.textContent='Reset';b.classList.remove('arm')}},2500);};
 const help=$('#help');
-$('#helpBtn').onclick=()=>{help.hidden=false};
+$('#helpBtn').onclick=()=>{help.hidden=false;showMenu(false)};
+function showMenu(on){$('#menu').hidden=!on;$('#menuBtn').setAttribute('aria-expanded',on)}
+$('#menuBtn').onclick=()=>showMenu($('#menu').hidden);
+$('#view').addEventListener('pointerdown',()=>showMenu(false));
+const statusEl=$('#status');try{statusEl.classList.toggle('min',localStorage.getItem('bhd_hudmin')==='1')}catch(e){}
+statusEl.onclick=()=>{const m=statusEl.classList.toggle('min');try{localStorage.setItem('bhd_hudmin',m?'1':'0')}catch(e){}};
 $('#startBtn').onclick=()=>{help.hidden=true;try{localStorage.setItem('bhd_seen','1')}catch(e){}};
 try{if(localStorage.getItem('bhd_seen'))help.hidden=true}catch(e){}
 function started(){if(!st.startT)st.startT=performance.now()}
@@ -1070,7 +1088,7 @@ function benchSample(dt){
   if(bench.barT<=0){bench.barT=0.2;const left=Math.max(0,Math.ceil(LEVEL_S*LEVELS.length-bench.t));
     $('#benchBar').innerHTML=`SPEED TEST · ${left} s left<small>Level ${bench.lvl+1} of ${LEVELS.length} · ${1+LEVELS[bench.lvl]} excavators + trucks · ${fmtTris(renderer.info.render.triangles)} tris</small>`}
 }
-$('#benchBtn').onclick=startBench;
+$('#benchBtn').onclick=()=>{showMenu(false);startBench()};
 $('#benchClose').onclick=()=>{$('#bench').hidden=true};
 $('#benchCopy').onclick=()=>{const t=$('#benchText').value,b=$('#benchCopy');
   const fallback=()=>{const ta=$('#benchText');ta.hidden=false;ta.select();b.textContent='Select and copy'};
@@ -1172,7 +1190,7 @@ function frame(now){
     const secs=st.startT?Math.round(((st.done?st.doneT:now)-st.startT)/1000):0;
     $('#trenchVal').textContent=`${tp}% · ${Math.floor(secs/60)}:${String(secs%60).padStart(2,'0')}`;
     $('#trenchBar i').style.width=tp+'%';
-    $('#truckVal').textContent=`${(tr.load*1.308).toFixed(1)} / 10.0 yd³`;
+    $('#truckVal').textContent=`${(tr.load*1.308).toFixed(1)} / 10 yd³`;
     $('#truckBar').style.width=Math.round(tr.load/TRUCK_CAP*100)+'%';
     $('#haulVal').textContent=`Hauled ${(tr.hauled*1.308).toFixed(1)} yd³`;
     const gv=$('#gasVal');
