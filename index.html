@@ -79,6 +79,7 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 .seg button{border:0;border-radius:0;height:36px;font-size:13px;padding:0 12px}
 .seg button+button{border-top:1px solid var(--hud-line)}
 .seg button[aria-pressed="true"]{background:var(--machine);color:#1c1309}
+.kb .seg button::before{content:attr(data-k) " ";opacity:.6}
 #toast{position:absolute;left:0;right:0;top:32%;display:flex;justify-content:center}
 #toast span{font:800 19px/1.2 var(--f-display);letter-spacing:.03em;background:var(--hud);border:2px solid var(--machine);padding:8px 14px;border-radius:10px;text-align:center;max-width:80%;opacity:0;transition:opacity .25s}
 #toast span.show{opacity:1}
@@ -173,9 +174,9 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
       <div class="stick" id="stickL"><div class="knob"></div></div>
     </div>
     <div class="seg" role="group" aria-label="Control mode">
-      <button id="modeDig" aria-pressed="true">Dig</button>
-      <button id="modeDrive" aria-pressed="false">Drive</button>
-      <button id="modeTruck" aria-pressed="false">Truck</button>
+      <button id="modeDig" data-k="1" aria-pressed="true">Dig</button>
+      <button id="modeDrive" data-k="2" aria-pressed="false">Drive</button>
+      <button id="modeTruck" data-k="3" aria-pressed="false">Truck</button>
     </div>
     <div class="stickwrap">
       <div class="cap" id="capR"><b>◀ ▶</b> Curl / dump<br><b>▲ ▼</b> Boom down / up</div>
@@ -220,7 +221,7 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
       <dt>Look</dt><dd>Drag the scene to look around.</dd>
       <dt>Map</dt><dd>Tap the minimap or press M for the big map.</dd>
       <dt>Screen</dt><dd>Tap the status card to fold it down. Speed test, Reset and UI size (1x, 1.5x, 2x) are in the ☰ menu.</dd>
-      <dt>Keys</dt><dd>Dig: A/D swing · W/S stick · I/K boom · J/L bucket. Drive or Truck: WASD or arrows to drive, I/K raises the truck bed.</dd>
+      <dt>Keys</dt><dd>WASD (or arrows) is always the left stick, IJKL is always the right stick, in every mode. 1 Dig · 2 Drive · 3 Truck (Tab cycles). Hold Shift for slow, fine moves. C cab view · M map · H this help.</dd>
     </dl>
     <p>To scoop: boom down until the teeth bite, curl in while pulling the stick toward you, boom up, swing, then dump.</p>
     <button id="startBtn">Start digging</button>
@@ -911,9 +912,28 @@ function makeStick(el){
 }
 const SL=makeStick($('#stickL')),SR=makeStick($('#stickR'));
 const keys={};
-addEventListener('keydown',e=>{keys[e.code]=true;if(e.code.startsWith('Arrow'))e.preventDefault();started()});
+// keyboard: WASD/arrows = left stick, IJKL = right stick in every mode; the sticks' captions show the keys once one is pressed
+const MODES=['dig','drive','truck'];let kbUsed=false;
+addEventListener('keydown',e=>{if(e.ctrlKey||e.metaKey||e.altKey)return;
+  const c=e.code;keys[c]=true;
+  if(c.startsWith('Arrow')||c==='Tab'||c==='Space')e.preventDefault();
+  if(!e.repeat){
+    if(c==='Digit1')setMode('dig');else if(c==='Digit2')setMode('drive');else if(c==='Digit3')setMode('truck');
+    else if(c==='Tab')setMode(MODES[(MODES.indexOf(mode)+(e.shiftKey?2:1))%3]);
+    else if(c==='KeyC')$('#camBtn').click();
+    else if(c==='KeyH')help.hidden=!help.hidden;
+    else if(c==='Escape')help.hidden=true;}
+  if(!kbUsed){kbUsed=true;document.body.classList.add('kb');setCaps()}
+  started()});
 addEventListener('keyup',e=>{keys[e.code]=false});
+const clearKeys=()=>{for(const k in keys)keys[k]=false};
+addEventListener('blur',clearKeys);document.addEventListener('visibilitychange',clearKeys);
 const kv=(a,b)=>(keys[a]?1:0)-(keys[b]?1:0);
+// keys ease in over ~0.2 s and out over ~0.1 s so a tap nudges and a hold runs smooth; Shift is a fine-control gear
+const KA={lx:0,ly:0,rx:0,ry:0};
+function keyAxes(dt){const f=keys.ShiftLeft||keys.ShiftRight?0.3:1;
+  const t={lx:kv('KeyD','KeyA')+kv('ArrowRight','ArrowLeft'),ly:kv('KeyW','KeyS')+kv('ArrowUp','ArrowDown'),rx:kv('KeyL','KeyJ'),ry:kv('KeyI','KeyK')};
+  for(const k in t){const g=clamp(t[k],-1,1)*f,r=(g===0?10:5)*dt;KA[k]+=clamp(g-KA[k],-r,r)}}
 // orbit drag on the scene
 let orbitYaw=0,orbitPitch=0.42,camDist=9.5,drag=null;
 canvas.addEventListener('pointerdown',e=>{drag={id:e.pointerId,x:e.clientX,y:e.clientY};canvas.setPointerCapture(e.pointerId)});
@@ -923,9 +943,11 @@ const dend=e=>{if(drag&&e.pointerId===drag.id)drag=null};
 canvas.addEventListener('pointerup',dend);canvas.addEventListener('pointercancel',dend);
 canvas.addEventListener('wheel',e=>{e.preventDefault();camDist=clamp(camDist+e.deltaY*0.01,5,22)},{passive:false});
 
-function setMode(m){mode=m;for(const [id,k] of [['#modeDig','dig'],['#modeDrive','drive'],['#modeTruck','truck']])$(id).setAttribute('aria-pressed',m===k);
-  $('#capL').innerHTML=m==='dig'?'<b>◀ ▶</b> Swing<br><b>▲ ▼</b> Stick out / in':m==='drive'?'<b>◀ ▶</b> Turn<br><b>▲ ▼</b> Drive fwd / back':'<b>◀ ▶</b> Steer<br><b>▲ ▼</b> Gas / reverse';
-  $('#capR').innerHTML=m==='truck'?'<b>▲ ▼</b> Bed up / down<br>&nbsp;':'<b>◀ ▶</b> Curl / dump<br><b>▲ ▼</b> Boom down / up';firstCam=true;}
+function setCaps(){const m=mode,lh=kbUsed?'A D':'◀ ▶',lv=kbUsed?'W S':'▲ ▼',rh=kbUsed?'J L':'◀ ▶',rv=kbUsed?'I K':'▲ ▼';
+  $('#capL').innerHTML=m==='dig'?`<b>${lh}</b> Swing<br><b>${lv}</b> Stick out / in`:m==='drive'?`<b>${lh}</b> Turn<br><b>${lv}</b> Drive fwd / back`:`<b>${lh}</b> Steer<br><b>${lv}</b> Gas / reverse`;
+  $('#capR').innerHTML=m==='truck'?`<b>${rv}</b> Bed up / down<br>&nbsp;`:`<b>${rh}</b> Curl / dump<br><b>${rv}</b> Boom down / up`;}
+function setMode(m){if(m===mode)return;mode=m;for(const [id,k] of [['#modeDig','dig'],['#modeDrive','drive'],['#modeTruck','truck']])$(id).setAttribute('aria-pressed',m===k);
+  setCaps();firstCam=true;}
 $('#modeDig').onclick=()=>setMode('dig'); $('#modeDrive').onclick=()=>setMode('drive'); $('#modeTruck').onclick=()=>setMode('truck');
 $('#camBtn').onclick=()=>{camMode=camMode==='chase'?'cab':'chase';$('#camBtn').textContent=camMode==='chase'?'Cab view':'Chase view'};
 let resetArm=0;
@@ -1121,15 +1143,12 @@ $('#benchCopy').onclick=()=>{const t=$('#benchText').value,b=$('#benchCopy');
 function frame(now){
   const dt=Math.min(0.05,(now-last)/1000);last=now;
   // inputs
-  let swingIn,stickIn,driveIn=0,turnIn=0;
-  let boomIn=clamp(-SR.y+kv('KeyI','KeyK'),-1,1);
-  let bucketIn=clamp(SR.x+kv('KeyL','KeyJ'),-1,1);
-  if(mode==='dig'){swingIn=SL.x;stickIn=SL.y}else if(mode==='drive'){swingIn=0;stickIn=0;driveIn=SL.y;turnIn=SL.x}else{swingIn=0;stickIn=0}
-  if(mode==='dig'){swingIn=clamp(swingIn+kv('KeyD','KeyA'),-1,1); stickIn=clamp(stickIn+kv('KeyW','KeyS'),-1,1);}
-  else{driveIn+=kv('KeyW','KeyS');turnIn+=kv('KeyD','KeyA');}
-  driveIn=clamp(driveIn+kv('ArrowUp','ArrowDown'),-1,1); turnIn=clamp(turnIn+kv('ArrowRight','ArrowLeft'),-1,1);
+  keyAxes(dt);
+  const Lx=clamp(SL.x+KA.lx,-1,1),Ly=clamp(SL.y+KA.ly,-1,1),Rx=clamp(SR.x+KA.rx,-1,1),Ry=clamp(SR.y+KA.ry,-1,1);
+  let swingIn=0,stickIn=0,driveIn=0,turnIn=0,boomIn=-Ry,bucketIn=Rx;
+  if(mode==='dig'){swingIn=Lx;stickIn=Ly}else if(mode==='drive'){driveIn=Ly;turnIn=Lx}
   let tThr=0,tSteer=0,tBed=0;
-  if(mode==='truck'){tThr=clamp(SL.y+driveIn,-1,1);tSteer=clamp(SL.x+turnIn,-1,1);tBed=clamp(SR.y+kv('KeyI','KeyK'),-1,1);driveIn=0;turnIn=0;boomIn=0;bucketIn=0}
+  if(mode==='truck'){tThr=Ly;tSteer=Lx;tBed=Ry;boomIn=0;bucketIn=0}
   const res=st.below?0.5:1;
   st.swing-=swingIn*0.85*dt*res;
   st.a1=clamp(st.a1+boomIn*0.6*dt*res,...LIM.a1);
