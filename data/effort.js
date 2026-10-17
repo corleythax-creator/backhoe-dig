@@ -1,7 +1,7 @@
 // Backhoe Dig build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Backhoe Dig",
- "updated": "2026-10-17T08:47:00Z",
+ "updated": "2026-10-17T08:55:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 237,
+   "dh": 243,
    "act": 4.0,
-   "versions": 27
+   "versions": 28
   }
  ],
  "extra": [
@@ -336,6 +336,15 @@ window.EFFORT = {
    "tris": 719332,
    "chars": 150481,
    "what": "Lighting pass: linear lighting with filmic tone mapping; a warm afternoon sun about 40 degrees up as the key light with a dim cool sky fill, so shade reads blue-grey; a sun disc and glow in the sky; Fresnel sky reflections on cab glass, chrome, mirror, paint and the lake; the excavator and truck catch their own shadows; ground darkens under both machines; grass tufts shade dark at the root; hazier mountain shadow sides."
+  },
+  {
+   "v": 35,
+   "asked": "2026-10-17T03:28:00-05:00",
+   "live": "2026-10-17T03:55:00-05:00",
+   "dh": 6,
+   "tris": 757236,
+   "chars": 165601,
+   "what": "Dump truck detail, twice the triangles (37,600 to 75,500): a polished fuel tank with domed ends, straps and brackets, filler neck and green diesel cap, vent, gauge sender, drain and fuel lines; DEF tank; battery box lid; driveline with shafts, U-joints and tandem diffs; leaf springs, shocks and steering linkage; grille surround, fog lights, tow hooks, plates, mud flaps; wipers, beacon, antenna, hood mirrors and a cab interior; exhaust clamps and flex pipe; hoist and air lines; rear under-ride bar and hitch; bed sills, hinge pins, marker lights, ladder, tarp roller and tailgate hardware; wheels with two tread rows, rim lips, hand holes and hub domes."
   }
  ]
 };
