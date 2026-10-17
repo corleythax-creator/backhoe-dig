@@ -142,6 +142,23 @@ function started(){if(!st.startT)st.startT=performance.now()}
 {const E=window.EFFORT,v=E&&E.versions&&E.versions[E.versions.length-1];
   if(v){const d=new Date(v.live).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit',timeZone:'America/Chicago'});
     $('#verMenu').textContent=`Version ${v.v}`;$('#verHelp').textContent=`Version ${v.v} · went live ${d} Central`}}
+// updates: a Home Screen app can stay open for days without reloading, so the game re-reads the build log when it comes
+// back to the front, when it is restored from the back-forward cache, and every 10 minutes while it is open. The site and
+// lawn are saved on the way out (save.js, mower.js), so a newer version reloads at once when the game comes back from the
+// background or nothing is under way yet; one that lands mid-play waits behind a tap-to-update button instead of
+// reloading under the player's thumbs
+const GAME_V=(()=>{const E=window.EFFORT,v=E&&E.versions&&E.versions[E.versions.length-1];return v?v.v:0})();
+let verBusy=false;
+function verReload(){try{siteSaveAll()}catch(e){}try{lawnSave()}catch(e){}location.reload()}
+function verCheck(back){if(verBusy||!GAME_V||!window.fetch)return;verBusy=true;
+  fetch('data/effort.js?t='+Date.now(),{cache:'no-store'}).then(r=>r.ok?r.text():'').then(t=>{let n=0;for(const m of t.matchAll(/"v":\s*(\d+)/g))n=Math.max(n,+m[1]);
+    if(n<=GAME_V)return;
+    if(!bench.on&&(back||!help.hidden||!st.startT))verReload();
+    else{const b=$('#updBtn');b.textContent=`Version ${n} is out · tap to update`;b.hidden=false}}).catch(()=>{}).finally(()=>{verBusy=false})}
+$('#updBtn').onclick=verReload;
+document.addEventListener('visibilitychange',()=>{if(!document.hidden)verCheck(true)});
+addEventListener('pageshow',e=>{if(e.persisted)verCheck(true)});
+setInterval(()=>{if(!document.hidden)verCheck(false)},600000);
 
 let toastTimer=0;
 function toast(t,kind,ms){const el=$('#toastText');el.textContent=t;el.className='show '+(kind||'');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.className=kind||'',ms||2200)}

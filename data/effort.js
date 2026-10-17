@@ -1,7 +1,7 @@
 // Backhoe Dig build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Backhoe Dig",
- "updated": "2026-10-17T17:28:00Z",
+ "updated": "2026-10-17T17:32:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 368.0,
+   "dh": 369.0,
    "act": 8.5,
-   "versions": 54
+   "versions": 55
   }
  ],
  "extra": [
@@ -573,13 +573,21 @@ window.EFFORT = {
   },
   {
    "v": 61,
+   "asked": "2026-10-17T11:55:00-05:00",
+   "live": "2026-10-17T12:24:00-05:00",
+   "dh": 1,
+   "tris": 1154250,
+   "chars": 328599,
+   "what": "Auto update, for the Home Screen app that never reloads on its own: the game re-reads its build log when it comes back to the front, when it is restored from the back-forward cache and every 10 minutes. A newer version reloads straight away when the game comes back from the background or nothing is under way yet (the site and lawn are saved on the way out, so nothing is lost); one that lands while you are playing waits behind a yellow 'Version N is out · tap to update' button instead of reloading mid-move."
+  },
+  {
+   "v": 62,
    "asked": "2026-10-17T12:17:00-05:00",
-   "live": "2026-10-17T12:28:00-05:00",
+   "live": "2026-10-17T12:32:00-05:00",
    "dh": 1.5,
-   "tris": 1154238,
-   "chars": 327932,
+   "tris": 1154250,
+   "chars": 329628,
    "what": "Sprint on foot: hold Shift (controller left stick click) to run about 12 mph, with a quicker, wider stride and a forward lean. Keys can now do one job on foot and another in a machine, so Shift stays Fine control in the machines."
   }
  ]
 };
-
