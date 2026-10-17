@@ -25,7 +25,7 @@ const timeU={value:0};
     for(let ri=0;ri<NR;ri++)for(let ai=0;ai<NA;ai++){const q=ri*(NA+1)+ai;ix.push(q,q+1,q+NA+1,q+1,q+NA+2,q+NA+1)}
     const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pp,3));g.setAttribute('color',new THREE.Float32BufferAttribute(cc,3));
     g.setAttribute('normal',new THREE.Float32BufferAttribute(new Float32Array(pp.length),3));g.setIndex(ix);
-    const mat=unlit?new THREE.MeshBasicMaterial({vertexColors:true,fog:false,side:THREE.DoubleSide})
+    const mat=unlit?new THREE.MeshBasicMaterial({vertexColors:true,fog:false,side:THREE.DoubleSide,toneMapped:false})
       :new THREE.MeshPhongMaterial({vertexColors:true,flatShading:true,fog:false,side:THREE.DoubleSide,shininess:2,specular:0x000000,emissive:0x6a7686});
     const m=new THREE.Mesh(g,mat);m.renderOrder=-0.5;scene.add(m);
   }
