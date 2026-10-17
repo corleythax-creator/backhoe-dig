@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-17T23:32:34Z",
+ "updated": "2026-10-17T23:39:46Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 464,
+   "dh": 490,
    "act": 11.0,
-   "versions": 66
+   "versions": 67
   }
  ],
  "extra": [
@@ -687,6 +687,15 @@ window.EFFORT = {
    "tris": 1154238,
    "chars": 406502,
    "what": "Rain: showers roll through now and then (or set Weather to Rain or Dry in the menu). Rain soaks the soil by what is there: dug dirt, dirt yards, clay and topsoil turn to mud first, dirt roads and grass get soft, sand and gravel drain, rock and paving stay hard, and low ground soaks fastest. The soaked ground ruts, holds puddles and bogs machines down like painted mud, and rain fills holes and ruts. When it stops the soil dries over several minutes (sand fast, clay slow), the puddles drain and wet spoil dries, and it keeps drying while the game is closed. The sky greys over, rain streaks fall (fewer on phones), the ground takes a wet sheen and there is a rain hiss. Wet ground and weather sync between devices."
+  },
+  {
+   "v": 74,
+   "asked": "2026-10-17T17:40:00-05:00",
+   "live": "2026-10-17T18:39:46-05:00",
+   "dh": 26,
+   "tris": 1282998,
+   "chars": 429826,
+   "what": "The Family Island: a dark green steel truss bridge (about 340 ft) runs from the Lower Bench south across the water to a new, larger mesa about 525 ft across. On it: the family house with a stone base, a steep roof, a chimney and a wraparound porch with rocking chairs; a picnic pavilion with two tables; a fire pit with log benches; a flagpole and a bench looking back at Corley's; a roundabout with a big tree in the middle; groves of pines and autumn trees. The excavator, truck, mower and the worker can all cross and drive around it, and the railings keep them on the deck. The roads west and east stop at barriers where Dexter's and Jessica's bridges will go, and the mainland bridge runs about 335 ft south to a barrier, with bare piers and a crane beyond. The site map now shows both islands."
   }
  ]
 };
