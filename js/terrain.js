@@ -89,6 +89,7 @@ function updateTerrain(){
   const ca=geo.attributes.color;ca.updateRange.offset=off;ca.updateRange.count=cnt;
   const da=geo.attributes.dirt;da.updateRange.offset=off/3;da.updateRange.count=cnt/3;da.needsUpdate=true;
   pos.needsUpdate=true; ca.needsUpdate=true;
+  snapClods(ja,jb);
 }
 function hAt(x,z){
   if(x<-S/2||x>S/2||z<-S/2||z>S/2)return baseHeight(x,z);
@@ -146,6 +147,7 @@ function dig(tip,cap){
   for(let n=0;n<list.length;n+=2)H[list[n]]-=list[n+1]*s;
   digC[0]=cr/vol;digC[1]=cg/vol;digC[2]=cb/vol;
   const mg=3*GRID_K;cI0=Math.max(0,Math.min(cI0,i0-mg));cI1=Math.min(N,Math.max(cI1,i1+mg));cJ0=Math.max(0,Math.min(cJ0,j0-mg));cJ1=Math.min(N,Math.max(cJ1,j1+mg));
+  clodsDug(tip.x,tip.z,r);dropClods(tip.x,tip.z,0.75,vol*s*60*DIRT,digC);
   return vol*s;
 }
 function deposit(x,z,vol,col){
@@ -159,6 +161,7 @@ function deposit(x,z,vol,col){
   if(!sum)return;
   touch(i0,i1,j0,j1);
   for(let n=0;n<list.length;n+=2){const k=list[n],a=vol*list[n+1]/sum/CA;H[k]+=a;mixSpoil(k,col||SOIL[SPOIL].c,a)}
+  dropClods(x,z,r,vol*150*DIRT,col||SOIL[SPOIL].c);
 }
 // each layer holds its own slope: sand runs, clay stands steep, rock barely moves; what slides keeps its colour as loose fill
 const RP_MIN=0.62*CELL,M0=1.1*CELL;
@@ -201,6 +204,7 @@ function collapse(k,sur){
     if(i<i1)slumpPair(kk,kk+1,true);if(j<j1)slumpPair(kk,kk+V,true)}
   touch(i0,i1,j0,j1);st.dirty=true;st.slumpT=2.5;st.caves++;
   const p=new THREE.Vector3(ci*CELL-S/2,H[k]+0.1,cj*CELL-S/2);for(let n=0;n<40;n++)spawn(p,1.6);
+  dropClods(p.x,p.z,1.4,60*DIRT,matColor(k,matAt(k,H[k]-0.05)),1.4);
   shake=reduceMotion?0:0.35;rumble(500,0.8);
   toast(sur?'Cave-in! Spoil too close to the edge. Keep piles 2 ft back.':'Cave-in! Walls past 5 ft deep need a slope or a trench box.','bad',3600);
 }

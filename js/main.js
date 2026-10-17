@@ -15,7 +15,7 @@ function frame(now){
   st.a2=clamp(st.a2+stickIn*0.8*dt*res,...LIM.a2);
   st.a3=clamp(st.a3+bucketIn*1.3*dt*res,...LIM.a3);
   if(bench.on){benchTick(dt);driveIn=0;turnIn=0;tThr=0;tSteer=0;tBed=0}
-  updateTruck(dt,tThr,tSteer,tBed);
+  updateTruck(dt,tThr,tSteer,tBed);updateHeapClods();
   // drive
   st.yaw-=turnIn*0.8*dt;
   st.x=clamp(st.x+Math.sin(st.yaw)*driveIn*2.6*dt,-60,60);
@@ -111,11 +111,8 @@ function frame(now){
     gv.textContent=st.strikes?`Gas main: ${st.strikes} strike${st.strikes>1?'s':''}`:st.exposed?'Gas main: exposed ✓':'Gas main: buried';
     gv.style.color=st.strikes?'var(--danger)':st.exposed?'var(--ok)':'';
   }
-  // particles
-  for(const p of parts){if(!p.on)continue;p.v.y-=9.8*dt;p.m.position.addScaledVector(p.v,dt);
-    const pp=p.m.position;if(pp.y<hAt(pp.x,pp.z)||(inBed(pp)&&tl.y<heapTop())){p.on=false;p.m.visible=false}}
-  for(let i=0;i<parts.length;i++){const m=parts[i].m;if(m.visible){m.updateMatrix();pInst.setMatrixAt(i,m.matrix)}else pInst.setMatrixAt(i,ZERO)}
-  pInst.instanceMatrix.needsUpdate=true;
+  // flying dirt
+  particlesTick(dt);
   // bucket load visual
   loadMesh.visible=st.load>0.01;
   if(loadMesh.visible){const s=0.35+0.75*Math.sqrt(st.load/CAP);loadMesh.scale.set(s,s*0.6,s*1.15);tintLoad(loadMesh.material,st.loadC)}
