@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-17T23:49:07Z",
+ "updated": "2026-10-17T23:59:05Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 490.5,
+   "dh": 515.5,
    "act": 11.0,
-   "versions": 68
+   "versions": 69
   }
  ],
  "extra": [
@@ -705,6 +705,15 @@ window.EFFORT = {
    "tris": 1282998,
    "chars": 429953,
    "what": "The Keys line in How to play now gives the mower's own keys: W and S drive it straight, A and D turn it, and the number pad works the lap bars (8 and 2 both, 4 and 6 spin in place, 7 and 1 the left bar, 9 and 3 the right bar), instead of saying IJKL is the right stick in every mode."
+  },
+  {
+   "v": 76,
+   "asked": "2026-10-17T18:50:00-05:00",
+   "live": "2026-10-17T18:59:05-05:00",
+   "dh": 25,
+   "tris": 1349676,
+   "chars": 452849,
+   "what": "Jessica's Island: from the Family Island's roundabout the east road leads to a red covered footbridge (about 305 ft, on foot only) that climbs 10 ft to a forest mesa the size of Corley's. Lantern-lit gravel paths wind through pines and autumn trees to a stone and timber cottage with a mossy roof, flower boxes and smoke curling from the chimney, past a fenced herb garden to a bench at the cliff edge. Inside is her library: shelves of books to the ceiling on three walls, a rolling ladder on a brass rail, a cushioned window seat with pillows, a plaid blanket and a sleeping cat, two armchairs on a rug by a crackling fire, a reading lamp and a side table with a teacup. Walk in and the roof lifts off so the camera looks down into the room; Cab view walks it at eye level. The library is only drawn when you are near, so phones pay for it only there."
   }
  ]
 };
