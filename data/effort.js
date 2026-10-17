@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-17T23:14:35Z",
+ "updated": "2026-10-17T23:22:23Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 443,
+   "dh": 444,
    "act": 10.5,
-   "versions": 63
+   "versions": 64
   }
  ],
  "extra": [
@@ -660,6 +660,15 @@ window.EFFORT = {
    "tris": 1154238,
    "chars": 389546,
    "what": "Mower keys: on a keyboard W and S (or the arrows) now drive the zero-turn straight and A and D turn it, instead of working only the left lap bar so it spun on its own. The number pad works the lap bars: 8 and 2 both forward or back, 4 and 6 spin in place, 7 and 1 the left bar, 9 and 3 the right bar, all changeable in the Keys panel. Touch and controller sticks still work one lap bar each."
+  },
+  {
+   "v": 71,
+   "asked": "2026-10-17T18:12:00-05:00",
+   "live": "2026-10-17T18:22:23-05:00",
+   "dh": 1,
+   "tris": 1154238,
+   "chars": 389790,
+   "what": "Fix: a puddle in a rut on a slope could spread over the untouched ground below it and cover the dig area with a flat slab of water. Water now only stands where the ground is dug or rutted below grade, and slabs already in saved sites drain away on load."
   }
  ]
 };
