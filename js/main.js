@@ -33,14 +33,14 @@ function frame(now){
   blkPush(st,EX_C,EX_R);
   const sy=Math.sin(st.yaw),cy=Math.cos(st.yaw);
   // tracks rut loose fill, crush clods, pick up mud and kick up a little dust
-  if(!bench.on&&(Math.abs(driveIn)>0.05||Math.abs(turnIn)>0.05))for(const sd of [-1,1]){const tx=st.x+sd*1.05*cy,tz=st.z-sd*1.05*sy;
-    if(stampRut(tx,tz,st.yaw,0.28,1.5,dt)){st.mud=Math.min(1,st.mud+dt*0.06);dustPuff(tx,hAt(tx,tz)+0.1,tz,dt*4)}}
+  if(!bench.on&&(Math.abs(driveIn)>0.05||Math.abs(turnIn)>0.05))for(const sd of [-1,1]){const tx=st.x+sd*1.1*cy,tz=st.z-sd*1.1*sy;
+    if(stampRut(tx,tz,st.yaw,0.26,1.6,dt)){st.mud=Math.min(1,st.mud+dt*0.06);dustPuff(tx,hAt(tx,tz)+0.1,tz,dt*4)}}
   if(crushT<=0)crushT=0.1;
   const sample=(lx,lz)=>surfAt(st.x+lx*cy+lz*sy,st.z-lx*sy+lz*cy);
-  const hf=(sample(-1,1.7)+sample(1,1.7))/2,hb=(sample(-1,-1.7)+sample(1,-1.7))/2;
-  const hr=(sample(1,1.7)+sample(1,-1.7))/2,hl=(sample(-1,1.7)+sample(-1,-1.7))/2;
+  const hf=(sample(-1.1,1.8)+sample(1.1,1.8))/2,hb=(sample(-1.1,-1.8)+sample(1.1,-1.8))/2;
+  const hr=(sample(1.1,1.8)+sample(1.1,-1.8))/2,hl=(sample(-1.1,1.8)+sample(-1.1,-1.8))/2;
   const k=Math.min(1,dt*8);
-  st.y+=((hf+hb)/2-st.y)*k; st.pitch+=(-Math.atan2(hf-hb,3.4)-st.pitch)*k; st.roll+=(Math.atan2(hr-hl,2.1)-st.roll)*k;
+  st.y+=((hf+hb)/2-st.y)*k; st.pitch+=(-Math.atan2(hf-hb,3.6)-st.pitch)*k; st.roll+=(Math.atan2(hr-hl,2.2)-st.roll)*k;
   machine.position.set(st.x,st.y,st.z); machine.rotation.set(st.pitch,st.yaw,st.roll);
   house.rotation.y=st.swing;
   boomP.rotation.x=-st.a1; stickP.rotation.x=-st.a2; bucketP.rotation.x=-st.a3;
@@ -123,7 +123,7 @@ function frame(now){
     const secs=st.startT?Math.round(((st.done?st.doneT:now)-st.startT)/1000):0;
     $('#trenchVal').textContent=`${tp}% · ${Math.floor(secs/60)}:${String(secs%60).padStart(2,'0')}`;
     $('#trenchBar i').style.width=tp+'%';
-    $('#truckVal').textContent=`${(tr.load*1.308).toFixed(1)} / 10 yd³`;
+    $('#truckVal').textContent=`${(tr.load*1.308).toFixed(1)} / 12 yd³`;
     $('#truckBar').style.width=Math.round(tr.load/TRUCK_CAP*100)+'%';
     $('#haulVal').textContent=(mode==='truck'?`${Math.round(Math.abs(tr.v)*2.237)} mph · ${tr.shiftT>0?'N':tr.gear>0?'D':'R'} · `:'')+`Hauled ${(tr.hauled*1.308).toFixed(1)} yd³`;
     // in Mow mode the lawn takes the bucket's place, so the card keeps its height

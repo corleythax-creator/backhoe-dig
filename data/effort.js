@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 268,
+   "dh": 273,
    "act": 4.5,
-   "versions": 33
+   "versions": 34
   }
  ],
  "extra": [
@@ -384,11 +384,20 @@ window.EFFORT = {
   },
   {
    "v": 40,
+   "asked": "2026-10-17T04:05:00-05:00",
+   "live": "2026-10-17T04:25:00-05:00",
+   "dh": 5,
+   "tris": 822372,
+   "chars": 212849,
+   "what": "Real-scale machines from CAT 320 and tri-axle dump truck specs. Excavator: 18.7 ft boom and 9.5 ft stick (was 13.8 and 8.5) with rams and hoses refitted, 7.2 ft track gauge, 24 in shoes, 10.8 ft of track on the ground, and a longer deck and counterweight for a 9 ft tail swing; reach along the ground 34 ft, dig depth 17 ft, top height 35 ft. Truck: 16 ft dump body (was 14 ft) hung farther past the tandem, frame and rear lighting moved back, capacity 12 yd³."
+  },
+  {
+   "v": 41,
    "asked": "2026-10-17T04:16:00-05:00",
    "live": "2026-10-17T04:25:00-05:00",
    "dh": 1.5,
-   "tris": 821848,
-   "chars": 214582,
+   "tris": 822372,
+   "chars": 214859,
    "what": "The mowed lawn stays mowed: which grass is cut and its stripes, the mowing time and where the mower was left are saved in the browser and come back on reload. Reset restores the ground but no longer regrows mowed grass; the save carries its time so grass growth can catch up on time away."
   }
  ]

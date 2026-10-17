@@ -51,7 +51,7 @@ const texManager=new THREE.LoadingManager(),texLoader=new THREE.TextureLoader(te
 function loadTex(url){const t=texLoader.load(url);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());return t}
 const texGrass=loadTex('grass.jpg'),texDirt=loadTex('dirt.jpg'),texGrime=loadTex('grime.jpg');
 const texMixU={value:0};
-const groundOcc={value:[new THREE.Vector4(0,0,0,0),new THREE.Vector4(1.3,1.9,0,0),new THREE.Vector4(0,0,0,0),new THREE.Vector4(1.2,3.6,0.3,0)]};
+const groundOcc={value:[new THREE.Vector4(0,0,0,0),new THREE.Vector4(1.4,2.0,0,0),new THREE.Vector4(0,0,0,0),new THREE.Vector4(1.2,3.9,0.0,0)]};
 const groundMat=M(0xffffff,{vertexColors:true});
 groundMat.onBeforeCompile=sh=>{
   sh.uniforms.tGrass={value:texGrass};sh.uniforms.tDirt={value:texDirt};sh.uniforms.texMix=texMixU;sh.uniforms.uTime=timeU;

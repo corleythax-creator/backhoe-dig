@@ -210,7 +210,7 @@ function updateMower(dt,inL,inR){
   // stays on the mesa, steers clear of the excavator, the truck and tall blocks; the big machines shove it aside
   for(const lz of MW_C){const sy=Math.sin(mw.yaw),cy=Math.cos(mw.yaw),px=mw.x+sy*lz,pz=mw.z+cy*lz,rr=mesaR(px,pz),lim=EDGE-2;
     if(rr>lim){const k=lim/rr;mw.x+=px*k-px;mw.z+=MZ+(pz-MZ)*k-pz}
-    const ex=px-st.x,ez=pz-st.z,ed=Math.hypot(ex,ez),em=MW_R+2.3;if(ed<em&&ed>1e-3){mw.x+=ex/ed*(em-ed);mw.z+=ez/ed*(em-ed)}
+    const ex=px-st.x,ez=pz-st.z,ed=Math.hypot(ex,ez),em=MW_R+2.7;if(ed<em&&ed>1e-3){mw.x+=ex/ed*(em-ed);mw.z+=ez/ed*(em-ed)}
     for(const tz of TR_C){const tx=tr.x+Math.sin(tr.yaw)*tz,tzz=tr.z+Math.cos(tr.yaw)*tz,dx=px-tx,dz=pz-tzz,d=Math.hypot(dx,dz),m=MW_R+TR_R;
       if(d<m&&d>1e-3){mw.x+=dx/d*(m-d);mw.z+=dz/d*(m-d)}}}
   blkPush(mw,MW_C,MW_R);
@@ -235,8 +235,8 @@ function updateMower(dt,inL,inR){
   if(!lawn.done&&lawnPct()>=0.97){lawn.done=true;lawn.doneT=performance.now();const s=Math.round((lawn.doneT-lawn.startT)/1000);
     toast(`Lawn mowed in ${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}. Nice stripes.`,'good',5000)}
   // the grass leans away from whatever drives through it
-  const P=lawnPush.value;P[0].set(mw.x+sy*0.7,mw.z+cy*0.7,0.95,0);P[1].set(st.x,st.z,2.2,0);
-  P[2].set(tr.x+Math.sin(tr.yaw)*2.0,tr.z+Math.cos(tr.yaw)*2.0,1.6,0);P[3].set(tr.x-Math.sin(tr.yaw)*1.8,tr.z-Math.cos(tr.yaw)*1.8,1.6,0);
+  const P=lawnPush.value;P[0].set(mw.x+sy*0.7,mw.z+cy*0.7,0.95,0);P[1].set(st.x,st.z,2.4,0);
+  P[2].set(tr.x+Math.sin(tr.yaw)*2.0,tr.z+Math.cos(tr.yaw)*2.0,1.6,0);P[3].set(tr.x-Math.sin(tr.yaw)*2.4,tr.z-Math.cos(tr.yaw)*2.4,1.6,0);
   clipTick(dt);lawnFlush();
   if(Math.abs(mw.v)>0.01||Math.abs(mw.w)>0.01)lawn.sDirty=true;
   if(lawn.sDirty&&performance.now()-lawn.saveT>2000)lawnSave();

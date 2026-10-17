@@ -60,7 +60,7 @@ function drawMap(cv,cx,cz,half,big){
   const hy=st.yaw+st.swing;
   g.strokeStyle='#f07a22';g.lineWidth=Math.max(2,0.3*sc);g.beginPath();g.moveTo(X(st.x),Y(st.z));g.lineTo(X(tip.x),Y(tip.z));g.stroke();
   icon(mw.x,mw.z,Math.atan2(Math.cos(mw.yaw),Math.sin(mw.yaw)),'#d8352a',2.2,1.4,mode==='mow');
-  icon(tr.x,tr.z,Math.atan2(Math.cos(tr.yaw),Math.sin(tr.yaw)),'#e9ecea',8.5,2.6,mode==='truck');
+  icon(tr.x,tr.z,Math.atan2(Math.cos(tr.yaw),Math.sin(tr.yaw)),'#e9ecea',9.1,2.6,mode==='truck');
   icon(st.x,st.z,Math.atan2(Math.cos(hy),Math.sin(hy)),'#f07a22',4.2,3,mode==='dig'||mode==='drive');
   g.fillStyle='rgba(20,23,19,.75)';g.fillRect(W-30*dpr,4*dpr,26*dpr,26*dpr);g.fillStyle='#f3f5ef';g.font=`800 ${16*dpr}px Saira Condensed, sans-serif`;g.textAlign='center';g.textBaseline='middle';g.fillText('N',W-17*dpr,17*dpr);
   if(big){g.font=`700 ${15*dpr}px Saira Condensed, sans-serif`;g.fillStyle='rgba(255,255,255,.85)';g.fillText('DIG SITE',X(0),Y(-S/2)-10*dpr);g.fillText('LAKE',X(0),Y(100));}
