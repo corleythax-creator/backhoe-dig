@@ -51,39 +51,60 @@ function updateTufts(i0,i1,j0,j1){
   tufts.instanceMatrix.needsUpdate=true;
 }
 const ZERO_M=new THREE.Matrix4().makeScale(0,0,0);
+// after the map editor reshapes, repaints or lays a road over an area (metres): tufts follow the ground and keep off
+// dirt, roads and steep ground
+function tuftsRefresh(x0,x1,z0,z1){
+  for(let n=0;n<TUFTS;n++){const x=tX[n],z=tZ[n];if(x<x0||x>x1||z<z0||z>z1)continue;const i=tI[n],k=tJ[n]*V+i;
+    if((i>=0&&Math.abs(H[k]-H0[k])>0.04)||yardAt(x,z)>0.3||roadAmt(x,z)>0.1||wallAt(x,z)){tufts.setMatrixAt(n,ZERO_M);continue}
+    tO.position.set(x,hAt(x,z)-0.02,z);tO.rotation.set(0,tR[n],0);tO.scale.setScalar(tS[n]);tO.updateMatrix();tufts.setMatrixAt(n,tO.matrix)}
+  tufts.instanceMatrix.needsUpdate=true}
 for(let n=0;n<TUFTS;n++){tO.position.set(tX[n],hAt(tX[n],tZ[n])-0.02,tZ[n]);tO.rotation.set(0,tR[n],0);tO.scale.setScalar(tS[n]);tO.updateMatrix();tufts.setMatrixAt(n,tO.matrix)}
 // ground outside the dig zone: 0.5 m over the rest of the mesa and its cliffs (hills, the scarp and the ramp need it),
 // 2 m beyond; each patch has a hole where the finer one sits
 const MID=[-58,58,-32,92];
+// a ground vertex's colour into c (rgb array), and its dirt-texture amount: grass (darker down on the meadows), rock on
+// steep ground, sand at the lake, the yards and the roads
+function groundColor(x,z,h,c){const n=hash(x*3.55+0.3,z*2.65+0.7);
+  const sl=(Math.abs(baseHeight(x+1,z)-baseHeight(x-1,z))+Math.abs(baseHeight(x,z+1)-baseHeight(x,z-1)))/2;
+  const rock=ss(0.55,1.1,sl),sand=1-ss(WATER+0.6,WATER+2.8,h),low=ss(-4,-20,h)*ss(EDGE-1,EDGE+2,mesaR(x,z));
+  let r=0.30+0.08*n+0.05*low,g=0.50+0.09*n-0.02*low,b=0.24+0.04*n;
+  const strata=0.06*Math.sin(h*1.4+n);
+  r+=(0.50+0.06*n+strata-r)*rock;g+=(0.44+0.05*n+strata-g)*rock;b+=(0.38+0.04*n+strata-b)*rock;
+  r+=(0.80-r)*sand;g+=(0.72-g)*sand;b+=(0.52-b)*sand;
+  c[0]=r;c[1]=g;c[2]=b;const ya=yardTint(x,z,c,n),ra=roadTint(x,z,c,n);return Math.min(1,Math.max(rock*0.95+sand*0.4,ra*0.9,ya*0.85))}
+let midPatch=null,skirtMesh=null;
 (function(){
   function patch(X0,X1,Z0,Z1,CO,hole){
-    const NX=Math.round((X1-X0)/CO),NZ=Math.round((Z1-Z0)/CO),VX=NX+1,pp=[],cc=[],ix=[],rk=[];
-    for(let j=0;j<=NZ;j++)for(let i=0;i<=NX;i++){const x=X0+i*CO,z=Z0+j*CO,n=hash(x*3.55+0.3,z*2.65+0.7),h=baseHeight(x,z);pp.push(x,h,z);
-      const sl=(Math.abs(baseHeight(x+1,z)-baseHeight(x-1,z))+Math.abs(baseHeight(x,z+1)-baseHeight(x,z-1)))/2;
-      const rock=ss(0.55,1.1,sl),sand=1-ss(WATER+0.6,WATER+2.8,h),low=ss(-4,-20,h)*ss(EDGE-1,EDGE+2,mesaR(x,z));
-      let r=0.30+0.08*n+0.05*low,g=0.50+0.09*n-0.02*low,b=0.24+0.04*n;
-      const strata=0.06*Math.sin(h*1.4+n);
-      r+=(0.50+0.06*n+strata-r)*rock;g+=(0.44+0.05*n+strata-g)*rock;b+=(0.38+0.04*n+strata-b)*rock;
-      r+=(0.80-r)*sand;g+=(0.72-g)*sand;b+=(0.52-b)*sand;
-      const rc=[r,g,b],ya=yardTint(x,z,rc,n),ra=roadTint(x,z,rc,n);cc.push(rc[0],rc[1],rc[2]);rk.push(Math.min(1,Math.max(rock*0.95+sand*0.4,ra*0.9,ya*0.85)))}
+    const NX=Math.round((X1-X0)/CO),NZ=Math.round((Z1-Z0)/CO),VX=NX+1,pp=[],cc=[],ix=[],rk=[],c=[0,0,0];
+    for(let j=0;j<=NZ;j++)for(let i=0;i<=NX;i++){const x=X0+i*CO,z=Z0+j*CO,h=baseHeight(x,z);pp.push(x,h,z);rk.push(groundColor(x,z,h,c));cc.push(c[0],c[1],c[2])}
     for(let j=0;j<NZ;j++)for(let i=0;i<NX;i++){const x0=X0+i*CO,z0=Z0+j*CO;
       if(x0>=hole[0]-1e-6&&x0+CO<=hole[1]+1e-6&&z0>=hole[2]-1e-6&&z0+CO<=hole[3]+1e-6)continue;const a=j*VX+i;ix.push(a,a+VX,a+1,a+1,a+VX,a+VX+1)}
     const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pp,3));g.setAttribute('color',new THREE.Float32BufferAttribute(cc,3));
     g.setAttribute('normal',new THREE.Float32BufferAttribute(new Float32Array(pp.length),3));g.setIndex(ix);
     g.setAttribute('dirt',new THREE.Float32BufferAttribute(rk,1));g.setAttribute('wetT',new THREE.Float32BufferAttribute(new Float32Array(rk.length).fill(-1e4),1));g.setAttribute('soilD',new THREE.Float32BufferAttribute(new Float32Array(rk.length),1));
     const m=new THREE.Mesh(g,groundMat);m.receiveShadow=true;scene.add(m);
+    return {g,X0,Z0,CO,VX,NX,NZ};
   }
   patch(-160,160,-160,160,2,MID);
-  patch(MID[0],MID[1],MID[2],MID[3],0.5,[-S/2,S/2,-S/2,S/2]);
-  // skirts hide any hairline gap where a finer grid meets a coarser one
+  midPatch=patch(MID[0],MID[1],MID[2],MID[3],0.5,[-S/2,S/2,-S/2,S/2]);
+  buildSkirts();
+})();
+// after the map editor reshapes or repaints an area (metres): the 0.5 m ground there takes the new heights and colours
+function midUpdate(x0,x1,z0,z1){const P=midPatch,g=P.g,pa=g.attributes.position,ca=g.attributes.color,da=g.attributes.dirt,c=[0,0,0];
+  const i0=Math.max(0,Math.floor((x0-P.X0)/P.CO)),i1=Math.min(P.NX,Math.ceil((x1-P.X0)/P.CO)),j0=Math.max(0,Math.floor((z0-P.Z0)/P.CO)),j1=Math.min(P.NZ,Math.ceil((z1-P.Z0)/P.CO));
+  if(i0>i1||j0>j1)return;
+  for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const v=j*P.VX+i,x=P.X0+i*P.CO,z=P.Z0+j*P.CO,h=baseHeight(x,z);
+    pa.array[v*3+1]=h;da.array[v]=groundColor(x,z,h,c);ca.array[v*3]=c[0];ca.array[v*3+1]=c[1];ca.array[v*3+2]=c[2]}
+  for(const [a,w] of [[pa,3],[ca,3],[da,1]]){a.updateRange.offset=j0*P.VX*w;a.updateRange.count=(j1-j0+1)*P.VX*w;a.needsUpdate=true}}
+// skirts hide any hairline gap where a finer grid meets a coarser one; rebuilt when the editor reshapes the ground
+function buildSkirts(){
   const sp=[],si=[];let q=0;
   const run=(fx,a0,a1,st,dp)=>{for(let t=a0;t<a1-1e-6;t+=st){const [x0,z0]=fx(t),[x1,z1]=fx(t+st),h0=baseHeight(x0,z0),h1=baseHeight(x1,z1);
     sp.push(x0,h0,z0,x1,h1,z1,x0,h0-dp,z0,x1,h1-dp,z1);si.push(q,q+2,q+1,q+1,q+2,q+3);q+=4}};
   const E=S/2;run(t=>[t,-E],-E,E,0.5,0.6);run(t=>[t,E],-E,E,0.5,0.6);run(t=>[-E,t],-E,E,0.5,0.6);run(t=>[E,t],-E,E,0.5,0.6);
   run(t=>[t,MID[2]],MID[0],MID[1],0.5,2);run(t=>[t,MID[3]],MID[0],MID[1],0.5,2);run(t=>[MID[0],t],MID[2],MID[3],0.5,2);run(t=>[MID[1],t],MID[2],MID[3],0.5,2);
   const sg=new THREE.BufferGeometry();sg.setAttribute('position',new THREE.Float32BufferAttribute(sp,3));sg.setAttribute('normal',new THREE.Float32BufferAttribute(new Float32Array(sp.length),3));sg.setIndex(si);
-  scene.add(new THREE.Mesh(sg,M(0x4a6a34,{side:THREE.DoubleSide})));
-})();
+  if(skirtMesh){skirtMesh.geometry.dispose();skirtMesh.geometry=sg}else{skirtMesh=new THREE.Mesh(sg,M(0x4a6a34,{side:THREE.DoubleSide}));scene.add(skirtMesh)}}
 const pipe=new THREE.Mesh(new THREE.CylinderGeometry(PIPE_R,PIPE_R,24,36,4),M(0xf2c21a,{shininess:30}));
 pipe.rotation.z=Math.PI/2; pipe.position.set(0,PIPE_Y,PIPE_Z); scene.add(pipe);
 function stake(x,z,flagColor){
@@ -96,6 +117,9 @@ function stake(x,z,flagColor){
 [[-3,PIPE_Z],[3,PIPE_Z],[-7,PIPE_Z],[7,PIPE_Z]].forEach(p=>stake(p[0],p[1],0xf5c518));
 // the tree instance meshes, for shadowproxy.js
 const treeIMs=[];
+// placed assets (trees and boulders) as {t: type, x, z, yaw, s: size, c: tint}; the map editor moves, adds and removes them
+const ASSET_CAP={pine:600,leafy:300,rock:400},assetIMs={},assets=mapAssets?mapAssets.slice():[];
+const ASSET_PT=[[1,1,1],[0.85,0.95,1.06],[1.08,1.04,0.82],[0.92,0.98,0.9]],ASSET_LT=[[0.98,0.78,0.26],[0.93,0.52,0.2],[0.56,0.64,0.3],[0.78,0.32,0.18],[0.46,0.6,0.28],[0.95,0.85,0.4]];
 (function trees(){
   function colorize(g,fn){if(g.index)g=g.toNonIndexed();const p=g.attributes.position,c=new Float32Array(p.count*3);
     for(let i=0;i<p.count;i++){const col=fn(p.getX(i),p.getY(i),p.getZ(i));c[i*3]=col[0];c[i*3+1]=col[1];c[i*3+2]=col[2]}
@@ -134,29 +158,43 @@ const treeIMs=[];
     crown.push(colorize(g,(px,py)=>{const k=0.62+0.38*Math.min(1,Math.max(0,(py-1.5)/3));return[k,k,k]}));
   }
   const crownGeo=mergeGeos(crown);
-  const NP=210,NB=75,treeM=M(0xffffff,{vertexColors:true});
-  const pines=new THREE.InstancedMesh(pineGeo,treeM,NP),woods=new THREE.InstancedMesh(woodGeo,treeM,NB),crowns=new THREE.InstancedMesh(crownGeo,treeM,NB);
-  for(const im of [pines,woods,crowns]){im.castShadow=true;im.receiveShadow=true;im.frustumCulled=false}
-  // clustered placement in a ring around the work zone
-  const spots=[];
-  // on the mesa: a band inside the rim and round West Rise, clear of the roads, the yards, the scarp and the tall grass
+  // boulder: a lumpy grey stone, lighter on top
+  const rockGeo=(function(){const g=new THREE.IcosahedronGeometry(0.8,1),p=g.attributes.position;
+    for(let i=0;i<p.count;i++){const x=p.getX(i),y=p.getY(i),z=p.getZ(i),n=1+0.22*Math.sin(x*5.1+y*3.3)*Math.cos(z*4.7-y*2.1);p.setXYZ(i,x*n*1.15,y*n*0.62,z*n)}
+    g.computeVertexNormals();return colorize(g,(x,y)=>{const k=0.62+0.3*Math.min(1,Math.max(0,(y+0.3)/0.8));return[0.62*k,0.6*k,0.56*k]})})();
+  const treeM=M(0xffffff,{vertexColors:true});
+  const pines=new THREE.InstancedMesh(pineGeo,treeM,ASSET_CAP.pine),woods=new THREE.InstancedMesh(woodGeo,treeM,ASSET_CAP.leafy),crowns=new THREE.InstancedMesh(crownGeo,treeM,ASSET_CAP.leafy),rocks=new THREE.InstancedMesh(rockGeo,treeM,ASSET_CAP.rock);
+  // colour buffers sized to capacity up front (three r128 sizes them by the live count, which starts at 0 here)
+  for(const im of [pines,woods,crowns,rocks]){im.castShadow=true;im.receiveShadow=true;im.frustumCulled=false;
+    im.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(im.instanceMatrix.count*3),3);im.count=0;scene.add(im)}
+  assetIMs.pine=[pines];assetIMs.leafy=[woods,crowns];assetIMs.rock=[rocks];treeIMs.push(pines,woods,crowns,rocks);
+  if(!assets.length)assets.push(...defaultAssets());
+  assetsBuild();
+})();
+// the default trees and boulders, the same every time (a seeded shuffle): clustered in a band inside the rim, round West
+// Rise and on the meadows, clear of the roads, the yards, the scarp and the tall grass
+function defaultAssets(){
+  let sd=7;const rnd=()=>{sd=(sd+0x6D2B79F5)|0;let t=Math.imul(sd^(sd>>>15),1|sd);t=(t+Math.imul(t^(t>>>7),61|t))^t;return((t^(t>>>14))>>>0)/4294967296};
   const okSpot=(x,z)=>{if(Math.abs(x)>116||Math.abs(z)>116)return false;const r=mesaR(x,z),h=baseHeight(x,z);
     if(r<EDGE-1.5){if(!(r>EDGE-9.5||Math.hypot(x+22,z-22)<7))return false;
       if(roadOff(x,z)<ROAD_W/2+1.6||yardAt(x,z)>0.05||z<-2||(Math.abs(x)<14&&z<2)||Math.hypot(x+7,z-1)<9||(x>-3&&x<17&&z>9&&z<25))return false;
       return Math.abs(baseHeight(x+1,z)-h)+Math.abs(baseHeight(x,z+1)-h)<0.5}
     const sl=Math.abs(baseHeight(x+1,z)-h)+Math.abs(baseHeight(x,z+1)-h);return h>WATER+2.5&&sl<0.7};
-  let guard=0;
-  while(spots.length<NP+NB&&guard++<20000){const cx=(Math.random()-0.5)*230,cz=(Math.random()-0.5)*230,n=3+Math.floor(Math.random()*7);
+  const out=[];let guard=0,np=0,nb=0;
+  while(np+nb<285&&guard++<20000){const cx=(rnd()-0.5)*230,cz=(rnd()-0.5)*230,n=3+Math.floor(rnd()*7);
     if(!okSpot(cx,cz))continue;
-    for(let i=0;i<n&&spots.length<NP+NB;i++){const x=cx+(Math.random()-0.5)*10,z=cz+(Math.random()-0.5)*10;if(okSpot(x,z))spots.push([x,z])}}
-  const o=new THREE.Object3D(),c=new THREE.Color();
-  const PT=[[1,1,1],[0.85,0.95,1.06],[1.08,1.04,0.82],[0.92,0.98,0.9]],LT=[[0.98,0.78,0.26],[0.93,0.52,0.2],[0.56,0.64,0.3],[0.78,0.32,0.18],[0.46,0.6,0.28],[0.95,0.85,0.4]];
-  let ip=0,ib=0;
-  for(const [x,z] of spots){const s2=0.8+Math.random()*0.7,y=baseHeight(x,z);
-    o.position.set(x,y-0.05,z);o.rotation.set((Math.random()-0.5)*0.08,Math.random()*6.3,(Math.random()-0.5)*0.08);
-    if(ip<NP&&(ib>=NB||Math.random()<0.74)){o.scale.set(s2,s2*(0.9+Math.random()*0.35),s2);o.updateMatrix();pines.setMatrixAt(ip,o.matrix);
-      const t=PT[Math.floor(Math.random()*PT.length)],v=0.88+Math.random()*0.24;c.setRGB(t[0]*v,t[1]*v,t[2]*v);pines.setColorAt(ip,c);ip++}
-    else if(ib<NB){o.scale.set(s2,s2,s2);o.updateMatrix();woods.setMatrixAt(ib,o.matrix);crowns.setMatrixAt(ib,o.matrix);
-      const t=LT[Math.floor(Math.random()*LT.length)],v=0.9+Math.random()*0.2;c.setRGB(t[0]*v,t[1]*v,t[2]*v);crowns.setColorAt(ib,c);c.setRGB(1,1,1);woods.setColorAt(ib,c);ib++}}
-  pines.count=ip;woods.count=crowns.count=ib;scene.add(pines);scene.add(woods);scene.add(crowns);treeIMs.push(pines,woods,crowns);
-})();
+    for(let i=0;i<n&&np+nb<285;i++){const x=cx+(rnd()-0.5)*10,z=cz+(rnd()-0.5)*10;if(!okSpot(x,z))continue;
+      const pine=np<210&&(nb>=75||rnd()<0.74);out.push({t:pine?'pine':'leafy',x,z,yaw:rnd()*6.3,s:0.8+rnd()*0.7,c:Math.floor(rnd()*(pine?4:6))});if(pine)np++;else nb++}}
+  for(let n=0,g=0;n<18&&g<4000;g++){const x=(rnd()-0.5)*100,z=-20+rnd()*100;if(!okSpot(x,z))continue;out.push({t:'rock',x,z,yaw:rnd()*6.3,s:0.5+rnd()*0.9,c:0});n++}
+  return out}
+// fills the instance meshes from the asset list (after any change to it)
+function assetsBuild(){const o=new THREE.Object3D(),c=new THREE.Color(),n={pine:0,leafy:0,rock:0};
+  for(const a of assets){const k=n[a.t];if(k===undefined||k>=ASSET_CAP[a.t])continue;n[a.t]++;
+    const w=hash(a.x*1.3+0.7,a.z*2.1+0.3),w2=hash(a.z*1.7,a.x*0.9),y=baseHeight(a.x,a.z);
+    if(a.t==='rock'){o.position.set(a.x,y-0.18*a.s,a.z);o.rotation.set((w-0.5)*0.4,a.yaw,(w2-0.5)*0.4);o.scale.set(a.s,a.s*(0.8+0.4*w),a.s)}
+    else{o.position.set(a.x,y-0.05,a.z);o.rotation.set((w-0.5)*0.08,a.yaw,(w2-0.5)*0.08);o.scale.set(a.s,a.s*(a.t==='pine'?0.9+0.35*w:1),a.s)}
+    o.updateMatrix();for(const im of assetIMs[a.t])im.setMatrixAt(k,o.matrix);
+    if(a.t==='pine'){const t=ASSET_PT[a.c%4],v=0.88+0.24*w2;c.setRGB(t[0]*v,t[1]*v,t[2]*v);assetIMs.pine[0].setColorAt(k,c)}
+    else if(a.t==='leafy'){const t=ASSET_LT[a.c%6],v=0.9+0.2*w2;c.setRGB(t[0]*v,t[1]*v,t[2]*v);assetIMs.leafy[1].setColorAt(k,c);c.setRGB(1,1,1);assetIMs.leafy[0].setColorAt(k,c)}
+    else{const v=0.85+0.3*w2;c.setRGB(v,v,v);assetIMs.rock[0].setColorAt(k,c)}}
+  for(const t in assetIMs)for(const im of assetIMs[t]){im.count=n[t];im.instanceMatrix.needsUpdate=true;if(im.instanceColor)im.instanceColor.needsUpdate=true}}

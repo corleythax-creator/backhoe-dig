@@ -32,7 +32,7 @@ function hookBox(){
     toast(TB.seated?'Trench box set. The walls between its panels are safe.':'Box set down. Set it in a cut to hold the walls.','good',3000);return}
   if(!boxNear()){toast(mode==='dig'?'Bring the bucket over the box to hook it.':'Switch to Dig to handle the box.');return}
   TB.hooked=true;TB.seated=false;boxMask();chain.visible=true;
-  toast(`Box hooked. Swing it over the trench and press ${padUsed?'X':kbUsed?'T':'Drop box'} to set it.`,'',3200)}
+  toast(`Box hooked. Swing it over the trench and press ${padUsed?'X':kbUsed?keyLabel('box'):'Drop box'} to set it.`,'',3200)}
 function updateBox(dt){
   if(TB.hooked){TB.x=tip.x;TB.z=tip.z;TB.yaw=st.yaw+st.swing;TB.y=TB.ty=Math.max(tip.y-0.45-BX_H,boxRest());
     boxTop.set(TB.x,TB.y+BX_H+0.15,TB.z);rD.subVectors(tip,boxTop);const d=Math.max(0.01,rD.length());

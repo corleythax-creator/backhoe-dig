@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Backhoe Dig",
- "updated": "2026-10-17T17:14:00Z",
+ "updated": "2026-10-17T17:38:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 342.5,
+   "dh": 378,
    "act": 8.5,
-   "versions": 51
+   "versions": 57
   }
  ],
  "extra": [
@@ -552,6 +552,61 @@ window.EFFORT = {
    "tris": 1152810,
    "chars": 277321,
    "what": "Renamed the game Corley's Island. The start card drops the work order and folds the controls list behind a Controls button, so it fits a phone screen; on a phone held sideways the four tiles sit in one row."
+  },
+  {
+   "v": 59,
+   "asked": "2026-10-17T11:52:00-05:00",
+   "live": "2026-10-17T12:20:00-05:00",
+   "dh": 7,
+   "tris": 1152810,
+   "chars": 290436,
+   "what": "Jump clears about 6 ft. Get in and out of machines on foot: walk up to the excavator, dump truck or mower and press F (Get in button, controller B) to drive it; press again to climb out beside it; the site save remembers when you are in one. Keys panel in the menu: every keyboard action with what it does in each mode, two keys each, rebind any of them, saved per device, Defaults to reset; captions and tips show your keys. Place block is E in every mode."
+  },
+  {
+   "v": 60,
+   "asked": "2026-10-17T11:45:00-05:00",
+   "live": "2026-10-17T12:19:00-05:00",
+   "dh": 17,
+   "tris": 1154238,
+   "chars": 326903,
+   "what": "Map editor (menu, or G), the first version: the game pauses and an overhead camera takes over (drag, pinch and twist on a phone; right mouse button, wheel and WASD/Q E/R F on a computer). Raise, Lower, Flatten and Smooth reshape the ground under a round brush (5 to 40 ft, strength 1 to 10) and Dirt and Grass paint it; the dig grid, ground mesh, steep-ground stops, grass, tall grass and trees all follow, and dug holes keep their depth. Trees are now saved assets in a fixed default layout, joined by boulders: Select moves, turns, resizes, copies and deletes them and moves the machines, Add places new ones, and Query reads any spot's height, slope, surface, driveability and edits in feet. Undo and Redo (30 steps). The map saves on the device as you edit, and Map file copies it out as a few KB of text, loads a copied map or starts over."
+  },
+  {
+   "v": 61,
+   "asked": "2026-10-17T11:55:00-05:00",
+   "live": "2026-10-17T12:24:00-05:00",
+   "dh": 1,
+   "tris": 1154250,
+   "chars": 328599,
+   "what": "Auto update, for the Home Screen app that never reloads on its own: the game re-reads its build log when it comes back to the front, when it is restored from the back-forward cache and every 10 minutes. A newer version reloads straight away when the game comes back from the background or nothing is under way yet (the site and lawn are saved on the way out, so nothing is lost); one that lands while you are playing waits behind a yellow 'Version N is out · tap to update' button instead of reloading mid-move."
+  },
+  {
+   "v": 62,
+   "asked": "2026-10-17T12:17:00-05:00",
+   "live": "2026-10-17T12:32:00-05:00",
+   "dh": 1.5,
+   "tris": 1154250,
+   "chars": 329628,
+   "what": "Sprint on foot: hold Shift (controller left stick click) to run about 12 mph, with a quicker, wider stride and a forward lean. Keys can now do one job on foot and another in a machine, so Shift stays Fine control in the machines."
+  },
+  {
+   "v": 63,
+   "asked": "2026-10-17T12:24:00-05:00",
+   "live": "2026-10-17T12:34:00-05:00",
+   "dh": 8,
+   "tris": 1154238,
+   "chars": 342689,
+   "what": "Road editing in the map editor (Roads tool): every road point shows as a dot; tap a road to pick it, drag its dots to move them, tap the picked road between dots to add a point, or tap New road and lay one point by point. The road's card sets the width (6 to 26 ft), grass up the middle, and grading: a graded road is cut and filled to a height at each point, like the ramp, with a Point height slider for the picked dot; otherwise it follows the ground. Delete point and Delete road, all with Undo. The ground, colours, steep-ground stops and grass follow each change, and the roads save with the map."
+  },
+  {
+   "v": 64,
+   "asked": "2026-10-17T12:29:00-05:00",
+   "live": "2026-10-17T12:38:00-05:00",
+   "dh": 1,
+   "tris": 1154238,
+   "chars": 343655,
+   "what": "Touch Sprint button next to Jump in Walk mode: tap to sprint, and it switches itself off once you stop, on a second tap or when you leave Walk mode."
   }
  ]
 };
+

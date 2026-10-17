@@ -1,4 +1,5 @@
-// Corley's Island: concrete blocks: 1, 2 and 3 ft cubes set down under the bucket, stacking, settling and machine collisions.
+// Corley's Island: concrete blocks: 1, 2 and 3 ft cubes set down under the bucket (or in front of the worker in Walk mode),
+// stacking, settling and machine collisions. surfAt() is the ground-or-block height everything that rides or lands uses.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 // ---------- blocks ----------
 // blocks snap to a 1 ft world grid so they line up into walls and stacks. Each rests on the highest ground or block top
