@@ -1,7 +1,7 @@
 // Backhoe Dig build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Backhoe Dig",
- "updated": "2026-10-17T07:15:00Z",
+ "updated": "2026-10-17T07:40:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 154,
-   "act": 2.5,
-   "versions": 15
+   "dh": 160,
+   "act": 3.0,
+   "versions": 16
   }
  ],
  "extra": [
@@ -228,6 +228,15 @@ window.EFFORT = {
    "tris": 490576,
    "chars": 99643,
    "what": "Soil layers: topsoil, red clay, sand bedding around the gas main, rock below; each digs at its own speed, holds its own slope and swells when dug; spoil keeps its colour; the HUD names the soil at the teeth."
+  },
+  {
+   "v": 23,
+   "asked": "2026-10-17T02:14:00-05:00",
+   "live": "2026-10-17T02:45:00-05:00",
+   "dh": 6,
+   "tris": 490576,
+   "chars": 102646,
+   "what": "Cave-ins: walls cut deeper than about 4 ft, or with spoil within 2 ft of the edge, cave in after a warning trickle; shake, rumble and a cave-in count on the finish."
   }
  ]
 };
