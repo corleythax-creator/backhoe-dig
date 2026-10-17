@@ -5,11 +5,11 @@ const CAP=1.0;
 const START={x:0.42,z:0,yaw:Math.PI,swing:0,a1:0.5,a2:-1.8,a3:-1.2};
 const st={};
 function resetState(){
-  Object.assign(st,START,{y:0,pitch:0,roll:0,load:0,strikes:0,exposed:false,done:false,startT:0,doneT:0,below:false,strikeCd:0,slumpT:0,dirty:true,res:1,soil:-1,seenSand:false,seenRock:false,rumT:0,loadC:[...SOIL[SPOIL].c],loadMix:[...CRUMB_MIX],stuck:0,grime:0,mud:0,caves:0,caveRisk:0,caveScanT:0,cave:null});
+  Object.assign(st,START,{y:0,pitch:0,roll:0,load:0,strikes:0,exposed:false,done:false,startT:0,doneT:0,below:false,strikeCd:0,slumpT:0,dirty:true,res:1,soil:-1,seenSand:false,seenRock:false,rumT:0,loadC:[...SOIL[SPOIL].c],loadMix:[...CRUMB_MIX],stuck:0,grime:0,mud:0,loadWet:0,pouring:false,caves:0,caveRisk:0,caveScanT:0,cave:null});
   cI0=N+1;cI1=-1;cJ0=N+1;cJ1=-1;
-  H.set(H0);dI0=0;dI1=N;dJ0=0;dJ1=N;winOn=true;Object.assign(tr,TR_START);tr.loadC=[...SOIL[SPOIL].c];tr.loadMix=[...CRUMB_MIX];tr.stuck=0;tr.mud=0;
+  H.set(H0);dI0=0;dI1=N;dJ0=0;dJ1=N;winOn=true;Object.assign(tr,TR_START);tr.loadC=[...SOIL[SPOIL].c];tr.loadMix=[...CRUMB_MIX];tr.stuck=0;tr.mud=0;tr.loadWet=0;tr.pourRate=0;tr.pourP=new THREE.Vector3();
   for(let k=0;k<V*V;k++)spoilC.set(SOIL[SPOIL].c,k*3);
-  clearClods();wetT.fill(-1e4);comp.fill(0);clearDust();
+  clearClods();wetT.fill(-1e4);comp.fill(0);clearDust();waterClear();
   blkReset();Object.assign(TB,TB_START,{hooked:false,seated:false});TB.y=TB.ty=boxRest();prot.fill(0);chain.visible=false;
 }
 resetState();
@@ -44,6 +44,7 @@ addEventListener('keydown',e=>{if(e.ctrlKey||e.metaKey||e.altKey)return;
     else if(c==='Tab')setMode(MODES[(MODES.indexOf(mode)+(e.shiftKey?2:1))%3]);
     else if(c==='KeyC')$('#camBtn').click();
     else if(c==='KeyT')hookBox();
+    else if(c==='KeyP')setPump(!pumpOn);
     else if(c==='KeyB')setBlocks(!blkOn);
     else if(c==='Space'&&blkOn)placeBlock();
     else if(c==='KeyV')setBlkSize(blkSize%3+1);

@@ -19,6 +19,8 @@ A 3D low-poly excavator game in plain HTML, CSS and JavaScript (three.js r128, n
 | `js/truck.js` | Dump truck model and driving; texture hookup |
 | `js/trenchbox.js` | Trench box model, hooking, setting, wall mask |
 | `js/dirt.js` | Loose dirt: clods, flying dirt, lumpy bucket load and truck heap, the Dirt detail setting |
+| `js/water.js` | Groundwater: seeping, levelling pools, mud, the pump |
+| `js/dirtsound.js` | Dirt sounds: digging, pouring, thuds, rattles, cave-ins, trickling water |
 | `js/blocks.js` | Concrete blocks (1×1, 2×2, 3×3 ft): placing under the bucket, stacking, settling, machine collisions |
 | `js/controls.js` | Game state and reset, touch sticks, keyboard, game controller, modes, menu |
 | `js/effects.js` | Shared per-frame vectors, resize |
