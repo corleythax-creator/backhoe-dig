@@ -137,6 +137,7 @@ for(const t of tiles)t.onclick=()=>startIn(t.dataset.m);
 function markTile(){const m=mode==='drive'?'dig':mode;for(const t of tiles)t.setAttribute('aria-pressed',t.dataset.m===m)}
 markTile();
 help.addEventListener('click',e=>{if(e.target===help)startIn(mode)});
+$('#ctrlBtn').onclick=()=>{const b=$('#ctrlBtn'),box=$('#ctrlBox'),on=box.hidden;box.hidden=!on;b.setAttribute('aria-expanded',on);b.textContent=on?'Hide controls':'Controls';if(on)box.scrollIntoView({block:'start',behavior:'smooth'})};
 function started(){if(!st.startT)st.startT=performance.now()}
 // the version in the menu and on the help card is the last entry in data/effort.js (the build log), so it is never stale
 {const E=window.EFFORT,v=E&&E.versions&&E.versions[E.versions.length-1];
