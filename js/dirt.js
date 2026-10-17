@@ -159,14 +159,29 @@ function rollClod(x,z,size,k){const steps=Math.round(size/0.1*(k===SOD?5:14));
     if(g<0.5)break;x-=gx/g*0.08;z-=gz/g*0.08;if(n===3)dirtRattle({x,y:hAt(x,z),z})}
   return [x,z]}
 // tracks and tyres press loose fill down by up to 30% of its height (comp: how much of that each point has had; fresh fill
-// resets it) and crush the clods under them
+// resets it) and crush the clods under them. In mud (mudOf, water.js) they sink up to 9 in below grade instead and squeeze
+// what they push aside into ragged berms along both edges (lumps up to about 1 ft; mud beyond that squelches away), so
+// driving back and forth churns the ground. Returns 0 when nothing gave way, 1 for loose fill, 2 for mud.
 const comp=new Float32Array(V*V);let crushT=0;
+const RUT_D=0.23,RUT_BERM=0.3,RUT_BH=0.2,RUT_MUD=0.15,MUD_C=[0.29,0.2,0.13],rutB=[];
 function stampRut(x,z,yaw,hw,hl,dt){
-  const s=Math.sin(yaw),c=Math.cos(yaw),R=Math.hypot(hw,hl);let any=false;
+  const s=Math.sin(yaw),c=Math.cos(yaw),R=Math.hypot(hw+RUT_BERM,hl);let any=0,outL=0,outR=0,mSum=0,mN=0;rutB.length=0;
   const i0=Math.max(0,Math.floor((x-R+S/2)/CELL)),i1=Math.min(N,Math.ceil((x+R+S/2)/CELL)),j0=Math.max(0,Math.floor((z-R+S/2)/CELL)),j1=Math.min(N,Math.ceil((z+R+S/2)/CELL));
-  for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const dx=i*CELL-S/2-x,dz=j*CELL-S/2-z,u=dx*s+dz*c,v=dx*c-dz*s;
-    if(Math.abs(u)>hl||Math.abs(v)>hw)continue;const k=j*V+i,loose=H[k]-H0[k];if(loose<0.02||comp[k]>=1)continue;
-    const full=loose/(1-0.3*comp[k])*0.3,d=Math.min(0.25*dt,full*(1-comp[k]));H[k]-=d;comp[k]=Math.min(1,comp[k]+d/full);any=true}
+  for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const dx=i*CELL-S/2-x,dz=j*CELL-S/2-z,u=dx*s+dz*c,v=dx*c-dz*s,av=Math.abs(v);
+    if(Math.abs(u)>hl||av>hw+RUT_BERM)continue;const k=j*V+i;if(prot[k])continue;
+    if(av>hw){const room=RUT_BH*(1-0.6*(av-hw)/RUT_BERM)*(0.4+0.7*hash(i>>1,j>>1)+0.5*hash(i,j))-(H[k]-H0[k]);if(room>0)rutB.push(k,v,room);continue}
+    const loose=H[k]-H0[k],m=mudOf(k);
+    if(m>RUT_MUD&&loose<0.45){const d=Math.min(0.5*dt,H[k]-(H0[k]-RUT_D*Math.min(1,m*1.25)));
+      if(d>0){H[k]-=d;if(v<0)outL+=d;else outR+=d;mSum+=m;mN++;wetT[k]=timeU.value;comp[k]=0;mudA[k]=Math.max(mudA[k],m);any=2}continue}
+    if(loose<0.02||comp[k]>=1)continue;
+    const full=loose/(1-0.3*comp[k])*0.3,d=Math.min(0.25*dt,full*(1-comp[k]));H[k]-=d;comp[k]=Math.min(1,comp[k]+d/full);any=any||1}
+  // the squeezed mud: each side's share goes to its berm, more where there is more room under each lump's height; berms are
+  // half as wet as the mud they came from, so tracks carry mud only a little way onto dry ground
+  if(outL+outR>0){let wL=0,wR=0;for(let n=0;n<rutB.length;n+=3)if(rutB[n+1]<0)wL+=rutB[n+2];else wR+=rutB[n+2];
+    const m=mSum/mN;
+    for(let n=0;n<rutB.length;n+=3){const k=rutB[n],w=rutB[n+1]<0?(wL?outL/wL:0):(wR?outR/wR:0),a=Math.min(1,w)*rutB[n+2];if(a<=0)continue;
+      H[k]+=a;mixSpoil(k,MUD_C,a);comp[k]=0;mudA[k]=Math.max(mudA[k],m*0.5)}
+    growDug(i0,i1,j0,j1)}
   if(any){touch(i0,i1,j0,j1);st.dirty=true}
   if(crushT<=0){for(const kd of CLODS){let hit=false;
     for(let n=0;n<kd.n;n++){if(!kd.sz[n])continue;const dx=kd.x[n]-x,dz=kd.z[n]-z;if(dx*dx+dz*dz>R*R)continue;
