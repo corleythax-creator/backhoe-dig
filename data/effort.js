@@ -17,7 +17,7 @@ window.EFFORT = {
    "versions": 7
   },
   {
-   "d": "2027-10-17",
+   "d": "2026-10-17",
    "dh": 237,
    "act": 4.0,
    "versions": 27
