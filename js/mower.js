@@ -266,7 +266,9 @@ function updateMower(dt,inL,inR){
   const bog=1-0.25*mw.load;
   mw.vl+=(mw.l*(mw.l>0?MW_FWD:MW_REV)*bog-mw.vl)*Math.min(1,dt*6);mw.vr+=(mw.r*(mw.r>0?MW_FWD:MW_REV)*bog-mw.vr)*Math.min(1,dt*6);
   mw.v=(mw.vl+mw.vr)/2;mw.w=(mw.vr-mw.vl)/MW_TRACK;
+  const ox=mw.x,oz=mw.z,w0=wallCount(mw.x,mw.z,mw.yaw,MW_P);
   mw.yaw+=mw.w*dt;mw.x+=Math.sin(mw.yaw)*mw.v*dt;mw.z+=Math.cos(mw.yaw)*mw.v*dt;
+  if(wallCount(mw.x,mw.z,mw.yaw,MW_P)>w0){mw.x=ox;mw.z=oz}
   // stays on the mesa, steers clear of the excavator, the truck and tall blocks; the big machines shove it aside
   for(const lz of MW_C){const sy=Math.sin(mw.yaw),cy=Math.cos(mw.yaw),px=mw.x+sy*lz,pz=mw.z+cy*lz,rr=mesaR(px,pz),lim=EDGE-2;
     if(rr>lim){const k=lim/rr;mw.x+=px*k-px;mw.z+=MZ+(pz-MZ)*k-pz}

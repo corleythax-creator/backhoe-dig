@@ -33,13 +33,13 @@ const timeU={value:0};
   range(860,1220,28,200,60,430,0.7,0.85,1.7,true);
 })();
 // grass tufts that disappear wherever the ground gets dug or buried
-const TUFTS=9000,tX=new Float32Array(TUFTS),tZ=new Float32Array(TUFTS),tS=new Float32Array(TUFTS),tR=new Float32Array(TUFTS),tI=new Int32Array(TUFTS),tJ=new Int32Array(TUFTS);
+const TUFTS=15000,tX=new Float32Array(TUFTS),tZ=new Float32Array(TUFTS),tS=new Float32Array(TUFTS),tR=new Float32Array(TUFTS),tI=new Int32Array(TUFTS),tJ=new Int32Array(TUFTS);
 const tuftGeo=(function(){const bp=[];for(let b=0;b<4;b++){const a=b*1.6+0.3,c=Math.cos(a),s=Math.sin(a),w=0.05,h=0.26+0.08*(b%2),ln=0.09;
   bp.push(-c*w,0,-s*w, c*w,0,s*w, -s*ln,h,c*ln)}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(bp,3));g.computeVertexNormals();
   // shaded at the root where the blades crowd together, sunlit at the tips
   g.setAttribute('color',new THREE.Float32BufferAttribute(bp.map((_,i)=>bp[i-i%3+1]>0?1.12:0.5),3));return g})();
 const tufts=new THREE.InstancedMesh(tuftGeo,M(0xffffff,{side:THREE.DoubleSide,vertexColors:true}),TUFTS);tufts.receiveShadow=true;tufts.frustumCulled=false;scene.add(tufts);
-(function(){const c=new THREE.Color();for(let n=0;n<TUFTS;n++){let gx,gz,q=0;do{gx=(Math.random()-0.5)*66;gz=-18+Math.random()*64}while((mesaR(gx,gz)>EDGE-0.8||roadAmt(gx,gz)>0.1)&&++q<60);
+(function(){const c=new THREE.Color();for(let n=0;n<TUFTS;n++){let gx,gz,q=0;do{gx=(Math.random()-0.5)*94;gz=-18+Math.random()*96}while((mesaR(gx,gz)>EDGE-0.8||roadAmt(gx,gz)>0.1||yardAt(gx,gz)>0.3||wallAt(gx,gz))&&++q<60);
   tX[n]=gx;tZ[n]=gz;tS[n]=0.7+Math.random()*0.8;tR[n]=Math.random()*6.3;
   tI[n]=Math.round((tX[n]+S/2)/CELL);tJ[n]=Math.round((tZ[n]+S/2)/CELL);if(tI[n]<0||tI[n]>N||tJ[n]<0||tJ[n]>N){tI[n]=-1;tJ[n]=-1}
   const v=Math.random();c.setRGB(0.27+0.1*v,0.48+0.12*v,0.2+0.05*v);if(Math.random()<0.08)c.setRGB(0.62,0.58,0.3);tufts.setColorAt(n,c)}})();
@@ -52,29 +52,35 @@ function updateTufts(i0,i1,j0,j1){
 }
 const ZERO_M=new THREE.Matrix4().makeScale(0,0,0);
 for(let n=0;n<TUFTS;n++){tO.position.set(tX[n],hAt(tX[n],tZ[n])-0.02,tZ[n]);tO.rotation.set(0,tR[n],0);tO.scale.setScalar(tS[n]);tO.updateMatrix();tufts.setMatrixAt(n,tO.matrix)}
-// coarse 1 m ground outside the dig zone (the zone is cut out of it)
+// ground outside the dig zone: 0.5 m over the rest of the mesa and its cliffs (hills, the scarp and the ramp need it),
+// 2 m beyond; each patch has a hole where the finer one sits
+const MID=[-58,58,-32,92];
 (function(){
-  const SO=320,NO=160,CO=SO/NO,VO=NO+1,pp=[],cc=[],ix=[];
-  const rk=[];
-  for(let j=0;j<VO;j++)for(let i=0;i<VO;i++){const x=i*CO-SO/2,z=j*CO-SO/2,n=hash(i*7.1,j*5.3),h=baseHeight(x,z);pp.push(x,h,z);
-    const sl=(Math.abs(baseHeight(x+1,z)-baseHeight(x-1,z))+Math.abs(baseHeight(x,z+1)-baseHeight(x,z-1)))/2;
-    const rock=ss(0.55,1.1,sl),sand=1-ss(WATER+0.6,WATER+2.8,h),low=ss(-4,-20,h);
-    let r=0.30+0.08*n+0.05*low,g=0.50+0.09*n-0.02*low,b=0.24+0.04*n;
-    const strata=0.06*Math.sin(h*1.4+n);
-    r+=(0.50+0.06*n+strata-r)*rock;g+=(0.44+0.05*n+strata-g)*rock;b+=(0.38+0.04*n+strata-b)*rock;
-    r+=(0.80-r)*sand;g+=(0.72-g)*sand;b+=(0.52-b)*sand;
-    const rc=[r,g,b],ra=roadTint(x,z,rc,n);cc.push(rc[0],rc[1],rc[2]);rk.push(Math.min(1,Math.max(rock*0.95+sand*0.4,ra*0.9)))}
-  for(let j=0;j<NO;j++)for(let i=0;i<NO;i++){const x0=i*CO-SO/2,z0=j*CO-SO/2;
-    if(x0>=-S/2&&x0+CO<=S/2&&z0>=-S/2&&z0+CO<=S/2)continue;const a=j*VO+i;ix.push(a,a+VO,a+1,a+1,a+VO,a+VO+1)}
-  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pp,3));g.setAttribute('color',new THREE.Float32BufferAttribute(cc,3));
-  g.setAttribute('normal',new THREE.Float32BufferAttribute(new Float32Array(pp.length),3));g.setIndex(ix);
-  g.setAttribute('dirt',new THREE.Float32BufferAttribute(rk,1));g.setAttribute('wetT',new THREE.Float32BufferAttribute(new Float32Array(rk.length).fill(-1e4),1));g.setAttribute('soilD',new THREE.Float32BufferAttribute(new Float32Array(rk.length),1));
-  const m=new THREE.Mesh(g,groundMat);m.receiveShadow=true;scene.add(m);
-  // skirt hides any hairline gap where the fine and coarse grids meet
-  const sp=[],si=[];let q=0;const st=0.5,E=S/2;
-  const run=(fx,fz)=>{for(let t=-E;t<E-1e-6;t+=st){const [x0,z0]=fx(t),[x1,z1]=fx(t+st),h0=baseHeight(x0,z0),h1=baseHeight(x1,z1);
-    sp.push(x0,h0,z0,x1,h1,z1,x0,h0-0.6,z0,x1,h1-0.6,z1);si.push(q,q+2,q+1,q+1,q+2,q+3);q+=4}};
-  run(t=>[t,-E]);run(t=>[t,E]);run(t=>[-E,t]);run(t=>[E,t]);
+  function patch(X0,X1,Z0,Z1,CO,hole){
+    const NX=Math.round((X1-X0)/CO),NZ=Math.round((Z1-Z0)/CO),VX=NX+1,pp=[],cc=[],ix=[],rk=[];
+    for(let j=0;j<=NZ;j++)for(let i=0;i<=NX;i++){const x=X0+i*CO,z=Z0+j*CO,n=hash(x*3.55+0.3,z*2.65+0.7),h=baseHeight(x,z);pp.push(x,h,z);
+      const sl=(Math.abs(baseHeight(x+1,z)-baseHeight(x-1,z))+Math.abs(baseHeight(x,z+1)-baseHeight(x,z-1)))/2;
+      const rock=ss(0.55,1.1,sl),sand=1-ss(WATER+0.6,WATER+2.8,h),low=ss(-4,-20,h)*ss(EDGE-1,EDGE+2,mesaR(x,z));
+      let r=0.30+0.08*n+0.05*low,g=0.50+0.09*n-0.02*low,b=0.24+0.04*n;
+      const strata=0.06*Math.sin(h*1.4+n);
+      r+=(0.50+0.06*n+strata-r)*rock;g+=(0.44+0.05*n+strata-g)*rock;b+=(0.38+0.04*n+strata-b)*rock;
+      r+=(0.80-r)*sand;g+=(0.72-g)*sand;b+=(0.52-b)*sand;
+      const rc=[r,g,b],ya=yardTint(x,z,rc,n),ra=roadTint(x,z,rc,n);cc.push(rc[0],rc[1],rc[2]);rk.push(Math.min(1,Math.max(rock*0.95+sand*0.4,ra*0.9,ya*0.85)))}
+    for(let j=0;j<NZ;j++)for(let i=0;i<NX;i++){const x0=X0+i*CO,z0=Z0+j*CO;
+      if(x0>=hole[0]-1e-6&&x0+CO<=hole[1]+1e-6&&z0>=hole[2]-1e-6&&z0+CO<=hole[3]+1e-6)continue;const a=j*VX+i;ix.push(a,a+VX,a+1,a+1,a+VX,a+VX+1)}
+    const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pp,3));g.setAttribute('color',new THREE.Float32BufferAttribute(cc,3));
+    g.setAttribute('normal',new THREE.Float32BufferAttribute(new Float32Array(pp.length),3));g.setIndex(ix);
+    g.setAttribute('dirt',new THREE.Float32BufferAttribute(rk,1));g.setAttribute('wetT',new THREE.Float32BufferAttribute(new Float32Array(rk.length).fill(-1e4),1));g.setAttribute('soilD',new THREE.Float32BufferAttribute(new Float32Array(rk.length),1));
+    const m=new THREE.Mesh(g,groundMat);m.receiveShadow=true;scene.add(m);
+  }
+  patch(-160,160,-160,160,2,MID);
+  patch(MID[0],MID[1],MID[2],MID[3],0.5,[-S/2,S/2,-S/2,S/2]);
+  // skirts hide any hairline gap where a finer grid meets a coarser one
+  const sp=[],si=[];let q=0;
+  const run=(fx,a0,a1,st,dp)=>{for(let t=a0;t<a1-1e-6;t+=st){const [x0,z0]=fx(t),[x1,z1]=fx(t+st),h0=baseHeight(x0,z0),h1=baseHeight(x1,z1);
+    sp.push(x0,h0,z0,x1,h1,z1,x0,h0-dp,z0,x1,h1-dp,z1);si.push(q,q+2,q+1,q+1,q+2,q+3);q+=4}};
+  const E=S/2;run(t=>[t,-E],-E,E,0.5,0.6);run(t=>[t,E],-E,E,0.5,0.6);run(t=>[-E,t],-E,E,0.5,0.6);run(t=>[E,t],-E,E,0.5,0.6);
+  run(t=>[t,MID[2]],MID[0],MID[1],0.5,2);run(t=>[t,MID[3]],MID[0],MID[1],0.5,2);run(t=>[MID[0],t],MID[2],MID[3],0.5,2);run(t=>[MID[1],t],MID[2],MID[3],0.5,2);
   const sg=new THREE.BufferGeometry();sg.setAttribute('position',new THREE.Float32BufferAttribute(sp,3));sg.setAttribute('normal',new THREE.Float32BufferAttribute(new Float32Array(sp.length),3));sg.setIndex(si);
   scene.add(new THREE.Mesh(sg,M(0x4a6a34,{side:THREE.DoubleSide})));
 })();
@@ -128,13 +134,16 @@ const treeIMs=[];
     crown.push(colorize(g,(px,py)=>{const k=0.62+0.38*Math.min(1,Math.max(0,(py-1.5)/3));return[k,k,k]}));
   }
   const crownGeo=mergeGeos(crown);
-  const NP=170,NB=60,treeM=M(0xffffff,{vertexColors:true});
+  const NP=210,NB=75,treeM=M(0xffffff,{vertexColors:true});
   const pines=new THREE.InstancedMesh(pineGeo,treeM,NP),woods=new THREE.InstancedMesh(woodGeo,treeM,NB),crowns=new THREE.InstancedMesh(crownGeo,treeM,NB);
   for(const im of [pines,woods,crowns]){im.castShadow=true;im.receiveShadow=true;im.frustumCulled=false}
   // clustered placement in a ring around the work zone
   const spots=[];
+  // on the mesa: a band inside the rim and round West Rise, clear of the roads, the yards, the scarp and the tall grass
   const okSpot=(x,z)=>{if(Math.abs(x)>116||Math.abs(z)>116)return false;const r=mesaR(x,z),h=baseHeight(x,z);
-    if(r<EDGE-1.5)return r>EDGE-9.5&&r<ROAD_R-ROAD_W/2-1.6&&z>-2&&!(Math.abs(x)<14&&z<2)&&Math.hypot(x+7,z-1)>9;
+    if(r<EDGE-1.5){if(!(r>EDGE-9.5||Math.hypot(x+22,z-22)<7))return false;
+      if(roadOff(x,z)<ROAD_W/2+1.6||yardAt(x,z)>0.05||z<-2||(Math.abs(x)<14&&z<2)||Math.hypot(x+7,z-1)<9||(x>-3&&x<17&&z>9&&z<25))return false;
+      return Math.abs(baseHeight(x+1,z)-h)+Math.abs(baseHeight(x,z+1)-h)<0.5}
     const sl=Math.abs(baseHeight(x+1,z)-h)+Math.abs(baseHeight(x,z+1)-h);return h>WATER+2.5&&sl<0.7};
   let guard=0;
   while(spots.length<NP+NB&&guard++<20000){const cx=(Math.random()-0.5)*230,cz=(Math.random()-0.5)*230,n=3+Math.floor(Math.random()*7);

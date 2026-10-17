@@ -1,6 +1,6 @@
 # Backhoe Dig
 
-A 3D low-poly excavator game in plain HTML, CSS and JavaScript (three.js r128, no build step). Dig a 3 ft trench on a grassy mesa above a mountain lake, expose the gas main without hitting it, load the dump truck and haul the spoil over the cliff edge. Then mow the patch of tall grass with the zero-turn mower.
+A 3D low-poly excavator game in plain HTML, CSS and JavaScript (three.js r128, no build step). Dig a 3 ft trench on a grassy mesa above a mountain lake (about 295 ft across: a high top with Lookout Knoll and West Rise, and a ramp down a 24 ft rocky scarp to the Lower Bench dirt yard), expose the gas main without hitting it, load the dump truck and haul the spoil over the cliff edge. Then mow the patch of tall grass with the zero-turn mower.
 
 - Live: https://backhoe-dig.vercel.app
 - Build time: https://backhoe-dig.vercel.app/build.html (reads `data/effort.js`)
@@ -13,8 +13,8 @@ A 3D low-poly excavator game in plain HTML, CSS and JavaScript (three.js r128, n
 | `index.html` | Page markup (HUD, sticks, menus, help card) and the script tags, in load order |
 | `css/game.css` | All game styles |
 | `js/core.js` | Shared helpers, renderer, scene, sky, camera, lights, material maker `M()` |
-| `js/terrain.js` | Dig-zone heightmap, road, soil layers, digging, dumping, slumping, cave-ins |
-| `js/scenery.js` | Lake, mountains, grass tufts, outer ground, gas main, stakes, trees |
+| `js/terrain.js` | Mesa layout (hills, scarp, Lower Bench), road network and ramp, ground too steep to drive, dig-zone heightmap, soil layers, digging, dumping, slumping, cave-ins |
+| `js/scenery.js` | Lake, mountains, grass tufts, mesa and outer ground meshes, gas main, stakes, trees |
 | `js/excavator.js` | Excavator model, linkage, rams, hoses |
 | `js/truck.js` | Dump truck model and driving; texture hookup |
 | `js/trenchbox.js` | Trench box model, hooking, setting, wall mask |
