@@ -1,7 +1,7 @@
 // Backhoe Dig build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Backhoe Dig",
- "updated": "2026-10-17T17:19:00Z",
+ "updated": "2026-10-17T17:28:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 366.5,
+   "dh": 368.0,
    "act": 8.5,
-   "versions": 53
+   "versions": 54
   }
  ],
  "extra": [
@@ -570,6 +570,15 @@ window.EFFORT = {
    "tris": 1154238,
    "chars": 326903,
    "what": "Map editor (menu, or G), the first version: the game pauses and an overhead camera takes over (drag, pinch and twist on a phone; right mouse button, wheel and WASD/Q E/R F on a computer). Raise, Lower, Flatten and Smooth reshape the ground under a round brush (5 to 40 ft, strength 1 to 10) and Dirt and Grass paint it; the dig grid, ground mesh, steep-ground stops, grass, tall grass and trees all follow, and dug holes keep their depth. Trees are now saved assets in a fixed default layout, joined by boulders: Select moves, turns, resizes, copies and deletes them and moves the machines, Add places new ones, and Query reads any spot's height, slope, surface, driveability and edits in feet. Undo and Redo (30 steps). The map saves on the device as you edit, and Map file copies it out as a few KB of text, loads a copied map or starts over."
+  },
+  {
+   "v": 61,
+   "asked": "2026-10-17T12:17:00-05:00",
+   "live": "2026-10-17T12:28:00-05:00",
+   "dh": 1.5,
+   "tris": 1154238,
+   "chars": 327932,
+   "what": "Sprint on foot: hold Shift (controller left stick click) to run about 12 mph, with a quicker, wider stride and a forward lean. Keys can now do one job on foot and another in a machine, so Shift stays Fine control in the machines."
   }
  ]
 };
