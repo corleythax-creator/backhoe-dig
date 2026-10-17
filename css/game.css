@@ -78,6 +78,7 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 .seg button[aria-pressed="true"]{background:var(--machine);color:#1c1309}
 /* Jump takes the right stick's caption spot in Walk mode */
 #jumpBtn{height:44px;min-width:100px;font-size:18px;border-radius:22px;background:var(--machine);color:#1c1309;border:0;box-shadow:0 3px 0 rgba(0,0,0,.35);zoom:var(--cs)}
+#seatBtn{min-width:100px;font-size:16px;border-radius:20px;background:var(--machine);color:#1c1309;border:0;box-shadow:0 3px 0 rgba(0,0,0,.35);zoom:var(--cs)}
 #jumpBtn:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.35)}
 .kb .seg button::before{content:attr(data-k) " ";opacity:.6}
 #toast{position:absolute;left:0;right:0;top:32%;display:flex;justify-content:center}
@@ -127,14 +128,45 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 .ver{font:600 14px/1.2 var(--f-display);letter-spacing:.05em;color:var(--muted);text-align:right;padding:4px 6px 2px}
 .card .ver{text-align:center;font-size:15px!important;margin-top:-6px}
 .card button{background:var(--machine);color:#1c1309;height:54px;font-size:21px;border:0}
-/* Start digging sits under the title and stays pinned there while the instructions scroll beneath it */
-#startBtn{position:sticky;top:-12px;z-index:1;flex:none;box-shadow:0 -20px 0 #1d211b,0 10px 12px -4px #1d211b}
+/* the start card leads with a tile per machine (and on foot); tapping one starts the game in that mode */
+#help .card{max-width:600px}
+.pick{display:grid;grid-template-columns:1fr 1fr;gap:10px;flex:none}
+/* short landscape screens (phones on their side): all four tiles in one row so none is cut off */
+@media (orientation:landscape) and (max-height:560px){#help .card{max-width:900px;padding:14px 18px;gap:10px}#help .card h1{font-size:28px}.pick{grid-template-columns:repeat(4,1fr)}
+  .tile .tn{font-size:19px;bottom:24px}.tile .ts{font-size:12px;bottom:7px}}
+/* the controls list hides behind the Controls button */
+#ctrlBtn{flex:none}#ctrlBtn[aria-expanded="true"]{border-color:var(--machine);color:var(--machine)}
+#ctrlBox{display:flex;flex-direction:column;gap:14px}#ctrlBox[hidden]{display:none}
+.card button.tile{position:relative;height:auto;aspect-ratio:16/10;padding:0;overflow:hidden;border-radius:10px;background:#0f120e;border:2px solid var(--hud-line);color:var(--ink);text-align:left}
+.tile img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.tile .tn,.tile .ts{position:absolute;left:10px;right:10px;text-shadow:0 1px 3px rgba(0,0,0,.9)}
+.tile .tn{bottom:30px;font:800 24px/1 var(--f-display);letter-spacing:.02em}
+.tile .ts{bottom:9px;font:600 15px/1.15 var(--f-display);text-transform:none;letter-spacing:.01em;color:#e4e8dc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tile::after{content:"";position:absolute;inset:45% 0 0;background:linear-gradient(transparent,rgba(8,10,7,.85))}
+.tile .tn,.tile .ts{z-index:1}
+.card button.tile[aria-pressed="true"]{border-color:var(--machine);box-shadow:0 0 0 2px var(--machine)}
+@media (hover:hover){.card button.tile:hover{border-color:var(--machine)}}
+@media (max-width:380px){.tile .tn{font-size:20px;bottom:26px}.tile .ts{font-size:13px}}
 #help .card{overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y}
 @media (max-width:360px){.stick{width:112px;height:112px}.status{width:160px}}
 @media (max-height:420px){.stick{width:112px;height:112px}#benchBar{top:var(--pt)}}
 @media (prefers-reduced-motion:reduce){#toast span,#flash,.bar>i{transition:none}}
 /* Sound panel: label and value over a full-width slider on phones, one row each when there is room; thumbs sized for thumbs */
 #sndBox{z-index:7}
+/* Keys panel: one row per action, its name and what it does, then two key boxes */
+#keysBox{position:fixed;inset:0;z-index:7;background:rgba(10,12,9,.72);display:flex;align-items:center;justify-content:center;pointer-events:auto;box-sizing:border-box;
+  padding-block:calc(env(safe-area-inset-top,0px) + 16px) calc(env(safe-area-inset-bottom,0px) + 16px);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#keysBox .card{max-width:560px;overscroll-behavior:contain}
+#keysList h2{margin:10px 0 2px;font:800 15px/1 var(--f-display);letter-spacing:.12em;text-transform:uppercase;color:var(--gas)}
+.krow{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.07)}
+.kname{font:700 18px/1.2 var(--f-display);letter-spacing:.02em}
+.kname small{display:block;font:600 14px/1.25 var(--f-body);color:var(--muted);letter-spacing:0;margin-top:2px}
+#keysBox .kbtn{height:42px;min-width:78px;padding:0 10px;font-size:16px;background:#2a2f27;color:var(--ink);border:1px solid var(--hud-line);text-transform:none}
+#keysBox .kbtn.none{color:var(--muted);font-weight:600}
+#keysBox .kbtn.cap{background:var(--gas);color:#1c1309;border-color:var(--gas)}
+#keysNote:empty{display:none}
+#keysNote{color:var(--gas)!important}
 .sliders{display:grid;grid-template-columns:1fr auto;grid-auto-flow:dense;gap:2px 12px;font:700 18px/1.2 var(--f-display);letter-spacing:.03em}
 .sliders label{grid-column:1;color:var(--muted);text-transform:uppercase;font-size:15px;letter-spacing:.08em;margin-top:8px;align-self:end}
 .sliders output{grid-column:2;align-self:end;font-variant-numeric:tabular-nums;color:var(--ink)}

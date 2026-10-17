@@ -27,6 +27,7 @@ function frame(now){
   st.a3=clamp(st.a3+bucketIn*1.3*dt*res,...LIM.a3);
   if(bench.on){benchTick(dt);driveIn=0;turnIn=0;tThr=0;tSteer=0;tBed=0;mL=0;mR=0}
   updateTruck(dt,tThr,tSteer,tBed);updateMower(dt,mL,mR);
+  siteTick();
   if(mode==='walk'&&!bench.on)updateWalker(dt,Lx,Ly,Rx,Ry);else updateWalker(dt,0,0,0,0);
   // what the mixer hears: hydraulic demand, a ram pushed against its stop (relief valve), tracks moving
   {const end=(v,l,i)=>(i>0.1&&v>=l[1]-1e-4)||(i<-0.1&&v<=l[0]+1e-4);
@@ -112,7 +113,7 @@ function frame(now){
   if(st.slumpT>0){st.slumpT-=dt;for(let n=0;n<3*GRID_K;n++)if(slump())st.dirty=true}
   if(st.dirty){
     updateTufts(dI0-1,dI1+1,dJ0-1,dJ1+1);lawnTerrain();
-    updateTerrain();st.dirty=false;mapDirty=true;blkTerrainMoved();
+    updateTerrain();st.dirty=false;site.dirty=true;mapDirty=true;blkTerrainMoved();
     if(st.slumpT<=0){winOn=false}
     if(!st.exposed){
       const jz=Math.round((PIPE_Z+S/2)/CELL);
@@ -125,6 +126,7 @@ function frame(now){
   if(hudT<=0)mapsTick(0.1);
   if(hudT<=0){hudT=0.1;
     {const pb=$('#pumpBtn');if(pb.hidden===waterAny)pb.hidden=!waterAny}
+    {const sb=$('#seatBtn'),walk=mode==='walk',show=walk?!!wkNear():!!wk.inside;if(sb.hidden===show)sb.hidden=!show;const t=walk?'Get in':'Get out';if(sb.textContent!==t)sb.textContent=t}
     {const bb=$('#boxBtn'),show=TB.hooked||boxNear();if(bb.hidden===show)bb.hidden=!show;const t=TB.hooked?'Drop box':'Hook box';if(bb.textContent!==t)bb.textContent=t}
     const pct=Math.round(st.load/CAP*100);
     $('#bucketVal').textContent=`${(st.load*1.308).toFixed(2)} yd³ · ${pct}%`;

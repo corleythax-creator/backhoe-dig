@@ -55,7 +55,7 @@ function edPick(cx,cy){const r=canvas.getBoundingClientRect();edNdc.set((cx-r.le
 // the nearest tree, boulder or machine to a ground point, if one is under it
 function edHit(x,z){let best=null,bd=1;
   for(const a of assets){const r=(a.t==='rock'?1.0:1.6)*a.s,d=Math.hypot(a.x-x,a.z-z)/r;if(d<bd){bd=d;best={a}}}
-  for(const m of ED_MACH){const o=m.o(),d=Math.hypot(o.x-x,o.z-z)/m.r;if(d<bd){bd=d;best={m}}}
+  for(const m of ED_MACH){if(!m.m().visible)continue;const o=m.o(),d=Math.hypot(o.x-x,o.z-z)/m.r;if(d<bd){bd=d;best={m}}}
   return best}
 
 // ---------- reshaping and painting ----------
@@ -79,11 +79,12 @@ function edBrush(dt){const R=ed.size,cx=ed.bx,cz=ed.bz,t=ed.tool,k=ed.str/10;
     ED_H[q]=Math.max(-60,Math.min(60,ED_H[q]))}
   ed.stroke.ij=edGrow(ed.stroke.ij,i0,i1,j0,j1);
   ed.pend=edGrow(ed.pend,ED_X0+i0*ED_C-0.6,ED_X0+i1*ED_C+0.6,ED_Z0+j0*ED_C-0.6,ED_Z0+j1*ED_C+0.6);ed.changed=true}
-// everything built from the ground over an area (metres) follows the edit: the dig grid (dug holes keep their depth),
-// the 0.5 m ground, steep-ground stops, grass tufts, the tall grass and the trees and boulders on it
+// everything built from the ground over an area (metres) follows the edit: the dig grid (dug holes keep their depth;
+// undug ground stays exactly at grade, so the site save skips it), the 0.5 m ground, steep-ground stops, grass tufts,
+// the tall grass and the trees and boulders on it
 function edRefresh(r,full){if(!r)return;const [x0,x1,z0,z1]=r;
   const i0=Math.max(0,Math.floor((x0+S/2)/CELL)),i1=Math.min(N,Math.ceil((x1+S/2)/CELL)),j0=Math.max(0,Math.floor((z0+S/2)/CELL)),j1=Math.min(N,Math.ceil((z1+S/2)/CELL));
-  if(i0<=i1&&j0<=j1){for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const k=j*V+i,b=baseHeight(i*CELL-S/2,j*CELL-S/2),d=b-H0[k];H0[k]=b;H[k]+=d;digBase(k)}
+  if(i0<=i1&&j0<=j1){for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const k=j*V+i,b=baseHeight(i*CELL-S/2,j*CELL-S/2);H[k]=H[k]===H0[k]?b:H[k]+b-H0[k];H0[k]=b;digBase(k)}
     touch(i0,i1,j0,j1);updateTufts(i0-1,i1+1,j0-1,j1+1);lawnTerrain();updateTerrain();winOn=false;blkTerrainMoved()}
   midUpdate(x0,x1,z0,z1);wallBuild(x0,x1,z0,z1);tuftsRefresh(x0,x1,z0,z1);
   if(assets.some(a=>a.x>x0-2&&a.x<x1+2&&a.z>z0-2&&a.z<z1+2)){assetsBuild();shpTreesRefresh()}
@@ -188,9 +189,9 @@ canvas.addEventListener('pointerleave',e=>{if(edOn&&e.pointerType==='mouse'&&!ed
 canvas.addEventListener('contextmenu',e=>{if(edOn)e.preventDefault()});
 canvas.addEventListener('wheel',e=>{if(!edOn)return;e.preventDefault();ed.dist=clamp(ed.dist*Math.exp(e.deltaY*0.0012),8,220)},{passive:false});
 
-// ---------- keys: G opens and closes; WASD or arrows pan, Q E turn, R F zoom, Delete removes, Ctrl+Z undo ----------
+// ---------- keys (fixed, not in the Keys panel): G opens and closes unless a game action has G; WASD or arrows pan, Q E turn, R F zoom, Delete removes, Ctrl+Z undo ----------
 addEventListener('keydown',e=>{const tg=e.target&&e.target.tagName;if(tg==='TEXTAREA'||tg==='INPUT')return;
-  if(!edOn){if(e.code==='KeyG'&&!e.repeat&&!e.ctrlKey&&!e.metaKey)editorOpen();return}
+  if(!edOn){if(e.code==='KeyG'&&!e.repeat&&!e.ctrlKey&&!e.metaKey&&!keyActs('KeyG').length&&keysBox.hidden)editorOpen();return}
   const c=e.code,mod=e.ctrlKey||e.metaKey;
   if(mod&&c==='KeyZ'){e.preventDefault();e.shiftKey?edRedo():edUndo();return}
   if(mod&&c==='KeyY'){e.preventDefault();edRedo();return}
@@ -220,9 +221,9 @@ $('#edReset').onclick=()=>{const b=$('#edReset');
 const edLook=new THREE.Vector3();
 function editorFrame(dt,now){
   // keys move the view
-  const kx=kv('KeyD','KeyA')+kv('ArrowRight','ArrowLeft'),kz=kv('KeyS','KeyW')+kv('ArrowDown','ArrowUp');
+  const ek=(a,b)=>(keys[a]?1:0)-(keys[b]?1:0),kx=ek('KeyD','KeyA')+ek('ArrowRight','ArrowLeft'),kz=ek('KeyS','KeyW')+ek('ArrowDown','ArrowUp');
   if(kx||kz)edPan(-kx*dt*700,-kz*dt*700);
-  ed.yaw+=kv('KeyQ','KeyE')*dt*1.6;ed.dist=clamp(ed.dist*Math.exp(kv('KeyF','KeyR')*dt*1.5),8,220);
+  ed.yaw+=ek('KeyQ','KeyE')*dt*1.6;ed.dist=clamp(ed.dist*Math.exp(ek('KeyF','KeyR')*dt*1.5),8,220);
   // the brush works while held; the ground catches up a few times a second, and fully when the stroke ends
   if(ed.stroke){edBrush(dt);if(now-ed.refT>110){ed.refT=now;edRefresh(ed.pend,false);ed.pend=null}}
   if(ed.sel&&ed.sel.m)edRingSel();
