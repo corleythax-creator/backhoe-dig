@@ -1,7 +1,7 @@
 // Backhoe Dig build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Backhoe Dig",
- "updated": "2026-10-17T09:15:00Z",
+ "updated": "2026-10-17T09:24:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 266.5,
+   "dh": 271.5,
    "act": 4.5,
-   "versions": 32
+   "versions": 33
   }
  ],
  "extra": [
@@ -381,6 +381,15 @@ window.EFFORT = {
    "tris": 821848,
    "chars": 212572,
    "what": "Tall grass and a zero-turn mower: a 52 by 39 ft patch of knee-high grass north of the trench that sways in the wind and bends away from the machines, and a red zero-turn with a 52 in deck, lap bars, swivel casters and a roll bar. Mow mode puts a lap bar on each stick (both up drives straight, opposite spins in place). Cutting leaves stubble with light and dark stripes by pass direction and throws clippings out the chute; Lawn row with percent mowed and time; a rendered V-twin with blade whine and grass chop in the sound mixer; seat view; patch and mower on the maps."
+  },
+  {
+   "v": 40,
+   "asked": "2026-10-17T04:05:00-05:00",
+   "live": "2026-10-17T04:25:00-05:00",
+   "dh": 5,
+   "tris": 822372,
+   "chars": 212849,
+   "what": "Real-scale machines from CAT 320 and tri-axle dump truck specs. Excavator: 18.7 ft boom and 9.5 ft stick (was 13.8 and 8.5) with rams and hoses refitted, 7.2 ft track gauge, 24 in shoes, 10.8 ft of track on the ground, and a longer deck and counterweight for a 9 ft tail swing; reach along the ground 34 ft, dig depth 17 ft, top height 35 ft. Truck: 16 ft dump body (was 14 ft) hung farther past the tandem, frame and rear lighting moved back, capacity 12 yd³."
   }
  ]
 };
