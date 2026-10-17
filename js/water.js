@@ -48,8 +48,8 @@ function waterTick(dt){
 }
 // how wet point k is: puddles and wet spoil (mudA) or painted Mud (mudBase, terrain.js)
 function mudOf(k){return Math.max(mudA[k],mudBase[k])}
-// how muddy the ground is at x,z (0 dry, 1 puddle or wet spoil)
-function mudAt(x,z){const i=Math.round((x+S/2)/CELL),j=Math.round((z+S/2)/CELL);if(i<0||i>N||j<0||j>N)return 0;return mudOf(j*V+i)}
+// how muddy the ground is at x,z (0 dry, 1 puddle, wet spoil or soaked ground; farMud in mud.js outside the dig zone)
+function mudAt(x,z){const i=Math.round((x+S/2)/CELL),j=Math.round((z+S/2)/CELL);if(i<0||i>N||j<0||j>N)return farMud(x,z);return mudOf(j*V+i)}
 // is the bucket tip under water?
 function underWater(p){const i=Math.round((p.x+S/2)/CELL),j=Math.round((p.z+S/2)/CELL);if(i<0||i>N||j<0||j>N)return false;return Wt[j*V+i]>p.y}
 function setPump(on){pumpOn=!!on&&waterAny;const b=$('#pumpBtn');b.textContent=pumpOn?'Pump: on':'Pump';b.setAttribute('aria-pressed',pumpOn);

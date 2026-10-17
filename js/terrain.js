@@ -268,8 +268,10 @@ function updateTerrain(){
   pos.needsUpdate=true; ca.needsUpdate=true;
   snapClods(ja,jb);updateShadowCaster();
 }
+// outside the dig zone: the mud tiles' ground once mud.js has loaded (farH), else the mesa
+let farGround=null;
 function hAt(x,z){
-  if(x<-S/2||x>S/2||z<-S/2||z>S/2)return baseHeight(x,z);
+  if(x<-S/2||x>S/2||z<-S/2||z>S/2)return farGround?farGround(x,z):baseHeight(x,z);
   let fx=(x+S/2)/CELL,fz=(z+S/2)/CELL;
   fx=Math.max(0,Math.min(N-0.001,fx)); fz=Math.max(0,Math.min(N-0.001,fz));
   const i=fx|0,j=fz|0,u=fx-i,v=fz-j,k=j*V+i;

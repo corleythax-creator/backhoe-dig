@@ -183,6 +183,8 @@ function stampRut(x,z,yaw,hw,hl,dt){
       H[k]+=a;mixSpoil(k,MUD_C,a);comp[k]=0;mudA[k]=Math.max(mudA[k],m*0.5)}
     growDug(i0,i1,j0,j1)}
   if(any){touch(i0,i1,j0,j1);st.dirty=true}
+  // past the dig zone's edge the mud tiles take the ruts (mud.js)
+  if(x-R<-S/2||x+R>S/2||z-R<-S/2||z+R>S/2)any=Math.max(any,farRut(x,z,yaw,hw,hl,dt));
   if(crushT<=0){for(const kd of CLODS){let hit=false;
     for(let n=0;n<kd.n;n++){if(!kd.sz[n])continue;const dx=kd.x[n]-x,dz=kd.z[n]-z;if(dx*dx+dz*dz>R*R)continue;
       const u=dx*s+dz*c,v=dx*c-dz*s;if(Math.abs(u)<hl&&Math.abs(v)<hw){kd.sz[n]=0;kd.mesh.setMatrixAt(n,ZERO);hit=true}}

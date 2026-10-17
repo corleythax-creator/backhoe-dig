@@ -5,8 +5,8 @@
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 const SITE_KEY='bhd_site',RIG_KEY='bhd_rigs';
 const site={dirty:false,saveT:0,rigT:0,rigSig:'',lastD:null};
-const ST_KEYS=['x','z','y','yaw','pitch','roll','swing','a1','a2','a3','load','loadC','loadMix','loadWet','stuck','strikes','exposed','done','seenSand','seenRock','grime','mud','caves'];
-const TR_KEYS=['x','z','y','yaw','pitch','roll','bed','load','hauled','loadC','loadMix','loadWet','stuck','mud','gear','loadedOnce','fullWarned','haulWarned','bedWarned'];
+const ST_KEYS=['x','z','y','yaw','pitch','roll','swing','a1','a2','a3','load','loadC','loadMix','loadWet','stuck','strikes','exposed','done','seenSand','seenRock','grime','mud','caves','sink'];
+const TR_KEYS=['x','z','y','yaw','pitch','roll','bed','load','hauled','loadC','loadMix','loadWet','stuck','mud','sink','gear','loadedOnce','fullWarned','haulWarned','bedWarned'];
 function siteB64(u8){let s='';for(let k=0;k<u8.length;k+=4096)s+=String.fromCharCode.apply(null,u8.subarray(k,k+4096));return btoa(s)}
 function siteUnB64(s){const b=atob(s),u=new Uint8Array(b.length);for(let k=0;k<b.length;k++)u[k]=b.charCodeAt(k);return u}
 // ground: for each changed vertex, the gap since the last one (varint), height above or below the original (float),
@@ -19,17 +19,18 @@ function siteSave(){if(window.syncHold)return;site.dirty=false;site.saveT=perfor
     for(let q=0;q<3;q++)buf[o++]=Math.round(Math.min(1,Math.max(0,spoilC[k*3+q]))*255);
     buf[o++]=Math.round(Math.min(1,comp[k])*255);buf[o++]=Math.round(Math.min(1,Math.max(0,mudA[k]))*255);
     if(Wt[k]>-1e8){buf[o++]=1;dv.setFloat32(o,Wt[k],true);o+=4}else buf[o++]=0}
-  // unchanged ground is not written again, so an idle device does not look changed to the sync
-  const d=siteB64(buf.subarray(0,o));if(d===site.lastD)return;site.lastD=d;
-  try{localStorage.setItem(SITE_KEY,JSON.stringify({v:1,V,n:ks.length,t:Date.now(),d}))}catch(e){}}
+  // unchanged ground is not written again, so an idle device does not look changed to the sync; mt: the mud tiles (mud.js)
+  const d=siteB64(buf.subarray(0,o)),mt=mtSave(),sig=d+JSON.stringify(mt);if(sig===site.lastD)return;site.lastD=sig;
+  try{localStorage.setItem(SITE_KEY,JSON.stringify({v:1,V,n:ks.length,t:Date.now(),d,mt}))}catch(e){}}
 function siteLoad(){let d=null;try{d=JSON.parse(localStorage.getItem(SITE_KEY))}catch(e){}
-  if(!d||d.v!==1||d.V!==V||typeof d.d!=='string')return false;site.lastD=d.d;let buf;try{buf=siteUnB64(d.d)}catch(e){return false}
+  if(!d||d.v!==1||d.V!==V||typeof d.d!=='string')return false;site.lastD=d.d+JSON.stringify(d.mt||[]);let buf;try{buf=siteUnB64(d.d)}catch(e){return false}
   const dv=new DataView(buf.buffer);let o=0,k=-1,any=false,i0=N+1,i1=-1,j0=N+1,j1=-1;
   try{for(let c=0;c<d.n;c++){let g=0,sh=0,b;do{b=buf[o++];g|=(b&127)<<sh;sh+=7}while(b&128);k+=g;if(k>=V*V)break;
     H[k]=H0[k]+dv.getFloat32(o,true);o+=4;for(let q=0;q<3;q++)spoilC[k*3+q]=buf[o++]/255;
     comp[k]=buf[o++]/255;mudA[k]=buf[o++]/255;if(buf[o++]){Wt[k]=dv.getFloat32(o,true);o+=4;waterAny=waterSeen=true}
     if(H[k]!==H0[k]){const i=k%V,j=(k/V)|0;i0=Math.min(i0,i);i1=Math.max(i1,i);j0=Math.min(j0,j);j1=Math.max(j1,j);any=true}}}
   catch(e){H.set(H0);return false}
+  mtLoad(d.mt);
   // the dug area's bounds, which water and cave-ins scan
   if(any){const mg=3*GRID_K;cI0=Math.max(0,i0-mg);cI1=Math.min(N,i1+mg);cJ0=Math.max(0,j0-mg);cJ1=Math.min(N,j1+mg)}
   dI0=0;dI1=N;dJ0=0;dJ1=N;winOn=true;st.dirty=true;return true}
