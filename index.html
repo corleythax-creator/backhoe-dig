@@ -56,6 +56,21 @@ button:focus-visible{outline:3px solid var(--gas);outline-offset:2px}
 #toast span.show{opacity:1}
 #toast span.bad{border-color:var(--danger);color:#ffd9d5}
 #toast span.good{border-color:var(--ok)}
+#benchBar{position:absolute;left:0;right:0;top:0;margin:0 auto;width:max-content;max-width:100%;box-sizing:border-box;font:800 20px/1.25 var(--f-display);letter-spacing:.04em;text-align:center;background:var(--hud);border:2px solid var(--gas);border-radius:10px;padding:8px 14px;font-variant-numeric:tabular-nums}
+#benchBar small{display:block;font:600 16px/1.2 var(--f-display);color:var(--muted);letter-spacing:.03em}
+#bench{position:fixed;inset:0;background:rgba(10,12,9,.78);display:flex;align-items:center;justify-content:center;pointer-events:auto;box-sizing:border-box;z-index:5;
+  padding-block:calc(env(safe-area-inset-top,0px) + 16px) calc(env(safe-area-inset-bottom,0px) + 16px);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.tablewrap{overflow-x:auto}
+#benchTable{border-collapse:collapse;width:100%;font:600 17px/1.3 var(--f-display);font-variant-numeric:tabular-nums}
+#benchTable th{font:700 14px/1.2 var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-align:right;padding:6px 8px;border-bottom:1px solid var(--hud-line)}
+#benchTable td{text-align:right;padding:7px 8px;border-bottom:1px solid rgba(255,255,255,.07)}
+#benchTable th:first-child,#benchTable td:first-child{text-align:left}
+.fps-good{color:var(--ok)}.fps-mid{color:var(--gas)}.fps-bad{color:var(--danger)}
+.big{font:800 26px/1.15 var(--f-display);letter-spacing:.02em}
+.devline{font-size:15px!important;color:var(--muted)}
+.card .row button{flex:1}
+.card button.ghost{background:transparent;color:var(--ink);border:1px solid var(--hud-line)}
 #flash{position:fixed;inset:0;background:var(--danger);opacity:0;pointer-events:none;transition:opacity .4s}
 #help{position:fixed;inset:0;background:rgba(10,12,9,.72);display:flex;align-items:center;justify-content:center;pointer-events:auto;box-sizing:border-box;
   padding-block:calc(env(safe-area-inset-top,0px) + 16px) calc(env(safe-area-inset-bottom,0px) + 16px);
@@ -98,10 +113,11 @@ button:focus-visible{outline:3px solid var(--gas);outline-offset:2px}
     </div>
     <button id="camBtn">Cab view</button>
     <span style="flex:1"></span>
+    <button id="benchBtn">Speed test</button>
     <button id="resetBtn">Reset</button>
     <button id="helpBtn" aria-label="Help">?</button>
   </div>
-  <div class="spacer"><div id="toast"><span id="toastText"></span></div></div>
+  <div class="spacer"><div id="benchBar" hidden></div><div id="toast"><span id="toastText"></span></div></div>
   <div class="sticks">
     <div class="stickwrap">
       <div class="cap" id="capL"><b>◀ ▶</b> Swing<br><b>▲ ▼</b> Stick out / in</div>
@@ -114,6 +130,16 @@ button:focus-visible{outline:3px solid var(--gas);outline-offset:2px}
   </div>
 </div>
 
+<div id="bench" hidden>
+  <div class="card">
+    <h1>Speed test results</h1>
+    <div id="benchSummary" class="ticket"></div>
+    <div class="tablewrap"><table id="benchTable"></table></div>
+    <p id="benchDevice" class="devline"></p>
+    <div class="row"><button id="benchCopy">Copy results</button><button id="benchClose" class="ghost">Close</button></div>
+    <textarea id="benchText" readonly hidden></textarea>
+  </div>
+</div>
 <div id="help">
   <div class="card">
     <h1>Backhoe Dig</h1>
@@ -657,6 +683,87 @@ const trenchK=[];for(let j=Math.round((TRENCH_Z0+S/2)/CELL);j<=Math.round((TRENC
 function resize(){const w=innerWidth,h=innerHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.fov=w<h?68:58;camera.updateProjectionMatrix()}
 addEventListener('resize',resize);resize();
 
+// ---------- speed test ----------
+const LEVELS=[0,4,12,28,60,124],LEVEL_S=5,WARM=1;
+const bench={on:false,t:0,lvl:-1,stats:[],clones:[],built:false,barT:0};
+function buildClones(){
+  machine.updateMatrixWorld(true);
+  const inv=new THREE.Matrix4().copy(machine.matrixWorld).invert(),rel=new THREE.Matrix4(),P=new THREE.Matrix4(),q=new THREE.Quaternion(),o=new THREE.Vector3(),sc=new THREE.Vector3(1,1,1),out=new THREE.Matrix4();
+  const max=LEVELS[LEVELS.length-1],places=[];
+  for(let i=0;i<max;i++){const r=9+(i%6)*3.1+Math.floor(i/60)*1.4,a=i*2.39996;const x=Math.cos(a)*r,z=Math.sin(a)*r;
+    q.setFromAxisAngle(new THREE.Vector3(0,1,0),a*1.7);o.set(x,baseHeight(x,z),z);places.push(new THREE.Matrix4().compose(o.clone(),q.clone(),sc))}
+  machine.traverse(m=>{if(!m.isMesh)return;
+    rel.multiplyMatrices(inv,m.matrixWorld);
+    const im=new THREE.InstancedMesh(m.geometry,m.material,max);im.castShadow=true;im.receiveShadow=false;im.frustumCulled=false;
+    for(let i=0;i<max;i++){out.multiplyMatrices(places[i],rel);im.setMatrixAt(i,out)}
+    im.count=0;scene.add(im);bench.clones.push(im)});
+  bench.built=true;
+}
+function setClones(n){for(const im of bench.clones)im.count=n}
+function startBench(){
+  if(bench.on)return;
+  if(!bench.built)buildClones();
+  bench.on=true;bench.t=0;bench.lvl=-1;bench.stats=LEVELS.map(n=>({n,ft:[],tris:0,calls:0,k:0}));
+  renderer.setPixelRatio(maxPR);resize();
+  help.hidden=true;$('#bench').hidden=true;$('#benchBar').hidden=false;
+  st.load=0;
+}
+function endBench(){
+  bench.on=false;setClones(0);$('#benchBar').hidden=true;firstCam=true;
+  renderer.setPixelRatio(pr);resize();
+  showBenchResults();
+}
+function fmtTris(t){return t>=1e6?(t/1e6).toFixed(2)+'M':t>=1e3?Math.round(t/1e3)+'k':String(Math.round(t))}
+function gpuName(){try{const gl=renderer.getContext(),ext=gl.getExtension('WEBGL_debug_renderer_info');return ext?gl.getParameter(ext.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER)}catch(e){return 'unknown'}}
+function showBenchResults(){
+  const rows=bench.stats.map(s=>{const ft=s.ft.slice().sort((a,b)=>a-b),tot=ft.reduce((a,b)=>a+b,0);
+    const avg=tot>0?ft.length/tot:0,p99=ft.length?ft[Math.min(ft.length-1,Math.floor(ft.length*0.99))]:0;
+    return{machines:1+s.n,tris:s.k?s.tris/s.k:0,calls:s.k?s.calls/s.k:0,avg,low:p99>0?1/p99:0}});
+  const cls=f=>f>=55?'fps-good':f>=30?'fps-mid':'fps-bad';
+  let html='<tr><th>Machines</th><th>Tris</th><th>Avg FPS</th><th>1% low</th></tr>';
+  for(const r of rows)html+=`<tr><td>${r.machines}</td><td>${fmtTris(r.tris)}</td><td class="${cls(r.avg)}">${r.avg.toFixed(1)}</td><td class="${cls(r.low)}">${r.low.toFixed(0)}</td></tr>`;
+  $('#benchTable').innerHTML=html;
+  const best=lim=>{let t=0;for(const r of rows)if(r.avg>=lim)t=Math.max(t,r.tris);return t};
+  const t55=best(55),t30=best(30),base=rows[0].avg;
+  let sum=`<div class="lbl">Smooth (55+ FPS) up to</div><div class="big">${t55?fmtTris(t55)+' tris':'not reached'}</div>
+    <div class="lbl" style="margin-top:8px">Playable (30+ FPS) up to</div><div class="big">${t30?fmtTris(t30)+' tris':'not reached'}</div>`;
+  if(base>=27&&base<=31.5)sum+=`<p style="margin-top:8px;color:var(--gas)">The baseline sat right at 30 FPS. That usually means Low Power Mode is on and capping the frame rate.</p>`;
+  if(rows[rows.length-1].avg>=55)sum+=`<p style="margin-top:8px;color:var(--ok)">Still smooth at the heaviest level. This device has more headroom than the test reaches.</p>`;
+  $('#benchSummary').innerHTML=sum;
+  const w=renderer.domElement.width,h=renderer.domElement.height,gpu=gpuName();
+  $('#benchDevice').textContent=`${gpu} · ${w}×${h} px at ${maxPR}x · ${navigator.platform||''}`;
+  $('#benchText').value=['Backhoe Dig speed test',`GPU: ${gpu}`,`Resolution: ${w}x${h} (${maxPR}x)`,`Smooth 55+ FPS up to: ${t55?fmtTris(t55):'not reached'}`,`Playable 30+ FPS up to: ${t30?fmtTris(t30):'not reached'}`,
+    ...rows.map(r=>`${r.machines} machines | ${fmtTris(r.tris)} tris | ${Math.round(r.calls)} draws | ${r.avg.toFixed(1)} avg FPS | ${r.low.toFixed(0)} 1% low`)].join('\n');
+  $('#bench').hidden=false;
+}
+function benchTick(dt){
+  bench.t+=dt;
+  const lvl=Math.min(LEVELS.length-1,Math.floor(bench.t/LEVEL_S));
+  if(lvl!==bench.lvl){bench.lvl=lvl;setClones(LEVELS[lvl])}
+  const u=bench.t;
+  st.a1=0.75+0.25*Math.sin(u*1.3);st.a2=-1.45+0.3*Math.sin(u*0.9+1);st.a3=-1.6+0.9*Math.sin(u*1.7);st.swing+=dt*0.7;
+  if(bench.t>=LEVEL_S*LEVELS.length)endBench();
+}
+function benchCamera(){
+  const u=bench.t%LEVEL_S,seg=Math.floor(u/(LEVEL_S/4)),k=u-seg*(LEVEL_S/4);
+  if(seg===0){const a=st.yaw+st.swing+Math.PI+k*1.4;look.set(st.x,st.y+1.5,st.z);camera.position.set(st.x+Math.sin(a)*9,st.y+4,st.z+Math.cos(a)*9);camera.lookAt(look)}
+  else if(seg===1){house.localToWorld(camera.position.set(-0.72,2.2,0.5));house.localToWorld(look.set(-0.1+Math.sin(k*2.5)*3,-0.4,6));camera.lookAt(look)}
+  else if(seg===2){const a=0.8+bench.t*0.35;camera.position.set(Math.sin(a)*24,9,Math.cos(a)*24);camera.lookAt(look.set(0,0,0))}
+  else{const a=bench.t*0.3;camera.position.set(Math.sin(a)*5,28,Math.cos(a)*5);camera.lookAt(look.set(0,0,0))}
+}
+function benchSample(dt){
+  const s=bench.stats[bench.lvl];if(!s)return;
+  if(bench.t-bench.lvl*LEVEL_S>=WARM){s.ft.push(dt);s.tris+=renderer.info.render.triangles;s.calls+=renderer.info.render.calls;s.k++}
+  bench.barT-=dt;
+  if(bench.barT<=0){bench.barT=0.2;const left=Math.max(0,Math.ceil(LEVEL_S*LEVELS.length-bench.t));
+    $('#benchBar').innerHTML=`SPEED TEST · ${left} s left<small>Level ${bench.lvl+1} of ${LEVELS.length} · ${1+LEVELS[bench.lvl]} machines · ${fmtTris(renderer.info.render.triangles)} tris</small>`}
+}
+$('#benchBtn').onclick=startBench;
+$('#benchClose').onclick=()=>{$('#bench').hidden=true};
+$('#benchCopy').onclick=()=>{const t=$('#benchText').value,b=$('#benchCopy');
+  const fallback=()=>{const ta=$('#benchText');ta.hidden=false;ta.select();b.textContent='Select and copy'};
+  try{navigator.clipboard.writeText(t).then(()=>{b.textContent='Copied'},fallback)}catch(e){fallback()}};
+
 function frame(now){
   const dt=Math.min(0.05,(now-last)/1000);last=now;
   // inputs
@@ -671,6 +778,7 @@ function frame(now){
   st.a1=clamp(st.a1+boomIn*0.6*dt*res,...LIM.a1);
   st.a2=clamp(st.a2+stickIn*0.8*dt*res,...LIM.a2);
   st.a3=clamp(st.a3+bucketIn*1.3*dt*res,...LIM.a3);
+  if(bench.on){benchTick(dt);driveIn=0;turnIn=0}
   // drive
   st.yaw-=turnIn*0.8*dt;
   st.x=clamp(st.x+Math.sin(st.yaw)*driveIn*2.6*dt,-11,11);
@@ -690,7 +798,7 @@ function frame(now){
   // dig
   const g=hAt(tip.x,tip.z);
   st.below=tip.y<g;
-  if(st.below){
+  if(st.below&&!bench.on){
     if(st.load<CAP-0.002){
       const got=dig(tip,CAP-st.load);
       if(got>0){st.load+=got;st.dirty=true;st.slumpT=2.5;if(Math.random()<0.5)spawn(tip.clone().setY(g+0.05),1.2)}
@@ -768,14 +876,16 @@ function frame(now){
     house.localToWorld(look.set(-0.1,-0.4,6));
     camera.lookAt(look); firstCam=true;
   }
+  if(bench.on)benchCamera();
   if(shake>0){shake-=dt;camera.position.x+=(Math.random()-0.5)*0.25;camera.position.y+=(Math.random()-0.5)*0.25}
   sky.position.copy(camera.position);
   sun.position.set(st.x+12,st.y+20,st.z+8); sun.target.position.set(st.x,st.y,st.z);
   renderer.render(scene,camera);
+  if(bench.on)benchSample(dt);
   fpsFrames++;fpsTime+=dt;
   if(fpsTime>=0.5){const f=Math.round(fpsFrames/fpsTime);const fe=$('#fpsVal');fe.textContent=f;fe.style.color=f>=50?'var(--ok)':f>=30?'var(--gas)':'var(--danger)';
-    if(f<48&&pr>1){if(++lowN>=3){pr=Math.max(1,pr-0.25);renderer.setPixelRatio(pr);resize();lowN=0}}else lowN=0;
-    if(f>=58&&pr<maxPR){if(++hiN>=8){pr=Math.min(maxPR,pr+0.25);renderer.setPixelRatio(pr);resize();hiN=0}}else hiN=0;
+    if(!bench.on&&f<48&&pr>1){if(++lowN>=3){pr=Math.max(1,pr-0.25);renderer.setPixelRatio(pr);resize();lowN=0}}else lowN=0;
+    if(!bench.on&&f>=58&&pr<maxPR){if(++hiN>=8){pr=Math.min(maxPR,pr+0.25);renderer.setPixelRatio(pr);resize();hiN=0}}else hiN=0;
     $('#resVal').textContent=pr.toFixed(2).replace(/0$/,'')+'x';
     const t=renderer.info.render.triangles;$('#triVal').textContent=t>=1e6?(t/1e6).toFixed(2)+'M':t>=1e3?Math.round(t/1e3)+'k':t;fpsFrames=0;fpsTime=0}
   requestAnimationFrame(frame);
