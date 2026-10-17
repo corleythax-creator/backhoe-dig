@@ -30,6 +30,11 @@ canvas#view{position:fixed;inset:0;width:100%;height:100%;display:block;touch-ac
 .lbl{font:700 14px/1 var(--f-display);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
 .val{font:700 23px/1.1 var(--f-display);font-variant-numeric:tabular-nums;margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .sub{font:600 16px/1.2 var(--f-display);font-variant-numeric:tabular-nums;margin-top:6px;color:var(--ink)}
+.panel.wide{grid-column:1/-1;padding-block:8px}
+.trow{display:flex;align-items:baseline;gap:12px;flex-wrap:wrap}
+.trow .val,.trow .sub{margin-top:0}
+.trow .sub{margin-left:auto;color:var(--muted)}
+#truckBar{background:#9fb7c6}
 .bar{height:10px;border-radius:5px;background:rgba(255,255,255,.14);margin-top:8px;overflow:hidden}
 .bar>i{display:block;height:100%;width:0;background:var(--machine);transition:width .15s}
 #trenchBar>i{background:var(--ok)}
@@ -95,21 +100,26 @@ button:focus-visible{outline:3px solid var(--gas);outline-offset:2px}
   <div class="top">
     <div class="panel" id="bucketPanel">
       <div class="lbl">Bucket</div>
-      <div class="val" id="bucketVal">0.00 m³ · 0%</div>
+      <div class="val" id="bucketVal">0.00 yd³ · 0%</div>
       <div class="bar"><i id="bucketBar"></i></div>
-      <div class="sub" id="tipVal">Tip 0.0 m above grade</div>
+      <div class="sub" id="tipVal">Tip 0.0 ft above grade</div>
     </div>
     <div class="panel">
-      <div class="lbl">Trench · 0.9 m deep</div>
+      <div class="lbl">Trench · 3 ft deep</div>
       <div class="val" id="trenchVal">0%</div>
       <div class="bar" id="trenchBar"><i></i></div>
       <div class="sub" id="gasVal">Gas main: buried</div>
+    </div>
+    <div class="panel wide">
+      <div class="trow"><span class="lbl">Dump truck</span><span class="val" id="truckVal">0.0 / 10.0 yd³</span><span class="sub" id="haulVal">Hauled 0.0 yd³</span></div>
+      <div class="bar"><i id="truckBar"></i></div>
     </div>
   </div>
   <div class="row">
     <div class="seg" role="group" aria-label="Control mode">
       <button id="modeDig" aria-pressed="true">Dig</button>
       <button id="modeDrive" aria-pressed="false">Drive</button>
+      <button id="modeTruck" aria-pressed="false">Truck</button>
     </div>
     <button id="camBtn">Cab view</button>
     <span style="flex:1"></span>
@@ -124,7 +134,7 @@ button:focus-visible{outline:3px solid var(--gas);outline-offset:2px}
       <div class="stick" id="stickL"><div class="knob"></div></div>
     </div>
     <div class="stickwrap">
-      <div class="cap"><b>◀ ▶</b> Curl / dump<br><b>▲ ▼</b> Boom down / up</div>
+      <div class="cap" id="capR"><b>◀ ▶</b> Curl / dump<br><b>▲ ▼</b> Boom down / up</div>
       <div class="stick" id="stickR"><div class="knob"></div></div>
     </div>
   </div>
@@ -145,12 +155,13 @@ button:focus-visible{outline:3px solid var(--gas);outline-offset:2px}
     <h1>Backhoe Dig</h1>
     <div class="ticket">
       <div class="lbl">Work order</div>
-      <p>Dig a 1 m wide trench along the <b>white paint</b>, 0.9 m deep. A gas main crosses at the <b style="color:var(--gas)">yellow paint</b> about 1.3 m down. Expose it. Don't hit it.</p>
+      <p>Dig a 3 ft wide trench along the <b>white paint</b>, 3 ft deep. A gas main crosses at the <b style="color:var(--gas)">yellow paint</b> about 4 ft down. Load the spoil into the dump truck and haul it off. Expose it. Don't hit it.</p>
     </div>
     <dl class="keys">
       <dt>Left stick</dt><dd>Swing left/right. Push up to reach the stick out, pull down to bring it in.</dd>
       <dt>Right stick</dt><dd>Left curls the bucket in (scoop), right dumps. Push up for boom down, pull for boom up.</dd>
       <dt>Drive</dt><dd>Tap Drive and the left stick moves the tracks.</dd>
+      <dt>Truck</dt><dd>Swing a full bucket over the truck bed and dump. Tap Truck to drive it: left stick steers and gives gas, right stick raises the bed. Dump outside the work area to haul it off.</dd>
       <dt>Look</dt><dd>Drag the scene to look around.</dd>
       <dt>Keys</dt><dd>A/D swing · W/S stick · I/K boom · J/L bucket · arrows drive</dd>
     </dl>
@@ -599,9 +610,99 @@ function mergeStatic(group,skip){
   }
 }
 [machine,house,cab,boomP,stickP,bucketP].forEach(g=>mergeStatic(g,[glass,loadMesh,sideL[0],sideL[1],hLink,jPin]));
+// ---------- dump truck ----------
+const WHITE=M(0xe9ecea),BEDM=M(0x6c7378),BED_D=M(0x4c5257),TGLASS=new THREE.MeshPhongMaterial({color:0x5f7f93,shininess:90,flatShading:true});
+const TRUCK_CAP=10/1.308,TR_START={x:-7,z:1,yaw:-Math.PI/2,v:0,steer:0,bed:0,load:0,hauled:0,rollA:0,y:0,pitch:0,roll:0,loadedOnce:false,fullWarned:false,haulWarned:false};
+const tr=Object.assign({},TR_START);
+const truck=new THREE.Group();truck.rotation.order='YXZ';scene.add(truck);
+const tBody=new THREE.Group();truck.add(tBody);
+for(const x of [-0.5,0.5])box(0.18,0.28,7.2,STEEL,x,0.95,0.3,tBody);
+for(let z=-3.2;z<=3.81;z+=0.75)box(1.0,0.1,0.12,STEEL,0,0.95,z,tBody);
+box(2.35,1.4,1.5,WHITE,0,2.15,1.85,tBody);
+box(2.37,0.12,1.52,STEEL_L,0,1.5,1.85,tBody);
+box(2.0,0.55,0.05,TGLASS,0,2.5,2.61,tBody);
+for(const x of [-1.185,1.185])box(0.04,0.5,0.85,TGLASS,x,2.5,1.95,tBody);
+box(1.9,0.45,0.05,TGLASS,0,2.45,1.09,tBody);
+box(2.2,0.08,0.3,WHITE,0,2.82,2.72,tBody);
+for(let i=-1;i<=1;i++)box(0.12,0.06,0.06,AMBER,i*0.35,2.9,2.55,tBody);
+box(2.0,0.75,1.45,WHITE,0,1.75,3.32,tBody);
+box(1.96,0.08,1.4,WHITE,0,2.16,3.3,tBody);
+box(1.5,0.6,0.05,STEEL,0,1.72,4.06,tBody);
+for(let i=0;i<7;i++)box(1.4,0.03,0.04,STEEL_L,0,1.48+i*0.08,4.09,tBody);
+box(2.45,0.28,0.28,STEEL_L,0,1.0,4.2,tBody);
+for(const x of [-0.8,0.8]){const hl=cyl(0.11,0.11,0.06,20,LENS,tBody);hl.rotation.x=Math.PI/2;hl.position.set(x,1.85,4.06)}
+for(const x of [-1.05,1.05]){box(0.55,0.08,1.25,WHITE,x,1.42,3.1,tBody);box(0.55,0.35,0.08,WHITE,x,1.26,3.72,tBody);
+  box(0.06,0.06,0.5,STEEL,x*1.18,2.6,2.75,tBody);box(0.08,0.45,0.22,STEEL,x*1.33,2.45,2.95,tBody);
+  box(0.4,0.06,0.3,STEEL_L,x,1.2,1.6,tBody);box(0.4,0.06,0.3,STEEL_L,x,0.85,1.6,tBody)}
+const tank=cyl(0.28,0.28,0.95,24,CHROME,tBody);tank.rotation.x=Math.PI/2;tank.position.set(1.0,1.15,0.6);
+const stack=cyl(0.08,0.08,1.9,16,CHROME,tBody);stack.position.set(-1.0,2.4,1.0);
+for(const z of [-2.2,-1.6,-2.8]){const ax=cyl(0.07,0.07,1.9,10,STEEL,tBody);ax.rotation.z=Math.PI/2;ax.position.set(0,0.55,z)}
+const ax2=cyl(0.07,0.07,2.0,10,STEEL,tBody);ax2.rotation.z=Math.PI/2;ax2.position.set(0,0.55,3.1);
+for(const x of [-1.15,1.15])box(0.06,0.5,1.9,BED_D,x,1.15,-2.2,tBody);
+// wheels
+const wheels=[],frontWheels=[];
+function makeWheel(x,z,dual){const g=new THREE.Group();g.rotation.order='YXZ';g.position.set(x,0.55,z);truck.add(g);
+  const offs=dual?[-0.21,0.21]:[0];
+  for(const o of offs){const t=cyl(0.55,0.55,0.38,32,RUBBER,g);t.rotation.z=Math.PI/2;t.position.x=o;
+    for(let k=0;k<16;k++){const an=k/16*Math.PI*2,tb=box(0.36,0.06,0.1,RUBBER,o,Math.sin(an)*0.56,Math.cos(an)*0.56,g);tb.rotation.x=-an}}
+  const rim=cyl(0.3,0.3,dual?0.84:0.4,20,STEEL_L,g);rim.rotation.z=Math.PI/2;
+  const hub=cyl(0.12,0.12,dual?0.9:0.46,12,CHROME,g);hub.rotation.z=Math.PI/2;
+  mergeStatic(g,[]);wheels.push(g);if(!dual)frontWheels.push(g);return g}
+makeWheel(-1.05,3.1,false);makeWheel(1.05,3.1,false);
+for(const z of [-1.6,-2.8])for(const x of [-0.95,0.95])makeWheel(x,z,true);
+// bed, hinged at the rear
+const bedG=new THREE.Group();bedG.position.set(0,1.3,-3.4);truck.add(bedG);
+box(2.3,0.12,4.3,BEDM,0,0.06,2.15,bedG);
+for(const x of [-1.15,1.15]){box(0.1,1.0,4.3,BEDM,x,0.56,2.15,bedG);box(0.18,0.1,4.36,BED_D,x,1.08,2.15,bedG);
+  for(let z=0.3;z<4.3;z+=0.6)box(0.06,0.9,0.1,BED_D,x*1.04,0.5,z,bedG)}
+for(const x of [-0.5,0.5])box(0.15,0.2,4.3,STEEL,x,-0.1,2.15,bedG);
+box(2.3,1.15,0.1,BEDM,0,0.6,4.3,bedG);box(2.4,0.08,0.95,BED_D,0,1.2,4.72,bedG);
+for(let i=-2;i<=2;i++)box(0.06,0.06,0.9,BEDM,i*0.5,1.26,4.72,bedG);
+const tailP=new THREE.Group();tailP.position.set(0,1.1,0.0);bedG.add(tailP);
+box(2.3,1.0,0.1,BED_D,0,-0.52,-0.03,tailP);for(let i=-2;i<=2;i++)box(0.08,0.9,0.05,BEDM,i*0.45,-0.52,-0.1,tailP);
+const heapGeo=(function(){const g=new THREE.BoxGeometry(2.1,1,4.1,8,1,14),pa=g.attributes.position;
+  for(let i=0;i<pa.count;i++){if(pa.getY(i)>0){const x=pa.getX(i),z=pa.getZ(i),e=Math.max(Math.abs(x)/1.05,Math.abs(z)/2.05);
+    pa.setY(i,-0.5+(1-0.65*e*e)+0.07*Math.sin(x*5.1+z*3.7)+0.05*Math.cos(z*6.3))}}g.computeVertexNormals();return g})();
+const heap=new THREE.Mesh(heapGeo,M(0x7a5232));heap.position.set(0,0.12,2.15);heap.visible=false;heap.castShadow=true;bedG.add(heap);
+mergeStatic(tBody,[]);mergeStatic(bedG,[heap]);mergeStatic(tailP,[]);
+ram(tBody,[0,1.05,0.4],bedG,[0,-0.05,3.75],0.13,0.065,1.3);
+const tl=new THREE.Vector3(),tv=new THREE.Vector3();
+function inBed(p){tl.copy(p);bedG.worldToLocal(tl);return tl.x>-1.1&&tl.x<1.1&&tl.z>0.1&&tl.z<4.2&&tl.y>-0.3&&tl.y<3.2}
+function heapTop(){return 0.12+(heap.visible?heap.scale.y*0.5+0.5*heap.scale.y:0)}
+function updateTruck(dt,thr,steerIn,bedIn){
+  tr.v+=(thr*7-tr.v)*Math.min(1,dt*(thr?1.1:2.2));
+  tr.steer+=(steerIn*0.55-tr.steer)*Math.min(1,dt*4);
+  tr.yaw-=tr.v*Math.tan(tr.steer)/4.6*dt;
+  tr.x=clamp(tr.x+Math.sin(tr.yaw)*tr.v*dt,-27,27);tr.z=clamp(tr.z+Math.cos(tr.yaw)*tr.v*dt,-27,27);
+  // keep the truck from driving through the excavator
+  const sy=Math.sin(tr.yaw),cy=Math.cos(tr.yaw);
+  for(const lz of [2.2,-0.4,-2.6]){const cx=tr.x+sy*lz,cz=tr.z+cy*lz,dx=cx-st.x,dz=cz-st.z,d=Math.hypot(dx,dz),min=1.5+2.3;
+    if(d<min&&d>1e-3){tr.x+=dx/d*(min-d);tr.z+=dz/d*(min-d);tr.v*=-0.2}}
+  tr.bed=clamp(tr.bed+bedIn*0.45*dt,0,0.9);
+  tr.rollA+=tr.v*dt/0.55;
+  const smp=(lx,lz)=>hAt(tr.x+lx*cy+lz*sy,tr.z-lx*sy+lz*cy);
+  const hf=(smp(-1,3.1)+smp(1,3.1))/2,hb=(smp(-1,-2.2)+smp(1,-2.2))/2,hr=(smp(1,3.1)+smp(1,-2.2))/2,hl=(smp(-1,3.1)+smp(-1,-2.2))/2,k=Math.min(1,dt*8);
+  tr.y+=((hf+hb)/2-tr.y)*k;tr.pitch+=(-Math.atan2(hf-hb,5.3)-tr.pitch)*k;tr.roll+=(Math.atan2(hr-hl,2.0)-tr.roll)*k;
+  truck.position.set(tr.x,tr.y,tr.z);truck.rotation.set(tr.pitch,tr.yaw,tr.roll);
+  for(const w of wheels)w.rotation.x=tr.rollA;
+  for(const w of frontWheels)w.rotation.y=tr.steer;
+  bedG.rotation.x=-tr.bed;tailP.rotation.x=tr.bed*1.35;
+  const f=tr.load/TRUCK_CAP;heap.visible=tr.load>0.01;if(heap.visible)heap.scale.set(0.55+0.45*Math.min(1,f*1.5),0.08+0.95*f,0.6+0.4*Math.min(1,f*1.5));heap.position.y=0.12+0.5*heap.scale.y;
+  truck.updateMatrixWorld(true);
+  // tipping the bed pours the load out the back
+  if(tr.bed>0.32&&tr.load>0.0005){
+    const out=Math.min(tr.load,(tr.bed-0.32)*3.2*dt);tr.load-=out;if(tr.load<0.0005)tr.load=0;
+    truck.localToWorld(tv.set(0,0.3,-4.3));
+    if(Math.abs(tv.x)<S/2-0.8&&Math.abs(tv.z)<S/2-0.8){deposit(tv.x,tv.z,out);st.dirty=true;st.slumpT=2.5}
+    else{tr.hauled+=out;if(!tr.haulWarned&&tr.load<=0){tr.haulWarned=true;toast('Load hauled off site.','good')}}
+    bedG.localToWorld(tv.set(0,0.4,0.2));for(let n=0;n<Math.ceil(out*40);n++)spawn(tv,1.2);
+  }
+  if(tr.load<TRUCK_CAP*0.95)tr.fullWarned=false;
+}
 texManager.onLoad=()=>{
   texMixU.value=1;
-  for(const mt of [ORANGE,ORANGE_D,STEEL,STEEL_L,RUBBER]){mt.map=texGrime;mt.needsUpdate=true}
+  for(const mt of [ORANGE,ORANGE_D,STEEL,STEEL_L,RUBBER,WHITE,BEDM,BED_D]){mt.map=texGrime;mt.needsUpdate=true}
+  heap.material.map=texDirt;heap.material.color.setHex(0xd8c2b0);heap.material.needsUpdate=true;
   ORANGE.color.setHex(0xf27a22);ORANGE_D.color.setHex(0xc85e1c);
   loadMesh.material.map=texDirt;loadMesh.material.color.setHex(0xd8c2b0);loadMesh.material.needsUpdate=true;
   pMat.map=texDirt;pMat.color.setHex(0xd0b8a6);pMat.needsUpdate=true;
@@ -613,7 +714,7 @@ const START={x:0.42,z:0,yaw:Math.PI,swing:0,a1:0.5,a2:-1.8,a3:-1.2};
 const st={};
 function resetState(){
   Object.assign(st,START,{y:0,pitch:0,roll:0,load:0,strikes:0,exposed:false,done:false,startT:0,doneT:0,below:false,strikeCd:0,slumpT:0,dirty:true});
-  H.set(H0);dI0=0;dI1=N;dJ0=0;dJ1=N;winOn=true;
+  H.set(H0);dI0=0;dI1=N;dJ0=0;dJ1=N;winOn=true;Object.assign(tr,TR_START);
 }
 resetState();
 const LIM={a1:[-0.65,1.15],a2:[-2.65,-0.45],a3:[-2.85,0.35]};
@@ -649,9 +750,10 @@ const dend=e=>{if(drag&&e.pointerId===drag.id)drag=null};
 canvas.addEventListener('pointerup',dend);canvas.addEventListener('pointercancel',dend);
 canvas.addEventListener('wheel',e=>{e.preventDefault();camDist=clamp(camDist+e.deltaY*0.01,5,22)},{passive:false});
 
-function setMode(m){mode=m;$('#modeDig').setAttribute('aria-pressed',m==='dig');$('#modeDrive').setAttribute('aria-pressed',m==='drive');
-  $('#capL').innerHTML=m==='dig'?'<b>◀ ▶</b> Swing<br><b>▲ ▼</b> Stick out / in':'<b>◀ ▶</b> Turn<br><b>▲ ▼</b> Drive fwd / back';}
-$('#modeDig').onclick=()=>setMode('dig'); $('#modeDrive').onclick=()=>setMode('drive');
+function setMode(m){mode=m;for(const [id,k] of [['#modeDig','dig'],['#modeDrive','drive'],['#modeTruck','truck']])$(id).setAttribute('aria-pressed',m===k);
+  $('#capL').innerHTML=m==='dig'?'<b>◀ ▶</b> Swing<br><b>▲ ▼</b> Stick out / in':m==='drive'?'<b>◀ ▶</b> Turn<br><b>▲ ▼</b> Drive fwd / back':'<b>◀ ▶</b> Steer<br><b>▲ ▼</b> Gas / reverse';
+  $('#capR').innerHTML=m==='truck'?'<b>▲ ▼</b> Bed up / down<br>&nbsp;':'<b>◀ ▶</b> Curl / dump<br><b>▲ ▼</b> Boom down / up';firstCam=true;}
+$('#modeDig').onclick=()=>setMode('dig'); $('#modeDrive').onclick=()=>setMode('drive'); $('#modeTruck').onclick=()=>setMode('truck');
 $('#camBtn').onclick=()=>{camMode=camMode==='chase'?'cab':'chase';$('#camBtn').textContent=camMode==='chase'?'Cab view':'Chase view'};
 let resetArm=0;
 $('#resetBtn').onclick=()=>{const b=$('#resetBtn');
@@ -768,17 +870,20 @@ function frame(now){
   const dt=Math.min(0.05,(now-last)/1000);last=now;
   // inputs
   let swingIn,stickIn,driveIn=0,turnIn=0;
-  const boomIn=clamp(-SR.y+kv('KeyI','KeyK'),-1,1);
-  const bucketIn=clamp(SR.x+kv('KeyL','KeyJ'),-1,1);
-  if(mode==='dig'){swingIn=SL.x;stickIn=SL.y}else{swingIn=0;stickIn=0;driveIn=SL.y;turnIn=SL.x}
+  let boomIn=clamp(-SR.y+kv('KeyI','KeyK'),-1,1);
+  let bucketIn=clamp(SR.x+kv('KeyL','KeyJ'),-1,1);
+  if(mode==='dig'){swingIn=SL.x;stickIn=SL.y}else if(mode==='drive'){swingIn=0;stickIn=0;driveIn=SL.y;turnIn=SL.x}else{swingIn=0;stickIn=0}
   swingIn=clamp(swingIn+kv('KeyD','KeyA'),-1,1); stickIn=clamp(stickIn+kv('KeyW','KeyS'),-1,1);
   driveIn=clamp(driveIn+kv('ArrowUp','ArrowDown'),-1,1); turnIn=clamp(turnIn+kv('ArrowRight','ArrowLeft'),-1,1);
+  let tThr=0,tSteer=0,tBed=0;
+  if(mode==='truck'){tThr=clamp(SL.y+driveIn,-1,1);tSteer=clamp(SL.x+turnIn,-1,1);tBed=clamp(SR.y+kv('KeyI','KeyK'),-1,1);driveIn=0;turnIn=0;boomIn=0;bucketIn=0}
   const res=st.below?0.5:1;
   st.swing-=swingIn*0.85*dt*res;
   st.a1=clamp(st.a1+boomIn*0.6*dt*res,...LIM.a1);
   st.a2=clamp(st.a2+stickIn*0.8*dt*res,...LIM.a2);
   st.a3=clamp(st.a3+bucketIn*1.3*dt*res,...LIM.a3);
-  if(bench.on){benchTick(dt);driveIn=0;turnIn=0}
+  if(bench.on){benchTick(dt);driveIn=0;turnIn=0;tThr=0;tSteer=0;tBed=0}
+  updateTruck(dt,tThr,tSteer,tBed);
   // drive
   st.yaw-=turnIn*0.8*dt;
   st.x=clamp(st.x+Math.sin(st.yaw)*driveIn*2.6*dt,-11,11);
@@ -810,7 +915,12 @@ function frame(now){
   const f=clamp((0.25-up)/0.5,0,1);
   if(f>0&&st.load>0.0005){
     const out=Math.min(st.load,f*(0.35+st.load*1.6)*dt);
-    st.load-=out; deposit(mid.x,mid.z,out); st.dirty=true; st.slumpT=2.5;
+    st.load-=out;
+    if(inBed(mid)&&tr.load<TRUCK_CAP){const take=Math.min(out,TRUCK_CAP-tr.load);tr.load+=take;
+      if(out-take>0){deposit(mid.x,mid.z,out-take);st.dirty=true;st.slumpT=2.5}
+      if(!tr.loadedOnce){tr.loadedOnce=true;toast('Dirt in the truck.','good')}
+      if(tr.load>=TRUCK_CAP*0.99&&!tr.fullWarned){tr.fullWarned=true;toast('Truck full. Tap Truck, drive off site and raise the bed.','',3500)}}
+    else{deposit(mid.x,mid.z,out); st.dirty=true; st.slumpT=2.5}
     for(let n=0;n<Math.ceil(out*80);n++)spawn(mid,0.8);
     if(st.load<0.0005)st.load=0;
   }
@@ -837,11 +947,11 @@ function frame(now){
   hudT-=dt;
   if(hudT<=0){hudT=0.1;
     const pct=Math.round(st.load/CAP*100);
-    $('#bucketVal').textContent=`${st.load.toFixed(2)} m³ · ${pct}%`;
+    $('#bucketVal').textContent=`${(st.load*1.308).toFixed(2)} yd³ · ${pct}%`;
     $('#bucketBar').style.width=pct+'%';
     $('#bucketPanel').classList.toggle('full',pct>=99);
     const dep=h0At(tip.x,tip.z)-tip.y;
-    $('#tipVal').textContent=dep>0?`Tip ${dep.toFixed(2)} m below grade`:`Tip ${(-dep).toFixed(1)} m above grade`;
+    $('#tipVal').textContent=dep>0?`Tip ${(dep*3.281).toFixed(1)} ft below grade`:`Tip ${(-dep*3.281).toFixed(1)} ft above grade`;
     let c=0;for(const kk of trenchK)if(H0[kk]-H[kk]>=0.85)c++;
     const tp=Math.round(c/trenchK.length*100);
     if(tp>=100&&!st.done){st.done=true;st.doneT=now;const s=Math.round((now-(st.startT||now))/1000);
@@ -849,13 +959,16 @@ function frame(now){
     const secs=st.startT?Math.round(((st.done?st.doneT:now)-st.startT)/1000):0;
     $('#trenchVal').textContent=`${tp}% · ${Math.floor(secs/60)}:${String(secs%60).padStart(2,'0')}`;
     $('#trenchBar i').style.width=tp+'%';
+    $('#truckVal').textContent=`${(tr.load*1.308).toFixed(1)} / 10.0 yd³`;
+    $('#truckBar').style.width=Math.round(tr.load/TRUCK_CAP*100)+'%';
+    $('#haulVal').textContent=`Hauled ${(tr.hauled*1.308).toFixed(1)} yd³`;
     const gv=$('#gasVal');
     gv.textContent=st.strikes?`Gas main: ${st.strikes} strike${st.strikes>1?'s':''}`:st.exposed?'Gas main: exposed ✓':'Gas main: buried';
     gv.style.color=st.strikes?'var(--danger)':st.exposed?'var(--ok)':'';
   }
   // particles
   for(const p of parts){if(!p.on)continue;p.v.y-=9.8*dt;p.m.position.addScaledVector(p.v,dt);
-    if(p.m.position.y<hAt(p.m.position.x,p.m.position.z)){p.on=false;p.m.visible=false}}
+    const pp=p.m.position;if(pp.y<hAt(pp.x,pp.z)||(inBed(pp)&&tl.y<heapTop())){p.on=false;p.m.visible=false}}
   for(let i=0;i<parts.length;i++){const m=parts[i].m;if(m.visible){m.updateMatrix();pInst.setMatrixAt(i,m.matrix)}else pInst.setMatrixAt(i,ZERO)}
   pInst.instanceMatrix.needsUpdate=true;
   // bucket load visual
@@ -864,22 +977,22 @@ function frame(now){
   // camera
   const hy=st.yaw+st.swing;
   if(camMode==='chase'){
-    const fx=Math.sin(hy),fz=Math.cos(hy);
-    look.set(st.x+fx*4,st.y+0.8,st.z+fz*4);
-    const cyaw=hy+Math.PI+orbitYaw;
-    camT.set(look.x+Math.sin(cyaw)*Math.cos(orbitPitch)*camDist,look.y+Math.sin(orbitPitch)*camDist,look.z+Math.cos(cyaw)*Math.cos(orbitPitch)*camDist);
+    let cyaw,cd=camDist;
+    if(mode==='truck'){look.set(tr.x,tr.y+1.6,tr.z);cyaw=tr.yaw+Math.PI+orbitYaw;cd=camDist+3}
+    else{const fx=Math.sin(hy),fz=Math.cos(hy);look.set(st.x+fx*4,st.y+0.8,st.z+fz*4);cyaw=hy+Math.PI+orbitYaw}
+    camT.set(look.x+Math.sin(cyaw)*Math.cos(orbitPitch)*cd,look.y+Math.sin(orbitPitch)*cd,look.z+Math.cos(cyaw)*Math.cos(orbitPitch)*cd);
     camT.y=Math.max(camT.y,hAt(camT.x,camT.z)+1.2);
     if(firstCam){camera.position.copy(camT);firstCam=false}else camera.position.lerp(camT,Math.min(1,dt*5));
     camera.lookAt(look);
   }else{
-    house.localToWorld(camera.position.set(-0.72,2.2,0.5));
-    house.localToWorld(look.set(-0.1,-0.4,6));
+    if(mode==='truck'){truck.localToWorld(camera.position.set(-0.55,2.6,1.95));truck.localToWorld(look.set(-0.3,1.6,14))}
+    else{house.localToWorld(camera.position.set(-0.72,2.2,0.5));house.localToWorld(look.set(-0.1,-0.4,6))}
     camera.lookAt(look); firstCam=true;
   }
   if(bench.on)benchCamera();
   if(shake>0){shake-=dt;camera.position.x+=(Math.random()-0.5)*0.25;camera.position.y+=(Math.random()-0.5)*0.25}
   sky.position.copy(camera.position);
-  sun.position.set(st.x+12,st.y+20,st.z+8); sun.target.position.set(st.x,st.y,st.z);
+  const fv=mode==='truck'?tr:st;sun.position.set(fv.x+12,fv.y+20,fv.z+8); sun.target.position.set(fv.x,fv.y,fv.z);
   renderer.render(scene,camera);
   if(bench.on)benchSample(dt);
   fpsFrames++;fpsTime+=dt;
