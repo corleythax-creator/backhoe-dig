@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-17T17:38:00Z",
+ "updated": "2026-10-17T17:52:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 378,
+   "dh": 379,
    "act": 8.5,
-   "versions": 57
+   "versions": 58
   }
  ],
  "extra": [
@@ -606,6 +606,15 @@ window.EFFORT = {
    "tris": 1154238,
    "chars": 343655,
    "what": "Touch Sprint button next to Jump in Walk mode: tap to sprint, and it switches itself off once you stop, on a second tap or when you leave Walk mode."
+  },
+  {
+   "v": 65,
+   "asked": "2026-10-17T12:45:00-05:00",
+   "live": "2026-10-17T12:56:00-05:00",
+   "dh": 1,
+   "tris": 1154238,
+   "chars": 343994,
+   "what": "The name Corley's Island everywhere: the map editor's wrong-map message, the versions page, the build log and the notes (the web address and the map file id stay backhoe-dig so links and saved maps keep working). Plus an idea board of 172 scored ideas for the dig site and island life."
   }
  ]
 };
