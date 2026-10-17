@@ -100,7 +100,7 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 .card .row button{flex:1}
 .card button.ghost{background:transparent;color:var(--ink);border:1px solid var(--hud-line)}
 #flash{position:fixed;inset:0;background:var(--danger);opacity:0;pointer-events:none;transition:opacity .4s}
-#help{position:fixed;inset:0;background:rgba(10,12,9,.72);display:flex;align-items:center;justify-content:center;pointer-events:auto;box-sizing:border-box;
+#help,#sndBox{position:fixed;inset:0;background:rgba(10,12,9,.72);display:flex;align-items:center;justify-content:center;pointer-events:auto;box-sizing:border-box;
   padding-block:calc(env(safe-area-inset-top,0px) + 16px) calc(env(safe-area-inset-bottom,0px) + 16px);
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .card{background:#1d211b;border:1px solid var(--hud-line);border-radius:14px;padding:20px;max-width:440px;width:100%;max-height:100%;overflow:auto;box-sizing:border-box;display:flex;flex-direction:column;gap:14px}
@@ -117,3 +117,12 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 @media (max-width:360px){.stick{width:112px;height:112px}.status{width:160px}}
 @media (max-height:420px){.stick{width:112px;height:112px}#benchBar{top:var(--pt)}}
 @media (prefers-reduced-motion:reduce){#toast span,#flash,.bar>i{transition:none}}
+/* Sound panel: label and value over a full-width slider on phones, one row each when there is room; thumbs sized for thumbs */
+#sndBox{z-index:7}
+.sliders{display:grid;grid-template-columns:1fr auto;grid-auto-flow:dense;gap:2px 12px;font:700 18px/1.2 var(--f-display);letter-spacing:.03em}
+.sliders label{grid-column:1;color:var(--muted);text-transform:uppercase;font-size:15px;letter-spacing:.08em;margin-top:8px;align-self:end}
+.sliders output{grid-column:2;align-self:end;font-variant-numeric:tabular-nums;color:var(--ink)}
+.sliders input{grid-column:1/-1;width:100%;height:36px;accent-color:var(--machine);margin:0}
+@media (min-width:480px){.sliders{grid-template-columns:auto 1fr 3.2em;align-items:center;gap:8px 12px}
+  .sliders label{margin-top:0;align-self:center}.sliders input{grid-column:2}.sliders output{grid-column:3;align-self:center;text-align:right}}
+#sndOn[aria-pressed="false"]{color:var(--danger);border-color:var(--danger)}

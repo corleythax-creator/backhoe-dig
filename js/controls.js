@@ -44,7 +44,7 @@ addEventListener('keydown',e=>{if(e.ctrlKey||e.metaKey||e.altKey)return;
     else if(c==='Tab')setMode(MODES[(MODES.indexOf(mode)+(e.shiftKey?2:1))%3]);
     else if(c==='KeyC')$('#camBtn').click();
     else if(c==='KeyT')hookBox();
-    else if(c==='KeyN')setSound(!sndOn);
+    else if(c==='KeyN')setSound(!sndCfg.on);
     else if(c==='KeyH')help.hidden=!help.hidden;
     else if(c==='Escape')help.hidden=true;}
   if(!kbUsed){kbUsed=true;padUsed=false;document.body.classList.add('kb');setCaps()}
@@ -103,7 +103,7 @@ $('#resetBtn').onclick=()=>{const b=$('#resetBtn');
   setTimeout(()=>{if(resetArm&&performance.now()-resetArm>=2400){resetArm=0;b.textContent='Reset';b.classList.remove('arm')}},2500);};
 const help=$('#help');
 $('#helpBtn').onclick=()=>{help.hidden=false;showMenu(false)};
-$('#soundBtn').onclick=()=>setSound(!sndOn);
+$('#soundBtn').onclick=()=>{showSound(true);showMenu(false)};
 function showMenu(on){$('#menu').hidden=!on;$('#menuBtn').setAttribute('aria-expanded',on)}
 $('#menuBtn').onclick=()=>showMenu($('#menu').hidden);
 $('#view').addEventListener('pointerdown',()=>showMenu(false));
