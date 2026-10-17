@@ -61,6 +61,17 @@ button:focus-visible{outline:3px solid var(--gas);outline-offset:2px}
 #toast span.show{opacity:1}
 #toast span.bad{border-color:var(--danger);color:#ffd9d5}
 #toast span.good{border-color:var(--ok)}
+#mini{position:absolute;right:0;bottom:0;width:136px;height:136px;border-radius:12px;border:2px solid rgba(255,255,255,.35);background:#1e2a30;pointer-events:auto;cursor:pointer;box-shadow:0 3px 10px rgba(0,0,0,.3)}
+#bigmap{position:fixed;inset:0;background:rgba(10,12,9,.8);display:flex;align-items:center;justify-content:center;z-index:6;pointer-events:auto;box-sizing:border-box;
+  padding-block:calc(env(safe-area-inset-top,0px) + 12px) calc(env(safe-area-inset-bottom,0px) + 12px);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.mapcard{background:#1d211b;border:1px solid var(--hud-line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px;max-width:100%;max-height:100%;box-sizing:border-box}
+.maphead{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.maphead h2{margin:0;font:800 28px/1 var(--f-display);color:var(--machine);letter-spacing:.02em}
+#big{display:block;border-radius:10px;background:#1e2a30;max-width:100%}
+.legend{display:flex;flex-wrap:wrap;gap:8px 16px;font:600 17px/1.2 var(--f-display);letter-spacing:.03em}
+.legend span{display:flex;align-items:center;gap:7px}
+.legend i{display:inline-block;width:18px;height:12px;border-radius:3px}
 #benchBar{position:absolute;left:0;right:0;top:0;margin:0 auto;width:max-content;max-width:100%;box-sizing:border-box;font:800 20px/1.25 var(--f-display);letter-spacing:.04em;text-align:center;background:var(--hud);border:2px solid var(--gas);border-radius:10px;padding:8px 14px;font-variant-numeric:tabular-nums}
 #benchBar small{display:block;font:600 16px/1.2 var(--f-display);color:var(--muted);letter-spacing:.03em}
 #bench{position:fixed;inset:0;background:rgba(10,12,9,.78);display:flex;align-items:center;justify-content:center;pointer-events:auto;box-sizing:border-box;z-index:5;
@@ -127,7 +138,7 @@ button:focus-visible{outline:3px solid var(--gas);outline-offset:2px}
     <button id="resetBtn">Reset</button>
     <button id="helpBtn" aria-label="Help">?</button>
   </div>
-  <div class="spacer"><div id="benchBar" hidden></div><div id="toast"><span id="toastText"></span></div></div>
+  <div class="spacer"><canvas id="mini" title="Tap for the big map (M)"></canvas><div id="benchBar" hidden></div><div id="toast"><span id="toastText"></span></div></div>
   <div class="sticks">
     <div class="stickwrap">
       <div class="cap" id="capL"><b>◀ ▶</b> Swing<br><b>▲ ▼</b> Stick out / in</div>
@@ -140,6 +151,17 @@ button:focus-visible{outline:3px solid var(--gas);outline-offset:2px}
   </div>
 </div>
 
+<div id="bigmap" hidden>
+  <div class="mapcard">
+    <div class="maphead"><h2>Site map</h2><button id="mapClose">Close</button></div>
+    <canvas id="big"></canvas>
+    <div class="legend">
+      <span><i style="background:#f07a22"></i>Excavator</span><span><i style="background:#e9ecea"></i>Dump truck</span>
+      <span><i style="background:#f2f2ee;height:3px"></i>Trench paint</span><span><i style="background:#f5c518;height:3px"></i>Gas main</span>
+      <span><i style="background:#7a5232"></i>Dug or dumped</span><span><i style="background:#2d7a94"></i>Lake</span>
+    </div>
+  </div>
+</div>
 <div id="bench" hidden>
   <div class="card">
     <h1>Speed test results</h1>
@@ -163,6 +185,7 @@ button:focus-visible{outline:3px solid var(--gas);outline-offset:2px}
       <dt>Drive</dt><dd>Tap Drive and the left stick moves the tracks.</dd>
       <dt>Truck</dt><dd>Swing a full bucket over the truck bed and dump. Tap Truck to drive it: left stick steers and gives gas, right stick raises the bed. Dump outside the work area to haul it off.</dd>
       <dt>Look</dt><dd>Drag the scene to look around.</dd>
+      <dt>Map</dt><dd>Tap the minimap or press M for the big map.</dd>
       <dt>Keys</dt><dd>Dig: A/D swing · W/S stick · I/K boom · J/L bucket. Drive or Truck: WASD or arrows to drive, I/K raises the truck bed.</dd>
     </dl>
     <p>To scoop: boom down until the teeth bite, curl in while pulling the stick toward you, boom up, swing, then dump.</p>
@@ -338,27 +361,33 @@ function slump(){
 const timeU={value:0};
 (function(){
   // lake: low-poly water with gentle animated swells
-  const wg=new THREE.PlaneGeometry(1500,1500,110,110);wg.rotateX(-Math.PI/2);
+  const wg=new THREE.PlaneGeometry(2600,2600,120,120);wg.rotateX(-Math.PI/2);
   const wm=new THREE.MeshPhongMaterial({color:0x2d7a94,specular:0xcfe8f0,shininess:70,flatShading:true});
   wm.onBeforeCompile=sh=>{sh.uniforms.uTime=timeU;sh.vertexShader='uniform float uTime;\n'+sh.vertexShader.replace('#include <begin_vertex>',
     '#include <begin_vertex>\nvec4 wpos=modelMatrix*vec4(transformed,1.0);\ntransformed.y+=sin(wpos.x*0.09+uTime*1.1)*0.35+cos(wpos.z*0.11+uTime*0.8)*0.3+sin((wpos.x+wpos.z)*0.23+uTime*1.7)*0.12;')};
   const water=new THREE.Mesh(wg,wm);water.position.y=WATER;water.receiveShadow=true;scene.add(water);
-  // mountain range ringing the lake, snow on the peaks, hazier with distance
-  const NR=48,NA=240,R0=230,R1=740,pp=[],cc=[],ix=[],hz=[0.75,0.82,0.87];
-  for(let ri=0;ri<=NR;ri++)for(let ai=0;ai<=NA;ai++){
-    const t=ri/NR,r=R0+(R1-R0)*Math.pow(t,0.85),a=ai/NA*Math.PI*2,x=Math.cos(a)*r,z=Math.sin(a)*r;
-    const env=ss(0,0.32,t)*(1-0.55*ss(0.78,1,t)),side=0.5+0.5*Math.sin(a+2.4);
-    const n=(1-Math.abs(Math.sin(a*7+r*0.013)))*0.5+(1-Math.abs(Math.sin(a*17+r*0.031+1.3)))*0.3+(1-Math.abs(Math.sin(a*37-r*0.05+2.1)))*0.2;
-    const hh=env*(0.45+0.55*side)*(50+300*n*n);
-    pp.push(x,WATER-4+hh,z);
-    const f=hh/350,j=hash(ri*3.3,ai*1.7)*0.06;let c;
-    if(f<0.08)c=[0.26,0.4,0.24];else if(f<0.3)c=[0.17+j,0.31+j,0.19];else if(f<0.55+j)c=[0.46+j,0.43+j,0.4+j];else c=[0.93,0.95,0.97];
-    const hk=0.22+0.5*t;cc.push(c[0]+(hz[0]-c[0])*hk,c[1]+(hz[1]-c[1])*hk,c[2]+(hz[2]-c[2])*hk);
+  // two mountain layers far across the lake: a lit front range, and pale hazy peaks behind it
+  function range(R0,R1,NR,NA,lo,hi,hazeA,hazeB,phase,unlit){
+    const pp=[],cc=[],ix=[],hz=[0.75,0.82,0.87];
+    for(let ri=0;ri<=NR;ri++)for(let ai=0;ai<=NA;ai++){
+      const t=ri/NR,r=R0+(R1-R0)*Math.pow(t,0.85),a=ai/NA*Math.PI*2,x=Math.cos(a)*r,z=Math.sin(a)*r;
+      const env=ss(0,0.3,t)*(1-0.5*ss(0.8,1,t)),side=0.5+0.5*Math.sin(a+2.4+phase);
+      const n=(1-Math.abs(Math.sin(a*7+r*0.013+phase)))*0.5+(1-Math.abs(Math.sin(a*17+r*0.031+1.3+phase)))*0.3+(1-Math.abs(Math.sin(a*37-r*0.05+2.1)))*0.2;
+      const hh=env*(0.45+0.55*side)*(lo+hi*n*n);
+      pp.push(x,WATER-6+hh,z);
+      const f=hh/(lo+hi),j=hash(ri*3.3+phase,ai*1.7)*0.06;let c;
+      if(f<0.08)c=[0.26,0.4,0.26];else if(f<0.3)c=[0.18+j,0.32+j,0.22];else if(f<0.56+j)c=[0.46+j,0.44+j,0.43+j];else c=[0.95,0.96,0.98];
+      const hk=hazeA+(hazeB-hazeA)*t;cc.push(c[0]+(hz[0]-c[0])*hk,c[1]+(hz[1]-c[1])*hk,c[2]+(hz[2]-c[2])*hk);
+    }
+    for(let ri=0;ri<NR;ri++)for(let ai=0;ai<NA;ai++){const q=ri*(NA+1)+ai;ix.push(q,q+1,q+NA+1,q+1,q+NA+2,q+NA+1)}
+    const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pp,3));g.setAttribute('color',new THREE.Float32BufferAttribute(cc,3));
+    g.setAttribute('normal',new THREE.Float32BufferAttribute(new Float32Array(pp.length),3));g.setIndex(ix);
+    const mat=unlit?new THREE.MeshBasicMaterial({vertexColors:true,fog:false,side:THREE.DoubleSide})
+      :new THREE.MeshPhongMaterial({vertexColors:true,flatShading:true,fog:false,side:THREE.DoubleSide,shininess:2,specular:0x000000,emissive:0x2a3038});
+    const m=new THREE.Mesh(g,mat);m.renderOrder=-0.5;scene.add(m);
   }
-  for(let ri=0;ri<NR;ri++)for(let ai=0;ai<NA;ai++){const q=ri*(NA+1)+ai;ix.push(q,q+1,q+NA+1,q+1,q+NA+2,q+NA+1)}
-  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pp,3));g.setAttribute('color',new THREE.Float32BufferAttribute(cc,3));
-  g.setAttribute('normal',new THREE.Float32BufferAttribute(new Float32Array(pp.length),3));g.setIndex(ix);
-  scene.add(new THREE.Mesh(g,new THREE.MeshPhongMaterial({vertexColors:true,flatShading:true,fog:false,side:THREE.DoubleSide,shininess:4,specular:0x111111})));
+  range(470,820,40,220,30,240,0.42,0.66,0,false);
+  range(860,1220,28,200,60,430,0.7,0.85,1.7,true);
 })();
 // grass tufts that disappear wherever the ground gets dug or buried
 const TUFTS=9000,tX=new Float32Array(TUFTS),tZ=new Float32Array(TUFTS),tS=new Float32Array(TUFTS),tR=new Float32Array(TUFTS),tI=new Int32Array(TUFTS),tJ=new Int32Array(TUFTS);
@@ -864,6 +893,72 @@ const trenchK=[];for(let j=Math.round((TRENCH_Z0+S/2)/CELL);j<=Math.round((TRENC
 function resize(){const w=innerWidth,h=innerHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.fov=w<h?68:58;camera.updateProjectionMatrix()}
 addEventListener('resize',resize);resize();
 
+// ---------- maps ----------
+const MAP_HALF=120,BG_PX=480;let mapBg=null,digLayer=null,mapDirty=true,mapT=0;
+function buildMapBg(){
+  const c=document.createElement('canvas');c.width=c.height=BG_PX;const x2=c.getContext('2d'),img=x2.createImageData(BG_PX,BG_PX),d=img.data,mpp=MAP_HALF*2/BG_PX;
+  const hs=new Float32Array(BG_PX*BG_PX);
+  for(let py=0;py<BG_PX;py++)for(let px=0;px<BG_PX;px++)hs[py*BG_PX+px]=baseHeight(px*mpp-MAP_HALF,py*mpp-MAP_HALF);
+  for(let py=0;py<BG_PX;py++)for(let px=0;px<BG_PX;px++){
+    const k=py*BG_PX+px,h=hs[k],hx=hs[py*BG_PX+Math.min(BG_PX-1,px+1)]-hs[py*BG_PX+Math.max(0,px-1)],hz=hs[Math.min(BG_PX-1,py+1)*BG_PX+px]-hs[Math.max(0,py-1)*BG_PX+px];
+    const sl=Math.hypot(hx,hz)/(2*mpp);let r,g,b;
+    if(h<WATER){const dp=Math.min(1,(WATER-h)/12);r=0.2-0.08*dp;g=0.5-0.15*dp;b=0.62-0.12*dp}
+    else if(h<WATER+2.5){r=0.82;g=0.75;b=0.55}
+    else if(sl>0.9){r=0.52;g=0.47;b=0.42}
+    else if(h>-3){r=0.38;g=0.6;b=0.3}else{r=0.42;g=0.58;b=0.32}
+    const shade=h<WATER?1:Math.max(0.55,Math.min(1.25,1+(-hx-hz)*0.35/mpp*0.5));
+    d[k*4]=Math.min(255,r*shade*255);d[k*4+1]=Math.min(255,g*shade*255);d[k*4+2]=Math.min(255,b*shade*255);d[k*4+3]=255;
+  }
+  x2.putImageData(img,0,0);mapBg=c;
+  digLayer=document.createElement('canvas');digLayer.width=digLayer.height=256;
+}
+function updateDigLayer(){
+  const x2=digLayer.getContext('2d'),img=x2.createImageData(256,256),d=img.data;
+  for(let py=0;py<256;py++)for(let px=0;px<256;px++){
+    const i=Math.round((px+0.5)/256*N),j=Math.round((py+0.5)/256*N),k=j*V+i,df=H[k]-H0[k],o=(py*256+px)*4;
+    if(df<-0.04){const t=Math.min(1,-df/1.2);d[o]=120-50*t;d[o+1]=80-35*t;d[o+2]=48-22*t;d[o+3]=230}
+    else if(df>0.04){d[o]=150;d[o+1]=108;d[o+2]=70;d[o+3]=Math.min(230,80+df*300)}
+  }
+  x2.putImageData(img,0,0);
+}
+function drawMap(cv,cx,cz,half,big){
+  if(!mapBg)buildMapBg();
+  const dpr=Math.min(2,devicePixelRatio||1),W=Math.round(cv.clientWidth*dpr);if(!W)return;
+  if(cv.width!==W){cv.width=cv.height=W}
+  const g=cv.getContext('2d'),sc=W/(2*half),X=x=>(x-cx)*sc+W/2,Y=z=>(z-cz)*sc+W/2;
+  g.fillStyle='#1d4f63';g.fillRect(0,0,W,W);
+  const spp=BG_PX/(2*MAP_HALF);
+  g.imageSmoothingEnabled=true;
+  g.drawImage(mapBg,(cx-half+MAP_HALF)*spp,(cz-half+MAP_HALF)*spp,2*half*spp,2*half*spp,0,0,W,W);
+  g.drawImage(digLayer,X(-S/2),Y(-S/2),S*sc,S*sc);
+  g.lineWidth=Math.max(1.5,0.18*sc);g.strokeStyle='#f2f2ee';g.strokeRect(X(-0.5),Y(TRENCH_Z0),1*sc,(TRENCH_Z1-TRENCH_Z0)*sc);
+  g.setLineDash([6*dpr,5*dpr]);g.strokeStyle='#f5c518';g.lineWidth=Math.max(2,0.2*sc);g.beginPath();g.moveTo(X(-12),Y(PIPE_Z));g.lineTo(X(12),Y(PIPE_Z));g.stroke();g.setLineDash([]);
+  if(big){g.strokeStyle='rgba(255,255,255,.35)';g.lineWidth=1.5*dpr;g.setLineDash([4*dpr,4*dpr]);g.strokeRect(X(-S/2),Y(-S/2),S*sc,S*sc);g.setLineDash([]);}
+  const icon=(x,z,ang,fill,len,wid,active)=>{g.save();g.translate(X(x),Y(z));g.rotate(ang);
+    const L=Math.max(len*sc,big?14*dpr:10*dpr),Wd=Math.max(wid*sc,big?9*dpr:7*dpr);
+    if(active){g.beginPath();g.arc(0,0,L*0.9,0,Math.PI*2);g.fillStyle='rgba(255,255,255,.22)';g.fill()}
+    g.fillStyle=fill;g.strokeStyle='#14161a';g.lineWidth=1.5*dpr;g.beginPath();g.moveTo(L/2,0);g.lineTo(-L/2,-Wd/2);g.lineTo(-L/2,Wd/2);g.closePath();g.fill();g.stroke();g.restore()};
+  const hy=st.yaw+st.swing;
+  g.strokeStyle='#f07a22';g.lineWidth=Math.max(2,0.3*sc);g.beginPath();g.moveTo(X(st.x),Y(st.z));g.lineTo(X(tip.x),Y(tip.z));g.stroke();
+  icon(tr.x,tr.z,Math.atan2(Math.cos(tr.yaw),Math.sin(tr.yaw)),'#e9ecea',8.5,2.6,mode==='truck');
+  icon(st.x,st.z,Math.atan2(Math.cos(hy),Math.sin(hy)),'#f07a22',4.2,3,mode!=='truck');
+  g.fillStyle='rgba(20,23,19,.75)';g.fillRect(W-30*dpr,4*dpr,26*dpr,26*dpr);g.fillStyle='#f3f5ef';g.font=`800 ${16*dpr}px Saira Condensed, sans-serif`;g.textAlign='center';g.textBaseline='middle';g.fillText('N',W-17*dpr,17*dpr);
+  if(big){g.font=`700 ${15*dpr}px Saira Condensed, sans-serif`;g.fillStyle='rgba(255,255,255,.85)';g.fillText('DIG SITE',X(0),Y(-S/2)-10*dpr);g.fillText('LAKE',X(0),Y(100));}
+}
+function mapsTick(dt){
+  mapT-=dt;if(mapDirty&&mapT<=0){if(!mapBg)buildMapBg();updateDigLayer();mapDirty=false;mapT=0.5}
+  const fv=mode==='truck'?tr:st;
+  drawMap($('#mini'),fv.x,fv.z,42,false);
+  if(!$('#bigmap').hidden)drawMap($('#big'),0,0,MAP_HALF,true);
+}
+function sizeBig(){const c=$('#big'),sz=Math.max(200,Math.min(innerWidth-60,innerHeight-230,900));c.style.width=c.style.height=sz+'px'}
+function toggleMap(show){const m=$('#bigmap');m.hidden=show===undefined?!m.hidden:!show;if(!m.hidden){sizeBig();drawMap($('#big'),0,0,MAP_HALF,true)}}
+$('#mini').addEventListener('click',()=>toggleMap(true));
+$('#mapClose').onclick=()=>toggleMap(false);
+$('#bigmap').addEventListener('click',e=>{if(e.target.id==='bigmap')toggleMap(false)});
+addEventListener('keydown',e=>{if(e.code==='KeyM')toggleMap();else if(e.code==='Escape')toggleMap(false)});
+addEventListener('resize',()=>{if(!$('#bigmap').hidden)sizeBig()});
+
 // ---------- speed test ----------
 const LEVELS=[0,4,12,28,60,124],LEVEL_S=5,WARM=1;
 const bench={on:false,t:0,lvl:-1,stats:[],clones:[],built:false,barT:0};
@@ -1015,7 +1110,7 @@ function frame(now){
   if(st.slumpT>0){st.slumpT-=dt;if(slump())st.dirty=true;if(slump())st.dirty=true;if(slump())st.dirty=true}
   if(st.dirty){
     updateTufts(dI0-1,dI1+1,dJ0-1,dJ1+1);
-    updateTerrain();st.dirty=false;
+    updateTerrain();st.dirty=false;mapDirty=true;
     if(st.slumpT<=0){winOn=false}
     if(!st.exposed){
       const jz=Math.round((PIPE_Z+S/2)/CELL);
@@ -1025,6 +1120,7 @@ function frame(now){
   }
   // HUD
   hudT-=dt;
+  if(hudT<=0)mapsTick(0.1);
   if(hudT<=0){hudT=0.1;
     const pct=Math.round(st.load/CAP*100);
     $('#bucketVal').textContent=`${(st.load*1.308).toFixed(2)} yd³ · ${pct}%`;
