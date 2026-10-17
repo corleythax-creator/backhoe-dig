@@ -406,7 +406,7 @@ window.EFFORT = {
    "live": "2026-10-17T04:28:00-05:00",
    "dh": 1.5,
    "tris": 991332,
-   "chars": 218102,
+   "chars": 218242,
    "what": "The mowed lawn stays mowed: how long ago each patch was cut and its stripe, the mowing time and where the mower was left are saved in the browser and come back on reload, so grass keeps growing back from where it was (it grows while the game runs, not while it is closed). Reset restores the ground but no longer regrows mowed grass."
   }
  ]
