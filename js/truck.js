@@ -337,10 +337,11 @@ function updateTruck(dt,thr,steerIn,bedIn){
   }
   if(tr.load<TRUCK_CAP*0.95)tr.fullWarned=false;
 }
-// a grey copy of the dirt texture (mean 0.8) so the bucket load and truck heap can take any soil colour
-function greyDetail(t){try{const im=t.image,c=document.createElement('canvas');c.width=im.width;c.height=im.height;
+// a grey copy of a texture (mean 0.8, or mean) so what wears it keeps its own colour: the dirt for the bucket load and
+// truck heap, which take any soil colour, and library textures for the blocks and boulders
+function greyDetail(t,mean){try{const im=t.image,c=document.createElement('canvas');c.width=im.width;c.height=im.height;
   const x2=c.getContext('2d');x2.drawImage(im,0,0);const d=x2.getImageData(0,0,c.width,c.height),p=d.data;let sum=0;
-  for(let i=0;i<p.length;i+=4)sum+=p[i]*0.3+p[i+1]*0.59+p[i+2]*0.11;const k=0.8*255/(sum/(p.length/4));
+  for(let i=0;i<p.length;i+=4)sum+=p[i]*0.3+p[i+1]*0.59+p[i+2]*0.11;const k=(mean||0.8)*255/(sum/(p.length/4));
   for(let i=0;i<p.length;i+=4){const l=Math.min(255,(p[i]*0.3+p[i+1]*0.59+p[i+2]*0.11)*k);p[i]=p[i+1]=p[i+2]=l}
   x2.putImageData(d,0,0);const g=new THREE.CanvasTexture(c);g.wrapS=g.wrapT=THREE.RepeatWrapping;return g}catch(e){return null}}
 function tintLoad(mat,c){const k=mat.map?1.25:1;mat.color.setRGB(Math.min(1,c[0]*k),Math.min(1,c[1]*k),Math.min(1,c[2]*k))}
@@ -352,4 +353,9 @@ function applyTextures(){
   ORANGE.color.setHex(0xf27a22);ORANGE_D.color.setHex(0xc85e1c);
   loadMesh.material.map=grey;loadMesh.material.needsUpdate=true;
   pMat.map=texDirt;pMat.color.setHex(0xd0b8a6);pMat.needsUpdate=true;
+  matTexUpdate();
+  // concrete blocks wear the poured concrete texture and boulders the bedrock (materials.js), brightened back to their colours
+  const lib=(id,mean,mt)=>new THREE.TextureLoader().load(`textures/${id}.jpg`,t=>{const g=greyDetail(t,mean);if(!g)return;
+    g.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());mt.map=g;mt.color.setScalar(1/mean);mt.needsUpdate=true});
+  lib('concrete',0.85,blkMesh.material);lib('granite',0.8,assetIMs.rock[0].material);
 }

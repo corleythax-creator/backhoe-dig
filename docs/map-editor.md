@@ -23,7 +23,8 @@ Undo and Redo hold 30 steps. Number keys 1 to 0 pick the first ten tools, Delete
 | File | Editor parts |
 | --- | --- |
 | `js/editor.js` | Everything the player touches: open and close, tools, camera, picking, brush, assets, roads, undo, the info cards, save, copy and load |
-| `js/terrain.js` | The edit layers `ED_H` and `ED_P`, `mapEncode` and `mapDecode`, loading `bhd_map` at startup, `baseHeight` (= `groundHeight` + `ED_H`), `yardAt` (+ `ED_P`), the road list `ROADS` and `roadsBuild`, `wallBuild` (ground too steep to drive), `digBase` (a dig-grid vertex's undug colour) |
+| `js/materials.js` | The material library `MAT_LIST` (append only: a material's saved id is its index + 1), the ground shader's material uniforms `matU`, and `matTexUpdate`, which builds the texture array of the materials the map uses |
+| `js/terrain.js` | The edit layers `ED_H`, `ED_P` and `ED_M`, `paintAt` and `matTint` (a vertex's colour under the materials), `mapEncode` and `mapDecode`, loading `bhd_map` at startup, `baseHeight` (= `groundHeight` + `ED_H`), `yardAt` (+ `ED_P`), the road list `ROADS` and `roadsBuild`, `wallBuild` (ground too steep to drive), `digBase` (a dig-grid vertex's undug colour) |
 | `js/scenery.js` | `groundColor`, the 0.5 m mesa mesh `midPatch` and `midUpdate`, `buildSkirts`, `tuftsRefresh`, and the assets: `assets`, `defaultAssets`, `assetsBuild` |
 | `js/shadowproxy.js` | `shpTreesRefresh`: tree shadows re-read the instance matrices after assets change |
 | `js/controls.js` | `edOn`; the game's keyboard and orbit-drag handlers return early while it is true |
@@ -38,9 +39,10 @@ The mesa is a rounded square centred at (0, 30), about 90 m (295 ft) across (`ED
 
 ## What a map stores
 
-Three layers sit on top of the generated mesa. Nothing about the generated mesa itself changes.
+These layers sit on top of the generated mesa. Nothing about the generated mesa itself changes.
 
 - `ED_H`: a height offset in metres, and `ED_P`: paint from −1 (grass) to +1 (dirt). Both are 0.5 m grids over the `MID` area (`ED_X0` −58, `ED_Z0` −32, 233 × 249 cells), read with `edSample` (bilinear). The outer 3 cells are kept at 0 so edited ground always meets the coarse outer mesh.
+- `ED_M`: the material painted on each of the same cells (`Uint8Array`, 0 natural ground, else an id into `MAT_LIST`), read nearest-cell with `paintAt`. Ground vertices blend toward the materials' mean colours (`matTint`, crisp over about 0.25 m) and carry how much is covered in the `matA` attribute; on Medium and High graphics with WebGL2 the ground shader looks each pixel's id up in `matU.tMatId` (one texel per cell, flagged `needsUpdate` when painting) and draws that material's texture from the array. Dug or dumped ground drops the cover.
 - `assets`: the trees and boulders, `{t: 'pine' | 'leafy' | 'rock', x, z, yaw, s: size, c: tint index}`. With no saved map, `defaultAssets()` makes the same layout every time (a seeded shuffle; it used to be random per load).
 - `ROADS`: `{w: width in metres, mid: 1 for grass up the middle, pts: [[x, z], ...]}`. A road is graded when every point has a third number, its height; the ground is then cut and filled to the road over a 2.5 m bank. Otherwise the road follows the ground.
 
@@ -53,6 +55,7 @@ A map is saved on the device as `localStorage.bhd_map` and copied out by Map fil
   "game": "backhoe-dig", "v": 1,
   "h": {"r": [i0, j0, w, h], "d": "<base64 Int16, centimetres>"},   // only the box holding height edits
   "p": {"r": [i0, j0, w, h], "d": "<base64 Int8, hundredths>"},     // only the box holding paint
+  "m": {"r": [i0, j0, w, h], "d": "<base64 Uint8, material ids>"},  // only the box holding materials
   "assets": [["pine", x, z, yaw, size, tint], ...],
   "roads": [[width, grassStrip, [[x, z, height?], ...]], ...]
 }
@@ -76,7 +79,7 @@ While the brush is held or a road point is dragged, the layer changes every fram
 
 `ed.undo` and `ed.redo` hold up to 30 entries. Applying an entry swaps the stored state with the current one, so the same entry undoes and redoes.
 
-- Brush strokes store only the changed box of `ED_H` and `ED_P` (copied from a snapshot taken when the stroke starts).
+- Brush strokes store only the changed box of `ED_H`, `ED_P` and `ED_M` (copied from a snapshot taken when the stroke starts).
 - Asset changes store the whole asset list as JSON (a few hundred entries).
 - Road changes store the whole road list as JSON and the area to refresh.
 

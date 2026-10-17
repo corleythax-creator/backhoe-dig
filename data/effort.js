@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
- "project": "Backhoe Dig",
- "updated": "2026-10-17T17:38:00Z",
+ "project": "Corley's Island",
+ "updated": "2026-10-17T18:22:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 378,
-   "act": 8.5,
-   "versions": 57
+   "dh": 408,
+   "act": 9.0,
+   "versions": 60
   }
  ],
  "extra": [
@@ -606,6 +606,33 @@ window.EFFORT = {
    "tris": 1154238,
    "chars": 343655,
    "what": "Touch Sprint button next to Jump in Walk mode: tap to sprint, and it switches itself off once you stop, on a second tap or when you leave Walk mode."
+  },
+  {
+   "v": 65,
+   "asked": "2026-10-17T12:45:00-05:00",
+   "live": "2026-10-17T12:56:00-05:00",
+   "dh": 1,
+   "tris": 1154238,
+   "chars": 343994,
+   "what": "The name Corley's Island everywhere: the map editor's wrong-map message, the versions page, the build log and the notes (the web address and the map file id stay backhoe-dig so links and saved maps keep working). Plus an idea board of 172 scored ideas for the dig site and island life."
+  },
+  {
+   "v": 66,
+   "asked": "2026-10-17T12:20:00-05:00",
+   "live": "2026-10-17T13:15:00-05:00",
+   "dh": 24,
+   "tris": 1154238,
+   "chars": 357054,
+   "what": "Material library: 31 seamless textures made with OpenAI GPT Image (ground covers, concrete and paving, steel, brick and stone, wood and more), shown as swatches in the map editor's new Paint tool and laid on the ground with a round or square brush, with Undo, Query and saving in the map. Medium and High graphics draw the textures (only the ones the map uses); Low keeps their plain colours. Digging cuts through painted ground and grass stays off it. Concrete blocks and boulders wear the concrete and bedrock textures."
+  },
+  {
+   "v": 67,
+   "asked": "2026-10-17T12:16:00-05:00",
+   "live": "2026-10-17T13:22:00-05:00",
+   "dh": 5,
+   "tris": 1154238,
+   "chars": 365873,
+   "what": "Sync devices (☰, on the Vercel site): get an 8-character code on one device and type it on the other, and from then on both play the same site: the dig, the machines, the lawn and map-editor changes, kept in Supabase. A device pulls a newer save when it opens or comes back into view and pushes its changes every 15 seconds and when it is hidden; if both changed, the first save to reach the server wins. The site also answers at corleys-island.vercel.app, and the rest of the code and notes now say Corley's Island."
   }
  ]
 };
