@@ -173,7 +173,7 @@ scene.add(sun); scene.add(sun.target);
 const M=(c,o)=>new THREE.MeshPhongMaterial(Object.assign({color:c,flatShading:true,shininess:6,specular:0x111111},o||{}));
 
 // ---------- terrain heightmap ----------
-const S=60,N=340,CELL=S/N,V=N+1,CA=CELL*CELL,FLOOR=3.5;
+const S=32,N=128,CELL=S/N,V=N+1,CA=CELL*CELL,FLOOR=3.5;
 const H=new Float32Array(V*V),H0=new Float32Array(V*V),grass=new Float32Array(V*V*3),paint=new Uint8Array(V*V),nz=new Float32Array(V*V);
 const ss=(a,b,x)=>{const t=Math.min(1,Math.max(0,(x-a)/(b-a)));return t*t*(3-2*t)};
 const hash=(i,j)=>{const s=Math.sin(i*127.1+j*311.7)*43758.5453;return s-Math.floor(s)};
@@ -226,12 +226,14 @@ function updateTerrain(){
   pos.needsUpdate=true; ca.needsUpdate=true;
 }
 function hAt(x,z){
+  if(x<-S/2||x>S/2||z<-S/2||z>S/2)return baseHeight(x,z);
   let fx=(x+S/2)/CELL,fz=(z+S/2)/CELL;
   fx=Math.max(0,Math.min(N-0.001,fx)); fz=Math.max(0,Math.min(N-0.001,fz));
   const i=fx|0,j=fz|0,u=fx-i,v=fz-j,k=j*V+i;
   return H[k]*(1-u)*(1-v)+H[k+1]*u*(1-v)+H[k+V]*(1-u)*v+H[k+V+1]*u*v;
 }
 function h0At(x,z){
+  if(x<-S/2||x>S/2||z<-S/2||z>S/2)return baseHeight(x,z);
   const i=Math.max(0,Math.min(N,Math.round((x+S/2)/CELL))),j=Math.max(0,Math.min(N,Math.round((z+S/2)/CELL)));
   return H0[j*V+i];
 }
@@ -287,16 +289,34 @@ const tuftGeo=(function(){const bp=[];for(let b=0;b<4;b++){const a=b*1.6+0.3,c=M
 const tufts=new THREE.InstancedMesh(tuftGeo,M(0xffffff,{side:THREE.DoubleSide}),TUFTS);tufts.receiveShadow=true;tufts.frustumCulled=false;scene.add(tufts);
 (function(){const c=new THREE.Color();for(let n=0;n<TUFTS;n++){const a=Math.random()*Math.PI*2,r=Math.sqrt(2+Math.random()*(22*22-2));
   tX[n]=Math.cos(a)*r;tZ[n]=Math.sin(a)*r;tS[n]=0.7+Math.random()*0.8;tR[n]=Math.random()*6.3;
-  tI[n]=Math.round((tX[n]+S/2)/CELL);tJ[n]=Math.round((tZ[n]+S/2)/CELL);
+  tI[n]=Math.round((tX[n]+S/2)/CELL);tJ[n]=Math.round((tZ[n]+S/2)/CELL);if(tI[n]<0||tI[n]>N||tJ[n]<0||tJ[n]>N){tI[n]=-1;tJ[n]=-1}
   const v=Math.random();c.setRGB(0.27+0.1*v,0.48+0.12*v,0.2+0.05*v);if(Math.random()<0.08)c.setRGB(0.62,0.58,0.3);tufts.setColorAt(n,c)}})();
 const tO=new THREE.Object3D();
 function updateTufts(i0,i1,j0,j1){
-  for(let n=0;n<TUFTS;n++){const i=tI[n],j=tJ[n];if(i<i0||i>i1||j<j0||j>j1)continue;const k=j*V+i;
+  for(let n=0;n<TUFTS;n++){const i=tI[n],j=tJ[n];if(i<0)continue;if(i<i0||i>i1||j<j0||j>j1)continue;const k=j*V+i;
     if(Math.abs(H[k]-H0[k])>0.04){tufts.setMatrixAt(n,ZERO_M);continue}
     tO.position.set(tX[n],hAt(tX[n],tZ[n])-0.02,tZ[n]);tO.rotation.set(0,tR[n],0);tO.scale.setScalar(tS[n]);tO.updateMatrix();tufts.setMatrixAt(n,tO.matrix)}
   tufts.instanceMatrix.needsUpdate=true;
 }
 const ZERO_M=new THREE.Matrix4().makeScale(0,0,0);
+for(let n=0;n<TUFTS;n++){tO.position.set(tX[n],hAt(tX[n],tZ[n])-0.02,tZ[n]);tO.rotation.set(0,tR[n],0);tO.scale.setScalar(tS[n]);tO.updateMatrix();tufts.setMatrixAt(n,tO.matrix)}
+// coarse 1 m ground outside the dig zone (the zone is cut out of it)
+(function(){
+  const SO=64,NO=64,CO=SO/NO,VO=NO+1,pp=[],cc=[],ix=[];
+  for(let j=0;j<VO;j++)for(let i=0;i<VO;i++){const x=i*CO-SO/2,z=j*CO-SO/2,n=hash(i*7.1,j*5.3);pp.push(x,baseHeight(x,z),z);cc.push(0.30+0.08*n,0.50+0.09*n,0.24+0.04*n)}
+  for(let j=0;j<NO;j++)for(let i=0;i<NO;i++){const x0=i*CO-SO/2,z0=j*CO-SO/2;
+    if(x0>=-S/2&&x0+CO<=S/2&&z0>=-S/2&&z0+CO<=S/2)continue;const a=j*VO+i;ix.push(a,a+VO,a+1,a+1,a+VO,a+VO+1)}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pp,3));g.setAttribute('color',new THREE.Float32BufferAttribute(cc,3));
+  g.setAttribute('normal',new THREE.Float32BufferAttribute(new Float32Array(pp.length),3));g.setIndex(ix);
+  const m=new THREE.Mesh(g,M(0xffffff,{vertexColors:true}));m.receiveShadow=true;scene.add(m);
+  // skirt hides any hairline gap where the fine and coarse grids meet
+  const sp=[],si=[];let q=0;const st=0.5,E=S/2;
+  const run=(fx,fz)=>{for(let t=-E;t<E-1e-6;t+=st){const [x0,z0]=fx(t),[x1,z1]=fx(t+st),h0=baseHeight(x0,z0),h1=baseHeight(x1,z1);
+    sp.push(x0,h0,z0,x1,h1,z1,x0,h0-0.6,z0,x1,h1-0.6,z1);si.push(q,q+2,q+1,q+1,q+2,q+3);q+=4}};
+  run(t=>[t,-E]);run(t=>[t,E]);run(t=>[-E,t]);run(t=>[E,t]);
+  const sg=new THREE.BufferGeometry();sg.setAttribute('position',new THREE.Float32BufferAttribute(sp,3));sg.setAttribute('normal',new THREE.Float32BufferAttribute(new Float32Array(sp.length),3));sg.setIndex(si);
+  scene.add(new THREE.Mesh(sg,M(0x4a6a34,{side:THREE.DoubleSide})));
+})();
 const pipe=new THREE.Mesh(new THREE.CylinderGeometry(PIPE_R,PIPE_R,24,36,4),M(0xf2c21a,{shininess:30}));
 pipe.rotation.z=Math.PI/2; pipe.position.set(0,PIPE_Y,PIPE_Z); scene.add(pipe);
 function stake(x,z,flagColor){
@@ -314,7 +334,7 @@ function stake(x,z,flagColor){
   const o=new THREE.Object3D(),c=new THREE.Color();let placed=0,tries=0;
   while(placed<n&&tries<2000){tries++;
     const a=Math.random()*Math.PI*2,r=15+Math.random()*14,x=Math.cos(a)*r,z=Math.sin(a)*r;
-    if(Math.abs(x)>S/2-1||Math.abs(z)>S/2-1)continue;
+    if(Math.abs(x)>29||Math.abs(z)>29)continue;
     const s=0.7+Math.random()*0.8,y=baseHeight(x,z);
     o.position.set(x,y+0.8+1.0*s,z);o.scale.set(s,s,s);o.rotation.y=Math.random()*3;o.updateMatrix();tm.setMatrixAt(placed,o.matrix);
     o.position.set(x,y+0.8+2.3*s,z);o.rotation.y+=0.3;o.updateMatrix();tm2.setMatrixAt(placed,o.matrix);
@@ -327,10 +347,13 @@ function stake(x,z,flagColor){
 })();
 
 // ---------- machine ----------
-const ORANGE=M(0xe8701d),ORANGE_D=M(0xb8561a),STEEL=M(0x2b2d2c),STEEL_L=M(0x55595a),CHROME=M(0xc9ccc8,{shininess:60}),RUBBER=M(0x1b1c1b),HOSE=M(0x141414,{shininess:20}),LENS=M(0xfff6d8,{emissive:0x554a30});
+const ORANGE=M(0xe8701d),ORANGE_D=M(0xb8561a),STEEL=M(0x2b2d2c),STEEL_L=M(0x55595a),CHROME=M(0xc9ccc8,{shininess:60}),RUBBER=M(0x1b1c1b),REDL=M(0xd0281c,{emissive:0x400804}),AMBER=M(0xffa21a,{emissive:0x402400}),HOSE=M(0x141414,{shininess:20}),LENS=M(0xfff6d8,{emissive:0x554a30});
 function box(w,h,d,mat,x,y,z,parent){const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),mat);m.position.set(x,y,z);m.castShadow=true;parent.add(m);return m}
 function cyl(rt,rb,h,seg,mat,parent){const m=new THREE.Mesh(new THREE.CylinderGeometry(rt,rb,h,seg),mat);m.castShadow=true;parent.add(m);return m}
-function pinX(r,len,mat,parent,y,z){const m=cyl(r,r,len,24,mat,parent);m.rotation.z=Math.PI/2;m.position.set(0,y,z);return m}
+function pinX(r,len,mat,parent,y,z){const m=cyl(r,r,len,32,mat,parent);m.rotation.z=Math.PI/2;m.position.set(0,y,z);return m}
+function edges(w,h,parent,mat,y0,z0,y1,z1){const dy=y1-y0,dz=z1-z0,L=Math.hypot(dy,dz),th=-Math.atan2(dy,dz),c=Math.cos(th),sn=Math.sin(th);
+  for(const ox of [-w/2,w/2])for(const oy of [-h/2,h/2]){const e=new THREE.Mesh(new THREE.BoxGeometry(0.06,0.06,L*0.97,1,1,6),mat);
+    e.rotation.set(th,0,Math.PI/4);e.position.set(ox,(y0+y1)/2+oy*c,(z0+z1)/2+oy*sn);e.castShadow=true;parent.add(e)}}
 function beam(w,h,parent,mat,y0,z0,y1,z1){const dy=y1-y0,dz=z1-z0,L=Math.hypot(dy,dz);const m=box(w,h,L,mat,0,(y0+y1)/2,(z0+z1)/2,parent);m.rotation.x=-Math.atan2(dy,dz);return m}
 const machine=new THREE.Group(); scene.add(machine);
 machine.rotation.order='YXZ';
@@ -339,32 +362,36 @@ for(const s of [-1,1]){
   const X=1.05*s;
   box(0.56,0.46,3.0,STEEL,X,0.4,0,machine);
   box(0.2,0.3,2.6,STEEL_L,X-0.3*s,0.45,0,machine);
-  for(const z of [-1.55,1.55]){const w=cyl(0.34,0.34,0.58,32,STEEL_L,machine);w.rotation.z=Math.PI/2;w.position.set(X,0.4,z);
-    const hub=cyl(0.14,0.14,0.62,20,STEEL,machine);hub.rotation.z=Math.PI/2;hub.position.set(X,0.4,z)}
-  for(let i=0;i<5;i++){const r=cyl(0.14,0.14,0.6,20,STEEL_L,machine);r.rotation.z=Math.PI/2;r.position.set(X,0.2,-1.0+i*0.5)}
-  for(let i=0;i<2;i++){const r=cyl(0.1,0.1,0.3,20,STEEL_L,machine);r.rotation.z=Math.PI/2;r.position.set(X,0.66,-0.6+i*1.2)}
-  for(let z=-1.5;z<=1.51;z+=0.11){box(0.66,0.07,0.09,RUBBER,X,0.78,z,machine);box(0.66,0.07,0.09,RUBBER,X,0.02,z,machine)}
+  for(const z of [-1.55,1.55]){const w=cyl(0.34,0.34,0.58,48,STEEL_L,machine);w.rotation.z=Math.PI/2;w.position.set(X,0.4,z);
+    const hub=cyl(0.14,0.14,0.62,28,STEEL,machine);hub.rotation.z=Math.PI/2;hub.position.set(X,0.4,z);
+    if(z<0)for(let t=0;t<16;t++){const an=t/16*Math.PI*2;const th=box(0.6,0.07,0.08,STEEL,X,0.4+Math.sin(an)*0.37,z+Math.cos(an)*0.37,machine);th.rotation.x=-an}}
+  for(let i=0;i<5;i++){const r=cyl(0.14,0.14,0.6,28,STEEL_L,machine);r.rotation.z=Math.PI/2;r.position.set(X,0.2,-1.0+i*0.5)}
+  for(let i=0;i<2;i++){const r=cyl(0.1,0.1,0.3,28,STEEL_L,machine);r.rotation.z=Math.PI/2;r.position.set(X,0.66,-0.6+i*1.2)}
+  for(let z=-1.5;z<=1.51;z+=0.11){box(0.66,0.07,0.09,RUBBER,X,0.78,z,machine);box(0.66,0.07,0.09,RUBBER,X,0.02,z,machine);box(0.66,0.04,0.025,RUBBER,X,0.835,z,machine);box(0.66,0.04,0.025,RUBBER,X,-0.035,z,machine)}
   for(const e of [-1,1])for(let a=-6;a<=6;a++){const ang=a*0.22;
     const p=box(0.66,0.07,0.09,RUBBER,X,0.4+Math.sin(ang)*0.38,e*(1.55+Math.cos(ang)*0.38),machine);
     p.rotation.x=Math.atan2(e*Math.cos(ang),Math.sin(ang))}
 }
 box(1.5,0.42,2.4,STEEL_L,0,0.55,0,machine);
 for(const s of [-1,1])for(let i=0;i<8;i++){const b=cyl(0.03,0.03,0.04,8,STEEL,machine);b.rotation.z=Math.PI/2;b.position.set(1.36*s,0.5,-1.2+i*0.34)}
-const ring=cyl(0.95,0.95,0.14,48,STEEL,machine);ring.position.y=0.8;
+const ring=cyl(0.95,0.95,0.14,64,STEEL,machine);ring.position.y=0.8;
 // house
 const house=new THREE.Group(); house.position.y=0.85; machine.add(house);
 box(2.5,0.85,2.2,ORANGE,0,0.43,0,house);
 box(0.62,0.3,0.55,ORANGE_D,0.42,0.35,1.35,house);
-const cw=new THREE.Mesh(new THREE.CylinderGeometry(1.25,1.25,0.9,48,3,false,Math.PI/2,Math.PI),ORANGE_D);
+const cw=new THREE.Mesh(new THREE.CylinderGeometry(1.25,1.25,0.9,64,4,false,Math.PI/2,Math.PI),ORANGE_D);
 cw.scale.z=0.55;cw.position.set(0,0.47,-1.1);cw.castShadow=true;house.add(cw);
 box(1.4,0.3,1.3,ORANGE,0.5,1.0,-0.55,house);
-for(let i=0;i<10;i++)box(0.02,0.03,0.9,STEEL,1.26,0.4+i*0.045,-0.55,house);
+for(let i=0;i<18;i++){box(0.02,0.015,0.9,STEEL,1.26,0.4+i*0.025,-0.55,house);box(0.02,0.015,0.7,STEEL,-1.26,0.4+i*0.025,-0.65,house)}
+for(const x of [-0.9,0.9]){box(0.22,0.1,0.05,REDL,x,0.62,-1.6,house);box(0.08,0.1,0.05,AMBER,x*0.72,0.62,-1.66,house)}
+for(const x of [-0.6,0.6]){const ey=cyl(0.06,0.06,0.04,16,STEEL,house);ey.rotation.x=Math.PI/2;ey.position.set(x,0.95,-1.3)}
+for(const z of [-0.9,-0.3,0.3,0.9])box(0.03,0.6,0.02,ORANGE_D,1.255,0.45,z,house);
 box(0.55,0.42,0.8,ORANGE,0.95,1.06,0.55,house);
-const cap=cyl(0.17,0.17,0.08,18,STEEL,house);cap.position.set(0.95,1.3,0.75);
+const cap=cyl(0.17,0.17,0.08,28,STEEL,house);cap.position.set(0.95,1.3,0.75);
 for(const x of [0.12,1.05]){box(0.04,0.04,1.2,ORANGE_D,x,1.4,-0.55,house);
   for(const z of [-1.05,-0.05])box(0.04,0.25,0.04,ORANGE_D,x,1.27,z,house)}
-const ex=cyl(0.065,0.07,0.8,14,STEEL,house);ex.position.set(0.95,1.5,-0.7);
-const exCap=cyl(0.08,0.08,0.05,14,STEEL_L,house);exCap.position.set(0.95,1.92,-0.7);
+const ex=cyl(0.065,0.07,0.8,24,STEEL,house);ex.position.set(0.95,1.5,-0.7);
+const exCap=cyl(0.08,0.08,0.05,24,STEEL_L,house);exCap.position.set(0.95,1.92,-0.7);
 // cab
 const cab=new THREE.Group(); cab.position.set(-0.72,0.85,0.4); house.add(cab);
 for(const [x,z] of [[-0.45,-0.62],[0.45,-0.62],[-0.45,0.62],[0.45,0.62]])box(0.07,1.55,0.07,STEEL,x,0.78,z,cab);
@@ -373,36 +400,41 @@ box(1.0,0.05,1.3,STEEL,0,1.52,0,cab);
 box(0.94,0.05,0.05,STEEL,0,0.7,0.62,cab);
 box(0.05,0.05,1.2,STEEL,-0.45,0.7,0,cab);
 box(0.94,0.35,0.05,ORANGE_D,0,0.18,0.62,cab);
+for(let i=0;i<5;i++)box(0.03,0.03,1.36,STEEL,-0.36+i*0.18,1.64,0.02,cab);
+for(const x of [-0.52,0.52])box(0.04,0.07,1.42,STEEL,x,1.64,0.02,cab);
+const wiper=box(0.018,0.6,0.018,STEEL,0.12,0.98,0.645,cab);wiper.rotation.z=0.45;
+for(const y of [0.55,1.0]){const gh=cyl(0.018,0.018,0.42,12,STEEL,cab);gh.position.set(-0.51,y+0.21,0.6)}
+box(0.14,0.03,0.03,STEEL,-0.48,0.85,-0.2,cab);box(0.3,0.04,0.25,STEEL,-0.25,-0.1,0.5,cab);
 const glass=new THREE.Mesh(new THREE.BoxGeometry(0.9,1.45,1.24),new THREE.MeshPhongMaterial({color:0x8fb4c8,transparent:true,opacity:0.3,shininess:80}));
 glass.position.y=0.78; cab.add(glass);
 box(0.5,0.12,0.5,STEEL,0,0.42,-0.15,cab); box(0.5,0.55,0.12,STEEL,0,0.72,-0.4,cab);
 for(const x of [-0.33,0.33]){box(0.16,0.3,0.4,STEEL_L,x,0.42,0.0,cab);const j=cyl(0.025,0.025,0.16,10,STEEL,cab);j.position.set(x,0.64,0.08)}
-const lamp=cyl(0.07,0.09,0.1,18,STEEL,cab);lamp.rotation.x=Math.PI/2;lamp.position.set(0.3,1.66,0.6);
-const lens=cyl(0.06,0.06,0.02,18,LENS,cab);lens.rotation.x=Math.PI/2;lens.position.set(0.3,1.66,0.66);
-const lamp2=cyl(0.07,0.09,0.1,18,STEEL,cab);lamp2.rotation.x=Math.PI/2;lamp2.position.set(-0.3,1.66,0.6);
-const lens2=cyl(0.06,0.06,0.02,18,LENS,cab);lens2.rotation.x=Math.PI/2;lens2.position.set(-0.3,1.66,0.66);
+const lamp=cyl(0.07,0.09,0.1,28,STEEL,cab);lamp.rotation.x=Math.PI/2;lamp.position.set(0.3,1.66,0.6);
+const lens=cyl(0.06,0.06,0.02,28,LENS,cab);lens.rotation.x=Math.PI/2;lens.position.set(0.3,1.66,0.66);
+const lamp2=cyl(0.07,0.09,0.1,28,STEEL,cab);lamp2.rotation.x=Math.PI/2;lamp2.position.set(-0.3,1.66,0.6);
+const lens2=cyl(0.06,0.06,0.02,28,LENS,cab);lens2.rotation.x=Math.PI/2;lens2.position.set(-0.3,1.66,0.66);
 box(0.03,0.03,0.45,STEEL,-0.62,1.1,0.75,cab).rotation.y=0.6;
-const mirror=cyl(0.15,0.15,0.03,36,STEEL,cab);mirror.rotation.set(Math.PI/2,0,0.5);mirror.position.set(-0.78,1.12,0.95);
-const mGlass=cyl(0.13,0.13,0.01,36,M(0x9aa9b4,{shininess:90}),cab);mGlass.rotation.set(Math.PI/2,0,0.5);mGlass.position.set(-0.77,1.12,0.97);
+const mirror=cyl(0.15,0.15,0.03,48,STEEL,cab);mirror.rotation.set(Math.PI/2,0,0.5);mirror.position.set(-0.78,1.12,0.95);
+const mGlass=cyl(0.13,0.13,0.01,48,M(0x9aa9b4,{shininess:90}),cab);mGlass.rotation.set(Math.PI/2,0,0.5);mGlass.position.set(-0.77,1.12,0.97);
 // boom (bent)
 const L1=4.2,L2=2.6,L3=1.1;
 const boomP=new THREE.Group(); boomP.position.set(0.42,1.0,0.95); house.add(boomP);
 box(0.5,0.45,0.5,ORANGE_D,0,-0.1,0.0,boomP);
-beam(0.42,0.5,boomP,ORANGE,0,0,0.6,2.0);
-beam(0.38,0.46,boomP,ORANGE,0.6,2.0,0,L1);
+beam(0.42,0.5,boomP,ORANGE,0,0,0.6,2.0);edges(0.42,0.5,boomP,ORANGE,0,0,0.6,2.0);
+beam(0.38,0.46,boomP,ORANGE,0.6,2.0,0,L1);edges(0.38,0.46,boomP,ORANGE,0.6,2.0,0,L1);
 box(0.44,0.3,0.4,ORANGE_D,0,0.62,2.0,boomP);
 beam(0.46,0.36,boomP,ORANGE_D,0.05,0.3,0.55,1.85);beam(0.42,0.32,boomP,ORANGE_D,0.55,2.15,0.05,L1-0.3);
 beam(0.44,0.08,boomP,ORANGE,0.31,0,0.86,2.0);beam(0.4,0.08,boomP,ORANGE,0.83,2.0,0.23,L1);
 pinX(0.11,0.56,STEEL,boomP,0,0); pinX(0.1,0.5,STEEL,boomP,0,L1); pinX(0.08,0.62,STEEL,boomP,0.15,1.9);box(0.3,0.36,0.34,ORANGE_D,0,0.3,1.9,boomP); pinX(0.08,0.36,STEEL,boomP,0.85,1.6);box(0.22,0.3,0.34,ORANGE_D,0,0.72,1.6,boomP);
 const stickP=new THREE.Group(); stickP.position.z=L1; boomP.add(stickP);
-beam(0.32,0.4,stickP,ORANGE,0,-0.55,0,L2);
+beam(0.32,0.4,stickP,ORANGE,0,-0.55,0,L2);edges(0.32,0.4,stickP,ORANGE,0,-0.55,0,L2);
 box(0.36,0.2,0.5,ORANGE_D,0,0.26,-0.35,stickP);
 beam(0.36,0.26,stickP,ORANGE_D,0,-0.3,0,L2-0.3);beam(0.34,0.06,stickP,ORANGE,0.23,-0.5,0.23,L2);
 pinX(0.08,0.42,STEEL,stickP,0.35,-0.5); pinX(0.07,0.4,STEEL,stickP,0,L2); pinX(0.07,0.36,STEEL,stickP,0.34,0.25);box(0.22,0.22,0.3,ORANGE_D,0,0.25,0.25,stickP);
 // bucket: curved shell + profiled side plates
 const bucketP=new THREE.Group(); bucketP.position.z=L2; stickP.add(bucketP);
 const shellPt=t=>[L3*t,0.2*Math.sin(Math.PI*t)-0.04*t];
-const SEG=20;
+const SEG=32;
 for(let i=0;i<SEG;i++){const a=shellPt(i/SEG),b=shellPt((i+1)/SEG);beam(0.92,0.06,bucketP,STEEL_L,a[1],a[0],b[1],b[0])}
 const shape=new THREE.Shape();
 shape.moveTo(0,0);for(let i=1;i<=SEG;i++){const p=shellPt(i/SEG);shape.lineTo(p[0],p[1])}
@@ -412,6 +444,8 @@ for(const x of [0.49,-0.44]){const m=new THREE.Mesh(sideGeo,STEEL_L);m.position.
 box(0.92,0.06,0.06,STEEL,0,-0.04,L3,bucketP);
 for(let i=0;i<5;i++){const t=new THREE.Mesh(new THREE.ConeGeometry(0.055,0.24,4),STEEL);t.rotation.x=Math.PI/2;t.position.set(-0.36+i*0.18,-0.05,L3+0.12);t.castShadow=true;bucketP.add(t)}
 for(const x of [-0.12,0.12])box(0.04,0.3,0.36,STEEL,x,0.14,0.22,bucketP);
+for(const x of [-0.3,0,0.3])for(let i=1;i<6;i++){const a=shellPt(i/7),b=shellPt((i+1)/7);beam(0.05,0.035,bucketP,STEEL,a[1]+0.045,a[0],b[1]+0.045,b[0]).position.x=x}
+for(const x of [-0.49,0.49])box(0.04,0.22,0.26,STEEL,x,-0.12,L3-0.06,bucketP);
 pinX(0.055,0.3,STEEL,bucketP,0.22,0.25);
 const loadMesh=new THREE.Mesh(new THREE.DodecahedronGeometry(0.42,2),M(0x6b4426));
 loadMesh.position.set(0,-0.3,0.55); loadMesh.visible=false; bucketP.add(loadMesh);
@@ -439,9 +473,9 @@ function updateLinkage(){
 // hydraulic rams that follow the joints
 const rams=[],UPY=new THREE.Vector3(0,1,0),rA=new THREE.Vector3(),rB=new THREE.Vector3(),rD=new THREE.Vector3();
 function ram(pa,a,pb,b,rb,rr,bl){
-  const barrel=new THREE.Mesh(new THREE.CylinderGeometry(rb,rb,1,24,2),ORANGE_D),rod=new THREE.Mesh(new THREE.CylinderGeometry(rr,rr,1,24,2),CHROME);
+  const barrel=new THREE.Mesh(new THREE.CylinderGeometry(rb,rb,1,32,3),ORANGE_D),rod=new THREE.Mesh(new THREE.CylinderGeometry(rr,rr,1,32,3),CHROME);
   barrel.castShadow=rod.castShadow=true;scene.add(barrel);scene.add(rod);
-  const eg=new THREE.IcosahedronGeometry(rb*1.15,2),ea=new THREE.Mesh(eg,STEEL),eb=new THREE.Mesh(eg,STEEL),gl=new THREE.Mesh(new THREE.CylinderGeometry(rb*1.2,rb*1.2,0.08,24),STEEL);
+  const eg=new THREE.IcosahedronGeometry(rb*1.15,3),ea=new THREE.Mesh(eg,STEEL),eb=new THREE.Mesh(eg,STEEL),gl=new THREE.Mesh(new THREE.CylinderGeometry(rb*1.2,rb*1.2,0.08,32),STEEL);
   scene.add(ea);scene.add(eb);scene.add(gl);
   rams.push({pa,a:new THREE.Vector3(...a),pb,b:new THREE.Vector3(...b),barrel,rod,bl,ea,eb,gl,wA:new THREE.Vector3(),wD:new THREE.Vector3(),cbl:bl});
 }
@@ -462,7 +496,7 @@ function updateRams(){
 }
 
 // flexible hydraulic hoses: sagging tubes rebuilt every frame between moving fittings
-const hoses=[],HS=20,HR=8,hT=new THREE.Vector3(),hN=new THREE.Vector3(),hBn=new THREE.Vector3(),hP=new THREE.Vector3(),hA=new THREE.Vector3(),hE=new THREE.Vector3(),hC=new THREE.Vector3(),hRef=new THREE.Vector3(1,0,0);
+const hoses=[],HS=32,HR=12,hT=new THREE.Vector3(),hN=new THREE.Vector3(),hBn=new THREE.Vector3(),hP=new THREE.Vector3(),hA=new THREE.Vector3(),hE=new THREE.Vector3(),hC=new THREE.Vector3(),hRef=new THREE.Vector3(1,0,0);
 function wp(obj,x,y,z){const v=new THREE.Vector3(x,y,z);return out=>obj.localToWorld(out.copy(v))}
 function rp(r,t){return out=>out.copy(r.wA).addScaledVector(r.wD,t<0?r.cbl+t:t)}
 function hose(fa,fb,sag,rad){
@@ -480,7 +514,7 @@ function updateHoses(){
       hP.set(u*u*hA.x+2*u*t*hC.x+t*t*hE.x,u*u*hA.y+2*u*t*hC.y+t*t*hE.y,u*u*hA.z+2*u*t*hC.z+t*t*hE.z);
       hT.set(u*(hC.x-hA.x)+t*(hE.x-hC.x),u*(hC.y-hA.y)+t*(hE.y-hC.y),u*(hC.z-hA.z)+t*(hE.z-hC.z)).normalize();
       hN.crossVectors(hT,hRef);if(hN.lengthSq()<1e-4)hN.crossVectors(hT,UPY);hN.normalize();hBn.crossVectors(hT,hN);
-      for(let j=0;j<HR;j++){const an=j/HR*Math.PI*2,c=Math.cos(an)*h.rad,sn=Math.sin(an)*h.rad,o=(i*HR+j)*3;
+      const rr=h.rad*(t<0.05||t>0.95?1.55:1);for(let j=0;j<HR;j++){const an=j/HR*Math.PI*2,c=Math.cos(an)*rr,sn=Math.sin(an)*rr,o=(i*HR+j)*3;
         h.pa[o]=hP.x+hN.x*c+hBn.x*sn;h.pa[o+1]=hP.y+hN.y*c+hBn.y*sn;h.pa[o+2]=hP.z+hN.z*c+hBn.z*sn}
     }
     h.g.attributes.position.needsUpdate=true;
@@ -612,8 +646,8 @@ function frame(now){
   st.a3=clamp(st.a3+bucketIn*1.3*dt*res,...LIM.a3);
   // drive
   st.yaw-=turnIn*0.8*dt;
-  st.x=clamp(st.x+Math.sin(st.yaw)*driveIn*2.6*dt,-22,22);
-  st.z=clamp(st.z+Math.cos(st.yaw)*driveIn*2.6*dt,-22,22);
+  st.x=clamp(st.x+Math.sin(st.yaw)*driveIn*2.6*dt,-11,11);
+  st.z=clamp(st.z+Math.cos(st.yaw)*driveIn*2.6*dt,-11,11);
   const sy=Math.sin(st.yaw),cy=Math.cos(st.yaw);
   const sample=(lx,lz)=>hAt(st.x+lx*cy+lz*sy,st.z-lx*sy+lz*cy);
   const hf=(sample(-1,1.7)+sample(1,1.7))/2,hb=(sample(-1,-1.7)+sample(1,-1.7))/2;
