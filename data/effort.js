@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-18T00:58:00Z",
+ "updated": "2026-10-18T00:44:13Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 585.0,
+   "dh": 593.0,
    "act": 12.0,
-   "versions": 78
+   "versions": 79
   }
  ],
  "extra": [
@@ -789,11 +789,20 @@ window.EFFORT = {
   },
   {
    "v": 85,
+   "asked": "2026-10-17T19:25:00-05:00",
+   "live": "2026-10-17T19:39:28-05:00",
+   "dh": 8,
+   "tris": 1620977,
+   "chars": 502641,
+   "what": "Field grass that reacts: tracks and tyres lay the grass flat the way they drove, the mower's wheels nearly flat and your boots partway, leaving pale trampled tracks that stay down for a minute and spring back over about two and a half minutes. The grass and the tall grass lean out of the worker's way as well as the machines'. In the rain the grass darkens and droops, heavier where the ground is soaked, and stands back up as it dries. Mud ruts outside the dig zone now clear the grass from them, and it comes back when the ruts are smoothed or the site is reset."
+  },
+  {
+   "v": 86,
    "asked": "2026-10-17T18:55:00-05:00",
-   "live": "2026-10-17T19:58:00-05:00",
+   "live": "2026-10-17T19:44:13-05:00",
    "dh": 10,
-   "tris": 1620129,
-   "chars": 510896,
+   "tris": 1620211,
+   "chars": 515689,
    "what": "Graphics panel: the Graphics button in the menu opens Low, Medium and High with every setting under them to play with, and the frame rate, triangles, draw calls, resolution and textures in memory shown live. Screen: resolution (0.5x to 3x), auto resolution, a 30 or 60 fps frame cap, field of view. Light: shadows off or 512 to 4096, soft shadow edges, filmic lighting, brightness, haze distance. Textures: texture size 512, 1024 or 2048, ground texture, extra detail (cut faces, painted materials, machine grime), ground variation, sharpness at an angle. Grass: how many blades and how far, lawn detail distance. Effects: Dirt detail, puddle water, raindrops. A change makes it Custom, marked in the panel and kept on that device; picking a preset clears it. Also: Low now shows the grass and dirt texture on the ground (512 px), sharpness at an angle is 4x, 8x and 16x by preset, and the large-scale ground variation is High only, so phones never download it."
   }
  ]

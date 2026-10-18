@@ -155,7 +155,7 @@ function rutErase(cx,cz,R,sq,keep){const inB=(dx,dz)=>(sq?Math.max(Math.abs(dx),
       site.dirty=true;hit=true}}
   return hit}
 function mudReset(){for(const t of mTiles){scene.remove(t.m);t.g.dispose();scene.remove(t.wm);t.wm.geometry.dispose()}
-  mTiles.length=0;mtIdx.fill(-1);mtWet=false;if(FD){FD.fill(0);FW.fill(-1e9);FM.fill(0)}midHoles()}
+  mTiles.length=0;mtIdx.fill(-1);mtWet=false;if(FD){FD.fill(0);FW.fill(-1e9);FM.fill(0)}midHoles();tuftsRefresh(-1e9,1e9,-1e9,1e9);grassReset()}
 // each tile: [ti, tj, rut depths (Int16, mm), mud (bytes)], base64
 function mtSave(){const out=[],n=MT+1;
   for(const t of mTiles){const d=new Int16Array(n*n),m=new Uint8Array(n*n);
@@ -170,7 +170,9 @@ function mtLoad(a){if(!Array.isArray(a))return;const n=MT+1;
   // puddles come back full
   for(const t of mTiles)for(let j=0;j<=MT;j++)for(let i=0;i<=MT;i++){const gi=t.i0+i,gj=t.j0+j;if(gi>FNX||gj>FNZ)continue;const v=gj*FV+gi;
     if(FS[v]>SAT_MUD*255&&vOk(gi,gj)&&FH0[v]+FD[v]<FH0[v]-SAT_DEPTH)FW[v]=FH0[v]-SAT_DEPTH}
-  mtWet=mTiles.length>0;mtWaterT=0;if(mTiles.length)midHoles()}
+  mtWet=mTiles.length>0;mtWaterT=0;if(mTiles.length)midHoles();
+  // no grass in the saved ruts
+  for(const t of mTiles)tuftsRefresh(FX0+t.i0*FC,FX0+(t.i0+MT)*FC,FZ0+t.j0*FC,FZ0+(t.j0+MT)*FC)}
 
 // ---------- getting stuck ----------
 // sink: how far a machine has dug itself in (0 firm, 1 buried to the frame). Pushing on in mud digs it in slowly (k: how
