@@ -138,12 +138,12 @@ function mudEdRefresh(x0,x1,z0,z1){for(const t of mTiles){const tx0=FX0+t.i0*FC,
 // the map editor painting over ruts: churned ground inside the brush (radius R, or a square when sq) goes back to grade,
 // dry and without its puddles, except where keep(x,z) says to leave it. Holes dug deeper than a rut and heaps of spoil stay,
 // and so does anything next to one, so painting near a trench doesn't carve its rim. Returns whether anything changed
-function rutErase(cx,cz,R,sq,keep){const inB=(dx,dz)=>(sq?Math.max(Math.abs(dx),Math.abs(dz)):Math.hypot(dx,dz))<=R;let hit=false;
+function rutErase(cx,cz,R,sq,keep,all){const inB=(dx,dz)=>(sq?Math.max(Math.abs(dx),Math.abs(dz)):Math.hypot(dx,dz))<=R;let hit=false;
   const i0=Math.max(0,Math.floor((cx-R+S/2)/CELL)),i1=Math.min(N,Math.ceil((cx+R+S/2)/CELL)),j0=Math.max(0,Math.floor((cz-R+S/2)/CELL)),j1=Math.min(N,Math.ceil((cz+R+S/2)/CELL));
   if(i0<=i1&&j0<=j1){
     for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const k=j*V+i,x=i*CELL-S/2,z=j*CELL-S/2,d=H[k]-H0[k];
-      if(d===0&&!mudA[k]&&Wt[k]<-1e8||Math.abs(d)>RUT_D+0.12||prot[k]||!inB(x-cx,z-cz))continue;
-      let deep=false;for(let b=Math.max(0,j-2);b<=Math.min(N,j+2)&&!deep;b++)for(let a=Math.max(0,i-2);a<=Math.min(N,i+2);a++)if(Math.abs(H[b*V+a]-H0[b*V+a])>RUT_D+0.22){deep=true;break}
+      if(d===0&&!mudA[k]&&Wt[k]<-1e8||!all&&Math.abs(d)>RUT_D+0.12||prot[k]||!inB(x-cx,z-cz))continue;
+      let deep=false;if(!all)for(let b=Math.max(0,j-2);b<=Math.min(N,j+2)&&!deep;b++)for(let a=Math.max(0,i-2);a<=Math.min(N,i+2);a++)if(Math.abs(H[b*V+a]-H0[b*V+a])>RUT_D+0.22){deep=true;break}
       if(deep||keep&&keep(x,z))continue;
       H[k]=H0[k];mudA[k]=0;Wt[k]=-1e9;comp[k]=0;wetT[k]=-1e4;hit=true}
     if(hit){touch(i0,i1,j0,j1);updateTufts(i0,i1,j0,j1);st.dirty=true}}

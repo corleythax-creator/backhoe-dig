@@ -82,8 +82,9 @@ function edStrokeStart(x,z){ed.stroke={h:ED_H.slice(),p:ED_P.slice(),m:ED_M.slic
 function edBrush(dt){const R=ed.size,cx=ed.bx,cz=ed.bz,t=ed.tool,k=ed.str/10;
   const i0=Math.max(3,Math.floor((cx-R-ED_X0)/ED_C)),i1=Math.min(ED_NX-4,Math.ceil((cx+R-ED_X0)/ED_C)),j0=Math.max(3,Math.floor((cz-R-ED_Z0)/ED_C)),j1=Math.min(ED_NZ-4,Math.ceil((cz+R-ED_Z0)/ED_C));
   if(i0>i1||j0>j1)return;
-  // painting turns ruts into what is painted, except Mud, and Dirt on ground that is already wet (mud.js)
-  if((t==='paint'&&ed.mat!==MUD_ID||t==='grass'||t==='dirt')&&rutErase(cx,cz,R,t==='paint'&&ed.square,t==='dirt'?(x,z)=>soakAt(x,z)>0.3:null)){
+  // painting turns ruts into what is painted, except Mud, and Dirt on ground that is already wet (mud.js); a material
+  // stroke also takes dug and dumped ground back to grade, however deep, so the paint shows on it (the dig zone draws no paint on dug ground)
+  if((t==='paint'&&ed.mat!==MUD_ID||t==='grass'||t==='dirt')&&rutErase(cx,cz,R,t==='paint'&&ed.square,t==='dirt'?(x,z)=>soakAt(x,z)>0.3:null,t==='paint')){
     ed.pend=edGrow(ed.pend,cx-R-0.6,cx+R+0.6,cz-R-0.6,cz+R+0.6);ed.changed=true}
   let hs=null,W=0;
   if(t==='smooth'||t==='flatten'){W=i1-i0+3;hs=new Float32Array(W*(j1-j0+3));
