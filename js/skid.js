@@ -67,6 +67,8 @@ function updateSkid(dt,drive,turn,arm,curl){
   for(const W of skWheels)W.g.rotation.x=W.side<0?sk.roll1:sk.roll2;
   const sy=Math.sin(sk.yaw),cy=Math.cos(sk.yaw);
   if(Math.abs(sk.v)+Math.abs(sk.w)>0.05)for(const sd of [-1,1])stampRut(sk.x+sd*0.9*cy,sk.z-sd*0.9*sy,sk.yaw,0.16,1.05,dt);
+  // the front of each track splashes through puddles (mud.js)
+  for(const sd of [-1,1]){const tv=sk.v-sd*sk.w*0.9,f=Math.sign(tv||1)*0.9;splashMud(sk.x+sd*0.9*cy+sy*f,sk.z-sd*0.9*sy+cy*f,sk.yaw,tv,0.2,0.7,dt)}
   const sample=(lx,lz)=>surfAt(sk.x+lx*cy+lz*sy,sk.z-lx*sy+lz*cy);
   const hf=(sample(-0.9,0.7)+sample(0.9,0.7))/2,hb=(sample(-0.9,-0.7)+sample(0.9,-0.7))/2,hr=(sample(0.9,0.7)+sample(0.9,-0.7))/2,hl=(sample(-0.9,0.7)+sample(-0.9,-0.7))/2,kk=Math.min(1,dt*10);
   sk.y+=((hf+hb)/2-sk.y)*kk;sk.pitch+=(-Math.atan2(hf-hb,1.4)-sk.pitch)*kk;sk.roll+=(Math.atan2(hr-hl,1.8)-sk.roll)*kk;
