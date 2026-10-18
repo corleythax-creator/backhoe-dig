@@ -28,7 +28,7 @@ const KEY_ACTIONS=[
   {id:'mow',g:'Modes',n:'Mow',d:'Drive the mower',k:['Digit4']},
   {id:'walk',g:'Modes',n:'Walk',d:'Get out and walk',k:['Digit5']},
   {id:'nextMode',g:'Modes',n:'Next mode',d:'With Shift held, the one before',k:['Tab']},
-  {id:'enter',g:'On foot',n:'Get in / get out',d:'Climb into the machine you are standing next to; press again to climb out',k:['KeyF']},
+  {id:'enter',g:'On foot',n:'Get in / get out',d:'Climb into the machine you are standing next to (or sit down at a game table on the pavilion); press again to climb out',k:['KeyF']},
   {id:'jump',g:'On foot',n:'Jump',d:'About 6 ft: onto blocks and up stacks',k:['Space'],s:'walk'},
   {id:'sprint',g:'On foot',n:'Sprint',d:'Hold to run flat out, about 12 mph',k:['ShiftLeft','ShiftRight'],s:'walk'},
   {id:'blocks',g:'Blocks',n:'Blocks on / off',d:'Show the block bar and the outline where one lands',k:['KeyB']},

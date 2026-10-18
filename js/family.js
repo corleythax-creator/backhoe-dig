@@ -91,6 +91,45 @@ function famBridge(b,K,o){
   {const [x,z]=F.W(L-1.4,0);famSign(['MAINLAND BRIDGE','Under construction'],5.4,1.7,x,Y+2.4,z,F.yaw+Math.PI,'#1f5f3a','#ffffff')}
 })();
 
+// ---------- games at the pavilion ----------
+// a chess board on the west picnic table and a checkers board on the east one, both set up to start. Sitting down at
+// one (Get in) saves the island and opens that Mesa game at full quality; its back link brings you here again.
+const MESA_URL='https://mesa-games-ochre.vercel.app/';
+const FAM_GAMES=[{k:'chess',n:'chess',b:'Play chess',x:23.5,z:264},{k:'checkers',n:'checkers',b:'Play checkers',x:28.5,z:264}];
+// the board's ranks run across the table (x), toward each bench, its files along it (z); a1 is dark
+function famBoard(K,g,y){const S=0.06,X=g.x,Z=g.z,chess=g.k==='chess';
+  K.box(8*S+0.06,0.03,8*S+0.06,chess?0x5a3b26:0x3a2a1e,X,y+0.015,Z);
+  for(let r=0;r<8;r++)for(let f=0;f<8;f++){const dark=(r+f)%2===0;
+    K.box(S,0.008,S,chess?(dark?0x6e4a2c:0xe6d6b0):(dark?0x262422:0xb2382c),X+(r-3.5)*S,y+0.034,Z+(f-3.5)*S)}
+  const top=y+0.038,at=(r,f)=>[X+(r-3.5)*S,Z+(f-3.5)*S];
+  if(chess){const BACK='rnbqkbnr';
+    for(const [r,col] of [[0,0xf1ead8],[1,0xf1ead8],[6,0x2b2622],[7,0x2b2622]])for(let f=0;f<8;f++){const [x,z]=at(r,f),t=r===1||r===6?'p':BACK[f];
+      const h={p:0.026,r:0.036,n:0.038,b:0.044,q:0.05,k:0.054}[t];K.cyl(0.016,0.021,h,6,col,x,top+h/2,z);
+      if(t==='p')K.geo(new THREE.IcosahedronGeometry(0.012,0),col,x,top+h+0.008,z);
+      else if(t==='r')K.cyl(0.02,0.018,0.012,6,col,x,top+h+0.006,z);
+      else if(t==='n')K.box(0.03,0.022,0.014,col,x+(r<4?0.006:-0.006),top+h+0.008,z,0,0,r<4?0.5:-0.5);
+      else if(t==='b')K.cyl(0,0.014,0.024,6,col,x,top+h+0.012,z);
+      else if(t==='q')K.geo(new THREE.IcosahedronGeometry(0.015,0),col,x,top+h+0.01,z);
+      else{K.box(0.008,0.026,0.008,col,x,top+h+0.013,z);K.box(0.008,0.008,0.022,col,x,top+h+0.017,z)}}}
+  else for(let r=0;r<8;r++){if(r===3||r===4)continue;for(let f=0;f<8;f++){if((r+f)%2)continue;const [x,z]=at(r,f);
+    K.cyl(0.024,0.024,0.012,10,r<3?0xb3302a:0xeee3c8,x,top+0.006,z)}}}
+// the game table the worker is standing at, if any (a stride from the table's edge)
+let famPrefetched=false;
+function famGameNear(){if(mode!=='walk'||wk.inside)return null;
+  if(!famPrefetched&&Math.hypot(wk.x-26,wk.z-264)<25){famPrefetched=true;
+    for(const g of FAM_GAMES){const l=document.createElement('link');l.rel='prefetch';l.href=MESA_URL+g.k+'/';document.head.appendChild(l)}}
+  for(const g of FAM_GAMES){const dx=Math.max(0,Math.abs(wk.x-g.x)-0.9),dz=Math.max(0,Math.abs(wk.z-g.z)-1.2);
+    if(Math.hypot(dx,dz)<1.1&&Math.abs(wk.y-baseHeight(g.x,g.z))<1)return g}
+  return null}
+// sit down: save everything, then go to the game. On the website the page itself goes (and Mesa's back link returns
+// here); in the claude.ai version, or an old version, the game opens in a new tab instead
+function famPlay(g){try{siteSaveAll()}catch(e){}try{lawnSave()}catch(e){}
+  const url=MESA_URL+g.k+'/?from=island&back='+encodeURIComponent(location.origin+location.pathname);
+  if(/(^|\.)vercel\.app$|^localhost$|^127\./.test(location.hostname)&&!/\/versions\//.test(location.pathname)){
+    try{sessionStorage.setItem('bhd_table',g.k)}catch(e){}toast(`Sitting down to ${g.n}...`,'',3000);setTimeout(()=>{location.href=url},400);return}
+  let w=null;try{w=window.open(url,'_blank')}catch(e){}
+  if(!w)toast(`Play ${g.n} at mesa-games-ochre.vercel.app/${g.k}/`,'',5000)}
+
 // ---------- the Family Island ----------
 (function(){
   const K=famKit(),G=(x,z)=>baseHeight(x,z);
@@ -132,7 +171,8 @@ function famBridge(b,K,o){
     for(const s of [-1,1])K.box(11.2,0.2,rl,0x5b3a2a,X,y+3.45+0.9-0.05,Z+s*1.75,0,s*sl);
     for(const dx of [-2.5,2.5]){const tx=X+dx;K.box(1.0,0.08,2.4,0x9a6b42,tx,y+0.82,Z);
       for(const s of [-1,1]){K.box(0.32,0.06,2.4,0x9a6b42,tx+s*0.75,y+0.48,Z);K.box(0.08,0.85,0.08,0x6b4428,tx+s*0.4,y+0.42,Z-1);K.box(0.08,0.85,0.08,0x6b4428,tx+s*0.4,y+0.42,Z+1)}
-      SOLIDS.push({x:tx,z:Z,hx:0.9,hz:1.2})}}
+      SOLIDS.push({x:tx,z:Z,hx:0.9,hz:1.2})}
+    for(const g of FAM_GAMES)famBoard(K,g,y+0.86)}
   // fire pit: a ring of stones round glowing embers and crossed logs, with log benches round it
   {const X=40,Z=280,y=G(X,Z);
     for(let i=0;i<10;i++){const a=i/10*Math.PI*2;K.geo(new THREE.IcosahedronGeometry(0.34,0),0x87827c,X+Math.cos(a)*1.1,y+0.12,Z+Math.sin(a)*1.1,a)}
@@ -150,8 +190,8 @@ function famBridge(b,K,o){
     for(const s of [-1,1])K.box(0.1,0.48,0.5,0x55595c,BX+s*0.95,by+0.24,BZ)}
   // a stone curb round the roundabout's middle
   for(let i=0;i<24;i++){const a=i/24*Math.PI*2;K.box(2.3,0.25,0.35,0x9b9890,FAM_X+Math.sin(a)*8.3,FAM_Y+0.1,FAM_Z-Math.cos(a)*8.3,-a)}
-  // the west and east arms stop at barriers where Dexter's and Jessica's bridges will go
-  for(const s of [-1,1]){const x=s*70.5,y=G(x,245);
+  // the west arm stops at a barrier where Dexter's bridge will go (the east arm runs on to Jessica's footbridge)
+  for(const s of [-1]){const x=s*70.5,y=G(x,245);
     for(let i=-2;i<=2;i++){K.box(0.12,1.1,0.12,0x8a8a86,x,y+0.55,245+i*1.05);K.box(0.08,0.2,0.95,i%2?0xf2f2ee:0xe0661e,x,y+1.0,245+i*1.05);K.box(0.08,0.2,0.95,i%2?0xe0661e:0xf2f2ee,x,y+0.7,245+i*1.05)}
     SOLIDS.push({x,z:245,hx:0.3,hz:2.8});
     K.box(0.12,2.6,0.12,0x8a8a86,x-s*0.6,y+1.3,242.2);K.box(0.12,2.6,0.12,0x8a8a86,x-s*0.6,y+1.3,247.8);
