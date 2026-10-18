@@ -44,6 +44,7 @@ A 3D low-poly excavator game in plain HTML, CSS and JavaScript (three.js r128, n
 | `js/sound.js` | All sound, rendered in the browser: diesel engine loops, turbo, tires, air brakes, hydraulics, relief valve, tracks, bucket scrape, pouring dirt, backup alarm; stereo, distance and cliff echo; the Sound panel (on/off, Master, Engines, Backup alarm, Effects) |
 | `js/maps.js` | Minimap and big map |
 | `js/editor.js` | Map editor (☰ menu or G): sculpt and paint the ground, lay out and grade roads, lay materials from the library, place, move, turn, resize, copy, query and delete trees, boulders and machines; undo; save on the device, copy out and load maps |
+| `js/ownmat.js` | Your own textures (map editor → Paint → + Your own texture): an uploaded image made into a seamless 512 px tile in the browser (as `tools/textures.py` does), named, sized in feet, given a kind and shine, published with the owner key to Supabase (`island_materials`) and added to the material library on every device (ids 41 and up, cached as `bhd_mats`) |
 | `js/gfx.js` | Graphics setting: Low (phones), Medium (laptops), High (desktop PCs), saved per device |
 | `js/shadowproxy.js` | Cheaper shadows: merged shadow-only meshes for the machines, near trees only |
 | `js/bench.js` | Speed test |
@@ -53,6 +54,7 @@ A 3D low-poly excavator game in plain HTML, CSS and JavaScript (three.js r128, n
 | `tools/gui_editor.py` | Builds `docs/gui-editor.html`, the claude.ai screen editor, from `docs/gui-editor-shell.html`, the screen's markup in `index.html`, `css/game.css` and `js/gui.js` (with `docs/gui-editor-bg.jpg` and `docs/gui-editor-mini.png` behind it) |
 | `supabase/island_tune.sql` | The live tuning: its table, the earlier ones kept for rollback, and `tune_get`, `tune_put` (owner key, the same as the skin's) and `tune_set` (connector only) |
 | `supabase/island_gui.sql` | The live screen skin: its table, the earlier ones kept for rollback, and the functions the game and the claude.ai editor call |
+| `supabase/island_materials.sql` | Your own textures: the table (id, name and settings with a thumbnail, the 512 px tile) and `mat_list`, `mat_img`, `mat_put` (owner key, as `gui_put`) |
 | `tools/textures.py` | Turns the raw 1024 px renders into the library textures, the swatch sheet and the mean colours in `js/materials.js` |
 | `shots/*.jpg` | Start-card tiles: in-game screenshots of the excavator, dump truck, mower and the worker on foot |
 | `build.html` | Build-time page: ask-to-live per version, triangles, developer-hour estimate |
@@ -135,6 +137,7 @@ A skin is JSON: `{v:1, t, L:{all|phone|big:{vars, el:{selector:{hide, x, y, sc, 
   | `bhd_sync`, `bhd_sync_t`, `bhd_sync_h` | Sync code, time of the last synced save, hash of what was last sent | `js/sync.js` |
   | `bhd_gui`, `bhd_gui_live`, `bhd_gui_key`, `bhd_gui_side` | Screen editor: unpublished look, the live look last loaded, owner key, which side the panel sits | `js/gui.js` |
   | `bhd_tune`, `bhd_tune_live` | Tuning: this device's unpublished numbers, the live tuning last loaded | `js/tune.js`, `js/gui.js` |
+  | `bhd_mats` | Your own textures known to this device (names, settings, thumbnails; pictures load from the server as used) | `js/ownmat.js`, `js/materials.js` |
   | `bhd_seen`, `bhd_glresets` | Start card seen, graphics resets counted for the speed test | `js/controls.js`, `js/core.js` |
   | `bhd_table` (sessionStorage, this tab only) | Which pavilion game you sat down at, so coming back from Mesa skips the start card and stands you by the table | `js/family.js`, `js/save.js` |
 

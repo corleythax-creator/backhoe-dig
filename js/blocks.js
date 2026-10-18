@@ -34,14 +34,14 @@ const blkMesh=blkMeshes[0]=blkNewMesh(M(0xffffff));blkTileMat(blkMesh.material,4
 // a library material's mesh, made the first time a block of it is set; its mean colour shows until the texture is in
 // shiny ones (sh) get a tight highlight and the sky mirrored in them, plainly face-on too, as metal does (the Fresnel
 // patch in core.js keeps paint and glass faint face-on)
-function blkMeshOf(m){let im=blkMeshes[m];if(im)return im;const d=MAT_LIST[m-1],
+function blkMeshOf(m){let im=blkMeshes[m];if(im)return im;const d=matDef(m),
     mt=M(0xffffff,d.sh?{shininess:90*d.sh,specular:new THREE.Color().setScalar(0.6*d.sh),envMap:skyEnv,combine:THREE.MixOperation,reflectivity:0.9*d.sh}:null);mt.color.setRGB(d.c[0],d.c[1],d.c[2]);
   blkTileMat(mt,Math.min(d.ft,6));if(d.sh){const ob=mt.onBeforeCompile;mt.onBeforeCompile=sh=>{ob(sh);sh.fragmentShader=sh.fragmentShader.replace(/\(0\.12\+0\.88\*/g,'(0.45+0.55*')}}
   im=blkMeshes[m]=blkNewMesh(mt);
-  new THREE.TextureLoader().load(`textures/${d.id}.jpg`,t=>{t.wrapS=t.wrapT=THREE.RepeatWrapping;t.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());
+  matImgOf(m,img=>{const t=new THREE.Texture(img);t.needsUpdate=true;t.wrapS=t.wrapT=THREE.RepeatWrapping;t.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());
     mt.map=t;mt.color.setScalar(1);mt.needsUpdate=true});
   return im}
-const blkMatName=m=>m?MAT_LIST[m-1].n:'Concrete';
+const blkMatName=m=>m?matDef(m).n:'Concrete';
 // placement preview: a see-through box with bright edges where the block will land; red when it can't go there
 const blkGhost=new THREE.Group(),ghostFill=new THREE.MeshBasicMaterial({color:0xf5c518,transparent:true,opacity:0.22,depthWrite:false,toneMapped:false}),
   ghostLine=new THREE.LineBasicMaterial({color:0xf5c518,toneMapped:false});
@@ -163,7 +163,7 @@ function blkCube(dir){const n=((Math.round(Math.max(blkDim.w,blkDim.d,blkDim.h)/
 // turn the block a quarter turn: width and length swap
 function blkTurn(){[blkDim.w,blkDim.d]=[blkDim.d,blkDim.w];blkUI()}
 function blkReachBy(ft){blkReach=clamp(blkReach+ft,BLK_REACH[0],TU.blkReach/FT);blkUI()}
-function setBlkMat(m){blkMat=clamp(m|0,0,MAT_LIST.length);blkUI()}
+function setBlkMat(m){m=m|0;blkMat=matIdOk(m)?m:0;blkUI()}
 function blkTerrainMoved(){if(blocks.length)blkWake=Math.max(blkWake,0.3)}
 // settle bottom-up: each block sits on the ground or the blocks already settled under it; dirt pushed under one lifts it
 function blkTick(dt){
@@ -190,7 +190,9 @@ document.querySelectorAll('#blkBar .bstep button').forEach(b=>b.onclick=()=>{con
   if(k==='reach')blkReachBy(s*2);else if(k==='grid'){blkGrid=BLK_GRIDS[clamp(BLK_GRIDS.indexOf(blkGrid)+s,0,BLK_GRIDS.length-1)];blkSnapSave();blkUI()}else blkStepDim(k,s)});
 $('#blkLock').onclick=blkLockNext;
 // the material list: plain concrete, then the library by group
-{const s=$('#blkMat');s.add(new Option('Concrete (plain)',0));
+// (made again when the owner's own textures arrive, ownmat.js)
+function blkMatOpts(){const s=$('#blkMat');s.textContent='';s.add(new Option('Concrete (plain)',0));
   MAT_CATS.forEach((c,ci)=>{const g=document.createElement('optgroup');g.label=c;
     MAT_LIST.forEach((d,i)=>{if(d.cat===ci)g.appendChild(new Option(d.n,i+1))});s.appendChild(g)});
-  s.onchange=()=>{setBlkMat(+s.value);s.blur()}}
+  s.value=blkMat;s.onchange=()=>{setBlkMat(+s.value);s.blur()}}
+blkMatOpts();

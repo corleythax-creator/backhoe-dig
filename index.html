@@ -141,6 +141,16 @@
         <div id="edMats" class="edmats" data-for="paint"></div>
         <p class="hint" data-for="raise lower flatten smooth dirt grass">Hold and drag on the ground. Flatten levels to the height where you start.</p>
         <p class="hint" data-for="paint"><b id="edMatV"></b>. Hold and drag on the ground to lay it; Natural ground takes it back up. Digging cuts through it.</p>
+        <div id="edOwn" class="edown" data-for="paint"><div class="row"><button class="sm" id="edOwnAdd">+ Your own texture</button><button class="sm" id="edOwnEdit" hidden>Edit this texture</button></div>
+          <div id="edOwnCard" class="edowncard" hidden>
+            <label class="edownpic"><canvas id="edOwnPrev" width="128" height="128"></canvas><input type="file" id="edOwnFile" accept="image/*"><span id="edOwnPick">Pick a photo or picture</span></label>
+            <span class="edopt"><label for="edOwnName">Name</label><input id="edOwnName" maxlength="40" autocomplete="off"></span>
+            <span class="edopt"><label for="edOwnFt">One tile is</label><input id="edOwnFt" type="number" min="0.5" max="40" step="0.5" value="4"><output>ft</output></span>
+            <span class="edopt"><label for="edOwnCat">Kind</label><select id="edOwnCat"></select></span>
+            <span class="edopt"><label for="edOwnSh">Shine</label><input id="edOwnSh" type="range" min="0" max="100" step="5" value="0"><output id="edOwnShV">0%</output></span>
+            <span class="edopt"><label for="edOwnKey">Owner key</label><input id="edOwnKey" type="password" autocomplete="off"></span>
+            <div class="row"><button class="sm" id="edOwnGo">Add to the library</button><button class="sm" id="edOwnX">Cancel</button></div>
+            <p class="hint" id="edOwnMsg">The picture is made into a seamless tile. It reaches every device once added.</p></div></div>
         <div class="edkind row" data-for="add" role="group" aria-label="What to add"><button class="sm" data-k="pine" aria-pressed="true">Pine tree</button><button class="sm" data-k="leafy" aria-pressed="false">Leafy tree</button><button class="sm" data-k="rock" aria-pressed="false">Boulder</button></div>
         <p class="hint" data-for="add">Tap the ground to place it; keep holding to drag it into place.</p>
         <p class="hint" data-for="select">Tap a tree, boulder or machine to select it, then drag it to move it.</p>
@@ -331,6 +341,7 @@
 <script src="js/maps.js"></script>
 <script src="js/shadowproxy.js"></script>
 <script src="js/editor.js"></script>
+<script src="js/ownmat.js"></script>
 <script src="js/bench.js"></script>
 <script src="js/main.js"></script>
 

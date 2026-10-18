@@ -60,7 +60,7 @@ function rigLoad(){let d=null;try{d=JSON.parse(localStorage.getItem(RIG_KEY))}ca
   // blocks: w by d by h of material m (older saves held plain concrete cubes of side s)
   const bOk=v=>isFinite(v)&&v>=FT/12*0.9&&v<=BLK_FT*FT*1.01;
   if(Array.isArray(d.blocks))for(const b of d.blocks.slice(0,BLK_MAX)){const w=b.w??b.s,dd=b.d??b.s,h=b.h??b.s,m=b.m|0;
-    if([b.x,b.z,b.y].every(isFinite)&&[w,dd,h].every(bOk)&&m>=0&&m<=MAT_LIST.length&&Array.isArray(b.c))blocks.push({x:b.x,z:b.z,y:b.y,w,d:dd,h,m,vy:0,c:b.c})}
+    if([b.x,b.z,b.y].every(isFinite)&&[w,dd,h].every(bOk)&&(m===0||matIdOk(m))&&Array.isArray(b.c))blocks.push({x:b.x,z:b.z,y:b.y,w,d:dd,h,m,vy:0,c:b.c})}
   if(blocks.length)blkWake=1.5;
   put(TB,d.tb,['x','z','y','ty','yaw','hooked','seated']);
   if(TB.hooked)chain.visible=true;else{TB.ty=boxRest();TB.y=Math.max(TB.y,TB.ty);boxMask()}
