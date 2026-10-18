@@ -199,7 +199,7 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - Q12 Simpler far islands: Islands far away draw with fewer triangles and no small props, to win frames back on the phone. (R2 F3 every none c2 5h)
 - Q13 Realistic lake water: Turquoise over the sand in the shallows, deep blue farther out, foam along the shore, sky reflections that change with the angle you look from, and calmer swells near land; still flat-shaded. (R8 F5 every low c2 5h needs S16)
 - Q14 Wakes and spray: A boat throws a V wake that spreads and fades, and spray off the bow at speed. (R8 F5 most low c1 3h needs M21)
-- Q15 PC high graphics tier: A PC-only graphics level behind the Graphics setting: HDR sky lighting, soft shadows, ambient occlusion, bloom, tone mapping, PBR ground and machine materials with wet-surface darkening and rain droplets, and richer autumn trees. Aims at the look of a modern construction sim; Low stays as is for the phone, and what the ground does stays the same on every device. Owner's high priority (Oct 18). (R9 F6 every none c3 16h needs Q07)
+- Q15 PC high graphics tier: A PC-only graphics level behind the Graphics setting: HDR sky lighting, soft shadows, ambient occlusion, bloom, tone mapping, PBR ground and machine materials with wet-surface darkening and rain droplets, and richer autumn trees. Aims at the look of a modern construction sim (lit, wet, autumn-coloured); Low stays as is for the phone, and what the ground does stays the same on every device. Owner's high priority (Oct 18). (R9 F6 every none c3 16h needs Q07)
 
 ## E: Map editor
 
