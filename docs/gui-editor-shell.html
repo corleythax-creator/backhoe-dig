@@ -1,0 +1,110 @@
+<title>Island Screen Editor</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<!-- Corley's Island screen editor (claude.ai artifact). This is the shell: tools/gui_editor.py fills in the game's CSS,
+     markup and js/gui.js and writes docs/gui-editor.html, which is what gets published. -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@600;700;800&family=Saira:wght@500;600&display=swap">
+<style>
+/* layout: the game screen on the left at the chosen device's size, scaled to fit; the editor panel docked on the right
+   (below it on a narrow window). One look, dark like the game's own bars */
+:root{--e-bg:#0e100c;--e-well:#1b1f17;--e-line:rgba(255,255,255,.14);--e-fg:#f3f5ef;--e-muted:#b9c2b0;--e-accent:#f07a22;--e-pick:#34d6ff;
+  --e-font:"Saira Condensed","Arial Narrow",system-ui,sans-serif;color-scheme:dark}
+html,body{height:100%}
+body{background:var(--e-bg);color:var(--e-fg);font:500 15px/1.35 system-ui,-apple-system,"Segoe UI",sans-serif;overflow:hidden}
+.app{display:grid;grid-template-columns:minmax(0,1fr) 400px;height:100%}
+.side{display:flex;flex-direction:column;min-width:0;min-height:0}
+.tool{display:flex;flex-wrap:wrap;align-items:center;gap:8px 10px;padding-block:10px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:16px;border-bottom:1px solid var(--e-line)}
+.tool h1{margin:0 8px 0 0;font:800 20px/1 var(--e-font);letter-spacing:.06em;text-transform:uppercase;color:var(--e-accent)}
+.tool h1 b{color:var(--e-fg)}
+.tool .devs{display:flex;flex-wrap:wrap;gap:6px}
+.tool .devs button{height:36px;padding:0 12px;border-radius:8px;border:1px solid var(--e-line);background:var(--e-well);color:var(--e-fg);font:700 14px/1 var(--e-font);letter-spacing:.04em;text-transform:none;cursor:pointer}
+.tool .devs button[aria-pressed="true"]{background:var(--e-pick);border-color:var(--e-pick);color:#06222b}
+.tool .devs button:focus-visible{outline:3px solid var(--e-accent);outline-offset:2px}
+.tool .dim{color:var(--e-muted);font-size:14px;font-variant-numeric:tabular-nums}
+.well{position:relative;flex:1;min-height:0;overflow:hidden;background:repeating-linear-gradient(45deg,var(--e-well) 0 12px,#171a14 12px 24px)}
+.stage{position:absolute;left:0;top:0;transform-origin:0 0;overflow:hidden;container-type:size;container-name:stage;box-shadow:0 0 0 1px var(--e-line),0 10px 40px rgba(0,0,0,.6)}
+#stg #view{background:#7fa3b8 url("{{BG_JPG}}") center/cover no-repeat}
+#dock{min-height:0;border-left:2px solid var(--e-accent);padding-right:env(safe-area-inset-right,0px)}
+@media (max-width:900px){
+  body{overflow:auto}
+  .app{grid-template-columns:minmax(0,1fr);grid-template-rows:auto auto;height:auto}
+  .well{flex:none;height:58vh}
+  #dock{height:78vh;border-left:0;border-top:2px solid var(--e-accent);padding-right:0}
+}
+</style>
+<style id="gameCss">
+{{GAME_CSS}}
+</style>
+<div class="app">
+  <div class="side">
+    <div class="tool">
+      <h1>Screen <b>editor</b></h1>
+      <div class="devs" role="group" aria-label="Screen size">
+        <button id="devPhoneL" data-w="844" data-h="390">Phone sideways</button>
+        <button id="devPhoneP" data-w="390" data-h="844">Phone upright</button>
+        <button id="devTablet" data-w="1180" data-h="820">Tablet</button>
+        <button id="devPC" data-w="1440" data-h="900">Computer</button>
+      </div>
+      <span class="dim" id="devDim"></span>
+    </div>
+    <div class="well" id="well"><div class="stage" id="stg">
+{{GAME_MARKUP}}
+    </div></div>
+  </div>
+  <div id="dock"></div>
+</div>
+<script>window.GUI_HOSTED=true</script>
+<script>
+{{GUI_JS}}
+</script>
+<script>
+// the stage: one device's screen, scaled into the well
+const stg=document.getElementById('stg'),well=document.getElementById('well');let devW=844,devH=390,devK=1;
+function fit(){const r=well.getBoundingClientRect();devK=Math.min((r.width-24)/devW,(r.height-24)/devH,1.5);
+  stg.style.width=devW+'px';stg.style.height=devH+'px';stg.style.transform=`translate(${Math.round((r.width-devW*devK)/2)}px,${Math.round((r.height-devH*devK)/2)}px) scale(${devK})`;
+  document.getElementById('devDim').textContent=`${devW} × ${devH} px, shown at ${Math.round(devK*100)}%`}
+function setDev(b){devW=+b.dataset.w;devH=+b.dataset.h;document.querySelectorAll('.devs button').forEach(x=>x.setAttribute('aria-pressed',x===b));
+  try{localStorage.setItem('gui_dev',b.id)}catch(e){}fit()}
+document.querySelectorAll('.devs button').forEach(b=>b.onclick=()=>setDev(b));
+addEventListener('resize',fit);new ResizeObserver(fit).observe(well);
+{let id='devPhoneL';try{id=localStorage.getItem('gui_dev')||id}catch(e){}setDev(document.getElementById(id)||document.getElementById('devPhoneL'))}
+// the copy of the screen as the game first shows it, less the start card
+document.getElementById('help').hidden=true;
+{const c=document.getElementById('mini'),im=new Image();im.onload=()=>{c.width=im.width;c.height=im.height;c.getContext('2d').drawImage(im,0,0)};im.src="{{MINI_PNG}}"}
+
+// publishing and loading the live look: SQL through the viewer's own Supabase connector (the owner's), on the
+// functions in supabase/island_gui.sql
+const GUI_PROJECT='wcrsomethkjlfhhuurmh';
+const GUI_ERR={server_not_connected:'Add the Supabase connector in claude.ai Settings → Connectors, then try again.',
+  needs_reauth:'Reconnect Supabase in claude.ai Settings → Connectors, then try again.',
+  selection_required:'Choose which Supabase connector this page should use when claude.ai asks, then try again.',
+  approval_required:'This page needs your OK to use Supabase. Try again and choose Allow.',
+  not_in_manifest:'Supabase is switched off for this page. Turn it on in the page\'s Permissions menu.',
+  blocked_by_policy:'Your organisation blocks this Supabase tool.',
+  server_unavailable:'Supabase did not answer. Try again in a minute.',
+  cancelled:'The request was stopped before it finished.'};
+let guiMcp=null;
+const mcpNs=()=>guiMcp||(guiMcp=window.claude&&claude.use?claude.use('mcp'):Promise.resolve(null));
+// the rows from execute_sql's answer, which wraps the JSON in a note about untrusted data
+function guiRows(pl){let t=typeof pl==='string'?pl:pl&&typeof pl.result==='string'?pl.result:null;
+  if(t===null){if(Array.isArray(pl))return pl;if(pl&&Array.isArray(pl.result))return pl.result;t=JSON.stringify(pl)}
+  const m=t.match(/<untrusted-data-[\w-]+>\s*(\[[\s\S]*?\])\s*<\/untrusted-data-/);return JSON.parse(m?m[1]:t)}
+async function guiSql(q){const m=await mcpNs();
+  if(!m)throw new Error('Loading and publishing work when this page is open on claude.ai with your Supabase connector. Copy the look and paste it into the game instead.');
+  try{const r=await m.callTool('Supabase','execute_sql',{project_id:GUI_PROJECT,query:q},{cache:false});return guiRows(r.payload!==undefined?r.payload:r)}
+  catch(e){const c=e&&e.code;if(GUI_ERR[c])throw new Error(GUI_ERR[c]);throw new Error('Supabase said: '+(e&&e.message||c||e))}}
+gui.host={
+  async load(){const r=await guiSql('select data, t from public.gui_get()'),row=r&&r[0];if(!row)return null;const s=guiParse(row.data);if(s)s.t=+row.t;return s},
+  async publish(data){let tag='$g'+Math.random().toString(36).slice(2,8)+'$';while(data.includes(tag))tag='$g'+Math.random().toString(36).slice(2,8)+'$';
+    const r=await guiSql(`select public.gui_set(${tag}${data}${tag}) as t`);return +(r&&r[0]&&r[0].t)},
+  async history(){return await guiSql("select t, data from public.island_gui_hist where data like '{%' order by n desc limit 20")||[]}};
+
+// the editor over the stage: this browser's draft if there is one, else the original look until the live one loads
+gui.root=stg;gui.media='@container stage';gui.scale=()=>devK;gui.dock=document.getElementById('dock');gui.styleAt=document.body;
+{const d=guiParse(guiLs(GUI_LS));gui.skin=d||guiNew();gui.draft=!!d}
+guiApply();guiOpen(true);
+gui.msg='To start from the look every device has now, open Publish and choose Load the live look.';guiStatus();
+// already allowed to use Supabase here: load the live look straight away
+(async()=>{try{const P=await claude.use('permissions');const st=P?await P.state('mcp:Supabase').catch(()=>'unavailable'):'unavailable';
+  if(st==='granted'){gui.msg='Loading the live look…';guiStatus();await guiFetch();if(gui.msg==='Loading the live look…'){gui.msg='';guiStatus()}}}catch(e){}})();
+</script>

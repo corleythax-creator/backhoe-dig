@@ -37,6 +37,7 @@ A 3D low-poly excavator game in plain HTML, CSS and JavaScript (three.js r128, n
 | `js/controls.js` | Game state and reset, touch sticks, keyboard, game controller, modes, menu |
 | `js/save.js` | Saves the site in the browser and loads it on start: the dug and dumped ground, groundwater, excavator, truck and load, trench box, blocks, worker (the lawn saves itself in `js/mower.js`) |
 | `js/sync.js` | Sync devices: a sync code that keeps the saves in step between phone and computer through Supabase |
+| `js/gui.js` | Screen editor (☰ → Edit the screen): restyle any part of the screen and publish the look (a skin) to every device through Supabase; also runs inside the claude.ai screen editor |
 | `js/effects.js` | Shared per-frame vectors, resize |
 | `js/sound.js` | All sound, rendered in the browser: diesel engine loops, turbo, tires, air brakes, hydraulics, relief valve, tracks, bucket scrape, pouring dirt, backup alarm; stereo, distance and cliff echo; the Sound panel (on/off, Master, Engines, Backup alarm, Effects) |
 | `js/maps.js` | Minimap and big map |
@@ -47,6 +48,8 @@ A 3D low-poly excavator game in plain HTML, CSS and JavaScript (three.js r128, n
 | `js/main.js` | Frame loop |
 | `textures/ground/` | The ground pack: seamless grass, dirt and machine grime at 512, 1024 and 2048 px (`low/`, `med/`, `high/`, loaded by the Graphics setting), and `macro.jpg`, a soft large-scale variation map laid over the ground on High only (anisotropy is 4, 8 and 16 by tier) |
 | `textures/*.jpg` | The material library: one seamless 512 px texture per material (OpenAI GPT Image, made tileable by `tools/textures.py`), and `thumbs.jpg`, the swatches the editor shows |
+| `tools/gui_editor.py` | Builds `docs/gui-editor.html`, the claude.ai screen editor, from `docs/gui-editor-shell.html`, the screen's markup in `index.html`, `css/game.css` and `js/gui.js` (with `docs/gui-editor-bg.jpg` and `docs/gui-editor-mini.png` behind it) |
+| `supabase/island_gui.sql` | The live screen skin: its table, the earlier ones kept for rollback, and the functions the game and the claude.ai editor call |
 | `tools/textures.py` | Turns the raw 1024 px renders into the library textures, the swatch sheet and the mean colours in `js/materials.js` |
 | `shots/*.jpg` | Start-card tiles: in-game screenshots of the excavator, dump truck, mower and the worker on foot |
 | `build.html` | Build-time page: ask-to-live per version, triangles, developer-hour estimate |
@@ -84,6 +87,17 @@ From the Lower Bench a dark green steel truss bridge (about 340 ft) crosses the 
 
 Maps save on the device as you edit (`localStorage.bhd_map`). The claude.ai version and the Vercel site keep separate storage, so move a map between them with Copy map. How it works inside, and what to watch out for when changing it: [`docs/map-editor.md`](docs/map-editor.md).
 
+## Screen editor
+
+Every part of the screen can be restyled without new code: the bars, buttons, gauges, sticks, minimap, panels and menus. Open it from ☰ → **Edit the screen** in the game, or use the claude.ai screen editor (https://claude.ai/artifact/Bj6MjgPkszqEP2PJQqQ29t), which shows a copy of the screen at phone, tablet or computer size.
+
+- **Parts**: tap a part to pick it (Tap to pick: off lets the game work normally, to open a menu or switch machine first). Hide it, set its opacity, rename it (not words the game keeps changing, like gauges), set its text size and colour, size, drag it or nudge it, its background and corners, or give it any CSS. **Change** aims the edit at just that part, everything sharing one of its styles, or every part of its kind in the same box. Usually hidden parts (menu, Blocks bar, Sprint and Jump…) can be shown to style them; hidden parts are picked again from the Changed list.
+- **Theme**: the shared colours and fonts, and free CSS.
+- **Changes go to**: every screen, phones and small screens (up to 900 px wide or 520 px tall), or big screens only.
+- **Publish**: edits save on the device at once as a draft. **Publish to every device** makes the look live: the game needs the owner key (kept by the owner, not in the repo), the claude.ai editor uses the owner's Supabase connector. Every device loads the live look when the game opens (Vercel site only; the claude.ai game and `versions/` keep the original look). The claude.ai editor can also bring back an earlier live look. **Copy the look** and **Use the pasted look** move a look between the two editors or keep it as a file.
+
+A skin is JSON: `{v:1, t, L:{all|phone|big:{vars, el:{selector:{hide, x, y, sc, fs, fg, bg, rad, op, css}}, css}}, text:{selector:text}}`, turned into one style sheet after `css/game.css`. It targets parts by CSS selectors, mostly element ids, so **renaming or removing an id or class in `index.html` or `css/game.css` can strand a published edit**: keep them stable, or move the live skin's selectors along (read it with `select data from public.gui_get()`, fix, publish with `select public.gui_set(...)`).
+
 ## How it fits together
 
 - **Plain scripts, one global scope.** `index.html` loads three.js r128 from cdnjs, then `data/effort.js`, then `js/*.js` in order. No modules, no build step. Top-level code may only call functions defined in its own file or an earlier one; functions can call anything at run time. Check a new top-level name isn't already taken before adding it (see CLAUDE.md).
@@ -105,6 +119,7 @@ Maps save on the device as you edit (`localStorage.bhd_map`). The claude.ai vers
   | `bhd_heat` | What the lawn heatmap shows | `js/stats.js` |
   | `bhd_gfx`, `bhd_dirt`, `bhd_ui`, `bhd_hudmin`, `bhd_sndcfg` | Graphics, Dirt detail, UI size, folded status card, sound | `js/gfx.js`, `js/dirt.js`, `js/controls.js`, `js/sound.js` |
   | `bhd_sync`, `bhd_sync_t`, `bhd_sync_h` | Sync code, time of the last synced save, hash of what was last sent | `js/sync.js` |
+  | `bhd_gui`, `bhd_gui_live`, `bhd_gui_key`, `bhd_gui_side` | Screen editor: unpublished look, the live look last loaded, owner key, which side the panel sits | `js/gui.js` |
   | `bhd_seen`, `bhd_glresets` | Start card seen, graphics resets counted for the speed test | `js/controls.js`, `js/core.js` |
   | `bhd_table` (sessionStorage, this tab only) | Which pavilion game you sat down at, so coming back from Mesa skips the start card and stands you by the table | `js/family.js`, `js/save.js` |
 
