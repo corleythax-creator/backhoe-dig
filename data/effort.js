@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-18T00:25:39Z",
+ "updated": "2026-10-18T00:33:31Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 565.5,
-   "act": 11.5,
-   "versions": 74
+   "dh": 568.5,
+   "act": 12.0,
+   "versions": 75
   }
  ],
  "extra": [
@@ -759,6 +759,15 @@ window.EFFORT = {
    "tris": 1619680,
    "chars": 490671,
    "what": "Dexter's Island: from the Family Island's roundabout the west road crosses a wide yellow steel haul bridge (about 305 ft, rated for the machines, with a steel portal at each end) to a flat gravel yard the size of Corley's. On it: Dexter's blue-grey equipment shed with three roll-up doors and a light over each, an office trailer on blocks, a diesel tank with its pump, stacked concrete pipe and Jersey barriers, two light towers, a cone course and dirt piles to climb, and his machines parked in the yard: a skid steer, a small dozer, a wheel loader and a red semi with an empty lowboy trailer. Drive the excavator, the truck or the mower over, or walk; the shed, the machines and everything else are solid. The parked machines are models for now. All four islands and their bridges are in."
+  },
+  {
+   "v": 82,
+   "asked": "2026-10-17T19:12:00-05:00",
+   "live": "2026-10-17T19:33:31-05:00",
+   "dh": 3,
+   "tris": 1620039,
+   "chars": 492757,
+   "what": "Turn sensitivity: a Turn slider just above the left stick sets how fast left and right turn, from 25% to 200%: the excavator swing and tracks, the truck steering, the mower spin and looking round on foot, from the sticks, keys or a controller. On a computer the slider is always out; on a phone it is a small Turn chip that opens the slider when tapped. Each device remembers its own."
   }
  ]
 };
