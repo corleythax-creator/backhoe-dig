@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-18T03:47:00Z",
+ "updated": "2026-10-18T04:44:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 699,
-   "act": 15.5,
-   "versions": 100
+   "dh": 717,
+   "act": 16,
+   "versions": 101
   }
  ],
  "extra": [
@@ -993,6 +993,15 @@ window.EFFORT = {
    "tris": 1619620,
    "chars": 610875,
    "what": "Polished steel, a shiny material for painting the ground and for blocks (Steel group): it catches a tight sun glint and mirrors the sky, strongly at low angles and plainly face-on as metal does, with its brushed grain running through the reflection; mud dulls it. Any library material can now carry a shine."
+  },
+  {
+   "v": 108,
+   "asked": "2026-10-17T23:08:00-05:00",
+   "live": "2026-10-17T23:44:03-05:00",
+   "dh": 18,
+   "tris": 1620366,
+   "chars": 647939,
+   "what": "Screen editor (menu, Edit the screen): tap any part of the screen to hide it, rename it, resize or drag it, recolour it, change its background and corners or give it any CSS, aimed at just that part, everything styled like it or every button in its bar, for every screen or for phones or big screens only; a Theme tab for the shared colours and fonts; undo and redo. Edits save on the device, and Publish (owner key) makes the look live for every device through Supabase, earlier looks kept for rollback. A claude.ai screen editor shows a copy of the screen at phone, tablet or computer size and publishes through the owner's Supabase connector."
   }
  ]
 };
