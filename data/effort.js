@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-18T01:00:00Z",
+ "updated": "2026-10-18T00:54:17Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 618.0,
+   "dh": 620,
    "act": 12.5,
-   "versions": 82
+   "versions": 83
   }
  ],
  "extra": [
@@ -825,6 +825,15 @@ window.EFFORT = {
   },
   {
    "v": 89,
+   "asked": "2026-10-17T19:46:00-05:00",
+   "live": "2026-10-17T19:54:17-05:00",
+   "dh": 2,
+   "tris": 1620800,
+   "chars": 534353,
+   "what": "Frame rate graph in the Graphics panel: the last 10 seconds of frames per second as bars, newest on the right, each as wide as its frame took and green, yellow or red like the fps counter, with dashed lines at 30 and 60. Under it the average, the 1% low (the stutters you feel) and the slowest frame in milliseconds. It updates four times a second while the panel is open, so a setting's cost shows within a second or two."
+  },
+  {
+   "v": 90,
    "asked": "2026-10-17T19:15:00-05:00",
    "live": "2026-10-17T20:00:27-05:00",
    "dh": 7,
