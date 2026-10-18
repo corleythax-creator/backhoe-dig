@@ -282,6 +282,7 @@ function mowCut(){
     // anything standing above the deck gets cut, and the regrowth clock starts over; tall grass throws clippings
     const g=lawnG(n);lawn.ct[n]=lawn.t;if(g>0.3)n0++;
     const da=mw.yaw-lawn.ga[n];
+    if(g>0.03||lawn.gd[n]>0)statCut(n,g);
     if(g>0.03||lawn.gd[n]>0||Math.abs(Math.atan2(Math.sin(da),Math.cos(da)))>0.5){lawn.str[n]=sv;lawn.ga[n]=mw.yaw;lawn.gd[n]=0;lawnPaint(n)}}
   // and the field grass anywhere on the mesa (scenery.js); a few clumps throw clippings like a cell of tall grass
   return n0+Math.ceil(fieldCut(dx0,dz0,mw.yaw,MW_HW,MW_HD)/3)}
@@ -327,7 +328,7 @@ function updateMower(dt,inL,inR){
   // the grass grows back: once the lawn is under half mowed again, it is a fresh job
   lawn.t+=dt;lawnGrow();fieldGrow(dt);lawn.pctT-=dt;if(lawn.pctT<=0){lawn.pctT=0.25;lawnCount()}
   if(lawn.done&&lawn.pct<0.5){lawn.done=false;lawn.startT=0;toast('The grass has grown back. Time to mow again.','',3500)}
-  if(!lawn.done&&lawn.pct>=0.97){lawn.done=true;lawn.doneT=performance.now();const s=Math.round((lawn.doneT-lawn.startT)/1000);
+  if(!lawn.done&&lawn.pct>=0.97){lawn.done=true;lawn.doneT=performance.now();const s=Math.round((lawn.doneT-lawn.startT)/1000);statLawnDone(s);
     toast(`Lawn mowed in ${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}. Nice stripes.`,'good',5000)}
   // the grass leans away from whatever drives through it
   const P=lawnPush.value;P[0].set(mw.x+sy*0.7,mw.z+cy*0.7,0.95,0);P[1].set(st.x,st.z,2.4,0);P[4].set(wk.inside?1e5:wk.x,wk.z,0.45,0);
