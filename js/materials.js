@@ -59,8 +59,9 @@ uniform float uMatLayer[${MAT_MAX}];
 // in the ground's colour step: how much of this pixel a material covers (matP) and its colour (matC), mixed in over the
 // lit-ground colour after the vertex colour (matGlslPost). The four editor cells around the pixel give the cover,
 // blended between their centres: a hard edge (cells fully covered, or not at all) turns over in about a pixel where
-// that blend crosses half, so it follows the painted cells' outline, rounding their corners; soft-edged paint (any
-// cell partly covered) keeps the blend. vMatA is 1 near paint and drops where the ground was dug or dumped. The
+// that blend crosses half, so it follows the painted cells' outline, rounding their corners, as round brushes want;
+// cells laid by the hard square brush (254) are drawn whole instead, each pixel taking the cell it is in, so their
+// corners stay sharp; soft-edged paint (any cell covered 252 or less) keeps the blend. vMatA is 1 near paint and drops where the ground was dug or dumped. The
 // material is the cell with the most cover, nearest first; its texture (Medium and High) is divided by its mean
 // colour for detail, as the ground's own textures are. Read when the shader compiles, after terrain.js has loaded
 const matGlsl=()=>MAT_GL2?`float matP=0.0;vec3 matC=vec3(1.0);
@@ -68,10 +69,13 @@ vec2 mfF=(vWXZ-vec2(${ED_X0.toFixed(1)},${ED_Z0.toFixed(1)}))/${ED_C.toFixed(2)}
 if(vMatA>0.001){
   ivec2 b=ivec2(floor(mfF));vec2 u=fract(mfF);
   float a0=texelFetch(tMatCov,b,0).r,a1=texelFetch(tMatCov,b+ivec2(1,0),0).r,a2=texelFetch(tMatCov,b+ivec2(0,1),0).r,a3=texelFetch(tMatCov,b+ivec2(1,1),0).r;
-  float c=mix(mix(a0,a1,u.x),mix(a2,a3,u.x),u.y);
-  vec4 aa=vec4(a0,a1,a2,a3);vec4 pa=step(0.002,aa)*step(aa,vec4(0.998));bool soft=pa.x+pa.y+pa.z+pa.w>0.0;
-  float g=abs(mix(a1-a0,a3-a2,u.y))*mfW.x+abs(mix(a2-a0,a3-a1,u.x))*mfW.y;
-  float p=soft?c:clamp((c-0.5)/max(g,1e-4)+0.5,0.0,1.0);
+  vec4 aa=vec4(a0,a1,a2,a3);vec4 pa=step(0.002,aa)*step(aa,vec4(252.5/255.0));bool soft=pa.x+pa.y+pa.z+pa.w>0.0;
+  vec4 sq=step(253.5/255.0,aa)*step(aa,vec4(254.5/255.0));bool box=!soft&&sq.x+sq.y+sq.z+sq.w>0.0;
+  aa=min(aa*(255.0/253.0),vec4(1.0));
+  if(box)u=clamp((u-0.5)/max(mfW,vec2(1e-4))+0.5,0.0,1.0);
+  float c=mix(mix(aa.x,aa.y,u.x),mix(aa.z,aa.w,u.x),u.y);
+  float g=abs(mix(aa.y-aa.x,aa.w-aa.z,u.y))*mfW.x+abs(mix(aa.z-aa.x,aa.w-aa.y,u.x))*mfW.y;
+  float p=soft||box?c:clamp((c-0.5)/max(g,1e-4)+0.5,0.0,1.0);
   vec4 w=aa*vec4((1.0-u.x)*(1.0-u.y),u.x*(1.0-u.y),(1.0-u.x)*u.y,u.x*u.y);
   ivec2 bm=b;float wm=w.x;if(w.y>wm){wm=w.y;bm=b+ivec2(1,0);}if(w.z>wm){wm=w.z;bm=b+ivec2(0,1);}if(w.w>wm){wm=w.w;bm=b+ivec2(1,1);}
   int mi=int(texelFetch(tMatId,bm,0).r*255.0+0.5);
