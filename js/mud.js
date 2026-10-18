@@ -53,7 +53,7 @@ function mtDraw(t){const n=MT+1,g=t.g,p=g.attributes.position.array,col=g.attrib
   mA=g.attributes.matA.array,uA=g.attributes.mudW.array;
   for(let j=0;j<n;j++)for(let i=0;i<n;i++){const gi=Math.min(FNX,t.i0+i),gj=Math.min(FNZ,t.j0+j),v=gj*FV+gi,q=j*n+i,d=FD[v],tt=ss(0.02,0.16,Math.abs(d));
     p[q*3]=FX0+gi*FC;p[q*3+1]=FH0[v]+d;p[q*3+2]=FZ0+gj*FC;sA[q]=-d;
-    const sh=(0.82+0.34*hash(gi,gj))*(d<0?0.8:1);
+    const sh=(0.82+0.34*hash(gi,gj))*rutShade(d);
     for(let c=0;c<3;c++)col[q*3+c]=t.bc[q*3+c]+(MUD_C[c]*sh-t.bc[q*3+c])*tt;
     dA[q]=Math.max(tt,t.bd[q]);mA[q]=t.bm[q]*(1-tt);uA[q]=FM[v]/255}
   for(const k of ['position','color','dirt','soilD','matA','mudW'])g.attributes[k].needsUpdate=true;
@@ -71,6 +71,13 @@ function farMud(x,z){if(FD){const i=Math.round((x-FX0)/FC),j=Math.round((z-FZ0)/
 
 // ---------- ruts outside the dig zone: the same rules as stampRut in the dig zone ----------
 const fBerm=[];
+// soft mud slumps to RUT_SLOPE, as rutSlump does in the dig zone
+function farSlump(i0,i1,j0,j1){const lim=RUT_SLOPE*FC;
+  const flow=(k,k2,i2,j2)=>{if(!vOk(i2,j2))return;const d=FD[k]-FD[k2],ad=Math.abs(d);if(ad<=lim)return;
+    const hi=d>0?k:k2,lo=d>0?k2:k;if(Math.abs(FD[hi])>0.45||Math.abs(FD[lo])>0.45)return;
+    const a=(ad-lim)*0.3;FD[hi]-=a;FD[lo]+=a;FM[lo]=Math.max(FM[lo],Math.round(FM[hi]*0.9))};
+  for(let pass=0;pass<3;pass++)for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const k=j*FV+i;
+    if(FM[k]<13||!vOk(i,j))continue;flow(k,k+1,i+1,j);flow(k,k+FV,i,j+1)}}
 function farRut(x,z,yaw,hw,hl,dt){
   const R=Math.hypot(hw+RUT_BERM,hl),i0=Math.floor((x-R-FX0)/FC),i1=Math.ceil((x+R-FX0)/FC),j0=Math.floor((z-R-FZ0)/FC),j1=Math.ceil((z+R-FZ0)/FC);
   if(i1<0||j1<0||i0>FNX||j0>FNZ)return 0;
@@ -83,13 +90,15 @@ function farRut(x,z,yaw,hw,hl,dt){
   const s=Math.sin(yaw),c=Math.cos(yaw);let any=0,outL=0,outR=0,mSum=0,mN=0;fBerm.length=0;
   for(let j=Math.max(1,j0);j<=Math.min(FNZ-1,j1);j++)for(let i=Math.max(1,i0);i<=Math.min(FNX-1,i1);i++){
     const dx=FX0+i*FC-x,dz=FZ0+j*FC-z,u=dx*s+dz*c,v=dx*c-dz*s,av=Math.abs(v);if(Math.abs(u)>hl||av>hw+RUT_BERM||!vOk(i,j))continue;const k=j*FV+i;
-    if(av>hw){const room=RUT_BH*(1-0.6*(av-hw)/RUT_BERM)*(0.4+0.7*hash(i>>1,j>>1)+0.5*hash(i,j))-FD[k];if(room>0)fBerm.push(k,v,room);continue}
-    const m=Math.max(FM[k]/255,fineSoak(k,FX0+i*FC,FZ0+j*FC));if(m<=RUT_MUD)continue;const d=Math.min(0.5*dt,FD[k]+RUT_D*Math.min(1,m*1.25));
+    const wx=FX0+i*FC,wz=FZ0+j*FC;
+    if(av>hw){const room=rutBerm(av-hw,wx,wz)-FD[k];if(room>0)fBerm.push(k,v,room);continue}
+    const m=Math.max(FM[k]/255,fineSoak(k,wx,wz));if(m<=RUT_MUD)continue;const d=Math.min(0.5*dt,FD[k]+RUT_D*Math.min(1,m*1.25)*rutDepth(v,hw,wx*s+wz*c));
     if(d>0){FD[k]-=d;if(v<0)outL+=d;else outR+=d;mSum+=m;mN++;any=2}}
   if(outL+outR>0){let wL=0,wR=0;for(let n=0;n<fBerm.length;n+=3)if(fBerm[n+1]<0)wL+=fBerm[n+2];else wR+=fBerm[n+2];
     const m=mSum/mN;
     for(let n=0;n<fBerm.length;n+=3){const k=fBerm[n],w=fBerm[n+1]<0?(wL?outL/wL:0):(wR?outR/wR:0),a=Math.min(1,w)*fBerm[n+2];if(a<=0)continue;
-      FD[k]+=a;FM[k]=Math.max(FM[k],Math.round(m*127))}}
+      FD[k]+=a;FM[k]=Math.max(FM[k],Math.round(m*127))}
+    farSlump(Math.max(1,i0),Math.min(FNX-2,i1),Math.max(1,j0),Math.min(FNZ-2,j1))}
   if(any){for(let tj=Math.max(0,(j0/MT)|0);tj<=Math.min(MT_NZ-1,(j1/MT)|0);tj++)for(let ti=Math.max(0,(i0/MT)|0);ti<=Math.min(MT_NX-1,(i1/MT)|0);ti++){const t=mTiles[mtIdx[tj*MT_NX+ti]];if(t)t.dirty=t.wDirty=true}
     mtWet=true;site.dirty=true}
   return any}
@@ -126,6 +135,25 @@ function mudGfx(fine){if(mtFine===fine)return;mtFine=fine;for(const t of mTiles)
 // after the editor reshapes or repaints an area (metres): tiles there take the new ground and soak, keeping their ruts
 function mudEdRefresh(x0,x1,z0,z1){for(const t of mTiles){const tx0=FX0+t.i0*FC,tz0=FZ0+t.j0*FC,w=MT*FC;
   if(tx0>x1||tx0+w<x0||tz0>z1||tz0+w<z0)continue;mtBase(t);t.wDirty=true}mtWet=mTiles.length>0}
+// the map editor painting over ruts: churned ground inside the brush (radius R, or a square when sq) goes back to grade,
+// dry and without its puddles, except where keep(x,z) says to leave it. Holes dug deeper than a rut and heaps of spoil stay,
+// and so does anything next to one, so painting near a trench doesn't carve its rim. Returns whether anything changed
+function rutErase(cx,cz,R,sq,keep){const inB=(dx,dz)=>(sq?Math.max(Math.abs(dx),Math.abs(dz)):Math.hypot(dx,dz))<=R;let hit=false;
+  const i0=Math.max(0,Math.floor((cx-R+S/2)/CELL)),i1=Math.min(N,Math.ceil((cx+R+S/2)/CELL)),j0=Math.max(0,Math.floor((cz-R+S/2)/CELL)),j1=Math.min(N,Math.ceil((cz+R+S/2)/CELL));
+  if(i0<=i1&&j0<=j1){
+    for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const k=j*V+i,x=i*CELL-S/2,z=j*CELL-S/2,d=H[k]-H0[k];
+      if(d===0&&!mudA[k]&&Wt[k]<-1e8||Math.abs(d)>RUT_D+0.12||prot[k]||!inB(x-cx,z-cz))continue;
+      let deep=false;for(let b=Math.max(0,j-2);b<=Math.min(N,j+2)&&!deep;b++)for(let a=Math.max(0,i-2);a<=Math.min(N,i+2);a++)if(Math.abs(H[b*V+a]-H0[b*V+a])>RUT_D+0.22){deep=true;break}
+      if(deep||keep&&keep(x,z))continue;
+      H[k]=H0[k];mudA[k]=0;Wt[k]=-1e9;comp[k]=0;wetT[k]=-1e4;hit=true}
+    if(hit){touch(i0,i1,j0,j1);updateTufts(i0,i1,j0,j1);st.dirty=true}}
+  if(FD){let ft=false;const fi0=Math.max(1,Math.floor((cx-R-FX0)/FC)),fi1=Math.min(FNX-1,Math.ceil((cx+R-FX0)/FC)),fj0=Math.max(1,Math.floor((cz-R-FZ0)/FC)),fj1=Math.min(FNZ-1,Math.ceil((cz+R-FZ0)/FC));
+    for(let j=fj0;j<=fj1;j++)for(let i=fi0;i<=fi1;i++){const v=j*FV+i,x=FX0+i*FC,z=FZ0+j*FC;
+      if(FD[v]===0&&FM[v]===FS[v]&&FW[v]<-1e8||tileOf(Math.min(i,FNX-1),Math.min(j,FNZ-1))<0||!inB(x-cx,z-cz)||keep&&keep(x,z))continue;
+      FD[v]=0;FM[v]=FS[v];FW[v]=-1e9;ft=true}
+    if(ft){for(const t of mTiles){const tx0=FX0+t.i0*FC,tz0=FZ0+t.j0*FC,w=MT*FC;if(tx0>cx+R||tx0+w<cx-R||tz0>cz+R||tz0+w<cz-R)continue;t.dirty=t.wDirty=true}
+      site.dirty=true;hit=true}}
+  return hit}
 function mudReset(){for(const t of mTiles){scene.remove(t.m);t.g.dispose();scene.remove(t.wm);t.wm.geometry.dispose()}
   mTiles.length=0;mtIdx.fill(-1);mtWet=false;if(FD){FD.fill(0);FW.fill(-1e9);FM.fill(0)}midHoles()}
 // each tile: [ti, tj, rut depths (Int16, mm), mud (bytes)], base64
