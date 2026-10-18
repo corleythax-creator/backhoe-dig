@@ -40,7 +40,8 @@ const MAT_LIST=[
   {id:'planks',n:'Deck planks',cat:4,ft:2.75,c:[0.437,0.351,0.284]},
   {id:'shingles',n:'Roof shingles',cat:4,ft:2.5,c:[0.237,0.243,0.255]},
   {id:'fabric',n:'Landscape fabric',cat:4,ft:6,c:[0.138,0.141,0.143]},
-  {id:'steel_polished',n:'Polished steel',cat:2,ft:4,c:[0.652,0.651,0.652],sh:1}];
+  {id:'steel_polished',n:'Polished steel',cat:2,ft:4,c:[0.652,0.651,0.652],sh:1},
+  {id:'gravel_wet',n:'Wet gravel',cat:0,ft:4,c:[0.349,0.327,0.303],sh:0.3}];
 // the owner's own textures (ownmat.js) come after the library: ids MAT_OWN0 (41) and up, the gap left for more built-in
 // ones, each kept for good once given. Known ones are cached on the device (bhd_mats), so a map that uses them draws
 // them from the start; one not known yet holds its place in grey until the server's list arrives
