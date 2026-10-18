@@ -63,6 +63,7 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 .bstep span{flex:1;font:700 12px/1 var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
 .bstep b{font:700 16px/1 var(--f-display);color:var(--ink);min-width:48px;text-align:center}
 .bstep button{border:0;background:transparent}
+#blkLock{flex:0 0 auto;min-width:112px;color:var(--machine)}
 #hud #blkBar .row{flex-direction:row;flex-wrap:nowrap;align-items:stretch;gap:4px;zoom:1;padding:4px 0 1px}#blkBar .row button{flex:1;padding:0 4px;background:#2a2f27}
 #blkMat{pointer-events:auto;width:100%;height:38px;padding:0 4px;font:700 14px/1 var(--f-display);color:var(--ink);background:transparent;border:0}
 #blkMat option,#blkMat optgroup{color:#111;background:#fff}

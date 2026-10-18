@@ -57,7 +57,7 @@ function rigLoad(){let d=null;try{d=JSON.parse(localStorage.getItem(RIG_KEY))}ca
   put(st,d.st,ST_KEYS);put(tr,d.tr,TR_KEYS);put(sk,d.sk,SK_KEYS);if(d.sk){sk.y=surfAt(sk.x,sk.z);skidPose()}
   if(d.st&&d.st.el>0){const now=performance.now();st.startT=now-d.st.el*1000;if(st.done)st.doneT=now}
   // blocks: w by d by h of material m (older saves held plain concrete cubes of side s)
-  const bOk=v=>isFinite(v)&&v>=FT*0.9&&v<=BLK_FT*FT*1.01;
+  const bOk=v=>isFinite(v)&&v>=FT/12*0.9&&v<=BLK_FT*FT*1.01;
   if(Array.isArray(d.blocks))for(const b of d.blocks.slice(0,BLK_MAX)){const w=b.w??b.s,dd=b.d??b.s,h=b.h??b.s,m=b.m|0;
     if([b.x,b.z,b.y].every(isFinite)&&[w,dd,h].every(bOk)&&m>=0&&m<=MAT_LIST.length&&Array.isArray(b.c))blocks.push({x:b.x,z:b.z,y:b.y,w,d:dd,h,m,vy:0,c:b.c})}
   if(blocks.length)blkWake=1.5;
