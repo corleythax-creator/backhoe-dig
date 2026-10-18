@@ -132,7 +132,7 @@ function buildHeapClods(){
   hcLast=-1;
 }
 function updateHeapClods(){
-  const f=heap.visible?Math.max(tr.load,tr.stuck||0)/TRUCK_CAP:0;if(Math.abs(f-hcLast)<0.004)return;hcLast=f;
+  const f=heap.visible?Math.max(tr.load,tr.stuck||0)/TU.trCap:0;if(Math.abs(f-hcLast)<0.004)return;hcLast=f;
   const sx=heap.scale.x,sy=heap.scale.y,sz=heap.scale.z,y0=heap.position.y,c=tr.loadC;
   for(let i=0;i<hcU.length;i++){
     if(f<=0.04+hcT[i]*0.85){heapClods.setMatrixAt(i,ZERO);continue}

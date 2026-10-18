@@ -4,12 +4,12 @@
 // ---------- tall grass ----------
 // a 16 x 12 m (52 x 39 ft) patch north-east of the trench, one clump of grass per 0.2 m cell. Each cell remembers when it
 // was last cut (on the lawn clock, lawn.t): it stays stubble for a while, then grows back to full height over a few minutes
-const LAWN_X0=-1,LAWN_Z0=11,LAWN_GS=0.2,LAWN_NX=80,LAWN_NZ=60,LAWN_N=LAWN_NX*LAWN_NZ,LAWN_BH=0.75,LAWN_CUT=0.09,LAWN_WAIT=45,LAWN_GROW=240;
+const LAWN_X0=-1,LAWN_Z0=11,LAWN_GS=0.2,LAWN_NX=80,LAWN_NZ=60,LAWN_N=LAWN_NX*LAWN_NZ,LAWN_BH=0.75,LAWN_CUT=0.09;
 const lawn={ct:new Float32Array(LAWN_N).fill(-1e9),gd:new Float32Array(LAWN_N).fill(1),dug:new Uint8Array(LAWN_N),str:new Float32Array(LAWN_N),ga:new Float32Array(LAWN_N),ht:new Float32Array(LAWN_N),x:new Float32Array(LAWN_N),z:new Float32Array(LAWN_N),
   r:new Float32Array(LAWN_N),s:new Float32Array(LAWN_N),h:new Float32Array(LAWN_N),tc:new Float32Array(LAWN_N*3),nz:new Float32Array(LAWN_N),
   t:0,pct:0,pctT:0,row:0,nDug:0,startT:0,doneT:0,done:false,mDirty:false,cDirty:false,gDirty:false,mapDirty:true,sDirty:false,saveT:0,aDirty:false};
 // how grown a cell is: 0 fresh stubble, 1 full height
-function lawnG(n){return Math.min(1,Math.max(0,(lawn.t-lawn.ct[n]-LAWN_WAIT)/LAWN_GROW))}
+function lawnG(n){return Math.min(1,Math.max(0,(lawn.t-lawn.ct[n]-TU.lawnWait)/TU.lawnGrow))}
 // grid cells of the dig zone the patch covers, so terrain edits elsewhere skip it
 const LAWN_I0=Math.floor((LAWN_X0+S/2)/CELL)-1,LAWN_I1=Math.ceil((LAWN_X0+LAWN_NX*LAWN_GS+S/2)/CELL)+1,LAWN_J0=Math.floor((LAWN_Z0+S/2)/CELL)-1,LAWN_J1=Math.ceil((LAWN_Z0+LAWN_NZ*LAWN_GS+S/2)/CELL)+1;
 // one clump: eight tapered blades that arch over and twist as they rise, each its own shade of green, dark down in the
@@ -156,10 +156,10 @@ function lawnReset(){for(let n=0;n<LAWN_N;n++)if(lawn.dug[n]){lawn.ct[n]=-1e9;la
 // the lawn is saved in this browser so it is still mowed after a reload: two bytes a cell, how long ago it was cut on the
 // lawn clock (0 full grown) and the heading it was mown in (its grain), plus the mowing time, the mower's spot and the wall-clock time of the save.
 // Grass grows while the game runs, not while it is closed. Written at most every 2 s while it changes and when the page is hidden
-const LAWN_KEY='bhd_lawn',LAWN_LIFE=LAWN_WAIT+LAWN_GROW;let mwSaved=null;
+const LAWN_KEY='bhd_lawn';let mwSaved=null;
 function lawnSave(){if(window.syncHold)return;lawn.sDirty=false;lawn.saveT=performance.now();const b=new Uint8Array(LAWN_N*2);
-  for(let n=0;n<LAWN_N;n++){const a=lawn.t-lawn.ct[n];if(lawn.dug[n]||a>=LAWN_LIFE)continue;
-    b[n*2]=1+Math.round(Math.max(0,a)/LAWN_LIFE*254);const h=lawn.ga[n]/(Math.PI*2);b[n*2+1]=Math.round((h-Math.floor(h))*255)&255}
+  for(let n=0;n<LAWN_N;n++){const a=lawn.t-lawn.ct[n];if(lawn.dug[n]||a>=(TU.lawnWait+TU.lawnGrow))continue;
+    b[n*2]=1+Math.round(Math.max(0,a)/(TU.lawnWait+TU.lawnGrow)*254);const h=lawn.ga[n]/(Math.PI*2);b[n*2+1]=Math.round((h-Math.floor(h))*255)&255}
   let bin='';for(let k=0;k<b.length;k+=4096)bin+=String.fromCharCode.apply(null,b.subarray(k,k+4096));
   const el=lawn.startT?Math.round(((lawn.done?lawn.doneT:performance.now())-lawn.startT)/1000):0;
   try{localStorage.setItem(LAWN_KEY,JSON.stringify({v:3,n:LAWN_N,t:Date.now(),cells:btoa(bin),field:fieldSave(),el,done:lawn.done,
@@ -168,7 +168,7 @@ function lawnLoad(){let d=null;try{d=JSON.parse(localStorage.getItem(LAWN_KEY))}
   if(!d||(d.v!==2&&d.v!==3)||d.n!==LAWN_N||typeof d.cells!=='string')return;let b;try{b=atob(d.cells)}catch(e){return}
   if(b.length!==LAWN_N*2)return;let cut=0;
   for(let n=0;n<LAWN_N;n++){const a=b.charCodeAt(n*2);if(!a)continue;
-    lawn.ct[n]=lawn.t-(a-1)/254*LAWN_LIFE;const q=b.charCodeAt(n*2+1);
+    lawn.ct[n]=lawn.t-(a-1)/254*(TU.lawnWait+TU.lawnGrow);const q=b.charCodeAt(n*2+1);
     lawn.ga[n]=d.v===3?q/255*Math.PI*2:q>=128?Math.PI/4:Math.PI*1.25;lawn.str[n]=Math.max(-1,Math.min(1,(Math.cos(lawn.ga[n])+Math.sin(lawn.ga[n]))*0.8));lawn.gd[n]=lawnG(n);cut++}
   if(cut&&d.el>0){const now=performance.now();lawn.startT=now-d.el*1000;if(d.done){lawn.done=true;lawn.doneT=now}}
   lawnCount();if(lawn.pct>=0.97)lawn.done=true;fieldLoad(d.field);
@@ -268,7 +268,6 @@ function clipTick(dt){if(!clipLive)return;let any=false;
 
 // ---------- driving and cutting ----------
 // hydrostatic drive: each lap bar sets its wheel's speed (8 mph forward, 4 mph back), so opposite bars spin it in place
-const MW_FWD=3.6,MW_REV=1.8;
 function mowCut(){
   const sy=Math.sin(mw.yaw),cy=Math.cos(mw.yaw),dx0=mw.x+sy*MW_DECK,dz0=mw.z+cy*MW_DECK,R=0.85;
   const i0=Math.max(0,Math.floor((dx0-R-LAWN_X0)/LAWN_GS)),i1=Math.min(LAWN_NX-1,Math.floor((dx0+R-LAWN_X0)/LAWN_GS));
@@ -290,7 +289,7 @@ function updateMower(dt,inL,inR){
   // the bars ease to where they are held; the pumps answer in about a third of a second
   mw.l+=clamp(inL-mw.l,-3*dt,3*dt);mw.r+=clamp(inR-mw.r,-3*dt,3*dt);
   const bog=1-0.25*mw.load;
-  mw.vl+=(mw.l*(mw.l>0?MW_FWD:MW_REV)*bog-mw.vl)*Math.min(1,dt*6);mw.vr+=(mw.r*(mw.r>0?MW_FWD:MW_REV)*bog-mw.vr)*Math.min(1,dt*6);
+  mw.vl+=(mw.l*(mw.l>0?TU.mwFwd:TU.mwRev)*bog-mw.vl)*Math.min(1,dt*6);mw.vr+=(mw.r*(mw.r>0?TU.mwFwd:TU.mwRev)*bog-mw.vr)*Math.min(1,dt*6);
   mw.v=(mw.vl+mw.vr)/2;mw.w=(mw.vr-mw.vl)/MW_TRACK;
   const ox=mw.x,oz=mw.z,w0=wallCount(mw.x,mw.z,mw.yaw,MW_P);
   mw.yaw+=mw.w*dt;mw.x+=Math.sin(mw.yaw)*mw.v*dt;mw.z+=Math.cos(mw.yaw)*mw.v*dt;
@@ -327,9 +326,9 @@ function updateMower(dt,inL,inR){
     if(!lawn.startT)lawn.startT=performance.now();started()}
   // the grass grows back: once the lawn is under half mowed again, it is a fresh job
   lawn.t+=dt;lawnGrow();fieldGrow(dt);lawn.pctT-=dt;if(lawn.pctT<=0){lawn.pctT=0.25;lawnCount()}
-  if(lawn.done&&lawn.pct<0.5){lawn.done=false;lawn.startT=0;toast('The grass has grown back. Time to mow again.','',3500)}
+  if(lawn.done&&lawn.pct<0.5){lawn.done=false;lawn.startT=0;toast(say('lawnBack'),'',3500)}
   if(!lawn.done&&lawn.pct>=0.97){lawn.done=true;lawn.doneT=performance.now();const s=Math.round((lawn.doneT-lawn.startT)/1000);statLawnDone(s);
-    toast(`Lawn mowed in ${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}. Nice stripes.`,'good',5000)}
+    toast(say('lawnDone',{time:`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`}),'good',5000)}
   // the grass leans away from whatever drives through it
   const P=lawnPush.value;P[0].set(mw.x+sy*0.7,mw.z+cy*0.7,0.95,0);P[1].set(st.x,st.z,2.4,0);P[4].set(wk.inside?1e5:wk.x,wk.z,0.45,0);
   P[2].set(tr.x+Math.sin(tr.yaw)*2.0,tr.z+Math.cos(tr.yaw)*2.0,1.6,0);P[3].set(tr.x-Math.sin(tr.yaw)*2.4,tr.z-Math.cos(tr.yaw)*2.4,1.6,0);

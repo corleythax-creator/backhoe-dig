@@ -45,7 +45,7 @@ renderer.setPixelRatio(pr);
 // a phone short on memory can reset the graphics, which shows black; say so, and keep a count for the speed test
 let glResets=0;try{glResets=+localStorage.getItem('bhd_glresets')||0}catch(e){}
 canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();glResets++;try{localStorage.setItem('bhd_glresets',glResets)}catch(e){}
-  if(typeof toast==='function')toast('The phone reset the graphics (low on memory). A lower Dirt detail helps.','bad',4500)});
+  if(typeof toast==='function')toast(say('glReset'),'bad',4500)});
 renderer.shadowMap.enabled=true; renderer.shadowMap.type=PHONE?THREE.PCFShadowMap:THREE.PCFSoftShadowMap;
 // lighting is done in linear space and tone mapped like a camera; colours stay written as the sRGB values they were
 // picked as, and the patched chunks below turn them linear before lighting

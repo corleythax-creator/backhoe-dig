@@ -17,8 +17,10 @@ a feature is roughly **steps × session length**, and the two levers are fewer s
 | Your own textures for painting and blocks | Map editor → Paint → + Your own texture: pick a photo or picture, name it, set its tile size in feet, kind and shine, type the owner key | Reaches every device; Edit this texture changes one later |
 | Which ideas get built next | Idea board | https://claude.ai/artifact/FMrDEa4VsKvPS5Z3ktTrS3, then send Claude the picked ids |
 | Graphics, weather, keys, UI size, turn sensitivity | The game's own settings | ☰ |
+| How the game feels: top speeds, turn rates, swing, boom, stick and bucket rates, bucket and bed sizes, jump height, block reach, grass regrowth, how often it rains, how fast mud dries, groundwater and the pump | Screen editor, Tuning tab | ☰ → Edit the screen → Tuning, or the claude.ai screen editor. Publish the tuning with your owner key: every device plays by the same numbers |
+| The words: the start card, every Controls entry, the tips that pop up, the stick captions | Screen editor, Words tab | ☰ → Edit the screen → Words, or the claude.ai screen editor. Write `[jump]` for a key, it follows each player's keys. Publish with the look |
 
-If you catch yourself asking Claude for a colour, a label, a size or a position, the screen editor does it.
+If you catch yourself asking Claude for a colour, a label, a size, a position, a speed or the words of a tip, the screen editor does it.
 
 ## 2. When you do need Claude
 
@@ -76,10 +78,9 @@ Each is a one-time build that then saves asking Claude for that kind of change. 
 
 | System | What you'd do yourself afterwards | One-time cost |
 | --- | --- | --- |
-| **Tuning panel** (like the screen editor, published live) | Speeds, turn rates, dig and bucket rates, jump height, grass growth, how often it rains, how fast mud dries, block sizes: every number the game feels by | about 3-6M tokens |
 | **Place-a-thing** in the map editor | Drop houses, sheds, fences, light towers and props from a catalogue onto any island, move and turn them | about 6-10M tokens |
-| **Start card and help text editor** | Rewrite the start card, tips and help in the screen editor | about 1-2M tokens |
 
 The build log shows why: 25 of the last 60 versions were small changes of 3 developer hours or less, many of them a
-default, a key, a label or a setting to remember. Each was a whole session and release. The tuning panel and the
-screen editor between them would cover a good part of that kind of change.
+default, a key, a label or a setting to remember. Each was a whole session and release. The screen editor's Tuning
+and Words tabs now cover a good part of that kind of change: a number the panel doesn't have yet is a small ask (add it
+to `TUNE` in `js/tune.js`).

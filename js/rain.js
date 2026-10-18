@@ -44,21 +44,21 @@ try{const m=localStorage.getItem('bhd_weather');if(['auto','rain','dry'].include
 function setWeather(m,picked){weather.mode=m;
   if(m==='rain')weather.want=0.8;else if(m==='dry')weather.want=0;else weather.next=Math.min(weather.next,60);
   document.querySelectorAll('.sizes button[data-w]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.w===m));
-  if(picked){try{localStorage.setItem('bhd_weather',m)}catch(e){}toast(m==='rain'?'Weather: rain':m==='dry'?'Weather: dry':'Weather: showers now and then','good');site.dirty=true}}
+  if(picked){try{localStorage.setItem('bhd_weather',m)}catch(e){}toast(say(m==='rain'?'wxRain':m==='dry'?'wxDry':'wxAuto'),'good');site.dirty=true}}
 document.querySelectorAll('.sizes button[data-w]').forEach(b=>b.onclick=()=>setWeather(b.dataset.w,true));
 setWeather(weather.mode,false);
 let rainT=0,rainTexDirty=true,rainWas=false,rainSaveT=0;
 function rainSim(sec){const r=weather.r;
   for(let k=0;k<rainW.length;k++){if(!rainK[k]&&!rainW[k])continue;let w=rainW[k];
-    if(r>0.02)w+=r*SOAK_RATE*rainLow[k]*(1-w)*sec;else w-=DRY_RATE*rainDry[k]/rainLow[k]*sec;
+    if(r>0.02)w+=r*SOAK_RATE*TU.soak*rainLow[k]*(1-w)*sec;else w-=DRY_RATE*1200/TU.mudDry*rainDry[k]/rainLow[k]*sec;
     rainW[k]=Math.max(0,Math.min(1,w))}}
 function rainTick(dt){
   if(!bench.on){
     if(weather.mode==='auto'){weather.next-=dt;
-      if(weather.next<=0){if(weather.want>0){weather.want=0;weather.next=300+Math.random()*420}else{weather.want=0.35+Math.random()*0.65;weather.next=90+Math.random()*180}}}
+      if(weather.next<=0){if(weather.want>0){weather.want=0;weather.next=TU.rainGap*(300+Math.random()*420)/510}else{weather.want=0.35+Math.random()*0.65;weather.next=TU.rainLen*(90+Math.random()*180)/180}}}
     weather.r+=Math.max(-dt*0.05,Math.min(dt*0.05,weather.want-weather.r))}
   const raining=weather.r>0.05;
-  if(raining!==rainWas){rainWas=raining;if(raining)toast('Rain coming in. Dirt, clay and low ground will turn to mud.','',3600);else if(!bench.on)toast('Rain has stopped. The ground will dry out over the next several minutes.','',3600)}
+  if(raining!==rainWas){rainWas=raining;if(raining)toast(say('rainIn'),'',3600);else if(!bench.on)toast(say('rainOut'),'',3600)}
   // once a second: soak or dry the soil, and show it
   rainT-=dt;if(rainT<=0){rainT=1;let any=weather.r>0.02;if(!any)for(let k=0;k<rainW.length;k+=7)if(rainW[k]>0){any=true;break}
     if(any){rainSim(1);rainTexDirty=true;if((rainSaveT-=1)<=0){rainSaveT=20;site.dirty=true}}}
@@ -79,7 +79,7 @@ function rainLoad(d){if(!d||typeof d.w!=='string')return;let b;try{b=siteUnB64(d
 function rainReset(){rainW.fill(0);rainTexDirty=true}
 // standing rainwater above the water table drains: in the dig zone, and the mud tiles
 function rainDrain(sec){const d=RAIN_DRAIN*sec;
-  for(let j=cJ0;j<=cJ1;j++)for(let i=cI0;i<=cI1;i++){const k=j*V+i;if(Wt[k]<-1e8)continue;const g=H0[k]-WT_DEPTH;if(Wt[k]>g){Wt[k]=Math.max(g,Wt[k]-d);if(Wt[k]<=H[k]+0.001)Wt[k]=-1e9}}
+  for(let j=cJ0;j<=cJ1;j++)for(let i=cI0;i<=cI1;i++){const k=j*V+i;if(Wt[k]<-1e8)continue;const g=H0[k]-TU.wtDepth;if(Wt[k]>g){Wt[k]=Math.max(g,Wt[k]-d);if(Wt[k]<=H[k]+0.001)Wt[k]=-1e9}}
   if(FW)for(let k=0;k<FW.length;k++)if(FW[k]>-1e8){FW[k]-=d;if(FW[k]<=FH0[k]+FD[k]+0.001)FW[k]=-1e9}}
 
 // ---------- how it looks ----------

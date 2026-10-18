@@ -4,7 +4,7 @@
 // ---------- worker ----------
 // about 5 ft 10 in: hard hat, hi-vis vest over a grey shirt, jeans and work boots. Arms and legs swing from the
 // shoulders and hips; knees bend on the back swing and tuck in the air
-const WK_H=1.78,WK_R=0.28,WK_STEP=0.2,WK_JUMP=6.2,WK_RUN=2.8,WK_SPRINT=5.6,WK_REACH=2.3;
+const WK_H=1.78,WK_R=0.28,WK_STEP=0.2,WK_REACH=2.3;
 const WK_SKIN=M(0xc68a62),WK_VEST=M(0xd8f02a,{emissive:0x1d2400}),WK_SHIRT=M(0x6d7378),WK_JEAN=M(0x34507a),WK_BOOT=M(0x4a3020),WK_HAT=M(0xf5c518,{shininess:40}),WK_STRIPE=M(0xd8dcd6,{emissive:0x2a2a2a});
 const walker=new THREE.Group();scene.add(walker);
 const wkBody=new THREE.Group();walker.add(wkBody);
@@ -61,7 +61,7 @@ function updateWalker(dt,mx,mz,lookX,lookY){
   // moves relative to where the camera looks; the worker turns to face the way he walks
   let vx=0,vz=0;
   if(on){const cyaw=camMode==='cab'?wk.view:wk.view+orbitYaw,fx=Math.sin(cyaw),fz=Math.cos(cyaw),m=Math.min(1,Math.hypot(mx,mz));
-    const top=held('sprint')||PA.sprint||wk.sprint?WK_SPRINT:WK_RUN;
+    const top=held('sprint')||PA.sprint||wk.sprint?TU.wkSprint:TU.wkRun;
     // the touch Sprint button stays on while you keep moving and switches itself off once you stop
     wk.stillT=m>0.02?0:wk.stillT+dt;if(wk.sprint&&wk.stillT>0.6)setSprint(false);
     if(m>0.02){vx=(fx*mz-fz*mx)*top;vz=(fz*mz+fx*mx)*top;
@@ -79,7 +79,7 @@ function updateWalker(dt,mx,mz,lookX,lookY){
   wkPushBlocks();wkPushRound(st,EX_C,EX_R);wkPushRound(tr,TR_C,TR_R);wkPushRound(mw,MW_C,MW_R);wkPushRound(sk,SK_C,SK_R);
   // jump, gravity, landing on the ground or a block; bump your head on a block above
   wk.jumpQ-=dt;
-  if(wk.jumpQ>0&&wk.ground){wk.vy=WK_JUMP;wk.ground=false;wk.jumpQ=0}
+  if(wk.jumpQ>0&&wk.ground){wk.vy=TU.wkJump;wk.ground=false;wk.jumpQ=0}
   const floor=wkFloor(wk.x,wk.z,wk.y,wk.y+WK_STEP);
   if(wk.ground){if(floor<wk.y-0.12){wk.ground=false;wk.vy=0}else wk.y+=(floor-wk.y)*Math.min(1,dt*20)}
   if(!wk.ground){wk.vy-=9.8*dt;const ny=wk.y+wk.vy*dt;
@@ -90,7 +90,7 @@ function updateWalker(dt,mx,mz,lookX,lookY){
   wk.landT=Math.max(0,wk.landT-dt);
   // pose: a walk cycle that lengthens into a jog, arms counter-swinging; legs tuck in the air, a dip on landing
   // sprinting quickens the stride, swings the limbs wider and leans him further forward
-  const run=Math.min(1,wk.spd/WK_RUN),fast=clamp((wk.spd-WK_RUN)/(WK_SPRINT-WK_RUN),0,1);if(wk.ground)wk.phase+=dt*(4+6*run+4*fast)*Math.min(1,wk.spd*2);
+  const run=Math.min(1,wk.spd/TU.wkRun),fast=clamp((wk.spd-TU.wkRun)/(TU.wkSprint-TU.wkRun),0,1);if(wk.ground)wk.phase+=dt*(4+6*run+4*fast)*Math.min(1,wk.spd*2);
   const sw=Math.sin(wk.phase)*(0.25+0.55*run+0.25*fast)*Math.min(1,wk.spd*1.5);
   for(let s=0;s<2;s++){const a=s?sw:-sw,L=wkLegs[s],A=wkArms[s];
     if(wk.ground){L.top.rotation.x=a;L.low.rotation.x=Math.max(0,-a)*1.3+0.05;A.top.rotation.x=-a*0.9;A.low.rotation.x=-0.25-run*0.6}
@@ -129,9 +129,9 @@ function wkPlaceOut(k){const R=WK_RIDES[k],o=R.o,sy=Math.sin(o.yaw),cy=Math.cos(
 function seatToggle(){
   if(mode==='walk'){const k=wkNear();
     if(!k){const g=famGameNear();if(g){famPlay(g);return}
-      toast('Walk up to the excavator, the truck or the mower to get in.');return}
-    wk.inside=k;walker.visible=false;setMode(WK_RIDES[k].m);toast(`In the ${WK_RIDES[k].n}. ${kbUsed?keyLabel('enter'):padUsed?'B':'Get out'} to climb out.`,'',2600);return}
+      toast(say('getInFar'));return}
+    wk.inside=k;walker.visible=false;setMode(WK_RIDES[k].m);toast(say('inMachine',{machine:WK_RIDES[k].n,key:kbUsed?keyLabel('enter'):padUsed?'B':'Get out'}),'',2600);return}
   const k=rideOf(mode);if(!k)return;
-  if(!wkPlaceOut(k)){toast('No room to climb out here. Move the machine a little.');return}
+  if(!wkPlaceOut(k)){toast(say('noRoomOut'));return}
   wk.inside=null;setMode('walk')}
 $('#seatBtn').onclick=seatToggle;

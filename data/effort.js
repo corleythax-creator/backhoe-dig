@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-18T05:53:00Z",
+ "updated": "2026-10-18T05:56:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -24,9 +24,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-18",
-   "dh": 24,
+   "dh": 38,
    "act": 1,
-   "versions": 2
+   "versions": 3
   }
  ],
  "extra": [
@@ -1026,6 +1026,15 @@ window.EFFORT = {
    "tris": 1620572,
    "chars": 670466,
    "what": "Map editor Paint panel: upload a picture, made into a seamless tile in the browser, named and sized, published with the owner key; joins the material library on every device for painting and blocks"
+  },
+  {
+   "v": 111,
+   "asked": "2026-10-18T00:37:00-05:00",
+   "live": "2026-10-18T00:56:15-05:00",
+   "dh": 14,
+   "tris": 1620007,
+   "chars": 690961,
+   "what": "Screen editor gets a Tuning tab (every speed, rate, capacity, jump, regrowth, rain and drying number, in mph, ft and minutes, published live to every device) and a Words tab (rewrite the start card, tips and stick captions; key names follow each player's keys)"
   }
  ]
 };

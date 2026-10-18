@@ -78,4 +78,4 @@ addEventListener('pagehide',siteSaveAll);
 document.addEventListener('visibilitychange',()=>{if(document.hidden)siteSaveAll()});
 siteLoad();rigLoad();
 // back from a game at the Family Island's pavilion (famPlay, family.js): straight back on foot beside the table, no start card
-try{const g=sessionStorage.getItem('bhd_table');if(g){sessionStorage.removeItem('bhd_table');if(!wk.inside){startIn('walk');toast(`Back from ${g} at the pavilion.`,'',2800)}}}catch(e){}
+try{const g=sessionStorage.getItem('bhd_table');if(g){sessionStorage.removeItem('bhd_table');if(!wk.inside){startIn('walk');toast(say('fromTable',{game:g}),'',2800)}}}catch(e){}
