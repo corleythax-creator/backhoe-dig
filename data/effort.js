@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-18T00:33:31Z",
+ "updated": "2026-10-18T00:33:28Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 568.5,
+   "dh": 574.5,
    "act": 12.0,
-   "versions": 75
+   "versions": 76
   }
  ],
  "extra": [
@@ -768,6 +768,15 @@ window.EFFORT = {
    "tris": 1620039,
    "chars": 492757,
    "what": "Turn sensitivity: a Turn slider just above the left stick sets how fast left and right turn, from 25% to 200%: the excavator swing and tracks, the truck steering, the mower spin and looking round on foot, from the sticks, keys or a controller. On a computer the slider is always out; on a phone it is a small Turn chip that opens the slider when tapped. Each device remembers its own."
+  },
+  {
+   "v": 83,
+   "asked": "2026-10-17T18:55:00-05:00",
+   "live": "2026-10-17T19:33:35-05:00",
+   "dh": 6,
+   "tris": 1620718,
+   "chars": 497536,
+   "what": "Teleport from the site map: open it with M (or tap the minimap), tap a spot, and choose On foot, Excavator, Dump truck or Mower. The machine you pick comes with you and you arrive in its seat, set down at the nearest open spot (on land, not too steep, clear of buildings, blocks and the other machines, turned if that fits better); On foot leaves the machine you were in where it is. A crosshair marks the spot, tapping the lake says so, and a message tells how far you went. On a phone held sideways the map now sits beside its buttons and legend."
   }
  ]
 };
