@@ -1,4 +1,4 @@
-// Corley's Island: lake, mountains, grass tufts, outer ground, gas main, stakes and trees.
+// Corley's Island: lake, mountains, field grass, outer ground, gas main, stakes and trees.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 // ---------- scenery ----------
 const timeU={value:0};
@@ -32,33 +32,155 @@ const timeU={value:0};
   range(470,820,40,220,30,240,0.42,0.66,0,false);
   range(860,1220,28,200,60,430,0.7,0.85,1.7,true);
 })();
-// grass tufts that disappear wherever the ground gets dug or buried
-const TUFTS=15000,tX=new Float32Array(TUFTS),tZ=new Float32Array(TUFTS),tS=new Float32Array(TUFTS),tR=new Float32Array(TUFTS),tI=new Int32Array(TUFTS),tJ=new Int32Array(TUFTS);
-const tuftGeo=(function(){const bp=[];for(let b=0;b<4;b++){const a=b*1.6+0.3,c=Math.cos(a),s=Math.sin(a),w=0.05,h=0.26+0.08*(b%2),ln=0.09;
-  bp.push(-c*w,0,-s*w, c*w,0,s*w, -s*ln,h,c*ln)}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(bp,3));g.computeVertexNormals();
-  // shaded at the root where the blades crowd together, sunlit at the tips
-  g.setAttribute('color',new THREE.Float32BufferAttribute(bp.map((_,i)=>bp[i-i%3+1]>0?1.12:0.5),3));return g})();
-const tufts=new THREE.InstancedMesh(tuftGeo,M(0xffffff,{side:THREE.DoubleSide,vertexColors:true}),TUFTS);tufts.receiveShadow=true;tufts.frustumCulled=false;scene.add(tufts);
-(function(){const c=new THREE.Color();for(let n=0;n<TUFTS;n++){let gx,gz,q=0;do{gx=(Math.random()-0.5)*94;gz=-18+Math.random()*96}while((mesaR(gx,gz)>EDGE-0.8||roadAmt(gx,gz)>0.1||yardAt(gx,gz)>0.3||wallAt(gx,gz)||paintAt(gx,gz))&&++q<60);
-  tX[n]=gx;tZ[n]=gz;tS[n]=0.7+Math.random()*0.8;tR[n]=Math.random()*6.3;
-  tI[n]=Math.round((tX[n]+S/2)/CELL);tJ[n]=Math.round((tZ[n]+S/2)/CELL);if(tI[n]<0||tI[n]>N||tJ[n]<0||tJ[n]>N){tI[n]=-1;tJ[n]=-1}
-  const v=Math.random();c.setRGB(0.27+0.1*v,0.48+0.12*v,0.2+0.05*v);if(Math.random()<0.08)c.setRGB(0.62,0.58,0.3);tufts.setColorAt(n,c)}})();
-const tO=new THREE.Object3D();
+// ---------- field grass ----------
+// clumps over the mesa that disappear wherever the ground gets dug, buried or painted. Four kinds on two shapes: meadow
+// grass (also the dry straw clumps) and seed-head grass, low broadleaf weeds and wildflowers. They grow in patches with bare-ish ground
+// between, in little clusters: lush and green down on the flats, dry and straw coloured up the slopes and hilltops,
+// seed heads in drifts and along the roads and yards, flowers in drifts of one colour
+const TUFTS=15000,tX=new Float32Array(TUFTS),tZ=new Float32Array(TUFTS),tS=new Float32Array(TUFTS),tR=new Float32Array(TUFTS),tI=new Int32Array(TUFTS),tJ=new Int32Array(TUFTS),
+  tK=new Uint8Array(TUFTS),tH=new Float32Array(TUFTS),tMi=new Uint16Array(TUFTS),tSl=new Int32Array(TUFTS);
+// smooth value noise, 0 to 1, about one feature per unit
+function tuftNoise(x,z){const i=Math.floor(x),j=Math.floor(z),fx=x-i,fz=z-j,u=fx*fx*(3-2*fx),v=fz*fz*(3-2*fz);
+  const a=hash(i,j),b=hash(i+1,j),c=hash(i,j+1),d=hash(i+1,j+1);return a+(b-a)*u+(c-a)*v+(a-b-c+d)*u*v}
+// the two shapes (flat shaded, coloured per vertex: dark down in the clump, sunlit and a little yellower at the tips).
+// aHead marks seed and flower heads (1), which take their colour from the clump's aTuft instead of its green, and their
+// stalks (2); clumps without heads (aTuft.y below 0) fold both away
+const TUFT_GEO=(function(){
+  function build(f){const P=[],C=[],A=[],I=[];
+    // one blade arching over from (rx,rz) along angle a: base quad then a tip, 3 triangles
+    const blade=(rx,rz,a,h,lean,w,tw,hv)=>{const ca=Math.cos(a),sa=Math.sin(a),v=[],c=[];
+      for(const [t,wf,k] of [[0,1,0.68],[0.5,0.72,0.9],[1,0,1.15]]){const o=lean*Math.pow(t,1.7),cx=rx+ca*o,cz=rz+sa*o,y=h*t*(1-0.18*t*lean/h),
+          ta=a+Math.PI/2+tw*t,px=Math.cos(ta)*w*wf,pz=Math.sin(ta)*w*wf,col=[k*(1+0.1*hv+0.08*t),k*(1+0.04*hv),k*(1-0.12*hv-0.14*t)];
+        if(wf>0){v.push([cx-px,y,cz-pz],[cx+px,y,cz+pz]);c.push(col,col)}else{v.push([cx,y,cz]);c.push(col)}}
+      const o=A.length;for(let q=0;q<5;q++){P.push(...v[q]);C.push(...c[q]);A.push(0)}for(const q of [0,1,3,0,3,2,2,3,4])I.push(o+q)};
+    const tri=(v,c,hd)=>{for(let q=0;q<3;q++){I.push(A.length);P.push(...v[q]);C.push(...c[q]);A.push(hd)}};
+    f(blade,tri);const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(P,3));g.setAttribute('color',new THREE.Float32BufferAttribute(C,3));
+    g.setAttribute('aHead',new THREE.Float32BufferAttribute(A,1));g.setIndex(I);g.computeVertexNormals();return g}
+  const R=Math.random,grass=(bl,n,hh)=>{for(let b=0;b<n;b++){const a=b*6.28/n+R()*0.6,ra=0.01+R()*0.035;
+    bl(Math.cos(a+1.9)*ra,Math.sin(a+1.9)*ra,a,hh*(0.55+0.45*R()),0.05+R()*0.13,0.02+R()*0.012,(R()-0.5)*1.2,R()*2-1)}};
+  // a seed stalk to height h leaning along a, with a narrow straw head (aHead) at the top
+  const stalk=(tri,a,h)=>{const ca=Math.cos(a),sa=Math.sin(a),lx=ca*h*0.12,lz=sa*h*0.12,ws=0.005,hw=0.016,hy=h*0.78,st=[0.5,0.55,0.32],hd=[1,1,1],hl=[0.8,0.8,0.8];
+    tri([[-sa*ws,0,ca*ws],[sa*ws,0,-ca*ws],[lx,h,lz]],[st,st,st],2);
+    tri([[lx*0.78,hy,lz*0.78],[lx*0.9+sa*hw,h*0.89,lz*0.9-ca*hw],[lx*0.9-sa*hw,h*0.89,lz*0.9+ca*hw]],[hl,hd,hd],1);
+    tri([[lx*0.9-sa*hw,h*0.89,lz*0.9+ca*hw],[lx*0.9+sa*hw,h*0.89,lz*0.9-ca*hw],[lx*1.04,h*1.02,lz*1.04]],[hd,hd,hd],1)};
+  // a flat leaf lying out from the root along a, tipped up a little (2 triangles)
+  const leaf=(tri,a,l,w,up)=>{const ca=Math.cos(a),sa=Math.sin(a),r=[0.62,0.66,0.6],m=[0.92,0.95,0.86],t=[1.05,1.08,0.95];
+    const L=[ca*l*0.55-sa*w,up*0.6+0.01,sa*l*0.55+ca*w],Rr=[ca*l*0.55+sa*w,up*0.6+0.01,sa*l*0.55-ca*w],T=[ca*l,up,sa*l],O=[0,0.012,0];
+    tri([O,L,T],[r,m,t],0);tri([O,T,Rr],[r,t,m],0)};
+  return [
+    // grass: five blades, and two stalks gone to seed (21 triangles)
+    build((bl,tri)=>{grass(bl,5,0.34);for(let b=0;b<2;b++)stalk(tri,b*3.1+R()*0.8,0.5+R()*0.18)}),
+    // broadleaf: a rosette of six leaves close to the ground, and a stem with a four-petal flower facing up (17 triangles)
+    build((bl,tri)=>{for(let b=0;b<6;b++)leaf(tri,b*1.047+R()*0.3,0.11+R()*0.06,0.035+R()*0.012,0.03+R()*0.04);
+      const h=0.36+R()*0.08,hx=0.03,st=[0.45,0.55,0.32],hc=[1,1,1],ce=[0.75,0.7,0.5],r=0.065;
+      tri([[-0.006,0,0],[0.006,0,0],[hx,h,0]],[st,st,st],2);
+      for(let q=0;q<4;q++){const a0=q*1.571,a1=a0+1.571,y=h+0.006;
+        tri([[hx,h+0.012,0],[hx+Math.cos(a0)*r,y,Math.sin(a0)*r],[hx+Math.cos(a1)*r,y,Math.sin(a1)*r]],[ce,hc,hc],1)}})]})();
+const TUFT_KINDS=TUFT_GEO.length;
+// per shape: how far out it is still drawn, as a share of the Graphics setting's distances (small things go first)
+const TUFT_KR=[1,0.65];
+// the clumps sit in 32 m squares, one instanced mesh per square and shape, so squares out of view or far away are skipped
+const TC_X0=-48,TC_Z0=-19,TC_W=32,TC_NX=3,TC_NZ=3;
+// thinning with distance, set each frame from the Graphics setting by tuftLod: share drawn up close, near and far
+// distances (m) and the share still drawn far off. Each clump has a rank (aTuft.x): it shrinks away as the share drops
+// below its rank, and the ones left grow a little to fill in
+const tuftMats=TUFT_GEO.map(()=>{const mat=M(0xffffff,{side:THREE.DoubleSide,vertexColors:true}),thin={value:new THREE.Vector4(1,25,80,0.35)};
+  mat.userData.thin=thin;
+  mat.onBeforeCompile=sh=>{sh.uniforms.uTime=timeU;sh.uniforms.uThin=thin;sh.uniforms.uSun={value:SUN_DIR};
+    sh.vertexShader='uniform float uTime;\nuniform vec4 uThin;\nattribute vec4 aTuft;\nattribute float aHead;\nvarying vec3 vLW;\nvarying float vTip;\n'+sh.vertexShader
+      .replace('#include <color_vertex>','vColor=vec3(1.0);\n#ifdef USE_COLOR\nvColor*=color;\n#endif\n#ifdef USE_INSTANCING_COLOR\nvColor*=mix(instanceColor,aTuft.yzw,step(0.5,aHead)*step(aHead,1.5));\n#endif')
+      .replace('#include <project_vertex>',
+      '#ifdef USE_INSTANCING\nvec3 root=instanceMatrix[3].xyz;\n#else\nvec3 root=vec3(0.0);\n#endif\n'+
+      'float fs=uThin.x*(uThin.w+(1.0-uThin.w)*(1.0-smoothstep(uThin.y,uThin.z,distance(root,cameraPosition))));\n'+
+      'vec4 mvPosition=vec4(transformed*clamp((fs-aTuft.x)/0.08,0.0,1.0)*(1.0+0.6*(1.0-fs/uThin.x))*(1.0-step(0.5,aHead)*step(aTuft.y,-0.5)),1.0);\n'+
+      '#ifdef USE_INSTANCING\nmvPosition=instanceMatrix*mvPosition;\n#endif\n'+
+      // the same gusts as the tall grass (mower.js), so the whole mesa moves together
+      'float hg=max(0.0,mvPosition.y-root.y);vec2 wd=vec2(0.8,0.6);\n'+
+      'float gust=pow(0.5+0.5*sin(dot(root.xz,wd)*0.42-uTime*1.9+1.5*sin(dot(root.xz,vec2(-0.6,0.8))*0.11+uTime*0.23)),3.0);\n'+
+      'float fl=sin(uTime*5.3+root.x*2.1+root.z*1.7)*0.5+sin(uTime*3.1+root.x*1.7-root.z*1.1)*0.5;\n'+
+      'mvPosition.xz+=wd*hg*hg*(0.25+1.1*gust+0.2*fl);mvPosition.y-=hg*hg*0.4*gust;\n'+
+      'vColor*=1.0+0.18*gust*smoothstep(0.05,0.3,hg);\n'+
+      'vLW=mvPosition.xyz;vTip=smoothstep(0.03,0.3,hg);\n'+
+      'mvPosition=modelViewMatrix*mvPosition;\ngl_Position=projectionMatrix*mvPosition;');
+    // looking toward the sun the blades glow where light comes through them
+    sh.fragmentShader='uniform vec3 uSun;\nvarying vec3 vLW;\nvarying float vTip;\n'+sh.fragmentShader.replace('#include <emissivemap_fragment>',
+      '#include <emissivemap_fragment>\nfloat bl=pow(max(0.0,dot(normalize(vLW-cameraPosition),uSun)),3.0);\ntotalEmissiveRadiance+=diffuseColor.rgb*vec3(1.0,1.15,0.4)*bl*vTip*0.9;')};
+  return mat});
+// all the meshes, in a group so the speed test can hide them together; tuftMeshes[(square)*shapes+shape]
+const tufts=new THREE.Group(),tuftMeshes=[];scene.add(tufts);
+(function(){const DRY=[0.68,0.6,0.33],FLW=[[1,0.84,0.18],[0.97,0.96,0.9],[0.66,0.44,0.86],[1,0.84,0.18]],col=new Float32Array(TUFTS*3),hd=new Float32Array(TUFTS*3);
+  const bad=(x,z)=>mesaR(x,z)>EDGE-0.8||roadAmt(x,z)>0.1||yardAt(x,z)>0.3||wallAt(x,z)||paintAt(x,z);
+  // where clumps grow: patches every few metres, thinner on rocky slopes
+  const dens=(x,z)=>ss(0.2,0.7,0.65*tuftNoise(x*0.17+3.1,z*0.17+7.3)+0.35*tuftNoise(x*0.6+11,z*0.6+5));
+  let n=0;
+  while(n<TUFTS){let x,z,q=0;do{x=(Math.random()-0.5)*94;z=-18+Math.random()*96}while((bad(x,z)||Math.random()>0.12+0.88*dens(x,z))&&++q<60);
+    // a little cluster of one to four clumps
+    const k=1+Math.floor(Math.pow(Math.random(),2)*4);
+    for(let m=0;m<k&&n<TUFTS;m++){const a=Math.random()*6.3,r=m?0.12+Math.random()*0.3:0,px=x+Math.cos(a)*r,pz=z+Math.sin(a)*r;if(m&&bad(px,pz))continue;
+      const h=baseHeight(px,pz),sl=(Math.abs(baseHeight(px+1,pz)-baseHeight(px-1,pz))+Math.abs(baseHeight(px,pz+1)-baseHeight(px,pz-1)))/2;
+      const dry=Math.min(1,ss(0.25,0.75,sl)+0.6*ss(3,9,h)+0.7*ss(0.62,0.85,tuftNoise(px*0.09+40,pz*0.09+2)));
+      const edge=Math.max(1-ss(ROAD_W/2+0.4,ROAD_W/2+2.6,Math.abs(roadOff(px,pz))),ss(0.02,0.2,yardAt(px,pz)));
+      const seedA=0.04+0.4*ss(0.6,0.82,tuftNoise(px*0.12+20,pz*0.12+9))+0.22*edge;
+      const fd=ss(0.62,0.8,tuftNoise(px*0.1+70,pz*0.1+30))*(1-dry),flA=0.012+0.32*fd,bdA=0.06+0.12*(1-dry)*(1-edge);
+      const u=Math.random(),kind=u<flA?3:u<flA+bdA?2:u<flA+bdA+seedA?1:0;
+      tX[n]=px;tZ[n]=pz;tK[n]=kind>>1;tR[n]=Math.random()*6.3;
+      tS[n]=(kind===2?0.75+Math.random()*0.6:kind===3?0.85+Math.random()*0.35:0.7+Math.random()*0.6)*(1+0.25*edge);
+      // dry clumps lie lower
+      const dk=kind<2&&Math.random()<0.06+0.6*dry;tH[n]=(0.8+Math.random()*0.45)*(dk?0.7:1);
+      tI[n]=Math.round((px+S/2)/CELL);tJ[n]=Math.round((pz+S/2)/CELL);if(tI[n]<0||tI[n]>N||tJ[n]<0||tJ[n]>N){tI[n]=-1;tJ[n]=-1}
+      // the green of the ground, a touch deeper in the lush flats; dry clumps straw coloured
+      const nv=Math.random(),lush=(1-dry)*0.15;
+      let cr=(0.3+0.05*nv)*(1-lush),cg=(0.52+0.08*nv)*(1-lush*0.4),cb=(0.22+0.04*nv)*(1-lush);
+      if(kind>=2){cr*=0.82;cg*=0.95;cb*=1.05}
+      const da=dk?0.7+0.3*Math.random():kind<2?0.25*dry*Math.random():0;cr+=(DRY[0]-cr)*da;cg+=(DRY[1]-cg)*da;cb+=(DRY[2]-cb)*da;
+      col[n*3]=cr;col[n*3+1]=cg;col[n*3+2]=cb;
+      // seed heads straw to rust; a flower drift is all one colour (yellow, white or purple), with the odd stray
+      const fl=FLW[Math.floor(hash(Math.floor(px/9),Math.floor(pz/9))*3.999)],hc=kind===3?(Math.random()<0.85?fl:FLW[Math.floor(Math.random()*3)]):[0.78+0.12*nv,0.76+0.06*nv,0.48-0.06*nv];
+      hd[n*3]=kind&1?hc[0]:-1;hd[n*3+1]=hc[1];hd[n*3+2]=hc[2];n++}}
+  // into the squares' meshes: count each, then give every clump a slot (in random order, so ranks spread evenly)
+  const cnt=new Int32Array(TC_NX*TC_NZ*TUFT_KINDS);
+  for(let n=0;n<TUFTS;n++){const cx=Math.min(TC_NX-1,Math.max(0,Math.floor((tX[n]-TC_X0)/TC_W))),cz=Math.min(TC_NZ-1,Math.max(0,Math.floor((tZ[n]-TC_Z0)/TC_W)));
+    tMi[n]=(cz*TC_NX+cx)*TUFT_KINDS+tK[n];tSl[n]=cnt[tMi[n]]++}
+  for(let m=0;m<cnt.length;m++){const k=m%TUFT_KINDS,sq=(m-k)/TUFT_KINDS,G=TUFT_GEO[k],g=new THREE.BufferGeometry();
+    for(const a of ['position','color','normal','aHead'])g.setAttribute(a,G.attributes[a]);g.setIndex(G.index);
+    const nn=Math.max(1,cnt[m]);g.setAttribute('aTuft',new THREE.InstancedBufferAttribute(new Float32Array(nn*4),4));
+    const im=new THREE.InstancedMesh(g,tuftMats[k],nn);im.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(nn*3),3);
+    im.receiveShadow=true;im.count=cnt[m];im.visible=cnt[m]>0;
+    // the square, with room for the hills and the clumps' height
+    const x0=TC_X0+(sq%TC_NX)*TC_W,z0=TC_Z0+Math.floor(sq/TC_NX)*TC_W;let lo=1e9,hi=-1e9;
+    for(let j=0;j<=8;j++)for(let i=0;i<=8;i++){const y=baseHeight(x0+i*TC_W/8,z0+j*TC_W/8);lo=Math.min(lo,y);hi=Math.max(hi,y)}
+    g.boundingSphere=new THREE.Sphere(new THREE.Vector3(x0+TC_W/2,(lo+hi)/2,z0+TC_W/2),Math.hypot(TC_W/2,TC_W/2,(hi-lo)/2+1.5));
+    im.userData.cx=x0+TC_W/2;im.userData.cz=z0+TC_W/2;im.userData.n=cnt[m];im.userData.k=k;tuftMeshes.push(im);tufts.add(im)}
+  for(let n=0;n<TUFTS;n++){const im=tuftMeshes[tMi[n]],s=tSl[n],A=im.geometry.attributes.aTuft.array,C=im.instanceColor.array;
+    A[s*4]=(s+0.5)/im.userData.n;A[s*4+1]=hd[n*3];A[s*4+2]=hd[n*3+1];A[s*4+3]=hd[n*3+2];for(let e=0;e<3;e++)C[s*3+e]=col[n*3+e]}})();
+const tO=new THREE.Object3D(),tuftDirty=new Set();
+// clump n standing on the ground (a slight random tilt each), or hidden
+function tuftPut(n,show){const im=tuftMeshes[tMi[n]];tuftDirty.add(im);
+  if(!show){im.setMatrixAt(tSl[n],ZERO_M);return}
+  const s=tS[n];tO.position.set(tX[n],hAt(tX[n],tZ[n])-0.02,tZ[n]);tO.rotation.set((hash(n,1.7)-0.5)*0.24,tR[n],(hash(n,4.3)-0.5)*0.24);tO.scale.set(s,s*tH[n],s);
+  tO.updateMatrix();im.setMatrixAt(tSl[n],tO.matrix)}
+function tuftFlush(){for(const im of tuftDirty)im.instanceMatrix.needsUpdate=true;tuftDirty.clear()}
 function updateTufts(i0,i1,j0,j1){
   for(let n=0;n<TUFTS;n++){const i=tI[n],j=tJ[n];if(i<0)continue;if(i<i0||i>i1||j<j0||j>j1)continue;const k=j*V+i;
-    if(Math.abs(H[k]-H0[k])>0.04||paintAt(tX[n],tZ[n])){tufts.setMatrixAt(n,ZERO_M);continue}
-    tO.position.set(tX[n],hAt(tX[n],tZ[n])-0.02,tZ[n]);tO.rotation.set(0,tR[n],0);tO.scale.setScalar(tS[n]);tO.updateMatrix();tufts.setMatrixAt(n,tO.matrix)}
-  tufts.instanceMatrix.needsUpdate=true;
+    tuftPut(n,!(Math.abs(H[k]-H0[k])>0.04||paintAt(tX[n],tZ[n])))}
+  tuftFlush();
 }
 const ZERO_M=new THREE.Matrix4().makeScale(0,0,0);
 // after the map editor reshapes, repaints or lays a road over an area (metres): tufts follow the ground and keep off
 // dirt, roads and steep ground
 function tuftsRefresh(x0,x1,z0,z1){
   for(let n=0;n<TUFTS;n++){const x=tX[n],z=tZ[n];if(x<x0||x>x1||z<z0||z>z1)continue;const i=tI[n],k=tJ[n]*V+i;
-    if((i>=0&&Math.abs(H[k]-H0[k])>0.04)||yardAt(x,z)>0.3||roadAmt(x,z)>0.1||wallAt(x,z)||paintAt(x,z)){tufts.setMatrixAt(n,ZERO_M);continue}
-    tO.position.set(x,hAt(x,z)-0.02,z);tO.rotation.set(0,tR[n],0);tO.scale.setScalar(tS[n]);tO.updateMatrix();tufts.setMatrixAt(n,tO.matrix)}
-  tufts.instanceMatrix.needsUpdate=true}
-for(let n=0;n<TUFTS;n++){tO.position.set(tX[n],hAt(tX[n],tZ[n])-0.02,tZ[n]);tO.rotation.set(0,tR[n],0);tO.scale.setScalar(tS[n]);tO.updateMatrix();tufts.setMatrixAt(n,tO.matrix)}
+    tuftPut(n,!((i>=0&&Math.abs(H[k]-H0[k])>0.04)||yardAt(x,z)>0.3||roadAmt(x,z)>0.1||wallAt(x,z)||paintAt(x,z)))}
+  tuftFlush()}
+for(let n=0;n<TUFTS;n++)tuftPut(n,true);tuftFlush();
+// every frame: each shape's thinning from the Graphics setting, and how many clumps each square draws (none when every
+// clump in it would be shrunk away)
+function tuftLod(){const g=typeof gfxKey!=='undefined'?GFX[gfxKey].tuft:[1,25,80,0.35],cx=camera.position.x,cz=camera.position.z;
+  for(let k=0;k<TUFT_KINDS;k++)tuftMats[k].userData.thin.value.set(g[0],g[1]*TUFT_KR[k],g[2]*TUFT_KR[k],k?0:g[3]);
+  for(const im of tuftMeshes){const k=im.userData.k,n=im.userData.n;if(!n)continue;
+    const d=Math.hypot(Math.max(0,Math.abs(cx-im.userData.cx)-TC_W/2),Math.max(0,Math.abs(cz-im.userData.cz)-TC_W/2)),fl=k?0:g[3];
+    const f=g[0]*(fl+(1-fl)*(1-ss(g[1]*TUFT_KR[k],g[2]*TUFT_KR[k],d)));
+    im.count=Math.min(n,Math.ceil(f*n)+1);im.visible=f>0.002}}
 // ground outside the dig zone: 0.5 m over the rest of the mesa and its cliffs (hills, the scarp and the ramp need it),
 // 2 m beyond; each patch has a hole where the finer one sits
 const MID=[-58,58,-32,92];

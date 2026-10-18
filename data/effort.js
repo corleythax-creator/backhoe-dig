@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-18T00:12:00Z",
+ "updated": "2026-10-18T00:17:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 526.5,
+   "dh": 536.5,
    "act": 11.5,
-   "versions": 71
+   "versions": 72
   }
  ],
  "extra": [
@@ -732,6 +732,15 @@ window.EFFORT = {
    "tris": 1353588,
    "chars": 461650,
    "what": "First-person look: in cab view, drag the scene to turn your head, on foot or in any machine. On foot the body turns with it and you can look nearly straight up or down; in the excavator, truck and mower you can turn about 150 degrees each way in the seat and look up at the boom or down at the bucket. On a PC a click on the scene takes the mouse for mouse look (Esc frees it). Zoom up to 4x with the mouse wheel, a two-finger pinch or by holding Z; R (controller: right stick click) turns your head back to straight ahead. A small aim dot shows on foot."
+  },
+  {
+   "v": 79,
+   "asked": "2026-10-17T18:35:00-05:00",
+   "live": "2026-10-17T19:17:21-05:00",
+   "dh": 10,
+   "tris": 1587618,
+   "chars": 473001,
+   "what": "Field grass: the mesa's grass is now curved, arching clumps instead of straight spikes, in four kinds: meadow grass, seed-head grass in drifts and along the roads and yards, low broadleaf weeds, and wildflowers in drifts of yellow, white or purple. It grows in patches and little clusters with thinner ground between, lush and green on the flats and dry and straw coloured up the slopes and hilltops, and it sways in the same wind gusts as the tall grass. It is drawn in squares that are skipped when out of view and thins out with distance by the Graphics setting (fewer clumps on Low), so phones draw less."
   }
  ]
 };
