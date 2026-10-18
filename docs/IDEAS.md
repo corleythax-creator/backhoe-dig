@@ -54,6 +54,7 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - M18 Telehandler: A reach forklift that lifts pallets of blocks onto stacks and roofs, with the boom angle and load shown in the cab. (R6 F7 some low c2 8h)
 - M19 Tractor with a box blade: A small tractor that drags a box blade to smooth ruts and level the dirt yards and roads. (R7 F6 most low c2 7h)
 - M20 Dump cart for the mower: A small cart hitched behind the zero-turn to carry clippings, mulch or a little dirt, and tip it out. (R5 F6 some low c1 4h)
+- M21 Drivable boats: A runabout, a pontoon and a small fishing boat you drive on the lake; the waves rock them, and you tie up at a dock and step off. (R6 F9 most low c3 10h)
 
 ## X: Excavator and attachments
 
@@ -130,6 +131,10 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - S13 Road signs: Signs at the roundabout and bridge ends pointing to Corley's, Dexter's and Jessica's islands and the mainland. (R7 F3 every none c1 2h)
 - S14 Bridge lights: Lamps along the three bridges and the covered footbridge that come on at dusk. (R6 F4 every low c1 2h needs W02)
 - S15 Windsock and flags: A windsock on the Lower Bench and the flags that stream with the wind gusts, so you can see where the wind is. (R7 F3 every none c1 1h)
+- S16 Beaches: Sandy beaches at the foot of the island cliffs that slope gently into the water, with driftwood and a few rocks. (R7 F6 most low c2 6h)
+- S17 Docks and cliff stairs: A dock on each island with a stair or lift down the cliff, so you can walk down and tie up a boat. (R7 F6 most low c2 6h)
+- S18 Marina: A marina with a breakwater, floating slips, a fuel dock, a bait shop and boats bobbing at their moorings. (R7 F7 some low c2 8h)
+- S19 Boats on the lake: Sailboats and fishing boats out on the water, motoring between the marina, the islands and the city. (R7 F4 every low c2 5h)
 
 ## L: Crew and people
 
@@ -151,6 +156,7 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - A05 Footsteps by surface: Boots crunch on gravel, swish in grass, squelch in mud and knock on the bridge decks. (R8 F5 every none c1 2h)
 - A06 Bridge deck rumble: Machines thunder across the steel truss decks, and the covered footbridge creaks under your boots. (R8 F5 most none c1 2h)
 - A07 Rain on the roof: Rain drums on the cab roof inside the machines and on the porch roofs, softer out in the open. (R8 F4 some none c1 1h needs W01)
+- A08 Boat sounds: An outboard that revs with the throttle, waves slapping the hull, and gulls round the marina. (R7 F4 most none c1 2h needs M21)
 
 ## C: Controls and camera
 
@@ -183,6 +189,8 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - Q10 Blob shadows on Low: A soft dark patch under each machine and the worker when shadows are off, so they sit on the ground on a phone. (R6 F2 every none c1 2h)
 - Q11 Foam at the shore: White foam where the lake meets the cliff foot and around the bridge piers. (R7 F3 every low c1 2h)
 - Q12 Simpler far islands: Islands far away draw with fewer triangles and no small props, to win frames back on the phone. (R2 F3 every none c2 5h)
+- Q13 Realistic lake water: Turquoise over the sand in the shallows, deep blue farther out, foam along the shore, sky reflections that change with the angle you look from, and calmer swells near land; still flat-shaded. (R8 F5 every low c2 5h)
+- Q14 Wakes and spray: A boat throws a V wake that spreads and fades, and spray off the bow at speed. (R8 F5 most low c1 3h needs M21)
 
 ## E: Map editor
 
@@ -271,6 +279,8 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - T09 Feed and landscape store: Feed, fertilizer, and mulch by the yard loaded into your truck by a loader. (R6 F5 some low c2 5h needs T01)
 - T10 Town lights at night: The city glowing in the mountains across the lake. (R6 F3 every low c1 2h)
 - T11 Town works jobs: A water line dug on Main Street, a sidewalk to tear out. (R7 F7 some low c3 10h needs T01)
+- T12 Harbor city: A bigger city on the mainland shore: streets of shops and houses, a waterfront promenade, a public beach and its own marina, reached by the bridge or by boat. (R6 F8 most high c3 14h needs B01)
+- T13 City skyline: Downtown towers across the lake, seen from the islands and lit at dusk, ahead of building the city itself. (R6 F4 every low c1 4h)
 
 ## R: Days and routine
 
