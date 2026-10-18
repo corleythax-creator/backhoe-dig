@@ -56,6 +56,8 @@ A 3D low-poly excavator game in plain HTML, CSS and JavaScript (three.js r128, n
 | `versions/` | A playable snapshot of every version (`versions/vN/`), the list page, and `list.js`. Made by `tools/versions.py` |
 | `data/effort.js` | Build-time data. The master dashboard reads it for hours |
 | `tools/versions.py` | Rebuilds `versions/` from `main`'s history after a release |
+| `docs/WORKFLOW.md` | The owner's playbook: what to change in the editors, when and how to ask Claude so it costs the fewest tokens |
+| `.github/workflows/check.yml` | Loads the game headless after each game change on `main` (free on GitHub's machines; `ISLAND_RUNNER` moves it to a self-hosted runner) and fails on page errors |
 | `tools/release.py` | Ships the branch as the next version in one command (README "Ship a version") |
 | `tools/play.js` | Plays the game headless: runs game code in the page, prints results and errors, takes a screenshot |
 | `tools/scene-check.js` | Loads the game headless and prints the triangle count, file size and any errors (the numbers a build-log entry needs) |

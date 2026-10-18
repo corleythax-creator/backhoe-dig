@@ -1,0 +1,37 @@
+# Corley's Island: loads the game headless after each change to the game on main and fails on any page error
+# (tools/scene-check.js; it also prints the triangle count and file size). The repo is public, so this runs free on
+# GitHub's machines; set the repo variable ISLAND_RUNNER to a self-hosted runner's label to run it there instead
+# (README "Working on it"). No pull_request trigger: on a public repo that would let anyone's fork run code here.
+name: check
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    # the game only: version snapshots, docs and this file don't start a run
+    paths: ['index.html', 'css/**', 'js/**', 'data/**', 'textures/**', 'shots/**', 'tools/scene-check.js']
+concurrency: { group: check, cancel-in-progress: true }
+permissions: { contents: read }
+jobs:
+  check:
+    runs-on: ${{ vars.ISLAND_RUNNER || 'ubuntu-latest' }}
+    timeout-minutes: 15
+    steps:
+      # the game without versions/ (450 MB of snapshots it doesn't need)
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            /*
+            !/versions/
+          sparse-checkout-cone-mode: false
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - uses: actions/cache@v4
+        with: { path: ~/.cache/ms-playwright, key: playwright-1.56.1 }
+      # the same Playwright as the cloud sessions use; Chromium's system libraries only on GitHub's machines (the
+      # self-hosted runners have them and no sudo)
+      - run: npm i -g playwright@1.56.1
+      - if: runner.environment == 'github-hosted'
+        run: npx -y playwright@1.56.1 install --with-deps chromium
+      - if: runner.environment != 'github-hosted'
+        run: npx -y playwright@1.56.1 install chromium
+      - run: NODE_PATH=$(npm root -g) node tools/scene-check.js
