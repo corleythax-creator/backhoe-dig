@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-18T00:44:31Z",
+ "updated": "2026-10-18T01:03:05Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 607.0,
-   "act": 12.0,
-   "versions": 80
+   "dh": 621,
+   "act": 12.5,
+   "versions": 84
   }
  ],
  "extra": [
@@ -810,9 +810,45 @@ window.EFFORT = {
    "asked": "2026-10-17T18:55:00-05:00",
    "live": "2026-10-17T19:44:31-05:00",
    "dh": 10,
-   "tris": 1620211,
-   "chars": 515689,
+   "tris": 1620449,
+   "chars": 527659,
    "what": "Graphics panel: the Graphics button in the menu opens Low, Medium and High with every setting under them to play with, and the frame rate, triangles, draw calls, resolution and textures in memory shown live. Screen: resolution (0.5x to 3x), auto resolution, a 30 or 60 fps frame cap, field of view. Light: shadows off or 512 to 4096, soft shadow edges, filmic lighting, brightness, haze distance. Textures: texture size 512, 1024 or 2048, ground texture, extra detail (cut faces, painted materials, machine grime), ground variation, sharpness at an angle. Grass: how many blades and how far, lawn detail distance. Effects: Dirt detail, puddle water, raindrops. A change makes it Custom, marked in the panel and kept on that device; picking a preset clears it. Also: Low now shows the grass and dirt texture on the ground (512 px), sharpness at an angle is 4x, 8x and 16x by preset, and the large-scale ground variation is High only, so phones never download it."
+  },
+  {
+   "v": 88,
+   "asked": "2026-10-17T19:42:00-05:00",
+   "live": "2026-10-17T19:48:43-05:00",
+   "dh": 4,
+   "tris": 1621225,
+   "chars": 531664,
+   "what": "The mower cuts the field grass too, anywhere on the mesa: the clumps under the deck drop to stubble and throw clippings, flowers and seed heads included, then grow back on the tall grass's timing (about a minute before they start, about four more to full height). The mowed field grass saves and syncs with the rest of the mowing."
+  },
+  {
+   "v": 89,
+   "asked": "2026-10-17T19:46:00-05:00",
+   "live": "2026-10-17T19:54:17-05:00",
+   "dh": 2,
+   "tris": 1620800,
+   "chars": 534353,
+   "what": "Frame rate graph in the Graphics panel: the last 10 seconds of frames per second as bars, newest on the right, each as wide as its frame took and green, yellow or red like the fps counter, with dashed lines at 30 and 60. Under it the average, the 1% low (the stutters you feel) and the slowest frame in milliseconds. It updates four times a second while the panel is open, so a setting's cost shows within a second or two."
+  },
+  {
+   "v": 90,
+   "asked": "2026-10-17T19:50:00-05:00",
+   "live": "2026-10-17T20:02:08-05:00",
+   "dh": 1,
+   "tris": 1620842,
+   "chars": 534416,
+   "what": "Turn sensitivity for each machine: the Turn slider now keeps its own setting for Dig, Drive, Truck, Mow, Skid and Walk, and shows the one for the mode you are in. The mower starts at 60%, everything else at 100%."
+  },
+  {
+   "v": 91,
+   "asked": "2026-10-17T19:15:00-05:00",
+   "live": "2026-10-17T20:03:05-05:00",
+   "dh": 7,
+   "tris": 1620713,
+   "chars": 537619,
+   "what": "Map editor: Paint has Hard edge and Soft edge. Soft edge fades the material out into the ground over the outer part of the brush, with a Softness slider (10 to 100%) and a second ring showing where the fade starts; Natural ground fades paint back out the same way, soft-edged Mud is partly soaked at its fade, and maps keep the soft edges (older maps load as before). The editor's controls move to the top left to leave the screen for the ground: a slim title bar with Undo, Redo, Map file and Done, the tools in a two-wide strip down the left, and the tool's options, Map file and info cards in a scrolling column beside them with a tighter material library. Tap the picked tool again to fold its options away."
   }
  ]
 };

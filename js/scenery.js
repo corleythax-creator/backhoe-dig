@@ -38,7 +38,7 @@ const timeU={value:0};
 // between, in little clusters: lush and green down on the flats, dry and straw coloured up the slopes and hilltops,
 // seed heads in drifts and along the roads and yards, flowers in drifts of one colour
 const TUFTS=15000,tX=new Float32Array(TUFTS),tZ=new Float32Array(TUFTS),tS=new Float32Array(TUFTS),tR=new Float32Array(TUFTS),tI=new Int32Array(TUFTS),tJ=new Int32Array(TUFTS),
-  tK=new Uint8Array(TUFTS),tGone=new Uint8Array(TUFTS),tH=new Float32Array(TUFTS),tMi=new Uint16Array(TUFTS),tSl=new Int32Array(TUFTS);
+  tK=new Uint8Array(TUFTS),tGone=new Uint8Array(TUFTS),tVis=new Uint8Array(TUFTS),tH=new Float32Array(TUFTS),tMi=new Uint16Array(TUFTS),tSl=new Int32Array(TUFTS);
 // smooth value noise, 0 to 1, about one feature per unit
 function tuftNoise(x,z){const i=Math.floor(x),j=Math.floor(z),fx=x-i,fz=z-j,u=fx*fx*(3-2*fx),v=fz*fz*(3-2*fz);
   const a=hash(i,j),b=hash(i+1,j),c=hash(i,j+1),d=hash(i+1,j+1);return a+(b-a)*u+(c-a)*v+(a-b-c+d)*u*v}
@@ -164,9 +164,10 @@ const tufts=new THREE.Group(),tuftMeshes=[];scene.add(tufts);
     A[s*4]=(s+0.5)/im.userData.n;A[s*4+1]=hd[n*3];A[s*4+2]=hd[n*3+1];A[s*4+3]=hd[n*3+2];for(let e=0;e<3;e++)C[s*3+e]=col[n*3+e]}})();
 const tO=new THREE.Object3D(),tuftDirty=new Set();
 // clump n standing on the ground (a slight random tilt each), or hidden
-function tuftPut(n,show){const im=tuftMeshes[tMi[n]];tuftDirty.add(im);
+// (shorter while it grows back from a mowing, tuftCutK)
+function tuftPut(n,show){const im=tuftMeshes[tMi[n]];tuftDirty.add(im);tVis[n]=show?1:0;
   if(!show){im.setMatrixAt(tSl[n],ZERO_M);return}
-  const s=tS[n];tO.position.set(tX[n],hAt(tX[n],tZ[n])-0.02,tZ[n]);tO.rotation.set((hash(n,1.7)-0.5)*0.24,tR[n],(hash(n,4.3)-0.5)*0.24);tO.scale.set(s,s*tH[n],s);
+  const s=tS[n];tO.position.set(tX[n],hAt(tX[n],tZ[n])-0.02,tZ[n]);tO.rotation.set((hash(n,1.7)-0.5)*0.24,tR[n],(hash(n,4.3)-0.5)*0.24);tO.scale.set(s,s*tH[n]*tuftCutK(n),s);
   tO.updateMatrix();im.setMatrixAt(tSl[n],tO.matrix)}
 function tuftFlush(){for(const im of tuftDirty)im.instanceMatrix.needsUpdate=true;tuftDirty.clear()}
 function updateTufts(i0,i1,j0,j1){
@@ -184,7 +185,6 @@ function tuftsRefresh(x0,x1,z0,z1){
 // ruts outside the dig zone (farRut, mud.js) mark the area here; the tufts there are checked a few times a second
 let tuftFarBox=null,tuftFarT=0;
 function tuftFarMark(x0,x1,z0,z1){const b=tuftFarBox;tuftFarBox=b?[Math.min(b[0],x0),Math.max(b[1],x1),Math.min(b[2],z0),Math.max(b[3],z1)]:[x0,x1,z0,z1]}
-for(let n=0;n<TUFTS;n++)tuftPut(n,true);tuftFlush();
 // every frame: each shape's thinning from the Graphics setting, and how many clumps each square draws (none when every
 // clump in it would be shrunk away)
 function tuftLod(){const g=typeof gfxCur!=='undefined'?gfxCur.tuft:[1,25,80,0.35],cx=camera.position.x,cz=camera.position.z;
@@ -214,6 +214,45 @@ function grassTick(dt){crT+=dt;if(tuftFarBox&&timeU.value-tuftFarT>0.3){tuftFarT
   for(let k=0;k<crA.length;k++){if(crA[k]<=0)continue;crA[k]=Math.max(0,crA[k]-st/CR_BACK);a[k*4]=Math.round(crA[k]*255);any=true}
   crOn=any;crTex.needsUpdate=true}
 function grassReset(){crA.fill(0);crTex.image.data.fill(0);crTex.needsUpdate=true;crOn=false}
+// ---------- mowed field grass ----------
+// the mower cuts the field grass too: on the same 0.5 m grid, each cell remembers when it was last cut (fcT, on the lawn
+// clock, mower.js), and its clumps stand at stubble height, then grow back on the tall grass's timing (LAWN_WAIT, then
+// LAWN_GROW). Saved with the mowing (lawnSave), so it syncs. The clumps in each cell, for the mower to find:
+// tuftsInCell(k) are tCellL[tCellS[k]] up to tCellS[k+1]
+const fcT=new Float32Array(CR_NX*CR_NZ).fill(-1e9),fcAct=[],fcIn=new Uint8Array(CR_NX*CR_NZ),tCell=new Int32Array(TUFTS),tCellS=new Int32Array(CR_NX*CR_NZ+1),tCellL=new Int32Array(TUFTS);
+// how tall each shape stands at full size (m): the grass with its seed stalks, the broadleaf with its flower
+const TUFT_HK=[0.45,0.42];
+{for(let n=0;n<TUFTS;n++){const i=Math.floor((tX[n]-CR_X0)/CR_C),j=Math.floor((tZ[n]-CR_Z0)/CR_C);tCell[n]=i<0||j<0||i>=CR_NX||j>=CR_NZ?-1:j*CR_NX+i;if(tCell[n]>=0)tCellS[tCell[n]+1]++}
+  for(let k=0;k<CR_NX*CR_NZ;k++)tCellS[k+1]+=tCellS[k];const at=tCellS.slice(0,-1);for(let n=0;n<TUFTS;n++)if(tCell[n]>=0)tCellL[at[tCell[n]]++]=n}
+// a clump's height (share of full): cut down to the deck's height, then growing back
+function tuftCutK(n){const k=tCell[n];if(k<0||fcT[k]<-1e8)return 1;
+  const g=Math.min(1,Math.max(0,(lawn.t-fcT[k]-LAWN_WAIT)/LAWN_GROW)),stub=Math.min(1,LAWN_CUT/(TUFT_HK[tK[n]]*tS[n]*tH[n]));return stub+(1-stub)*g}
+function fcRedraw(k){for(let q=tCellS[k];q<tCellS[k+1];q++){const n=tCellL[q];if(tVis[n])tuftPut(n,true)}}
+// the deck centred on x,z facing yaw (half width hw, half depth hd) cuts what stands in it; returns how many tall clumps it cut
+function fieldCut(x,z,yaw,hw,hd){const s=Math.sin(yaw),c=Math.cos(yaw),R=Math.hypot(hw,hd)+CR_C/2;let cut=0;
+  const i0=Math.max(0,Math.floor((x-R-CR_X0)/CR_C)),i1=Math.min(CR_NX-1,Math.floor((x+R-CR_X0)/CR_C)),j0=Math.max(0,Math.floor((z-R-CR_Z0)/CR_C)),j1=Math.min(CR_NZ-1,Math.floor((z+R-CR_Z0)/CR_C));
+  for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const k=j*CR_NX+i;if(tCellS[k]===tCellS[k+1])continue;
+    const dx=CR_X0+(i+0.5)*CR_C-x,dz=CR_Z0+(j+0.5)*CR_C-z;if(Math.abs(dx*c-dz*s)>hw||Math.abs(dx*s+dz*c)>hd)continue;
+    // only grass grown back past halfway counts as a cut (and restarts the clock)
+    if(fcT[k]>-1e8&&lawn.t-fcT[k]<LAWN_WAIT+LAWN_GROW*0.5)continue;
+    for(let q=tCellS[k];q<tCellS[k+1];q++)if(tVis[tCellL[q]])cut++;
+    fcT[k]=lawn.t;if(!fcIn[k]){fcIn[k]=1;fcAct.push(k)}fcRedraw(k)}
+  if(cut){tuftFlush();lawn.sDirty=true}return cut}
+// once a second: the cut cells grow, and drop off the list when fully grown
+let fcGrowT=0;
+function fieldGrow(dt){if(!fcAct.length||(fcGrowT-=dt)>0)return;fcGrowT=1;
+  for(let q=fcAct.length-1;q>=0;q--){const k=fcAct[q];fcRedraw(k);if(lawn.t-fcT[k]>=LAWN_WAIT+LAWN_GROW){fcT[k]=-1e9;fcIn[k]=0;fcAct[q]=fcAct[fcAct.length-1];fcAct.pop()}}
+  tuftFlush()}
+// the save: cells still growing, 3 bytes each (cell, low and high byte; then age as a share of the regrowth, 1-255)
+function fieldSave(){const b=new Uint8Array(fcAct.length*3);let m=0;
+  for(const k of fcAct){const a=lawn.t-fcT[k];if(a>=LAWN_WAIT+LAWN_GROW)continue;b[m++]=k&255;b[m++]=k>>8;b[m++]=1+Math.round(Math.max(0,a)/(LAWN_WAIT+LAWN_GROW)*254)}
+  let bin='';for(let q=0;q<m;q++)bin+=String.fromCharCode(b[q]);return btoa(bin)}
+function fieldLoad(str){if(typeof str!=='string')return;let b;try{b=atob(str)}catch(e){return}
+  for(let q=0;q+2<b.length;q+=3){const k=b.charCodeAt(q)|b.charCodeAt(q+1)<<8;if(k>=fcT.length)continue;
+    fcT[k]=lawn.t-(b.charCodeAt(q+2)-1)/254*(LAWN_WAIT+LAWN_GROW);if(!fcIn[k]){fcIn[k]=1;fcAct.push(k)}fcRedraw(k)}
+  tuftFlush()}
+// every clump stands up at the start
+for(let n=0;n<TUFTS;n++)tuftPut(n,true);tuftFlush();
 // ground outside the dig zone: 0.5 m over the rest of the mesa and its cliffs (hills, the scarp and the ramp need it),
 // 2 m beyond; each patch has a hole where the finer one sits
 const MID=[-58,58,-32,92];
