@@ -1,16 +1,18 @@
-// Corley's Island: blocks: any size from 1 to 10 ft each way, in plain concrete or any library material, set down
+// Corley's Island: blocks: any size from 1 in to 10 ft each way, in plain concrete or any library material, set down
 // under the bucket, in front of the worker in Walk mode, or at the middle of the screen in first person (the wheel
 // pushes it out and pulls it in); stacking, settling and machine collisions. surfAt() is the ground-or-block height
 // everything that rides or lands uses.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 // ---------- blocks ----------
-// blocks snap to a 1 ft world grid so they line up into walls and stacks. Each is a box w (east-west) by d (north-south)
+// blocks snap to a 1 ft world grid (1 in for pieces thinner than a foot), and optionally to the faces of the blocks already set, so they line up into walls and stacks; or go wherever you aim (blkLock). Each is a box w (east-west) by d (north-south)
 // by h (tall), in metres, of material m (0 plain concrete, otherwise its MAT_LIST id). It rests on the highest ground or
 // block top under its footprint and drops when what holds it is dug out or picked up. Tracks and tires roll over a 1 ft
 // block; taller ones stop them
-const FT=0.3048,BLK_MAX=240,BLK_CLIMB=0.35,BLK_FT=10,BLK_REACH=[3,80],blocks=[];
-// the size being set (ft), its material, and how far out the first-person aim reaches (ft)
-const blkDim={w:2,d:2,h:2};
+const FT=0.3048,IN=FT/12,BLK_MAX=240,BLK_CLIMB=0.35,BLK_FT=10,BLK_REACH=[3,80],blocks=[];
+// the size being set (inches, from BLK_IN), its material, and how far out the first-person aim reaches (ft)
+const blkDim={w:24,d:24,h:24},BLK_IN=[1,2,3,4,6,8,12,18,24,36,48,60,72,84,96,108,120];
+// how a block lands: 'grid' on a whole-foot grid, 'blocks' the grid plus flush against nearby blocks, 'free' exactly where aimed
+const BLK_LOCKS=[['grid','Grid'],['blocks','Grid + blocks'],['free','Free']];let blkLock='grid';
 let blkOn=false,blkWake=0,blkMat=0,blkReach=12,blkFPTold=false;
 // one instanced mesh per material in use; the texture is laid on in world space so any size tiles it evenly and
 // neighbouring blocks line up. Plain concrete (blkMesh) gets its texture in applyTextures (truck.js)
@@ -38,7 +40,16 @@ blkGhost.add(new THREE.Mesh(new THREE.BoxGeometry(1,1,1),ghostFill),new THREE.Li
 blkGhost.visible=false;scene.add(blkGhost);
 const blkO=new THREE.Object3D(),blkCol=new THREE.Color(),blkP={x:0,z:0,y:0,w:FT,d:FT,h:FT,ok:false,why:''},blkV=new THREE.Vector3(),blkE=new THREE.Vector3();
 function blkReset(){blocks.length=0;for(const im of blkMeshes)if(im)im.count=0;blkWake=0}
-function blkSnap(v,n){return n%2?(Math.floor(v/FT)+0.5)*FT:Math.round(v/FT)*FT}
+// centre for a block w long on one axis so its edges sit on the grid (1 ft, or 1 in for thin pieces)
+function blkSnap(v,w){const g=w<FT-1e-6?IN:FT;return Math.round((v-w/2)/g)*g+w/2}
+// pull a block's faces flush with the faces of blocks within 1 ft, on each axis
+function blkMagnet(x,z,w,d){const R=0.3;let bx=R,bz=R,ox=0,oz=0;
+  for(const b of blocks){
+    if(Math.abs(b.z-z)<(b.d+d)/2+R)for(const e of [b.x-b.w/2,b.x+b.w/2])for(const s of [-1,1]){const dx=e-(x+s*w/2);if(Math.abs(dx)<bx){bx=Math.abs(dx);ox=dx}}
+    if(Math.abs(b.x-x)<(b.w+w)/2+R)for(const e of [b.z-b.d/2,b.z+b.d/2])for(const s of [-1,1]){const dz=e-(z+s*d/2);if(Math.abs(dz)<bz){bz=Math.abs(dz);oz=dz}}}
+  return [x+ox,z+oz]}
+// the size as shown: inches under a foot, otherwise feet
+const blkInTxt=n=>n<12?`${n} in`:`${+(n/12).toFixed(2)} ft`;
 function blkOver(a,x,z,w,d){return Math.abs(a.x-x)<(a.w+w)/2-0.01&&Math.abs(a.z-z)<(a.d+d)/2-0.01}
 // highest ground under a footprint, sampled about every 6 in
 function blkGround(x,z,w,d){const mx=Math.max(1,Math.ceil(w/CELL)),mz=Math.max(1,Math.ceil(d/CELL));let y=-1e9;
@@ -86,12 +97,13 @@ function blkTarget(w,d){
     return [r.x,r.z]}
   const k=WK_R+Math.max(w,d)/2+0.12;return [wk.x+Math.sin(wk.yaw)*k,wk.z+Math.cos(wk.yaw)*k]}
 // where a block of the chosen size would land and whether it may go there
-function blkAim(){const nw=blkDim.w,nd=blkDim.d,w=nw*FT,d=nd*FT,h=blkDim.h*FT,[ax,az]=blkTarget(w,d),x=blkSnap(ax,nw),z=blkSnap(az,nd);let y=blkGround(x,z,w,d);
+function blkAim(){const w=blkDim.w*IN,d=blkDim.d*IN,h=blkDim.h*IN,[ax,az]=blkTarget(w,d);let x=ax,z=az;
+  if(blkLock!=='free'){x=blkSnap(ax,w);z=blkSnap(az,d);if(blkLock==='blocks')[x,z]=blkMagnet(x,z,w,d)}
+  let y=blkGround(x,z,w,d);
   for(const b of blocks)if(blkOver(b,x,z,w,d))y=Math.max(y,b.y+b.h);
   const p=blkP;p.x=x;p.z=z;p.y=y;p.w=w;p.d=d;p.h=h;p.ok=false;
   const t={x,z,w,d},walk=mode==='walk';
-  if(Math.abs(x)>S/2-w||Math.abs(z)>S/2-d||mesaR(x,z)>EDGE-2-Math.max(w,d)/2)p.why='Too close to the edge for a block.';
-  else if(blocks.length>=BLK_MAX)p.why=`That's all ${BLK_MAX} blocks. Pick some up first.`;
+  if(blocks.length>=BLK_MAX)p.why=`That's all ${BLK_MAX} blocks. Pick some up first.`;
   else if(!walk&&y>tip.y+0.6)p.why='Raise the bucket above the stack to set a block on it.';
   else if(walk&&!blkFP()&&y+Math.min(h,FT*3)>wk.y+WK_REACH)p.why='Too high to reach. Climb up first.';
   else if(walk&&Math.abs(wk.x-x)<w/2+WK_R&&Math.abs(wk.z-z)<d/2+WK_R&&y<wk.y+WK_H&&y+h>wk.y+0.02)p.why='You are standing there. Step back.';
@@ -99,7 +111,7 @@ function blkAim(){const nw=blkDim.w,nd=blkDim.d,w=nw*FT,d=nd*FT,h=blkDim.h*FT,[a
   else if(TR_C.some(lz=>blkCircleD(tr,lz,t)<TR_R+0.05))p.why='That spot is under the truck.';
   else{p.ok=true;p.why=''}
   return p}
-const blkSizeTxt=(w,d,h)=>`${w}×${d}×${h} ft`;
+const blkSizeTxt=(w,d,h)=>`${blkInTxt(w)} × ${blkInTxt(d)} × ${blkInTxt(h)}`;
 function placeBlock(){
   if(mode!=='dig'&&mode!=='walk'){toast('Switch to Dig or Walk to set blocks.');return}
   if(!blkOn)setBlocks(true);
@@ -108,7 +120,7 @@ function placeBlock(){
   blocks.push({x:p.x,z:p.z,y,w:p.w,d:p.d,h:p.h,m,vy:0,c:m?[v,v,v]:[0.66*v,0.65*v,0.62*v]});
   blkWake=1.5;started();
   toast(`${blkSizeTxt(blkDim.w,blkDim.d,blkDim.h)} ${blkMatName(m).toLowerCase()} block set · ${blocks.length} on site`,'good',1600)}
-const blkFt=b=>blkSizeTxt(Math.round(b.w/FT),Math.round(b.d/FT),Math.round(b.h/FT));
+const blkFt=b=>blkSizeTxt(Math.round(b.w/IN),Math.round(b.d/IN),Math.round(b.h/IN));
 // the highest block the bucket is over or touching comes away; on foot, the highest one within reach just in front;
 // in first person, the first one the middle of the screen meets (out to the longest reach)
 function removeBlock(){
@@ -126,13 +138,17 @@ function removeBlock(){
 function setBlocks(on){blkOn=on;const btn=$('#blkBtn');btn.setAttribute('aria-pressed',on);$('#blkBar').hidden=!on;
   if(on&&mode!=='dig'&&mode!=='walk')setMode('dig');blkUI()}
 const blkReachEl=$('#blkReach');
-function blkUI(){for(const k of ['w','d','h'])$(`#blkBar .bstep[data-k="${k}"] b`).textContent=`${blkDim[k]} ft`;
+function blkUI(){for(const k of ['w','d','h'])$(`#blkBar .bstep[data-k="${k}"] b`).textContent=blkInTxt(blkDim[k]);
+  $('#blkLock').textContent=BLK_LOCKS.find(l=>l[0]===blkLock)[1];
   blkReachEl.querySelector('b').textContent=`${Math.round(blkReach)} ft`;blkReachEl.hidden=!blkFP();
   const s=$('#blkMat');if(+s.value!==blkMat)s.value=blkMat}
-function setBlkDim(k,n){blkDim[k]=clamp(Math.round(n),1,BLK_FT);blkUI()}
+// one step up or down the BLK_IN list
+function blkStepDim(k,dir){const i=BLK_IN.findIndex(v=>v>=blkDim[k]),j=dir>0?(BLK_IN[i]>blkDim[k]?i:i+1):i-1;
+  blkDim[k]=BLK_IN[clamp(j,0,BLK_IN.length-1)];blkUI()}
+function blkLockNext(){blkLock=BLK_LOCKS[(BLK_LOCKS.findIndex(l=>l[0]===blkLock)+1)%BLK_LOCKS.length][0];blkUI();return BLK_LOCKS.find(l=>l[0]===blkLock)[1]}
 // the size key and the D-pad step through cubes, 1 to 10 ft
-function blkCube(dir){const n=((Math.max(blkDim.w,blkDim.d,blkDim.h)-1+dir)%BLK_FT+BLK_FT)%BLK_FT+1;blkDim.w=blkDim.d=blkDim.h=n;blkUI();
-  toast(`Block size ${blkSizeTxt(n,n,n)}`,'',1200)}
+function blkCube(dir){const n=((Math.round(Math.max(blkDim.w,blkDim.d,blkDim.h)/12)-1+dir)%BLK_FT+BLK_FT)%BLK_FT+1;blkDim.w=blkDim.d=blkDim.h=n*12;blkUI();
+  toast(`Block size ${blkSizeTxt(n*12,n*12,n*12)}`,'',1200)}
 // turn the block a quarter turn: width and length swap
 function blkTurn(){[blkDim.w,blkDim.d]=[blkDim.d,blkDim.w];blkUI()}
 function blkReachBy(ft){blkReach=clamp(blkReach+ft,BLK_REACH[0],BLK_REACH[1]);blkUI()}
@@ -160,7 +176,8 @@ function blkTick(dt){
 $('#blkBtn').onclick=()=>setBlocks(!blkOn);
 $('#blkPlace').onclick=placeBlock;$('#blkRemove').onclick=removeBlock;$('#blkTurn').onclick=blkTurn;
 document.querySelectorAll('#blkBar .bstep button').forEach(b=>b.onclick=()=>{const k=b.parentNode.dataset.k,s=+b.dataset.d;
-  if(k==='reach')blkReachBy(s*2);else setBlkDim(k,blkDim[k]+s)});
+  if(k==='reach')blkReachBy(s*2);else blkStepDim(k,s)});
+$('#blkLock').onclick=blkLockNext;
 // the material list: plain concrete, then the library by group
 {const s=$('#blkMat');s.add(new Option('Concrete (plain)',0));
   MAT_CATS.forEach((c,ci)=>{const g=document.createElement('optgroup');g.label=c;
