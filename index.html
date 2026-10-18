@@ -48,12 +48,10 @@
       <button id="menuBtn" class="sm sq" aria-label="Menu" aria-expanded="false">☰</button>
     </div>
     <div id="blkBar" hidden>
-      <div class="bdim" role="group" aria-label="Block size in feet">
+      <select id="blkMat" aria-label="Block material"></select>
       <div class="bstep" data-k="w"><span>Wide</span><button class="sm sq" data-d="-1" aria-label="Narrower">−</button><b>2 ft</b><button class="sm sq" data-d="1" aria-label="Wider">+</button></div>
       <div class="bstep" data-k="d"><span>Long</span><button class="sm sq" data-d="-1" aria-label="Shorter">−</button><b>2 ft</b><button class="sm sq" data-d="1" aria-label="Longer">+</button></div>
       <div class="bstep" data-k="h"><span>Tall</span><button class="sm sq" data-d="-1" aria-label="Lower">−</button><b>2 ft</b><button class="sm sq" data-d="1" aria-label="Taller">+</button></div>
-      </div>
-      <select id="blkMat" aria-label="Block material"></select>
       <div class="bstep" id="blkReach" hidden data-k="reach"><span>Reach</span><button class="sm sq" data-d="-1" aria-label="Nearer">−</button><b>12 ft</b><button class="sm sq" data-d="1" aria-label="Farther">+</button></div>
       <div class="row"><button id="blkTurn" class="sm" aria-label="Turn the block a quarter turn">Turn</button><button id="blkRemove" class="sm">Lift</button><button id="blkPlace" class="sm">Place</button></div>
     </div>
