@@ -279,3 +279,8 @@ body.editing #hud .top,body.editing #hud .sticks{display:none}
 #heatKey b{font:800 17px/1 var(--f-display);letter-spacing:.05em;text-transform:uppercase;color:var(--machine)}
 #heatKey i{display:block;height:10px;border-radius:5px}
 #heatKey>span{display:flex;justify-content:space-between;gap:8px;font:600 14px/1.1 var(--f-display);color:var(--muted)}
+/* the frame rate graph: fps over the last 10 s, with dashed lines at 30 and 60 */
+.ggraph{display:flex;flex-direction:column;gap:6px}
+#gfxGraph{width:100%;height:110px;background:#141712;border-radius:8px;display:block}
+#gfxGraphCap{font-variant-numeric:tabular-nums}
+#gfxGraphCap b{color:var(--ink)}

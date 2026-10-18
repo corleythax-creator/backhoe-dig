@@ -142,7 +142,7 @@ function setCaps(){const m=mode,two=(a,b)=>`${keyLabel(a)} ${keyLabel(b)}`,lh=kb
   for(const b of document.querySelectorAll('.seg button'))b.dataset.k=keyLabel(b.id.slice(4).toLowerCase());
   $('#capL').innerHTML=m==='dig'?`<b>${lh}</b> Swing<br><b>${lv}</b> Stick out / in`:m==='drive'?`<b>${lh}</b> Turn<br><b>${lv}</b> Drive fwd / back`:m==='mow'?(kbUsed?`<b>${lv}</b> Drive fwd / back<br><b>${lh}</b> Turn`:`<b>${lv}</b> Left lap bar<br><b>${lh}</b> Spin`):m==='walk'?`<b>${lv}</b> Walk / back<br><b>${lh}</b> Step left / right`:m==='skid'?`<b>${lv}</b> Drive fwd / back<br><b>${lh}</b> Turn`:`<b>${lh}</b> Steer<br><b>${lv}</b> Gas / reverse`;
   $('#capR').innerHTML=m==='truck'?`<b>${rv}</b> Bed up / down<br>&nbsp;`:m==='mow'?(kbUsed?`<b>${keyLabel('mwLF')} ${keyLabel('mwLB')}</b> Left bar · <b>${keyLabel('mwRF')} ${keyLabel('mwRB')}</b> Right bar<br><b>${keyLabel('mwSpinL')} ${keyLabel('mwSpinR')}</b> Spin in place`:`<b>${rv}</b> Right lap bar<br>&nbsp;`):m==='walk'?`<b>${rh}</b> Turn<br><b>${rv}</b> Look up / down`:m==='skid'?`<b>${rh}</b> Curl / dump<br><b>${rv}</b> Arms down / up`:`<b>${rh}</b> Curl / dump<br><b>${rv}</b> Boom down / up`;}
-function setMode(m){if(m===mode)return;mode=m;for(const [id,k] of [['#modeDig','dig'],['#modeDrive','drive'],['#modeTruck','truck'],['#modeMow','mow'],['#modeSkid','skid'],['#modeWalk','walk']])$(id).setAttribute('aria-pressed',m===k);
+function setMode(m){if(m===mode)return;mode=m;setTurnSens();for(const [id,k] of [['#modeDig','dig'],['#modeDrive','drive'],['#modeTruck','truck'],['#modeMow','mow'],['#modeSkid','skid'],['#modeWalk','walk']])$(id).setAttribute('aria-pressed',m===k);
   $('#walkBtns').hidden=m!=='walk';if(m!=='walk')setSprint(false);$('#capR').hidden=m==='walk';
   // switching to Walk from a machine you climbed into sets you down beside it
   if(m==='walk'){if(wk.inside){wkPlaceOut(wk.inside);wk.inside=null}wk.view=wk.yaw}
@@ -168,17 +168,18 @@ function setUiScale(v){uiScale=+v||1;const h=$('#hud');h.style.setProperty('--s'
   document.querySelectorAll('.sizes button[data-s]').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.s===uiScale));try{localStorage.setItem('bhd_ui',uiScale)}catch(e){}}
 document.querySelectorAll('.sizes button[data-s]').forEach(b=>b.onclick=()=>setUiScale(b.dataset.s));
 try{setUiScale(localStorage.getItem('bhd_ui')||1)}catch(e){setUiScale(1)}
-// turn sensitivity (above the left stick): scales every left / right input, swing, tracks, steering, the mower's spin
-// and looking round on foot, from 25% to 200% (60% unless the player moves it); saved on this device once moved.
-// Open on a computer, a tap away on a phone
-const TURN_DEF=60;let turnSens=TURN_DEF/100;const turnSl=$('#turnSl'),turnBtn=$('#turnBtn');
-function setTurnSens(v){turnSens=clamp(Math.round(+v/5)*5||TURN_DEF,25,200)/100;turnSl.value=Math.round(turnSens*100);turnBtn.textContent=`Turn ${turnSl.value}%`}
+// turn sensitivity (above the left stick): scales the left / right input of the mode you are in, swing, tracks, steering,
+// the mower's spin and looking round on foot, from 25% to 200%. Each mode keeps its own (the mower starts at 60%, the
+// rest at 100%), saved on this device once moved. Open on a computer, a tap away on a phone
+const TURN_DEF={mow:60},turnPct={};let turnSens=1;const turnSl=$('#turnSl'),turnBtn=$('#turnBtn');
+try{Object.assign(turnPct,JSON.parse(localStorage.getItem('bhd_turnM')||'{}'))}catch(e){}
+// shows the current mode's setting; with v, sets it
+function setTurnSens(v){if(v!==undefined)turnPct[mode]=clamp(Math.round(+v/5)*5||100,25,200);
+  const p=turnPct[mode]||TURN_DEF[mode]||100;turnSens=p/100;turnSl.value=p;turnBtn.textContent=`Turn ${p}%`}
 function showTurnSl(on){turnSl.hidden=!on;turnBtn.setAttribute('aria-expanded',on)}
-// v82 saved 100% under bhd_turn on every load, moved or not, so only a value other than 100% there is the player's own
-try{const s=+localStorage.getItem('bhd_turnS')||(+localStorage.getItem('bhd_turn')!==1&&+localStorage.getItem('bhd_turn'));setTurnSens(s?s*100:TURN_DEF)}catch(e){setTurnSens(TURN_DEF)}
-showTurnSl(!PHONE);
+setTurnSens();showTurnSl(!PHONE);
 turnBtn.onclick=()=>showTurnSl(turnSl.hidden);
-turnSl.oninput=()=>{setTurnSens(turnSl.value);try{localStorage.setItem('bhd_turnS',turnSens)}catch(e){}};
+turnSl.oninput=()=>{setTurnSens(turnSl.value);try{localStorage.setItem('bhd_turnM',JSON.stringify(turnPct))}catch(e){}};
 // let go of the slider so the arrow keys drive again
 turnSl.onchange=()=>turnSl.blur();
 const statusEl=$('#status');try{statusEl.classList.toggle('min',localStorage.getItem('bhd_hudmin')==='1')}catch(e){}

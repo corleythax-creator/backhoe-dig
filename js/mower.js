@@ -162,7 +162,7 @@ function lawnSave(){if(window.syncHold)return;lawn.sDirty=false;lawn.saveT=perfo
     b[n*2]=1+Math.round(Math.max(0,a)/LAWN_LIFE*254);const h=lawn.ga[n]/(Math.PI*2);b[n*2+1]=Math.round((h-Math.floor(h))*255)&255}
   let bin='';for(let k=0;k<b.length;k+=4096)bin+=String.fromCharCode.apply(null,b.subarray(k,k+4096));
   const el=lawn.startT?Math.round(((lawn.done?lawn.doneT:performance.now())-lawn.startT)/1000):0;
-  try{localStorage.setItem(LAWN_KEY,JSON.stringify({v:3,n:LAWN_N,t:Date.now(),cells:btoa(bin),el,done:lawn.done,
+  try{localStorage.setItem(LAWN_KEY,JSON.stringify({v:3,n:LAWN_N,t:Date.now(),cells:btoa(bin),field:fieldSave(),el,done:lawn.done,
     mw:{x:+mw.x.toFixed(2),z:+mw.z.toFixed(2),yaw:+mw.yaw.toFixed(3)}}))}catch(e){}}
 function lawnLoad(){let d=null;try{d=JSON.parse(localStorage.getItem(LAWN_KEY))}catch(e){}
   if(!d||(d.v!==2&&d.v!==3)||d.n!==LAWN_N||typeof d.cells!=='string')return;let b;try{b=atob(d.cells)}catch(e){return}
@@ -171,7 +171,7 @@ function lawnLoad(){let d=null;try{d=JSON.parse(localStorage.getItem(LAWN_KEY))}
     lawn.ct[n]=lawn.t-(a-1)/254*LAWN_LIFE;const q=b.charCodeAt(n*2+1);
     lawn.ga[n]=d.v===3?q/255*Math.PI*2:q>=128?Math.PI/4:Math.PI*1.25;lawn.str[n]=Math.max(-1,Math.min(1,(Math.cos(lawn.ga[n])+Math.sin(lawn.ga[n]))*0.8));lawn.gd[n]=lawnG(n);cut++}
   if(cut&&d.el>0){const now=performance.now();lawn.startT=now-d.el*1000;if(d.done){lawn.done=true;lawn.doneT=now}}
-  lawnCount();if(lawn.pct>=0.97)lawn.done=true;
+  lawnCount();if(lawn.pct>=0.97)lawn.done=true;fieldLoad(d.field);
   if(d.mw&&isFinite(d.mw.x)&&isFinite(d.mw.z)&&isFinite(d.mw.yaw))mwSaved=d.mw}
 try{lawnLoad()}catch(e){lawn.ct.fill(-1e9);lawn.gd.fill(1);lawn.str.fill(0);lawn.ga.fill(0);mwSaved=null;try{localStorage.removeItem(LAWN_KEY)}catch(e2){}}
 addEventListener('pagehide',lawnSave);
@@ -284,7 +284,8 @@ function mowCut(){
     const da=mw.yaw-lawn.ga[n];
     if(g>0.03||lawn.gd[n]>0)statCut(n,g);
     if(g>0.03||lawn.gd[n]>0||Math.abs(Math.atan2(Math.sin(da),Math.cos(da)))>0.5){lawn.str[n]=sv;lawn.ga[n]=mw.yaw;lawn.gd[n]=0;lawnPaint(n)}}
-  return n0}
+  // and the field grass anywhere on the mesa (scenery.js); a few clumps throw clippings like a cell of tall grass
+  return n0+Math.ceil(fieldCut(dx0,dz0,mw.yaw,MW_HW,MW_HD)/3)}
 function updateMower(dt,inL,inR){
   // the bars ease to where they are held; the pumps answer in about a third of a second
   mw.l+=clamp(inL-mw.l,-3*dt,3*dt);mw.r+=clamp(inR-mw.r,-3*dt,3*dt);
@@ -323,7 +324,7 @@ function updateMower(dt,inL,inR){
   if(cutN){clipSpawn(Math.min(6,cutN*2));
     if(!lawn.startT)lawn.startT=performance.now();started()}
   // the grass grows back: once the lawn is under half mowed again, it is a fresh job
-  lawn.t+=dt;lawnGrow();lawn.pctT-=dt;if(lawn.pctT<=0){lawn.pctT=0.25;lawnCount()}
+  lawn.t+=dt;lawnGrow();fieldGrow(dt);lawn.pctT-=dt;if(lawn.pctT<=0){lawn.pctT=0.25;lawnCount()}
   if(lawn.done&&lawn.pct<0.5){lawn.done=false;lawn.startT=0;toast('The grass has grown back. Time to mow again.','',3500)}
   if(!lawn.done&&lawn.pct>=0.97){lawn.done=true;lawn.doneT=performance.now();const s=Math.round((lawn.doneT-lawn.startT)/1000);statLawnDone(s);
     toast(`Lawn mowed in ${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}. Nice stripes.`,'good',5000)}
