@@ -57,6 +57,9 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - M21 Drivable boats: A runabout, a pontoon and a small fishing boat you drive on the lake; the waves rock them, and you tie up at a dock and step off. (R6 F9 most low c3 10h)
 - M22 Kayak and paddleboard: Paddle the shallows and coves by hand, with the boat dipping as you shift your weight. Quiet and cozy, and a way to reach beaches the big boats can't. (R6 F8 most low c2 5h)
 - M23 Floatplane at the dock: A little seaplane lands at the dock, drops off mail and visitors, and takes off again. (R6 F7 some low c2 6h)
+- M24 ATV four-wheeler: A quad to blast around the fields and woods trails: throttle thumb, a rack on the back, mud on the tyres and a rumble you hear across the lake. (R6 F8 most low c1 4h)
+- M25 Tractor with a brush hog: A rear-mounted rotary cutter for tall grass and brush: drop the deck, engage the PTO and watch the field fall in swaths behind you. (R7 F8 most low c2 6h)
+- M26 Tractor loader and attachments: A front loader bucket, pallet forks, a post-hole auger and a bale spear that bolt onto the farm tractor. (R8 F7 most low c3 10h needs M19)
 
 ## X: Excavator and attachments
 
@@ -143,6 +146,11 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - S21 Boardwalk and snack shack: A short boardwalk with an ice-cream window, a bait shop and a cafe, with a few visitors. (R7 F7 most low c2 8h)
 - S22 Lighthouse on the point: A small beacon whose lamp sweeps the lake at night, with a stair to climb for the view. (R7 F8 every low c2 6h)
 - S23 Herons, otters and turtles: Shore animals with habits: a heron fishing at dawn, turtles sunning on a log, otters playing off the dock. Extends S09. (R6 F6 most low c2 5h needs S09)
+- S24 Woods to explore: A big forest on the island with trails, ferns, fallen logs, a creek to cross, birdsong, and sunlight through the leaves. Trees are instanced and fade out with distance so the phone keeps its frame rate. (R7 F9 most high c3 14h)
+- S25 Trail network for ATVs and side-by-sides: Dirt trails through the woods and along the field edge, with hills, mud holes, a creek crossing and jumps, built to be ridden at speed. (R6 F9 most low c2 7h needs S24 M24)
+- S26 Cut and split firewood: Fell a dead tree with a chainsaw, buck it into rounds, split and stack it, and haul it to the cabin on a trailer for the woodstove. (R7 F7 some low c2 7h needs S24 H01)
+- S27 Trail cameras: Strap cameras to trees in the woods and check the photos later: deer at dawn, a fox, an owl, and maybe a bear. (R5 F8 some low c1 4h needs S24)
+- S28 Hidden spots in the woods: An old stone wall, a collapsed cabin, a spring and a rock overlook with a view of the lake, waiting to be found. (R5 F8 some low c1 4h needs S24)
 
 ## L: Crew and people
 
@@ -265,6 +273,8 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - K11 Lawn care business: Mow customers' yards in town on a weekly route for pay. (R5 F7 most low c3 10h needs T01)
 - K12 Bagger and compost pile: Catch clippings and dump them on a compost pile. (R6 F4 some low c1 3h)
 - K13 Family Island lawn: Grass around the family house that grows long and needs the zero-turn, with its own lawn timer. (R7 F7 most low c1 4h)
+- K14 The big hayfield: A huge field, forty acres or more, of tall grass to mow in rows with the tractor. It takes real minutes, a progress meter counts the acres, and the cut rows show as stripes. Grass is drawn in chunks so a phone only pays for what is in view. (R7 F9 most high c3 12h needs M25)
+- K15 Cut, rake and bale hay: Mow the hay, rake it into windrows, bale it in round bales and haul them to the barn on a wagon before the rain comes. (R8 F8 some low c3 10h needs K14 W01)
 
 ## B: The bridge and the drive
 
@@ -282,6 +292,8 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - B12 Traffic reacts to you: Cars slow, stop and honk for your machine on the road, wait while you pull a trailer or a loaded dump truck out of the site, and a flagger walks out to stop traffic for you. (R7 F7 most low c2 5h needs B11)
 - B13 Trains on the mainland shore: A railroad along the mainland shore with freight trains of boxcars, tankers and hoppers that rumble past with a horn, a long shadow on the water and a ground shake you feel in the cab. Spawn and draw only the cars in view so a phone keeps its frame rate. (R8 F8 most low c3 10h)
 - B14 Rail crossing: A road crossing with flashing lights, bells and gates; traffic and your machine have to wait while a train goes by, and a slow dump truck on the tracks is a bad idea. (R8 F7 some low c2 5h needs B13 B11)
+- B15 Railroad maintenance job: Dig out the ditch along the tracks, swap rotten ties with the excavator and spread ballast stone, then wait for a train to roll over your work. (R9 F7 some low c2 7h needs B13)
+- B16 Ride the train to town: Climb aboard at the depot and watch the shore roll by on the way to the mountain town. (R5 F9 some low c2 6h needs B13 T01)
 
 ## T: The mountain town
 
@@ -344,3 +356,4 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - I29 Sunset cruise: Take the pontoon out with the family at dusk: a slow drift, golden light and the dog in the bow. (R5 F9 some low c1 3h needs M21)
 - I30 Floating lantern night: Once a season everyone sets paper lanterns afloat from the beach, and they drift out across the lake. (R5 F8 rare low c1 3h)
 - I31 Saturday regatta: Sailboats race a course round the buoys while the town watches from the shore. (R6 F7 rare low c2 7h needs S19)
+- I32 Fall hayride: The family climbs on a hay wagon behind the tractor for a bumpy ride round the field at sunset, with pumpkins in the back. (R5 F8 rare low c1 3h needs M25 I02)
