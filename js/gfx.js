@@ -7,13 +7,13 @@
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 // pr resolution cap, auto lower it when slow, fps frame cap (0 none), fov degrees added, sh shadow map (0 off), soft
 // shadow edges, filmic lighting, exp brightness, tex texture size, base ground texture, detail cut faces, painted
-// materials and machine grime, macro large-scale variation, aniso, tuft grass blades [amount, full-detail distance m,
+// materials and machine grime, macro large-scale variation, pbr relief and wet sheen on materials that have those maps, aniso, tuft grass blades [amount, full-detail distance m,
 // fade-out distance m, share kept far off], lawnFar lawn full detail within m, fog haze distance, wmFine fine puddle
 // water, rainN raindrops, splashN drops in a puddle splash, dirt the Dirt detail it sets when picked
 const GFX={
-  low:{name:'Low',pr:1.5,auto:true,fps:0,fov:0,sh:1024,soft:false,filmic:false,exp:1,tex:'low',detail:0,base:1,macro:false,aniso:4,dirt:1,lawnFar:6,fog:1,wmFine:false,rainN:600,splashN:250,tuft:[0.6,12,40,0.2]},
-  med:{name:'Medium',pr:1.5,auto:true,fps:0,fov:0,sh:2048,soft:false,filmic:true,exp:1,tex:'med',detail:1,base:1,macro:false,aniso:8,dirt:2,lawnFar:15,fog:1,wmFine:true,rainN:1500,splashN:600,tuft:[0.85,18,60,0.3]},
-  high:{name:'High',pr:2,auto:true,fps:0,fov:0,sh:2048,soft:true,filmic:true,exp:1,tex:'high',detail:1,base:1,macro:true,aniso:16,dirt:4,lawnFar:1e9,fog:1,wmFine:true,rainN:3000,splashN:1200,tuft:[1,25,80,0.35]}};
+  low:{name:'Low',pr:1.5,auto:true,fps:0,fov:0,sh:1024,soft:false,filmic:false,exp:1,tex:'low',detail:0,base:1,macro:false,pbr:false,aniso:4,dirt:1,lawnFar:6,fog:1,wmFine:false,rainN:600,splashN:250,tuft:[0.6,12,40,0.2]},
+  med:{name:'Medium',pr:1.5,auto:true,fps:0,fov:0,sh:2048,soft:false,filmic:true,exp:1,tex:'med',detail:1,base:1,macro:false,pbr:false,aniso:8,dirt:2,lawnFar:15,fog:1,wmFine:true,rainN:1500,splashN:600,tuft:[0.85,18,60,0.3]},
+  high:{name:'High',pr:2,auto:true,fps:0,fov:0,sh:2048,soft:true,filmic:true,exp:1,tex:'high',detail:1,base:1,macro:true,pbr:true,aniso:16,dirt:4,lawnFar:1e9,fog:1,wmFine:true,rainN:3000,splashN:1200,tuft:[1,25,80,0.35]}};
 let gfxKey='high',gfxOver={},gfxCur=Object.assign({},GFX.high);
 function gfxName(){return GFX[gfxKey].name+(Object.keys(gfxOver).length?' (custom)':'')}
 function gfxGuess(){if(PHONE)return 'low';
@@ -33,7 +33,7 @@ function gfxApply(){const g=gfxCur=Object.assign({},GFX[gfxKey],gfxOver);
     scene.traverse(o=>{if(o.material)for(const m of [].concat(o.material))m.needsUpdate=true})}
   renderer.toneMappingExposure=te;
   // ground detail: the cut-face detail, material library and machine grime (detail), and the grass and dirt textures (base)
-  gfxDetail=g.detail;gfxBase=g.base;if(texOn){texMixU.value=gfxDetail;texBaseU.value=gfxBase;matTexUpdate()}
+  gfxDetail=g.detail;gfxBase=g.base;matU.texPbr.value=g.pbr?1:0;if(texOn){texMixU.value=gfxDetail;texBaseU.value=gfxBase;matTexUpdate()}
   // the ground pack's size, its filtering and the large-scale variation map (terrain.js)
   texTierSet(g.tex);texAnisoSet(g.aniso);macroSet(g.macro);
   // puddles: a finer water surface with sky reflections, or a 1 ft one without (water.js); the water itself is the same
@@ -77,6 +77,7 @@ const GFX_ROWS=[
   {id:'tex',label:'Texture size',hint:'Ground and machine textures. Bigger is sharper and uses more memory.',opts:[['low','512'],['med','1024'],['high','2048']]},
   {id:'base',label:'Ground texture',hint:'Grass and dirt detail on the ground.',opts:[[1,'On'],[0,'Off']]},
   {id:'detail',label:'Extra detail',hint:'Cut dirt faces, painted materials and grime on the machines.',opts:[[1,'On'],[0,'Off']]},
+  {id:'pbr',label:'Material relief',hint:'Painted gravel, brick, concrete and other materials show bumps and glints in the sun and in the rain. Adjust them on the screen editor\'s Tuning tab (Ground look).',opts:onOff},
   {id:'macro',label:'Ground variation',hint:'Large soft light and dark patches that hide the texture repeating.',opts:onOff},
   {id:'aniso',label:'Sharpness at an angle',hint:'Keeps far-off ground crisp (anisotropic filtering).',opts:[[1,'1x'],[2,'2x'],[4,'4x'],[8,'8x'],[16,'16x']]},
   ['Grass and scenery'],

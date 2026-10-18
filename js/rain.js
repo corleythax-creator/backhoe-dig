@@ -18,7 +18,7 @@ const SOAK_RATE=0.004,DRY_RATE=0.0008,RAIN_IN=0.0004,RAIN_DRAIN=0.0008;
 // with a map) it starts soaked, then dries out like the rest over about 20 minutes, through damp to cracked (how it
 // looks: materials.js), and rain soaks it again. rainMud marks the points painted Mud, to catch new paint
 const rainMud=new Uint8Array(RW_NX*RW_NZ);
-const MAT_WET={mud:[1,1],dirt2:[1,1],clay:[1,0.5],sand:[0.2,2.5],gravel:[0.15,2],riverrock:[0.1,2],mulch:[0.4,1.2],grass2:[0.55,1]};
+const MAT_WET={mud:[1,1],dirt2:[1,1],clay:[1,0.5],sand:[0.2,2.5],gravel:[0.15,2],gravel_wet:[0.15,2],riverrock:[0.1,2],mulch:[0.4,1.2],grass2:[0.55,1]};
 function rainBase(i0,i1,j0,j1){
   for(let j=Math.max(0,j0);j<=Math.min(RW_NZ-1,j1);j++)for(let i=Math.max(0,i0);i<=Math.min(RW_NX-1,i1);i++){const x=RW_X0+i*RW_C,z=RW_Z0+j*RW_C,k=j*RW_NX+i;
     const h=baseHeight(x,z),sl=(Math.abs(baseHeight(x+0.5,z)-baseHeight(x-0.5,z))+Math.abs(baseHeight(x,z+0.5)-baseHeight(x,z-0.5)));

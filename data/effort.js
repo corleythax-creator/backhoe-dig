@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-18T06:06:00Z",
+ "updated": "2026-10-18T21:49:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -24,9 +24,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-18",
-   "dh": 57,
-   "act": 1.5,
-   "versions": 5
+   "dh": 65,
+   "act": 2,
+   "versions": 6
   }
  ],
  "extra": [
@@ -1053,6 +1053,15 @@ window.EFFORT = {
    "tris": 1620572,
    "chars": 703241,
    "what": "Map editor Add tool: a catalogue of low-poly houses, shed, garage, fences, gates, light towers, cones, barrels, pallets, porta-potty, signs, benches, picnic table and dumpster; placed, moved, turned, resized and copied like trees, saved with the map, instanced, solid ones block machines and the worker"
+  },
+  {
+   "v": 114,
+   "asked": "2026-10-18T16:00:00-05:00",
+   "live": "2026-10-18T16:49:55-05:00",
+   "dh": 8,
+   "tris": 1619989,
+   "chars": 709263,
+   "what": "Gravel, brick, cobble, concrete and 24 other painted materials show real bumps and wet glints on High graphics, with the new Wet gravel and Ground look sliders in the Tuning tab."
   }
  ]
 };
