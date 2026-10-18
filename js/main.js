@@ -10,6 +10,7 @@ function frame(now){
   // frame cap (Graphics panel): skip this display refresh if the last frame was too recent
   if(gfxCur.fps&&!bench.on&&now-last<900/gfxCur.fps){requestAnimationFrame(frame);return}
   gfxFrame(now-last);
+  matPbrSync();
   const dt=Math.min(0.05,(now-last)/1000);last=now;crushT-=dt;
   // resolution changes and window resizes land here, before anything is drawn this frame
   if(viewDirty){viewDirty=false;const want=bench.on?(bench.pr||maxPR):pr;if(renderer.getPixelRatio()!==want)renderer.setPixelRatio(want);resize()}

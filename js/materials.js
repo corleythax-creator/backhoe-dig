@@ -3,42 +3,45 @@
 // made tileable by tools/textures.py) with its mean colour, which the ground's vertex colours take everywhere and the
 // texture's detail rides on (Medium and High graphics, WebGL2). The painted ids live in ED_M (terrain.js). Mud has two
 // extra textures for when it dries (MUD_STAGES).
+// pbr:1 marks a material that also has relief and sheen maps (textures/<id>_n.jpg and _r.jpg, from tools/pbr.py): on High graphics (the
+// Material relief setting) the ground shader tilts its lighting by the normal map and takes its sheen from the roughness map and the rain.
+// The strengths are the Ground look tunings (tune.js), fading with distance so far ground does not shimmer.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 // A material's saved id is its place in MAT_LIST plus one (0 is the natural ground): only ever add to the end.
 // ft: how many feet one tile of the texture covers; c: its mean colour (sRGB, from tools/textures.py); sh: how shiny it is
 // (0 to 1, none if left out): sharp sun highlights and the sky mirrored in it, on the ground and on blocks
 const MAT_CATS=['Ground','Concrete and paving','Steel','Brick and stone','Wood and more'];
 const MAT_LIST=[
-  {id:'gravel',n:'Crushed gravel',cat:0,ft:4,c:[0.499,0.498,0.501]},
-  {id:'riverrock',n:'River rock',cat:0,ft:4,c:[0.576,0.455,0.347]},
-  {id:'sand',n:'Sand',cat:0,ft:6,c:[0.837,0.648,0.386]},
-  {id:'dirt2',n:'Topsoil',cat:0,ft:5,c:[0.431,0.215,0.109]},
-  {id:'clay',n:'Dry clay',cat:0,ft:8,c:[0.867,0.490,0.207]},
+  {id:'gravel',n:'Crushed gravel',cat:0,ft:4,c:[0.499,0.498,0.501],pbr:1},
+  {id:'riverrock',n:'River rock',cat:0,ft:4,c:[0.576,0.455,0.347],pbr:1},
+  {id:'sand',n:'Sand',cat:0,ft:6,c:[0.837,0.648,0.386],pbr:1},
+  {id:'dirt2',n:'Topsoil',cat:0,ft:5,c:[0.431,0.215,0.109],pbr:1},
+  {id:'clay',n:'Dry clay',cat:0,ft:8,c:[0.867,0.490,0.207],pbr:1},
   {id:'mud',n:'Mud',cat:0,ft:6,c:[0.265,0.181,0.121]},
-  {id:'mulch',n:'Wood mulch',cat:0,ft:4,c:[0.429,0.256,0.172]},
+  {id:'mulch',n:'Wood mulch',cat:0,ft:4,c:[0.429,0.256,0.172],pbr:1},
   {id:'grass2',n:'Lawn sod',cat:0,ft:4,c:[0.236,0.538,0.106]},
-  {id:'granite',n:'Bedrock',cat:0,ft:8,c:[0.459,0.456,0.430]},
-  {id:'concrete',n:'Poured concrete',cat:1,ft:8,c:[0.697,0.693,0.684]},
-  {id:'concrete_broom',n:'Broom-finish concrete',cat:1,ft:6,c:[0.664,0.651,0.635]},
-  {id:'concrete_old',n:'Old concrete',cat:1,ft:10,c:[0.450,0.435,0.408]},
-  {id:'aggregate',n:'Exposed aggregate',cat:1,ft:4,c:[0.522,0.471,0.418]},
-  {id:'pavers',n:'Concrete pavers',cat:1,ft:6,c:[0.528,0.520,0.512]},
-  {id:'cmu',n:'Concrete block',cat:1,ft:2.67,c:[0.533,0.529,0.527]},
-  {id:'asphalt',n:'Asphalt',cat:1,ft:6,c:[0.268,0.265,0.266]},
-  {id:'diamond',n:'Diamond plate',cat:2,ft:3,c:[0.542,0.563,0.582]},
-  {id:'rustplate',n:'Steel road plate',cat:2,ft:8,c:[0.312,0.238,0.196]},
-  {id:'corrugated',n:'Corrugated steel',cat:2,ft:1.8,c:[0.567,0.585,0.603]},
-  {id:'grating',n:'Bar grating',cat:2,ft:3,c:[0.300,0.331,0.357]},
-  {id:'rebar',n:'Rebar mat',cat:2,ft:4,c:[0.360,0.327,0.307]},
+  {id:'granite',n:'Bedrock',cat:0,ft:8,c:[0.459,0.456,0.430],pbr:1},
+  {id:'concrete',n:'Poured concrete',cat:1,ft:8,c:[0.697,0.693,0.684],pbr:1},
+  {id:'concrete_broom',n:'Broom-finish concrete',cat:1,ft:6,c:[0.664,0.651,0.635],pbr:1},
+  {id:'concrete_old',n:'Old concrete',cat:1,ft:10,c:[0.450,0.435,0.408],pbr:1},
+  {id:'aggregate',n:'Exposed aggregate',cat:1,ft:4,c:[0.522,0.471,0.418],pbr:1},
+  {id:'pavers',n:'Concrete pavers',cat:1,ft:6,c:[0.528,0.520,0.512],pbr:1},
+  {id:'cmu',n:'Concrete block',cat:1,ft:2.67,c:[0.533,0.529,0.527],pbr:1},
+  {id:'asphalt',n:'Asphalt',cat:1,ft:6,c:[0.268,0.265,0.266],pbr:1},
+  {id:'diamond',n:'Diamond plate',cat:2,ft:3,c:[0.542,0.563,0.582],pbr:1},
+  {id:'rustplate',n:'Steel road plate',cat:2,ft:8,c:[0.312,0.238,0.196],pbr:1},
+  {id:'corrugated',n:'Corrugated steel',cat:2,ft:1.8,c:[0.567,0.585,0.603],pbr:1},
+  {id:'grating',n:'Bar grating',cat:2,ft:3,c:[0.300,0.331,0.357],pbr:1},
+  {id:'rebar',n:'Rebar mat',cat:2,ft:4,c:[0.360,0.327,0.307],pbr:1},
   {id:'yellowsteel',n:'Yellow steel',cat:2,ft:4,c:[0.911,0.701,0.067]},
-  {id:'brick',n:'Red brick',cat:3,ft:2.67,c:[0.678,0.337,0.255]},
-  {id:'brick_old',n:'Old brick',cat:3,ft:2.67,c:[0.475,0.246,0.157]},
-  {id:'herringbone',n:'Brick pavers',cat:3,ft:4,c:[0.705,0.358,0.238]},
-  {id:'cobble',n:'Cobblestone',cat:3,ft:5,c:[0.424,0.426,0.433]},
-  {id:'flagstone',n:'Flagstone',cat:3,ft:8,c:[0.584,0.460,0.347]},
-  {id:'plywood',n:'Plywood',cat:4,ft:4,c:[0.889,0.736,0.526]},
-  {id:'planks',n:'Deck planks',cat:4,ft:2.75,c:[0.437,0.351,0.284]},
-  {id:'shingles',n:'Roof shingles',cat:4,ft:2.5,c:[0.237,0.243,0.255]},
+  {id:'brick',n:'Red brick',cat:3,ft:2.67,c:[0.678,0.337,0.255],pbr:1},
+  {id:'brick_old',n:'Old brick',cat:3,ft:2.67,c:[0.475,0.246,0.157],pbr:1},
+  {id:'herringbone',n:'Brick pavers',cat:3,ft:4,c:[0.705,0.358,0.238],pbr:1},
+  {id:'cobble',n:'Cobblestone',cat:3,ft:5,c:[0.424,0.426,0.433],pbr:1},
+  {id:'flagstone',n:'Flagstone',cat:3,ft:8,c:[0.584,0.460,0.347],pbr:1},
+  {id:'plywood',n:'Plywood',cat:4,ft:4,c:[0.889,0.736,0.526],pbr:1},
+  {id:'planks',n:'Deck planks',cat:4,ft:2.75,c:[0.437,0.351,0.284],pbr:1},
+  {id:'shingles',n:'Roof shingles',cat:4,ft:2.5,c:[0.237,0.243,0.255],pbr:1},
   {id:'fabric',n:'Landscape fabric',cat:4,ft:6,c:[0.138,0.141,0.143]},
   {id:'steel_polished',n:'Polished steel',cat:2,ft:4,c:[0.652,0.651,0.652],sh:1},
   {id:'gravel_wet',n:'Wet gravel',cat:0,ft:4,c:[0.349,0.327,0.303],sh:0.3,pbr:1}];
@@ -65,7 +68,7 @@ const MAT_GL2=renderer.capabilities.isWebGL2;
 // up in terrain.js), the texture array holding just the materials the map uses, each id's mean colour and tiles per
 // metre, and its layer; for Mud, the layers of its drier looks and their colours over its own
 const matU={tMatId:{value:null},tMatCov:{value:null},tMatArr:{value:null},uMatInfo:{value:[]},uMatLS:{value:new Float32Array(MAT_MAX*2)},uMudL:{value:new THREE.Vector2(-1,-1)},
-  uMatN:{value:new Float32Array(MAT_MAX).fill(-1)},texPbr:{value:0},uMudC1:{value:new THREE.Vector3()},uMudC2:{value:new THREE.Vector3()},tSkyEnv:{value:skyEnv}};
+  uMatN:{value:new Float32Array(MAT_MAX).fill(-1)},texPbr:{value:0},uPbr:{value:new THREE.Vector4(1,1,1,55)},uMudC1:{value:new THREE.Vector3()},uMudC2:{value:new THREE.Vector3()},tSkyEnv:{value:skyEnv}};
 // uMatLS: each id's texture layer (-1 none loaded) and shine
 {const w=MAT_LIST.find(m=>m&&m.id==='mud').c,r=(c,i)=>c[i]/w[i];matU.uMudC1.value.set(r(MUD_STAGES[0].c,0),r(MUD_STAGES[0].c,1),r(MUD_STAGES[0].c,2));matU.uMudC2.value.set(r(MUD_STAGES[1].c,0),r(MUD_STAGES[1].c,1),r(MUD_STAGES[1].c,2))}
 for(let m=0;m<MAT_MAX;m++)matU.uMatInfo.value.push(new THREE.Vector4(1,1,1,1));
@@ -80,6 +83,7 @@ uniform vec4 uMatInfo[${MAT_MAX}];
 uniform vec2 uMatLS[${MAT_MAX}];
 uniform float uMatN[${MAT_MAX}];
 uniform float texPbr;
+uniform vec4 uPbr;
 uniform samplerCube tSkyEnv;
 uniform vec2 uMudL;
 uniform vec3 uMudC1;
@@ -114,7 +118,12 @@ if(vMatA>0.001){
     vec3 mk=vec3(1.0);float d1=0.0,d2=0.0;
     if(mi==${MUD_ID}){d1=1.0-smoothstep(0.3,0.55,soilW);d2=1.0-smoothstep(0.06,0.22,soilW);mk=mix(mix(vec3(1.0),uMudC1,d1),uMudC2,d2);matC*=mk;}
     if(texMix>0.5&&ly>=0.0){vec2 uv=vWXZ*inf.a;vec4 tx4=texture(tMatArr,vec3(uv,ly));vec3 tx=tx4.rgb;
-      float nl=uMatN[mi];if(texPbr>0.5&&nl>=0.0){matG=clamp(tx4.a*2.0,0.0,2.0);matNt=texture(tMatArr,vec3(uv,nl)).rgb*2.0-1.0;matNp=matP;matS*=matG;}
+      float nl=uMatN[mi];if(texPbr>0.5&&nl>=0.0){
+        // relief and sheen (High): the normal map, faded out with distance (it only shimmers far off) and softened where rain films the
+        // surface; the roughness map in the alpha scales the sheen, and rain adds to it (uPbr: relief, sheen, rain sheen, fade-out distance)
+        float pd=length(vWP-cameraPosition);matG=clamp(tx4.a*2.0,0.0,2.0);matNt=texture(tMatArr,vec3(uv,nl)).rgb*2.0-1.0;
+        matNp=matP*uPbr.x*(1.0-smoothstep(0.45*uPbr.w,uPbr.w,pd))*(1.0-0.3*rainF);
+        matS=(ls.y+0.35*uPbr.z*rainF)*matP*(1.0-mudF)*matG*uPbr.y;}
       if(mi==${MUD_ID}){if(uMudL.x>=0.0){tx=mix(tx,texture(tMatArr,vec3(uv,uMudL.x)).rgb,d1);tx=mix(tx,texture(tMatArr,vec3(uv,uMudL.y)).rgb,d2);}else tx*=mk;}
       matC=mix(matC,clamp(tx,vec3(0.0),3.0*inf.rgb*mk),texBase);matT=mix(1.0,clamp(dot(tx,vec3(1.0))/dot(inf.rgb,vec3(1.0)),0.0,2.0),texBase);}}
 }
@@ -129,6 +138,8 @@ const matGlslPost=()=>MAT_GL2?'if(matP>0.0){vec3 mc=matC*(1.0-0.19*mudF)*(1.0-0.
 // a normal map (a material's pbr maps, High graphics): the ground is lit from its tilted normal. The map's x runs east and its y
 // south (the texture's u and v on the ground), so it tilts the world normal that way
 const matGlslNorm=()=>MAT_GL2?'if(matNp>0.0){vec3 mnW=inverseTransformDirection(normal,viewMatrix);mnW=normalize(mnW+vec3(matNt.x,0.0,matNt.y)*1.1*matNp);normal=transformDirection(mnW,viewMatrix);}\n':'';
+// the Ground look tunings (tune.js) into the shader, read live each frame (relief, sheen, rain sheen, fade-out distance in metres)
+function matPbrSync(){matU.uPbr.value.set(TU.pbrRelief,TU.pbrSheen,TU.pbrRain,TU.pbrFar)}
 const matGlslSpec=()=>MAT_GL2?'specularStrength=mix(specularStrength,12.0,matS);\n':'';
 const matGlslShin=()=>MAT_GL2?'material.specularShininess=mix(material.specularShininess,90.0,matS);\n':'';
 const matGlslRefl=()=>MAT_GL2?`if(matS>0.0){vec3 mrN=inverseTransformDirection(normal,viewMatrix);vec3 mrV=normalize(vWP-cameraPosition);

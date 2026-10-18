@@ -39,7 +39,12 @@ const TUNE=[
   ['soilSand','Digging','Dig speed in sand',0.85,'pct',5,100,1],['soilRock','Digging','Dig speed in rock',0.12,'pct',2,100,1],
   ['fluff','Digging','How much dug dirt fluffs up (100% = about a quarter)',1,'pct',0,400,5],
   ['caveDepth','Cave-ins','Walls start to cave in deeper than',1.2,'ft',1,30,0.5],['caveSpoil','Cave-ins','Spoil this close to the edge loads the wall',0.64,'ft',0,10,0.5],
-  ['caveRate','Cave-ins','How fast a bad wall gives way (0% = never)',1,'pct',0,500,5],['caveWarn','Cave-ins','Dirt trickles off the lip for',2.2,'s',0,20,0.5]];
+  ['caveRate','Cave-ins','How fast a bad wall gives way (0% = never)',1,'pct',0,500,5],['caveWarn','Cave-ins','Dirt trickles off the lip for',2.2,'s',0,20,0.5],
+  // only drawn on High graphics (Material relief); how the ground looks, not what it does, so every device may use the same numbers
+  ['pbrRelief','Ground look','Relief: how deep the bumps in gravel, brick and concrete look',1,'pct',0,300,5],
+  ['pbrSheen','Ground look','Sheen: how strong the glints on wet and shiny ground are',1,'pct',0,300,5],
+  ['pbrRain','Ground look','Extra sheen while it rains',1,'pct',0,400,5],
+  ['pbrFar','Ground look','Relief fades out by',180*0.3048,'ft',60,600,10]];
 // unit: [shown = code value × factor, label]
 const TUNE_U={mph:[1/0.44704,'mph'],ft:[1/0.3048,'ft'],deg:[180/Math.PI,'°/s'],yd3:[1.307951,'yd³'],pct:[100,'%'],s:[1,'s'],min:[1/60,'min'],in:[1/0.0254,'in']};
 const tuneShow=(e,v)=>v*TUNE_U[e[4]][0];

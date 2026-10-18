@@ -77,7 +77,7 @@ const GFX_ROWS=[
   {id:'tex',label:'Texture size',hint:'Ground and machine textures. Bigger is sharper and uses more memory.',opts:[['low','512'],['med','1024'],['high','2048']]},
   {id:'base',label:'Ground texture',hint:'Grass and dirt detail on the ground.',opts:[[1,'On'],[0,'Off']]},
   {id:'detail',label:'Extra detail',hint:'Cut dirt faces, painted materials and grime on the machines.',opts:[[1,'On'],[0,'Off']]},
-  {id:'pbr',label:'Material relief',hint:'Painted materials with relief and wet-sheen maps (Wet gravel) show their bumps and glints.',opts:onOff},
+  {id:'pbr',label:'Material relief',hint:'Painted gravel, brick, concrete and other materials show bumps and glints in the sun and in the rain. Adjust them on the screen editor\'s Tuning tab (Ground look).',opts:onOff},
   {id:'macro',label:'Ground variation',hint:'Large soft light and dark patches that hide the texture repeating.',opts:onOff},
   {id:'aniso',label:'Sharpness at an angle',hint:'Keeps far-off ground crisp (anisotropic filtering).',opts:[[1,'1x'],[2,'2x'],[4,'4x'],[8,'8x'],[16,'16x']]},
   ['Grass and scenery'],
