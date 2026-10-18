@@ -285,9 +285,10 @@ function updateTruck(dt,thr,steerIn,bedIn){
   if(wallCount(tr.x,tr.z,tr.yaw,TR_P)>w0){tr.x=ox;tr.z=oz;tr.yaw=oyaw;if(Math.abs(tr.v)>1.2){shake=reduceMotion?0:0.12;rumble(200,0.5)}tr.v=0}
   // the rim berm keeps both axles on the mesa (the tail can still hang over the edge to dump): head-on it stops
   // the truck, at a glancing angle it scrapes along and keeps most of its speed
-  for(const lz of [3.1,REAR]){const sy=Math.sin(tr.yaw),cy=Math.cos(tr.yaw),px=tr.x+sy*lz,pz=tr.z+cy*lz,rr=mesaR(px,pz),lim=EDGE-1.0;
-    if(rr>lim){const k=lim/rr;tr.x+=px*k-px;tr.z+=MZ+(pz-MZ)*k-pz;
-      const nz=pz-MZ,nl=Math.hypot(px,nz)||1,c=(sy*px+cy*nz)/nl*Math.sign(tr.v);
+  // (and the railings keep it on a bridge deck)
+  for(const lz of [3.1,REAR]){const sy=Math.sin(tr.yaw),cy=Math.cos(tr.yaw),px=tr.x+sy*lz,pz=tr.z+cy*lz,q=landClamp(px,pz,1.0,1.4);
+    if(q[0]!==px||q[1]!==pz){tr.x+=q[0]-px;tr.z+=q[1]-pz;
+      const nx=px-q[0],nz=pz-q[1],nl=Math.hypot(nx,nz)||1,c=(sy*nx+cy*nz)/nl*Math.sign(tr.v);
       if(c>0)tr.v*=Math.exp(-c*dt*40)}}
   // keep the truck from driving through the excavator or blocks it can't roll over
   const sy=Math.sin(tr.yaw),cy=Math.cos(tr.yaw);
