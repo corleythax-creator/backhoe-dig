@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-18T06:05:00Z",
+ "updated": "2026-10-18T06:06:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -24,9 +24,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-18",
-   "dh": 41,
+   "dh": 57,
    "act": 1.5,
-   "versions": 4
+   "versions": 5
   }
  ],
  "extra": [
@@ -1044,6 +1044,15 @@ window.EFFORT = {
    "tris": 1621042,
    "chars": 693177,
    "what": "Tuning tab grows to 56 numbers: truck grip, braking, bed rates and load weight, bucket pour and spill, gravity, camera speed, reach, mowing height, rain strength, puddle drain, mud sink, drag and sticking, dig speed per soil, dirt fluff and cave-ins"
+  },
+  {
+   "v": 113,
+   "asked": "2026-10-18T00:37:00-05:00",
+   "live": "2026-10-18T01:06:02-05:00",
+   "dh": 16,
+   "tris": 1620572,
+   "chars": 703241,
+   "what": "Map editor Add tool: a catalogue of low-poly houses, shed, garage, fences, gates, light towers, cones, barrels, pallets, porta-potty, signs, benches, picnic table and dumpster; placed, moved, turned, resized and copied like trees, saved with the map, instanced, solid ones block machines and the worker"
   }
  ]
 };
