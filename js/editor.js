@@ -158,6 +158,9 @@ function edQuery(x,z){const g=baseHeight(x,z),h=hAt(x,z),r=mesaR(x,z);
   const mt=paintAt(x,z);if(mt)mine.push(MAT_LIST[mt-1].n.toLowerCase());
   const rows=[['Spot',edWhere(x,z)],['Ground',`${g>=0?'+':'−'}${edFmt(Math.abs(g))} ft (mesa top is 0)`],['Slope',`${Math.round(sl*100)}% · ${Math.round(Math.atan(sl)*57.3)}°`],
     ['Surface',surf],['Driveable',drive]];
+  // how wet the soil is (rain.js); painted Mud names its look as it dries
+  {const k=rwIdx(x,z);if(k>=0&&rainK[k]>0){const w=rainW[k],m=mt===MUD_ID;
+    rows.push(['Soil',w>0.9?'Soaked':w>0.55?'Wet':w>0.3?(m?'Drying, still soft':'Damp'):w>0.12?(m?'Dry, starting to crack':'Dry'):(m?'Dry and cracked':'Dry')])}}
   if(h<g-0.04)rows.push(['Dug',`${edFmt(g-h)} ft below the ground`]);else if(h>g+0.04)rows.push(['Dumped',`${edFmt(h-g)} ft of dirt`]);
   if(mine.length)rows.push(['Your edits',mine.join(', ')]);
   const hit=edHit(x,z);if(hit)rows.push(['Here',hit.a?edAssetName(hit.a):hit.m.name]);
@@ -366,7 +369,7 @@ function editorFrame(dt,now){
   if(ed.pend&&(ed.stroke||(ed.drag&&ed.drag.road))&&now-ed.refT>110){ed.refT=now;edRefresh(ed.pend,false);ed.pend=null}
   if(ed.sel&&ed.sel.m)edRingSel();
   // puddles and mud tiles keep up with the edits (painted Mud fills ruts, painting over them dries them)
-  waterTick(dt);mudTick(dt);
+  waterTick(dt);mudTick(dt);if(rainTexDirty)rainTexUpdate();
   const fy=hAt(ed.x,ed.z);edLook.set(ed.x,fy,ed.z);
   camera.position.set(ed.x+Math.sin(ed.yaw)*Math.cos(ed.pitch)*ed.dist,fy+Math.sin(ed.pitch)*ed.dist,ed.z+Math.cos(ed.yaw)*Math.cos(ed.pitch)*ed.dist);
   camera.position.y=Math.max(camera.position.y,hAt(camera.position.x,camera.position.z)+2);camera.lookAt(edLook);

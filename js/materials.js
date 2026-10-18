@@ -1,7 +1,8 @@
 // Corley's Island: the material library the map editor paints onto the ground (Paint tool): ground covers, concrete
 // and paving, steel, brick and stone, wood and more. Each is a seamless 512 px texture in textures/ (OpenAI GPT Image,
 // made tileable by tools/textures.py) with its mean colour, which the ground's vertex colours take everywhere and the
-// texture's detail rides on (Medium and High graphics, WebGL2). The painted ids live in ED_M (terrain.js).
+// texture's detail rides on (Medium and High graphics, WebGL2). The painted ids live in ED_M (terrain.js). Mud has two
+// extra textures for when it dries (MUD_STAGES).
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 // A material's saved id is its place in MAT_LIST plus one (0 is the natural ground): only ever add to the end.
 // ft: how many feet one tile of the texture covers; c: its mean colour (sRGB, from tools/textures.py)
@@ -39,36 +40,54 @@ const MAT_LIST=[
   {id:'shingles',n:'Roof shingles',cat:4,ft:2.5,c:[0.237,0.243,0.255]},
   {id:'fabric',n:'Landscape fabric',cat:4,ft:6,c:[0.138,0.141,0.143]}];
 const MAT_MAX=32;
+// painted Mud dries out (rain.js) through two more looks: damp and matte, then pale and cracked; c as for MAT_LIST
+const MUD_STAGES=[{id:'mud_drying',c:[0.446,0.323,0.221]},{id:'mud_cracked',c:[0.658,0.539,0.408]}];
 // ---------- textures on the ground ----------
 // WebGL2 only (a texture array); without it the painted ground keeps the plain material colours
 const MAT_GL2=renderer.capabilities.isWebGL2;
 // the ground shader's material uniforms: the painted-id map (one texel per editor cell, set up in terrain.js), the
 // texture array holding just the materials the map uses, each id's mean colour and tiles per metre, and its layer
-const matU={tMatId:{value:null},tMatArr:{value:null},uMatInfo:{value:[]},uMatLayer:{value:new Float32Array(MAT_MAX).fill(-1)}};
+const matU={tMatId:{value:null},tMatArr:{value:null},uMatInfo:{value:[]},uMatLayer:{value:new Float32Array(MAT_MAX).fill(-1)},uMudL:{value:new THREE.Vector2(-1,-1)},
+  uMudC1:{value:new THREE.Vector3()},uMudC2:{value:new THREE.Vector3()}};
+{const w=MAT_LIST.find(m=>m.id==='mud').c,r=(c,i)=>c[i]/w[i];matU.uMudC1.value.set(r(MUD_STAGES[0].c,0),r(MUD_STAGES[0].c,1),r(MUD_STAGES[0].c,2));matU.uMudC2.value.set(r(MUD_STAGES[1].c,0),r(MUD_STAGES[1].c,1),r(MUD_STAGES[1].c,2))}
 for(let m=0;m<MAT_MAX;m++){const d=MAT_LIST[m-1];matU.uMatInfo.value.push(d?new THREE.Vector4(d.c[0],d.c[1],d.c[2],1/(d.ft*0.3048)):new THREE.Vector4(1,1,1,1))}
 const MAT_GLSL_HEAD=MAT_GL2?`precision highp sampler2DArray;
 uniform sampler2D tMatId;
 uniform sampler2DArray tMatArr;
 uniform vec4 uMatInfo[${MAT_MAX}];
 uniform float uMatLayer[${MAT_MAX}];
+uniform vec2 uMudL;
+uniform vec3 uMudC1;
+uniform vec3 uMudC2;
 `:'';
 // in the ground's colour step: where a material covers the ground, its texture takes over the grass and dirt detail
-// (gd) at full strength (gk); divided by its mean colour, as the vertex colour already is that colour. The id map
-// is the editor grid of terrain.js (called when the shader compiles, after that has loaded)
-const matGlsl=()=>MAT_GL2?`if(vMatA>0.01&&texMix>0.5){
+// (gd) at full strength (gk); divided by its mean colour, as the vertex colour already is that colour. Painted Mud
+// blends to its drying and cracked looks as the soil water (soilW, rain.js) drops; without its textures (Low graphics)
+// the colour shifts the same way (mudT). The id map is the editor grid of terrain.js (called when the shader
+// compiles, after that has loaded)
+const matGlsl=()=>MAT_GL2?`vec3 mudT=vec3(1.0);
+if(vMatA>0.01){
   int mi=int(texture(tMatId,((vWXZ-vec2(${ED_X0.toFixed(1)},${ED_Z0.toFixed(1)}))/${ED_C.toFixed(2)}+0.5)/vec2(${ED_NX.toFixed(1)},${ED_NZ.toFixed(1)})).r*255.0+0.5);
-  float ly=mi>0?uMatLayer[mi]:-1.0;
-  if(ly>=0.0){vec4 inf=uMatInfo[mi];vec3 tm=texture(tMatArr,vec3(vWXZ*inf.a,ly)).rgb/inf.rgb;gd=mix(gd,clamp(tm,0.0,3.0),vMatA);gk=mix(gk,1.0,vMatA);}
+  float ly=mi>0?uMatLayer[mi]:-1.0,d1=0.0,d2=0.0;
+  if(mi==${MUD_ID}){d1=1.0-smoothstep(0.3,0.55,soilW);d2=1.0-smoothstep(0.06,0.22,soilW);}
+  bool shown=texMix>0.5&&ly>=0.0;
+  if(shown){vec4 inf=uMatInfo[mi];vec2 uv=vWXZ*inf.a;vec3 tx=texture(tMatArr,vec3(uv,ly)).rgb;
+    if(mi==${MUD_ID}&&uMudL.x>=0.0){tx=mix(tx,texture(tMatArr,vec3(uv,uMudL.x)).rgb,d1);tx=mix(tx,texture(tMatArr,vec3(uv,uMudL.y)).rgb,d2);}
+    gd=mix(gd,clamp(tx/inf.rgb,0.0,3.0),vMatA);gk=mix(gk,1.0,vMatA);}
+  if(mi==${MUD_ID}&&!(shown&&uMudL.x>=0.0&&texBase>0.5))mudT=mix(vec3(1.0),mix(mix(vec3(1.0),uMudC1,d1),uMudC2,d2),vMatA);
 }
-`:'';
+`:'vec3 mudT=vec3(1.0);\n';
 const matImg={};let matLayers=[];
 // rebuilds the texture array when the materials painted on the map (and loaded) change; the images load on first use.
 // Skipped while the ground detail is off (Low graphics), where the shader never reads it
 function matTexUpdate(){if(!MAT_GL2||!texOn||!gfxDetail)return;
   const used=new Uint8Array(MAT_MAX);for(let q=0;q<ED_M.length;q++)used[ED_M[q]]=1;
+  // ids for the library, names for Mud's drier looks
+  const want=[];for(let m=1;m<=MAT_LIST.length;m++)if(used[m])want.push(m);
+  if(used[MUD_ID])for(const st of MUD_STAGES)want.push(st.id);
   const ready=[];
-  for(let m=1;m<=MAT_LIST.length;m++){if(!used[m])continue;let im=matImg[m];
-    if(!im){im=matImg[m]=new Image();im.onload=matTexUpdate;im.src=`textures/${MAT_LIST[m-1].id}.jpg`}
+  for(const m of want){let im=matImg[m];
+    if(!im){im=matImg[m]=new Image();im.onload=matTexUpdate;im.src=`textures/${typeof m==='number'?MAT_LIST[m-1].id:m}.jpg`}
     if(im.complete&&im.naturalWidth)ready.push(m)}
   if(ready.length===matLayers.length&&ready.every((m,i)=>m===matLayers[i]))return;
   const T=512,L=Math.max(1,ready.length),data=new Uint8Array(T*T*4*L),cv=document.createElement('canvas');cv.width=cv.height=T;
@@ -76,4 +95,5 @@ function matTexUpdate(){if(!MAT_GL2||!texOn||!gfxDetail)return;
   const t=new THREE.DataTexture2DArray(data,T,T,L);t.format=THREE.RGBAFormat;t.wrapS=t.wrapT=THREE.RepeatWrapping;
   t.magFilter=THREE.LinearFilter;t.minFilter=THREE.LinearMipmapLinearFilter;t.generateMipmaps=true;t.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());t.needsUpdate=true;
   if(matU.tMatArr.value)matU.tMatArr.value.dispose();matU.tMatArr.value=t;
-  matU.uMatLayer.value.fill(-1);ready.forEach((m,l)=>matU.uMatLayer.value[m]=l);matLayers=ready}
+  matU.uMatLayer.value.fill(-1);ready.forEach((m,l)=>{if(typeof m==='number')matU.uMatLayer.value[m]=l});
+  const l1=ready.indexOf(MUD_STAGES[0].id),l2=ready.indexOf(MUD_STAGES[1].id);matU.uMudL.value.set(l1>=0&&l2>=0?l1:-1,l2);matLayers=ready}

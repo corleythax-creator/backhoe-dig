@@ -23,9 +23,9 @@ function waterTick(dt){
   waterT-=dt;if(waterT>0||cI1<cI0)return;const step=0.25;waterT=step;
   let any=false,hole=false,moved=false;seeping=0;const rain=weather.r>0.02,dry=(dryT-=step)<=0;if(dry)dryT=2.5;
   for(let j=cJ0;j<=cJ1;j++)for(let i=cI0;i<=cI1;i++){const k=j*V+i,h=H[k],w0=Wt[k];
-    // soaked ground holds water near the surface: painted Mud everywhere, rain-soaked ground only in ruts and shallow
-    // dips (a deep cut just catches the rain that falls in it)
-    const g=H0[k]-((mudBase[k]>SAT_MUD||h>H0[k]-0.5&&rainSoakK(k)>SAT_MUD)?SAT_DEPTH:WT_DEPTH);
+    // soaked ground holds water near the surface: painted Mud everywhere while it is soaked, other rain-soaked ground only
+    // in ruts and shallow dips (a deep cut just catches the rain that falls in it)
+    const g=H0[k]-((mudBase[k]>SAT_MUD||h>H0[k]-0.5)&&rainSoakK(k)>SAT_MUD?SAT_DEPTH:WT_DEPTH);
     // seep up from the water table into anything dug below it
     if(h<g){if(Wt[k]<h)Wt[k]=h;if(Wt[k]<g){Wt[k]=Math.min(g,Wt[k]+SEEP*step);seeping++}}
     // rain falls into anything dug below grade; once it stops, rainwater above the table drains away
@@ -59,8 +59,9 @@ function waterTick(dt){
     p[o]=gi*CELL-S/2;p[o+1]=y;p[o+2]=gj*CELL-S/2}
   wmMesh.geometry.attributes.position.needsUpdate=true;wmMesh.geometry.computeVertexNormals();
 }
-// how wet point k is: puddles and wet spoil (mudA), painted Mud (mudBase, terrain.js) or rain (rainSoakK, rain.js)
-function soakK(k){return Math.max(mudBase[k],rainSoakK(k))}
+// how wet point k is: puddles and wet spoil (mudA), or the soil water (rainSoakK, rain.js: rain, and painted Mud,
+// which starts soaked and dries out)
+function soakK(k){return rainSoakK(k)}
 function mudOf(k){return Math.max(mudA[k],soakK(k))}
 // how muddy the ground is at x,z (0 dry, 1 puddle, wet spoil or soaked ground; farMud in mud.js outside the dig zone)
 function mudAt(x,z){const i=Math.round((x+S/2)/CELL),j=Math.round((z+S/2)/CELL);if(i<0||i>N||j<0||j>N)return farMud(x,z);return mudOf(j*V+i)}
