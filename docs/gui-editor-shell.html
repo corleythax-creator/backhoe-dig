@@ -55,6 +55,12 @@ body{background:var(--e-bg);color:var(--e-fg);font:500 15px/1.35 system-ui,-appl
 </div>
 <script>window.GUI_HOSTED=true</script>
 <script>
+{{TUNE_JS}}
+</script>
+<script>
+{{WORDS_JS}}
+</script>
+<script>
 {{GUI_JS}}
 </script>
 <script>
@@ -97,7 +103,11 @@ gui.host={
   async load(){const r=await guiSql('select data, t from public.gui_get()'),row=r&&r[0];if(!row)return null;const s=guiParse(row.data);if(s)s.t=+row.t;return s},
   async publish(data){let tag='$g'+Math.random().toString(36).slice(2,8)+'$';while(data.includes(tag))tag='$g'+Math.random().toString(36).slice(2,8)+'$';
     const r=await guiSql(`select public.gui_set(${tag}${data}${tag}) as t`);return +(r&&r[0]&&r[0].t)},
-  async history(){return await guiSql("select t, data from public.island_gui_hist where data like '{%' order by n desc limit 20")||[]}};
+  async history(){return await guiSql("select t, data from public.island_gui_hist where data like '{%' order by n desc limit 20")||[]},
+  // the tuning (supabase/island_tune.sql)
+  async tuneLoad(){const r=await guiSql('select data, t from public.tune_get()'),row=r&&r[0];if(!row)return null;const s=tuneParse(row.data);if(s)s.t=+row.t;return s},
+  async tunePublish(data){let tag='$t'+Math.random().toString(36).slice(2,8)+'$';while(data.includes(tag))tag='$t'+Math.random().toString(36).slice(2,8)+'$';
+    const r=await guiSql(`select public.tune_set(${tag}${data}${tag}) as t`);return +(r&&r[0]&&r[0].t)}};
 
 // the editor over the stage: this browser's draft if there is one, else the original look until the live one loads
 gui.root=stg;gui.media='@container stage';gui.scale=()=>devK;gui.dock=document.getElementById('dock');gui.styleAt=document.body;
@@ -106,5 +116,5 @@ guiApply();guiOpen(true);
 gui.msg='To start from the look every device has now, open Publish and choose Load the live look.';guiStatus();
 // already allowed to use Supabase here: load the live look straight away
 (async()=>{try{const P=await claude.use('permissions');const st=P?await P.state('mcp:Supabase').catch(()=>'unavailable'):'unavailable';
-  if(st==='granted'){gui.msg='Loading the live look…';guiStatus();await guiFetch();if(gui.msg==='Loading the live look…'){gui.msg='';guiStatus()}}}catch(e){}})();
+  if(st==='granted'){gui.msg='Loading the live look…';guiStatus();await guiFetch();await guiTuneFetch();if(gui.msg==='Loading the live look…'){gui.msg='';guiStatus()}}}catch(e){}})();
 </script>

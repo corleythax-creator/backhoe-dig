@@ -57,7 +57,7 @@ function statTick(dt){if(bench.on)return;const now=performance.now(),P=statPrev;
       else if(mode==='truck'){stats.trDist+=d;stats.trTime+=dt;stats.trTop=Math.max(stats.trTop,Math.abs(tr.v))}
       else if(mode==='skid'){stats.skDist+=d;stats.skTime+=dt;stats.skTop=Math.max(stats.skTop,Math.abs(sk.v))}
       else if(mode==='walk'){stats.walkDist+=d;stats.walkTime+=dt;if(wk.ground)stats.walkTop=Math.max(stats.walkTop,Math.min(v,wk.spd+0.2));
-        if(wk.spd>WK_RUN+0.3)stats.sprintDist+=d}
+        if(wk.spd>TU.wkRun+0.3)stats.sprintDist+=d}
       else{stats.exDist+=d;stats.exTime+=dt}
       trailAdd(mode==='drive'||mode==='dig'?'ex':mode,o.x,o.z,d)}
     if(mode==='walk'&&P.ground&&!wk.ground&&wk.vy>0){stats.jumps++;statDirty=true}}

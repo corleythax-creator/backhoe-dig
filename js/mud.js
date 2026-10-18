@@ -117,7 +117,7 @@ function mtWaterTick(dt){
   for(const t of mTiles){let any=false;
     for(let j=0;j<=MT;j++)for(let i=0;i<=MT;i++){const gi=t.i0+i,gj=t.j0+j;if(gi>FNX||gj>FNZ)continue;const v=gj*FV+gi,h=FH0[v]+FD[v],w0=FW[v];
       if(!vOk(gi,gj))continue;const soak=fineSoak(v,FX0+gi*FC,FZ0+gj*FC),sat=soak>SAT_MUD,top=FH0[v]-SAT_DEPTH;
-      if(sat&&h<top){if(FW[v]<h)FW[v]=h;if(FW[v]<top)FW[v]=Math.min(top,FW[v]+SEEP*step)}
+      if(sat&&h<top){if(FW[v]<h)FW[v]=h;if(FW[v]<top)FW[v]=Math.min(top,FW[v]+SEEP*TU.seep*step)}
       if(rain&&h<FH0[v]-0.02){if(FW[v]<h)FW[v]=h;if(FW[v]<top)FW[v]=Math.min(top,FW[v]+weather.r*RAIN_IN*step)}
       else if(!rain&&FW[v]>-1e8&&(!sat||FW[v]>top))FW[v]-=RAIN_DRAIN*step;
       if(dry&&FM[v]>0&&FW[v]<-1e8){FM[v]--;t.dirty=true}
@@ -213,7 +213,7 @@ function bogTick(o,mud,inp,k,dt){
   if(dir){o.pushDir=dir;if(!o.lurch)o.sink=Math.min(1,o.sink+dt*mud*mud*k*(0.3+3*o.spin))}
   else o.sink=Math.min(1,o.sink+dt*0.004*mud);
   if(o.spin>0.5&&o.sink>0.7&&(!o.bogMsgT||performance.now()-o.bogMsgT>20000)){o.bogMsgT=performance.now();
-    toast(`Stuck in the mud. Rock it free: ${keyLabel('lUp')} then ${keyLabel('lDown')}, and again.`,'bad',4200)}
+    toast(say('stuck'),'bad',4200)}
   return g}
 
 // ---------- flung mud ----------

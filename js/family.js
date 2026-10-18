@@ -126,7 +126,7 @@ function famGameNear(){if(mode!=='walk'||wk.inside)return null;
 function famPlay(g){try{siteSaveAll()}catch(e){}try{lawnSave()}catch(e){}
   const url=MESA_URL+g.k+'/?from=island&back='+encodeURIComponent(location.origin+location.pathname);
   if(/(^|\.)vercel\.app$|^localhost$|^127\./.test(location.hostname)&&!/\/versions\//.test(location.pathname)){
-    try{sessionStorage.setItem('bhd_table',g.k)}catch(e){}toast(`Sitting down to ${g.n}...`,'',3000);setTimeout(()=>{location.href=url},400);return}
+    try{sessionStorage.setItem('bhd_table',g.k)}catch(e){}toast(say('famSit',{game:g.n}),'',3000);setTimeout(()=>{location.href=url},400);return}
   let w=null;try{w=window.open(url,'_blank')}catch(e){}
   if(!w)toast(`Play ${g.n} at mesa-games-ochre.vercel.app/${g.k}/`,'',5000)}
 

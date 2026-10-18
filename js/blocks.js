@@ -121,27 +121,27 @@ function blkAim(){const w=blkDim.w*IN,d=blkDim.d*IN,h=blkDim.h*IN,[ax,az]=blkTar
   return p}
 const blkSizeTxt=(w,d,h)=>`${blkInTxt(w)} × ${blkInTxt(d)} × ${blkInTxt(h)}`;
 function placeBlock(){
-  if(mode!=='dig'&&mode!=='walk'){toast('Switch to Dig or Walk to set blocks.');return}
+  if(mode!=='dig'&&mode!=='walk'){toast(say('blkWrongMode'));return}
   if(!blkOn)setBlocks(true);
   const p=blkAim();if(!p.ok){toast(p.why);return}
   const v=0.88+Math.random()*0.12,y=mode==='walk'?p.y+0.05:Math.max(p.y,Math.min(tip.y-0.25-p.h,p.y+4)),m=blkMat;
   blocks.push({x:p.x,z:p.z,y,w:p.w,d:p.d,h:p.h,m,vy:0,c:m?[v,v,v]:[0.66*v,0.65*v,0.62*v]});
   blkWake=1.5;started();
-  toast(`${blkSizeTxt(blkDim.w,blkDim.d,blkDim.h)} ${blkMatName(m).toLowerCase()} block set · ${blocks.length} on site`,'good',1600)}
+  toast(say('blkSet',{size:blkSizeTxt(blkDim.w,blkDim.d,blkDim.h),mat:blkMatName(m).toLowerCase(),n:blocks.length}),'good',1600)}
 const blkFt=b=>blkSizeTxt(Math.round(b.w/IN),Math.round(b.d/IN),Math.round(b.h/IN));
 // the highest block the bucket is over or touching comes away; on foot, the highest one within reach just in front;
 // in first person, the first one the middle of the screen meets (out to the longest reach)
 function removeBlock(){
-  if(mode!=='dig'&&mode!=='walk'){toast('Switch to Dig or Walk to pick up blocks.');return}
+  if(mode!=='dig'&&mode!=='walk'){toast(say('blkLiftMode'));return}
   let best=-1,top=-1e9;const walk=mode==='walk';
-  if(blkFP()){const r=blkRay(BLK_REACH[1]);if(r.hit&&r.hit!=='ground')best=blocks.indexOf(r.hit)}
+  if(blkFP()){const r=blkRay(TU.blkReach/FT);if(r.hit&&r.hit!=='ground')best=blocks.indexOf(r.hit)}
   else{const fx=walk?wk.x+Math.sin(wk.yaw)*(WK_R+0.3):tip.x,fz=walk?wk.z+Math.cos(wk.yaw)*(WK_R+0.3):tip.z;
     for(let i=0;i<blocks.length;i++){const b=blocks[i],e=walk?0.12:0.2,t=b.y+b.h;
       const inY=walk?t<=wk.y+WK_REACH+0.3&&t>wk.y-0.8||b.y<wk.y+WK_REACH&&t>wk.y:tip.y>b.y-0.3&&tip.y<t+1.5;
       if(Math.abs(fx-b.x)<b.w/2+e&&Math.abs(fz-b.z)<b.d/2+e&&inY&&t>top){top=t;best=i}}}
-  if(best<0){toast(!blocks.length?'No blocks set yet.':blkFP()?'Put the dot on a block to pick it up.':walk?'Face a block within reach to pick it up.':'Bring the bucket onto a block to pick it up.');return}
+  if(best<0){toast(say(!blocks.length?'blkNone':blkFP()?'blkDot':walk?'blkFace':'blkBucket'));return}
   const b=blocks.splice(best,1)[0];blkWake=1.5;
-  toast(`${blkFt(b)} block picked up · ${blocks.length} on site`,'good',1600)}
+  toast(say('blkLifted',{size:blkFt(b),n:blocks.length}),'good',1600)}
 // ---------- the block bar ----------
 function setBlocks(on){blkOn=on;const btn=$('#blkBtn');btn.setAttribute('aria-pressed',on);$('#blkBar').hidden=!on;
   if(on&&mode!=='dig'&&mode!=='walk')setMode('dig');blkUI()}
@@ -157,10 +157,10 @@ function blkStepDim(k,dir){const i=BLK_IN.findIndex(v=>v>=blkDim[k]),j=dir>0?(BL
 function blkLockNext(){blkLock=BLK_LOCKS[(BLK_LOCKS.findIndex(l=>l[0]===blkLock)+1)%BLK_LOCKS.length][0];blkSnapSave();blkUI();return BLK_LOCKS.find(l=>l[0]===blkLock)[1]}
 // the size key and the D-pad step through cubes, 1 to 10 ft
 function blkCube(dir){const n=((Math.round(Math.max(blkDim.w,blkDim.d,blkDim.h)/12)-1+dir)%BLK_FT+BLK_FT)%BLK_FT+1;blkDim.w=blkDim.d=blkDim.h=n*12;blkUI();
-  toast(`Block size ${blkSizeTxt(n*12,n*12,n*12)}`,'',1200)}
+  toast(say('blkSize',{size:blkSizeTxt(n*12,n*12,n*12)}),'',1200)}
 // turn the block a quarter turn: width and length swap
 function blkTurn(){[blkDim.w,blkDim.d]=[blkDim.d,blkDim.w];blkUI()}
-function blkReachBy(ft){blkReach=clamp(blkReach+ft,BLK_REACH[0],BLK_REACH[1]);blkUI()}
+function blkReachBy(ft){blkReach=clamp(blkReach+ft,BLK_REACH[0],TU.blkReach/FT);blkUI()}
 function setBlkMat(m){m=m|0;blkMat=matIdOk(m)?m:0;blkUI()}
 function blkTerrainMoved(){if(blocks.length)blkWake=Math.max(blkWake,0.3)}
 // settle bottom-up: each block sits on the ground or the blocks already settled under it; dirt pushed under one lifts it
@@ -181,7 +181,7 @@ function blkTick(dt){
   if(blkGhost.visible){const p=blkAim(),c=p.ok?0xf5c518:0xff5143;
     blkGhost.position.set(p.x,p.y+p.h/2+0.005,p.z);blkGhost.scale.set(p.w+0.01,p.h+0.01,p.d+0.01);ghostFill.color.setHex(c);ghostLine.color.setHex(c)}
   if(blkOn&&blkReachEl.hidden===blkFP()){blkUI();
-    if(blkFP()&&!blkFPTold){blkFPTold=true;toast(`Blocks go where the dot is. The mouse wheel (or ${keyLabel('blkNear')} ${keyLabel('blkFar')}) pulls them in and pushes them out.`,'',4200)}}}
+    if(blkFP()&&!blkFPTold){blkFPTold=true;toast(say('blkFP'),'',4200)}}}
 $('#blkBtn').onclick=()=>setBlocks(!blkOn);
 $('#blkPlace').onclick=placeBlock;$('#blkRemove').onclick=removeBlock;$('#blkTurn').onclick=blkTurn;
 document.querySelectorAll('#blkBar .bstep button').forEach(b=>b.onclick=()=>{const k=b.parentNode.dataset.k,s=+b.dataset.d;

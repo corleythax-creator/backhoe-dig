@@ -108,17 +108,17 @@ function tpSpot(k,x,z){const y0=k==='foot'?wk.yaw:WK_RIDES[k].o.yaw;
     for(let q=0;q<(k==='foot'?1:4);q++){const yaw=y0+q*Math.PI/2;if(tpFits(k,px,pz,yaw))return {x:px,z:pz,yaw}}}
   return null}
 function tpGo(k){if(!tpPick||bench.on)return;
-  const p=tpSpot(k,tpPick.x,tpPick.z);if(!p){toast('No room there. Pick an open spot on land.','bad');return}
+  const p=tpSpot(k,tpPick.x,tpPick.z);if(!p){toast(say('tpNoRoom'),'bad');return}
   const from=wk.inside?WK_RIDES[wk.inside].o:wk,dist=Math.hypot(p.x-from.x,p.z-from.z)/FT;
   if(k==='foot'){Object.assign(wk,{x:p.x,z:p.z,vy:0,ground:true,airT:0,jumpQ:0,landT:0,spd:0,inside:null});wk.y=wkFloor(p.x,p.z,0,1e9);setMode('walk')}
   else{const R=WK_RIDES[k],o=R.o;Object.assign(o,{x:p.x,z:p.z,yaw:p.yaw,pitch:0,roll:0,sink:0,spin:0});o.y=surfAt(p.x,p.z);
     if(o===tr)Object.assign(tr,{v:0,steer:0,stuck:0,mud:0});else if(o===mw)Object.assign(mw,{l:0,r:0,vl:0,vr:0,v:0,w:0});else if(o===sk)Object.assign(sk,{v:0,w:0});
     wk.inside=k;walker.visible=false;setMode(rideOf(mode)===k?mode:R.m)}
   firstCam=true;toggleMap(false);
-  toast(`Teleported ${Math.round(dist/10)*10} ft ${k==='foot'?'on foot':'in the '+WK_RIDES[k].n}.`,'good')}
+  toast(say('tpDone',{ft:Math.round(dist/10)*10,how:k==='foot'?'on foot':'in the '+WK_RIDES[k].n}),'good')}
 $('#big').addEventListener('click',e=>{const c=$('#big'),b=c.getBoundingClientRect();if(!b.width)return;
   const x=MAP_CX+((e.clientX-b.left)/b.width-0.5)*MAP_SZ,z=MAP_CZ+((e.clientY-b.top)/b.height-0.5)*MAP_SZ;
-  if(!landIn(x,z,0,0,true)&&!tpSpot('foot',x,z)){toast('That is the lake. Pick a spot on land.','bad');return}
+  if(!landIn(x,z,0,0,true)&&!tpSpot('foot',x,z)){toast(say('tpLake'),'bad');return}
   tpSet({x,z})});
 for(const b of document.querySelectorAll('#tpOpts [data-tp]'))b.onclick=()=>tpGo(b.dataset.tp);
 $('#tpCancel').onclick=()=>tpSet(null);

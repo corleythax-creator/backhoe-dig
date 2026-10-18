@@ -5,7 +5,7 @@
 // it sticks in the bucket and truck bed, and wet spoil, mud and puddles bog the truck, slow the tracks and take deep ruts
 // (stampRut, dirt.js). The Pump button dewaters a flooded hole.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
-const WT_DEPTH=1.85,SAT_DEPTH=0.05,SAT_MUD=0.5,SEEP=0.008,PUMP=0.03;
+const SAT_DEPTH=0.05,SAT_MUD=0.5,SEEP=0.008,PUMP=0.03;
 const Wt=new Float32Array(V*V).fill(-1e9),mudA=new Float32Array(V*V);
 let waterT=0,dryT=0,pumpOn=false,waterAny=false,puddleAny=false,waterMoved=false,waterSeen=false,seeping=0;
 // the water surface: a mesh 96 ft across over the dug area (or around the camera when that is bigger); dry points sit just
@@ -25,9 +25,9 @@ function waterTick(dt){
   for(let j=cJ0;j<=cJ1;j++)for(let i=cI0;i<=cI1;i++){const k=j*V+i,h=H[k],w0=Wt[k];
     // soaked ground holds water near the surface: painted Mud everywhere while it is soaked, other rain-soaked ground only
     // in ruts and shallow dips (a deep cut just catches the rain that falls in it)
-    const g=H0[k]-((mudBase[k]>SAT_MUD||h>H0[k]-0.5)&&rainSoakK(k)>SAT_MUD?SAT_DEPTH:WT_DEPTH);
+    const g=H0[k]-((mudBase[k]>SAT_MUD||h>H0[k]-0.5)&&rainSoakK(k)>SAT_MUD?SAT_DEPTH:TU.wtDepth);
     // seep up from the water table into anything dug below it
-    if(h<g){if(Wt[k]<h)Wt[k]=h;if(Wt[k]<g){Wt[k]=Math.min(g,Wt[k]+SEEP*step);seeping++}}
+    if(h<g){if(Wt[k]<h)Wt[k]=h;if(Wt[k]<g){Wt[k]=Math.min(g,Wt[k]+SEEP*TU.seep*step);seeping++}}
     // rain falls into anything dug below grade; once it stops, rainwater above the table drains away
     if(rain&&h<H0[k]-0.02){const top=H0[k]-SAT_DEPTH;if(Wt[k]<h)Wt[k]=h;if(Wt[k]<top)Wt[k]=Math.min(top,Wt[k]+weather.r*RAIN_IN*step)}
     else if(!rain&&Wt[k]>g)Wt[k]=Math.max(g,Wt[k]-RAIN_DRAIN*step);
@@ -41,7 +41,7 @@ function waterTick(dt){
       if(Math.abs(cx-crkA[k*2])>0.01||Math.abs(cy-crkA[k*2+1])>0.01||(!cx&&crkA[k*2])||(!cy&&crkA[k*2+1])){crkA[k*2]=cx;crkA[k*2+1]=cy;crk=true}}
     // level out with wetter neighbours (water runs into any low ground next to a pool, never above the table)
     if(i>cI0&&i<cI1&&j>cJ0&&j<cJ1){const m=Math.max(Wt[k-1],Wt[k+1],Wt[k-V],Wt[k+V]);if(m>Wt[k]&&m>h)Wt[k]=Math.min(m,Math.max(Wt[k],g,m-0.002))}
-    if(pumpOn&&Wt[k]>-1e8)Wt[k]-=PUMP*step;
+    if(pumpOn&&Wt[k]>-1e8)Wt[k]-=PUMP*TU.pump*step;
     // water only stands in ground dug or rutted below grade: never higher than 2 in under the original surface, so a
     // pool on a slope can't level out over the untouched ground below it
     if(Wt[k]>H0[k]-SAT_DEPTH)Wt[k]=H0[k]-SAT_DEPTH;
@@ -51,7 +51,7 @@ function waterTick(dt){
   if(crk){const a=geo.attributes.crk;a.updateRange.offset=cJ0*V*2;a.updateRange.count=(cJ1-cJ0+1)*V*2;a.needsUpdate=true}
   // waterAny: a flooded hole (the Pump button); puddleAny: any water at all
   waterAny=hole;puddleAny=any;waterMoved=moved;if(!hole)pumpOn=false;
-  if(hole&&!waterSeen){waterSeen=true;toast(rain?'Rain is filling the hole. Tap Pump to dewater it.':'Groundwater seeping in. Tap Pump to dewater the hole.','',3800)}
+  if(hole&&!waterSeen){waterSeen=true;toast(say(rain?'waterRain':'waterSeep'),'',3800)}
   // place the surface over the dug area, or around the camera when the dug area is wider; it moves only when the camera
   // nears its edge, and is redrawn when the water moves or the camera moves it, and each second for the ground under it
   const span=WM_N*WM_K;let i0=Math.max(0,Math.min(N-span,Math.round(((cI0+cI1)/2-span/2)/GRID_K)*GRID_K)),j0=Math.max(0,Math.min(N-span,Math.round(((cJ0+cJ1)/2-span/2)/GRID_K)*GRID_K));
@@ -81,5 +81,5 @@ function mudAt(x,z){const i=Math.round((x+S/2)/CELL),j=Math.round((z+S/2)/CELL);
 // is the bucket tip under water?
 function underWater(p){const i=Math.round((p.x+S/2)/CELL),j=Math.round((p.z+S/2)/CELL);if(i<0||i>N||j<0||j>N)return false;return Wt[j*V+i]>p.y}
 function setPump(on){pumpOn=!!on&&waterAny;const b=$('#pumpBtn');b.textContent=pumpOn?'Pump: on':'Pump';b.setAttribute('aria-pressed',pumpOn);
-  if(pumpOn)toast('Pump running. The water will drop slowly.','good')}
+  if(pumpOn)toast(say('pumpOn'),'good')}
 $('#pumpBtn').onclick=()=>setPump(!pumpOn);

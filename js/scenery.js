@@ -216,8 +216,8 @@ function grassTick(dt){crT+=dt;if(tuftFarBox&&timeU.value-tuftFarT>0.3){tuftFarT
 function grassReset(){crA.fill(0);crTex.image.data.fill(0);crTex.needsUpdate=true;crOn=false}
 // ---------- mowed field grass ----------
 // the mower cuts the field grass too: on the same 0.5 m grid, each cell remembers when it was last cut (fcT, on the lawn
-// clock, mower.js), and its clumps stand at stubble height, then grow back on the tall grass's timing (LAWN_WAIT, then
-// LAWN_GROW). Saved with the mowing (lawnSave), so it syncs. The clumps in each cell, for the mower to find:
+// clock, mower.js), and its clumps stand at stubble height, then grow back on the tall grass's timing (TU.lawnWait, then
+// TU.lawnGrow). Saved with the mowing (lawnSave), so it syncs. The clumps in each cell, for the mower to find:
 // tuftsInCell(k) are tCellL[tCellS[k]] up to tCellS[k+1]
 const fcT=new Float32Array(CR_NX*CR_NZ).fill(-1e9),fcAct=[],fcIn=new Uint8Array(CR_NX*CR_NZ),tCell=new Int32Array(TUFTS),tCellS=new Int32Array(CR_NX*CR_NZ+1),tCellL=new Int32Array(TUFTS);
 // how tall each shape stands at full size (m): the grass with its seed stalks, the broadleaf with its flower
@@ -226,7 +226,7 @@ const TUFT_HK=[0.45,0.42];
   for(let k=0;k<CR_NX*CR_NZ;k++)tCellS[k+1]+=tCellS[k];const at=tCellS.slice(0,-1);for(let n=0;n<TUFTS;n++)if(tCell[n]>=0)tCellL[at[tCell[n]]++]=n}
 // a clump's height (share of full): cut down to the deck's height, then growing back
 function tuftCutK(n){const k=tCell[n];if(k<0||fcT[k]<-1e8)return 1;
-  const g=Math.min(1,Math.max(0,(lawn.t-fcT[k]-LAWN_WAIT)/LAWN_GROW)),stub=Math.min(1,LAWN_CUT/(TUFT_HK[tK[n]]*tS[n]*tH[n]));return stub+(1-stub)*g}
+  const g=Math.min(1,Math.max(0,(lawn.t-fcT[k]-TU.lawnWait)/TU.lawnGrow)),stub=Math.min(1,LAWN_CUT/(TUFT_HK[tK[n]]*tS[n]*tH[n]));return stub+(1-stub)*g}
 function fcRedraw(k){for(let q=tCellS[k];q<tCellS[k+1];q++){const n=tCellL[q];if(tVis[n])tuftPut(n,true)}}
 // the deck centred on x,z facing yaw (half width hw, half depth hd) cuts what stands in it; returns how many tall clumps it cut
 function fieldCut(x,z,yaw,hw,hd){const s=Math.sin(yaw),c=Math.cos(yaw),R=Math.hypot(hw,hd)+CR_C/2;let cut=0;
@@ -234,22 +234,22 @@ function fieldCut(x,z,yaw,hw,hd){const s=Math.sin(yaw),c=Math.cos(yaw),R=Math.hy
   for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const k=j*CR_NX+i;if(tCellS[k]===tCellS[k+1])continue;
     const dx=CR_X0+(i+0.5)*CR_C-x,dz=CR_Z0+(j+0.5)*CR_C-z;if(Math.abs(dx*c-dz*s)>hw||Math.abs(dx*s+dz*c)>hd)continue;
     // only grass grown back past halfway counts as a cut (and restarts the clock)
-    if(fcT[k]>-1e8&&lawn.t-fcT[k]<LAWN_WAIT+LAWN_GROW*0.5)continue;
+    if(fcT[k]>-1e8&&lawn.t-fcT[k]<TU.lawnWait+TU.lawnGrow*0.5)continue;
     for(let q=tCellS[k];q<tCellS[k+1];q++)if(tVis[tCellL[q]])cut++;
     fcT[k]=lawn.t;if(!fcIn[k]){fcIn[k]=1;fcAct.push(k)}fcRedraw(k)}
   if(cut){tuftFlush();lawn.sDirty=true}return cut}
 // once a second: the cut cells grow, and drop off the list when fully grown
 let fcGrowT=0;
 function fieldGrow(dt){if(!fcAct.length||(fcGrowT-=dt)>0)return;fcGrowT=1;
-  for(let q=fcAct.length-1;q>=0;q--){const k=fcAct[q];fcRedraw(k);if(lawn.t-fcT[k]>=LAWN_WAIT+LAWN_GROW){fcT[k]=-1e9;fcIn[k]=0;fcAct[q]=fcAct[fcAct.length-1];fcAct.pop()}}
+  for(let q=fcAct.length-1;q>=0;q--){const k=fcAct[q];fcRedraw(k);if(lawn.t-fcT[k]>=TU.lawnWait+TU.lawnGrow){fcT[k]=-1e9;fcIn[k]=0;fcAct[q]=fcAct[fcAct.length-1];fcAct.pop()}}
   tuftFlush()}
 // the save: cells still growing, 3 bytes each (cell, low and high byte; then age as a share of the regrowth, 1-255)
 function fieldSave(){const b=new Uint8Array(fcAct.length*3);let m=0;
-  for(const k of fcAct){const a=lawn.t-fcT[k];if(a>=LAWN_WAIT+LAWN_GROW)continue;b[m++]=k&255;b[m++]=k>>8;b[m++]=1+Math.round(Math.max(0,a)/(LAWN_WAIT+LAWN_GROW)*254)}
+  for(const k of fcAct){const a=lawn.t-fcT[k];if(a>=TU.lawnWait+TU.lawnGrow)continue;b[m++]=k&255;b[m++]=k>>8;b[m++]=1+Math.round(Math.max(0,a)/(TU.lawnWait+TU.lawnGrow)*254)}
   let bin='';for(let q=0;q<m;q++)bin+=String.fromCharCode(b[q]);return btoa(bin)}
 function fieldLoad(str){if(typeof str!=='string')return;let b;try{b=atob(str)}catch(e){return}
   for(let q=0;q+2<b.length;q+=3){const k=b.charCodeAt(q)|b.charCodeAt(q+1)<<8;if(k>=fcT.length)continue;
-    fcT[k]=lawn.t-(b.charCodeAt(q+2)-1)/254*(LAWN_WAIT+LAWN_GROW);if(!fcIn[k]){fcIn[k]=1;fcAct.push(k)}fcRedraw(k)}
+    fcT[k]=lawn.t-(b.charCodeAt(q+2)-1)/254*(TU.lawnWait+TU.lawnGrow);if(!fcIn[k]){fcIn[k]=1;fcAct.push(k)}fcRedraw(k)}
   tuftFlush()}
 // every clump stands up at the start
 for(let n=0;n<TUFTS;n++)tuftPut(n,true);tuftFlush();

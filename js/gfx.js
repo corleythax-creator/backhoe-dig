@@ -52,7 +52,7 @@ function setGfx(k,picked){gfxKey=GFX[k]?k:gfxGuess();
   // dirt detail follows the setting when picked (or the first time), and stays its own setting after that
   let saved=null;try{saved=localStorage.getItem('bhd_dirt')}catch(e){}
   if(picked||saved===null)setDirtLevel(GFX[gfxKey].dirt,picked);
-  if(picked){try{localStorage.setItem('bhd_gfx',gfxKey)}catch(e){}toast(`Graphics: ${GFX[gfxKey].name}`,'good')}}
+  if(picked){try{localStorage.setItem('bhd_gfx',gfxKey)}catch(e){}toast(say('gfx',{name:GFX[gfxKey].name}),'good')}}
 // one setting changed in the panel (back to the preset's own value drops it from the changes)
 function gfxSet(id,v){if(JSON.stringify(v)===JSON.stringify(GFX[gfxKey][id]))delete gfxOver[id];else gfxOver[id]=v;
   try{if(Object.keys(gfxOver).length)localStorage.setItem('bhd_gfxc',JSON.stringify(gfxOver));else localStorage.removeItem('bhd_gfxc')}catch(e){}
