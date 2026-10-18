@@ -26,6 +26,11 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - J13 Culvert under the rim road: Cut the road, set a culvert pipe on bedding, backfill and drive over it. (R7 F6 some low c2 6h needs J04)
 - J14 Inspector visit: An inspector walks the trench, checks the slope and the trench box, and signs off or shuts you down. (R7 F5 some low c2 5h)
 - J15 Pay and the day's log: Yards moved, fuel burned, hours on the meter and what the day paid. (R4 F6 every none c1 3h)
+- J16 Scale tickets: A truck scale on the Lower Bench: weigh in empty and out loaded, and get a printed ticket for every load hauled. (R8 F5 most none c1 3h)
+- J17 Fill for Dexter's yard: Haul spoil across the haul bridge to fill a low spot in Dexter's yard; he pays by the load and checks the grade. (R6 F7 some low c2 5h)
+- J18 Second ramp down the scarp: Cut and grade a new ramp down the scarp, steep enough to save time but gentle enough for a loaded truck to climb. (R7 F6 some none c2 5h)
+- J19 Drainage swale: Cut a shallow ditch so rain runs off the dig instead of pooling; the puddles drain along it into the lake. (R8 F6 most low c2 5h needs W01)
+- J20 Block retaining wall: Stack blocks into a wall at the scarp edge and backfill behind it; a check says whether it holds or leans. (R6 F7 some low c2 6h)
 
 ## M: New machines
 
@@ -45,6 +50,10 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - M14 Side-by-side: A UTV to zip around the island on foot's behalf. (R5 F8 most low c2 6h)
 - M15 Boat on the lake: A johnboat at a dock below the cliffs. (R4 F8 some low c2 8h)
 - M16 Wear and breakdowns: Broken teeth, a blown hose spraying oil, a flat on the truck; fix it or call the shop. (R6 F6 some none c2 6h)
+- M17 Skid steer grapple and sweeper: A grapple for logs and brush and an angle broom that sweeps dirt off the roads, on a rack in Dexter's shed. (R7 F7 most low c2 6h needs M02)
+- M18 Telehandler: A reach forklift that lifts pallets of blocks onto stacks and roofs, with the boom angle and load shown in the cab. (R6 F7 some low c2 8h)
+- M19 Tractor with a box blade: A small tractor that drags a box blade to smooth ruts and level the dirt yards and roads. (R7 F6 most low c2 7h)
+- M20 Dump cart for the mower: A small cart hitched behind the zero-turn to carry clippings, mulch or a little dirt, and tip it out. (R5 F6 some low c1 4h)
 
 ## X: Excavator and attachments
 
@@ -59,6 +68,9 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - X09 Lift mode and overload: A lift chart and a warning when a block or pipe is too heavy at that reach. (R7 F5 some none c1 3h)
 - X10 Horn and travel alarm: A horn, a travel alarm and a swing lock. (R5 F4 most none c1 2h)
 - X11 Mud-packed tracks: Clay packs into the undercarriage and drops off in clumps. (R6 F4 most low c1 3h)
+- X12 Tiltrotator: A bucket that tilts and turns on the stick, for sloped trench walls and tidy corners. (R6 F7 some none c2 5h needs X01)
+- X13 Dig-to guide: A string line and a see-through target in the trench; dug ground turns green when it is on grade and red when you go too deep. (R6 F7 every none c1 3h)
+- X14 Tipping over: Lift a heavy block far out to the side and the excavator rocks up onto its tracks' edge; too much and it tips. (R8 F7 some none c2 4h)
 
 ## D: Dirt and digging
 
@@ -73,6 +85,9 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - D09 Roots in the cut: Tree roots in the trench wall near the trees that the bucket snaps. (R7 F5 most low c1 4h)
 - D10 Frozen ground: A hard crust in winter that needs ripping. (R5 F4 rare none c1 3h needs W04)
 - D11 Deeper dig zone: Dig past the rock into a deeper layer, with a bigger dig grid. (R3 F6 some high c2 6h)
+- D12 Fill that settles: Fresh spoil is soft and ruts deep; over a few minutes piles settle and firm up, and driven-over fill packs hard. (R7 F4 every none c1 3h)
+- D13 Erosion: Rain carves little gullies down spoil piles and washes silt into the puddles and the trench. (R8 F6 some low c2 6h needs W01)
+- D14 Dig anywhere: Pick a spot on the site map and the dig grid moves there, so any part of the mesa can be dug, not only the trench area. (R4 F9 most high c3 12h)
 
 ## U: Buried utilities
 
@@ -84,6 +99,7 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - U06 Overhead power lines: Poles across the site; the boom must stay 10 ft clear or it beeps. (R8 F5 most low c1 4h)
 - U07 Locator wand: Walk the site with a pipe locator that beeps over buried lines. (R7 F6 some none c1 4h)
 - U08 Abandoned lines: Old clay tile and rusty pipe nobody marked. (R6 F5 some low c1 3h)
+- U09 Gas service to the house: A branch off the gas main runs to the family house; dig the service line and set the meter. (R7 F6 rare low c2 5h)
 
 ## W: Weather and time of day
 
@@ -94,6 +110,8 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - W05 Thunderstorm: Lightning stops work; get off the machine and wait it out. (R6 F7 rare low c2 5h needs W01)
 - W06 Morning fog: Fog lying on the lake that burns off. (R7 F4 some low c1 3h)
 - W07 Hot afternoons: Heat shimmer and the engine temperature climbing on long digs. (R5 F3 some none c1 2h)
+- W08 Rainbow after a shower: When the sun comes back after rain, a rainbow arches over the lake. (R6 F5 some none c1 1h needs W01)
+- W09 Raindrops on puddles: Rings spread across the puddles while it rains, and the water goes still when it stops. (R8 F4 some low c1 2h needs W01)
 
 ## S: Site and scenery
 
@@ -109,6 +127,9 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - S10 Wildflowers and weeds: Clover, dandelions and taller weeds around the site edges. (R6 F3 every high c1 3h)
 - S11 Cabin on Lookout Knoll: A cabin that goes up stage by stage as you finish jobs. (R5 F7 every low c3 10h needs J07)
 - S12 Dirt jumps: Build dirt ramps and launch the side-by-side or the truck off them. (R3 F8 some low c2 5h)
+- S13 Road signs: Signs at the roundabout and bridge ends pointing to Corley's, Dexter's and Jessica's islands and the mainland. (R7 F3 every none c1 2h)
+- S14 Bridge lights: Lamps along the three bridges and the covered footbridge that come on at dusk. (R6 F4 every low c1 2h needs W02)
+- S15 Windsock and flags: A windsock on the Lower Bench and the flags that stream with the wind gusts, so you can see where the wind is. (R7 F3 every none c1 1h)
 
 ## L: Crew and people
 
@@ -118,6 +139,8 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - L04 AI truck driver: A dump truck that pulls up to load, honks when full and hauls it off. (R7 F7 most low c2 6h)
 - L05 Lunch break: The crew on the tailgate at noon. (R6 F3 some low c1 3h)
 - L06 Two players: One on the excavator, one driving the truck, online. (R5 F9 some low c3 14h)
+- L07 Dexter in his yard: Dexter walks his yard, waves as you drive by and asks you to move a pile or park his skid steer back. (R5 F7 most low c2 6h)
+- L08 Jessica at home: Jessica reads by the fire in her library or tends her herb garden, and chats when you walk up. (R4 F6 some low c2 5h)
 
 ## A: Sound
 
@@ -125,6 +148,9 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - A02 Lake and wind sounds: Waves, wind over the cliff, birds and frogs at dusk. (R7 F4 every none c1 2h)
 - A03 Track squeal: Idler clatter and squealing tracks as speed picks up. (R6 F3 every none c1 2h)
 - A04 Attachment sounds: Hammer chatter, coupler clunks, the thumb clamping. (R7 F5 some none c1 2h needs X01)
+- A05 Footsteps by surface: Boots crunch on gravel, swish in grass, squelch in mud and knock on the bridge decks. (R8 F5 every none c1 2h)
+- A06 Bridge deck rumble: Machines thunder across the steel truss decks, and the covered footbridge creaks under your boots. (R8 F5 most none c1 2h)
+- A07 Rain on the roof: Rain drums on the cab roof inside the machines and on the porch roofs, softer out in the open. (R8 F4 some none c1 1h needs W01)
 
 ## C: Controls and camera
 
@@ -135,6 +161,13 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - C05 Tilt to steer: Steer the truck by tilting the phone. (R2 F5 most none c1 2h)
 - C06 Swap the sticks: Mirror the stick layout for left-handed play. (R1 F3 every none c1 1h)
 - C07 First-dig tutorial: A guided first trench with arrows and tips. (R2 F5 rare none c1 4h)
+- C08 Fold the bars away: One tap folds the top, left and bottom bars away for a clear view; a tap at the edge brings them back. (R2 F5 every none c1 2h)
+- C09 Choose what the bars show: Pick which gauges sit in the top bar and which buttons go on the left rail or the bottom bar, saved per device. (R1 F5 every none c2 5h)
+- C10 Machine buttons in the bottom bar: Each machine's own actions as big buttons in the bottom bar: Bed up in the truck, Blades on in the mower, Hook box in the excavator. (R3 F6 every none c1 3h)
+- C11 Compass and position: A compass heading in the top bar and where you are in feet from the site stake. (R5 F3 every none c1 1h)
+- C12 Minimap zoom and turn: Pinch the minimap to zoom, and pick north-up or heading-up. (R4 F5 every none c1 2h)
+- C13 Map pins: Drop a pin on the big map and an arrow in the top bar points you to it with the distance in feet. (R3 F5 most none c1 3h)
+- C14 Menus by controller: Move through the menu, panels and the map editor with the controller's D-pad and buttons. (R1 F4 some none c1 3h)
 
 ## Q: Graphics and phone speed
 
@@ -147,6 +180,9 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - Q07 Ambient occlusion: Soft dark creases in the trench and under the machines. (R7 F2 every high c2 5h)
 - Q08 Exhaust heat haze: Wavy air above the stacks. (R6 F2 every low c1 2h)
 - Q09 Phone 60 FPS mode: A lighter preset that holds 60 on the phone. (R2 F4 every none c1 3h)
+- Q10 Blob shadows on Low: A soft dark patch under each machine and the worker when shadows are off, so they sit on the ground on a phone. (R6 F2 every none c1 2h)
+- Q11 Foam at the shore: White foam where the lake meets the cliff foot and around the bridge piers. (R7 F3 every low c1 2h)
+- Q12 Simpler far islands: Islands far away draw with fewer triangles and no small props, to win frames back on the phone. (R2 F3 every none c2 5h)
 
 ## E: Map editor
 
@@ -155,6 +191,9 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - E03 Place site props: Cones, trailers, pipe stacks and signs. (R4 F5 rare none c1 3h needs S02)
 - E04 Ponds and creeks: Add water in the editor. (R5 F5 rare low c2 5h)
 - E05 Share maps by link: Open a friend's map from a link, and a gallery of maps. (R2 F6 rare none c2 6h)
+- E06 Blocks in the editor: Lay out block builds from overhead in the map editor, with copy, paste and turn. (R3 F6 some none c1 4h)
+- E07 Edit the other islands: Sculpt, paint and place on the Family, Dexter's and Jessica's islands too, not only Corley's. (R3 F7 some none c3 10h)
+- E08 Named maps: Keep several maps on the device under names and switch between them. (R2 F5 some none c1 3h)
 
 ## Y: Gameplay and challenges
 
@@ -166,6 +205,10 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - Y06 Leaderboards: Best times on the challenges, online. (R1 F5 some none c2 5h needs Y02)
 - Y07 Daily dig: A new site layout and job every day. (R3 F7 most none c2 6h)
 - Y08 Kids mode: No strikes or cave-ins, giant toy blocks. (R1 F5 rare none c1 2h)
+- Y09 Build to a blueprint: A see-through blueprint (a doghouse, a wall with a gate, a staircase) to fill with blocks, scored on how closely it matches. (R2 F8 some low c2 5h)
+- Y10 Share block builds: Copy a block build as text and load it on another device or another spot. (R1 F6 some none c1 3h)
+- Y11 Parkour course: A block obstacle course on foot on Dexter's Island, timed from start to finish line. (R1 F7 some none c1 3h)
+- Y12 Landmark hunt: Find hidden landmarks across the islands (the cliff bench, the crane, the flagpole) and tick them off. (R2 F6 some none c1 3h)
 
 ## H: Cozy home life
 
@@ -183,6 +226,8 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - H12 Holidays at home: Pumpkins on the porch in fall, lights on the cabin at Christmas. (R5 F5 rare low c1 4h needs H01)
 - H13 Home projects with your machines: Dig your own pond, cut a driveway, terrace a garden with the excavator. (R5 F8 most low c2 6h)
 - H14 Chess and checkers table: A low-poly picnic table with a board on it. Sit down and the island saves and switches to Mesa Chess or Checkers at full quality, straight onto the board (the chess page preloads as you walk up); Get out brings you back standing beside the table. On the claude.ai version it opens in a new tab. (R4 F7 some none c1 6h)
+- H15 Sit down anywhere: Sit on the porch rockers, the cliff bench or the library window seat; the camera settles and the world carries on. (R5 F5 most none c1 3h)
+- H16 Tips from the library: Pull a book off Jessica's shelves to read operating tips and the islands' story. (R3 F4 rare none c1 2h)
 
 ## K: Yard work
 
@@ -198,6 +243,7 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - K10 Lawn health: Brown patches, fertilizer and a sprinkler; the grass greens up over days. (R6 F4 most low c2 5h)
 - K11 Lawn care business: Mow customers' yards in town on a weekly route for pay. (R5 F7 most low c3 10h needs T01)
 - K12 Bagger and compost pile: Catch clippings and dump them on a compost pile. (R6 F4 some low c1 3h)
+- K13 Family Island lawn: Grass around the family house that grows long and needs the zero-turn, with its own lawn timer. (R7 F7 most low c1 4h)
 
 ## B: The bridge and the drive
 
@@ -210,6 +256,7 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - B07 Swing span: A section of the bridge that swings open for sailboats while you wait. (R5 F6 some low c2 5h needs B01)
 - B08 Skip the drive: Fast travel to town once you've driven it. (R1 F4 most none c1 2h needs T01)
 - B09 Bridge repair job: Rebuild a washed-out bridge approach with your machines. (R6 F6 rare low c2 6h needs B01)
+- B10 The crane builds the bridge: The crane past the barrier swings girders into place, and the mainland bridge grows a span at a time. (R6 F6 every low c2 6h needs B01)
 
 ## T: The mountain town
 
@@ -235,6 +282,7 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - R06 Chores by season: Mowing in summer, leaves in fall, plowing snow in winter. (R6 F7 most low c2 6h needs W04)
 - R07 Snow plowing: Clear the road and the bridge with a loader in winter. (R6 F7 rare low c2 5h needs W04)
 - R08 End-of-day summary: What you did, what you earned, the lawn and the yards dug. (R3 F5 every none c1 2h)
+- R09 While you were away: Coming back shows what changed: the grass grew, the mud dried, the puddles soaked away. (R3 F5 every none c1 2h)
 
 ## I: Islands and the family
 
@@ -263,3 +311,5 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - I23 Mail boat: A little boat stops at every dock each morning with letters, packages and the seed you ordered. (R6 F5 every low c1 4h needs I01)
 - I24 Island upgrades: Earn and spend to bring each island a dock, power, a well and a gravel road over time. (R5 F7 most none c2 6h needs I01 R02)
 - I25 Visit family online: Play on a family member's island together over the internet, or have them sail over to yours. (R3 F8 some low c3 14h needs I01 L06)
+- I26 Lantern paths at dusk: The lanterns along Jessica's paths and the porch lights on the islands glow as the sun goes down. (R6 F4 every low c1 2h needs W02)
+- I27 Cone course run: A timed run through Dexter's cone course in the skid steer or truck; knock a cone and it counts against you. (R3 F8 some none c1 3h)
