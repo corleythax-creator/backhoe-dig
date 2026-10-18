@@ -100,7 +100,7 @@ function rainGfx(n){if(rainLines&&rainLines.userData.n===n)return;if(rainLines){
 const SKY0=scene.background.clone(),SKY_R=new THREE.Color(0x8e989f),FOG_FAR=scene.fog.far,SUN_I=sun.intensity,hemiL=scene.children.find(o=>o.isHemisphereLight),HEMI_I=hemiL?hemiL.intensity:0;
 const skyTint=new THREE.Color();
 function rainFxTick(dt){const r=weather.r,v=ss(0,0.6,r);
-  scene.background.copy(SKY0).lerp(SKY_R,v*0.85);scene.fog.color.copy(scene.background);scene.fog.far=FOG_FAR*(1-0.6*v);
+  scene.background.copy(SKY0).lerp(SKY_R,v*0.85);scene.fog.color.copy(scene.background);scene.fog.far=FOG_FAR*gfxFog*(1-0.6*v);
   sun.intensity=SUN_I*(1-0.7*v);if(hemiL)hemiL.intensity=HEMI_I*(1+0.15*v);
   sky.material.color.copy(skyTint.setRGB(1,1,1).lerp(SKY_R,v*0.75));skySunVis.value=1-v;
   if(!rainLines)return;rainLines.visible=r>0.03;if(!rainLines.visible)return;

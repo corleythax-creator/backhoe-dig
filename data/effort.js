@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-18T00:25:39Z",
+ "updated": "2026-10-18T00:48:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 565.5,
-   "act": 11.5,
-   "versions": 74
+   "dh": 611.0,
+   "act": 12.0,
+   "versions": 81
   }
  ],
  "extra": [
@@ -759,6 +759,69 @@ window.EFFORT = {
    "tris": 1619680,
    "chars": 490671,
    "what": "Dexter's Island: from the Family Island's roundabout the west road crosses a wide yellow steel haul bridge (about 305 ft, rated for the machines, with a steel portal at each end) to a flat gravel yard the size of Corley's. On it: Dexter's blue-grey equipment shed with three roll-up doors and a light over each, an office trailer on blocks, a diesel tank with its pump, stacked concrete pipe and Jersey barriers, two light towers, a cone course and dirt piles to climb, and his machines parked in the yard: a skid steer, a small dozer, a wheel loader and a red semi with an empty lowboy trailer. Drive the excavator, the truck or the mower over, or walk; the shed, the machines and everything else are solid. The parked machines are models for now. All four islands and their bridges are in."
+  },
+  {
+   "v": 82,
+   "asked": "2026-10-17T19:12:00-05:00",
+   "live": "2026-10-17T19:33:31-05:00",
+   "dh": 3,
+   "tris": 1620039,
+   "chars": 492757,
+   "what": "Turn sensitivity: a Turn slider just above the left stick sets how fast left and right turn, from 25% to 200%: the excavator swing and tracks, the truck steering, the mower spin and looking round on foot, from the sticks, keys or a controller. On a computer the slider is always out; on a phone it is a small Turn chip that opens the slider when tapped. Each device remembers its own."
+  },
+  {
+   "v": 83,
+   "asked": "2026-10-17T18:55:00-05:00",
+   "live": "2026-10-17T19:33:35-05:00",
+   "dh": 6,
+   "tris": 1620718,
+   "chars": 497536,
+   "what": "Teleport from the site map: open it with M (or tap the minimap), tap a spot, and choose On foot, Excavator, Dump truck or Mower. The machine you pick comes with you and you arrive in its seat, set down at the nearest open spot (on land, not too steep, clear of buildings, blocks and the other machines, turned if that fits better); On foot leaves the machine you were in where it is. A crosshair marks the spot, tapping the lake says so, and a message tells how far you went. On a phone held sideways the map now sits beside its buttons and legend."
+  },
+  {
+   "v": 84,
+   "asked": "2026-10-17T19:34:00-05:00",
+   "live": "2026-10-17T19:39:10-05:00",
+   "dh": 0.5,
+   "tris": 1620195,
+   "chars": 497848,
+   "what": "Turning starts gentler: the Turn slider now starts at 60% instead of 100%. It is saved only once you move it, so devices that opened v82 without touching it start at 60% too, and a setting you chose is kept."
+  },
+  {
+   "v": 85,
+   "asked": "2026-10-17T19:25:00-05:00",
+   "live": "2026-10-17T19:39:28-05:00",
+   "dh": 8,
+   "tris": 1620977,
+   "chars": 502641,
+   "what": "Field grass that reacts: tracks and tyres lay the grass flat the way they drove, the mower's wheels nearly flat and your boots partway, leaving pale trampled tracks that stay down for a minute and spring back over about two and a half minutes. The grass and the tall grass lean out of the worker's way as well as the machines'. In the rain the grass darkens and droops, heavier where the ground is soaked, and stands back up as it dries. Mud ruts outside the dig zone now clear the grass from them, and it comes back when the ruts are smoothed or the site is reset."
+  },
+  {
+   "v": 86,
+   "asked": "2026-10-17T19:30:00-05:00",
+   "live": "2026-10-17T19:43:39-05:00",
+   "dh": 14,
+   "tris": 1620777,
+   "chars": 514611,
+   "what": "Dexter's skid steer is drivable. Tap Skid (or press 6), walk up to it in his yard and tap Get in, or teleport into it from the site map. The left stick drives it, turns it and spins it in place; the right stick lowers and raises the arms (up lowers, like the excavator's boom) and curls or dumps the bucket, which stays level as the arms go up. Drive it over the bridges to the dig site and it scoops dirt with the bucket down on the ground and dumps it in a pile, over the cliff or into the dump truck's bed. It has its own diesel sound, ruts soft ground and lays the grass down, bumps into buildings, blocks and the other machines, shows its load, speed and bucket depth on the status card, follows the turn sensitivity slider, and is saved and synced with the site. Reset parks it back in Dexter's yard."
+  },
+  {
+   "v": 87,
+   "asked": "2026-10-17T18:55:00-05:00",
+   "live": "2026-10-17T19:44:31-05:00",
+   "dh": 10,
+   "tris": 1620449,
+   "chars": 527659,
+   "what": "Graphics panel: the Graphics button in the menu opens Low, Medium and High with every setting under them to play with, and the frame rate, triangles, draw calls, resolution and textures in memory shown live. Screen: resolution (0.5x to 3x), auto resolution, a 30 or 60 fps frame cap, field of view. Light: shadows off or 512 to 4096, soft shadow edges, filmic lighting, brightness, haze distance. Textures: texture size 512, 1024 or 2048, ground texture, extra detail (cut faces, painted materials, machine grime), ground variation, sharpness at an angle. Grass: how many blades and how far, lawn detail distance. Effects: Dirt detail, puddle water, raindrops. A change makes it Custom, marked in the panel and kept on that device; picking a preset clears it. Also: Low now shows the grass and dirt texture on the ground (512 px), sharpness at an angle is 4x, 8x and 16x by preset, and the large-scale ground variation is High only, so phones never download it."
+  },
+  {
+   "v": 88,
+   "asked": "2026-10-17T19:42:00-05:00",
+   "live": "2026-10-17T19:48:43-05:00",
+   "dh": 4,
+   "tris": 1621225,
+   "chars": 531664,
+   "what": "The mower cuts the field grass too, anywhere on the mesa: the clumps under the deck drop to stubble and throw clippings, flowers and seed heads included, then grow back on the tall grass's timing (about a minute before they start, about four more to full height). The mowed field grass saves and syncs with the rest of the mowing."
   }
  ]
 };

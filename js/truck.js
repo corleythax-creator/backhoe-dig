@@ -295,6 +295,9 @@ function updateTruck(dt,thr,steerIn,bedIn){
   for(const lz of [2.2,-0.4,-2.6,-3.6]){const cx=tr.x+sy*lz,cz=tr.z+cy*lz,dx=cx-st.x,dz=cz-st.z,d=Math.hypot(dx,dz),min=1.5+2.7;
     if(d<min&&d>1e-3){tr.x+=dx/d*(min-d);tr.z+=dz/d*(min-d);
       if(Math.abs(tr.v)>1.2){shake=reduceMotion?0:0.15;rumble(250,0.7)}tr.v*=-0.15}}
+  // and off Dexter's skid steer
+  for(const lz of TR_C){const cx=tr.x+sy*lz,cz=tr.z+cy*lz;for(const q of SK_C){const dx=cx-sk.x-Math.sin(sk.yaw)*q,dz=cz-sk.z-Math.cos(sk.yaw)*q,d=Math.hypot(dx,dz),m=TR_R+SK_R;
+    if(d<m&&d>1e-3){tr.x+=dx/d*(m-d);tr.z+=dz/d*(m-d);tr.v*=0.5}}}
   if(blkPush(tr,TR_C,TR_R)){if(Math.abs(tr.v)>1.2){shake=reduceMotion?0:0.15;rumble(250,0.7)}tr.v*=-0.15}
   tr.aL+=((tr.v-vPrev)/Math.max(dt,1e-3)-tr.aL)*Math.min(1,dt*6);
   // hydraulics lift slower under load; the bed comes down on its own weight
@@ -354,7 +357,7 @@ function greyDetail(t,mean){try{const im=t.image,c=document.createElement('canva
 function tintLoad(mat,c){const k=mat.map?1.25:1;mat.color.setRGB(Math.min(1,c[0]*k),Math.min(1,c[1]*k),Math.min(1,c[2]*k))}
 // called by main.js once every script has loaded (the images can finish before the later scripts arrive)
 function applyTextures(){
-  texOn=true;texMixU.value=gfxDetail;
+  texOn=true;texMixU.value=gfxDetail;texBaseU.value=gfxBase;
   for(const mt of [ORANGE,ORANGE_D,STEEL,STEEL_L,RUBBER,WHITE,WHITE_DS,BEDM,BED_D]){mt.map=texGrime;mt.needsUpdate=true}
   const grey=greyDetail(texDirt);heap.material.map=grey;heap.material.needsUpdate=true;
   ORANGE.color.setHex(0xf27a22);ORANGE_D.color.setHex(0xc85e1c);

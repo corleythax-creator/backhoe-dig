@@ -10,7 +10,7 @@ function resetState(){
   H.set(H0);dI0=0;dI1=N;dJ0=0;dJ1=N;winOn=true;Object.assign(tr,TR_START);tr.loadC=[...SOIL[SPOIL].c];tr.loadMix=[...CRUMB_MIX];tr.stuck=0;tr.mud=0;tr.sink=0;tr.spin=0;tr.loadWet=0;tr.pourRate=0;tr.pourP=new THREE.Vector3();
   for(let k=0;k<V*V;k++)spoilC.set(SOIL[SPOIL].c,k*3);
   clearClods();wetT.fill(-1e4);comp.fill(0);clearDust();waterClear();mudReset();rainReset();
-  blkReset();mowReset();walkReset();Object.assign(TB,TB_START,{hooked:false,seated:false});TB.y=TB.ty=boxRest();prot.fill(0);chain.visible=false;
+  blkReset();mowReset();skidReset();walkReset();Object.assign(TB,TB_START,{hooked:false,seated:false});TB.y=TB.ty=boxRest();prot.fill(0);chain.visible=false;
 }
 resetState();
 const LIM={a1:[-0.55,1.3],a2:[-2.65,-0.45],a3:[-2.85,0.35]};
@@ -36,8 +36,8 @@ const SL=makeStick($('#stickL')),SR=makeStick($('#stickR'));
 const keys={};
 // keyboard: every key runs the action it is bound to in keys.js (standard: WASD/arrows the left stick, IJKL the right stick);
 // the sticks' captions show the keys once one is pressed
-const MODES=['dig','drive','truck','mow','walk'];let kbUsed=false;
-const KEY_RUN={dig:()=>setMode('dig'),drive:()=>setMode('drive'),truck:()=>setMode('truck'),mow:()=>setMode('mow'),walk:()=>setMode('walk'),
+const MODES=['dig','drive','truck','mow','skid','walk'];let kbUsed=false;
+const KEY_RUN={dig:()=>setMode('dig'),drive:()=>setMode('drive'),truck:()=>setMode('truck'),mow:()=>setMode('mow'),skid:()=>setMode('skid'),walk:()=>setMode('walk'),
   nextMode:e=>setMode(MODES[(MODES.indexOf(mode)+(e.shiftKey?MODES.length-1:1))%MODES.length]),
   enter:()=>seatToggle(),jump:()=>walkJump(),blocks:()=>setBlocks(!blkOn),place:()=>placeBlock(),lift:()=>removeBlock(),size:()=>setBlkSize(blkSize%3+1),
   box:()=>hookBox(),lookAhead:()=>{if(camMode==='cab')fpl.home=true;fpl.zt=1},pump:()=>setPump(!pumpOn),cam:()=>$('#camBtn').click(),map:()=>toggleMap(),sound:()=>setSound(!sndCfg.on),help:()=>{help.hidden=!help.hidden}};
@@ -61,7 +61,7 @@ function keyAxes(dt){const f=mode!=='walk'&&held('fine')?0.3:1;
   const t={lx:kv('lRight','lLeft'),ly:kv('lUp','lDown'),rx:kv('rRight','rLeft'),ry:kv('rUp','rDown')};
   // mower: ly / ry are the left / right lap bars. Up and down drive both (A / D still spin, as the left stick does), and the
   // numpad has both bars together (8 2), a spin in place (4 6) and each bar on its own (7 1 left, 9 3 right)
-  if(mode==='mow'){const go=t.ly+kv('mwFwd','mwBack'),sp=kv('mwSpinR','mwSpinL');
+  if(mode==='mow'){const go=t.ly+kv('mwFwd','mwBack'),sp=kv('mwSpinR','mwSpinL')*turnSens;
     t.ly=go+sp+kv('mwLF','mwLB');t.ry=go-sp+kv('mwRF','mwRB');t.rx=0}
   for(const k in t){const g=clamp(t[k],-1,1)*f,r=(g===0?10:5)*dt;KA[k]+=clamp(g-KA[k],-r,r)}}
 // game controller (standard mapping): sticks = the two on-screen sticks, triggers = gas / reverse when driving,
@@ -139,15 +139,16 @@ const aimEl=$('#aim');
 
 function setCaps(){const m=mode,two=(a,b)=>`${keyLabel(a)} ${keyLabel(b)}`,lh=kbUsed?two('lLeft','lRight'):'◀ ▶',lv=kbUsed?two('lUp','lDown'):'▲ ▼',rh=kbUsed?two('rLeft','rRight'):'◀ ▶',rv=kbUsed?two('rUp','rDown'):'▲ ▼';
   for(const b of document.querySelectorAll('.seg button'))b.dataset.k=keyLabel(b.id.slice(4).toLowerCase());
-  $('#capL').innerHTML=m==='dig'?`<b>${lh}</b> Swing<br><b>${lv}</b> Stick out / in`:m==='drive'?`<b>${lh}</b> Turn<br><b>${lv}</b> Drive fwd / back`:m==='mow'?(kbUsed?`<b>${lv}</b> Drive fwd / back<br><b>${lh}</b> Turn`:`<b>${lv}</b> Left lap bar<br><b>${lh}</b> Spin`):m==='walk'?`<b>${lv}</b> Walk / back<br><b>${lh}</b> Step left / right`:`<b>${lh}</b> Steer<br><b>${lv}</b> Gas / reverse`;
-  $('#capR').innerHTML=m==='truck'?`<b>${rv}</b> Bed up / down<br>&nbsp;`:m==='mow'?(kbUsed?`<b>${keyLabel('mwLF')} ${keyLabel('mwLB')}</b> Left bar · <b>${keyLabel('mwRF')} ${keyLabel('mwRB')}</b> Right bar<br><b>${keyLabel('mwSpinL')} ${keyLabel('mwSpinR')}</b> Spin in place`:`<b>${rv}</b> Right lap bar<br>&nbsp;`):m==='walk'?`<b>${rh}</b> Turn<br><b>${rv}</b> Look up / down`:`<b>${rh}</b> Curl / dump<br><b>${rv}</b> Boom down / up`;}
-function setMode(m){if(m===mode)return;mode=m;for(const [id,k] of [['#modeDig','dig'],['#modeDrive','drive'],['#modeTruck','truck'],['#modeMow','mow'],['#modeWalk','walk']])$(id).setAttribute('aria-pressed',m===k);
+  $('#capL').innerHTML=m==='dig'?`<b>${lh}</b> Swing<br><b>${lv}</b> Stick out / in`:m==='drive'?`<b>${lh}</b> Turn<br><b>${lv}</b> Drive fwd / back`:m==='mow'?(kbUsed?`<b>${lv}</b> Drive fwd / back<br><b>${lh}</b> Turn`:`<b>${lv}</b> Left lap bar<br><b>${lh}</b> Spin`):m==='walk'?`<b>${lv}</b> Walk / back<br><b>${lh}</b> Step left / right`:m==='skid'?`<b>${lv}</b> Drive fwd / back<br><b>${lh}</b> Turn`:`<b>${lh}</b> Steer<br><b>${lv}</b> Gas / reverse`;
+  $('#capR').innerHTML=m==='truck'?`<b>${rv}</b> Bed up / down<br>&nbsp;`:m==='mow'?(kbUsed?`<b>${keyLabel('mwLF')} ${keyLabel('mwLB')}</b> Left bar · <b>${keyLabel('mwRF')} ${keyLabel('mwRB')}</b> Right bar<br><b>${keyLabel('mwSpinL')} ${keyLabel('mwSpinR')}</b> Spin in place`:`<b>${rv}</b> Right lap bar<br>&nbsp;`):m==='walk'?`<b>${rh}</b> Turn<br><b>${rv}</b> Look up / down`:m==='skid'?`<b>${rh}</b> Curl / dump<br><b>${rv}</b> Arms down / up`:`<b>${rh}</b> Curl / dump<br><b>${rv}</b> Boom down / up`;}
+function setMode(m){if(m===mode)return;mode=m;for(const [id,k] of [['#modeDig','dig'],['#modeDrive','drive'],['#modeTruck','truck'],['#modeMow','mow'],['#modeSkid','skid'],['#modeWalk','walk']])$(id).setAttribute('aria-pressed',m===k);
   $('#walkBtns').hidden=m!=='walk';if(m!=='walk')setSprint(false);$('#capR').hidden=m==='walk';
   // switching to Walk from a machine you climbed into sets you down beside it
   if(m==='walk'){if(wk.inside){wkPlaceOut(wk.inside);wk.inside=null}wk.view=wk.yaw}
   setCaps();markTile();firstCam=true;fpReset();if(m==='mow'&&!lawn.startT&&!lawn.done)toast(kbUsed?`Mower running. ${keyLabel('lUp')} drives straight, ${keyLabel('lLeft')} ${keyLabel('lRight')} turn; the number pad works each lap bar.`:'Mower running. Push both sticks up to drive, one up and one back to spin.','',3800);
+  if(m==='skid')toast(kbUsed?`Skid steer running. ${keyLabel('lUp')} ${keyLabel('lDown')} drive, ${keyLabel('lLeft')} ${keyLabel('lRight')} turn; ${keyLabel('rUp')} ${keyLabel('rDown')} lower and raise the arms, ${keyLabel('rLeft')} ${keyLabel('rRight')} curl and dump.`:'Skid steer running. Left stick drives and turns; right stick up and down lowers and raises the arms, left and right curls and dumps.','',4200);
   if(m==='walk')toast(padUsed?'On foot. A jumps, X sets a block, B gets into a machine.':kbUsed?`On foot. ${keyLabel('jump')} jumps, ${keyLabel('place')} sets a block, ${keyLabel('enter')} gets into a machine.`:'On foot. Tap Jump to jump. Walk up to a machine and tap Get in.','',3800)}
-$('#modeDig').onclick=()=>setMode('dig'); $('#modeDrive').onclick=()=>setMode('drive'); $('#modeTruck').onclick=()=>setMode('truck'); $('#modeMow').onclick=()=>setMode('mow'); $('#modeWalk').onclick=()=>setMode('walk');
+$('#modeDig').onclick=()=>setMode('dig'); $('#modeDrive').onclick=()=>setMode('drive'); $('#modeTruck').onclick=()=>setMode('truck'); $('#modeMow').onclick=()=>setMode('mow'); $('#modeSkid').onclick=()=>setMode('skid'); $('#modeWalk').onclick=()=>setMode('walk');
 $('#camBtn').onclick=()=>{camMode=camMode==='chase'?'cab':'chase';fpReset();$('#camBtn').textContent=camMode==='chase'?'Cab view':'Chase view'};
 let resetArm=0;
 $('#resetBtn').onclick=()=>{const b=$('#resetBtn');
@@ -166,6 +167,19 @@ function setUiScale(v){uiScale=+v||1;const h=$('#hud');h.style.setProperty('--s'
   document.querySelectorAll('.sizes button[data-s]').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.s===uiScale));try{localStorage.setItem('bhd_ui',uiScale)}catch(e){}}
 document.querySelectorAll('.sizes button[data-s]').forEach(b=>b.onclick=()=>setUiScale(b.dataset.s));
 try{setUiScale(localStorage.getItem('bhd_ui')||1)}catch(e){setUiScale(1)}
+// turn sensitivity (above the left stick): scales every left / right input, swing, tracks, steering, the mower's spin
+// and looking round on foot, from 25% to 200% (60% unless the player moves it); saved on this device once moved.
+// Open on a computer, a tap away on a phone
+const TURN_DEF=60;let turnSens=TURN_DEF/100;const turnSl=$('#turnSl'),turnBtn=$('#turnBtn');
+function setTurnSens(v){turnSens=clamp(Math.round(+v/5)*5||TURN_DEF,25,200)/100;turnSl.value=Math.round(turnSens*100);turnBtn.textContent=`Turn ${turnSl.value}%`}
+function showTurnSl(on){turnSl.hidden=!on;turnBtn.setAttribute('aria-expanded',on)}
+// v82 saved 100% under bhd_turn on every load, moved or not, so only a value other than 100% there is the player's own
+try{const s=+localStorage.getItem('bhd_turnS')||(+localStorage.getItem('bhd_turn')!==1&&+localStorage.getItem('bhd_turn'));setTurnSens(s?s*100:TURN_DEF)}catch(e){setTurnSens(TURN_DEF)}
+showTurnSl(!PHONE);
+turnBtn.onclick=()=>showTurnSl(turnSl.hidden);
+turnSl.oninput=()=>{setTurnSens(turnSl.value);try{localStorage.setItem('bhd_turnS',turnSens)}catch(e){}};
+// let go of the slider so the arrow keys drive again
+turnSl.onchange=()=>turnSl.blur();
 const statusEl=$('#status');try{statusEl.classList.toggle('min',localStorage.getItem('bhd_hudmin')==='1')}catch(e){}
 statusEl.onclick=()=>{const m=statusEl.classList.toggle('min');try{localStorage.setItem('bhd_hudmin',m?'1':'0')}catch(e){}};
 // the start card: tap a machine (or On foot) to start in that mode; tapping outside the card keeps the current one

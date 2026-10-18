@@ -26,6 +26,7 @@ const KEY_ACTIONS=[
   {id:'drive',g:'Modes',n:'Drive',d:'Drive the excavator on its tracks',k:['Digit2']},
   {id:'truck',g:'Modes',n:'Truck',d:'Drive the dump truck',k:['Digit3']},
   {id:'mow',g:'Modes',n:'Mow',d:'Drive the mower',k:['Digit4']},
+  {id:'skid',g:'Modes',n:'Skid steer',d:'Drive Dexter\'s skid steer',k:['Digit6']},
   {id:'walk',g:'Modes',n:'Walk',d:'Get out and walk',k:['Digit5']},
   {id:'nextMode',g:'Modes',n:'Next mode',d:'With Shift held, the one before',k:['Tab']},
   {id:'enter',g:'On foot',n:'Get in / get out',d:'Climb into the machine you are standing next to (or sit down at a game table on the pavilion); press again to climb out',k:['KeyF']},

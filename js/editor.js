@@ -10,7 +10,7 @@ const ED_TOOLS={look:'Look',raise:'Raise',lower:'Lower',flatten:'Flatten',smooth
 const ED_BRUSH=['raise','lower','flatten','smooth','dirt','grass','paint'];
 const ED_KINDS={pine:'Pine tree',leafy:'Leafy tree',rock:'Boulder'};
 // the machines and the walker can be picked and moved: their state, scene object and pick radius
-const ED_MACH=[{name:'Excavator',o:()=>st,m:()=>machine,r:2.6},{name:'Dump truck',o:()=>tr,m:()=>truck,r:3.6},{name:'Mower',o:()=>mw,m:()=>mower,r:1.2},{name:'You, on foot',o:()=>wk,m:()=>walker,r:0.8}];
+const ED_MACH=[{name:'Excavator',o:()=>st,m:()=>machine,r:2.6},{name:'Dump truck',o:()=>tr,m:()=>truck,r:3.6},{name:'Mower',o:()=>mw,m:()=>mower,r:1.2},{name:'Skid steer',o:()=>sk,m:()=>skid,r:1.6},{name:'You, on foot',o:()=>wk,m:()=>walker,r:0.8}];
 const edFt=m=>m/FT,edFmt=(m,d)=>(m/FT).toFixed(d===undefined?1:d);
 
 // brush and selection rings drawn over the ground
@@ -27,7 +27,7 @@ function edRingAt(l,x,z,r,sq){const p=l.geometry.attributes.position.array;
 // ---------- open and close ----------
 function editorOpen(){if(edOn||bench.on)return;edOn=true;mapAssets=assets;
   document.body.classList.add('editing');$('#editor').hidden=false;showMenu(false);help.hidden=true;toggleMap(false);clearKeys();
-  const fv=mode==='truck'?tr:mode==='mow'?mw:mode==='walk'?wk:st;ed.x=fv.x;ed.z=fv.z;
+  const fv=mode==='truck'?tr:mode==='mow'?mw:mode==='skid'?sk:mode==='walk'?wk:st;ed.x=fv.x;ed.z=fv.z;
   ed.yaw=Math.atan2(camera.position.x-fv.x,camera.position.z-fv.z);ed.dist=45;ed.pitch=0.95;
   edTool(ed.tool);edInfo(null);toast('Map editor. The game is paused while you edit.','',2600)}
 function editorClose(){if(!edOn)return;edStrokeEnd();edRoadFinish();edOn=false;document.body.classList.remove('editing');$('#editor').hidden=true;

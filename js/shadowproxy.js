@@ -24,7 +24,7 @@ function shpProxies(root){const by=new Map();
     const side=m.material.side===THREE.DoubleSide?THREE.DoubleSide:THREE.FrontSide,key=m.parent.uuid+side;
     if(!by.has(key))by.set(key,{parent:m.parent,side,src:[],proxy:null});by.get(key).src.push({m,s:shpSnap(m)})});
   for(const G of by.values()){if(G.src.length<2)continue;for(const s of G.src)s.m.castShadow=false;shpBuild(G);shpGroups.push(G)}}
-for(const r of [machine,truck,mower,tbox])shpProxies(r);
+for(const r of [machine,truck,mower,tbox,skid])shpProxies(r);
 // trees: a shadow-only copy holding the instances near the shadow camera
 for(const im of treeIMs){im.castShadow=false;const near=new THREE.InstancedMesh(im.geometry,shpMat(THREE.FrontSide),im.instanceMatrix.count);near.count=0;near.castShadow=true;near.visible=false;near.frustumCulled=false;near.userData.shProxy=true;
   scene.add(near);shpTrees.push({im,M:[],near,x:1e9,z:1e9})}

@@ -31,19 +31,19 @@ const lawnGeo=(function(){const P=[],C=[],tri=(v,c,list)=>{for(const t of list)f
 // per clump (aLawn): mowing grain times stripe strength (x, z) and the height of the grass around it (z), set by lawnShade
 lawnGeo.setAttribute('aLawn',new THREE.InstancedBufferAttribute(new Float32Array(LAWN_N*4),4));
 // wind comes in gusts that roll across the patch, bending the grass over and showing its paler side; the grass leans away
-// from the machines (mower, excavator, truck front and back: x, z, radius). Cut grass reads light looking along the way
+// from the machines and the worker (mower, excavator, truck front and back, worker: x, z, radius). Cut grass reads light looking along the way
 // the mower laid it and dark looking against it, so the stripes swap as you walk round. Down in the clumps it is dark
 // where the grass around stands taller, and looking toward the sun the blades glow where light comes through them
-const lawnPush={value:[new THREE.Vector4(),new THREE.Vector4(),new THREE.Vector4(),new THREE.Vector4()]};
+const lawnPush={value:[new THREE.Vector4(),new THREE.Vector4(),new THREE.Vector4(),new THREE.Vector4(),new THREE.Vector4(1e5,0,0,0)]};
 const lawnMat=M(0xffffff,{side:THREE.DoubleSide,vertexColors:true});
 lawnMat.onBeforeCompile=sh=>{sh.uniforms.uTime=timeU;sh.uniforms.uPush=lawnPush;sh.uniforms.uSun={value:SUN_DIR};
-  sh.vertexShader='uniform float uTime;\nuniform vec4 uPush[4];\nattribute vec4 aLawn;\nvarying vec3 vLW;\nvarying float vTip;\n'+sh.vertexShader.replace('#include <project_vertex>',
+  sh.vertexShader='uniform float uTime;\nuniform vec4 uPush[5];\nattribute vec4 aLawn;\nvarying vec3 vLW;\nvarying float vTip;\n'+sh.vertexShader.replace('#include <project_vertex>',
     'vec4 mvPosition=vec4(transformed,1.0);\n#ifdef USE_INSTANCING\nmvPosition=instanceMatrix*mvPosition;\nvec3 root=instanceMatrix[3].xyz;\n#else\nvec3 root=vec3(0.0);\n#endif\n'+
     'float hg=max(0.0,mvPosition.y-root.y);vec2 wd=vec2(0.8,0.6);\n'+
     'float gust=pow(0.5+0.5*sin(dot(root.xz,wd)*0.42-uTime*1.9+1.5*sin(dot(root.xz,vec2(-0.6,0.8))*0.11+uTime*0.23)),3.0);\n'+
     'float fl=sin(uTime*5.3+root.x*2.1+root.z*1.7)*0.5+sin(uTime*3.1+root.x*1.7-root.z*1.1)*0.5;\n'+
     'mvPosition.xz+=wd*hg*hg*(0.08+0.42*gust+0.07*fl);mvPosition.y-=hg*hg*0.18*gust;\n'+
-    'for(int m=0;m<4;m++){vec2 d=root.xz-uPush[m].xy;float l=length(d),f=1.0-smoothstep(uPush[m].z*0.55,uPush[m].z+0.35,l);\n'+
+    'for(int m=0;m<5;m++){vec2 d=root.xz-uPush[m].xy;float l=length(d),f=1.0-smoothstep(uPush[m].z*0.55,uPush[m].z+0.35,l);\n'+
     'if(f>0.0){mvPosition.xz+=d/max(l,0.05)*hg*0.9*f;mvPosition.y-=hg*0.7*f;}}\n'+
     'vec3 cv=root-cameraPosition;float cd=length(cv);vec2 vh=cv.xz/max(0.001,length(cv.xz));\n'+
     'float shade=mix(1.0,0.55+0.45*smoothstep(-0.05,aLawn.z*0.9+0.01,hg),clamp(aLawn.z/0.45,0.0,1.0));\n'+
@@ -73,7 +73,7 @@ function lawnFarSync(){const M=lawnClumps.instanceMatrix.array,F=lawnFar.instanc
   lawnFar.instanceMatrix.needsUpdate=true;lawnFarGeo.attributes.aLawn.needsUpdate=true;if(C)lawnFar.instanceColor.needsUpdate=true;lawnFarStale=false}
 // every frame: near or far version, by the camera's distance to the patch and the Graphics setting (always near while mowing)
 function lawnLod(){const d=Math.hypot(Math.max(0,LAWN_X0-camera.position.x,camera.position.x-LAWN_X0-LAWN_NX*LAWN_GS),Math.max(0,LAWN_Z0-camera.position.z,camera.position.z-LAWN_Z0-LAWN_NZ*LAWN_GS));
-  const far=mode!=='mow'&&d>(typeof gfxKey!=='undefined'?GFX[gfxKey].lawnFar:1e9);
+  const far=mode!=='mow'&&d>(typeof gfxCur!=='undefined'?gfxCur.lawnFar:1e9);
   if(far&&lawnFarStale)lawnFarSync();
   if(far!==lawnFarOn){lawnFarOn=far;lawnClumps.count=far?0:LAWN_N;lawnFar.count=far?LAWN_FN:0}}
 const lwO=new THREE.Object3D(),lwC=new THREE.Color();
@@ -85,7 +85,7 @@ for(let j=0;j<LAWN_NZ;j++)for(let i=0;i<LAWN_NX;i++){const n=j*LAWN_NX+i,e=Math.
   const v=Math.random(),drift=ss(0.55,0.9,hash(i*0.11+3,j*0.13+5)),dry=Math.random()<0.15+0.4*drift?0.45+0.5*Math.random():0.12*Math.random();
   lwC.setRGB(0.36+0.08*v,0.55+0.1*v,0.2+0.04*v).lerp(new THREE.Color(0.8,0.72,0.42),dry);lawn.tc[n*3]=lwC.r;lawn.tc[n*3+1]=lwC.g;lawn.tc[n*3+2]=lwC.b}
 // the mesa's short grass tufts give way to the patch
-for(let n=0;n<TUFTS;n++)if(tX[n]>LAWN_X0-0.2&&tX[n]<LAWN_X0+LAWN_NX*LAWN_GS+0.2&&tZ[n]>LAWN_Z0-0.2&&tZ[n]<LAWN_Z0+LAWN_NZ*LAWN_GS+0.2){tI[n]=-1;tuftPut(n,false)}
+for(let n=0;n<TUFTS;n++)if(tX[n]>LAWN_X0-0.2&&tX[n]<LAWN_X0+LAWN_NX*LAWN_GS+0.2&&tZ[n]>LAWN_Z0-0.2&&tZ[n]<LAWN_Z0+LAWN_NZ*LAWN_GS+0.2){tI[n]=-1;tGone[n]=1;tuftPut(n,false)}
 tuftFlush();
 // ground under the patch: dark thatch under tall grass, light and dark stripes once it is cut, fading as it grows back
 const LAWN_VX=LAWN_NX+1,LAWN_VN=LAWN_VX*(LAWN_NZ+1),LAWN_TG=[0.24,0.34,0.15],LAWN_LT=[0.46,0.66,0.29],LAWN_DK=[0.27,0.44,0.17];
@@ -162,7 +162,7 @@ function lawnSave(){if(window.syncHold)return;lawn.sDirty=false;lawn.saveT=perfo
     b[n*2]=1+Math.round(Math.max(0,a)/LAWN_LIFE*254);const h=lawn.ga[n]/(Math.PI*2);b[n*2+1]=Math.round((h-Math.floor(h))*255)&255}
   let bin='';for(let k=0;k<b.length;k+=4096)bin+=String.fromCharCode.apply(null,b.subarray(k,k+4096));
   const el=lawn.startT?Math.round(((lawn.done?lawn.doneT:performance.now())-lawn.startT)/1000):0;
-  try{localStorage.setItem(LAWN_KEY,JSON.stringify({v:3,n:LAWN_N,t:Date.now(),cells:btoa(bin),el,done:lawn.done,
+  try{localStorage.setItem(LAWN_KEY,JSON.stringify({v:3,n:LAWN_N,t:Date.now(),cells:btoa(bin),field:fieldSave(),el,done:lawn.done,
     mw:{x:+mw.x.toFixed(2),z:+mw.z.toFixed(2),yaw:+mw.yaw.toFixed(3)}}))}catch(e){}}
 function lawnLoad(){let d=null;try{d=JSON.parse(localStorage.getItem(LAWN_KEY))}catch(e){}
   if(!d||(d.v!==2&&d.v!==3)||d.n!==LAWN_N||typeof d.cells!=='string')return;let b;try{b=atob(d.cells)}catch(e){return}
@@ -171,7 +171,7 @@ function lawnLoad(){let d=null;try{d=JSON.parse(localStorage.getItem(LAWN_KEY))}
     lawn.ct[n]=lawn.t-(a-1)/254*LAWN_LIFE;const q=b.charCodeAt(n*2+1);
     lawn.ga[n]=d.v===3?q/255*Math.PI*2:q>=128?Math.PI/4:Math.PI*1.25;lawn.str[n]=Math.max(-1,Math.min(1,(Math.cos(lawn.ga[n])+Math.sin(lawn.ga[n]))*0.8));lawn.gd[n]=lawnG(n);cut++}
   if(cut&&d.el>0){const now=performance.now();lawn.startT=now-d.el*1000;if(d.done){lawn.done=true;lawn.doneT=now}}
-  lawnCount();if(lawn.pct>=0.97)lawn.done=true;
+  lawnCount();if(lawn.pct>=0.97)lawn.done=true;fieldLoad(d.field);
   if(d.mw&&isFinite(d.mw.x)&&isFinite(d.mw.z)&&isFinite(d.mw.yaw))mwSaved=d.mw}
 try{lawnLoad()}catch(e){lawn.ct.fill(-1e9);lawn.gd.fill(1);lawn.str.fill(0);lawn.ga.fill(0);mwSaved=null;try{localStorage.removeItem(LAWN_KEY)}catch(e2){}}
 addEventListener('pagehide',lawnSave);
@@ -283,7 +283,8 @@ function mowCut(){
     const g=lawnG(n);lawn.ct[n]=lawn.t;if(g>0.3)n0++;
     const da=mw.yaw-lawn.ga[n];
     if(g>0.03||lawn.gd[n]>0||Math.abs(Math.atan2(Math.sin(da),Math.cos(da)))>0.5){lawn.str[n]=sv;lawn.ga[n]=mw.yaw;lawn.gd[n]=0;lawnPaint(n)}}
-  return n0}
+  // and the field grass anywhere on the mesa (scenery.js); a few clumps throw clippings like a cell of tall grass
+  return n0+Math.ceil(fieldCut(dx0,dz0,mw.yaw,MW_HW,MW_HD)/3)}
 function updateMower(dt,inL,inR){
   // the bars ease to where they are held; the pumps answer in about a third of a second
   mw.l+=clamp(inL-mw.l,-3*dt,3*dt);mw.r+=clamp(inR-mw.r,-3*dt,3*dt);
@@ -298,9 +299,12 @@ function updateMower(dt,inL,inR){
     mw.x+=q[0]-px;mw.z+=q[1]-pz;
     const ex=px-st.x,ez=pz-st.z,ed=Math.hypot(ex,ez),em=MW_R+2.7;if(ed<em&&ed>1e-3){mw.x+=ex/ed*(em-ed);mw.z+=ez/ed*(em-ed)}
     for(const tz of TR_C){const tx=tr.x+Math.sin(tr.yaw)*tz,tzz=tr.z+Math.cos(tr.yaw)*tz,dx=px-tx,dz=pz-tzz,d=Math.hypot(dx,dz),m=MW_R+TR_R;
-      if(d<m&&d>1e-3){mw.x+=dx/d*(m-d);mw.z+=dz/d*(m-d)}}}
+      if(d<m&&d>1e-3){mw.x+=dx/d*(m-d);mw.z+=dz/d*(m-d)}}
+    for(const q of SK_C){const dx=px-sk.x-Math.sin(sk.yaw)*q,dz=pz-sk.z-Math.cos(sk.yaw)*q,d=Math.hypot(dx,dz),m=MW_R+SK_R;if(d<m&&d>1e-3){mw.x+=dx/d*(m-d);mw.z+=dz/d*(m-d)}}}
   blkPush(mw,MW_C,MW_R);
   const sy=Math.sin(mw.yaw),cy=Math.cos(mw.yaw);
+  // the tyres and casters press the grass down (scenery.js)
+  if(Math.abs(mw.v)>0.05||Math.abs(mw.w)>0.05)for(const [lx,lz] of [[MW_TRACK/2,0],[-MW_TRACK/2,0],[0.46,1.45],[-0.46,1.45]])grassCrush(mw.x+lx*cy+lz*sy,mw.z-lx*sy+lz*cy,mw.yaw,lz?0.06:0.13,lz?0.1:0.25,5,0.85,dt);
   // rides the ground on its four wheels
   const smp=(lx,lz)=>surfAt(mw.x+lx*cy+lz*sy,mw.z-lx*sy+lz*cy);
   const fL=smp(0.46,1.45),fR=smp(-0.46,1.45),bL=smp(MW_TRACK/2,0),bR=smp(-MW_TRACK/2,0),k=Math.min(1,dt*12);
@@ -319,12 +323,12 @@ function updateMower(dt,inL,inR){
   if(cutN){clipSpawn(Math.min(6,cutN*2));
     if(!lawn.startT)lawn.startT=performance.now();started()}
   // the grass grows back: once the lawn is under half mowed again, it is a fresh job
-  lawn.t+=dt;lawnGrow();lawn.pctT-=dt;if(lawn.pctT<=0){lawn.pctT=0.25;lawnCount()}
+  lawn.t+=dt;lawnGrow();fieldGrow(dt);lawn.pctT-=dt;if(lawn.pctT<=0){lawn.pctT=0.25;lawnCount()}
   if(lawn.done&&lawn.pct<0.5){lawn.done=false;lawn.startT=0;toast('The grass has grown back. Time to mow again.','',3500)}
   if(!lawn.done&&lawn.pct>=0.97){lawn.done=true;lawn.doneT=performance.now();const s=Math.round((lawn.doneT-lawn.startT)/1000);
     toast(`Lawn mowed in ${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}. Nice stripes.`,'good',5000)}
   // the grass leans away from whatever drives through it
-  const P=lawnPush.value;P[0].set(mw.x+sy*0.7,mw.z+cy*0.7,0.95,0);P[1].set(st.x,st.z,2.4,0);
+  const P=lawnPush.value;P[0].set(mw.x+sy*0.7,mw.z+cy*0.7,0.95,0);P[1].set(st.x,st.z,2.4,0);P[4].set(wk.inside?1e5:wk.x,wk.z,0.45,0);
   P[2].set(tr.x+Math.sin(tr.yaw)*2.0,tr.z+Math.cos(tr.yaw)*2.0,1.6,0);P[3].set(tr.x-Math.sin(tr.yaw)*2.4,tr.z-Math.cos(tr.yaw)*2.4,1.6,0);
   clipTick(dt);lawnFlush();
   if(Math.abs(mw.v)>0.01||Math.abs(mw.w)>0.01)lawn.sDirty=true;
