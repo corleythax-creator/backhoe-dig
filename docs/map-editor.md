@@ -11,12 +11,13 @@ First version shipped as v60, roads as v63.
 | Look | Drag to move the view; two fingers pinch to zoom and twist to turn. Mouse: right button turns, wheel zooms. Keys: WASD or arrows pan, Q E turn, R F zoom |
 | Raise, Lower, Flatten, Smooth | Reshape the ground under a soft round brush with a 5 to 40 ft radius, strength 1 to 10. Flatten levels to the height where the stroke starts |
 | Dirt, Grass | Paint the ground toward worked dirt or back to grass (Grass also paints over the built-in dirt yards) |
+| Paint | Lay a material from the library under a round or square brush, Hard edge (whole cells, fully covered) or Soft edge (the cover fades to nothing over the outer 10 to 100% of the radius, the Softness slider). Natural ground takes it back up, softly too |
 | Select | Pick a tree, boulder or machine; drag to move it; its card turns, resizes, copies or deletes it (machines move and turn only) |
 | Add | Place a pine, leafy tree or boulder; keep holding to drag it into place |
 | Query | Read a spot's height, slope, surface, whether it can be driven, your edits there and what stands on it, in feet |
 | Roads | Pick a road and drag its points; tap it between points to add one; New road lays one point by point. Its card sets width, grass up the middle, grading and the picked point's height, and deletes points or the road |
 
-Undo and Redo hold 30 steps. Number keys 1 to 0 pick the first ten tools, Delete removes the selected asset or road point, Enter finishes a new road, G or Esc closes the editor.
+The tools sit in a two-wide strip down the left, with the picked tool's options, the Map file card and the info cards in a column beside it; tapping the picked tool again folds its options away. Undo and Redo hold 30 steps. Number keys 1 to 0 pick the first ten tools, Delete removes the selected asset or road point, Enter finishes a new road, G or Esc closes the editor.
 
 ## Where the code is
 
@@ -24,12 +25,12 @@ Undo and Redo hold 30 steps. Number keys 1 to 0 pick the first ten tools, Delete
 | --- | --- |
 | `js/editor.js` | Everything the player touches: open and close, tools, camera, picking, brush, assets, roads, undo, the info cards, save, copy and load |
 | `js/materials.js` | The material library `MAT_LIST` (append only: a material's saved id is its index + 1), the ground shader's material uniforms `matU`, and `matTexUpdate`, which builds the texture array of the materials the map uses |
-| `js/terrain.js` | The edit layers `ED_H`, `ED_P` and `ED_M`, `paintAt` and `matTint` (a vertex's colour under the materials), `mapEncode` and `mapDecode`, loading `bhd_map` at startup, `baseHeight` (= `groundHeight` + `ED_H`), `yardAt` (+ `ED_P`), the road list `ROADS` and `roadsBuild`, `wallBuild` (ground too steep to drive), `digBase` (a dig-grid vertex's undug colour) |
+| `js/terrain.js` | The edit layers `ED_H`, `ED_P`, `ED_M` and `ED_A`, `paintAt` and `matTint` (a vertex's colour under the materials), `mapEncode` and `mapDecode`, loading `bhd_map` at startup, `baseHeight` (= `groundHeight` + `ED_H`), `yardAt` (+ `ED_P`), the road list `ROADS` and `roadsBuild`, `wallBuild` (ground too steep to drive), `digBase` (a dig-grid vertex's undug colour) |
 | `js/scenery.js` | `groundColor`, the 0.5 m mesa mesh `midPatch` and `midUpdate`, `buildSkirts`, `tuftsRefresh`, and the assets: `assets`, `defaultAssets`, `assetsBuild` |
 | `js/shadowproxy.js` | `shpTreesRefresh`: tree shadows re-read the instance matrices after assets change |
 | `js/controls.js` | `edOn`; the game's keyboard and orbit-drag handlers return early while it is true |
 | `js/main.js` | `frame()` hands the whole frame to `editorFrame()` while the editor is open, so the game stands still |
-| `index.html`, `css/game.css` | The `#editor` overlay; `body.editing` hides the game HUD but keeps toasts |
+| `index.html`, `css/game.css` | The `#editor` overlay (the title bar, then `.edmain`: the tool strip `.edtools` and the `.edside` column of cards); `body.editing` hides the game HUD but keeps toasts |
 
 ## Coordinates and units
 
@@ -42,7 +43,7 @@ The mesa is a rounded square centred at (0, 30), about 90 m (295 ft) across (`ED
 These layers sit on top of the generated mesa. Nothing about the generated mesa itself changes.
 
 - `ED_H`: a height offset in metres, and `ED_P`: paint from −1 (grass) to +1 (dirt). Both are 0.5 m grids over the `MID` area (`ED_X0` −58, `ED_Z0` −32, 233 × 249 cells), read with `edSample` (bilinear). The outer 3 cells are kept at 0 so edited ground always meets the coarse outer mesh.
-- `ED_M`: the material painted on each of the same cells (`Uint8Array`, 0 natural ground, else an id into `MAT_LIST`), read nearest-cell with `paintAt`. Ground vertices blend toward the materials' mean colours (`matTint`, crisp over about 0.25 m) and carry how much is covered in the `matA` attribute. Painted Mud inside the dig grid is also saturated ground: `digBase` keeps its cover in `mudBase` (`matCovOf`), where tracks and tyres rut deep and puddles stand in the ruts (`stampRut` in `js/dirt.js`, `waterTick` in `js/water.js`). Outside the dig grid the same happens on mud tiles (`js/mud.js`): an 8 m tile of 2 in ground is made where a rut first starts, the 0.5 m mesh gets a hole there (`midHoles`), and `edRefresh` calls `mudEdRefresh` so tiles take new heights and paint while keeping their ruts. Painting (Paint, Dirt or Grass) over ruts puts that ground back to grade, dry and without puddles (`rutErase`, `js/mud.js`), except when painting Mud, or Dirt on ground already soaked; dug holes and spoil heaps, and the ground next to them, are left alone, and Undo doesn't bring the ruts back; on Medium and High graphics with WebGL2 the ground shader looks each pixel's id up in `matU.tMatId` (one texel per cell, flagged `needsUpdate` when painting) and draws that material's texture from the array. Dug or dumped ground drops the cover.
+- `ED_M`: the material painted on each of the same cells (`Uint8Array`, 0 natural ground, else an id into `MAT_LIST`), read nearest-cell with `paintAt` (which counts a cell only when it is at least half covered). `ED_A` says how much of each painted cell its material covers (`Uint8Array`, 255 full, as the Hard edge brush lays; the Soft edge brush fades it out toward the brush's rim; 0 wherever `ED_M` is 0). A cell holds one material: a soft fade only takes over another material where it covers more. Ground vertices blend toward the materials' mean colours (`matTint`, crisp over about 0.25 m, then scaled by the cover) and carry how much is covered in the `matA` attribute, which also fades the texture in the shader, so the shader needs only the ids. `matCovOf` scales the same way, so a soft-edged Mud fade is partly soaked ground. Painted Mud inside the dig grid is also saturated ground: `digBase` keeps its cover in `mudBase` (`matCovOf`), where tracks and tyres rut deep and puddles stand in the ruts (`stampRut` in `js/dirt.js`, `waterTick` in `js/water.js`). Outside the dig grid the same happens on mud tiles (`js/mud.js`): an 8 m tile of 2 in ground is made where a rut first starts, the 0.5 m mesh gets a hole there (`midHoles`), and `edRefresh` calls `mudEdRefresh` so tiles take new heights and paint while keeping their ruts. Painting (Paint, Dirt or Grass) over ruts puts that ground back to grade, dry and without puddles (`rutErase`, `js/mud.js`), except when painting Mud, or Dirt on ground already soaked; dug holes and spoil heaps, and the ground next to them, are left alone, and Undo doesn't bring the ruts back; on Medium and High graphics with WebGL2 the ground shader looks each pixel's id up in `matU.tMatId` (one texel per cell, flagged `needsUpdate` when painting) and draws that material's texture from the array. Dug or dumped ground drops the cover.
 - `assets`: the trees and boulders, `{t: 'pine' | 'leafy' | 'rock', x, z, yaw, s: size, c: tint index}`. With no saved map, `defaultAssets()` makes the same layout every time (a seeded shuffle; it used to be random per load).
 - `ROADS`: `{w: width in metres, mid: 1 for grass up the middle, pts: [[x, z], ...]}`. A road is graded when every point has a third number, its height; the ground is then cut and filled to the road over a 2.5 m bank. Otherwise the road follows the ground.
 
@@ -56,12 +57,13 @@ A map is saved on the device as `localStorage.bhd_map` and copied out by Map fil
   "h": {"r": [i0, j0, w, h], "d": "<base64 Int16, centimetres>"},   // only the box holding height edits
   "p": {"r": [i0, j0, w, h], "d": "<base64 Int8, hundredths>"},     // only the box holding paint
   "m": {"r": [i0, j0, w, h], "d": "<base64 Uint8, material ids>"},  // only the box holding materials
+  "a": {"r": [i0, j0, w, h], "d": "<base64 Uint8, 255 - cover>"},   // only the box holding soft-edged (partly covered) cells
   "assets": [["pine", x, z, yaw, size, tint], ...],
   "roads": [[width, grassStrip, [[x, z, height?], ...]], ...]
 }
 ```
 
-Each part is optional; a map with only a few edits is a few KB. `assets` and `roads` are written once the player has changed them, and then replace the defaults entirely. `mapDecode` validates everything (sizes, ranges, types) and throws on anything that is not a map. Load a map by saving its text to `bhd_map` and reloading; `terrain.js` reads it before any ground is built, so every mesh, the dig grid's original grade (`H0`), the site save and the steep-ground grid start from the edited ground.
+A map without `a` (all hard edged, and every map from before soft edges) loads fully covered wherever painted. Each part is optional; a map with only a few edits is a few KB. `assets` and `roads` are written once the player has changed them, and then replace the defaults entirely. `mapDecode` validates everything (sizes, ranges, types) and throws on anything that is not a map. Load a map by saving its text to `bhd_map` and reloading; `terrain.js` reads it before any ground is built, so every mesh, the dig grid's original grade (`H0`), the site save and the steep-ground grid start from the edited ground.
 
 ## How an edit reaches the screen
 
@@ -79,7 +81,7 @@ While the brush is held or a road point is dragged, the layer changes every fram
 
 `ed.undo` and `ed.redo` hold up to 30 entries. Applying an entry swaps the stored state with the current one, so the same entry undoes and redoes.
 
-- Brush strokes store only the changed box of `ED_H`, `ED_P` and `ED_M` (copied from a snapshot taken when the stroke starts).
+- Brush strokes store only the changed box of `ED_H`, `ED_P`, `ED_M` and `ED_A` (copied from a snapshot taken when the stroke starts).
 - Asset changes store the whole asset list as JSON (a few hundred entries).
 - Road changes store the whole road list as JSON and the area to refresh.
 
