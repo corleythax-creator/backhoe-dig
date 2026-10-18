@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-18T01:03:05Z",
+ "updated": "2026-10-18T01:19:07Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 621,
+   "dh": 641,
    "act": 12.5,
-   "versions": 84
+   "versions": 88
   }
  ],
  "extra": [
@@ -849,6 +849,42 @@ window.EFFORT = {
    "tris": 1620713,
    "chars": 537619,
    "what": "Map editor: Paint has Hard edge and Soft edge. Soft edge fades the material out into the ground over the outer part of the brush, with a Softness slider (10 to 100%) and a second ring showing where the fade starts; Natural ground fades paint back out the same way, soft-edged Mud is partly soaked at its fade, and maps keep the soft edges (older maps load as before). The editor's controls move to the top left to leave the screen for the ground: a slim title bar with Undo, Redo, Map file and Done, the tools in a two-wide strip down the left, and the tool's options, Map file and info cards in a scrolling column beside them with a tighter material library. Tap the picked tool again to fold its options away."
+  },
+  {
+   "v": 92,
+   "asked": "2026-10-17T19:57:00-05:00",
+   "live": "2026-10-17T20:03:53-05:00",
+   "dh": 3,
+   "tris": 1621586,
+   "chars": 541220,
+   "what": "GPU memory in the Graphics panel: an estimate of the memory the game has on the graphics card, split into textures, geometry, the screen and depth buffers (mostly the shadow map), updated live as settings change. Browsers do not report the real figure, so the game counts what it asks the GPU to hold as it is made, resized or freed. Texture size and shadow size are the big levers: 4096 shadows alone take about 128 MB."
+  },
+  {
+   "v": 93,
+   "asked": "2026-10-17T19:13:00-05:00",
+   "live": "2026-10-17T20:06:56-05:00",
+   "dh": 8,
+   "tris": 1620641,
+   "chars": 559422,
+   "what": "Stats: ☰ then Stats (or O) shows everything you've done: grass mowed and tall grass cut in sq ft, lawns finished and the best lawn time, how much of the patch you've ever mowed, distance walked, sprinted and driven in each machine, jumps, dirt dug, buckets dumped, dirt hauled off and moved by the skid steer, line strikes, cave-ins, blocks placed, time in each machine and top speeds. Only time spent moving counts. Saved on the device and synced with the site. Lawn heatmap: times each spot has been cut, how far the grass has grown back, or the way it was last mowed, drawn north up in the Stats panel with the mower on it, and over the lawn itself as flat tiles (U, or the panel's switch; press U again to change what it shows), with a key on screen that you tap to switch."
+  },
+  {
+   "v": 94,
+   "asked": "2026-10-17T19:30:00-05:00",
+   "live": "2026-10-17T20:08:48-05:00",
+   "dh": 6,
+   "tris": 1621301,
+   "chars": 567489,
+   "what": "Puddle splashes: the truck's tyres, the excavator's and skid steer's tracks, the mower's wheels and your boots throw muddy spray out to both sides and ahead when they go through standing water, bigger the faster and deeper, with rings spreading across the water, a few lumps of mud and a slosh. Jumping into a puddle splashes all round. Only drawn, so the puddles stay the same on every device; Low graphics throws 250 drops, Medium 600, High 1200, and the custom Graphics panel has a Puddle splash row."
+  },
+  {
+   "v": 95,
+   "asked": "2026-10-17T20:10:00-05:00",
+   "live": "2026-10-17T20:19:07-05:00",
+   "dh": 3,
+   "tris": 1620066,
+   "chars": 573253,
+   "what": "Trails on the big map: where you've walked and driven, in 13 ft squares coloured from a faint purple where you passed once to bright yellow where you go all the time. The map's Trails row shows all of it, or just on foot, the excavator, the truck, the mower or the skid steer, with a key giving the busiest spot. The Stats panel opens the map with trails on. Teleports don't draw a line. Saved and synced with the stats, kept small, and cleared with them."
   }
  ]
 };

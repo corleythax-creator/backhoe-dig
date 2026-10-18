@@ -41,6 +41,7 @@ function frame(now){
   updateTruck(dt,tThr,tSteer,tBed);updateMower(dt,mL,mR);if(bench.on){sDrive=sTurn=sArm=sCurl=0}updateSkid(dt,sDrive,sTurn,sArm,sCurl);
   siteTick();
   if(mode==='walk'&&!bench.on)updateWalker(dt,Lx,Ly,Rx*Ts,Ry);else updateWalker(dt,0,0,0,0);
+  statTick(dt);
   // what the mixer hears: hydraulic demand, a ram pushed against its stop (relief valve), tracks moving
   {const end=(v,l,i)=>(i>0.1&&v>=l[1]-1e-4)||(i<-0.1&&v<=l[0]+1e-4);
     sndIn.hyd=Math.abs(swingIn)+Math.abs(stickIn)+Math.abs(boomIn)+Math.abs(bucketIn)+Math.abs(driveIn)+Math.abs(turnIn);
@@ -60,6 +61,8 @@ function frame(now){
   // tracks rut loose fill and mud, crush clods, pick up mud and kick up a little dust (not off mud)
   if(!bench.on&&(Math.abs(driveIn)>0.05||Math.abs(turnIn)>0.05))for(const sd of [-1,1]){const tx=st.x+sd*1.1*cy,tz=st.z-sd*1.1*sy;
     const r=stampRut(tx,tz,st.yaw,0.26,1.6,dt*(1+2*st.spin));if(r){st.mud=Math.min(1,st.mud+dt*(r===2?0.2+0.6*st.spin:0.06));if(r===1)dustPuff(tx,hAt(tx,tz)+0.1,tz,dt*4)}
+    // the front of each track splashes through puddles
+    {const tv=driveIn*2.6*mudK,f=Math.sign(tv||1)*1.4;splashMud(tx+sy*f,tz+cy*f,st.yaw,tv,0.3,1,dt)}
     // spinning tracks throw mud off the back; driving through it flicks a little
     if(mudN>RUT_MUD){const bk=-Math.sign(driveIn||1)*1.7;flingMud(tx+sy*bk,hAt(tx,tz)+0.25,tz+cy*bk,st.yaw+(driveIn<0?Math.PI:0),2+5*st.spin,(st.spin*40+Math.abs(driveIn)*4)*mudN,dt)}}
   if(crushT<=0)crushT=0.1;
@@ -90,7 +93,7 @@ function frame(now){
       const got=dig(tip,CAP-st.load);
       if(got>0){const f=got/(st.load+got);for(let q=0;q<3;q++)st.loadC[q]+=(digC[q]-st.loadC[q])*f;for(let q=0;q<4;q++)st.loadMix[q]+=(digMix[q]-st.loadMix[q])*f;
         st.loadWet+=((underWater(tip)?1:mudAt(tip.x,tip.z))-st.loadWet)*f;
-        st.load+=got;st.dirty=true;st.slumpT=2.5;if(Math.random()<0.5)spawn(tip.clone().setY(g+0.05),1.2)}
+        st.load+=got;statDug(got);st.dirty=true;st.slumpT=2.5;if(Math.random()<0.5)spawn(tip.clone().setY(g+0.05),1.2)}
     }else if(!fullWarned){toast('Bucket full. Boom up, swing, dump.');fullWarned=true}
   }
   if(st.load<CAP*0.9)fullWarned=false;

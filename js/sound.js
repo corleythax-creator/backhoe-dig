@@ -139,6 +139,8 @@ function* sndBuild(){
   // rain: a soft hiss all around (not placed on a machine), with a little low patter
   snd.rainG=sndGain(0,snd.dry);sndLoopSrc(noise,sndFilter('highpass',900,0.5,sndFilter('lowpass',6500,0.5,snd.rainG)),0.9);
   snd.rainLoG=sndGain(0,snd.dry);sndLoopSrc(gravel,sndFilter('lowpass',700,0.6,snd.rainLoG),1.6);
+  // splashing through puddles: a low slosh with a wet hiss on top
+  snd.splashG=sndGain(0,snd.dry);sndLoopSrc(gravel,sndFilter('bandpass',420,0.9,snd.splashG),0.7);sndLoopSrc(noise,sndFilter('bandpass',1800,1.2,snd.splashG),1.1);
   // one-shots
   snd.clank=[toBuf(c,renderClank(sr,31,[[430,0.05,1],[1010,0.035,0.7],[1690,0.025,0.5],[2760,0.018,0.3]],0.16)),
              toBuf(c,renderClank(sr,32,[[380,0.05,1],[920,0.04,0.6],[1820,0.022,0.5],[3100,0.015,0.25]],0.16))];
@@ -215,6 +217,7 @@ function updateSound(dt){
   if(tr.bed<0.015)snd.bedMax=0;
   snd.dumpG.gain.setTargetAtTime(quiet*Math.min(1,sndIn.dump*0.8),t,0.06);
   {const r=quiet*sndVol(sndCfg.fx)*ss(0,0.7,weather.r);snd.rainG.gain.setTargetAtTime(r*0.2,t,0.3);snd.rainLoG.gain.setTargetAtTime(r*0.12,t,0.3)}
+  snd.splashG.gain.setTargetAtTime(quiet*sndVol(sndCfg.fx)*splashLvl*0.5,t,0.08);
   // backup alarm, scheduled on the audio clock: half a second on, half off, as long as it is in reverse
   const rev=tr.gear<0&&tr.shiftT<=0&&!bench.on;
   if(rev){if(snd.beepT<t)snd.beepT=t+0.05;while(snd.beepT<t+0.15){sndShot(snd.beep,snd.T.alarm,snd.beepT,1,1);snd.beepT+=1}}

@@ -37,7 +37,7 @@ const KEY_ACTIONS=[
   {id:'lift',g:'Blocks',n:'Lift block',d:'The top block under the bucket, the one in front of you, or the one at the dot',k:['KeyX']},
   {id:'size',g:'Blocks',n:'Block size',d:'Steps through cubes, 1 to 10 ft (the block bar sets wide, long and tall one by one)',k:['KeyV']},
   {id:'blkTurn',g:'Blocks',n:'Turn block',d:'A quarter turn: wide and long swap',k:['KeyQ']},
-  {id:'blkMat',g:'Blocks',n:'Block material',d:'Next material: plain concrete, then the library',k:['KeyU']},
+  {id:'blkMat',g:'Blocks',n:'Block material',d:'Next material: plain concrete, then the library',k:['KeyY']},
   {id:'blkFar',g:'Blocks',n:'Reach farther',d:'In first person on foot, push the block out from you (the mouse wheel does too)',k:['BracketRight']},
   {id:'blkNear',g:'Blocks',n:'Reach nearer',d:'In first person on foot, pull the block back toward you',k:['BracketLeft']},
   {id:'box',g:'Site',n:'Trench box',d:'Hook it to the bucket, or set it down',k:['KeyT']},
@@ -47,7 +47,9 @@ const KEY_ACTIONS=[
   {id:'zoom',g:'View',n:'Zoom',d:'Hold to zoom in, in cab view (the mouse wheel or a pinch zooms too, but on foot with blocks on the wheel sets their reach)',k:['KeyZ']},
   {id:'map',g:'View',n:'Big map',d:'Open or close the site map',k:['KeyM']},
   {id:'sound',g:'View',n:'Sound',d:'Sound on or off',k:['KeyN']},
-  {id:'help',g:'View',n:'How to play',d:'Open or close the help card',k:['KeyH']}];
+  {id:'help',g:'View',n:'How to play',d:'Open or close the help card',k:['KeyH']},
+  {id:'stats',g:'View',n:'Stats',d:'Open or close your stats: grass mowed, distance walked and driven, dirt moved',k:['KeyO']},
+  {id:'heat',g:'View',n:'Lawn heatmap',d:'Show the lawn heatmap; press again to change what it shows, then to hide it',k:['KeyU']}];
 const KEY_BY={};for(const a of KEY_ACTIONS)KEY_BY[a.id]=a;
 // the player's keys: action id -> [key code or '', key code or '']
 const keyBind={};
