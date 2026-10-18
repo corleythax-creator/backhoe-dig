@@ -55,6 +55,8 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - M19 Tractor with a box blade: A small tractor that drags a box blade to smooth ruts and level the dirt yards and roads. (R7 F6 most low c2 7h)
 - M20 Dump cart for the mower: A small cart hitched behind the zero-turn to carry clippings, mulch or a little dirt, and tip it out. (R5 F6 some low c1 4h)
 - M21 Drivable boats: A runabout, a pontoon and a small fishing boat you drive on the lake; the waves rock them, and you tie up at a dock and step off. (R6 F9 most low c3 10h)
+- M22 Kayak and paddleboard: Paddle the shallows and coves by hand, with the boat dipping as you shift your weight. Quiet and cozy, and a way to reach beaches the big boats can't. (R6 F8 most low c2 5h)
+- M23 Floatplane at the dock: A little seaplane lands at the dock, drops off mail and visitors, and takes off again. (R6 F7 some low c2 6h)
 
 ## X: Excavator and attachments
 
@@ -113,6 +115,8 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - W07 Hot afternoons: Heat shimmer and the engine temperature climbing on long digs. (R5 F3 some none c1 2h)
 - W08 Rainbow after a shower: When the sun comes back after rain, a rainbow arches over the lake. (R6 F5 some none c1 1h needs W01)
 - W09 Raindrops on puddles: Rings spread across the puddles while it rains, and the water goes still when it stops. (R8 F4 some low c1 2h needs W01)
+- W10 Rising and falling water: The lake level drifts with the season and rain, so docks float higher or lower and sandbars appear; digging near the shore changes where the water sits. (R8 F6 every low c3 10h)
+- W11 Fireflies and evening frogs: A summer-night layer of fireflies over the grass and frog calls from the water. (R6 F6 every none c1 2h needs W02)
 
 ## S: Site and scenery
 
@@ -136,6 +140,9 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - S18 Marina: A marina with a breakwater, floating slips, a fuel dock, a bait shop and boats bobbing at their moorings. (R7 F7 some low c2 8h)
 - S19 Boats on the lake: Sailboats and fishing boats out on the water, motoring between the marina, the islands and the city. (R7 F4 every low c2 5h)
 - S20 Barge and tug: A working barge on the lake pushed by a tug along a set route, loaded with a spoil pile you can see, with a wake and a horn as it passes the dock. Joins the AI boats of S19. (R7 F5 some low c2 5h needs S19)
+- S21 Boardwalk and snack shack: A short boardwalk with an ice-cream window, a bait shop and a cafe, with a few visitors. (R7 F7 most low c2 8h)
+- S22 Lighthouse on the point: A small beacon whose lamp sweeps the lake at night, with a stair to climb for the view. (R7 F8 every low c2 6h)
+- S23 Herons, otters and turtles: Shore animals with habits: a heron fishing at dawn, turtles sunning on a log, otters playing off the dock. Extends S09. (R6 F6 most low c2 5h needs S09)
 
 ## L: Crew and people
 
@@ -237,6 +244,10 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - H14 Chess and checkers table: A low-poly picnic table with a board on it. Sit down and the island saves and switches to Mesa Chess or Checkers at full quality, straight onto the board (the chess page preloads as you walk up); Get out brings you back standing beside the table. On the claude.ai version it opens in a new tab. (R4 F7 some none c1 6h)
 - H15 Sit down anywhere: Sit on the porch rockers, the cliff bench or the library window seat; the camera settles and the world carries on. (R5 F5 most none c1 3h)
 - H16 Tips from the library: Pull a book off Jessica's shelves to read operating tips and the islands' story. (R3 F4 rare none c1 2h)
+- H17 Swim and dock jumps: Wade in, swim and dive off the dock, with a rope swing on the cliff. (R6 F9 most low c2 6h)
+- H18 Beachcombing: Shells, sea glass and driftwood wash up after storms, and you collect them in a jar on the porch shelf. (R6 F7 most none c1 3h needs S16)
+- H19 Sandcastles with blocks: Build with wet sand using the block system; the water takes it back if you build below the line. (R3 F8 some low c1 4h needs S16)
+- H20 Beach bonfire and s'mores: Gather the family at night round a driftwood fire, with the sound of the water. (R6 F8 some low c1 3h needs S16)
 
 ## K: Yard work
 
@@ -327,3 +338,6 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - I26 Lantern paths at dusk: The lanterns along Jessica's paths and the porch lights on the islands glow as the sun goes down. (R6 F4 every low c1 2h needs W02)
 - I27 Cone course run: A timed run through Dexter's cone course in the skid steer or truck; knock a cone and it counts against you. (R3 F8 some none c1 3h)
 - I28 Family together on the island: Your wife and son join your island live by room code and drive, dig and mow beside you. Level 1 (see each other, each in their own machine) reuses Cruise Brandon's Cloudflare Worker and Durable Object relay (`realtime/`, `web/js/multi.js`, 4 per room); level 2 (shared digging) makes the room's Durable Object the host of the dug ground. Owner's top wish (Oct 18). (R6 F10 every low c3 24h)
+- I29 Sunset cruise: Take the pontoon out with the family at dusk: a slow drift, golden light and the dog in the bow. (R5 F9 some low c1 3h needs M21)
+- I30 Floating lantern night: Once a season everyone sets paper lanterns afloat from the beach, and they drift out across the lake. (R5 F8 rare low c1 3h)
+- I31 Saturday regatta: Sailboats race a course round the buoys while the town watches from the shore. (R6 F7 rare low c2 7h needs S19)
