@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-18T02:28:00Z",
+ "updated": "2026-10-18T03:12:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 682,
-   "act": 14.5,
-   "versions": 98
+   "dh": 694,
+   "act": 15,
+   "versions": 99
   }
  ],
  "extra": [
@@ -975,6 +975,15 @@ window.EFFORT = {
    "tris": 1620872,
    "chars": 604634,
    "what": "Dug dirt and ruts dry and crack: dug or dumped ground and ruts that got soaked (rain, puddles, wet spoil) remember it, and as they dry they turn pale and matte, then crack like dried mud (the crack pattern on Medium and High; Low pales them), until they are dug again or rained on; mud tiles past the dig zone too. The big map has a Soil wetness row: All shades the soil from dry to soaked, Damp+, Wet+ and Soaked show only ground at least that wet, standing water shows bright blue, and Show on the ground too tints the ground itself."
+  },
+  {
+   "v": 106,
+   "asked": "2026-10-17T21:40:00-05:00",
+   "live": "2026-10-17T22:12:00-05:00",
+   "dh": 12,
+   "tris": 1620505,
+   "chars": 608819,
+   "what": "A new screen layout with bars on three sides. The top bar has the menu (now at the top left), the job gauges side by side (tap for more or less) and the Pump, Hook box, Blocks and Cab view buttons, with a hazard stripe along its foot; on a phone held upright the gauges get a row of their own. The left bar has a button per machine with an icon, the one you drive lit. The bottom bar has the Turn setting, what each stick does under that stick, and the frame rate. The minimap and Blocks panel stay at the top right, the sticks in the thumb zones, with Get in over the left stick and Sprint and Jump over the right."
   }
  ]
 };
