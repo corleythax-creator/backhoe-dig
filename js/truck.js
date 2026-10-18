@@ -317,6 +317,8 @@ function updateTruck(dt,thr,steerIn,bedIn){
   // tyres rut loose fill and mud (deeper while they spin) and crush clods; they pick up mud there
   if((Math.abs(tr.v)>0.1||tr.spin>0.1)&&!bench.on){let r=false;for(const w of wheels){const u=w.userData,wx=tr.x+u.lx*cy+u.lz*sy,wz=tr.z-u.lx*sy+u.lz*cy;if(stampRut(wx,wz,tr.yaw,0.3,0.32,dt*(1+2*tr.spin)))r=true}
     if(r||mudAt(tr.x,tr.z)>0.3)tr.mud=Math.min(1,tr.mud+dt*0.08)}
+  // tyres moving through puddles splash; spinning ones throw the water back
+  if(!bench.on){const sv=Math.abs(tr.v)>tr.spin*3?tr.v:-(tr.gear<0?-1:1)*tr.spin*3;if(Math.abs(sv)>0.25)for(const w of wheels){const u=w.userData;splashMud(tr.x+u.lx*cy+u.lz*sy,tr.z-u.lx*sy+u.lz*cy,tr.yaw,sv,0.3,1,dt)}}
   // spinning or fast tyres throw mud off the back
   if(mudN>RUT_MUD&&(tr.spin>0.05||Math.abs(tr.v)>1)&&!bench.on)for(const w of wheels){const u=w.userData;if(u.lz>0)continue;const wx=tr.x+u.lx*cy+u.lz*sy,wz=tr.z-u.lx*sy+u.lz*cy;
     flingMud(wx,hAt(wx,wz)+0.3,wz,tr.yaw+(tr.gear<0?Math.PI:0),2+6*tr.spin+Math.abs(tr.v)*0.6,(tr.spin*30+Math.min(4,Math.abs(tr.v))*2)*mudN,dt)}

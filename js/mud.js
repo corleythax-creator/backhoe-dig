@@ -211,5 +211,63 @@ function mudFlyTick(dt){if(!mfInst)return;let c=0;
     mfO.position.set(mfP[q*3],mfP[q*3+1],mfP[q*3+2]);mfO.rotation.set(q,q*0.7,0);mfO.scale.setScalar(0.6+(q%5)*0.2);mfO.updateMatrix();mfInst.setMatrixAt(c++,mfO.matrix)}
   mfInst.count=c;if(c)mfInst.instanceMatrix.needsUpdate=true}
 
-// every frame: tiles that changed, puddles, flung mud
-function mudTick(dt){for(const t of mTiles)if(t.dirty)mtDraw(t);mtWaterTick(dt);mudFlyTick(dt)}
+// ---------- splashes ----------
+// a tyre, track or boot moving through standing water throws muddy spray out to both sides and ahead (a bow wave, bigger
+// the faster and deeper), flicks a little mud and sends rings across the water. It is only drawn: the puddles themselves
+// don't change, so they stay the same on every device; the Graphics setting picks how many drops the spray has (splashN)
+// standing water at x,z: its surface and depth (deepest of five points a step apart), or null when dry
+const spAt={y:0,d:0};
+function waterAt(x,z){let d=0,y=0;
+  for(let n=0;n<5;n++){const px=x+(n===1?0.2:n===2?-0.2:0),pz=z+(n===3?0.2:n===4?-0.2:0);let w=-1e9,h=0;
+    if(px>=-S/2&&px<=S/2&&pz>=-S/2&&pz<=S/2){const k=Math.round((pz+S/2)/CELL)*V+Math.round((px+S/2)/CELL);w=Wt[k];h=H[k]}
+    else if(FD){const i=Math.round((px-FX0)/FC),j=Math.round((pz-FZ0)/FC);if(i>=0&&j>=0&&i<=FNX&&j<=FNZ&&tileOf(Math.min(i,FNX-1),Math.min(j,FNZ-1))>=0){const v=j*FV+i;w=FW[v];h=FH0[v]+FD[v]}}
+    if(w>-1e8&&w-h>d){d=w-h;y=w}}
+  if(d<0.004)return null;spAt.y=y;spAt.d=d;return spAt}
+let spN=0,spPts=null,spP,spV,spLife,spAge,spSz,spHead=0,spAcc=0,splashLvl=0;
+const spMat=new THREE.ShaderMaterial({transparent:true,depthWrite:false,uniforms:{uScale:{value:400},uCol:{value:new THREE.Color(0x5c4630)}},
+  vertexShader:'attribute float aA;attribute float aS;varying float vA;uniform float uScale;\nvoid main(){vA=aA;vec4 mv=modelViewMatrix*vec4(position,1.0);gl_PointSize=max(1.5,aS*uScale/max(0.1,-mv.z));gl_Position=projectionMatrix*mv;}',
+  fragmentShader:'varying float vA;uniform vec3 uCol;\nvoid main(){vec2 d=gl_PointCoord-0.5;float r=dot(d,d)*4.0;if(r>1.0)discard;float gl=smoothstep(0.22,0.0,length(d-vec2(-0.14,-0.14)));gl_FragColor=vec4(uCol*(1.2-0.5*r)+vec3(0.55*gl),vA);}'});
+// n drops in the spray (from GFX)
+function splashGfx(n){if(spPts){scene.remove(spPts);spPts.geometry.dispose()}spN=n;const g=new THREE.BufferGeometry();
+  spP=new Float32Array(n*3);spV=new Float32Array(n*3);spLife=new Float32Array(n);spAge=new Float32Array(n).fill(1e9);spSz=new Float32Array(n);
+  g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(n*3),3));g.setAttribute('aA',new THREE.BufferAttribute(new Float32Array(n),1));g.setAttribute('aS',new THREE.BufferAttribute(new Float32Array(n),1));
+  g.setDrawRange(0,0);spPts=new THREE.Points(g,spMat);spPts.frustumCulled=false;spPts.renderOrder=2;scene.add(spPts);spHead=0}
+function spDrop(x,y,z,vx,vy,vz,sz){if(!spN)return;const i=spHead;spHead=(spHead+1)%spN;
+  spP[i*3]=x;spP[i*3+1]=y;spP[i*3+2]=z;spV[i*3]=vx;spV[i*3+1]=vy;spV[i*3+2]=vz;spAge[i]=0;spLife[i]=1.6;spSz[i]=sz}
+// rings on the water: flat circles that spread and fade
+const RG_N=48,rgMat=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0.45,depthWrite:false,blending:THREE.AdditiveBlending,fog:false});
+const rgInst=new THREE.InstancedMesh(new THREE.RingGeometry(0.86,1,28).rotateX(-Math.PI/2),rgMat,RG_N),rgX=new Float32Array(RG_N),rgY=new Float32Array(RG_N),rgZ=new Float32Array(RG_N),rgAge=new Float32Array(RG_N).fill(1e9),rgS=new Float32Array(RG_N);
+rgInst.count=0;rgInst.frustumCulled=false;rgInst.renderOrder=1;for(let i=0;i<RG_N;i++)rgInst.setColorAt(i,new THREE.Color(0,0,0));scene.add(rgInst);
+let rgHead=0;
+function spRing(x,y,z,s){const i=rgHead;rgHead=(rgHead+1)%RG_N;rgX[i]=x;rgY[i]=y+0.012;rgZ[i]=z;rgAge[i]=0;rgS[i]=s}
+// a print of half width hw moving at v (m/s, + forward along yaw) through x,z this frame; k scales it (1 a truck tyre)
+function splashMud(x,z,yaw,v,hw,k,dt){const w=waterAt(x,z);if(!w)return;const sp=Math.abs(v);if(sp<0.25)return;
+  const I=Math.min(1,sp/3.5)*ss(0.004,0.07,w.d)*k,fx=Math.sin(yaw)*Math.sign(v),fz=Math.cos(yaw)*Math.sign(v),px=Math.cos(yaw),pz=-Math.sin(yaw),y=w.y;
+  const cd=Math.hypot(x-camera.position.x,z-camera.position.z);splashLvl=Math.max(splashLvl,I*Math.min(1,12/(cd+4)));
+  // drops: a fan out of each side, thrown up and forward
+  spAcc+=spN*0.3*I*dt;
+  while(spAcc>=1){spAcc--;const sd=Math.random()<0.5?-1:1,out=(0.8+Math.random()*2.2)*(0.4+sp*0.3),fw=sp*(0.3+Math.random()*0.6),up=(1.2+Math.random()*3)*(0.4+0.6*Math.min(1,sp/3));
+    spDrop(x+px*sd*hw+fx*0.25,y+0.03,z+pz*sd*hw+fz*0.25,px*sd*out+fx*fw+(Math.random()-0.5)*0.5,up,pz*sd*out+fz*fw+(Math.random()-0.5)*0.5,(0.04+Math.random()*0.08)*(0.5+0.5*k))}
+  // a ring every so often, and now and then a lump of mud with the water
+  if(Math.random()<dt*7*Math.min(1,I*3))spRing(x+fx*0.3,y,z+fz*0.3,0.3+0.6*I+hw*0.6);
+  if(I>0.25)flingMud(x+px*hw,y+0.05,z+pz*hw,yaw+(v<0?0:Math.PI),1+sp*0.3,3*I,dt)}
+// landing in a puddle at height y (not on a block over it): a ring of drops all round and a ring on the water
+function splashBurst(x,y,z,k){const w=waterAt(x,z);if(!w||y>w.y+0.3)return;const I=ss(0.004,0.06,w.d)*k;if(I<0.05)return;
+  for(let n=Math.round(spN*0.12*I);n>0;n--){const a=Math.random()*6.283,o=0.6+Math.random()*1.4;spDrop(x+Math.cos(a)*0.15,w.y+0.03,z+Math.sin(a)*0.15,Math.cos(a)*o,1.2+Math.random()*2.2,Math.sin(a)*o,0.02+Math.random()*0.03)}
+  spRing(x,w.y,z,0.9);splashLvl=Math.max(splashLvl,I)}
+function splashTick(dt){
+  splashLvl*=Math.exp(-dt*5);
+  if(spPts){const g=spPts.geometry,P=g.attributes.position.array,A=g.attributes.aA.array,Sz=g.attributes.aS.array;let n=0;
+    for(let i=0;i<spN;i++){if(spAge[i]>=spLife[i])continue;spAge[i]+=dt;spV[i*3+1]-=9.8*dt;for(let a=0;a<3;a++)spP[i*3+a]+=spV[i*3+a]*dt;
+      if(spV[i*3+1]<0&&spP[i*3+1]<hAt(spP[i*3],spP[i*3+2])+0.01){spAge[i]=1e9;continue}
+      P[n*3]=spP[i*3];P[n*3+1]=spP[i*3+1];P[n*3+2]=spP[i*3+2];A[n]=0.85*(1-spAge[i]/spLife[i]);Sz[n]=spSz[i];n++}
+    g.setDrawRange(0,n);if(n){g.attributes.position.needsUpdate=true;g.attributes.aA.needsUpdate=true;g.attributes.aS.needsUpdate=true}
+    spMat.uniforms.uScale.value=renderer.domElement.height/(2*Math.tan(camera.fov*Math.PI/360))}
+  let c=0;const o=mfO,col=new THREE.Color();
+  for(let i=0;i<RG_N;i++){if(rgAge[i]>=1.3)continue;rgAge[i]+=dt;const t=rgAge[i]/1.3;if(t>=1)continue;
+    o.position.set(rgX[i],rgY[i],rgZ[i]);o.rotation.set(0,0,0);o.scale.setScalar(rgS[i]*(0.25+0.75*Math.sqrt(t)));o.updateMatrix();rgInst.setMatrixAt(c,o.matrix);
+    const b=(1-t)*(1-t);rgInst.setColorAt(c,col.setRGB(b,b,b));c++}
+  rgInst.count=c;if(c){rgInst.instanceMatrix.needsUpdate=true;rgInst.instanceColor.needsUpdate=true}}
+
+// every frame: tiles that changed, puddles, flung mud, splashes
+function mudTick(dt){for(const t of mTiles)if(t.dirty)mtDraw(t);mtWaterTick(dt);mudFlyTick(dt);splashTick(dt)}

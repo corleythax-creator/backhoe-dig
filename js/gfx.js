@@ -3,9 +3,9 @@
 // Low is from the iPhone speed test (Oct 17): shadows, filmic lighting and ground detail each cost it 9-16 FPS.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 const GFX={
-  low:{name:'Low',pr:1.5,sh:1024,soft:false,filmic:false,detail:0,dirt:1,lawnFar:6,wmFine:false,rainN:600,tuft:[0.6,12,40,0.2]},
-  med:{name:'Medium',pr:1.5,sh:2048,soft:false,filmic:true,detail:1,dirt:2,lawnFar:15,wmFine:true,rainN:1500,tuft:[0.85,18,60,0.3]},
-  high:{name:'High',pr:2,sh:2048,soft:true,filmic:true,detail:1,dirt:4,lawnFar:1e9,wmFine:true,rainN:3000,tuft:[1,25,80,0.35]}};
+  low:{name:'Low',pr:1.5,sh:1024,soft:false,filmic:false,detail:0,dirt:1,lawnFar:6,wmFine:false,rainN:600,splashN:250,tuft:[0.6,12,40,0.2]},
+  med:{name:'Medium',pr:1.5,sh:2048,soft:false,filmic:true,detail:1,dirt:2,lawnFar:15,wmFine:true,rainN:1500,splashN:600,tuft:[0.85,18,60,0.3]},
+  high:{name:'High',pr:2,sh:2048,soft:true,filmic:true,detail:1,dirt:4,lawnFar:1e9,wmFine:true,rainN:3000,splashN:1200,tuft:[1,25,80,0.35]}};
 let gfxKey='high';
 function gfxGuess(){if(PHONE)return 'low';
   try{const gl=renderer.getContext(),ext=gl.getExtension('WEBGL_debug_renderer_info'),r=ext?gl.getParameter(ext.UNMASKED_RENDERER_WEBGL):'';if(/intel/i.test(r))return 'med'}catch(e){}
@@ -29,7 +29,7 @@ function setGfx(k,picked){const g=GFX[k]?GFX[k]:GFX[gfxGuess()];gfxKey=GFX[k]?k:
   if(WM_K!==(g.wmFine?1:GRID_K))wmSet(g.wmFine);
   mudGfx(g.wmFine);
   // raindrops drawn (rain.js); the rain itself is the same
-  rainGfx(g.rainN);
+  rainGfx(g.rainN);splashGfx(g.splashN);
   // dirt detail follows the setting when picked (or the first time), and stays its own setting after that
   let saved=null;try{saved=localStorage.getItem('bhd_dirt')}catch(e){}
   if(picked||saved===null)setDirtLevel(g.dirt,picked);
