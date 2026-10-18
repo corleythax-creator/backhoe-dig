@@ -6,7 +6,8 @@ Options: --asked is when the owner asked (Central, YYYY-MM-DDTHH:MM); --dh devel
   --title names the merge commit; --what is the build-log line; --trailer the commit attribution lines the session was
   given (one string, lines joined with \n); --dry-run merges main, runs the checks and stops before changing anything else.
 
-Steps: fetch main and merge it into the branch; take the next version after main's last one; run tools/scene-check.js
+Steps: fetch main and merge it into the branch; take the next version after main's last one (another session releasing at
+the same time just pushes this one to the number after); run tools/scene-check.js
 (stops on any error); add the entry and the day's hours to data/effort.js (live time is now, Central; the day's act
 gains 0.5 when no release that day sits in the same half hour); commit and push the branch; merge it into main with
 --no-ff (a first-parent release commit, as tools/versions.py needs) and push; make the snapshot with tools/versions.py
@@ -39,6 +40,19 @@ def push(*a):
         if subprocess.run(['git', 'push', *a], cwd=ROOT).returncode == 0:
             return
     sys.exit('git push failed: ' + ' '.join(a))
+
+
+def push_main(base):
+    """push main; False when it was refused because main moved past base (another release), so the caller redoes its
+    commit on top; network trouble is retried"""
+    for wait in (0, 2, 4, 8, 16):
+        if wait:
+            subprocess.run(['sleep', str(wait)])
+        if subprocess.run(['git', 'push', '-q', 'origin', 'main'], cwd=ROOT).returncode == 0:
+            return True
+        if subprocess.run(['git', 'fetch', '-q', 'origin', 'main'], cwd=ROOT).returncode == 0 and git('rev-parse', 'origin/main') != base:
+            return False
+    sys.exit('git push to main failed')
 
 
 def effort(text):
@@ -93,7 +107,7 @@ def main():
     prev = effort(git('show', 'origin/main:data/effort.js'))
     v = prev['versions'][-1]['v'] + 1
     gui_changed = bool(git('diff', '--name-only', 'origin/main', 'HEAD', '--', 'index.html', 'css/game.css', 'js/gui.js'))
-    print(f'Releasing {branch} as v{v}')
+    print(f'Releasing {branch} as v{v} (or the next free number)')
     if gui_changed:
         sh('python3', 'tools/gui_editor.py')
         if git('status', '--porcelain') and not o.dry_run:
@@ -109,29 +123,47 @@ def main():
         print('dry run: stopping here')
         return
 
-    # the build-log entry and the day's totals
-    now = datetime.datetime.now(CT).replace(microsecond=0)
-    path = os.path.join(ROOT, 'data', 'effort.js')
-    s = add_entry(open(path, encoding='utf-8').read(), v, asked, now, o.dh, chk['tris'], chk['chars'], o.what)
-    open(path, 'w', encoding='utf-8').write(s)
-    git('commit', '-qam', f'v{v}: effort entry for {o.title}' + TRAILER)
+    # the build-log entry and the release commit on main. Another session can release in the meantime: when main has
+    # moved, its push is refused, so this version's entry is taken back out and it goes again with the next number
+    for attempt in range(4):
+        git('fetch', '-q', 'origin', 'main')
+        git('merge', '-q', '--no-edit', 'origin/main')
+        base = git('rev-parse', 'origin/main')
+        v = effort(git('show', 'origin/main:data/effort.js'))['versions'][-1]['v'] + 1
+        now = datetime.datetime.now(CT).replace(microsecond=0)
+        path = os.path.join(ROOT, 'data', 'effort.js')
+        s = add_entry(open(path, encoding='utf-8').read(), v, asked, now, o.dh, chk['tris'], chk['chars'], o.what)
+        open(path, 'w', encoding='utf-8').write(s)
+        git('commit', '-qam', f'v{v}: effort entry for {o.title}' + TRAILER)
+        git('checkout', '-q', '-B', 'main', base)
+        git('merge', '--no-ff', '-q', branch, '-m', f'v{v}: {o.title} (merge {branch})' + TRAILER)
+        if push_main(base):
+            break
+        print(f'main moved while releasing v{v} (another session released); trying again with the next number')
+        git('checkout', '-q', branch)
+        git('reset', '-q', '--hard', 'HEAD~1')
+    else:
+        sys.exit('main kept moving; nothing was released. Try again in a few minutes.')
     push('-q', '-u', 'origin', branch)
 
-    # the release commit on main
-    git('checkout', '-q', '-B', 'main', 'origin/main')
-    git('merge', '--no-ff', '-q', branch, '-m', f'v{v}: {o.title} (merge {branch})' + TRAILER)
-    push('-q', 'origin', 'main')
-
-    # the playable snapshot
+    # the playable snapshot, made again on top of main if another release lands first
     if git('rev-parse', '--is-shallow-repository') == 'true':
         git('fetch', '-q', '--unshallow', 'origin')
-    sh('python3', 'tools/versions.py')
-    bad = [l for l in git('status', '--porcelain').splitlines() if l[:2].strip() == 'D' or not (l[3:].startswith(f'versions/v{v}/') or l[3:] == 'versions/list.js')]
-    if bad:
-        sys.exit('versions.py changed more than the new snapshot; nothing committed:\n' + '\n'.join(bad[:20]))
-    git('add', 'versions')
-    git('commit', '-qm', f'Versions: add the v{v} snapshot' + TRAILER)
-    push('-q', 'origin', 'main')
+    for attempt in range(4):
+        base = git('rev-parse', 'HEAD')
+        sh('python3', 'tools/versions.py')
+        if not git('status', '--porcelain'):
+            break  # another release's snapshot commit already holds this one
+        bad = [l for l in git('status', '--porcelain').splitlines() if l[:2].strip() == 'D' or not (l[3:].startswith('versions/v') or l[3:] == 'versions/list.js')]
+        if bad:
+            sys.exit('versions.py changed more than the snapshots; nothing committed:\n' + '\n'.join(bad[:20]))
+        git('add', 'versions')
+        git('commit', '-qm', f'Versions: add the v{v} snapshot' + TRAILER)
+        if push_main(base):
+            break
+        git('reset', '-q', '--hard', 'origin/main')
+    else:
+        sys.exit(f'v{v} is released but its snapshot could not be pushed (main kept moving): run python3 tools/versions.py on main and push.')
     git('checkout', '-q', branch)
     git('merge', '-q', '--ff-only', 'main')
     push('-q', 'origin', branch)
