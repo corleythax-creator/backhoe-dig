@@ -74,7 +74,7 @@ function updateWalker(dt,mx,mz,lookX,lookY){
   const ox=wk.x,oz=wk.z,g0=hAt(ox,oz);wk.x+=vx*dt;wk.z+=vz*dt;
   {const g1=hAt(wk.x,wk.z),run=Math.hypot(wk.x-ox,wk.z-oz);if(run>1e-5&&g1>wk.y+0.02&&(g1-g0)/run>1.3){wk.x=ox;wk.z=oz}}
   [wk.x,wk.z]=landClamp(wk.x,wk.z,1.2,0.45,true);
-  wkPushBlocks();wkPushRound(st,EX_C,EX_R);wkPushRound(tr,TR_C,TR_R);wkPushRound(mw,MW_C,MW_R);
+  wkPushBlocks();wkPushRound(st,EX_C,EX_R);wkPushRound(tr,TR_C,TR_R);wkPushRound(mw,MW_C,MW_R);wkPushRound(sk,SK_C,SK_R);
   // jump, gravity, landing on the ground or a block; bump your head on a block above
   wk.jumpQ-=dt;
   if(wk.jumpQ>0&&wk.ground){wk.vy=WK_JUMP;wk.ground=false;wk.jumpQ=0}
@@ -104,8 +104,8 @@ $('#sprintBtn').addEventListener('pointerdown',e=>{e.preventDefault();setSprint(
 // ---------- getting in and out ----------
 // each machine: its state (looked up when used: the excavator's is made in controls.js), the circles that make up its
 // body, the mode that drives it and what to call it
-const WK_RIDES={ex:{get o(){return st},c:EX_C,r:EX_R,m:'dig',n:'excavator'},truck:{get o(){return tr},c:TR_C,r:TR_R,m:'truck',n:'dump truck'},mow:{get o(){return mw},c:MW_C,r:MW_R,m:'mow',n:'mower'}};
-const rideOf=m=>m==='dig'||m==='drive'?'ex':m==='truck'?'truck':m==='mow'?'mow':null;
+const WK_RIDES={ex:{get o(){return st},c:EX_C,r:EX_R,m:'dig',n:'excavator'},truck:{get o(){return tr},c:TR_C,r:TR_R,m:'truck',n:'dump truck'},skid:{get o(){return sk},c:SK_C,r:SK_R,m:'skid',n:'skid steer'},mow:{get o(){return mw},c:MW_C,r:MW_R,m:'mow',n:'mower'}};
+const rideOf=m=>m==='dig'||m==='drive'?'ex':m==='truck'?'truck':m==='mow'?'mow':m==='skid'?'skid':null;
 // the machine within an arm's length of the worker, nearest first
 function wkNear(){let best=null,bd=1.3;
   for(const k in WK_RIDES){const R=WK_RIDES[k];

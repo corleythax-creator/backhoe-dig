@@ -1,7 +1,7 @@
 // Corley's Island: Dexter's Island, west of the Family Island across a wide yellow steel haul bridge the machines can
-// drive: a gravel yard with an equipment shed, an office trailer, a fuel tank, parked machines (a skid steer, a dozer,
-// a wheel loader and a semi with a lowboy trailer), light towers, a cone course and dirt piles to practise on.
-// The parked machines are models for now; they can be made drivable one at a time later.
+// drive: a gravel yard with an equipment shed, an office trailer, a fuel tank, parked machines (a dozer, a wheel loader
+// and a semi with a lowboy trailer; his skid steer, skid.js, is drivable), light towers, a cone course and dirt piles to practise on.
+// The parked machines are models for now; they can be made drivable one at a time, as the skid steer was.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 const dexGround=groundPatch(-275,-125,170,320,1.5,[]);
 const DB=BRIDGES[3];
@@ -71,14 +71,6 @@ const DEX_Y=0xf2b705,DEX_D=0x2b2d30,DEX_GLASS=0x3c4a52;
 // ---------- the parked machines ----------
 (function(){
   const K=famKit(),G=(x,z)=>baseHeight(x,z);
-  // skid steer
-  {const X=-224,Z=247,f=dexFrame(K,X,Z,0,G(X,Z));
-    f.box(1.5,0.7,2.2,DEX_Y,0,0.75,0);f.box(1.4,0.55,0.7,DEX_D,0,1.3,-0.8);
-    for(const sx of [-0.62,0.62])for(const sz of [-0.3,0.75])f.box(0.08,1.0,0.08,DEX_D,sx,1.6,sz);f.box(1.4,0.1,1.25,DEX_Y,0,2.12,0.22);f.box(0.5,0.5,0.5,0x1d1d1f,0,1.35,0.15);
-    for(const sx of [-0.88,0.88])for(const sz of [-0.68,0.68])f.wheel(0.4,0.32,sx,0.4,sz);
-    for(const sx of [-0.82,0.82])f.box(0.14,0.22,2.6,DEX_Y,sx,1.25,0.35,0.5);
-    f.box(1.8,0.5,0.6,DEX_D,0,0.32,1.75);f.box(1.82,0.06,0.2,0x8a8a86,0,0.08,2.05);
-    SOLIDS.push({x:X,z:Z+0.2,hx:0.95,hz:1.6})}
   // small dozer
   {const X=-212,Z=247,f=dexFrame(K,X,Z,0,G(X,Z));
     for(const sx of [-1.05,1.05]){f.box(0.55,0.75,3.0,DEX_D,sx,0.4,0);for(const sz of [-1.45,1.45])f.cyl(0.38,0.38,0.56,10,0x3a3c40,sx,0.4,sz,0,Math.PI/2)}

@@ -28,13 +28,16 @@ function frame(now){
   if(mode==='mow'){mL=clamp(Ly+Lx*0.7*Ts,-1,1);mR=clamp(Ry-Lx*0.7*Ts,-1,1);boomIn=0;bucketIn=0}
   // on foot: the left stick walks, the right stick looks around
   if(mode==='walk'){boomIn=0;bucketIn=0}
+  // skid steer: left stick drives, right stick runs the arms (up lowers them, as the boom) and the bucket (right dumps)
+  let sDrive=0,sTurn=0,sArm=0,sCurl=0;
+  if(mode==='skid'){sDrive=Ly;sTurn=Lx*Ts;sArm=-Ry;sCurl=-Rx;boomIn=0;bucketIn=0}
   const res=st.res;
   st.swing-=swingIn*0.85*dt*res;
   st.a1=clamp(st.a1+boomIn*0.6*dt*res,...LIM.a1);
   st.a2=clamp(st.a2+stickIn*0.8*dt*res,...LIM.a2);
   st.a3=clamp(st.a3+bucketIn*1.3*dt*res,...LIM.a3);
   if(bench.on){benchTick(dt);driveIn=0;turnIn=0;tThr=0;tSteer=0;tBed=0;mL=0;mR=0}
-  updateTruck(dt,tThr,tSteer,tBed);updateMower(dt,mL,mR);
+  updateTruck(dt,tThr,tSteer,tBed);updateMower(dt,mL,mR);if(bench.on){sDrive=sTurn=sArm=sCurl=0}updateSkid(dt,sDrive,sTurn,sArm,sCurl);
   siteTick();
   if(mode==='walk'&&!bench.on)updateWalker(dt,Lx,Ly,Rx*Ts,Ry);else updateWalker(dt,0,0,0,0);
   // what the mixer hears: hydraulic demand, a ram pushed against its stop (relief valve), tracks moving
@@ -140,11 +143,13 @@ function frame(now){
     {const pb=$('#pumpBtn');if(pb.hidden===waterAny)pb.hidden=!waterAny}
     {const sb=$('#seatBtn'),walk=mode==='walk',mc=walk&&wkNear(),gm=walk&&!mc?famGameNear():null,show=walk?!!(mc||gm):!!wk.inside;if(sb.hidden===show)sb.hidden=!show;const t=walk?(gm?gm.b:'Get in'):'Get out';if(sb.textContent!==t)sb.textContent=t}
     {const bb=$('#boxBtn'),show=TB.hooked||boxNear();if(bb.hidden===show)bb.hidden=!show;const t=TB.hooked?'Drop box':'Hook box';if(bb.textContent!==t)bb.textContent=t}
-    const pct=Math.round(st.load/CAP*100);
-    $('#bucketVal').textContent=`${(st.load*1.308).toFixed(2)} yd³ · ${pct}%`;
+    // in the skid steer the bucket line is its bucket
+    const skm=mode==='skid',bl=skm?sk.load:st.load,pct=Math.round(bl/(skm?SK_CAP:CAP)*100);
+    $('#bucketVal').textContent=`${(bl*1.308).toFixed(2)} yd³ · ${pct}%`;
     $('#bucketBar').style.width=pct+'%';
     $('#bucketPanel').classList.toggle('full',pct>=99);
     const dep=h0At(tip.x,tip.z)-tip.y;
+    if(skm){const sd=h0At(skTip.x,skTip.z)-skTip.y;$('#tipVal').textContent=`${(Math.abs(sk.v)*2.237).toFixed(1)} mph · edge ${(Math.abs(sd)*3.281).toFixed(1)} ft ${sd>0?'below':'above'} grade`}else
     $('#tipVal').textContent=(dep>0?`Tip ${(dep*3.281).toFixed(1)} ft below grade`:`Tip ${(-dep*3.281).toFixed(1)} ft above grade`)+(st.soil>=0?` · ${SOIL[st.soil].n}`:'');
     let c=0;for(const kk of trenchK)if(H0[kk]-H[kk]>=0.85)c++;
     const tp=Math.round(c/trenchK.length*100);
@@ -179,6 +184,7 @@ function frame(now){
   if(camMode==='chase'){
     let cyaw,cd=camDist,op=orbitPitch;
     if(mode==='truck'){look.set(tr.x,tr.y+1.6,tr.z);cyaw=tr.yaw+Math.PI+orbitYaw;cd=camDist+3}
+    else if(mode==='skid'){look.set(sk.x+Math.sin(sk.yaw)*1.2,sk.y+1.0,sk.z+Math.cos(sk.yaw)*1.2);cyaw=sk.yaw+Math.PI+orbitYaw;cd=camDist*0.7}
     else if(mode==='mow'){look.set(mw.x+Math.sin(mw.yaw)*0.8,mw.y+0.7,mw.z+Math.cos(mw.yaw)*0.8);cyaw=mw.yaw+Math.PI+orbitYaw;cd=camDist*0.6}
     else if(mode==='walk'){look.set(wk.x,wk.y+1.35,wk.z);cyaw=wk.view+Math.PI+orbitYaw;cd=camDist*0.5;
       // inside Jessica's cottage the roof lifts off and the camera looks down from above the walls
@@ -191,6 +197,7 @@ function frame(now){
   }else{
     // the seat's eye point and its straight-ahead look, turned by where you have turned your head (fpl)
     if(mode==='truck')fpEye(sprung,-0.55,1.6,1.95,0.25,-1,12.05);
+    else if(mode==='skid')fpEye(skid,0,1.72,0.0,0,-0.9,4.5);
     else if(mode==='mow')fpEye(mower,0,1.42,0.02,0,-1.32,4.48);
     else if(mode==='walk'){const p=fpl.pitch,fx=Math.sin(wk.view),fz=Math.cos(wk.view);camera.position.set(wk.x+fx*0.1,wk.y+WK_H-0.12+wkBody.position.y,wk.z+fz*0.1);
       look.set(camera.position.x+fx*Math.cos(p)*5,camera.position.y+Math.sin(p)*5,camera.position.z+fz*Math.cos(p)*5)}
@@ -202,7 +209,7 @@ function frame(now){
   updateSound(dt);
   if(shake>0){shake-=dt;camera.position.x+=(Math.random()-0.5)*0.25;camera.position.y+=(Math.random()-0.5)*0.25}
   sky.position.copy(camera.position);
-  const fv=mode==='truck'?tr:mode==='mow'?mw:mode==='walk'?wk:st;sun.position.set(fv.x,fv.y,fv.z).addScaledVector(SUN_DIR,25); sun.target.position.set(fv.x,fv.y,fv.z);
+  const fv=mode==='truck'?tr:mode==='mow'?mw:mode==='skid'?sk:mode==='walk'?wk:st;sun.position.set(fv.x,fv.y,fv.z).addScaledVector(SUN_DIR,25); sun.target.position.set(fv.x,fv.y,fv.z);
   {const o=groundOcc.value;o[0].set(st.x,st.z,st.yaw,0);o[2].set(tr.x,tr.z,tr.yaw,0)}
   timeU.value=now/1000;
   shadowProxyTick();lawnLod();tuftLod();renderer.render(scene,camera);
