@@ -353,4 +353,4 @@ function editorFrame(dt,now){
   sky.position.copy(camera.position);
   sun.position.set(ed.x,fy,ed.z).addScaledVector(SUN_DIR,25);sun.target.position.set(ed.x,fy,ed.z);
   timeU.value=now/1000;updateSound(dt);
-  shadowProxyTick();lawnLod();renderer.render(scene,camera)}
+  shadowProxyTick();lawnLod();tuftLod();renderer.render(scene,camera)}
