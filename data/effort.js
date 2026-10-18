@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-18T01:40:09Z",
+ "updated": "2026-10-18T02:09:33Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 669,
+   "dh": 670,
    "act": 14,
-   "versions": 93
+   "versions": 94
   }
  ],
  "extra": [
@@ -930,6 +930,15 @@ window.EFFORT = {
    "tris": 1620584,
    "chars": 591664,
    "what": "Paint can keep the dug shape: a new Dug ground choice in the editor's Paint panel. Level dug ground (as before, now also for deep holes and heaps) takes dug and dumped ground back to grade under the brush so the material shows on it; Keep dug shape recolours it where it is, so ruts, holes and heaps stay, painted and saved with the site. Digging afterwards still cuts through the paint."
+  },
+  {
+   "v": 101,
+   "asked": "2026-10-17T21:00:00-05:00",
+   "live": "2026-10-17T21:09:33-05:00",
+   "dh": 1,
+   "tris": 1621287,
+   "chars": 592422,
+   "what": "Left click places blocks: with Blocks on, a left click on the scene sets a block in Dig or Walk mode, in either view (a drag still turns the camera). Also fixes clicks doing nothing once the mouse is taken for mouse look in first person."
   }
  ]
 };
