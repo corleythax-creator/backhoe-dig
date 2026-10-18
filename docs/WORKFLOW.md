@@ -72,6 +72,7 @@ For something that looks wrong, one screenshot and where it is.
 - **Checks**: every change to the game on `main` is loaded headless by GitHub (the `check` workflow, free on this
   public repo); a red X on the commit means the game threw an error. GitHub emails you when it fails.
 - **Testing in a session**: `tools/play.js` runs game code headless in one step instead of a hand-written script.
+- **Art prompts**: `docs/IMAGE_PROMPTS.md` has ready-to-paste ChatGPT prompts for textures, icons, sprites and concept art (Ultra source quality); `tools/make_tiers.py` cuts a saved image into the Ultra / High / Medium / Low sizes.
 
 ## 4. Systems that would let you do more yourself
 
