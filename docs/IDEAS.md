@@ -189,7 +189,7 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - Q10 Blob shadows on Low: A soft dark patch under each machine and the worker when shadows are off, so they sit on the ground on a phone. (R6 F2 every none c1 2h)
 - Q11 Foam at the shore: White foam where the lake meets the cliff foot and around the bridge piers. (R7 F3 every low c1 2h)
 - Q12 Simpler far islands: Islands far away draw with fewer triangles and no small props, to win frames back on the phone. (R2 F3 every none c2 5h)
-- Q13 Realistic lake water: Turquoise over the sand in the shallows, deep blue farther out, foam along the shore, sky reflections that change with the angle you look from, and calmer swells near land; still flat-shaded. (R8 F5 every low c2 5h)
+- Q13 Realistic lake water: Turquoise over the sand in the shallows, deep blue farther out, foam along the shore, sky reflections that change with the angle you look from, and calmer swells near land; still flat-shaded. (R8 F5 every low c2 5h needs S16)
 - Q14 Wakes and spray: A boat throws a V wake that spreads and fades, and spray off the bow at speed. (R8 F5 most low c1 3h needs M21)
 
 ## E: Map editor
