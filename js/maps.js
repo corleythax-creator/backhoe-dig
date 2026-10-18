@@ -1,18 +1,19 @@
 // Corley's Island: minimap and big site map.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 // ---------- maps ----------
-const MAP_HALF=120,BG_PX=480;let mapBg=null,digLayer=null,mapDirty=true,mapT=0;
+// the background covers the mesa and the Family Island: a square from MAP_X0, MAP_Z0, MAP_SZ metres across
+const MAP_X0=-200,MAP_Z0=-62,MAP_SZ=480,MAP_HALF=MAP_SZ/2,MAP_CX=MAP_X0+MAP_HALF,MAP_CZ=MAP_Z0+MAP_HALF,BG_PX=720;let mapBg=null,digLayer=null,mapDirty=true,mapT=0;
 function buildMapBg(){
-  const c=document.createElement('canvas');c.width=c.height=BG_PX;const x2=c.getContext('2d'),img=x2.createImageData(BG_PX,BG_PX),d=img.data,mpp=MAP_HALF*2/BG_PX;
+  const c=document.createElement('canvas');c.width=c.height=BG_PX;const x2=c.getContext('2d'),img=x2.createImageData(BG_PX,BG_PX),d=img.data,mpp=MAP_SZ/BG_PX;
   const hs=new Float32Array(BG_PX*BG_PX);
-  for(let py=0;py<BG_PX;py++)for(let px=0;px<BG_PX;px++)hs[py*BG_PX+px]=baseHeight(px*mpp-MAP_HALF,py*mpp-MAP_HALF);
+  for(let py=0;py<BG_PX;py++)for(let px=0;px<BG_PX;px++)hs[py*BG_PX+px]=baseHeight(MAP_X0+px*mpp,MAP_Z0+py*mpp);
   for(let py=0;py<BG_PX;py++)for(let px=0;px<BG_PX;px++){
     const k=py*BG_PX+px,h=hs[k],hx=hs[py*BG_PX+Math.min(BG_PX-1,px+1)]-hs[py*BG_PX+Math.max(0,px-1)],hz=hs[Math.min(BG_PX-1,py+1)*BG_PX+px]-hs[Math.max(0,py-1)*BG_PX+px];
     const sl=Math.hypot(hx,hz)/(2*mpp);let r,g,b;
     if(h<WATER){const dp=Math.min(1,(WATER-h)/12);r=0.2-0.08*dp;g=0.5-0.15*dp;b=0.62-0.12*dp}
     else if(h<WATER+2.5){r=0.82;g=0.75;b=0.55}
     else if(sl>0.9){r=0.52;g=0.47;b=0.42}
-    else if(mesaR(px*mpp-MAP_HALF,py*mpp-MAP_HALF)<EDGE){const x=px*mpp-MAP_HALF,z=py*mpp-MAP_HALF;r=0.38;g=0.6;b=0.3;
+    else if(mesaR(MAP_X0+px*mpp,MAP_Z0+py*mpp)<EDGE||famR(MAP_X0+px*mpp,MAP_Z0+py*mpp)<FAM_R||jesR(MAP_X0+px*mpp,MAP_Z0+py*mpp)<JES_R){const x=MAP_X0+px*mpp,z=MAP_Z0+py*mpp;r=0.38;g=0.6;b=0.3;
       if(yardAt(x,z)>0.4){r=0.6;g=0.47;b=0.33}if(roadAmt(x,z)>0.3){r=0.72;g=0.6;b=0.42}}else{r=0.42;g=0.58;b=0.32}
     const shade=h<WATER?1:Math.max(0.55,Math.min(1.25,1+(-hx-hz)*0.35/mpp*0.5));
     d[k*4]=Math.min(255,r*shade*255);d[k*4+1]=Math.min(255,g*shade*255);d[k*4+2]=Math.min(255,b*shade*255);d[k*4+3]=255;
@@ -43,9 +44,13 @@ function drawMap(cv,cx,cz,half,big){
   if(cv.width!==W){cv.width=cv.height=W}
   const g=cv.getContext('2d'),sc=W/(2*half),X=x=>(x-cx)*sc+W/2,Y=z=>(z-cz)*sc+W/2;
   g.fillStyle='#1d4f63';g.fillRect(0,0,W,W);
-  const spp=BG_PX/(2*MAP_HALF);
+  const spp=BG_PX/MAP_SZ;
   g.imageSmoothingEnabled=true;
-  g.drawImage(mapBg,(cx-half+MAP_HALF)*spp,(cz-half+MAP_HALF)*spp,2*half*spp,2*half*spp,0,0,W,W);
+  g.drawImage(mapBg,(cx-half-MAP_X0)*spp,(cz-half-MAP_Z0)*spp,2*half*spp,2*half*spp,0,0,W,W);
+  // bridge decks, the Family Island's buildings
+  for(const b of BRIDGES){g.save();g.translate(X(b.x0),Y(b.z0));g.rotate(Math.atan2(b.uz,b.ux));g.fillStyle='#55595c';g.fillRect(0,-(b.hw+0.4)*sc,b.len*sc,(2*b.hw+0.8)*sc);
+    g.fillStyle='#9a9c9e';g.fillRect(0,-b.hw*sc,b.len*sc,2*b.hw*sc);g.restore()}
+  g.fillStyle='#8a5a3a';for(const s of SOLIDS)if(s.hx>2||s.hz>2)g.fillRect(X(s.x-s.hx),Y(s.z-s.hz),2*s.hx*sc,2*s.hz*sc);
   g.drawImage(digLayer,X(-S/2),Y(-S/2),S*sc,S*sc);
   g.lineWidth=Math.max(1.5,0.18*sc);g.strokeStyle='#f2f2ee';g.strokeRect(X(-0.5),Y(TRENCH_Z0),1*sc,(TRENCH_Z1-TRENCH_Z0)*sc);
   g.setLineDash([6*dpr,5*dpr]);g.strokeStyle='#f5c518';g.lineWidth=Math.max(2,0.2*sc);g.beginPath();g.moveTo(X(-12),Y(PIPE_Z));g.lineTo(X(12),Y(PIPE_Z));g.stroke();g.setLineDash([]);
@@ -65,16 +70,16 @@ function drawMap(cv,cx,cz,half,big){
   icon(tr.x,tr.z,Math.atan2(Math.cos(tr.yaw),Math.sin(tr.yaw)),'#e9ecea',9.1,2.6,mode==='truck');
   icon(st.x,st.z,Math.atan2(Math.cos(hy),Math.sin(hy)),'#f07a22',4.2,3,mode==='dig'||mode==='drive');
   g.fillStyle='rgba(20,23,19,.75)';g.fillRect(W-30*dpr,4*dpr,26*dpr,26*dpr);g.fillStyle='#f3f5ef';g.font=`800 ${16*dpr}px Saira Condensed, sans-serif`;g.textAlign='center';g.textBaseline='middle';g.fillText('N',W-17*dpr,17*dpr);
-  if(big){g.font=`700 ${15*dpr}px Saira Condensed, sans-serif`;g.fillStyle='rgba(255,255,255,.85)';g.fillText('DIG SITE',X(0),Y(-S/2)-10*dpr);g.fillText('LAKE',X(0),Y(100));}
+  if(big){g.font=`700 ${15*dpr}px Saira Condensed, sans-serif`;g.fillStyle='rgba(255,255,255,.85)';g.fillText('DIG SITE',X(0),Y(-S/2)-10*dpr);g.fillText('LAKE',X(-110),Y(130));g.fillText('FAMILY ISLAND',X(FAM_X),Y(FAM_Z-FAM_R)-10*dpr);g.fillText("JESSICA'S ISLAND",X(JES_X),Y(JES_Z-JES_R)-10*dpr);}
 }
 function mapsTick(dt){
   mapT-=dt;if(mapDirty&&mapT<=0){if(!mapBg)buildMapBg();updateDigLayer();mapDirty=false;mapT=0.5}
   const fv=mode==='truck'?tr:mode==='mow'?mw:mode==='walk'?wk:st;
   drawMap($('#mini'),fv.x,fv.z,42,false);
-  if(!$('#bigmap').hidden)drawMap($('#big'),0,0,MAP_HALF,true);
+  if(!$('#bigmap').hidden)drawMap($('#big'),MAP_CX,MAP_CZ,MAP_HALF,true);
 }
 function sizeBig(){const c=$('#big'),sz=Math.max(200,Math.min(innerWidth-60,innerHeight-230,900));c.style.width=c.style.height=sz+'px'}
-function toggleMap(show){const m=$('#bigmap');m.hidden=show===undefined?!m.hidden:!show;if(!m.hidden){sizeBig();drawMap($('#big'),0,0,MAP_HALF,true)}}
+function toggleMap(show){const m=$('#bigmap');m.hidden=show===undefined?!m.hidden:!show;if(!m.hidden){sizeBig();drawMap($('#big'),MAP_CX,MAP_CZ,MAP_HALF,true)}}
 $('#mini').addEventListener('click',()=>toggleMap(true));
 $('#mapClose').onclick=()=>toggleMap(false);
 $('#bigmap').addEventListener('click',e=>{if(e.target.id==='bigmap')toggleMap(false)});

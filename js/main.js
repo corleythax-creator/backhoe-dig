@@ -2,6 +2,10 @@
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 // the machines catch their own shadows (cab under the boom, bed under the load); glass stays clear
 for(const g of [machine,truck])g.traverse(o=>{if(o.isMesh&&!o.material.transparent)o.receiveShadow=true});
+// first person in a machine: the eye at (px,py,pz) in the machine's frame, looking along (dx,dy,dz) turned by fpl
+function fpEye(o,px,py,pz,dx,dy,dz){o.localToWorld(camera.position.set(px,py,pz));
+  const y=Math.atan2(dx,dz)+fpl.yaw,p=clamp(Math.atan2(dy,Math.hypot(dx,dz))+fpl.pitch,-1.45,1.45),c=Math.cos(p)*10;
+  o.localToWorld(look.set(px+Math.sin(y)*c,py+Math.sin(p)*10,pz+Math.cos(y)*c))}
 function frame(now){
   const dt=Math.min(0.05,(now-last)/1000);last=now;crushT-=dt;
   // resolution changes and window resizes land here, before anything is drawn this frame
@@ -37,9 +41,10 @@ function frame(now){
   st.yaw-=turnIn*0.8*dt;
   // mud slows the tracks, and pushing on in it digs them in until they spin (bogTick, mud.js)
   const mudN=mudAt(st.x,st.z),mudK=(1-0.5*mudN)*bogTick(st,mudN,bench.on?0:driveIn,0.03,dt),ox=st.x,oz=st.z,w0=wallCount(st.x,st.z,st.yaw,EX_P);
-  st.x=clamp(st.x+Math.sin(st.yaw)*driveIn*2.6*mudK*dt,-90,90);
-  st.z=clamp(st.z+Math.cos(st.yaw)*driveIn*2.6*mudK*dt,-90,90);
-  {const rr=mesaR(st.x,st.z),lim=EDGE-3.5;if(rr>lim){const f=lim/rr;st.x*=f;st.z=MZ+(st.z-MZ)*f}}
+  st.x+=Math.sin(st.yaw)*driveIn*2.6*mudK*dt;
+  st.z+=Math.cos(st.yaw)*driveIn*2.6*mudK*dt;
+  // stays on the mesa, the Family Island or a bridge deck
+  [st.x,st.z]=landClamp(st.x,st.z,3.5,1.9);
   // the scarp face, ramp banks and stockpiles are too steep to climb: the tracks stop at their foot
   if(wallCount(st.x,st.z,st.yaw,EX_P)>w0){st.x=ox;st.z=oz}
   blkPush(st,EX_C,EX_R);
@@ -129,7 +134,7 @@ function frame(now){
   if(hudT<=0)mapsTick(0.1);
   if(hudT<=0){hudT=0.1;
     {const pb=$('#pumpBtn');if(pb.hidden===waterAny)pb.hidden=!waterAny}
-    {const sb=$('#seatBtn'),walk=mode==='walk',show=walk?!!wkNear():!!wk.inside;if(sb.hidden===show)sb.hidden=!show;const t=walk?'Get in':'Get out';if(sb.textContent!==t)sb.textContent=t}
+    {const sb=$('#seatBtn'),walk=mode==='walk',mc=walk&&wkNear(),gm=walk&&!mc?famGameNear():null,show=walk?!!(mc||gm):!!wk.inside;if(sb.hidden===show)sb.hidden=!show;const t=walk?(gm?gm.b:'Get in'):'Get out';if(sb.textContent!==t)sb.textContent=t}
     {const bb=$('#boxBtn'),show=TB.hooked||boxNear();if(bb.hidden===show)bb.hidden=!show;const t=TB.hooked?'Drop box':'Hook box';if(bb.textContent!==t)bb.textContent=t}
     const pct=Math.round(st.load/CAP*100);
     $('#bucketVal').textContent=`${(st.load*1.308).toFixed(2)} yd³ · ${pct}%`;
@@ -159,7 +164,7 @@ function frame(now){
   // flying dirt
   particlesTick(dt);dustTick(dt);grimeTick();
   // groundwater, the tailgate stream and the dirt sounds
-  if(!bench.on)waterTick(dt);mudTick(dt);rainTick(dt);
+  if(!bench.on)waterTick(dt);mudTick(dt);rainTick(dt);jesTick(dt);
   pourStream(streams[1],tr.pourP,hAt(tr.pourP.x,tr.pourP.z),tr.pourRate,tr.loadC,now/1000);
   dirtSndTick(dt);
   // bucket load visual
@@ -168,23 +173,27 @@ function frame(now){
   // camera
   const hy=st.yaw+st.swing;
   if(camMode==='chase'){
-    let cyaw,cd=camDist;
+    let cyaw,cd=camDist,op=orbitPitch;
     if(mode==='truck'){look.set(tr.x,tr.y+1.6,tr.z);cyaw=tr.yaw+Math.PI+orbitYaw;cd=camDist+3}
     else if(mode==='mow'){look.set(mw.x+Math.sin(mw.yaw)*0.8,mw.y+0.7,mw.z+Math.cos(mw.yaw)*0.8);cyaw=mw.yaw+Math.PI+orbitYaw;cd=camDist*0.6}
-    else if(mode==='walk'){look.set(wk.x,wk.y+1.35,wk.z);cyaw=wk.view+Math.PI+orbitYaw;cd=camDist*0.5}
+    else if(mode==='walk'){look.set(wk.x,wk.y+1.35,wk.z);cyaw=wk.view+Math.PI+orbitYaw;cd=camDist*0.5;
+      // inside Jessica's cottage the roof lifts off and the camera looks down from above the walls
+      if(jesIn){cd=camDist*0.42;op=Math.max(op,1.05)}}
     else{const fx=Math.sin(hy),fz=Math.cos(hy);look.set(st.x+fx*4,st.y+0.8,st.z+fz*4);cyaw=hy+Math.PI+orbitYaw}
-    camT.set(look.x+Math.sin(cyaw)*Math.cos(orbitPitch)*cd,look.y+Math.sin(orbitPitch)*cd,look.z+Math.cos(cyaw)*Math.cos(orbitPitch)*cd);
+    camT.set(look.x+Math.sin(cyaw)*Math.cos(op)*cd,look.y+Math.sin(op)*cd,look.z+Math.cos(cyaw)*Math.cos(op)*cd);
     camT.y=Math.max(camT.y,surfAt(camT.x,camT.z)+1.2);
     if(firstCam){camera.position.copy(camT);firstCam=false}else camera.position.lerp(camT,Math.min(1,dt*5));
     camera.lookAt(look);
   }else{
-    if(mode==='truck'){sprung.localToWorld(camera.position.set(-0.55,1.6,1.95));sprung.localToWorld(look.set(-0.3,0.6,14))}
-    else if(mode==='mow'){mower.localToWorld(camera.position.set(0,1.42,0.02));mower.localToWorld(look.set(0,0.1,4.5))}
-    else if(mode==='walk'){const p=(0.42-orbitPitch)*1.6,fx=Math.sin(wk.view),fz=Math.cos(wk.view);camera.position.set(wk.x+fx*0.1,wk.y+WK_H-0.12+wkBody.position.y,wk.z+fz*0.1);
+    // the seat's eye point and its straight-ahead look, turned by where you have turned your head (fpl)
+    if(mode==='truck')fpEye(sprung,-0.55,1.6,1.95,0.25,-1,12.05);
+    else if(mode==='mow')fpEye(mower,0,1.42,0.02,0,-1.32,4.48);
+    else if(mode==='walk'){const p=fpl.pitch,fx=Math.sin(wk.view),fz=Math.cos(wk.view);camera.position.set(wk.x+fx*0.1,wk.y+WK_H-0.12+wkBody.position.y,wk.z+fz*0.1);
       look.set(camera.position.x+fx*Math.cos(p)*5,camera.position.y+Math.sin(p)*5,camera.position.z+fz*Math.cos(p)*5)}
-    else{house.localToWorld(camera.position.set(-0.72,2.2,0.5));house.localToWorld(look.set(-0.1,-0.4,6))}
+    else fpEye(house,-0.72,2.2,0.5,0.62,-2.6,5.5);
     camera.lookAt(look); firstCam=true;
   }
+  fpTick(dt);
   if(bench.on)benchCamera();
   updateSound(dt);
   if(shake>0){shake-=dt;camera.position.x+=(Math.random()-0.5)*0.25;camera.position.y+=(Math.random()-0.5)*0.25}

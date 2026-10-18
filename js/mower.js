@@ -294,8 +294,8 @@ function updateMower(dt,inL,inR){
   mw.yaw+=mw.w*dt;mw.x+=Math.sin(mw.yaw)*mw.v*dt;mw.z+=Math.cos(mw.yaw)*mw.v*dt;
   if(wallCount(mw.x,mw.z,mw.yaw,MW_P)>w0){mw.x=ox;mw.z=oz}
   // stays on the mesa, steers clear of the excavator, the truck and tall blocks; the big machines shove it aside
-  for(const lz of MW_C){const sy=Math.sin(mw.yaw),cy=Math.cos(mw.yaw),px=mw.x+sy*lz,pz=mw.z+cy*lz,rr=mesaR(px,pz),lim=EDGE-2;
-    if(rr>lim){const k=lim/rr;mw.x+=px*k-px;mw.z+=MZ+(pz-MZ)*k-pz}
+  for(const lz of MW_C){const sy=Math.sin(mw.yaw),cy=Math.cos(mw.yaw),px=mw.x+sy*lz,pz=mw.z+cy*lz,q=landClamp(px,pz,2,1);
+    mw.x+=q[0]-px;mw.z+=q[1]-pz;
     const ex=px-st.x,ez=pz-st.z,ed=Math.hypot(ex,ez),em=MW_R+2.7;if(ed<em&&ed>1e-3){mw.x+=ex/ed*(em-ed);mw.z+=ez/ed*(em-ed)}
     for(const tz of TR_C){const tx=tr.x+Math.sin(tr.yaw)*tz,tzz=tr.z+Math.cos(tr.yaw)*tz,dx=px-tx,dz=pz-tzz,d=Math.hypot(dx,dz),m=MW_R+TR_R;
       if(d<m&&d>1e-3){mw.x+=dx/d*(m-d);mw.z+=dz/d*(m-d)}}}

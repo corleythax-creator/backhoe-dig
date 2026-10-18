@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-17T23:32:34Z",
+ "updated": "2026-10-18T00:12:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 464,
-   "act": 11.0,
-   "versions": 66
+   "dh": 526.5,
+   "act": 11.5,
+   "versions": 71
   }
  ],
  "extra": [
@@ -687,6 +687,51 @@ window.EFFORT = {
    "tris": 1154238,
    "chars": 406502,
    "what": "Rain: showers roll through now and then (or set Weather to Rain or Dry in the menu). Rain soaks the soil by what is there: dug dirt, dirt yards, clay and topsoil turn to mud first, dirt roads and grass get soft, sand and gravel drain, rock and paving stay hard, and low ground soaks fastest. The soaked ground ruts, holds puddles and bogs machines down like painted mud, and rain fills holes and ruts. When it stops the soil dries over several minutes (sand fast, clay slow), the puddles drain and wet spoil dries, and it keeps drying while the game is closed. The sky greys over, rain streaks fall (fewer on phones), the ground takes a wet sheen and there is a rain hiss. Wet ground and weather sync between devices."
+  },
+  {
+   "v": 74,
+   "asked": "2026-10-17T17:40:00-05:00",
+   "live": "2026-10-17T18:39:46-05:00",
+   "dh": 26,
+   "tris": 1282998,
+   "chars": 429826,
+   "what": "The Family Island: a dark green steel truss bridge (about 340 ft) runs from the Lower Bench south across the water to a new, larger mesa about 525 ft across. On it: the family house with a stone base, a steep roof, a chimney and a wraparound porch with rocking chairs; a picnic pavilion with two tables; a fire pit with log benches; a flagpole and a bench looking back at Corley's; a roundabout with a big tree in the middle; groves of pines and autumn trees. The excavator, truck, mower and the worker can all cross and drive around it, and the railings keep them on the deck. The roads west and east stop at barriers where Dexter's and Jessica's bridges will go, and the mainland bridge runs about 335 ft south to a barrier, with bare piers and a crane beyond. The site map now shows both islands."
+  },
+  {
+   "v": 75,
+   "asked": "2026-10-17T18:44:00-05:00",
+   "live": "2026-10-17T18:49:07-05:00",
+   "dh": 0.5,
+   "tris": 1282998,
+   "chars": 429953,
+   "what": "The Keys line in How to play now gives the mower's own keys: W and S drive it straight, A and D turn it, and the number pad works the lap bars (8 and 2 both, 4 and 6 spin in place, 7 and 1 the left bar, 9 and 3 the right bar), instead of saying IJKL is the right stick in every mode."
+  },
+  {
+   "v": 76,
+   "asked": "2026-10-17T18:40:00-05:00",
+   "live": "2026-10-17T18:57:34-05:00",
+   "dh": 6,
+   "tris": 1286910,
+   "chars": 433848,
+   "what": "Chess and checkers at the Family Island's picnic pavilion: a chess board set up to start on the west table and a checkers board on the east one. Walk up to a table and Get in (F on a keyboard) becomes Play chess or Play checkers: the island saves and switches to Mesa Chess or Mesa Checkers at full quality, and their Corley's Island link brings you straight back on foot beside the table, with no start card. The Mesa pages load ahead as you walk up to the pavilion. In the claude.ai version the game opens in a new tab."
+  },
+  {
+   "v": 77,
+   "asked": "2026-10-17T18:50:00-05:00",
+   "live": "2026-10-17T19:01:40-05:00",
+   "dh": 25,
+   "tris": 1353588,
+   "chars": 456944,
+   "what": "Jessica's Island: from the Family Island's roundabout the east road leads to a red covered footbridge (about 305 ft, on foot only) that climbs 10 ft to a forest mesa the size of Corley's. Lantern-lit gravel paths wind through pines and autumn trees to a stone and timber cottage with a mossy roof, flower boxes and smoke curling from the chimney, past a fenced herb garden to a bench at the cliff edge. Inside is her library: shelves of books to the ceiling on three walls, a rolling ladder on a brass rail, a cushioned window seat with pillows, a plaid blanket and a sleeping cat, two armchairs on a rug by a crackling fire, a reading lamp and a side table with a teacup. Walk in and the roof lifts off so the camera looks down into the room; Cab view walks it at eye level. The library is only drawn when you are near, so phones pay for it only there."
+  },
+  {
+   "v": 78,
+   "asked": "2026-10-17T18:45:00-05:00",
+   "live": "2026-10-17T19:09:50-05:00",
+   "dh": 5,
+   "tris": 1353588,
+   "chars": 461650,
+   "what": "First-person look: in cab view, drag the scene to turn your head, on foot or in any machine. On foot the body turns with it and you can look nearly straight up or down; in the excavator, truck and mower you can turn about 150 degrees each way in the seat and look up at the boom or down at the bucket. On a PC a click on the scene takes the mouse for mouse look (Esc frees it). Zoom up to 4x with the mouse wheel, a two-finger pinch or by holding Z; R (controller: right stick click) turns your head back to straight ahead. A small aim dot shows on foot."
   }
  ]
 };
