@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 614,
+   "dh": 620,
    "act": 12.5,
-   "versions": 83
+   "versions": 84
   }
  ],
  "extra": [
@@ -840,6 +840,15 @@ window.EFFORT = {
    "tris": 1620842,
    "chars": 534416,
    "what": "Turn sensitivity for each machine: the Turn slider now keeps its own setting for Dig, Drive, Truck, Mow, Skid and Walk, and shows the one for the mode you are in. The mower starts at 60%, everything else at 100%."
+  },
+  {
+   "v": 91,
+   "asked": "2026-10-17T19:30:00-05:00",
+   "live": "2026-10-17T20:03:44-05:00",
+   "dh": 6,
+   "tris": 1620729,
+   "chars": 542483,
+   "what": "Puddle splashes: the truck's tyres, the excavator's and skid steer's tracks, the mower's wheels and your boots throw muddy spray out to both sides and ahead when they go through standing water, bigger the faster and deeper, with rings spreading across the water, a few lumps of mud and a slosh. Jumping into a puddle splashes all round. Only drawn, so the puddles stay the same on every device; Low graphics throws 250 drops, Medium 600, High 1200, and the custom Graphics panel has a Puddle splash row."
   }
  ]
 };
