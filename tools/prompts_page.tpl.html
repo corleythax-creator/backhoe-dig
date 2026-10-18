@@ -56,6 +56,9 @@ details p{margin:6px 0 0;white-space:pre-wrap;overflow-wrap:anywhere}
 label.up{display:inline-flex;align-items:center;justify-content:center;font:600 16px var(--body);border:1px solid var(--ink);border-radius:6px;padding:10px 16px;min-height:44px;cursor:pointer}
 label.up:focus-within{outline:3px solid var(--ink);outline-offset:2px}
 label.up input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none}
+.drive{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.drive input[type=url]{flex:1 1 200px;min-width:0;min-height:44px;font:15px var(--body);color:var(--ink);background:var(--bg);border:1px solid var(--line);border-radius:6px;padding:8px 10px}
+.drive a{font-size:13px;color:var(--ink);overflow-wrap:anywhere}
 .note{color:var(--mute);font-size:14px;margin:0 0 4px}
 .toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:6px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .2s;z-index:20}
 .toast.on{opacity:1}
@@ -80,7 +83,7 @@ label.up input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:n
 <script>
 const D=/*DATA*/null;
 const KEYS=['all'].concat(D.sections.map(s=>s.key));
-let tab='all',proj=false,done={},imgs={},A=null,DB=null,lastId='';
+let tab='all',proj=false,done={},imgs={},drv={},A=null,DB=null,lastId='';
 try{done=JSON.parse(localStorage.getItem('art_done')||'{}');proj=localStorage.getItem('art_proj')==='1';tab=localStorage.getItem('art_tab')||'all'}catch(e){}
 if(!KEYS.includes(tab))tab='all';
 const $=id=>document.getElementById(id);
@@ -125,6 +128,7 @@ function render(){
       ${A&&DB?`<div class="shot">${imgs[it.id]?`<img src="${esc(imgs[it.id].url)}" alt="Uploaded image for ${it.id}"><span>Uploaded ${esc(imgs[it.id].name||'')}</span>`:''}
         <label class="up">${imgs[it.id]?'Replace image':'Upload image'}<input type="file" accept="image/*" data-up="${it.id}"></label>
         ${imgs[it.id]?`<button class="alt" data-rm="${it.id}">Remove</button>`:''}</div>`:''}
+      ${DB?`<div class="drive">${drv[it.id]?`<span class="meta">Drive link saved:</span> <a href="${esc(drv[it.id].url)}" target="_blank" rel="noopener">${esc(drv[it.id].url.replace(/^https?:\/\//,'').slice(0,48))}</a> <button class="alt" data-rmd="${it.id}">Remove link</button>`:`<input type="url" id="dl-${it.id}" inputmode="url" placeholder="Paste Google Drive link" aria-label="Google Drive link for ${it.id}"><button class="alt" data-sd="${it.id}">Save link</button>`}</div>`:''}
       <details><summary>See full text</summary><p>${esc(t)}</p></details>
     </article>`}
   $('list').innerHTML=h;
@@ -149,6 +153,13 @@ document.addEventListener('paste',e=>{
 });
 document.addEventListener('click',e=>{
   const c=e.target.closest('.card');if(c)lastId=c.id.slice(2);
+  const sd=e.target.closest('[data-sd]');
+  if(sd&&DB){const id=sd.dataset.sd,it=all.find(i=>i.id===id),v=($('dl-'+id).value||'').trim();
+    const m=v.match(/^https:\/\/(?:drive|docs)\.google\.com\//)&&(v.match(/\/(?:d|folders)\/([\w-]+)/)||v.match(/[?&]id=([\w-]+)/));
+    if(!m){toast('That is not a Google Drive link.');return}
+    DB.collection('drive').doc(id).set({url:v,fileId:m[1],folder:/\/folders\//.test(v),target:it.file,title:it.title,at:Date.now()}).then(()=>{done[id]=1;save();toast(id+' link saved. Tell Claude to place it.')}).catch(()=>toast('Could not save the link.'));return}
+  const rmd=e.target.closest('[data-rmd]');
+  if(rmd&&DB){DB.collection('drive').doc(rmd.dataset.rmd).delete().catch(()=>toast('Could not remove it.'));return}
   const rm=e.target.closest('[data-rm]');
   if(rm&&DB){DB.collection('images').doc(rm.dataset.rm).delete().catch(()=>toast('Could not remove it.'));return}
   const t=e.target.closest('[data-k],[data-copy],[data-pbr]');if(!t)return;
@@ -169,7 +180,8 @@ render();
   try{
     if(!window.claude||!window.claude.use)return;
     A=await window.claude.use('assets');DB=await window.claude.use('db');
-    if(!A||!DB){A=DB=null;return}
+    if(!DB){A=DB=null;return}
+    DB.collection('drive').onSnapshot(snap=>{drv={};snap.docs.forEach(d=>{drv[d.id]=d.data()});render()},()=>{});
     DB.collection('images').onSnapshot(snap=>{imgs={};snap.docs.forEach(d=>{imgs[d.id]=d.data()});render()},()=>{});
   }catch(e){A=DB=null}
 })();
