@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-18T00:48:00Z",
+ "updated": "2026-10-18T01:00:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 611.0,
-   "act": 12.0,
-   "versions": 81
+   "dh": 618.0,
+   "act": 12.5,
+   "versions": 82
   }
  ],
  "extra": [
@@ -822,6 +822,15 @@ window.EFFORT = {
    "tris": 1621225,
    "chars": 531664,
    "what": "The mower cuts the field grass too, anywhere on the mesa: the clumps under the deck drop to stubble and throw clippings, flowers and seed heads included, then grow back on the tall grass's timing (about a minute before they start, about four more to full height). The mowed field grass saves and syncs with the rest of the mowing."
+  },
+  {
+   "v": 89,
+   "asked": "2026-10-17T19:15:00-05:00",
+   "live": "2026-10-17T20:00:27-05:00",
+   "dh": 7,
+   "tris": 1620685,
+   "chars": 534867,
+   "what": "Map editor: Paint has Hard edge and Soft edge. Soft edge fades the material out into the ground over the outer part of the brush, with a Softness slider (10 to 100%) and a second ring showing where the fade starts; Natural ground fades paint back out the same way, soft-edged Mud is partly soaked at its fade, and maps keep the soft edges (older maps load as before). The editor's controls move to the top left to leave the screen for the ground: a slim title bar with Undo, Redo, Map file and Done, the tools in a two-wide strip down the left, and the tool's options, Map file and info cards in a scrolling column beside them with a tighter material library. Tap the picked tool again to fold its options away."
   }
  ]
 };
