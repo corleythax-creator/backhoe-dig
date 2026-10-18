@@ -167,15 +167,16 @@ function setUiScale(v){uiScale=+v||1;const h=$('#hud');h.style.setProperty('--s'
 document.querySelectorAll('.sizes button[data-s]').forEach(b=>b.onclick=()=>setUiScale(b.dataset.s));
 try{setUiScale(localStorage.getItem('bhd_ui')||1)}catch(e){setUiScale(1)}
 // turn sensitivity (above the left stick): scales every left / right input, swing, tracks, steering, the mower's spin
-// and looking round on foot, from 25% to 200%; saved on this device. Open on a computer, a tap away on a phone
-let turnSens=1;const turnSl=$('#turnSl'),turnBtn=$('#turnBtn');
-function setTurnSens(v){turnSens=clamp(Math.round(+v/5)*5||100,25,200)/100;turnSl.value=Math.round(turnSens*100);turnBtn.textContent=`Turn ${turnSl.value}%`;
-  try{localStorage.setItem('bhd_turn',turnSens)}catch(e){}}
+// and looking round on foot, from 25% to 200% (60% unless the player moves it); saved on this device once moved.
+// Open on a computer, a tap away on a phone
+const TURN_DEF=60;let turnSens=TURN_DEF/100;const turnSl=$('#turnSl'),turnBtn=$('#turnBtn');
+function setTurnSens(v){turnSens=clamp(Math.round(+v/5)*5||TURN_DEF,25,200)/100;turnSl.value=Math.round(turnSens*100);turnBtn.textContent=`Turn ${turnSl.value}%`}
 function showTurnSl(on){turnSl.hidden=!on;turnBtn.setAttribute('aria-expanded',on)}
-try{setTurnSens((+localStorage.getItem('bhd_turn')||1)*100)}catch(e){setTurnSens(100)}
+// v82 saved 100% under bhd_turn on every load, moved or not, so only a value other than 100% there is the player's own
+try{const s=+localStorage.getItem('bhd_turnS')||(+localStorage.getItem('bhd_turn')!==1&&+localStorage.getItem('bhd_turn'));setTurnSens(s?s*100:TURN_DEF)}catch(e){setTurnSens(TURN_DEF)}
 showTurnSl(!PHONE);
 turnBtn.onclick=()=>showTurnSl(turnSl.hidden);
-turnSl.oninput=()=>setTurnSens(turnSl.value);
+turnSl.oninput=()=>{setTurnSens(turnSl.value);try{localStorage.setItem('bhd_turnS',turnSens)}catch(e){}};
 // let go of the slider so the arrow keys drive again
 turnSl.onchange=()=>turnSl.blur();
 const statusEl=$('#status');try{statusEl.classList.toggle('min',localStorage.getItem('bhd_hudmin')==='1')}catch(e){}
