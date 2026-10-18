@@ -73,7 +73,7 @@ function lawnFarSync(){const M=lawnClumps.instanceMatrix.array,F=lawnFar.instanc
   lawnFar.instanceMatrix.needsUpdate=true;lawnFarGeo.attributes.aLawn.needsUpdate=true;if(C)lawnFar.instanceColor.needsUpdate=true;lawnFarStale=false}
 // every frame: near or far version, by the camera's distance to the patch and the Graphics setting (always near while mowing)
 function lawnLod(){const d=Math.hypot(Math.max(0,LAWN_X0-camera.position.x,camera.position.x-LAWN_X0-LAWN_NX*LAWN_GS),Math.max(0,LAWN_Z0-camera.position.z,camera.position.z-LAWN_Z0-LAWN_NZ*LAWN_GS));
-  const far=mode!=='mow'&&d>(typeof gfxKey!=='undefined'?GFX[gfxKey].lawnFar:1e9);
+  const far=mode!=='mow'&&d>(typeof gfxCur!=='undefined'?gfxCur.lawnFar:1e9);
   if(far&&lawnFarStale)lawnFarSync();
   if(far!==lawnFarOn){lawnFarOn=far;lawnClumps.count=far?0:LAWN_N;lawnFar.count=far?LAWN_FN:0}}
 const lwO=new THREE.Object3D(),lwC=new THREE.Color();

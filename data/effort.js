@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-18T00:43:39Z",
+ "updated": "2026-10-18T00:44:31Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 597,
+   "dh": 607.0,
    "act": 12.0,
-   "versions": 79
+   "versions": 80
   }
  ],
  "extra": [
@@ -804,6 +804,15 @@ window.EFFORT = {
    "tris": 1620777,
    "chars": 514611,
    "what": "Dexter's skid steer is drivable. Tap Skid (or press 6), walk up to it in his yard and tap Get in, or teleport into it from the site map. The left stick drives it, turns it and spins it in place; the right stick lowers and raises the arms (up lowers, like the excavator's boom) and curls or dumps the bucket, which stays level as the arms go up. Drive it over the bridges to the dig site and it scoops dirt with the bucket down on the ground and dumps it in a pile, over the cliff or into the dump truck's bed. It has its own diesel sound, ruts soft ground and lays the grass down, bumps into buildings, blocks and the other machines, shows its load, speed and bucket depth on the status card, follows the turn sensitivity slider, and is saved and synced with the site. Reset parks it back in Dexter's yard."
+  },
+  {
+   "v": 87,
+   "asked": "2026-10-17T18:55:00-05:00",
+   "live": "2026-10-17T19:44:31-05:00",
+   "dh": 10,
+   "tris": 1620211,
+   "chars": 515689,
+   "what": "Graphics panel: the Graphics button in the menu opens Low, Medium and High with every setting under them to play with, and the frame rate, triangles, draw calls, resolution and textures in memory shown live. Screen: resolution (0.5x to 3x), auto resolution, a 30 or 60 fps frame cap, field of view. Light: shadows off or 512 to 4096, soft shadow edges, filmic lighting, brightness, haze distance. Textures: texture size 512, 1024 or 2048, ground texture, extra detail (cut faces, painted materials, machine grime), ground variation, sharpness at an angle. Grass: how many blades and how far, lawn detail distance. Effects: Dirt detail, puddle water, raindrops. A change makes it Custom, marked in the panel and kept on that device; picking a preset clears it. Also: Low now shows the grass and dirt texture on the ground (512 px), sharpness at an angle is 4x, 8x and 16x by preset, and the large-scale ground variation is High only, so phones never download it."
   }
  ]
 };

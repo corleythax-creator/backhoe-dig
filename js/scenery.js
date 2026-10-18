@@ -187,7 +187,7 @@ function tuftFarMark(x0,x1,z0,z1){const b=tuftFarBox;tuftFarBox=b?[Math.min(b[0]
 for(let n=0;n<TUFTS;n++)tuftPut(n,true);tuftFlush();
 // every frame: each shape's thinning from the Graphics setting, and how many clumps each square draws (none when every
 // clump in it would be shrunk away)
-function tuftLod(){const g=typeof gfxKey!=='undefined'?GFX[gfxKey].tuft:[1,25,80,0.35],cx=camera.position.x,cz=camera.position.z;
+function tuftLod(){const g=typeof gfxCur!=='undefined'?gfxCur.tuft:[1,25,80,0.35],cx=camera.position.x,cz=camera.position.z;
   for(let k=0;k<TUFT_KINDS;k++)tuftMats[k].userData.thin.value.set(g[0],g[1]*TUFT_KR[k],g[2]*TUFT_KR[k],k?0:g[3]);
   for(const im of tuftMeshes){const k=im.userData.k,n=im.userData.n;if(!n)continue;
     const d=Math.hypot(Math.max(0,Math.abs(cx-im.userData.cx)-TC_W/2),Math.max(0,Math.abs(cz-im.userData.cz)-TC_W/2)),fl=k?0:g[3];

@@ -44,7 +44,7 @@ A 3D low-poly excavator game in plain HTML, CSS and JavaScript (three.js r128, n
 | `js/shadowproxy.js` | Cheaper shadows: merged shadow-only meshes for the machines, near trees only |
 | `js/bench.js` | Speed test |
 | `js/main.js` | Frame loop |
-| `textures/ground/` | The ground pack: seamless grass, dirt and machine grime at 512, 1024 and 2048 px (`low/`, `med/`, `high/`, loaded by the Graphics setting), and `macro.jpg`, a soft large-scale variation map laid over the ground |
+| `textures/ground/` | The ground pack: seamless grass, dirt and machine grime at 512, 1024 and 2048 px (`low/`, `med/`, `high/`, loaded by the Graphics setting), and `macro.jpg`, a soft large-scale variation map laid over the ground on High only (anisotropy is 4, 8 and 16 by tier) |
 | `textures/*.jpg` | The material library: one seamless 512 px texture per material (OpenAI GPT Image, made tileable by `tools/textures.py`), and `thumbs.jpg`, the swatches the editor shows |
 | `tools/textures.py` | Turns the raw 1024 px renders into the library textures, the swatch sheet and the mean colours in `js/materials.js` |
 | `shots/*.jpg` | Start-card tiles: in-game screenshots of the excavator, dump truck, mower and the worker on foot |

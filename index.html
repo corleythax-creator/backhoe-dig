@@ -60,9 +60,8 @@
       <button id="keysBtn">Keys</button>
       <button id="syncBtn" hidden>Sync devices</button>
       <div class="sizes"><span>Weather</span><button data-w="auto">Auto</button><button data-w="rain">Rain</button><button data-w="dry">Dry</button></div>
-      <div class="sizes"><span>Graphics</span><button data-g="low">Low</button><button data-g="med">Med</button><button data-g="high">High</button></div>
+      <button id="gfxMenuBtn">Graphics</button>
       <div class="sizes"><span>UI size</span><button data-s="1">1x</button><button data-s="1.5">1.5x</button><button data-s="2">2x</button></div>
-      <div class="sizes"><span>Dirt detail</span><button data-d="1">1x</button><button data-d="2">2x</button><button data-d="4">4x</button><button data-d="16">16x</button></div>
       <div class="ver" id="verMenu"></div>
     </div>
   </div>
@@ -168,6 +167,16 @@
     <div class="row"><button id="keysDone">Done</button><button id="keysReset" class="ghost">Defaults</button></div>
   </div>
 </div>
+<div id="gfxBox" hidden>
+  <div class="card">
+    <h1>Graphics</h1>
+    <div class="gseg gpre"><button data-g="low">Low</button><button data-g="med">Medium</button><button data-g="high">High</button></div>
+    <p class="devline">Low for phones, Medium for laptops, High for desktop PCs. Change anything below to make it your own<span id="gfxCustom" hidden> (now <b>Custom</b>: changed settings are marked)</span>. Saved on this device.</p>
+    <p id="gfxStats" class="gstats" aria-live="off"></p>
+    <div id="gfxList"></div>
+    <div class="row"><button id="gfxDone">Done</button><button id="gfxReset" class="ghost">Preset again</button></div>
+  </div>
+</div>
 <div id="sndBox" hidden>
   <div class="card">
     <h1>Sound</h1>
@@ -232,7 +241,7 @@
       <dt>Look</dt><dd>Drag the scene to look around.</dd>
       <dt>Map</dt><dd>Tap the minimap or press M for the big map.</dd>
       <dt>Map editor</dt><dd>☰ menu, then Map editor (or G). The game pauses while you edit. Raise, Lower, Flatten and Smooth reshape the ground under a round brush; Dirt and Grass paint it. Paint lays a material from the library (gravel, concrete, steel plate, brick, wood and more) under a round or square brush; Natural ground clears it, and digging cuts through it. Select picks a tree, boulder or machine: drag it to move it, and turn, resize, copy or delete it on its card. Add places pine trees, leafy trees or boulders. Query reads the height, slope and surface of any spot. Roads lays out the road network: tap a road to pick it, drag its dots to move them, tap the picked road between dots to add one, or tap New road and lay one point by point. Its card sets the width, grass up the middle and grading (cut and filled to a height at each point, like the ramp) and deletes points or the road. Look moves the view: drag, pinch to zoom, twist to turn (mouse: right button turns, wheel zooms; keys WASD, Q E, R F). Undo and Redo step through your edits. The map saves on this device as you edit; Map file copies it as text to keep or share, loads a copied map, or starts over.</dd>
-      <dt>Screen</dt><dd>Tap the status card to fold it down. Turn, just above the left stick, sets how fast left and right turn, from 25% to 200% (60% to start): the excavator swing and tracks, the truck steering, the mower spin and looking round on foot. On a computer its slider is always out; on a phone tap Turn to open it. Each device remembers its own. Speed test, Reset, Sound (on/off and volume sliders), Graphics (Low for phones, Medium for laptops, High for desktop PCs; each device remembers its own), UI size (1x, 1.5x, 2x) and Dirt detail (1x, 2x, 4x, 16x: more clods, flying dirt and lumpier loads; 16x is for screenshots and fast computers, turn it down if the game slows) are in the ☰ menu. The site is saved in this browser: the dig, the dumped dirt, the excavator, the truck and its load, the trench box, blocks and the mowing are all still there when you come back. Reset starts fresh ground. To play the same site on your phone and computer, open ☰ then Sync devices: get a code on one and type it on the other.</dd>
+      <dt>Screen</dt><dd>Tap the status card to fold it down. Turn, just above the left stick, sets how fast left and right turn, from 25% to 200% (60% to start): the excavator swing and tracks, the truck steering, the mower spin and looking round on foot. On a computer its slider is always out; on a phone tap Turn to open it. Each device remembers its own. Speed test, Reset, Sound (on/off and volume sliders), Graphics and UI size (1x, 1.5x, 2x) are in the ☰ menu. Graphics has Low for phones, Medium for laptops and High for desktop PCs, and under them every setting on its own to play with: resolution, frame cap, field of view, shadows, lighting, brightness, haze, texture size and sharpness, ground detail, grass blades, Dirt detail (16x is for screenshots and fast computers), puddle water and raindrops, with the frame rate and triangle count shown live. Each device remembers its own. The site is saved in this browser: the dig, the dumped dirt, the excavator, the truck and its load, the trench box, blocks and the mowing are all still there when you come back. Reset starts fresh ground. To play the same site on your phone and computer, open ☰ then Sync devices: get a code on one and type it on the other.</dd>
       <dt>Looking around</dt><dd>In cab view (C) drag the scene to turn your head, in any machine or on foot: look out the side windows, behind you, up at the boom or down at the bucket. On a PC, click the scene to take the mouse for mouse look; Esc gives it back. Zoom with the mouse wheel, a two-finger pinch, or hold Z for a quick look. R turns your head back to straight ahead.</dd>
       <dt>Controller</dt><dd>Sticks work like the two on-screen sticks. Triggers are gas and reverse when driving. LB / RB switch machine · Y cab view · right stick click looks ahead · A place block (in Walk mode A jumps, X places and a left stick click sprints) · D-pad up blocks on/off, left/right block size, down pick up · View map · Menu this help · B closes, or gets you in and out of machines.</dd>
       <dt>Keys</dt><dd>Every key can be changed under Keys in the ☰ menu, which also lists what each one does. The standard keys: WASD (or arrows) is the left stick and IJKL the right stick, in every mode but Mow. Mow: W S drive straight, A D turn, and the number pad works the lap bars (8 2 both, 4 6 spin in place, 7 1 left bar, 9 3 right bar). 1 Dig · 2 Drive · 3 Truck · 4 Mow · 5 Walk · 6 Skid steer (Tab cycles). Hold Shift for slow, fine moves in a machine (on foot it sprints). C cab view (R look ahead · Z zoom) · M map · P pump · N sound on/off · H this help. Blocks: B on/off · E place · V size · X pick up. Walk: Space jump · Shift sprint · E place block · F get in and out.</dd>
