@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 620,
+   "dh": 621,
    "act": 12.5,
-   "versions": 83
+   "versions": 84
   }
  ],
  "extra": [
@@ -834,6 +834,15 @@ window.EFFORT = {
   },
   {
    "v": 90,
+   "asked": "2026-10-17T19:50:00-05:00",
+   "live": "2026-10-17T20:02:08-05:00",
+   "dh": 1,
+   "tris": 1620842,
+   "chars": 534416,
+   "what": "Turn sensitivity for each machine: the Turn slider now keeps its own setting for Dig, Drive, Truck, Mow, Skid and Walk, and shows the one for the mode you are in. The mower starts at 60%, everything else at 100%."
+  },
+  {
+   "v": 91,
    "asked": "2026-10-17T19:15:00-05:00",
    "live": "2026-10-17T20:02:45-05:00",
    "dh": 7,
