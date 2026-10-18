@@ -35,18 +35,18 @@ function walkReset(){Object.assign(wk,WK_START,{vy:0,ground:true,phase:0,spd:0,a
 // the highest ground or block top under the feet that is no higher than a step above y: a 5 point foot
 function wkFloor(x,z,y,lim){let f=-1e9;const r=WK_R*0.7;
   for(const [dx,dz] of [[0,0],[r,0],[-r,0],[0,r],[0,-r]]){const px=x+dx,pz=z+dz;let h=hAt(px,pz);
-    for(const b of blocks){const s=b.s/2;if(Math.abs(px-b.x)<=s&&Math.abs(pz-b.z)<=s){const t=b.y+b.s;if(t<=lim&&t>h)h=t}}
+    for(const b of blocks)if(Math.abs(px-b.x)<=b.w/2&&Math.abs(pz-b.z)<=b.d/2){const t=b.y+b.h;if(t<=lim&&t>h)h=t}
     if(h>f)f=h}
   return f}
 // blocks are walls from a step above the feet to the top of the head; push the body out of them
 function wkPushBlocks(){let bump=false;
   for(const s of SOLIDS){const dx=wk.x-s.x,dz=wk.z-s.z,nx=dx-clamp(dx,-s.hx,s.hx),nz=dz-clamp(dz,-s.hz,s.hz),d=Math.hypot(nx,nz);
     if(d>=WK_R)continue;if(d>1e-4){wk.x+=nx/d*(WK_R-d);wk.z+=nz/d*(WK_R-d)}else if(s.hx-Math.abs(dx)<s.hz-Math.abs(dz))wk.x=s.x+Math.sign(dx||1)*(s.hx+WK_R);else wk.z=s.z+Math.sign(dz||1)*(s.hz+WK_R)}
-  for(const b of blocks){if(b.y+b.s<=wk.y+WK_STEP||b.y>=wk.y+WK_H)continue;const h=b.s/2,dx=wk.x-b.x,dz=wk.z-b.z;
-    const nx=dx-clamp(dx,-h,h),nz=dz-clamp(dz,-h,h),d=Math.hypot(nx,nz);
+  for(const b of blocks){if(b.y+b.h<=wk.y+WK_STEP||b.y>=wk.y+WK_H)continue;const hx=b.w/2,hz=b.d/2,dx=wk.x-b.x,dz=wk.z-b.z;
+    const nx=dx-clamp(dx,-hx,hx),nz=dz-clamp(dz,-hz,hz),d=Math.hypot(nx,nz);
     if(d>=WK_R)continue;bump=true;
     if(d>1e-4){wk.x+=nx/d*(WK_R-d);wk.z+=nz/d*(WK_R-d)}
-    else{const px=h+WK_R-Math.abs(dx),pz=h+WK_R-Math.abs(dz);if(px<pz)wk.x+=Math.sign(dx||1)*px;else wk.z+=Math.sign(dz||1)*pz}}
+    else{const px=hx+WK_R-Math.abs(dx),pz=hz+WK_R-Math.abs(dz);if(px<pz)wk.x+=Math.sign(dx||1)*px;else wk.z+=Math.sign(dz||1)*pz}}
   return bump}
 // the machines are solid too (a row of circles each, as for blocks)
 function wkPushRound(o,lzs,r){for(const lz of lzs){const cx=o.x+Math.sin(o.yaw)*lz,cz=o.z+Math.cos(o.yaw)*lz,dx=wk.x-cx,dz=wk.z-cz,d=Math.hypot(dx,dz),m=r+WK_R;
@@ -81,7 +81,7 @@ function updateWalker(dt,mx,mz,lookX,lookY){
   const floor=wkFloor(wk.x,wk.z,wk.y,wk.y+WK_STEP);
   if(wk.ground){if(floor<wk.y-0.12){wk.ground=false;wk.vy=0}else wk.y+=(floor-wk.y)*Math.min(1,dt*20)}
   if(!wk.ground){wk.vy-=9.8*dt;const ny=wk.y+wk.vy*dt;
-    if(wk.vy>0)for(const b of blocks){const h=b.s/2+WK_R*0.6;if(Math.abs(wk.x-b.x)<h&&Math.abs(wk.z-b.z)<h&&b.y>=wk.y+WK_H-0.05&&b.y<ny+WK_H){wk.vy=0;break}}
+    if(wk.vy>0)for(const b of blocks){if(Math.abs(wk.x-b.x)<b.w/2+WK_R*0.6&&Math.abs(wk.z-b.z)<b.d/2+WK_R*0.6&&b.y>=wk.y+WK_H-0.05&&b.y<ny+WK_H){wk.vy=0;break}}
     wk.y+=wk.vy*dt;wk.airT+=dt;
     const f2=wkFloor(wk.x,wk.z,wk.y,wk.y+WK_STEP);
     if(wk.y<=f2&&wk.vy<=0){if(wk.vy<-8){shake=reduceMotion?0:0.1}wk.y=f2;wk.vy=0;wk.ground=true;wk.landT=0.18;wk.airT=0}}
@@ -116,7 +116,7 @@ function wkPlaceOut(k){const R=WK_RIDES[k],o=R.o,sy=Math.sin(o.yaw),cy=Math.cos(
   const spots=[[gap,0],[-gap,0],[gap,R.c[0]],[-gap,R.c[0]],[0,len+gap],[0,-len-gap]];
   for(const [sx,sz] of spots){const x=o.x+cy*sx+sy*sz,z=o.z-sy*sx+cy*sz;
     if(!landIn(x,z,1.5,0.45,true)||SOLIDS.some(s=>Math.abs(x-s.x)<s.hx+WK_R&&Math.abs(z-s.z)<s.hz+WK_R))continue;const f=wkFloor(x,z,0,1e9);
-    if(blocks.some(b=>Math.abs(x-b.x)<b.s/2+WK_R&&Math.abs(z-b.z)<b.s/2+WK_R&&b.y<f+WK_H&&b.y+b.s>f+WK_STEP))continue;
+    if(blocks.some(b=>Math.abs(x-b.x)<b.w/2+WK_R&&Math.abs(z-b.z)<b.d/2+WK_R&&b.y<f+WK_H&&b.y+b.h>f+WK_STEP))continue;
     let clear=true;for(const j in WK_RIDES){if(j===k)continue;const Q=WK_RIDES[j];
       for(const lz of Q.c)if(Math.hypot(x-Q.o.x-Math.sin(Q.o.yaw)*lz,z-Q.o.z-Math.cos(Q.o.yaw)*lz)<Q.r+WK_R+0.1)clear=false}
     if(!clear)continue;

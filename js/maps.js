@@ -57,7 +57,7 @@ function drawMap(cv,cx,cz,half,big){
   g.save();g.translate(X(TB.x),Y(TB.z));g.rotate(-TB.yaw);g.fillStyle='#d8a514';g.fillRect(-BX_W/2*sc-1,-BX_L/2*sc,BX_W*sc+2,BX_L*sc);g.restore();
   if(lawn.mapDirty||!lawnMap){updateLawnMap();lawn.mapDirty=false}
   g.drawImage(lawnMap,X(LAWN_X0),Y(LAWN_Z0),LAWN_NX*LAWN_GS*sc,LAWN_NZ*LAWN_GS*sc);
-  g.fillStyle='#b9b6ae';for(const b of blocks)g.fillRect(X(b.x-b.s/2),Y(b.z-b.s/2),Math.max(2,b.s*sc),Math.max(2,b.s*sc));
+  g.fillStyle='#b9b6ae';for(const b of blocks)g.fillRect(X(b.x-b.w/2),Y(b.z-b.d/2),Math.max(2,b.w*sc),Math.max(2,b.d*sc));
   if(big){g.strokeStyle='rgba(255,255,255,.35)';g.lineWidth=1.5*dpr;g.setLineDash([4*dpr,4*dpr]);g.strokeRect(X(-S/2),Y(-S/2),S*sc,S*sc);g.setLineDash([]);}
   const icon=(x,z,ang,fill,len,wid,active)=>{g.save();g.translate(X(x),Y(z));g.rotate(ang);
     const L=Math.max(len*sc,big?14*dpr:10*dpr),Wd=Math.max(wid*sc,big?9*dpr:7*dpr);
@@ -95,7 +95,7 @@ function tpFits(k,x,z,yaw){const R=WK_RIDES[k],circ=R?R.c.map(lz=>[x+Math.sin(ya
   if(R){const lim=k==='ex'?[3.5,1.9]:k==='truck'?[3,1.4]:[2,1];if(!landIn(x,z,lim[0],lim[1]))return false}else if(!landIn(x,z,1.5,0.45,true))return false;
   for(const [cx,cz] of circ){if(R&&(!landIn(cx,cz,1,0.3)||wallAt(cx,cz)))return false;
     if(SOLIDS.some(s=>Math.abs(cx-s.x)<s.hx+r&&Math.abs(cz-s.z)<s.hz+r))return false;
-    if(blocks.some(b=>Math.abs(cx-b.x)<b.s/2+r&&Math.abs(cz-b.z)<b.s/2+r))return false;
+    if(blocks.some(b=>Math.abs(cx-b.x)<b.w/2+r&&Math.abs(cz-b.z)<b.d/2+r))return false;
     for(const j in WK_RIDES){if(j===k)continue;const Q=WK_RIDES[j];
       for(const lz of Q.c)if(Math.hypot(cx-Q.o.x-Math.sin(Q.o.yaw)*lz,cz-Q.o.z-Math.cos(Q.o.yaw)*lz)<Q.r+r+0.3)return false}}
   return true}
