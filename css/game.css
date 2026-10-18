@@ -99,7 +99,14 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 .maphead{display:flex;align-items:center;justify-content:space-between;gap:12px}
 .maphead h2{margin:0;font:800 28px/1 var(--f-display);color:var(--machine);letter-spacing:.02em}
 #big{display:block;border-radius:10px;background:#1e2a30;max-width:100%}
+#tpBar{display:flex;align-items:center;min-height:46px;font:700 18px/1.2 var(--f-display);letter-spacing:.03em;color:var(--ink)}
+#tpOpts{display:flex;flex-wrap:wrap;align-items:center;gap:8px}#tpOpts[hidden],#tpHint[hidden]{display:none}
+#tpOpts button{height:46px;font-size:18px;padding:0 14px}
+#tpOpts button[aria-pressed="true"]{border-color:var(--machine);color:var(--machine)}
 .legend{display:flex;flex-wrap:wrap;gap:8px 16px;font:600 17px/1.2 var(--f-display);letter-spacing:.03em}
+/* short landscape screens (a phone on its side): the map on the left, title, teleport and legend beside it */
+@media (max-height:520px) and (orientation:landscape){.mapcard{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:max-content max-content 1fr;gap:10px 14px;align-items:start}
+  #big{grid-column:1;grid-row:1/4}.maphead,#tpBar,.legend{grid-column:2}.legend{font-size:15px;gap:4px 12px}}
 .legend span{display:flex;align-items:center;gap:7px}
 .legend i{display:inline-block;width:18px;height:12px;border-radius:3px}
 #benchBar{position:absolute;left:0;right:0;top:calc(var(--pt) + 210px);z-index:2;margin:0 auto;width:max-content;max-width:100%;box-sizing:border-box;font:800 16px/1.25 var(--f-display);letter-spacing:.04em;text-align:center;background:var(--hud);border:2px solid var(--gas);border-radius:10px;padding:8px 14px;font-variant-numeric:tabular-nums}

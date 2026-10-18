@@ -1,4 +1,4 @@
-// Corley's Island: minimap and big site map.
+// Corley's Island: minimap, big site map, and teleporting from it (on foot or in a machine).
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 // ---------- maps ----------
 // the background covers the mesa and the Family Island: a square from MAP_X0, MAP_Z0, MAP_SZ metres across
@@ -69,6 +69,9 @@ function drawMap(cv,cx,cz,half,big){
   icon(mw.x,mw.z,Math.atan2(Math.cos(mw.yaw),Math.sin(mw.yaw)),'#d8352a',2.2,1.4,mode==='mow');
   icon(tr.x,tr.z,Math.atan2(Math.cos(tr.yaw),Math.sin(tr.yaw)),'#e9ecea',9.1,2.6,mode==='truck');
   icon(st.x,st.z,Math.atan2(Math.cos(hy),Math.sin(hy)),'#f07a22',4.2,3,mode==='dig'||mode==='drive');
+  if(big&&tpPick){const px=X(tpPick.x),py=Y(tpPick.z),r=9*dpr;g.lineWidth=3*dpr;g.strokeStyle='#14161a';g.fillStyle='rgba(245,197,24,.35)';
+    g.beginPath();g.arc(px,py,r,0,Math.PI*2);g.fill();g.stroke();g.strokeStyle='#f5c518';g.lineWidth=2*dpr;g.stroke();
+    g.beginPath();g.moveTo(px-r*1.6,py);g.lineTo(px+r*1.6,py);g.moveTo(px,py-r*1.6);g.lineTo(px,py+r*1.6);g.stroke()}
   g.fillStyle='rgba(20,23,19,.75)';g.fillRect(W-30*dpr,4*dpr,26*dpr,26*dpr);g.fillStyle='#f3f5ef';g.font=`800 ${16*dpr}px Saira Condensed, sans-serif`;g.textAlign='center';g.textBaseline='middle';g.fillText('N',W-17*dpr,17*dpr);
   if(big){g.font=`700 ${15*dpr}px Saira Condensed, sans-serif`;g.fillStyle='rgba(255,255,255,.85)';g.fillText('DIG SITE',X(0),Y(-S/2)-10*dpr);g.fillText('LAKE',X(-110),Y(130));g.fillText('FAMILY ISLAND',X(FAM_X),Y(FAM_Z-FAM_R)-10*dpr);g.fillText("JESSICA'S ISLAND",X(JES_X),Y(JES_Z-JES_R)-10*dpr);}
 }
@@ -78,8 +81,43 @@ function mapsTick(dt){
   drawMap($('#mini'),fv.x,fv.z,42,false);
   if(!$('#bigmap').hidden)drawMap($('#big'),MAP_CX,MAP_CZ,MAP_HALF,true);
 }
-function sizeBig(){const c=$('#big'),sz=Math.max(200,Math.min(innerWidth-60,innerHeight-230,900));c.style.width=c.style.height=sz+'px'}
-function toggleMap(show){const m=$('#bigmap');m.hidden=show===undefined?!m.hidden:!show;if(!m.hidden){sizeBig();drawMap($('#big'),MAP_CX,MAP_CZ,MAP_HALF,true)}}
+function sizeBig(){const c=$('#big'),side=innerHeight<=520&&innerWidth>innerHeight,sz=Math.max(200,side?Math.min(innerHeight-60,innerWidth-400):Math.min(innerWidth-60,innerHeight-280,900));c.style.width=c.style.height=sz+'px'}
+function toggleMap(show){const m=$('#bigmap');m.hidden=show===undefined?!m.hidden:!show;tpSet(null);if(!m.hidden){sizeBig();drawMap($('#big'),MAP_CX,MAP_CZ,MAP_HALF,true)}}
+// ---------- teleport ----------
+// tap a spot on the big map, then go there on foot or in a machine (the one you're in, or any other: it comes with you)
+let tpPick=null;
+function tpSet(p){tpPick=p;$('#tpOpts').hidden=!p;$('#tpHint').hidden=!!p;const cur=wk.inside||(mode==='walk'?'foot':rideOf(mode));
+  for(const b of document.querySelectorAll('#tpOpts [data-tp]'))b.setAttribute('aria-pressed',b.dataset.tp===cur)}
+// room for machine k (or the worker, k 'foot') at x,z facing yaw: on land, off steep ground, clear of buildings, blocks
+// and the other machines
+function tpFits(k,x,z,yaw){const R=WK_RIDES[k],circ=R?R.c.map(lz=>[x+Math.sin(yaw)*lz,z+Math.cos(yaw)*lz]):[[x,z]],r=R?R.r:WK_R;
+  if(R){const lim=k==='ex'?[3.5,1.9]:k==='truck'?[3,1.4]:[2,1];if(!landIn(x,z,lim[0],lim[1]))return false}else if(!landIn(x,z,1.5,0.45,true))return false;
+  for(const [cx,cz] of circ){if(R&&(!landIn(cx,cz,1,0.3)||wallAt(cx,cz)))return false;
+    if(SOLIDS.some(s=>Math.abs(cx-s.x)<s.hx+r&&Math.abs(cz-s.z)<s.hz+r))return false;
+    if(blocks.some(b=>Math.abs(cx-b.x)<b.s/2+r&&Math.abs(cz-b.z)<b.s/2+r))return false;
+    for(const j in WK_RIDES){if(j===k)continue;const Q=WK_RIDES[j];
+      for(const lz of Q.c)if(Math.hypot(cx-Q.o.x-Math.sin(Q.o.yaw)*lz,cz-Q.o.z-Math.cos(Q.o.yaw)*lz)<Q.r+r+0.3)return false}}
+  return true}
+// the nearest spot with room, out to 15 m from the one tapped, turning a machine a quarter at a time if it doesn't fit
+function tpSpot(k,x,z){const y0=k==='foot'?wk.yaw:WK_RIDES[k].o.yaw;
+  for(let d=0;d<=15;d+=1.5)for(let a=0,n=d?Math.ceil(d*4):1;a<n;a++){const px=x+Math.cos(a/n*Math.PI*2)*d,pz=z+Math.sin(a/n*Math.PI*2)*d;
+    for(let q=0;q<(k==='foot'?1:4);q++){const yaw=y0+q*Math.PI/2;if(tpFits(k,px,pz,yaw))return {x:px,z:pz,yaw}}}
+  return null}
+function tpGo(k){if(!tpPick||bench.on)return;
+  const p=tpSpot(k,tpPick.x,tpPick.z);if(!p){toast('No room there. Pick an open spot on land.','bad');return}
+  const from=wk.inside?WK_RIDES[wk.inside].o:wk,dist=Math.hypot(p.x-from.x,p.z-from.z)/FT;
+  if(k==='foot'){Object.assign(wk,{x:p.x,z:p.z,vy:0,ground:true,airT:0,jumpQ:0,landT:0,spd:0,inside:null});wk.y=wkFloor(p.x,p.z,0,1e9);setMode('walk')}
+  else{const R=WK_RIDES[k],o=R.o;Object.assign(o,{x:p.x,z:p.z,yaw:p.yaw,pitch:0,roll:0,sink:0,spin:0});o.y=surfAt(p.x,p.z);
+    if(o===tr)Object.assign(tr,{v:0,steer:0,stuck:0,mud:0});else if(o===mw)Object.assign(mw,{l:0,r:0,vl:0,vr:0,v:0,w:0});
+    wk.inside=k;walker.visible=false;setMode(rideOf(mode)===k?mode:R.m)}
+  firstCam=true;toggleMap(false);
+  toast(`Teleported ${Math.round(dist/10)*10} ft ${k==='foot'?'on foot':'in the '+WK_RIDES[k].n}.`,'good')}
+$('#big').addEventListener('click',e=>{const c=$('#big'),b=c.getBoundingClientRect();if(!b.width)return;
+  const x=MAP_CX+((e.clientX-b.left)/b.width-0.5)*MAP_SZ,z=MAP_CZ+((e.clientY-b.top)/b.height-0.5)*MAP_SZ;
+  if(!landIn(x,z,0,0,true)&&!tpSpot('foot',x,z)){toast('That is the lake. Pick a spot on land.','bad');return}
+  tpSet({x,z})});
+for(const b of document.querySelectorAll('#tpOpts [data-tp]'))b.onclick=()=>tpGo(b.dataset.tp);
+$('#tpCancel').onclick=()=>tpSet(null);
 $('#mini').addEventListener('click',()=>toggleMap(true));
 $('#mapClose').onclick=()=>toggleMap(false);
 $('#bigmap').addEventListener('click',e=>{if(e.target.id==='bigmap')toggleMap(false)});
