@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 665,
-   "act": 13,
-   "versions": 92
+   "dh": 669,
+   "act": 14,
+   "versions": 93
   }
  ],
  "extra": [
@@ -921,6 +921,15 @@ window.EFFORT = {
    "tris": 1620473,
    "chars": 588178,
    "what": "Mud dries out: painted Mud now starts soaked and dries over about 20 minutes like other soil, firming up as it goes, and rain soaks it again. It shows each stage: dark and wet with puddles in its ruts, then matte damp mud, then pale mud starting to crack, then dry cracked mud (two new textures made with OpenAI GPT Image; Low graphics shifts the colour the same way without the textures). The editor's Query tool tells you how wet a spot is. Sites saved earlier keep their painted Mud soaked to start."
+  },
+  {
+   "v": 100,
+   "asked": "2026-10-17T20:50:00-05:00",
+   "live": "2026-10-17T21:05:00-05:00",
+   "dh": 4,
+   "tris": 1620584,
+   "chars": 591664,
+   "what": "Paint can keep the dug shape: a new Dug ground choice in the editor's Paint panel. Level dug ground (as before, now also for deep holes and heaps) takes dug and dumped ground back to grade under the brush so the material shows on it; Keep dug shape recolours it where it is, so ruts, holes and heaps stay, painted and saved with the site. Digging afterwards still cuts through the paint."
   }
  ]
 };
