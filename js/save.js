@@ -44,20 +44,22 @@ function rigSave(){if(window.syncHold)return;site.rigT=performance.now();site.ri
   const S0=sitePick(st,ST_KEYS);S0.el=st.startT?Math.round(((st.done?st.doneT:now)-st.startT)/1000):0;
   try{localStorage.setItem(RIG_KEY,JSON.stringify({v:1,t:Date.now(),st:S0,tr:sitePick(tr,TR_KEYS),
     tb:sitePick(TB,['x','z','y','ty','yaw','hooked','seated']),sk:sitePick(sk,SK_KEYS),wk:Object.assign(sitePick(wk,['x','z','yaw']),{in:wk.inside}),
-    blocks:blocks.map(b=>({x:b.x,z:b.z,y:+b.y.toFixed(4),s:b.s,n:b.n,c:b.c.map(x=>+x.toFixed(3))}))}))}catch(e){}}
+    blocks:blocks.map(b=>({x:b.x,z:b.z,y:+b.y.toFixed(4),w:b.w,d:b.d,h:b.h,m:b.m,c:b.c.map(x=>+x.toFixed(3))}))}))}catch(e){}}
 function rigLoad(){let d=null;try{d=JSON.parse(localStorage.getItem(RIG_KEY))}catch(e){}
   if(!d||d.v!==1)return;const ok=v=>typeof v==='number'?isFinite(v):typeof v==='boolean'||Array.isArray(v)&&v.every(isFinite);
   const put=(dst,src,keys)=>{if(src)for(const k of keys)if(ok(src[k])&&(!Array.isArray(dst[k])||src[k].length===dst[k].length))dst[k]=Array.isArray(src[k])?[...src[k]]:src[k]};
   put(st,d.st,ST_KEYS);put(tr,d.tr,TR_KEYS);put(sk,d.sk,SK_KEYS);if(d.sk){sk.y=surfAt(sk.x,sk.z);skidPose()}
   if(d.st&&d.st.el>0){const now=performance.now();st.startT=now-d.st.el*1000;if(st.done)st.doneT=now}
-  if(Array.isArray(d.blocks))for(const b of d.blocks.slice(0,BLK_MAX))if([b.x,b.z,b.y,b.s].every(isFinite)&&b.n>=1&&b.n<=3&&Array.isArray(b.c))
-    blocks.push({x:b.x,z:b.z,y:b.y,s:b.s,n:b.n,vy:0,c:b.c});
+  // blocks: w by d by h of material m (older saves held plain concrete cubes of side s)
+  const bOk=v=>isFinite(v)&&v>=FT*0.9&&v<=BLK_FT*FT*1.01;
+  if(Array.isArray(d.blocks))for(const b of d.blocks.slice(0,BLK_MAX)){const w=b.w??b.s,dd=b.d??b.s,h=b.h??b.s,m=b.m|0;
+    if([b.x,b.z,b.y].every(isFinite)&&[w,dd,h].every(bOk)&&m>=0&&m<=MAT_LIST.length&&Array.isArray(b.c))blocks.push({x:b.x,z:b.z,y:b.y,w,d:dd,h,m,vy:0,c:b.c})}
   if(blocks.length)blkWake=1.5;
   put(TB,d.tb,['x','z','y','ty','yaw','hooked','seated']);
   if(TB.hooked)chain.visible=true;else{TB.ty=boxRest();TB.y=Math.max(TB.y,TB.ty);boxMask()}
   if(d.wk&&[d.wk.x,d.wk.z,d.wk.yaw].every(isFinite)){Object.assign(wk,{x:d.wk.x,z:d.wk.z,yaw:d.wk.yaw,view:d.wk.yaw});wk.y=wkFloor(wk.x,wk.z,0,1e9);wk.inside=['ex','truck','mow','skid'].includes(d.wk.in)?d.wk.in:null}
   site.rigSig=rigSig()}
-function rigSig(){return [st.x,st.z,st.yaw,st.swing,st.a1,st.a2,st.a3,st.load,tr.x,tr.z,tr.yaw,tr.bed,tr.load,tr.hauled,TB.x,TB.z,TB.y,sk.x,sk.z,sk.yaw,sk.a,sk.c,sk.load,wk.x,wk.z,wk.inside?1:0,blocks.length]
+function rigSig(){return [st.x,st.z,st.yaw,st.swing,st.a1,st.a2,st.a3,st.load,tr.x,tr.z,tr.yaw,tr.bed,tr.load,tr.hauled,TB.x,TB.z,TB.y,sk.x,sk.z,sk.yaw,sk.a,sk.c,sk.load,wk.x,wk.z,wk.inside?1:0,blocks.length,blocks.reduce((a,b)=>a+b.x+b.z*3+b.y*7+b.m,0)]
   .map(v=>Math.round(v*100)).join(',')}
 // the ground is written at most every 4 s while it changes, the machines every 2 s while they move, both when the page is hidden
 function siteTick(){if(bench.on)return;const now=performance.now();

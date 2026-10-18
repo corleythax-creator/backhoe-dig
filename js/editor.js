@@ -90,12 +90,13 @@ function edBrush(dt){const R=ed.size,cx=ed.bx,cz=ed.bz,t=ed.tool,k=ed.str/10;
     for(let j=j0-1;j<=j1+1;j++)for(let i=i0-1;i<=i1+1;i++)hs[(j-j0+1)*W+i-i0+1]=baseHeight(ED_X0+i*ED_C,ED_Z0+j*ED_C)}
   // materials go down whole cells inside the ring (or the square, lined up north-south, for slabs and plates). Hard
   // edged, each cell is covered fully; soft edged, the cover fades to nothing over the outer part (the softness) of the
-  // brush (topping out at 254, which tells the ground shader the edge is soft). A cell holds one material: a fade only
-  // takes over another material where it covers more, and Natural ground fades the paint back out. The cell under the
+  // brush (topping out at 253, which tells the ground shader the edge is soft; hard square paint is 254, which it
+  // draws as whole square cells, so corners stay sharp). A cell holds one material: a fade only takes over another
+  // material where it covers more, and Natural ground fades the paint back out. The cell under the
   // middle always takes paint, so a 1 ft brush (smaller than a cell) still lays a line of cells
   if(t==='paint'){let n=0,ids=false;const R0=R*(1-ed.feather),mat=ed.mat,qc=Math.round((cz-ED_Z0)/ED_C)*ED_NX+Math.round((cx-ED_X0)/ED_C);
     for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const q=j*ED_NX+i,dx=ED_X0+i*ED_C-cx,dz=ED_Z0+j*ED_C-cz,d=ed.square?Math.max(Math.abs(dx),Math.abs(dz)):Math.hypot(dx,dz);
-      if(d>R&&q!==qc)continue;const w=ed.soft?Math.round(254*(1-ss(R0,R,d))):255;if(w<=0)continue;
+      if(d>R&&q!==qc)continue;const w=ed.soft?Math.round(253*(1-ss(R0,R,d))):ed.square?254:255;if(w<=0)continue;
       const m0=ED_M[q],a0=ED_A[q];let m=m0,a=a0;
       if(!mat){if(m0){a=Math.min(a0,255-w);if(!a)m=0}}
       else if(m0===mat)a=Math.max(a0,w);
