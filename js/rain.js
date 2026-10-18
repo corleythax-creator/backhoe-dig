@@ -25,7 +25,7 @@ function rainBase(i0,i1,j0,j1){
     let m=0.45,d=1;
     if(mesaR(x,z)>EDGE-0.5||sl>0.8||h<WATER+2.8)m=sl>0.8?0:0.2;
     else{if(roadAmt(x,z)>0.5)m=0.5;if(yardAt(x,z)>0.5||edSample(ED_P,x,z)>0.3)m=1;
-      const p=paintAt(x,z);if(p){const w=MAT_WET[MAT_LIST[p-1].id];if(w){m=w[0];d=w[1]}else m=0}}
+      const p=paintAt(x,z);if(p){const w=MAT_WET[matDef(p).id];if(w){m=w[0];d=w[1]}else m=0}}
     const pm=paintAt(x,z)===MUD_ID?1:0;if(pm&&!rainMud[k])rainW[k]=1;rainMud[k]=pm;
     let avg=0;for(const [a,b] of [[-4,0],[4,0],[0,-4],[0,4]])avg+=baseHeight(x+a,z+b);
     rainK[k]=m;rainDry[k]=d;rainLow[k]=Math.max(0.6,Math.min(1.8,1+(avg/4-h)*1.5))}}

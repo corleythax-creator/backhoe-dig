@@ -41,7 +41,7 @@ const KEY_RUN={dig:()=>setMode('dig'),drive:()=>setMode('drive'),truck:()=>setMo
   nextMode:e=>setMode(MODES[(MODES.indexOf(mode)+(e.shiftKey?MODES.length-1:1))%MODES.length]),
   stats:()=>showStats(statBox.hidden),heat:()=>{if(!heat.on)setHeat(true);else if(heat.mode!==HEAT_MODES[HEAT_MODES.length-1][0])heatNext();else setHeat(false)},
   enter:()=>seatToggle(),jump:()=>walkJump(),blocks:()=>setBlocks(!blkOn),place:()=>placeBlock(),lift:()=>removeBlock(),size:()=>blkCube(1),blkTurn:()=>blkTurn(),blkLock:()=>toast(`Block snap: ${blkLockNext()}`,'',1400),blkFar:()=>blkReachBy(2),blkNear:()=>blkReachBy(-2),
-  blkMat:()=>{setBlkMat((blkMat+1)%(MAT_LIST.length+1));toast(`Block material: ${blkMatName(blkMat)}`,'',1400)},
+  blkMat:()=>{let m=blkMat;do m=(m+1)%MAT_MAX;while(m&&!MAT_LIST[m-1]);setBlkMat(m);toast(`Block material: ${blkMatName(blkMat)}`,'',1400)},
   box:()=>hookBox(),lookAhead:()=>{if(camMode==='cab')fpl.home=true;fpl.zt=1},pump:()=>setPump(!pumpOn),cam:()=>$('#camBtn').click(),map:()=>toggleMap(),sound:()=>setSound(!sndCfg.on),help:()=>{help.hidden=!help.hidden}};
 addEventListener('keydown',e=>{const c=e.code;
   if((e.ctrlKey||e.metaKey||e.altKey)&&!/^(Control|Alt|Meta)/.test(c))return;
