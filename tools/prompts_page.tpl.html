@@ -16,8 +16,8 @@ body{background:var(--bg);color:var(--ink);font:16px/1.45 var(--body);padding-le
 header{padding-top:20px}
 h1{font:700 34px/1 var(--display);letter-spacing:.01em;margin:0 0 6px;text-transform:uppercase}
 header p{margin:0;color:var(--mute);max-width:60ch}
-.bar{position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);z-index:5;padding:12px 0 10px;margin-top:14px;border-bottom:1px solid var(--line)}
-body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.bar{background:var(--bg);z-index:5;padding:12px 0 10px;margin-top:14px;border-bottom:1px solid var(--line)}
+
 .tabs{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
 .tabs::-webkit-scrollbar{display:none}
 .tab{flex:none;border:1px solid var(--line);background:var(--chip);color:var(--ink);border-radius:6px;padding:7px 12px;font:600 15px var(--body);cursor:pointer;min-height:40px}
@@ -26,9 +26,23 @@ body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset
 .opts{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:10px;flex-wrap:wrap}
 .opts label{display:flex;gap:8px;align-items:center;color:var(--mute);font-size:14px;min-width:0}
 .opts input{width:20px;height:20px;accent-color:var(--ok)}
-.prog{font:500 13px var(--mono);color:var(--mute)}
+.sum{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.counts{display:flex;gap:8px;flex-wrap:wrap}
+.cnt{font:600 15px var(--body);border:1px solid var(--line);background:var(--chip);border-radius:6px;padding:6px 10px;white-space:nowrap}
+.cnt b{font:700 20px var(--display);margin-right:4px}
+.cnt.q{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.cnt.g{border-color:var(--ok)}
+button.send{font:700 16px var(--body);background:var(--ink);color:var(--bg);border:0;border-radius:6px;padding:10px 16px;min-height:44px;cursor:pointer}
+button.send[disabled]{opacity:.4;cursor:default}
+.card.q{border-color:var(--accent);box-shadow:inset 5px 0 0 var(--accent)}
+.card.g{border-color:var(--ok)}
+.badge{display:inline-block;font:700 11px var(--mono);letter-spacing:.06em;border-radius:4px;padding:2px 6px;margin-left:6px;vertical-align:1px}
+.badge.q{background:var(--accent);color:var(--on-accent)}
+.badge.g{background:var(--ok);color:#fff}
 .meter{height:6px;background:var(--chip);border-radius:3px;margin-top:8px;overflow:hidden}
-.meter i{display:block;height:100%;width:0;background:var(--ok);transition:width .25s}
+.meter{display:flex}
+.meter i{display:block;height:100%;width:0;transition:width .25s}
+#mg{background:var(--ok)}#mq{background:var(--accent)}
 main{display:flex;flex-direction:column;gap:12px;margin-top:16px}
 .card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:14px 14px 12px;display:flex;flex-direction:column;gap:8px;min-width:0}
 .card.done{opacity:.62}
@@ -71,11 +85,12 @@ label.up input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:n
 </header>
 <div class="bar">
   <div class="tabs" id="tabs" role="group" aria-label="Prompt groups"></div>
-  <div class="opts">
-    <label><input type="checkbox" id="proj"> Style blocks are already in my ChatGPT Project</label>
-    <span class="prog" id="prog"></span>
+  <div class="sum">
+    <div class="counts" aria-live="polite"><span class="cnt"><b id="nMade">0</b>made</span><span class="cnt q"><b id="nQ">0</b>queued</span><span class="cnt g"><b id="nG">0</b>in game</span></div>
+    <button class="send" id="send" disabled>Send queued to Claude</button>
   </div>
-  <div class="meter"><i id="meter"></i></div>
+  <div class="opts"><label><input type="checkbox" id="proj"> Style blocks are already in my ChatGPT Project</label></div>
+  <div class="meter"><i id="mg"></i><i id="mq"></i></div>
 </div>
 <main id="list"></main>
 </div>
@@ -83,7 +98,7 @@ label.up input{position:absolute;width:1px;height:1px;opacity:0;pointer-events:n
 <script>
 const D=/*DATA*/null;
 const KEYS=['all'].concat(D.sections.map(s=>s.key));
-let tab='all',proj=false,done={},imgs={},drv={},A=null,DB=null,lastId='';
+let tab='all',proj=false,done={},imgs={},drv={},placed={},A=null,MCP=null,DB=null,lastId='';
 try{done=JSON.parse(localStorage.getItem('art_done')||'{}');proj=localStorage.getItem('art_proj')==='1';tab=localStorage.getItem('art_tab')||'all'}catch(e){}
 if(!KEYS.includes(tab))tab='all';
 const $=id=>document.getElementById(id);
@@ -95,6 +110,19 @@ function full(it){
   if(it.sec.add)out+=' '+it.sec.add;
   if(proj&&it.tex)out='(Use the project style and texture rules.) '+out;
   return out.replace(/\s+/g,' ').trim();
+}
+const ART='https://claude.ai/artifact/Pox9LLTYG4KqThbkBqeA9f',SID='session_0138ngZesiUmEWBYMvWp3vhr';
+function st(id){return placed[id]?'g':(imgs[id]||drv[id])?'q':done[id]?'m':''}
+function summary(){
+  const q=all.filter(i=>st(i.id)==='q'),g=all.filter(i=>st(i.id)==='g'),m=all.filter(i=>st(i.id)).length,N=all.length;
+  $('nMade').textContent=m;$('nQ').textContent=q.length;$('nG').textContent=g.length;
+  $('mg').style.width=(100*g.length/N)+'%';$('mq').style.width=(100*q.length/N)+'%';
+  const b=$('send');b.disabled=!q.length;b.textContent=q.length?(MCP?'Send ':'Copy ')+q.length+' queued '+(MCP?'to Claude':'for Claude'):'Nothing queued';
+}
+function sendText(){
+  const q=all.filter(i=>st(i.id)==='q');
+  const rows=q.map(i=>'- '+i.id+' '+i.title+' -> '+i.file+(imgs[i.id]?' (uploaded image, assetId '+imgs[i.id].assetId+')':' (Google Drive: '+drv[i.id].url+')')).join('\n');
+  return "Place the queued art in the game. Artifact: "+ART+"\nQueued:\n"+rows+"\nRead the artifact's images and drive collections, download each file, cut the sizes with tools/make_tiers.py (add --neutral for ground maps the game tints), install under textures/, check the game loads, release as CLAUDE.md says, then add a doc per id to the artifact's placed collection.";
 }
 function save(){try{localStorage.setItem('art_done',JSON.stringify(done));localStorage.setItem('art_proj',proj?'1':'0');localStorage.setItem('art_tab',tab)}catch(e){}}
 function toast(m){const t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove('on'),1600)}
@@ -109,7 +137,7 @@ async function copy(text,btn,label){
 function esc(s){return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 function renderTabs(){
   $('tabs').innerHTML=KEYS.map(k=>{
-    const s=D.sections.find(x=>x.key===k),n=k==='all'?all.length:s.items.length,d=(k==='all'?all:s.items).filter(i=>done[i.id]).length;
+    const s=D.sections.find(x=>x.key===k),n=k==='all'?all.length:s.items.length,d=(k==='all'?all:s.items).filter(i=>st(i.id)).length;
     return `<button class="tab" data-k="${k}" aria-pressed="${k===tab}">${k==='all'?'All':esc(s.title.replace(/ and .*/,'').replace(/:.*/,''))}<small>${d}/${n}</small></button>`}).join('');
 }
 function render(){
@@ -119,8 +147,8 @@ function render(){
   for(const it of items){
     if(tab==='all'&&it.sec.key!==last){last=it.sec.key;h+=`<p class="note"><b>${esc(it.sec.title)}</b></p>`}
     const t=full(it);
-    h+=`<article class="card${done[it.id]?' done':''}" id="c-${it.id}">
-      <div class="top"><div><div class="id">${it.id}${it.needs?' &middot; serves '+esc(it.needs):''}</div><h2>${esc(it.title)}</h2></div>
+    const S=st(it.id);h+=`<article class="card${S==='g'?' g done':S==='q'?' q':done[it.id]?' done':''}" id="c-${it.id}">
+      <div class="top"><div><div class="id">${it.id}${S==='q'?'<span class="badge q">QUEUED</span>':S==='g'?'<span class="badge g">IN GAME</span>':''}${it.needs?' &middot; serves '+esc(it.needs):''}</div><h2>${esc(it.title)}</h2></div>
       <label class="tick"><input type="checkbox" data-done="${it.id}" ${done[it.id]?'checked':''}> Made</label></div>
       <p class="text">${esc(it.text.replace('[STYLE]','').replace('[TEXTURE]','').replace('[concept sheet]','').trim())}</p>
       <div class="meta">Save as ${esc(it.file)}</div>
@@ -133,7 +161,7 @@ function render(){
     </article>`}
   $('list').innerHTML=h;
   const d=all.filter(i=>done[i.id]).length;
-  $('prog').textContent=d+' of '+all.length+' made';$('meter').style.width=(100*d/all.length)+'%';
+  summary();
   $('proj').checked=proj;
 }
 async function upload(id,file){
@@ -151,7 +179,12 @@ document.addEventListener('paste',e=>{
   if(!f)return;if(!lastId){toast('Tap a card first, then paste.');return}
   e.preventDefault();upload(lastId,f)
 });
-document.addEventListener('click',e=>{
+document.addEventListener('click',async e=>{
+  const sb=e.target.closest('#send');
+  if(sb&&!sb.disabled){
+    const msg=sendText();
+    if(MCP){try{await MCP.callTool('Claude Code Remote','send_message',{session_id:SID,message:msg});toast('Sent to Claude. It will place them in the game.');return}catch(err){}}
+    await copy(msg,sb,'Message');toast('Copied. Paste it into your chat with Claude.');return}
   const c=e.target.closest('.card');if(c)lastId=c.id.slice(2);
   const sd=e.target.closest('[data-sd]');
   if(sd&&DB){const id=sd.dataset.sd,it=all.find(i=>i.id===id),v=($('dl-'+id).value||'').trim();
@@ -173,14 +206,15 @@ document.addEventListener('change',e=>{
   const id=e.target.dataset.done;if(!id)return;
   if(e.target.checked)done[id]=1;else delete done[id];
   save();const c=$('c-'+id);if(c)c.classList.toggle('done',!!done[id]);
-  const d=all.filter(i=>done[i.id]).length;$('prog').textContent=d+' of '+all.length+' made';$('meter').style.width=(100*d/all.length)+'%';renderTabs();
+  summary();renderTabs();
 });
 render();
 (async()=>{
   try{
     if(!window.claude||!window.claude.use)return;
-    A=await window.claude.use('assets');DB=await window.claude.use('db');
+    A=await window.claude.use('assets');DB=await window.claude.use('db');try{MCP=await window.claude.use('mcp')}catch(e){MCP=null}
     if(!DB){A=DB=null;return}
+    DB.collection('placed').onSnapshot(snap=>{placed={};snap.docs.forEach(d=>{placed[d.id]=d.data()});render()},()=>{});
     DB.collection('drive').onSnapshot(snap=>{drv={};snap.docs.forEach(d=>{drv[d.id]=d.data()});render()},()=>{});
     DB.collection('images').onSnapshot(snap=>{imgs={};snap.docs.forEach(d=>{imgs[d.id]=d.data()});render()},()=>{});
   }catch(e){A=DB=null}
