@@ -17,11 +17,14 @@ A 3D low-poly excavator game in plain HTML, CSS and JavaScript (three.js r128, n
 | `js/materials.js` | Material library for the map editor's Paint tool (31 textures: ground covers, concrete and paving, steel, brick and stone, wood and more): ids, names, tile sizes, mean colours, and the texture array the ground shader reads |
 | `js/terrain.js` | Mesa layout (hills, scarp, Lower Bench), the map editor's layers and the map save format, road network and ramp, ground too steep to drive, dig-zone heightmap, soil layers, digging, dumping, slumping, cave-ins |
 | `js/scenery.js` | Lake, mountains, grass tufts, mesa and outer ground meshes (updated in place by the editor), gas main, stakes, trees and boulders (placed assets) |
+| `js/jessica.js` | Jessica's Island east of the Family Island: its ground mesh, the red covered footbridge (`BRIDGES[2]`, worker only), forest, paths and lanterns, herb garden, cliff bench, and the cottage with its library (shelves, ladder, window seat, armchairs, fireplace, chimney smoke); `jesTick` lifts the roof over the worker so the camera can see in |
+| `js/family.js` | The Family Island south across the water: its 1.5 m ground mesh, the family house, picnic pavilion (with a chess and a checkers table: sitting down at one opens that Mesa game, `famPlay`), fire pit, flagpole, signs, road-end barriers and trees, and the bridges in `BRIDGES`: the steel truss bridge from the Lower Bench and the first stretch of the mainland bridge |
 | `js/excavator.js` | Excavator model, linkage, rams, hoses |
 | `js/truck.js` | Dump truck model and driving; texture hookup |
 | `js/trenchbox.js` | Trench box model, hooking, setting, wall mask |
-| `js/dirt.js` | Loose dirt: clods, flying dirt, lumpy bucket load and truck heap, ruts (loose fill packs down; mud sinks up to 9 in and heaps berms), the Dirt detail setting |
+| `js/dirt.js` | Loose dirt: clods, flying dirt, lumpy bucket load and truck heap, ruts (loose fill packs down; mud sinks up to 9 in in a rounded, tread-printed rut, heaps lumpy berms and slumps to about 40°), the Dirt detail setting |
 | `js/mud.js` | Mud outside the dig zone and getting stuck: soak (`soakAt`, painted Mud for now, soil and rain later), 2 in mud tiles made where ruts start (they punch holes in the 0.5 m mesh and save with the site), their puddles, bogging down and rocking free (`bogTick`), flung mud |
+| `js/rain.js` | Rain and wet ground: the weather (☰ Weather: Auto, Rain, Dry), a 1 m grid of soil water that soaks and dries by surface (`rainBase`), its soak (`rainSoakAt`, `rainSoakK`) feeding the mud rules, the wet-ground texture the ground shader reads (`wetU`), raindrops (count by Graphics), the grey sky, drying while closed |
 | `js/water.js` | Groundwater and puddles: seeping, levelling pools, saturated mud (painted Mud), the puddle surface (drawn finer and with sky reflections on Medium and High), the pump |
 | `js/dirtsound.js` | Dirt sounds: digging, pouring, thuds, rattles, cave-ins, trickling water |
 | `js/blocks.js` | Concrete blocks (1×1, 2×2, 3×3 ft): placing under the bucket or in front of the worker, lifting, stacking, settling, machine collisions; `surfAt()` (ground or block top) |
@@ -60,6 +63,8 @@ Left stick swings and moves the stick; right stick moves the boom and curls the 
 
 The mesa is a rounded square about 295 ft across (90 m), with cliffs about 150 ft down to meadows and the lake. The north part is the high top (0 ft): the trench and gas main near the north rim, the tall-grass patch, Lookout Knoll (18 ft) and West Rise (10 ft). A rocky scarp across the middle drops 24 ft to the Lower Bench, a dirt yard with stockpiles. Roads: a loop round the top that passes the cliff dump spot, a 16 ft ramp graded diagonally down the scarp (about 11%), a loop round the bench and a track up the knoll. The truck can dump over the north cliff or in the bench yard.
 
+From the Lower Bench a dark green steel truss bridge (about 340 ft) crosses the water south to the Family Island, a larger mesa about 525 ft across at the bench's height: the family house with a wraparound porch, a picnic pavilion with a chess table and a checkers table (walk up and Get in becomes Play chess or Play checkers: the island saves and switches to Mesa Chess or Mesa Checkers at https://mesa-games-ochre.vercel.app, whose Corley's Island link brings you back on foot beside the table; the claude.ai version opens the game in a new tab), a fire pit, a flagpole looking back at Corley's, and a roundabout where the roads meet. Its west road stops at a barrier where Dexter's bridge will go (plan C in `docs/island-plans.html`); its east road leads to a red covered footbridge (about 305 ft, on foot only) climbing 10 ft to Jessica's Island, a forest mesa the size of Corley's with a stone cottage and its library, a herb garden and a cliff bench; and the mainland bridge runs about 335 ft south to a barrier, with bare piers and a crane beyond. Every machine and the worker can cross.
+
 ## Map editor
 
 ☰ menu → Map editor, or G. The game pauses and an overhead camera takes over.
@@ -79,17 +84,18 @@ Maps save on the device as you edit (`localStorage.bhd_map`). The claude.ai vers
 
 - **Plain scripts, one global scope.** `index.html` loads three.js r128 from cdnjs, then `data/effort.js`, then `js/*.js` in order. No modules, no build step. Top-level code may only call functions defined in its own file or an earlier one; functions can call anything at run time. Check a new top-level name isn't already taken before adding it (see CLAUDE.md).
 - **Units.** World units are metres: x east, z south (north is −z, the top of the map), y up, 0 = the mesa top. Everything the player sees is in feet (`FT` = 0.3048 in `js/blocks.js`).
-- **Ground.** `baseHeight(x, z)` in `js/terrain.js` is the one source of the undug ground: the generated mesa (`groundHeight`: rolls, hills, scarp, bench, rim berm, graded roads, cliffs) plus the map editor's height layer. Three meshes draw it (plus 8 m mud tiles at 2 in wherever a machine has rutted mud outside the dig grid, `js/mud.js`): the dig grid (64 m square at 0.16 m around the trench, the only ground that can be dug; `H` is the current height, `H0` the original grade), a 0.5 m mesh over the rest of the mesa and its cliffs (`MID`), and a 2 m mesh out to the lake. Skirts hide the seams. Roads are polylines in `ROADS`, looked up through a 4 m bucket grid (`roadAt`). `WALL` marks ground too steep to drive; the excavator, truck and mower stop against it.
+- **Ground.** `baseHeight(x, z)` in `js/terrain.js` is the one source of the undug ground: the generated mesa (`groundHeight`: rolls, hills, scarp, bench, rim berm, graded roads, cliffs) plus the map editor's height layer. Three meshes draw it (plus 8 m mud tiles at 2 in wherever a machine has rutted mud outside the dig grid, `js/mud.js`): the dig grid (64 m square at 0.16 m around the trench, the only ground that can be dug; `H` is the current height, `H0` the original grade), a 0.5 m mesh over the rest of the mesa and its cliffs (`MID`), and a 2 m mesh out to the lake. The Family Island (`famHeight`, rising from the lake bed) has its own 1.5 m mesh in `js/family.js`. Skirts hide the seams. Roads are polylines in `ROADS` (plus the islands' own `ISLAND_ROADS`, which the map editor doesn't change), looked up through a 4 m bucket grid (`roadAt`). `WALL` marks ground too steep to drive; the excavator, truck and mower stop against it. Bridge decks (`BRIDGES`, which can climb from one end to the other, and `foot` ones that carry only the worker) are not ground: `hAt` rides them, and `landIn`/`landClamp` keep the machines and the worker on the mesa, the Family Island or a deck. `SOLIDS` are the buildings they can't pass through.
 - **Frame loop.** `js/main.js`: input, machines, digging, spills, slumping, terrain updates, HUD, camera, render. The map editor takes the whole frame while it is open.
 - **Saved in the browser** (each per device, all keys start `bhd_`):
 
   | Key | What | File |
   | --- | --- | --- |
-  | `bhd_site` | Dug and dumped ground (`H − H0` per changed vertex), dirt colour, mud, groundwater | `js/save.js` |
+  | `bhd_site` | Dug and dumped ground (`H − H0` per changed vertex), dirt colour, mud, groundwater, mud tiles, wet soil and weather | `js/save.js` |
   | `bhd_rigs` | Excavator, truck and load, trench box, blocks, worker | `js/save.js` |
   | `bhd_lawn` | Mowing and regrowth | `js/mower.js` |
   | `bhd_map` | Map editor edits: heights, paint, assets, roads | `js/terrain.js`, `js/editor.js` |
   | `bhd_keys` | Key bindings | `js/keys.js` |
+  | `bhd_weather` | Weather setting (Auto, Rain, Dry) | `js/rain.js` |
   | `bhd_gfx`, `bhd_dirt`, `bhd_ui`, `bhd_hudmin`, `bhd_sndcfg` | Graphics, Dirt detail, UI size, folded status card, sound | `js/gfx.js`, `js/dirt.js`, `js/controls.js`, `js/sound.js` |
   | `bhd_sync`, `bhd_sync_t`, `bhd_sync_h` | Sync code, time of the last synced save, hash of what was last sent | `js/sync.js` |
   | `bhd_seen`, `bhd_glresets` | Start card seen, graphics resets counted for the speed test | `js/controls.js`, `js/core.js` |
@@ -98,7 +104,7 @@ Maps save on the device as you edit (`localStorage.bhd_map`). The claude.ai vers
 
   Snapshots in `versions/` prefix their keys (`bhd-vN:`) so playing an old version can't touch the live save.
 - **Updates.** The game re-reads `data/effort.js` when it comes back to the front and every 10 minutes; a newer version reloads at once if nothing is under way, otherwise it shows a tap-to-update button (`js/controls.js`).
-- **Speed.** The owner's phone is the target: above 30 FPS. The iPhone speed test (☰ → Speed test) showed phones are held back by pixels, shadows, filmic lighting and ground textures more than triangles, which is what the Graphics setting trades. The scene is about 1.15 million triangles.
+- **Speed.** The owner's phone is the target: above 30 FPS. The iPhone speed test (☰ → Speed test) showed phones are held back by pixels, shadows, filmic lighting and ground textures more than triangles, which is what the Graphics setting trades. The scene is about 1.35 million triangles (the Family Island, its trees and the bridges added about 130,000, Jessica's Island about 65,000; the library's inside draws only within about 300 ft).
 
 ## Working on it
 

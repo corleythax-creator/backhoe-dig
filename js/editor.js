@@ -76,6 +76,9 @@ function edStrokeStart(x,z){ed.stroke={h:ED_H.slice(),p:ED_P.slice(),m:ED_M.slic
 function edBrush(dt){const R=ed.size,cx=ed.bx,cz=ed.bz,t=ed.tool,k=ed.str/10;
   const i0=Math.max(3,Math.floor((cx-R-ED_X0)/ED_C)),i1=Math.min(ED_NX-4,Math.ceil((cx+R-ED_X0)/ED_C)),j0=Math.max(3,Math.floor((cz-R-ED_Z0)/ED_C)),j1=Math.min(ED_NZ-4,Math.ceil((cz+R-ED_Z0)/ED_C));
   if(i0>i1||j0>j1)return;
+  // painting turns ruts into what is painted, except Mud, and Dirt on ground that is already wet (mud.js)
+  if((t==='paint'&&ed.mat!==MUD_ID||t==='grass'||t==='dirt')&&rutErase(cx,cz,R,t==='paint'&&ed.square,t==='dirt'?(x,z)=>soakAt(x,z)>0.3:null)){
+    ed.pend=edGrow(ed.pend,cx-R-0.6,cx+R+0.6,cz-R-0.6,cz+R+0.6);ed.changed=true}
   let hs=null,W=0;
   if(t==='smooth'||t==='flatten'){W=i1-i0+3;hs=new Float32Array(W*(j1-j0+3));
     for(let j=j0-1;j<=j1+1;j++)for(let i=i0-1;i<=i1+1;i++)hs[(j-j0+1)*W+i-i0+1]=baseHeight(ED_X0+i*ED_C,ED_Z0+j*ED_C)}
@@ -101,7 +104,7 @@ function edRefresh(r,full){if(!r)return;const [x0,x1,z0,z1]=r;
   const i0=Math.max(0,Math.floor((x0+S/2)/CELL)),i1=Math.min(N,Math.ceil((x1+S/2)/CELL)),j0=Math.max(0,Math.floor((z0+S/2)/CELL)),j1=Math.min(N,Math.ceil((z1+S/2)/CELL));
   if(i0<=i1&&j0<=j1){for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const k=j*V+i,b=baseHeight(i*CELL-S/2,j*CELL-S/2);H[k]=H[k]===H0[k]?b:H[k]+b-H0[k];H0[k]=b;digBase(k)}
     touch(i0,i1,j0,j1);updateTufts(i0-1,i1+1,j0-1,j1+1);lawnTerrain();updateTerrain();winOn=false;blkTerrainMoved()}
-  midUpdate(x0,x1,z0,z1);mudEdRefresh(x0,x1,z0,z1);wallBuild(x0,x1,z0,z1);tuftsRefresh(x0,x1,z0,z1);
+  midUpdate(x0,x1,z0,z1);mudEdRefresh(x0,x1,z0,z1);rainEdRefresh(x0,x1,z0,z1);wallBuild(x0,x1,z0,z1);tuftsRefresh(x0,x1,z0,z1);
   if(assets.some(a=>a.x>x0-2&&a.x<x1+2&&a.z>z0-2&&a.z<z1+2)){assetsBuild();shpTreesRefresh()}
   if(full&&(x0<-S/2+1||x1>S/2-1||z0<-S/2+1||z1>S/2-1||x0<MID[0]+1||x1>MID[1]-1||z0<MID[2]+1||z1>MID[3]-1))buildSkirts()}
 function edStrokeEnd(){const s=ed.stroke;if(!s)return;ed.stroke=null;edRefresh(ed.pend,true);ed.pend=null;
@@ -132,8 +135,9 @@ function edWhere(x,z){const e=x,s=z-(TRENCH_Z0+TRENCH_Z1)/2;
   return `${edFmt(Math.abs(e),0)} ft ${e<0?'west':'east'}, ${edFmt(Math.abs(s),0)} ft ${s<0?'north':'south'} of the trench`}
 function edQuery(x,z){const g=baseHeight(x,z),h=hAt(x,z),r=mesaR(x,z);
   const sx=(baseHeight(x+0.5,z)-baseHeight(x-0.5,z)),sz=(baseHeight(x,z+0.5)-baseHeight(x,z-0.5)),sl=Math.hypot(sx,sz);
-  const surf=paintAt(x,z)?MAT_LIST[paintAt(x,z)-1].n:g<WATER?'Lake':roadAmt(x,z)>0.5?'Road':sl>0.9?'Rock face':yardAt(x,z)>0.5?'Dirt yard':r>EDGE?'Meadow below the cliffs':'Grass';
-  const drive=r>EDGE-1?'No, off the mesa':wallAt(x,z)?'No, too steep':'Yes';
+  const top=r<EDGE||famR(x,z)<FAM_R||jesR(x,z)<JES_R,deck=deckAt(x,z)>g;
+  const surf=deck?'Bridge deck':paintAt(x,z)?MAT_LIST[paintAt(x,z)-1].n:g<WATER?'Lake':roadAmt(x,z)>0.5?'Road':sl>0.9?'Rock face':yardAt(x,z)>0.5?'Dirt yard':top?'Grass':'Meadow below the cliffs';
+  const drive=!landIn(x,z,1,0)?'No, off the island':wallAt(x,z)?'No, too steep':'Yes';
   const dh=edSample(ED_H,x,z),dp=edSample(ED_P,x,z),mine=[];
   if(Math.abs(dh)>0.02)mine.push(`${dh>0?'raised':'lowered'} ${edFmt(Math.abs(dh))} ft`);if(dp>0.05)mine.push('painted dirt');if(dp<-0.05)mine.push('painted grass');
   const mt=paintAt(x,z);if(mt)mine.push(MAT_LIST[mt-1].n.toLowerCase());
@@ -162,7 +166,7 @@ function edSelect(hit){ed.sel=hit;if(!hit){edSelRing.visible=false;edInfo(null);
 function edRingSel(){const s=ed.sel;if(!s){edSelRing.visible=false;return}const o=s.a||s.m.o();edRingAt(edSelRing,o.x,o.z,s.a?(s.a.t==='rock'?1.0:1.6)*s.a.s:s.m.r)}
 function edDelete(){const s=ed.sel;if(!s||!s.a)return;const b=edAssetsSnap(),i=assets.indexOf(s.a);if(i<0)return;assets.splice(i,1);edAssetsChanged(b);edSelect(null)}
 // moves a machine (or the walker) to a spot on the mesa and sets it down on the ground there
-function edPlaceMachine(m,x,z){const o=m.o(),r=mesaR(x,z),lim=EDGE-4;if(r>lim){const f=lim/r;x*=f;z=MZ+(z-MZ)*f}
+function edPlaceMachine(m,x,z){const o=m.o();[x,z]=landClamp(x,z,4,2);
   o.x=x;o.z=z;if(o===tr)tr.v=0;const y=surfAt(x,z);o.y=y;m.m().position.set(x,y,z)}
 
 // ---------- roads ----------
@@ -264,7 +268,7 @@ $('#edRoadNew').onclick=edRoadNew;$('#edRoadFin').onclick=edRoadFinish;
 // ---------- pointer: tools, and look around with two fingers, the right mouse button or the Look tool ----------
 const edPtrs=new Map();let edGest=null,edMouse=null;
 function edPan(dx,dy){const s=ed.dist*0.0019*(720/Math.max(320,innerHeight)),c=Math.cos(ed.yaw),n=Math.sin(ed.yaw);
-  ed.x=clamp(ed.x+(-c*dx-n*dy)*s,-120,120);ed.z=clamp(ed.z+(n*dx-c*dy)*s,-120,120)}
+  ed.x=clamp(ed.x+(-c*dx-n*dy)*s,-120,120);ed.z=clamp(ed.z+(n*dx-c*dy)*s,-120,350)}
 function edDown(x,y){const p=edPick(x,y),t=ed.tool;
   if(t==='look'||!p){edMouse={pan:true,x,y};return}
   if(ED_BRUSH.includes(t)){edStrokeStart(p.x,p.z);edRingAt(edBrushRing,p.x,p.z,ed.size,ed.square&&ed.tool==='paint');return}
@@ -346,10 +350,12 @@ function editorFrame(dt,now){
   if(ed.stroke)edBrush(dt);
   if(ed.pend&&(ed.stroke||(ed.drag&&ed.drag.road))&&now-ed.refT>110){ed.refT=now;edRefresh(ed.pend,false);ed.pend=null}
   if(ed.sel&&ed.sel.m)edRingSel();
+  // puddles and mud tiles keep up with the edits (painted Mud fills ruts, painting over them dries them)
+  waterTick(dt);mudTick(dt);
   const fy=hAt(ed.x,ed.z);edLook.set(ed.x,fy,ed.z);
   camera.position.set(ed.x+Math.sin(ed.yaw)*Math.cos(ed.pitch)*ed.dist,fy+Math.sin(ed.pitch)*ed.dist,ed.z+Math.cos(ed.yaw)*Math.cos(ed.pitch)*ed.dist);
   camera.position.y=Math.max(camera.position.y,hAt(camera.position.x,camera.position.z)+2);camera.lookAt(edLook);
   sky.position.copy(camera.position);
   sun.position.set(ed.x,fy,ed.z).addScaledVector(SUN_DIR,25);sun.target.position.set(ed.x,fy,ed.z);
   timeU.value=now/1000;updateSound(dt);
-  shadowProxyTick();lawnLod();renderer.render(scene,camera)}
+  shadowProxyTick();lawnLod();tuftLod();renderer.render(scene,camera)}

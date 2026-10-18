@@ -85,8 +85,8 @@ for(let j=0;j<LAWN_NZ;j++)for(let i=0;i<LAWN_NX;i++){const n=j*LAWN_NX+i,e=Math.
   const v=Math.random(),drift=ss(0.55,0.9,hash(i*0.11+3,j*0.13+5)),dry=Math.random()<0.15+0.4*drift?0.45+0.5*Math.random():0.12*Math.random();
   lwC.setRGB(0.36+0.08*v,0.55+0.1*v,0.2+0.04*v).lerp(new THREE.Color(0.8,0.72,0.42),dry);lawn.tc[n*3]=lwC.r;lawn.tc[n*3+1]=lwC.g;lawn.tc[n*3+2]=lwC.b}
 // the mesa's short grass tufts give way to the patch
-for(let n=0;n<TUFTS;n++)if(tX[n]>LAWN_X0-0.2&&tX[n]<LAWN_X0+LAWN_NX*LAWN_GS+0.2&&tZ[n]>LAWN_Z0-0.2&&tZ[n]<LAWN_Z0+LAWN_NZ*LAWN_GS+0.2){tI[n]=-1;tufts.setMatrixAt(n,ZERO_M)}
-tufts.instanceMatrix.needsUpdate=true;
+for(let n=0;n<TUFTS;n++)if(tX[n]>LAWN_X0-0.2&&tX[n]<LAWN_X0+LAWN_NX*LAWN_GS+0.2&&tZ[n]>LAWN_Z0-0.2&&tZ[n]<LAWN_Z0+LAWN_NZ*LAWN_GS+0.2){tI[n]=-1;tuftPut(n,false)}
+tuftFlush();
 // ground under the patch: dark thatch under tall grass, light and dark stripes once it is cut, fading as it grows back
 const LAWN_VX=LAWN_NX+1,LAWN_VN=LAWN_VX*(LAWN_NZ+1),LAWN_TG=[0.24,0.34,0.15],LAWN_LT=[0.46,0.66,0.29],LAWN_DK=[0.27,0.44,0.17];
 const lawnGround=(function(){const P=new Float32Array(LAWN_VN*3),ix=[];
@@ -294,8 +294,8 @@ function updateMower(dt,inL,inR){
   mw.yaw+=mw.w*dt;mw.x+=Math.sin(mw.yaw)*mw.v*dt;mw.z+=Math.cos(mw.yaw)*mw.v*dt;
   if(wallCount(mw.x,mw.z,mw.yaw,MW_P)>w0){mw.x=ox;mw.z=oz}
   // stays on the mesa, steers clear of the excavator, the truck and tall blocks; the big machines shove it aside
-  for(const lz of MW_C){const sy=Math.sin(mw.yaw),cy=Math.cos(mw.yaw),px=mw.x+sy*lz,pz=mw.z+cy*lz,rr=mesaR(px,pz),lim=EDGE-2;
-    if(rr>lim){const k=lim/rr;mw.x+=px*k-px;mw.z+=MZ+(pz-MZ)*k-pz}
+  for(const lz of MW_C){const sy=Math.sin(mw.yaw),cy=Math.cos(mw.yaw),px=mw.x+sy*lz,pz=mw.z+cy*lz,q=landClamp(px,pz,2,1);
+    mw.x+=q[0]-px;mw.z+=q[1]-pz;
     const ex=px-st.x,ez=pz-st.z,ed=Math.hypot(ex,ez),em=MW_R+2.7;if(ed<em&&ed>1e-3){mw.x+=ex/ed*(em-ed);mw.z+=ez/ed*(em-ed)}
     for(const tz of TR_C){const tx=tr.x+Math.sin(tr.yaw)*tz,tzz=tr.z+Math.cos(tr.yaw)*tz,dx=px-tx,dz=pz-tzz,d=Math.hypot(dx,dz),m=MW_R+TR_R;
       if(d<m&&d>1e-3){mw.x+=dx/d*(m-d);mw.z+=dz/d*(m-d)}}}

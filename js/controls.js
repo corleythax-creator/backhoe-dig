@@ -9,7 +9,7 @@ function resetState(){
   cI0=N+1;cI1=-1;cJ0=N+1;cJ1=-1;
   H.set(H0);dI0=0;dI1=N;dJ0=0;dJ1=N;winOn=true;Object.assign(tr,TR_START);tr.loadC=[...SOIL[SPOIL].c];tr.loadMix=[...CRUMB_MIX];tr.stuck=0;tr.mud=0;tr.sink=0;tr.spin=0;tr.loadWet=0;tr.pourRate=0;tr.pourP=new THREE.Vector3();
   for(let k=0;k<V*V;k++)spoilC.set(SOIL[SPOIL].c,k*3);
-  clearClods();wetT.fill(-1e4);comp.fill(0);clearDust();waterClear();mudReset();
+  clearClods();wetT.fill(-1e4);comp.fill(0);clearDust();waterClear();mudReset();rainReset();
   blkReset();mowReset();walkReset();Object.assign(TB,TB_START,{hooked:false,seated:false});TB.y=TB.ty=boxRest();prot.fill(0);chain.visible=false;
 }
 resetState();
@@ -40,7 +40,7 @@ const MODES=['dig','drive','truck','mow','walk'];let kbUsed=false;
 const KEY_RUN={dig:()=>setMode('dig'),drive:()=>setMode('drive'),truck:()=>setMode('truck'),mow:()=>setMode('mow'),walk:()=>setMode('walk'),
   nextMode:e=>setMode(MODES[(MODES.indexOf(mode)+(e.shiftKey?MODES.length-1:1))%MODES.length]),
   enter:()=>seatToggle(),jump:()=>walkJump(),blocks:()=>setBlocks(!blkOn),place:()=>placeBlock(),lift:()=>removeBlock(),size:()=>setBlkSize(blkSize%3+1),
-  box:()=>hookBox(),pump:()=>setPump(!pumpOn),cam:()=>$('#camBtn').click(),map:()=>toggleMap(),sound:()=>setSound(!sndCfg.on),help:()=>{help.hidden=!help.hidden}};
+  box:()=>hookBox(),lookAhead:()=>{if(camMode==='cab')fpl.home=true;fpl.zt=1},pump:()=>setPump(!pumpOn),cam:()=>$('#camBtn').click(),map:()=>toggleMap(),sound:()=>setSound(!sndCfg.on),help:()=>{help.hidden=!help.hidden}};
 addEventListener('keydown',e=>{const c=e.code;
   if((e.ctrlKey||e.metaKey||e.altKey)&&!/^(Control|Alt|Meta)/.test(c))return;
   if(c==='Escape'){help.hidden=true;return}
@@ -83,6 +83,7 @@ function padButton(i){usePad();
   else if(i===12)setBlocks(!blkOn);
   else if(i===13)removeBlock();
   else if(i===14||i===15)setBlkSize((blkSize+(i===15?0:1))%3+1);
+  else if(i===11){if(camMode==='cab')fpl.home=true;fpl.zt=1}
   else if(i===8)toggleMap();
   else if(i===9)help.hidden=!help.hidden;
   else if(i===1){const open=!help.hidden||!$('#bigmap').hidden;help.hidden=true;toggleMap(false);if(!open&&(mode==='walk'||wk.inside))seatToggle()}}
@@ -93,14 +94,48 @@ function pollPad(){for(const k in PA)PA[k]=0;PA.sprint=false;const gp=getPad();i
   if(PA.lx||PA.ly||PA.rx||PA.ry||Math.abs(PA.thr)>0.05)usePad()}
 function rumble(ms,mag){const gp=getPad(),va=gp&&gp.vibrationActuator;
   if(va&&va.playEffect)va.playEffect('dual-rumble',{duration:ms,strongMagnitude:mag,weakMagnitude:mag*0.6}).catch(()=>{})}
-// orbit drag on the scene
+// orbit drag on the scene; in cab view the same drag turns your head instead (see fpTurn)
 let orbitYaw=0,orbitPitch=0.42,camDist=9.5,drag=null;
-canvas.addEventListener('pointerdown',e=>{if(edOn)return;drag={id:e.pointerId,x:e.clientX,y:e.clientY};canvas.setPointerCapture(e.pointerId)});
-canvas.addEventListener('pointermove',e=>{if(!drag||e.pointerId!==drag.id)return;
-  orbitYaw-=(e.clientX-drag.x)*0.006;orbitPitch=clamp(orbitPitch+(e.clientY-drag.y)*0.005,0.08,1.3);drag.x=e.clientX;drag.y=e.clientY});
-const dend=e=>{if(drag&&e.pointerId===drag.id)drag=null};
+const camPtrs=new Map();let pinch=0;
+canvas.addEventListener('pointerdown',e=>{if(edOn)return;camPtrs.set(e.pointerId,{x:e.clientX,y:e.clientY});canvas.setPointerCapture(e.pointerId);
+  if(camPtrs.size===2){const [a,b]=camPtrs.values();pinch=Math.hypot(a.x-b.x,a.y-b.y);drag=null;return}
+  drag={id:e.pointerId,x:e.clientX,y:e.clientY};
+  if(camMode==='cab'&&e.pointerType==='mouse'&&e.button===0&&!PHONE)fpMouseLock(true)});
+canvas.addEventListener('pointermove',e=>{const p=camPtrs.get(e.pointerId);if(p){p.x=e.clientX;p.y=e.clientY}
+  // two fingers in cab view pinch to zoom
+  if(camPtrs.size===2&&pinch>0){const [a,b]=camPtrs.values(),d=Math.hypot(a.x-b.x,a.y-b.y);if(camMode==='cab')fpl.zt=clamp(fpl.zt*d/pinch,1,FP_ZOOM);pinch=d;return}
+  if(!drag||e.pointerId!==drag.id)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag.x=e.clientX;drag.y=e.clientY;
+  if(camMode==='cab'){if(document.pointerLockElement!==canvas)fpTurn(dx*0.006,dy*0.005)}
+  else{orbitYaw-=dx*0.006;orbitPitch=clamp(orbitPitch+dy*0.005,0.08,1.3)}});
+const dend=e=>{camPtrs.delete(e.pointerId);if(camPtrs.size<2)pinch=0;if(drag&&e.pointerId===drag.id)drag=null};
 canvas.addEventListener('pointerup',dend);canvas.addEventListener('pointercancel',dend);
-canvas.addEventListener('wheel',e=>{if(edOn)return;e.preventDefault();camDist=clamp(camDist+e.deltaY*0.01,5,22)},{passive:false});
+canvas.addEventListener('wheel',e=>{if(edOn)return;e.preventDefault();
+  if(camMode==='cab')fpl.zt=clamp(fpl.zt*Math.exp(-e.deltaY*0.0015),1,FP_ZOOM);else camDist=clamp(camDist+e.deltaY*0.01,5,22)},{passive:false});
+// first person (cab view): where the eyes look. On foot the body turns with the view (wk.view) and fpl.pitch tilts the
+// head; in a machine fpl.yaw and fpl.pitch turn the head in the seat. Drag the scene to look (on a PC, a click takes the
+// mouse for mouse look until Esc); the wheel, a pinch or a held Z zooms; R looks straight ahead again
+const FP_YAW=2.6,FP_UP=1.35,FP_DOWN=1.4,FP_ZOOM=4;
+const fpl={yaw:0,pitch:0,zoom:1,zt:1,home:false};
+function fpTurn(dx,dy){const k=1/fpl.zoom;fpl.home=false;
+  if(mode==='walk')wk.view-=dx*k;else fpl.yaw=clamp(fpl.yaw-dx*k,-FP_YAW,FP_YAW);
+  fpl.pitch=clamp(fpl.pitch-dy*k,-FP_DOWN,FP_UP)}
+function fpReset(){fpl.yaw=fpl.pitch=0;fpl.zt=1;fpl.home=false}
+let fpLockTold=false;
+function fpMouseLock(on){
+  if(on){if(document.pointerLockElement===canvas||!canvas.requestPointerLock)return;
+    try{const r=canvas.requestPointerLock();if(r&&r.catch)r.catch(()=>{})}catch(e){}
+    if(!fpLockTold){fpLockTold=true;toast(`Mouse look. Move the mouse to look around, wheel or ${keyLabel('zoom')} zooms, ${keyLabel('lookAhead')} looks ahead. Esc frees the mouse.`,'',4200)}}
+  else if(document.pointerLockElement===canvas)document.exitPointerLock()}
+// (some browsers send a wild jump as the mouse is taken: skip any single move that large)
+document.addEventListener('mousemove',e=>{if(document.pointerLockElement!==canvas||camMode!=='cab'||edOn)return;
+  if(Math.abs(e.movementX)<300&&Math.abs(e.movementY)<300)fpTurn(e.movementX*0.0025,e.movementY*0.0025)});
+// eases the head back to straight ahead after R; ends at once if you look somewhere
+function fpTick(dt){if(fpl.home){const k=Math.min(1,dt*8);fpl.yaw-=fpl.yaw*k;fpl.pitch-=fpl.pitch*k;if(Math.abs(fpl.yaw)+Math.abs(fpl.pitch)<0.003){fpl.yaw=fpl.pitch=0;fpl.home=false}}
+  const zt=camMode!=='cab'?1:held('zoom')?Math.max(fpl.zt,3):fpl.zt;fpl.zoom+=(zt-fpl.zoom)*Math.min(1,dt*10);
+  const f=camFov/fpl.zoom;if(Math.abs(camera.fov-f)>0.01){camera.fov=f;camera.updateProjectionMatrix()}
+  if(camMode!=='cab'||edOn||!help.hidden)fpMouseLock(false);
+  const aim=camMode==='cab'&&mode==='walk'&&!bench.on;if(aimEl.hidden===aim)aimEl.hidden=!aim}
+const aimEl=$('#aim');
 
 function setCaps(){const m=mode,two=(a,b)=>`${keyLabel(a)} ${keyLabel(b)}`,lh=kbUsed?two('lLeft','lRight'):'◀ ▶',lv=kbUsed?two('lUp','lDown'):'▲ ▼',rh=kbUsed?two('rLeft','rRight'):'◀ ▶',rv=kbUsed?two('rUp','rDown'):'▲ ▼';
   for(const b of document.querySelectorAll('.seg button'))b.dataset.k=keyLabel(b.id.slice(4).toLowerCase());
@@ -110,10 +145,10 @@ function setMode(m){if(m===mode)return;mode=m;for(const [id,k] of [['#modeDig','
   $('#walkBtns').hidden=m!=='walk';if(m!=='walk')setSprint(false);$('#capR').hidden=m==='walk';
   // switching to Walk from a machine you climbed into sets you down beside it
   if(m==='walk'){if(wk.inside){wkPlaceOut(wk.inside);wk.inside=null}wk.view=wk.yaw}
-  setCaps();markTile();firstCam=true;if(m==='mow'&&!lawn.startT&&!lawn.done)toast(kbUsed?`Mower running. ${keyLabel('lUp')} drives straight, ${keyLabel('lLeft')} ${keyLabel('lRight')} turn; the number pad works each lap bar.`:'Mower running. Push both sticks up to drive, one up and one back to spin.','',3800);
+  setCaps();markTile();firstCam=true;fpReset();if(m==='mow'&&!lawn.startT&&!lawn.done)toast(kbUsed?`Mower running. ${keyLabel('lUp')} drives straight, ${keyLabel('lLeft')} ${keyLabel('lRight')} turn; the number pad works each lap bar.`:'Mower running. Push both sticks up to drive, one up and one back to spin.','',3800);
   if(m==='walk')toast(padUsed?'On foot. A jumps, X sets a block, B gets into a machine.':kbUsed?`On foot. ${keyLabel('jump')} jumps, ${keyLabel('place')} sets a block, ${keyLabel('enter')} gets into a machine.`:'On foot. Tap Jump to jump. Walk up to a machine and tap Get in.','',3800)}
 $('#modeDig').onclick=()=>setMode('dig'); $('#modeDrive').onclick=()=>setMode('drive'); $('#modeTruck').onclick=()=>setMode('truck'); $('#modeMow').onclick=()=>setMode('mow'); $('#modeWalk').onclick=()=>setMode('walk');
-$('#camBtn').onclick=()=>{camMode=camMode==='chase'?'cab':'chase';$('#camBtn').textContent=camMode==='chase'?'Cab view':'Chase view'};
+$('#camBtn').onclick=()=>{camMode=camMode==='chase'?'cab':'chase';fpReset();$('#camBtn').textContent=camMode==='chase'?'Cab view':'Chase view'};
 let resetArm=0;
 $('#resetBtn').onclick=()=>{const b=$('#resetBtn');
   if(resetArm&&performance.now()-resetArm<2500){resetState();siteSaveAll();resetArm=0;b.textContent='Reset';b.classList.remove('arm');toast('Fresh ground. Paint is back.','good');return}
