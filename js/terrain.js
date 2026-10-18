@@ -73,25 +73,32 @@ function mesaR(x,z){z-=MZ;const a=Math.atan2(z,x);return Math.pow(Math.pow(Math.
 // the bridge from the bench runs level. The same rounded-square shape; FAM_R is its half width
 const FAM_X=0,FAM_Z=245,FAM_R=80,FAM_Y=BENCH_H;
 function famR(x,z){x-=FAM_X;z-=FAM_Z;const a=Math.atan2(z,x);return Math.pow(x*x*x*x+z*z*z*z,0.25)*(1+0.035*Math.sin(a*4+1.9)+0.02*Math.sin(a*9+0.4))}
+// Jessica's Island: a mesa the size of Corley's, east of the Family Island and 10 ft higher, reached on foot by a covered
+// bridge. Forest, a garden and a stone cottage with a library inside (jessica.js)
+const JES_X=200,JES_Z=245,JES_R=45,JES_Y=FAM_Y+10*0.3048,JES_CX=209,JES_CZ=245;
+function jesR(x,z){x-=JES_X;z-=JES_Z;const a=Math.atan2(z,x);return Math.pow(x*x*x*x+z*z*z*z,0.25)*(1+0.05*Math.sin(a*5+2.6)+0.03*Math.sin(a*8+1.2))}
 // bridge decks, each a straight run from x0,z0 to x1,z1 (half width hw, deck height y): the truss bridge from the Lower
 // Bench to the Family Island, and the first stretch of the mainland bridge, which ends at a barrier for now. The machines
 // and the worker ride the decks (hAt) and landIn counts them as ground; family.js draws them
-const BRIDGES=[{x0:0,z0:68,x1:0,z1:171,hw:4,y:FAM_Y},{x0:0,z0:316,x1:0,z1:418,hw:4,y:FAM_Y}];
-for(const b of BRIDGES){const dx=b.x1-b.x0,dz=b.z1-b.z0;b.len=Math.hypot(dx,dz);b.ux=dx/b.len;b.uz=dz/b.len}
+// A deck climbs evenly from y at its start to y1 at its end; a foot bridge carries the worker but no machines
+const BRIDGES=[{x0:0,z0:68,x1:0,z1:171,hw:4,y:FAM_Y},{x0:0,z0:316,x1:0,z1:418,hw:4,y:FAM_Y},
+  {x0:70,z0:JES_Z,x1:163,z1:JES_Z,hw:1.6,y:FAM_Y,y1:JES_Y,foot:true}];
+for(const b of BRIDGES){const dx=b.x1-b.x0,dz=b.z1-b.z0;b.len=Math.hypot(dx,dz);b.ux=dx/b.len;b.uz=dz/b.len;if(b.y1===undefined)b.y1=b.y}
 // metres along a deck and out from its centreline
 function deckLocal(b,x,z){const dx=x-b.x0,dz=z-b.z0;return [dx*b.ux+dz*b.uz,dz*b.ux-dx*b.uz]}
 // the deck height at x,z, or -1e9 off every deck
-function deckAt(x,z){let y=-1e9;for(const b of BRIDGES){const [t,u]=deckLocal(b,x,z);if(t>=0&&t<=b.len&&Math.abs(u)<=b.hw+0.3&&b.y>y)y=b.y}return y}
-// ground a machine or the worker can stand on, at least lim in from a cliff edge (side: from a deck's railings): the
-// mesa, the Family Island or a bridge deck
-function landIn(x,z,lim,side){if(mesaR(x,z)<=EDGE-lim||famR(x,z)<=FAM_R-lim)return true;
-  for(const b of BRIDGES){const [t,u]=deckLocal(b,x,z);if(t>=0&&t<=b.len&&Math.abs(u)<=b.hw-side)return true}return false}
+function deckAt(x,z){let y=-1e9;for(const b of BRIDGES){const [t,u]=deckLocal(b,x,z);if(t>=0&&t<=b.len&&Math.abs(u)<=b.hw+0.3){const h=b.y+(b.y1-b.y)*t/b.len;if(h>y)y=h}}return y}
+// ground a machine or the worker (walk: foot bridges too) can stand on, at least lim in from a cliff edge (side: from a
+// deck's railings): the mesa, the Family Island, Jessica's Island or a bridge deck
+function landIn(x,z,lim,side,walk){if(mesaR(x,z)<=EDGE-lim||famR(x,z)<=FAM_R-lim||jesR(x,z)<=JES_R-lim)return true;
+  for(const b of BRIDGES){if(b.foot&&!walk)continue;const [t,u]=deckLocal(b,x,z);if(t>=0&&t<=b.len&&Math.abs(u)<=b.hw-side)return true}return false}
 // the nearest such spot to x,z (x,z itself when it already is one)
-function landClamp(x,z,lim,side){if(landIn(x,z,lim,side))return [x,z];
-  const c=[],r=mesaR(x,z),f=famR(x,z);
+function landClamp(x,z,lim,side,walk){if(landIn(x,z,lim,side,walk))return [x,z];
+  const c=[],r=mesaR(x,z),f=famR(x,z),j=jesR(x,z);
   c.push([x*(EDGE-lim)/r,MZ+(z-MZ)*(EDGE-lim)/r]);
   c.push([FAM_X+(x-FAM_X)*(FAM_R-lim)/f,FAM_Z+(z-FAM_Z)*(FAM_R-lim)/f]);
-  for(const b of BRIDGES){let [t,u]=deckLocal(b,x,z);t=Math.max(0,Math.min(b.len,t));u=Math.max(side-b.hw,Math.min(b.hw-side,u));
+  c.push([JES_X+(x-JES_X)*(JES_R-lim)/j,JES_Z+(z-JES_Z)*(JES_R-lim)/j]);
+  for(const b of BRIDGES){if(b.foot&&!walk)continue;let [t,u]=deckLocal(b,x,z);t=Math.max(0,Math.min(b.len,t));u=Math.max(side-b.hw,Math.min(b.hw-side,u));
     c.push([b.x0+b.ux*t-b.uz*u,b.z0+b.uz*t+b.ux*u])}
   let best=c[0],bd=1e18;for(const q of c){const d=(q[0]-x)**2+(q[1]-z)**2;if(d<bd){bd=d;best=q}}return best}
 // fixed things the machines and the worker can't pass through (buildings on the Family Island), as boxes along the
@@ -117,12 +124,14 @@ const ISLAND_ROADS=[
   {w:4.8,mid:0,pts:Array.from({length:17},(_,i)=>[FAM_X+Math.sin(i/16*Math.PI*2)*11,FAM_Z-Math.cos(i/16*Math.PI*2)*11,FAM_Y])},
   {w:4.8,mid:0,pts:[[0,256,FAM_Y],[0,322,FAM_Y]]},
   {w:4.8,mid:0,pts:[[-11,245,FAM_Y],[-70,245,FAM_Y]]},
-  {w:4.8,mid:0,pts:[[11,245,FAM_Y],[70,245,FAM_Y]]},
+  {w:4.8,mid:0,pts:[[11,245,FAM_Y],[72,245,FAM_Y]]},
   {w:3.6,mid:1,pts:[[-34,243,FAM_Y],[-34,223,FAM_Y]]},
+  {w:3,mid:0,pts:[[158,JES_Z,JES_Y],[166,JES_Z,JES_Y]]},
+  {w:2,mid:0,pts:[[165,245],[171,243.6],[178,247.4],[185,248.8],[191,245.6],[196,243.6],[201,245],[203.6,245]]},
 ];
 // segments bucketed on a 4 m grid so a lookup only checks the few nearby; roadAt leaves its answer in RD_*.
 // Rebuilt whenever the editor changes a road
-const RG_X0=-124,RG_Z0=-32,RG_C=4,RG_NX=62,RG_NZ=94,RG=[],RSEG=[];
+const RG_X0=-124,RG_Z0=-32,RG_C=4,RG_NX=101,RG_NZ=94,RG=[],RSEG=[];
 function roadsBuild(){RSEG.length=0;RG.length=0;
   for(const r of ROADS.concat(ISLAND_ROADS))for(let i=0;i<r.pts.length-1;i++){const a=r.pts[i],b=r.pts[i+1],dx=b[0]-a[0],dz=b[1]-a[1];if(dx*dx+dz*dz<1e-6)continue;
     RSEG.push({ax:a[0],az:a[1],dx,dz,il:1/(dx*dx+dz*dz),ha:a[2],hb:b[2],w:r.w,mid:r.mid,g:a.length>2&&b.length>2})}
@@ -159,18 +168,30 @@ function yardTint(x,z,c,n){const a=yardAt(x,z);if(a<=0)return 0;const v=0.86+0.2
 // the generated ground plus the editor's raise and lower
 function baseHeight(x,z){return groundHeight(x,z)+edSample(ED_H,x,z)}
 // the mesa and, rising from the lake to its south, the Family Island
-function groundHeight(x,z){const h=mesaHeight(x,z);
-  if(Math.abs(x-FAM_X)>FAM_R+50||Math.abs(z-FAM_Z)>FAM_R+50)return h;const f=famHeight(x,z);return f>h?f:h}
+function groundHeight(x,z){let h=mesaHeight(x,z);
+  if(Math.abs(x-FAM_X)<FAM_R+50&&Math.abs(z-FAM_Z)<FAM_R+50){const f=famHeight(x,z);if(f>h)h=f}
+  if(Math.abs(x-JES_X)<JES_R+50&&Math.abs(z-JES_Z)<JES_R+50){const f=jesHeight(x,z);if(f>h)h=f}
+  return h}
+// an island's cliffs d metres out from its rim: from Y down cliffH to a strip of meadow and beach, then the lake bed
+function isleCliff(d,x,z,Y,cliffH){
+  const cliff=-cliffH*ss(0,7,d)-1.4*Math.sin(d*1.9)*ss(0,1,d)*(1-ss(6,9,d));
+  const low=-16*ss(7,30,d)-8*ss(26,60,d);
+  const bumps=(Math.sin(x*0.07+z*0.05)*2.5+Math.sin(x*0.17-z*0.13)*1.2)*ss(8,20,d)*(1-ss(28,45,d));
+  return Y+cliff+low+bumps}
+// Jessica's Island: soft rolls, flat round the cottage, graded where the footbridge lands
+function jesHeight(x,z){const d=jesR(x,z)-JES_R;let top=JES_Y;
+  if(d<3){top+=(0.3*Math.sin(x*0.11+1.2)*Math.cos(z*0.09+0.3)+0.18*Math.sin(x*0.23-z*0.19))*ss(8,13,Math.hypot(x-JES_CX,z-JES_CZ));
+    roadAt(x,z);if(RD_gd<RD_gw/2+2.5)top=RD_h+(top-RD_h)*ss(RD_gw/2,RD_gw/2+2.5,RD_gd);
+    if(d<0)return top}
+  const out=isleCliff(d,x,z,JES_Y,41);
+  return d<3?out+(top-JES_Y)*(1-ss(0,3,d)):out}
 // the Family Island: gently rolling grass graded flat along its roads, cliffs about 125 ft down to a narrow strip of
 // meadow and beach, then the lake bed
 function famHeight(x,z){const d=famR(x,z)-FAM_R;let top=FAM_Y;
   if(d<3){top+=0.35*Math.sin(x*0.07+0.4)*Math.cos(z*0.06+1.1)+0.2*Math.sin(x*0.19-z*0.15);
     roadAt(x,z);if(RD_gd<RD_gw/2+2.5)top=RD_h+(top-RD_h)*ss(RD_gw/2,RD_gw/2+2.5,RD_gd);
     if(d<0)return top}
-  const cliff=-38*ss(0,7,d)-1.4*Math.sin(d*1.9)*ss(0,1,d)*(1-ss(6,9,d));
-  const low=-16*ss(7,30,d)-8*ss(26,60,d);
-  const bumps=(Math.sin(x*0.07+z*0.05)*2.5+Math.sin(x*0.17-z*0.13)*1.2)*ss(8,20,d)*(1-ss(28,45,d));
-  const out=FAM_Y+cliff+low+bumps;
+  const out=isleCliff(d,x,z,FAM_Y,38);
   return d<3?out+(top-FAM_Y)*(1-ss(0,3,d)):out}
 function mesaHeight(x,z){
   const r=mesaR(x,z);let h;
