@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-18T03:12:00Z",
+ "updated": "2026-10-18T03:47:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 694,
-   "act": 15,
-   "versions": 99
+   "dh": 699,
+   "act": 15.5,
+   "versions": 100
   }
  ],
  "extra": [
@@ -984,6 +984,15 @@ window.EFFORT = {
    "tris": 1620505,
    "chars": 608819,
    "what": "A new screen layout with bars on three sides. The top bar has the menu (now at the top left), the job gauges side by side (tap for more or less) and the Pump, Hook box, Blocks and Cab view buttons, with a hazard stripe along its foot; on a phone held upright the gauges get a row of their own. The left bar has a button per machine with an icon, the one you drive lit. The bottom bar has the Turn setting, what each stick does under that stick, and the frame rate. The minimap and Blocks panel stay at the top right, the sticks in the thumb zones, with Get in over the left stick and Sprint and Jump over the right."
+  },
+  {
+   "v": 107,
+   "asked": "2026-10-17T22:26:00-05:00",
+   "live": "2026-10-17T22:47:31-05:00",
+   "dh": 5,
+   "tris": 1619620,
+   "chars": 610875,
+   "what": "Polished steel, a shiny material for painting the ground and for blocks (Steel group): it catches a tight sun glint and mirrors the sky, strongly at low angles and plainly face-on as metal does, with its brushed grain running through the reflection; mud dulls it. Any library material can now carry a shine."
   }
  ]
 };
