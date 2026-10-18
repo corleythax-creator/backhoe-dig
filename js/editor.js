@@ -90,17 +90,18 @@ function edBrush(dt){const R=ed.size,cx=ed.bx,cz=ed.bz,t=ed.tool,k=ed.str/10;
     for(let j=j0-1;j<=j1+1;j++)for(let i=i0-1;i<=i1+1;i++)hs[(j-j0+1)*W+i-i0+1]=baseHeight(ED_X0+i*ED_C,ED_Z0+j*ED_C)}
   // materials go down whole cells inside the ring (or the square, lined up north-south, for slabs and plates). Hard
   // edged, each cell is covered fully; soft edged, the cover fades to nothing over the outer part (the softness) of the
-  // brush. A cell holds one material: a fade only takes over another material where it covers more, and Natural
-  // ground fades the paint back out
-  if(t==='paint'){let n=0,ids=false;const R0=R*(1-ed.feather),mat=ed.mat;
+  // brush (topping out at 254, which tells the ground shader the edge is soft). A cell holds one material: a fade only
+  // takes over another material where it covers more, and Natural ground fades the paint back out. The cell under the
+  // middle always takes paint, so a 1 ft brush (smaller than a cell) still lays a line of cells
+  if(t==='paint'){let n=0,ids=false;const R0=R*(1-ed.feather),mat=ed.mat,qc=Math.round((cz-ED_Z0)/ED_C)*ED_NX+Math.round((cx-ED_X0)/ED_C);
     for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const q=j*ED_NX+i,dx=ED_X0+i*ED_C-cx,dz=ED_Z0+j*ED_C-cz,d=ed.square?Math.max(Math.abs(dx),Math.abs(dz)):Math.hypot(dx,dz);
-      if(d>R)continue;const w=ed.soft?Math.round(255*(1-ss(R0,R,d))):255;if(w<=0)continue;
+      if(d>R&&q!==qc)continue;const w=ed.soft?Math.round(254*(1-ss(R0,R,d))):255;if(w<=0)continue;
       const m0=ED_M[q],a0=ED_A[q];let m=m0,a=a0;
       if(!mat){if(m0){a=Math.min(a0,255-w);if(!a)m=0}}
       else if(m0===mat)a=Math.max(a0,w);
       else if(!m0||w>=a0){m=mat;a=w}
       if(m!==m0||a!==a0){ED_M[q]=m;ED_A[q]=a;n++;if(m!==m0)ids=true}}
-    if(!n)return;if(ids)matU.tMatId.value.needsUpdate=true}
+    if(!n)return;if(ids)matU.tMatId.value.needsUpdate=true;matU.tMatCov.value.needsUpdate=true}
   else for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const x=ED_X0+i*ED_C,z=ED_Z0+j*ED_C,d=Math.hypot(x-cx,z-cz);if(d>R)continue;
     const f=0.5*(1+Math.cos(Math.PI*d/R)),q=j*ED_NX+i;
     if(t==='raise')ED_H[q]+=1.5*k*dt*f;
@@ -134,7 +135,7 @@ function edUndoBtns(){$('#edUndo').disabled=!ed.undo.length;$('#edRedo').disable
 function edSwap(u){
   if(u.g){const [i0,i1,j0,j1]=u.g,w=i1-i0+1;
     for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const q=j*ED_NX+i,o=(j-j0)*w+i-i0,a=ED_H[q],b=ED_P[q],c=ED_M[q],d=ED_A[q];ED_H[q]=u.h[o];ED_P[q]=u.p[o];ED_M[q]=u.m[o];ED_A[q]=u.a[o];u.h[o]=a;u.p[o]=b;u.m[o]=c;u.a[o]=d}
-    matU.tMatId.value.needsUpdate=true;matTexUpdate();
+    matU.tMatId.value.needsUpdate=true;matU.tMatCov.value.needsUpdate=true;matTexUpdate();
     edRefresh([ED_X0+i0*ED_C-0.6,ED_X0+i1*ED_C+0.6,ED_Z0+j0*ED_C-0.6,ED_Z0+j1*ED_C+0.6],true)}
   else if(u.roads){const now=edRoadsSnap();edRoadsSet(u.roads);u.roads=now;ed.road=null;ed.rpt=-1;edRoadCard();edRoadsDraw();edRefresh(u.rect,true)}
   else{const now=JSON.stringify(assets);assets.length=0;assets.push(...JSON.parse(u.a));u.a=now;ed.sel=null;edSelRing.visible=false;edInfo(null);assetsBuild();shpTreesRefresh()}

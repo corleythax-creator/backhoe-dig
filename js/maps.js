@@ -2,7 +2,7 @@
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 // ---------- maps ----------
 // the background covers the mesa and the islands round the Family Island: a square from MAP_X0, MAP_Z0, MAP_SZ metres across
-const MAP_X0=-260,MAP_Z0=-62,MAP_SZ=540,MAP_HALF=MAP_SZ/2,MAP_CX=MAP_X0+MAP_HALF,MAP_CZ=MAP_Z0+MAP_HALF,BG_PX=800;let mapBg=null,digLayer=null,mapDirty=true,mapT=0;
+const MAP_X0=-260,MAP_Z0=-62,MAP_SZ=540,MAP_HALF=MAP_SZ/2,MAP_CX=MAP_X0+MAP_HALF,MAP_CZ=MAP_Z0+MAP_HALF,BG_PX=800;let mapBg=null,digLayer=null,mapDirty=true,mapT=0,mapBigT=0;
 function buildMapBg(){
   const c=document.createElement('canvas');c.width=c.height=BG_PX;const x2=c.getContext('2d'),img=x2.createImageData(BG_PX,BG_PX),d=img.data,mpp=MAP_SZ/BG_PX;
   const hs=new Float32Array(BG_PX*BG_PX);
@@ -51,6 +51,7 @@ function drawMap(cv,cx,cz,half,big){
   for(const b of BRIDGES){g.save();g.translate(X(b.x0),Y(b.z0));g.rotate(Math.atan2(b.uz,b.ux));g.fillStyle='#55595c';g.fillRect(0,-(b.hw+0.4)*sc,b.len*sc,(2*b.hw+0.8)*sc);
     g.fillStyle='#9a9c9e';g.fillRect(0,-b.hw*sc,b.len*sc,2*b.hw*sc);g.restore()}
   g.fillStyle='#8a5a3a';for(const s of SOLIDS)if(s.hx>2||s.hz>2)g.fillRect(X(s.x-s.hx),Y(s.z-s.hz),2*s.hx*sc,2*s.hz*sc);
+  if(big)trailDrawOn(g,X,Y,sc);
   g.drawImage(digLayer,X(-S/2),Y(-S/2),S*sc,S*sc);
   g.lineWidth=Math.max(1.5,0.18*sc);g.strokeStyle='#f2f2ee';g.strokeRect(X(-0.5),Y(TRENCH_Z0),1*sc,(TRENCH_Z1-TRENCH_Z0)*sc);
   g.setLineDash([6*dpr,5*dpr]);g.strokeStyle='#f5c518';g.lineWidth=Math.max(2,0.2*sc);g.beginPath();g.moveTo(X(-12),Y(PIPE_Z));g.lineTo(X(12),Y(PIPE_Z));g.stroke();g.setLineDash([]);
@@ -80,10 +81,11 @@ function mapsTick(dt){
   mapT-=dt;if(mapDirty&&mapT<=0){if(!mapBg)buildMapBg();updateDigLayer();mapDirty=false;mapT=0.5}
   const fv=mode==='truck'?tr:mode==='mow'?mw:mode==='skid'?sk:mode==='walk'?wk:st;
   drawMap($('#mini'),fv.x,fv.z,42,false);
-  if(!$('#bigmap').hidden)drawMap($('#big'),MAP_CX,MAP_CZ,MAP_HALF,true);
+  // the trails layer catches up with new travel once a second while the map is open
+  if(!$('#bigmap').hidden){mapBigT-=dt;if(mapBigT<=0&&trailDirty&&trailShow!=='off'){mapBigT=1;trailSync()}else drawMap($('#big'),MAP_CX,MAP_CZ,MAP_HALF,true)}
 }
-function sizeBig(){const c=$('#big'),side=innerHeight<=520&&innerWidth>innerHeight,sz=Math.max(200,side?Math.min(innerHeight-60,innerWidth-400):Math.min(innerWidth-60,innerHeight-280,900));c.style.width=c.style.height=sz+'px'}
-function toggleMap(show){const m=$('#bigmap');m.hidden=show===undefined?!m.hidden:!show;tpSet(null);if(!m.hidden){sizeBig();drawMap($('#big'),MAP_CX,MAP_CZ,MAP_HALF,true)}}
+function sizeBig(){const c=$('#big'),side=innerHeight<=520&&innerWidth>innerHeight,sz=Math.max(200,side?Math.min(innerHeight-60,innerWidth-400):Math.min(innerWidth-60,innerHeight-340,900));c.style.width=c.style.height=sz+'px'}
+function toggleMap(show){const m=$('#bigmap');m.hidden=show===undefined?!m.hidden:!show;tpSet(null);if(!m.hidden){sizeBig();trailSync()}}
 // ---------- teleport ----------
 // tap a spot on the big map, then go there on foot or in a machine (the one you're in, or any other: it comes with you)
 let tpPick=null;

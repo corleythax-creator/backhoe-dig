@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-18T01:05:48Z",
+ "updated": "2026-10-18T01:30:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 638,
-   "act": 12.5,
-   "versions": 87
+   "dh": 644,
+   "act": 13,
+   "versions": 89
   }
  ],
  "extra": [
@@ -876,6 +876,24 @@ window.EFFORT = {
    "tris": 1621301,
    "chars": 567489,
    "what": "Puddle splashes: the truck's tyres, the excavator's and skid steer's tracks, the mower's wheels and your boots throw muddy spray out to both sides and ahead when they go through standing water, bigger the faster and deeper, with rings spreading across the water, a few lumps of mud and a slosh. Jumping into a puddle splashes all round. Only drawn, so the puddles stay the same on every device; Low graphics throws 250 drops, Medium 600, High 1200, and the custom Graphics panel has a Puddle splash row."
+  },
+  {
+   "v": 95,
+   "asked": "2026-10-17T20:10:00-05:00",
+   "live": "2026-10-17T20:19:07-05:00",
+   "dh": 3,
+   "tris": 1620066,
+   "chars": 573253,
+   "what": "Trails on the big map: where you've walked and driven, in 13 ft squares coloured from a faint purple where you passed once to bright yellow where you go all the time. The map's Trails row shows all of it, or just on foot, the excavator, the truck, the mower or the skid steer, with a key giving the busiest spot. The Stats panel opens the map with trails on. Teleports don't draw a line. Saved and synced with the stats, kept small, and cleared with them."
+  },
+  {
+   "v": 96,
+   "asked": "2026-10-17T20:05:00-05:00",
+   "live": "2026-10-17T20:30:00-05:00",
+   "dh": 3,
+   "tris": 1621024,
+   "chars": 576182,
+   "what": "Map editor: Hard edge paint is a truly sharp line now. The ground shader draws painted materials per pixel instead of blending them across the ground mesh, so a hard edge turns over in about a pixel wherever it falls (square corners round off by about 3 in), while Soft edge paint keeps its fade; on the rare device without WebGL2 paint looks as before. The brush goes down to 1 ft, which lays a line of single paint cells (about 1.6 ft, the finest the paint grid holds)."
   }
  ]
 };
