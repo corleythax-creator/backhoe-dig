@@ -94,7 +94,7 @@ function farRut(x,z,yaw,hw,hl,dt){
     const dx=FX0+i*FC-x,dz=FZ0+j*FC-z,u=dx*s+dz*c,v=dx*c-dz*s,av=Math.abs(v);if(Math.abs(u)>hl||av>hw+RUT_BERM||!vOk(i,j))continue;const k=j*FV+i;
     const wx=FX0+i*FC,wz=FZ0+j*FC;
     if(av>hw){const room=rutBerm(av-hw,wx,wz)-FD[k];if(room>0)fBerm.push(k,v,room);continue}
-    const m=Math.max(FM[k]/255,fineSoak(k,wx,wz));if(m<=RUT_MUD)continue;const d=Math.min(0.5*dt,FD[k]+RUT_D*Math.min(1,m*1.25)*rutDepth(v,hw,wx*s+wz*c));
+    const m=Math.max(FM[k]/255,fineSoak(k,wx,wz));if(m<=RUT_MUD)continue;const d=Math.min(0.5*dt,FD[k]+TU.rutDepth*Math.min(1,m*1.25)*rutDepth(v,hw,wx*s+wz*c));
     if(d>0){FD[k]-=d;if(v<0)outL+=d;else outR+=d;mSum+=m;mN++;any=2}}
   if(outL+outR>0){let wL=0,wR=0;for(let n=0;n<fBerm.length;n+=3)if(fBerm[n+1]<0)wL+=fBerm[n+2];else wR+=fBerm[n+2];
     const m=mSum/mN;
@@ -149,8 +149,8 @@ function rutErase(cx,cz,R,sq,keep,all){const inB=(dx,dz)=>(sq?Math.max(Math.abs(
   const i0=Math.max(0,Math.floor((cx-R+S/2)/CELL)),i1=Math.min(N,Math.ceil((cx+R+S/2)/CELL)),j0=Math.max(0,Math.floor((cz-R+S/2)/CELL)),j1=Math.min(N,Math.ceil((cz+R+S/2)/CELL));
   if(i0<=i1&&j0<=j1){
     for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const k=j*V+i,x=i*CELL-S/2,z=j*CELL-S/2,d=H[k]-H0[k];
-      if(d===0&&!mudA[k]&&Wt[k]<-1e8||!all&&Math.abs(d)>RUT_D+0.12||prot[k]||!inB(x-cx,z-cz))continue;
-      let deep=false;if(!all)for(let b=Math.max(0,j-2);b<=Math.min(N,j+2)&&!deep;b++)for(let a=Math.max(0,i-2);a<=Math.min(N,i+2);a++)if(Math.abs(H[b*V+a]-H0[b*V+a])>RUT_D+0.22){deep=true;break}
+      if(d===0&&!mudA[k]&&Wt[k]<-1e8||!all&&Math.abs(d)>TU.rutDepth+0.12||prot[k]||!inB(x-cx,z-cz))continue;
+      let deep=false;if(!all)for(let b=Math.max(0,j-2);b<=Math.min(N,j+2)&&!deep;b++)for(let a=Math.max(0,i-2);a<=Math.min(N,i+2);a++)if(Math.abs(H[b*V+a]-H0[b*V+a])>TU.rutDepth+0.22){deep=true;break}
       if(deep||keep&&keep(x,z))continue;
       H[k]=H0[k];paintD[k]=0;mudA[k]=0;Wt[k]=-1e9;comp[k]=0;wetT[k]=-1e4;soakMax[k]=0;hit=true}
     if(hit){touch(i0,i1,j0,j1);updateTufts(i0,i1,j0,j1);st.dirty=true}}
@@ -210,7 +210,7 @@ function bogTick(o,mud,inp,k,dt){
   if(dir&&o.pushDir&&dir!==o.pushDir&&o.sink>0.1&&o.rockT>0.6){o.sink=Math.max(0,o.sink-0.15-0.15*o.sink);o.lurch=0.5;o.rockT=0}
   const g=Math.max(1-0.95*ss(0.35,0.9,o.sink),o.lurch>0?0.6:0);
   o.spin=Math.abs(inp)*(1-g);
-  if(dir){o.pushDir=dir;if(!o.lurch)o.sink=Math.min(1,o.sink+dt*mud*mud*k*(0.3+3*o.spin))}
+  if(dir){o.pushDir=dir;if(!o.lurch)o.sink=Math.min(1,o.sink+dt*mud*mud*k*TU.stuck*(0.3+3*o.spin))}
   else o.sink=Math.min(1,o.sink+dt*0.004*mud);
   if(o.spin>0.5&&o.sink>0.7&&(!o.bogMsgT||performance.now()-o.bogMsgT>20000)){o.bogMsgT=performance.now();
     toast(say('stuck'),'bad',4200)}

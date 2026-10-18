@@ -4,7 +4,7 @@
 // ---------- tall grass ----------
 // a 16 x 12 m (52 x 39 ft) patch north-east of the trench, one clump of grass per 0.2 m cell. Each cell remembers when it
 // was last cut (on the lawn clock, lawn.t): it stays stubble for a while, then grows back to full height over a few minutes
-const LAWN_X0=-1,LAWN_Z0=11,LAWN_GS=0.2,LAWN_NX=80,LAWN_NZ=60,LAWN_N=LAWN_NX*LAWN_NZ,LAWN_BH=0.75,LAWN_CUT=0.09;
+const LAWN_X0=-1,LAWN_Z0=11,LAWN_GS=0.2,LAWN_NX=80,LAWN_NZ=60,LAWN_N=LAWN_NX*LAWN_NZ,LAWN_BH=0.75;
 const lawn={ct:new Float32Array(LAWN_N).fill(-1e9),gd:new Float32Array(LAWN_N).fill(1),dug:new Uint8Array(LAWN_N),str:new Float32Array(LAWN_N),ga:new Float32Array(LAWN_N),ht:new Float32Array(LAWN_N),x:new Float32Array(LAWN_N),z:new Float32Array(LAWN_N),
   r:new Float32Array(LAWN_N),s:new Float32Array(LAWN_N),h:new Float32Array(LAWN_N),tc:new Float32Array(LAWN_N*3),nz:new Float32Array(LAWN_N),
   t:0,pct:0,pctT:0,row:0,nDug:0,startT:0,doneT:0,done:false,mDirty:false,cDirty:false,gDirty:false,mapDirty:true,sDirty:false,saveT:0,aDirty:false};
@@ -117,7 +117,7 @@ function lawnVert(i,j){const ca=lawnGround.geometry.attributes.color.array,ga=la
 // colour; gone where the ground was dug or buried
 function lawnSet(n){
   if(lawn.dug[n]){lawnClumps.setMatrixAt(n,ZERO_M);lawn.ht[n]=0;return}
-  const g=lawn.gd[n],stub=LAWN_CUT/LAWN_BH*(0.8+0.4*lawn.nz[n]),f=ss(0,0.7,g);
+  const g=lawn.gd[n],stub=TU.lawnCut/LAWN_BH*(0.8+0.4*lawn.nz[n]),f=ss(0,0.7,g);
   lwO.position.set(lawn.x[n],hAt(lawn.x[n],lawn.z[n])-0.02,lawn.z[n]);lwO.rotation.set(0,lawn.r[n],0);
   const sy=stub+(lawn.h[n]-stub)*Math.pow(g,1.3);lawn.ht[n]=sy*LAWN_BH;
   lwO.scale.set(lawn.s[n],sy,lawn.s[n]);lwO.updateMatrix();lawnClumps.setMatrixAt(n,lwO.matrix);

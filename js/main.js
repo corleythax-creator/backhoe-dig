@@ -49,7 +49,7 @@ function frame(now){
   // drive
   st.yaw-=turnIn*TU.exTurn*dt;
   // mud slows the tracks, and pushing on in it digs them in until they spin (bogTick, mud.js)
-  const mudN=mudAt(st.x,st.z),mudK=(1-0.5*mudN)*bogTick(st,mudN,bench.on?0:driveIn,0.03,dt),ox=st.x,oz=st.z,w0=wallCount(st.x,st.z,st.yaw,EX_P);
+  const mudN=mudAt(st.x,st.z),mudK=Math.max(0,1-0.5*mudN*TU.mudDrag)*bogTick(st,mudN,bench.on?0:driveIn,0.03,dt),ox=st.x,oz=st.z,w0=wallCount(st.x,st.z,st.yaw,EX_P);
   st.x+=Math.sin(st.yaw)*driveIn*TU.exTrack*mudK*dt;
   st.z+=Math.cos(st.yaw)*driveIn*TU.exTrack*mudK*dt;
   // stays on the mesa, the Family Island or a bridge deck
@@ -84,7 +84,7 @@ function frame(now){
   // soil at the teeth sets how hard the arm works; a full bucket pushing on barely moves
   {const ti=Math.max(0,Math.min(N,Math.round((tip.x+S/2)/CELL))),tj=Math.max(0,Math.min(N,Math.round((tip.z+S/2)/CELL)));
     st.soil=st.below?matAt(tj*V+ti,tip.y):-1;
-    st.res=st.soil<0?1:SOIL[st.soil].h*(st.load>=TU.exCap-0.002?0.5:1);
+    st.res=st.soil<0?1:(st.soil<4?TU[SOIL_TU[st.soil]]:SOIL[st.soil].h)*(st.load>=TU.exCap-0.002?0.5:1);
     if(st.soil===2&&!st.seenSand){st.seenSand=true;toast(say('sand'),'',3200)}
     if(st.soil===3&&!st.seenRock){st.seenRock=true;toast(say('rock'),'',3000)}
     st.rumT-=dt;if(padUsed&&st.soil>=0&&st.rumT<=0&&(Math.abs(swingIn)+Math.abs(stickIn)+Math.abs(boomIn)+Math.abs(bucketIn))>0.1){st.rumT=0.12;rumble(140,0.15+0.55*(1-SOIL[st.soil].h))}}
@@ -102,7 +102,7 @@ function frame(now){
   const f=clamp((0.25-up)/0.5,0,1);
   let pourA=0,pourY=0;
   if(f>0&&st.load>0.0005){
-    const out=Math.min(st.load,f*(0.35+st.load*1.6)*dt);
+    const out=Math.min(st.load,f*(0.35+st.load*1.6)*TU.exPour*dt);
     st.load-=out;pourA=out/dt;sndIn.pour=out/dt;
     const bed=inBed(mid);pourY=bed?mid.y-(tl.y-heapTop()):hAt(mid.x,mid.z);const spr=dropSpread(mid.y-pourY);
     if(!st.pouring){st.pouring=true;dirtThud(mid,0.3+st.load/TU.exCap)}
@@ -117,7 +117,7 @@ function frame(now){
   pourStream(streams[0],mid,pourY,pourA,st.loadC,now/1000);
   // a heaped bucket swung or lifted fast loses crumbs over the rim
   {const armV=Math.abs(swingIn)*TU.exSwing+Math.abs(boomIn)*TU.exBoom+Math.abs(stickIn)*TU.exStick;
-    if(f===0&&!st.below&&!bench.on&&st.load>TU.exCap*0.7&&armV>0.2){const out=Math.min(st.load,(st.load/TU.exCap-0.7)/0.3*armV*0.006*dt);st.load-=out;
+    if(f===0&&!st.below&&!bench.on&&st.load>TU.exCap*0.7&&armV>0.2){const out=Math.min(st.load,(st.load/TU.exCap-0.7)/0.3*armV*0.006*TU.exSpill*dt);st.load-=out;
       if(inBed(mid))tr.load=Math.min(TU.trCap,tr.load+out);else{deposit(mid.x,mid.z,out,st.loadC,st.loadMix,1,st.loadWet);st.dirty=true}
       if(Math.random()<armV*dt*8)spawn(mid,0.4)}}
   // gas main

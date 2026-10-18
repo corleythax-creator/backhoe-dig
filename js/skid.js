@@ -51,7 +51,7 @@ function skidPose(){skid.position.set(sk.x,sk.y,sk.z);skid.rotation.set(sk.pitch
 // every frame: drive (in, turn: left stick), arms (arm: up/down) and bucket (curl: back/dump); all 0 when parked
 function updateSkid(dt,drive,turn,arm,curl){
   const on=mode==='skid'&&!bench.on;sk.run+=((on?1:0)-sk.run)*Math.min(1,dt*(on?2:0.7));
-  const mudN=mudAt(sk.x,sk.z),k=1-0.45*mudN,full=1-0.15*sk.load/TU.skCap;
+  const mudN=mudAt(sk.x,sk.z),k=Math.max(0,1-0.45*mudN*TU.mudDrag),full=1-0.15*sk.load/TU.skCap;
   sk.v+=(drive*TU.skSpd*k*full-sk.v)*Math.min(1,dt*(drive?3:5));sk.w+=(-turn*TU.skTurn*k-sk.w)*Math.min(1,dt*6);
   const ox=sk.x,oz=sk.z,oyaw=sk.yaw,w0=wallCount(sk.x,sk.z,sk.yaw,SK_P);
   sk.yaw+=sk.w*dt;sk.x+=Math.sin(sk.yaw)*sk.v*dt;sk.z+=Math.cos(sk.yaw)*sk.v*dt;
