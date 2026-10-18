@@ -22,15 +22,16 @@ function siteSave(){if(window.syncHold)return;site.dirty=false;site.saveT=perfor
     buf[o++]=Math.round(Math.min(1,comp[k])*255);buf[o++]=Math.round(Math.min(1,Math.max(0,mudA[k]))*255);
     if(Wt[k]>-1e8){buf[o++]=1;dv.setFloat32(o,Wt[k],true);o+=4}else buf[o++]=0}
   // unchanged ground is not written again, so an idle device does not look changed to the sync; mt: the mud tiles
-  // (mud.js), wx: the wet soil and the weather (rain.js, left out of the comparison since it carries the time)
+  // (mud.js), wx: the wet soil and the weather (rain.js, left out of the comparison since it carries the time), sm: how
+  // wet dug ground got before it dried (water.js)
   // pd: dug ground the editor painted without levelling it (paintD, mm): the gap since the last one (varint) and the height
   const pb=new Uint8Array(V*V*5);let po=0,pl=-1;for(let k=0;k<V*V;k++)if(paintD[k]){let g=k-pl;pl=k;while(g>=128){pb[po++]=(g&127)|128;g>>>=7}pb[po++]=g;
     const m=Math.round(Math.max(-32,Math.min(32,paintD[k]))*1000)&0xffff;pb[po++]=m&255;pb[po++]=m>>8}
   const pd=po?siteB64(pb.subarray(0,po)):'';
-  const d=siteB64(buf.subarray(0,o)),mt=mtSave(),wx=rainSave(),sig=d+JSON.stringify(mt)+wx.w+wx.r+wx.want+pd;if(sig===site.lastD)return;site.lastD=sig;
-  try{localStorage.setItem(SITE_KEY,JSON.stringify({v:1,V,n:ks.length,t:Date.now(),d,mt,wx,pd}))}catch(e){}}
+  const d=siteB64(buf.subarray(0,o)),mt=mtSave(),wx=rainSave(),sm=smSave(),sig=d+JSON.stringify(mt)+wx.w+wx.r+wx.want+pd+sm;if(sig===site.lastD)return;site.lastD=sig;
+  try{localStorage.setItem(SITE_KEY,JSON.stringify({v:1,V,n:ks.length,t:Date.now(),d,mt,wx,pd,sm}))}catch(e){}}
 function siteLoad(){let d=null;try{d=JSON.parse(localStorage.getItem(SITE_KEY))}catch(e){}
-  if(!d||d.v!==1||d.V!==V||typeof d.d!=='string')return false;site.lastD=d.d+JSON.stringify(d.mt||[])+(d.wx?d.wx.w+d.wx.r+d.wx.want:'')+(d.pd||'');let buf;try{buf=siteUnB64(d.d)}catch(e){return false}
+  if(!d||d.v!==1||d.V!==V||typeof d.d!=='string')return false;site.lastD=d.d+JSON.stringify(d.mt||[])+(d.wx?d.wx.w+d.wx.r+d.wx.want:'')+(d.pd||'')+(d.sm||'');let buf;try{buf=siteUnB64(d.d)}catch(e){return false}
   const dv=new DataView(buf.buffer);let o=0,k=-1,any=false,i0=N+1,i1=-1,j0=N+1,j1=-1;
   try{for(let c=0;c<d.n;c++){let g=0,sh=0,b;do{b=buf[o++];g|=(b&127)<<sh;sh+=7}while(b&128);k+=g;if(k>=V*V)break;
     H[k]=H0[k]+dv.getFloat32(o,true);o+=4;for(let q=0;q<3;q++)spoilC[k*3+q]=buf[o++]/255;
@@ -42,7 +43,7 @@ function siteLoad(){let d=null;try{d=JSON.parse(localStorage.getItem(SITE_KEY))}
     const m=pb[po]|pb[po+1]<<8;po+=2;if(k<V*V)paintD[k]=(m<<16>>16)/1000}}catch(e){paintD.fill(0)}}
   // the dug area's bounds, which water and cave-ins scan
   if(any){const mg=3*GRID_K;cI0=Math.max(0,i0-mg);cI1=Math.min(N,i1+mg);cJ0=Math.max(0,j0-mg);cJ1=Math.min(N,j1+mg)}
-  rainLoad(d.wx);mtRefill();
+  rainLoad(d.wx);mtRefill();smLoad(d.sm);
   dI0=0;dI1=N;dJ0=0;dJ1=N;winOn=true;st.dirty=true;return true}
 // machines: small, so saved whenever any of them has moved
 function sitePick(o,keys){const r={};for(const k of keys){const v=o[k];r[k]=Array.isArray(v)?v.map(x=>+x.toFixed(4)):typeof v==='number'?+v.toFixed(4):v}return r}
