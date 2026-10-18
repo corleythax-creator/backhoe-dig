@@ -40,27 +40,48 @@ const MAT_LIST=[
   {id:'fabric',n:'Landscape fabric',cat:4,ft:6,c:[0.138,0.141,0.143]}];
 const MAT_MAX=32;
 // ---------- textures on the ground ----------
-// WebGL2 only (a texture array); without it the painted ground keeps the plain material colours
+// WebGL2 (nearly every device): the ground shader draws the painted materials itself, per pixel, so a hard edge is a
+// sharp line wherever it falls between the mesh's vertices, with the texture on Medium and High graphics. Without
+// WebGL2 the vertex colours carry the materials' plain colours (matTint, terrain.js), edges blurred over a cell
 const MAT_GL2=renderer.capabilities.isWebGL2;
-// the ground shader's material uniforms: the painted-id map (one texel per editor cell, set up in terrain.js), the
-// texture array holding just the materials the map uses, each id's mean colour and tiles per metre, and its layer
-const matU={tMatId:{value:null},tMatArr:{value:null},uMatInfo:{value:[]},uMatLayer:{value:new Float32Array(MAT_MAX).fill(-1)}};
+// the ground shader's material uniforms: the painted-id and cover maps (one texel per editor cell, ED_M and ED_A, set
+// up in terrain.js), the texture array holding just the materials the map uses, each id's mean colour and tiles per
+// metre, and its layer
+const matU={tMatId:{value:null},tMatCov:{value:null},tMatArr:{value:null},uMatInfo:{value:[]},uMatLayer:{value:new Float32Array(MAT_MAX).fill(-1)}};
 for(let m=0;m<MAT_MAX;m++){const d=MAT_LIST[m-1];matU.uMatInfo.value.push(d?new THREE.Vector4(d.c[0],d.c[1],d.c[2],1/(d.ft*0.3048)):new THREE.Vector4(1,1,1,1))}
 const MAT_GLSL_HEAD=MAT_GL2?`precision highp sampler2DArray;
 uniform sampler2D tMatId;
+uniform sampler2D tMatCov;
 uniform sampler2DArray tMatArr;
 uniform vec4 uMatInfo[${MAT_MAX}];
 uniform float uMatLayer[${MAT_MAX}];
 `:'';
-// in the ground's colour step: where a material covers the ground, its texture takes over the grass and dirt detail
-// (gd) at full strength (gk); divided by its mean colour, as the vertex colour already is that colour. The id map
-// is the editor grid of terrain.js (called when the shader compiles, after that has loaded)
-const matGlsl=()=>MAT_GL2?`if(vMatA>0.01&&texMix>0.5){
-  int mi=int(texture(tMatId,((vWXZ-vec2(${ED_X0.toFixed(1)},${ED_Z0.toFixed(1)}))/${ED_C.toFixed(2)}+0.5)/vec2(${ED_NX.toFixed(1)},${ED_NZ.toFixed(1)})).r*255.0+0.5);
-  float ly=mi>0?uMatLayer[mi]:-1.0;
-  if(ly>=0.0){vec4 inf=uMatInfo[mi];vec3 tm=texture(tMatArr,vec3(vWXZ*inf.a,ly)).rgb/inf.rgb;gd=mix(gd,clamp(tm,0.0,3.0),vMatA);gk=mix(gk,1.0,vMatA);}
+// in the ground's colour step: how much of this pixel a material covers (matP) and its colour (matC), mixed in over the
+// lit-ground colour after the vertex colour (matGlslPost). The four editor cells around the pixel give the cover,
+// blended between their centres: a hard edge (cells fully covered, or not at all) turns over in about a pixel where
+// that blend crosses half, so it follows the painted cells' outline, rounding their corners; soft-edged paint (any
+// cell partly covered) keeps the blend. vMatA is 1 near paint and drops where the ground was dug or dumped. The
+// material is the cell with the most cover, nearest first; its texture (Medium and High) is divided by its mean
+// colour for detail, as the ground's own textures are. Read when the shader compiles, after terrain.js has loaded
+const matGlsl=()=>MAT_GL2?`float matP=0.0;vec3 matC=vec3(1.0);
+vec2 mfF=(vWXZ-vec2(${ED_X0.toFixed(1)},${ED_Z0.toFixed(1)}))/${ED_C.toFixed(2)};vec2 mfW=fwidth(mfF);
+if(vMatA>0.001){
+  ivec2 b=ivec2(floor(mfF));vec2 u=fract(mfF);
+  float a0=texelFetch(tMatCov,b,0).r,a1=texelFetch(tMatCov,b+ivec2(1,0),0).r,a2=texelFetch(tMatCov,b+ivec2(0,1),0).r,a3=texelFetch(tMatCov,b+ivec2(1,1),0).r;
+  float c=mix(mix(a0,a1,u.x),mix(a2,a3,u.x),u.y);
+  vec4 aa=vec4(a0,a1,a2,a3);vec4 pa=step(0.002,aa)*step(aa,vec4(0.998));bool soft=pa.x+pa.y+pa.z+pa.w>0.0;
+  float g=abs(mix(a1-a0,a3-a2,u.y))*mfW.x+abs(mix(a2-a0,a3-a1,u.x))*mfW.y;
+  float p=soft?c:clamp((c-0.5)/max(g,1e-4)+0.5,0.0,1.0);
+  vec4 w=aa*vec4((1.0-u.x)*(1.0-u.y),u.x*(1.0-u.y),(1.0-u.x)*u.y,u.x*u.y);
+  ivec2 bm=b;float wm=w.x;if(w.y>wm){wm=w.y;bm=b+ivec2(1,0);}if(w.z>wm){wm=w.z;bm=b+ivec2(0,1);}if(w.w>wm){wm=w.w;bm=b+ivec2(1,1);}
+  int mi=int(texelFetch(tMatId,bm,0).r*255.0+0.5);
+  if(mi>0&&p>0.0){vec4 inf=uMatInfo[mi];matC=inf.rgb;matP=p*min(vMatA,1.0);float ly=uMatLayer[mi];
+    if(texMix>0.5&&ly>=0.0)matC=mix(inf.rgb,clamp(texture(tMatArr,vec3(vWXZ*inf.a,ly)).rgb,vec3(0.0),3.0*inf.rgb),texBase);}
 }
 `:'';
+// after the vertex colour, which has turned the colour linear (core.js): the material over the ground, turned linear
+// the same way and darkened by mud and rain as the ground is
+const matGlslPost=()=>MAT_GL2?'if(matP>0.0){vec3 mc=matC*(1.0-0.19*mudF)*(1.0-0.12*rainF);mc=mix(mc/12.92,pow((mc+0.055)/1.055,vec3(2.4)),step(vec3(0.04045),mc));diffuseColor.rgb=mix(diffuseColor.rgb,mc,matP);}\n':'';
 const matImg={};let matLayers=[];
 // rebuilds the texture array when the materials painted on the map (and loaded) change; the images load on first use.
 // Skipped while the ground detail is off (Low graphics), where the shader never reads it

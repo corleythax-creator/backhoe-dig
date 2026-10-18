@@ -10,8 +10,8 @@ const hash=(i,j)=>{const s=Math.sin(i*127.1+j*311.7)*43758.5453;return s-Math.fl
 // ---------- map edits ----------
 // the map editor's layers over the generated ground, on a 0.5 m grid over the mesa and its cliffs: ED_H raises or
 // lowers the ground (metres), ED_P paints it toward dirt (+) or grass (-), ED_M covers it with a material from the
-// library (materials.js; 0 is the natural ground) and ED_A says how much of the cell it covers (255 full, less on a
-// soft-edged brush's fade; 0 wherever ED_M is 0). The outer cells stay 0 so the edges meet the coarse ground. Saved on
+// library (materials.js; 0 is the natural ground) and ED_A says how much of the cell it covers (255 full, as the Hard edge brush lays; the Soft edge
+// brush lays 254 and less over its fade; 0 wherever ED_M is 0). The outer cells stay 0 so the edges meet the coarse ground. Saved on
 // this device as bhd_map, with the placed assets (trees and boulders) and the roads; see editor.js
 const ED_X0=-58,ED_Z0=-32,ED_C=0.5,ED_NX=233,ED_NZ=249,ED_H=new Float32Array(ED_NX*ED_NZ),ED_P=new Float32Array(ED_NX*ED_NZ),ED_M=new Uint8Array(ED_NX*ED_NZ),ED_A=new Uint8Array(ED_NX*ED_NZ);
 let mapAssets=null,mapRoads=null;
@@ -19,10 +19,13 @@ function edSample(A,x,z){const fx=(x-ED_X0)/ED_C,fz=(z-ED_Z0)/ED_C;if(fx<0||fz<0
   const i=fx|0,j=fz|0,u=fx-i,v=fz-j,k=j*ED_NX+i;return A[k]*(1-u)*(1-v)+A[k+1]*u*(1-v)+A[k+ED_NX]*(1-u)*v+A[k+ED_NX+1]*u*v}
 // the material painted on the cell nearest a point (0: natural ground, or a soft edge fading out to less than half)
 function paintAt(x,z){const i=Math.round((x-ED_X0)/ED_C),j=Math.round((z-ED_Z0)/ED_C);if(i<0||j<0||i>=ED_NX||j>=ED_NZ)return 0;const q=j*ED_NX+i;return ED_A[q]>=128?ED_M[q]:0}
-// a ground vertex's colour c (rgb array) under the painted materials: blended toward each nearby cell's material colour
-// as the cells' corners blend, tightened so an edge turns over about 0.25 m, as built surfaces have crisp edges. Returns
-// how much of it is covered (0 to 1). Soft-edged paint (ED_A below 255) scales that cover down, so it fades out
+// a ground vertex under the painted materials. With WebGL2 the shader draws them per pixel (materials.js): the colour
+// c is left alone and this says only whether paint is near (1 when any of the 4 x 4 cells around it is painted), which
+// the matA attribute carries. Without it, c (rgb array) is blended toward each nearby cell's material colour as the
+// cells' corners blend, tightened so an edge turns over about 0.25 m, and this returns how much is covered (0 to 1);
+// soft-edged paint (ED_A below 255) scales that cover down, so it fades out
 function matTint(x,z,c){const fx=(x-ED_X0)/ED_C,fz=(z-ED_Z0)/ED_C;if(fx<0||fz<0||fx>=ED_NX-1||fz>=ED_NZ-1)return 0;
+  if(MAT_GL2){const i=fx|0,j=fz|0;for(let b=Math.max(0,j-1);b<=Math.min(ED_NZ-1,j+2);b++)for(let a=Math.max(0,i-1);a<=Math.min(ED_NX-1,i+2);a++)if(ED_M[b*ED_NX+a])return 1;return 0}
   const i=fx|0,j=fz|0,u=fx-i,v=fz-j,k=j*ED_NX+i;let cov=0,al=0,r=0,g=0,b=0;
   for(const [q,w] of [[k,(1-u)*(1-v)],[k+1,u*(1-v)],[k+ED_NX,(1-u)*v],[k+ED_NX+1,u*v]]){const m=ED_M[q];if(!m||w<=0)continue;const mc=MAT_LIST[m-1].c;cov+=w;al+=w*ED_A[q];r+=mc[0]*w;g+=mc[1]*w;b+=mc[2]*w}
   if(cov<=0)return 0;const sc=ss(0.25,0.75,cov)*al/(cov*255),f=sc/cov;
@@ -69,6 +72,8 @@ try{const t=localStorage.getItem('bhd_map');if(t){const m=mapDecode(t);ED_H.set(
 // the painted ids for the ground shader, one texel per cell (materials.js); editor.js flags it when they change
 matU.tMatId.value=new THREE.DataTexture(ED_M,ED_NX,ED_NZ,THREE.LuminanceFormat,THREE.UnsignedByteType);
 matU.tMatId.value.unpackAlignment=1;matU.tMatId.value.needsUpdate=true;
+matU.tMatCov.value=new THREE.DataTexture(ED_A,ED_NX,ED_NZ,THREE.LuminanceFormat,THREE.UnsignedByteType);
+matU.tMatCov.value.unpackAlignment=1;matU.tMatCov.value.needsUpdate=true;
 // the site sits on a grassy mesa; cliffs drop about 150 ft to meadows and a lake. It is about 295 ft across, centred
 // south of the dig so the north rim (the truck's dump spot) stays put. The north part is the high top with two hills;
 // across the middle a rocky scarp drops 24 ft to the Lower Bench, a dirt yard with stockpiles, and a ramp runs down it
@@ -261,7 +266,7 @@ function digBase(k){const i=k%V,j=(k/V)|0,x=i*CELL-S/2,z=j*CELL-S/2;
   if(rock>0){grass[k*3]+=(0.50+0.06*n+st2-grass[k*3])*rock;grass[k*3+1]+=(0.44+0.05*n+st2-grass[k*3+1])*rock;grass[k*3+2]+=(0.38+0.04*n+st2-grass[k*3+2])*rock}
   if(sand>0){grass[k*3]+=(0.80-grass[k*3])*sand;grass[k*3+1]+=(0.72-grass[k*3+1])*sand;grass[k*3+2]+=(0.52-grass[k*3+2])*sand}
   const rc=[grass[k*3],grass[k*3+1],grass[k*3+2]],ya=yardTint(x,z,rc,n),ra=roadTint(x,z,rc,n),mc=matTint(x,z,rc);grass[k*3]=rc[0];grass[k*3+1]=rc[1];grass[k*3+2]=rc[2];
-  rockA[k]=Math.min(1,Math.max(rock*0.95+sand*0.4,ra*0.9,ya*0.85))*(1-mc);matCov[k]=mc;mudBase[k]=matCovOf(x,z,MUD_ID)}
+  rockA[k]=Math.min(1,Math.max(rock*0.95+sand*0.4,ra*0.9,ya*0.85))*(MAT_GL2?1:1-mc);matCov[k]=mc;mudBase[k]=matCovOf(x,z,MUD_ID)}
 for(let j=0;j<V;j++)for(let i=0;i<V;i++){
   const k=j*V+i,x=i*CELL-S/2,z=j*CELL-S/2;
   H0[k]=H[k]=baseHeight(x,z); nz[k]=hash(i*1.7+3,j*2.3+1);
@@ -344,7 +349,7 @@ groundMat.onBeforeCompile=sh=>{
   // excavator and truck, dimmed by distance to each footprint (x, z, yaw, unused; half width, half length, forward offset, unused)
   sh.uniforms.uOcc=groundOcc;Object.assign(sh.uniforms,matU);
   sh.fragmentShader=`#define GRASS_K ${TEX_K.grass.toFixed(3)}\n#define DIRT_K ${TEX_K.dirt.toFixed(3)}\n`+'uniform sampler2D tGrass;\nuniform sampler2D tDirt;\nuniform sampler2D tMacro;\nuniform float uMacro;\nuniform float texMix;\nuniform float texBase;\nuniform float uPipeZ;\nuniform vec4 uOcc[4];\nuniform sampler2D tWet;\nuniform vec4 uWetO;\nvarying float vMud;\nvarying float vRain;\nvarying float vDirt;\nvarying float vWet;\nvarying float vSD;\nvarying float vMatA;\nvarying vec2 vWXZ;\nvarying vec3 vWP;\n'+MAT_GLSL_HEAD+FACE_GLSL+sh.fragmentShader.replace('#include <specularmap_fragment>','#include <specularmap_fragment>\nspecularStrength*=(1.0+7.0*vWet*vDirt*(1.0-mudF))*mix(1.0,0.5,max(mudF,rainF));').replace('#include <lights_phong_fragment>','#include <lights_phong_fragment>\nmaterial.specularShininess=mix(material.specularShininess,24.0,max(mudF,rainF));').replace('#include <color_fragment>',
-    (WET_VTX?'float mudF=vMud,rainF=vRain;\n':'vec4 wt=texture2D(tWet,(vWXZ-uWetO.xy)*uWetO.zw);float mudF=max(vMud,wt.g),rainF=wt.r;\n')+'vec3 tg=texture2D(tGrass,vWXZ*GRASS_K).rgb/vec3(0.443,0.486,0.385);\nvec3 td=texture2D(tDirt,vWXZ*DIRT_K).rgb/vec3(0.491,0.467,0.431);\nvec3 gd=clamp(mix(tg,td,vDirt),0.0,2.2)*(uMacro>0.0?mix(1.0,texture2D(tMacro,vWXZ*0.025).r/0.502,uMacro):1.0);float gk=0.8;\n'+matGlsl()+'diffuseColor.rgb*=mix(vec3(1.0),gd,gk*texBase);\ndiffuseColor.rgb*=(1.0-0.32*max(vWet*vDirt,0.6*mudF))*(1.0-0.12*rainF);\nif(vDirt>0.01&&texMix>0.5)diffuseColor.rgb*=mix(vec3(1.0),faceDetail(vWP,vSD,uPipeZ),vDirt);\n#include <color_fragment>').replace('#include <lights_fragment_end>',
+    (WET_VTX?'float mudF=vMud,rainF=vRain;\n':'vec4 wt=texture2D(tWet,(vWXZ-uWetO.xy)*uWetO.zw);float mudF=max(vMud,wt.g),rainF=wt.r;\n')+'vec3 tg=texture2D(tGrass,vWXZ*GRASS_K).rgb/vec3(0.443,0.486,0.385);\nvec3 td=texture2D(tDirt,vWXZ*DIRT_K).rgb/vec3(0.491,0.467,0.431);\nvec3 gd=clamp(mix(tg,td,vDirt),0.0,2.2)*(uMacro>0.0?mix(1.0,texture2D(tMacro,vWXZ*0.025).r/0.502,uMacro):1.0);float gk=0.8;\n'+matGlsl()+'diffuseColor.rgb*=mix(vec3(1.0),gd,gk*texBase);\ndiffuseColor.rgb*=(1.0-0.32*max(vWet*vDirt,0.6*mudF))*(1.0-0.12*rainF);\nif(vDirt>0.01&&texMix>0.5)diffuseColor.rgb*=mix(vec3(1.0),faceDetail(vWP,vSD,uPipeZ),vDirt);\n#include <color_fragment>\n'+matGlslPost()).replace('#include <lights_fragment_end>',
     'float skyO=1.0;\nfor(int m=0;m<4;m+=2){vec2 d=vWXZ-uOcc[m].xy;float c=cos(uOcc[m].z),s=sin(uOcc[m].z);vec2 l=vec2(d.x*c-d.y*s,d.x*s+d.y*c-uOcc[m+1].z);vec2 q=abs(l)-uOcc[m+1].xy;\nfloat dist=length(max(q,0.0))+min(max(q.x,q.y),0.0);skyO*=1.0-0.75*(1.0-smoothstep(-0.4,1.6,dist));}\nirradiance*=skyO;\n#include <lights_fragment_end>');
 };
 const geo=new THREE.PlaneGeometry(S,S,N,N); geo.rotateX(-Math.PI/2);
