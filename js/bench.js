@@ -8,7 +8,7 @@ const bench={on:false,t:0,lvl:-1,steps:[],clones:[],built:false,barT:0,pr:0};
 const benchSaved=new Map();
 function benchMats(){scene.traverse(o=>{if(o.material)for(const m of [].concat(o.material))m.needsUpdate=true})}
 const DIAG_OFF={
-  shadows:on=>{sun.castShadow=!on},
+  shadows:on=>{sun.castShadow=!on&&gfxCur.sh>0},
   lighting:on=>{if(on){benchSaved.set('tm',renderer.toneMapping);renderer.toneMapping=THREE.NoToneMapping}else if(benchSaved.has('tm')){renderer.toneMapping=benchSaved.get('tm');benchSaved.delete('tm')}benchMats()},
   ground:on=>{if(on){benchSaved.set('tex',[texMixU.value,texBaseU.value]);texMixU.value=0;texBaseU.value=0}else if(benchSaved.has('tex')){[texMixU.value,texBaseU.value]=benchSaved.get('tex');benchSaved.delete('tex')}},
   grass:on=>{for(const m of [tufts,lawnClumps,lawnFar,clipMesh]){if(on){benchSaved.set(m,m.visible);m.visible=false}else if(benchSaved.has(m)){m.visible=benchSaved.get(m);benchSaved.delete(m)}}},
@@ -77,9 +77,9 @@ function showBenchResults(){
   else if(top)sum+=`<p style="margin-top:8px">Biggest single gain: <b>${top.name}</b> (${sg(gain(top))} FPS).</p>`;
   $('#benchSummary').innerHTML=sum;
   const w=renderer.domElement.width,h=renderer.domElement.height,gpu=gpuName();
-  $('#benchDevice').textContent=`${gpu} · ${w}×${h} px at ${maxPR}x · Graphics ${GFX[gfxKey].name} · ${navigator.platform||''}`+(glResets?` · ${glResets} graphics reset${glResets>1?'s':''} on this device`:'');
+  $('#benchDevice').textContent=`${gpu} · ${w}×${h} px at ${maxPR}x · Graphics ${gfxName()} · ${navigator.platform||''}`+(glResets?` · ${glResets} graphics reset${glResets>1?'s':''} on this device`:'');
   const ver=window.EFFORT&&EFFORT.versions?EFFORT.versions[EFFORT.versions.length-1].v:'?';
-  $('#benchText').value=[`Corley's Island speed test (v3: diagnosis + excavator + truck pairs), game version ${ver}`,`GPU: ${gpu}`,`Graphics: ${GFX[gfxKey].name}${PHONE?' (phone)':''}`,`Resolution: ${w}x${h} (${maxPR}x)`,`Smooth 55+ FPS up to: ${t55?fmtTris(t55):'not reached'}`,`Playable 30+ FPS up to: ${t30?fmtTris(t30):'not reached'}`,
+  $('#benchText').value=[`Corley's Island speed test (v3: diagnosis + excavator + truck pairs), game version ${ver}`,`GPU: ${gpu}`,`Graphics: ${gfxName()}${PHONE?' (phone)':''}`,`Resolution: ${w}x${h} (${maxPR}x)`,`Smooth 55+ FPS up to: ${t55?fmtTris(t55):'not reached'}`,`Playable 30+ FPS up to: ${t30?fmtTris(t30):'not reached'}`,
     'Diagnosis, plain scene, one feature off at a time (gain vs the average of the two Normal runs):',...diag.map(r=>`${r.name} | ${r.avg.toFixed(1)} avg FPS | ${r.low.toFixed(0)} 1% low${r.name.startsWith('Normal')?'':' | '+sg(gain(r))}`),
     'Load levels:',...rows.map(r=>`${r.machines} excavators + ${r.machines} trucks | ${fmtTris(r.tris)} tris | ${Math.round(r.calls)} draws | ${r.avg.toFixed(1)} avg FPS | ${r.low.toFixed(0)} 1% low`)].join('\n');
   $('#bench').hidden=false;
