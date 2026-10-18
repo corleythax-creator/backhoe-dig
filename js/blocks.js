@@ -4,7 +4,7 @@
 // everything that rides or lands uses.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 // ---------- blocks ----------
-// blocks snap to a 1 ft world grid (1 in for pieces thinner than a foot), and optionally to the faces of the blocks already set, so they line up into walls and stacks; or go wherever you aim (blkLock). Each is a box w (east-west) by d (north-south)
+// blocks snap to a world grid (1 ft, or finer: blkGrid) and/or to the faces of the blocks already set, so they line up into walls and stacks; or go wherever you aim (blkLock). Each is a box w (east-west) by d (north-south)
 // by h (tall), in metres, of material m (0 plain concrete, otherwise its MAT_LIST id). It rests on the highest ground or
 // block top under its footprint and drops when what holds it is dug out or picked up. Tracks and tires roll over a 1 ft
 // block; taller ones stop them
@@ -12,7 +12,9 @@ const FT=0.3048,IN=FT/12,BLK_MAX=240,BLK_CLIMB=0.35,BLK_FT=10,BLK_REACH=[3,80],b
 // the size being set (inches, from BLK_IN), its material, and how far out the first-person aim reaches (ft)
 const blkDim={w:24,d:24,h:24},BLK_IN=[1,2,3,4,6,8,12,18,24,36,48,60,72,84,96,108,120];
 // how a block lands: 'grid' on a whole-foot grid, 'blocks' the grid plus flush against nearby blocks, 'free' exactly where aimed
-const BLK_LOCKS=[['grid','Grid'],['blocks','Grid + blocks'],['free','Free']];let blkLock='grid';
+const BLK_LOCKS=[['grid','Grid'],['gridblocks','Grid + blocks'],['blocks','Blocks only'],['free','Free']];let blkLock='grid';
+// the grid's cell, in inches (BLK_GRIDS, finest to coarsest)
+const BLK_GRIDS=[1,2,3,6,12];let blkGrid=12;
 let blkOn=false,blkWake=0,blkMat=0,blkReach=12,blkFPTold=false;
 // one instanced mesh per material in use; the texture is laid on in world space so any size tiles it evenly and
 // neighbouring blocks line up. Plain concrete (blkMesh) gets its texture in applyTextures (truck.js)
@@ -40,8 +42,8 @@ blkGhost.add(new THREE.Mesh(new THREE.BoxGeometry(1,1,1),ghostFill),new THREE.Li
 blkGhost.visible=false;scene.add(blkGhost);
 const blkO=new THREE.Object3D(),blkCol=new THREE.Color(),blkP={x:0,z:0,y:0,w:FT,d:FT,h:FT,ok:false,why:''},blkV=new THREE.Vector3(),blkE=new THREE.Vector3();
 function blkReset(){blocks.length=0;for(const im of blkMeshes)if(im)im.count=0;blkWake=0}
-// centre for a block w long on one axis so its edges sit on the grid (1 ft, or 1 in for thin pieces)
-function blkSnap(v,w){const g=w<FT-1e-6?IN:FT;return Math.round((v-w/2)/g)*g+w/2}
+// centre for a block w long on one axis so its edges sit on the grid
+function blkSnap(v,w){const g=blkGrid*IN;return Math.round((v-w/2)/g)*g+w/2}
 // pull a block's faces flush with the faces of blocks within 1 ft, on each axis
 function blkMagnet(x,z,w,d){const R=0.3;let bx=R,bz=R,ox=0,oz=0;
   for(const b of blocks){
@@ -98,7 +100,8 @@ function blkTarget(w,d){
   const k=WK_R+Math.max(w,d)/2+0.12;return [wk.x+Math.sin(wk.yaw)*k,wk.z+Math.cos(wk.yaw)*k]}
 // where a block of the chosen size would land and whether it may go there
 function blkAim(){const w=blkDim.w*IN,d=blkDim.d*IN,h=blkDim.h*IN,[ax,az]=blkTarget(w,d);let x=ax,z=az;
-  if(blkLock!=='free'){x=blkSnap(ax,w);z=blkSnap(az,d);if(blkLock==='blocks')[x,z]=blkMagnet(x,z,w,d)}
+  if(blkLock==='grid'||blkLock==='gridblocks'){x=blkSnap(ax,w);z=blkSnap(az,d)}
+  if(blkLock==='gridblocks'||blkLock==='blocks')[x,z]=blkMagnet(x,z,w,d)
   let y=blkGround(x,z,w,d);
   for(const b of blocks)if(blkOver(b,x,z,w,d))y=Math.max(y,b.y+b.h);
   const p=blkP;p.x=x;p.z=z;p.y=y;p.w=w;p.d=d;p.h=h;p.ok=false;
@@ -139,6 +142,7 @@ function setBlocks(on){blkOn=on;const btn=$('#blkBtn');btn.setAttribute('aria-pr
   if(on&&mode!=='dig'&&mode!=='walk')setMode('dig');blkUI()}
 const blkReachEl=$('#blkReach');
 function blkUI(){for(const k of ['w','d','h'])$(`#blkBar .bstep[data-k="${k}"] b`).textContent=blkInTxt(blkDim[k]);
+  $('#blkGridRow b').textContent=blkInTxt(blkGrid);$('#blkGridRow').hidden=blkLock!=='grid'&&blkLock!=='gridblocks';
   $('#blkLock').textContent=BLK_LOCKS.find(l=>l[0]===blkLock)[1];
   blkReachEl.querySelector('b').textContent=`${Math.round(blkReach)} ft`;blkReachEl.hidden=!blkFP();
   const s=$('#blkMat');if(+s.value!==blkMat)s.value=blkMat}
@@ -176,7 +180,7 @@ function blkTick(dt){
 $('#blkBtn').onclick=()=>setBlocks(!blkOn);
 $('#blkPlace').onclick=placeBlock;$('#blkRemove').onclick=removeBlock;$('#blkTurn').onclick=blkTurn;
 document.querySelectorAll('#blkBar .bstep button').forEach(b=>b.onclick=()=>{const k=b.parentNode.dataset.k,s=+b.dataset.d;
-  if(k==='reach')blkReachBy(s*2);else blkStepDim(k,s)});
+  if(k==='reach')blkReachBy(s*2);else if(k==='grid'){blkGrid=BLK_GRIDS[clamp(BLK_GRIDS.indexOf(blkGrid)+s,0,BLK_GRIDS.length-1)];blkUI()}else blkStepDim(k,s)});
 $('#blkLock').onclick=blkLockNext;
 // the material list: plain concrete, then the library by group
 {const s=$('#blkMat');s.add(new Option('Concrete (plain)',0));

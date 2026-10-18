@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-18T02:17:00Z",
+ "updated": "2026-10-18T02:23:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 673,
+   "dh": 674,
    "act": 14,
-   "versions": 95
+   "versions": 96
   }
  ],
  "extra": [
@@ -948,6 +948,15 @@ window.EFFORT = {
    "tris": 1621607,
    "chars": 594435,
    "what": "A tidier Blocks panel and finer blocks: the controls are now one box of rows (material, wide, long, tall, reach) with Turn, Lift and Place along the bottom. Blocks can be as thin as 1 inch (steps of 1 in up to a foot, then larger), and the \"too close to the edge\" limit is gone. A new Snap row (or the \\ key) picks Grid (as before), Grid + blocks (faces line up flush with nearby blocks, even off-grid ones) or Free (exactly where you aim)."
+  },
+  {
+   "v": 103,
+   "asked": "2026-10-17T21:18:00-05:00",
+   "live": "2026-10-17T21:23:00-05:00",
+   "dh": 1,
+   "tris": 1620566,
+   "chars": 595041,
+   "what": "Block snapping you can set: a new Blocks only mode locks a block flush to nearby blocks and otherwise goes exactly where you aim, without falling back to the grid (the Snap row now cycles Grid, Grid + blocks, Blocks only and Free). A new Grid row sets the grid's cell from 1 in up to 1 ft, so blocks can line up in finer steps."
   }
  ]
 };
