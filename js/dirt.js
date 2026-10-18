@@ -189,6 +189,8 @@ function rutSlump(i0,i1,j0,j1){const lim=RUT_SLOPE*CELL;i1=Math.min(N-1,i1);j1=M
   for(let pass=0;pass<3;pass++)for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const k=j*V+i;
     if(mudA[k]<0.05||prot[k])continue;flow(k,k+1);flow(k,k+V)}}
 function stampRut(x,z,yaw,hw,hl,dt){
+  // tracks and tyres lay the grass flat (scenery.js)
+  grassCrush(x,z,yaw,hw,hl,6,1,dt);
   const s=Math.sin(yaw),c=Math.cos(yaw),R=Math.hypot(hw+RUT_BERM,hl);let any=0,outL=0,outR=0,mSum=0,mN=0;rutB.length=0;
   const i0=Math.max(0,Math.floor((x-R+S/2)/CELL)),i1=Math.min(N,Math.ceil((x+R+S/2)/CELL)),j0=Math.max(0,Math.floor((z-R+S/2)/CELL)),j1=Math.min(N,Math.ceil((z+R+S/2)/CELL));
   for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const wx=i*CELL-S/2,wz=j*CELL-S/2,dx=wx-x,dz=wz-z,u=dx*s+dz*c,v=dx*c-dz*s,av=Math.abs(v);
@@ -209,7 +211,7 @@ function stampRut(x,z,yaw,hw,hl,dt){
   // grass tufts in the churned ground go, a few times a second (each refresh walks every tuft)
   if(tuftBox&&timeU.value-tuftT>0.3){tuftT=timeU.value;updateTufts(...tuftBox);tuftBox=null}
   // past the dig zone's edge the mud tiles take the ruts (mud.js)
-  if(x-R<-S/2||x+R>S/2||z-R<-S/2||z+R>S/2)any=Math.max(any,farRut(x,z,yaw,hw,hl,dt));
+  if(x-R<-S/2||x+R>S/2||z-R<-S/2||z+R>S/2){const fr=farRut(x,z,yaw,hw,hl,dt);if(fr){any=Math.max(any,fr);tuftFarMark(x-R,x+R,z-R,z+R)}}
   if(crushT<=0){for(const kd of CLODS){let hit=false;
     for(let n=0;n<kd.n;n++){if(!kd.sz[n])continue;const dx=kd.x[n]-x,dz=kd.z[n]-z;if(dx*dx+dz*dz>R*R)continue;
       const u=dx*s+dz*c,v=dx*c-dz*s;if(Math.abs(u)<hl&&Math.abs(v)<hw){kd.sz[n]=0;kd.mesh.setMatrixAt(n,ZERO);hit=true}}

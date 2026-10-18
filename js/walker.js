@@ -68,6 +68,8 @@ function updateWalker(dt,mx,mz,lookX,lookY){
       if(camMode!=='cab'){let a=Math.atan2(vx,vz)-wk.yaw;a=Math.atan2(Math.sin(a),Math.cos(a));wk.yaw+=a*Math.min(1,dt*12)}}
     if(camMode==='cab')wk.yaw=wk.view}
   const sp=Math.hypot(vx,vz);wk.spd+=(sp-wk.spd)*Math.min(1,dt*10);
+  // boots tread the grass down partway (scenery.js); not from up on a block or a deck
+  if(wk.ground&&sp>0.3&&wk.y-hAt(wk.x,wk.z)<0.2)grassCrush(wk.x,wk.z,Math.atan2(vx,vz),0.16,0.22,1.2+0.25*sp,0.55,dt);
   // steep ground (a trench wall) stops you on foot; jump to get up it
   const ox=wk.x,oz=wk.z,g0=hAt(ox,oz);wk.x+=vx*dt;wk.z+=vz*dt;
   {const g1=hAt(wk.x,wk.z),run=Math.hypot(wk.x-ox,wk.z-oz);if(run>1e-5&&g1>wk.y+0.02&&(g1-g0)/run>1.3){wk.x=ox;wk.z=oz}}

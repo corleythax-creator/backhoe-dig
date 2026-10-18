@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-18T00:39:10Z",
+ "updated": "2026-10-18T00:39:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 575,
+   "dh": 583,
    "act": 12.0,
-   "versions": 77
+   "versions": 78
   }
  ],
  "extra": [
@@ -786,6 +786,15 @@ window.EFFORT = {
    "tris": 1620195,
    "chars": 497848,
    "what": "Turning starts gentler: the Turn slider now starts at 60% instead of 100%. It is saved only once you move it, so devices that opened v82 without touching it start at 60% too, and a setting you chose is kept."
+  },
+  {
+   "v": 85,
+   "asked": "2026-10-17T19:25:00-05:00",
+   "live": "2026-10-17T19:39:28-05:00",
+   "dh": 8,
+   "tris": 1620977,
+   "chars": 502641,
+   "what": "Field grass that reacts: tracks and tyres lay the grass flat the way they drove, the mower's wheels nearly flat and your boots partway, leaving pale trampled tracks that stay down for a minute and spring back over about two and a half minutes. The grass and the tall grass lean out of the worker's way as well as the machines'. In the rain the grass darkens and droops, heavier where the ground is soaked, and stands back up as it dries. Mud ruts outside the dig zone now clear the grass from them, and it comes back when the ruts are smoothed or the site is reset."
   }
  ]
 };
