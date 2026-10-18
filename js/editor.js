@@ -4,7 +4,7 @@
 // scenery.js), saved on this device
 // as you go; the map can be copied out as text and loaded back. While it is open the game stands still.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
-const ed={tool:'raise',size:15*FT,str:5,kind:'pine',mat:10,square:false,x:0,z:10,yaw:0,pitch:0.95,dist:45,
+const ed={tool:'raise',size:15*FT,str:5,kind:'pine',mat:10,square:false,soft:false,feather:0.5,x:0,z:10,yaw:0,pitch:0.95,dist:45,
   stroke:null,flatH:0,road:null,rpt:-1,drawing:false,roadSnap:null,bx:0,bz:0,hover:false,pend:null,refT:0,sel:null,drag:null,snap:null,changed:false,saveT:0,undo:[],redo:[]};
 const ED_TOOLS={look:'Look',raise:'Raise',lower:'Lower',flatten:'Flatten',smooth:'Smooth',dirt:'Dirt',grass:'Grass',select:'Select',add:'Add',query:'Query',roads:'Roads',paint:'Paint'};
 const ED_BRUSH=['raise','lower','flatten','smooth','dirt','grass','paint'];
@@ -16,7 +16,10 @@ const edFt=m=>m/FT,edFmt=(m,d)=>(m/FT).toFixed(d===undefined?1:d);
 // brush and selection rings drawn over the ground
 function edRing(color){const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(65*3),3));
   const l=new THREE.Line(g,new THREE.LineBasicMaterial({color,depthTest:false,transparent:true,opacity:0.95,fog:false,toneMapped:false}));l.renderOrder=20;l.frustumCulled=false;l.visible=false;scene.add(l);return l}
-const edBrushRing=edRing(0xffd23f),edSelRing=edRing(0xf07a22);
+const edBrushRing=edRing(0xffd23f),edSelRing=edRing(0xf07a22),edSoftRing=edRing(0xfff2b0);edSoftRing.material.opacity=0.6;
+// the brush ring, and for soft-edged paint a second ring where the fade starts
+function edBrushAt(x,z){const p=ed.tool==='paint',sq=ed.square&&p;edRingAt(edBrushRing,x,z,ed.size,sq);
+  if(p&&ed.soft)edRingAt(edSoftRing,x,z,ed.size*(1-ed.feather),sq);else edSoftRing.visible=false}
 function edRingAt(l,x,z,r,sq){const p=l.geometry.attributes.position.array;
   for(let i=0;i<=64;i++){const a=i/64*Math.PI*2,c=Math.cos(a),s=Math.sin(a),k=sq?1/Math.max(Math.abs(c),Math.abs(s)):1,px=x+c*r*k,pz=z+s*r*k;p[i*3]=px;p[i*3+1]=hAt(px,pz)+0.15;p[i*3+2]=pz}
   l.geometry.attributes.position.needsUpdate=true;l.visible=true}
@@ -28,17 +31,18 @@ function editorOpen(){if(edOn||bench.on)return;edOn=true;mapAssets=assets;
   ed.yaw=Math.atan2(camera.position.x-fv.x,camera.position.z-fv.z);ed.dist=45;ed.pitch=0.95;
   edTool(ed.tool);edInfo(null);toast('Map editor. The game is paused while you edit.','',2600)}
 function editorClose(){if(!edOn)return;edStrokeEnd();edRoadFinish();edOn=false;document.body.classList.remove('editing');$('#editor').hidden=true;
-  edBrushRing.visible=edSelRing.visible=false;ed.sel=null;ed.road=null;ed.rpt=-1;edRoadsDraw();clearKeys();firstCam=true;last=performance.now();
+  edBrushRing.visible=edSelRing.visible=edSoftRing.visible=false;ed.sel=null;ed.road=null;ed.rpt=-1;edRoadsDraw();clearKeys();firstCam=true;last=performance.now();
   if(ed.changed){edSave();mapBg=null;mapDirty=true;ed.changed=false}}
 $('#edDone').onclick=editorClose;
 $('#editBtn').onclick=editorOpen;
 
 // ---------- tools ----------
-function edTool(t){if(t!=='roads'){edRoadFinish();ed.road=null;ed.rpt=-1}ed.tool=t;ed.sel=t==='select'?ed.sel:null;edSelRing.visible=!!ed.sel;
+function edTool(t){if(t!=='roads'){edRoadFinish();ed.road=null;ed.rpt=-1}ed.tool=t;$('#edOpts').hidden=false;ed.sel=t==='select'?ed.sel:null;edSelRing.visible=!!ed.sel;
   document.querySelectorAll('.edtools button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.t===t));
   document.querySelectorAll('#edOpts [data-for]').forEach(el=>el.hidden=!el.dataset.for.split(' ').includes(t));
-  if(t!=='query'&&t!=='select')edInfo(null);edBrushRing.visible=false;if(t==='roads')edRoadCard();edRoadsDraw()}
-document.querySelectorAll('.edtools button').forEach(b=>b.onclick=()=>edTool(b.dataset.t));
+  if(t!=='query'&&t!=='select')edInfo(null);edBrushRing.visible=edSoftRing.visible=false;if(t==='roads')edRoadCard();edRoadsDraw()}
+// tapping the tool already picked folds its options away (or back), to see more of the ground
+document.querySelectorAll('.edtools button').forEach(b=>b.onclick=()=>{if(b.dataset.t===ed.tool){const o=$('#edOpts');o.hidden=!o.hidden}else edTool(b.dataset.t)});
 document.querySelectorAll('.edkind button').forEach(b=>b.onclick=()=>{ed.kind=b.dataset.k;document.querySelectorAll('.edkind button').forEach(c=>c.setAttribute('aria-pressed',c===b))});
 // the material library: every texture by kind, plus Natural ground, which clears a material
 (function(){const N=MAT_LIST.length,sw=m=>m?`<i style="background-size:${N*100}% 100%;background-position:${(m-1)/(N-1)*100}% 0"></i>`:'<i class="nat"></i>';
@@ -48,12 +52,14 @@ document.querySelectorAll('.edkind button').forEach(b=>b.onclick=()=>{ed.kind=b.
   const box=$('#edMats');box.innerHTML=h;
   box.querySelectorAll('.edmat').forEach(b=>b.onclick=()=>{ed.mat=+b.dataset.m;box.querySelectorAll('.edmat').forEach(c=>c.setAttribute('aria-pressed',c===b));edMatLabel()})})();
 document.querySelectorAll('.edshape button').forEach(b=>b.onclick=()=>{ed.square=b.dataset.s==='sq';document.querySelectorAll('.edshape button').forEach(c=>c.setAttribute('aria-pressed',c===b))});
+// Hard edge lays whole cells; Soft edge fades the material out to the natural ground over the outer part of the brush
+document.querySelectorAll('.ededge button').forEach(b=>b.onclick=()=>{ed.soft=b.dataset.e==='soft';$('#edSoftOpt').hidden=!ed.soft;document.querySelectorAll('.ededge button').forEach(c=>c.setAttribute('aria-pressed',c===b))});
 function edMatLabel(){const d=MAT_LIST[ed.mat-1];$('#edMatV').textContent=d?`${d.n} (one tile is ${d.ft} ft)`:'Natural ground (clears materials)'}
 edMatLabel();
-const edSizeIn=$('#edSize'),edStrIn=$('#edStr');
-function edSliders(){$('#edSizeV').textContent=`${Math.round(edFt(ed.size))} ft`;$('#edStrV').textContent=ed.str}
-edSizeIn.oninput=()=>{ed.size=+edSizeIn.value*FT;edSliders()};edStrIn.oninput=()=>{ed.str=+edStrIn.value;edSliders()};
-edSizeIn.value=Math.round(edFt(ed.size));edStrIn.value=ed.str;edSliders();
+const edSizeIn=$('#edSize'),edStrIn=$('#edStr'),edSoftIn=$('#edSoft');
+function edSliders(){$('#edSizeV').textContent=`${Math.round(edFt(ed.size))} ft`;$('#edStrV').textContent=ed.str;$('#edSoftV').textContent=`${Math.round(ed.feather*100)}%`}
+edSizeIn.oninput=()=>{ed.size=+edSizeIn.value*FT;edSliders()};edStrIn.oninput=()=>{ed.str=+edStrIn.value;edSliders()};edSoftIn.oninput=()=>{ed.feather=+edSoftIn.value/100;edSliders()};
+edSizeIn.value=Math.round(edFt(ed.size));edStrIn.value=ed.str;edSoftIn.value=Math.round(ed.feather*100);edSliders();
 
 // ---------- picking the ground ----------
 const edRay=new THREE.Raycaster(),edNdc=new THREE.Vector2();
@@ -71,7 +77,7 @@ function edHit(x,z){let best=null,bd=1;
 
 // ---------- reshaping and painting ----------
 const edGrow=(r,a,b,c,d)=>r?[Math.min(r[0],a),Math.max(r[1],b),Math.min(r[2],c),Math.max(r[3],d)]:[a,b,c,d];
-function edStrokeStart(x,z){ed.stroke={h:ED_H.slice(),p:ED_P.slice(),m:ED_M.slice(),ij:null};ed.bx=x;ed.bz=z;ed.flatH=baseHeight(x,z)}
+function edStrokeStart(x,z){ed.stroke={h:ED_H.slice(),p:ED_P.slice(),m:ED_M.slice(),a:ED_A.slice(),ij:null};ed.bx=x;ed.bz=z;ed.flatH=baseHeight(x,z)}
 // one frame of the brush: a soft round brush, strongest in the middle
 function edBrush(dt){const R=ed.size,cx=ed.bx,cz=ed.bz,t=ed.tool,k=ed.str/10;
   const i0=Math.max(3,Math.floor((cx-R-ED_X0)/ED_C)),i1=Math.min(ED_NX-4,Math.ceil((cx+R-ED_X0)/ED_C)),j0=Math.max(3,Math.floor((cz-R-ED_Z0)/ED_C)),j1=Math.min(ED_NZ-4,Math.ceil((cz+R-ED_Z0)/ED_C));
@@ -82,10 +88,19 @@ function edBrush(dt){const R=ed.size,cx=ed.bx,cz=ed.bz,t=ed.tool,k=ed.str/10;
   let hs=null,W=0;
   if(t==='smooth'||t==='flatten'){W=i1-i0+3;hs=new Float32Array(W*(j1-j0+3));
     for(let j=j0-1;j<=j1+1;j++)for(let i=i0-1;i<=i1+1;i++)hs[(j-j0+1)*W+i-i0+1]=baseHeight(ED_X0+i*ED_C,ED_Z0+j*ED_C)}
-  // materials go down whole cells, hard edged, inside the ring (or the square, lined up north-south, for slabs and plates)
-  if(t==='paint'){let n=0;for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const q=j*ED_NX+i,dx=ED_X0+i*ED_C-cx,dz=ED_Z0+j*ED_C-cz;
-      if(ED_M[q]!==ed.mat&&(ed.square?Math.max(Math.abs(dx),Math.abs(dz)):Math.hypot(dx,dz))<=R){ED_M[q]=ed.mat;n++}}
-    if(!n)return;matU.tMatId.value.needsUpdate=true}
+  // materials go down whole cells inside the ring (or the square, lined up north-south, for slabs and plates). Hard
+  // edged, each cell is covered fully; soft edged, the cover fades to nothing over the outer part (the softness) of the
+  // brush. A cell holds one material: a fade only takes over another material where it covers more, and Natural
+  // ground fades the paint back out
+  if(t==='paint'){let n=0,ids=false;const R0=R*(1-ed.feather),mat=ed.mat;
+    for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const q=j*ED_NX+i,dx=ED_X0+i*ED_C-cx,dz=ED_Z0+j*ED_C-cz,d=ed.square?Math.max(Math.abs(dx),Math.abs(dz)):Math.hypot(dx,dz);
+      if(d>R)continue;const w=ed.soft?Math.round(255*(1-ss(R0,R,d))):255;if(w<=0)continue;
+      const m0=ED_M[q],a0=ED_A[q];let m=m0,a=a0;
+      if(!mat){if(m0){a=Math.min(a0,255-w);if(!a)m=0}}
+      else if(m0===mat)a=Math.max(a0,w);
+      else if(!m0||w>=a0){m=mat;a=w}
+      if(m!==m0||a!==a0){ED_M[q]=m;ED_A[q]=a;n++;if(m!==m0)ids=true}}
+    if(!n)return;if(ids)matU.tMatId.value.needsUpdate=true}
   else for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const x=ED_X0+i*ED_C,z=ED_Z0+j*ED_C,d=Math.hypot(x-cx,z-cz);if(d>R)continue;
     const f=0.5*(1+Math.cos(Math.PI*d/R)),q=j*ED_NX+i;
     if(t==='raise')ED_H[q]+=1.5*k*dt*f;
@@ -108,9 +123,9 @@ function edRefresh(r,full){if(!r)return;const [x0,x1,z0,z1]=r;
   if(assets.some(a=>a.x>x0-2&&a.x<x1+2&&a.z>z0-2&&a.z<z1+2)){assetsBuild();shpTreesRefresh()}
   if(full&&(x0<-S/2+1||x1>S/2-1||z0<-S/2+1||z1>S/2-1||x0<MID[0]+1||x1>MID[1]-1||z0<MID[2]+1||z1>MID[3]-1))buildSkirts()}
 function edStrokeEnd(){const s=ed.stroke;if(!s)return;ed.stroke=null;edRefresh(ed.pend,true);ed.pend=null;
-  if(!s.ij)return;const [i0,i1,j0,j1]=s.ij,w=i1-i0+1,h=new Float32Array(w*(j1-j0+1)),p=new Float32Array(h.length),m=new Uint8Array(h.length);
-  for(let j=j0;j<=j1;j++){const a=j*ED_NX+i0,b=j*ED_NX+i1+1,o=(j-j0)*w;h.set(s.h.subarray(a,b),o);p.set(s.p.subarray(a,b),o);m.set(s.m.subarray(a,b),o)}
-  edPush({g:[i0,i1,j0,j1],h,p,m});edQueueSave();matTexUpdate()}
+  if(!s.ij)return;const [i0,i1,j0,j1]=s.ij,w=i1-i0+1,h=new Float32Array(w*(j1-j0+1)),p=new Float32Array(h.length),m=new Uint8Array(h.length),c=new Uint8Array(h.length);
+  for(let j=j0;j<=j1;j++){const a=j*ED_NX+i0,b=j*ED_NX+i1+1,o=(j-j0)*w;h.set(s.h.subarray(a,b),o);p.set(s.p.subarray(a,b),o);m.set(s.m.subarray(a,b),o);c.set(s.a.subarray(a,b),o)}
+  edPush({g:[i0,i1,j0,j1],h,p,m,a:c});edQueueSave();matTexUpdate()}
 
 // ---------- undo ----------
 function edPush(u){ed.undo.push(u);if(ed.undo.length>30)ed.undo.shift();ed.redo.length=0;edUndoBtns()}
@@ -118,7 +133,7 @@ function edUndoBtns(){$('#edUndo').disabled=!ed.undo.length;$('#edRedo').disable
 // swaps the saved state with the current one, so the same entry undoes and redoes
 function edSwap(u){
   if(u.g){const [i0,i1,j0,j1]=u.g,w=i1-i0+1;
-    for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const q=j*ED_NX+i,o=(j-j0)*w+i-i0,a=ED_H[q],b=ED_P[q],c=ED_M[q];ED_H[q]=u.h[o];ED_P[q]=u.p[o];ED_M[q]=u.m[o];u.h[o]=a;u.p[o]=b;u.m[o]=c}
+    for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const q=j*ED_NX+i,o=(j-j0)*w+i-i0,a=ED_H[q],b=ED_P[q],c=ED_M[q],d=ED_A[q];ED_H[q]=u.h[o];ED_P[q]=u.p[o];ED_M[q]=u.m[o];ED_A[q]=u.a[o];u.h[o]=a;u.p[o]=b;u.m[o]=c;u.a[o]=d}
     matU.tMatId.value.needsUpdate=true;matTexUpdate();
     edRefresh([ED_X0+i0*ED_C-0.6,ED_X0+i1*ED_C+0.6,ED_Z0+j0*ED_C-0.6,ED_Z0+j1*ED_C+0.6],true)}
   else if(u.roads){const now=edRoadsSnap();edRoadsSet(u.roads);u.roads=now;ed.road=null;ed.rpt=-1;edRoadCard();edRoadsDraw();edRefresh(u.rect,true)}
@@ -271,7 +286,7 @@ function edPan(dx,dy){const s=ed.dist*0.0019*(720/Math.max(320,innerHeight)),c=M
   ed.x=clamp(ed.x+(-c*dx-n*dy)*s,-120,120);ed.z=clamp(ed.z+(n*dx-c*dy)*s,-120,350)}
 function edDown(x,y){const p=edPick(x,y),t=ed.tool;
   if(t==='look'||!p){edMouse={pan:true,x,y};return}
-  if(ED_BRUSH.includes(t)){edStrokeStart(p.x,p.z);edRingAt(edBrushRing,p.x,p.z,ed.size,ed.square&&ed.tool==='paint');return}
+  if(ED_BRUSH.includes(t)){edStrokeStart(p.x,p.z);edBrushAt(p.x,p.z);return}
   if(t==='roads'){edRoadDown(p,x,y);return}
   if(t==='query'){edQuery(p.x,p.z);edRingAt(edBrushRing,p.x,p.z,0.5);ed.drag={query:true};return}
   if(t==='add'){const b=edAssetsSnap(),a={t:ed.kind,x:p.x,z:p.z,yaw:Math.random()*6.28,s:ed.kind==='rock'?0.7+Math.random()*0.6:0.85+Math.random()*0.4,c:Math.floor(Math.random()*6)};
@@ -281,13 +296,13 @@ function edDown(x,y){const p=edPick(x,y),t=ed.tool;
 function edMove(x,y){
   if(edMouse){if(edMouse.pan)edPan(x-edMouse.x,y-edMouse.y);else{ed.yaw-=(x-edMouse.x)*0.006;ed.pitch=clamp(ed.pitch+(y-edMouse.y)*0.005,0.25,1.45)}edMouse.x=x;edMouse.y=y;return}
   const p=edPick(x,y);if(!p)return;
-  if(ed.stroke){ed.bx=p.x;ed.bz=p.z;edRingAt(edBrushRing,p.x,p.z,ed.size,ed.square&&ed.tool==='paint');return}
+  if(ed.stroke){ed.bx=p.x;ed.bz=p.z;edBrushAt(p.x,p.z);return}
   const d=ed.drag;
   if(d&&d.query){edQuery(p.x,p.z);edRingAt(edBrushRing,p.x,p.z,0.5);return}
   if(d&&d.road){edRoadDrag(d,p);return}
   if(d&&d.a){d.a.x=clamp(p.x+d.dx,-118,118);d.a.z=clamp(p.z+d.dz,-118,118);d.moved=true;assetsBuild();shpTreesRefresh();edRingSel();return}
   if(d&&d.m){edPlaceMachine(d.m,p.x+d.dx,p.z+d.dz);d.moved=true;edRingSel();return}
-  if(ED_BRUSH.includes(ed.tool)){edRingAt(edBrushRing,p.x,p.z,ed.size,ed.square&&ed.tool==='paint')}}
+  if(ED_BRUSH.includes(ed.tool)){edBrushAt(p.x,p.z)}}
 function edUp(){edMouse=null;edStrokeEnd();const d=ed.drag;ed.drag=null;
   if(d&&d.road){edRoadUp(d);return}
   if(d&&d.a&&(d.moved||d.added)){edPush({a:d.snap});ed.changed=true;edQueueSave();edSelect({a:d.a})}
@@ -306,7 +321,7 @@ canvas.addEventListener('pointermove',e=>{if(!edOn)return;const p=edPtrs.get(e.p
   if(p||e.pointerType==='mouse')edMove(e.clientX,e.clientY)});
 const edEnd=e=>{if(!edOn)return;if(!edPtrs.delete(e.pointerId))return;if(edGest){if(edPtrs.size<2)edGest=null;return}edUp()};
 canvas.addEventListener('pointerup',edEnd);canvas.addEventListener('pointercancel',edEnd);
-canvas.addEventListener('pointerleave',e=>{if(edOn&&e.pointerType==='mouse'&&!edPtrs.size)edBrushRing.visible=false});
+canvas.addEventListener('pointerleave',e=>{if(edOn&&e.pointerType==='mouse'&&!edPtrs.size)edBrushRing.visible=edSoftRing.visible=false});
 canvas.addEventListener('contextmenu',e=>{if(edOn)e.preventDefault()});
 canvas.addEventListener('wheel',e=>{if(!edOn)return;e.preventDefault();ed.dist=clamp(ed.dist*Math.exp(e.deltaY*0.0012),8,220)},{passive:false});
 

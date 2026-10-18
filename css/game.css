@@ -180,39 +180,39 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 @media (min-width:480px){.sliders{grid-template-columns:auto 1fr 3.2em;align-items:center;gap:8px 12px}
   .sliders label{margin-top:0;align-self:center}.sliders input{grid-column:2}.sliders output{grid-column:3;align-self:center;text-align:right}}
 #sndOn[aria-pressed="false"]{color:var(--danger);border-color:var(--danger)}
-/* Map editor: title and file/info cards top left, tool options and a 10-tool grid at the bottom; the game HUD hides */
+/* Map editor: everything in a column down the left, so the rest of the view is ground: the title bar along the top,
+   a two-wide tool strip, and beside it the tool's options with the file and info cards; the game HUD hides */
 body.editing #hud .top,body.editing #hud .sticks{display:none}
-#editor{position:fixed;inset:0;z-index:4;pointer-events:none;display:flex;flex-direction:column;justify-content:space-between;gap:8px;box-sizing:border-box;
+#editor{position:fixed;inset:0;z-index:4;pointer-events:none;display:flex;flex-direction:column;align-items:flex-start;gap:6px;box-sizing:border-box;
   padding:calc(env(safe-area-inset-top,0px) + 8px) max(10px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 10px) max(10px,env(safe-area-inset-left,0px))}
 #editor[hidden]{display:none}
-.edtop{display:flex;flex-direction:column;align-items:flex-start;gap:8px;min-height:0}
-.edbar{display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:8px;width:100%}
-.edbar h2{margin:0;font:800 24px/1 var(--f-display);letter-spacing:.05em;text-transform:uppercase;text-shadow:0 1px 4px rgba(0,0,0,.7)}
-.edbar .row{pointer-events:auto}
-.edpanel{pointer-events:auto;box-sizing:border-box;max-width:min(100%,460px);background:var(--hud);border:1px solid var(--hud-line);border-radius:10px;padding:10px 12px;display:flex;flex-direction:column;gap:8px;font:600 16px/1.3 var(--f-display)}
-.edpanel p{margin:0}.edpanel .hint{color:var(--muted);font-size:15px}
-.edpanel h3{margin:0;font:800 19px/1.1 var(--f-display);letter-spacing:.03em;color:var(--machine)}
+.edbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
+.edbar h2{margin:0;font:800 20px/1 var(--f-display);letter-spacing:.05em;text-transform:uppercase;text-shadow:0 1px 4px rgba(0,0,0,.7)}
+@media (max-width:480px){.edbar h2{display:none}}
+.edbar .row{pointer-events:auto;gap:4px}
+.edmain{flex:1;min-height:0;max-width:100%;display:flex;align-items:flex-start;gap:6px}
+.edtools{pointer-events:auto;flex:none;display:grid;grid-template-columns:repeat(2,64px);gap:4px}
+.edtools button{height:36px;padding:0 2px;font-size:14px;letter-spacing:.02em}
+.edside{flex:0 1 360px;min-width:0;max-height:100%;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:6px;border-radius:10px}
+.edpanel{pointer-events:auto;box-sizing:border-box;width:100%;background:var(--hud);border:1px solid var(--hud-line);border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;gap:6px;font:600 15px/1.25 var(--f-display)}
+.edpanel p{margin:0}.edpanel .hint{color:var(--muted);font-size:14px}
+.edpanel h3{margin:0;font:800 18px/1.1 var(--f-display);letter-spacing:.03em;color:var(--machine)}
 #edInfo dl{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;margin:0}
 #edInfo dt{font:700 13px/1.5 var(--f-display);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
 #edInfo dd{margin:0;font-variant-numeric:tabular-nums}
-.edfoot{display:flex;flex-direction:column;align-items:center;gap:8px}
-#edOpts{width:min(100%,640px);max-width:640px}
-.edopt{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
+.edopt{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px}
+.edopt .row{gap:4px}
 .edopt label{font:700 13px/1 var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
-.edopt output{min-width:44px;font-variant-numeric:tabular-nums}
-#editor input[type=range]{width:min(150px,30vw);accent-color:var(--machine)}
-.edtools{pointer-events:auto;display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:4px;width:min(100%,640px)}
-.edmats{max-height:min(40vh,420px);overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:6px;padding-right:4px}
+.edopt output{min-width:40px;font-variant-numeric:tabular-nums}
+#editor input[type=range]{flex:1 1 90px;min-width:80px;max-width:170px;accent-color:var(--machine)}
+.edmats{max-height:min(38vh,380px);overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:5px;padding-right:4px}
 .edmats h3 small{font:600 14px/1 var(--f-display);color:var(--muted);letter-spacing:0;margin-left:6px}
-.edmats h4{margin:4px 0 0;font:700 13px/1 var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
-.edmatgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(76px,1fr));gap:6px}
-#editor button.edmat{height:auto;padding:4px;display:flex;flex-direction:column;align-items:stretch;gap:4px;font:700 14px/1.15 var(--f-display);text-align:center}
-.edmat i{display:block;aspect-ratio:1;border-radius:6px;background:url(../textures/thumbs.jpg) 0 0/100% 100%}
+.edmats h4{margin:3px 0 0;font:700 12px/1 var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.edmatgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(62px,1fr));gap:4px}
+#editor button.edmat{height:auto;padding:3px;display:flex;flex-direction:column;align-items:stretch;gap:3px;font:700 12px/1.1 var(--f-display);letter-spacing:.02em;text-align:center}
+.edmat i{display:block;aspect-ratio:4/3;border-radius:5px;background:url(../textures/thumbs.jpg) 0 0/100% 100%}
 .edmat i.nat{background:linear-gradient(135deg,#5b8a3a,#4a7a30 60%,#8a6a3f)}
 #editor button.edmat[aria-pressed="true"]{background:var(--machine);color:#1c1309}
-@media (min-width:820px){.edtools{grid-template-columns:repeat(12,minmax(0,1fr));width:min(100%,980px)}#edOpts{width:min(100%,980px);max-width:980px}}
-.edtools button{height:46px;padding:0 2px;font-size:15px;letter-spacing:.02em}
-@media (max-width:420px){.edtools button{font-size:13px}}
 #editor .row button[aria-pressed="true"]{background:var(--machine);color:#1c1309}
 .edtools button[aria-pressed="true"],.edkind button[aria-pressed="true"],#editor button.go{background:var(--machine);color:#1c1309}
 #editor button.danger{color:var(--danger)}
