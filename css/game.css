@@ -65,7 +65,11 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 #resetBtn.arm{background:var(--danger);color:#fff}
 /* Sticks in the thumb zones, the mode switch stacked between them */
 .sticks{position:absolute;left:var(--pl);right:var(--pr);bottom:var(--pb);display:flex;justify-content:space-between;align-items:flex-end;gap:8px}
-.stickwrap{display:flex;flex-direction:column;align-items:center;gap:6px}
+.stickwrap{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px}
+/* Turn sensitivity, above the left stick: the slider is open on a computer; on a phone tap the chip to open it */
+.turnbox{position:absolute;left:0;bottom:100%;margin-bottom:6px;display:flex;align-items:center;gap:8px;zoom:var(--cs);pointer-events:auto}
+#turnBtn{height:36px;font-size:15px;white-space:nowrap}#turnBtn[aria-expanded="true"]{border-color:var(--machine)}
+#turnSl{width:160px;height:32px;margin:0;accent-color:var(--machine);touch-action:none;cursor:pointer}#turnSl[hidden]{display:none}
 .stick{--sz:min(calc(124px*var(--s)),calc((100vw - 40px)/2),calc(100vh - 150px*var(--s)));width:var(--sz);height:var(--sz);border-radius:50%;background:rgba(20,23,19,.38);border:2px solid rgba(255,255,255,.28);position:relative;pointer-events:auto;touch-action:none}
 .stick::before,.stick::after{content:"";position:absolute;background:rgba(255,255,255,.16)}
 .stick::before{left:50%;top:12px;bottom:12px;width:2px;margin-left:-1px}
