@@ -324,7 +324,7 @@ groundMat.onBeforeCompile=sh=>{
   // texture detail goes in ahead of the vertex colour so it is turned linear with it. groundOcc: sky light under the
   // excavator and truck, dimmed by distance to each footprint (x, z, yaw, unused; half width, half length, forward offset, unused)
   sh.uniforms.uOcc=groundOcc;Object.assign(sh.uniforms,matU);
-  sh.fragmentShader=`#define GRASS_K ${TEX_K.grass.toFixed(3)}\n#define DIRT_K ${TEX_K.dirt.toFixed(3)}\n#define MACRO_K ${TEX_K.macro.toFixed(2)}\n`+'uniform sampler2D tGrass;\nuniform sampler2D tDirt;\nuniform sampler2D tMacro;\nuniform float texMix;\nuniform float uPipeZ;\nuniform vec4 uOcc[4];\nuniform sampler2D tWet;\nuniform vec4 uWetO;\nvarying float vMud;\nvarying float vRain;\nvarying float vDirt;\nvarying float vWet;\nvarying float vSD;\nvarying float vMatA;\nvarying vec2 vWXZ;\nvarying vec3 vWP;\n'+MAT_GLSL_HEAD+FACE_GLSL+sh.fragmentShader.replace('#include <specularmap_fragment>','#include <specularmap_fragment>\nspecularStrength*=1.0+7.0*vWet*vDirt*(1.0-mudF)+2.0*mudF+1.5*rainF;').replace('#include <color_fragment>',
+  sh.fragmentShader=`#define GRASS_K ${TEX_K.grass.toFixed(3)}\n#define DIRT_K ${TEX_K.dirt.toFixed(3)}\n#define MACRO_K ${TEX_K.macro.toFixed(2)}\n`+'uniform sampler2D tGrass;\nuniform sampler2D tDirt;\nuniform sampler2D tMacro;\nuniform float texMix;\nuniform float uPipeZ;\nuniform vec4 uOcc[4];\nuniform sampler2D tWet;\nuniform vec4 uWetO;\nvarying float vMud;\nvarying float vRain;\nvarying float vDirt;\nvarying float vWet;\nvarying float vSD;\nvarying float vMatA;\nvarying vec2 vWXZ;\nvarying vec3 vWP;\n'+MAT_GLSL_HEAD+FACE_GLSL+sh.fragmentShader.replace('#include <specularmap_fragment>','#include <specularmap_fragment>\nspecularStrength*=(1.0+7.0*vWet*vDirt*(1.0-mudF))*mix(1.0,0.5,max(mudF,rainF));').replace('#include <lights_phong_fragment>','#include <lights_phong_fragment>\nmaterial.specularShininess=mix(material.specularShininess,24.0,max(mudF,rainF));').replace('#include <color_fragment>',
     (WET_VTX?'float mudF=vMud,rainF=vRain;\n':'vec4 wt=texture2D(tWet,(vWXZ-uWetO.xy)*uWetO.zw);float mudF=max(vMud,wt.g),rainF=wt.r;\n')+'vec3 tg=texture2D(tGrass,vWXZ*GRASS_K).rgb/vec3(0.443,0.486,0.385);\nvec3 td=texture2D(tDirt,vWXZ*DIRT_K).rgb/vec3(0.491,0.467,0.431);\nvec3 gd=clamp(mix(tg,td,vDirt),0.0,2.2)*mix(1.0,texture2D(tMacro,vWXZ*0.025).r/0.502,MACRO_K);float gk=0.8;\n'+matGlsl()+'diffuseColor.rgb*=mix(vec3(1.0),gd,gk*texMix);\ndiffuseColor.rgb*=(1.0-0.32*max(vWet*vDirt,0.6*mudF))*(1.0-0.12*rainF);\nif(vDirt>0.01&&texMix>0.5)diffuseColor.rgb*=mix(vec3(1.0),faceDetail(vWP,vSD,uPipeZ),vDirt);\n#include <color_fragment>').replace('#include <lights_fragment_end>',
     'float skyO=1.0;\nfor(int m=0;m<4;m+=2){vec2 d=vWXZ-uOcc[m].xy;float c=cos(uOcc[m].z),s=sin(uOcc[m].z);vec2 l=vec2(d.x*c-d.y*s,d.x*s+d.y*c-uOcc[m+1].z);vec2 q=abs(l)-uOcc[m+1].xy;\nfloat dist=length(max(q,0.0))+min(max(q.x,q.y),0.0);skyO*=1.0-0.75*(1.0-smoothstep(-0.4,1.6,dist));}\nirradiance*=skyO;\n#include <lights_fragment_end>');
 };
@@ -335,7 +335,7 @@ const dirtA=new Float32Array(V*V);geo.setAttribute('dirt',new THREE.BufferAttrib
 const wetT=new Float32Array(V*V).fill(-1e4);geo.setAttribute('wetT',new THREE.BufferAttribute(wetT,1));
 const soilDA=new Float32Array(V*V);geo.setAttribute('soilD',new THREE.BufferAttribute(soilDA,1));
 const matAA=new Float32Array(V*V);geo.setAttribute('matA',new THREE.BufferAttribute(matAA,1));
-// mud: how wet the ground stays (puddles, wet spoil, painted Mud): darker and glossy for good
+// mud: how wet the ground stays (puddles, wet spoil, painted Mud): darker for good, with tight wet glints rather than a dull sheen
 const mudWA=new Float32Array(V*V);geo.setAttribute('mudW',new THREE.BufferAttribute(mudWA,1));
 // sky view: for dug and dumped dirt, how high the ground rises around it (8 directions, about 1 ft and 3 ft out)
 // darkens trench floors and lower walls, since the ground casts no shadows on itself
@@ -363,7 +363,7 @@ function updateTerrain(){
       let dr,dg,db;
       if(d<0){const c=SOIL[layerAt((k%V)*CELL-S/2,((k/V)|0)*CELL-S/2,-d,nz[k])].c,sh=1-0.12*ss(0.3,2.5,-d);dr=c[0]*sh;dg=c[1]*sh;db=c[2]*sh}
       else{dr=spoilC[k*3];dg=spoilC[k*3+1];db=spoilC[k*3+2]}
-      const cn=(0.82+0.34*nz[k])*(1-0.7*skyOcc(k,h));dr*=cn;dg*=cn;db*=cn;
+      const cn=(0.82+0.34*nz[k])*(1-0.7*skyOcc(k,h))*(mudA[k]>0.05?rutShade(d):1);dr*=cn;dg*=cn;db*=cn;
       r+=(dr-r)*t;g+=(dg-g)*t;b+=(db-b)*t;
     }
     colors[k*3]=r;colors[k*3+1]=g;colors[k*3+2]=b;
