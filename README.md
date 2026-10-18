@@ -123,6 +123,6 @@ Maps save on the device as you edit (`localStorage.bhd_map`). The claude.ai vers
   2. Take the next version number after `main`'s last entry in `data/effort.js`; add the entry (asked and live times in Central, developer hours, `tris` and `chars` from `tools/scene-check.js`, a plain description) and add the hours to the day in `days`.
   3. Merge to `main` so the release is a first-parent commit on `main` (a pull request merge or `git merge --no-ff`); `tools/versions.py` finds each version that way. Push: Vercel deploys `main`.
   4. Run `python3 tools/versions.py`, commit `versions/`, push.
-  5. Publish the claude.ai artifact from `main`: the page from `<title>` to before `</html>` of `index.html`, with `css/game.css`, every `js/*.js` and `data/effort.js` at the same paths. If the publish is refused because another session published since, read the files it names, confirm `main` already has them, then publish again.
+  5. (On hold for now, as of v100: skip this step unless the owner says to resume.) Publish the claude.ai artifact from `main`: the page from `<title>` to before `</html>` of `index.html`, with `css/game.css`, every `js/*.js` and `data/effort.js` at the same paths. If the publish is refused because another session published since, read the files it names, confirm `main` already has them, then publish again.
   6. Check the live site serves the new `data/effort.js` and `versions/vN/`.
 
