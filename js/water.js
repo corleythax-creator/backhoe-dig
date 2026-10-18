@@ -18,10 +18,10 @@ wmMesh.frustumCulled=false;wmMesh.visible=false;wmMesh.receiveShadow=true;scene.
 function wmSet(fine){WM_K=fine?1:GRID_K;WM_N=96*GRID_K/WM_K;wmMesh.geometry.dispose();wmMesh.geometry=new THREE.PlaneGeometry(1,1,WM_N,WM_N);
   wmMat.envMap=fine?skyEnv:null;wmMat.needsUpdate=true;wmI0=-1;waterT=0}
 wmSet(false);
-function waterClear(){Wt.fill(-1e9);mudA.fill(0);pumpOn=false;waterAny=puddleAny=false;waterSeen=false;wmMesh.visible=false}
+function waterClear(){Wt.fill(-1e9);mudA.fill(0);soakMax.fill(0);crkA.fill(0);geo.attributes.crk.updateRange.count=-1;geo.attributes.crk.needsUpdate=true;pumpOn=false;waterAny=puddleAny=false;waterSeen=false;wmMesh.visible=false}
 function waterTick(dt){
   waterT-=dt;if(waterT>0||cI1<cI0)return;const step=0.25;waterT=step;
-  let any=false,hole=false,moved=false;seeping=0;const rain=weather.r>0.02,dry=(dryT-=step)<=0;if(dry)dryT=2.5;
+  let any=false,hole=false,moved=false,crk=false;seeping=0;const rain=weather.r>0.02,dry=(dryT-=step)<=0;if(dry)dryT=2.5;
   for(let j=cJ0;j<=cJ1;j++)for(let i=cI0;i<=cI1;i++){const k=j*V+i,h=H[k],w0=Wt[k];
     // soaked ground holds water near the surface: painted Mud everywhere while it is soaked, other rain-soaked ground only
     // in ruts and shallow dips (a deep cut just catches the rain that falls in it)
@@ -33,6 +33,12 @@ function waterTick(dt){
     else if(!rain&&Wt[k]>g)Wt[k]=Math.max(g,Wt[k]-RAIN_DRAIN*step);
     // wet spoil and churned mud dry out over several minutes once there is no water on them
     if(dry&&mudA[k]>0&&Wt[k]<-1e8)mudA[k]=Math.max(0,mudA[k]-0.005);
+    // dug, dumped and rutted ground remembers the wettest it got (soakMax, terrain.js) and, drying out from there,
+    // turns pale and matte, then cracks once it was proper mud
+    if(dry){let cx=0,cy=0;
+      if(Math.abs(h-H0[k])>0.02){const s=mudOf(k);if(s>soakMax[k])soakMax[k]=s;const m=soakMax[k];
+        if(m>0.4){cx=ss(0.4,0.8,m)*(1-ss(0.3,0.6,s));cy=ss(0.5,0.9,m)*(1-ss(0.06,0.25,s))}}
+      if(Math.abs(cx-crkA[k*2])>0.01||Math.abs(cy-crkA[k*2+1])>0.01||(!cx&&crkA[k*2])||(!cy&&crkA[k*2+1])){crkA[k*2]=cx;crkA[k*2+1]=cy;crk=true}}
     // level out with wetter neighbours (water runs into any low ground next to a pool, never above the table)
     if(i>cI0&&i<cI1&&j>cJ0&&j<cJ1){const m=Math.max(Wt[k-1],Wt[k+1],Wt[k-V],Wt[k+V]);if(m>Wt[k]&&m>h)Wt[k]=Math.min(m,Math.max(Wt[k],g,m-0.002))}
     if(pumpOn&&Wt[k]>-1e8)Wt[k]-=PUMP*step;
@@ -42,6 +48,7 @@ function waterTick(dt){
     // a film thinner than 3 mm is not shown; rain builds one up in a dug spot instead of losing it
     if(Wt[k]<=h+0.001&&!(rain&&Wt[k]>-1e8&&h<H0[k]-0.02))Wt[k]=-1e9;else if(Wt[k]>h+0.003){any=true;if(Wt[k]<H0[k]-1)hole=true;mudA[k]=1;wetT[k]=timeU.value}
     if(Math.abs(Wt[k]-w0)>1e-4)moved=true}
+  if(crk){const a=geo.attributes.crk;a.updateRange.offset=cJ0*V*2;a.updateRange.count=(cJ1-cJ0+1)*V*2;a.needsUpdate=true}
   // waterAny: a flooded hole (the Pump button); puddleAny: any water at all
   waterAny=hole;puddleAny=any;waterMoved=moved;if(!hole)pumpOn=false;
   if(hole&&!waterSeen){waterSeen=true;toast(rain?'Rain is filling the hole. Tap Pump to dewater it.':'Groundwater seeping in. Tap Pump to dewater the hole.','',3800)}
@@ -59,6 +66,12 @@ function waterTick(dt){
     p[o]=gi*CELL-S/2;p[o+1]=y;p[o+2]=gj*CELL-S/2}
   wmMesh.geometry.attributes.position.needsUpdate=true;wmMesh.geometry.computeVertexNormals();
 }
+// the dried-out memory for the site save: each point that has one, as the gap since the last (varint) and a byte
+function smSave(){const out=[];let last=-1;for(let k=0;k<V*V;k++){const b=Math.round(soakMax[k]*255);if(b<1)continue;let g=k-last;last=k;
+    while(g>=128){out.push((g&127)|128);g>>>=7}out.push(g,b)}
+  return out.length?siteB64(new Uint8Array(out)):''}
+function smLoad(t){soakMax.fill(0);if(typeof t!=='string'||!t)return;let b;try{b=siteUnB64(t)}catch(e){return}
+  let o=0,k=-1;while(o<b.length){let g=0,sh=0,c;do{c=b[o++];g|=(c&127)<<sh;sh+=7}while(c&128&&o<b.length);k+=g;if(k>=V*V||o>=b.length)break;soakMax[k]=b[o++]/255}}
 // how wet point k is: puddles and wet spoil (mudA), or the soil water (rainSoakK, rain.js: rain, and painted Mud,
 // which starts soaked and dries out)
 function soakK(k){return rainSoakK(k)}
