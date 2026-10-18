@@ -66,6 +66,7 @@ function drawMap(cv,cx,cz,half,big){
   const hy=st.yaw+st.swing;
   g.strokeStyle='#f07a22';g.lineWidth=Math.max(2,0.3*sc);g.beginPath();g.moveTo(X(st.x),Y(st.z));g.lineTo(X(tip.x),Y(tip.z));g.stroke();
   if(!wk.inside){g.beginPath();g.arc(X(wk.x),Y(wk.z),Math.max((big?5:4)*dpr,0.4*sc)*(mode==='walk'?1.3:1),0,Math.PI*2);g.fillStyle='#2fb7e8';g.fill();g.strokeStyle='#14161a';g.lineWidth=1.5*dpr;g.stroke();}
+  icon(sk.x,sk.z,Math.atan2(Math.cos(sk.yaw),Math.sin(sk.yaw)),'#f2b705',2.8,1.8,mode==='skid');
   icon(mw.x,mw.z,Math.atan2(Math.cos(mw.yaw),Math.sin(mw.yaw)),'#d8352a',2.2,1.4,mode==='mow');
   icon(tr.x,tr.z,Math.atan2(Math.cos(tr.yaw),Math.sin(tr.yaw)),'#e9ecea',9.1,2.6,mode==='truck');
   icon(st.x,st.z,Math.atan2(Math.cos(hy),Math.sin(hy)),'#f07a22',4.2,3,mode==='dig'||mode==='drive');
@@ -77,7 +78,7 @@ function drawMap(cv,cx,cz,half,big){
 }
 function mapsTick(dt){
   mapT-=dt;if(mapDirty&&mapT<=0){if(!mapBg)buildMapBg();updateDigLayer();mapDirty=false;mapT=0.5}
-  const fv=mode==='truck'?tr:mode==='mow'?mw:mode==='walk'?wk:st;
+  const fv=mode==='truck'?tr:mode==='mow'?mw:mode==='skid'?sk:mode==='walk'?wk:st;
   drawMap($('#mini'),fv.x,fv.z,42,false);
   if(!$('#bigmap').hidden)drawMap($('#big'),MAP_CX,MAP_CZ,MAP_HALF,true);
 }
@@ -108,7 +109,7 @@ function tpGo(k){if(!tpPick||bench.on)return;
   const from=wk.inside?WK_RIDES[wk.inside].o:wk,dist=Math.hypot(p.x-from.x,p.z-from.z)/FT;
   if(k==='foot'){Object.assign(wk,{x:p.x,z:p.z,vy:0,ground:true,airT:0,jumpQ:0,landT:0,spd:0,inside:null});wk.y=wkFloor(p.x,p.z,0,1e9);setMode('walk')}
   else{const R=WK_RIDES[k],o=R.o;Object.assign(o,{x:p.x,z:p.z,yaw:p.yaw,pitch:0,roll:0,sink:0,spin:0});o.y=surfAt(p.x,p.z);
-    if(o===tr)Object.assign(tr,{v:0,steer:0,stuck:0,mud:0});else if(o===mw)Object.assign(mw,{l:0,r:0,vl:0,vr:0,v:0,w:0});
+    if(o===tr)Object.assign(tr,{v:0,steer:0,stuck:0,mud:0});else if(o===mw)Object.assign(mw,{l:0,r:0,vl:0,vr:0,v:0,w:0});else if(o===sk)Object.assign(sk,{v:0,w:0});
     wk.inside=k;walker.visible=false;setMode(rideOf(mode)===k?mode:R.m)}
   firstCam=true;toggleMap(false);
   toast(`Teleported ${Math.round(dist/10)*10} ft ${k==='foot'?'on foot':'in the '+WK_RIDES[k].n}.`,'good')}
