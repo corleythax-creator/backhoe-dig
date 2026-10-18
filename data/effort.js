@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-18T00:54:17Z",
+ "updated": "2026-10-18T01:02:45Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -835,10 +835,10 @@ window.EFFORT = {
   {
    "v": 90,
    "asked": "2026-10-17T19:15:00-05:00",
-   "live": "2026-10-17T20:00:27-05:00",
+   "live": "2026-10-17T20:02:45-05:00",
    "dh": 7,
-   "tris": 1620685,
-   "chars": 534867,
+   "tris": 1620306,
+   "chars": 537556,
    "what": "Map editor: Paint has Hard edge and Soft edge. Soft edge fades the material out into the ground over the outer part of the brush, with a Softness slider (10 to 100%) and a second ring showing where the fade starts; Natural ground fades paint back out the same way, soft-edged Mud is partly soaked at its fade, and maps keep the soft edges (older maps load as before). The editor's controls move to the top left to leave the screen for the ground: a slim title bar with Undo, Redo, Map file and Done, the tools in a two-wide strip down the left, and the tool's options, Map file and info cards in a scrolling column beside them with a tighter material library. Tap the picked tool again to fold its options away."
   }
  ]
