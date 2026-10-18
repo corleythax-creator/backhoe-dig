@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-18T05:56:00Z",
+ "updated": "2026-10-18T06:05:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -24,9 +24,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-18",
-   "dh": 38,
-   "act": 1,
-   "versions": 3
+   "dh": 41,
+   "act": 1.5,
+   "versions": 4
   }
  ],
  "extra": [
@@ -1035,6 +1035,15 @@ window.EFFORT = {
    "tris": 1620007,
    "chars": 690961,
    "what": "Screen editor gets a Tuning tab (every speed, rate, capacity, jump, regrowth, rain and drying number, in mph, ft and minutes, published live to every device) and a Words tab (rewrite the start card, tips and stick captions; key names follow each player's keys)"
+  },
+  {
+   "v": 112,
+   "asked": "2026-10-18T01:05:00-05:00",
+   "live": "2026-10-18T01:05:29-05:00",
+   "dh": 3,
+   "tris": 1621042,
+   "chars": 693177,
+   "what": "Tuning tab grows to 56 numbers: truck grip, braking, bed rates and load weight, bucket pour and spill, gravity, camera speed, reach, mowing height, rain strength, puddle drain, mud sink, drag and sticking, dig speed per soil, dirt fluff and cave-ins"
   }
  ]
 };

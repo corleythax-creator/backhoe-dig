@@ -250,11 +250,11 @@ function inBed(p){tl.copy(p);bedG.worldToLocal(tl);return tl.x>-1.1&&tl.x<1.1&&t
 function heapTop(){return 0.12+(heap.visible?heap.scale.y*0.5+0.5*heap.scale.y:0)}
 const G=9.8,WB=5.3,REAR=-2.2;
 function updateTruck(dt,thr,steerIn,bedIn){
-  const f=tr.load/TU.trCap,mass=15000+tr.load*1400,vPrev=tr.v;
+  const f=tr.load/TU.trCap,mass=15000+tr.load*1400*TU.trLoadMass,vPrev=tr.v;
   // ground: the packed road rolls easiest and grips best, grass drags more, dug dirt most
   // mud drags, and pushing on in it digs the tyres in until they spin (bogTick, mud.js); bogged down it drags far more
   const mudN=mudAt(tr.x,tr.z),grip=bogTick(tr,mudN,thr,0.06,dt);
-  const soft=Math.abs(hAt(tr.x,tr.z)-h0At(tr.x,tr.z))>0.04,road=!soft&&roadAmt(tr.x,tr.z)>0.5,crr=(soft?0.1:road?0.03:0.06)+0.06*mudN+0.06*tr.sink;
+  const soft=Math.abs(hAt(tr.x,tr.z)-h0At(tr.x,tr.z))>0.04,road=!soft&&roadAmt(tr.x,tr.z)>0.5,crr=(soft?0.1:road?0.03:0.06)+0.06*mudN*TU.mudDrag+0.06*tr.sink;
   // transmission: opposite stick brakes; come to a stop and hold it to shift between D and R
   let drive=0,brake=0;
   if(tr.shiftT>0){tr.shiftT-=dt;brake=1;if(tr.shiftT<=0)tr.gear=-tr.gear}
@@ -269,12 +269,12 @@ function updateTruck(dt,thr,steerIn,bedIn){
   const vTop=tr.gear>0&&tr.bed<0.06?TU.trTop:TU.trRev,along=tr.v*tr.gear;
   const Fd=drive*Math.min(36000,230000/Math.max(1,Math.abs(tr.v)))*clamp(vTop-along,0,1)*grip;
   tr.v+=(tr.gear*Fd/mass+G*Math.sin(tr.pitch))*dt;
-  const dec=(crr*G+(drive?0:0.35)+brake*65000/mass)*dt;
+  const dec=(crr*G+(drive?0:0.35)+brake*65000*TU.trBrake/mass)*dt;
   tr.v=Math.abs(tr.v)<=dec?0:tr.v-Math.sign(tr.v)*dec;
   tr.drive=drive;tr.soft=soft;tr.road=road;tr.bedIn=bedIn;sndIn.dump=0;tr.brakeOn=brake>0.2&&(Math.abs(tr.v)>0.05||tr.shiftT>0||!!thr);
   // steering: the wheels turn at a hydraulic rate, and tires scrub wide when the turn asks for more grip than they have
   tr.steer+=clamp(steerIn*0.6-tr.steer,-TU.trSteer*dt,TU.trSteer*dt);
-  let curv=Math.tan(tr.steer)/WB;const v2=tr.v*tr.v,latMax=(soft?2.8:road?4.2:3.5)*(1-0.25*f)*(1-0.35*mudAt(tr.x,tr.z));
+  let curv=Math.tan(tr.steer)/WB;const v2=tr.v*tr.v,latMax=(soft?2.8:road?4.2:3.5)*TU.trGrip*(1-0.25*f)*(1-0.35*mudAt(tr.x,tr.z));
   if(v2*Math.abs(curv)>latMax)curv=Math.sign(curv)*latMax/v2;
   // the rear tandem rolls along its heading and the cab swings around it, so the back end cuts inside the turn
   const sy0=Math.sin(tr.yaw),cy0=Math.cos(tr.yaw),rx=tr.x+sy0*REAR+sy0*tr.v*dt,rz=tr.z+cy0*REAR+cy0*tr.v*dt;
@@ -301,7 +301,7 @@ function updateTruck(dt,thr,steerIn,bedIn){
   if(blkPush(tr,TR_C,TR_R)){if(Math.abs(tr.v)>1.2){shake=reduceMotion?0:0.15;rumble(250,0.7)}tr.v*=-0.15}
   tr.aL+=((tr.v-vPrev)/Math.max(dt,1e-3)-tr.aL)*Math.min(1,dt*6);
   // hydraulics lift slower under load; the bed comes down on its own weight
-  tr.bed=clamp(tr.bed+bedIn*(bedIn>0?0.4*(1-0.4*f):0.55)*dt,0,0.9);
+  tr.bed=clamp(tr.bed+bedIn*(bedIn>0?TU.trBedUp*(1-0.4*f):TU.trBedDown)*dt,0,0.9);
   // spinning tyres turn faster than the truck moves
   tr.rollA+=(tr.v+tr.gear*tr.spin*5)*dt/0.55;
   // axles follow the ground (the rear tandem averages its two axles like a walking beam)

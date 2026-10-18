@@ -165,7 +165,7 @@ function rollClod(x,z,size,k){const steps=Math.round(size/0.1*(k===SOD?5:14));
 // about 40 degrees (rutSlump), so driving back and forth churns the ground into soft ridges. Returns 0 when nothing gave
 // way, 1 for loose fill, 2 for mud.
 const comp=new Float32Array(V*V);let crushT=0;
-const RUT_D=0.23,RUT_BERM=0.45,RUT_BH=0.2,RUT_MUD=0.15,RUT_SLOPE=0.85,MUD_C=[0.29,0.2,0.13],rutB=[];let tuftBox=null,tuftT=0;
+const RUT_BERM=0.45,RUT_BH=0.2,RUT_MUD=0.15,RUT_SLOPE=0.85,MUD_C=[0.29,0.2,0.13],rutB=[];let tuftBox=null,tuftT=0;
 // smooth value noise at scale sc metres (0 to 1): lumps that span several cells, never a lone spike
 function vnoise(x,z,sc){const fx=x/sc,fz=z/sc,i=Math.floor(fx),j=Math.floor(fz),u=fx-i,v=fz-j,a=u*u*(3-2*u),b=v*v*(3-2*v);
   return (hash(i,j)*(1-a)+hash(i+1,j)*a)*(1-b)+(hash(i,j+1)*(1-a)+hash(i+1,j+1)*a)*b}
@@ -197,7 +197,7 @@ function stampRut(x,z,yaw,hw,hl,dt){
     if(Math.abs(u)>hl||av>hw+RUT_BERM)continue;const k=j*V+i;if(prot[k])continue;
     if(av>hw){const room=rutBerm(av-hw,wx,wz)-(H[k]-H0[k]);if(room>0)rutB.push(k,v,room);continue}
     const loose=H[k]-H0[k],m=mudOf(k);
-    if(m>RUT_MUD&&loose<0.45){const d=Math.min(0.5*dt,H[k]-(H0[k]-RUT_D*Math.min(1,m*1.25)*rutDepth(v,hw,wx*s+wz*c)));
+    if(m>RUT_MUD&&loose<0.45){const d=Math.min(0.5*dt,H[k]-(H0[k]-TU.rutDepth*Math.min(1,m*1.25)*rutDepth(v,hw,wx*s+wz*c)));
       if(d>0){H[k]-=d;if(v<0)outL+=d;else outR+=d;mSum+=m;mN++;wetT[k]=timeU.value;comp[k]=0;mudA[k]=Math.max(mudA[k],m);any=2}continue}
     if(loose<0.02||comp[k]>=1)continue;
     const full=loose/(1-0.3*comp[k])*0.3,d=Math.min(0.25*dt,full*(1-comp[k]));H[k]-=d;comp[k]=Math.min(1,comp[k]+d/full);any=any||1}

@@ -55,7 +55,7 @@ function rainSim(sec){const r=weather.r;
 function rainTick(dt){
   if(!bench.on){
     if(weather.mode==='auto'){weather.next-=dt;
-      if(weather.next<=0){if(weather.want>0){weather.want=0;weather.next=TU.rainGap*(300+Math.random()*420)/510}else{weather.want=0.35+Math.random()*0.65;weather.next=TU.rainLen*(90+Math.random()*180)/180}}}
+      if(weather.next<=0){if(weather.want>0){weather.want=0;weather.next=TU.rainGap*(300+Math.random()*420)/510}else{weather.want=Math.min(1,(0.35+Math.random()*0.65)*TU.rainHard);weather.next=TU.rainLen*(90+Math.random()*180)/180}}}
     weather.r+=Math.max(-dt*0.05,Math.min(dt*0.05,weather.want-weather.r))}
   const raining=weather.r>0.05;
   if(raining!==rainWas){rainWas=raining;if(raining)toast(say('rainIn'),'',3600);else if(!bench.on)toast(say('rainOut'),'',3600)}
@@ -78,7 +78,7 @@ function rainLoad(d){if(!d||typeof d.w!=='string')return;let b;try{b=siteUnB64(d
   rainTexDirty=true}
 function rainReset(){rainW.fill(0);rainTexDirty=true}
 // standing rainwater above the water table drains: in the dig zone, and the mud tiles
-function rainDrain(sec){const d=RAIN_DRAIN*sec;
+function rainDrain(sec){const d=RAIN_DRAIN*TU.puddleDrain*sec;
   for(let j=cJ0;j<=cJ1;j++)for(let i=cI0;i<=cI1;i++){const k=j*V+i;if(Wt[k]<-1e8)continue;const g=H0[k]-TU.wtDepth;if(Wt[k]>g){Wt[k]=Math.max(g,Wt[k]-d);if(Wt[k]<=H[k]+0.001)Wt[k]=-1e9}}
   if(FW)for(let k=0;k<FW.length;k++)if(FW[k]>-1e8){FW[k]-=d;if(FW[k]<=FH0[k]+FD[k]+0.001)FW[k]=-1e9}}
 

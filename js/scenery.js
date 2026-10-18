@@ -226,7 +226,7 @@ const TUFT_HK=[0.45,0.42];
   for(let k=0;k<CR_NX*CR_NZ;k++)tCellS[k+1]+=tCellS[k];const at=tCellS.slice(0,-1);for(let n=0;n<TUFTS;n++)if(tCell[n]>=0)tCellL[at[tCell[n]]++]=n}
 // a clump's height (share of full): cut down to the deck's height, then growing back
 function tuftCutK(n){const k=tCell[n];if(k<0||fcT[k]<-1e8)return 1;
-  const g=Math.min(1,Math.max(0,(lawn.t-fcT[k]-TU.lawnWait)/TU.lawnGrow)),stub=Math.min(1,LAWN_CUT/(TUFT_HK[tK[n]]*tS[n]*tH[n]));return stub+(1-stub)*g}
+  const g=Math.min(1,Math.max(0,(lawn.t-fcT[k]-TU.lawnWait)/TU.lawnGrow)),stub=Math.min(1,TU.lawnCut/(TUFT_HK[tK[n]]*tS[n]*tH[n]));return stub+(1-stub)*g}
 function fcRedraw(k){for(let q=tCellS[k];q<tCellS[k+1];q++){const n=tCellL[q];if(tVis[n])tuftPut(n,true)}}
 // the deck centred on x,z facing yaw (half width hw, half depth hd) cuts what stands in it; returns how many tall clumps it cut
 function fieldCut(x,z,yaw,hw,hd){const s=Math.sin(yaw),c=Math.cos(yaw),R=Math.hypot(hw,hd)+CR_C/2;let cut=0;
