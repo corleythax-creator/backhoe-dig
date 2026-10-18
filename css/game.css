@@ -296,4 +296,12 @@ body.editing #hud .top,body.editing #hud .sticks{display:none}
 #trailKey{display:flex;flex-direction:column;gap:4px}
 #trailKey i{display:block;height:10px;border-radius:5px}
 #trailKey>span{display:flex;justify-content:space-between;gap:10px;font:600 15px/1.2 var(--f-display);color:var(--muted)}
-@media (max-height:520px) and (orientation:landscape){.mapcard{grid-template-rows:max-content max-content max-content max-content 1fr}#big{grid-row:1/6}#trailBar,#trailKey{grid-column:2}}
+#wetBar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font:700 18px/1.2 var(--f-display);letter-spacing:.03em;color:var(--ink)}
+#wetBar span{margin-right:4px}
+#wetBar button{height:42px;font-size:16px;padding:0 10px}
+#wetBar button[aria-pressed="true"],#wetGround[aria-pressed="true"]{background:var(--machine);color:#1c1309;border-color:var(--machine)}
+#wetKey{display:flex;flex-direction:column;gap:4px}
+#wetKey i{display:block;height:10px;border-radius:5px}
+#wetKey>span{display:flex;justify-content:space-between;gap:10px;font:600 15px/1.2 var(--f-display);color:var(--muted)}
+#wetGround{align-self:flex-start;margin-top:4px}
+@media (max-height:520px) and (orientation:landscape){.mapcard{grid-template-rows:max-content max-content max-content max-content max-content max-content 1fr}#big{grid-row:1/8}#trailBar,#trailKey,#wetBar,#wetKey{grid-column:2}}

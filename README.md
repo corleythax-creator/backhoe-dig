@@ -25,8 +25,8 @@ A 3D low-poly excavator game in plain HTML, CSS and JavaScript (three.js r128, n
 | `js/trenchbox.js` | Trench box model, hooking, setting, wall mask |
 | `js/dirt.js` | Loose dirt: clods, flying dirt, lumpy bucket load and truck heap, ruts (loose fill packs down; mud sinks up to 9 in in a rounded, tread-printed rut, heaps lumpy berms and slumps to about 40°), the Dirt detail setting |
 | `js/mud.js` | Mud outside the dig zone and getting stuck: soak (`soakAt`, from the soil water of rain.js), 2 in mud tiles made where ruts start (they punch holes in the 0.5 m mesh and save with the site), their puddles, bogging down and rocking free (`bogTick`), flung mud, splashes through puddles (`splashMud`: spray, rings and a slosh; drawn only, drop count from `GFX.splashN`) |
-| `js/rain.js` | Rain and wet ground: the weather (☰ Weather: Auto, Rain, Dry), a 1 m grid of soil water that soaks and dries by surface (`rainBase`; painted Mud starts soaked and dries through damp to cracked), its soak (`rainSoakAt`, `rainSoakK`) feeding the mud rules, the wet-ground texture the ground shader reads (`wetU`), raindrops (count by Graphics), the grey sky, drying while closed |
-| `js/water.js` | Groundwater and puddles: seeping, levelling pools, saturated mud (soaked painted Mud), the puddle surface (drawn finer and with sky reflections on Medium and High), the pump |
+| `js/rain.js` | Rain and wet ground: the weather (☰ Weather: Auto, Rain, Dry), a 1 m grid of soil water that soaks and dries by surface (`rainBase`; painted Mud starts soaked and dries through damp to cracked), the big map's Soil wetness layer and its tint on the ground (`wetDrawOn`, `uWetView`), its soak (`rainSoakAt`, `rainSoakK`) feeding the mud rules, the wet-ground texture the ground shader reads (`wetU`), raindrops (count by Graphics), the grey sky, drying while closed |
+| `js/water.js` | Groundwater and puddles: seeping, levelling pools, saturated mud (soaked painted Mud), dug ground and ruts drying pale and cracked (`soakMax`, `crkA`), the puddle surface (drawn finer and with sky reflections on Medium and High), the pump |
 | `js/dirtsound.js` | Dirt sounds: digging, pouring, thuds, rattles, cave-ins, trickling water |
 | `js/blocks.js` | Blocks of any size from 1 to 10 ft wide, long and tall, in plain concrete or any library material (one instanced mesh per material, textured in world space): placing under the bucket, in front of the worker, or in first person on foot where the middle of the screen points (the wheel sets the reach, up to 80 ft; aiming at a block's side sets the new one against it), lifting, stacking, settling, machine collisions; `surfAt()` (ground or block top) |
 | `js/mower.js` | Tall grass patch, zero-turn mower, mowing, clippings, lawn stripes, regrowth and the saved lawn |
@@ -94,13 +94,14 @@ Maps save on the device as you edit (`localStorage.bhd_map`). The claude.ai vers
 
   | Key | What | File |
   | --- | --- | --- |
-  | `bhd_site` | Dug and dumped ground (`H − H0` per changed vertex), dirt colour, mud, groundwater, mud tiles, wet soil and weather | `js/save.js` |
+  | `bhd_site` | Dug and dumped ground (`H − H0` per changed vertex), dirt colour, mud, groundwater, mud tiles, wet soil and weather, how wet dug ground got before it dried | `js/save.js` |
   | `bhd_rigs` | Excavator, truck and load, trench box, blocks, worker | `js/save.js` |
   | `bhd_lawn` | Mowing and regrowth | `js/mower.js` |
   | `bhd_map` | Map editor edits: heights, paint, assets, roads | `js/terrain.js`, `js/editor.js` |
   | `bhd_stats` | Player stats (☰ → Stats): totals, and how many times each lawn cell has been cut | `js/stats.js` |
   | `bhd_keys` | Key bindings | `js/keys.js` |
   | `bhd_weather` | Weather setting (Auto, Rain, Dry) | `js/rain.js` |
+  | `bhd_wetview` | Big map's Soil wetness layer and whether it shows on the ground | `js/rain.js` |
   | `bhd_heat` | What the lawn heatmap shows | `js/stats.js` |
   | `bhd_gfx`, `bhd_dirt`, `bhd_ui`, `bhd_hudmin`, `bhd_sndcfg` | Graphics, Dirt detail, UI size, folded status card, sound | `js/gfx.js`, `js/dirt.js`, `js/controls.js`, `js/sound.js` |
   | `bhd_sync`, `bhd_sync_t`, `bhd_sync_h` | Sync code, time of the last synced save, hash of what was last sent | `js/sync.js` |

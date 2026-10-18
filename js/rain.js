@@ -91,6 +91,43 @@ wetU.uWetO.value.set(RW_X0-RW_C/2,RW_Z0-RW_C/2,1/(RW_NX*RW_C),1/(RW_NZ*RW_C));
 function rainTexUpdate(){rainTexDirty=false;const a=rainTex.image.data;
   for(let k=0;k<rainW.length;k++){const w=rainW[k];a[k*4]=Math.round(Math.min(1,w*1.6+weather.r*0.5)*255);a[k*4+1]=Math.round(ss(0.25,0.9,w)*rainK[k]*255);a[k*4+2]=Math.round(w*255)}
   rainTex.needsUpdate=true}
+// ---------- soil wetness on the big map ----------
+// how wet the soil is (rainW), off, at every level (pale to deep blue), or only where it is at least damp, wet or
+// soaked; standing water shows bright blue, and in the dig zone wet spoil and churned mud count too. It can show on
+// the ground itself as well (uWetView in the ground shader). Kept on this device
+const WET_OPTS=[['off','Off',0],['all','All',0],['damp','Damp+',0.3],['wet','Wet+',0.55],['soaked','Soaked',0.9]],WET_KEY='bhd_wetview';
+let wetView='off',wetGround=false,wetCv=null,wetDigCv=null,wetMapT=-1e9;
+try{const o=JSON.parse(localStorage.getItem(WET_KEY)||'null');if(o&&WET_OPTS.some(w=>w[0]===o.v)){wetView=o.v;wetGround=!!o.g}}catch(e){}
+const wetMin=()=>WET_OPTS.find(w=>w[0]===wetView)[2];
+// one soil value (0-1, or 2 for standing water) to a pixel
+function wetPx(D,o,w,min){if(w>=2){D[o]=40;D[o+1]=170;D[o+2]=255;D[o+3]=235;return}
+  if(min>0){if(w>=min){D[o]=30;D[o+1]=90;D[o+2]=210;D[o+3]=190}return}
+  if(w<0.05)return;const t=(w-0.05)/0.95;D[o]=175-165*t;D[o+1]=220-180*t;D[o+2]=245-85*t;D[o+3]=140+90*t}
+function wetImages(){const min=wetMin();
+  if(!wetCv){wetCv=document.createElement('canvas');wetCv.width=RW_NX;wetCv.height=RW_NZ;wetDigCv=document.createElement('canvas');wetDigCv.width=wetDigCv.height=200}
+  let g=wetCv.getContext('2d'),img=g.createImageData(RW_NX,RW_NZ),D=img.data;
+  for(let j=0;j<RW_NZ;j++)for(let i=0;i<RW_NX;i++){const x=RW_X0+i*RW_C,z=RW_Z0+j*RW_C,k=j*RW_NX+i;
+    if(x>-S/2&&x<S/2&&z>-S/2&&z<S/2)continue;wetPx(D,k*4,waterAt(x,z)?2:rainW[k],min)}
+  g.putImageData(img,0,0);
+  g=wetDigCv.getContext('2d');img=g.createImageData(200,200);D=img.data;
+  for(let py=0;py<200;py++)for(let px=0;px<200;px++){const i=px*2,j=py*2,k=j*V+i,r=rwIdx(i*CELL-S/2,j*CELL-S/2);
+    wetPx(D,(py*200+px)*4,Wt[k]>H[k]+0.003?2:Math.max(r<0?0:rainW[r],mudA[k]),min)}
+  g.putImageData(img,0,0);wetMapT=timeU.value}
+// drawMap (maps.js) calls this on the big map, over the ground and the dug area
+function wetDrawOn(g,X,Y,sc){if(wetView==='off')return;if(timeU.value-wetMapT>1||timeU.value<wetMapT)wetImages();
+  g.save();g.imageSmoothingEnabled=true;g.drawImage(wetCv,X(RW_X0-RW_C/2),Y(RW_Z0-RW_C/2),RW_NX*RW_C*sc,RW_NZ*RW_C*sc);
+  g.drawImage(wetDigCv,X(-S/2),Y(-S/2),S*sc,S*sc);g.restore()}
+function wetSet(v,gr){wetView=v;if(gr!==undefined)wetGround=gr;try{localStorage.setItem(WET_KEY,JSON.stringify({v:wetView,g:wetGround}))}catch(e){}wetMapT=-1e9;wetSync()}
+function wetSync(){document.querySelectorAll('#wetBar [data-wv]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.wv===wetView));
+  const on=wetView!=='off',min=wetMin();$('#wetKey').hidden=!on;
+  $('#wetKey i').style.background=min>0?'linear-gradient(90deg,rgba(30,90,210,.15),rgb(30,90,210) 60%,rgb(40,170,255))':'linear-gradient(90deg,rgb(175,220,245),rgb(10,40,160) 85%,rgb(40,170,255))';
+  $('#wetLo').textContent=min>0?`Drier than ${WET_OPTS.find(w=>w[0]===wetView)[1].replace('+','').toLowerCase()}: clear`:'Dry (clear) to soaked';
+  const b=$('#wetGround');b.setAttribute('aria-pressed',wetGround);b.textContent=wetGround?'On the ground too: on':'Show on the ground too';
+  wetU.uWetView.value=on&&wetGround?1:0;wetU.uWetMin.value=min;
+  if(!$('#bigmap').hidden&&typeof drawMap==='function')drawMap($('#big'),MAP_CX,MAP_CZ,MAP_HALF,true)}
+{const bar=$('#wetBar');for(const [k,n] of WET_OPTS){const b=document.createElement('button');b.dataset.wv=k;b.textContent=n;b.onclick=()=>wetSet(k);bar.appendChild(b)}}
+$('#wetGround').onclick=()=>wetSet(wetView,!wetGround);
+wetSync();
 // raindrops: streaks in a box that follows the camera, moved by the GPU; the count follows the Graphics setting
 const RD_BOX=new THREE.Vector3(26,16,26);
 const rainMat=new THREE.ShaderMaterial({transparent:true,depthWrite:false,fog:false,
