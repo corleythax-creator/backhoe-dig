@@ -56,6 +56,8 @@ A 3D low-poly excavator game in plain HTML, CSS and JavaScript (three.js r128, n
 | `versions/` | A playable snapshot of every version (`versions/vN/`), the list page, and `list.js`. Made by `tools/versions.py` |
 | `data/effort.js` | Build-time data. The master dashboard reads it for hours |
 | `tools/versions.py` | Rebuilds `versions/` from `main`'s history after a release |
+| `tools/release.py` | Ships the branch as the next version in one command (README "Ship a version") |
+| `tools/play.js` | Plays the game headless: runs game code in the page, prints results and errors, takes a screenshot |
 | `tools/scene-check.js` | Loads the game headless and prints the triangle count, file size and any errors (the numbers a build-log entry needs) |
 | `docs/map-editor.md` | How the map editor works: what a map stores, how an edit reaches the screen, gotchas, limits and ideas |
 | `docs/mesa-plans.html` | The three mesa layout plans from the 1.5× expansion (Plan A was built, v54). Planning record, not part of the game |
@@ -137,7 +139,8 @@ A skin is JSON: `{v:1, t, L:{all|phone|big:{vars, el:{selector:{hide, x, y, sc, 
 
 - **Run it:** any static server from the repo root, for example `python3 -m http.server`, then open `http://localhost:8000`. Opening `index.html` as a file won't load the textures.
 - **Check it headless:** `NODE_PATH=$(npm root -g) node tools/scene-check.js` loads the game in headless Chromium and prints the triangle count, file size and any errors. Software rendering is slow (a frame can take a second or two), so for behaviour tests drive the game's own functions from `page.evaluate` (for example `updateTruck(0.05, 0.6, 0, 0)` in a loop, or `editorOpen()` then `edBrush(0.05)`) rather than simulating input frame by frame.
-- **Ship a version** (the steps CLAUDE.md asks for):
+- **Play it headless:** `NODE_PATH=$(npm root -g) node tools/play.js --eval "setMode('walk'); return wk.x" --shot /tmp/shot.png` opens the game with no saved site, runs each `--eval` in the page (game functions and globals; return a value to print it), and can take one screenshot; `--steps file.js` for real clicks, `--gfx`, `--size`, `--keep`. Page errors make it exit 1. It opens the page as `play.test`, so the game makes no sync or live-look calls.
+- **Ship a version:** `python3 tools/release.py --asked 2026-10-18T09:15 --dh 6 --title "Name" --what "Build-log line" --trailer "Co-Authored-By: …"` from the feature branch does steps 1 to 4 below (and rebuilds the screen editor page if the screen changed); `--dry-run` stops after the merge and the scene check. By hand, the steps are:
   1. Merge the latest `main` into your branch and re-test.
   2. Take the next version number after `main`'s last entry in `data/effort.js`; add the entry (asked and live times in Central, developer hours, `tris` and `chars` from `tools/scene-check.js`, a plain description) and add the hours to the day in `days`.
   3. Merge to `main` so the release is a first-parent commit on `main` (a pull request merge or `git merge --no-ff`); `tools/versions.py` finds each version that way. Push: Vercel deploys `main`.
