@@ -14,6 +14,7 @@ a feature is roughly **steps × session length**, and the two levers are fewer s
 | --- | --- | --- |
 | How the screen looks: colours, fonts, sizes, corners, hiding, renaming, moving a part, docking bars, phone vs. computer layouts | Screen editor | ☰ → Edit the screen, or https://claude.ai/artifact/Bj6MjgPkszqEP2PJQqQ29t. Publish with your owner key |
 | The ground: sculpt, paint materials (32 of them), roads, trees, boulders, where machines park | Map editor | ☰ → Map editor (or G) |
+| Your own textures for painting and blocks | Map editor → Paint → + Your own texture: pick a photo or picture, name it, set its tile size in feet, kind and shine, type the owner key | Reaches every device; Edit this texture changes one later |
 | Which ideas get built next | Idea board | https://claude.ai/artifact/FMrDEa4VsKvPS5Z3ktTrS3, then send Claude the picked ids |
 | Graphics, weather, keys, UI size, turn sensitivity | The game's own settings | ☰ |
 
@@ -76,7 +77,6 @@ Each is a one-time build that then saves asking Claude for that kind of change. 
 | System | What you'd do yourself afterwards | One-time cost |
 | --- | --- | --- |
 | **Tuning panel** (like the screen editor, published live) | Speeds, turn rates, dig and bucket rates, jump height, grass growth, how often it rains, how fast mud dries, block sizes: every number the game feels by | about 3-6M tokens |
-| **Your own textures** in the map editor | Upload an image (made with any image tool) and paint with it; it joins the material library | about 3-5M tokens |
 | **Place-a-thing** in the map editor | Drop houses, sheds, fences, light towers and props from a catalogue onto any island, move and turn them | about 6-10M tokens |
 | **Start card and help text editor** | Rewrite the start card, tips and help in the screen editor | about 1-2M tokens |
 

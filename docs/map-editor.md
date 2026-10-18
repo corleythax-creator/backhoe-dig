@@ -11,7 +11,7 @@ First version shipped as v60, roads as v63.
 | Look | Drag to move the view; two fingers pinch to zoom and twist to turn. Mouse: right button turns, wheel zooms. Keys: WASD or arrows pan, Q E turn, R F zoom |
 | Raise, Lower, Flatten, Smooth | Reshape the ground under a soft round brush with a 1 to 40 ft radius, strength 1 to 10. Flatten levels to the height where the stroke starts |
 | Dirt, Grass | Paint the ground toward worked dirt or back to grass (Grass also paints over the built-in dirt yards) |
-| Paint | Lay a material from the library under a round or square brush (1 to 40 ft; at 1 ft it lays single 0.5 m cells, the finest the grid holds), Hard edge (whole cells, fully covered, drawn with a sharp edge) or Soft edge (the cover fades to nothing over the outer 10 to 100% of the radius, the Softness slider). Natural ground takes it back up, softly too |
+| Paint | Lay a material from the library (or one of your own textures: + Your own texture turns an uploaded picture into a seamless tile and adds it for every device; Edit this texture changes a picked one) under a round or square brush (1 to 40 ft; at 1 ft it lays single 0.5 m cells, the finest the grid holds), Hard edge (whole cells, fully covered, drawn with a sharp edge) or Soft edge (the cover fades to nothing over the outer 10 to 100% of the radius, the Softness slider). Natural ground takes it back up, softly too |
 | Select | Pick a tree, boulder or machine; drag to move it; its card turns, resizes, copies or deletes it (machines move and turn only) |
 | Add | Place a pine, leafy tree or boulder; keep holding to drag it into place |
 | Query | Read a spot's height, slope, surface, whether it can be driven, your edits there and what stands on it, in feet |
@@ -24,7 +24,8 @@ The tools sit in a two-wide strip down the left, with the picked tool's options,
 | File | Editor parts |
 | --- | --- |
 | `js/editor.js` | Everything the player touches: open and close, tools, camera, picking, brush, assets, roads, undo, the info cards, save, copy and load |
-| `js/materials.js` | The material library `MAT_LIST` (append only: a material's saved id is its index + 1), the ground shader's material uniforms `matU`, and `matTexUpdate`, which builds the texture array of the materials the map uses |
+| `js/materials.js` | The material library `MAT_LIST` (append only: a material's saved id is its index + 1; built-in ones stop at 40, the owner's own start at `MAT_OWN0` 41 and run to `MAT_MAX` − 1, 71; `matDef(id)` gives an entry or a grey stand-in for an own texture not heard of yet, `matIdOk` says whether an id may be kept), the ground shader's material uniforms `matU`, and `matTexUpdate`, which builds the texture array of the materials the map uses |
+| `js/ownmat.js` | Your own textures: the upload card, `ownTile` (crop to the best period, fade the seams, mean colour, as `tools/textures.py`), publishing (`mat_put` with the owner key, `supabase/island_materials.sql`), loading the list at start (`mat_list`, cached in `bhd_mats`) and pictures as used (`mat_img`, through `matOwnImg`); `ownChanged` updates the shader's uniforms, the library panel, the blocks' list and the texture array |
 | `js/terrain.js` | The edit layers `ED_H`, `ED_P`, `ED_M` and `ED_A`, `paintAt` and `matTint` (a vertex's colour under the materials), `mapEncode` and `mapDecode`, loading `bhd_map` at startup, `baseHeight` (= `groundHeight` + `ED_H`), `yardAt` (+ `ED_P`), the road list `ROADS` and `roadsBuild`, `wallBuild` (ground too steep to drive), `digBase` (a dig-grid vertex's undug colour) |
 | `js/scenery.js` | `groundColor`, the 0.5 m mesa mesh `midPatch` and `midUpdate`, `buildSkirts`, `tuftsRefresh`, and the assets: `assets`, `defaultAssets`, `assetsBuild` |
 | `js/shadowproxy.js` | `shpTreesRefresh`: tree shadows re-read the instance matrices after assets change |
@@ -86,6 +87,8 @@ While the brush is held or a road point is dragged, the layer changes every fram
 - Road changes store the whole road list as JSON and the area to refresh.
 
 ## Things to know before changing it
+
+- Own textures: an id is given by the server once and kept for good, even if the texture is changed (name, size, kind, shine or picture). There is no delete, since maps and saves may hold the id. A map using one this device has not loaded yet keeps the ids and draws them grey until the list arrives. The shader's per-id data is `uMatInfo` (colour, tiles per metre) and `uMatLS` (texture layer, shine); raising `MAT_MAX` also needs the cap in `mat_put` and the table's check raised.
 
 - Anything new that is built from the ground (a mesh, a placement, a lookup grid) must either be rebuilt in `edRefresh` or read `baseHeight` live; otherwise it will not follow edits.
 - Changing the generated mesa (`groundHeight`, hills, scarp) moves the ground under every saved map, since maps store offsets, not absolute heights. Saved `ED_H` keeps its meaning (raise this spot by so much) but may land differently.

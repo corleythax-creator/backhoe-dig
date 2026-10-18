@@ -45,17 +45,21 @@ function edTool(t){if(t!=='roads'){edRoadFinish();ed.road=null;ed.rpt=-1}ed.tool
 document.querySelectorAll('.edtools button').forEach(b=>b.onclick=()=>{if(b.dataset.t===ed.tool){const o=$('#edOpts');o.hidden=!o.hidden}else edTool(b.dataset.t)});
 document.querySelectorAll('.edkind button').forEach(b=>b.onclick=()=>{ed.kind=b.dataset.k;document.querySelectorAll('.edkind button').forEach(c=>c.setAttribute('aria-pressed',c===b))});
 // the material library: every texture by kind, plus Natural ground, which clears a material
-(function(){const N=MAT_LIST.length,sw=m=>m?`<i style="background-size:${N*100}% 100%;background-position:${(m-1)/(N-1)*100}% 0"></i>`:'<i class="nat"></i>';
-  const btn=m=>`<button class="edmat" data-m="${m}" aria-pressed="${m===ed.mat}">${sw(m)}<span>${m?MAT_LIST[m-1].n:'Natural ground'}</span></button>`;
-  let h=`<h3>Material library <small>${N} textures</small></h3>`;
+// (made again when the owner's own textures arrive or change, ownmat.js; theirs show their own thumbnail)
+function edMatPanel(){const N=MAT_BUILT,esc=t=>t.replace(/[&<>"]/g,c=>'&#'+c.charCodeAt(0)+';'),
+    sw=m=>{const d=MAT_LIST[m-1];return !m?'<i class="nat"></i>':d.own?`<i class="own" style="background-image:url(${d.th})"></i>`:`<i style="background-size:${N*100}% 100%;background-position:${(m-1)/(N-1)*100}% 0"></i>`};
+  const btn=m=>`<button class="edmat" data-m="${m}" aria-pressed="${m===ed.mat}">${sw(m)}<span>${m?esc(MAT_LIST[m-1].n):'Natural ground'}</span></button>`;
+  let h=`<h3>Material library <small>${MAT_LIST.filter(Boolean).length} textures</small></h3>`;
   MAT_CATS.forEach((c,ci)=>{const ms=ci?[]:[0];MAT_LIST.forEach((d,i)=>{if(d.cat===ci)ms.push(i+1)});h+=`<h4>${c}</h4><div class="edmatgrid">${ms.map(btn).join('')}</div>`});
   const box=$('#edMats');box.innerHTML=h;
-  box.querySelectorAll('.edmat').forEach(b=>b.onclick=()=>{ed.mat=+b.dataset.m;box.querySelectorAll('.edmat').forEach(c=>c.setAttribute('aria-pressed',c===b));edMatLabel()})})();
+  box.querySelectorAll('.edmat').forEach(b=>b.onclick=()=>{ed.mat=+b.dataset.m;box.querySelectorAll('.edmat').forEach(c=>c.setAttribute('aria-pressed',c===b));edMatLabel()})}
+edMatPanel();
 document.querySelectorAll('.edshape button').forEach(b=>b.onclick=()=>{ed.square=b.dataset.s==='sq';document.querySelectorAll('.edshape button').forEach(c=>c.setAttribute('aria-pressed',c===b))});
 // Hard edge lays whole cells; Soft edge fades the material out to the natural ground over the outer part of the brush
 document.querySelectorAll('.eddug button').forEach(b=>b.onclick=()=>{ed.keep=b.dataset.k==='keep';document.querySelectorAll('.eddug button').forEach(c=>c.setAttribute('aria-pressed',c===b))});
 document.querySelectorAll('.ededge button').forEach(b=>b.onclick=()=>{ed.soft=b.dataset.e==='soft';$('#edSoftOpt').hidden=!ed.soft;document.querySelectorAll('.ededge button').forEach(c=>c.setAttribute('aria-pressed',c===b))});
-function edMatLabel(){const d=MAT_LIST[ed.mat-1];$('#edMatV').textContent=d?`${d.n} (one tile is ${d.ft} ft)`:'Natural ground (clears materials)'}
+function edMatLabel(){const d=matDef(ed.mat);$('#edMatV').textContent=d?`${d.n} (one tile is ${d.ft} ft)`:'Natural ground (clears materials)';
+  if(typeof ownMatPicked==='function')ownMatPicked()}
 edMatLabel();
 const edSizeIn=$('#edSize'),edStrIn=$('#edStr'),edSoftIn=$('#edSoft');
 function edSliders(){$('#edSizeV').textContent=`${Math.round(edFt(ed.size))} ft`;$('#edStrV').textContent=ed.str;$('#edSoftV').textContent=`${Math.round(ed.feather*100)}%`}
@@ -156,11 +160,11 @@ function edWhere(x,z){const e=x,s=z-(TRENCH_Z0+TRENCH_Z1)/2;
 function edQuery(x,z){const g=baseHeight(x,z),h=hAt(x,z),r=mesaR(x,z);
   const sx=(baseHeight(x+0.5,z)-baseHeight(x-0.5,z)),sz=(baseHeight(x,z+0.5)-baseHeight(x,z-0.5)),sl=Math.hypot(sx,sz);
   const top=r<EDGE||famR(x,z)<FAM_R||jesR(x,z)<JES_R||dexR(x,z)<DEX_R,deck=deckAt(x,z)>g;
-  const surf=deck?'Bridge deck':paintAt(x,z)?MAT_LIST[paintAt(x,z)-1].n:g<WATER?'Lake':roadAmt(x,z)>0.5?'Road':sl>0.9?'Rock face':yardAt(x,z)>0.5?'Dirt yard':top?'Grass':'Meadow below the cliffs';
+  const surf=deck?'Bridge deck':paintAt(x,z)?matDef(paintAt(x,z)).n:g<WATER?'Lake':roadAmt(x,z)>0.5?'Road':sl>0.9?'Rock face':yardAt(x,z)>0.5?'Dirt yard':top?'Grass':'Meadow below the cliffs';
   const drive=!landIn(x,z,1,0)?'No, off the island':wallAt(x,z)?'No, too steep':'Yes';
   const dh=edSample(ED_H,x,z),dp=edSample(ED_P,x,z),mine=[];
   if(Math.abs(dh)>0.02)mine.push(`${dh>0?'raised':'lowered'} ${edFmt(Math.abs(dh))} ft`);if(dp>0.05)mine.push('painted dirt');if(dp<-0.05)mine.push('painted grass');
-  const mt=paintAt(x,z);if(mt)mine.push(MAT_LIST[mt-1].n.toLowerCase());
+  const mt=paintAt(x,z);if(mt)mine.push(matDef(mt).n.toLowerCase());
   const rows=[['Spot',edWhere(x,z)],['Ground',`${g>=0?'+':'−'}${edFmt(Math.abs(g))} ft (mesa top is 0)`],['Slope',`${Math.round(sl*100)}% · ${Math.round(Math.atan(sl)*57.3)}°`],
     ['Surface',surf],['Driveable',drive]];
   // how wet the soil is (rain.js); painted Mud names its look as it dries

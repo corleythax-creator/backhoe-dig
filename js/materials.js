@@ -41,7 +41,18 @@ const MAT_LIST=[
   {id:'shingles',n:'Roof shingles',cat:4,ft:2.5,c:[0.237,0.243,0.255]},
   {id:'fabric',n:'Landscape fabric',cat:4,ft:6,c:[0.138,0.141,0.143]},
   {id:'steel_polished',n:'Polished steel',cat:2,ft:4,c:[0.652,0.651,0.652],sh:1}];
-const MAT_MAX=48;
+// the owner's own textures (ownmat.js) come after the library: ids MAT_OWN0 (41) and up, the gap left for more built-in
+// ones, each kept for good once given. Known ones are cached on the device (bhd_mats), so a map that uses them draws
+// them from the start; one not known yet holds its place in grey until the server's list arrives
+const MAT_MAX=72,MAT_OWN0=41,MAT_BUILT=MAT_LIST.length,MAT_OWN_LS='bhd_mats';
+// a material's entry by id, a grey stand-in for an own texture this device hasn't heard of yet; undefined for none
+const matDef=m=>MAT_LIST[m-1]||(m>=MAT_OWN0&&m<MAT_MAX?{id:'own'+m,n:'Your texture (loading)',cat:0,ft:4,c:[0.5,0.5,0.5],own:1,ph:1}:undefined);
+const matIdOk=m=>m>0&&!!matDef(m);
+// one cached own texture into the library: {i: id, n, cat, ft, c, sh, th: thumbnail data URL, t: when published}
+function matOwnTake(o){if(!o||!(o.i>=MAT_OWN0&&o.i<MAT_MAX)||typeof o.n!=='string'||!Array.isArray(o.c)||o.c.length!==3||!(o.ft>0))return false;
+  MAT_LIST[o.i-1]={id:'own'+o.i,n:o.n.slice(0,40),cat:MAT_CATS[o.cat]?o.cat|0:0,ft:Math.min(40,Math.max(0.5,+o.ft)),c:o.c.map(v=>Math.min(1,Math.max(0,+v||0))),
+    sh:Math.min(1,Math.max(0,+o.sh||0))||undefined,th:typeof o.th==='string'&&o.th.startsWith('data:image/')?o.th:'',t:+o.t||0,own:1};return true}
+try{const a=JSON.parse(localStorage.getItem(MAT_OWN_LS)||'[]');if(Array.isArray(a))a.forEach(matOwnTake)}catch(e){}
 // painted Mud dries out (rain.js) through two more looks: damp and matte, then pale and cracked; c as for MAT_LIST
 const MUD_STAGES=[{id:'mud_drying',c:[0.446,0.323,0.221]},{id:'mud_cracked',c:[0.658,0.539,0.408]}];
 // ---------- textures on the ground ----------
@@ -52,18 +63,20 @@ const MAT_GL2=renderer.capabilities.isWebGL2;
 // the ground shader's material uniforms: the painted-id and cover maps (one texel per editor cell, ED_M and ED_A, set
 // up in terrain.js), the texture array holding just the materials the map uses, each id's mean colour and tiles per
 // metre, and its layer; for Mud, the layers of its drier looks and their colours over its own
-const matU={tMatId:{value:null},tMatCov:{value:null},tMatArr:{value:null},uMatInfo:{value:[]},uMatLayer:{value:new Float32Array(MAT_MAX).fill(-1)},uMudL:{value:new THREE.Vector2(-1,-1)},
-  uMudC1:{value:new THREE.Vector3()},uMudC2:{value:new THREE.Vector3()},uMatShine:{value:new Float32Array(MAT_MAX)},tSkyEnv:{value:skyEnv}};
-MAT_LIST.forEach((d,i)=>{matU.uMatShine.value[i+1]=d.sh||0});
-{const w=MAT_LIST.find(m=>m.id==='mud').c,r=(c,i)=>c[i]/w[i];matU.uMudC1.value.set(r(MUD_STAGES[0].c,0),r(MUD_STAGES[0].c,1),r(MUD_STAGES[0].c,2));matU.uMudC2.value.set(r(MUD_STAGES[1].c,0),r(MUD_STAGES[1].c,1),r(MUD_STAGES[1].c,2))}
-for(let m=0;m<MAT_MAX;m++){const d=MAT_LIST[m-1];matU.uMatInfo.value.push(d?new THREE.Vector4(d.c[0],d.c[1],d.c[2],1/(d.ft*0.3048)):new THREE.Vector4(1,1,1,1))}
+const matU={tMatId:{value:null},tMatCov:{value:null},tMatArr:{value:null},uMatInfo:{value:[]},uMatLS:{value:new Float32Array(MAT_MAX*2)},uMudL:{value:new THREE.Vector2(-1,-1)},
+  uMudC1:{value:new THREE.Vector3()},uMudC2:{value:new THREE.Vector3()},tSkyEnv:{value:skyEnv}};
+// uMatLS: each id's texture layer (-1 none loaded) and shine
+{const w=MAT_LIST.find(m=>m&&m.id==='mud').c,r=(c,i)=>c[i]/w[i];matU.uMudC1.value.set(r(MUD_STAGES[0].c,0),r(MUD_STAGES[0].c,1),r(MUD_STAGES[0].c,2));matU.uMudC2.value.set(r(MUD_STAGES[1].c,0),r(MUD_STAGES[1].c,1),r(MUD_STAGES[1].c,2))}
+for(let m=0;m<MAT_MAX;m++)matU.uMatInfo.value.push(new THREE.Vector4(1,1,1,1));
+// an id's colour, tile size and shine into the shader's uniforms (again when an own texture arrives or changes)
+function matUSet(m){const d=matDef(m);if(d)matU.uMatInfo.value[m].set(d.c[0],d.c[1],d.c[2],1/(d.ft*0.3048));matU.uMatLS.value[m*2+1]=d&&d.sh||0}
+for(let m=0;m<MAT_MAX;m++){matU.uMatLS.value[m*2]=-1;matUSet(m)}
 const MAT_GLSL_HEAD=MAT_GL2?`precision highp sampler2DArray;
 uniform sampler2D tMatId;
 uniform sampler2D tMatCov;
 uniform sampler2DArray tMatArr;
 uniform vec4 uMatInfo[${MAT_MAX}];
-uniform float uMatLayer[${MAT_MAX}];
-uniform float uMatShine[${MAT_MAX}];
+uniform vec2 uMatLS[${MAT_MAX}];
 uniform samplerCube tSkyEnv;
 uniform vec2 uMudL;
 uniform vec3 uMudC1;
@@ -93,7 +106,7 @@ if(vMatA>0.001){
   vec4 w=aa*vec4((1.0-u.x)*(1.0-u.y),u.x*(1.0-u.y),(1.0-u.x)*u.y,u.x*u.y);
   ivec2 bm=b;float wm=w.x;if(w.y>wm){wm=w.y;bm=b+ivec2(1,0);}if(w.z>wm){wm=w.z;bm=b+ivec2(0,1);}if(w.w>wm){wm=w.w;bm=b+ivec2(1,1);}
   int mi=int(texelFetch(tMatId,bm,0).r*255.0+0.5);
-  if(mi>0&&p>0.0){vec4 inf=uMatInfo[mi];matC=inf.rgb;matP=p*min(vMatA,1.0);float ly=uMatLayer[mi];matS=uMatShine[mi]*matP*(1.0-mudF);
+  if(mi>0&&p>0.0){vec4 inf=uMatInfo[mi];matC=inf.rgb;matP=p*min(vMatA,1.0);vec2 ls=uMatLS[mi];float ly=ls.x;matS=ls.y*matP*(1.0-mudF);
     // Mud: damp then cracked as the soil water drops (its colour alone where its textures aren't drawn)
     vec3 mk=vec3(1.0);float d1=0.0,d2=0.0;
     if(mi==${MUD_ID}){d1=1.0-smoothstep(0.3,0.55,soilW);d2=1.0-smoothstep(0.06,0.22,soilW);mk=mix(mix(vec3(1.0),uMudC1,d1),uMudC2,d2);matC*=mk;}
@@ -116,16 +129,23 @@ const matGlslRefl=()=>MAT_GL2?`if(matS>0.0){vec3 mrN=inverseTransformDirection(n
   reflectedLight.directDiffuse*=1.0-0.7*matS;reflectedLight.indirectDiffuse*=1.0-0.7*matS;reflectedLight.indirectSpecular+=mrE*mrF*matT*matS;}
 `:'';
 const matImg={};let matLayers=[];
+// an own texture's picture comes from the server (ownmat.js sets this); until it does, its colour shows alone
+let matOwnImg=null;
+// the image of a library id (or a Mud stage's name), loading on first use; calls back once it is in
+function matImgOf(m,cb){let im=matImg[m];
+  if(!im){im=matImg[m]=new Image();const d=typeof m==='number'?matDef(m):null;
+    if(d&&d.own){if(matOwnImg)matOwnImg(m,im)}else im.src=`textures/${d?d.id:m}.jpg`}
+  if(cb){if(im.complete&&im.naturalWidth)cb(im);else im.addEventListener('load',()=>cb(im),{once:true})}
+  return im}
 // rebuilds the texture array when the materials painted on the map (and loaded) change; the images load on first use.
 // Skipped while the ground detail is off (Low graphics), where the shader never reads it
 function matTexUpdate(){if(!MAT_GL2||!texOn||!gfxDetail)return;
   const used=new Uint8Array(MAT_MAX);for(let q=0;q<ED_M.length;q++)used[ED_M[q]]=1;
   // ids for the library, names for Mud's drier looks
-  const want=[];for(let m=1;m<=MAT_LIST.length;m++)if(used[m])want.push(m);
+  const want=[];for(let m=1;m<MAT_MAX;m++)if(used[m]&&matDef(m))want.push(m);
   if(used[MUD_ID])for(const st of MUD_STAGES)want.push(st.id);
   const ready=[];
-  for(const m of want){let im=matImg[m];
-    if(!im){im=matImg[m]=new Image();im.onload=matTexUpdate;im.src=`textures/${typeof m==='number'?MAT_LIST[m-1].id:m}.jpg`}
+  for(const m of want){const fresh=!matImg[m],im=matImgOf(m);if(fresh)im.addEventListener('load',matTexUpdate);
     if(im.complete&&im.naturalWidth)ready.push(m)}
   if(ready.length===matLayers.length&&ready.every((m,i)=>m===matLayers[i]))return;
   const T=512,L=Math.max(1,ready.length),data=new Uint8Array(T*T*4*L),cv=document.createElement('canvas');cv.width=cv.height=T;
@@ -133,5 +153,5 @@ function matTexUpdate(){if(!MAT_GL2||!texOn||!gfxDetail)return;
   const t=new THREE.DataTexture2DArray(data,T,T,L);t.format=THREE.RGBAFormat;t.wrapS=t.wrapT=THREE.RepeatWrapping;
   t.magFilter=THREE.LinearFilter;t.minFilter=THREE.LinearMipmapLinearFilter;t.generateMipmaps=true;t.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());t.needsUpdate=true;
   if(matU.tMatArr.value)matU.tMatArr.value.dispose();matU.tMatArr.value=t;
-  matU.uMatLayer.value.fill(-1);ready.forEach((m,l)=>{if(typeof m==='number')matU.uMatLayer.value[m]=l});
+  for(let m=0;m<MAT_MAX;m++)matU.uMatLS.value[m*2]=-1;ready.forEach((m,l)=>{if(typeof m==='number')matU.uMatLS.value[m*2]=l});
   const l1=ready.indexOf(MUD_STAGES[0].id),l2=ready.indexOf(MUD_STAGES[1].id);matU.uMudL.value.set(l1>=0&&l2>=0?l1:-1,l2);matLayers=ready}

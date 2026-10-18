@@ -27,12 +27,12 @@ function paintAt(x,z){const i=Math.round((x-ED_X0)/ED_C),j=Math.round((z-ED_Z0)/
 function matTint(x,z,c){const fx=(x-ED_X0)/ED_C,fz=(z-ED_Z0)/ED_C;if(fx<0||fz<0||fx>=ED_NX-1||fz>=ED_NZ-1)return 0;
   if(MAT_GL2){const i=fx|0,j=fz|0;for(let b=Math.max(0,j-1);b<=Math.min(ED_NZ-1,j+2);b++)for(let a=Math.max(0,i-1);a<=Math.min(ED_NX-1,i+2);a++)if(ED_M[b*ED_NX+a])return 1;return 0}
   const i=fx|0,j=fz|0,u=fx-i,v=fz-j,k=j*ED_NX+i;let cov=0,al=0,r=0,g=0,b=0;
-  for(const [q,w] of [[k,(1-u)*(1-v)],[k+1,u*(1-v)],[k+ED_NX,(1-u)*v],[k+ED_NX+1,u*v]]){const m=ED_M[q];if(!m||w<=0)continue;const mc=MAT_LIST[m-1].c;cov+=w;al+=w*ED_A[q];r+=mc[0]*w;g+=mc[1]*w;b+=mc[2]*w}
+  for(const [q,w] of [[k,(1-u)*(1-v)],[k+1,u*(1-v)],[k+ED_NX,(1-u)*v],[k+ED_NX+1,u*v]]){const m=ED_M[q];if(!m||w<=0)continue;const mc=matDef(m).c;cov+=w;al+=w*ED_A[q];r+=mc[0]*w;g+=mc[1]*w;b+=mc[2]*w}
   if(cov<=0)return 0;const sc=ss(0.25,0.75,cov)*al/(cov*255),f=sc/cov;
   c[0]=c[0]*(1-sc)+r*f;c[1]=c[1]*(1-sc)+g*f;c[2]=c[2]*(1-sc)+b*f;
   return sc}
 // how much of x,z one material covers (0 to 1, smoothed like matTint); painted Mud is saturated ground (water.js)
-const MUD_ID=MAT_LIST.findIndex(m=>m.id==='mud')+1;
+const MUD_ID=MAT_LIST.findIndex(m=>m&&m.id==='mud')+1;
 function matCovOf(x,z,id){const fx=(x-ED_X0)/ED_C,fz=(z-ED_Z0)/ED_C;if(fx<0||fz<0||fx>=ED_NX-1||fz>=ED_NZ-1)return 0;
   const i=fx|0,j=fz|0,u=fx-i,v=fz-j,k=j*ED_NX+i;let cov=0,al=0;
   for(const [q,w] of [[k,(1-u)*(1-v)],[k+1,u*(1-v)],[k+ED_NX,(1-u)*v],[k+ED_NX+1,u*v]])if(ED_M[q]===id){cov+=w;al+=w*ED_A[q]}
@@ -60,7 +60,7 @@ function mapDecode(text){const doc=JSON.parse(text);if(!doc||doc.game!=='backhoe
   const h=new Float32Array(ED_H.length),p=new Float32Array(ED_P.length),m=new Uint8Array(ED_M.length);edUnbox(doc.h,h,100,Int16Array);edUnbox(doc.p,p,100,Int8Array);edUnbox(doc.m,m,1,Uint8Array);
   // cover: maps from before soft edges have no "a" and are covered fully wherever painted
   const a=new Uint8Array(ED_A.length);edUnbox(doc.a,a,1,Uint8Array);
-  for(let q=0;q<m.length;q++){if(m[q]>MAT_LIST.length)m[q]=0;a[q]=m[q]?255-a[q]:0;if(!a[q])m[q]=0}
+  for(let q=0;q<m.length;q++){if(m[q]&&!matIdOk(m[q]))m[q]=0;a[q]=m[q]?255-a[q]:0;if(!a[q])m[q]=0}
   for(let j=0;j<ED_NZ;j++)for(let i=0;i<ED_NX;i++)if(i<3||j<3||i>ED_NX-4||j>ED_NZ-4){h[j*ED_NX+i]=0;p[j*ED_NX+i]=0;m[j*ED_NX+i]=0;a[j*ED_NX+i]=0}
   const as=Array.isArray(doc.assets)?doc.assets.filter(a=>Array.isArray(a)&&['pine','leafy','rock'].includes(a[0])&&isFinite(a[1])&&isFinite(a[2]))
     .map(a=>({t:a[0],x:+a[1],z:+a[2],yaw:+a[3]||0,s:Math.max(0.3,Math.min(3,+a[4]||1)),c:(a[5]|0)>=0?a[5]|0:0})):null;
