@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-18T01:33:16Z",
+ "updated": "2026-10-18T01:40:09Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 656,
+   "dh": 657,
    "act": 13,
-   "versions": 90
+   "versions": 91
   }
  ],
  "extra": [
@@ -903,6 +903,15 @@ window.EFFORT = {
    "tris": 1620620,
    "chars": 584708,
    "what": "Blocks of any size and material: the block bar sets how wide, long and tall a block is, 1 to 10 ft each (V steps through cubes, Turn or Q swaps wide and long), and a material picker offers plain concrete or any of the 31 library materials, textured evenly at any size (Y steps through them). On foot in first person the block goes where the dot in the middle of the screen points: the mouse wheel (or Reach, or [ and ]) pushes it out and pulls it back up to 80 ft, aiming at the side of a block sets the new one against it, a click places and a right click lifts while the mouse is taken, and Lift picks up the block the dot is on. Saves keep each block's size and material; older saves load as before."
+  },
+  {
+   "v": 98,
+   "asked": "2026-10-17T20:30:00-05:00",
+   "live": "2026-10-17T20:40:09-05:00",
+   "dh": 1,
+   "tris": 1620851,
+   "chars": 585279,
+   "what": "Map editor: paint laid with the square brush keeps sharp corners. Its cells are drawn whole, each a crisp square, while round-brush paint keeps its smooth outline and soft-edged paint its fade. Square paint laid before this version still has slightly rounded corners until it is painted again."
   }
  ]
 };

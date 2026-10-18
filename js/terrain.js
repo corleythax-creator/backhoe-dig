@@ -10,8 +10,8 @@ const hash=(i,j)=>{const s=Math.sin(i*127.1+j*311.7)*43758.5453;return s-Math.fl
 // ---------- map edits ----------
 // the map editor's layers over the generated ground, on a 0.5 m grid over the mesa and its cliffs: ED_H raises or
 // lowers the ground (metres), ED_P paints it toward dirt (+) or grass (-), ED_M covers it with a material from the
-// library (materials.js; 0 is the natural ground) and ED_A says how much of the cell it covers (255 full, as the Hard edge brush lays; the Soft edge
-// brush lays 254 and less over its fade; 0 wherever ED_M is 0). The outer cells stay 0 so the edges meet the coarse ground. Saved on
+// library (materials.js; 0 is the natural ground) and ED_A says how much of the cell it covers (255 full, as the Hard edge brush lays, 254 also full
+// but laid by the square brush, drawn with sharp corners; the Soft edge brush lays 253 and less over its fade; 0 wherever ED_M is 0). The outer cells stay 0 so the edges meet the coarse ground. Saved on
 // this device as bhd_map, with the placed assets (trees and boulders) and the roads; see editor.js
 const ED_X0=-58,ED_Z0=-32,ED_C=0.5,ED_NX=233,ED_NZ=249,ED_H=new Float32Array(ED_NX*ED_NZ),ED_P=new Float32Array(ED_NX*ED_NZ),ED_M=new Uint8Array(ED_NX*ED_NZ),ED_A=new Uint8Array(ED_NX*ED_NZ);
 let mapAssets=null,mapRoads=null;
