@@ -14,7 +14,7 @@ A 3D low-poly excavator game in plain HTML, CSS and JavaScript (three.js r128, n
 | `index.html` | Page markup (HUD, sticks, menus, help card) and the script tags, in load order |
 | `css/game.css` | All game styles |
 | `js/core.js` | Shared helpers, renderer, scene, sky, camera, lights, material maker `M()` |
-| `js/materials.js` | Material library for the map editor's Paint tool (31 textures: ground covers, concrete and paving, steel, brick and stone, wood and more): ids, names, tile sizes, mean colours, and the texture array the ground shader reads |
+| `js/materials.js` | Material library for the map editor's Paint tool (32 textures: ground covers, concrete and paving, steel, brick and stone, wood and more; shiny ones like Polished steel mirror the sky and catch the sun): ids, names, tile sizes, mean colours, and the texture array the ground shader reads |
 | `js/terrain.js` | Mesa layout (hills, scarp, Lower Bench), the map editor's layers and the map save format, road network and ramp, ground too steep to drive, dig-zone heightmap, soil layers, digging, dumping, slumping, cave-ins |
 | `js/scenery.js` | Lake, mountains, grass tufts, mesa and outer ground meshes (updated in place by the editor), gas main, stakes, trees and boulders (placed assets) |
 | `js/dexter.js` | Dexter's Island west of the Family Island: its ground mesh, the yellow haul bridge (`BRIDGES[3]`), the shed, office trailer, diesel tank, pipe, barriers, light towers, cone course, the parked machine models (`dexFrame` places parts in a machine's own frame) and rim pines |

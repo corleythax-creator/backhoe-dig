@@ -32,8 +32,12 @@ function blkNewMesh(mt){const im=new THREE.InstancedMesh(blkGeo,mt,BLK_MAX);
   im.castShadow=im.receiveShadow=true;im.frustumCulled=false;im.count=0;scene.add(im);return im}
 const blkMesh=blkMeshes[0]=blkNewMesh(M(0xffffff));blkTileMat(blkMesh.material,4);
 // a library material's mesh, made the first time a block of it is set; its mean colour shows until the texture is in
-function blkMeshOf(m){let im=blkMeshes[m];if(im)return im;const d=MAT_LIST[m-1],mt=M(0xffffff);mt.color.setRGB(d.c[0],d.c[1],d.c[2]);
-  blkTileMat(mt,Math.min(d.ft,6));im=blkMeshes[m]=blkNewMesh(mt);
+// shiny ones (sh) get a tight highlight and the sky mirrored in them, plainly face-on too, as metal does (the Fresnel
+// patch in core.js keeps paint and glass faint face-on)
+function blkMeshOf(m){let im=blkMeshes[m];if(im)return im;const d=MAT_LIST[m-1],
+    mt=M(0xffffff,d.sh?{shininess:90*d.sh,specular:new THREE.Color().setScalar(0.6*d.sh),envMap:skyEnv,combine:THREE.MixOperation,reflectivity:0.9*d.sh}:null);mt.color.setRGB(d.c[0],d.c[1],d.c[2]);
+  blkTileMat(mt,Math.min(d.ft,6));if(d.sh){const ob=mt.onBeforeCompile;mt.onBeforeCompile=sh=>{ob(sh);sh.fragmentShader=sh.fragmentShader.replace(/\(0\.12\+0\.88\*/g,'(0.45+0.55*')}}
+  im=blkMeshes[m]=blkNewMesh(mt);
   new THREE.TextureLoader().load(`textures/${d.id}.jpg`,t=>{t.wrapS=t.wrapT=THREE.RepeatWrapping;t.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());
     mt.map=t;mt.color.setScalar(1);mt.needsUpdate=true});
   return im}
