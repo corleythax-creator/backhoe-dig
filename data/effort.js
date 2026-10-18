@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-18T01:03:05Z",
+ "updated": "2026-10-18T01:03:53Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 621,
+   "dh": 624,
    "act": 12.5,
-   "versions": 84
+   "versions": 85
   }
  ],
  "extra": [
@@ -849,6 +849,15 @@ window.EFFORT = {
    "tris": 1620713,
    "chars": 537619,
    "what": "Map editor: Paint has Hard edge and Soft edge. Soft edge fades the material out into the ground over the outer part of the brush, with a Softness slider (10 to 100%) and a second ring showing where the fade starts; Natural ground fades paint back out the same way, soft-edged Mud is partly soaked at its fade, and maps keep the soft edges (older maps load as before). The editor's controls move to the top left to leave the screen for the ground: a slim title bar with Undo, Redo, Map file and Done, the tools in a two-wide strip down the left, and the tool's options, Map file and info cards in a scrolling column beside them with a tighter material library. Tap the picked tool again to fold its options away."
+  },
+  {
+   "v": 92,
+   "asked": "2026-10-17T19:57:00-05:00",
+   "live": "2026-10-17T20:03:53-05:00",
+   "dh": 3,
+   "tris": 1621038,
+   "chars": 538017,
+   "what": "GPU memory in the Graphics panel: an estimate of the memory the game has on the graphics card, split into textures, geometry, the screen and depth buffers (mostly the shadow map), updated live as settings change. Browsers do not report the real figure, so the game counts what it asks the GPU to hold as it is made, resized or freed. Texture size and shadow size are the big levers: 4096 shadows alone take about 128 MB."
   }
  ]
 };
