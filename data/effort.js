@@ -810,8 +810,8 @@ window.EFFORT = {
    "asked": "2026-10-17T18:55:00-05:00",
    "live": "2026-10-17T19:44:31-05:00",
    "dh": 10,
-   "tris": 1620211,
-   "chars": 515689,
+   "tris": 1620449,
+   "chars": 527659,
    "what": "Graphics panel: the Graphics button in the menu opens Low, Medium and High with every setting under them to play with, and the frame rate, triangles, draw calls, resolution and textures in memory shown live. Screen: resolution (0.5x to 3x), auto resolution, a 30 or 60 fps frame cap, field of view. Light: shadows off or 512 to 4096, soft shadow edges, filmic lighting, brightness, haze distance. Textures: texture size 512, 1024 or 2048, ground texture, extra detail (cut faces, painted materials, machine grime), ground variation, sharpness at an angle. Grass: how many blades and how far, lawn detail distance. Effects: Dirt detail, puddle water, raindrops. A change makes it Custom, marked in the panel and kept on that device; picking a preset clears it. Also: Low now shows the grass and dirt texture on the ground (512 px), sharpness at an angle is 4x, 8x and 16x by preset, and the large-scale ground variation is High only, so phones never download it."
   }
  ]
