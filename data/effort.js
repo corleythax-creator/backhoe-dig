@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 675,
-   "act": 14,
-   "versions": 97
+   "dh": 682,
+   "act": 14.5,
+   "versions": 98
   }
  ],
  "extra": [
@@ -966,6 +966,15 @@ window.EFFORT = {
    "tris": 1620562,
    "chars": 595399,
    "what": "Block snap settings are remembered: the snap mode (Grid, Grid + blocks, Blocks only or Free) and the grid size you pick in the Blocks panel come back when you return to the game. Each device keeps its own."
+  },
+  {
+   "v": 105,
+   "asked": "2026-10-17T20:50:00-05:00",
+   "live": "2026-10-17T21:33:23-05:00",
+   "dh": 7,
+   "tris": 1620872,
+   "chars": 604634,
+   "what": "Dug dirt and ruts dry and crack: dug or dumped ground and ruts that got soaked (rain, puddles, wet spoil) remember it, and as they dry they turn pale and matte, then crack like dried mud (the crack pattern on Medium and High; Low pales them), until they are dug again or rained on; mud tiles past the dig zone too. The big map has a Soil wetness row: All shades the soil from dry to soaked, Damp+, Wet+ and Soaked show only ground at least that wet, standing water shows bright blue, and Show on the ground too tints the ground itself."
   }
  ]
 };
