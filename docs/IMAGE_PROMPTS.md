@@ -26,10 +26,10 @@ ask for it.
 
 ## Master style block (paste at the start of every prompt)
 
-> STYLE: game-ready asset for a chunky, flat-shaded low-poly construction game set on a lake in the mountains; clean readable shapes,
-> slightly stylised realism, no photographic clutter. Flat, even, shadowless lighting (no baked shadows, no sun glare, no vignette), so
-> the game can light it. No text, logos, watermarks, borders or people unless asked. Colours slightly saturated, warm earthy palette
-> (red clay, sun-bleached grass, lake blue, safety yellow).
+> STYLE: game-ready asset for a modern, photorealistic construction simulation game set on a lake in the mountains; true-to-life
+> materials, accurate real-world scale and colour, crisp high-resolution detail, the look of a AAA PBR game. Flat, even, shadowless
+> lighting (no baked shadows, no sun glare, no vignette), so the game can light it. No text, logos, watermarks, borders or people
+> unless asked. Natural, realistic colours: red clay, sun-bleached grass, lake blue, safety yellow.
 
 ## Master texture block (add for every seamless texture)
 
@@ -154,7 +154,7 @@ ask for it.
 > [STYLE] A 4x2 sheet on transparent: top row soft white snowflakes, bottom row warm yellow-green glowing fireflies with soft halos.
 
 **F06 Cloud sprites** -> `fx/clouds.png`. Needs: W02, W06
-> [STYLE] A 3x2 sheet of six puffy low-poly-friendly cumulus clouds, soft white with light grey undersides, on transparent, no sky.
+> [STYLE] A 3x2 sheet of six puffy realistic cumulus clouds, soft white with light grey undersides, on transparent, no sky.
 
 ## E: Sky, water and environment
 
@@ -171,7 +171,7 @@ ask for it.
 > [STYLE] A seamless 2:1 equirectangular misty dawn sky: soft grey-pink gradient, no features, edges match.
 
 **E05 Distant mountain ridgeline** -> `sky/mountains.png`. Needs: B04, T01, T13
-> [STYLE] A seamless horizontally tiling strip (6:1) of layered blue-grey pine mountain ridges fading into haze, transparent above the top ridge, slightly stylised, three depth layers.
+> [STYLE] A seamless horizontally tiling strip (6:1) of layered blue-grey pine mountain ridges fading into haze, transparent above the top ridge, realistic, three depth layers.
 
 **E06 Far-shore town lights** -> `sky/town_night.png`. Needs: S08, T10
 > [STYLE] A tileable 8:1 strip of a far lakeshore at night: small clusters of warm yellow window lights and a few white street lights, on transparent.
@@ -181,7 +181,7 @@ ask for it.
 
 ## U: Interface icons (flat, readable at phone size)
 
-Add: "Flat vector style, thick dark outline, a single bold subject centred on a transparent background, readable at 64 px, no text."
+Add: "Clean modern game-UI icon style with realistic detail and soft shading, a single bold subject centred on a transparent background, readable at 64 px, no text."
 Do these in batches ("a 6x4 sheet of 24 icons, equal cells, in this order: ..."), then crop.
 
 **U01 Machine icons** -> `ui/machines.png`. Needs: M01-M23
@@ -204,7 +204,7 @@ Do these in batches ("a 6x4 sheet of 24 icons, equal cells, in this order: ...")
 
 ## S: Scenery concept sheets (reference art, not textures; use as guides when building)
 
-Add: "Three-quarter view on a plain light grey background, low-poly flat-shaded game-model style, front, side and back views of the same object on one sheet."
+Add: "Three-quarter view on a plain light grey background, realistic 3D game-model render style, front, side and back views of the same object on one sheet."
 
 **S01 Job trailer, porta-john, fuel tank, pipe rack** -> `concept/site_props.png`. Needs: S01, S02
 > [STYLE] [concept sheet] A construction site prop set: office trailer, porta-john, skid fuel tank, PVC pipe rack, traffic cones, barricade, caution tape stand, job sign, light tower.
