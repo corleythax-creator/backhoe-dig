@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-18T01:02:08Z",
+ "updated": "2026-10-18T01:05:25Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 614,
+   "dh": 622,
    "act": 12.5,
-   "versions": 83
+   "versions": 84
   }
  ],
  "extra": [
@@ -840,6 +840,15 @@ window.EFFORT = {
    "tris": 1620842,
    "chars": 534416,
    "what": "Turn sensitivity for each machine: the Turn slider now keeps its own setting for Dig, Drive, Truck, Mow, Skid and Walk, and shows the one for the mode you are in. The mower starts at 60%, everything else at 100%."
+  },
+  {
+   "v": 91,
+   "asked": "2026-10-17T19:13:00-05:00",
+   "live": "2026-10-17T20:05:25-05:00",
+   "dh": 8,
+   "tris": 1620825,
+   "chars": 552618,
+   "what": "Stats: ☰ then Stats (or O) shows everything you've done: grass mowed and tall grass cut in sq ft, lawns finished and the best lawn time, how much of the patch you've ever mowed, distance walked, sprinted and driven in each machine, jumps, dirt dug, buckets dumped, dirt hauled off and moved by the skid steer, line strikes, cave-ins, blocks placed, time in each machine and top speeds. Only time spent moving counts. Saved on the device and synced with the site. Lawn heatmap: times each spot has been cut, how far the grass has grown back, or the way it was last mowed, drawn north up in the Stats panel with the mower on it, and over the lawn itself as flat tiles (U, or the panel's switch; press U again to change what it shows), with a key on screen that you tap to switch."
   }
  ]
 };
