@@ -62,7 +62,7 @@ function mapDecode(text){const doc=JSON.parse(text);if(!doc||doc.game!=='backhoe
   const a=new Uint8Array(ED_A.length);edUnbox(doc.a,a,1,Uint8Array);
   for(let q=0;q<m.length;q++){if(m[q]&&!matIdOk(m[q]))m[q]=0;a[q]=m[q]?255-a[q]:0;if(!a[q])m[q]=0}
   for(let j=0;j<ED_NZ;j++)for(let i=0;i<ED_NX;i++)if(i<3||j<3||i>ED_NX-4||j>ED_NZ-4){h[j*ED_NX+i]=0;p[j*ED_NX+i]=0;m[j*ED_NX+i]=0;a[j*ED_NX+i]=0}
-  const as=Array.isArray(doc.assets)?doc.assets.filter(a=>Array.isArray(a)&&['pine','leafy','rock'].includes(a[0])&&isFinite(a[1])&&isFinite(a[2]))
+  const as=Array.isArray(doc.assets)?doc.assets.filter(a=>Array.isArray(a)&&typeof a[0]==='string'&&/^[a-z]{2,16}$/.test(a[0])&&isFinite(a[1])&&isFinite(a[2]))
     .map(a=>({t:a[0],x:+a[1],z:+a[2],yaw:+a[3]||0,s:Math.max(0.3,Math.min(3,+a[4]||1)),c:(a[5]|0)>=0?a[5]|0:0})):null;
   // roads: 1.5 to 8 m wide, 2 to 200 points each; graded only when every point has a height
   const rs=Array.isArray(doc.roads)?doc.roads.slice(0,60).filter(r=>Array.isArray(r)&&isFinite(r[0])&&Array.isArray(r[2])&&r[2].length>=2&&r[2].length<=200&&r[2].every(q=>Array.isArray(q)&&q.length>=2&&q.slice(0,3).every(isFinite)))
@@ -118,8 +118,15 @@ function landClamp(x,z,lim,side,walk){if(landIn(x,z,lim,side,walk))return [x,z];
     c.push([b.x0+b.ux*t-b.uz*u,b.z0+b.uz*t+b.ux*u])}
   let best=c[0],bd=1e18;for(const q of c){const d=(q[0]-x)**2+(q[1]-z)**2;if(d<bd){bd=d;best=q}}return best}
 // fixed things the machines and the worker can't pass through (buildings on the Family Island), as boxes along the
-// axes {x, z, hx, hz: half sizes}; family.js fills it
+// axes {x, z, hx, hz: half sizes}; family.js fills it. Things placed in the map editor (props.js) are turned boxes:
+// lx, lz their own half sizes, cs and sn the cosine and sine of their turn, hx and hz then the box along the axes round them
 const SOLIDS=[];
+// how far to move a circle (x, z, radius r) so it clears a solid, [dx, dz], or null when it is clear already
+function solidOut(s,x,z,r){let dx=x-s.x,dz=z-s.z,hx=s.hx,hz=s.hz;const rot=s.sn!==undefined;
+  if(rot){const a=dx*s.cs-dz*s.sn;dz=dx*s.sn+dz*s.cs;dx=a;hx=s.lx;hz=s.lz}
+  const nx=dx-Math.max(-hx,Math.min(hx,dx)),nz=dz-Math.max(-hz,Math.min(hz,dz)),d=Math.hypot(nx,nz);if(d>=r)return null;
+  let px=0,pz=0;if(d>1e-4){px=nx/d*(r-d);pz=nz/d*(r-d)}else if(hx-Math.abs(dx)<hz-Math.abs(dz))px=Math.sign(dx||1)*(hx-Math.abs(dx)+r);else pz=Math.sign(dz||1)*(hz-Math.abs(dz)+r);
+  return rot?[px*s.cs+pz*s.sn,pz*s.cs-px*s.sn]:[px,pz]}
 // roads: centrelines in metres and widths; a third number on every point grades the road to that height (the ramp).
 // The map editor can replace them (a saved map's roads load here)
 const ROAD_W=3.6;

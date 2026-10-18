@@ -40,8 +40,7 @@ function wkFloor(x,z,y,lim){let f=-1e9;const r=WK_R*0.7;
   return f}
 // blocks are walls from a step above the feet to the top of the head; push the body out of them
 function wkPushBlocks(){let bump=false;
-  for(const s of SOLIDS){const dx=wk.x-s.x,dz=wk.z-s.z,nx=dx-clamp(dx,-s.hx,s.hx),nz=dz-clamp(dz,-s.hz,s.hz),d=Math.hypot(nx,nz);
-    if(d>=WK_R)continue;if(d>1e-4){wk.x+=nx/d*(WK_R-d);wk.z+=nz/d*(WK_R-d)}else if(s.hx-Math.abs(dx)<s.hz-Math.abs(dz))wk.x=s.x+Math.sign(dx||1)*(s.hx+WK_R);else wk.z=s.z+Math.sign(dz||1)*(s.hz+WK_R)}
+  for(const s of SOLIDS){const p=solidOut(s,wk.x,wk.z,WK_R);if(p){wk.x+=p[0];wk.z+=p[1]}}
   for(const b of blocks){if(b.y+b.h<=wk.y+WK_STEP||b.y>=wk.y+WK_H)continue;const hx=b.w/2,hz=b.d/2,dx=wk.x-b.x,dz=wk.z-b.z;
     const nx=dx-clamp(dx,-hx,hx),nz=dz-clamp(dz,-hz,hz),d=Math.hypot(nx,nz);
     if(d>=WK_R)continue;bump=true;

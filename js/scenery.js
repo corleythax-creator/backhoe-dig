@@ -312,7 +312,7 @@ function stake(x,z,flagColor){
 [[-3,PIPE_Z],[3,PIPE_Z],[-7,PIPE_Z],[7,PIPE_Z]].forEach(p=>stake(p[0],p[1],0xf5c518));
 // the tree instance meshes, for shadowproxy.js
 const treeIMs=[];
-// placed assets (trees and boulders) as {t: type, x, z, yaw, s: size, c: tint}; the map editor moves, adds and removes them
+// placed assets (trees and boulders, and the things of props.js) as {t: type, x, z, yaw, s: size, c: tint}; the map editor moves, adds and removes them
 const ASSET_CAP={pine:600,leafy:300,rock:400},assetIMs={},assets=mapAssets?mapAssets.slice():[];
 const ASSET_PT=[[1,1,1],[0.85,0.95,1.06],[1.08,1.04,0.82],[0.92,0.98,0.9]],ASSET_LT=[[0.98,0.78,0.26],[0.93,0.52,0.2],[0.56,0.64,0.3],[0.78,0.32,0.18],[0.46,0.6,0.28],[0.95,0.85,0.4]];
 (function trees(){
@@ -392,4 +392,6 @@ function assetsBuild(){const o=new THREE.Object3D(),c=new THREE.Color(),n={pine:
     if(a.t==='pine'){const t=ASSET_PT[a.c%4],v=0.88+0.24*w2;c.setRGB(t[0]*v,t[1]*v,t[2]*v);assetIMs.pine[0].setColorAt(k,c)}
     else if(a.t==='leafy'){const t=ASSET_LT[a.c%6],v=0.9+0.2*w2;c.setRGB(t[0]*v,t[1]*v,t[2]*v);assetIMs.leafy[1].setColorAt(k,c);c.setRGB(1,1,1);assetIMs.leafy[0].setColorAt(k,c)}
     else{const v=0.85+0.3*w2;c.setRGB(v,v,v);assetIMs.rock[0].setColorAt(k,c)}}
-  for(const t in assetIMs)for(const im of assetIMs[t]){im.count=n[t];im.instanceMatrix.needsUpdate=true;if(im.instanceColor)im.instanceColor.needsUpdate=true}}
+  for(const t in assetIMs)for(const im of assetIMs[t]){im.count=n[t];im.instanceMatrix.needsUpdate=true;if(im.instanceColor)im.instanceColor.needsUpdate=true}
+  // the things placed from the editor's catalogue (props.js, which loads later)
+  if(typeof propsBuild==='function')propsBuild()}

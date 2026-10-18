@@ -71,10 +71,8 @@ function blkHit(x,y,z){for(const b of blocks)if(Math.abs(x-b.x)<b.w/2&&Math.abs(
 function blkCircleD(o,lz,b){const cx=o.x+Math.sin(o.yaw)*lz,cz=o.z+Math.cos(o.yaw)*lz,hx=b.w/2,hz=b.d/2;
   return Math.hypot(cx-Math.max(b.x-hx,Math.min(b.x+hx,cx)),cz-Math.max(b.z-hz,Math.min(b.z+hz,cz)))}
 function blkPush(o,lzs,r){let hit=false;
-  // the Family Island's buildings
-  for(const s of SOLIDS)for(const lz of lzs){const cx=o.x+Math.sin(o.yaw)*lz,cz=o.z+Math.cos(o.yaw)*lz,dx=cx-s.x,dz=cz-s.z;
-    const nx=dx-Math.max(-s.hx,Math.min(s.hx,dx)),nz=dz-Math.max(-s.hz,Math.min(s.hz,dz)),d=Math.hypot(nx,nz);if(d>=r)continue;hit=true;
-    if(d>1e-4){o.x+=nx/d*(r-d);o.z+=nz/d*(r-d)}else if(s.hx-Math.abs(dx)<s.hz-Math.abs(dz))o.x+=Math.sign(dx||1)*(s.hx-Math.abs(dx)+r);else o.z+=Math.sign(dz||1)*(s.hz-Math.abs(dz)+r)}
+  // the islands' buildings and the things placed in the map editor
+  for(const s of SOLIDS)for(const lz of lzs){const p=solidOut(s,o.x+Math.sin(o.yaw)*lz,o.z+Math.cos(o.yaw)*lz,r);if(!p)continue;hit=true;o.x+=p[0];o.z+=p[1]}
   for(const b of blocks){if(b.y+b.h<o.y+BLK_CLIMB||b.y>o.y+3)continue;const hx=b.w/2,hz=b.d/2;
     for(const lz of lzs){const cx=o.x+Math.sin(o.yaw)*lz,cz=o.z+Math.cos(o.yaw)*lz,dx=cx-b.x,dz=cz-b.z,px=hx+r-Math.abs(dx),pz=hz+r-Math.abs(dz);
       if(px<=0||pz<=0)continue;

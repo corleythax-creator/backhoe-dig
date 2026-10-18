@@ -74,9 +74,9 @@ function edPick(cx,cy){const r=canvas.getBoundingClientRect();edNdc.set((cx-r.le
   for(let n=0;n<2000&&t<900;n++){const s=Math.max(0.3,t*0.01);t0=t;t+=s;if(o.y+d.y*t<hAt(o.x+d.x*t,o.z+d.z*t))break;if(n===1999||t>=900)return null}
   for(let n=0;n<12;n++){const m=(t0+t)/2;if(o.y+d.y*m<hAt(o.x+d.x*m,o.z+d.z*m))t=m;else t0=m}
   return {x:o.x+d.x*t,z:o.z+d.z*t}}
-// the nearest tree, boulder or machine to a ground point, if one is under it
+// the nearest tree, boulder, placed thing or machine to a ground point, if one is under it
 function edHit(x,z){let best=null,bd=1;
-  for(const a of assets){const r=(a.t==='rock'?1.0:1.6)*a.s,d=Math.hypot(a.x-x,a.z-z)/r;if(d<bd){bd=d;best={a}}}
+  for(const a of assets){const d=PROPS[a.t]?propHit(a,x,z):Math.hypot(a.x-x,a.z-z)/((a.t==='rock'?1.0:1.6)*a.s);if(d<bd){bd=d;best={a}}}
   for(const m of ED_MACH){if(!m.m().visible)continue;const o=m.o(),d=Math.hypot(o.x-x,o.z-z)/m.r;if(d<bd){bd=d;best={m}}}
   return best}
 
@@ -129,7 +129,7 @@ function edRefresh(r,full){if(!r)return;const [x0,x1,z0,z1]=r;
   if(i0<=i1&&j0<=j1){for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const k=j*V+i,b=baseHeight(i*CELL-S/2,j*CELL-S/2);H[k]=H[k]===H0[k]?b:H[k]+b-H0[k];H0[k]=b;digBase(k)}
     touch(i0,i1,j0,j1);updateTufts(i0-1,i1+1,j0-1,j1+1);lawnTerrain();updateTerrain();winOn=false;blkTerrainMoved()}
   midUpdate(x0,x1,z0,z1);mudEdRefresh(x0,x1,z0,z1);rainEdRefresh(x0,x1,z0,z1);wallBuild(x0,x1,z0,z1);tuftsRefresh(x0,x1,z0,z1);
-  if(assets.some(a=>a.x>x0-2&&a.x<x1+2&&a.z>z0-2&&a.z<z1+2)){assetsBuild();shpTreesRefresh()}
+  if(assets.some(a=>a.x>x0-6&&a.x<x1+6&&a.z>z0-6&&a.z<z1+6)){assetsBuild();shpTreesRefresh()}
   if(full&&(x0<-S/2+1||x1>S/2-1||z0<-S/2+1||z1>S/2-1||x0<MID[0]+1||x1>MID[1]-1||z0<MID[2]+1||z1>MID[3]-1))buildSkirts()}
 function edStrokeEnd(){const s=ed.stroke;if(!s)return;ed.stroke=null;edRefresh(ed.pend,true);ed.pend=null;
   if(!s.ij)return;const [i0,i1,j0,j1]=s.ij,w=i1-i0+1,h=new Float32Array(w*(j1-j0+1)),p=new Float32Array(h.length),m=new Uint8Array(h.length),c=new Uint8Array(h.length);
@@ -174,7 +174,7 @@ function edQuery(x,z){const g=baseHeight(x,z),h=hAt(x,z),r=mesaR(x,z);
   if(mine.length)rows.push(['Your edits',mine.join(', ')]);
   const hit=edHit(x,z);if(hit)rows.push(['Here',hit.a?edAssetName(hit.a):hit.m.name]);
   edInfo(`<h3>Ground here</h3><dl>${rows.map(([a,b])=>`<dt>${a}</dt><dd>${b}</dd>`).join('')}</dl>`)}
-function edAssetName(a){return a.t==='rock'?`Boulder, ${edFmt(1.6*a.s,0)} ft across`:`${ED_KINDS[a.t]}, ${edFmt((a.t==='pine'?5.9:4.7)*a.s,0)} ft tall`}
+function edAssetName(a){return PROPS[a.t]?propName(a):a.t==='rock'?`Boulder, ${edFmt(1.6*a.s,0)} ft across`:`${ED_KINDS[a.t]}, ${edFmt((a.t==='pine'?5.9:4.7)*a.s,0)} ft tall`}
 function edInfo(html){const el=$('#edInfo');el.hidden=!html;if(html)el.innerHTML=html}
 function edSelect(hit){ed.sel=hit;if(!hit){edSelRing.visible=false;edInfo(null);return}
   const o=hit.a||hit.m.o(),title=hit.a?edAssetName(hit.a):hit.m.name,yaw=hit.a?hit.a.yaw:o.yaw||0;
@@ -187,10 +187,11 @@ function edSelect(hit){ed.sel=hit;if(!hit){edSelRing.visible=false;edInfo(null);
   tv.oninput=()=>{begin();lab();const y=+tv.value/57.3;if(hit.a){hit.a.yaw=y;assetsBuild();shpTreesRefresh()}else{o.yaw=y;if(o===wk)wk.view=y;hit.m.m().rotation.y=y}};
   tv.onchange=commit;
   if(sv){sv.oninput=()=>{begin();lab();hit.a.s=+sv.value/100;assetsBuild();shpTreesRefresh();edRingSel()};sv.onchange=()=>{commit();$('#edInfo h3').textContent=edAssetName(hit.a)};
-    $('#edSelCopy').onclick=()=>{const b=edAssetsSnap(),a=Object.assign({},hit.a,{x:hit.a.x+2.5*hit.a.s,z:hit.a.z+1.5*hit.a.s});assets.push(a);edAssetsChanged(b);edSelect({a})};
+    $('#edSelCopy').onclick=()=>{const b=edAssetsSnap(),P=PROPS[hit.a.t],w=P?(P.w+(P.d>0.5?0.6:0))*hit.a.s:0,
+      a=Object.assign({},hit.a,P?{x:hit.a.x+Math.cos(hit.a.yaw)*w,z:hit.a.z-Math.sin(hit.a.yaw)*w}:{x:hit.a.x+2.5*hit.a.s,z:hit.a.z+1.5*hit.a.s});assets.push(a);edAssetsChanged(b);edSelect({a})};
     $('#edSelDel').onclick=edDelete}
   edRingSel()}
-function edRingSel(){const s=ed.sel;if(!s){edSelRing.visible=false;return}const o=s.a||s.m.o();edRingAt(edSelRing,o.x,o.z,s.a?(s.a.t==='rock'?1.0:1.6)*s.a.s:s.m.r)}
+function edRingSel(){const s=ed.sel;if(!s){edSelRing.visible=false;return}const o=s.a||s.m.o();edRingAt(edSelRing,o.x,o.z,s.a?PROPS[s.a.t]?propR(s.a):(s.a.t==='rock'?1.0:1.6)*s.a.s:s.m.r)}
 function edDelete(){const s=ed.sel;if(!s||!s.a)return;const b=edAssetsSnap(),i=assets.indexOf(s.a);if(i<0)return;assets.splice(i,1);edAssetsChanged(b);edSelect(null)}
 // moves a machine (or the walker) to a spot on the mesa and sets it down on the ground there
 function edPlaceMachine(m,x,z){const o=m.o();[x,z]=landClamp(x,z,4,2);
@@ -301,7 +302,9 @@ function edDown(x,y){const p=edPick(x,y),t=ed.tool;
   if(ED_BRUSH.includes(t)){edStrokeStart(p.x,p.z);edBrushAt(p.x,p.z);return}
   if(t==='roads'){edRoadDown(p,x,y);return}
   if(t==='query'){edQuery(p.x,p.z);edRingAt(edBrushRing,p.x,p.z,0.5);ed.drag={query:true};return}
-  if(t==='add'){const b=edAssetsSnap(),a={t:ed.kind,x:p.x,z:p.z,yaw:Math.random()*6.28,s:ed.kind==='rock'?0.7+Math.random()*0.6:0.85+Math.random()*0.4,c:Math.floor(Math.random()*6)};
+  // things from the catalogue come in at full size, their front to the camera
+  if(t==='add'){const b=edAssetsSnap(),pr=PROPS[ed.kind],a=pr?{t:ed.kind,x:p.x,z:p.z,yaw:Math.round(ed.yaw/(Math.PI/12))*Math.PI/12,s:1,c:pr.tint?Math.floor(Math.random()*PROP_TINT.length):0}:
+      {t:ed.kind,x:p.x,z:p.z,yaw:Math.random()*6.28,s:ed.kind==='rock'?0.7+Math.random()*0.6:0.85+Math.random()*0.4,c:Math.floor(Math.random()*6)};
     assets.push(a);assetsBuild();shpTreesRefresh();ed.drag={a,dx:0,dz:0,snap:b,added:true};edSelect({a});ed.changed=true;return}
   if(t==='select'){const hit=edHit(p.x,p.z);if(!hit){edSelect(null);edMouse={pan:true,x,y};return}
     edSelect(hit);const o=hit.a||hit.m.o();ed.drag={a:hit.a,m:hit.m,dx:o.x-p.x,dz:o.z-p.z,snap:hit.a?edAssetsSnap():null,moved:false}}}
