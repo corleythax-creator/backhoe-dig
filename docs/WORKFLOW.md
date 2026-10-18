@@ -13,7 +13,8 @@ a feature is roughly **steps × session length**, and the two levers are fewer s
 | You want to change | Use | Where |
 | --- | --- | --- |
 | How the screen looks: colours, fonts, sizes, corners, hiding, renaming, moving a part, docking bars, phone vs. computer layouts | Screen editor | ☰ → Edit the screen, or https://claude.ai/artifact/Bj6MjgPkszqEP2PJQqQ29t. Publish with your owner key |
-| The ground: sculpt, paint materials (32 of them), roads, trees, boulders, where machines park | Map editor | ☰ → Map editor (or G) |
+| The ground: sculpt, paint materials (32 of them, plus your own), roads, trees, boulders, where machines park | Map editor | ☰ → Map editor (or G) |
+| Houses, sheds, fences, gates, light towers and props: place, move, turn, resize, copy, delete | Map editor → Add (pick from the catalogue), then Select | Saved with the map, so it syncs |
 | Your own textures for painting and blocks | Map editor → Paint → + Your own texture: pick a photo or picture, name it, set its tile size in feet, kind and shine, type the owner key | Reaches every device; Edit this texture changes one later |
 | Which ideas get built next | Idea board | https://claude.ai/artifact/FMrDEa4VsKvPS5Z3ktTrS3, then send Claude the picked ids |
 | Graphics, weather, keys, UI size, turn sensitivity | The game's own settings | ☰ |
@@ -74,11 +75,10 @@ For something that looks wrong, one screenshot and where it is.
 
 ## 4. Systems that would let you do more yourself
 
-Each is a one-time build that then saves asking Claude for that kind of change. Costs are for a fresh session.
-
-| System | What you'd do yourself afterwards | One-time cost |
-| --- | --- | --- |
-| **Place-a-thing** in the map editor | Drop houses, sheds, fences, light towers and props from a catalogue onto any island, move and turn them | about 6-10M tokens |
+Each is a one-time build that then saves asking Claude for that kind of change. All four from the first list (the
+tuning panel, the words editor, your own textures and place-a-thing) are built and now sit in the table in section 1.
+Ideas for the next ones: a shipped default map everyone starts from, editing the other islands in the map editor, and
+your own models for the catalogue.
 
 The build log shows why: 25 of the last 60 versions were small changes of 3 developer hours or less, many of them a
 default, a key, a label or a setting to remember. Each was a whole session and release. The screen editor's Tuning
