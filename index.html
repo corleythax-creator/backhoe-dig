@@ -53,6 +53,7 @@
     </div>
     <div id="menu" hidden>
       <button id="helpBtn">How to play</button>
+      <button id="statsBtn">Stats</button>
       <button id="editBtn">Map editor</button>
       <button id="benchBtn">Speed test</button>
       <button id="resetBtn">Reset</button>
@@ -67,6 +68,7 @@
   </div>
   </div>
   <div id="benchBar" hidden></div>
+  <button id="heatKey" hidden title="Tap to change what the heatmap shows"><b id="heatName"></b><i id="heatBar"></i><span><span id="heatLo"></span><span id="heatHi"></span></span></button>
   <div id="toast"><span id="toastText"></span></div>
   <button id="updBtn" hidden></button>
   <div class="sticks">
@@ -181,6 +183,21 @@
     <div class="row"><button id="gfxDone">Done</button><button id="gfxReset" class="ghost">Preset again</button></div>
   </div>
 </div>
+<div id="statBox" hidden>
+  <div class="card">
+    <h1>Stats</h1>
+    <p class="devline">Everything you've done on the island, kept on this device and synced with your site.</p>
+    <div id="statHeat">
+      <h2>Lawn heatmap</h2>
+      <div class="gseg"><button data-h="cut" aria-pressed="false">Times cut</button><button data-h="grow" aria-pressed="false">Grass height</button><button data-h="dir" aria-pressed="false">Mow direction</button></div>
+      <canvas id="heatCv" aria-label="Map of the lawn, north up"></canvas>
+      <i id="heatBar2" class="hbar"></i><div class="hends"><span id="heatLo2"></span><span id="heatHi2"></span></div>
+      <button id="heatOn" class="ghost" aria-pressed="false">Heatmap on the lawn: off</button>
+    </div>
+    <div id="statList"></div>
+    <div class="row"><button id="statDone">Done</button><button id="statClear" class="ghost">Clear stats</button></div>
+  </div>
+</div>
 <div id="sndBox" hidden>
   <div class="card">
     <h1>Sound</h1>
@@ -242,6 +259,7 @@
       <dt>Dexter's Island</dt><dd>Drive west from the Family Island's roundabout over the wide yellow haul bridge (any machine, or on foot) to Dexter's gravel yard: his equipment shed, the office trailer, the diesel tank, a skid steer, a dozer, a wheel loader and a semi with a lowboy trailer parked in the yard, light towers, a cone course to weave through and dirt piles to climb. His skid steer is ready to drive (see Skid steer); the other machines are parked for now.</dd>
       <dt>Skid steer</dt><dd>Dexter's skid steer starts parked in his yard. Tap Skid (or press 6), or walk up to it and tap Get in. Left stick drives: push to go, pull to back up, sideways to turn, and it spins in place. Right stick runs the loader: up lowers the arms, down raises them, left curls the bucket back and right dumps it; the bucket stays level as the arms go up. Drive it over the bridges to the dig site and it scoops dirt with the bucket down on the ground, then dumps it in a pile, over the cliff, or into the dump truck's bed. The status card shows its load, speed and how deep the bucket edge is.</dd>
       <dt>Jessica's Island</dt><dd>Walk east from the Family Island's roundabout and over the red covered bridge (on foot only; machines stay behind). Lantern-lit paths wind through the forest to a stone cottage with a herb garden and a bench at the cliff edge. Step inside: the roof lifts off so you can look down into the library, with shelves to the ceiling, a rolling ladder, armchairs by the fire and a cat asleep on the window seat. Cab view walks you around at eye level.</dd>
+      <dt>Stats</dt><dd>☰ then Stats (or O) shows everything you've done: grass mowed, lawns finished and your best time, distance walked, sprinted and driven in each machine, jumps, dirt dug and hauled, time in each machine and top speeds. Its lawn heatmap shows how many times each spot has been cut, how far the grass has grown back, or the way it was last mowed; turn it on to see it over the lawn itself (U, press again to change what it shows). Tap the key at the top of the screen to switch what it shows.</dd>
       <dt>Look</dt><dd>Drag the scene to look around.</dd>
       <dt>Map</dt><dd>Tap the minimap or press M for the big map.</dd>
       <dt>Map editor</dt><dd>☰ menu, then Map editor (or G). The game pauses while you edit. Raise, Lower, Flatten and Smooth reshape the ground under a round brush; Dirt and Grass paint it. Paint lays a material from the library (gravel, concrete, steel plate, brick, wood and more) under a round or square brush, hard edged or soft edged (Softness sets how much of the brush fades out into the ground); Natural ground clears it, and digging cuts through it. Select picks a tree, boulder or machine: drag it to move it, and turn, resize, copy or delete it on its card. Add places pine trees, leafy trees or boulders. Query reads the height, slope and surface of any spot. Roads lays out the road network: tap a road to pick it, drag its dots to move them, tap the picked road between dots to add one, or tap New road and lay one point by point. Its card sets the width, grass up the middle and grading (cut and filled to a height at each point, like the ramp) and deletes points or the road. Look moves the view: drag, pinch to zoom, twist to turn (mouse: right button turns, wheel zooms; keys WASD, Q E, R F). The tools run down the left with their options beside them; tap the picked tool again to fold its options away. Undo and Redo step through your edits. The map saves on this device as you edit; Map file copies it as text to keep or share, loads a copied map, or starts over.</dd>
@@ -278,6 +296,7 @@
 <script src="js/mower.js"></script>
 <script src="js/skid.js"></script>
 <script src="js/walker.js"></script>
+<script src="js/stats.js"></script>
 <script src="js/keys.js"></script>
 <script src="js/controls.js"></script>
 <script src="js/save.js"></script>

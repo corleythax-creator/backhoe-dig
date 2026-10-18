@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-18T01:03:53Z",
+ "updated": "2026-10-18T01:05:48Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 624,
+   "dh": 632,
    "act": 12.5,
-   "versions": 85
+   "versions": 86
   }
  ],
  "extra": [
@@ -858,6 +858,15 @@ window.EFFORT = {
    "tris": 1621586,
    "chars": 541220,
    "what": "GPU memory in the Graphics panel: an estimate of the memory the game has on the graphics card, split into textures, geometry, the screen and depth buffers (mostly the shadow map), updated live as settings change. Browsers do not report the real figure, so the game counts what it asks the GPU to hold as it is made, resized or freed. Texture size and shadow size are the big levers: 4096 shadows alone take about 128 MB."
+  },
+  {
+   "v": 93,
+   "asked": "2026-10-17T19:13:00-05:00",
+   "live": "2026-10-17T20:06:56-05:00",
+   "dh": 8,
+   "tris": 1620641,
+   "chars": 559422,
+   "what": "Stats: ☰ then Stats (or O) shows everything you've done: grass mowed and tall grass cut in sq ft, lawns finished and the best lawn time, how much of the patch you've ever mowed, distance walked, sprinted and driven in each machine, jumps, dirt dug, buckets dumped, dirt hauled off and moved by the skid steer, line strikes, cave-ins, blocks placed, time in each machine and top speeds. Only time spent moving counts. Saved on the device and synced with the site. Lawn heatmap: times each spot has been cut, how far the grass has grown back, or the way it was last mowed, drawn north up in the Stats panel with the mower on it, and over the lawn itself as flat tiles (U, or the panel's switch; press U again to change what it shows), with a key on screen that you tap to switch."
   }
  ]
 };
