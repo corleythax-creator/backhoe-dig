@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 536.5,
-   "act": 11.5,
-   "versions": 72
+   "dh": 546.5,
+   "act": 12.0,
+   "versions": 73
   }
  ],
  "extra": [
@@ -741,6 +741,15 @@ window.EFFORT = {
    "tris": 1587618,
    "chars": 473001,
    "what": "Field grass: the mesa's grass is now curved, arching clumps instead of straight spikes, in four kinds: meadow grass, seed-head grass in drifts and along the roads and yards, low broadleaf weeds, and wildflowers in drifts of yellow, white or purple. It grows in patches and little clusters with thinner ground between, lush and green on the flats and dry and straw coloured up the slopes and hilltops, and it sways in the same wind gusts as the tall grass. It is drawn in squares that are skipped when out of view and thins out with distance by the Graphics setting (fewer clumps on Low), so phones draw less."
+  },
+  {
+   "v": 80,
+   "asked": "2026-10-17T18:40:00-05:00",
+   "live": "2026-10-17T19:22:20-05:00",
+   "dh": 10,
+   "tris": 1586492,
+   "chars": 479052,
+   "what": "Better ruts: mud ruts are rounded with the tread printed in the bottom (grousers under the tracks, chevrons under the tyres), the squeezed mud forms wide lumpy berms instead of spikes, and soft mud slumps so no face is steeper than about 40 degrees. Rut bottoms show darker and wetter and the crests lighter, wet mud gives small glints instead of a grey sheen, and puddles are muddy brown. In the map editor, painting over ruts smooths them back to the painted ground (dry, puddles gone), except painting Mud, or Dirt on ground that is already soaked."
   }
  ]
 };

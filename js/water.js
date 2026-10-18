@@ -12,7 +12,7 @@ let waterT=0,dryT=0,pumpOn=false,waterAny=false,puddleAny=false,waterMoved=false
 // under the ground. The water itself is the same everywhere; the Graphics setting only changes how it is drawn: every 6 in
 // with sky reflections on Medium and High, every 1 ft without them on Low (phones)
 let WM_N=96,WM_K=GRID_K,wmI0=-1,wmJ0=-1,wmAge=0;
-const wmMat=new THREE.MeshPhongMaterial({color:0x6a5d4c,specular:0x5a544c,shininess:90,transparent:true,opacity:0.92,combine:THREE.MixOperation,reflectivity:0.75});
+const wmMat=new THREE.MeshPhongMaterial({color:0x6b5238,specular:0x5a544c,shininess:90,transparent:true,opacity:0.9,combine:THREE.MixOperation,reflectivity:0.55});
 const wmMesh=new THREE.Mesh(new THREE.PlaneGeometry(1,1,1,1),wmMat);
 wmMesh.frustumCulled=false;wmMesh.visible=false;wmMesh.receiveShadow=true;scene.add(wmMesh);
 function wmSet(fine){WM_K=fine?1:GRID_K;WM_N=96*GRID_K/WM_K;wmMesh.geometry.dispose();wmMesh.geometry=new THREE.PlaneGeometry(1,1,WM_N,WM_N);
