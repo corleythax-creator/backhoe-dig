@@ -38,7 +38,7 @@ const timeU={value:0};
 // between, in little clusters: lush and green down on the flats, dry and straw coloured up the slopes and hilltops,
 // seed heads in drifts and along the roads and yards, flowers in drifts of one colour
 const TUFTS=15000,tX=new Float32Array(TUFTS),tZ=new Float32Array(TUFTS),tS=new Float32Array(TUFTS),tR=new Float32Array(TUFTS),tI=new Int32Array(TUFTS),tJ=new Int32Array(TUFTS),
-  tK=new Uint8Array(TUFTS),tH=new Float32Array(TUFTS),tMi=new Uint16Array(TUFTS),tSl=new Int32Array(TUFTS);
+  tK=new Uint8Array(TUFTS),tGone=new Uint8Array(TUFTS),tVis=new Uint8Array(TUFTS),tH=new Float32Array(TUFTS),tMi=new Uint16Array(TUFTS),tSl=new Int32Array(TUFTS);
 // smooth value noise, 0 to 1, about one feature per unit
 function tuftNoise(x,z){const i=Math.floor(x),j=Math.floor(z),fx=x-i,fz=z-j,u=fx*fx*(3-2*fx),v=fz*fz*(3-2*fz);
   const a=hash(i,j),b=hash(i+1,j),c=hash(i,j+1),d=hash(i+1,j+1);return a+(b-a)*u+(c-a)*v+(a-b-c+d)*u*v}
@@ -86,8 +86,9 @@ const TC_X0=-48,TC_Z0=-19,TC_W=32,TC_NX=3,TC_NZ=3;
 // below its rank, and the ones left grow a little to fill in
 const tuftMats=TUFT_GEO.map(()=>{const mat=M(0xffffff,{side:THREE.DoubleSide,vertexColors:true}),thin={value:new THREE.Vector4(1,25,80,0.35)};
   mat.userData.thin=thin;
-  mat.onBeforeCompile=sh=>{sh.uniforms.uTime=timeU;sh.uniforms.uThin=thin;sh.uniforms.uSun={value:SUN_DIR};
-    sh.vertexShader='uniform float uTime;\nuniform vec4 uThin;\nattribute vec4 aTuft;\nattribute float aHead;\nvarying vec3 vLW;\nvarying float vTip;\n'+sh.vertexShader
+  mat.onBeforeCompile=sh=>{sh.uniforms.uTime=timeU;sh.uniforms.uThin=thin;sh.uniforms.uSun={value:SUN_DIR};sh.uniforms.uPush=lawnPush;
+    sh.uniforms.tCrush={value:crTex};sh.uniforms.uCrO={value:new THREE.Vector4(CR_X0,CR_Z0,1/(CR_NX*CR_C),1/(CR_NZ*CR_C))};Object.assign(sh.uniforms,wetU);
+    sh.vertexShader='uniform float uTime;\nuniform vec4 uThin;\nuniform vec4 uPush[5];\nuniform sampler2D tCrush;\nuniform vec4 uCrO;\nuniform sampler2D tWet;\nuniform vec4 uWetO;\nattribute vec4 aTuft;\nattribute float aHead;\nvarying vec3 vLW;\nvarying float vTip;\n'+sh.vertexShader
       .replace('#include <color_vertex>','vColor=vec3(1.0);\n#ifdef USE_COLOR\nvColor*=color;\n#endif\n#ifdef USE_INSTANCING_COLOR\nvColor*=mix(instanceColor,aTuft.yzw,step(0.5,aHead)*step(aHead,1.5));\n#endif')
       .replace('#include <project_vertex>',
       '#ifdef USE_INSTANCING\nvec3 root=instanceMatrix[3].xyz;\n#else\nvec3 root=vec3(0.0);\n#endif\n'+
@@ -96,10 +97,18 @@ const tuftMats=TUFT_GEO.map(()=>{const mat=M(0xffffff,{side:THREE.DoubleSide,ver
       '#ifdef USE_INSTANCING\nmvPosition=instanceMatrix*mvPosition;\n#endif\n'+
       // the same gusts as the tall grass (mower.js), so the whole mesa moves together
       'float hg=max(0.0,mvPosition.y-root.y);vec2 wd=vec2(0.8,0.6);\n'+
+      // trampled (grassCrush): laid over the way the wheels went, paler where the undersides show; and in the wet
+      // (rain.js) the blades hang heavier and darker. Read per vertex where the GPU can (nearly all), else left out
+      (WET_VTX?'vec4 cr=texture2D(tCrush,(root.xz-uCrO.xy)*uCrO.zw);float fla=smoothstep(0.0,0.5,cr.r);vec2 cd=vec2(sin(cr.g*6.2832),cos(cr.g*6.2832));\n'+
+        'float wet=texture2D(tWet,(root.xz-uWetO.xy)*uWetO.zw).r;\n':'float fla=0.0,wet=0.0;vec2 cd=vec2(0.0);\n')+
       'float gust=pow(0.5+0.5*sin(dot(root.xz,wd)*0.42-uTime*1.9+1.5*sin(dot(root.xz,vec2(-0.6,0.8))*0.11+uTime*0.23)),3.0);\n'+
       'float fl=sin(uTime*5.3+root.x*2.1+root.z*1.7)*0.5+sin(uTime*3.1+root.x*1.7-root.z*1.1)*0.5;\n'+
-      'mvPosition.xz+=wd*hg*hg*(0.25+1.1*gust+0.2*fl);mvPosition.y-=hg*hg*0.4*gust;\n'+
-      'vColor*=1.0+0.18*gust*smoothstep(0.05,0.3,hg);\n'+
+      'mvPosition.xz+=wd*hg*hg*(0.25+1.1*gust+0.2*fl+0.4*wet)*(1.0-fla);mvPosition.y-=hg*hg*(0.4*gust+0.5*wet)*(1.0-fla);\n'+
+      'mvPosition.xz+=cd*hg*0.9*fla;mvPosition.y-=hg*0.8*fla;\n'+
+      // and it leans away from the machines and the worker (uPush, set by updateMower)
+      'for(int m=0;m<5;m++){vec2 d=root.xz-uPush[m].xy;float l=length(d),f=(1.0-smoothstep(uPush[m].z*0.55,uPush[m].z+0.35,l))*(1.0-fla);\n'+
+      'if(f>0.0){mvPosition.xz+=d/max(l,0.05)*hg*0.9*f;mvPosition.y-=hg*0.6*f;}}\n'+
+      'vColor*=(1.0+0.18*gust*smoothstep(0.05,0.3,hg)*(1.0-fla))*mix(vec3(1.0),vec3(1.3,1.22,0.78),fla)*(1.0-0.22*wet);\n'+
       'vLW=mvPosition.xyz;vTip=smoothstep(0.03,0.3,hg);\n'+
       'mvPosition=modelViewMatrix*mvPosition;\ngl_Position=projectionMatrix*mvPosition;');
     // looking toward the sun the blades glow where light comes through them
@@ -155,9 +164,10 @@ const tufts=new THREE.Group(),tuftMeshes=[];scene.add(tufts);
     A[s*4]=(s+0.5)/im.userData.n;A[s*4+1]=hd[n*3];A[s*4+2]=hd[n*3+1];A[s*4+3]=hd[n*3+2];for(let e=0;e<3;e++)C[s*3+e]=col[n*3+e]}})();
 const tO=new THREE.Object3D(),tuftDirty=new Set();
 // clump n standing on the ground (a slight random tilt each), or hidden
-function tuftPut(n,show){const im=tuftMeshes[tMi[n]];tuftDirty.add(im);
+// (shorter while it grows back from a mowing, tuftCutK)
+function tuftPut(n,show){const im=tuftMeshes[tMi[n]];tuftDirty.add(im);tVis[n]=show?1:0;
   if(!show){im.setMatrixAt(tSl[n],ZERO_M);return}
-  const s=tS[n];tO.position.set(tX[n],hAt(tX[n],tZ[n])-0.02,tZ[n]);tO.rotation.set((hash(n,1.7)-0.5)*0.24,tR[n],(hash(n,4.3)-0.5)*0.24);tO.scale.set(s,s*tH[n],s);
+  const s=tS[n];tO.position.set(tX[n],hAt(tX[n],tZ[n])-0.02,tZ[n]);tO.rotation.set((hash(n,1.7)-0.5)*0.24,tR[n],(hash(n,4.3)-0.5)*0.24);tO.scale.set(s,s*tH[n]*tuftCutK(n),s);
   tO.updateMatrix();im.setMatrixAt(tSl[n],tO.matrix)}
 function tuftFlush(){for(const im of tuftDirty)im.instanceMatrix.needsUpdate=true;tuftDirty.clear()}
 function updateTufts(i0,i1,j0,j1){
@@ -166,21 +176,83 @@ function updateTufts(i0,i1,j0,j1){
   tuftFlush();
 }
 const ZERO_M=new THREE.Matrix4().makeScale(0,0,0);
-// after the map editor reshapes, repaints or lays a road over an area (metres): tufts follow the ground and keep off
-// dirt, roads and steep ground
+// after the map editor reshapes, repaints or lays a road over an area (metres), or ruts or smooths the mud there: tufts
+// follow the ground and keep off dirt, roads, steep ground and ruts (tGone: under the tall grass, mower.js)
 function tuftsRefresh(x0,x1,z0,z1){
-  for(let n=0;n<TUFTS;n++){const x=tX[n],z=tZ[n];if(x<x0||x>x1||z<z0||z>z1)continue;const i=tI[n],k=tJ[n]*V+i;
-    tuftPut(n,!((i>=0&&Math.abs(H[k]-H0[k])>0.04)||yardAt(x,z)>0.3||roadAmt(x,z)>0.1||wallAt(x,z)||paintAt(x,z)))}
+  for(let n=0;n<TUFTS;n++){const x=tX[n],z=tZ[n];if(x<x0||x>x1||z<z0||z>z1||tGone[n])continue;const i=tI[n],k=tJ[n]*V+i;
+    tuftPut(n,!((i>=0?Math.abs(H[k]-H0[k])>0.04:Math.abs(hAt(x,z)-baseHeight(x,z))>0.04)||yardAt(x,z)>0.3||roadAmt(x,z)>0.1||wallAt(x,z)||paintAt(x,z)))}
   tuftFlush()}
-for(let n=0;n<TUFTS;n++)tuftPut(n,true);tuftFlush();
+// ruts outside the dig zone (farRut, mud.js) mark the area here; the tufts there are checked a few times a second
+let tuftFarBox=null,tuftFarT=0;
+function tuftFarMark(x0,x1,z0,z1){const b=tuftFarBox;tuftFarBox=b?[Math.min(b[0],x0),Math.max(b[1],x1),Math.min(b[2],z0),Math.max(b[3],z1)]:[x0,x1,z0,z1]}
 // every frame: each shape's thinning from the Graphics setting, and how many clumps each square draws (none when every
 // clump in it would be shrunk away)
-function tuftLod(){const g=typeof gfxKey!=='undefined'?GFX[gfxKey].tuft:[1,25,80,0.35],cx=camera.position.x,cz=camera.position.z;
+function tuftLod(){const g=typeof gfxCur!=='undefined'?gfxCur.tuft:[1,25,80,0.35],cx=camera.position.x,cz=camera.position.z;
   for(let k=0;k<TUFT_KINDS;k++)tuftMats[k].userData.thin.value.set(g[0],g[1]*TUFT_KR[k],g[2]*TUFT_KR[k],k?0:g[3]);
   for(const im of tuftMeshes){const k=im.userData.k,n=im.userData.n;if(!n)continue;
     const d=Math.hypot(Math.max(0,Math.abs(cx-im.userData.cx)-TC_W/2),Math.max(0,Math.abs(cz-im.userData.cz)-TC_W/2)),fl=k?0:g[3];
     const f=g[0]*(fl+(1-fl)*(1-ss(g[1]*TUFT_KR[k],g[2]*TUFT_KR[k],d)));
     im.count=Math.min(n,Math.ceil(f*n)+1);im.visible=f>0.002}}
+// ---------- trampled grass ----------
+// a 0.5 m grid over the field grass: how flat it is (0 standing, 1 laid flat) and which way it was pushed. Tracks and
+// tyres lay it flat (stampRut, dirt.js), the mower's wheels nearly and the worker's feet partway; it springs back over
+// about two and a half minutes, staying down for the first minute. The same on every device; not saved, since it stands
+// back up so soon. The grass shader reads it from a small texture (r flatness, g direction)
+const CR_X0=TC_X0,CR_Z0=TC_Z0,CR_C=0.5,CR_NX=TC_NX*TC_W/CR_C,CR_NZ=TC_NZ*TC_W/CR_C,CR_BACK=150;
+const crA=new Float32Array(CR_NX*CR_NZ),crTex=new THREE.DataTexture(new Uint8Array(CR_NX*CR_NZ*4),CR_NX,CR_NZ,THREE.RGBAFormat);
+crTex.needsUpdate=true;
+let crOn=false,crT=0;
+// press the grass in a footprint centred on x,z facing yaw (half width hw, half length hl, metres) toward cap, at rate a second
+function grassCrush(x,z,yaw,hw,hl,rate,cap,dt){const s=Math.sin(yaw),c=Math.cos(yaw),R=Math.hypot(hw,hl)+CR_C/2,d=Math.round(((yaw/6.2832)%1+1)%1*255);
+  const i0=Math.max(0,Math.floor((x-R-CR_X0)/CR_C)),i1=Math.min(CR_NX-1,Math.ceil((x+R-CR_X0)/CR_C)),j0=Math.max(0,Math.floor((z-R-CR_Z0)/CR_C)),j1=Math.min(CR_NZ-1,Math.ceil((z+R-CR_Z0)/CR_C));
+  for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const dx=CR_X0+(i+0.5)*CR_C-x,dz=CR_Z0+(j+0.5)*CR_C-z;
+    if(Math.abs(dx*s+dz*c)>hl+CR_C/2||Math.abs(dx*c-dz*s)>hw+CR_C/2)continue;const k=j*CR_NX+i;if(crA[k]>=cap)continue;
+    crA[k]=Math.min(cap,crA[k]+rate*dt);crTex.image.data[k*4+1]=d;crOn=true}}
+// four times a second: the grass springs back, and the texture follows; tufts in fresh ruts go
+function grassTick(dt){crT+=dt;if(tuftFarBox&&timeU.value-tuftFarT>0.3){tuftFarT=timeU.value;tuftsRefresh(...tuftFarBox);tuftFarBox=null}
+  if(crT<0.25)return;const st=crT;crT=0;if(!crOn)return;let any=false;const a=crTex.image.data;
+  for(let k=0;k<crA.length;k++){if(crA[k]<=0)continue;crA[k]=Math.max(0,crA[k]-st/CR_BACK);a[k*4]=Math.round(crA[k]*255);any=true}
+  crOn=any;crTex.needsUpdate=true}
+function grassReset(){crA.fill(0);crTex.image.data.fill(0);crTex.needsUpdate=true;crOn=false}
+// ---------- mowed field grass ----------
+// the mower cuts the field grass too: on the same 0.5 m grid, each cell remembers when it was last cut (fcT, on the lawn
+// clock, mower.js), and its clumps stand at stubble height, then grow back on the tall grass's timing (LAWN_WAIT, then
+// LAWN_GROW). Saved with the mowing (lawnSave), so it syncs. The clumps in each cell, for the mower to find:
+// tuftsInCell(k) are tCellL[tCellS[k]] up to tCellS[k+1]
+const fcT=new Float32Array(CR_NX*CR_NZ).fill(-1e9),fcAct=[],fcIn=new Uint8Array(CR_NX*CR_NZ),tCell=new Int32Array(TUFTS),tCellS=new Int32Array(CR_NX*CR_NZ+1),tCellL=new Int32Array(TUFTS);
+// how tall each shape stands at full size (m): the grass with its seed stalks, the broadleaf with its flower
+const TUFT_HK=[0.45,0.42];
+{for(let n=0;n<TUFTS;n++){const i=Math.floor((tX[n]-CR_X0)/CR_C),j=Math.floor((tZ[n]-CR_Z0)/CR_C);tCell[n]=i<0||j<0||i>=CR_NX||j>=CR_NZ?-1:j*CR_NX+i;if(tCell[n]>=0)tCellS[tCell[n]+1]++}
+  for(let k=0;k<CR_NX*CR_NZ;k++)tCellS[k+1]+=tCellS[k];const at=tCellS.slice(0,-1);for(let n=0;n<TUFTS;n++)if(tCell[n]>=0)tCellL[at[tCell[n]]++]=n}
+// a clump's height (share of full): cut down to the deck's height, then growing back
+function tuftCutK(n){const k=tCell[n];if(k<0||fcT[k]<-1e8)return 1;
+  const g=Math.min(1,Math.max(0,(lawn.t-fcT[k]-LAWN_WAIT)/LAWN_GROW)),stub=Math.min(1,LAWN_CUT/(TUFT_HK[tK[n]]*tS[n]*tH[n]));return stub+(1-stub)*g}
+function fcRedraw(k){for(let q=tCellS[k];q<tCellS[k+1];q++){const n=tCellL[q];if(tVis[n])tuftPut(n,true)}}
+// the deck centred on x,z facing yaw (half width hw, half depth hd) cuts what stands in it; returns how many tall clumps it cut
+function fieldCut(x,z,yaw,hw,hd){const s=Math.sin(yaw),c=Math.cos(yaw),R=Math.hypot(hw,hd)+CR_C/2;let cut=0;
+  const i0=Math.max(0,Math.floor((x-R-CR_X0)/CR_C)),i1=Math.min(CR_NX-1,Math.floor((x+R-CR_X0)/CR_C)),j0=Math.max(0,Math.floor((z-R-CR_Z0)/CR_C)),j1=Math.min(CR_NZ-1,Math.floor((z+R-CR_Z0)/CR_C));
+  for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const k=j*CR_NX+i;if(tCellS[k]===tCellS[k+1])continue;
+    const dx=CR_X0+(i+0.5)*CR_C-x,dz=CR_Z0+(j+0.5)*CR_C-z;if(Math.abs(dx*c-dz*s)>hw||Math.abs(dx*s+dz*c)>hd)continue;
+    // only grass grown back past halfway counts as a cut (and restarts the clock)
+    if(fcT[k]>-1e8&&lawn.t-fcT[k]<LAWN_WAIT+LAWN_GROW*0.5)continue;
+    for(let q=tCellS[k];q<tCellS[k+1];q++)if(tVis[tCellL[q]])cut++;
+    fcT[k]=lawn.t;if(!fcIn[k]){fcIn[k]=1;fcAct.push(k)}fcRedraw(k)}
+  if(cut){tuftFlush();lawn.sDirty=true}return cut}
+// once a second: the cut cells grow, and drop off the list when fully grown
+let fcGrowT=0;
+function fieldGrow(dt){if(!fcAct.length||(fcGrowT-=dt)>0)return;fcGrowT=1;
+  for(let q=fcAct.length-1;q>=0;q--){const k=fcAct[q];fcRedraw(k);if(lawn.t-fcT[k]>=LAWN_WAIT+LAWN_GROW){fcT[k]=-1e9;fcIn[k]=0;fcAct[q]=fcAct[fcAct.length-1];fcAct.pop()}}
+  tuftFlush()}
+// the save: cells still growing, 3 bytes each (cell, low and high byte; then age as a share of the regrowth, 1-255)
+function fieldSave(){const b=new Uint8Array(fcAct.length*3);let m=0;
+  for(const k of fcAct){const a=lawn.t-fcT[k];if(a>=LAWN_WAIT+LAWN_GROW)continue;b[m++]=k&255;b[m++]=k>>8;b[m++]=1+Math.round(Math.max(0,a)/(LAWN_WAIT+LAWN_GROW)*254)}
+  let bin='';for(let q=0;q<m;q++)bin+=String.fromCharCode(b[q]);return btoa(bin)}
+function fieldLoad(str){if(typeof str!=='string')return;let b;try{b=atob(str)}catch(e){return}
+  for(let q=0;q+2<b.length;q+=3){const k=b.charCodeAt(q)|b.charCodeAt(q+1)<<8;if(k>=fcT.length)continue;
+    fcT[k]=lawn.t-(b.charCodeAt(q+2)-1)/254*(LAWN_WAIT+LAWN_GROW);if(!fcIn[k]){fcIn[k]=1;fcAct.push(k)}fcRedraw(k)}
+  tuftFlush()}
+// every clump stands up at the start
+for(let n=0;n<TUFTS;n++)tuftPut(n,true);tuftFlush();
 // ground outside the dig zone: 0.5 m over the rest of the mesa and its cliffs (hills, the scarp and the ramp need it),
 // 2 m beyond; each patch has a hole where the finer one sits
 const MID=[-58,58,-32,92];

@@ -7,6 +7,8 @@ function fpEye(o,px,py,pz,dx,dy,dz){o.localToWorld(camera.position.set(px,py,pz)
   const y=Math.atan2(dx,dz)+fpl.yaw,p=clamp(Math.atan2(dy,Math.hypot(dx,dz))+fpl.pitch,-1.45,1.45),c=Math.cos(p)*10;
   o.localToWorld(look.set(px+Math.sin(y)*c,py+Math.sin(p)*10,pz+Math.cos(y)*c))}
 function frame(now){
+  // frame cap (Graphics panel): skip this display refresh if the last frame was too recent
+  if(gfxCur.fps&&!bench.on&&now-last<900/gfxCur.fps){requestAnimationFrame(frame);return}
   const dt=Math.min(0.05,(now-last)/1000);last=now;crushT-=dt;
   // resolution changes and window resizes land here, before anything is drawn this frame
   if(viewDirty){viewDirty=false;const want=bench.on?(bench.pr||maxPR):pr;if(renderer.getPixelRatio()!==want)renderer.setPixelRatio(want);resize()}
@@ -16,23 +18,28 @@ function frame(now){
   keyAxes(dt);pollPad();
   const Lx=clamp(SL.x+KA.lx+PA.lx,-1,1),Ly=clamp(SL.y+KA.ly+PA.ly+(mode==='dig'||mode==='mow'||mode==='walk'?0:PA.thr),-1,1),Rx=clamp(SR.x+KA.rx+PA.rx,-1,1),Ry=clamp(SR.y+KA.ry+PA.ry,-1,1);
   let swingIn=0,stickIn=0,driveIn=0,turnIn=0,boomIn=-Ry,bucketIn=Rx;
-  if(mode==='dig'){swingIn=Lx;stickIn=Ly}else if(mode==='drive'){driveIn=Ly;turnIn=Lx}
+  // Turn sensitivity (controls.js) scales every left / right
+  const Ts=turnSens;
+  if(mode==='dig'){swingIn=Lx*Ts;stickIn=Ly}else if(mode==='drive'){driveIn=Ly;turnIn=Lx*Ts}
   let tThr=0,tSteer=0,tBed=0;
-  if(mode==='truck'){tThr=Ly;tSteer=Lx;tBed=Ry;boomIn=0;bucketIn=0}
+  if(mode==='truck'){tThr=Ly;tSteer=clamp(Lx*Ts,-1,1);tBed=Ry;boomIn=0;bucketIn=0}
   // mower: one stick per lap bar; the left stick sideways spins it as well
   let mL=0,mR=0;
-  if(mode==='mow'){mL=clamp(Ly+Lx*0.7,-1,1);mR=clamp(Ry-Lx*0.7,-1,1);boomIn=0;bucketIn=0}
+  if(mode==='mow'){mL=clamp(Ly+Lx*0.7*Ts,-1,1);mR=clamp(Ry-Lx*0.7*Ts,-1,1);boomIn=0;bucketIn=0}
   // on foot: the left stick walks, the right stick looks around
   if(mode==='walk'){boomIn=0;bucketIn=0}
+  // skid steer: left stick drives, right stick runs the arms (up lowers them, as the boom) and the bucket (right dumps)
+  let sDrive=0,sTurn=0,sArm=0,sCurl=0;
+  if(mode==='skid'){sDrive=Ly;sTurn=Lx*Ts;sArm=-Ry;sCurl=-Rx;boomIn=0;bucketIn=0}
   const res=st.res;
   st.swing-=swingIn*0.85*dt*res;
   st.a1=clamp(st.a1+boomIn*0.6*dt*res,...LIM.a1);
   st.a2=clamp(st.a2+stickIn*0.8*dt*res,...LIM.a2);
   st.a3=clamp(st.a3+bucketIn*1.3*dt*res,...LIM.a3);
   if(bench.on){benchTick(dt);driveIn=0;turnIn=0;tThr=0;tSteer=0;tBed=0;mL=0;mR=0}
-  updateTruck(dt,tThr,tSteer,tBed);updateMower(dt,mL,mR);
+  updateTruck(dt,tThr,tSteer,tBed);updateMower(dt,mL,mR);if(bench.on){sDrive=sTurn=sArm=sCurl=0}updateSkid(dt,sDrive,sTurn,sArm,sCurl);
   siteTick();
-  if(mode==='walk'&&!bench.on)updateWalker(dt,Lx,Ly,Rx,Ry);else updateWalker(dt,0,0,0,0);
+  if(mode==='walk'&&!bench.on)updateWalker(dt,Lx,Ly,Rx*Ts,Ry);else updateWalker(dt,0,0,0,0);
   // what the mixer hears: hydraulic demand, a ram pushed against its stop (relief valve), tracks moving
   {const end=(v,l,i)=>(i>0.1&&v>=l[1]-1e-4)||(i<-0.1&&v<=l[0]+1e-4);
     sndIn.hyd=Math.abs(swingIn)+Math.abs(stickIn)+Math.abs(boomIn)+Math.abs(bucketIn)+Math.abs(driveIn)+Math.abs(turnIn);
@@ -138,11 +145,13 @@ function frame(now){
     {const pb=$('#pumpBtn');if(pb.hidden===waterAny)pb.hidden=!waterAny}
     {const sb=$('#seatBtn'),walk=mode==='walk',mc=walk&&wkNear(),gm=walk&&!mc?famGameNear():null,show=walk?!!(mc||gm):!!wk.inside;if(sb.hidden===show)sb.hidden=!show;const t=walk?(gm?gm.b:'Get in'):'Get out';if(sb.textContent!==t)sb.textContent=t}
     {const bb=$('#boxBtn'),show=TB.hooked||boxNear();if(bb.hidden===show)bb.hidden=!show;const t=TB.hooked?'Drop box':'Hook box';if(bb.textContent!==t)bb.textContent=t}
-    const pct=Math.round(st.load/CAP*100);
-    $('#bucketVal').textContent=`${(st.load*1.308).toFixed(2)} yd³ · ${pct}%`;
+    // in the skid steer the bucket line is its bucket
+    const skm=mode==='skid',bl=skm?sk.load:st.load,pct=Math.round(bl/(skm?SK_CAP:CAP)*100);
+    $('#bucketVal').textContent=`${(bl*1.308).toFixed(2)} yd³ · ${pct}%`;
     $('#bucketBar').style.width=pct+'%';
     $('#bucketPanel').classList.toggle('full',pct>=99);
     const dep=h0At(tip.x,tip.z)-tip.y;
+    if(skm){const sd=h0At(skTip.x,skTip.z)-skTip.y;$('#tipVal').textContent=`${(Math.abs(sk.v)*2.237).toFixed(1)} mph · edge ${(Math.abs(sd)*3.281).toFixed(1)} ft ${sd>0?'below':'above'} grade`}else
     $('#tipVal').textContent=(dep>0?`Tip ${(dep*3.281).toFixed(1)} ft below grade`:`Tip ${(-dep*3.281).toFixed(1)} ft above grade`)+(st.soil>=0?` · ${SOIL[st.soil].n}`:'');
     let c=0;for(const kk of trenchK)if(H0[kk]-H[kk]>=0.85)c++;
     const tp=Math.round(c/trenchK.length*100);
@@ -166,7 +175,7 @@ function frame(now){
   // flying dirt
   particlesTick(dt);dustTick(dt);grimeTick();
   // groundwater, the tailgate stream and the dirt sounds
-  if(!bench.on)waterTick(dt);mudTick(dt);rainTick(dt);jesTick(dt);
+  if(!bench.on)waterTick(dt);mudTick(dt);rainTick(dt);grassTick(dt);jesTick(dt);
   pourStream(streams[1],tr.pourP,hAt(tr.pourP.x,tr.pourP.z),tr.pourRate,tr.loadC,now/1000);
   dirtSndTick(dt);
   // bucket load visual
@@ -177,6 +186,7 @@ function frame(now){
   if(camMode==='chase'){
     let cyaw,cd=camDist,op=orbitPitch;
     if(mode==='truck'){look.set(tr.x,tr.y+1.6,tr.z);cyaw=tr.yaw+Math.PI+orbitYaw;cd=camDist+3}
+    else if(mode==='skid'){look.set(sk.x+Math.sin(sk.yaw)*1.2,sk.y+1.0,sk.z+Math.cos(sk.yaw)*1.2);cyaw=sk.yaw+Math.PI+orbitYaw;cd=camDist*0.7}
     else if(mode==='mow'){look.set(mw.x+Math.sin(mw.yaw)*0.8,mw.y+0.7,mw.z+Math.cos(mw.yaw)*0.8);cyaw=mw.yaw+Math.PI+orbitYaw;cd=camDist*0.6}
     else if(mode==='walk'){look.set(wk.x,wk.y+1.35,wk.z);cyaw=wk.view+Math.PI+orbitYaw;cd=camDist*0.5;
       // inside Jessica's cottage the roof lifts off and the camera looks down from above the walls
@@ -189,6 +199,7 @@ function frame(now){
   }else{
     // the seat's eye point and its straight-ahead look, turned by where you have turned your head (fpl)
     if(mode==='truck')fpEye(sprung,-0.55,1.6,1.95,0.25,-1,12.05);
+    else if(mode==='skid')fpEye(skid,0,1.72,0.0,0,-0.9,4.5);
     else if(mode==='mow')fpEye(mower,0,1.42,0.02,0,-1.32,4.48);
     else if(mode==='walk'){const p=fpl.pitch,fx=Math.sin(wk.view),fz=Math.cos(wk.view);camera.position.set(wk.x+fx*0.1,wk.y+WK_H-0.12+wkBody.position.y,wk.z+fz*0.1);
       look.set(camera.position.x+fx*Math.cos(p)*5,camera.position.y+Math.sin(p)*5,camera.position.z+fz*Math.cos(p)*5)}
@@ -200,7 +211,7 @@ function frame(now){
   updateSound(dt);
   if(shake>0){shake-=dt;camera.position.x+=(Math.random()-0.5)*0.25;camera.position.y+=(Math.random()-0.5)*0.25}
   sky.position.copy(camera.position);
-  const fv=mode==='truck'?tr:mode==='mow'?mw:mode==='walk'?wk:st;sun.position.set(fv.x,fv.y,fv.z).addScaledVector(SUN_DIR,25); sun.target.position.set(fv.x,fv.y,fv.z);
+  const fv=mode==='truck'?tr:mode==='mow'?mw:mode==='skid'?sk:mode==='walk'?wk:st;sun.position.set(fv.x,fv.y,fv.z).addScaledVector(SUN_DIR,25); sun.target.position.set(fv.x,fv.y,fv.z);
   {const o=groundOcc.value;o[0].set(st.x,st.z,st.yaw,0);o[2].set(tr.x,tr.z,tr.yaw,0)}
   timeU.value=now/1000;
   shadowProxyTick();lawnLod();tuftLod();renderer.render(scene,camera);
@@ -208,8 +219,8 @@ function frame(now){
   fpsFrames++;fpsTime+=dt;
   if(fpsTime>=0.5){const f=Math.round(fpsFrames/fpsTime);const fe=$('#fpsVal');fe.textContent=f;fe.style.color=f>=50?'var(--ok)':f>=30?'var(--gas)':'var(--danger)';
     // auto resolution: step down when slow; step back up only after a long steady run, and never within 30 s of a step down
-    if(!bench.on&&f<48&&pr>1){if(++lowN>=3){pr=Math.max(1,pr-0.25);viewDirty=true;lowN=0;prHold=now+30000}}else lowN=0;
-    if(!bench.on&&f>=58&&pr<maxPR&&now>prHold){if(++hiN>=8){pr=Math.min(maxPR,pr+0.25);viewDirty=true;hiN=0}}else hiN=0;
+    if(!bench.on&&gfxCur.auto&&f<48&&pr>1){if(++lowN>=3){pr=Math.max(1,pr-0.25);viewDirty=true;lowN=0;prHold=now+30000}}else lowN=0;
+    if(!bench.on&&gfxCur.auto&&f>=58&&pr<maxPR&&now>prHold){if(++hiN>=8){pr=Math.min(maxPR,pr+0.25);viewDirty=true;hiN=0}}else hiN=0;
     $('#resVal').textContent=pr.toFixed(2).replace(/0$/,'')+'x';
     const t=renderer.info.render.triangles;$('#triVal').textContent=t>=1e6?(t/1e6).toFixed(2)+'M':t>=1e3?Math.round(t/1e3)+'k':t;fpsFrames=0;fpsTime=0}
   requestAnimationFrame(frame);
