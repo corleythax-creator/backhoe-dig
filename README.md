@@ -69,11 +69,12 @@ From the Lower Bench a dark green steel truss bridge (about 340 ft) crosses the 
 
 ## Map editor
 
-☰ menu → Map editor, or G. The game pauses and an overhead camera takes over.
+☰ menu → Map editor, or G. The game pauses and an overhead camera takes over. The tools run down the left in a two-wide strip with the picked tool's options beside them (tap the picked tool again to fold them away), so the rest of the screen is ground.
 
 - **Look**: drag to move; two fingers pinch to zoom and twist to turn (mouse: right button turns, wheel zooms; keys WASD or arrows, Q E, R F).
 - **Raise, Lower, Flatten, Smooth**: reshape the ground under a round brush (5 to 40 ft radius, strength 1 to 10). Dug holes keep their depth.
 - **Dirt, Grass**: paint the ground.
+- **Paint**: lay a material from the library under a round or square brush, Hard edge or Soft edge (Softness: how much of the brush fades out, 10 to 100%).
 - **Select**: pick a tree, boulder or machine, drag it to move it; its card turns, resizes, copies or deletes it.
 - **Add**: place pine trees, leafy trees or boulders.
 - **Query**: read any spot's height, slope, surface, whether it can be driven and what was edited there, in feet.
