@@ -1,0 +1,140 @@
+<title>Corley's Island Art Prompts</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&family=IBM+Plex+Mono:wght@500&display=swap">
+<style>
+/* Layout: sticky filter strip over a single column of prompt cards, copy button on the card's right edge */
+:root{
+  --bg:#eceef0; --card:#ffffff; --ink:#1b1f23; --mute:#5b646c; --line:#cdd3d8;
+  --accent:#f2b800; --on-accent:#1b1f23; --ok:#1f8a4c; --chip:#e1e5e8;
+  --display:'Barlow Condensed','Arial Narrow',sans-serif; --body:'Barlow',system-ui,sans-serif; --mono:'IBM Plex Mono',ui-monospace,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#13171a;--card:#1c2226;--ink:#e7eaec;--mute:#98a2aa;--line:#2f383e;--ok:#4cc27d;--chip:#262e33;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#13171a;--card:#1c2226;--ink:#e7eaec;--mute:#98a2aa;--line:#2f383e;--ok:#4cc27d;--chip:#262e33;color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font:16px/1.45 var(--body);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:0 48px}
+.wrap{max-width:760px;margin:0 auto}
+header{padding-top:20px}
+h1{font:700 34px/1 var(--display);letter-spacing:.01em;margin:0 0 6px;text-transform:uppercase}
+header p{margin:0;color:var(--mute);max-width:60ch}
+.bar{position:sticky;top:env(safe-area-inset-top,0px);background:var(--bg);z-index:5;padding:12px 0 10px;margin-top:14px;border-bottom:1px solid var(--line)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--bg)}
+.tabs{display:flex;gap:8px;overflow-x:auto;padding-bottom:4px;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:none;border:1px solid var(--line);background:var(--chip);color:var(--ink);border-radius:6px;padding:7px 12px;font:600 15px var(--body);cursor:pointer;min-height:40px}
+.tab[aria-pressed="true"]{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
+.tab small{font:500 12px var(--mono);opacity:.75;margin-left:6px}
+.opts{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-top:10px;flex-wrap:wrap}
+.opts label{display:flex;gap:8px;align-items:center;color:var(--mute);font-size:14px;min-width:0}
+.opts input{width:20px;height:20px;accent-color:var(--ok)}
+.prog{font:500 13px var(--mono);color:var(--mute)}
+.meter{height:6px;background:var(--chip);border-radius:3px;margin-top:8px;overflow:hidden}
+.meter i{display:block;height:100%;width:0;background:var(--ok);transition:width .25s}
+main{display:flex;flex-direction:column;gap:12px;margin-top:16px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:8px;padding:14px 14px 12px;display:flex;flex-direction:column;gap:8px;min-width:0}
+.card.done{opacity:.62}
+.top{display:flex;justify-content:space-between;gap:10px;align-items:flex-start}
+.top>div{min-width:0}
+.id{font:500 12px var(--mono);color:var(--mute);letter-spacing:.04em}
+h2{font:700 21px/1.1 var(--display);margin:2px 0 0;text-transform:uppercase;letter-spacing:.01em}
+.done h2{text-decoration:line-through;text-decoration-thickness:2px}
+.tick{flex:none;display:flex;align-items:center;gap:6px;font-size:13px;color:var(--mute);cursor:pointer;min-height:40px}
+.tick input{width:22px;height:22px;accent-color:var(--ok)}
+.text{margin:0;font-size:15px;overflow-wrap:anywhere}
+.meta{font:500 12px/1.4 var(--mono);color:var(--mute);overflow-wrap:anywhere}
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:2px}
+button.copy,button.alt{font:600 16px var(--body);border-radius:6px;padding:10px 16px;min-height:44px;cursor:pointer}
+button.copy{background:var(--accent);color:var(--on-accent);border:0;flex:1 1 150px}
+button.alt{background:transparent;color:var(--ink);border:1px solid var(--line);flex:0 1 auto}
+button:focus-visible,.tab:focus-visible,input:focus-visible{outline:3px solid var(--ink);outline-offset:2px}
+button.ok{background:var(--ok)!important;color:#fff!important;border-color:var(--ok)!important}
+details{font-size:13px;color:var(--mute)}
+summary{cursor:pointer;min-height:28px}
+details p{margin:6px 0 0;white-space:pre-wrap;overflow-wrap:anywhere}
+.note{color:var(--mute);font-size:14px;margin:0 0 4px}
+.toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:6px;font-weight:600;opacity:0;pointer-events:none;transition:opacity .2s;z-index:20}
+.toast.on{opacity:1}
+@media (prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+<div class="wrap">
+<header>
+  <h1>Art prompts</h1>
+  <p>Tap Copy, paste into ChatGPT's image maker, save the result as the file named on the card, then tick it off. Ground and material prompts for the Ultra graphics tier ask for the biggest, finest detail; the phone sizes are cut from that one image later.</p>
+</header>
+<div class="bar">
+  <div class="tabs" id="tabs" role="group" aria-label="Prompt groups"></div>
+  <div class="opts">
+    <label><input type="checkbox" id="proj"> Style blocks are already in my ChatGPT Project</label>
+    <span class="prog" id="prog"></span>
+  </div>
+  <div class="meter"><i id="meter"></i></div>
+</div>
+<main id="list"></main>
+</div>
+<div class="toast" id="toast" role="status"></div>
+<script>
+const D=/*DATA*/null;
+const KEYS=['all'].concat(D.sections.map(s=>s.key));
+let tab='all',proj=false,done={};
+try{done=JSON.parse(localStorage.getItem('art_done')||'{}');proj=localStorage.getItem('art_proj')==='1';tab=localStorage.getItem('art_tab')||'all'}catch(e){}
+if(!KEYS.includes(tab))tab='all';
+const $=id=>document.getElementById(id);
+const all=D.sections.flatMap(s=>s.items.map(i=>Object.assign({sec:s},i)));
+function full(it){
+  let t=it.text.replace('[concept sheet] ','');
+  const body=t.replace('[STYLE]',proj?'':D.style+' ').replace('[TEXTURE]',proj?'':D.texture+' ');
+  let out=body.trim();
+  if(it.sec.add)out+=' '+it.sec.add;
+  if(proj&&it.tex)out='(Use the project style and texture rules.) '+out;
+  return out.replace(/\s+/g,' ').trim();
+}
+function save(){try{localStorage.setItem('art_done',JSON.stringify(done));localStorage.setItem('art_proj',proj?'1':'0');localStorage.setItem('art_tab',tab)}catch(e){}}
+function toast(m){const t=$('toast');t.textContent=m;t.classList.add('on');clearTimeout(toast.h);toast.h=setTimeout(()=>t.classList.remove('on'),1600)}
+async function copy(text,btn,label){
+  let ok=false;
+  try{await navigator.clipboard.writeText(text);ok=true}catch(e){
+    const ta=document.createElement('textarea');ta.value=text;ta.setAttribute('readonly','');ta.style.cssText='position:fixed;top:0;left:0;opacity:0';document.body.appendChild(ta);ta.select();ta.setSelectionRange(0,text.length);
+    try{ok=document.execCommand('copy')}catch(e2){}ta.remove()}
+  if(ok){const old=btn.textContent;btn.textContent='Copied';btn.classList.add('ok');toast(label+' copied. Paste it into ChatGPT.');setTimeout(()=>{btn.textContent=old;btn.classList.remove('ok')},1400)}
+  else toast('Copy was blocked. Open "See full text" and select it.');
+}
+function esc(s){return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function renderTabs(){
+  $('tabs').innerHTML=KEYS.map(k=>{
+    const s=D.sections.find(x=>x.key===k),n=k==='all'?all.length:s.items.length,d=(k==='all'?all:s.items).filter(i=>done[i.id]).length;
+    return `<button class="tab" data-k="${k}" aria-pressed="${k===tab}">${k==='all'?'All':esc(s.title.replace(/ and .*/,'').replace(/:.*/,''))}<small>${d}/${n}</small></button>`}).join('');
+}
+function render(){
+  renderTabs();
+  const items=tab==='all'?all:all.filter(i=>i.sec.key===tab);
+  let h='',last='';
+  for(const it of items){
+    if(tab==='all'&&it.sec.key!==last){last=it.sec.key;h+=`<p class="note"><b>${esc(it.sec.title)}</b></p>`}
+    const t=full(it);
+    h+=`<article class="card${done[it.id]?' done':''}" id="c-${it.id}">
+      <div class="top"><div><div class="id">${it.id}${it.needs?' &middot; serves '+esc(it.needs):''}</div><h2>${esc(it.title)}</h2></div>
+      <label class="tick"><input type="checkbox" data-done="${it.id}" ${done[it.id]?'checked':''}> Made</label></div>
+      <p class="text">${esc(it.text.replace('[STYLE]','').replace('[TEXTURE]','').replace('[concept sheet]','').trim())}</p>
+      <div class="meta">Save as ${esc(it.file)}</div>
+      <div class="acts"><button class="copy" data-copy="${it.id}">Copy prompt</button>${it.pbr?`<button class="alt" data-pbr="${it.id}">Copy height + roughness follow-up</button>`:''}</div>
+      <details><summary>See full text</summary><p>${esc(t)}</p></details>
+    </article>`}
+  $('list').innerHTML=h;
+  const d=all.filter(i=>done[i.id]).length;
+  $('prog').textContent=d+' of '+all.length+' made';$('meter').style.width=(100*d/all.length)+'%';
+  $('proj').checked=proj;
+}
+document.addEventListener('click',e=>{
+  const t=e.target.closest('[data-k],[data-copy],[data-pbr]');if(!t)return;
+  if(t.dataset.k){tab=t.dataset.k;save();render();window.scrollTo({top:0})}
+  else if(t.dataset.copy){const it=all.find(i=>i.id===t.dataset.copy);copy(full(it),t,it.id)}
+  else if(t.dataset.pbr){copy(D.pbr,t,'Follow-up')}
+});
+document.addEventListener('change',e=>{
+  if(e.target.id==='proj'){proj=e.target.checked;save();render();return}
+  const id=e.target.dataset.done;if(!id)return;
+  if(e.target.checked)done[id]=1;else delete done[id];
+  save();const c=$('c-'+id);if(c)c.classList.toggle('done',!!done[id]);
+  const d=all.filter(i=>done[i.id]).length;$('prog').textContent=d+' of '+all.length+' made';$('meter').style.width=(100*d/all.length)+'%';renderTabs();
+});
+render();
+</script>
