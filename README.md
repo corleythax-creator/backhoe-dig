@@ -24,7 +24,7 @@ A 3D low-poly excavator game in plain HTML, CSS and JavaScript (three.js r128, n
 | `js/truck.js` | Dump truck model and driving; texture hookup |
 | `js/trenchbox.js` | Trench box model, hooking, setting, wall mask |
 | `js/dirt.js` | Loose dirt: clods, flying dirt, lumpy bucket load and truck heap, ruts (loose fill packs down; mud sinks up to 9 in in a rounded, tread-printed rut, heaps lumpy berms and slumps to about 40°), the Dirt detail setting |
-| `js/mud.js` | Mud outside the dig zone and getting stuck: soak (`soakAt`, painted Mud for now, soil and rain later), 2 in mud tiles made where ruts start (they punch holes in the 0.5 m mesh and save with the site), their puddles, bogging down and rocking free (`bogTick`), flung mud |
+| `js/mud.js` | Mud outside the dig zone and getting stuck: soak (`soakAt`, painted Mud for now, soil and rain later), 2 in mud tiles made where ruts start (they punch holes in the 0.5 m mesh and save with the site), their puddles, bogging down and rocking free (`bogTick`), flung mud, splashes through puddles (`splashMud`: spray, rings and a slosh; drawn only, drop count from `GFX.splashN`) |
 | `js/rain.js` | Rain and wet ground: the weather (☰ Weather: Auto, Rain, Dry), a 1 m grid of soil water that soaks and dries by surface (`rainBase`), its soak (`rainSoakAt`, `rainSoakK`) feeding the mud rules, the wet-ground texture the ground shader reads (`wetU`), raindrops (count by Graphics), the grey sky, drying while closed |
 | `js/water.js` | Groundwater and puddles: seeping, levelling pools, saturated mud (painted Mud), the puddle surface (drawn finer and with sky reflections on Medium and High), the pump |
 | `js/dirtsound.js` | Dirt sounds: digging, pouring, thuds, rattles, cave-ins, trickling water |

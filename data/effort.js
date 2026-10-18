@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 632,
+   "dh": 638,
    "act": 12.5,
-   "versions": 86
+   "versions": 87
   }
  ],
  "extra": [
@@ -867,6 +867,15 @@ window.EFFORT = {
    "tris": 1620641,
    "chars": 559422,
    "what": "Stats: ☰ then Stats (or O) shows everything you've done: grass mowed and tall grass cut in sq ft, lawns finished and the best lawn time, how much of the patch you've ever mowed, distance walked, sprinted and driven in each machine, jumps, dirt dug, buckets dumped, dirt hauled off and moved by the skid steer, line strikes, cave-ins, blocks placed, time in each machine and top speeds. Only time spent moving counts. Saved on the device and synced with the site. Lawn heatmap: times each spot has been cut, how far the grass has grown back, or the way it was last mowed, drawn north up in the Stats panel with the mower on it, and over the lawn itself as flat tiles (U, or the panel's switch; press U again to change what it shows), with a key on screen that you tap to switch."
+  },
+  {
+   "v": 94,
+   "asked": "2026-10-17T19:30:00-05:00",
+   "live": "2026-10-17T20:08:48-05:00",
+   "dh": 6,
+   "tris": 1621301,
+   "chars": 567489,
+   "what": "Puddle splashes: the truck's tyres, the excavator's and skid steer's tracks, the mower's wheels and your boots throw muddy spray out to both sides and ahead when they go through standing water, bigger the faster and deeper, with rings spreading across the water, a few lumps of mud and a slosh. Jumping into a puddle splashes all round. Only drawn, so the puddles stay the same on every device; Low graphics throws 250 drops, Medium 600, High 1200, and the custom Graphics panel has a Puddle splash row."
   }
  ]
 };
