@@ -135,7 +135,7 @@ function edWhere(x,z){const e=x,s=z-(TRENCH_Z0+TRENCH_Z1)/2;
   return `${edFmt(Math.abs(e),0)} ft ${e<0?'west':'east'}, ${edFmt(Math.abs(s),0)} ft ${s<0?'north':'south'} of the trench`}
 function edQuery(x,z){const g=baseHeight(x,z),h=hAt(x,z),r=mesaR(x,z);
   const sx=(baseHeight(x+0.5,z)-baseHeight(x-0.5,z)),sz=(baseHeight(x,z+0.5)-baseHeight(x,z-0.5)),sl=Math.hypot(sx,sz);
-  const top=r<EDGE||famR(x,z)<FAM_R||jesR(x,z)<JES_R,deck=deckAt(x,z)>g;
+  const top=r<EDGE||famR(x,z)<FAM_R||jesR(x,z)<JES_R||dexR(x,z)<DEX_R,deck=deckAt(x,z)>g;
   const surf=deck?'Bridge deck':paintAt(x,z)?MAT_LIST[paintAt(x,z)-1].n:g<WATER?'Lake':roadAmt(x,z)>0.5?'Road':sl>0.9?'Rock face':yardAt(x,z)>0.5?'Dirt yard':top?'Grass':'Meadow below the cliffs';
   const drive=!landIn(x,z,1,0)?'No, off the island':wallAt(x,z)?'No, too steep':'Yes';
   const dh=edSample(ED_H,x,z),dp=edSample(ED_P,x,z),mine=[];

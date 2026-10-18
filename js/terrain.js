@@ -76,13 +76,18 @@ function famR(x,z){x-=FAM_X;z-=FAM_Z;const a=Math.atan2(z,x);return Math.pow(x*x
 // Jessica's Island: a mesa the size of Corley's, east of the Family Island and 10 ft higher, reached on foot by a covered
 // bridge. Forest, a garden and a stone cottage with a library inside (jessica.js)
 const JES_X=200,JES_Z=245,JES_R=45,JES_Y=FAM_Y+10*0.3048,JES_CX=209,JES_CZ=245;
+// Dexter's Island: a mesa the size of Corley's west of the Family Island, level with it so the machines drive straight
+// across the haul bridge; a gravel yard with an equipment shed, parked machines and a practice yard (dexter.js)
+const DEX_X=-200,DEX_Z=245,DEX_R=45;
+function dexR(x,z){x-=DEX_X;z-=DEX_Z;const a=Math.atan2(z,x);return Math.pow(x*x*x*x+z*z*z*z,0.25)*(1+0.04*Math.sin(a*6+0.9)+0.025*Math.sin(a*10+2.4))}
 function jesR(x,z){x-=JES_X;z-=JES_Z;const a=Math.atan2(z,x);return Math.pow(x*x*x*x+z*z*z*z,0.25)*(1+0.05*Math.sin(a*5+2.6)+0.03*Math.sin(a*8+1.2))}
 // bridge decks, each a straight run from x0,z0 to x1,z1 (half width hw, deck height y): the truss bridge from the Lower
 // Bench to the Family Island, and the first stretch of the mainland bridge, which ends at a barrier for now. The machines
 // and the worker ride the decks (hAt) and landIn counts them as ground; family.js draws them
 // A deck climbs evenly from y at its start to y1 at its end; a foot bridge carries the worker but no machines
 const BRIDGES=[{x0:0,z0:68,x1:0,z1:171,hw:4,y:FAM_Y},{x0:0,z0:316,x1:0,z1:418,hw:4,y:FAM_Y},
-  {x0:70,z0:JES_Z,x1:163,z1:JES_Z,hw:1.6,y:FAM_Y,y1:JES_Y,foot:true}];
+  {x0:70,z0:JES_Z,x1:163,z1:JES_Z,hw:1.6,y:FAM_Y,y1:JES_Y,foot:true},
+  {x0:-70,z0:DEX_Z,x1:-163,z1:DEX_Z,hw:5,y:FAM_Y}];
 for(const b of BRIDGES){const dx=b.x1-b.x0,dz=b.z1-b.z0;b.len=Math.hypot(dx,dz);b.ux=dx/b.len;b.uz=dz/b.len;if(b.y1===undefined)b.y1=b.y}
 // metres along a deck and out from its centreline
 function deckLocal(b,x,z){const dx=x-b.x0,dz=z-b.z0;return [dx*b.ux+dz*b.uz,dz*b.ux-dx*b.uz]}
@@ -90,11 +95,12 @@ function deckLocal(b,x,z){const dx=x-b.x0,dz=z-b.z0;return [dx*b.ux+dz*b.uz,dz*b
 function deckAt(x,z){let y=-1e9;for(const b of BRIDGES){const [t,u]=deckLocal(b,x,z);if(t>=0&&t<=b.len&&Math.abs(u)<=b.hw+0.3){const h=b.y+(b.y1-b.y)*t/b.len;if(h>y)y=h}}return y}
 // ground a machine or the worker (walk: foot bridges too) can stand on, at least lim in from a cliff edge (side: from a
 // deck's railings): the mesa, the Family Island, Jessica's Island or a bridge deck
-function landIn(x,z,lim,side,walk){if(mesaR(x,z)<=EDGE-lim||famR(x,z)<=FAM_R-lim||jesR(x,z)<=JES_R-lim)return true;
+function landIn(x,z,lim,side,walk){if(mesaR(x,z)<=EDGE-lim||famR(x,z)<=FAM_R-lim||jesR(x,z)<=JES_R-lim||dexR(x,z)<=DEX_R-lim)return true;
   for(const b of BRIDGES){if(b.foot&&!walk)continue;const [t,u]=deckLocal(b,x,z);if(t>=0&&t<=b.len&&Math.abs(u)<=b.hw-side)return true}return false}
 // the nearest such spot to x,z (x,z itself when it already is one)
 function landClamp(x,z,lim,side,walk){if(landIn(x,z,lim,side,walk))return [x,z];
-  const c=[],r=mesaR(x,z),f=famR(x,z),j=jesR(x,z);
+  const c=[],r=mesaR(x,z),f=famR(x,z),j=jesR(x,z),dx=dexR(x,z);
+  c.push([DEX_X+(x-DEX_X)*(DEX_R-lim)/dx,DEX_Z+(z-DEX_Z)*(DEX_R-lim)/dx]);
   c.push([x*(EDGE-lim)/r,MZ+(z-MZ)*(EDGE-lim)/r]);
   c.push([FAM_X+(x-FAM_X)*(FAM_R-lim)/f,FAM_Z+(z-FAM_Z)*(FAM_R-lim)/f]);
   c.push([JES_X+(x-JES_X)*(JES_R-lim)/j,JES_Z+(z-JES_Z)*(JES_R-lim)/j]);
@@ -123,15 +129,17 @@ const ISLAND_ROADS=[
   {w:4.8,mid:0,pts:[[0,165,FAM_Y],[0,234,FAM_Y]]},
   {w:4.8,mid:0,pts:Array.from({length:17},(_,i)=>[FAM_X+Math.sin(i/16*Math.PI*2)*11,FAM_Z-Math.cos(i/16*Math.PI*2)*11,FAM_Y])},
   {w:4.8,mid:0,pts:[[0,256,FAM_Y],[0,322,FAM_Y]]},
-  {w:4.8,mid:0,pts:[[-11,245,FAM_Y],[-70,245,FAM_Y]]},
+  {w:4.8,mid:0,pts:[[-11,245,FAM_Y],[-72,245,FAM_Y]]},
   {w:4.8,mid:0,pts:[[11,245,FAM_Y],[72,245,FAM_Y]]},
   {w:3.6,mid:1,pts:[[-34,243,FAM_Y],[-34,223,FAM_Y]]},
   {w:3,mid:0,pts:[[158,JES_Z,JES_Y],[166,JES_Z,JES_Y]]},
+  {w:9,mid:0,pts:[[-158,DEX_Z,FAM_Y],[-170,DEX_Z,FAM_Y]]},
+  {w:5,mid:0,pts:[[-170,245],[-186,245],[-196,240],[-205,238.5],[-216,238.5],[-224,240]]},
   {w:2,mid:0,pts:[[165,245],[171,243.6],[178,247.4],[185,248.8],[191,245.6],[196,243.6],[201,245],[203.6,245]]},
 ];
 // segments bucketed on a 4 m grid so a lookup only checks the few nearby; roadAt leaves its answer in RD_*.
 // Rebuilt whenever the editor changes a road
-const RG_X0=-124,RG_Z0=-32,RG_C=4,RG_NX=101,RG_NZ=94,RG=[],RSEG=[];
+const RG_X0=-284,RG_Z0=-32,RG_C=4,RG_NX=141,RG_NZ=94,RG=[],RSEG=[];
 function roadsBuild(){RSEG.length=0;RG.length=0;
   for(const r of ROADS.concat(ISLAND_ROADS))for(let i=0;i<r.pts.length-1;i++){const a=r.pts[i],b=r.pts[i+1],dx=b[0]-a[0],dz=b[1]-a[1];if(dx*dx+dz*dz<1e-6)continue;
     RSEG.push({ax:a[0],az:a[1],dx,dz,il:1/(dx*dx+dz*dz),ha:a[2],hb:b[2],w:r.w,mid:r.mid,g:a.length>2&&b.length>2})}
@@ -160,8 +168,8 @@ function roadTint(x,z,c,n){const o=Math.abs(roadOff(x,z)),a=1-ss(ROAD_W/2-0.35,R
 function scarpZ(x){return 45+2.5*Math.sin(x*0.09+0.5)}
 function hill(x,z,cx,cz,rx,rz,h){const t=Math.hypot((x-cx)/rx,(z-cz)/rz);return t>=1?0:h*0.5*(1+Math.cos(Math.PI*t))}
 // worked dirt: the Lower Bench yard and a laydown pad west of the dig; 0 to 1
-function yardAt(x,z){const r=mesaR(x,z),zs=scarpZ(x);
-  return Math.max(0,Math.min(1,Math.max(ss(zs+3,zs+6,z)*(1-ss(37,42,r)),ss(0.15,0.4,hill(x,z,-22,4,9,6,1)))+edSample(ED_P,x,z)))}
+function yardAt(x,z){const r=mesaR(x,z),zs=scarpZ(x),dx=Math.abs(x-DEX_X)<DEX_R+8&&Math.abs(z-DEX_Z)<DEX_R+8?1-ss(DEX_R-9,DEX_R-4,dexR(x,z)):0;
+  return Math.max(0,Math.min(1,Math.max(ss(zs+3,zs+6,z)*(1-ss(37,42,r)),ss(0.15,0.4,hill(x,z,-22,4,9,6,1)),dx)+edSample(ED_P,x,z)))}
 // colour c (rgb array) toward packed dirt by the yard amount; returns the amount
 function yardTint(x,z,c,n){const a=yardAt(x,z);if(a<=0)return 0;const v=0.86+0.2*n;
   c[0]+=(0.55*v-c[0])*a;c[1]+=(0.42*v-c[1])*a;c[2]+=(0.29*v-c[2])*a;return a}
@@ -171,6 +179,7 @@ function baseHeight(x,z){return groundHeight(x,z)+edSample(ED_H,x,z)}
 function groundHeight(x,z){let h=mesaHeight(x,z);
   if(Math.abs(x-FAM_X)<FAM_R+50&&Math.abs(z-FAM_Z)<FAM_R+50){const f=famHeight(x,z);if(f>h)h=f}
   if(Math.abs(x-JES_X)<JES_R+50&&Math.abs(z-JES_Z)<JES_R+50){const f=jesHeight(x,z);if(f>h)h=f}
+  if(Math.abs(x-DEX_X)<DEX_R+50&&Math.abs(z-DEX_Z)<DEX_R+50){const f=dexHeight(x,z);if(f>h)h=f}
   return h}
 // an island's cliffs d metres out from its rim: from Y down cliffH to a strip of meadow and beach, then the lake bed
 function isleCliff(d,x,z,Y,cliffH){
@@ -178,6 +187,12 @@ function isleCliff(d,x,z,Y,cliffH){
   const low=-16*ss(7,30,d)-8*ss(26,60,d);
   const bumps=(Math.sin(x*0.07+z*0.05)*2.5+Math.sin(x*0.17-z*0.13)*1.2)*ss(8,20,d)*(1-ss(28,45,d));
   return Y+cliff+low+bumps}
+// Dexter's Island: a flat gravel yard at the Family Island's height, with dirt piles in the practice yard to climb
+function dexHeight(x,z){const d=dexR(x,z)-DEX_R;let top=FAM_Y;
+  if(d<3){top+=hill(x,z,-226,262,7,6,2.6)+hill(x,z,-233,249,5.5,5,1.8)+hill(x,z,-216,270,4,3.5,1.2);
+    if(d<0)return top}
+  const out=isleCliff(d,x,z,FAM_Y,38);
+  return d<3?out+(top-FAM_Y)*(1-ss(0,3,d)):out}
 // Jessica's Island: soft rolls, flat round the cottage, graded where the footbridge lands
 function jesHeight(x,z){const d=jesR(x,z)-JES_R;let top=JES_Y;
   if(d<3){top+=(0.3*Math.sin(x*0.11+1.2)*Math.cos(z*0.09+0.3)+0.18*Math.sin(x*0.23-z*0.19))*ss(8,13,Math.hypot(x-JES_CX,z-JES_CZ));
