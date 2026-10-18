@@ -855,8 +855,8 @@ window.EFFORT = {
    "asked": "2026-10-17T19:57:00-05:00",
    "live": "2026-10-17T20:03:53-05:00",
    "dh": 3,
-   "tris": 1621038,
-   "chars": 538017,
+   "tris": 1621586,
+   "chars": 541220,
    "what": "GPU memory in the Graphics panel: an estimate of the memory the game has on the graphics card, split into textures, geometry, the screen and depth buffers (mostly the shadow map), updated live as settings change. Browsers do not report the real figure, so the game counts what it asks the GPU to hold as it is made, resized or freed. Texture size and shadow size are the big levers: 4096 shadows alone take about 128 MB."
   }
  ]
