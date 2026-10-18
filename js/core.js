@@ -6,6 +6,34 @@ const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
 // ---------- renderer / scene ----------
 const canvas=$('#view');
 const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
+// GPU memory: WebGL never says how much the GPU really uses, so this counts what the game asks it to hold: every
+// texture level (and mip chain), vertex and index buffer and render buffer as it is made, resized or deleted, plus the
+// screen's own buffers. The Graphics panel shows it (gfx.js) as an estimate
+const gpuMem=(function(){const gl=renderer.getContext(),tex=new Map(),buf=new Map(),rb=new Map(),bound=new Map(),units=new Map();
+  const tot={tex:0,buf:0,rb:0};let unit=0,bBuf=new Map(),bRb=null;
+  const CUBE=gl.TEXTURE_CUBE_MAP,bpp=(fmt,type)=>type===gl.FLOAT?16:type===gl.HALF_FLOAT||type===0x8D61?8:fmt===gl.DEPTH_COMPONENT||fmt===0x81A6||fmt===0x88F0?4:4;
+  const tgt=t=>t>=gl.TEXTURE_CUBE_MAP_POSITIVE_X&&t<=gl.TEXTURE_CUBE_MAP_POSITIVE_X+5?CUBE:t;
+  const cur=t=>(units.get(unit)||{})[tgt(t)];
+  const setLevel=(t,key,b)=>{const o=cur(t);if(!o)return;const e=tex.get(o)||{};tot.tex+=b-(e[key]||0);e[key]=b;tex.set(o,e)};
+  const w=(name,f)=>{const g=gl[name];if(g)gl[name]=function(){f.apply(null,arguments);return g.apply(gl,arguments)}};
+  w('activeTexture',u=>{unit=u});
+  w('bindTexture',(t,o)=>{const u=units.get(unit)||{};u[t]=o;units.set(unit,u)});
+  w('texImage2D',function(t,l,ifmt){const a=arguments;let W,H,fmt,type;
+    if(a.length>=8){W=a[3];H=a[4];fmt=a[6];type=a[7]}else{const src=a[5]||{};W=src.naturalWidth||src.videoWidth||src.width||0;H=src.naturalHeight||src.videoHeight||src.height||0;fmt=a[3];type=a[4]}
+    setLevel(t,t+':'+l,W*H*bpp(fmt,type))});
+  w('texStorage2D',(t,levels,ifmt,W,H)=>{let b=0;for(let l=0;l<levels;l++)b+=Math.max(1,W>>l)*Math.max(1,H>>l)*(ifmt===0x881A?8:ifmt===0x8814?16:4);setLevel(t,'store',b*(t===CUBE?6:1))});
+  w('generateMipmap',t=>{const o=cur(t),e=o&&tex.get(o);if(!e)return;let b0=0;for(const k in e)if(/:0$/.test(k))b0+=e[k];setLevel(t,'mip',Math.round(b0/3))});
+  w('deleteTexture',o=>{const e=tex.get(o);if(e){for(const k in e)tot.tex-=e[k];tex.delete(o)}});
+  w('bindBuffer',(t,o)=>{bBuf.set(t,o)});
+  w('bufferData',(t,d)=>{const o=bBuf.get(t);if(!o)return;const b=typeof d==='number'?d:d?d.byteLength:0;tot.buf+=b-(buf.get(o)||0);buf.set(o,b)});
+  w('deleteBuffer',o=>{tot.buf-=buf.get(o)||0;buf.delete(o)});
+  w('bindRenderbuffer',(t,o)=>{bRb=o});
+  w('renderbufferStorage',(t,f,W,H)=>{if(!bRb)return;const b=W*H*4;tot.rb+=b-(rb.get(bRb)||0);rb.set(bRb,b)});
+  w('renderbufferStorageMultisample',(t,s,f,W,H)=>{if(!bRb)return;const b=W*H*4*Math.max(1,s);tot.rb+=b-(rb.get(bRb)||0);rb.set(bRb,b)});
+  w('deleteRenderbuffer',o=>{tot.rb-=rb.get(o)||0;rb.delete(o)});
+  // the screen: front and back colour, depth, and with antialiasing a 4x multisampled colour and depth copy
+  const screen=()=>{const W=gl.drawingBufferWidth,H=gl.drawingBufferHeight,aa=gl.getContextAttributes().antialias;return W*H*(4+4+4+(aa?4*8:0))};
+  return ()=>({textures:tot.tex,geometry:tot.buf,targets:tot.rb,screen:screen(),texCount:tex.size,bufCount:buf.size})})();
 // phones (touch-first, short side 1000 CSS px or less) are held back by pixels, not triangles (speed test, Oct 17: 43 fps
 // at 1x scene load and still 39 at three times the triangles): cap them at 1.5x and give them cheaper shadows
 const PHONE=matchMedia('(pointer: coarse)').matches&&Math.min(screen.width,screen.height)<=1000;
