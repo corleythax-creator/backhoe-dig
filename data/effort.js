@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-18T04:44:00Z",
+ "updated": "2026-10-18T05:10:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -21,6 +21,12 @@ window.EFFORT = {
    "dh": 717,
    "act": 16,
    "versions": 101
+  },
+  {
+   "d": "2026-10-18",
+   "dh": 10,
+   "act": 0.5,
+   "versions": 1
   }
  ],
  "extra": [
@@ -1002,6 +1008,15 @@ window.EFFORT = {
    "tris": 1620366,
    "chars": 647939,
    "what": "Screen editor (menu, Edit the screen): tap any part of the screen to hide it, rename it, resize or drag it, recolour it, change its background and corners or give it any CSS, aimed at just that part, everything styled like it or every button in its bar, for every screen or for phones or big screens only; a Theme tab for the shared colours and fonts; undo and redo. Edits save on the device, and Publish (owner key) makes the look live for every device through Supabase, earlier looks kept for rollback. A claude.ai screen editor shows a copy of the screen at phone, tablet or computer size and publishes through the owner's Supabase connector."
+  },
+  {
+   "v": 109,
+   "asked": "2026-10-17T23:55:00-05:00",
+   "live": "2026-10-18T00:10:50-05:00",
+   "dh": 10,
+   "tris": 1620929,
+   "chars": 656283,
+   "what": "Screen editor: a Groups tab with one-move sliders (button corners and text size, gauge name and number sizes, panel corners) and ready-made groups to edit like one part (every button, the bars, the gauges and their parts, the sticks, captions, minimap, panels); Pick more (or Shift) picks several parts at once; a Layout tab docks the top bar, the bottom bar, the machine buttons and the minimap on other sides and swaps the sticks, with its own layout on phones and big screens."
   }
  ]
 };
