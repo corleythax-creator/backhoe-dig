@@ -4,7 +4,7 @@
 // scenery.js), saved on this device
 // as you go; the map can be copied out as text and loaded back. While it is open the game stands still.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
-const ed={tool:'raise',size:15*FT,str:5,kind:'pine',mat:10,square:false,soft:false,feather:0.5,x:0,z:10,yaw:0,pitch:0.95,dist:45,
+const ed={tool:'raise',size:15*FT,str:5,kind:'pine',mat:10,square:false,soft:false,keep:false,feather:0.5,x:0,z:10,yaw:0,pitch:0.95,dist:45,
   stroke:null,flatH:0,road:null,rpt:-1,drawing:false,roadSnap:null,bx:0,bz:0,hover:false,pend:null,refT:0,sel:null,drag:null,snap:null,changed:false,saveT:0,undo:[],redo:[]};
 const ED_TOOLS={look:'Look',raise:'Raise',lower:'Lower',flatten:'Flatten',smooth:'Smooth',dirt:'Dirt',grass:'Grass',select:'Select',add:'Add',query:'Query',roads:'Roads',paint:'Paint'};
 const ED_BRUSH=['raise','lower','flatten','smooth','dirt','grass','paint'];
@@ -53,6 +53,7 @@ document.querySelectorAll('.edkind button').forEach(b=>b.onclick=()=>{ed.kind=b.
   box.querySelectorAll('.edmat').forEach(b=>b.onclick=()=>{ed.mat=+b.dataset.m;box.querySelectorAll('.edmat').forEach(c=>c.setAttribute('aria-pressed',c===b));edMatLabel()})})();
 document.querySelectorAll('.edshape button').forEach(b=>b.onclick=()=>{ed.square=b.dataset.s==='sq';document.querySelectorAll('.edshape button').forEach(c=>c.setAttribute('aria-pressed',c===b))});
 // Hard edge lays whole cells; Soft edge fades the material out to the natural ground over the outer part of the brush
+document.querySelectorAll('.eddug button').forEach(b=>b.onclick=()=>{ed.keep=b.dataset.k==='keep';document.querySelectorAll('.eddug button').forEach(c=>c.setAttribute('aria-pressed',c===b))});
 document.querySelectorAll('.ededge button').forEach(b=>b.onclick=()=>{ed.soft=b.dataset.e==='soft';$('#edSoftOpt').hidden=!ed.soft;document.querySelectorAll('.ededge button').forEach(c=>c.setAttribute('aria-pressed',c===b))});
 function edMatLabel(){const d=MAT_LIST[ed.mat-1];$('#edMatV').textContent=d?`${d.n} (one tile is ${d.ft} ft)`:'Natural ground (clears materials)'}
 edMatLabel();
@@ -82,8 +83,10 @@ function edStrokeStart(x,z){ed.stroke={h:ED_H.slice(),p:ED_P.slice(),m:ED_M.slic
 function edBrush(dt){const R=ed.size,cx=ed.bx,cz=ed.bz,t=ed.tool,k=ed.str/10;
   const i0=Math.max(3,Math.floor((cx-R-ED_X0)/ED_C)),i1=Math.min(ED_NX-4,Math.ceil((cx+R-ED_X0)/ED_C)),j0=Math.max(3,Math.floor((cz-R-ED_Z0)/ED_C)),j1=Math.min(ED_NZ-4,Math.ceil((cz+R-ED_Z0)/ED_C));
   if(i0>i1||j0>j1)return;
-  // painting turns ruts into what is painted, except Mud, and Dirt on ground that is already wet (mud.js)
-  if((t==='paint'&&ed.mat!==MUD_ID||t==='grass'||t==='dirt')&&rutErase(cx,cz,R,t==='paint'&&ed.square,t==='dirt'?(x,z)=>soakAt(x,z)>0.3:null)){
+  // painting turns ruts into what is painted, except Mud, and Dirt on ground that is already wet (mud.js); a material
+  // stroke also takes dug and dumped ground back to grade, however deep, so the paint shows on it (the dig zone draws no paint on dug ground)
+  if(t==='paint'&&ed.keep&&paintKeep(cx,cz,R,ed.square)){ed.pend=edGrow(ed.pend,cx-R-0.6,cx+R+0.6,cz-R-0.6,cz+R+0.6);ed.changed=true}
+  if((t==='paint'&&ed.mat!==MUD_ID&&!ed.keep||t==='grass'||t==='dirt')&&rutErase(cx,cz,R,t==='paint'&&ed.square,t==='dirt'?(x,z)=>soakAt(x,z)>0.3:null,t==='paint')){
     ed.pend=edGrow(ed.pend,cx-R-0.6,cx+R+0.6,cz-R-0.6,cz+R+0.6);ed.changed=true}
   let hs=null,W=0;
   if(t==='smooth'||t==='flatten'){W=i1-i0+3;hs=new Float32Array(W*(j1-j0+3));
