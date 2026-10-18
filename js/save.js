@@ -36,7 +36,7 @@ function siteLoad(){let d=null;try{d=JSON.parse(localStorage.getItem(SITE_KEY))}
   mtLoad(d.mt);
   // the dug area's bounds, which water and cave-ins scan
   if(any){const mg=3*GRID_K;cI0=Math.max(0,i0-mg);cI1=Math.min(N,i1+mg);cJ0=Math.max(0,j0-mg);cJ1=Math.min(N,j1+mg)}
-  rainLoad(d.wx);
+  rainLoad(d.wx);mtRefill();
   dI0=0;dI1=N;dJ0=0;dJ1=N;winOn=true;st.dirty=true;return true}
 // machines: small, so saved whenever any of them has moved
 function sitePick(o,keys){const r={};for(const k of keys){const v=o[k];r[k]=Array.isArray(v)?v.map(x=>+x.toFixed(4)):typeof v==='number'?+v.toFixed(4):v}return r}

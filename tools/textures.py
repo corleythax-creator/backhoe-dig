@@ -1,6 +1,8 @@
 """Makes the material textures for the map editor from the raw OpenAI GPT Image renders.
 
 Usage: python3 tools/textures.py RAW_DIR
+       python3 tools/textures.py --extra RAW_DIR ID...   (textures outside the library, such as the drier stages of mud:
+       just textures/<id>.jpg and its mean colour, printed; materials.js and the thumbnails are left alone)
 Each RAW_DIR/<id>.png (1024 square) becomes textures/<id>.jpg (512 square, seamless), and all of them go into
 textures/thumbs.jpg, one 96 px swatch per material in the order of MAT_LIST in js/materials.js. Writes each texture's
 mean colour (sRGB, as the game's shader divides by it) into js/materials.js.
@@ -42,6 +44,19 @@ def seamless(a, band=0.07):
     return a
 
 
+def make(raw, mid):
+    """RAW_DIR/<id>.png to the seamless textures/<id>.jpg; returns the image and its mean colour"""
+    a = np.asarray(Image.open(os.path.join(raw, mid + '.png')).convert('RGB'), dtype=np.float64)
+    a = a[:best_period(a, 0), :best_period(a, 1)]
+    im = Image.fromarray(np.uint8(np.clip(a, 0, 255))).resize((SIZE, SIZE), Image.LANCZOS)
+    a = seamless(np.asarray(im, dtype=np.float64))
+    im = Image.fromarray(np.uint8(np.clip(np.round(a), 0, 255)))
+    im.save(os.path.join(OUT, mid + '.jpg'), quality=86, optimize=True)
+    c = np.asarray(im, dtype=np.float64).mean(axis=(0, 1)) / 255
+    print(f"{mid:16s} c:[{c[0]:.3f},{c[1]:.3f},{c[2]:.3f}]")
+    return im, c
+
+
 def main(raw):
     js = open(os.path.join(ROOT, 'js', 'materials.js')).read()
     ids = re.findall(r"\{id:'(\w+)'", js)
@@ -49,16 +64,8 @@ def main(raw):
     means = {}
     sheet = Image.new('RGB', (THUMB * len(ids), THUMB))
     for n, mid in enumerate(ids):
-        a = np.asarray(Image.open(os.path.join(raw, mid + '.png')).convert('RGB'), dtype=np.float64)
-        a = a[:best_period(a, 0), :best_period(a, 1)]
-        im = Image.fromarray(np.uint8(np.clip(a, 0, 255))).resize((SIZE, SIZE), Image.LANCZOS)
-        a = seamless(np.asarray(im, dtype=np.float64))
-        im = Image.fromarray(np.uint8(np.clip(np.round(a), 0, 255)))
-        im.save(os.path.join(OUT, mid + '.jpg'), quality=86, optimize=True)
+        im, means[mid] = make(raw, mid)
         sheet.paste(im.resize((THUMB, THUMB), Image.LANCZOS), (n * THUMB, 0))
-        c = np.asarray(im, dtype=np.float64).mean(axis=(0, 1)) / 255
-        means[mid] = c
-        print(f"{mid:16s} c:[{c[0]:.3f},{c[1]:.3f},{c[2]:.3f}]")
     sheet.save(os.path.join(OUT, 'thumbs.jpg'), quality=84, optimize=True)
     # write the means into js/materials.js
     js = re.sub(r"(\{id:'(\w+)'.*?c:)\[[^\]]*\]", lambda m: m.group(1) + '[' + ','.join(f'{v:.3f}' for v in means[m.group(2)]) + ']', js)
@@ -66,4 +73,9 @@ def main(raw):
 
 
 if __name__ == '__main__':
-    main(sys.argv[1])
+    if sys.argv[1] == '--extra':
+        os.makedirs(OUT, exist_ok=True)
+        for mid in sys.argv[3:]:
+            make(sys.argv[2], mid)
+    else:
+        main(sys.argv[1])

@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 657,
+   "dh": 665,
    "act": 13,
-   "versions": 91
+   "versions": 92
   }
  ],
  "extra": [
@@ -912,6 +912,15 @@ window.EFFORT = {
    "tris": 1620851,
    "chars": 585279,
    "what": "Map editor: paint laid with the square brush keeps sharp corners. Its cells are drawn whole, each a crisp square, while round-brush paint keeps its smooth outline and soft-edged paint its fade. Square paint laid before this version still has slightly rounded corners until it is painted again."
+  },
+  {
+   "v": 99,
+   "asked": "2026-10-17T20:15:00-05:00",
+   "live": "2026-10-17T20:41:22-05:00",
+   "dh": 8,
+   "tris": 1620473,
+   "chars": 588178,
+   "what": "Mud dries out: painted Mud now starts soaked and dries over about 20 minutes like other soil, firming up as it goes, and rain soaks it again. It shows each stage: dark and wet with puddles in its ruts, then matte damp mud, then pale mud starting to crack, then dry cracked mud (two new textures made with OpenAI GPT Image; Low graphics shifts the colour the same way without the textures). The editor's Query tool tells you how wet a spot is. Sites saved earlier keep their painted Mud soaked to start."
   }
  ]
 };
