@@ -2,8 +2,8 @@
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 // ---------- loop ----------
 const tip=new THREE.Vector3(),mid=new THREE.Vector3(),q=new THREE.Quaternion(),tmp=new THREE.Vector3(),camT=new THREE.Vector3(),look=new THREE.Vector3();
-let fpsFrames=0,fpsTime=0;
+let camFov=60,fpsFrames=0,fpsTime=0;
 let last=performance.now(),hudT=0,shake=0,firstCam=true,fullWarned=false;
 const trenchK=[];for(let j=Math.round((TRENCH_Z0+S/2)/CELL);j<=Math.round((TRENCH_Z1+S/2)/CELL);j++)trenchK.push(j*V+Math.round(S/2/CELL));
-function resize(){const w=innerWidth,h=innerHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camera.fov=w<h?68:58;camera.updateProjectionMatrix()}
+function resize(){const w=innerWidth,h=innerHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camFov=w<h?68:58;camera.fov=camFov;camera.updateProjectionMatrix()}
 addEventListener('resize',()=>{viewDirty=true});resize();

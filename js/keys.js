@@ -38,6 +38,8 @@ const KEY_ACTIONS=[
   {id:'box',g:'Site',n:'Trench box',d:'Hook it to the bucket, or set it down',k:['KeyT']},
   {id:'pump',g:'Site',n:'Pump',d:'Dewater a flooded hole',k:['KeyP']},
   {id:'cam',g:'View',n:'Cab view',d:'Switch between the cab (or your own eyes) and the chase camera',k:['KeyC']},
+  {id:'lookAhead',g:'View',n:'Look ahead',d:'In cab view, turn your head back to straight ahead and zoom out',k:['KeyR']},
+  {id:'zoom',g:'View',n:'Zoom',d:'Hold to zoom in, in cab view (the mouse wheel or a pinch zooms too)',k:['KeyZ']},
   {id:'map',g:'View',n:'Big map',d:'Open or close the site map',k:['KeyM']},
   {id:'sound',g:'View',n:'Sound',d:'Sound on or off',k:['KeyN']},
   {id:'help',g:'View',n:'How to play',d:'Open or close the help card',k:['KeyH']}];
