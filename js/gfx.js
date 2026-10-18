@@ -120,7 +120,29 @@ let gfxStatT=0;
 function gfxStats(){if(gfxBox.hidden)return;const i=renderer.info,t=i.render.triangles,f=$('#fpsVal').textContent;
   $('#gfxStats').innerHTML=`<b>${f}</b> fps · <b>${fmtNum(t)}</b> tris · <b>${i.render.calls}</b> draws · <b>${pr.toFixed(2).replace(/0$/,'')}x</b> res · <b>${i.memory.textures}</b> textures`}
 function fmtNum(t){return t>=1e6?(t/1e6).toFixed(2)+'M':t>=1e3?Math.round(t/1e3)+'k':String(t)}
-function showGfx(on){gfxBox.hidden=!on;if(on){gfxPanelSync();gfxStats();clearInterval(gfxStatT);gfxStatT=setInterval(gfxStats,500)}else clearInterval(gfxStatT)}
+// frame rate graph: every frame's time goes in a ring (main.js), and while the panel is open the last 10 s are drawn as
+// frames per second over time, with lines at 30 and 60, coloured green, yellow or red like the fps counter
+const GFX_FT=new Float32Array(1200);let gfxFTi=0,gfxFTn=0;
+function gfxFrame(ms){GFX_FT[gfxFTi]=ms;gfxFTi=(gfxFTi+1)%GFX_FT.length;if(gfxFTn<GFX_FT.length)gfxFTn++}
+const gfxGraph=$('#gfxGraph'),GRAPH_S=10,GRAPH_MAX=120;
+function gfxDraw(){const cv=gfxGraph,dpr=devicePixelRatio||1,w=cv.clientWidth,h=cv.clientHeight;if(!w)return;
+  if(cv.width!==Math.round(w*dpr)||cv.height!==Math.round(h*dpr)){cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr)}
+  const g=cv.getContext('2d'),css=getComputedStyle(document.documentElement),col=f=>css.getPropertyValue(f>=50?'--ok':f>=30?'--gas':'--danger').trim();
+  g.setTransform(dpr,0,0,dpr,0,0);g.clearRect(0,0,w,h);
+  const y=f=>h-Math.min(f,GRAPH_MAX)/GRAPH_MAX*h;
+  // newest frame at the right edge, back GRAPH_S seconds
+  let t=0,n=0,sum=0;const fps=[];
+  for(let k=1;k<=gfxFTn&&t<GRAPH_S*1000;k++){const ms=GFX_FT[(gfxFTi-k+GFX_FT.length)%GFX_FT.length];if(ms<=0)continue;t+=ms;const f=1000/ms;fps.push([t,f]);sum+=ms;n++}
+  for(const [ft,f] of fps){const x=w-ft/(GRAPH_S*1000)*w,bw=Math.max(1,w*(1000/f)/(GRAPH_S*1000));g.fillStyle=col(f);g.fillRect(Math.floor(x),y(f),Math.ceil(bw)+1,h-y(f))}
+  g.font='600 13px Saira, sans-serif';g.textBaseline='bottom';
+  for(const L of [30,60]){g.strokeStyle='rgba(243,245,239,.55)';g.setLineDash([4,4]);g.lineWidth=1;g.beginPath();g.moveTo(0,y(L)+0.5);g.lineTo(w,y(L)+0.5);g.stroke();
+    g.fillStyle='rgba(243,245,239,.8)';g.fillText(String(L),4,y(L)-2)}
+  g.setLineDash([]);
+  // the summary: average over the window, and the slowest 1% of frames (the stutters you feel)
+  const ms=fps.map(p=>1000/p[1]).sort((a,b)=>b-a),low=ms.length?1000/ms[Math.floor(ms.length*0.01)]:0;
+  $('#gfxGraphCap').innerHTML=n?`Last ${GRAPH_S} s: <b>${(1000*n/sum).toFixed(0)}</b> fps average · <b>${low.toFixed(0)}</b> fps 1% low · slowest frame <b>${ms[0].toFixed(0)}</b> ms`:''}
+function gfxTick(){gfxStats();gfxDraw()}
+function showGfx(on){gfxBox.hidden=!on;if(on){gfxPanelSync();gfxTick();clearInterval(gfxStatT);gfxStatT=setInterval(gfxTick,250)}else clearInterval(gfxStatT)}
 document.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>setGfx(b.dataset.g,true));
 $('#gfxMenuBtn').onclick=()=>{showGfx(true);$('#menu').hidden=true;$('#menuBtn').setAttribute('aria-expanded',false)};
 $('#gfxDone').onclick=()=>showGfx(false);
