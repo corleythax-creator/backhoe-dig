@@ -1,12 +1,12 @@
 // Corley's Island: sync the saved site between devices with a sync code. One device makes a code (shown as 7Q4K-M2XP),
 // another types it in, and from then on both read and write the same save: the ground, the machines and the lawn
-// and any map-editor changes (the bhd_site, bhd_rigs, bhd_lawn and bhd_map saves; key bindings and settings stay per device), kept in a Supabase table (for now in the fuel-model project; supabase/island_sync.sql sets it up) that the page reaches only through two database
+// and any map-editor changes (the bhd_site, bhd_rigs, bhd_lawn, bhd_map and bhd_stats saves; key bindings and settings stay per device), kept in a Supabase table (for now in the fuel-model project; supabase/island_sync.sql sets it up) that the page reaches only through two database
 // functions. A device pulls a newer save when it opens or comes back into view, and pushes its own changes every 15 s and
 // when it is hidden. If two devices both change the site, the save that reached the server first wins and the other
 // device reloads into it. Only on the Vercel site: the claude.ai artifact cannot reach the sync server.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 const SYNC_URL='https://wcrsomethkjlfhhuurmh.supabase.co',SYNC_KEY='sb_publishable_CmmhyRA-D2HdL37h445BIQ_0O3GEpMP';
-const SYNC_KEYS=['bhd_site','bhd_rigs','bhd_lawn','bhd_map'],SYNC_ABC='23456789ABCDEFGHJKMNPQRSTUVWXYZ';
+const SYNC_KEYS=['bhd_site','bhd_rigs','bhd_lawn','bhd_map','bhd_stats'],SYNC_ABC='23456789ABCDEFGHJKMNPQRSTUVWXYZ';
 const sync={code:'',base:0,last:null,busy:false,state:'',okT:0,
   on:!!SYNC_URL&&/(^|\.)vercel\.app$|^localhost$|^127\./.test(location.hostname)&&!/\/versions\//.test(location.pathname)};
 function syncLs(k,v){try{if(v===undefined)return localStorage.getItem(k);if(v===null)localStorage.removeItem(k);else localStorage.setItem(k,v)}catch(e){}return null}
@@ -21,7 +21,7 @@ function syncSet(state){sync.state=state;syncShow()}
 // the cloud save replaces this device's: written straight into storage, then the page reloads into it. The saves that
 // run as the page unloads are held off so they can't write the old site back over it
 function syncApply(row){window.syncHold=true;let o={};try{o=JSON.parse(row.data)}catch(e){}
-  for(const k of SYNC_KEYS)syncLs(k,typeof o[k]==='string'?o[k]:null);
+  for(const k of SYNC_KEYS)if(k!=='bhd_stats'||k in o)syncLs(k,typeof o[k]==='string'?o[k]:null);
   syncLs('bhd_sync_t',String(row.t));syncLs('bhd_sync_h',syncHash(syncPayload()));location.reload()}
 async function syncPull(){if(!sync.code||sync.busy)return;sync.busy=true;
   try{const t=await syncRpc('island_peek',{p_code:sync.code});
