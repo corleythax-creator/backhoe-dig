@@ -24,7 +24,7 @@ A 3D low-poly excavator game in plain HTML, CSS and JavaScript (three.js r128, n
 | `js/truck.js` | Dump truck model and driving; texture hookup |
 | `js/trenchbox.js` | Trench box model, hooking, setting, wall mask |
 | `js/dirt.js` | Loose dirt: clods, flying dirt, lumpy bucket load and truck heap, ruts (loose fill packs down; mud sinks up to 9 in in a rounded, tread-printed rut, heaps lumpy berms and slumps to about 40°), the Dirt detail setting |
-| `js/mud.js` | Mud outside the dig zone and getting stuck: soak (`soakAt`, painted Mud for now, soil and rain later), 2 in mud tiles made where ruts start (they punch holes in the 0.5 m mesh and save with the site), their puddles, bogging down and rocking free (`bogTick`), flung mud |
+| `js/mud.js` | Mud outside the dig zone and getting stuck: soak (`soakAt`, painted Mud for now, soil and rain later), 2 in mud tiles made where ruts start (they punch holes in the 0.5 m mesh and save with the site), their puddles, bogging down and rocking free (`bogTick`), flung mud, splashes through puddles (`splashMud`: spray, rings and a slosh; drawn only, drop count from `GFX.splashN`) |
 | `js/rain.js` | Rain and wet ground: the weather (☰ Weather: Auto, Rain, Dry), a 1 m grid of soil water that soaks and dries by surface (`rainBase`), its soak (`rainSoakAt`, `rainSoakK`) feeding the mud rules, the wet-ground texture the ground shader reads (`wetU`), raindrops (count by Graphics), the grey sky, drying while closed |
 | `js/water.js` | Groundwater and puddles: seeping, levelling pools, saturated mud (painted Mud), the puddle surface (drawn finer and with sky reflections on Medium and High), the pump |
 | `js/dirtsound.js` | Dirt sounds: digging, pouring, thuds, rattles, cave-ins, trickling water |
@@ -32,6 +32,7 @@ A 3D low-poly excavator game in plain HTML, CSS and JavaScript (three.js r128, n
 | `js/mower.js` | Tall grass patch, zero-turn mower, mowing, clippings, lawn stripes, regrowth and the saved lawn |
 | `js/skid.js` | Dexter's skid steer: model, driving (it spins in place), the loader arms and the self-levelling bucket, scooping on the dig site and dumping into piles or the truck bed; `sk` is its state, saved in `bhd_rigs` |
 | `js/walker.js` | Walk mode: the site worker, walking, jogging, sprinting, jumping (about 6 ft), climbing blocks, collisions, getting in and out of the excavator, truck and mower |
+| `js/stats.js` | Player stats (☰ → Stats, O): grass mowed, distance walked and driven, dirt dug and hauled, time and top speed in each machine, saved and synced; the lawn heatmap (times cut, grass height, mow direction) over the lawn (U) and in the panel |
 | `js/keys.js` | Key bindings: every keyboard action (`KEY_ACTIONS`), its default keys, where it works (on foot, in a machine or everywhere), the player's saved keys and the Keys panel |
 | `js/controls.js` | Game state and reset, touch sticks, keyboard, game controller, modes, menu |
 | `js/save.js` | Saves the site in the browser and loads it on start: the dug and dumped ground, groundwater, excavator, truck and load, trench box, blocks, worker (the lawn saves itself in `js/mower.js`) |
@@ -97,15 +98,19 @@ Maps save on the device as you edit (`localStorage.bhd_map`). The claude.ai vers
   | `bhd_rigs` | Excavator, truck and load, trench box, blocks, worker | `js/save.js` |
   | `bhd_lawn` | Mowing and regrowth | `js/mower.js` |
   | `bhd_map` | Map editor edits: heights, paint, assets, roads | `js/terrain.js`, `js/editor.js` |
+  | `bhd_stats` | Player stats (☰ → Stats): totals, and how many times each lawn cell has been cut | `js/stats.js` |
   | `bhd_keys` | Key bindings | `js/keys.js` |
   | `bhd_weather` | Weather setting (Auto, Rain, Dry) | `js/rain.js` |
+  | `bhd_heat` | What the lawn heatmap shows | `js/stats.js` |
   | `bhd_gfx`, `bhd_dirt`, `bhd_ui`, `bhd_hudmin`, `bhd_sndcfg` | Graphics, Dirt detail, UI size, folded status card, sound | `js/gfx.js`, `js/dirt.js`, `js/controls.js`, `js/sound.js` |
   | `bhd_sync`, `bhd_sync_t`, `bhd_sync_h` | Sync code, time of the last synced save, hash of what was last sent | `js/sync.js` |
   | `bhd_seen`, `bhd_glresets` | Start card seen, graphics resets counted for the speed test | `js/controls.js`, `js/core.js` |
+  | `bhd_table` (sessionStorage, this tab only) | Which pavilion game you sat down at, so coming back from Mesa skips the start card and stands you by the table | `js/family.js`, `js/save.js` |
 
-  **Sync devices** (☰, Vercel site only) carries `bhd_site`, `bhd_rigs`, `bhd_lawn` and `bhd_map` between devices under an 8-character code, through the `island_peek`, `island_get` and `island_put` functions in Supabase (the `island_saves` table, for now in the fuel-model project; `supabase/island_sync.sql` sets it up). Pulls on open and on coming back into view, pushes every 15 s and on hide; the first save to reach the server wins.
+  **Sync devices** (☰, Vercel site only) carries `bhd_site`, `bhd_rigs`, `bhd_lawn`, `bhd_map` and `bhd_stats` (a save from before stats synced leaves the device's own alone) between devices under an 8-character code, through the `island_peek`, `island_get` and `island_put` functions in Supabase (the `island_saves` table, for now in the fuel-model project; `supabase/island_sync.sql` sets it up). Pulls on open and on coming back into view, pushes every 15 s and on hide; the first save to reach the server wins.
 
   Snapshots in `versions/` prefix their keys (`bhd-vN:`) so playing an old version can't touch the live save.
+- **Pavilion games (Mesa).** The Family Island pavilion's two tables (`FAM_GAMES` in `js/family.js`, boards drawn by `famBoard`) hand off to the separate Mesa site (repo `corleythax-creator/mesa-games`, `MESA_URL`), which keeps its full-quality three.js r160 chess and checkers; merging them into this game was looked at and turned down (different three.js versions, the phone's memory budget, and the low-poly look). On foot within a stride of a table, `famGameNear` turns Get in into Play chess or Play checkers (`seatToggle` in `js/walker.js`, the button in `js/main.js`). `famPlay` saves the site and lawn, sets `sessionStorage.bhd_table` and loads `MESA_URL + 'chess/?from=island&back=' + this page`; Mesa's top-left link then reads "Corley's Island" and goes back to `back` (Mesa only accepts this game's own sites or localhost). On return the last line of `js/save.js` sees `bhd_table`, starts in Walk mode with no start card, and the saved worker position puts you beside the table. Both Mesa pages are prefetched once the worker is within about 80 ft of the pavilion. Navigation happens only on the website (vercel.app or localhost, not `versions/`); the claude.ai copy and old snapshots open the game in a new tab instead. Mesa's side is described in its `NOTES.md`, "Corley's Island link". Not yet tried on the owner's iPhone.
 - **Updates.** The game re-reads `data/effort.js` when it comes back to the front and every 10 minutes; a newer version reloads at once if nothing is under way, otherwise it shows a tap-to-update button (`js/controls.js`).
 - **Speed.** The owner's phone is the target: above 30 FPS. The iPhone speed test (☰ → Speed test) showed phones are held back by pixels, shadows, filmic lighting and ground textures more than triangles, which is what the Graphics setting trades. The scene is about 1.62 million triangles (the field grass is about 230,000; the Family Island, its trees and the bridges added about 130,000, Jessica's Island about 65,000, Dexter's about 35,000; the library's inside draws only within about 300 ft).
 

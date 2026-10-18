@@ -43,7 +43,9 @@ const KEY_ACTIONS=[
   {id:'zoom',g:'View',n:'Zoom',d:'Hold to zoom in, in cab view (the mouse wheel or a pinch zooms too)',k:['KeyZ']},
   {id:'map',g:'View',n:'Big map',d:'Open or close the site map',k:['KeyM']},
   {id:'sound',g:'View',n:'Sound',d:'Sound on or off',k:['KeyN']},
-  {id:'help',g:'View',n:'How to play',d:'Open or close the help card',k:['KeyH']}];
+  {id:'help',g:'View',n:'How to play',d:'Open or close the help card',k:['KeyH']},
+  {id:'stats',g:'View',n:'Stats',d:'Open or close your stats: grass mowed, distance walked and driven, dirt moved',k:['KeyO']},
+  {id:'heat',g:'View',n:'Lawn heatmap',d:'Show the lawn heatmap; press again to change what it shows, then to hide it',k:['KeyU']}];
 const KEY_BY={};for(const a of KEY_ACTIONS)KEY_BY[a.id]=a;
 // the player's keys: action id -> [key code or '', key code or '']
 const keyBind={};

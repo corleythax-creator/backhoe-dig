@@ -258,8 +258,38 @@ body.editing #hud .top,body.editing #hud .sticks{display:none}
 .card .gpre button{height:50px;font-size:20px}
 .gstats{font:700 17px/1.4 var(--f-display)!important;color:var(--muted);font-variant-numeric:tabular-nums;background:#141712;border-radius:8px;padding:8px 10px}
 .gstats b{color:var(--ink)}
+/* Stats panel: the lawn heatmap with its modes and key, then each group of numbers */
+#statBox{position:fixed;inset:0;z-index:7;background:rgba(10,12,9,.72);display:flex;align-items:center;justify-content:center;pointer-events:auto;box-sizing:border-box;
+  padding-block:calc(env(safe-area-inset-top,0px) + 16px) calc(env(safe-area-inset-bottom,0px) + 16px);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#statBox .card{max-width:620px;overscroll-behavior:contain;touch-action:pan-y}
+#statBox h2{margin:6px 0 0;font:800 22px/1 var(--f-display);letter-spacing:.06em;text-transform:uppercase;color:var(--machine);border-bottom:1px solid var(--hud-line);padding-bottom:6px}
+#statHeat{display:flex;flex-direction:column;gap:8px}
+#heatCv{display:block;width:100%;aspect-ratio:4/3;image-rendering:pixelated;border-radius:8px;border:1px solid var(--hud-line);background:#141712}
+.hbar{display:block;height:14px;border-radius:7px}
+.hends{display:flex;justify-content:space-between;gap:10px;font:700 16px/1.2 var(--f-display);color:var(--muted)}
+#heatOn[aria-pressed="true"]{background:var(--machine);color:#1c1309;border-color:var(--machine)}
+#statList{display:flex;flex-direction:column;gap:8px}
+.stl{display:grid;grid-template-columns:1fr auto;gap:4px 14px;margin:0}
+.stl dt{font-size:18px;color:var(--muted)}
+.stl dd{margin:0;font:700 20px/1.2 var(--f-display);font-variant-numeric:tabular-nums;text-align:right;color:var(--ink)}
+/* the heatmap's key on screen while it is on; tap it to change what it shows */
+#heatKey{position:absolute;left:50%;top:22%;transform:translateX(-50%);z-index:2;zoom:var(--s);width:min(270px,70vw);height:auto;padding:7px 10px 6px;display:flex;flex-direction:column;gap:5px;
+  text-transform:none;background:var(--hud);border:1px solid var(--hud-line);border-radius:10px}
+#heatKey b{font:800 17px/1 var(--f-display);letter-spacing:.05em;text-transform:uppercase;color:var(--machine)}
+#heatKey i{display:block;height:10px;border-radius:5px}
+#heatKey>span{display:flex;justify-content:space-between;gap:8px;font:600 14px/1.1 var(--f-display);color:var(--muted)}
 /* the frame rate graph: fps over the last 10 s, with dashed lines at 30 and 60 */
 .ggraph{display:flex;flex-direction:column;gap:6px}
 #gfxGraph{width:100%;height:110px;background:#141712;border-radius:8px;display:block}
 #gfxGraphCap{font-variant-numeric:tabular-nums}
 #gfxGraphCap b{color:var(--ink)}
+/* big map trails: what to show, and its key */
+#trailBar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font:700 18px/1.2 var(--f-display);letter-spacing:.03em;color:var(--ink)}
+#trailBar span{margin-right:4px}
+#trailBar button{height:42px;font-size:16px;padding:0 10px}
+#trailBar button[aria-pressed="true"]{background:var(--machine);color:#1c1309;border-color:var(--machine)}
+#trailKey{display:flex;flex-direction:column;gap:4px}
+#trailKey i{display:block;height:10px;border-radius:5px}
+#trailKey>span{display:flex;justify-content:space-between;gap:10px;font:600 15px/1.2 var(--f-display);color:var(--muted)}
+@media (max-height:520px) and (orientation:landscape){.mapcard{grid-template-rows:max-content max-content max-content max-content 1fr}#big{grid-row:1/6}#trailBar,#trailKey{grid-column:2}}

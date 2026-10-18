@@ -74,6 +74,8 @@ function updateWalker(dt,mx,mz,lookX,lookY){
   const ox=wk.x,oz=wk.z,g0=hAt(ox,oz);wk.x+=vx*dt;wk.z+=vz*dt;
   {const g1=hAt(wk.x,wk.z),run=Math.hypot(wk.x-ox,wk.z-oz);if(run>1e-5&&g1>wk.y+0.02&&(g1-g0)/run>1.3){wk.x=ox;wk.z=oz}}
   [wk.x,wk.z]=landClamp(wk.x,wk.z,1.2,0.45,true);
+  // feet splash through puddles
+  if(wk.ground&&wk.spd>0.4)splashMud(wk.x,wk.z,Math.atan2(vx,vz),wk.spd,0.12,0.3,dt);
   wkPushBlocks();wkPushRound(st,EX_C,EX_R);wkPushRound(tr,TR_C,TR_R);wkPushRound(mw,MW_C,MW_R);wkPushRound(sk,SK_C,SK_R);
   // jump, gravity, landing on the ground or a block; bump your head on a block above
   wk.jumpQ-=dt;
@@ -84,7 +86,7 @@ function updateWalker(dt,mx,mz,lookX,lookY){
     if(wk.vy>0)for(const b of blocks){const h=b.s/2+WK_R*0.6;if(Math.abs(wk.x-b.x)<h&&Math.abs(wk.z-b.z)<h&&b.y>=wk.y+WK_H-0.05&&b.y<ny+WK_H){wk.vy=0;break}}
     wk.y+=wk.vy*dt;wk.airT+=dt;
     const f2=wkFloor(wk.x,wk.z,wk.y,wk.y+WK_STEP);
-    if(wk.y<=f2&&wk.vy<=0){if(wk.vy<-8){shake=reduceMotion?0:0.1}wk.y=f2;wk.vy=0;wk.ground=true;wk.landT=0.18;wk.airT=0}}
+    if(wk.y<=f2&&wk.vy<=0){if(wk.vy<-8){shake=reduceMotion?0:0.1}wk.y=f2;wk.vy=0;wk.ground=true;wk.landT=0.18;wk.airT=0;splashBurst(wk.x,wk.y,wk.z,1)}}
   wk.landT=Math.max(0,wk.landT-dt);
   // pose: a walk cycle that lengthens into a jog, arms counter-swinging; legs tuck in the air, a dip on landing
   // sprinting quickens the stride, swings the limbs wider and leans him further forward

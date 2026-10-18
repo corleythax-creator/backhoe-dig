@@ -9,11 +9,11 @@
 // shadow edges, filmic lighting, exp brightness, tex texture size, base ground texture, detail cut faces, painted
 // materials and machine grime, macro large-scale variation, aniso, tuft grass blades [amount, full-detail distance m,
 // fade-out distance m, share kept far off], lawnFar lawn full detail within m, fog haze distance, wmFine fine puddle
-// water, rainN raindrops, dirt the Dirt detail it sets when picked
+// water, rainN raindrops, splashN drops in a puddle splash, dirt the Dirt detail it sets when picked
 const GFX={
-  low:{name:'Low',pr:1.5,auto:true,fps:0,fov:0,sh:1024,soft:false,filmic:false,exp:1,tex:'low',detail:0,base:1,macro:false,aniso:4,dirt:1,lawnFar:6,fog:1,wmFine:false,rainN:600,tuft:[0.6,12,40,0.2]},
-  med:{name:'Medium',pr:1.5,auto:true,fps:0,fov:0,sh:2048,soft:false,filmic:true,exp:1,tex:'med',detail:1,base:1,macro:false,aniso:8,dirt:2,lawnFar:15,fog:1,wmFine:true,rainN:1500,tuft:[0.85,18,60,0.3]},
-  high:{name:'High',pr:2,auto:true,fps:0,fov:0,sh:2048,soft:true,filmic:true,exp:1,tex:'high',detail:1,base:1,macro:true,aniso:16,dirt:4,lawnFar:1e9,fog:1,wmFine:true,rainN:3000,tuft:[1,25,80,0.35]}};
+  low:{name:'Low',pr:1.5,auto:true,fps:0,fov:0,sh:1024,soft:false,filmic:false,exp:1,tex:'low',detail:0,base:1,macro:false,aniso:4,dirt:1,lawnFar:6,fog:1,wmFine:false,rainN:600,splashN:250,tuft:[0.6,12,40,0.2]},
+  med:{name:'Medium',pr:1.5,auto:true,fps:0,fov:0,sh:2048,soft:false,filmic:true,exp:1,tex:'med',detail:1,base:1,macro:false,aniso:8,dirt:2,lawnFar:15,fog:1,wmFine:true,rainN:1500,splashN:600,tuft:[0.85,18,60,0.3]},
+  high:{name:'High',pr:2,auto:true,fps:0,fov:0,sh:2048,soft:true,filmic:true,exp:1,tex:'high',detail:1,base:1,macro:true,aniso:16,dirt:4,lawnFar:1e9,fog:1,wmFine:true,rainN:3000,splashN:1200,tuft:[1,25,80,0.35]}};
 let gfxKey='high',gfxOver={},gfxCur=Object.assign({},GFX.high);
 function gfxName(){return GFX[gfxKey].name+(Object.keys(gfxOver).length?' (custom)':'')}
 function gfxGuess(){if(PHONE)return 'low';
@@ -41,6 +41,8 @@ function gfxApply(){const g=gfxCur=Object.assign({},GFX[gfxKey],gfxOver);
   mudGfx(g.wmFine);
   // raindrops drawn (rain.js); the rain itself is the same
   rainGfx(g.rainN);
+  // drops in the splash when something goes through a puddle (mud.js); the puddle itself is the same
+  splashGfx(g.splashN);
   // field of view and haze (effects.js, rain.js)
   gfxFov=g.fov;gfxFog=g.fog;scene.fog.far=760*g.fog;if(typeof resize==='function')resize();
   if(typeof gfxPanelSync==='function')gfxPanelSync()}
@@ -84,7 +86,8 @@ const GFX_ROWS=[
   ['Effects'],
   {id:'dirt',label:'Dirt detail',hint:'Clods, flying dirt and lumpy loads. 16x is for screenshots.',opts:[[1,'1x'],[2,'2x'],[4,'4x'],[16,'16x']]},
   {id:'wmFine',label:'Puddle water',hint:'Fine water with sky reflections, or simple.',opts:[[true,'Fine'],[false,'Simple']]},
-  {id:'rainN',label:'Raindrops',opts:[[0,'Off'],[600,'600'],[1500,'1500'],[3000,'3000'],[6000,'6000']]}];
+  {id:'rainN',label:'Raindrops',opts:[[0,'Off'],[600,'600'],[1500,'1500'],[3000,'3000'],[6000,'6000']]},
+  {id:'splashN',label:'Puddle splash',opts:[[0,'Off'],[250,'250'],[600,'600'],[1200,'1200'],[2400,'2400']]}];
 function camFovBase(){return innerWidth<innerHeight?68:58}
 // grass blades are one array in GFX; the panel shows its amount and distance, the fade-out distance follows
 function gfxGet(id){const g=gfxCur;if(id==='tuftA')return g.tuft[0];if(id==='tuftR')return g.tuft[1];if(id==='dirt')return DIRT;return g[id]}
@@ -115,7 +118,10 @@ function gfxPanelSync(){
 // live numbers while the panel is open, from the frame loop's own counters
 let gfxStatT=0;
 function gfxStats(){if(gfxBox.hidden)return;const i=renderer.info,t=i.render.triangles,f=$('#fpsVal').textContent;
-  $('#gfxStats').innerHTML=`<b>${f}</b> fps · <b>${fmtNum(t)}</b> tris · <b>${i.render.calls}</b> draws · <b>${pr.toFixed(2).replace(/0$/,'')}x</b> res · <b>${i.memory.textures}</b> textures`}
+  $('#gfxStats').innerHTML=`<b>${f}</b> fps · <b>${fmtNum(t)}</b> tris · <b>${i.render.calls}</b> draws · <b>${pr.toFixed(2).replace(/0$/,'')}x</b> res · <b>${i.memory.textures}</b> textures`;
+  // GPU memory, counted from what the game asked the GPU to hold (core.js); the real figure is a little higher
+  const m=gpuMem(),mb=b=>(b/1048576).toFixed(b<10485760?1:0),all=m.textures+m.geometry+m.targets+m.screen;
+  $('#gfxMem').innerHTML=`GPU memory about <b>${mb(all)} MB</b>: textures <b>${mb(m.textures)}</b> · geometry <b>${mb(m.geometry)}</b> · screen <b>${mb(m.screen)}</b>`+(m.targets?` · depth buffers <b>${mb(m.targets)}</b>`:'')+` MB`}
 function fmtNum(t){return t>=1e6?(t/1e6).toFixed(2)+'M':t>=1e3?Math.round(t/1e3)+'k':String(t)}
 // frame rate graph: every frame's time goes in a ring (main.js), and while the panel is open the last 10 s are drawn as
 // frames per second over time, with lines at 30 and 60, coloured green, yellow or red like the fps counter
