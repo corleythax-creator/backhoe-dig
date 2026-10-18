@@ -105,7 +105,7 @@ Maps save on the device as you edit (`localStorage.bhd_map`). The claude.ai vers
 
   Snapshots in `versions/` prefix their keys (`bhd-vN:`) so playing an old version can't touch the live save.
 - **Updates.** The game re-reads `data/effort.js` when it comes back to the front and every 10 minutes; a newer version reloads at once if nothing is under way, otherwise it shows a tap-to-update button (`js/controls.js`).
-- **Speed.** The owner's phone is the target: above 30 FPS. The iPhone speed test (☰ → Speed test) showed phones are held back by pixels, shadows, filmic lighting and ground textures more than triangles, which is what the Graphics setting trades. The scene is about 1.35 million triangles (the Family Island, its trees and the bridges added about 130,000, Jessica's Island about 65,000, Dexter's about 35,000; the library's inside draws only within about 300 ft).
+- **Speed.** The owner's phone is the target: above 30 FPS. The iPhone speed test (☰ → Speed test) showed phones are held back by pixels, shadows, filmic lighting and ground textures more than triangles, which is what the Graphics setting trades. The scene is about 1.62 million triangles (the field grass is about 230,000; the Family Island, its trees and the bridges added about 130,000, Jessica's Island about 65,000, Dexter's about 35,000; the library's inside draws only within about 300 ft).
 
 ## Working on it
 
