@@ -2,7 +2,7 @@
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 // ---------- dump truck ----------
 const WHITE=M(0xe9ecea,PAINT),WHITE_DS=M(0xe9ecea,Object.assign({side:THREE.DoubleSide},PAINT)),BEDM=M(0x6c7378),BED_D=M(0x4c5257),TGLASS=new THREE.MeshPhongMaterial({color:0x5f7f93,shininess:90,flatShading:true,transparent:true,opacity:0.35,depthWrite:false,envMap:skyEnv,combine:THREE.MixOperation,reflectivity:0.9}),TAIL=M(0xd0281c,{emissive:0x400804}),REV=M(0xf4f1e6,{emissive:0x202018});
-const TRUCK_CAP=12/1.308,BED_L=4.9,TR_START={x:-9,z:-11.6,yaw:1.47,v:0,sink:0,spin:0,steer:0,bed:0,load:0,hauled:0,rollA:0,y:0,pitch:0,roll:0,gear:1,shiftT:0,aL:0,brakeOn:false,sh:0,shV:0,sp:0,spV:0,sr:0,srV:0,bumpCd:0,loadedOnce:false,fullWarned:false,haulWarned:false,bedWarned:false};
+const BED_L=4.9,TR_START={x:-9,z:-11.6,yaw:1.47,v:0,sink:0,spin:0,steer:0,bed:0,load:0,hauled:0,rollA:0,y:0,pitch:0,roll:0,gear:1,shiftT:0,aL:0,brakeOn:false,sh:0,shV:0,sp:0,spV:0,sr:0,srV:0,bumpCd:0,loadedOnce:false,fullWarned:false,haulWarned:false,bedWarned:false};
 const tr=Object.assign({},TR_START);
 const truck=new THREE.Group();truck.rotation.order='YXZ';scene.add(truck);
 // sprung: cab, frame and bed ride on the springs above the axles, pivoting near frame height
@@ -250,7 +250,7 @@ function inBed(p){tl.copy(p);bedG.worldToLocal(tl);return tl.x>-1.1&&tl.x<1.1&&t
 function heapTop(){return 0.12+(heap.visible?heap.scale.y*0.5+0.5*heap.scale.y:0)}
 const G=9.8,WB=5.3,REAR=-2.2;
 function updateTruck(dt,thr,steerIn,bedIn){
-  const f=tr.load/TRUCK_CAP,mass=15000+tr.load*1400,vPrev=tr.v;
+  const f=tr.load/TU.trCap,mass=15000+tr.load*1400,vPrev=tr.v;
   // ground: the packed road rolls easiest and grips best, grass drags more, dug dirt most
   // mud drags, and pushing on in it digs the tyres in until they spin (bogTick, mud.js); bogged down it drags far more
   const mudN=mudAt(tr.x,tr.z),grip=bogTick(tr,mudN,thr,0.06,dt);
@@ -263,17 +263,17 @@ function updateTruck(dt,thr,steerIn,bedIn){
     else if(Math.abs(tr.v)>0.3)brake=Math.abs(thr);
     else{tr.shiftT=0.5;brake=1}}
   else if(Math.abs(tr.v)<0.6)brake=1;
-  if(tr.bed>0.06&&drive&&Math.abs(tr.v)>2&&!tr.bedWarned){tr.bedWarned=true;toast('Bed is up. Lower it to drive faster.')}
+  if(tr.bed>0.06&&drive&&Math.abs(tr.v)>2&&!tr.bedWarned){tr.bedWarned=true;toast(say('bedUp'))}
   if(tr.bed<0.02)tr.bedWarned=false;
   // diesel: traction-limited at low speed, power-limited above, governed top speed (20 mph, 6 mph in reverse or with the bed up)
-  const vTop=tr.gear>0&&tr.bed<0.06?8.9:2.7,along=tr.v*tr.gear;
+  const vTop=tr.gear>0&&tr.bed<0.06?TU.trTop:TU.trRev,along=tr.v*tr.gear;
   const Fd=drive*Math.min(36000,230000/Math.max(1,Math.abs(tr.v)))*clamp(vTop-along,0,1)*grip;
   tr.v+=(tr.gear*Fd/mass+G*Math.sin(tr.pitch))*dt;
   const dec=(crr*G+(drive?0:0.35)+brake*65000/mass)*dt;
   tr.v=Math.abs(tr.v)<=dec?0:tr.v-Math.sign(tr.v)*dec;
   tr.drive=drive;tr.soft=soft;tr.road=road;tr.bedIn=bedIn;sndIn.dump=0;tr.brakeOn=brake>0.2&&(Math.abs(tr.v)>0.05||tr.shiftT>0||!!thr);
   // steering: the wheels turn at a hydraulic rate, and tires scrub wide when the turn asks for more grip than they have
-  tr.steer+=clamp(steerIn*0.6-tr.steer,-1.1*dt,1.1*dt);
+  tr.steer+=clamp(steerIn*0.6-tr.steer,-TU.trSteer*dt,TU.trSteer*dt);
   let curv=Math.tan(tr.steer)/WB;const v2=tr.v*tr.v,latMax=(soft?2.8:road?4.2:3.5)*(1-0.25*f)*(1-0.35*mudAt(tr.x,tr.z));
   if(v2*Math.abs(curv)>latMax)curv=Math.sign(curv)*latMax/v2;
   // the rear tandem rolls along its heading and the cab swings around it, so the back end cuts inside the turn
@@ -336,18 +336,18 @@ function updateTruck(dt,thr,steerIn,bedIn){
   // dust behind the rear tyres on the dry road and over loose dirt
   if((soft||road)&&Math.abs(tr.v)>2.5){truck.localToWorld(tv.set(0,0.3,REAR-Math.sign(tr.v)*1.2));dustPuff(tv.x,tv.y,tv.z,Math.abs(tr.v)*dt*(soft?1.2:0.6),soft?tr.loadC:null)}
   bedG.rotation.x=-tr.bed;tailP.rotation.x=tr.bed*1.35;
-  const hv=Math.max(tr.load,tr.stuck);heap.visible=hv>0.01;if(heap.visible){const f=hv/TRUCK_CAP;tintLoad(heap.material,tr.loadC);heap.scale.set(0.55+0.45*Math.min(1,f*1.5),0.08+0.95*f,0.6+0.4*Math.min(1,f*1.5))}heap.position.y=0.12+0.5*heap.scale.y;
+  const hv=Math.max(tr.load,tr.stuck);heap.visible=hv>0.01;if(heap.visible){const f=hv/TU.trCap;tintLoad(heap.material,tr.loadC);heap.scale.set(0.55+0.45*Math.min(1,f*1.5),0.08+0.95*f,0.6+0.4*Math.min(1,f*1.5))}heap.position.y=0.12+0.5*heap.scale.y;
   truck.updateMatrixWorld(true);
   // tipping the bed pours the load out the back
   tr.pourRate=0;
   if(tr.bed>0.32&&tr.load>0.0005){
-    const out=Math.min(tr.load,(tr.bed-0.32)*3.2*dt);tr.load-=out;sndIn.dump=out/dt;if(tr.load<0.0005){tr.load=0;tr.stuck=TRUCK_CAP*0.025*(0.4+1.6*tr.loadMix[CLAY])*(1+2*tr.loadWet)}
+    const out=Math.min(tr.load,(tr.bed-0.32)*3.2*dt);tr.load-=out;sndIn.dump=out/dt;if(tr.load<0.0005){tr.load=0;tr.stuck=TU.trCap*0.025*(0.4+1.6*tr.loadMix[CLAY])*(1+2*tr.loadWet)}
     truck.localToWorld(tv.set(0,0.3,-4.9));tr.pourRate=out/dt;tr.pourP.copy(tv);
     if(mesaR(tv.x,tv.z)<EDGE-1.2&&Math.abs(tv.x)<S/2-0.8&&Math.abs(tv.z)<S/2-0.8){deposit(tv.x,tv.z,out,tr.loadC,tr.loadMix,dropSpread(tv.y-hAt(tv.x,tv.z)),tr.loadWet);st.dirty=true;st.slumpT=2.5}
-    else{tr.hauled+=out;if(!tr.haulWarned&&tr.load<=0){tr.haulWarned=true;toast(mesaR(tv.x,tv.z)<EDGE-1.2?'Load dumped in the yard.':'Load hauled off site.','good')}}
+    else{tr.hauled+=out;if(!tr.haulWarned&&tr.load<=0){tr.haulWarned=true;toast(say(mesaR(tv.x,tv.z)<EDGE-1.2?'dumpYard':'dumpOff'),'good')}}
     bedG.localToWorld(tv.set(0,0.4,0.2));for(let n=0;n<Math.ceil(out*40);n++)spawn(tv,1.2);
   }
-  if(tr.load<TRUCK_CAP*0.95)tr.fullWarned=false;
+  if(tr.load<TU.trCap*0.95)tr.fullWarned=false;
 }
 // a grey copy of a texture (mean 0.8, or mean) so what wears it keeps its own colour: the dirt for the bucket load and
 // truck heap, which take any soil colour, and library textures for the blocks and boulders

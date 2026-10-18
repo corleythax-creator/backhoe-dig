@@ -1,8 +1,9 @@
 """Builds docs/gui-editor.html, the claude.ai screen editor (artifact), from the game's own screen: the markup of
-index.html (everything before the scripts), css/game.css and js/gui.js, so the editor always shows the screen as it is.
+index.html (everything before the scripts), css/game.css, js/gui.js and the tuning and words tables (js/tune.js,
+js/words.js), so the editor always shows the screen as it is.
 
 Usage: python3 tools/gui_editor.py     (then publish docs/gui-editor.html as the screen editor artifact)
-Run it again whenever index.html, css/game.css or js/gui.js change.
+Run it again whenever index.html, css/game.css, js/gui.js, js/tune.js or js/words.js change.
 
 The game screen sits in a stage box the size of the chosen device, scaled to fit. game.css is written for the whole
 window, so it is adapted to the box: its html/body rule styles the box, its width, height and orientation media
@@ -28,7 +29,7 @@ css = re.sub(r'@media\s*(\([^{]*(?:width|height|orientation)[^{]*)\{', lambda m:
 css = re.sub(r'(\d*\.?\d+)d?v([hw])\b', lambda m: m.group(1) + 'cq' + m.group(2), css)
 
 page = rd('docs/gui-editor-shell.html')
-for k, v in {'GAME_CSS': css, 'GAME_MARKUP': markup, 'GUI_JS': rd('js/gui.js'),
+for k, v in {'GAME_CSS': css, 'GAME_MARKUP': markup, 'GUI_JS': rd('js/gui.js'), 'TUNE_JS': rd('js/tune.js'), 'WORDS_JS': rd('js/words.js'),
              'BG_JPG': b64('docs/gui-editor-bg.jpg', 'image/jpeg'), 'MINI_PNG': b64('docs/gui-editor-mini.png', 'image/png')}.items():
     assert '{{' + k + '}}' in page, k
     page = page.replace('{{' + k + '}}', v)

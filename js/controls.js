@@ -1,7 +1,6 @@
 // Corley's Island: game state, reset, touch sticks, keyboard, game controller, mode switch and menu.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 // ---------- state ----------
-const CAP=1.0;
 const START={x:0.42,z:0,yaw:Math.PI,swing:0,a1:0.5,a2:-1.8,a3:-1.2};
 const st={};
 function resetState(){
@@ -40,8 +39,8 @@ const MODES=['dig','drive','truck','mow','skid','walk'];let kbUsed=false;
 const KEY_RUN={dig:()=>setMode('dig'),drive:()=>setMode('drive'),truck:()=>setMode('truck'),mow:()=>setMode('mow'),skid:()=>setMode('skid'),walk:()=>setMode('walk'),
   nextMode:e=>setMode(MODES[(MODES.indexOf(mode)+(e.shiftKey?MODES.length-1:1))%MODES.length]),
   stats:()=>showStats(statBox.hidden),heat:()=>{if(!heat.on)setHeat(true);else if(heat.mode!==HEAT_MODES[HEAT_MODES.length-1][0])heatNext();else setHeat(false)},
-  enter:()=>seatToggle(),jump:()=>walkJump(),blocks:()=>setBlocks(!blkOn),place:()=>placeBlock(),lift:()=>removeBlock(),size:()=>blkCube(1),blkTurn:()=>blkTurn(),blkLock:()=>toast(`Block snap: ${blkLockNext()}`,'',1400),blkFar:()=>blkReachBy(2),blkNear:()=>blkReachBy(-2),
-  blkMat:()=>{setBlkMat((blkMat+1)%(MAT_LIST.length+1));toast(`Block material: ${blkMatName(blkMat)}`,'',1400)},
+  enter:()=>seatToggle(),jump:()=>walkJump(),blocks:()=>setBlocks(!blkOn),place:()=>placeBlock(),lift:()=>removeBlock(),size:()=>blkCube(1),blkTurn:()=>blkTurn(),blkLock:()=>toast(say('blkSnap',{snap:blkLockNext()}),'',1400),blkFar:()=>blkReachBy(2),blkNear:()=>blkReachBy(-2),
+  blkMat:()=>{setBlkMat((blkMat+1)%(MAT_LIST.length+1));toast(say('blkMat',{mat:blkMatName(blkMat)}),'',1400)},
   box:()=>hookBox(),lookAhead:()=>{if(camMode==='cab')fpl.home=true;fpl.zt=1},pump:()=>setPump(!pumpOn),cam:()=>$('#camBtn').click(),map:()=>toggleMap(),sound:()=>setSound(!sndCfg.on),help:()=>{help.hidden=!help.hidden}};
 addEventListener('keydown',e=>{const c=e.code;
   if((e.ctrlKey||e.metaKey||e.altKey)&&!/^(Control|Alt|Meta)/.test(c))return;
@@ -70,7 +69,7 @@ function keyAxes(dt){const f=mode!=='walk'&&held('fine')?0.3:1;
 // LB/RB switch machine, Y cab view, View map, Menu help, B closes (or gets in and out of machines), A sets a block,
 // D-pad runs blocks (in Walk mode A jumps and X sets a block); a line strike rumbles
 const PA={lx:0,ly:0,rx:0,ry:0,thr:0,sprint:false},padPrev=[];let padIdx=-1,padUsed=false;
-addEventListener('gamepadconnected',e=>{padIdx=e.gamepad.index;toast('Controller ready. LB / RB switch machine, Y cab view.','good',3500)});
+addEventListener('gamepadconnected',e=>{padIdx=e.gamepad.index;toast(say('padReady'),'good',3500)});
 addEventListener('gamepaddisconnected',e=>{if(e.gamepad.index===padIdx)padIdx=-1;for(const k in PA)PA[k]=0;padPrev.length=0});
 function getPad(){if(!navigator.getGamepads)return null;const all=navigator.getGamepads();
   if(padIdx<0||!all[padIdx])padIdx=[...all].findIndex(g=>g&&g.connected);return padIdx<0?null:all[padIdx]}
@@ -136,7 +135,7 @@ let fpLockTold=false;
 function fpMouseLock(on){
   if(on){if(document.pointerLockElement===canvas||!canvas.requestPointerLock)return;
     try{const r=canvas.requestPointerLock();if(r&&r.catch)r.catch(()=>{})}catch(e){}
-    if(!fpLockTold){fpLockTold=true;toast(`Mouse look. Move the mouse to look around, wheel or ${keyLabel('zoom')} zooms, ${keyLabel('lookAhead')} looks ahead. Esc frees the mouse.`,'',4200)}}
+    if(!fpLockTold){fpLockTold=true;toast(say('mouseLook'),'',4200)}}
   else if(document.pointerLockElement===canvas)document.exitPointerLock()}
 // (some browsers send a wild jump as the mouse is taken: skip any single move that large)
 document.addEventListener('mousemove',e=>{if(document.pointerLockElement!==canvas||camMode!=='cab'||edOn)return;
@@ -151,20 +150,21 @@ const aimEl=$('#aim');
 
 function setCaps(){const m=mode,two=(a,b)=>`${keyLabel(a)} ${keyLabel(b)}`,lh=kbUsed?two('lLeft','lRight'):'◀ ▶',lv=kbUsed?two('lUp','lDown'):'▲ ▼',rh=kbUsed?two('rLeft','rRight'):'◀ ▶',rv=kbUsed?two('rUp','rDown'):'▲ ▼';
   for(const b of document.querySelectorAll('.seg button'))b.dataset.k=keyLabel(b.id.slice(4).toLowerCase());
-  $('#capL').innerHTML=m==='dig'?`<b>${lh}</b> Swing<br><b>${lv}</b> Stick out / in`:m==='drive'?`<b>${lh}</b> Turn<br><b>${lv}</b> Drive fwd / back`:m==='mow'?(kbUsed?`<b>${lv}</b> Drive fwd / back<br><b>${lh}</b> Turn`:`<b>${lv}</b> Left lap bar<br><b>${lh}</b> Spin`):m==='walk'?`<b>${lv}</b> Walk / back<br><b>${lh}</b> Step left / right`:m==='skid'?`<b>${lv}</b> Drive fwd / back<br><b>${lh}</b> Turn`:`<b>${lh}</b> Steer<br><b>${lv}</b> Gas / reverse`;
-  $('#capR').innerHTML=m==='truck'?`<b>${rv}</b> Bed up / down<br>&nbsp;`:m==='mow'?(kbUsed?`<b>${keyLabel('mwLF')} ${keyLabel('mwLB')}</b> Left bar · <b>${keyLabel('mwRF')} ${keyLabel('mwRB')}</b> Right bar<br><b>${keyLabel('mwSpinL')} ${keyLabel('mwSpinR')}</b> Spin in place`:`<b>${rv}</b> Right lap bar<br>&nbsp;`):m==='walk'?`<b>${rh}</b> Turn<br><b>${rv}</b> Look up / down`:m==='skid'?`<b>${rh}</b> Curl / dump<br><b>${rv}</b> Arms down / up`:`<b>${rh}</b> Curl / dump<br><b>${rv}</b> Boom down / up`;}
+  const sv={lh,lv,rh,rv},cap=id=>{const h=say(id,sv,true);return h.includes('<br>')?h:h+'<br>&nbsp;'},kb=m==='mow'&&kbUsed?'Kb':'';
+  $('#capL').innerHTML=cap('capL_'+(m==='dig'||m==='drive'||m==='mow'||m==='walk'||m==='skid'?m+kb:'truck'));
+  $('#capR').innerHTML=cap('capR_'+(m==='truck'||m==='mow'||m==='walk'||m==='skid'?m+kb:'dig'));}
 function setMode(m){if(m===mode)return;mode=m;setTurnSens();for(const [id,k] of [['#modeDig','dig'],['#modeDrive','drive'],['#modeTruck','truck'],['#modeMow','mow'],['#modeSkid','skid'],['#modeWalk','walk']])$(id).setAttribute('aria-pressed',m===k);
   $('#walkBtns').hidden=m!=='walk';if(m!=='walk')setSprint(false);
   // switching to Walk from a machine you climbed into sets you down beside it
   if(m==='walk'){if(wk.inside){wkPlaceOut(wk.inside);wk.inside=null}wk.view=wk.yaw}
-  setCaps();markTile();firstCam=true;fpReset();if(m==='mow'&&!lawn.startT&&!lawn.done)toast(kbUsed?`Mower running. ${keyLabel('lUp')} drives straight, ${keyLabel('lLeft')} ${keyLabel('lRight')} turn; the number pad works each lap bar.`:'Mower running. Push both sticks up to drive, one up and one back to spin.','',3800);
-  if(m==='skid')toast(kbUsed?`Skid steer running. ${keyLabel('lUp')} ${keyLabel('lDown')} drive, ${keyLabel('lLeft')} ${keyLabel('lRight')} turn; ${keyLabel('rUp')} ${keyLabel('rDown')} lower and raise the arms, ${keyLabel('rLeft')} ${keyLabel('rRight')} curl and dump.`:'Skid steer running. Left stick drives and turns; right stick up and down lowers and raises the arms, left and right curls and dumps.','',4200);
-  if(m==='walk')toast(padUsed?'On foot. A jumps, X sets a block, B gets into a machine.':kbUsed?`On foot. ${keyLabel('jump')} jumps, ${keyLabel('place')} sets a block, ${keyLabel('enter')} gets into a machine.`:'On foot. Tap Jump to jump. Walk up to a machine and tap Get in.','',3800)}
+  setCaps();markTile();firstCam=true;fpReset();if(m==='mow'&&!lawn.startT&&!lawn.done)toast(say(kbUsed?'mowKb':'mowTouch'),'',3800);
+  if(m==='skid')toast(say(kbUsed?'skidKb':'skidTouch'),'',4200);
+  if(m==='walk')toast(say(padUsed?'walkPad':kbUsed?'walkKb':'walkTouch'),'',3800)}
 $('#modeDig').onclick=()=>setMode('dig'); $('#modeDrive').onclick=()=>setMode('drive'); $('#modeTruck').onclick=()=>setMode('truck'); $('#modeMow').onclick=()=>setMode('mow'); $('#modeSkid').onclick=()=>setMode('skid'); $('#modeWalk').onclick=()=>setMode('walk');
 $('#camBtn').onclick=()=>{camMode=camMode==='chase'?'cab':'chase';fpReset();$('#camBtn').textContent=camMode==='chase'?'Cab view':'Chase view'};
 let resetArm=0;
 $('#resetBtn').onclick=()=>{const b=$('#resetBtn');
-  if(resetArm&&performance.now()-resetArm<2500){resetState();siteSaveAll();resetArm=0;b.textContent='Reset';b.classList.remove('arm');toast('Fresh ground. Paint is back.','good');return}
+  if(resetArm&&performance.now()-resetArm<2500){resetState();siteSaveAll();resetArm=0;b.textContent='Reset';b.classList.remove('arm');toast(say('reset'),'good');return}
   resetArm=performance.now();b.textContent='Tap again';b.classList.add('arm');
   setTimeout(()=>{if(resetArm&&performance.now()-resetArm>=2400){resetArm=0;b.textContent='Reset';b.classList.remove('arm')}},2500);};
 const help=$('#help');

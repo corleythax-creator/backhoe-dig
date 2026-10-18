@@ -529,7 +529,7 @@ function collapse(k,sur){
   const p=new THREE.Vector3(ci*CELL-S/2,H[k]+0.1,cj*CELL-S/2);for(let n=0;n<40;n++)spawn(p,1.6);
   {const m=matAt(k,H[k]-0.05),ck=clodKind(m,H0[k]-H[k]+0.05);dropClods(ck,p.x,p.z,1.4,60*DIRT,ck===CRUMB?matColor(k,m):KIND_COL[Math.max(0,ck)],ck===SOD?1:1.4);dustPuff(p.x,p.y,p.z,25,matColor(k,m));dirtRumble(p)}
   shake=reduceMotion?0:0.35;rumble(500,0.8);
-  toast(sur?'Cave-in! Spoil too close to the edge. Keep piles 2 ft back.':'Cave-in! Walls past 5 ft deep need a slope or a trench box.','bad',3600);
+  toast(say(sur?'caveSpoil':'caveWall'),'bad',3600);
 }
 // risk builds while a bad wall stands, then dirt trickles off the lip for 2 s before it lets go
 const lipP=new THREE.Vector3();

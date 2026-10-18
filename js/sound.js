@@ -242,6 +242,6 @@ function updateSound(dt){
   snd.bladeF.frequency.setTargetAtTime(500+250*mb-80*mw.load,t,0.1);snd.bladeG.gain.setTargetAtTime(quiet*0.22*mb*mb,t,0.1);
   snd.chopG.gain.setTargetAtTime(quiet*0.35*mw.load*mb,t,0.05);
   // skid steer: runs while you drive it; driving, the loader and the bucket biting the ground pull the revs up
-  const sr=sk.run,ss_=snd.engS,sT=950+800*Math.min(1,Math.abs(sk.v)/SK_SPD*0.6+sndIn.skHyd*0.6+sndIn.skDig*0.5);ss_.rpm+=(sT*1.08-ss_.rpm)*Math.min(1,dt*3);
+  const sr=sk.run,ss_=snd.engS,sT=950+800*Math.min(1,Math.abs(sk.v)/TU.skSpd*0.6+sndIn.skHyd*0.6+sndIn.skDig*0.5);ss_.rpm+=(sT*1.08-ss_.rpm)*Math.min(1,dt*3);
   sndEngineTo(ss_,ss_.rpm,Math.min(1,sndIn.skHyd*0.6+sndIn.skDig),quiet*0.7*sr,t);sndIn.skDig=Math.max(0,sndIn.skDig-dt*3);
 }
