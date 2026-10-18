@@ -7,7 +7,7 @@ const jesGround=groundPatch(125,275,170,320,1.5,[]);
 // roofs are seen from inside too, so both faces draw
 const jesRoofMat=M(0xffffff,{vertexColors:true,side:THREE.DoubleSide});
 const JB=BRIDGES[2],jesGlass=new THREE.MeshPhongMaterial({color:0xcfe3ea,transparent:true,opacity:0.22,depthWrite:false,shininess:80});
-let jesIn=false,jesRoof=null,jesBridgeRoof=null,jesInside=null,jesFire=null;const jesSmoke=[];
+let jesPineGeo=null,jesIn=false,jesRoof=null,jesBridgeRoof=null,jesInside=null,jesFire=null;const jesSmoke=[];
 function jesMesh(list,mat,shadow){if(!list.length)return null;const m=new THREE.Mesh(famMerge(list),mat);if(shadow){m.castShadow=true;m.receiveShadow=true}scene.add(m);return m}
 
 // ---------- the covered bridge ----------
@@ -185,7 +185,7 @@ const jesTrees=(function(){
   for(let t=0;t<4;t++){const r=1.45*(1-t*0.2),h=1.7-t*0.12,b=0.8+t*1.0,g=new THREE.ConeGeometry(r,h,9,1,true),p=g.attributes.position;
     for(let i=0;i<p.count;i++)if(p.getY(i)<0){const k=i%2?1.12:0.92;p.setX(i,p.getX(i)*k);p.setZ(i,p.getZ(i)*k);p.setY(i,p.getY(i)-(i%2?0.15:0))}
     P.geo(g,[0x2a5233,0x30603a,0x387041,0x427a48][t],0,b+h/2,0);const cap=new THREE.CircleGeometry(r*0.95,9);cap.rotateX(Math.PI/2);P.geo(cap,0x1c3a24,0,b+0.02,0)}
-  const pineGeo=famMerge(P.solid);
+  const pineGeo=jesPineGeo=famMerge(P.solid);
   let sd=29;const rnd=()=>{sd=(sd*16807)%2147483647;return sd/2147483647};
   const out=[],ok=(x,z)=>{if(jesR(x,z)>JES_R-2.5)return false;if(roadOff(x,z)<ROAD_W/2+0.9)return false;
     if(Math.hypot(x-JES_CX,z-JES_CZ)<9.5||(Math.abs(x-209)<5.5&&Math.abs(z-257)<4.5)||Math.hypot(x-236.5,z-245)<4.5||(x<172&&Math.abs(z-245)<6))return false;
