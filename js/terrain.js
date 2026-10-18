@@ -10,32 +10,34 @@ const hash=(i,j)=>{const s=Math.sin(i*127.1+j*311.7)*43758.5453;return s-Math.fl
 // ---------- map edits ----------
 // the map editor's layers over the generated ground, on a 0.5 m grid over the mesa and its cliffs: ED_H raises or
 // lowers the ground (metres), ED_P paints it toward dirt (+) or grass (-), ED_M covers it with a material from the
-// library (materials.js; 0 is the natural ground). The outer cells stay 0 so the edges meet the coarse ground. Saved on
+// library (materials.js; 0 is the natural ground) and ED_A says how much of the cell it covers (255 full, less on a
+// soft-edged brush's fade; 0 wherever ED_M is 0). The outer cells stay 0 so the edges meet the coarse ground. Saved on
 // this device as bhd_map, with the placed assets (trees and boulders) and the roads; see editor.js
-const ED_X0=-58,ED_Z0=-32,ED_C=0.5,ED_NX=233,ED_NZ=249,ED_H=new Float32Array(ED_NX*ED_NZ),ED_P=new Float32Array(ED_NX*ED_NZ),ED_M=new Uint8Array(ED_NX*ED_NZ);
+const ED_X0=-58,ED_Z0=-32,ED_C=0.5,ED_NX=233,ED_NZ=249,ED_H=new Float32Array(ED_NX*ED_NZ),ED_P=new Float32Array(ED_NX*ED_NZ),ED_M=new Uint8Array(ED_NX*ED_NZ),ED_A=new Uint8Array(ED_NX*ED_NZ);
 let mapAssets=null,mapRoads=null;
 function edSample(A,x,z){const fx=(x-ED_X0)/ED_C,fz=(z-ED_Z0)/ED_C;if(fx<0||fz<0||fx>=ED_NX-1||fz>=ED_NZ-1)return 0;
   const i=fx|0,j=fz|0,u=fx-i,v=fz-j,k=j*ED_NX+i;return A[k]*(1-u)*(1-v)+A[k+1]*u*(1-v)+A[k+ED_NX]*(1-u)*v+A[k+ED_NX+1]*u*v}
-// the material painted on the cell nearest a point (0: natural ground)
-function paintAt(x,z){const i=Math.round((x-ED_X0)/ED_C),j=Math.round((z-ED_Z0)/ED_C);return i<0||j<0||i>=ED_NX||j>=ED_NZ?0:ED_M[j*ED_NX+i]}
+// the material painted on the cell nearest a point (0: natural ground, or a soft edge fading out to less than half)
+function paintAt(x,z){const i=Math.round((x-ED_X0)/ED_C),j=Math.round((z-ED_Z0)/ED_C);if(i<0||j<0||i>=ED_NX||j>=ED_NZ)return 0;const q=j*ED_NX+i;return ED_A[q]>=128?ED_M[q]:0}
 // a ground vertex's colour c (rgb array) under the painted materials: blended toward each nearby cell's material colour
 // as the cells' corners blend, tightened so an edge turns over about 0.25 m, as built surfaces have crisp edges. Returns
-// how much of it is covered (0 to 1)
+// how much of it is covered (0 to 1). Soft-edged paint (ED_A below 255) scales that cover down, so it fades out
 function matTint(x,z,c){const fx=(x-ED_X0)/ED_C,fz=(z-ED_Z0)/ED_C;if(fx<0||fz<0||fx>=ED_NX-1||fz>=ED_NZ-1)return 0;
-  const i=fx|0,j=fz|0,u=fx-i,v=fz-j,k=j*ED_NX+i;let cov=0,r=0,g=0,b=0;
-  for(const [q,w] of [[k,(1-u)*(1-v)],[k+1,u*(1-v)],[k+ED_NX,(1-u)*v],[k+ED_NX+1,u*v]]){const m=ED_M[q];if(!m||w<=0)continue;const mc=MAT_LIST[m-1].c;cov+=w;r+=mc[0]*w;g+=mc[1]*w;b+=mc[2]*w}
-  if(cov<=0)return 0;const sc=ss(0.25,0.75,cov),f=sc/cov;
+  const i=fx|0,j=fz|0,u=fx-i,v=fz-j,k=j*ED_NX+i;let cov=0,al=0,r=0,g=0,b=0;
+  for(const [q,w] of [[k,(1-u)*(1-v)],[k+1,u*(1-v)],[k+ED_NX,(1-u)*v],[k+ED_NX+1,u*v]]){const m=ED_M[q];if(!m||w<=0)continue;const mc=MAT_LIST[m-1].c;cov+=w;al+=w*ED_A[q];r+=mc[0]*w;g+=mc[1]*w;b+=mc[2]*w}
+  if(cov<=0)return 0;const sc=ss(0.25,0.75,cov)*al/(cov*255),f=sc/cov;
   c[0]=c[0]*(1-sc)+r*f;c[1]=c[1]*(1-sc)+g*f;c[2]=c[2]*(1-sc)+b*f;
   return sc}
 // how much of x,z one material covers (0 to 1, smoothed like matTint); painted Mud is saturated ground (water.js)
 const MUD_ID=MAT_LIST.findIndex(m=>m.id==='mud')+1;
 function matCovOf(x,z,id){const fx=(x-ED_X0)/ED_C,fz=(z-ED_Z0)/ED_C;if(fx<0||fz<0||fx>=ED_NX-1||fz>=ED_NZ-1)return 0;
-  const i=fx|0,j=fz|0,u=fx-i,v=fz-j,k=j*ED_NX+i;
-  return ss(0.25,0.75,(ED_M[k]===id)*(1-u)*(1-v)+(ED_M[k+1]===id)*u*(1-v)+(ED_M[k+ED_NX]===id)*(1-u)*v+(ED_M[k+ED_NX+1]===id)*u*v)}
+  const i=fx|0,j=fz|0,u=fx-i,v=fz-j,k=j*ED_NX+i;let cov=0,al=0;
+  for(const [q,w] of [[k,(1-u)*(1-v)],[k+1,u*(1-v)],[k+ED_NX,(1-u)*v],[k+ED_NX+1,u*v]])if(ED_M[q]===id){cov+=w;al+=w*ED_A[q]}
+  return cov>0?ss(0.25,0.75,cov)*al/(cov*255):0}
 function b64Bytes(b){let s='';for(let i=0;i<b.length;i+=0x8000)s+=String.fromCharCode.apply(null,b.subarray(i,i+0x8000));return btoa(s)}
 function bytesB64(t){const s=atob(t),b=new Uint8Array(s.length);for(let i=0;i<s.length;i++)b[i]=s.charCodeAt(i);return b}
 // a map as text: each edit layer as the smallest box holding its edits (heights in centimetres, paint in hundredths,
-// materials as ids), the assets as [type, x, z, turn, size, tint] and the roads as [width, grass up the middle, [[x, z, height if graded], ...]]
+// materials as ids, and how much less than full each painted cell is covered, for soft edges), the assets as [type, x, z, turn, size, tint] and the roads as [width, grass up the middle, [[x, z, height if graded], ...]]
 function edBox(A,scale,Arr){let i0=ED_NX,i1=-1,j0=ED_NZ,j1=-1;
   for(let j=0;j<ED_NZ;j++)for(let i=0;i<ED_NX;i++)if(Math.round(A[j*ED_NX+i]*scale)!==0){if(i<i0)i0=i;if(i>i1)i1=i;if(j<j0)j0=j;if(j>j1)j1=j}
   if(i1<0)return null;const w=i1-i0+1,h=j1-j0+1,q=new Arr(w*h),lim=Arr===Int8Array?127:32767;
@@ -45,22 +47,25 @@ function edUnbox(o,A,scale,Arr){if(!o)return;const [i0,j0,w,h]=o.r,q=new Arr(byt
   if(!(w>0&&h>0&&i0>=0&&j0>=0&&i0+w<=ED_NX&&j0+h<=ED_NZ&&q.length===w*h))throw new Error('bad layer');
   for(let j=0;j<h;j++)for(let i=0;i<w;i++)A[(j+j0)*ED_NX+i+i0]=q[j*w+i]/scale}
 function mapEncode(){const doc={game:'backhoe-dig',v:1},h=edBox(ED_H,100,Int16Array),p=edBox(ED_P,100,Int8Array);
-  const m=edBox(ED_M,1,Uint8Array);if(h)doc.h=h;if(p)doc.p=p;if(m)doc.m=m;
+  const m=edBox(ED_M,1,Uint8Array),fa=new Uint8Array(ED_A.length);for(let q=0;q<fa.length;q++)if(ED_M[q])fa[q]=255-ED_A[q];
+  const a=edBox(fa,1,Uint8Array);if(h)doc.h=h;if(p)doc.p=p;if(m)doc.m=m;if(a)doc.a=a;
   if(mapAssets)doc.assets=mapAssets.map(a=>[a.t,+a.x.toFixed(2),+a.z.toFixed(2),+a.yaw.toFixed(2),+a.s.toFixed(2),a.c]);
   if(mapRoads)doc.roads=mapRoads.map(r=>[+r.w.toFixed(2),r.mid,r.pts.map(q=>q.map(v=>+v.toFixed(2)))]);
   return JSON.stringify(doc)}
 // reads a map into new layers; throws on anything that is not one
 function mapDecode(text){const doc=JSON.parse(text);if(!doc||doc.game!=='backhoe-dig'||doc.v!==1)throw new Error('not a Corley\'s Island map');
   const h=new Float32Array(ED_H.length),p=new Float32Array(ED_P.length),m=new Uint8Array(ED_M.length);edUnbox(doc.h,h,100,Int16Array);edUnbox(doc.p,p,100,Int8Array);edUnbox(doc.m,m,1,Uint8Array);
-  for(let q=0;q<m.length;q++)if(m[q]>MAT_LIST.length)m[q]=0;
-  for(let j=0;j<ED_NZ;j++)for(let i=0;i<ED_NX;i++)if(i<3||j<3||i>ED_NX-4||j>ED_NZ-4){h[j*ED_NX+i]=0;p[j*ED_NX+i]=0;m[j*ED_NX+i]=0}
+  // cover: maps from before soft edges have no "a" and are covered fully wherever painted
+  const a=new Uint8Array(ED_A.length);edUnbox(doc.a,a,1,Uint8Array);
+  for(let q=0;q<m.length;q++){if(m[q]>MAT_LIST.length)m[q]=0;a[q]=m[q]?255-a[q]:0;if(!a[q])m[q]=0}
+  for(let j=0;j<ED_NZ;j++)for(let i=0;i<ED_NX;i++)if(i<3||j<3||i>ED_NX-4||j>ED_NZ-4){h[j*ED_NX+i]=0;p[j*ED_NX+i]=0;m[j*ED_NX+i]=0;a[j*ED_NX+i]=0}
   const as=Array.isArray(doc.assets)?doc.assets.filter(a=>Array.isArray(a)&&['pine','leafy','rock'].includes(a[0])&&isFinite(a[1])&&isFinite(a[2]))
     .map(a=>({t:a[0],x:+a[1],z:+a[2],yaw:+a[3]||0,s:Math.max(0.3,Math.min(3,+a[4]||1)),c:(a[5]|0)>=0?a[5]|0:0})):null;
   // roads: 1.5 to 8 m wide, 2 to 200 points each; graded only when every point has a height
   const rs=Array.isArray(doc.roads)?doc.roads.slice(0,60).filter(r=>Array.isArray(r)&&isFinite(r[0])&&Array.isArray(r[2])&&r[2].length>=2&&r[2].length<=200&&r[2].every(q=>Array.isArray(q)&&q.length>=2&&q.slice(0,3).every(isFinite)))
     .map(r=>{const g=r[2].every(q=>q.length>2);return {w:Math.max(1.5,Math.min(8,+r[0])),mid:r[1]?1:0,pts:r[2].map(q=>g?[+q[0],+q[1],+q[2]]:[+q[0],+q[1]])}}):null;
-  return {h,p,m,as,rs}}
-try{const t=localStorage.getItem('bhd_map');if(t){const m=mapDecode(t);ED_H.set(m.h);ED_P.set(m.p);ED_M.set(m.m);mapAssets=m.as;mapRoads=m.rs}}catch(e){}
+  return {h,p,m,a,as,rs}}
+try{const t=localStorage.getItem('bhd_map');if(t){const m=mapDecode(t);ED_H.set(m.h);ED_P.set(m.p);ED_M.set(m.m);ED_A.set(m.a);mapAssets=m.as;mapRoads=m.rs}}catch(e){}
 // the painted ids for the ground shader, one texel per cell (materials.js); editor.js flags it when they change
 matU.tMatId.value=new THREE.DataTexture(ED_M,ED_NX,ED_NZ,THREE.LuminanceFormat,THREE.UnsignedByteType);
 matU.tMatId.value.unpackAlignment=1;matU.tMatId.value.needsUpdate=true;

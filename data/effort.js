@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-18T01:02:08Z",
+ "updated": "2026-10-18T01:03:05Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 614,
+   "dh": 621,
    "act": 12.5,
-   "versions": 83
+   "versions": 84
   }
  ],
  "extra": [
@@ -840,6 +840,15 @@ window.EFFORT = {
    "tris": 1620842,
    "chars": 534416,
    "what": "Turn sensitivity for each machine: the Turn slider now keeps its own setting for Dig, Drive, Truck, Mow, Skid and Walk, and shows the one for the mode you are in. The mower starts at 60%, everything else at 100%."
+  },
+  {
+   "v": 91,
+   "asked": "2026-10-17T19:15:00-05:00",
+   "live": "2026-10-17T20:03:05-05:00",
+   "dh": 7,
+   "tris": 1620713,
+   "chars": 537619,
+   "what": "Map editor: Paint has Hard edge and Soft edge. Soft edge fades the material out into the ground over the outer part of the brush, with a Softness slider (10 to 100%) and a second ring showing where the fade starts; Natural ground fades paint back out the same way, soft-edged Mud is partly soaked at its fade, and maps keep the soft edges (older maps load as before). The editor's controls move to the top left to leave the screen for the ground: a slim title bar with Undo, Redo, Map file and Done, the tools in a two-wide strip down the left, and the tool's options, Map file and info cards in a scrolling column beside them with a tighter material library. Tap the picked tool again to fold its options away."
   }
  ]
 };
