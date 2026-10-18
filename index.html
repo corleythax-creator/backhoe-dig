@@ -14,48 +14,37 @@
 <div id="aim" hidden></div>
 <div id="flash"></div>
 <div id="hud">
-  <div class="top">
-  <div class="status" id="status" title="Tap to show less or more">
-    <div class="srow" id="bucketPanel">
-      <div class="line"><span class="lbl">Bucket</span><span class="val" id="bucketVal">0.00 yd³ · 0%</span></div>
-      <div class="bar"><i id="bucketBar"></i></div>
-      <div class="sub" id="tipVal">Tip 2.0 ft above grade</div>
+  <!-- top bar: menu, the job gauges (tap them for more or less), then the machine's action buttons -->
+  <header class="tbar">
+    <button id="menuBtn" class="sq" aria-label="Menu" aria-expanded="false">☰</button>
+    <div class="brand">Corley's<b>Island</b></div>
+    <div class="status" id="status" title="Tap to show less or more">
+      <div class="srow" id="bucketPanel">
+        <div class="line"><span class="lbl">Bucket</span><span class="val" id="bucketVal">0.00 yd³ · 0%</span></div>
+        <div class="bar"><i id="bucketBar"></i></div>
+        <div class="sub" id="tipVal">Tip 2.0 ft above grade</div>
+      </div>
+      <div class="srow">
+        <div class="line"><span class="lbl">Trench</span><span class="val" id="trenchVal">0% · 0:00</span></div>
+        <div class="bar" id="trenchBar"><i></i></div>
+        <div class="sub" id="gasVal">Gas main: buried</div>
+      </div>
+      <div class="srow">
+        <div class="line"><span class="lbl">Truck</span><span class="val" id="truckVal">0.0 / 12 yd³</span></div>
+        <div class="bar"><i id="truckBar"></i></div>
+        <div class="sub" id="haulVal">Hauled 0.0 yd³</div>
+      </div>
+      <div class="srow" id="lawnRow" hidden>
+        <div class="line"><span class="lbl">Lawn</span><span class="val" id="lawnVal">0% · 0:00</span></div>
+        <div class="bar" id="lawnBar"><i></i></div>
+        <div class="sub" id="mowVal">0.0 mph · blades on</div>
+      </div>
     </div>
-    <div class="srow">
-      <div class="line"><span class="lbl">Trench</span><span class="val" id="trenchVal">0% · 0:00</span></div>
-      <div class="bar" id="trenchBar"><i></i></div>
-      <div class="sub" id="gasVal">Gas main: buried</div>
-    </div>
-    <div class="srow">
-      <div class="line"><span class="lbl">Truck</span><span class="val" id="truckVal">0.0 / 12 yd³</span></div>
-      <div class="bar"><i id="truckBar"></i></div>
-      <div class="sub" id="haulVal">Hauled 0.0 yd³</div>
-    </div>
-    <div class="srow" id="lawnRow" hidden>
-      <div class="line"><span class="lbl">Lawn</span><span class="val" id="lawnVal">0% · 0:00</span></div>
-      <div class="bar" id="lawnBar"><i></i></div>
-      <div class="sub" id="mowVal">0.0 mph · blades on</div>
-    </div>
-    <div class="stats" aria-live="off"><b id="fpsVal">--</b> fps · <b id="triVal">--</b> tris · <b id="resVal">--</b></div>
-  </div>
-  <div class="side">
-    <canvas id="mini" title="Tap for the big map (M)"></canvas>
-    <div class="row">
-      <button id="pumpBtn" class="sm" hidden aria-pressed="false">Pump</button>
-      <button id="boxBtn" class="sm" hidden>Hook box</button>
-      <button id="blkBtn" class="sm" aria-pressed="false">Blocks</button>
-      <button id="camBtn" class="sm">Cab view</button>
-      <button id="menuBtn" class="sm sq" aria-label="Menu" aria-expanded="false">☰</button>
-    </div>
-    <div id="blkBar" hidden>
-      <select id="blkMat" aria-label="Block material"></select>
-      <div class="bstep" data-k="w"><span>Wide</span><button class="sm sq" data-d="-1" aria-label="Narrower">−</button><b>2 ft</b><button class="sm sq" data-d="1" aria-label="Wider">+</button></div>
-      <div class="bstep" data-k="d"><span>Long</span><button class="sm sq" data-d="-1" aria-label="Shorter">−</button><b>2 ft</b><button class="sm sq" data-d="1" aria-label="Longer">+</button></div>
-      <div class="bstep" data-k="h"><span>Tall</span><button class="sm sq" data-d="-1" aria-label="Lower">−</button><b>2 ft</b><button class="sm sq" data-d="1" aria-label="Taller">+</button></div>
-      <div class="bstep" id="blkReach" hidden data-k="reach"><span>Reach</span><button class="sm sq" data-d="-1" aria-label="Nearer">−</button><b>12 ft</b><button class="sm sq" data-d="1" aria-label="Farther">+</button></div>
-      <div class="bstep"><span>Snap</span><button id="blkLock" class="sm" aria-label="How blocks snap: grid, grid and blocks, blocks only, or free">Grid</button></div>
-      <div class="bstep" id="blkGridRow" data-k="grid"><span>Grid</span><button class="sm sq" data-d="-1" aria-label="Finer grid">−</button><b>1 ft</b><button class="sm sq" data-d="1" aria-label="Coarser grid">+</button></div>
-      <div class="row"><button id="blkTurn" class="sm" aria-label="Turn the block a quarter turn">Turn</button><button id="blkRemove" class="sm">Lift</button><button id="blkPlace" class="sm">Place</button></div>
+    <div class="tacts">
+      <button id="pumpBtn" hidden aria-pressed="false">Pump</button>
+      <button id="boxBtn" hidden>Hook box</button>
+      <button id="blkBtn" aria-pressed="false">Blocks</button>
+      <button id="camBtn">Cab view</button>
     </div>
     <div id="menu" hidden>
       <button id="helpBtn">How to play</button>
@@ -71,33 +60,52 @@
       <div class="sizes"><span>UI size</span><button data-s="1">1x</button><button data-s="1.5">1.5x</button><button data-s="2">2x</button></div>
       <div class="ver" id="verMenu"></div>
     </div>
+  </header>
+  <!-- left rail: which machine (or on foot) the sticks drive -->
+  <nav class="lbar seg" role="group" aria-label="Control mode">
+    <button id="modeDig" data-k="1" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 20h11v-5H2zM4 15v-3h5v3M9 13l5-8 6 4-2 5h-3"/></svg><span>Dig</span></button>
+    <button id="modeDrive" data-k="2" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="14" width="20" height="7" rx="3.5"/><path d="M6 14v-4h9v4M9 10V6h5"/><circle cx="6.5" cy="17.5" r="1"/><circle cx="17.5" cy="17.5" r="1"/></svg><span>Drive</span></button>
+    <button id="modeTruck" data-k="3" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 16V8l11-2v10M13 10h5l4 4v2H13"/><circle cx="6" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg><span>Truck</span></button>
+    <button id="modeMow" data-k="4" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 16h14v-4H6zM9 12V7h5l2 5M17 14h4"/><circle cx="6" cy="18" r="2"/><circle cx="16" cy="18" r="2"/></svg><span>Mow</span></button>
+    <button id="modeSkid" data-k="6" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 17V7h8l3 4v6M5 11h11M16 12l4-3 2 5h-5"/><circle cx="7" cy="19" r="2"/><circle cx="14" cy="19" r="2"/></svg><span>Skid</span></button>
+    <button id="modeWalk" data-k="5" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="13" cy="4" r="2"/><path d="M8 11l4-4 3 3 3 1M12 7l-1 7 3 3v4M11 14l-3 7"/></svg><span>Walk</span></button>
+  </nav>
+  <!-- right column: the minimap, and the block bar under it while Blocks is on -->
+  <aside class="rpane">
+    <canvas id="mini" title="Tap for the big map (M)"></canvas>
+    <div id="blkBar" hidden>
+      <select id="blkMat" aria-label="Block material"></select>
+      <div class="bstep" data-k="w"><span>Wide</span><button class="sm sq" data-d="-1" aria-label="Narrower">−</button><b>2 ft</b><button class="sm sq" data-d="1" aria-label="Wider">+</button></div>
+      <div class="bstep" data-k="d"><span>Long</span><button class="sm sq" data-d="-1" aria-label="Shorter">−</button><b>2 ft</b><button class="sm sq" data-d="1" aria-label="Longer">+</button></div>
+      <div class="bstep" data-k="h"><span>Tall</span><button class="sm sq" data-d="-1" aria-label="Lower">−</button><b>2 ft</b><button class="sm sq" data-d="1" aria-label="Taller">+</button></div>
+      <div class="bstep" id="blkReach" hidden data-k="reach"><span>Reach</span><button class="sm sq" data-d="-1" aria-label="Nearer">−</button><b>12 ft</b><button class="sm sq" data-d="1" aria-label="Farther">+</button></div>
+      <div class="bstep"><span>Snap</span><button id="blkLock" class="sm" aria-label="How blocks snap: grid, grid and blocks, blocks only, or free">Grid</button></div>
+      <div class="bstep" id="blkGridRow" data-k="grid"><span>Grid</span><button class="sm sq" data-d="-1" aria-label="Finer grid">−</button><b>1 ft</b><button class="sm sq" data-d="1" aria-label="Coarser grid">+</button></div>
+      <div class="row"><button id="blkTurn" class="sm" aria-label="Turn the block a quarter turn">Turn</button><button id="blkRemove" class="sm">Lift</button><button id="blkPlace" class="sm">Place</button></div>
+    </div>
+  </aside>
+  <!-- the two sticks in the thumb zones, between the bars; Get in, Sprint and Jump sit on top of them -->
+  <div class="sticks">
+    <div class="stickwrap">
+      <button id="seatBtn" hidden>Get in</button>
+      <div class="stick" id="stickL"><div class="knob"></div></div>
+    </div>
+    <div class="stickwrap">
+      <div class="walkbtns" id="walkBtns" hidden><button id="sprintBtn" aria-pressed="false">Sprint</button><button id="jumpBtn">Jump</button></div>
+      <div class="stick" id="stickR"><div class="knob"></div></div>
+    </div>
   </div>
-  </div>
+  <!-- bottom bar: turn sensitivity, what each stick does (under its stick), and the frame rate -->
+  <footer class="bbar">
+    <div class="turnbox"><button id="turnBtn" class="sm" aria-expanded="false" aria-controls="turnSl" title="How fast left and right turn">Turn 100%</button><input id="turnSl" type="range" min="25" max="200" step="5" value="100" aria-label="Turn sensitivity" hidden></div>
+    <div class="cap" id="capL"><b>◀ ▶</b> Swing<br><b>▲ ▼</b> Stick out / in</div>
+    <div class="stats" aria-live="off"><b id="fpsVal">--</b> fps · <b id="triVal">--</b> tris · <b id="resVal">--</b></div>
+    <div class="cap" id="capR"><b>◀ ▶</b> Curl / dump<br><b>▲ ▼</b> Boom down / up</div>
+  </footer>
   <div id="benchBar" hidden></div>
   <button id="heatKey" hidden title="Tap to change what the heatmap shows"><b id="heatName"></b><i id="heatBar"></i><span><span id="heatLo"></span><span id="heatHi"></span></span></button>
   <div id="toast"><span id="toastText"></span></div>
   <button id="updBtn" hidden></button>
-  <div class="sticks">
-    <div class="stickwrap">
-      <div class="turnbox"><button id="turnBtn" class="sm" aria-expanded="false" aria-controls="turnSl" title="How fast left and right turn">Turn 100%</button><input id="turnSl" type="range" min="25" max="200" step="5" value="100" aria-label="Turn sensitivity" hidden></div>
-      <button id="seatBtn" hidden>Get in</button>
-      <div class="cap" id="capL"><b>◀ ▶</b> Swing<br><b>▲ ▼</b> Stick out / in</div>
-      <div class="stick" id="stickL"><div class="knob"></div></div>
-    </div>
-    <div class="seg" role="group" aria-label="Control mode">
-      <button id="modeDig" data-k="1" aria-pressed="true">Dig</button>
-      <button id="modeDrive" data-k="2" aria-pressed="false">Drive</button>
-      <button id="modeTruck" data-k="3" aria-pressed="false">Truck</button>
-      <button id="modeMow" data-k="4" aria-pressed="false">Mow</button>
-      <button id="modeSkid" data-k="6" aria-pressed="false">Skid</button>
-      <button id="modeWalk" data-k="5" aria-pressed="false">Walk</button>
-    </div>
-    <div class="stickwrap">
-      <div class="walkbtns" id="walkBtns" hidden><button id="sprintBtn" aria-pressed="false">Sprint</button><button id="jumpBtn">Jump</button></div>
-      <div class="cap" id="capR"><b>◀ ▶</b> Curl / dump<br><b>▲ ▼</b> Boom down / up</div>
-      <div class="stick" id="stickR"><div class="knob"></div></div>
-    </div>
-  </div>
 </div>
 
 <div id="editor" hidden>
