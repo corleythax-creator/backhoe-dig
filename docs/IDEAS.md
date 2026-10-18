@@ -280,6 +280,8 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - B10 The crane builds the bridge: The crane past the barrier swings girders into place, and the mainland bridge grows a span at a time. (R6 F6 every low c2 6h needs B01)
 - B11 Busy road with traffic: A busy highway along the mainland shore near the island with a steady stream of cars, pickups, vans, semis, buses and motorcycles in both lanes, headlights at night and engine noise that fades with distance. Cars are instanced and pooled so a phone only draws the ones in view. (R8 F6 every low c2 8h)
 - B12 Traffic reacts to you: Cars slow, stop and honk for your machine on the road, wait while you pull a trailer or a loaded dump truck out of the site, and a flagger walks out to stop traffic for you. (R7 F7 most low c2 5h needs B11)
+- B13 Trains on the mainland shore: A railroad along the mainland shore with freight trains of boxcars, tankers and hoppers that rumble past with a horn, a long shadow on the water and a ground shake you feel in the cab. Spawn and draw only the cars in view so a phone keeps its frame rate. (R8 F8 most low c3 10h)
+- B14 Rail crossing: A road crossing with flashing lights, bells and gates; traffic and your machine have to wait while a train goes by, and a slow dump truck on the tracks is a bad idea. (R8 F7 some low c2 5h needs B13 B11)
 
 ## T: The mountain town
 
