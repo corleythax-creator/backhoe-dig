@@ -144,6 +144,8 @@
     <div id="tpBar"><span id="tpHint">Tap the map to teleport there</span>
       <div id="tpOpts" hidden><span>Go there:</span><button data-tp="foot">On foot</button><button data-tp="ex">Excavator</button><button data-tp="truck">Dump truck</button><button data-tp="mow">Mower</button><button data-tp="skid">Skid steer</button><button id="tpCancel">Cancel</button></div>
     </div>
+    <div id="trailBar" role="group" aria-label="Trails: where you have walked and driven"><span>Trails</span></div>
+    <div id="trailKey" hidden><i></i><span><span>Less</span><span id="trailHi"></span></span></div>
     <div class="legend">
       <span><i style="background:#f07a22"></i>Excavator</span><span><i style="background:#e9ecea"></i>Dump truck</span>
       <span><i style="background:#f2f2ee;height:3px"></i>Trench paint</span><span><i style="background:#f5c518;height:3px"></i>Gas main</span>
@@ -193,6 +195,7 @@
       <canvas id="heatCv" aria-label="Map of the lawn, north up"></canvas>
       <i id="heatBar2" class="hbar"></i><div class="hends"><span id="heatLo2"></span><span id="heatHi2"></span></div>
       <button id="heatOn" class="ghost" aria-pressed="false">Heatmap on the lawn: off</button>
+      <button id="statTrail" class="ghost">Where I've walked and driven</button>
     </div>
     <div id="statList"></div>
     <div class="row"><button id="statDone">Done</button><button id="statClear" class="ghost">Clear stats</button></div>

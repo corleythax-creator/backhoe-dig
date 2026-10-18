@@ -1,7 +1,8 @@
 // Corley's Island: the player's stats (☰ then Stats, or O): grass mowed, distance walked and driven, dirt dug and
 // hauled, time in each machine and top speeds, kept for good on this device and synced with the site. Also the lawn
 // heatmap (U, or from the Stats panel): times each patch of grass has been cut, how far it has grown back, and the way
-// it was last mowed, drawn as flat tiles over the patch (the grass is hidden while it is on) and in the panel.
+// it was last mowed, drawn as flat tiles over the patch (the grass is hidden while it is on) and in the panel. And trails:
+// where you have walked and driven, in 4 m squares, shown over the big map (maps.js) for all of it or one way of getting round.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 // ---------- what is counted ----------
 // distances in metres, volumes in cubic metres (bank), times in seconds, speeds in m/s; shown in feet, miles, yd³ and mph
@@ -15,11 +16,26 @@ let statDirty=false,statSaveT=0;
 function statSave(){if(window.syncHold)return;statDirty=false;statSaveT=performance.now();
   const b=new Uint8Array(statCuts.buffer);let bin='';for(let k=0;k<b.length;k+=4096)bin+=String.fromCharCode.apply(null,b.subarray(k,k+4096));
   const s={};for(const k in STAT_ZERO)s[k]=+(+stats[k]).toFixed(3);
-  try{localStorage.setItem(STAT_KEY,JSON.stringify({v:1,n:LAWN_N,s,cuts:btoa(bin)}))}catch(e){}}
+  try{localStorage.setItem(STAT_KEY,JSON.stringify({v:1,n:LAWN_N,s,cuts:btoa(bin),trail:trailPack()}))}catch(e){}}
 function statLoad(){let d=null;try{d=JSON.parse(localStorage.getItem(STAT_KEY))}catch(e){}
   if(d&&d.v===1&&d.s){for(const k in STAT_ZERO)if(isFinite(d.s[k]))stats[k]=+d.s[k];
     if(d.n===LAWN_N&&typeof d.cuts==='string')try{const b=atob(d.cuts);if(b.length===LAWN_N*2){const u=new Uint8Array(statCuts.buffer);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i)}}catch(e){}}
+  if(d&&d.trail)try{trailUnpack(d.trail)}catch(e){}
   if(!stats.since)stats.since=Date.now()}
+// ---------- trails ----------
+// metres travelled in each 4 m square of the big map, one layer for each way of getting round. Saved sparse: three bytes
+// a square that has been crossed (its index, then the distance on a log scale), so a save stays small enough to sync
+// the grid covers the big map's square (MAP_X0, MAP_Z0, MAP_SZ in maps.js, which loads later): 135 x 135 squares
+const TRAIL_C=4,TRAIL_X0=-260,TRAIL_Z0=-62,TRAIL_N=540/TRAIL_C,TRAIL_KINDS=['walk','ex','truck','mow','skid'],trail={};for(const k of TRAIL_KINDS)trail[k]=new Float32Array(TRAIL_N*TRAIL_N);
+let trailDirty=true;
+function trailAdd(k,x,z,d){const i=Math.floor((x-TRAIL_X0)/TRAIL_C),j=Math.floor((z-TRAIL_Z0)/TRAIL_C);
+  if(i<0||j<0||i>=TRAIL_N||j>=TRAIL_N)return;trail[k][j*TRAIL_N+i]+=d;trailDirty=true}
+function trailPack(){const o={};for(const k of TRAIL_KINDS){const a=trail[k],b=[];
+    for(let n=0;n<a.length;n++)if(a[n]>0.05){const q=Math.max(1,Math.min(255,Math.round(Math.log2(1+a[n]*10)*12)));b.push(n&255,n>>8,q)}
+    let bin='';for(let i=0;i<b.length;i+=4096)bin+=String.fromCharCode.apply(null,b.slice(i,i+4096));o[k]=btoa(bin)}
+  return o}
+function trailUnpack(o){for(const k of TRAIL_KINDS){if(typeof o[k]!=='string')continue;const b=atob(o[k]),a=trail[k];
+  for(let i=0;i+2<b.length;i+=3){const n=b.charCodeAt(i)|b.charCodeAt(i+1)<<8;if(n<a.length)a[n]=(Math.pow(2,b.charCodeAt(i+2)/12)-1)/10}}}
 statLoad();
 addEventListener('pagehide',()=>{if(statDirty)statSave()});
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&statDirty)statSave()});
@@ -42,7 +58,8 @@ function statTick(dt){if(bench.on)return;const now=performance.now(),P=statPrev;
       else if(mode==='skid'){stats.skDist+=d;stats.skTime+=dt;stats.skTop=Math.max(stats.skTop,Math.abs(sk.v))}
       else if(mode==='walk'){stats.walkDist+=d;stats.walkTime+=dt;if(wk.ground)stats.walkTop=Math.max(stats.walkTop,Math.min(v,wk.spd+0.2));
         if(wk.spd>WK_RUN+0.3)stats.sprintDist+=d}
-      else{stats.exDist+=d;stats.exTime+=dt}}
+      else{stats.exDist+=d;stats.exTime+=dt}
+      trailAdd(mode==='drive'||mode==='dig'?'ex':mode,o.x,o.z,d)}
     if(mode==='walk'&&P.ground&&!wk.ground&&wk.vy>0){stats.jumps++;statDirty=true}}
   // counters the machines keep themselves: only the rises count (Reset and loading a save put them back)
   const up=(k,v,sk2)=>{const dv=v-P[k];if(!fresh&&dv>0&&dv<50){stats[sk2]+=dv;statDirty=true}P[k]=v};
@@ -93,7 +110,7 @@ function heatTick(dt){const panel=!statBox.hidden;if(!heat.on&&!panel)return;
   if(heatDirty)heatScan();heatDirty=false;
   if(heat.on){heat.posT-=0.25;if(heat.posT<=0){heat.posT=2;heatPos()}heatColors()}
   heatKeySync();if(panel)heatDraw()}
-function heatSave(){try{localStorage.setItem(HEAT_KEY,JSON.stringify({mode:heat.mode}))}catch(e){}}
+function heatSave(){try{const h=JSON.parse(localStorage.getItem(HEAT_KEY)||'{}')||{};h.mode=heat.mode;localStorage.setItem(HEAT_KEY,JSON.stringify(h))}catch(e){}}
 function setHeat(on,mode){if(mode&&mode!==heat.mode){heat.mode=mode;heatSave()}heat.on=!!on;
   heatMesh.visible=heat.on;lawnClumps.visible=lawnFar.visible=!heat.on;
   if(heat.on){heat.posT=0}heat.t=0;heatDirty=true;heatTick(0);heatKeySync();statPanelBtns()}
@@ -144,7 +161,32 @@ $('#statsBtn').onclick=()=>{showStats(true);showMenu(false)};
 $('#statDone').onclick=()=>showStats(false);
 $('#heatOn').onclick=()=>setHeat(!heat.on);
 document.querySelectorAll('#statHeat [data-h]').forEach(b=>b.onclick=()=>setHeat(heat.on,b.dataset.h));
-$('#statClear').onclick=()=>{if(!confirm('Clear all your stats and the lawn heatmap? This can\'t be undone.'))return;
-  Object.assign(stats,STAT_ZERO,{since:Date.now()});statCuts.fill(0);statSave();heatDirty=true;statFill();heat.t=0;heatTick(0)};
+$('#statClear').onclick=()=>{if(!confirm('Clear all your stats, the lawn heatmap and your trails? This can\'t be undone.'))return;
+  Object.assign(stats,STAT_ZERO,{since:Date.now()});statCuts.fill(0);for(const k of TRAIL_KINDS)trail[k].fill(0);trailDirty=true;statSave();heatDirty=true;statFill();heat.t=0;heatTick(0)};
 statBox.addEventListener('pointerdown',e=>{if(e.target===statBox)showStats(false)});
 addEventListener('keydown',e=>{if(e.code==='Escape'&&!statBox.hidden)showStats(false)});
+
+// ---------- trails on the big map ----------
+// which layer shows (off, all, or one way of getting round), kept on this device with the heatmap's choice
+const TRAIL_OPTS=[['off','Off'],['all','All'],['walk','On foot'],['ex','Excavator'],['truck','Truck'],['mow','Mower'],['skid','Skid steer']];
+let trailShow='off',trailCv=null,trailMax=0,trailDrawn='';
+try{const h=JSON.parse(localStorage.getItem(HEAT_KEY)||'null');if(h&&TRAIL_OPTS.some(o=>o[0]===h.trail))trailShow=h.trail}catch(e){}
+// one pixel a square: clear where never crossed, then the heatmap's colours, fainter where you've only passed through once
+function trailImage(){if(!trailCv){trailCv=document.createElement('canvas');trailCv.width=trailCv.height=TRAIL_N}
+  const g=trailCv.getContext('2d'),img=g.createImageData(TRAIL_N,TRAIL_N),D=img.data,L=trailShow==='all'?TRAIL_KINDS:[trailShow];let m=0;
+  const v=new Float32Array(TRAIL_N*TRAIL_N);for(const k of L){const a=trail[k];for(let n=0;n<v.length;n++)v[n]+=a[n]}
+  for(let n=0;n<v.length;n++)if(v[n]>m)m=v[n];trailMax=m;const lm=Math.log(1+m),c=[0,0,0];
+  if(m>0)for(let n=0;n<v.length;n++){if(v[n]<=0.05)continue;const t=Math.log(1+v[n])/lm;heatLerp(HEAT_RAMP,0.15+0.85*t,c);
+    D[n*4]=c[0]*255;D[n*4+1]=c[1]*255;D[n*4+2]=c[2]*255;D[n*4+3]=150+105*t}
+  g.putImageData(img,0,0);trailDirty=false;trailDrawn=trailShow}
+// drawMap (maps.js) calls this on the big map, over the ground and under the machines
+function trailDrawOn(g,X,Y,sc){if(trailShow==='off')return;if(trailDirty||trailDrawn!==trailShow)trailImage();
+  g.save();g.imageSmoothingEnabled=false;g.drawImage(trailCv,X(TRAIL_X0),Y(TRAIL_Z0),TRAIL_N*TRAIL_C*sc,TRAIL_N*TRAIL_C*sc);g.restore()}
+function trailSet(k){trailShow=k;try{const h=JSON.parse(localStorage.getItem(HEAT_KEY)||'{}')||{};h.trail=k;localStorage.setItem(HEAT_KEY,JSON.stringify(h))}catch(e){}trailSync()}
+function trailSync(){document.querySelectorAll('#trailBar [data-tr]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.tr===trailShow));
+  const on=trailShow!=='off';$('#trailKey').hidden=!on;
+  if(on){if(trailDirty||trailDrawn!==trailShow)trailImage();$('#trailHi').textContent=trailMax>0?`More (busiest spot: ${sMi(trailMax)})`:'Nowhere yet'}
+  if(!$('#bigmap').hidden)drawMap($('#big'),MAP_CX,MAP_CZ,MAP_HALF,true)}
+{const bar=$('#trailBar');for(const [k,n] of TRAIL_OPTS){const b=document.createElement('button');b.dataset.tr=k;b.textContent=n;b.onclick=()=>trailSet(k);bar.appendChild(b)}}
+$('#trailKey i').style.background=`linear-gradient(90deg,${HEAT_RAMP.map(c=>heatCss(c)).join(',')})`;
+$('#statTrail').onclick=()=>{showStats(false);if(trailShow==='off')trailShow='all';toggleMap(true);trailSet(trailShow)};
