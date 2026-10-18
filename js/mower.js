@@ -298,7 +298,8 @@ function updateMower(dt,inL,inR){
     mw.x+=q[0]-px;mw.z+=q[1]-pz;
     const ex=px-st.x,ez=pz-st.z,ed=Math.hypot(ex,ez),em=MW_R+2.7;if(ed<em&&ed>1e-3){mw.x+=ex/ed*(em-ed);mw.z+=ez/ed*(em-ed)}
     for(const tz of TR_C){const tx=tr.x+Math.sin(tr.yaw)*tz,tzz=tr.z+Math.cos(tr.yaw)*tz,dx=px-tx,dz=pz-tzz,d=Math.hypot(dx,dz),m=MW_R+TR_R;
-      if(d<m&&d>1e-3){mw.x+=dx/d*(m-d);mw.z+=dz/d*(m-d)}}}
+      if(d<m&&d>1e-3){mw.x+=dx/d*(m-d);mw.z+=dz/d*(m-d)}}
+    for(const q of SK_C){const dx=px-sk.x-Math.sin(sk.yaw)*q,dz=pz-sk.z-Math.cos(sk.yaw)*q,d=Math.hypot(dx,dz),m=MW_R+SK_R;if(d<m&&d>1e-3){mw.x+=dx/d*(m-d);mw.z+=dz/d*(m-d)}}}
   blkPush(mw,MW_C,MW_R);
   const sy=Math.sin(mw.yaw),cy=Math.cos(mw.yaw);
   // rides the ground on its four wheels
