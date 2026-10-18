@@ -16,17 +16,19 @@ function frame(now){
   keyAxes(dt);pollPad();
   const Lx=clamp(SL.x+KA.lx+PA.lx,-1,1),Ly=clamp(SL.y+KA.ly+PA.ly+(mode==='dig'||mode==='mow'||mode==='walk'?0:PA.thr),-1,1),Rx=clamp(SR.x+KA.rx+PA.rx,-1,1),Ry=clamp(SR.y+KA.ry+PA.ry,-1,1);
   let swingIn=0,stickIn=0,driveIn=0,turnIn=0,boomIn=-Ry,bucketIn=Rx;
-  if(mode==='dig'){swingIn=Lx;stickIn=Ly}else if(mode==='drive'){driveIn=Ly;turnIn=Lx}
+  // Turn sensitivity (controls.js) scales every left / right
+  const Ts=turnSens;
+  if(mode==='dig'){swingIn=Lx*Ts;stickIn=Ly}else if(mode==='drive'){driveIn=Ly;turnIn=Lx*Ts}
   let tThr=0,tSteer=0,tBed=0;
-  if(mode==='truck'){tThr=Ly;tSteer=Lx;tBed=Ry;boomIn=0;bucketIn=0}
+  if(mode==='truck'){tThr=Ly;tSteer=clamp(Lx*Ts,-1,1);tBed=Ry;boomIn=0;bucketIn=0}
   // mower: one stick per lap bar; the left stick sideways spins it as well
   let mL=0,mR=0;
-  if(mode==='mow'){mL=clamp(Ly+Lx*0.7,-1,1);mR=clamp(Ry-Lx*0.7,-1,1);boomIn=0;bucketIn=0}
+  if(mode==='mow'){mL=clamp(Ly+Lx*0.7*Ts,-1,1);mR=clamp(Ry-Lx*0.7*Ts,-1,1);boomIn=0;bucketIn=0}
   // on foot: the left stick walks, the right stick looks around
   if(mode==='walk'){boomIn=0;bucketIn=0}
   // skid steer: left stick drives, right stick runs the arms (up lowers them, as the boom) and the bucket (right dumps)
   let sDrive=0,sTurn=0,sArm=0,sCurl=0;
-  if(mode==='skid'){sDrive=Ly;sTurn=Lx;sArm=-Ry;sCurl=-Rx;boomIn=0;bucketIn=0}
+  if(mode==='skid'){sDrive=Ly;sTurn=Lx*Ts;sArm=-Ry;sCurl=-Rx;boomIn=0;bucketIn=0}
   const res=st.res;
   st.swing-=swingIn*0.85*dt*res;
   st.a1=clamp(st.a1+boomIn*0.6*dt*res,...LIM.a1);
@@ -35,7 +37,7 @@ function frame(now){
   if(bench.on){benchTick(dt);driveIn=0;turnIn=0;tThr=0;tSteer=0;tBed=0;mL=0;mR=0}
   updateTruck(dt,tThr,tSteer,tBed);updateMower(dt,mL,mR);if(bench.on){sDrive=sTurn=sArm=sCurl=0}updateSkid(dt,sDrive,sTurn,sArm,sCurl);
   siteTick();
-  if(mode==='walk'&&!bench.on)updateWalker(dt,Lx,Ly,Rx,Ry);else updateWalker(dt,0,0,0,0);
+  if(mode==='walk'&&!bench.on)updateWalker(dt,Lx,Ly,Rx*Ts,Ry);else updateWalker(dt,0,0,0,0);
   // what the mixer hears: hydraulic demand, a ram pushed against its stop (relief valve), tracks moving
   {const end=(v,l,i)=>(i>0.1&&v>=l[1]-1e-4)||(i<-0.1&&v<=l[0]+1e-4);
     sndIn.hyd=Math.abs(swingIn)+Math.abs(stickIn)+Math.abs(boomIn)+Math.abs(bucketIn)+Math.abs(driveIn)+Math.abs(turnIn);
