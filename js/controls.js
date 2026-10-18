@@ -61,7 +61,7 @@ function keyAxes(dt){const f=mode!=='walk'&&held('fine')?0.3:1;
   const t={lx:kv('lRight','lLeft'),ly:kv('lUp','lDown'),rx:kv('rRight','rLeft'),ry:kv('rUp','rDown')};
   // mower: ly / ry are the left / right lap bars. Up and down drive both (A / D still spin, as the left stick does), and the
   // numpad has both bars together (8 2), a spin in place (4 6) and each bar on its own (7 1 left, 9 3 right)
-  if(mode==='mow'){const go=t.ly+kv('mwFwd','mwBack'),sp=kv('mwSpinR','mwSpinL');
+  if(mode==='mow'){const go=t.ly+kv('mwFwd','mwBack'),sp=kv('mwSpinR','mwSpinL')*turnSens;
     t.ly=go+sp+kv('mwLF','mwLB');t.ry=go-sp+kv('mwRF','mwRB');t.rx=0}
   for(const k in t){const g=clamp(t[k],-1,1)*f,r=(g===0?10:5)*dt;KA[k]+=clamp(g-KA[k],-r,r)}}
 // game controller (standard mapping): sticks = the two on-screen sticks, triggers = gas / reverse when driving,
@@ -166,6 +166,18 @@ function setUiScale(v){uiScale=+v||1;const h=$('#hud');h.style.setProperty('--s'
   document.querySelectorAll('.sizes button[data-s]').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.s===uiScale));try{localStorage.setItem('bhd_ui',uiScale)}catch(e){}}
 document.querySelectorAll('.sizes button[data-s]').forEach(b=>b.onclick=()=>setUiScale(b.dataset.s));
 try{setUiScale(localStorage.getItem('bhd_ui')||1)}catch(e){setUiScale(1)}
+// turn sensitivity (above the left stick): scales every left / right input, swing, tracks, steering, the mower's spin
+// and looking round on foot, from 25% to 200%; saved on this device. Open on a computer, a tap away on a phone
+let turnSens=1;const turnSl=$('#turnSl'),turnBtn=$('#turnBtn');
+function setTurnSens(v){turnSens=clamp(Math.round(+v/5)*5||100,25,200)/100;turnSl.value=Math.round(turnSens*100);turnBtn.textContent=`Turn ${turnSl.value}%`;
+  try{localStorage.setItem('bhd_turn',turnSens)}catch(e){}}
+function showTurnSl(on){turnSl.hidden=!on;turnBtn.setAttribute('aria-expanded',on)}
+try{setTurnSens((+localStorage.getItem('bhd_turn')||1)*100)}catch(e){setTurnSens(100)}
+showTurnSl(!PHONE);
+turnBtn.onclick=()=>showTurnSl(turnSl.hidden);
+turnSl.oninput=()=>setTurnSens(turnSl.value);
+// let go of the slider so the arrow keys drive again
+turnSl.onchange=()=>turnSl.blur();
 const statusEl=$('#status');try{statusEl.classList.toggle('min',localStorage.getItem('bhd_hudmin')==='1')}catch(e){}
 statusEl.onclick=()=>{const m=statusEl.classList.toggle('min');try{localStorage.setItem('bhd_hudmin',m?'1':'0')}catch(e){}};
 // the start card: tap a machine (or On foot) to start in that mode; tapping outside the card keeps the current one
