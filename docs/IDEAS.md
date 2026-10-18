@@ -135,6 +135,7 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - S17 Docks and cliff stairs: A dock on each island with a stair or lift down the cliff, so you can walk down and tie up a boat. (R7 F6 most low c2 6h)
 - S18 Marina: A marina with a breakwater, floating slips, a fuel dock, a bait shop and boats bobbing at their moorings. (R7 F7 some low c2 8h)
 - S19 Boats on the lake: Sailboats and fishing boats out on the water, motoring between the marina, the islands and the city. (R7 F4 every low c2 5h)
+- S20 Barge and tug: A working barge on the lake pushed by a tug along a set route, loaded with a spoil pile you can see, with a wake and a horn as it passes the dock. Joins the AI boats of S19. (R7 F5 some low c2 5h needs S19)
 
 ## L: Crew and people
 
@@ -265,6 +266,8 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - B08 Skip the drive: Fast travel to town once you've driven it. (R1 F4 most none c1 2h needs T01)
 - B09 Bridge repair job: Rebuild a washed-out bridge approach with your machines. (R6 F6 rare low c2 6h needs B01)
 - B10 The crane builds the bridge: The crane past the barrier swings girders into place, and the mainland bridge grows a span at a time. (R6 F6 every low c2 6h needs B01)
+- B11 Busy road with traffic: A busy highway along the mainland shore near the island with a steady stream of cars, pickups, vans, semis, buses and motorcycles in both lanes, headlights at night and engine noise that fades with distance. Cars are instanced and pooled so a phone only draws the ones in view. (R8 F6 every low c2 8h)
+- B12 Traffic reacts to you: Cars slow, stop and honk for your machine on the road, wait while you pull a trailer or a loaded dump truck out of the site, and a flagger walks out to stop traffic for you. (R7 F7 most low c2 5h needs B11)
 
 ## T: The mountain town
 
