@@ -15,6 +15,9 @@ const blkDim={w:24,d:24,h:24},BLK_IN=[1,2,3,4,6,8,12,18,24,36,48,60,72,84,96,108
 const BLK_LOCKS=[['grid','Grid'],['gridblocks','Grid + blocks'],['blocks','Blocks only'],['free','Free']];let blkLock='grid';
 // the grid's cell, in inches (BLK_GRIDS, finest to coarsest)
 const BLK_GRIDS=[1,2,3,6,12];let blkGrid=12;
+// remembered on this device
+try{const q=JSON.parse(localStorage.getItem('bhd_blkSnap')||'null');if(q){if(BLK_LOCKS.some(l=>l[0]===q.lock))blkLock=q.lock;if(BLK_GRIDS.includes(q.grid))blkGrid=q.grid}}catch(e){}
+function blkSnapSave(){try{localStorage.setItem('bhd_blkSnap',JSON.stringify({lock:blkLock,grid:blkGrid}))}catch(e){}}
 let blkOn=false,blkWake=0,blkMat=0,blkReach=12,blkFPTold=false;
 // one instanced mesh per material in use; the texture is laid on in world space so any size tiles it evenly and
 // neighbouring blocks line up. Plain concrete (blkMesh) gets its texture in applyTextures (truck.js)
@@ -149,7 +152,7 @@ function blkUI(){for(const k of ['w','d','h'])$(`#blkBar .bstep[data-k="${k}"] b
 // one step up or down the BLK_IN list
 function blkStepDim(k,dir){const i=BLK_IN.findIndex(v=>v>=blkDim[k]),j=dir>0?(BLK_IN[i]>blkDim[k]?i:i+1):i-1;
   blkDim[k]=BLK_IN[clamp(j,0,BLK_IN.length-1)];blkUI()}
-function blkLockNext(){blkLock=BLK_LOCKS[(BLK_LOCKS.findIndex(l=>l[0]===blkLock)+1)%BLK_LOCKS.length][0];blkUI();return BLK_LOCKS.find(l=>l[0]===blkLock)[1]}
+function blkLockNext(){blkLock=BLK_LOCKS[(BLK_LOCKS.findIndex(l=>l[0]===blkLock)+1)%BLK_LOCKS.length][0];blkSnapSave();blkUI();return BLK_LOCKS.find(l=>l[0]===blkLock)[1]}
 // the size key and the D-pad step through cubes, 1 to 10 ft
 function blkCube(dir){const n=((Math.round(Math.max(blkDim.w,blkDim.d,blkDim.h)/12)-1+dir)%BLK_FT+BLK_FT)%BLK_FT+1;blkDim.w=blkDim.d=blkDim.h=n*12;blkUI();
   toast(`Block size ${blkSizeTxt(n*12,n*12,n*12)}`,'',1200)}
@@ -180,7 +183,7 @@ function blkTick(dt){
 $('#blkBtn').onclick=()=>setBlocks(!blkOn);
 $('#blkPlace').onclick=placeBlock;$('#blkRemove').onclick=removeBlock;$('#blkTurn').onclick=blkTurn;
 document.querySelectorAll('#blkBar .bstep button').forEach(b=>b.onclick=()=>{const k=b.parentNode.dataset.k,s=+b.dataset.d;
-  if(k==='reach')blkReachBy(s*2);else if(k==='grid'){blkGrid=BLK_GRIDS[clamp(BLK_GRIDS.indexOf(blkGrid)+s,0,BLK_GRIDS.length-1)];blkUI()}else blkStepDim(k,s)});
+  if(k==='reach')blkReachBy(s*2);else if(k==='grid'){blkGrid=BLK_GRIDS[clamp(BLK_GRIDS.indexOf(blkGrid)+s,0,BLK_GRIDS.length-1)];blkSnapSave();blkUI()}else blkStepDim(k,s)});
 $('#blkLock').onclick=blkLockNext;
 // the material list: plain concrete, then the library by group
 {const s=$('#blkMat');s.add(new Option('Concrete (plain)',0));
