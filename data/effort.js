@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-18T00:41:44Z",
+ "updated": "2026-10-18T00:43:39Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 589,
+   "dh": 597,
    "act": 12.0,
-   "versions": 78
+   "versions": 79
   }
  ],
  "extra": [
@@ -789,12 +789,21 @@ window.EFFORT = {
   },
   {
    "v": 85,
+   "asked": "2026-10-17T19:25:00-05:00",
+   "live": "2026-10-17T19:39:28-05:00",
+   "dh": 8,
+   "tris": 1620977,
+   "chars": 502641,
+   "what": "Field grass that reacts: tracks and tyres lay the grass flat the way they drove, the mower's wheels nearly flat and your boots partway, leaving pale trampled tracks that stay down for a minute and spring back over about two and a half minutes. The grass and the tall grass lean out of the worker's way as well as the machines'. In the rain the grass darkens and droops, heavier where the ground is soaked, and stands back up as it dries. Mud ruts outside the dig zone now clear the grass from them, and it comes back when the ruts are smoothed or the site is reset."
+  },
+  {
+   "v": 86,
    "asked": "2026-10-17T19:30:00-05:00",
-   "live": "2026-10-17T19:41:44-05:00",
+   "live": "2026-10-17T19:43:39-05:00",
    "dh": 14,
-   "tris": 1620368,
-   "chars": 509818,
-   "what": "Dexter's skid steer is drivable. Tap Skid (or press 6), walk up to it in his yard and tap Get in, or teleport into it from the site map. The left stick drives it, turns it and spins it in place; the right stick lowers and raises the arms (up lowers, like the excavator's boom) and curls or dumps the bucket, which stays level as the arms go up. Drive it over the bridges to the dig site and it scoops dirt with the bucket down on the ground and dumps it in a pile, over the cliff or into the dump truck's bed. It has its own diesel sound, ruts soft ground, bumps into buildings, blocks and the other machines, shows its load, speed and bucket depth on the status card, follows the turn sensitivity slider, and is saved and synced with the site. Reset parks it back in Dexter's yard."
+   "tris": 1620777,
+   "chars": 514611,
+   "what": "Dexter's skid steer is drivable. Tap Skid (or press 6), walk up to it in his yard and tap Get in, or teleport into it from the site map. The left stick drives it, turns it and spins it in place; the right stick lowers and raises the arms (up lowers, like the excavator's boom) and curls or dumps the bucket, which stays level as the arms go up. Drive it over the bridges to the dig site and it scoops dirt with the bucket down on the ground and dumps it in a pile, over the cliff or into the dump truck's bed. It has its own diesel sound, ruts soft ground and lays the grass down, bumps into buildings, blocks and the other machines, shows its load, speed and bucket depth on the status card, follows the turn sensitivity slider, and is saved and synced with the site. Reset parks it back in Dexter's yard."
   }
  ]
 };
