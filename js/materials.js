@@ -41,7 +41,7 @@ const MAT_LIST=[
   {id:'shingles',n:'Roof shingles',cat:4,ft:2.5,c:[0.237,0.243,0.255]},
   {id:'fabric',n:'Landscape fabric',cat:4,ft:6,c:[0.138,0.141,0.143]},
   {id:'steel_polished',n:'Polished steel',cat:2,ft:4,c:[0.652,0.651,0.652],sh:1},
-  {id:'gravel_wet',n:'Wet gravel',cat:0,ft:4,c:[0.349,0.327,0.303],sh:0.3}];
+  {id:'gravel_wet',n:'Wet gravel',cat:0,ft:4,c:[0.349,0.327,0.303],sh:0.3,pbr:1}];
 // the owner's own textures (ownmat.js) come after the library: ids MAT_OWN0 (41) and up, the gap left for more built-in
 // ones, each kept for good once given. Known ones are cached on the device (bhd_mats), so a map that uses them draws
 // them from the start; one not known yet holds its place in grey until the server's list arrives
@@ -65,7 +65,7 @@ const MAT_GL2=renderer.capabilities.isWebGL2;
 // up in terrain.js), the texture array holding just the materials the map uses, each id's mean colour and tiles per
 // metre, and its layer; for Mud, the layers of its drier looks and their colours over its own
 const matU={tMatId:{value:null},tMatCov:{value:null},tMatArr:{value:null},uMatInfo:{value:[]},uMatLS:{value:new Float32Array(MAT_MAX*2)},uMudL:{value:new THREE.Vector2(-1,-1)},
-  uMudC1:{value:new THREE.Vector3()},uMudC2:{value:new THREE.Vector3()},tSkyEnv:{value:skyEnv}};
+  uMatN:{value:new Float32Array(MAT_MAX).fill(-1)},texPbr:{value:0},uMudC1:{value:new THREE.Vector3()},uMudC2:{value:new THREE.Vector3()},tSkyEnv:{value:skyEnv}};
 // uMatLS: each id's texture layer (-1 none loaded) and shine
 {const w=MAT_LIST.find(m=>m&&m.id==='mud').c,r=(c,i)=>c[i]/w[i];matU.uMudC1.value.set(r(MUD_STAGES[0].c,0),r(MUD_STAGES[0].c,1),r(MUD_STAGES[0].c,2));matU.uMudC2.value.set(r(MUD_STAGES[1].c,0),r(MUD_STAGES[1].c,1),r(MUD_STAGES[1].c,2))}
 for(let m=0;m<MAT_MAX;m++)matU.uMatInfo.value.push(new THREE.Vector4(1,1,1,1));
@@ -78,6 +78,8 @@ uniform sampler2D tMatCov;
 uniform sampler2DArray tMatArr;
 uniform vec4 uMatInfo[${MAT_MAX}];
 uniform vec2 uMatLS[${MAT_MAX}];
+uniform float uMatN[${MAT_MAX}];
+uniform float texPbr;
 uniform samplerCube tSkyEnv;
 uniform vec2 uMudL;
 uniform vec3 uMudC1;
@@ -92,7 +94,7 @@ uniform vec3 uMudC2;
 // material is the cell with the most cover, nearest first; its texture (Medium and High) is divided by its mean
 // colour for detail, as the ground's own textures are. Painted Mud blends to its drying and cracked looks as the soil
 // water (soilW, rain.js) drops. Read when the shader compiles, after terrain.js has loaded
-const matGlsl=()=>MAT_GL2?`float matP=0.0,matS=0.0,matT=1.0;vec3 matC=vec3(1.0);
+const matGlsl=()=>MAT_GL2?`float matP=0.0,matS=0.0,matT=1.0,matG=1.0,matNp=0.0;vec3 matC=vec3(1.0),matNt=vec3(0.0,0.0,1.0);
 vec2 mfF=(vWXZ-vec2(${ED_X0.toFixed(1)},${ED_Z0.toFixed(1)}))/${ED_C.toFixed(2)};vec2 mfW=fwidth(mfF);
 if(vMatA>0.001){
   ivec2 b=ivec2(floor(mfF));vec2 u=fract(mfF);
@@ -111,7 +113,8 @@ if(vMatA>0.001){
     // Mud: damp then cracked as the soil water drops (its colour alone where its textures aren't drawn)
     vec3 mk=vec3(1.0);float d1=0.0,d2=0.0;
     if(mi==${MUD_ID}){d1=1.0-smoothstep(0.3,0.55,soilW);d2=1.0-smoothstep(0.06,0.22,soilW);mk=mix(mix(vec3(1.0),uMudC1,d1),uMudC2,d2);matC*=mk;}
-    if(texMix>0.5&&ly>=0.0){vec2 uv=vWXZ*inf.a;vec3 tx=texture(tMatArr,vec3(uv,ly)).rgb;
+    if(texMix>0.5&&ly>=0.0){vec2 uv=vWXZ*inf.a;vec4 tx4=texture(tMatArr,vec3(uv,ly));vec3 tx=tx4.rgb;
+      float nl=uMatN[mi];if(texPbr>0.5&&nl>=0.0){matG=clamp(tx4.a*2.0,0.0,2.0);matNt=texture(tMatArr,vec3(uv,nl)).rgb*2.0-1.0;matNp=matP;matS*=matG;}
       if(mi==${MUD_ID}){if(uMudL.x>=0.0){tx=mix(tx,texture(tMatArr,vec3(uv,uMudL.x)).rgb,d1);tx=mix(tx,texture(tMatArr,vec3(uv,uMudL.y)).rgb,d2);}else tx*=mk;}
       matC=mix(matC,clamp(tx,vec3(0.0),3.0*inf.rgb*mk),texBase);matT=mix(1.0,clamp(dot(tx,vec3(1.0))/dot(inf.rgb,vec3(1.0)),0.0,2.0),texBase);}}
 }
@@ -123,6 +126,9 @@ const matGlslPost=()=>MAT_GL2?'if(matP>0.0){vec3 mc=matC*(1.0-0.19*mudF)*(1.0-0.
 // after the Phong setup), and the sky cube map mirrored in it, strong face-on as metal is and stronger still at grazing
 // angles, over a darker diffuse (before the lights end); the texture's grain (matT) runs through the mirror too, so
 // brushed steel shows its brushing
+// a normal map (a material's pbr maps, High graphics): the ground is lit from its tilted normal. The map's x runs east and its y
+// south (the texture's u and v on the ground), so it tilts the world normal that way
+const matGlslNorm=()=>MAT_GL2?'if(matNp>0.0){vec3 mnW=inverseTransformDirection(normal,viewMatrix);mnW=normalize(mnW+vec3(matNt.x,0.0,matNt.y)*1.1*matNp);normal=transformDirection(mnW,viewMatrix);}\n':'';
 const matGlslSpec=()=>MAT_GL2?'specularStrength=mix(specularStrength,12.0,matS);\n':'';
 const matGlslShin=()=>MAT_GL2?'material.specularShininess=mix(material.specularShininess,90.0,matS);\n':'';
 const matGlslRefl=()=>MAT_GL2?`if(matS>0.0){vec3 mrN=inverseTransformDirection(normal,viewMatrix);vec3 mrV=normalize(vWP-cameraPosition);
@@ -144,15 +150,21 @@ function matTexUpdate(){if(!MAT_GL2||!texOn||!gfxDetail)return;
   const used=new Uint8Array(MAT_MAX);for(let q=0;q<ED_M.length;q++)used[ED_M[q]]=1;
   // ids for the library, names for Mud's drier looks
   const want=[];for(let m=1;m<MAT_MAX;m++)if(used[m]&&matDef(m))want.push(m);
+  // relief and sheen maps (normal map as a layer of its own, roughness into the alpha of the colour layer) for the materials that have them
+  if(matU.texPbr.value)for(let m=1;m<MAT_MAX;m++)if(used[m]&&matDef(m).pbr)want.push(matDef(m).id+'_n',matDef(m).id+'_r');
   if(used[MUD_ID])for(const st of MUD_STAGES)want.push(st.id);
   const ready=[];
   for(const m of want){const fresh=!matImg[m],im=matImgOf(m);if(fresh)im.addEventListener('load',matTexUpdate);
     if(im.complete&&im.naturalWidth)ready.push(m)}
   if(ready.length===matLayers.length&&ready.every((m,i)=>m===matLayers[i]))return;
-  const T=512,L=Math.max(1,ready.length),data=new Uint8Array(T*T*4*L),cv=document.createElement('canvas');cv.width=cv.height=T;
-  const x2=cv.getContext('2d');ready.forEach((m,l)=>{x2.drawImage(matImg[m],0,0,T,T);data.set(x2.getImageData(0,0,T,T).data,l*T*T*4)});
+  const layers=ready.filter(m=>!(typeof m==='string'&&m.endsWith('_r')));
+  const T=512,L=Math.max(1,layers.length),data=new Uint8Array(T*T*4*L),cv=document.createElement('canvas');cv.width=cv.height=T;
+  const x2=cv.getContext('2d');layers.forEach((m,l)=>{x2.drawImage(matImg[m],0,0,T,T);data.set(x2.getImageData(0,0,T,T).data,l*T*T*4);
+    const d=typeof m==='number'?matDef(m):null,r=d&&d.pbr&&matImg[d.id+'_r'];
+    if(r&&r.complete){x2.drawImage(r,0,0,T,T);const q=x2.getImageData(0,0,T,T).data,o=l*T*T*4;for(let i=3;i<q.length;i+=4)data[o+i]=255-q[i-3]}});
   const t=new THREE.DataTexture2DArray(data,T,T,L);t.format=THREE.RGBAFormat;t.wrapS=t.wrapT=THREE.RepeatWrapping;
   t.magFilter=THREE.LinearFilter;t.minFilter=THREE.LinearMipmapLinearFilter;t.generateMipmaps=true;t.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());t.needsUpdate=true;
   if(matU.tMatArr.value)matU.tMatArr.value.dispose();matU.tMatArr.value=t;
-  for(let m=0;m<MAT_MAX;m++)matU.uMatLS.value[m*2]=-1;ready.forEach((m,l)=>{if(typeof m==='number')matU.uMatLS.value[m*2]=l});
-  const l1=ready.indexOf(MUD_STAGES[0].id),l2=ready.indexOf(MUD_STAGES[1].id);matU.uMudL.value.set(l1>=0&&l2>=0?l1:-1,l2);matLayers=ready}
+  for(let m=0;m<MAT_MAX;m++)matU.uMatLS.value[m*2]=-1;matU.uMatN.value.fill(-1);
+  layers.forEach((m,l)=>{if(typeof m==='number'){matU.uMatLS.value[m*2]=l;const d=matDef(m),n=d.pbr?layers.indexOf(d.id+'_n'):-1;if(n>=0&&matImg[d.id+'_r']&&matImg[d.id+'_r'].complete)matU.uMatN.value[m]=n}});
+  const l1=layers.indexOf(MUD_STAGES[0].id),l2=layers.indexOf(MUD_STAGES[1].id);matU.uMudL.value.set(l1>=0&&l2>=0?l1:-1,l2);matLayers=ready}
