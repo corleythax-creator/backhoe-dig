@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-17T23:59:05Z",
+ "updated": "2026-10-18T00:01:40Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 515.5,
-   "act": 11.0,
-   "versions": 69
+   "dh": 521.5,
+   "act": 11.5,
+   "versions": 70
   }
  ],
  "extra": [
@@ -708,11 +708,20 @@ window.EFFORT = {
   },
   {
    "v": 76,
+   "asked": "2026-10-17T18:40:00-05:00",
+   "live": "2026-10-17T18:57:34-05:00",
+   "dh": 6,
+   "tris": 1286910,
+   "chars": 433848,
+   "what": "Chess and checkers at the Family Island's picnic pavilion: a chess board set up to start on the west table and a checkers board on the east one. Walk up to a table and Get in (F on a keyboard) becomes Play chess or Play checkers: the island saves and switches to Mesa Chess or Mesa Checkers at full quality, and their Corley's Island link brings you straight back on foot beside the table, with no start card. The Mesa pages load ahead as you walk up to the pavilion. In the claude.ai version the game opens in a new tab."
+  },
+  {
+   "v": 77,
    "asked": "2026-10-17T18:50:00-05:00",
-   "live": "2026-10-17T18:59:05-05:00",
+   "live": "2026-10-17T19:01:40-05:00",
    "dh": 25,
-   "tris": 1349676,
-   "chars": 452849,
+   "tris": 1353588,
+   "chars": 456944,
    "what": "Jessica's Island: from the Family Island's roundabout the east road leads to a red covered footbridge (about 305 ft, on foot only) that climbs 10 ft to a forest mesa the size of Corley's. Lantern-lit gravel paths wind through pines and autumn trees to a stone and timber cottage with a mossy roof, flower boxes and smoke curling from the chimney, past a fenced herb garden to a bench at the cliff edge. Inside is her library: shelves of books to the ceiling on three walls, a rolling ladder on a brass rail, a cushioned window seat with pillows, a plaid blanket and a sleeping cat, two armchairs on a rug by a crackling fire, a reading lamp and a side table with a teacup. Walk in and the roof lifts off so the camera looks down into the room; Cab view walks it at eye level. The library is only drawn when you are near, so phones pay for it only there."
   }
  ]

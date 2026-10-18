@@ -120,10 +120,12 @@ function wkPlaceOut(k){const R=WK_RIDES[k],o=R.o,sy=Math.sin(o.yaw),cy=Math.cos(
     if(!clear)continue;
     Object.assign(wk,{x,z,y:f,vy:0,ground:true,yaw:o.yaw+(k==='ex'?st.swing:0),airT:0});return true}
   return false}
-// F (or Get in / Get out, or controller B): on foot it climbs into the machine at hand; driving, it climbs out
+// F (or Get in / Get out, or controller B): on foot it climbs into the machine at hand (or sits down at a game table on
+// the Family Island's pavilion, family.js); driving, it climbs out
 function seatToggle(){
   if(mode==='walk'){const k=wkNear();
-    if(!k){toast('Walk up to the excavator, the truck or the mower to get in.');return}
+    if(!k){const g=famGameNear();if(g){famPlay(g);return}
+      toast('Walk up to the excavator, the truck or the mower to get in.');return}
     wk.inside=k;walker.visible=false;setMode(WK_RIDES[k].m);toast(`In the ${WK_RIDES[k].n}. ${kbUsed?keyLabel('enter'):padUsed?'B':'Get out'} to climb out.`,'',2600);return}
   const k=rideOf(mode);if(!k)return;
   if(!wkPlaceOut(k)){toast('No room to climb out here. Move the machine a little.');return}
