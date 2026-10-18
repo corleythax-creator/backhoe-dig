@@ -15,9 +15,9 @@ const FC=0.5/3,FX0=MID[0],FZ0=MID[2],FNX=Math.round((MID[1]-MID[0])/FC),FNZ=Math
 const MT=48,MT_NX=Math.ceil(FNX/MT),MT_NZ=Math.ceil(FNZ/MT),MT_MAX=160;
 // the dig zone in fine cells (its own grid draws it)
 const FDI0=Math.round((-S/2-FX0)/FC),FDI1=Math.round((S/2-FX0)/FC),FDJ0=Math.round((-S/2-FZ0)/FC),FDJ1=Math.round((S/2-FZ0)/FC);
-// per fine vertex, made on the first tile: original height, rut depth (+ up), water surface and churned mud (0-255), and
-// as for the dig zone's soakMax and crkA (terrain.js): the wettest a rut got (0-255) and how dried out and cracked it shows
-let FH0=null,FD=null,FW=null,FM=null,FK=null,FCR=null;
+// per fine vertex, made on the first tile: original height, rut depth (+ up), water surface and churned mud (0-255); and
+// as for the dig zone's soakMax and crkA (terrain.js): the wettest a rut got (FWX, 0-255) and how dried out and cracked it shows
+let FH0=null,FD=null,FW=null,FM=null,FK=null,FWX=null,FCR=null;
 const mtIdx=new Int16Array(MT_NX*MT_NZ).fill(-1),mTiles=[];
 let mtWet=false,mtWaterT=0,mtDryT=0,mtFine=false;
 const cellOk=(ci,cj)=>ci>=0&&cj>=0&&ci<FNX&&cj<FNZ&&!(ci>=FDI0&&ci<FDI1&&cj>=FDJ0&&cj<FDJ1);
@@ -34,7 +34,7 @@ function mtBase(t){const n=MT+1,c=[0,0,0,0];
     if(FD[v]===0)FM[v]=0}
   t.dirty=true}
 function mtAdd(ti,tj){if(ti<0||tj<0||ti>=MT_NX||tj>=MT_NZ)return -1;const at=mtIdx[tj*MT_NX+ti];if(at>=0)return at;if(mTiles.length>=MT_MAX)return -1;
-  if(!FD){const n=FV*(FNZ+1);FH0=new Float32Array(n);FD=new Float32Array(n);FW=new Float32Array(n).fill(-1e9);FM=new Uint8Array(n);FK=new Uint8Array(n);FCR=new Float32Array(n*2)}
+  if(!FD){const n=FV*(FNZ+1);FH0=new Float32Array(n);FD=new Float32Array(n);FW=new Float32Array(n).fill(-1e9);FM=new Uint8Array(n);FK=new Int16Array(n);FWX=new Uint8Array(n);FCR=new Float32Array(n*2)}
   const n=MT+1,nv=n*n,i0=ti*MT,j0=tj*MT,ix=[];
   for(let j=0;j<MT;j++)for(let i=0;i<MT;i++)if(cellOk(i0+i,j0+j)){const a=j*n+i;ix.push(a,a+n,a+1,a+1,a+n,a+n+1)}
   if(!ix.length)return -1;
@@ -52,7 +52,7 @@ function midHoles(){const P=midPatch,ix=[];
   P.g.setIndex(ix)}
 function mtDraw(t){const n=MT+1,g=t.g,p=g.attributes.position.array,col=g.attributes.color.array,dA=g.attributes.dirt.array,sA=g.attributes.soilD.array,
   mA=g.attributes.matA.array,uA=g.attributes.mudW.array;
-  for(let j=0;j<n;j++)for(let i=0;i<n;i++){const gi=Math.min(FNX,t.i0+i),gj=Math.min(FNZ,t.j0+j),v=gj*FV+gi,q=j*n+i,d=FD[v],tt=ss(0.02,0.16,Math.abs(d));
+  for(let j=0;j<n;j++)for(let i=0;i<n;i++){const gi=Math.min(FNX,t.i0+i),gj=Math.min(FNZ,t.j0+j),v=gj*FV+gi,q=j*n+i,d=FD[v],kd=FK[v],tt=kd?Math.max(ss(0.02,0.16,Math.abs(d-kd/1000)),1-t.bm[q]):ss(0.02,0.16,Math.abs(d));
     p[q*3]=FX0+gi*FC;p[q*3+1]=FH0[v]+d;p[q*3+2]=FZ0+gj*FC;sA[q]=-d;
     const sh=(0.82+0.34*hash(gi,gj))*rutShade(d);
     for(let c=0;c<3;c++)col[q*3+c]=t.bc[q*3+c]+(MUD_C[c]*sh-t.bc[q*3+c])*tt;
@@ -123,7 +123,7 @@ function mtWaterTick(dt){
       if(dry&&FM[v]>0&&FW[v]<-1e8){FM[v]--;t.dirty=true}
       // ruts dry out pale, then cracked, as in the dig zone (waterTick)
       if(dry){let cx=0,cy=0;
-        if(Math.abs(FD[v])>0.02){const s=Math.max(FM[v]/255,soak,FW[v]>-1e8?1:0);if(s*255>FK[v])FK[v]=Math.round(s*255);const m=FK[v]/255;
+        if(Math.abs(FD[v])>0.02){const s=Math.max(FM[v]/255,soak,FW[v]>-1e8?1:0);if(s*255>FWX[v])FWX[v]=Math.round(s*255);const m=FWX[v]/255;
           if(m>0.4){cx=ss(0.4,0.8,m)*(1-ss(0.3,0.6,s));cy=ss(0.5,0.9,m)*(1-ss(0.06,0.25,s))}}
         if(Math.abs(cx-FCR[v*2])>0.01||Math.abs(cy-FCR[v*2+1])>0.01){FCR[v*2]=cx;FCR[v*2+1]=cy;t.dirty=true}}
       if(FW[v]<=h+0.001&&!(rain&&FW[v]>-1e8&&h<FH0[v]-0.02))FW[v]=-1e9;else if(FW[v]>h+0.003)any=true;
@@ -145,37 +145,53 @@ function mudEdRefresh(x0,x1,z0,z1){for(const t of mTiles){const tx0=FX0+t.i0*FC,
 // the map editor painting over ruts: churned ground inside the brush (radius R, or a square when sq) goes back to grade,
 // dry and without its puddles, except where keep(x,z) says to leave it. Holes dug deeper than a rut and heaps of spoil stay,
 // and so does anything next to one, so painting near a trench doesn't carve its rim. Returns whether anything changed
-function rutErase(cx,cz,R,sq,keep){const inB=(dx,dz)=>(sq?Math.max(Math.abs(dx),Math.abs(dz)):Math.hypot(dx,dz))<=R;let hit=false;
+function rutErase(cx,cz,R,sq,keep,all){const inB=(dx,dz)=>(sq?Math.max(Math.abs(dx),Math.abs(dz)):Math.hypot(dx,dz))<=R;let hit=false;
   const i0=Math.max(0,Math.floor((cx-R+S/2)/CELL)),i1=Math.min(N,Math.ceil((cx+R+S/2)/CELL)),j0=Math.max(0,Math.floor((cz-R+S/2)/CELL)),j1=Math.min(N,Math.ceil((cz+R+S/2)/CELL));
   if(i0<=i1&&j0<=j1){
     for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const k=j*V+i,x=i*CELL-S/2,z=j*CELL-S/2,d=H[k]-H0[k];
-      if(d===0&&!mudA[k]&&Wt[k]<-1e8||Math.abs(d)>RUT_D+0.12||prot[k]||!inB(x-cx,z-cz))continue;
-      let deep=false;for(let b=Math.max(0,j-2);b<=Math.min(N,j+2)&&!deep;b++)for(let a=Math.max(0,i-2);a<=Math.min(N,i+2);a++)if(Math.abs(H[b*V+a]-H0[b*V+a])>RUT_D+0.22){deep=true;break}
+      if(d===0&&!mudA[k]&&Wt[k]<-1e8||!all&&Math.abs(d)>RUT_D+0.12||prot[k]||!inB(x-cx,z-cz))continue;
+      let deep=false;if(!all)for(let b=Math.max(0,j-2);b<=Math.min(N,j+2)&&!deep;b++)for(let a=Math.max(0,i-2);a<=Math.min(N,i+2);a++)if(Math.abs(H[b*V+a]-H0[b*V+a])>RUT_D+0.22){deep=true;break}
       if(deep||keep&&keep(x,z))continue;
-      H[k]=H0[k];mudA[k]=0;Wt[k]=-1e9;comp[k]=0;wetT[k]=-1e4;soakMax[k]=0;hit=true}
+      H[k]=H0[k];paintD[k]=0;mudA[k]=0;Wt[k]=-1e9;comp[k]=0;wetT[k]=-1e4;soakMax[k]=0;hit=true}
     if(hit){touch(i0,i1,j0,j1);updateTufts(i0,i1,j0,j1);st.dirty=true}}
   if(FD){let ft=false;const fi0=Math.max(1,Math.floor((cx-R-FX0)/FC)),fi1=Math.min(FNX-1,Math.ceil((cx+R-FX0)/FC)),fj0=Math.max(1,Math.floor((cz-R-FZ0)/FC)),fj1=Math.min(FNZ-1,Math.ceil((cz+R-FZ0)/FC));
     for(let j=fj0;j<=fj1;j++)for(let i=fi0;i<=fi1;i++){const v=j*FV+i,x=FX0+i*FC,z=FZ0+j*FC;
       if(FD[v]===0&&!FM[v]&&FW[v]<-1e8||tileOf(Math.min(i,FNX-1),Math.min(j,FNZ-1))<0||!inB(x-cx,z-cz)||keep&&keep(x,z))continue;
-      FD[v]=0;FM[v]=0;FW[v]=-1e9;FK[v]=0;FCR[v*2]=FCR[v*2+1]=0;ft=true}
+      FD[v]=0;FM[v]=0;FK[v]=0;FW[v]=-1e9;FWX[v]=0;FCR[v*2]=FCR[v*2+1]=0;ft=true}
     if(ft){for(const t of mTiles){const tx0=FX0+t.i0*FC,tz0=FZ0+t.j0*FC,w=MT*FC;if(tx0>cx+R||tx0+w<cx-R||tz0>cz+R||tz0+w<cz-R)continue;t.dirty=t.wDirty=true}
       site.dirty=true;hit=true}}
   return hit}
+// the map editor painting over dug or churned ground while keeping its shape: the ground inside the brush that is dug, dumped
+// or rutted remembers the height it had (paintD in the dig zone, FK on tiles, mm), and the paint then shows on it as on
+// level ground until digging or rutting moves it from there. Returns whether anything changed
+function paintKeep(cx,cz,R,sq){const inB=(dx,dz)=>(sq?Math.max(Math.abs(dx),Math.abs(dz)):Math.hypot(dx,dz))<=R;let hit=false;
+  const i0=Math.max(0,Math.floor((cx-R+S/2)/CELL)),i1=Math.min(N,Math.ceil((cx+R+S/2)/CELL)),j0=Math.max(0,Math.floor((cz-R+S/2)/CELL)),j1=Math.min(N,Math.ceil((cz+R+S/2)/CELL));
+  for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const k=j*V+i,d=H[k]-H0[k];
+    if(Math.abs(d)<0.04||prot[k]||!inB(i*CELL-S/2-cx,j*CELL-S/2-cz)||Math.abs(d-paintD[k])<1e-4)continue;paintD[k]=d;hit=true}
+  if(FD){const fi0=Math.max(1,Math.floor((cx-R-FX0)/FC)),fi1=Math.min(FNX-1,Math.ceil((cx+R-FX0)/FC)),fj0=Math.max(1,Math.floor((cz-R-FZ0)/FC)),fj1=Math.min(FNZ-1,Math.ceil((cz+R-FZ0)/FC));
+    for(let j=fj0;j<=fj1;j++)for(let i=fi0;i<=fi1;i++){const v=j*FV+i,d=FD[v];
+      if(Math.abs(d)<0.04||tileOf(Math.min(i,FNX-1),Math.min(j,FNZ-1))<0||!inB(FX0+i*FC-cx,FZ0+j*FC-cz))continue;
+      const m=Math.round(Math.max(-32,Math.min(32,d))*1000);if(FK[v]===m)continue;FK[v]=m;hit=true}}
+  if(hit)site.dirty=true;return hit}
 function mudReset(){for(const t of mTiles){scene.remove(t.m);t.g.dispose();scene.remove(t.wm);t.wm.geometry.dispose()}
-  mTiles.length=0;mtIdx.fill(-1);mtWet=false;if(FD){FD.fill(0);FW.fill(-1e9);FM.fill(0);FK.fill(0);FCR.fill(0)}midHoles();tuftsRefresh(-1e9,1e9,-1e9,1e9);grassReset()}
-// each tile: [ti, tj, rut depths (Int16, mm), mud (bytes), wettest it got (bytes)], base64
+  mTiles.length=0;mtIdx.fill(-1);mtWet=false;paintD.fill(0);if(FD){FD.fill(0);FW.fill(-1e9);FM.fill(0);FK.fill(0);FWX.fill(0);FCR.fill(0)}midHoles();tuftsRefresh(-1e9,1e9,-1e9,1e9);grassReset()}
+// each tile: [ti, tj, rut depths (Int16, mm), mud (bytes), then FK (Int16, or '' when none) and the wettest each
+// point got (bytes, when any)], base64
 function mtSave(){const out=[],n=MT+1;
-  for(const t of mTiles){const d=new Int16Array(n*n),m=new Uint8Array(n*n),w=new Uint8Array(n*n);
-    for(let j=0;j<n;j++)for(let i=0;i<n;i++){const gi=Math.min(FNX,t.i0+i),gj=Math.min(FNZ,t.j0+j),v=gj*FV+gi;d[j*n+i]=Math.round(Math.max(-32,Math.min(32,FD[v]))*1000);m[j*n+i]=FM[v];w[j*n+i]=FK[v]}
-    out.push([t.ti,t.tj,siteB64(new Uint8Array(d.buffer)),siteB64(m),siteB64(w)])}
+  for(const t of mTiles){const d=new Int16Array(n*n),m=new Uint8Array(n*n);
+    for(let j=0;j<n;j++)for(let i=0;i<n;i++){const gi=Math.min(FNX,t.i0+i),gj=Math.min(FNZ,t.j0+j),v=gj*FV+gi;d[j*n+i]=Math.round(Math.max(-32,Math.min(32,FD[v]))*1000);m[j*n+i]=FM[v]}
+    const e=[t.ti,t.tj,siteB64(new Uint8Array(d.buffer)),siteB64(m)],kk=new Int16Array(n*n);let ka=false;
+    for(let j=0;j<n;j++)for(let i=0;i<n;i++){const gi=Math.min(FNX,t.i0+i),gj=Math.min(FNZ,t.j0+j),k=FK[gj*FV+gi];kk[j*n+i]=k;if(k)ka=true}
+    const w=new Uint8Array(n*n);let wa=false;for(let j=0;j<n;j++)for(let i=0;i<n;i++){const v=Math.min(FNZ,t.j0+j)*FV+Math.min(FNX,t.i0+i);w[j*n+i]=FWX[v];if(FWX[v])wa=true}
+    if(ka||wa)e.push(ka?siteB64(new Uint8Array(kk.buffer)):'');if(wa)e.push(siteB64(w));out.push(e)}
   return out}
 // after the soil water has loaded (save.js): ruts in soaked ground come back with their puddles full
 function mtRefill(){for(const t of mTiles)for(let j=0;j<=MT;j++)for(let i=0;i<=MT;i++){const gi=t.i0+i,gj=t.j0+j;if(gi>FNX||gj>FNZ)continue;const v=gj*FV+gi;
   if(vOk(gi,gj)&&FD[v]<-SAT_DEPTH&&fineSoak(v,FX0+gi*FC,FZ0+gj*FC)>SAT_MUD)FW[v]=FH0[v]-SAT_DEPTH}}
 function mtLoad(a){if(!Array.isArray(a))return;const n=MT+1;
   for(const e of a){if(!Array.isArray(e)||e.length<4)continue;const idx=mtAdd(e[0]|0,e[1]|0);if(idx<0)continue;const t=mTiles[idx];
-    let d,m,w=null;try{d=new Int16Array(siteUnB64(e[2]).buffer);m=siteUnB64(e[3]);if(typeof e[4]==='string')w=siteUnB64(e[4])}catch(x){continue}if(d.length!==n*n||m.length!==n*n)continue;if(w&&w.length!==n*n)w=null;
-    for(let j=0;j<n;j++)for(let i=0;i<n;i++){const gi=t.i0+i,gj=t.j0+j;if(gi>FNX||gj>FNZ)continue;const v=gj*FV+gi;FD[v]=d[j*n+i]/1000;FM[v]=m[j*n+i];if(w)FK[v]=w[j*n+i]}
+    let d,m,kk=null,w=null;try{d=new Int16Array(siteUnB64(e[2]).buffer);m=siteUnB64(e[3]);if(typeof e[4]==='string'&&e[4]){kk=new Int16Array(siteUnB64(e[4]).buffer);if(kk.length!==n*n)kk=null}if(typeof e[5]==='string'){w=siteUnB64(e[5]);if(w.length!==n*n)w=null}}catch(x){continue}if(d.length!==n*n||m.length!==n*n)continue;
+    for(let j=0;j<n;j++)for(let i=0;i<n;i++){const gi=t.i0+i,gj=t.j0+j;if(gi>FNX||gj>FNZ)continue;const v=gj*FV+gi;FD[v]=d[j*n+i]/1000;FM[v]=m[j*n+i];if(kk)FK[v]=kk[j*n+i];if(w)FWX[v]=w[j*n+i]}
     t.dirty=true}
   mtWet=mTiles.length>0;mtWaterT=0;if(mTiles.length)midHoles();
   // no grass in the saved ruts

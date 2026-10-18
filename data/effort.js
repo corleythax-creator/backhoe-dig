@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-18T01:40:09Z",
+ "updated": "2026-10-18T02:23:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 665,
-   "act": 13,
-   "versions": 92
+   "dh": 674,
+   "act": 14,
+   "versions": 96
   }
  ],
  "extra": [
@@ -921,6 +921,42 @@ window.EFFORT = {
    "tris": 1620473,
    "chars": 588178,
    "what": "Mud dries out: painted Mud now starts soaked and dries over about 20 minutes like other soil, firming up as it goes, and rain soaks it again. It shows each stage: dark and wet with puddles in its ruts, then matte damp mud, then pale mud starting to crack, then dry cracked mud (two new textures made with OpenAI GPT Image; Low graphics shifts the colour the same way without the textures). The editor's Query tool tells you how wet a spot is. Sites saved earlier keep their painted Mud soaked to start."
+  },
+  {
+   "v": 100,
+   "asked": "2026-10-17T20:50:00-05:00",
+   "live": "2026-10-17T21:05:00-05:00",
+   "dh": 4,
+   "tris": 1620584,
+   "chars": 591664,
+   "what": "Paint can keep the dug shape: a new Dug ground choice in the editor's Paint panel. Level dug ground (as before, now also for deep holes and heaps) takes dug and dumped ground back to grade under the brush so the material shows on it; Keep dug shape recolours it where it is, so ruts, holes and heaps stay, painted and saved with the site. Digging afterwards still cuts through the paint."
+  },
+  {
+   "v": 101,
+   "asked": "2026-10-17T21:00:00-05:00",
+   "live": "2026-10-17T21:09:33-05:00",
+   "dh": 1,
+   "tris": 1621287,
+   "chars": 592422,
+   "what": "Left click places blocks: with Blocks on, a left click on the scene sets a block in Dig or Walk mode, in either view (a drag still turns the camera). Also fixes clicks doing nothing once the mouse is taken for mouse look in first person."
+  },
+  {
+   "v": 102,
+   "asked": "2026-10-17T21:00:00-05:00",
+   "live": "2026-10-17T21:17:00-05:00",
+   "dh": 3,
+   "tris": 1621607,
+   "chars": 594435,
+   "what": "A tidier Blocks panel and finer blocks: the controls are now one box of rows (material, wide, long, tall, reach) with Turn, Lift and Place along the bottom. Blocks can be as thin as 1 inch (steps of 1 in up to a foot, then larger), and the \"too close to the edge\" limit is gone. A new Snap row (or the \\ key) picks Grid (as before), Grid + blocks (faces line up flush with nearby blocks, even off-grid ones) or Free (exactly where you aim)."
+  },
+  {
+   "v": 103,
+   "asked": "2026-10-17T21:18:00-05:00",
+   "live": "2026-10-17T21:23:00-05:00",
+   "dh": 1,
+   "tris": 1620566,
+   "chars": 595041,
+   "what": "Block snapping you can set: a new Blocks only mode locks a block flush to nearby blocks and otherwise goes exactly where you aim, without falling back to the grid (the Snap row now cycles Grid, Grid + blocks, Blocks only and Free). A new Grid row sets the grid's cell from 1 in up to 1 ft, so blocks can line up in finer steps."
   }
  ]
 };

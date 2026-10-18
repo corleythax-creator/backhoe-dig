@@ -1,0 +1,299 @@
+/* Layout: full-bleed 3D jobsite; gauges pinned top, two joysticks in the thumb zones at the bottom */
+:root{
+  --sky:#a9c3d3; --hud:rgba(20,23,19,.82); --hud-line:rgba(255,255,255,.16);
+  --ink:#f3f5ef; --muted:#c3ccbb; --machine:#f07a22; --gas:#f5c518; --danger:#ff5143; --ok:#86d98f;
+  --f-display:"Saira Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"Saira",system-ui,sans-serif;
+  color-scheme:dark;
+}
+html,body{height:100%;margin:0;overflow:hidden;background:var(--sky);color:var(--ink);font-family:var(--f-body);-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+canvas#view{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+#aim{position:fixed;left:50%;top:50%;width:6px;height:6px;margin:-3px 0 0 -3px;border-radius:50%;background:rgba(255,255,255,.85);box-shadow:0 0 0 1.5px rgba(0,0,0,.55);pointer-events:none;z-index:1}#aim[hidden]{display:none}
+#hud{position:fixed;inset:0;pointer-events:none;box-sizing:border-box;
+  --pt:calc(env(safe-area-inset-top,0px) + 8px);--pb:calc(env(safe-area-inset-bottom,0px) + 10px);
+  --pl:max(10px,env(safe-area-inset-left,0px));--pr:max(10px,env(safe-area-inset-right,0px))}
+/* Status card, top left: one compact row per job; tap it to hide the detail lines */
+.top{position:absolute;top:var(--pt);left:var(--pl);right:var(--pr);display:flex;flex-wrap:wrap;justify-content:space-between;align-items:flex-start;gap:6px;z-index:2}
+.status{position:relative;width:172px;box-sizing:border-box;background:var(--hud);border:1px solid var(--hud-line);border-radius:10px;padding:7px 9px 6px;display:flex;flex-direction:column;gap:6px;pointer-events:auto;cursor:pointer}
+.srow{display:flex;flex-direction:column;gap:3px}
+.line{display:flex;align-items:baseline;justify-content:space-between;gap:6px}
+.lbl{font:700 12px/1 var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.val{font:700 16px/1 var(--f-display);font-variant-numeric:tabular-nums;white-space:nowrap}
+.sub{font:600 13px/1.1 var(--f-display);font-variant-numeric:tabular-nums;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.stats{font:600 11px/1 var(--f-display);letter-spacing:.04em;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap;opacity:.8}
+.stats b{color:var(--ink);font-weight:700}
+.status.min{gap:5px}.status.min .sub,.status.min .stats{display:none}
+#truckBar{background:#9fb7c6}
+.bar{height:4px;border-radius:2px;background:rgba(255,255,255,.14);overflow:hidden}
+.bar>i{display:block;height:100%;width:0;background:var(--machine);transition:width .15s}
+#trenchBar>i{background:var(--ok)}#lawnBar>i{background:#9bd46a}
+.full .val{color:var(--gas)}
+.row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+button{pointer-events:auto;touch-action:manipulation;font:700 15px/1 var(--f-display);letter-spacing:.05em;text-transform:uppercase;color:var(--ink);background:var(--hud);border:1px solid var(--hud-line);border-radius:9px;height:40px;padding:0 12px;cursor:pointer}
+button:focus-visible{outline:3px solid var(--gas);outline-offset:2px}
+button.sm{height:34px;padding:0 10px;font-size:13px}
+button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
+/* Map and buttons, top right */
+.side{position:relative;margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.side .row{flex-wrap:nowrap}
+#mini{display:block;width:calc(96px*var(--ms));height:calc(96px*var(--ms));border-radius:10px;border:1px solid rgba(255,255,255,.35);background:#1e2a30;pointer-events:auto;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+/* UI size (menu): --s for text, --ms for the map and its buttons, --cs for stick captions; sticks grow up to what fits */
+#hud{--s:1;--ms:1;--cs:1}
+.status,#toast,#benchBar,.seg{zoom:var(--s)}
+.side .row,#menu{zoom:var(--ms)}.cap{zoom:var(--cs)}
+#menu{position:absolute;top:100%;right:0;margin-top:6px;z-index:3}
+#hud.lg .side{flex-direction:row-reverse;align-items:flex-start}
+/* big UI: buttons stack beside the map */
+#hud.lg .side .row{flex-direction:column;align-items:flex-end}
+#hud.lg .seg{flex-direction:row}#hud.lg .seg button{padding:0 7px}#hud.lg .seg button+button{border-top:0;border-left:1px solid var(--hud-line)}
+@media (orientation:portrait){#hud.lg .seg{position:absolute;left:50%;bottom:100%;transform:translateX(-50%);margin-bottom:6px;zoom:min(var(--s),1.3)}
+  #hud.lg .stick{--sz:min(calc(124px*var(--s)),calc((100vw - 32px)/2))}}
+@media (orientation:landscape){#hud.lg .status .sub,#hud.lg .status .stats{display:none}
+  #hud.lg .stick{--sz:min(calc(124px*var(--s)),calc(100vh - 96px*var(--ms) - 34px*var(--cs) - 40px))}}
+.sizes{display:flex;align-items:center;gap:4px;justify-content:flex-end;padding:2px 4px}
+.sizes span{white-space:nowrap;font:700 12px/1 var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-right:4px}
+#menu .sizes button{height:32px;padding:0 8px;font-size:13px;border:1px solid var(--hud-line);text-align:center}
+#menu .sizes button[aria-pressed="true"]{background:var(--machine);color:#1c1309}
+#menu{display:flex;flex-direction:column;gap:4px;background:#1d211b;box-shadow:0 4px 14px rgba(0,0,0,.45);border:1px solid var(--hud-line);border-radius:10px;padding:5px}
+#menu button{height:38px;font-size:14px;border:0;background:transparent;text-align:right}
+/* Block bar under the map: size steppers, material, first-person reach, then turn / pick up / place */
+#blkBar{display:flex;flex-direction:column;align-items:flex-end;gap:6px;zoom:var(--ms)}#blkBar .row{zoom:1}.side button{white-space:nowrap}
+.bdim{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
+.bstep{display:flex;align-items:center;gap:4px;pointer-events:auto;background:var(--hud);border:1px solid var(--hud-line);border-radius:9px;padding:2px 2px 2px 8px}.bstep[hidden]{display:none}
+.bstep span{font:700 12px/1 var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);min-width:46px}
+.bstep b{font:700 15px/1 var(--f-display);color:var(--ink);min-width:44px;text-align:center}
+.bstep button{border:0;background:transparent}
+#blkMat{pointer-events:auto;max-width:200px;height:34px;padding:0 8px;font:700 13px/1 var(--f-display);color:var(--ink);background:var(--hud);border:1px solid var(--hud-line);border-radius:9px}
+#blkMat option,#blkMat optgroup{color:#111;background:#fff}
+#blkBtn[aria-pressed="true"]{background:var(--machine);color:#1c1309}
+#resetBtn.arm{background:var(--danger);color:#fff}
+/* Sticks in the thumb zones, the mode switch stacked between them */
+.sticks{position:absolute;left:var(--pl);right:var(--pr);bottom:var(--pb);display:flex;justify-content:space-between;align-items:flex-end;gap:8px}
+.stickwrap{position:relative;display:flex;flex-direction:column;align-items:center;gap:6px}
+/* Turn sensitivity, above the left stick: the slider is open on a computer; on a phone tap the chip to open it */
+.turnbox{position:absolute;left:0;bottom:100%;margin-bottom:6px;display:flex;align-items:center;gap:8px;zoom:var(--cs);pointer-events:auto}
+#turnBtn{height:36px;font-size:15px;white-space:nowrap}#turnBtn[aria-expanded="true"]{border-color:var(--machine)}
+#turnSl{width:160px;height:32px;margin:0;accent-color:var(--machine);touch-action:none;cursor:pointer}#turnSl[hidden]{display:none}
+.stick{--sz:min(calc(124px*var(--s)),calc((100vw - 40px)/2),calc(100vh - 150px*var(--s)));width:var(--sz);height:var(--sz);border-radius:50%;background:rgba(20,23,19,.38);border:2px solid rgba(255,255,255,.28);position:relative;pointer-events:auto;touch-action:none}
+.stick::before,.stick::after{content:"";position:absolute;background:rgba(255,255,255,.16)}
+.stick::before{left:50%;top:12px;bottom:12px;width:2px;margin-left:-1px}
+.stick::after{top:50%;left:12px;right:12px;height:2px;margin-top:-1px}
+.knob{position:absolute;left:50%;top:50%;width:42%;height:42%;margin:-21% 0 0 -21%;border-radius:50%;background:var(--machine);box-shadow:0 3px 0 rgba(0,0,0,.35);z-index:1}
+.cap{font:600 12px/1.3 var(--f-display);color:var(--ink);text-shadow:0 1px 2px rgba(0,0,0,.9);text-align:center;letter-spacing:.03em;white-space:nowrap;opacity:.9}
+.cap b{color:var(--machine);font-weight:800}
+.seg{display:flex;flex-direction:column;border-radius:10px;overflow:hidden;border:1px solid var(--hud-line);pointer-events:auto;margin-bottom:10px}
+.seg button{border:0;border-radius:0;height:36px;font-size:13px;padding:0 12px}
+.seg button+button{border-top:1px solid var(--hud-line)}
+.seg button[aria-pressed="true"]{background:var(--machine);color:#1c1309}
+/* Sprint and Jump take the right stick's caption spot in Walk mode; Sprint lights up while it is on */
+.walkbtns{display:flex;gap:8px;zoom:var(--cs);align-self:flex-end}.walkbtns[hidden]{display:none}
+@media (orientation:portrait){#hud.lg .walkbtns{zoom:1}}
+#jumpBtn,#sprintBtn{height:44px;min-width:76px;padding:0 12px;font-size:17px;border-radius:22px;box-shadow:0 3px 0 rgba(0,0,0,.35)}
+#jumpBtn{background:var(--machine);color:#1c1309;border:0}
+#sprintBtn{border:2px solid var(--machine);color:var(--machine)}#sprintBtn[aria-pressed="true"]{background:var(--machine);color:#1c1309}
+#seatBtn{min-width:100px;font-size:16px;border-radius:20px;background:var(--machine);color:#1c1309;border:0;box-shadow:0 3px 0 rgba(0,0,0,.35);zoom:var(--cs)}
+#jumpBtn:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.35)}
+.kb .seg button::before{content:attr(data-k) " ";opacity:.6}
+#updBtn{position:absolute;left:50%;top:22%;transform:translateX(-50%);z-index:6;background:var(--gas);color:#1c1309;border:0;height:46px;font-size:18px;white-space:nowrap;box-shadow:0 3px 10px rgba(0,0,0,.35)}
+#toast{position:absolute;left:0;right:0;top:32%;display:flex;justify-content:center}
+#toast span{font:800 19px/1.2 var(--f-display);letter-spacing:.03em;background:var(--hud);border:2px solid var(--machine);padding:8px 14px;border-radius:10px;text-align:center;max-width:80%;opacity:0;transition:opacity .25s}
+#toast span.show{opacity:1}
+#toast span.bad{border-color:var(--danger);color:#ffd9d5}
+#toast span.good{border-color:var(--ok)}
+#bigmap{position:fixed;inset:0;background:rgba(10,12,9,.8);display:flex;align-items:center;justify-content:center;z-index:6;pointer-events:auto;box-sizing:border-box;
+  padding-block:calc(env(safe-area-inset-top,0px) + 12px) calc(env(safe-area-inset-bottom,0px) + 12px);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.mapcard{background:#1d211b;border:1px solid var(--hud-line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px;max-width:100%;max-height:100%;box-sizing:border-box}
+.maphead{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.maphead h2{margin:0;font:800 28px/1 var(--f-display);color:var(--machine);letter-spacing:.02em}
+#big{display:block;border-radius:10px;background:#1e2a30;max-width:100%}
+#tpBar{display:flex;align-items:center;min-height:46px;font:700 18px/1.2 var(--f-display);letter-spacing:.03em;color:var(--ink)}
+#tpOpts{display:flex;flex-wrap:wrap;align-items:center;gap:8px}#tpOpts[hidden],#tpHint[hidden]{display:none}
+#tpOpts button{height:46px;font-size:18px;padding:0 14px}
+#tpOpts button[aria-pressed="true"]{border-color:var(--machine);color:var(--machine)}
+.legend{display:flex;flex-wrap:wrap;gap:8px 16px;font:600 17px/1.2 var(--f-display);letter-spacing:.03em}
+/* short landscape screens (a phone on its side): the map on the left, title, teleport and legend beside it */
+@media (max-height:520px) and (orientation:landscape){.mapcard{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:max-content max-content 1fr;gap:10px 14px;align-items:start}
+  #big{grid-column:1;grid-row:1/4}.maphead,#tpBar,.legend{grid-column:2}.legend{font-size:15px;gap:4px 12px}}
+.legend span{display:flex;align-items:center;gap:7px}
+.legend i{display:inline-block;width:18px;height:12px;border-radius:3px}
+#benchBar{position:absolute;left:0;right:0;top:calc(var(--pt) + 210px);z-index:2;margin:0 auto;width:max-content;max-width:100%;box-sizing:border-box;font:800 16px/1.25 var(--f-display);letter-spacing:.04em;text-align:center;background:var(--hud);border:2px solid var(--gas);border-radius:10px;padding:8px 14px;font-variant-numeric:tabular-nums}
+#benchBar small{display:block;font:600 13px/1.2 var(--f-display);color:var(--muted);letter-spacing:.03em}
+#bench{position:fixed;inset:0;background:rgba(10,12,9,.78);display:flex;align-items:center;justify-content:center;pointer-events:auto;box-sizing:border-box;z-index:5;
+  padding-block:calc(env(safe-area-inset-top,0px) + 16px) calc(env(safe-area-inset-bottom,0px) + 16px);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.tablewrap{overflow-x:auto}
+.btab{margin-bottom:10px;border-collapse:collapse;width:100%;font:600 17px/1.3 var(--f-display);font-variant-numeric:tabular-nums}
+.btab th{font:700 14px/1.2 var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-align:right;padding:6px 8px;border-bottom:1px solid var(--hud-line)}
+.btab td{text-align:right;padding:7px 8px;border-bottom:1px solid rgba(255,255,255,.07)}
+.btab th:first-child,.btab td:first-child{text-align:left}
+.fps-good{color:var(--ok)}.fps-mid{color:var(--gas)}.fps-bad{color:var(--danger)}
+.big{font:800 26px/1.15 var(--f-display);letter-spacing:.02em}
+.devline{font-size:15px!important;color:var(--muted)}
+.card .row button{flex:1}
+.card button.ghost{background:transparent;color:var(--ink);border:1px solid var(--hud-line)}
+#flash{position:fixed;inset:0;background:var(--danger);opacity:0;pointer-events:none;transition:opacity .4s}
+#help,#sndBox,#syncBox{position:fixed;inset:0;background:rgba(10,12,9,.72);display:flex;align-items:center;justify-content:center;pointer-events:auto;box-sizing:border-box;
+  padding-block:calc(env(safe-area-inset-top,0px) + 16px) calc(env(safe-area-inset-bottom,0px) + 16px);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.card{background:#1d211b;border:1px solid var(--hud-line);border-radius:14px;padding:20px;max-width:440px;width:100%;max-height:100%;overflow:auto;box-sizing:border-box;display:flex;flex-direction:column;gap:14px}
+.card h1{margin:0;font:800 36px/1 var(--f-display);letter-spacing:.02em;color:var(--machine);text-wrap:balance}
+.card p{margin:0;font-size:18px;line-height:1.45}
+.ticket{border:2px dashed rgba(255,255,255,.3);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.ticket .lbl{color:var(--gas)}
+.keys{display:grid;grid-template-columns:auto 1fr;gap:8px 14px;font-size:17px;line-height:1.3}
+.keys dt{font:700 17px/1.3 var(--f-display);color:var(--machine);letter-spacing:.04em;text-transform:uppercase}
+.keys dd{margin:0}
+.buildlink{text-align:center;font-size:17px!important}
+.buildlink a{color:var(--machine);font-weight:600}
+.ver{font:600 14px/1.2 var(--f-display);letter-spacing:.05em;color:var(--muted);text-align:right;padding:4px 6px 2px}
+.card .ver{text-align:center;font-size:15px!important;margin-top:-6px}
+.card button{background:var(--machine);color:#1c1309;height:54px;font-size:21px;border:0}
+/* the start card leads with a tile per machine (and on foot); tapping one starts the game in that mode */
+#help .card{max-width:600px}
+.pick{display:grid;grid-template-columns:1fr 1fr;gap:10px;flex:none}
+/* short landscape screens (phones on their side): all four tiles in one row so none is cut off */
+@media (orientation:landscape) and (max-height:560px){#help .card{max-width:900px;padding:14px 18px;gap:10px}#help .card h1{font-size:28px}.pick{grid-template-columns:repeat(4,1fr)}
+  .tile .tn{font-size:19px;bottom:24px}.tile .ts{font-size:12px;bottom:7px}}
+/* the controls list hides behind the Controls button */
+#ctrlBtn{flex:none}#ctrlBtn[aria-expanded="true"]{border-color:var(--machine);color:var(--machine)}
+#ctrlBox{display:flex;flex-direction:column;gap:14px}#ctrlBox[hidden]{display:none}
+.card button.tile{position:relative;height:auto;aspect-ratio:16/10;padding:0;overflow:hidden;border-radius:10px;background:#0f120e;border:2px solid var(--hud-line);color:var(--ink);text-align:left}
+.tile img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.tile .tn,.tile .ts{position:absolute;left:10px;right:10px;text-shadow:0 1px 3px rgba(0,0,0,.9)}
+.tile .tn{bottom:30px;font:800 24px/1 var(--f-display);letter-spacing:.02em}
+.tile .ts{bottom:9px;font:600 15px/1.15 var(--f-display);text-transform:none;letter-spacing:.01em;color:#e4e8dc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tile::after{content:"";position:absolute;inset:45% 0 0;background:linear-gradient(transparent,rgba(8,10,7,.85))}
+.tile .tn,.tile .ts{z-index:1}
+.card button.tile[aria-pressed="true"]{border-color:var(--machine);box-shadow:0 0 0 2px var(--machine)}
+@media (hover:hover){.card button.tile:hover{border-color:var(--machine)}}
+@media (max-width:380px){.tile .tn{font-size:20px;bottom:26px}.tile .ts{font-size:13px}}
+#help .card{overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y}
+@media (max-width:360px){.stick{width:112px;height:112px}.status{width:160px}}
+@media (max-height:420px){.stick{width:112px;height:112px}#benchBar{top:var(--pt)}}
+@media (prefers-reduced-motion:reduce){#toast span,#flash,.bar>i{transition:none}}
+/* Sound panel: label and value over a full-width slider on phones, one row each when there is room; thumbs sized for thumbs */
+#sndBox{z-index:7}
+/* Keys panel: one row per action, its name and what it does, then two key boxes */
+#keysBox{position:fixed;inset:0;z-index:7;background:rgba(10,12,9,.72);display:flex;align-items:center;justify-content:center;pointer-events:auto;box-sizing:border-box;
+  padding-block:calc(env(safe-area-inset-top,0px) + 16px) calc(env(safe-area-inset-bottom,0px) + 16px);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#keysBox .card{max-width:560px;overscroll-behavior:contain}
+#keysList h2{margin:10px 0 2px;font:800 15px/1 var(--f-display);letter-spacing:.12em;text-transform:uppercase;color:var(--gas)}
+.krow{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.07)}
+.kname{font:700 18px/1.2 var(--f-display);letter-spacing:.02em}
+.kname small{display:block;font:600 14px/1.25 var(--f-body);color:var(--muted);letter-spacing:0;margin-top:2px}
+#keysBox .kbtn{height:42px;min-width:78px;padding:0 10px;font-size:16px;background:#2a2f27;color:var(--ink);border:1px solid var(--hud-line);text-transform:none}
+#keysBox .kbtn.none{color:var(--muted);font-weight:600}
+#keysBox .kbtn.cap{background:var(--gas);color:#1c1309;border-color:var(--gas)}
+#keysNote:empty{display:none}
+#keysNote{color:var(--gas)!important}
+.sliders{display:grid;grid-template-columns:1fr auto;grid-auto-flow:dense;gap:2px 12px;font:700 18px/1.2 var(--f-display);letter-spacing:.03em}
+.sliders label{grid-column:1;color:var(--muted);text-transform:uppercase;font-size:15px;letter-spacing:.08em;margin-top:8px;align-self:end}
+.sliders output{grid-column:2;align-self:end;font-variant-numeric:tabular-nums;color:var(--ink)}
+.sliders input{grid-column:1/-1;width:100%;height:36px;accent-color:var(--machine);margin:0}
+@media (min-width:480px){.sliders{grid-template-columns:auto 1fr 3.2em;align-items:center;gap:8px 12px}
+  .sliders label{margin-top:0;align-self:center}.sliders input{grid-column:2}.sliders output{grid-column:3;align-self:center;text-align:right}}
+#sndOn[aria-pressed="false"]{color:var(--danger);border-color:var(--danger)}
+/* Map editor: everything in a column down the left, so the rest of the view is ground: the title bar along the top,
+   a two-wide tool strip, and beside it the tool's options with the file and info cards; the game HUD hides */
+body.editing #hud .top,body.editing #hud .sticks{display:none}
+#editor{position:fixed;inset:0;z-index:4;pointer-events:none;display:flex;flex-direction:column;align-items:flex-start;gap:6px;box-sizing:border-box;
+  padding:calc(env(safe-area-inset-top,0px) + 8px) max(10px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 10px) max(10px,env(safe-area-inset-left,0px))}
+#editor[hidden]{display:none}
+.edbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
+.edbar h2{margin:0;font:800 20px/1 var(--f-display);letter-spacing:.05em;text-transform:uppercase;text-shadow:0 1px 4px rgba(0,0,0,.7)}
+@media (max-width:480px){.edbar h2{display:none}}
+.edbar .row{pointer-events:auto;gap:4px}
+.edmain{flex:1;min-height:0;max-width:100%;display:flex;align-items:flex-start;gap:6px}
+.edtools{pointer-events:auto;flex:none;display:grid;grid-template-columns:repeat(2,64px);gap:4px}
+.edtools button{height:36px;padding:0 2px;font-size:14px;letter-spacing:.02em}
+.edside{flex:0 1 360px;min-width:0;max-height:100%;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:6px;border-radius:10px}
+.edpanel{pointer-events:auto;box-sizing:border-box;width:100%;background:var(--hud);border:1px solid var(--hud-line);border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;gap:6px;font:600 15px/1.25 var(--f-display)}
+.edpanel p{margin:0}.edpanel .hint{color:var(--muted);font-size:14px}
+.edpanel h3{margin:0;font:800 18px/1.1 var(--f-display);letter-spacing:.03em;color:var(--machine)}
+#edInfo dl{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;margin:0}
+#edInfo dt{font:700 13px/1.5 var(--f-display);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+#edInfo dd{margin:0;font-variant-numeric:tabular-nums}
+.edopt{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px}
+.edopt .row{gap:4px}
+.edopt label{font:700 13px/1 var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.edopt output{min-width:40px;font-variant-numeric:tabular-nums}
+#editor input[type=range]{flex:1 1 90px;min-width:80px;max-width:170px;accent-color:var(--machine)}
+.edmats{max-height:min(38vh,380px);overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:5px;padding-right:4px}
+.edmats h3 small{font:600 14px/1 var(--f-display);color:var(--muted);letter-spacing:0;margin-left:6px}
+.edmats h4{margin:3px 0 0;font:700 12px/1 var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.edmatgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(62px,1fr));gap:4px}
+#editor button.edmat{height:auto;padding:3px;display:flex;flex-direction:column;align-items:stretch;gap:3px;font:700 12px/1.1 var(--f-display);letter-spacing:.02em;text-align:center}
+.edmat i{display:block;aspect-ratio:4/3;border-radius:5px;background:url(../textures/thumbs.jpg) 0 0/100% 100%}
+.edmat i.nat{background:linear-gradient(135deg,#5b8a3a,#4a7a30 60%,#8a6a3f)}
+#editor button.edmat[aria-pressed="true"]{background:var(--machine);color:#1c1309}
+#editor .row button[aria-pressed="true"]{background:var(--machine);color:#1c1309}
+.edtools button[aria-pressed="true"],.edkind button[aria-pressed="true"],#editor button.go{background:var(--machine);color:#1c1309}
+#editor button.danger{color:var(--danger)}
+#editor button:disabled{opacity:.4}
+#editor textarea{width:100%;box-sizing:border-box;height:96px;font:12px/1.3 ui-monospace,Menlo,monospace;color:var(--ink);background:#111410;border:1px solid var(--hud-line);border-radius:8px;padding:6px;-webkit-user-select:text;user-select:text}
+#edPasteBox{display:flex;flex-direction:column;gap:6px}#edPasteBox[hidden]{display:none}
+/* Sync panel: the code in big type, the code box and Join on one row */
+#syncBox{z-index:7}
+#syncOff,#syncOn{display:flex;flex-direction:column;gap:14px}#syncOff[hidden],#syncOn[hidden]{display:none}
+.synccode{font:800 46px/1 var(--f-display);letter-spacing:.08em;text-align:center;color:var(--gas);padding:14px 0;border:2px dashed rgba(255,255,255,.3);border-radius:10px;user-select:all}
+#syncIn{flex:1.4;min-width:0;height:54px;box-sizing:border-box;border-radius:10px;border:1px solid var(--hud-line);background:#0f120e;color:var(--ink);
+  font:700 24px/1 var(--f-display);letter-spacing:.08em;text-transform:uppercase;padding:0 12px}
+#syncIn::placeholder{color:var(--muted);opacity:.6}
+#syncJoin{flex:1}
+/* Graphics panel: the presets, live numbers, then one row per setting (name, value, hint, then buttons or a slider) */
+#gfxBox{position:fixed;inset:0;z-index:7;background:rgba(10,12,9,.72);display:flex;align-items:center;justify-content:center;pointer-events:auto;box-sizing:border-box;
+  padding-block:calc(env(safe-area-inset-top,0px) + 16px) calc(env(safe-area-inset-bottom,0px) + 16px);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#gfxBox .card{max-width:620px;overscroll-behavior:contain;touch-action:pan-y}
+#gfxList{display:flex;flex-direction:column;gap:12px}
+#gfxList h2{margin:10px 0 0;font:800 22px/1 var(--f-display);letter-spacing:.06em;text-transform:uppercase;color:var(--machine);border-bottom:1px solid var(--hud-line);padding-bottom:6px}
+.grow{display:flex;flex-direction:column;gap:6px;padding-left:10px;border-left:3px solid transparent}
+.grow.changed{border-left-color:var(--machine)}
+.grow .gl{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 10px}
+.grow .gl b{font:700 18px/1.2 var(--f-display);letter-spacing:.03em}
+.grow .gl output{margin-left:auto;font:700 18px/1.2 var(--f-display);font-variant-numeric:tabular-nums}
+.grow .gl small{flex-basis:100%;font-size:15px;color:var(--muted);line-height:1.35}
+.grow input{width:100%;height:36px;accent-color:var(--machine);margin:0}
+.gseg{display:flex;flex-wrap:wrap;gap:4px}
+.card .gseg button{flex:1 1 0;min-width:52px;height:42px;font-size:17px;padding:0 6px;background:transparent;color:var(--ink);border:1px solid var(--hud-line)}
+.card .gseg button[aria-pressed="true"]{background:var(--machine);color:#1c1309;border-color:var(--machine)}
+.card .gpre button{height:50px;font-size:20px}
+.gstats{font:700 17px/1.4 var(--f-display)!important;color:var(--muted);font-variant-numeric:tabular-nums;background:#141712;border-radius:8px;padding:8px 10px}
+.gstats b{color:var(--ink)}
+/* Stats panel: the lawn heatmap with its modes and key, then each group of numbers */
+#statBox{position:fixed;inset:0;z-index:7;background:rgba(10,12,9,.72);display:flex;align-items:center;justify-content:center;pointer-events:auto;box-sizing:border-box;
+  padding-block:calc(env(safe-area-inset-top,0px) + 16px) calc(env(safe-area-inset-bottom,0px) + 16px);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#statBox .card{max-width:620px;overscroll-behavior:contain;touch-action:pan-y}
+#statBox h2{margin:6px 0 0;font:800 22px/1 var(--f-display);letter-spacing:.06em;text-transform:uppercase;color:var(--machine);border-bottom:1px solid var(--hud-line);padding-bottom:6px}
+#statHeat{display:flex;flex-direction:column;gap:8px}
+#heatCv{display:block;width:100%;aspect-ratio:4/3;image-rendering:pixelated;border-radius:8px;border:1px solid var(--hud-line);background:#141712}
+.hbar{display:block;height:14px;border-radius:7px}
+.hends{display:flex;justify-content:space-between;gap:10px;font:700 16px/1.2 var(--f-display);color:var(--muted)}
+#heatOn[aria-pressed="true"]{background:var(--machine);color:#1c1309;border-color:var(--machine)}
+#statList{display:flex;flex-direction:column;gap:8px}
+.stl{display:grid;grid-template-columns:1fr auto;gap:4px 14px;margin:0}
+.stl dt{font-size:18px;color:var(--muted)}
+.stl dd{margin:0;font:700 20px/1.2 var(--f-display);font-variant-numeric:tabular-nums;text-align:right;color:var(--ink)}
+/* the heatmap's key on screen while it is on; tap it to change what it shows */
+#heatKey{position:absolute;left:50%;top:22%;transform:translateX(-50%);z-index:2;zoom:var(--s);width:min(270px,70vw);height:auto;padding:7px 10px 6px;display:flex;flex-direction:column;gap:5px;
+  text-transform:none;background:var(--hud);border:1px solid var(--hud-line);border-radius:10px}
+#heatKey b{font:800 17px/1 var(--f-display);letter-spacing:.05em;text-transform:uppercase;color:var(--machine)}
+#heatKey i{display:block;height:10px;border-radius:5px}
+#heatKey>span{display:flex;justify-content:space-between;gap:8px;font:600 14px/1.1 var(--f-display);color:var(--muted)}
+/* the frame rate graph: fps over the last 10 s, with dashed lines at 30 and 60 */
+.ggraph{display:flex;flex-direction:column;gap:6px}
+#gfxGraph{width:100%;height:110px;background:#141712;border-radius:8px;display:block}
+#gfxGraphCap{font-variant-numeric:tabular-nums}
+#gfxGraphCap b{color:var(--ink)}
+/* big map trails: what to show, and its key */
+#trailBar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font:700 18px/1.2 var(--f-display);letter-spacing:.03em;color:var(--ink)}
+#trailBar span{margin-right:4px}
+#trailBar button{height:42px;font-size:16px;padding:0 10px}
+#trailBar button[aria-pressed="true"]{background:var(--machine);color:#1c1309;border-color:var(--machine)}
+#trailKey{display:flex;flex-direction:column;gap:4px}
+#trailKey i{display:block;height:10px;border-radius:5px}
+#trailKey>span{display:flex;justify-content:space-between;gap:10px;font:600 15px/1.2 var(--f-display);color:var(--muted)}
+@media (max-height:520px) and (orientation:landscape){.mapcard{grid-template-rows:max-content max-content max-content max-content 1fr}#big{grid-row:1/6}#trailBar,#trailKey{grid-column:2}}

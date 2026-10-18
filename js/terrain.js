@@ -4,7 +4,7 @@
 // dig grid: 64 m square at 0.16 m (about 6 in) per cell. GRID_K = cells per 0.32 m, the old 1 ft cell, so reaches and
 // settling speeds written in cells stay the same in feet
 const S=64,N=400,CELL=S/N,V=N+1,CA=CELL*CELL,FLOOR=3.5,GRID_K=Math.round(0.32/CELL);
-const H=new Float32Array(V*V),H0=new Float32Array(V*V),grass=new Float32Array(V*V*3),matCov=new Float32Array(V*V),mudBase=new Float32Array(V*V),paint=new Uint8Array(V*V),nz=new Float32Array(V*V),rockA=new Float32Array(V*V);
+const H=new Float32Array(V*V),H0=new Float32Array(V*V),grass=new Float32Array(V*V*3),matCov=new Float32Array(V*V),mudBase=new Float32Array(V*V),paintD=new Float32Array(V*V),paint=new Uint8Array(V*V),nz=new Float32Array(V*V),rockA=new Float32Array(V*V);
 const ss=(a,b,x)=>{const t=Math.min(1,Math.max(0,(x-a)/(b-a)));return t*t*(3-2*t)};
 const hash=(i,j)=>{const s=Math.sin(i*127.1+j*311.7)*43758.5453;return s-Math.floor(s)};
 // ---------- map edits ----------
@@ -383,11 +383,11 @@ function touch(i0,i1,j0,j1){if(!winOn){dI0=i0;dI1=i1;dJ0=j0;dJ1=j1;winOn=true}el
 function updateTerrain(){
   const p=pos.array,ja=Math.max(0,dJ0-1-AO_R),jb=Math.min(N,dJ1+1+AO_R);
   for(let k=ja*V;k<(jb+1)*V;k++){
-    const h=H[k],d=h-H0[k],ad=Math.abs(d);
+    const h=H[k],d=h-H0[k],bd=paintD[k],ad=Math.abs(bd?d-bd:d);
     p[k*3+1]=h;soilDA[k]=-d;
     let r=grass[k*3],g=grass[k*3+1],b=grass[k*3+2];
     if(paint[k]&&ad<0.04){ if(paint[k]===1){r=0.93;g=0.93;b=0.9}else{r=0.96;g=0.78;b=0.1} }
-    const t=ss(0.02,0.16,ad);dirtA[k]=Math.max(t,rockA[k]);matAA[k]=matCov[k]*(1-t);mudWA[k]=mudA[k];
+    let t=ss(0.02,0.16,ad);if(bd&&matCov[k]<1)t=Math.max(t,1-matCov[k]);dirtA[k]=Math.max(t,rockA[k]);matAA[k]=matCov[k]*(1-t);mudWA[k]=mudA[k];
     if(t>0){
       let dr,dg,db;
       if(d<0){const c=SOIL[layerAt((k%V)*CELL-S/2,((k/V)|0)*CELL-S/2,-d,nz[k])].c,sh=1-0.12*ss(0.3,2.5,-d);dr=c[0]*sh;dg=c[1]*sh;db=c[2]*sh}

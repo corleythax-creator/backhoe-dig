@@ -56,14 +56,16 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 #menu .sizes button[aria-pressed="true"]{background:var(--machine);color:#1c1309}
 #menu{display:flex;flex-direction:column;gap:4px;background:#1d211b;box-shadow:0 4px 14px rgba(0,0,0,.45);border:1px solid var(--hud-line);border-radius:10px;padding:5px}
 #menu button{height:38px;font-size:14px;border:0;background:transparent;text-align:right}
-/* Block bar under the map: size steppers, material, first-person reach, then turn / pick up / place */
-#blkBar{display:flex;flex-direction:column;align-items:flex-end;gap:6px;zoom:var(--ms)}#blkBar .row{zoom:1}.side button{white-space:nowrap}
-.bdim{display:flex;flex-direction:column;align-items:flex-end;gap:4px}
-.bstep{display:flex;align-items:center;gap:4px;pointer-events:auto;background:var(--hud);border:1px solid var(--hud-line);border-radius:9px;padding:2px 2px 2px 8px}.bstep[hidden]{display:none}
-.bstep span{font:700 12px/1 var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);min-width:46px}
-.bstep b{font:700 15px/1 var(--f-display);color:var(--ink);min-width:44px;text-align:center}
+/* Block bar under the map: one box of rows (material, size steppers, first-person reach), then turn / lift / place */
+#blkBar{display:flex;flex-direction:column;width:210px;background:var(--hud);border:1px solid var(--hud-line);border-radius:10px;padding:3px 4px;pointer-events:auto;zoom:var(--ms)}.side button{white-space:nowrap}
+#blkBar>*+*{border-top:1px solid var(--hud-line)}
+.bstep{display:flex;align-items:center;gap:2px;height:38px;padding-left:6px}.bstep[hidden]{display:none}
+.bstep span{flex:1;font:700 12px/1 var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.bstep b{font:700 16px/1 var(--f-display);color:var(--ink);min-width:48px;text-align:center}
 .bstep button{border:0;background:transparent}
-#blkMat{pointer-events:auto;max-width:200px;height:34px;padding:0 8px;font:700 13px/1 var(--f-display);color:var(--ink);background:var(--hud);border:1px solid var(--hud-line);border-radius:9px}
+#blkLock{flex:0 0 auto;min-width:112px;color:var(--machine)}
+#hud #blkBar .row{flex-direction:row;flex-wrap:nowrap;align-items:stretch;gap:4px;zoom:1;padding:4px 0 1px}#blkBar .row button{flex:1;padding:0 4px;background:#2a2f27}
+#blkMat{pointer-events:auto;width:100%;height:38px;padding:0 4px;font:700 14px/1 var(--f-display);color:var(--ink);background:transparent;border:0}
 #blkMat option,#blkMat optgroup{color:#111;background:#fff}
 #blkBtn[aria-pressed="true"]{background:var(--machine);color:#1c1309}
 #resetBtn.arm{background:var(--danger);color:#fff}

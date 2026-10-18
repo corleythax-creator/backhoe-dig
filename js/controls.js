@@ -40,7 +40,7 @@ const MODES=['dig','drive','truck','mow','skid','walk'];let kbUsed=false;
 const KEY_RUN={dig:()=>setMode('dig'),drive:()=>setMode('drive'),truck:()=>setMode('truck'),mow:()=>setMode('mow'),skid:()=>setMode('skid'),walk:()=>setMode('walk'),
   nextMode:e=>setMode(MODES[(MODES.indexOf(mode)+(e.shiftKey?MODES.length-1:1))%MODES.length]),
   stats:()=>showStats(statBox.hidden),heat:()=>{if(!heat.on)setHeat(true);else if(heat.mode!==HEAT_MODES[HEAT_MODES.length-1][0])heatNext();else setHeat(false)},
-  enter:()=>seatToggle(),jump:()=>walkJump(),blocks:()=>setBlocks(!blkOn),place:()=>placeBlock(),lift:()=>removeBlock(),size:()=>blkCube(1),blkTurn:()=>blkTurn(),blkFar:()=>blkReachBy(2),blkNear:()=>blkReachBy(-2),
+  enter:()=>seatToggle(),jump:()=>walkJump(),blocks:()=>setBlocks(!blkOn),place:()=>placeBlock(),lift:()=>removeBlock(),size:()=>blkCube(1),blkTurn:()=>blkTurn(),blkLock:()=>toast(`Block snap: ${blkLockNext()}`,'',1400),blkFar:()=>blkReachBy(2),blkNear:()=>blkReachBy(-2),
   blkMat:()=>{setBlkMat((blkMat+1)%(MAT_LIST.length+1));toast(`Block material: ${blkMatName(blkMat)}`,'',1400)},
   box:()=>hookBox(),lookAhead:()=>{if(camMode==='cab')fpl.home=true;fpl.zt=1},pump:()=>setPump(!pumpOn),cam:()=>$('#camBtn').click(),map:()=>toggleMap(),sound:()=>setSound(!sndCfg.on),help:()=>{help.hidden=!help.hidden}};
 addEventListener('keydown',e=>{const c=e.code;
@@ -99,9 +99,10 @@ function rumble(ms,mag){const gp=getPad(),va=gp&&gp.vibrationActuator;
 // orbit drag on the scene; in cab view the same drag turns your head instead (see fpTurn)
 let orbitYaw=0,orbitPitch=0.42,camDist=9.5,drag=null;
 const camPtrs=new Map();let pinch=0;
-canvas.addEventListener('pointerdown',e=>{if(edOn)return;camPtrs.set(e.pointerId,{x:e.clientX,y:e.clientY});canvas.setPointerCapture(e.pointerId);
+// (with the mouse taken for mouse look the browser refuses pointer capture; the click still has to go through)
+canvas.addEventListener('pointerdown',e=>{if(edOn)return;camPtrs.set(e.pointerId,{x:e.clientX,y:e.clientY});try{canvas.setPointerCapture(e.pointerId)}catch(err){}
   if(camPtrs.size===2){const [a,b]=camPtrs.values();pinch=Math.hypot(a.x-b.x,a.y-b.y);drag=null;return}
-  drag={id:e.pointerId,x:e.clientX,y:e.clientY};
+  drag={id:e.pointerId,x:e.clientX,y:e.clientY,x0:e.clientX,y0:e.clientY,t0:performance.now(),btn:e.button,mouse:e.pointerType==='mouse',locked:document.pointerLockElement===canvas};
   // with the mouse taken on foot and blocks on, a click sets a block where the dot is and a right click lifts one
   if(document.pointerLockElement===canvas&&blkOn&&blkFP()){if(e.button===0)placeBlock();else if(e.button===2)removeBlock();return}
   if(camMode==='cab'&&e.pointerType==='mouse'&&e.button===0&&!PHONE)fpMouseLock(true)});
@@ -113,6 +114,10 @@ canvas.addEventListener('pointermove',e=>{const p=camPtrs.get(e.pointerId);if(p)
   if(camMode==='cab'){if(document.pointerLockElement!==canvas)fpTurn(dx*0.006,dy*0.005)}
   else{orbitYaw-=dx*0.006;orbitPitch=clamp(orbitPitch+dy*0.005,0.08,1.3)}});
 const dend=e=>{camPtrs.delete(e.pointerId);if(camPtrs.size<2)pinch=0;if(drag&&e.pointerId===drag.id)drag=null};
+// with blocks on, a left click on the scene (not a drag) sets a block, in Dig or Walk mode and either view (the click
+// that takes the mouse in cab view sets one too; once it is taken, pointerdown above does it)
+canvas.addEventListener('pointerup',e=>{const d=drag;if(!d||e.pointerId!==d.id||!d.mouse||d.btn!==0||d.locked||!blkOn||edOn)return;
+  if(Math.hypot(e.clientX-d.x0,e.clientY-d.y0)<6&&performance.now()-d.t0<400&&(mode==='dig'||mode==='walk'))placeBlock()});
 canvas.addEventListener('pointerup',dend);canvas.addEventListener('pointercancel',dend);
 canvas.addEventListener('wheel',e=>{if(edOn)return;e.preventDefault();
   // in first person on foot with blocks on, the wheel pushes the block out and pulls it back instead of zooming
