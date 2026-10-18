@@ -433,6 +433,8 @@ function h0At(x,z){
 // layers by depth below original grade, with wavy boundaries; sand bedding wraps the gas main.
 // h: arm speed while the teeth bite, sw: swell (loose volume per bank volume), rp: steepest slope it holds (rise per run),
 // rl: slope it holds for good; a deep wall steeper than rl caves in after a while
+// the soils whose dig speed (h) the tuning sets (js/tune.js)
+const SOIL_TU=['soilTop','soilClay','soilSand','soilRock'];
 const SOIL=[
   {n:'Topsoil',c:[0.30,0.21,0.13],h:0.7,sw:1.25,rp:0.9,rl:0.75},
   {n:'Clay',c:[0.64,0.36,0.21],h:0.45,sw:1.3,rp:1.6,rl:0.95},
@@ -466,7 +468,7 @@ function dig(tip,cap){
     const k=j*V+i;
     const t=Math.max(tip.y+(d/r)*(d/r)*0.35,H0[k]-FLOOR);
     const dh=H[k]-t;
-    if(dh>0){const y=H[k]-dh/2,m=matAt(k,y),c=matColor(k,m),v=dh*CA*SOIL[m].sw,ck=clodKind(m,H0[k]-y);list.push(k,dh);vol+=v;cr+=c[0]*v;cg+=c[1]*v;cb+=c[2]*v;if(ck>=0)vk[ck]+=v}
+    if(dh>0){const y=H[k]-dh/2,m=matAt(k,y),c=matColor(k,m),v=dh*CA*(1+(SOIL[m].sw-1)*TU.fluff),ck=clodKind(m,H0[k]-y);list.push(k,dh);vol+=v;cr+=c[0]*v;cg+=c[1]*v;cb+=c[2]*v;if(ck>=0)vk[ck]+=v}
   }
   if(vol<=0)return 0;
   touch(i0,i1,j0,j1);
@@ -523,8 +525,8 @@ function caveScan(){
       const dep=H0[k2]-H[k2];if(dep<0.75)continue;
       const df=H[k]-H[k2];if(df<=0.62*CELL||Math.abs(H0[k]-H0[k2])>M0)continue;
       if(df<=SOIL[matAt(k,H[k]-0.03)].rl*CELL)continue;
-      let sur=H[k]-H0[k];for(let q=1;q<=2*GRID_K;q++){const i3=i-di*q,j3=j-dj*q;if(i3>=0&&i3<=N&&j3>=0&&j3<=N)sur=Math.max(sur,H[j3*V+i3]-H0[j3*V+i3])}
-      const deep=Math.max(0,dep-1.2)*2,load=sur>0.08?sur*3:0,risk=deep+load;
+      let sur=H[k]-H0[k];for(let q=1;q<=Math.round(TU.caveSpoil/CELL);q++){const i3=i-di*q,j3=j-dj*q;if(i3>=0&&i3<=N&&j3>=0&&j3<=N)sur=Math.max(sur,H[j3*V+i3]-H0[j3*V+i3])}
+      const deep=Math.max(0,dep-TU.caveDepth)*2,load=sur>0.08?sur*3:0,risk=deep+load;
       if(risk>best){best=risk;bk=k;bs=load>deep}}}
   return {best,bk,bs};
 }
@@ -546,7 +548,7 @@ function caveTick(dt){
     if(c.dT<=0){c.dT=0.07;lipP.set((c.k%V)*CELL-S/2+(Math.random()-0.5)*0.6,H[c.k]+0.05,((c.k/V)|0)*CELL-S/2+(Math.random()-0.5)*0.6);spawn(lipP,0.25)}
     if(c.t<=0){st.cave=null;st.caveRisk=0;collapse(c.k,c.sur)}}
   else if(cI1>=cI0&&(st.caveScanT-=dt)<=0){st.caveScanT=0.5;const r=caveScan();
-    if(r.best>0){st.caveRisk+=r.best*0.04;if(st.caveRisk>=1)st.cave={k:r.bk,sur:r.bs,t:2.2,dT:0}}else st.caveRisk=Math.max(0,st.caveRisk-0.05)}
+    if(r.best>0){st.caveRisk+=r.best*0.04*TU.caveRate;if(st.caveRisk>=1)st.cave={k:r.bk,sur:r.bs,t:TU.caveWarn,dT:0}}else st.caveRisk=Math.max(0,st.caveRisk-0.05)}
 }
 
 // ---------- shadow caster ----------

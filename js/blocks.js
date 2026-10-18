@@ -113,7 +113,7 @@ function blkAim(){const w=blkDim.w*IN,d=blkDim.d*IN,h=blkDim.h*IN,[ax,az]=blkTar
   const t={x,z,w,d},walk=mode==='walk';
   if(blocks.length>=BLK_MAX)p.why=`That's all ${BLK_MAX} blocks. Pick some up first.`;
   else if(!walk&&y>tip.y+0.6)p.why='Raise the bucket above the stack to set a block on it.';
-  else if(walk&&!blkFP()&&y+Math.min(h,FT*3)>wk.y+WK_REACH)p.why='Too high to reach. Climb up first.';
+  else if(walk&&!blkFP()&&y+Math.min(h,FT*3)>wk.y+TU.wkReachUp)p.why='Too high to reach. Climb up first.';
   else if(walk&&Math.abs(wk.x-x)<w/2+WK_R&&Math.abs(wk.z-z)<d/2+WK_R&&y<wk.y+WK_H&&y+h>wk.y+0.02)p.why='You are standing there. Step back.';
   else if(EX_C.some(lz=>blkCircleD(st,lz,t)<EX_R+0.05))p.why='Too close to the excavator. Reach out farther.';
   else if(TR_C.some(lz=>blkCircleD(tr,lz,t)<TR_R+0.05))p.why='That spot is under the truck.';
@@ -137,7 +137,7 @@ function removeBlock(){
   if(blkFP()){const r=blkRay(TU.blkReach/FT);if(r.hit&&r.hit!=='ground')best=blocks.indexOf(r.hit)}
   else{const fx=walk?wk.x+Math.sin(wk.yaw)*(WK_R+0.3):tip.x,fz=walk?wk.z+Math.cos(wk.yaw)*(WK_R+0.3):tip.z;
     for(let i=0;i<blocks.length;i++){const b=blocks[i],e=walk?0.12:0.2,t=b.y+b.h;
-      const inY=walk?t<=wk.y+WK_REACH+0.3&&t>wk.y-0.8||b.y<wk.y+WK_REACH&&t>wk.y:tip.y>b.y-0.3&&tip.y<t+1.5;
+      const inY=walk?t<=wk.y+TU.wkReachUp+0.3&&t>wk.y-0.8||b.y<wk.y+TU.wkReachUp&&t>wk.y:tip.y>b.y-0.3&&tip.y<t+1.5;
       if(Math.abs(fx-b.x)<b.w/2+e&&Math.abs(fz-b.z)<b.d/2+e&&inY&&t>top){top=t;best=i}}}
   if(best<0){toast(say(!blocks.length?'blkNone':blkFP()?'blkDot':walk?'blkFace':'blkBucket'));return}
   const b=blocks.splice(best,1)[0];blkWake=1.5;

@@ -4,7 +4,7 @@
 // ---------- worker ----------
 // about 5 ft 10 in: hard hat, hi-vis vest over a grey shirt, jeans and work boots. Arms and legs swing from the
 // shoulders and hips; knees bend on the back swing and tuck in the air
-const WK_H=1.78,WK_R=0.28,WK_STEP=0.2,WK_REACH=2.3;
+const WK_H=1.78,WK_R=0.28,WK_STEP=0.2;
 const WK_SKIN=M(0xc68a62),WK_VEST=M(0xd8f02a,{emissive:0x1d2400}),WK_SHIRT=M(0x6d7378),WK_JEAN=M(0x34507a),WK_BOOT=M(0x4a3020),WK_HAT=M(0xf5c518,{shininess:40}),WK_STRIPE=M(0xd8dcd6,{emissive:0x2a2a2a});
 const walker=new THREE.Group();scene.add(walker);
 const wkBody=new THREE.Group();walker.add(wkBody);
@@ -56,7 +56,7 @@ function updateWalker(dt,mx,mz,lookX,lookY){
   // in a cab he rides along out of sight
   if(wk.inside){walker.visible=false;return}
   const on=mode==='walk'&&!bench.on;
-  if(on){const z=camMode==='cab'?1/fpl.zoom:1;wk.view-=lookX*2.2*dt*z;if(camMode==='cab'){fpl.pitch=clamp(fpl.pitch+lookY*1.2*dt*z,-FP_DOWN,FP_UP);if(lookX||lookY)fpl.home=false}else orbitPitch=clamp(orbitPitch-lookY*1.2*dt,0.08,1.3)}
+  if(on){const z=camMode==='cab'?1/fpl.zoom:1;wk.view-=lookX*2.2*TU.wkLook*dt*z;if(camMode==='cab'){fpl.pitch=clamp(fpl.pitch+lookY*1.2*TU.wkLook*dt*z,-FP_DOWN,FP_UP);if(lookX||lookY)fpl.home=false}else orbitPitch=clamp(orbitPitch-lookY*1.2*TU.wkLook*dt,0.08,1.3)}
   // moves relative to where the camera looks; the worker turns to face the way he walks
   let vx=0,vz=0;
   if(on){const cyaw=camMode==='cab'?wk.view:wk.view+orbitYaw,fx=Math.sin(cyaw),fz=Math.cos(cyaw),m=Math.min(1,Math.hypot(mx,mz));
@@ -78,10 +78,10 @@ function updateWalker(dt,mx,mz,lookX,lookY){
   wkPushBlocks();wkPushRound(st,EX_C,EX_R);wkPushRound(tr,TR_C,TR_R);wkPushRound(mw,MW_C,MW_R);wkPushRound(sk,SK_C,SK_R);
   // jump, gravity, landing on the ground or a block; bump your head on a block above
   wk.jumpQ-=dt;
-  if(wk.jumpQ>0&&wk.ground){wk.vy=TU.wkJump;wk.ground=false;wk.jumpQ=0}
+  if(wk.jumpQ>0&&wk.ground){wk.vy=Math.sqrt(2*9.8*TU.wkGrav*TU.wkJump);wk.ground=false;wk.jumpQ=0}
   const floor=wkFloor(wk.x,wk.z,wk.y,wk.y+WK_STEP);
   if(wk.ground){if(floor<wk.y-0.12){wk.ground=false;wk.vy=0}else wk.y+=(floor-wk.y)*Math.min(1,dt*20)}
-  if(!wk.ground){wk.vy-=9.8*dt;const ny=wk.y+wk.vy*dt;
+  if(!wk.ground){wk.vy-=9.8*TU.wkGrav*dt;const ny=wk.y+wk.vy*dt;
     if(wk.vy>0)for(const b of blocks){if(Math.abs(wk.x-b.x)<b.w/2+WK_R*0.6&&Math.abs(wk.z-b.z)<b.d/2+WK_R*0.6&&b.y>=wk.y+WK_H-0.05&&b.y<ny+WK_H){wk.vy=0;break}}
     wk.y+=wk.vy*dt;wk.airT+=dt;
     const f2=wkFloor(wk.x,wk.z,wk.y,wk.y+WK_STEP);
