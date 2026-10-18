@@ -115,7 +115,10 @@ function gfxPanelSync(){
 // live numbers while the panel is open, from the frame loop's own counters
 let gfxStatT=0;
 function gfxStats(){if(gfxBox.hidden)return;const i=renderer.info,t=i.render.triangles,f=$('#fpsVal').textContent;
-  $('#gfxStats').innerHTML=`<b>${f}</b> fps · <b>${fmtNum(t)}</b> tris · <b>${i.render.calls}</b> draws · <b>${pr.toFixed(2).replace(/0$/,'')}x</b> res · <b>${i.memory.textures}</b> textures`}
+  $('#gfxStats').innerHTML=`<b>${f}</b> fps · <b>${fmtNum(t)}</b> tris · <b>${i.render.calls}</b> draws · <b>${pr.toFixed(2).replace(/0$/,'')}x</b> res · <b>${i.memory.textures}</b> textures`;
+  // GPU memory, counted from what the game asked the GPU to hold (core.js); the real figure is a little higher
+  const m=gpuMem(),mb=b=>(b/1048576).toFixed(b<10485760?1:0),all=m.textures+m.geometry+m.targets+m.screen;
+  $('#gfxMem').innerHTML=`GPU memory about <b>${mb(all)} MB</b>: textures <b>${mb(m.textures)}</b> · geometry <b>${mb(m.geometry)}</b> · screen <b>${mb(m.screen)}</b>`+(m.targets?` · depth buffers <b>${mb(m.targets)}</b>`:'')+` MB`}
 function fmtNum(t){return t>=1e6?(t/1e6).toFixed(2)+'M':t>=1e3?Math.round(t/1e3)+'k':String(t)}
 // frame rate graph: every frame's time goes in a ring (main.js), and while the panel is open the last 10 s are drawn as
 // frames per second over time, with lines at 30 and 60, coloured green, yellow or red like the fps counter
