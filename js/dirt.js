@@ -159,19 +159,43 @@ function rollClod(x,z,size,k){const steps=Math.round(size/0.1*(k===SOD?5:14));
     if(g<0.5)break;x-=gx/g*0.08;z-=gz/g*0.08;if(n===3)dirtRattle({x,y:hAt(x,z),z})}
   return [x,z]}
 // tracks and tyres press loose fill down by up to 30% of its height (comp: how much of that each point has had; fresh fill
-// resets it) and crush the clods under them. In mud (mudOf, water.js) they sink up to 9 in below grade instead and squeeze
-// what they push aside into ragged berms along both edges (lumps up to about 1 ft; mud beyond that squelches away), so
-// driving back and forth churns the ground. Returns 0 when nothing gave way, 1 for loose fill, 2 for mud.
+// resets it) and crush the clods under them. In mud (mudOf, water.js) they sink up to 9 in below grade instead, in a
+// rounded rut printed with the tread (rutDepth), and squeeze what they push aside into lumpy berms along both edges
+// (rutBerm: up to about 8 in, more mud than that squelches away); the mud then slumps until no face is steeper than
+// about 40 degrees (rutSlump), so driving back and forth churns the ground into soft ridges. Returns 0 when nothing gave
+// way, 1 for loose fill, 2 for mud.
 const comp=new Float32Array(V*V);let crushT=0;
-const RUT_D=0.23,RUT_BERM=0.3,RUT_BH=0.2,RUT_MUD=0.15,MUD_C=[0.29,0.2,0.13],rutB=[];
+const RUT_D=0.23,RUT_BERM=0.45,RUT_BH=0.2,RUT_MUD=0.15,RUT_SLOPE=0.85,MUD_C=[0.29,0.2,0.13],rutB=[];let tuftBox=null,tuftT=0;
+// smooth value noise at scale sc metres (0 to 1): lumps that span several cells, never a lone spike
+function vnoise(x,z,sc){const fx=x/sc,fz=z/sc,i=Math.floor(fx),j=Math.floor(fz),u=fx-i,v=fz-j,a=u*u*(3-2*u),b=v*v*(3-2*v);
+  return (hash(i,j)*(1-a)+hash(i+1,j)*a)*(1-b)+(hash(i,j+1)*(1-a)+hash(i+1,j+1)*a)*b}
+// share of the full rut depth at v across a print of half width hw: flat in the middle, rounding up to the edges, with
+// tread bars every 0.48 m along the ground (al: the point's distance along the heading): straight grousers under the
+// excavator's tracks (half width under 0.28 m), chevrons under the truck's tyres
+function rutDepth(v,hw,al){const e=Math.abs(v)/hw,ch=hw<0.28?0:Math.abs(v)*0.9;
+  return (1-e*e*e*e)*(0.78+0.22*Math.cos(6.2832*(al+ch)/0.48))}
+// churned mud shows darker and wetter down in a rut, lighter where it was squeezed up (d: height above grade)
+const rutShade=d=>d<0?1-0.3*ss(0.03,0.2,-d):1+0.2*ss(0.03,0.18,d);
+// room for squeezed mud at a point av-hw outside the print's edge: a ridge that peaks a third of the way out and dies
+// away by RUT_BERM, in lumps about 1 to 2 ft long
+function rutBerm(out,x,z){const t=out/RUT_BERM;
+  return RUT_BH*ss(0,0.3,t)*(1-ss(0.4,1,t))*(0.45+0.75*vnoise(x,z,0.55)+0.35*vnoise(x+7.3,z-3.1,0.27))}
+// soft mud flows: wherever two neighbouring muddy points' heights above or below grade differ by more than RUT_SLOPE
+// per cell, part of the difference moves down (volume kept; the slope of the ground itself doesn't count), a few passes over the box just churned
+function rutSlump(i0,i1,j0,j1){const lim=RUT_SLOPE*CELL;i1=Math.min(N-1,i1);j1=Math.min(N-1,j1);
+  const flow=(k,k2)=>{if(prot[k2])return;const d=H[k]-H0[k]-H[k2]+H0[k2],ad=Math.abs(d);if(ad<=lim)return;
+    const hi=d>0?k:k2,lo=d>0?k2:k;if(Math.abs(H[hi]-H0[hi])>0.45||Math.abs(H[lo]-H0[lo])>0.45)return;
+    const a=(ad-lim)*0.3;H[hi]-=a;H[lo]+=a;mixSpoil(lo,MUD_C,a);mudA[lo]=Math.max(mudA[lo],mudA[hi]*0.9);comp[lo]=0};
+  for(let pass=0;pass<3;pass++)for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const k=j*V+i;
+    if(mudA[k]<0.05||prot[k])continue;flow(k,k+1);flow(k,k+V)}}
 function stampRut(x,z,yaw,hw,hl,dt){
   const s=Math.sin(yaw),c=Math.cos(yaw),R=Math.hypot(hw+RUT_BERM,hl);let any=0,outL=0,outR=0,mSum=0,mN=0;rutB.length=0;
   const i0=Math.max(0,Math.floor((x-R+S/2)/CELL)),i1=Math.min(N,Math.ceil((x+R+S/2)/CELL)),j0=Math.max(0,Math.floor((z-R+S/2)/CELL)),j1=Math.min(N,Math.ceil((z+R+S/2)/CELL));
-  for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const dx=i*CELL-S/2-x,dz=j*CELL-S/2-z,u=dx*s+dz*c,v=dx*c-dz*s,av=Math.abs(v);
+  for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const wx=i*CELL-S/2,wz=j*CELL-S/2,dx=wx-x,dz=wz-z,u=dx*s+dz*c,v=dx*c-dz*s,av=Math.abs(v);
     if(Math.abs(u)>hl||av>hw+RUT_BERM)continue;const k=j*V+i;if(prot[k])continue;
-    if(av>hw){const room=RUT_BH*(1-0.6*(av-hw)/RUT_BERM)*(0.4+0.7*hash(i>>1,j>>1)+0.5*hash(i,j))-(H[k]-H0[k]);if(room>0)rutB.push(k,v,room);continue}
+    if(av>hw){const room=rutBerm(av-hw,wx,wz)-(H[k]-H0[k]);if(room>0)rutB.push(k,v,room);continue}
     const loose=H[k]-H0[k],m=mudOf(k);
-    if(m>RUT_MUD&&loose<0.45){const d=Math.min(0.5*dt,H[k]-(H0[k]-RUT_D*Math.min(1,m*1.25)));
+    if(m>RUT_MUD&&loose<0.45){const d=Math.min(0.5*dt,H[k]-(H0[k]-RUT_D*Math.min(1,m*1.25)*rutDepth(v,hw,wx*s+wz*c)));
       if(d>0){H[k]-=d;if(v<0)outL+=d;else outR+=d;mSum+=m;mN++;wetT[k]=timeU.value;comp[k]=0;mudA[k]=Math.max(mudA[k],m);any=2}continue}
     if(loose<0.02||comp[k]>=1)continue;
     const full=loose/(1-0.3*comp[k])*0.3,d=Math.min(0.25*dt,full*(1-comp[k]));H[k]-=d;comp[k]=Math.min(1,comp[k]+d/full);any=any||1}
@@ -181,8 +205,9 @@ function stampRut(x,z,yaw,hw,hl,dt){
     const m=mSum/mN;
     for(let n=0;n<rutB.length;n+=3){const k=rutB[n],w=rutB[n+1]<0?(wL?outL/wL:0):(wR?outR/wR:0),a=Math.min(1,w)*rutB[n+2];if(a<=0)continue;
       H[k]+=a;mixSpoil(k,MUD_C,a);comp[k]=0;mudA[k]=Math.max(mudA[k],m*0.5)}
-    growDug(i0,i1,j0,j1)}
-  if(any){touch(i0,i1,j0,j1);st.dirty=true}
+    rutSlump(i0,i1,j0,j1);growDug(i0,i1,j0,j1);tuftBox=tuftBox?[Math.min(tuftBox[0],i0),Math.max(tuftBox[1],i1),Math.min(tuftBox[2],j0),Math.max(tuftBox[3],j1)]:[i0,i1,j0,j1]}
+  // grass tufts in the churned ground go, a few times a second (each refresh walks every tuft)
+  if(tuftBox&&timeU.value-tuftT>0.3){tuftT=timeU.value;updateTufts(...tuftBox);tuftBox=null}
   // past the dig zone's edge the mud tiles take the ruts (mud.js)
   if(x-R<-S/2||x+R>S/2||z-R<-S/2||z+R>S/2)any=Math.max(any,farRut(x,z,yaw,hw,hl,dt));
   if(crushT<=0){for(const kd of CLODS){let hit=false;

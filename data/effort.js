@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-18T00:12:00Z",
+ "updated": "2026-10-18T00:25:39Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 526.5,
+   "dh": 565.5,
    "act": 11.5,
-   "versions": 71
+   "versions": 74
   }
  ],
  "extra": [
@@ -732,6 +732,33 @@ window.EFFORT = {
    "tris": 1353588,
    "chars": 461650,
    "what": "First-person look: in cab view, drag the scene to turn your head, on foot or in any machine. On foot the body turns with it and you can look nearly straight up or down; in the excavator, truck and mower you can turn about 150 degrees each way in the seat and look up at the boom or down at the bucket. On a PC a click on the scene takes the mouse for mouse look (Esc frees it). Zoom up to 4x with the mouse wheel, a two-finger pinch or by holding Z; R (controller: right stick click) turns your head back to straight ahead. A small aim dot shows on foot."
+  },
+  {
+   "v": 79,
+   "asked": "2026-10-17T18:35:00-05:00",
+   "live": "2026-10-17T19:17:21-05:00",
+   "dh": 10,
+   "tris": 1587618,
+   "chars": 473001,
+   "what": "Field grass: the mesa's grass is now curved, arching clumps instead of straight spikes, in four kinds: meadow grass, seed-head grass in drifts and along the roads and yards, low broadleaf weeds, and wildflowers in drifts of yellow, white or purple. It grows in patches and little clusters with thinner ground between, lush and green on the flats and dry and straw coloured up the slopes and hilltops, and it sways in the same wind gusts as the tall grass. It is drawn in squares that are skipped when out of view and thins out with distance by the Graphics setting (fewer clumps on Low), so phones draw less."
+  },
+  {
+   "v": 80,
+   "asked": "2026-10-17T18:40:00-05:00",
+   "live": "2026-10-17T19:22:20-05:00",
+   "dh": 10,
+   "tris": 1586492,
+   "chars": 479052,
+   "what": "Better ruts: mud ruts are rounded with the tread printed in the bottom (grousers under the tracks, chevrons under the tyres), the squeezed mud forms wide lumpy berms instead of spikes, and soft mud slumps so no face is steeper than about 40 degrees. Rut bottoms show darker and wetter and the crests lighter, wet mud gives small glints instead of a grey sheen, and puddles are muddy brown. In the map editor, painting over ruts smooths them back to the painted ground (dry, puddles gone), except painting Mud, or Dirt on ground that is already soaked."
+  },
+  {
+   "v": 81,
+   "asked": "2026-10-17T19:05:00-05:00",
+   "live": "2026-10-17T19:25:39-05:00",
+   "dh": 19,
+   "tris": 1619680,
+   "chars": 490671,
+   "what": "Dexter's Island: from the Family Island's roundabout the west road crosses a wide yellow steel haul bridge (about 305 ft, rated for the machines, with a steel portal at each end) to a flat gravel yard the size of Corley's. On it: Dexter's blue-grey equipment shed with three roll-up doors and a light over each, an office trailer on blocks, a diesel tank with its pump, stacked concrete pipe and Jersey barriers, two light towers, a cone course and dirt piles to climb, and his machines parked in the yard: a skid steer, a small dozer, a wheel loader and a red semi with an empty lowboy trailer. Drive the excavator, the truck or the mower over, or walk; the shed, the machines and everything else are solid. The parked machines are models for now. All four islands and their bridges are in."
   }
  ]
 };
