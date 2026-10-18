@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-18T02:23:00Z",
+ "updated": "2026-10-18T02:28:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -18,9 +18,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-17",
-   "dh": 674,
+   "dh": 675,
    "act": 14,
-   "versions": 96
+   "versions": 97
   }
  ],
  "extra": [
@@ -957,6 +957,15 @@ window.EFFORT = {
    "tris": 1620566,
    "chars": 595041,
    "what": "Block snapping you can set: a new Blocks only mode locks a block flush to nearby blocks and otherwise goes exactly where you aim, without falling back to the grid (the Snap row now cycles Grid, Grid + blocks, Blocks only and Free). A new Grid row sets the grid's cell from 1 in up to 1 ft, so blocks can line up in finer steps."
+  },
+  {
+   "v": 104,
+   "asked": "2026-10-17T21:24:00-05:00",
+   "live": "2026-10-17T21:28:00-05:00",
+   "dh": 1,
+   "tris": 1620562,
+   "chars": 595399,
+   "what": "Block snap settings are remembered: the snap mode (Grid, Grid + blocks, Blocks only or Free) and the grid size you pick in the Blocks panel come back when you return to the game. Each device keeps its own."
   }
  ]
 };
