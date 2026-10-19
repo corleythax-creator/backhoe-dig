@@ -141,6 +141,10 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - W09 Raindrops on puddles: Rings spread across the puddles while it rains, and the water goes still when it stops. (R8 F4 some low c1 2h needs W01)
 - W10 Rising and falling water: The lake level drifts with the season and rain, so docks float higher or lower and sandbars appear; digging near the shore changes where the water sits. (R8 F6 every low c3 10h)
 - W11 Fireflies and evening frogs: A summer-night layer of fireflies over the grass and frog calls from the water. (R6 F6 every none c1 2h needs W02)
+- W12 Morning mist on the lake: Thin fog lies on the water at dawn, lifts with the sun and leaves dew on the grass. (R5 F6 every low c1 3h)
+- W13 Thunderstorm over the lake: Dark clouds roll in over the water, lightning flashes light the cabin and thunder takes a few seconds to reach you. (R7 F8 some low c2 5h needs W01)
+- W14 Autumn colours: In fall the trees turn red, orange and gold, leaves drift down and the woods look warm in low sun. (R7 F7 every low c2 6h)
+- W15 Stars and meteor showers: A clear night with the Milky Way over the lake, a shooting star now and then, and a telescope to set up in the yard. (R5 F8 rare low c1 3h)
 
 ## S: Site and scenery
 
@@ -173,6 +177,11 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - S27 Trail cameras: Strap cameras to trees in the woods and check the photos later: deer at dawn, a fox, an owl, and maybe a bear. (R5 F8 some low c1 4h needs S24)
 - S28 Hidden spots in the woods: An old stone wall, a collapsed cabin, a spring and a rock overlook with a view of the lake, waiting to be found. (R5 F8 some low c1 4h needs S24)
 - S29 Pump station build: Dig a tank pit, set a tank and a pump house, tie in the pipeline and power, then start the pump and watch the new line fill and the gauges climb. (R8 F9 some low c3 12h needs J21 U12)
+- S30 Build your own dock: Drive pilings, set the stringers and lay the decking to extend your dock, then tie up the boat. (R7 F8 most low c2 6h needs S05)
+- S31 Cottages across the water: Other lake cottages with lit windows at dusk, chimney smoke, a boat at each dock and a porch light that clicks on. (R6 F5 every low c1 3h)
+- S32 Old mill on the creek: A weathered mill with a wheel turned by the creek and a mill pond behind a stone dam, found along the woods trail. (R6 F7 some low c2 6h needs S24)
+- S33 Swimming hole and rope swing: A cool pool under a little waterfall in the woods with a rope swing off a big branch. (R5 F8 some low c2 5h needs S24)
+- S34 Lakeside campground: A clearing of fire rings, picnic tables and tents, where weekend campers pull in and a hand pump supplies water. (R6 F7 some low c2 7h)
 
 ## L: Crew and people
 
@@ -184,6 +193,7 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - L06 Two players: One on the excavator, one driving the truck, online. (R5 F9 some low c3 14h)
 - L07 Dexter in his yard: Dexter walks his yard, waves as you drive by and asks you to move a pile or park his skid steer back. (R5 F7 most low c2 6h)
 - L08 Jessica at home: Jessica reads by the fire in her library or tends her herb garden, and chats when you walk up. (R4 F6 some low c2 5h)
+- L09 Earl, the old-timer: A neighbor with a boat and a thousand stories, who shows you the fishing spots, repairs things and sits on the dock at sundown. (R4 F7 most low c1 4h)
 
 ## A: Sound
 
@@ -195,6 +205,7 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - A06 Bridge deck rumble: Machines thunder across the steel truss decks, and the covered footbridge creaks under your boots. (R8 F5 most none c1 2h)
 - A07 Rain on the roof: Rain drums on the cab roof inside the machines and on the porch roofs, softer out in the open. (R8 F4 some none c1 1h needs W01)
 - A08 Boat sounds: An outboard that revs with the throttle, waves slapping the hull, and gulls round the marina. (R7 F4 most none c1 2h needs M21)
+- A09 Night sounds of the lake: Loons calling, crickets, a whip-poor-will, a bullfrog and a far train horn that carries over the water. (R6 F5 every none c1 3h)
 
 ## C: Controls and camera
 
@@ -281,6 +292,17 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - H18 Beachcombing: Shells, sea glass and driftwood wash up after storms, and you collect them in a jar on the porch shelf. (R6 F7 most none c1 3h needs S16)
 - H19 Sandcastles with blocks: Build with wet sand using the block system; the water takes it back if you build below the line. (R3 F8 some low c1 4h needs S16)
 - H20 Beach bonfire and s'mores: Gather the family at night round a driftwood fire, with the sound of the water. (R6 F8 some low c1 3h needs S16)
+- H21 Wood-fired lake sauna: A little sauna by the water: stoke the stove, sweat, then jump off the dock into the cold lake. (R5 F8 some low c1 4h needs H01)
+- H22 Fish fry night: Clean what you caught, roll it in cornmeal and fry it outside for the family on a Friday night. (R6 F8 some low c1 4h needs H08)
+- H23 Beehives and honey: Set hives at the edge of the field, suit up, smoke the bees and pull frames of honey in late summer. (R6 F7 some low c2 5h needs H04)
+- H24 Canning and the root cellar: Put up tomatoes, beans and pickles in jars and line the root cellar shelves with the winter's food. (R6 F6 some none c1 3h needs H04)
+- H25 Woodstove and a warm cabin: Keep the fire going, load the box from the woodpile and hear the stove tick as the cabin warms against a cold night. (R7 F7 most low c1 4h needs H01 S26)
+- H26 Porch picking: Neighbors bring a guitar, a fiddle and a banjo to the porch for an easy evening of tunes while the lake goes dark. (R4 F8 some low c1 4h needs H01)
+- H27 Barn cats and a horse: A couple of barn cats that follow you, and an old horse or mule to feed, groom and lead out to the pasture. (R5 F8 some low c2 5h needs H10)
+- H28 Ice fishing and skating: In a hard winter the lake freezes: test the ice with a spud bar, drag out a shanty, drill holes, or skate near the dock. (R7 F8 rare low c2 6h needs W04)
+- H29 County fair: Late summer on the fairgrounds: a Ferris wheel, a pie contest, a tractor pull and a livestock barn. (R5 F8 rare low c3 10h needs T01)
+- H30 Tailgate sunset: Drive the pickup to an overlook, drop the tailgate and sit with the dog, a cold drink and the lake going gold. (R4 F7 some none c1 2h needs B02)
+- H31 Woodshop projects: Build birdhouses, Adirondack chairs, a workbench or a little rowboat at the shop, and put them where they belong. (R6 F8 some low c2 6h needs H10)
 
 ## K: Yard work
 
@@ -318,6 +340,7 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - B14 Rail crossing: A road crossing with flashing lights, bells and gates; traffic and your machine have to wait while a train goes by, and a slow dump truck on the tracks is a bad idea. (R8 F7 some low c2 5h needs B13 B11)
 - B15 Railroad maintenance job: Dig out the ditch along the tracks, swap rotten ties with the excavator and spread ballast stone, then wait for a train to roll over your work. (R9 F7 some low c2 7h needs B13)
 - B16 Ride the train to town: Climb aboard at the depot and watch the shore roll by on the way to the mountain town. (R5 F9 some low c2 6h needs B13 T01)
+- B17 Back roads cruise: Take the pickup down gravel roads with dust trails, one-lane bridges, a farm stand and a church with a gravel lot. (R6 F7 most low c2 7h needs B02)
 
 ## T: The mountain town
 
@@ -347,6 +370,7 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - R07 Snow plowing: Clear the road and the bridge with a loader in winter. (R6 F7 rare low c2 5h needs W04)
 - R08 End-of-day summary: What you did, what you earned, the lawn and the yards dug. (R3 F5 every none c1 2h)
 - R09 While you were away: Coming back shows what changed: the grass grew, the mud dried, the puddles soaked away. (R3 F5 every none c1 2h)
+- R10 Field notebook: A journal that logs your catches, the birds you spot, the weather and what you did each day, in your own little drawings. (R3 F6 most none c1 3h)
 
 ## I: Islands and the family
 
@@ -382,3 +406,4 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - I30 Floating lantern night: Once a season everyone sets paper lanterns afloat from the beach, and they drift out across the lake. (R5 F8 rare low c1 3h)
 - I31 Saturday regatta: Sailboats race a course round the buoys while the town watches from the shore. (R6 F7 rare low c2 7h needs S19)
 - I32 Fall hayride: The family climbs on a hay wagon behind the tractor for a bumpy ride round the field at sunset, with pumpkins in the back. (R5 F8 rare low c1 3h needs M25 I02)
+- I33 Lakeside potluck: The families bring dishes to a long table by the water; whatever you grew or caught is on it. (R5 F7 rare low c1 4h needs I02)
