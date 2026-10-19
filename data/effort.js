@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-19T16:11:00Z",
+ "updated": "2026-10-19T16:18:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -30,9 +30,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-19",
-   "dh": 46,
+   "dh": 60,
    "act": 2,
-   "versions": 7
+   "versions": 8
   }
  ],
  "extra": [
@@ -1446,6 +1446,15 @@ window.EFFORT = {
    "tris": 3008544,
    "chars": 1018704,
    "what": "A boat at the town marina too, and every bridge now has room for a boat underneath (at least 8 ft between the piers), with piers, pile bents and the crane barge solid to boats."
+  },
+  {
+   "v": 157,
+   "asked": "2026-10-19T10:30:00-05:00",
+   "live": "2026-10-19T11:18:55-05:00",
+   "dh": 14,
+   "tris": 3029551,
+   "chars": 1036209,
+   "what": "Dexter's Island has a dirt bike track (a tabletop jump, whoops and banked turns) with his dirt bike on the start line: walk up and Get in to ride it."
   }
  ]
 };
