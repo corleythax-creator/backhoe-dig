@@ -5,7 +5,7 @@
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 const SITE_KEY='bhd_site',RIG_KEY='bhd_rigs';
 const site={dirty:false,saveT:0,rigT:0,rigSig:'',lastD:null};
-const ST_KEYS=['x','z','y','yaw','pitch','roll','swing','a1','a2','a3','load','loadC','loadMix','loadWet','stuck','strikes','exposed','done','seenSand','seenRock','grime','mud','caves','sink'];
+const ST_KEYS=['x','z','y','yaw','pitch','roll','swing','a1','a2','a3','load','loadC','loadMix','loadWet','stuck','strikes','exposed','done','seenSand','seenRock','grime','mud','pack','packC','caves','sink'];
 // Dexter's skid steer (skid.js)
 const SK_KEYS=['x','z','yaw','a','c','load','loadC','loadMix','loadWet','stuck'];
 const TR_KEYS=['x','z','y','yaw','pitch','roll','bed','load','hauled','loadC','loadMix','loadWet','stuck','mud','sink','gear','loadedOnce','fullWarned','haulWarned','bedWarned'];
