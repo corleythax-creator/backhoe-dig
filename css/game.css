@@ -228,6 +228,17 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
   padding-block:calc(env(safe-area-inset-top,0px) + 16px) calc(env(safe-area-inset-bottom,0px) + 16px);
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 #keysBox .card{max-width:560px;overscroll-behavior:contain}
+#ctrlsBox{position:fixed;inset:0;z-index:7;background:rgba(10,12,9,.72);display:flex;align-items:center;justify-content:center;pointer-events:auto;box-sizing:border-box;
+  padding-block:calc(env(safe-area-inset-top,0px) + 16px) calc(env(safe-area-inset-bottom,0px) + 16px);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#ctrlsBox[hidden]{display:none}
+#ctrlsBox .card{max-width:600px;overscroll-behavior:contain;touch-action:pan-y}
+#ctrlsTabs button{flex:1 1 0;height:42px;font-size:15px}
+#ctrlsTabs button[aria-pressed="false"]{background:transparent;color:var(--ink);border:1px solid var(--hud-line)}
+#ctrlsTabs button[aria-pressed="true"]{background:var(--machine);color:#1c1309}
+#ctrlsList h2{margin:10px 0 2px;font:800 15px/1 var(--f-display);letter-spacing:.12em;text-transform:uppercase;color:var(--gas)}
+#ctrlsList .kkey{font:700 16px/1.2 var(--f-display);white-space:nowrap;text-align:right;color:var(--ink)}
+#ctrlsList .krow{grid-template-columns:1fr auto}
 #keysList h2{margin:10px 0 2px;font:800 15px/1 var(--f-display);letter-spacing:.12em;text-transform:uppercase;color:var(--gas)}
 .krow{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.07)}
 .kname{font:700 18px/1.2 var(--f-display);letter-spacing:.02em}
