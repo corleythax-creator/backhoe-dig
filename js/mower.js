@@ -307,7 +307,7 @@ function updateMower(dt,inL,inR){
     for(const tz of TR_C){const tx=tr.x+Math.sin(tr.yaw)*tz,tzz=tr.z+Math.cos(tr.yaw)*tz,dx=px-tx,dz=pz-tzz,d=Math.hypot(dx,dz),m=MW_R+TR_R;
       if(d<m&&d>1e-3){mw.x+=dx/d*(m-d);mw.z+=dz/d*(m-d)}}
     for(const q of SK_C){const dx=px-sk.x-Math.sin(sk.yaw)*q,dz=pz-sk.z-Math.cos(sk.yaw)*q,d=Math.hypot(dx,dz),m=MW_R+SK_R;if(d<m&&d>1e-3){mw.x+=dx/d*(m-d);mw.z+=dz/d*(m-d)}}}
-  blkPush(mw,MW_C,MW_R);
+  blkPush(mw,MW_C,MW_R);hvPush(mw,MW_C,MW_R);
   const sy=Math.sin(mw.yaw),cy=Math.cos(mw.yaw);
   // the tyres and casters press the grass down (scenery.js)
   if(Math.abs(mw.v)>0.05||Math.abs(mw.w)>0.05)for(const [lx,lz] of [[MW_TRACK/2,0],[-MW_TRACK/2,0],[0.46,1.45],[-0.46,1.45]])grassCrush(mw.x+lx*cy+lz*sy,mw.z-lx*sy+lz*cy,mw.yaw,lz?0.06:0.13,lz?0.1:0.25,5,0.85,dt);

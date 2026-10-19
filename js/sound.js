@@ -106,8 +106,8 @@ function* sndBuild(){
   snd.master=sndGain(0,snd.comp);
   snd.dry=sndGain(1,snd.master);snd.send=sndGain(0.16);const cv=c.createConvolver();cv.buffer=renderSpace(c);snd.send.connect(cv);cv.connect(snd.master);yield;
   // the three user buses sit inside each machine's voice, so a machine's engine, alarm and effects pan together
-  const T=snd.T=sndVoice(),X=snd.X=sndVoice(),Mw=snd.M=sndVoice(),Sk=snd.S=sndVoice(),Bk=snd.B=sndVoice(),Ob=snd.O=sndVoice(),Fb=snd.F=sndVoice(),Tg=snd.G=sndVoice();
-  for(const v of [T,X,Mw,Sk,Bk,Ob,Fb,Tg]){v.eng=sndGain(0,v.g);v.fx=sndGain(0,v.g);v.alarm=sndGain(0,v.g)}
+  const T=snd.T=sndVoice(),X=snd.X=sndVoice(),Mw=snd.M=sndVoice(),Sk=snd.S=sndVoice(),Bk=snd.B=sndVoice(),Ob=snd.O=sndVoice(),Fb=snd.F=sndVoice(),Tg=snd.G=sndVoice(),Hv=snd.H=sndVoice();
+  for(const v of [T,X,Mw,Sk,Bk,Ob,Fb,Tg,Hv]){v.eng=sndGain(0,v.g);v.fx=sndGain(0,v.g);v.alarm=sndGain(0,v.g)}
   const tLo=toBuf(c,renderEngine(sr,750,{seed:3,cycles:10,decay:0.0055,jit:0.03,var:0.14,knock:0.8,mech:0.12,crack:0.8,crackF:550,tilt:2,tiltF:250,tilt2:2.5,pipe:6.5,fb:0.5,dry:0.35,
       res:[[68,1.4,1.1],[185,2.6,0.6],[470,3.5,0.32],[1150,3,0.2],[2700,2,0.1]],lp:6200}));yield;
   const tHi=toBuf(c,renderEngine(sr,1650,{seed:4,cycles:20,decay:0.0045,jit:0.02,var:0.08,knock:0.7,mech:0.1,crack:0.8,crackF:550,tilt:2,tiltF:250,tilt2:2.5,pipe:6.5,fb:0.5,dry:0.35,
@@ -126,6 +126,8 @@ function* sndBuild(){
   snd.engT=sndEngine(tLo,tHi,750,1650,T.eng);snd.engX=sndEngine(xLo,xHi,850,1800,X.eng);snd.engM=sndEngine(mLo,mHi,880,1150,Mw.eng);
   // the skid steer: a smaller diesel, the excavator's recording run a little faster
   snd.engS=sndEngine(xLo,xHi,850,1800,Sk.eng);
+  // Dexter's heavy machines: the dump truck's big diesel
+  snd.engH=sndEngine(tLo,tHi,750,1650,Hv.eng);
   // the dirt bike's single: renderEngine's six-cylinder spacing at 1/6 the rpm fires once every other turn (50 Hz idling
   // up to 100 Hz flat out), a sharp crack and a short loud pipe
   const bLo=toBuf(c,renderEngine(sr,1000,{seed:17,cycles:12,decay:0.004,jit:0.06,var:0.12,knock:0.3,mech:0.15,crack:1.1,crackF:1300,tilt:2,tiltF:400,tilt2:3,pipe:1.6,fb:0.35,dry:0.45,
@@ -288,6 +290,10 @@ function updateSound(dt){
   // dirt bike: idles while you sit on it; the gas (and the back wheel spinning free in the air) sends the revs up
   const be=snd.engB,bT=1000+1000*Math.min(1,Math.max(0,bk.thr)*(bk.air?1:0.45)+Math.abs(bk.v)/TU.bkSpd*0.6);be.rpm+=(bT-be.rpm)*Math.min(1,dt*(bT>be.rpm?6:3));
   sndEngineTo(be,be.rpm,Math.max(0,bk.thr),quiet*0.6*bk.run,t);
+  // Dexter's heavy machine you are in (heavy.js): idles while you sit in it; driving and the hydraulics pull the revs up
+  {const R=WK_RIDES[wk.inside],h=R&&R.m==='heavy'?R.o:null,he=snd.engH;if(h)sndPlace(snd.H,h.x,h.y+1.6,h.z,t);
+    const hT=750+900*(h?Math.min(1,Math.abs(h.v)/h.top*0.7+h.hyd*0.5+Math.abs(h.thr)*0.2):0);he.rpm+=(hT-he.rpm)*Math.min(1,dt*3);
+    sndEngineTo(he,he.rpm,h?Math.min(1,Math.abs(h.thr)*0.7+h.hyd*0.6):0,quiet*0.75*(h?h.run:0),t)}
   // the boat you are in: idles while you are aboard, the throttle and speed send the revs up; water along the hull and
   // a slap now and then as it meets the swells (often, and harder, the faster it goes; a gentle lap at rest)
   {const R=WK_RIDES[wk.inside],ob=R&&R.m==='boat'?R.o:null,oe=snd.engO;

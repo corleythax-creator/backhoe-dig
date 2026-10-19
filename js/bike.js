@@ -92,6 +92,7 @@ function bikeTick(dt,thr,steer){
   // on the islands and decks, out of buildings, blocks and the other machines
   [b.x,b.z]=landClamp(b.x,b.z,1.0,0.5);
   if(blkPush(b,BK_C,BK_R))b.v*=0.5;
+  if(hvPush(b,BK_C,BK_R))b.v*=0.6;
   for(const lz of BK_C){const cx=b.x+Math.sin(b.yaw)*lz,cz=b.z+Math.cos(b.yaw)*lz;
     for(const [o,cs,r] of [[st,EX_C,EX_R],[tr,TR_C,TR_R],[mw,MW_C,MW_R],[sk,SK_C,SK_R]])for(const q of cs){const dx=cx-o.x-Math.sin(o.yaw)*q,dz=cz-o.z-Math.cos(o.yaw)*q,d=Math.hypot(dx,dz),m=BK_R+r;
       if(d<m&&d>1e-3){b.x+=dx/d*(m-d);b.z+=dz/d*(m-d);b.v*=0.6}}}
