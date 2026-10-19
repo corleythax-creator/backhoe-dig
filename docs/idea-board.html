@@ -126,6 +126,9 @@ tr.done td{opacity:.6}
 .tks::-webkit-details-marker{display:none}
 .tks::after{content:"▸";position:absolute;right:14px;top:12px;color:var(--amber)}
 .tkd2[open]>.tks::after{content:"▾"}
+.withicon>.tks{padding-left:74px;min-height:68px}
+.tkic{position:absolute;left:14px;top:10px;width:48px;height:48px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--gc);background:color-mix(in srgb,var(--gc) 14%,rgba(20,16,10,.7));border:1px solid color-mix(in srgb,var(--gc) 45%,transparent)}
+.tkic svg{width:32px;height:32px}
 .tkn{color:var(--muted);font-size:12px;margin-top:2px}
 .tkbody{padding:0 14px 10px}
 .tkh{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px}
@@ -863,16 +866,18 @@ function trackList(){const inT=new Set(TRACKS.flatMap(t=>t[3])),rest=I.filter(r=
   return [...TRACKS,["none","Not in a track","Everything else on the board, best priority first, whatever its group.",rest]]}
 function catList(){return Object.keys(G).map(k=>{const ids=I.filter(r=>r[1]===k&&!hid.has(r[0])).sort((x,y)=>prio(y)-prio(x)).map(r=>r[0]);return [k,G[k],ids.length+" ideas, best priority first.",ids]})}
 const catOpen=new Set();
+const CAT_ICON={"J":"M7 4h10a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z M9.5 2.5h5v3h-5z M9 10h6 M9 14h6 M9 18h3","M":"M3 18h14a2 2 0 0 1 0 3H3a2 2 0 0 1 0-3z M5 18v-4h6v4 M11 14l4-8 6 2-2 7 M19 15h2","X":"M4 8h11l4 6-3 4H7z M7 18v3 M11 18v3 M15 18v3 M4 8l-2-3","D":"M2 20h20 M3.5 20c2-8 5-11 8.5-11s6.500 3 8.500 11 M9 15.500h.01 M14 14h.01 M12 17.500h.01","U":"M3 6h9a4 4 0 0 1 4 4v11 M3 4v4 M14 21h4 M2 12h6","W":"M7 15a4 4 0 1 1 1-7.900A5 5 0 0 1 17.500 9 3.500 3.500 0 0 1 17 16H7z M9 19l-1 2.500 M13 19l-1 2.500 M17 19l-1 2.500","S":"M6 20v-4 M6 16H2.500L6 9l3.500 7z M16 20v-5 M16 15h-4.500L16 6l4.500 9z","L":"M8 8a4 4 0 0 1 8 0z M7 8h10 M9 8v2.500a3 3 0 0 0 6 0V8 M5 21v-2a7 7 0 0 1 14 0v2","A":"M4 9h4l5-4v14l-5-4H4z M16 9a4 4 0 0 1 0 6 M18.500 6.500a8 8 0 0 1 0 11","C":"M3 9a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v6a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3z M8 10v4 M6 12h4 M16 10.500h.01 M18 13.500h.01","Q":"M3 5h18v11H3z M9 20h6 M12 16v4 M7 13l3-3 3 2 4-4","E":"M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z M9 4v14 M15 6v14","Y":"M8 4h8v5a4 4 0 0 1-8 0z M8 6H5a3 3 0 0 0 3 4 M16 6h3a3 3 0 0 1-3 4 M12 13v4 M8 20h8 M10 17h4","H":"M3 11l9-7 9 7 M5 10v10h14V10 M10 20v-5h4v5 M17 7V4h2.500v5","K":"M4 20c0-5 1-8 2-9 M9 20c0-6 1-10 3-12 M14 20c0-5 1-8 2-9 M19 20c0-4 0-6 1-7 M2 20h20","B":"M2 18h20 M4 18v-6 M20 18v-6 M4 12c4-6 12-6 16 0 M8 18v-5.500 M12 18v-6 M16 18v-5.500","T":"M2 20l6-11 4 6 3-4 7 9z M17 5.500h.01 M8 9l1.500 2.500","R":"M4 6h16v14H4z M4 10h16 M8 3v4 M16 3v4 M8 14h2 M13 14h2 M8 17h2","I":"M3 19c3-1 6 1 9 0s6 1 9 0 M7 16c1-3 3-4 5-4s4 1 5 4z M12 12V6 M12 6c-2-1-4 0-5 2 M12 6c2-1 4 0 5 2"};
+const catIcon=k=>{const s=el("span","tkic");s.setAttribute("aria-hidden","true");s.innerHTML='<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="'+CAT_ICON[k]+'"/></svg>';return s};
 function renderTracks(){renderAcc("tkb",trackList(),tkOpen)}
-function renderCats(){renderAcc("ctb",catList(),catOpen)}
-function renderAcc(bodyId,groups,openSet){
+function renderCats(){renderAcc("ctb",catList(),catOpen,true)}
+function renderAcc(bodyId,groups,openSet,icons){
   const b=$(bodyId);b.textContent="";
   for(const [k,n,d,list] of groups){
     if(!list.length)continue;
     const rows=list.map(i=>IDS.get(i)),tot=rows.length,pc=Math.round(trackPct(list)*100),nb=rows.filter(r=>stOf(r[0])==="built").length;
     const nx=nextOf(list),hr=Math.round(rows.reduce((a,r)=>a+hrsLeft(r),0));
     const dt=el("details","tkd2");dt.open=openSet.has(k);dt.addEventListener("toggle",()=>{dt.open?openSet.add(k):openSet.delete(k)});
-    const sm=el("summary","tks"),top=el("div","tkh");
+    const sm=el("summary","tks"),top=el("div","tkh");if(icons){dt.classList.add("withicon");dt.style.setProperty("--gc",GC[k]);sm.appendChild(catIcon(k))}
     top.append(el("h3",null,n),el("span","tkp",nb+" of "+tot+" built · "+pc+"%"),el("span","tkp",hr?"~"+hr+" h left":"all built"),hr?el("span","tkp",fmtTok(hr)+" left ("+pct(hr)+" of week)"):el("span"));
     const bar=el("div","tkb"),bi=el("i");bi.style.width=pc+"%";bar.appendChild(bi);
     sm.append(top,bar);if(nx)sm.appendChild(el("div","tkn","Next: "+nx[0]+" "+nx[2]));
