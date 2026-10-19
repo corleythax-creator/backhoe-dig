@@ -102,15 +102,11 @@ const DEX_Y=0xf2b705,DEX_D=0x2b2d30,DEX_GLASS=0x3c4a52;
   famAdd(K);
 })();
 
-// a few pines round the rim (Jessica's lighter pine)
+// a few pines round the rim (trees.js, its 'dex' group)
 const dexTrees=(function(){
   let sd=41;const rnd=()=>{sd=(sd*16807)%2147483647;return sd/2147483647};const out=[];
   for(let g=0;g<3000&&out.length<34;g++){const a=rnd()*6.283,x=DEX_X+Math.cos(a)*60,z=DEX_Z+Math.sin(a)*60,k=(DEX_R-3-rnd()*4.5)/dexR(x,z),px=DEX_X+(x-DEX_X)*k,pz=DEX_Z+(z-DEX_Z)*k;
     if(roadOff(px,pz)<ROAD_W/2+3||Math.abs(pz-DEX_Z)<9&&px>-185||SOLIDS.some(s=>Math.abs(px-s.x)<s.hx+2&&Math.abs(pz-s.z)<s.hz+2)||out.some(o=>Math.hypot(o.x-px,o.z-pz)<3.2))continue;
     out.push({x:px,z:pz,yaw:rnd()*6.3,s:0.8+rnd()*0.6})}
-  const im=new THREE.InstancedMesh(jesPineGeo,famMat,out.length);im.castShadow=true;im.receiveShadow=true;
-  im.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(out.length*3),3);scene.add(im);treeIMs.push(im);
-  const o=new THREE.Object3D(),c=new THREE.Color();
-  out.forEach((a,i)=>{const w=hash(a.x*1.3,a.z*2.1);o.position.set(a.x,baseHeight(a.x,a.z)-0.05,a.z);o.rotation.set(0,a.yaw,0);o.scale.set(a.s,a.s*(0.95+0.4*w),a.s);o.updateMatrix();
-    im.setMatrixAt(i,o.matrix);const v=0.85+0.3*w;im.setColorAt(i,c.setRGB(v,v,v))});
+  treeGroup('dex',out.map(a=>treeEntry('pine',a.x,a.z,a.yaw,a.s,(a.x*7|0)&3,0.95+0.4*hash(a.x*1.3,a.z*2.1))));
   return out})();

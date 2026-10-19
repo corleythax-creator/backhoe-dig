@@ -187,7 +187,7 @@ function famPlay(g){try{siteSaveAll()}catch(e){}try{lawnSave()}catch(e){}
   famAdd(K);
 })();
 
-// trees on the Family Island: the map editor's pine and leafy-tree shapes in their own instance meshes (not saved with
+// trees on the Family Island: the map editor's pines and leafy trees (trees.js, its 'fam' group; not saved with
 // the map), a band inside the rim, groves behind the house and to the east and south, and a big tree in the roundabout
 const famTrees=(function(){
   let sd=11;const rnd=()=>{sd=(sd+0x6D2B79F5)|0;let t=Math.imul(sd^(sd>>>15),1|sd);t=(t+Math.imul(t^(t>>>7),61|t))^t;return((t^(t>>>14))>>>0)/4294967296};
@@ -202,13 +202,5 @@ const famTrees=(function(){
   for(let i=0,g=0;i<38&&g<4000;g++){const a=rnd()*6.283,x=FAM_X+Math.cos(a)*90,z=FAM_Z+Math.sin(a)*90,f=famR(x,z),k=(FAM_R-3-rnd()*10)/f,px=FAM_X+(x-FAM_X)*k,pz=FAM_Z+(z-FAM_Z)*k;
     if(!clear(px,pz,1.6)||out.some(o=>Math.hypot(o.x-px,o.z-pz)<3))continue;out.push({t:rnd()<0.7?'pine':'leafy',x:px,z:pz,yaw:rnd()*6.3,s:0.8+rnd()*0.7,c:Math.floor(rnd()*6)});i++}
   out.push({t:'leafy',x:FAM_X,z:FAM_Z,yaw:0.6,s:1.7,c:4});SOLIDS.push({x:FAM_X,z:FAM_Z,hx:0.35,hz:0.35});
-  const np=out.filter(o=>o.t==='pine').length,nl=out.length-np;
-  const mk=(src,n)=>{const im=new THREE.InstancedMesh(src.geometry,src.material,n);im.castShadow=true;im.receiveShadow=true;
-    im.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(n*3),3);scene.add(im);treeIMs.push(im);return im};
-  const pines=mk(assetIMs.pine[0],np),woods=mk(assetIMs.leafy[0],nl),crowns=mk(assetIMs.leafy[1],nl);
-  const o=new THREE.Object3D(),c=new THREE.Color();let ip=0,il=0;
-  for(const a of out){const w=hash(a.x*1.3+0.7,a.z*2.1+0.3),w2=hash(a.z*1.7,a.x*0.9);
-    o.position.set(a.x,baseHeight(a.x,a.z)-0.05,a.z);o.rotation.set((w-0.5)*0.08,a.yaw,(w2-0.5)*0.08);o.scale.set(a.s,a.s*(a.t==='pine'?0.9+0.35*w:1),a.s);o.updateMatrix();
-    if(a.t==='pine'){const t=ASSET_PT[a.c%4],v=0.88+0.24*w2;pines.setMatrixAt(ip,o.matrix);c.setRGB(t[0]*v,t[1]*v,t[2]*v);pines.setColorAt(ip++,c)}
-    else{const t=ASSET_LT[a.c%6],v=0.9+0.2*w2;woods.setMatrixAt(il,o.matrix);crowns.setMatrixAt(il,o.matrix);c.setRGB(t[0]*v,t[1]*v,t[2]*v);crowns.setColorAt(il,c);c.setRGB(1,1,1);woods.setColorAt(il++,c)}}
+  treeGroup('fam',out.map(a=>treeEntry(a.t,a.x,a.z,a.yaw,a.s,a.c)));
   return out})();

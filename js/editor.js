@@ -174,7 +174,7 @@ function edQuery(x,z){const g=baseHeight(x,z),h=hAt(x,z),r=mesaR(x,z);
   if(mine.length)rows.push(['Your edits',mine.join(', ')]);
   const hit=edHit(x,z);if(hit)rows.push(['Here',hit.a?edAssetName(hit.a):hit.m.name]);
   edInfo(`<h3>Ground here</h3><dl>${rows.map(([a,b])=>`<dt>${a}</dt><dd>${b}</dd>`).join('')}</dl>`)}
-function edAssetName(a){return PROPS[a.t]?propName(a):a.t==='rock'?`Boulder, ${edFmt(1.6*a.s,0)} ft across`:`${ED_KINDS[a.t]}, ${edFmt((a.t==='pine'?5.9:4.7)*a.s,0)} ft tall`}
+function edAssetName(a){return PROPS[a.t]?propName(a):a.t==='rock'?`Boulder, ${edFmt(1.6*a.s,0)} ft across`:`${ED_KINDS[a.t]} (${TREE_SP[treeSpecies(a.t,a.x,a.z)].name}), ${edFmt(treeHeight(a.t,a.x,a.z)*a.s,0)} ft tall`}
 function edInfo(html){const el=$('#edInfo');el.hidden=!html;if(html)el.innerHTML=html}
 function edSelect(hit){ed.sel=hit;if(!hit){edSelRing.visible=false;edInfo(null);return}
   const o=hit.a||hit.m.o(),title=hit.a?edAssetName(hit.a):hit.m.name,yaw=hit.a?hit.a.yaw:o.yaw||0;
@@ -381,7 +381,7 @@ function editorFrame(dt,now){
   if(ed.pend&&(ed.stroke||(ed.drag&&ed.drag.road))&&now-ed.refT>110){ed.refT=now;edRefresh(ed.pend,false);ed.pend=null}
   if(ed.sel&&ed.sel.m)edRingSel();
   // puddles and mud tiles keep up with the edits (painted Mud fills ruts, painting over them dries them)
-  waterTick(dt);mudTick(dt);if(rainTexDirty)rainTexUpdate();
+  waterTick(dt);mudTick(dt);treesTick(dt);if(rainTexDirty)rainTexUpdate();
   const fy=hAt(ed.x,ed.z);edLook.set(ed.x,fy,ed.z);
   camera.position.set(ed.x+Math.sin(ed.yaw)*Math.cos(ed.pitch)*ed.dist,fy+Math.sin(ed.pitch)*ed.dist,ed.z+Math.cos(ed.yaw)*Math.cos(ed.pitch)*ed.dist);
   camera.position.y=Math.max(camera.position.y,hAt(camera.position.x,camera.position.z)+2);camera.lookAt(edLook);

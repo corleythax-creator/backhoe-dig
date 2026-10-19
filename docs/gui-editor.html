@@ -779,7 +779,8 @@ const TUNE=[
   ['pbrRelief','Ground look','Relief: how deep the bumps in gravel, brick and concrete look',1,'pct',0,300,5],
   ['pbrSheen','Ground look','Sheen: how strong the glints on wet and shiny ground are',1,'pct',0,300,5],
   ['pbrRain','Ground look','Extra sheen while it rains',1,'pct',0,400,5],
-  ['pbrFar','Ground look','Relief fades out by',180*0.3048,'ft',60,600,10]];
+  ['pbrFar','Ground look','Relief fades out by',180*0.3048,'ft',60,600,10],
+  ['treeSway','Trees','How much the trees sway in the breeze',1,'pct',0,400,5]];
 // unit: [shown = code value × factor, label]
 const TUNE_U={mph:[1/0.44704,'mph'],ft:[1/0.3048,'ft'],deg:[180/Math.PI,'°/s'],yd3:[1.307951,'yd³'],pct:[100,'%'],s:[1,'s'],min:[1/60,'min'],in:[1/0.0254,'in']};
 const tuneShow=(e,v)=>v*TUNE_U[e[4]][0];
