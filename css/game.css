@@ -335,6 +335,7 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
 .edopt .row{gap:4px}
 .edopt label{font:700 13px/1 var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
 .edopt output{min-width:40px;font-variant-numeric:tabular-nums}
+.edpanel input[type=number]{width:76px;flex:none}
 #editor input[type=range]{flex:1 1 90px;min-width:80px;max-width:170px;accent-color:var(--machine)}
 .edmats{display:flex;flex-direction:column;gap:5px;padding-right:4px}
 .edmats h3 small{font:600 14px/1 var(--f-display);color:var(--muted);letter-spacing:0;margin-left:6px}
