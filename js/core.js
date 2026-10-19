@@ -65,24 +65,51 @@ const scene=new THREE.Scene();
 scene.background=new THREE.Color(0xbfd2dd);
 scene.fog=new THREE.Fog(0xbfd2dd,90,760);
 // gradient sky dome and a hazy mountain ring past the fog
-// afternoon sun from the south-east of the dig, about 40 degrees up
-const SUN_DIR=new THREE.Vector3(13,15,9).normalize();
+// where the sun is (a unit vector toward it): set every frame from the clock by daynight.js, which also sets LIGHT_DIR,
+// the way the shadow-casting light shines from (the sun by day, the moon at night, never quite flat along the ground)
+const SUN_DIR=new THREE.Vector3(13,15,9).normalize(),LIGHT_DIR=SUN_DIR.clone();
+// dayKU: how much sunlight there is (0 at night, 1 by day), for the light through leaves and grass blades
+const dayKU={value:1};
 // things that keep the rain off (roofs, cabs, buildings, bridges, props, blocks) are also on this layer: rain.js draws
 // them from above into its shelter map
 const RAIN_LAYER=3;
 // skySunVis: how much of the sun disc shows (rain.js clouds it over)
 const skySunVis={value:1};
+// the sky's colours, sun, moon and stars (daynight.js sets them): uTop and uHor the gradient, uGlow the twilight glow on
+// the sun's side of the horizon, uCel turns the view into the star sphere's frame, uMet a shooting star
+const skyU={uSun:{value:SUN_DIR},uSunVis:skySunVis,uTop:{value:new THREE.Color(0x4f86bd)},uHor:{value:new THREE.Color(0xbfd2dd)},
+  uGlow:{value:new THREE.Color(0)},uSunC:{value:new THREE.Color(1,0.86,0.62)},uMoon:{value:new THREE.Vector3(0,-1,0)},uMoonV:{value:0},
+  uStars:{value:0},uCel:{value:new THREE.Matrix3()},uGNP:{value:new THREE.Vector3(0,0,1)},uSkyT:{value:0},
+  uMetA:{value:new THREE.Vector3(0,1,0)},uMetB:{value:new THREE.Vector3(0,1,0)},uMetT:{value:-1}};
 const sky=(function(){
-  const g=new THREE.SphereGeometry(1300,64,32),p=g.attributes.position,c=new Float32Array(p.count*3);
-  const top=new THREE.Color(0x4f86bd),hor=new THREE.Color(0xbfd2dd),col=new THREE.Color();
-  for(let i=0;i<p.count;i++){const t=Math.min(1,Math.max(0,p.getY(i)/1300*2.4));col.copy(hor).lerp(top,Math.pow(t,0.8));c[i*3]=col.r;c[i*3+1]=col.g;c[i*3+2]=col.b}
-  g.setAttribute('color',new THREE.BufferAttribute(c,3));
-  const mat=new THREE.MeshBasicMaterial({vertexColors:true,side:THREE.BackSide,fog:false,depthWrite:false,toneMapped:false});
-  // sun disc and glow drawn per pixel over the gradient
-  mat.onBeforeCompile=sh=>{sh.uniforms.uSun={value:SUN_DIR};sh.uniforms.uSunVis=skySunVis;
+  const g=new THREE.SphereGeometry(1300,64,32);
+  const mat=new THREE.MeshBasicMaterial({side:THREE.BackSide,fog:false,depthWrite:false,toneMapped:false});
+  // gradient, sun disc and glow, moon with its phase, stars and the Milky Way, drawn per pixel
+  mat.onBeforeCompile=sh=>{Object.assign(sh.uniforms,skyU);
     sh.vertexShader='varying vec3 vDir;\n'+sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvDir=position;');
-    sh.fragmentShader='uniform vec3 uSun;\nuniform float uSunVis;\nvarying vec3 vDir;\n'+sh.fragmentShader.replace('#include <color_fragment>',
-      '#include <color_fragment>\nvec3 sd=normalize(vDir);float cs=max(0.0,dot(sd,uSun));\ndiffuseColor.rgb+=uSunVis*vec3(1.0,0.86,0.62)*(0.32*pow(cs,10.0)+0.5*pow(cs,180.0))*(0.6+0.4*smoothstep(0.0,0.3,sd.y))+uSunVis*vec3(12.0,10.5,8.5)*smoothstep(0.99955,0.9997,cs);\ndiffuseColor.rgb*=1.0-0.25*smoothstep(0.0,-0.08,sd.y);')};
+    sh.fragmentShader='uniform vec3 uSun,uTop,uHor,uGlow,uSunC,uMoon,uGNP,uMetA,uMetB;uniform float uSunVis,uMoonV,uStars,uSkyT,uMetT;uniform mat3 uCel;\nvarying vec3 vDir;\n'+
+      'float skH(vec3 p){return fract(sin(dot(p,vec3(127.1,311.7,74.7)))*43758.5453);}\n'+
+      'float skN(vec3 p){vec3 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);return mix(mix(mix(skH(i),skH(i+vec3(1,0,0)),f.x),mix(skH(i+vec3(0,1,0)),skH(i+vec3(1,1,0)),f.x),f.y),mix(mix(skH(i+vec3(0,0,1)),skH(i+vec3(1,0,1)),f.x),mix(skH(i+vec3(0,1,1)),skH(i+1.0),f.x),f.y),f.z);}\n'+
+      sh.fragmentShader.replace('#include <color_fragment>',
+      'vec3 sd=normalize(vDir);float cs=max(0.0,dot(sd,uSun));\n'+
+      'float gt=clamp(sd.y*2.4,0.0,1.0);float az=0.5+0.5*dot(normalize(uSun.xz+1e-5),normalize(sd.xz+1e-5));\n'+
+      'diffuseColor.rgb*=mix(uHor,uTop,pow(gt,0.8))+uGlow*(0.25+0.75*az*az*az)*(1.0-smoothstep(0.0,0.5,sd.y));\n'+
+      '#include <color_fragment>\n'+
+      'float up=smoothstep(-0.03,0.02,sd.y);\n'+
+      'diffuseColor.rgb+=uSunVis*uSunC*(0.32*pow(cs,10.0)+0.5*pow(cs,180.0))*(0.6+0.4*smoothstep(0.0,0.3,sd.y))*up+uSunVis*uSunC*vec3(12.0,12.2,13.7)*smoothstep(0.99955,0.9997,cs)*up;\n'+
+      // stars on the turning star sphere, more of them along the Milky Way, twinkling
+      'if(uStars>0.001){vec3 cel=uCel*sd;float gb=dot(cel,uGNP),band=exp(-gb*gb*14.0);vec3 p=cel*130.0,id=floor(p),f=fract(p);float hh=skH(id);float s=0.0;\n'+
+      '  if(hh>0.9-0.06*band){vec3 o=vec3(skH(id+1.7),skH(id+3.1),skH(id+5.3))*0.6+0.2;float b=pow((hh-0.84)/0.16,3.0);s=b*smoothstep(0.17,0.0,length(f-o))*(0.7+0.3*sin(uSkyT*(2.0+3.0*hh)+hh*90.0));}\n'+
+      '  float mw=band*smoothstep(0.35,0.85,skN(cel*7.0)*0.6+skN(cel*19.0)*0.4)*0.05;\n'+
+      '  diffuseColor.rgb+=(s*vec3(1.0,0.96,0.9)*1.6+mw*vec3(0.7,0.76,0.95))*uStars*uSunVis*smoothstep(0.0,0.12,sd.y);\n'+
+      '  if(uMetT>0.0){vec3 ab=uMetB-uMetA;float q=clamp(dot(sd-uMetA,ab)/dot(ab,ab),0.0,uMetT),d=length(sd-uMetA-ab*q),tl=q/uMetT;\n'+
+      '    diffuseColor.rgb+=vec3(1.0,0.95,0.85)*2.5*smoothstep(0.0016,0.0,d)*tl*tl*(1.0-smoothstep(0.75,1.0,uMetT))*uStars*uSunVis;}}\n'+
+      // the moon: a disc lit on the side toward the sun, so it shows its real phase, with a faint glow round it
+      'float cm=dot(sd,uMoon);if(uMoonV>0.001&&cm>0.99){const float R=0.0095;vec3 o=sd-uMoon*cm;float r=length(o)/R;\n'+
+      '  diffuseColor.rgb+=vec3(0.55,0.6,0.7)*0.05*uMoonV*pow(max(0.0,(cm-0.99)/0.01),40.0)*uSunVis*up;\n'+
+      '  if(r<1.0){vec3 n=o/R-uMoon*sqrt(1.0-r*r);float lit=smoothstep(-0.06,0.1,dot(n,uSun));float mare=0.82+0.18*skN(o/R*3.0+4.0);\n'+
+      '    diffuseColor.rgb=mix(diffuseColor.rgb,vec3(1.0,0.97,0.9)*(0.03+1.4*lit*mare)+diffuseColor.rgb*0.4,smoothstep(1.0,0.9,r)*uMoonV*uSunVis*up);}}\n'+
+      'diffuseColor.rgb*=1.0-0.25*smoothstep(0.0,-0.08,sd.y);')};
   const m=new THREE.Mesh(g,mat);
   m.renderOrder=-1;scene.add(m);return m;
 })();
@@ -96,15 +123,14 @@ sun.castShadow=true; sun.shadow.mapSize.set(PHONE?1024:2048,PHONE?1024:2048);
 const SUN_D=80;Object.assign(sun.shadow.camera,{left:-14,right:14,top:14,bottom:-14,near:1,far:SUN_D+90});
 sun.shadow.bias=-0.0004; sun.shadow.normalBias=0.02;
 scene.add(sun); scene.add(sun.target);
-// sky reflections: the dome over a dull ground, caught once into a small cube map for glass, paint, chrome and water
-const skyEnv=(function(){
-  const rt=new THREE.WebGLCubeRenderTarget(64,{generateMipmaps:true,minFilter:THREE.LinearMipmapLinearFilter});
-  const gnd=new THREE.Mesh(new THREE.CircleGeometry(900,24).rotateX(-Math.PI/2),new THREE.MeshBasicMaterial({color:0x4a4a32,fog:false,toneMapped:false}));
-  gnd.position.y=-12;scene.add(gnd);
-  new THREE.CubeCamera(1,2000,rt).update(renderer,scene);
-  scene.remove(gnd);gnd.geometry.dispose();gnd.material.dispose();
-  return rt.texture;
-})();
+// sky reflections: the dome over a dull ground, caught into a small cube map for glass, paint, chrome and water; daynight.js
+// catches it again as the sky changes (skyEnvUpdate), from a scene of its own that holds only the dome and the ground
+const skyEnvRT=new THREE.WebGLCubeRenderTarget(64,{generateMipmaps:true,minFilter:THREE.LinearMipmapLinearFilter}),skyEnv=skyEnvRT.texture;
+const skyEnvScene=new THREE.Scene(),skyEnvCam=new THREE.CubeCamera(1,2000,skyEnvRT),skyEnvGnd=new THREE.MeshBasicMaterial({color:0x4a4a32,fog:false,toneMapped:false});
+{const gnd=new THREE.Mesh(new THREE.CircleGeometry(900,24).rotateX(-Math.PI/2),skyEnvGnd);gnd.position.y=-12;skyEnvScene.add(gnd,new THREE.Mesh(sky.geometry,sky.material))}
+// k: how bright the ground under the sky is (1 by day)
+function skyEnvUpdate(k){skyEnvGnd.color.setHex(0x4a4a32).multiplyScalar(k);skyEnvScene.background=scene.background;skyEnvCam.update(renderer,skyEnvScene)}
+skyEnvUpdate(1);
 // straight-up normals for flat-shaded ground: lighting takes its slope from the faces, but the shadow lookup needs a
 // real normal (an all-zero one gives no shadow at all)
 function upNormals(n){const a=new Float32Array(n);for(let i=1;i<n;i+=3)a[i]=1;return a}

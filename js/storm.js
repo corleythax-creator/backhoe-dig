@@ -12,14 +12,14 @@ const STORM_GLSL='float sh(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43
   'float sn(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);return mix(mix(sh(i),sh(i+vec2(1,0)),f.x),mix(sh(i+vec2(0,1)),sh(i+1.0),f.x),f.y);}\n'+
   'float fbm(vec2 p){float s=0.0,a=0.5;for(int i=0;i<5;i++){s+=a*sn(p);p=p*2.03+17.1;a*=0.5;}return s;}\n';
 const cloudMat=new THREE.ShaderMaterial({transparent:true,depthWrite:false,fog:false,side:THREE.DoubleSide,
-  uniforms:{uC:{value:0.18},uT:{value:0},uOff:{value:new THREE.Vector2()},uCam:{value:new THREE.Vector3()},uFog:{value:new THREE.Color()},uSunI:rainSunI,uFlash:{value:0}},
+  uniforms:{uC:{value:0.18},uT:{value:0},uOff:{value:new THREE.Vector2()},uCam:{value:new THREE.Vector3()},uFog:{value:new THREE.Color()},uSunI:rainSunI,uFlash:{value:0},uDay:{value:DAY.cloud}},
   vertexShader:'varying vec3 vW;void main(){vec4 w=modelMatrix*vec4(position,1.0);vW=w.xyz;gl_Position=projectionMatrix*viewMatrix*w;}',
-  fragmentShader:'uniform float uC,uT,uSunI,uFlash;uniform vec2 uOff;uniform vec3 uCam,uFog;varying vec3 vW;\n'+STORM_GLSL+
+  fragmentShader:'uniform float uC,uT,uSunI,uFlash;uniform vec2 uOff;uniform vec3 uCam,uFog,uDay;varying vec3 vW;\n'+STORM_GLSL+
     // density: billowing noise thresholded by how much of the sky is covered; thick cloud is dark underneath in a storm
     'void main(){vec2 p=(vW.xz+uOff)/950.0;float d=fbm(p)*0.75+0.25*fbm(p*3.3+vec2(uT*0.004,0.0));\n'+
     'float th=0.78-0.62*uC,den=smoothstep(th,th+0.22-0.12*uC,d);\n'+
     'vec3 lit=vec3(1.0,0.98,0.95)*(0.72+0.28*uSunI),dark=mix(vec3(0.6,0.63,0.67),vec3(0.2,0.22,0.25),smoothstep(0.5,1.0,uC));\n'+
-    'vec3 col=mix(lit,dark,smoothstep(0.1,0.9,den)*(0.35+0.65*uC)*(0.7+0.3*smoothstep(0.55,0.95,d)))+uFlash*vec3(0.75,0.8,1.0)*den;\n'+
+    'vec3 col=mix(lit,dark,smoothstep(0.1,0.9,den)*(0.35+0.65*uC)*(0.7+0.3*smoothstep(0.55,0.95,d)))*uDay+uFlash*vec3(0.75,0.8,1.0)*den;\n'+
     'float dist=length(vW.xz-uCam.xz);col=mix(col,uFog,smoothstep(400.0,2200.0,dist)*0.8);\n'+
     'gl_FragColor=vec4(col,den*(1.0-smoothstep(1500.0,2350.0,dist)));}'});
 const clouds=new THREE.Mesh(new THREE.PlaneGeometry(CL_S,CL_S,1,1).rotateX(-Math.PI/2),cloudMat);

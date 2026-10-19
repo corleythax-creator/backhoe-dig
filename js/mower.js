@@ -40,7 +40,7 @@ lawnGeo.setAttribute('aLawn',new THREE.InstancedBufferAttribute(new Float32Array
 // where the grass around stands taller, and looking toward the sun the blades glow where light comes through them
 const lawnPush={value:[new THREE.Vector4(),new THREE.Vector4(),new THREE.Vector4(),new THREE.Vector4(),new THREE.Vector4(1e5,0,0,0)]};
 const lawnMat=M(0xffffff,{side:THREE.DoubleSide,vertexColors:true});
-lawnMat.onBeforeCompile=sh=>{sh.uniforms.uTime=timeU;sh.uniforms.uPush=lawnPush;sh.uniforms.uSun={value:SUN_DIR};
+lawnMat.onBeforeCompile=sh=>{sh.uniforms.uTime=timeU;sh.uniforms.uDayK=dayKU;sh.uniforms.uPush=lawnPush;sh.uniforms.uSun={value:SUN_DIR};
   sh.vertexShader='uniform float uTime;\nuniform vec4 uPush[5];\nattribute vec4 aLawn;\nvarying vec3 vLW;\nvarying float vTip;\n'+sh.vertexShader.replace('#include <project_vertex>',
     'vec4 mvPosition=vec4(transformed,1.0);\n#ifdef USE_INSTANCING\nmvPosition=instanceMatrix*mvPosition;\nvec3 root=instanceMatrix[3].xyz;\n#else\nvec3 root=vec3(0.0);\n#endif\n'+
     'float hg=max(0.0,mvPosition.y-root.y);vec2 wd=vec2(0.8,0.6);\n'+
@@ -54,8 +54,8 @@ lawnMat.onBeforeCompile=sh=>{sh.uniforms.uTime=timeU;sh.uniforms.uPush=lawnPush;
     'vColor.rgb*=shade*(1.0+0.22*gust*smoothstep(0.1,0.6,hg))*(1.0+0.32*dot(vh,aLawn.xy)*(1.0-0.5*smoothstep(0.5,0.95,-cv.y/cd)));\n'+
     'vLW=mvPosition.xyz;vTip=smoothstep(0.05,0.6,hg);\n'+
     'mvPosition=modelViewMatrix*mvPosition;\ngl_Position=projectionMatrix*mvPosition;');
-  sh.fragmentShader='uniform vec3 uSun;\nvarying vec3 vLW;\nvarying float vTip;\n'+sh.fragmentShader.replace('#include <emissivemap_fragment>',
-    '#include <emissivemap_fragment>\nfloat bl=pow(max(0.0,dot(normalize(vLW-cameraPosition),uSun)),3.0);\ntotalEmissiveRadiance+=diffuseColor.rgb*vec3(1.0,1.15,0.4)*bl*vTip*1.1;')};
+  sh.fragmentShader='uniform vec3 uSun;\nuniform float uDayK;\nvarying vec3 vLW;\nvarying float vTip;\n'+sh.fragmentShader.replace('#include <emissivemap_fragment>',
+    '#include <emissivemap_fragment>\nfloat bl=pow(max(0.0,dot(normalize(vLW-cameraPosition),uSun)),3.0);\ntotalEmissiveRadiance+=diffuseColor.rgb*vec3(1.0,1.15,0.4)*bl*vTip*1.1*uDayK;')};
 const lawnClumps=new THREE.InstancedMesh(lawnGeo,lawnMat,LAWN_N);lawnClumps.receiveShadow=true;lawnClumps.frustumCulled=true;scene.add(lawnClumps);
 // far away (Graphics Low and Medium) the patch draws a quarter of the clumps, every other one each way and twice as wide,
 // so it reads the same for a quarter of the triangles; both versions are skipped when the patch is out of view (an

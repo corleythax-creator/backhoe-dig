@@ -2,6 +2,8 @@
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 // ---------- scenery ----------
 const timeU={value:0};
+// the mountain ranges' materials, dimmed at night by daynight.js
+const MTN_MATS=[];
 (function(){
   // lake: low-poly water with gentle animated swells
   const wg=new THREE.PlaneGeometry(3400,3400,150,150);wg.rotateX(-Math.PI/2);
@@ -27,7 +29,7 @@ const timeU={value:0};
     g.setAttribute('normal',new THREE.Float32BufferAttribute(new Float32Array(pp.length),3));g.setIndex(ix);
     const mat=unlit?new THREE.MeshBasicMaterial({vertexColors:true,fog:false,side:THREE.DoubleSide,toneMapped:false})
       :new THREE.MeshPhongMaterial({vertexColors:true,flatShading:true,fog:false,side:THREE.DoubleSide,shininess:2,specular:0x000000,emissive:0x6a7686});
-    const m=new THREE.Mesh(g,mat);m.renderOrder=-0.5;scene.add(m);
+    const m=new THREE.Mesh(g,mat);m.renderOrder=-0.5;scene.add(m);MTN_MATS.push(mat);
   }
   range(790,1080,40,220,30,240,0.42,0.66,0,false);
   range(1080,1320,28,200,60,430,0.7,0.85,1.7,true);
@@ -86,7 +88,7 @@ const TC_X0=-48,TC_Z0=-19,TC_W=32,TC_NX=3,TC_NZ=3;
 // below its rank, and the ones left grow a little to fill in
 const tuftMats=TUFT_GEO.map(()=>{const mat=M(0xffffff,{side:THREE.DoubleSide,vertexColors:true}),thin={value:new THREE.Vector4(1,25,80,0.35)};
   mat.userData.thin=thin;
-  mat.onBeforeCompile=sh=>{sh.uniforms.uTime=timeU;sh.uniforms.uThin=thin;sh.uniforms.uSun={value:SUN_DIR};sh.uniforms.uPush=lawnPush;
+  mat.onBeforeCompile=sh=>{sh.uniforms.uTime=timeU;sh.uniforms.uDayK=dayKU;sh.uniforms.uThin=thin;sh.uniforms.uSun={value:SUN_DIR};sh.uniforms.uPush=lawnPush;
     sh.uniforms.tCrush={value:crTex};sh.uniforms.uCrO={value:new THREE.Vector4(CR_X0,CR_Z0,1/(CR_NX*CR_C),1/(CR_NZ*CR_C))};Object.assign(sh.uniforms,wetU);
     sh.vertexShader='uniform float uTime;\nuniform vec4 uThin;\nuniform vec4 uPush[5];\nuniform sampler2D tCrush;\nuniform vec4 uCrO;\nuniform sampler2D tWet;\nuniform vec4 uWetO;\nattribute vec4 aTuft;\nattribute float aHead;\nvarying vec3 vLW;\nvarying float vTip;\n'+sh.vertexShader
       .replace('#include <color_vertex>','vColor=vec3(1.0);\n#ifdef USE_COLOR\nvColor*=color;\n#endif\n#ifdef USE_INSTANCING_COLOR\nvColor*=mix(instanceColor,aTuft.yzw,step(0.5,aHead)*step(aHead,1.5));\n#endif')
@@ -112,8 +114,8 @@ const tuftMats=TUFT_GEO.map(()=>{const mat=M(0xffffff,{side:THREE.DoubleSide,ver
       'vLW=mvPosition.xyz;vTip=smoothstep(0.03,0.3,hg);\n'+
       'mvPosition=modelViewMatrix*mvPosition;\ngl_Position=projectionMatrix*mvPosition;');
     // looking toward the sun the blades glow where light comes through them
-    sh.fragmentShader='uniform vec3 uSun;\nvarying vec3 vLW;\nvarying float vTip;\n'+sh.fragmentShader.replace('#include <emissivemap_fragment>',
-      '#include <emissivemap_fragment>\nfloat bl=pow(max(0.0,dot(normalize(vLW-cameraPosition),uSun)),3.0);\ntotalEmissiveRadiance+=diffuseColor.rgb*vec3(1.0,1.15,0.4)*bl*vTip*0.9;')};
+    sh.fragmentShader='uniform vec3 uSun;\nuniform float uDayK;\nvarying vec3 vLW;\nvarying float vTip;\n'+sh.fragmentShader.replace('#include <emissivemap_fragment>',
+      '#include <emissivemap_fragment>\nfloat bl=pow(max(0.0,dot(normalize(vLW-cameraPosition),uSun)),3.0);\ntotalEmissiveRadiance+=diffuseColor.rgb*vec3(1.0,1.15,0.4)*bl*vTip*0.9*uDayK;')};
   return mat});
 // all the meshes, in a group so the speed test can hide them together; tuftMeshes[(square)*shapes+shape]
 const tufts=new THREE.Group(),tuftMeshes=[];scene.add(tufts);

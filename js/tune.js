@@ -55,7 +55,11 @@ const TUNE=[
   ['pbrSheen','Ground look','Sheen: how strong the glints on wet and shiny ground are',1,'pct',0,300,5],
   ['pbrRain','Ground look','Extra sheen while it rains',1,'pct',0,400,5],
   ['pbrFar','Ground look','Relief fades out by',180*0.3048,'ft',60,600,10],
-  ['treeSway','Trees','How much the trees sway in the breeze',1,'pct',0,400,5]];
+  ['treeSway','Trees','How much the trees sway in the breeze',1,'pct',0,400,5],
+  // how the clock runs (☰ menu, Time) and how dark the night gets
+  ['dayLen','Day and night','A whole day (24 hours) passes in',2880,'min',2,1440,1],
+  ['nightLight','Day and night','Moonlight and starlight at night',1,'pct',0,400,5],
+  ['lampLight','Day and night','Headlights, lamps and lit windows',1,'pct',0,300,5]];
 // unit: [shown = code value × factor, label]
 const TUNE_U={mph:[1/0.44704,'mph'],ft:[1/0.3048,'ft'],deg:[180/Math.PI,'°/s'],yd3:[1.307951,'yd³'],pct:[100,'%'],s:[1,'s'],min:[1/60,'min'],in:[1/0.0254,'in']};
 const tuneShow=(e,v)=>v*TUNE_U[e[4]][0];
