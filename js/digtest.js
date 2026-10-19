@@ -43,6 +43,10 @@ function digTestSeam(c){if(!inDig(c.x0,c.z0)||!inDig(c.x1,c.z1))return null;cons
 function digTestDepth(x,z){if(inDig(x,z)){const k=Math.round(gJ(z))*V+Math.round(gI(x));return H[k]-H0[k]}const d=tileFarD(x,z);return d===null?0:d}
 const ftIn=m=>{const i=Math.round(Math.abs(m)/FT*12);return (m<0?'-':'')+(i>=12?Math.floor(i/12)+' ft '+(i%12?i%12+' in':''):i+' in').trim()};
 
+// a cut dug to the grid's edge leaves a sheer wall against the ground outside it, which slumps in once the grid moves over
+// it (play can't dig there: DIG_FOLLOW, digtiles.js); so its edge point is checked straight after that move, then left out
+function digTestEdges(s){for(const site of digT.cuts)for(const c of site.cuts)if(c.edge&&c.mark&&!c.edgeDone&&inDig(c.ex+1,c.ez)){c.edgeDone=true;
+  const d=digTestDepth(c.ex,c.ez);if(!c.lost&&Math.abs(d-c.mark[2])>0.05)c.lost=[s.name+' (as the grid moved)',d]}}
 function digTestEnter(s){
   digT.moveN=digMoveN;s.moves=[];
   if(s.p){digTestPut(s.p[0],s.p[1]);const cx=GX0+TILE,cz=GZ0+TILE;
@@ -51,7 +55,7 @@ function digTestEnter(s){
     s.mid=[(cx+cx+s.ox)/2,(cz+s.oz+cz)/2];st.yaw=Math.atan2(s.mid[0]-st.x,s.mid[1]-st.z)}
   else if(s.route){const [x,z,yaw]=digTestAlong(s.route,0);digTestPut(x,z,yaw)}
   else if(s.back){digTestPut(s.back[0],s.back[1]);const m=digT.stages[0].mid;s.mid=m;st.yaw=Math.atan2(m[0]-st.x,m[1]-st.z)}
-  if(digMoveN!==digT.moveN){s.moves.push(digMoveMs);digT.moveN=digMoveN}}
+  if(digMoveN!==digT.moveN){s.moves.push(digMoveMs);digT.moveN=digMoveN}digTestEdges(s)}
 // a cut dug from where it got to up to share u (0..1) of its length, a bite every 5 in, the spoil heaped 8 ft to one side
 function digTestCut(c,u){const L=c.x1-c.x0+c.z1-c.z0,along=c.x0!==c.x1;
   for(;c.done<=u*L;c.done+=0.12){const x=along?c.x0+c.done:c.x0,z=along?c.z0:c.z0+c.done;
@@ -69,8 +73,8 @@ function digTestLeave(s){
     digTestCheck('The grid followed the excavator across three islands',ok&&s.moves.length>=2,`${s.moves.length} moves, the longest ${Math.round(Math.max(0,...s.moves))} ms`)}
   else if(s.back){
     for(const site of digT.cuts)for(const [n,c] of site.cuts.entries()){const d=digTestDepth(c.mark[0],c.mark[1]);
-      digTestCheck(`${site.site}: cut ${n+1} kept through every grid move${inDig(c.mark[0],c.mark[1])?'':' (stored tile)'}`,c.mark[2]<-0.5&&!c.lost,
-        `${ftIn(-c.mark[2])} deep when dug, `+(c.lost?`${ftIn(-c.lost[1])} after "${c.lost[0]}"`:`${ftIn(-d)} now`))}
+      digTestCheck(c.edge?`${site.site}: cut ${n+1} kept as the grid moved over it`:`${site.site}: cut ${n+1} kept through every grid move${inDig(c.mark[0],c.mark[1])?'':' (stored tile)'}`,c.mark[2]<-0.5&&!c.lost,
+        `${ftIn(-c.mark[2])} deep when dug, `+(c.lost?`${ftIn(-c.lost[1])} after "${c.lost[0]}"`:c.edge?'the same after the move':`${ftIn(-d)} now`))}
     for(const [n,c] of digT.cuts[0].cuts.entries()){const r=digTestSeam(c);digTestCheck(`Mesa top: cut ${n+1} still seamless after the grid came back`,r&&r.ok,r?`no step over ${ftIn(Math.max(r.step,FT/12))}`:'not in the grid')}
     // saves: every stored tile and the grid's own tiles written in the save form and read back, within 1/16 in
     let worst=0,n=0;const cmp=(g,e)=>{const b=tileDec(e);if(!b){worst=1e9;return}n++;for(let q=0;q<g.h.length;q++)worst=Math.max(worst,Math.abs(g.h[q]-b.h[q]))};
@@ -87,7 +91,7 @@ function digTestStart(){
   help.hidden=true;$('#bench').hidden=true;$('#benchBar').hidden=false;st.load=0}
 // one step of the script: the stage it is in, entered and left in turn
 // every cut's edge point after each stage: the first stage after which it is no longer as dug is kept
-function digTestMarks(s){for(const site of digT.cuts)for(const c of site.cuts)if(c.mark&&!c.lost){const d=digTestDepth(c.mark[0],c.mark[1]);if(Math.abs(d-c.mark[2])>0.05)c.lost=[s.name,d]}}
+function digTestMarks(s){for(const site of digT.cuts)for(const c of site.cuts)if(c.mark&&!c.lost&&!(c.edge&&c.edgeDone)){const d=digTestDepth(c.mark[0],c.mark[1]);if(Math.abs(d-c.mark[2])>0.05)c.lost=[s.name,d]}}
 function digTestStep(dt){bench.t+=dt;const S=digT.stages;
   while(digT.cur<S.length&&(digT.cur<0||bench.t>=S[digT.cur].t1)){if(digT.cur>=0){digTestMarks(S[digT.cur]);digTestLeave(S[digT.cur])}digT.cur++;if(digT.cur<S.length)digTestEnter(S[digT.cur])}
   if(digT.cur>=S.length)return false;const s=S[digT.cur];digTestStage(s,bench.t-s.t0,dt);return true}
@@ -138,7 +142,7 @@ function digTestShow(r){$('#benchTitle').textContent=r.title;$('#benchSummary').
   $('#benchDevice').textContent=r.device;$('#benchText').value=r.text;$('#benchCopy').textContent='Copy results';$('#bench').hidden=false}
 // headless: the whole script at 10 steps a second without drawing; the page is left in the test's state (bench.on stays
 // set so nothing saves), so use a throwaway page (tools/play.js)
-function digTestRun(){digTestStart();digT.headless=true;let n=0;while(digTestStep(0.1)&&n<20000)n++;
+function digTestRun(){digTestStart();digT.headless=true;let n=0;while(digTestStep(0.1)&&n<20000){slopeTick(0.1);n++}
   const r=digTestResults();return {ok:r.checksOk,checks:r.checks.map(c=>`${c.ok?'pass':'FAIL'} | ${c.name} | ${c.note}`),moves:r.rows.map(x=>x.name+': '+x.moves)}}
 
 $('#digTestBtn').onclick=()=>{showMenu(false);digTestStart()};
