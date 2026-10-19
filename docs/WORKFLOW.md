@@ -66,7 +66,8 @@ Check them with tools/play.js and release with tools/release.py. I asked at [tim
 ```
 
 Precise asks save rounds of back-and-forth: "the mower's top speed 8 mph instead of 6" beats "the mower feels slow".
-For something that looks wrong, one screenshot and where it is.
+For something that looks wrong, one screenshot and where it is. Best: open the map editor at that spot, press **Copy view**
+and paste the code (`view 40,-150,315,55,148`); Claude opens its headless screenshot at exactly that camera.
 
 ## 3. What runs on its own
 

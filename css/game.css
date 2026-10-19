@@ -312,6 +312,7 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
 .edstat{grid-column:1/-1;grid-row:4;pointer-events:auto;display:flex;gap:16px;white-space:nowrap;overflow:hidden;background:rgba(10,12,10,.88);color:var(--muted);font:600 13px/1.3 var(--f-display);
   padding:3px var(--ed-r) calc(env(safe-area-inset-bottom,0px) + 3px) var(--ed-l)}
 .edstat span{font-variant-numeric:tabular-nums}
+#edStatView{color:#fff;flex:none}
 #edTip{margin-left:auto;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .edlist{display:flex;flex-direction:column;gap:4px}
 .edbar h2 small{font:600 14px/1 var(--f-display);letter-spacing:.02em;text-transform:none;color:var(--muted);margin-left:6px}

@@ -7,7 +7,8 @@
 //   NODE_PATH=$(npm root -g) node tools/play.js --eval "setMode('walk');return wk.x" --wait 2000 --shot /tmp/x.png
 // Options: --eval CODE (repeatable), --steps FILE (a module exporting async (page, help) => result, for real clicks:
 //   help.center(selector) gives a part's middle), --wait MS after each step (default 600), --size WxH (1100x620),
-//   --gfx low|medium|high, --shot FILE, --keep (keep this browser's saves), --boot MS before the first step (3000).
+//   --gfx low|medium|high, --view CODE (a view code from the map editor's Copy view, "view X,Z,FACE,TILT,BACK": the
+//   shot looks from there in the editor; --view-game pins it over the game instead), --shot FILE, --keep (keep this browser's saves), --boot MS before the first step (3000).
 const http=require('http'),fs=require('fs'),path=require('path');const {chromium}=require('playwright');
 const root=path.resolve(__dirname,'..'),A=process.argv.slice(2),opt={eval:[],wait:600,size:'1100x620',boot:3000};
 for(let i=0;i<A.length;i++){const k=A[i].replace(/^--/,'');if(k==='keep')opt.keep=true;else if(k==='eval')opt.eval.push(A[++i]);else opt[k]=A[++i]}
@@ -28,6 +29,7 @@ server.listen(0,async()=>{const port=server.address().port,errs=[],[w,h]=opt.siz
     await p.waitForTimeout(+opt.boot);
     await p.evaluate(g=>{const h=document.getElementById('help');if(h)h.hidden=true;if(g&&typeof setGfx==='function')setGfx(g)},opt.gfx||'');
     const out=[];
+    if(opt.view||opt['view-game']){out.push(await p.evaluate(([c,g])=>viewGo(c,g),[opt.view||opt['view-game'],!opt.view]));await p.waitForTimeout(+opt.wait)}
     for(const code of opt.eval){out.push(await p.evaluate(`(async()=>{${code}})()`).catch(e=>'ERROR: '+e.message));await p.waitForTimeout(+opt.wait)}
     if(opt.steps){const help={center:async s=>{const r=await p.locator(s).boundingBox();return [r.x+r.width/2,r.y+r.height/2]}};
       out.push(await require(path.resolve(opt.steps))(p,help));await p.waitForTimeout(+opt.wait)}
