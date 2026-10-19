@@ -62,7 +62,7 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 #resetBtn.arm{background:var(--danger)!important;color:#fff}
 /* Controls: the machines drop from the Controls button at the top right, a tile per machine, icon beside name; the one you drive is lit */
 #ctlMenu{position:absolute;top:100%;right:var(--pr);margin-top:8px;z-index:3;display:flex;flex-direction:column;gap:2px;min-width:180px;box-sizing:border-box;background:#1d211b;box-shadow:0 6px 18px rgba(0,0,0,.5);border:1px solid var(--hud-line);border-radius:10px;padding:5px}
-#ctlMenu[hidden]{display:none}
+#ctlMenu[hidden],#ctlMenu button[hidden]{display:none}
 #ctlMenu button{position:relative;height:44px;display:flex;align-items:center;gap:10px;padding:0 12px;font-size:15px;background:transparent;border:1px solid transparent;border-radius:7px;text-align:left}
 #ctlMenu svg{width:24px;height:24px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 #ctlMenu button[aria-pressed="true"]{background:var(--machine);color:#1c1309}
@@ -102,6 +102,11 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 #seatBtn,.walkbtns{position:absolute;bottom:100%;margin-bottom:10px;zoom:var(--cs)}
 #seatBtn{left:0;min-width:100px;font-size:16px;border-radius:20px;background:var(--machine);color:#1c1309;border:0;box-shadow:0 3px 0 rgba(0,0,0,.35);white-space:nowrap}
 .walkbtns{right:0;display:flex;gap:8px}.walkbtns[hidden]{display:none}
+/* the excavator's Drive / Dig switch over the right stick: the lit half is what the sticks run */
+.exswitch{position:absolute;bottom:100%;right:0;margin-bottom:10px;zoom:var(--cs);display:flex;border-radius:24px;padding:3px;background:rgba(20,23,19,.62);border:2px solid var(--machine);box-shadow:0 3px 0 rgba(0,0,0,.35);pointer-events:auto}
+.exswitch[hidden]{display:none}
+.exswitch button{height:42px;min-width:78px;padding:0 14px;font-size:18px;border:0;border-radius:20px;background:transparent;color:#fff}
+.exswitch button[aria-pressed="true"]{background:var(--machine);color:#1c1309}
 #jumpBtn,#sprintBtn{height:44px;min-width:76px;padding:0 12px;font-size:17px;border-radius:22px;box-shadow:0 3px 0 rgba(0,0,0,.35)}
 #jumpBtn{background:var(--machine);color:#1c1309;border:0}
 #sprintBtn{border:2px solid var(--machine);color:var(--machine)}#sprintBtn[aria-pressed="true"]{background:var(--machine);color:#1c1309}

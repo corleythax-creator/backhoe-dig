@@ -84,7 +84,7 @@ function tileFarMesh(g){const n=(g.w-1)/FAR_K,vx=n+1,nv=vx*vx,x0=g.ti*TILE,z0=g.
   const P=new Float32Array(nv*3),C=new Float32Array(nv*3),D=new Float32Array(nv),SD=new Float32Array(nv),MA=new Float32Array(nv),MW=new Float32Array(nv),ix=[];
   for(let b=0;b<vx;b++)for(let a=0;a<vx;a++){const v=b*vx+a,q=b*FAR_K*g.w+a*FAR_K,x=x0+a*FAR_K*CELL,z=z0+b*FAR_K*CELL,d=g.h[q],h=baseHeight(x,z)+d;
     let rk=groundColor(x,z,h,c);const t=ss(0.02,0.16,Math.abs(d));
-    if(t>0){const sc=d<0?SOIL[layerAt(x,z,-d,0.5)].c:[g.c[q*3],g.c[q*3+1],g.c[q*3+2]],sh=d<0?1-0.12*ss(0.3,2.5,-d):1;
+    if(t>0){const sc=d<0?SOIL[layerAt(x,z,-d,0.5,baseHeight(x,z))].c:[g.c[q*3],g.c[q*3+1],g.c[q*3+2]],sh=d<0?1-0.12*ss(0.3,2.5,-d):1;
       for(let e=0;e<3;e++)c[e]+=(sc[e]*sh*0.95-c[e])*t;rk=Math.max(rk,t)}
     P[v*3]=x;P[v*3+1]=h;P[v*3+2]=z;C.set(c.slice(0,3),v*3);D[v]=rk;SD[v]=-d;MA[v]=c[3]*(1-t);MW[v]=g.m[q]}
   for(let b=0;b<n;b++)for(let a=0;a<n;a++){const v=b*vx+a;ix.push(v,v+vx,v+1,v+1,v+vx,v+vx+1)}
