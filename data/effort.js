@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-19T03:49:00Z",
+ "updated": "2026-10-19T03:53:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -24,9 +24,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-18",
-   "dh": 250.5,
+   "dh": 253.5,
    "act": 5,
-   "versions": 34
+   "versions": 35
   }
  ],
  "extra": [
@@ -1314,6 +1314,15 @@ window.EFFORT = {
    "tris": 2968590,
    "chars": 896360,
    "what": "Shadows now fall on ruts, mud and the lawn too, and reach farther: a Shadow distance setting, 72/105/148 ft by tier"
+  },
+  {
+   "v": 143,
+   "asked": "2026-10-18T22:48:00-05:00",
+   "live": "2026-10-18T22:53:49-05:00",
+   "dh": 3,
+   "tris": 2968661,
+   "chars": 900682,
+   "what": "The map editor can hide things while you edit, to get at what is behind them, and lock things (saved with the map) so they can't be picked, moved or deleted by accident; On the map has an eye and a lock on each row and kind, and a Locked filter."
   }
  ]
 };

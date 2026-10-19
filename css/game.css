@@ -316,6 +316,8 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
 #editor button.edlck{flex:none;width:32px;height:auto;min-height:36px;padding:0}
 .edlck::before{content:'';display:block;width:14px;height:14px;margin:auto;border:2px solid var(--muted);border-radius:3px}
 .edlck[aria-pressed="true"]::before{background:var(--machine);border-color:var(--machine)}
+#editor button.edlhd{flex:none;width:32px;height:auto;min-height:36px;padding:0;font-size:15px;opacity:.35}
+#editor button.edlhd[aria-pressed="true"]{opacity:1;box-shadow:inset 0 0 0 2px var(--machine)}
 #editor button.edlrn{flex:1;min-width:0;height:auto;min-height:36px;padding:4px 8px;display:flex;flex-direction:column;align-items:flex-start;gap:1px;text-align:left;font:600 14px/1.2 var(--f-display);letter-spacing:0;text-transform:none}
 .edlrn small{color:var(--muted);font-size:12px}
 #editor button.edlrn[aria-pressed="true"]{box-shadow:inset 0 0 0 2px var(--machine)}

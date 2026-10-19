@@ -88,7 +88,7 @@ function propY(a){const P=PROPS[a.t];if(!P.deep)return surfAt(a.x,a.z);let y=-1e
 function propsBuild(){const o=new THREE.Object3D(),col=new THREE.Color(),n={};
   for(let i=SOLIDS.length-1;i>=0;i--)if(SOLIDS[i].prop)SOLIDS.splice(i,1);
   for(const k in PROPS)n[k]=0;
-  for(const a of assets){const P=PROPS[a.t];if(!P||n[a.t]>=P.cap)continue;const im=propIMs[a.t],i=n[a.t]++;
+  for(const a of assets){const P=PROPS[a.t];if(a.hd||!P||n[a.t]>=P.cap)continue;const im=propIMs[a.t],i=n[a.t]++;
     o.position.set(a.x,propY(a),a.z);o.rotation.set(0,a.yaw,0);o.scale.setScalar(a.s);o.updateMatrix();im.setMatrixAt(i,o.matrix);
     const t=P.tint?PROP_TINT[(a.c|0)%PROP_TINT.length]:[1,1,1];im.setColorAt(i,col.setRGB(t[0],t[1],t[2]));
     if(P.solid){const [lx,lz]=Array.isArray(P.solid)?P.solid:[P.w/2,P.d/2],c=Math.cos(a.yaw),s=Math.sin(a.yaw),L=lx*a.s,Z=lz*a.s;
