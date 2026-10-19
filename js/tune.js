@@ -24,7 +24,7 @@ const TUNE=[
   ['skArm','Skid steer','Arm rate',0.55,'deg',5,180,1],['skCurl','Skid steer','Bucket curl rate',0.9,'deg',5,240,1],
   ['skCap','Skid steer','Bucket holds',0.38,'yd3',0.1,3,0.05],
   ['hvDzSpd','Dozer','Top speed',2.4,'mph',1,15,0.1],['hvDzTurn','Dozer','Turn rate',0.6,'deg',5,120,1],['hvDzBlade','Dozer','Blade rate',0.35,'deg',5,90,1],
-  ['hvDzCap','Dozer','Blade carries',1.9,'yd3',0.5,8,0.1],
+  ['hvDzCap','Dozer','Blade carries',1.9,'yd3',0.5,8,0.1],['hvRipD','Dozer','Ripper reaches down',0.75,'ft',0.5,3,0.1],
   ['hvLdSpd','Wheel loader','Top speed',5.4,'mph',2,30,0.5],['hvLdLock','Wheel loader','Steering lock',0.7,'deg',10,50,1],
   ['hvLdArm','Wheel loader','Arm rate',0.45,'deg',5,90,1],['hvLdCurl','Wheel loader','Bucket curl rate',0.8,'deg',5,180,1],['hvLdCap','Wheel loader','Bucket holds',1.9,'yd3',0.5,6,0.1],
   ['hvSmSpd','Semi','Top speed',15.6,'mph',5,70,1],['hvSmLock','Semi','Steering lock',0.6,'deg',10,45,1],

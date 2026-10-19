@@ -153,7 +153,7 @@ function rutErase(cx,cz,R,sq,keep,all){const inB=(dx,dz)=>(sq?Math.max(Math.abs(
       if(d===0&&!mudA[k]&&Wt[k]<-1e8||!all&&Math.abs(d)>TU.rutDepth+0.12||prot[k]||!inB(x-cx,z-cz))continue;
       let deep=false;if(!all)for(let b=Math.max(0,j-2);b<=Math.min(N,j+2)&&!deep;b++)for(let a=Math.max(0,i-2);a<=Math.min(N,i+2);a++)if(Math.abs(H[b*V+a]-H0[b*V+a])>TU.rutDepth+0.22){deep=true;break}
       if(deep||keep&&keep(x,z))continue;
-      H[k]=H0[k];paintD[k]=0;mudA[k]=0;Wt[k]=-1e9;comp[k]=0;wetT[k]=-1e4;soakMax[k]=0;hit=true}
+      H[k]=H0[k];paintD[k]=0;ripD[k]=0;mudA[k]=0;Wt[k]=-1e9;comp[k]=0;wetT[k]=-1e4;soakMax[k]=0;hit=true}
     if(hit){touch(i0,i1,j0,j1);updateTufts(i0,i1,j0,j1);st.dirty=true}}
   if(FD){let ft=false;const fi0=Math.max(1,Math.floor((cx-R-FX0)/FC)),fi1=Math.min(FNX-1,Math.ceil((cx+R-FX0)/FC)),fj0=Math.max(1,Math.floor((cz-R-FZ0)/FC)),fj1=Math.min(FNZ-1,Math.ceil((cz+R-FZ0)/FC));
     for(let j=fj0;j<=fj1;j++)for(let i=fi0;i<=fi1;i++){const v=j*FV+i,x=FX0+i*FC,z=FZ0+j*FC;
@@ -175,7 +175,7 @@ function paintKeep(cx,cz,R,sq){const inB=(dx,dz)=>(sq?Math.max(Math.abs(dx),Math
       const m=Math.round(Math.max(-32,Math.min(32,d))*1000);if(FK[v]===m)continue;FK[v]=m;hit=true}}
   if(hit)site.dirty=true;return hit}
 function mudReset(){for(const t of mTiles){scene.remove(t.m);t.g.dispose();scene.remove(t.wm);t.wm.geometry.dispose()}
-  mTiles.length=0;mtIdx.fill(-1);mtWet=false;paintD.fill(0);if(FD){FD.fill(0);FW.fill(-1e9);FM.fill(0);FK.fill(0);FWX.fill(0);FCR.fill(0)}midHoles();tuftsRefresh(-1e9,1e9,-1e9,1e9);grassReset()}
+  mTiles.length=0;mtIdx.fill(-1);mtWet=false;paintD.fill(0);ripD.fill(0);if(FD){FD.fill(0);FW.fill(-1e9);FM.fill(0);FK.fill(0);FWX.fill(0);FCR.fill(0)}midHoles();tuftsRefresh(-1e9,1e9,-1e9,1e9);grassReset()}
 // each tile: [ti, tj, rut depths (Int16, mm), mud (bytes), then FK (Int16, or '' when none) and the wettest each
 // point got (bytes, when any)], base64
 function mtSave(){const out=[],n=MT+1;

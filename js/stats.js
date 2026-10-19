@@ -33,7 +33,7 @@ function statLoad(){let d=null;try{d=JSON.parse(localStorage.getItem(STAT_KEY))}
 const TRAIL_C=4,TRAIL_X0=-464,TRAIL_Z0=-594,TRAIL_NX=232,TRAIL_NZ=360,TRAIL_OLD=[51,133,135],TRAIL_KINDS=['walk','ex','truck','mow','skid','boat'],trail={};for(const k of TRAIL_KINDS)trail[k]=new Float32Array(TRAIL_NX*TRAIL_NZ);
 let trailDirty=true;
 function trailAdd(k,x,z,d){const i=Math.floor((x-TRAIL_X0)/TRAIL_C),j=Math.floor((z-TRAIL_Z0)/TRAIL_C);
-  if(i<0||j<0||i>=TRAIL_NX||j>=TRAIL_NZ)return;trail[k][j*TRAIL_NX+i]+=d;trailDirty=true}
+  if(i<0||j<0||i>=TRAIL_NX||j>=TRAIL_NZ||!trail[k])return;trail[k][j*TRAIL_NX+i]+=d;trailDirty=true}
 function trailPack(){const o={};for(const k of TRAIL_KINDS){const a=trail[k],b=[];
     for(let n=0;n<a.length;n++)if(a[n]>0.05){const q=Math.max(1,Math.min(255,Math.round(Math.log2(1+a[n]*10)*12)));b.push(n&255,n>>8&255,n>>16,q)}
     let bin='';for(let i=0;i<b.length;i+=4096)bin+=String.fromCharCode.apply(null,b.slice(i,i+4096));o[k]=btoa(bin)}
@@ -61,7 +61,7 @@ function statTick(dt){if(bench.on)return;const now=performance.now(),P=statPrev;
       if(mode==='mow'){stats.mowDist+=d;stats.mowTime+=dt;stats.mowTop=Math.max(stats.mowTop,Math.abs(mw.v))}
       else if(mode==='truck'){stats.trDist+=d;stats.trTime+=dt;stats.trTop=Math.max(stats.trTop,Math.abs(tr.v))}
       else if(mode==='skid'){stats.skDist+=d;stats.skTime+=dt;stats.skTop=Math.max(stats.skTop,Math.abs(sk.v))}
-      else if(mode==='boat'){}
+      else if(mode==='boat'||mode==='bike'||mode==='heavy'){}
       else if(mode==='walk'){stats.walkDist+=d;stats.walkTime+=dt;if(wk.ground)stats.walkTop=Math.max(stats.walkTop,Math.min(v,wk.spd+0.2));
         if(wk.spd>TU.wkRun+0.3)stats.sprintDist+=d}
       else{stats.exDist+=d;stats.exTime+=dt}

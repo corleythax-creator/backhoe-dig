@@ -4,7 +4,9 @@
 // and raises the blade, and with the blade down on the dig site it shaves the ground and shoves what it cuts along in a
 // heap in front of it, left where you lift the blade. The wheel loader steers on its middle hinge; the right stick
 // lowers and raises the arms and curls and dumps the bucket, which scoops on the dig site and dumps in a pile, over the
-// cliff or into the dump truck's bed. The semi steers like a truck and its lowboy follows on the fifth wheel; the right
+// cliff or into the dump truck's bed. The dozer's ripper, at the back, goes down and up on the right stick left and right:
+// dragged through the ground it breaks up hard clay and rock (ripD, terrain.js), so the blade and the excavator then dig
+// it like loose fill. The semi steers like a truck and its lowboy follows on the fifth wheel; the right
 // stick looks round.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 // ---------- the machines ----------
@@ -22,6 +24,8 @@ const HV_KINDS={
 const HV_KP=1.8,HV_LT=13.2,HV_TC=[-1.2,-4.4,-7.6,-10.8,-13.4];
 // the dozer's blade swings on its push arms; the loader's arms pivot high on the front frame, HV_LA0 down at rest
 const HV_BLIM=[-0.14,0.5],HV_ALIM=[-0.12,1.2],HV_CLIM=[-0.95,0.6],HV_LA0=0.42,HV_ARM=2.7;
+// the ripper tooth's tip: HV_RIP0 above the ground fully up, HV_RIPY below its beam's frame, HV_RIPZ along the dozer
+const HV_RIP0=0.3,HV_RIPZ=-1.91,HV_RIPY=-0.45;
 const hvs=[];let hvI=0;
 const hvCur=()=>hvs[hvI];
 // a kit of boxes and cylinders in the machine's own frame, merged into one mesh (famKit, family.js)
@@ -33,13 +37,17 @@ function hvMesh(k,parent){const m=new THREE.Mesh(famMerge(k.K.solid),famMat);m.c
 // the dirt heaped in front of the blade or in the bucket
 function hvHeap(parent,x,y,z){const m=new THREE.Mesh(new THREE.IcosahedronGeometry(0.5,1),M(0x7a5232,{map:null}));m.position.set(x,y,z);m.visible=false;parent.add(m);return m}
 function hvMake(k){const K=HV_KINDS[k],g=new THREE.Group();scene.add(g);
-  const h={k,K,g,x:K.x,z:K.z,y:0,yaw:K.yaw,pitch:0,roll:0,v:0,w:0,steer:0,ty:K.yaw,a:0,c:0.1,load:0,loadC:[0.5,0.34,0.21],loadMix:[0,0,0,1],loadWet:0,run:0,thr:0,hyd:0,top:1,circ:[]};
+  const h={k,K,g,x:K.x,z:K.z,y:0,yaw:K.yaw,pitch:0,roll:0,v:0,w:0,steer:0,ty:K.yaw,a:0,c:0.1,rip:0,drag:1,load:0,loadC:[0.5,0.34,0.21],loadMix:[0,0,0,1],loadWet:0,run:0,thr:0,hyd:0,top:1,circ:[]};
   const Y=DEX_Y,D=DEX_D,GL=DEX_GLASS,STEEL=0x8a8a86;
   if(k==='dozer'){const b=hvKit();
     for(const sx of [-1.05,1.05]){b.box(0.55,0.75,3.0,D,sx,0.4,0);for(const sz of [-1.45,1.45])b.cyl(0.38,0.38,0.56,10,0x3a3c40,sx,0.4,sz,0,Math.PI/2)}
     b.box(1.55,0.9,2.6,Y,0,1.2,-0.15);b.box(1.3,0.55,1.2,Y,0,1.85,0.6);b.cyl(0.07,0.07,0.8,6,D,0.4,2.4,0.8);
     b.box(1.3,1.15,1.3,GL,0,2.25,-0.65);b.box(1.5,0.12,1.5,Y,0,2.9,-0.65);for(const sx of [-0.68,0.68])for(const sz of [-1.3,0])b.box(0.08,1.2,0.08,Y,sx,2.25,sz);
-    b.box(0.15,0.8,0.2,D,0,0.55,-1.85,0.3);hvMesh(b,g);
+    for(const sx of [-0.5,0.5])b.box(0.2,0.5,0.3,D,sx,0.85,-1.8);hvMesh(b,g);
+    // the ripper: a beam on two links carrying one shank and its tooth, lowered and raised on its rams (h.rip: 0 up, 1 down)
+    const rp=new THREE.Group();rp.position.set(0,0,-2.05);g.add(rp);h.ripG=rp;
+    const r=hvKit();for(const sx of [-0.5,0.5])r.box(0.12,0.14,0.55,D,sx,0.75,0.2,0.35);r.box(1.25,0.24,0.3,Y,0,0.62,0);
+    r.box(0.12,1.0,0.24,D,0,0.25,-0.02);r.box(0.1,0.32,0.14,D,0,-0.28,0.05,-0.35);r.box(0.09,0.08,0.24,STEEL,0,-0.4,0.14,-0.6);hvMesh(r,rp);
     // the push arms, blade and cutting edge, swung from the track frames
     const bl=new THREE.Group();bl.position.set(0,0.6,0.45);g.add(bl);h.blade=bl;
     const p=hvKit();for(const sx of [-1.25,1.25])p.box(0.18,0.22,1.6,Y,sx,0,0.8,-0.1);
@@ -73,13 +81,14 @@ for(const k of ['dozer','loader','semi'])hvMake(k);
 const hvV=new THREE.Vector3(),hvTip=new THREE.Vector3(),hvTipL=new THREE.Vector3(),hvTipR=new THREE.Vector3(),hvLip=new THREE.Vector3();
 function hvPose(h){h.g.position.set(h.x,h.y,h.z);h.g.rotation.set(h.pitch,h.yaw,h.roll,'YXZ');
   if(h.blade)h.blade.rotation.x=-h.a;
+  if(h.ripG)h.ripG.position.y=HV_RIP0-HV_RIPY-h.rip*(HV_RIP0+TU.hvRipD);
   if(h.arm){const e=HV_LA0-h.a;h.arm.rotation.x=e;h.bkt.rotation.x=-e-h.c}
   h.g.updateMatrixWorld(true);
   const sy=Math.sin(h.yaw),cy=Math.cos(h.yaw);h.circ.length=0;for(const lz of h.K.C)h.circ.push([h.x+sy*lz,h.z+cy*lz,h.K.R]);
   if(h.trailer){h.g.localToWorld(hvV.set(0,1.3,-HV_KP));const ts=Math.sin(h.ty),tc=Math.cos(h.ty),yA=surfAt(hvV.x-ts*HV_LT,hvV.z-tc*HV_LT),yK=hvV.y-1.3;
     h.trailer.position.set(hvV.x,yK,hvV.z);h.trailer.rotation.set(-Math.atan2(yK-yA,HV_LT),h.ty,0,'YXZ');
     for(const lz of HV_TC)h.circ.push([hvV.x+ts*lz,hvV.z+tc*lz,1.45])}}
-function hvReset(h){const K=h.K;Object.assign(h,{x:K.x,z:K.z,yaw:K.yaw,ty:K.yaw,v:0,w:0,steer:0,a:0,c:0.1,load:0,loadWet:0,run:0});hvGround(h,1);hvPose(h)}
+function hvReset(h){const K=h.K;Object.assign(h,{x:K.x,z:K.z,yaw:K.yaw,ty:K.yaw,v:0,w:0,steer:0,a:0,c:0.1,rip:0,drag:1,load:0,loadWet:0,run:0});hvGround(h,1);hvPose(h)}
 // sits it on the ground under its wheels or tracks (k: how far toward it this frame)
 function hvGround(h,k){const K=h.K,sy=Math.sin(h.yaw),cy=Math.cos(h.yaw),S=(lx,lz)=>surfAt(h.x+lx*cy+lz*sy,h.z-lx*sy+lz*cy);
   const fl=S(-K.hw,K.af),fr=S(K.hw,K.af),bl=S(-K.hw,K.ab),br=S(K.hw,K.ab),hf=(fl+fr)/2,hb=(bl+br)/2,L=K.af-K.ab,y=hb+(hf-hb)*(-K.ab/L);
@@ -105,7 +114,7 @@ function hvDrive(h,dt,drive,turn,arm,curl,on){const K=h.K;
   h.run+=((on?1:0)-h.run)*Math.min(1,dt*(on?2:0.7));h.thr=drive;h.hyd=Math.min(1,Math.abs(arm)+Math.abs(curl));
   const mudN=mudAt(h.x,h.z),k=Math.max(0,1-0.45*mudN*TU.mudDrag);
   const ox=h.x,oz=h.z,oyaw=h.yaw,oty=h.ty,bad0=wallCount(h.x,h.z,h.yaw,K.P)+(K.trail?hvTrailOut(h):0);
-  if(K.track){h.top=TU.hvDzSpd;h.v+=(drive*h.top*k-h.v)*Math.min(1,dt*(drive?2:4));h.w+=(-turn*TU.hvDzTurn*k-h.w)*Math.min(1,dt*5);h.yaw+=h.w*dt}
+  if(K.track){h.top=TU.hvDzSpd;h.v+=(drive*h.top*k*h.drag-h.v)*Math.min(1,dt*(drive?2:4));h.w+=(-turn*TU.hvDzTurn*k-h.w)*Math.min(1,dt*5);h.yaw+=h.w*dt}
   else{// the gas pulls it up to speed (the semi slowly), the brakes stop it harder; the wheel locks less the faster it goes
     h.top=K.trail?TU.hvSmSpd:TU.hvLdSpd;const tgt=drive*h.top*k,acc=K.trail?0.35:1.2,up=Math.abs(tgt)>Math.abs(h.v)&&tgt*h.v>=0;
     h.v+=(tgt-h.v)*Math.min(1,dt*(up?acc:acc*3));
@@ -128,17 +137,34 @@ function hvDrive(h,dt,drive,turn,arm,curl,on){const K=h.K;
     if(K.track){stampRut(rx,rz,h.yaw,0.28,1.5,dt);splashMud(rx+sy*1.5*Math.sign(tv||1),rz+cy*1.5*Math.sign(tv||1),h.yaw,tv,0.3,0.8,dt)}
     else for(const lz of [K.af,K.ab]){stampRut(rx+sy*lz,rz+cy*lz,h.yaw,0.3,0.45,dt);splashMud(rx+sy*lz,rz+cy*lz,h.yaw,tv,0.3,0.6,dt)}}
   hvGround(h,Math.min(1,dt*10));
-  if(K.track)hvBlade(h,dt,arm,on);else if(h.arm)hvBucket(h,dt,arm,curl,on);else hvPose(h)}
+  if(K.track)hvBlade(h,dt,arm,curl,on);else if(h.arm)hvBucket(h,dt,arm,curl,on);else hvPose(h)}
 // the dozer's blade: down on the dig site it shaves the ground as it goes forward; what it cuts rolls up in front of it
 // and spills ahead (the blade, still down, picks it up again, so the heap goes along with it); lifted, it is left there
-function hvBlade(h,dt,arm,on){const cap=TU.hvDzCap;h.a=clamp(h.a+arm*TU.hvDzBlade*dt,...HV_BLIM);hvPose(h);
+// It bites hard ground slowly (soilRes, terrain.js) and lugs the dozer down doing it, unless the ripper broke it up first
+function hvBlade(h,dt,arm,curl,on){const cap=TU.hvDzCap;h.a=clamp(h.a+arm*TU.hvDzBlade*dt,...HV_BLIM);h.rip=clamp(h.rip-curl*0.8*dt,0,1);hvPose(h);
+  let drag=1;if(on)drag*=hvRipper(h,dt);
   const B=h.blade;B.localToWorld(hvTip.set(0,-0.54,1.78));
-  if(on&&h.v>0.15&&h.load<cap-0.002&&inDig(hvTip.x,hvTip.z,1.5)&&hvTip.y<hAt(hvTip.x,hvTip.z)-0.02)
-    for(const lx of [-1.0,0,1.0]){B.localToWorld(hvTipL.set(lx,-0.54,1.78));const got=dig(hvTipL,(cap-h.load)/3);if(got>0)hvTake(h,got,hvTipL)}
+  if(on&&h.v>0.15&&h.load<cap-0.002&&inDig(hvTip.x,hvTip.z,1.5)&&hvTip.y<hAt(hvTip.x,hvTip.z)-0.02){
+    const res=soilRes(Math.round(gJ(hvTip.z))*V+Math.round(gI(hvTip.x)),hvTip.y),rate=Math.min(cap-h.load,(0.4+h.v*0.8)*res*dt*3);drag*=0.4+0.6*res;
+    if(res<0.25&&!h.seenRock){h.seenRock=true;toast(say('dozerRock'),'',4200)}
+    for(const lx of [-1.0,0,1.0]){B.localToWorld(hvTipL.set(lx,-0.54,1.78));const got=dig(hvTipL,rate/3);if(got>0)hvTake(h,got,hvTipL)}}
+  h.drag+=(drag-h.drag)*Math.min(1,dt*4);
   if(h.load>0.001){const keep=h.a<0.12&&h.v>0.1,out=Math.min(h.load,h.load*dt*(keep?0.6:3)+(h.load>cap?h.load-cap:0));
     for(const lx of [-0.8,0.8]){B.localToWorld(hvLip.set(lx,-0.3,2.5));if(inDig(hvLip.x,hvLip.z,1)){deposit(hvLip.x,hvLip.z,out/2,h.loadC,h.loadMix,1.4,h.loadWet);st.dirty=true;st.slumpT=2.5}}
     h.load-=out;if(h.load<0.001)h.load=0}
   h.heap.visible=h.load>0.03;if(h.heap.visible){const s=0.4+0.8*Math.sqrt(h.load/cap);h.heap.scale.set(2.8*s,0.9*s,1.1*s);tintLoad(h.heap.material,h.loadC)}}
+// the ripper: its tooth under the ground on the dig site, moving, loosens the ground round it down to the tooth (ripD)
+// and lifts it a little as it breaks (loose ground bulks up); it throws clods, and hard ground drags on it. Returns the drag
+function hvRipper(h,dt){h.g.localToWorld(hvV.set(0,HV_RIP0-h.rip*(HV_RIP0+TU.hvRipD),HV_RIPZ));
+  if(Math.abs(h.v)<0.1||!inDig(hvV.x,hvV.z,1))return 1;
+  const ti=Math.round(gI(hvV.x)),tj=Math.round(gJ(hvV.z));if(ti<0||tj<0||ti>N||tj>N||hvV.y>H[tj*V+ti]-0.03)return 1;
+  const res=soilRes(tj*V+ti,hvV.y),r=0.45,i0=Math.max(0,Math.floor(gI(hvV.x-r))),i1=Math.min(N,Math.ceil(gI(hvV.x+r))),j0=Math.max(0,Math.floor(gJ(hvV.z-r))),j1=Math.min(N,Math.ceil(gJ(hvV.z+r)));
+  let any=false;
+  for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const k=j*V+i,d=Math.hypot(gX(i)-hvV.x,gZ(j)-hvV.z);if(d>r||digKeep[k])continue;
+    const depth=(H0[k]-hvV.y)*(1-0.4*d/r),fresh=depth-Math.max(ripD[k],H0[k]-H[k]);if(fresh<=0.01)continue;
+    const sw=Math.min(0.05,fresh*0.08)*(1-d/r),m=matAt(k,H0[k]-depth);H[k]+=sw;mixSpoil(k,matColor(k,m),sw);comp[k]=0;ripD[k]=Math.max(ripD[k],depth);any=true}
+  if(any){touch(i0,i1,j0,j1);st.dirty=true;if(Math.random()<dt*10)spawn(hvV,0.5)}
+  return 0.45+0.55*res}
 // the loader's arms and bucket: it scoops with the cutting edge under the ground on the dig site and the bucket near
 // level, and pours off the lip once it is tipped past about 20 degrees, into the truck bed, onto the ground or over the cliff
 function hvBucket(h,dt,arm,curl,on){const cap=TU.hvLdCap,full=1-0.15*h.load/cap;

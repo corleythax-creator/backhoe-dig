@@ -11,7 +11,7 @@
 // what a tile keeps, per grid point: the array, values per point, and its untouched value (H is kept as H - H0); the
 // dirt colour's is held at the arrays' own precision so untouched points compare equal
 const TILE_FIELDS=[{id:'h',a:H,n:1,blank:0},{id:'c',a:spoilC,n:3,blank:Float32Array.from(SOIL[SPOIL].c)},{id:'p',a:comp,n:1,blank:0},{id:'wt',a:Wt,n:1,blank:-1e9},
-  {id:'m',a:mudA,n:1,blank:0},{id:'s',a:soakMax,n:1,blank:0},{id:'d',a:paintD,n:1,blank:0}];
+  {id:'m',a:mudA,n:1,blank:0},{id:'s',a:soakMax,n:1,blank:0},{id:'d',a:paintD,n:1,blank:0},{id:'r',a:ripD,n:1,blank:0}];
 // tiles lifted out of the grid, by tKey(ti, tj)
 const tileStore=new Map();
 // tile t's points in the grid, edges included: [i0, i1, j0, j1]
@@ -167,20 +167,21 @@ function tileEnc(g){const np=g.w*g.w,b=new Uint8Array(np*18+8),dv=new DataView(b
   const SP=Float32Array.from(SOIL[SPOIL].c),q8=v=>Math.round(Math.min(1,Math.max(0,v))*255),mm=v=>Math.round(Math.max(-32.767,Math.min(32.767,v))*1000);
   let pc0=q8(SP[0]),pc1=q8(SP[1]),pc2=q8(SP[2]);
   for(let q=0;q<np;q++){const c0=g.c[q*3],c1=g.c[q*3+1],c2=g.c[q*3+2];
-    if(!(g.h[q]||g.p[q]||g.m[q]||g.s[q]||g.d[q]||g.wt[q]>-1e8||c0!==SP[0]||c1!==SP[1]||c2!==SP[2]))continue;
+    if(!(g.h[q]||g.p[q]||g.m[q]||g.s[q]||g.d[q]||g.r[q]||g.wt[q]>-1e8||c0!==SP[0]||c1!==SP[1]||c2!==SP[2]))continue;
     let gp=q-last;last=q;while(gp>=128){b[o++]=(gp&127)|128;gp>>>=7}b[o++]=gp;
-    const k0=q8(c0),k1=q8(c1),k2=q8(c2),col=k0!==pc0||k1!==pc1||k2!==pc2,psm=g.p[q]||g.m[q]||g.s[q],wet=g.wt[q]>-1e8,pd=mm(g.d[q])!==0;
-    b[o++]=(col?1:0)|(psm?2:0)|(pd?4:0)|(wet?8:0);dv.setInt16(o,mm(g.h[q]),true);o+=2;
+    const k0=q8(c0),k1=q8(c1),k2=q8(c2),col=k0!==pc0||k1!==pc1||k2!==pc2,psm=g.p[q]||g.m[q]||g.s[q],wet=g.wt[q]>-1e8,pd=mm(g.d[q])!==0,rp=mm(g.r[q])!==0;
+    b[o++]=(col?1:0)|(psm?2:0)|(pd?4:0)|(wet?8:0)|(rp?16:0);dv.setInt16(o,mm(g.h[q]),true);o+=2;
     if(col){b[o++]=k0;b[o++]=k1;b[o++]=k2;pc0=k0;pc1=k1;pc2=k2}
     if(psm){b[o++]=q8(g.p[q]);b[o++]=q8(g.m[q]);b[o++]=q8(g.s[q])}
     if(pd){dv.setInt16(o,mm(g.d[q]),true);o+=2}
-    if(wet){dv.setFloat32(o,g.wt[q],true);o+=4}}
+    if(wet){dv.setFloat32(o,g.wt[q],true);o+=4}
+    if(rp){dv.setInt16(o,mm(g.r[q]),true);o+=2}}
   return {ti:g.ti,tj:g.tj,f:2,t:g.t,d:siteB64(b.subarray(0,o))}}
 function tileStoreSave(){return [...tileStore.values()].map(tileEnc)}
 // a saved tile back into arrays, or null if it can't be read
 function tileDec(e){const W=N/TPG+1;
   {if(!e||!isFinite(e.ti)||!isFinite(e.tj)||typeof e.d!=='string'||(e.f===2?false:e.w!==W))return null;
-    const np=W*W,g={ti:e.ti,tj:e.tj,w:W,t:e.t||0,h:new Float32Array(np),c:new Float32Array(np*3),p:new Float32Array(np),wt:new Float32Array(np).fill(-1e9),m:new Float32Array(np),s:new Float32Array(np),d:new Float32Array(np)};
+    const np=W*W,g={ti:e.ti,tj:e.tj,w:W,t:e.t||0,h:new Float32Array(np),c:new Float32Array(np*3),p:new Float32Array(np),wt:new Float32Array(np).fill(-1e9),m:new Float32Array(np),s:new Float32Array(np),d:new Float32Array(np),r:new Float32Array(np)};
     for(let q=0;q<np;q++)g.c.set(SOIL[SPOIL].c,q*3);
     try{const b=siteUnB64(e.d),dv=new DataView(b.buffer);let o=0,q=-1,c0=SOIL[SPOIL].c[0],c1=SOIL[SPOIL].c[1],c2=SOIL[SPOIL].c[2];
       while(o<b.length){let gp=0,sh=0,x;do{x=b[o++];gp|=(x&127)<<sh;sh+=7}while(x&128);q+=gp;if(q>=np)break;
@@ -188,7 +189,8 @@ function tileDec(e){const W=N/TPG+1;
           if(fl&1){c0=b[o++]/255;c1=b[o++]/255;c2=b[o++]/255}g.c[q*3]=c0;g.c[q*3+1]=c1;g.c[q*3+2]=c2;
           if(fl&2){g.p[q]=b[o++]/255;g.m[q]=b[o++]/255;g.s[q]=b[o++]/255}
           if(fl&4){g.d[q]=dv.getInt16(o,true)/1000;o+=2}
-          if(fl&8){g.wt[q]=dv.getFloat32(o,true);o+=4}}
+          if(fl&8){g.wt[q]=dv.getFloat32(o,true);o+=4}
+          if(fl&16){g.r[q]=dv.getInt16(o,true)/1000;o+=2}}
         else{g.h[q]=dv.getFloat32(o,true);o+=4;for(let c=0;c<3;c++)g.c[q*3+c]=b[o++]/255;g.p[q]=b[o++]/255;g.m[q]=b[o++]/255;g.s[q]=b[o++]/255;
           g.d[q]=dv.getInt16(o,true)/1000;o+=2;if(b[o++]){g.wt[q]=dv.getFloat32(o,true);o+=4}}}}catch(err){return null}
     return g}}
