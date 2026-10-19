@@ -1,5 +1,6 @@
 # Corley's Island: loads the game headless after each change to the game on main and fails on any page error
-# (tools/scene-check.js; it also prints the triangle count and file size). The repo is public, so this runs free on
+# (tools/scene-check.js; it also prints the triangle count and file size), then runs the dig site test's checks
+# (digTestRun, js/digtest.js: digging across tile edges, the grid following the machine, saves) and fails if one fails. The repo is public, so this runs free on
 # GitHub's machines; set the repo variable ISLAND_RUNNER to a self-hosted runner's label to run it there instead
 # (README "Working on it"). No pull_request trigger: on a public repo that would let anyone's fork run code here.
 name: check
@@ -8,7 +9,7 @@ on:
   push:
     branches: [main]
     # the game only: version snapshots, docs and this file don't start a run
-    paths: ['index.html', 'css/**', 'js/**', 'data/**', 'textures/**', 'shots/**', 'tools/scene-check.js']
+    paths: ['index.html', 'css/**', 'js/**', 'data/**', 'textures/**', 'shots/**', 'tools/scene-check.js', 'tools/play.js']
 concurrency: { group: check, cancel-in-progress: true }
 permissions: { contents: read }
 jobs:
@@ -35,3 +36,4 @@ jobs:
       - if: runner.environment != 'github-hosted'
         run: npx -y playwright@1.56.1 install chromium
       - run: NODE_PATH=$(npm root -g) node tools/scene-check.js
+      - run: NODE_PATH=$(npm root -g) node tools/play.js --eval "const r=digTestRun();if(!r.ok)console.error('dig site test: '+r.checks.filter(c=>c.startsWith('FAIL')).join('; '));return r"
