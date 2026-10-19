@@ -22,9 +22,9 @@ function boxRest(){const s=Math.sin(TB.yaw),c=Math.cos(TB.yaw);let y=-1e9;
   return y}
 // grid vertices inside the panels, plus the wall band just outside them, are held while the box sits in a cut
 function boxMask(){prot.fill(0);if(TB.hooked||!TB.seated)return;
-  const s=Math.sin(TB.yaw),c=Math.cos(TB.yaw),n=Math.ceil(2/CELL),ci=Math.round((TB.x+S/2)/CELL),cj=Math.round((TB.z+S/2)/CELL);
+  const s=Math.sin(TB.yaw),c=Math.cos(TB.yaw),n=Math.ceil(2/CELL),ci=Math.round(gI(TB.x)),cj=Math.round(gJ(TB.z));
   for(let j=Math.max(0,cj-n);j<=Math.min(N,cj+n);j++)for(let i=Math.max(0,ci-n);i<=Math.min(N,ci+n);i++){
-    const dx=i*CELL-S/2-TB.x,dz=j*CELL-S/2-TB.z,u=dx*s+dz*c,v=dx*c-dz*s;
+    const dx=gX(i)-TB.x,dz=gZ(j)-TB.z,u=dx*s+dz*c,v=dx*c-dz*s;
     if(Math.abs(u)<BX_L/2+0.15&&Math.abs(v)<BX_W/2+0.5)prot[j*V+i]=1}}
 function boxNear(){return mode==='dig'&&tip.distanceTo(boxTop.set(TB.x,TB.y+BX_H,TB.z))<1.6}
 function hookBox(){

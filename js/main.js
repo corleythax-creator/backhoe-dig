@@ -48,9 +48,11 @@ function frame(now){
     sndIn.hyd=Math.abs(swingIn)+Math.abs(stickIn)+Math.abs(boomIn)+Math.abs(bucketIn)+Math.abs(driveIn)+Math.abs(turnIn);
     sndIn.relief=end(st.a1,LIM.a1,boomIn)||end(st.a2,LIM.a2,stickIn)||end(st.a3,LIM.a3,bucketIn);sndIn.track=Math.min(1,Math.abs(driveIn)+Math.abs(turnIn)*0.7);sndIn.pour=0}updateHeapClods();
   // drive
-  st.yaw-=turnIn*TU.exTurn*dt;
+  // clay packed in the undercarriage (packTick, dirt.js) makes the tracks drag and turn slower
+  const packK=1-Math.min(0.9,TU.packDrag*(st.pack||0)/PACK_CAP);
+  st.yaw-=turnIn*TU.exTurn*dt*(1-0.5*(1-packK));
   // mud slows the tracks, and pushing on in it digs them in until they spin (bogTick, mud.js)
-  const mudN=mudAt(st.x,st.z),mudK=Math.max(0,1-0.5*mudN*TU.mudDrag)*bogTick(st,mudN,bench.on?0:driveIn,0.03,dt),ox=st.x,oz=st.z,w0=wallCount(st.x,st.z,st.yaw,EX_P);
+  const mudN=mudAt(st.x,st.z),mudK=packK**0.5*Math.max(0,1-0.5*mudN*TU.mudDrag)*bogTick(st,mudN,bench.on?0:driveIn,0.03,dt),ox=st.x,oz=st.z,w0=wallCount(st.x,st.z,st.yaw,EX_P);
   st.x+=Math.sin(st.yaw)*driveIn*TU.exTrack*mudK*dt;
   st.z+=Math.cos(st.yaw)*driveIn*TU.exTrack*mudK*dt;
   // stays on the mesa, the Family Island or a bridge deck
@@ -66,6 +68,7 @@ function frame(now){
     {const tv=driveIn*2.6*mudK,f=Math.sign(tv||1)*1.4;splashMud(tx+sy*f,tz+cy*f,st.yaw,tv,0.3,1,dt)}
     // spinning tracks throw mud off the back; driving through it flicks a little
     if(mudN>RUT_MUD){const bk=-Math.sign(driveIn||1)*1.7;flingMud(tx+sy*bk,hAt(tx,tz)+0.25,tz+cy*bk,st.yaw+(driveIn<0?Math.PI:0),2+5*st.spin,(st.spin*40+Math.abs(driveIn)*4)*mudN,dt)}}
+  packTick(dt,bench.on?0:driveIn,bench.on?0:turnIn);
   if(crushT<=0)crushT=0.1;
   const sample=(lx,lz)=>surfAt(st.x+lx*cy+lz*sy,st.z-lx*sy+lz*cy);
   const hf=(sample(-1.1,1.8)+sample(1.1,1.8))/2,hb=(sample(-1.1,-1.8)+sample(1.1,-1.8))/2;
@@ -83,7 +86,7 @@ function frame(now){
   const g=hAt(tip.x,tip.z);
   st.below=tip.y<g&&!blkHit(tip.x,tip.y,tip.z);
   // soil at the teeth sets how hard the arm works; a full bucket pushing on barely moves
-  {const ti=Math.max(0,Math.min(N,Math.round((tip.x+S/2)/CELL))),tj=Math.max(0,Math.min(N,Math.round((tip.z+S/2)/CELL)));
+  {const ti=Math.max(0,Math.min(N,Math.round(gI(tip.x)))),tj=Math.max(0,Math.min(N,Math.round(gJ(tip.z))));
     st.soil=st.below?matAt(tj*V+ti,tip.y):-1;
     st.res=st.soil<0?1:(st.soil<4?TU[SOIL_TU[st.soil]]:SOIL[st.soil].h)*(st.load>=TU.exCap-0.002?0.5:1);
     if(st.soil===2&&!st.seenSand){st.seenSand=true;toast(say('sand'),'',3200)}
@@ -145,8 +148,8 @@ function frame(now){
     updateTerrain();st.dirty=false;site.dirty=true;mapDirty=true;blkTerrainMoved();
     if(st.slumpT<=0){winOn=false}
     if(!st.exposed){
-      const jz=Math.round((PIPE_Z+S/2)/CELL);
-      outer:for(let j=jz-1;j<=jz+1;j++)for(let i=Math.round((-12+S/2)/CELL);i<=Math.round((12+S/2)/CELL);i++)
+      const jz=Math.round(gJ(PIPE_Z));
+      outer:for(let j=jz-1;j<=jz+1;j++)for(let i=Math.round(gI(-12));i<=Math.round(gI(12));i++)
         if(H[j*V+i]<PIPE_Y+PIPE_R+0.17){st.exposed=true;toast(say('exposed'),'good',2800);break outer}
     }
   }
@@ -187,7 +190,7 @@ function frame(now){
   // flying dirt
   particlesTick(dt);dustTick(dt);grimeTick();
   // groundwater, the tailgate stream and the dirt sounds
-  if(!bench.on)waterTick(dt);mudTick(dt);rainTick(dt);grassTick(dt);jesTick(dt);
+  if(!bench.on)waterTick(dt);mudTick(dt);rainTick(dt);grassTick(dt);jesTick(dt);mainTick(dt);
   pourStream(streams[1],tr.pourP,hAt(tr.pourP.x,tr.pourP.z),tr.pourRate,tr.loadC,now/1000);
   dirtSndTick(dt);
   // bucket load visual
@@ -226,7 +229,7 @@ function frame(now){
   const fv=mode==='truck'?tr:mode==='mow'?mw:mode==='skid'?sk:mode==='walk'?wk:st;sun.position.set(fv.x,fv.y,fv.z).addScaledVector(SUN_DIR,25); sun.target.position.set(fv.x,fv.y,fv.z);
   {const o=groundOcc.value;o[0].set(st.x,st.z,st.yaw,0);o[2].set(tr.x,tr.z,tr.yaw,0)}
   timeU.value=now/1000;
-  shadowProxyTick();lawnLod();tuftLod();renderer.render(scene,camera);
+  shadowProxyTick();lawnLod();tuftLod();rainCover();renderer.render(scene,camera);
   if(bench.on)benchSample(dt);
   fpsFrames++;fpsTime+=dt;
   if(fpsTime>=0.5){const f=Math.round(fpsFrames/fpsTime);const fe=$('#fpsVal');fe.textContent=f;fe.style.color=f>=50?'var(--ok)':f>=30?'var(--gas)':'var(--danger)';

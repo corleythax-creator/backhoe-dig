@@ -109,6 +109,33 @@ tr.done td{opacity:.6}
 .rin{width:2.6em;height:34px;text-align:center;font:400 17px var(--f-disp);color:var(--amber);background:var(--panel-solid);border:1px solid rgba(255,225,170,.3);border-radius:8px;padding:0}
 .rin::placeholder{color:#6d6150}
 .rin:disabled{opacity:.6;color:var(--s)}
+.ngrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px}
+.ncard{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:rgba(10,8,5,.3)}
+.ncard h3,.tk h3{font:600 15px var(--f-disp);margin:0 0 2px;color:var(--gold)}
+.ncard .sub{color:var(--muted);font-size:12px;margin-bottom:6px}
+.xr{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;padding:7px 0;border-top:1px solid var(--line);align-items:center}
+.xr .xt{font-weight:600;font-size:14px}.xr .xt span{color:var(--gc,var(--s));font-weight:700;font-size:12px;margin-right:6px}
+.xr .xs{grid-column:1/-1;color:var(--muted);font-size:12px}
+.xr .xs b{color:var(--m);font-weight:600}
+.xr.next{background:rgba(245,184,0,.1);border-radius:8px;padding-left:8px;padding-right:8px}
+.xr.blocked .xt{opacity:.6}.xr.built .xt{opacity:.6;text-decoration:line-through}
+.rbtn{font:inherit;font-size:12px;font-weight:700;border-radius:999px;padding:3px 10px;border:1px solid var(--amber);background:none;color:var(--amber);cursor:pointer;white-space:nowrap}
+.rbtn:disabled{opacity:.5;border-color:var(--line);color:var(--muted);cursor:default}
+.tkd2{border:1px solid var(--line);border-radius:12px;background:rgba(10,8,5,.3);margin-top:8px}
+.tks{list-style:none;cursor:pointer;padding:10px 14px 8px;position:relative;padding-right:34px}
+.tks::-webkit-details-marker{display:none}
+.tks::after{content:"▸";position:absolute;right:14px;top:12px;color:var(--amber)}
+.tkd2[open]>.tks::after{content:"▾"}
+.withicon>.tks{padding-left:74px;min-height:68px}
+.tkic{position:absolute;left:14px;top:10px;width:48px;height:48px;border-radius:10px;display:flex;align-items:center;justify-content:center;color:var(--gc);background:color-mix(in srgb,var(--gc) 14%,rgba(20,16,10,.7));border:1px solid color-mix(in srgb,var(--gc) 45%,transparent)}
+.tkic svg{width:32px;height:32px}
+.tkn{color:var(--muted);font-size:12px;margin-top:2px}
+.tkbody{padding:0 14px 10px}
+.tkh{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px}
+.tkh .tkp{color:var(--s);font-size:13px;font-weight:600}
+.tkb{height:7px;border-radius:4px;background:var(--bar-bg);overflow:hidden;margin:4px 0 2px;max-width:420px}
+.tkb i{display:block;height:100%;background:var(--s)}
+.tkd{color:var(--muted);font-size:13px;max-width:70ch}
 .wip h3{font:600 15px var(--f-disp);margin:10px 0 4px;display:flex;align-items:center;gap:8px;color:var(--gc)}
 .wip h3 small{color:var(--s);font-size:12px;font-weight:400}
 .wrow{display:grid;grid-template-columns:minmax(0,1fr) 120px;gap:4px 14px;padding:8px 0;border-top:1px solid var(--line)}
@@ -207,6 +234,9 @@ tr.on .rin{background:var(--amber);color:var(--amber-ink);border-color:var(--amb
     <div class="tgl">
       <button class="tbtn" data-p="pfil" aria-expanded="false">Filters <span id="fcount" class="badge" hidden></span></button>
       <button class="tbtn" data-p="pwip" aria-expanded="false">In progress <span id="wipn" class="badge"></span></button>
+      <button class="tbtn" data-p="pnext" aria-expanded="false">Next up</button>
+      <button class="tbtn" data-p="ptracks" aria-expanded="false">Tracks</button>
+      <button class="tbtn" data-p="pcats" aria-expanded="false">Categories</button>
       <button class="tbtn" data-p="pgsum" aria-expanded="false">Totals</button>
       <button class="tbtn" data-p="phelp" aria-expanded="false">Help</button>
     </div>
@@ -230,6 +260,23 @@ tr.on .rin{background:var(--amber);color:var(--amber-ink);border-color:var(--amb
   <div class="panel wip" id="pwip" hidden>
     <div class="frow"><label>Category <select id="wipg"><option value="">All categories</option></select></label><label>Sort <select id="wips"><option value="cat">By category, most complete first</option><option value="hi">Most complete first</option><option value="lo">Least complete first</option></select></label><span class="wipsum" id="wipsum"></span></div>
     <div id="wipb"></div>
+  </div>
+
+  <div class="panel nx" id="pnext" hidden>
+    <p class="hint">What to send Claude next. Ideas you have hidden are left out. Tap + Rank to add one to your ranked list.</p>
+    <div class="ngrid" id="nxb"></div>
+  </div>
+
+  <div class="panel tk" id="ptracks" hidden>
+    <p class="hint">Groups of ideas that add up to one thing you can play. Tap a track to open it. Each runs in build order; the highlighted one is the next to build. Tokens are a rough guess of about 0.4 M per estimated hour, and the percent is of your weekly hours (set under Help).</p>
+    <div class="frow"><button class="gbtn" id="tkall" type="button">Expand all</button><button class="gbtn" id="tknone" type="button">Collapse all</button></div>
+    <div id="tkb"></div>
+  </div>
+
+  <div class="panel tk" id="pcats" hidden>
+    <p class="hint">Every idea by its category, best priority first. Tap a category to open it; the highlighted one is the best ready to build. Tokens are a rough guess of about 0.4 M per estimated hour, and the percent is of your weekly hours (set under Help).</p>
+    <div class="frow"><button class="gbtn" id="ctall" type="button">Expand all</button><button class="gbtn" id="ctnone" type="button">Collapse all</button></div>
+    <div id="ctb"></div>
   </div>
 
   <div class="panel gsum" id="pgsum" hidden>
@@ -695,12 +742,13 @@ const I=[
 ];
 // built (or partly built) ideas: date and what is in the game; part: more steps left (still pickable); pc: percent done
 const DONE={
+B10:{d:"Oct 18 (v123)",n:"A lattice-boom crawler crane on a deck barge with spud poles, a stack of steel pipe piles and a stack of plate girders works along the temporary timber trestles: for each span it lifts a pile, upends it, drives it with a vibratory hammer, then swings a girder into place, and the span turns to steel with a concrete deck. The town trestle first, then the north one; about 4 minutes a span (Tuning: Bridges), saved and synced, and the temporary signs come down when a trestle is done."},
 Q15:{d:"Oct 18 (v114)",part:true,pc:35,n:"Relief and wet sheen on 28 painted materials (gravel, brick, cobble, concrete and more) on High graphics: bumps from normal maps that fade with distance, sheen from roughness maps plus extra sheen in rain, with Ground look sliders in the Tuning tab. Still to come: sky lighting, soft sun shadows, bloom, better trees, relief on the natural grass and dirt."},
 D02:{d:"Oct 17 (v68, v69, v73)",n:"Tracks and tires sink up to 9 in and leave ruts with berms; push on in deep mud and they dig in and spin until you rock free (forward, back, forward). Rain or painted Mud soaks the ground, and it bogs anywhere on the mesa."},
 H14:{d:"Oct 17 (v76)",n:"A chess table and a checkers table at the Family Island pavilion, set up to play. Walk up and Get in becomes Play chess or Play checkers: the island saves and opens Mesa at full quality, and its Corley's Island link brings you back beside the table."},
 Q02:{d:"Oct 17 (v68, v80, v85)",n:"Tracks and tyres leave rounded ruts with the tread printed in the bottom, and lay the field grass flat the way they drove; the trampled tracks spring back over a few minutes."},
 S10:{d:"Oct 17 (v79)",n:"The field grass comes in four kinds, with low broadleaf weeds and drifts of yellow, white and purple wildflowers."},
-W01:{d:"Oct 17 (v73, v99, v105, v118)",part:true,pc:90,n:"Showers roll through: soil soaks by type, ruts and holes fill, it all dries over minutes and dug dirt cracks as it dries, grey sky and hiss. Rain falls as slanted streaks of many lengths that lean in the wind and light up against the sun, with a fainter layer and a veil of rain further out, and splashes where it lands. Still to come: cab wipers that run."},
+W01:{d:"Oct 17 (v73, v99, v105, v118, v121)",n:"Showers roll through: soil soaks by type, ruts and holes fill, it all dries over minutes and dug dirt cracks as it dries, grey sky and hiss. Rain falls as slanted streaks that lean in the wind and light up against the sun, with a far layer, a veil of rain in the haze and splashes where it lands; roofs, cabs, porches and bridges keep it off. Drops bead and run on the excavator and truck windscreens, and the wipers sweep them off."},
 W09:{d:"Oct 18 (v118)",n:"Drops throw up little crowns of spray on the ground near you and spread rings across puddles and the lake while it rains; it all stops when the rain does."},
 M02:{d:"Oct 17 (v86)",part:true,pc:70,n:"Dexter's skid steer drives, spins in place, scoops on the dig site and dumps into piles or the truck. Still to come: pallet forks for blocks and pipe."},
 I01:{d:"Oct 17 (v74, v77, v81)",part:true,pc:40,n:"Three more islands on the lake, joined by bridges: the Family Island, Dexter's Island and Jessica's Island. Still to come: more islands and docks."},
@@ -719,7 +767,7 @@ Q04:{d:"Oct 17 (v32)",part:true,pc:40,n:"The bucket gets dirty and tracks and ty
 D01:{d:"Oct 17 (v32), Oct 19 (v116)",n:"Moist clay clings in the excavator bucket, the skid steer bucket and the truck bed when tipped (most when moist, less dry or as slop) and takes up room until shaken out: rock the curl fast or slam it into the dump stop; bump the truck bed into its top stop. It falls as big lumps."},
 D06:{d:"Oct 17 (v22, v80), Oct 19 (v116)",n:"Each soil holds its own angle, piles too (dry sand 32°, topsoil 36°, lumpy clay 42°): damp sand and soil stand steeper, soaked faces a foot or more tall slump (sand to about 26°, clay to about 29°), so piles and trench walls can let go after rain, and a growing pile slides in small avalanches to just under its angle."},
 W03:{d:"Oct 17 (v47)",part:true,pc:40,n:"Wind comes in gusts that roll across the grass. Still to come: dust off the piles and trees swaying harder."},
-X11:{d:"Oct 17 (v32)",part:true,pc:30,n:"Tracks get muddy as you work. Still to come: clay packing in and dropping off in clumps."},
+X11:{d:"Oct 17 (v32), Oct 19 (v122)",n:"Working wet clay packs into the excavator undercarriage (most while turning, up to about 800 lb): the tracks drag and turn slower, and lumps show on the track frames. It drops off in clumps as you drive, faster on firm ground and when you rock the tracks back and forth, and slowly as it dries."},
 I11:{d:"Oct 17 (v77)",part:true,pc:30,n:"Jessica's Island is a forest mesa with lantern-lit gravel paths, a cliff bench and her stone cottage. Still to come: a lookout tower and a campsite."},
 E05:{d:"Oct 17 (v60)",part:true,pc:30,n:"Copy map gives a few KB of text to paste into Load a map on another device. Still to come: opening a map from a link, and a gallery."},
 Q09:{d:"Oct 17 (v52, v87)",part:true,pc:40,n:"Graphics Low is the light preset for phones, and the Graphics panel shows the frame rate live. Still to come: a preset that holds 60."}
@@ -766,6 +814,83 @@ function renderWip(){
 }
 {const ws=$("wipg");for(const k of Object.keys(G)){const n=I.filter(r=>r[1]===k&&DONE[r[0]]&&DONE[r[0]].part).length;if(!n)continue;const o=document.createElement("option");o.value=k;o.textContent=G[k]+" ("+n+")";ws.appendChild(o)}
  ws.addEventListener("change",renderWip);$("wips").addEventListener("change",renderWip);$("wipn").textContent=I.filter(r=>DONE[r[0]]&&DONE[r[0]].part).length;renderWip()}
+const TRACKS=[["pipe","Pipeline job","Lay a real pipeline: pipelayer, valves, tests, a bore under the road and a pump station at the end.",["J04","M27","U14","U12","U11","J22","J21","U15","S29","M29","U10"]],["road","Build a road","Stake it, cut and fill, crown and drain it, test the compaction, pave and stripe it.",["J06","J37","J05","M07","M06","J26","J25","J38","J27","J04","J29","J23","B18","B20"]],["quarry","Quarry and mining","Drill and blast a bench, load haul trucks, crush and stockpile stone, sell it by the ton, reclaim the pit.",["S03","D16","M34","J40","D17","M36","M35","J43","M32","M38","J45","J16","J46","J44","J48"]],["farm","Farm, field and woods","Mow the big hayfield, bale hay, and ride ATVs and side-by-sides through woods you can explore.",["M19","M25","K14","K15","M26","I32","M24","S24","S25","S26","S27","S28","S32","S33"]],["cozy","Cozy lake life","Sauna, fish fry, porch picking, mist, stars and the neighbors: the down-home feel of the lake.",["H01","H08","H21","H22","H26","H31","W12","W14","W15","A09","L09","S34","H25","I33"]],["rail","Trains and traffic","Busy road, trains on the shore, a rail crossing with gates, track work and a ride to town.",["B11","B12","B13","B14","B15","B16"]],["fleet","The yard fleet","Drive the loader and dozer, haul with the articulated truck, fuel and fix the machines.",["M02","M03","M05","M06","M07","M09","M10","M11","M16","X16","Y14"]],["excav","Excavator craft","Couplers, thumb and hammer, tilt, grade guides, GPS control and a machine that tips and wears.",["X01","X02","X03","X07","X12","X13","X15","X14","X09","X17","X18"]],["wet","Weather and wet ground","Rain you can see land, storms, mud, groundwater, erosion and the drainage that answers them.",["W01","W09","W03","W05","W08","W13","D02","D13","D15","J19","J34","J35","J39"]],["fam","Family Island life","The islands, the ferry, the family and the evenings together.",["I01","I02","I03","I04","I06","I07","I16","I17","I21","I28"]],["biz","Business and simulation","Work orders, money, bids, supplies and the ladder of operator skill.",["R02","J01","J15","J24","T04","T14","T06","Y13"]]];
+
+// ---- Next up and Tracks: what to build next, from the built marks and the "needs" links ----
+const stOf=id=>{const d=DONE[id];return d?(d.part?"part":"built"):"open"};
+const builtId=id=>stOf(id)==="built";
+const blockedBy=r=>N(r).dp.filter(d=>IDS.has(d)&&!builtId(d));
+function addPick(id){picks.add(id);hid.delete(id);save();render()}
+function rankBtn(r){const b=el("button","rbtn",picks.has(r[0])?"Ranked":"+ Rank");b.type="button";b.disabled=picks.has(r[0]);b.setAttribute("aria-label","Rank "+r[2]);b.addEventListener("click",()=>addPick(r[0]));return b}
+function xrow(r,o){o=o||{};const id=r[0],s=stOf(id),bl=blockedBy(r),w=el("div","xr"+(s==="built"?" built":bl.length?" blocked":"")+(o.next?" next":""));
+  w.style.setProperty("--gc",GC[r[1]]);
+  const t=el("div","xt");t.append(el("span",null,id),r[2]);
+  const sub=el("div","xs");
+  if(s==="built")sub.textContent="Built "+DONE[id].d;
+  else if(s==="part")sub.append("Started, "+(DONE[id].pc!=null?DONE[id].pc+"% done. ":"")+(DONE[id].n||""));
+  else{sub.append(COST[N(r).c][0]+" · ~"+r[9]+" h · priority "+prio(r));if(bl.length){const b=el("b",null," · waits on "+bl.map(d=>d+" "+IDS.get(d)[2]).join(", "));sub.appendChild(b)}}
+  if(o.extra){sub.appendChild(document.createTextNode(" "));const e=el("b",null,o.extra);sub.appendChild(e)}
+  w.append(t,s==="built"?el("span"):rankBtn(r),sub);return w}
+// unbuilt ideas that depend on each idea, directly or through others
+let kids=null;
+function kidsMap(){const m=new Map();for(const r of I)for(const d of N(r).dp){if(!m.has(d))m.set(d,[]);m.get(d).push(r[0])}return m}
+function unlocks(id,seen){seen=seen||new Set();for(const k of kids.get(id)||[]){if(!seen.has(k)){seen.add(k);if(!builtId(k))unlocks(k,seen)}}return [...seen].filter(k=>!builtId(k))}
+function nextOf(list){return list.map(i=>IDS.get(i)).find(r=>r&&stOf(r[0])!=="built"&&!blockedBy(r).length)}
+function renderNext(){
+  const b=$("nxb");b.textContent="";kids=kidsMap();
+  const open=I.filter(r=>stOf(r[0])==="open"&&!hid.has(r[0])),ready=open.filter(r=>!blockedBy(r).length);
+  const card=(h,sub,rows)=>{const c=el("div","ncard");c.append(el("h3",null,h),el("div","sub",sub));if(!rows.length)c.appendChild(el("div","empty","Nothing here right now."));rows.forEach(x=>c.appendChild(x));b.appendChild(c)};
+  // 1 unlockers
+  const ul=I.filter(r=>stOf(r[0])!=="built"&&!hid.has(r[0])).map(r=>({r,u:unlocks(r[0])})).filter(x=>x.u.length).sort((x,y)=>y.u.length-x.u.length||prio(y.r)-prio(x.r)).slice(0,8);
+  card("Unlockers","Building these opens the most other ideas.",ul.map(x=>xrow(x.r,{extra:" · unlocks "+x.u.length+": "+x.u.slice(0,3).map(i=>IDS.get(i)[2]).join(", ")+(x.u.length>3?"…":"")})));
+  // 2 finish
+  const part=I.filter(r=>stOf(r[0])==="part").sort((x,y)=>(DONE[y[0]].pc||0)-(DONE[x[0]].pc||0)).slice(0,8);
+  card("Finish what is started","Partly built, furthest along first.",part.map(r=>xrow(r)));
+  // 3 quick wins
+  const qw=ready.filter(r=>N(r).c===1).sort((x,y)=>prio(y)-prio(x)||x[9]-y[9]).slice(0,8);
+  card("Quick wins","One session each, nothing in the way, best priority first.",qw.map(r=>xrow(r)));
+  // 4 best ready
+  const br=ready.sort((x,y)=>prio(y)-prio(x)).slice(0,8);
+  card("Best ready now","Nothing in the way, highest priority first.",br.map(r=>xrow(r)));
+  // 5 next in each track
+  const nt=[];for(const [k,n,d,list] of TRACKS){const r=nextOf(list);if(r&&!hid.has(r[0]))nt.push(xrow(r,{extra:" · "+n}))}
+  card("Next step in each track","The first thing still open in every track.",nt)
+}
+const tkOpen=new Set();
+// rough guess: about 0.4 M tokens of Claude work per estimated developer hour (a feature is roughly steps x session length, see docs/WORKFLOW.md)
+const TOK_PER_H=0.4;
+const hrsLeft=r=>stOf(r[0])==="built"?0:r[9]*(stOf(r[0])==="part"?1-(DONE[r[0]].pc||0)/100:1);
+const fmtTok=h=>{const m=h*TOK_PER_H;return "~"+(m<10?m.toFixed(1):Math.round(m))+" M tokens"};
+function trackPct(list){const rows=list.map(i=>IDS.get(i));return rows.reduce((a,r)=>a+(stOf(r[0])==="built"?1:stOf(r[0])==="part"?(DONE[r[0]].pc||0)/100:0),0)/rows.length}
+// every idea that is in no track, best priority first, so nothing is lost from view
+function trackList(){const inT=new Set(TRACKS.flatMap(t=>t[3])),rest=I.filter(r=>!inT.has(r[0])&&!hid.has(r[0])).sort((x,y)=>prio(y)-prio(x)).map(r=>r[0]);
+  return [...TRACKS,["none","Not in a track","Everything else on the board, best priority first, whatever its group.",rest]]}
+function catList(){return Object.keys(G).map(k=>{const ids=I.filter(r=>r[1]===k&&!hid.has(r[0])).sort((x,y)=>prio(y)-prio(x)).map(r=>r[0]);return [k,G[k],ids.length+" ideas, best priority first.",ids]})}
+const catOpen=new Set();
+const CAT_ICON={"J":"M7 4h10a1 1 0 0 1 1 1v15a1 1 0 0 1-1 1H7a1 1 0 0 1-1-1V5a1 1 0 0 1 1-1z M9.5 2.5h5v3h-5z M9 10h6 M9 14h6 M9 18h3","M":"M3 18h14a2 2 0 0 1 0 3H3a2 2 0 0 1 0-3z M5 18v-4h6v4 M11 14l4-8 6 2-2 7 M19 15h2","X":"M4 8h11l4 6-3 4H7z M7 18v3 M11 18v3 M15 18v3 M4 8l-2-3","D":"M2 20h20 M3.5 20c2-8 5-11 8.5-11s6.500 3 8.500 11 M9 15.500h.01 M14 14h.01 M12 17.500h.01","U":"M3 6h9a4 4 0 0 1 4 4v11 M3 4v4 M14 21h4 M2 12h6","W":"M7 15a4 4 0 1 1 1-7.900A5 5 0 0 1 17.500 9 3.500 3.500 0 0 1 17 16H7z M9 19l-1 2.500 M13 19l-1 2.500 M17 19l-1 2.500","S":"M6 20v-4 M6 16H2.500L6 9l3.500 7z M16 20v-5 M16 15h-4.500L16 6l4.500 9z","L":"M8 8a4 4 0 0 1 8 0z M7 8h10 M9 8v2.500a3 3 0 0 0 6 0V8 M5 21v-2a7 7 0 0 1 14 0v2","A":"M4 9h4l5-4v14l-5-4H4z M16 9a4 4 0 0 1 0 6 M18.500 6.500a8 8 0 0 1 0 11","C":"M3 9a3 3 0 0 1 3-3h12a3 3 0 0 1 3 3v6a3 3 0 0 1-3 3H6a3 3 0 0 1-3-3z M8 10v4 M6 12h4 M16 10.500h.01 M18 13.500h.01","Q":"M3 5h18v11H3z M9 20h6 M12 16v4 M7 13l3-3 3 2 4-4","E":"M3 6l6-2 6 2 6-2v14l-6 2-6-2-6 2z M9 4v14 M15 6v14","Y":"M8 4h8v5a4 4 0 0 1-8 0z M8 6H5a3 3 0 0 0 3 4 M16 6h3a3 3 0 0 1-3 4 M12 13v4 M8 20h8 M10 17h4","H":"M3 11l9-7 9 7 M5 10v10h14V10 M10 20v-5h4v5 M17 7V4h2.500v5","K":"M4 20c0-5 1-8 2-9 M9 20c0-6 1-10 3-12 M14 20c0-5 1-8 2-9 M19 20c0-4 0-6 1-7 M2 20h20","B":"M2 18h20 M4 18v-6 M20 18v-6 M4 12c4-6 12-6 16 0 M8 18v-5.500 M12 18v-6 M16 18v-5.500","T":"M2 20l6-11 4 6 3-4 7 9z M17 5.500h.01 M8 9l1.500 2.500","R":"M4 6h16v14H4z M4 10h16 M8 3v4 M16 3v4 M8 14h2 M13 14h2 M8 17h2","I":"M3 19c3-1 6 1 9 0s6 1 9 0 M7 16c1-3 3-4 5-4s4 1 5 4z M12 12V6 M12 6c-2-1-4 0-5 2 M12 6c2-1 4 0 5 2"};
+const catIcon=k=>{const s=el("span","tkic");s.setAttribute("aria-hidden","true");s.innerHTML='<svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="'+CAT_ICON[k]+'"/></svg>';return s};
+function renderTracks(){renderAcc("tkb",trackList(),tkOpen)}
+function renderCats(){renderAcc("ctb",catList(),catOpen,true)}
+function renderAcc(bodyId,groups,openSet,icons){
+  const b=$(bodyId);b.textContent="";
+  for(const [k,n,d,list] of groups){
+    if(!list.length)continue;
+    const rows=list.map(i=>IDS.get(i)),tot=rows.length,pc=Math.round(trackPct(list)*100),nb=rows.filter(r=>stOf(r[0])==="built").length;
+    const nx=nextOf(list),hr=Math.round(rows.reduce((a,r)=>a+hrsLeft(r),0));
+    const dt=el("details","tkd2");dt.open=openSet.has(k);dt.addEventListener("toggle",()=>{dt.open?openSet.add(k):openSet.delete(k)});
+    const sm=el("summary","tks"),top=el("div","tkh");if(icons){dt.classList.add("withicon");dt.style.setProperty("--gc",GC[k]);sm.appendChild(catIcon(k))}
+    top.append(el("h3",null,n),el("span","tkp",nb+" of "+tot+" built · "+pc+"%"),el("span","tkp",hr?"~"+hr+" h left":"all built"),hr?el("span","tkp",fmtTok(hr)+" left ("+pct(hr)+" of week)"):el("span"));
+    const bar=el("div","tkb"),bi=el("i");bi.style.width=pc+"%";bar.appendChild(bi);
+    sm.append(top,bar);if(nx)sm.appendChild(el("div","tkn","Next: "+nx[0]+" "+nx[2]));
+    const body=el("div","tkbody");body.appendChild(el("div","tkd",d));
+    for(const r of rows)body.appendChild(xrow(r,{next:nx&&nx[0]===r[0]}));
+    dt.append(sm,body);b.appendChild(dt)}
+}
+$("tkall").addEventListener("click",()=>{trackList().forEach(t=>tkOpen.add(t[0]));renderTracks()});
+$("tknone").addEventListener("click",()=>{tkOpen.clear();renderTracks()});
+$("ctall").addEventListener("click",()=>{catList().forEach(t=>catOpen.add(t[0]));renderCats()});
+$("ctnone").addEventListener("click",()=>{catOpen.clear();renderCats()});
+function renderPanels(){if(!$("pnext").hidden)renderNext();if(!$("ptracks").hidden)renderTracks();if(!$("pcats").hidden)renderCats()}
 let gK="pr",gD=-1;
 document.querySelectorAll("th button[data-gk]").forEach(b=>b.addEventListener("click",()=>{const k=b.dataset.gk;if(gK===k)gD=-gD;else{gK=k;gD=k==="g"?1:-1}groupTable()}));
 function agg(rows){const n=rows.length,ns=rows.map(N),h=rows.reduce((a,r)=>a+hrs(r),0);return{n,pk:rows.filter(r=>picks.has(r[0])).length,ses:rows.reduce((a,r,i)=>a+COST[ns[i].c][1],0),pc:h,
@@ -784,7 +909,7 @@ $("plan").addEventListener("change",()=>{PL=$("plan").value;if(PL!=="c"){WK=+PL;
 $("wk").addEventListener("input",()=>{const v=+$("wk").value;if(v>0){WK=v;PL=(v===88||v===40||v===25)?String(v):"c";$("plan").value=PL;save();render()}});
 $("wt").addEventListener("change",()=>{W=+$("wt").value;save();render()});
 ["q","fs","fp","ff","fo","fd","fh","fph"].forEach(id=>$(id).addEventListener(id==="q"?"input":"change",render));
-document.querySelectorAll(".tbtn").forEach(b=>b.addEventListener("click",()=>{const p=$(b.dataset.p),open=p.hidden;p.hidden=!open;b.setAttribute("aria-expanded",open)}));
+document.querySelectorAll(".tbtn").forEach(b=>b.addEventListener("click",()=>{const p=$(b.dataset.p),open=p.hidden;p.hidden=!open;b.setAttribute("aria-expanded",open);if(open)renderPanels()}));
 // any dropdown (change or input, whichever the browser fires) redraws the list and the in-progress tab, and the list jumps back to its top
 let rfq=0;function refreshAll(){if(rfq)return;rfq=requestAnimationFrame(()=>{rfq=0;render();renderWip();const bx=$("tb").closest(".tbox");if(bx)bx.scrollTop=0})}
 ["change","input"].forEach(ev=>document.addEventListener(ev,e=>{if(e.target&&e.target.tagName==="SELECT"&&!e.target.closest("#phelp"))refreshAll()}));
@@ -828,6 +953,7 @@ function render(){
   totals()
 }
 function totals(){
+  renderPanels();
   const p=[...picks].map(id=>IDS.get(id)),h=p.reduce((a,r)=>a+hrs(r),0);
   $("nPick").textContent=p.length;$("hPick").textContent=Math.round(p.reduce((a,r)=>a+COST[N(r).c][1],0));
   $("tPick").textContent=Math.round(h);$("pPick").textContent=pct(h);
@@ -866,4 +992,5 @@ if(window.claude&&window.claude.use)window.claude.use("mcp").then(m=>{MCP=m;if(!
 else $("send").hidden=true;
 </script>
 
+</body></html>
 </body></html>

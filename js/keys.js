@@ -43,6 +43,7 @@ const KEY_ACTIONS=[
   {id:'blkNear',g:'Blocks',n:'Reach nearer',d:'In first person on foot, pull the block back toward you',k:['BracketLeft']},
   {id:'box',g:'Site',n:'Trench box',d:'Hook it to the bucket, or set it down',k:['KeyT']},
   {id:'pump',g:'Site',n:'Pump',d:'Dewater a flooded hole',k:['KeyP']},
+  {id:'wipers',g:'Site',n:'Wipers',d:'Turn the windscreen wipers on or off in the excavator and the truck',k:['Space'],s:'ride'},
   {id:'cam',g:'View',n:'Cab view',d:'Switch between the cab (or your own eyes) and the chase camera',k:['KeyC']},
   {id:'lookAhead',g:'View',n:'Look ahead',d:'In cab view, turn your head back to straight ahead and zoom out',k:['KeyR']},
   {id:'zoom',g:'View',n:'Zoom',d:'Hold to zoom in, in cab view (the mouse wheel or a pinch zooms too, but on foot with blocks on the wheel sets their reach)',k:['KeyZ']},

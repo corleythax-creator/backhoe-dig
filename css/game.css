@@ -40,7 +40,7 @@ canvas#view{position:fixed;inset:0;width:100%;height:100%;display:block;touch-ac
 #trenchBar>i{background:var(--ok)}#lawnBar>i{background:#9bd46a}
 .full .val{color:var(--gas)}
 .tacts{flex:none;margin-left:auto;display:flex;gap:6px}
-#blkBtn[aria-pressed="true"],#pumpBtn[aria-pressed="true"]{background:var(--machine);color:#1c1309}
+#blkBtn[aria-pressed="true"],#pumpBtn[aria-pressed="true"],#wipeBtn[aria-pressed="true"]{background:var(--machine);color:#1c1309}
 .row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 button{pointer-events:auto;touch-action:manipulation;font:700 15px/1 var(--f-display);letter-spacing:.05em;text-transform:uppercase;color:var(--ink);background:var(--hud);border:1px solid var(--hud-line);border-radius:9px;height:40px;padding:0 12px;cursor:pointer}
 button:focus-visible{outline:3px solid var(--gas);outline-offset:2px}
@@ -124,22 +124,43 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 #toast span.show{opacity:1}
 #toast span.bad{border-color:var(--danger);color:#ffd9d5}
 #toast span.good{border-color:var(--ok)}
-#bigmap{position:fixed;inset:0;background:rgba(10,12,9,.8);display:flex;align-items:center;justify-content:center;z-index:6;pointer-events:auto;box-sizing:border-box;
-  padding-block:calc(env(safe-area-inset-top,0px) + 12px) calc(env(safe-area-inset-bottom,0px) + 12px);
+/* Site map: the map fills the card on the left, a side panel on the right (below on a tall phone) holds the title,
+   teleport, places, layers and the key. The map is dragged, pinched and scrolled; its buttons float on it */
+#bigmap{position:fixed;inset:0;background:rgba(6,8,6,.72);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);display:flex;align-items:stretch;justify-content:center;z-index:6;pointer-events:auto;box-sizing:border-box;
+  padding-block:calc(env(safe-area-inset-top,0px) + 14px) calc(env(safe-area-inset-bottom,0px) + 14px);
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-.mapcard{background:#1d211b;border:1px solid var(--hud-line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px;max-width:100%;max-height:100%;box-sizing:border-box}
+.mapcard{width:100%;max-width:1680px;display:grid;grid-template-columns:minmax(0,1fr) 380px;background:#161a15;border:1px solid var(--hud-line);border-radius:16px;overflow:hidden;box-shadow:0 24px 70px rgba(0,0,0,.55);box-sizing:border-box}
+.mapview{position:relative;min-height:0;min-width:0;background:#1a4769}
+#big{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:crosshair}
+#big.drag{cursor:grabbing}
+#mapCtl{position:absolute;right:12px;top:12px;display:flex;flex-direction:column;gap:8px}
+#mapCtl button{width:48px;height:48px;padding:0;display:grid;place-items:center;background:rgba(20,23,19,.85);border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+#mapCtl svg{width:24px;height:24px;fill:none;stroke:var(--ink);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+@media (hover:hover){#mapCtl button:hover{background:rgba(48,54,44,.95)}}
+#mapWhere{position:absolute;left:12px;bottom:12px;max-width:calc(100% - 200px);padding:8px 14px;border-radius:10px;background:rgba(20,23,19,.85);font:700 18px/1.2 var(--f-display);letter-spacing:.03em;color:var(--ink);pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#mapWhere:empty{display:none}
+.mapside{display:flex;flex-direction:column;gap:16px;padding:16px 18px 18px;overflow-y:auto;min-height:0;border-left:1px solid var(--hud-line);background:linear-gradient(180deg,#1f241d,#161a15)}
 .maphead{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.maphead h2{margin:0;font:800 28px/1 var(--f-display);color:var(--machine);letter-spacing:.02em}
-#big{display:block;border-radius:10px;background:#1e2a30;max-width:100%}
-#tpBar{display:flex;align-items:center;min-height:46px;font:700 18px/1.2 var(--f-display);letter-spacing:.03em;color:var(--ink)}
+.maphead h2{margin:0;font:800 32px/1 var(--f-display);color:var(--machine);letter-spacing:.02em;text-transform:uppercase}
+.mapsec{display:flex;flex-direction:column;gap:10px;padding-top:14px;border-top:1px solid var(--hud-line)}
+.mapsec h3{margin:0;font:800 14px/1 var(--f-display);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+#mapPlaces{display:flex;flex-wrap:wrap;gap:6px}
+#mapPlaces button{height:40px;font-size:16px;padding:0 12px}
+#tpBar{display:flex;align-items:center;min-height:46px;padding:10px 12px;border-radius:10px;background:rgba(245,197,24,.08);border:1px solid rgba(245,197,24,.28);font:700 18px/1.2 var(--f-display);letter-spacing:.03em;color:var(--ink)}
 #tpOpts{display:flex;flex-wrap:wrap;align-items:center;gap:8px}#tpOpts[hidden],#tpHint[hidden]{display:none}
-#tpOpts button{height:46px;font-size:18px;padding:0 14px}
+#tpOpts>span{width:100%;color:var(--gas)}
+#tpOpts button{height:44px;font-size:17px;padding:0 12px}
 #tpOpts button[aria-pressed="true"]{border-color:var(--machine);color:var(--machine)}
-.legend{display:flex;flex-wrap:wrap;gap:8px 16px;font:600 17px/1.2 var(--f-display);letter-spacing:.03em}
-/* short landscape screens (a phone on its side): the map on the left, title, teleport and legend beside it */
-@media (max-height:520px) and (orientation:landscape){.mapcard{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:max-content max-content 1fr;gap:10px 14px;align-items:start}
-  #big{grid-column:1;grid-row:1/4}.maphead,#tpBar,.legend{grid-column:2}.legend{font-size:15px;gap:4px 12px}}
-.legend span{display:flex;align-items:center;gap:7px}
+.legend{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:9px 12px;font:600 17px/1.2 var(--f-display);letter-spacing:.03em}
+.legend span{display:flex;align-items:center;gap:9px}
+.legend i{flex:none;display:block;width:18px;height:12px;border-radius:3px}
+.legend i.tri{width:18px;height:14px;border-radius:0;background:var(--c);clip-path:polygon(100% 50%,0 0,30% 50%,0 100%)}
+/* a tall phone: the map on top, the panel under it */
+@media (orientation:portrait) and (max-width:900px){.mapcard{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,58fr) minmax(0,42fr)}
+  .mapside{border-left:0;border-top:1px solid var(--hud-line)}}
+/* a phone on its side: a narrower panel beside the map */
+@media (max-height:520px) and (orientation:landscape){.mapcard{grid-template-columns:minmax(0,1fr) 300px}.mapside{padding:12px 14px;gap:12px}.maphead h2{font-size:26px}
+  #mapCtl button{width:42px;height:42px}.legend{font-size:15px;grid-template-columns:repeat(2,minmax(0,1fr))}}
 .legend i{display:inline-block;width:18px;height:12px;border-radius:3px}
 #benchBar{position:absolute;left:0;right:0;top:calc(var(--pt) + 130px);z-index:2;margin:0 auto;width:max-content;max-width:100%;box-sizing:border-box;font:800 16px/1.25 var(--f-display);letter-spacing:.04em;text-align:center;background:var(--hud);border:2px solid var(--gas);border-radius:10px;padding:8px 14px;font-variant-numeric:tabular-nums}
 #benchBar small{display:block;font:600 13px/1.2 var(--f-display);color:var(--muted);letter-spacing:.03em}
@@ -376,18 +397,17 @@ body.editing #hud>:is(.tbar,.lbar,.rpane,.sticks,.bbar){display:none}
 #gfxGraphCap b{color:var(--ink)}
 /* big map trails: what to show, and its key */
 #trailBar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font:700 18px/1.2 var(--f-display);letter-spacing:.03em;color:var(--ink)}
-#trailBar span{margin-right:4px}
-#trailBar button{height:42px;font-size:16px;padding:0 10px}
+#trailBar span{width:100%}
+#trailBar button{height:40px;font-size:16px;padding:0 10px}
 #trailBar button[aria-pressed="true"]{background:var(--machine);color:#1c1309;border-color:var(--machine)}
 #trailKey{display:flex;flex-direction:column;gap:4px}
 #trailKey i{display:block;height:10px;border-radius:5px}
 #trailKey>span{display:flex;justify-content:space-between;gap:10px;font:600 15px/1.2 var(--f-display);color:var(--muted)}
 #wetBar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font:700 18px/1.2 var(--f-display);letter-spacing:.03em;color:var(--ink)}
-#wetBar span{margin-right:4px}
-#wetBar button{height:42px;font-size:16px;padding:0 10px}
+#wetBar span{width:100%}
+#wetBar button{height:40px;font-size:16px;padding:0 10px}
 #wetBar button[aria-pressed="true"],#wetGround[aria-pressed="true"]{background:var(--machine);color:#1c1309;border-color:var(--machine)}
 #wetKey{display:flex;flex-direction:column;gap:4px}
 #wetKey i{display:block;height:10px;border-radius:5px}
 #wetKey>span{display:flex;justify-content:space-between;gap:10px;font:600 15px/1.2 var(--f-display);color:var(--muted)}
 #wetGround{align-self:flex-start;margin-top:4px}
-@media (max-height:520px) and (orientation:landscape){.mapcard{grid-template-rows:max-content max-content max-content max-content max-content max-content 1fr}#big{grid-row:1/8}#trailBar,#trailKey,#wetBar,#wetKey{grid-column:2}}

@@ -77,7 +77,7 @@ const PROP_MODELS={
 {const mt=M(0xffffff,{vertexColors:true});
   for(const k in PROPS){const im=new THREE.InstancedMesh(propModel(PROP_MODELS[k]),mt,PROPS[k].cap);
     im.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(PROPS[k].cap*3),3);
-    im.castShadow=im.receiveShadow=true;im.frustumCulled=false;im.count=0;im.visible=false;scene.add(im);propIMs[k]=im}}
+    im.castShadow=im.receiveShadow=true;im.frustumCulled=false;im.count=0;im.visible=false;im.layers.enable(RAIN_LAYER);scene.add(im);propIMs[k]=im}}
 // ---------- placing ----------
 // a thing's footprint corners and middle, turned and sized, as [x, z] points
 function propPts(a){const p=PROPS[a.t],hw=p.w/2*a.s,hd=p.d/2*a.s,c=Math.cos(a.yaw),s=Math.sin(a.yaw),out=[[a.x,a.z]];

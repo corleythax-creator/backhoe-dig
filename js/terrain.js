@@ -4,6 +4,19 @@
 // dig grid: 64 m square at 0.16 m (about 6 in) per cell. GRID_K = cells per 0.32 m, the old 1 ft cell, so reaches and
 // settling speeds written in cells stay the same in feet
 const S=64,N=400,CELL=S/N,V=N+1,CA=CELL*CELL,FLOOR=3.5,GRID_K=Math.round(0.32/CELL);
+// dig tiles (docs/dig-plans.html): the map is cut into TILE m squares, named from the mesa top's centre (E0/W1 across,
+// S0/N1 down). The dig grid covers TPG by TPG of them, its west and north edges at GX0, GZ0 (on tile lines); today the
+// four round the trench. Everything that turns world x, z into grid i, j or back goes through gX/gZ and gI/gJ
+const TILE=32,TPG=S/TILE,GX0=-TILE,GZ0=-TILE,GX1=GX0+S,GZ1=GZ0+S;
+const gX=i=>GX0+i*CELL,gZ=j=>GZ0+j*CELL,gI=x=>(x-GX0)/CELL,gJ=z=>(z-GZ0)/CELL;
+// inside the dig grid, at least m in from its edge
+function inDig(x,z,m=0){return x>=GX0+m&&x<=GX1-m&&z>=GZ0+m&&z<=GZ1-m}
+function tileName(ti,tj){return (ti<0?'W'+(-ti):'E'+ti)+' · '+(tj<0?'N'+(-tj):'S'+tj)}
+// the grid's tiles: their map index (ti, tj) and grid point ranges (a shared edge row belongs to both)
+const DIG_TILES=[];for(let b=0;b<TPG;b++)for(let a=0;a<TPG;a++){const ti=Math.round(GX0/TILE)+a,tj=Math.round(GZ0/TILE)+b,n=N/TPG;
+  DIG_TILES.push({ti,tj,name:tileName(ti,tj),i0:a*n,i1:(a+1)*n,j0:b*n,j1:(b+1)*n})}
+// the dig tile under x, z, or null off the grid
+function digTileAt(x,z){if(!inDig(x,z))return null;const a=Math.min(TPG-1,Math.floor((x-GX0)/TILE)),b=Math.min(TPG-1,Math.floor((z-GZ0)/TILE));return DIG_TILES[b*TPG+a]}
 const H=new Float32Array(V*V),H0=new Float32Array(V*V),grass=new Float32Array(V*V*3),matCov=new Float32Array(V*V),mudBase=new Float32Array(V*V),paintD=new Float32Array(V*V),paint=new Uint8Array(V*V),nz=new Float32Array(V*V),rockA=new Float32Array(V*V);
 const ss=(a,b,x)=>{const t=Math.min(1,Math.max(0,(x-a)/(b-a)));return t*t*(3-2*t)};
 const hash=(i,j)=>{const s=Math.sin(i*127.1+j*311.7)*43758.5453;return s-Math.floor(s)};
@@ -308,7 +321,7 @@ function wallCount(x,z,yaw,P){const s=Math.sin(yaw),c=Math.cos(yaw);let n=0;for(
 const PIPE_Z=-5.5, TRENCH_Z0=-8.5, TRENCH_Z1=-3.0;
 // a dig-grid vertex's undug colour (grass, rock on steep ground, sand, the yards and roads, painted materials), its
 // dirt-texture amount and how much material covers it
-function digBase(k){const i=k%V,j=(k/V)|0,x=i*CELL-S/2,z=j*CELL-S/2;
+function digBase(k){const i=k%V,j=(k/V)|0,x=gX(i),z=gZ(j);
   const n=hash(i,j),n2=hash(i*0.37|0,j*0.37|0);
   grass[k*3]=0.30+0.07*n+0.05*n2; grass[k*3+1]=0.50+0.08*n+0.04*n2; grass[k*3+2]=0.24+0.04*n;
   const h=H0[k],sl=(Math.abs(baseHeight(x+0.5,z)-baseHeight(x-0.5,z))+Math.abs(baseHeight(x,z+0.5)-baseHeight(x,z-0.5))),rock=ss(0.55,1.1,sl),sand=1-ss(WATER+1.6,WATER+2.4,h),st2=0.06*Math.sin(h*1.4+n);
@@ -317,7 +330,7 @@ function digBase(k){const i=k%V,j=(k/V)|0,x=i*CELL-S/2,z=j*CELL-S/2;
   const rc=[grass[k*3],grass[k*3+1],grass[k*3+2]],ya=yardTint(x,z,rc,n),ra=roadTint(x,z,rc,n),mc=matTint(x,z,rc);grass[k*3]=rc[0];grass[k*3+1]=rc[1];grass[k*3+2]=rc[2];
   rockA[k]=Math.min(1,Math.max(rock*0.95+sand*0.4,ra*0.9,ya*0.85))*(MAT_GL2?1:1-mc);matCov[k]=mc;mudBase[k]=matCovOf(x,z,MUD_ID)}
 for(let j=0;j<V;j++)for(let i=0;i<V;i++){
-  const k=j*V+i,x=i*CELL-S/2,z=j*CELL-S/2;
+  const k=j*V+i,x=gX(i),z=gZ(j);
   H0[k]=H[k]=baseHeight(x,z); nz[k]=hash(i*1.7+3,j*2.3+1);
   digBase(k);
   const hc=CELL/2+0.001,onSide=Math.abs(Math.abs(x)-0.5)<hc&&z>=TRENCH_Z0-hc&&z<=TRENCH_Z1+hc;
@@ -401,7 +414,7 @@ groundMat.onBeforeCompile=sh=>{
     (WET_VTX?'float mudF=vMud,rainF=vRain,soilW=vSoil;\n':'vec4 wt=texture2D(tWet,(vWXZ-uWetO.xy)*uWetO.zw);float mudF=max(vMud,wt.g),rainF=wt.r,soilW=wt.b;\n')+'vec3 tg=texture2D(tGrass,vWXZ*GRASS_K).rgb/vec3(0.443,0.486,0.385);\nvec3 td=texture2D(tDirt,vWXZ*DIRT_K).rgb/vec3(0.491,0.467,0.431);\nvec3 gd=clamp(mix(tg,td,vDirt),0.0,2.2)*(uMacro>0.0?mix(1.0,texture2D(tMacro,vWXZ*0.025).r/0.502,uMacro):1.0);float gk=0.8;\n'+matGlsl()+'diffuseColor.rgb*=mix(vec3(1.0),gd,gk*texBase);\nfloat crkD=vDirt*(1.0-smoothstep(0.4,1.0,vSD));diffuseColor.rgb*=1.0+0.2*vCrk.x*crkD;\ndiffuseColor.rgb*=(1.0-0.32*max(vWet*vDirt,0.6*mudF))*(1.0-0.12*rainF);\nif(vDirt>0.01&&texMix>0.5)diffuseColor.rgb*=mix(vec3(1.0),faceDetail(vWP,vSD,uPipeZ),vDirt);\n#include <color_fragment>\nif(vCrk.y*crkD>0.01){float cl=texMix>0.5?dot(texture2D(tCrack,vWXZ*0.547).rgb,vec3(0.299,0.587,0.114))/0.56:1.0;diffuseColor.rgb=mix(diffuseColor.rgb,(diffuseColor.rgb*0.5+vec3(0.2,0.15,0.1))*cl,vCrk.y*crkD);}\n'+matGlslPost()+'if(uWetView>0.5){float sw=max(soilW,vMud);float on=uWetMin>0.0?step(uWetMin,sw):smoothstep(0.03,0.08,sw);vec3 wc=uWetMin>0.0?vec3(0.02,0.1,0.5):mix(vec3(0.45,0.68,0.78),vec3(0.01,0.05,0.38),sw);diffuseColor.rgb=mix(diffuseColor.rgb,wc,0.8*on);}\n').replace('#include <lights_fragment_end>',
     'float skyO=1.0;\nfor(int m=0;m<4;m+=2){vec2 d=vWXZ-uOcc[m].xy;float c=cos(uOcc[m].z),s=sin(uOcc[m].z);vec2 l=vec2(d.x*c-d.y*s,d.x*s+d.y*c-uOcc[m+1].z);vec2 q=abs(l)-uOcc[m+1].xy;\nfloat dist=length(max(q,0.0))+min(max(q.x,q.y),0.0);skyO*=1.0-0.75*(1.0-smoothstep(-0.4,1.6,dist));}\nirradiance*=skyO;\n'+matGlslRefl()+'#include <lights_fragment_end>');
 };
-const geo=new THREE.PlaneGeometry(S,S,N,N); geo.rotateX(-Math.PI/2);
+const geo=new THREE.PlaneGeometry(S,S,N,N); geo.rotateX(-Math.PI/2); geo.translate(GX0+S/2,0,GZ0+S/2);
 const colors=new Float32Array(V*V*3);
 geo.setAttribute('color',new THREE.BufferAttribute(colors,3));
 const dirtA=new Float32Array(V*V);geo.setAttribute('dirt',new THREE.BufferAttribute(dirtA,1));
@@ -439,7 +452,7 @@ function updateTerrain(){
     let t=ss(0.02,0.16,ad);if(bd&&matCov[k]<1)t=Math.max(t,1-matCov[k]);dirtA[k]=Math.max(t,rockA[k]);matAA[k]=matCov[k]*(1-t);mudWA[k]=mudA[k];
     if(t>0){
       let dr,dg,db;
-      if(d<0){const c=SOIL[layerAt((k%V)*CELL-S/2,((k/V)|0)*CELL-S/2,-d,nz[k])].c,sh=1-0.12*ss(0.3,2.5,-d);dr=c[0]*sh;dg=c[1]*sh;db=c[2]*sh}
+      if(d<0){const c=SOIL[layerAt(gX((k%V)),gZ(((k/V)|0)),-d,nz[k])].c,sh=1-0.12*ss(0.3,2.5,-d);dr=c[0]*sh;dg=c[1]*sh;db=c[2]*sh}
       else{dr=spoilC[k*3];dg=spoilC[k*3+1];db=spoilC[k*3+2]}
       const cn=(0.82+0.34*nz[k])*(1-0.7*skyOcc(k,h))*(mudA[k]>0.05?rutShade(d):1);dr*=cn;dg*=cn;db*=cn;
       r+=(dr-r)*t;g+=(dg-g)*t;b+=(db-b)*t;
@@ -460,15 +473,15 @@ function updateTerrain(){
 // outside the dig zone: the mud tiles' ground once mud.js has loaded (farH), else the mesa
 let farGround=null;
 function hAt(x,z){
-  if(x<-S/2||x>S/2||z<-S/2||z>S/2){const g=farGround?farGround(x,z):baseHeight(x,z),d=deckAt(x,z);return d>g?d:g}
-  let fx=(x+S/2)/CELL,fz=(z+S/2)/CELL;
+  if(!inDig(x,z)){const g=farGround?farGround(x,z):baseHeight(x,z),d=deckAt(x,z);return d>g?d:g}
+  let fx=gI(x),fz=gJ(z);
   fx=Math.max(0,Math.min(N-0.001,fx)); fz=Math.max(0,Math.min(N-0.001,fz));
   const i=fx|0,j=fz|0,u=fx-i,v=fz-j,k=j*V+i;
   return H[k]*(1-u)*(1-v)+H[k+1]*u*(1-v)+H[k+V]*(1-u)*v+H[k+V+1]*u*v;
 }
 function h0At(x,z){
-  if(x<-S/2||x>S/2||z<-S/2||z>S/2)return Math.max(baseHeight(x,z),deckAt(x,z));
-  const i=Math.max(0,Math.min(N,Math.round((x+S/2)/CELL))),j=Math.max(0,Math.min(N,Math.round((z+S/2)/CELL)));
+  if(!inDig(x,z))return Math.max(baseHeight(x,z),deckAt(x,z));
+  const i=Math.max(0,Math.min(N,Math.round(gI(x)))),j=Math.max(0,Math.min(N,Math.round(gJ(z))));
   return H0[j*V+i];
 }
 // ---------- soil ----------
@@ -493,7 +506,7 @@ function layerAt(x,z,d,nn){
   return d<1.95+2*w?1:3;
 }
 // material at height y over grid vertex k: loose fill above original grade, a native layer below
-function matAt(k,y){const d=H0[k]-y;return d<0?SPOIL:layerAt((k%V)*CELL-S/2,((k/V)|0)*CELL-S/2,d,nz[k])}
+function matAt(k,y){const d=H0[k]-y;return d<0?SPOIL:layerAt(gX((k%V)),gZ(((k/V)|0)),d,nz[k])}
 function matColor(k,m){return m===SPOIL?[spoilC[k*3],spoilC[k*3+1],spoilC[k*3+2]]:SOIL[m].c}
 // blend material of colour c and height a into the loose fill on vertex k
 function mixSpoil(k,c,a){const above=H[k]-H0[k];if(above<=0||a<=0)return;const f=Math.min(1,a/above);
@@ -504,10 +517,10 @@ let cI0=N+1,cI1=-1,cJ0=N+1,cJ1=-1;
 function growDug(i0,i1,j0,j1){growSl(i0,i1,j0,j1);const mg=3*GRID_K;cI0=Math.max(0,Math.min(cI0,i0-mg));cI1=Math.min(N,Math.max(cI1,i1+mg));cJ0=Math.max(0,Math.min(cJ0,j0-mg));cJ1=Math.min(N,Math.max(cJ1,j1+mg))}
 function dig(tip,cap){
   const r=0.55,list=[],vk=[0,0,0,0];let vol=0,cr=0,cg=0,cb=0;
-  const i0=Math.max(0,Math.floor((tip.x-r+S/2)/CELL)),i1=Math.min(N,Math.ceil((tip.x+r+S/2)/CELL));
-  const j0=Math.max(0,Math.floor((tip.z-r+S/2)/CELL)),j1=Math.min(N,Math.ceil((tip.z+r+S/2)/CELL));
+  const i0=Math.max(0,Math.floor(gI(tip.x-r))),i1=Math.min(N,Math.ceil(gI(tip.x+r)));
+  const j0=Math.max(0,Math.floor(gJ(tip.z-r))),j1=Math.min(N,Math.ceil(gJ(tip.z+r)));
   for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){
-    const x=i*CELL-S/2,z=j*CELL-S/2,d=Math.hypot(x-tip.x,z-tip.z);
+    const x=gX(i),z=gZ(j),d=Math.hypot(x-tip.x,z-tip.z);
     if(d>r)continue;
     const k=j*V+i;
     const t=Math.max(tip.y+(d/r)*(d/r)*0.35,H0[k]-FLOOR);
@@ -527,10 +540,10 @@ function dig(tip,cap){
 }
 function deposit(x,z,vol,col,mix,spread,wet){
   const r=0.9*(spread||1),list=[];let sum=0;
-  const i0=Math.max(0,Math.floor((x-r+S/2)/CELL)),i1=Math.min(N,Math.ceil((x+r+S/2)/CELL));
-  const j0=Math.max(0,Math.floor((z-r+S/2)/CELL)),j1=Math.min(N,Math.ceil((z+r+S/2)/CELL));
+  const i0=Math.max(0,Math.floor(gI(x-r))),i1=Math.min(N,Math.ceil(gI(x+r)));
+  const j0=Math.max(0,Math.floor(gJ(z-r))),j1=Math.min(N,Math.ceil(gJ(z+r)));
   for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){
-    const d=Math.hypot(i*CELL-S/2-x,j*CELL-S/2-z); if(d>r)continue;
+    const d=Math.hypot(gX(i)-x,gZ(j)-z); if(d>r)continue;
     const w=Math.exp(-(d/(0.5*(spread||1)))*(d/(0.5*(spread||1)))); list.push(j*V+i,w); sum+=w;
   }
   if(!sum)return;
@@ -613,7 +626,7 @@ function collapse(k,sur){
   for(let it=0;it<24*GRID_K;it++)for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const kk=j*V+i;
     if(i<i1)slumpPair(kk,kk+1,true);if(j<j1)slumpPair(kk,kk+V,true)}
   touch(i0,i1,j0,j1);st.dirty=true;st.slumpT=2.5;st.caves++;
-  const p=new THREE.Vector3(ci*CELL-S/2,H[k]+0.1,cj*CELL-S/2);for(let n=0;n<40;n++)spawn(p,1.6);
+  const p=new THREE.Vector3(gX(ci),H[k]+0.1,gZ(cj));for(let n=0;n<40;n++)spawn(p,1.6);
   {const m=matAt(k,H[k]-0.05),ck=clodKind(m,H0[k]-H[k]+0.05);dropClods(ck,p.x,p.z,1.4,60*DIRT,ck===CRUMB?matColor(k,m):KIND_COL[Math.max(0,ck)],ck===SOD?1:1.4);dustPuff(p.x,p.y,p.z,25,matColor(k,m));dirtRumble(p)}
   shake=reduceMotion?0:0.35;rumble(500,0.8);
   toast(say(sur?'caveSpoil':'caveWall'),'bad',3600);
@@ -623,7 +636,7 @@ const lipP=new THREE.Vector3();
 function caveTick(dt){
   if(st.cave&&prot[st.cave.k]){st.cave=null;st.caveRisk=0}
   if(st.cave){const c=st.cave;c.t-=dt;c.dT-=dt;
-    if(c.dT<=0){c.dT=0.07;lipP.set((c.k%V)*CELL-S/2+(Math.random()-0.5)*0.6,H[c.k]+0.05,((c.k/V)|0)*CELL-S/2+(Math.random()-0.5)*0.6);spawn(lipP,0.25)}
+    if(c.dT<=0){c.dT=0.07;lipP.set(gX((c.k%V))+(Math.random()-0.5)*0.6,H[c.k]+0.05,gZ(((c.k/V)|0))+(Math.random()-0.5)*0.6);spawn(lipP,0.25)}
     if(c.t<=0){st.cave=null;st.caveRisk=0;collapse(c.k,c.sur)}}
   else if(cI1>=cI0&&(st.caveScanT-=dt)<=0){st.caveScanT=0.5;const r=caveScan();
     if(r.best>0){st.caveRisk+=r.best*0.04*TU.caveRate;if(st.caveRisk>=1)st.cave={k:r.bk,sur:r.bs,t:TU.caveWarn,dT:0}}else st.caveRisk=Math.max(0,st.caveRisk-0.05)}
@@ -641,6 +654,6 @@ function updateShadowCaster(){
   const i0=Math.max(0,Math.min(N-span,Math.round((ci-span/2)/GRID_K)*GRID_K)),j0=Math.max(0,Math.min(N-span,Math.round((cj-span/2)/GRID_K)*GRID_K));
   const p=shGeo.attributes.position.array;
   for(let j=0;j<=SH_N;j++)for(let i=0;i<=SH_N;i++){const gi=i0+i*GRID_K,gj=j0+j*GRID_K,o=(j*(SH_N+1)+i)*3;
-    p[o]=gi*CELL-S/2;p[o+1]=H[gj*V+gi]-0.05;p[o+2]=gj*CELL-S/2}
+    p[o]=gX(gi);p[o+1]=H[gj*V+gi]-0.05;p[o+2]=gZ(gj)}
   shGeo.attributes.position.needsUpdate=true;shMesh.visible=true;
 }

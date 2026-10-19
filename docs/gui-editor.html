@@ -75,7 +75,7 @@ canvas#view{position:fixed;inset:0;width:100%;height:100%;display:block;touch-ac
 #trenchBar>i{background:var(--ok)}#lawnBar>i{background:#9bd46a}
 .full .val{color:var(--gas)}
 .tacts{flex:none;margin-left:auto;display:flex;gap:6px}
-#blkBtn[aria-pressed="true"],#pumpBtn[aria-pressed="true"]{background:var(--machine);color:#1c1309}
+#blkBtn[aria-pressed="true"],#pumpBtn[aria-pressed="true"],#wipeBtn[aria-pressed="true"]{background:var(--machine);color:#1c1309}
 .row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 button{pointer-events:auto;touch-action:manipulation;font:700 15px/1 var(--f-display);letter-spacing:.05em;text-transform:uppercase;color:var(--ink);background:var(--hud);border:1px solid var(--hud-line);border-radius:9px;height:40px;padding:0 12px;cursor:pointer}
 button:focus-visible{outline:3px solid var(--gas);outline-offset:2px}
@@ -159,22 +159,43 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 #toast span.show{opacity:1}
 #toast span.bad{border-color:var(--danger);color:#ffd9d5}
 #toast span.good{border-color:var(--ok)}
-#bigmap{position:fixed;inset:0;background:rgba(10,12,9,.8);display:flex;align-items:center;justify-content:center;z-index:6;pointer-events:auto;box-sizing:border-box;
-  padding-block:calc(env(safe-area-inset-top,0px) + 12px) calc(env(safe-area-inset-bottom,0px) + 12px);
+/* Site map: the map fills the card on the left, a side panel on the right (below on a tall phone) holds the title,
+   teleport, places, layers and the key. The map is dragged, pinched and scrolled; its buttons float on it */
+#bigmap{position:fixed;inset:0;background:rgba(6,8,6,.72);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);display:flex;align-items:stretch;justify-content:center;z-index:6;pointer-events:auto;box-sizing:border-box;
+  padding-block:calc(env(safe-area-inset-top,0px) + 14px) calc(env(safe-area-inset-bottom,0px) + 14px);
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-.mapcard{background:#1d211b;border:1px solid var(--hud-line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px;max-width:100%;max-height:100%;box-sizing:border-box}
+.mapcard{width:100%;max-width:1680px;display:grid;grid-template-columns:minmax(0,1fr) 380px;background:#161a15;border:1px solid var(--hud-line);border-radius:16px;overflow:hidden;box-shadow:0 24px 70px rgba(0,0,0,.55);box-sizing:border-box}
+.mapview{position:relative;min-height:0;min-width:0;background:#1a4769}
+#big{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:crosshair}
+#big.drag{cursor:grabbing}
+#mapCtl{position:absolute;right:12px;top:12px;display:flex;flex-direction:column;gap:8px}
+#mapCtl button{width:48px;height:48px;padding:0;display:grid;place-items:center;background:rgba(20,23,19,.85);border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+#mapCtl svg{width:24px;height:24px;fill:none;stroke:var(--ink);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+@media (hover:hover){#mapCtl button:hover{background:rgba(48,54,44,.95)}}
+#mapWhere{position:absolute;left:12px;bottom:12px;max-width:calc(100% - 200px);padding:8px 14px;border-radius:10px;background:rgba(20,23,19,.85);font:700 18px/1.2 var(--f-display);letter-spacing:.03em;color:var(--ink);pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#mapWhere:empty{display:none}
+.mapside{display:flex;flex-direction:column;gap:16px;padding:16px 18px 18px;overflow-y:auto;min-height:0;border-left:1px solid var(--hud-line);background:linear-gradient(180deg,#1f241d,#161a15)}
 .maphead{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.maphead h2{margin:0;font:800 28px/1 var(--f-display);color:var(--machine);letter-spacing:.02em}
-#big{display:block;border-radius:10px;background:#1e2a30;max-width:100%}
-#tpBar{display:flex;align-items:center;min-height:46px;font:700 18px/1.2 var(--f-display);letter-spacing:.03em;color:var(--ink)}
+.maphead h2{margin:0;font:800 32px/1 var(--f-display);color:var(--machine);letter-spacing:.02em;text-transform:uppercase}
+.mapsec{display:flex;flex-direction:column;gap:10px;padding-top:14px;border-top:1px solid var(--hud-line)}
+.mapsec h3{margin:0;font:800 14px/1 var(--f-display);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+#mapPlaces{display:flex;flex-wrap:wrap;gap:6px}
+#mapPlaces button{height:40px;font-size:16px;padding:0 12px}
+#tpBar{display:flex;align-items:center;min-height:46px;padding:10px 12px;border-radius:10px;background:rgba(245,197,24,.08);border:1px solid rgba(245,197,24,.28);font:700 18px/1.2 var(--f-display);letter-spacing:.03em;color:var(--ink)}
 #tpOpts{display:flex;flex-wrap:wrap;align-items:center;gap:8px}#tpOpts[hidden],#tpHint[hidden]{display:none}
-#tpOpts button{height:46px;font-size:18px;padding:0 14px}
+#tpOpts>span{width:100%;color:var(--gas)}
+#tpOpts button{height:44px;font-size:17px;padding:0 12px}
 #tpOpts button[aria-pressed="true"]{border-color:var(--machine);color:var(--machine)}
-.legend{display:flex;flex-wrap:wrap;gap:8px 16px;font:600 17px/1.2 var(--f-display);letter-spacing:.03em}
-/* short landscape screens (a phone on its side): the map on the left, title, teleport and legend beside it */
-@container stage (max-height:520px) and (orientation:landscape){.mapcard{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:max-content max-content 1fr;gap:10px 14px;align-items:start}
-  #big{grid-column:1;grid-row:1/4}.maphead,#tpBar,.legend{grid-column:2}.legend{font-size:15px;gap:4px 12px}}
-.legend span{display:flex;align-items:center;gap:7px}
+.legend{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:9px 12px;font:600 17px/1.2 var(--f-display);letter-spacing:.03em}
+.legend span{display:flex;align-items:center;gap:9px}
+.legend i{flex:none;display:block;width:18px;height:12px;border-radius:3px}
+.legend i.tri{width:18px;height:14px;border-radius:0;background:var(--c);clip-path:polygon(100% 50%,0 0,30% 50%,0 100%)}
+/* a tall phone: the map on top, the panel under it */
+@container stage (orientation:portrait) and (max-width:900px){.mapcard{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,58fr) minmax(0,42fr)}
+  .mapside{border-left:0;border-top:1px solid var(--hud-line)}}
+/* a phone on its side: a narrower panel beside the map */
+@container stage (max-height:520px) and (orientation:landscape){.mapcard{grid-template-columns:minmax(0,1fr) 300px}.mapside{padding:12px 14px;gap:12px}.maphead h2{font-size:26px}
+  #mapCtl button{width:42px;height:42px}.legend{font-size:15px;grid-template-columns:repeat(2,minmax(0,1fr))}}
 .legend i{display:inline-block;width:18px;height:12px;border-radius:3px}
 #benchBar{position:absolute;left:0;right:0;top:calc(var(--pt) + 130px);z-index:2;margin:0 auto;width:max-content;max-width:100%;box-sizing:border-box;font:800 16px/1.25 var(--f-display);letter-spacing:.04em;text-align:center;background:var(--hud);border:2px solid var(--gas);border-radius:10px;padding:8px 14px;font-variant-numeric:tabular-nums}
 #benchBar small{display:block;font:600 13px/1.2 var(--f-display);color:var(--muted);letter-spacing:.03em}
@@ -411,21 +432,20 @@ body.editing #hud>:is(.tbar,.lbar,.rpane,.sticks,.bbar){display:none}
 #gfxGraphCap b{color:var(--ink)}
 /* big map trails: what to show, and its key */
 #trailBar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font:700 18px/1.2 var(--f-display);letter-spacing:.03em;color:var(--ink)}
-#trailBar span{margin-right:4px}
-#trailBar button{height:42px;font-size:16px;padding:0 10px}
+#trailBar span{width:100%}
+#trailBar button{height:40px;font-size:16px;padding:0 10px}
 #trailBar button[aria-pressed="true"]{background:var(--machine);color:#1c1309;border-color:var(--machine)}
 #trailKey{display:flex;flex-direction:column;gap:4px}
 #trailKey i{display:block;height:10px;border-radius:5px}
 #trailKey>span{display:flex;justify-content:space-between;gap:10px;font:600 15px/1.2 var(--f-display);color:var(--muted)}
 #wetBar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font:700 18px/1.2 var(--f-display);letter-spacing:.03em;color:var(--ink)}
-#wetBar span{margin-right:4px}
-#wetBar button{height:42px;font-size:16px;padding:0 10px}
+#wetBar span{width:100%}
+#wetBar button{height:40px;font-size:16px;padding:0 10px}
 #wetBar button[aria-pressed="true"],#wetGround[aria-pressed="true"]{background:var(--machine);color:#1c1309;border-color:var(--machine)}
 #wetKey{display:flex;flex-direction:column;gap:4px}
 #wetKey i{display:block;height:10px;border-radius:5px}
 #wetKey>span{display:flex;justify-content:space-between;gap:10px;font:600 15px/1.2 var(--f-display);color:var(--muted)}
 #wetGround{align-self:flex-start;margin-top:4px}
-@container stage (max-height:520px) and (orientation:landscape){.mapcard{grid-template-rows:max-content max-content max-content max-content max-content max-content 1fr}#big{grid-row:1/8}#trailBar,#trailKey,#wetBar,#wetKey{grid-column:2}}
 
 </style>
 <div class="app">
@@ -473,6 +493,7 @@ body.editing #hud>:is(.tbar,.lbar,.rpane,.sticks,.bbar){display:none}
     </div>
     <div class="tacts">
       <button id="pumpBtn" hidden aria-pressed="false">Pump</button>
+      <button id="wipeBtn" hidden aria-pressed="false">Wipers</button>
       <button id="boxBtn" hidden>Hook box</button>
       <button id="blkBtn" aria-pressed="false">Blocks</button>
       <button id="camBtn">Cab view</button>
@@ -607,19 +628,37 @@ body.editing #hud>:is(.tbar,.lbar,.rpane,.sticks,.bbar){display:none}
 </div>
 <div id="bigmap" hidden>
   <div class="mapcard">
-    <div class="maphead"><h2>Site map</h2><button id="mapClose">Close</button></div>
-    <canvas id="big"></canvas>
-    <div id="tpBar"><span id="tpHint">Tap the map to teleport there</span>
-      <div id="tpOpts" hidden><span>Go there:</span><button data-tp="foot">On foot</button><button data-tp="ex">Excavator</button><button data-tp="truck">Dump truck</button><button data-tp="mow">Mower</button><button data-tp="skid">Skid steer</button><button id="tpCancel">Cancel</button></div>
+    <div class="mapview">
+      <canvas id="big" aria-label="Site map: drag to move, pinch or scroll to zoom, tap to pick a spot"></canvas>
+      <div id="mapCtl" role="group" aria-label="Map view">
+        <button id="mapZin" class="sq" aria-label="Zoom in"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+        <button id="mapZout" class="sq" aria-label="Zoom out"><svg viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button>
+        <button id="mapFit" class="sq" aria-label="Show the whole map"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+        <button id="mapMe" class="sq" aria-label="Centre on you"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg></button>
+      </div>
+      <div id="mapWhere" aria-live="polite"></div>
     </div>
-    <div id="trailBar" role="group" aria-label="Trails: where you have walked and driven"><span>Trails</span></div>
-    <div id="trailKey" hidden><i></i><span><span>Less</span><span id="trailHi"></span></span></div>
-    <div id="wetBar" role="group" aria-label="Soil wetness: show where the ground is wetter"><span>Soil wetness</span></div>
-    <div id="wetKey" hidden><i></i><span><span id="wetLo">Dry</span><span id="wetHi">Soaked · standing water</span></span><button id="wetGround" class="sm" aria-pressed="false">Show on the ground too</button></div>
-    <div class="legend">
-      <span><i style="background:#f07a22"></i>Excavator</span><span><i style="background:#e9ecea"></i>Dump truck</span>
-      <span><i style="background:#f2f2ee;height:3px"></i>Trench paint</span><span><i style="background:#f5c518;height:3px"></i>Gas main</span>
-      <span><i style="background:#b89a6b"></i>Dirt road</span><span><i style="background:#7a5232"></i>Dug or dumped</span><span><i style="background:#d8a514"></i>Trench box</span><span><i style="background:#b9b6ae"></i>Block</span><span><i style="background:#2d7a94"></i>Lake</span><span><i style="background:#a3a64c"></i>Tall grass</span><span><i style="background:#d8352a"></i>Mower</span><span><i style="background:#f2b705"></i>Skid steer</span><span><i style="background:#2fb7e8;border-radius:50%;width:12px"></i>You on foot</span>
+    <div class="mapside">
+      <div class="maphead"><h2>Site map</h2><button id="mapClose">Close</button></div>
+      <div id="tpBar"><span id="tpHint">Tap the map to teleport there</span>
+        <div id="tpOpts" hidden><span>Go there:</span><button data-tp="foot">On foot</button><button data-tp="ex">Excavator</button><button data-tp="truck">Dump truck</button><button data-tp="mow">Mower</button><button data-tp="skid">Skid steer</button><button id="tpCancel">Cancel</button></div>
+      </div>
+      <section class="mapsec"><h3>Places</h3><div id="mapPlaces" role="group" aria-label="Show a place on the map"></div></section>
+      <section class="mapsec"><h3>Layers</h3>
+        <div id="trailBar" role="group" aria-label="Trails: where you have walked and driven"><span>Trails</span></div>
+        <div id="trailKey" hidden><i></i><span><span>Less</span><span id="trailHi"></span></span></div>
+        <div id="wetBar" role="group" aria-label="Soil wetness: show where the ground is wetter"><span>Soil wetness</span></div>
+        <div id="wetKey" hidden><i></i><span><span id="wetLo">Dry</span><span id="wetHi">Soaked · standing water</span></span><button id="wetGround" class="sm" aria-pressed="false">Show on the ground too</button></div>
+      </section>
+      <section class="mapsec"><h3>Key</h3>
+        <div class="legend">
+          <span><i class="tri" style="--c:#f07a22"></i>Excavator</span><span><i class="tri" style="--c:#e9ecea"></i>Dump truck</span><span><i class="tri" style="--c:#d8352a"></i>Mower</span><span><i class="tri" style="--c:#f2b705"></i>Skid steer</span>
+          <span><i style="background:#2fb7e8;border-radius:50%;width:14px;height:14px;box-shadow:0 0 0 2px #fff"></i>You on foot</span><span><i style="background:#f5c518;height:4px"></i>Gas main</span>
+          <span><i style="background:#f2f2ee;height:4px"></i>Trench paint</span><span><i style="background:#d8a514"></i>Trench box</span><span><i style="background:#7a5232"></i>Dug or dumped</span><span><i style="background:#b9b6ae"></i>Block</span>
+          <span><i style="background:#b89a6b"></i>Road</span><span><i style="background:#8d6a52"></i>Building</span><span><i style="background:#a2a4a6"></i>Bridge</span><span><i style="background:#9c7c56"></i>Temporary bridge</span>
+          <span><i style="background:#a3a64c"></i>Tall grass</span><span><i style="background:radial-gradient(circle at 35% 35%,#6c8a40,#24401c);border-radius:50%"></i>Trees</span><span><i style="background:linear-gradient(90deg,#4a8f99,#173f55)"></i>Lake</span>
+        </div>
+      </section>
     </div>
   </div>
 </div>
@@ -797,7 +836,10 @@ const TUNE=[
   ['slopeDamp','Digging','How much steeper damp sand and soil stand',1,'pct',0,300,5],['slopeWet','Digging','How much soaked soil slumps (0% = holds like dry)',1,'pct',0,200,5],
   ['slopeSlide','Digging','How far a face slides back under its angle when it lets go',0.1,'pct',0,40,1],
   ['clayStick','Digging','Most moist clay that sticks in a bucket or bed when tipped',0.25,'pct',0,100,1],['clayShake','Digging','How much each shake knocks loose',0.3,'pct',0,100,5],
+  ['packRate','Excavator','How fast wet clay packs into the tracks',1,'pct',0,500,5],['packDrag','Excavator','How much packed tracks drag',0.6,'pct',0,90,5],
+  ['packShed','Excavator','How fast packed clay drops off',1,'pct',0,500,5],
   ['caveDepth','Cave-ins','Walls start to cave in deeper than',1.2,'ft',1,30,0.5],['caveSpoil','Cave-ins','Spoil this close to the edge loads the wall',0.64,'ft',0,10,0.5],
+  ['craneSpan','Bridges','The crane builds a steel span in about',240,'min',1,60,1],
   ['caveRate','Cave-ins','How fast a bad wall gives way (0% = never)',1,'pct',0,500,5],['caveWarn','Cave-ins','Dirt trickles off the lip for',2.2,'s',0,20,0.5],
   // only drawn on High graphics (Graphics → Material relief); how the ground looks, not what it does, so every device may use the same numbers
   ['pbrRelief','Ground look','Relief: how deep the bumps in gravel, brick and concrete look',1,'pct',0,300,5],
@@ -849,11 +891,12 @@ const WORDS=[
   ['getInFar','Machines','Walk up to the excavator, the truck or the mower to get in.'],['noRoomOut','Machines','No room to climb out here. Move the machine a little.'],
   ['bedUp','Machines','Bed is up. Lower it to drive faster.'],['truckFirst','Machines','Dirt in the truck.'],
   ['truckFull','Machines','Truck full. Tap Truck, drive it to the spoil yard north of the dig and raise the bed.'],
+  ['spanDone','Machines','The crane set a steel span on the {bridge} bridge. {left} to go.','{bridge}: town or north; {left}: spans left'],['bridgeDone','Machines','The {bridge} bridge is all steel now. The temporary trestle is gone.','{bridge}: town or north'],
   ['dumpYard','Machines','Load dumped in the yard.'],['dumpOff','Machines','Load hauled off site.'],
   ['skidFull','Machines','Bucket full. Raise the arms and drive to where it goes.'],
   ['stuck','Machines','Stuck in the mud. Rock it free: [lUp] then [lDown], and again.'],
   ['lawnBack','Machines','The grass has grown back. Time to mow again.'],['lawnDone','Machines','Lawn mowed in {time}. Nice stripes.','{time}: minutes:seconds'],
-  ['bucketFull','Digging','Bucket full. Boom up, swing, dump.'],['claySticks','Digging','Moist clay is stuck in the bucket. Shake it out: tip it and rock the curl fast, [rLeft] then [rRight], or bang it on the dump stop.'],['bedSticks','Machines','Clay is stuck in the bed. Shake it loose: drop the bed a little and run it up hard into the top stop.'],['sand','Digging','Sand bedding. The gas main is right below. Go easy.'],
+  ['bucketFull','Digging','Bucket full. Boom up, swing, dump.'],['trackPack','Machines','Clay is packing into the tracks, so they drag and turn slow. Drive onto firm ground and rock them back and forth, [lUp] then [lDown], to knock it out.'],['claySticks','Digging','Moist clay is stuck in the bucket. Shake it out: tip it and rock the curl fast, [rLeft] then [rRight], or bang it on the dump stop.'],['bedSticks','Machines','Clay is stuck in the bed. Shake it loose: drop the bed a little and run it up hard into the top stop.'],['sand','Digging','Sand bedding. The gas main is right below. Go easy.'],
   ['rock','Digging','Rock. You are past trench depth.'],['strike','Digging','LINE STRIKE! You hit the gas main.'],
   ['exposed','Digging','Gas main exposed. Nice and careful.'],
   ['trenchDone','Digging','Trench complete in {time}{strikes}{caves}','{time}: minutes:seconds; {strikes}: " · no strikes" or " · 2 strikes"; {caves}: " · 1 cave-in" or nothing'],
@@ -876,6 +919,7 @@ const WORDS=[
   ['blkSize','Blocks','Block size {size}'],['blkSnap','Blocks','Block snap: {snap}'],['blkMat','Blocks','Block material: {mat}'],
   ['blkFP','Blocks','Blocks go where the dot is. The mouse wheel (or [blkNear] [blkFar]) pulls them in and pushes them out.'],
   ['rainIn','Weather and water','Rain coming in. Dirt, clay and low ground will turn to mud.'],
+  ['wipeTip','Weather and water','Rain on the glass. [wipers] runs the wipers.'],
   ['rainOut','Weather and water','Rain has stopped. The ground will dry out over the next several minutes.'],
   ['wxAuto','Weather and water','Weather: showers now and then'],['wxRain','Weather and water','Weather: rain'],['wxDry','Weather and water','Weather: dry'],
   ['waterSeep','Weather and water','Groundwater seeping in. Tap Pump to dewater the hole.'],
@@ -937,7 +981,7 @@ const GUI_VARS=[['--machine','Accent (machine orange)','c'],['--gas','Highlight 
 const GUI_FONTS=['"Saira Condensed","Arial Narrow",system-ui,sans-serif','"Saira",system-ui,sans-serif','system-ui,sans-serif','Arial,Helvetica,sans-serif',
   '"Arial Narrow",Arial,sans-serif','Verdana,sans-serif','"Trebuchet MS",sans-serif','Georgia,serif','Impact,"Arial Black",sans-serif','"Courier New",monospace'];
 // parts that are usually hidden until the game needs them, shown on request so they can be styled
-const GUI_PEEK=[['#menu','Menu'],['#help','Start card'],['#blkBar','Blocks bar'],['#walkBtns','Sprint and Jump'],['#seatBtn','Get in'],['#pumpBtn','Pump'],
+const GUI_PEEK=[['#menu','Menu'],['#help','Start card'],['#blkBar','Blocks bar'],['#walkBtns','Sprint and Jump'],['#seatBtn','Get in'],['#pumpBtn','Pump'],['#wipeBtn','Wipers'],
   ['#boxBtn','Hook box'],['#lawnRow','Lawn gauge'],['#heatKey','Heatmap key'],['#updBtn','Update button'],['#keysBox','Keys panel'],['#gfxBox','Graphics panel']];
 // ready-made groups (selector, name), picked from the Groups tab and then edited like any part
 const GUI_GROUPS=[['#hud button','Every button on the screen'],['.tbar button','Top bar buttons'],['.lbar button','Machine buttons'],['.bbar button','Bottom bar buttons'],

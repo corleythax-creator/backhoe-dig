@@ -49,7 +49,7 @@ function editorOpen(){if(edOn||bench.on)return;edOn=true;mapAssets=assets;
   edTool(ed.tool);edCard(null);edSelSet([]);toast('Map editor. The game is paused while you edit.','',2600)}
 function editorClose(){if(!edOn)return;edStrokeEnd();edRoadFinish();edOn=false;document.body.classList.remove('editing');$('#editor').hidden=true;
   edBrushRing.visible=edSelRings.visible=edSoftRing.visible=false;ed.sel=[];ed.box=null;ed.lp=null;$('#edBox').hidden=true;ed.road=null;ed.rpt=-1;edRoadsDraw();clearKeys();firstCam=true;last=performance.now();
-  if(ed.changed){edSave();mapBg=null;mapDirty=true;ed.changed=false}}
+  if(ed.changed){edSave();mapReset();mapDirty=true;ed.changed=false}}
 $('#edDone').onclick=editorClose;
 $('#editBtn').onclick=editorOpen;
 
@@ -173,12 +173,12 @@ function edBrush(dt){const R=ed.size,cx=ed.bx,cz=ed.bz,t=ed.tool,k=ed.str/10;
 // undug ground stays exactly at grade, so the site save skips it), the 0.5 m ground, steep-ground stops, grass tufts,
 // the tall grass and the trees and boulders on it
 function edRefresh(r,full){if(!r)return;const [x0,x1,z0,z1]=r;
-  const i0=Math.max(0,Math.floor((x0+S/2)/CELL)),i1=Math.min(N,Math.ceil((x1+S/2)/CELL)),j0=Math.max(0,Math.floor((z0+S/2)/CELL)),j1=Math.min(N,Math.ceil((z1+S/2)/CELL));
-  if(i0<=i1&&j0<=j1){for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const k=j*V+i,b=baseHeight(i*CELL-S/2,j*CELL-S/2);H[k]=H[k]===H0[k]?b:H[k]+b-H0[k];H0[k]=b;digBase(k)}
+  const i0=Math.max(0,Math.floor(gI(x0))),i1=Math.min(N,Math.ceil(gI(x1))),j0=Math.max(0,Math.floor(gJ(z0))),j1=Math.min(N,Math.ceil(gJ(z1)));
+  if(i0<=i1&&j0<=j1){for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const k=j*V+i,b=baseHeight(gX(i),gZ(j));H[k]=H[k]===H0[k]?b:H[k]+b-H0[k];H0[k]=b;digBase(k)}
     touch(i0,i1,j0,j1);updateTufts(i0-1,i1+1,j0-1,j1+1);lawnTerrain();updateTerrain();winOn=false;blkTerrainMoved()}
   midUpdate(x0,x1,z0,z1);mudEdRefresh(x0,x1,z0,z1);rainEdRefresh(x0,x1,z0,z1);wallBuild(x0,x1,z0,z1);tuftsRefresh(x0,x1,z0,z1);
   if(assets.some(a=>a.x>x0-6&&a.x<x1+6&&a.z>z0-6&&a.z<z1+6)){assetsBuild();shpTreesRefresh()}
-  if(full&&(x0<-S/2+1||x1>S/2-1||z0<-S/2+1||z1>S/2-1||x0<MID[0]+1||x1>MID[1]-1||z0<MID[2]+1||z1>MID[3]-1||x0<OUTER_MID[0]+1||x1>OUTER_MID[1]-1||z0<OUTER_MID[2]+1||z1>OUTER_MID[3]-1))buildSkirts()}
+  if(full&&(x0<GX0+1||x1>GX1-1||z0<GZ0+1||z1>GZ1-1||x0<MID[0]+1||x1>MID[1]-1||z0<MID[2]+1||z1>MID[3]-1||x0<OUTER_MID[0]+1||x1>OUTER_MID[1]-1||z0<OUTER_MID[2]+1||z1>OUTER_MID[3]-1))buildSkirts()}
 function edStrokeEnd(){const s=ed.stroke;if(!s)return;ed.stroke=null;edRefresh(ed.pend,true);ed.pend=null;
   if(!s.ij)return;const [i0,i1,j0,j1]=s.ij,w=i1-i0+1,h=new Float32Array(w*(j1-j0+1)),p=new Float32Array(h.length),m=new Uint8Array(h.length),c=new Uint8Array(h.length);
   for(let j=j0;j<=j1;j++){const a=j*ED_NX+i0,b=j*ED_NX+i1+1,o=(j-j0)*w;h.set(s.h.subarray(a,b),o);p.set(s.p.subarray(a,b),o);m.set(s.m.subarray(a,b),o);c.set(s.a.subarray(a,b),o)}

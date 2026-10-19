@@ -15,7 +15,8 @@ SKIP = ('versions/', 'tools/', 'build.html', 'README.md', 'CLAUDE.md', '.git')
 KEEP = range(1, 7)          # hand-recovered snapshots, not in git
 # versions whose last first-parent commit on main is a later branch's work in progress (that branch was
 # fast-forwarded onto main), pinned to the commit that shipped them
-PIN = {55: '8b58bd4'}
+PIN = {55: '8b58bd4', 114: 'efb178a', 115: '612fd1c', 116: 'fc6970a', 117: '660bad2', 118: 'a1080e5', 119: '198f36d',
+       120: '1e79c6f', 121: 'ce0a3dd', 122: 'c60cfca', 123: 'babe839', 124: '41271fc'}
 
 
 def git(*a, text=True):
@@ -56,6 +57,9 @@ def main():
     last = {}
     for line in log:
         sha, when, subject = line.split(' ', 2)
+        # a version's own "vN: playable snapshot" commit only adds versions/; the version is the commit before it
+        if subject.endswith(': playable snapshot'):
+            continue
         v = version_of(sha, subject)
         if v:
             last[v] = (sha, when)
