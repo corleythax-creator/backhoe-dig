@@ -280,7 +280,8 @@ function groundPatch(X0,X1,Z0,Z1,CO,holes){
   for(let j=0;j<NZ;j++)for(let i=0;i<NX;i++){const x0=X0+i*CO,z0=Z0+j*CO;
     if(holes.some(h=>x0>=h[0]-1e-6&&x0+CO<=h[1]+1e-6&&z0>=h[2]-1e-6&&z0+CO<=h[3]+1e-6))continue;const a=j*VX+i;ix.push(a,a+VX,a+1,a+1,a+VX,a+VX+1)}
   const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pp,3));g.setAttribute('color',new THREE.Float32BufferAttribute(cc,3));
-  g.setAttribute('normal',new THREE.Float32BufferAttribute(new Float32Array(pp.length),3));g.setIndex(ix);
+  // smooth normals: the ground is drawn flat-shaded, but rain runoff reads which way is downhill from them (terrain.js)
+  g.setAttribute('normal',new THREE.Float32BufferAttribute(new Float32Array(pp.length),3));g.setIndex(ix);g.computeVertexNormals();
   g.setAttribute('dirt',new THREE.Float32BufferAttribute(rk,1));g.setAttribute('wetT',new THREE.Float32BufferAttribute(new Float32Array(rk.length).fill(-1e4),1));g.setAttribute('soilD',new THREE.Float32BufferAttribute(new Float32Array(rk.length),1));g.setAttribute('matA',new THREE.Float32BufferAttribute(ma,1));
   const m=new THREE.Mesh(g,groundMat);m.receiveShadow=true;scene.add(m);
   return {g,m,X0,Z0,CO,VX,NX,NZ};
