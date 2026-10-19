@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-19T14:46:00Z",
+ "updated": "2026-10-19T14:51:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -30,9 +30,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-19",
-   "dh": 13,
+   "dh": 20,
    "act": 0.5,
-   "versions": 2
+   "versions": 3
   }
  ],
  "extra": [
@@ -1401,6 +1401,15 @@ window.EFFORT = {
    "tris": 2968327,
    "chars": 989797,
    "what": "The dig grid moves about 10 times faster, so following the machine no longer stutters: each tile's untouched ground is worked out once and kept, and the tiles round the grid are worked out a little each frame before the grid gets there."
+  },
+  {
+   "v": 152,
+   "asked": "2026-10-19T10:05:00-05:00",
+   "live": "2026-10-19T09:51:22-05:00",
+   "dh": 7,
+   "tris": 2968389,
+   "chars": 995526,
+   "what": "The island's own trees grow with ☰ Time's Date; planted trees count in Stats and show on the site map; the map editor's Things gets a Plant tool (species, years ago, dig up, undo)"
   }
  ]
 };
