@@ -56,6 +56,7 @@ function lightning(){const c=camera.position,a=Math.random()*Math.PI*2,d=450+Mat
   bolt.geometry.dispose();bolt.geometry=new THREE.BufferGeometry();bolt.geometry.setAttribute('position',new THREE.Float32BufferAttribute(out,3));
   // two or three flickers over a fifth of a second
   lgAge=0;lgPulse=[0,0.07+Math.random()*0.05,0.16+Math.random()*0.08].slice(0,2+(Math.random()<0.6?1:0));
+  stats.bolts++;if(!stats.boltNear||d<stats.boltNear)stats.boltNear=d;statDirty=true;
   if(typeof sndThunder==='function')sndThunder(d)}
 
 // ---------- every frame (from rainFxTick, after it sets the sky and the lights) ----------
