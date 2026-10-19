@@ -15,10 +15,12 @@ try{const c=JSON.parse(localStorage.getItem('bhd_clock')||'null');if(c&&isFinite
 dn.saved=dn.t;
 
 // ---------- the clock, in Central time ----------
-let dnFmt=null,dnHM=null,dnDayF=null;
+let dnFmt=null,dnHM=null,dnDayF=null,dnDateF=null;
 try{dnFmt=new Intl.DateTimeFormat('en-US',{timeZone:DN_TZ,hour:'numeric',minute:'2-digit'});
   dnHM=new Intl.DateTimeFormat('en-US',{timeZone:DN_TZ,hourCycle:'h23',hour:'2-digit',minute:'2-digit'});
-  dnDayF=new Intl.DateTimeFormat('en-US',{timeZone:DN_TZ,weekday:'short',month:'short',day:'numeric'})}catch(e){}
+  dnDayF=new Intl.DateTimeFormat('en-US',{timeZone:DN_TZ,weekday:'short',month:'short',day:'numeric'});
+  dnDateF=new Intl.DateTimeFormat('en-US',{timeZone:DN_TZ,month:'short',day:'numeric',year:'numeric'})}catch(e){}
+const dnDate=t=>dnDateF?dnDateF.format(t):new Date(t).toDateString();
 const dnTime=t=>dnFmt?dnFmt.format(t):new Date(t).toLocaleTimeString([],{hour:'numeric',minute:'2-digit'});
 // minutes after midnight on the lake's clock
 function dnMin(t){if(!dnHM){const d=new Date(t);return d.getHours()*60+d.getMinutes()+d.getSeconds()/60}
@@ -192,12 +194,24 @@ function dnCompass(v){const a=Math.atan2(v.x,-v.z)/DN_R;return DN_DIRS[Math.roun
 function dnPhase(){const i=dn.ill,w=dn.wax;return i<0.03?'new moon':i>0.97?'full moon':i<0.47?(w?'waxing':'waning')+' crescent':i<0.53?(w?'first':'last')+' quarter':(w?'waxing':'waning')+' gibbous'}
 function dnUI(){if(!dnSl||$('#menu').hidden)return;const t=dn.t;
   if(!dn.drag)dnSl.value=Math.round(dnMin(t));
+  const ah=dnAhead();if(!dn.dragD)dnDSl.value=Math.round(1000*Math.sqrt(Math.max(0,ah)/DN_DATE_MAX));$('#dateVal').textContent=dnDate(t);
   $('#todVal').textContent=dnTime(t);$('#todRun').textContent=dn.run?'Stop':'Run';
   const day=dnDayF?dnDayF.format(t):new Date(t).toDateString();if(day!==dn.day){dn.day=day;[dn.rise,dn.set]=dnRiseSet(t)}
   const sunTxt=dn.el>-0.83?'Sun '+Math.round(dn.el)+'° up in the '+dnCompass(SUN_DIR):'Sun down',
     moonTxt=dn.mel>0?', '+dnPhase()+' '+Math.round(dn.mel)+'° up in the '+dnCompass(dnMoonDir):'';
-  $('#todSub').textContent=day+' · '+sunTxt+moonTxt+' · Sunrise '+(dn.rise?dnTime(dn.rise):'–')+' · Sunset '+(dn.set?dnTime(dn.set):'–')}
+  const pc=typeof plantCount==='function'?plantCount():null,
+    plTxt=pc&&pc.n?' · Planted: '+PLANT_STAGES.map((s,i)=>pc.c[i]?pc.c[i]+' '+s.toLowerCase():'').filter(Boolean).join(', '):'';
+  $('#todSub').textContent=(ah>0?dnAheadTxt(ah)+plTxt+' · ':plTxt?plTxt.slice(3)+' · ':'')+day+' · '+sunTxt+moonTxt+' · Sunrise '+(dn.rise?dnTime(dn.rise):'–')+' · Sunset '+(dn.set?dnTime(dn.set):'–')}
 function dnSet(min){dn.t+=(min-dnMin(dn.t))*60000;dn.uiT=0;dnSave()}
+// the Date slider: whole days ahead of the real date, up to 100 years, finer near today (the slider's square); the time
+// of day stays put. Planted trees (plant.js) grow with it
+const DN_DATE_MAX=36525,dnDSl=$('#dateSlider');
+const dnAhead=()=>Math.round((dn.t-Date.now())/86400000);
+function dnAheadTxt(d){if(d<=0)return 'today';if(d<60)return d+(d===1?' day':' days')+' ahead';const y=Math.floor(d/365.25),m=Math.floor((d-y*365.25)/30.44);
+  return (y?y+' yr':'')+(y&&m?' ':'')+(m?m+' mo':'')+' ahead'}
+function dnSetDate(v){const d=Math.round(DN_DATE_MAX*Math.pow(v/1000,2));dn.t+=(d-Math.max(0,dnAhead()))*86400000;dn.uiT=0;dnSave()}
+if(dnDSl){dnDSl.addEventListener('input',()=>{dn.dragD=true;dnSetDate(+dnDSl.value)});
+  dnDSl.addEventListener('change',()=>{dn.dragD=false;dnSetDate(+dnDSl.value);toast(say('dateSet',{date:dnDate(dn.t),ahead:dnAheadTxt(dnAhead())}),'good',2200)})}
 if(dnSl){dnSl.addEventListener('input',()=>{dn.drag=true;dnSet(+dnSl.value)});dnSl.addEventListener('change',()=>{dn.drag=false;dnSet(+dnSl.value)});
   $('#todRun').onclick=()=>{dn.run=!dn.run;dnSave();dn.uiT=0;toast(say(dn.run?'todRun':'todStop',{min:Math.round(TU.dayLen/60),time:dnTime(dn.t)}),'good')};
   $('#todNow').onclick=()=>{dn.t=Date.now();dnSave();dn.uiT=0;toast(say('todNow',{time:dnTime(dn.t)}),'good')}}

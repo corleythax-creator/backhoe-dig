@@ -67,52 +67,55 @@ function treeKit(seed){let sd=seed;const rnd=()=>{sd=(sd*16807)%2147483647;retur
 // a bent line from a toward a + dir*len in n steps, curling by bend (a vector added along the way, growing with t^2)
 function treeLine(K,a,dir,len,n,bend,wob){const P=[];for(let k=0;k<=n;k++){const t=k/n;
   P.push(a.clone().add(dir.clone().multiplyScalar(len*t)).add(bend.clone().multiplyScalar(t*t)).add(new K.V((K.rnd()-0.5)*wob,(K.rnd()-0.5)*wob*0.5,(K.rnd()-0.5)*wob).multiplyScalar(k&&k<n?1:0)))}return P}
-// spruce: a straight trunk and whorls of drooping branch cards all the way down, narrowing to a leader
-function treeSpruce(hi){const K=treeKit(hi?101:102),V=K.V,up=new V(0,1,0),H=8.4,R=2.0,Y0=0.55;
-  const tp=[],tr=[];for(let k=0,n=hi?9:3;k<=n;k++){const t=k/n;tp.push(new V((K.rnd()-0.5)*0.04*t,H*t,(K.rnd()-0.5)*0.04*t));tr.push(0.21*(1-t)+0.025)}
+// spruce: a straight trunk and whorls of drooping branch cards all the way down, narrowing to a leader. o (plant.js's
+// growth stages): H height, R branch reach at the bottom, tr trunk radius, y0 lowest whorl, dy whorl spacing, seed
+function treeSpruce(hi,o){o=o||{};const K=treeKit((hi?101:102)+(o.seed||0)),V=K.V,up=new V(0,1,0),H=o.H||8.4,g=H/8.4,R=o.R||2.0,Y0=o.y0===undefined?0.55:o.y0;
+  const tp=[],tr=[];for(let k=0,n=hi?9:3;k<=n;k++){const t=k/n;tp.push(new V((K.rnd()-0.5)*0.04*t*g,H*t,(K.rnd()-0.5)*0.04*t*g));tr.push((o.tr||0.21)*(1-t)+0.025*g)}
   K.tube(tp,tr,hi?12:6);
-  const dy=hi?0.27:0.6;
-  for(let y=Y0;y<H-0.45;y+=dy*(0.85+0.3*K.rnd())){const f=(y-Y0)/(H-0.45-Y0),L=R*Math.pow(1-f,0.92)*(0.85+0.3*K.rnd())+0.3,nb=hi?5+Math.floor(K.rnd()*3):4,y0=K.rnd()*6.28;
+  const dy=(hi?0.27:0.6)*(o.dy||1);
+  for(let y=Y0;y<H-0.45*g;y+=dy*(0.85+0.3*K.rnd())){const f=(y-Y0)/(H-0.45*g-Y0),L=R*Math.pow(1-f,0.92)*(0.85+0.3*K.rnd())+0.3*g,nb=hi?5+Math.floor(K.rnd()*3):4,y0=K.rnd()*6.28;
     for(let b=0;b<nb;b++){const a=y0+b*6.283/nb+(K.rnd()-0.5)*0.7,d=new V(Math.cos(a),0,Math.sin(a)),p=-0.32+0.62*f+(K.rnd()-0.5)*0.15;
       const ay=d.clone().multiplyScalar(Math.cos(p)).add(up.clone().multiplyScalar(Math.sin(p))),ax=new V().crossVectors(ay,up).normalize(),au=new V().crossVectors(ax,ay);
-      const nrm=d.clone().multiplyScalar(0.75).add(up.clone().multiplyScalar(0.7)).normalize(),dk=0.62+0.38*f,o=new V(d.x*0.06,y,d.z*0.06),w=L*(hi?0.44:0.62);
-      K.card(o,ax,ay,w,L,FOL_UV.spruce,nrm,0.45*dk,1.0*dk,hi?3:1,L*0.2*(1-f));
+      const nrm=d.clone().multiplyScalar(0.75).add(up.clone().multiplyScalar(0.7)).normalize(),dk=0.62+0.38*f,c=new V(d.x*0.06*g,y,d.z*0.06*g),w=L*(hi?0.44:0.62);
+      K.card(c,ax,ay,w,L,FOL_UV.spruce,nrm,0.45*dk,1.0*dk,hi?3:1,L*0.2*(1-f));
       const a2=hi?1.1:1.3,ax2=ax.clone().multiplyScalar(Math.cos(a2)).add(au.clone().multiplyScalar(Math.sin(a2)));
-      K.card(o,ax2,ay,w*0.85,L*0.95,FOL_UV.spruce,nrm,0.4*dk,0.92*dk,hi?3:1,L*0.2*(1-f))}}
-  for(let k=0;k<2;k++){const a=k*Math.PI/2,ax=new V(Math.cos(a),0,Math.sin(a));K.card(new V(0,H-0.75,0),ax,up,0.42,1.1,FOL_UV.spruce,up,0.9,1.05,hi?2:1,0)}
+      K.card(c,ax2,ay,w*0.85,L*0.95,FOL_UV.spruce,nrm,0.4*dk,0.92*dk,hi?3:1,L*0.2*(1-f))}}
+  const lg=Math.max(g,0.3);for(let k=0;k<2;k++){const a=k*Math.PI/2,ax=new V(Math.cos(a),0,Math.sin(a));K.card(new V(0,H-0.75*lg,0),ax,up,0.42*lg,1.1*lg,FOL_UV.spruce,up,0.9,1.05,hi?2:1,0)}
   return K.done()}
-// red pine: a tall clean trunk, a few dead stubs, and an open crown of upswept limbs ending in needle tufts
-function treeRedPine(hi){const K=treeKit(hi?201:202),V=K.V,up=new V(0,1,0),H=10.2,C0=H*0.5,lean=new V(0.25,0,0.1);
-  const tp=[],tr=[];for(let k=0,n=hi?10:4;k<=n;k++){const t=k/n;tp.push(new V(lean.x*t*t+(K.rnd()-0.5)*0.05*t,H*t,lean.z*t*t+(K.rnd()-0.5)*0.05*t));tr.push(0.25*(1-t)*(1-0.3*t)+0.03)}
+// red pine: a tall clean trunk, a few dead stubs, and an open crown of upswept limbs ending in needle tufts. o (plant.js's
+// growth stages): H height, cf where the crown starts (share of H), tr trunk radius, nl limbs, seed; young ones have no stubs
+function treeRedPine(hi,o){o=o||{};const K=treeKit((hi?201:202)+(o.seed||0)),V=K.V,up=new V(0,1,0),H=o.H||10.2,g=H/10.2,gs=Math.pow(g,0.6),C0=H*(o.cf||0.5),lean=new V(0.25*g,0,0.1*g);
+  const tp=[],tr=[];for(let k=0,n=hi?10:4;k<=n;k++){const t=k/n;tp.push(new V(lean.x*t*t+(K.rnd()-0.5)*0.05*t*g,H*t,lean.z*t*t+(K.rnd()-0.5)*0.05*t*g));tr.push((o.tr||0.25)*(1-t)*(1-0.3*t)+0.03*g)}
   K.tube(tp,tr,hi?12:6);
   const at=y=>{const t=y/H;return new V(lean.x*t*t,y,lean.z*t*t)};
-  if(hi)for(let k=0;k<7;k++){const y=1.8+K.rnd()*(C0-2.2),a=K.rnd()*6.28,d=new V(Math.cos(a),-0.1,Math.sin(a)).normalize();K.tube(treeLine(K,at(y),d,0.25+K.rnd()*0.3,1,new V(0,0,0),0),[0.035,0.012],4,1)}
+  if(hi&&!o.H)for(let k=0;k<7;k++){const y=1.8+K.rnd()*(C0-2.2),a=K.rnd()*6.28,d=new V(Math.cos(a),-0.1,Math.sin(a)).normalize();K.tube(treeLine(K,at(y),d,0.25+K.rnd()*0.3,1,new V(0,0,0),0),[0.035,0.012],4,1)}
   const tuft=(c,s,n)=>{const out=c.clone().sub(at(c.y)).setY(0),nrm=out.normalize().multiplyScalar(0.7).add(up.clone().multiplyScalar(0.75)).normalize(),k=0.52+0.33*(c.y-C0)/(H-C0);
-    for(let j=0;j<n;j++)K.clump(c.clone().add(new V((K.rnd()-0.5)*0.3,(K.rnd()-0.5)*0.2,(K.rnd()-0.5)*0.3)),s*(0.85+0.3*K.rnd()),FOL_UV.needles,nrm,k)};
-  const nl=hi?11:7;
-  for(let b=0;b<nl;b++){const f=b/(nl-1),y=C0+f*(H-1.3-C0),a=b*2.4+K.rnd()*0.5,d=new V(Math.cos(a),0.45+0.6*f+K.rnd()*0.25,Math.sin(a)).normalize(),L=(2.3-1.3*f)*(0.85+0.3*K.rnd());
-    const pts=treeLine(K,at(y),d,L,hi?3:2,new V(0,0.35,0),0.08);K.tube(pts,pts.map((p,k)=>0.075*(1-k/pts.length)+0.015),hi?6:4,1);
+    for(let j=0;j<n;j++)K.clump(c.clone().add(new V((K.rnd()-0.5)*0.3*gs,(K.rnd()-0.5)*0.2*gs,(K.rnd()-0.5)*0.3*gs)),s*gs*(0.85+0.3*K.rnd()),FOL_UV.needles,nrm,k)};
+  const nl=o.nl?(hi?o.nl:Math.ceil(o.nl*0.6)):hi?11:7;
+  for(let b=0;b<nl;b++){const f=b/(nl-1),y=C0+f*(H-1.3*g-C0),a=b*2.4+K.rnd()*0.5,d=new V(Math.cos(a),0.45+0.6*f+K.rnd()*0.25,Math.sin(a)).normalize(),L=(2.3-1.3*f)*(0.85+0.3*K.rnd())*g;
+    const pts=treeLine(K,at(y),d,L,hi?3:2,new V(0,0.35*g,0),0.08*g);K.tube(pts,pts.map((p,k)=>(0.075*(1-k/pts.length)+0.015)*g),hi?6:4,1);
     const tip=pts[pts.length-1];tuft(tip,1.25,hi?5:2);
     if(hi){tuft(pts[1].clone().lerp(tip,0.5),1.0,3);
-      for(let s=0;s<3;s++){const sa=a+(s-1)*0.9+0.3,sd=new V(Math.cos(sa),0.5,Math.sin(sa)).normalize(),sp=pts[1].clone().lerp(tip,0.4),st=treeLine(K,sp,sd,L*0.45,2,new V(0,0.15,0),0.04);
-        K.tube(st,[0.035,0.025,0.012],4,1);tuft(st[2],1.05,3);tuft(st[1],0.9,2)}}
+      for(let s=0;s<3;s++){const sa=a+(s-1)*0.9+0.3,sd=new V(Math.cos(sa),0.5,Math.sin(sa)).normalize(),sp=pts[1].clone().lerp(tip,0.4),st=treeLine(K,sp,sd,L*0.45,2,new V(0,0.15*g,0),0.04*g);
+        K.tube(st,[0.035*g,0.025*g,0.012*g],4,1);tuft(st[2],1.05,3);tuft(st[1],0.9,2)}}
     else tuft(pts[1].clone().lerp(tip,0.5),1.4,1)}
-  tuft(at(H-0.3),1.1,hi?4:2);
+  tuft(at(H-0.3*g),1.1,hi?4:2);
   return K.done()}
 // broadleaf: a trunk splitting into limbs, then branches and twigs, with leaf clumps at the twig ends and over the
 // crown's shell, shaded darker inside and underneath. o: trunk height, rad base radius, crown centre cy and radii
-// rx, ry, limb count and spread, wob how crooked, clumps (full detail) and clump size, stems for a clump of trunks
+// rx, ry, limb count and spread, wob how crooked, clumps (full detail) and clump size, stems for a clump of trunks; and
+// for plant.js's small growth stages: so how far apart the stems stand, tw how crooked the trunk, rmin the thinnest limb
 function treeBroad(hi,o){const K=treeKit(hi?o.seed:o.seed+1),V=K.V,up=new V(0,1,0),C=new V(0,o.cy,0),ends=[];
   // the light model leaves out the twigs (their ends still place the clumps)
   const limb=(a,d,len,r0,depth)=>{if(!hi&&depth<=0){ends.push(a.clone().add(d.clone().multiplyScalar(len)));return}
     const n=hi&&r0>0.06?4:2,pts=treeLine(K,a,d,len,n,new V(d.x*0.15*len,o.lift*len,d.z*0.15*len),o.wob*len*0.15);
     K.tube(pts,pts.map((p,k)=>r0*(1-0.6*k/n)),r0>0.1?(hi?10:5):r0>0.05?(hi?6:4):(hi?4:3),1);
-    const e=pts[n];if(depth<=0||r0<0.03){ends.push(e);return}
+    const e=pts[n];if(depth<=0||r0<(o.rmin||0.03)){ends.push(e);return}
     const nc=depth>1?o.limbs-1:2+(K.rnd()<0.5?1:0);
     for(let c=0;c<nc;c++){const a=K.rnd()*6.28,s=new V(Math.cos(a),0,Math.sin(a)),nd=d.clone().add(s.multiplyScalar(o.spread)).add(up.clone().multiplyScalar(0.25)).normalize();
       limb(c===0&&depth>1?pts[n-1].clone().lerp(e,0.5):e,nd,len*(0.55+0.15*K.rnd()),r0*0.58,depth-1)}};
-  for(let s=0;s<o.stems;s++){const sa=s*2.4+0.5,sl=o.stems>1?new V(Math.cos(sa)*0.18,1,Math.sin(sa)*0.18).normalize():up,base=new V(o.stems>1?Math.cos(sa)*0.18:0,0,o.stems>1?Math.sin(sa)*0.18:0);
-    const tp=treeLine(K,base,sl,o.trunk,hi?6:2,new V(0,0,0),o.wob*0.25);K.tube(tp,tp.map((p,k)=>o.rad*(1-0.3*k/tp.length)),hi?12:6);
+  for(let s=0;s<o.stems;s++){const so=o.so||0.18,sa=s*2.4+0.5,sl=o.stems>1?new V(Math.cos(sa)*0.18,1,Math.sin(sa)*0.18).normalize():up,base=new V(o.stems>1?Math.cos(sa)*so:0,0,o.stems>1?Math.sin(sa)*so:0);
+    const tp=treeLine(K,base,sl,o.trunk,hi?6:2,new V(0,0,0),o.wob*0.25*(o.tw||1));K.tube(tp,tp.map((p,k)=>o.rad*(1-0.3*k/tp.length)),hi?12:6);
     const top=tp[tp.length-1];
     for(let l=0;l<o.limbs;l++){const a=l*6.283/o.limbs+s*1.1+K.rnd()*0.6,d=new V(Math.cos(a)*o.out,1,Math.sin(a)*o.out).normalize();
       limb(tp[Math.max(1,tp.length-1-(l%2))].clone().lerp(top,0.5),d,o.limbLen*(0.85+0.3*K.rnd()),o.rad*0.62,hi?3:2)}

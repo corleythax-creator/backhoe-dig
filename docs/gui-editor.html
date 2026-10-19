@@ -554,6 +554,8 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
       <!-- time of day: the clock, a slider through the day, run or stop it, back to the real time (daynight.js) -->
       <div class="tod" id="todRow"><div class="sizes"><span>Time</span><b id="todVal">--</b><button id="todRun">Stop</button><button id="todNow">Now</button></div>
         <input id="todSlider" type="range" min="0" max="1439" step="5" aria-label="Time of day">
+        <div class="sizes" id="dateHead"><span>Date</span><b id="dateVal">--</b><button id="plantKindBtn">Spruce</button></div>
+        <input id="dateSlider" type="range" min="0" max="1000" step="1" aria-label="Date, up to 100 years ahead">
         <div class="todsub" id="todSub"></div></div>
       <div class="sizes"><span>Weather</span><button data-w="auto">Auto</button><button data-w="rain">Rain</button><button data-w="dry">Dry</button></div>
       <button id="gfxMenuBtn">Graphics</button>
@@ -591,7 +593,7 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
       <div class="stick" id="stickL"><div class="knob"></div></div>
     </div>
     <div class="stickwrap">
-      <div class="walkbtns" id="walkBtns" hidden><button id="sprintBtn" aria-pressed="false">Sprint</button><button id="jumpBtn">Jump</button></div>
+      <div class="walkbtns" id="walkBtns" hidden><button id="sprintBtn" aria-pressed="false">Sprint</button><button id="jumpBtn">Jump</button><button id="plantBtn">Plant</button></div>
       <div class="stick" id="stickR"><div class="knob"></div></div>
     </div>
   </div>
@@ -838,7 +840,8 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
       <dt id="hkCaveIns">Cave-ins</dt><dd id="hdCaveIns">Walls deeper than about 5 ft, or with spoil piled within 2 ft of the edge, cave in after a while. Dirt trickling off the lip means get the bucket out.</dd>
       <dt id="hkGroundwater">Groundwater</dt><dd id="hdGroundwater">Below about 6 ft the hole meets the water table and slowly fills with muddy water. Dirt dug from under it comes up as mud: it sticks in the bucket and truck bed, and wet spoil bogs the truck and slows the tracks. Tap Pump (or P) to dewater the hole.</dd>
       <dt id="hkMud">Mud</dt><dd id="hdMud">Paint Mud anywhere on the mesa with the map editor's Paint tool to lay soaked ground. It dries out over about 20 minutes, turning matte, then pale and cracked, and firms up as it goes; rain soaks it again (the editor's Query tool tells you how wet it is). Dug or dumped dirt and ruts that got soaked dry out the same way, pale and then cracked, until they are dug again or rained on. Tracks and tires sink up to 9 in and squeeze the mud into lumpy berms, leaving their tread in the bottom, and the ruts fill with puddles: drive or walk through them and the muddy water splashes, the faster the bigger. Painting anything else over ruts smooths them away (painting Dirt on soaked ground keeps them). Mud slows the machines and coats them, and pushing on in it digs them in until the tracks or tires spin and throw mud. Stuck? Rock it free: forward, then back, then forward again. On Low graphics the puddles are drawn more simply and less mud and spray flies; the mud itself is the same on every device.</dd>
-      <dt id="hkTime">Day and night</dt><dd id="hdTime">The sun crosses the sky where it really would over a lake in the Arkansas mountains on today's date, and the shadows follow it; then dusk, stars, the Milky Way, the moon in its real phase and the odd shooting star. Lamps, light towers, lanterns and windows come on as the sun goes down, the machine you are in lights the way (on foot you have a headlamp), and fireflies, crickets and frogs come out. ☰ then Time: drag the slider to any time of day, Stop or Run the clock, or Now for the real time. A whole day passes in 48 minutes (Tuning: Day and night). Each device keeps its own time.</dd>
+      <dt id="hkPlant">Planting trees</dt><dd id="hdPlant">On foot, press 7 (or tap Plant) to set a sapling in front of you; 8 (or the tree button on ☰ Time's Date row) picks spruce, red pine, oak, sugar maple or birch. Each grows at its real species' rate from the date it went in: slide ☰ Time, Date ahead and watch it go from sapling to young tree to full grown. Plant beside one of yours to dig it up. Your trees sync between devices.</dd>
+      <dt id="hkTime">Day and night</dt><dd id="hdTime">The sun crosses the sky where it really would over a lake in the Arkansas mountains on today's date, and the shadows follow it; then dusk, stars, the Milky Way, the moon in its real phase and the odd shooting star. Lamps, light towers, lanterns and windows come on as the sun goes down, the machine you are in lights the way (on foot you have a headlamp), and fireflies, crickets and frogs come out. ☰ then Time: drag the slider to any time of day, Stop or Run the clock, or Now for the real time. The Date slider below it runs up to 100 years ahead. A whole day passes in 48 minutes (Tuning: Day and night). Each device keeps its own time.</dd>
       <dt id="hkRain">Rain</dt><dd id="hdRain">Showers roll through now and then (☰ then Weather: Auto, or Rain to keep it raining, or Dry). Rain soaks the ground: dug dirt, dirt yards, clay and topsoil turn to mud first, dirt roads and grass get soft, sand and gravel drain, and rock and paving stay hard. Low ground soaks fastest. Rain fills holes and ruts with puddles. When it stops the ground dries over several minutes (sand fast, clay slow) and the puddles drain away; it keeps drying while the game is closed. Phones on Low graphics draw fewer raindrops; the rain and the mud it makes are the same on every device.</dd>
       <dt id="hkTrenchBox">Trench box</dt><dd id="hdTrenchBox">Swing the bucket over the yellow box and press T (controller X, or the Hook box button). It hangs from the bucket and turns with the swing. Lower it into the trench and press again to set it. Walls between its panels can't slump or cave in, so dig deep inside it and leapfrog it along the trench.</dd>
       <dt id="hkWalk">Walk</dt><dd id="hdWalk">Tap Walk (or press 5) to get out and walk around as the site worker. The left stick walks the way the camera faces; push it all the way to jog, and hold Shift (controller: click the left stick) to sprint; on a touch screen tap Sprint, which stays on until you stop. The right stick turns the camera and looks up and down. Tap Jump (Space) to jump about 6 ft: onto any block, and up a stack two blocks at a time. Trench walls are too steep to walk up, so jump out. Cab view looks through his eyes: drag the scene to look around (on a PC, click it for mouse look; Esc frees the mouse). Walk up to the excavator, the dump truck or the mower and tap Get in (F) to climb in and drive it; press F (or Get out) again to climb out beside it.</dd>
@@ -1027,6 +1030,13 @@ const WORDS=[
   ['todRun','Time of day','The clock runs: a day passes in {min} min','{min}: minutes (Tuning: Day and night)'],
   ['todStop','Time of day','The clock is stopped at {time}','{time}: like 6:40 PM'],
   ['todNow','Time of day','Back to the real time: {time}','{time}: like 6:40 PM'],
+  ['dateSet','Time of day','{date}: {ahead}','{date}: like Oct 19, 2026; {ahead}: like 12 yr ahead, or today'],
+  ['plantIn','Planting','Planted a {tree} sapling on {date}. Slide ☰ Time, Date ahead to watch it grow','{tree}: the species; {date}: like Oct 19, 2026'],
+  ['plantUp','Planting','Dug up your {tree} ({age} yr old)','{tree}: the species; {age}: years'],
+  ['plantKind','Planting','Next tree to plant: {tree}. [plant] plants it','{tree}: the species'],
+  ['plantWalk','Planting','Get out and walk to plant a tree',''],
+  ['plantWet','Planting','Too wet to plant here: find dry ground',''],
+  ['plantFull','Planting','That makes {n} planted trees, the most there can be: dig one up first','{n}: how many'],
   ['glReset','Other','The phone reset the graphics (low on memory). A lower Dirt detail helps.']];
 const WORDS_BY={};for(const w of WORDS)WORDS_BY[w[0]]=w;
 // the owner's words if the skin has them, else the game's own; html: escaped, with the filled-in parts in bold and the
