@@ -233,6 +233,7 @@ tr.on .rin{background:var(--amber);color:var(--amber-ink);border-color:var(--amb
       <button class="tbtn" data-p="pwip" aria-expanded="false">In progress <span id="wipn" class="badge"></span></button>
       <button class="tbtn" data-p="pnext" aria-expanded="false">Next up</button>
       <button class="tbtn" data-p="ptracks" aria-expanded="false">Tracks</button>
+      <button class="tbtn" data-p="pcats" aria-expanded="false">Categories</button>
       <button class="tbtn" data-p="pgsum" aria-expanded="false">Totals</button>
       <button class="tbtn" data-p="phelp" aria-expanded="false">Help</button>
     </div>
@@ -267,6 +268,12 @@ tr.on .rin{background:var(--amber);color:var(--amber-ink);border-color:var(--amb
     <p class="hint">Groups of ideas that add up to one thing you can play. Tap a track to open it. Each runs in build order; the highlighted one is the next to build. Tokens are a rough guess of about 0.4 M per estimated hour, and the percent is of your weekly hours (set under Help).</p>
     <div class="frow"><button class="gbtn" id="tkall" type="button">Expand all</button><button class="gbtn" id="tknone" type="button">Collapse all</button></div>
     <div id="tkb"></div>
+  </div>
+
+  <div class="panel tk" id="pcats" hidden>
+    <p class="hint">Every idea by its category, best priority first. Tap a category to open it; the highlighted one is the best ready to build. Tokens are a rough guess of about 0.4 M per estimated hour, and the percent is of your weekly hours (set under Help).</p>
+    <div class="frow"><button class="gbtn" id="ctall" type="button">Expand all</button><button class="gbtn" id="ctnone" type="button">Collapse all</button></div>
+    <div id="ctb"></div>
   </div>
 
   <div class="panel gsum" id="pgsum" hidden>
@@ -854,13 +861,17 @@ function trackPct(list){const rows=list.map(i=>IDS.get(i));return rows.reduce((a
 // every idea that is in no track, best priority first, so nothing is lost from view
 function trackList(){const inT=new Set(TRACKS.flatMap(t=>t[3])),rest=I.filter(r=>!inT.has(r[0])&&!hid.has(r[0])).sort((x,y)=>prio(y)-prio(x)).map(r=>r[0]);
   return [...TRACKS,["none","Not in a track","Everything else on the board, best priority first, whatever its group.",rest]]}
-function renderTracks(){
-  const b=$("tkb");b.textContent="";
-  for(const [k,n,d,list] of trackList()){
+function catList(){return Object.keys(G).map(k=>{const ids=I.filter(r=>r[1]===k&&!hid.has(r[0])).sort((x,y)=>prio(y)-prio(x)).map(r=>r[0]);return [k,G[k],ids.length+" ideas, best priority first.",ids]})}
+const catOpen=new Set();
+function renderTracks(){renderAcc("tkb",trackList(),tkOpen)}
+function renderCats(){renderAcc("ctb",catList(),catOpen)}
+function renderAcc(bodyId,groups,openSet){
+  const b=$(bodyId);b.textContent="";
+  for(const [k,n,d,list] of groups){
     if(!list.length)continue;
     const rows=list.map(i=>IDS.get(i)),tot=rows.length,pc=Math.round(trackPct(list)*100),nb=rows.filter(r=>stOf(r[0])==="built").length;
     const nx=nextOf(list),hr=Math.round(rows.reduce((a,r)=>a+hrsLeft(r),0));
-    const dt=el("details","tkd2");dt.open=tkOpen.has(k);dt.addEventListener("toggle",()=>{dt.open?tkOpen.add(k):tkOpen.delete(k)});
+    const dt=el("details","tkd2");dt.open=openSet.has(k);dt.addEventListener("toggle",()=>{dt.open?openSet.add(k):openSet.delete(k)});
     const sm=el("summary","tks"),top=el("div","tkh");
     top.append(el("h3",null,n),el("span","tkp",nb+" of "+tot+" built · "+pc+"%"),el("span","tkp",hr?"~"+hr+" h left":"all built"),hr?el("span","tkp",fmtTok(hr)+" left ("+pct(hr)+" of week)"):el("span"));
     const bar=el("div","tkb"),bi=el("i");bi.style.width=pc+"%";bar.appendChild(bi);
@@ -871,7 +882,9 @@ function renderTracks(){
 }
 $("tkall").addEventListener("click",()=>{trackList().forEach(t=>tkOpen.add(t[0]));renderTracks()});
 $("tknone").addEventListener("click",()=>{tkOpen.clear();renderTracks()});
-function renderPanels(){if(!$("pnext").hidden)renderNext();if(!$("ptracks").hidden)renderTracks()}
+$("ctall").addEventListener("click",()=>{catList().forEach(t=>catOpen.add(t[0]));renderCats()});
+$("ctnone").addEventListener("click",()=>{catOpen.clear();renderCats()});
+function renderPanels(){if(!$("pnext").hidden)renderNext();if(!$("ptracks").hidden)renderTracks();if(!$("pcats").hidden)renderCats()}
 let gK="pr",gD=-1;
 document.querySelectorAll("th button[data-gk]").forEach(b=>b.addEventListener("click",()=>{const k=b.dataset.gk;if(gK===k)gD=-gD;else{gK=k;gD=k==="g"?1:-1}groupTable()}));
 function agg(rows){const n=rows.length,ns=rows.map(N),h=rows.reduce((a,r)=>a+hrs(r),0);return{n,pk:rows.filter(r=>picks.has(r[0])).length,ses:rows.reduce((a,r,i)=>a+COST[ns[i].c][1],0),pc:h,
