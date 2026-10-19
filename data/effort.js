@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-19T04:08:00Z",
+ "updated": "2026-10-19T04:13:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -24,9 +24,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-18",
-   "dh": 261.5,
+   "dh": 266.5,
    "act": 5.5,
-   "versions": 37
+   "versions": 38
   }
  ],
  "extra": [
@@ -1341,6 +1341,15 @@ window.EFFORT = {
    "tris": 2968751,
    "chars": 929026,
    "what": "Stats page counts every tree by species (ages from real forestry growth curves, trunks, shade, wood, carbon, life stages) with a Tree guide of age by height; the map editor shows each tree's age and a species age summary."
+  },
+  {
+   "v": 146,
+   "asked": "2026-10-18T23:00:00-05:00",
+   "live": "2026-10-18T23:13:40-05:00",
+   "dh": 5,
+   "tris": 2967890,
+   "chars": 940667,
+   "what": "The map editor keeps several named maps on the device, downloads a map as a file and opens one, shows what a map holds, starts over one layer at a time (shape, paint, things or roads), and its History list names each step and jumps back to any of them."
   }
  ]
 };
