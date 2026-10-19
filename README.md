@@ -128,7 +128,7 @@ A skin is JSON: `{v:1, t, L:{all|phone|big:{vars, el:{selector:{hide, x, y, sc, 
 
   | Key | What | File |
   | --- | --- | --- |
-  | `bhd_site` | Dug and dumped ground (`H − H0` per changed vertex), dirt colour, mud, groundwater, mud tiles, wet soil and weather, how wet dug ground got before it dried | `js/save.js` |
+  | `bhd_site` | Dug and dumped ground (`H − H0` per changed vertex), dirt colour, mud, groundwater, mud tiles, wet soil and weather, how wet dug ground got before it dried; where the dig grid sits (`go`) and the dug tiles stored outside it (`ts`, compact form `f:2`, `tileEnc`/`tileDec` in `js/digtiles.js`). If the browser's storage is full the grid is written in the same compact form (`dc`, `d` left empty), and if that still won't fit the player is told (`saveFull`) | `js/save.js` |
   | `bhd_rigs` | Excavator, truck and load, trench box, blocks, worker | `js/save.js` |
   | `bhd_lawn` | Mowing and regrowth | `js/mower.js` |
   | `bhd_map` | Map editor edits: heights, paint, assets, roads | `js/terrain.js`, `js/editor.js` |

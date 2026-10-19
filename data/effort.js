@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-19T03:01:00Z",
+ "updated": "2026-10-19T03:20:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -24,9 +24,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-18",
-   "dh": 208,
+   "dh": 211,
    "act": 4.5,
-   "versions": 27
+   "versions": 28
   }
  ],
  "extra": [
@@ -1251,6 +1251,15 @@ window.EFFORT = {
    "tris": 1919122,
    "chars": 850762,
    "what": "The dig site follows the excavator and skid steer anywhere on Corley's mesa; holes left behind stay, drawn in less detail, and save with the site"
+  },
+  {
+   "v": 136,
+   "asked": "2026-10-18T22:05:00-05:00",
+   "live": "2026-10-18T22:20:36-05:00",
+   "dh": 3,
+   "tris": 1919012,
+   "chars": 852995,
+   "what": "Dug tiles save three times smaller, and a site too big for the browser saves in a compact form or warns instead of failing silently"
   }
  ]
 };
