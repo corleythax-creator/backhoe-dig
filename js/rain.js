@@ -39,7 +39,8 @@ function rainEdRefresh(x0,x1,z0,z1){rainBase(Math.floor((x0-RW_X0)/RW_C)-1,Math.
 
 // ---------- weather ----------
 // r: how hard it is raining now (0-1), easing toward want; next: seconds until Auto changes its mind
-const weather={mode:'auto',r:0,want:0,next:240};
+// c: how much of the sky the cloud covers (0-1); a shower's clouds roll in first and the rain follows them (storm.js)
+const weather={mode:'auto',r:0,want:0,next:240,c:0.18};
 try{const m=localStorage.getItem('bhd_weather');if(['auto','rain','dry'].includes(m))weather.mode=m}catch(e){}
 function setWeather(m,picked){weather.mode=m;
   if(m==='rain')weather.want=0.8;else if(m==='dry')weather.want=0;else weather.next=Math.min(weather.next,60);
@@ -56,9 +57,12 @@ function rainTick(dt){
   if(!bench.on){
     if(weather.mode==='auto'){weather.next-=dt;
       if(weather.next<=0){if(weather.want>0){weather.want=0;weather.next=TU.rainGap*(300+Math.random()*420)/510}else{weather.want=Math.min(1,(0.35+Math.random()*0.65)*TU.rainHard);weather.next=TU.rainLen*(90+Math.random()*180)/180}}}
-    weather.r+=Math.max(-dt*0.05,Math.min(dt*0.05,weather.want-weather.r))}
+    weather.c+=Math.max(-dt/60,Math.min(dt/40,(weather.want>0||weather.r>0.1?1:0.18)-weather.c));
+    weather.r+=Math.max(-dt*0.05,Math.min(dt*0.05,weather.want*ss(0.55,0.85,weather.c)-weather.r))}
   const raining=weather.r>0.05;
-  if(raining!==rainWas){rainWas=raining;if(raining)toast(say('rainIn'),'',3600);else if(!bench.on)toast(say('rainOut'),'',3600)}
+  // for the Stats panel (stats.js)
+  if(raining){stats.rainTime+=dt;if(weather.r>stats.rainTop)stats.rainTop=weather.r}
+  if(raining!==rainWas){rainWas=raining;if(raining){toast(say('rainIn'),'',3600);stats.showers++;statDirty=true}else if(!bench.on)toast(say('rainOut'),'',3600)}
   // once a second: soak or dry the soil, and show it
   rainT-=dt;if(rainT<=0){rainT=1;let any=weather.r>0.02;if(!any)for(let k=0;k<rainW.length;k+=7)if(rainW[k]>0){any=true;break}
     if(any){rainSim(1);rainTexDirty=true;if((rainSaveT-=1)<=0){rainSaveT=20;site.dirty=true}}}
@@ -66,12 +70,12 @@ function rainTick(dt){
   rainFxTick(dt)}
 // the save: soil water (bytes, base64) and the weather, with the time so drying carries on while the game is closed
 function rainSave(){const b=new Uint8Array(rainW.length);for(let k=0;k<b.length;k++)b[k]=Math.round(rainW[k]*255);
-  return {w:siteB64(b),pm:1,r:+weather.r.toFixed(3),want:+weather.want.toFixed(3),next:Math.round(weather.next),t:Date.now()}}
+  return {w:siteB64(b),pm:1,r:+weather.r.toFixed(3),c:+weather.c.toFixed(3),want:+weather.want.toFixed(3),next:Math.round(weather.next),t:Date.now()}}
 function rainLoad(d){if(!d||typeof d.w!=='string')return;let b;try{b=siteUnB64(d.w)}catch(e){return}if(b.length!==rainW.length)return;
   for(let k=0;k<b.length;k++)rainW[k]=b[k]/255;
   // saved before painted Mud could dry (pm), when it was always soaked: it starts soaked
   if(!d.pm)for(let k=0;k<b.length;k++)if(rainMud[k])rainW[k]=1;
-  if(isFinite(d.r))weather.r=d.r;if(isFinite(d.want)&&weather.mode==='auto')weather.want=d.want;if(isFinite(d.next))weather.next=d.next;
+  if(isFinite(d.r))weather.r=d.r;weather.c=isFinite(d.c)?d.c:weather.r>0.05?1:0.18;if(isFinite(d.want)&&weather.mode==='auto')weather.want=d.want;if(isFinite(d.next))weather.next=d.next;
   // dry on for the time the game was closed (up to an hour; it is not raining meanwhile)
   const gone=isFinite(d.t)?Math.min(3600,Math.max(0,(Date.now()-d.t)/1000)):0;
   if(gone>5&&weather.mode!=='rain'){const r=weather.r;weather.r=0;for(let s=0;s<gone;s+=10)rainSim(Math.min(10,gone-s));weather.r=weather.mode==='auto'&&weather.next>gone?r:0;rainDrain(gone)}
@@ -166,7 +170,7 @@ function rainDropMat(box,near,far,wid,alpha){return new THREE.ShaderMaterial({tr
     'vec3 p=uCam+mod(aP*uBox+vel*uT-uCam+uBox*0.5,uBox)-uBox*0.5;if(p.y<coverY(p.xz)+0.02){gl_Position=vec4(0.0,0.0,-2.0,1.0);return;}vec3 ax=normalize(vel);vec3 tc=uCam-p;float d=length(tc);tc/=d;\n'+
     'vec3 sd=normalize(cross(ax,tc));float L=(0.35+0.45*aR.x)*(0.8+0.4*aR.y);\n'+
     'vec3 w=p-ax*L*corner.y+sd*max(uW,d*0.0016)*corner.x;vC=corner;\n'+
-    'vF=smoothstep(0.6,2.0,d)*(uNear>0.0?smoothstep(uNear*0.7,uNear,d):1.0)*(1.0-smoothstep(uFar*0.7,uFar,d));\n'+
+    'vF=smoothstep(1.0,3.0,d)*(uNear>0.0?smoothstep(uNear*0.7,uNear,d):1.0)*(1.0-smoothstep(uFar*0.7,uFar,d));\n'+
     'vB=pow(max(0.0,dot(-tc,uSun)),5.0);gl_Position=projectionMatrix*viewMatrix*vec4(w,1.0);}',
   fragmentShader:'uniform float uA,uK,uSunI;varying vec2 vC;varying float vF;varying float vB;\n'+
     'void main(){float a=(1.0-vC.x*vC.x)*smoothstep(0.0,0.25,vC.y)*smoothstep(1.0,0.55,vC.y)*vF*uA*uK;float b=vB*uSunI;\n'+
@@ -197,14 +201,20 @@ const rsMat=new THREE.ShaderMaterial({transparent:true,depthWrite:false,fog:fals
   uniforms:Object.assign({uCam:{value:new THREE.Vector3()},uT:{value:0},uSunI:rainSunI},rcU),
   vertexShader:RC_GLSL+'attribute vec4 aS;attribute vec3 aK;uniform vec3 uCam;uniform float uT;varying vec2 vC;varying float vAge;varying float vKind;varying float vSeed;varying float vF;\n'+
     // under a roof the drop lands on the roof: a crown up there instead
-    'void main(){vec2 corner=position.xy;vec3 b=aS.xyz;float kind=aK.x,cy=coverY(b.xz);if(cy>b.y+0.25){b.y=cy+0.01;kind=0.0;}\n'+
-    'float life=kind>0.5?'+SP_LIFE[1].toFixed(2)+':'+SP_LIFE[0].toFixed(2)+';float t=(uT-aS.w)/life;vAge=t;vKind=kind;vSeed=aK.z;vC=corner;\n'+
+    // a drip (kind 2) falls from the eave it left at aS.w, aK.y metres to the ground, as a short streak
+    'void main(){vec2 corner=position.xy;vec3 b=aS.xyz;vC=corner;vSeed=aK.z;\n'+
+    'if(aK.x>1.5){float tt=uT-aS.w,fall=4.9*tt*tt;if(tt<0.0||fall>aK.y){gl_Position=vec4(0.0,0.0,-2.0,1.0);return;}\n'+
+    '  b.y-=fall;vec2 f=normalize(uCam.xz-b.xz);float L=0.03+0.05*min(1.0,tt*2.0);vKind=2.0;vAge=0.0;vF=1.0-smoothstep(9.0,13.0,distance(uCam,b));\n'+
+    '  gl_Position=projectionMatrix*viewMatrix*vec4(b+vec3(-f.y,0.0,f.x)*corner.x*0.003+vec3(0.0,(corner.y*0.5+0.5)*L,0.0),1.0);return;}\n'+
+    'float kind=aK.x,cy=coverY(b.xz);if(cy>b.y+0.25){b.y=cy+0.01;kind=0.0;}\n'+
+    'float life=kind>0.5?'+SP_LIFE[1].toFixed(2)+':'+SP_LIFE[0].toFixed(2)+';float t=(uT-aS.w)/life;vAge=t;vKind=kind;\n'+
     'vec3 w;if(t<0.0||t>1.0){gl_Position=vec4(0.0,0.0,-2.0,1.0);return;}\n'+
     'if(kind>0.5){w=b+vec3(corner.x,0.0,corner.y)*aK.y;}\n'+
     'else{vec2 f=normalize(uCam.xz-b.xz);float sz=min(aK.y,0.18);w=b+vec3(-f.y,0.0,f.x)*corner.x*sz+vec3(0.0,(corner.y*0.5+0.5)*sz*1.1,0.0);}\n'+
     'vF=1.0-smoothstep(9.0,13.0,distance(uCam,b));gl_Position=projectionMatrix*viewMatrix*vec4(w,1.0);}',
   fragmentShader:'uniform float uSunI;varying vec2 vC;varying float vAge;varying float vKind;varying float vSeed;varying float vF;\n'+
     'void main(){float t=vAge,a=0.0;\n'+
+    'if(vKind>1.5){gl_FragColor=vec4(0.85,0.88,0.92,(1.0-vC.x*vC.x)*0.7*vF);return;}\n'+
     'if(vKind>0.5){float r=length(vC),r1=t*0.95,r2=(t-0.22)*0.7;\n'+
     'a=smoothstep(0.09,0.0,abs(r-r1))*(1.0-t)*(1.0-t)*0.9+(t>0.22?smoothstep(0.06,0.0,abs(r-r2))*(1.0-t)*0.5:0.0);\n'+
     'a+=smoothstep(0.12,0.0,r)*smoothstep(0.25,0.0,t)*0.6;}\n'+
@@ -234,6 +244,11 @@ function rsTick(dt,r){if(!rsMesh)return;rsT=(rsT+dt)%1000;rsMat.uniforms.uT.valu
     S4[i*4]=x;S4[i*4+1]=y+(ring?0.012:0.002);S4[i*4+2]=z;S4[i*4+3]=rsT;
     K3[i*3]=ring;K3[i*3+1]=ring?0.14+Math.random()*0.16:0.1+Math.random()*0.08;K3[i*3+2]=Math.random()*10}
   if(any){rsS.needsUpdate=true;rsK.needsUpdate=true}}
+// a drip off an eave: the falling drop, then the little crown where it lands
+function rsDrip(x,y,z,h){if(!rsMesh||h<0.3)return;const S4=rsS.array,K3=rsK.array;
+  let i=rsHead;rsHead=(rsHead+1)%rsN;S4.set([x,y,z,rsT],i*4);K3.set([2,h,Math.random()*10],i*3);
+  i=rsHead;rsHead=(rsHead+1)%rsN;S4.set([x,y-h+0.002,z,rsT+Math.sqrt(h/4.9)],i*4);K3.set([0,0.06+Math.random()*0.04,Math.random()*10],i*3);
+  rsS.needsUpdate=rsK.needsUpdate=true}
 function rainGfx(n,sp){if(!rainLines||rainLines.userData.n!==n){
     for(const m of [rainLines,rainFar])if(m){scene.remove(m);m.geometry.dispose()}
     rainLines=rainDropMesh(Math.max(1,n),rainMat);rainFar=rainDropMesh(Math.max(1,Math.round(n*0.6)),rainFarMat);rainLines.userData.off=rainFar.userData.off=!n;rainVeil.userData.off=n<1500}
@@ -241,21 +256,58 @@ function rainGfx(n,sp){if(!rainLines||rainLines.userData.n!==n){
 // the sky greys over, the sun and its disc dim and the haze closes in
 const SKY0=scene.background.clone(),SKY_R=new THREE.Color(0x8e989f),FOG_FAR=scene.fog.far,SUN_I=sun.intensity,hemiL=scene.children.find(o=>o.isHemisphereLight),HEMI_I=hemiL?hemiL.intensity:0;
 const skyTint=new THREE.Color();
-function rainFxTick(dt){const r=weather.r,v=ss(0,0.6,r);
+function rainFxTick(dt){const r=weather.r,v=Math.max(ss(0,0.6,r),0.75*ss(0.3,1,weather.c));
   scene.background.copy(SKY0).lerp(SKY_R,v*0.85);scene.fog.color.copy(scene.background);scene.fog.far=FOG_FAR*gfxFog*(1-0.6*v);
   sun.intensity=SUN_I*(1-0.7*v);if(hemiL)hemiL.intensity=HEMI_I*(1+0.15*v);
   sky.material.color.copy(skyTint.setRGB(1,1,1).lerp(SKY_R,v*0.75));skySunVis.value=1-v;
-  rainSunI.value=sun.intensity/SUN_I;
+  rainSunI.value=sun.intensity/SUN_I;stormTick(dt);
   // the breeze under the rain, in gusts that roll over the island like the grass's (mower.js)
   const t=timeU.value,c=camera.position,gu=Math.pow(0.5+0.5*Math.sin((c.x*RAIN_WD[0]+c.z*RAIN_WD[1])*0.42-t*1.9+1.5*Math.sin((-0.6*c.x+0.8*c.z)*0.11+t*0.23)),3);
   rainWind.set(RAIN_WD[0],RAIN_WD[1]).multiplyScalar(TU.rainWind*(0.7+0.9*gu));
-  const on=r>0.03;rsTick(dt,on?r:0);wsTick(dt,r);
+  const on=r>0.03;rsTick(dt,on?r:0);wsTick(dt,r);wetTick(dt,r);dripTick(dt,r);
+  wetU.uRunoff.value=ss(0.15,0.7,r);
   if(!rainLines)return;const off=rainLines.userData.off;rainLines.visible=rainFar.visible=on&&!off;rainVeil.visible=on&&!off&&!rainVeil.userData.off;if(!rainLines.visible)return;
   const a=0.6*ss(0.03,0.5,r);
   for(const m of [rainMat,rainFarMat]){m.uniforms.uCam.value.copy(c);m.uniforms.uT.value=(m.uniforms.uT.value+dt)%1000;m.uniforms.uA.value=a}
   rainVeil.position.set(c.x,c.y,c.z);rainVeilMat.uniforms.uT.value=(rainVeilMat.uniforms.uT.value+dt)%1000;rainVeilMat.uniforms.uA.value=0.5*ss(0.1,0.8,r);rainVeilMat.uniforms.uC.value.copy(scene.fog.color)}
 // the shelter map is drawn just before each frame (main.js), so the cabs it holds are where the machines are now
-function rainCover(){if(weather.r>0.03&&(rsMesh||rainLines&&!rainLines.userData.off))rcRender()}
+// while it rains, every frame; while things drip after it, once a second (for the eaves, below)
+let rcNext=0;
+function rainCover(){if(!(rsMesh||rainLines&&!rainLines.userData.off))return;const now=performance.now(),due=rsMesh&&now>=rcNext;
+  if(weather.r>0.03||wetAll>0.08&&due){rcRender();if(due){rcNext=now+1000;rcRead()}}}
+
+// ---------- everything gets wet ----------
+// wetAll: how wet the machines, the worker, buildings, trees and props are (0-1). It soaks in over half a minute of rain
+// and dries over about five minutes after. Every lit material (wetPatch, from main.js before the first frame) darkens
+// with it and turns glossy, the tops most; the ground and the grass have their own wet look. How it looks only
+const wetAllU={value:0};let wetAll=0;
+function wetPatch(m){if(!m||m.userData.wetP||m.userData.noWet||m===groundMat||tuftMats.includes(m))return;
+  const t=m.type;if(t!=='MeshPhongMaterial'&&t!=='MeshStandardMaterial'&&t!=='MeshLambertMaterial')return;if(m.transparent&&m.opacity<0.7)return;
+  m.userData.wetP=true;const old=m.onBeforeCompile,key=m.customProgramCacheKey();
+  m.onBeforeCompile=function(sh,r){if(old)old.call(this,sh,r);sh.uniforms.uWetAll=wetAllU;let f='uniform float uWetAll;\n'+sh.fragmentShader;
+    f=f.includes('#include <normal_fragment_maps>')?f.replace('#include <normal_fragment_maps>','#include <normal_fragment_maps>\nfloat wW=uWetAll*clamp(inverseTransformDirection(normal,viewMatrix).y*0.6+0.4,0.0,1.0);diffuseColor.rgb*=1.0-0.32*wW;')
+      :f.replace('#include <color_fragment>','#include <color_fragment>\nfloat wW=uWetAll*0.6;diffuseColor.rgb*=1.0-0.32*wW;');
+    sh.fragmentShader=f.replace('#include <lights_phong_fragment>','#include <lights_phong_fragment>\nmaterial.specularColor=max(material.specularColor,vec3(0.25*wW));material.specularShininess=mix(material.specularShininess,max(material.specularShininess,80.0),wW);')
+      .replace('#include <lights_physical_fragment>','#include <lights_physical_fragment>\nmaterial.specularRoughness=mix(material.specularRoughness,min(material.specularRoughness,0.28),wW);')};
+  m.customProgramCacheKey=()=>key+'|wet';m.needsUpdate=true}
+function wetPatchAll(){scene.traverse(o=>{if(o.isMesh)(Array.isArray(o.material)?o.material:[o.material]).forEach(wetPatch)})}
+function wetTick(dt,r){wetAll=r>0.03?Math.min(1,wetAll+dt*(0.01+0.05*r)):Math.max(0,wetAll-dt/300);wetAllU.value=wetAll}
+// drips: once a second the shelter map comes back from the GPU and the edges of roofs within about 40 ft are found
+// (cover that drops away by more than 2 ft to the next spot); drops fall from them while it rains and for a while after
+const rcPix=new Uint8Array(RC_N*RC_N*4),rcEdges=[];let rcCX=0,rcCZ=0,rcTop=0,dripAcc=0;
+const rcH=k=>{const a=rcPix[k*4+3]/255,d=(255/256)*(rcPix[k*4]/255/16777216+rcPix[k*4+1]/255/65536+rcPix[k*4+2]/255/256+a);return d>0.999?-1e5:rcTop-d*RC_R};
+function rcRead(){renderer.readRenderTargetPixels(rcRT,0,0,RC_N,RC_N,rcPix);const v=rcU.uRC.value;rcCX=v.x;rcCZ=v.y;rcTop=v.z;rcEdges.length=0;
+  const px=RC_S/RC_N,R=Math.round(12/px),c=RC_N>>1;
+  for(let y=c-R;y<c+R;y++)for(let x=c-R;x<c+R;x++){const k=y*RC_N+x,h=rcH(k);if(h<-1e4)continue;
+    for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const hn=rcH(k+dy*RC_N+dx);if(hn>h-0.6)continue;
+      // texture rows run from the south (bottom) up; the drip hangs just past the edge
+      const wx=rcCX+(x+0.5+dx*0.6-RC_N/2)*px,wz=rcCZ-(y+0.5+dy*0.6-RC_N/2)*px;rcEdges.push(wx,h-0.04,wz);break}
+    if(rcEdges.length>900)return}}
+function dripTick(dt,r){if(!rsMesh||!rcEdges.length)return;const n=rcEdges.length/3,wet=r>0.03?0.4+r:wetAll*wetAll;
+  dripAcc+=Math.min(40,n*0.12*wet)*dt;
+  while(dripAcc>=1){dripAcc--;const i=(Math.random()*n|0)*3,x=rcEdges[i],y=rcEdges[i+1],z=rcEdges[i+2],g=surfAt(x,z);
+    if(Math.hypot(x-camera.position.x,z-camera.position.z)<13)rsDrip(x,y,z,y-g)}}
+
 
 // ---------- the windscreens: drops on the glass, and wipers ----------
 // The excavator's front window and the truck's windscreen bead up with drops while it rains and dry off slowly after.
@@ -309,7 +361,7 @@ function wsTick(dt,r){let wetMax=0;
   for(const ws of WS){const W=ws.W,run=mode===ws.mode&&wipeOn;
     // rain wets the glass, faster in a downpour; out of the rain it dries over a few minutes
     for(let k=0;k<W.length;k++)W[k]=r>0.02?W[k]+r*0.09*dt*(1-W[k]):Math.max(0,W[k]-dt/240);
-    if(run||ws.ph>0){const p0=ws.ph;ws.ph+=dt/1.5;if(ws.ph>=1)ws.ph=run?ws.ph%1:0;if(!run&&p0>0&&ws.ph<p0)ws.ph=0;
+    if(run||ws.ph>0){const p0=ws.ph;ws.ph+=dt/1.5;if(ws.ph>=1){ws.ph=run?ws.ph%1:0;stats.wipes++;statDirty=true}if(!run&&p0>0&&ws.ph<p0)ws.ph=0;
       ws.blades.forEach((b,i)=>{const a=wsAng(b,ws.ph),f0=(Math.min(a,ws.prev[i])-b.a0)/(b.a1-b.a0),f1=(Math.max(a,ws.prev[i])-b.a0)/(b.a1-b.a0);
         for(let k=Math.max(0,Math.floor(f0*WS_BINS));k<=Math.min(WS_BINS-1,Math.floor(f1*WS_BINS));k++)W[i*WS_BINS+k]=0;
         ws.prev[i]=a;b.g.rotation.z=b.s*a})}

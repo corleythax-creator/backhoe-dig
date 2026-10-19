@@ -5,16 +5,21 @@
 // settling speeds written in cells stay the same in feet
 const S=64,N=400,CELL=S/N,V=N+1,CA=CELL*CELL,FLOOR=3.5,GRID_K=Math.round(0.32/CELL);
 // dig tiles (docs/dig-plans.html): the map is cut into TILE m squares, named from the mesa top's centre (E0/W1 across,
-// S0/N1 down). The dig grid covers TPG by TPG of them, its west and north edges at GX0, GZ0 (on tile lines); today the
-// four round the trench. Everything that turns world x, z into grid i, j or back goes through gX/gZ and gI/gJ
-const TILE=32,TPG=S/TILE,GX0=-TILE,GZ0=-TILE,GX1=GX0+S,GZ1=GZ0+S;
+// S0/N1 down). The dig grid covers TPG by TPG of them, its west and north edges at GX0, GZ0 (on tile lines); it starts
+// on the four round the trench and follows the digging machine (digMoveTo, digtiles.js). Everything that turns world
+// x, z into grid i, j or back goes through gX/gZ and gI/gJ
+const TILE=32,TPG=S/TILE;let GX0=-TILE,GZ0=-TILE,GX1=GX0+S,GZ1=GZ0+S;
 const gX=i=>GX0+i*CELL,gZ=j=>GZ0+j*CELL,gI=x=>(x-GX0)/CELL,gJ=z=>(z-GZ0)/CELL;
 // inside the dig grid, at least m in from its edge
 function inDig(x,z,m=0){return x>=GX0+m&&x<=GX1-m&&z>=GZ0+m&&z<=GZ1-m}
 function tileName(ti,tj){return (ti<0?'W'+(-ti):'E'+ti)+' · '+(tj<0?'N'+(-tj):'S'+tj)}
 // the grid's tiles: their map index (ti, tj) and grid point ranges (a shared edge row belongs to both)
-const DIG_TILES=[];for(let b=0;b<TPG;b++)for(let a=0;a<TPG;a++){const ti=Math.round(GX0/TILE)+a,tj=Math.round(GZ0/TILE)+b,n=N/TPG;
-  DIG_TILES.push({ti,tj,name:tileName(ti,tj),i0:a*n,i1:(a+1)*n,j0:b*n,j1:(b+1)*n})}
+const DIG_TILES=[];
+function digTilesSet(){DIG_TILES.length=0;for(let b=0;b<TPG;b++)for(let a=0;a<TPG;a++){const ti=Math.round(GX0/TILE)+a,tj=Math.round(GZ0/TILE)+b,n=N/TPG;
+  DIG_TILES.push({ti,tj,name:tileName(ti,tj),i0:a*n,i1:(a+1)*n,j0:b*n,j1:(b+1)*n})}}
+digTilesSet();
+// rectangles [x0, x1, z0, z1] of dug ground drawn outside the grid (digtiles.js), which buildSkirts edges too
+const digSkirtRects=[];
 // the dig tile under x, z, or null off the grid
 function digTileAt(x,z){if(!inDig(x,z))return null;const a=Math.min(TPG-1,Math.floor((x-GX0)/TILE)),b=Math.min(TPG-1,Math.floor((z-GZ0)/TILE));return DIG_TILES[b*TPG+a]}
 const H=new Float32Array(V*V),H0=new Float32Array(V*V),grass=new Float32Array(V*V*3),matCov=new Float32Array(V*V),mudBase=new Float32Array(V*V),paintD=new Float32Array(V*V),paint=new Uint8Array(V*V),nz=new Float32Array(V*V),rockA=new Float32Array(V*V);
@@ -329,6 +334,8 @@ function digBase(k){const i=k%V,j=(k/V)|0,x=gX(i),z=gZ(j);
   if(sand>0){grass[k*3]+=(0.80-grass[k*3])*sand;grass[k*3+1]+=(0.72-grass[k*3+1])*sand;grass[k*3+2]+=(0.52-grass[k*3+2])*sand}
   const rc=[grass[k*3],grass[k*3+1],grass[k*3+2]],ya=yardTint(x,z,rc,n),ra=roadTint(x,z,rc,n),mc=matTint(x,z,rc);grass[k*3]=rc[0];grass[k*3+1]=rc[1];grass[k*3+2]=rc[2];
   rockA[k]=Math.min(1,Math.max(rock*0.95+sand*0.4,ra*0.9,ya*0.85))*(MAT_GL2?1:1-mc);matCov[k]=mc;mudBase[k]=matCovOf(x,z,MUD_ID)}
+// the untouched grid where it sits: original grade, noise, colours and the trench's paint marks; run again when it moves
+function digInit(){paint.fill(0);
 for(let j=0;j<V;j++)for(let i=0;i<V;i++){
   const k=j*V+i,x=gX(i),z=gZ(j);
   H0[k]=H[k]=baseHeight(x,z); nz[k]=hash(i*1.7+3,j*2.3+1);
@@ -337,7 +344,8 @@ for(let j=0;j<V;j++)for(let i=0;i<V;i++){
   const onEnd=(Math.abs(z-TRENCH_Z0)<hc||Math.abs(z-TRENCH_Z1)<hc)&&Math.abs(x)<=0.5+hc;
   if(onSide||onEnd)paint[k]=1;
   else if(Math.abs(z-PIPE_Z)<hc&&Math.abs(x)<12&&(Math.floor(x+50)&1)===0)paint[k]=2;
-}
+}}
+digInit();
 const PIPE_Y=baseHeight(0,PIPE_Z)-1.3, PIPE_R=0.08;
 // textures: grass and dirt detail blended per vertex on the ground, grime overlay on the machines, and a large soft
 // macro map that breaks up the repeat. The ground pack (textures/ground/) has each map at 512, 1024 and 2048 px for
@@ -401,7 +409,7 @@ const groundOcc={value:[new THREE.Vector4(0,0,0,0),new THREE.Vector4(1.4,2.0,0,0
 const groundMat=M(0xffffff,{vertexColors:true});
 // rain (rain.js): a small texture of the wet ground over the mesa, r = wet surface, g = mud; read per vertex where the
 // GPU can (most), else per pixel
-const wetU={tWet:{value:null},uWetO:{value:new THREE.Vector4(0,0,0,0)},uWetView:{value:0},uWetMin:{value:0}},WET_VTX=renderer.capabilities.vertexTextures;
+const wetU={tWet:{value:null},uWetO:{value:new THREE.Vector4(0,0,0,0)},uWetView:{value:0},uWetMin:{value:0},uRunoff:{value:0}},WET_VTX=renderer.capabilities.vertexTextures;
 groundMat.onBeforeCompile=sh=>{
   Object.assign(sh.uniforms,wetU);
   sh.uniforms.tGrass={value:texGrass};sh.uniforms.tDirt={value:texDirt};sh.uniforms.tMacro={value:texMacro};sh.uniforms.uMacro=macroU;sh.uniforms.texMix=texMixU;sh.uniforms.texBase=texBaseU;sh.uniforms.uTime=timeU;sh.uniforms.uPipeZ={value:PIPE_Z};
@@ -413,6 +421,16 @@ groundMat.onBeforeCompile=sh=>{
   sh.fragmentShader=`#define GRASS_K ${TEX_K.grass.toFixed(3)}\n#define DIRT_K ${TEX_K.dirt.toFixed(3)}\n`+'uniform sampler2D tGrass;\nuniform sampler2D tDirt;\nuniform sampler2D tMacro;\nuniform float uMacro;\nuniform float texMix;\nuniform float texBase;\nuniform float uPipeZ;\nuniform vec4 uOcc[4];\nuniform sampler2D tWet;\nuniform vec4 uWetO;\nuniform float uWetView;\nuniform float uWetMin;\nuniform sampler2D tCrack;\nvarying vec2 vCrk;\nvarying float vMud;\nvarying float vRain;\nvarying float vSoil;\nvarying float vDirt;\nvarying float vWet;\nvarying float vSD;\nvarying float vMatA;\nvarying vec2 vWXZ;\nvarying vec3 vWP;\n'+MAT_GLSL_HEAD+FACE_GLSL+sh.fragmentShader.replace('#include <normal_fragment_maps>','#include <normal_fragment_maps>\n'+matGlslNorm()).replace('#include <specularmap_fragment>','#include <specularmap_fragment>\nspecularStrength*=(1.0+7.0*vWet*vDirt*(1.0-mudF))*mix(1.0,0.5,max(mudF,rainF));\n'+matGlslSpec()).replace('#include <lights_phong_fragment>','#include <lights_phong_fragment>\nmaterial.specularShininess=mix(material.specularShininess,24.0,max(mudF,rainF));\n'+matGlslShin()).replace('#include <color_fragment>',
     (WET_VTX?'float mudF=vMud,rainF=vRain,soilW=vSoil;\n':'vec4 wt=texture2D(tWet,(vWXZ-uWetO.xy)*uWetO.zw);float mudF=max(vMud,wt.g),rainF=wt.r,soilW=wt.b;\n')+'vec3 tg=texture2D(tGrass,vWXZ*GRASS_K).rgb/vec3(0.443,0.486,0.385);\nvec3 td=texture2D(tDirt,vWXZ*DIRT_K).rgb/vec3(0.491,0.467,0.431);\nvec3 gd=clamp(mix(tg,td,vDirt),0.0,2.2)*(uMacro>0.0?mix(1.0,texture2D(tMacro,vWXZ*0.025).r/0.502,uMacro):1.0);float gk=0.8;\n'+matGlsl()+'diffuseColor.rgb*=mix(vec3(1.0),gd,gk*texBase);\nfloat crkD=vDirt*(1.0-smoothstep(0.4,1.0,vSD));diffuseColor.rgb*=1.0+0.2*vCrk.x*crkD;\ndiffuseColor.rgb*=(1.0-0.32*max(vWet*vDirt,0.6*mudF))*(1.0-0.12*rainF);\nif(vDirt>0.01&&texMix>0.5)diffuseColor.rgb*=mix(vec3(1.0),faceDetail(vWP,vSD,uPipeZ),vDirt);\n#include <color_fragment>\nif(vCrk.y*crkD>0.01){float cl=texMix>0.5?dot(texture2D(tCrack,vWXZ*0.547).rgb,vec3(0.299,0.587,0.114))/0.56:1.0;diffuseColor.rgb=mix(diffuseColor.rgb,(diffuseColor.rgb*0.5+vec3(0.2,0.15,0.1))*cl,vCrk.y*crkD);}\n'+matGlslPost()+'if(uWetView>0.5){float sw=max(soilW,vMud);float on=uWetMin>0.0?step(uWetMin,sw):smoothstep(0.03,0.08,sw);vec3 wc=uWetMin>0.0?vec3(0.02,0.1,0.5):mix(vec3(0.45,0.68,0.78),vec3(0.01,0.05,0.38),sw);diffuseColor.rgb=mix(diffuseColor.rgb,wc,0.8*on);}\n').replace('#include <lights_fragment_end>',
     'float skyO=1.0;\nfor(int m=0;m<4;m+=2){vec2 d=vWXZ-uOcc[m].xy;float c=cos(uOcc[m].z),s=sin(uOcc[m].z);vec2 l=vec2(d.x*c-d.y*s,d.x*s+d.y*c-uOcc[m+1].z);vec2 q=abs(l)-uOcc[m+1].xy;\nfloat dist=length(max(q,0.0))+min(max(q.x,q.y),0.0);skyO*=1.0-0.75*(1.0-smoothstep(-0.4,1.6,dist));}\nirradiance*=skyO;\n'+matGlslRefl()+'#include <lights_fragment_end>');
+  // while it rains, water runs down wet slopes off the dig area too (the ramp, the roads, bare banks; grass drinks it): thin rills that stream
+  // downhill, quicker on steeper ground, shining like the sky; uRunoff (rain.js) is how hard it is raining
+  sh.vertexShader='varying vec3 vRunN;\n'+sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvRunN=(modelMatrix*vec4(normal,0.0)).xyz;');
+  sh.fragmentShader='uniform float uRunoff;\nvarying vec3 vRunN;\n'+(sh.fragmentShader.includes('uniform float uTime')?'':'uniform float uTime;\n')+sh.fragmentShader.replace('#include <dithering_fragment>',
+    'if(uRunoff>0.01){vec3 gn=normalize(vRunN);float sl=length(gn.xz);\n'+
+    '  float rf=uRunoff*smoothstep(0.3,0.75,rainF)*smoothstep(0.012,0.035,sl)*(1.0-smoothstep(0.55,0.85,sl))*(1.0-smoothstep(0.0,0.05,gl_FragColor.g-max(gl_FragColor.r,gl_FragColor.b)));if(rf>0.01){\n'+
+    '  vec2 dn=gn.xz/sl;vec2 pp=vec2(dot(vWP.xz,vec2(-dn.y,dn.x)),dot(vWP.xz,dn));float sp=0.5+2.5*min(sl,0.5);\n'+
+    '  vec2 a=vec2(pp.x*9.0+1.2*sin(pp.y*0.9)+0.6*sin(pp.y*2.3),pp.y*0.6-uTime*sp);vec2 ia=floor(a),fa=fract(a);fa=fa*fa*(3.0-2.0*fa);\n'+
+    '  float n=mix(mix(fract(sin(dot(ia,vec2(127.1,311.7)))*43758.5),fract(sin(dot(ia+vec2(1,0),vec2(127.1,311.7)))*43758.5),fa.x),mix(fract(sin(dot(ia+vec2(0,1),vec2(127.1,311.7)))*43758.5),fract(sin(dot(ia+1.0,vec2(127.1,311.7)))*43758.5),fa.x),fa.y);\n'+
+    '  float riv=smoothstep(0.7,0.88,n)*rf;gl_FragColor.rgb=mix(gl_FragColor.rgb,gl_FragColor.rgb*0.45+fogColor*0.4,riv*0.6);}}\n#include <dithering_fragment>');
 };
 const geo=new THREE.PlaneGeometry(S,S,N,N); geo.rotateX(-Math.PI/2); geo.translate(GX0+S/2,0,GZ0+S/2);
 const colors=new Float32Array(V*V*3);
@@ -522,7 +540,7 @@ function dig(tip,cap){
   for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){
     const x=gX(i),z=gZ(j),d=Math.hypot(x-tip.x,z-tip.z);
     if(d>r)continue;
-    const k=j*V+i;
+    const k=j*V+i;if(digKeep[k])continue;
     const t=Math.max(tip.y+(d/r)*(d/r)*0.35,H0[k]-FLOOR);
     const dh=H[k]-t;
     if(dh>0){const y=H[k]-dh/2,m=matAt(k,y),c=matColor(k,m),v=dh*CA*(1+(SOIL[m].sw-1)*TU.fluff),ck=clodKind(m,H0[k]-y);list.push(k,dh);vol+=v;cr+=c[0]*v;cg+=c[1]*v;cb+=c[2]*v;if(ck>=0)vk[ck]+=v}
@@ -574,7 +592,7 @@ function wetSlope(o,w,h){return Math.max(0.2,1+o.dp*TU.slopeDamp*ss(0.04,0.3,w)*
 // k: the high point, k2 its neighbour; the face is as tall as the deeper of the two cut or heaped heights
 function slopeLim(k,k2,m,long){const o=soilP(k,m);return (long?o.rl:o.rp)*wetSlope(o,mudOf(k),Math.max(Math.abs(H[k]-H0[k]),Math.abs(H[k2]-H0[k2])))*CELL}
 function slumpPair(k,k2,long){
-  if(prot[k]||prot[k2])return false;
+  if(prot[k]||prot[k2]||digKeep[k]||digKeep[k2])return false;
   if((H[k]===H0[k]&&H[k2]===H0[k2])||Math.abs(H0[k]-H0[k2])>M0)return false;
   const df=H[k]-H[k2],ad=Math.abs(df);if(ad<=RP_MIN)return false;
   const hi=df>0?k:k2,lo=df>0?k2:k,m=matAt(hi,H[hi]-0.03),lim=slopeLim(hi,lo,m,long);if(ad<=lim)return false;
@@ -611,7 +629,7 @@ function slump(){
 const CDIR=[[1,0],[-1,0],[0,1],[0,-1]];
 function caveScan(){
   let best=0,bk=-1,bs=false;
-  for(let j=cJ0;j<=cJ1;j++)for(let i=cI0;i<=cI1;i++){const k=j*V+i;if(prot[k])continue;
+  for(let j=cJ0;j<=cJ1;j++)for(let i=cI0;i<=cI1;i++){const k=j*V+i;if(prot[k]||digKeep[k])continue;
     for(const [di,dj] of CDIR){const i2=i+di,j2=j+dj;if(i2<0||i2>N||j2<0||j2>N)continue;const k2=j2*V+i2;
       const dep=H0[k2]-H[k2];if(dep<0.75)continue;
       const df=H[k]-H[k2];if(df<=0.62*CELL||Math.abs(H0[k]-H0[k2])>M0)continue;

@@ -11,7 +11,11 @@ const lawn={ct:new Float32Array(LAWN_N).fill(-1e9),gd:new Float32Array(LAWN_N).f
 // how grown a cell is: 0 fresh stubble, 1 full height
 function lawnG(n){return Math.min(1,Math.max(0,(lawn.t-lawn.ct[n]-TU.lawnWait)/TU.lawnGrow))}
 // grid cells of the dig zone the patch covers, so terrain edits elsewhere skip it
-const LAWN_I0=Math.floor(gI(LAWN_X0))-1,LAWN_I1=Math.ceil(gI(LAWN_X0+LAWN_NX*LAWN_GS))+1,LAWN_J0=Math.floor(gJ(LAWN_Z0))-1,LAWN_J1=Math.ceil(gJ(LAWN_Z0+LAWN_NZ*LAWN_GS))+1;
+let LAWN_I0=0,LAWN_I1=0,LAWN_J0=0,LAWN_J1=0;
+// the patch's grid points, clamped to the grid (none while the grid is elsewhere)
+function lawnIdx(){LAWN_I0=Math.max(0,Math.floor(gI(LAWN_X0))-1);LAWN_I1=Math.min(N,Math.ceil(gI(LAWN_X0+LAWN_NX*LAWN_GS))+1);LAWN_J0=Math.max(0,Math.floor(gJ(LAWN_Z0))-1);LAWN_J1=Math.min(N,Math.ceil(gJ(LAWN_Z0+LAWN_NZ*LAWN_GS))+1);
+  if(LAWN_I0>LAWN_I1||LAWN_J0>LAWN_J1){LAWN_I0=LAWN_J0=N+1;LAWN_I1=LAWN_J1=-1}}
+lawnIdx();
 // one clump: eight tapered blades that arch over and twist as they rise, each its own shade of green, dark down in the
 // clump and sunlit at the tips, plus two seed stalks with straw-coloured heads standing above them (46 triangles)
 const lawnGeo=(function(){const P=[],C=[],tri=(v,c,list)=>{for(const t of list)for(const q of t){P.push(...v[q]);C.push(...c[q])}};

@@ -28,10 +28,19 @@ function siteSave(){if(window.syncHold)return;site.dirty=false;site.saveT=perfor
   const pb=new Uint8Array(V*V*5);let po=0,pl=-1;for(let k=0;k<V*V;k++)if(paintD[k]){let g=k-pl;pl=k;while(g>=128){pb[po++]=(g&127)|128;g>>>=7}pb[po++]=g;
     const m=Math.round(Math.max(-32,Math.min(32,paintD[k]))*1000)&0xffff;pb[po++]=m&255;pb[po++]=m>>8}
   const pd=po?siteB64(pb.subarray(0,po)):'';
-  const d=siteB64(buf.subarray(0,o)),mt=mtSave(),wx=rainSave(),sm=smSave(),cr=craneSave(),sig=d+JSON.stringify(mt)+wx.w+wx.r+wx.want+pd+sm+cr.n+'.'+(cr.t/30|0);if(sig===site.lastD)return;site.lastD=sig;
-  try{localStorage.setItem(SITE_KEY,JSON.stringify({v:1,V,n:ks.length,t:Date.now(),d,mt,wx,pd,sm,cr}))}catch(e){}}
+  // go: where the grid sits (its west and north edges); ts: dug tiles stored outside it (digtiles.js)
+  const go=[GX0,GZ0],ts=tileStoreSave();
+  const d=siteB64(buf.subarray(0,o)),mt=mtSave(),wx=rainSave(),sm=smSave(),cr=craneSave(),sig=d+JSON.stringify(mt)+wx.w+wx.r+wx.want+pd+sm+cr.n+'.'+(cr.t/30|0)+go+JSON.stringify(ts)+treeFalls.length;if(sig===site.lastD)return;site.lastD=sig;
+  const tf=treeFallSave(),rec={v:1,V,n:ks.length,t:Date.now(),d,mt,wx,pd,sm,cr,go,ts,tf};if(siteWrite(rec))return;
+  // too big for this browser's storage: the grid goes in the compact tile form (dc) instead, else the player is told
+  rec.d='';rec.n=0;rec.dc=gridEnc();if(siteWrite(rec))return;
+  site.lastD=null;siteFull(JSON.stringify(rec).length)}
+function siteWrite(r){try{localStorage.setItem(SITE_KEY,JSON.stringify(r));return true}catch(e){return false}}
+function siteFull(n){const now=performance.now();if(now-(site.fullT||-1e9)<60000)return;site.fullT=now;toast(say('saveFull',{mb:(n/1048576).toFixed(1)}),'bad',6000)}
 function siteLoad(){let d=null;try{d=JSON.parse(localStorage.getItem(SITE_KEY))}catch(e){}
   if(!d||d.v!==1||d.V!==V||typeof d.d!=='string')return false;site.lastD=d.d+JSON.stringify(d.mt||[])+(d.wx?d.wx.w+d.wx.r+d.wx.want:'')+(d.pd||'')+(d.sm||'');let buf;try{buf=siteUnB64(d.d)}catch(e){return false}
+  // the stored tiles first, then the grid where it was (saves from before the tiles sit on the trench)
+  tileStoreLoad(d.ts);{const go=Array.isArray(d.go)&&d.go.length===2&&d.go.every(v=>isFinite(v)&&v%TILE===0)?d.go:[-TILE,-TILE];if(go[0]!==GX0||go[1]!==GZ0)digMoveTo(go[0],go[1],true);else farSync()}
   const dv=new DataView(buf.buffer);let o=0,k=-1,any=false,i0=N+1,i1=-1,j0=N+1,j1=-1;
   try{for(let c=0;c<d.n;c++){let g=0,sh=0,b;do{b=buf[o++];g|=(b&127)<<sh;sh+=7}while(b&128);k+=g;if(k>=V*V)break;
     H[k]=H0[k]+dv.getFloat32(o,true);o+=4;for(let q=0;q<3;q++)spoilC[k*3+q]=buf[o++]/255;
@@ -43,7 +52,7 @@ function siteLoad(){let d=null;try{d=JSON.parse(localStorage.getItem(SITE_KEY))}
     const m=pb[po]|pb[po+1]<<8;po+=2;if(k<V*V)paintD[k]=(m<<16>>16)/1000}}catch(e){paintD.fill(0)}}
   // the dug area's bounds, which water and cave-ins scan
   if(any){const mg=3*GRID_K;cI0=Math.max(0,i0-mg);cI1=Math.min(N,i1+mg);cJ0=Math.max(0,j0-mg);cJ1=Math.min(N,j1+mg)}
-  rainLoad(d.wx);mtRefill();smLoad(d.sm);
+  rainLoad(d.wx);mtRefill();smLoad(d.sm);gridDec(d.dc);treeFallLoad(d.tf);
   dI0=0;dI1=N;dJ0=0;dJ1=N;winOn=true;st.dirty=true;return true}
 // machines: small, so saved whenever any of them has moved
 function sitePick(o,keys){const r={};for(const k of keys){const v=o[k];r[k]=Array.isArray(v)?v.map(x=>+x.toFixed(4)):typeof v==='number'?+v.toFixed(4):v}return r}

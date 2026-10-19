@@ -8,22 +8,23 @@
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 // n: name; w, d: footprint in metres (x across, z front to back) at size 100%; cap: most of that kind; solid: blocks
 // machines and the worker (with the solid box's half sizes, if not the footprint); deep: a footing below the ground, so
-// it sits on the highest ground under it and a slope never shows a gap; tint: takes the house colours
+// it sits on the highest ground under it and a slope never shows a gap; tint: takes the house colours; cat: its group in the
+// editor's Things library (ED_KIND_CATS, editor.js); run: laid end to end along a line (the editor's Line)
 const PROPS={
-  house:{n:'House',w:8,d:6.5,cap:40,solid:1,deep:1,tint:1},
-  shed:{n:'Shed',w:3,d:2.4,cap:60,solid:1,deep:1,tint:1},
-  garage:{n:'Garage',w:6.6,d:6.6,cap:40,solid:1,deep:1,tint:1},
-  fence:{n:'Fence (8 ft)',w:2.44,d:0.15,cap:600,solid:[1.22,0.07],deep:1},
-  gate:{n:'Farm gate',w:3.66,d:0.15,cap:120,solid:[1.83,0.07],deep:1},
-  light:{n:'Light tower',w:1.6,d:2.8,cap:40,solid:1},
-  cone:{n:'Cone',w:0.36,d:0.36,cap:400},
-  barrel:{n:'Barrel',w:0.6,d:0.6,cap:300,solid:[0.3,0.3]},
-  pallet:{n:'Pallet',w:1.22,d:1.02,cap:300},
-  potty:{n:'Porta-potty',w:1.12,d:1.12,cap:40,solid:1},
-  sign:{n:'Sign',w:0.9,d:0.12,cap:200,solid:[0.08,0.08]},
-  bench:{n:'Bench',w:1.8,d:0.6,cap:120,solid:1},
-  picnic:{n:'Picnic table',w:1.8,d:1.6,cap:80,solid:1},
-  dumpster:{n:'Dumpster',w:2.0,d:1.8,cap:60,solid:1,deep:1}};
+  house:{n:'House',cat:1,w:8,d:6.5,cap:40,solid:1,deep:1,tint:1},
+  shed:{n:'Shed',cat:1,w:3,d:2.4,cap:60,solid:1,deep:1,tint:1},
+  garage:{n:'Garage',cat:1,w:6.6,d:6.6,cap:40,solid:1,deep:1,tint:1},
+  fence:{n:'Fence (8 ft)',cat:2,run:1,w:2.44,d:0.15,cap:600,solid:[1.22,0.07],deep:1},
+  gate:{n:'Farm gate',cat:2,run:1,w:3.66,d:0.15,cap:120,solid:[1.83,0.07],deep:1},
+  light:{n:'Light tower',cat:3,w:1.6,d:2.8,cap:40,solid:1},
+  cone:{n:'Cone',cat:3,w:0.36,d:0.36,cap:400},
+  barrel:{n:'Barrel',cat:3,w:0.6,d:0.6,cap:300,solid:[0.3,0.3]},
+  pallet:{n:'Pallet',cat:3,w:1.22,d:1.02,cap:300},
+  potty:{n:'Porta-potty',cat:3,w:1.12,d:1.12,cap:40,solid:1},
+  sign:{n:'Sign',cat:3,w:0.9,d:0.12,cap:200,solid:[0.08,0.08]},
+  bench:{n:'Bench',cat:4,w:1.8,d:0.6,cap:120,solid:1},
+  picnic:{n:'Picnic table',cat:4,w:1.8,d:1.6,cap:80,solid:1},
+  dumpster:{n:'Dumpster',cat:3,w:2.0,d:1.8,cap:60,solid:1,deep:1}};
 // house colours (the walls take them; everything else on the model is tinted slightly with them)
 const PROP_TINT=[[1,1,1],[1,0.93,0.8],[0.82,0.9,1],[0.86,0.96,0.82],[1,0.84,0.78],[0.9,0.88,0.86]];
 const propIMs={};
@@ -99,5 +100,3 @@ function propHit(a,x,z){const P=PROPS[a.t],c=Math.cos(a.yaw),s=Math.sin(a.yaw),d
 const propR=a=>Math.hypot(PROPS[a.t].w,PROPS[a.t].d)/2*a.s;
 const propName=a=>{const P=PROPS[a.t];return `${P.n}, ${(P.w*a.s/FT).toFixed(0)} × ${(P.d*a.s/FT).toFixed(P.d*a.s<1?1:0)} ft`};
 propsBuild();
-// the catalogue in the editor's Add tool, after the trees and the boulder
-{const row=document.querySelector('.edkind');if(row)for(const k in PROPS){const b=document.createElement('button');b.className='sm';b.dataset.k=k;b.setAttribute('aria-pressed','false');b.textContent=PROPS[k].n;row.appendChild(b)}}
