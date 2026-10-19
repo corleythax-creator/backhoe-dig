@@ -85,17 +85,15 @@ From the Lower Bench a dark green steel truss bridge (about 340 ft) crosses the 
 
 ## Map editor
 
-☰ menu → Map editor, or G. The game pauses and an overhead camera takes over. The tools run down the left in a two-wide strip with the picked tool's options beside them (tap the picked tool again to fold them away), so the rest of the screen is ground.
+☰ menu → Map editor, or G. The game pauses and an overhead camera takes over. Bars run across the top (Done, Undo and Redo, the view: Look, Closer, Farther, North up, Start view, and Panel, which shows or hides the drawer), down the left (the tool groups, each an icon with its name, and Map at the foot) and along the bottom (the picked tool and its options; the selection's settings when something is picked; a status line with the spot under the pointer, the brush, the view, how many things there are and a tip). Beside the left bar a drawer holds the group's library or list; it stays open on a computer and gets out of the way on a phone once something in it is picked. Tap the picked group again to fold its drawer (or its options) away. Keys 1 to 5 pick the groups and 6 opens Map.
 
-- **Look**: drag to move; two fingers pinch to zoom and twist to turn (mouse: right button turns, wheel zooms; keys WASD or arrows, Q E, R F).
-- **Raise, Lower, Flatten, Smooth**: reshape the ground under a round brush (1 to 40 ft radius, strength 1 to 10). Dug holes keep their depth.
-- **Dirt, Grass**: paint the ground.
-- **Paint**: lay a material from the library under a round or square brush, Hard edge (a sharp line) or Soft edge (Softness: how much of the brush fades out, 10 to 100%), down to a 1 ft brush. **+ Your own texture** turns a picture of yours into a seamless tile and adds it to the library on every device (owner key).
-- **Select**: pick a tree, boulder, placed thing or machine, drag it to move it; its card turns, resizes, copies or deletes it.
-- **Add**: place pine trees, leafy trees or boulders, or things from the catalogue: houses, sheds, garages, fences, farm gates, light towers, cones, barrels, pallets, porta-potties, signs, benches, picnic tables, dumpsters. Solid ones stop the machines and the worker.
-- **Query**: read any spot's height, slope, surface, whether it can be driven and what was edited there, in feet.
-- **Roads**: drag a road's points, tap it between points to add one, lay a new road point by point; set width, grass up the middle and grading (cut and filled to a height at each point, like the ramp).
-- **Undo / Redo** (30 steps). **Map file**: Copy map (a few KB of text), Load a map, Start over.
+- **Moving the view**: two fingers pinch to zoom, twist to turn and drag to move; with Look on, one finger moves it whatever the tool (mouse: right button turns, middle button or WASD and arrows move, wheel zooms; Q E turn, R F zoom).
+- **Shape**: Raise, Lower, Flatten, Smooth reshape the ground under a round brush (1 to 40 ft radius, strength 1 to 10). Dug holes keep their depth.
+- **Paint**: lay a material from the library under a round or square brush, Hard edge (a sharp line) or Soft edge (Softness: how much of the brush fades out, 10 to 100%), down to a 1 ft brush. Worked dirt and Grass sit in the library beside Natural ground. **+ Your own texture** turns a picture of yours into a seamless tile and adds it to the library on every device (owner key).
+- **Things**: Select and Add. The drawer holds the things to add by group (trees and rocks, buildings, fencing, site gear, yard: houses, sheds, garages, fences, farm gates, light towers, cones, barrels, pallets, porta-potties, signs, benches, picnic tables, dumpsters) and **On the map**, every thing and machine by kind with counts (All, Near the view, Selected): open a kind to see each one, tap a row to pick it and go there, tick rows to pick several, Select all a kind, delete every one of a kind, or put back the first trees or boulders. Select picks one with a tap; Shift-tap, Ctrl-tap or a long press adds or takes away; a drag on empty ground (with a mouse, or with Box select on) picks everything in the box; Select all in view (Ctrl+A) picks every thing on screen. Drag a picked one to move them all. The bottom bar turns, sizes (each about its own middle, or As a group), colours (needles, leaves, house walls), copies (Ctrl+D) or deletes them (Delete); Clear or Esc lets go. Solid things stop the machines and the worker.
+- **Roads**: drag a road's points, tap it between points to add one, lay a new road point by point; set width, grass up the middle and grading (cut and filled to a height at each point, like the ramp). The drawer lists every road; tap one to pick it and go there.
+- **Inspect**: Query reads any spot's height, slope, surface, whether it can be driven and what was edited there, in feet.
+- **Undo / Redo** (30 steps). **Map**: Copy map (a few KB of text), Load a map, Start over.
 
 Maps save on the device as you edit (`localStorage.bhd_map`). The claude.ai version and the Vercel site keep separate storage, so move a map between them with Copy map. How it works inside, and what to watch out for when changing it: [`docs/map-editor.md`](docs/map-editor.md).
 

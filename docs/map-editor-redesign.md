@@ -1,6 +1,6 @@
 # Map editor redesign: analysis and plan
 
-Written at v120 (October 2026). This covers what the map editor is today from the screen's side and from the side of what it can do, then a plan to rebuild its layout around bars across the top, left and bottom, with a full asset editor (library, list, select, add, remove and more). `docs/map-editor.md` describes how the editor works inside; this file is about where it should go next. Nothing here has been built yet.
+Written at v120 (October 2026). Steps 1, 3 and 4 (the bars, On the map and selecting several) shipped together as the next version; the rest is still to do. This covers what the map editor is today from the screen's side and from the side of what it can do, then a plan to rebuild its layout around bars across the top, left and bottom, with a full asset editor (library, list, select, add, remove and more). `docs/map-editor.md` describes how the editor works inside; this file is about where it should go next. Nothing here has been built yet.
 
 ## 1. Where it stands
 
@@ -243,9 +243,18 @@ Later steps from the idea board fit into this layout without moving anything: E0
 - **Units:** every number shown in feet (`FT`).
 - **Docs:** update `docs/map-editor.md`, the README's Map editor section, the in-game help card and `docs/WORKFLOW.md` as each step ships.
 
-## 8. Questions for the owner
+## 8. The owner's answers
 
-1. The selected thing's settings in the **bottom bar** (as planned here) or in a panel down the right side? The bottom keeps the right side clear and matches "bars across the top, left, bottom"; a right panel has room for more at once on the PC.
-2. Icons with a short word under each (planned), or icons alone with the word on hover?
-3. Should the drawer stay open on the PC by default, or open only when a group is picked?
-4. Is step 1 (the bars, with no new features) worth shipping alone, or should it go out with steps 3 and 4 (the list and multi-select) as one bigger version?
+1. The selected things' settings go in the **bottom bar**.
+2. **Icons with a short word** under each in the left bar (and beside the word in the top bar).
+3. The drawer **stays open by default** on a computer.
+4. Steps 1, 3 and 4 ship **together** as one version.
+
+## 9. What shipped first, and what changed from the plan
+
+- The left bar has Shape, Paint, Things, Roads, Inspect and Map; the top bar Done, Undo, Redo, Look, Closer, Farther, North up, Start view and Panel. The map's name and History ▾ wait for step 9, the grid snap for step 7.
+- The Query card and the road card show in the bottom bar too, above the tool's options, and take the selection's place while shown (the selection is kept).
+- Box select: a mouse drag on empty ground with Select draws the box (it used to move the view; the middle and right buttons and the keys still do). On touch it's the Box select toggle in the bottom bar, as two-finger taps already move the view.
+- On a phone the bottom bar is one row that scrolls sideways, and the status line is hidden, so all six left-bar buttons fit a 390 px tall screen.
+- The things to add are grouped words for now; their pictures are step 5.
+- Machines can be in a selection and move with it; turn, size, colour, copy and delete leave them out.
