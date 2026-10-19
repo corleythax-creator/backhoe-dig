@@ -59,6 +59,7 @@ function updateSkid(dt,drive,turn,arm,curl){
   [sk.x,sk.z]=landClamp(sk.x,sk.z,1.2,1.0);
   if(wallCount(sk.x,sk.z,sk.yaw,SK_P)>w0){sk.x=ox;sk.z=oz;sk.yaw=oyaw;sk.v=0}
   if(blkPush(sk,SK_C,SK_R))sk.v*=0.5;
+  if(hvPush(sk,SK_C,SK_R))sk.v*=0.6;
   for(const lz of SK_C){const cx=sk.x+Math.sin(sk.yaw)*lz,cz=sk.z+Math.cos(sk.yaw)*lz;
     for(const [o,cs,r] of [[st,EX_C,EX_R],[tr,TR_C,TR_R],[mw,MW_C,MW_R]])for(const q of cs){const qx=o.x+Math.sin(o.yaw)*q,qz=o.z+Math.cos(o.yaw)*q,dx=cx-qx,dz=cz-qz,d=Math.hypot(dx,dz),m=SK_R+r;
       if(d<m&&d>1e-3){sk.x+=dx/d*(m-d);sk.z+=dz/d*(m-d);sk.v*=0.6}}}

@@ -1,7 +1,6 @@
 // Corley's Island: Dexter's Island, west of the Family Island across a wide yellow steel haul bridge the machines can
-// drive: a gravel yard with an equipment shed, an office trailer, a fuel tank, parked machines (a dozer, a wheel loader
-// and a semi with a lowboy trailer; his skid steer, skid.js, is drivable), light towers, a cone course and dirt piles to practise on.
-// The parked machines are models for now; they can be made drivable one at a time, as the skid steer was.
+// drive: a gravel yard with an equipment shed, an office trailer, a fuel tank, his machines (the skid steer, skid.js; the
+// dozer, wheel loader and semi with a lowboy trailer, heavy.js; all drivable), light towers, a cone course and dirt piles to practise on.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 const dexGround=groundPatch(-275,-125,170,320,1.5,[TRK_BOX]);
 // the dirt bike track's jump, whoops and berms need a finer mesh than the yard (terrain.js, trkH)
@@ -67,40 +66,6 @@ const DEX_Y=0xf2b705,DEX_D=0x2b2d30,DEX_GLASS=0x3c4a52;
     SOLIDS.push({x,z,hx:0.75,hz:1.35})}
   // a cone course to weave through
   for(let i=0;i<10;i++){const x=-190+i*2.4,z=255+(i%2?1.2:-1.2),y=G(x,z);K.box(0.42,0.04,0.42,0xe0661e,x,y+0.02,z);K.cyl(0.03,0.17,0.62,8,0xe0661e,x,y+0.33,z);K.cyl(0.085,0.12,0.12,8,0xf2f2ee,x,y+0.38,z)}
-  famAdd(K);
-})();
-
-// ---------- the parked machines ----------
-(function(){
-  const K=famKit(),G=(x,z)=>baseHeight(x,z);
-  // small dozer
-  {const X=-212,Z=247,f=dexFrame(K,X,Z,0,G(X,Z));
-    for(const sx of [-1.05,1.05]){f.box(0.55,0.75,3.0,DEX_D,sx,0.4,0);for(const sz of [-1.45,1.45])f.cyl(0.38,0.38,0.56,10,0x3a3c40,sx,0.4,sz,0,Math.PI/2)}
-    f.box(1.55,0.9,2.6,DEX_Y,0,1.2,-0.15);f.box(1.3,0.55,1.2,DEX_Y,0,1.85,0.6);f.cyl(0.07,0.07,0.8,6,DEX_D,0.4,2.4,0.8);
-    f.box(1.3,1.15,1.3,DEX_GLASS,0,2.25,-0.65);f.box(1.5,0.12,1.5,DEX_Y,0,2.9,-0.65);for(const sx of [-0.68,0.68])for(const sz of [-1.3,0])f.box(0.08,1.2,0.08,DEX_Y,sx,2.25,sz);
-    for(const sx of [-1.25,1.25])f.box(0.18,0.22,1.6,DEX_Y,sx,0.6,1.25,-0.1);
-    f.box(3.1,1.05,0.22,DEX_Y,0,0.62,2.1,-0.15);f.box(3.12,0.08,0.12,0x8a8a86,0,0.1,2.2);
-    f.box(0.15,0.8,0.2,DEX_D,0,0.55,-1.85,0.3);
-    SOLIDS.push({x:X,z:Z+0.3,hx:1.6,hz:2.0})}
-  // wheel loader
-  {const X=-198,Z=246,f=dexFrame(K,X,Z,0,G(X,Z));
-    for(const sx of [-1.15,1.15])for(const sz of [-1.3,1.4])f.wheel(0.8,0.62,sx,0.8,sz);
-    f.box(1.8,1.0,2.6,DEX_Y,0,1.35,-1.0);f.box(1.6,0.9,1.5,DEX_Y,0,2.2,-1.65);f.box(2.0,0.8,0.45,DEX_D,0,1.35,-2.5);f.cyl(0.08,0.08,0.9,6,DEX_D,-0.45,2.95,-1.7);
-    f.box(1.3,1.45,1.3,DEX_GLASS,0,2.6,-0.15);f.box(1.55,0.12,1.55,DEX_Y,0,3.38,-0.15);for(const sx of [-0.66,0.66])for(const sz of [-0.8,0.5])f.box(0.08,1.5,0.08,DEX_Y,sx,2.6,sz);
-    f.box(1.2,0.8,1.6,DEX_Y,0,1.25,1.0);for(const sx of [-0.72,0.72])f.box(0.22,0.32,2.7,DEX_Y,sx,1.55,2.05,0.42);
-    f.box(2.7,0.95,1.05,DEX_Y,0,0.55,3.3);f.box(2.72,0.08,0.3,0x8a8a86,0,0.1,3.8);
-    SOLIDS.push({x:X,z:Z+0.6,hx:1.5,hz:3.4})}
-  // a red semi with an empty lowboy trailer, parked along the south of the yard facing east
-  {const X=-178,Z=268,f=dexFrame(K,X,Z,Math.PI/2,G(X,Z)),RED=0xb3262c,CHROME=0xc8ccd0;
-    f.box(1.0,0.4,7.0,DEX_D,0,1.0,0.3);f.box(2.4,2.5,2.0,RED,0,2.45,1.5);f.box(2.2,0.9,0.06,DEX_GLASS,0,3.0,2.52);
-    f.box(2.1,1.2,1.8,RED,0,1.85,3.4);f.box(1.5,1.0,0.1,CHROME,0,1.85,4.32);f.box(2.3,0.25,0.3,CHROME,0,0.75,4.4);
-    for(const sx of [-1.1,1.1]){f.cyl(0.09,0.09,2.4,8,CHROME,sx*1.08,3.1,0.4);f.cyl(0.32,0.32,1.0,10,CHROME,sx*1.15,0.95,2.0,Math.PI/2)}
-    for(const sx of [-1.05,1.05]){f.wheel(0.55,0.32,sx,0.55,3.4,CHROME);for(const sz of [-1.1,-2.4])f.wheel(0.55,0.5,sx,0.55,sz,CHROME)}
-    f.box(1.6,0.12,1.4,DEX_D,0,1.3,-1.8);
-    f.box(2.6,0.4,2.6,DEX_D,0,1.6,-2.2);f.box(2.6,0.35,1.6,DEX_D,0,1.05,-3.95,0.62);
-    f.box(2.8,0.35,8.5,DEX_D,0,0.62,-8.9);f.box(2.7,0.05,8.4,0x7a5434,0,0.82,-8.9);f.box(2.8,0.45,3.4,DEX_D,0,1.1,-14.8);
-    for(const sx of [-1.1,1.1])for(const sz of [-13.8,-15.0,-16.2])f.wheel(0.5,0.45,sx,0.5,sz,0x9a9ea2);
-    SOLIDS.push({x:X-6.05,z:Z,hx:10.6,hz:1.45})}
   famAdd(K);
 })();
 

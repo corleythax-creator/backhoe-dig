@@ -29,7 +29,8 @@ const ED_KINDS={pine:'Pine tree',leafy:'Leafy tree',rock:'Boulder'};
 // the machines and the walker can be picked and moved: their state, scene object and pick radius
 // (home: where each starts, for Back to start)
 const ED_MACH=[{name:'Excavator',o:()=>st,m:()=>machine,r:2.6,home:()=>START},{name:'Dump truck',o:()=>tr,m:()=>truck,r:3.6,home:()=>TR_START},{name:'Mower',o:()=>mw,m:()=>mower,r:1.2,home:()=>MW_START},
-  {name:'Skid steer',o:()=>sk,m:()=>skid,r:1.6,home:()=>SK_START},{name:'You, on foot',o:()=>wk,m:()=>walker,r:0.8,home:()=>WK_START}];
+  {name:'Skid steer',o:()=>sk,m:()=>skid,r:1.6,home:()=>SK_START},
+  ...hvs.map(h=>({name:h.K.n[0].toUpperCase()+h.K.n.slice(1),o:()=>h,m:()=>h.g,r:h.K.trail?3.6:2.4,home:()=>h.K})),{name:'You, on foot',o:()=>wk,m:()=>walker,r:0.8,home:()=>WK_START}];
 const edFt=m=>m/FT,edFmt=(m,d)=>(m/FT).toFixed(d===undefined?1:d);
 // spots are given from the trench's middle, so the grid lines up with the numbers shown
 const ED_ZM=(TRENCH_Z0+TRENCH_Z1)/2;
@@ -48,7 +49,7 @@ function edRingAt(l,x,z,r,sq){const p=l.geometry.attributes.position.array;
 // ---------- open and close ----------
 function editorOpen(){if(edOn||bench.on)return;edOn=true;mapAssets=assets;
   document.body.classList.add('editing');$('#editor').hidden=false;showMenu(false);help.hidden=true;toggleMap(false);clearKeys();
-  const fv=mode==='boat'?btCur():mode==='bike'?bk:mode==='truck'?tr:mode==='mow'?mw:mode==='skid'?sk:mode==='walk'?wk:st;ed.x=fv.x;ed.z=fv.z;
+  const fv=mode==='boat'?btCur():mode==='heavy'?hvCur():mode==='bike'?bk:mode==='truck'?tr:mode==='mow'?mw:mode==='skid'?sk:mode==='walk'?wk:st;ed.x=fv.x;ed.z=fv.z;
   ed.yaw=Math.atan2(camera.position.x-fv.x,camera.position.z-fv.z);ed.dist=45;ed.pitch=0.95;
   ed.home={x:ed.x,z:ed.z,yaw:ed.yaw,dist:ed.dist,pitch:ed.pitch};ed.drawer=!edNarrow();ed.pane=ED_GROUPS[ed.group].pane?ed.group:'';
   edTool(ed.tool);edCard(null);edSelSet([]);edMapsDraw();edUndoBtns();toast('Map editor. The game is paused while you edit.','',2600)}
