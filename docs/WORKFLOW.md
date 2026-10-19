@@ -14,7 +14,7 @@ a feature is roughly **steps × session length**, and the two levers are fewer s
 | --- | --- | --- |
 | How the screen looks: colours, fonts, sizes, corners, hiding, renaming, moving a part, docking bars, phone vs. computer layouts | Screen editor | ☰ → Edit the screen, or https://claude.ai/artifact/Bj6MjgPkszqEP2PJQqQ29t. Publish with your owner key |
 | The ground: sculpt, paint materials (32 of them, plus your own), roads, trees, boulders, where machines park | Map editor | ☰ → Map editor (or G) |
-| Houses, sheds, fences, gates, light towers and props: place, move, turn, resize, copy, delete | Map editor → Things: Add (pick from the drawer), then Select (several at once, or a whole kind from On the map) | Saved with the map, so it syncs |
+| Houses, sheds, fences, gates, light towers and props: place, move, turn, resize, copy, delete | Map editor → Things: Add (pick from the drawer; One, Stamp, Line for fence runs and cone lines, Scatter for woods), then Select (several at once, or a whole kind from On the map) | Saved with the map, so it syncs |
 | Your own textures for painting and blocks | Map editor → Paint → + Your own texture: pick a photo or picture, name it, set its tile size in feet, kind and shine, type the owner key | Reaches every device; Edit this texture changes one later |
 | Which ideas get built next | Idea board | https://claude.ai/artifact/FMrDEa4VsKvPS5Z3ktTrS3, then send Claude the picked ids |
 | Graphics, weather, keys, UI size, turn sensitivity | The game's own settings | ☰ |

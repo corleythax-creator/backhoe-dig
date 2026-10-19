@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-19T03:22:00Z",
+ "updated": "2026-10-19T03:24:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -24,9 +24,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-18",
-   "dh": 230,
+   "dh": 235,
    "act": 4.5,
-   "versions": 30
+   "versions": 31
   }
  ],
  "extra": [
@@ -1278,6 +1278,15 @@ window.EFFORT = {
    "tris": 2968735,
    "chars": 864906,
    "what": "The trees are redesigned: five species (spruce, red pine, oak, sugar maple and birch) with photo bark and real leaf and needle cards from OpenAI textures, full branches up close and lighter models far off, swaying in the breeze; Graphics has a new Tree detail distance and Tuning a Trees sway"
+  },
+  {
+   "v": 139,
+   "asked": "2026-10-18T21:43:00-05:00",
+   "live": "2026-10-18T22:24:18-05:00",
+   "dh": 5,
+   "tris": 2968517,
+   "chars": 875501,
+   "what": "Add in the map editor places things One at a time, by Stamp, along a Line (fence runs end to end, cone lines at a spacing) or with a Scatter brush that plants woods and boulders at a spacing and density, or erases them."
   }
  ]
 };
