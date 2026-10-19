@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-19T02:46:00Z",
+ "updated": "2026-10-19T02:50:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -24,9 +24,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-18",
-   "dh": 179,
+   "dh": 181,
    "act": 4,
-   "versions": 22
+   "versions": 23
   }
  ],
  "extra": [
@@ -1206,6 +1206,15 @@ window.EFFORT = {
    "tris": 1918954,
    "chars": 815573,
    "what": "Three new mud settings in the screen editor's Tuning tab: how wet ground must be before it ruts, how fast ruts cut in, and how high mud piles up beside them."
+  },
+  {
+   "v": 131,
+   "asked": "2026-10-18T21:44:00-05:00",
+   "live": "2026-10-18T21:50:12-05:00",
+   "dh": 2,
+   "tris": 1919017,
+   "chars": 820471,
+   "what": "Machine dropdown renamed Drive; a Controls button opens a panel listing every keyboard key (the player's own), mouse, touch and controller input"
   }
  ]
 };
