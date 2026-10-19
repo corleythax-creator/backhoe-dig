@@ -38,7 +38,7 @@ function famSign(lines,w,h,x,y,z,ry,bg,fg){
   lines.forEach((t,i)=>{g.font=`${i?600:800} ${Math.round(fs*(i?0.72:0.9))}px "Saira Condensed","Arial Narrow",Arial,sans-serif`;g.fillText(t,cv.width/2,cv.height*(0.5+(i-(lines.length-1)/2)*0.78/lines.length))});
   const tex=new THREE.CanvasTexture(cv);tex.anisotropy=4;
   const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),M(0xffffff,{map:tex,flatShading:false,side:THREE.DoubleSide}));
-  m.position.set(x,y,z);m.rotation.y=ry;scene.add(m)}
+  m.position.set(x,y,z);m.rotation.y=ry;scene.add(m);return m}
 
 // ---------- bridges ----------
 // in each deck's own frame: t metres along it, u out from its centreline, y up
