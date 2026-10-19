@@ -23,7 +23,7 @@ const TUNE=[
   ['skSpd','Skid steer','Top speed',3.1,'mph',1,25,0.1],['skTurn','Skid steer','Turn rate',1.7,'deg',10,300,1],
   ['skArm','Skid steer','Arm rate',0.55,'deg',5,180,1],['skCurl','Skid steer','Bucket curl rate',0.9,'deg',5,240,1],
   ['skCap','Skid steer','Bucket holds',0.38,'yd3',0.1,3,0.05],
-  ['wkRun','On foot','Jog (stick all the way)',2.8,'mph',1,20,0.1],['wkSprint','On foot','Sprint',5.6,'mph',1,40,0.1],
+  ['wkRun','On foot','Jog (stick all the way)',2.8,'mph',1,20,0.1],['wkSwim','On foot','Swim',1.1,'mph',0.5,10,0.1],['wkSprint','On foot','Sprint',5.6,'mph',1,40,0.1],
   ['wkJump','On foot','Jump height',6.2*6.2/(2*9.8),'ft',0.5,30,0.1],['wkGrav','On foot','Gravity (how floaty a jump is)',1,'pct',10,300,5],
   ['wkLook','On foot','Camera turn speed with the stick',1,'pct',20,400,5],['wkReachUp','On foot','How high the worker reaches for blocks',2.3,'ft',2,20,0.5],['blkReach','On foot','Farthest block reach (cab view)',80*0.3048,'ft',10,300,5],
   ['lawnCut','Grass','Mower cuts the grass to',0.09,'in',1,24,0.5],['lawnWait','Grass','Wait before cut grass grows',45,'s',0,1200,5],['lawnGrow','Grass','Time to grow back tall',240,'s',10,3600,10],

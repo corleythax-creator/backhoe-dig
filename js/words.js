@@ -40,6 +40,7 @@ const WORDS=[
   ['walkTouch','On foot','On foot. Tap Jump to jump. Walk up to a machine and tap Get in.'],
   ['walkPad','On foot','On foot. A jumps, X sets a block, B gets into a machine.'],
   ['mouseLook','On foot','Mouse look. Move the mouse to look around, wheel or [zoom] zooms, [lookAhead] looks ahead. Esc frees the mouse.'],
+  ['swimming','On foot','Swimming. Head for a beach to wade out; [sprint] swims harder.',''],
   ['fromTable','On foot','Back from {game} at the pavilion.','{game}: chess or checkers'],
   ['famSit','On foot','Sitting down to {game}...','{game}: chess or checkers'],
   ['blkWrongMode','Blocks','Switch to Dig or Walk to set blocks.'],['blkLiftMode','Blocks','Switch to Dig or Walk to pick up blocks.'],
