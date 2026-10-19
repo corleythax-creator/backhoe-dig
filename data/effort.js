@@ -24,9 +24,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-18",
-   "dh": 182,
+   "dh": 198,
    "act": 4,
-   "versions": 25
+   "versions": 26
   }
  ],
  "extra": [
@@ -1233,6 +1233,15 @@ window.EFFORT = {
    "tris": 1918628,
    "chars": 820447,
    "what": "The map editor now scrolls and zooms out over the whole map, the mainland, woods and town included."
+  },
+  {
+   "v": 134,
+   "asked": "2026-10-18T21:20:00-05:00",
+   "live": "2026-10-18T21:57:51-05:00",
+   "dh": 16,
+   "tris": 1919945,
+   "chars": 840124,
+   "what": "Rain runs downhill: rills on spoil piles and ruts fill the trench and wash loose dirt down as silt, and water streams down wet bare slopes like the ramp. Machines, the worker, buildings and trees darken and shine in the rain and dry after; water drips off roof edges. Cloud rolls in before a shower, curtains of rain hang over the lake, and hard showers bring lightning and thunder that arrives late with distance."
   }
  ]
 };
