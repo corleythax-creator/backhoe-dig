@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-19T01:25:00Z",
+ "updated": "2026-10-19T01:29:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -24,9 +24,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-18",
-   "dh": 81,
+   "dh": 90,
    "act": 2.5,
-   "versions": 8
+   "versions": 9
   }
  ],
  "extra": [
@@ -1080,6 +1080,15 @@ window.EFFORT = {
    "tris": 1621415,
    "chars": 718171,
    "what": "Slopes: every soil holds its own angle, piles too (their make-up read from their colour: dry sand 32°, topsoil 36°, lumpy clay 42°); damp soil stands steeper, soaked faces a foot or more tall slump, so piles and trench walls can let go after rain; a growing pile slides in small avalanches to just under its angle. Sticky clay: moist clay clings in the excavator and skid steer buckets and the truck bed and takes up room until shaken out (rock the curl fast or slam the dump stop; bump the bed into its top stop), falling as big lumps."
+  },
+  {
+   "v": 117,
+   "asked": "2026-10-18T20:03:00-05:00",
+   "live": "2026-10-18T20:29:49-05:00",
+   "dh": 9,
+   "tris": 1667774,
+   "chars": 719977,
+   "what": "Corley's Island grows to about 525 ft across with open north lawns, a tree line along the new rim and a spoil yard where the truck dumps; Lookout Knoll and West Rise are cut down, so nothing is over 30 ft above the lake (Plan C, release 2)"
   }
  ]
 };

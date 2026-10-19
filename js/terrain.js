@@ -8,12 +8,12 @@ const H=new Float32Array(V*V),H0=new Float32Array(V*V),grass=new Float32Array(V*
 const ss=(a,b,x)=>{const t=Math.min(1,Math.max(0,(x-a)/(b-a)));return t*t*(3-2*t)};
 const hash=(i,j)=>{const s=Math.sin(i*127.1+j*311.7)*43758.5453;return s-Math.floor(s)};
 // ---------- map edits ----------
-// the map editor's layers over the generated ground, on a 0.5 m grid over the mesa and its cliffs: ED_H raises or
+// the map editor's layers over the generated ground, on a 0.5 m grid over Corley's Island and its shore: ED_H raises or
 // lowers the ground (metres), ED_P paints it toward dirt (+) or grass (-), ED_M covers it with a material from the
 // library (materials.js; 0 is the natural ground) and ED_A says how much of the cell it covers (255 full, as the Hard edge brush lays, 254 also full
 // but laid by the square brush, drawn with sharp corners; the Soft edge brush lays 253 and less over its fade; 0 wherever ED_M is 0). The outer cells stay 0 so the edges meet the coarse ground. Saved on
 // this device as bhd_map, with the placed assets (trees and boulders) and the roads; see editor.js
-const ED_X0=-58,ED_Z0=-32,ED_C=0.5,ED_NX=233,ED_NZ=249,ED_H=new Float32Array(ED_NX*ED_NZ),ED_P=new Float32Array(ED_NX*ED_NZ),ED_M=new Uint8Array(ED_NX*ED_NZ),ED_A=new Uint8Array(ED_NX*ED_NZ);
+const ED_X0=-112,ED_Z0=-122,ED_C=0.5,ED_NX=449,ED_NZ=433,ED_H=new Float32Array(ED_NX*ED_NZ),ED_P=new Float32Array(ED_NX*ED_NZ),ED_M=new Uint8Array(ED_NX*ED_NZ),ED_A=new Uint8Array(ED_NX*ED_NZ);
 let mapAssets=null,mapRoads=null;
 function edSample(A,x,z){const fx=(x-ED_X0)/ED_C,fz=(z-ED_Z0)/ED_C;if(fx<0||fz<0||fx>=ED_NX-1||fz>=ED_NZ-1)return 0;
   const i=fx|0,j=fz|0,u=fx-i,v=fz-j,k=j*ED_NX+i;return A[k]*(1-u)*(1-v)+A[k+1]*u*(1-v)+A[k+ED_NX]*(1-u)*v+A[k+ED_NX+1]*u*v}
@@ -46,10 +46,11 @@ function edBox(A,scale,Arr){let i0=ED_NX,i1=-1,j0=ED_NZ,j1=-1;
   if(i1<0)return null;const w=i1-i0+1,h=j1-j0+1,q=new Arr(w*h),lim=Arr===Int8Array?127:32767;
   for(let j=0;j<h;j++)for(let i=0;i<w;i++)q[j*w+i]=Math.max(-lim,Math.min(lim,Math.round(A[(j+j0)*ED_NX+i+i0]*scale)));
   return {r:[i0,j0,w,h],d:b64Bytes(new Uint8Array(q.buffer))}}
-function edUnbox(o,A,scale,Arr){if(!o)return;const [i0,j0,w,h]=o.r,q=new Arr(bytesB64(o.d).buffer);
+// oi, oj: where the map's own grid starts in this one, in cells (maps from before v116 start at -58, -32)
+function edUnbox(o,A,scale,Arr,oi=0,oj=0){if(!o)return;let [i0,j0,w,h]=o.r;i0+=oi;j0+=oj;const q=new Arr(bytesB64(o.d).buffer);
   if(!(w>0&&h>0&&i0>=0&&j0>=0&&i0+w<=ED_NX&&j0+h<=ED_NZ&&q.length===w*h))throw new Error('bad layer');
   for(let j=0;j<h;j++)for(let i=0;i<w;i++)A[(j+j0)*ED_NX+i+i0]=q[j*w+i]/scale}
-function mapEncode(){const doc={game:'backhoe-dig',v:1},h=edBox(ED_H,100,Int16Array),p=edBox(ED_P,100,Int8Array);
+function mapEncode(){const doc={game:'backhoe-dig',v:1,g:[ED_X0,ED_Z0]},h=edBox(ED_H,100,Int16Array),p=edBox(ED_P,100,Int8Array);
   const m=edBox(ED_M,1,Uint8Array),fa=new Uint8Array(ED_A.length);for(let q=0;q<fa.length;q++)if(ED_M[q])fa[q]=255-ED_A[q];
   const a=edBox(fa,1,Uint8Array);if(h)doc.h=h;if(p)doc.p=p;if(m)doc.m=m;if(a)doc.a=a;
   if(mapAssets)doc.assets=mapAssets.map(a=>[a.t,+a.x.toFixed(2),+a.z.toFixed(2),+a.yaw.toFixed(2),+a.s.toFixed(2),a.c]);
@@ -57,9 +58,10 @@ function mapEncode(){const doc={game:'backhoe-dig',v:1},h=edBox(ED_H,100,Int16Ar
   return JSON.stringify(doc)}
 // reads a map into new layers; throws on anything that is not one
 function mapDecode(text){const doc=JSON.parse(text);if(!doc||doc.game!=='backhoe-dig'||doc.v!==1)throw new Error('not a Corley\'s Island map');
-  const h=new Float32Array(ED_H.length),p=new Float32Array(ED_P.length),m=new Uint8Array(ED_M.length);edUnbox(doc.h,h,100,Int16Array);edUnbox(doc.p,p,100,Int8Array);edUnbox(doc.m,m,1,Uint8Array);
+  const g=Array.isArray(doc.g)&&doc.g.length===2&&doc.g.every(isFinite)?doc.g:[-58,-32],oi=Math.round((g[0]-ED_X0)/ED_C),oj=Math.round((g[1]-ED_Z0)/ED_C);
+  const h=new Float32Array(ED_H.length),p=new Float32Array(ED_P.length),m=new Uint8Array(ED_M.length);edUnbox(doc.h,h,100,Int16Array,oi,oj);edUnbox(doc.p,p,100,Int8Array,oi,oj);edUnbox(doc.m,m,1,Uint8Array,oi,oj);
   // cover: maps from before soft edges have no "a" and are covered fully wherever painted
-  const a=new Uint8Array(ED_A.length);edUnbox(doc.a,a,1,Uint8Array);
+  const a=new Uint8Array(ED_A.length);edUnbox(doc.a,a,1,Uint8Array,oi,oj);
   for(let q=0;q<m.length;q++){if(m[q]&&!matIdOk(m[q]))m[q]=0;a[q]=m[q]?255-a[q]:0;if(!a[q])m[q]=0}
   for(let j=0;j<ED_NZ;j++)for(let i=0;i<ED_NX;i++)if(i<3||j<3||i>ED_NX-4||j>ED_NZ-4){h[j*ED_NX+i]=0;p[j*ED_NX+i]=0;m[j*ED_NX+i]=0;a[j*ED_NX+i]=0}
   const as=Array.isArray(doc.assets)?doc.assets.filter(a=>Array.isArray(a)&&typeof a[0]==='string'&&/^[a-z]{2,16}$/.test(a[0])&&isFinite(a[1])&&isFinite(a[2]))
@@ -75,10 +77,12 @@ matU.tMatId.value.unpackAlignment=1;matU.tMatId.value.needsUpdate=true;
 matU.tMatCov.value=new THREE.DataTexture(ED_A,ED_NX,ED_NZ,THREE.LuminanceFormat,THREE.UnsignedByteType);
 matU.tMatCov.value.unpackAlignment=1;matU.tMatCov.value.needsUpdate=true;
 // the site sits on a grassy island 24 ft above the lake: a rocky bank drops to a sand beach all round (shore). It is
-// about 295 ft across, centred south of the dig so the north rim (the truck's dump spot) stays put. The north part is
-// the high top with two hills; across the middle a grassy scarp drops 8 ft to the Lower Bench, a dirt yard with
-// stockpiles, and a ramp runs down it
-const EDGE=45,WATER=-7.3,MZ=30,BENCH_H=-2.4;
+// about 525 ft across, centred north of the dig so its south rim (where the bridge starts) stays put, with wide lawns
+// and the spoil yard to the north. Round the dig is the high top with two low hills; across the south a grassy scarp
+// drops 8 ft to the Lower Bench, a dirt yard with stockpiles, and a ramp runs down it. coreR is the island's first,
+// smaller outline (295 ft across, centred CORE_Z), which still bounds the bench yard
+const EDGE=80,WATER=-7.3,MZ=-5,BENCH_H=-2.4,CORE_Z=30,CORE_R=45;
+function coreR(x,z){z-=CORE_Z;const a=Math.atan2(z,x);return Math.pow(Math.pow(Math.abs(x),4)+Math.pow(Math.abs(z),4),0.25)*(1+0.06*Math.sin(a*5+0.7)+0.035*Math.sin(a*11+2.1))}
 function mesaR(x,z){z-=MZ;const a=Math.atan2(z,x);return Math.pow(Math.pow(Math.abs(x),4)+Math.pow(Math.abs(z),4),0.25)*(1+0.06*Math.sin(a*5+0.7)+0.035*Math.sin(a*11+2.1))}
 // the Family Island: a larger island (about 525 ft across, 16 ft above the lake) south across the water, its top at the Lower Bench's height so
 // the bridge from the bench runs level. The same rounded-square shape; FAM_R is its half width
@@ -143,6 +147,7 @@ if(mapRoads){ROADS.length=0;ROADS.push(...mapRoads);mapRoads=ROADS}
 // bridge to a roundabout in the middle, on to the mainland bridge, arms west and east (where Dexter's and Jessica's
 // bridges will go) and the drive to the house
 const ISLAND_ROADS=[
+  {w:4.2,mid:1,pts:[[0,-13],[0,-44]]},
   {w:4.8,mid:0,pts:[[0,63,FAM_Y],[0,72,FAM_Y]]},
   {w:4.8,mid:0,pts:[[0,165,FAM_Y],[0,234,FAM_Y]]},
   {w:4.8,mid:0,pts:Array.from({length:17},(_,i)=>[FAM_X+Math.sin(i/16*Math.PI*2)*11,FAM_Z-Math.cos(i/16*Math.PI*2)*11,FAM_Y])},
@@ -185,9 +190,9 @@ function roadTint(x,z,c,n){const o=Math.abs(roadOff(x,z)),a=1-ss(ROAD_W/2-0.35,R
 // the scarp's centre line, and smooth round hills
 function scarpZ(x){return 45+2.5*Math.sin(x*0.09+0.5)}
 function hill(x,z,cx,cz,rx,rz,h){const t=Math.hypot((x-cx)/rx,(z-cz)/rz);return t>=1?0:h*0.5*(1+Math.cos(Math.PI*t))}
-// worked dirt: the Lower Bench yard and a laydown pad west of the dig; 0 to 1
-function yardAt(x,z){const r=mesaR(x,z),zs=scarpZ(x),dx=Math.abs(x-DEX_X)<DEX_R+8&&Math.abs(z-DEX_Z)<DEX_R+8?1-ss(DEX_R-9,DEX_R-4,dexR(x,z)):0;
-  return Math.max(0,Math.min(1,Math.max(ss(zs+3,zs+6,z)*(1-ss(37,42,r)),ss(0.15,0.4,hill(x,z,-22,4,9,6,1)),dx)+edSample(ED_P,x,z)))}
+// worked dirt: the Lower Bench yard, a laydown pad west of the dig and the spoil yard on the north lawn; 0 to 1
+function yardAt(x,z){const r=coreR(x,z),sp=1-ss(1,4,Math.hypot(Math.max(0,Math.abs(x)-12),Math.max(0,Math.abs(z+52)-8))),zs=scarpZ(x),dx=Math.abs(x-DEX_X)<DEX_R+8&&Math.abs(z-DEX_Z)<DEX_R+8?1-ss(DEX_R-9,DEX_R-4,dexR(x,z)):0;
+  return Math.max(0,Math.min(1,Math.max(ss(zs+3,zs+6,z)*(1-ss(37,42,r)),ss(0.15,0.4,hill(x,z,-22,4,9,6,1)),dx,sp)+edSample(ED_P,x,z)))}
 // colour c (rgb array) toward packed dirt by the yard amount; returns the amount
 function yardTint(x,z,c,n){const a=yardAt(x,z);if(a<=0)return 0;const v=0.86+0.2*n;
   c[0]+=(0.55*v-c[0])*a;c[1]+=(0.42*v-c[1])*a;c[2]+=(0.29*v-c[2])*a;return a}
@@ -230,9 +235,9 @@ function famHeight(x,z){const d=famR(x,z)-FAM_R;let top=FAM_Y;
 function mesaHeight(x,z){
   const r=mesaR(x,z);let h;
   if(r<EDGE+3){
-    // gentle rolls, flatter round the dig; Lookout Knoll (18 ft) and West Rise (10 ft) on the top; the bench and its stockpiles
+    // gentle rolls, flatter round the dig; Lookout Knoll (6 ft) and West Rise (3 ft) on the top; the bench and its stockpiles
     const roll=(0.012+0.025*ss(16,34,Math.hypot(x,z+4)))*(6*Math.sin(x*0.09+1.3)*Math.cos(z*0.08)+4*Math.sin(x*0.21+z*0.17));
-    const top=roll+hill(x,z,27,20,12.5,12.5,5.5)+hill(x,z,-22,22,9,9,3);
+    const top=roll+hill(x,z,27,20,12.5,12.5,1.83)+hill(x,z,-22,22,9,9,0.9);
     const zs=scarpZ(x),lo=ss(zs-4,zs+5,z);
     const bench=BENCH_H+roll*0.5+hill(x,z,-8,61.5,4.5,3.4,2.4)+hill(x,z,9,61.3,5,3.4,2.4)+hill(x,z,22,60,3.5,3,1.5);
     h=top+(bench-top)*lo;
@@ -248,7 +253,7 @@ function mesaHeight(x,z){
   return shore(d,x,z,d<3?rim+(h-rim)*(1-ss(0,3,d)):rim);
 }
 // ground too steep to drive onto (the scarp, ramp banks, stockpiles), on a 0.5 m grid over the mesa from the original grade
-const WG_X0=-48,WG_Z0=-20,WG_C=0.5,WG_NX=193,WG_NZ=197,WALL=new Uint8Array(WG_NX*WG_NZ);
+const WG_X0=-112,WG_Z0=-122,WG_C=0.5,WG_NX=449,WG_NZ=405,WALL=new Uint8Array(WG_NX*WG_NZ);
 // rebuilt over an area (metres) after the editor reshapes it
 function wallBuild(x0,x1,z0,z1){
   const i0=Math.max(1,Math.floor((x0-WG_X0)/WG_C)-1),i1=Math.min(WG_NX-2,Math.ceil((x1-WG_X0)/WG_C)+1),j0=Math.max(1,Math.floor((z0-WG_Z0)/WG_C)-1),j1=Math.min(WG_NZ-2,Math.ceil((z1-WG_Z0)/WG_C)+1);
