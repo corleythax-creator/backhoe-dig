@@ -42,6 +42,8 @@ const TUNE=[
   ['slopeDamp','Digging','How much steeper damp sand and soil stand',1,'pct',0,300,5],['slopeWet','Digging','How much soaked soil slumps (0% = holds like dry)',1,'pct',0,200,5],
   ['slopeSlide','Digging','How far a face slides back under its angle when it lets go',0.1,'pct',0,40,1],
   ['clayStick','Digging','Most moist clay that sticks in a bucket or bed when tipped',0.25,'pct',0,100,1],['clayShake','Digging','How much each shake knocks loose',0.3,'pct',0,100,5],
+  ['packRate','Excavator','How fast wet clay packs into the tracks',1,'pct',0,500,5],['packDrag','Excavator','How much packed tracks drag',0.6,'pct',0,90,5],
+  ['packShed','Excavator','How fast packed clay drops off',1,'pct',0,500,5],
   ['caveDepth','Cave-ins','Walls start to cave in deeper than',1.2,'ft',1,30,0.5],['caveSpoil','Cave-ins','Spoil this close to the edge loads the wall',0.64,'ft',0,10,0.5],
   ['caveRate','Cave-ins','How fast a bad wall gives way (0% = never)',1,'pct',0,500,5],['caveWarn','Cave-ins','Dirt trickles off the lip for',2.2,'s',0,20,0.5],
   // only drawn on High graphics (Graphics → Material relief); how the ground looks, not what it does, so every device may use the same numbers
