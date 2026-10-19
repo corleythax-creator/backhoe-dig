@@ -264,7 +264,7 @@ tr.on .rin{background:var(--amber);color:var(--amber-ink);border-color:var(--amb
   </div>
 
   <div class="panel tk" id="ptracks" hidden>
-    <p class="hint">Groups of ideas that add up to one thing you can play. Tap a track to open it. Each runs in build order; the highlighted one is the next to build.</p>
+    <p class="hint">Groups of ideas that add up to one thing you can play. Tap a track to open it. Each runs in build order; the highlighted one is the next to build. Tokens are a rough guess of about 0.4 M per estimated hour.</p>
     <div class="frow"><button class="gbtn" id="tkall" type="button">Expand all</button><button class="gbtn" id="tknone" type="button">Collapse all</button></div>
     <div id="tkb"></div>
   </div>
@@ -846,15 +846,19 @@ function renderNext(){
   card("Next step in each track","The first thing still open in every track.",nt)
 }
 const tkOpen=new Set();
+// rough guess: about 0.4 M tokens of Claude work per estimated developer hour (a feature is roughly steps x session length, see docs/WORKFLOW.md)
+const TOK_PER_H=0.4;
+const hrsLeft=r=>stOf(r[0])==="built"?0:r[9]*(stOf(r[0])==="part"?1-(DONE[r[0]].pc||0)/100:1);
+const fmtTok=h=>{const m=h*TOK_PER_H;return "~"+(m<10?m.toFixed(1):Math.round(m))+" M tokens"};
 function trackPct(list){const rows=list.map(i=>IDS.get(i));return rows.reduce((a,r)=>a+(stOf(r[0])==="built"?1:stOf(r[0])==="part"?(DONE[r[0]].pc||0)/100:0),0)/rows.length}
 function renderTracks(){
   const b=$("tkb");b.textContent="";
   for(const [k,n,d,list] of TRACKS){
     const rows=list.map(i=>IDS.get(i)),tot=rows.length,pc=Math.round(trackPct(list)*100),nb=rows.filter(r=>stOf(r[0])==="built").length;
-    const nx=nextOf(list),hr=rows.filter(r=>stOf(r[0])!=="built").reduce((a,r)=>a+r[9],0);
+    const nx=nextOf(list),hr=Math.round(rows.reduce((a,r)=>a+hrsLeft(r),0));
     const dt=el("details","tkd2");dt.open=tkOpen.has(k);dt.addEventListener("toggle",()=>{dt.open?tkOpen.add(k):tkOpen.delete(k)});
     const sm=el("summary","tks"),top=el("div","tkh");
-    top.append(el("h3",null,n),el("span","tkp",nb+" of "+tot+" built · "+pc+"%"),el("span","tkp",hr?"~"+hr+" h left":"all built"));
+    top.append(el("h3",null,n),el("span","tkp",nb+" of "+tot+" built · "+pc+"%"),el("span","tkp",hr?"~"+hr+" h left":"all built"),hr?el("span","tkp",fmtTok(hr)+" left"):el("span"));
     const bar=el("div","tkb"),bi=el("i");bi.style.width=pc+"%";bar.appendChild(bi);
     sm.append(top,bar);if(nx)sm.appendChild(el("div","tkn","Next: "+nx[0]+" "+nx[2]));
     const body=el("div","tkbody");body.appendChild(el("div","tkd",d));
