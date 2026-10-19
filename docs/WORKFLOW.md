@@ -73,6 +73,8 @@ For something that looks wrong, one screenshot and where it is.
 - **Checks**: every change to the game on `main` is loaded headless by GitHub (the `check` workflow, free on this
   public repo); a red X on the commit means the game threw an error. GitHub emails you when it fails.
 - **Testing in a session**: `tools/play.js` runs game code headless in one step instead of a hand-written script.
+- **Dig checks**: the same `check` workflow runs the dig site test's checks (digging across tile edges, the grid following the machine between islands, saves) and goes red if one fails.
+- **Frame rate on your phone**: open https://corleys-island.vercel.app/?digtest=low and put the phone down. It digs at every dig site and drives between the islands by itself for about 2 minutes, then puts your site back and shows FPS for each part (30 passes). Copy results and paste them to Claude if anything is red. `?speedtest` runs the older speed test the same way.
 - **Art prompts**: `docs/IMAGE_PROMPTS.md` has ready-to-paste ChatGPT prompts for textures, icons, sprites and concept art (Ultra source quality); `tools/make_tiers.py` cuts a saved image into the Ultra / High / Medium / Low sizes.
 
 ## 4. Systems that would let you do more yourself

@@ -39,6 +39,17 @@ function tilePut(t,g,held){const [i0,i1,j0,j1]=tileRange(t),w=i1-i0+1,[hw,he,hn,
   if(a1>=0)growDug(a0,a1,b0,b1);
   if(wet)waterAny=waterSeen=true;
   touch(Math.max(0,i0-1),Math.min(N,i1+1),Math.max(0,j0-1),Math.min(N,j1+1));st.dirty=true}
+// a neighbour of tile t left outside the grid, stored after t was (tt: when; 0 for never), holds the newer copy of the edge
+// or corner they share: the grid takes it. Without this, ground dug on the grid's edge went back to the old copy when
+// the grid moved over it (found by the dig site test, digtest.js)
+function tileEdgeFrom(t,tt){const [i0,i1,j0,j1]=tileRange(t),w=i1-i0+1;let a0=N+1,a1=-1,b0=N+1,b1=-1,wet=false;
+  for(let dz=-1;dz<=1;dz++)for(let dx=-1;dx<=1;dx++){const nb=(dx||dz)?tileStore.get(tKey(t.ti+dx,t.tj+dz)):null;if(!nb||nb.t<=tt||nb.w!==w)continue;
+    for(let b=dz>0?w-1:0;b<=(dz<0?0:w-1);b++)for(let a=dx>0?w-1:0;a<=(dx<0?0:w-1);a++){const i=i0+a,j=j0+b,k=j*V+i,q=(b-dz*(w-1))*w+(a-dx*(w-1));
+      for(const f of TILE_FIELDS)for(let c=0;c<f.n;c++){const v=nb[f.id][q*f.n+c];if(f.id==='h')H[k]=H0[k]+v;else f.a[k*f.n+c]=v}
+      if(H[k]!==H0[k]){a0=Math.min(a0,i);a1=Math.max(a1,i);b0=Math.min(b0,j);b1=Math.max(b1,j)}
+      if(Wt[k]>-1e8)wet=true}}
+  if(a1>=0){growDug(a0,a1,b0,b1);touch(Math.max(0,a0-1),Math.min(N,a1+1),Math.max(0,b0-1),Math.min(N,b1+1))}
+  if(wet)waterAny=waterSeen=true}
 // lift tile t out of the grid into the store, leaving untouched ground; and put a stored tile back (or untouched
 // ground when none is stored)
 function tileLift(t){const g=tileGrab(t);if(g)tileStore.set(tileKeyOf(t),g);else tileStore.delete(tileKeyOf(t));tilePut(t,null,tileHeldEdges(t));return g}
@@ -105,7 +116,9 @@ const DIG_REGIONS=[OUTER_MID,FAM_PATCH,[dexGround.X0,dexGround.X0+dexGround.NX*d
 function tileKeyOf(t){return tKey(t.ti,t.tj)}
 // move the grid so its west and north edges are x0, z0: its tiles' ground goes into the store, the new spot's comes out
 // of it (or from the mud tiles' ruts), and everything built on the grid is redone. fresh: forget the grid's ground
-function digMoveTo(x0,z0,fresh){
+// digMoveN, digMoveMs: how many times the grid has moved, and how long the last move took (the dig site test, digtest.js)
+let digMoveN=0,digMoveMs=0;
+function digMoveTo(x0,z0,fresh){const t0=performance.now();
   if(!fresh)for(const t of DIG_TILES){const g=tileGrab(t),key=tileKeyOf(t);if(g)tileStore.set(key,g);else tileStore.delete(key)}
   GX0=x0;GZ0=z0;GX1=GX0+S;GZ1=GZ0+S;digTilesSet();
   st.cave=null;st.caveRisk=0;cI0=N+1;cI1=-1;cJ0=N+1;cJ1=-1;sI0=N+1;sI1=-1;sJ0=N+1;sJ1=-1;slInit=false;
@@ -115,10 +128,12 @@ function digMoveTo(x0,z0,fresh){
   // tiles coming in: stored ones oldest first, so where two share an edge the one dug last wins; new ground takes the ruts
   const ins=DIG_TILES.map(t=>({t,g:tileStore.get(tileKeyOf(t))||null})).sort((a,b)=>(a.g?a.g.t:0)-(b.g?b.g.t:0));
   for(const {t,g} of ins){tileStore.delete(tileKeyOf(t));if(g)tilePut(t,g);else{tilePut(t,null);tileAdoptRuts(t)}}
+  for(const {t,g} of ins)tileEdgeFrom(t,g?g.t:0);
   farSync();if(typeof trenchKeys==='function')trenchKeys();lawnIdx();tuftIdx();
   for(let n=0;n<TUFTS;n++)if(tX[n]>LAWN_X0-0.2&&tX[n]<LAWN_X0+LAWN_NX*LAWN_GS+0.2&&tZ[n]>LAWN_Z0-0.2&&tZ[n]<LAWN_Z0+LAWN_NZ*LAWN_GS+0.2)tI[n]=-1;
   keepBuild();boxMask();dI0=0;dI1=N;dJ0=0;dJ1=N;winOn=true;st.dirty=true;if(typeof mapDirty!=='undefined')mapDirty=true;wetMapT=-1e9;if(typeof site!=='undefined')site.dirty=true;
-  if(typeof lawnTerrain==='function'){const sv=[dI0,dI1,dJ0,dJ1];if(LAWN_I0<=LAWN_I1){dI0=LAWN_I0;dI1=LAWN_I1;dJ0=LAWN_J0;dJ1=LAWN_J1;lawnTerrain()}[dI0,dI1,dJ0,dJ1]=sv}}
+  if(typeof lawnTerrain==='function'){const sv=[dI0,dI1,dJ0,dJ1];if(LAWN_I0<=LAWN_I1){dI0=LAWN_I0;dI1=LAWN_I1;dJ0=LAWN_J0;dJ1=LAWN_J1;lawnTerrain()}[dI0,dI1,dJ0,dJ1]=sv}
+  digMoveN++;digMoveMs=performance.now()-t0}
 // the grid follows the excavator or skid steer: once it is within 10 m of the grid's edge, the grid recentres on the tile
 // corner nearest it (within where it may sit)
 // (on a bridge or off every island it stays where it is)
@@ -219,7 +234,7 @@ function treeFallTick(dt){
     const R=Math.ceil(2.5/CELL);let sx=0,sz=0;
     for(let j=Math.max(0,cj-R);j<=Math.min(N,cj+R);j+=2)for(let i=Math.max(0,ci-R);i<=Math.min(N,ci+R);i+=2){const d=H0[j*V+i]-H[j*V+i];if(d>0.05){sx+=(gX(i)-a.x)*d;sz+=(gZ(j)-a.z)*d}}
     if(!sx&&!sz){sx=Math.cos(a.yaw);sz=Math.sin(a.yaw)}
-    treeFell(a,sx,sz,0)}}
+    treeFell(a,sx,sz,0);stats.treesFelled++;statDirty=true}}
 function treeFallReset(){for(const f of treeFalls)for(const m of f.ims){scene.remove(m);m.dispose()}treeFalls.length=0;treeFallen.clear();
   const g=Object.keys(treeGroups)[0];if(g)treeGroup(g,treeGroups[g])}
 function treeFallSave(){return treeFalls.map(f=>[+f.a.x.toFixed(3),+f.a.z.toFixed(3),+f.dx.toFixed(3),+f.dz.toFixed(3)])}

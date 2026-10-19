@@ -411,6 +411,14 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
 #statList{display:flex;flex-direction:column;gap:8px}
 .stl{display:grid;grid-template-columns:1fr auto;gap:4px 14px;margin:0}
 .stl dt{font-size:18px;color:var(--muted)}
+.sbar{display:inline-block;vertical-align:middle;width:90px;height:10px;margin-left:8px;border-radius:5px;background:rgba(255,255,255,.12);overflow:hidden}
+.sbar i{display:block;height:100%;background:var(--gas)}
+#treeGuide h2,.tgd{margin-top:10px}
+.tgd summary{cursor:pointer;font:700 20px/1.3 var(--f-display)}.tgd summary small{font:400 16px var(--f-body,inherit);color:var(--muted)}
+.tgd p{margin:6px 0;font-size:16px;color:var(--muted)}
+.tgd table{width:100%;border-collapse:collapse;font-size:17px;font-variant-numeric:tabular-nums}
+.tgd th{font-weight:600;color:var(--muted);text-align:right;padding:2px 6px}.tgd td{text-align:right;padding:2px 6px;border-top:1px solid rgba(255,255,255,.08)}.tgd th:first-child,.tgd td:first-child{text-align:left}
+.edtrees{margin:0 0 8px}.edtrees .tgd{margin-top:4px}.edtrees table.edsum{width:100%;font-size:14px;border-collapse:collapse}.edtrees .edsum td,.edtrees .edsum th{padding:2px 4px;text-align:right}.edtrees .edsum td:first-child,.edtrees .edsum th:first-child{text-align:left}
 .stl dd{margin:0;font:700 20px/1.2 var(--f-display);font-variant-numeric:tabular-nums;text-align:right;color:var(--ink)}
 /* the heatmap's key on screen while it is on; tap it to change what it shows */
 #heatKey{position:absolute;left:50%;top:22%;transform:translateX(-50%);z-index:2;zoom:var(--s);width:min(270px,70vw);height:auto;padding:7px 10px 6px;display:flex;flex-direction:column;gap:5px;
