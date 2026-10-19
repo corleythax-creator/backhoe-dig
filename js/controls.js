@@ -162,10 +162,11 @@ function setMode(m){if(m===mode)return;mode=m;setTurnSens();for(const [id,k] of 
   if(m==='walk')toast(say(padUsed?'walkPad':kbUsed?'walkKb':'walkTouch'),'',3800)}
 $('#modeDig').onclick=()=>setMode('dig'); $('#modeDrive').onclick=()=>setMode('drive'); $('#modeTruck').onclick=()=>setMode('truck'); $('#modeMow').onclick=()=>setMode('mow'); $('#modeSkid').onclick=()=>setMode('skid'); $('#modeWalk').onclick=()=>setMode('walk');
 $('#camBtn').onclick=()=>{camMode=camMode==='chase'?'cab':'chase';fpReset();$('#camBtn').dataset.cam=camMode};
-// Controls (top right) drops the machine list; picking one, or tapping the scene, closes it
+// Drive (top right) drops the machine list; picking one, or tapping the scene, closes it
 function showCtl(on){$('#ctlMenu').hidden=!on;$('#ctlBtn').setAttribute('aria-expanded',on)}
 $('#ctlBtn').onclick=()=>{showCtl($('#ctlMenu').hidden);showMenu(false)};
 $('#ctlMenu').addEventListener('click',e=>{if(e.target.closest('button'))showCtl(false)});
+$('#ctrlsBtn').onclick=()=>{showCtrls(true);showCtl(false);showMenu(false)};
 let resetArm=0;
 $('#resetBtn').onclick=()=>{const b=$('#resetBtn');
   if(resetArm&&performance.now()-resetArm<2500){resetState();siteSaveAll();resetArm=0;b.textContent='Reset';b.classList.remove('arm');toast(say('reset'),'good');return}

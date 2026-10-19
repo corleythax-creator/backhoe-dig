@@ -263,6 +263,17 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
   padding-block:calc(env(safe-area-inset-top,0px) + 16px) calc(env(safe-area-inset-bottom,0px) + 16px);
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 #keysBox .card{max-width:560px;overscroll-behavior:contain}
+#ctrlsBox{position:fixed;inset:0;z-index:7;background:rgba(10,12,9,.72);display:flex;align-items:center;justify-content:center;pointer-events:auto;box-sizing:border-box;
+  padding-block:calc(env(safe-area-inset-top,0px) + 16px) calc(env(safe-area-inset-bottom,0px) + 16px);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#ctrlsBox[hidden]{display:none}
+#ctrlsBox .card{max-width:600px;overscroll-behavior:contain;touch-action:pan-y}
+#ctrlsTabs button{flex:1 1 0;height:42px;font-size:15px}
+#ctrlsTabs button[aria-pressed="false"]{background:transparent;color:var(--ink);border:1px solid var(--hud-line)}
+#ctrlsTabs button[aria-pressed="true"]{background:var(--machine);color:#1c1309}
+#ctrlsList h2{margin:10px 0 2px;font:800 15px/1 var(--f-display);letter-spacing:.12em;text-transform:uppercase;color:var(--gas)}
+#ctrlsList .kkey{font:700 16px/1.2 var(--f-display);white-space:nowrap;text-align:right;color:var(--ink)}
+#ctrlsList .krow{grid-template-columns:1fr auto}
 #keysList h2{margin:10px 0 2px;font:800 15px/1 var(--f-display);letter-spacing:.12em;text-transform:uppercase;color:var(--gas)}
 .krow{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.07)}
 .kname{font:700 18px/1.2 var(--f-display);letter-spacing:.02em}
@@ -470,7 +481,7 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
 <div id="aim" hidden></div>
 <div id="flash"></div>
 <div id="hud">
-  <!-- top bar: menu, the job gauges (hidden for now), then the action buttons: Blocks, Controls (the machines), the camera -->
+  <!-- top bar: menu, the job gauges (hidden for now), then the action buttons: Blocks, Drive (the machines), Controls (every key, mouse and controller input), the camera -->
   <header class="tbar">
     <button id="menuBtn" class="sq" aria-label="Menu" aria-expanded="false">☰</button>
     <div class="brand">Corley's<b>Island</b></div>
@@ -501,7 +512,8 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
       <button id="wipeBtn" hidden aria-pressed="false">Wipers</button>
       <button id="boxBtn" hidden>Hook box</button>
       <button id="blkBtn" aria-pressed="false">Blocks</button>
-      <button id="ctlBtn" aria-expanded="false">Controls</button>
+      <button id="ctlBtn" aria-expanded="false">Drive</button>
+      <button id="ctrlsBtn">Controls</button>
       <button id="camBtn" data-cam="chase" aria-label="Camera: chase or cab view"><span id="camChase">Chase</span><span id="camCab">Cab</span></button>
     </div>
     <div id="menu" hidden>
@@ -519,7 +531,7 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
       <div class="sizes"><span>UI size</span><button data-s="1">1x</button><button data-s="1.5">1.5x</button><button data-s="2">2x</button></div>
       <div class="ver" id="verMenu"></div>
     </div>
-    <!-- Controls: which machine (or on foot) the sticks drive, dropping from the Controls button -->
+    <!-- Drive: which machine (or on foot) the sticks drive, dropping from the Drive button -->
     <nav id="ctlMenu" class="seg" role="group" aria-label="Control mode" hidden>
       <button id="modeDig" data-k="1" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 20h11v-5H2zM4 15v-3h5v3M9 13l5-8 6 4-2 5h-3"/></svg><span>Dig</span></button>
       <button id="modeDrive" data-k="2" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="14" width="20" height="7" rx="3.5"/><path d="M6 14v-4h9v4M9 10V6h5"/><circle cx="6.5" cy="17.5" r="1"/><circle cx="17.5" cy="17.5" r="1"/></svg><span>Drive</span></button>
@@ -677,6 +689,15 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
     <p id="benchDevice" class="devline"></p>
     <div class="row"><button id="benchCopy">Copy results</button><button id="benchClose" class="ghost">Close</button></div>
     <textarea id="benchText" readonly hidden></textarea>
+  </div>
+</div>
+<!-- Controls: every input at a glance, keyboard (the player's own keys), mouse and touch, controller -->
+<div id="ctrlsBox" hidden>
+  <div class="card">
+    <h1>Controls</h1>
+    <div class="row" id="ctrlsTabs"><button data-t="kb" aria-pressed="true">Keyboard</button><button data-t="mouse" aria-pressed="false">Mouse &amp; touch</button><button data-t="pad" aria-pressed="false">Controller</button></div>
+    <div id="ctrlsList"></div>
+    <div class="row"><button id="ctrlsDone">Done</button><button id="ctrlsKeys" class="ghost">Change keys</button></div>
   </div>
 </div>
 <div id="keysBox" hidden>
@@ -988,7 +1009,7 @@ const GUI_FONTS=['"Saira Condensed","Arial Narrow",system-ui,sans-serif','"Saira
   '"Arial Narrow",Arial,sans-serif','Verdana,sans-serif','"Trebuchet MS",sans-serif','Georgia,serif','Impact,"Arial Black",sans-serif','"Courier New",monospace'];
 // parts that are usually hidden until the game needs them, shown on request so they can be styled
 const GUI_PEEK=[['#menu','Menu'],['#help','Start card'],['#blkBar','Blocks bar'],['#walkBtns','Sprint and Jump'],['#seatBtn','Get in'],['#pumpBtn','Pump'],['#wipeBtn','Wipers'],
-  ['#boxBtn','Hook box'],['#lawnRow','Lawn gauge'],['#heatKey','Heatmap key'],['#updBtn','Update button'],['#keysBox','Keys panel'],['#gfxBox','Graphics panel']];
+  ['#boxBtn','Hook box'],['#lawnRow','Lawn gauge'],['#heatKey','Heatmap key'],['#updBtn','Update button'],['#keysBox','Keys panel'],['#ctrlsBox','Controls panel'],['#ctlMenu','Drive list'],['#gfxBox','Graphics panel']];
 // ready-made groups (selector, name), picked from the Groups tab and then edited like any part
 const GUI_GROUPS=[['#hud button','Every button on the screen'],['.tbar button','Top bar buttons'],['#ctlMenu button','Machine buttons'],['.bbar button','Bottom bar buttons'],
   ['#menu button','Menu buttons'],['#blkBar button','Blocks bar buttons'],['.tbar, .bbar','The two bars'],['.srow','Gauges'],['.lbl','Gauge names'],
