@@ -242,4 +242,6 @@ function frame(now){
 }
 // textures may finish loading before the later scripts arrive: apply them now if they are in, otherwise when they are
 if([texGrass,texDirt,texGrime].every(t=>t.image&&t.image.width))applyTextures();else texManager.onLoad=applyTextures;
+// every lit material gets its wet look before anything is drawn, so nothing compiles twice (rain.js)
+wetPatchAll();
 requestAnimationFrame(frame);

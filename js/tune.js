@@ -31,6 +31,7 @@ const TUNE=[
   ['soak','Weather','How fast rain soaks the ground',1,'pct',10,500,5],
   ['rainHard','Weather','How hard it rains',1,'pct',10,300,5],['puddleDrain','Weather','How fast puddles drain',1,'pct',0,1000,10],
   ['rainWind','Weather','Wind in the rain (leans the drops)',2.2,'mph',0,40,0.5],
+  ['runoff','Weather','How much rain runs off instead of soaking in',1,'pct',0,300,5],['erode','Weather','How fast running water carries loose dirt',1,'pct',0,500,5],
   ['mudDry','Mud and water','Soaked ground dries in about',1200,'min',1,240,1],
   ['seep','Mud and water','Groundwater seeps in',1,'pct',0,500,5],['pump','Mud and water','Pump drains',1,'pct',10,1000,10],
   ['wtDepth','Mud and water','Water table depth',1.85,'ft',1,40,0.5],
