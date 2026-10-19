@@ -107,9 +107,10 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
    it, the frame rate in the middle */
 .bbar{grid-area:3/1/4/4;position:relative;z-index:2;pointer-events:auto;display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;min-height:46px;box-sizing:border-box;
   padding:5px var(--pr) calc(env(safe-area-inset-bottom,0px) + 5px) var(--pl);background:var(--bar);border-top:1px solid var(--hud-line);zoom:var(--cs)}
-.turnbox{display:flex;align-items:center;gap:8px}
-#turnBtn{height:34px;font-size:14px;white-space:nowrap}#turnBtn[aria-expanded="true"]{border-color:var(--machine)}
-#turnSl{width:140px;height:30px;margin:0;accent-color:var(--machine);touch-action:none;cursor:pointer}#turnSl[hidden]{display:none}
+/* turn sensitivity, in the Controls panel: a slider for the machine you are in */
+.turnbox{display:flex;align-items:center;gap:12px;padding:10px 0 4px;border-bottom:1px solid var(--hud-line)}
+#turnBtn{font:700 17px/1 var(--f-display);white-space:nowrap;font-variant-numeric:tabular-nums;min-width:130px;text-align:right}
+#turnSl{flex:1 1 auto;min-width:0;height:30px;margin:0;accent-color:var(--machine);touch-action:none;cursor:pointer}
 .cap{font:600 13px/1.3 var(--f-display);color:var(--ink);letter-spacing:.03em;white-space:nowrap}
 .cap b{color:var(--machine);font-weight:800}
 #capR{margin-left:auto;text-align:right}
@@ -228,6 +229,17 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
   padding-block:calc(env(safe-area-inset-top,0px) + 16px) calc(env(safe-area-inset-bottom,0px) + 16px);
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 #keysBox .card{max-width:560px;overscroll-behavior:contain}
+#ctrlsBox{position:fixed;inset:0;z-index:7;background:rgba(10,12,9,.72);display:flex;align-items:center;justify-content:center;pointer-events:auto;box-sizing:border-box;
+  padding-block:calc(env(safe-area-inset-top,0px) + 16px) calc(env(safe-area-inset-bottom,0px) + 16px);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#ctrlsBox[hidden]{display:none}
+#ctrlsBox .card{max-width:600px;overscroll-behavior:contain;touch-action:pan-y}
+#ctrlsTabs button{flex:1 1 0;height:42px;font-size:15px}
+#ctrlsTabs button[aria-pressed="false"]{background:transparent;color:var(--ink);border:1px solid var(--hud-line)}
+#ctrlsTabs button[aria-pressed="true"]{background:var(--machine);color:#1c1309}
+#ctrlsList h2{margin:10px 0 2px;font:800 15px/1 var(--f-display);letter-spacing:.12em;text-transform:uppercase;color:var(--gas)}
+#ctrlsList .kkey{font:700 16px/1.2 var(--f-display);white-space:nowrap;text-align:right;color:var(--ink)}
+#ctrlsList .krow{grid-template-columns:1fr auto}
 #keysList h2{margin:10px 0 2px;font:800 15px/1 var(--f-display);letter-spacing:.12em;text-transform:uppercase;color:var(--gas)}
 .krow{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.07)}
 .kname{font:700 18px/1.2 var(--f-display);letter-spacing:.02em}

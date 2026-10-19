@@ -98,3 +98,32 @@ $('#keysDone').onclick=()=>showKeys(false);
 $('#keysReset').onclick=()=>{keyDefaults();keySave();keyCap=null;$('#keysNote').textContent='Back to the standard keys.';keysDraw()};
 keysBox.addEventListener('pointerdown',e=>{if(e.target===keysBox)showKeys(false)});
 addEventListener('keydown',e=>{if(e.code==='Escape'&&!keysBox.hidden)showKeys(false)});
+// ---------- Controls panel ----------
+// every input at a glance: the keyboard tab lists the player's own keys (changed in the Keys panel), the others the
+// mouse, touch and controller inputs, which are fixed (controls.js: the pointer handlers and padButton)
+const CTRL_MOUSE=[['Mouse',[['Drag the scene','Turns the camera round the machine; in cab view, looks around'],
+    ['Click the scene (cab view, PC)','Takes the mouse for mouse look; Esc lets it go'],
+    ['Wheel','Camera nearer or farther; in cab view, zooms; on foot in first person with blocks on, pushes the block out or pulls it back'],
+    ['Left click (blocks on)','Places a block (Dig or Walk mode)'],['Right click (mouse taken, blocks on)','Lifts the block the dot is on']]],
+  ['Touch',[['Left stick','Drives, or walks on foot'],['Right stick','Works the boom, bed or blade; on foot, turns and looks'],
+    ['Drag the scene','Turns the camera; in cab view, looks around'],['Pinch (cab view)','Zooms'],
+    ['Buttons','Blocks, Drive, Controls, Chase / Cab, Get in or out, Sprint, Jump']]]];
+const CTRL_PAD=[['Sticks and triggers',[['Left stick','Drives, or walks on foot'],['Right stick','Works the boom, bed or blade; on foot, turns and looks'],
+    ['Right trigger / left trigger','Gas / reverse (Drive, Truck, Skid)'],['Left stick click','Sprint on foot'],['Right stick click','Look straight ahead and reset the zoom']]],
+  ['Buttons',[['A','Jump on foot; places a block in a machine'],['B','Gets in or out; closes the map or help'],['X','Places a block on foot; hooks the box in a machine'],
+    ['Y','Chase / cab view'],['LB / RB','Previous / next machine']]],
+  ['D-pad and menu',[['D-pad up','Blocks on or off'],['D-pad down','Lifts a block'],['D-pad left / right','Block size smaller / bigger'],
+    ['View (Back)','Map'],['Menu (Start)','How to play']]]];
+let ctrlsTab='kb';
+function ctrlsDraw(){let h='';
+  const rows=(g,list)=>`<h2>${g}</h2>`+list.map(([k,d])=>`<div class="krow"><div class="kname">${k}<small>${d}</small></div></div>`).join('');
+  if(ctrlsTab==='kb'){let g='';for(const a of KEY_ACTIONS){if(a.g!==g){g=a.g;h+=`<h2>${g}</h2>`}
+      const k=keyBind[a.id].filter(Boolean).map(keyName).join(' or ')||'—';h+=`<div class="krow"><div class="kname">${a.n}<small>${a.d}</small></div><div class="kkey">${k}</div></div>`}}
+  else for(const [g,list] of ctrlsTab==='pad'?CTRL_PAD:CTRL_MOUSE)h+=rows(g,list);
+  $('#ctrlsList').innerHTML=h;document.querySelectorAll('#ctrlsTabs button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.t===ctrlsTab))}
+function showCtrls(on){$('#ctrlsBox').hidden=!on;if(on)ctrlsDraw()}
+$('#ctrlsTabs').onclick=e=>{const b=e.target.closest('button');if(b){ctrlsTab=b.dataset.t;ctrlsDraw()}};
+$('#ctrlsDone').onclick=()=>showCtrls(false);
+$('#ctrlsKeys').onclick=()=>{showCtrls(false);showKeys(true)};
+$('#ctrlsBox').addEventListener('pointerdown',e=>{if(e.target===e.currentTarget)showCtrls(false)});
+addEventListener('keydown',e=>{if(e.code==='Escape'&&!$('#ctrlsBox').hidden)showCtrls(false)});

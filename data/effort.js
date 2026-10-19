@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-19T02:46:00Z",
+ "updated": "2026-10-19T03:01:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -24,9 +24,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-18",
-   "dh": 179,
-   "act": 4,
-   "versions": 22
+   "dh": 208,
+   "act": 4.5,
+   "versions": 27
   }
  ],
  "extra": [
@@ -1206,6 +1206,51 @@ window.EFFORT = {
    "tris": 1918954,
    "chars": 815573,
    "what": "Three new mud settings in the screen editor's Tuning tab: how wet ground must be before it ruts, how fast ruts cut in, and how high mud piles up beside them."
+  },
+  {
+   "v": 131,
+   "asked": "2026-10-18T21:44:00-05:00",
+   "live": "2026-10-18T21:50:12-05:00",
+   "dh": 2,
+   "tris": 1919017,
+   "chars": 820471,
+   "what": "Machine dropdown renamed Drive; a Controls button opens a panel listing every keyboard key (the player's own), mouse, touch and controller input"
+  },
+  {
+   "v": 132,
+   "asked": "2026-10-18T21:45:00-05:00",
+   "live": "2026-10-18T21:56:29-05:00",
+   "dh": 0.5,
+   "tris": 1918697,
+   "chars": 820447,
+   "what": "The Turn slider moved from the bottom bar into the Controls panel, showing the machine it sets"
+  },
+  {
+   "v": 133,
+   "asked": "2026-10-18T21:50:00-05:00",
+   "live": "2026-10-18T21:57:33-05:00",
+   "dh": 0.5,
+   "tris": 1918628,
+   "chars": 820447,
+   "what": "The map editor now scrolls and zooms out over the whole map, the mainland, woods and town included."
+  },
+  {
+   "v": 134,
+   "asked": "2026-10-18T21:20:00-05:00",
+   "live": "2026-10-18T21:57:51-05:00",
+   "dh": 16,
+   "tris": 1919945,
+   "chars": 840124,
+   "what": "Rain runs downhill: rills on spoil piles and ruts fill the trench and wash loose dirt down as silt, and water streams down wet bare slopes like the ramp. Machines, the worker, buildings and trees darken and shine in the rain and dry after; water drips off roof edges. Cloud rolls in before a shower, curtains of rain hang over the lake, and hard showers bring lightning and thunder that arrives late with distance."
+  },
+  {
+   "v": 135,
+   "asked": "2026-10-18T21:37:00-05:00",
+   "live": "2026-10-18T22:01:55-05:00",
+   "dh": 10,
+   "tris": 1919122,
+   "chars": 850762,
+   "what": "The dig site follows the excavator and skid steer anywhere on Corley's mesa; holes left behind stay, drawn in less detail, and save with the site"
   }
  ]
 };
