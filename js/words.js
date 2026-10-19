@@ -21,7 +21,7 @@ const WORDS=[
   ['inMachine','Machines','In the {machine}. {key} to climb out.','{machine}: excavator, dump truck…; {key}: the get out key or button'],
   ['getInFar','Machines','Walk up to the excavator, the truck or the mower to get in.'],['noRoomOut','Machines','No room to climb out here. Move the machine a little.'],
   ['bedUp','Machines','Bed is up. Lower it to drive faster.'],['truckFirst','Machines','Dirt in the truck.'],
-  ['truckFull','Machines','Truck full. Tap Truck, back it to the north bank and raise the bed.'],
+  ['truckFull','Machines','Truck full. Tap Truck, drive it to the spoil yard north of the dig and raise the bed.'],
   ['dumpYard','Machines','Load dumped in the yard.'],['dumpOff','Machines','Load hauled off site.'],
   ['skidFull','Machines','Bucket full. Raise the arms and drive to where it goes.'],
   ['stuck','Machines','Stuck in the mud. Rock it free: [lUp] then [lDown], and again.'],

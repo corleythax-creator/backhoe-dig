@@ -89,6 +89,9 @@ function famBridge(b,K,o){
     K2.box(0.05,8,0.05,0x333333,x,top-4,z-14);K2.box(1.6,0.6,1.2,0x6a6f73,x,top-8.3,z-14)}
   famAdd(K2);
   {const [x,z]=F.W(L-1.4,0);famSign(['MAINLAND BRIDGE','Under construction'],5.4,1.7,x,Y+2.4,z,F.yaw+Math.PI,'#1f5f3a','#ffffff')}
+  // the spoil yard on Corley's north lawn, where the truck dumps now the cliff is gone
+  {const x=6,z=-41,y=baseHeight(x,z),K=famKit();for(const s of [-1,1])K.box(0.12,2.6,0.12,0x8a8a86,x+s*1.9,y+1.3,z);famAdd(K);
+    famSign(['SPOIL YARD','Dump loads here'],4.2,1.4,x,y+2.1,z+0.07,0,'#c9601c','#ffffff')}
 })();
 
 // ---------- games at the pavilion ----------
