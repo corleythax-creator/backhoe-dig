@@ -117,6 +117,7 @@ tr.done td{opacity:.6}
 .wrow .wp{display:flex;align-items:center;gap:8px;justify-content:flex-end}
 .wrow .wp .pbar{width:70px}.wrow .wp .pbar i{background:var(--m)}
 .wipsum{color:var(--s);font-size:13px}
+.wtag{display:inline-block;font-size:11px;font-weight:700;border-radius:999px;padding:1px 8px;margin-left:4px;color:#13110d;background:var(--gc)}
 .wipd{color:var(--s);font-size:12px;font-weight:400}
 @media (max-width:600px){.wrow{grid-template-columns:1fr}.wrow .wp{justify-content:flex-start}}
 .hbtn{display:block;margin:6px auto 0;font:inherit;font-size:12px;font-weight:600;background:none;border:none;color:var(--s);cursor:pointer;padding:2px 0;text-decoration:underline}
@@ -227,7 +228,7 @@ tr.on .rin{background:var(--amber);color:var(--amber-ink);border-color:var(--amb
   </div>
 
   <div class="panel wip" id="pwip" hidden>
-    <div class="frow"><label>Category <select id="wipg"><option value="">All categories</option></select></label><span class="wipsum" id="wipsum"></span></div>
+    <div class="frow"><label>Category <select id="wipg"><option value="">All categories</option></select></label><label>Sort <select id="wips"><option value="cat">By category, most complete first</option><option value="hi">Most complete first</option><option value="lo">Least complete first</option></select></label><span class="wipsum" id="wipsum"></span></div>
     <div id="wipb"></div>
   </div>
 
@@ -744,20 +745,26 @@ for(const k of Object.keys(G)){const o=document.createElement("option");o.value=
 function setGroups(ks){FG.clear();ks.forEach(k=>FG.add(k));$("fgs").value=FG.size===1?[...FG][0]:"";render()}
 $("fgs").addEventListener("change",()=>setGroups($("fgs").value?[$("fgs").value]:[]));
 function renderWip(){
-  const sel=$("wipg").value,b=$("wipb");b.textContent="";let tot=0;
-  for(const k of Object.keys(G)){
+  const sel=$("wipg").value,so=$("wips").value,b=$("wipb");b.textContent="";let tot=0;
+  const pc=r=>DONE[r[0]].pc||0,part=r=>DONE[r[0]]&&DONE[r[0]].part;
+  const row=(r,tag)=>{const d=DONE[r[0]],w=el("div","wrow"),t=el("div","wt"),pr=el("div","wp"),pb=el("div","pbar"),pi=el("i");
+    t.append(el("span",null,r[0]),r[2]);if(tag){const g=el("span","wtag",G[r[1]]);g.style.setProperty("--gc",GC[r[1]]);t.appendChild(g)}
+    pi.style.width=(d.pc||0)+"%";pb.appendChild(pi);pr.append(pb,el("b",null,(d.pc!=null?d.pc:"?")+"%"));t.appendChild(el("div","wipd","Started "+d.d));
+    w.append(t,pr,el("div","wn",d.n));b.appendChild(w)};
+  if(so!=="cat"){
+    const rows=I.filter(r=>part(r)&&(!sel||r[1]===sel)).sort((x,y)=>so==="hi"?pc(y)-pc(x):pc(x)-pc(y));
+    tot=rows.length;rows.forEach(r=>row(r,true))}
+  else for(const k of Object.keys(G)){
     if(sel&&sel!==k)continue;
-    const rows=I.filter(r=>r[1]===k&&DONE[r[0]]&&DONE[r[0]].part).sort((x,y)=>(DONE[y[0]].pc||0)-(DONE[x[0]].pc||0));
+    const rows=I.filter(r=>r[1]===k&&part(r)).sort((x,y)=>pc(y)-pc(x));
     if(!rows.length)continue;tot+=rows.length;
     const hd=el("h3");hd.style.setProperty("--gc",GC[k]);hd.append(el("span","dot"),G[k],el("small",null,rows.length+(rows.length>1?" projects":" project")));b.appendChild(hd);
-    for(const r of rows){const d=DONE[r[0]],w=el("div","wrow"),t=el("div","wt"),pr=el("div","wp"),pb=el("div","pbar"),pi=el("i");
-      t.append(el("span",null,r[0]),r[2]);pi.style.width=(d.pc||0)+"%";pb.appendChild(pi);pr.append(pb,el("b",null,(d.pc!=null?d.pc:"?")+"%"));t.appendChild(el("div","wipd","Started "+d.d));
-      w.append(t,pr,el("div","wn",d.n));b.appendChild(w)}}
+    rows.forEach(r=>row(r,false))}
   if(!tot)b.appendChild(el("div","empty","Nothing partly built in this category."));
   $("wipsum").textContent=tot+" partly built"
 }
 {const ws=$("wipg");for(const k of Object.keys(G)){const n=I.filter(r=>r[1]===k&&DONE[r[0]]&&DONE[r[0]].part).length;if(!n)continue;const o=document.createElement("option");o.value=k;o.textContent=G[k]+" ("+n+")";ws.appendChild(o)}
- ws.addEventListener("change",renderWip);$("wipn").textContent=I.filter(r=>DONE[r[0]]&&DONE[r[0]].part).length;renderWip()}
+ ws.addEventListener("change",renderWip);$("wips").addEventListener("change",renderWip);$("wipn").textContent=I.filter(r=>DONE[r[0]]&&DONE[r[0]].part).length;renderWip()}
 let gK="pr",gD=-1;
 document.querySelectorAll("th button[data-gk]").forEach(b=>b.addEventListener("click",()=>{const k=b.dataset.gk;if(gK===k)gD=-gD;else{gK=k;gD=k==="g"?1:-1}groupTable()}));
 function agg(rows){const n=rows.length,ns=rows.map(N),h=rows.reduce((a,r)=>a+hrs(r),0);return{n,pk:rows.filter(r=>picks.has(r[0])).length,ses:rows.reduce((a,r,i)=>a+COST[ns[i].c][1],0),pc:h,
