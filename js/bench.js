@@ -2,7 +2,8 @@
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 // ---------- speed test ----------
 const LEVELS=[0,8,24,56,120,248],LEVEL_S=5,WARM=1.5;
-const bench={on:false,t:0,lvl:-1,steps:[],clones:[],built:false,barT:0,pr:0};
+// kind: 'speed' (this test) or 'dig' (the dig site test, digtest.js, which runs through the same hooks)
+const bench={on:false,kind:'speed',t:0,lvl:-1,steps:[],clones:[],built:false,barT:0,pr:0};
 // diagnosis: before the levels, the plain scene is measured with one feature switched off at a time, then everything
 // off, so the results show which feature costs this device the most. Each switch saves what it changes and puts it back.
 const benchSaved=new Map();
@@ -41,7 +42,7 @@ function setClones(n){for(const im of bench.clones)im.count=n}
 function startBench(){
   if(bench.on)return;
   if(!bench.built)buildClones();
-  bench.on=true;bench.t=0;bench.lvl=-1;
+  bench.on=true;bench.kind='speed';bench.t=0;bench.lvl=-1;
   bench.steps=DIAG.map(([name,off])=>({name,off,n:0,ft:[],tris:0,calls:0,k:0})).concat(LEVELS.map(n=>({n,ft:[],tris:0,calls:0,k:0})));
   viewDirty=true;
   help.hidden=true;$('#bench').hidden=true;$('#benchBar').hidden=false;
@@ -54,7 +55,7 @@ function endBench(){
 }
 function fmtTris(t){return t>=1e6?(t/1e6).toFixed(2)+'M':t>=1e3?Math.round(t/1e3)+'k':String(Math.round(t))}
 function gpuName(){try{const gl=renderer.getContext(),ext=gl.getExtension('WEBGL_debug_renderer_info');return ext?gl.getParameter(ext.UNMASKED_RENDERER_WEBGL):gl.getParameter(gl.RENDERER)}catch(e){return 'unknown'}}
-function showBenchResults(){
+function showBenchResults(){$('#benchTitle').textContent='Speed test results';
   const all=bench.steps.map(s=>{const ft=s.ft.slice().sort((a,b)=>a-b),tot=ft.reduce((a,b)=>a+b,0);
     const avg=tot>0?ft.length/tot:0,p99=ft.length?ft[Math.min(ft.length-1,Math.floor(ft.length*0.99))]:0;
     return{name:s.name,machines:1+s.n,tris:s.k?s.tris/s.k:0,calls:s.k?s.calls/s.k:0,avg,low:p99>0?1/p99:0}});
@@ -84,7 +85,7 @@ function showBenchResults(){
     'Load levels:',...rows.map(r=>`${r.machines} excavators + ${r.machines} trucks | ${fmtTris(r.tris)} tris | ${Math.round(r.calls)} draws | ${r.avg.toFixed(1)} avg FPS | ${r.low.toFixed(0)} 1% low`)].join('\n');
   $('#bench').hidden=false;
 }
-function benchTick(dt){
+function benchTick(dt){if(bench.kind==='dig'){digTestTick(dt);return}
   bench.t+=dt;
   const lvl=Math.min(bench.steps.length-1,Math.floor(bench.t/LEVEL_S));
   if(lvl!==bench.lvl)benchStep(lvl);
@@ -92,14 +93,14 @@ function benchTick(dt){
   st.a1=0.75+0.25*Math.sin(u*1.3);st.a2=-1.45+0.3*Math.sin(u*0.9+1);st.a3=-1.6+0.9*Math.sin(u*1.7);st.swing+=dt*0.7;
   if(bench.t>=LEVEL_S*bench.steps.length)endBench();
 }
-function benchCamera(){
+function benchCamera(){if(bench.kind==='dig'){digTestCam();return}
   const u=bench.t%LEVEL_S,seg=Math.floor(u/(LEVEL_S/4)),k=u-seg*(LEVEL_S/4);
   if(seg===0){const a=st.yaw+st.swing+Math.PI+k*1.4;look.set(st.x,st.y+1.5,st.z);camera.position.set(st.x+Math.sin(a)*9,st.y+4,st.z+Math.cos(a)*9);camera.lookAt(look)}
   else if(seg===1){house.localToWorld(camera.position.set(-0.72,2.2,0.5));house.localToWorld(look.set(-0.1+Math.sin(k*2.5)*3,-0.4,6));camera.lookAt(look)}
   else if(seg===2){const a=0.8+bench.t*0.35;camera.position.set(Math.sin(a)*24,9,Math.cos(a)*24);camera.lookAt(look.set(0,0,0))}
   else{const a=bench.t*0.3;camera.position.set(Math.sin(a)*5,28,Math.cos(a)*5);camera.lookAt(look.set(0,0,0))}
 }
-function benchSample(dt){
+function benchSample(dt){if(bench.kind==='dig'){digTestSample();return}
   const s=bench.steps[bench.lvl];if(!s)return;
   if(bench.t-bench.lvl*LEVEL_S>=WARM){s.ft.push(dt);s.tris+=renderer.info.render.triangles;s.calls+=renderer.info.render.calls;s.k++}
   bench.barT-=dt;
