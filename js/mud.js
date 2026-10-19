@@ -84,7 +84,7 @@ function farRut(x,z,yaw,hw,hl,dt){
   const R=Math.hypot(hw+RUT_BERM,hl),i0=Math.floor((x-R-FX0)/FC),i1=Math.ceil((x+R-FX0)/FC),j0=Math.floor((z-R-FZ0)/FC),j1=Math.ceil((z+R-FZ0)/FC);
   if(i1<0||j1<0||i0>FNX||j0>FNZ)return 0;
   // only properly muddy ground (or ground already churned) gets a tile, so a drive on damp grass doesn't tile the mesa
-  let wet=false;for(const [px,pz] of [[x,z],[x-hw,z-hl],[x+hw,z-hl],[x-hw,z+hl],[x+hw,z+hl]])if(farMud(px,pz)>0.4){wet=true;break}
+  let wet=false;for(const [px,pz] of [[x,z],[x-hw,z-hl],[x+hw,z-hl],[x-hw,z+hl],[x+hw,z+hl]])if(farMud(px,pz)>Math.min(0.4,TU.rutWet*2.7)){wet=true;break}
   if(!wet)return 0;
   let added=false;for(let tj=Math.max(0,((j0-1)/MT)|0);tj<=Math.min(MT_NZ-1,((j1+1)/MT)|0);tj++)for(let ti=Math.max(0,((i0-1)/MT)|0);ti<=Math.min(MT_NX-1,((i1+1)/MT)|0);ti++)
     if(mtIdx[tj*MT_NX+ti]<0&&mtAdd(ti,tj)>=0)added=true;
@@ -94,7 +94,7 @@ function farRut(x,z,yaw,hw,hl,dt){
     const dx=FX0+i*FC-x,dz=FZ0+j*FC-z,u=dx*s+dz*c,v=dx*c-dz*s,av=Math.abs(v);if(Math.abs(u)>hl||av>hw+RUT_BERM||!vOk(i,j))continue;const k=j*FV+i;
     const wx=FX0+i*FC,wz=FZ0+j*FC;
     if(av>hw){const room=rutBerm(av-hw,wx,wz)-FD[k];if(room>0)fBerm.push(k,v,room);continue}
-    const m=Math.max(FM[k]/255,fineSoak(k,wx,wz));if(m<=RUT_MUD)continue;const d=Math.min(0.5*dt,FD[k]+TU.rutDepth*Math.min(1,m*1.25)*rutDepth(v,hw,wx*s+wz*c));
+    const m=Math.max(FM[k]/255,fineSoak(k,wx,wz));if(m<=TU.rutWet)continue;const d=Math.min(0.5*TU.rutRate*dt,FD[k]+TU.rutDepth*Math.min(1,m*1.25)*rutDepth(v,hw,wx*s+wz*c));
     if(d>0){FD[k]-=d;if(v<0)outL+=d;else outR+=d;mSum+=m;mN++;any=2}}
   if(outL+outR>0){let wL=0,wR=0;for(let n=0;n<fBerm.length;n+=3)if(fBerm[n+1]<0)wL+=fBerm[n+2];else wR+=fBerm[n+2];
     const m=mSum/mN;

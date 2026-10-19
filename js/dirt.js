@@ -165,7 +165,7 @@ function rollClod(x,z,size,k){const steps=Math.round(size/0.1*(k===SOD?5:14));
 // about 40 degrees (rutSlump), so driving back and forth churns the ground into soft ridges. Returns 0 when nothing gave
 // way, 1 for loose fill, 2 for mud.
 const comp=new Float32Array(V*V);let crushT=0;
-const RUT_BERM=0.45,RUT_BH=0.2,RUT_MUD=0.15,RUT_SLOPE=0.85,MUD_C=[0.29,0.2,0.13],rutB=[];let tuftBox=null,tuftT=0;
+const RUT_BERM=0.45,RUT_MUD=0.15,RUT_SLOPE=0.85,MUD_C=[0.29,0.2,0.13],rutB=[];let tuftBox=null,tuftT=0;
 // smooth value noise at scale sc metres (0 to 1): lumps that span several cells, never a lone spike
 function vnoise(x,z,sc){const fx=x/sc,fz=z/sc,i=Math.floor(fx),j=Math.floor(fz),u=fx-i,v=fz-j,a=u*u*(3-2*u),b=v*v*(3-2*v);
   return (hash(i,j)*(1-a)+hash(i+1,j)*a)*(1-b)+(hash(i,j+1)*(1-a)+hash(i+1,j+1)*a)*b}
@@ -179,7 +179,7 @@ const rutShade=d=>d<0?1-0.3*ss(0.03,0.2,-d):1+0.2*ss(0.03,0.18,d);
 // room for squeezed mud at a point av-hw outside the print's edge: a ridge that peaks a third of the way out and dies
 // away by RUT_BERM, in lumps about 1 to 2 ft long
 function rutBerm(out,x,z){const t=out/RUT_BERM;
-  return RUT_BH*ss(0,0.3,t)*(1-ss(0.4,1,t))*(0.45+0.75*vnoise(x,z,0.55)+0.35*vnoise(x+7.3,z-3.1,0.27))}
+  return TU.rutBerm*ss(0,0.3,t)*(1-ss(0.4,1,t))*(0.45+0.75*vnoise(x,z,0.55)+0.35*vnoise(x+7.3,z-3.1,0.27))}
 // soft mud flows: wherever two neighbouring muddy points' heights above or below grade differ by more than RUT_SLOPE
 // per cell, part of the difference moves down (volume kept; the slope of the ground itself doesn't count), a few passes over the box just churned
 function rutSlump(i0,i1,j0,j1){const lim=RUT_SLOPE*CELL;i1=Math.min(N-1,i1);j1=Math.min(N-1,j1);
@@ -197,7 +197,7 @@ function stampRut(x,z,yaw,hw,hl,dt){
     if(Math.abs(u)>hl||av>hw+RUT_BERM)continue;const k=j*V+i;if(prot[k])continue;
     if(av>hw){const room=rutBerm(av-hw,wx,wz)-(H[k]-H0[k]);if(room>0)rutB.push(k,v,room);continue}
     const loose=H[k]-H0[k],m=mudOf(k);
-    if(m>RUT_MUD&&loose<0.45){const d=Math.min(0.5*dt,H[k]-(H0[k]-TU.rutDepth*Math.min(1,m*1.25)*rutDepth(v,hw,wx*s+wz*c)));
+    if(m>TU.rutWet&&loose<0.45){const d=Math.min(0.5*TU.rutRate*dt,H[k]-(H0[k]-TU.rutDepth*Math.min(1,m*1.25)*rutDepth(v,hw,wx*s+wz*c)));
       if(d>0){H[k]-=d;if(v<0)outL+=d;else outR+=d;mSum+=m;mN++;wetT[k]=timeU.value;comp[k]=0;mudA[k]=Math.max(mudA[k],m);any=2}continue}
     if(loose<0.02||comp[k]>=1)continue;
     const full=loose/(1-0.3*comp[k])*0.3,d=Math.min(0.25*dt,full*(1-comp[k]));H[k]-=d;comp[k]=Math.min(1,comp[k]+d/full);any=any||1}
