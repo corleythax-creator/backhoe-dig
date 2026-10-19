@@ -738,6 +738,6 @@ function editorFrame(dt,now){
   camera.position.set(ed.x+Math.sin(ed.yaw)*Math.cos(ed.pitch)*ed.dist,fy+Math.sin(ed.pitch)*ed.dist,ed.z+Math.cos(ed.yaw)*Math.cos(ed.pitch)*ed.dist);
   camera.position.y=Math.max(camera.position.y,hAt(camera.position.x,camera.position.z)+2);camera.lookAt(edLook);
   sky.position.copy(camera.position);
-  sun.position.set(ed.x,fy,ed.z).addScaledVector(SUN_DIR,25);sun.target.position.set(ed.x,fy,ed.z);
+  sun.position.set(ed.x,fy,ed.z).addScaledVector(SUN_DIR,SUN_D);sun.target.position.set(ed.x,fy,ed.z);
   timeU.value=now/1000;updateSound(dt);
   shadowProxyTick();lawnLod();tuftLod();renderer.render(scene,camera)}
