@@ -21,8 +21,10 @@ server.listen(0,async()=>{const port=server.address().port,errs=[],[w,h]=opt.siz
   const b=await chromium.launch({args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader','--host-resolver-rules=MAP play.test 127.0.0.1']});
   try{const p=await b.newPage({viewport:{width:w,height:h}});
     p.on('pageerror',e=>errs.push(e.message));p.on('console',m=>{if(m.type()==='error')errs.push(m.text())});
-    await p.goto(`http://play.test:${port}/index.html`,{waitUntil:'load'});
-    if(!opt.keep){await p.evaluate(()=>{for(const k of Object.keys(localStorage))if(k.startsWith('bhd_'))localStorage.removeItem(k)});await p.reload({waitUntil:'load'})}
+    // a fresh browser has no saves; clearing them before the page's own scripts run beats a reload, which can stall
+    // while the page saves on its way out
+    if(!opt.keep)await p.addInitScript(()=>{if(!sessionStorage.getItem('playCleared')){for(const k of Object.keys(localStorage))if(k.startsWith('bhd_'))localStorage.removeItem(k);sessionStorage.setItem('playCleared','1')}});
+    await p.goto(`http://play.test:${port}/index.html`,{waitUntil:'load',timeout:120000});
     await p.waitForTimeout(+opt.boot);
     await p.evaluate(g=>{const h=document.getElementById('help');if(h)h.hidden=true;if(g&&typeof setGfx==='function')setGfx(g)},opt.gfx||'');
     const out=[];
