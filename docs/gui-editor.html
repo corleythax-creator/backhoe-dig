@@ -47,9 +47,9 @@ canvas#view{position:fixed;inset:0;width:100%;height:100%;display:block;touch-ac
 #hud{position:fixed;inset:0;pointer-events:none;box-sizing:border-box;
   --pt:calc(env(safe-area-inset-top,0px) + 8px);--pb:calc(env(safe-area-inset-bottom,0px) + 10px);
   --pl:max(10px,env(safe-area-inset-left,0px));--pr:max(10px,env(safe-area-inset-right,0px))}
-/* Three bars frame the view: the top bar (menu, job gauges, action buttons), the left rail (machines) and the bottom bar
+/* Two bars frame the view: the top bar (menu, action buttons, Controls with the machines, the camera) and the bottom bar
    (turn, what the sticks do, frame rate). The sticks and the minimap float over the view between them. #hud is a grid:
-   rows top bar / view / bottom bar, columns rail / view / minimap column */
+   rows top bar / view / bottom bar, columns (once the machine rail, now empty) / view / minimap column */
 #hud{display:grid;grid-template-columns:auto minmax(0,1fr) auto;grid-template-rows:auto minmax(0,1fr) auto;--bar:rgba(22,25,20,.9)}
 .tbar{grid-area:1/1/2/4;position:relative;z-index:3;pointer-events:auto;display:flex;align-items:center;gap:8px 12px;min-height:50px;box-sizing:border-box;
   padding:calc(env(safe-area-inset-top,0px) + 5px) var(--pr) 6px var(--pl);background:var(--bar);border-bottom:1px solid var(--hud-line);zoom:var(--ms)}
@@ -69,6 +69,8 @@ canvas#view{position:fixed;inset:0;width:100%;height:100%;display:block;touch-ac
 .val{font:700 17px/1 var(--f-display);font-variant-numeric:tabular-nums;white-space:nowrap}
 .sub{font:600 13px/1.1 var(--f-display);font-variant-numeric:tabular-nums;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .status.min .sub{display:none}
+/* the job gauges are hidden for now (the game still keeps them up to date); the buttons sit at the right */
+#status{display:none}
 #truckBar{background:#9fb7c6}
 .bar{height:5px;border-radius:3px;background:rgba(255,255,255,.14);overflow:hidden}
 .bar>i{display:block;height:100%;width:0;background:var(--machine);transition:width .15s}
@@ -90,16 +92,19 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 #menu .sizes button{height:32px;padding:0 8px;font-size:13px;border:1px solid var(--hud-line);text-align:center}
 #menu .sizes button[aria-pressed="true"]{background:var(--machine);color:#1c1309}
 #resetBtn.arm{background:var(--danger)!important;color:#fff}
-/* left rail: a tile per machine, icon over name; the one you drive is lit */
-.lbar{grid-area:2/1/3/2;pointer-events:auto;display:flex;flex-direction:column;gap:4px;box-sizing:border-box;min-height:0;overflow-y:auto;scrollbar-width:none;
-  padding:11px 8px 8px var(--pl);background:var(--bar);border-right:1px solid var(--hud-line);zoom:var(--ms)}
-.lbar::-webkit-scrollbar{display:none}
-.lbar button{position:relative;flex:1 1 0;width:48px;min-height:42px;max-height:64px;height:auto;padding:4px 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
-  font-size:11px;letter-spacing:.06em;background:transparent;border:1px solid transparent;border-radius:9px}
-.lbar svg{width:26px;height:26px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.lbar button[aria-pressed="true"]{background:var(--machine);color:#1c1309}
-@media (hover:hover){.lbar button[aria-pressed="false"]:hover{border-color:var(--hud-line)}}
-.kb .lbar button::before{content:attr(data-k);position:absolute;top:3px;right:5px;font-size:10px;opacity:.6}
+/* Controls: the machines drop from the Controls button at the top right, a tile per machine, icon beside name; the one you drive is lit */
+#ctlMenu{position:absolute;top:100%;right:var(--pr);margin-top:8px;z-index:3;display:flex;flex-direction:column;gap:2px;min-width:180px;box-sizing:border-box;background:#1d211b;box-shadow:0 6px 18px rgba(0,0,0,.5);border:1px solid var(--hud-line);border-radius:10px;padding:5px}
+#ctlMenu[hidden]{display:none}
+#ctlMenu button{position:relative;height:44px;display:flex;align-items:center;gap:10px;padding:0 12px;font-size:15px;background:transparent;border:1px solid transparent;border-radius:7px;text-align:left}
+#ctlMenu svg{width:24px;height:24px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#ctlMenu button[aria-pressed="true"]{background:var(--machine);color:#1c1309}
+@media (hover:hover){#ctlMenu button[aria-pressed="false"]:hover{background:rgba(255,255,255,.07)}}
+.kb #ctlMenu button::after{content:attr(data-k);margin-left:auto;font-size:12px;opacity:.6}
+#ctlBtn[aria-expanded="true"]{background:var(--machine);color:#1c1309}
+/* the camera toggle: chase and cab side by side, the one in use lit */
+#camBtn{display:flex;align-items:stretch;gap:2px;padding:3px}
+#camBtn span{display:flex;align-items:center;padding:0 10px;border-radius:6px;color:var(--muted)}
+#camBtn[data-cam="chase"] #camChase,#camBtn[data-cam="cab"] #camCab{background:var(--machine);color:#1c1309}
 /* right column: the minimap, the block bar under it */
 .rpane{grid-area:2/3/3/4;z-index:2;min-height:0;max-height:100%;box-sizing:border-box;display:flex;flex-direction:column;align-items:flex-end;gap:6px;padding:11px var(--pr) 8px 0}
 #mini{flex:none;display:block;width:calc(104px*var(--ms));height:calc(104px*var(--ms));border-radius:10px;border:1px solid rgba(255,255,255,.35);background:#1e2a30;pointer-events:auto;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.3)}
@@ -151,7 +156,7 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
   .srow{max-width:none;padding:0 10px}.srow:first-child{border-left:0}.line{flex-direction:column;align-items:flex-start;gap:3px}
   .bbar .stats{order:-1;flex-basis:100%;margin:0;text-align:center}.bbar{gap:4px 12px}}
 /* short screens (a phone on its side): slimmer bars */
-@container stage (max-height:440px){.tbar{min-height:44px;padding-bottom:4px}.status .sub{display:none}.lbar{padding-top:9px}.lbar button{min-height:38px;font-size:10px;gap:2px}.lbar svg{width:21px;height:21px}
+@container stage (max-height:440px){.tbar{min-height:44px;padding-bottom:4px}.status .sub{display:none}#ctlMenu button{height:38px}
   .bbar{min-height:40px;padding-top:3px}#mini{width:calc(92px*var(--ms));height:calc(92px*var(--ms))}}
 #updBtn{position:absolute;left:50%;top:22%;transform:translateX(-50%);z-index:6;background:var(--gas);color:#1c1309;border:0;height:46px;font-size:18px;white-space:nowrap;box-shadow:0 3px 10px rgba(0,0,0,.35)}
 #toast{position:absolute;left:0;right:0;top:32%;display:flex;justify-content:center}
@@ -276,7 +281,7 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 #sndOn[aria-pressed="false"]{color:var(--danger);border-color:var(--danger)}
 /* Map editor: everything in a column down the left, so the rest of the view is ground: the title bar along the top,
    a two-wide tool strip, and beside it the tool's options with the file and info cards; the game HUD hides */
-body.editing #hud>:is(.tbar,.lbar,.rpane,.sticks,.bbar){display:none}
+body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
 #editor{position:fixed;inset:0;z-index:4;pointer-events:none;display:flex;flex-direction:column;align-items:flex-start;gap:6px;box-sizing:border-box;
   padding:calc(env(safe-area-inset-top,0px) + 8px) max(10px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 10px) max(10px,env(safe-area-inset-left,0px))}
 #editor[hidden]{display:none}
@@ -410,7 +415,7 @@ body.editing #hud>:is(.tbar,.lbar,.rpane,.sticks,.bbar){display:none}
 <div id="aim" hidden></div>
 <div id="flash"></div>
 <div id="hud">
-  <!-- top bar: menu, the job gauges (tap them for more or less), then the machine's action buttons -->
+  <!-- top bar: menu, the job gauges (hidden for now), then the action buttons: Blocks, Controls (the machines), the camera -->
   <header class="tbar">
     <button id="menuBtn" class="sq" aria-label="Menu" aria-expanded="false">☰</button>
     <div class="brand">Corley's<b>Island</b></div>
@@ -441,7 +446,8 @@ body.editing #hud>:is(.tbar,.lbar,.rpane,.sticks,.bbar){display:none}
       <button id="wipeBtn" hidden aria-pressed="false">Wipers</button>
       <button id="boxBtn" hidden>Hook box</button>
       <button id="blkBtn" aria-pressed="false">Blocks</button>
-      <button id="camBtn">Cab view</button>
+      <button id="ctlBtn" aria-expanded="false">Controls</button>
+      <button id="camBtn" data-cam="chase" aria-label="Camera: chase or cab view"><span id="camChase">Chase</span><span id="camCab">Cab</span></button>
     </div>
     <div id="menu" hidden>
       <button id="helpBtn">How to play</button>
@@ -458,16 +464,16 @@ body.editing #hud>:is(.tbar,.lbar,.rpane,.sticks,.bbar){display:none}
       <div class="sizes"><span>UI size</span><button data-s="1">1x</button><button data-s="1.5">1.5x</button><button data-s="2">2x</button></div>
       <div class="ver" id="verMenu"></div>
     </div>
+    <!-- Controls: which machine (or on foot) the sticks drive, dropping from the Controls button -->
+    <nav id="ctlMenu" class="seg" role="group" aria-label="Control mode" hidden>
+      <button id="modeDig" data-k="1" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 20h11v-5H2zM4 15v-3h5v3M9 13l5-8 6 4-2 5h-3"/></svg><span>Dig</span></button>
+      <button id="modeDrive" data-k="2" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="14" width="20" height="7" rx="3.5"/><path d="M6 14v-4h9v4M9 10V6h5"/><circle cx="6.5" cy="17.5" r="1"/><circle cx="17.5" cy="17.5" r="1"/></svg><span>Drive</span></button>
+      <button id="modeTruck" data-k="3" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 16V8l11-2v10M13 10h5l4 4v2H13"/><circle cx="6" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg><span>Truck</span></button>
+      <button id="modeMow" data-k="4" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 16h14v-4H6zM9 12V7h5l2 5M17 14h4"/><circle cx="6" cy="18" r="2"/><circle cx="16" cy="18" r="2"/></svg><span>Mow</span></button>
+      <button id="modeSkid" data-k="6" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 17V7h8l3 4v6M5 11h11M16 12l4-3 2 5h-5"/><circle cx="7" cy="19" r="2"/><circle cx="14" cy="19" r="2"/></svg><span>Skid</span></button>
+      <button id="modeWalk" data-k="5" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="13" cy="4" r="2"/><path d="M8 11l4-4 3 3 3 1M12 7l-1 7 3 3v4M11 14l-3 7"/></svg><span>Walk</span></button>
+    </nav>
   </header>
-  <!-- left rail: which machine (or on foot) the sticks drive -->
-  <nav class="lbar seg" role="group" aria-label="Control mode">
-    <button id="modeDig" data-k="1" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 20h11v-5H2zM4 15v-3h5v3M9 13l5-8 6 4-2 5h-3"/></svg><span>Dig</span></button>
-    <button id="modeDrive" data-k="2" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="14" width="20" height="7" rx="3.5"/><path d="M6 14v-4h9v4M9 10V6h5"/><circle cx="6.5" cy="17.5" r="1"/><circle cx="17.5" cy="17.5" r="1"/></svg><span>Drive</span></button>
-    <button id="modeTruck" data-k="3" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 16V8l11-2v10M13 10h5l4 4v2H13"/><circle cx="6" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg><span>Truck</span></button>
-    <button id="modeMow" data-k="4" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 16h14v-4H6zM9 12V7h5l2 5M17 14h4"/><circle cx="6" cy="18" r="2"/><circle cx="16" cy="18" r="2"/></svg><span>Mow</span></button>
-    <button id="modeSkid" data-k="6" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 17V7h8l3 4v6M5 11h11M16 12l4-3 2 5h-5"/><circle cx="7" cy="19" r="2"/><circle cx="14" cy="19" r="2"/></svg><span>Skid</span></button>
-    <button id="modeWalk" data-k="5" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="13" cy="4" r="2"/><path d="M8 11l4-4 3 3 3 1M12 7l-1 7 3 3v4M11 14l-3 7"/></svg><span>Walk</span></button>
-  </nav>
   <!-- right column: the minimap, and the block bar under it while Blocks is on -->
   <aside class="rpane">
     <canvas id="mini" title="Tap for the big map (M)"></canvas>
@@ -892,7 +898,7 @@ function wordsRefresh(){if(typeof setCaps==='function'&&typeof mode!=='undefined
 // A skin: {v:1, t: when it went live (ms), L:{all|phone|big:{vars:{'--name':value}, el:{selector:{...}}, css, dock}},
 // text:{selector:text}, words:{id:text}} (words: the tips and captions of js/words.js). An el entry: hide, x/y (px moved), sc (size %), fs (text px), fg (text colour), bg (background),
 // rad (corners px), op (opacity %), css (any declarations). A selector can be a list (several parts or a group). dock:
-// {top: top|bottom, bottom: bottom|top, rail: left|right|top|bottom, map: right|left, sticks: normal|swap}.
+// {top: top|bottom, bottom: bottom|top, map: right|left, sticks: normal|swap}.
 // The Words tab rewrites the start card (skin.text) and the tips and captions (skin.words). The Tuning tab edits the
 // numbers of js/tune.js, which publish on their own (supabase/island_tune.sql) but with the same owner key.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md. This file needs nothing from the
@@ -910,8 +916,8 @@ const GUI_FONTS=['"Saira Condensed","Arial Narrow",system-ui,sans-serif','"Saira
 const GUI_PEEK=[['#menu','Menu'],['#help','Start card'],['#blkBar','Blocks bar'],['#walkBtns','Sprint and Jump'],['#seatBtn','Get in'],['#pumpBtn','Pump'],['#wipeBtn','Wipers'],
   ['#boxBtn','Hook box'],['#lawnRow','Lawn gauge'],['#heatKey','Heatmap key'],['#updBtn','Update button'],['#keysBox','Keys panel'],['#gfxBox','Graphics panel']];
 // ready-made groups (selector, name), picked from the Groups tab and then edited like any part
-const GUI_GROUPS=[['#hud button','Every button on the screen'],['.tbar button','Top bar buttons'],['.lbar button','Machine buttons'],['.bbar button','Bottom bar buttons'],
-  ['#menu button','Menu buttons'],['#blkBar button','Blocks bar buttons'],['.tbar, .lbar, .bbar','The three bars'],['.srow','Gauges'],['.lbl','Gauge names'],
+const GUI_GROUPS=[['#hud button','Every button on the screen'],['.tbar button','Top bar buttons'],['#ctlMenu button','Machine buttons'],['.bbar button','Bottom bar buttons'],
+  ['#menu button','Menu buttons'],['#blkBar button','Blocks bar buttons'],['.tbar, .bbar','The two bars'],['.srow','Gauges'],['.lbl','Gauge names'],
   ['.val','Gauge numbers'],['.sub','Gauge detail lines'],['.bar','Gauge meters'],['.stick','Sticks'],['.knob','Stick knobs'],['.cap','Stick captions'],
   ['#mini','Minimap'],['.card','Cards and panels'],['#toast span','Messages'],['#hud','The whole screen layer']];
 // one-move settings at the top of the Groups tab: name, selector, field, slider top
@@ -919,7 +925,7 @@ const GUI_QUICK=[['Button corners','#hud button','rad',30],['Button text size','
   ['Panel corners','.card','rad',40]];
 // where the big pieces can sit (Layout tab): key, name, choices (first is the game's own)
 const GUI_DOCK=[['top','Top bar',[['top','Top'],['bottom','Bottom']]],['bottom','Bottom bar',[['bottom','Bottom'],['top','Top']]],
-  ['rail','Machine buttons',[['left','Left'],['right','Right'],['top','Top'],['bottom','Bottom']]],['map','Minimap',[['right','Right'],['left','Left']]],
+  ['map','Minimap',[['right','Right'],['left','Left']]],
   ['sticks','Sticks',[['normal','As they are'],['swap','Swapped']]]];
 const GUI_TAGS={button:'button',span:'text',b:'text',div:'box',canvas:'drawing',select:'dropdown',input:'control',label:'label',p:'text',h1:'heading',h2:'heading',h3:'heading',h4:'heading',nav:'bar',header:'bar',footer:'bar',aside:'column'};
 // doc and root: the page holding the screen (the claude.ai editor puts it in a stage box), media: how the phone and big
@@ -960,14 +966,11 @@ function guiDecl(p){const d=[];
 // machine buttons right), and each piece takes its slot. The phone and big screen layers write the whole layout from
 // their own choices over the every-screen ones, so a layer can put a piece back where the game has it
 function guiDockCss(d){const c=k=>d[k]||GUI_DOCK.find(g=>g[0]===k)[2][0][0];
-  const top=c('top'),bot=c('bottom'),rail=c('rail'),map=c('map'),swap=c('sticks')==='swap',flat=rail==='top'||rail==='bottom';
+  const top=c('top'),bot=c('bottom'),map=c('map'),swap=c('sticks')==='swap';
   let r='#hud{grid-template-columns:auto auto minmax(0,1fr) auto auto;grid-template-rows:auto auto auto minmax(0,1fr) auto auto auto}\n';
   r+=`.tbar{grid-area:${top==='top'?1:6}/1/${top==='top'?2:7}/6}\n.bbar{grid-area:${bot==='bottom'?7:2}/1/${bot==='bottom'?8:3}/6}\n`;
   if(top==='bottom')r+='.tbar::after{top:auto;bottom:100%}\n';
   if(bot==='top')r+='.bbar{border-top:0;border-bottom:1px solid var(--hud-line)}\n';
-  r+=`.lbar{grid-area:${rail==='top'?'3/1/4/6':rail==='bottom'?'5/1/6/6':rail==='right'?'4/5/5/6':'4/1/5/2'}}\n`;
-  if(rail==='right')r+='.lbar{border-right:0;border-left:1px solid var(--hud-line);padding:11px var(--pr) 8px 8px}\n';
-  if(flat)r+=`.lbar{flex-direction:row;overflow-x:auto;overflow-y:hidden;border-right:0;${rail==='top'?'border-bottom':'border-top'}:1px solid var(--hud-line);padding:6px var(--pr) 6px var(--pl)}\n.lbar button{width:auto;max-height:none;min-width:58px;flex:1 1 0;height:52px}\n`;
   r+=`.rpane{grid-area:4/${map==='left'?2:4}/5/${map==='left'?3:5}${map==='left'?';align-items:flex-start;padding:11px 0 8px var(--pl)':''}}\n`;
   r+=`.sticks{grid-area:4/2/5/5${swap?';flex-direction:row-reverse;padding:0 14px 10px var(--pr)':''}}\n`;
   if(swap)r+='#capL{order:5;margin-left:auto;text-align:right}#capR{order:-1;margin-left:0;text-align:left}\n';

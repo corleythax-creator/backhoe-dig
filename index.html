@@ -14,7 +14,7 @@
 <div id="aim" hidden></div>
 <div id="flash"></div>
 <div id="hud">
-  <!-- top bar: menu, the job gauges (tap them for more or less), then the machine's action buttons -->
+  <!-- top bar: menu, the job gauges (hidden for now), then the action buttons: Blocks, Controls (the machines), the camera -->
   <header class="tbar">
     <button id="menuBtn" class="sq" aria-label="Menu" aria-expanded="false">☰</button>
     <div class="brand">Corley's<b>Island</b></div>
@@ -45,7 +45,8 @@
       <button id="wipeBtn" hidden aria-pressed="false">Wipers</button>
       <button id="boxBtn" hidden>Hook box</button>
       <button id="blkBtn" aria-pressed="false">Blocks</button>
-      <button id="camBtn">Cab view</button>
+      <button id="ctlBtn" aria-expanded="false">Controls</button>
+      <button id="camBtn" data-cam="chase" aria-label="Camera: chase or cab view"><span id="camChase">Chase</span><span id="camCab">Cab</span></button>
     </div>
     <div id="menu" hidden>
       <button id="helpBtn">How to play</button>
@@ -62,16 +63,16 @@
       <div class="sizes"><span>UI size</span><button data-s="1">1x</button><button data-s="1.5">1.5x</button><button data-s="2">2x</button></div>
       <div class="ver" id="verMenu"></div>
     </div>
+    <!-- Controls: which machine (or on foot) the sticks drive, dropping from the Controls button -->
+    <nav id="ctlMenu" class="seg" role="group" aria-label="Control mode" hidden>
+      <button id="modeDig" data-k="1" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 20h11v-5H2zM4 15v-3h5v3M9 13l5-8 6 4-2 5h-3"/></svg><span>Dig</span></button>
+      <button id="modeDrive" data-k="2" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="14" width="20" height="7" rx="3.5"/><path d="M6 14v-4h9v4M9 10V6h5"/><circle cx="6.5" cy="17.5" r="1"/><circle cx="17.5" cy="17.5" r="1"/></svg><span>Drive</span></button>
+      <button id="modeTruck" data-k="3" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 16V8l11-2v10M13 10h5l4 4v2H13"/><circle cx="6" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg><span>Truck</span></button>
+      <button id="modeMow" data-k="4" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 16h14v-4H6zM9 12V7h5l2 5M17 14h4"/><circle cx="6" cy="18" r="2"/><circle cx="16" cy="18" r="2"/></svg><span>Mow</span></button>
+      <button id="modeSkid" data-k="6" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 17V7h8l3 4v6M5 11h11M16 12l4-3 2 5h-5"/><circle cx="7" cy="19" r="2"/><circle cx="14" cy="19" r="2"/></svg><span>Skid</span></button>
+      <button id="modeWalk" data-k="5" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="13" cy="4" r="2"/><path d="M8 11l4-4 3 3 3 1M12 7l-1 7 3 3v4M11 14l-3 7"/></svg><span>Walk</span></button>
+    </nav>
   </header>
-  <!-- left rail: which machine (or on foot) the sticks drive -->
-  <nav class="lbar seg" role="group" aria-label="Control mode">
-    <button id="modeDig" data-k="1" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 20h11v-5H2zM4 15v-3h5v3M9 13l5-8 6 4-2 5h-3"/></svg><span>Dig</span></button>
-    <button id="modeDrive" data-k="2" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="14" width="20" height="7" rx="3.5"/><path d="M6 14v-4h9v4M9 10V6h5"/><circle cx="6.5" cy="17.5" r="1"/><circle cx="17.5" cy="17.5" r="1"/></svg><span>Drive</span></button>
-    <button id="modeTruck" data-k="3" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 16V8l11-2v10M13 10h5l4 4v2H13"/><circle cx="6" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg><span>Truck</span></button>
-    <button id="modeMow" data-k="4" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 16h14v-4H6zM9 12V7h5l2 5M17 14h4"/><circle cx="6" cy="18" r="2"/><circle cx="16" cy="18" r="2"/></svg><span>Mow</span></button>
-    <button id="modeSkid" data-k="6" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 17V7h8l3 4v6M5 11h11M16 12l4-3 2 5h-5"/><circle cx="7" cy="19" r="2"/><circle cx="14" cy="19" r="2"/></svg><span>Skid</span></button>
-    <button id="modeWalk" data-k="5" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="13" cy="4" r="2"/><path d="M8 11l4-4 3 3 3 1M12 7l-1 7 3 3v4M11 14l-3 7"/></svg><span>Walk</span></button>
-  </nav>
   <!-- right column: the minimap, and the block bar under it while Blocks is on -->
   <aside class="rpane">
     <canvas id="mini" title="Tap for the big map (M)"></canvas>
