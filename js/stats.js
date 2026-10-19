@@ -9,7 +9,7 @@
 // distances in metres, volumes in cubic metres (bank), times in seconds, speeds in m/s; shown in feet, miles, yd³ and mph
 const STAT_KEY='bhd_stats',HEAT_KEY='bhd_heat';
 const STAT_ZERO={mowCuts:0,mowTall:0,mowLawns:0,mowBest:0,mowDist:0,mowTime:0,mowTop:0,walkDist:0,sprintDist:0,jumps:0,walkTime:0,walkTop:0,
-  exDug:0,exDumps:0,exDist:0,exTime:0,strikes:0,caves:0,trDist:0,trTime:0,trTop:0,trHauled:0,skDist:0,skTime:0,skTop:0,skMoved:0,blocks:0,since:0,
+  exDug:0,exDumps:0,exDist:0,exTime:0,strikes:0,caves:0,trDist:0,trTime:0,trTop:0,trHauled:0,skDist:0,skTime:0,skTop:0,skMoved:0,blocks:0,treesFelled:0,since:0,
   // weather and water (rain.js, storm.js, water.js): volumes in cubic metres, the nearest strike in metres
   showers:0,rainTime:0,rainTop:0,bolts:0,boltNear:0,wipes:0,runoff:0,runPool:0,pumped:0,seeped:0,washed:0,silt:0};
 const stats=Object.assign({},STAT_ZERO);
@@ -166,8 +166,43 @@ function statRows(){const S=stats,cellFt=LAWN_GS*LAWN_GS/(FT*FT),all=S.mowTime+S
     ['Excavator',[['Dirt dug',sYd(S.exDug)],['Buckets dumped',sN(S.exDumps)],['Tracked',sMi(S.exDist)],['Time running it',sTime(S.exTime)],['Gas line strikes',sN(S.strikes)],['Cave-ins',sN(S.caves)]]],
     ['Dump truck',[['Hauled off',sYd(S.trHauled)],['Driven',sMi(S.trDist)],['Time driving',sTime(S.trTime)],['Top speed',sMph(S.trTop)]]],
     ['Skid steer',[['Dirt moved',sYd(S.skMoved)],['Driven',sMi(S.skDist)],['Time driving',sTime(S.skTime)],['Top speed',sMph(S.skTop)]]],
+    ...statTreeRows(),
     ['All together',[['Time playing',sTime(all)],['Distance, all ways',sMi(S.mowDist+S.walkDist+S.exDist+S.trDist+S.skDist)],['Blocks placed',sN(S.blocks)],
       ['Counting since',new Date(S.since).toLocaleDateString([],{month:'short',day:'numeric',year:'numeric'})]]]]}
+
+// ---------- the trees ----------
+// from trees.js: what is standing now (treeCensus) and what a real tree of that size is (treeVitals): its age, trunk, crown
+const sIn=cm=>{const i=cm/2.54;return i<10?i.toFixed(1)+' in':Math.round(i)+' in'},sYr=n=>sN(n)+' yr',sLb=kg=>sN(kg*2.2046)+' lb';
+const sArea=m2=>{const sf=m2/(FT*FT);return sf>=43560/2?(sf/43560).toFixed(2)+' acres':sN(sf)+' sq ft'};
+const sBar=(n,m)=>`${sN(n)} <span class="sbar"><i style="width:${m?Math.round(100*n/m):0}%"></i></span>`;
+const TREE_PLACES={main:'Mesa (your map)',fam:'Family Island',jes:"Jessica's Island",dex:"Dexter's Island",mainland:'Mainland shores'};
+const treeName=k=>TREE_SP[k].name[0].toUpperCase()+TREE_SP[k].name.slice(1);
+function statTreeRows(){const C=treeCensus(),out=[],S=stats,none='—';
+  const sp=k=>TREE_SP[k].name;
+  out.push(['Trees',[['Standing',sN(C.n)],['Species',sN(C.sp.filter(x=>x.n).length)+' of '+TREE_SP.length],
+    ['Tallest',C.tall?`${sFt(C.tall.H)} ${sp(C.tall.k)}`:none],['Oldest',C.old?`${sYr(C.old.age)} ${sp(C.old.k)}`:none],
+    ['Average age',C.n?sYr(C.age/C.n):none],['Average height',C.n?sFt(C.H/C.n):none],['Thickest trunk',C.thick?`${sIn(C.thick.D)} ${sp(C.thick.k)}`:none],
+    ['Shade under the crowns',sArea(C.area)],['Wood standing',sCf(C.vol)],['Carbon dioxide held',sLb(C.co2)],
+    ['Lying down after digging',sN(C.felled)],['Knocked over by digging, ever',sN(S.treesFelled)]]]);
+  const bl=['Under '+TREE_AGE_BRACKETS[0]+' yr',...TREE_AGE_BRACKETS.slice(1).map((m,i)=>`${TREE_AGE_BRACKETS[i]} to ${m-1} yr`),TREE_AGE_BRACKETS[TREE_AGE_BRACKETS.length-1]+' yr and over'],mx=Math.max(1,...C.br);
+  out.push(['Tree ages',bl.map((n,i)=>[n,sBar(C.br[i],mx)])]);
+  const ms=Math.max(1,...C.st);
+  out.push(['Tree life stages (how far through its own lifespan)',TREE_STAGES.map((n,i)=>[n,sBar(C.st[i],ms)])]);
+  out.push(['Trees by place',Object.keys(C.places).map(g=>[TREE_PLACES[g]||g,C.places[g].n?`${sN(C.places[g].n)} · avg ${sYr(C.places[g].age/C.places[g].n)}`:none])]);
+  C.sp.forEach((x,k)=>{const b=TREE_BIO[TREE_SP[k].id];
+    out.push([`${treeName(k)} (${b.real})`,[['Standing',sN(x.n)],['Average age',x.n?sYr(x.age/x.n):none],['Oldest',x.n?sYr(x.old):none],['Youngest',x.n?sYr(x.young):none],
+      ['Average height',x.n?sFt(x.H/x.n):none],['Tallest',x.n?sFt(x.tall):none],['Thickest trunk',x.n?sIn(x.thick):none],['Wood standing',x.n?sCf(x.vol):none],['Carbon dioxide held',x.n?sLb(x.co2):none],
+      ['Lifespan',`up to ${b.life} yr`]]])});
+  return out}
+// the guide: for each species how old, how thick and how fast growing a tree is at each height, a table of real
+// figures (the same curve ages every tree in the game). Shown in the Stats panel and the map editor
+const TREE_GUIDE_FT=[5,10,15,20,30,40,50,60,70,80,90,100];
+function treeGuideHtml(){let h='';
+  TREE_SP.forEach((sp,k)=>{const b=TREE_BIO[sp.id],rows=TREE_GUIDE_FT.filter(f=>f*FT<b.hmax*0.97).map(f=>{const v=treeVitals(k,f*FT);
+      return `<tr><td>${f} ft</td><td>${sYr(v.age)}</td><td>${sIn(v.D)}</td><td>${(v.grow/2.54).toFixed(1)} in</td><td>${TREE_STAGES[v.st]}</td></tr>`}).join('');
+    h+=`<details class="tgd"><summary>${treeName(k)} <small>${b.real}, <i>${b.lat}</i></small></summary><p>Grows to about ${sFt(b.hmax)} and lives up to ${b.life} years. At normal size the game draws it ${sFt(sp.h)} tall.</p>
+      <table><thead><tr><th>Height</th><th>Age</th><th>Trunk</th><th>Grows a year</th><th>Stage</th></tr></thead><tbody>${rows}</tbody></table></details>`});
+  return h}
 function statFill(){const L=$('#statList');let h='';
   for(const [g,rows] of statRows())h+=`<h2>${g}</h2><dl class="stl">${rows.map(([a,b])=>`<dt>${a}</dt><dd>${b}</dd>`).join('')}</dl>`;
   L.innerHTML=h}
@@ -175,7 +210,7 @@ function statPanelBtns(){document.querySelectorAll('#statHeat [data-h]').forEach
   const b=$('#heatOn');b.setAttribute('aria-pressed',heat.on);b.textContent=heat.on?'Heatmap on the lawn: on':'Heatmap on the lawn: off'}
 let statFillT=0;
 function showStats(on){statBox.hidden=!on;clearInterval(statFillT);
-  if(on){statFill();statPanelBtns();heatDirty=true;heat.t=0;heatTick(0);statFillT=setInterval(statFill,1000)}}
+  if(on){statFill();$('#treeGuide').innerHTML=treeGuideHtml();statPanelBtns();heatDirty=true;heat.t=0;heatTick(0);statFillT=setInterval(statFill,1000)}}
 $('#statsBtn').onclick=()=>{showStats(true);showMenu(false)};
 $('#statsTop').onclick=()=>showStats(statBox.hidden);
 $('#statDone').onclick=()=>showStats(false);

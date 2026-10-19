@@ -219,7 +219,7 @@ function treeFallTick(dt){
     const R=Math.ceil(2.5/CELL);let sx=0,sz=0;
     for(let j=Math.max(0,cj-R);j<=Math.min(N,cj+R);j+=2)for(let i=Math.max(0,ci-R);i<=Math.min(N,ci+R);i+=2){const d=H0[j*V+i]-H[j*V+i];if(d>0.05){sx+=(gX(i)-a.x)*d;sz+=(gZ(j)-a.z)*d}}
     if(!sx&&!sz){sx=Math.cos(a.yaw);sz=Math.sin(a.yaw)}
-    treeFell(a,sx,sz,0)}}
+    treeFell(a,sx,sz,0);stats.treesFelled++;statDirty=true}}
 function treeFallReset(){for(const f of treeFalls)for(const m of f.ims){scene.remove(m);m.dispose()}treeFalls.length=0;treeFallen.clear();
   const g=Object.keys(treeGroups)[0];if(g)treeGroup(g,treeGroups[g])}
 function treeFallSave(){return treeFalls.map(f=>[+f.a.x.toFixed(3),+f.a.z.toFixed(3),+f.dx.toFixed(3),+f.dz.toFixed(3)])}
