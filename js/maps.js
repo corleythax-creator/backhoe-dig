@@ -114,6 +114,7 @@ function drawMap(cv,cx,cz,mpp,big){
   icon(sk.x,sk.z,Math.atan2(Math.cos(sk.yaw),Math.sin(sk.yaw)),'#f2b705',2.8,1.8,mode==='skid');
   icon(bk.x,bk.z,Math.atan2(Math.cos(bk.yaw),Math.sin(bk.yaw)),'#f2b705',2.2,0.8,mode==='bike');
   boats.forEach((b,i)=>icon(b.x,b.z,Math.atan2(Math.cos(b.yaw),Math.sin(b.yaw)),'#f4f3ef',BT_L,BT_B,mode==='boat'&&btI===i));
+  for(const b of lakeBoats)icon(b.x,b.z,Math.atan2(Math.cos(b.yaw),Math.sin(b.yaw)),b.kind==='tug'?'#9e2a22':'#c9ced1',b.hl*2,b.hb*2,false);
   icon(mw.x,mw.z,Math.atan2(Math.cos(mw.yaw),Math.sin(mw.yaw)),'#d8352a',2.2,1.4,mode==='mow');
   icon(tr.x,tr.z,Math.atan2(Math.cos(tr.yaw),Math.sin(tr.yaw)),'#e9ecea',9.1,2.6,mode==='truck');
   icon(st.x,st.z,Math.atan2(Math.cos(hy),Math.sin(hy)),'#f07a22',4.2,3,mode==='dig'||mode==='drive');

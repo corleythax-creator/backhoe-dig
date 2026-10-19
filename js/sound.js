@@ -3,7 +3,8 @@
 // the revs; load opens a filter. Around them: turbo, tires on gravel, air brakes, bed and pump hydraulics, the relief
 // valve, track clank, bucket scrape, pouring dirt and the backup alarm. Each machine is panned and faded by distance
 // from the camera, with a short echo off the cliffs. The mower is a small gas V-twin with blade whine and the chop of
-// cut grass, and rain. No sound files: everything is rendered on the first tap or key.
+// cut grass, and rain. Boats: a V6 outboard, hull slap and the wash along the sides, the tug's diesel and horn.
+// No sound files: everything is rendered on the first tap or key.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 const SND_DEF={on:true,master:70,eng:80,alarm:60,fx:70};
 const sndCfg=Object.assign({},SND_DEF);
@@ -105,8 +106,8 @@ function* sndBuild(){
   snd.master=sndGain(0,snd.comp);
   snd.dry=sndGain(1,snd.master);snd.send=sndGain(0.16);const cv=c.createConvolver();cv.buffer=renderSpace(c);snd.send.connect(cv);cv.connect(snd.master);yield;
   // the three user buses sit inside each machine's voice, so a machine's engine, alarm and effects pan together
-  const T=snd.T=sndVoice(),X=snd.X=sndVoice(),Mw=snd.M=sndVoice(),Sk=snd.S=sndVoice(),Bk=snd.B=sndVoice();
-  for(const v of [T,X,Mw,Sk,Bk]){v.eng=sndGain(0,v.g);v.fx=sndGain(0,v.g);v.alarm=sndGain(0,v.g)}
+  const T=snd.T=sndVoice(),X=snd.X=sndVoice(),Mw=snd.M=sndVoice(),Sk=snd.S=sndVoice(),Bk=snd.B=sndVoice(),Ob=snd.O=sndVoice(),Fb=snd.F=sndVoice(),Tg=snd.G=sndVoice();
+  for(const v of [T,X,Mw,Sk,Bk,Ob,Fb,Tg]){v.eng=sndGain(0,v.g);v.fx=sndGain(0,v.g);v.alarm=sndGain(0,v.g)}
   const tLo=toBuf(c,renderEngine(sr,750,{seed:3,cycles:10,decay:0.0055,jit:0.03,var:0.14,knock:0.8,mech:0.12,crack:0.8,crackF:550,tilt:2,tiltF:250,tilt2:2.5,pipe:6.5,fb:0.5,dry:0.35,
       res:[[68,1.4,1.1],[185,2.6,0.6],[470,3.5,0.32],[1150,3,0.2],[2700,2,0.1]],lp:6200}));yield;
   const tHi=toBuf(c,renderEngine(sr,1650,{seed:4,cycles:20,decay:0.0045,jit:0.02,var:0.08,knock:0.7,mech:0.1,crack:0.8,crackF:550,tilt:2,tiltF:250,tilt2:2.5,pipe:6.5,fb:0.5,dry:0.35,
@@ -132,7 +133,20 @@ function* sndBuild(){
   const bHi=toBuf(c,renderEngine(sr,2000,{seed:18,cycles:20,decay:0.003,jit:0.04,var:0.08,knock:0.3,mech:0.14,crack:1.1,crackF:1500,tilt:2,tiltF:400,tilt2:3,pipe:1.6,fb:0.35,dry:0.45,
       res:[[110,1.5,0.85],[330,2.5,0.75],[900,3,0.5],[2400,2.5,0.3]],lp:9000}));yield;
   snd.engB=sndEngine(bLo,bHi,1000,2000,Bk.eng);
+  // boats: a V6 outboard (renderEngine's six cylinders as they are: 80 Hz at idle, about 250 Hz flat out), smooth and
+  // buzzy through a short underwater exhaust; the far fishing boat runs the same recording, the tug the truck's diesel
+  const oLo=toBuf(c,renderEngine(sr,800,{seed:23,cycles:12,decay:0.003,jit:0.02,var:0.08,knock:0.15,mech:0.25,crack:0.6,crackF:1100,tilt:2,tiltF:350,tilt2:3.5,pipe:1.2,fb:0.25,dry:0.5,
+      res:[[160,1.4,0.7],[520,2.5,0.6],[1300,3,0.45],[3100,2.5,0.25]],lp:7500}));yield;
+  const oHi=toBuf(c,renderEngine(sr,2400,{seed:24,cycles:30,decay:0.0025,jit:0.015,var:0.05,knock:0.15,mech:0.22,crack:0.6,crackF:1300,tilt:2,tiltF:350,tilt2:3.5,pipe:1.2,fb:0.25,dry:0.5,
+      res:[[160,1.4,0.6],[520,2.5,0.65],[1300,3,0.5],[3100,2.5,0.3]],lp:9000}));yield;
+  snd.engO=sndEngine(oLo,oHi,800,2400,Ob.eng);snd.engF=sndEngine(oLo,oHi,800,2400,Fb.eng);snd.engG=sndEngine(tLo,tHi,750,1650,Tg.eng);
+  snd.engO.rpm=snd.engF.rpm=800;snd.engG.rpm=750;
   const noise=toBuf(c,noiseBuf(sr,2,21)),gravel=toBuf(c,renderGravel(sr));yield;
+  // the boat you drive: water rushing along the hull, and slaps as it meets the swells (renderSlap)
+  snd.washG=sndGain(0,Ob.fx);snd.washF=sndFilter('lowpass',400,0.8,snd.washG);sndLoopSrc(noise,snd.washF,0.6);
+  snd.slap=[toBuf(c,renderSlap(sr,51)),toBuf(c,renderSlap(sr,52))];snd.slapT=0;
+  // the tug's horn: two reedy notes a third apart
+  snd.horn=toBuf(c,renderHorn(sr));
   // truck: turbo whistle and spool whoosh, tire roar, gravel crunch, bed hydraulics
   snd.turbo=c.createOscillator();snd.turbo.type='sine';snd.turboG=sndGain(0,T.eng);snd.turbo.connect(snd.turboG);snd.turbo.start();
   snd.whooshG=sndGain(0,T.eng);snd.whooshF=sndFilter('bandpass',2600,1.1,snd.whooshG);sndLoopSrc(noise,snd.whooshF);
@@ -165,6 +179,14 @@ function* sndBuild(){
   snd.trackT=0;snd.beepT=0;snd.boost=0;snd.gear=0;snd.gearT=0;snd.moved=0;snd.bedMax=0;
   snd.ready=true;sndApply();if(!sndCfg.on)c.suspend();
 }
+// a wave slapping a hull: a soft low thump with a splash of spray on top
+function renderSlap(sr,seed){const r=sndRng(seed),n=Math.round(sr*0.35),b=new Float32Array(n);
+  for(let i=0;i<n;i++){const t=i/sr;b[i]=Math.sin(2*Math.PI*(95+40*r())*t)*Math.exp(-t*22)*0.9+(r()*2-1)*Math.exp(-t*30)*0.5}
+  return sndNorm(bqRun(b,bq('lp',1800,0.7,sr)),0.2)}
+// a ship's horn: two sawtooth notes (A2 and C#3) with a slow swell, held about two seconds
+function renderHorn(sr){const n=Math.round(sr*2.6),b=new Float32Array(n);
+  for(let i=0;i<n;i++){const t=i/sr,env=ss(0,0.15,t)*(1-ss(2.1,2.6,t));let v=0;for(const f of [110,138.6])for(let h=1;h<9;h++)v+=Math.sin(2*Math.PI*f*h*t+h)/h;b[i]=v*env}
+  return sndNorm(bqRun(bqRun(b,bq('lp',1400,0.8,sr)),bq('bp',420,0.9,sr)),0.25)}
 // thunder from a strike d metres away: it arrives at the speed of sound, quieter and duller the farther it came
 function sndThunder(d){if(!snd||!snd.ready||!sndCfg.on)return;const near=d<800,t=actx.currentTime+d/343,f=sndFilter('lowpass',near?3000:Math.max(220,1500-d*0.45),0.5,snd.dry);
   sndShot(snd.thunder[near?1:0],f,t,0.85+Math.random()*0.25,Math.min(1,700/d)*sndVol(sndCfg.fx)*1.4);setTimeout(()=>f.disconnect(),(d/343+9)*1000)}
@@ -180,7 +202,7 @@ function sndApply(){
   for(const k of ['master','eng','alarm','fx']){const el=$('#snd_'+k);if(el){el.value=sndCfg[k];$('#snd_'+k+'_v').textContent=sndCfg[k]+'%'}}
   if(!snd||!snd.ready)return;const t=actx.currentTime;
   snd.master.gain.setTargetAtTime(sndCfg.on?sndVol(sndCfg.master)*2.4:0,t,0.03);
-  for(const v of [snd.T,snd.X,snd.M]){v.eng.gain.setTargetAtTime(sndVol(sndCfg.eng),t,0.03);v.fx.gain.setTargetAtTime(sndVol(sndCfg.fx),t,0.03);v.alarm.gain.setTargetAtTime(sndVol(sndCfg.alarm),t,0.03)}
+  for(const v of [snd.T,snd.X,snd.M,snd.S,snd.B,snd.O,snd.F,snd.G]){v.eng.gain.setTargetAtTime(sndVol(sndCfg.eng),t,0.03);v.fx.gain.setTargetAtTime(sndVol(sndCfg.fx),t,0.03);v.alarm.gain.setTargetAtTime(sndVol(sndCfg.alarm),t,0.03)}
 }
 function setSound(on){sndCfg.on=on;sndSave();if(!actx){if(on)sndStart();sndApply();return}
   sndApply();if(on)actx.resume();else setTimeout(()=>{if(!sndCfg.on)actx.suspend()},150)}
@@ -266,4 +288,21 @@ function updateSound(dt){
   // dirt bike: idles while you sit on it; the gas (and the back wheel spinning free in the air) sends the revs up
   const be=snd.engB,bT=1000+1000*Math.min(1,Math.max(0,bk.thr)*(bk.air?1:0.45)+Math.abs(bk.v)/TU.bkSpd*0.6);be.rpm+=(bT-be.rpm)*Math.min(1,dt*(bT>be.rpm?6:3));
   sndEngineTo(be,be.rpm,Math.max(0,bk.thr),quiet*0.6*bk.run,t);
+  // the boat you are in: idles while you are aboard, the throttle and speed send the revs up; water along the hull and
+  // a slap now and then as it meets the swells (often, and harder, the faster it goes; a gentle lap at rest)
+  {const R=WK_RIDES[wk.inside],ob=R&&R.m==='boat'?R.o:null,oe=snd.engO;
+    if(ob){const sy=Math.sin(ob.yaw),cy=Math.cos(ob.yaw);sndPlace(snd.O,ob.x-sy*2.6,ob.y+0.6,ob.z-cy*2.6,t)}
+    const sp=ob?Math.abs(ob.v):0,th=ob?Math.abs(ob.thr||0):0,oT=800+1600*Math.min(1,Math.max(th,sp/TU.btSpeed));oe.rpm+=(oT-oe.rpm)*Math.min(1,dt*(oT>oe.rpm?3:2));
+    sndEngineTo(oe,oe.rpm,th,quiet*(ob?0.75:0),t);
+    snd.washF.frequency.setTargetAtTime(300+70*sp,t,0.1);snd.washG.gain.setTargetAtTime(quiet*(ob?0.05+0.45*ss(0.3,9,sp):0),t,0.15);
+    if(ob&&!bench.on){snd.slapT-=dt*(0.4+sp*0.35+Math.abs(ob.rkv||0)*3);if(snd.slapT<=0){snd.slapT=0.4+Math.random()*1.4;
+      sndShot(snd.slap[Math.random()<0.5?0:1],snd.O.fx,t+0.01,0.85+0.3*Math.random(),(0.25+0.5*ss(0,8,sp))*(0.6+0.4*Math.random()))}}}
+  // the boats out on the lake: the nearest fishing boat's outboard, and the tug's diesel and horn
+  {let nf=null,nd=1e9;for(const b of lakeBoats){if(b.eng!==1)continue;const d=Math.hypot(b.x-camera.position.x,b.z-camera.position.z);if(d<nd){nd=d;nf=b}}
+    const fe=snd.engF;if(nf){sndPlace(snd.F,nf.x,nf.y+0.5,nf.z,t);const fT=900+1100*Math.min(1,nf.v/6);fe.rpm+=(fT-fe.rpm)*Math.min(1,dt*2)}
+    sndEngineTo(fe,fe.rpm,0.4,quiet*(nf?0.55:0),t);
+    const tg=lakeBoats.find(b=>b.kind==='tug'),ge=snd.engG;if(tg){sndPlace(snd.G,tg.x,tg.y+2,tg.z,t);const gT=700+500*Math.min(1,tg.v/2.4);ge.rpm+=(gT-ge.rpm)*Math.min(1,dt*1.5)}
+    sndEngineTo(ge,ge.rpm,0.5,quiet*(tg?0.9:0),t);
+    // a horn carries across the water: it fades with distance far more gently than the engines
+    if(tg&&tg.hornQ){tg.hornQ=false;const d=Math.hypot(tg.x-camera.position.x,tg.z-camera.position.z);sndShot(snd.horn,snd.dry,t+0.05+d/343,1,quiet*sndVol(sndCfg.fx)*1.6*Math.min(1,50/(d+10)))}}
 }
