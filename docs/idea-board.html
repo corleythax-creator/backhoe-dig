@@ -785,6 +785,9 @@ $("wk").addEventListener("input",()=>{const v=+$("wk").value;if(v>0){WK=v;PL=(v=
 $("wt").addEventListener("change",()=>{W=+$("wt").value;save();render()});
 ["q","fs","fp","ff","fo","fd","fh","fph"].forEach(id=>$(id).addEventListener(id==="q"?"input":"change",render));
 document.querySelectorAll(".tbtn").forEach(b=>b.addEventListener("click",()=>{const p=$(b.dataset.p),open=p.hidden;p.hidden=!open;b.setAttribute("aria-expanded",open)}));
+// any dropdown (change or input, whichever the browser fires) redraws the list and the in-progress tab, and the list jumps back to its top
+let rfq=0;function refreshAll(){if(rfq)return;rfq=requestAnimationFrame(()=>{rfq=0;render();renderWip();const bx=$("tb").closest(".tbox");if(bx)bx.scrollTop=0})}
+["change","input"].forEach(ev=>document.addEventListener(ev,e=>{if(e.target&&e.target.tagName==="SELECT"&&!e.target.closest("#phelp"))refreshAll()}));
 $("reset").addEventListener("click",()=>{$("q").value="";$("fs").value="";$("fp").value="0";$("ff").value="0";$("fo").checked=false;$("fph").checked=false;$("fd").value="";$("fh").value="";setGroups([])});
 $("sortp").addEventListener("change",()=>{const v=$("sortp").value;if(v==="c")return;const [k,d]=v.split(":");sortK=k;sortD=+d;save();render()});
 function syncSortp(){const v=sortK+":"+sortD;$("sortp").value=[...$("sortp").options].some(o=>o.value===v)?v:"c"}
