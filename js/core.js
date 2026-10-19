@@ -67,6 +67,9 @@ scene.fog=new THREE.Fog(0xbfd2dd,90,760);
 // gradient sky dome and a hazy mountain ring past the fog
 // afternoon sun from the south-east of the dig, about 40 degrees up
 const SUN_DIR=new THREE.Vector3(13,15,9).normalize();
+// things that keep the rain off (roofs, cabs, buildings, bridges, props, blocks) are also on this layer: rain.js draws
+// them from above into its shelter map
+const RAIN_LAYER=3;
 // skySunVis: how much of the sun disc shows (rain.js clouds it over)
 const skySunVis={value:1};
 const sky=(function(){
@@ -84,7 +87,7 @@ const sky=(function(){
   m.renderOrder=-1;scene.add(m);return m;
 })();
 
-const camera=new THREE.PerspectiveCamera(60,1,0.05,1700);
+const camera=new THREE.PerspectiveCamera(60,1,0.05,2400);
 // warm sun as the key, a cooler and much dimmer sky fill, so shade reads blue-grey and lit faces stand out
 scene.add(new THREE.HemisphereLight(0xb8d0ea,0x5b5a3c,0.5));
 const sun=new THREE.DirectionalLight(0xfff0dc,1.6);

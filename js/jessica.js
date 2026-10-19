@@ -8,7 +8,7 @@ const jesGround=groundPatch(125,275,170,320,1.5,[]);
 const jesRoofMat=M(0xffffff,{vertexColors:true,side:THREE.DoubleSide});
 const JB=BRIDGES[2],jesGlass=new THREE.MeshPhongMaterial({color:0xcfe3ea,transparent:true,opacity:0.22,depthWrite:false,shininess:80});
 let jesPineGeo=null,jesIn=false,jesRoof=null,jesBridgeRoof=null,jesInside=null,jesFire=null;const jesSmoke=[];
-function jesMesh(list,mat,shadow){if(!list.length)return null;const m=new THREE.Mesh(famMerge(list),mat);if(shadow){m.castShadow=true;m.receiveShadow=true}scene.add(m);return m}
+function jesMesh(list,mat,shadow){if(!list.length)return null;const m=new THREE.Mesh(famMerge(list),mat);if(shadow){m.castShadow=true;m.receiveShadow=true;m.layers.enable(RAIN_LAYER)}scene.add(m);return m}
 
 // ---------- the covered bridge ----------
 (function(){

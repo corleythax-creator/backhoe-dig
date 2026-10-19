@@ -128,6 +128,31 @@ function wetSync(){document.querySelectorAll('#wetBar [data-wv]').forEach(b=>b.s
 {const bar=$('#wetBar');for(const [k,n] of WET_OPTS){const b=document.createElement('button');b.dataset.wv=k;b.textContent=n;b.onclick=()=>wetSet(k);bar.appendChild(b)}}
 $('#wetGround').onclick=()=>wetSet(wetView,!wetGround);
 wetSync();
+// shelter: roofs, cabs, buildings, bridges, placed props and blocks keep the rain off. They sit on RAIN_LAYER (core.js);
+// while it rains a camera high above you draws their depth into a small map round you (about 260 ft across), and drops
+// under anything in it are not drawn while splashes land on top of it instead. The machines join on first use
+const RC_N=256,RC_S=80,RC_UP=60,RC_R=140;
+const rcRT=new THREE.WebGLRenderTarget(RC_N,RC_N,{minFilter:THREE.NearestFilter,magFilter:THREE.NearestFilter,generateMipmaps:false});
+const rcCam=new THREE.OrthographicCamera(-RC_S/2,RC_S/2,RC_S/2,-RC_S/2,0.1,RC_R);rcCam.rotation.x=-Math.PI/2;rcCam.layers.set(RAIN_LAYER);
+const rcDepth=new THREE.MeshDepthMaterial({depthPacking:THREE.RGBADepthPacking,side:THREE.DoubleSide});
+// uRC: the map's centre x, z, the camera's height and 1/width; the cover height is that height less depth x RC_R
+const rcU={tCover:{value:rcRT.texture},uRC:{value:new THREE.Vector4(0,0,-1e5,1/RC_S)},uRCR:{value:RC_R}};
+const RC_GLSL='uniform sampler2D tCover;uniform vec4 uRC;uniform float uRCR;\n#include <packing>\n'+
+  'float coverY(vec2 xz){vec2 uv=vec2((xz.x-uRC.x)*uRC.w+0.5,(uRC.y-xz.y)*uRC.w+0.5);if(uv.x<0.0||uv.y<0.0||uv.x>1.0||uv.y>1.0)return -1e5;\n'+
+  'float d=unpackRGBAToDepth(texture2D(tCover,uv));return d>0.999?-1e5:uRC.z-d*uRCR;}\n';
+let rcTagged=false;const rcCol=new THREE.Color();
+function rcRender(){
+  if(!rcTagged){rcTagged=true;for(const g of [machine,truck,skid,mower])g.traverse(o=>{if(o.isMesh&&!o.userData.noCover)o.layers.enable(RAIN_LAYER)})}
+  const c=camera.position,px=RC_S/RC_N,cx=Math.round(c.x/px)*px,cz=Math.round(c.z/px)*px;
+  rcCam.position.set(cx,c.y+RC_UP,cz);rcCam.updateMatrixWorld();
+  // Jessica's roofs lift off while you are under them, but they still keep the rain out
+  const lift=[jesRoof,jesBridgeRoof].filter(m=>m&&!m.visible);for(const m of lift)m.visible=true;
+  const bg=scene.background,au=renderer.shadowMap.autoUpdate,ca=renderer.getClearAlpha(),rt=renderer.getRenderTarget();renderer.getClearColor(rcCol);
+  scene.background=null;scene.overrideMaterial=rcDepth;renderer.shadowMap.autoUpdate=false;renderer.setClearColor(0xffffff,1);
+  renderer.setRenderTarget(rcRT);renderer.render(scene,rcCam);
+  renderer.setRenderTarget(rt);renderer.setClearColor(rcCol,ca);scene.background=bg;scene.overrideMaterial=null;renderer.shadowMap.autoUpdate=au;
+  for(const m of lift)m.visible=false;
+  rcU.uRC.value.set(cx,cz,c.y+RC_UP,1/RC_S)}
 // raindrops: camera-facing streaks in a box that follows the camera, moved by the GPU. Each drop has its own length,
 // speed and a slight slant of its own; the wind (rainWind, in gusts like the grass's) leans them all. A second, fainter
 // layer fills a wider box past the near one, a soft veil (not on Low) of falling rain hangs in the haze further out, and streaks
@@ -135,10 +160,10 @@ wetSync();
 const RD_BOX=new THREE.Vector3(24,16,24),RD_FAR=new THREE.Vector3(80,34,80),RAIN_WD=[0.8,0.6];
 const rainWind=new THREE.Vector2(),rainSunU={value:SUN_DIR},rainSunI={value:1};
 function rainDropMat(box,near,far,wid,alpha){return new THREE.ShaderMaterial({transparent:true,depthWrite:false,fog:false,side:THREE.DoubleSide,
-  uniforms:{uCam:{value:new THREE.Vector3()},uT:{value:0},uBox:{value:box},uA:{value:0},uWind:{value:rainWind},uSun:rainSunU,uSunI:rainSunI,uNear:{value:near},uFar:{value:far},uW:{value:wid},uK:{value:alpha}},
-  vertexShader:'attribute vec3 aP;attribute vec4 aR;uniform vec3 uCam;uniform float uT;uniform vec3 uBox;uniform vec2 uWind;uniform vec3 uSun;uniform float uNear,uFar,uW;varying vec2 vC;varying float vF;varying float vB;\n'+
+  uniforms:Object.assign({uCam:{value:new THREE.Vector3()},uT:{value:0},uBox:{value:box},uA:{value:0},uWind:{value:rainWind},uSun:rainSunU,uSunI:rainSunI,uNear:{value:near},uFar:{value:far},uW:{value:wid},uK:{value:alpha}},rcU),
+  vertexShader:RC_GLSL+'attribute vec3 aP;attribute vec4 aR;uniform vec3 uCam;uniform float uT;uniform vec3 uBox;uniform vec2 uWind;uniform vec3 uSun;uniform float uNear,uFar,uW;varying vec2 vC;varying float vF;varying float vB;\n'+
     'void main(){vec2 corner=position.xy;vec3 vel=vec3(uWind.x*(0.8+0.4*aR.y)+aR.z*0.5,-(7.5+3.0*aR.y),uWind.y*(0.8+0.4*aR.y)+aR.w*0.5);\n'+
-    'vec3 p=uCam+mod(aP*uBox+vel*uT-uCam+uBox*0.5,uBox)-uBox*0.5;vec3 ax=normalize(vel);vec3 tc=uCam-p;float d=length(tc);tc/=d;\n'+
+    'vec3 p=uCam+mod(aP*uBox+vel*uT-uCam+uBox*0.5,uBox)-uBox*0.5;if(p.y<coverY(p.xz)+0.02){gl_Position=vec4(0.0,0.0,-2.0,1.0);return;}vec3 ax=normalize(vel);vec3 tc=uCam-p;float d=length(tc);tc/=d;\n'+
     'vec3 sd=normalize(cross(ax,tc));float L=(0.35+0.45*aR.x)*(0.8+0.4*aR.y);\n'+
     'vec3 w=p-ax*L*corner.y+sd*max(uW,d*0.0016)*corner.x;vC=corner;\n'+
     'vF=smoothstep(0.6,2.0,d)*(uNear>0.0?smoothstep(uNear*0.7,uNear,d):1.0)*(1.0-smoothstep(uFar*0.7,uFar,d));\n'+
@@ -169,13 +194,15 @@ const rainVeil=new THREE.Mesh(new THREE.CylinderGeometry(58,58,60,48,1,true),rai
 // fade on puddles and the lake. One instanced draw; spawned on the CPU into a ring buffer
 const SP_LIFE=[0.28,0.9];
 const rsMat=new THREE.ShaderMaterial({transparent:true,depthWrite:false,fog:false,side:THREE.DoubleSide,
-  uniforms:{uCam:{value:new THREE.Vector3()},uT:{value:0},uSunI:rainSunI},
-  vertexShader:'attribute vec4 aS;attribute vec3 aK;uniform vec3 uCam;uniform float uT;varying vec2 vC;varying float vAge;varying float vKind;varying float vSeed;varying float vF;\n'+
-    'void main(){vec2 corner=position.xy;float life=aK.x>0.5?'+SP_LIFE[1].toFixed(2)+':'+SP_LIFE[0].toFixed(2)+';float t=(uT-aS.w)/life;vAge=t;vKind=aK.x;vSeed=aK.z;vC=corner;\n'+
+  uniforms:Object.assign({uCam:{value:new THREE.Vector3()},uT:{value:0},uSunI:rainSunI},rcU),
+  vertexShader:RC_GLSL+'attribute vec4 aS;attribute vec3 aK;uniform vec3 uCam;uniform float uT;varying vec2 vC;varying float vAge;varying float vKind;varying float vSeed;varying float vF;\n'+
+    // under a roof the drop lands on the roof: a crown up there instead
+    'void main(){vec2 corner=position.xy;vec3 b=aS.xyz;float kind=aK.x,cy=coverY(b.xz);if(cy>b.y+0.25){b.y=cy+0.01;kind=0.0;}\n'+
+    'float life=kind>0.5?'+SP_LIFE[1].toFixed(2)+':'+SP_LIFE[0].toFixed(2)+';float t=(uT-aS.w)/life;vAge=t;vKind=kind;vSeed=aK.z;vC=corner;\n'+
     'vec3 w;if(t<0.0||t>1.0){gl_Position=vec4(0.0,0.0,-2.0,1.0);return;}\n'+
-    'if(aK.x>0.5){w=aS.xyz+vec3(corner.x,0.0,corner.y)*aK.y;}\n'+
-    'else{vec2 f=normalize(uCam.xz-aS.xz);w=aS.xyz+vec3(-f.y,0.0,f.x)*corner.x*aK.y+vec3(0.0,(corner.y*0.5+0.5)*aK.y*1.1,0.0);}\n'+
-    'vF=1.0-smoothstep(9.0,13.0,distance(uCam,aS.xyz));gl_Position=projectionMatrix*viewMatrix*vec4(w,1.0);}',
+    'if(kind>0.5){w=b+vec3(corner.x,0.0,corner.y)*aK.y;}\n'+
+    'else{vec2 f=normalize(uCam.xz-b.xz);float sz=min(aK.y,0.18);w=b+vec3(-f.y,0.0,f.x)*corner.x*sz+vec3(0.0,(corner.y*0.5+0.5)*sz*1.1,0.0);}\n'+
+    'vF=1.0-smoothstep(9.0,13.0,distance(uCam,b));gl_Position=projectionMatrix*viewMatrix*vec4(w,1.0);}',
   fragmentShader:'uniform float uSunI;varying vec2 vC;varying float vAge;varying float vKind;varying float vSeed;varying float vF;\n'+
     'void main(){float t=vAge,a=0.0;\n'+
     'if(vKind>0.5){float r=length(vC),r1=t*0.95,r2=(t-0.22)*0.7;\n'+
@@ -222,8 +249,73 @@ function rainFxTick(dt){const r=weather.r,v=ss(0,0.6,r);
   // the breeze under the rain, in gusts that roll over the island like the grass's (mower.js)
   const t=timeU.value,c=camera.position,gu=Math.pow(0.5+0.5*Math.sin((c.x*RAIN_WD[0]+c.z*RAIN_WD[1])*0.42-t*1.9+1.5*Math.sin((-0.6*c.x+0.8*c.z)*0.11+t*0.23)),3);
   rainWind.set(RAIN_WD[0],RAIN_WD[1]).multiplyScalar(TU.rainWind*(0.7+0.9*gu));
-  const on=r>0.03;rsTick(dt,on?r:0);
+  const on=r>0.03;rsTick(dt,on?r:0);wsTick(dt,r);
   if(!rainLines)return;const off=rainLines.userData.off;rainLines.visible=rainFar.visible=on&&!off;rainVeil.visible=on&&!off&&!rainVeil.userData.off;if(!rainLines.visible)return;
   const a=0.6*ss(0.03,0.5,r);
   for(const m of [rainMat,rainFarMat]){m.uniforms.uCam.value.copy(c);m.uniforms.uT.value=(m.uniforms.uT.value+dt)%1000;m.uniforms.uA.value=a}
   rainVeil.position.set(c.x,c.y,c.z);rainVeilMat.uniforms.uT.value=(rainVeilMat.uniforms.uT.value+dt)%1000;rainVeilMat.uniforms.uA.value=0.5*ss(0.1,0.8,r);rainVeilMat.uniforms.uC.value.copy(scene.fog.color)}
+// the shelter map is drawn just before each frame (main.js), so the cabs it holds are where the machines are now
+function rainCover(){if(weather.r>0.03&&(rsMesh||rainLines&&!rainLines.userData.off))rcRender()}
+
+// ---------- the windscreens: drops on the glass, and wipers ----------
+// The excavator's front window and the truck's windscreen bead up with drops while it rains and dry off slowly after.
+// The wipers (key [wipers], or the Wipers button) sweep the machine you are in: each blade clears the strip it passes
+// over, and drops build up again behind it. How wet each strip is lives in wsW: 24 strips per blade across its sweep,
+// then one for the glass no blade reaches. A blade parks where it started when they go off. The drops are drawn on a
+// plane just outside the glass, in the glass's own metres; the Graphics setting only drops the running drops on Low
+const WS_BINS=24;
+const WS=[{par:cab,mode:'dig',pos:[0,0.92,0.628],w:0.84,h:1.1,
+    blades:[{g:exWiper,px:0.3,py:0.74-0.92,len:0.6,ph0:Math.PI/2,s:1,a0:-0.15,a1:1.3}]},
+  {par:tBody,mode:'truck',pos:[0,2.5,2.642],w:2.0,h:0.55,
+    blades:[{g:trWipers[0],px:-0.15,py:2.255-2.5,len:0.7,ph0:Math.PI,s:-1,a0:0.08,a1:1.45},{g:trWipers[1],px:0.15,py:2.255-2.5,len:0.7,ph0:0,s:1,a0:0.08,a1:1.45}]}];
+const WS_GLSL_DROP='vec4 wsDrop(vec2 q,float r,float lit){float d=length(q)/r;if(d>1.0)return vec4(0.0);vec2 n=q/r;\n'+
+  // a bead of water: the far side of the bead dark, light gathered low in it, a bright glint high on one side
+  'float rim=smoothstep(0.5,1.0,d),gl=smoothstep(0.34,0.0,length(n-vec2(-0.35,0.42)));\n'+
+  'vec3 c=mix(vec3(0.8,0.85,0.9)*(0.8+0.2*n.y*-1.0),vec3(0.1,0.12,0.14),rim*(n.y>0.0?0.85:0.45))+gl*(0.55+0.6*lit);\n'+
+  'return vec4(c,(0.16+0.5*rim+0.7*gl)*smoothstep(1.0,0.82,d));}\n';
+function wsMake(ws){
+  ws.W=new Float32Array(WS_BINS*2+1);ws.px=new Uint8Array(64*4);ws.tex=new THREE.DataTexture(ws.px,64,1,THREE.RGBAFormat);
+  ws.tex.magFilter=ws.tex.minFilter=THREE.NearestFilter;ws.ph=0;ws.prev=ws.blades.map(b=>b.a0);
+  const bp=[0,1].map(i=>{const b=ws.blades[i]||ws.blades[0];return new THREE.Vector4(b.px,b.py,ws.blades[i]?b.len:0,0)}),
+    ba=[0,1].map(i=>{const b=ws.blades[i]||ws.blades[0];return new THREE.Vector4(b.a0,b.a1,b.ph0,b.s)});
+  ws.mat=new THREE.ShaderMaterial({transparent:true,depthWrite:false,side:THREE.DoubleSide,
+    uniforms:{tW:{value:ws.tex},uBp:{value:bp},uBa:{value:ba},uT:{value:0},uH:{value:ws.h},uRun:{value:1},uSunI:rainSunI},
+    vertexShader:'varying vec2 vP;void main(){vP=position.xy;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
+    fragmentShader:'uniform sampler2D tW;uniform vec4 uBp[2];uniform vec4 uBa[2];uniform float uT,uH,uRun,uSunI;varying vec2 vP;\n'+
+      'float hs(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}\n'+
+      'float bin(float k){return texture2D(tW,vec2((k+0.5)/64.0,0.5)).r;}\n'+
+      // how wet the glass is at p: the strip of the blade that reaches it, or the glass no blade reaches
+      'float wetAt(vec2 p){for(int i=0;i<2;i++){vec2 d=p-uBp[i].xy;float L=length(d);if(L<uBp[i].z&&L>uBp[i].z*0.12){\n'+
+      '  float th=uBa[i].w*(atan(d.y,d.x)-uBa[i].z);th=mod(th+3.14159,6.28318)-3.14159;float f=(th-uBa[i].x)/(uBa[i].y-uBa[i].x);\n'+
+      '  if(f>-0.03&&f<1.03)return bin(float(i)*'+WS_BINS+'.0+clamp(floor(f*'+WS_BINS+'.0),0.0,'+(WS_BINS-1)+'.0));}}\n'+
+      '  return bin('+(WS_BINS*2)+'.0);}\n'+WS_GLSL_DROP+
+      'void main(){vec4 o=vec4(0.0);const float C=0.016;vec2 c=floor(vP/C),f=vP-(c+0.5)*C;float w=wetAt((c+0.5)*C);\n'+
+      'if(hs(c)<w*0.8){float r=C*(0.16+0.28*hs(c+7.1));vec2 j=(vec2(hs(c+3.3),hs(c+5.7))-0.5)*(C-2.0*r);o=wsDrop(f-j,r,uSunI);}\n'+
+      // a few bigger drops run down the glass, wandering a little, with a thin wet trail above them
+      'if(uRun>0.5){const float R=0.045;float ci=floor(vP.x/R),hc=hs(vec2(ci,1.7));if(hc>0.72){\n'+
+      '  float yd=uH*0.5-mod(uT*(0.03+0.06*hs(vec2(ci,4.1)))+hc*7.0,uH+0.2),xd=(ci+0.5)*R+0.008*sin(yd*30.0+hc*20.0);\n'+
+      '  if(wetAt(vec2(xd,yd))>0.45){vec4 b=wsDrop(vP-vec2(xd,yd),0.0055,uSunI);if(b.a>o.a)o=b;\n'+
+      '    float tr=vP.y-yd;if(tr>0.0&&tr<0.09&&abs(vP.x-xd-0.008*sin(vP.y*30.0+hc*20.0)+0.008*sin(yd*30.0+hc*20.0))<0.0013)o=max(o,vec4(0.85,0.88,0.92,0.22*(1.0-tr/0.09)));}}}\n'+
+      'o.a=max(o.a,w*0.06);gl_FragColor=o;}'});
+  ws.mesh=new THREE.Mesh(new THREE.PlaneGeometry(ws.w,ws.h),ws.mat);ws.mesh.position.set(...ws.pos);ws.mesh.renderOrder=4;
+  ws.mesh.visible=false;ws.mesh.userData.noCover=true;ws.par.add(ws.mesh)}
+for(const ws of WS)wsMake(ws);
+let wipeOn=false,wipeTipped=false;
+function setWipers(on){wipeOn=!!on;const b=$('#wipeBtn');b.textContent=wipeOn?'Wipers: on':'Wipers';b.setAttribute('aria-pressed',wipeOn)}
+$('#wipeBtn').onclick=()=>setWipers(!wipeOn);
+// blade angle at a point in its cycle (0-1: out and back)
+const wsAng=(b,ph)=>b.a0+(b.a1-b.a0)*(0.5-0.5*Math.cos(ph*Math.PI*2));
+function wsTick(dt,r){let wetMax=0;
+  for(const ws of WS){const W=ws.W,run=mode===ws.mode&&wipeOn;
+    // rain wets the glass, faster in a downpour; out of the rain it dries over a few minutes
+    for(let k=0;k<W.length;k++)W[k]=r>0.02?W[k]+r*0.09*dt*(1-W[k]):Math.max(0,W[k]-dt/240);
+    if(run||ws.ph>0){const p0=ws.ph;ws.ph+=dt/1.5;if(ws.ph>=1)ws.ph=run?ws.ph%1:0;if(!run&&p0>0&&ws.ph<p0)ws.ph=0;
+      ws.blades.forEach((b,i)=>{const a=wsAng(b,ws.ph),f0=(Math.min(a,ws.prev[i])-b.a0)/(b.a1-b.a0),f1=(Math.max(a,ws.prev[i])-b.a0)/(b.a1-b.a0);
+        for(let k=Math.max(0,Math.floor(f0*WS_BINS));k<=Math.min(WS_BINS-1,Math.floor(f1*WS_BINS));k++)W[i*WS_BINS+k]=0;
+        ws.prev[i]=a;b.g.rotation.z=b.s*a})}
+    let m=0;for(let k=0;k<W.length;k++){ws.px[k*4]=Math.round(W[k]*255);m=Math.max(m,W[k])}ws.tex.needsUpdate=true;
+    ws.mesh.visible=m>0.01;if(ws.mesh.visible){ws.mat.uniforms.uT.value=(ws.mat.uniforms.uT.value+dt)%1000;ws.mat.uniforms.uRun.value=gfxCur.tex==='low'?0:1}
+    if(mode===ws.mode)wetMax=m}
+  // the button shows in the excavator and the truck while it rains, or while the glass is wet or the wipers run
+  const show=WS.some(ws=>ws.mode===mode)&&(r>0.03||wetMax>0.1||wipeOn),bt=$('#wipeBtn');if(bt.hidden===show)bt.hidden=!show;
+  if(!wipeTipped&&!wipeOn&&camMode==='cab'&&wetMax>0.4){wipeTipped=true;toast(say('wipeTip'),'',4000)}}
