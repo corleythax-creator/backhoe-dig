@@ -6,12 +6,12 @@
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 const ed={tool:'raise',group:'shape',gtool:{shape:'raise',paint:'paint',things:'select',roads:'roads',inspect:'query'},size:15*FT,str:5,kind:'pine',mat:10,square:false,soft:false,keep:false,feather:0.5,x:0,z:10,yaw:0,pitch:0.95,dist:45,
   stroke:null,flatH:0,road:null,rpt:-1,drawing:false,roadSnap:null,bx:0,bz:0,hover:false,pend:null,refT:0,sel:[],drag:null,snap:null,changed:false,saveT:0,undo:[],redo:[],
-  look:false,pane:'',drawer:true,boxMode:false,box:null,lp:null,fly:null,home:null,grp:false,listF:'all',open:{},statT:0,listT:0,place:'one',gap:12,dens:5,erase:false,scat:null,
+  look:false,pane:'',drawer:true,boxMode:false,box:null,lp:null,fly:null,home:null,grp:false,listF:'all',open:{},statT:0,listT:0,place:'one',gap:12,dens:5,erase:false,scat:null,meas:[],measClosed:false,
   grid:0,cur:null,curMouse:false,clip:null,xf:null,knob:null,hYaw:0,nudgeT:0,rowOpen:false,rowN:4,rowGap:0,rowDir:'along'};
-const ED_TOOLS={raise:'Raise',lower:'Lower',flatten:'Flatten',smooth:'Smooth',dirt:'Worked dirt',grass:'Grass',select:'Select',add:'Add',query:'Query',roads:'Roads',paint:'Paint'};
+const ED_TOOLS={raise:'Raise',lower:'Lower',flatten:'Flatten',smooth:'Smooth',dirt:'Worked dirt',grass:'Grass',select:'Select',add:'Add',query:'Query',measure:'Measure',roads:'Roads',paint:'Paint'};
 // the left bar's groups: their tools (picked in the bottom bar, or for Paint by the library's swatches), and whether the
 // drawer beside the bar has a part for them (the material library, the things to add and the On the map list, the roads)
-const ED_GROUPS={shape:{tools:['raise','lower','flatten','smooth']},paint:{tools:['paint','dirt','grass'],pane:1},things:{tools:['select','add'],pane:1},roads:{tools:['roads'],pane:1},inspect:{tools:['query']}};
+const ED_GROUPS={shape:{tools:['raise','lower','flatten','smooth']},paint:{tools:['paint','dirt','grass'],pane:1},things:{tools:['select','add'],pane:1},roads:{tools:['roads'],pane:1},inspect:{tools:['query','measure']}};
 const ED_KIND_CATS=['Trees and rocks','Buildings','Fencing','Site gear','Yard'];
 // the editor's icons (24 px, drawn with lines), put in front of the words of every part with a data-ic
 const ED_ICONS={done:'M15 5l-7 7 7 7',undo:'M9 14L4 9l5-5M4 9h10a6 6 0 010 12h-3',redo:'M15 14l5-5-5-5M20 9H10a6 6 0 000 12h3',
@@ -27,7 +27,9 @@ edIcons($('#editor'));
 const ED_BRUSH=['raise','lower','flatten','smooth','dirt','grass','paint'];
 const ED_KINDS={pine:'Pine tree',leafy:'Leafy tree',rock:'Boulder'};
 // the machines and the walker can be picked and moved: their state, scene object and pick radius
-const ED_MACH=[{name:'Excavator',o:()=>st,m:()=>machine,r:2.6},{name:'Dump truck',o:()=>tr,m:()=>truck,r:3.6},{name:'Mower',o:()=>mw,m:()=>mower,r:1.2},{name:'Skid steer',o:()=>sk,m:()=>skid,r:1.6},{name:'You, on foot',o:()=>wk,m:()=>walker,r:0.8}];
+// (home: where each starts, for Back to start)
+const ED_MACH=[{name:'Excavator',o:()=>st,m:()=>machine,r:2.6,home:()=>START},{name:'Dump truck',o:()=>tr,m:()=>truck,r:3.6,home:()=>TR_START},{name:'Mower',o:()=>mw,m:()=>mower,r:1.2,home:()=>MW_START},
+  {name:'Skid steer',o:()=>sk,m:()=>skid,r:1.6,home:()=>SK_START},{name:'You, on foot',o:()=>wk,m:()=>walker,r:0.8,home:()=>WK_START}];
 const edFt=m=>m/FT,edFmt=(m,d)=>(m/FT).toFixed(d===undefined?1:d);
 // spots are given from the trench's middle, so the grid lines up with the numbers shown
 const ED_ZM=(TRENCH_Z0+TRENCH_Z1)/2;
@@ -51,7 +53,7 @@ function editorOpen(){if(edOn||bench.on)return;edOn=true;mapAssets=assets;
   ed.home={x:ed.x,z:ed.z,yaw:ed.yaw,dist:ed.dist,pitch:ed.pitch};ed.drawer=!edNarrow();ed.pane=ED_GROUPS[ed.group].pane?ed.group:'';
   edTool(ed.tool);edCard(null);edSelSet([]);edMapsDraw();edUndoBtns();toast('Map editor. The game is paused while you edit.','',2600)}
 function editorClose(){if(!edOn)return;$('#edHistList').hidden=true;edStrokeEnd();edScatterEnd();edRoadFinish();edOn=false;document.body.classList.remove('editing');$('#editor').hidden=true;
-  edBrushRing.visible=edSelRings.visible=edSoftRing.visible=edHRing.visible=edHKnob.visible=false;ed.sel=[];ed.box=null;ed.lp=null;$('#edBox').hidden=true;ed.road=null;ed.rpt=-1;edRoadsDraw();clearKeys();firstCam=true;last=performance.now();
+  edBrushRing.visible=edSelRings.visible=edSoftRing.visible=edHRing.visible=edHKnob.visible=edMeasDots.visible=edMeasLine.visible=false;ed.sel=[];ed.box=null;ed.lp=null;$('#edBox').hidden=true;ed.road=null;ed.rpt=-1;edRoadsDraw();clearKeys();firstCam=true;last=performance.now();
   if(assets.some(a=>a.hd)){for(const a of assets)delete a.hd;assetsBuild();shpTreesRefresh();edHiddenSync()}
   if(ed.changed){edSave();mapReset();mapDirty=true;ed.changed=false}}
 $('#edDone').onclick=editorClose;
@@ -65,7 +67,7 @@ function edTool(t){if(t!=='roads'){edRoadFinish();ed.road=null;ed.rpt=-1}ed.tool
   document.querySelectorAll('#edOpts [data-for]').forEach(el=>el.hidden=!el.dataset.for.split(' ').includes(t));
   $('#edSoftOpt').hidden=!(t==='paint'&&ed.soft);edPlaceSync();
   if(t!=='query')edCard(null);edBrushRing.visible=edSoftRing.visible=false;if(t==='roads')edRoadCard();edRoadsDraw();
-  edMatMark();edKindMark();edPaneSync();edTipSet();if(edOn)edRingSel()}
+  edMatMark();edKindMark();edPaneSync();edTipSet();if(edOn){edRingSel();edMeasDraw()}}
 // tapping the picked group again folds the drawer away (or the bottom bar's options, for a group without a drawer part)
 function edGroup(g){const G=ED_GROUPS[g];
   if(g===ed.group&&ed.pane!=='map'){if(G.pane)ed.drawer=!ed.drawer;else{const o=$('#edOpts');o.hidden=!o.hidden}edPaneSync();return}
@@ -358,7 +360,7 @@ function edInspector(){const S=ed.sel,el=$('#edInfo');edBottomSync();if(!S.lengt
   const F=edFams(),fams={};for(const a of as){const f=edFam(a.t);if(f)(fams[f]=fams[f]||[]).push(a)}
   for(const f in fams){const T=F[f],cs=new Set(fams[f].map(a=>a.c%T.c.length));
     h+=`<span class="edopt"><label>${T.n}</label><span class="edsw">${T.c.map((q,i)=>`<button class="edswb" data-f="${f}" data-c="${i}" aria-pressed="${cs.size===1&&cs.has(i)}" aria-label="${T.n} colour ${i+1}" style="background:rgb(${q.map(v=>Math.round(Math.min(1,v)*255)).join(',')})"></button>`).join('')}</span></span>`}
-  h+=`<span class="row">${as.length?`<button id="edSelCopy" class="sm edico" data-ic="copy">Duplicate</button><button id="edSelClip" class="sm">Copy</button><button id="edRowBtn" class="sm" aria-pressed="${ed.rowOpen}">Row</button><button id="edSelDel" class="sm danger edico" data-ic="trash">Delete</button>`:'<span class="hint">Drag it to move it.</span>'}<button id="edSelX" class="sm">Clear</button></span>`+(L.length?edHideLockRow(L):'');
+  h+=`<span class="row">${as.length?`<button id="edSelCopy" class="sm edico" data-ic="copy">Duplicate</button><button id="edSelClip" class="sm">Copy</button><button id="edRowBtn" class="sm" aria-pressed="${ed.rowOpen}">Row</button><button id="edSelDel" class="sm danger edico" data-ic="trash">Delete</button>`:'<span class="hint">Drag it to move it.</span>'}${S.some(s=>s.m)?'<button id="edMachHome" class="sm">Back to start</button>':''}<button id="edSelX" class="sm">Clear</button></span>`+(L.length?edHideLockRow(L):'');
   // Row: copies of the selection in a line, along the first one's width or across it, end to end or at a spacing
   if(as.length&&ed.rowOpen)h+=edSlider('edRowN','Copies',1,30,1,ed.rowN,'')+edSlider('edRowGap','Spacing',0,60,1,ed.rowGap,'')+
     `<span class="row" role="group" aria-label="Row direction"><button class="sm" data-rd="along" aria-pressed="${ed.rowDir==='along'}">Along</button><button class="sm" data-rd="across" aria-pressed="${ed.rowDir==='across'}">Across</button></span><button id="edRowGo" class="sm go">Make row</button>`;
@@ -387,7 +389,8 @@ function edInspector(){const S=ed.sel,el=$('#edInfo');edBottomSync();if(!S.lengt
   const gb=$('#edSelGrp');if(gb)gb.onclick=()=>{ed.grp=!ed.grp;edInspector()};
   el.querySelectorAll('.edswb').forEach(b=>b.onclick=()=>{const snap=edAssetsSnap();for(const a of fams[b.dataset.f])a.c=+b.dataset.c;edAssetsChanged(snap);edInspector()});
   const cb=$('#edSelCopy');if(cb){cb.onclick=edCopy;$('#edSelDel').onclick=edDelete}
-  $('#edSelX').onclick=()=>edSelSet([]);if(L.length)edHideLockWire(el,L)}
+  $('#edSelX').onclick=()=>edSelSet([]);if(L.length)edHideLockWire(el,L);
+  const mh=$('#edMachHome');if(mh)mh.onclick=()=>{for(const s of ed.sel)if(s.m)edMachHome(s.m);edRingSel();edInspector()}}
 // Hide (H) leaves things out of the view while the editor is open, to get at what is behind them; it is not saved, and
 // they come back when the editor closes or their row in On the map is tapped. Lock (L) is saved with the map: a locked
 // thing can't be picked on the ground or in a box, moved, turned, sized, copied or deleted (Delete every kind leaves it)
@@ -412,6 +415,8 @@ function edDelete(){const as=edSelA();if(!as.length)return;const b=edAssetsSnap(
 // moves a machine (or the walker) to a spot on the mesa and sets it down on the ground there
 function edPlaceMachine(m,x,z){const o=m.o();[x,z]=landClamp(x,z,4,2);
   o.x=x;o.z=z;if(o===tr)tr.v=0;const y=surfAt(x,z);o.y=y;m.m().position.set(x,y,z)}
+// a machine (or the walker) back where it starts the game, facing the way it starts
+function edMachHome(m){const h=m.home(),o=m.o();edPlaceMachine(m,h.x,h.z);o.yaw=h.yaw;if(o===wk)wk.view=h.yaw;m.m().rotation.y=h.yaw}
 
 // ---------- On the map: every thing and machine by kind, in the Things drawer ----------
 const edShortSpot=(x,z)=>{const s=z-(TRENCH_Z0+TRENCH_Z1)/2;return `${edFmt(Math.abs(x),0)} ft ${x<0?'W':'E'}, ${edFmt(Math.abs(s),0)} ft ${s<0?'N':'S'}`};
@@ -430,7 +435,8 @@ function edListDraw(){const el=$('#edList');if($('#edDrawer').hidden||ed.pane!==
     if(!open)continue;
     h+='<div class="edlrows">'+shown.slice(0,200).map(q=>`<div class="edlr"><button class="edlck" data-k="${q.k}" aria-pressed="${edIn(q.h)}" aria-label="Add to the selection"></button><button class="edlrn" data-k="${q.k}"><span>${q.label}</span><small>${edShortSpot(q.x,q.z)}</small></button>${q.h.a?`<button class="edlhd" data-hd="${q.k}" aria-pressed="${!!q.h.a.hd}" aria-label="Hide while editing" title="Hide while editing">👁</button><button class="edlhd" data-lk="${q.k}" aria-pressed="${!!q.h.a.lk}" aria-label="Lock" title="Lock">🔒</button>`:''}</div>`).join('')+
       (shown.length>200?`<p class="hint">and ${shown.length-200} more: pick Near the view to see the ones close by</p>`:'')+'</div>';
-    if(t){const ah=items.every(q=>q.h.a.hd),al=items.every(lk);h+=`<div class="row edlact"><button class="sm" data-hdall="${t}" aria-pressed="${ah}">${ah?'Show':'Hide'} them</button><button class="sm" data-lkall="${t}" aria-pressed="${al}">${al?'Unlock':'Lock'} them</button><button class="sm danger" data-del="${t}">Delete every ${name.toLowerCase()}${items.some(lk)?' not locked':''}</button>${ED_KINDS[t]?`<button class="sm" data-def="${t}">Put back the first ones</button>`:''}</div>`}}
+    if(t){const ah=items.every(q=>q.h.a.hd),al=items.every(lk);h+=`<div class="row edlact"><button class="sm" data-hdall="${t}" aria-pressed="${ah}">${ah?'Show':'Hide'} them</button><button class="sm" data-lkall="${t}" aria-pressed="${al}">${al?'Unlock':'Lock'} them</button><button class="sm danger" data-del="${t}">Delete every ${name.toLowerCase()}${items.some(lk)?' not locked':''}</button>${ED_KINDS[t]?`<button class="sm" data-def="${t}">Put back the first ones</button>`:''}</div>`}
+    if(id==='m')h+='<div class="row edlact"><button class="sm" data-home="all">Every machine back to its start spot</button></div>'}
   el.innerHTML=edTreeBlock()+(h||'<p class="hint">Nothing to show.</p>');const td=el.querySelector('.edtrees');if(td)td.ontoggle=()=>{ed.treeOpen=td.open};$('#edListN').textContent=`${assets.length} things`;
   el._g=groups}
 document.querySelectorAll('.edfilter button').forEach(b=>b.onclick=()=>{ed.listF=b.dataset.f;document.querySelectorAll('.edfilter button').forEach(c=>c.setAttribute('aria-pressed',c===b));edListDraw()});
@@ -440,6 +446,7 @@ $('#edList').onclick=e=>{const b=e.target.closest('button');if(!b)return;const e
   if(b.dataset.hd||b.dataset.lk){const h=edRowHit(b.dataset.hd||b.dataset.lk);if(h&&h.a){if(b.dataset.hd)edHide([h.a],!h.a.hd);else edLock([h.a],!h.a.lk)}return}
   if(b.dataset.hdall||b.dataset.lkall){const t=b.dataset.hdall||b.dataset.lkall,as=assets.filter(a=>a.t===t);
     if(b.dataset.hdall)edHide(as,!as.every(a=>a.hd));else edLock(as,!as.every(a=>a.lk));return}
+  if(b.dataset.home){for(const m of ED_MACH)if(m.m().visible)edMachHome(m);edRingSel();edInspector();toast('The machines are back where they start.','',2200);return}
   if(ed.tool!=='select')edTool('select');
   // Select all picks the whole kind (or lets go of it, if it is all picked already)
   if(b.classList.contains('edlgs')){const hs=grp(b.dataset.g).map(q=>q.h).filter(h=>!h.a||!h.a.hd),all=hs.every(edIn),keys=new Set(hs.map(edKey));
@@ -559,6 +566,36 @@ function edRoadCard(){const ob=$('#edRoadNew'),fb=$('#edRoadFin');if(ob){ob.hidd
   $('#edRdDel').onclick=()=>edRoadDelete(true)}
 $('#edRoadNew').onclick=edRoadNew;$('#edRoadFin').onclick=edRoadFinish;
 
+// ---------- Measure (Inspect): tap points on the ground for the length of the path and, with three or more, the area
+// inside it; drag a point to move it, tap the first point (or Close) to close the shape. Snap puts points on the grid ----------
+const edMeasDots=edDots(0x7fe3ff,17,64),edMeasLine=(function(){const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(8000*3),3));g.setDrawRange(0,0);
+  const l=new THREE.Line(g,new THREE.LineBasicMaterial({color:0x7fe3ff,depthTest:false,transparent:true,fog:false,toneMapped:false}));l.renderOrder=21;l.frustumCulled=false;l.visible=false;scene.add(l);return l})();
+function edMeasPtAt(cx,cy){const rc=canvas.getBoundingClientRect();let best=-1,bd=24*24;
+  ed.meas.forEach((q,i)=>{edV.set(q[0],hAt(q[0],q[1])+0.3,q[1]).project(camera);if(edV.z>1)return;const d=((edV.x+1)/2*rc.width+rc.left-cx)**2+((1-edV.y)/2*rc.height+rc.top-cy)**2;if(d<bd){bd=d;best=i}});return best}
+function edMeasDown(p,cx,cy){const i=edMeasPtAt(cx,cy);
+  if(i===0&&ed.meas.length>2&&!ed.measClosed){ed.measClosed=true;edMeasDraw();return}
+  if(i>=0){ed.drag={meas:i};return}
+  if(ed.meas.length>=64)return;ed.meas.push(edSnapXZ(p.x,p.z));ed.drag={meas:ed.meas.length-1};edMeasDraw()}
+function edMeasClear(){ed.meas=[];ed.measClosed=false;edMeasDraw()}
+const edArea=P=>{let a=0;for(let i=0;i<P.length;i++){const p=P[i],q=P[(i+1)%P.length];a+=p[0]*q[1]-q[0]*p[1]}return Math.abs(a)/2};
+// the line over the ground (to the pointer too, while it moves, when cur is given) and the card with the numbers
+function edMeasDraw(cur){const on=edOn&&ed.tool==='measure',P=on?ed.meas:[],L=P.slice();if(on&&cur&&!ed.measClosed&&P.length)L.push([cur.x,cur.z]);if(ed.measClosed)L.push(P[0]);
+  edDotsSet(edMeasDots,P);const a=edMeasLine.geometry.attributes.position;let n=0;
+  for(let i=0;i<L.length-1;i++){const p=L[i],q=L[i+1],k=Math.max(1,Math.ceil(Math.hypot(q[0]-p[0],q[1]-p[1])));
+    for(let j=(i?1:0);j<=k&&n<a.count;j++){const x=p[0]+(q[0]-p[0])*j/k,z=p[1]+(q[1]-p[1])*j/k;a.array[n*3]=x;a.array[n*3+1]=hAt(x,z)+0.25;a.array[n*3+2]=z;n++}}
+  a.needsUpdate=true;edMeasLine.geometry.setDrawRange(0,n);edMeasLine.visible=n>1;if(!on)return;
+  let len=0,grd=0;for(let i=0;i<L.length-1;i++){const p=L[i],q=L[i+1],k=Math.max(1,Math.ceil(Math.hypot(q[0]-p[0],q[1]-p[1])));len+=Math.hypot(q[0]-p[0],q[1]-p[1]);
+    for(let j=0;j<k;j++){const x0=p[0]+(q[0]-p[0])*j/k,z0=p[1]+(q[1]-p[1])*j/k,x1=p[0]+(q[0]-p[0])*(j+1)/k,z1=p[1]+(q[1]-p[1])*(j+1)/k;grd+=Math.hypot(x1-x0,z1-z0,hAt(x1,z1)-hAt(x0,z0))}}
+  if(cur&&P.length&&!ed.measClosed){$('#edStatInfo').textContent=`${edFmt(len,1)} ft to here`;return}
+  if(!P.length){edCard(`<h3>Measure</h3><p class="hint">${say('edTip_measure')}</p>`);return}
+  const f=a=>Math.round(a/(FT*FT)),last=P[P.length-1],dh=hAt(last[0],last[1])-hAt(P[0][0],P[0][1]),fl=Math.hypot(last[0]-P[0][0],last[1]-P[0][1]),rows=[['Points',`${P.length}`],
+    [ed.measClosed?'Around':'Length',`${edFmt(len)} ft${Math.abs(grd-len)>0.05*FT?` · ${edFmt(grd)} ft over the ground`:''}`]];
+  if(!ed.measClosed&&P.length>1)rows.push(['Start to end',`${edFmt(fl)} ft straight, ${dh>=0?'up':'down'} ${edFmt(Math.abs(dh))} ft${fl>0.3?` (${Math.round(Math.abs(dh)/fl*100)}%)`:''}`]);
+  if(P.length>2){const ar=f(edArea(P));rows.push(['Area',`${ar.toLocaleString()} sq ft${ar>4356?` · ${(ar/43560).toFixed(2)} acres`:''}${ed.measClosed?'':' (if closed)'}`])}
+  edCard(`<h3>Measure</h3><dl>${rows.map(([x,y])=>`<dt>${x}</dt><dd>${y}</dd>`).join('')}</dl><div class="row">${P.length>2?`<button id="edMsClose" class="sm" aria-pressed="${ed.measClosed}">Close the shape</button>`:''}<button id="edMsBack" class="sm">Take away the last point</button><button id="edMsClear" class="sm danger">Clear</button></div>`);
+  const c=$('#edMsClose');if(c)c.onclick=()=>{ed.measClosed=!ed.measClosed;edMeasDraw()};
+  $('#edMsBack').onclick=()=>{ed.meas.pop();if(ed.meas.length<3)ed.measClosed=false;edMeasDraw()};$('#edMsClear').onclick=edMeasClear}
+
 // ---------- exact edits: snap, the turn and size ring, nudging, line up, Row, copy and paste ----------
 // Snap (top bar) cycles off, 1, 2, 5 and 10 ft: moves and new things land on the grid, turns go in 15° steps, a fence or
 // gate meets another's end, and a placed thing near a road's edge stands at the edge facing the road
@@ -660,6 +697,7 @@ function edDown(x,y,e){const p=edPick(x,y),t=ed.tool,mod=e&&(e.shiftKey||e.ctrlK
   if(ed.look||!p){edMouse={pan:true,x,y};return}
   if(ED_BRUSH.includes(t)){edStrokeStart(p.x,p.z);edBrushAt(p.x,p.z);return}
   if(t==='roads'){edRoadDown(p,x,y);return}
+  if(t==='measure'){edMeasDown(p,x,y);return}
   if(t==='query'){edQuery(p.x,p.z);edRingAt(edBrushRing,p.x,p.z,0.5);ed.drag={query:true};return}
   // things from the catalogue come in at full size, their front to the camera
   if(t==='add'&&ed.place==='scatter'){ed.scat={x:p.x,z:p.z,snap:edAssetsSnap(),erase:ed.erase||!!(e&&e.altKey),t:0};edBrushAt(p.x,p.z);return}
@@ -684,6 +722,8 @@ function edMove(x,y){
   if(ed.scat){ed.scat.x=p.x;ed.scat.z=p.z;edBrushAt(p.x,p.z);return}
   if(ed.drag&&ed.drag.line){edLineSet(ed.drag.line,p.x,p.z);return}
   const d=ed.drag;
+  if(d&&d.meas!==undefined){[ed.meas[d.meas][0],ed.meas[d.meas][1]]=edSnapXZ(p.x,p.z);edMeasDraw();return}
+  if(ed.tool==='measure'&&ed.meas.length&&!d){edMeasDraw(p);return}
   if(d&&d.query){edQuery(p.x,p.z);edRingAt(edBrushRing,p.x,p.z,0.5);return}
   if(d&&d.road){edRoadDrag(d,p);return}
   if(d&&d.ring){edHandleMove(d,p);return}
@@ -734,6 +774,9 @@ addEventListener('keydown',e=>{const tg=e.target&&e.target.tagName;if(tg==='TEXT
   if(c.startsWith('Arrow')&&ed.sel.length&&ed.tool!=='roads'&&!ed.drag){e.preventDefault();edNudge(c,e.shiftKey?10:1);return}
   if(e.repeat)return;
   if(c==='Escape'&&ed.box){ed.box=null;$('#edBox').hidden=true}
+  else if(c==='Escape'&&ed.tool==='measure'&&ed.meas.length)edMeasClear();
+  else if((c==='Delete'||c==='Backspace')&&ed.tool==='measure'){ed.meas.pop();if(ed.meas.length<3)ed.measClosed=false;edMeasDraw()}
+  else if(c==='Enter'&&ed.tool==='measure'&&ed.meas.length>2){ed.measClosed=!ed.measClosed;edMeasDraw()}
   else if(c==='Escape'&&ed.sel.length)edSelSet([]);
   else if(c==='KeyG'||c==='Escape')editorClose();
   else if(c==='Delete'||c==='Backspace'){if(ed.tool==='roads')edRoadDelete(ed.rpt<0);else edDelete()}
