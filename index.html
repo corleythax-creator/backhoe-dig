@@ -48,6 +48,7 @@
       <button id="ctlBtn" aria-expanded="false">Drive</button>
       <button id="ctrlsBtn">Controls</button>
       <button id="camBtn" data-cam="chase" aria-label="Camera: chase or cab view"><span id="camChase">Chase</span><span id="camCab">Cab</span></button>
+      <button id="statsTop">Stats</button>
     </div>
     <div id="menu" hidden>
       <button id="helpBtn">How to play</button>
@@ -263,6 +264,7 @@
   <div class="card">
     <h1>Stats</h1>
     <p class="devline">Everything you've done on the island, kept on this device and synced with your site.</p>
+    <div id="statList"></div>
     <div id="statHeat">
       <h2>Lawn heatmap</h2>
       <div class="gseg"><button data-h="cut" aria-pressed="false">Times cut</button><button data-h="grow" aria-pressed="false">Grass height</button><button data-h="dir" aria-pressed="false">Mow direction</button></div>
@@ -271,7 +273,6 @@
       <button id="heatOn" class="ghost" aria-pressed="false">Heatmap on the lawn: off</button>
       <button id="statTrail" class="ghost">Where I've walked and driven</button>
     </div>
-    <div id="statList"></div>
     <div class="row"><button id="statDone">Done</button><button id="statClear" class="ghost">Clear stats</button></div>
   </div>
 </div>
@@ -359,6 +360,7 @@
 <script src="js/words.js"></script>
 <script src="js/materials.js"></script>
 <script src="js/terrain.js"></script>
+<script src="js/trees.js"></script>
 <script src="js/scenery.js"></script>
 <script src="js/family.js"></script>
 <script src="js/jessica.js"></script>

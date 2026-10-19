@@ -66,7 +66,7 @@ const WORDS=[
   ['edTip_add_scatter','Map editor','Hold and drag to scatter them under the brush. Erase (or Alt) takes this kind away under it.'],
   ['edTip_query','Map editor','Tap or drag over the ground to read its height, slope and surface.'],
   ['edTip_roads','Map editor','Tap a road to pick it, drag its dots, tap it between dots to add one.'],
-  ['padReady','Other','Controller ready. LB / RB switch machine, Y cab view.'],['reset','Other','Fresh ground. Paint is back.'],
+  ['padReady','Other','Controller ready. LB / RB switch machine, Y cab view.'],['reset','Other','Fresh ground. Paint is back.'],['saveFull','Other','The site is too big to save in this browser ({mb} MB). Digging since the last save is not kept.','{mb}: how big the save is, in MB'],
   ['tpNoRoom','Other','No room there. Pick an open spot on land.'],['tpLake','Other','That is the lake. Pick a spot on land.'],
   ['tpDone','Other','Teleported {ft} ft {how}.','{ft}: distance; {how}: on foot, in the dump truck…'],
   ['gfx','Other','Graphics: {name}','{name}: Low, Medium, High'],

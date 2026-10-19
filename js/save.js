@@ -31,7 +31,12 @@ function siteSave(){if(window.syncHold)return;site.dirty=false;site.saveT=perfor
   // go: where the grid sits (its west and north edges); ts: dug tiles stored outside it (digtiles.js)
   const go=[GX0,GZ0],ts=tileStoreSave();
   const d=siteB64(buf.subarray(0,o)),mt=mtSave(),wx=rainSave(),sm=smSave(),cr=craneSave(),sig=d+JSON.stringify(mt)+wx.w+wx.r+wx.want+pd+sm+cr.n+'.'+(cr.t/30|0)+go+JSON.stringify(ts);if(sig===site.lastD)return;site.lastD=sig;
-  try{localStorage.setItem(SITE_KEY,JSON.stringify({v:1,V,n:ks.length,t:Date.now(),d,mt,wx,pd,sm,cr,go,ts}))}catch(e){}}
+  const rec={v:1,V,n:ks.length,t:Date.now(),d,mt,wx,pd,sm,cr,go,ts};if(siteWrite(rec))return;
+  // too big for this browser's storage: the grid goes in the compact tile form (dc) instead, else the player is told
+  rec.d='';rec.n=0;rec.dc=gridEnc();if(siteWrite(rec))return;
+  site.lastD=null;siteFull(JSON.stringify(rec).length)}
+function siteWrite(r){try{localStorage.setItem(SITE_KEY,JSON.stringify(r));return true}catch(e){return false}}
+function siteFull(n){const now=performance.now();if(now-(site.fullT||-1e9)<60000)return;site.fullT=now;toast(say('saveFull',{mb:(n/1048576).toFixed(1)}),'bad',6000)}
 function siteLoad(){let d=null;try{d=JSON.parse(localStorage.getItem(SITE_KEY))}catch(e){}
   if(!d||d.v!==1||d.V!==V||typeof d.d!=='string')return false;site.lastD=d.d+JSON.stringify(d.mt||[])+(d.wx?d.wx.w+d.wx.r+d.wx.want:'')+(d.pd||'')+(d.sm||'');let buf;try{buf=siteUnB64(d.d)}catch(e){return false}
   // the stored tiles first, then the grid where it was (saves from before the tiles sit on the trench)
@@ -47,7 +52,7 @@ function siteLoad(){let d=null;try{d=JSON.parse(localStorage.getItem(SITE_KEY))}
     const m=pb[po]|pb[po+1]<<8;po+=2;if(k<V*V)paintD[k]=(m<<16>>16)/1000}}catch(e){paintD.fill(0)}}
   // the dug area's bounds, which water and cave-ins scan
   if(any){const mg=3*GRID_K;cI0=Math.max(0,i0-mg);cI1=Math.min(N,i1+mg);cJ0=Math.max(0,j0-mg);cJ1=Math.min(N,j1+mg)}
-  rainLoad(d.wx);mtRefill();smLoad(d.sm);
+  rainLoad(d.wx);mtRefill();smLoad(d.sm);gridDec(d.dc);
   dI0=0;dI1=N;dJ0=0;dJ1=N;winOn=true;st.dirty=true;return true}
 // machines: small, so saved whenever any of them has moved
 function sitePick(o,keys){const r={};for(const k of keys){const v=o[k];r[k]=Array.isArray(v)?v.map(x=>+x.toFixed(4)):typeof v==='number'?+v.toFixed(4):v}return r}

@@ -325,59 +325,22 @@ function stake(x,z,flagColor){
 }
 [[0.8,TRENCH_Z0-0.3],[-0.8,TRENCH_Z0-0.3],[0.8,TRENCH_Z1+0.3],[-0.8,TRENCH_Z1+0.3]].forEach(p=>stake(p[0],p[1],0xf2f2ee));
 [[-3,PIPE_Z],[3,PIPE_Z],[-7,PIPE_Z],[7,PIPE_Z]].forEach(p=>stake(p[0],p[1],0xf5c518));
-// the tree instance meshes, for shadowproxy.js
-const treeIMs=[];
-// placed assets (trees and boulders, and the things of props.js) as {t: type, x, z, yaw, s: size, c: tint}; the map editor moves, adds and removes them
+// placed assets (trees and boulders, and the things of props.js) as {t: type, x, z, yaw, s: size, c: tint}; the map editor moves, adds and removes them.
+// The trees are drawn by trees.js (its 'main' group); the boulders here
 const ASSET_CAP={pine:600,leafy:300,rock:400},assetIMs={},assets=mapAssets?mapAssets.slice():[];
-const ASSET_PT=[[1,1,1],[0.85,0.95,1.06],[1.08,1.04,0.82],[0.92,0.98,0.9]],ASSET_LT=[[0.98,0.78,0.26],[0.93,0.52,0.2],[0.56,0.64,0.3],[0.78,0.32,0.18],[0.46,0.6,0.28],[0.95,0.85,0.4]];
-(function trees(){
+(function rocks(){
   function colorize(g,fn){if(g.index)g=g.toNonIndexed();const p=g.attributes.position,c=new Float32Array(p.count*3);
     for(let i=0;i<p.count;i++){const col=fn(p.getX(i),p.getY(i),p.getZ(i));c[i*3]=col[0];c[i*3+1]=col[1];c[i*3+2]=col[2]}
     g.setAttribute('color',new THREE.BufferAttribute(c,3));return g}
-  function mergeGeos(list){let n=0;for(const g of list)n+=g.attributes.position.count;
-    const P=new Float32Array(n*3),Nn=new Float32Array(n*3),C=new Float32Array(n*3);let o=0;
-    for(const g of list){P.set(g.attributes.position.array,o*3);Nn.set(g.attributes.normal.array,o*3);C.set(g.attributes.color.array,o*3);o+=g.attributes.position.count}
-    const m=new THREE.BufferGeometry();m.setAttribute('position',new THREE.BufferAttribute(P,3));m.setAttribute('normal',new THREE.BufferAttribute(Nn,3));m.setAttribute('color',new THREE.BufferAttribute(C,3));return m}
-  const BARK=[0.36,0.25,0.17];
-  // pine: five drooping tiers with ragged skirts, darker underneath, lighter toward the tip
-  const pine=[];
-  const pt=new THREE.CylinderGeometry(0.09,0.19,1.7,12,2);pt.translate(0,0.85,0);pine.push(colorize(pt,()=>BARK));
-  const TOP=5.9;
-  for(let t=0;t<5;t++){
-    const r=1.5*(1-t*0.17),h=1.65-t*0.08,base=0.85+t*0.92;
-    const g=new THREE.ConeGeometry(r,h,24,3,true),p=g.attributes.position;
-    for(let i=0;i<p.count;i++){const y=p.getY(i);
-      if(Math.abs(y+h/2)<1e-4){const j=Math.round((Math.atan2(p.getZ(i),p.getX(i))+Math.PI)/(Math.PI*2)*24),o=j%2?1.14:0.9;
-        p.setX(i,p.getX(i)*o);p.setZ(i,p.getZ(i)*o);p.setY(i,y-(j%2?0.18:0))}}
-    g.translate(0,base+h/2,0);
-    pine.push(colorize(g,(x,y,z)=>{const f=Math.min(1,y/TOP),e=Math.min(1,Math.hypot(x,z)/r),k=0.72+0.28*f;
-      return[(0.12+0.1*f)*k+0.03*e,(0.30+0.18*f)*k+0.05*e,(0.16+0.06*f)*k]}));
-    const cap=new THREE.CircleGeometry(r*0.95,24);cap.rotateX(Math.PI/2);cap.translate(0,base+0.03,0);pine.push(colorize(cap,()=>[0.07,0.17,0.09]));
-  }
-  const pineGeo=mergeGeos(pine);
-  // broadleaf: trunk and branches, plus a lumpy crown tinted per tree (autumn golds, oranges, greens)
-  const lw=[];
-  const lt=new THREE.CylinderGeometry(0.1,0.18,2.1,10,2);lt.translate(0,1.05,0);lw.push(colorize(lt,()=>BARK));
-  for(const [ang,len,rot] of [[0.75,1.1,0],[-0.7,1.0,1.2],[0.6,0.9,2.6]]){const br=new THREE.CylinderGeometry(0.045,0.08,len,8);br.translate(0,len/2,0);br.rotateZ(ang);br.rotateY(rot);br.translate(0,1.5,0);lw.push(colorize(br,()=>BARK))}
-  const woodGeo=mergeGeos(lw);
-  const crown=[];
-  for(const [x,y,z,r] of [[0,3.1,0,1.3],[0.95,2.65,0.2,0.95],[-0.9,2.6,-0.2,1.0],[0.2,2.45,0.95,0.9],[-0.15,2.6,-0.95,0.9],[0.1,3.85,0.05,0.85]]){
-    const g=new THREE.IcosahedronGeometry(r,1),p=g.attributes.position;
-    for(let i=0;i<p.count;i++){const n=Math.sin(p.getX(i)*7.3+p.getY(i)*5.1+p.getZ(i)*3.7)*0.09;p.setXYZ(i,p.getX(i)*(1+n),p.getY(i)*(0.86+n),p.getZ(i)*(1+n))}
-    g.translate(x,y,z);g.computeVertexNormals();
-    crown.push(colorize(g,(px,py)=>{const k=0.62+0.38*Math.min(1,Math.max(0,(py-1.5)/3));return[k,k,k]}));
-  }
-  const crownGeo=mergeGeos(crown);
   // boulder: a lumpy grey stone, lighter on top
   const rockGeo=(function(){const g=new THREE.IcosahedronGeometry(0.8,1),p=g.attributes.position;
     for(let i=0;i<p.count;i++){const x=p.getX(i),y=p.getY(i),z=p.getZ(i),n=1+0.22*Math.sin(x*5.1+y*3.3)*Math.cos(z*4.7-y*2.1);p.setXYZ(i,x*n*1.15,y*n*0.62,z*n)}
     g.computeVertexNormals();return colorize(g,(x,y)=>{const k=0.62+0.3*Math.min(1,Math.max(0,(y+0.3)/0.8));return[0.62*k,0.6*k,0.56*k]})})();
-  const treeM=M(0xffffff,{vertexColors:true});
-  const pines=new THREE.InstancedMesh(pineGeo,treeM,ASSET_CAP.pine),woods=new THREE.InstancedMesh(woodGeo,treeM,ASSET_CAP.leafy),crowns=new THREE.InstancedMesh(crownGeo,treeM,ASSET_CAP.leafy),rocks=new THREE.InstancedMesh(rockGeo,M(0xffffff,{vertexColors:true}),ASSET_CAP.rock);
-  // colour buffers sized to capacity up front (three r128 sizes them by the live count, which starts at 0 here)
-  for(const im of [pines,woods,crowns,rocks]){im.castShadow=true;im.receiveShadow=true;im.frustumCulled=false;
-    im.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(im.instanceMatrix.count*3),3);im.count=0;scene.add(im)}
-  assetIMs.pine=[pines];assetIMs.leafy=[woods,crowns];assetIMs.rock=[rocks];treeIMs.push(pines,woods,crowns,rocks);
+  const rocks=new THREE.InstancedMesh(rockGeo,M(0xffffff,{vertexColors:true}),ASSET_CAP.rock);
+  // colour buffer sized to capacity up front (three r128 sizes it by the live count, which starts at 0 here)
+  rocks.castShadow=true;rocks.receiveShadow=true;rocks.frustumCulled=false;
+  rocks.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(rocks.instanceMatrix.count*3),3);rocks.count=0;scene.add(rocks);
+  assetIMs.rock=[rocks];treeIMs.push(rocks);
   if(!assets.length)assets.push(...defaultAssets());
   assetsBuild();
 })();
@@ -397,16 +360,14 @@ function defaultAssets(){
       const pine=np<210&&(nb>=75||rnd()<0.74);out.push({t:pine?'pine':'leafy',x,z,yaw:rnd()*6.3,s:0.8+rnd()*0.7,c:Math.floor(rnd()*(pine?4:6))});if(pine)np++;else nb++}}
   for(let n=0,g=0;n<18&&g<4000;g++){const x=(rnd()-0.5)*100,z=-20+rnd()*100;if(!okSpot(x,z))continue;out.push({t:'rock',x,z,yaw:rnd()*6.3,s:0.5+rnd()*0.9,c:0});n++}
   return out}
-// fills the instance meshes from the asset list (after any change to it)
-function assetsBuild(){const o=new THREE.Object3D(),c=new THREE.Color(),n={pine:0,leafy:0,rock:0};
-  for(const a of assets){const k=n[a.t],y=baseHeight(a.x,a.z);if(k===undefined||k>=ASSET_CAP[a.t]||y<WATER-0.3)continue;n[a.t]++;
+// fills the instance meshes from the asset list (after any change to it): the trees go to trees.js, the boulders here
+function assetsBuild(){const o=new THREE.Object3D(),c=new THREE.Color(),n={pine:0,leafy:0,rock:0},T=[];
+  for(const a of assets){const k=n[a.t];if(k===undefined||k>=ASSET_CAP[a.t])continue;const y=baseHeight(a.x,a.z);if(y<WATER-0.3)continue;n[a.t]++;
+    if(a.t!=='rock'){T.push(treeEntry(a.t,a.x,a.z,a.yaw,a.s,a.c));continue}
     const w=hash(a.x*1.3+0.7,a.z*2.1+0.3),w2=hash(a.z*1.7,a.x*0.9);
-    if(a.t==='rock'){o.position.set(a.x,y-0.18*a.s,a.z);o.rotation.set((w-0.5)*0.4,a.yaw,(w2-0.5)*0.4);o.scale.set(a.s,a.s*(0.8+0.4*w),a.s)}
-    else{o.position.set(a.x,y-0.05,a.z);o.rotation.set((w-0.5)*0.08,a.yaw,(w2-0.5)*0.08);o.scale.set(a.s,a.s*(a.t==='pine'?0.9+0.35*w:1),a.s)}
-    o.updateMatrix();for(const im of assetIMs[a.t])im.setMatrixAt(k,o.matrix);
-    if(a.t==='pine'){const t=ASSET_PT[a.c%4],v=0.88+0.24*w2;c.setRGB(t[0]*v,t[1]*v,t[2]*v);assetIMs.pine[0].setColorAt(k,c)}
-    else if(a.t==='leafy'){const t=ASSET_LT[a.c%6],v=0.9+0.2*w2;c.setRGB(t[0]*v,t[1]*v,t[2]*v);assetIMs.leafy[1].setColorAt(k,c);c.setRGB(1,1,1);assetIMs.leafy[0].setColorAt(k,c)}
-    else{const v=0.85+0.3*w2;c.setRGB(v,v,v);assetIMs.rock[0].setColorAt(k,c)}}
-  for(const t in assetIMs)for(const im of assetIMs[t]){im.count=n[t];im.instanceMatrix.needsUpdate=true;if(im.instanceColor)im.instanceColor.needsUpdate=true}
+    o.position.set(a.x,y-0.18*a.s,a.z);o.rotation.set((w-0.5)*0.4,a.yaw,(w2-0.5)*0.4);o.scale.set(a.s,a.s*(0.8+0.4*w),a.s);
+    o.updateMatrix();assetIMs.rock[0].setMatrixAt(k,o.matrix);const v=0.85+0.3*w2;c.setRGB(v,v,v);assetIMs.rock[0].setColorAt(k,c)}
+  const im=assetIMs.rock[0];im.count=n.rock;im.instanceMatrix.needsUpdate=true;im.instanceColor.needsUpdate=true;
+  treeGroup('main',T);
   // the things placed from the editor's catalogue (props.js, which loads later)
   if(typeof propsBuild==='function')propsBuild()}
