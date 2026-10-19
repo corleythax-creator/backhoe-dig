@@ -16,7 +16,7 @@ const ED_KIND_CATS=['Trees and rocks','Buildings','Fencing','Site gear','Yard'];
 // the editor's icons (24 px, drawn with lines), put in front of the words of every part with a data-ic
 const ED_ICONS={done:'M15 5l-7 7 7 7',undo:'M9 14L4 9l5-5M4 9h10a6 6 0 010 12h-3',redo:'M15 14l5-5-5-5M20 9H10a6 6 0 000 12h3',
   look:'M12 3v18M3 12h18M9 6l3-3 3 3M9 18l3 3 3-3M6 9l-3 3 3 3M18 9l3 3-3 3',zin:'M10.5 4a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM15.5 15.5L21 21M7.5 10.5h6M10.5 7.5v6',
-  zout:'M10.5 4a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM15.5 15.5L21 21M7.5 10.5h6',north:'M12 3l5 17-5-4-5 4z',home:'M3 11l9-8 9 8M5 9v11h5v-6h4v6h5V9',
+  zout:'M10.5 4a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM15.5 15.5L21 21M7.5 10.5h6',north:'M12 3l5 17-5-4-5 4z',eye:'M2 12s4-7 10-7 10 7 10 7-4 7-10 7S2 12 2 12zM12 9a3 3 0 100 6 3 3 0 000-6z',home:'M3 11l9-8 9 8M5 9v11h5v-6h4v6h5V9',
   panel:'M3 4h18v16H3zM9 4v16',shape:'M2 20l7-12 4 6 3-4 6 10z',paint:'M18 3l3 3-8 8-3-3zM10 11c-3 0-5 2-5 4.5S4 19 2 19.5C5 22 11 21 12 17c.4-1.6-.4-3.4-2-6z',
   things:'M12 2l6 9h-3l4 6H5l4-6H6zM12 17v5',roads:'M8 3L4 21M16 3l4 18M12 4v3M12 10v3M12 16v3',inspect:'M10 3a7 7 0 100 14 7 7 0 000-14zM15 15l6 6',
   map:'M3 6h6l2 2h10v11H3z',box:'M4 4h3M10 4h4M17 4h3v3M20 10v4M20 17v3h-3M14 20h-4M7 20H4v-3M4 14v-4M4 7V4',
@@ -484,8 +484,31 @@ function edRoadList(){const el=$('#edRoadList');$('#edRoadN').textContent=ROADS.
 // ---------- the status line under the bottom bar: the spot under the pointer, the brush and the view, and a tip ----------
 function edStatus(p){if(p){const g=baseHeight(p.x,p.z),sl=Math.hypot(baseHeight(p.x+0.5,p.z)-baseHeight(p.x-0.5,p.z),baseHeight(p.x,p.z+0.5)-baseHeight(p.x,p.z-0.5));
     $('#edStatPos').textContent=`${edShortSpot(p.x,p.z)} · ground ${g>=0?'+':'−'}${edFmt(Math.abs(g))} ft · slope ${Math.round(sl*100)}%`}
-  const b=[];if(ED_BRUSH.includes(ed.tool)||ed.tool==='add'&&ed.place==='scatter')b.push(`brush ${Math.round(edFt(ed.size))} ft`);b.push(`view from ${Math.round(edFt(ed.dist))} ft`,`${assets.length} things`);
+  const b=[];if(ED_BRUSH.includes(ed.tool)||ed.tool==='add'&&ed.place==='scatter')b.push(`brush ${Math.round(edFt(ed.size))} ft`);b.push(`${assets.length} things`);
   if(ed.sel.length)b.push(`${ed.sel.length} selected`);{const n=assets.filter(a=>a.hd).length;if(n)b.push(`${n} hidden`)}if(ed.grid)b.push(`snap ${ed.grid} ft`);$('#edStatInfo').textContent=b.join(' · ')}
+// ---------- the view code: where the camera looks, as text the owner can copy and paste to Claude ----------
+// "view X,Z,FACE,TILT,BACK": the spot looked at (world feet, x east, z south), the compass way the view faces (0 north,
+// 90 east), how far it tilts down (degrees) and how far back the camera sits (feet). viewGo takes it back, in the
+// editor or (game) pinned over the game for a headless shot; tools/play.js --view does that.
+const VIEW_DIRS=['N','NE','E','SE','S','SW','W','NW'];
+let viewPin=null;
+const viewDeg=r=>((Math.round(r*180/Math.PI)%360)+360)%360;
+// the view now: the editor's own, or the game camera's (the ground it points at)
+function viewNow(){if(edOn)return {x:ed.x,z:ed.z,face:viewDeg(-ed.yaw),tilt:Math.round(ed.pitch*180/Math.PI),back:ed.dist};
+  const d=camera.getWorldDirection(new THREE.Vector3()),p=camera.position;let t=1;
+  while(t<900&&p.y+d.y*t>hAt(p.x+d.x*t,p.z+d.z*t))t*=1.03;
+  return {x:p.x+d.x*t,z:p.z+d.z*t,face:viewDeg(Math.atan2(d.x,-d.z)),tilt:Math.round(Math.asin(-d.y)*180/Math.PI),back:t}}
+function viewCode(v){v=v||viewNow();return `view ${Math.round(edFt(v.x))},${Math.round(edFt(v.z))},${v.face},${v.tilt},${Math.round(edFt(v.back))}`}
+function viewText(v){v=v||viewNow();return `Looking at ${edShortSpot(v.x,v.z)} · facing ${VIEW_DIRS[Math.round(v.face/45)%8]} ${v.face}° · tilt ${v.tilt}° · ${Math.round(edFt(v.back))} ft back`}
+function viewGo(code,game){const n=String(code).replace(/−/g,'-').match(/-?\d+(\.\d+)?/g);if(!n||n.length<5)return 'need 5 numbers: '+code;
+  const [x,z,face,tilt,back]=n.map(Number),v={x:x*FT,z:z*FT,yaw:-face*Math.PI/180,pitch:clamp(tilt,1,89)*Math.PI/180,dist:clamp(back*FT,2,900)};
+  if(game){if(edOn)editorClose();viewPin=v;return viewCode(viewNow())}
+  viewPin=null;if(!edOn)editorOpen();Object.assign(ed,{x:v.x,z:v.z,yaw:v.yaw,pitch:v.pitch,dist:v.dist,fly:null});return viewCode()}
+// main.js calls this after the game's own camera when a view is pinned
+function viewPinApply(){const v=viewPin,fy=hAt(v.x,v.z);
+  camera.position.set(v.x+Math.sin(v.yaw)*Math.cos(v.pitch)*v.dist,fy+Math.sin(v.pitch)*v.dist,v.z+Math.cos(v.yaw)*Math.cos(v.pitch)*v.dist);camera.lookAt(v.x,fy,v.z)}
+$('#edViewCopy').onclick=()=>{const c=viewCode(),t=viewText();
+  try{navigator.clipboard.writeText(c).then(()=>toast(say('edViewCopied',{code:c,where:t}),'good',5000),()=>toast(c,'',8000))}catch(e){toast(c,'',8000)}};
 function edTipSet(){$('#edTip').textContent=say('edTip_'+ed.tool+(ed.tool==='add'&&ed.place!=='one'?'_'+ed.place:''));edStatus()}
 
 // ---------- roads ----------
@@ -881,6 +904,7 @@ function editorFrame(dt,now){
   camera.position.set(ed.x+Math.sin(ed.yaw)*Math.cos(ed.pitch)*ed.dist,fy+Math.sin(ed.pitch)*ed.dist,ed.z+Math.cos(ed.yaw)*Math.cos(ed.pitch)*ed.dist);
   camera.position.y=Math.max(camera.position.y,hAt(camera.position.x,camera.position.z)+2);camera.lookAt(edLook);
   sky.position.copy(camera.position);
+  if(now-(ed.viewT||0)>200){ed.viewT=now;const t=viewText()+' · '+viewCode();if(t!==ed.viewS){ed.viewS=t;$('#edStatView').textContent=t}}
   sun.position.set(ed.x,fy,ed.z).addScaledVector(LIGHT_DIR,SUN_D);sun.target.position.set(ed.x,fy,ed.z);
   timeU.value=now/1000;updateSound(dt);
   shadowProxyTick();lawnLod();tuftLod();renderer.render(scene,camera)}

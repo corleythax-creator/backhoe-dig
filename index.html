@@ -126,7 +126,7 @@
     <h2>Map editor <small id="edMapNm"></small></h2>
     <div class="row" role="group" aria-label="Undo"><button id="edUndo" class="sm edico" data-ic="undo" disabled>Undo</button><button id="edRedo" class="sm edico" data-ic="redo" disabled>Redo</button></div>
     <button id="edHist" class="sm" aria-expanded="false">History ▾</button>
-    <div class="row" id="edView" role="group" aria-label="View"><button id="edLook" class="sm edico" data-ic="look" aria-pressed="false">Look</button><button id="edZoomIn" class="sm edico" data-ic="zin">Closer</button><button id="edZoomOut" class="sm edico" data-ic="zout">Farther</button><button id="edNorth" class="sm edico" data-ic="north">North up</button><button id="edHome" class="sm edico" data-ic="home">Start view</button></div>
+    <div class="row" id="edView" role="group" aria-label="View"><button id="edLook" class="sm edico" data-ic="look" aria-pressed="false">Look</button><button id="edZoomIn" class="sm edico" data-ic="zin">Closer</button><button id="edZoomOut" class="sm edico" data-ic="zout">Farther</button><button id="edNorth" class="sm edico" data-ic="north">North up</button><button id="edHome" class="sm edico" data-ic="home">Start view</button><button id="edViewCopy" class="sm edico" data-ic="eye" title="Copy where you are looking, to paste to Claude">Copy view</button></div>
     <button id="edGrid" class="sm edico" data-ic="grid" aria-pressed="false">Snap off</button>
     <button id="edPanelBtn" class="sm edico" data-ic="panel" aria-pressed="true">Panel</button>
   </div>
@@ -201,7 +201,7 @@
       <span class="row" data-for="select"><button id="edBoxBtn" class="sm edico" data-ic="box" aria-pressed="false">Box select</button><button id="edAllBtn" class="sm">Select all in view</button><button id="edClipPaste" class="sm" hidden>Paste</button><button id="edShowAll" class="sm" hidden>Show hidden</button></span>
     </div>
   </div>
-  <div id="edStat" class="edstat"><span id="edStatPos"></span><span id="edStatInfo"></span><span id="edTip"></span></div>
+  <div id="edStat" class="edstat"><span id="edStatPos"></span><span id="edStatInfo"></span><span id="edStatView"></span><span id="edTip"></span></div>
   <div id="edBox" hidden></div>
   <div id="edHistList" class="edhist" role="menu" hidden></div>
 </div>
