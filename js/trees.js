@@ -147,6 +147,8 @@ function treeHull(h){const g=new THREE.BufferGeometry(),P=[],add=s=>{const n=s.i
   g.setAttribute('position',new THREE.Float32BufferAttribute(P,3));g.computeBoundingSphere();return g}
 // the instance meshes: per species, full and light wood and foliage (drawn) and the hull (all of that species' trees)
 const TREE_CAP=2400,treeGroups={},treeDraw=[];
+// trees knocked over by digging (digtiles.js), by treeKey: left out of the groups, drawn lying down
+const treeFallen=new Map(),treeKey=(x,z)=>Math.round(x*100)+','+Math.round(z*100);
 (function(){const hullMat=new THREE.MeshBasicMaterial();
   for(const sp of TREE_SP){const H=sp.build(true),L=sp.build(false),mk=(g,m,col)=>{const im=new THREE.InstancedMesh(g,m,TREE_CAP);im.count=0;im.frustumCulled=false;
       im.receiveShadow=true;im.castShadow=false;if(col)im.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(TREE_CAP*3),3);scene.add(im);treeDraw.push(im);return im};
@@ -157,7 +159,7 @@ const TREE_CAP=2400,treeGroups={},treeDraw=[];
 function treeGroup(name,list){treeGroups[name]=list;
   const o=new THREE.Object3D(),n=TREE_SP.map(()=>0);
   for(const sp of TREE_SP)sp.all.count=0;
-  for(const g in treeGroups)for(const a of treeGroups[g]){const k=treeSpecies(a.t,a.x,a.z),sp=TREE_SP[k];if(n[k]>=TREE_CAP)continue;
+  for(const g in treeGroups)for(const a of treeGroups[g]){if(treeFallen.size&&treeFallen.has(treeKey(a.x,a.z)))continue;const k=treeSpecies(a.t,a.x,a.z),sp=TREE_SP[k];if(n[k]>=TREE_CAP)continue;
     const w=hash(a.x*1.3+0.7,a.z*2.1+0.3),w2=hash(a.z*1.7,a.x*0.9);
     o.position.set(a.x,a.y-0.05,a.z);o.rotation.set((w-0.5)*0.06,a.yaw,(w2-0.5)*0.06);o.scale.set(a.s,a.s*(a.sy||1),a.s);o.updateMatrix();
     sp.all.setMatrixAt(n[k],o.matrix);sp.col.set(a.c,n[k]*3);n[k]++}
