@@ -159,7 +159,12 @@ const TREE_BIO={
   birch:{real:'paper birch',lat:'Betula papyrifera',hmax:28,k:0.0300,p:1.20,life:110,dmax:50,crown:0.17,form:0.38,dens:610}};
 const TREE_STAGES=['Sapling','Young','Mature','Old','Veteran'],TREE_STAGE_AT=[0.08,0.25,0.55,0.85];
 const treeHeightAt=(b,age)=>b.hmax*Math.pow(1-Math.exp(-b.k*age),b.p);
-const treeAgeAt=(b,H)=>Math.max(1,Math.round(-Math.log(1-Math.pow(Math.min(0.985,Math.max(0.001,H/b.hmax)),1/b.p))/b.k));
+const treeAgeF=(b,H)=>-Math.log(1-Math.pow(Math.min(0.985,Math.max(0.001,H/b.hmax)),1/b.p))/b.k,treeAgeAt=(b,H)=>Math.max(1,Math.round(treeAgeF(b,H)));
+// the island's trees grow with the game's date: they are their drawn size on the real date, and treeAheadNow years on
+// (how far ☰ Time's Date is ahead, never back; set by treeRegrow) each is as tall as its species' curve says, all of it
+// scaled up together. treeGrowK: how many times taller species k, H0 metres tall today, is yr years on
+const TREE_YR=365.25*86400000;let treeAheadNow=0;
+function treeGrowK(k,H0,yr){if(yr<=0)return 1;const b=TREE_BIO[TREE_SP[k].id],a0=treeAgeF(b,H0);return treeHeightAt(b,a0+yr)/treeHeightAt(b,a0)}
 // everything worked out for species index k at H metres tall: age (yr, also its growth rings), trunk diameter at breast
 // height (cm), crown spread (m), stem wood (m³), carbon dioxide held in the whole tree (kg), growth now (cm of height a
 // year), and how far through its life it is (0 to 1, and stage: an index into TREE_STAGES)
@@ -167,7 +172,8 @@ function treeVitals(k,H){const b=TREE_BIO[TREE_SP[k].id],age=treeAgeAt(b,H),D=H<
   vol=b.form*Math.PI/4*Math.pow(D/100,2)*H,life=age/b.life,st=life<TREE_STAGE_AT[0]?0:life<TREE_STAGE_AT[1]?1:life<TREE_STAGE_AT[2]?2:life<TREE_STAGE_AT[3]?3:4;
   return{age,D,H,crown:Math.max(0.4,b.crown*D),vol,co2:vol*b.dens*1.6*0.5*3.667,grow:(treeHeightAt(b,age+1)-treeHeightAt(b,age))*100,life,st}}
 // a standing tree of a group (as treeEntry makes them) or an editor asset: its species index and vitals
-function treeHeightOf(a,k){return TREE_SP[k].h*a.s*(a.sy===undefined?treeSy(a.t,a.x,a.z):(a.sy||1))}
+function treeHeight0(a,k){return TREE_SP[k].h*a.s*(a.sy===undefined?treeSy(a.t,a.x,a.z):(a.sy||1))}
+function treeHeightOf(a,k){const H0=treeHeight0(a,k);return H0*treeGrowK(k,H0,treeAheadNow)}
 function treeSy(t,x,z){const w=hash(x*1.3+0.7,z*2.1+0.3);return t==='pine'?0.92+0.25*w:0.95+0.12*w}
 function treeVitalsOf(a){const k=treeSpecies(a.t,a.x,a.z);return Object.assign({k},treeVitals(k,treeHeightOf(a,k)))}
 // all the standing trees (only one group if named), added up by species: n, ages (sum, oldest, youngest), heights (sum,
@@ -176,13 +182,16 @@ function treeVitalsOf(a){const k=treeSpecies(a.t,a.x,a.z);return Object.assign({
 const TREE_AGE_BRACKETS=[10,25,50,100];
 function treeCensus(only){const sp=TREE_SP.map(()=>({n:0,age:0,old:0,young:1e9,H:0,tall:0,thick:0,area:0,vol:0,co2:0,st:[0,0,0,0,0],br:[0,0,0,0,0]})),
   T={sp,n:0,age:0,H:0,area:0,vol:0,co2:0,felled:0,places:{},st:[0,0,0,0,0],br:[0,0,0,0,0],old:null,tall:null,thick:null};
+  const add=(v,P)=>{const S=sp[v.k],br=TREE_AGE_BRACKETS.findIndex(m=>v.age<m),bi=br<0?TREE_AGE_BRACKETS.length:br,ar=Math.PI*v.crown*v.crown/4;
+    S.n++;S.age+=v.age;S.H+=v.H;S.area+=ar;S.vol+=v.vol;S.co2+=v.co2;S.st[v.st]++;S.br[bi]++;
+    if(v.age>S.old)S.old=v.age;if(v.age<S.young)S.young=v.age;if(v.H>S.tall)S.tall=v.H;if(v.D>S.thick)S.thick=v.D;
+    T.n++;T.age+=v.age;T.H+=v.H;T.area+=ar;T.vol+=v.vol;T.co2+=v.co2;T.st[v.st]++;T.br[bi]++;P.n++;P.age+=v.age;
+    if(!T.old||v.age>T.old.age)T.old=v;if(!T.tall||v.H>T.tall.H)T.tall=v;if(!T.thick||v.D>T.thick.D)T.thick=v};
   for(const g in treeGroups){if(only&&g!==only)continue;const P=T.places[g]={n:0,age:0};
-    for(const a of treeGroups[g]){if(treeFallen.has(treeKey(a.x,a.z))){T.felled++;continue}
-      const v=treeVitalsOf(a),S=sp[v.k],br=TREE_AGE_BRACKETS.findIndex(m=>v.age<m),bi=br<0?TREE_AGE_BRACKETS.length:br,ar=Math.PI*v.crown*v.crown/4;
-      S.n++;S.age+=v.age;S.H+=v.H;S.area+=ar;S.vol+=v.vol;S.co2+=v.co2;S.st[v.st]++;S.br[bi]++;
-      if(v.age>S.old)S.old=v.age;if(v.age<S.young)S.young=v.age;if(v.H>S.tall)S.tall=v.H;if(v.D>S.thick)S.thick=v.D;
-      T.n++;T.age+=v.age;T.H+=v.H;T.area+=ar;T.vol+=v.vol;T.co2+=v.co2;T.st[v.st]++;T.br[bi]++;P.n++;P.age+=v.age;
-      if(!T.old||v.age>T.old.age)T.old=v;if(!T.tall||v.H>T.tall.H)T.tall=v;if(!T.thick||v.D>T.thick.D)T.thick=v}}
+    for(const a of treeGroups[g]){if(treeFallen.has(treeKey(a.x,a.z))){T.felled++;continue}add(treeVitalsOf(a),P)}}
+  // the ones you planted (plant.js), as tall as they are on the game's date
+  if(typeof plant!=='undefined'&&(!only||only==='planted')&&plant.list.length){const P=T.places.planted={n:0,age:0};
+    for(const a of plant.list){const G=plantGrowth(a,dn.t);if(G)add(Object.assign({k:a.k},treeVitals(a.k,G.H)),P)}}
   return T}
 function treeHull(h){const g=new THREE.BufferGeometry(),P=[],add=s=>{const n=s.index?s.toNonIndexed():s;P.push(...n.attributes.position.array)};
   const tr=new THREE.CylinderGeometry(0.12,0.2,h[3]*0.6,6);tr.translate(0,h[3]*0.3,0);add(tr);
@@ -200,14 +209,20 @@ const treeFallen=new Map(),treeKey=(x,z)=>Math.round(x*100)+','+Math.round(z*100
     sp.all=new THREE.InstancedMesh(treeHull(sp.hull),hullMat,TREE_CAP);sp.all.count=0;sp.all.castShadow=true;sp.col=new Float32Array(TREE_CAP*3);treeIMs.push(sp.all);
     sp.tris=[H.wood,H.fol,L.wood,L.fol].map(g=>g.index.count/3)}})();
 // one island's trees: [{t:'pine'|'leafy', x, z, y (ground), yaw, s, sy (height scale), c:[r,g,b] foliage tint}]
-function treeGroup(name,list){treeGroups[name]=list;
-  const o=new THREE.Object3D(),n=TREE_SP.map(()=>0);
+function treeGroup(name,list){treeGroups[name]=list;treeLayout()}
+// all the groups' trees into the species' hull meshes (which treesTick shares out to the drawn ones), grown to the date
+function treeLayout(){const o=new THREE.Object3D(),n=TREE_SP.map(()=>0);
   for(const sp of TREE_SP)sp.all.count=0;
   for(const g in treeGroups)for(const a of treeGroups[g]){if(treeFallen.size&&treeFallen.has(treeKey(a.x,a.z)))continue;const k=treeSpecies(a.t,a.x,a.z),sp=TREE_SP[k];if(n[k]>=TREE_CAP)continue;
     const w=hash(a.x*1.3+0.7,a.z*2.1+0.3),w2=hash(a.z*1.7,a.x*0.9);
-    o.position.set(a.x,a.y-0.05,a.z);o.rotation.set((w-0.5)*0.06,a.yaw,(w2-0.5)*0.06);o.scale.set(a.s,a.s*(a.sy||1),a.s);o.updateMatrix();
+    const g=treeAheadNow>0?treeGrowK(k,sp.h*a.s*(a.sy||1),treeAheadNow):1;
+    o.position.set(a.x,a.y-0.05,a.z);o.rotation.set((w-0.5)*0.06,a.yaw,(w2-0.5)*0.06);o.scale.set(a.s*g,a.s*(a.sy||1)*g,a.s*g);o.updateMatrix();
     sp.all.setMatrixAt(n[k],o.matrix);sp.col.set(a.c,n[k]*3);n[k]++}
   TREE_SP.forEach((sp,k)=>{sp.all.count=n[k];sp.all.instanceMatrix.needsUpdate=true});treeLodDirty=true}
+// lay the trees out again when the date has moved a month or more from what they were grown to (or back to today);
+// true if it did. dn (daynight.js) and shpTreesRefresh (shadowproxy.js) load later and are only read here
+function treeRegrow(){const y=Math.max(0,(dn.t-Date.now())/TREE_YR);if(Math.abs(y-treeAheadNow)<1/12&&!(y===0&&treeAheadNow>0))return false;
+  treeAheadNow=y;treeLayout();if(typeof shpTreesRefresh==='function')shpTreesRefresh();return true}
 // the tint and height of a tree from the old per-island colour schemes
 function treeEntry(t,x,z,yaw,s,c,sy){const w=hash(x*1.3+0.7,z*2.1+0.3),w2=hash(z*1.7,x*0.9),k=treeSpecies(t,x,z);let col;
   if(t==='pine'){const p=ASSET_PT[(c|0)%4],v=0.9+0.2*w2;col=[p[0]*v,p[1]*v,p[2]*v]}
