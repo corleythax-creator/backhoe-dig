@@ -38,7 +38,7 @@ function mtAdd(ti,tj){if(ti<0||tj<0||ti>=MT_NX||tj>=MT_NZ)return -1;const at=mtI
   if(!ix.length)return -1;
   const g=new THREE.BufferGeometry();
   for(const [k,w] of [['position',3],['normal',3],['color',3],['dirt',1],['soilD',1],['matA',1],['mudW',1],['wetT',1],['crk',2]])g.setAttribute(k,new THREE.BufferAttribute(new Float32Array(nv*w),w));
-  g.attributes.wetT.array.fill(-1e4);g.setIndex(ix);
+  g.attributes.wetT.array.fill(-1e4);g.attributes.normal.array.set(upNormals(nv*3));g.setIndex(ix);
   const m=new THREE.Mesh(g,groundMat);m.receiveShadow=true;m.frustumCulled=false;scene.add(m);
   const t={ti,tj,i0,j0,g,m,bc:new Float32Array(nv*3),bd:new Float32Array(nv),bm:new Float32Array(nv),dirty:true,wm:null,wet:false,wDirty:false};
   mtIdx[tj*MT_NX+ti]=mTiles.length;mTiles.push(t);mtBase(t);mtWaterMesh(t);return mTiles.length-1}

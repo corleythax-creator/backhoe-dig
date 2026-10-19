@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-19T03:42:00Z",
+ "updated": "2026-10-19T03:49:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -24,9 +24,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-18",
-   "dh": 248,
+   "dh": 250.5,
    "act": 5,
-   "versions": 33
+   "versions": 34
   }
  ],
  "extra": [
@@ -1305,6 +1305,15 @@ window.EFFORT = {
    "tris": 2969059,
    "chars": 895453,
    "what": "The map editor's exact edits: type a thing's spot in feet, Snap to a 1 to 10 ft grid (15° turns, fence ends meet, things face a road at its edge), a ring to turn and size the selection, arrow-key nudges, Line up, Space evenly, Face one way, Row, and Copy and Paste at the pointer."
+  },
+  {
+   "v": 142,
+   "asked": "2026-10-18T22:20:00-05:00",
+   "live": "2026-10-18T22:49:12-05:00",
+   "dh": 2.5,
+   "tris": 2968590,
+   "chars": 896360,
+   "what": "Shadows now fall on ruts, mud and the lawn too, and reach farther: a Shadow distance setting, 72/105/148 ft by tier"
   }
  ]
 };
