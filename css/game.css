@@ -256,8 +256,7 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 @media (min-width:480px){.sliders{grid-template-columns:auto 1fr 3.2em;align-items:center;gap:8px 12px}
   .sliders label{margin-top:0;align-self:center}.sliders input{grid-column:2}.sliders output{grid-column:3;align-self:center;text-align:right}}
 #sndOn[aria-pressed="false"]{color:var(--danger);border-color:var(--danger)}
-/* Map editor: everything in a column down the left, so the rest of the view is ground: the title bar along the top,
-   a two-wide tool strip, and beside it the tool's options with the file and info cards; the game HUD hides */
+/* while the map editor is open the game HUD hides */
 body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
 :root{--ed-l:max(8px,env(safe-area-inset-left,0px));--ed-r:max(8px,env(safe-area-inset-right,0px))}
 /* the map editor: bars across the top (the map, undo, the view), down the left (the tool groups, with a drawer beside them
@@ -292,7 +291,9 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
 .edpanel p{margin:0}.edpanel .hint{color:var(--muted);font-size:14px}
 .edihead{display:flex;flex-direction:column;gap:2px;min-width:0;max-width:340px}
 .edihead small{color:var(--muted);font-size:13px}
-.edsub{gap:4px}
+.edsub{gap:4px;order:-2}
+/* Add: what is being added and how, ahead of the brush and spacing */
+#edOpts .edpicked[data-for="add"],#edPlace{order:-1}
 .edpicked{color:var(--muted)}.edpicked b{color:var(--ink)}
 #edCard dl{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px;margin:0}
 #edCard dt{font:700 12px/1.5 var(--f-display);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
