@@ -40,7 +40,7 @@ canvas#view{position:fixed;inset:0;width:100%;height:100%;display:block;touch-ac
 #trenchBar>i{background:var(--ok)}#lawnBar>i{background:#9bd46a}
 .full .val{color:var(--gas)}
 .tacts{flex:none;margin-left:auto;display:flex;gap:6px}
-#blkBtn[aria-pressed="true"],#pumpBtn[aria-pressed="true"]{background:var(--machine);color:#1c1309}
+#blkBtn[aria-pressed="true"],#pumpBtn[aria-pressed="true"],#wipeBtn[aria-pressed="true"]{background:var(--machine);color:#1c1309}
 .row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 button{pointer-events:auto;touch-action:manipulation;font:700 15px/1 var(--f-display);letter-spacing:.05em;text-transform:uppercase;color:var(--ink);background:var(--hud);border:1px solid var(--hud-line);border-radius:9px;height:40px;padding:0 12px;cursor:pointer}
 button:focus-visible{outline:3px solid var(--gas);outline-offset:2px}

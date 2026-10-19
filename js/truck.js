@@ -8,6 +8,7 @@ const truck=new THREE.Group();truck.rotation.order='YXZ';scene.add(truck);
 // sprung: cab, frame and bed ride on the springs above the axles, pivoting near frame height
 const sprung=new THREE.Group();sprung.position.y=1.0;truck.add(sprung);
 const tBody=new THREE.Group();tBody.position.y=-1.0;sprung.add(tBody);
+const trWipers=[];
 for(const x of [-0.5,0.5])box(0.18,0.28,7.8,STEEL,x,0.95,0.0,tBody);
 for(let z=-3.8;z<=3.81;z+=0.75)box(1.0,0.1,0.12,STEEL,0,0.95,z,tBody);
 // cab shell: roof, floor and walls with real window openings, so the glass shows the cab inside
@@ -188,7 +189,8 @@ for(let i=0;i<4;i++)box(2.0,0.02,0.02,STEEL,0,2.18,3.0+i*0.25,tBody);
   box(0.5,0.22,0.02,PLATE,0,1.0,4.345,tBody);
   // cab: two-piece windshield post, wipers, door window trim and hinges, beacon, antenna, hood spot mirrors
   box(0.05,0.55,0.03,WHITE,0,2.5,2.635,tBody);
-  for(const sd of [-1,1]){const w=box(0.7,0.015,0.015,BLACK,sd*0.5,2.265,2.645,tBody);w.rotation.z=sd*0.08;box(0.04,0.04,0.04,BLACK,sd*0.15,2.245,2.64,tBody);
+  // the wipers (left then right) turn on pivots by the centre post and sweep up when they are on (rain.js)
+  for(const sd of [-1,1]){const w=new THREE.Group();w.position.set(sd*0.15,2.255,2.648);w.rotation.z=sd*0.08;tBody.add(w);trWipers.push(w);box(0.7,0.015,0.015,BLACK,sd*0.35,0,0,w);box(0.04,0.04,0.04,BLACK,sd*0.15,2.245,2.64,tBody);
     box(0.02,0.04,0.88,CHROME,sd*1.19,2.77,1.95,tBody);box(0.02,0.04,0.88,CHROME,sd*1.19,2.23,1.95,tBody);
     for(const y of [1.75,2.4])cylX(0.03,0.04,12,STEEL,sd*1.19,y,2.58,tBody);
     tube([[sd*1.0,2.12,3.7],[sd*1.12,2.2,3.85],[sd*1.18,2.12,3.95]],0.012,12,STEEL,tBody);

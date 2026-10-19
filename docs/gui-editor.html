@@ -75,7 +75,7 @@ canvas#view{position:fixed;inset:0;width:100%;height:100%;display:block;touch-ac
 #trenchBar>i{background:var(--ok)}#lawnBar>i{background:#9bd46a}
 .full .val{color:var(--gas)}
 .tacts{flex:none;margin-left:auto;display:flex;gap:6px}
-#blkBtn[aria-pressed="true"],#pumpBtn[aria-pressed="true"]{background:var(--machine);color:#1c1309}
+#blkBtn[aria-pressed="true"],#pumpBtn[aria-pressed="true"],#wipeBtn[aria-pressed="true"]{background:var(--machine);color:#1c1309}
 .row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 button{pointer-events:auto;touch-action:manipulation;font:700 15px/1 var(--f-display);letter-spacing:.05em;text-transform:uppercase;color:var(--ink);background:var(--hud);border:1px solid var(--hud-line);border-radius:9px;height:40px;padding:0 12px;cursor:pointer}
 button:focus-visible{outline:3px solid var(--gas);outline-offset:2px}
@@ -418,6 +418,7 @@ body.editing #hud>:is(.tbar,.lbar,.rpane,.sticks,.bbar){display:none}
     </div>
     <div class="tacts">
       <button id="pumpBtn" hidden aria-pressed="false">Pump</button>
+      <button id="wipeBtn" hidden aria-pressed="false">Wipers</button>
       <button id="boxBtn" hidden>Hook box</button>
       <button id="blkBtn" aria-pressed="false">Blocks</button>
       <button id="camBtn">Cab view</button>
@@ -810,6 +811,7 @@ const WORDS=[
   ['blkSize','Blocks','Block size {size}'],['blkSnap','Blocks','Block snap: {snap}'],['blkMat','Blocks','Block material: {mat}'],
   ['blkFP','Blocks','Blocks go where the dot is. The mouse wheel (or [blkNear] [blkFar]) pulls them in and pushes them out.'],
   ['rainIn','Weather and water','Rain coming in. Dirt, clay and low ground will turn to mud.'],
+  ['wipeTip','Weather and water','Rain on the glass. [wipers] runs the wipers.'],
   ['rainOut','Weather and water','Rain has stopped. The ground will dry out over the next several minutes.'],
   ['wxAuto','Weather and water','Weather: showers now and then'],['wxRain','Weather and water','Weather: rain'],['wxDry','Weather and water','Weather: dry'],
   ['waterSeep','Weather and water','Groundwater seeping in. Tap Pump to dewater the hole.'],
@@ -863,7 +865,7 @@ const GUI_VARS=[['--machine','Accent (machine orange)','c'],['--gas','Highlight 
 const GUI_FONTS=['"Saira Condensed","Arial Narrow",system-ui,sans-serif','"Saira",system-ui,sans-serif','system-ui,sans-serif','Arial,Helvetica,sans-serif',
   '"Arial Narrow",Arial,sans-serif','Verdana,sans-serif','"Trebuchet MS",sans-serif','Georgia,serif','Impact,"Arial Black",sans-serif','"Courier New",monospace'];
 // parts that are usually hidden until the game needs them, shown on request so they can be styled
-const GUI_PEEK=[['#menu','Menu'],['#help','Start card'],['#blkBar','Blocks bar'],['#walkBtns','Sprint and Jump'],['#seatBtn','Get in'],['#pumpBtn','Pump'],
+const GUI_PEEK=[['#menu','Menu'],['#help','Start card'],['#blkBar','Blocks bar'],['#walkBtns','Sprint and Jump'],['#seatBtn','Get in'],['#pumpBtn','Pump'],['#wipeBtn','Wipers'],
   ['#boxBtn','Hook box'],['#lawnRow','Lawn gauge'],['#heatKey','Heatmap key'],['#updBtn','Update button'],['#keysBox','Keys panel'],['#gfxBox','Graphics panel']];
 // ready-made groups (selector, name), picked from the Groups tab and then edited like any part
 const GUI_GROUPS=[['#hud button','Every button on the screen'],['.tbar button','Top bar buttons'],['.lbar button','Machine buttons'],['.bbar button','Bottom bar buttons'],

@@ -49,6 +49,7 @@ const WORDS=[
   ['blkSize','Blocks','Block size {size}'],['blkSnap','Blocks','Block snap: {snap}'],['blkMat','Blocks','Block material: {mat}'],
   ['blkFP','Blocks','Blocks go where the dot is. The mouse wheel (or [blkNear] [blkFar]) pulls them in and pushes them out.'],
   ['rainIn','Weather and water','Rain coming in. Dirt, clay and low ground will turn to mud.'],
+  ['wipeTip','Weather and water','Rain on the glass. [wipers] runs the wipers.'],
   ['rainOut','Weather and water','Rain has stopped. The ground will dry out over the next several minutes.'],
   ['wxAuto','Weather and water','Weather: showers now and then'],['wxRain','Weather and water','Weather: rain'],['wxDry','Weather and water','Weather: dry'],
   ['waterSeep','Weather and water','Groundwater seeping in. Tap Pump to dewater the hole.'],
