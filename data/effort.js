@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-19T20:07:00Z",
+ "updated": "2026-10-19T21:17:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -30,9 +30,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-19",
-   "dh": 85.2,
-   "act": 3,
-   "versions": 12
+   "dh": 90.2,
+   "act": 3.5,
+   "versions": 13
   }
  ],
  "extra": [
@@ -1491,6 +1491,15 @@ window.EFFORT = {
    "tris": 3033562,
    "chars": 1075302,
    "what": "The help now says all of Dexter's machines drive, and the idea board marks the wheel loader done and the dozer mostly done."
+  },
+  {
+   "v": 162,
+   "asked": "2026-10-19T15:40:00-05:00",
+   "live": "2026-10-19T16:17:41-05:00",
+   "dh": 5,
+   "tris": 3033349,
+   "chars": 1079809,
+   "what": "Dexter's dozer has a working ripper that breaks up hard clay and rock so the blade and excavator dig it easily; the blade now struggles in unripped hard ground; fixed a crash while riding the dirt bike or a heavy machine."
   }
  ]
 };
