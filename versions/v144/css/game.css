@@ -1,0 +1,434 @@
+/* Layout: full-bleed 3D jobsite framed by a top bar, a left rail and a bottom bar; two joysticks in the thumb zones */
+:root{
+  --sky:#a9c3d3; --hud:rgba(20,23,19,.82); --hud-line:rgba(255,255,255,.16);
+  --ink:#f3f5ef; --muted:#c3ccbb; --machine:#f07a22; --gas:#f5c518; --danger:#ff5143; --ok:#86d98f;
+  --f-display:"Saira Condensed","Arial Narrow",system-ui,sans-serif;
+  --f-body:"Saira",system-ui,sans-serif;
+  color-scheme:dark;
+}
+html,body{height:100%;margin:0;overflow:hidden;background:var(--sky);color:var(--ink);font-family:var(--f-body);-webkit-user-select:none;user-select:none;-webkit-touch-callout:none}
+canvas#view{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
+#aim{position:fixed;left:50%;top:50%;width:6px;height:6px;margin:-3px 0 0 -3px;border-radius:50%;background:rgba(255,255,255,.85);box-shadow:0 0 0 1.5px rgba(0,0,0,.55);pointer-events:none;z-index:1}#aim[hidden]{display:none}
+#hud{position:fixed;inset:0;pointer-events:none;box-sizing:border-box;
+  --pt:calc(env(safe-area-inset-top,0px) + 8px);--pb:calc(env(safe-area-inset-bottom,0px) + 10px);
+  --pl:max(10px,env(safe-area-inset-left,0px));--pr:max(10px,env(safe-area-inset-right,0px))}
+/* Two bars frame the view: the top bar (menu, action buttons, Controls with the machines, the camera) and the bottom bar
+   (turn, what the sticks do, frame rate). The sticks and the minimap float over the view between them. #hud is a grid:
+   rows top bar / view / bottom bar, columns (once the machine rail, now empty) / view / minimap column */
+#hud{display:grid;grid-template-columns:auto minmax(0,1fr) auto;grid-template-rows:auto minmax(0,1fr) auto;--bar:rgba(22,25,20,.9)}
+.tbar{grid-area:1/1/2/4;position:relative;z-index:3;pointer-events:auto;display:flex;align-items:center;gap:8px 12px;min-height:50px;box-sizing:border-box;
+  padding:calc(env(safe-area-inset-top,0px) + 5px) var(--pr) 6px var(--pl);background:var(--bar);border-bottom:1px solid var(--hud-line);zoom:var(--ms)}
+/* hazard stripe along the top bar's foot */
+.tbar::after{content:"";position:absolute;left:0;right:0;top:100%;height:3px;background:repeating-linear-gradient(-45deg,var(--gas) 0 7px,#22251f 7px 14px);pointer-events:none}
+.tbar button{height:38px;font-size:14px;padding:0 12px;white-space:nowrap}
+#menuBtn{flex:none;width:48px;padding:0;font-size:20px;letter-spacing:0}#menuBtn[aria-expanded="true"]{background:var(--machine);color:#1c1309}
+.brand{flex:none;font:800 13px/1 var(--f-display);letter-spacing:.14em;text-transform:uppercase;color:var(--machine)}
+.brand b{display:block;font-size:20px;letter-spacing:.05em;color:var(--ink)}
+@media (max-width:1000px){.brand{display:none}}
+/* the gauges: one cell per job, side by side; tap to hide the detail lines */
+.status{flex:1 1 auto;min-width:0;display:flex;align-items:stretch;cursor:pointer}
+.srow{flex:1 1 0;min-width:0;max-width:240px;display:flex;flex-direction:column;justify-content:center;gap:3px;padding:0 12px;border-left:1px solid var(--hud-line)}
+.srow[hidden]{display:none}
+.line{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:0 6px}
+.lbl{font:700 12px/1 var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.val{font:700 17px/1 var(--f-display);font-variant-numeric:tabular-nums;white-space:nowrap}
+.sub{font:600 13px/1.1 var(--f-display);font-variant-numeric:tabular-nums;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.status.min .sub{display:none}
+/* the job gauges are hidden for now (the game still keeps them up to date); the buttons sit at the right */
+#status{display:none}
+#truckBar{background:#9fb7c6}
+.bar{height:5px;border-radius:3px;background:rgba(255,255,255,.14);overflow:hidden}
+.bar>i{display:block;height:100%;width:0;background:var(--machine);transition:width .15s}
+#trenchBar>i{background:var(--ok)}#lawnBar>i{background:#9bd46a}
+.full .val{color:var(--gas)}
+.tacts{flex:none;margin-left:auto;display:flex;gap:6px}
+#blkBtn[aria-pressed="true"],#pumpBtn[aria-pressed="true"],#wipeBtn[aria-pressed="true"]{background:var(--machine);color:#1c1309}
+.row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+button{pointer-events:auto;touch-action:manipulation;font:700 15px/1 var(--f-display);letter-spacing:.05em;text-transform:uppercase;color:var(--ink);background:var(--hud);border:1px solid var(--hud-line);border-radius:9px;height:40px;padding:0 12px;cursor:pointer}
+button:focus-visible{outline:3px solid var(--gas);outline-offset:2px}
+button.sm{height:34px;padding:0 10px;font-size:13px}
+button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
+/* the menu drops from the ☰ at the top left, over the rail */
+#menu{position:absolute;top:100%;left:var(--pl);margin-top:8px;z-index:3;min-width:200px;max-height:calc(100dvh - 72px);overflow-y:auto;overscroll-behavior:contain;box-sizing:border-box;display:flex;flex-direction:column;gap:2px;background:#1d211b;box-shadow:0 6px 18px rgba(0,0,0,.5);border:1px solid var(--hud-line);border-radius:10px;padding:5px}
+#menu button{height:40px;font-size:15px;border:0;background:transparent;text-align:left;padding:0 12px;border-radius:7px}
+@media (hover:hover){#menu>button:hover{background:rgba(255,255,255,.07)}}
+.sizes{display:flex;align-items:center;gap:4px;padding:3px 4px 3px 12px}
+.sizes span{flex:1;white-space:nowrap;font:700 12px/1 var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-right:4px}
+#menu .sizes button{height:32px;padding:0 8px;font-size:13px;border:1px solid var(--hud-line);text-align:center}
+#menu .sizes button[aria-pressed="true"]{background:var(--machine);color:#1c1309}
+#resetBtn.arm{background:var(--danger)!important;color:#fff}
+/* Controls: the machines drop from the Controls button at the top right, a tile per machine, icon beside name; the one you drive is lit */
+#ctlMenu{position:absolute;top:100%;right:var(--pr);margin-top:8px;z-index:3;display:flex;flex-direction:column;gap:2px;min-width:180px;box-sizing:border-box;background:#1d211b;box-shadow:0 6px 18px rgba(0,0,0,.5);border:1px solid var(--hud-line);border-radius:10px;padding:5px}
+#ctlMenu[hidden]{display:none}
+#ctlMenu button{position:relative;height:44px;display:flex;align-items:center;gap:10px;padding:0 12px;font-size:15px;background:transparent;border:1px solid transparent;border-radius:7px;text-align:left}
+#ctlMenu svg{width:24px;height:24px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#ctlMenu button[aria-pressed="true"]{background:var(--machine);color:#1c1309}
+@media (hover:hover){#ctlMenu button[aria-pressed="false"]:hover{background:rgba(255,255,255,.07)}}
+.kb #ctlMenu button::after{content:attr(data-k);margin-left:auto;font-size:12px;opacity:.6}
+#ctlBtn[aria-expanded="true"]{background:var(--machine);color:#1c1309}
+/* the camera toggle: chase and cab side by side, the one in use lit */
+#camBtn{display:flex;align-items:stretch;gap:2px;padding:3px}
+#camBtn span{display:flex;align-items:center;padding:0 10px;border-radius:6px;color:var(--muted)}
+#camBtn[data-cam="chase"] #camChase,#camBtn[data-cam="cab"] #camCab{background:var(--machine);color:#1c1309}
+/* right column: the minimap, the block bar under it */
+.rpane{grid-area:2/3/3/4;z-index:2;min-height:0;max-height:100%;box-sizing:border-box;display:flex;flex-direction:column;align-items:flex-end;gap:6px;padding:11px var(--pr) 8px 0}
+#mini{flex:none;display:block;width:calc(104px*var(--ms));height:calc(104px*var(--ms));border-radius:10px;border:1px solid rgba(255,255,255,.35);background:#1e2a30;pointer-events:auto;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+/* UI size (menu): --s for the sticks, --ms for the bars, the map and the block bar, --cs for the bottom bar */
+#hud{--s:1;--ms:1;--cs:1}
+#toast,#benchBar{zoom:var(--s)}
+/* Block bar under the map: one box of rows (material, size steppers, first-person reach), then turn / lift / place */
+#blkBar{display:flex;flex-direction:column;width:210px;min-height:0;overflow-y:auto;overscroll-behavior:contain;background:var(--bar);border:1px solid var(--hud-line);border-radius:10px;padding:3px 4px;pointer-events:auto;zoom:var(--ms)}
+#blkBar>*+*{border-top:1px solid var(--hud-line)}
+.bstep{flex:none;display:flex;align-items:center;gap:2px;height:38px;padding-left:6px}.bstep[hidden]{display:none}
+.bstep span{flex:1;font:700 12px/1 var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.bstep b{font:700 16px/1 var(--f-display);color:var(--ink);min-width:48px;text-align:center}
+.bstep button{border:0;background:transparent}
+#blkLock{flex:0 0 auto;min-width:112px;color:var(--machine)}
+#blkBar .row{flex:none;flex-wrap:nowrap;align-items:stretch;gap:4px;padding:4px 0 1px}#blkBar .row button{flex:1;padding:0 4px;background:#2a2f27}
+#blkMat{flex:none;pointer-events:auto;width:100%;height:38px;padding:0 4px;font:700 14px/1 var(--f-display);color:var(--ink);background:transparent;border:0}
+#blkMat option,#blkMat optgroup{color:#111;background:#fff}
+/* the sticks, in the thumb zones just above the bottom bar (the left one beside the rail) */
+.sticks{grid-area:2/2/3/4;align-self:end;z-index:1;display:flex;justify-content:space-between;align-items:flex-end;padding:0 var(--pr) 10px 14px}
+.stickwrap{position:relative}
+.stick{--sz:min(calc(124px*var(--s)),calc((100vw - 64px*var(--ms) - 56px)/2),calc(100vh - 210px));width:var(--sz);height:var(--sz);border-radius:50%;background:rgba(20,23,19,.38);border:2px solid rgba(255,255,255,.28);position:relative;pointer-events:auto;touch-action:none}
+.stick::before,.stick::after{content:"";position:absolute;background:rgba(255,255,255,.16)}
+.stick::before{left:50%;top:12px;bottom:12px;width:2px;margin-left:-1px}
+.stick::after{top:50%;left:12px;right:12px;height:2px;margin-top:-1px}
+.knob{position:absolute;left:50%;top:50%;width:42%;height:42%;margin:-21% 0 0 -21%;border-radius:50%;background:var(--machine);box-shadow:0 3px 0 rgba(0,0,0,.35);z-index:1}
+/* Get in over the left stick; Sprint and Jump over the right one in Walk mode (Sprint lights up while it is on) */
+#seatBtn,.walkbtns{position:absolute;bottom:100%;margin-bottom:10px;zoom:var(--cs)}
+#seatBtn{left:0;min-width:100px;font-size:16px;border-radius:20px;background:var(--machine);color:#1c1309;border:0;box-shadow:0 3px 0 rgba(0,0,0,.35);white-space:nowrap}
+.walkbtns{right:0;display:flex;gap:8px}.walkbtns[hidden]{display:none}
+#jumpBtn,#sprintBtn{height:44px;min-width:76px;padding:0 12px;font-size:17px;border-radius:22px;box-shadow:0 3px 0 rgba(0,0,0,.35)}
+#jumpBtn{background:var(--machine);color:#1c1309;border:0}
+#sprintBtn{border:2px solid var(--machine);color:var(--machine)}#sprintBtn[aria-pressed="true"]{background:var(--machine);color:#1c1309}
+#jumpBtn:active{transform:translateY(2px);box-shadow:0 1px 0 rgba(0,0,0,.35)}
+/* bottom bar: turn sensitivity (the slider is open on a computer; on a phone tap the chip), each stick's caption under
+   it, the frame rate in the middle */
+.bbar{grid-area:3/1/4/4;position:relative;z-index:2;pointer-events:auto;display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;min-height:46px;box-sizing:border-box;
+  padding:5px var(--pr) calc(env(safe-area-inset-bottom,0px) + 5px) var(--pl);background:var(--bar);border-top:1px solid var(--hud-line);zoom:var(--cs)}
+/* turn sensitivity, in the Controls panel: a slider for the machine you are in */
+.turnbox{display:flex;align-items:center;gap:12px;padding:10px 0 4px;border-bottom:1px solid var(--hud-line)}
+#turnBtn{font:700 17px/1 var(--f-display);white-space:nowrap;font-variant-numeric:tabular-nums;min-width:130px;text-align:right}
+#turnSl{flex:1 1 auto;min-width:0;height:30px;margin:0;accent-color:var(--machine);touch-action:none;cursor:pointer}
+.cap{font:600 13px/1.3 var(--f-display);color:var(--ink);letter-spacing:.03em;white-space:nowrap}
+.cap b{color:var(--machine);font-weight:800}
+#capR{margin-left:auto;text-align:right}
+.stats{margin-left:auto;font:600 12px/1 var(--f-display);letter-spacing:.04em;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.stats b{color:var(--ink);font-weight:700}
+/* narrow screens (a phone upright): the gauges take a row of their own under the menu and buttons, and the frame rate
+   a line of its own in the bottom bar */
+@media (max-width:640px){.tbar{flex-wrap:wrap}.status{order:3;flex-basis:100%;margin:0 calc(-1 * var(--pl)) -1px;border-top:1px solid var(--hud-line);padding-top:5px}
+  .srow{max-width:none;padding:0 10px}.srow:first-child{border-left:0}.line{flex-direction:column;align-items:flex-start;gap:3px}
+  .bbar .stats{order:-1;flex-basis:100%;margin:0;text-align:center}.bbar{gap:4px 12px}}
+/* short screens (a phone on its side): slimmer bars */
+@media (max-height:440px){.tbar{min-height:44px;padding-bottom:4px}.status .sub{display:none}#ctlMenu button{height:38px}
+  .bbar{min-height:40px;padding-top:3px}#mini{width:calc(92px*var(--ms));height:calc(92px*var(--ms))}}
+#updBtn{position:absolute;left:50%;top:22%;transform:translateX(-50%);z-index:6;background:var(--gas);color:#1c1309;border:0;height:46px;font-size:18px;white-space:nowrap;box-shadow:0 3px 10px rgba(0,0,0,.35)}
+#toast{position:absolute;left:0;right:0;top:32%;display:flex;justify-content:center}
+#toast span{font:800 19px/1.2 var(--f-display);letter-spacing:.03em;background:var(--hud);border:2px solid var(--machine);padding:8px 14px;border-radius:10px;text-align:center;max-width:80%;opacity:0;transition:opacity .25s}
+#toast span.show{opacity:1}
+#toast span.bad{border-color:var(--danger);color:#ffd9d5}
+#toast span.good{border-color:var(--ok)}
+/* Site map: the map fills the card on the left, a side panel on the right (below on a tall phone) holds the title,
+   teleport, places, layers and the key. The map is dragged, pinched and scrolled; its buttons float on it */
+#bigmap{position:fixed;inset:0;background:rgba(6,8,6,.72);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);display:flex;align-items:stretch;justify-content:center;z-index:6;pointer-events:auto;box-sizing:border-box;
+  padding-block:calc(env(safe-area-inset-top,0px) + 14px) calc(env(safe-area-inset-bottom,0px) + 14px);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.mapcard{width:100%;max-width:1680px;display:grid;grid-template-columns:minmax(0,1fr) 380px;background:#161a15;border:1px solid var(--hud-line);border-radius:16px;overflow:hidden;box-shadow:0 24px 70px rgba(0,0,0,.55);box-sizing:border-box}
+.mapview{position:relative;min-height:0;min-width:0;background:#1a4769}
+#big{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:crosshair}
+#big.drag{cursor:grabbing}
+#mapCtl{position:absolute;right:12px;top:12px;display:flex;flex-direction:column;gap:8px}
+#mapCtl button{width:48px;height:48px;padding:0;display:grid;place-items:center;background:rgba(20,23,19,.85);border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+#mapCtl svg{width:24px;height:24px;fill:none;stroke:var(--ink);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+@media (hover:hover){#mapCtl button:hover{background:rgba(48,54,44,.95)}}
+#mapWhere{position:absolute;left:12px;bottom:12px;max-width:calc(100% - 200px);padding:8px 14px;border-radius:10px;background:rgba(20,23,19,.85);font:700 18px/1.2 var(--f-display);letter-spacing:.03em;color:var(--ink);pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#mapWhere:empty{display:none}
+.mapside{display:flex;flex-direction:column;gap:16px;padding:16px 18px 18px;overflow-y:auto;min-height:0;border-left:1px solid var(--hud-line);background:linear-gradient(180deg,#1f241d,#161a15)}
+.maphead{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.maphead h2{margin:0;font:800 32px/1 var(--f-display);color:var(--machine);letter-spacing:.02em;text-transform:uppercase}
+.mapsec{display:flex;flex-direction:column;gap:10px;padding-top:14px;border-top:1px solid var(--hud-line)}
+.mapsec h3{margin:0;font:800 14px/1 var(--f-display);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+#mapPlaces{display:flex;flex-wrap:wrap;gap:6px}
+#mapPlaces button{height:40px;font-size:16px;padding:0 12px}
+#tpBar{display:flex;align-items:center;min-height:46px;padding:10px 12px;border-radius:10px;background:rgba(245,197,24,.08);border:1px solid rgba(245,197,24,.28);font:700 18px/1.2 var(--f-display);letter-spacing:.03em;color:var(--ink)}
+#tpOpts{display:flex;flex-wrap:wrap;align-items:center;gap:8px}#tpOpts[hidden],#tpHint[hidden]{display:none}
+#tpOpts>span{width:100%;color:var(--gas)}
+#tpOpts button{height:44px;font-size:17px;padding:0 12px}
+#tpOpts button[aria-pressed="true"]{border-color:var(--machine);color:var(--machine)}
+.legend{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:9px 12px;font:600 17px/1.2 var(--f-display);letter-spacing:.03em}
+.legend span{display:flex;align-items:center;gap:9px}
+.legend i{flex:none;display:block;width:18px;height:12px;border-radius:3px}
+.legend i.tri{width:18px;height:14px;border-radius:0;background:var(--c);clip-path:polygon(100% 50%,0 0,30% 50%,0 100%)}
+/* a tall phone: the map on top, the panel under it */
+@media (orientation:portrait) and (max-width:900px){.mapcard{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,58fr) minmax(0,42fr)}
+  .mapside{border-left:0;border-top:1px solid var(--hud-line)}}
+/* a phone on its side: a narrower panel beside the map */
+@media (max-height:520px) and (orientation:landscape){.mapcard{grid-template-columns:minmax(0,1fr) 300px}.mapside{padding:12px 14px;gap:12px}.maphead h2{font-size:26px}
+  #mapCtl button{width:42px;height:42px}.legend{font-size:15px;grid-template-columns:repeat(2,minmax(0,1fr))}}
+.legend i{display:inline-block;width:18px;height:12px;border-radius:3px}
+#benchBar{position:absolute;left:0;right:0;top:calc(var(--pt) + 130px);z-index:2;margin:0 auto;width:max-content;max-width:100%;box-sizing:border-box;font:800 16px/1.25 var(--f-display);letter-spacing:.04em;text-align:center;background:var(--hud);border:2px solid var(--gas);border-radius:10px;padding:8px 14px;font-variant-numeric:tabular-nums}
+#benchBar small{display:block;font:600 13px/1.2 var(--f-display);color:var(--muted);letter-spacing:.03em}
+#bench{position:fixed;inset:0;background:rgba(10,12,9,.78);display:flex;align-items:center;justify-content:center;pointer-events:auto;box-sizing:border-box;z-index:5;
+  padding-block:calc(env(safe-area-inset-top,0px) + 16px) calc(env(safe-area-inset-bottom,0px) + 16px);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.tablewrap{overflow-x:auto}
+.btab{margin-bottom:10px;border-collapse:collapse;width:100%;font:600 17px/1.3 var(--f-display);font-variant-numeric:tabular-nums}
+.btab th{font:700 14px/1.2 var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-align:right;padding:6px 8px;border-bottom:1px solid var(--hud-line)}
+.btab td{text-align:right;padding:7px 8px;border-bottom:1px solid rgba(255,255,255,.07)}
+.btab th:first-child,.btab td:first-child{text-align:left}
+.fps-good{color:var(--ok)}.fps-mid{color:var(--gas)}.fps-bad{color:var(--danger)}
+.big{font:800 26px/1.15 var(--f-display);letter-spacing:.02em}
+.devline{font-size:15px!important;color:var(--muted)}
+.card .row button{flex:1}
+.card button.ghost{background:transparent;color:var(--ink);border:1px solid var(--hud-line)}
+#flash{position:fixed;inset:0;background:var(--danger);opacity:0;pointer-events:none;transition:opacity .4s}
+#help,#sndBox,#syncBox{position:fixed;inset:0;background:rgba(10,12,9,.72);display:flex;align-items:center;justify-content:center;pointer-events:auto;box-sizing:border-box;
+  padding-block:calc(env(safe-area-inset-top,0px) + 16px) calc(env(safe-area-inset-bottom,0px) + 16px);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+.card{background:#1d211b;border:1px solid var(--hud-line);border-radius:14px;padding:20px;max-width:440px;width:100%;max-height:100%;overflow:auto;box-sizing:border-box;display:flex;flex-direction:column;gap:14px}
+.card h1{margin:0;font:800 36px/1 var(--f-display);letter-spacing:.02em;color:var(--machine);text-wrap:balance}
+.card p{margin:0;font-size:18px;line-height:1.45}
+.ticket{border:2px dashed rgba(255,255,255,.3);border-radius:10px;padding:12px 14px;display:flex;flex-direction:column;gap:6px}
+.ticket .lbl{color:var(--gas)}
+.keys{display:grid;grid-template-columns:auto 1fr;gap:8px 14px;font-size:17px;line-height:1.3}
+.keys dt{font:700 17px/1.3 var(--f-display);color:var(--machine);letter-spacing:.04em;text-transform:uppercase}
+.keys dd{margin:0}
+.buildlink{text-align:center;font-size:17px!important}
+.buildlink a{color:var(--machine);font-weight:600}
+.ver{font:600 14px/1.2 var(--f-display);letter-spacing:.05em;color:var(--muted);text-align:right;padding:4px 6px 2px}
+.card .ver{text-align:center;font-size:15px!important;margin-top:-6px}
+.card button{background:var(--machine);color:#1c1309;height:54px;font-size:21px;border:0}
+/* the start card leads with a tile per machine (and on foot); tapping one starts the game in that mode */
+#help .card{max-width:600px}
+.pick{display:grid;grid-template-columns:1fr 1fr;gap:10px;flex:none}
+/* short landscape screens (phones on their side): all four tiles in one row so none is cut off */
+@media (orientation:landscape) and (max-height:560px){#help .card{max-width:900px;padding:14px 18px;gap:10px}#help .card h1{font-size:28px}.pick{grid-template-columns:repeat(4,1fr)}
+  .tile .tn{font-size:19px;bottom:24px}.tile .ts{font-size:12px;bottom:7px}}
+/* the controls list hides behind the Controls button */
+#ctrlBtn{flex:none}#ctrlBtn[aria-expanded="true"]{border-color:var(--machine);color:var(--machine)}
+#ctrlBox{display:flex;flex-direction:column;gap:14px}#ctrlBox[hidden]{display:none}
+.card button.tile{position:relative;height:auto;aspect-ratio:16/10;padding:0;overflow:hidden;border-radius:10px;background:#0f120e;border:2px solid var(--hud-line);color:var(--ink);text-align:left}
+.tile img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
+.tile .tn,.tile .ts{position:absolute;left:10px;right:10px;text-shadow:0 1px 3px rgba(0,0,0,.9)}
+.tile .tn{bottom:30px;font:800 24px/1 var(--f-display);letter-spacing:.02em}
+.tile .ts{bottom:9px;font:600 15px/1.15 var(--f-display);text-transform:none;letter-spacing:.01em;color:#e4e8dc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tile::after{content:"";position:absolute;inset:45% 0 0;background:linear-gradient(transparent,rgba(8,10,7,.85))}
+.tile .tn,.tile .ts{z-index:1}
+.card button.tile[aria-pressed="true"]{border-color:var(--machine);box-shadow:0 0 0 2px var(--machine)}
+@media (hover:hover){.card button.tile:hover{border-color:var(--machine)}}
+@media (max-width:380px){.tile .tn{font-size:20px;bottom:26px}.tile .ts{font-size:13px}}
+#help .card{overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y}
+@media (max-height:420px){#benchBar{top:calc(var(--pt) + 56px)}}
+@media (prefers-reduced-motion:reduce){#toast span,#flash,.bar>i{transition:none}}
+/* Sound panel: label and value over a full-width slider on phones, one row each when there is room; thumbs sized for thumbs */
+#sndBox{z-index:7}
+/* Keys panel: one row per action, its name and what it does, then two key boxes */
+#keysBox{position:fixed;inset:0;z-index:7;background:rgba(10,12,9,.72);display:flex;align-items:center;justify-content:center;pointer-events:auto;box-sizing:border-box;
+  padding-block:calc(env(safe-area-inset-top,0px) + 16px) calc(env(safe-area-inset-bottom,0px) + 16px);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#keysBox .card{max-width:560px;overscroll-behavior:contain}
+#ctrlsBox{position:fixed;inset:0;z-index:7;background:rgba(10,12,9,.72);display:flex;align-items:center;justify-content:center;pointer-events:auto;box-sizing:border-box;
+  padding-block:calc(env(safe-area-inset-top,0px) + 16px) calc(env(safe-area-inset-bottom,0px) + 16px);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#ctrlsBox[hidden]{display:none}
+#ctrlsBox .card{max-width:600px;overscroll-behavior:contain;touch-action:pan-y}
+#ctrlsTabs button{flex:1 1 0;height:42px;font-size:15px}
+#ctrlsTabs button[aria-pressed="false"]{background:transparent;color:var(--ink);border:1px solid var(--hud-line)}
+#ctrlsTabs button[aria-pressed="true"]{background:var(--machine);color:#1c1309}
+#ctrlsList h2{margin:10px 0 2px;font:800 15px/1 var(--f-display);letter-spacing:.12em;text-transform:uppercase;color:var(--gas)}
+#ctrlsList .kkey{font:700 16px/1.2 var(--f-display);white-space:nowrap;text-align:right;color:var(--ink)}
+#ctrlsList .krow{grid-template-columns:1fr auto}
+#keysList h2{margin:10px 0 2px;font:800 15px/1 var(--f-display);letter-spacing:.12em;text-transform:uppercase;color:var(--gas)}
+.krow{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.07)}
+.kname{font:700 18px/1.2 var(--f-display);letter-spacing:.02em}
+.kname small{display:block;font:600 14px/1.25 var(--f-body);color:var(--muted);letter-spacing:0;margin-top:2px}
+#keysBox .kbtn{height:42px;min-width:78px;padding:0 10px;font-size:16px;background:#2a2f27;color:var(--ink);border:1px solid var(--hud-line);text-transform:none}
+#keysBox .kbtn.none{color:var(--muted);font-weight:600}
+#keysBox .kbtn.cap{background:var(--gas);color:#1c1309;border-color:var(--gas)}
+#keysNote:empty{display:none}
+#keysNote{color:var(--gas)!important}
+.sliders{display:grid;grid-template-columns:1fr auto;grid-auto-flow:dense;gap:2px 12px;font:700 18px/1.2 var(--f-display);letter-spacing:.03em}
+.sliders label{grid-column:1;color:var(--muted);text-transform:uppercase;font-size:15px;letter-spacing:.08em;margin-top:8px;align-self:end}
+.sliders output{grid-column:2;align-self:end;font-variant-numeric:tabular-nums;color:var(--ink)}
+.sliders input{grid-column:1/-1;width:100%;height:36px;accent-color:var(--machine);margin:0}
+@media (min-width:480px){.sliders{grid-template-columns:auto 1fr 3.2em;align-items:center;gap:8px 12px}
+  .sliders label{margin-top:0;align-self:center}.sliders input{grid-column:2}.sliders output{grid-column:3;align-self:center;text-align:right}}
+#sndOn[aria-pressed="false"]{color:var(--danger);border-color:var(--danger)}
+/* while the map editor is open the game HUD hides */
+body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
+:root{--ed-l:max(8px,env(safe-area-inset-left,0px));--ed-r:max(8px,env(safe-area-inset-right,0px))}
+/* the map editor: bars across the top (the map, undo, the view), down the left (the tool groups, with a drawer beside them
+   for the group's library or list) and along the bottom (the tool's options, the selection's settings, then a status line) */
+#editor{position:fixed;inset:0;z-index:4;pointer-events:none;display:grid;grid-template-columns:auto auto 1fr;grid-template-rows:auto minmax(0,1fr) auto auto;box-sizing:border-box}
+#editor[hidden]{display:none}
+#editor svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.edbar{grid-column:1/-1;grid-row:1;pointer-events:auto;display:flex;align-items:center;gap:6px 12px;overflow-x:auto;scrollbar-width:none;background:var(--hud);border-bottom:1px solid var(--hud-line);
+  padding:calc(env(safe-area-inset-top,0px) + 6px) var(--ed-r) 6px var(--ed-l)}
+.edbar h2{margin:0;flex:none;font:800 20px/1 var(--f-display);letter-spacing:.05em;text-transform:uppercase}
+.edbar .row{flex:none;flex-wrap:nowrap;gap:4px}
+#edPanelBtn{margin-left:auto}
+.edbar>button{flex:none}
+.edico{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.edico svg{width:18px;height:18px;flex:none}
+.edtools{grid-column:1;grid-row:2;pointer-events:auto;display:flex;flex-direction:column;gap:4px;overflow-y:auto;scrollbar-width:none;background:var(--hud);border-right:1px solid var(--hud-line);padding:6px 6px 6px var(--ed-l)}
+.edtools button{flex:none;width:66px;height:56px;padding:2px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font:700 13px/1 var(--f-display);letter-spacing:.03em}
+.edtools svg{width:22px;height:22px}
+.edtools .edmapbtn{margin-top:auto}
+.eddrawer{grid-column:2;grid-row:2;pointer-events:auto;width:310px;max-width:calc(100vw - 100px);box-sizing:border-box;overflow-y:auto;overscroll-behavior:contain;background:var(--hud);border-right:1px solid var(--hud-line);padding:8px 10px 12px;display:flex;flex-direction:column;gap:8px;font:600 15px/1.25 var(--f-display)}
+.eddrawer[hidden],.edsec[hidden]{display:none}
+.edsec{display:flex;flex-direction:column;gap:7px}
+.edsec p{margin:0}.edsec .hint{color:var(--muted);font-size:14px}
+.edsec h3,.edpanel h3{margin:0;font:800 18px/1.1 var(--f-display);letter-spacing:.03em;color:var(--machine)}
+.edsec h3 small{font:600 14px/1 var(--f-display);color:var(--muted);letter-spacing:0;margin-left:6px}
+.edsec h4{margin:3px 0 0;font:700 12px/1 var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.edkinds{display:flex;flex-direction:column;gap:4px}.edkinds .row{flex-wrap:wrap;gap:4px}
+.edbottom{grid-column:1/-1;grid-row:3;pointer-events:auto;display:flex;flex-direction:column;background:var(--hud);border-top:1px solid var(--hud-line)}
+.edpanel{box-sizing:border-box;width:100%;display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;padding:7px var(--ed-r) 7px var(--ed-l);font:600 15px/1.25 var(--f-display)}
+.edpanel[hidden]{display:none}
+.edpanel+.edpanel{border-top:1px solid var(--hud-line)}
+.edpanel p{margin:0}.edpanel .hint{color:var(--muted);font-size:14px}
+.edihead{display:flex;flex-direction:column;gap:2px;min-width:0;max-width:340px}
+.edihead small{color:var(--muted);font-size:13px}
+.edsub{gap:4px;order:-2}
+/* Add: what is being added and how, ahead of the brush and spacing */
+#edOpts .edpicked[data-for="add"],#edPlace{order:-1}
+.edpicked{color:var(--muted)}.edpicked b{color:var(--ink)}
+#edCard dl{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px;margin:0}
+#edCard dt{font:700 12px/1.5 var(--f-display);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+#edCard dd{margin:0 10px 0 0;font-variant-numeric:tabular-nums}
+.edsw{display:flex;gap:5px}
+#editor button.edswb{width:30px;height:30px;padding:0;border-radius:50%;border:2px solid rgba(255,255,255,.35)}
+#editor button.edswb[aria-pressed="true"]{border-color:#fff;box-shadow:0 0 0 2px var(--machine)}
+.edstat{grid-column:1/-1;grid-row:4;pointer-events:auto;display:flex;gap:16px;white-space:nowrap;overflow:hidden;background:rgba(10,12,10,.88);color:var(--muted);font:600 13px/1.3 var(--f-display);
+  padding:3px var(--ed-r) calc(env(safe-area-inset-bottom,0px) + 3px) var(--ed-l)}
+.edstat span{font-variant-numeric:tabular-nums}
+#edTip{margin-left:auto;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.edlist{display:flex;flex-direction:column;gap:4px}
+.edlg{display:flex;gap:5px;align-items:center}
+#editor button.edlgo{flex:1;min-width:0;height:36px;padding:0 8px;display:flex;align-items:center;gap:6px;text-align:left;font:700 15px/1 var(--f-display)}
+.edlgo i{font-style:normal;width:12px}.edlgo small{color:var(--muted);font-weight:600}
+#editor button.edlgs{flex:none}
+#editor button.edlgs[aria-pressed="true"]{background:var(--machine);color:#1c1309}
+.edlrows{display:flex;flex-direction:column;gap:2px;padding-left:10px}
+.edlr{display:flex;gap:4px;align-items:stretch}
+#editor button.edlck{flex:none;width:32px;height:auto;min-height:36px;padding:0}
+.edlck::before{content:'';display:block;width:14px;height:14px;margin:auto;border:2px solid var(--muted);border-radius:3px}
+.edlck[aria-pressed="true"]::before{background:var(--machine);border-color:var(--machine)}
+#editor button.edlhd{flex:none;width:32px;height:auto;min-height:36px;padding:0;font-size:15px;opacity:.35}
+#editor button.edlhd[aria-pressed="true"]{opacity:1;box-shadow:inset 0 0 0 2px var(--machine)}
+#editor button.edlrn{flex:1;min-width:0;height:auto;min-height:36px;padding:4px 8px;display:flex;flex-direction:column;align-items:flex-start;gap:1px;text-align:left;font:600 14px/1.2 var(--f-display);letter-spacing:0;text-transform:none}
+.edlrn small{color:var(--muted);font-size:12px}
+#editor button.edlrn[aria-pressed="true"]{box-shadow:inset 0 0 0 2px var(--machine)}
+.edlact{gap:4px;flex-wrap:wrap;padding-left:10px}
+#edBox{position:fixed;z-index:5;pointer-events:none;border:2px dashed var(--machine);background:rgba(240,122,34,.12)}
+#edBox[hidden]{display:none}
+@media (max-width:900px){.edbar h2{display:none}}
+/* phones: no status line, the bottom bar scrolls sideways in one line, the left bar's buttons a little smaller */
+@media (max-height:500px),(max-width:600px){
+  .edstat{display:none}.edbottom{flex-direction:row;overflow-x:auto;scrollbar-width:none;padding-bottom:env(safe-area-inset-bottom,0px)}
+  .edpanel{width:auto;flex:none;flex-wrap:nowrap;gap:6px 12px;padding-top:5px;padding-bottom:5px}
+  .edpanel+.edpanel{border-top:0;border-left:1px solid var(--hud-line)}
+  .edpanel>*{flex:none}#editor .edpanel input[type=range]{width:120px;flex:none}
+  .edbar{padding-top:calc(env(safe-area-inset-top,0px) + 4px);padding-bottom:4px}
+  .edtools{gap:3px;padding-top:4px;padding-bottom:4px}.edtools button{width:58px;height:44px;font-size:12px;gap:2px}.edtools svg{width:19px;height:19px}}
+.edopt{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px}
+.edopt .row{gap:4px}
+.edopt label{font:700 13px/1 var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.edopt output{min-width:40px;font-variant-numeric:tabular-nums}
+.edpanel input[type=number]{width:76px;flex:none}
+#editor input[type=range]{flex:1 1 90px;min-width:80px;max-width:170px;accent-color:var(--machine)}
+.edmats{display:flex;flex-direction:column;gap:5px;padding-right:4px}
+.edmats h3 small{font:600 14px/1 var(--f-display);color:var(--muted);letter-spacing:0;margin-left:6px}
+.edmats h4{margin:3px 0 0;font:700 12px/1 var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.edmatgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(62px,1fr));gap:4px}
+#editor button.edmat{height:auto;padding:3px;display:flex;flex-direction:column;align-items:stretch;gap:3px;font:700 12px/1.1 var(--f-display);letter-spacing:.02em;text-align:center}
+.edmat i{display:block;aspect-ratio:4/3;border-radius:5px;background:url(../textures/thumbs.jpg) 0 0/100% 100%}
+.edmat i.own{background-size:cover;background-position:center}
+.edown{display:flex;flex-direction:column;gap:6px}
+.edowncard{display:flex;flex-direction:column;gap:6px;padding:8px;border-radius:8px;background:rgba(0,0,0,.25)}
+.edownpic{position:relative;display:flex;align-items:center;gap:10px;cursor:pointer;font:700 14px/1.2 var(--f-display)}
+.edownpic canvas{width:96px;height:96px;border-radius:6px;background:#2a2620}
+.edownpic input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.edowncard input:not([type=range]):not([type=file]),.edowncard select{flex:1 1 90px;min-width:0;font:600 15px/1.2 var(--f-display);padding:4px 6px;border-radius:5px;border:1px solid rgba(255,255,255,.25);background:#1d1a16;color:inherit}
+.edowncard input[type=number]{max-width:80px}
+.edmat i.dirt{background:linear-gradient(135deg,#8a6a3f,#6e5232 60%,#9a7a4a)}.edmat i.grass{background:linear-gradient(135deg,#6a9a40,#4a7a30)}
+.edmat i.nat{background:linear-gradient(135deg,#5b8a3a,#4a7a30 60%,#8a6a3f)}
+#editor button.edmat[aria-pressed="true"]{background:var(--machine);color:#1c1309}
+#editor .row button[aria-pressed="true"]{background:var(--machine);color:#1c1309}
+.edtools button[aria-pressed="true"],#editor button.go{background:var(--machine);color:#1c1309}
+#editor button.danger{color:var(--danger)}
+#editor button:disabled{opacity:.4}
+#editor textarea{width:100%;box-sizing:border-box;height:96px;font:12px/1.3 ui-monospace,Menlo,monospace;color:var(--ink);background:#111410;border:1px solid var(--hud-line);border-radius:8px;padding:6px;-webkit-user-select:text;user-select:text}
+#edPasteBox{display:flex;flex-direction:column;gap:6px}#edPasteBox[hidden]{display:none}
+/* Sync panel: the code in big type, the code box and Join on one row */
+#syncBox{z-index:7}
+#syncOff,#syncOn{display:flex;flex-direction:column;gap:14px}#syncOff[hidden],#syncOn[hidden]{display:none}
+.synccode{font:800 46px/1 var(--f-display);letter-spacing:.08em;text-align:center;color:var(--gas);padding:14px 0;border:2px dashed rgba(255,255,255,.3);border-radius:10px;user-select:all}
+#syncIn{flex:1.4;min-width:0;height:54px;box-sizing:border-box;border-radius:10px;border:1px solid var(--hud-line);background:#0f120e;color:var(--ink);
+  font:700 24px/1 var(--f-display);letter-spacing:.08em;text-transform:uppercase;padding:0 12px}
+#syncIn::placeholder{color:var(--muted);opacity:.6}
+#syncJoin{flex:1}
+/* Graphics panel: the presets, live numbers, then one row per setting (name, value, hint, then buttons or a slider) */
+#gfxBox{position:fixed;inset:0;z-index:7;background:rgba(10,12,9,.72);display:flex;align-items:center;justify-content:center;pointer-events:auto;box-sizing:border-box;
+  padding-block:calc(env(safe-area-inset-top,0px) + 16px) calc(env(safe-area-inset-bottom,0px) + 16px);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#gfxBox .card{max-width:620px;overscroll-behavior:contain;touch-action:pan-y}
+#gfxList{display:flex;flex-direction:column;gap:12px}
+#gfxList h2{margin:10px 0 0;font:800 22px/1 var(--f-display);letter-spacing:.06em;text-transform:uppercase;color:var(--machine);border-bottom:1px solid var(--hud-line);padding-bottom:6px}
+.grow{display:flex;flex-direction:column;gap:6px;padding-left:10px;border-left:3px solid transparent}
+.grow.changed{border-left-color:var(--machine)}
+.grow .gl{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 10px}
+.grow .gl b{font:700 18px/1.2 var(--f-display);letter-spacing:.03em}
+.grow .gl output{margin-left:auto;font:700 18px/1.2 var(--f-display);font-variant-numeric:tabular-nums}
+.grow .gl small{flex-basis:100%;font-size:15px;color:var(--muted);line-height:1.35}
+.grow input{width:100%;height:36px;accent-color:var(--machine);margin:0}
+.gseg{display:flex;flex-wrap:wrap;gap:4px}
+.card .gseg button{flex:1 1 0;min-width:52px;height:42px;font-size:17px;padding:0 6px;background:transparent;color:var(--ink);border:1px solid var(--hud-line)}
+.card .gseg button[aria-pressed="true"]{background:var(--machine);color:#1c1309;border-color:var(--machine)}
+.card .gpre button{height:50px;font-size:20px}
+.gstats{font:700 17px/1.4 var(--f-display)!important;color:var(--muted);font-variant-numeric:tabular-nums;background:#141712;border-radius:8px;padding:8px 10px}
+.gstats b{color:var(--ink)}
+/* Stats panel: the lawn heatmap with its modes and key, then each group of numbers */
+#statBox{position:fixed;inset:0;z-index:7;background:rgba(10,12,9,.72);display:flex;align-items:center;justify-content:center;pointer-events:auto;box-sizing:border-box;
+  padding-block:calc(env(safe-area-inset-top,0px) + 16px) calc(env(safe-area-inset-bottom,0px) + 16px);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#statBox .card{max-width:620px;overscroll-behavior:contain;touch-action:pan-y}
+#statBox h2{margin:6px 0 0;font:800 22px/1 var(--f-display);letter-spacing:.06em;text-transform:uppercase;color:var(--machine);border-bottom:1px solid var(--hud-line);padding-bottom:6px}
+#statHeat{display:flex;flex-direction:column;gap:8px}
+#heatCv{display:block;width:100%;aspect-ratio:4/3;image-rendering:pixelated;border-radius:8px;border:1px solid var(--hud-line);background:#141712}
+.hbar{display:block;height:14px;border-radius:7px}
+.hends{display:flex;justify-content:space-between;gap:10px;font:700 16px/1.2 var(--f-display);color:var(--muted)}
+#heatOn[aria-pressed="true"]{background:var(--machine);color:#1c1309;border-color:var(--machine)}
+#statList{display:flex;flex-direction:column;gap:8px}
+.stl{display:grid;grid-template-columns:1fr auto;gap:4px 14px;margin:0}
+.stl dt{font-size:18px;color:var(--muted)}
+.stl dd{margin:0;font:700 20px/1.2 var(--f-display);font-variant-numeric:tabular-nums;text-align:right;color:var(--ink)}
+/* the heatmap's key on screen while it is on; tap it to change what it shows */
+#heatKey{position:absolute;left:50%;top:22%;transform:translateX(-50%);z-index:2;zoom:var(--s);width:min(270px,70vw);height:auto;padding:7px 10px 6px;display:flex;flex-direction:column;gap:5px;
+  text-transform:none;background:var(--hud);border:1px solid var(--hud-line);border-radius:10px}
+#heatKey b{font:800 17px/1 var(--f-display);letter-spacing:.05em;text-transform:uppercase;color:var(--machine)}
+#heatKey i{display:block;height:10px;border-radius:5px}
+#heatKey>span{display:flex;justify-content:space-between;gap:8px;font:600 14px/1.1 var(--f-display);color:var(--muted)}
+/* the frame rate graph: fps over the last 10 s, with dashed lines at 30 and 60 */
+.ggraph{display:flex;flex-direction:column;gap:6px}
+#gfxGraph{width:100%;height:110px;background:#141712;border-radius:8px;display:block}
+#gfxGraphCap{font-variant-numeric:tabular-nums}
+#gfxGraphCap b{color:var(--ink)}
+/* big map trails: what to show, and its key */
+#trailBar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font:700 18px/1.2 var(--f-display);letter-spacing:.03em;color:var(--ink)}
+#trailBar span{width:100%}
+#trailBar button{height:40px;font-size:16px;padding:0 10px}
+#trailBar button[aria-pressed="true"]{background:var(--machine);color:#1c1309;border-color:var(--machine)}
+#trailKey{display:flex;flex-direction:column;gap:4px}
+#trailKey i{display:block;height:10px;border-radius:5px}
+#trailKey>span{display:flex;justify-content:space-between;gap:10px;font:600 15px/1.2 var(--f-display);color:var(--muted)}
+#wetBar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font:700 18px/1.2 var(--f-display);letter-spacing:.03em;color:var(--ink)}
+#wetBar span{width:100%}
+#wetBar button{height:40px;font-size:16px;padding:0 10px}
+#wetBar button[aria-pressed="true"],#wetGround[aria-pressed="true"]{background:var(--machine);color:#1c1309;border-color:var(--machine)}
+#wetKey{display:flex;flex-direction:column;gap:4px}
+#wetKey i{display:block;height:10px;border-radius:5px}
+#wetKey>span{display:flex;justify-content:space-between;gap:10px;font:600 15px/1.2 var(--f-display);color:var(--muted)}
+#wetGround{align-self:flex-start;margin-top:4px}
