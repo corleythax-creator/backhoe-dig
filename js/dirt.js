@@ -287,6 +287,54 @@ function shakeOut(o,v,fast,stop,tip,dt){
 // a shaken-out cake lands as big clay lumps
 function shakeClods(x,z,v){dropClods(CLAY,x,z,0.45,v*60*DIRT,KIND_COL[CLAY],1.7)}
 
+// ---------- clay packed in the undercarriage ----------
+// working wet clay, the tracks carry it up between the rollers and pack it onto the track frames, most while turning
+// (the pads scrub sideways). Packed tracks run tight: they drag and turn slower. It drops off in clumps as the tracks
+// flex, faster on firm ground and when the tracks are rocked back and forth, and slowly as it dries; what packs in comes
+// off the ground under the tracks and what drops lands as lumps, so no dirt is made or lost. st.pack: m3 packed,
+// st.packC: its colour
+const PACK_CAP=0.3,PACK_N=56,packMesh=(()=>{const m=new THREE.InstancedMesh(CLODS[CLAY].geo(),M(0xffffff),PACK_N),R=Math.random,o=new THREE.Object3D();
+  m.castShadow=true;m.count=0;machine.add(m);
+  for(let i=0;i<PACK_N;i++){const s=i%2?1:-1,f=R();
+    if(f<0.7)o.position.set(s*(1.1+(R()<0.6?0.27:-0.27)),0.15+R()*0.5,(R()*2-1)*1.5);
+    else if(f<0.85)o.position.set(s*(1.1+(R()-0.5)*0.4),0.82,(R()*2-1)*1.4);
+    else o.position.set(s*(1.1+(R()-0.5)*0.4),0.25+R()*0.35,(R()<0.5?-1:1)*(1.95+R()*0.06));
+    o.rotation.set(R()*6,R()*6,R()*6);const sz=0.06+R()*0.1;o.scale.set(sz*1.3,sz,sz*1.6);o.updateMatrix();m.setMatrixAt(i,o.matrix);m.setColorAt(i,dCol.setRGB(1,1,1))}
+  return m})();
+// how much clay a point of ground carries (loose fill by its colour, spoilFr in terrain.js; grass-covered topsoil a little)
+function clayAt(x,z){const i=Math.round((x+S/2)/CELL),j=Math.round((z+S/2)/CELL);if(i<0||i>N||j<0||j>N)return 0.2;
+  const k=j*V+i,m=matAt(k,H[k]-0.03);if(m===SPOIL){const f=spoilFr(k);return f[1]+0.2*f[0]}return m===1?1:m===0?0.2:0}
+function packTick(dt,drive,turn){
+  if(!st.packC)st.packC=[...MUD_C];
+  const sy=Math.sin(st.yaw),cy=Math.cos(st.yaw),mv=Math.abs(drive)+1.5*Math.abs(turn),wet=mudAt(st.x,st.z);
+  let p=st.pack||0;
+  if(mv>0.05&&!bench.on){
+    // packing in: wet, sticky clay, worse the more it scrubs; slop partly washes through
+    const g=Math.min(PACK_CAP-p,TU.packRate*0.012*mv*clayAt(st.x,st.z)*ss(0.15,0.5,wet)*(1-0.5*ss(0.8,1,wet))*(1-p/PACK_CAP)*dt);
+    if(g>1e-6){p+=g;const c=groundC(st.x,st.z),f=g/p;for(let q=0;q<3;q++)st.packC[q]+=(c[q]-st.packC[q])*f;
+      for(const sd of [-1,1])takeGround(st.x+sd*1.1*cy,st.z-sd*1.1*sy,g/2)}
+    // and out: reversing the tracks knocks a chunk loose
+    const d=Math.abs(drive)>0.5?Math.sign(drive):0;if(d&&st.packDir&&d!==st.packDir&&st.packT<0.8&&p>0.005)shedPack(p*0.3*TU.packShed);
+    if(d){st.packDir=d;st.packT=0}else st.packT=(st.packT||0)+dt}
+  st.pack=p;
+  if(p>0.0005)shedPack(p*TU.packShed*(0.08*mv*(1-ss(0.2,0.5,wet))+0.004)*dt);
+  if(st.pack>PACK_CAP*0.5&&!st.seenPack){st.seenPack=true;toast(say('trackPack'),'',4500)}
+  const n=Math.round(PACK_N*Math.min(1,st.pack/PACK_CAP));
+  if(n!==packMesh.count){if(n){for(let i=0;i<PACK_N;i++){const v=0.75+0.4*((i*0.618)%1);packMesh.setColorAt(i,dCol.setRGB(st.packC[0]*v,st.packC[1]*v,st.packC[2]*v))}packMesh.instanceColor.needsUpdate=true}packMesh.count=n;packMesh.instanceMatrix.needsUpdate=true}
+}
+// clumps of packed clay drop off a track end or out from between the rollers
+function shedPack(v){v=Math.min(v,st.pack||0);if(v<=1e-6)return;st.pack-=v;st.packAcc=(st.packAcc||0)+v;
+  if(st.packAcc<0.004)return;const a=st.packAcc;st.packAcc=0;
+  const sd=Math.random()<0.5?-1:1,lz=(Math.random()*2-1)*1.9,sy=Math.sin(st.yaw),cy=Math.cos(st.yaw),x=st.x+sd*1.1*cy+lz*sy,z=st.z-sd*1.1*sy+lz*cy;
+  if(Math.abs(x)<S/2-0.5&&Math.abs(z)<S/2-0.5){deposit(x,z,a,st.packC,[0,0.3,0.7,0],0.45,0);st.dirty=true;st.slumpT=Math.max(st.slumpT,1)}
+  dropClods(CLAY,x,z,0.35,a*120*DIRT,st.packC,1.5)}
+// the ground's colour at x,z (loose fill keeps the colour of what was dumped there)
+function groundC(x,z){const i=Math.round((x+S/2)/CELL),j=Math.round((z+S/2)/CELL);if(i<0||i>N||j<0||j>N)return MUD_C;const k=j*V+i,m=matAt(k,H[k]-0.03);return m===0?MUD_C:matColor(k,m)}
+// take volume v off the ground within about a foot and a half of x,z (inside the dig zone)
+function takeGround(x,z,v){const r=0.45,i0=Math.max(0,Math.floor((x-r+S/2)/CELL)),i1=Math.min(N,Math.ceil((x+r+S/2)/CELL)),j0=Math.max(0,Math.floor((z-r+S/2)/CELL)),j1=Math.min(N,Math.ceil((z+r+S/2)/CELL)),l=[];
+  for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++)if(!prot[j*V+i]&&Math.hypot(i*CELL-S/2-x,j*CELL-S/2-z)<=r)l.push(j*V+i);
+  if(!l.length)return;const d=v/(l.length*CA);for(const k of l){H[k]-=d;comp[k]=0}touch(i0,i1,j0,j1);st.dirty=true}
+
 // apply the saved Dirt detail last, once everything above exists
 document.querySelectorAll('.sizes button[data-d]').forEach(b=>b.onclick=()=>setDirtLevel(b.dataset.d));
 try{setDirtLevel(localStorage.getItem('bhd_dirt')||1,false)}catch(e){setDirtLevel(1,false)}
