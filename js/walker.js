@@ -30,11 +30,13 @@ walker.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
 // a jump clears about 6 ft: onto a 3 ft block with room to spare, or two blocks up a stack
 // starts beside the excavator, facing the trench
 const WK_START={x:2.7,z:1.6,yaw:Math.PI};
-const wk={x:0,z:0,y:0,vy:0,yaw:0,view:0,ground:true,phase:0,spd:0,airT:0,jumpQ:0,landT:0,inside:null,sprint:false,stillT:0};
-function walkReset(){Object.assign(wk,WK_START,{vy:0,ground:true,phase:0,spd:0,airT:0,jumpQ:0,landT:0,view:WK_START.yaw,inside:null});wk.y=wkFloor(wk.x,wk.z,0,1e9)}
+const wk={x:0,z:0,y:0,vy:0,yaw:0,view:0,ground:true,phase:0,spd:0,airT:0,jumpQ:0,landT:0,inside:null,sprint:false,stillT:0,swim:false};
+function walkReset(){Object.assign(wk,WK_START,{vy:0,ground:true,swim:false,phase:0,spd:0,airT:0,jumpQ:0,landT:0,view:WK_START.yaw,inside:null});wk.y=wkFloor(wk.x,wk.z,0,1e9)}
+// the ground at x,z, or the ground under a bridge deck that is more than lim up (swimming under it, or falling past its edge)
+function wkGround(x,z,lim){const h=hAt(x,z);if(h<=lim)return h;const d=deckAt(x,z);return d>=h-1e-4?(farGround?farGround(x,z):baseHeight(x,z)):h}
 // the highest ground or block top under the feet that is no higher than a step above y: a 5 point foot
 function wkFloor(x,z,y,lim){let f=-1e9;const r=WK_R*0.7;
-  for(const [dx,dz] of [[0,0],[r,0],[-r,0],[0,r],[0,-r]]){const px=x+dx,pz=z+dz;let h=hAt(px,pz);
+  for(const [dx,dz] of [[0,0],[r,0],[-r,0],[0,r],[0,-r]]){const px=x+dx,pz=z+dz;let h=wkGround(px,pz,lim);
     for(const b of blocks)if(Math.abs(px-b.x)<=b.w/2&&Math.abs(pz-b.z)<=b.d/2){const t=b.y+b.h;if(t<=lim&&t>h)h=t}
     if(h>f)f=h}
   return f}
@@ -48,6 +50,18 @@ function wkPushBlocks(){let bump=false;
     else{const px=hx+WK_R-Math.abs(dx),pz=hz+WK_R-Math.abs(dz);if(px<pz)wk.x+=Math.sign(dx||1)*px;else wk.z+=Math.sign(dz||1)*pz}}
   return bump}
 // the machines are solid too (a row of circles each, as for blocks)
+// on foot he goes anywhere in the drawn world: the beaches, down into the lake, out along the mainland shores
+const WK_BOUND={x:428,z0:-553,z1:763};
+// the lake's surface at x,z: the swells the water shader moves it by (scenery.js)
+function lakeY(x,z){const t=timeU.value;return WATER+Math.sin(x*0.09+t*1.1)*0.16+Math.cos(z*0.11+t*0.8)*0.13+Math.sin((x+z)*0.23+t*1.7)*0.06}
+// deeper than WK_FLOAT (about 4.6 ft) he floats, treading water with his head out; shallower he wades, slowed by the water.
+// WK_RAIL: how far above a deck the feet must be to clear a bridge railing (a jump does it)
+const WK_FLOAT=1.4,WK_RAIL=1.05;
+// a splash on the lake: drops thrown up all round (k: how hard) and a ring on the water (mud.js draws both)
+function lakeSplash(x,z,k){const y=lakeY(x,z);
+  for(let n=Math.round(spN*0.1*k);n>0;n--){const a=Math.random()*6.283,o=(0.5+Math.random()*1.5)*(0.5+0.5*k);spDrop(x+Math.cos(a)*0.2,y+0.03,z+Math.sin(a)*0.2,Math.cos(a)*o,(1+Math.random()*2.5)*(0.5+0.6*k),Math.sin(a)*o,0.03+Math.random()*0.05)}
+  spRing(x,y,z,0.6+0.8*k)}
+let wkSwimTold=false;
 function wkPushRound(o,lzs,r){for(const lz of lzs){const cx=o.x+Math.sin(o.yaw)*lz,cz=o.z+Math.cos(o.yaw)*lz,dx=wk.x-cx,dz=wk.z-cz,d=Math.hypot(dx,dz),m=r+WK_R;
   if(d<m&&d>1e-4){wk.x+=dx/d*(m-d);wk.z+=dz/d*(m-d)}}}
 // mx, mz: move input (stick right, stick up); lookX, lookY: right stick. Sprint (Shift, controller left stick click) doubles
@@ -59,8 +73,10 @@ function updateWalker(dt,mx,mz,lookX,lookY){
   if(on){const z=camMode==='cab'?1/fpl.zoom:1;wk.view-=lookX*2.2*TU.wkLook*dt*z;if(camMode==='cab'){fpl.pitch=clamp(fpl.pitch+lookY*1.2*TU.wkLook*dt*z,-FP_DOWN,FP_UP);if(lookX||lookY)fpl.home=false}else orbitPitch=clamp(orbitPitch-lookY*1.2*TU.wkLook*dt,0.08,1.3)}
   // moves relative to where the camera looks; the worker turns to face the way he walks
   let vx=0,vz=0;
+  // wading slows him the deeper it gets; swimming has its own speed (Sprint swims harder)
+  const wade=wk.swim?0:clamp((WATER-wk.y)/WK_FLOAT,0,1);
   if(on){const cyaw=camMode==='cab'?wk.view:wk.view+orbitYaw,fx=Math.sin(cyaw),fz=Math.cos(cyaw),m=Math.min(1,Math.hypot(mx,mz));
-    const top=held('sprint')||PA.sprint||wk.sprint?TU.wkSprint:TU.wkRun;
+    const fast=held('sprint')||PA.sprint||wk.sprint,top=wk.swim?TU.wkSwim*(fast?1.6:1):(fast?TU.wkSprint:TU.wkRun)*(1-0.55*wade);
     // the touch Sprint button stays on while you keep moving and switches itself off once you stop
     wk.stillT=m>0.02?0:wk.stillT+dt;if(wk.sprint&&wk.stillT>0.6)setSprint(false);
     if(m>0.02){vx=(fx*mz-fz*mx)*top;vz=(fz*mz+fx*mx)*top;
@@ -69,19 +85,33 @@ function updateWalker(dt,mx,mz,lookX,lookY){
   const sp=Math.hypot(vx,vz);wk.spd+=(sp-wk.spd)*Math.min(1,dt*10);
   // boots tread the grass down partway (scenery.js); not from up on a block or a deck
   if(wk.ground&&sp>0.3&&wk.y-hAt(wk.x,wk.z)<0.2)grassCrush(wk.x,wk.z,Math.atan2(vx,vz),0.16,0.22,1.2+0.25*sp,0.55,dt);
-  // steep ground (a trench wall) stops you on foot; jump to get up it
-  const ox=wk.x,oz=wk.z,g0=hAt(ox,oz);wk.x+=vx*dt;wk.z+=vz*dt;
-  {const g1=hAt(wk.x,wk.z),run=Math.hypot(wk.x-ox,wk.z-oz);if(run>1e-5&&g1>wk.y+0.02&&(g1-g0)/run>1.3){wk.x=ox;wk.z=oz}}
-  [wk.x,wk.z]=landClamp(wk.x,wk.z,1.2,0.45,true);
+  // steep ground (a trench wall) stops you on foot; jump to get up it. Off the dig he scrambles up the rocky banks
+  const ox=wk.x,oz=wk.z,lim=wk.y+WK_STEP,g0=wkGround(ox,oz,lim);wk.x+=vx*dt;wk.z+=vz*dt;
+  {const g1=wkGround(wk.x,wk.z,lim),run=Math.hypot(wk.x-ox,wk.z-oz);if(run>1e-5&&g1>wk.y+0.02&&(g1-g0)/run>(inDig(wk.x,wk.z)?1.3:2.5)){wk.x=ox;wk.z=oz}}
+  wk.x=clamp(wk.x,-WK_BOUND.x,WK_BOUND.x);wk.z=clamp(wk.z,WK_BOUND.z0,WK_BOUND.z1);
+  // a bridge's railings keep him on the deck unless he jumps over them (the covered footbridge's walls always do)
+  for(const b of BRIDGES){const [t0,u0]=deckLocal(b,ox,oz);if(t0<0||t0>b.len||Math.abs(u0)>b.hw-0.4)continue;
+    const dy=b.y+(b.y1-b.y)*t0/b.len;if(wk.y<dy-0.3||(!b.foot&&wk.y>dy+WK_RAIL))continue;
+    let [t,u]=deckLocal(b,wk.x,wk.z);if(t<0||t>b.len||Math.abs(u)<=b.hw-0.45)continue;
+    u=clamp(u,0.45-b.hw,b.hw-0.45);wk.x=b.x0+b.ux*t-b.uz*u;wk.z=b.z0+b.uz*t+b.ux*u}
   // feet splash through puddles
   if(wk.ground&&wk.spd>0.4)splashMud(wk.x,wk.z,Math.atan2(vx,vz),wk.spd,0.12,0.3,dt);
   wkPushBlocks();wkPushRound(st,EX_C,EX_R);wkPushRound(tr,TR_C,TR_R);wkPushRound(mw,MW_C,MW_R);wkPushRound(sk,SK_C,SK_R);
   // jump, gravity, landing on the ground or a block; bump your head on a block above
   wk.jumpQ-=dt;
   if(wk.jumpQ>0&&wk.ground){wk.vy=Math.sqrt(2*9.8*TU.wkGrav*TU.wkJump);wk.ground=false;wk.jumpQ=0}
-  const floor=wkFloor(wk.x,wk.z,wk.y,wk.y+WK_STEP);
-  if(wk.ground){if(floor<wk.y-0.12){wk.ground=false;wk.vy=0}else wk.y+=(floor-wk.y)*Math.min(1,dt*20)}
-  if(!wk.ground){wk.vy-=9.8*TU.wkGrav*dt;const ny=wk.y+wk.vy*dt;
+  const floor=wkFloor(wk.x,wk.z,wk.y,wk.y+WK_STEP),dep=WATER-floor;
+  // into water deeper than he stands in, he floats: a spring holds him at the swells, so a dive off a bridge plunges in and
+  // bobs back up; once his feet find the bottom again (a beach, a causeway) he wades out
+  if(wk.swim&&dep<WK_FLOAT-0.05){wk.swim=false;wk.ground=true;wk.vy=0}
+  if(!wk.swim&&dep>WK_FLOAT+0.05&&wk.y<=lakeY(wk.x,wk.z)-WK_FLOAT+0.05&&(wk.ground||wk.vy<=0)){
+    if(wk.vy<-2)lakeSplash(wk.x,wk.z,Math.min(1.5,-wk.vy/7));
+    wk.swim=true;wk.ground=false;wk.airT=0;
+    if(!wkSwimTold&&mode==='walk'){wkSwimTold=true;toast(say('swimming'),'',3200)}}
+  if(wk.swim){const fy=lakeY(wk.x,wk.z)-WK_FLOAT-0.15;wk.vy+=((fy-wk.y)*14-wk.vy*6)*dt;wk.y=Math.max(floor,wk.y+wk.vy*dt);
+    if(wk.spd>0.3&&Math.random()<dt*2.5*wk.spd)spRing(wk.x+Math.sin(wk.yaw)*0.3,lakeY(wk.x,wk.z),wk.z+Math.cos(wk.yaw)*0.3,0.5+0.3*wk.spd)}
+  else if(wk.ground){if(floor<wk.y-0.12){wk.ground=false;wk.vy=0}else wk.y+=(floor-wk.y)*Math.min(1,dt*20)}
+  if(!wk.swim&&!wk.ground){wk.vy-=9.8*TU.wkGrav*dt;const ny=wk.y+wk.vy*dt;
     if(wk.vy>0)for(const b of blocks){if(Math.abs(wk.x-b.x)<b.w/2+WK_R*0.6&&Math.abs(wk.z-b.z)<b.d/2+WK_R*0.6&&b.y>=wk.y+WK_H-0.05&&b.y<ny+WK_H){wk.vy=0;break}}
     wk.y+=wk.vy*dt;wk.airT+=dt;
     const f2=wkFloor(wk.x,wk.z,wk.y,wk.y+WK_STEP);
@@ -89,6 +119,12 @@ function updateWalker(dt,mx,mz,lookX,lookY){
   wk.landT=Math.max(0,wk.landT-dt);
   // pose: a walk cycle that lengthens into a jog, arms counter-swinging; legs tuck in the air, a dip on landing
   // sprinting quickens the stride, swings the limbs wider and leans him further forward
+  // swimming: treading water, legs kicking and arms sweeping, leaning into the stroke as he moves
+  if(wk.swim){const mv=Math.min(1,wk.spd/TU.wkSwim);wk.phase+=dt*(3.5+3*mv);const p=wk.phase;
+    for(let s=0;s<2;s++){const L=wkLegs[s],A=wkArms[s],k=s?Math.PI:0;L.top.rotation.x=-0.25+Math.sin(p*2+k)*(0.3+0.2*mv);L.low.rotation.x=0.45+Math.sin(p*2+k+1)*0.25;
+      A.top.rotation.x=-1.1-mv*0.5+Math.sin(p)*0.6;A.low.rotation.x=-0.5+Math.cos(p)*0.4}
+    wkBody.position.y=Math.sin(p*2)*0.02;wkBody.rotation.x=0.15+0.45*mv;wkHead.rotation.x=-0.2-0.4*mv;
+    walker.position.set(wk.x,wk.y,wk.z);walker.rotation.y=wk.yaw;walker.visible=!(on&&camMode==='cab');return}
   const run=Math.min(1,wk.spd/TU.wkRun),fast=clamp((wk.spd-TU.wkRun)/(TU.wkSprint-TU.wkRun),0,1);if(wk.ground)wk.phase+=dt*(4+6*run+4*fast)*Math.min(1,wk.spd*2);
   const sw=Math.sin(wk.phase)*(0.25+0.55*run+0.25*fast)*Math.min(1,wk.spd*1.5);
   for(let s=0;s<2;s++){const a=s?sw:-sw,L=wkLegs[s],A=wkArms[s];
