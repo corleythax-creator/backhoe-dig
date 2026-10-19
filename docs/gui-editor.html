@@ -97,7 +97,7 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 #resetBtn.arm{background:var(--danger)!important;color:#fff}
 /* Controls: the machines drop from the Controls button at the top right, a tile per machine, icon beside name; the one you drive is lit */
 #ctlMenu{position:absolute;top:100%;right:var(--pr);margin-top:8px;z-index:3;display:flex;flex-direction:column;gap:2px;min-width:180px;box-sizing:border-box;background:#1d211b;box-shadow:0 6px 18px rgba(0,0,0,.5);border:1px solid var(--hud-line);border-radius:10px;padding:5px}
-#ctlMenu[hidden]{display:none}
+#ctlMenu[hidden],#ctlMenu button[hidden]{display:none}
 #ctlMenu button{position:relative;height:44px;display:flex;align-items:center;gap:10px;padding:0 12px;font-size:15px;background:transparent;border:1px solid transparent;border-radius:7px;text-align:left}
 #ctlMenu svg{width:24px;height:24px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 #ctlMenu button[aria-pressed="true"]{background:var(--machine);color:#1c1309}
@@ -137,6 +137,11 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 #seatBtn,.walkbtns{position:absolute;bottom:100%;margin-bottom:10px;zoom:var(--cs)}
 #seatBtn{left:0;min-width:100px;font-size:16px;border-radius:20px;background:var(--machine);color:#1c1309;border:0;box-shadow:0 3px 0 rgba(0,0,0,.35);white-space:nowrap}
 .walkbtns{right:0;display:flex;gap:8px}.walkbtns[hidden]{display:none}
+/* the excavator's Drive / Dig switch over the right stick: the lit half is what the sticks run */
+.exswitch{position:absolute;bottom:100%;right:0;margin-bottom:10px;zoom:var(--cs);display:flex;border-radius:24px;padding:3px;background:rgba(20,23,19,.62);border:2px solid var(--machine);box-shadow:0 3px 0 rgba(0,0,0,.35);pointer-events:auto}
+.exswitch[hidden]{display:none}
+.exswitch button{height:42px;min-width:78px;padding:0 14px;font-size:18px;border:0;border-radius:20px;background:transparent;color:#fff}
+.exswitch button[aria-pressed="true"]{background:var(--machine);color:#1c1309}
 #jumpBtn,#sprintBtn{height:44px;min-width:76px;padding:0 12px;font-size:17px;border-radius:22px;box-shadow:0 3px 0 rgba(0,0,0,.35)}
 #jumpBtn{background:var(--machine);color:#1c1309;border:0}
 #sprintBtn{border:2px solid var(--machine);color:var(--machine)}#sprintBtn[aria-pressed="true"]{background:var(--machine);color:#1c1309}
@@ -564,8 +569,8 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
     </div>
     <!-- Drive: which machine (or on foot) the sticks drive, dropping from the Drive button -->
     <nav id="ctlMenu" class="seg" role="group" aria-label="Control mode" hidden>
-      <button id="modeDig" data-k="1" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 20h11v-5H2zM4 15v-3h5v3M9 13l5-8 6 4-2 5h-3"/></svg><span>Dig</span></button>
-      <button id="modeDrive" data-k="2" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="14" width="20" height="7" rx="3.5"/><path d="M6 14v-4h9v4M9 10V6h5"/><circle cx="6.5" cy="17.5" r="1"/><circle cx="17.5" cy="17.5" r="1"/></svg><span>Drive</span></button>
+      <button id="modeDig" data-k="1" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 20h11v-5H2zM4 15v-3h5v3M9 13l5-8 6 4-2 5h-3"/></svg><span>Excavator</span></button>
+      <button id="modeDrive" data-k="2" aria-pressed="false" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="14" width="20" height="7" rx="3.5"/><path d="M6 14v-4h9v4M9 10V6h5"/><circle cx="6.5" cy="17.5" r="1"/><circle cx="17.5" cy="17.5" r="1"/></svg><span>Drive</span></button>
       <button id="modeTruck" data-k="3" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 16V8l11-2v10M13 10h5l4 4v2H13"/><circle cx="6" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg><span>Truck</span></button>
       <button id="modeMow" data-k="4" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 16h14v-4H6zM9 12V7h5l2 5M17 14h4"/><circle cx="6" cy="18" r="2"/><circle cx="16" cy="18" r="2"/></svg><span>Mow</span></button>
       <button id="modeSkid" data-k="6" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 17V7h8l3 4v6M5 11h11M16 12l4-3 2 5h-5"/><circle cx="7" cy="19" r="2"/><circle cx="14" cy="19" r="2"/></svg><span>Skid</span></button>
@@ -593,6 +598,7 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
       <div class="stick" id="stickL"><div class="knob"></div></div>
     </div>
     <div class="stickwrap">
+      <div class="exswitch" id="exSwitch" role="group" aria-label="Excavator: drive or dig"><button id="exDrive" aria-pressed="false">Drive</button><button id="exDig" aria-pressed="true">Dig</button></div>
       <div class="walkbtns" id="walkBtns" hidden><button id="sprintBtn" aria-pressed="false">Sprint</button><button id="jumpBtn">Jump</button><button id="plantBtn">Plant</button></div>
       <div class="stick" id="stickR"><div class="knob"></div></div>
     </div>
@@ -836,7 +842,7 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
     <dl class="keys">
       <dt id="hkLeftStick">Left stick</dt><dd id="hdLeftStick">Swing left/right. Push up to reach the stick out, pull down to bring it in.</dd>
       <dt id="hkRightStick">Right stick</dt><dd id="hdRightStick">Left curls the bucket in (scoop), right dumps. Push up for boom down, pull for boom up.</dd>
-      <dt id="hkDrive">Drive</dt><dd id="hdDrive">Tap Drive and the left stick moves the tracks.</dd>
+      <dt id="hkDrive">Drive</dt><dd id="hdDrive">In the excavator, the Drive / Dig switch over the right stick (or Enter) flips between driving: the left stick moves the tracks, and digging: the sticks run the arm. It digs anywhere on Corley's, down the bank and in the beach sand to the water's edge.</dd>
       <dt id="hkTruck">Truck</dt><dd id="hdTruck">Swing a full bucket over the truck bed and dump. It starts parked on the dirt road that loops the mesa. Tap Truck to drive it: left stick steers and gives gas, right stick raises the bed. Pull back to brake; hold it at a stop to shift into reverse. A full load is heavy: it pulls slowly, stops long and leans in turns. Back up to the cliff edge and dump it over to haul it off, or take the ramp down the scarp and dump it in the Lower Bench yard.</dd>
       <dt id="hkMow">Mow</dt><dd id="hdMow">A patch of tall grass grows north of the trench, with a zero-turn mower parked beside it. Tap Mow: each stick is a lap bar. Left stick up/down drives the left wheel, right stick up/down the right wheel. Both up goes straight, one up and one back spins it in place; the left stick sideways also turns it. On a keyboard, W and S drive it straight and A and D turn it; the number pad works the lap bars: 8 and 2 both forward or back, 4 and 6 spin in place, 7 and 1 the left bar, 9 and 3 the right bar. The blades run in Mow mode. Each pass lays the grass over the way you drove: it looks light when you look the same way and dark when you look against it, so the stripes swap as you walk around. The grass grows back: about a minute after a pass it starts coming up, and in about five minutes it is tall again, so a lawn left too long needs mowing again. Your mowing is saved with the rest of the site (it only grows while the game runs), and Reset leaves it mowed.</dd>
       <dt id="hkSoil">Soil</dt><dd id="hdSoil">Dark topsoil, then red clay that holds a steep wall. Sand means the gas main is close, and it slumps. Grey rock is past trench depth and slow going. Dug dirt fluffs up about a quarter, so it fills the truck faster than the hole it came from.</dd>
@@ -978,6 +984,8 @@ const WORDS=[
   ['mowTouch','Machines','Mower running. Push both sticks up to drive, one up and one back to spin.'],
   ['skidKb','Machines','Skid steer running. [lUp] [lDown] drive, [lLeft] [lRight] turn; [rUp] [rDown] lower and raise the arms, [rLeft] [rRight] curl and dump.'],
   ['skidTouch','Machines','Skid steer running. Left stick drives and turns; right stick up and down lowers and raises the arms, left and right curls and dumps.'],
+  ['exDriving','Machines','Driving: the left stick moves the tracks. Tap Dig or [exSwap] to run the arm.','The excavator switched to Drive'],
+  ['exDigging','Machines','Digging: the sticks run the arm. Tap Drive or [exSwap] to move.','The excavator switched to Dig'],
   ['inMachine','Machines','In the {machine}. {key} to climb out.','{machine}: excavator, dump truck…; {key}: the get out key or button'],
   ['getInFar','Machines','Walk up to the excavator, the truck, the mower or a boat to get in.'],['noRoomOut','Machines','No room to climb out here. Move the machine a little.'],
   ['bedUp','Machines','Bed is up. Lower it to drive faster.'],['truckFirst','Machines','Dirt in the truck.'],
