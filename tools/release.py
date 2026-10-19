@@ -154,7 +154,13 @@ def main():
         sh('python3', 'tools/versions.py')
         if not git('status', '--porcelain'):
             break  # another release's snapshot commit already holds this one
-        bad = [l for l in git('status', '--porcelain').splitlines() if l[:2].strip() == 'D' or not (l[3:].startswith('versions/v') or l[3:] == 'versions/list.js')]
+        # each line is 'XY path'; git() strips the output, which eats the first line's leading space, so split instead
+        rows = [l.split(None, 1) for l in git('status', '--porcelain').splitlines()]
+        # a changed file in an older snapshot (versions.py rebuilt it a little differently) is put back: snapshots stay as committed
+        stale = [r[1] for r in rows if r[0] == 'M' and r[1].startswith('versions/v')]
+        if stale:
+            git('checkout', '--', *stale)
+        bad = [' '.join(r) for r in rows if r[1] not in stale and ('D' in r[0] or not (r[1].startswith('versions/v') or r[1] == 'versions/list.js'))]
         if bad:
             sys.exit('versions.py changed more than the snapshots; nothing committed:\n' + '\n'.join(bad[:20]))
         git('add', 'versions')
