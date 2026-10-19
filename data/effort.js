@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-19T02:07:00Z",
+ "updated": "2026-10-19T02:10:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -24,9 +24,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-18",
-   "dh": 116,
+   "dh": 121,
    "act": 3.5,
-   "versions": 13
+   "versions": 14
   }
  ],
  "extra": [
@@ -1125,6 +1125,15 @@ window.EFFORT = {
    "tris": 1913595,
    "chars": 750767,
    "what": "Rain stays off whatever is under a roof: cabs, porches, the pavilion, sheds, bridges, placed buildings and blocks, and splashes on the roofs instead. Drops bead and run down the excavator and truck windscreens; the new Wipers button (Space) sweeps them off."
+  },
+  {
+   "v": 122,
+   "asked": "2026-10-18T20:14:00-05:00",
+   "live": "2026-10-18T21:10:06-05:00",
+   "dh": 5,
+   "tris": 1914406,
+   "chars": 755860,
+   "what": "Working wet clay packs into the excavator undercarriage (most while turning): packed tracks drag and turn slower and show clay lumps on the track frames; it drops off in clumps as you drive, faster on firm ground and when the tracks are rocked back and forth, and slowly as it dries."
   }
  ]
 };
