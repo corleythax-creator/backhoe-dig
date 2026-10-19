@@ -153,7 +153,10 @@ function deckLocal(b,x,z){const dx=x-b.x0,dz=z-b.z0;return [dx*b.ux+dz*b.uz,dz*b
 function deckAt(x,z){let y=-1e9;for(const b of BRIDGES){const [t,u]=deckLocal(b,x,z);if(t>=0&&t<=b.len&&Math.abs(u)<=b.hw+0.3){const h=b.y+(b.y1-b.y)*t/b.len;if(h>y)y=h}}return y}
 // ground a machine or the worker (walk: foot bridges too) can stand on, at least lim in from a cliff edge (side: from a
 // deck's railings): the mesa, the Family Island, Jessica's Island or a bridge deck
-function landIn(x,z,lim,side,walk){if(mesaR(x,z)<=EDGE-lim||famR(x,z)<=FAM_R-lim||jesR(x,z)<=JES_R-lim||dexR(x,z)<=DEX_R-lim||mainIn(x,z,lim))return true;
+// Corley's bank and beach, down to the water: the ground here and lim further out from the island's middle above the lake
+function shoreIn(x,z,lim){if(mesaR(x,z)>EDGE+40)return false;const dz=z-MZ,l=Math.hypot(x,dz)||1;
+  return baseHeight(x,z)>WATER+0.15&&baseHeight(x+x/l*lim,z+dz/l*lim)>WATER+0.15}
+function landIn(x,z,lim,side,walk){if(mesaR(x,z)<=EDGE-lim||shoreIn(x,z,lim)||famR(x,z)<=FAM_R-lim||jesR(x,z)<=JES_R-lim||dexR(x,z)<=DEX_R-lim||mainIn(x,z,lim))return true;
   for(const c of CAUSEWAYS){const [t,u]=deckLocal(c,x,z);if(t>=0&&t<=c.len&&Math.abs(u)<=c.hw-side-0.4)return true}
   for(const b of BRIDGES){if((b.foot||b.dock)&&!walk)continue;const [t,u]=deckLocal(b,x,z);if(t>=0&&t<=b.len&&Math.abs(u)<=b.hw-side)return true}return false}
 // the nearest such spot to x,z (x,z itself when it already is one)
@@ -161,6 +164,9 @@ function landClamp(x,z,lim,side,walk){if(landIn(x,z,lim,side,walk))return [x,z];
   const c=[],r=mesaR(x,z),f=famR(x,z),j=jesR(x,z),dx=dexR(x,z);
   c.push([DEX_X+(x-DEX_X)*(DEX_R-lim)/dx,DEX_Z+(z-DEX_Z)*(DEX_R-lim)/dx]);
   c.push([x*(EDGE-lim)/r,MZ+(z-MZ)*(EDGE-lim)/r]);
+  // in the lake off Corley's: back in towards the middle to the water's edge
+  if(r<EDGE+60){const dz=z-MZ,l=Math.hypot(x,dz)||1,ux=x/l,uz=dz/l;let px=x,pz=z;
+    for(let n=0;n<160;n++){px-=ux*0.5;pz-=uz*0.5;if(mesaR(px,pz)<=EDGE-lim||shoreIn(px,pz,lim)){c.push([px,pz]);break}}}
   c.push([FAM_X+(x-FAM_X)*(FAM_R-lim)/f,FAM_Z+(z-FAM_Z)*(FAM_R-lim)/f]);
   c.push([JES_X+(x-JES_X)*(JES_R-lim)/j,JES_Z+(z-JES_Z)*(JES_R-lim)/j]);
   {const mx=Math.max(lim-430,Math.min(430-lim,x));c.push(z<0?[mx,Math.max(-555+lim,Math.min(mainRimN(mx)-lim,z))]:[mx,Math.min(765-lim,Math.max(mainRimS(mx)+lim,z))])}
@@ -492,7 +498,7 @@ function updateTerrain(){
     let t=ss(0.02,0.16,ad);if(bd&&matCov[k]<1)t=Math.max(t,1-matCov[k]);dirtA[k]=Math.max(t,rockA[k]);matAA[k]=matCov[k]*(1-t);mudWA[k]=mudA[k];
     if(t>0){
       let dr,dg,db;
-      if(d<0){const c=SOIL[layerAt(gX((k%V)),gZ(((k/V)|0)),-d,nz[k])].c,sh=1-0.12*ss(0.3,2.5,-d);dr=c[0]*sh;dg=c[1]*sh;db=c[2]*sh}
+      if(d<0){const c=SOIL[layerAt(gX((k%V)),gZ(((k/V)|0)),-d,nz[k],H0[k])].c,sh=1-0.12*ss(0.3,2.5,-d);dr=c[0]*sh;dg=c[1]*sh;db=c[2]*sh}
       else{dr=spoilC[k*3];dg=spoilC[k*3+1];db=spoilC[k*3+2]}
       const cn=(0.82+0.34*nz[k])*(1-0.7*skyOcc(k,h))*(mudA[k]>0.05?rutShade(d):1);dr*=cn;dg*=cn;db*=cn;
       r+=(dr-r)*t;g+=(dg-g)*t;b+=(db-b)*t;
@@ -539,14 +545,16 @@ const SOIL=[
   {n:'Rock',c:[0.47,0.46,0.44],h:0.12,sw:1.5,rp:3.0,rl:2.5,dp:0,wt:1,lp:0.8},
   {n:'Loose fill',c:[0.50,0.34,0.21],h:0.9,sw:1.0,rp:0.75,rl:0.7,dp:0.2,wt:0.6}];
 const SPOIL=4,spoilC=new Float32Array(V*V*3);
-function layerAt(x,z,d,nn){
+// h0: the undug ground's height there, when known: the beach (low ground by the lake) is sand down to the rock
+function layerAt(x,z,d,nn,h0){
   const w=0.06*Math.sin(x*1.7+z*0.9)+0.05*(nn-0.5);
+  if(h0!==undefined&&h0<WATER+2.4+w)return d<2.6+2*w?2:3;
   if(d<0.3+w)return 0;
   if(Math.abs(x)<12.5&&Math.abs(z-PIPE_Z)<0.55+0.08*Math.sin(x*0.8)&&d>0.95+w&&d<1.62+w)return 2;
   return d<1.95+2*w?1:3;
 }
 // material at height y over grid vertex k: loose fill above original grade, a native layer below
-function matAt(k,y){const d=H0[k]-y;return d<0?SPOIL:layerAt(gX((k%V)),gZ(((k/V)|0)),d,nz[k])}
+function matAt(k,y){const d=H0[k]-y;return d<0?SPOIL:layerAt(gX((k%V)),gZ(((k/V)|0)),d,nz[k],H0[k])}
 function matColor(k,m){return m===SPOIL?[spoilC[k*3],spoilC[k*3+1],spoilC[k*3+2]]:SOIL[m].c}
 // blend material of colour c and height a into the loose fill on vertex k
 function mixSpoil(k,c,a){const above=H[k]-H0[k];if(above<=0||a<=0)return;const f=Math.min(1,a/above);

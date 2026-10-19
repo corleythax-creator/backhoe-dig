@@ -290,8 +290,9 @@ function groundPatch(X0,X1,Z0,Z1,CO,holes){
 }
 // the Family Island gets its own 1.5 m mesh (family.js)
 const FAM_PATCH=[-111,111,136,352];
-// 1 m over the rest of Corley's Island and its shore, round the 0.5 m mesh
-const OUTER_MID=[-112,112,-122,94];
+// 1 m over the rest of Corley's Island and its shore, round the 0.5 m mesh; whole dig tiles out to the water all round, so
+// the dig grid (digtiles.js) can sit over the bank and the beach
+const OUTER_MID=[-128,128,-128,128];
 // the mainland (mainland.js): 4 m ground, with 1 m where each causeway lands
 const MAIN_FINE=[[-42,42,-300,-196],[-42,42,480,600]];
 groundPatch(-160,160,-160,160,2,[OUTER_MID,[FAM_PATCH[0],FAM_PATCH[1],FAM_PATCH[2],160]]);
