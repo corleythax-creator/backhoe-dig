@@ -14,7 +14,7 @@ function fineSoak(v,x,z){const r=rwIdx(x,z);return r<0?0:ss(0.25,0.9,rainW[r])*(
 const FC=0.5/3,FX0=MID[0],FZ0=MID[2],FNX=Math.round((MID[1]-MID[0])/FC),FNZ=Math.round((MID[3]-MID[2])/FC),FV=FNX+1;
 const MT=48,MT_NX=Math.ceil(FNX/MT),MT_NZ=Math.ceil(FNZ/MT),MT_MAX=160;
 // the dig zone in fine cells (its own grid draws it)
-const FDI0=Math.round((-S/2-FX0)/FC),FDI1=Math.round((S/2-FX0)/FC),FDJ0=Math.round((-S/2-FZ0)/FC),FDJ1=Math.round((S/2-FZ0)/FC);
+const FDI0=Math.round((GX0-FX0)/FC),FDI1=Math.round((GX1-FX0)/FC),FDJ0=Math.round((GZ0-FZ0)/FC),FDJ1=Math.round((GZ1-FZ0)/FC);
 // per fine vertex, made on the first tile: original height, rut depth (+ up), water surface and churned mud (0-255); and
 // as for the dig zone's soakMax and crkA (terrain.js): the wettest a rut got (FWX, 0-255) and how dried out and cracked it shows
 let FH0=null,FD=null,FW=null,FM=null,FK=null,FWX=null,FCR=null;
@@ -47,7 +47,7 @@ function mtAdd(ti,tj){if(ti<0||tj<0||ti>=MT_NX||tj>=MT_NZ)return -1;const at=mtI
 // the mid mesh skips the dig zone and every cell a tile draws
 function midHoles(){const P=midPatch,ix=[];
   for(let j=0;j<P.NZ;j++)for(let i=0;i<P.NX;i++){const x0=P.X0+i*P.CO,z0=P.Z0+j*P.CO;
-    if(x0>=-S/2-1e-6&&x0+P.CO<=S/2+1e-6&&z0>=-S/2-1e-6&&z0+P.CO<=S/2+1e-6)continue;
+    if(x0>=GX0-1e-6&&x0+P.CO<=GX1+1e-6&&z0>=GZ0-1e-6&&z0+P.CO<=GZ1+1e-6)continue;
     if(mtIdx[((j*3/MT)|0)*MT_NX+((i*3/MT)|0)]>=0)continue;const a=j*P.VX+i;ix.push(a,a+P.VX,a+1,a+1,a+P.VX,a+P.VX+1)}
   P.g.setIndex(ix)}
 function mtDraw(t){const n=MT+1,g=t.g,p=g.attributes.position.array,col=g.attributes.color.array,dA=g.attributes.dirt.array,sA=g.attributes.soilD.array,
@@ -84,7 +84,7 @@ function farRut(x,z,yaw,hw,hl,dt){
   const R=Math.hypot(hw+RUT_BERM,hl),i0=Math.floor((x-R-FX0)/FC),i1=Math.ceil((x+R-FX0)/FC),j0=Math.floor((z-R-FZ0)/FC),j1=Math.ceil((z+R-FZ0)/FC);
   if(i1<0||j1<0||i0>FNX||j0>FNZ)return 0;
   // only properly muddy ground (or ground already churned) gets a tile, so a drive on damp grass doesn't tile the mesa
-  let wet=false;for(const [px,pz] of [[x,z],[x-hw,z-hl],[x+hw,z-hl],[x-hw,z+hl],[x+hw,z+hl]])if(farMud(px,pz)>0.4){wet=true;break}
+  let wet=false;for(const [px,pz] of [[x,z],[x-hw,z-hl],[x+hw,z-hl],[x-hw,z+hl],[x+hw,z+hl]])if(farMud(px,pz)>Math.min(0.4,TU.rutWet*2.7)){wet=true;break}
   if(!wet)return 0;
   let added=false;for(let tj=Math.max(0,((j0-1)/MT)|0);tj<=Math.min(MT_NZ-1,((j1+1)/MT)|0);tj++)for(let ti=Math.max(0,((i0-1)/MT)|0);ti<=Math.min(MT_NX-1,((i1+1)/MT)|0);ti++)
     if(mtIdx[tj*MT_NX+ti]<0&&mtAdd(ti,tj)>=0)added=true;
@@ -94,7 +94,7 @@ function farRut(x,z,yaw,hw,hl,dt){
     const dx=FX0+i*FC-x,dz=FZ0+j*FC-z,u=dx*s+dz*c,v=dx*c-dz*s,av=Math.abs(v);if(Math.abs(u)>hl||av>hw+RUT_BERM||!vOk(i,j))continue;const k=j*FV+i;
     const wx=FX0+i*FC,wz=FZ0+j*FC;
     if(av>hw){const room=rutBerm(av-hw,wx,wz)-FD[k];if(room>0)fBerm.push(k,v,room);continue}
-    const m=Math.max(FM[k]/255,fineSoak(k,wx,wz));if(m<=RUT_MUD)continue;const d=Math.min(0.5*dt,FD[k]+TU.rutDepth*Math.min(1,m*1.25)*rutDepth(v,hw,wx*s+wz*c));
+    const m=Math.max(FM[k]/255,fineSoak(k,wx,wz));if(m<=TU.rutWet)continue;const d=Math.min(0.5*TU.rutRate*dt,FD[k]+TU.rutDepth*Math.min(1,m*1.25)*rutDepth(v,hw,wx*s+wz*c));
     if(d>0){FD[k]-=d;if(v<0)outL+=d;else outR+=d;mSum+=m;mN++;any=2}}
   if(outL+outR>0){let wL=0,wR=0;for(let n=0;n<fBerm.length;n+=3)if(fBerm[n+1]<0)wL+=fBerm[n+2];else wR+=fBerm[n+2];
     const m=mSum/mN;
@@ -146,9 +146,9 @@ function mudEdRefresh(x0,x1,z0,z1){for(const t of mTiles){const tx0=FX0+t.i0*FC,
 // dry and without its puddles, except where keep(x,z) says to leave it. Holes dug deeper than a rut and heaps of spoil stay,
 // and so does anything next to one, so painting near a trench doesn't carve its rim. Returns whether anything changed
 function rutErase(cx,cz,R,sq,keep,all){const inB=(dx,dz)=>(sq?Math.max(Math.abs(dx),Math.abs(dz)):Math.hypot(dx,dz))<=R;let hit=false;
-  const i0=Math.max(0,Math.floor((cx-R+S/2)/CELL)),i1=Math.min(N,Math.ceil((cx+R+S/2)/CELL)),j0=Math.max(0,Math.floor((cz-R+S/2)/CELL)),j1=Math.min(N,Math.ceil((cz+R+S/2)/CELL));
+  const i0=Math.max(0,Math.floor(gI(cx-R))),i1=Math.min(N,Math.ceil(gI(cx+R))),j0=Math.max(0,Math.floor(gJ(cz-R))),j1=Math.min(N,Math.ceil(gJ(cz+R)));
   if(i0<=i1&&j0<=j1){
-    for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const k=j*V+i,x=i*CELL-S/2,z=j*CELL-S/2,d=H[k]-H0[k];
+    for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const k=j*V+i,x=gX(i),z=gZ(j),d=H[k]-H0[k];
       if(d===0&&!mudA[k]&&Wt[k]<-1e8||!all&&Math.abs(d)>TU.rutDepth+0.12||prot[k]||!inB(x-cx,z-cz))continue;
       let deep=false;if(!all)for(let b=Math.max(0,j-2);b<=Math.min(N,j+2)&&!deep;b++)for(let a=Math.max(0,i-2);a<=Math.min(N,i+2);a++)if(Math.abs(H[b*V+a]-H0[b*V+a])>TU.rutDepth+0.22){deep=true;break}
       if(deep||keep&&keep(x,z))continue;
@@ -165,9 +165,9 @@ function rutErase(cx,cz,R,sq,keep,all){const inB=(dx,dz)=>(sq?Math.max(Math.abs(
 // or rutted remembers the height it had (paintD in the dig zone, FK on tiles, mm), and the paint then shows on it as on
 // level ground until digging or rutting moves it from there. Returns whether anything changed
 function paintKeep(cx,cz,R,sq){const inB=(dx,dz)=>(sq?Math.max(Math.abs(dx),Math.abs(dz)):Math.hypot(dx,dz))<=R;let hit=false;
-  const i0=Math.max(0,Math.floor((cx-R+S/2)/CELL)),i1=Math.min(N,Math.ceil((cx+R+S/2)/CELL)),j0=Math.max(0,Math.floor((cz-R+S/2)/CELL)),j1=Math.min(N,Math.ceil((cz+R+S/2)/CELL));
+  const i0=Math.max(0,Math.floor(gI(cx-R))),i1=Math.min(N,Math.ceil(gI(cx+R))),j0=Math.max(0,Math.floor(gJ(cz-R))),j1=Math.min(N,Math.ceil(gJ(cz+R)));
   for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const k=j*V+i,d=H[k]-H0[k];
-    if(Math.abs(d)<0.04||prot[k]||!inB(i*CELL-S/2-cx,j*CELL-S/2-cz)||Math.abs(d-paintD[k])<1e-4)continue;paintD[k]=d;hit=true}
+    if(Math.abs(d)<0.04||prot[k]||!inB(gX(i)-cx,gZ(j)-cz)||Math.abs(d-paintD[k])<1e-4)continue;paintD[k]=d;hit=true}
   if(FD){const fi0=Math.max(1,Math.floor((cx-R-FX0)/FC)),fi1=Math.min(FNX-1,Math.ceil((cx+R-FX0)/FC)),fj0=Math.max(1,Math.floor((cz-R-FZ0)/FC)),fj1=Math.min(FNZ-1,Math.ceil((cz+R-FZ0)/FC));
     for(let j=fj0;j<=fj1;j++)for(let i=fi0;i<=fi1;i++){const v=j*FV+i,d=FD[v];
       if(Math.abs(d)<0.04||tileOf(Math.min(i,FNX-1),Math.min(j,FNZ-1))<0||!inB(FX0+i*FC-cx,FZ0+j*FC-cz))continue;
@@ -244,7 +244,7 @@ function mudFlyTick(dt){if(!mfInst)return;let c=0;
 const spAt={y:0,d:0};
 function waterAt(x,z){let d=0,y=0;
   for(let n=0;n<5;n++){const px=x+(n===1?0.2:n===2?-0.2:0),pz=z+(n===3?0.2:n===4?-0.2:0);let w=-1e9,h=0;
-    if(px>=-S/2&&px<=S/2&&pz>=-S/2&&pz<=S/2){const k=Math.round((pz+S/2)/CELL)*V+Math.round((px+S/2)/CELL);w=Wt[k];h=H[k]}
+    if(inDig(px,pz)){const k=Math.round(gJ(pz))*V+Math.round(gI(px));w=Wt[k];h=H[k]}
     else if(FD){const i=Math.round((px-FX0)/FC),j=Math.round((pz-FZ0)/FC);if(i>=0&&j>=0&&i<=FNX&&j<=FNZ&&tileOf(Math.min(i,FNX-1),Math.min(j,FNZ-1))>=0){const v=j*FV+i;w=FW[v];h=FH0[v]+FD[v]}}
     if(w>-1e8&&w-h>d){d=w-h;y=w}}
   if(d<0.004)return null;spAt.y=y;spAt.d=d;return spAt}

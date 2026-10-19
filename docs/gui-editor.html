@@ -47,9 +47,9 @@ canvas#view{position:fixed;inset:0;width:100%;height:100%;display:block;touch-ac
 #hud{position:fixed;inset:0;pointer-events:none;box-sizing:border-box;
   --pt:calc(env(safe-area-inset-top,0px) + 8px);--pb:calc(env(safe-area-inset-bottom,0px) + 10px);
   --pl:max(10px,env(safe-area-inset-left,0px));--pr:max(10px,env(safe-area-inset-right,0px))}
-/* Three bars frame the view: the top bar (menu, job gauges, action buttons), the left rail (machines) and the bottom bar
+/* Two bars frame the view: the top bar (menu, action buttons, Controls with the machines, the camera) and the bottom bar
    (turn, what the sticks do, frame rate). The sticks and the minimap float over the view between them. #hud is a grid:
-   rows top bar / view / bottom bar, columns rail / view / minimap column */
+   rows top bar / view / bottom bar, columns (once the machine rail, now empty) / view / minimap column */
 #hud{display:grid;grid-template-columns:auto minmax(0,1fr) auto;grid-template-rows:auto minmax(0,1fr) auto;--bar:rgba(22,25,20,.9)}
 .tbar{grid-area:1/1/2/4;position:relative;z-index:3;pointer-events:auto;display:flex;align-items:center;gap:8px 12px;min-height:50px;box-sizing:border-box;
   padding:calc(env(safe-area-inset-top,0px) + 5px) var(--pr) 6px var(--pl);background:var(--bar);border-bottom:1px solid var(--hud-line);zoom:var(--ms)}
@@ -69,6 +69,8 @@ canvas#view{position:fixed;inset:0;width:100%;height:100%;display:block;touch-ac
 .val{font:700 17px/1 var(--f-display);font-variant-numeric:tabular-nums;white-space:nowrap}
 .sub{font:600 13px/1.1 var(--f-display);font-variant-numeric:tabular-nums;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .status.min .sub{display:none}
+/* the job gauges are hidden for now (the game still keeps them up to date); the buttons sit at the right */
+#status{display:none}
 #truckBar{background:#9fb7c6}
 .bar{height:5px;border-radius:3px;background:rgba(255,255,255,.14);overflow:hidden}
 .bar>i{display:block;height:100%;width:0;background:var(--machine);transition:width .15s}
@@ -90,16 +92,19 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 #menu .sizes button{height:32px;padding:0 8px;font-size:13px;border:1px solid var(--hud-line);text-align:center}
 #menu .sizes button[aria-pressed="true"]{background:var(--machine);color:#1c1309}
 #resetBtn.arm{background:var(--danger)!important;color:#fff}
-/* left rail: a tile per machine, icon over name; the one you drive is lit */
-.lbar{grid-area:2/1/3/2;pointer-events:auto;display:flex;flex-direction:column;gap:4px;box-sizing:border-box;min-height:0;overflow-y:auto;scrollbar-width:none;
-  padding:11px 8px 8px var(--pl);background:var(--bar);border-right:1px solid var(--hud-line);zoom:var(--ms)}
-.lbar::-webkit-scrollbar{display:none}
-.lbar button{position:relative;flex:1 1 0;width:48px;min-height:42px;max-height:64px;height:auto;padding:4px 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
-  font-size:11px;letter-spacing:.06em;background:transparent;border:1px solid transparent;border-radius:9px}
-.lbar svg{width:26px;height:26px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.lbar button[aria-pressed="true"]{background:var(--machine);color:#1c1309}
-@media (hover:hover){.lbar button[aria-pressed="false"]:hover{border-color:var(--hud-line)}}
-.kb .lbar button::before{content:attr(data-k);position:absolute;top:3px;right:5px;font-size:10px;opacity:.6}
+/* Controls: the machines drop from the Controls button at the top right, a tile per machine, icon beside name; the one you drive is lit */
+#ctlMenu{position:absolute;top:100%;right:var(--pr);margin-top:8px;z-index:3;display:flex;flex-direction:column;gap:2px;min-width:180px;box-sizing:border-box;background:#1d211b;box-shadow:0 6px 18px rgba(0,0,0,.5);border:1px solid var(--hud-line);border-radius:10px;padding:5px}
+#ctlMenu[hidden]{display:none}
+#ctlMenu button{position:relative;height:44px;display:flex;align-items:center;gap:10px;padding:0 12px;font-size:15px;background:transparent;border:1px solid transparent;border-radius:7px;text-align:left}
+#ctlMenu svg{width:24px;height:24px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#ctlMenu button[aria-pressed="true"]{background:var(--machine);color:#1c1309}
+@media (hover:hover){#ctlMenu button[aria-pressed="false"]:hover{background:rgba(255,255,255,.07)}}
+.kb #ctlMenu button::after{content:attr(data-k);margin-left:auto;font-size:12px;opacity:.6}
+#ctlBtn[aria-expanded="true"]{background:var(--machine);color:#1c1309}
+/* the camera toggle: chase and cab side by side, the one in use lit */
+#camBtn{display:flex;align-items:stretch;gap:2px;padding:3px}
+#camBtn span{display:flex;align-items:center;padding:0 10px;border-radius:6px;color:var(--muted)}
+#camBtn[data-cam="chase"] #camChase,#camBtn[data-cam="cab"] #camCab{background:var(--machine);color:#1c1309}
 /* right column: the minimap, the block bar under it */
 .rpane{grid-area:2/3/3/4;z-index:2;min-height:0;max-height:100%;box-sizing:border-box;display:flex;flex-direction:column;align-items:flex-end;gap:6px;padding:11px var(--pr) 8px 0}
 #mini{flex:none;display:block;width:calc(104px*var(--ms));height:calc(104px*var(--ms));border-radius:10px;border:1px solid rgba(255,255,255,.35);background:#1e2a30;pointer-events:auto;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.3)}
@@ -151,7 +156,7 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
   .srow{max-width:none;padding:0 10px}.srow:first-child{border-left:0}.line{flex-direction:column;align-items:flex-start;gap:3px}
   .bbar .stats{order:-1;flex-basis:100%;margin:0;text-align:center}.bbar{gap:4px 12px}}
 /* short screens (a phone on its side): slimmer bars */
-@container stage (max-height:440px){.tbar{min-height:44px;padding-bottom:4px}.status .sub{display:none}.lbar{padding-top:9px}.lbar button{min-height:38px;font-size:10px;gap:2px}.lbar svg{width:21px;height:21px}
+@container stage (max-height:440px){.tbar{min-height:44px;padding-bottom:4px}.status .sub{display:none}#ctlMenu button{height:38px}
   .bbar{min-height:40px;padding-top:3px}#mini{width:calc(92px*var(--ms));height:calc(92px*var(--ms))}}
 #updBtn{position:absolute;left:50%;top:22%;transform:translateX(-50%);z-index:6;background:var(--gas);color:#1c1309;border:0;height:46px;font-size:18px;white-space:nowrap;box-shadow:0 3px 10px rgba(0,0,0,.35)}
 #toast{position:absolute;left:0;right:0;top:32%;display:flex;justify-content:center}
@@ -159,22 +164,43 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 #toast span.show{opacity:1}
 #toast span.bad{border-color:var(--danger);color:#ffd9d5}
 #toast span.good{border-color:var(--ok)}
-#bigmap{position:fixed;inset:0;background:rgba(10,12,9,.8);display:flex;align-items:center;justify-content:center;z-index:6;pointer-events:auto;box-sizing:border-box;
-  padding-block:calc(env(safe-area-inset-top,0px) + 12px) calc(env(safe-area-inset-bottom,0px) + 12px);
+/* Site map: the map fills the card on the left, a side panel on the right (below on a tall phone) holds the title,
+   teleport, places, layers and the key. The map is dragged, pinched and scrolled; its buttons float on it */
+#bigmap{position:fixed;inset:0;background:rgba(6,8,6,.72);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);display:flex;align-items:stretch;justify-content:center;z-index:6;pointer-events:auto;box-sizing:border-box;
+  padding-block:calc(env(safe-area-inset-top,0px) + 14px) calc(env(safe-area-inset-bottom,0px) + 14px);
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-.mapcard{background:#1d211b;border:1px solid var(--hud-line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px;max-width:100%;max-height:100%;box-sizing:border-box}
+.mapcard{width:100%;max-width:1680px;display:grid;grid-template-columns:minmax(0,1fr) 380px;background:#161a15;border:1px solid var(--hud-line);border-radius:16px;overflow:hidden;box-shadow:0 24px 70px rgba(0,0,0,.55);box-sizing:border-box}
+.mapview{position:relative;min-height:0;min-width:0;background:#1a4769}
+#big{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:crosshair}
+#big.drag{cursor:grabbing}
+#mapCtl{position:absolute;right:12px;top:12px;display:flex;flex-direction:column;gap:8px}
+#mapCtl button{width:48px;height:48px;padding:0;display:grid;place-items:center;background:rgba(20,23,19,.85);border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+#mapCtl svg{width:24px;height:24px;fill:none;stroke:var(--ink);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+@media (hover:hover){#mapCtl button:hover{background:rgba(48,54,44,.95)}}
+#mapWhere{position:absolute;left:12px;bottom:12px;max-width:calc(100% - 200px);padding:8px 14px;border-radius:10px;background:rgba(20,23,19,.85);font:700 18px/1.2 var(--f-display);letter-spacing:.03em;color:var(--ink);pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#mapWhere:empty{display:none}
+.mapside{display:flex;flex-direction:column;gap:16px;padding:16px 18px 18px;overflow-y:auto;min-height:0;border-left:1px solid var(--hud-line);background:linear-gradient(180deg,#1f241d,#161a15)}
 .maphead{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.maphead h2{margin:0;font:800 28px/1 var(--f-display);color:var(--machine);letter-spacing:.02em}
-#big{display:block;border-radius:10px;background:#1e2a30;max-width:100%}
-#tpBar{display:flex;align-items:center;min-height:46px;font:700 18px/1.2 var(--f-display);letter-spacing:.03em;color:var(--ink)}
+.maphead h2{margin:0;font:800 32px/1 var(--f-display);color:var(--machine);letter-spacing:.02em;text-transform:uppercase}
+.mapsec{display:flex;flex-direction:column;gap:10px;padding-top:14px;border-top:1px solid var(--hud-line)}
+.mapsec h3{margin:0;font:800 14px/1 var(--f-display);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+#mapPlaces{display:flex;flex-wrap:wrap;gap:6px}
+#mapPlaces button{height:40px;font-size:16px;padding:0 12px}
+#tpBar{display:flex;align-items:center;min-height:46px;padding:10px 12px;border-radius:10px;background:rgba(245,197,24,.08);border:1px solid rgba(245,197,24,.28);font:700 18px/1.2 var(--f-display);letter-spacing:.03em;color:var(--ink)}
 #tpOpts{display:flex;flex-wrap:wrap;align-items:center;gap:8px}#tpOpts[hidden],#tpHint[hidden]{display:none}
-#tpOpts button{height:46px;font-size:18px;padding:0 14px}
+#tpOpts>span{width:100%;color:var(--gas)}
+#tpOpts button{height:44px;font-size:17px;padding:0 12px}
 #tpOpts button[aria-pressed="true"]{border-color:var(--machine);color:var(--machine)}
-.legend{display:flex;flex-wrap:wrap;gap:8px 16px;font:600 17px/1.2 var(--f-display);letter-spacing:.03em}
-/* short landscape screens (a phone on its side): the map on the left, title, teleport and legend beside it */
-@container stage (max-height:520px) and (orientation:landscape){.mapcard{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:max-content max-content 1fr;gap:10px 14px;align-items:start}
-  #big{grid-column:1;grid-row:1/4}.maphead,#tpBar,.legend{grid-column:2}.legend{font-size:15px;gap:4px 12px}}
-.legend span{display:flex;align-items:center;gap:7px}
+.legend{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:9px 12px;font:600 17px/1.2 var(--f-display);letter-spacing:.03em}
+.legend span{display:flex;align-items:center;gap:9px}
+.legend i{flex:none;display:block;width:18px;height:12px;border-radius:3px}
+.legend i.tri{width:18px;height:14px;border-radius:0;background:var(--c);clip-path:polygon(100% 50%,0 0,30% 50%,0 100%)}
+/* a tall phone: the map on top, the panel under it */
+@container stage (orientation:portrait) and (max-width:900px){.mapcard{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,58fr) minmax(0,42fr)}
+  .mapside{border-left:0;border-top:1px solid var(--hud-line)}}
+/* a phone on its side: a narrower panel beside the map */
+@container stage (max-height:520px) and (orientation:landscape){.mapcard{grid-template-columns:minmax(0,1fr) 300px}.mapside{padding:12px 14px;gap:12px}.maphead h2{font-size:26px}
+  #mapCtl button{width:42px;height:42px}.legend{font-size:15px;grid-template-columns:repeat(2,minmax(0,1fr))}}
 .legend i{display:inline-block;width:18px;height:12px;border-radius:3px}
 #benchBar{position:absolute;left:0;right:0;top:calc(var(--pt) + 130px);z-index:2;margin:0 auto;width:max-content;max-width:100%;box-sizing:border-box;font:800 16px/1.25 var(--f-display);letter-spacing:.04em;text-align:center;background:var(--hud);border:2px solid var(--gas);border-radius:10px;padding:8px 14px;font-variant-numeric:tabular-nums}
 #benchBar small{display:block;font:600 13px/1.2 var(--f-display);color:var(--muted);letter-spacing:.03em}
@@ -237,6 +263,17 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
   padding-block:calc(env(safe-area-inset-top,0px) + 16px) calc(env(safe-area-inset-bottom,0px) + 16px);
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 #keysBox .card{max-width:560px;overscroll-behavior:contain}
+#ctrlsBox{position:fixed;inset:0;z-index:7;background:rgba(10,12,9,.72);display:flex;align-items:center;justify-content:center;pointer-events:auto;box-sizing:border-box;
+  padding-block:calc(env(safe-area-inset-top,0px) + 16px) calc(env(safe-area-inset-bottom,0px) + 16px);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#ctrlsBox[hidden]{display:none}
+#ctrlsBox .card{max-width:600px;overscroll-behavior:contain;touch-action:pan-y}
+#ctrlsTabs button{flex:1 1 0;height:42px;font-size:15px}
+#ctrlsTabs button[aria-pressed="false"]{background:transparent;color:var(--ink);border:1px solid var(--hud-line)}
+#ctrlsTabs button[aria-pressed="true"]{background:var(--machine);color:#1c1309}
+#ctrlsList h2{margin:10px 0 2px;font:800 15px/1 var(--f-display);letter-spacing:.12em;text-transform:uppercase;color:var(--gas)}
+#ctrlsList .kkey{font:700 16px/1.2 var(--f-display);white-space:nowrap;text-align:right;color:var(--ink)}
+#ctrlsList .krow{grid-template-columns:1fr auto}
 #keysList h2{margin:10px 0 2px;font:800 15px/1 var(--f-display);letter-spacing:.12em;text-transform:uppercase;color:var(--gas)}
 .krow{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.07)}
 .kname{font:700 18px/1.2 var(--f-display);letter-spacing:.02em}
@@ -255,30 +292,84 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 #sndOn[aria-pressed="false"]{color:var(--danger);border-color:var(--danger)}
 /* Map editor: everything in a column down the left, so the rest of the view is ground: the title bar along the top,
    a two-wide tool strip, and beside it the tool's options with the file and info cards; the game HUD hides */
-body.editing #hud>:is(.tbar,.lbar,.rpane,.sticks,.bbar){display:none}
-#editor{position:fixed;inset:0;z-index:4;pointer-events:none;display:flex;flex-direction:column;align-items:flex-start;gap:6px;box-sizing:border-box;
-  padding:calc(env(safe-area-inset-top,0px) + 8px) max(10px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 10px) max(10px,env(safe-area-inset-left,0px))}
+body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
+:root{--ed-l:max(8px,env(safe-area-inset-left,0px));--ed-r:max(8px,env(safe-area-inset-right,0px))}
+/* the map editor: bars across the top (the map, undo, the view), down the left (the tool groups, with a drawer beside them
+   for the group's library or list) and along the bottom (the tool's options, the selection's settings, then a status line) */
+#editor{position:fixed;inset:0;z-index:4;pointer-events:none;display:grid;grid-template-columns:auto auto 1fr;grid-template-rows:auto minmax(0,1fr) auto auto;box-sizing:border-box}
 #editor[hidden]{display:none}
-.edbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
-.edbar h2{margin:0;font:800 20px/1 var(--f-display);letter-spacing:.05em;text-transform:uppercase;text-shadow:0 1px 4px rgba(0,0,0,.7)}
-@container stage (max-width:480px){.edbar h2{display:none}}
-.edbar .row{pointer-events:auto;gap:4px}
-.edmain{flex:1;min-height:0;max-width:100%;display:flex;align-items:flex-start;gap:6px}
-.edtools{pointer-events:auto;flex:none;display:grid;grid-template-columns:repeat(2,64px);gap:4px}
-.edtools button{height:36px;padding:0 2px;font-size:14px;letter-spacing:.02em}
-.edside{flex:0 1 360px;min-width:0;max-height:100%;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:6px;border-radius:10px}
-.edpanel{pointer-events:auto;box-sizing:border-box;width:100%;background:var(--hud);border:1px solid var(--hud-line);border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;gap:6px;font:600 15px/1.25 var(--f-display)}
+#editor svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.edbar{grid-column:1/-1;grid-row:1;pointer-events:auto;display:flex;align-items:center;gap:6px 12px;overflow-x:auto;scrollbar-width:none;background:var(--hud);border-bottom:1px solid var(--hud-line);
+  padding:calc(env(safe-area-inset-top,0px) + 6px) var(--ed-r) 6px var(--ed-l)}
+.edbar h2{margin:0;flex:none;font:800 20px/1 var(--f-display);letter-spacing:.05em;text-transform:uppercase}
+.edbar .row{flex:none;flex-wrap:nowrap;gap:4px}
+#edPanelBtn{margin-left:auto}
+.edbar>button{flex:none}
+.edico{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.edico svg{width:18px;height:18px;flex:none}
+.edtools{grid-column:1;grid-row:2;pointer-events:auto;display:flex;flex-direction:column;gap:4px;overflow-y:auto;scrollbar-width:none;background:var(--hud);border-right:1px solid var(--hud-line);padding:6px 6px 6px var(--ed-l)}
+.edtools button{flex:none;width:66px;height:56px;padding:2px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font:700 13px/1 var(--f-display);letter-spacing:.03em}
+.edtools svg{width:22px;height:22px}
+.edtools .edmapbtn{margin-top:auto}
+.eddrawer{grid-column:2;grid-row:2;pointer-events:auto;width:310px;max-width:calc(100cqw - 100px);box-sizing:border-box;overflow-y:auto;overscroll-behavior:contain;background:var(--hud);border-right:1px solid var(--hud-line);padding:8px 10px 12px;display:flex;flex-direction:column;gap:8px;font:600 15px/1.25 var(--f-display)}
+.eddrawer[hidden],.edsec[hidden]{display:none}
+.edsec{display:flex;flex-direction:column;gap:7px}
+.edsec p{margin:0}.edsec .hint{color:var(--muted);font-size:14px}
+.edsec h3,.edpanel h3{margin:0;font:800 18px/1.1 var(--f-display);letter-spacing:.03em;color:var(--machine)}
+.edsec h3 small{font:600 14px/1 var(--f-display);color:var(--muted);letter-spacing:0;margin-left:6px}
+.edsec h4{margin:3px 0 0;font:700 12px/1 var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.edkinds{display:flex;flex-direction:column;gap:4px}.edkinds .row{flex-wrap:wrap;gap:4px}
+.edbottom{grid-column:1/-1;grid-row:3;pointer-events:auto;display:flex;flex-direction:column;background:var(--hud);border-top:1px solid var(--hud-line)}
+.edpanel{box-sizing:border-box;width:100%;display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;padding:7px var(--ed-r) 7px var(--ed-l);font:600 15px/1.25 var(--f-display)}
+.edpanel[hidden]{display:none}
+.edpanel+.edpanel{border-top:1px solid var(--hud-line)}
 .edpanel p{margin:0}.edpanel .hint{color:var(--muted);font-size:14px}
-.edpanel h3{margin:0;font:800 18px/1.1 var(--f-display);letter-spacing:.03em;color:var(--machine)}
-#edInfo dl{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;margin:0}
-#edInfo dt{font:700 13px/1.5 var(--f-display);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-#edInfo dd{margin:0;font-variant-numeric:tabular-nums}
+.edihead{display:flex;flex-direction:column;gap:2px;min-width:0;max-width:340px}
+.edihead small{color:var(--muted);font-size:13px}
+.edsub{gap:4px}
+.edpicked{color:var(--muted)}.edpicked b{color:var(--ink)}
+#edCard dl{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px;margin:0}
+#edCard dt{font:700 12px/1.5 var(--f-display);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+#edCard dd{margin:0 10px 0 0;font-variant-numeric:tabular-nums}
+.edsw{display:flex;gap:5px}
+#editor button.edswb{width:30px;height:30px;padding:0;border-radius:50%;border:2px solid rgba(255,255,255,.35)}
+#editor button.edswb[aria-pressed="true"]{border-color:#fff;box-shadow:0 0 0 2px var(--machine)}
+.edstat{grid-column:1/-1;grid-row:4;pointer-events:auto;display:flex;gap:16px;white-space:nowrap;overflow:hidden;background:rgba(10,12,10,.88);color:var(--muted);font:600 13px/1.3 var(--f-display);
+  padding:3px var(--ed-r) calc(env(safe-area-inset-bottom,0px) + 3px) var(--ed-l)}
+.edstat span{font-variant-numeric:tabular-nums}
+#edTip{margin-left:auto;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.edlist{display:flex;flex-direction:column;gap:4px}
+.edlg{display:flex;gap:5px;align-items:center}
+#editor button.edlgo{flex:1;min-width:0;height:36px;padding:0 8px;display:flex;align-items:center;gap:6px;text-align:left;font:700 15px/1 var(--f-display)}
+.edlgo i{font-style:normal;width:12px}.edlgo small{color:var(--muted);font-weight:600}
+#editor button.edlgs{flex:none}
+#editor button.edlgs[aria-pressed="true"]{background:var(--machine);color:#1c1309}
+.edlrows{display:flex;flex-direction:column;gap:2px;padding-left:10px}
+.edlr{display:flex;gap:4px;align-items:stretch}
+#editor button.edlck{flex:none;width:32px;height:auto;min-height:36px;padding:0}
+.edlck::before{content:'';display:block;width:14px;height:14px;margin:auto;border:2px solid var(--muted);border-radius:3px}
+.edlck[aria-pressed="true"]::before{background:var(--machine);border-color:var(--machine)}
+#editor button.edlrn{flex:1;min-width:0;height:auto;min-height:36px;padding:4px 8px;display:flex;flex-direction:column;align-items:flex-start;gap:1px;text-align:left;font:600 14px/1.2 var(--f-display);letter-spacing:0;text-transform:none}
+.edlrn small{color:var(--muted);font-size:12px}
+#editor button.edlrn[aria-pressed="true"]{box-shadow:inset 0 0 0 2px var(--machine)}
+.edlact{gap:4px;flex-wrap:wrap;padding-left:10px}
+#edBox{position:fixed;z-index:5;pointer-events:none;border:2px dashed var(--machine);background:rgba(240,122,34,.12)}
+#edBox[hidden]{display:none}
+@container stage (max-width:900px){.edbar h2{display:none}}
+/* phones: no status line, the bottom bar scrolls sideways in one line, the left bar's buttons a little smaller */
+@container stage (max-height:500px),(max-width:600px){
+  .edstat{display:none}.edbottom{flex-direction:row;overflow-x:auto;scrollbar-width:none;padding-bottom:env(safe-area-inset-bottom,0px)}
+  .edpanel{width:auto;flex:none;flex-wrap:nowrap;gap:6px 12px;padding-top:5px;padding-bottom:5px}
+  .edpanel+.edpanel{border-top:0;border-left:1px solid var(--hud-line)}
+  .edpanel>*{flex:none}#editor .edpanel input[type=range]{width:120px;flex:none}
+  .edbar{padding-top:calc(env(safe-area-inset-top,0px) + 4px);padding-bottom:4px}
+  .edtools{gap:3px;padding-top:4px;padding-bottom:4px}.edtools button{width:58px;height:44px;font-size:12px;gap:2px}.edtools svg{width:19px;height:19px}}
 .edopt{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px}
 .edopt .row{gap:4px}
 .edopt label{font:700 13px/1 var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
 .edopt output{min-width:40px;font-variant-numeric:tabular-nums}
 #editor input[type=range]{flex:1 1 90px;min-width:80px;max-width:170px;accent-color:var(--machine)}
-.edmats{max-height:min(38cqh,380px);overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:5px;padding-right:4px}
+.edmats{display:flex;flex-direction:column;gap:5px;padding-right:4px}
 .edmats h3 small{font:600 14px/1 var(--f-display);color:var(--muted);letter-spacing:0;margin-left:6px}
 .edmats h4{margin:3px 0 0;font:700 12px/1 var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
 .edmatgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(62px,1fr));gap:4px}
@@ -292,10 +383,11 @@ body.editing #hud>:is(.tbar,.lbar,.rpane,.sticks,.bbar){display:none}
 .edownpic input{position:absolute;inset:0;opacity:0;cursor:pointer}
 .edowncard input:not([type=range]):not([type=file]),.edowncard select{flex:1 1 90px;min-width:0;font:600 15px/1.2 var(--f-display);padding:4px 6px;border-radius:5px;border:1px solid rgba(255,255,255,.25);background:#1d1a16;color:inherit}
 .edowncard input[type=number]{max-width:80px}
+.edmat i.dirt{background:linear-gradient(135deg,#8a6a3f,#6e5232 60%,#9a7a4a)}.edmat i.grass{background:linear-gradient(135deg,#6a9a40,#4a7a30)}
 .edmat i.nat{background:linear-gradient(135deg,#5b8a3a,#4a7a30 60%,#8a6a3f)}
 #editor button.edmat[aria-pressed="true"]{background:var(--machine);color:#1c1309}
 #editor .row button[aria-pressed="true"]{background:var(--machine);color:#1c1309}
-.edtools button[aria-pressed="true"],.edkind button[aria-pressed="true"],#editor button.go{background:var(--machine);color:#1c1309}
+.edtools button[aria-pressed="true"],#editor button.go{background:var(--machine);color:#1c1309}
 #editor button.danger{color:var(--danger)}
 #editor button:disabled{opacity:.4}
 #editor textarea{width:100%;box-sizing:border-box;height:96px;font:12px/1.3 ui-monospace,Menlo,monospace;color:var(--ink);background:#111410;border:1px solid var(--hud-line);border-radius:8px;padding:6px;-webkit-user-select:text;user-select:text}
@@ -356,21 +448,20 @@ body.editing #hud>:is(.tbar,.lbar,.rpane,.sticks,.bbar){display:none}
 #gfxGraphCap b{color:var(--ink)}
 /* big map trails: what to show, and its key */
 #trailBar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font:700 18px/1.2 var(--f-display);letter-spacing:.03em;color:var(--ink)}
-#trailBar span{margin-right:4px}
-#trailBar button{height:42px;font-size:16px;padding:0 10px}
+#trailBar span{width:100%}
+#trailBar button{height:40px;font-size:16px;padding:0 10px}
 #trailBar button[aria-pressed="true"]{background:var(--machine);color:#1c1309;border-color:var(--machine)}
 #trailKey{display:flex;flex-direction:column;gap:4px}
 #trailKey i{display:block;height:10px;border-radius:5px}
 #trailKey>span{display:flex;justify-content:space-between;gap:10px;font:600 15px/1.2 var(--f-display);color:var(--muted)}
 #wetBar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font:700 18px/1.2 var(--f-display);letter-spacing:.03em;color:var(--ink)}
-#wetBar span{margin-right:4px}
-#wetBar button{height:42px;font-size:16px;padding:0 10px}
+#wetBar span{width:100%}
+#wetBar button{height:40px;font-size:16px;padding:0 10px}
 #wetBar button[aria-pressed="true"],#wetGround[aria-pressed="true"]{background:var(--machine);color:#1c1309;border-color:var(--machine)}
 #wetKey{display:flex;flex-direction:column;gap:4px}
 #wetKey i{display:block;height:10px;border-radius:5px}
 #wetKey>span{display:flex;justify-content:space-between;gap:10px;font:600 15px/1.2 var(--f-display);color:var(--muted)}
 #wetGround{align-self:flex-start;margin-top:4px}
-@container stage (max-height:520px) and (orientation:landscape){.mapcard{grid-template-rows:max-content max-content max-content max-content max-content max-content 1fr}#big{grid-row:1/8}#trailBar,#trailKey,#wetBar,#wetKey{grid-column:2}}
 
 </style>
 <div class="app">
@@ -390,7 +481,7 @@ body.editing #hud>:is(.tbar,.lbar,.rpane,.sticks,.bbar){display:none}
 <div id="aim" hidden></div>
 <div id="flash"></div>
 <div id="hud">
-  <!-- top bar: menu, the job gauges (tap them for more or less), then the machine's action buttons -->
+  <!-- top bar: menu, the job gauges (hidden for now), then the action buttons: Blocks, Drive (the machines), Controls (every key, mouse and controller input), the camera -->
   <header class="tbar">
     <button id="menuBtn" class="sq" aria-label="Menu" aria-expanded="false">☰</button>
     <div class="brand">Corley's<b>Island</b></div>
@@ -421,7 +512,9 @@ body.editing #hud>:is(.tbar,.lbar,.rpane,.sticks,.bbar){display:none}
       <button id="wipeBtn" hidden aria-pressed="false">Wipers</button>
       <button id="boxBtn" hidden>Hook box</button>
       <button id="blkBtn" aria-pressed="false">Blocks</button>
-      <button id="camBtn">Cab view</button>
+      <button id="ctlBtn" aria-expanded="false">Drive</button>
+      <button id="ctrlsBtn">Controls</button>
+      <button id="camBtn" data-cam="chase" aria-label="Camera: chase or cab view"><span id="camChase">Chase</span><span id="camCab">Cab</span></button>
     </div>
     <div id="menu" hidden>
       <button id="helpBtn">How to play</button>
@@ -438,16 +531,16 @@ body.editing #hud>:is(.tbar,.lbar,.rpane,.sticks,.bbar){display:none}
       <div class="sizes"><span>UI size</span><button data-s="1">1x</button><button data-s="1.5">1.5x</button><button data-s="2">2x</button></div>
       <div class="ver" id="verMenu"></div>
     </div>
+    <!-- Drive: which machine (or on foot) the sticks drive, dropping from the Drive button -->
+    <nav id="ctlMenu" class="seg" role="group" aria-label="Control mode" hidden>
+      <button id="modeDig" data-k="1" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 20h11v-5H2zM4 15v-3h5v3M9 13l5-8 6 4-2 5h-3"/></svg><span>Dig</span></button>
+      <button id="modeDrive" data-k="2" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="14" width="20" height="7" rx="3.5"/><path d="M6 14v-4h9v4M9 10V6h5"/><circle cx="6.5" cy="17.5" r="1"/><circle cx="17.5" cy="17.5" r="1"/></svg><span>Drive</span></button>
+      <button id="modeTruck" data-k="3" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 16V8l11-2v10M13 10h5l4 4v2H13"/><circle cx="6" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg><span>Truck</span></button>
+      <button id="modeMow" data-k="4" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 16h14v-4H6zM9 12V7h5l2 5M17 14h4"/><circle cx="6" cy="18" r="2"/><circle cx="16" cy="18" r="2"/></svg><span>Mow</span></button>
+      <button id="modeSkid" data-k="6" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 17V7h8l3 4v6M5 11h11M16 12l4-3 2 5h-5"/><circle cx="7" cy="19" r="2"/><circle cx="14" cy="19" r="2"/></svg><span>Skid</span></button>
+      <button id="modeWalk" data-k="5" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="13" cy="4" r="2"/><path d="M8 11l4-4 3 3 3 1M12 7l-1 7 3 3v4M11 14l-3 7"/></svg><span>Walk</span></button>
+    </nav>
   </header>
-  <!-- left rail: which machine (or on foot) the sticks drive -->
-  <nav class="lbar seg" role="group" aria-label="Control mode">
-    <button id="modeDig" data-k="1" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 20h11v-5H2zM4 15v-3h5v3M9 13l5-8 6 4-2 5h-3"/></svg><span>Dig</span></button>
-    <button id="modeDrive" data-k="2" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="14" width="20" height="7" rx="3.5"/><path d="M6 14v-4h9v4M9 10V6h5"/><circle cx="6.5" cy="17.5" r="1"/><circle cx="17.5" cy="17.5" r="1"/></svg><span>Drive</span></button>
-    <button id="modeTruck" data-k="3" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 16V8l11-2v10M13 10h5l4 4v2H13"/><circle cx="6" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg><span>Truck</span></button>
-    <button id="modeMow" data-k="4" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 16h14v-4H6zM9 12V7h5l2 5M17 14h4"/><circle cx="6" cy="18" r="2"/><circle cx="16" cy="18" r="2"/></svg><span>Mow</span></button>
-    <button id="modeSkid" data-k="6" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 17V7h8l3 4v6M5 11h11M16 12l4-3 2 5h-5"/><circle cx="7" cy="19" r="2"/><circle cx="14" cy="19" r="2"/></svg><span>Skid</span></button>
-    <button id="modeWalk" data-k="5" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="13" cy="4" r="2"/><path d="M8 11l4-4 3 3 3 1M12 7l-1 7 3 3v4M11 14l-3 7"/></svg><span>Walk</span></button>
-  </nav>
   <!-- right column: the minimap, and the block bar under it while Blocks is on -->
   <aside class="rpane">
     <canvas id="mini" title="Tap for the big map (M)"></canvas>
@@ -487,38 +580,21 @@ body.editing #hud>:is(.tbar,.lbar,.rpane,.sticks,.bbar){display:none}
 </div>
 
 <div id="editor" hidden>
-  <div class="edbar">
+  <div class="edbar" id="edTop">
+    <button id="edDone" class="sm go edico" data-ic="done">Done</button>
     <h2>Map editor</h2>
-    <div class="row">
-      <button id="edUndo" class="sm" disabled>Undo</button>
-      <button id="edRedo" class="sm" disabled>Redo</button>
-      <button id="edFileBtn" class="sm" aria-expanded="false">Map file</button>
-      <button id="edDone" class="sm go">Done</button>
-    </div>
+    <div class="row" role="group" aria-label="Undo"><button id="edUndo" class="sm edico" data-ic="undo" disabled>Undo</button><button id="edRedo" class="sm edico" data-ic="redo" disabled>Redo</button></div>
+    <div class="row" id="edView" role="group" aria-label="View"><button id="edLook" class="sm edico" data-ic="look" aria-pressed="false">Look</button><button id="edZoomIn" class="sm edico" data-ic="zin">Closer</button><button id="edZoomOut" class="sm edico" data-ic="zout">Farther</button><button id="edNorth" class="sm edico" data-ic="north">North up</button><button id="edHome" class="sm edico" data-ic="home">Start view</button></div>
+    <button id="edPanelBtn" class="sm edico" data-ic="panel" aria-pressed="true">Panel</button>
   </div>
-  <div class="edmain">
-    <div class="edtools" role="group" aria-label="Editor tool">
-      <button data-t="look">Look</button><button data-t="raise">Raise</button><button data-t="lower">Lower</button><button data-t="flatten">Flatten</button><button data-t="smooth">Smooth</button>
-      <button data-t="dirt">Dirt</button><button data-t="grass">Grass</button><button data-t="select">Select</button><button data-t="add">Add</button><button data-t="query">Query</button><button data-t="roads">Roads</button><button data-t="paint">Paint</button>
-    </div>
-    <div class="edside">
-      <div id="edFile" class="edpanel" hidden>
-        <p>Your map saves on this device as you edit. Copy it to keep it or share it, and load a copied map here.</p>
-        <div class="row"><button id="edCopy" class="sm">Copy map</button><button id="edPasteBtn" class="sm">Load a map</button><button id="edReset" class="sm danger">Start over</button></div>
-        <textarea id="edCopyBox" readonly hidden aria-label="Copied map"></textarea>
-        <div id="edPasteBox" hidden><textarea id="edPaste" placeholder="Paste a copied map here" aria-label="Map to load"></textarea><div class="row"><button id="edLoad" class="sm go">Load it</button></div></div>
-      </div>
-      <div id="edOpts" class="edpanel">
-        <div class="edopt" data-for="raise lower flatten smooth dirt grass paint"><label for="edSize">Brush</label><input id="edSize" type="range" min="1" max="40" step="1"><output id="edSizeV"></output>
-          <span class="edshape row" data-for="paint" role="group" aria-label="Brush shape"><button class="sm" data-s="round" aria-pressed="true">Round</button><button class="sm" data-s="sq" aria-pressed="false">Square</button></span>
-          <span class="ededge row" data-for="paint" role="group" aria-label="Brush edge"><button class="sm" data-e="hard" aria-pressed="true">Hard edge</button><button class="sm" data-e="soft" aria-pressed="false">Soft edge</button></span>
-          <span class="eddug row" data-for="paint" role="group" aria-label="Dug ground"><button class="sm" data-k="level" aria-pressed="true">Level dug ground</button><button class="sm" data-k="keep" aria-pressed="false">Keep dug shape</button></span>
-          <span id="edSoftOpt" class="edopt" hidden><label for="edSoft">Softness</label><input id="edSoft" type="range" min="10" max="100" step="5"><output id="edSoftV"></output></span>
-          <span class="edopt" data-for="raise lower flatten smooth dirt grass"><label for="edStr">Strength</label><input id="edStr" type="range" min="1" max="10" step="1"><output id="edStrV"></output></span></div>
-        <div id="edMats" class="edmats" data-for="paint"></div>
-        <p class="hint" data-for="raise lower flatten smooth dirt grass">Hold and drag on the ground. Flatten levels to the height where you start.</p>
-        <p class="hint" data-for="paint"><b id="edMatV"></b>. Hold and drag on the ground to lay it; Natural ground takes it back up. Digging cuts through it.</p>
-        <div id="edOwn" class="edown" data-for="paint"><div class="row"><button class="sm" id="edOwnAdd">+ Your own texture</button><button class="sm" id="edOwnEdit" hidden>Edit this texture</button></div>
+  <nav class="edtools" id="edRail" aria-label="Editor tools">
+    <button data-g="shape" data-ic="shape">Shape</button><button data-g="paint" data-ic="paint">Paint</button><button data-g="things" data-ic="things">Things</button><button data-g="roads" data-ic="roads">Roads</button><button data-g="inspect" data-ic="inspect">Inspect</button>
+    <button id="edFileBtn" data-g="map" data-ic="map" class="edmapbtn">Map</button>
+  </nav>
+  <aside id="edDrawer" class="eddrawer" hidden>
+    <section class="edsec" data-g="paint">
+      <div id="edMats" class="edmats"></div>
+      <div id="edOwn" class="edown" data-for="paint"><div class="row"><button class="sm" id="edOwnAdd">+ Your own texture</button><button class="sm" id="edOwnEdit" hidden>Edit this texture</button></div>
           <div id="edOwnCard" class="edowncard" hidden>
             <label class="edownpic"><canvas id="edOwnPrev" width="128" height="128"></canvas><input type="file" id="edOwnFile" accept="image/*"><span id="edOwnPick">Pick a photo or picture</span></label>
             <span class="edopt"><label for="edOwnName">Name</label><input id="edOwnName" maxlength="40" autocomplete="off"></span>
@@ -528,33 +604,79 @@ body.editing #hud>:is(.tbar,.lbar,.rpane,.sticks,.bbar){display:none}
             <span class="edopt"><label for="edOwnKey">Owner key</label><input id="edOwnKey" type="password" autocomplete="off"></span>
             <div class="row"><button class="sm" id="edOwnGo">Add to the library</button><button class="sm" id="edOwnX">Cancel</button></div>
             <p class="hint" id="edOwnMsg">The picture is made into a seamless tile. It reaches every device once added.</p></div></div>
-        <div class="edkind row" data-for="add" role="group" aria-label="What to add"><button class="sm" data-k="pine" aria-pressed="true">Pine tree</button><button class="sm" data-k="leafy" aria-pressed="false">Leafy tree</button><button class="sm" data-k="rock" aria-pressed="false">Boulder</button></div>
-        <p class="hint" data-for="add">Tap the ground to place it; keep holding to drag it into place. Things come in facing you; Select turns, sizes, copies (alongside, so fences line up) or deletes them.</p>
-        <p class="hint" data-for="select">Tap a tree, boulder, placed thing or machine to select it, then drag it to move it.</p>
-        <div class="row" data-for="roads"><button id="edRoadNew" class="sm">New road</button><button id="edRoadFin" class="sm go" hidden>Finish road</button></div>
-        <p class="hint" data-for="roads">Tap a road to pick it and show its dots. Drag a dot to move it; tap the picked road between dots to add one.</p>
-        <p class="hint" data-for="query">Tap or drag over the ground to read its height, slope and surface.</p>
-        <p class="hint" data-for="look">Drag to move around. Two fingers pinch to zoom and twist to turn. Mouse: right button turns, wheel zooms. Keys: WASD, Q E, R F.</p>
-      </div>
-      <div id="edInfo" class="edpanel" hidden></div>
+    </section>
+    <section class="edsec" data-g="things">
+      <h3>Add</h3>
+      <div id="edKinds" class="edkinds" role="group" aria-label="What to add"></div>
+      <h3>On the map <small id="edListN"></small></h3>
+      <div class="edfilter row" role="group" aria-label="Show"><button class="sm" data-f="all" aria-pressed="true">All</button><button class="sm" data-f="near" aria-pressed="false">Near the view</button><button class="sm" data-f="sel" aria-pressed="false">Selected</button></div>
+      <div id="edList" class="edlist"></div>
+    </section>
+    <section class="edsec" data-g="roads">
+      <h3>Roads <small id="edRoadN"></small></h3>
+      <div id="edRoadList" class="edlist"></div>
+    </section>
+    <section class="edsec" data-g="map" id="edFile">
+      <h3>Map file</h3>
+        <p>Your map saves on this device as you edit. Copy it to keep it or share it, and load a copied map here.</p>
+        <div class="row"><button id="edCopy" class="sm">Copy map</button><button id="edPasteBtn" class="sm">Load a map</button><button id="edReset" class="sm danger">Start over</button></div>
+        <textarea id="edCopyBox" readonly hidden aria-label="Copied map"></textarea>
+        <div id="edPasteBox" hidden><textarea id="edPaste" placeholder="Paste a copied map here" aria-label="Map to load"></textarea><div class="row"><button id="edLoad" class="sm go">Load it</button></div></div>
+    </section>
+  </aside>
+  <div class="edbottom" id="edBottom">
+    <div id="edCard" class="edpanel" hidden></div>
+    <div id="edInfo" class="edpanel" hidden></div>
+    <div id="edOpts" class="edpanel">
+      <span id="edSub" class="edsub row" role="group" aria-label="Tool"></span>
+      <span class="edopt" data-for="raise lower flatten smooth dirt grass paint"><label for="edSize">Brush</label><input id="edSize" type="range" min="1" max="40" step="1"><output id="edSizeV"></output></span>
+      <span class="edopt" data-for="raise lower flatten smooth dirt grass"><label for="edStr">Strength</label><input id="edStr" type="range" min="1" max="10" step="1"><output id="edStrV"></output></span>
+      <span class="edshape row" data-for="paint" role="group" aria-label="Brush shape"><button class="sm" data-s="round" aria-pressed="true">Round</button><button class="sm" data-s="sq" aria-pressed="false">Square</button></span>
+      <span class="ededge row" data-for="paint" role="group" aria-label="Brush edge"><button class="sm" data-e="hard" aria-pressed="true">Hard edge</button><button class="sm" data-e="soft" aria-pressed="false">Soft edge</button></span>
+      <span id="edSoftOpt" class="edopt" data-for="paint" hidden><label for="edSoft">Softness</label><input id="edSoft" type="range" min="10" max="100" step="5"><output id="edSoftV"></output></span>
+      <span class="eddug row" data-for="paint" role="group" aria-label="Dug ground"><button class="sm" data-k="level" aria-pressed="true">Level dug ground</button><button class="sm" data-k="keep" aria-pressed="false">Keep dug shape</button></span>
+      <span class="edpicked" data-for="paint dirt grass"><b id="edMatV"></b></span>
+      <span class="edpicked" data-for="add">Adding <b id="edKindV"></b></span>
+      <span class="row" data-for="roads"><button id="edRoadNew" class="sm">New road</button><button id="edRoadFin" class="sm go" hidden>Finish road</button></span>
+      <span class="row" data-for="select"><button id="edBoxBtn" class="sm edico" data-ic="box" aria-pressed="false">Box select</button><button id="edAllBtn" class="sm">Select all in view</button></span>
     </div>
   </div>
+  <div id="edStat" class="edstat"><span id="edStatPos"></span><span id="edStatInfo"></span><span id="edTip"></span></div>
+  <div id="edBox" hidden></div>
 </div>
 <div id="bigmap" hidden>
   <div class="mapcard">
-    <div class="maphead"><h2>Site map</h2><button id="mapClose">Close</button></div>
-    <canvas id="big"></canvas>
-    <div id="tpBar"><span id="tpHint">Tap the map to teleport there</span>
-      <div id="tpOpts" hidden><span>Go there:</span><button data-tp="foot">On foot</button><button data-tp="ex">Excavator</button><button data-tp="truck">Dump truck</button><button data-tp="mow">Mower</button><button data-tp="skid">Skid steer</button><button id="tpCancel">Cancel</button></div>
+    <div class="mapview">
+      <canvas id="big" aria-label="Site map: drag to move, pinch or scroll to zoom, tap to pick a spot"></canvas>
+      <div id="mapCtl" role="group" aria-label="Map view">
+        <button id="mapZin" class="sq" aria-label="Zoom in"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+        <button id="mapZout" class="sq" aria-label="Zoom out"><svg viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button>
+        <button id="mapFit" class="sq" aria-label="Show the whole map"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+        <button id="mapMe" class="sq" aria-label="Centre on you"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg></button>
+      </div>
+      <div id="mapWhere" aria-live="polite"></div>
     </div>
-    <div id="trailBar" role="group" aria-label="Trails: where you have walked and driven"><span>Trails</span></div>
-    <div id="trailKey" hidden><i></i><span><span>Less</span><span id="trailHi"></span></span></div>
-    <div id="wetBar" role="group" aria-label="Soil wetness: show where the ground is wetter"><span>Soil wetness</span></div>
-    <div id="wetKey" hidden><i></i><span><span id="wetLo">Dry</span><span id="wetHi">Soaked · standing water</span></span><button id="wetGround" class="sm" aria-pressed="false">Show on the ground too</button></div>
-    <div class="legend">
-      <span><i style="background:#f07a22"></i>Excavator</span><span><i style="background:#e9ecea"></i>Dump truck</span>
-      <span><i style="background:#f2f2ee;height:3px"></i>Trench paint</span><span><i style="background:#f5c518;height:3px"></i>Gas main</span>
-      <span><i style="background:#b89a6b"></i>Dirt road</span><span><i style="background:#7a5232"></i>Dug or dumped</span><span><i style="background:#d8a514"></i>Trench box</span><span><i style="background:#b9b6ae"></i>Block</span><span><i style="background:#2d7a94"></i>Lake</span><span><i style="background:#a3a64c"></i>Tall grass</span><span><i style="background:#d8352a"></i>Mower</span><span><i style="background:#f2b705"></i>Skid steer</span><span><i style="background:#2fb7e8;border-radius:50%;width:12px"></i>You on foot</span>
+    <div class="mapside">
+      <div class="maphead"><h2>Site map</h2><button id="mapClose">Close</button></div>
+      <div id="tpBar"><span id="tpHint">Tap the map to teleport there</span>
+        <div id="tpOpts" hidden><span>Go there:</span><button data-tp="foot">On foot</button><button data-tp="ex">Excavator</button><button data-tp="truck">Dump truck</button><button data-tp="mow">Mower</button><button data-tp="skid">Skid steer</button><button id="tpCancel">Cancel</button></div>
+      </div>
+      <section class="mapsec"><h3>Places</h3><div id="mapPlaces" role="group" aria-label="Show a place on the map"></div></section>
+      <section class="mapsec"><h3>Layers</h3>
+        <div id="trailBar" role="group" aria-label="Trails: where you have walked and driven"><span>Trails</span></div>
+        <div id="trailKey" hidden><i></i><span><span>Less</span><span id="trailHi"></span></span></div>
+        <div id="wetBar" role="group" aria-label="Soil wetness: show where the ground is wetter"><span>Soil wetness</span></div>
+        <div id="wetKey" hidden><i></i><span><span id="wetLo">Dry</span><span id="wetHi">Soaked · standing water</span></span><button id="wetGround" class="sm" aria-pressed="false">Show on the ground too</button></div>
+      </section>
+      <section class="mapsec"><h3>Key</h3>
+        <div class="legend">
+          <span><i class="tri" style="--c:#f07a22"></i>Excavator</span><span><i class="tri" style="--c:#e9ecea"></i>Dump truck</span><span><i class="tri" style="--c:#d8352a"></i>Mower</span><span><i class="tri" style="--c:#f2b705"></i>Skid steer</span>
+          <span><i style="background:#2fb7e8;border-radius:50%;width:14px;height:14px;box-shadow:0 0 0 2px #fff"></i>You on foot</span><span><i style="background:#f5c518;height:4px"></i>Gas main</span>
+          <span><i style="background:#f2f2ee;height:4px"></i>Trench paint</span><span><i style="background:#d8a514"></i>Trench box</span><span><i style="background:#7a5232"></i>Dug or dumped</span><span><i style="background:#b9b6ae"></i>Block</span>
+          <span><i style="background:#b89a6b"></i>Road</span><span><i style="background:#8d6a52"></i>Building</span><span><i style="background:#a2a4a6"></i>Bridge</span><span><i style="background:#9c7c56"></i>Temporary bridge</span>
+          <span><i style="background:#a3a64c"></i>Tall grass</span><span><i style="background:radial-gradient(circle at 35% 35%,#6c8a40,#24401c);border-radius:50%"></i>Trees</span><span><i style="background:linear-gradient(90deg,#4a8f99,#173f55)"></i>Lake</span>
+        </div>
+      </section>
     </div>
   </div>
 </div>
@@ -567,6 +689,15 @@ body.editing #hud>:is(.tbar,.lbar,.rpane,.sticks,.bbar){display:none}
     <p id="benchDevice" class="devline"></p>
     <div class="row"><button id="benchCopy">Copy results</button><button id="benchClose" class="ghost">Close</button></div>
     <textarea id="benchText" readonly hidden></textarea>
+  </div>
+</div>
+<!-- Controls: every input at a glance, keyboard (the player's own keys), mouse and touch, controller -->
+<div id="ctrlsBox" hidden>
+  <div class="card">
+    <h1>Controls</h1>
+    <div class="row" id="ctrlsTabs"><button data-t="kb" aria-pressed="true">Keyboard</button><button data-t="mouse" aria-pressed="false">Mouse &amp; touch</button><button data-t="pad" aria-pressed="false">Controller</button></div>
+    <div id="ctrlsList"></div>
+    <div class="row"><button id="ctrlsDone">Done</button><button id="ctrlsKeys" class="ghost">Change keys</button></div>
   </div>
 </div>
 <div id="keysBox" hidden>
@@ -670,7 +801,7 @@ body.editing #hud>:is(.tbar,.lbar,.rpane,.sticks,.bbar){display:none}
       <dt id="hkStats">Stats</dt><dd id="hdStats">☰ then Stats (or O) shows everything you've done: grass mowed, lawns finished and your best time, distance walked, sprinted and driven in each machine, jumps, dirt dug and hauled, time in each machine and top speeds. Its lawn heatmap shows how many times each spot has been cut, how far the grass has grown back, or the way it was last mowed; turn it on to see it over the lawn itself (U, press again to change what it shows). Tap the key at the top of the screen to switch what it shows.</dd>
       <dt id="hkLook">Look</dt><dd id="hdLook">Drag the scene to look around.</dd>
       <dt id="hkMap">Map</dt><dd id="hdMap">Tap the minimap or press M for the big map. Its Soil wetness row shows how wet the soil on the mesa is: All shades it from dry (clear) to soaked (deep blue), and Damp+, Wet+ or Soaked show only the ground at least that wet; standing water shows bright blue. Show on the ground too tints the ground itself the same way.</dd>
-      <dt id="hkMapEditor">Map editor</dt><dd id="hdMapEditor">☰ menu, then Map editor (or G). The game pauses while you edit. Raise, Lower, Flatten and Smooth reshape the ground under a round brush; Dirt and Grass paint it. Paint lays a material from the library (gravel, concrete, steel plate, brick, wood and more) under a round or square brush, hard edged or soft edged (Softness sets how much of the brush fades out into the ground); Natural ground clears it, and digging cuts through it; + Your own texture adds a picture of yours to the library. Select picks a tree, boulder, placed thing or machine: drag it to move it, and turn, resize, copy or delete it on its card. Add places pine trees, leafy trees, boulders and things from the catalogue: houses, a shed, a garage, fences, gates, light towers, cones, barrels, pallets, a porta-potty, signs, benches, a picnic table and a dumpster. Query reads the height, slope and surface of any spot. Roads lays out the road network: tap a road to pick it, drag its dots to move them, tap the picked road between dots to add one, or tap New road and lay one point by point. Its card sets the width, grass up the middle and grading (cut and filled to a height at each point, like the ramp) and deletes points or the road. Look moves the view: drag, pinch to zoom, twist to turn (mouse: right button turns, wheel zooms; keys WASD, Q E, R F). The tools run down the left with their options beside them; tap the picked tool again to fold its options away. Undo and Redo step through your edits. The map saves on this device as you edit; Map file copies it as text to keep or share, loads a copied map, or starts over.</dd>
+      <dt id="hkMapEditor">Map editor</dt><dd id="hdMapEditor">☰ menu, then Map editor (or G). The game pauses while you edit. The tool groups run down the left (keys 1 to 5), with a drawer beside them for the group's library or list; the picked tool's options and whatever you have selected sit in the bar along the bottom. Shape: Raise, Lower, Flatten and Smooth reshape the ground under a round brush. Paint lays a material from the library (gravel, concrete, steel plate, brick, wood and more, and worked dirt and grass) under a round or square brush, hard edged or soft edged (Softness sets how much of the brush fades out into the ground); Natural ground clears it, and digging cuts through it; + Your own texture adds a picture of yours to the library. Things: Add places trees, boulders and things from the catalogue (houses, sheds, garages, fences, gates, light towers, cones, barrels, pallets, porta-potties, signs, benches, picnic tables, dumpsters). Select picks a tree, boulder, placed thing or machine; Shift-tap or a long press picks more, and a drag on empty ground (Box select on touch) picks everything in the box. Drag a picked one to move them all; the bottom bar turns, sizes, colours, copies or deletes them. On the map, in the drawer, lists every thing and machine by kind: tap one to go to it, tick several, select or delete a whole kind. Roads: tap a road to pick it (or pick it from the list), drag its dots to move them, tap the picked road between dots to add one, or tap New road and lay one point by point; set its width, grass up the middle and grading. Inspect: Query reads the height, slope and surface of any spot. Move the view with two fingers (pinch to zoom, twist to turn), or turn Look on to move it with one finger; Closer, Farther, North up and Start view are in the top bar (mouse: right button turns, wheel zooms; keys WASD, Q E, R F). Undo and Redo step through your edits. The map saves on this device as you edit; Map copies it as text to keep or share, loads a copied map, or starts over.</dd>
       <dt id="hkScreen">Screen</dt><dd id="hdScreen">Tap the status card to fold it down. Turn, just above the left stick, sets how fast left and right turn in the mode you are in, from 25% to 200%; each mode keeps its own (the mower starts at 60%, the rest at 100%): the excavator swing and tracks, the truck steering, the mower spin and looking round on foot. On a computer its slider is always out; on a phone tap Turn to open it. Each device remembers its own. Speed test, Reset, Sound (on/off and volume sliders), Graphics and UI size (1x, 1.5x, 2x) are in the ☰ menu. Graphics has Low for phones, Medium for laptops and High for desktop PCs, and under them every setting on its own to play with: resolution, frame cap, field of view, shadows, lighting, brightness, haze, texture size and sharpness, ground detail, grass blades, Dirt detail (16x is for screenshots and fast computers), puddle water and raindrops, with the frame rate and triangle count shown live, an estimate of the GPU memory in use (textures, geometry and the screen) and a graph of the frame rate over the last 10 seconds (average, 1% low and slowest frame). Each device remembers its own. The site is saved in this browser: the dig, the dumped dirt, the excavator, the truck and its load, the trench box, blocks and the mowing are all still there when you come back. Reset starts fresh ground. To play the same site on your phone and computer, open ☰ then Sync devices: get a code on one and type it on the other.</dd>
       <dt id="hkLookingAround">Looking around</dt><dd id="hdLookingAround">In cab view (C) drag the scene to turn your head, in any machine or on foot: look out the side windows, behind you, up at the boom or down at the bucket. On a PC, click the scene to take the mouse for mouse look; Esc gives it back. Zoom with the mouse wheel, a two-finger pinch, or hold Z for a quick look. R turns your head back to straight ahead.</dd>
       <dt id="hkController">Controller</dt><dd id="hdController">Sticks work like the two on-screen sticks. Triggers are gas and reverse when driving. LB / RB switch machine · Y cab view · right stick click looks ahead · A place block (in Walk mode A jumps, X places and a left stick click sprints) · D-pad up blocks on/off, left/right block size (cubes, 1 to 10 ft), down pick up · View map · Menu this help · B closes, or gets you in and out of machines.</dd>
@@ -727,6 +858,8 @@ const TUNE=[
   ['wtDepth','Mud and water','Water table depth',1.85,'ft',1,40,0.5],
   ['rutDepth','Mud and water','How deep tracks and tires sink',0.23,'in',1,24,0.5],['mudDrag','Mud and water','How much mud slows the machines',1,'pct',0,200,5],
   ['stuck','Mud and water','How easily machines get stuck',1,'pct',0,500,5],
+  ['rutWet','Mud and water','How wet ground must be before it ruts',0.15,'pct',0,100,5],['rutRate','Mud and water','How fast ruts cut in',1,'pct',10,500,5],
+  ['rutBerm','Mud and water','How high mud piles up beside the ruts',0.2,'in',0,24,0.5],
   ['soilTop','Digging','Dig speed in topsoil (of full speed)',0.7,'pct',5,100,1],['soilClay','Digging','Dig speed in clay',0.45,'pct',5,100,1],
   ['soilSand','Digging','Dig speed in sand',0.85,'pct',5,100,1],['soilRock','Digging','Dig speed in rock',0.12,'pct',2,100,1],
   ['fluff','Digging','How much dug dirt fluffs up (100% = about a quarter)',1,'pct',0,400,5],
@@ -736,6 +869,7 @@ const TUNE=[
   ['packRate','Excavator','How fast wet clay packs into the tracks',1,'pct',0,500,5],['packDrag','Excavator','How much packed tracks drag',0.6,'pct',0,90,5],
   ['packShed','Excavator','How fast packed clay drops off',1,'pct',0,500,5],
   ['caveDepth','Cave-ins','Walls start to cave in deeper than',1.2,'ft',1,30,0.5],['caveSpoil','Cave-ins','Spoil this close to the edge loads the wall',0.64,'ft',0,10,0.5],
+  ['craneSpan','Bridges','The crane builds a steel span in about',240,'min',1,60,1],
   ['caveRate','Cave-ins','How fast a bad wall gives way (0% = never)',1,'pct',0,500,5],['caveWarn','Cave-ins','Dirt trickles off the lip for',2.2,'s',0,20,0.5],
   // only drawn on High graphics (Graphics → Material relief); how the ground looks, not what it does, so every device may use the same numbers
   ['pbrRelief','Ground look','Relief: how deep the bumps in gravel, brick and concrete look',1,'pct',0,300,5],
@@ -787,6 +921,7 @@ const WORDS=[
   ['getInFar','Machines','Walk up to the excavator, the truck or the mower to get in.'],['noRoomOut','Machines','No room to climb out here. Move the machine a little.'],
   ['bedUp','Machines','Bed is up. Lower it to drive faster.'],['truckFirst','Machines','Dirt in the truck.'],
   ['truckFull','Machines','Truck full. Tap Truck, drive it to the spoil yard north of the dig and raise the bed.'],
+  ['spanDone','Machines','The crane set a steel span on the {bridge} bridge. {left} to go.','{bridge}: town or north; {left}: spans left'],['bridgeDone','Machines','The {bridge} bridge is all steel now. The temporary trestle is gone.','{bridge}: town or north'],
   ['dumpYard','Machines','Load dumped in the yard.'],['dumpOff','Machines','Load hauled off site.'],
   ['skidFull','Machines','Bucket full. Raise the arms and drive to where it goes.'],
   ['stuck','Machines','Stuck in the mud. Rock it free: [lUp] then [lDown], and again.'],
@@ -819,6 +954,14 @@ const WORDS=[
   ['wxAuto','Weather and water','Weather: showers now and then'],['wxRain','Weather and water','Weather: rain'],['wxDry','Weather and water','Weather: dry'],
   ['waterSeep','Weather and water','Groundwater seeping in. Tap Pump to dewater the hole.'],
   ['waterRain','Weather and water','Rain is filling the hole. Tap Pump to dewater it.'],['pumpOn','Weather and water','Pump running. The water will drop slowly.'],
+  ['edTip_raise','Map editor','Raise: hold and drag on the ground to lift it.'],['edTip_lower','Map editor','Lower: hold and drag on the ground to take it down.'],
+  ['edTip_flatten','Map editor','Flatten: hold and drag to level the ground to the height where you start.'],['edTip_smooth','Map editor','Smooth: hold and drag to even out bumps.'],
+  ['edTip_paint','Map editor','Hold and drag to lay the material. Natural ground takes it back up; digging cuts through it.'],
+  ['edTip_dirt','Map editor','Hold and drag to paint worked dirt.'],['edTip_grass','Map editor','Hold and drag to paint grass, over the dirt yards too.'],
+  ['edTip_select','Map editor','Tap to pick. Shift-tap or a long press picks more; drag on empty ground (Box select on touch) to pick many; drag a picked one to move them all.'],
+  ['edTip_add','Map editor','Tap the ground to place it; keep holding to drag it into place.'],
+  ['edTip_query','Map editor','Tap or drag over the ground to read its height, slope and surface.'],
+  ['edTip_roads','Map editor','Tap a road to pick it, drag its dots, tap it between dots to add one.'],
   ['padReady','Other','Controller ready. LB / RB switch machine, Y cab view.'],['reset','Other','Fresh ground. Paint is back.'],
   ['tpNoRoom','Other','No room there. Pick an open spot on land.'],['tpLake','Other','That is the lake. Pick a spot on land.'],
   ['tpDone','Other','Teleported {ft} ft {how}.','{ft}: distance; {how}: on foot, in the dump truck…'],
@@ -853,7 +996,7 @@ function wordsRefresh(){if(typeof setCaps==='function'&&typeof mode!=='undefined
 // A skin: {v:1, t: when it went live (ms), L:{all|phone|big:{vars:{'--name':value}, el:{selector:{...}}, css, dock}},
 // text:{selector:text}, words:{id:text}} (words: the tips and captions of js/words.js). An el entry: hide, x/y (px moved), sc (size %), fs (text px), fg (text colour), bg (background),
 // rad (corners px), op (opacity %), css (any declarations). A selector can be a list (several parts or a group). dock:
-// {top: top|bottom, bottom: bottom|top, rail: left|right|top|bottom, map: right|left, sticks: normal|swap}.
+// {top: top|bottom, bottom: bottom|top, map: right|left, sticks: normal|swap}.
 // The Words tab rewrites the start card (skin.text) and the tips and captions (skin.words). The Tuning tab edits the
 // numbers of js/tune.js, which publish on their own (supabase/island_tune.sql) but with the same owner key.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md. This file needs nothing from the
@@ -869,10 +1012,10 @@ const GUI_FONTS=['"Saira Condensed","Arial Narrow",system-ui,sans-serif','"Saira
   '"Arial Narrow",Arial,sans-serif','Verdana,sans-serif','"Trebuchet MS",sans-serif','Georgia,serif','Impact,"Arial Black",sans-serif','"Courier New",monospace'];
 // parts that are usually hidden until the game needs them, shown on request so they can be styled
 const GUI_PEEK=[['#menu','Menu'],['#help','Start card'],['#blkBar','Blocks bar'],['#walkBtns','Sprint and Jump'],['#seatBtn','Get in'],['#pumpBtn','Pump'],['#wipeBtn','Wipers'],
-  ['#boxBtn','Hook box'],['#lawnRow','Lawn gauge'],['#heatKey','Heatmap key'],['#updBtn','Update button'],['#keysBox','Keys panel'],['#gfxBox','Graphics panel']];
+  ['#boxBtn','Hook box'],['#lawnRow','Lawn gauge'],['#heatKey','Heatmap key'],['#updBtn','Update button'],['#keysBox','Keys panel'],['#ctrlsBox','Controls panel'],['#ctlMenu','Drive list'],['#gfxBox','Graphics panel']];
 // ready-made groups (selector, name), picked from the Groups tab and then edited like any part
-const GUI_GROUPS=[['#hud button','Every button on the screen'],['.tbar button','Top bar buttons'],['.lbar button','Machine buttons'],['.bbar button','Bottom bar buttons'],
-  ['#menu button','Menu buttons'],['#blkBar button','Blocks bar buttons'],['.tbar, .lbar, .bbar','The three bars'],['.srow','Gauges'],['.lbl','Gauge names'],
+const GUI_GROUPS=[['#hud button','Every button on the screen'],['.tbar button','Top bar buttons'],['#ctlMenu button','Machine buttons'],['.bbar button','Bottom bar buttons'],
+  ['#menu button','Menu buttons'],['#blkBar button','Blocks bar buttons'],['.tbar, .bbar','The two bars'],['.srow','Gauges'],['.lbl','Gauge names'],
   ['.val','Gauge numbers'],['.sub','Gauge detail lines'],['.bar','Gauge meters'],['.stick','Sticks'],['.knob','Stick knobs'],['.cap','Stick captions'],
   ['#mini','Minimap'],['.card','Cards and panels'],['#toast span','Messages'],['#hud','The whole screen layer']];
 // one-move settings at the top of the Groups tab: name, selector, field, slider top
@@ -880,7 +1023,7 @@ const GUI_QUICK=[['Button corners','#hud button','rad',30],['Button text size','
   ['Panel corners','.card','rad',40]];
 // where the big pieces can sit (Layout tab): key, name, choices (first is the game's own)
 const GUI_DOCK=[['top','Top bar',[['top','Top'],['bottom','Bottom']]],['bottom','Bottom bar',[['bottom','Bottom'],['top','Top']]],
-  ['rail','Machine buttons',[['left','Left'],['right','Right'],['top','Top'],['bottom','Bottom']]],['map','Minimap',[['right','Right'],['left','Left']]],
+  ['map','Minimap',[['right','Right'],['left','Left']]],
   ['sticks','Sticks',[['normal','As they are'],['swap','Swapped']]]];
 const GUI_TAGS={button:'button',span:'text',b:'text',div:'box',canvas:'drawing',select:'dropdown',input:'control',label:'label',p:'text',h1:'heading',h2:'heading',h3:'heading',h4:'heading',nav:'bar',header:'bar',footer:'bar',aside:'column'};
 // doc and root: the page holding the screen (the claude.ai editor puts it in a stage box), media: how the phone and big
@@ -921,14 +1064,11 @@ function guiDecl(p){const d=[];
 // machine buttons right), and each piece takes its slot. The phone and big screen layers write the whole layout from
 // their own choices over the every-screen ones, so a layer can put a piece back where the game has it
 function guiDockCss(d){const c=k=>d[k]||GUI_DOCK.find(g=>g[0]===k)[2][0][0];
-  const top=c('top'),bot=c('bottom'),rail=c('rail'),map=c('map'),swap=c('sticks')==='swap',flat=rail==='top'||rail==='bottom';
+  const top=c('top'),bot=c('bottom'),map=c('map'),swap=c('sticks')==='swap';
   let r='#hud{grid-template-columns:auto auto minmax(0,1fr) auto auto;grid-template-rows:auto auto auto minmax(0,1fr) auto auto auto}\n';
   r+=`.tbar{grid-area:${top==='top'?1:6}/1/${top==='top'?2:7}/6}\n.bbar{grid-area:${bot==='bottom'?7:2}/1/${bot==='bottom'?8:3}/6}\n`;
   if(top==='bottom')r+='.tbar::after{top:auto;bottom:100%}\n';
   if(bot==='top')r+='.bbar{border-top:0;border-bottom:1px solid var(--hud-line)}\n';
-  r+=`.lbar{grid-area:${rail==='top'?'3/1/4/6':rail==='bottom'?'5/1/6/6':rail==='right'?'4/5/5/6':'4/1/5/2'}}\n`;
-  if(rail==='right')r+='.lbar{border-right:0;border-left:1px solid var(--hud-line);padding:11px var(--pr) 8px 8px}\n';
-  if(flat)r+=`.lbar{flex-direction:row;overflow-x:auto;overflow-y:hidden;border-right:0;${rail==='top'?'border-bottom':'border-top'}:1px solid var(--hud-line);padding:6px var(--pr) 6px var(--pl)}\n.lbar button{width:auto;max-height:none;min-width:58px;flex:1 1 0;height:52px}\n`;
   r+=`.rpane{grid-area:4/${map==='left'?2:4}/5/${map==='left'?3:5}${map==='left'?';align-items:flex-start;padding:11px 0 8px var(--pl)':''}}\n`;
   r+=`.sticks{grid-area:4/2/5/5${swap?';flex-direction:row-reverse;padding:0 14px 10px var(--pr)':''}}\n`;
   if(swap)r+='#capL{order:5;margin-left:auto;text-align:right}#capR{order:-1;margin-left:0;text-align:left}\n';

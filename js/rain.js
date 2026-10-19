@@ -33,7 +33,7 @@ rainBase(0,RW_NX-1,0,RW_NZ-1);
 const rwIdx=(x,z)=>{const i=Math.round((x-RW_X0)/RW_C),j=Math.round((z-RW_Z0)/RW_C);return i<0||j<0||i>=RW_NX||j>=RW_NZ?-1:j*RW_NX+i};
 // how much mud the rain makes at x,z (0-1); dug or dumped ground in the dig zone counts as dirt (rainSoakK)
 function rainSoakAt(x,z){const k=rwIdx(x,z);return k<0?0:ss(0.25,0.9,rainW[k])*rainK[k]}
-function rainSoakK(k){const x=(k%V)*CELL-S/2,z=((k/V)|0)*CELL-S/2,r=rwIdx(x,z);if(r<0)return 0;
+function rainSoakK(k){const x=gX((k%V)),z=gZ(((k/V)|0)),r=rwIdx(x,z);if(r<0)return 0;
   return ss(0.25,0.9,rainW[r])*(Math.abs(H[k]-H0[k])>0.04?1:rainK[r])}
 function rainEdRefresh(x0,x1,z0,z1){rainBase(Math.floor((x0-RW_X0)/RW_C)-1,Math.ceil((x1-RW_X0)/RW_C)+1,Math.floor((z0-RW_Z0)/RW_C)-1,Math.ceil((z1-RW_Z0)/RW_C)+1);rainTexDirty=true}
 
@@ -109,16 +109,16 @@ function wetImages(){const min=wetMin();
   if(!wetCv){wetCv=document.createElement('canvas');wetCv.width=RW_NX;wetCv.height=RW_NZ;wetDigCv=document.createElement('canvas');wetDigCv.width=wetDigCv.height=200}
   let g=wetCv.getContext('2d'),img=g.createImageData(RW_NX,RW_NZ),D=img.data;
   for(let j=0;j<RW_NZ;j++)for(let i=0;i<RW_NX;i++){const x=RW_X0+i*RW_C,z=RW_Z0+j*RW_C,k=j*RW_NX+i;
-    if(x>-S/2&&x<S/2&&z>-S/2&&z<S/2)continue;wetPx(D,k*4,waterAt(x,z)?2:rainW[k],min)}
+    if(inDig(x,z))continue;wetPx(D,k*4,waterAt(x,z)?2:rainW[k],min)}
   g.putImageData(img,0,0);
   g=wetDigCv.getContext('2d');img=g.createImageData(200,200);D=img.data;
-  for(let py=0;py<200;py++)for(let px=0;px<200;px++){const i=px*2,j=py*2,k=j*V+i,r=rwIdx(i*CELL-S/2,j*CELL-S/2);
+  for(let py=0;py<200;py++)for(let px=0;px<200;px++){const i=px*2,j=py*2,k=j*V+i,r=rwIdx(gX(i),gZ(j));
     wetPx(D,(py*200+px)*4,Wt[k]>H[k]+0.003?2:Math.max(r<0?0:rainW[r],mudA[k]),min)}
   g.putImageData(img,0,0);wetMapT=timeU.value}
 // drawMap (maps.js) calls this on the big map, over the ground and the dug area
 function wetDrawOn(g,X,Y,sc){if(wetView==='off')return;if(timeU.value-wetMapT>1||timeU.value<wetMapT)wetImages();
   g.save();g.imageSmoothingEnabled=true;g.drawImage(wetCv,X(RW_X0-RW_C/2),Y(RW_Z0-RW_C/2),RW_NX*RW_C*sc,RW_NZ*RW_C*sc);
-  g.drawImage(wetDigCv,X(-S/2),Y(-S/2),S*sc,S*sc);g.restore()}
+  g.drawImage(wetDigCv,X(GX0),Y(GZ0),S*sc,S*sc);g.restore()}
 function wetSet(v,gr){wetView=v;if(gr!==undefined)wetGround=gr;try{localStorage.setItem(WET_KEY,JSON.stringify({v:wetView,g:wetGround}))}catch(e){}wetMapT=-1e9;wetSync()}
 function wetSync(){document.querySelectorAll('#wetBar [data-wv]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.wv===wetView));
   const on=wetView!=='off',min=wetMin();$('#wetKey').hidden=!on;
@@ -126,7 +126,7 @@ function wetSync(){document.querySelectorAll('#wetBar [data-wv]').forEach(b=>b.s
   $('#wetLo').textContent=min>0?`Drier than ${WET_OPTS.find(w=>w[0]===wetView)[1].replace('+','').toLowerCase()}: clear`:'Dry (clear) to soaked';
   const b=$('#wetGround');b.setAttribute('aria-pressed',wetGround);b.textContent=wetGround?'On the ground too: on':'Show on the ground too';
   wetU.uWetView.value=on&&wetGround?1:0;wetU.uWetMin.value=min;
-  if(!$('#bigmap').hidden&&typeof drawMap==='function')drawMap($('#big'),MAP_CX,MAP_CZ,MAP_HALF,true)}
+  if(typeof drawBig==='function')drawBig()}
 {const bar=$('#wetBar');for(const [k,n] of WET_OPTS){const b=document.createElement('button');b.dataset.wv=k;b.textContent=n;b.onclick=()=>wetSet(k);bar.appendChild(b)}}
 $('#wetGround').onclick=()=>wetSet(wetView,!wetGround);
 wetSync();

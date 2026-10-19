@@ -12,9 +12,9 @@ canvas#view{position:fixed;inset:0;width:100%;height:100%;display:block;touch-ac
 #hud{position:fixed;inset:0;pointer-events:none;box-sizing:border-box;
   --pt:calc(env(safe-area-inset-top,0px) + 8px);--pb:calc(env(safe-area-inset-bottom,0px) + 10px);
   --pl:max(10px,env(safe-area-inset-left,0px));--pr:max(10px,env(safe-area-inset-right,0px))}
-/* Three bars frame the view: the top bar (menu, job gauges, action buttons), the left rail (machines) and the bottom bar
+/* Two bars frame the view: the top bar (menu, action buttons, Controls with the machines, the camera) and the bottom bar
    (turn, what the sticks do, frame rate). The sticks and the minimap float over the view between them. #hud is a grid:
-   rows top bar / view / bottom bar, columns rail / view / minimap column */
+   rows top bar / view / bottom bar, columns (once the machine rail, now empty) / view / minimap column */
 #hud{display:grid;grid-template-columns:auto minmax(0,1fr) auto;grid-template-rows:auto minmax(0,1fr) auto;--bar:rgba(22,25,20,.9)}
 .tbar{grid-area:1/1/2/4;position:relative;z-index:3;pointer-events:auto;display:flex;align-items:center;gap:8px 12px;min-height:50px;box-sizing:border-box;
   padding:calc(env(safe-area-inset-top,0px) + 5px) var(--pr) 6px var(--pl);background:var(--bar);border-bottom:1px solid var(--hud-line);zoom:var(--ms)}
@@ -34,6 +34,8 @@ canvas#view{position:fixed;inset:0;width:100%;height:100%;display:block;touch-ac
 .val{font:700 17px/1 var(--f-display);font-variant-numeric:tabular-nums;white-space:nowrap}
 .sub{font:600 13px/1.1 var(--f-display);font-variant-numeric:tabular-nums;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .status.min .sub{display:none}
+/* the job gauges are hidden for now (the game still keeps them up to date); the buttons sit at the right */
+#status{display:none}
 #truckBar{background:#9fb7c6}
 .bar{height:5px;border-radius:3px;background:rgba(255,255,255,.14);overflow:hidden}
 .bar>i{display:block;height:100%;width:0;background:var(--machine);transition:width .15s}
@@ -55,16 +57,19 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 #menu .sizes button{height:32px;padding:0 8px;font-size:13px;border:1px solid var(--hud-line);text-align:center}
 #menu .sizes button[aria-pressed="true"]{background:var(--machine);color:#1c1309}
 #resetBtn.arm{background:var(--danger)!important;color:#fff}
-/* left rail: a tile per machine, icon over name; the one you drive is lit */
-.lbar{grid-area:2/1/3/2;pointer-events:auto;display:flex;flex-direction:column;gap:4px;box-sizing:border-box;min-height:0;overflow-y:auto;scrollbar-width:none;
-  padding:11px 8px 8px var(--pl);background:var(--bar);border-right:1px solid var(--hud-line);zoom:var(--ms)}
-.lbar::-webkit-scrollbar{display:none}
-.lbar button{position:relative;flex:1 1 0;width:48px;min-height:42px;max-height:64px;height:auto;padding:4px 0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
-  font-size:11px;letter-spacing:.06em;background:transparent;border:1px solid transparent;border-radius:9px}
-.lbar svg{width:26px;height:26px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
-.lbar button[aria-pressed="true"]{background:var(--machine);color:#1c1309}
-@media (hover:hover){.lbar button[aria-pressed="false"]:hover{border-color:var(--hud-line)}}
-.kb .lbar button::before{content:attr(data-k);position:absolute;top:3px;right:5px;font-size:10px;opacity:.6}
+/* Controls: the machines drop from the Controls button at the top right, a tile per machine, icon beside name; the one you drive is lit */
+#ctlMenu{position:absolute;top:100%;right:var(--pr);margin-top:8px;z-index:3;display:flex;flex-direction:column;gap:2px;min-width:180px;box-sizing:border-box;background:#1d211b;box-shadow:0 6px 18px rgba(0,0,0,.5);border:1px solid var(--hud-line);border-radius:10px;padding:5px}
+#ctlMenu[hidden]{display:none}
+#ctlMenu button{position:relative;height:44px;display:flex;align-items:center;gap:10px;padding:0 12px;font-size:15px;background:transparent;border:1px solid transparent;border-radius:7px;text-align:left}
+#ctlMenu svg{width:24px;height:24px;flex:none;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#ctlMenu button[aria-pressed="true"]{background:var(--machine);color:#1c1309}
+@media (hover:hover){#ctlMenu button[aria-pressed="false"]:hover{background:rgba(255,255,255,.07)}}
+.kb #ctlMenu button::after{content:attr(data-k);margin-left:auto;font-size:12px;opacity:.6}
+#ctlBtn[aria-expanded="true"]{background:var(--machine);color:#1c1309}
+/* the camera toggle: chase and cab side by side, the one in use lit */
+#camBtn{display:flex;align-items:stretch;gap:2px;padding:3px}
+#camBtn span{display:flex;align-items:center;padding:0 10px;border-radius:6px;color:var(--muted)}
+#camBtn[data-cam="chase"] #camChase,#camBtn[data-cam="cab"] #camCab{background:var(--machine);color:#1c1309}
 /* right column: the minimap, the block bar under it */
 .rpane{grid-area:2/3/3/4;z-index:2;min-height:0;max-height:100%;box-sizing:border-box;display:flex;flex-direction:column;align-items:flex-end;gap:6px;padding:11px var(--pr) 8px 0}
 #mini{flex:none;display:block;width:calc(104px*var(--ms));height:calc(104px*var(--ms));border-radius:10px;border:1px solid rgba(255,255,255,.35);background:#1e2a30;pointer-events:auto;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.3)}
@@ -116,7 +121,7 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
   .srow{max-width:none;padding:0 10px}.srow:first-child{border-left:0}.line{flex-direction:column;align-items:flex-start;gap:3px}
   .bbar .stats{order:-1;flex-basis:100%;margin:0;text-align:center}.bbar{gap:4px 12px}}
 /* short screens (a phone on its side): slimmer bars */
-@media (max-height:440px){.tbar{min-height:44px;padding-bottom:4px}.status .sub{display:none}.lbar{padding-top:9px}.lbar button{min-height:38px;font-size:10px;gap:2px}.lbar svg{width:21px;height:21px}
+@media (max-height:440px){.tbar{min-height:44px;padding-bottom:4px}.status .sub{display:none}#ctlMenu button{height:38px}
   .bbar{min-height:40px;padding-top:3px}#mini{width:calc(92px*var(--ms));height:calc(92px*var(--ms))}}
 #updBtn{position:absolute;left:50%;top:22%;transform:translateX(-50%);z-index:6;background:var(--gas);color:#1c1309;border:0;height:46px;font-size:18px;white-space:nowrap;box-shadow:0 3px 10px rgba(0,0,0,.35)}
 #toast{position:absolute;left:0;right:0;top:32%;display:flex;justify-content:center}
@@ -124,22 +129,43 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 #toast span.show{opacity:1}
 #toast span.bad{border-color:var(--danger);color:#ffd9d5}
 #toast span.good{border-color:var(--ok)}
-#bigmap{position:fixed;inset:0;background:rgba(10,12,9,.8);display:flex;align-items:center;justify-content:center;z-index:6;pointer-events:auto;box-sizing:border-box;
-  padding-block:calc(env(safe-area-inset-top,0px) + 12px) calc(env(safe-area-inset-bottom,0px) + 12px);
+/* Site map: the map fills the card on the left, a side panel on the right (below on a tall phone) holds the title,
+   teleport, places, layers and the key. The map is dragged, pinched and scrolled; its buttons float on it */
+#bigmap{position:fixed;inset:0;background:rgba(6,8,6,.72);-webkit-backdrop-filter:blur(3px);backdrop-filter:blur(3px);display:flex;align-items:stretch;justify-content:center;z-index:6;pointer-events:auto;box-sizing:border-box;
+  padding-block:calc(env(safe-area-inset-top,0px) + 14px) calc(env(safe-area-inset-bottom,0px) + 14px);
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-.mapcard{background:#1d211b;border:1px solid var(--hud-line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:10px;max-width:100%;max-height:100%;box-sizing:border-box}
+.mapcard{width:100%;max-width:1680px;display:grid;grid-template-columns:minmax(0,1fr) 380px;background:#161a15;border:1px solid var(--hud-line);border-radius:16px;overflow:hidden;box-shadow:0 24px 70px rgba(0,0,0,.55);box-sizing:border-box}
+.mapview{position:relative;min-height:0;min-width:0;background:#1a4769}
+#big{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:none;cursor:crosshair}
+#big.drag{cursor:grabbing}
+#mapCtl{position:absolute;right:12px;top:12px;display:flex;flex-direction:column;gap:8px}
+#mapCtl button{width:48px;height:48px;padding:0;display:grid;place-items:center;background:rgba(20,23,19,.85);border-radius:10px;box-shadow:0 2px 8px rgba(0,0,0,.4)}
+#mapCtl svg{width:24px;height:24px;fill:none;stroke:var(--ink);stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+@media (hover:hover){#mapCtl button:hover{background:rgba(48,54,44,.95)}}
+#mapWhere{position:absolute;left:12px;bottom:12px;max-width:calc(100% - 200px);padding:8px 14px;border-radius:10px;background:rgba(20,23,19,.85);font:700 18px/1.2 var(--f-display);letter-spacing:.03em;color:var(--ink);pointer-events:none;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#mapWhere:empty{display:none}
+.mapside{display:flex;flex-direction:column;gap:16px;padding:16px 18px 18px;overflow-y:auto;min-height:0;border-left:1px solid var(--hud-line);background:linear-gradient(180deg,#1f241d,#161a15)}
 .maphead{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.maphead h2{margin:0;font:800 28px/1 var(--f-display);color:var(--machine);letter-spacing:.02em}
-#big{display:block;border-radius:10px;background:#1e2a30;max-width:100%}
-#tpBar{display:flex;align-items:center;min-height:46px;font:700 18px/1.2 var(--f-display);letter-spacing:.03em;color:var(--ink)}
+.maphead h2{margin:0;font:800 32px/1 var(--f-display);color:var(--machine);letter-spacing:.02em;text-transform:uppercase}
+.mapsec{display:flex;flex-direction:column;gap:10px;padding-top:14px;border-top:1px solid var(--hud-line)}
+.mapsec h3{margin:0;font:800 14px/1 var(--f-display);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+#mapPlaces{display:flex;flex-wrap:wrap;gap:6px}
+#mapPlaces button{height:40px;font-size:16px;padding:0 12px}
+#tpBar{display:flex;align-items:center;min-height:46px;padding:10px 12px;border-radius:10px;background:rgba(245,197,24,.08);border:1px solid rgba(245,197,24,.28);font:700 18px/1.2 var(--f-display);letter-spacing:.03em;color:var(--ink)}
 #tpOpts{display:flex;flex-wrap:wrap;align-items:center;gap:8px}#tpOpts[hidden],#tpHint[hidden]{display:none}
-#tpOpts button{height:46px;font-size:18px;padding:0 14px}
+#tpOpts>span{width:100%;color:var(--gas)}
+#tpOpts button{height:44px;font-size:17px;padding:0 12px}
 #tpOpts button[aria-pressed="true"]{border-color:var(--machine);color:var(--machine)}
-.legend{display:flex;flex-wrap:wrap;gap:8px 16px;font:600 17px/1.2 var(--f-display);letter-spacing:.03em}
-/* short landscape screens (a phone on its side): the map on the left, title, teleport and legend beside it */
-@media (max-height:520px) and (orientation:landscape){.mapcard{display:grid;grid-template-columns:auto minmax(0,1fr);grid-template-rows:max-content max-content 1fr;gap:10px 14px;align-items:start}
-  #big{grid-column:1;grid-row:1/4}.maphead,#tpBar,.legend{grid-column:2}.legend{font-size:15px;gap:4px 12px}}
-.legend span{display:flex;align-items:center;gap:7px}
+.legend{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:9px 12px;font:600 17px/1.2 var(--f-display);letter-spacing:.03em}
+.legend span{display:flex;align-items:center;gap:9px}
+.legend i{flex:none;display:block;width:18px;height:12px;border-radius:3px}
+.legend i.tri{width:18px;height:14px;border-radius:0;background:var(--c);clip-path:polygon(100% 50%,0 0,30% 50%,0 100%)}
+/* a tall phone: the map on top, the panel under it */
+@media (orientation:portrait) and (max-width:900px){.mapcard{grid-template-columns:minmax(0,1fr);grid-template-rows:minmax(0,58fr) minmax(0,42fr)}
+  .mapside{border-left:0;border-top:1px solid var(--hud-line)}}
+/* a phone on its side: a narrower panel beside the map */
+@media (max-height:520px) and (orientation:landscape){.mapcard{grid-template-columns:minmax(0,1fr) 300px}.mapside{padding:12px 14px;gap:12px}.maphead h2{font-size:26px}
+  #mapCtl button{width:42px;height:42px}.legend{font-size:15px;grid-template-columns:repeat(2,minmax(0,1fr))}}
 .legend i{display:inline-block;width:18px;height:12px;border-radius:3px}
 #benchBar{position:absolute;left:0;right:0;top:calc(var(--pt) + 130px);z-index:2;margin:0 auto;width:max-content;max-width:100%;box-sizing:border-box;font:800 16px/1.25 var(--f-display);letter-spacing:.04em;text-align:center;background:var(--hud);border:2px solid var(--gas);border-radius:10px;padding:8px 14px;font-variant-numeric:tabular-nums}
 #benchBar small{display:block;font:600 13px/1.2 var(--f-display);color:var(--muted);letter-spacing:.03em}
@@ -202,6 +228,17 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
   padding-block:calc(env(safe-area-inset-top,0px) + 16px) calc(env(safe-area-inset-bottom,0px) + 16px);
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 #keysBox .card{max-width:560px;overscroll-behavior:contain}
+#ctrlsBox{position:fixed;inset:0;z-index:7;background:rgba(10,12,9,.72);display:flex;align-items:center;justify-content:center;pointer-events:auto;box-sizing:border-box;
+  padding-block:calc(env(safe-area-inset-top,0px) + 16px) calc(env(safe-area-inset-bottom,0px) + 16px);
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+#ctrlsBox[hidden]{display:none}
+#ctrlsBox .card{max-width:600px;overscroll-behavior:contain;touch-action:pan-y}
+#ctrlsTabs button{flex:1 1 0;height:42px;font-size:15px}
+#ctrlsTabs button[aria-pressed="false"]{background:transparent;color:var(--ink);border:1px solid var(--hud-line)}
+#ctrlsTabs button[aria-pressed="true"]{background:var(--machine);color:#1c1309}
+#ctrlsList h2{margin:10px 0 2px;font:800 15px/1 var(--f-display);letter-spacing:.12em;text-transform:uppercase;color:var(--gas)}
+#ctrlsList .kkey{font:700 16px/1.2 var(--f-display);white-space:nowrap;text-align:right;color:var(--ink)}
+#ctrlsList .krow{grid-template-columns:1fr auto}
 #keysList h2{margin:10px 0 2px;font:800 15px/1 var(--f-display);letter-spacing:.12em;text-transform:uppercase;color:var(--gas)}
 .krow{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid rgba(255,255,255,.07)}
 .kname{font:700 18px/1.2 var(--f-display);letter-spacing:.02em}
@@ -220,30 +257,84 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 #sndOn[aria-pressed="false"]{color:var(--danger);border-color:var(--danger)}
 /* Map editor: everything in a column down the left, so the rest of the view is ground: the title bar along the top,
    a two-wide tool strip, and beside it the tool's options with the file and info cards; the game HUD hides */
-body.editing #hud>:is(.tbar,.lbar,.rpane,.sticks,.bbar){display:none}
-#editor{position:fixed;inset:0;z-index:4;pointer-events:none;display:flex;flex-direction:column;align-items:flex-start;gap:6px;box-sizing:border-box;
-  padding:calc(env(safe-area-inset-top,0px) + 8px) max(10px,env(safe-area-inset-right,0px)) calc(env(safe-area-inset-bottom,0px) + 10px) max(10px,env(safe-area-inset-left,0px))}
+body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
+:root{--ed-l:max(8px,env(safe-area-inset-left,0px));--ed-r:max(8px,env(safe-area-inset-right,0px))}
+/* the map editor: bars across the top (the map, undo, the view), down the left (the tool groups, with a drawer beside them
+   for the group's library or list) and along the bottom (the tool's options, the selection's settings, then a status line) */
+#editor{position:fixed;inset:0;z-index:4;pointer-events:none;display:grid;grid-template-columns:auto auto 1fr;grid-template-rows:auto minmax(0,1fr) auto auto;box-sizing:border-box}
 #editor[hidden]{display:none}
-.edbar{display:flex;flex-wrap:wrap;align-items:center;gap:6px 10px}
-.edbar h2{margin:0;font:800 20px/1 var(--f-display);letter-spacing:.05em;text-transform:uppercase;text-shadow:0 1px 4px rgba(0,0,0,.7)}
-@media (max-width:480px){.edbar h2{display:none}}
-.edbar .row{pointer-events:auto;gap:4px}
-.edmain{flex:1;min-height:0;max-width:100%;display:flex;align-items:flex-start;gap:6px}
-.edtools{pointer-events:auto;flex:none;display:grid;grid-template-columns:repeat(2,64px);gap:4px}
-.edtools button{height:36px;padding:0 2px;font-size:14px;letter-spacing:.02em}
-.edside{flex:0 1 360px;min-width:0;max-height:100%;overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:6px;border-radius:10px}
-.edpanel{pointer-events:auto;box-sizing:border-box;width:100%;background:var(--hud);border:1px solid var(--hud-line);border-radius:10px;padding:8px 10px;display:flex;flex-direction:column;gap:6px;font:600 15px/1.25 var(--f-display)}
+#editor svg{fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.edbar{grid-column:1/-1;grid-row:1;pointer-events:auto;display:flex;align-items:center;gap:6px 12px;overflow-x:auto;scrollbar-width:none;background:var(--hud);border-bottom:1px solid var(--hud-line);
+  padding:calc(env(safe-area-inset-top,0px) + 6px) var(--ed-r) 6px var(--ed-l)}
+.edbar h2{margin:0;flex:none;font:800 20px/1 var(--f-display);letter-spacing:.05em;text-transform:uppercase}
+.edbar .row{flex:none;flex-wrap:nowrap;gap:4px}
+#edPanelBtn{margin-left:auto}
+.edbar>button{flex:none}
+.edico{display:inline-flex;align-items:center;gap:5px;white-space:nowrap}
+.edico svg{width:18px;height:18px;flex:none}
+.edtools{grid-column:1;grid-row:2;pointer-events:auto;display:flex;flex-direction:column;gap:4px;overflow-y:auto;scrollbar-width:none;background:var(--hud);border-right:1px solid var(--hud-line);padding:6px 6px 6px var(--ed-l)}
+.edtools button{flex:none;width:66px;height:56px;padding:2px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;font:700 13px/1 var(--f-display);letter-spacing:.03em}
+.edtools svg{width:22px;height:22px}
+.edtools .edmapbtn{margin-top:auto}
+.eddrawer{grid-column:2;grid-row:2;pointer-events:auto;width:310px;max-width:calc(100vw - 100px);box-sizing:border-box;overflow-y:auto;overscroll-behavior:contain;background:var(--hud);border-right:1px solid var(--hud-line);padding:8px 10px 12px;display:flex;flex-direction:column;gap:8px;font:600 15px/1.25 var(--f-display)}
+.eddrawer[hidden],.edsec[hidden]{display:none}
+.edsec{display:flex;flex-direction:column;gap:7px}
+.edsec p{margin:0}.edsec .hint{color:var(--muted);font-size:14px}
+.edsec h3,.edpanel h3{margin:0;font:800 18px/1.1 var(--f-display);letter-spacing:.03em;color:var(--machine)}
+.edsec h3 small{font:600 14px/1 var(--f-display);color:var(--muted);letter-spacing:0;margin-left:6px}
+.edsec h4{margin:3px 0 0;font:700 12px/1 var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
+.edkinds{display:flex;flex-direction:column;gap:4px}.edkinds .row{flex-wrap:wrap;gap:4px}
+.edbottom{grid-column:1/-1;grid-row:3;pointer-events:auto;display:flex;flex-direction:column;background:var(--hud);border-top:1px solid var(--hud-line)}
+.edpanel{box-sizing:border-box;width:100%;display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;padding:7px var(--ed-r) 7px var(--ed-l);font:600 15px/1.25 var(--f-display)}
+.edpanel[hidden]{display:none}
+.edpanel+.edpanel{border-top:1px solid var(--hud-line)}
 .edpanel p{margin:0}.edpanel .hint{color:var(--muted);font-size:14px}
-.edpanel h3{margin:0;font:800 18px/1.1 var(--f-display);letter-spacing:.03em;color:var(--machine)}
-#edInfo dl{display:grid;grid-template-columns:auto 1fr;gap:3px 12px;margin:0}
-#edInfo dt{font:700 13px/1.5 var(--f-display);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-#edInfo dd{margin:0;font-variant-numeric:tabular-nums}
+.edihead{display:flex;flex-direction:column;gap:2px;min-width:0;max-width:340px}
+.edihead small{color:var(--muted);font-size:13px}
+.edsub{gap:4px}
+.edpicked{color:var(--muted)}.edpicked b{color:var(--ink)}
+#edCard dl{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px;margin:0}
+#edCard dt{font:700 12px/1.5 var(--f-display);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+#edCard dd{margin:0 10px 0 0;font-variant-numeric:tabular-nums}
+.edsw{display:flex;gap:5px}
+#editor button.edswb{width:30px;height:30px;padding:0;border-radius:50%;border:2px solid rgba(255,255,255,.35)}
+#editor button.edswb[aria-pressed="true"]{border-color:#fff;box-shadow:0 0 0 2px var(--machine)}
+.edstat{grid-column:1/-1;grid-row:4;pointer-events:auto;display:flex;gap:16px;white-space:nowrap;overflow:hidden;background:rgba(10,12,10,.88);color:var(--muted);font:600 13px/1.3 var(--f-display);
+  padding:3px var(--ed-r) calc(env(safe-area-inset-bottom,0px) + 3px) var(--ed-l)}
+.edstat span{font-variant-numeric:tabular-nums}
+#edTip{margin-left:auto;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.edlist{display:flex;flex-direction:column;gap:4px}
+.edlg{display:flex;gap:5px;align-items:center}
+#editor button.edlgo{flex:1;min-width:0;height:36px;padding:0 8px;display:flex;align-items:center;gap:6px;text-align:left;font:700 15px/1 var(--f-display)}
+.edlgo i{font-style:normal;width:12px}.edlgo small{color:var(--muted);font-weight:600}
+#editor button.edlgs{flex:none}
+#editor button.edlgs[aria-pressed="true"]{background:var(--machine);color:#1c1309}
+.edlrows{display:flex;flex-direction:column;gap:2px;padding-left:10px}
+.edlr{display:flex;gap:4px;align-items:stretch}
+#editor button.edlck{flex:none;width:32px;height:auto;min-height:36px;padding:0}
+.edlck::before{content:'';display:block;width:14px;height:14px;margin:auto;border:2px solid var(--muted);border-radius:3px}
+.edlck[aria-pressed="true"]::before{background:var(--machine);border-color:var(--machine)}
+#editor button.edlrn{flex:1;min-width:0;height:auto;min-height:36px;padding:4px 8px;display:flex;flex-direction:column;align-items:flex-start;gap:1px;text-align:left;font:600 14px/1.2 var(--f-display);letter-spacing:0;text-transform:none}
+.edlrn small{color:var(--muted);font-size:12px}
+#editor button.edlrn[aria-pressed="true"]{box-shadow:inset 0 0 0 2px var(--machine)}
+.edlact{gap:4px;flex-wrap:wrap;padding-left:10px}
+#edBox{position:fixed;z-index:5;pointer-events:none;border:2px dashed var(--machine);background:rgba(240,122,34,.12)}
+#edBox[hidden]{display:none}
+@media (max-width:900px){.edbar h2{display:none}}
+/* phones: no status line, the bottom bar scrolls sideways in one line, the left bar's buttons a little smaller */
+@media (max-height:500px),(max-width:600px){
+  .edstat{display:none}.edbottom{flex-direction:row;overflow-x:auto;scrollbar-width:none;padding-bottom:env(safe-area-inset-bottom,0px)}
+  .edpanel{width:auto;flex:none;flex-wrap:nowrap;gap:6px 12px;padding-top:5px;padding-bottom:5px}
+  .edpanel+.edpanel{border-top:0;border-left:1px solid var(--hud-line)}
+  .edpanel>*{flex:none}#editor .edpanel input[type=range]{width:120px;flex:none}
+  .edbar{padding-top:calc(env(safe-area-inset-top,0px) + 4px);padding-bottom:4px}
+  .edtools{gap:3px;padding-top:4px;padding-bottom:4px}.edtools button{width:58px;height:44px;font-size:12px;gap:2px}.edtools svg{width:19px;height:19px}}
 .edopt{display:flex;flex-wrap:wrap;align-items:center;gap:6px 8px}
 .edopt .row{gap:4px}
 .edopt label{font:700 13px/1 var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
 .edopt output{min-width:40px;font-variant-numeric:tabular-nums}
 #editor input[type=range]{flex:1 1 90px;min-width:80px;max-width:170px;accent-color:var(--machine)}
-.edmats{max-height:min(38vh,380px);overflow-y:auto;overscroll-behavior:contain;display:flex;flex-direction:column;gap:5px;padding-right:4px}
+.edmats{display:flex;flex-direction:column;gap:5px;padding-right:4px}
 .edmats h3 small{font:600 14px/1 var(--f-display);color:var(--muted);letter-spacing:0;margin-left:6px}
 .edmats h4{margin:3px 0 0;font:700 12px/1 var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
 .edmatgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(62px,1fr));gap:4px}
@@ -257,10 +348,11 @@ body.editing #hud>:is(.tbar,.lbar,.rpane,.sticks,.bbar){display:none}
 .edownpic input{position:absolute;inset:0;opacity:0;cursor:pointer}
 .edowncard input:not([type=range]):not([type=file]),.edowncard select{flex:1 1 90px;min-width:0;font:600 15px/1.2 var(--f-display);padding:4px 6px;border-radius:5px;border:1px solid rgba(255,255,255,.25);background:#1d1a16;color:inherit}
 .edowncard input[type=number]{max-width:80px}
+.edmat i.dirt{background:linear-gradient(135deg,#8a6a3f,#6e5232 60%,#9a7a4a)}.edmat i.grass{background:linear-gradient(135deg,#6a9a40,#4a7a30)}
 .edmat i.nat{background:linear-gradient(135deg,#5b8a3a,#4a7a30 60%,#8a6a3f)}
 #editor button.edmat[aria-pressed="true"]{background:var(--machine);color:#1c1309}
 #editor .row button[aria-pressed="true"]{background:var(--machine);color:#1c1309}
-.edtools button[aria-pressed="true"],.edkind button[aria-pressed="true"],#editor button.go{background:var(--machine);color:#1c1309}
+.edtools button[aria-pressed="true"],#editor button.go{background:var(--machine);color:#1c1309}
 #editor button.danger{color:var(--danger)}
 #editor button:disabled{opacity:.4}
 #editor textarea{width:100%;box-sizing:border-box;height:96px;font:12px/1.3 ui-monospace,Menlo,monospace;color:var(--ink);background:#111410;border:1px solid var(--hud-line);border-radius:8px;padding:6px;-webkit-user-select:text;user-select:text}
@@ -321,18 +413,17 @@ body.editing #hud>:is(.tbar,.lbar,.rpane,.sticks,.bbar){display:none}
 #gfxGraphCap b{color:var(--ink)}
 /* big map trails: what to show, and its key */
 #trailBar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font:700 18px/1.2 var(--f-display);letter-spacing:.03em;color:var(--ink)}
-#trailBar span{margin-right:4px}
-#trailBar button{height:42px;font-size:16px;padding:0 10px}
+#trailBar span{width:100%}
+#trailBar button{height:40px;font-size:16px;padding:0 10px}
 #trailBar button[aria-pressed="true"]{background:var(--machine);color:#1c1309;border-color:var(--machine)}
 #trailKey{display:flex;flex-direction:column;gap:4px}
 #trailKey i{display:block;height:10px;border-radius:5px}
 #trailKey>span{display:flex;justify-content:space-between;gap:10px;font:600 15px/1.2 var(--f-display);color:var(--muted)}
 #wetBar{display:flex;flex-wrap:wrap;align-items:center;gap:6px;font:700 18px/1.2 var(--f-display);letter-spacing:.03em;color:var(--ink)}
-#wetBar span{margin-right:4px}
-#wetBar button{height:42px;font-size:16px;padding:0 10px}
+#wetBar span{width:100%}
+#wetBar button{height:40px;font-size:16px;padding:0 10px}
 #wetBar button[aria-pressed="true"],#wetGround[aria-pressed="true"]{background:var(--machine);color:#1c1309;border-color:var(--machine)}
 #wetKey{display:flex;flex-direction:column;gap:4px}
 #wetKey i{display:block;height:10px;border-radius:5px}
 #wetKey>span{display:flex;justify-content:space-between;gap:10px;font:600 15px/1.2 var(--f-display);color:var(--muted)}
 #wetGround{align-self:flex-start;margin-top:4px}
-@media (max-height:520px) and (orientation:landscape){.mapcard{grid-template-rows:max-content max-content max-content max-content max-content max-content 1fr}#big{grid-row:1/8}#trailBar,#trailKey,#wetBar,#wetKey{grid-column:2}}

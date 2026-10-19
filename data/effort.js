@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-19T02:10:00Z",
+ "updated": "2026-10-19T02:50:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -24,9 +24,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-18",
-   "dh": 121,
-   "act": 3.5,
-   "versions": 14
+   "dh": 181,
+   "act": 4,
+   "versions": 23
   }
  ],
  "extra": [
@@ -1134,6 +1134,87 @@ window.EFFORT = {
    "tris": 1914406,
    "chars": 755860,
    "what": "Working wet clay packs into the excavator undercarriage (most while turning): packed tracks drag and turn slower and show clay lumps on the track frames; it drops off in clumps as you drive, faster on firm ground and when the tracks are rocked back and forth, and slowly as it dries."
+  },
+  {
+   "v": 123,
+   "asked": "2026-10-18T20:31:00-05:00",
+   "live": "2026-10-18T21:12:38-05:00",
+   "dh": 10,
+   "tris": 1918984,
+   "chars": 769989,
+   "what": "A lattice-boom crawler crane on a barge with steel pipe piles and plate girders drives a pile and sets a girder for each span, turning both temporary trestles to steel a span at a time (B10)"
+  },
+  {
+   "v": 124,
+   "asked": "2026-10-18T20:45:00-05:00",
+   "live": "2026-10-18T21:21:55-05:00",
+   "dh": 10,
+   "tris": 1917760,
+   "chars": 783962,
+   "what": "The site map shows the whole world now, both mainland shores as well as the islands, drawn from the real ground with every tree; drag, pinch or scroll to zoom, jump to a place, read how far a spot is, with a new side panel for teleport, layers and the key."
+  },
+  {
+   "v": 125,
+   "asked": "2026-10-18T21:05:00-05:00",
+   "live": "2026-10-18T21:26:36-05:00",
+   "dh": 10,
+   "tris": 1918519,
+   "chars": 784358,
+   "what": "The dig grid now sits on 105 ft dig tiles and can move: groundwork for digging anywhere, with no change in play"
+  },
+  {
+   "v": 126,
+   "asked": "2026-10-18T21:06:00-05:00",
+   "live": "2026-10-18T21:31:58-05:00",
+   "dh": 1.5,
+   "tris": 1920321,
+   "chars": 784746,
+   "what": "Trails on the site map now record everywhere you go, the woods, the hayfield and the lakeside town as well as the islands; trails already walked are kept."
+  },
+  {
+   "v": 127,
+   "asked": "2026-10-18T21:28:00-05:00",
+   "live": "2026-10-18T21:35:48-05:00",
+   "dh": 8,
+   "tris": 1919332,
+   "chars": 789494,
+   "what": "Each dig tile's ground (holes, spoil, puddles, mud, wetness) can be lifted out and put back seamlessly, and mud ruts carry into a tile: groundwork for digging anywhere, with no change in play"
+  },
+  {
+   "v": 128,
+   "asked": "2026-10-18T21:30:00-05:00",
+   "live": "2026-10-18T21:43:17-05:00",
+   "dh": 1.5,
+   "tris": 1919441,
+   "chars": 789860,
+   "what": "Top bar: job gauges hidden, the machine rail moved into a Controls dropdown beside Blocks, and a Chase / Cab camera toggle"
+  },
+  {
+   "v": 129,
+   "asked": "2026-10-18T20:40:00-05:00",
+   "live": "2026-10-18T21:45:51-05:00",
+   "dh": 16,
+   "tris": 1919145,
+   "chars": 815284,
+   "what": "The map editor is rebuilt around bars across the top, left and bottom: grouped tools with icons, a drawer with the library and an On the map list of every thing by kind, and picking several things at once to move, turn, size, colour, copy or delete together."
+  },
+  {
+   "v": 130,
+   "asked": "2026-10-18T21:30:00-05:00",
+   "live": "2026-10-18T21:46:47-05:00",
+   "dh": 1,
+   "tris": 1918954,
+   "chars": 815573,
+   "what": "Three new mud settings in the screen editor's Tuning tab: how wet ground must be before it ruts, how fast ruts cut in, and how high mud piles up beside them."
+  },
+  {
+   "v": 131,
+   "asked": "2026-10-18T21:44:00-05:00",
+   "live": "2026-10-18T21:50:12-05:00",
+   "dh": 2,
+   "tris": 1919017,
+   "chars": 820471,
+   "what": "Machine dropdown renamed Drive; a Controls button opens a panel listing every keyboard key (the player's own), mouse, touch and controller input"
   }
  ]
 };

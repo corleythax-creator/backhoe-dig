@@ -4,9 +4,25 @@
 // scenery.js), saved on this device
 // as you go; the map can be copied out as text and loaded back. While it is open the game stands still.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
-const ed={tool:'raise',size:15*FT,str:5,kind:'pine',mat:10,square:false,soft:false,keep:false,feather:0.5,x:0,z:10,yaw:0,pitch:0.95,dist:45,
-  stroke:null,flatH:0,road:null,rpt:-1,drawing:false,roadSnap:null,bx:0,bz:0,hover:false,pend:null,refT:0,sel:null,drag:null,snap:null,changed:false,saveT:0,undo:[],redo:[]};
-const ED_TOOLS={look:'Look',raise:'Raise',lower:'Lower',flatten:'Flatten',smooth:'Smooth',dirt:'Dirt',grass:'Grass',select:'Select',add:'Add',query:'Query',roads:'Roads',paint:'Paint'};
+const ed={tool:'raise',group:'shape',gtool:{shape:'raise',paint:'paint',things:'select',roads:'roads',inspect:'query'},size:15*FT,str:5,kind:'pine',mat:10,square:false,soft:false,keep:false,feather:0.5,x:0,z:10,yaw:0,pitch:0.95,dist:45,
+  stroke:null,flatH:0,road:null,rpt:-1,drawing:false,roadSnap:null,bx:0,bz:0,hover:false,pend:null,refT:0,sel:[],drag:null,snap:null,changed:false,saveT:0,undo:[],redo:[],
+  look:false,pane:'',drawer:true,boxMode:false,box:null,lp:null,fly:null,home:null,grp:false,listF:'all',open:{},statT:0,listT:0};
+const ED_TOOLS={raise:'Raise',lower:'Lower',flatten:'Flatten',smooth:'Smooth',dirt:'Worked dirt',grass:'Grass',select:'Select',add:'Add',query:'Query',roads:'Roads',paint:'Paint'};
+// the left bar's groups: their tools (picked in the bottom bar, or for Paint by the library's swatches), and whether the
+// drawer beside the bar has a part for them (the material library, the things to add and the On the map list, the roads)
+const ED_GROUPS={shape:{tools:['raise','lower','flatten','smooth']},paint:{tools:['paint','dirt','grass'],pane:1},things:{tools:['select','add'],pane:1},roads:{tools:['roads'],pane:1},inspect:{tools:['query']}};
+const ED_KIND_CATS=['Trees and rocks','Buildings','Fencing','Site gear','Yard'];
+// the editor's icons (24 px, drawn with lines), put in front of the words of every part with a data-ic
+const ED_ICONS={done:'M15 5l-7 7 7 7',undo:'M9 14L4 9l5-5M4 9h10a6 6 0 010 12h-3',redo:'M15 14l5-5-5-5M20 9H10a6 6 0 000 12h3',
+  look:'M12 3v18M3 12h18M9 6l3-3 3 3M9 18l3 3 3-3M6 9l-3 3 3 3M18 9l3 3-3 3',zin:'M10.5 4a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM15.5 15.5L21 21M7.5 10.5h6M10.5 7.5v6',
+  zout:'M10.5 4a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM15.5 15.5L21 21M7.5 10.5h6',north:'M12 3l5 17-5-4-5 4z',home:'M3 11l9-8 9 8M5 9v11h5v-6h4v6h5V9',
+  panel:'M3 4h18v16H3zM9 4v16',shape:'M2 20l7-12 4 6 3-4 6 10z',paint:'M18 3l3 3-8 8-3-3zM10 11c-3 0-5 2-5 4.5S4 19 2 19.5C5 22 11 21 12 17c.4-1.6-.4-3.4-2-6z',
+  things:'M12 2l6 9h-3l4 6H5l4-6H6zM12 17v5',roads:'M8 3L4 21M16 3l4 18M12 4v3M12 10v3M12 16v3',inspect:'M10 3a7 7 0 100 14 7 7 0 000-14zM15 15l6 6',
+  map:'M3 6h6l2 2h10v11H3z',box:'M4 4h3M10 4h4M17 4h3v3M20 10v4M20 17v3h-3M14 20h-4M7 20H4v-3M4 14v-4M4 7V4',
+  copy:'M8 8h12v12H8zM4 16V4h12',trash:'M4 6h16M9 6V3h6v3M6 6l1 15h10l1-15M10 10v7M14 10v7'};
+function edIcons(root){root.querySelectorAll('[data-ic]').forEach(b=>{if(b.querySelector('svg'))return;
+  b.insertAdjacentHTML('afterbegin',`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${ED_ICONS[b.dataset.ic]}"/></svg>`)})}
+edIcons($('#editor'));
 const ED_BRUSH=['raise','lower','flatten','smooth','dirt','grass','paint'];
 const ED_KINDS={pine:'Pine tree',leafy:'Leafy tree',rock:'Boulder'};
 // the machines and the walker can be picked and moved: their state, scene object and pick radius
@@ -16,7 +32,7 @@ const edFt=m=>m/FT,edFmt=(m,d)=>(m/FT).toFixed(d===undefined?1:d);
 // brush and selection rings drawn over the ground
 function edRing(color){const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(65*3),3));
   const l=new THREE.Line(g,new THREE.LineBasicMaterial({color,depthTest:false,transparent:true,opacity:0.95,fog:false,toneMapped:false}));l.renderOrder=20;l.frustumCulled=false;l.visible=false;scene.add(l);return l}
-const edBrushRing=edRing(0xffd23f),edSelRing=edRing(0xf07a22),edSoftRing=edRing(0xfff2b0);edSoftRing.material.opacity=0.6;
+const edBrushRing=edRing(0xffd23f),edSoftRing=edRing(0xfff2b0);edSoftRing.material.opacity=0.6;
 // the brush ring, and for soft-edged paint a second ring where the fade starts
 function edBrushAt(x,z){const p=ed.tool==='paint',sq=ed.square&&p;edRingAt(edBrushRing,x,z,ed.size,sq);
   if(p&&ed.soft)edRingAt(edSoftRing,x,z,ed.size*(1-ed.feather),sq);else edSoftRing.visible=false}
@@ -29,41 +45,73 @@ function editorOpen(){if(edOn||bench.on)return;edOn=true;mapAssets=assets;
   document.body.classList.add('editing');$('#editor').hidden=false;showMenu(false);help.hidden=true;toggleMap(false);clearKeys();
   const fv=mode==='truck'?tr:mode==='mow'?mw:mode==='skid'?sk:mode==='walk'?wk:st;ed.x=fv.x;ed.z=fv.z;
   ed.yaw=Math.atan2(camera.position.x-fv.x,camera.position.z-fv.z);ed.dist=45;ed.pitch=0.95;
-  edTool(ed.tool);edInfo(null);toast('Map editor. The game is paused while you edit.','',2600)}
+  ed.home={x:ed.x,z:ed.z,yaw:ed.yaw,dist:ed.dist,pitch:ed.pitch};ed.drawer=!edNarrow();ed.pane=ED_GROUPS[ed.group].pane?ed.group:'';
+  edTool(ed.tool);edCard(null);edSelSet([]);toast('Map editor. The game is paused while you edit.','',2600)}
 function editorClose(){if(!edOn)return;edStrokeEnd();edRoadFinish();edOn=false;document.body.classList.remove('editing');$('#editor').hidden=true;
-  edBrushRing.visible=edSelRing.visible=edSoftRing.visible=false;ed.sel=null;ed.road=null;ed.rpt=-1;edRoadsDraw();clearKeys();firstCam=true;last=performance.now();
-  if(ed.changed){edSave();mapBg=null;mapDirty=true;ed.changed=false}}
+  edBrushRing.visible=edSelRings.visible=edSoftRing.visible=false;ed.sel=[];ed.box=null;ed.lp=null;$('#edBox').hidden=true;ed.road=null;ed.rpt=-1;edRoadsDraw();clearKeys();firstCam=true;last=performance.now();
+  if(ed.changed){edSave();mapReset();mapDirty=true;ed.changed=false}}
 $('#edDone').onclick=editorClose;
 $('#editBtn').onclick=editorOpen;
 
-// ---------- tools ----------
-function edTool(t){if(t!=='roads'){edRoadFinish();ed.road=null;ed.rpt=-1}ed.tool=t;$('#edOpts').hidden=false;ed.sel=t==='select'?ed.sel:null;edSelRing.visible=!!ed.sel;
-  document.querySelectorAll('.edtools button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.t===t));
+// ---------- tools: the left bar picks a group, the bottom bar its tool and options, the drawer its library or list ----------
+const edNarrow=()=>innerWidth<900||innerHeight<500;
+function edTool(t){if(t!=='roads'){edRoadFinish();ed.road=null;ed.rpt=-1}ed.tool=t;
+  const g=Object.keys(ED_GROUPS).find(k=>ED_GROUPS[k].tools.includes(t));if(g){ed.group=g;ed.gtool[g]=t}
+  $('#edOpts').hidden=false;edSubDraw();
   document.querySelectorAll('#edOpts [data-for]').forEach(el=>el.hidden=!el.dataset.for.split(' ').includes(t));
-  if(t!=='query'&&t!=='select')edInfo(null);edBrushRing.visible=edSoftRing.visible=false;if(t==='roads')edRoadCard();edRoadsDraw()}
-// tapping the tool already picked folds its options away (or back), to see more of the ground
-document.querySelectorAll('.edtools button').forEach(b=>b.onclick=()=>{if(b.dataset.t===ed.tool){const o=$('#edOpts');o.hidden=!o.hidden}else edTool(b.dataset.t)});
-document.querySelectorAll('.edkind button').forEach(b=>b.onclick=()=>{ed.kind=b.dataset.k;document.querySelectorAll('.edkind button').forEach(c=>c.setAttribute('aria-pressed',c===b))});
-// the material library: every texture by kind, plus Natural ground, which clears a material
+  $('#edSoftOpt').hidden=!(t==='paint'&&ed.soft);
+  if(t!=='query')edCard(null);edBrushRing.visible=edSoftRing.visible=false;if(t==='roads')edRoadCard();edRoadsDraw();
+  edMatMark();edKindMark();edPaneSync();edTipSet()}
+// tapping the picked group again folds the drawer away (or the bottom bar's options, for a group without a drawer part)
+function edGroup(g){const G=ED_GROUPS[g];
+  if(g===ed.group&&ed.pane!=='map'){if(G.pane)ed.drawer=!ed.drawer;else{const o=$('#edOpts');o.hidden=!o.hidden}edPaneSync();return}
+  ed.pane=G.pane?g:'';if(G.pane&&edNarrow())ed.drawer=true;edTool(ed.gtool[g])}
+function edMapPane(){if(ed.pane==='map'&&ed.drawer)ed.pane=ED_GROUPS[ed.group].pane?ed.group:'';else{ed.pane='map';ed.drawer=true}edPaneSync()}
+function edPaneSync(){const d=$('#edDrawer'),on=ed.drawer&&!!ed.pane;d.hidden=!on;
+  d.querySelectorAll('.edsec').forEach(s=>s.hidden=s.dataset.g!==ed.pane);$('#edPanelBtn').setAttribute('aria-pressed',on);
+  document.querySelectorAll('#edRail button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.g==='map'?on&&ed.pane==='map':b.dataset.g===ed.group));
+  if(on&&ed.pane==='things')edListDraw();if(on&&ed.pane==='roads')edRoadList()}
+// on a phone the drawer gets out of the way once something in it is picked
+const edPicked=()=>{if(edNarrow()&&ed.drawer){ed.drawer=false;edPaneSync()}};
+document.querySelectorAll('#edRail button').forEach(b=>b.onclick=()=>b.dataset.g==='map'?edMapPane():edGroup(b.dataset.g));
+$('#edPanelBtn').onclick=()=>{if(!ed.pane){ed.pane='things';ed.drawer=true}else ed.drawer=!ed.drawer;edPaneSync()};
+// the group's tools, as a row at the start of the bottom bar
+function edSubDraw(){const ts=ED_GROUPS[ed.group].tools,box=$('#edSub');box.hidden=ed.group==='paint'||ts.length<2;if(box.hidden)return;
+  box.innerHTML=ts.map(t=>`<button class="sm" data-t="${t}" aria-pressed="${t===ed.tool}">${ED_TOOLS[t]}</button>`).join('');
+  box.querySelectorAll('button').forEach(b=>b.onclick=()=>edTool(b.dataset.t))}
+// the things to add, by group: the trees and the boulder, then the catalogue (props.js)
+const edKindName=t=>PROPS[t]?PROPS[t].n:ED_KINDS[t]||t;
+{const all=[...Object.keys(ED_KINDS).map(k=>[k,0]),...Object.keys(PROPS).map(k=>[k,PROPS[k].cat||3])];
+  $('#edKinds').innerHTML=ED_KIND_CATS.map((c,ci)=>`<h4>${c}</h4><div class="row">${all.filter(q=>q[1]===ci).map(q=>`<button class="sm" data-k="${q[0]}">${edKindName(q[0])}</button>`).join('')}</div>`).join('');
+  document.querySelectorAll('#edKinds button').forEach(b=>b.onclick=()=>{ed.kind=b.dataset.k;edTool('add');edPicked()})}
+function edKindMark(){document.querySelectorAll('#edKinds button').forEach(b=>b.setAttribute('aria-pressed',ed.tool==='add'&&b.dataset.k===ed.kind));$('#edKindV').textContent=edKindName(ed.kind)}
+// the view: Look makes one finger move the view whatever the tool; closer, farther, north up and back to where the editor opened
+$('#edLook').onclick=()=>{ed.look=!ed.look;$('#edLook').setAttribute('aria-pressed',ed.look)};
+$('#edZoomIn').onclick=()=>{ed.dist=clamp(ed.dist/1.4,8,220);edStatus()};$('#edZoomOut').onclick=()=>{ed.dist=clamp(ed.dist*1.4,8,220);edStatus()};
+$('#edNorth').onclick=()=>{ed.yaw=0};$('#edHome').onclick=()=>{if(ed.home){Object.assign(ed,ed.home);ed.fly=null}};
+// the material library: every texture by kind, plus Natural ground, which clears a material, and Worked dirt and Grass,
+// which pick the Dirt and Grass tools (they paint ED_P, not a material)
 // (made again when the owner's own textures arrive or change, ownmat.js; theirs show their own thumbnail)
 function edMatPanel(){const N=MAT_BUILT,esc=t=>t.replace(/[&<>"]/g,c=>'&#'+c.charCodeAt(0)+';'),
     sw=m=>{const d=MAT_LIST[m-1];return !m?'<i class="nat"></i>':d.own?`<i class="own" style="background-image:url(${d.th})"></i>`:`<i style="background-size:${N*100}% 100%;background-position:${(m-1)/(N-1)*100}% 0"></i>`};
-  const btn=m=>`<button class="edmat" data-m="${m}" aria-pressed="${m===ed.mat}">${sw(m)}<span>${m?esc(MAT_LIST[m-1].n):'Natural ground'}</span></button>`;
+  const btn=m=>typeof m==='string'?`<button class="edmat" data-m="${m}"><i class="${m}"></i><span>${ED_TOOLS[m]}</span></button>`:
+    `<button class="edmat" data-m="${m}">${sw(m)}<span>${m?esc(MAT_LIST[m-1].n):'Natural ground'}</span></button>`;
   let h=`<h3>Material library <small>${MAT_LIST.filter(Boolean).length} textures</small></h3>`;
-  MAT_CATS.forEach((c,ci)=>{const ms=ci?[]:[0];MAT_LIST.forEach((d,i)=>{if(d.cat===ci)ms.push(i+1)});h+=`<h4>${c}</h4><div class="edmatgrid">${ms.map(btn).join('')}</div>`});
+  MAT_CATS.forEach((c,ci)=>{const ms=ci?[]:[0,'dirt','grass'];MAT_LIST.forEach((d,i)=>{if(d.cat===ci)ms.push(i+1)});h+=`<h4>${c}</h4><div class="edmatgrid">${ms.map(btn).join('')}</div>`});
   const box=$('#edMats');box.innerHTML=h;
-  box.querySelectorAll('.edmat').forEach(b=>b.onclick=()=>{ed.mat=+b.dataset.m;box.querySelectorAll('.edmat').forEach(c=>c.setAttribute('aria-pressed',c===b));edMatLabel()})}
+  box.querySelectorAll('.edmat').forEach(b=>b.onclick=()=>{const v=b.dataset.m;if(v==='dirt'||v==='grass')edTool(v);else{ed.mat=+v;edTool('paint')}edPicked()});edMatMark()}
+function edMatMark(){document.querySelectorAll('#edMats .edmat').forEach(b=>{const v=b.dataset.m;b.setAttribute('aria-pressed',ed.tool==='paint'?+v===ed.mat&&v!=='dirt'&&v!=='grass':v===ed.tool)});edMatLabel()}
 edMatPanel();
 document.querySelectorAll('.edshape button').forEach(b=>b.onclick=()=>{ed.square=b.dataset.s==='sq';document.querySelectorAll('.edshape button').forEach(c=>c.setAttribute('aria-pressed',c===b))});
 // Hard edge lays whole cells; Soft edge fades the material out to the natural ground over the outer part of the brush
 document.querySelectorAll('.eddug button').forEach(b=>b.onclick=()=>{ed.keep=b.dataset.k==='keep';document.querySelectorAll('.eddug button').forEach(c=>c.setAttribute('aria-pressed',c===b))});
 document.querySelectorAll('.ededge button').forEach(b=>b.onclick=()=>{ed.soft=b.dataset.e==='soft';$('#edSoftOpt').hidden=!ed.soft;document.querySelectorAll('.ededge button').forEach(c=>c.setAttribute('aria-pressed',c===b))});
-function edMatLabel(){const d=matDef(ed.mat);$('#edMatV').textContent=d?`${d.n} (one tile is ${d.ft} ft)`:'Natural ground (clears materials)';
+function edMatLabel(){const d=matDef(ed.mat);$('#edMatV').textContent=ed.tool==='dirt'?'Worked dirt':ed.tool==='grass'?'Grass (over the dirt yards too)':d?`${d.n} (one tile is ${d.ft} ft)`:'Natural ground (clears materials)';
   if(typeof ownMatPicked==='function')ownMatPicked()}
 edMatLabel();
 const edSizeIn=$('#edSize'),edStrIn=$('#edStr'),edSoftIn=$('#edSoft');
 function edSliders(){$('#edSizeV').textContent=`${Math.round(edFt(ed.size))} ft`;$('#edStrV').textContent=ed.str;$('#edSoftV').textContent=`${Math.round(ed.feather*100)}%`}
-edSizeIn.oninput=()=>{ed.size=+edSizeIn.value*FT;edSliders()};edStrIn.oninput=()=>{ed.str=+edStrIn.value;edSliders()};edSoftIn.oninput=()=>{ed.feather=+edSoftIn.value/100;edSliders()};
+edSizeIn.oninput=()=>{ed.size=+edSizeIn.value*FT;edSliders();edStatus()};edStrIn.oninput=()=>{ed.str=+edStrIn.value;edSliders()};edSoftIn.oninput=()=>{ed.feather=+edSoftIn.value/100;edSliders()};
 edSizeIn.value=Math.round(edFt(ed.size));edStrIn.value=ed.str;edSoftIn.value=Math.round(ed.feather*100);edSliders();
 
 // ---------- picking the ground ----------
@@ -125,12 +173,12 @@ function edBrush(dt){const R=ed.size,cx=ed.bx,cz=ed.bz,t=ed.tool,k=ed.str/10;
 // undug ground stays exactly at grade, so the site save skips it), the 0.5 m ground, steep-ground stops, grass tufts,
 // the tall grass and the trees and boulders on it
 function edRefresh(r,full){if(!r)return;const [x0,x1,z0,z1]=r;
-  const i0=Math.max(0,Math.floor((x0+S/2)/CELL)),i1=Math.min(N,Math.ceil((x1+S/2)/CELL)),j0=Math.max(0,Math.floor((z0+S/2)/CELL)),j1=Math.min(N,Math.ceil((z1+S/2)/CELL));
-  if(i0<=i1&&j0<=j1){for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const k=j*V+i,b=baseHeight(i*CELL-S/2,j*CELL-S/2);H[k]=H[k]===H0[k]?b:H[k]+b-H0[k];H0[k]=b;digBase(k)}
+  const i0=Math.max(0,Math.floor(gI(x0))),i1=Math.min(N,Math.ceil(gI(x1))),j0=Math.max(0,Math.floor(gJ(z0))),j1=Math.min(N,Math.ceil(gJ(z1)));
+  if(i0<=i1&&j0<=j1){for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const k=j*V+i,b=baseHeight(gX(i),gZ(j));H[k]=H[k]===H0[k]?b:H[k]+b-H0[k];H0[k]=b;digBase(k)}
     touch(i0,i1,j0,j1);updateTufts(i0-1,i1+1,j0-1,j1+1);lawnTerrain();updateTerrain();winOn=false;blkTerrainMoved()}
   midUpdate(x0,x1,z0,z1);mudEdRefresh(x0,x1,z0,z1);rainEdRefresh(x0,x1,z0,z1);wallBuild(x0,x1,z0,z1);tuftsRefresh(x0,x1,z0,z1);
   if(assets.some(a=>a.x>x0-6&&a.x<x1+6&&a.z>z0-6&&a.z<z1+6)){assetsBuild();shpTreesRefresh()}
-  if(full&&(x0<-S/2+1||x1>S/2-1||z0<-S/2+1||z1>S/2-1||x0<MID[0]+1||x1>MID[1]-1||z0<MID[2]+1||z1>MID[3]-1||x0<OUTER_MID[0]+1||x1>OUTER_MID[1]-1||z0<OUTER_MID[2]+1||z1>OUTER_MID[3]-1))buildSkirts()}
+  if(full&&(x0<GX0+1||x1>GX1-1||z0<GZ0+1||z1>GZ1-1||x0<MID[0]+1||x1>MID[1]-1||z0<MID[2]+1||z1>MID[3]-1||x0<OUTER_MID[0]+1||x1>OUTER_MID[1]-1||z0<OUTER_MID[2]+1||z1>OUTER_MID[3]-1))buildSkirts()}
 function edStrokeEnd(){const s=ed.stroke;if(!s)return;ed.stroke=null;edRefresh(ed.pend,true);ed.pend=null;
   if(!s.ij)return;const [i0,i1,j0,j1]=s.ij,w=i1-i0+1,h=new Float32Array(w*(j1-j0+1)),p=new Float32Array(h.length),m=new Uint8Array(h.length),c=new Uint8Array(h.length);
   for(let j=j0;j<=j1;j++){const a=j*ED_NX+i0,b=j*ED_NX+i1+1,o=(j-j0)*w;h.set(s.h.subarray(a,b),o);p.set(s.p.subarray(a,b),o);m.set(s.m.subarray(a,b),o);c.set(s.a.subarray(a,b),o)}
@@ -146,13 +194,13 @@ function edSwap(u){
     matU.tMatId.value.needsUpdate=true;matU.tMatCov.value.needsUpdate=true;matTexUpdate();
     edRefresh([ED_X0+i0*ED_C-0.6,ED_X0+i1*ED_C+0.6,ED_Z0+j0*ED_C-0.6,ED_Z0+j1*ED_C+0.6],true)}
   else if(u.roads){const now=edRoadsSnap();edRoadsSet(u.roads);u.roads=now;ed.road=null;ed.rpt=-1;edRoadCard();edRoadsDraw();edRefresh(u.rect,true)}
-  else{const now=JSON.stringify(assets);assets.length=0;assets.push(...JSON.parse(u.a));u.a=now;ed.sel=null;edSelRing.visible=false;edInfo(null);assetsBuild();shpTreesRefresh()}
+  else{const now=JSON.stringify(assets);assets.length=0;assets.push(...JSON.parse(u.a));u.a=now;assetsBuild();shpTreesRefresh();edSelSet([])}
   ed.changed=true;edQueueSave()}
 function edUndo(){const u=ed.undo.pop();if(!u)return;edStrokeEnd();edSwap(u);ed.redo.push(u);edUndoBtns()}
 function edRedo(){const u=ed.redo.pop();if(!u)return;edSwap(u);ed.undo.push(u);edUndoBtns()}
 $('#edUndo').onclick=edUndo;$('#edRedo').onclick=edRedo;
 const edAssetsSnap=()=>JSON.stringify(assets);
-function edAssetsChanged(before){edPush({a:before});assetsBuild();shpTreesRefresh();ed.changed=true;edQueueSave()}
+function edAssetsChanged(before){edPush({a:before});assetsBuild();shpTreesRefresh();ed.changed=true;edQueueSave();edListDraw()}
 
 // ---------- the info card: what is at a spot, or the selected tree, boulder or machine ----------
 function edWhere(x,z){const e=x,s=z-(TRENCH_Z0+TRENCH_Z1)/2;
@@ -173,29 +221,135 @@ function edQuery(x,z){const g=baseHeight(x,z),h=hAt(x,z),r=mesaR(x,z);
   if(h<g-0.04)rows.push(['Dug',`${edFmt(g-h)} ft below the ground`]);else if(h>g+0.04)rows.push(['Dumped',`${edFmt(h-g)} ft of dirt`]);
   if(mine.length)rows.push(['Your edits',mine.join(', ')]);
   const hit=edHit(x,z);if(hit)rows.push(['Here',hit.a?edAssetName(hit.a):hit.m.name]);
-  edInfo(`<h3>Ground here</h3><dl>${rows.map(([a,b])=>`<dt>${a}</dt><dd>${b}</dd>`).join('')}</dl>`)}
-function edAssetName(a){return PROPS[a.t]?propName(a):a.t==='rock'?`Boulder, ${edFmt(1.6*a.s,0)} ft across`:`${ED_KINDS[a.t]}, ${edFmt((a.t==='pine'?5.9:4.7)*a.s,0)} ft tall`}
-function edInfo(html){const el=$('#edInfo');el.hidden=!html;if(html)el.innerHTML=html}
-function edSelect(hit){ed.sel=hit;if(!hit){edSelRing.visible=false;edInfo(null);return}
-  const o=hit.a||hit.m.o(),title=hit.a?edAssetName(hit.a):hit.m.name,yaw=hit.a?hit.a.yaw:o.yaw||0;
-  edInfo(`<h3>${title}</h3><dl><dt>Spot</dt><dd>${edWhere(o.x,o.z)}</dd><dt>Ground</dt><dd>${baseHeight(o.x,o.z)>=0?'+':'−'}${edFmt(Math.abs(baseHeight(o.x,o.z)))} ft</dd></dl>
-    <div class="edopt"><label for="edSelTurn">Turn</label><input id="edSelTurn" type="range" min="0" max="359" step="1" value="${Math.round(((yaw*57.3)%360+360)%360)}"><output id="edSelTurnV"></output></div>
-    ${hit.a?`<div class="edopt"><label for="edSelSize">Size</label><input id="edSelSize" type="range" min="30" max="300" step="5" value="${Math.round(hit.a.s*100)}"><output id="edSelSizeV"></output></div>
-    <div class="row"><button id="edSelCopy" class="sm">Copy</button><button id="edSelDel" class="sm danger">Delete</button></div>`:'<p class="hint">Drag it to move it.</p>'}`);
-  const tv=$('#edSelTurn'),sv=$('#edSelSize');const lab=()=>{$('#edSelTurnV').textContent=tv.value+'°';if(sv)$('#edSelSizeV').textContent=sv.value+'%'};lab();
-  let snap=null;const begin=()=>{if(hit.a&&!snap)snap=edAssetsSnap()},commit=()=>{if(snap){edAssetsChanged(snap);snap=null}};
-  tv.oninput=()=>{begin();lab();const y=+tv.value/57.3;if(hit.a){hit.a.yaw=y;assetsBuild();shpTreesRefresh()}else{o.yaw=y;if(o===wk)wk.view=y;hit.m.m().rotation.y=y}};
-  tv.onchange=commit;
-  if(sv){sv.oninput=()=>{begin();lab();hit.a.s=+sv.value/100;assetsBuild();shpTreesRefresh();edRingSel()};sv.onchange=()=>{commit();$('#edInfo h3').textContent=edAssetName(hit.a)};
-    $('#edSelCopy').onclick=()=>{const b=edAssetsSnap(),P=PROPS[hit.a.t],w=P?(P.w+(P.d>0.5?0.6:0))*hit.a.s:0,
-      a=Object.assign({},hit.a,P?{x:hit.a.x+Math.cos(hit.a.yaw)*w,z:hit.a.z-Math.sin(hit.a.yaw)*w}:{x:hit.a.x+2.5*hit.a.s,z:hit.a.z+1.5*hit.a.s});assets.push(a);edAssetsChanged(b);edSelect({a})};
-    $('#edSelDel').onclick=edDelete}
-  edRingSel()}
-function edRingSel(){const s=ed.sel;if(!s){edSelRing.visible=false;return}const o=s.a||s.m.o();edRingAt(edSelRing,o.x,o.z,s.a?PROPS[s.a.t]?propR(s.a):(s.a.t==='rock'?1.0:1.6)*s.a.s:s.m.r)}
-function edDelete(){const s=ed.sel;if(!s||!s.a)return;const b=edAssetsSnap(),i=assets.indexOf(s.a);if(i<0)return;assets.splice(i,1);edAssetsChanged(b);edSelect(null)}
+  edCard(`<h3>Ground here</h3><dl>${rows.map(([a,b])=>`<dt>${a}</dt><dd>${b}</dd>`).join('')}</dl>`)}
+// the bottom bar: a card for the spot queried or the road picked, and the selection's settings when there is no card
+function edCard(html){const el=$('#edCard');el.hidden=!html;if(html)el.innerHTML=html;edBottomSync()}
+function edBottomSync(){$('#edInfo').hidden=!ed.sel.length||!$('#edCard').hidden}
+
+// ---------- the selection: any number of trees, boulders, placed things and machines ({a} or {m}) ----------
+const edKey=h=>h.a||h.m,edIn=h=>ed.sel.some(s=>edKey(s)===edKey(h)),edSelA=()=>ed.sel.filter(s=>s.a).map(s=>s.a);
+const edRad=a=>PROPS[a.t]?propR(a):(a.t==='rock'?1.0:1.6)*a.s;
+// a ring round each picked one, all in one line set
+const edSelRings=(function(){const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(1200*48*3),3));g.setDrawRange(0,0);
+  const l=new THREE.LineSegments(g,new THREE.LineBasicMaterial({color:0xf07a22,depthTest:false,transparent:true,opacity:0.95,fog:false,toneMapped:false}));l.renderOrder=20;l.frustumCulled=false;l.visible=false;scene.add(l);return l})();
+function edRingSel(){const at=edSelRings.geometry.attributes.position,P=at.array,k=ed.sel.length>60?12:24;let n=0;
+  for(const s of ed.sel){if(n+2*k>at.count)break;const o=s.a||s.m.o(),r=s.a?edRad(s.a):s.m.r;
+    for(let i=0;i<k;i++)for(const e of [i,i+1]){const t=e/k*Math.PI*2,x=o.x+Math.cos(t)*r,z=o.z+Math.sin(t)*r;P[n*3]=x;P[n*3+1]=hAt(x,z)+0.15;P[n*3+2]=z;n++}}
+  at.needsUpdate=true;edSelRings.geometry.setDrawRange(0,n);edSelRings.visible=n>0}
+function edSelSet(list){ed.sel=list;edRingSel();edInspector();edListDraw();edStatus()}
+// the things and machines whose middles are inside a rectangle of the screen
+function edInRect(x0,y0,x1,y1,things){const rc=canvas.getBoundingClientRect(),out=[];
+  const inR=(x,z)=>{edV.set(x,hAt(x,z)+0.5,z).project(camera);if(Math.abs(edV.z)>1)return false;const sx=(edV.x+1)/2*rc.width+rc.left,sy=(1-edV.y)/2*rc.height+rc.top;return sx>=x0&&sx<=x1&&sy>=y0&&sy<=y1};
+  for(const a of assets)if(inR(a.x,a.z))out.push({a});
+  if(!things)for(const m of ED_MACH){if(!m.m().visible)continue;const o=m.o();if(inR(o.x,o.z))out.push({m})}return out}
+function edSelectView(){const r=canvas.getBoundingClientRect();if(ed.tool!=='select'&&ed.tool!=='add')edTool('select');edSelSet(edInRect(r.left,r.top,r.right,r.bottom,true))}
+$('#edAllBtn').onclick=edSelectView;
+$('#edBoxBtn').onclick=()=>{ed.boxMode=!ed.boxMode;$('#edBoxBtn').setAttribute('aria-pressed',ed.boxMode)};
+function edBoxDraw(){const b=ed.box,el=$('#edBox');el.hidden=false;
+  Object.assign(el.style,{left:Math.min(b.x0,b.x1)+'px',top:Math.min(b.y0,b.y1)+'px',width:Math.abs(b.x1-b.x0)+'px',height:Math.abs(b.y1-b.y0)+'px'})}
+function edBoxEnd(){const b=ed.box;ed.box=null;$('#edBox').hidden=true;const x0=Math.min(b.x0,b.x1),x1=Math.max(b.x0,b.x1),y0=Math.min(b.y0,b.y1),y1=Math.max(b.y0,b.y1);
+  if(x1-x0<6&&y1-y0<6){if(!b.add)edSelSet([]);return}
+  const got=edInRect(x0,y0,x1,y1);edSelSet(b.add?[...ed.sel,...got.filter(h=>!edIn(h))]:got)}
+
+// ---------- the selection's settings in the bottom bar ----------
+function edAssetName(a){return PROPS[a.t]?propName(a):a.t==='rock'?`Boulder, ${edFmt(1.6*a.s,0)} ft across`:`${ED_KINDS[a.t]||a.t}, ${edFmt((a.t==='pine'?5.9:4.7)*a.s,0)} ft tall`}
+const edSlider=(id,lab,min,max,step,val,unit)=>`<span class="edopt"><label for="${id}">${lab}</label><input id="${id}" type="range" min="${min}" max="${max}" step="${step}" value="${val}"><output id="${id}V">${val}${unit}</output></span>`;
+// the colours a kind can take (scenery.js tints the trees, props.js the buildings' walls), as swatches
+const edFam=t=>t==='pine'||t==='leafy'?t:PROPS[t]&&PROPS[t].tint?'house':null;
+function edFams(){return {pine:{n:'Needles',c:ASSET_PT.map(t=>[0.3*t[0],0.46*t[1],0.26*t[2]])},leafy:{n:'Leaves',c:ASSET_LT},house:{n:'Walls',c:PROP_TINT.map(t=>[0.9*t[0],0.88*t[1],0.84*t[2]])}}}
+function edInspector(){const S=ed.sel,el=$('#edInfo');edBottomSync();if(!S.length){el.innerHTML='';return}
+  const as=edSelA(),one=S.length===1?S[0]:null,deg=y=>Math.round(((y*57.3)%360+360)%360);let h;
+  if(one){const o=one.a||one.m.o(),g=baseHeight(o.x,o.z);
+    h=`<div class="edihead"><h3>${one.a?edAssetName(one.a):one.m.name}</h3><small>${edWhere(o.x,o.z)} · ground ${g>=0?'+':'−'}${edFmt(Math.abs(g))} ft</small></div>`+
+      edSlider('edSelTurn','Turn',0,359,1,deg(one.a?one.a.yaw:o.yaw||0),'°')+(one.a?edSlider('edSelSize','Size',30,300,5,Math.round(one.a.s*100),'%'):'')}
+  else{const c={};for(const s of S){const n=s.a?edKindName(s.a.t):'Machine';c[n]=(c[n]||0)+1}
+    h=`<div class="edihead"><h3>${S.length} selected</h3><small>${Object.entries(c).map(([n,k])=>`${n} ×${k}`).join(', ')}</small></div>`+
+      (as.length?edSlider('edSelTurn','Turn',-180,180,5,0,'°')+edSlider('edSelSize','Size',30,300,5,100,'%')+`<button id="edSelGrp" class="sm" aria-pressed="${ed.grp}">As a group</button>`:'')}
+  const F=edFams(),fams={};for(const a of as){const f=edFam(a.t);if(f)(fams[f]=fams[f]||[]).push(a)}
+  for(const f in fams){const T=F[f],cs=new Set(fams[f].map(a=>a.c%T.c.length));
+    h+=`<span class="edopt"><label>${T.n}</label><span class="edsw">${T.c.map((q,i)=>`<button class="edswb" data-f="${f}" data-c="${i}" aria-pressed="${cs.size===1&&cs.has(i)}" aria-label="${T.n} colour ${i+1}" style="background:rgb(${q.map(v=>Math.round(Math.min(1,v)*255)).join(',')})"></button>`).join('')}</span></span>`}
+  h+=`<span class="row">${as.length?'<button id="edSelCopy" class="sm edico" data-ic="copy">Copy</button><button id="edSelDel" class="sm danger edico" data-ic="trash">Delete</button>':'<span class="hint">Drag it to move it.</span>'}<button id="edSelX" class="sm">Clear</button></span>`;
+  el.innerHTML=h;edIcons(el);
+  // turning and sizing start from where each one was when the slider was taken hold of; several turn and size each about
+  // its own middle, or as a group about the middle of them all
+  const tv=$('#edSelTurn'),sv=$('#edSelSize');let base=null;
+  const begin=()=>{if(base)return;base={snap:edAssetsSnap(),q:as.map(a=>({a,x:a.x,z:a.z,yaw:a.yaw,s:a.s})),cx:0,cz:0};
+    for(const q of base.q){base.cx+=q.x/base.q.length;base.cz+=q.z/base.q.length}};
+  const put=(q,ox,oz)=>{q.a.x=clamp(base.cx+ox,-118,118);q.a.z=clamp(base.cz+oz,-118,118)};
+  const commit=()=>{if(!base)return;edAssetsChanged(base.snap);base=null;edInspector()};
+  if(tv)tv.oninput=()=>{$('#edSelTurnV').textContent=tv.value+'°';
+    if(!as.length){const o=one.m.o(),y=+tv.value/57.3;o.yaw=y;if(o===wk)wk.view=y;one.m.m().rotation.y=y;return}
+    begin();const d=+tv.value/57.3-(one?base.q[0].yaw:0),c=Math.cos(d),n=Math.sin(d);
+    for(const q of base.q){q.a.yaw=q.yaw+d;if(!one&&ed.grp){const ox=q.x-base.cx,oz=q.z-base.cz;put(q,ox*c+oz*n,-ox*n+oz*c)}}
+    assetsBuild();shpTreesRefresh();edRingSel()};
+  if(tv)tv.onchange=commit;
+  if(sv){sv.oninput=()=>{$('#edSelSizeV').textContent=sv.value+'%';begin();const f=+sv.value/100/(one?base.q[0].s:1);
+      for(const q of base.q){q.a.s=clamp(q.s*f,0.3,3);if(!one&&ed.grp)put(q,(q.x-base.cx)*f,(q.z-base.cz)*f)}
+      assetsBuild();shpTreesRefresh();edRingSel()};
+    sv.onchange=commit}
+  const gb=$('#edSelGrp');if(gb)gb.onclick=()=>{ed.grp=!ed.grp;edInspector()};
+  el.querySelectorAll('.edswb').forEach(b=>b.onclick=()=>{const snap=edAssetsSnap();for(const a of fams[b.dataset.f])a.c=+b.dataset.c;edAssetsChanged(snap);edInspector()});
+  const cb=$('#edSelCopy');if(cb){cb.onclick=edCopy;$('#edSelDel').onclick=edDelete}
+  $('#edSelX').onclick=()=>edSelSet([])}
+// a copy of one thing goes alongside it, along its width, so fence sections line up; a copy of several goes beside them
+// all, to the right as seen from the camera
+function edCopy(){const as=edSelA();if(!as.length)return;const b=edAssetsSnap();let out;
+  if(as.length===1){const a0=as[0],P=PROPS[a0.t],w=P?(P.w+(P.d>0.5?0.6:0))*a0.s:0;
+    out=[Object.assign({},a0,P?{x:a0.x+Math.cos(a0.yaw)*w,z:a0.z-Math.sin(a0.yaw)*w}:{x:a0.x+2.5*a0.s,z:a0.z+1.5*a0.s})]}
+  else{const rx=Math.cos(ed.yaw),rz=-Math.sin(ed.yaw);let p0=1e9,p1=-1e9;for(const a of as){const p=a.x*rx+a.z*rz,r=edRad(a);p0=Math.min(p0,p-r);p1=Math.max(p1,p+r)}
+    const w=p1-p0+1;out=as.map(a=>Object.assign({},a,{x:clamp(a.x+rx*w,-118,118),z:clamp(a.z+rz*w,-118,118)}))}
+  assets.push(...out);edAssetsChanged(b);edSelSet(out.map(a=>({a})))}
+function edDelete(){const as=edSelA();if(!as.length)return;const b=edAssetsSnap(),gone=new Set(as),keep=assets.filter(a=>!gone.has(a));
+  assets.length=0;assets.push(...keep);edAssetsChanged(b);edSelSet(ed.sel.filter(s=>!s.a))}
 // moves a machine (or the walker) to a spot on the mesa and sets it down on the ground there
 function edPlaceMachine(m,x,z){const o=m.o();[x,z]=landClamp(x,z,4,2);
   o.x=x;o.z=z;if(o===tr)tr.v=0;const y=surfAt(x,z);o.y=y;m.m().position.set(x,y,z)}
+
+// ---------- On the map: every thing and machine by kind, in the Things drawer ----------
+const edShortSpot=(x,z)=>{const s=z-(TRENCH_Z0+TRENCH_Z1)/2;return `${edFmt(Math.abs(x),0)} ft ${x<0?'W':'E'}, ${edFmt(Math.abs(s),0)} ft ${s<0?'N':'S'}`};
+const edFlyTo=(x,z)=>{ed.fly={x,z}};
+// a row's key: a + its index in the asset list, or m + its index in ED_MACH
+const edRowHit=k=>k[0]==='a'?(assets[+k.slice(1)]?{a:assets[+k.slice(1)]}:null):{m:ED_MACH[+k.slice(1)]};
+function edListDraw(){const el=$('#edList');if($('#edDrawer').hidden||ed.pane!=='things')return;
+  const f=ed.listF,by={},near=(x,z)=>Math.hypot(x-ed.x,z-ed.z)<ed.dist*0.9;assets.forEach((a,i)=>{(by[a.t]=by[a.t]||[]).push({h:{a},k:'a'+i,label:edAssetName(a),x:a.x,z:a.z})});
+  const groups=[...new Set(['pine','leafy','rock',...Object.keys(PROPS),...Object.keys(by)])].filter(t=>by[t]).map(t=>['a:'+t,edKindName(t),by[t],t]);
+  groups.push(['m','Machines',ED_MACH.map((m,i)=>({m,i})).filter(q=>q.m.m().visible).map(q=>{const o=q.m.o();return {h:{m:q.m},k:'m'+q.i,label:q.m.name,x:o.x,z:o.z}})]);
+  let h='';
+  for(const [id,name,items,t] of groups){const shown=items.filter(q=>f==='all'||f==='near'&&near(q.x,q.z)||f==='sel'&&edIn(q.h));if(!shown.length)continue;
+    shown.sort((p,q)=>edIn(q.h)-edIn(p.h)); // the picked ones first
+    const nSel=items.filter(q=>edIn(q.h)).length,open=!!ed.open[id];
+    h+=`<div class="edlg"><button class="edlgo" data-g="${id}" aria-expanded="${open}"><i>${open?'▾':'▸'}</i>${name} <small>${shown.length}${f==='all'?'':' of '+items.length}</small></button><button class="sm edlgs" data-g="${id}" aria-pressed="${nSel===items.length}">${nSel?nSel+' picked':'Select all'}</button></div>`;
+    if(!open)continue;
+    h+='<div class="edlrows">'+shown.slice(0,200).map(q=>`<div class="edlr"><button class="edlck" data-k="${q.k}" aria-pressed="${edIn(q.h)}" aria-label="Add to the selection"></button><button class="edlrn" data-k="${q.k}"><span>${q.label}</span><small>${edShortSpot(q.x,q.z)}</small></button></div>`).join('')+
+      (shown.length>200?`<p class="hint">and ${shown.length-200} more: pick Near the view to see the ones close by</p>`:'')+'</div>';
+    if(t)h+=`<div class="row edlact"><button class="sm danger" data-del="${t}">Delete every ${name.toLowerCase()}</button>${ED_KINDS[t]?`<button class="sm" data-def="${t}">Put back the first ones</button>`:''}</div>`}
+  el.innerHTML=h||'<p class="hint">Nothing to show.</p>';$('#edListN').textContent=`${assets.length} things`;
+  el._g=groups}
+document.querySelectorAll('.edfilter button').forEach(b=>b.onclick=()=>{ed.listF=b.dataset.f;document.querySelectorAll('.edfilter button').forEach(c=>c.setAttribute('aria-pressed',c===b));edListDraw()});
+$('#edList').onclick=e=>{const b=e.target.closest('button');if(!b)return;const el=$('#edList'),grp=id=>(el._g.find(g=>g[0]===id)||[])[2]||[];
+  if(b.classList.contains('edlgo')){ed.open[b.dataset.g]=!ed.open[b.dataset.g];edListDraw();return}
+  if(ed.tool!=='select')edTool('select');
+  // Select all picks the whole kind (or lets go of it, if it is all picked already)
+  if(b.classList.contains('edlgs')){const hs=grp(b.dataset.g).map(q=>q.h),all=hs.every(edIn),keys=new Set(hs.map(edKey));
+    edSelSet(all?ed.sel.filter(s=>!keys.has(edKey(s))):[...ed.sel,...hs.filter(h=>!edIn(h))]);return}
+  if(b.dataset.del){const t=b.dataset.del,snap=edAssetsSnap(),keep=assets.filter(a=>a.t!==t);assets.length=0;assets.push(...keep);edAssetsChanged(snap);edSelSet(ed.sel.filter(s=>!s.a||s.a.t!==t));return}
+  if(b.dataset.def){const t=b.dataset.def,snap=edAssetsSnap(),keep=assets.filter(a=>a.t!==t);assets.length=0;assets.push(...keep,...defaultAssets().filter(a=>a.t===t));edAssetsChanged(snap);edSelSet([]);return}
+  const h=b.dataset.k&&edRowHit(b.dataset.k);if(!h)return;
+  if(b.classList.contains('edlck')){edSelSet(edIn(h)?ed.sel.filter(s=>edKey(s)!==edKey(h)):[...ed.sel,h]);return}
+  const o=h.a||h.m.o();edSelSet([h]);edFlyTo(o.x,o.z);edPicked()};
+// the roads, in the Roads drawer: tap one to pick it and go to it
+function edRoadList(){const el=$('#edRoadList');$('#edRoadN').textContent=ROADS.length?`${ROADS.length}`:'';if($('#edDrawer').hidden||ed.pane!=='roads')return;
+  el.innerHTML=ROADS.map((r,i)=>{let L=0;for(let k=0;k<r.pts.length-1;k++)L+=Math.hypot(r.pts[k+1][0]-r.pts[k][0],r.pts[k+1][1]-r.pts[k][1]);
+    return `<div class="edlr"><button class="edlrn" data-r="${i}" aria-pressed="${r===ed.road}"><span>${edGraded(r)?'Graded road':r.mid?'Road':'Track'} ${i+1}</span><small>${Math.round(edFt(r.w))} ft wide · ${edFmt(L,0)} ft long · ${r.pts.length} points</small></button></div>`}).join('')||'<p class="hint">No roads yet. New road, in the bottom bar, lays one.</p>';
+  el.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>{const r=ROADS[+b.dataset.r];if(!r)return;if(ed.tool!=='roads')edTool('roads');ed.road=r;ed.rpt=-1;
+    const q=r.pts[Math.floor(r.pts.length/2)];if(q)edFlyTo(q[0],q[1]);edRoadCard();edRoadsDraw();edPicked()})}
+
+// ---------- the status line under the bottom bar: the spot under the pointer, the brush and the view, and a tip ----------
+function edStatus(p){if(p){const g=baseHeight(p.x,p.z),sl=Math.hypot(baseHeight(p.x+0.5,p.z)-baseHeight(p.x-0.5,p.z),baseHeight(p.x,p.z+0.5)-baseHeight(p.x,p.z-0.5));
+    $('#edStatPos').textContent=`${edShortSpot(p.x,p.z)} · ground ${g>=0?'+':'−'}${edFmt(Math.abs(g))} ft · slope ${Math.round(sl*100)}%`}
+  const b=[];if(ED_BRUSH.includes(ed.tool))b.push(`brush ${Math.round(edFt(ed.size))} ft`);b.push(`view from ${Math.round(edFt(ed.dist))} ft`,`${assets.length} things`);
+  if(ed.sel.length)b.push(`${ed.sel.length} selected`);$('#edStatInfo').textContent=b.join(' · ')}
+function edTipSet(){$('#edTip').textContent=say('edTip_'+ed.tool);edStatus()}
 
 // ---------- roads ----------
 // Roads tool: tap a road to pick it, drag its points (dots) to move them, tap the picked road between points to add one,
@@ -273,10 +427,10 @@ function edRoadDelete(whole){const r=ed.road;if(!r||ed.drawing&&!whole)return;co
   edRoadsChanged(box,true);edRoadCommit(box);edRoadCard()}
 // the picked road's card
 function edRoadCard(){const ob=$('#edRoadNew'),fb=$('#edRoadFin');if(ob){ob.hidden=ed.drawing;fb.hidden=!ed.drawing}
-  if(ed.tool!=='roads')return;const r=ed.road;if(!r){edInfo(null);return}
+  edRoadList();if(ed.tool!=='roads')return;const r=ed.road;if(!r){edCard(null);return}
   let L=0,steep=0;for(let i=0;i<r.pts.length-1;i++){const a=r.pts[i],b=r.pts[i+1],l=Math.hypot(b[0]-a[0],b[1]-a[1]);L+=l;if(a.length>2&&b.length>2&&l>0.1)steep=Math.max(steep,Math.abs(b[2]-a[2])/l)}
   const g=edGraded(r),q=ed.rpt>=0?r.pts[ed.rpt]:null;
-  edInfo(`<h3>${ed.drawing?'New road':g?'Graded road (cut and filled to each point\u2019s height)':r.mid?'Road (follows the ground)':'Track (follows the ground)'}</h3><dl><dt>Length</dt><dd id="edRdLen">${edFmt(L,0)} ft · ${r.pts.length} points</dd>${g?`<dt>Steepest</dt><dd>${Math.round(steep*100)}%</dd>`:''}</dl>
+  edCard(`<h3>${ed.drawing?'New road':g?'Graded road (cut and filled to each point\u2019s height)':r.mid?'Road (follows the ground)':'Track (follows the ground)'}</h3><dl><dt>Length</dt><dd id="edRdLen">${edFmt(L,0)} ft · ${r.pts.length} points</dd>${g?`<dt>Steepest</dt><dd>${Math.round(steep*100)}%</dd>`:''}</dl>
     <div class="edopt"><label for="edRdW">Width</label><input id="edRdW" type="range" min="6" max="26" step="1" value="${Math.round(edFt(r.w))}"><output id="edRdWV">${Math.round(edFt(r.w))} ft</output></div>
     <div class="row"><button id="edRdMid" class="sm" aria-pressed="${!!r.mid}">Grass up the middle</button><button id="edRdGrade" class="sm" aria-pressed="${g}">Graded</button></div>
     ${g&&q?`<div class="edopt"><label for="edRdH">Point height</label><input id="edRdH" type="range" min="-80" max="40" step="0.5" value="${edFt(q[2]).toFixed(1)}"><output id="edRdHV">${edFt(q[2]).toFixed(1)} ft</output></div>`:''}
@@ -295,40 +449,47 @@ $('#edRoadNew').onclick=edRoadNew;$('#edRoadFin').onclick=edRoadFinish;
 
 // ---------- pointer: tools, and look around with two fingers, the right mouse button or the Look tool ----------
 const edPtrs=new Map();let edGest=null,edMouse=null;
-function edPan(dx,dy){const s=ed.dist*0.0019*(720/Math.max(320,innerHeight)),c=Math.cos(ed.yaw),n=Math.sin(ed.yaw);
+function edPan(dx,dy){ed.fly=null;const s=ed.dist*0.0019*(720/Math.max(320,innerHeight)),c=Math.cos(ed.yaw),n=Math.sin(ed.yaw);
   ed.x=clamp(ed.x+(-c*dx-n*dy)*s,-120,120);ed.z=clamp(ed.z+(n*dx-c*dy)*s,-120,350)}
-function edDown(x,y){const p=edPick(x,y),t=ed.tool;
-  if(t==='look'||!p){edMouse={pan:true,x,y};return}
+function edDown(x,y,e){const p=edPick(x,y),t=ed.tool,mod=e&&(e.shiftKey||e.ctrlKey||e.metaKey),touch=e&&e.pointerType!=='mouse';
+  if(ed.look||!p){edMouse={pan:true,x,y};return}
   if(ED_BRUSH.includes(t)){edStrokeStart(p.x,p.z);edBrushAt(p.x,p.z);return}
   if(t==='roads'){edRoadDown(p,x,y);return}
   if(t==='query'){edQuery(p.x,p.z);edRingAt(edBrushRing,p.x,p.z,0.5);ed.drag={query:true};return}
   // things from the catalogue come in at full size, their front to the camera
   if(t==='add'){const b=edAssetsSnap(),pr=PROPS[ed.kind],a=pr?{t:ed.kind,x:p.x,z:p.z,yaw:Math.round(ed.yaw/(Math.PI/12))*Math.PI/12,s:1,c:pr.tint?Math.floor(Math.random()*PROP_TINT.length):0}:
       {t:ed.kind,x:p.x,z:p.z,yaw:Math.random()*6.28,s:ed.kind==='rock'?0.7+Math.random()*0.6:0.85+Math.random()*0.4,c:Math.floor(Math.random()*6)};
-    assets.push(a);assetsBuild();shpTreesRefresh();ed.drag={a,dx:0,dz:0,snap:b,added:true};edSelect({a});ed.changed=true;return}
-  if(t==='select'){const hit=edHit(p.x,p.z);if(!hit){edSelect(null);edMouse={pan:true,x,y};return}
-    edSelect(hit);const o=hit.a||hit.m.o();ed.drag={a:hit.a,m:hit.m,dx:o.x-p.x,dz:o.z-p.z,snap:hit.a?edAssetsSnap():null,moved:false}}}
+    assets.push(a);assetsBuild();shpTreesRefresh();ed.drag={items:[{a,dx:0,dz:0}],snap:b,added:true};edSelSet([{a}]);ed.changed=true;return}
+  // Select: a tap picks one; Shift (or Ctrl) and a tap, or a long press, adds it or takes it away; a drag on empty ground
+  // draws a box round several (with a mouse, or with Box select on); dragging a picked one moves them all
+  if(t==='select'){const hit=edHit(p.x,p.z);
+    if(!hit){if(!touch||ed.boxMode){ed.box={x0:x,y0:y,x1:x,y1:y,add:mod};edBoxDraw()}else{edSelSet([]);edMouse={pan:true,x,y}}return}
+    if(mod){edSelSet(edIn(hit)?ed.sel.filter(s=>edKey(s)!==edKey(hit)):[...ed.sel,hit]);return}
+    const prev=ed.sel,was=edIn(hit);if(!was)edSelSet([hit]);if(touch)ed.lp={t:performance.now(),x,y,prev,hit,was};
+    ed.drag={items:ed.sel.map(s=>{const o=s.a||s.m.o();return {a:s.a,m:s.m,dx:o.x-p.x,dz:o.z-p.z}}),snap:ed.sel.some(s=>s.a)?edAssetsSnap():null,moved:false}}}
 function edMove(x,y){
   if(edMouse){if(edMouse.pan)edPan(x-edMouse.x,y-edMouse.y);else{ed.yaw-=(x-edMouse.x)*0.006;ed.pitch=clamp(ed.pitch+(y-edMouse.y)*0.005,0.25,1.45)}edMouse.x=x;edMouse.y=y;return}
+  if(ed.lp&&Math.hypot(x-ed.lp.x,y-ed.lp.y)>8)ed.lp=null;
+  if(ed.box){ed.box.x1=x;ed.box.y1=y;edBoxDraw();return}
   const p=edPick(x,y);if(!p)return;
+  const now=performance.now();if(now-ed.statT>80){ed.statT=now;edStatus(p)}
   if(ed.stroke){ed.bx=p.x;ed.bz=p.z;edBrushAt(p.x,p.z);return}
   const d=ed.drag;
   if(d&&d.query){edQuery(p.x,p.z);edRingAt(edBrushRing,p.x,p.z,0.5);return}
   if(d&&d.road){edRoadDrag(d,p);return}
-  if(d&&d.a){d.a.x=clamp(p.x+d.dx,-118,118);d.a.z=clamp(p.z+d.dz,-118,118);d.moved=true;assetsBuild();shpTreesRefresh();edRingSel();return}
-  if(d&&d.m){edPlaceMachine(d.m,p.x+d.dx,p.z+d.dz);d.moved=true;edRingSel();return}
+  if(d&&d.items){let any=false;for(const q of d.items){if(q.a){q.a.x=clamp(p.x+q.dx,-118,118);q.a.z=clamp(p.z+q.dz,-118,118);any=true}else edPlaceMachine(q.m,p.x+q.dx,p.z+q.dz)}
+    d.moved=true;if(any){assetsBuild();shpTreesRefresh()}edRingSel();return}
   if(ED_BRUSH.includes(ed.tool)){edBrushAt(p.x,p.z)}}
-function edUp(){edMouse=null;edStrokeEnd();const d=ed.drag;ed.drag=null;
+function edUp(){edMouse=null;ed.lp=null;edStrokeEnd();if(ed.box){edBoxEnd();return}const d=ed.drag;ed.drag=null;
   if(d&&d.road){edRoadUp(d);return}
-  if(d&&d.a&&(d.moved||d.added)){edPush({a:d.snap});ed.changed=true;edQueueSave();edSelect({a:d.a})}
-  else if(d&&d.m&&d.moved)edSelect({m:d.m})}
+  if(d&&d.items&&(d.moved||d.added)){if(d.snap){edPush({a:d.snap});ed.changed=true;edQueueSave()}edInspector();edListDraw()}}
 function edGestStart(){const [a,b]=[...edPtrs.values()];
   edGest={d:Math.hypot(a.x-b.x,a.y-b.y)||1,ang:Math.atan2(b.y-a.y,b.x-a.x),mx:(a.x+b.x)/2,my:(a.y+b.y)/2,dist:ed.dist,yaw:ed.yaw}}
 canvas.addEventListener('pointerdown',e=>{if(!edOn)return;canvas.setPointerCapture(e.pointerId);edPtrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
   if(edPtrs.size===2){edUp();edGestStart();return}if(edPtrs.size>2)return;
   if(e.pointerType==='mouse'&&e.button===2){edMouse={pan:false,x:e.clientX,y:e.clientY};return}
   if(e.pointerType==='mouse'&&e.button===1){edMouse={pan:true,x:e.clientX,y:e.clientY};return}
-  edDown(e.clientX,e.clientY)});
+  edDown(e.clientX,e.clientY,e)});
 canvas.addEventListener('pointermove',e=>{if(!edOn)return;const p=edPtrs.get(e.pointerId);
   if(p){p.x=e.clientX;p.y=e.clientY}
   if(edGest&&edPtrs.size===2){const [a,b]=[...edPtrs.values()],d=Math.hypot(a.x-b.x,a.y-b.y)||1,ang=Math.atan2(b.y-a.y,b.x-a.x),mx=(a.x+b.x)/2,my=(a.y+b.y)/2;
@@ -340,22 +501,26 @@ canvas.addEventListener('pointerleave',e=>{if(edOn&&e.pointerType==='mouse'&&!ed
 canvas.addEventListener('contextmenu',e=>{if(edOn)e.preventDefault()});
 canvas.addEventListener('wheel',e=>{if(!edOn)return;e.preventDefault();ed.dist=clamp(ed.dist*Math.exp(e.deltaY*0.0012),8,220)},{passive:false});
 
-// ---------- keys (fixed, not in the Keys panel): G opens and closes unless a game action has G; WASD or arrows pan, Q E turn, R F zoom, Delete removes, Ctrl+Z undo ----------
+// ---------- keys (fixed, not in the Keys panel): G opens and closes unless a game action has G; WASD or arrows pan, Q E turn, R F zoom,
+// 1 to 5 the groups and 6 the Map drawer, Delete removes, Esc lets go of the selection, Ctrl+Z undo, Ctrl+A picks everything in view, Ctrl+D copies ----------
 addEventListener('keydown',e=>{const tg=e.target&&e.target.tagName;if(tg==='TEXTAREA'||tg==='INPUT')return;
   if(!edOn){if(e.code==='KeyG'&&!e.repeat&&!e.ctrlKey&&!e.metaKey&&!keyActs('KeyG').length&&keysBox.hidden)editorOpen();return}
   const c=e.code,mod=e.ctrlKey||e.metaKey;
   if(mod&&c==='KeyZ'){e.preventDefault();e.shiftKey?edRedo():edUndo();return}
   if(mod&&c==='KeyY'){e.preventDefault();edRedo();return}
+  if(mod&&c==='KeyA'){e.preventDefault();edSelectView();return}
+  if(mod&&c==='KeyD'){e.preventDefault();edCopy();return}
   if(e.repeat)return;
-  if(c==='KeyG'||c==='Escape')editorClose();
+  if(c==='Escape'&&ed.box){ed.box=null;$('#edBox').hidden=true}
+  else if(c==='Escape'&&ed.sel.length)edSelSet([]);
+  else if(c==='KeyG'||c==='Escape')editorClose();
   else if(c==='Delete'||c==='Backspace'){if(ed.tool==='roads')edRoadDelete(ed.rpt<0);else edDelete()}
   else if(c==='Enter'&&ed.drawing)edRoadFinish();
-  else{const i=['Digit1','Digit2','Digit3','Digit4','Digit5','Digit6','Digit7','Digit8','Digit9','Digit0'].indexOf(c);if(i>=0)edTool(Object.keys(ED_TOOLS)[i])}});
+  else{const i=['Digit1','Digit2','Digit3','Digit4','Digit5','Digit6'].indexOf(c);if(i===5)edMapPane();else if(i>=0)edGroup(Object.keys(ED_GROUPS)[i])}});
 
 // ---------- saving, copying and loading ----------
 function edQueueSave(){clearTimeout(ed.saveT);ed.saveT=setTimeout(edSave,800)}
 function edSave(){clearTimeout(ed.saveT);mapAssets=assets;if(ed.roadsEdited)mapRoads=ROADS;try{localStorage.setItem('bhd_map',mapEncode())}catch(e){toast('Could not save the map on this device (storage is full or blocked).','bad',4000)}}
-$('#edFileBtn').onclick=()=>{const f=$('#edFile'),on=f.hidden;f.hidden=!on;$('#edFileBtn').setAttribute('aria-expanded',on);$('#edPasteBox').hidden=true;$('#edCopyBox').hidden=true};
 $('#edCopy').onclick=()=>{edSave();const t=mapEncode(),box=$('#edCopyBox');
   const show=()=>{box.value=t;box.hidden=false;box.focus();box.select();toast('Select all of the text and copy it.','',3000)};
   try{navigator.clipboard.writeText(t).then(()=>toast(`Map copied (${Math.round(t.length/1024)} KB of text). Paste it anywhere to keep it.`,'good',3500),show)}catch(e){show()}};
@@ -379,7 +544,10 @@ function editorFrame(dt,now){
   // the brush works while held; the ground catches up a few times a second, and fully when the stroke ends
   if(ed.stroke)edBrush(dt);
   if(ed.pend&&(ed.stroke||(ed.drag&&ed.drag.road))&&now-ed.refT>110){ed.refT=now;edRefresh(ed.pend,false);ed.pend=null}
-  if(ed.sel&&ed.sel.m)edRingSel();
+  // a list row or road picked: the view glides there; a long press adds to the selection (or takes away)
+  if(ed.fly){const k=1-Math.exp(-dt*7);ed.x+=(ed.fly.x-ed.x)*k;ed.z+=(ed.fly.z-ed.z)*k;if(Math.hypot(ed.fly.x-ed.x,ed.fly.z-ed.z)<0.05)ed.fly=null}
+  if(ed.lp&&now-ed.lp.t>450){const l=ed.lp,o=l.prev.filter(s=>edKey(s)!==edKey(l.hit));ed.lp=null;ed.drag=null;edSelSet(l.was?o:[...o,l.hit]);if(navigator.vibrate)navigator.vibrate(15)}
+  if(ed.listF==='near'&&now-ed.listT>600){ed.listT=now;edListDraw()}
   // puddles and mud tiles keep up with the edits (painted Mud fills ruts, painting over them dries them)
   waterTick(dt);mudTick(dt);if(rainTexDirty)rainTexUpdate();
   const fy=hAt(ed.x,ed.z);edLook.set(ed.x,fy,ed.z);

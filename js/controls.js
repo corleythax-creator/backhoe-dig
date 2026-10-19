@@ -161,7 +161,12 @@ function setMode(m){if(m===mode)return;mode=m;setTurnSens();for(const [id,k] of 
   if(m==='skid')toast(say(kbUsed?'skidKb':'skidTouch'),'',4200);
   if(m==='walk')toast(say(padUsed?'walkPad':kbUsed?'walkKb':'walkTouch'),'',3800)}
 $('#modeDig').onclick=()=>setMode('dig'); $('#modeDrive').onclick=()=>setMode('drive'); $('#modeTruck').onclick=()=>setMode('truck'); $('#modeMow').onclick=()=>setMode('mow'); $('#modeSkid').onclick=()=>setMode('skid'); $('#modeWalk').onclick=()=>setMode('walk');
-$('#camBtn').onclick=()=>{camMode=camMode==='chase'?'cab':'chase';fpReset();$('#camBtn').textContent=camMode==='chase'?'Cab view':'Chase view'};
+$('#camBtn').onclick=()=>{camMode=camMode==='chase'?'cab':'chase';fpReset();$('#camBtn').dataset.cam=camMode};
+// Drive (top right) drops the machine list; picking one, or tapping the scene, closes it
+function showCtl(on){$('#ctlMenu').hidden=!on;$('#ctlBtn').setAttribute('aria-expanded',on)}
+$('#ctlBtn').onclick=()=>{showCtl($('#ctlMenu').hidden);showMenu(false)};
+$('#ctlMenu').addEventListener('click',e=>{if(e.target.closest('button'))showCtl(false)});
+$('#ctrlsBtn').onclick=()=>{showCtrls(true);showCtl(false);showMenu(false)};
 let resetArm=0;
 $('#resetBtn').onclick=()=>{const b=$('#resetBtn');
   if(resetArm&&performance.now()-resetArm<2500){resetState();siteSaveAll();resetArm=0;b.textContent='Reset';b.classList.remove('arm');toast(say('reset'),'good');return}
@@ -172,8 +177,8 @@ $('#helpBtn').onclick=()=>{help.hidden=false;showMenu(false)};
 $('#soundBtn').onclick=()=>{showSound(true);showMenu(false)};
 $('#keysBtn').onclick=()=>{showKeys(true);showMenu(false)};
 function showMenu(on){$('#menu').hidden=!on;$('#menuBtn').setAttribute('aria-expanded',on)}
-$('#menuBtn').onclick=()=>showMenu($('#menu').hidden);
-$('#view').addEventListener('pointerdown',()=>showMenu(false));
+$('#menuBtn').onclick=()=>{showMenu($('#menu').hidden);showCtl(false)};
+$('#view').addEventListener('pointerdown',()=>{showMenu(false);showCtl(false)});
 let uiScale=1;
 function setUiScale(v){uiScale=+v||1;const h=$('#hud');h.style.setProperty('--s',uiScale);h.style.setProperty('--ms',Math.min(uiScale,1.5));h.style.setProperty('--cs',Math.min(uiScale,1.3));h.classList.toggle('lg',uiScale>1.2);
   document.querySelectorAll('.sizes button[data-s]').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.s===uiScale));try{localStorage.setItem('bhd_ui',uiScale)}catch(e){}}

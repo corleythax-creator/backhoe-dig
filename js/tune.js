@@ -37,6 +37,8 @@ const TUNE=[
   ['wtDepth','Mud and water','Water table depth',1.85,'ft',1,40,0.5],
   ['rutDepth','Mud and water','How deep tracks and tires sink',0.23,'in',1,24,0.5],['mudDrag','Mud and water','How much mud slows the machines',1,'pct',0,200,5],
   ['stuck','Mud and water','How easily machines get stuck',1,'pct',0,500,5],
+  ['rutWet','Mud and water','How wet ground must be before it ruts',0.15,'pct',0,100,5],['rutRate','Mud and water','How fast ruts cut in',1,'pct',10,500,5],
+  ['rutBerm','Mud and water','How high mud piles up beside the ruts',0.2,'in',0,24,0.5],
   ['soilTop','Digging','Dig speed in topsoil (of full speed)',0.7,'pct',5,100,1],['soilClay','Digging','Dig speed in clay',0.45,'pct',5,100,1],
   ['soilSand','Digging','Dig speed in sand',0.85,'pct',5,100,1],['soilRock','Digging','Dig speed in rock',0.12,'pct',2,100,1],
   ['fluff','Digging','How much dug dirt fluffs up (100% = about a quarter)',1,'pct',0,400,5],
@@ -46,6 +48,7 @@ const TUNE=[
   ['packRate','Excavator','How fast wet clay packs into the tracks',1,'pct',0,500,5],['packDrag','Excavator','How much packed tracks drag',0.6,'pct',0,90,5],
   ['packShed','Excavator','How fast packed clay drops off',1,'pct',0,500,5],
   ['caveDepth','Cave-ins','Walls start to cave in deeper than',1.2,'ft',1,30,0.5],['caveSpoil','Cave-ins','Spoil this close to the edge loads the wall',0.64,'ft',0,10,0.5],
+  ['craneSpan','Bridges','The crane builds a steel span in about',240,'min',1,60,1],
   ['caveRate','Cave-ins','How fast a bad wall gives way (0% = never)',1,'pct',0,500,5],['caveWarn','Cave-ins','Dirt trickles off the lip for',2.2,'s',0,20,0.5],
   // only drawn on High graphics (Graphics → Material relief); how the ground looks, not what it does, so every device may use the same numbers
   ['pbrRelief','Ground look','Relief: how deep the bumps in gravel, brick and concrete look',1,'pct',0,300,5],

@@ -18,7 +18,7 @@ wmMesh.frustumCulled=false;wmMesh.visible=false;wmMesh.receiveShadow=true;scene.
 function wmSet(fine){WM_K=fine?1:GRID_K;WM_N=96*GRID_K/WM_K;wmMesh.geometry.dispose();wmMesh.geometry=new THREE.PlaneGeometry(1,1,WM_N,WM_N);
   wmMat.envMap=fine?skyEnv:null;wmMat.needsUpdate=true;wmI0=-1;waterT=0}
 wmSet(false);
-function waterClear(){Wt.fill(-1e9);mudA.fill(0);soakMax.fill(0);crkA.fill(0);geo.attributes.crk.updateRange.count=-1;geo.attributes.crk.needsUpdate=true;pumpOn=false;waterAny=puddleAny=false;waterSeen=false;wmMesh.visible=false}
+function waterClear(){Wt.fill(-1e9);Rq.fill(0);Rs.fill(0);runAny=false;mudA.fill(0);soakMax.fill(0);crkA.fill(0);geo.attributes.crk.updateRange.count=-1;geo.attributes.crk.needsUpdate=true;pumpOn=false;waterAny=puddleAny=false;waterSeen=false;wmMesh.visible=false}
 // ---------- runoff: rain that runs downhill ----------
 // Over the dig area rain that the soil can't take (more of it the wetter the soil) runs off as a thin film, Rq (m): each
 // step it moves toward the lowest neighbouring surface, so it gathers into rills down spoil piles and ruts and pours into
@@ -29,7 +29,7 @@ const Rq=new Float32Array(V*V),Rs=new Float32Array(V*V),Rq2=new Float32Array(V*V
 const RUN_NB=[1,-1,V,-V];
 function runoffStep(dt){const r=weather.r,rain=r>0.02;if(!rain&&!runAny)return false;
   // at most about 100 ft square of it, round the camera, so a big dig costs no more
-  const li=Math.round((look.x+S/2)/CELL),lj=Math.round((look.z+S/2)/CELL),RW=100;
+  const li=Math.round(gI(look.x)),lj=Math.round(gJ(look.z)),RW=100;
   const i0=Math.max(cI0+1,li-RW),i1=Math.min(cI1-1,li+RW),j0=Math.max(cJ0+1,lj-RW),j1=Math.min(cJ1-1,lj+RW);if(i1<=i0||j1<=j0)return false;
   const ke=0.45*TU.erode,emax=0.0006*TU.erode*dt;let any=false,ti0=N,ti1=-1,tj0=N,tj1=-1;
   for(let j=j0;j<=j1;j++){const o=j*V;Rq2.fill(0,o+i0,o+i1+1);Rs2.fill(0,o+i0,o+i1+1)}
@@ -93,7 +93,7 @@ function waterTick(dt){
   // place the surface over the dug area, or around the camera when the dug area is wider; it moves only when the camera
   // nears its edge, and is redrawn when the water moves or the camera moves it, and each second for the ground under it
   const span=WM_N*WM_K;let i0=Math.max(0,Math.min(N-span,Math.round(((cI0+cI1)/2-span/2)/GRID_K)*GRID_K)),j0=Math.max(0,Math.min(N-span,Math.round(((cJ0+cJ1)/2-span/2)/GRID_K)*GRID_K));
-  if(cI1-cI0>span||cJ1-cJ0>span){const li=(look.x+S/2)/CELL,lj=(look.z+S/2)/CELL;
+  if(cI1-cI0>span||cJ1-cJ0>span){const li=gI(look.x),lj=gJ(look.z);
     if(wmI0>=0&&Math.abs(li-wmI0-span/2)<span/4&&Math.abs(lj-wmJ0-span/2)<span/4){i0=wmI0;j0=wmJ0}
     else{i0=Math.max(0,Math.min(N-span,Math.round((li-span/2)/GRID_K)*GRID_K));j0=Math.max(0,Math.min(N-span,Math.round((lj-span/2)/GRID_K)*GRID_K))}}
   wmMesh.visible=any;wmAge+=step;if(!any||(!moved&&wmAge<1&&i0===wmI0&&j0===wmJ0))return;wmI0=i0;wmJ0=j0;wmAge=0;
@@ -101,7 +101,7 @@ function waterTick(dt){
   for(let j=0;j<=WM_N;j++)for(let i=0;i<=WM_N;i++){const gi=i0+i*G,gj=j0+j*G,k=gj*V+gi,o=(j*(WM_N+1)+i)*3;
     // a dry point next to water takes the pool's level (it is inside the bank there, so the surface ends flat at the wall)
     let y=Rq[k]>0.004&&Math.abs(H[k]-H0[k])>0.04&&Wt[k]<H[k]+0.003?H[k]+Rq[k]+0.002:Wt[k];if(y<H[k]+0.003){const m=Math.max(gi>=G?Wt[k-G]:-1e9,gi+G<=N?Wt[k+G]:-1e9,gj>=G?Wt[k-G*V]:-1e9,gj+G<=N?Wt[k+G*V]:-1e9);y=m>-1e8?Math.min(m,H[k]-0.02):H[k]-0.12}
-    p[o]=gi*CELL-S/2;p[o+1]=y;p[o+2]=gj*CELL-S/2}
+    p[o]=gX(gi);p[o+1]=y;p[o+2]=gZ(gj)}
   wmMesh.geometry.attributes.position.needsUpdate=true;wmMesh.geometry.computeVertexNormals();
 }
 // the dried-out memory for the site save: each point that has one, as the gap since the last (varint) and a byte
@@ -115,9 +115,9 @@ function smLoad(t){soakMax.fill(0);if(typeof t!=='string'||!t)return;let b;try{b
 function soakK(k){return rainSoakK(k)}
 function mudOf(k){return Math.max(mudA[k],soakK(k))}
 // how muddy the ground is at x,z (0 dry, 1 puddle, wet spoil or soaked ground; farMud in mud.js outside the dig zone)
-function mudAt(x,z){const i=Math.round((x+S/2)/CELL),j=Math.round((z+S/2)/CELL);if(i<0||i>N||j<0||j>N)return farMud(x,z);return mudOf(j*V+i)}
+function mudAt(x,z){const i=Math.round(gI(x)),j=Math.round(gJ(z));if(i<0||i>N||j<0||j>N)return farMud(x,z);return mudOf(j*V+i)}
 // is the bucket tip under water?
-function underWater(p){const i=Math.round((p.x+S/2)/CELL),j=Math.round((p.z+S/2)/CELL);if(i<0||i>N||j<0||j>N)return false;return Wt[j*V+i]>p.y}
+function underWater(p){const i=Math.round(gI(p.x)),j=Math.round(gJ(p.z));if(i<0||i>N||j<0||j>N)return false;return Wt[j*V+i]>p.y}
 function setPump(on){pumpOn=!!on&&waterAny;const b=$('#pumpBtn');b.textContent=pumpOn?'Pump: on':'Pump';b.setAttribute('aria-pressed',pumpOn);
   if(pumpOn)toast(say('pumpOn'),'good')}
 $('#pumpBtn').onclick=()=>setPump(!pumpOn);
