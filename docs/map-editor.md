@@ -53,7 +53,7 @@ These layers sit on top of the generated mesa. Nothing about the generated mesa 
 
 ### Saved text
 
-A map is saved on the device as `localStorage.bhd_map` and copied out by Map file → Copy map. It is JSON:
+A map is saved on the device as `localStorage.bhd_map` and copied out by Map file → Copy map or Download file (the same text, as `name.island.json`). The other named maps wait in `localStorage.bhd_maps` (`{name: map text}`, an empty text for the starting island) and the open map's name in `bhd_mapname` ("My island" when unset); opening one stores the open map there under its name, puts the other in `bhd_map`, and reloads, so nothing else in the game knows about named maps. Sync devices carries `bhd_map` only. Start over for one layer clears `ED_H` (shape) or `ED_P`, `ED_M` and `ED_A` (paint), or drops `assets` or `roads` so the starting ones come back, saves, and reloads. It is JSON:
 
 ```
 {
@@ -88,6 +88,7 @@ While the brush is held or a road point is dragged, the layer changes every fram
 - Brush strokes store only the changed box of `ED_H`, `ED_P`, `ED_M` and `ED_A` (copied from a snapshot taken when the stroke starts).
 - Asset changes store the whole asset list as JSON (a few hundred entries).
 - Road changes store the whole road list as JSON and the area to refresh.
+- Each entry has a name `n` for History ▾: a stroke by its tool and material, roads and things by comparing the stored copy with the list just after the change (`edRoadsName`, `edThingsName`; things are named in a microtask, since a nudge is pushed before it moves them). History jumps by undoing or redoing until the list holds that many entries.
 
 ## Things to know before changing it
 

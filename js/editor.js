@@ -49,8 +49,8 @@ function editorOpen(){if(edOn||bench.on)return;edOn=true;mapAssets=assets;
   const fv=mode==='truck'?tr:mode==='mow'?mw:mode==='skid'?sk:mode==='walk'?wk:st;ed.x=fv.x;ed.z=fv.z;
   ed.yaw=Math.atan2(camera.position.x-fv.x,camera.position.z-fv.z);ed.dist=45;ed.pitch=0.95;
   ed.home={x:ed.x,z:ed.z,yaw:ed.yaw,dist:ed.dist,pitch:ed.pitch};ed.drawer=!edNarrow();ed.pane=ED_GROUPS[ed.group].pane?ed.group:'';
-  edTool(ed.tool);edCard(null);edSelSet([]);toast('Map editor. The game is paused while you edit.','',2600)}
-function editorClose(){if(!edOn)return;edStrokeEnd();edScatterEnd();edRoadFinish();edOn=false;document.body.classList.remove('editing');$('#editor').hidden=true;
+  edTool(ed.tool);edCard(null);edSelSet([]);edMapsDraw();edUndoBtns();toast('Map editor. The game is paused while you edit.','',2600)}
+function editorClose(){if(!edOn)return;$('#edHistList').hidden=true;edStrokeEnd();edScatterEnd();edRoadFinish();edOn=false;document.body.classList.remove('editing');$('#editor').hidden=true;
   edBrushRing.visible=edSelRings.visible=edSoftRing.visible=edHRing.visible=edHKnob.visible=false;ed.sel=[];ed.box=null;ed.lp=null;$('#edBox').hidden=true;ed.road=null;ed.rpt=-1;edRoadsDraw();clearKeys();firstCam=true;last=performance.now();
   if(assets.some(a=>a.hd)){for(const a of assets)delete a.hd;assetsBuild();shpTreesRefresh();edHiddenSync()}
   if(ed.changed){edSave();mapReset();mapDirty=true;ed.changed=false}}
@@ -74,7 +74,7 @@ function edMapPane(){if(ed.pane==='map'&&ed.drawer)ed.pane=ED_GROUPS[ed.group].p
 function edPaneSync(){const d=$('#edDrawer'),on=ed.drawer&&!!ed.pane;d.hidden=!on;
   d.querySelectorAll('.edsec').forEach(s=>s.hidden=s.dataset.g!==ed.pane);$('#edPanelBtn').setAttribute('aria-pressed',on);
   document.querySelectorAll('#edRail button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.g==='map'?on&&ed.pane==='map':b.dataset.g===ed.group));
-  if(on&&ed.pane==='things')edListDraw();if(on&&ed.pane==='roads')edRoadList()}
+  if(on&&ed.pane==='things')edListDraw();if(on&&ed.pane==='roads')edRoadList();if(on&&ed.pane==='map'){edMapsDraw();edStatsDraw()}}
 // on a phone the drawer gets out of the way once something in it is picked
 const edPicked=()=>{if(edNarrow()&&ed.drawer){ed.drawer=false;edPaneSync()}};
 document.querySelectorAll('#edRail button').forEach(b=>b.onclick=()=>b.dataset.g==='map'?edMapPane():edGroup(b.dataset.g));
@@ -172,7 +172,7 @@ function edHit(x,z){let best=null,bd=1;
 
 // ---------- reshaping and painting ----------
 const edGrow=(r,a,b,c,d)=>r?[Math.min(r[0],a),Math.max(r[1],b),Math.min(r[2],c),Math.max(r[3],d)]:[a,b,c,d];
-function edStrokeStart(x,z){ed.stroke={h:ED_H.slice(),p:ED_P.slice(),m:ED_M.slice(),a:ED_A.slice(),ij:null};ed.bx=x;ed.bz=z;ed.flatH=baseHeight(x,z)}
+function edStrokeStart(x,z){ed.stroke0=ed.tool;ed.stroke={h:ED_H.slice(),p:ED_P.slice(),m:ED_M.slice(),a:ED_A.slice(),ij:null};ed.bx=x;ed.bz=z;ed.flatH=baseHeight(x,z)}
 // one frame of the brush: a soft round brush, strongest in the middle
 function edBrush(dt){const R=ed.size,cx=ed.bx,cz=ed.bz,t=ed.tool,k=ed.str/10;
   const i0=Math.max(3,Math.floor((cx-R-ED_X0)/ED_C)),i1=Math.min(ED_NX-4,Math.ceil((cx+R-ED_X0)/ED_C)),j0=Math.max(3,Math.floor((cz-R-ED_Z0)/ED_C)),j1=Math.min(ED_NZ-4,Math.ceil((cz+R-ED_Z0)/ED_C));
@@ -224,11 +224,39 @@ function edRefresh(r,full){if(!r)return;const [x0,x1,z0,z1]=r;
 function edStrokeEnd(){const s=ed.stroke;if(!s)return;ed.stroke=null;edRefresh(ed.pend,true);ed.pend=null;
   if(!s.ij)return;const [i0,i1,j0,j1]=s.ij,w=i1-i0+1,h=new Float32Array(w*(j1-j0+1)),p=new Float32Array(h.length),m=new Uint8Array(h.length),c=new Uint8Array(h.length);
   for(let j=j0;j<=j1;j++){const a=j*ED_NX+i0,b=j*ED_NX+i1+1,o=(j-j0)*w;h.set(s.h.subarray(a,b),o);p.set(s.p.subarray(a,b),o);m.set(s.m.subarray(a,b),o);c.set(s.a.subarray(a,b),o)}
-  edPush({g:[i0,i1,j0,j1],h,p,m,a:c});edQueueSave();matTexUpdate()}
+  const t=ed.stroke0,mt=matDef(ed.mat);
+  edPush({g:[i0,i1,j0,j1],h,p,m,a:c,n:t==='paint'?(mt?`Painted ${mt.n.toLowerCase()}`:'Cleared paint'):ED_STROKE_N[t]||'Edited the ground'});edQueueSave();matTexUpdate()}
 
 // ---------- undo ----------
-function edPush(u){ed.undo.push(u);if(ed.undo.length>30)ed.undo.shift();ed.redo.length=0;edUndoBtns()}
-function edUndoBtns(){$('#edUndo').disabled=!ed.undo.length;$('#edRedo').disabled=!ed.redo.length}
+function edPush(u){const th=!u.g&&!u.roads;if(!u.n)u.n=th?'Changed things':u.roads?edRoadsName(u.roads):'Edit';if(th)queueMicrotask(()=>{u.n=edThingsName(u.a)});ed.undo.push(u);if(ed.undo.length>30)ed.undo.shift();ed.redo.length=0;edUndoBtns()}
+function edUndoBtns(){$('#edUndo').disabled=!ed.undo.length;$('#edRedo').disabled=!ed.redo.length;$('#edHist').disabled=!ed.undo.length&&!ed.redo.length;if(!$('#edHistList').hidden)edHistDraw()}
+// each step's name for History: a brush stroke by its tool, roads and things by what changed from the copy kept for undo
+const ED_STROKE_N={raise:'Raised ground',lower:'Lowered ground',flatten:'Flattened ground',smooth:'Smoothed ground',dirt:'Painted worked dirt',grass:'Painted grass'};
+const edPlural=(n,w)=>n===1?`1 ${w}`:`${n} ${/(s|x|ch|sh)$/.test(w)?w+'es':/[^aeiou]y$/.test(w)?w.slice(0,-1)+'ies':w+'s'}`;
+const edKindWord=t=>edKindName(t).replace(/ \(.*\)/,'').toLowerCase();
+function edThingsName(before){const was=JSON.parse(before),now=assets,kinds=l=>[...new Set(l.map(a=>a.t))],word=l=>kinds(l).length===1?edKindWord(l[0].t):'thing';
+  const say=(v,l)=>`${v} ${edPlural(l.length,word(l))}`;
+  if(now.length!==was.length){const key=a=>[a.t,a.x,a.z,a.yaw,a.s].join(),s=new Set(was.map(key)),s2=new Set(now.map(key));
+    return now.length>was.length?say('Added',now.filter(a=>!s.has(key(a)))):say('Deleted',was.filter(a=>!s2.has(key(a))))}
+  const ch=[],how=new Set();now.forEach((a,i)=>{const b=was[i];if(!b)return;let c=false;
+    if(a.x!==b.x||a.z!==b.z){how.add('Moved');c=true}if(a.yaw!==b.yaw){how.add('Turned');c=true}if(a.s!==b.s){how.add('Sized');c=true}
+    if(a.c!==b.c){how.add('Coloured');c=true}if(!!a.lk!==!!b.lk){how.add(a.lk?'Locked':'Unlocked');c=true}if(c)ch.push(a)});
+  if(!ch.length)return 'Changed things';const v=[...how];return say(v.length===1?v[0]:v.slice(0,2).join(' and ').replace(/ and (\w)/,(m,c)=>' and '+c.toLowerCase()),ch)}
+function edRoadsName(before){const was=JSON.parse(before);if(ROADS.length>was.length)return 'New road';if(ROADS.length<was.length)return 'Deleted a road';
+  for(let i=0;i<ROADS.length;i++){const r=ROADS[i],b=was[i];if(!b)continue;
+    if(r.pts.length>b.pts.length)return 'Added a road point';if(r.pts.length<b.pts.length)return 'Deleted a road point';
+    if(r.w!==b.w)return 'Road width';if(r.mid!==b.mid)return 'Grass up the middle';if(edGraded(r)!==edGraded(b))return edGraded(r)?'Graded a road':'Ungraded a road';
+    if(JSON.stringify(r.pts)!==JSON.stringify(b.pts))return r.pts.some((q,k)=>b.pts[k]&&q[2]!==b.pts[k][2]&&q[0]===b.pts[k][0])?'Road point height':'Moved a road point'}
+  return 'Changed a road'}
+// History: every step that can be undone or redone, newest at the top; tapping one undoes or redoes up to just after it
+function edHistDraw(){const el=$('#edHistList'),U=ed.undo,R=ed.redo,rows=[];
+  for(let i=R.length-1;i>=0;i--)rows.push([U.length+R.length-i,R[i].n,true]);
+  for(let i=U.length-1;i>=0;i--)rows.push([i+1,U[i].n,false]);rows.push([0,'Where this began',false]);
+  el.innerHTML=rows.map(([k,n,f])=>`<button class="sm${f?' fut':''}" data-h="${k}" aria-current="${k===U.length}">${n}</button>`).join('');
+  el.querySelectorAll('button').forEach(b=>b.onclick=()=>{const k=+b.dataset.h;while(ed.undo.length>k)edUndo();while(ed.undo.length<k&&ed.redo.length)edRedo()})}
+$('#edHist').onclick=()=>{const el=$('#edHistList'),open=el.hidden;el.hidden=!open;$('#edHist').setAttribute('aria-expanded',open);
+  if(open){const r=$('#edHist').getBoundingClientRect();el.style.left=Math.max(4,Math.min(r.left,innerWidth-230))+'px';el.style.top=r.bottom+4+'px';edHistDraw()}};
+addEventListener('pointerdown',e=>{const el=$('#edHistList');if(!el.hidden&&!el.contains(e.target)&&e.target!==$('#edHist')){el.hidden=true;$('#edHist').setAttribute('aria-expanded',false)}},true);
 // swaps the saved state with the current one, so the same entry undoes and redoes
 function edSwap(u){
   if(u.g){const [i0,i1,j0,j1]=u.g,w=i1-i0+1;
@@ -725,10 +753,50 @@ $('#edLoad').onclick=()=>{const t=$('#edPaste').value.trim();
   try{mapDecode(t)}catch(e){toast('That is not a Corley\'s Island map. Copy one with Copy map first.','bad',3500);return}
   try{localStorage.setItem('bhd_map',t)}catch(e){toast('Could not save the map on this device.','bad');return}
   location.reload()};
-let edResetArm=0;
-$('#edReset').onclick=()=>{const b=$('#edReset');
-  if(edResetArm&&performance.now()-edResetArm<2500){try{localStorage.removeItem('bhd_map')}catch(e){}location.reload();return}
-  edResetArm=performance.now();b.textContent='Tap again';setTimeout(()=>{edResetArm=0;b.textContent='Start over'},2500)};
+// ---------- maps: several named maps on this device (bhd_maps, name → map text), the open one in bhd_map as always,
+// its name in bhd_mapname; opening another stores this one first, then reloads, as Load does ----------
+const edMaps=()=>{try{const m=JSON.parse(localStorage.getItem('bhd_maps')||'{}');return m&&typeof m==='object'?m:{}}catch(e){return {}}};
+const edMapName=()=>{try{return localStorage.getItem('bhd_mapname')||'My island'}catch(e){return 'My island'}};
+const edEsc=t=>String(t).replace(/[&<>"]/g,c=>'&#'+c.charCodeAt(0)+';');
+function edMapsPut(m){try{localStorage.setItem('bhd_maps',JSON.stringify(m));return true}catch(e){toast('Not enough room on this device for another map. Delete one or download it as a file.','bad',4000);return false}}
+function edFreeName(base){const m=edMaps(),cur=edMapName();let n=base,k=2;while(m[n]!==undefined||n===cur)n=`${base} ${k++}`;return n}
+// leaves this map in the list and opens another: its text (or the starting island, for null) under its name
+function edMapOpen(name,text){edSave();const m=edMaps(),cur=edMapName();m[cur]=localStorage.getItem('bhd_map')||'';delete m[name];if(!edMapsPut(m))return;
+  try{if(text)localStorage.setItem('bhd_map',text);else localStorage.removeItem('bhd_map');localStorage.setItem('bhd_mapname',name)}catch(e){toast('Could not save the map on this device.','bad');return}
+  location.reload()}
+function edMapsDraw(){const m=edMaps(),cur=edMapName(),names=Object.keys(m).filter(n=>n!==cur).sort();
+  $('#edMapNm').textContent=cur;const ni=$('#edMapNameIn');if(document.activeElement!==ni)ni.value=cur;$('#edMapsN').textContent=names.length+1;
+  $('#edMapList').innerHTML=names.map(n=>`<div class="edlr"><button class="edlrn" data-open="${edEsc(n)}"><span>${edEsc(n)}</span><small>${Math.max(1,Math.round(m[n].length/1024))} KB · tap to open</small></button><button class="sm danger" data-del="${edEsc(n)}">Delete</button></div>`).join('')||'<p class="hint">No other maps yet.</p>'}
+$('#edMapList').onclick=e=>{const b=e.target.closest('button');if(!b)return;
+  if(b.dataset.open!==undefined){const n=b.dataset.open,m=edMaps();if(m[n]!==undefined)edMapOpen(n,m[n]);return}
+  if(b.dataset.del!==undefined){if(b.dataset.arm){const m=edMaps();delete m[b.dataset.del];edMapsPut(m);edMapsDraw();return}
+    b.dataset.arm=1;b.textContent='Tap again';setTimeout(()=>{if(b.isConnected){delete b.dataset.arm;b.textContent='Delete'}},2500)}};
+$('#edMapNameIn').onchange=()=>{const v=$('#edMapNameIn').value.trim().slice(0,40),m=edMaps();
+  if(!v||v===edMapName()){edMapsDraw();return}if(m[v]!==undefined){toast('There is already a map with that name.','bad',2600);edMapsDraw();return}
+  try{localStorage.setItem('bhd_mapname',v)}catch(e){}edMapsDraw()};
+$('#edMapNew').onclick=()=>edMapOpen(edFreeName('New map'),null);
+$('#edMapDup').onclick=()=>{edSave();edMapOpen(edFreeName(edMapName()+' copy'),localStorage.getItem('bhd_map'))};
+// a map as a file to keep, and a file opened as a new map, named after the file
+$('#edDownload').onclick=()=>{edSave();const u=URL.createObjectURL(new Blob([mapEncode()],{type:'application/json'})),a=document.createElement('a');
+  a.href=u;a.download=edMapName().replace(/[^\w\- ]+/g,'').trim().replace(/ +/g,'-')+'.island.json';document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),2000)};
+$('#edOpenFile').onclick=()=>$('#edFileIn').click();
+$('#edFileIn').onchange=()=>{const f=$('#edFileIn').files[0];$('#edFileIn').value='';if(!f)return;
+  f.text().then(t=>{t=t.trim();try{mapDecode(t)}catch(e){toast('That file is not a Corley\'s Island map.','bad',3500);return}
+    edMapOpen(edFreeName(f.name.replace(/(\.island)?\.json$/i,'').slice(0,40)||'Opened map'),t)})};
+// This map: things by kind, roads and their length, the ground shaped and painted, and its size
+function edStatsDraw(){const c={};for(const a of assets)c[a.t]=(c[a.t]||0)+1;let L=0;for(const r of ROADS)for(let i=0;i<r.pts.length-1;i++)L+=Math.hypot(r.pts[i+1][0]-r.pts[i][0],r.pts[i+1][1]-r.pts[i][1]);
+  let sh=0,pa=0;for(let q=0;q<ED_H.length;q++){if(Math.abs(ED_H[q])>0.02)sh++;if(ED_M[q]||Math.abs(ED_P[q])>0.05)pa++}
+  const sq=n=>`${Math.round(n*ED_C*ED_C/(FT*FT)).toLocaleString()} sq ft`,kb=Math.max(1,Math.round(mapEncode().length/1024));
+  const rows=[['Things',`${assets.length}`],...Object.entries(c).sort((p,q)=>q[1]-p[1]).map(([t,n])=>['',edPlural(n,edKindWord(t))]),
+    ['Roads',ROADS.length?`${ROADS.length}, ${Math.round(edFt(L)).toLocaleString()} ft in all`:'None'],['Shaped',sh?sq(sh):'None'],['Painted',pa?sq(pa):'None'],['Size',`${kb} KB`]];
+  $('#edMapStats').innerHTML=rows.map(([a,b])=>`<dt>${a}</dt><dd>${b}</dd>`).join('')}
+// Start over, for the whole map or one layer: the layer goes back to the starting island (shape and paint cleared, the
+// first trees and boulders and roads back), saved, then the game reloads
+$('#edReset').onclick=e=>{const b=e.target.closest('button');if(!b)return;
+  if(!b.dataset.arm){b.dataset.arm=1;const t=b.textContent;b.textContent='Tap again';setTimeout(()=>{if(b.dataset.arm){delete b.dataset.arm;b.textContent=t}},2500);return}
+  const k=b.dataset.clear;if(k==='all'){try{localStorage.removeItem('bhd_map')}catch(e){}location.reload();return}
+  edSave();if(k==='shape')ED_H.fill(0);if(k==='paint'){ED_P.fill(0);ED_M.fill(0);ED_A.fill(0)}if(k==='things')mapAssets=null;if(k==='roads')mapRoads=null;
+  try{localStorage.setItem('bhd_map',mapEncode())}catch(e){toast('Could not save the map on this device.','bad');return}location.reload()};
 
 // ---------- each frame while the editor is open (main.js hands it the frame) ----------
 const edLook=new THREE.Vector3();
