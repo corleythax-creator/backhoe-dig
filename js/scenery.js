@@ -273,7 +273,7 @@ function groundColor(x,z,h,c){const n=hash(x*3.55+0.3,z*2.65+0.7);
   const strata=0.06*Math.sin(h*1.4+n);
   r+=(0.50+0.06*n+strata-r)*rock;g+=(0.44+0.05*n+strata-g)*rock;b+=(0.38+0.04*n+strata-b)*rock;
   r+=(0.80-r)*sand;g+=(0.72-g)*sand;b+=(0.52-b)*sand;
-  c[0]=r;c[1]=g;c[2]=b;const ya=yardTint(x,z,c,n),ra=roadTint(x,z,c,n),mc=matTint(x,z,c);c[3]=mc;return Math.min(1,Math.max(rock*0.95+sand*0.4,ra*0.9,ya*0.85))*(MAT_GL2?1:1-mc)}
+  c[0]=r;c[1]=g;c[2]=b;const ya=yardTint(x,z,c,n),ka=trkTint(x,z,c,n),ra=roadTint(x,z,c,n),mc=matTint(x,z,c);c[3]=mc;return Math.min(1,Math.max(rock*0.95+sand*0.4,ra*0.9,ya*0.85,ka))*(MAT_GL2?1:1-mc)}
 let midPatch=null,skirtMesh=null;
 // a ground mesh over a rectangle at CO metres, leaving out the cells inside any of the holes (where a finer mesh sits)
 function groundPatch(X0,X1,Z0,Z1,CO,holes){

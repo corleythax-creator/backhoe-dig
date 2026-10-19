@@ -3,7 +3,9 @@
 // and a semi with a lowboy trailer; his skid steer, skid.js, is drivable), light towers, a cone course and dirt piles to practise on.
 // The parked machines are models for now; they can be made drivable one at a time, as the skid steer was.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
-const dexGround=groundPatch(-275,-125,170,320,1.5,[]);
+const dexGround=groundPatch(-275,-125,170,320,1.5,[TRK_BOX]);
+// the dirt bike track's jump, whoops and berms need a finer mesh than the yard (terrain.js, trkH)
+const trkGround=groundPatch(TRK_BOX[0],TRK_BOX[1],TRK_BOX[2],TRK_BOX[3],0.5,[]);
 const DB=BRIDGES[3];
 // parts placed in a machine's own frame (x across, z forward) at x0,z0 turned by yaw, standing on ground y0
 function dexFrame(K,x0,z0,yaw,y0){const c=Math.cos(yaw),s=Math.sin(yaw),W=(lx,lz)=>[x0+lx*c+lz*s,z0-lx*s+lz*c];
@@ -102,11 +104,35 @@ const DEX_Y=0xf2b705,DEX_D=0x2b2d30,DEX_GLASS=0x3c4a52;
   famAdd(K);
 })();
 
+// ---------- the dirt bike track: tyres half buried round the inside of the turns, hay bales at the ends of the jump and
+// the whoops, a start line, and a sign on two posts by the start ----------
+(function(){
+  const K=famKit(),G=(x,z)=>baseHeight(x,z),hw=TRK_W/2,L=TRK_L2,PR=Math.PI*TRK_R;
+  // the point s metres along the line and u out from it
+  const at=(s,u)=>{s=(s%TRK_LEN+TRK_LEN)%TRK_LEN;let x,z,yaw;
+    if(s<L){x=TRK_A[0]+s;z=TRK_A[1]-TRK_R-u;yaw=Math.PI/2}
+    else if(s<L+PR){const a=-Math.PI/2+(s-L)/TRK_R;x=TRK_B[0]+Math.cos(a)*(TRK_R+u);z=TRK_A[1]+Math.sin(a)*(TRK_R+u);yaw=-a}
+    else if(s<2*L+PR){x=TRK_B[0]-(s-L-PR);z=TRK_A[1]+TRK_R+u;yaw=-Math.PI/2}
+    else{const a=Math.PI/2+(s-2*L-PR)/TRK_R;x=TRK_A[0]+Math.cos(a)*(TRK_R+u);z=TRK_A[1]+Math.sin(a)*(TRK_R+u);yaw=-a}
+    return [x,z,yaw]};
+  for(const [s0,s1] of [[L,L+PR],[2*L+PR,TRK_LEN]])for(let s=s0+0.6;s<s1;s+=0.75){const [x,z]=at(s,-hw-0.45),y=G(x,z);
+    K.cyl(0.33,0.33,0.24,10,0x1d1d1f,x,y+0.04,z);K.cyl(0.2,0.2,0.26,8,0x4a3a2a,x,y+0.05,z)}
+  const bale=(s,u)=>{const [x,z,yaw]=at(s,u),y=G(x,z);K.box(0.5,0.45,1.1,0xc9a75a,x,y+0.22,z,yaw);K.box(0.04,0.03,1.12,0x8a6f38,x,y+0.3,z,yaw)};
+  for(const s of [L/2-6.5,L/2+6.5,L+PR+3,L+PR+16.5])for(const u of [-hw-0.9,hw+0.9])bale(s,u);
+  // the start line across the south straight, and the sign
+  {const s=L+PR+1.2;for(let u=-hw;u<hw;u+=0.5){const [x,z,yaw]=at(s,u+0.25),y=G(x,z);K.box(0.5,0.02,0.3,(u/0.5|0)%2?0x1d1d1f:0xf2f2ee,x,y+0.012,z,yaw)}
+    const [x,z]=at(s,hw+1.6),y=G(x,z);for(const d of [-1.6,1.6])K.box(0.12,2.2,0.12,DEX_D,x+d,y+1.1,z);
+    famSign(["DEXTER'S MX TRACK"],3.6,0.8,x,y+2.3,z-0.07,Math.PI,'#2b2d30','#f2b705')}
+  famAdd(K);
+})();
+
 // a few pines round the rim (trees.js, its 'dex' group)
 const dexTrees=(function(){
   let sd=41;const rnd=()=>{sd=(sd*16807)%2147483647;return sd/2147483647};const out=[];
   for(let g=0;g<3000&&out.length<34;g++){const a=rnd()*6.283,x=DEX_X+Math.cos(a)*60,z=DEX_Z+Math.sin(a)*60,k=(DEX_R-3-rnd()*4.5)/dexR(x,z),px=DEX_X+(x-DEX_X)*k,pz=DEX_Z+(z-DEX_Z)*k;
     if(roadOff(px,pz)<ROAD_W/2+3||Math.abs(pz-DEX_Z)<9&&px>-185||SOLIDS.some(s=>Math.abs(px-s.x)<s.hx+2&&Math.abs(pz-s.z)<s.hz+2)||out.some(o=>Math.hypot(o.x-px,o.z-pz)<3.2))continue;
     out.push({x:px,z:pz,yaw:rnd()*6.3,s:0.8+rnd()*0.6})}
+  // none on the dirt bike track or its berms
+  for(let i=out.length-1;i>=0;i--){if(trkH(out[i].x,out[i].z)>0||(trkAt(out[i].x,out[i].z),Math.abs(TRK_U)<TRK_W/2+4))out.splice(i,1)}
   treeGroup('dex',out.map(a=>treeEntry('pine',a.x,a.z,a.yaw,a.s,(a.x*7|0)&3,0.95+0.4*hash(a.x*1.3,a.z*2.1))));
   return out})();

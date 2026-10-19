@@ -279,9 +279,38 @@ function shore(d,x,z,Y){const W=WATER,back=W+1.4+0.25*Math.sin(x*0.05+z*0.04),bw
   if(e<bl)return back-(back-W)*e/bl;
   const f=e-bl;return W-0.9*ss(0,9,f)-5*ss(6,28,f)-5*ss(24,60,f)}
 function isleCliff(d,x,z,Y){return shore(d,x,z,Y)}
-// Dexter's Island: a flat gravel yard at the Family Island's height, with dirt piles in the practice yard to climb
+// Dexter's Island: a flat gravel yard at the Family Island's height, with a dirt pile to climb and his dirt bike track
+// Dexter's dirt bike track (bike.js) in the practice yard: a 13 ft wide oval, two straights joined round A and B by
+// banked turns, whoops on the south straight (where the bike starts, heading west) and a tabletop jump on the north one.
+// trkAt(x,z) sets TRK_S, metres along the line (0 at the north straight's west end, running east, so clockwise on the
+// map), and TRK_U, metres out from it (+ away from the infield)
+const TRK_A=[-228,270],TRK_B=[-210,270],TRK_R=10.5,TRK_W=4,TRK_L2=TRK_B[0]-TRK_A[0],TRK_LEN=2*TRK_L2+2*Math.PI*TRK_R;
+// the finer ground mesh drawn over it (dexter.js), on the 1.5 m mesh's lines
+const TRK_BOX=[-243.5,-192.5,252.5,287];
+let TRK_S=0,TRK_U=0;
+function trkAt(x,z){const dz=z-TRK_A[1],R=TRK_R,L=TRK_L2;
+  if(x>=TRK_A[0]&&x<=TRK_B[0]){if(dz<0){TRK_S=x-TRK_A[0];TRK_U=-dz-R}else{TRK_S=L+Math.PI*R+TRK_B[0]-x;TRK_U=dz-R}return}
+  const e=x>TRK_B[0],dx=x-(e?TRK_B[0]:TRK_A[0]);let a=Math.atan2(dz,dx);TRK_U=Math.hypot(dx,dz)-R;
+  if(e)TRK_S=L+(a+Math.PI/2)*R;else{if(a<0)a+=2*Math.PI;TRK_S=2*L+Math.PI*R+(a-Math.PI/2)*R}}
+// the track's shape above the yard: the jump and the whoops fade off its edges, the turns bank up to a berm outside
+function trkH(x,z){if(x<TRK_BOX[0]||x>TRK_BOX[1]||z<TRK_BOX[2]||z>TRK_BOX[3])return 0;trkAt(x,z);
+  const s=TRK_S,u=TRK_U,hw=TRK_W/2,L=TRK_L2,PR=Math.PI*TRK_R;if(Math.abs(u)>hw+3)return 0;
+  let f=0;
+  // tabletop: 4 ft up a 10 ft ramp each way, a 14 ft top
+  {const t=Math.abs(s-L/2);if(t<5.2)f+=t<2.2?1.2:1.2*Math.min(1,(5.2-t)/3)}
+  // whoops: four 16 in rollers, 10 ft apart
+  {const t=s-(L+PR+4);if(t>0&&t<12)f+=0.2*(1-Math.cos(t*Math.PI*2/3))}
+  let h=f*(1-ss(hw,hw+1.5,Math.abs(u)));
+  // berms: the turns lean in, rising to 3 ft along the outside edge and falling away behind it
+  const c=s<L||s>2*L+PR?0:s<L+PR?ss(L,L+3,s)*(1-ss(L+PR-3,L+PR,s)):ss(L+PR+L,L+PR+L+3,s)*(1-ss(TRK_LEN-3,TRK_LEN,s));
+  if(c>0)h+=c*(u<hw?0.75*ss(-hw,hw,u):0.9*(1-ss(hw+0.4,hw+2.8,u))+0.15*(1-ss(hw,hw+0.4,u)));
+  return h}
+// the track's dirt: dark, worked loam; returns how much of it there is at x,z (0 off the track)
+function trkTint(x,z,c,n){if(x<TRK_BOX[0]||x>TRK_BOX[1]||z<TRK_BOX[2]||z>TRK_BOX[3])return 0;trkAt(x,z);
+  const a=1-ss(TRK_W/2+0.3,TRK_W/2+2.2,Math.abs(TRK_U));if(a<=0)return 0;const v=0.9+0.2*n,line=1-0.12*Math.exp(-TRK_U*TRK_U*1.5);
+  const tc=[0.42*v*line,0.3*v*line,0.2*v*line];for(let q=0;q<3;q++)c[q]+=(tc[q]-c[q])*a;return a}
 function dexHeight(x,z){const d=dexR(x,z)-DEX_R;let top=FAM_Y;
-  if(d<3){top+=hill(x,z,-226,262,7,6,2.6)+hill(x,z,-233,249,5.5,5,1.8)+hill(x,z,-216,270,4,3.5,1.2);
+  if(d<3){top+=hill(x,z,-233,249,5.5,5,1.8)+trkH(x,z);
     if(d<0)return top}
   const out=isleCliff(d,x,z,FAM_Y);
   return d<3?out+(top-FAM_Y)*(1-ss(0,3,d)):out}
