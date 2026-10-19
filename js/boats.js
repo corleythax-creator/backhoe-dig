@@ -1,27 +1,36 @@
 // Corley's Island: boats. A wooden dock runs out from a beach on each island with a centre-console runabout tied up at
-// its end. Walk up to one and Get in to drive it (Boat mode: left stick throttle and steering); run it up onto any beach
+// its end, and one more lies at the town marina's pier. Walk up to one and Get in to drive it (Boat mode: left stick throttle and steering); run it up onto any beach
 // and it slides to a stop on the sand, where you can climb out and leave it; reverse pushes it back off.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 // The docks are walkable decks in BRIDGES (dock set: no railings, and the machines keep off them)
 const BT_L=5.2,BT_B=2.1,BT_DRAFT=0.32,BT_DECK=WATER+0.9;
 // the circles along the hull (metres along it from the middle) and their radius, for getting in (wkNear) and bumping
 const BT_C=[-1.7,-0.6,0.5,1.6],BT_R=0.95;
-// each island's dock: the island's middle and the way out to the beach it starts from; the boat's hull colour
+// each island's dock: the island's middle and the way out to the beach it starts from; the boat's hull colour. The town's
+// boat ties up on the open (west) side of the marina pier mainland.js draws (dock: that pier's deck, at: metres back from
+// its end, side: which side of it)
+const BT_MAR_X=72,BT_MAR_Z=mainRimS(72)+2;
 const BT_SPOTS=[
   {n:"Corley's",cx:0,cz:MZ,dx:-1,dz:0,hull:0xe8b923},
   {n:'Family',cx:FAM_X,cz:FAM_Z,dx:-0.6,dz:0.8,hull:0x1f3a5f},
   {n:"Jessica's",cx:JES_X,cz:JES_Z,dx:0,dz:1,hull:0xa8322a},
-  {n:"Dexter's",cx:DEX_X,cz:DEX_Z,dx:0,dz:-1,hull:0x2f6b4a}];
+  {n:"Dexter's",cx:DEX_X,cz:DEX_Z,dx:0,dz:-1,hull:0x2f6b4a},
+  {n:'Town',dock:{x0:BT_MAR_X,z0:BT_MAR_Z,x1:BT_MAR_X,z1:BT_MAR_Z-46,hw:1.5,y:WATER+1.2,drawn:1},at:6,side:-1,hull:0x6d7f8c}];
 // out from the middle to where the beach is just under the deck, then on until the water is deep enough to moor in
-function btDockPlan(s){const at=t=>baseHeight(s.cx+s.dx*t,s.cz+s.dz*t);
+function btDockPlan(s){if(s.dock){const d=s.dock,dx=d.x1-d.x0,dz=d.z1-d.z0,len=Math.hypot(dx,dz);
+    const b=Object.assign({y1:d.y,dock:1,len,ux:dx/len,uz:dz/len},d);BRIDGES.push(b);return b}
+  const at=t=>baseHeight(s.cx+s.dx*t,s.cz+s.dz*t);
   let t0=10;while(t0<300&&at(t0)>BT_DECK-0.15)t0+=0.25;
   let t1=t0+14;while(t1<t0+40&&at(t1)>WATER-1.5)t1+=1;
   const b={x0:s.cx+s.dx*t0,z0:s.cz+s.dz*t0,x1:s.cx+s.dx*t1,z1:s.cz+s.dz*t1,hw:1.2,y:BT_DECK,y1:BT_DECK,dock:1,len:t1-t0,ux:s.dx,uz:s.dz};
   BRIDGES.push(b);return b}
 const BT_DOCKS=BT_SPOTS.map(btDockPlan);
+// the marina's finger slips walk too, and the boats moored at them are in the way (the hulls mainland.js draws)
+for(let i=0;i<3;i++){const z=BT_MAR_Z-14-i*12;BRIDGES.push({x0:BT_MAR_X+1.5,z0:z,x1:BT_MAR_X+10.5,z1:z,hw:0.8,y:WATER+1.19,y1:WATER+1.19,dock:1,len:9,ux:1,uz:0,drawn:1});
+  for(const dz of [-3,3])BOAT_WALLS.push({ax:BT_MAR_X+5,az:z+dz,bx:BT_MAR_X+9,bz:z+dz,r:1.25})}
 // ---------- the docks: boards across two stringers on piles, pile tops standing proud as posts, cleats by the boat ----------
 (function(){const K=famKit(),WOOD=[0x8d6b4b,0x80603f,0x97765a],PILE=0x5a4632;
-  for(const b of BT_DOCKS){const ry=Math.atan2(b.ux,b.uz),P=(t,u)=>[b.x0+b.ux*t-b.uz*u,b.z0+b.uz*t+b.ux*u];
+  for(const b of BT_DOCKS){if(b.drawn)continue;const ry=Math.atan2(b.ux,b.uz),P=(t,u)=>[b.x0+b.ux*t-b.uz*u,b.z0+b.uz*t+b.ux*u];
     for(let t=0.1,n=0;t<b.len;t+=0.2,n++){const [x,z]=P(t,0);K.box(2*b.hw,0.05,0.17,WOOD[n%3],x,b.y-0.025,z,ry)}
     for(const u of [-b.hw+0.25,b.hw-0.25]){const [x,z]=P(b.len/2,u);K.box(0.1,0.22,b.len,0x5f4a35,x,b.y-0.16,z,ry)}
     for(let t=0.5;t<=b.len;t+=3){const tt=Math.min(t,b.len-0.15);for(const u of [-b.hw-0.06,b.hw+0.06]){const [x,z]=P(tt,u),g=baseHeight(x,z)-0.6,top=b.y+0.45;
@@ -67,19 +76,26 @@ function btModel(hull){const g=new THREE.Group(),K=famKit();
   const ws=new THREE.Mesh(new THREE.BoxGeometry(0.82,0.32,0.02),btGlass);ws.position.set(0,1.12,0.66);ws.rotation.x=-0.45;g.add(ws);
   scene.add(g);return g}
 // boats: where each is, its speed (m/s along the bow), how it sits (y, pitch, roll) and its model
-const boats=BT_SPOTS.map((s,i)=>{const d=BT_DOCKS[i],t=d.len-3.4,u=d.hw+BT_B/2+0.12;
+const boats=BT_SPOTS.map((s,i)=>{const d=BT_DOCKS[i],t=d.len-(s.at||3.4),u=(s.side||1)*(d.hw+BT_B/2+0.12);
   const home={x:d.x0+d.ux*t-d.uz*u,z:d.z0+d.uz*t+d.ux*u,yaw:Math.atan2(d.ux,d.uz)};
   return {n:s.n,home,x:home.x,z:home.z,yaw:home.yaw,v:0,y:WATER,pitch:0,roll:0,g:btModel(s.hull)}});
 let btI=0;
 const btCur=()=>boats[btI];
 // the walker climbs in at any of them (walker.js): the boats join WK_RIDES as boat0, boat1…
-boats.forEach((b,i)=>{WK_RIDES['boat'+i]={o:b,c:BT_C,r:BT_R,m:'boat',n:'boat',pick(){btI=i},out:()=>btOut(b)}});
+boats.forEach((b,i)=>{WK_RIDES['boat'+i]={o:b,c:BT_C,r:BT_R,reach:0.8,m:'boat',n:'boat',pick(){btI=i},out:()=>btOut(b)}});
 // climbing out: onto the dock or the sand beside it if there is one (dry ground first, then shallow water), else into the lake
 function btOut(b){const sy=Math.sin(b.yaw),cy=Math.cos(b.yaw),gap=BT_B/2+WK_R+0.3,len=BT_L/2+0.5;
   const spots=[[gap,0],[-gap,0],[0,len],[gap,1.2],[-gap,1.2],[gap,-1.2],[-gap,-1.2],[0,-len-0.4]].map(([sx,sz])=>{const x=b.x+cy*sx+sy*sz,z=b.z-sy*sx+cy*sz;return {x,z,f:wkFloor(x,z,0,1e9)}});
   const free=p=>!SOLIDS.some(s=>solidOut(s,p.x,p.z,WK_R))&&!boats.some(o=>o!==b&&Math.hypot(o.x-p.x,o.z-p.z)<BT_L/2+0.4);
   const p=spots.find(p=>p.f>=WATER+0.15&&free(p))||spots.find(p=>p.f>=WATER-1&&free(p))||spots[0];
   Object.assign(wk,{x:p.x,z:p.z,y:Math.max(p.f,Math.min(b.y,WATER-WK_FLOAT)),vy:0,ground:p.f>=WATER-1,swim:false,yaw:b.yaw,airT:0});return true}
+// what is in the way on the water this frame: the fixed piers and hulls, each trestle span's bents as it stands (timber
+// or steel), and the crane's barge, a line down its length
+const btWallList=[];
+function btWalls(){btWallList.length=0;for(const w of BOAT_WALLS)btWallList.push(w);
+  for(const s of crnSpans)for(const w of s.st.visible?s.stW:s.trW)btWallList.push(w);
+  const p=crnBarge.position,y=crnBarge.rotation.y,sy=Math.sin(y)*13,cy=Math.cos(y)*13;btWallList.push({ax:p.x-sy,az:p.z-cy,bx:p.x+sy,bz:p.z+cy,r:6.2});
+  return btWallList}
 // the ground under a hull, not counting decks (it runs under the docks and bridges, not onto them)
 function btGround(x,z){return farGround?farGround(x,z):baseHeight(x,z)}
 // thr: throttle (+ ahead), steer (+ right). Idle boats bob where they are left
@@ -96,10 +112,13 @@ function boatTick(dt,thr,steer){
     if(Math.abs(b.v)>0.02)b.yaw-=sr*TU.btTurn*Math.min(1,Math.abs(b.v)/2.5)*Math.sign(b.v)*(1-0.85*sand)*dt;
     b.x+=Math.sin(b.yaw)*b.v*dt;b.z+=Math.cos(b.yaw)*b.v*dt;
     b.x=clamp(b.x,-WK_BOUND.x,WK_BOUND.x);b.z=clamp(b.z,WK_BOUND.z0,WK_BOUND.z1);
-    // the docks and the other boats are in the way: push the hull's circles out of them
-    let hit=false;const s2=Math.sin(b.yaw),c2=Math.cos(b.yaw);
+    // the docks, piers and pile bents, the crane's barge and the other boats are in the way: push the hull's circles out
+    let hit=false;const s2=Math.sin(b.yaw),c2=Math.cos(b.yaw),walls=btWalls();
     for(const lz of BT_C){let px=b.x+s2*lz,pz=b.z+c2*lz;
-      for(const d of BT_DOCKS){const [t,u]=deckLocal(d,px,pz);if(t<-BT_R||t>d.len+BT_R||Math.abs(u)>=d.hw+BT_R)continue;
+      for(const w of walls){if(Math.abs(px-w.ax)>60&&Math.abs(px-w.bx)>60||Math.abs(pz-w.az)>60&&Math.abs(pz-w.bz)>60)continue;
+        const ex=w.bx-w.ax,ez=w.bz-w.az,f=clamp(((px-w.ax)*ex+(pz-w.az)*ez)/(ex*ex+ez*ez||1),0,1),dx=px-w.ax-ex*f,dz=pz-w.az-ez*f,dd=Math.hypot(dx,dz),m=w.r+BT_R;
+        if(dd<m&&dd>1e-4){const k=(m-dd)/dd;b.x+=dx*k;b.z+=dz*k;px+=dx*k;pz+=dz*k;hit=true}}
+      for(const d of BRIDGES){if(!d.dock)continue;const [t,u]=deckLocal(d,px,pz);if(t<-BT_R||t>d.len+BT_R||Math.abs(u)>=d.hw+BT_R)continue;
         if(t>0){const push=Math.sign(u||1)*(d.hw+BT_R)-u;b.x-=d.uz*push;b.z+=d.ux*push;px-=d.uz*push;pz+=d.ux*push;hit=true}}
       for(const o of boats){if(o===b)continue;for(const lo of BT_C){const qx=o.x+Math.sin(o.yaw)*lo,qz=o.z+Math.cos(o.yaw)*lo,dx=px-qx,dz=pz-qz,dd=Math.hypot(dx,dz),m=BT_R*2;
         if(dd<m&&dd>1e-4){b.x+=dx/dd*(m-dd)*0.5;b.z+=dz/dd*(m-dd)*0.5;hit=true}}}}
@@ -115,7 +134,7 @@ function boatTick(dt,thr,steer){
       if(b.v>4&&Math.random()<r*1.5)for(const sd of [-1,1]){const a=Math.random()*0.4;spDrop(bx-sy*0.6+sd*cy*0.6,wB+0.05,bz-cy*0.6-sd*sy*0.6,sd*cy*(1.2+a)-sy*0.5,1+Math.random()*1.2,-sd*sy*(1.2+a)-cy*0.5,0.04+Math.random()*0.04)}}
   }
   // the worker at the helm: seated behind the console, hands on the wheel
-  const R=WK_RIDES[wk.inside];if(R&&R.m==='boat'){const b=R.o;b.g.localToWorld(btV.set(0,0,-0.47));
+  const R=WK_RIDES[wk.inside];if(R&&R.m==='boat'){const b=R.o;b.g.updateMatrixWorld();b.g.localToWorld(btV.set(0,0,-0.47));
     Object.assign(wk,{x:b.x,z:b.z,y:b.y,yaw:b.yaw});walker.position.copy(btV);walker.rotation.set(-b.pitch,b.yaw,b.roll,'YXZ');
     walker.visible=!(mode==='boat'&&camMode==='cab');wkBody.position.y=0;wkBody.rotation.x=0;wkHead.rotation.x=0;
     for(let s=0;s<2;s++){wkLegs[s].top.rotation.x=-1.45;wkLegs[s].low.rotation.x=1.4;wkArms[s].top.rotation.x=-0.9;wkArms[s].low.rotation.x=-0.5}}

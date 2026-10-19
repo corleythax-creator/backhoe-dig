@@ -123,10 +123,10 @@ function jesR(x,z){x-=JES_X;z-=JES_Z;const a=Math.atan2(z,x);return Math.pow(x*x
 const BRIDGES=[{x0:0,z0:68,x1:0,z1:171,hw:4,y:FAM_Y},{x0:0,z0:316,x1:0,z1:418,hw:4,y:FAM_Y},
   {x0:70,z0:JES_Z,x1:163,z1:JES_Z,hw:1.6,y:FAM_Y,y1:JES_Y,foot:true},
   {x0:-70,z0:DEX_Z,x1:-163,z1:DEX_Z,hw:5,y:FAM_Y},
-  {x0:0,z0:418,x1:0,z1:500,hw:3.4,y:FAM_Y,y1:WATER+2.44,temp:1},{x0:0,z0:-82,x1:0,z1:-213,hw:3.4,y:0,y1:-3,temp:1}];
+  {x0:0,z0:418,x1:0,z1:500,hw:3.4,y:FAM_Y,y1:-3.6,temp:1},{x0:0,z0:-82,x1:0,z1:-213,hw:3.4,y:0,y1:-3,temp:1}];
 // the temporary rock causeways out from each mainland shore to the trestles: a flat top hw either side of the line,
 // rising evenly from y to y1, with rough rock sides down to the lake bed (causewayH)
-const CAUSEWAYS=[{x0:0,z0:500,x1:0,z1:566,hw:4.6,y:WATER+2.44,y1:-3.6},{x0:0,z0:-213,x1:0,z1:-296,hw:4.6,y:-3,y1:-3}];
+const CAUSEWAYS=[{x0:0,z0:500,x1:0,z1:566,hw:4.6,y:-3.6,y1:-3.6},{x0:0,z0:-213,x1:0,z1:-296,hw:4.6,y:-3,y1:-3}];
 for(const b of BRIDGES.concat(CAUSEWAYS)){const dx=b.x1-b.x0,dz=b.z1-b.z0;b.len=Math.hypot(dx,dz);b.ux=dx/b.len;b.uz=dz/b.len;if(b.y1===undefined)b.y1=b.y}
 // the mainland across the lake: the field and woods to the north and the lakeside town to the south, each a low shore
 // (shore) rising gently inland to about 29 ft. The rim lines wander, but run straight where the causeways land
@@ -172,6 +172,10 @@ function landClamp(x,z,lim,side,walk){if(landIn(x,z,lim,side,walk))return [x,z];
 // axes {x, z, hx, hz: half sizes}; family.js fills it. Things placed in the map editor (props.js) are turned boxes:
 // lx, lz their own half sizes, cs and sn the cosine and sine of their turn, hx and hz then the box along the axes round them
 const SOLIDS=[];
+// what a boat can't get past on the water (boats.js): bridge piers, pile bents and moored hulls, each a thick line from
+// ax,az to bx,bz, r out from it. family.js, jessica.js and boats.js fill it as they build them; a trestle's bents are kept
+// with its spans instead (crnSpans in mainland.js), as they change from timber to steel
+const BOAT_WALLS=[];
 // how far to move a circle (x, z, radius r) so it clears a solid, [dx, dz], or null when it is clear already
 function solidOut(s,x,z,r){let dx=x-s.x,dz=z-s.z,hx=s.hx,hz=s.hz;const rot=s.sn!==undefined;
   if(rot){const a=dx*s.cs-dz*s.sn;dz=dx*s.sn+dz*s.cs;dx=a;hx=s.lx;hz=s.lz}
