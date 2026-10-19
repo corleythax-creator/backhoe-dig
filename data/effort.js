@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-19T02:45:00Z",
+ "updated": "2026-10-19T02:46:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -24,9 +24,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-18",
-   "dh": 178,
+   "dh": 179,
    "act": 4,
-   "versions": 21
+   "versions": 22
   }
  ],
  "extra": [
@@ -1197,6 +1197,15 @@ window.EFFORT = {
    "tris": 1919145,
    "chars": 815284,
    "what": "The map editor is rebuilt around bars across the top, left and bottom: grouped tools with icons, a drawer with the library and an On the map list of every thing by kind, and picking several things at once to move, turn, size, colour, copy or delete together."
+  },
+  {
+   "v": 130,
+   "asked": "2026-10-18T21:30:00-05:00",
+   "live": "2026-10-18T21:46:47-05:00",
+   "dh": 1,
+   "tris": 1918954,
+   "chars": 815573,
+   "what": "Three new mud settings in the screen editor's Tuning tab: how wet ground must be before it ruts, how fast ruts cut in, and how high mud piles up beside them."
   }
  ]
 };
