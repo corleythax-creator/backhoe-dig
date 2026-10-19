@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-19T02:26:00Z",
+ "updated": "2026-10-19T02:31:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -24,9 +24,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-18",
-   "dh": 151,
-   "act": 3.5,
-   "versions": 17
+   "dh": 152.5,
+   "act": 4,
+   "versions": 18
   }
  ],
  "extra": [
@@ -1161,6 +1161,15 @@ window.EFFORT = {
    "tris": 1918519,
    "chars": 784358,
    "what": "The dig grid now sits on 105 ft dig tiles and can move: groundwork for digging anywhere, with no change in play"
+  },
+  {
+   "v": 126,
+   "asked": "2026-10-18T21:06:00-05:00",
+   "live": "2026-10-18T21:31:58-05:00",
+   "dh": 1.5,
+   "tris": 1920321,
+   "chars": 784746,
+   "what": "Trails on the site map now record everywhere you go, the woods, the hayfield and the lakeside town as well as the islands; trails already walked are kept."
   }
  ]
 };
