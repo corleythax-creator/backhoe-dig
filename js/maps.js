@@ -2,7 +2,7 @@
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 // ---------- maps ----------
 // the background covers the mesa and the islands round the Family Island: a square from MAP_X0, MAP_Z0, MAP_SZ metres across
-const MAP_X0=-260,MAP_Z0=-62,MAP_SZ=540,MAP_HALF=MAP_SZ/2,MAP_CX=MAP_X0+MAP_HALF,MAP_CZ=MAP_Z0+MAP_HALF,BG_PX=800;let mapBg=null,digLayer=null,mapDirty=true,mapT=0,mapBigT=0;
+const MAP_X0=-260,MAP_Z0=-122,MAP_SZ=540,MAP_HALF=MAP_SZ/2,MAP_CX=MAP_X0+MAP_HALF,MAP_CZ=MAP_Z0+MAP_HALF,BG_PX=800;let mapBg=null,digLayer=null,mapDirty=true,mapT=0,mapBigT=0;
 function buildMapBg(){
   const c=document.createElement('canvas');c.width=c.height=BG_PX;const x2=c.getContext('2d'),img=x2.createImageData(BG_PX,BG_PX),d=img.data,mpp=MAP_SZ/BG_PX;
   const hs=new Float32Array(BG_PX*BG_PX);
