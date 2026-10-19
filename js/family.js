@@ -68,7 +68,8 @@ function famBridge(b,K,o){
   for(let i=0;i<=NP;i++)at(i*P,0,Y-0.5-D,2*b.hw-0.4,0.3,0.3,steel);
   // concrete piers: two columns and a cap wherever the ground falls well below the truss, and an abutment at each end
   const pier=(t)=>{const [x,z]=W(t,0),g=baseHeight(x,z)-2,top=Y-0.75-D,hgt=top-g;if(hgt<1)return;
-    for(const s of [-1,1])at(t,s*(b.hw-0.4),g+hgt/2,1.4,hgt,1.4,CON);at(t,0,top-0.4,2*b.hw+0.6,0.8,1.8,CON)};
+    for(const s of [-1,1])at(t,s*(b.hw-0.4),g+hgt/2,1.4,hgt,1.4,CON);at(t,0,top-0.4,2*b.hw+0.6,0.8,1.8,CON);
+    const [ax,az]=W(t,0.3-b.hw),[bx,bz]=W(t,b.hw-0.3);BOAT_WALLS.push({ax,az,bx,bz,r:0.9})};
   for(const t of o.piers)pier(t);
   for(const t of [0,L]){const [x,z]=W(t,0),g=baseHeight(x,z);if(g<Y-1)continue;at(t,0,Y-1.6,2*b.hw+1.2,3,3,CON)}
   // street lamps, staggered, their heads lit
@@ -80,9 +81,9 @@ function famBridge(b,K,o){
 
 (function(){
   // the truss bridge from the Lower Bench: dark green steel
-  const K1=famKit(),B1=BRIDGES[0];famBridge(B1,K1,{depth:2.6,steel:0x3f5e4e,piers:[34,69]});famAdd(K1);
+  const K1=famKit(),B1=BRIDGES[0];famBridge(B1,K1,{depth:1.5,steel:0x3f5e4e,piers:[34,69]});famAdd(K1);
   // the mainland bridge: grey steel, running on as a timber trestle and a causeway to the town (mainland.js)
-  const K2=famKit(),B2=BRIDGES[1];famBridge(B2,K2,{depth:2.4,steel:0x5d6a74,piers:[30,64,98]});famAdd(K2);
+  const K2=famKit(),B2=BRIDGES[1];famBridge(B2,K2,{depth:1.4,steel:0x5d6a74,piers:[30,64,98]});famAdd(K2);
   // the spoil yard on Corley's north lawn, where the truck dumps now the cliff is gone
   {const x=6,z=-41,y=baseHeight(x,z),K=famKit();for(const s of [-1,1])K.box(0.12,2.6,0.12,0x8a8a86,x+s*1.9,y+1.3,z);famAdd(K);
     famSign(['SPOIL YARD','Dump loads here'],4.2,1.4,x,y+2.1,z+0.07,0,'#c9601c','#ffffff')}

@@ -30,7 +30,7 @@ function statLoad(){let d=null;try{d=JSON.parse(localStorage.getItem(STAT_KEY))}
 // bytes a square that has been crossed (its index in three, then the distance on a log scale), so a save stays small
 // enough to sync. The grid covers the islands and both mainland shores, 232 x 360 squares; the first saves (trail) held
 // three bytes a square of a 135 x 135 grid round the islands, which sits TRAIL_OLD squares in from this one's corner
-const TRAIL_C=4,TRAIL_X0=-464,TRAIL_Z0=-594,TRAIL_NX=232,TRAIL_NZ=360,TRAIL_OLD=[51,133,135],TRAIL_KINDS=['walk','ex','truck','mow','skid'],trail={};for(const k of TRAIL_KINDS)trail[k]=new Float32Array(TRAIL_NX*TRAIL_NZ);
+const TRAIL_C=4,TRAIL_X0=-464,TRAIL_Z0=-594,TRAIL_NX=232,TRAIL_NZ=360,TRAIL_OLD=[51,133,135],TRAIL_KINDS=['walk','ex','truck','mow','skid','boat'],trail={};for(const k of TRAIL_KINDS)trail[k]=new Float32Array(TRAIL_NX*TRAIL_NZ);
 let trailDirty=true;
 function trailAdd(k,x,z,d){const i=Math.floor((x-TRAIL_X0)/TRAIL_C),j=Math.floor((z-TRAIL_Z0)/TRAIL_C);
   if(i<0||j<0||i>=TRAIL_NX||j>=TRAIL_NZ)return;trail[k][j*TRAIL_NX+i]+=d;trailDirty=true}
@@ -224,7 +224,7 @@ addEventListener('keydown',e=>{if(e.code==='Escape'&&!statBox.hidden)showStats(f
 
 // ---------- trails on the big map ----------
 // which layer shows (off, all, or one way of getting round), kept on this device with the heatmap's choice
-const TRAIL_OPTS=[['off','Off'],['all','All'],['walk','On foot'],['ex','Excavator'],['truck','Truck'],['mow','Mower'],['skid','Skid steer']];
+const TRAIL_OPTS=[['off','Off'],['all','All'],['walk','On foot'],['ex','Excavator'],['truck','Truck'],['mow','Mower'],['skid','Skid steer'],['boat','Boats']];
 let trailShow='off',trailCv=null,trailMax=0,trailDrawn='';
 try{const h=JSON.parse(localStorage.getItem(HEAT_KEY)||'null');if(h&&TRAIL_OPTS.some(o=>o[0]===h.trail))trailShow=h.trail}catch(e){}
 // one pixel a square: clear where never crossed, then the heatmap's colours, fainter where you've only passed through once
