@@ -96,7 +96,7 @@ function farDrop(key){const f=farTiles.get(key);if(!f)return;scene.remove(f.m);f
 function farSync(){for(const key of [...farTiles.keys()])if(!tileStore.has(key))farDrop(key);
   for(const [key,g] of tileStore){const f=farTiles.get(key);if(f&&f.g===g)continue;if(f)farDrop(key);farTiles.set(key,{g,m:tileFarMesh(g)})}
   digSkirtRects.length=0;for(const f of farTiles.values())digSkirtRects.push([f.g.ti*TILE,(f.g.ti+1)*TILE,f.g.tj*TILE,(f.g.tj+1)*TILE]);
-  patchHoles(outPatch,MID);for(const P of [famGround,dexGround,jesGround])patchHoles(P,null);mtReindex();buildSkirts()}
+  patchHoles(outPatch,MID);for(const P of [famGround,jesGround,trkGround])patchHoles(P,null);patchHoles(dexGround,TRK_BOX);mtReindex();buildSkirts()}
 // a ground patch's triangles: every cell but those in its fixed hole and on dug ground
 function patchHoles(P,hole){const ix=[];for(let j=0;j<P.NZ;j++)for(let i=0;i<P.NX;i++){const x0=P.X0+i*P.CO,z0=P.Z0+j*P.CO;
     if(hole&&x0>=hole[0]-1e-6&&x0+P.CO<=hole[1]+1e-6&&z0>=hole[2]-1e-6&&z0+P.CO<=hole[3]+1e-6||tileMade(x0+P.CO/2,z0+P.CO/2))continue;const a=j*P.VX+i;ix.push(a,a+P.VX,a+1,a+1,a+P.VX,a+P.VX+1)}
