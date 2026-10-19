@@ -347,6 +347,7 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
 .edstat{grid-column:1/-1;grid-row:4;pointer-events:auto;display:flex;gap:16px;white-space:nowrap;overflow:hidden;background:rgba(10,12,10,.88);color:var(--muted);font:600 13px/1.3 var(--f-display);
   padding:3px var(--ed-r) calc(env(safe-area-inset-bottom,0px) + 3px) var(--ed-l)}
 .edstat span{font-variant-numeric:tabular-nums}
+#edStatView{color:#fff;flex:none}
 #edTip{margin-left:auto;overflow:hidden;text-overflow:ellipsis;min-width:0}
 .edlist{display:flex;flex-direction:column;gap:4px}
 .edbar h2 small{font:600 14px/1 var(--f-display);letter-spacing:.02em;text-transform:none;color:var(--muted);margin-left:6px}
@@ -621,7 +622,7 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
     <h2>Map editor <small id="edMapNm"></small></h2>
     <div class="row" role="group" aria-label="Undo"><button id="edUndo" class="sm edico" data-ic="undo" disabled>Undo</button><button id="edRedo" class="sm edico" data-ic="redo" disabled>Redo</button></div>
     <button id="edHist" class="sm" aria-expanded="false">History ▾</button>
-    <div class="row" id="edView" role="group" aria-label="View"><button id="edLook" class="sm edico" data-ic="look" aria-pressed="false">Look</button><button id="edZoomIn" class="sm edico" data-ic="zin">Closer</button><button id="edZoomOut" class="sm edico" data-ic="zout">Farther</button><button id="edNorth" class="sm edico" data-ic="north">North up</button><button id="edHome" class="sm edico" data-ic="home">Start view</button></div>
+    <div class="row" id="edView" role="group" aria-label="View"><button id="edLook" class="sm edico" data-ic="look" aria-pressed="false">Look</button><button id="edZoomIn" class="sm edico" data-ic="zin">Closer</button><button id="edZoomOut" class="sm edico" data-ic="zout">Farther</button><button id="edNorth" class="sm edico" data-ic="north">North up</button><button id="edHome" class="sm edico" data-ic="home">Start view</button><button id="edViewCopy" class="sm edico" data-ic="eye" title="Copy where you are looking, to paste to Claude">Copy view</button></div>
     <button id="edGrid" class="sm edico" data-ic="grid" aria-pressed="false">Snap off</button>
     <button id="edPanelBtn" class="sm edico" data-ic="panel" aria-pressed="true">Panel</button>
   </div>
@@ -696,7 +697,7 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
       <span class="row" data-for="select"><button id="edBoxBtn" class="sm edico" data-ic="box" aria-pressed="false">Box select</button><button id="edAllBtn" class="sm">Select all in view</button><button id="edClipPaste" class="sm" hidden>Paste</button><button id="edShowAll" class="sm" hidden>Show hidden</button></span>
     </div>
   </div>
-  <div id="edStat" class="edstat"><span id="edStatPos"></span><span id="edStatInfo"></span><span id="edTip"></span></div>
+  <div id="edStat" class="edstat"><span id="edStatPos"></span><span id="edStatInfo"></span><span id="edStatView"></span><span id="edTip"></span></div>
   <div id="edBox" hidden></div>
   <div id="edHistList" class="edhist" role="menu" hidden></div>
 </div>
@@ -1041,6 +1042,7 @@ const WORDS=[
   ['edTip_add_scatter','Map editor','Hold and drag to scatter them under the brush. Erase (or Alt) takes this kind away under it.'],
   ['edTip_query','Map editor','Tap or drag over the ground to read its height, slope and surface.'],
   ['edTip_measure','Map editor','Tap the ground to lay points: the length shows, and with three or more the area. Drag a point to move it; tap the first one to close the shape.'],
+  ['edViewCopied','Map editor','View copied: {code}. Paste it to Claude to show where you are looking ({where}).','the view code, where it looks'],
   ['edTip_roads','Map editor','Tap a road to pick it, drag its dots, tap it between dots to add one.'],
   ['padReady','Other','Controller ready. LB / RB switch machine, Y cab view.'],['reset','Other','Fresh ground. Paint is back.'],['saveFull','Other','The site is too big to save in this browser ({mb} MB). Digging since the last save is not kept.','{mb}: how big the save is, in MB'],
   ['tpNoRoom','Other','No room there. Pick an open spot on land.'],['tpLake','Other','That is the lake. Pick a spot on land.'],

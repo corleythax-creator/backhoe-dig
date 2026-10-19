@@ -234,6 +234,7 @@ function frame(now){
   }
   fpTick(dt);
   if(bench.on)benchCamera();
+  if(viewPin)viewPinApply();
   updateSound(dt);
   if(shake>0){shake-=dt;camera.position.x+=(Math.random()-0.5)*0.25;camera.position.y+=(Math.random()-0.5)*0.25}
   sky.position.copy(camera.position);
