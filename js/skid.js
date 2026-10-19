@@ -77,7 +77,7 @@ function updateSkid(dt,drive,turn,arm,curl){
   skidPose();sndIn.skHyd=Math.min(1,Math.abs(arm)+Math.abs(curl));
   // scooping: the cutting edge under the ground on the dig site, the bucket near level
   const g=hAt(skTip.x,skTip.z);
-  if(on&&sk.c>-0.3&&sk.load<TU.skCap-0.002&&skTip.y<g-0.03&&Math.abs(skTip.x)<S/2-1&&Math.abs(skTip.z)<S/2-1){
+  if(on&&sk.c>-0.3&&sk.load<TU.skCap-0.002&&skTip.y<g-0.03&&inDig(skTip.x,skTip.z,1)){
     let got=dig(skTipL,(TU.skCap-sk.load)/2);got+=dig(skTipR,TU.skCap-sk.load-got);
     if(got>0){const f=got/(sk.load+got);for(let q=0;q<3;q++)sk.loadC[q]+=(digC[q]-sk.loadC[q])*f;for(let q=0;q<4;q++)sk.loadMix[q]+=(digMix[q]-sk.loadMix[q])*f;
       sk.loadWet+=(mudAt(skTip.x,skTip.z)-sk.loadWet)*f;sk.load+=got;st.dirty=true;st.slumpT=2.5;sndIn.skDig=1;
@@ -89,7 +89,7 @@ function updateSkid(dt,drive,turn,arm,curl){
   const drop=out=>{sk.dumped+=out;
     if(inBed(skLip)&&tr.load<TU.trCap){const take=Math.min(out,TU.trCap-tr.load),ff=take/(tr.load+take||1);
       for(let q=0;q<3;q++)tr.loadC[q]+=(sk.loadC[q]-tr.loadC[q])*ff;for(let q=0;q<4;q++)tr.loadMix[q]+=(sk.loadMix[q]-tr.loadMix[q])*ff;tr.loadWet+=(sk.loadWet-tr.loadWet)*ff;tr.load+=take;return false}
-    if(Math.abs(skLip.x)<S/2-1&&Math.abs(skLip.z)<S/2-1){const gy=hAt(skLip.x,skLip.z);deposit(skLip.x,skLip.z,out,sk.loadC,sk.loadMix,dropSpread(skLip.y-gy),sk.loadWet);st.dirty=true;st.slumpT=2.5;return true}return false};
+    if(inDig(skLip.x,skLip.z,1)){const gy=hAt(skLip.x,skLip.z);deposit(skLip.x,skLip.z,out,sk.loadC,sk.loadMix,dropSpread(skLip.y-gy),sk.loadWet);st.dirty=true;st.slumpT=2.5;return true}return false};
   sk.stuck=Math.min(sk.stuck||0,sk.load);
   if(f>0&&sk.load-sk.stuck>0.0005){
     if(!sk.pouring){sk.pouring=true;sk.stuck=Math.min(sk.load,TU.skCap*0.4,sk.stuck+(sk.load-sk.stuck)*stickFrac(sk.loadMix,sk.loadWet))}

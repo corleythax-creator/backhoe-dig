@@ -346,7 +346,7 @@ function updateTruck(dt,thr,steerIn,bedIn){
   // (stickFrac, shakeOut in dirt.js): bump the bed down and up fast, or run it hard into its top stop
   tr.stuck=Math.min(tr.stuck||0,tr.load);
   const drop=out=>{truck.localToWorld(tv.set(0,0.3,-4.9));tr.pourP.copy(tv);
-    if(mesaR(tv.x,tv.z)<EDGE-1.2&&Math.abs(tv.x)<S/2-0.8&&Math.abs(tv.z)<S/2-0.8){deposit(tv.x,tv.z,out,tr.loadC,tr.loadMix,dropSpread(tv.y-hAt(tv.x,tv.z)),tr.loadWet);st.dirty=true;st.slumpT=2.5;return true}
+    if(mesaR(tv.x,tv.z)<EDGE-1.2&&inDig(tv.x,tv.z,0.8)){deposit(tv.x,tv.z,out,tr.loadC,tr.loadMix,dropSpread(tv.y-hAt(tv.x,tv.z)),tr.loadWet);st.dirty=true;st.slumpT=2.5;return true}
     tr.hauled+=out;if(!tr.haulWarned&&tr.load<=0.0005){tr.haulWarned=true;toast(say(mesaR(tv.x,tv.z)<EDGE-1.2?'dumpYard':'dumpOff'),'good')}return false};
   if(tr.bed>0.32&&tr.load-tr.stuck>0.0005){
     if(!tr.tipping){tr.tipping=true;tr.stuck=Math.min(tr.load,TU.trCap*0.3,tr.stuck+(tr.load-tr.stuck)*stickFrac(tr.loadMix,tr.loadWet)*0.6)}

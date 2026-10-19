@@ -62,7 +62,7 @@ function updateLawnMap(){
     const t=0.5+0.5*lawn.str[n],f=ss(0,0.6,lawn.gd[n]);d[o]=70+50*t+(163-70-50*t)*f;d[o+1]=120+70*t+(166-120-70*t)*f;d[o+2]=45+30*t+(76-45-30*t)*f;d[o+3]=235}
   x2.putImageData(img,0,0)}
 // place names on the big map: [name, x, z, size], drawn at every zoom
-const MAP_LABELS=[['DIG SITE',0,-S/2-4,1],["CORLEY'S ISLAND",0,-EDGE-8,1.2],['FAMILY ISLAND',FAM_X,FAM_Z-FAM_R-6,1.2],["JESSICA'S ISLAND",JES_X,JES_Z-JES_R-8,1.1],
+const MAP_LABELS=[['DIG SITE',GX0+S/2,GZ0-4,1],["CORLEY'S ISLAND",0,-EDGE-8,1.2],['FAMILY ISLAND',FAM_X,FAM_Z-FAM_R-6,1.2],["JESSICA'S ISLAND",JES_X,JES_Z-JES_R-8,1.1],
   ["DEXTER'S ISLAND",DEX_X,DEX_Z-DEX_R-8,1.1],['THE LAKE',-130,120,1.3],['THE LAKE',170,390,1.3],['THE WOODS',-220,-450,1.3],['HAYFIELD',210,-440,1.3],['LAKESIDE TOWN',0,690,1.4],['MARINA BEACH',-120,545,1]];
 // the map at canvas cv, centred on cx, cz at mpp metres a CSS pixel (big: the site map, with its layers and labels)
 function drawMap(cv,cx,cz,mpp,big){
@@ -89,7 +89,7 @@ function drawMap(cv,cx,cz,mpp,big){
     g.save();g.translate(X(s.x),Y(s.z));if(rot)g.rotate(Math.atan2(s.sn,s.cs));g.fillStyle='rgba(0,0,0,.35)';g.fillRect(-hx*sc+sh,-hz*sc+sh,2*hx*sc,2*hz*sc);
     g.fillStyle='#8d6a52';g.fillRect(-hx*sc,-hz*sc,2*hx*sc,2*hz*sc);if(hx*sc>3){g.strokeStyle='rgba(255,236,210,.35)';g.lineWidth=Math.max(1,dpr);g.strokeRect(-hx*sc+0.5,-hz*sc+0.5,2*hx*sc-1,2*hz*sc-1)}g.restore()}
   if(big)trailDrawOn(g,X,Y,sc);
-  if(digLayer)g.drawImage(digLayer,X(-S/2),Y(-S/2),S*sc,S*sc);
+  if(digLayer)g.drawImage(digLayer,X(GX0),Y(GZ0),S*sc,S*sc);
   if(big)wetDrawOn(g,X,Y,sc);
   g.lineWidth=Math.max(1.5,0.18*sc);g.strokeStyle='#f2f2ee';g.strokeRect(X(-0.5),Y(TRENCH_Z0),1*sc,(TRENCH_Z1-TRENCH_Z0)*sc);
   g.setLineDash([6*dpr,5*dpr]);g.strokeStyle='#f5c518';g.lineWidth=Math.max(2,0.2*sc);g.beginPath();g.moveTo(X(-12),Y(PIPE_Z));g.lineTo(X(12),Y(PIPE_Z));g.stroke();g.setLineDash([]);
@@ -97,7 +97,7 @@ function drawMap(cv,cx,cz,mpp,big){
   if(lawn.mapDirty||!lawnMap){updateLawnMap();lawn.mapDirty=false}
   g.drawImage(lawnMap,X(LAWN_X0),Y(LAWN_Z0),LAWN_NX*LAWN_GS*sc,LAWN_NZ*LAWN_GS*sc);
   g.fillStyle='#b9b6ae';for(const b of blocks)g.fillRect(X(b.x-b.w/2),Y(b.z-b.d/2),Math.max(2,b.w*sc),Math.max(2,b.d*sc));
-  if(big&&S*sc>40){g.strokeStyle='rgba(255,255,255,.4)';g.lineWidth=1.5*dpr;g.setLineDash([4*dpr,4*dpr]);g.strokeRect(X(-S/2),Y(-S/2),S*sc,S*sc);g.setLineDash([]);}
+  if(big&&S*sc>40){g.strokeStyle='rgba(255,255,255,.4)';g.lineWidth=1.5*dpr;g.setLineDash([4*dpr,4*dpr]);g.strokeRect(X(GX0),Y(GZ0),S*sc,S*sc);g.setLineDash([]);}
   if(big){g.textAlign='center';g.textBaseline='middle';g.lineJoin='round';const fs=Math.max(12,Math.min(22,10+sc/dpr*4));
     for(const [t,x,z,k] of MAP_LABELS){if(t==='DIG SITE'&&S*sc<40)continue;if(t==="CORLEY'S ISLAND"&&S*sc>=40)continue;
       g.font=`800 ${Math.round(fs*k*dpr)}px Saira Condensed, sans-serif`;g.lineWidth=4*dpr;g.strokeStyle='rgba(12,16,12,.75)';g.strokeText(t,X(x),Y(z));g.fillStyle='#f6f3e8';g.fillText(t,X(x),Y(z))}}
@@ -144,7 +144,7 @@ function mapFocus(){return wk.inside?WK_RIDES[wk.inside].o:mode==='walk'?wk:mode
 function mapPlace(x,z){
   for(const b of BRIDGES){const [t,u]=deckLocal(b,x,z);if(t>0&&t<b.len&&Math.abs(u)<b.hw+1)return b.temp?'Temporary bridge':b.foot?'Covered footbridge':'Bridge'}
   if(jesR(x,z)<JES_R+4)return "Jessica's Island";if(dexR(x,z)<DEX_R+4)return "Dexter's Island";if(famR(x,z)<FAM_R+4)return 'Family Island';
-  if(Math.abs(x)<S/2&&Math.abs(z)<S/2)return 'Dig site';if(mesaR(x,z)<EDGE+4)return "Corley's Island";
+  if(inDig(x,z))return 'Dig site';if(mesaR(x,z)<EDGE+4)return "Corley's Island";
   if(z<0&&z<mainRimN(x)+6)return x<-14?'The woods':x>14?'The hayfield':'North trail';if(z>0&&z>mainRimS(x)-6)return 'Lakeside town';return 'The lake'}
 function mapWhere(){const el=$('#mapWhere'),f=mapFocus(),p=mapV.hover||tpPick;
   const t=p?`${mapPlace(p.x,p.z)} · ${Math.round(Math.hypot(p.x-f.x,p.z-f.z)/FT/10)*10} ft from you`:`You: ${mapPlace(f.x,f.z)}`;if(el.textContent!==t)el.textContent=t}
