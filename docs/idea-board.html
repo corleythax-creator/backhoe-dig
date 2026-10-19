@@ -121,7 +121,14 @@ tr.done td{opacity:.6}
 .xr.blocked .xt{opacity:.6}.xr.built .xt{opacity:.6;text-decoration:line-through}
 .rbtn{font:inherit;font-size:12px;font-weight:700;border-radius:999px;padding:3px 10px;border:1px solid var(--amber);background:none;color:var(--amber);cursor:pointer;white-space:nowrap}
 .rbtn:disabled{opacity:.5;border-color:var(--line);color:var(--muted);cursor:default}
-.tkh{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;margin-top:14px}
+.tkd2{border:1px solid var(--line);border-radius:12px;background:rgba(10,8,5,.3);margin-top:8px}
+.tks{list-style:none;cursor:pointer;padding:10px 14px 8px;position:relative;padding-right:34px}
+.tks::-webkit-details-marker{display:none}
+.tks::after{content:"▸";position:absolute;right:14px;top:12px;color:var(--amber)}
+.tkd2[open]>.tks::after{content:"▾"}
+.tkn{color:var(--muted);font-size:12px;margin-top:2px}
+.tkbody{padding:0 14px 10px}
+.tkh{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px}
 .tkh .tkp{color:var(--s);font-size:13px;font-weight:600}
 .tkb{height:7px;border-radius:4px;background:var(--bar-bg);overflow:hidden;margin:4px 0 2px;max-width:420px}
 .tkb i{display:block;height:100%;background:var(--s)}
@@ -257,8 +264,8 @@ tr.on .rin{background:var(--amber);color:var(--amber-ink);border-color:var(--amb
   </div>
 
   <div class="panel tk" id="ptracks" hidden>
-    <p class="hint">Groups of ideas that add up to one thing you can play. Each runs in build order; the highlighted one is the next to build.</p>
-    <div class="chips" id="tkc" role="group" aria-label="Pick a track"></div>
+    <p class="hint">Groups of ideas that add up to one thing you can play. Tap a track to open it. Each runs in build order; the highlighted one is the next to build.</p>
+    <div class="frow"><button class="gbtn" id="tkall" type="button">Expand all</button><button class="gbtn" id="tknone" type="button">Collapse all</button></div>
     <div id="tkb"></div>
   </div>
 
@@ -838,22 +845,24 @@ function renderNext(){
   const nt=[];for(const [k,n,d,list] of TRACKS){const r=nextOf(list);if(r&&!hid.has(r[0]))nt.push(xrow(r,{extra:" · "+n}))}
   card("Next step in each track","The first thing still open in every track.",nt)
 }
-let tkSel="";
+const tkOpen=new Set();
 function trackPct(list){const rows=list.map(i=>IDS.get(i));return rows.reduce((a,r)=>a+(stOf(r[0])==="built"?1:stOf(r[0])==="part"?(DONE[r[0]].pc||0)/100:0),0)/rows.length}
 function renderTracks(){
-  const c=$("tkc");c.textContent="";
-  const mk=(k,label,small)=>{const x=el("button","chip");x.type="button";x.setAttribute("aria-pressed",tkSel===k);x.style.setProperty("--gc","var(--amber)");x.append(label);if(small)x.appendChild(el("small",null,small));x.addEventListener("click",()=>{tkSel=k;renderTracks()});c.appendChild(x)};
-  mk("","All tracks",TRACKS.length);for(const [k,n,d,list] of TRACKS)mk(k,n,Math.round(trackPct(list)*100)+"%");
   const b=$("tkb");b.textContent="";
   for(const [k,n,d,list] of TRACKS){
-    if(tkSel&&tkSel!==k)continue;
-    const rows=list.map(i=>IDS.get(i)),tot=rows.length,pt=rows.reduce((a,r)=>a+(stOf(r[0])==="built"?1:stOf(r[0])==="part"?(DONE[r[0]].pc||0)/100:0),0),nb=rows.filter(r=>stOf(r[0])==="built").length;
+    const rows=list.map(i=>IDS.get(i)),tot=rows.length,pc=Math.round(trackPct(list)*100),nb=rows.filter(r=>stOf(r[0])==="built").length;
     const nx=nextOf(list),hr=rows.filter(r=>stOf(r[0])!=="built").reduce((a,r)=>a+r[9],0);
-    const hd=el("div","tkh");hd.append(el("h3",null,n),el("span","tkp",nb+" of "+tot+" built · "+Math.round(pt/tot*100)+"%"),el("span","tkp",hr?"~"+hr+" h left":"all built"));
-    const bar=el("div","tkb"),bi=el("i");bi.style.width=Math.round(pt/tot*100)+"%";bar.appendChild(bi);
-    b.append(hd,bar,el("div","tkd",d));
-    for(const r of rows)b.appendChild(xrow(r,{next:nx&&nx[0]===r[0]}))}
+    const dt=el("details","tkd2");dt.open=tkOpen.has(k);dt.addEventListener("toggle",()=>{dt.open?tkOpen.add(k):tkOpen.delete(k)});
+    const sm=el("summary","tks"),top=el("div","tkh");
+    top.append(el("h3",null,n),el("span","tkp",nb+" of "+tot+" built · "+pc+"%"),el("span","tkp",hr?"~"+hr+" h left":"all built"));
+    const bar=el("div","tkb"),bi=el("i");bi.style.width=pc+"%";bar.appendChild(bi);
+    sm.append(top,bar);if(nx)sm.appendChild(el("div","tkn","Next: "+nx[0]+" "+nx[2]));
+    const body=el("div","tkbody");body.appendChild(el("div","tkd",d));
+    for(const r of rows)body.appendChild(xrow(r,{next:nx&&nx[0]===r[0]}));
+    dt.append(sm,body);b.appendChild(dt)}
 }
+$("tkall").addEventListener("click",()=>{TRACKS.forEach(t=>tkOpen.add(t[0]));renderTracks()});
+$("tknone").addEventListener("click",()=>{tkOpen.clear();renderTracks()});
 function renderPanels(){if(!$("pnext").hidden)renderNext();if(!$("ptracks").hidden)renderTracks()}
 let gK="pr",gD=-1;
 document.querySelectorAll("th button[data-gk]").forEach(b=>b.addEventListener("click",()=>{const k=b.dataset.gk;if(gK===k)gD=-gD;else{gK=k;gD=k==="g"?1:-1}groupTable()}));
