@@ -142,7 +142,7 @@ $('#sprintBtn').addEventListener('pointerdown',e=>{e.preventDefault();setSprint(
 // each machine: its state (looked up when used: the excavator's is made in controls.js), the circles that make up its
 // body, the mode that drives it and what to call it
 const WK_RIDES={ex:{get o(){return st},c:EX_C,r:EX_R,m:'dig',n:'excavator'},truck:{get o(){return tr},c:TR_C,r:TR_R,m:'truck',n:'dump truck'},skid:{get o(){return sk},c:SK_C,r:SK_R,m:'skid',n:'skid steer'},mow:{get o(){return mw},c:MW_C,r:MW_R,m:'mow',n:'mower'}};
-const rideOf=m=>m==='dig'||m==='drive'?'ex':m==='truck'?'truck':m==='mow'?'mow':m==='skid'?'skid':m==='boat'?'boat'+btI:null;
+const rideOf=m=>m==='dig'||m==='drive'?'ex':m==='truck'?'truck':m==='mow'?'mow':m==='skid'?'skid':m==='boat'?'boat'+btI:m==='bike'?'bike':null;
 // the machine within an arm's length of the worker, nearest first
 function wkNear(){let best=null,bd=1.3;
   for(const k in WK_RIDES){const R=WK_RIDES[k];

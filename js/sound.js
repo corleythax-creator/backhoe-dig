@@ -105,8 +105,8 @@ function* sndBuild(){
   snd.master=sndGain(0,snd.comp);
   snd.dry=sndGain(1,snd.master);snd.send=sndGain(0.16);const cv=c.createConvolver();cv.buffer=renderSpace(c);snd.send.connect(cv);cv.connect(snd.master);yield;
   // the three user buses sit inside each machine's voice, so a machine's engine, alarm and effects pan together
-  const T=snd.T=sndVoice(),X=snd.X=sndVoice(),Mw=snd.M=sndVoice(),Sk=snd.S=sndVoice();
-  for(const v of [T,X,Mw,Sk]){v.eng=sndGain(0,v.g);v.fx=sndGain(0,v.g);v.alarm=sndGain(0,v.g)}
+  const T=snd.T=sndVoice(),X=snd.X=sndVoice(),Mw=snd.M=sndVoice(),Sk=snd.S=sndVoice(),Bk=snd.B=sndVoice();
+  for(const v of [T,X,Mw,Sk,Bk]){v.eng=sndGain(0,v.g);v.fx=sndGain(0,v.g);v.alarm=sndGain(0,v.g)}
   const tLo=toBuf(c,renderEngine(sr,750,{seed:3,cycles:10,decay:0.0055,jit:0.03,var:0.14,knock:0.8,mech:0.12,crack:0.8,crackF:550,tilt:2,tiltF:250,tilt2:2.5,pipe:6.5,fb:0.5,dry:0.35,
       res:[[68,1.4,1.1],[185,2.6,0.6],[470,3.5,0.32],[1150,3,0.2],[2700,2,0.1]],lp:6200}));yield;
   const tHi=toBuf(c,renderEngine(sr,1650,{seed:4,cycles:20,decay:0.0045,jit:0.02,var:0.08,knock:0.7,mech:0.1,crack:0.8,crackF:550,tilt:2,tiltF:250,tilt2:2.5,pipe:6.5,fb:0.5,dry:0.35,
@@ -125,6 +125,13 @@ function* sndBuild(){
   snd.engT=sndEngine(tLo,tHi,750,1650,T.eng);snd.engX=sndEngine(xLo,xHi,850,1800,X.eng);snd.engM=sndEngine(mLo,mHi,880,1150,Mw.eng);
   // the skid steer: a smaller diesel, the excavator's recording run a little faster
   snd.engS=sndEngine(xLo,xHi,850,1800,Sk.eng);
+  // the dirt bike's single: renderEngine's six-cylinder spacing at 1/6 the rpm fires once every other turn (50 Hz idling
+  // up to 100 Hz flat out), a sharp crack and a short loud pipe
+  const bLo=toBuf(c,renderEngine(sr,1000,{seed:17,cycles:12,decay:0.004,jit:0.06,var:0.12,knock:0.3,mech:0.15,crack:1.1,crackF:1300,tilt:2,tiltF:400,tilt2:3,pipe:1.6,fb:0.35,dry:0.45,
+      res:[[110,1.5,0.9],[330,2.5,0.7],[900,3,0.45],[2400,2.5,0.25]],lp:8000}));yield;
+  const bHi=toBuf(c,renderEngine(sr,2000,{seed:18,cycles:20,decay:0.003,jit:0.04,var:0.08,knock:0.3,mech:0.14,crack:1.1,crackF:1500,tilt:2,tiltF:400,tilt2:3,pipe:1.6,fb:0.35,dry:0.45,
+      res:[[110,1.5,0.85],[330,2.5,0.75],[900,3,0.5],[2400,2.5,0.3]],lp:9000}));yield;
+  snd.engB=sndEngine(bLo,bHi,1000,2000,Bk.eng);
   const noise=toBuf(c,noiseBuf(sr,2,21)),gravel=toBuf(c,renderGravel(sr));yield;
   // truck: turbo whistle and spool whoosh, tire roar, gravel crunch, bed hydraulics
   snd.turbo=c.createOscillator();snd.turbo.type='sine';snd.turboG=sndGain(0,T.eng);snd.turbo.connect(snd.turboG);snd.turbo.start();
@@ -204,7 +211,7 @@ function sndEngineTo(e,rpm,load,lvl,t){
 function updateSound(dt){
   if(!snd||!snd.ready||actx.state!=='running')return;
   const t=actx.currentTime,quiet=bench.on?0:1;
-  sndPlace(snd.T,tr.x,tr.y+1.6,tr.z,t);sndPlace(snd.X,st.x,st.y+1.4,st.z,t);sndPlace(snd.M,mw.x,mw.y+0.6,mw.z,t);sndPlace(snd.S,sk.x,sk.y+1.2,sk.z,t);
+  sndPlace(snd.T,tr.x,tr.y+1.6,tr.z,t);sndPlace(snd.X,st.x,st.y+1.4,st.z,t);sndPlace(snd.M,mw.x,mw.y+0.6,mw.z,t);sndPlace(snd.S,sk.x,sk.y+1.2,sk.z,t);sndPlace(snd.B,bk.x,bk.y+0.6,bk.z,t);
   // truck: automatic box, five gears forward; revs climb through each and drop on the upshift
   const sp=Math.abs(tr.v),drive=tr.drive||0,pto=tr.bedIn>0?1:0;let gi=0,frac;
   if(tr.gear<0)frac=Math.min(1,sp/2.7);else{gi=Math.min(4,Math.floor(sp/1.8));frac=Math.min(1,(sp-gi*1.8)/1.8)}
@@ -256,4 +263,7 @@ function updateSound(dt){
   // skid steer: runs while you drive it; driving, the loader and the bucket biting the ground pull the revs up
   const sr=sk.run,ss_=snd.engS,sT=950+800*Math.min(1,Math.abs(sk.v)/TU.skSpd*0.6+sndIn.skHyd*0.6+sndIn.skDig*0.5);ss_.rpm+=(sT*1.08-ss_.rpm)*Math.min(1,dt*3);
   sndEngineTo(ss_,ss_.rpm,Math.min(1,sndIn.skHyd*0.6+sndIn.skDig),quiet*0.7*sr,t);sndIn.skDig=Math.max(0,sndIn.skDig-dt*3);
+  // dirt bike: idles while you sit on it; the gas (and the back wheel spinning free in the air) sends the revs up
+  const be=snd.engB,bT=1000+1000*Math.min(1,Math.max(0,bk.thr)*(bk.air?1:0.45)+Math.abs(bk.v)/TU.bkSpd*0.6);be.rpm+=(bT-be.rpm)*Math.min(1,dt*(bT>be.rpm?6:3));
+  sndEngineTo(be,be.rpm,Math.max(0,bk.thr),quiet*0.6*bk.run,t);
 }

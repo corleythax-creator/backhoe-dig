@@ -151,8 +151,8 @@ const aimEl=$('#aim');
 function setCaps(){const m=mode,two=(a,b)=>`${keyLabel(a)} ${keyLabel(b)}`,lh=kbUsed?two('lLeft','lRight'):'◀ ▶',lv=kbUsed?two('lUp','lDown'):'▲ ▼',rh=kbUsed?two('rLeft','rRight'):'◀ ▶',rv=kbUsed?two('rUp','rDown'):'▲ ▼';
   for(const b of document.querySelectorAll('.seg button'))b.dataset.k=keyLabel(b.id.slice(4).toLowerCase());
   const sv={lh,lv,rh,rv},cap=id=>{const h=say(id,sv,true);return h.includes('<br>')?h:h+'<br>&nbsp;'},kb=m==='mow'&&kbUsed?'Kb':'';
-  $('#capL').innerHTML=cap('capL_'+(m==='dig'||m==='drive'||m==='mow'||m==='walk'||m==='skid'||m==='boat'?m+kb:'truck'));
-  $('#capR').innerHTML=cap('capR_'+(m==='truck'||m==='mow'||m==='walk'||m==='skid'||m==='boat'?m+kb:'dig'));}
+  $('#capL').innerHTML=cap('capL_'+(m==='dig'||m==='drive'||m==='mow'||m==='walk'||m==='skid'||m==='boat'||m==='bike'?m+kb:'truck'));
+  $('#capR').innerHTML=cap('capR_'+(m==='truck'||m==='mow'||m==='walk'||m==='skid'||m==='boat'||m==='bike'?m+kb:'dig'));}
 function setMode(m){if(m===mode)return;mode=m;setTurnSens();for(const [id,k] of [['#modeDig','dig'],['#modeDrive','drive'],['#modeTruck','truck'],['#modeMow','mow'],['#modeSkid','skid'],['#modeWalk','walk']])$(id).setAttribute('aria-pressed',m===k);
   $('#walkBtns').hidden=m!=='walk';if(m!=='walk')setSprint(false);
   // switching to Walk from a machine you climbed into sets you down beside it
@@ -160,6 +160,7 @@ function setMode(m){if(m===mode)return;mode=m;setTurnSens();for(const [id,k] of 
   setCaps();markTile();firstCam=true;fpReset();if(m==='mow'&&!lawn.startT&&!lawn.done)toast(say(kbUsed?'mowKb':'mowTouch'),'',3800);
   if(m==='skid')toast(say(kbUsed?'skidKb':'skidTouch'),'',4200);
   if(m==='boat')toast(say('boatTip'),'',4200);
+  if(m==='bike')toast(say('bikeTip'),'',4200);
   if(m==='walk')toast(say(padUsed?'walkPad':kbUsed?'walkKb':'walkTouch'),'',3800)}
 $('#modeDig').onclick=()=>setMode('dig'); $('#modeDrive').onclick=()=>setMode('drive'); $('#modeTruck').onclick=()=>setMode('truck'); $('#modeMow').onclick=()=>setMode('mow'); $('#modeSkid').onclick=()=>setMode('skid'); $('#modeWalk').onclick=()=>setMode('walk');
 $('#camBtn').onclick=()=>{camMode=camMode==='chase'?'cab':'chase';fpReset();$('#camBtn').dataset.cam=camMode};
@@ -188,7 +189,7 @@ try{setUiScale(localStorage.getItem('bhd_ui')||1)}catch(e){setUiScale(1)}
 // turn sensitivity (above the left stick): scales the left / right input of the mode you are in, swing, tracks, steering,
 // the mower's spin and looking round on foot, from 25% to 200%. Each mode keeps its own (the mower starts at 60%, the
 // rest at 100%), saved on this device once moved. The slider sits in the Controls panel
-const TURN_DEF={mow:60},TURN_NAME={dig:'Dig',drive:'Drive',truck:'Truck',mow:'Mow',skid:'Skid',walk:'Walk',boat:'Boat'},turnPct={};let turnSens=1;const turnSl=$('#turnSl'),turnBtn=$('#turnBtn');
+const TURN_DEF={mow:60},TURN_NAME={dig:'Dig',drive:'Drive',truck:'Truck',mow:'Mow',skid:'Skid',walk:'Walk',boat:'Boat',bike:'Bike'},turnPct={};let turnSens=1;const turnSl=$('#turnSl'),turnBtn=$('#turnBtn');
 try{Object.assign(turnPct,JSON.parse(localStorage.getItem('bhd_turnM')||'{}'))}catch(e){}
 // shows the current mode's setting; with v, sets it
 function setTurnSens(v){if(v!==undefined)turnPct[mode]=clamp(Math.round(+v/5)*5||100,25,200);

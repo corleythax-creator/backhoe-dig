@@ -112,6 +112,7 @@ function drawMap(cv,cx,cz,mpp,big){
   const hy=st.yaw+st.swing;
   g.strokeStyle='#f07a22';g.lineWidth=Math.max(2,0.3*sc);g.beginPath();g.moveTo(X(st.x),Y(st.z));g.lineTo(X(tip.x),Y(tip.z));g.stroke();
   icon(sk.x,sk.z,Math.atan2(Math.cos(sk.yaw),Math.sin(sk.yaw)),'#f2b705',2.8,1.8,mode==='skid');
+  icon(bk.x,bk.z,Math.atan2(Math.cos(bk.yaw),Math.sin(bk.yaw)),'#f2b705',2.2,0.8,mode==='bike');
   boats.forEach((b,i)=>icon(b.x,b.z,Math.atan2(Math.cos(b.yaw),Math.sin(b.yaw)),'#f4f3ef',BT_L,BT_B,mode==='boat'&&btI===i));
   icon(mw.x,mw.z,Math.atan2(Math.cos(mw.yaw),Math.sin(mw.yaw)),'#d8352a',2.2,1.4,mode==='mow');
   icon(tr.x,tr.z,Math.atan2(Math.cos(tr.yaw),Math.sin(tr.yaw)),'#e9ecea',9.1,2.6,mode==='truck');
@@ -143,7 +144,7 @@ function mapGo(cx,cz,span){const [w,h]=mapBox(),mpp=span?span/Math.min(w,h):mapF
 function mapZoom(f,px,py){const [w,h]=mapBox();if(px===undefined){px=w/2;py=h/2}mapV.anim=null;
   const x=mapV.cx+(px-w/2)*mapV.mpp,z=mapV.cz+(py-h/2)*mapV.mpp;mapV.mpp*=f;mapClamp();mapV.cx=x-(px-w/2)*mapV.mpp;mapV.cz=z-(py-h/2)*mapV.mpp;mapClamp()}
 function mapAt(px,py){const [w,h]=mapBox();return {x:mapV.cx+(px-w/2)*mapV.mpp,z:mapV.cz+(py-h/2)*mapV.mpp}}
-function mapFocus(){return wk.inside?WK_RIDES[wk.inside].o:mode==='boat'?btCur():mode==='walk'?wk:mode==='truck'?tr:mode==='mow'?mw:mode==='skid'?sk:st}
+function mapFocus(){return wk.inside?WK_RIDES[wk.inside].o:mode==='boat'?btCur():mode==='bike'?bk:mode==='walk'?wk:mode==='truck'?tr:mode==='mow'?mw:mode==='skid'?sk:st}
 // what a spot on the map is called
 function mapPlace(x,z){
   for(const b of BRIDGES){const [t,u]=deckLocal(b,x,z);if(t>0&&t<b.len&&Math.abs(u)<b.hw+1)return b.dock?'Dock':b.temp?'Temporary bridge':b.foot?'Covered footbridge':'Bridge'}
