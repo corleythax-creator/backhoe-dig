@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-19T04:06:00Z",
+ "updated": "2026-10-19T04:08:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -24,9 +24,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-18",
-   "dh": 258.5,
+   "dh": 261.5,
    "act": 5.5,
-   "versions": 36
+   "versions": 37
   }
  ],
  "extra": [
@@ -1332,6 +1332,15 @@ window.EFFORT = {
    "tris": 2967738,
    "chars": 918042,
    "what": "Dig site test (☰ → Dig site test, or ?digtest=low to run it hands off): digs across tile edges at every dig site, drives from the mesa to Dexter's, checks every hole and the saves and shows FPS for each part; GitHub runs its checks on every change. Fixed ground dug on the dig grid's edge going back to undug when the grid moved over it."
+  },
+  {
+   "v": 145,
+   "asked": "2026-10-18T22:50:00-05:00",
+   "live": "2026-10-18T23:08:09-05:00",
+   "dh": 3,
+   "tris": 2968751,
+   "chars": 929026,
+   "what": "Stats page counts every tree by species (ages from real forestry growth curves, trunks, shade, wood, carbon, life stages) with a Tree guide of age by height; the map editor shows each tree's age and a species age summary."
   }
  ]
 };
