@@ -187,14 +187,7 @@ function mainLot(K,x,z,w,d,h,col,face,awn){const y=Math.min(baseHeight(x-w/2,z-d
     out.push({p:rnd()<0.9,x,z,yaw:rnd()*6.3,s:0.85+rnd()*0.7,c:(rnd()*6)|0})}
   // and a ragged tree line along the far side of the hayfield
   for(let x=30;x<400;x+=5+rnd()*6){const z=-548+rnd()*10;out.push({p:rnd()<0.75,x,z,yaw:rnd()*6.3,s:0.9+rnd()*0.6,c:(rnd()*6)|0})}
-  const np=out.filter(o=>o.p).length,nl=out.length-np,mk=(geo,mat,n)=>{const im=new THREE.InstancedMesh(geo,mat,Math.max(1,n));im.castShadow=true;im.receiveShadow=true;
-    im.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(Math.max(1,n)*3),3);im.count=n;scene.add(im);treeIMs.push(im);return im};
-  const pines=mk(jesPineGeo,famMat,np),woods=mk(assetIMs.leafy[0].geometry,assetIMs.leafy[0].material,nl),crowns=mk(assetIMs.leafy[1].geometry,assetIMs.leafy[1].material,nl);
-  const o=new THREE.Object3D(),c=new THREE.Color();let ip=0,il=0;
-  for(const a of out){const w=hash(a.x*1.3+0.7,a.z*2.1+0.3),w2=hash(a.z*1.7,a.x*0.9);
-    o.position.set(a.x,baseHeight(a.x,a.z)-0.05,a.z);o.rotation.set((w-0.5)*0.08,a.yaw,(w2-0.5)*0.08);o.scale.set(a.s,a.s*(a.p?1+0.45*w:1),a.s);o.updateMatrix();
-    if(a.p){const v=0.82+0.3*w2;pines.setMatrixAt(ip,o.matrix);c.setRGB(v,v*(0.95+0.1*w),v);pines.setColorAt(ip++,c)}
-    else{const t=ASSET_LT[a.c%6],v=0.9+0.2*w2;woods.setMatrixAt(il,o.matrix);crowns.setMatrixAt(il,o.matrix);c.setRGB(t[0]*v,t[1]*v,t[2]*v);crowns.setColorAt(il,c);c.setRGB(1,1,1);woods.setColorAt(il++,c)}}
+  treeGroup('mainland',out.map(a=>treeEntry(a.p?'pine':'leafy',a.x,a.z,a.yaw,a.s,a.c,a.p?1+0.45*hash(a.x*1.3+0.7,a.z*2.1+0.3):0)));
 
   // ---------- south: the lakeside town ----------
   const T=famKit(),COLS=[0xb5654a,0xd9cdb0,0x7d9aa8,0xc9b27a,0x9c4f3f,0xe4e0d4,0x8f9a7a,0xb98b5e],AWN=[0x2f6b4f,0xb8322a,0x2a4f7a,0xd08a22];

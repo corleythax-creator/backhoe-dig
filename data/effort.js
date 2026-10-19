@@ -24,9 +24,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-18",
-   "dh": 216,
+   "dh": 230,
    "act": 4.5,
-   "versions": 29
+   "versions": 30
   }
  ],
  "extra": [
@@ -1269,6 +1269,15 @@ window.EFFORT = {
    "tris": 1919296,
    "chars": 857153,
    "what": "Running water turns milky tan where it carries dirt into pools and clears as the silt settles. A Stats button at the top right opens the stats: what the weather, ground and water are doing right now, showers, lightning, wiper sweeps, runoff, pumped and seeped water, dirt washed off and settled as silt, and steps walked."
+  },
+  {
+   "v": 138,
+   "asked": "2026-10-18T21:35:00-05:00",
+   "live": "2026-10-18T22:22:07-05:00",
+   "dh": 14,
+   "tris": 2968735,
+   "chars": 864906,
+   "what": "The trees are redesigned: five species (spruce, red pine, oak, sugar maple and birch) with photo bark and real leaf and needle cards from OpenAI textures, full branches up close and lighter models far off, swaying in the breeze; Graphics has a new Tree detail distance and Tuning a Trees sway"
   }
  ]
 };

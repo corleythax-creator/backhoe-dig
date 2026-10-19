@@ -252,7 +252,7 @@ function edBoxEnd(){const b=ed.box;ed.box=null;$('#edBox').hidden=true;const x0=
   const got=edInRect(x0,y0,x1,y1);edSelSet(b.add?[...ed.sel,...got.filter(h=>!edIn(h))]:got)}
 
 // ---------- the selection's settings in the bottom bar ----------
-function edAssetName(a){return PROPS[a.t]?propName(a):a.t==='rock'?`Boulder, ${edFmt(1.6*a.s,0)} ft across`:`${ED_KINDS[a.t]||a.t}, ${edFmt((a.t==='pine'?5.9:4.7)*a.s,0)} ft tall`}
+function edAssetName(a){return PROPS[a.t]?propName(a):a.t==='rock'?`Boulder, ${edFmt(1.6*a.s,0)} ft across`:`${ED_KINDS[a.t]||a.t}${(a.t==='pine'||a.t==='leafy')?` (${TREE_SP[treeSpecies(a.t,a.x,a.z)].name})`:''}, ${edFmt((a.t==='pine'||a.t==='leafy'?treeHeight(a.t,a.x,a.z):4.7)*a.s,0)} ft tall`}
 const edSlider=(id,lab,min,max,step,val,unit)=>`<span class="edopt"><label for="${id}">${lab}</label><input id="${id}" type="range" min="${min}" max="${max}" step="${step}" value="${val}"><output id="${id}V">${val}${unit}</output></span>`;
 // the colours a kind can take (scenery.js tints the trees, props.js the buildings' walls), as swatches
 const edFam=t=>t==='pine'||t==='leafy'?t:PROPS[t]&&PROPS[t].tint?'house':null;
@@ -549,7 +549,7 @@ function editorFrame(dt,now){
   if(ed.lp&&now-ed.lp.t>450){const l=ed.lp,o=l.prev.filter(s=>edKey(s)!==edKey(l.hit));ed.lp=null;ed.drag=null;edSelSet(l.was?o:[...o,l.hit]);if(navigator.vibrate)navigator.vibrate(15)}
   if(ed.listF==='near'&&now-ed.listT>600){ed.listT=now;edListDraw()}
   // puddles and mud tiles keep up with the edits (painted Mud fills ruts, painting over them dries them)
-  waterTick(dt);mudTick(dt);if(rainTexDirty)rainTexUpdate();
+  waterTick(dt);mudTick(dt);treesTick(dt);if(rainTexDirty)rainTexUpdate();
   const fy=hAt(ed.x,ed.z);edLook.set(ed.x,fy,ed.z);
   camera.position.set(ed.x+Math.sin(ed.yaw)*Math.cos(ed.pitch)*ed.dist,fy+Math.sin(ed.pitch)*ed.dist,ed.z+Math.cos(ed.yaw)*Math.cos(ed.pitch)*ed.dist);
   camera.position.y=Math.max(camera.position.y,hAt(camera.position.x,camera.position.z)+2);camera.lookAt(edLook);

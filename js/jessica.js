@@ -7,7 +7,7 @@ const jesGround=groundPatch(125,275,170,320,1.5,[]);
 // roofs are seen from inside too, so both faces draw
 const jesRoofMat=M(0xffffff,{vertexColors:true,side:THREE.DoubleSide});
 const JB=BRIDGES[2],jesGlass=new THREE.MeshPhongMaterial({color:0xcfe3ea,transparent:true,opacity:0.22,depthWrite:false,shininess:80});
-let jesPineGeo=null,jesIn=false,jesRoof=null,jesBridgeRoof=null,jesInside=null,jesFire=null;const jesSmoke=[];
+let jesIn=false,jesRoof=null,jesBridgeRoof=null,jesInside=null,jesFire=null;const jesSmoke=[];
 function jesMesh(list,mat,shadow){if(!list.length)return null;const m=new THREE.Mesh(famMerge(list),mat);if(shadow){m.castShadow=true;m.receiveShadow=true;m.layers.enable(RAIN_LAYER)}scene.add(m);return m}
 
 // ---------- the covered bridge ----------
@@ -180,27 +180,13 @@ function jesMesh(list,mat,shadow){if(!list.length)return null;const m=new THREE.
   famAdd(K);
 })();
 const jesTrees=(function(){
-  // a lighter pine than the map editor's (four ragged tiers), so a dense forest stays cheap on a phone
-  const P=famKit();P.cyl(0.08,0.16,1.4,6,0x5c4030,0,0.7,0);
-  for(let t=0;t<4;t++){const r=1.45*(1-t*0.2),h=1.7-t*0.12,b=0.8+t*1.0,g=new THREE.ConeGeometry(r,h,9,1,true),p=g.attributes.position;
-    for(let i=0;i<p.count;i++)if(p.getY(i)<0){const k=i%2?1.12:0.92;p.setX(i,p.getX(i)*k);p.setZ(i,p.getZ(i)*k);p.setY(i,p.getY(i)-(i%2?0.15:0))}
-    P.geo(g,[0x2a5233,0x30603a,0x387041,0x427a48][t],0,b+h/2,0);const cap=new THREE.CircleGeometry(r*0.95,9);cap.rotateX(Math.PI/2);P.geo(cap,0x1c3a24,0,b+0.02,0)}
-  const pineGeo=jesPineGeo=famMerge(P.solid);
   let sd=29;const rnd=()=>{sd=(sd*16807)%2147483647;return sd/2147483647};
   const out=[],ok=(x,z)=>{if(jesR(x,z)>JES_R-2.5)return false;if(roadOff(x,z)<ROAD_W/2+0.9)return false;
     if(Math.hypot(x-JES_CX,z-JES_CZ)<9.5||(Math.abs(x-209)<5.5&&Math.abs(z-257)<4.5)||Math.hypot(x-236.5,z-245)<4.5||(x<172&&Math.abs(z-245)<6))return false;
     if(SOLIDS.some(s=>Math.abs(x-s.x)<s.hx+1.2&&Math.abs(z-s.z)<s.hz+1.2))return false;return !out.some(o=>Math.hypot(o.x-x,o.z-z)<2.4)};
   for(let g=0;g<9000&&out.length<200;g++){const x=JES_X-50+rnd()*100,z=JES_Z-50+rnd()*100;if(!ok(x,z))continue;
     out.push({t:rnd()<0.78?'pine':'leafy',x,z,yaw:rnd()*6.3,s:0.8+rnd()*0.65,c:(rnd()*6)|0})}
-  const np=out.filter(o=>o.t==='pine').length,nl=out.length-np;
-  const mk=(geo,mat,n)=>{const im=new THREE.InstancedMesh(geo,mat,n);im.castShadow=true;im.receiveShadow=true;
-    im.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(n*3),3);scene.add(im);treeIMs.push(im);return im};
-  const pines=mk(pineGeo,famMat,np),woods=mk(assetIMs.leafy[0].geometry,assetIMs.leafy[0].material,nl),crowns=mk(assetIMs.leafy[1].geometry,assetIMs.leafy[1].material,nl);
-  const o=new THREE.Object3D(),c=new THREE.Color();let ip=0,il=0;
-  for(const a of out){const w=hash(a.x*1.3+0.7,a.z*2.1+0.3),w2=hash(a.z*1.7,a.x*0.9);
-    o.position.set(a.x,baseHeight(a.x,a.z)-0.05,a.z);o.rotation.set((w-0.5)*0.08,a.yaw,(w2-0.5)*0.08);o.scale.set(a.s,a.s*(a.t==='pine'?0.95+0.4*w:1),a.s);o.updateMatrix();
-    if(a.t==='pine'){const v=0.85+0.3*w2;pines.setMatrixAt(ip,o.matrix);c.setRGB(v,v*(0.95+0.1*w),v);pines.setColorAt(ip++,c)}
-    else{const t=ASSET_LT[a.c%6],v=0.9+0.2*w2;woods.setMatrixAt(il,o.matrix);crowns.setMatrixAt(il,o.matrix);c.setRGB(t[0]*v,t[1]*v,t[2]*v);crowns.setColorAt(il,c);c.setRGB(1,1,1);woods.setColorAt(il++,c)}}
+  treeGroup('jes',out.map(a=>treeEntry(a.t,a.x,a.z,a.yaw,a.s,a.c,a.t==='pine'?0.95+0.4*hash(a.x*1.3+0.7,a.z*2.1+0.3):0)));
   return out})();
 
 // every frame: the fire flickers, smoke rises, the library inside is drawn only when you are near, and the roof over
