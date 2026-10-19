@@ -107,7 +107,7 @@ const CTRL_MOUSE=[['Mouse',[['Drag the scene','Turns the camera round the machin
     ['Left click (blocks on)','Places a block (Dig or Walk mode)'],['Right click (mouse taken, blocks on)','Lifts the block the dot is on']]],
   ['Touch',[['Left stick','Drives, or walks on foot'],['Right stick','Works the boom, bed or blade; on foot, turns and looks'],
     ['Drag the scene','Turns the camera; in cab view, looks around'],['Pinch (cab view)','Zooms'],
-    ['Turn slider','How hard the sticks turn, per machine'],['Buttons','Blocks, Drive, Controls, Chase / Cab, Get in or out, Sprint, Jump']]]];
+    ['Buttons','Blocks, Drive, Controls, Chase / Cab, Get in or out, Sprint, Jump']]]];
 const CTRL_PAD=[['Sticks and triggers',[['Left stick','Drives, or walks on foot'],['Right stick','Works the boom, bed or blade; on foot, turns and looks'],
     ['Right trigger / left trigger','Gas / reverse (Drive, Truck, Skid)'],['Left stick click','Sprint on foot'],['Right stick click','Look straight ahead and reset the zoom']]],
   ['Buttons',[['A','Jump on foot; places a block in a machine'],['B','Gets in or out; closes the map or help'],['X','Places a block on foot; hooks the box in a machine'],
