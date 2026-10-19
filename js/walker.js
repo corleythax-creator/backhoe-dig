@@ -143,10 +143,10 @@ $('#sprintBtn').addEventListener('pointerdown',e=>{e.preventDefault();setSprint(
 // body, the mode that drives it and what to call it
 const WK_RIDES={ex:{get o(){return st},c:EX_C,r:EX_R,m:'dig',n:'excavator'},truck:{get o(){return tr},c:TR_C,r:TR_R,m:'truck',n:'dump truck'},skid:{get o(){return sk},c:SK_C,r:SK_R,m:'skid',n:'skid steer'},mow:{get o(){return mw},c:MW_C,r:MW_R,m:'mow',n:'mower'}};
 const rideOf=m=>m==='dig'||m==='drive'?'ex':m==='truck'?'truck':m==='mow'?'mow':m==='skid'?'skid':m==='boat'?'boat'+btI:m==='bike'?'bike':null;
-// the machine within an arm's length of the worker, nearest first
+// the machine within an arm's length of the worker, nearest first (reach: a boat can be stepped into from the middle of its dock)
 function wkNear(){let best=null,bd=1.3;
   for(const k in WK_RIDES){const R=WK_RIDES[k];
-    for(const lz of R.c){const d=Math.hypot(wk.x-R.o.x-Math.sin(R.o.yaw)*lz,wk.z-R.o.z-Math.cos(R.o.yaw)*lz)-R.r-WK_R;if(d<bd){bd=d;best=k}}}
+    for(const lz of R.c){const d=Math.hypot(wk.x-R.o.x-Math.sin(R.o.yaw)*lz,wk.z-R.o.z-Math.cos(R.o.yaw)*lz)-R.r-WK_R-(R.reach||0);if(d<bd){bd=d;best=k}}}
   return best}
 // climbing out: the first clear spot beside the machine (driver's side, then the other side, then front and back)
 function wkPlaceOut(k){const R=WK_RIDES[k];if(R.out)return R.out();const o=R.o,sy=Math.sin(o.yaw),cy=Math.cos(o.yaw),gap=R.r+WK_R+0.3,len=Math.max(...R.c.map(Math.abs));

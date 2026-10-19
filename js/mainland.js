@@ -30,7 +30,8 @@ function mainSpanKits(b){
       at(T,tm,s*(hw+0.1),Y(tm)+1.0,0.12,0.2,SL,TIM,pit);at(T,tm,s*(hw+0.1),Y(tm)+0.55,0.1,0.16,SL,TIM,pit);
       for(let t=Math.ceil(t0/2.4)*2.4;t<t1-0.01||(last&&t<=t1+0.01);t+=2.4)at(T,t,s*(hw+0.1),Y(t)+0.55,0.2,1.1,0.2,TIM)}
     for(const u of [-2.4,-0.8,0.8,2.4])at(T,tm,u,Y(tm)-0.48,0.3,0.6,SL,STL,pit);
-    for(let k=0;k<=NB;k++){const t=k*L/NB;if(t<t0-1e-6||(t>=t1-1e-6&&!(last&&t<=t1+1e-6)))continue;const top=Y(t)-1.0;at(T,t,0,top,2*hw+0.9,0.45,0.5,TIM);
+    const trW=[],stW=[],wall=(Wl,t,u,r)=>{const [ax,az]=W(t,-u),[bx,bz]=W(t,u);Wl.push({ax,az,bx,bz,r})};
+    for(let k=0;k<=NB;k++){const t=k*L/NB;if(t<t0-1e-6||(t>=t1-1e-6&&!(last&&t<=t1+1e-6)))continue;const top=Y(t)-1.0;at(T,t,0,top,2*hw+0.9,0.45,0.5,TIM);wall(trW,t,hw+0.2,0.35);
       let lo=1e9;for(const u of [-2.4,0,2.4]){const [x,z]=W(t,u),g=baseHeight(x,z),h=top-0.2-g;lo=Math.min(lo,g);if(h>0.3)T.cyl(0.17,0.19,h,7,TIM,x,g+h/2,z)}
       const hb=Math.min(3.2,top-0.4-Math.max(lo,WATER+0.2));
       if(hb>0.6){const dl=Math.hypot(4.8,hb),a=Math.atan2(hb,4.8);for(const sg of [-1,1])at(T,t,0,top-0.4-hb/2,dl,0.24,0.12,TIM,0,sg*a)}}
@@ -38,14 +39,14 @@ function mainSpanKits(b){
     // concrete abutment where the ground is close) at the far end, and at the near end of the first span
     at(S,tm,0,Y(tm)-0.15,2*hw+0.8,0.3,SL,CON,pit);at(S,tm,0,Y(tm)+0.005,2*hw-0.6,0.02,SL,0x45474a,pit);
     for(const s of [-1,1]){at(S,tm,s*(hw+0.15),Y(tm)+0.12,0.4,0.25,SL,0xb4b2aa,pit);
-      at(S,tm,s*2.2,Y(tm)-1.05,0.05,1.5,SL,GIRD,pit);for(const dy of [-0.32,-1.78])at(S,tm,s*2.2,Y(tm)+dy,0.5,0.06,SL,GIRD,pit);
-      for(let t=t0+1.5;t<t1;t+=2.5){at(S,t,s*2.2,Y(t)-1.05,0.35,1.4,0.03,GIRD)}
+      at(S,tm,s*2.2,Y(tm)-0.78,0.05,0.9,SL,GIRD,pit);for(const dy of [-0.32,-1.24])at(S,tm,s*2.2,Y(tm)+dy,0.5,0.06,SL,GIRD,pit);
+      for(let t=t0+1.5;t<t1;t+=2.5){at(S,t,s*2.2,Y(t)-0.78,0.35,0.85,0.03,GIRD)}
       at(S,tm,s*(hw+0.25),Y(tm)+1.05,0.1,0.1,SL,STL,pit);at(S,tm,s*(hw+0.25),Y(tm)+0.6,0.08,0.08,SL,STL,pit);
       for(let t=t0+0.5;t<t1;t+=2)at(S,t,s*(hw+0.25),Y(t)+0.6,0.1,0.95,0.1,STL)}
-    for(const t of i===0?[t0,t1]:[t1]){const capY=Y(t)-2.15,[cx,cz]=W(t,0),gc=baseHeight(cx,cz);
+    for(const t of i===0?[t0,t1]:[t1]){const capY=Y(t)-1.6,[cx,cz]=W(t,0),gc=baseHeight(cx,cz);
       if(gc>capY-0.6){at(S,t,0,(Y(t)-0.3+gc-1)/2,2*hw+1,Y(t)-0.3-gc+1,1.6,CON);continue}
-      at(S,t,0,capY,2*hw+1,0.7,0.9,STL);for(const u of [-2.2,2.2]){const [x,z]=W(t,u),g=baseHeight(x,z)-1,h=capY-0.35-g;if(h>0.3)S.cyl(0.45,0.45,h,12,0x7d5a43,x,g+h/2,z)}}
-    const tr=mainGroup(T),st=mainGroup(S);st.visible=false;crnSpans.push({b,i,t0,t1,tm,SL,W,Y,tr,st,last})}
+      at(S,t,0,capY,2*hw+1,0.7,0.9,STL);wall(stW,t,2.2,0.5);for(const u of [-2.2,2.2]){const [x,z]=W(t,u),g=baseHeight(x,z)-1,h=capY-0.35-g;if(h>0.3)S.cyl(0.45,0.45,h,12,0x7d5a43,x,g+h/2,z)}}
+    const tr=mainGroup(T),st=mainGroup(S);st.visible=false;crnSpans.push({b,i,t0,t1,tm,SL,W,Y,tr,st,last,trW,stW})}
   // a yellow limit sign at each end, taken down when the last span is steel
   b.signs=[];for(const [t,ry] of [[-1.5,yaw+Math.PI],[L+1.5,yaw]]){const [x,z]=W(t,hw+1.3),y=baseHeight(x,z),K=famKit();
     for(const s of [-1,1]){const [px,pz]=W(t,hw+1.3+s*1.9);K.box(0.12,2.5,0.12,0x8a8a86,px,y+1.25,pz)}
@@ -70,7 +71,7 @@ const crnLines=[],crnPile=new THREE.Group(),crnGird=new THREE.Group();let crnHam
   for(const z of [-14,-9,-4])B.box(5,0.25,0.4,0x6e5236,-2.4,D+0.13,z);
   {const rows=[[-4.1,-3.2,-2.3,-1.4],[-3.65,-2.75,-1.85],[-3.2,-2.3]];rows.forEach((r,k)=>r.forEach(x=>B.cyl(0.45,0.45,14,14,RUST,x,D+0.7+k*0.78,CRN_PILE[1],0,Math.PI/2)))}
   for(const z of [0,7,14])B.box(5,0.3,0.5,0x6e5236,-3,D+0.15,z);
-  for(const x of [-4.4,-3.0,-1.6]){const y=D+0.3;B.box(0.05,1.4,18,0x6b7a84,x,y+0.76,CRN_GIRD[1]);for(const dy of [0.04,1.48])B.box(0.5,0.06,18,0x6b7a84,x,y+dy,CRN_GIRD[1])}
+  for(const x of [-4.4,-3.0,-1.6]){const y=D+0.3;B.box(0.05,0.9,18,0x6b7a84,x,y+0.5,CRN_GIRD[1]);for(const dy of [0.04,0.96])B.box(0.5,0.06,18,0x6b7a84,x,y+dy,CRN_GIRD[1])}
   B.box(2.4,2.3,3,0xd9d4c4,-4.2,D+1.15,-13.5+0.4);B.box(2.6,0.15,3.2,0x8a8a86,-4.2,D+2.35,-13.1);
   B.cyl(0.32,0.32,0.08,12,0xe0661e,5.95,D+1.2,6,0,0,Math.PI/2);
   crnBarge.add(mainGroup(B));
@@ -104,7 +105,7 @@ const crnLines=[],crnPile=new THREE.Group(),crnGird=new THREE.Group();let crnHam
   // a pile (its centre at the group's origin) and the vibratory hammer clamped on its top
   const P=famKit();P.cyl(0.45,0.45,14,14,RUST,0,0,0);crnPile.add(mainGroup(P));
   const VH=famKit();VH.box(1.2,1.6,1.0,0x3a6e8f,0,7.8,0);VH.box(0.5,0.4,0.5,DARK,0,8.8,0);crnHam=mainGroup(VH);crnPile.add(crnHam);crnPile.visible=false;scene.add(crnPile);
-  const G=famKit();G.box(0.05,1.4,1,0x6b7a84,0,-0.76,0);for(const dy of [-0.04,-1.48])G.box(0.5,0.06,1,0x6b7a84,0,dy,0);
+  const G=famKit();G.box(0.05,0.9,1,0x6b7a84,0,-0.5,0);for(const dy of [-0.04,-0.96])G.box(0.5,0.06,1,0x6b7a84,0,dy,0);
   crnGird.add(mainGroup(G));crnGird.visible=false;scene.add(crnGird);
   const lm=new THREE.MeshBasicMaterial({color:0x1d1f21});for(let k=0;k<6;k++){const m=new THREE.Mesh(new THREE.CylinderGeometry(0.03,0.03,1,4,1,true),lm);scene.add(m);crnLines.push(m)}
   scene.add(crnBarge)})();
@@ -118,7 +119,7 @@ function crnBargeAt(k){const s=crnSpans[Math.min(k,crnSpans.length-1)],b=s.b,yaw
 // the hook's way through one span, in the barge's own frame: [share of the span's time, x, z, hook height], the crane
 // swinging between them; pile: carried from 0.08, upended 0.18-0.26, driven 0.30-0.42; girder: carried 0.59-0.84
 function crnKeys(s,toL){const P=CRN_PILE,G=CRN_GIRD,D=CRN_DY,[px,pz]=toL(...s.W(s.t1,0)),[gx,gz]=toL(...s.W(s.tm,0));
-  const [bx,bz]=s.W(s.t1,0),bed=baseHeight(bx,bz)-1,top=s.Y(s.t1)-2.5-WATER,drop=Math.max(bed-WATER+14,top)+2.2,hi=D+17,gy=s.Y(s.tm)-0.3-WATER+1.2;
+  const [bx,bz]=s.W(s.t1,0),bed=baseHeight(bx,bz)-1,top=s.Y(s.t1)-1.95-WATER,drop=Math.max(bed-WATER+14,top)+2.2,hi=D+17,gy=s.Y(s.tm)-0.3-WATER+1.2;
   return [[0,12,3,hi],[0.05,P[0],P[1],D+5],[0.08,P[0],P[1],D+3.1],[0.12,P[0],P[1],hi],[0.24,px,pz,hi+4],[0.30,px,pz,drop],[0.42,px,pz,top+2.2],[0.46,px,pz,top+7],
     [0.56,G[0],G[1],D+5],[0.59,G[0],G[1],D+3.2],[0.63,G[0],G[1],hi],[0.76,gx,gz,hi],[0.84,gx,gz,gy],[0.88,gx,gz,gy+5],[1,12,3,hi]]}
 function crnPose(keys,u){let i=0;while(i<keys.length-2&&u>keys[i+1][0])i++;const a=keys[i],b=keys[i+1],f=ss(0,1,(u-a[0])/(b[0]-a[0]));
@@ -152,7 +153,7 @@ function mainTick(dt){
   // the loads: the pile hangs from the hook, swings upright and is driven; the girder hangs level along the bridge
   crnPile.visible=!done&&u>=0.08&&u<0.88;crnGird.visible=!done&&u>=0.59&&u<0.88;
   if(crnPile.visible){const up=u<0.42?ss(0.18,0.26,u):1,[px,pz]=s.W(s.t1,0),hold=u>=0.42,jit=u>0.3&&u<0.42?0.03*Math.sin(timeU.value*70):0;
-    if(hold)crnPile.position.set(px,s.Y(s.t1)-2.5-7,pz);else crnPile.position.set(hook.x+jit,hy-0.9-8.3*up,hook.z);
+    if(hold)crnPile.position.set(px,s.Y(s.t1)-1.95-7,pz);else crnPile.position.set(hook.x+jit,hy-0.9-8.3*up,hook.z);
     crnPile.rotation.set((1-up)*Math.PI/2,A.yaw,0,'YXZ');crnHam.visible=up>0.5&&!hold}
   if(crnGird.visible){const hold=u>=0.84,[gx,gz]=s.W(s.tm,0);crnGird.position.set(hold?gx:hook.x,hold?s.Y(s.tm)-0.3:hy-1.2,hold?gz:hook.z);
     crnGird.rotation.set(0,Math.atan2(s.b.ux,s.b.uz),0);crnGird.scale.set(1,1,s.SL)}

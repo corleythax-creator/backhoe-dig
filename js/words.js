@@ -18,6 +18,8 @@ const WORDS=[
   ['mowTouch','Machines','Mower running. Push both sticks up to drive, one up and one back to spin.'],
   ['skidKb','Machines','Skid steer running. [lUp] [lDown] drive, [lLeft] [lRight] turn; [rUp] [rDown] lower and raise the arms, [rLeft] [rRight] curl and dump.'],
   ['skidTouch','Machines','Skid steer running. Left stick drives and turns; right stick up and down lowers and raises the arms, left and right curls and dumps.'],
+  ['exDriving','Machines','Driving: the left stick moves the tracks. Tap Dig or [exSwap] to run the arm.','The excavator switched to Drive'],
+  ['exDigging','Machines','Digging: the sticks run the arm. Tap Drive or [exSwap] to move.','The excavator switched to Dig'],
   ['inMachine','Machines','In the {machine}. {key} to climb out.','{machine}: excavator, dump truck…; {key}: the get out key or button'],
   ['getInFar','Machines','Walk up to the excavator, the truck, the mower, a boat or Dexter\'s dirt bike to get in.'],['noRoomOut','Machines','No room to climb out here. Move the machine a little.'],
   ['bedUp','Machines','Bed is up. Lower it to drive faster.'],['truckFirst','Machines','Dirt in the truck.'],

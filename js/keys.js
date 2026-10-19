@@ -24,6 +24,7 @@ const KEY_ACTIONS=[
   {id:'mwRB',g:'Mower',n:'Right lap bar back',d:'Right wheel only, in reverse',k:['Numpad3'],s:'ride'},
   {id:'dig',g:'Modes',n:'Dig',d:'Run the excavator arm',k:['Digit1']},
   {id:'drive',g:'Modes',n:'Drive',d:'Drive the excavator on its tracks',k:['Digit2']},
+  {id:'exSwap',g:'Modes',n:'Drive / Dig',d:'In the excavator: switch between driving the tracks and running the arm',k:['Enter'],s:'ride'},
   {id:'truck',g:'Modes',n:'Truck',d:'Drive the dump truck',k:['Digit3']},
   {id:'mow',g:'Modes',n:'Mow',d:'Drive the mower',k:['Digit4']},
   {id:'skid',g:'Modes',n:'Skid steer',d:'Drive Dexter\'s skid steer',k:['Digit6']},

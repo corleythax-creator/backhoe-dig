@@ -22,7 +22,8 @@ function jesMesh(list,mat,shadow){if(!list.length)return null;const m=new THREE.
     for(let t=0;t<=L+0.01;t+=L/Math.round(L/2.4))K.box(0.18,2.6,0.18,RED,X0+t,Y(t)+1.35,Z+s*(hw+0.1));
     run(K,L/2,s*(hw-0.3),-0.6,L,0.6,0.3,WOOD)}
   // stone piers, and a white-trimmed portal at each end
-  for(const t of [L/3,2*L/3]){const g=baseHeight(X0+t,Z)-2,top=Y(t)-0.9;K.box(2,top-g,2*hw+1.4,STONE,X0+t,(top+g)/2,Z);K.box(2.4,0.3,2*hw+1.8,0xa29d96,X0+t,top-0.15,Z)}
+  for(const t of [L/3,2*L/3]){const g=baseHeight(X0+t,Z)-2,top=Y(t)-0.9;K.box(2,top-g,2*hw+1.4,STONE,X0+t,(top+g)/2,Z);K.box(2.4,0.3,2*hw+1.8,0xa29d96,X0+t,top-0.15,Z);
+    BOAT_WALLS.push({ax:X0+t,az:Z-hw-0.2,bx:X0+t,bz:Z+hw+0.2,r:1.1})}
   for(const t of [0,L]){for(const s of [-1,1])K.box(0.26,2.8,0.26,TRIM,X0+t,Y(t)+1.4,Z+s*(hw+0.15));K.box(0.26,0.26,2*hw+0.6,TRIM,X0+t,Y(t)+2.75,Z)}
   // lanterns hanging inside
   for(let t=8;t<L-4;t+=11){K.box(0.04,0.4,0.04,0x333333,X0+t,Y(t)+2.45,Z);K.box(0.26,0.3,0.26,0x2f2f2f,X0+t,Y(t)+2.15,Z);K.lit(new THREE.BoxGeometry(0.2,0.22,0.2),0xffd27a,X0+t,Y(t)+2.1,Z)}
