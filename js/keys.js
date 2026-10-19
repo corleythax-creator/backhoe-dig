@@ -32,6 +32,8 @@ const KEY_ACTIONS=[
   {id:'enter',g:'On foot',n:'Get in / get out',d:'Climb into the machine you are standing next to (or sit down at a game table on the pavilion); press again to climb out',k:['KeyF']},
   {id:'jump',g:'On foot',n:'Jump',d:'About 6 ft: onto blocks and up stacks',k:['Space'],s:'walk'},
   {id:'sprint',g:'On foot',n:'Sprint',d:'Hold to run flat out, about 12 mph',k:['ShiftLeft','ShiftRight'],s:'walk'},
+  {id:'plant',g:'On foot',n:'Plant a tree',d:'A sapling of the chosen kind in front of you (next to one of yours: dig it up). Slide ☰ Time, Date ahead to see it grow',k:['Digit7'],s:'walk'},
+  {id:'plantKind',g:'On foot',n:'Tree to plant',d:'Steps through spruce, red pine, oak, sugar maple and birch',k:['Digit8'],s:'walk'},
   {id:'blocks',g:'Blocks',n:'Blocks on / off',d:'Show the block bar and the outline where one lands',k:['KeyB']},
   {id:'place',g:'Blocks',n:'Place block',d:'Under the bucket, in front of you on foot, or at the dot in first person',k:['KeyE']},
   {id:'lift',g:'Blocks',n:'Lift block',d:'The top block under the bucket, the one in front of you, or the one at the dot',k:['KeyX']},
