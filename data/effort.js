@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-19T03:20:00Z",
+ "updated": "2026-10-19T03:22:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -24,9 +24,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-18",
-   "dh": 211,
+   "dh": 216,
    "act": 4.5,
-   "versions": 28
+   "versions": 29
   }
  ],
  "extra": [
@@ -1260,6 +1260,15 @@ window.EFFORT = {
    "tris": 1919012,
    "chars": 852995,
    "what": "Dug tiles save three times smaller, and a site too big for the browser saves in a compact form or warns instead of failing silently"
+  },
+  {
+   "v": 137,
+   "asked": "2026-10-18T22:05:00-05:00",
+   "live": "2026-10-18T22:22:02-05:00",
+   "dh": 5,
+   "tris": 1919296,
+   "chars": 857153,
+   "what": "Running water turns milky tan where it carries dirt into pools and clears as the silt settles. A Stats button at the top right opens the stats: what the weather, ground and water are doing right now, showers, lightning, wiper sweeps, runoff, pumped and seeped water, dirt washed off and settled as silt, and steps walked."
   }
  ]
 };
