@@ -94,7 +94,7 @@ function pollPad(){for(const k in PA)PA[k]=0;PA.sprint=false;const gp=getPad();i
   for(let i=0;i<b.length;i++){const on=b[i].pressed;if(on&&!padPrev[i])padButton(i);padPrev[i]=on}
   if(PA.lx||PA.ly||PA.rx||PA.ry||Math.abs(PA.thr)>0.05)usePad()}
 function rumble(ms,mag){const gp=getPad(),va=gp&&gp.vibrationActuator;
-  if(va&&va.playEffect)va.playEffect('dual-rumble',{duration:ms,strongMagnitude:mag,weakMagnitude:mag*0.6}).catch(()=>{})}
+  if(va&&va.playEffect)va.playEffect('dual-rumble',{duration:ms,strongMagnitude:mag,weakMagnitude:mag*0.6}).catch(()=>{});vrRumble(ms,mag)}
 // orbit drag on the scene; in cab view the same drag turns your head instead (see fpTurn)
 let orbitYaw=0,orbitPitch=0.42,camDist=9.5,drag=null;
 const camPtrs=new Map();let pinch=0;
