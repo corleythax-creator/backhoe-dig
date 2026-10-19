@@ -71,7 +71,7 @@ function edUnbox(o,A,scale,Arr,oi=0,oj=0){if(!o)return;let [i0,j0,w,h]=o.r;i0+=o
 function mapEncode(){const doc={game:'backhoe-dig',v:1,g:[ED_X0,ED_Z0]},h=edBox(ED_H,100,Int16Array),p=edBox(ED_P,100,Int8Array);
   const m=edBox(ED_M,1,Uint8Array),fa=new Uint8Array(ED_A.length);for(let q=0;q<fa.length;q++)if(ED_M[q])fa[q]=255-ED_A[q];
   const a=edBox(fa,1,Uint8Array);if(h)doc.h=h;if(p)doc.p=p;if(m)doc.m=m;if(a)doc.a=a;
-  if(mapAssets)doc.assets=mapAssets.map(a=>[a.t,+a.x.toFixed(2),+a.z.toFixed(2),+a.yaw.toFixed(2),+a.s.toFixed(2),a.c]);
+  if(mapAssets)doc.assets=mapAssets.map(a=>[a.t,+a.x.toFixed(2),+a.z.toFixed(2),+a.yaw.toFixed(2),+a.s.toFixed(2),a.c,...(a.lk?[1]:[])]);
   if(mapRoads)doc.roads=mapRoads.map(r=>[+r.w.toFixed(2),r.mid,r.pts.map(q=>q.map(v=>+v.toFixed(2)))]);
   return JSON.stringify(doc)}
 // reads a map into new layers; throws on anything that is not one
@@ -83,7 +83,7 @@ function mapDecode(text){const doc=JSON.parse(text);if(!doc||doc.game!=='backhoe
   for(let q=0;q<m.length;q++){if(m[q]&&!matIdOk(m[q]))m[q]=0;a[q]=m[q]?255-a[q]:0;if(!a[q])m[q]=0}
   for(let j=0;j<ED_NZ;j++)for(let i=0;i<ED_NX;i++)if(i<3||j<3||i>ED_NX-4||j>ED_NZ-4){h[j*ED_NX+i]=0;p[j*ED_NX+i]=0;m[j*ED_NX+i]=0;a[j*ED_NX+i]=0}
   const as=Array.isArray(doc.assets)?doc.assets.filter(a=>Array.isArray(a)&&typeof a[0]==='string'&&/^[a-z]{2,16}$/.test(a[0])&&isFinite(a[1])&&isFinite(a[2]))
-    .map(a=>({t:a[0],x:+a[1],z:+a[2],yaw:+a[3]||0,s:Math.max(0.3,Math.min(3,+a[4]||1)),c:(a[5]|0)>=0?a[5]|0:0})):null;
+    .map(a=>Object.assign({t:a[0],x:+a[1],z:+a[2],yaw:+a[3]||0,s:Math.max(0.3,Math.min(3,+a[4]||1)),c:(a[5]|0)>=0?a[5]|0:0},a[6]===1?{lk:1}:{})):null;
   // roads: 1.5 to 8 m wide, 2 to 200 points each; graded only when every point has a height
   const rs=Array.isArray(doc.roads)?doc.roads.slice(0,60).filter(r=>Array.isArray(r)&&isFinite(r[0])&&Array.isArray(r[2])&&r[2].length>=2&&r[2].length<=200&&r[2].every(q=>Array.isArray(q)&&q.length>=2&&q.slice(0,3).every(isFinite)))
     .map(r=>{const g=r[2].every(q=>q.length>2);return {w:Math.max(1.5,Math.min(8,+r[0])),mid:r[1]?1:0,pts:r[2].map(q=>g?[+q[0],+q[1],+q[2]]:[+q[0],+q[1]])}}):null;

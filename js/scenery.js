@@ -362,7 +362,7 @@ function defaultAssets(){
   return out}
 // fills the instance meshes from the asset list (after any change to it): the trees go to trees.js, the boulders here
 function assetsBuild(){const o=new THREE.Object3D(),c=new THREE.Color(),n={pine:0,leafy:0,rock:0},T=[];
-  for(const a of assets){const k=n[a.t];if(k===undefined||k>=ASSET_CAP[a.t])continue;const y=baseHeight(a.x,a.z);if(y<WATER-0.3)continue;n[a.t]++;
+  for(const a of assets){const k=n[a.t];if(a.hd||k===undefined||k>=ASSET_CAP[a.t])continue;const y=baseHeight(a.x,a.z);if(y<WATER-0.3)continue;n[a.t]++;
     if(a.t!=='rock'){T.push(treeEntry(a.t,a.x,a.z,a.yaw,a.s,a.c));continue}
     const w=hash(a.x*1.3+0.7,a.z*2.1+0.3),w2=hash(a.z*1.7,a.x*0.9);
     o.position.set(a.x,y-0.18*a.s,a.z);o.rotation.set((w-0.5)*0.4,a.yaw,(w2-0.5)*0.4);o.scale.set(a.s,a.s*(0.8+0.4*w),a.s);

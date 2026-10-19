@@ -226,8 +226,8 @@ Each step ships on its own as a version and leaves the editor working.
 | 4 | **Selecting several.** Shift, long-press and box select; the selection survives tool changes; move, turn, size, colour and delete for many; one undo step each; the inspector for many | 6 |
 | 5 | **Library with pictures.** Thumbnails, groups, search, recent; size, colour and turn set before placing | 5 |
 | 6 | **Placing in bulk** (shipped).  Stamp, Line (fences and cones along a drag) and Scatter (trees and boulders) | 6 |
-| 7 | **Exact edits.** X/Z numbers, snap grid and angles, the turn and size ring, align and space, copy and paste at the cursor, Row | 6 |
-| 8 | **Hide and lock.** Lock saved with the map (an optional seventh entry on each asset, so older maps still load and older code keeps them), hide for the session | 3 |
+| 7 | **Exact edits** (shipped). X/Z numbers, snap grid and angles, the turn and size ring, align and space, copy and paste at the cursor, Row | 6 |
+| 8 | **Hide and lock** (shipped). Lock saved with the map (an optional seventh entry on each asset, so older maps still load and older code keeps them), hide for the session | 3 |
 | 9 | **Maps.** Named maps, file download and open, map stats, layer-by-layer start over, History ▾ | 5 |
 | 10 | **Inspect extras.** Measure distance and area; machines back to their start spots | 3 |
 | | **Total** | **about 50** |
@@ -252,9 +252,11 @@ Later steps from the idea board fit into this layout without moving anything: E0
 
 ## 9. What shipped first, and what changed from the plan
 
-- The left bar has Shape, Paint, Things, Roads, Inspect and Map; the top bar Done, Undo, Redo, Look, Closer, Farther, North up, Start view and Panel. The map's name and History ▾ wait for step 9, the grid snap for step 7.
+- The left bar has Shape, Paint, Things, Roads, Inspect and Map; the top bar Done, Undo, Redo, Look, Closer, Farther, North up, Start view and Panel. The map's name and History ▾ wait for step 9, the grid snap came with step 7 (Snap, beside Start view).
 - The Query card and the road card show in the bottom bar too, above the tool's options, and take the selection's place while shown (the selection is kept).
 - Box select: a mouse drag on empty ground with Select draws the box (it used to move the view; the middle and right buttons and the keys still do). On touch it's the Box select toggle in the bottom bar, as two-finger taps already move the view.
 - On a phone the bottom bar is one row that scrolls sideways, and the status line is hidden, so all six left-bar buttons fit a 390 px tall screen.
 - The things to add are grouped words for now; their pictures are step 5.
 - Machines can be in a selection and move with it; turn, size, colour, copy and delete leave them out.
+- Step 7: the copy beside a thing is now Duplicate (Ctrl+D), and Copy puts it on the clipboard for Paste. The ring's knob sits on the side of the selection nearest the view; the ring always turns and sizes about the selection's middle. East and South are in feet from the trench's middle, as the Spot line gives them, so the grid lines up with them. Snap's road edge and fence ends apply to one thing on its own.
+- Step 8: lock and hide are for things only (the machines aren't saved in the map). Delete every kind and Put back the first ones leave locked things where they are, and Scatter's Erase passes over them. Tapping a hidden thing's row in On the map shows it again, so nothing hidden is ever picked.

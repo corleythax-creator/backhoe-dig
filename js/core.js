@@ -92,7 +92,8 @@ const camera=new THREE.PerspectiveCamera(60,1,0.05,2400);
 scene.add(new THREE.HemisphereLight(0xb8d0ea,0x5b5a3c,0.5));
 const sun=new THREE.DirectionalLight(0xfff0dc,1.6);
 sun.castShadow=true; sun.shadow.mapSize.set(PHONE?1024:2048,PHONE?1024:2048);
-Object.assign(sun.shadow.camera,{left:-14,right:14,top:14,bottom:-14,near:1,far:70});
+// the shadow box's half width is the Graphics setting shR (gfx.js); the sun sits SUN_D m back so tall things at its edges still cast
+const SUN_D=80;Object.assign(sun.shadow.camera,{left:-14,right:14,top:14,bottom:-14,near:1,far:SUN_D+90});
 sun.shadow.bias=-0.0004; sun.shadow.normalBias=0.02;
 scene.add(sun); scene.add(sun.target);
 // sky reflections: the dome over a dull ground, caught once into a small cube map for glass, paint, chrome and water
@@ -104,4 +105,7 @@ const skyEnv=(function(){
   scene.remove(gnd);gnd.geometry.dispose();gnd.material.dispose();
   return rt.texture;
 })();
+// straight-up normals for flat-shaded ground: lighting takes its slope from the faces, but the shadow lookup needs a
+// real normal (an all-zero one gives no shadow at all)
+function upNormals(n){const a=new Float32Array(n);for(let i=1;i<n;i+=3)a[i]=1;return a}
 const M=(c,o)=>new THREE.MeshPhongMaterial(Object.assign({color:c,flatShading:true,shininess:6,specular:0x111111},o||{}));
