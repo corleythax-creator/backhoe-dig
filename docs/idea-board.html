@@ -109,6 +109,16 @@ tr.done td{opacity:.6}
 .rin{width:2.6em;height:34px;text-align:center;font:400 17px var(--f-disp);color:var(--amber);background:var(--panel-solid);border:1px solid rgba(255,225,170,.3);border-radius:8px;padding:0}
 .rin::placeholder{color:#6d6150}
 .rin:disabled{opacity:.6;color:var(--s)}
+.wip h3{font:600 15px var(--f-disp);margin:10px 0 4px;display:flex;align-items:center;gap:8px;color:var(--gc)}
+.wip h3 small{color:var(--s);font-size:12px;font-weight:400}
+.wrow{display:grid;grid-template-columns:minmax(0,1fr) 120px;gap:4px 14px;padding:8px 0;border-top:1px solid var(--line)}
+.wrow .wt{font-weight:600}.wrow .wt span{color:var(--s);font-weight:400;margin-right:6px}
+.wrow .wn{grid-column:1/-1;color:var(--m);font-size:13px;max-width:70ch}
+.wrow .wp{display:flex;align-items:center;gap:8px;justify-content:flex-end}
+.wrow .wp .pbar{width:70px}.wrow .wp .pbar i{background:var(--m)}
+.wipsum{color:var(--s);font-size:13px}
+.wipd{color:var(--s);font-size:12px;font-weight:400}
+@media (max-width:600px){.wrow{grid-template-columns:1fr}.wrow .wp{justify-content:flex-start}}
 .hbtn{display:block;margin:6px auto 0;font:inherit;font-size:12px;font-weight:600;background:none;border:none;color:var(--s);cursor:pointer;padding:2px 0;text-decoration:underline}
 .hbtn:disabled{display:none}
 tr.hid td{opacity:.5}
@@ -195,6 +205,7 @@ tr.on .rin{background:var(--amber);color:var(--amber-ink);border-color:var(--amb
     <label class="sortl">Realism weight <select id="wt"><option value="0.3">30%</option><option value="0.4">40%</option><option value="0.5">50%</option><option value="0.6">60%</option><option value="0.7">70%</option><option value="0.8">80%</option></select></label>
     <div class="tgl">
       <button class="tbtn" data-p="pfil" aria-expanded="false">Filters <span id="fcount" class="badge" hidden></span></button>
+      <button class="tbtn" data-p="pwip" aria-expanded="false">In progress <span id="wipn" class="badge"></span></button>
       <button class="tbtn" data-p="pgsum" aria-expanded="false">Totals</button>
       <button class="tbtn" data-p="phelp" aria-expanded="false">Help</button>
     </div>
@@ -206,13 +217,18 @@ tr.on .rin{background:var(--amber);color:var(--amber-ink);border-color:var(--amb
       <label>Cost <select id="fs"><option value="">All</option><option value="1">1 session</option><option value="2">2-3 sessions</option><option value="3">4+ sessions</option></select></label>
       <label>Realism at least <select id="fp"><option value="0">Any</option><option>3</option><option>5</option><option>6</option><option>7</option><option>8</option></select></label>
       <label>Fun at least <select id="ff"><option value="0">Any</option><option>3</option><option>5</option><option>6</option><option>7</option><option>8</option></select></label>
+      <label>Category <select id="fgs"><option value="">All categories</option></select></label>
       <label>Status <select id="fd"><option value="">All</option><option value="open">Not built</option><option value="done">Built or started</option></select></label>
       <label>Hidden <select id="fh"><option value="">Leave out hidden</option><option value="all">Show hidden too</option><option value="only">Only hidden</option></select></label>
       <label><input id="fo" type="checkbox"> Ranked only</label>
       <label><input id="fph" type="checkbox"> Hide high phone cost</label>
       <button class="gbtn" id="reset">Reset filters</button>
     </div>
-    <div class="chips" id="fg" role="group" aria-label="Groups"><span class="clab">Groups (none = all):</span></div>
+  </div>
+
+  <div class="panel wip" id="pwip" hidden>
+    <div class="frow"><label>Category <select id="wipg"><option value="">All categories</option></select></label><span class="wipsum" id="wipsum"></span></div>
+    <div id="wipb"></div>
   </div>
 
   <div class="panel gsum" id="pgsum" hidden>
@@ -724,9 +740,24 @@ function prio(r){const n=N(r);return Math.round(100*((W*n.R+(1-W)*n.F)/10)*SEEN[
 // red (low) -> yellow (middle) -> green (high) on the 1-10 scale
 function rzCol(p,a){const h=Math.max(0,Math.min(120,(p-1)/8*120));return "hsla("+h.toFixed(0)+",75%,45%,"+a+")"}
 const FG=new Set();
-for(const k of Object.keys(G)){const b=document.createElement("button");b.className="chip";b.dataset.g=k;b.style.setProperty("--gc",GC[k]);b.setAttribute("aria-pressed","false");const dt=document.createElement("span");dt.className="dot";b.append(dt,G[k]);const sm=document.createElement("small");sm.textContent=I.filter(r=>r[1]===k).length;b.appendChild(sm);$("fg").appendChild(b)}
-function setGroups(ks){FG.clear();ks.forEach(k=>FG.add(k));document.querySelectorAll("#fg .chip").forEach(b=>b.setAttribute("aria-pressed",FG.has(b.dataset.g)));render()}
-$("fg").addEventListener("click",e=>{const b=e.target.closest(".chip");if(!b)return;const k=b.dataset.g;FG.has(k)?FG.delete(k):FG.add(k);b.setAttribute("aria-pressed",FG.has(k));render()});
+for(const k of Object.keys(G)){const o=document.createElement("option");o.value=k;o.textContent=G[k]+" ("+I.filter(r=>r[1]===k).length+")";$("fgs").appendChild(o)}
+function setGroups(ks){FG.clear();ks.forEach(k=>FG.add(k));$("fgs").value=FG.size===1?[...FG][0]:"";render()}
+$("fgs").addEventListener("change",()=>setGroups($("fgs").value?[$("fgs").value]:[]));
+function renderWip(){
+  const sel=$("wipg").value,b=$("wipb");b.textContent="";let tot=0;
+  for(const k of Object.keys(G)){
+    if(sel&&sel!==k)continue;
+    const rows=I.filter(r=>r[1]===k&&DONE[r[0]]&&DONE[r[0]].part).sort((x,y)=>(DONE[y[0]].pc||0)-(DONE[x[0]].pc||0));
+    if(!rows.length)continue;tot+=rows.length;
+    const hd=el("h3");hd.style.setProperty("--gc",GC[k]);hd.append(el("span","dot"),G[k],el("small",null,rows.length+(rows.length>1?" projects":" project")));b.appendChild(hd);
+    for(const r of rows){const d=DONE[r[0]],w=el("div","wrow"),t=el("div","wt"),pr=el("div","wp"),pb=el("div","pbar"),pi=el("i");
+      t.append(el("span",null,r[0]),r[2]);pi.style.width=(d.pc||0)+"%";pb.appendChild(pi);pr.append(pb,el("b",null,(d.pc!=null?d.pc:"?")+"%"));t.appendChild(el("div","wipd","Started "+d.d));
+      w.append(t,pr,el("div","wn",d.n));b.appendChild(w)}}
+  if(!tot)b.appendChild(el("div","empty","Nothing partly built in this category."));
+  $("wipsum").textContent=tot+" partly built"
+}
+{const ws=$("wipg");for(const k of Object.keys(G)){const n=I.filter(r=>r[1]===k&&DONE[r[0]]&&DONE[r[0]].part).length;if(!n)continue;const o=document.createElement("option");o.value=k;o.textContent=G[k]+" ("+n+")";ws.appendChild(o)}
+ ws.addEventListener("change",renderWip);$("wipn").textContent=I.filter(r=>DONE[r[0]]&&DONE[r[0]].part).length;renderWip()}
 let gK="pr",gD=-1;
 document.querySelectorAll("th button[data-gk]").forEach(b=>b.addEventListener("click",()=>{const k=b.dataset.gk;if(gK===k)gD=-gD;else{gK=k;gD=k==="g"?1:-1}groupTable()}));
 function agg(rows){const n=rows.length,ns=rows.map(N),h=rows.reduce((a,r)=>a+hrs(r),0);return{n,pk:rows.filter(r=>picks.has(r[0])).length,ses:rows.reduce((a,r,i)=>a+COST[ns[i].c][1],0),pc:h,
