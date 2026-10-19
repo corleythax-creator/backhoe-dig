@@ -35,6 +35,21 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - J22 Trench safety rules: Deep trenches cave in if you ignore them: slope the walls or set a trench box, keep spoil 2 ft back from the edge, and watch the wet clay. A wall that slumps with a crew inside stops the job. (R9 F7 most low c2 6h)
 - J23 Asphalt road repair: Saw-cut a failed patch of road, dig it out, lay and roll base stone, tack the edges and run a hot-mix paver and roller over it. (R8 F7 some low c3 10h needs M07)
 - J24 Bid the job: Measure a plan, work out the yards and feet, bid it, then see if the real job came in over or under. Win a bid to take the work. (R7 F7 every none c2 6h needs J01 R02)
+- J25 Build a gravel road from scratch: Strip the topsoil, cut and fill to the line, shape the subgrade, then lay base stone in lifts, grade it to a crown and roll it. Pay by the station. (R9 F8 most low c3 12h needs M06 M07)
+- J26 Crown and side ditches: Shape the road with a 2 percent crown and a ditch on each side so rain runs off; a flat road holds water and ruts. (R8 F6 most none c1 4h)
+- J27 Soft spots and subgrade repair: A wet patch pumps under the truck. Dig it out, lay fabric, backfill with coarse stone and roll it until it stops moving. (R9 F7 some low c2 6h)
+- J28 Cut and fill balance: Plan a road so the dirt from the cuts fills the low spots with little hauling; a haul chart shows yards moved and how far. (R8 F7 some none c2 7h needs J24)
+- J29 Storm drains and catch basins: Set inlets and a storm pipe under the road that runs to an outfall at the lake, with sumps that catch the silt. (R9 F7 some low c2 8h needs J04)
+- J30 Riprap outfalls and bank armor: Place big angular stone where pipes empty and along creek banks so the flow can't scour the soil away. (R8 F6 some low c1 4h)
+- J31 Curb, gutter and sidewalk: Form, pour and finish concrete curb and sidewalk with a mixer truck, with a curb ramp at each crossing. (R8 F6 some low c3 10h needs M12)
+- J32 Driveway entrance: Cut an apron where a driveway meets the road with a culvert under it and stone to keep mud off the pavement. (R7 F7 most low c2 6h needs J13)
+- J33 Reinforced slope and wall: Build a wall with layers of geogrid and compacted backfill to hold up a road shoulder on a steep hillside. (R8 F7 some low c2 7h needs J20)
+- J34 Slope seeding and silt fence: Seed and cover raw slopes with straw matting and set silt fence below, so rain does not wash the cut away. (R7 F5 most none c1 3h needs D13)
+- J35 Storm washout repair: After a hard rain the shoulder is gone and a culvert end is clogged. Clear the pipe, rebuild the fill and armor the edge. (R8 F8 some low c2 5h needs W01 D13)
+- J36 Road cross-section view: A cutaway of the road you built that shows each layer, its thickness and compaction. (R9 F5 some none c1 3h)
+- J37 Surveying and staking: Set stakes along the centreline with cut and fill marks on them, and slope stakes to show where the cut meets the ground. (R9 F6 most none c2 6h needs J06)
+- J38 Compaction test: Proof-roll with a loaded truck or read a density gauge on each lift, and re-roll the places that fail. (R9 F6 most none c1 3h needs M07 J05)
+- J39 Culvert sizing: Pick the pipe diameter for a ditch by its drainage area; too small and the road overtops in a storm. (R9 F7 some low c2 6h needs J13 W01)
 
 ## M: New machines
 
@@ -252,6 +267,8 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - E06 Blocks in the editor: Lay out block builds from overhead in the map editor, with copy, paste and turn. (R3 F6 some none c1 4h)
 - E07 Edit the other islands: Sculpt, paint and place on the Family, Dexter's and Jessica's islands too, not only Corley's. (R3 F7 some none c3 10h)
 - E08 Named maps: Keep several maps on the device under names and switch between them. (R2 F5 some none c1 3h)
+- E09 Road profile editor: Set crown, shoulder width, ditch depth and base thickness for each stretch of road in the map editor. (R7 F4 every none c2 6h)
+- E10 Road takeoff readout: A number in the map editor for the length, area and yards of stone and asphalt each road needs. (R7 F5 every none c1 3h)
 
 ## Y: Gameplay and challenges
 
@@ -341,6 +358,14 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - B15 Railroad maintenance job: Dig out the ditch along the tracks, swap rotten ties with the excavator and spread ballast stone, then wait for a train to roll over your work. (R9 F7 some low c2 7h needs B13)
 - B16 Ride the train to town: Climb aboard at the depot and watch the shore roll by on the way to the mountain town. (R5 F9 some low c2 6h needs B13 T01)
 - B17 Back roads cruise: Take the pickup down gravel roads with dust trails, one-lane bridges, a farm stand and a church with a gravel lot. (R6 F7 most low c2 7h needs B02)
+- B18 Striping and road signs: Paint centre and edge lines with a striper truck, set reflective posts and put up stop, yield and speed signs. (R8 F6 most low c2 6h needs J23)
+- B19 Guardrail installation: Drive posts, bolt the W-beam rail and set end terminals along the bridge approaches and sharp curves. (R8 F6 some low c2 6h needs M33)
+- B20 Work zones and flaggers: Set cones, barrels and an arrow board to close a lane, and a flagger waves traffic through while you work. (R9 F7 most low c2 6h)
+- B21 Gravel road wear: Gravel roads wear into washboard and potholes with traffic and rain; grade and re-stone them to keep them smooth. (R8 F7 most low c2 6h needs M06)
+- B22 Creek crossings: Build a low-water ford, a box culvert or a short bridge over the creek, sized for the flow. (R8 F7 some low c2 8h)
+- B23 Load limits: Heavy loads rut a soft road; a posted weight limit tells you what the road will carry, and trucks past it leave damage. (R8 F6 most none c2 5h)
+- B24 Intersections and turn lanes: Lay out a junction with a turn lane, a corner radius a semi can make and a stop bar. (R7 F6 some low c2 8h)
+- B25 Street lights and signals: Set pole bases, run conduit and stand light poles and a signal at the junction, then switch them on. (R7 F5 some low c2 6h)
 
 ## T: The mountain town
 
