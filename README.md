@@ -71,6 +71,7 @@ A 3D excavator game in plain HTML, CSS and JavaScript (three.js r128, no build s
 | `tools/scene-check.js` | Loads the game headless and prints the triangle count, file size and any errors (the numbers a build-log entry needs) |
 | `docs/map-editor.md` | How the map editor works: what a map stores, how an edit reaches the screen, gotchas, limits and ideas |
 | `docs/mesa-plans.html` | The three mesa layout plans from the 1.5× expansion (Plan A was built, v54). Planning record, not part of the game |
+| `docs/dig-plans.html` | Dig Anywhere plan: the whole map split into 105 ft dig tiles, with the tile map, options, phases and rollout (idea D14 and beyond). Planning record, not part of the game |
 | `gfx_low.png` | A 1.6 MB screenshot added with v52; nothing references it, so it can be deleted |
 
 ## Controls
