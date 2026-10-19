@@ -85,8 +85,8 @@ function drawMap(cv,cx,cz,mpp,big){
   for(const b of CAUSEWAYS){g.save();g.translate(X(b.x0),Y(b.z0));g.rotate(Math.atan2(b.uz,b.ux));g.fillStyle='#7d7a72';g.fillRect(0,-(b.hw+1.5)*sc,b.len*sc,(2*b.hw+3)*sc);
     g.fillStyle='#a49a86';g.fillRect(0,-b.hw*sc,b.len*sc,2*b.hw*sc);g.restore()}
   for(const b of BRIDGES){g.save();g.translate(X(b.x0),Y(b.z0));g.rotate(Math.atan2(b.uz,b.ux));g.fillStyle='rgba(0,0,0,.3)';g.fillRect(0.8*sc,-(b.hw+0.4)*sc+0.8*sc,b.len*sc,(2*b.hw+0.8)*sc);
-    g.fillStyle=b.temp?'#5e4630':b.foot?'#8a2f24':'#55595c';g.fillRect(0,-(b.hw+0.4)*sc,b.len*sc,(2*b.hw+0.8)*sc);
-    g.fillStyle=b.temp?'#9c7c56':b.foot?'#b9563f':'#a2a4a6';g.fillRect(0,-b.hw*sc,b.len*sc,2*b.hw*sc);g.restore()}
+    g.fillStyle=b.temp||b.dock?'#5e4630':b.foot?'#8a2f24':'#55595c';g.fillRect(0,-(b.hw+0.4)*sc,b.len*sc,(2*b.hw+0.8)*sc);
+    g.fillStyle=b.temp||b.dock?'#9c7c56':b.foot?'#b9563f':'#a2a4a6';g.fillRect(0,-b.hw*sc,b.len*sc,2*b.hw*sc);g.restore()}
   const sh=Math.max(1,0.9*sc);
   for(const s of SOLIDS){const rot=s.sn!==undefined,hx=rot?s.lx:s.hx,hz=rot?s.lz:s.hz;if(hx<1.4&&hz<1.4)continue;
     g.save();g.translate(X(s.x),Y(s.z));if(rot)g.rotate(Math.atan2(s.sn,s.cs));g.fillStyle='rgba(0,0,0,.35)';g.fillRect(-hx*sc+sh,-hz*sc+sh,2*hx*sc,2*hz*sc);
@@ -112,6 +112,7 @@ function drawMap(cv,cx,cz,mpp,big){
   const hy=st.yaw+st.swing;
   g.strokeStyle='#f07a22';g.lineWidth=Math.max(2,0.3*sc);g.beginPath();g.moveTo(X(st.x),Y(st.z));g.lineTo(X(tip.x),Y(tip.z));g.stroke();
   icon(sk.x,sk.z,Math.atan2(Math.cos(sk.yaw),Math.sin(sk.yaw)),'#f2b705',2.8,1.8,mode==='skid');
+  boats.forEach((b,i)=>icon(b.x,b.z,Math.atan2(Math.cos(b.yaw),Math.sin(b.yaw)),'#f4f3ef',BT_L,BT_B,mode==='boat'&&btI===i));
   icon(mw.x,mw.z,Math.atan2(Math.cos(mw.yaw),Math.sin(mw.yaw)),'#d8352a',2.2,1.4,mode==='mow');
   icon(tr.x,tr.z,Math.atan2(Math.cos(tr.yaw),Math.sin(tr.yaw)),'#e9ecea',9.1,2.6,mode==='truck');
   icon(st.x,st.z,Math.atan2(Math.cos(hy),Math.sin(hy)),'#f07a22',4.2,3,mode==='dig'||mode==='drive');
@@ -142,10 +143,10 @@ function mapGo(cx,cz,span){const [w,h]=mapBox(),mpp=span?span/Math.min(w,h):mapF
 function mapZoom(f,px,py){const [w,h]=mapBox();if(px===undefined){px=w/2;py=h/2}mapV.anim=null;
   const x=mapV.cx+(px-w/2)*mapV.mpp,z=mapV.cz+(py-h/2)*mapV.mpp;mapV.mpp*=f;mapClamp();mapV.cx=x-(px-w/2)*mapV.mpp;mapV.cz=z-(py-h/2)*mapV.mpp;mapClamp()}
 function mapAt(px,py){const [w,h]=mapBox();return {x:mapV.cx+(px-w/2)*mapV.mpp,z:mapV.cz+(py-h/2)*mapV.mpp}}
-function mapFocus(){return wk.inside?WK_RIDES[wk.inside].o:mode==='walk'?wk:mode==='truck'?tr:mode==='mow'?mw:mode==='skid'?sk:st}
+function mapFocus(){return wk.inside?WK_RIDES[wk.inside].o:mode==='boat'?btCur():mode==='walk'?wk:mode==='truck'?tr:mode==='mow'?mw:mode==='skid'?sk:st}
 // what a spot on the map is called
 function mapPlace(x,z){
-  for(const b of BRIDGES){const [t,u]=deckLocal(b,x,z);if(t>0&&t<b.len&&Math.abs(u)<b.hw+1)return b.temp?'Temporary bridge':b.foot?'Covered footbridge':'Bridge'}
+  for(const b of BRIDGES){const [t,u]=deckLocal(b,x,z);if(t>0&&t<b.len&&Math.abs(u)<b.hw+1)return b.dock?'Dock':b.temp?'Temporary bridge':b.foot?'Covered footbridge':'Bridge'}
   if(jesR(x,z)<JES_R+4)return "Jessica's Island";if(dexR(x,z)<DEX_R+4)return "Dexter's Island";if(famR(x,z)<FAM_R+4)return 'Family Island';
   if(inDig(x,z))return 'Dig site';if(mesaR(x,z)<EDGE+4)return "Corley's Island";
   if(z<0&&z<mainRimN(x)+6)return x<-14?'The woods':x>14?'The hayfield':'North trail';if(z>0&&z>mainRimS(x)-6)return 'Lakeside town';return 'The lake'}

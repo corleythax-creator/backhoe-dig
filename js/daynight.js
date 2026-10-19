@@ -87,7 +87,7 @@ const dnHead=new THREE.SpotLight(0xfff1dc,0,46,0.6,0.55,1.1);dnHead.castShadow=f
 const dnHP=new THREE.Vector3(),dnHT=new THREE.Vector3();
 function dnHeadPlace(){
   // [part, lamp x y z, aim x y z] in the part's own frame, forward along +z
-  const p=mode==='truck'?[sprung,0,0.2,3.0,0,-1.6,16]:mode==='skid'?[skid,0,1.3,0.9,0,-1.2,10]:mode==='mow'?[mower,0,0.8,0.9,0,-0.9,8]:mode==='walk'?null:[house,0,1.75,0.7,0,-0.8,14];
+  const p=mode==='boat'?[btCur().g,0,0.75,2.3,0,-1,18]:mode==='truck'?[sprung,0,0.2,3.0,0,-1.6,16]:mode==='skid'?[skid,0,1.3,0.9,0,-1.2,10]:mode==='mow'?[mower,0,0.8,0.9,0,-0.9,8]:mode==='walk'?null:[house,0,1.75,0.7,0,-0.8,14];
   if(p){p[0].localToWorld(dnHP.set(p[1],p[2],p[3]));p[0].localToWorld(dnHT.set(p[4],p[5],p[6]))}
   else{const fx=Math.sin(wk.view),fz=Math.cos(wk.view);dnHP.set(wk.x+fx*0.2,wk.y+1.75,wk.z+fz*0.2);dnHT.set(wk.x+fx*9,wk.y,wk.z+fz*9)}
   dnHead.position.copy(dnHP);dnHead.target.position.copy(dnHT)}
