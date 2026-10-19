@@ -8,22 +8,22 @@ First version shipped as v60, roads as v63.
 
 | Tool | What it does |
 | --- | --- |
-| Look | Drag to move the view; two fingers pinch to zoom and twist to turn. Mouse: right button turns, wheel zooms. Keys: WASD or arrows pan, Q E turn, R F zoom |
-| Raise, Lower, Flatten, Smooth | Reshape the ground under a soft round brush with a 1 to 40 ft radius, strength 1 to 10. Flatten levels to the height where the stroke starts |
-| Dirt, Grass | Paint the ground toward worked dirt or back to grass (Grass also paints over the built-in dirt yards) |
-| Paint | Lay a material from the library (or one of your own textures: + Your own texture turns an uploaded picture into a seamless tile and adds it for every device; Edit this texture changes a picked one) under a round or square brush (1 to 40 ft; at 1 ft it lays single 0.5 m cells, the finest the grid holds), Hard edge (whole cells, fully covered, drawn with a sharp edge) or Soft edge (the cover fades to nothing over the outer 10 to 100% of the radius, the Softness slider). Natural ground takes it back up, softly too |
-| Select | Pick a tree, boulder, placed thing or machine; drag to move it; its card turns, resizes, copies or deletes it (machines move and turn only). A thing's copy goes alongside it, along its width, so fence sections line up |
-| Add | Place a pine, leafy tree or boulder, or a thing from the catalogue (house, shed, garage, fence, farm gate, light tower, cone, barrel, pallet, porta-potty, sign, bench, picnic table, dumpster), which comes in at full size facing the camera; keep holding to drag it into place |
-| Query | Read a spot's height, slope, surface, whether it can be driven, your edits there and what stands on it, in feet |
-| Roads | Pick a road and drag its points; tap it between points to add one; New road lays one point by point. Its card sets width, grass up the middle, grading and the picked point's height, and deletes points or the road |
+| Moving the view | Two fingers pinch to zoom, twist to turn and drag to move; Look (top bar) makes one finger move it whatever the tool. Mouse: right button turns, middle button moves, wheel zooms. Keys: WASD or arrows pan (over the whole map, mainland included), Q E turn, R F zoom. The top bar also has Closer, Farther, North up and Start view (where the editor opened) |
+| Shape: Raise, Lower, Flatten, Smooth | Reshape the ground under a soft round brush with a 1 to 40 ft radius, strength 1 to 10. Flatten levels to the height where the stroke starts |
+| Paint | Lay a material from the library (or one of your own textures: + Your own texture turns an uploaded picture into a seamless tile and adds it for every device; Edit this texture changes a picked one) under a round or square brush (1 to 40 ft; at 1 ft it lays single 0.5 m cells, the finest the grid holds), Hard edge (whole cells, fully covered, drawn with a sharp edge) or Soft edge (the cover fades to nothing over the outer 10 to 100% of the radius, the Softness slider). Natural ground takes it back up, softly too. Worked dirt and Grass are swatches in the same library, but they pick the Dirt and Grass tools, which paint `ED_P` toward worked dirt or back to grass (Grass also paints over the built-in dirt yards) |
+| Things: Select | Pick trees, boulders, placed things and machines: a tap picks one, Shift, Ctrl or a long press adds or takes away, a drag on empty ground (a mouse, or touch with Box select on) picks everything whose middle is in the box, Select all in view (Ctrl+A) every thing on screen. Drag a picked one to move them all. The bottom bar turns, sizes, colours, copies or deletes the selection (machines move and turn only). Several turn and size each about its own middle, or As a group about theirs. One thing's copy goes alongside it, along its width, so fence sections line up; several are copied beside themselves, to the right as the camera sees them |
+| Things: Add | Place a pine, leafy tree or boulder, or a thing from the catalogue (house, shed, garage, fence, farm gate, light tower, cone, barrel, pallet, porta-potty, sign, bench, picnic table, dumpster), picked in the drawer by group, which comes in at full size facing the camera; keep holding to drag it into place |
+| On the map (Things drawer) | Every thing and the machines by kind, with counts, filtered All, Near the view or Selected. Open a kind to see each one (picked ones first, up to 200 rows); tap a row to pick it and glide there, tick rows to pick several, Select all a kind, delete every one of a kind, or put back the first trees or boulders (from `defaultAssets()`) |
+| Inspect: Query | Read a spot's height, slope, surface, whether it can be driven, your edits there and what stands on it, in feet |
+| Roads | Pick a road (on the ground or from the drawer's list) and drag its points; tap it between points to add one; New road (bottom bar) lays one point by point. Its card sets width, grass up the middle, grading and the picked point's height, and deletes points or the road |
 
-The tools sit in a two-wide strip down the left, with the picked tool's options, the Map file card and the info cards in a column beside it; tapping the picked tool again folds its options away. Undo and Redo hold 30 steps. Number keys 1 to 0 pick the first ten tools, Delete removes the selected asset or road point, Enter finishes a new road, G or Esc closes the editor.
+The screen has bars across the top (Done, Undo, Redo, the view, Panel), down the left (the groups Shape, Paint, Things, Roads, Inspect, with Map at the foot) and along the bottom (the group's tools and the tool's options; above them the selection's settings, or the Query or road card, which take their place while shown; under them on a computer a status line: the spot under the pointer, the brush, the view, the count of things and the selection, and a tip from `WORDS`, `edTip_<tool>`). A drawer beside the left bar shows the group's part: the material library, the things to add and On the map, the roads, or Map's file card. It opens by default on a wide screen (900 px and up, 500 px tall) and on a phone opens with the group and closes once something in it is picked. Tapping the picked group again folds its drawer (or, for Shape and Inspect, the options) away. On a phone the bottom bar is one row that scrolls sideways and the status line is hidden. The selection stays across tool changes. Undo and Redo hold 30 steps. Number keys 1 to 5 pick the groups and 6 opens Map, Delete removes the selection or the road point, Esc lets go of the selection (then closes), Ctrl+A picks every thing in view, Ctrl+D copies, Enter finishes a new road, G closes the editor.
 
 ## Where the code is
 
 | File | Editor parts |
 | --- | --- |
-| `js/editor.js` | Everything the player touches: open and close, tools, camera, picking, brush, assets, roads, undo, the info cards, save, copy and load |
+| `js/editor.js` | Everything the player touches: open and close, the bars, groups and drawer, camera, picking, brush, the selection (`ed.sel`, a list of `{a}` or `{m}`) and its settings, On the map, assets, roads and their list, the status line, undo, save, copy and load |
 | `js/materials.js` | The material library `MAT_LIST` (append only: a material's saved id is its index + 1; built-in ones stop at 40, the owner's own start at `MAT_OWN0` 41 and run to `MAT_MAX` − 1, 71; `matDef(id)` gives an entry or a grey stand-in for an own texture not heard of yet, `matIdOk` says whether an id may be kept), the ground shader's material uniforms `matU`, and `matTexUpdate`, which builds the texture array of the materials the map uses. A material with `pbr:1` adds its `<id>_n.jpg` normal map as a layer of its own and its `<id>_r.jpg` roughness into the alpha of its colour layer (High graphics, `texPbr`); the shader tilts the normal (`matGlslNorm`), fades the relief with distance and rain and scales the sheen from the Ground look tunings (`uPbr`, set each frame by `matPbrSync`). Maps come from `tools/pbr.py` |
 | `js/ownmat.js` | Your own textures: the upload card, `ownTile` (crop to the best period, fade the seams, mean colour, as `tools/textures.py`), publishing (`mat_put` with the owner key, `supabase/island_materials.sql`), loading the list at start (`mat_list`, cached in `bhd_mats`) and pictures as used (`mat_img`, through `matOwnImg`); `ownChanged` updates the shader's uniforms, the library panel, the blocks' list and the texture array |
 | `js/terrain.js` | The edit layers `ED_H`, `ED_P`, `ED_M` and `ED_A`, `paintAt` and `matTint` (a vertex's colour under the materials), `mapEncode` and `mapDecode`, loading `bhd_map` at startup, `baseHeight` (= `groundHeight` + `ED_H`), `yardAt` (+ `ED_P`), the road list `ROADS` and `roadsBuild`, `wallBuild` (ground too steep to drive), `digBase` (a dig-grid vertex's undug colour) |
@@ -32,7 +32,7 @@ The tools sit in a two-wide strip down the left, with the picked tool's options,
 | `js/shadowproxy.js` | `shpTreesRefresh`: tree shadows re-read the instance matrices after assets change |
 | `js/controls.js` | `edOn`; the game's keyboard and orbit-drag handlers return early while it is true |
 | `js/main.js` | `frame()` hands the whole frame to `editorFrame()` while the editor is open, so the game stands still |
-| `index.html`, `css/game.css` | The `#editor` overlay (the title bar, then `.edmain`: the tool strip `.edtools` and the `.edside` column of cards); `body.editing` hides the game HUD but keeps toasts |
+| `index.html`, `css/game.css` | The `#editor` overlay, a grid: the top bar `#edTop`, the left bar `#edRail`, the drawer `#edDrawer` (one `.edsec` per part), the bottom bar `#edBottom` (`#edCard`, `#edInfo`, `#edOpts`) and the status line `#edStat`; `#edBox` is the box being dragged. `body.editing` hides the game HUD but keeps toasts |
 
 ## Coordinates and units
 
@@ -102,6 +102,9 @@ While the brush is held or a road point is dragged, the layer changes every fram
 
 ## Limits and ideas for next
 
+The plan to rebuild the editor's layout (bars across the top, left and bottom) and add a full asset editor is in `docs/map-editor-redesign.md`.
+
+
 - A map lives on one device (and one origin: the claude.ai version and the Vercel site have separate storage). Copy map / Load a map moves it as text.
 - There is no way yet to make a map the shipped default for everyone. The simplest route: a `data/map.js` that sets the map text, read by `terrain.js` before `bhd_map`.
 - Only the dig grid around the trench can be dug. Sculpting works anywhere in the `MID` area, but the bucket only digs in the dig grid.
@@ -109,4 +112,4 @@ While the brush is held or a road point is dragged, the layer changes every fram
 - A graded road's banks are too steep to drive. Laying or widening a graded road across another road can block the one it crosses.
 - The Family Island, Jessica's Island and Dexter's Island, their roads (`ISLAND_ROADS`), buildings, trees and the bridges are fixed for now: the editor layers cover only the `MID` area, and the island's trees are not editor assets. The editor camera can pan over to look at it.
 - The machines' start spots (used by Reset), the trench, the gas main and the tall-grass patch are fixed.
-- Ideas: multi-select and move for assets, a road "follow the ground but smooth it" mode, a slope-limited flatten for building ramps, a shipped default map, and dig-grid placement anywhere on the mesa.
+- Ideas: a road "follow the ground but smooth it" mode, a slope-limited flatten for building ramps, a shipped default map, and dig-grid placement anywhere on the mesa.

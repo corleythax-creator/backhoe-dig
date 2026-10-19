@@ -18,9 +18,46 @@ wmMesh.frustumCulled=false;wmMesh.visible=false;wmMesh.receiveShadow=true;scene.
 function wmSet(fine){WM_K=fine?1:GRID_K;WM_N=96*GRID_K/WM_K;wmMesh.geometry.dispose();wmMesh.geometry=new THREE.PlaneGeometry(1,1,WM_N,WM_N);
   wmMat.envMap=fine?skyEnv:null;wmMat.needsUpdate=true;wmI0=-1;waterT=0}
 wmSet(false);
-function waterClear(){Wt.fill(-1e9);mudA.fill(0);soakMax.fill(0);crkA.fill(0);geo.attributes.crk.updateRange.count=-1;geo.attributes.crk.needsUpdate=true;pumpOn=false;waterAny=puddleAny=false;waterSeen=false;wmMesh.visible=false}
+function waterClear(){Wt.fill(-1e9);Rq.fill(0);Rs.fill(0);runAny=false;mudA.fill(0);soakMax.fill(0);crkA.fill(0);geo.attributes.crk.updateRange.count=-1;geo.attributes.crk.needsUpdate=true;pumpOn=false;waterAny=puddleAny=false;waterSeen=false;wmMesh.visible=false}
+// ---------- runoff: rain that runs downhill ----------
+// Over the dig area rain that the soil can't take (more of it the wetter the soil) runs off as a thin film, Rq (m): each
+// step it moves toward the lowest neighbouring surface, so it gathers into rills down spoil piles and ruts and pours into
+// any pool or dug hole (Wt). Running water picks up loose dirt (dug, dumped or rutted ground, Rs: dirt carried, m) where
+// it runs fast and steep and drops it where it slows, so piles grow gullies and the trench floor takes silt. Once the
+// rain stops the film soaks away in a few seconds. It is behaviour, the same on every device; TU.runoff and TU.erode tune it
+const Rq=new Float32Array(V*V),Rs=new Float32Array(V*V),Rq2=new Float32Array(V*V),Rs2=new Float32Array(V*V);let runAny=false;
+const RUN_NB=[1,-1,V,-V];
+function runoffStep(dt){const r=weather.r,rain=r>0.02;if(!rain&&!runAny)return false;
+  // at most about 100 ft square of it, round the camera, so a big dig costs no more
+  const li=Math.round(gI(look.x)),lj=Math.round(gJ(look.z)),RW=100;
+  const i0=Math.max(cI0+1,li-RW),i1=Math.min(cI1-1,li+RW),j0=Math.max(cJ0+1,lj-RW),j1=Math.min(cJ1-1,lj+RW);if(i1<=i0||j1<=j0)return false;
+  const ke=0.45*TU.erode,emax=0.0006*TU.erode*dt;let any=false,ti0=N,ti1=-1,tj0=N,tj1=-1;
+  for(let j=j0;j<=j1;j++){const o=j*V;Rq2.fill(0,o+i0,o+i1+1);Rs2.fill(0,o+i0,o+i1+1)}
+  for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const k=j*V+i,h=H[k];let q=Rq[k],sd=Rs[k];
+    // rain on ground at or above grade (a dug hole catches its own rain, waterTick); the soaked share runs off
+    if(rain&&h>=H0[k]-0.02)q+=r*RAIN_IN*0.4*TU.runoff*dt*(0.25+0.75*rainSoakK(k));
+    // untouched ground (grass, roots) drinks a film in; once the rain stops it all soaks away in seconds
+    if(Math.abs(h-H0[k])<=0.04)q=Math.max(0,q-0.00025*dt*(1.2-rainSoakK(k)));
+    if(!rain)q=Math.max(0,q-0.0006*dt);
+    if(q<1e-6){if(sd>0&&!prot[k]){H[k]+=sd;ti0=Math.min(ti0,i);ti1=Math.max(ti1,i);tj0=Math.min(tj0,j);tj1=Math.max(tj1,j)}continue}
+    // into a pool: the water joins it and the dirt settles out as silt
+    if(Wt[k]>h+0.001){Wt[k]+=q;if(sd>0&&!prot[k]){H[k]+=sd;ti0=Math.min(ti0,i);ti1=Math.max(ti1,i);tj0=Math.min(tj0,j);tj1=Math.max(tj1,j)}continue}
+    const s0=h+q;let best=-1,bs=s0;
+    for(const d of RUN_NB){const n=k+d,sn=Wt[n]>H[n]?Wt[n]:H[n]+Rq[n];if(sn<bs){bs=sn;best=n}}
+    any=true;if(best<0){Rq2[k]+=q;Rs2[k]+=sd;continue}
+    const mv=Math.min(q,(s0-bs)*0.5),f=mv/q,slope=(h-H[best])/CELL;
+    // loose ground gives up dirt where the water runs steep; it drops it again where the flow can't carry it
+    if(!prot[k]&&Math.abs(h-H0[k])>0.04&&h>H0[k]-FLOOR+0.05){const cap=ke*mv*Math.max(0,slope);
+      let dh=sd<cap?-Math.min((cap-sd)*0.3,emax):Math.min((sd-cap)*0.3,sd);if(dh){H[k]+=dh;sd-=dh;ti0=Math.min(ti0,i);ti1=Math.max(ti1,i);tj0=Math.min(tj0,j);tj1=Math.max(tj1,j)}}
+    Rq2[best]+=mv;Rs2[best]+=sd*f;Rq2[k]+=q-mv;Rs2[k]+=sd*(1-f);
+    // running water keeps the ground under it wet
+    if(mv>0.0015)mudA[k]=1}
+  // water that runs off the edge of the dig area is gone
+  for(let j=j0;j<=j1;j++){const o=j*V;Rq.set(Rq2.subarray(o+i0,o+i1+1),o+i0);Rs.set(Rs2.subarray(o+i0,o+i1+1),o+i0)}
+  runAny=any;if(ti1>=ti0){touch(ti0,ti1,tj0,tj1);st.dirty=true}
+  return any}
 function waterTick(dt){
-  waterT-=dt;if(waterT>0||cI1<cI0)return;const step=0.25;waterT=step;
+  waterT-=dt;if(waterT>0||cI1<cI0)return;const step=0.25;waterT=step;runoffStep(step);
   let any=false,hole=false,moved=false,crk=false;seeping=0;const rain=weather.r>0.02,dry=(dryT-=step)<=0;if(dry)dryT=2.5;
   for(let j=cJ0;j<=cJ1;j++)for(let i=cI0;i<=cI1;i++){const k=j*V+i,h=H[k],w0=Wt[k];
     // soaked ground holds water near the surface: painted Mud everywhere while it is soaked, other rain-soaked ground only
@@ -50,6 +87,7 @@ function waterTick(dt){
     if(Math.abs(Wt[k]-w0)>1e-4)moved=true}
   if(crk){const a=geo.attributes.crk;a.updateRange.offset=cJ0*V*2;a.updateRange.count=(cJ1-cJ0+1)*V*2;a.needsUpdate=true}
   // waterAny: a flooded hole (the Pump button); puddleAny: any water at all
+  if(runAny){any=true;moved=true}
   waterAny=hole;puddleAny=any;waterMoved=moved;if(!hole)pumpOn=false;
   if(hole&&!waterSeen){waterSeen=true;toast(say(rain?'waterRain':'waterSeep'),'',3800)}
   // place the surface over the dug area, or around the camera when the dug area is wider; it moves only when the camera
@@ -62,7 +100,7 @@ function waterTick(dt){
   const p=wmMesh.geometry.attributes.position.array,G=WM_K;
   for(let j=0;j<=WM_N;j++)for(let i=0;i<=WM_N;i++){const gi=i0+i*G,gj=j0+j*G,k=gj*V+gi,o=(j*(WM_N+1)+i)*3;
     // a dry point next to water takes the pool's level (it is inside the bank there, so the surface ends flat at the wall)
-    let y=Wt[k];if(y<H[k]+0.003){const m=Math.max(gi>=G?Wt[k-G]:-1e9,gi+G<=N?Wt[k+G]:-1e9,gj>=G?Wt[k-G*V]:-1e9,gj+G<=N?Wt[k+G*V]:-1e9);y=m>-1e8?Math.min(m,H[k]-0.02):H[k]-0.12}
+    let y=Rq[k]>0.004&&Math.abs(H[k]-H0[k])>0.04&&Wt[k]<H[k]+0.003?H[k]+Rq[k]+0.002:Wt[k];if(y<H[k]+0.003){const m=Math.max(gi>=G?Wt[k-G]:-1e9,gi+G<=N?Wt[k+G]:-1e9,gj>=G?Wt[k-G*V]:-1e9,gj+G<=N?Wt[k+G*V]:-1e9);y=m>-1e8?Math.min(m,H[k]-0.02):H[k]-0.12}
     p[o]=gX(gi);p[o+1]=y;p[o+2]=gZ(gj)}
   wmMesh.geometry.attributes.position.needsUpdate=true;wmMesh.geometry.computeVertexNormals();
 }

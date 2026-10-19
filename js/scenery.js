@@ -136,7 +136,6 @@ const tufts=new THREE.Group(),tuftMeshes=[];scene.add(tufts);
       tS[n]=(kind===2?0.75+Math.random()*0.6:kind===3?0.85+Math.random()*0.35:0.7+Math.random()*0.6)*(1+0.25*edge);
       // dry clumps lie lower
       const dk=kind<2&&Math.random()<0.06+0.6*dry;tH[n]=(0.8+Math.random()*0.45)*(dk?0.7:1);
-      tI[n]=Math.round(gI(px));tJ[n]=Math.round(gJ(pz));if(tI[n]<0||tI[n]>N||tJ[n]<0||tJ[n]>N){tI[n]=-1;tJ[n]=-1}
       // the green of the ground, a touch deeper in the lush flats; dry clumps straw coloured
       const nv=Math.random(),lush=(1-dry)*0.15;
       let cr=(0.3+0.05*nv)*(1-lush),cg=(0.52+0.08*nv)*(1-lush*0.4),cb=(0.22+0.04*nv)*(1-lush);
@@ -252,6 +251,9 @@ function fieldLoad(str){if(typeof str!=='string')return;let b;try{b=atob(str)}ca
     fcT[k]=lawn.t-(b.charCodeAt(q+2)-1)/254*(TU.lawnWait+TU.lawnGrow);if(!fcIn[k]){fcIn[k]=1;fcAct.push(k)}fcRedraw(k)}
   tuftFlush()}
 // every clump stands up at the start
+// each tuft's dig-grid point, or -1 off the grid; again when the grid moves (the lawn patch's are cleared by mower.js)
+function tuftIdx(){for(let n=0;n<TUFTS;n++){const i=Math.round(gI(tX[n])),j=Math.round(gJ(tZ[n]));if(i<0||i>N||j<0||j>N){tI[n]=-1;tJ[n]=-1}else{tI[n]=i;tJ[n]=j}}}
+tuftIdx();
 for(let n=0;n<TUFTS;n++)tuftPut(n,true);tuftFlush();
 // ground outside the dig zone: 0.5 m over the rest of the mesa and its cliffs (hills, the scarp and the ramp need it),
 // 2 m beyond; each patch has a hole where the finer one sits
@@ -278,7 +280,8 @@ function groundPatch(X0,X1,Z0,Z1,CO,holes){
   for(let j=0;j<NZ;j++)for(let i=0;i<NX;i++){const x0=X0+i*CO,z0=Z0+j*CO;
     if(holes.some(h=>x0>=h[0]-1e-6&&x0+CO<=h[1]+1e-6&&z0>=h[2]-1e-6&&z0+CO<=h[3]+1e-6))continue;const a=j*VX+i;ix.push(a,a+VX,a+1,a+1,a+VX,a+VX+1)}
   const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pp,3));g.setAttribute('color',new THREE.Float32BufferAttribute(cc,3));
-  g.setAttribute('normal',new THREE.Float32BufferAttribute(new Float32Array(pp.length),3));g.setIndex(ix);
+  // smooth normals: the ground is drawn flat-shaded, but rain runoff reads which way is downhill from them (terrain.js)
+  g.setAttribute('normal',new THREE.Float32BufferAttribute(new Float32Array(pp.length),3));g.setIndex(ix);g.computeVertexNormals();
   g.setAttribute('dirt',new THREE.Float32BufferAttribute(rk,1));g.setAttribute('wetT',new THREE.Float32BufferAttribute(new Float32Array(rk.length).fill(-1e4),1));g.setAttribute('soilD',new THREE.Float32BufferAttribute(new Float32Array(rk.length),1));g.setAttribute('matA',new THREE.Float32BufferAttribute(ma,1));
   const m=new THREE.Mesh(g,groundMat);m.receiveShadow=true;scene.add(m);
   return {g,m,X0,Z0,CO,VX,NX,NZ};
@@ -306,7 +309,7 @@ function buildSkirts(){
   const sp=[],si=[];let q=0;
   const run=(fx,a0,a1,st,dp)=>{for(let t=a0;t<a1-1e-6;t+=st){const [x0,z0]=fx(t),[x1,z1]=fx(t+st),h0=baseHeight(x0,z0),h1=baseHeight(x1,z1);
     sp.push(x0,h0,z0,x1,h1,z1,x0,h0-dp,z0,x1,h1-dp,z1);si.push(q,q+2,q+1,q+1,q+2,q+3);q+=4}};
-  run(t=>[t,GZ0],GX0,GX1,0.5,0.6);run(t=>[t,GZ1],GX0,GX1,0.5,0.6);run(t=>[GX0,t],GZ0,GZ1,0.5,0.6);run(t=>[GX1,t],GZ0,GZ1,0.5,0.6);
+  for(const R of [[GX0,GX1,GZ0,GZ1],...digSkirtRects]){run(t=>[t,R[2]],R[0],R[1],0.5,0.6);run(t=>[t,R[3]],R[0],R[1],0.5,0.6);run(t=>[R[0],t],R[2],R[3],0.5,0.6);run(t=>[R[1],t],R[2],R[3],0.5,0.6)}
   run(t=>[t,OUTER_MID[2]],OUTER_MID[0],OUTER_MID[1],1,2);run(t=>[t,OUTER_MID[3]],OUTER_MID[0],OUTER_MID[1],1,2);run(t=>[OUTER_MID[0],t],OUTER_MID[2],OUTER_MID[3],1,2);run(t=>[OUTER_MID[1],t],OUTER_MID[2],OUTER_MID[3],1,2);
   for(const R of MAIN_FINE){run(t=>[t,R[2]],R[0],R[1],1,2);run(t=>[t,R[3]],R[0],R[1],1,2);run(t=>[R[0],t],R[2],R[3],1,2);run(t=>[R[1],t],R[2],R[3],1,2)}
   run(t=>[t,MID[2]],MID[0],MID[1],0.5,2);run(t=>[t,MID[3]],MID[0],MID[1],0.5,2);run(t=>[MID[0],t],MID[2],MID[3],0.5,2);run(t=>[MID[1],t],MID[2],MID[3],0.5,2);

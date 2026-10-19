@@ -13,14 +13,13 @@ function fineSoak(v,x,z){const r=rwIdx(x,z);return r<0?0:ss(0.25,0.9,rainW[r])*(
 // ---------- the fine grid and its tiles ----------
 const FC=0.5/3,FX0=MID[0],FZ0=MID[2],FNX=Math.round((MID[1]-MID[0])/FC),FNZ=Math.round((MID[3]-MID[2])/FC),FV=FNX+1;
 const MT=48,MT_NX=Math.ceil(FNX/MT),MT_NZ=Math.ceil(FNZ/MT),MT_MAX=160;
-// the dig zone in fine cells (its own grid draws it)
-const FDI0=Math.round((GX0-FX0)/FC),FDI1=Math.round((GX1-FX0)/FC),FDJ0=Math.round((GZ0-FZ0)/FC),FDJ1=Math.round((GZ1-FZ0)/FC);
 // per fine vertex, made on the first tile: original height, rut depth (+ up), water surface and churned mud (0-255); and
 // as for the dig zone's soakMax and crkA (terrain.js): the wettest a rut got (FWX, 0-255) and how dried out and cracked it shows
 let FH0=null,FD=null,FW=null,FM=null,FK=null,FWX=null,FCR=null;
 const mtIdx=new Int16Array(MT_NX*MT_NZ).fill(-1),mTiles=[];
 let mtWet=false,mtWaterT=0,mtDryT=0,mtFine=false;
-const cellOk=(ci,cj)=>ci>=0&&cj>=0&&ci<FNX&&cj<FNZ&&!(ci>=FDI0&&ci<FDI1&&cj>=FDJ0&&cj<FDJ1);
+// a fine cell the mud tiles may draw: not in the dig grid or a dug tile drawn outside it (tileMade, digtiles.js)
+const cellOk=(ci,cj)=>ci>=0&&cj>=0&&ci<FNX&&cj<FNZ&&!tileMade(FX0+(ci+0.5)*FC,FZ0+(cj+0.5)*FC);
 const tileOf=(ci,cj)=>ci<0||cj<0||ci>=FNX||cj>=FNZ?-1:mtIdx[((cj/MT)|0)*MT_NX+((ci/MT)|0)];
 // a vertex moves only when all four cells around it are drawn by tiles, so tile edges against the mid mesh stay put
 function vOk(i,j){for(const [a,b] of [[i-1,j-1],[i,j-1],[i-1,j],[i,j]])if(!cellOk(a,b)||tileOf(a,b)<0)return false;return true}
@@ -35,8 +34,7 @@ function mtBase(t){const n=MT+1,c=[0,0,0,0];
   t.dirty=true}
 function mtAdd(ti,tj){if(ti<0||tj<0||ti>=MT_NX||tj>=MT_NZ)return -1;const at=mtIdx[tj*MT_NX+ti];if(at>=0)return at;if(mTiles.length>=MT_MAX)return -1;
   if(!FD){const n=FV*(FNZ+1);FH0=new Float32Array(n);FD=new Float32Array(n);FW=new Float32Array(n).fill(-1e9);FM=new Uint8Array(n);FK=new Int16Array(n);FWX=new Uint8Array(n);FCR=new Float32Array(n*2)}
-  const n=MT+1,nv=n*n,i0=ti*MT,j0=tj*MT,ix=[];
-  for(let j=0;j<MT;j++)for(let i=0;i<MT;i++)if(cellOk(i0+i,j0+j)){const a=j*n+i;ix.push(a,a+n,a+1,a+1,a+n,a+n+1)}
+  const n=MT+1,nv=n*n,i0=ti*MT,j0=tj*MT,ix=mtCells(i0,j0);
   if(!ix.length)return -1;
   const g=new THREE.BufferGeometry();
   for(const [k,w] of [['position',3],['normal',3],['color',3],['dirt',1],['soilD',1],['matA',1],['mudW',1],['wetT',1],['crk',2]])g.setAttribute(k,new THREE.BufferAttribute(new Float32Array(nv*w),w));
@@ -44,10 +42,13 @@ function mtAdd(ti,tj){if(ti<0||tj<0||ti>=MT_NX||tj>=MT_NZ)return -1;const at=mtI
   const m=new THREE.Mesh(g,groundMat);m.receiveShadow=true;m.frustumCulled=false;scene.add(m);
   const t={ti,tj,i0,j0,g,m,bc:new Float32Array(nv*3),bd:new Float32Array(nv),bm:new Float32Array(nv),dirty:true,wm:null,wet:false,wDirty:false};
   mtIdx[tj*MT_NX+ti]=mTiles.length;mTiles.push(t);mtBase(t);mtWaterMesh(t);return mTiles.length-1}
-// the mid mesh skips the dig zone and every cell a tile draws
+// a tile's triangles: the cells it may draw (again when the dig grid moves)
+function mtCells(i0,j0){const n=MT+1,ix=[];for(let j=0;j<MT;j++)for(let i=0;i<MT;i++)if(cellOk(i0+i,j0+j)){const a=j*n+i;ix.push(a,a+n,a+1,a+1,a+n,a+n+1)}return ix}
+function mtReindex(){for(const t of mTiles)t.g.setIndex(mtCells(t.i0,t.j0));midHoles()}
+// the mid mesh skips the dig grid, dug tiles drawn outside it and every cell a tile draws
 function midHoles(){const P=midPatch,ix=[];
   for(let j=0;j<P.NZ;j++)for(let i=0;i<P.NX;i++){const x0=P.X0+i*P.CO,z0=P.Z0+j*P.CO;
-    if(x0>=GX0-1e-6&&x0+P.CO<=GX1+1e-6&&z0>=GZ0-1e-6&&z0+P.CO<=GZ1+1e-6)continue;
+    if(tileMade(x0+P.CO/2,z0+P.CO/2))continue;
     if(mtIdx[((j*3/MT)|0)*MT_NX+((i*3/MT)|0)]>=0)continue;const a=j*P.VX+i;ix.push(a,a+P.VX,a+1,a+1,a+P.VX,a+P.VX+1)}
   P.g.setIndex(ix)}
 function mtDraw(t){const n=MT+1,g=t.g,p=g.attributes.position.array,col=g.attributes.color.array,dA=g.attributes.dirt.array,sA=g.attributes.soilD.array,
@@ -84,7 +85,7 @@ function farRut(x,z,yaw,hw,hl,dt){
   const R=Math.hypot(hw+RUT_BERM,hl),i0=Math.floor((x-R-FX0)/FC),i1=Math.ceil((x+R-FX0)/FC),j0=Math.floor((z-R-FZ0)/FC),j1=Math.ceil((z+R-FZ0)/FC);
   if(i1<0||j1<0||i0>FNX||j0>FNZ)return 0;
   // only properly muddy ground (or ground already churned) gets a tile, so a drive on damp grass doesn't tile the mesa
-  let wet=false;for(const [px,pz] of [[x,z],[x-hw,z-hl],[x+hw,z-hl],[x-hw,z+hl],[x+hw,z+hl]])if(farMud(px,pz)>0.4){wet=true;break}
+  let wet=false;for(const [px,pz] of [[x,z],[x-hw,z-hl],[x+hw,z-hl],[x-hw,z+hl],[x+hw,z+hl]])if(farMud(px,pz)>Math.min(0.4,TU.rutWet*2.7)){wet=true;break}
   if(!wet)return 0;
   let added=false;for(let tj=Math.max(0,((j0-1)/MT)|0);tj<=Math.min(MT_NZ-1,((j1+1)/MT)|0);tj++)for(let ti=Math.max(0,((i0-1)/MT)|0);ti<=Math.min(MT_NX-1,((i1+1)/MT)|0);ti++)
     if(mtIdx[tj*MT_NX+ti]<0&&mtAdd(ti,tj)>=0)added=true;
@@ -94,7 +95,7 @@ function farRut(x,z,yaw,hw,hl,dt){
     const dx=FX0+i*FC-x,dz=FZ0+j*FC-z,u=dx*s+dz*c,v=dx*c-dz*s,av=Math.abs(v);if(Math.abs(u)>hl||av>hw+RUT_BERM||!vOk(i,j))continue;const k=j*FV+i;
     const wx=FX0+i*FC,wz=FZ0+j*FC;
     if(av>hw){const room=rutBerm(av-hw,wx,wz)-FD[k];if(room>0)fBerm.push(k,v,room);continue}
-    const m=Math.max(FM[k]/255,fineSoak(k,wx,wz));if(m<=RUT_MUD)continue;const d=Math.min(0.5*dt,FD[k]+TU.rutDepth*Math.min(1,m*1.25)*rutDepth(v,hw,wx*s+wz*c));
+    const m=Math.max(FM[k]/255,fineSoak(k,wx,wz));if(m<=TU.rutWet)continue;const d=Math.min(0.5*TU.rutRate*dt,FD[k]+TU.rutDepth*Math.min(1,m*1.25)*rutDepth(v,hw,wx*s+wz*c));
     if(d>0){FD[k]-=d;if(v<0)outL+=d;else outR+=d;mSum+=m;mN++;any=2}}
   if(outL+outR>0){let wL=0,wR=0;for(let n=0;n<fBerm.length;n+=3)if(fBerm[n+1]<0)wL+=fBerm[n+2];else wR+=fBerm[n+2];
     const m=mSum/mN;

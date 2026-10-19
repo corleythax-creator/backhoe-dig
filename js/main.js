@@ -147,7 +147,7 @@ function frame(now){
     updateTufts(dI0-1,dI1+1,dJ0-1,dJ1+1);lawnTerrain();
     updateTerrain();st.dirty=false;site.dirty=true;mapDirty=true;blkTerrainMoved();
     if(st.slumpT<=0){winOn=false}
-    if(!st.exposed){
+    if(!st.exposed&&inDig(-12,PIPE_Z+CELL)&&inDig(12,PIPE_Z-CELL)){
       const jz=Math.round(gJ(PIPE_Z));
       outer:for(let j=jz-1;j<=jz+1;j++)for(let i=Math.round(gI(-12));i<=Math.round(gI(12));i++)
         if(H[j*V+i]<PIPE_Y+PIPE_R+0.17){st.exposed=true;toast(say('exposed'),'good',2800);break outer}
@@ -169,7 +169,7 @@ function frame(now){
     if(skm){const sd=h0At(skTip.x,skTip.z)-skTip.y;$('#tipVal').textContent=`${(Math.abs(sk.v)*2.237).toFixed(1)} mph · edge ${(Math.abs(sd)*3.281).toFixed(1)} ft ${sd>0?'below':'above'} grade`}else
     $('#tipVal').textContent=(dep>0?`Tip ${(dep*3.281).toFixed(1)} ft below grade`:`Tip ${(-dep*3.281).toFixed(1)} ft above grade`)+(st.soil>=0?` · ${SOIL[st.soil].n}`:'');
     let c=0;for(const kk of trenchK)if(H0[kk]-H[kk]>=0.85)c++;
-    const tp=Math.round(c/trenchK.length*100);
+    const tp=trenchK.length?(st.tpLast=Math.round(c/trenchK.length*100)):(st.tpLast||0);
     if(tp>=100&&!st.done){st.done=true;st.doneT=now;const s=Math.round((now-(st.startT||now))/1000);
       toast(say('trenchDone',{time:`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`,strikes:st.strikes?` · ${st.strikes} strike${st.strikes>1?'s':''}`:' · no strikes',caves:st.caves?` · ${st.caves} cave-in${st.caves>1?'s':''}`:''}),'good',6000)}
     const secs=st.startT?Math.round(((st.done?st.doneT:now)-st.startT)/1000):0;
@@ -190,7 +190,7 @@ function frame(now){
   // flying dirt
   particlesTick(dt);dustTick(dt);grimeTick();
   // groundwater, the tailgate stream and the dirt sounds
-  if(!bench.on)waterTick(dt);mudTick(dt);rainTick(dt);grassTick(dt);jesTick(dt);mainTick(dt);treesTick(dt);
+  digTilesTick();if(!bench.on)waterTick(dt);mudTick(dt);rainTick(dt);grassTick(dt);jesTick(dt);mainTick(dt);treesTick(dt);
   pourStream(streams[1],tr.pourP,hAt(tr.pourP.x,tr.pourP.z),tr.pourRate,tr.loadC,now/1000);
   dirtSndTick(dt);
   // bucket load visual
@@ -242,4 +242,6 @@ function frame(now){
 }
 // textures may finish loading before the later scripts arrive: apply them now if they are in, otherwise when they are
 if([texGrass,texDirt,texGrime].every(t=>t.image&&t.image.width))applyTextures();else texManager.onLoad=applyTextures;
+// every lit material gets its wet look before anything is drawn, so nothing compiles twice (rain.js)
+wetPatchAll();
 requestAnimationFrame(frame);
