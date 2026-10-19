@@ -42,8 +42,8 @@ function trailUnpack(o,old){const [oi,oj,on]=TRAIL_OLD,w=old?3:4;for(const k of 
   for(let i=0;i+w-1<b.length;i+=w){let n=b.charCodeAt(i)|b.charCodeAt(i+1)<<8;if(old)n=(Math.floor(n/on)+oj)*TRAIL_NX+n%on+oi;else n|=b.charCodeAt(i+2)<<16;
     if(n<a.length)a[n]=(Math.pow(2,b.charCodeAt(i+w-1)/12)-1)/10}}}
 statLoad();
-addEventListener('pagehide',()=>{if(statDirty)statSave()});
-document.addEventListener('visibilitychange',()=>{if(document.hidden&&statDirty)statSave()});
+addEventListener('pagehide',()=>{if(statDirty&&!bench.on)statSave()});
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&statDirty&&!bench.on)statSave()});
 // mowCut (mower.js) calls this for each cell it cuts that had grown back at all; g is how grown it was
 function statCut(n,g){if(statCuts[n]<65535)statCuts[n]++;stats.mowCuts++;if(g>=0.95)stats.mowTall++;statDirty=true;heatDirty=true}
 function statLawnDone(s){stats.mowLawns++;if(s>0&&(!stats.mowBest||s<stats.mowBest))stats.mowBest=s;statDirty=true}
