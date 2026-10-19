@@ -25,7 +25,7 @@ function statLoad(){let d=null;try{d=JSON.parse(localStorage.getItem(STAT_KEY))}
 // ---------- trails ----------
 // metres travelled in each 4 m square of the big map, one layer for each way of getting round. Saved sparse: three bytes
 // a square that has been crossed (its index, then the distance on a log scale), so a save stays small enough to sync
-// the grid covers the big map's square (MAP_X0, MAP_Z0, MAP_SZ in maps.js, which loads later): 135 x 135 squares
+// the grid covers a 540 m square round the islands: 135 x 135 squares
 const TRAIL_C=4,TRAIL_X0=-260,TRAIL_Z0=-62,TRAIL_N=540/TRAIL_C,TRAIL_KINDS=['walk','ex','truck','mow','skid'],trail={};for(const k of TRAIL_KINDS)trail[k]=new Float32Array(TRAIL_N*TRAIL_N);
 let trailDirty=true;
 function trailAdd(k,x,z,d){const i=Math.floor((x-TRAIL_X0)/TRAIL_C),j=Math.floor((z-TRAIL_Z0)/TRAIL_C);
@@ -186,7 +186,7 @@ function trailSet(k){trailShow=k;try{const h=JSON.parse(localStorage.getItem(HEA
 function trailSync(){document.querySelectorAll('#trailBar [data-tr]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.tr===trailShow));
   const on=trailShow!=='off';$('#trailKey').hidden=!on;
   if(on){if(trailDirty||trailDrawn!==trailShow)trailImage();$('#trailHi').textContent=trailMax>0?`More (busiest spot: ${sMi(trailMax)})`:'Nowhere yet'}
-  if(!$('#bigmap').hidden)drawMap($('#big'),MAP_CX,MAP_CZ,MAP_HALF,true)}
+  if(typeof drawBig==='function')drawBig()}
 {const bar=$('#trailBar');for(const [k,n] of TRAIL_OPTS){const b=document.createElement('button');b.dataset.tr=k;b.textContent=n;b.onclick=()=>trailSet(k);bar.appendChild(b)}}
 $('#trailKey i').style.background=`linear-gradient(90deg,${HEAT_RAMP.map(c=>heatCss(c)).join(',')})`;
 $('#statTrail').onclick=()=>{showStats(false);if(trailShow==='off')trailShow='all';toggleMap(true);trailSet(trailShow)};
