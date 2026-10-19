@@ -268,6 +268,25 @@ function grimeTick(){
     g.m.color.copy(g.base.color).lerp(MUD,a)}
 }
 
+// ---------- sticky clay ----------
+// share of a load that clings when it is tipped out: moist clay (near its plastic limit) sticks most, dry clay crumbles
+// out and slop slides; topsoil carries a little clay
+function stickFrac(mix,wet){return TU.clayStick*Math.min(1,mix[CLAY]+0.2*mix[SOD])*Math.max(0,0.3+0.7*ss(0.1,0.45,wet)-0.45*ss(0.75,1,wet))}
+// shaking it out: reversing the curl (or the bed) fast, or slamming it into its stop, knocks part of what clings loose,
+// more the further it is tipped; tipped, it also creeps out slowly. o holds stuck and the joint's last speed (jv), the
+// way it last moved fast (jd) and the time since (jt); v: its speed now, fast: what counts as fast, stop: at its stop,
+// tip 0-1. Returns the volume that falls; o.jolt is set on a shake
+function shakeOut(o,v,fast,stop,tip,dt){
+  let j=0;
+  if(Math.abs(v)>fast){const d=Math.sign(v);if(o.jd&&d!==o.jd&&o.jt<0.35)j=1;o.jd=d;o.jt=0}else o.jt=(o.jt||0)+dt;
+  if(stop&&Math.abs(o.jv||0)>fast&&Math.abs(v)<fast*0.3)j=1.3;
+  o.jv=v;o.jolt=j>0&&tip>0.15&&o.stuck>0.0005;
+  if(!(o.stuck>0))return 0;
+  return Math.min(o.stuck,o.stuck*(0.03*tip*dt+(o.jolt?TU.clayShake*j*tip:0)));
+}
+// a shaken-out cake lands as big clay lumps
+function shakeClods(x,z,v){dropClods(CLAY,x,z,0.45,v*60*DIRT,KIND_COL[CLAY],1.7)}
+
 // apply the saved Dirt detail last, once everything above exists
 document.querySelectorAll('.sizes button[data-d]').forEach(b=>b.onclick=()=>setDirtLevel(b.dataset.d));
 try{setDirtLevel(localStorage.getItem('bhd_dirt')||1,false)}catch(e){setDirtLevel(1,false)}

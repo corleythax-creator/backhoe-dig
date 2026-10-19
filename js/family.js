@@ -76,9 +76,9 @@ function famBridge(b,K,o){
 
 (function(){
   // the truss bridge from the Lower Bench: dark green steel
-  const K1=famKit(),B1=BRIDGES[0];famBridge(B1,K1,{depth:4.5,steel:0x3f5e4e,piers:[34,69]});famAdd(K1);
+  const K1=famKit(),B1=BRIDGES[0];famBridge(B1,K1,{depth:2.6,steel:0x3f5e4e,piers:[34,69]});famAdd(K1);
   // the mainland bridge: grey steel, finished as far as a barrier, then two bare piers and a crane where the work stops
-  const K2=famKit(),B2=BRIDGES[1],F=famBridge(B2,K2,{depth:4,steel:0x5d6a74,piers:[30,64,98,122,146]});
+  const K2=famKit(),B2=BRIDGES[1],F=famBridge(B2,K2,{depth:2.4,steel:0x5d6a74,piers:[30,64,98,122,146]});
   const L=B2.len,Y=B2.y;
   for(let i=-3;i<=3;i++){F.at(L-1.2,i*1.05,Y+0.55,0.12,1.1,0.12,0x8a8a86);F.at(L-1.2,i*1.05,Y+1.05,0.95,0.2,0.08,i%2?0xf2f2ee:0xe0661e);F.at(L-1.2,i*1.05,Y+0.7,0.95,0.2,0.08,i%2?0xe0661e:0xf2f2ee)}
   for(const s of [-1,1])F.at(L-1.4,s*2.6,Y+1.6,0.12,3.2,0.12,0x8a8a86);
@@ -89,6 +89,9 @@ function famBridge(b,K,o){
     K2.box(0.05,8,0.05,0x333333,x,top-4,z-14);K2.box(1.6,0.6,1.2,0x6a6f73,x,top-8.3,z-14)}
   famAdd(K2);
   {const [x,z]=F.W(L-1.4,0);famSign(['MAINLAND BRIDGE','Under construction'],5.4,1.7,x,Y+2.4,z,F.yaw+Math.PI,'#1f5f3a','#ffffff')}
+  // the spoil yard on Corley's north lawn, where the truck dumps now the cliff is gone
+  {const x=6,z=-41,y=baseHeight(x,z),K=famKit();for(const s of [-1,1])K.box(0.12,2.6,0.12,0x8a8a86,x+s*1.9,y+1.3,z);famAdd(K);
+    famSign(['SPOIL YARD','Dump loads here'],4.2,1.4,x,y+2.1,z+0.07,0,'#c9601c','#ffffff')}
 })();
 
 // ---------- games at the pavilion ----------

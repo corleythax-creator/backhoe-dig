@@ -7,7 +7,7 @@ const timeU={value:0};
   const wg=new THREE.PlaneGeometry(2600,2600,120,120);wg.rotateX(-Math.PI/2);
   const wm=new THREE.MeshPhongMaterial({color:0x1f5d72,specular:0xfff2dc,shininess:90,flatShading:true,envMap:skyEnv,combine:THREE.MixOperation,reflectivity:0.7});
   wm.onBeforeCompile=sh=>{sh.uniforms.uTime=timeU;sh.vertexShader='uniform float uTime;\n'+sh.vertexShader.replace('#include <begin_vertex>',
-    '#include <begin_vertex>\nvec4 wpos=modelMatrix*vec4(transformed,1.0);\ntransformed.y+=sin(wpos.x*0.09+uTime*1.1)*0.35+cos(wpos.z*0.11+uTime*0.8)*0.3+sin((wpos.x+wpos.z)*0.23+uTime*1.7)*0.12;')};
+    '#include <begin_vertex>\nvec4 wpos=modelMatrix*vec4(transformed,1.0);\ntransformed.y+=sin(wpos.x*0.09+uTime*1.1)*0.16+cos(wpos.z*0.11+uTime*0.8)*0.13+sin((wpos.x+wpos.z)*0.23+uTime*1.7)*0.06;')};
   const water=new THREE.Mesh(wg,wm);water.position.y=WATER;water.receiveShadow=true;scene.add(water);
   // two mountain layers far across the lake: a lit front range, and pale hazy peaks behind it
   function range(R0,R1,NR,NA,lo,hi,hazeA,hazeB,phase,unlit){
@@ -260,7 +260,7 @@ const MID=[-58,58,-32,92];
 // steep ground, sand at the lake, the yards and the roads, and any painted material (how much covers it into c[3])
 function groundColor(x,z,h,c){const n=hash(x*3.55+0.3,z*2.65+0.7);
   const sl=(Math.abs(baseHeight(x+1,z)-baseHeight(x-1,z))+Math.abs(baseHeight(x,z+1)-baseHeight(x,z-1)))/2;
-  const rock=ss(0.55,1.1,sl),sand=1-ss(WATER+0.6,WATER+2.8,h),low=ss(-4,-20,h)*ss(EDGE-1,EDGE+2,mesaR(x,z));
+  const rock=ss(0.55,1.1,sl),sand=1-ss(WATER+1.6,WATER+2.4,h),low=ss(-4,-20,h)*ss(EDGE-1,EDGE+2,mesaR(x,z));
   let r=0.30+0.08*n+0.05*low,g=0.50+0.09*n-0.02*low,b=0.24+0.04*n;
   const strata=0.06*Math.sin(h*1.4+n);
   r+=(0.50+0.06*n+strata-r)*rock;g+=(0.44+0.05*n+strata-g)*rock;b+=(0.38+0.04*n+strata-b)*rock;
@@ -281,11 +281,15 @@ function groundPatch(X0,X1,Z0,Z1,CO,holes){
 }
 // the Family Island gets its own 1.5 m mesh (family.js)
 const FAM_PATCH=[-111,111,136,352];
-groundPatch(-160,160,-160,160,2,[MID,[FAM_PATCH[0],FAM_PATCH[1],FAM_PATCH[2],160]]);
+// 1 m over the rest of Corley's Island and its shore, round the 0.5 m mesh
+const OUTER_MID=[-112,112,-122,94];
+groundPatch(-160,160,-160,160,2,[OUTER_MID,[FAM_PATCH[0],FAM_PATCH[1],FAM_PATCH[2],160]]);
 midPatch=groundPatch(MID[0],MID[1],MID[2],MID[3],0.5,[[-S/2,S/2,-S/2,S/2]]);
+const outPatch=groundPatch(OUTER_MID[0],OUTER_MID[1],OUTER_MID[2],OUTER_MID[3],1,[MID]);
 buildSkirts();
-// after the map editor reshapes or repaints an area (metres): the 0.5 m ground there takes the new heights and colours
-function midUpdate(x0,x1,z0,z1){const P=midPatch,g=P.g,pa=g.attributes.position,ca=g.attributes.color,da=g.attributes.dirt,ma=g.attributes.matA,c=[0,0,0,0];
+// after the map editor reshapes or repaints an area (metres): the 0.5 m and 1 m ground there take the new heights and colours
+function midUpdate(x0,x1,z0,z1){patchUpdate(midPatch,x0,x1,z0,z1);patchUpdate(outPatch,x0,x1,z0,z1)}
+function patchUpdate(P,x0,x1,z0,z1){const g=P.g,pa=g.attributes.position,ca=g.attributes.color,da=g.attributes.dirt,ma=g.attributes.matA,c=[0,0,0,0];
   const i0=Math.max(0,Math.floor((x0-P.X0)/P.CO)),i1=Math.min(P.NX,Math.ceil((x1-P.X0)/P.CO)),j0=Math.max(0,Math.floor((z0-P.Z0)/P.CO)),j1=Math.min(P.NZ,Math.ceil((z1-P.Z0)/P.CO));
   if(i0>i1||j0>j1)return;
   for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const v=j*P.VX+i,x=P.X0+i*P.CO,z=P.Z0+j*P.CO,h=baseHeight(x,z);
@@ -297,6 +301,7 @@ function buildSkirts(){
   const run=(fx,a0,a1,st,dp)=>{for(let t=a0;t<a1-1e-6;t+=st){const [x0,z0]=fx(t),[x1,z1]=fx(t+st),h0=baseHeight(x0,z0),h1=baseHeight(x1,z1);
     sp.push(x0,h0,z0,x1,h1,z1,x0,h0-dp,z0,x1,h1-dp,z1);si.push(q,q+2,q+1,q+1,q+2,q+3);q+=4}};
   const E=S/2;run(t=>[t,-E],-E,E,0.5,0.6);run(t=>[t,E],-E,E,0.5,0.6);run(t=>[-E,t],-E,E,0.5,0.6);run(t=>[E,t],-E,E,0.5,0.6);
+  run(t=>[t,OUTER_MID[2]],OUTER_MID[0],OUTER_MID[1],1,2);run(t=>[t,OUTER_MID[3]],OUTER_MID[0],OUTER_MID[1],1,2);run(t=>[OUTER_MID[0],t],OUTER_MID[2],OUTER_MID[3],1,2);run(t=>[OUTER_MID[1],t],OUTER_MID[2],OUTER_MID[3],1,2);
   run(t=>[t,MID[2]],MID[0],MID[1],0.5,2);run(t=>[t,MID[3]],MID[0],MID[1],0.5,2);run(t=>[MID[0],t],MID[2],MID[3],0.5,2);run(t=>[MID[1],t],MID[2],MID[3],0.5,2);
   const sg=new THREE.BufferGeometry();sg.setAttribute('position',new THREE.Float32BufferAttribute(sp,3));sg.setAttribute('normal',new THREE.Float32BufferAttribute(new Float32Array(sp.length),3));sg.setIndex(si);
   if(skirtMesh){skirtMesh.geometry.dispose();skirtMesh.geometry=sg}else{skirtMesh=new THREE.Mesh(sg,M(0x4a6a34,{side:THREE.DoubleSide}));scene.add(skirtMesh)}}
@@ -372,7 +377,7 @@ function defaultAssets(){
   let sd=7;const rnd=()=>{sd=(sd+0x6D2B79F5)|0;let t=Math.imul(sd^(sd>>>15),1|sd);t=(t+Math.imul(t^(t>>>7),61|t))^t;return((t^(t>>>14))>>>0)/4294967296};
   const okSpot=(x,z)=>{if(Math.abs(x)>116||Math.abs(z)>116)return false;const r=mesaR(x,z),h=baseHeight(x,z);
     if(r<EDGE-1.5){if(!(r>EDGE-9.5||Math.hypot(x+22,z-22)<7))return false;
-      if(roadOff(x,z)<ROAD_W/2+1.6||yardAt(x,z)>0.05||z<-2||(Math.abs(x)<14&&z<2)||Math.hypot(x+7,z-1)<9||(x>-3&&x<17&&z>9&&z<25))return false;
+      if(roadOff(x,z)<ROAD_W/2+1.6||yardAt(x,z)>0.05||(z<-2&&z>-38)||(Math.abs(x)<14&&z<2)||Math.hypot(x+7,z-1)<9||(x>-3&&x<17&&z>9&&z<25))return false;
       return Math.abs(baseHeight(x+1,z)-h)+Math.abs(baseHeight(x,z+1)-h)<0.5}
     const sl=Math.abs(baseHeight(x+1,z)-h)+Math.abs(baseHeight(x,z+1)-h);return h>WATER+2.5&&sl<0.7};
   const out=[];let guard=0,np=0,nb=0;
@@ -384,8 +389,8 @@ function defaultAssets(){
   return out}
 // fills the instance meshes from the asset list (after any change to it)
 function assetsBuild(){const o=new THREE.Object3D(),c=new THREE.Color(),n={pine:0,leafy:0,rock:0};
-  for(const a of assets){const k=n[a.t];if(k===undefined||k>=ASSET_CAP[a.t])continue;n[a.t]++;
-    const w=hash(a.x*1.3+0.7,a.z*2.1+0.3),w2=hash(a.z*1.7,a.x*0.9),y=baseHeight(a.x,a.z);
+  for(const a of assets){const k=n[a.t],y=baseHeight(a.x,a.z);if(k===undefined||k>=ASSET_CAP[a.t]||y<WATER-0.3)continue;n[a.t]++;
+    const w=hash(a.x*1.3+0.7,a.z*2.1+0.3),w2=hash(a.z*1.7,a.x*0.9);
     if(a.t==='rock'){o.position.set(a.x,y-0.18*a.s,a.z);o.rotation.set((w-0.5)*0.4,a.yaw,(w2-0.5)*0.4);o.scale.set(a.s,a.s*(0.8+0.4*w),a.s)}
     else{o.position.set(a.x,y-0.05,a.z);o.rotation.set((w-0.5)*0.08,a.yaw,(w2-0.5)*0.08);o.scale.set(a.s,a.s*(a.t==='pine'?0.9+0.35*w:1),a.s)}
     o.updateMatrix();for(const im of assetIMs[a.t])im.setMatrixAt(k,o.matrix);

@@ -301,7 +301,7 @@ function updateTruck(dt,thr,steerIn,bedIn){
   if(blkPush(tr,TR_C,TR_R)){if(Math.abs(tr.v)>1.2){shake=reduceMotion?0:0.15;rumble(250,0.7)}tr.v*=-0.15}
   tr.aL+=((tr.v-vPrev)/Math.max(dt,1e-3)-tr.aL)*Math.min(1,dt*6);
   // hydraulics lift slower under load; the bed comes down on its own weight
-  tr.bed=clamp(tr.bed+bedIn*(bedIn>0?TU.trBedUp*(1-0.4*f):TU.trBedDown)*dt,0,0.9);
+  {const b=tr.bed;tr.bed=clamp(tr.bed+bedIn*(bedIn>0?TU.trBedUp*(1-0.4*f):TU.trBedDown)*dt,0,0.9);tr.bedV=dt>0?(tr.bed-b)/dt:0}
   // spinning tyres turn faster than the truck moves
   tr.rollA+=(tr.v+tr.gear*tr.spin*5)*dt/0.55;
   // axles follow the ground (the rear tandem averages its two axles like a walking beam)
@@ -336,17 +336,28 @@ function updateTruck(dt,thr,steerIn,bedIn){
   // dust behind the rear tyres on the dry road and over loose dirt
   if((soft||road)&&Math.abs(tr.v)>2.5){truck.localToWorld(tv.set(0,0.3,REAR-Math.sign(tr.v)*1.2));dustPuff(tv.x,tv.y,tv.z,Math.abs(tr.v)*dt*(soft?1.2:0.6),soft?tr.loadC:null)}
   bedG.rotation.x=-tr.bed;tailP.rotation.x=tr.bed*1.35;
-  const hv=Math.max(tr.load,tr.stuck);heap.visible=hv>0.01;if(heap.visible){const f=hv/TU.trCap;tintLoad(heap.material,tr.loadC);heap.scale.set(0.55+0.45*Math.min(1,f*1.5),0.08+0.95*f,0.6+0.4*Math.min(1,f*1.5))}heap.position.y=0.12+0.5*heap.scale.y;
+  const hv=tr.load;heap.visible=hv>0.01;if(heap.visible){const f=hv/TU.trCap;tintLoad(heap.material,tr.loadC);heap.scale.set(0.55+0.45*Math.min(1,f*1.5),0.08+0.95*f,0.6+0.4*Math.min(1,f*1.5))}heap.position.y=0.12+0.5*heap.scale.y;
   truck.updateMatrixWorld(true);
   // tipping the bed pours the load out the back
   tr.pourRate=0;
-  if(tr.bed>0.32&&tr.load>0.0005){
-    const out=Math.min(tr.load,(tr.bed-0.32)*3.2*dt);tr.load-=out;sndIn.dump=out/dt;if(tr.load<0.0005){tr.load=0;tr.stuck=TU.trCap*0.025*(0.4+1.6*tr.loadMix[CLAY])*(1+2*tr.loadWet)}
-    truck.localToWorld(tv.set(0,0.3,-4.9));tr.pourRate=out/dt;tr.pourP.copy(tv);
-    if(mesaR(tv.x,tv.z)<EDGE-1.2&&Math.abs(tv.x)<S/2-0.8&&Math.abs(tv.z)<S/2-0.8){deposit(tv.x,tv.z,out,tr.loadC,tr.loadMix,dropSpread(tv.y-hAt(tv.x,tv.z)),tr.loadWet);st.dirty=true;st.slumpT=2.5}
-    else{tr.hauled+=out;if(!tr.haulWarned&&tr.load<=0){tr.haulWarned=true;toast(say(mesaR(tv.x,tv.z)<EDGE-1.2?'dumpYard':'dumpOff'),'good')}}
+  // sticky clay: as the bed tips past pouring, part of the load clings to the floor and stays until shaken loose
+  // (stickFrac, shakeOut in dirt.js): bump the bed down and up fast, or run it hard into its top stop
+  tr.stuck=Math.min(tr.stuck||0,tr.load);
+  const drop=out=>{truck.localToWorld(tv.set(0,0.3,-4.9));tr.pourP.copy(tv);
+    if(mesaR(tv.x,tv.z)<EDGE-1.2&&Math.abs(tv.x)<S/2-0.8&&Math.abs(tv.z)<S/2-0.8){deposit(tv.x,tv.z,out,tr.loadC,tr.loadMix,dropSpread(tv.y-hAt(tv.x,tv.z)),tr.loadWet);st.dirty=true;st.slumpT=2.5;return true}
+    tr.hauled+=out;if(!tr.haulWarned&&tr.load<=0.0005){tr.haulWarned=true;toast(say(mesaR(tv.x,tv.z)<EDGE-1.2?'dumpYard':'dumpOff'),'good')}return false};
+  if(tr.bed>0.32&&tr.load-tr.stuck>0.0005){
+    if(!tr.tipping){tr.tipping=true;tr.stuck=Math.min(tr.load,TU.trCap*0.3,tr.stuck+(tr.load-tr.stuck)*stickFrac(tr.loadMix,tr.loadWet)*0.6)}
+    const out=Math.min(tr.load-tr.stuck,(tr.bed-0.32)*3.2*dt);tr.load-=out;sndIn.dump=out/dt;tr.pourRate=out/dt;
+    if(tr.load-tr.stuck<0.0005){tr.load=tr.stuck;if(tr.stuck>TU.trCap*0.04&&!tr.seenStick){tr.seenStick=true;toast(say('bedSticks'),'',4200)}}
+    drop(out);
     bedG.localToWorld(tv.set(0,0.4,0.2));for(let n=0;n<Math.ceil(out*40);n++)spawn(tv,1.2);
   }
+  if(tr.bed<0.25)tr.tipping=false;
+  {const fell=shakeOut(tr,tr.bedV||0,TU.trBedDown*0.45,tr.bed>=0.9-1e-4,clamp((tr.bed-0.32)/0.4,0,1),dt);
+    if(fell>0){tr.stuck-=fell;tr.load-=fell;if(tr.stuck<0.0005){tr.load=Math.max(0,tr.load-tr.stuck);tr.stuck=0}
+      const onGround=drop(fell);tr.pourRate=Math.max(tr.pourRate,fell/dt*0.3);
+      if(tr.jolt){dirtThud(tr.pourP,0.4+fell);if(onGround)shakeClods(tr.pourP.x,tr.pourP.z,fell);bedG.localToWorld(tv.set(0,0.4,0.2));for(let n=0;n<Math.ceil(fell*60);n++)spawn(tv,1.2)}}}
   if(tr.load<TU.trCap*0.95)tr.fullWarned=false;
 }
 // a grey copy of a texture (mean 0.8, or mean) so what wears it keeps its own colour: the dirt for the bucket load and

@@ -109,6 +109,10 @@ tr.done td{opacity:.6}
 .rin{width:2.6em;height:34px;text-align:center;font:400 17px var(--f-disp);color:var(--amber);background:var(--panel-solid);border:1px solid rgba(255,225,170,.3);border-radius:8px;padding:0}
 .rin::placeholder{color:#6d6150}
 .rin:disabled{opacity:.6;color:var(--s)}
+.hbtn{display:block;margin:6px auto 0;font:inherit;font-size:12px;font-weight:600;background:none;border:none;color:var(--s);cursor:pointer;padding:2px 0;text-decoration:underline}
+.hbtn:disabled{display:none}
+tr.hid td{opacity:.5}
+tr.hid td:first-child{opacity:1}
 tr.on .rin{background:var(--amber);color:var(--amber-ink);border-color:var(--amber)}
 .chips{display:flex;flex-wrap:wrap;gap:7px;align-items:center}
 .clab{font-size:14px;color:var(--muted);margin-right:4px}
@@ -203,6 +207,7 @@ tr.on .rin{background:var(--amber);color:var(--amber-ink);border-color:var(--amb
       <label>Realism at least <select id="fp"><option value="0">Any</option><option>3</option><option>5</option><option>6</option><option>7</option><option>8</option></select></label>
       <label>Fun at least <select id="ff"><option value="0">Any</option><option>3</option><option>5</option><option>6</option><option>7</option><option>8</option></select></label>
       <label>Status <select id="fd"><option value="">All</option><option value="open">Not built</option><option value="done">Built or started</option></select></label>
+      <label>Hidden <select id="fh"><option value="">Leave out hidden</option><option value="all">Show hidden too</option><option value="only">Only hidden</option></select></label>
       <label><input id="fo" type="checkbox"> Ranked only</label>
       <label><input id="fph" type="checkbox"> Hide high phone cost</label>
       <button class="gbtn" id="reset">Reset filters</button>
@@ -694,8 +699,8 @@ C01:{d:"Oct 17 (v60, v78)",part:true,pc:40,n:"In cab view drag to look round, on
 I04:{d:"Oct 17 (v83)",part:true,pc:50,n:"Tap the site map to teleport there on foot or with a machine. Still to come: sailing between docks."},
 J15:{d:"Oct 17 (v93)",part:true,pc:40,n:"Stats (menu, or O) count dirt dug and hauled, grass mowed, distance and time in each machine. Still to come: fuel, hour meters and pay."},
 Q04:{d:"Oct 17 (v32)",part:true,pc:40,n:"The bucket gets dirty and tracks and tyres get muddy as you work. Still to come: washing clean in rain or at a wash spot."},
-D01:{d:"Oct 17 (v32)",part:true,pc:60,n:"Clay sticks in the bucket and the truck bed. Still to come: shaking it out with the curl."},
-D06:{d:"Oct 17 (v22, v80)",part:true,pc:70,n:"Each soil holds its own slope, and soft mud slumps to about 40 degrees. Still to come: different wet and dry angles as piles grow."},
+D01:{d:"Oct 17 (v32), Oct 19 (v116)",n:"Moist clay clings in the excavator bucket, the skid steer bucket and the truck bed when tipped (most when moist, less dry or as slop) and takes up room until shaken out: rock the curl fast or slam it into the dump stop; bump the truck bed into its top stop. It falls as big lumps."},
+D06:{d:"Oct 17 (v22, v80), Oct 19 (v116)",n:"Each soil holds its own angle, piles too (dry sand 32°, topsoil 36°, lumpy clay 42°): damp sand and soil stand steeper, soaked faces a foot or more tall slump (sand to about 26°, clay to about 29°), so piles and trench walls can let go after rain, and a growing pile slides in small avalanches to just under its angle."},
 W03:{d:"Oct 17 (v47)",part:true,pc:40,n:"Wind comes in gusts that roll across the grass. Still to come: dust off the piles and trees swaying harder."},
 X11:{d:"Oct 17 (v32)",part:true,pc:30,n:"Tracks get muddy as you work. Still to come: clay packing in and dropping off in clumps."},
 I11:{d:"Oct 17 (v77)",part:true,pc:30,n:"Jessica's Island is a forest mesa with lantern-lit gravel paths, a cliff bench and her stone cottage. Still to come: a lookout tower and a campsite."},
@@ -710,11 +715,11 @@ function N(r){return{R:r[4],F:r[5],se:r[6],ph:r[7],c:r[8],dp:r[10]||[]}}
 const hrs=r=>r[9]*CAL;
 const GC={};Object.keys(G).forEach((k,i,a)=>GC[k]="hsl("+Math.round(i*360/a.length+40)+",78%,66%)");
 const IDS=new Map(I.map(r=>[r[0],r]));
-let picks=new Set(), WK=88, PL="88", W=.5, sortK="pr", sortD=-1;
+let picks=new Set(), hid=new Set(), WK=88, PL="88", W=.5, sortK="pr", sortD=-1;
 const $=id=>document.getElementById(id);
-try{const s=JSON.parse(localStorage.getItem("bd-ideas")||"{}");(s.p||[]).forEach(id=>IDS.has(id)&&!(DONE[id]&&!DONE[id].part)&&picks.add(id));if(s.n)$("note").value=s.n;
+try{const s=JSON.parse(localStorage.getItem("bd-ideas")||"{}");(s.p||[]).forEach(id=>IDS.has(id)&&!(DONE[id]&&!DONE[id].part)&&picks.add(id));(s.hd||[]).forEach(id=>IDS.has(id)&&!picks.has(id)&&hid.add(id));if(s.n)$("note").value=s.n;
   if(s.h>0){WK=s.h;PL=s.pl||"c"}if(s.w)W=s.w;if(s.sk){sortK=s.sk;sortD=s.sd||-1}}catch(e){}
-function save(){try{localStorage.setItem("bd-ideas",JSON.stringify({p:[...picks],n:$("note").value,h:WK,pl:PL,w:W,sk:sortK,sd:sortD}))}catch(e){}}
+function save(){try{localStorage.setItem("bd-ideas",JSON.stringify({p:[...picks],hd:[...hid],n:$("note").value,h:WK,pl:PL,w:W,sk:sortK,sd:sortD}))}catch(e){}}
 function pct(h){const v=h/WK*100;return (v<10?v.toFixed(1):Math.round(v))+"%"}
 function prio(r){const n=N(r);return Math.round(100*((W*n.R+(1-W)*n.F)/10)*SEEN[n.se][0]*PHN[n.ph][0])}
 // red (low) -> yellow (middle) -> green (high) on the 1-10 scale
@@ -740,9 +745,9 @@ $("wk").value=WK;$("plan").value=[...$("plan").options].some(o=>o.value===PL)?PL
 $("plan").addEventListener("change",()=>{PL=$("plan").value;if(PL!=="c"){WK=+PL;$("wk").value=WK}save();render()});
 $("wk").addEventListener("input",()=>{const v=+$("wk").value;if(v>0){WK=v;PL=(v===88||v===40||v===25)?String(v):"c";$("plan").value=PL;save();render()}});
 $("wt").addEventListener("change",()=>{W=+$("wt").value;save();render()});
-["q","fs","fp","ff","fo","fd","fph"].forEach(id=>$(id).addEventListener(id==="q"?"input":"change",render));
+["q","fs","fp","ff","fo","fd","fh","fph"].forEach(id=>$(id).addEventListener(id==="q"?"input":"change",render));
 document.querySelectorAll(".tbtn").forEach(b=>b.addEventListener("click",()=>{const p=$(b.dataset.p),open=p.hidden;p.hidden=!open;b.setAttribute("aria-expanded",open)}));
-$("reset").addEventListener("click",()=>{$("q").value="";$("fs").value="";$("fp").value="0";$("ff").value="0";$("fo").checked=false;$("fph").checked=false;$("fd").value="";setGroups([])});
+$("reset").addEventListener("click",()=>{$("q").value="";$("fs").value="";$("fp").value="0";$("ff").value="0";$("fo").checked=false;$("fph").checked=false;$("fd").value="";$("fh").value="";setGroups([])});
 $("sortp").addEventListener("change",()=>{const v=$("sortp").value;if(v==="c")return;const [k,d]=v.split(":");sortK=k;sortD=+d;save();render()});
 function syncSortp(){const v=sortK+":"+sortD;$("sortp").value=[...$("sortp").options].some(o=>o.value===v)?v:"c"}
 document.querySelectorAll("th button[data-k]").forEach(b=>b.addEventListener("click",()=>{const k=b.dataset.k;if(sortK===k)sortD=-sortD;else{sortK=k;sortD=(k==="r"||k==="id"||k==="g"||k==="t"||k==="c"||k==="ph")?1:-1}save();render()}));
@@ -752,20 +757,21 @@ function idCell(r){const td=el("td"),s=el("div","gsh");s.title=G[r[1]];s.append(
 function el(t,c,x){const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
 function bar(l,v){const w=el("div","sr"),b=el("div","pbar"),i=el("i");i.style.width=(v*10)+"%";i.style.background=rzCol(v,1);b.appendChild(i);w.append(el("span","sl",l),el("span","sv",String(v)),b);return w}
 function render(){
-  const q=$("q").value.trim().toLowerCase(),s=$("fs").value,mp=+$("fp").value,mf=+$("ff").value,only=$("fo").checked,fd=$("fd").value,nph=$("fph").checked;
+  const q=$("q").value.trim().toLowerCase(),s=$("fs").value,mp=+$("fp").value,mf=+$("ff").value,only=$("fo").checked,fd=$("fd").value,fh=$("fh").value,nph=$("fph").checked;
   RK=new Map([...picks].map((id,i)=>[id,i+1]));
-  const nf=(s?1:0)+(mp?1:0)+(mf?1:0)+(only?1:0)+(fd?1:0)+(nph?1:0)+FG.size;$("fcount").textContent=nf;$("fcount").hidden=!nf;
-  shown=I.filter(r=>{const n=N(r);return(!FG.size||FG.has(r[1]))&&(!s||n.c===+s)&&n.R>=mp&&n.F>=mf&&(!only||picks.has(r[0]))&&(!nph||n.ph!=="high")&&(!fd||(fd==="done")===!!DONE[r[0]])&&(!q||(r[0]+" "+r[2]+" "+r[3]+" "+G[r[1]]).toLowerCase().includes(q))});
+  const nf=(s?1:0)+(mp?1:0)+(mf?1:0)+(only?1:0)+(fd?1:0)+(fh?1:0)+(nph?1:0)+FG.size;$("fcount").textContent=nf;$("fcount").hidden=!nf;
+  shown=I.filter(r=>{const n=N(r);return(!FG.size||FG.has(r[1]))&&(!s||n.c===+s)&&n.R>=mp&&n.F>=mf&&(!only||picks.has(r[0]))&&(!nph||n.ph!=="high")&&(!fd||(fd==="done")===!!DONE[r[0]])&&(fh==="all"||(fh==="only")===hid.has(r[0]))&&(!q||(r[0]+" "+r[2]+" "+r[3]+" "+G[r[1]]).toLowerCase().includes(q))});
   shown.sort((a,b)=>{const x=key(a),y=key(b);const c=typeof x==="string"?x.localeCompare(y):x-y;if(c)return c*sortD;const t=prio(b)-prio(a);if(t)return t;return a[0].localeCompare(b[0])});
   document.querySelectorAll("th button[data-k]").forEach(b=>{const on=b.dataset.k===sortK;b.classList.toggle("sorted",on);b.querySelector(".arr").textContent=on&&sortD<0?"▼":"▲"});
   new Set([...document.querySelectorAll("th button[data-k]")].map(b=>b.closest("th"))).forEach(th=>th.setAttribute("aria-sort",th.querySelector("button.sorted")?(sortD<0?"descending":"ascending"):"none"));
   const tb=$("tb");tb.textContent="";
   if(!shown.length){const tr=el("tr"),td=el("td","empty","No ideas match these filters.");td.colSpan=6;tr.appendChild(td);tb.appendChild(tr)}
   for(const r of shown){
-    const n=N(r),P=prio(r),B=DONE[r[0]],tr=el("tr",(picks.has(r[0])?"on":"")+(B&&!B.part?" done":""));tr.style.setProperty("--gc",GC[r[1]]);const c0=el("td"),cb=el("input");cb.type="text";cb.inputMode="numeric";cb.className="rin";cb.id="c-"+r[0];cb.value=RK.get(r[0])||"";cb.placeholder="–";cb.setAttribute("aria-label","Rank for "+r[2]);if(B&&!B.part){cb.disabled=true;cb.title="Built";cb.value="✓"}
-    cb.addEventListener("change",()=>{const k=parseInt(cb.value,10),x=[...picks].filter(i=>i!==r[0]);if(k>0)x.splice(Math.min(k,x.length+1)-1,0,r[0]);picks=new Set(x);save();render()});
+    const n=N(r),P=prio(r),B=DONE[r[0]],tr=el("tr",(picks.has(r[0])?"on":"")+(B&&!B.part?" done":"")+(hid.has(r[0])?" hid":""));tr.style.setProperty("--gc",GC[r[1]]);const c0=el("td"),cb=el("input");cb.type="text";cb.inputMode="numeric";cb.className="rin";cb.id="c-"+r[0];cb.value=RK.get(r[0])||"";cb.placeholder="–";cb.setAttribute("aria-label","Rank for "+r[2]);if(B&&!B.part){cb.disabled=true;cb.title="Built";cb.value="✓"}
+    cb.addEventListener("change",()=>{const k=parseInt(cb.value,10),x=[...picks].filter(i=>i!==r[0]);if(k>0)x.splice(Math.min(k,x.length+1)-1,0,r[0]);if(k>0)hid.delete(r[0]);picks=new Set(x);save();render()});
     cb.addEventListener("keydown",e=>{if(e.key==="Enter")cb.blur()});
     c0.appendChild(cb);
+    const hb=el("button","hbtn",hid.has(r[0])?"Unhide":"Hide");hb.type="button";hb.disabled=picks.has(r[0]);hb.setAttribute("aria-label",(hid.has(r[0])?"Unhide ":"Hide ")+r[2]);hb.addEventListener("click",()=>{if(hid.has(r[0]))hid.delete(r[0]);else hid.add(r[0]);save();render()});c0.appendChild(hb);
     const ci=el("td","ic"),tt=el("div","t"),tid=el("span","tid",r[0]+" ");tt.append(tid,r[2]);const dd=el("div","desc",r[3]),mt=el("div","meta");
     mt.textContent="R "+n.R+" · F "+n.F+" · "+SEEN[n.se][1]+" · "+COST[n.c][0]+(n.ph!=="none"?" · phone "+PHN[n.ph][1].toLowerCase():"");ci.append(tt,dd,mt);
     if(n.dp.length)ci.appendChild(el("div","deps","Needs: "+n.dp.map(d=>d+" "+(IDS.get(d)?IDS.get(d)[2]:"")+(DONE[d]&&!DONE[d].part?" (built)":"")).join(", ")));
@@ -777,7 +783,7 @@ function render(){
     tr.append(c0,idCell(r),ci,cc,sc,pc);
     tb.appendChild(tr)
   }
-  syncSortp();$("count").textContent=shown.length+" of "+I.length+" shown";
+  syncSortp();$("count").textContent=shown.length+" of "+I.length+" shown"+(hid.size?" · "+hid.size+" hidden":"");
   totals()
 }
 function totals(){
@@ -818,3 +824,5 @@ render();
 if(window.claude&&window.claude.use)window.claude.use("mcp").then(m=>{MCP=m;if(!m)$("send").hidden=true;totals()}).catch(()=>{$("send").hidden=true});
 else $("send").hidden=true;
 </script>
+
+</body></html>

@@ -17,7 +17,7 @@ const DEX_Y=0xf2b705,DEX_D=0x2b2d30,DEX_GLASS=0x3c4a52;
 
 // ---------- the haul bridge ----------
 (function(){
-  const K=famKit(),F=famBridge(DB,K,{depth:5,steel:0xd9a404,piers:[31,62]});famAdd(K);
+  const K=famKit(),F=famBridge(DB,K,{depth:2.8,steel:0xd9a404,piers:[31,62]});famAdd(K);
   famSign(["DEXTER'S ISLAND"],5.0,1.1,DB.x0-1.2,DB.y+6.9,DB.z0,Math.PI/2,'#2b2d30','#f2b705');
   famSign(['FAMILY ISLAND'],5.0,1.1,DB.x1+1.2,DB.y+6.9,DB.z0,-Math.PI/2,'#2b2d30','#f2b705');
   // a steel portal at each end to hang the signs on, tall enough for a raised boom

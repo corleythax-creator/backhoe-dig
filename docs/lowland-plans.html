@@ -1,0 +1,412 @@
+<title>Lowland Islands Plans</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@400;500;600&family=JetBrains+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: the same site-plan set as docs/island-plans.html. Brief and today's map first, then one sheet per plan
+   (map and height profile beside its numbers), a side-by-side table, what every plan shares, and a recommendation. */
+:root{
+  --bg:#eceee8; --sheet:#f6f7f3; --fg:#1d231f; --muted:#59645b; --line:#c8cdc3;
+  --accent:#c9601c; --accent-soft:#f3dccb; --ok:#3f7a3a; --warn:#9a6a00; --water:#2f6f86; --limit:#b8321f;
+  --f-display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --f-body:"Barlow",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-mono:"JetBrains Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#121613; --sheet:#1a1f1b; --fg:#e3e8e1; --muted:#9aa59b; --line:#2e3630;
+  --accent:#f0884a; --accent-soft:#3a2618; --ok:#8cc47f; --warn:#e0b24a; --water:#5fa8c2; --limit:#ff7a62; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#121613; --sheet:#1a1f1b; --fg:#e3e8e1; --muted:#9aa59b; --line:#2e3630;
+  --accent:#f0884a; --accent-soft:#3a2618; --ok:#8cc47f; --warn:#e0b24a; --water:#5fa8c2; --limit:#ff7a62; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font-family:var(--f-body);font-size:16px;line-height:1.55;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 56px}
+.wrap{max-width:1180px;margin:0 auto;display:grid;gap:28px}
+h1,h2,h3{font-family:var(--f-display);font-weight:600;line-height:1.1;margin:0;text-wrap:balance}
+h1{font-size:clamp(34px,6vw,54px);letter-spacing:.01em}
+h2{font-size:clamp(28px,4.4vw,38px)}
+h3{font-size:20px;letter-spacing:.02em}
+p{margin:0;max-width:68ch}
+ul,ol{margin:0;padding-left:20px;display:grid;gap:4px}
+.eyebrow{font-family:var(--f-display);font-size:14px;font-weight:600;letter-spacing:.14em;text-transform:uppercase;color:var(--accent)}
+.muted{color:var(--muted)}
+.mono{font-family:var(--f-mono);font-size:.88em;font-variant-numeric:tabular-nums}
+header{display:grid;gap:12px}
+.lede{font-size:18px}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:6px;overflow:hidden}
+.fact{background:var(--sheet);padding:14px 16px;display:grid;gap:2px;min-width:0}
+.fact b{font-family:var(--f-display);font-size:24px;font-weight:600}
+.fact span{font-size:14px;color:var(--muted)}
+.sheet{background:var(--sheet);border:1px solid var(--line);border-radius:8px;padding:22px clamp(16px,2.4vw,28px);display:grid;gap:20px}
+.sheet-head{display:grid;gap:6px}
+.sheet-body{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:26px;align-items:start}
+@media (max-width:860px){.sheet-body{grid-template-columns:minmax(0,1fr)}}
+.mapbox{display:grid;gap:8px;min-width:0}
+canvas{width:100%;height:auto;display:block;border-radius:4px;border:1px solid var(--line)}
+canvas.map{background:#2d5c6e}
+canvas.prof{background:var(--bg)}
+.cap{font-size:13px;color:var(--muted)}
+.detail{display:grid;gap:18px;min-width:0}
+.tablewrap{overflow-x:auto;border:1px solid var(--line);border-radius:6px}
+table{border-collapse:collapse;width:100%;font-size:14.5px;min-width:440px}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-family:var(--f-display);font-weight:600;letter-spacing:.06em;text-transform:uppercase;font-size:13px;color:var(--muted);background:var(--bg)}
+tr:last-child td{border-bottom:0}
+td.num{font-family:var(--f-mono);font-size:13.5px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.pc{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px}
+@media (max-width:520px){.pc{grid-template-columns:minmax(0,1fr)}}
+.pc h3{font-size:16px;margin-bottom:6px}
+.pc .pro h3{color:var(--ok)} .pc .con h3{color:var(--warn)}
+.pc ul{font-size:15px}
+.tag{display:inline-block;font-family:var(--f-display);font-weight:600;font-size:13px;letter-spacing:.08em;text-transform:uppercase;background:var(--accent-soft);color:var(--accent);padding:2px 8px;border-radius:3px}
+.cost{font-family:var(--f-mono);font-size:14px;color:var(--muted)}
+.grid3{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:18px}
+.card{display:grid;gap:8px;align-content:start;min-width:0}
+.card h3{border-bottom:2px solid var(--accent);padding-bottom:4px}
+.card ul,.card ol{font-size:15px}
+.rec{border-left:4px solid var(--accent);padding:4px 0 4px 16px;display:grid;gap:8px}
+.phases{display:grid;gap:6px;font-size:15px;padding-left:22px}
+.phases b{font-weight:600}
+code{font-family:var(--f-mono);font-size:.86em;background:var(--bg);padding:1px 4px;border-radius:3px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;font-size:13px;color:var(--muted)}
+.legend i{display:inline-block;width:12px;height:12px;border-radius:2px;vertical-align:-2px;margin-right:5px}
+</style>
+
+<div class="wrap">
+<header>
+  <div class="eyebrow">Corley's Island · master plans · October 2026</div>
+  <h1>Bringing the islands down to the water</h1>
+  <p class="lede">Three ways to drop every island to under 50 ft above the lake, so the cliffs become banks and beaches with room for docks. Each plan adds a temporary bridge south to the lakeside town and another north to the field and woods, built so the crane can swap them for permanent spans later. Every island keeps its theme. Corley's gets flatter and grassier, with beaches.</p>
+  <div class="facts">
+    <div class="fact"><b>190 ft</b><span>Corley's top above the lake today (Lookout Knoll 208 ft)</span></div>
+    <div class="fact"><b>166 ft</b><span>Family and Dexter's tops today (Jessica's 176 ft)</span></div>
+    <div class="fact"><b>&lt; 50 ft</b><span>Highest ground on any island in every plan</span></div>
+    <div class="fact"><b>1,610 × 1,420 ft</b><span>The playable map today, Dexter's to Jessica's, Corley's to the barrier</span></div>
+  </div>
+  <div class="sheet-body" style="margin-top:6px">
+    <div class="mapbox">
+      <canvas class="map" id="map0" width="900" height="560" aria-label="Map of the islands today"></canvas>
+      <div class="cap">Today, north up. Four mesas on 125–190 ft cliffs. The mainland bridge stops at a barrier 335 ft out.</div>
+    </div>
+    <div class="detail">
+      <h3>What the code has today</h3>
+      <ul>
+        <li>The lake surface is <code>WATER = -58</code> m (190 ft below Corley's top, which is height 0). Every island is a mesa on cliffs drawn by <code>isleCliff</code> and <code>mesaHeight</code> in <code>terrain.js</code>.</li>
+        <li>The Family, Dexter's and Jessica's tops hang off <code>FAM_Y</code> (the Lower Bench height, 24 ft under Corley's top). Their buildings and roads sit on that number, so moving it moves them together.</li>
+        <li>Bridges are entries in <code>BRIDGES</code>, drawn by <code>famBridge</code>. Piers already reach down to whatever ground is under them, so lower ground means shorter piers for free.</li>
+        <li>Saves keep dug ground as a change from the original grade (<code>H − H0</code>), and map edits as a height layer. A plan that keeps the dig grid where it is keeps players' holes.</li>
+      </ul>
+      <div class="legend">
+        <span><i style="background:#7fae58"></i>grass top</span><span><i style="background:#e2cf98"></i>beach</span>
+        <span><i style="background:#9b8d74"></i>cliff or bank</span><span><i style="background:#5e7a3f"></i>mainland</span>
+        <span><i style="background:#3b5f2c"></i>woods</span><span><i style="background:#c9601c"></i>temporary bridge</span>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- ======================= PLAN A ======================= -->
+<section class="sheet" id="plan-a">
+  <div class="sheet-head">
+    <div class="eyebrow">Plan A</div>
+    <h2>High Water: raise the lake, keep the map</h2>
+    <p>Bring the lake up about 150 ft instead of bringing the land down. Nothing on the islands moves: the lake simply fills the cliffs, and the last 6–20 ft of each cliff is regraded into an earth bank and a sand beach. The two new bridges reach mainland shores pulled in close.</p>
+    <div><span class="tag">Smallest change</span> <span class="cost">about 28 developer hours · 2 releases</span></div>
+  </div>
+  <div class="sheet-body">
+    <div class="mapbox">
+      <canvas class="map" id="mapA" width="900" height="560" aria-label="Plan A map"></canvas>
+      <canvas class="prof" id="profA" width="900" height="270" aria-label="Plan A north to south height profile"></canvas>
+      <div class="cap">Profile runs north to south through the middle of the map (field shore, Corley's, the Family Island, town). Grey line: today. Red dashed line: the 50 ft limit.</div>
+    </div>
+    <div class="detail">
+      <div class="tablewrap"><table>
+        <tr><th>Island</th><th>Top above water</th><th>Across (top / with beach)</th><th>Theme kept</th></tr>
+        <tr><td>Corley's</td><td class="num">41 ft · knoll 47</td><td class="num">295 / 440 ft</td><td>Dig site, ramp and bench; knoll cut from 18 to 6 ft, rolls halved, tall grass spread</td></tr>
+        <tr><td>Family</td><td class="num">17 ft</td><td class="num">525 / 670 ft</td><td>House, pavilion, fire pit, roundabout</td></tr>
+        <tr><td>Dexter's</td><td class="num">17 ft</td><td class="num">295 / 425 ft</td><td>Gravel yard, shed, machines</td></tr>
+        <tr><td>Jessica's</td><td class="num">27 ft</td><td class="num">295 / 415 ft</td><td>Forest, cottage, library</td></tr>
+      </table></div>
+      <div class="tablewrap"><table>
+        <tr><th>Bridge</th><th>Length</th><th>Temporary build</th></tr>
+        <tr><td>Mainland (south, to town)</td><td class="num">about 690 ft</td><td>The existing 335 ft finished, then 355 ft of steel panel truss (Bailey type) on H-pile bents, ending at a town beach road</td></tr>
+        <tr><td>North (to field and woods)</td><td class="num">about 610 ft</td><td>Steel panel truss in 100 ft spans, descending 31 ft from Corley's north rim at about 5%</td></tr>
+      </table></div>
+      <ol class="phases">
+        <li><b>Water and banks</b> (10 h): <code>WATER</code> to −12.5 m; rework <code>isleCliff</code> and the mesa's cliff ring into bank, beach and a wading shelf 3 ft deep out to about 40 ft; sand and wet-sand bands; groundwater and water-table tuning measured from the new lake.</li>
+        <li><b>Corley's flatter</b> (3 h): knoll and West Rise cut down, rolls halved, more tall grass. The dig grid doesn't move.</li>
+        <li><b>Two shores</b> (8 h): a south shore strip with the town front (distant blocks only) and a north shore strip with the field edge and tree line, both driveable near the bridge ends.</li>
+        <li><b>Temporary bridges</b> (7 h): a panel-truss kit in <code>famBridge</code>, two <code>BRIDGES</code> entries marked temporary, signs, weight and speed limits.</li>
+      </ol>
+      <div class="pc">
+        <div class="pro"><h3>Gains</h3><ul>
+          <li>Every save and map edit survives as it is.</li>
+          <li>Fastest to ship; banks and beaches show up in the first release.</li>
+          <li>Cheapest on the phone: about +40,000 triangles.</li>
+        </ul></div>
+        <div class="con"><h3>Costs</h3><ul>
+          <li>Corley's stays the tall one at 41–47 ft, right under the limit.</li>
+          <li>The map isn't any bigger; the mainland feels close.</li>
+          <li>The truck's north-cliff dump spot becomes a 41 ft bank by the new bridge, so the dump moves.</li>
+        </ul></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= PLAN B ======================= -->
+<section class="sheet" id="plan-b">
+  <div class="sheet-head">
+    <div class="eyebrow">Plan B</div>
+    <h2>Double Archipelago: rebuild everything at twice the size</h2>
+    <p>Start over with the waterline as height 0 and lay all four islands out again at twice the size and twice the spacing, in the same arrangement. The islands become low and green with real beaches, a dune ridge and coves. Buildings stay their real size and spread across the bigger islands, with new docks, lawns and trails in the extra room. A floating pontoon bridge at each end of the map suits ground this low.</p>
+    <div><span class="tag">Biggest change</span> <span class="cost">about 105 developer hours · 4–5 releases</span></div>
+  </div>
+  <div class="sheet-body">
+    <div class="mapbox">
+      <canvas class="map" id="mapB" width="900" height="560" aria-label="Plan B map"></canvas>
+      <canvas class="prof" id="profB" width="900" height="270" aria-label="Plan B north to south height profile"></canvas>
+      <div class="cap">The map is drawn at a smaller scale here: everything is twice as far apart as on today's map.</div>
+    </div>
+    <div class="detail">
+      <div class="tablewrap"><table>
+        <tr><th>Island</th><th>Top above water</th><th>Across (top / with beach)</th><th>Theme kept</th></tr>
+        <tr><td>Corley's</td><td class="num">10–18 ft dune ridge</td><td class="num">590 / 790 ft</td><td>Dig site on a flat grassy rise, beaches all round, a cove with a dock</td></tr>
+        <tr><td>Family</td><td class="num">14–20 ft</td><td class="num">1,050 / 1,250 ft</td><td>House and pavilion, plus a long shared dock and lawn</td></tr>
+        <tr><td>Dexter's</td><td class="num">12 ft</td><td class="num">590 / 755 ft</td><td>Gravel yard with room for a bigger practice course</td></tr>
+        <tr><td>Jessica's</td><td class="num">38 ft forest ridge</td><td class="num">590 / 755 ft</td><td>Forest, cottage and library on the high ground</td></tr>
+      </table></div>
+      <div class="tablewrap"><table>
+        <tr><th>Bridge</th><th>Length</th><th>Temporary build</th></tr>
+        <tr><td>Mainland (south, to town)</td><td class="num">about 900 ft</td><td>Modular steel pontoons 3 ft above the water with hinged ramps at each beach and a lift-out section for boats</td></tr>
+        <tr><td>North (to field and woods)</td><td class="num">about 820 ft</td><td>The same pontoon kit, landing on a gravel ramp at the field's edge</td></tr>
+        <tr><td>Corley's to Family (rebuilt)</td><td class="num">about 590 ft</td><td>The green truss, longer, at 10–14 ft</td></tr>
+      </table></div>
+      <ol class="phases">
+        <li><b>New datum and layout</b> (18 h): heights measured from the water; one layout table for island centres, sizes and spacing; every island's placed buildings, roads and props moved to it.</li>
+        <li><b>Ground in tiles</b> (22 h): four times the land area won't fit in today's fixed meshes on the phone, so the ground becomes tiles drawn finer near the camera and coarser far off, with the field grass in chunks.</li>
+        <li><b>Low islands and beaches</b> (20 h): new height shapes for all four, dunes, coves, bank-and-beach edges, docks.</li>
+        <li><b>Mainland</b> (20 h): a town shore and a field-and-woods shore, driveable where the bridges land and simple farther out.</li>
+        <li><b>Bridges and saves</b> (25 h): pontoon kit, the longer truss, Dexter's and Jessica's bridges stretched, a save upgrade that moves dug ground and map edits onto the new layout.</li>
+      </ol>
+      <div class="pc">
+        <div class="pro"><h3>Gains</h3><ul>
+          <li>Doubles every island and the map, as you described.</li>
+          <li>Lowest, most natural islands: beaches and docks everywhere.</li>
+          <li>The tiled ground is ready for the long bridge, the town and the hayfield ideas.</li>
+        </ul></div>
+        <div class="con"><h3>Costs</h3><ul>
+          <li>Touches nearly every file that places something on an island.</li>
+          <li>Map edits on old cliff faces can't carry over cleanly; Copy map first.</li>
+          <li>Drive times double; the Family Island is a quarter mile across.</li>
+          <li>Highest risk to the phone's 30 FPS until the tiling is tuned.</li>
+        </ul></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= PLAN C ======================= -->
+<section class="sheet" id="plan-c">
+  <div class="sheet-head">
+    <div class="eyebrow">Plan C</div>
+    <h2>Corley's Lowland and a Mainland Ring</h2>
+    <p>Lower the lake to 24 ft under Corley's top and drop the other three islands to match, keeping their layouts. Rebuild Corley's alone as a bigger, flatter, grassier island with beaches on three sides. Double the map with mainland shores rather than bigger islands: the lakeside town to the south and the field and woods to the north. Both new bridges are a rock causeway out from the mainland plus a timber trestle over the deep water. The crane later replaces the trestle with steel spans; the causeway stays.</p>
+    <div><span class="tag">Middle road</span> <span class="cost">about 62 developer hours · 3 releases</span></div>
+  </div>
+  <div class="sheet-body">
+    <div class="mapbox">
+      <canvas class="map" id="mapC" width="900" height="560" aria-label="Plan C map"></canvas>
+      <canvas class="prof" id="profC" width="900" height="270" aria-label="Plan C north to south height profile"></canvas>
+      <div class="cap">Corley's grows north and to the sides, so its south edge, the dig grid and the Family bridge stay where they are.</div>
+    </div>
+    <div class="detail">
+      <div class="tablewrap"><table>
+        <tr><th>Island</th><th>Top above water</th><th>Across (top / with beach)</th><th>Theme kept</th></tr>
+        <tr><td>Corley's</td><td class="num">24 ft · knoll 30</td><td class="num">525 / 690 ft</td><td>Dig site unchanged; an 8 ft step to the bench instead of 24; wide lawns, tall grass and a north beach with a dock</td></tr>
+        <tr><td>Family</td><td class="num">16 ft</td><td class="num">525 / 655 ft</td><td>Same house, pavilion and roads, with a beach and the long dock</td></tr>
+        <tr><td>Dexter's</td><td class="num">16 ft</td><td class="num">295 / 415 ft</td><td>Same gravel yard; a landing ramp for a barge later</td></tr>
+        <tr><td>Jessica's</td><td class="num">26 ft · ridge 34</td><td class="num">295 / 395 ft</td><td>Same forest and cottage on a wooded bluff</td></tr>
+      </table></div>
+      <div class="tablewrap"><table>
+        <tr><th>Bridge</th><th>Length</th><th>Temporary build</th></tr>
+        <tr><td>Mainland (south, to town)</td><td class="num">about 770 ft</td><td>The existing 335 ft, then a 300 ft timber pile trestle and a 135 ft rock causeway onto the town's beach road</td></tr>
+        <tr><td>North (to field and woods)</td><td class="num">about 640 ft</td><td>A 220 ft causeway from the field shore and a 420 ft trestle to Corley's north lawn</td></tr>
+      </table></div>
+      <ol class="phases">
+        <li><b>Lower and soften</b> (12 h): <code>WATER</code> to −7.3 m and <code>FAM_Y</code> to −2.4 m; bank-and-beach edges for the three outer islands; the bridge from the bench runs level as it does now.</li>
+        <li><b>Corley's rebuilt</b> (16 h): larger shape centred farther north, flatter rolls, a gentler 8 ft scarp and ramp, new lawns and a north beach. The dig grid stays at the centre, so dug holes survive; the cliff dump becomes a spoil yard on the north lawn.</li>
+        <li><b>Mainland ring</b> (20 h): the south town front (beach, boardwalk, a marina and the first block of a main street) and the north field and woods (a 40-acre hayfield edge and a tree line with a trail), driveable near the bridges and simple beyond.</li>
+        <li><b>Causeway and trestle</b> (8 h): a rock-fill embankment made from the ground itself, and a timber trestle kit with steel stringers, signs and limits.</li>
+        <li><b>Saves and editor</b> (6 h): map editor grid widened over the new land; map edits on the old cliffs dropped with a notice.</li>
+      </ol>
+      <div class="pc">
+        <div class="pro"><h3>Gains</h3><ul>
+          <li>Your island gets the flat, grassy beach makeover in full.</li>
+          <li>The map more than doubles north to south.</li>
+          <li>Dug ground and most map edits survive.</li>
+          <li>Causeways are cheap to draw and feel like real temporary work.</li>
+        </ul></div>
+        <div class="con"><h3>Costs</h3><ul>
+          <li>The Family, Dexter's and Jessica's islands stay their current size.</li>
+          <li>About +180,000 triangles; the mainland needs distance fading to hold 30 FPS.</li>
+          <li>Map edits on Corley's old cliffs are lost.</li>
+        </ul></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ======================= COMPARE ======================= -->
+<section class="sheet" id="compare">
+  <div class="sheet-head"><div class="eyebrow">Side by side</div><h2>The three plans compared</h2></div>
+  <div class="tablewrap"><table>
+    <tr><th></th><th>A · High Water</th><th>B · Double Archipelago</th><th>C · Lowland and Mainland Ring</th></tr>
+    <tr><td>Highest ground</td><td class="num">47 ft (Corley's knoll)</td><td class="num">38 ft (Jessica's ridge)</td><td class="num">34 ft (Jessica's ridge)</td></tr>
+    <tr><td>Corley's top</td><td class="num">41 ft</td><td class="num">10–18 ft</td><td class="num">24 ft</td></tr>
+    <tr><td>Island size</td><td>Same, plus beaches</td><td>Every island twice across</td><td>Corley's 1.8× across; others same plus beaches</td></tr>
+    <tr><td>Map size</td><td class="num">about 1,610 × 2,400 ft</td><td class="num">about 3,200 × 5,200 ft</td><td class="num">about 1,800 × 4,600 ft</td></tr>
+    <tr><td>Temporary bridges</td><td>Steel panel truss</td><td>Floating pontoons</td><td>Rock causeway and timber trestle</td></tr>
+    <tr><td>Saves</td><td>All kept</td><td>Moved by an upgrade; cliff edits lost</td><td>Holes kept; Corley's cliff edits lost</td></tr>
+    <tr><td>Phone cost</td><td class="num">+40k triangles</td><td>New tiled ground (needed)</td><td class="num">+180k triangles, faded by distance</td></tr>
+    <tr><td>Developer hours</td><td class="num">about 28</td><td class="num">about 105</td><td class="num">about 62</td></tr>
+  </table></div>
+</section>
+
+<!-- ======================= SHARED ======================= -->
+<section class="sheet" id="shared">
+  <div class="sheet-head"><div class="eyebrow">In every plan</div><h2>What all three share</h2></div>
+  <div class="grid3">
+    <div class="card"><h3>Temporary bridges the crane can replace</h3><ul>
+      <li>Each temporary bridge is a <code>BRIDGES</code> entry marked temporary, with a list of spans. Each span is a panel truss, a pontoon or a trestle bay.</li>
+      <li>The crane idea (B10) swaps one span at a time for a permanent steel girder span. The deck stays drivable at every step, with one lane coned off.</li>
+      <li>Yellow "TEMPORARY BRIDGE · 10 MPH · 40 TON LIMIT" signs. The limit lets the lowboy with the dozer across but has room to say no to heavier loads later.</li>
+    </ul></div>
+    <div class="card"><h3>Beaches and docks</h3><ul>
+      <li>Every edge becomes bank, dry sand, wet sand, then a wading shelf before the drop. Wet sand reads the soil-wetness system the same way mud does.</li>
+      <li>A photoreal sand texture set with relief and sheen for High graphics (made with <code>tools/pbr.py</code>).</li>
+      <li>Dock spots kept flat on each island: the boat-on-the-lake, dock-and-ramp and drivable-boat ideas (M15, S05, M21) drop straight in.</li>
+    </ul></div>
+    <div class="card"><h3>Things that move with the water</h3><ul>
+      <li>The truck's cliff dump spot becomes a spoil yard.</li>
+      <li>Groundwater, the water table and puddle drainage are measured from the lake, so their tunings shift with <code>WATER</code>.</li>
+      <li>Fog and draw distances push out to show the far shores. Phones may draw less of the far shore, but the shore itself is the same on every device.</li>
+      <li>The pavilion and its chess and checkers tables keep working; if the pavilion moves, <code>FAM_GAMES</code> moves with it.</li>
+    </ul></div>
+  </div>
+</section>
+
+<!-- ======================= RECOMMEND ======================= -->
+<section class="sheet" id="recommend">
+  <div class="sheet-head"><div class="eyebrow">Recommendation</div><h2>Start with Plan C</h2></div>
+  <div class="rec">
+    <p>Plan C gives your island the full flat, grassy beach makeover, more than doubles the map with the town and the field and woods, and keeps players' dug ground. It costs about 60% of Plan B. Its first release (lake down, beaches on the outer islands) is playable on its own.</p>
+    <p>If you still want every island twice as big after playing it, Plan B's tiled ground and bigger layout can follow later. Plan C's mainland shores, beaches and bridge kits all carry over. Plan A suits you best if you only want the lower water soon and would rather spend the hours on other ideas.</p>
+  </div>
+  <div class="card"><h3>Choices I need from you before building</h3><ul>
+    <li>Which plan, or a mix: Plan C with Plan B's pontoon bridges is easy to swap in.</li>
+    <li>Is the 24 ft Lower Bench scarp and ramp part of Corley's character, or can it shrink to 8 ft?</li>
+    <li>Which side is the field and woods on? These plans put it north, opposite the town.</li>
+    <li>Can old map edits on the cliffs be dropped (a copy is kept in Map file → Copy map)?</li>
+  </ul></div>
+</section>
+</div>
+
+<script>
+// heights in feet above the water; positions in metres as the game has them (x east, z south); north up on the maps
+const FT=0.3048;
+const PLANS={
+ now:{isl:[['Corley\'s',0,30,45,0,'mesa'],['Family',0,245,80,0],['Dexter\'s',-200,245,45,0],['Jessica\'s',200,245,45,0,'woods']],
+   br:[[0,68,0,171,0],[-70,245,-163,245,0],[70,245,163,245,0],[0,316,0,418,0,'barrier']],land:[],cliff:1},
+ A:{isl:[['Corley\'s',0,30,45,22,'mesa'],['Family',0,245,80,22],['Dexter\'s',-200,245,45,20],['Jessica\'s',200,245,45,18,'woods']],
+   br:[[0,68,0,171,0],[-70,245,-163,245,0],[70,245,163,245,0],[0,316,0,418,0],[0,418,0,525,1],[0,-15,0,-205,1]],
+   land:[['N',-205,'Field and woods'],['S',525,'Lakeside town']],
+   prof:{g:[[-420,14],[-260,18],[-215,6],[-205,0],[-195,-8],[-60,-25],[-38,-4],[-36,0],[-22,5],[-17,14],[-15,41],[20,44],[27,47],[45,41],[50,17],[68,17],[75,10],[88,0],[96,-10],[136,-10],[143,0],[158,6],[165,17],[325,17],[332,6],[347,0],[352,-8],[505,-15],[518,0],[530,6],[600,14],[760,25]],
+     b:[[68,171,17,17,0],[325,418,17,17,0],[418,525,17,8,1],[-15,-205,41,10,1]]}},
+ B:{isl:[['Corley\'s',0,-185,90,30,'dunes'],['Family',0,245,160,30],['Dexter\'s',-400,245,90,25],['Jessica\'s',400,245,90,25,'woods']],
+   br:[[0,-95,0,85,0],[-160,245,-310,245,0],[160,245,310,245,0],[0,-305,0,-555,1],[0,435,0,680,1]],
+   land:[['N',-555,'Field and woods'],['S',680,'Lakeside town']],
+   prof:{g:[[-900,20],[-580,14],[-560,4],[-555,0],[-550,-8],[-420,-18],[-310,-6],[-305,0],[-288,4],[-275,10],[-240,12],[-185,18],[-120,12],[-95,10],[-80,4],[-65,0],[-60,-8],[0,-16],[50,-6],[55,0],[72,5],[85,14],[245,20],[405,14],[420,5],[435,0],[440,-8],[560,-18],[675,-6],[680,0],[700,6],[800,16],[1000,26]],
+     b:[[-95,85,10,14,0],[-305,-555,3,3,1],[435,680,3,3,1]]}},
+ C:{isl:[['Corley\'s',0,-5,80,25,'lawn'],['Family',0,245,80,20],['Dexter\'s',-200,245,45,18],['Jessica\'s',200,245,45,15,'woods']],
+   br:[[0,75,0,165,0],[-70,245,-163,245,0],[70,245,163,245,0],[0,316,0,418,0],[0,418,0,510,1],[0,510,0,560,2],[0,-85,0,-213,1],[0,-213,0,-280,2]],
+   land:[['N',-280,'Field and woods'],['S',560,'Lakeside town']],
+   prof:{g:[[-560,18],[-320,14],[-285,5],[-280,0],[-275,-8],[-180,-20],[-115,-6],[-110,0],[-95,4],[-85,10],[-80,22],[-20,24],[10,30],[40,24],[50,16],[75,16],[82,6],[95,0],[100,-8],[120,-14],[140,-6],[145,0],[158,6],[165,16],[325,16],[332,6],[345,0],[350,-8],[450,-18],[550,-6],[560,0],[575,6],[640,14],[780,22]],
+     b:[[75,165,16,16,0],[325,418,16,16,0],[418,510,16,8,1],[510,560,8,6,2],[-85,-213,22,14,1],[-213,-280,14,14,2]]}}
+};
+const TODAY={g:[[-60,-60],[-35,-60],[-28,10],[-24,40],[-17,190],[20,192],[45,190],[50,166],[68,166],[72,140],[80,40],[95,-60],[150,-60],[158,40],[163,140],[165,166],[325,166],[330,140],[338,40],[350,-60],[460,-60]],b:[[68,171,166,166,0],[316,418,166,166,0]]};
+
+function css(n){return getComputedStyle(document.documentElement).getPropertyValue(n).trim()}
+function shape(R,cx,cz,seed){const p=[];for(let i=0;i<96;i++){const t=i/96*Math.PI*2,c=Math.cos(t),s=Math.sin(t);
+  const w=1+0.04*Math.sin(t*5+seed)+0.025*Math.sin(t*9+seed*2);
+  p.push([cx+R*w*Math.sign(c)*Math.sqrt(Math.abs(c)),cz+R*w*Math.sign(s)*Math.sqrt(Math.abs(s))])}return p}
+
+function drawMap(id,P){
+  const cv=document.getElementById(id),g=cv.getContext('2d'),W=cv.width,Hh=cv.height;
+  // fit the islands and a slice of each mainland shore
+  let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9;
+  for(const s of P.isl){const r=s[3]+s[4]+30;x0=Math.min(x0,s[1]-r);x1=Math.max(x1,s[1]+r);z0=Math.min(z0,s[2]-r);z1=Math.max(z1,s[2]+r)}
+  for(const b of P.br){z0=Math.min(z0,b[1]-20,b[3]-20);z1=Math.max(z1,b[1]+20,b[3]+20)}
+  for(const l of P.land){if(l[0]==='N')z0=Math.min(z0,l[1]-90);else z1=Math.max(z1,l[1]+90)}
+  const sc=Math.min(W/(x1-x0),Hh/(z1-z0)),ox=W/2-(x0+x1)/2*sc,oz=Hh/2-(z0+z1)/2*sc;
+  const X=x=>ox+x*sc,Z=z=>oz+z*sc;
+  g.clearRect(0,0,W,Hh);
+  const wg=g.createLinearGradient(0,0,0,Hh);wg.addColorStop(0,'#2f6479');wg.addColorStop(1,'#26566a');g.fillStyle=wg;g.fillRect(0,0,W,Hh);
+  // mainland shores: a wavy edge, beach band, then land with town blocks or field stripes and woods
+  for(const [side,zs,label] of P.land){
+    const edge=[];for(let x=-1;x<=W+1;x+=6){const wx=(x-ox)/sc;edge.push([x,Z(zs+(side==='N'?-1:1)*(10*Math.sin(wx*0.013)+6*Math.sin(wx*0.031+1)))])}
+    const far=side==='N'?-10:Hh+10,poly=(off,col)=>{g.beginPath();g.moveTo(-2,far);for(const [x,z] of edge)g.lineTo(x,z+(side==='N'?-off:off)*sc);g.lineTo(W+2,far);g.closePath();g.fillStyle=col;g.fill()};
+    poly(0,'#e2cf98');poly(9,'#5e7a3f');
+    if(side==='S'){g.fillStyle='#c9c2b2';for(let i=-6;i<=6;i++)for(let j=0;j<4;j++){const bx=W/2+i*sc*34-sc*12,bz=Z(zs+26+j*30);if(bz<Hh)g.fillRect(bx,bz,sc*22,sc*18)}
+      g.fillStyle='#8b6a45';g.fillRect(W/2-sc*90,Z(zs+12),sc*180,Math.max(2,sc*3));}
+    else{g.save();g.globalAlpha=.5;g.strokeStyle='#a6b45a';g.lineWidth=Math.max(1,sc*2);for(let i=0;i<12;i++){const z=Z(zs-22-i*8);g.beginPath();g.moveTo(X(-40),z);g.lineTo(W+4,z);g.stroke()}g.restore();
+      g.fillStyle='#3b5f2c';for(let i=0;i<220;i++){const a=Math.sin(i*12.9898)*43758.5,b=Math.sin(i*78.233)*12345.6,fx=a-Math.floor(a),fz=b-Math.floor(b);
+        const x=fx*(X(-40)+10)-10,z=Z(zs-18)-fz*Z(zs-18);if(z<Z(zs-14)){g.beginPath();g.arc(x,z,Math.max(2,sc*7),0,7);g.fill()}}}
+    g.font='600 '+Math.round(Math.max(15,sc*16))+'px Barlow Condensed, Arial Narrow, sans-serif';g.textAlign='center';
+    const ly=side==='N'?Z(zs-50):Z(zs+56);g.lineWidth=4;g.strokeStyle='rgba(0,0,0,.55)';g.strokeText(label.toUpperCase(),W/2+(side==='N'?-W*0.22:W*0.22),ly);g.fillStyle='#fff';g.fillText(label.toUpperCase(),W/2+(side==='N'?-W*0.22:W*0.22),ly)}
+  // islands: beach ring, then the bank or cliff, then the top
+  P.isl.forEach((s,k)=>{const [n,cx,cz,R,bch,kind]=s,path=(r)=>{const p=shape(r,cx,cz,k*1.7);g.beginPath();p.forEach((q,i)=>i?g.lineTo(X(q[0]),Z(q[1])):g.moveTo(X(q[0]),Z(q[1])));g.closePath()};
+    if(P.cliff){path(R+14);g.fillStyle='#86a35a';g.fill();path(R+6);g.fillStyle='#9b8d74';g.fill()}
+    else{path(R+bch+8);g.fillStyle='rgba(120,200,210,.35)';g.fill();path(R+bch);g.fillStyle='#e2cf98';g.fill();path(R+4);g.fillStyle='#9b9a62';g.fill()}
+    path(R);g.fillStyle=kind==='woods'?'#4f7a36':kind==='dunes'?'#8db95f':'#7fae58';g.fill();
+    if(kind==='woods'){g.fillStyle='#355a26';for(let i=0;i<60;i++){const a=i*2.39996,r=R*0.85*Math.sqrt((i+.5)/60);g.beginPath();g.arc(X(cx+Math.cos(a)*r),Z(cz+Math.sin(a)*r),Math.max(2,sc*5),0,7);g.fill()}}
+    if(n==='Corley\'s'){g.fillStyle='#a88b62';g.fillRect(X(-12),Z(50),24*sc,16*sc);g.strokeStyle='#6d5a40';g.lineWidth=Math.max(1,sc*1.2);g.strokeRect(X(-32),Z(-32),64*sc,64*sc)}
+    if(n==='Dexter\'s'){g.fillStyle='#b9ad93';path(R*0.82);g.fill()}
+    g.font='600 '+Math.round(Math.max(14,sc*15))+'px Barlow Condensed, Arial Narrow, sans-serif';g.textAlign='center';g.lineWidth=4;g.strokeStyle='rgba(0,0,0,.55)';
+    g.strokeText(n.toUpperCase(),X(cx),Z(cz)+5);g.fillStyle='#fff';g.fillText(n.toUpperCase(),X(cx),Z(cz)+5)});
+  // bridges: built ones in steel grey, temporary in orange, causeway as a rock band
+  for(const [ax,az,bx,bz,t,end] of P.br){
+    if(t===2){g.strokeStyle='#8a8478';g.lineWidth=Math.max(6,sc*14);g.lineCap='butt';g.beginPath();g.moveTo(X(ax),Z(az));g.lineTo(X(bx),Z(bz));g.stroke()}
+    g.strokeStyle=t===1?'#c9601c':t===2?'#c9601c':'#d9dcd6';g.lineWidth=Math.max(3,sc*(t===2?5:6));g.setLineDash(t===1?[8,5]:[]);
+    g.beginPath();g.moveTo(X(ax),Z(az));g.lineTo(X(bx),Z(bz));g.stroke();g.setLineDash([]);
+    if(end==='barrier'){g.fillStyle='#e6c229';g.fillRect(X(bx)-8,Z(bz)-2,16,5)}}
+  // north arrow and a 500 ft bar
+  g.fillStyle='#fff';g.font='600 14px Barlow Condensed, Arial Narrow, sans-serif';g.textAlign='left';
+  const bar=500*FT*sc;g.fillRect(16,Hh-22,bar,4);g.fillText('500 ft',16,Hh-28);
+  g.beginPath();g.moveTo(W-26,16);g.lineTo(W-34,36);g.lineTo(W-18,36);g.closePath();g.fill();g.fillText('N',W-30,52)}
+
+function drawProf(id,P){
+  const cv=document.getElementById(id),g=cv.getContext('2d'),W=cv.width,Hh=cv.height,fg=css('--fg'),mu=css('--muted'),ln=css('--line'),wa=css('--water'),li=css('--limit'),ac=css('--accent');
+  g.clearRect(0,0,W,Hh);const L=52,R=16,T=14,B=30,zs=P.g.map(q=>q[0]),za=Math.min(...zs),zb=Math.max(...zs),ya=-30,yb=210;
+  const X=z=>L+(z-za)/(zb-za)*(W-L-R),Y=y=>T+(yb-y)/(yb-ya)*(Hh-T-B);
+  g.font='12px JetBrains Mono, ui-monospace, monospace';g.textAlign='right';g.fillStyle=mu;g.strokeStyle=ln;g.lineWidth=1;
+  for(const y of [0,50,100,150,200]){g.beginPath();g.moveTo(L,Y(y));g.lineTo(W-R,Y(y));g.stroke();g.fillText(y+' ft',L-6,Y(y)+4)}
+  g.fillStyle=wa;g.globalAlpha=.25;g.fillRect(L,Y(0),W-L-R,Y(ya)-Y(0));g.globalAlpha=1;
+  // today, for comparison, where it falls in this view
+  g.strokeStyle=mu;g.globalAlpha=.55;g.lineWidth=1.5;g.beginPath();let st=0;for(const [z,y] of TODAY.g){if(z<za||z>zb)continue;const yy=Math.max(ya,y);st?g.lineTo(X(z),Y(yy)):g.moveTo(X(z),Y(yy));st=1}g.stroke();
+  for(const [a,b,y] of TODAY.b){if(Math.max(a,b)<za||Math.min(a,b)>zb)continue;g.beginPath();g.moveTo(X(Math.max(za,a)),Y(y));g.lineTo(X(Math.min(zb,b)),Y(y));g.stroke()}g.globalAlpha=1;
+  // the plan's ground
+  g.beginPath();g.moveTo(X(P.g[0][0]),Y(ya));for(const [z,y] of P.g)g.lineTo(X(z),Y(Math.max(ya,y)));g.lineTo(X(P.g[P.g.length-1][0]),Y(ya));g.closePath();
+  g.fillStyle='#7fae58';g.globalAlpha=.8;g.fill();g.globalAlpha=1;g.strokeStyle=fg;g.lineWidth=1.5;g.beginPath();P.g.forEach(([z,y],i)=>i?g.lineTo(X(z),Y(Math.max(ya,y))):g.moveTo(X(z),Y(y)));g.stroke();
+  for(const [a,b,y0,y1,t] of P.b){g.strokeStyle=t?ac:fg;g.lineWidth=t===2?6:3;g.setLineDash(t===1?[7,4]:[]);g.beginPath();g.moveTo(X(a),Y(y0));g.lineTo(X(b),Y(y1));g.stroke()}g.setLineDash([]);
+  g.strokeStyle=li;g.lineWidth=1.5;g.setLineDash([6,4]);g.beginPath();g.moveTo(L,Y(50));g.lineTo(W-R,Y(50));g.stroke();g.setLineDash([]);
+  g.fillStyle=li;g.textAlign='left';g.fillText('50 ft limit',L+6,Y(50)-6);
+  g.fillStyle=mu;g.textAlign='left';g.fillText('north',L,Hh-10);g.textAlign='right';g.fillText('south',W-R,Hh-10);
+  g.textAlign='center';g.fillStyle=wa;g.fillText('lake',X((za+zb)/2),Y(-18))}
+
+function drawAll(){drawMap('map0',PLANS.now);for(const k of ['A','B','C']){drawMap('map'+k,PLANS[k]);drawProf('prof'+k,PLANS[k].prof)}}
+drawAll();
+try{matchMedia('(prefers-color-scheme: dark)').addEventListener('change',drawAll)}catch(e){}
+new MutationObserver(drawAll).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+if(document.fonts&&document.fonts.ready)document.fonts.ready.then(drawAll);
+</script>

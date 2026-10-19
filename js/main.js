@@ -37,7 +37,7 @@ function frame(now){
   st.swing-=swingIn*TU.exSwing*dt*res;
   st.a1=clamp(st.a1+boomIn*TU.exBoom*dt*res,...LIM.a1);
   st.a2=clamp(st.a2+stickIn*TU.exStick*dt*res,...LIM.a2);
-  st.a3=clamp(st.a3+bucketIn*TU.exBucket*dt*res,...LIM.a3);
+  {const a3=st.a3;st.a3=clamp(st.a3+bucketIn*TU.exBucket*dt*res,...LIM.a3);st.a3v=dt>0?(st.a3-a3)/dt:0}
   if(bench.on){benchTick(dt);driveIn=0;turnIn=0;tThr=0;tSteer=0;tBed=0;mL=0;mR=0}
   updateTruck(dt,tThr,tSteer,tBed);updateMower(dt,mL,mR);if(bench.on){sDrive=sTurn=sArm=sCurl=0}updateSkid(dt,sDrive,sTurn,sArm,sCurl);
   siteTick();
@@ -102,19 +102,28 @@ function frame(now){
   const up=tmp.set(0,-1,0).applyQuaternion(q).y;
   const f=clamp((0.25-up)/0.5,0,1);
   let pourA=0,pourY=0;
-  if(f>0&&st.load>0.0005){
-    const out=Math.min(st.load,f*(0.35+st.load*1.6)*TU.exPour*dt);
-    st.load-=out;pourA=out/dt;sndIn.pour=out/dt;
-    const bed=inBed(mid);pourY=bed?mid.y-(tl.y-heapTop()):hAt(mid.x,mid.z);const spr=dropSpread(mid.y-pourY);
-    if(!st.pouring){st.pouring=true;dirtThud(mid,0.3+st.load/TU.exCap)}
+  // dirt leaving the bucket goes into the truck bed under it (what does not fit spills) or onto the ground
+  const exDrop=(out,spr)=>{
     if(inBed(mid)&&tr.load<TU.trCap){const take=Math.min(out,TU.trCap-tr.load);if(take>0){const f=take/(tr.load+take);for(let q=0;q<3;q++)tr.loadC[q]+=(st.loadC[q]-tr.loadC[q])*f;for(let q=0;q<4;q++)tr.loadMix[q]+=(st.loadMix[q]-tr.loadMix[q])*f;tr.loadWet+=(st.loadWet-tr.loadWet)*f}tr.load+=take;
       if(out-take>0){deposit(mid.x,mid.z,out-take,st.loadC,st.loadMix,spr,st.loadWet);st.dirty=true;st.slumpT=2.5}
       if(!tr.loadedOnce){tr.loadedOnce=true;toast(say('truckFirst'),'good')}
       if(tr.load>=TU.trCap*0.99&&!tr.fullWarned){tr.fullWarned=true;toast(say('truckFull'),'',3500)}}
-    else{deposit(mid.x,mid.z,out,st.loadC,st.loadMix,spr,st.loadWet); st.dirty=true; st.slumpT=2.5}
+    else{deposit(mid.x,mid.z,out,st.loadC,st.loadMix,spr,st.loadWet);st.dirty=true;st.slumpT=2.5}};
+  st.stuck=Math.min(st.stuck||0,st.load);
+  // sticky clay: when it starts to pour, part of the load (stickFrac) clings to the bucket and stays in it, taking up
+  // room, until it is shaken out with the curl
+  if(f>0&&st.load-st.stuck>0.0005){
+    if(!st.pouring){st.pouring=true;dirtThud(mid,0.3+st.load/TU.exCap);st.stuck=Math.min(st.load,TU.exCap*0.4,st.stuck+(st.load-st.stuck)*stickFrac(st.loadMix,st.loadWet))}
+    const out=Math.min(st.load-st.stuck,f*(0.35+st.load*1.6)*TU.exPour*dt);
+    st.load-=out;pourA=out/dt;sndIn.pour=out/dt;
+    const bed=inBed(mid);pourY=bed?mid.y-(tl.y-heapTop()):hAt(mid.x,mid.z);
+    exDrop(out,dropSpread(mid.y-pourY));
     for(let n=0;n<Math.ceil(out*80);n++)spawn(mid,0.8);
-    if(st.load<0.0005){st.load=0;st.stuck=0.03*(0.3+st.loadMix[CLAY])*(1+2*st.loadWet)}
+    if(st.load-st.stuck<0.0005){st.load=st.stuck;if(st.stuck>TU.exCap*0.06&&!st.seenStick){st.seenStick=true;toast(say('claySticks'),'',4200)}}
   }else st.pouring=false;
+  {const fell=shakeOut(st,st.a3v||0,TU.exBucket*0.45,st.a3<=LIM.a3[0]+1e-4||st.a3>=LIM.a3[1]-1e-4,clamp((0.5-up)/0.75,0,1),dt);
+    if(fell>0){st.stuck-=fell;st.load-=fell;exDrop(fell,1);if(st.stuck<0.0005){st.load=Math.max(0,st.load-st.stuck);st.stuck=0}
+      if(st.jolt){dirtThud(mid,0.25+fell*3);if(!inBed(mid))shakeClods(mid.x,mid.z,fell);for(let n=0;n<Math.ceil(fell*120);n++)spawn(mid,0.7);rumble(120,0.4)}}}
   pourStream(streams[0],mid,pourY,pourA,st.loadC,now/1000);
   // a heaped bucket swung or lifted fast loses crumbs over the rim
   {const armV=Math.abs(swingIn)*TU.exSwing+Math.abs(boomIn)*TU.exBoom+Math.abs(stickIn)*TU.exStick;
@@ -128,7 +137,7 @@ function frame(now){
     const fl=$('#flash');fl.style.opacity='0.45';setTimeout(()=>fl.style.opacity='0',180);
     toast(say('strike'),'bad',3000);rumble(600,1);
   }
-  if(!bench.on)caveTick(dt);
+  if(!bench.on)caveTick(dt);slopeTick(dt);
   // terrain
   if(st.slumpT>0){st.slumpT-=dt;for(let n=0;n<3*GRID_K;n++)if(slump())st.dirty=true}
   if(st.dirty){
