@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-19T16:54:00Z",
+ "updated": "2026-10-19T20:05:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -30,9 +30,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-19",
-   "dh": 71,
-   "act": 2.5,
-   "versions": 10
+   "dh": 85,
+   "act": 3,
+   "versions": 11
   }
  ],
  "extra": [
@@ -1473,6 +1473,15 @@ window.EFFORT = {
    "tris": 3032960,
    "chars": 1056925,
    "what": "Boats sound real (an outboard that revs with the throttle, hull slap, water rushing by), leave a spreading V wake that rocks other boats, and the lake has company: fishing boats, sailboats and a tug pushing a spoil barge that give way to you and blow the horn at the docks."
+  },
+  {
+   "v": 160,
+   "asked": "2026-10-19T14:15:00-05:00",
+   "live": "2026-10-19T15:05:00-05:00",
+   "dh": 14,
+   "tris": 3032407,
+   "chars": 1075321,
+   "what": "Dexter's dozer, wheel loader and semi are drivable: the dozer's blade shaves and shoves dirt, the loader scoops and loads the dump truck, and the semi tows its lowboy trailer."
   }
  ]
 };
