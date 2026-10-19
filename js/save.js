@@ -5,7 +5,7 @@
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 const SITE_KEY='bhd_site',RIG_KEY='bhd_rigs';
 const site={dirty:false,saveT:0,rigT:0,rigSig:'',lastD:null};
-const ST_KEYS=['x','z','y','yaw','pitch','roll','swing','a1','a2','a3','load','loadC','loadMix','loadWet','stuck','strikes','exposed','done','seenSand','seenRock','grime','mud','caves','sink'];
+const ST_KEYS=['x','z','y','yaw','pitch','roll','swing','a1','a2','a3','load','loadC','loadMix','loadWet','stuck','strikes','exposed','done','seenSand','seenRock','grime','mud','pack','packC','caves','sink'];
 // Dexter's skid steer (skid.js)
 const SK_KEYS=['x','z','yaw','a','c','load','loadC','loadMix','loadWet','stuck'];
 const TR_KEYS=['x','z','y','yaw','pitch','roll','bed','load','hauled','loadC','loadMix','loadWet','stuck','mud','sink','gear','loadedOnce','fullWarned','haulWarned','bedWarned'];
@@ -28,8 +28,8 @@ function siteSave(){if(window.syncHold)return;site.dirty=false;site.saveT=perfor
   const pb=new Uint8Array(V*V*5);let po=0,pl=-1;for(let k=0;k<V*V;k++)if(paintD[k]){let g=k-pl;pl=k;while(g>=128){pb[po++]=(g&127)|128;g>>>=7}pb[po++]=g;
     const m=Math.round(Math.max(-32,Math.min(32,paintD[k]))*1000)&0xffff;pb[po++]=m&255;pb[po++]=m>>8}
   const pd=po?siteB64(pb.subarray(0,po)):'';
-  const d=siteB64(buf.subarray(0,o)),mt=mtSave(),wx=rainSave(),sm=smSave(),sig=d+JSON.stringify(mt)+wx.w+wx.r+wx.want+pd+sm;if(sig===site.lastD)return;site.lastD=sig;
-  try{localStorage.setItem(SITE_KEY,JSON.stringify({v:1,V,n:ks.length,t:Date.now(),d,mt,wx,pd,sm}))}catch(e){}}
+  const d=siteB64(buf.subarray(0,o)),mt=mtSave(),wx=rainSave(),sm=smSave(),cr=craneSave(),sig=d+JSON.stringify(mt)+wx.w+wx.r+wx.want+pd+sm+cr.n+'.'+(cr.t/30|0);if(sig===site.lastD)return;site.lastD=sig;
+  try{localStorage.setItem(SITE_KEY,JSON.stringify({v:1,V,n:ks.length,t:Date.now(),d,mt,wx,pd,sm,cr}))}catch(e){}}
 function siteLoad(){let d=null;try{d=JSON.parse(localStorage.getItem(SITE_KEY))}catch(e){}
   if(!d||d.v!==1||d.V!==V||typeof d.d!=='string')return false;site.lastD=d.d+JSON.stringify(d.mt||[])+(d.wx?d.wx.w+d.wx.r+d.wx.want:'')+(d.pd||'')+(d.sm||'');let buf;try{buf=siteUnB64(d.d)}catch(e){return false}
   const dv=new DataView(buf.buffer);let o=0,k=-1,any=false,i0=N+1,i1=-1,j0=N+1,j1=-1;
@@ -38,7 +38,7 @@ function siteLoad(){let d=null;try{d=JSON.parse(localStorage.getItem(SITE_KEY))}
     comp[k]=buf[o++]/255;mudA[k]=buf[o++]/255;if(buf[o++]){Wt[k]=dv.getFloat32(o,true);o+=4;waterAny=waterSeen=true}
     if(H[k]!==H0[k]){const i=k%V,j=(k/V)|0;i0=Math.min(i0,i);i1=Math.max(i1,i);j0=Math.min(j0,j);j1=Math.max(j1,j);any=true}}}
   catch(e){H.set(H0);return false}
-  mtLoad(d.mt);
+  mtLoad(d.mt);craneLoad(d.cr);
   paintD.fill(0);if(typeof d.pd==='string'&&d.pd){try{const pb=siteUnB64(d.pd);let po=0,k=-1;while(po<pb.length){let g=0,sh=0,b;do{b=pb[po++];g|=(b&127)<<sh;sh+=7}while(b&128);k+=g;
     const m=pb[po]|pb[po+1]<<8;po+=2;if(k<V*V)paintD[k]=(m<<16>>16)/1000}}catch(e){paintD.fill(0)}}
   // the dug area's bounds, which water and cave-ins scan

@@ -17,9 +17,10 @@ server.listen(0,async()=>{const port=server.address().port,errs=[];
   const b=await chromium.launch({args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
   try{const p=await b.newPage({viewport:{width:800,height:500}});
     p.on('pageerror',e=>errs.push(e.message));p.on('console',m=>{if(m.type()==='error')errs.push(m.text())});
-    const t0=Date.now();await p.goto(`http://localhost:${port}/index.html`,{waitUntil:'load'});const loadMs=Date.now()-t0;
-    await p.evaluate(()=>{for(const k of Object.keys(localStorage))if(k.startsWith('bhd_'))localStorage.removeItem(k)});
-    await p.reload({waitUntil:'load'});await p.waitForTimeout(5000);
+    // no saves: cleared before the page's scripts run (a reload can stall while the page saves on its way out)
+    await p.addInitScript(()=>{for(const k of Object.keys(localStorage))if(k.startsWith('bhd_'))localStorage.removeItem(k)});
+    const t0=Date.now();await p.goto(`http://localhost:${port}/index.html`,{waitUntil:'load',timeout:120000});const loadMs=Date.now()-t0;
+    await p.waitForTimeout(5000);
     const r=await p.evaluate(()=>{let tris=0;scene.traverse(o=>{if(!o.isMesh||o.userData.shProxy)return;for(let q=o;q;q=q.parent)if(!q.visible)return;
       const g=o.geometry;let t=(g.index?g.index.count:g.attributes.position.count)/3;if(o.isInstancedMesh)t*=o.count;tris+=t});
       const E=window.EFFORT,v=E&&E.versions[E.versions.length-1];return {tris:Math.round(tris),version:v&&v.v}});
