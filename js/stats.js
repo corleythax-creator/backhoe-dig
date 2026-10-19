@@ -1,5 +1,6 @@
-// Corley's Island: the player's stats (☰ then Stats, or O): grass mowed, distance walked and driven, dirt dug and
-// hauled, time in each machine and top speeds, kept for good on this device and synced with the site. Also the lawn
+// Corley's Island: the player's stats (the Stats button, ☰ then Stats, or O): what the weather, the water and the soil are
+// doing right now; showers, lightning, runoff, pumping and dirt washed off; grass mowed, distance walked and driven, dirt
+// dug and hauled, time in each machine and top speeds, kept for good on this device and synced with the site. Also the lawn
 // heatmap (U, or from the Stats panel): times each patch of grass has been cut, how far it has grown back, and the way
 // it was last mowed, drawn as flat tiles over the patch (the grass is hidden while it is on) and in the panel. And trails:
 // where you have walked and driven, in 4 m squares, shown over the big map (maps.js) for all of it or one way of getting round.
@@ -8,7 +9,9 @@
 // distances in metres, volumes in cubic metres (bank), times in seconds, speeds in m/s; shown in feet, miles, yd³ and mph
 const STAT_KEY='bhd_stats',HEAT_KEY='bhd_heat';
 const STAT_ZERO={mowCuts:0,mowTall:0,mowLawns:0,mowBest:0,mowDist:0,mowTime:0,mowTop:0,walkDist:0,sprintDist:0,jumps:0,walkTime:0,walkTop:0,
-  exDug:0,exDumps:0,exDist:0,exTime:0,strikes:0,caves:0,trDist:0,trTime:0,trTop:0,trHauled:0,skDist:0,skTime:0,skTop:0,skMoved:0,blocks:0,since:0};
+  exDug:0,exDumps:0,exDist:0,exTime:0,strikes:0,caves:0,trDist:0,trTime:0,trTop:0,trHauled:0,skDist:0,skTime:0,skTop:0,skMoved:0,blocks:0,since:0,
+  // weather and water (rain.js, storm.js, water.js): volumes in cubic metres, the nearest strike in metres
+  showers:0,rainTime:0,rainTop:0,bolts:0,boltNear:0,wipes:0,runoff:0,runPool:0,pumped:0,seeped:0,washed:0,silt:0};
 const stats=Object.assign({},STAT_ZERO);
 // how many times each lawn cell has been cut
 const statCuts=new Uint16Array(LAWN_N);
@@ -139,13 +142,27 @@ function heatDraw(){const cv=$('#heatCv'),W=LAWN_NX*4,Hh=LAWN_NZ*4;if(cv.width!=
 const statBox=$('#statBox');
 const sFt=m=>Math.round(m/FT).toLocaleString()+' ft',sMi=m=>m/FT>=5280?(m/1609.34).toFixed(2)+' mi':sFt(m);
 const sYd=v=>(v*1.308).toFixed(1)+' yd³',sMph=v=>(v*2.237).toFixed(1)+' mph',sN=n=>Math.round(n).toLocaleString();
+// water in gallons, a little dirt in cubic feet
+const sGal=v=>sN(v*264.17)+' gal',sCf=v=>(v*35.315).toFixed(v*35.315<10?2:1)+' ft³',sPct=f=>Math.round(f*100)+'%';
+// what is going on right now: the weather, how much of the ground is soaked, the water standing and running in the dig
+function statNow(){const r=weather.r,c=weather.c;let soak=0,n=0;for(let k=0;k<rainW.length;k++)if(rainK[k]>0){n++;if(rainW[k]>0.6)soak++}
+  let pool=0,run=0,mud=0;for(let j=cJ0;j<=cJ1;j++)for(let i=cI0;i<=cI1;i++){const k=j*V+i,d=Wt[k]-H[k];if(d>0.003){pool+=d;if(Tu[k]>mud)mud=Tu[k]}run+=Rq[k]}
+  const sky=r>0.75?'Downpour':r>0.35?'Raining':r>0.05?'Light rain':c>0.6?'Clouding over':c>0.3?'Some cloud':'Clear';
+  return [['Weather',sky+(weatherWord())],['Cloud cover',sPct(c)],['Ground soaked',sPct(n?soak/n:0)],['Machines and buildings wet',sPct(wetAll)],
+    ['Water standing in the dig',sGal(pool*CA)],['Water running off now',sGal(run*CA)],['Muddiest pool',pool>0?sPct(mud):'—']]}
+const weatherWord=()=>weather.mode==='rain'?' (set to Rain)':weather.mode==='dry'?' (set to Dry)':'';
 function sTime(s){s=Math.round(s);const h=Math.floor(s/3600),m=Math.floor(s/60)%60;return h?`${h} h ${m} min`:m?`${m} min ${s%60} s`:`${s} s`}
 function statRows(){const S=stats,cellFt=LAWN_GS*LAWN_GS/(FT*FT),all=S.mowTime+S.walkTime+S.exTime+S.trTime+S.skTime;
   let cut=0,most=0;for(let n=0;n<LAWN_N;n++){if(statCuts[n])cut++;if(statCuts[n]>most)most=statCuts[n]}
-  return [['Mowing',[['Grass mowed',sN(S.mowCuts*cellFt)+' sq ft'],['Tall grass cut',sN(S.mowTall*cellFt)+' sq ft'],['Lawns finished',sN(S.mowLawns)],
+  return [['Right now',statNow()],
+    ['Weather',[['Showers',sN(S.showers)],['Time raining',sTime(S.rainTime)],['Hardest rain',S.rainTop?sPct(S.rainTop):'—'],['Lightning strikes',sN(S.bolts)],
+      ['Closest strike',S.boltNear?sMi(S.boltNear):'—'],['Wiper sweeps',sN(S.wipes)]]],
+    ['Water and runoff',[['Rain that ran off',sGal(S.runoff)],['Runoff into pools and holes',sGal(S.runPool)],['Groundwater seeped in',sGal(S.seeped)],['Water pumped out',sGal(S.pumped)]]],
+    ['Soil',[['Dirt dug',sYd(S.exDug)],['Hauled off in the truck',sYd(S.trHauled)],['Moved by the skid steer',sYd(S.skMoved)],['Washed off by running water',sCf(S.washed)],['Settled as silt',sCf(S.silt)],['Cave-ins',sN(S.caves)]]],
+    ['Mowing',[['Grass mowed',sN(S.mowCuts*cellFt)+' sq ft'],['Tall grass cut',sN(S.mowTall*cellFt)+' sq ft'],['Lawns finished',sN(S.mowLawns)],
       ['Best lawn time',S.mowBest?sTime(S.mowBest):'—'],['Patch ever mowed',Math.round(cut/LAWN_N*100)+'%'],['Most cuts on one spot',sN(most)],
       ['Mower driven',sMi(S.mowDist)],['Time mowing',sTime(S.mowTime)],['Mower top speed',sMph(S.mowTop)]]],
-    ['On foot',[['Walked',sMi(S.walkDist)],['Sprinted',sMi(S.sprintDist)],['Jumps',sN(S.jumps)],['Time on foot',sTime(S.walkTime)],['Top speed',sMph(S.walkTop)]]],
+    ['On foot',[['Walked',sMi(S.walkDist)],['Steps',sN(S.walkDist/0.76)],['Sprinted',sMi(S.sprintDist)],['Jumps',sN(S.jumps)],['Time on foot',sTime(S.walkTime)],['Top speed',sMph(S.walkTop)]]],
     ['Excavator',[['Dirt dug',sYd(S.exDug)],['Buckets dumped',sN(S.exDumps)],['Tracked',sMi(S.exDist)],['Time running it',sTime(S.exTime)],['Gas line strikes',sN(S.strikes)],['Cave-ins',sN(S.caves)]]],
     ['Dump truck',[['Hauled off',sYd(S.trHauled)],['Driven',sMi(S.trDist)],['Time driving',sTime(S.trTime)],['Top speed',sMph(S.trTop)]]],
     ['Skid steer',[['Dirt moved',sYd(S.skMoved)],['Driven',sMi(S.skDist)],['Time driving',sTime(S.skTime)],['Top speed',sMph(S.skTop)]]],
@@ -160,6 +177,7 @@ let statFillT=0;
 function showStats(on){statBox.hidden=!on;clearInterval(statFillT);
   if(on){statFill();statPanelBtns();heatDirty=true;heat.t=0;heatTick(0);statFillT=setInterval(statFill,1000)}}
 $('#statsBtn').onclick=()=>{showStats(true);showMenu(false)};
+$('#statsTop').onclick=()=>showStats(statBox.hidden);
 $('#statDone').onclick=()=>showStats(false);
 $('#heatOn').onclick=()=>setHeat(!heat.on);
 document.querySelectorAll('#statHeat [data-h]').forEach(b=>b.onclick=()=>setHeat(heat.on,b.dataset.h));

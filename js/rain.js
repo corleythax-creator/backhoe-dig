@@ -60,7 +60,9 @@ function rainTick(dt){
     weather.c+=Math.max(-dt/60,Math.min(dt/40,(weather.want>0||weather.r>0.1?1:0.18)-weather.c));
     weather.r+=Math.max(-dt*0.05,Math.min(dt*0.05,weather.want*ss(0.55,0.85,weather.c)-weather.r))}
   const raining=weather.r>0.05;
-  if(raining!==rainWas){rainWas=raining;if(raining)toast(say('rainIn'),'',3600);else if(!bench.on)toast(say('rainOut'),'',3600)}
+  // for the Stats panel (stats.js)
+  if(raining){stats.rainTime+=dt;if(weather.r>stats.rainTop)stats.rainTop=weather.r}
+  if(raining!==rainWas){rainWas=raining;if(raining){toast(say('rainIn'),'',3600);stats.showers++;statDirty=true}else if(!bench.on)toast(say('rainOut'),'',3600)}
   // once a second: soak or dry the soil, and show it
   rainT-=dt;if(rainT<=0){rainT=1;let any=weather.r>0.02;if(!any)for(let k=0;k<rainW.length;k+=7)if(rainW[k]>0){any=true;break}
     if(any){rainSim(1);rainTexDirty=true;if((rainSaveT-=1)<=0){rainSaveT=20;site.dirty=true}}}
@@ -359,7 +361,7 @@ function wsTick(dt,r){let wetMax=0;
   for(const ws of WS){const W=ws.W,run=mode===ws.mode&&wipeOn;
     // rain wets the glass, faster in a downpour; out of the rain it dries over a few minutes
     for(let k=0;k<W.length;k++)W[k]=r>0.02?W[k]+r*0.09*dt*(1-W[k]):Math.max(0,W[k]-dt/240);
-    if(run||ws.ph>0){const p0=ws.ph;ws.ph+=dt/1.5;if(ws.ph>=1)ws.ph=run?ws.ph%1:0;if(!run&&p0>0&&ws.ph<p0)ws.ph=0;
+    if(run||ws.ph>0){const p0=ws.ph;ws.ph+=dt/1.5;if(ws.ph>=1){ws.ph=run?ws.ph%1:0;stats.wipes++;statDirty=true}if(!run&&p0>0&&ws.ph<p0)ws.ph=0;
       ws.blades.forEach((b,i)=>{const a=wsAng(b,ws.ph),f0=(Math.min(a,ws.prev[i])-b.a0)/(b.a1-b.a0),f1=(Math.max(a,ws.prev[i])-b.a0)/(b.a1-b.a0);
         for(let k=Math.max(0,Math.floor(f0*WS_BINS));k<=Math.min(WS_BINS-1,Math.floor(f1*WS_BINS));k++)W[i*WS_BINS+k]=0;
         ws.prev[i]=a;b.g.rotation.z=b.s*a})}
