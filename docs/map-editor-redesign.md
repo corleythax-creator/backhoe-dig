@@ -1,6 +1,6 @@
 # Map editor redesign: analysis and plan
 
-Written at v120 (October 2026). Steps 1, 3 and 4 (the bars, On the map and selecting several) shipped together as the next version; the rest is still to do. This covers what the map editor is today from the screen's side and from the side of what it can do, then a plan to rebuild its layout around bars across the top, left and bottom, with a full asset editor (library, list, select, add, remove and more). `docs/map-editor.md` describes how the editor works inside; this file is about where it should go next. Nothing here has been built yet.
+Written at v120 (October 2026). Steps 1, 3 and 4 (the bars, On the map and selecting several) shipped together as v129; the rest is still to do. This covers what the map editor is today from the screen's side and from the side of what it can do, then a plan to rebuild its layout around bars across the top, left and bottom, with a full asset editor (library, list, select, add, remove and more). `docs/map-editor.md` describes how the editor works inside; this file is about where it should go next. Nothing here has been built yet.
 
 ## 1. Where it stands
 
