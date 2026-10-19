@@ -10,11 +10,11 @@
 // shadow edges, filmic lighting, exp brightness, tex texture size, base ground texture, detail cut faces, painted
 // materials and machine grime, macro large-scale variation, pbr relief and wet sheen on materials that have those maps, aniso, tuft grass blades [amount, full-detail distance m,
 // fade-out distance m, share kept far off], lawnFar lawn full detail within m, fog haze distance, wmFine fine puddle
-// water, treeR full-detail tree distance m, rainN raindrops, rainSp splashes where they land, splashN drops in a puddle splash, dirt the Dirt detail it sets when picked
+// water, treeR full-detail tree distance m, rainN raindrops, rainSp splashes where they land, splashN drops in a puddle splash, wakeN boat wake marks drawn, dirt the Dirt detail it sets when picked
 const GFX={
-  low:{name:'Low',pr:1.5,auto:true,fps:0,fov:0,sh:1024,shR:22,soft:false,filmic:false,exp:1,tex:'low',detail:0,base:1,macro:false,pbr:false,aniso:4,dirt:1,lawnFar:6,fog:1,wmFine:false,rainN:600,rainSp:160,splashN:250,treeR:45,tuft:[0.6,12,40,0.2]},
-  med:{name:'Medium',pr:1.5,auto:true,fps:0,fov:0,sh:2048,shR:32,soft:false,filmic:true,exp:1,tex:'med',detail:1,base:1,macro:false,pbr:false,aniso:8,dirt:2,lawnFar:15,fog:1,wmFine:true,rainN:1500,rainSp:400,splashN:600,treeR:90,tuft:[0.85,18,60,0.3]},
-  high:{name:'High',pr:2,auto:true,fps:0,fov:0,sh:4096,shR:45,soft:true,filmic:true,exp:1,tex:'high',detail:1,base:1,macro:true,pbr:true,aniso:16,dirt:4,lawnFar:1e9,fog:1,wmFine:true,rainN:3000,rainSp:900,splashN:1200,treeR:160,tuft:[1,25,80,0.35]}};
+  low:{name:'Low',pr:1.5,auto:true,fps:0,fov:0,sh:1024,shR:22,soft:false,filmic:false,exp:1,tex:'low',detail:0,base:1,macro:false,pbr:false,aniso:4,dirt:1,lawnFar:6,fog:1,wmFine:false,rainN:600,rainSp:160,splashN:250,wakeN:140,treeR:45,tuft:[0.6,12,40,0.2]},
+  med:{name:'Medium',pr:1.5,auto:true,fps:0,fov:0,sh:2048,shR:32,soft:false,filmic:true,exp:1,tex:'med',detail:1,base:1,macro:false,pbr:false,aniso:8,dirt:2,lawnFar:15,fog:1,wmFine:true,rainN:1500,rainSp:400,splashN:600,wakeN:300,treeR:90,tuft:[0.85,18,60,0.3]},
+  high:{name:'High',pr:2,auto:true,fps:0,fov:0,sh:4096,shR:45,soft:true,filmic:true,exp:1,tex:'high',detail:1,base:1,macro:true,pbr:true,aniso:16,dirt:4,lawnFar:1e9,fog:1,wmFine:true,rainN:3000,rainSp:900,splashN:1200,wakeN:640,treeR:160,tuft:[1,25,80,0.35]}};
 let gfxKey='high',gfxOver={},gfxCur=Object.assign({},GFX.high);
 function gfxName(){return GFX[gfxKey].name+(Object.keys(gfxOver).length?' (custom)':'')}
 function gfxGuess(){if(PHONE)return 'low';
@@ -47,6 +47,8 @@ function gfxApply(){const g=gfxCur=Object.assign({},GFX[gfxKey],gfxOver);
   rainGfx(g.rainN,g.rainSp);
   // drops in the splash when something goes through a puddle (mud.js); the puddle itself is the same
   splashGfx(g.splashN);
+  // boat wake marks drawn (boats.js); the wakes themselves are the same
+  if(typeof wakeGfx==='function')wakeGfx(g.wakeN);
   // field of view and haze (effects.js, rain.js)
   gfxFov=g.fov;gfxFog=g.fog;scene.fog.far=760*g.fog;if(typeof resize==='function')resize();
   if(typeof gfxPanelSync==='function')gfxPanelSync()}
@@ -95,7 +97,8 @@ const GFX_ROWS=[
   {id:'wmFine',label:'Puddle water',hint:'Fine water with sky reflections, or simple.',opts:[[true,'Fine'],[false,'Simple']]},
   {id:'rainN',label:'Raindrops',opts:[[0,'Off'],[600,'600'],[1500,'1500'],[3000,'3000'],[6000,'6000']]},
   {id:'rainSp',label:'Rain splashes',hint:'Spray and spreading rings where the drops land near you.',opts:[[0,'Off'],[160,'160'],[400,'400'],[900,'900'],[1800,'1800']]},
-  {id:'splashN',label:'Puddle splash',opts:[[0,'Off'],[250,'250'],[600,'600'],[1200,'1200'],[2400,'2400']]}];
+  {id:'splashN',label:'Puddle splash',opts:[[0,'Off'],[250,'250'],[600,'600'],[1200,'1200'],[2400,'2400']]},
+  {id:'wakeN',label:'Boat wakes',opts:[[0,'Off'],[140,'140'],[300,'300'],[640,'640']]}];
 function camFovBase(){return innerWidth<innerHeight?68:58}
 // grass blades are one array in GFX; the panel shows its amount and distance, the fade-out distance follows
 function gfxGet(id){const g=gfxCur;if(id==='tuftA')return g.tuft[0];if(id==='tuftR')return g.tuft[1];if(id==='dirt')return DIRT;return g[id]}

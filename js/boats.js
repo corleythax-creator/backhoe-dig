@@ -94,13 +94,15 @@ function btOut(b){const sy=Math.sin(b.yaw),cy=Math.cos(b.yaw),gap=BT_B/2+WK_R+0.
 const btWallList=[];
 function btWalls(){btWallList.length=0;for(const w of BOAT_WALLS)btWallList.push(w);
   for(const s of crnSpans)for(const w of s.st.visible?s.stW:s.trW)btWallList.push(w);
+  // the boats out on the lake (lakeboats.js), a line down each hull
+  for(const o of lakeBoats){const sy=Math.sin(o.yaw)*o.hl,cy=Math.cos(o.yaw)*o.hl;btWallList.push({ax:o.x-sy,az:o.z-cy,bx:o.x+sy,bz:o.z+cy,r:o.hb})}
   const p=crnBarge.position,y=crnBarge.rotation.y,sy=Math.sin(y)*13,cy=Math.cos(y)*13;btWallList.push({ax:p.x-sy,az:p.z-cy,bx:p.x+sy,bz:p.z+cy,r:6.2});
   return btWallList}
 // the ground under a hull, not counting decks (it runs under the docks and bridges, not onto them)
 function btGround(x,z){return farGround?farGround(x,z):baseHeight(x,z)}
 // thr: throttle (+ ahead), steer (+ right). Idle boats bob where they are left
 function boatTick(dt,thr,steer){
-  for(let i=0;i<boats.length;i++){const b=boats[i],drive=mode==='boat'&&btI===i&&wk.inside==='boat'+i&&!bench.on,th=drive?thr:0,sr=drive?steer:0;
+  for(let i=0;i<boats.length;i++){const b=boats[i],drive=mode==='boat'&&btI===i&&wk.inside==='boat'+i&&!bench.on,th=drive?thr:0,sr=drive?steer:0;b.thr=th;
     const sy=Math.sin(b.yaw),cy=Math.cos(b.yaw),h=BT_L/2-0.4;
     const bx=b.x+sy*h,bz=b.z+cy*h,sx=b.x-sy*h,sz=b.z-cy*h,wB=lakeY(bx,bz),wS=lakeY(sx,sz),gB=btGround(bx,bz),gS=btGround(sx,sz),gM=btGround(b.x,b.z);
     // how much of the hull sits on the bottom (a beach): there it only creeps, as if shoved along, and comes to a stop a
@@ -126,11 +128,11 @@ function boatTick(dt,thr,steer){
     // how it sits: afloat on the swells, or with its keel on the sand; bow lifts when it is going fast, leans into turns
     const yB=Math.max(wB,gB+BT_DRAFT),yS=Math.max(wS,gS+BT_DRAFT),wP=lakeY(b.x-cy*BT_B/2,b.z+sy*BT_B/2),wR=lakeY(b.x+cy*BT_B/2,b.z-sy*BT_B/2),plane=ss(2,7,b.v)*(1-sand);
     const ty=(yB+yS)/2+0.06*plane,tp=Math.atan2(yB-yS,2*h)+0.09*plane-0.05*ss(7,14,b.v)*(1-sand),tr=(wR-wP)/BT_B*0.7*(1-sand)+sr*0.12*ss(1,8,b.v);
-    const k=Math.min(1,dt*5);b.y+=(ty-b.y)*k;b.pitch+=(tp-b.pitch)*k;b.roll+=(tr-b.roll)*k;
-    b.g.position.set(b.x,b.y,b.z);b.g.rotation.set(-b.pitch,b.yaw,b.roll,'YXZ');
-    // a wake: rings off the stern and spray off the bow while it is moving in the water
+    const k=Math.min(1,dt*5);b.y+=(ty-b.y)*k;b.pitch+=(tp-b.pitch)*k;b.roll+=(tr-b.roll)*k;btRock(b,dt);
+    b.g.position.set(b.x,b.y,b.z);b.g.rotation.set(-b.pitch,b.yaw,b.roll+b.rk*(1-sand),'YXZ');
+    // its wake (wakeEmit), and spray off the bow at speed
+    if(sand<0.5)wakeEmit(b,dt,sx-sy*0.3,sz-cy*0.3,i);
     if(Math.abs(b.v)>1&&sand<0.5){const r=dt*Math.min(6,Math.abs(b.v));
-      if(Math.random()<r)spRing(sx-sy*0.3,wS,sz-cy*0.3,0.8+0.12*Math.abs(b.v));
       if(b.v>4&&Math.random()<r*1.5)for(const sd of [-1,1]){const a=Math.random()*0.4;spDrop(bx-sy*0.6+sd*cy*0.6,wB+0.05,bz-cy*0.6-sd*sy*0.6,sd*cy*(1.2+a)-sy*0.5,1+Math.random()*1.2,-sd*sy*(1.2+a)-cy*0.5,0.04+Math.random()*0.04)}}
   }
   // the worker at the helm: seated behind the console, hands on the wheel
@@ -140,3 +142,47 @@ function boatTick(dt,thr,steer){
     for(let s=0;s<2;s++){wkLegs[s].top.rotation.x=-1.45;wkLegs[s].low.rotation.x=1.4;wkArms[s].top.rotation.x=-0.9;wkArms[s].low.rotation.x=-0.5}}
   else if(walker.rotation.x||walker.rotation.z)walker.rotation.set(0,walker.rotation.y,0,'XYZ')}
 const btV=new THREE.Vector3();
+// a hull rocked by a passing wave: a damped swing about its keel, added to its roll (rk, rkv)
+function btRock(b,dt){const rk=b.rk||0,rv=b.rkv||0;b.rkv=rv+(-rk*9-rv*1.4)*dt;b.rk=rk+b.rkv*dt}
+// ---------- wakes ----------
+// a moving boat lays down wake marks every eighth of a second: a pair off the stern that drift out sideways at about a
+// third of its speed while it runs on, which spreads them into a V about 19° each side (as a real Kelvin wake is), and a
+// churned trail behind the propeller. They fade over several seconds; a wave that reaches another hull rocks it (btRock),
+// and one that runs into shallow water breaks in a ring of foam. What the marks do is the same on every device; the
+// Graphics setting picks how many of the newest are drawn (wakeN, gfx.js)
+const WAKE_MAX=640,wkX=new Float32Array(WAKE_MAX),wkZ=new Float32Array(WAKE_MAX),wkVX=new Float32Array(WAKE_MAX),wkVZ=new Float32Array(WAKE_MAX),
+  wkYaw=new Float32Array(WAKE_MAX),wkAge=new Float32Array(WAKE_MAX).fill(99),wkLife=new Float32Array(WAKE_MAX).fill(1),wkK=new Float32Array(WAKE_MAX),
+  wkTrail=new Uint8Array(WAKE_MAX),wkOwn=new Int16Array(WAKE_MAX),wkHit=new Uint32Array(WAKE_MAX);
+let wakeHead=0,wakeDraw=260,wakeFrame=0;
+// b: the boat (x, z, yaw, v; its own clock in wakeT), sx, sz: its stern, own: who laid it (a hull its own wake doesn't rock)
+function wakeEmit(b,dt,sx,sz,own){const sp=Math.abs(b.v);if(sp<0.8){b.wakeT=0;return}
+  b.wakeT=(b.wakeT||0)+dt;if(b.wakeT<0.125)return;b.wakeT=0;
+  const k=ss(0.8,7,sp)*(b.wakeK||1),px=Math.cos(b.yaw),pz=-Math.sin(b.yaw),out=sp*0.34,back=b.yaw+Math.PI;
+  for(const sd of [-1,1,0]){const i=wakeHead;wakeHead=(wakeHead+1)%WAKE_MAX;
+    wkX[i]=sx+px*sd*0.6;wkZ[i]=sz+pz*sd*0.6;wkVX[i]=px*sd*out;wkVZ[i]=pz*sd*out;wkYaw[i]=back-sd*0.33*Math.sign(b.v);
+    wkAge[i]=0;wkLife[i]=sd?6+3*k:3.5;wkK[i]=sd?k:k*0.8;wkTrail[i]=sd?0:1;wkOwn[i]=own;wkHit[i]=0}}
+const wakeTex=(()=>{const c=document.createElement('canvas');c.width=64;c.height=32;const g=c.getContext('2d'),r=g.createRadialGradient(32,16,1,32,16,30);
+  r.addColorStop(0,'rgba(255,255,255,0.9)');r.addColorStop(0.45,'rgba(235,245,250,0.45)');r.addColorStop(1,'rgba(255,255,255,0)');g.setTransform(1,0,0,0.5,0,8);g.fillStyle=r;g.fillRect(0,0,64,64);
+  g.setTransform(1,0,0,1,0,0);for(let n=0;n<90;n++){g.fillStyle='rgba(255,255,255,'+(0.2+Math.random()*0.4)+')';g.fillRect(8+Math.random()*48,6+Math.random()*20,1+Math.random()*2,1)}
+  return new THREE.CanvasTexture(c)})();
+const wakeMesh=new THREE.InstancedMesh(new THREE.PlaneGeometry(1,1).rotateX(-Math.PI/2),
+  new THREE.MeshBasicMaterial({map:wakeTex,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,color:0xe8f0f2}),WAKE_MAX);
+wakeMesh.frustumCulled=false;wakeMesh.count=0;wakeMesh.renderOrder=2;scene.add(wakeMesh);
+const wakeO=new THREE.Object3D(),wakeC=new THREE.Color();
+function wakeGfx(n){wakeDraw=Math.min(WAKE_MAX,n|0)}
+wakeGfx(gfxCur.wakeN??260);
+// hulls: the boats the waves can rock, each {x, z, rk, rkv}, and its own index for wkOwn
+function wakeTick(dt,hulls){wakeFrame++;let n=0;
+  for(let j=0;j<WAKE_MAX;j++){const i=(wakeHead-1-j+WAKE_MAX*2)%WAKE_MAX;if(wkAge[i]>=wkLife[i])continue;
+    wkAge[i]+=dt;const a=wkAge[i],f=a/wkLife[i];if(f>=1)continue;
+    const dmp=Math.exp(-dt*0.25);wkVX[i]*=dmp;wkVZ[i]*=dmp;wkX[i]+=wkVX[i]*dt;wkZ[i]+=wkVZ[i]*dt;
+    // shallow water breaks it (a quarter of the marks checked each frame)
+    if((i&3)===(wakeFrame&3)&&btGround(wkX[i],wkZ[i])>WATER-0.35){if(!wkTrail[i]&&wkK[i]>0.3&&Math.random()<0.5)spRing(wkX[i],lakeY(wkX[i],wkZ[i]),wkZ[i],0.8+wkK[i]);wkAge[i]=wkLife[i];continue}
+    // a wave front reaching a hull rocks it, once
+    if(!wkTrail[i])for(let h=0;h<hulls.length;h++){const o=hulls[h];if(h===wkOwn[i]&&a<2.5)continue;if(wkHit[i]&(1<<h))continue;
+      const dx=wkX[i]-o.x,dz=wkZ[i]-o.z;if(dx*dx+dz*dz<(o.hr||3)*(o.hr||3)){wkHit[i]|=1<<h;o.rkv=(o.rkv||0)+wkK[i]*(1-f)*0.55*(Math.random()<0.5?-1:1)}}
+    if(n>=wakeDraw)continue;
+    const k=wkK[i]*(1-f)*(1-f)*Math.min(1,a*4),len=wkTrail[i]?3+3.5*f:2.6+4*f,wid=wkTrail[i]?1.3+2.2*f:0.7+1.4*f;
+    wakeO.position.set(wkX[i],lakeY(wkX[i],wkZ[i])+0.05,wkZ[i]);wakeO.rotation.set(0,wkYaw[i],0);wakeO.scale.set(wid,1,len);wakeO.updateMatrix();
+    wakeMesh.setMatrixAt(n,wakeO.matrix);wakeMesh.setColorAt(n,wakeC.setScalar(k*(wkTrail[i]?0.75:1)));n++}
+  wakeMesh.count=n;if(n){wakeMesh.instanceMatrix.needsUpdate=true;if(wakeMesh.instanceColor)wakeMesh.instanceColor.needsUpdate=true}}

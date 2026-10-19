@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-19T16:51:00Z",
+ "updated": "2026-10-19T16:54:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -30,9 +30,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-19",
-   "dh": 62,
+   "dh": 71,
    "act": 2.5,
-   "versions": 9
+   "versions": 10
   }
  ],
  "extra": [
@@ -1464,6 +1464,15 @@ window.EFFORT = {
    "tris": 3031283,
    "chars": 1039153,
    "what": "Map editor shows exactly where you are looking and Copy view gives a code to paste to Claude, who opens headless shots at that exact camera"
+  },
+  {
+   "v": 159,
+   "asked": "2026-10-19T11:35:00-05:00",
+   "live": "2026-10-19T11:54:57-05:00",
+   "dh": 9,
+   "tris": 3032960,
+   "chars": 1056925,
+   "what": "Boats sound real (an outboard that revs with the throttle, hull slap, water rushing by), leave a spreading V wake that rocks other boats, and the lake has company: fishing boats, sailboats and a tug pushing a spoil barge that give way to you and blow the horn at the docks."
   }
  ]
 };
