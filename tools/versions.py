@@ -57,6 +57,9 @@ def main():
     last = {}
     for line in log:
         sha, when, subject = line.split(' ', 2)
+        # a version's own "vN: playable snapshot" commit only adds versions/; the version is the commit before it
+        if subject.endswith(': playable snapshot'):
+            continue
         v = version_of(sha, subject)
         if v:
             last[v] = (sha, when)
