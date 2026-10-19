@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-19T03:24:00Z",
+ "updated": "2026-10-19T03:31:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -24,9 +24,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-18",
-   "dh": 235,
-   "act": 4.5,
-   "versions": 31
+   "dh": 242,
+   "act": 5,
+   "versions": 32
   }
  ],
  "extra": [
@@ -1287,6 +1287,15 @@ window.EFFORT = {
    "tris": 2968517,
    "chars": 875501,
    "what": "Add in the map editor places things One at a time, by Stamp, along a Line (fence runs end to end, cone lines at a spacing) or with a Scatter brush that plants woods and boulders at a spacing and density, or erases them."
+  },
+  {
+   "v": 140,
+   "asked": "2026-10-18T22:21:00-05:00",
+   "live": "2026-10-18T22:31:19-05:00",
+   "dh": 7,
+   "tris": 2968231,
+   "chars": 881960,
+   "what": "Dig on the Family Island, Dexter's and Jessica's too; buildings and bridge ends can't be dug under, and trees fall when their roots are dug out"
   }
  ]
 };
