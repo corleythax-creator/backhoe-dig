@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-19T02:50:00Z",
+ "updated": "2026-10-19T02:56:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -24,9 +24,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-18",
-   "dh": 181,
+   "dh": 181.5,
    "act": 4,
-   "versions": 23
+   "versions": 24
   }
  ],
  "extra": [
@@ -1215,6 +1215,15 @@ window.EFFORT = {
    "tris": 1919017,
    "chars": 820471,
    "what": "Machine dropdown renamed Drive; a Controls button opens a panel listing every keyboard key (the player's own), mouse, touch and controller input"
+  },
+  {
+   "v": 132,
+   "asked": "2026-10-18T21:45:00-05:00",
+   "live": "2026-10-18T21:56:29-05:00",
+   "dh": 0.5,
+   "tris": 1918697,
+   "chars": 820447,
+   "what": "The Turn slider moved from the bottom bar into the Controls panel, showing the machine it sets"
   }
  ]
 };
