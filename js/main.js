@@ -99,7 +99,7 @@ function frame(now){
   // soil at the teeth sets how hard the arm works; a full bucket pushing on barely moves
   {const ti=Math.max(0,Math.min(N,Math.round(gI(tip.x)))),tj=Math.max(0,Math.min(N,Math.round(gJ(tip.z))));
     st.soil=st.below?matAt(tj*V+ti,tip.y):-1;
-    st.res=st.soil<0?1:(st.soil<4?TU[SOIL_TU[st.soil]]:SOIL[st.soil].h)*(st.load>=TU.exCap-0.002?0.5:1);
+    st.res=st.soil<0?1:soilRes(tj*V+ti,tip.y)*(st.load>=TU.exCap-0.002?0.5:1);
     if(st.soil===2&&!st.seenSand){st.seenSand=true;toast(say('sand'),'',3200)}
     if(st.soil===3&&!st.seenRock){st.seenRock=true;toast(say('rock'),'',3000)}
     st.rumT-=dt;if(padUsed&&st.soil>=0&&st.rumT<=0&&(Math.abs(swingIn)+Math.abs(stickIn)+Math.abs(boomIn)+Math.abs(bucketIn))>0.1){st.rumT=0.12;rumble(140,0.15+0.55*(1-SOIL[st.soil].h))}}

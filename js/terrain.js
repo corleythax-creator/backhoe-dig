@@ -22,7 +22,7 @@ digTilesSet();
 const digSkirtRects=[];
 // the dig tile under x, z, or null off the grid
 function digTileAt(x,z){if(!inDig(x,z))return null;const a=Math.min(TPG-1,Math.floor((x-GX0)/TILE)),b=Math.min(TPG-1,Math.floor((z-GZ0)/TILE));return DIG_TILES[b*TPG+a]}
-const H=new Float32Array(V*V),H0=new Float32Array(V*V),grass=new Float32Array(V*V*3),matCov=new Float32Array(V*V),mudBase=new Float32Array(V*V),paintD=new Float32Array(V*V),paint=new Uint8Array(V*V),nz=new Float32Array(V*V),rockA=new Float32Array(V*V);
+const H=new Float32Array(V*V),H0=new Float32Array(V*V),grass=new Float32Array(V*V*3),matCov=new Float32Array(V*V),mudBase=new Float32Array(V*V),paintD=new Float32Array(V*V),ripD=new Float32Array(V*V),paint=new Uint8Array(V*V),nz=new Float32Array(V*V),rockA=new Float32Array(V*V);
 const ss=(a,b,x)=>{const t=Math.min(1,Math.max(0,(x-a)/(b-a)));return t*t*(3-2*t)};
 const hash=(i,j)=>{const s=Math.sin(i*127.1+j*311.7)*43758.5453;return s-Math.floor(s)};
 // ---------- map edits ----------
@@ -588,6 +588,9 @@ function layerAt(x,z,d,nn,h0){
 }
 // material at height y over grid vertex k: loose fill above original grade, a native layer below
 function matAt(k,y){const d=H0[k]-y;return d<0?SPOIL:layerAt(gX((k%V)),gZ(((k/V)|0)),d,nz[k],H0[k])}
+// how readily the ground at height y over vertex k gives (the excavator's res: 1 easy, rock about a tenth): loose fill,
+// and ground the dozer's ripper has broken up (ripD: how far under the undug ground it reached, heavy.js), give like fill
+function soilRes(k,y){const m=H0[k]-y<=ripD[k]?SPOIL:matAt(k,y);return m<4?TU[SOIL_TU[m]]:SOIL[m].h}
 function matColor(k,m){return m===SPOIL?[spoilC[k*3],spoilC[k*3+1],spoilC[k*3+2]]:SOIL[m].c}
 // blend material of colour c and height a into the loose fill on vertex k
 function mixSpoil(k,c,a){const above=H[k]-H0[k];if(above<=0||a<=0)return;const f=Math.min(1,a/above);
