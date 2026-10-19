@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-19T01:57:00Z",
+ "updated": "2026-10-19T02:07:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -24,9 +24,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-18",
-   "dh": 109,
-   "act": 3,
-   "versions": 12
+   "dh": 116,
+   "act": 3.5,
+   "versions": 13
   }
  ],
  "extra": [
@@ -1116,6 +1116,15 @@ window.EFFORT = {
    "tris": 1912702,
    "chars": 740639,
    "what": "The mainland draws about 97,000 fewer triangles (coarser far ground, more pines in the woods) for the same look"
+  },
+  {
+   "v": 121,
+   "asked": "2026-10-18T20:45:00-05:00",
+   "live": "2026-10-18T21:07:16-05:00",
+   "dh": 7,
+   "tris": 1913595,
+   "chars": 750767,
+   "what": "Rain stays off whatever is under a roof: cabs, porches, the pavilion, sheds, bridges, placed buildings and blocks, and splashes on the roofs instead. Drops bead and run down the excavator and truck windscreens; the new Wipers button (Space) sweeps them off."
   }
  ]
 };
