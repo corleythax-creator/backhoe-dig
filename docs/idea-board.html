@@ -109,6 +109,23 @@ tr.done td{opacity:.6}
 .rin{width:2.6em;height:34px;text-align:center;font:400 17px var(--f-disp);color:var(--amber);background:var(--panel-solid);border:1px solid rgba(255,225,170,.3);border-radius:8px;padding:0}
 .rin::placeholder{color:#6d6150}
 .rin:disabled{opacity:.6;color:var(--s)}
+.ngrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px}
+.ncard{border:1px solid var(--line);border-radius:12px;padding:10px 12px;background:rgba(10,8,5,.3)}
+.ncard h3,.tk h3{font:600 15px var(--f-disp);margin:0 0 2px;color:var(--gold)}
+.ncard .sub{color:var(--muted);font-size:12px;margin-bottom:6px}
+.xr{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 10px;padding:7px 0;border-top:1px solid var(--line);align-items:center}
+.xr .xt{font-weight:600;font-size:14px}.xr .xt span{color:var(--gc,var(--s));font-weight:700;font-size:12px;margin-right:6px}
+.xr .xs{grid-column:1/-1;color:var(--muted);font-size:12px}
+.xr .xs b{color:var(--m);font-weight:600}
+.xr.next{background:rgba(245,184,0,.1);border-radius:8px;padding-left:8px;padding-right:8px}
+.xr.blocked .xt{opacity:.6}.xr.built .xt{opacity:.6;text-decoration:line-through}
+.rbtn{font:inherit;font-size:12px;font-weight:700;border-radius:999px;padding:3px 10px;border:1px solid var(--amber);background:none;color:var(--amber);cursor:pointer;white-space:nowrap}
+.rbtn:disabled{opacity:.5;border-color:var(--line);color:var(--muted);cursor:default}
+.tkh{display:flex;flex-wrap:wrap;align-items:baseline;gap:4px 12px;margin-top:14px}
+.tkh .tkp{color:var(--s);font-size:13px;font-weight:600}
+.tkb{height:7px;border-radius:4px;background:var(--bar-bg);overflow:hidden;margin:4px 0 2px;max-width:420px}
+.tkb i{display:block;height:100%;background:var(--s)}
+.tkd{color:var(--muted);font-size:13px;max-width:70ch}
 .wip h3{font:600 15px var(--f-disp);margin:10px 0 4px;display:flex;align-items:center;gap:8px;color:var(--gc)}
 .wip h3 small{color:var(--s);font-size:12px;font-weight:400}
 .wrow{display:grid;grid-template-columns:minmax(0,1fr) 120px;gap:4px 14px;padding:8px 0;border-top:1px solid var(--line)}
@@ -207,6 +224,8 @@ tr.on .rin{background:var(--amber);color:var(--amber-ink);border-color:var(--amb
     <div class="tgl">
       <button class="tbtn" data-p="pfil" aria-expanded="false">Filters <span id="fcount" class="badge" hidden></span></button>
       <button class="tbtn" data-p="pwip" aria-expanded="false">In progress <span id="wipn" class="badge"></span></button>
+      <button class="tbtn" data-p="pnext" aria-expanded="false">Next up</button>
+      <button class="tbtn" data-p="ptracks" aria-expanded="false">Tracks</button>
       <button class="tbtn" data-p="pgsum" aria-expanded="false">Totals</button>
       <button class="tbtn" data-p="phelp" aria-expanded="false">Help</button>
     </div>
@@ -230,6 +249,16 @@ tr.on .rin{background:var(--amber);color:var(--amber-ink);border-color:var(--amb
   <div class="panel wip" id="pwip" hidden>
     <div class="frow"><label>Category <select id="wipg"><option value="">All categories</option></select></label><label>Sort <select id="wips"><option value="cat">By category, most complete first</option><option value="hi">Most complete first</option><option value="lo">Least complete first</option></select></label><span class="wipsum" id="wipsum"></span></div>
     <div id="wipb"></div>
+  </div>
+
+  <div class="panel nx" id="pnext" hidden>
+    <p class="hint">What to send Claude next. Ideas you have hidden are left out. Tap + Rank to add one to your ranked list.</p>
+    <div class="ngrid" id="nxb"></div>
+  </div>
+
+  <div class="panel tk" id="ptracks" hidden>
+    <p class="hint">Groups of ideas that add up to one thing you can play. Each runs in build order; the highlighted one is the next to build.</p>
+    <div id="tkb"></div>
   </div>
 
   <div class="panel gsum" id="pgsum" hidden>
@@ -766,6 +795,59 @@ function renderWip(){
 }
 {const ws=$("wipg");for(const k of Object.keys(G)){const n=I.filter(r=>r[1]===k&&DONE[r[0]]&&DONE[r[0]].part).length;if(!n)continue;const o=document.createElement("option");o.value=k;o.textContent=G[k]+" ("+n+")";ws.appendChild(o)}
  ws.addEventListener("change",renderWip);$("wips").addEventListener("change",renderWip);$("wipn").textContent=I.filter(r=>DONE[r[0]]&&DONE[r[0]].part).length;renderWip()}
+const TRACKS=[["pipe","Pipeline job","Lay a real pipeline: pipelayer, valves, tests, a bore under the road and a pump station at the end.",["J04","M27","U14","U12","U11","J22","J21","U15","S29","M29","U10"]],["road","Build a road","Stake it, cut and fill, crown and drain it, test the compaction, pave and stripe it.",["J06","J37","J05","M07","M06","J26","J25","J38","J27","J04","J29","J23","B18","B20"]],["quarry","Quarry and mining","Drill and blast a bench, load haul trucks, crush and stockpile stone, sell it by the ton, reclaim the pit.",["S03","D16","M34","J40","D17","M36","M35","J43","M32","M38","J45","J16","J46","J44","J48"]],["farm","Farm, field and woods","Mow the big hayfield, bale hay, and ride ATVs and side-by-sides through woods you can explore.",["M19","M25","K14","K15","M26","I32","M24","S24","S25","S26","S27","S28","S32","S33"]],["cozy","Cozy lake life","Sauna, fish fry, porch picking, mist, stars and the neighbors: the down-home feel of the lake.",["H01","H08","H21","H22","H26","H31","W12","W14","W15","A09","L09","S34","H25","I33"]],["rail","Trains and traffic","Busy road, trains on the shore, a rail crossing with gates, track work and a ride to town.",["B11","B12","B13","B14","B15","B16"]],["fleet","The yard fleet","Drive the loader and dozer, haul with the articulated truck, fuel and fix the machines.",["M02","M03","M05","M06","M07","M09","M10","M11","M16","X16","Y14"]],["excav","Excavator craft","Couplers, thumb and hammer, tilt, grade guides, GPS control and a machine that tips and wears.",["X01","X02","X03","X07","X12","X13","X15","X14","X09","X17","X18"]],["wet","Weather and wet ground","Rain you can see land, storms, mud, groundwater, erosion and the drainage that answers them.",["W01","W09","W03","W05","W08","W13","D02","D13","D15","J19","J34","J35","J39"]],["fam","Family Island life","The islands, the ferry, the family and the evenings together.",["I01","I02","I03","I04","I06","I07","I16","I17","I21","I28"]],["biz","Business and simulation","Work orders, money, bids, supplies and the ladder of operator skill.",["R02","J01","J15","J24","T04","T14","T06","Y13"]]];
+
+// ---- Next up and Tracks: what to build next, from the built marks and the "needs" links ----
+const stOf=id=>{const d=DONE[id];return d?(d.part?"part":"built"):"open"};
+const builtId=id=>stOf(id)==="built";
+const blockedBy=r=>N(r).dp.filter(d=>IDS.has(d)&&!builtId(d));
+function addPick(id){picks.add(id);hid.delete(id);save();render()}
+function rankBtn(r){const b=el("button","rbtn",picks.has(r[0])?"Ranked":"+ Rank");b.type="button";b.disabled=picks.has(r[0]);b.setAttribute("aria-label","Rank "+r[2]);b.addEventListener("click",()=>addPick(r[0]));return b}
+function xrow(r,o){o=o||{};const id=r[0],s=stOf(id),bl=blockedBy(r),w=el("div","xr"+(s==="built"?" built":bl.length?" blocked":"")+(o.next?" next":""));
+  w.style.setProperty("--gc",GC[r[1]]);
+  const t=el("div","xt");t.append(el("span",null,id),r[2]);
+  const sub=el("div","xs");
+  if(s==="built")sub.textContent="Built "+DONE[id].d;
+  else if(s==="part")sub.append("Started, "+(DONE[id].pc!=null?DONE[id].pc+"% done. ":"")+(DONE[id].n||""));
+  else{sub.append(COST[N(r).c][0]+" · ~"+r[9]+" h · priority "+prio(r));if(bl.length){const b=el("b",null," · waits on "+bl.map(d=>d+" "+IDS.get(d)[2]).join(", "));sub.appendChild(b)}}
+  if(o.extra){sub.appendChild(document.createTextNode(" "));const e=el("b",null,o.extra);sub.appendChild(e)}
+  w.append(t,s==="built"?el("span"):rankBtn(r),sub);return w}
+// unbuilt ideas that depend on each idea, directly or through others
+let kids=null;
+function kidsMap(){const m=new Map();for(const r of I)for(const d of N(r).dp){if(!m.has(d))m.set(d,[]);m.get(d).push(r[0])}return m}
+function unlocks(id,seen){seen=seen||new Set();for(const k of kids.get(id)||[]){if(!seen.has(k)){seen.add(k);if(!builtId(k))unlocks(k,seen)}}return [...seen].filter(k=>!builtId(k))}
+function nextOf(list){return list.map(i=>IDS.get(i)).find(r=>r&&stOf(r[0])!=="built"&&!blockedBy(r).length)}
+function renderNext(){
+  const b=$("nxb");b.textContent="";kids=kidsMap();
+  const open=I.filter(r=>stOf(r[0])==="open"&&!hid.has(r[0])),ready=open.filter(r=>!blockedBy(r).length);
+  const card=(h,sub,rows)=>{const c=el("div","ncard");c.append(el("h3",null,h),el("div","sub",sub));if(!rows.length)c.appendChild(el("div","empty","Nothing here right now."));rows.forEach(x=>c.appendChild(x));b.appendChild(c)};
+  // 1 unlockers
+  const ul=I.filter(r=>stOf(r[0])!=="built"&&!hid.has(r[0])).map(r=>({r,u:unlocks(r[0])})).filter(x=>x.u.length).sort((x,y)=>y.u.length-x.u.length||prio(y.r)-prio(x.r)).slice(0,8);
+  card("Unlockers","Building these opens the most other ideas.",ul.map(x=>xrow(x.r,{extra:" · unlocks "+x.u.length+": "+x.u.slice(0,3).map(i=>IDS.get(i)[2]).join(", ")+(x.u.length>3?"…":"")})));
+  // 2 finish
+  const part=I.filter(r=>stOf(r[0])==="part").sort((x,y)=>(DONE[y[0]].pc||0)-(DONE[x[0]].pc||0)).slice(0,8);
+  card("Finish what is started","Partly built, furthest along first.",part.map(r=>xrow(r)));
+  // 3 quick wins
+  const qw=ready.filter(r=>N(r).c===1).sort((x,y)=>prio(y)-prio(x)||x[9]-y[9]).slice(0,8);
+  card("Quick wins","One session each, nothing in the way, best priority first.",qw.map(r=>xrow(r)));
+  // 4 best ready
+  const br=ready.sort((x,y)=>prio(y)-prio(x)).slice(0,8);
+  card("Best ready now","Nothing in the way, highest priority first.",br.map(r=>xrow(r)));
+  // 5 next in each track
+  const nt=[];for(const [k,n,d,list] of TRACKS){const r=nextOf(list);if(r&&!hid.has(r[0]))nt.push(xrow(r,{extra:" · "+n}))}
+  card("Next step in each track","The first thing still open in every track.",nt)
+}
+function renderTracks(){
+  const b=$("tkb");b.textContent="";
+  for(const [k,n,d,list] of TRACKS){
+    const rows=list.map(i=>IDS.get(i)),tot=rows.length,pt=rows.reduce((a,r)=>a+(stOf(r[0])==="built"?1:stOf(r[0])==="part"?(DONE[r[0]].pc||0)/100:0),0),nb=rows.filter(r=>stOf(r[0])==="built").length;
+    const nx=nextOf(list),hr=rows.filter(r=>stOf(r[0])!=="built").reduce((a,r)=>a+r[9],0);
+    const hd=el("div","tkh");hd.append(el("h3",null,n),el("span","tkp",nb+" of "+tot+" built · "+Math.round(pt/tot*100)+"%"),el("span","tkp",hr?"~"+hr+" h left":"all built"));
+    const bar=el("div","tkb"),bi=el("i");bi.style.width=Math.round(pt/tot*100)+"%";bar.appendChild(bi);
+    b.append(hd,bar,el("div","tkd",d));
+    for(const r of rows)b.appendChild(xrow(r,{next:nx&&nx[0]===r[0]}))}
+}
+function renderPanels(){if(!$("pnext").hidden)renderNext();if(!$("ptracks").hidden)renderTracks()}
 let gK="pr",gD=-1;
 document.querySelectorAll("th button[data-gk]").forEach(b=>b.addEventListener("click",()=>{const k=b.dataset.gk;if(gK===k)gD=-gD;else{gK=k;gD=k==="g"?1:-1}groupTable()}));
 function agg(rows){const n=rows.length,ns=rows.map(N),h=rows.reduce((a,r)=>a+hrs(r),0);return{n,pk:rows.filter(r=>picks.has(r[0])).length,ses:rows.reduce((a,r,i)=>a+COST[ns[i].c][1],0),pc:h,
@@ -784,7 +866,7 @@ $("plan").addEventListener("change",()=>{PL=$("plan").value;if(PL!=="c"){WK=+PL;
 $("wk").addEventListener("input",()=>{const v=+$("wk").value;if(v>0){WK=v;PL=(v===88||v===40||v===25)?String(v):"c";$("plan").value=PL;save();render()}});
 $("wt").addEventListener("change",()=>{W=+$("wt").value;save();render()});
 ["q","fs","fp","ff","fo","fd","fh","fph"].forEach(id=>$(id).addEventListener(id==="q"?"input":"change",render));
-document.querySelectorAll(".tbtn").forEach(b=>b.addEventListener("click",()=>{const p=$(b.dataset.p),open=p.hidden;p.hidden=!open;b.setAttribute("aria-expanded",open)}));
+document.querySelectorAll(".tbtn").forEach(b=>b.addEventListener("click",()=>{const p=$(b.dataset.p),open=p.hidden;p.hidden=!open;b.setAttribute("aria-expanded",open);if(open)renderPanels()}));
 // any dropdown (change or input, whichever the browser fires) redraws the list and the in-progress tab, and the list jumps back to its top
 let rfq=0;function refreshAll(){if(rfq)return;rfq=requestAnimationFrame(()=>{rfq=0;render();renderWip();const bx=$("tb").closest(".tbox");if(bx)bx.scrollTop=0})}
 ["change","input"].forEach(ev=>document.addEventListener(ev,e=>{if(e.target&&e.target.tagName==="SELECT"&&!e.target.closest("#phelp"))refreshAll()}));
@@ -828,6 +910,7 @@ function render(){
   totals()
 }
 function totals(){
+  renderPanels();
   const p=[...picks].map(id=>IDS.get(id)),h=p.reduce((a,r)=>a+hrs(r),0);
   $("nPick").textContent=p.length;$("hPick").textContent=Math.round(p.reduce((a,r)=>a+COST[N(r).c][1],0));
   $("tPick").textContent=Math.round(h);$("pPick").textContent=pct(h);
