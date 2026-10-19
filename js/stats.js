@@ -16,26 +16,28 @@ let statDirty=false,statSaveT=0;
 function statSave(){if(window.syncHold)return;statDirty=false;statSaveT=performance.now();
   const b=new Uint8Array(statCuts.buffer);let bin='';for(let k=0;k<b.length;k+=4096)bin+=String.fromCharCode.apply(null,b.subarray(k,k+4096));
   const s={};for(const k in STAT_ZERO)s[k]=+(+stats[k]).toFixed(3);
-  try{localStorage.setItem(STAT_KEY,JSON.stringify({v:1,n:LAWN_N,s,cuts:btoa(bin),trail:trailPack()}))}catch(e){}}
+  try{localStorage.setItem(STAT_KEY,JSON.stringify({v:1,n:LAWN_N,s,cuts:btoa(bin),trail2:trailPack()}))}catch(e){}}
 function statLoad(){let d=null;try{d=JSON.parse(localStorage.getItem(STAT_KEY))}catch(e){}
   if(d&&d.v===1&&d.s){for(const k in STAT_ZERO)if(isFinite(d.s[k]))stats[k]=+d.s[k];
     if(d.n===LAWN_N&&typeof d.cuts==='string')try{const b=atob(d.cuts);if(b.length===LAWN_N*2){const u=new Uint8Array(statCuts.buffer);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i)}}catch(e){}}
-  if(d&&d.trail)try{trailUnpack(d.trail)}catch(e){}
+  if(d&&(d.trail2||d.trail))try{trailUnpack(d.trail2||d.trail,!d.trail2)}catch(e){}
   if(!stats.since)stats.since=Date.now()}
 // ---------- trails ----------
-// metres travelled in each 4 m square of the big map, one layer for each way of getting round. Saved sparse: three bytes
-// a square that has been crossed (its index, then the distance on a log scale), so a save stays small enough to sync
-// the grid covers a 540 m square round the islands: 135 x 135 squares
-const TRAIL_C=4,TRAIL_X0=-260,TRAIL_Z0=-62,TRAIL_N=540/TRAIL_C,TRAIL_KINDS=['walk','ex','truck','mow','skid'],trail={};for(const k of TRAIL_KINDS)trail[k]=new Float32Array(TRAIL_N*TRAIL_N);
+// metres travelled in each 4 m square of the world, one layer for each way of getting round. Saved sparse (trail2): four
+// bytes a square that has been crossed (its index in three, then the distance on a log scale), so a save stays small
+// enough to sync. The grid covers the islands and both mainland shores, 232 x 360 squares; the first saves (trail) held
+// three bytes a square of a 135 x 135 grid round the islands, which sits TRAIL_OLD squares in from this one's corner
+const TRAIL_C=4,TRAIL_X0=-464,TRAIL_Z0=-594,TRAIL_NX=232,TRAIL_NZ=360,TRAIL_OLD=[51,133,135],TRAIL_KINDS=['walk','ex','truck','mow','skid'],trail={};for(const k of TRAIL_KINDS)trail[k]=new Float32Array(TRAIL_NX*TRAIL_NZ);
 let trailDirty=true;
 function trailAdd(k,x,z,d){const i=Math.floor((x-TRAIL_X0)/TRAIL_C),j=Math.floor((z-TRAIL_Z0)/TRAIL_C);
-  if(i<0||j<0||i>=TRAIL_N||j>=TRAIL_N)return;trail[k][j*TRAIL_N+i]+=d;trailDirty=true}
+  if(i<0||j<0||i>=TRAIL_NX||j>=TRAIL_NZ)return;trail[k][j*TRAIL_NX+i]+=d;trailDirty=true}
 function trailPack(){const o={};for(const k of TRAIL_KINDS){const a=trail[k],b=[];
-    for(let n=0;n<a.length;n++)if(a[n]>0.05){const q=Math.max(1,Math.min(255,Math.round(Math.log2(1+a[n]*10)*12)));b.push(n&255,n>>8,q)}
+    for(let n=0;n<a.length;n++)if(a[n]>0.05){const q=Math.max(1,Math.min(255,Math.round(Math.log2(1+a[n]*10)*12)));b.push(n&255,n>>8&255,n>>16,q)}
     let bin='';for(let i=0;i<b.length;i+=4096)bin+=String.fromCharCode.apply(null,b.slice(i,i+4096));o[k]=btoa(bin)}
   return o}
-function trailUnpack(o){for(const k of TRAIL_KINDS){if(typeof o[k]!=='string')continue;const b=atob(o[k]),a=trail[k];
-  for(let i=0;i+2<b.length;i+=3){const n=b.charCodeAt(i)|b.charCodeAt(i+1)<<8;if(n<a.length)a[n]=(Math.pow(2,b.charCodeAt(i+2)/12)-1)/10}}}
+function trailUnpack(o,old){const [oi,oj,on]=TRAIL_OLD,w=old?3:4;for(const k of TRAIL_KINDS){if(typeof o[k]!=='string')continue;const b=atob(o[k]),a=trail[k];
+  for(let i=0;i+w-1<b.length;i+=w){let n=b.charCodeAt(i)|b.charCodeAt(i+1)<<8;if(old)n=(Math.floor(n/on)+oj)*TRAIL_NX+n%on+oi;else n|=b.charCodeAt(i+2)<<16;
+    if(n<a.length)a[n]=(Math.pow(2,b.charCodeAt(i+w-1)/12)-1)/10}}}
 statLoad();
 addEventListener('pagehide',()=>{if(statDirty)statSave()});
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&statDirty)statSave()});
@@ -172,16 +174,16 @@ const TRAIL_OPTS=[['off','Off'],['all','All'],['walk','On foot'],['ex','Excavato
 let trailShow='off',trailCv=null,trailMax=0,trailDrawn='';
 try{const h=JSON.parse(localStorage.getItem(HEAT_KEY)||'null');if(h&&TRAIL_OPTS.some(o=>o[0]===h.trail))trailShow=h.trail}catch(e){}
 // one pixel a square: clear where never crossed, then the heatmap's colours, fainter where you've only passed through once
-function trailImage(){if(!trailCv){trailCv=document.createElement('canvas');trailCv.width=trailCv.height=TRAIL_N}
-  const g=trailCv.getContext('2d'),img=g.createImageData(TRAIL_N,TRAIL_N),D=img.data,L=trailShow==='all'?TRAIL_KINDS:[trailShow];let m=0;
-  const v=new Float32Array(TRAIL_N*TRAIL_N);for(const k of L){const a=trail[k];for(let n=0;n<v.length;n++)v[n]+=a[n]}
+function trailImage(){if(!trailCv){trailCv=document.createElement('canvas');trailCv.width=TRAIL_NX;trailCv.height=TRAIL_NZ}
+  const g=trailCv.getContext('2d'),img=g.createImageData(TRAIL_NX,TRAIL_NZ),D=img.data,L=trailShow==='all'?TRAIL_KINDS:[trailShow];let m=0;
+  const v=new Float32Array(TRAIL_NX*TRAIL_NZ);for(const k of L){const a=trail[k];for(let n=0;n<v.length;n++)v[n]+=a[n]}
   for(let n=0;n<v.length;n++)if(v[n]>m)m=v[n];trailMax=m;const lm=Math.log(1+m),c=[0,0,0];
   if(m>0)for(let n=0;n<v.length;n++){if(v[n]<=0.05)continue;const t=Math.log(1+v[n])/lm;heatLerp(HEAT_RAMP,0.15+0.85*t,c);
     D[n*4]=c[0]*255;D[n*4+1]=c[1]*255;D[n*4+2]=c[2]*255;D[n*4+3]=150+105*t}
   g.putImageData(img,0,0);trailDirty=false;trailDrawn=trailShow}
 // drawMap (maps.js) calls this on the big map, over the ground and under the machines
 function trailDrawOn(g,X,Y,sc){if(trailShow==='off')return;if(trailDirty||trailDrawn!==trailShow)trailImage();
-  g.save();g.imageSmoothingEnabled=false;g.drawImage(trailCv,X(TRAIL_X0),Y(TRAIL_Z0),TRAIL_N*TRAIL_C*sc,TRAIL_N*TRAIL_C*sc);g.restore()}
+  g.save();g.imageSmoothingEnabled=false;g.drawImage(trailCv,X(TRAIL_X0),Y(TRAIL_Z0),TRAIL_NX*TRAIL_C*sc,TRAIL_NZ*TRAIL_C*sc);g.restore()}
 function trailSet(k){trailShow=k;try{const h=JSON.parse(localStorage.getItem(HEAT_KEY)||'{}')||{};h.trail=k;localStorage.setItem(HEAT_KEY,JSON.stringify(h))}catch(e){}trailSync()}
 function trailSync(){document.querySelectorAll('#trailBar [data-tr]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.tr===trailShow));
   const on=trailShow!=='off';$('#trailKey').hidden=!on;
