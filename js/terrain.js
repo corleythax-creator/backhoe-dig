@@ -540,7 +540,7 @@ function dig(tip,cap){
   for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){
     const x=gX(i),z=gZ(j),d=Math.hypot(x-tip.x,z-tip.z);
     if(d>r)continue;
-    const k=j*V+i;
+    const k=j*V+i;if(digKeep[k])continue;
     const t=Math.max(tip.y+(d/r)*(d/r)*0.35,H0[k]-FLOOR);
     const dh=H[k]-t;
     if(dh>0){const y=H[k]-dh/2,m=matAt(k,y),c=matColor(k,m),v=dh*CA*(1+(SOIL[m].sw-1)*TU.fluff),ck=clodKind(m,H0[k]-y);list.push(k,dh);vol+=v;cr+=c[0]*v;cg+=c[1]*v;cb+=c[2]*v;if(ck>=0)vk[ck]+=v}
@@ -592,7 +592,7 @@ function wetSlope(o,w,h){return Math.max(0.2,1+o.dp*TU.slopeDamp*ss(0.04,0.3,w)*
 // k: the high point, k2 its neighbour; the face is as tall as the deeper of the two cut or heaped heights
 function slopeLim(k,k2,m,long){const o=soilP(k,m);return (long?o.rl:o.rp)*wetSlope(o,mudOf(k),Math.max(Math.abs(H[k]-H0[k]),Math.abs(H[k2]-H0[k2])))*CELL}
 function slumpPair(k,k2,long){
-  if(prot[k]||prot[k2])return false;
+  if(prot[k]||prot[k2]||digKeep[k]||digKeep[k2])return false;
   if((H[k]===H0[k]&&H[k2]===H0[k2])||Math.abs(H0[k]-H0[k2])>M0)return false;
   const df=H[k]-H[k2],ad=Math.abs(df);if(ad<=RP_MIN)return false;
   const hi=df>0?k:k2,lo=df>0?k2:k,m=matAt(hi,H[hi]-0.03),lim=slopeLim(hi,lo,m,long);if(ad<=lim)return false;
@@ -629,7 +629,7 @@ function slump(){
 const CDIR=[[1,0],[-1,0],[0,1],[0,-1]];
 function caveScan(){
   let best=0,bk=-1,bs=false;
-  for(let j=cJ0;j<=cJ1;j++)for(let i=cI0;i<=cI1;i++){const k=j*V+i;if(prot[k])continue;
+  for(let j=cJ0;j<=cJ1;j++)for(let i=cI0;i<=cI1;i++){const k=j*V+i;if(prot[k]||digKeep[k])continue;
     for(const [di,dj] of CDIR){const i2=i+di,j2=j+dj;if(i2<0||i2>N||j2<0||j2>N)continue;const k2=j2*V+i2;
       const dep=H0[k2]-H[k2];if(dep<0.75)continue;
       const df=H[k]-H[k2];if(df<=0.62*CELL||Math.abs(H0[k]-H0[k2])>M0)continue;
