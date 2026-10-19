@@ -102,6 +102,9 @@ While the brush is held or a road point is dragged, the layer changes every fram
 
 ## Limits and ideas for next
 
+The plan to rebuild the editor's layout (bars across the top, left and bottom) and add a full asset editor is in `docs/map-editor-redesign.md`.
+
+
 - A map lives on one device (and one origin: the claude.ai version and the Vercel site have separate storage). Copy map / Load a map moves it as text.
 - There is no way yet to make a map the shipped default for everyone. The simplest route: a `data/map.js` that sets the map text, read by `terrain.js` before `bhd_map`.
 - Only the dig grid around the trench can be dug. Sculpting works anywhere in the `MID` area, but the bucket only digs in the dig grid.
