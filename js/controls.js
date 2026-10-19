@@ -169,7 +169,7 @@ $('#ctlMenu').addEventListener('click',e=>{if(e.target.closest('button'))showCtl
 $('#ctrlsBtn').onclick=()=>{showCtrls(true);showCtl(false);showMenu(false)};
 let resetArm=0;
 $('#resetBtn').onclick=()=>{const b=$('#resetBtn');
-  if(resetArm&&performance.now()-resetArm<2500){resetState();siteSaveAll();resetArm=0;b.textContent='Reset';b.classList.remove('arm');toast(say('reset'),'good');return}
+  if(resetArm&&performance.now()-resetArm<2500){tileReset();resetState();siteSaveAll();resetArm=0;b.textContent='Reset';b.classList.remove('arm');toast(say('reset'),'good');return}
   resetArm=performance.now();b.textContent='Tap again';b.classList.add('arm');
   setTimeout(()=>{if(resetArm&&performance.now()-resetArm>=2400){resetArm=0;b.textContent='Reset';b.classList.remove('arm')}},2500);};
 const help=$('#help');

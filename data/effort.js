@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-19T02:57:00Z",
+ "updated": "2026-10-19T03:01:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -24,9 +24,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-18",
-   "dh": 198,
-   "act": 4,
-   "versions": 26
+   "dh": 208,
+   "act": 4.5,
+   "versions": 27
   }
  ],
  "extra": [
@@ -1242,6 +1242,15 @@ window.EFFORT = {
    "tris": 1919945,
    "chars": 840124,
    "what": "Rain runs downhill: rills on spoil piles and ruts fill the trench and wash loose dirt down as silt, and water streams down wet bare slopes like the ramp. Machines, the worker, buildings and trees darken and shine in the rain and dry after; water drips off roof edges. Cloud rolls in before a shower, curtains of rain hang over the lake, and hard showers bring lightning and thunder that arrives late with distance."
+  },
+  {
+   "v": 135,
+   "asked": "2026-10-18T21:37:00-05:00",
+   "live": "2026-10-18T22:01:55-05:00",
+   "dh": 10,
+   "tris": 1919122,
+   "chars": 850762,
+   "what": "The dig site follows the excavator and skid steer anywhere on Corley's mesa; holes left behind stay, drawn in less detail, and save with the site"
   }
  ]
 };

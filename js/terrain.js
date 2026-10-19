@@ -5,16 +5,21 @@
 // settling speeds written in cells stay the same in feet
 const S=64,N=400,CELL=S/N,V=N+1,CA=CELL*CELL,FLOOR=3.5,GRID_K=Math.round(0.32/CELL);
 // dig tiles (docs/dig-plans.html): the map is cut into TILE m squares, named from the mesa top's centre (E0/W1 across,
-// S0/N1 down). The dig grid covers TPG by TPG of them, its west and north edges at GX0, GZ0 (on tile lines); today the
-// four round the trench. Everything that turns world x, z into grid i, j or back goes through gX/gZ and gI/gJ
-const TILE=32,TPG=S/TILE,GX0=-TILE,GZ0=-TILE,GX1=GX0+S,GZ1=GZ0+S;
+// S0/N1 down). The dig grid covers TPG by TPG of them, its west and north edges at GX0, GZ0 (on tile lines); it starts
+// on the four round the trench and follows the digging machine (digMoveTo, digtiles.js). Everything that turns world
+// x, z into grid i, j or back goes through gX/gZ and gI/gJ
+const TILE=32,TPG=S/TILE;let GX0=-TILE,GZ0=-TILE,GX1=GX0+S,GZ1=GZ0+S;
 const gX=i=>GX0+i*CELL,gZ=j=>GZ0+j*CELL,gI=x=>(x-GX0)/CELL,gJ=z=>(z-GZ0)/CELL;
 // inside the dig grid, at least m in from its edge
 function inDig(x,z,m=0){return x>=GX0+m&&x<=GX1-m&&z>=GZ0+m&&z<=GZ1-m}
 function tileName(ti,tj){return (ti<0?'W'+(-ti):'E'+ti)+' · '+(tj<0?'N'+(-tj):'S'+tj)}
 // the grid's tiles: their map index (ti, tj) and grid point ranges (a shared edge row belongs to both)
-const DIG_TILES=[];for(let b=0;b<TPG;b++)for(let a=0;a<TPG;a++){const ti=Math.round(GX0/TILE)+a,tj=Math.round(GZ0/TILE)+b,n=N/TPG;
-  DIG_TILES.push({ti,tj,name:tileName(ti,tj),i0:a*n,i1:(a+1)*n,j0:b*n,j1:(b+1)*n})}
+const DIG_TILES=[];
+function digTilesSet(){DIG_TILES.length=0;for(let b=0;b<TPG;b++)for(let a=0;a<TPG;a++){const ti=Math.round(GX0/TILE)+a,tj=Math.round(GZ0/TILE)+b,n=N/TPG;
+  DIG_TILES.push({ti,tj,name:tileName(ti,tj),i0:a*n,i1:(a+1)*n,j0:b*n,j1:(b+1)*n})}}
+digTilesSet();
+// rectangles [x0, x1, z0, z1] of dug ground drawn outside the grid (digtiles.js), which buildSkirts edges too
+const digSkirtRects=[];
 // the dig tile under x, z, or null off the grid
 function digTileAt(x,z){if(!inDig(x,z))return null;const a=Math.min(TPG-1,Math.floor((x-GX0)/TILE)),b=Math.min(TPG-1,Math.floor((z-GZ0)/TILE));return DIG_TILES[b*TPG+a]}
 const H=new Float32Array(V*V),H0=new Float32Array(V*V),grass=new Float32Array(V*V*3),matCov=new Float32Array(V*V),mudBase=new Float32Array(V*V),paintD=new Float32Array(V*V),paint=new Uint8Array(V*V),nz=new Float32Array(V*V),rockA=new Float32Array(V*V);
@@ -329,6 +334,8 @@ function digBase(k){const i=k%V,j=(k/V)|0,x=gX(i),z=gZ(j);
   if(sand>0){grass[k*3]+=(0.80-grass[k*3])*sand;grass[k*3+1]+=(0.72-grass[k*3+1])*sand;grass[k*3+2]+=(0.52-grass[k*3+2])*sand}
   const rc=[grass[k*3],grass[k*3+1],grass[k*3+2]],ya=yardTint(x,z,rc,n),ra=roadTint(x,z,rc,n),mc=matTint(x,z,rc);grass[k*3]=rc[0];grass[k*3+1]=rc[1];grass[k*3+2]=rc[2];
   rockA[k]=Math.min(1,Math.max(rock*0.95+sand*0.4,ra*0.9,ya*0.85))*(MAT_GL2?1:1-mc);matCov[k]=mc;mudBase[k]=matCovOf(x,z,MUD_ID)}
+// the untouched grid where it sits: original grade, noise, colours and the trench's paint marks; run again when it moves
+function digInit(){paint.fill(0);
 for(let j=0;j<V;j++)for(let i=0;i<V;i++){
   const k=j*V+i,x=gX(i),z=gZ(j);
   H0[k]=H[k]=baseHeight(x,z); nz[k]=hash(i*1.7+3,j*2.3+1);
@@ -337,7 +344,8 @@ for(let j=0;j<V;j++)for(let i=0;i<V;i++){
   const onEnd=(Math.abs(z-TRENCH_Z0)<hc||Math.abs(z-TRENCH_Z1)<hc)&&Math.abs(x)<=0.5+hc;
   if(onSide||onEnd)paint[k]=1;
   else if(Math.abs(z-PIPE_Z)<hc&&Math.abs(x)<12&&(Math.floor(x+50)&1)===0)paint[k]=2;
-}
+}}
+digInit();
 const PIPE_Y=baseHeight(0,PIPE_Z)-1.3, PIPE_R=0.08;
 // textures: grass and dirt detail blended per vertex on the ground, grime overlay on the machines, and a large soft
 // macro map that breaks up the repeat. The ground pack (textures/ground/) has each map at 512, 1024 and 2048 px for

@@ -28,10 +28,14 @@ function siteSave(){if(window.syncHold)return;site.dirty=false;site.saveT=perfor
   const pb=new Uint8Array(V*V*5);let po=0,pl=-1;for(let k=0;k<V*V;k++)if(paintD[k]){let g=k-pl;pl=k;while(g>=128){pb[po++]=(g&127)|128;g>>>=7}pb[po++]=g;
     const m=Math.round(Math.max(-32,Math.min(32,paintD[k]))*1000)&0xffff;pb[po++]=m&255;pb[po++]=m>>8}
   const pd=po?siteB64(pb.subarray(0,po)):'';
-  const d=siteB64(buf.subarray(0,o)),mt=mtSave(),wx=rainSave(),sm=smSave(),cr=craneSave(),sig=d+JSON.stringify(mt)+wx.w+wx.r+wx.want+pd+sm+cr.n+'.'+(cr.t/30|0);if(sig===site.lastD)return;site.lastD=sig;
-  try{localStorage.setItem(SITE_KEY,JSON.stringify({v:1,V,n:ks.length,t:Date.now(),d,mt,wx,pd,sm,cr}))}catch(e){}}
+  // go: where the grid sits (its west and north edges); ts: dug tiles stored outside it (digtiles.js)
+  const go=[GX0,GZ0],ts=tileStoreSave();
+  const d=siteB64(buf.subarray(0,o)),mt=mtSave(),wx=rainSave(),sm=smSave(),cr=craneSave(),sig=d+JSON.stringify(mt)+wx.w+wx.r+wx.want+pd+sm+cr.n+'.'+(cr.t/30|0)+go+JSON.stringify(ts);if(sig===site.lastD)return;site.lastD=sig;
+  try{localStorage.setItem(SITE_KEY,JSON.stringify({v:1,V,n:ks.length,t:Date.now(),d,mt,wx,pd,sm,cr,go,ts}))}catch(e){}}
 function siteLoad(){let d=null;try{d=JSON.parse(localStorage.getItem(SITE_KEY))}catch(e){}
   if(!d||d.v!==1||d.V!==V||typeof d.d!=='string')return false;site.lastD=d.d+JSON.stringify(d.mt||[])+(d.wx?d.wx.w+d.wx.r+d.wx.want:'')+(d.pd||'')+(d.sm||'');let buf;try{buf=siteUnB64(d.d)}catch(e){return false}
+  // the stored tiles first, then the grid where it was (saves from before the tiles sit on the trench)
+  tileStoreLoad(d.ts);{const go=Array.isArray(d.go)&&d.go.length===2&&d.go.every(v=>isFinite(v)&&v%TILE===0)?d.go:[-TILE,-TILE];if(go[0]!==GX0||go[1]!==GZ0)digMoveTo(go[0],go[1],true);else farSync()}
   const dv=new DataView(buf.buffer);let o=0,k=-1,any=false,i0=N+1,i1=-1,j0=N+1,j1=-1;
   try{for(let c=0;c<d.n;c++){let g=0,sh=0,b;do{b=buf[o++];g|=(b&127)<<sh;sh+=7}while(b&128);k+=g;if(k>=V*V)break;
     H[k]=H0[k]+dv.getFloat32(o,true);o+=4;for(let q=0;q<3;q++)spoilC[k*3+q]=buf[o++]/255;
