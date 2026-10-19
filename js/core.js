@@ -84,7 +84,7 @@ const sky=(function(){
   m.renderOrder=-1;scene.add(m);return m;
 })();
 
-const camera=new THREE.PerspectiveCamera(60,1,0.05,1700);
+const camera=new THREE.PerspectiveCamera(60,1,0.05,2400);
 // warm sun as the key, a cooler and much dimmer sky fill, so shade reads blue-grey and lit faces stand out
 scene.add(new THREE.HemisphereLight(0xb8d0ea,0x5b5a3c,0.5));
 const sun=new THREE.DirectionalLight(0xfff0dc,1.6);

@@ -97,20 +97,46 @@ const DEX_X=-200,DEX_Z=245,DEX_R=45;
 function dexR(x,z){x-=DEX_X;z-=DEX_Z;const a=Math.atan2(z,x);return Math.pow(x*x*x*x+z*z*z*z,0.25)*(1+0.04*Math.sin(a*6+0.9)+0.025*Math.sin(a*10+2.4))}
 function jesR(x,z){x-=JES_X;z-=JES_Z;const a=Math.atan2(z,x);return Math.pow(x*x*x*x+z*z*z*z,0.25)*(1+0.05*Math.sin(a*5+2.6)+0.03*Math.sin(a*8+1.2))}
 // bridge decks, each a straight run from x0,z0 to x1,z1 (half width hw, deck height y): the truss bridge from the Lower
-// Bench to the Family Island, and the first stretch of the mainland bridge, which ends at a barrier for now. The machines
-// and the worker ride the decks (hAt) and landIn counts them as ground; family.js draws them
+// Bench to the Family Island, the mainland bridge, Jessica's footbridge, Dexter's haul bridge, then the two temporary
+// timber trestles (temp: drawn by mainland.js) that meet the causeways to the mainland: south from the end of the
+// mainland bridge to the town, north from Corley's north lawn to the field and woods. The machines and the worker
+// ride the decks (hAt) and landIn counts them as ground; family.js draws the steel ones
 // A deck climbs evenly from y at its start to y1 at its end; a foot bridge carries the worker but no machines
 const BRIDGES=[{x0:0,z0:68,x1:0,z1:171,hw:4,y:FAM_Y},{x0:0,z0:316,x1:0,z1:418,hw:4,y:FAM_Y},
   {x0:70,z0:JES_Z,x1:163,z1:JES_Z,hw:1.6,y:FAM_Y,y1:JES_Y,foot:true},
-  {x0:-70,z0:DEX_Z,x1:-163,z1:DEX_Z,hw:5,y:FAM_Y}];
-for(const b of BRIDGES){const dx=b.x1-b.x0,dz=b.z1-b.z0;b.len=Math.hypot(dx,dz);b.ux=dx/b.len;b.uz=dz/b.len;if(b.y1===undefined)b.y1=b.y}
+  {x0:-70,z0:DEX_Z,x1:-163,z1:DEX_Z,hw:5,y:FAM_Y},
+  {x0:0,z0:418,x1:0,z1:500,hw:3.4,y:FAM_Y,y1:WATER+2.44,temp:1},{x0:0,z0:-82,x1:0,z1:-213,hw:3.4,y:0,y1:-3,temp:1}];
+// the temporary rock causeways out from each mainland shore to the trestles: a flat top hw either side of the line,
+// rising evenly from y to y1, with rough rock sides down to the lake bed (causewayH)
+const CAUSEWAYS=[{x0:0,z0:500,x1:0,z1:566,hw:4.6,y:WATER+2.44,y1:-3.6},{x0:0,z0:-213,x1:0,z1:-296,hw:4.6,y:-3,y1:-3}];
+for(const b of BRIDGES.concat(CAUSEWAYS)){const dx=b.x1-b.x0,dz=b.z1-b.z0;b.len=Math.hypot(dx,dz);b.ux=dx/b.len;b.uz=dz/b.len;if(b.y1===undefined)b.y1=b.y}
+// the mainland across the lake: the field and woods to the north and the lakeside town to the south, each a low shore
+// (shore) rising gently inland to about 29 ft. The rim lines wander, but run straight where the causeways land
+const MAIN_N=-288,MAIN_S=558;
+function mainWob(x,a){return (9*Math.sin(x*0.013+a)+5*Math.sin(x*0.031+1+a))*ss(14,40,Math.abs(x))}
+function mainRimN(x){return MAIN_N+mainWob(x,0)}
+function mainRimS(x){return MAIN_S+mainWob(x,2.2)}
+function mainHeight(x,z){
+  if(z<0){const d=z-mainRimN(x);if(d>=0)return shore(d,x,z,-3);
+    return -3+Math.min(4,-d*0.018)+0.5*Math.sin(x*0.021+0.6)*Math.cos(z*0.026)*ss(0,40,-d)}
+  const d=mainRimS(x)-z;if(d>=0)return shore(d,x,z,-3.6);
+  return -3.6+Math.min(5,-d*0.022)+0.35*Math.sin(x*0.017+1.4)*Math.cos(z*0.023+0.4)*ss(0,40,-d)}
+function causewayH(x,z){let y=-1e9;for(const c of CAUSEWAYS){const [t,u]=deckLocal(c,x,z);if(t<-14||t>c.len+2)continue;
+  const e=Math.max(Math.abs(u)-c.hw,-t,0),top=c.y+(c.y1-c.y)*Math.max(0,Math.min(1,t/c.len));
+  const h=top-0.8*e-0.3*Math.sin(x*1.3+z*0.9)*ss(0,1.5,e);if(h>y)y=h}return y}
+// how much of the mainland ground is the hayfield (east of the north trail) or the woods floor (west of it); 0 to 1
+function mainField(x,z){return z>-300?0:ss(16,24,x)*ss(-300,-308,z)*(1-ss(390,420,x))}
+function mainWoods(x,z){return z>-300?0:ss(-16,-26,x)*ss(-300,-308,z)}
+// on the mainland, at least lim in from its shore and inside the part that is drawn
+function mainIn(x,z,lim){return Math.abs(x)<=430-lim&&(z<0?z<=mainRimN(x)-lim&&z>=-555+lim:z>=mainRimS(x)+lim&&z<=765-lim)}
 // metres along a deck and out from its centreline
 function deckLocal(b,x,z){const dx=x-b.x0,dz=z-b.z0;return [dx*b.ux+dz*b.uz,dz*b.ux-dx*b.uz]}
 // the deck height at x,z, or -1e9 off every deck
 function deckAt(x,z){let y=-1e9;for(const b of BRIDGES){const [t,u]=deckLocal(b,x,z);if(t>=0&&t<=b.len&&Math.abs(u)<=b.hw+0.3){const h=b.y+(b.y1-b.y)*t/b.len;if(h>y)y=h}}return y}
 // ground a machine or the worker (walk: foot bridges too) can stand on, at least lim in from a cliff edge (side: from a
 // deck's railings): the mesa, the Family Island, Jessica's Island or a bridge deck
-function landIn(x,z,lim,side,walk){if(mesaR(x,z)<=EDGE-lim||famR(x,z)<=FAM_R-lim||jesR(x,z)<=JES_R-lim||dexR(x,z)<=DEX_R-lim)return true;
+function landIn(x,z,lim,side,walk){if(mesaR(x,z)<=EDGE-lim||famR(x,z)<=FAM_R-lim||jesR(x,z)<=JES_R-lim||dexR(x,z)<=DEX_R-lim||mainIn(x,z,lim))return true;
+  for(const c of CAUSEWAYS){const [t,u]=deckLocal(c,x,z);if(t>=0&&t<=c.len&&Math.abs(u)<=c.hw-side-0.4)return true}
   for(const b of BRIDGES){if(b.foot&&!walk)continue;const [t,u]=deckLocal(b,x,z);if(t>=0&&t<=b.len&&Math.abs(u)<=b.hw-side)return true}return false}
 // the nearest such spot to x,z (x,z itself when it already is one)
 function landClamp(x,z,lim,side,walk){if(landIn(x,z,lim,side,walk))return [x,z];
@@ -119,6 +145,8 @@ function landClamp(x,z,lim,side,walk){if(landIn(x,z,lim,side,walk))return [x,z];
   c.push([x*(EDGE-lim)/r,MZ+(z-MZ)*(EDGE-lim)/r]);
   c.push([FAM_X+(x-FAM_X)*(FAM_R-lim)/f,FAM_Z+(z-FAM_Z)*(FAM_R-lim)/f]);
   c.push([JES_X+(x-JES_X)*(JES_R-lim)/j,JES_Z+(z-JES_Z)*(JES_R-lim)/j]);
+  {const mx=Math.max(lim-430,Math.min(430-lim,x));c.push(z<0?[mx,Math.max(-555+lim,Math.min(mainRimN(mx)-lim,z))]:[mx,Math.min(765-lim,Math.max(mainRimS(mx)+lim,z))])}
+  for(const b of CAUSEWAYS){let [t,u]=deckLocal(b,x,z);t=Math.max(0,Math.min(b.len,t));u=Math.max(side+0.4-b.hw,Math.min(b.hw-side-0.4,u));c.push([b.x0+b.ux*t-b.uz*u,b.z0+b.uz*t+b.ux*u])}
   for(const b of BRIDGES){if(b.foot&&!walk)continue;let [t,u]=deckLocal(b,x,z);t=Math.max(0,Math.min(b.len,t));u=Math.max(side-b.hw,Math.min(b.hw-side,u));
     c.push([b.x0+b.ux*t-b.uz*u,b.z0+b.uz*t+b.ux*u])}
   let best=c[0],bd=1e18;for(const q of c){const d=(q[0]-x)**2+(q[1]-z)**2;if(d<bd){bd=d;best=q}}return best}
@@ -147,7 +175,16 @@ if(mapRoads){ROADS.length=0;ROADS.push(...mapRoads);mapRoads=ROADS}
 // bridge to a roundabout in the middle, on to the mainland bridge, arms west and east (where Dexter's and Jessica's
 // bridges will go) and the drive to the house
 const ISLAND_ROADS=[
-  {w:4.2,mid:1,pts:[[0,-13],[0,-44]]},
+  {w:4.2,mid:1,pts:[[0,-13],[0,-44],[0,-84]]},
+  // the mainland: over each causeway, the north trail into the woods and the lane along the hayfield, and the town's
+  // main street, beach road and cross street
+  {w:6,mid:0,pts:[[0,-213],[0,-296],[0,-336]]},
+  {w:3.2,mid:1,pts:[[0,-336],[-30,-346],[-90,-370],[-150,-362],[-220,-396],[-300,-410],[-380,-440]]},
+  {w:3.6,mid:1,pts:[[0,-336],[60,-333],[180,-337],[320,-331],[400,-334]]},
+  {w:6,mid:0,pts:[[0,500],[0,566]]},
+  {w:8,mid:0,pts:[[0,566],[0,725]]},
+  {w:5,mid:0,pts:[[-170,576],[-60,574],[0,574],[60,574],[170,577]]},
+  {w:6,mid:0,pts:[[-140,652],[0,652],[140,652]]},
   {w:4.8,mid:0,pts:[[0,63,FAM_Y],[0,72,FAM_Y]]},
   {w:4.8,mid:0,pts:[[0,165,FAM_Y],[0,234,FAM_Y]]},
   {w:4.8,mid:0,pts:Array.from({length:17},(_,i)=>[FAM_X+Math.sin(i/16*Math.PI*2)*11,FAM_Z-Math.cos(i/16*Math.PI*2)*11,FAM_Y])},
@@ -162,7 +199,7 @@ const ISLAND_ROADS=[
 ];
 // segments bucketed on a 4 m grid so a lookup only checks the few nearby; roadAt leaves its answer in RD_*.
 // Rebuilt whenever the editor changes a road
-const RG_X0=-284,RG_Z0=-32,RG_C=4,RG_NX=141,RG_NZ=94,RG=[],RSEG=[];
+const RG_X0=-452,RG_Z0=-600,RG_C=4,RG_NX=227,RG_NZ=352,RG=[],RSEG=[];
 function roadsBuild(){RSEG.length=0;RG.length=0;
   for(const r of ROADS.concat(ISLAND_ROADS))for(let i=0;i<r.pts.length-1;i++){const a=r.pts[i],b=r.pts[i+1],dx=b[0]-a[0],dz=b[1]-a[1];if(dx*dx+dz*dz<1e-6)continue;
     RSEG.push({ax:a[0],az:a[1],dx,dz,il:1/(dx*dx+dz*dz),ha:a[2],hb:b[2],w:r.w,mid:r.mid,g:a.length>2&&b.length>2})}
@@ -203,6 +240,8 @@ function groundHeight(x,z){let h=mesaHeight(x,z);
   if(Math.abs(x-FAM_X)<FAM_R+50&&Math.abs(z-FAM_Z)<FAM_R+50){const f=famHeight(x,z);if(f>h)h=f}
   if(Math.abs(x-JES_X)<JES_R+50&&Math.abs(z-JES_Z)<JES_R+50){const f=jesHeight(x,z);if(f>h)h=f}
   if(Math.abs(x-DEX_X)<DEX_R+50&&Math.abs(z-DEX_Z)<DEX_R+50){const f=dexHeight(x,z);if(f>h)h=f}
+  if(z<-170||z>460){const f=mainHeight(x,z);if(f>h)h=f}
+  if(Math.abs(x)<30&&((z<-190&&z>-300)||(z>480&&z<570))){const f=causewayH(x,z);if(f>h)h=f}
   return h}
 // the ground d metres out from an island's rim at height Y: a rocky bank down to the back of a sand beach 4 to 5 ft above
 // the lake, the beach sloping gently into the water (narrower and wider round the island), a wading shelf, then the lake bed

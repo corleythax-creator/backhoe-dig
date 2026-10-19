@@ -4,7 +4,7 @@
 const timeU={value:0};
 (function(){
   // lake: low-poly water with gentle animated swells
-  const wg=new THREE.PlaneGeometry(2600,2600,120,120);wg.rotateX(-Math.PI/2);
+  const wg=new THREE.PlaneGeometry(3400,3400,150,150);wg.rotateX(-Math.PI/2);
   const wm=new THREE.MeshPhongMaterial({color:0x1f5d72,specular:0xfff2dc,shininess:90,flatShading:true,envMap:skyEnv,combine:THREE.MixOperation,reflectivity:0.7});
   wm.onBeforeCompile=sh=>{sh.uniforms.uTime=timeU;sh.vertexShader='uniform float uTime;\n'+sh.vertexShader.replace('#include <begin_vertex>',
     '#include <begin_vertex>\nvec4 wpos=modelMatrix*vec4(transformed,1.0);\ntransformed.y+=sin(wpos.x*0.09+uTime*1.1)*0.16+cos(wpos.z*0.11+uTime*0.8)*0.13+sin((wpos.x+wpos.z)*0.23+uTime*1.7)*0.06;')};
@@ -29,8 +29,8 @@ const timeU={value:0};
       :new THREE.MeshPhongMaterial({vertexColors:true,flatShading:true,fog:false,side:THREE.DoubleSide,shininess:2,specular:0x000000,emissive:0x6a7686});
     const m=new THREE.Mesh(g,mat);m.renderOrder=-0.5;scene.add(m);
   }
-  range(470,820,40,220,30,240,0.42,0.66,0,false);
-  range(860,1220,28,200,60,430,0.7,0.85,1.7,true);
+  range(790,1080,40,220,30,240,0.42,0.66,0,false);
+  range(1080,1320,28,200,60,430,0.7,0.85,1.7,true);
 })();
 // ---------- field grass ----------
 // clumps over the mesa that disappear wherever the ground gets dug, buried or painted. Four kinds on two shapes: meadow
@@ -262,6 +262,10 @@ function groundColor(x,z,h,c){const n=hash(x*3.55+0.3,z*2.65+0.7);
   const sl=(Math.abs(baseHeight(x+1,z)-baseHeight(x-1,z))+Math.abs(baseHeight(x,z+1)-baseHeight(x,z-1)))/2;
   const rock=ss(0.55,1.1,sl),sand=1-ss(WATER+1.6,WATER+2.4,h),low=ss(-4,-20,h)*ss(EDGE-1,EDGE+2,mesaR(x,z));
   let r=0.30+0.08*n+0.05*low,g=0.50+0.09*n-0.02*low,b=0.24+0.04*n;
+  // the mainland's hayfield, mown in rows, and the darker woods floor
+  const hf=mainField(x,z),wf=mainWoods(x,z);
+  if(hf>0){const st=0.5+0.5*Math.sin(z*0.9);r+=(0.58+0.08*st+0.04*n-r)*hf;g+=(0.55+0.05*st-g)*hf;b+=(0.28-b)*hf}
+  if(wf>0){r-=0.1*wf;g-=0.12*wf;b-=0.05*wf}
   const strata=0.06*Math.sin(h*1.4+n);
   r+=(0.50+0.06*n+strata-r)*rock;g+=(0.44+0.05*n+strata-g)*rock;b+=(0.38+0.04*n+strata-b)*rock;
   r+=(0.80-r)*sand;g+=(0.72-g)*sand;b+=(0.52-b)*sand;
@@ -283,6 +287,8 @@ function groundPatch(X0,X1,Z0,Z1,CO,holes){
 const FAM_PATCH=[-111,111,136,352];
 // 1 m over the rest of Corley's Island and its shore, round the 0.5 m mesh
 const OUTER_MID=[-112,112,-122,94];
+// the mainland (mainland.js): 3 m ground, with 1 m where each causeway lands
+const MAIN_FINE=[[-42,42,-300,-195],[-42,42,480,600]];
 groundPatch(-160,160,-160,160,2,[OUTER_MID,[FAM_PATCH[0],FAM_PATCH[1],FAM_PATCH[2],160]]);
 midPatch=groundPatch(MID[0],MID[1],MID[2],MID[3],0.5,[[-S/2,S/2,-S/2,S/2]]);
 const outPatch=groundPatch(OUTER_MID[0],OUTER_MID[1],OUTER_MID[2],OUTER_MID[3],1,[MID]);
@@ -302,6 +308,7 @@ function buildSkirts(){
     sp.push(x0,h0,z0,x1,h1,z1,x0,h0-dp,z0,x1,h1-dp,z1);si.push(q,q+2,q+1,q+1,q+2,q+3);q+=4}};
   const E=S/2;run(t=>[t,-E],-E,E,0.5,0.6);run(t=>[t,E],-E,E,0.5,0.6);run(t=>[-E,t],-E,E,0.5,0.6);run(t=>[E,t],-E,E,0.5,0.6);
   run(t=>[t,OUTER_MID[2]],OUTER_MID[0],OUTER_MID[1],1,2);run(t=>[t,OUTER_MID[3]],OUTER_MID[0],OUTER_MID[1],1,2);run(t=>[OUTER_MID[0],t],OUTER_MID[2],OUTER_MID[3],1,2);run(t=>[OUTER_MID[1],t],OUTER_MID[2],OUTER_MID[3],1,2);
+  for(const R of MAIN_FINE){run(t=>[t,R[2]],R[0],R[1],1,2);run(t=>[t,R[3]],R[0],R[1],1,2);run(t=>[R[0],t],R[2],R[3],1,2);run(t=>[R[1],t],R[2],R[3],1,2)}
   run(t=>[t,MID[2]],MID[0],MID[1],0.5,2);run(t=>[t,MID[3]],MID[0],MID[1],0.5,2);run(t=>[MID[0],t],MID[2],MID[3],0.5,2);run(t=>[MID[1],t],MID[2],MID[3],0.5,2);
   const sg=new THREE.BufferGeometry();sg.setAttribute('position',new THREE.Float32BufferAttribute(sp,3));sg.setAttribute('normal',new THREE.Float32BufferAttribute(new Float32Array(sp.length),3));sg.setIndex(si);
   if(skirtMesh){skirtMesh.geometry.dispose();skirtMesh.geometry=sg}else{skirtMesh=new THREE.Mesh(sg,M(0x4a6a34,{side:THREE.DoubleSide}));scene.add(skirtMesh)}}
