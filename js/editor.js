@@ -87,7 +87,7 @@ const edKindName=t=>PROPS[t]?PROPS[t].n:ED_KINDS[t]||t;
 function edKindMark(){document.querySelectorAll('#edKinds button').forEach(b=>b.setAttribute('aria-pressed',ed.tool==='add'&&b.dataset.k===ed.kind));$('#edKindV').textContent=edKindName(ed.kind)}
 // the view: Look makes one finger move the view whatever the tool; closer, farther, north up and back to where the editor opened
 $('#edLook').onclick=()=>{ed.look=!ed.look;$('#edLook').setAttribute('aria-pressed',ed.look)};
-$('#edZoomIn').onclick=()=>{ed.dist=clamp(ed.dist/1.4,8,220);edStatus()};$('#edZoomOut').onclick=()=>{ed.dist=clamp(ed.dist*1.4,8,220);edStatus()};
+$('#edZoomIn').onclick=()=>{ed.dist=clamp(ed.dist/1.4,8,900);edStatus()};$('#edZoomOut').onclick=()=>{ed.dist=clamp(ed.dist*1.4,8,900);edStatus()};
 $('#edNorth').onclick=()=>{ed.yaw=0};$('#edHome').onclick=()=>{if(ed.home){Object.assign(ed,ed.home);ed.fly=null}};
 // the material library: every texture by kind, plus Natural ground, which clears a material, and Worked dirt and Grass,
 // which pick the Dirt and Grass tools (they paint ED_P, not a material)
@@ -450,7 +450,7 @@ $('#edRoadNew').onclick=edRoadNew;$('#edRoadFin').onclick=edRoadFinish;
 // ---------- pointer: tools, and look around with two fingers, the right mouse button or the Look tool ----------
 const edPtrs=new Map();let edGest=null,edMouse=null;
 function edPan(dx,dy){ed.fly=null;const s=ed.dist*0.0019*(720/Math.max(320,innerHeight)),c=Math.cos(ed.yaw),n=Math.sin(ed.yaw);
-  ed.x=clamp(ed.x+(-c*dx-n*dy)*s,-120,120);ed.z=clamp(ed.z+(n*dx-c*dy)*s,-120,350)}
+  ed.x=clamp(ed.x+(-c*dx-n*dy)*s,-430,430);ed.z=clamp(ed.z+(n*dx-c*dy)*s,-555,765)}
 function edDown(x,y,e){const p=edPick(x,y),t=ed.tool,mod=e&&(e.shiftKey||e.ctrlKey||e.metaKey),touch=e&&e.pointerType!=='mouse';
   if(ed.look||!p){edMouse={pan:true,x,y};return}
   if(ED_BRUSH.includes(t)){edStrokeStart(p.x,p.z);edBrushAt(p.x,p.z);return}
@@ -493,13 +493,13 @@ canvas.addEventListener('pointerdown',e=>{if(!edOn)return;canvas.setPointerCaptu
 canvas.addEventListener('pointermove',e=>{if(!edOn)return;const p=edPtrs.get(e.pointerId);
   if(p){p.x=e.clientX;p.y=e.clientY}
   if(edGest&&edPtrs.size===2){const [a,b]=[...edPtrs.values()],d=Math.hypot(a.x-b.x,a.y-b.y)||1,ang=Math.atan2(b.y-a.y,b.x-a.x),mx=(a.x+b.x)/2,my=(a.y+b.y)/2;
-    ed.dist=clamp(edGest.dist*edGest.d/d,8,220);ed.yaw=edGest.yaw+(ang-edGest.ang);edPan(mx-edGest.mx,my-edGest.my);edGest.mx=mx;edGest.my=my;return}
+    ed.dist=clamp(edGest.dist*edGest.d/d,8,900);ed.yaw=edGest.yaw+(ang-edGest.ang);edPan(mx-edGest.mx,my-edGest.my);edGest.mx=mx;edGest.my=my;return}
   if(p||e.pointerType==='mouse')edMove(e.clientX,e.clientY)});
 const edEnd=e=>{if(!edOn)return;if(!edPtrs.delete(e.pointerId))return;if(edGest){if(edPtrs.size<2)edGest=null;return}edUp()};
 canvas.addEventListener('pointerup',edEnd);canvas.addEventListener('pointercancel',edEnd);
 canvas.addEventListener('pointerleave',e=>{if(edOn&&e.pointerType==='mouse'&&!edPtrs.size)edBrushRing.visible=edSoftRing.visible=false});
 canvas.addEventListener('contextmenu',e=>{if(edOn)e.preventDefault()});
-canvas.addEventListener('wheel',e=>{if(!edOn)return;e.preventDefault();ed.dist=clamp(ed.dist*Math.exp(e.deltaY*0.0012),8,220)},{passive:false});
+canvas.addEventListener('wheel',e=>{if(!edOn)return;e.preventDefault();ed.dist=clamp(ed.dist*Math.exp(e.deltaY*0.0012),8,900)},{passive:false});
 
 // ---------- keys (fixed, not in the Keys panel): G opens and closes unless a game action has G; WASD or arrows pan, Q E turn, R F zoom,
 // 1 to 5 the groups and 6 the Map drawer, Delete removes, Esc lets go of the selection, Ctrl+Z undo, Ctrl+A picks everything in view, Ctrl+D copies ----------
@@ -540,7 +540,7 @@ function editorFrame(dt,now){
   // keys move the view
   const ek=(a,b)=>(keys[a]?1:0)-(keys[b]?1:0),kx=ek('KeyD','KeyA')+ek('ArrowRight','ArrowLeft'),kz=ek('KeyS','KeyW')+ek('ArrowDown','ArrowUp');
   if(kx||kz)edPan(-kx*dt*700,-kz*dt*700);
-  ed.yaw+=ek('KeyQ','KeyE')*dt*1.6;ed.dist=clamp(ed.dist*Math.exp(ek('KeyF','KeyR')*dt*1.5),8,220);
+  ed.yaw+=ek('KeyQ','KeyE')*dt*1.6;ed.dist=clamp(ed.dist*Math.exp(ek('KeyF','KeyR')*dt*1.5),8,900);
   // the brush works while held; the ground catches up a few times a second, and fully when the stroke ends
   if(ed.stroke)edBrush(dt);
   if(ed.pend&&(ed.stroke||(ed.drag&&ed.drag.road))&&now-ed.refT>110){ed.refT=now;edRefresh(ed.pend,false);ed.pend=null}

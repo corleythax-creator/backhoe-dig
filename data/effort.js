@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-19T02:56:00Z",
+ "updated": "2026-10-19T02:57:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -24,9 +24,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-18",
-   "dh": 181.5,
+   "dh": 182,
    "act": 4,
-   "versions": 24
+   "versions": 25
   }
  ],
  "extra": [
@@ -1224,6 +1224,15 @@ window.EFFORT = {
    "tris": 1918697,
    "chars": 820447,
    "what": "The Turn slider moved from the bottom bar into the Controls panel, showing the machine it sets"
+  },
+  {
+   "v": 133,
+   "asked": "2026-10-18T21:50:00-05:00",
+   "live": "2026-10-18T21:57:33-05:00",
+   "dh": 0.5,
+   "tris": 1918628,
+   "chars": 820447,
+   "what": "The map editor now scrolls and zooms out over the whole map, the mainland, woods and town included."
   }
  ]
 };
