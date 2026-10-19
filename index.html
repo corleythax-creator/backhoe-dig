@@ -166,19 +166,37 @@
 </div>
 <div id="bigmap" hidden>
   <div class="mapcard">
-    <div class="maphead"><h2>Site map</h2><button id="mapClose">Close</button></div>
-    <canvas id="big"></canvas>
-    <div id="tpBar"><span id="tpHint">Tap the map to teleport there</span>
-      <div id="tpOpts" hidden><span>Go there:</span><button data-tp="foot">On foot</button><button data-tp="ex">Excavator</button><button data-tp="truck">Dump truck</button><button data-tp="mow">Mower</button><button data-tp="skid">Skid steer</button><button id="tpCancel">Cancel</button></div>
+    <div class="mapview">
+      <canvas id="big" aria-label="Site map: drag to move, pinch or scroll to zoom, tap to pick a spot"></canvas>
+      <div id="mapCtl" role="group" aria-label="Map view">
+        <button id="mapZin" class="sq" aria-label="Zoom in"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+        <button id="mapZout" class="sq" aria-label="Zoom out"><svg viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button>
+        <button id="mapFit" class="sq" aria-label="Show the whole map"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+        <button id="mapMe" class="sq" aria-label="Centre on you"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg></button>
+      </div>
+      <div id="mapWhere" aria-live="polite"></div>
     </div>
-    <div id="trailBar" role="group" aria-label="Trails: where you have walked and driven"><span>Trails</span></div>
-    <div id="trailKey" hidden><i></i><span><span>Less</span><span id="trailHi"></span></span></div>
-    <div id="wetBar" role="group" aria-label="Soil wetness: show where the ground is wetter"><span>Soil wetness</span></div>
-    <div id="wetKey" hidden><i></i><span><span id="wetLo">Dry</span><span id="wetHi">Soaked · standing water</span></span><button id="wetGround" class="sm" aria-pressed="false">Show on the ground too</button></div>
-    <div class="legend">
-      <span><i style="background:#f07a22"></i>Excavator</span><span><i style="background:#e9ecea"></i>Dump truck</span>
-      <span><i style="background:#f2f2ee;height:3px"></i>Trench paint</span><span><i style="background:#f5c518;height:3px"></i>Gas main</span>
-      <span><i style="background:#b89a6b"></i>Dirt road</span><span><i style="background:#7a5232"></i>Dug or dumped</span><span><i style="background:#d8a514"></i>Trench box</span><span><i style="background:#b9b6ae"></i>Block</span><span><i style="background:#2d7a94"></i>Lake</span><span><i style="background:#a3a64c"></i>Tall grass</span><span><i style="background:#d8352a"></i>Mower</span><span><i style="background:#f2b705"></i>Skid steer</span><span><i style="background:#2fb7e8;border-radius:50%;width:12px"></i>You on foot</span>
+    <div class="mapside">
+      <div class="maphead"><h2>Site map</h2><button id="mapClose">Close</button></div>
+      <div id="tpBar"><span id="tpHint">Tap the map to teleport there</span>
+        <div id="tpOpts" hidden><span>Go there:</span><button data-tp="foot">On foot</button><button data-tp="ex">Excavator</button><button data-tp="truck">Dump truck</button><button data-tp="mow">Mower</button><button data-tp="skid">Skid steer</button><button id="tpCancel">Cancel</button></div>
+      </div>
+      <section class="mapsec"><h3>Places</h3><div id="mapPlaces" role="group" aria-label="Show a place on the map"></div></section>
+      <section class="mapsec"><h3>Layers</h3>
+        <div id="trailBar" role="group" aria-label="Trails: where you have walked and driven"><span>Trails</span></div>
+        <div id="trailKey" hidden><i></i><span><span>Less</span><span id="trailHi"></span></span></div>
+        <div id="wetBar" role="group" aria-label="Soil wetness: show where the ground is wetter"><span>Soil wetness</span></div>
+        <div id="wetKey" hidden><i></i><span><span id="wetLo">Dry</span><span id="wetHi">Soaked · standing water</span></span><button id="wetGround" class="sm" aria-pressed="false">Show on the ground too</button></div>
+      </section>
+      <section class="mapsec"><h3>Key</h3>
+        <div class="legend">
+          <span><i class="tri" style="--c:#f07a22"></i>Excavator</span><span><i class="tri" style="--c:#e9ecea"></i>Dump truck</span><span><i class="tri" style="--c:#d8352a"></i>Mower</span><span><i class="tri" style="--c:#f2b705"></i>Skid steer</span>
+          <span><i style="background:#2fb7e8;border-radius:50%;width:14px;height:14px;box-shadow:0 0 0 2px #fff"></i>You on foot</span><span><i style="background:#f5c518;height:4px"></i>Gas main</span>
+          <span><i style="background:#f2f2ee;height:4px"></i>Trench paint</span><span><i style="background:#d8a514"></i>Trench box</span><span><i style="background:#7a5232"></i>Dug or dumped</span><span><i style="background:#b9b6ae"></i>Block</span>
+          <span><i style="background:#b89a6b"></i>Road</span><span><i style="background:#8d6a52"></i>Building</span><span><i style="background:#a2a4a6"></i>Bridge</span><span><i style="background:#9c7c56"></i>Temporary bridge</span>
+          <span><i style="background:#a3a64c"></i>Tall grass</span><span><i style="background:radial-gradient(circle at 35% 35%,#6c8a40,#24401c);border-radius:50%"></i>Trees</span><span><i style="background:linear-gradient(90deg,#4a8f99,#173f55)"></i>Lake</span>
+        </div>
+      </section>
     </div>
   </div>
 </div>

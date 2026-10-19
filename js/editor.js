@@ -32,7 +32,7 @@ function editorOpen(){if(edOn||bench.on)return;edOn=true;mapAssets=assets;
   edTool(ed.tool);edInfo(null);toast('Map editor. The game is paused while you edit.','',2600)}
 function editorClose(){if(!edOn)return;edStrokeEnd();edRoadFinish();edOn=false;document.body.classList.remove('editing');$('#editor').hidden=true;
   edBrushRing.visible=edSelRing.visible=edSoftRing.visible=false;ed.sel=null;ed.road=null;ed.rpt=-1;edRoadsDraw();clearKeys();firstCam=true;last=performance.now();
-  if(ed.changed){edSave();mapBg=null;mapDirty=true;ed.changed=false}}
+  if(ed.changed){edSave();mapReset();mapDirty=true;ed.changed=false}}
 $('#edDone').onclick=editorClose;
 $('#editBtn').onclick=editorOpen;
 
