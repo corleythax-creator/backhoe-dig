@@ -258,6 +258,7 @@ tr.on .rin{background:var(--amber);color:var(--amber-ink);border-color:var(--amb
 
   <div class="panel tk" id="ptracks" hidden>
     <p class="hint">Groups of ideas that add up to one thing you can play. Each runs in build order; the highlighted one is the next to build.</p>
+    <div class="chips" id="tkc" role="group" aria-label="Pick a track"></div>
     <div id="tkb"></div>
   </div>
 
@@ -837,9 +838,15 @@ function renderNext(){
   const nt=[];for(const [k,n,d,list] of TRACKS){const r=nextOf(list);if(r&&!hid.has(r[0]))nt.push(xrow(r,{extra:" · "+n}))}
   card("Next step in each track","The first thing still open in every track.",nt)
 }
+let tkSel="";
+function trackPct(list){const rows=list.map(i=>IDS.get(i));return rows.reduce((a,r)=>a+(stOf(r[0])==="built"?1:stOf(r[0])==="part"?(DONE[r[0]].pc||0)/100:0),0)/rows.length}
 function renderTracks(){
+  const c=$("tkc");c.textContent="";
+  const mk=(k,label,small)=>{const x=el("button","chip");x.type="button";x.setAttribute("aria-pressed",tkSel===k);x.style.setProperty("--gc","var(--amber)");x.append(label);if(small)x.appendChild(el("small",null,small));x.addEventListener("click",()=>{tkSel=k;renderTracks()});c.appendChild(x)};
+  mk("","All tracks",TRACKS.length);for(const [k,n,d,list] of TRACKS)mk(k,n,Math.round(trackPct(list)*100)+"%");
   const b=$("tkb");b.textContent="";
   for(const [k,n,d,list] of TRACKS){
+    if(tkSel&&tkSel!==k)continue;
     const rows=list.map(i=>IDS.get(i)),tot=rows.length,pt=rows.reduce((a,r)=>a+(stOf(r[0])==="built"?1:stOf(r[0])==="part"?(DONE[r[0]].pc||0)/100:0),0),nb=rows.filter(r=>stOf(r[0])==="built").length;
     const nx=nextOf(list),hr=rows.filter(r=>stOf(r[0])!=="built").reduce((a,r)=>a+r[9],0);
     const hd=el("div","tkh");hd.append(el("h3",null,n),el("span","tkp",nb+" of "+tot+" built · "+Math.round(pt/tot*100)+"%"),el("span","tkp",hr?"~"+hr+" h left":"all built"));
