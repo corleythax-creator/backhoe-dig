@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-19T01:51:00Z",
+ "updated": "2026-10-19T01:57:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -24,9 +24,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-18",
-   "dh": 108.5,
+   "dh": 109,
    "act": 3,
-   "versions": 11
+   "versions": 12
   }
  ],
  "extra": [
@@ -1107,6 +1107,15 @@ window.EFFORT = {
    "tris": 2010403,
    "chars": 740639,
    "what": "The lakeside town to the south and the field and woods to the north, each reached by a temporary timber trestle and rock causeway, with the crane waiting on a barge to build steel spans (Plan C, release 3)"
+  },
+  {
+   "v": 120,
+   "asked": "2026-10-18T20:46:00-05:00",
+   "live": "2026-10-18T20:57:10-05:00",
+   "dh": 0.5,
+   "tris": 1912702,
+   "chars": 740639,
+   "what": "The mainland draws about 97,000 fewer triangles (coarser far ground, more pines in the woods) for the same look"
   }
  ]
 };

@@ -287,8 +287,8 @@ function groundPatch(X0,X1,Z0,Z1,CO,holes){
 const FAM_PATCH=[-111,111,136,352];
 // 1 m over the rest of Corley's Island and its shore, round the 0.5 m mesh
 const OUTER_MID=[-112,112,-122,94];
-// the mainland (mainland.js): 3 m ground, with 1 m where each causeway lands
-const MAIN_FINE=[[-42,42,-300,-195],[-42,42,480,600]];
+// the mainland (mainland.js): 4 m ground, with 1 m where each causeway lands
+const MAIN_FINE=[[-42,42,-300,-196],[-42,42,480,600]];
 groundPatch(-160,160,-160,160,2,[OUTER_MID,[FAM_PATCH[0],FAM_PATCH[1],FAM_PATCH[2],160]]);
 midPatch=groundPatch(MID[0],MID[1],MID[2],MID[3],0.5,[[-S/2,S/2,-S/2,S/2]]);
 const outPatch=groundPatch(OUTER_MID[0],OUTER_MID[1],OUTER_MID[2],OUTER_MID[3],1,[MID]);

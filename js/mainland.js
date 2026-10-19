@@ -3,8 +3,8 @@
 // town: a boardwalk on the beach, a marina, Main Street with a block of shops each side and a cross street. Both are
 // reached by temporary crossings, a timber trestle (BRIDGES with temp set) and a rock causeway (CAUSEWAYS), until the
 // crane builds steel spans; the crane waits on a barge beside the south trestle.
-const mainGround=[groundPatch(-450,450,-570,-195,3,[MAIN_FINE[0]]),groundPatch(...MAIN_FINE[0],1,[]),
-  groundPatch(-450,450,480,780,3,[MAIN_FINE[1]]),groundPatch(...MAIN_FINE[1],1,[])];
+const mainGround=[groundPatch(-450,450,-572,-196,4,[MAIN_FINE[0]]),groundPatch(...MAIN_FINE[0],1,[]),
+  groundPatch(-450,450,480,780,4,[MAIN_FINE[1]]),groundPatch(...MAIN_FINE[1],1,[])];
 
 // a temporary trestle: timber pile bents every 6 m with cap beams and cross bracing, steel stringers, a plank deck
 // with wheel guards and a timber rail, and a yellow limit sign at each end
@@ -58,9 +58,9 @@ function mainLot(K,x,z,w,d,h,col,face,awn){const y=Math.min(baseHeight(x-w/2,z-d
   const out=[];
   for(let g=0;g<12000&&out.length<440;g++){const x=-440+rnd()*420,z=-555+rnd()*250,w=mainWoods(x,z);
     if(w<0.5||rnd()>0.35+0.65*ss(-20,-60,x)||Math.abs(roadOff(x,z))<ROAD_W/2+1.4)continue;
-    out.push({p:rnd()<0.72,x,z,yaw:rnd()*6.3,s:0.85+rnd()*0.7,c:(rnd()*6)|0})}
+    out.push({p:rnd()<0.9,x,z,yaw:rnd()*6.3,s:0.85+rnd()*0.7,c:(rnd()*6)|0})}
   // and a ragged tree line along the far side of the hayfield
-  for(let x=30;x<400;x+=5+rnd()*6){const z=-548+rnd()*10;out.push({p:rnd()<0.5,x,z,yaw:rnd()*6.3,s:0.9+rnd()*0.6,c:(rnd()*6)|0})}
+  for(let x=30;x<400;x+=5+rnd()*6){const z=-548+rnd()*10;out.push({p:rnd()<0.75,x,z,yaw:rnd()*6.3,s:0.9+rnd()*0.6,c:(rnd()*6)|0})}
   const np=out.filter(o=>o.p).length,nl=out.length-np,mk=(geo,mat,n)=>{const im=new THREE.InstancedMesh(geo,mat,Math.max(1,n));im.castShadow=true;im.receiveShadow=true;
     im.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(Math.max(1,n)*3),3);im.count=n;scene.add(im);treeIMs.push(im);return im};
   const pines=mk(jesPineGeo,famMat,np),woods=mk(assetIMs.leafy[0].geometry,assetIMs.leafy[0].material,nl),crowns=mk(assetIMs.leafy[1].geometry,assetIMs.leafy[1].material,nl);
