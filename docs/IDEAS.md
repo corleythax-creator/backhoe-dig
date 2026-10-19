@@ -50,6 +50,15 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - J37 Surveying and staking: Set stakes along the centreline with cut and fill marks on them, and slope stakes to show where the cut meets the ground. (R9 F6 most none c2 6h needs J06)
 - J38 Compaction test: Proof-roll with a loaded truck or read a density gauge on each lift, and re-roll the places that fail. (R9 F6 most none c1 3h needs M07 J05)
 - J39 Culvert sizing: Pick the pipe diameter for a ditch by its drainage area; too small and the road overtops in a storm. (R9 F7 some low c2 6h needs J13 W01)
+- J40 Drill and blast a bench: Mark the drill pattern, drill the holes, load them, clear the area, sound the siren and fire the shot to break a bench of rock. (R9 F9 some low c3 12h needs M34)
+- J41 Quarry bench design: Lay out benches with a safe height, a berm at the edge, a steep face angle and a haul ramp at a fixed grade. (R9 F7 some none c2 7h needs S03)
+- J42 Highwall safety: Scale loose rock off the face, keep berms at the edges and never park or stand under an undercut face. (R9 F7 some low c2 5h needs S03)
+- J43 Haul road design: Cut a ramp wide enough for the truck with a safe grade, a berm on the drop side and a drain so it does not rut. (R9 F7 some low c2 6h needs M35)
+- J44 Production targets: Set tons per hour for the pit and see where it bottlenecks: loading, truck cycle, crusher or the scale. (R8 F8 every none c2 7h needs J16)
+- J45 Stockpile inventory: Piles of 3/4 in, 57 stone, base and fines grow as the plant runs and shrink as orders go out; run out and the customer waits. (R8 F7 most none c2 6h needs M38)
+- J46 Contractor pickups: Contractor trucks arrive for stone, the wheel loader fills them, they weigh out on the scale, and you get paid by the ton. (R8 F8 most low c2 8h needs J16 M03)
+- J47 Sand and gravel pit: Dig a wet pit with a long-reach excavator, stack the sand to drain, and screen it into gravel and sand. (R7 F7 some low c2 7h)
+- J48 Reclaim the quarry: When a pit is worked out, regrade the benches, spread topsoil, seed it and let it fill with water to make a new lake. (R8 F8 some low c2 7h needs D05 S03)
 
 ## M: New machines
 
@@ -86,6 +95,12 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - M31 Water well drill rig: A truck-mounted rig that drills a well: add casing, watch the bit pass clay and rock layers and finish with a pump test. (R8 F7 rare low c2 7h)
 - M32 Rock crusher and screening plant: Feed quarry rock into a crusher, run it up a conveyor and screen it into piles of different stone sizes to load out. (R8 F8 some low c3 10h needs S03)
 - M33 Pile driver and vibratory hammer: Drive steel and timber piles for a dock or retaining wall, with the hammer pounding and the pile sinking foot by foot. (R7 F7 rare low c2 6h needs S18)
+- M34 Blasthole drill rig: A tracked rig with a tall mast that drills blast holes with a rattle and a dust collector, and a rack of steel. (R8 F7 some low c2 7h)
+- M35 Rigid mining haul truck: A huge rigid-frame dump truck with a tall ladder and a bed that takes several loads from the shovel. (R8 F8 some low c3 8h needs S03)
+- M36 Large mining excavator: A giant front-shovel excavator that loads a haul truck in three bucket passes. (R9 F9 some low c3 10h)
+- M37 Rock breaker at the grizzly: A fixed rock breaker over the crusher feed to smash oversized rock that bridges the hopper. (R8 F6 some low c1 4h needs M32)
+- M38 Radial stacker and conveyors: Conveyors carry crushed stone to a radial stacker that swings and builds a cone-shaped stockpile. (R8 F7 some low c2 6h needs M32)
+- M39 Screen and sand wash plant: A vibrating screen and a sand screw that wash and sort the fines into clean sand and drained water. (R8 F6 some low c2 7h needs M32)
 
 ## X: Excavator and attachments
 
@@ -106,6 +121,7 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - X15 GPS machine control: A design surface loaded into the cab, with a colour map of cut and fill and a bucket-tip readout that follows the grade as you dig. (R9 F7 some none c2 8h needs J06 X07)
 - X16 Quick coupler and attachment changes: Pull the pins or use the hydraulic coupler to swap a bucket, thumb, hammer or auger, and park each one on the ground. (R8 F6 every low c1 4h)
 - X17 Tracks and undercarriage: Tracks sink in soft ground, slip on wet slopes and pack with mud; a track that comes off is a stoppage until you jack it back. (R8 F6 most low c2 6h)
+- X18 Rock bucket and ripper teeth: A heavy rock bucket with wear-plated teeth that go dull and break, plus a ripper tooth for the dozer. (R8 F6 most low c1 4h)
 
 ## D: Dirt and digging
 
@@ -124,6 +140,9 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - D13 Erosion: Rain carves little gullies down spoil piles and washes silt into the puddles and the trench. (R8 F6 some low c2 6h needs W01)
 - D14 Dig anywhere: Pick a spot on the site map and the dig grid moves there, so any part of the mesa can be dug, not only the trench area. (R4 F9 most high c3 12h)
 - D15 Groundwater and dewatering: Dig below the water table and the trench fills from the sides; set a sump and a pump to dry it out, and watch the cone of drawdown spread. (R9 F7 some low c2 7h)
+- D16 Rock types and hardness: Limestone, granite and shale each have their own hardness and break differently under the hammer, teeth and blast. (R8 F7 some low c2 6h needs D11)
+- D17 Blast fragmentation: A good shot breaks to loadable size; a poor one leaves oversize boulders to break and a toe you have to dig out. (R8 F8 some low c2 5h needs J40)
+- D18 Dust from drilling and crushing: Drilling, loading and crushing throw dust that drifts with the wind; a water spray keeps it down. (R8 F6 most low c1 4h)
 
 ## U: Buried utilities
 
@@ -197,6 +216,9 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - S32 Old mill on the creek: A weathered mill with a wheel turned by the creek and a mill pond behind a stone dam, found along the woods trail. (R6 F7 some low c2 6h needs S24)
 - S33 Swimming hole and rope swing: A cool pool under a little waterfall in the woods with a rope swing off a big branch. (R5 F8 some low c2 5h needs S24)
 - S34 Lakeside campground: A clearing of fire rings, picnic tables and tents, where weekend campers pull in and a hand pump supplies water. (R6 F7 some low c2 7h)
+- S35 Underground mine adit: A tunnel into the hillside with timber sets, a rail track and a cart ride, lit by a head lamp. (R7 F8 rare high c3 14h)
+- S36 Settling ponds: Wash water goes to a series of ponds where the silt settles and clean water leaves; they fill with silt and need dredging. (R8 F6 some low c2 6h)
+- S37 Scale house and truck wash: A scale house with a window, a wheel wash at the gate that drips mud, and a sign-in board for each truck. (R8 F5 most low c1 4h needs J16)
 
 ## L: Crew and people
 
@@ -209,6 +231,7 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - L07 Dexter in his yard: Dexter walks his yard, waves as you drive by and asks you to move a pile or park his skid steer back. (R5 F7 most low c2 6h)
 - L08 Jessica at home: Jessica reads by the fire in her library or tends her herb garden, and chats when you walk up. (R4 F6 some low c2 5h)
 - L09 Earl, the old-timer: A neighbor with a boat and a thousand stories, who shows you the fishing spots, repairs things and sits on the dock at sundown. (R4 F7 most low c1 4h)
+- L10 Blaster and spotter: A blaster in a hard hat who calls out the clear, fire in the hole and all clear on the radio, and a spotter at the pit road. (R8 F7 some low c1 4h needs J40)
 
 ## A: Sound
 
@@ -221,6 +244,7 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - A07 Rain on the roof: Rain drums on the cab roof inside the machines and on the porch roofs, softer out in the open. (R8 F4 some none c1 1h needs W01)
 - A08 Boat sounds: An outboard that revs with the throttle, waves slapping the hull, and gulls round the marina. (R7 F4 most none c1 2h needs M21)
 - A09 Night sounds of the lake: Loons calling, crickets, a whip-poor-will, a bullfrog and a far train horn that carries over the water. (R6 F5 every none c1 3h)
+- A10 Quarry sounds: The blast siren, a long horn, back-up alarms, rock hitting the steel bed and the roar of the crusher. (R8 F6 every none c1 3h)
 
 ## C: Controls and camera
 
@@ -256,6 +280,7 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - Q13 Realistic lake water: Turquoise over the sand in the shallows, deep blue farther out, foam along the shore, sky reflections that change with the angle you look from, and calmer swells near land; still flat-shaded. (R8 F5 every low c2 5h needs S16)
 - Q14 Wakes and spray: A boat throws a V wake that spreads and fades, and spray off the bow at speed. (R8 F5 most low c1 3h needs M21)
 - Q15 PC high graphics tier: A PC-only graphics level behind the Graphics setting: HDR sky lighting, soft shadows, ambient occlusion, bloom, tone mapping, PBR ground and machine materials with wet-surface darkening and rain droplets, and richer autumn trees. Aims at the look of a modern construction sim (lit, wet, autumn-coloured); Low stays as is for the phone, and what the ground does stays the same on every device. Owner's high priority (Oct 18). (R9 F6 every none c3 16h needs Q07)
+- Q16 Blast dust and debris: A blast throws a dust cloud and chunks of rock that fall with a thud, and the ground shakes through the cab. (R8 F9 some high c2 6h needs J40)
 
 ## E: Map editor
 
