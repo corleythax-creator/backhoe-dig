@@ -8,16 +8,16 @@ function fpEye(o,px,py,pz,dx,dy,dz){o.localToWorld(camera.position.set(px,py,pz)
   o.localToWorld(look.set(px+Math.sin(y)*c,py+Math.sin(p)*10,pz+Math.cos(y)*c))}
 function frame(now){
   // frame cap (Graphics panel): skip this display refresh if the last frame was too recent
-  if(gfxCur.fps&&!bench.on&&now-last<900/gfxCur.fps){requestAnimationFrame(frame);return}
+  if(gfxCur.fps&&!bench.on&&!vrOn()&&now-last<900/gfxCur.fps)return;
   gfxFrame(now-last);
   matPbrSync();
   const dt=Math.min(0.05,(now-last)/1000);last=now;crushT-=dt;
   // resolution changes and window resizes land here, before anything is drawn this frame
-  if(viewDirty){viewDirty=false;const want=bench.on?(bench.pr||maxPR):pr;if(renderer.getPixelRatio()!==want)renderer.setPixelRatio(want);resize()}
+  if(viewDirty&&!renderer.xr.isPresenting){viewDirty=false;const want=bench.on?(bench.pr||maxPR):pr;if(renderer.getPixelRatio()!==want)renderer.setPixelRatio(want);resize()}
   // the map editor has the frame while it is open; the game stands still
-  if(edOn){editorFrame(dt,now);requestAnimationFrame(frame);return}
+  if(edOn){editorFrame(dt,now);return}
   // inputs
-  keyAxes(dt);pollPad();
+  keyAxes(dt);pollPad();vrPoll();
   const Lx=clamp(SL.x+KA.lx+PA.lx,-1,1),Ly=clamp(SL.y+KA.ly+PA.ly+(mode==='dig'||mode==='mow'||mode==='walk'?0:PA.thr),-1,1),Rx=clamp(SR.x+KA.rx+PA.rx,-1,1),Ry=clamp(SR.y+KA.ry+PA.ry,-1,1);
   let swingIn=0,stickIn=0,driveIn=0,turnIn=0,boomIn=-Ry,bucketIn=Rx;
   // Turn sensitivity (controls.js) scales every left / right
@@ -241,25 +241,27 @@ function frame(now){
   fpTick(dt);
   if(bench.on)benchCamera();
   if(viewPin)viewPinApply();
+  // VR: the rig goes to the seat and the headset looks round from there (vr.js)
+  if(vrOn())vrFrame(dt);
   updateSound(dt);
   if(shake>0){shake-=dt;camera.position.x+=(Math.random()-0.5)*0.25;camera.position.y+=(Math.random()-0.5)*0.25}
   sky.position.copy(camera.position);
   const fv=mode==='boat'?btCur():mode==='heavy'?hvCur():mode==='bike'?bk:mode==='truck'?tr:mode==='mow'?mw:mode==='skid'?sk:mode==='walk'?wk:st;sun.position.set(fv.x,fv.y,fv.z).addScaledVector(LIGHT_DIR,SUN_D); sun.target.position.set(fv.x,fv.y,fv.z);
   {const o=groundOcc.value;o[0].set(st.x,st.z,st.yaw,0);o[2].set(tr.x,tr.z,tr.yaw,0)}
   timeU.value=now/1000;
-  shadowProxyTick();lawnLod();tuftLod();rainCover();renderer.render(scene,camera);
+  shadowProxyTick();lawnLod();tuftLod();rainCover();if(vr.fake)vrFakeHead();renderer.render(scene,camera);if(vrOn())vrAfter();
   if(bench.on)benchSample(dt);
   fpsFrames++;fpsTime+=dt;
   if(fpsTime>=0.5){const f=Math.round(fpsFrames/fpsTime);const fe=$('#fpsVal');fe.textContent=f;fe.style.color=f>=50?'var(--ok)':f>=30?'var(--gas)':'var(--danger)';
     // auto resolution: step down when slow; step back up only after a long steady run, and never within 30 s of a step down
-    if(!bench.on&&gfxCur.auto&&f<48&&pr>1){if(++lowN>=3){pr=Math.max(1,pr-0.25);viewDirty=true;lowN=0;prHold=now+30000}}else lowN=0;
-    if(!bench.on&&gfxCur.auto&&f>=58&&pr<maxPR&&now>prHold){if(++hiN>=8){pr=Math.min(maxPR,pr+0.25);viewDirty=true;hiN=0}}else hiN=0;
+    if(!bench.on&&!vrOn()&&gfxCur.auto&&f<48&&pr>1){if(++lowN>=3){pr=Math.max(1,pr-0.25);viewDirty=true;lowN=0;prHold=now+30000}}else lowN=0;
+    if(!bench.on&&!vrOn()&&gfxCur.auto&&f>=58&&pr<maxPR&&now>prHold){if(++hiN>=8){pr=Math.min(maxPR,pr+0.25);viewDirty=true;hiN=0}}else hiN=0;
     $('#resVal').textContent=pr.toFixed(2).replace(/0$/,'')+'x';
     const t=renderer.info.render.triangles;$('#triVal').textContent=t>=1e6?(t/1e6).toFixed(2)+'M':t>=1e3?Math.round(t/1e3)+'k':t;fpsFrames=0;fpsTime=0}
-  requestAnimationFrame(frame);
 }
 // textures may finish loading before the later scripts arrive: apply them now if they are in, otherwise when they are
 if([texGrass,texDirt,texGrime].every(t=>t.image&&t.image.width))applyTextures();else texManager.onLoad=applyTextures;
 // every lit material gets its wet look before anything is drawn, so nothing compiles twice (rain.js)
 wetPatchAll();
-requestAnimationFrame(frame);
+// the renderer runs the loop: a WebXR headset only draws frames asked for through it (vr.js)
+renderer.setAnimationLoop(frame);

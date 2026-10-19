@@ -17,7 +17,7 @@ const GFX={
   high:{name:'High',pr:2,auto:true,fps:0,fov:0,sh:4096,shR:45,soft:true,filmic:true,exp:1,tex:'high',detail:1,base:1,macro:true,pbr:true,aniso:16,dirt:4,lawnFar:1e9,fog:1,wmFine:true,rainN:3000,rainSp:900,splashN:1200,wakeN:640,treeR:160,tuft:[1,25,80,0.35]}};
 let gfxKey='high',gfxOver={},gfxCur=Object.assign({},GFX.high);
 function gfxName(){return GFX[gfxKey].name+(Object.keys(gfxOver).length?' (custom)':'')}
-function gfxGuess(){if(PHONE)return 'low';
+function gfxGuess(){if(PHONE||/OculusBrowser|Quest/.test(navigator.userAgent))return 'low';
   try{const gl=renderer.getContext(),ext=gl.getExtension('WEBGL_debug_renderer_info'),r=ext?gl.getParameter(ext.UNMASKED_RENDERER_WEBGL):'';if(/intel/i.test(r))return 'med'}catch(e){}
   return 'high'}
 // the preset with the panel's changes on top, put into effect

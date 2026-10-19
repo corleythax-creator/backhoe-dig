@@ -8,5 +8,5 @@ let last=performance.now(),hudT=0,shake=0,firstCam=true,fullWarned=false;
 const trenchK=[];
 function trenchKeys(){trenchK.length=0;if(inDig(0,TRENCH_Z0)&&inDig(0,TRENCH_Z1))for(let j=Math.round(gJ(TRENCH_Z0));j<=Math.round(gJ(TRENCH_Z1));j++)trenchK.push(j*V+Math.round(gI(0)))}
 trenchKeys();
-function resize(){const w=innerWidth,h=innerHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camFov=(w<h?68:58)+gfxFov;camera.fov=camFov;camera.updateProjectionMatrix()}
+function resize(){if(renderer.xr.isPresenting)return;const w=innerWidth,h=innerHeight;renderer.setSize(w,h,false);camera.aspect=w/h;camFov=(w<h?68:58)+gfxFov;camera.fov=camFov;camera.updateProjectionMatrix()}
 addEventListener('resize',()=>{viewDirty=true});resize();

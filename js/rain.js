@@ -153,7 +153,7 @@ function rcRender(){
   const lift=[jesRoof,jesBridgeRoof].filter(m=>m&&!m.visible);for(const m of lift)m.visible=true;
   const bg=scene.background,au=renderer.shadowMap.autoUpdate,ca=renderer.getClearAlpha(),rt=renderer.getRenderTarget();renderer.getClearColor(rcCol);
   scene.background=null;scene.overrideMaterial=rcDepth;renderer.shadowMap.autoUpdate=false;renderer.setClearColor(0xffffff,1);
-  renderer.setRenderTarget(rcRT);renderer.render(scene,rcCam);
+  const xr=renderer.xr.enabled;renderer.xr.enabled=false;renderer.setRenderTarget(rcRT);renderer.render(scene,rcCam);renderer.xr.enabled=xr;
   renderer.setRenderTarget(rt);renderer.setClearColor(rcCol,ca);scene.background=bg;scene.overrideMaterial=null;renderer.shadowMap.autoUpdate=au;
   for(const m of lift)m.visible=false;
   rcU.uRC.value.set(cx,cz,c.y+RC_UP,1/RC_S)}
