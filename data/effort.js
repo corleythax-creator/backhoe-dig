@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-19T02:35:00Z",
+ "updated": "2026-10-19T02:43:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -24,9 +24,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-18",
-   "dh": 160.5,
+   "dh": 162,
    "act": 4,
-   "versions": 19
+   "versions": 20
   }
  ],
  "extra": [
@@ -1179,6 +1179,15 @@ window.EFFORT = {
    "tris": 1919332,
    "chars": 789494,
    "what": "Each dig tile's ground (holes, spoil, puddles, mud, wetness) can be lifted out and put back seamlessly, and mud ruts carry into a tile: groundwork for digging anywhere, with no change in play"
+  },
+  {
+   "v": 128,
+   "asked": "2026-10-18T21:30:00-05:00",
+   "live": "2026-10-18T21:43:17-05:00",
+   "dh": 1.5,
+   "tris": 1919441,
+   "chars": 789860,
+   "what": "Top bar: job gauges hidden, the machine rail moved into a Controls dropdown beside Blocks, and a Chase / Cab camera toggle"
   }
  ]
 };

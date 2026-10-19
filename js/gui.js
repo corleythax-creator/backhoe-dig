@@ -11,7 +11,7 @@
 // A skin: {v:1, t: when it went live (ms), L:{all|phone|big:{vars:{'--name':value}, el:{selector:{...}}, css, dock}},
 // text:{selector:text}, words:{id:text}} (words: the tips and captions of js/words.js). An el entry: hide, x/y (px moved), sc (size %), fs (text px), fg (text colour), bg (background),
 // rad (corners px), op (opacity %), css (any declarations). A selector can be a list (several parts or a group). dock:
-// {top: top|bottom, bottom: bottom|top, rail: left|right|top|bottom, map: right|left, sticks: normal|swap}.
+// {top: top|bottom, bottom: bottom|top, map: right|left, sticks: normal|swap}.
 // The Words tab rewrites the start card (skin.text) and the tips and captions (skin.words). The Tuning tab edits the
 // numbers of js/tune.js, which publish on their own (supabase/island_tune.sql) but with the same owner key.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md. This file needs nothing from the
@@ -29,8 +29,8 @@ const GUI_FONTS=['"Saira Condensed","Arial Narrow",system-ui,sans-serif','"Saira
 const GUI_PEEK=[['#menu','Menu'],['#help','Start card'],['#blkBar','Blocks bar'],['#walkBtns','Sprint and Jump'],['#seatBtn','Get in'],['#pumpBtn','Pump'],['#wipeBtn','Wipers'],
   ['#boxBtn','Hook box'],['#lawnRow','Lawn gauge'],['#heatKey','Heatmap key'],['#updBtn','Update button'],['#keysBox','Keys panel'],['#gfxBox','Graphics panel']];
 // ready-made groups (selector, name), picked from the Groups tab and then edited like any part
-const GUI_GROUPS=[['#hud button','Every button on the screen'],['.tbar button','Top bar buttons'],['.lbar button','Machine buttons'],['.bbar button','Bottom bar buttons'],
-  ['#menu button','Menu buttons'],['#blkBar button','Blocks bar buttons'],['.tbar, .lbar, .bbar','The three bars'],['.srow','Gauges'],['.lbl','Gauge names'],
+const GUI_GROUPS=[['#hud button','Every button on the screen'],['.tbar button','Top bar buttons'],['#ctlMenu button','Machine buttons'],['.bbar button','Bottom bar buttons'],
+  ['#menu button','Menu buttons'],['#blkBar button','Blocks bar buttons'],['.tbar, .bbar','The two bars'],['.srow','Gauges'],['.lbl','Gauge names'],
   ['.val','Gauge numbers'],['.sub','Gauge detail lines'],['.bar','Gauge meters'],['.stick','Sticks'],['.knob','Stick knobs'],['.cap','Stick captions'],
   ['#mini','Minimap'],['.card','Cards and panels'],['#toast span','Messages'],['#hud','The whole screen layer']];
 // one-move settings at the top of the Groups tab: name, selector, field, slider top
@@ -38,7 +38,7 @@ const GUI_QUICK=[['Button corners','#hud button','rad',30],['Button text size','
   ['Panel corners','.card','rad',40]];
 // where the big pieces can sit (Layout tab): key, name, choices (first is the game's own)
 const GUI_DOCK=[['top','Top bar',[['top','Top'],['bottom','Bottom']]],['bottom','Bottom bar',[['bottom','Bottom'],['top','Top']]],
-  ['rail','Machine buttons',[['left','Left'],['right','Right'],['top','Top'],['bottom','Bottom']]],['map','Minimap',[['right','Right'],['left','Left']]],
+  ['map','Minimap',[['right','Right'],['left','Left']]],
   ['sticks','Sticks',[['normal','As they are'],['swap','Swapped']]]];
 const GUI_TAGS={button:'button',span:'text',b:'text',div:'box',canvas:'drawing',select:'dropdown',input:'control',label:'label',p:'text',h1:'heading',h2:'heading',h3:'heading',h4:'heading',nav:'bar',header:'bar',footer:'bar',aside:'column'};
 // doc and root: the page holding the screen (the claude.ai editor puts it in a stage box), media: how the phone and big
@@ -79,14 +79,11 @@ function guiDecl(p){const d=[];
 // machine buttons right), and each piece takes its slot. The phone and big screen layers write the whole layout from
 // their own choices over the every-screen ones, so a layer can put a piece back where the game has it
 function guiDockCss(d){const c=k=>d[k]||GUI_DOCK.find(g=>g[0]===k)[2][0][0];
-  const top=c('top'),bot=c('bottom'),rail=c('rail'),map=c('map'),swap=c('sticks')==='swap',flat=rail==='top'||rail==='bottom';
+  const top=c('top'),bot=c('bottom'),map=c('map'),swap=c('sticks')==='swap';
   let r='#hud{grid-template-columns:auto auto minmax(0,1fr) auto auto;grid-template-rows:auto auto auto minmax(0,1fr) auto auto auto}\n';
   r+=`.tbar{grid-area:${top==='top'?1:6}/1/${top==='top'?2:7}/6}\n.bbar{grid-area:${bot==='bottom'?7:2}/1/${bot==='bottom'?8:3}/6}\n`;
   if(top==='bottom')r+='.tbar::after{top:auto;bottom:100%}\n';
   if(bot==='top')r+='.bbar{border-top:0;border-bottom:1px solid var(--hud-line)}\n';
-  r+=`.lbar{grid-area:${rail==='top'?'3/1/4/6':rail==='bottom'?'5/1/6/6':rail==='right'?'4/5/5/6':'4/1/5/2'}}\n`;
-  if(rail==='right')r+='.lbar{border-right:0;border-left:1px solid var(--hud-line);padding:11px var(--pr) 8px 8px}\n';
-  if(flat)r+=`.lbar{flex-direction:row;overflow-x:auto;overflow-y:hidden;border-right:0;${rail==='top'?'border-bottom':'border-top'}:1px solid var(--hud-line);padding:6px var(--pr) 6px var(--pl)}\n.lbar button{width:auto;max-height:none;min-width:58px;flex:1 1 0;height:52px}\n`;
   r+=`.rpane{grid-area:4/${map==='left'?2:4}/5/${map==='left'?3:5}${map==='left'?';align-items:flex-start;padding:11px 0 8px var(--pl)':''}}\n`;
   r+=`.sticks{grid-area:4/2/5/5${swap?';flex-direction:row-reverse;padding:0 14px 10px var(--pr)':''}}\n`;
   if(swap)r+='#capL{order:5;margin-left:auto;text-align:right}#capR{order:-1;margin-left:0;text-align:left}\n';
