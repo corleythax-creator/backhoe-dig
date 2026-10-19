@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-19T04:13:00Z",
+ "updated": "2026-10-19T04:19:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -24,9 +24,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-18",
-   "dh": 266.5,
+   "dh": 269.5,
    "act": 5.5,
-   "versions": 38
+   "versions": 39
   }
  ],
  "extra": [
@@ -1350,6 +1350,15 @@ window.EFFORT = {
    "tris": 2967890,
    "chars": 940667,
    "what": "The map editor keeps several named maps on the device, downloads a map as a file and opens one, shows what a map holds, starts over one layer at a time (shape, paint, things or roads), and its History list names each step and jumps back to any of them."
+  },
+  {
+   "v": 147,
+   "asked": "2026-10-18T23:20:00-05:00",
+   "live": "2026-10-18T23:19:36-05:00",
+   "dh": 3,
+   "tris": 2968865,
+   "chars": 946888,
+   "what": "The map editor's Inspect group can measure: tap points for a length, slope and area, in feet and acres; and the machines can be sent back to where they start."
   }
  ]
 };
