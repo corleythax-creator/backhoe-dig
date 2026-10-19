@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-19T01:31:00Z",
+ "updated": "2026-10-19T01:51:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -24,9 +24,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-18",
-   "dh": 94.5,
+   "dh": 108.5,
    "act": 3,
-   "versions": 10
+   "versions": 11
   }
  ],
  "extra": [
@@ -1098,6 +1098,15 @@ window.EFFORT = {
    "tris": 1668774,
    "chars": 728533,
    "what": "Rain splashes where it lands: little crowns of spray on the ground and spreading rings on puddles and the lake. Drops are now slanted streaks of many lengths that lean in the wind and catch the sun, with a fainter far layer and a veil of rain in the haze. New: Rain splashes in Graphics, Wind in the rain on the Tuning tab."
+  },
+  {
+   "v": 119,
+   "asked": "2026-10-18T20:00:00-05:00",
+   "live": "2026-10-18T20:51:25-05:00",
+   "dh": 14,
+   "tris": 2010403,
+   "chars": 740639,
+   "what": "The lakeside town to the south and the field and woods to the north, each reached by a temporary timber trestle and rock causeway, with the crane waiting on a barge to build steel spans (Plan C, release 3)"
   }
  ]
 };
