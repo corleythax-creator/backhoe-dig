@@ -90,7 +90,7 @@ function updateWalker(dt,mx,mz,lookX,lookY){
   {const g1=wkGround(wk.x,wk.z,lim),run=Math.hypot(wk.x-ox,wk.z-oz);if(run>1e-5&&g1>wk.y+0.02&&(g1-g0)/run>(inDig(wk.x,wk.z)?1.3:2.5)){wk.x=ox;wk.z=oz}}
   wk.x=clamp(wk.x,-WK_BOUND.x,WK_BOUND.x);wk.z=clamp(wk.z,WK_BOUND.z0,WK_BOUND.z1);
   // a bridge's railings keep him on the deck unless he jumps over them (the covered footbridge's walls always do)
-  for(const b of BRIDGES){const [t0,u0]=deckLocal(b,ox,oz);if(t0<0||t0>b.len||Math.abs(u0)>b.hw-0.4)continue;
+  for(const b of BRIDGES){if(b.dock)continue;const [t0,u0]=deckLocal(b,ox,oz);if(t0<0||t0>b.len||Math.abs(u0)>b.hw-0.4)continue;
     const dy=b.y+(b.y1-b.y)*t0/b.len;if(wk.y<dy-0.3||(!b.foot&&wk.y>dy+WK_RAIL))continue;
     let [t,u]=deckLocal(b,wk.x,wk.z);if(t<0||t>b.len||Math.abs(u)<=b.hw-0.45)continue;
     u=clamp(u,0.45-b.hw,b.hw-0.45);wk.x=b.x0+b.ux*t-b.uz*u;wk.z=b.z0+b.uz*t+b.ux*u}
@@ -142,14 +142,14 @@ $('#sprintBtn').addEventListener('pointerdown',e=>{e.preventDefault();setSprint(
 // each machine: its state (looked up when used: the excavator's is made in controls.js), the circles that make up its
 // body, the mode that drives it and what to call it
 const WK_RIDES={ex:{get o(){return st},c:EX_C,r:EX_R,m:'dig',n:'excavator'},truck:{get o(){return tr},c:TR_C,r:TR_R,m:'truck',n:'dump truck'},skid:{get o(){return sk},c:SK_C,r:SK_R,m:'skid',n:'skid steer'},mow:{get o(){return mw},c:MW_C,r:MW_R,m:'mow',n:'mower'}};
-const rideOf=m=>m==='dig'||m==='drive'?'ex':m==='truck'?'truck':m==='mow'?'mow':m==='skid'?'skid':null;
+const rideOf=m=>m==='dig'||m==='drive'?'ex':m==='truck'?'truck':m==='mow'?'mow':m==='skid'?'skid':m==='boat'?'boat'+btI:null;
 // the machine within an arm's length of the worker, nearest first
 function wkNear(){let best=null,bd=1.3;
   for(const k in WK_RIDES){const R=WK_RIDES[k];
     for(const lz of R.c){const d=Math.hypot(wk.x-R.o.x-Math.sin(R.o.yaw)*lz,wk.z-R.o.z-Math.cos(R.o.yaw)*lz)-R.r-WK_R;if(d<bd){bd=d;best=k}}}
   return best}
 // climbing out: the first clear spot beside the machine (driver's side, then the other side, then front and back)
-function wkPlaceOut(k){const R=WK_RIDES[k],o=R.o,sy=Math.sin(o.yaw),cy=Math.cos(o.yaw),gap=R.r+WK_R+0.3,len=Math.max(...R.c.map(Math.abs));
+function wkPlaceOut(k){const R=WK_RIDES[k];if(R.out)return R.out();const o=R.o,sy=Math.sin(o.yaw),cy=Math.cos(o.yaw),gap=R.r+WK_R+0.3,len=Math.max(...R.c.map(Math.abs));
   const spots=[[gap,0],[-gap,0],[gap,R.c[0]],[-gap,R.c[0]],[0,len+gap],[0,-len-gap]];
   for(const [sx,sz] of spots){const x=o.x+cy*sx+sy*sz,z=o.z-sy*sx+cy*sz;
     if(!landIn(x,z,1.5,0.45,true)||SOLIDS.some(s=>Math.abs(x-s.x)<s.hx+WK_R&&Math.abs(z-s.z)<s.hz+WK_R))continue;const f=wkFloor(x,z,0,1e9);
@@ -165,7 +165,7 @@ function seatToggle(){
   if(mode==='walk'){const k=wkNear();
     if(!k){const g=famGameNear();if(g){famPlay(g);return}
       toast(say('getInFar'));return}
-    wk.inside=k;walker.visible=false;setMode(WK_RIDES[k].m);toast(say('inMachine',{machine:WK_RIDES[k].n,key:kbUsed?keyLabel('enter'):padUsed?'B':'Get out'}),'',2600);return}
+    wk.inside=k;walker.visible=false;if(WK_RIDES[k].pick)WK_RIDES[k].pick();setMode(WK_RIDES[k].m);toast(say('inMachine',{machine:WK_RIDES[k].n,key:kbUsed?keyLabel('enter'):padUsed?'B':'Get out'}),'',2600);return}
   const k=rideOf(mode);if(!k)return;
   if(!wkPlaceOut(k)){toast(say('noRoomOut'));return}
   wk.inside=null;setMode('walk')}

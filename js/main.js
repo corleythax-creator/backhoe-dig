@@ -33,6 +33,9 @@ function frame(now){
   // skid steer: left stick drives, right stick runs the arms (up lowers them, as the boom) and the bucket (right dumps)
   let sDrive=0,sTurn=0,sArm=0,sCurl=0;
   if(mode==='skid'){sDrive=Ly;sTurn=Lx*Ts;sArm=-Ry;sCurl=-Rx;boomIn=0;bucketIn=0}
+  // boat: the left stick is the throttle and the wheel; the right stick looks round
+  let bThr=0,bSteer=0;
+  if(mode==='boat'){bThr=Ly;bSteer=Lx*Ts;boomIn=0;bucketIn=0;if(camMode==='chase')orbitYaw-=Rx*1.6*dt}
   const res=st.res;
   st.swing-=swingIn*TU.exSwing*dt*res;
   st.a1=clamp(st.a1+boomIn*TU.exBoom*dt*res,...LIM.a1);
@@ -42,6 +45,7 @@ function frame(now){
   updateTruck(dt,tThr,tSteer,tBed);updateMower(dt,mL,mR);if(bench.on){sDrive=sTurn=sArm=sCurl=0}updateSkid(dt,sDrive,sTurn,sArm,sCurl);
   siteTick();
   if(mode==='walk'&&!bench.on)updateWalker(dt,Lx,Ly,Rx*Ts,Ry);else updateWalker(dt,0,0,0,0);
+  boatTick(dt,bThr,bSteer);
   statTick(dt);
   // what the mixer hears: hydraulic demand, a ram pushed against its stop (relief valve), tracks moving
   {const end=(v,l,i)=>(i>0.1&&v>=l[1]-1e-4)||(i<-0.1&&v<=l[0]+1e-4);
@@ -202,19 +206,21 @@ function frame(now){
     let cyaw,cd=camDist,op=orbitPitch;
     if(mode==='truck'){look.set(tr.x,tr.y+1.6,tr.z);cyaw=tr.yaw+Math.PI+orbitYaw;cd=camDist+3}
     else if(mode==='skid'){look.set(sk.x+Math.sin(sk.yaw)*1.2,sk.y+1.0,sk.z+Math.cos(sk.yaw)*1.2);cyaw=sk.yaw+Math.PI+orbitYaw;cd=camDist*0.7}
+    else if(mode==='boat'){const b=btCur();look.set(b.x+Math.sin(b.yaw)*0.8,b.y+1.0,b.z+Math.cos(b.yaw)*0.8);cyaw=b.yaw+Math.PI+orbitYaw;cd=camDist*0.85}
     else if(mode==='mow'){look.set(mw.x+Math.sin(mw.yaw)*0.8,mw.y+0.7,mw.z+Math.cos(mw.yaw)*0.8);cyaw=mw.yaw+Math.PI+orbitYaw;cd=camDist*0.6}
     else if(mode==='walk'){look.set(wk.x,wk.y+1.35,wk.z);cyaw=wk.view+Math.PI+orbitYaw;cd=camDist*0.5;
       // inside Jessica's cottage the roof lifts off and the camera looks down from above the walls
       if(jesIn){cd=camDist*0.42;op=Math.max(op,1.05)}}
     else{const fx=Math.sin(hy),fz=Math.cos(hy);look.set(st.x+fx*4,st.y+0.8,st.z+fz*4);cyaw=hy+Math.PI+orbitYaw}
     camT.set(look.x+Math.sin(cyaw)*Math.cos(op)*cd,look.y+Math.sin(op)*cd,look.z+Math.cos(cyaw)*Math.cos(op)*cd);
-    camT.y=Math.max(camT.y,surfAt(camT.x,camT.z)+1.2);
+    camT.y=Math.max(camT.y,surfAt(camT.x,camT.z)+1.2,WATER+0.9);
     if(firstCam){camera.position.copy(camT);firstCam=false}else camera.position.lerp(camT,Math.min(1,dt*5));
     camera.lookAt(look);
   }else{
     // the seat's eye point and its straight-ahead look, turned by where you have turned your head (fpl)
     if(mode==='truck')fpEye(sprung,-0.55,1.6,1.95,0.25,-1,12.05);
     else if(mode==='skid')fpEye(skid,0,1.72,0.0,0,-0.9,4.5);
+    else if(mode==='boat')fpEye(btCur().g,0,1.62,-0.47,0,-1.1,8);
     else if(mode==='mow')fpEye(mower,0,1.42,0.02,0,-1.32,4.48);
     else if(mode==='walk'){const p=fpl.pitch,fx=Math.sin(wk.view),fz=Math.cos(wk.view);camera.position.set(wk.x+fx*0.1,wk.y+WK_H-0.12+wkBody.position.y,wk.z+fz*0.1);
       look.set(camera.position.x+fx*Math.cos(p)*5,camera.position.y+Math.sin(p)*5,camera.position.z+fz*Math.cos(p)*5)}
@@ -226,7 +232,7 @@ function frame(now){
   updateSound(dt);
   if(shake>0){shake-=dt;camera.position.x+=(Math.random()-0.5)*0.25;camera.position.y+=(Math.random()-0.5)*0.25}
   sky.position.copy(camera.position);
-  const fv=mode==='truck'?tr:mode==='mow'?mw:mode==='skid'?sk:mode==='walk'?wk:st;sun.position.set(fv.x,fv.y,fv.z).addScaledVector(LIGHT_DIR,SUN_D); sun.target.position.set(fv.x,fv.y,fv.z);
+  const fv=mode==='boat'?btCur():mode==='truck'?tr:mode==='mow'?mw:mode==='skid'?sk:mode==='walk'?wk:st;sun.position.set(fv.x,fv.y,fv.z).addScaledVector(LIGHT_DIR,SUN_D); sun.target.position.set(fv.x,fv.y,fv.z);
   {const o=groundOcc.value;o[0].set(st.x,st.z,st.yaw,0);o[2].set(tr.x,tr.z,tr.yaw,0)}
   timeU.value=now/1000;
   shadowProxyTick();lawnLod();tuftLod();rainCover();renderer.render(scene,camera);

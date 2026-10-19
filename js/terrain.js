@@ -155,7 +155,7 @@ function deckAt(x,z){let y=-1e9;for(const b of BRIDGES){const [t,u]=deckLocal(b,
 // deck's railings): the mesa, the Family Island, Jessica's Island or a bridge deck
 function landIn(x,z,lim,side,walk){if(mesaR(x,z)<=EDGE-lim||famR(x,z)<=FAM_R-lim||jesR(x,z)<=JES_R-lim||dexR(x,z)<=DEX_R-lim||mainIn(x,z,lim))return true;
   for(const c of CAUSEWAYS){const [t,u]=deckLocal(c,x,z);if(t>=0&&t<=c.len&&Math.abs(u)<=c.hw-side-0.4)return true}
-  for(const b of BRIDGES){if(b.foot&&!walk)continue;const [t,u]=deckLocal(b,x,z);if(t>=0&&t<=b.len&&Math.abs(u)<=b.hw-side)return true}return false}
+  for(const b of BRIDGES){if((b.foot||b.dock)&&!walk)continue;const [t,u]=deckLocal(b,x,z);if(t>=0&&t<=b.len&&Math.abs(u)<=b.hw-side)return true}return false}
 // the nearest such spot to x,z (x,z itself when it already is one)
 function landClamp(x,z,lim,side,walk){if(landIn(x,z,lim,side,walk))return [x,z];
   const c=[],r=mesaR(x,z),f=famR(x,z),j=jesR(x,z),dx=dexR(x,z);
@@ -165,7 +165,7 @@ function landClamp(x,z,lim,side,walk){if(landIn(x,z,lim,side,walk))return [x,z];
   c.push([JES_X+(x-JES_X)*(JES_R-lim)/j,JES_Z+(z-JES_Z)*(JES_R-lim)/j]);
   {const mx=Math.max(lim-430,Math.min(430-lim,x));c.push(z<0?[mx,Math.max(-555+lim,Math.min(mainRimN(mx)-lim,z))]:[mx,Math.min(765-lim,Math.max(mainRimS(mx)+lim,z))])}
   for(const b of CAUSEWAYS){let [t,u]=deckLocal(b,x,z);t=Math.max(0,Math.min(b.len,t));u=Math.max(side+0.4-b.hw,Math.min(b.hw-side-0.4,u));c.push([b.x0+b.ux*t-b.uz*u,b.z0+b.uz*t+b.ux*u])}
-  for(const b of BRIDGES){if(b.foot&&!walk)continue;let [t,u]=deckLocal(b,x,z);t=Math.max(0,Math.min(b.len,t));u=Math.max(side-b.hw,Math.min(b.hw-side,u));
+  for(const b of BRIDGES){if((b.foot||b.dock)&&!walk)continue;let [t,u]=deckLocal(b,x,z);t=Math.max(0,Math.min(b.len,t));u=Math.max(side-b.hw,Math.min(b.hw-side,u));
     c.push([b.x0+b.ux*t-b.uz*u,b.z0+b.uz*t+b.ux*u])}
   let best=c[0],bd=1e18;for(const q of c){const d=(q[0]-x)**2+(q[1]-z)**2;if(d<bd){bd=d;best=q}}return best}
 // fixed things the machines and the worker can't pass through (buildings on the Family Island), as boxes along the

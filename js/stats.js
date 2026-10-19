@@ -53,7 +53,7 @@ function statDug(v){stats.exDug+=v;statDirty=true}
 // a few metres in a frame (a teleport, Reset, a sync reload) starts the count afresh
 const statPrev={m:'',x:0,z:0,yaw:0,arm:0,t:0,hauled:0,dumped:0,strikes:0,caves:0,blocks:0,pour:false,ground:true};
 function statTick(dt){if(bench.on)return;const now=performance.now(),P=statPrev;
-  const o=mode==='mow'?mw:mode==='truck'?tr:mode==='skid'?sk:mode==='walk'?wk:st;
+  const o=mode==='boat'?btCur():mode==='mow'?mw:mode==='truck'?tr:mode==='skid'?sk:mode==='walk'?wk:st;
   const arm=mode==='dig'?st.swing+st.a1+st.a2+st.a3:mode==='truck'?tr.bed:mode==='skid'?sk.a+sk.c:0;
   const fresh=P.m!==mode||now-P.t>250;
   if(!fresh){const d=Math.hypot(o.x-P.x,o.z-P.z),moved=d>1e-4||Math.abs(o.yaw-P.yaw)>1e-4||Math.abs(arm-P.arm)>1e-5;
@@ -61,6 +61,7 @@ function statTick(dt){if(bench.on)return;const now=performance.now(),P=statPrev;
       if(mode==='mow'){stats.mowDist+=d;stats.mowTime+=dt;stats.mowTop=Math.max(stats.mowTop,Math.abs(mw.v))}
       else if(mode==='truck'){stats.trDist+=d;stats.trTime+=dt;stats.trTop=Math.max(stats.trTop,Math.abs(tr.v))}
       else if(mode==='skid'){stats.skDist+=d;stats.skTime+=dt;stats.skTop=Math.max(stats.skTop,Math.abs(sk.v))}
+      else if(mode==='boat'){}
       else if(mode==='walk'){stats.walkDist+=d;stats.walkTime+=dt;if(wk.ground)stats.walkTop=Math.max(stats.walkTop,Math.min(v,wk.spd+0.2));
         if(wk.spd>TU.wkRun+0.3)stats.sprintDist+=d}
       else{stats.exDist+=d;stats.exTime+=dt}

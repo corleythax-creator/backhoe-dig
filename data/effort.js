@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-19T15:09:00Z",
+ "updated": "2026-10-19T15:39:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -30,9 +30,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-19",
-   "dh": 26,
-   "act": 1,
-   "versions": 4
+   "dh": 36,
+   "act": 1.5,
+   "versions": 5
   }
  ],
  "extra": [
@@ -1419,6 +1419,15 @@ window.EFFORT = {
    "tris": 2967407,
    "chars": 999409,
    "what": "On foot you can go almost anywhere: down the rocky banks to every beach, wade into the lake and swim once it's deep (Sprint swims harder), and jump over a bridge railing to dive in."
+  },
+  {
+   "v": 154,
+   "asked": "2026-10-19T10:12:00-05:00",
+   "live": "2026-10-19T10:39:37-05:00",
+   "dh": 10,
+   "tris": 2977243,
+   "chars": 1012831,
+   "what": "A wooden dock with a boat at every island: get in and drive it across the lake, run it up on any beach to leave it on the sand, and reverse to push off."
   }
  ]
 };

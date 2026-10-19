@@ -26,6 +26,7 @@ const TUNE=[
   ['wkRun','On foot','Jog (stick all the way)',2.8,'mph',1,20,0.1],['wkSwim','On foot','Swim',1.1,'mph',0.5,10,0.1],['wkSprint','On foot','Sprint',5.6,'mph',1,40,0.1],
   ['wkJump','On foot','Jump height',6.2*6.2/(2*9.8),'ft',0.5,30,0.1],['wkGrav','On foot','Gravity (how floaty a jump is)',1,'pct',10,300,5],
   ['wkLook','On foot','Camera turn speed with the stick',1,'pct',20,400,5],['wkReachUp','On foot','How high the worker reaches for blocks',2.3,'ft',2,20,0.5],['blkReach','On foot','Farthest block reach (cab view)',80*0.3048,'ft',10,300,5],
+  ['btSpeed','Boats','Top speed',11,'mph',2,60,0.5],['btTurn','Boats','Turn rate at speed',0.9,'deg',10,180,1],
   ['lawnCut','Grass','Mower cuts the grass to',0.09,'in',1,24,0.5],['lawnWait','Grass','Wait before cut grass grows',45,'s',0,1200,5],['lawnGrow','Grass','Time to grow back tall',240,'s',10,3600,10],
   ['rainGap','Weather','Dry spell between showers (average)',510,'min',0.5,120,0.5],['rainLen','Weather','Shower length (average)',180,'min',0.5,60,0.5],
   ['soak','Weather','How fast rain soaks the ground',1,'pct',10,500,5],
