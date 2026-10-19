@@ -92,7 +92,7 @@ const LAWN_VX=LAWN_NX+1,LAWN_VN=LAWN_VX*(LAWN_NZ+1),LAWN_TG=[0.24,0.34,0.15],LAW
 const lawnGround=(function(){const P=new Float32Array(LAWN_VN*3),ix=[];
   for(let j=0;j<=LAWN_NZ;j++)for(let i=0;i<=LAWN_NX;i++){const k=j*LAWN_VX+i;P[k*3]=LAWN_X0+i*LAWN_GS;P[k*3+2]=LAWN_Z0+j*LAWN_GS}
   for(let j=0;j<LAWN_NZ;j++)for(let i=0;i<LAWN_NX;i++){const a=j*LAWN_VX+i;ix.push(a,a+LAWN_VX,a+1,a+1,a+LAWN_VX,a+LAWN_VX+1)}
-  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(P,3));g.setAttribute('normal',new THREE.BufferAttribute(new Float32Array(LAWN_VN*3),3));
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(P,3));g.setAttribute('normal',new THREE.BufferAttribute(upNormals(LAWN_VN*3),3));
   g.setAttribute('color',new THREE.BufferAttribute(new Float32Array(LAWN_VN*3),3));g.setAttribute('dirt',new THREE.BufferAttribute(new Float32Array(LAWN_VN),1));
   g.setAttribute('wetT',new THREE.BufferAttribute(new Float32Array(LAWN_VN).fill(-1e4),1));g.setIndex(ix);
   g.setAttribute('aGrain',new THREE.BufferAttribute(new Float32Array(LAWN_VN*2),2));
