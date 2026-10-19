@@ -136,7 +136,6 @@ const tufts=new THREE.Group(),tuftMeshes=[];scene.add(tufts);
       tS[n]=(kind===2?0.75+Math.random()*0.6:kind===3?0.85+Math.random()*0.35:0.7+Math.random()*0.6)*(1+0.25*edge);
       // dry clumps lie lower
       const dk=kind<2&&Math.random()<0.06+0.6*dry;tH[n]=(0.8+Math.random()*0.45)*(dk?0.7:1);
-      tI[n]=Math.round(gI(px));tJ[n]=Math.round(gJ(pz));if(tI[n]<0||tI[n]>N||tJ[n]<0||tJ[n]>N){tI[n]=-1;tJ[n]=-1}
       // the green of the ground, a touch deeper in the lush flats; dry clumps straw coloured
       const nv=Math.random(),lush=(1-dry)*0.15;
       let cr=(0.3+0.05*nv)*(1-lush),cg=(0.52+0.08*nv)*(1-lush*0.4),cb=(0.22+0.04*nv)*(1-lush);
@@ -252,6 +251,9 @@ function fieldLoad(str){if(typeof str!=='string')return;let b;try{b=atob(str)}ca
     fcT[k]=lawn.t-(b.charCodeAt(q+2)-1)/254*(TU.lawnWait+TU.lawnGrow);if(!fcIn[k]){fcIn[k]=1;fcAct.push(k)}fcRedraw(k)}
   tuftFlush()}
 // every clump stands up at the start
+// each tuft's dig-grid point, or -1 off the grid; again when the grid moves (the lawn patch's are cleared by mower.js)
+function tuftIdx(){for(let n=0;n<TUFTS;n++){const i=Math.round(gI(tX[n])),j=Math.round(gJ(tZ[n]));if(i<0||i>N||j<0||j>N){tI[n]=-1;tJ[n]=-1}else{tI[n]=i;tJ[n]=j}}}
+tuftIdx();
 for(let n=0;n<TUFTS;n++)tuftPut(n,true);tuftFlush();
 // ground outside the dig zone: 0.5 m over the rest of the mesa and its cliffs (hills, the scarp and the ramp need it),
 // 2 m beyond; each patch has a hole where the finer one sits
@@ -306,7 +308,7 @@ function buildSkirts(){
   const sp=[],si=[];let q=0;
   const run=(fx,a0,a1,st,dp)=>{for(let t=a0;t<a1-1e-6;t+=st){const [x0,z0]=fx(t),[x1,z1]=fx(t+st),h0=baseHeight(x0,z0),h1=baseHeight(x1,z1);
     sp.push(x0,h0,z0,x1,h1,z1,x0,h0-dp,z0,x1,h1-dp,z1);si.push(q,q+2,q+1,q+1,q+2,q+3);q+=4}};
-  run(t=>[t,GZ0],GX0,GX1,0.5,0.6);run(t=>[t,GZ1],GX0,GX1,0.5,0.6);run(t=>[GX0,t],GZ0,GZ1,0.5,0.6);run(t=>[GX1,t],GZ0,GZ1,0.5,0.6);
+  for(const R of [[GX0,GX1,GZ0,GZ1],...digSkirtRects]){run(t=>[t,R[2]],R[0],R[1],0.5,0.6);run(t=>[t,R[3]],R[0],R[1],0.5,0.6);run(t=>[R[0],t],R[2],R[3],0.5,0.6);run(t=>[R[1],t],R[2],R[3],0.5,0.6)}
   run(t=>[t,OUTER_MID[2]],OUTER_MID[0],OUTER_MID[1],1,2);run(t=>[t,OUTER_MID[3]],OUTER_MID[0],OUTER_MID[1],1,2);run(t=>[OUTER_MID[0],t],OUTER_MID[2],OUTER_MID[3],1,2);run(t=>[OUTER_MID[1],t],OUTER_MID[2],OUTER_MID[3],1,2);
   for(const R of MAIN_FINE){run(t=>[t,R[2]],R[0],R[1],1,2);run(t=>[t,R[3]],R[0],R[1],1,2);run(t=>[R[0],t],R[2],R[3],1,2);run(t=>[R[1],t],R[2],R[3],1,2)}
   run(t=>[t,MID[2]],MID[0],MID[1],0.5,2);run(t=>[t,MID[3]],MID[0],MID[1],0.5,2);run(t=>[MID[0],t],MID[2],MID[3],0.5,2);run(t=>[MID[1],t],MID[2],MID[3],0.5,2);
