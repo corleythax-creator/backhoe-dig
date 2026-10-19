@@ -140,6 +140,47 @@ const TREE_SP=[
 // which species a tree at x, z is: pines are 60% spruce, leafy trees a third each
 function treeSpecies(t,x,z){const w=hash(x*0.731+5.1,z*0.917-2.3);return t==='pine'?(w<0.6?0:1):w<0.36?2:w<0.7?3:4}
 function treeHeight(t,x,z){return TREE_SP[treeSpecies(t,x,z)].h}
+// ---------- how old and how big a tree really is ----------
+// Each game species stands for a real one of the north-eastern woods, and its drawn height is a real height (the model's
+// metres times the tree's size). Age comes from the species' height-for-age curve, a Chapman-Richards growth curve
+// H = hmax(1 - e^(-k age))^p of the kind foresters fit to measured trees (medium ground, trees growing in the open or
+// the edge of a stand); the numbers are tuned to published site-index figures (white spruce about 14 m at 50 yr,
+// red pine 19 m, red oak 17 m, sugar maple 15 m, paper birch 17 m). hmax: tallest the species gets (m); life: the age
+// it can reach (yr); dmax: trunk diameter at breast height (1.3 m) when that tall (cm); crown: crown spread (m) per
+// cm of trunk; form: how much of a cylinder the stem fills; dens: green wood density (kg/m³)
+const TREE_BIO={
+  spruce:{real:'white spruce',lat:'Picea glauca',hmax:34,k:0.0150,p:1.40,life:250,dmax:60,crown:0.15,form:0.42,dens:420},
+  redpine:{real:'red pine',lat:'Pinus resinosa',hmax:36,k:0.0175,p:1.30,life:300,dmax:70,crown:0.13,form:0.42,dens:450},
+  oak:{real:'northern red oak',lat:'Quercus rubra',hmax:34,k:0.0140,p:1.20,life:300,dmax:85,crown:0.24,form:0.40,dens:700},
+  maple:{real:'sugar maple',lat:'Acer saccharum',hmax:33,k:0.0120,p:1.25,life:350,dmax:80,crown:0.21,form:0.40,dens:650},
+  birch:{real:'paper birch',lat:'Betula papyrifera',hmax:28,k:0.0300,p:1.20,life:110,dmax:50,crown:0.17,form:0.38,dens:610}};
+const TREE_STAGES=['Sapling','Young','Mature','Old','Veteran'],TREE_STAGE_AT=[0.08,0.25,0.55,0.85];
+const treeHeightAt=(b,age)=>b.hmax*Math.pow(1-Math.exp(-b.k*age),b.p);
+const treeAgeAt=(b,H)=>Math.max(1,Math.round(-Math.log(1-Math.pow(Math.min(0.985,Math.max(0.001,H/b.hmax)),1/b.p))/b.k));
+// everything worked out for species index k at H metres tall: age (yr, also its growth rings), trunk diameter at breast
+// height (cm), crown spread (m), stem wood (m³), carbon dioxide held in the whole tree (kg), growth now (cm of height a
+// year), and how far through its life it is (0 to 1, and stage: an index into TREE_STAGES)
+function treeVitals(k,H){const b=TREE_BIO[TREE_SP[k].id],age=treeAgeAt(b,H),D=H<1.3?0:b.dmax*Math.pow((H-1.3)/(b.hmax-1.3),0.85),
+  vol=b.form*Math.PI/4*Math.pow(D/100,2)*H,life=age/b.life,st=life<TREE_STAGE_AT[0]?0:life<TREE_STAGE_AT[1]?1:life<TREE_STAGE_AT[2]?2:life<TREE_STAGE_AT[3]?3:4;
+  return{age,D,H,crown:Math.max(0.4,b.crown*D),vol,co2:vol*b.dens*1.6*0.5*3.667,grow:(treeHeightAt(b,age+1)-treeHeightAt(b,age))*100,life,st}}
+// a standing tree of a group (as treeEntry makes them) or an editor asset: its species index and vitals
+function treeHeightOf(a,k){return TREE_SP[k].h*a.s*(a.sy===undefined?treeSy(a.t,a.x,a.z):(a.sy||1))}
+function treeSy(t,x,z){const w=hash(x*1.3+0.7,z*2.1+0.3);return t==='pine'?0.92+0.25*w:0.95+0.12*w}
+function treeVitalsOf(a){const k=treeSpecies(a.t,a.x,a.z);return Object.assign({k},treeVitals(k,treeHeightOf(a,k)))}
+// all the standing trees (only one group if named), added up by species: n, ages (sum, oldest, youngest), heights (sum,
+// tallest), thickest trunk, crown area (m²), stem wood (m³), CO₂ (kg), and how many are at each life stage and age
+// bracket (TREE_AGE_BRACKETS); T.places has each group's count and age sum, T.felled the ones lying down
+const TREE_AGE_BRACKETS=[10,25,50,100];
+function treeCensus(only){const sp=TREE_SP.map(()=>({n:0,age:0,old:0,young:1e9,H:0,tall:0,thick:0,area:0,vol:0,co2:0,st:[0,0,0,0,0],br:[0,0,0,0,0]})),
+  T={sp,n:0,age:0,H:0,area:0,vol:0,co2:0,felled:0,places:{},st:[0,0,0,0,0],br:[0,0,0,0,0],old:null,tall:null,thick:null};
+  for(const g in treeGroups){if(only&&g!==only)continue;const P=T.places[g]={n:0,age:0};
+    for(const a of treeGroups[g]){if(treeFallen.has(treeKey(a.x,a.z))){T.felled++;continue}
+      const v=treeVitalsOf(a),S=sp[v.k],br=TREE_AGE_BRACKETS.findIndex(m=>v.age<m),bi=br<0?TREE_AGE_BRACKETS.length:br,ar=Math.PI*v.crown*v.crown/4;
+      S.n++;S.age+=v.age;S.H+=v.H;S.area+=ar;S.vol+=v.vol;S.co2+=v.co2;S.st[v.st]++;S.br[bi]++;
+      if(v.age>S.old)S.old=v.age;if(v.age<S.young)S.young=v.age;if(v.H>S.tall)S.tall=v.H;if(v.D>S.thick)S.thick=v.D;
+      T.n++;T.age+=v.age;T.H+=v.H;T.area+=ar;T.vol+=v.vol;T.co2+=v.co2;T.st[v.st]++;T.br[bi]++;P.n++;P.age+=v.age;
+      if(!T.old||v.age>T.old.age)T.old=v;if(!T.tall||v.H>T.tall.H)T.tall=v;if(!T.thick||v.D>T.thick.D)T.thick=v}}
+  return T}
 function treeHull(h){const g=new THREE.BufferGeometry(),P=[],add=s=>{const n=s.index?s.toNonIndexed():s;P.push(...n.attributes.position.array)};
   const tr=new THREE.CylinderGeometry(0.12,0.2,h[3]*0.6,6);tr.translate(0,h[3]*0.3,0);add(tr);
   if(h[0]==='cone'){const c=new THREE.ConeGeometry(h[1],h[3]-h[2],10);c.translate(0,h[2]+(h[3]-h[2])/2,0);add(c)}
@@ -168,7 +209,7 @@ function treeGroup(name,list){treeGroups[name]=list;
 function treeEntry(t,x,z,yaw,s,c,sy){const w=hash(x*1.3+0.7,z*2.1+0.3),w2=hash(z*1.7,x*0.9),k=treeSpecies(t,x,z);let col;
   if(t==='pine'){const p=ASSET_PT[(c|0)%4],v=0.9+0.2*w2;col=[p[0]*v,p[1]*v,p[2]*v]}
   else{const p=ASSET_LT[(c|0)%6],v=0.9+0.2*w2;col=k===4?[p[0]*v*1.05,(p[1]*0.8+0.2)*v,p[2]*v*0.85]:[p[0]*v,p[1]*v,p[2]*v]}
-  return{t,x,z,y:baseHeight(x,z),yaw,s,sy:sy||(t==='pine'?0.92+0.25*w:0.95+0.12*w),c:col}}
+  return{t,x,z,y:baseHeight(x,z),yaw,s,sy:sy||treeSy(t,x,z),c:col}}
 // every frame: the breeze, and when the camera has moved a few metres, which trees get the full model
 function treesTick(dt){const sw=TU.treeSway===undefined?1:TU.treeSway;treeWindU.value+=dt*(0.6+0.4*Math.min(2,sw));treeSwayU.value=sw;
   const cx=camera.position.x,cz=camera.position.z;if(!treeLodDirty&&Math.hypot(cx-treeLodX,cz-treeLodZ)<Math.max(4,treeNearR*0.06))return;

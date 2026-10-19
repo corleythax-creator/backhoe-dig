@@ -295,7 +295,20 @@ function edBoxEnd(){const b=ed.box;ed.box=null;$('#edBox').hidden=true;const x0=
   const got=edInRect(x0,y0,x1,y1);edSelSet(b.add?[...ed.sel,...got.filter(h=>!edIn(h))]:got)}
 
 // ---------- the selection's settings in the bottom bar ----------
-function edAssetName(a){return PROPS[a.t]?propName(a):a.t==='rock'?`Boulder, ${edFmt(1.6*a.s,0)} ft across`:`${ED_KINDS[a.t]||a.t}${(a.t==='pine'||a.t==='leafy')?` (${TREE_SP[treeSpecies(a.t,a.x,a.z)].name})`:''}, ${edFmt((a.t==='pine'||a.t==='leafy'?treeHeight(a.t,a.x,a.z):4.7)*a.s,0)} ft tall`}
+const edIsTree=a=>a.t==='pine'||a.t==='leafy';
+function edAssetName(a){if(PROPS[a.t])return propName(a);if(a.t==='rock')return `Boulder, ${edFmt(1.6*a.s,0)} ft across`;
+  if(!edIsTree(a))return `${ED_KINDS[a.t]||a.t}, ${edFmt(4.7*a.s,0)} ft tall`;
+  const v=treeVitalsOf(a);return `${ED_KINDS[a.t]} (${TREE_SP[v.k].name}), ${edFmt(v.H,0)} ft tall, about ${sN(v.age)} yr old`}
+// the ages of the trees among several picked things
+function edTreeAges(S){const ages=S.filter(s=>s.a&&edIsTree(s.a)).map(s=>treeVitalsOf(s.a).age);if(!ages.length)return '';
+  return ` · tree ages ${sN(Math.min(...ages))} to ${sN(Math.max(...ages))} yr, average ${sN(ages.reduce((p,q)=>p+q,0)/ages.length)}`}
+// the trees on the map by species with their ages, and the guide of age by size
+function edTreeBlock(){const C=treeCensus('main');if(!C.n)return '';
+  return `<details class="edtrees"${ed.treeOpen?' open':''}><summary>Tree ages: ${sN(C.n)} trees, average ${sN(C.age/C.n)} yr, oldest ${sN(C.old.age)} yr</summary>
+    <table class="edsum"><thead><tr><th>Species</th><th>Trees</th><th>Avg age</th><th>Oldest</th><th>Tallest</th></tr></thead><tbody>${C.sp.map((x,k)=>`<tr><td>${treeName(k)}</td><td>${x.n}</td><td>${x.n?sN(x.age/x.n)+' yr':'—'}</td><td>${x.n?sN(x.old)+' yr':'—'}</td><td>${x.n?sFt(x.tall):'—'}</td></tr>`).join('')}</tbody></table>
+    <p class="hint">Pick a tree to see its age, trunk and growth. Size changes its age: a taller tree is an older one.</p>${treeGuideHtml()}</details>`}
+// a tree's age and size in words: for the info card
+function edTreeLine(a){const v=treeVitalsOf(a);return `${TREE_STAGES[v.st]} · ${sN(v.age)} yr old · trunk ${sIn(v.D)} · crown ${edFmt(v.crown,0)} ft wide · grows ${(v.grow/2.54).toFixed(1)} in a year · holds ${sLb(v.co2)} of CO₂`}
 const edSlider=(id,lab,min,max,step,val,unit)=>`<span class="edopt"><label for="${id}">${lab}</label><input id="${id}" type="range" min="${min}" max="${max}" step="${step}" value="${val}"><output id="${id}V">${val}${unit}</output></span>`;
 // the colours a kind can take (scenery.js tints the trees, props.js the buildings' walls), as swatches
 const edFam=t=>t==='pine'||t==='leafy'?t:PROPS[t]&&PROPS[t].tint?'house':null;
@@ -306,12 +319,12 @@ function edInspector(){const S=ed.sel,el=$('#edInfo');edBottomSync();if(!S.lengt
   if(nl&&nl===S.length){el.innerHTML=`<div class="edihead"><h3>${nl===1?edAssetName(L[0]):nl+' selected'}</h3><small>Locked: unlock to move or change ${nl===1?'it':'them'}</small></div>`+edHideLockRow(L);edHideLockWire(el,L);return}
   const as=edSelA(),one=S.length===1?S[0]:null,deg=y=>Math.round(((y*57.3)%360+360)%360);let h;
   if(one){const o=one.a||one.m.o(),g=baseHeight(o.x,o.z);
-    h=`<div class="edihead"><h3>${one.a?edAssetName(one.a):one.m.name}</h3><small>${edWhere(o.x,o.z)} · ground ${g>=0?'+':'−'}${edFmt(Math.abs(g))} ft</small></div>`+
+    h=`<div class="edihead"><h3>${one.a?edAssetName(one.a):one.m.name}</h3><small>${edWhere(o.x,o.z)} · ground ${g>=0?'+':'−'}${edFmt(Math.abs(g))} ft</small>${one.a&&edIsTree(one.a)?`<small>${edTreeLine(one.a)}</small>`:''}</div>`+
       `<span class="edopt"><label for="edSelPX">East</label><input id="edSelPX" type="number" step="0.5" value="${edFmt(o.x)}" title="Feet east of the trench (west is negative)"><output>ft</output></span>`+
       `<span class="edopt"><label for="edSelPZ">South</label><input id="edSelPZ" type="number" step="0.5" value="${edFmt(o.z-ED_ZM)}" title="Feet south of the trench (north is negative)"><output>ft</output></span>`+
       edSlider('edSelTurn','Turn',0,359,ed.grid?15:1,deg(one.a?one.a.yaw:o.yaw||0),'°')+(one.a?edSlider('edSelSize','Size',30,300,5,Math.round(one.a.s*100),'%'):'')}
   else{const c={};for(const s of S){const n=s.a?edKindName(s.a.t):'Machine';c[n]=(c[n]||0)+1}
-    h=`<div class="edihead"><h3>${S.length} selected</h3><small>${Object.entries(c).map(([n,k])=>`${n} ×${k}`).join(', ')}${nl?` · ${nl} locked, left as they are`:''}</small></div>`+
+    h=`<div class="edihead"><h3>${S.length} selected</h3><small>${Object.entries(c).map(([n,k])=>`${n} ×${k}`).join(', ')}${edTreeAges(S)}${nl?` · ${nl} locked, left as they are`:''}</small></div>`+
       (as.length?edSlider('edSelTurn','Turn',-180,180,ed.grid?15:5,0,'°')+edSlider('edSelSize','Size',30,300,5,100,'%')+`<button id="edSelGrp" class="sm" aria-pressed="${ed.grp}">As a group</button>`:'')+
       (as.length>1?`<span class="row" role="group" aria-label="Line up"><button id="edAlLine" class="sm">Line up</button>${as.length>2?'<button id="edAlSpace" class="sm">Space evenly</button>':''}<button id="edAlFace" class="sm">Face one way</button></span>`:'')}
   const F=edFams(),fams={};for(const a of as){const f=edFam(a.t);if(f)(fams[f]=fams[f]||[]).push(a)}
@@ -390,7 +403,7 @@ function edListDraw(){const el=$('#edList');if($('#edDrawer').hidden||ed.pane!==
     h+='<div class="edlrows">'+shown.slice(0,200).map(q=>`<div class="edlr"><button class="edlck" data-k="${q.k}" aria-pressed="${edIn(q.h)}" aria-label="Add to the selection"></button><button class="edlrn" data-k="${q.k}"><span>${q.label}</span><small>${edShortSpot(q.x,q.z)}</small></button>${q.h.a?`<button class="edlhd" data-hd="${q.k}" aria-pressed="${!!q.h.a.hd}" aria-label="Hide while editing" title="Hide while editing">👁</button><button class="edlhd" data-lk="${q.k}" aria-pressed="${!!q.h.a.lk}" aria-label="Lock" title="Lock">🔒</button>`:''}</div>`).join('')+
       (shown.length>200?`<p class="hint">and ${shown.length-200} more: pick Near the view to see the ones close by</p>`:'')+'</div>';
     if(t){const ah=items.every(q=>q.h.a.hd),al=items.every(lk);h+=`<div class="row edlact"><button class="sm" data-hdall="${t}" aria-pressed="${ah}">${ah?'Show':'Hide'} them</button><button class="sm" data-lkall="${t}" aria-pressed="${al}">${al?'Unlock':'Lock'} them</button><button class="sm danger" data-del="${t}">Delete every ${name.toLowerCase()}${items.some(lk)?' not locked':''}</button>${ED_KINDS[t]?`<button class="sm" data-def="${t}">Put back the first ones</button>`:''}</div>`}}
-  el.innerHTML=h||'<p class="hint">Nothing to show.</p>';$('#edListN').textContent=`${assets.length} things`;
+  el.innerHTML=edTreeBlock()+(h||'<p class="hint">Nothing to show.</p>');const td=el.querySelector('.edtrees');if(td)td.ontoggle=()=>{ed.treeOpen=td.open};$('#edListN').textContent=`${assets.length} things`;
   el._g=groups}
 document.querySelectorAll('.edfilter button').forEach(b=>b.onclick=()=>{ed.listF=b.dataset.f;document.querySelectorAll('.edfilter button').forEach(c=>c.setAttribute('aria-pressed',c===b));edListDraw()});
 $('#edList').onclick=e=>{const b=e.target.closest('button');if(!b)return;const el=$('#edList'),grp=id=>(el._g.find(g=>g[0]===id)||[])[2]||[];
