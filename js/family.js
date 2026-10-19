@@ -22,7 +22,7 @@ function famMerge(list){let n=0;for(const g of list)n+=g.attributes.position.cou
 const famMat=M(0xffffff,{vertexColors:true}),famGlowMat=new THREE.MeshBasicMaterial({vertexColors:true});
 // a kit's parts into the scene, as one mesh per kind
 function famAdd(K){
-  if(K.solid.length){const m=new THREE.Mesh(famMerge(K.solid),famMat);m.castShadow=true;m.receiveShadow=true;scene.add(m)}
+  if(K.solid.length){const m=new THREE.Mesh(famMerge(K.solid),famMat);m.castShadow=true;m.receiveShadow=true;m.layers.enable(RAIN_LAYER);scene.add(m)}
   if(K.glow.length)scene.add(new THREE.Mesh(famMerge(K.glow),famGlowMat))}
 // a gable: a triangular prism along x, width d across z, height h, length L, its base at y=0
 function famGable(d,h,L){const a=-L/2,b=L/2,p=-d/2,q=d/2,v=[
