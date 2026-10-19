@@ -52,7 +52,7 @@ function drawMap(cv,cx,cz,half,big){
     g.fillStyle='#9a9c9e';g.fillRect(0,-b.hw*sc,b.len*sc,2*b.hw*sc);g.restore()}
   g.fillStyle='#8a5a3a';for(const s of SOLIDS)if(s.hx>2||s.hz>2)g.fillRect(X(s.x-s.hx),Y(s.z-s.hz),2*s.hx*sc,2*s.hz*sc);
   if(big)trailDrawOn(g,X,Y,sc);
-  g.drawImage(digLayer,X(-S/2),Y(-S/2),S*sc,S*sc);
+  g.drawImage(digLayer,X(GX0),Y(GZ0),S*sc,S*sc);
   if(big)wetDrawOn(g,X,Y,sc);
   g.lineWidth=Math.max(1.5,0.18*sc);g.strokeStyle='#f2f2ee';g.strokeRect(X(-0.5),Y(TRENCH_Z0),1*sc,(TRENCH_Z1-TRENCH_Z0)*sc);
   g.setLineDash([6*dpr,5*dpr]);g.strokeStyle='#f5c518';g.lineWidth=Math.max(2,0.2*sc);g.beginPath();g.moveTo(X(-12),Y(PIPE_Z));g.lineTo(X(12),Y(PIPE_Z));g.stroke();g.setLineDash([]);
@@ -60,7 +60,7 @@ function drawMap(cv,cx,cz,half,big){
   if(lawn.mapDirty||!lawnMap){updateLawnMap();lawn.mapDirty=false}
   g.drawImage(lawnMap,X(LAWN_X0),Y(LAWN_Z0),LAWN_NX*LAWN_GS*sc,LAWN_NZ*LAWN_GS*sc);
   g.fillStyle='#b9b6ae';for(const b of blocks)g.fillRect(X(b.x-b.w/2),Y(b.z-b.d/2),Math.max(2,b.w*sc),Math.max(2,b.d*sc));
-  if(big){g.strokeStyle='rgba(255,255,255,.35)';g.lineWidth=1.5*dpr;g.setLineDash([4*dpr,4*dpr]);g.strokeRect(X(-S/2),Y(-S/2),S*sc,S*sc);g.setLineDash([]);}
+  if(big){g.strokeStyle='rgba(255,255,255,.35)';g.lineWidth=1.5*dpr;g.setLineDash([4*dpr,4*dpr]);g.strokeRect(X(GX0),Y(GZ0),S*sc,S*sc);g.setLineDash([]);}
   const icon=(x,z,ang,fill,len,wid,active)=>{g.save();g.translate(X(x),Y(z));g.rotate(ang);
     const L=Math.max(len*sc,big?14*dpr:10*dpr),Wd=Math.max(wid*sc,big?9*dpr:7*dpr);
     if(active){g.beginPath();g.arc(0,0,L*0.9,0,Math.PI*2);g.fillStyle='rgba(255,255,255,.22)';g.fill()}
@@ -76,7 +76,7 @@ function drawMap(cv,cx,cz,half,big){
     g.beginPath();g.arc(px,py,r,0,Math.PI*2);g.fill();g.stroke();g.strokeStyle='#f5c518';g.lineWidth=2*dpr;g.stroke();
     g.beginPath();g.moveTo(px-r*1.6,py);g.lineTo(px+r*1.6,py);g.moveTo(px,py-r*1.6);g.lineTo(px,py+r*1.6);g.stroke()}
   g.fillStyle='rgba(20,23,19,.75)';g.fillRect(W-30*dpr,4*dpr,26*dpr,26*dpr);g.fillStyle='#f3f5ef';g.font=`800 ${16*dpr}px Saira Condensed, sans-serif`;g.textAlign='center';g.textBaseline='middle';g.fillText('N',W-17*dpr,17*dpr);
-  if(big){g.font=`700 ${15*dpr}px Saira Condensed, sans-serif`;g.fillStyle='rgba(255,255,255,.85)';g.fillText('DIG SITE',X(0),Y(-S/2)-10*dpr);g.fillText('LAKE',X(-110),Y(130));g.fillText('FAMILY ISLAND',X(FAM_X),Y(FAM_Z-FAM_R)-10*dpr);g.fillText("JESSICA'S ISLAND",X(JES_X),Y(JES_Z-JES_R)-10*dpr);g.fillText("DEXTER'S ISLAND",X(DEX_X),Y(DEX_Z-DEX_R)-10*dpr);}
+  if(big){g.font=`700 ${15*dpr}px Saira Condensed, sans-serif`;g.fillStyle='rgba(255,255,255,.85)';g.fillText('DIG SITE',X(GX0+S/2),Y(GZ0)-10*dpr);g.fillText('LAKE',X(-110),Y(130));g.fillText('FAMILY ISLAND',X(FAM_X),Y(FAM_Z-FAM_R)-10*dpr);g.fillText("JESSICA'S ISLAND",X(JES_X),Y(JES_Z-JES_R)-10*dpr);g.fillText("DEXTER'S ISLAND",X(DEX_X),Y(DEX_Z-DEX_R)-10*dpr);}
 }
 function mapsTick(dt){
   mapT-=dt;if(mapDirty&&mapT<=0){if(!mapBg)buildMapBg();updateDigLayer();mapDirty=false;mapT=0.5}

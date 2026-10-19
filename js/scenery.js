@@ -136,7 +136,7 @@ const tufts=new THREE.Group(),tuftMeshes=[];scene.add(tufts);
       tS[n]=(kind===2?0.75+Math.random()*0.6:kind===3?0.85+Math.random()*0.35:0.7+Math.random()*0.6)*(1+0.25*edge);
       // dry clumps lie lower
       const dk=kind<2&&Math.random()<0.06+0.6*dry;tH[n]=(0.8+Math.random()*0.45)*(dk?0.7:1);
-      tI[n]=Math.round((px+S/2)/CELL);tJ[n]=Math.round((pz+S/2)/CELL);if(tI[n]<0||tI[n]>N||tJ[n]<0||tJ[n]>N){tI[n]=-1;tJ[n]=-1}
+      tI[n]=Math.round(gI(px));tJ[n]=Math.round(gJ(pz));if(tI[n]<0||tI[n]>N||tJ[n]<0||tJ[n]>N){tI[n]=-1;tJ[n]=-1}
       // the green of the ground, a touch deeper in the lush flats; dry clumps straw coloured
       const nv=Math.random(),lush=(1-dry)*0.15;
       let cr=(0.3+0.05*nv)*(1-lush),cg=(0.52+0.08*nv)*(1-lush*0.4),cb=(0.22+0.04*nv)*(1-lush);
@@ -290,7 +290,7 @@ const OUTER_MID=[-112,112,-122,94];
 // the mainland (mainland.js): 4 m ground, with 1 m where each causeway lands
 const MAIN_FINE=[[-42,42,-300,-196],[-42,42,480,600]];
 groundPatch(-160,160,-160,160,2,[OUTER_MID,[FAM_PATCH[0],FAM_PATCH[1],FAM_PATCH[2],160]]);
-midPatch=groundPatch(MID[0],MID[1],MID[2],MID[3],0.5,[[-S/2,S/2,-S/2,S/2]]);
+midPatch=groundPatch(MID[0],MID[1],MID[2],MID[3],0.5,[[GX0,GX1,GZ0,GZ1]]);
 const outPatch=groundPatch(OUTER_MID[0],OUTER_MID[1],OUTER_MID[2],OUTER_MID[3],1,[MID]);
 buildSkirts();
 // after the map editor reshapes or repaints an area (metres): the 0.5 m and 1 m ground there take the new heights and colours
@@ -306,7 +306,7 @@ function buildSkirts(){
   const sp=[],si=[];let q=0;
   const run=(fx,a0,a1,st,dp)=>{for(let t=a0;t<a1-1e-6;t+=st){const [x0,z0]=fx(t),[x1,z1]=fx(t+st),h0=baseHeight(x0,z0),h1=baseHeight(x1,z1);
     sp.push(x0,h0,z0,x1,h1,z1,x0,h0-dp,z0,x1,h1-dp,z1);si.push(q,q+2,q+1,q+1,q+2,q+3);q+=4}};
-  const E=S/2;run(t=>[t,-E],-E,E,0.5,0.6);run(t=>[t,E],-E,E,0.5,0.6);run(t=>[-E,t],-E,E,0.5,0.6);run(t=>[E,t],-E,E,0.5,0.6);
+  run(t=>[t,GZ0],GX0,GX1,0.5,0.6);run(t=>[t,GZ1],GX0,GX1,0.5,0.6);run(t=>[GX0,t],GZ0,GZ1,0.5,0.6);run(t=>[GX1,t],GZ0,GZ1,0.5,0.6);
   run(t=>[t,OUTER_MID[2]],OUTER_MID[0],OUTER_MID[1],1,2);run(t=>[t,OUTER_MID[3]],OUTER_MID[0],OUTER_MID[1],1,2);run(t=>[OUTER_MID[0],t],OUTER_MID[2],OUTER_MID[3],1,2);run(t=>[OUTER_MID[1],t],OUTER_MID[2],OUTER_MID[3],1,2);
   for(const R of MAIN_FINE){run(t=>[t,R[2]],R[0],R[1],1,2);run(t=>[t,R[3]],R[0],R[1],1,2);run(t=>[R[0],t],R[2],R[3],1,2);run(t=>[R[1],t],R[2],R[3],1,2)}
   run(t=>[t,MID[2]],MID[0],MID[1],0.5,2);run(t=>[t,MID[3]],MID[0],MID[1],0.5,2);run(t=>[MID[0],t],MID[2],MID[3],0.5,2);run(t=>[MID[1],t],MID[2],MID[3],0.5,2);

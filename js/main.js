@@ -86,7 +86,7 @@ function frame(now){
   const g=hAt(tip.x,tip.z);
   st.below=tip.y<g&&!blkHit(tip.x,tip.y,tip.z);
   // soil at the teeth sets how hard the arm works; a full bucket pushing on barely moves
-  {const ti=Math.max(0,Math.min(N,Math.round((tip.x+S/2)/CELL))),tj=Math.max(0,Math.min(N,Math.round((tip.z+S/2)/CELL)));
+  {const ti=Math.max(0,Math.min(N,Math.round(gI(tip.x)))),tj=Math.max(0,Math.min(N,Math.round(gJ(tip.z))));
     st.soil=st.below?matAt(tj*V+ti,tip.y):-1;
     st.res=st.soil<0?1:(st.soil<4?TU[SOIL_TU[st.soil]]:SOIL[st.soil].h)*(st.load>=TU.exCap-0.002?0.5:1);
     if(st.soil===2&&!st.seenSand){st.seenSand=true;toast(say('sand'),'',3200)}
@@ -148,8 +148,8 @@ function frame(now){
     updateTerrain();st.dirty=false;site.dirty=true;mapDirty=true;blkTerrainMoved();
     if(st.slumpT<=0){winOn=false}
     if(!st.exposed){
-      const jz=Math.round((PIPE_Z+S/2)/CELL);
-      outer:for(let j=jz-1;j<=jz+1;j++)for(let i=Math.round((-12+S/2)/CELL);i<=Math.round((12+S/2)/CELL);i++)
+      const jz=Math.round(gJ(PIPE_Z));
+      outer:for(let j=jz-1;j<=jz+1;j++)for(let i=Math.round(gI(-12));i<=Math.round(gI(12));i++)
         if(H[j*V+i]<PIPE_Y+PIPE_R+0.17){st.exposed=true;toast(say('exposed'),'good',2800);break outer}
     }
   }
