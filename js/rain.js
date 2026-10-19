@@ -253,12 +253,13 @@ function rainGfx(n,sp){if(!rainLines||rainLines.userData.n!==n){
     for(const m of [rainLines,rainFar])if(m){scene.remove(m);m.geometry.dispose()}
     rainLines=rainDropMesh(Math.max(1,n),rainMat);rainFar=rainDropMesh(Math.max(1,Math.round(n*0.6)),rainFarMat);rainLines.userData.off=rainFar.userData.off=!n;rainVeil.userData.off=n<1500}
   rsGfx(sp|0)}
-// the sky greys over, the sun and its disc dim and the haze closes in
-const SKY0=scene.background.clone(),SKY_R=new THREE.Color(0x8e989f),FOG_FAR=scene.fog.far,SUN_I=sun.intensity,hemiL=scene.children.find(o=>o.isHemisphereLight),HEMI_I=hemiL?hemiL.intensity:0;
-const skyTint=new THREE.Color();
-function rainFxTick(dt){const r=weather.r,v=Math.max(ss(0,0.6,r),0.75*ss(0.3,1,weather.c));
-  scene.background.copy(SKY0).lerp(SKY_R,v*0.85);scene.fog.color.copy(scene.background);scene.fog.far=FOG_FAR*gfxFog*(1-0.6*v);
-  sun.intensity=SUN_I*(1-0.7*v);if(hemiL)hemiL.intensity=HEMI_I*(1+0.15*v);
+// the sky greys over, the sun and its disc dim and the haze closes in, from the time of day's sky and lights (daynight.js;
+// SUN_I is the noon sun, so rainSunI is how bright the sunlight is now)
+const SKY_R=new THREE.Color(0x8e989f),FOG_FAR=scene.fog.far,SUN_I=sun.intensity,hemiL=scene.children.find(o=>o.isHemisphereLight);
+const skyTint=new THREE.Color(),skyGrey=new THREE.Color();
+function rainFxTick(dt){dnTick(dt);const r=weather.r,v=Math.max(ss(0,0.6,r),0.75*ss(0.3,1,weather.c));
+  scene.background.copy(DAY.bg).lerp(skyGrey.copy(SKY_R).multiplyScalar(DAY.lum),v*0.85);scene.fog.color.copy(scene.background);scene.fog.far=FOG_FAR*gfxFog*DAY.fogK*(1-0.6*v);
+  sun.intensity*=1-0.7*v;if(hemiL)hemiL.intensity=DAY.hemiI*(1+0.15*v);
   sky.material.color.copy(skyTint.setRGB(1,1,1).lerp(SKY_R,v*0.75));skySunVis.value=1-v;
   rainSunI.value=sun.intensity/SUN_I;stormTick(dt);
   // the breeze under the rain, in gusts that roll over the island like the grass's (mower.js)

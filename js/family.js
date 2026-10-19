@@ -3,27 +3,31 @@
 // Lower Bench and the mainland bridge, which runs on as a timber trestle (mainland.js).
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 const famGround=groundPatch(FAM_PATCH[0],FAM_PATCH[1],FAM_PATCH[2],FAM_PATCH[3],1.5,[]);
-// low-poly parts gathered by colour into a few merged meshes: solid (lit, flat shaded) and glow (lamps, embers)
-function famKit(){const solid=[],glow=[],O=new THREE.Object3D();O.rotation.order='YXZ';
+// low-poly parts gathered by colour into a few merged meshes: solid (lit, flat shaded), glow (lamps, embers) and win
+// (window glass, which lights up at night). Lamps (by colour: 1 street and bridge lamps, 2 light towers, 3 lanterns) also
+// go in FAM_LAMPS ([x, y, z, kind]) for their halos and the light they throw on the ground after dark (daynight.js)
+const FAM_LAMPS=[],FAM_LAMP_K={0xfff1c8:1,0xfff6d8:2,0xffd27a:3},FAM_WIN={0x6f8fa4:1,0x2c3a44:1};
+function famKit(){const solid=[],glow=[],win=[],O=new THREE.Object3D();O.rotation.order='YXZ';
   function add(L,g,col,x,y,z,ry,rx,rz){O.position.set(x,y,z);O.rotation.set(rx||0,ry||0,rz||0);O.updateMatrix();
     if(g.index)g=g.toNonIndexed();g.deleteAttribute('uv');g.applyMatrix4(O.matrix);
     const c=new THREE.Color(col),n=g.attributes.position.count,a=new Float32Array(n*3);
     for(let i=0;i<n;i++){a[i*3]=c.r;a[i*3+1]=c.g;a[i*3+2]=c.b}g.setAttribute('color',new THREE.BufferAttribute(a,3));L.push(g)}
-  return {solid,glow,
-    box:(w,h,d,col,x,y,z,ry,rx,rz)=>add(solid,new THREE.BoxGeometry(w,h,d),col,x,y,z,ry,rx,rz),
+  return {solid,glow,win,
+    box:(w,h,d,col,x,y,z,ry,rx,rz)=>add(FAM_WIN[col]?win:solid,new THREE.BoxGeometry(w,h,d),col,x,y,z,ry,rx,rz),
     cyl:(r0,r1,h,seg,col,x,y,z,ry,rx,rz)=>add(solid,new THREE.CylinderGeometry(r0,r1,h,seg),col,x,y,z,ry,rx,rz),
     geo:(g,col,x,y,z,ry,rx,rz)=>add(solid,g,col,x,y,z,ry,rx,rz),
-    lit:(g,col,x,y,z,ry)=>add(glow,g,col,x,y,z,ry)}}
+    lit:(g,col,x,y,z,ry)=>{if(FAM_LAMP_K[col]&&g.type==='BoxGeometry')FAM_LAMPS.push([x,y,z,FAM_LAMP_K[col]]);add(glow,g,col,x,y,z,ry)}}}
 function famMerge(list){let n=0;for(const g of list)n+=g.attributes.position.count;
   const P=new Float32Array(n*3),C=new Float32Array(n*3);let o=0;
   for(const g of list){P.set(g.attributes.position.array,o*3);C.set(g.attributes.color.array,o*3);o+=g.attributes.position.count;g.dispose()}
   const m=new THREE.BufferGeometry();m.setAttribute('position',new THREE.BufferAttribute(P,3));m.setAttribute('color',new THREE.BufferAttribute(C,3));
   m.computeVertexNormals();m.computeBoundingSphere();return m}
-const famMat=M(0xffffff,{vertexColors:true}),famGlowMat=new THREE.MeshBasicMaterial({vertexColors:true});
+const famMat=M(0xffffff,{vertexColors:true}),famGlowMat=new THREE.MeshBasicMaterial({vertexColors:true}),famWinMat=M(0xffffff,{vertexColors:true,shininess:60,specular:0x333333});
 // a kit's parts into the scene, as one mesh per kind
 function famAdd(K){
   if(K.solid.length){const m=new THREE.Mesh(famMerge(K.solid),famMat);m.castShadow=true;m.receiveShadow=true;m.layers.enable(RAIN_LAYER);scene.add(m)}
-  if(K.glow.length)scene.add(new THREE.Mesh(famMerge(K.glow),famGlowMat))}
+  if(K.glow.length)scene.add(new THREE.Mesh(famMerge(K.glow),famGlowMat));
+  if(K.win.length){const m=new THREE.Mesh(famMerge(K.win),famWinMat);m.receiveShadow=true;scene.add(m)}}
 // a gable: a triangular prism along x, width d across z, height h, length L, its base at y=0
 function famGable(d,h,L){const a=-L/2,b=L/2,p=-d/2,q=d/2,v=[
   a,0,p, a,h,0, a,0,q,  b,0,q, b,h,0, b,0,p,

@@ -814,11 +814,11 @@ function editorFrame(dt,now){
   if(ed.listF==='near'&&now-ed.listT>600){ed.listT=now;edListDraw()}
   if(ed.knob&&ed.yaw!==ed.hYaw&&!(ed.drag&&ed.drag.ring))edHandles()
   // puddles and mud tiles keep up with the edits (painted Mud fills ruts, painting over them dries them)
-  waterTick(dt);mudTick(dt);treesTick(dt);if(rainTexDirty)rainTexUpdate();
+  waterTick(dt);mudTick(dt);treesTick(dt);dnTick(dt);if(rainTexDirty)rainTexUpdate();
   const fy=hAt(ed.x,ed.z);edLook.set(ed.x,fy,ed.z);
   camera.position.set(ed.x+Math.sin(ed.yaw)*Math.cos(ed.pitch)*ed.dist,fy+Math.sin(ed.pitch)*ed.dist,ed.z+Math.cos(ed.yaw)*Math.cos(ed.pitch)*ed.dist);
   camera.position.y=Math.max(camera.position.y,hAt(camera.position.x,camera.position.z)+2);camera.lookAt(edLook);
   sky.position.copy(camera.position);
-  sun.position.set(ed.x,fy,ed.z).addScaledVector(SUN_DIR,SUN_D);sun.target.position.set(ed.x,fy,ed.z);
+  sun.position.set(ed.x,fy,ed.z).addScaledVector(LIGHT_DIR,SUN_D);sun.target.position.set(ed.x,fy,ed.z);
   timeU.value=now/1000;updateSound(dt);
   shadowProxyTick();lawnLod();tuftLod();renderer.render(scene,camera)}

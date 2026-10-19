@@ -91,6 +91,9 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 .sizes span{flex:1;white-space:nowrap;font:700 12px/1 var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-right:4px}
 #menu .sizes button{height:32px;padding:0 8px;font-size:13px;border:1px solid var(--hud-line);text-align:center}
 #menu .sizes button[aria-pressed="true"]{background:var(--machine);color:#1c1309}
+#todRow{padding:2px 0 6px}#todVal{font:700 17px/1 var(--f-display);font-variant-numeric:tabular-nums;margin-right:6px;white-space:nowrap}
+#todSlider{display:block;width:calc(100% - 24px);height:34px;margin:0 12px;accent-color:var(--machine)}
+.todsub{padding:0 12px;max-width:260px;font-size:12px;line-height:1.35;color:var(--muted)}
 #resetBtn.arm{background:var(--danger)!important;color:#fff}
 /* Controls: the machines drop from the Controls button at the top right, a tile per machine, icon beside name; the one you drive is lit */
 #ctlMenu{position:absolute;top:100%;right:var(--pr);margin-top:8px;z-index:3;display:flex;flex-direction:column;gap:2px;min-width:180px;box-sizing:border-box;background:#1d211b;box-shadow:0 6px 18px rgba(0,0,0,.5);border:1px solid var(--hud-line);border-radius:10px;padding:5px}
@@ -548,6 +551,10 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
       <button id="keysBtn">Keys</button>
       <button id="guiBtn">Edit the screen</button>
       <button id="syncBtn" hidden>Sync devices</button>
+      <!-- time of day: the clock, a slider through the day, run or stop it, back to the real time (daynight.js) -->
+      <div class="tod" id="todRow"><div class="sizes"><span>Time</span><b id="todVal">--</b><button id="todRun">Stop</button><button id="todNow">Now</button></div>
+        <input id="todSlider" type="range" min="0" max="1439" step="5" aria-label="Time of day">
+        <div class="todsub" id="todSub"></div></div>
       <div class="sizes"><span>Weather</span><button data-w="auto">Auto</button><button data-w="rain">Rain</button><button data-w="dry">Dry</button></div>
       <button id="gfxMenuBtn">Graphics</button>
       <div class="sizes"><span>UI size</span><button data-s="1">1x</button><button data-s="1.5">1.5x</button><button data-s="2">2x</button></div>
@@ -831,6 +838,7 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
       <dt id="hkCaveIns">Cave-ins</dt><dd id="hdCaveIns">Walls deeper than about 5 ft, or with spoil piled within 2 ft of the edge, cave in after a while. Dirt trickling off the lip means get the bucket out.</dd>
       <dt id="hkGroundwater">Groundwater</dt><dd id="hdGroundwater">Below about 6 ft the hole meets the water table and slowly fills with muddy water. Dirt dug from under it comes up as mud: it sticks in the bucket and truck bed, and wet spoil bogs the truck and slows the tracks. Tap Pump (or P) to dewater the hole.</dd>
       <dt id="hkMud">Mud</dt><dd id="hdMud">Paint Mud anywhere on the mesa with the map editor's Paint tool to lay soaked ground. It dries out over about 20 minutes, turning matte, then pale and cracked, and firms up as it goes; rain soaks it again (the editor's Query tool tells you how wet it is). Dug or dumped dirt and ruts that got soaked dry out the same way, pale and then cracked, until they are dug again or rained on. Tracks and tires sink up to 9 in and squeeze the mud into lumpy berms, leaving their tread in the bottom, and the ruts fill with puddles: drive or walk through them and the muddy water splashes, the faster the bigger. Painting anything else over ruts smooths them away (painting Dirt on soaked ground keeps them). Mud slows the machines and coats them, and pushing on in it digs them in until the tracks or tires spin and throw mud. Stuck? Rock it free: forward, then back, then forward again. On Low graphics the puddles are drawn more simply and less mud and spray flies; the mud itself is the same on every device.</dd>
+      <dt id="hkTime">Day and night</dt><dd id="hdTime">The sun crosses the sky where it really would over a lake in the Arkansas mountains on today's date, and the shadows follow it; then dusk, stars, the Milky Way, the moon in its real phase and the odd shooting star. Lamps, light towers, lanterns and windows come on as the sun goes down, the machine you are in lights the way (on foot you have a headlamp), and fireflies, crickets and frogs come out. ☰ then Time: drag the slider to any time of day, Stop or Run the clock, or Now for the real time. A whole day passes in 48 minutes (Tuning: Day and night). Each device keeps its own time.</dd>
       <dt id="hkRain">Rain</dt><dd id="hdRain">Showers roll through now and then (☰ then Weather: Auto, or Rain to keep it raining, or Dry). Rain soaks the ground: dug dirt, dirt yards, clay and topsoil turn to mud first, dirt roads and grass get soft, sand and gravel drain, and rock and paving stay hard. Low ground soaks fastest. Rain fills holes and ruts with puddles. When it stops the ground dries over several minutes (sand fast, clay slow) and the puddles drain away; it keeps drying while the game is closed. Phones on Low graphics draw fewer raindrops; the rain and the mud it makes are the same on every device.</dd>
       <dt id="hkTrenchBox">Trench box</dt><dd id="hdTrenchBox">Swing the bucket over the yellow box and press T (controller X, or the Hook box button). It hangs from the bucket and turns with the swing. Lower it into the trench and press again to set it. Walls between its panels can't slump or cave in, so dig deep inside it and leapfrog it along the trench.</dd>
       <dt id="hkWalk">Walk</dt><dd id="hdWalk">Tap Walk (or press 5) to get out and walk around as the site worker. The left stick walks the way the camera faces; push it all the way to jog, and hold Shift (controller: click the left stick) to sprint; on a touch screen tap Sprint, which stays on until you stop. The right stick turns the camera and looks up and down. Tap Jump (Space) to jump about 6 ft: onto any block, and up a stack two blocks at a time. Trench walls are too steep to walk up, so jump out. Cab view looks through his eyes: drag the scene to look around (on a PC, click it for mouse look; Esc frees the mouse). Walk up to the excavator, the dump truck or the mower and tap Get in (F) to climb in and drive it; press F (or Get out) again to climb out beside it.</dd>
@@ -917,7 +925,11 @@ const TUNE=[
   ['pbrSheen','Ground look','Sheen: how strong the glints on wet and shiny ground are',1,'pct',0,300,5],
   ['pbrRain','Ground look','Extra sheen while it rains',1,'pct',0,400,5],
   ['pbrFar','Ground look','Relief fades out by',180*0.3048,'ft',60,600,10],
-  ['treeSway','Trees','How much the trees sway in the breeze',1,'pct',0,400,5]];
+  ['treeSway','Trees','How much the trees sway in the breeze',1,'pct',0,400,5],
+  // how the clock runs (☰ menu, Time) and how dark the night gets
+  ['dayLen','Day and night','A whole day (24 hours) passes in',2880,'min',2,1440,1],
+  ['nightLight','Day and night','Moonlight and starlight at night',1,'pct',0,400,5],
+  ['lampLight','Day and night','Headlights, lamps and lit windows',1,'pct',0,300,5]];
 // unit: [shown = code value × factor, label]
 const TUNE_U={mph:[1/0.44704,'mph'],ft:[1/0.3048,'ft'],deg:[180/Math.PI,'°/s'],yd3:[1.307951,'yd³'],pct:[100,'%'],s:[1,'s'],min:[1/60,'min'],in:[1/0.0254,'in']};
 const tuneShow=(e,v)=>v*TUNE_U[e[4]][0];
@@ -1011,6 +1023,9 @@ const WORDS=[
   ['tpNoRoom','Other','No room there. Pick an open spot on land.'],['tpLake','Other','That is the lake. Pick a spot on land.'],
   ['tpDone','Other','Teleported {ft} ft {how}.','{ft}: distance; {how}: on foot, in the dump truck…'],
   ['gfx','Other','Graphics: {name}','{name}: Low, Medium, High'],
+  ['todRun','Time of day','The clock runs: a day passes in {min} min','{min}: minutes (Tuning: Day and night)'],
+  ['todStop','Time of day','The clock is stopped at {time}','{time}: like 6:40 PM'],
+  ['todNow','Time of day','Back to the real time: {time}','{time}: like 6:40 PM'],
   ['glReset','Other','The phone reset the graphics (low on memory). A lower Dirt detail helps.']];
 const WORDS_BY={};for(const w of WORDS)WORDS_BY[w[0]]=w;
 // the owner's words if the skin has them, else the game's own; html: escaped, with the filled-in parts in bold and the

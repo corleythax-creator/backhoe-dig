@@ -56,6 +56,9 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 .sizes span{flex:1;white-space:nowrap;font:700 12px/1 var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin-right:4px}
 #menu .sizes button{height:32px;padding:0 8px;font-size:13px;border:1px solid var(--hud-line);text-align:center}
 #menu .sizes button[aria-pressed="true"]{background:var(--machine);color:#1c1309}
+#todRow{padding:2px 0 6px}#todVal{font:700 17px/1 var(--f-display);font-variant-numeric:tabular-nums;margin-right:6px;white-space:nowrap}
+#todSlider{display:block;width:calc(100% - 24px);height:34px;margin:0 12px;accent-color:var(--machine)}
+.todsub{padding:0 12px;max-width:260px;font-size:12px;line-height:1.35;color:var(--muted)}
 #resetBtn.arm{background:var(--danger)!important;color:#fff}
 /* Controls: the machines drop from the Controls button at the top right, a tile per machine, icon beside name; the one you drive is lit */
 #ctlMenu{position:absolute;top:100%;right:var(--pr);margin-top:8px;z-index:3;display:flex;flex-direction:column;gap:2px;min-width:180px;box-sizing:border-box;background:#1d211b;box-shadow:0 6px 18px rgba(0,0,0,.5);border:1px solid var(--hud-line);border-radius:10px;padding:5px}

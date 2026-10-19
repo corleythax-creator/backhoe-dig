@@ -20,7 +20,7 @@ const treeTex=(()=>{const L=new THREE.TextureLoader(),T=(n,wrap)=>{const t=L.loa
   // read as they are, like the game's other textures (no sRGB decode), so they sit with the rest of the scene
   return{bark:T('tree_bark',1),birch:T('tree_birch',1),fol:T('tree_leaves'),folA:T('tree_leaves_a'),barkN:null,birchN:null}})();
 // the breeze: the whole tree leans and the leaf cards flutter, more the higher up (the wood leans with them)
-function treeSwayShader(mat,flutter){mat.onBeforeCompile=sh=>{sh.uniforms.uWind=treeWindU;sh.uniforms.uSway=treeSwayU;
+function treeSwayShader(mat,flutter){mat.onBeforeCompile=sh=>{sh.uniforms.uWind=treeWindU;sh.uniforms.uDayK=dayKU;sh.uniforms.uSway=treeSwayU;
   sh.vertexShader='uniform float uWind;\nuniform float uSway;\n'+sh.vertexShader.replace('#include <begin_vertex>',`#include <begin_vertex>
 #ifdef USE_INSTANCING
   float twPh=uWind+dot(instanceMatrix[3].xz,vec2(0.37,0.23)),twH=max(transformed.y-1.0,0.0)*uSway;
@@ -28,7 +28,7 @@ function treeSwayShader(mat,flutter){mat.onBeforeCompile=sh=>{sh.uniforms.uWind=
   ${flutter?'transformed.xyz+=uSway*0.03*min(twH,1.0)*vec3(sin(twPh*4.3+position.x*2.1+position.y*1.3),0.5*sin(twPh*5.1+position.y*1.9),sin(twPh*3.9+position.z*2.3));':''}
 #endif`);
   // light through the leaves: a little of their own colour glows, so a crown against the sun isn't a black cut-out
-  if(flutter)sh.fragmentShader=sh.fragmentShader.replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\n  totalEmissiveRadiance+=diffuseColor.rgb*0.22;')}}
+  if(flutter)sh.fragmentShader='uniform float uDayK;\n'+sh.fragmentShader.replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\n  totalEmissiveRadiance+=diffuseColor.rgb*0.22*uDayK;')}}
 const treeMats=(()=>{
   const wood=map=>{const m=new THREE.MeshPhongMaterial({map,shininess:4,specular:0x080808});treeSwayShader(m,false);return m};
   const fol=new THREE.MeshLambertMaterial({map:treeTex.fol,alphaMap:treeTex.folA,alphaTest:0.45,vertexColors:true});treeSwayShader(fol,true);
