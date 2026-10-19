@@ -71,6 +71,14 @@ function renderSpace(c){const sr=c.sampleRate,n=Math.round(sr*0.9),ir=c.createBu
     for(const [t,a] of [[0.031,0.5],[0.058,0.35],[0.093,0.3],[0.15,0.22],[0.21,0.15]]){const k=Math.round((t+ch*0.004*(r()-0.3))*sr);if(k<n)d[k]+=a*(r()<0.5?-1:1)}
     for(let i=0;i<n;i++)d[i]+=(r()*2-1)*0.06*Math.exp(-i/sr/0.28)*Math.min(1,i/sr/0.04)}
   return ir}
+// thunder: deep filtered noise that rolls in waves for several seconds; near is a hard crack first, then the roll
+function renderThunder(sr,seed,near){const r=sndRng(seed),n=Math.round(sr*7.5),b=new Float32Array(n);let a=0,l=0,hp=0,pk=0;
+  const rolls=[];for(let i=0;i<7;i++)rolls.push([0.2+r()*5.5,0.4+r()*1.2,0.4+r()*0.6]);
+  for(let i=0;i<n;i++){const t=i/sr,w=r()*2-1;a+=(w-a)*0.03;l+=(a-l)*0.06;
+    let e=Math.min(1,t/0.15)*Math.exp(-t*0.42)*0.5;for(const [t0,d,g] of rolls){const x=(t-t0)/d;if(x>-1&&x<3)e+=g*Math.exp(-x*x*(x<0?6:0.8))}
+    let v=l*8*e;if(near&&t<0.6){hp=w-hp*0.2;v+=hp*Math.exp(-t*9)*0.9+a*Math.exp(-t*4)*3}
+    b[i]=v;pk=Math.max(pk,Math.abs(v))}
+  for(let i=0;i<n;i++)b[i]*=0.9/pk;return b}
 function toBuf(c,a){const b=c.createBuffer(1,a.length,c.sampleRate);b.getChannelData(0).set(a);return b}
 
 // ---------- live graph ----------
@@ -145,10 +153,14 @@ function* sndBuild(){
   snd.clank=[toBuf(c,renderClank(sr,31,[[430,0.05,1],[1010,0.035,0.7],[1690,0.025,0.5],[2760,0.018,0.3]],0.16)),
              toBuf(c,renderClank(sr,32,[[380,0.05,1],[920,0.04,0.6],[1820,0.022,0.5],[3100,0.015,0.25]],0.16))];
   snd.gate=toBuf(c,renderClank(sr,33,[[150,0.12,1],[410,0.08,0.7],[880,0.05,0.4],[1600,0.03,0.25]],0.5));
+  snd.thunder=[toBuf(c,renderThunder(sr,41,false)),toBuf(c,renderThunder(sr,42,true))];yield;
   snd.hiss=toBuf(c,renderHiss(sr));snd.beep=toBuf(c,renderBeep(sr));
   snd.trackT=0;snd.beepT=0;snd.boost=0;snd.gear=0;snd.gearT=0;snd.moved=0;snd.bedMax=0;
   snd.ready=true;sndApply();if(!sndCfg.on)c.suspend();
 }
+// thunder from a strike d metres away: it arrives at the speed of sound, quieter and duller the farther it came
+function sndThunder(d){if(!snd||!snd.ready||!sndCfg.on)return;const near=d<800,t=actx.currentTime+d/343,f=sndFilter('lowpass',near?3000:Math.max(220,1500-d*0.45),0.5,snd.dry);
+  sndShot(snd.thunder[near?1:0],f,t,0.85+Math.random()*0.25,Math.min(1,700/d)*sndVol(sndCfg.fx)*1.4);setTimeout(()=>f.disconnect(),(d/343+9)*1000)}
 function sndShot(buf,dest,t,rate,gain){const s=actx.createBufferSource();s.buffer=buf;s.playbackRate.value=rate||1;const g=sndGain(gain==null?1:gain,dest);s.connect(g);s.start(t);s.onended=()=>g.disconnect();return s}
 for(const ev of ['pointerdown','keydown','touchend'])addEventListener(ev,sndStart,{capture:true,passive:true});
 document.addEventListener('visibilitychange',()=>{if(!actx)return;if(document.hidden)actx.suspend();else if(sndCfg.on)actx.resume()});

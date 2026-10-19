@@ -29,7 +29,7 @@ function blkTileMat(mt,ft){mt.onBeforeCompile=sh=>{sh.uniforms.uTile={value:1/(f
   #endif`)}}
 function blkNewMesh(mt){const im=new THREE.InstancedMesh(blkGeo,mt,BLK_MAX);
   im.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(BLK_MAX*3),3);
-  im.castShadow=im.receiveShadow=true;im.frustumCulled=false;im.count=0;im.layers.enable(RAIN_LAYER);scene.add(im);return im}
+  im.castShadow=im.receiveShadow=true;im.frustumCulled=false;im.count=0;im.layers.enable(RAIN_LAYER);wetPatch(mt);scene.add(im);return im}
 const blkMesh=blkMeshes[0]=blkNewMesh(M(0xffffff));blkTileMat(blkMesh.material,4);
 // a library material's mesh, made the first time a block of it is set; its mean colour shows until the texture is in
 // shiny ones (sh) get a tight highlight and the sky mirrored in them, plainly face-on too, as metal does (the Fresnel
