@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-19T04:47:00Z",
+ "updated": "2026-10-19T14:39:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -27,6 +27,12 @@ window.EFFORT = {
    "dh": 279.5,
    "act": 6,
    "versions": 41
+  },
+  {
+   "d": "2026-10-19",
+   "dh": 10,
+   "act": 0.5,
+   "versions": 1
   }
  ],
  "extra": [
@@ -1377,6 +1383,15 @@ window.EFFORT = {
    "tris": 2968008,
    "chars": 973696,
    "what": "Day and night: the sun and moon move where they really are over the lake for the date and time, with shadows to match; golden hour, dusk, stars, Milky Way, moon phases, shooting stars; lamps, light towers, lanterns and windows light at dusk; headlights; fireflies, crickets and frogs; ☰ Time slider, Stop/Run, Now"
+  },
+  {
+   "v": 150,
+   "asked": "2026-10-19T09:20:00-05:00",
+   "live": "2026-10-19T09:39:32-05:00",
+   "dh": 10,
+   "tris": 2968361,
+   "chars": 986680,
+   "what": "Plant trees on foot (7, or Plant) in five species; each grows on its real height-for-age curve through sapling, young and full-grown models as ☰ Time's new Date slider runs up to 100 years ahead"
   }
  ]
 };

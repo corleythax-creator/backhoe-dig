@@ -74,6 +74,13 @@ const WORDS=[
   ['todRun','Time of day','The clock runs: a day passes in {min} min','{min}: minutes (Tuning: Day and night)'],
   ['todStop','Time of day','The clock is stopped at {time}','{time}: like 6:40 PM'],
   ['todNow','Time of day','Back to the real time: {time}','{time}: like 6:40 PM'],
+  ['dateSet','Time of day','{date}: {ahead}','{date}: like Oct 19, 2026; {ahead}: like 12 yr ahead, or today'],
+  ['plantIn','Planting','Planted a {tree} sapling on {date}. Slide ☰ Time, Date ahead to watch it grow','{tree}: the species; {date}: like Oct 19, 2026'],
+  ['plantUp','Planting','Dug up your {tree} ({age} yr old)','{tree}: the species; {age}: years'],
+  ['plantKind','Planting','Next tree to plant: {tree}. [plant] plants it','{tree}: the species'],
+  ['plantWalk','Planting','Get out and walk to plant a tree',''],
+  ['plantWet','Planting','Too wet to plant here: find dry ground',''],
+  ['plantFull','Planting','That makes {n} planted trees, the most there can be: dig one up first','{n}: how many'],
   ['glReset','Other','The phone reset the graphics (low on memory). A lower Dirt detail helps.']];
 const WORDS_BY={};for(const w of WORDS)WORDS_BY[w[0]]=w;
 // the owner's words if the skin has them, else the game's own; html: escaped, with the filled-in parts in bold and the
