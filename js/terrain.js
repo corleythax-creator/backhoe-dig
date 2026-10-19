@@ -74,12 +74,13 @@ matU.tMatId.value=new THREE.DataTexture(ED_M,ED_NX,ED_NZ,THREE.LuminanceFormat,T
 matU.tMatId.value.unpackAlignment=1;matU.tMatId.value.needsUpdate=true;
 matU.tMatCov.value=new THREE.DataTexture(ED_A,ED_NX,ED_NZ,THREE.LuminanceFormat,THREE.UnsignedByteType);
 matU.tMatCov.value.unpackAlignment=1;matU.tMatCov.value.needsUpdate=true;
-// the site sits on a grassy mesa; cliffs drop about 150 ft to meadows and a lake. It is about 295 ft across, centred
-// south of the dig so the north rim (the truck's dump spot) stays put. The north part is the high top with two hills;
-// across the middle a rocky scarp drops 24 ft to the Lower Bench, a dirt yard with stockpiles, and a ramp runs down it
-const EDGE=45,WATER=-58,MZ=30,BENCH_H=-7.3;
+// the site sits on a grassy island 24 ft above the lake: a rocky bank drops to a sand beach all round (shore). It is
+// about 295 ft across, centred south of the dig so the north rim (the truck's dump spot) stays put. The north part is
+// the high top with two hills; across the middle a grassy scarp drops 8 ft to the Lower Bench, a dirt yard with
+// stockpiles, and a ramp runs down it
+const EDGE=45,WATER=-7.3,MZ=30,BENCH_H=-2.4;
 function mesaR(x,z){z-=MZ;const a=Math.atan2(z,x);return Math.pow(Math.pow(Math.abs(x),4)+Math.pow(Math.abs(z),4),0.25)*(1+0.06*Math.sin(a*5+0.7)+0.035*Math.sin(a*11+2.1))}
-// the Family Island: a larger mesa (about 525 ft across) south across the water, its top at the Lower Bench's height so
+// the Family Island: a larger island (about 525 ft across, 16 ft above the lake) south across the water, its top at the Lower Bench's height so
 // the bridge from the bench runs level. The same rounded-square shape; FAM_R is its half width
 const FAM_X=0,FAM_Z=245,FAM_R=80,FAM_Y=BENCH_H;
 function famR(x,z){x-=FAM_X;z-=FAM_Z;const a=Math.atan2(z,x);return Math.pow(x*x*x*x+z*z*z*z,0.25)*(1+0.035*Math.sin(a*4+1.9)+0.02*Math.sin(a*9+0.4))}
@@ -132,7 +133,7 @@ function solidOut(s,x,z,r){let dx=x-s.x,dz=z-s.z,hx=s.hx,hz=s.hz;const rot=s.sn!
 const ROAD_W=3.6;
 const ROADS=[
   {w:3.6,mid:1,pts:[[-40,16],[-30,-6],[-14,-12],[0,-13],[16,-12],[32,-6],[40,6],[41,22],[40,34],[28,35],[12,38.5],[0,39.5],[-24,37.5],[-38,33],[-40,16]]},
-  {w:4.8,mid:0,pts:[[40,34,0],[38,36.5,-0.2],[20,44.5,-2.4],[0,49,-4.8],[-22,53,-7.3]]},
+  {w:4.8,mid:0,pts:[[40,34,0],[38,36.5,BENCH_H*0.027],[20,44.5,BENCH_H*0.33],[0,49,BENCH_H*0.66],[-22,53,BENCH_H]]},
   {w:3.6,mid:1,pts:[[-22,53],[-33,59.5],[-20,66.5],[0,66.5],[20,65],[30,58.5],[18,55],[2,57],[-14,56.5],[-22,53]]},
   {w:2.4,mid:0,pts:[[41,12],[33,9],[24,10.5],[19,17],[21,23.5],[27,20]]},
 ];
@@ -198,32 +199,33 @@ function groundHeight(x,z){let h=mesaHeight(x,z);
   if(Math.abs(x-JES_X)<JES_R+50&&Math.abs(z-JES_Z)<JES_R+50){const f=jesHeight(x,z);if(f>h)h=f}
   if(Math.abs(x-DEX_X)<DEX_R+50&&Math.abs(z-DEX_Z)<DEX_R+50){const f=dexHeight(x,z);if(f>h)h=f}
   return h}
-// an island's cliffs d metres out from its rim: from Y down cliffH to a strip of meadow and beach, then the lake bed
-function isleCliff(d,x,z,Y,cliffH){
-  const cliff=-cliffH*ss(0,7,d)-1.4*Math.sin(d*1.9)*ss(0,1,d)*(1-ss(6,9,d));
-  const low=-16*ss(7,30,d)-8*ss(26,60,d);
-  const bumps=(Math.sin(x*0.07+z*0.05)*2.5+Math.sin(x*0.17-z*0.13)*1.2)*ss(8,20,d)*(1-ss(28,45,d));
-  return Y+cliff+low+bumps}
+// the ground d metres out from an island's rim at height Y: a rocky bank down to the back of a sand beach 4 to 5 ft above
+// the lake, the beach sloping gently into the water (narrower and wider round the island), a wading shelf, then the lake bed
+function shore(d,x,z,Y){const W=WATER,back=W+1.4+0.25*Math.sin(x*0.05+z*0.04),bw=Math.max(2.5,(Y-back)*1.25);
+  if(d<bw)return Y+(back-Y)*ss(0,bw,d)-0.4*Math.sin(d*2.3+x*0.1)*Math.sin(Math.PI*d/bw);
+  const e=d-bw,bl=Math.max(5,12+4*Math.sin(x*0.043-z*0.037+1.7)+2.5*Math.sin(x*0.11+z*0.09));
+  if(e<bl)return back-(back-W)*e/bl;
+  const f=e-bl;return W-0.9*ss(0,9,f)-5*ss(6,28,f)-5*ss(24,60,f)}
+function isleCliff(d,x,z,Y){return shore(d,x,z,Y)}
 // Dexter's Island: a flat gravel yard at the Family Island's height, with dirt piles in the practice yard to climb
 function dexHeight(x,z){const d=dexR(x,z)-DEX_R;let top=FAM_Y;
   if(d<3){top+=hill(x,z,-226,262,7,6,2.6)+hill(x,z,-233,249,5.5,5,1.8)+hill(x,z,-216,270,4,3.5,1.2);
     if(d<0)return top}
-  const out=isleCliff(d,x,z,FAM_Y,38);
+  const out=isleCliff(d,x,z,FAM_Y);
   return d<3?out+(top-FAM_Y)*(1-ss(0,3,d)):out}
 // Jessica's Island: soft rolls, flat round the cottage, graded where the footbridge lands
 function jesHeight(x,z){const d=jesR(x,z)-JES_R;let top=JES_Y;
   if(d<3){top+=(0.3*Math.sin(x*0.11+1.2)*Math.cos(z*0.09+0.3)+0.18*Math.sin(x*0.23-z*0.19))*ss(8,13,Math.hypot(x-JES_CX,z-JES_CZ));
     roadAt(x,z);if(RD_gd<RD_gw/2+2.5)top=RD_h+(top-RD_h)*ss(RD_gw/2,RD_gw/2+2.5,RD_gd);
     if(d<0)return top}
-  const out=isleCliff(d,x,z,JES_Y,41);
+  const out=isleCliff(d,x,z,JES_Y);
   return d<3?out+(top-JES_Y)*(1-ss(0,3,d)):out}
-// the Family Island: gently rolling grass graded flat along its roads, cliffs about 125 ft down to a narrow strip of
-// meadow and beach, then the lake bed
+// the Family Island: gently rolling grass graded flat along its roads, a rocky bank down to the beach (shore)
 function famHeight(x,z){const d=famR(x,z)-FAM_R;let top=FAM_Y;
   if(d<3){top+=0.35*Math.sin(x*0.07+0.4)*Math.cos(z*0.06+1.1)+0.2*Math.sin(x*0.19-z*0.15);
     roadAt(x,z);if(RD_gd<RD_gw/2+2.5)top=RD_h+(top-RD_h)*ss(RD_gw/2,RD_gw/2+2.5,RD_gd);
     if(d<0)return top}
-  const out=isleCliff(d,x,z,FAM_Y,38);
+  const out=isleCliff(d,x,z,FAM_Y);
   return d<3?out+(top-FAM_Y)*(1-ss(0,3,d)):out}
 function mesaHeight(x,z){
   const r=mesaR(x,z);let h;
@@ -241,13 +243,9 @@ function mesaHeight(x,z){
     if(RD_gd<RD_gw/2+2.5)h=RD_h+(h-RD_h)*ss(RD_gw/2,RD_gw/2+2.5,RD_gd);
     if(r<EDGE)return h;
   }
-  const d=r-EDGE;
-  const cliff=-46*ss(0,7,d)-1.6*Math.sin(d*1.9)*ss(0,1,d)*(1-ss(6,9,d));
-  const low=-14*ss(7,60,d)-9*ss(40,95,d);
-  const bumps=(Math.sin(x*0.07+z*0.05)*3+Math.sin(x*0.17-z*0.13)*1.5+Math.sin(x*0.031-z*0.027+1)*4)*ss(8,22,d);
-  const out=cliff+low+bumps+0.5*(1-ss(0,2,d));
-  // the cliff starts from the ground at the rim (the bench is lower than the top)
-  return d<3?out+(h-0.5)*(1-ss(0,3,d)):out;
+  // the bank and beach start from the ground at the rim (the bench is lower than the top)
+  const d=r-EDGE,zs=scarpZ(x),rim=BENCH_H*ss(zs-4,zs+5,z);
+  return shore(d,x,z,d<3?rim+(h-rim)*(1-ss(0,3,d)):rim);
 }
 // ground too steep to drive onto (the scarp, ramp banks, stockpiles), on a 0.5 m grid over the mesa from the original grade
 const WG_X0=-48,WG_Z0=-20,WG_C=0.5,WG_NX=193,WG_NZ=197,WALL=new Uint8Array(WG_NX*WG_NZ);
@@ -269,7 +267,7 @@ const PIPE_Z=-5.5, TRENCH_Z0=-8.5, TRENCH_Z1=-3.0;
 function digBase(k){const i=k%V,j=(k/V)|0,x=i*CELL-S/2,z=j*CELL-S/2;
   const n=hash(i,j),n2=hash(i*0.37|0,j*0.37|0);
   grass[k*3]=0.30+0.07*n+0.05*n2; grass[k*3+1]=0.50+0.08*n+0.04*n2; grass[k*3+2]=0.24+0.04*n;
-  const h=H0[k],sl=(Math.abs(baseHeight(x+0.5,z)-baseHeight(x-0.5,z))+Math.abs(baseHeight(x,z+0.5)-baseHeight(x,z-0.5))),rock=ss(0.55,1.1,sl),sand=1-ss(WATER+0.6,WATER+2.8,h),st2=0.06*Math.sin(h*1.4+n);
+  const h=H0[k],sl=(Math.abs(baseHeight(x+0.5,z)-baseHeight(x-0.5,z))+Math.abs(baseHeight(x,z+0.5)-baseHeight(x,z-0.5))),rock=ss(0.55,1.1,sl),sand=1-ss(WATER+1.6,WATER+2.4,h),st2=0.06*Math.sin(h*1.4+n);
   if(rock>0){grass[k*3]+=(0.50+0.06*n+st2-grass[k*3])*rock;grass[k*3+1]+=(0.44+0.05*n+st2-grass[k*3+1])*rock;grass[k*3+2]+=(0.38+0.04*n+st2-grass[k*3+2])*rock}
   if(sand>0){grass[k*3]+=(0.80-grass[k*3])*sand;grass[k*3+1]+=(0.72-grass[k*3+1])*sand;grass[k*3+2]+=(0.52-grass[k*3+2])*sand}
   const rc=[grass[k*3],grass[k*3+1],grass[k*3+2]],ya=yardTint(x,z,rc,n),ra=roadTint(x,z,rc,n),mc=matTint(x,z,rc);grass[k*3]=rc[0];grass[k*3+1]=rc[1];grass[k*3+2]=rc[2];
