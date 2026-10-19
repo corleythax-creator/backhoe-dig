@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-19T16:06:00Z",
+ "updated": "2026-10-19T16:11:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -30,9 +30,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-19",
-   "dh": 41,
+   "dh": 46,
    "act": 2,
-   "versions": 6
+   "versions": 7
   }
  ],
  "extra": [
@@ -1437,6 +1437,15 @@ window.EFFORT = {
    "tris": 3003564,
    "chars": 1015929,
    "what": "Dig anywhere on Corley's right out to the water: drive the excavator down the bank onto the beach and dig in the sand. In the excavator a big Drive / Dig switch over the right stick (or Enter) flips between moving and digging."
+  },
+  {
+   "v": 156,
+   "asked": "2026-10-19T10:50:00-05:00",
+   "live": "2026-10-19T11:11:01-05:00",
+   "dh": 5,
+   "tris": 3008544,
+   "chars": 1018704,
+   "what": "A boat at the town marina too, and every bridge now has room for a boat underneath (at least 8 ft between the piers), with piers, pile bents and the crane barge solid to boats."
   }
  ]
 };
