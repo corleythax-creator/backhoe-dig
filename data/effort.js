@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-18T21:49:00Z",
+ "updated": "2026-10-19T01:22:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -24,9 +24,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-18",
-   "dh": 65,
-   "act": 2,
-   "versions": 6
+   "dh": 72,
+   "act": 2.5,
+   "versions": 7
   }
  ],
  "extra": [
@@ -1062,6 +1062,15 @@ window.EFFORT = {
    "tris": 1619989,
    "chars": 709263,
    "what": "Gravel, brick, cobble, concrete and 24 other painted materials show real bumps and wet glints on High graphics, with the new Wet gravel and Ground look sliders in the Tuning tab."
+  },
+  {
+   "v": 115,
+   "asked": "2026-10-18T20:15:00-05:00",
+   "live": "2026-10-18T20:22:06-05:00",
+   "dh": 7,
+   "tris": 1620340,
+   "chars": 709406,
+   "what": "The lake rises to 24 ft under Corley's top; every island's cliffs become a rocky bank and a sand beach, the bench and the Family, Dexter's and Jessica's islands sit 16 to 26 ft above the water (Plan C, release 1)"
   }
  ]
 };

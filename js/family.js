@@ -76,9 +76,9 @@ function famBridge(b,K,o){
 
 (function(){
   // the truss bridge from the Lower Bench: dark green steel
-  const K1=famKit(),B1=BRIDGES[0];famBridge(B1,K1,{depth:4.5,steel:0x3f5e4e,piers:[34,69]});famAdd(K1);
+  const K1=famKit(),B1=BRIDGES[0];famBridge(B1,K1,{depth:2.6,steel:0x3f5e4e,piers:[34,69]});famAdd(K1);
   // the mainland bridge: grey steel, finished as far as a barrier, then two bare piers and a crane where the work stops
-  const K2=famKit(),B2=BRIDGES[1],F=famBridge(B2,K2,{depth:4,steel:0x5d6a74,piers:[30,64,98,122,146]});
+  const K2=famKit(),B2=BRIDGES[1],F=famBridge(B2,K2,{depth:2.4,steel:0x5d6a74,piers:[30,64,98,122,146]});
   const L=B2.len,Y=B2.y;
   for(let i=-3;i<=3;i++){F.at(L-1.2,i*1.05,Y+0.55,0.12,1.1,0.12,0x8a8a86);F.at(L-1.2,i*1.05,Y+1.05,0.95,0.2,0.08,i%2?0xf2f2ee:0xe0661e);F.at(L-1.2,i*1.05,Y+0.7,0.95,0.2,0.08,i%2?0xe0661e:0xf2f2ee)}
   for(const s of [-1,1])F.at(L-1.4,s*2.6,Y+1.6,0.12,3.2,0.12,0x8a8a86);

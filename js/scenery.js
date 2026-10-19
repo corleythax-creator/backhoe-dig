@@ -7,7 +7,7 @@ const timeU={value:0};
   const wg=new THREE.PlaneGeometry(2600,2600,120,120);wg.rotateX(-Math.PI/2);
   const wm=new THREE.MeshPhongMaterial({color:0x1f5d72,specular:0xfff2dc,shininess:90,flatShading:true,envMap:skyEnv,combine:THREE.MixOperation,reflectivity:0.7});
   wm.onBeforeCompile=sh=>{sh.uniforms.uTime=timeU;sh.vertexShader='uniform float uTime;\n'+sh.vertexShader.replace('#include <begin_vertex>',
-    '#include <begin_vertex>\nvec4 wpos=modelMatrix*vec4(transformed,1.0);\ntransformed.y+=sin(wpos.x*0.09+uTime*1.1)*0.35+cos(wpos.z*0.11+uTime*0.8)*0.3+sin((wpos.x+wpos.z)*0.23+uTime*1.7)*0.12;')};
+    '#include <begin_vertex>\nvec4 wpos=modelMatrix*vec4(transformed,1.0);\ntransformed.y+=sin(wpos.x*0.09+uTime*1.1)*0.16+cos(wpos.z*0.11+uTime*0.8)*0.13+sin((wpos.x+wpos.z)*0.23+uTime*1.7)*0.06;')};
   const water=new THREE.Mesh(wg,wm);water.position.y=WATER;water.receiveShadow=true;scene.add(water);
   // two mountain layers far across the lake: a lit front range, and pale hazy peaks behind it
   function range(R0,R1,NR,NA,lo,hi,hazeA,hazeB,phase,unlit){
@@ -260,7 +260,7 @@ const MID=[-58,58,-32,92];
 // steep ground, sand at the lake, the yards and the roads, and any painted material (how much covers it into c[3])
 function groundColor(x,z,h,c){const n=hash(x*3.55+0.3,z*2.65+0.7);
   const sl=(Math.abs(baseHeight(x+1,z)-baseHeight(x-1,z))+Math.abs(baseHeight(x,z+1)-baseHeight(x,z-1)))/2;
-  const rock=ss(0.55,1.1,sl),sand=1-ss(WATER+0.6,WATER+2.8,h),low=ss(-4,-20,h)*ss(EDGE-1,EDGE+2,mesaR(x,z));
+  const rock=ss(0.55,1.1,sl),sand=1-ss(WATER+1.6,WATER+2.4,h),low=ss(-4,-20,h)*ss(EDGE-1,EDGE+2,mesaR(x,z));
   let r=0.30+0.08*n+0.05*low,g=0.50+0.09*n-0.02*low,b=0.24+0.04*n;
   const strata=0.06*Math.sin(h*1.4+n);
   r+=(0.50+0.06*n+strata-r)*rock;g+=(0.44+0.05*n+strata-g)*rock;b+=(0.38+0.04*n+strata-b)*rock;
@@ -384,8 +384,8 @@ function defaultAssets(){
   return out}
 // fills the instance meshes from the asset list (after any change to it)
 function assetsBuild(){const o=new THREE.Object3D(),c=new THREE.Color(),n={pine:0,leafy:0,rock:0};
-  for(const a of assets){const k=n[a.t];if(k===undefined||k>=ASSET_CAP[a.t])continue;n[a.t]++;
-    const w=hash(a.x*1.3+0.7,a.z*2.1+0.3),w2=hash(a.z*1.7,a.x*0.9),y=baseHeight(a.x,a.z);
+  for(const a of assets){const k=n[a.t],y=baseHeight(a.x,a.z);if(k===undefined||k>=ASSET_CAP[a.t]||y<WATER-0.3)continue;n[a.t]++;
+    const w=hash(a.x*1.3+0.7,a.z*2.1+0.3),w2=hash(a.z*1.7,a.x*0.9);
     if(a.t==='rock'){o.position.set(a.x,y-0.18*a.s,a.z);o.rotation.set((w-0.5)*0.4,a.yaw,(w2-0.5)*0.4);o.scale.set(a.s,a.s*(0.8+0.4*w),a.s)}
     else{o.position.set(a.x,y-0.05,a.z);o.rotation.set((w-0.5)*0.08,a.yaw,(w2-0.5)*0.08);o.scale.set(a.s,a.s*(a.t==='pine'?0.9+0.35*w:1),a.s)}
     o.updateMatrix();for(const im of assetIMs[a.t])im.setMatrixAt(k,o.matrix);
