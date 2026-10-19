@@ -325,21 +325,43 @@ function wallAt(x,z){const i=Math.round((x-WG_X0)/WG_C),j=Math.round((z-WG_Z0)/W
 function wallCount(x,z,yaw,P){const s=Math.sin(yaw),c=Math.cos(yaw);let n=0;for(const [lx,lz] of P)if(wallAt(x+lx*c+lz*s,z-lx*s+lz*c))n++;return n}
 const PIPE_Z=-5.5, TRENCH_Z0=-8.5, TRENCH_Z1=-3.0;
 // a dig-grid vertex's undug colour (grass, rock on steep ground, sand, the yards and roads, painted materials), its
-// dirt-texture amount and how much material covers it
-function digBase(k){const i=k%V,j=(k/V)|0,x=gX(i),z=gZ(j);
-  const n=hash(i,j),n2=hash(i*0.37|0,j*0.37|0);
-  grass[k*3]=0.30+0.07*n+0.05*n2; grass[k*3+1]=0.50+0.08*n+0.04*n2; grass[k*3+2]=0.24+0.04*n;
-  const h=H0[k],sl=(Math.abs(baseHeight(x+0.5,z)-baseHeight(x-0.5,z))+Math.abs(baseHeight(x,z+0.5)-baseHeight(x,z-0.5))),rock=ss(0.55,1.1,sl),sand=1-ss(WATER+1.6,WATER+2.4,h),st2=0.06*Math.sin(h*1.4+n);
-  if(rock>0){grass[k*3]+=(0.50+0.06*n+st2-grass[k*3])*rock;grass[k*3+1]+=(0.44+0.05*n+st2-grass[k*3+1])*rock;grass[k*3+2]+=(0.38+0.04*n+st2-grass[k*3+2])*rock}
-  if(sand>0){grass[k*3]+=(0.80-grass[k*3])*sand;grass[k*3+1]+=(0.72-grass[k*3+1])*sand;grass[k*3+2]+=(0.52-grass[k*3+2])*sand}
-  const rc=[grass[k*3],grass[k*3+1],grass[k*3+2]],ya=yardTint(x,z,rc,n),ra=roadTint(x,z,rc,n),mc=matTint(x,z,rc);grass[k*3]=rc[0];grass[k*3+1]=rc[1];grass[k*3+2]=rc[2];
-  rockA[k]=Math.min(1,Math.max(rock*0.95+sand*0.4,ra*0.9,ya*0.85))*(MAT_GL2?1:1-mc);matCov[k]=mc;mudBase[k]=matCovOf(x,z,MUD_ID)}
+// dirt-texture amount and how much material covers it. digBaseAt works from where the point is on the map alone (its
+// noise from world cell numbers, cellW), so a point looks the same wherever the grid sits and a tile's ground can be
+// worked out ahead of the grid (digBaseFill); it leaves r, g, b, rock, material cover and mud in DGB
+const DGB=new Float32Array(6),cellW=v=>Math.round(v/CELL);
+function digBaseAt(x,z,h,iw,jw){const n=hash(iw,jw),n2=hash(iw*0.37|0,jw*0.37|0);
+  const rc=[0.30+0.07*n+0.05*n2,0.50+0.08*n+0.04*n2,0.24+0.04*n];
+  const sl=(Math.abs(baseHeight(x+0.5,z)-baseHeight(x-0.5,z))+Math.abs(baseHeight(x,z+0.5)-baseHeight(x,z-0.5))),rock=ss(0.55,1.1,sl),sand=1-ss(WATER+1.6,WATER+2.4,h),st2=0.06*Math.sin(h*1.4+n);
+  if(rock>0){rc[0]+=(0.50+0.06*n+st2-rc[0])*rock;rc[1]+=(0.44+0.05*n+st2-rc[1])*rock;rc[2]+=(0.38+0.04*n+st2-rc[2])*rock}
+  if(sand>0){rc[0]+=(0.80-rc[0])*sand;rc[1]+=(0.72-rc[1])*sand;rc[2]+=(0.52-rc[2])*sand}
+  const ya=yardTint(x,z,rc,n),ra=roadTint(x,z,rc,n),mc=matTint(x,z,rc);DGB[0]=rc[0];DGB[1]=rc[1];DGB[2]=rc[2];
+  DGB[3]=Math.min(1,Math.max(rock*0.95+sand*0.4,ra*0.9,ya*0.85))*(MAT_GL2?1:1-mc);DGB[4]=mc;DGB[5]=matCovOf(x,z,MUD_ID)}
+function digBase(k){const x=gX(k%V),z=gZ((k/V)|0);digBaseAt(x,z,H0[k],cellW(x),cellW(z));
+  grass[k*3]=DGB[0];grass[k*3+1]=DGB[1];grass[k*3+2]=DGB[2];rockA[k]=DGB[3];matCov[k]=DGB[4];mudBase[k]=DGB[5]}
+// the untouched ground of tiles, by tile, so moving the grid copies it instead of working it out again (about 800,000
+// height samples for the grid, most of a move's time): the grade (h), the colour, rock, material cover and mud as bytes
+// (c, 6 a point) and the grain noise (nz). rows: how many rows are worked out so far (a tile can be done a few rows a
+// frame ahead of the grid, digBasePrefetch in digtiles.js). Map edits drop them all (edRefresh); the oldest go past
+// BASE_MAX tiles (about 450 KB each: the grid's 4 and the 12 round it, plus a few)
+const baseCache=new Map(),BASE_MAX=20,BASE_W=N/TPG+1;
+const baseKey=(ti,tj)=>(ti+64)*128+tj+64;
+function baseEntry(ti,tj){const key=baseKey(ti,tj);let e=baseCache.get(key);
+  if(e){baseCache.delete(key);baseCache.set(key,e);return e}
+  const np=BASE_W*BASE_W;e={ti,tj,rows:0,h:new Float32Array(np),c:new Uint8Array(np*6),nz:new Uint8Array(np)};baseCache.set(key,e);
+  for(const [k,o] of baseCache){if(baseCache.size<=BASE_MAX)break;if(o!==e&&!DIG_TILES.some(t=>baseKey(t.ti,t.tj)===k))baseCache.delete(k)}
+  return e}
+// work out up to n more rows of tile e; true once it is all done
+function digBaseFill(e,n){const x0=e.ti*TILE,z0=e.tj*TILE,b1=Math.min(BASE_W,e.rows+n);
+  for(let b=e.rows;b<b1;b++){const z=z0+b*CELL,jw=cellW(z);for(let a=0;a<BASE_W;a++){const x=x0+a*CELL,iw=cellW(x),q=b*BASE_W+a,h=baseHeight(x,z);
+    e.h[q]=h;digBaseAt(x,z,h,iw,jw);for(let c=0;c<6;c++)e.c[q*6+c]=Math.round(Math.min(1,Math.max(0,DGB[c]))*255);e.nz[q]=Math.round(hash(iw*1.7+3,jw*2.3+1)*255)}}
+  e.rows=b1;return e.rows>=BASE_W}
+function baseCacheClear(){baseCache.clear()}
 // the untouched grid where it sits: original grade, noise, colours and the trench's paint marks; run again when it moves
 function digInit(){paint.fill(0);
-for(let j=0;j<V;j++)for(let i=0;i<V;i++){
-  const k=j*V+i,x=gX(i),z=gZ(j);
-  H0[k]=H[k]=baseHeight(x,z); nz[k]=hash(i*1.7+3,j*2.3+1);
-  digBase(k);
+for(const t of DIG_TILES){const e=baseEntry(t.ti,t.tj);digBaseFill(e,BASE_W);
+  for(let b=0;b<BASE_W;b++)for(let a=0;a<BASE_W;a++){const k=(t.j0+b)*V+t.i0+a,q=b*BASE_W+a,c=e.c;
+    H0[k]=H[k]=e.h[q];nz[k]=e.nz[q]/255;grass[k*3]=c[q*6]/255;grass[k*3+1]=c[q*6+1]/255;grass[k*3+2]=c[q*6+2]/255;rockA[k]=c[q*6+3]/255;matCov[k]=c[q*6+4]/255;mudBase[k]=c[q*6+5]/255}}
+for(let j=0;j<V;j++)for(let i=0;i<V;i++){const k=j*V+i,x=gX(i),z=gZ(j);
   const hc=CELL/2+0.001,onSide=Math.abs(Math.abs(x)-0.5)<hc&&z>=TRENCH_Z0-hc&&z<=TRENCH_Z1+hc;
   const onEnd=(Math.abs(z-TRENCH_Z0)<hc||Math.abs(z-TRENCH_Z1)<hc)&&Math.abs(x)<=0.5+hc;
   if(onSide||onEnd)paint[k]=1;

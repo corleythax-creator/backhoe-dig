@@ -141,11 +141,19 @@ function digMoveTo(x0,z0,fresh){const t0=performance.now();
 // where it would leave a sheer wall against ground outside the grid that slumps in once the grid moves (the dig site
 // test found this on the phone). After a move the machine is at most 16 m from the middle, well inside the 20 m limit
 const DIG_FOLLOW=12;
-function digTilesTick(dt){treeFallTick(dt);keepCheck();const o=wk.inside==='ex'?st:wk.inside==='skid'?sk:null;if(!o)return;
+function digTilesTick(dt){treeFallTick(dt);keepCheck();const o=wk.inside==='ex'?st:wk.inside==='skid'?sk:null;if(!o)return;digBasePrefetch(o);
   const cx=GX0+S/2,cz=GZ0+S/2;if(Math.abs(o.x-cx)<S/2-DIG_FOLLOW&&Math.abs(o.z-cz)<S/2-DIG_FOLLOW)return;
   const R=DIG_REGIONS.find(R=>o.x>=R.r[0]&&o.x<=R.r[1]&&o.z>=R.r[2]&&o.z<=R.r[3]);if(!R)return;
   const cl=(v,r)=>Math.max(r[0],Math.min(r[1],v)),x0=cl(Math.round(o.x/TILE)*TILE-S/2,R.x),z0=cl(Math.round(o.z/TILE)*TILE-S/2,R.z);
   if(x0!==GX0||z0!==GZ0)digMoveTo(x0,z0)}
+// the tiles round the grid that it may move onto next are worked out ahead (digBaseFill, terrain.js), nearest the
+// machine first, BASE_MS a frame, so a move mostly copies ground already worked out
+const BASE_MS=2;
+function digBasePrefetch(o){const t0=Math.round(GX0/TILE),u0=Math.round(GZ0/TILE);let best=null,bd=1e9;
+  for(let tj=u0-1;tj<=u0+TPG;tj++)for(let ti=t0-1;ti<=t0+TPG;ti++){if(ti>=t0&&ti<t0+TPG&&tj>=u0&&tj<u0+TPG)continue;
+    const cx=(ti+0.5)*TILE,cz=(tj+0.5)*TILE;if(!DIG_REGIONS.some(R=>cx>=R.x[0]&&cx<=R.x[1]+S&&cz>=R.z[0]&&cz<=R.z[1]+S))continue;
+    const e=baseCache.get(baseKey(ti,tj));if(e&&e.rows>=BASE_W)continue;const d=Math.hypot(cx-o.x,cz-o.z);if(d<bd){bd=d;best=[ti,tj]}}
+  if(!best)return;const e=baseEntry(best[0],best[1]),t=performance.now();while(!digBaseFill(e,1)&&performance.now()-t<BASE_MS);}
 // Reset: back to the trench with nothing stored
 function tileReset(){tileStore.clear();treeFallReset();digMoveTo(-TILE,-TILE,true)}
 

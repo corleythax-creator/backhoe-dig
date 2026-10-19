@@ -216,7 +216,7 @@ function edBrush(dt){const R=ed.size,cx=ed.bx,cz=ed.bz,t=ed.tool,k=ed.str/10;
 // everything built from the ground over an area (metres) follows the edit: the dig grid (dug holes keep their depth;
 // undug ground stays exactly at grade, so the site save skips it), the 0.5 m ground, steep-ground stops, grass tufts,
 // the tall grass and the trees and boulders on it
-function edRefresh(r,full){if(!r)return;const [x0,x1,z0,z1]=r;
+function edRefresh(r,full){if(!r)return;const [x0,x1,z0,z1]=r;baseCacheClear();
   const i0=Math.max(0,Math.floor(gI(x0))),i1=Math.min(N,Math.ceil(gI(x1))),j0=Math.max(0,Math.floor(gJ(z0))),j1=Math.min(N,Math.ceil(gJ(z1)));
   if(i0<=i1&&j0<=j1){for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const k=j*V+i,b=baseHeight(gX(i),gZ(j));H[k]=H[k]===H0[k]?b:H[k]+b-H0[k];H0[k]=b;digBase(k)}
     touch(i0,i1,j0,j1);updateTufts(i0-1,i1+1,j0-1,j1+1);lawnTerrain();updateTerrain();winOn=false;blkTerrainMoved()}
