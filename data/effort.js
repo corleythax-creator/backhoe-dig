@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-19T02:21:00Z",
+ "updated": "2026-10-19T02:26:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -24,9 +24,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-18",
-   "dh": 141,
+   "dh": 151,
    "act": 3.5,
-   "versions": 16
+   "versions": 17
   }
  ],
  "extra": [
@@ -1152,6 +1152,15 @@ window.EFFORT = {
    "tris": 1917760,
    "chars": 783962,
    "what": "The site map shows the whole world now, both mainland shores as well as the islands, drawn from the real ground with every tree; drag, pinch or scroll to zoom, jump to a place, read how far a spot is, with a new side panel for teleport, layers and the key."
+  },
+  {
+   "v": 125,
+   "asked": "2026-10-18T21:05:00-05:00",
+   "live": "2026-10-18T21:26:36-05:00",
+   "dh": 10,
+   "tris": 1918519,
+   "chars": 784358,
+   "what": "The dig grid now sits on 105 ft dig tiles and can move: groundwork for digging anywhere, with no change in play"
   }
  ]
 };
