@@ -186,15 +186,13 @@ document.querySelectorAll('.sizes button[data-s]').forEach(b=>b.onclick=()=>setU
 try{setUiScale(localStorage.getItem('bhd_ui')||1)}catch(e){setUiScale(1)}
 // turn sensitivity (above the left stick): scales the left / right input of the mode you are in, swing, tracks, steering,
 // the mower's spin and looking round on foot, from 25% to 200%. Each mode keeps its own (the mower starts at 60%, the
-// rest at 100%), saved on this device once moved. Open on a computer, a tap away on a phone
-const TURN_DEF={mow:60},turnPct={};let turnSens=1;const turnSl=$('#turnSl'),turnBtn=$('#turnBtn');
+// rest at 100%), saved on this device once moved. The slider sits in the Controls panel
+const TURN_DEF={mow:60},TURN_NAME={dig:'Dig',drive:'Drive',truck:'Truck',mow:'Mow',skid:'Skid',walk:'Walk'},turnPct={};let turnSens=1;const turnSl=$('#turnSl'),turnBtn=$('#turnBtn');
 try{Object.assign(turnPct,JSON.parse(localStorage.getItem('bhd_turnM')||'{}'))}catch(e){}
 // shows the current mode's setting; with v, sets it
 function setTurnSens(v){if(v!==undefined)turnPct[mode]=clamp(Math.round(+v/5)*5||100,25,200);
-  const p=turnPct[mode]||TURN_DEF[mode]||100;turnSens=p/100;turnSl.value=p;turnBtn.textContent=`Turn ${p}%`}
-function showTurnSl(on){turnSl.hidden=!on;turnBtn.setAttribute('aria-expanded',on)}
-setTurnSens();showTurnSl(!PHONE);
-turnBtn.onclick=()=>showTurnSl(turnSl.hidden);
+  const p=turnPct[mode]||TURN_DEF[mode]||100;turnSens=p/100;turnSl.value=p;turnBtn.textContent=`${p}% · ${TURN_NAME[mode]||mode}`}
+setTurnSens();
 turnSl.oninput=()=>{setTurnSens(turnSl.value);try{localStorage.setItem('bhd_turnM',JSON.stringify(turnPct))}catch(e){}};
 // let go of the slider so the arrow keys drive again
 turnSl.onchange=()=>turnSl.blur();
