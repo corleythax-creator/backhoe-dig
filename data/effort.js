@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-19T04:21:00Z",
+ "updated": "2026-10-19T04:47:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -24,9 +24,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-18",
-   "dh": 270.5,
-   "act": 5.5,
-   "versions": 40
+   "dh": 279.5,
+   "act": 6,
+   "versions": 41
   }
  ],
  "extra": [
@@ -1368,6 +1368,15 @@ window.EFFORT = {
    "tris": 2967805,
    "chars": 947950,
    "what": "The dig grid now moves when the machine is 39 ft from its edge (was 33 ft), so the bucket can't dig right at the edge and leave a wall that slumps in once the grid moves; found by the dig site test on the phone. The test runs the slumping in its headless checks too."
+  },
+  {
+   "v": 149,
+   "asked": "2026-10-18T23:10:00-05:00",
+   "live": "2026-10-18T23:47:21-05:00",
+   "dh": 9,
+   "tris": 2968008,
+   "chars": 973696,
+   "what": "Day and night: the sun and moon move where they really are over the lake for the date and time, with shadows to match; golden hour, dusk, stars, Milky Way, moon phases, shooting stars; lamps, light towers, lanterns and windows light at dusk; headlights; fireflies, crickets and frogs; ☰ Time slider, Stop/Run, Now"
   }
  ]
 };
