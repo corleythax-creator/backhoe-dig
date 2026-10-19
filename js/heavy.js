@@ -153,16 +153,21 @@ function hvBlade(h,dt,arm,curl,on){const cap=TU.hvDzCap;h.a=clamp(h.a+arm*TU.hvD
     for(const lx of [-0.8,0.8]){B.localToWorld(hvLip.set(lx,-0.3,2.5));if(inDig(hvLip.x,hvLip.z,1)){deposit(hvLip.x,hvLip.z,out/2,h.loadC,h.loadMix,1.4,h.loadWet);st.dirty=true;st.slumpT=2.5}}
     h.load-=out;if(h.load<0.001)h.load=0}
   h.heap.visible=h.load>0.03;if(h.heap.visible){const s=0.4+0.8*Math.sqrt(h.load/cap);h.heap.scale.set(2.8*s,0.9*s,1.1*s);tintLoad(h.heap.material,h.loadC)}}
-// the ripper: its tooth under the ground on the dig site, moving, loosens the ground round it down to the tooth (ripD)
-// and lifts it a little as it breaks (loose ground bulks up); it throws clods, and hard ground drags on it. Returns the drag
+// the ripper: its tooth under the ground on the dig site, moving, loosens the ground beside it down to the tooth (ripD).
+// Each point is broken once, as the tooth goes by: it leaves a furrow down the middle, about 3 in deep and 4 in wide,
+// with the broken ground heaved up in lumps along both sides of it (loose ground bulks up), in the colour of what it
+// tore up. It throws clods, and hard ground drags on it. Returns the drag
 function hvRipper(h,dt){h.g.localToWorld(hvV.set(0,HV_RIP0-h.rip*(HV_RIP0+TU.hvRipD),HV_RIPZ));
   if(Math.abs(h.v)<0.1||!inDig(hvV.x,hvV.z,1))return 1;
   const ti=Math.round(gI(hvV.x)),tj=Math.round(gJ(hvV.z));if(ti<0||tj<0||ti>N||tj>N||hvV.y>H[tj*V+ti]-0.03)return 1;
   const res=soilRes(tj*V+ti,hvV.y),r=0.45,i0=Math.max(0,Math.floor(gI(hvV.x-r))),i1=Math.min(N,Math.ceil(gI(hvV.x+r))),j0=Math.max(0,Math.floor(gJ(hvV.z-r))),j1=Math.min(N,Math.ceil(gJ(hvV.z+r)));
-  let any=false;
-  for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const k=j*V+i,d=Math.hypot(gX(i)-hvV.x,gZ(j)-hvV.z);if(d>r||digKeep[k])continue;
-    const depth=(H0[k]-hvV.y)*(1-0.4*d/r),fresh=depth-Math.max(ripD[k],H0[k]-H[k]);if(fresh<=0.01)continue;
-    const sw=Math.min(0.05,fresh*0.08)*(1-d/r),m=matAt(k,H0[k]-depth);H[k]+=sw;mixSpoil(k,matColor(k,m),sw);comp[k]=0;ripD[k]=Math.max(ripD[k],depth);any=true}
+  const fx=Math.sin(h.yaw),fz=Math.cos(h.yaw),sg=Math.sign(h.v);let any=false;
+  for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const k=j*V+i;if(digKeep[k])continue;
+    // a: how far the point is behind the tooth as it goes, u: how far out to the side
+    const dx=gX(i)-hvV.x,dz=gZ(j)-hvV.z,a=-(dx*fx+dz*fz)*sg,u=Math.abs(dx*fz-dz*fx);if(a<-0.08||a>0.3||u>r)continue;
+    const depth=(H0[k]-hvV.y)*(1-0.5*u/r),fresh=depth-Math.max(ripD[k],H0[k]-H[k]);if(fresh<=0.02)continue;
+    const f=Math.min(1,fresh/0.25),m=matAt(k,H0[k]-depth),dh=u<0.12?-0.07*f:(0.035+0.03*hash(i*1.7,j*2.3))*f*(1-(u-0.12)/(r-0.12));
+    H[k]+=dh;if(dh>0)mixSpoil(k,matColor(k,m),dh);comp[k]=0;ripD[k]=Math.max(ripD[k],depth);any=true}
   if(any){touch(i0,i1,j0,j1);st.dirty=true;if(Math.random()<dt*10)spawn(hvV,0.5)}
   return 0.45+0.55*res}
 // the loader's arms and bucket: it scoops with the cutting edge under the ground on the dig site and the bucket near
