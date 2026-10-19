@@ -44,7 +44,7 @@ A 3D excavator game in plain HTML, CSS and JavaScript (three.js r128, no build s
 | `js/gui.js` | Screen editor (☰ → Edit the screen): restyle any part of the screen and publish the look (a skin) to every device through Supabase; also runs inside the claude.ai screen editor |
 | `js/effects.js` | Shared per-frame vectors, resize |
 | `js/sound.js` | All sound, rendered in the browser: diesel engine loops, turbo, tires, air brakes, hydraulics, relief valve, tracks, bucket scrape, pouring dirt, backup alarm; stereo, distance and cliff echo; the Sound panel (on/off, Master, Engines, Backup alarm, Effects) |
-| `js/maps.js` | Minimap and big map |
+| `js/maps.js` | Minimap and the site map: the whole world (islands and both mainland shores) in ground tiles built a few rows a frame, nearest the player first, from `groundColor` with hill shading, lake depth and every tree (`mapBuild`, cleared by `mapReset` when the map editor changes the ground); pan, pinch and wheel zoom, place buttons, scale bar in feet, tap to teleport |
 | `js/editor.js` | Map editor (☰ menu or G): sculpt and paint the ground, lay out and grade roads, lay materials from the library, place, move, turn, resize, copy, query and delete trees, boulders and machines; undo; save on the device, copy out and load maps |
 | `js/ownmat.js` | Your own textures (map editor → Paint → + Your own texture): an uploaded image made into a seamless 512 px tile in the browser (as `tools/textures.py` does), named, sized in feet, given a kind and shine, published with the owner key to Supabase (`island_materials`) and added to the material library on every device (ids 41 and up, cached as `bhd_mats`) |
 | `js/gfx.js` | Graphics setting: Low (phones), Medium (laptops), High (desktop PCs), saved per device |

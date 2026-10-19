@@ -124,7 +124,7 @@ function wetSync(){document.querySelectorAll('#wetBar [data-wv]').forEach(b=>b.s
   $('#wetLo').textContent=min>0?`Drier than ${WET_OPTS.find(w=>w[0]===wetView)[1].replace('+','').toLowerCase()}: clear`:'Dry (clear) to soaked';
   const b=$('#wetGround');b.setAttribute('aria-pressed',wetGround);b.textContent=wetGround?'On the ground too: on':'Show on the ground too';
   wetU.uWetView.value=on&&wetGround?1:0;wetU.uWetMin.value=min;
-  if(!$('#bigmap').hidden&&typeof drawMap==='function')drawMap($('#big'),MAP_CX,MAP_CZ,MAP_HALF,true)}
+  if(typeof drawBig==='function')drawBig()}
 {const bar=$('#wetBar');for(const [k,n] of WET_OPTS){const b=document.createElement('button');b.dataset.wv=k;b.textContent=n;b.onclick=()=>wetSet(k);bar.appendChild(b)}}
 $('#wetGround').onclick=()=>wetSet(wetView,!wetGround);
 wetSync();
