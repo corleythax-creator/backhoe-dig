@@ -8,11 +8,14 @@ const MPT_PX=128,MPT_MPP=0.8,MPT_M=MPT_PX*MPT_MPP,MPT_NX=9,MPT_NZ=14,MAPW_X0=-MP
   MAPW_X1=MAPW_X0+MPT_NX*MPT_M,MAPW_Z1=MAPW_Z0+MPT_NZ*MPT_M,MAP_FIT=[-452,452,-584,792],mapTiles=[];
 let digLayer=null,mapDirty=true,mapT=0,mapBigT=0,mapJob=null,mapTreeList=null;
 function mapReset(){mapTiles.length=0;mapJob=null;mapTreeList=null}
-// every tree in the world as [x, z, crown radius, shade], read from the tree instance meshes (rocks are left out)
+// every tree in the world as [x, z, crown radius, shade], read from the tree instance meshes (rocks are left out) and the
+// planted ones
 function mapTrees(){if(mapTreeList)return mapTreeList;const L=[],m=new THREE.Matrix4(),p=new THREE.Vector3(),q=new THREE.Quaternion(),s=new THREE.Vector3();
   for(const im of treeIMs){const g=im.geometry;if(!g.boundingBox)g.computeBoundingBox();const b=g.boundingBox,hgt=b.max.y-b.min.y,rad=Math.max(b.max.x-b.min.x,b.max.z-b.min.z)/2;
     if(hgt<2.5||rad<0.6)continue;
     for(let i=0;i<im.count;i++){im.getMatrixAt(i,m);m.decompose(p,q,s);if(s.y<0.05)continue;L.push([p.x,p.z,rad*Math.max(s.x,s.z),hash(p.x*1.7,p.z*2.3)])}}
+  // the trees you planted (plant.js), once they are taller than a person: their crown as it is on the game's date
+  for(const a of plant.list){const G=plantGrowth(a,dn.t);if(G&&G.H>=1.8)L.push([a.x,a.z,Math.max(0.6,treeVitals(a.k,G.H).crown/2),hash(a.x*1.7,a.z*2.3)])}
   return mapTreeList=L}
 function mapTile(i,j){const k=j*MPT_NX+i;return mapTiles[k]||(mapTiles[k]={i,j,cv:null,row:0,img:null,hs:null})}
 // a few more rows of tile t; true once it is finished

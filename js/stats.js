@@ -175,7 +175,7 @@ function statRows(){const S=stats,cellFt=LAWN_GS*LAWN_GS/(FT*FT),all=S.mowTime+S
 const sIn=cm=>{const i=cm/2.54;return i<10?i.toFixed(1)+' in':Math.round(i)+' in'},sYr=n=>sN(n)+' yr',sLb=kg=>sN(kg*2.2046)+' lb';
 const sArea=m2=>{const sf=m2/(FT*FT);return sf>=43560/2?(sf/43560).toFixed(2)+' acres':sN(sf)+' sq ft'};
 const sBar=(n,m)=>`${sN(n)} <span class="sbar"><i style="width:${m?Math.round(100*n/m):0}%"></i></span>`;
-const TREE_PLACES={main:'Mesa (your map)',fam:'Family Island',jes:"Jessica's Island",dex:"Dexter's Island",mainland:'Mainland shores'};
+const TREE_PLACES={main:'Mesa (your map)',fam:'Family Island',jes:"Jessica's Island",dex:"Dexter's Island",mainland:'Mainland shores',planted:'Planted by you'};
 const treeName=k=>TREE_SP[k].name[0].toUpperCase()+TREE_SP[k].name.slice(1);
 function statTreeRows(){const C=treeCensus(),out=[],S=stats,none='—';
   const sp=k=>TREE_SP[k].name;

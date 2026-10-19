@@ -8,10 +8,10 @@ const ed={tool:'raise',group:'shape',gtool:{shape:'raise',paint:'paint',things:'
   stroke:null,flatH:0,road:null,rpt:-1,drawing:false,roadSnap:null,bx:0,bz:0,hover:false,pend:null,refT:0,sel:[],drag:null,snap:null,changed:false,saveT:0,undo:[],redo:[],
   look:false,pane:'',drawer:true,boxMode:false,box:null,lp:null,fly:null,home:null,grp:false,listF:'all',open:{},statT:0,listT:0,place:'one',gap:12,dens:5,erase:false,scat:null,meas:[],measClosed:false,
   grid:0,cur:null,curMouse:false,clip:null,xf:null,knob:null,hYaw:0,nudgeT:0,rowOpen:false,rowN:4,rowGap:0,rowDir:'along'};
-const ED_TOOLS={raise:'Raise',lower:'Lower',flatten:'Flatten',smooth:'Smooth',dirt:'Worked dirt',grass:'Grass',select:'Select',add:'Add',query:'Query',measure:'Measure',roads:'Roads',paint:'Paint'};
+const ED_TOOLS={raise:'Raise',lower:'Lower',flatten:'Flatten',smooth:'Smooth',dirt:'Worked dirt',grass:'Grass',select:'Select',add:'Add',plant:'Plant',query:'Query',measure:'Measure',roads:'Roads',paint:'Paint'};
 // the left bar's groups: their tools (picked in the bottom bar, or for Paint by the library's swatches), and whether the
 // drawer beside the bar has a part for them (the material library, the things to add and the On the map list, the roads)
-const ED_GROUPS={shape:{tools:['raise','lower','flatten','smooth']},paint:{tools:['paint','dirt','grass'],pane:1},things:{tools:['select','add'],pane:1},roads:{tools:['roads'],pane:1},inspect:{tools:['query','measure']}};
+const ED_GROUPS={shape:{tools:['raise','lower','flatten','smooth']},paint:{tools:['paint','dirt','grass'],pane:1},things:{tools:['select','add','plant'],pane:1},roads:{tools:['roads'],pane:1},inspect:{tools:['query','measure']}};
 const ED_KIND_CATS=['Trees and rocks','Buildings','Fencing','Site gear','Yard'];
 // the editor's icons (24 px, drawn with lines), put in front of the words of every part with a data-ic
 const ED_ICONS={done:'M15 5l-7 7 7 7',undo:'M9 14L4 9l5-5M4 9h10a6 6 0 010 12h-3',redo:'M15 14l5-5-5-5M20 9H10a6 6 0 000 12h3',
@@ -107,6 +107,23 @@ function edPlaceSync(){document.querySelectorAll('#edPlace button').forEach(b=>b
 document.querySelectorAll('#edPlace button').forEach(b=>b.onclick=()=>{ed.place=b.dataset.p;edPlaceSync();edTipSet();edBrushRing.visible=false});
 {const g=$('#edGap'),d=$('#edDens');g.value=ed.gap;d.value=ed.dens;g.oninput=()=>{ed.gap=+g.value;edPlaceSync()};d.oninput=()=>{ed.dens=+d.value;edPlaceSync()}}
 $('#edErase').onclick=()=>{ed.erase=!ed.erase;edPlaceSync()};
+// Plant (Things): trees you planted (plant.js), which grow with ☰ Time's Date. A tap plants the picked species, put in
+// Age years before the game's date (0: a nursery sapling today); with Dig up on (or Alt held) a tap digs up the nearest
+// of yours within 10 ft. They are kept apart from the map, with the planted trees you set on foot (bhd_plant)
+ed.plantAge=0;ed.plantDig=false;
+$('#edPlantSp').innerHTML=TREE_SP.map((s,k)=>`<button class="sm" data-sp="${k}">${s.name.replace(/^./,c=>c.toUpperCase())}</button>`).join('');
+function edPlantSync(){document.querySelectorAll('#edPlantSp button').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.sp===plant.sp));
+  $('#edPlantAge').value=ed.plantAge;$('#edPlantAgeV').textContent=ed.plantAge?`${ed.plantAge} yr ago`:'today';$('#edPlantDig').setAttribute('aria-pressed',ed.plantDig)}
+document.querySelectorAll('#edPlantSp button').forEach(b=>b.onclick=()=>{plant.sp=+b.dataset.sp;plantSave();plantKindUI();ed.plantDig=false;edPlantSync()});
+$('#edPlantAge').oninput=()=>{ed.plantAge=+$('#edPlantAge').value;edPlantSync()};
+$('#edPlantDig').onclick=()=>{ed.plantDig=!ed.plantDig;edPlantSync()};
+edPlantSync();
+function edPlantAt(x,z,alt){const before=JSON.stringify(plant.list);
+  if(ed.plantDig||alt){const i=plantNear(x,z,10*FT);if(i<0){toast('None of your planted trees stands here.','',1800);return}
+    const a=plant.list.splice(i,1)[0];edPush({pl:before,n:'Dug up a '+TREE_SP[a.k].name});plantChanged();return}
+  if(plant.list.length>=PLANT_CAP){toast(say('plantFull',{n:PLANT_CAP}),'bad',2400);return}
+  if(!plantSpotOk(x,z)){toast(say('plantWet',{}),'bad',2200);return}
+  plant.list.push(plantNew(plant.sp,x,z,dn.t-ed.plantAge*TREE_YR));edPush({pl:before,n:'Planted a '+TREE_SP[plant.sp].name});plantChanged()}
 // Line: the things from where the drag started to where it is now; fences and gates end to end, the rest at the spacing,
 // each turned along the line (at most 200, and no more than the kind's cap)
 function edLineThings(L){const t=ed.kind,P=PROPS[t],dx=L.x1-L.x0,dz=L.z1-L.z0,len=Math.hypot(dx,dz),ux=len?dx/len:1,uz=len?dz/len:0,yaw=Math.atan2(-uz,ux);
@@ -230,7 +247,7 @@ function edStrokeEnd(){const s=ed.stroke;if(!s)return;ed.stroke=null;edRefresh(e
   edPush({g:[i0,i1,j0,j1],h,p,m,a:c,n:t==='paint'?(mt?`Painted ${mt.n.toLowerCase()}`:'Cleared paint'):ED_STROKE_N[t]||'Edited the ground'});edQueueSave();matTexUpdate()}
 
 // ---------- undo ----------
-function edPush(u){const th=!u.g&&!u.roads;if(!u.n)u.n=th?'Changed things':u.roads?edRoadsName(u.roads):'Edit';if(th)queueMicrotask(()=>{u.n=edThingsName(u.a)});ed.undo.push(u);if(ed.undo.length>30)ed.undo.shift();ed.redo.length=0;edUndoBtns()}
+function edPush(u){const th=!u.g&&!u.roads&&!u.pl;if(!u.n)u.n=th?'Changed things':u.roads?edRoadsName(u.roads):'Edit';if(th)queueMicrotask(()=>{u.n=edThingsName(u.a)});ed.undo.push(u);if(ed.undo.length>30)ed.undo.shift();ed.redo.length=0;edUndoBtns()}
 function edUndoBtns(){$('#edUndo').disabled=!ed.undo.length;$('#edRedo').disabled=!ed.redo.length;$('#edHist').disabled=!ed.undo.length&&!ed.redo.length;if(!$('#edHistList').hidden)edHistDraw()}
 // each step's name for History: a brush stroke by its tool, roads and things by what changed from the copy kept for undo
 const ED_STROKE_N={raise:'Raised ground',lower:'Lowered ground',flatten:'Flattened ground',smooth:'Smoothed ground',dirt:'Painted worked dirt',grass:'Painted grass'};
@@ -265,6 +282,7 @@ function edSwap(u){
     for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const q=j*ED_NX+i,o=(j-j0)*w+i-i0,a=ED_H[q],b=ED_P[q],c=ED_M[q],d=ED_A[q];ED_H[q]=u.h[o];ED_P[q]=u.p[o];ED_M[q]=u.m[o];ED_A[q]=u.a[o];u.h[o]=a;u.p[o]=b;u.m[o]=c;u.a[o]=d}
     matU.tMatId.value.needsUpdate=true;matU.tMatCov.value.needsUpdate=true;matTexUpdate();
     edRefresh([ED_X0+i0*ED_C-0.6,ED_X0+i1*ED_C+0.6,ED_Z0+j0*ED_C-0.6,ED_Z0+j1*ED_C+0.6],true)}
+  else if(u.pl){const now=JSON.stringify(plant.list);plant.list.length=0;plant.list.push(...JSON.parse(u.pl));u.pl=now;plantChanged()}
   else if(u.roads){const now=edRoadsSnap();edRoadsSet(u.roads);u.roads=now;ed.road=null;ed.rpt=-1;edRoadCard();edRoadsDraw();edRefresh(u.rect,true)}
   else{const now=JSON.stringify(assets);assets.length=0;assets.push(...JSON.parse(u.a));u.a=now;assetsBuild();shpTreesRefresh();edSelSet([])}
   ed.changed=true;edQueueSave()}
@@ -698,6 +716,7 @@ function edDown(x,y,e){const p=edPick(x,y),t=ed.tool,mod=e&&(e.shiftKey||e.ctrlK
   if(ED_BRUSH.includes(t)){edStrokeStart(p.x,p.z);edBrushAt(p.x,p.z);return}
   if(t==='roads'){edRoadDown(p,x,y);return}
   if(t==='measure'){edMeasDown(p,x,y);return}
+  if(t==='plant'){edPlantAt(p.x,p.z,e&&e.altKey);return}
   if(t==='query'){edQuery(p.x,p.z);edRingAt(edBrushRing,p.x,p.z,0.5);ed.drag={query:true};return}
   // things from the catalogue come in at full size, their front to the camera
   if(t==='add'&&ed.place==='scatter'){ed.scat={x:p.x,z:p.z,snap:edAssetsSnap(),erase:ed.erase||!!(e&&e.altKey),t:0};edBrushAt(p.x,p.z);return}
@@ -849,7 +868,7 @@ function editorFrame(dt,now){
   if(kx||kz)edPan(-kx*dt*700,-kz*dt*700);
   ed.yaw+=ek('KeyQ','KeyE')*dt*1.6;ed.dist=clamp(ed.dist*Math.exp(ek('KeyF','KeyR')*dt*1.5),8,900);
   // the brush works while held; the ground catches up a few times a second, and fully when the stroke ends
-  if(ed.stroke)edBrush(dt);if(ed.scat)edScatter(dt);
+  if(ed.stroke)edBrush(dt);if(ed.scat)edScatter(dt);plantTick();
   if(ed.pend&&(ed.stroke||(ed.drag&&ed.drag.road))&&now-ed.refT>110){ed.refT=now;edRefresh(ed.pend,false);ed.pend=null}
   // a list row or road picked: the view glides there; a long press adds to the selection (or takes away)
   if(ed.fly){const k=1-Math.exp(-dt*7);ed.x+=(ed.fly.x-ed.x)*k;ed.z+=(ed.fly.z-ed.z)*k;if(Math.hypot(ed.fly.x-ed.x,ed.fly.z-ed.z)<0.05)ed.fly=null}

@@ -60,6 +60,7 @@ const WORDS=[
   ['edTip_paint','Map editor','Hold and drag to lay the material. Natural ground takes it back up; digging cuts through it.'],
   ['edTip_dirt','Map editor','Hold and drag to paint worked dirt.'],['edTip_grass','Map editor','Hold and drag to paint grass, over the dirt yards too.'],
   ['edTip_select','Map editor','Tap to pick. Shift-tap or a long press picks more; drag on empty ground (Box select on touch) to pick many; drag a picked one to move them all, its ring to turn or size them; the arrow keys nudge, H hides, L locks.'],
+  ['edTip_plant','Map editor','Tap the ground to plant the picked tree; it grows with ☰ Time, Date. Planted sets how many years ago it went in. Dig up (or Alt and a tap) takes one of yours out.'],
   ['edTip_add','Map editor','Tap the ground to place it; keep holding to drag it into place. Then it is picked, to turn or size it.'],
   ['edTip_add_stamp','Map editor','Each tap places another; keep holding to drag it into place.'],
   ['edTip_add_line','Map editor','Drag a line on the ground: fences and gates go end to end along it, other things at the spacing.'],
