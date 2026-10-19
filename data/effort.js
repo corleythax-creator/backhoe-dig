@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-19T02:31:00Z",
+ "updated": "2026-10-19T02:35:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -24,9 +24,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-18",
-   "dh": 152.5,
+   "dh": 160.5,
    "act": 4,
-   "versions": 18
+   "versions": 19
   }
  ],
  "extra": [
@@ -1170,6 +1170,15 @@ window.EFFORT = {
    "tris": 1920321,
    "chars": 784746,
    "what": "Trails on the site map now record everywhere you go, the woods, the hayfield and the lakeside town as well as the islands; trails already walked are kept."
+  },
+  {
+   "v": 127,
+   "asked": "2026-10-18T21:28:00-05:00",
+   "live": "2026-10-18T21:35:48-05:00",
+   "dh": 8,
+   "tris": 1919332,
+   "chars": 789494,
+   "what": "Each dig tile's ground (holes, spoil, puddles, mud, wetness) can be lifted out and put back seamlessly, and mud ruts carry into a tile: groundwork for digging anywhere, with no change in play"
   }
  ]
 };
