@@ -52,6 +52,7 @@ function editorOpen(){if(edOn||bench.on)return;edOn=true;mapAssets=assets;
   edTool(ed.tool);edCard(null);edSelSet([]);toast('Map editor. The game is paused while you edit.','',2600)}
 function editorClose(){if(!edOn)return;edStrokeEnd();edScatterEnd();edRoadFinish();edOn=false;document.body.classList.remove('editing');$('#editor').hidden=true;
   edBrushRing.visible=edSelRings.visible=edSoftRing.visible=edHRing.visible=edHKnob.visible=false;ed.sel=[];ed.box=null;ed.lp=null;$('#edBox').hidden=true;ed.road=null;ed.rpt=-1;edRoadsDraw();clearKeys();firstCam=true;last=performance.now();
+  if(assets.some(a=>a.hd)){for(const a of assets)delete a.hd;assetsBuild();shpTreesRefresh();edHiddenSync()}
   if(ed.changed){edSave();mapReset();mapDirty=true;ed.changed=false}}
 $('#edDone').onclick=editorClose;
 $('#editBtn').onclick=editorOpen;
@@ -117,7 +118,7 @@ function edLineSet(L,x,z){[L.x1,L.z1]=edSnapXZ(x,z);const gone=new Set(L.items),
 // Scatter, each frame while held: tries spots in the brush (more for a bigger brush and a higher density), keeping each
 // new one the spacing from every thing already there; Erase takes this kind away under the brush
 function edScatter(dt){const s=ed.scat,R=ed.size,t=ed.kind;
-  if(s.erase){const keep=assets.filter(a=>!(a.t===t&&Math.hypot(a.x-s.x,a.z-s.z)<R));if(keep.length<assets.length){assets.length=0;assets.push(...keep);s.dirty=true}}
+  if(s.erase){const keep=assets.filter(a=>a.lk||!(a.t===t&&Math.hypot(a.x-s.x,a.z-s.z)<R));if(keep.length<assets.length){assets.length=0;assets.push(...keep);s.dirty=true}}
   else{const g=Math.max(0.5,ed.gap*FT),tries=Math.min(40,Math.ceil(ed.dens*dt*Math.PI*R*R/40));let n=assets.filter(a=>a.t===t).length;
     for(let i=0;i<tries&&n<edCap(t);i++){const r=R*Math.sqrt(Math.random()),q=Math.random()*6.283,x=s.x+Math.cos(q)*r,z=s.z+Math.sin(q)*r;
       if(Math.abs(x)>118||Math.abs(z)>118||baseHeight(x,z)<WATER||assets.some(a=>Math.hypot(a.x-x,a.z-z)<g))continue;
@@ -165,7 +166,7 @@ function edPick(cx,cy){const r=canvas.getBoundingClientRect();edNdc.set((cx-r.le
   return {x:o.x+d.x*t,z:o.z+d.z*t}}
 // the nearest tree, boulder, placed thing or machine to a ground point, if one is under it
 function edHit(x,z){let best=null,bd=1;
-  for(const a of assets){const d=PROPS[a.t]?propHit(a,x,z):Math.hypot(a.x-x,a.z-z)/((a.t==='rock'?1.0:1.6)*a.s);if(d<bd){bd=d;best={a}}}
+  for(const a of assets){if(a.lk||a.hd)continue;const d=PROPS[a.t]?propHit(a,x,z):Math.hypot(a.x-x,a.z-z)/((a.t==='rock'?1.0:1.6)*a.s);if(d<bd){bd=d;best={a}}}
   for(const m of ED_MACH){if(!m.m().visible)continue;const o=m.o(),d=Math.hypot(o.x-x,o.z-z)/m.r;if(d<bd){bd=d;best={m}}}
   return best}
 
@@ -268,7 +269,8 @@ function edCard(html){const el=$('#edCard');el.hidden=!html;if(html)el.innerHTML
 function edBottomSync(){$('#edInfo').hidden=!ed.sel.length||!$('#edCard').hidden}
 
 // ---------- the selection: any number of trees, boulders, placed things and machines ({a} or {m}) ----------
-const edKey=h=>h.a||h.m,edIn=h=>ed.sel.some(s=>edKey(s)===edKey(h)),edSelA=()=>ed.sel.filter(s=>s.a).map(s=>s.a);
+// edSelA: the picked things that can be changed (not locked); edSelL: every picked thing, for Lock and Hide
+const edKey=h=>h.a||h.m,edIn=h=>ed.sel.some(s=>edKey(s)===edKey(h)),edSelL=()=>ed.sel.filter(s=>s.a).map(s=>s.a),edSelA=()=>edSelL().filter(a=>!a.lk);
 const edRad=a=>PROPS[a.t]?propR(a):(a.t==='rock'?1.0:1.6)*a.s;
 // a ring round each picked one, all in one line set
 const edSelRings=(function(){const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(1200*48*3),3));g.setDrawRange(0,0);
@@ -281,7 +283,7 @@ function edSelSet(list){ed.sel=list;edRingSel();edInspector();edListDraw();edSta
 // the things and machines whose middles are inside a rectangle of the screen
 function edInRect(x0,y0,x1,y1,things){const rc=canvas.getBoundingClientRect(),out=[];
   const inR=(x,z)=>{edV.set(x,hAt(x,z)+0.5,z).project(camera);if(Math.abs(edV.z)>1)return false;const sx=(edV.x+1)/2*rc.width+rc.left,sy=(1-edV.y)/2*rc.height+rc.top;return sx>=x0&&sx<=x1&&sy>=y0&&sy<=y1};
-  for(const a of assets)if(inR(a.x,a.z))out.push({a});
+  for(const a of assets)if(!a.lk&&!a.hd&&inR(a.x,a.z))out.push({a});
   if(!things)for(const m of ED_MACH){if(!m.m().visible)continue;const o=m.o();if(inR(o.x,o.z))out.push({m})}return out}
 function edSelectView(){const r=canvas.getBoundingClientRect();if(ed.tool!=='select'&&ed.tool!=='add')edTool('select');edSelSet(edInRect(r.left,r.top,r.right,r.bottom,true))}
 $('#edAllBtn').onclick=edSelectView;
@@ -299,6 +301,9 @@ const edSlider=(id,lab,min,max,step,val,unit)=>`<span class="edopt"><label for="
 const edFam=t=>t==='pine'||t==='leafy'?t:PROPS[t]&&PROPS[t].tint?'house':null;
 function edFams(){return {pine:{n:'Needles',c:ASSET_PT.map(t=>[0.3*t[0],0.46*t[1],0.26*t[2]])},leafy:{n:'Leaves',c:ASSET_LT},house:{n:'Walls',c:PROP_TINT.map(t=>[0.9*t[0],0.88*t[1],0.84*t[2]])}}}
 function edInspector(){const S=ed.sel,el=$('#edInfo');edBottomSync();if(!S.length){el.innerHTML='';return}
+  const L=edSelL(),nl=L.length-edSelA().length;
+  // only locked things picked: they can be unlocked or hidden, nothing else
+  if(nl&&nl===S.length){el.innerHTML=`<div class="edihead"><h3>${nl===1?edAssetName(L[0]):nl+' selected'}</h3><small>Locked: unlock to move or change ${nl===1?'it':'them'}</small></div>`+edHideLockRow(L);edHideLockWire(el,L);return}
   const as=edSelA(),one=S.length===1?S[0]:null,deg=y=>Math.round(((y*57.3)%360+360)%360);let h;
   if(one){const o=one.a||one.m.o(),g=baseHeight(o.x,o.z);
     h=`<div class="edihead"><h3>${one.a?edAssetName(one.a):one.m.name}</h3><small>${edWhere(o.x,o.z)} · ground ${g>=0?'+':'−'}${edFmt(Math.abs(g))} ft</small></div>`+
@@ -306,13 +311,13 @@ function edInspector(){const S=ed.sel,el=$('#edInfo');edBottomSync();if(!S.lengt
       `<span class="edopt"><label for="edSelPZ">South</label><input id="edSelPZ" type="number" step="0.5" value="${edFmt(o.z-ED_ZM)}" title="Feet south of the trench (north is negative)"><output>ft</output></span>`+
       edSlider('edSelTurn','Turn',0,359,ed.grid?15:1,deg(one.a?one.a.yaw:o.yaw||0),'°')+(one.a?edSlider('edSelSize','Size',30,300,5,Math.round(one.a.s*100),'%'):'')}
   else{const c={};for(const s of S){const n=s.a?edKindName(s.a.t):'Machine';c[n]=(c[n]||0)+1}
-    h=`<div class="edihead"><h3>${S.length} selected</h3><small>${Object.entries(c).map(([n,k])=>`${n} ×${k}`).join(', ')}</small></div>`+
+    h=`<div class="edihead"><h3>${S.length} selected</h3><small>${Object.entries(c).map(([n,k])=>`${n} ×${k}`).join(', ')}${nl?` · ${nl} locked, left as they are`:''}</small></div>`+
       (as.length?edSlider('edSelTurn','Turn',-180,180,ed.grid?15:5,0,'°')+edSlider('edSelSize','Size',30,300,5,100,'%')+`<button id="edSelGrp" class="sm" aria-pressed="${ed.grp}">As a group</button>`:'')+
       (as.length>1?`<span class="row" role="group" aria-label="Line up"><button id="edAlLine" class="sm">Line up</button>${as.length>2?'<button id="edAlSpace" class="sm">Space evenly</button>':''}<button id="edAlFace" class="sm">Face one way</button></span>`:'')}
   const F=edFams(),fams={};for(const a of as){const f=edFam(a.t);if(f)(fams[f]=fams[f]||[]).push(a)}
   for(const f in fams){const T=F[f],cs=new Set(fams[f].map(a=>a.c%T.c.length));
     h+=`<span class="edopt"><label>${T.n}</label><span class="edsw">${T.c.map((q,i)=>`<button class="edswb" data-f="${f}" data-c="${i}" aria-pressed="${cs.size===1&&cs.has(i)}" aria-label="${T.n} colour ${i+1}" style="background:rgb(${q.map(v=>Math.round(Math.min(1,v)*255)).join(',')})"></button>`).join('')}</span></span>`}
-  h+=`<span class="row">${as.length?`<button id="edSelCopy" class="sm edico" data-ic="copy">Duplicate</button><button id="edSelClip" class="sm">Copy</button><button id="edRowBtn" class="sm" aria-pressed="${ed.rowOpen}">Row</button><button id="edSelDel" class="sm danger edico" data-ic="trash">Delete</button>`:'<span class="hint">Drag it to move it.</span>'}<button id="edSelX" class="sm">Clear</button></span>`;
+  h+=`<span class="row">${as.length?`<button id="edSelCopy" class="sm edico" data-ic="copy">Duplicate</button><button id="edSelClip" class="sm">Copy</button><button id="edRowBtn" class="sm" aria-pressed="${ed.rowOpen}">Row</button><button id="edSelDel" class="sm danger edico" data-ic="trash">Delete</button>`:'<span class="hint">Drag it to move it.</span>'}<button id="edSelX" class="sm">Clear</button></span>`+(L.length?edHideLockRow(L):'');
   // Row: copies of the selection in a line, along the first one's width or across it, end to end or at a spacing
   if(as.length&&ed.rowOpen)h+=edSlider('edRowN','Copies',1,30,1,ed.rowN,'')+edSlider('edRowGap','Spacing',0,60,1,ed.rowGap,'')+
     `<span class="row" role="group" aria-label="Row direction"><button class="sm" data-rd="along" aria-pressed="${ed.rowDir==='along'}">Along</button><button class="sm" data-rd="across" aria-pressed="${ed.rowDir==='across'}">Across</button></span><button id="edRowGo" class="sm go">Make row</button>`;
@@ -341,7 +346,18 @@ function edInspector(){const S=ed.sel,el=$('#edInfo');edBottomSync();if(!S.lengt
   const gb=$('#edSelGrp');if(gb)gb.onclick=()=>{ed.grp=!ed.grp;edInspector()};
   el.querySelectorAll('.edswb').forEach(b=>b.onclick=()=>{const snap=edAssetsSnap();for(const a of fams[b.dataset.f])a.c=+b.dataset.c;edAssetsChanged(snap);edInspector()});
   const cb=$('#edSelCopy');if(cb){cb.onclick=edCopy;$('#edSelDel').onclick=edDelete}
-  $('#edSelX').onclick=()=>edSelSet([])}
+  $('#edSelX').onclick=()=>edSelSet([]);if(L.length)edHideLockWire(el,L)}
+// Hide (H) leaves things out of the view while the editor is open, to get at what is behind them; it is not saved, and
+// they come back when the editor closes or their row in On the map is tapped. Lock (L) is saved with the map: a locked
+// thing can't be picked on the ground or in a box, moved, turned, sized, copied or deleted (Delete every kind leaves it)
+// until it is unlocked, from the bottom bar or its 🔒 in On the map
+const edHideLockRow=L=>`<span class="row" role="group" aria-label="Hide and lock"><button id="edSelHide" class="sm">Hide</button><button id="edSelLock" class="sm" aria-pressed="${L.every(a=>a.lk)}">${L.every(a=>a.lk)?'Unlock':'Lock'}</button></span>`;
+function edHideLockWire(el,L){$('#edSelHide').onclick=()=>edHide(L,true);$('#edSelLock').onclick=()=>edLock(L,!L.every(a=>a.lk));$('#edSelX')&&($('#edSelX').onclick=()=>edSelSet([]))}
+function edHide(as,on){for(const a of as)if(on)a.hd=1;else delete a.hd;assetsBuild();shpTreesRefresh();
+  if(on)edSelSet(ed.sel.filter(s=>!s.a||!s.a.hd));else edListDraw();edHiddenSync();edStatus()}
+function edLock(as,on){const b=edAssetsSnap();for(const a of as)if(on)a.lk=1;else delete a.lk;edAssetsChanged(b);edRingSel();edInspector()}
+function edHiddenSync(){const n=assets.filter(a=>a.hd).length,s=$('#edShowAll');s.hidden=!n;s.textContent=`Show hidden (${n})`}
+$('#edShowAll').onclick=()=>edHide(assets.filter(a=>a.hd),false);
 // a copy of one thing goes alongside it, along its width, so fence sections line up; a copy of several goes beside them
 // all, to the right as seen from the camera
 function edCopy(){const as=edSelA();if(!as.length)return;const b=edAssetsSnap();let out;
@@ -351,7 +367,7 @@ function edCopy(){const as=edSelA();if(!as.length)return;const b=edAssetsSnap();
     const w=p1-p0+1;out=as.map(a=>Object.assign({},a,{x:clamp(a.x+rx*w,-118,118),z:clamp(a.z+rz*w,-118,118)}))}
   assets.push(...out);edAssetsChanged(b);edSelSet(out.map(a=>({a})))}
 function edDelete(){const as=edSelA();if(!as.length)return;const b=edAssetsSnap(),gone=new Set(as),keep=assets.filter(a=>!gone.has(a));
-  assets.length=0;assets.push(...keep);edAssetsChanged(b);edSelSet(ed.sel.filter(s=>!s.a))}
+  assets.length=0;assets.push(...keep);edAssetsChanged(b);edSelSet(ed.sel.filter(s=>!gone.has(s.a)))}
 // moves a machine (or the walker) to a spot on the mesa and sets it down on the ground there
 function edPlaceMachine(m,x,z){const o=m.o();[x,z]=landClamp(x,z,4,2);
   o.x=x;o.z=z;if(o===tr)tr.v=0;const y=surfAt(x,z);o.y=y;m.m().position.set(x,y,z)}
@@ -362,30 +378,34 @@ const edFlyTo=(x,z)=>{ed.fly={x,z}};
 // a row's key: a + its index in the asset list, or m + its index in ED_MACH
 const edRowHit=k=>k[0]==='a'?(assets[+k.slice(1)]?{a:assets[+k.slice(1)]}:null):{m:ED_MACH[+k.slice(1)]};
 function edListDraw(){const el=$('#edList');if($('#edDrawer').hidden||ed.pane!=='things')return;
-  const f=ed.listF,by={},near=(x,z)=>Math.hypot(x-ed.x,z-ed.z)<ed.dist*0.9;assets.forEach((a,i)=>{(by[a.t]=by[a.t]||[]).push({h:{a},k:'a'+i,label:edAssetName(a),x:a.x,z:a.z})});
+  const f=ed.listF,by={},lk=q=>q.h.a&&q.h.a.lk,near=(x,z)=>Math.hypot(x-ed.x,z-ed.z)<ed.dist*0.9;assets.forEach((a,i)=>{(by[a.t]=by[a.t]||[]).push({h:{a},k:'a'+i,label:edAssetName(a),x:a.x,z:a.z})});
   const groups=[...new Set(['pine','leafy','rock',...Object.keys(PROPS),...Object.keys(by)])].filter(t=>by[t]).map(t=>['a:'+t,edKindName(t),by[t],t]);
   groups.push(['m','Machines',ED_MACH.map((m,i)=>({m,i})).filter(q=>q.m.m().visible).map(q=>{const o=q.m.o();return {h:{m:q.m},k:'m'+q.i,label:q.m.name,x:o.x,z:o.z}})]);
   let h='';
-  for(const [id,name,items,t] of groups){const shown=items.filter(q=>f==='all'||f==='near'&&near(q.x,q.z)||f==='sel'&&edIn(q.h));if(!shown.length)continue;
+  for(const [id,name,items,t] of groups){const shown=items.filter(q=>f==='all'||f==='near'&&near(q.x,q.z)||f==='sel'&&edIn(q.h)||f==='lock'&&lk(q));if(!shown.length)continue;
     shown.sort((p,q)=>edIn(q.h)-edIn(p.h)); // the picked ones first
     const nSel=items.filter(q=>edIn(q.h)).length,open=!!ed.open[id];
     h+=`<div class="edlg"><button class="edlgo" data-g="${id}" aria-expanded="${open}"><i>${open?'▾':'▸'}</i>${name} <small>${shown.length}${f==='all'?'':' of '+items.length}</small></button><button class="sm edlgs" data-g="${id}" aria-pressed="${nSel===items.length}">${nSel?nSel+' picked':'Select all'}</button></div>`;
     if(!open)continue;
-    h+='<div class="edlrows">'+shown.slice(0,200).map(q=>`<div class="edlr"><button class="edlck" data-k="${q.k}" aria-pressed="${edIn(q.h)}" aria-label="Add to the selection"></button><button class="edlrn" data-k="${q.k}"><span>${q.label}</span><small>${edShortSpot(q.x,q.z)}</small></button></div>`).join('')+
+    h+='<div class="edlrows">'+shown.slice(0,200).map(q=>`<div class="edlr"><button class="edlck" data-k="${q.k}" aria-pressed="${edIn(q.h)}" aria-label="Add to the selection"></button><button class="edlrn" data-k="${q.k}"><span>${q.label}</span><small>${edShortSpot(q.x,q.z)}</small></button>${q.h.a?`<button class="edlhd" data-hd="${q.k}" aria-pressed="${!!q.h.a.hd}" aria-label="Hide while editing" title="Hide while editing">👁</button><button class="edlhd" data-lk="${q.k}" aria-pressed="${!!q.h.a.lk}" aria-label="Lock" title="Lock">🔒</button>`:''}</div>`).join('')+
       (shown.length>200?`<p class="hint">and ${shown.length-200} more: pick Near the view to see the ones close by</p>`:'')+'</div>';
-    if(t)h+=`<div class="row edlact"><button class="sm danger" data-del="${t}">Delete every ${name.toLowerCase()}</button>${ED_KINDS[t]?`<button class="sm" data-def="${t}">Put back the first ones</button>`:''}</div>`}
+    if(t){const ah=items.every(q=>q.h.a.hd),al=items.every(lk);h+=`<div class="row edlact"><button class="sm" data-hdall="${t}" aria-pressed="${ah}">${ah?'Show':'Hide'} them</button><button class="sm" data-lkall="${t}" aria-pressed="${al}">${al?'Unlock':'Lock'} them</button><button class="sm danger" data-del="${t}">Delete every ${name.toLowerCase()}${items.some(lk)?' not locked':''}</button>${ED_KINDS[t]?`<button class="sm" data-def="${t}">Put back the first ones</button>`:''}</div>`}}
   el.innerHTML=h||'<p class="hint">Nothing to show.</p>';$('#edListN').textContent=`${assets.length} things`;
   el._g=groups}
 document.querySelectorAll('.edfilter button').forEach(b=>b.onclick=()=>{ed.listF=b.dataset.f;document.querySelectorAll('.edfilter button').forEach(c=>c.setAttribute('aria-pressed',c===b));edListDraw()});
 $('#edList').onclick=e=>{const b=e.target.closest('button');if(!b)return;const el=$('#edList'),grp=id=>(el._g.find(g=>g[0]===id)||[])[2]||[];
   if(b.classList.contains('edlgo')){ed.open[b.dataset.g]=!ed.open[b.dataset.g];edListDraw();return}
+  // 👁 and 🔒 on a row, or for the whole kind
+  if(b.dataset.hd||b.dataset.lk){const h=edRowHit(b.dataset.hd||b.dataset.lk);if(h&&h.a){if(b.dataset.hd)edHide([h.a],!h.a.hd);else edLock([h.a],!h.a.lk)}return}
+  if(b.dataset.hdall||b.dataset.lkall){const t=b.dataset.hdall||b.dataset.lkall,as=assets.filter(a=>a.t===t);
+    if(b.dataset.hdall)edHide(as,!as.every(a=>a.hd));else edLock(as,!as.every(a=>a.lk));return}
   if(ed.tool!=='select')edTool('select');
   // Select all picks the whole kind (or lets go of it, if it is all picked already)
-  if(b.classList.contains('edlgs')){const hs=grp(b.dataset.g).map(q=>q.h),all=hs.every(edIn),keys=new Set(hs.map(edKey));
+  if(b.classList.contains('edlgs')){const hs=grp(b.dataset.g).map(q=>q.h).filter(h=>!h.a||!h.a.hd),all=hs.every(edIn),keys=new Set(hs.map(edKey));
     edSelSet(all?ed.sel.filter(s=>!keys.has(edKey(s))):[...ed.sel,...hs.filter(h=>!edIn(h))]);return}
-  if(b.dataset.del){const t=b.dataset.del,snap=edAssetsSnap(),keep=assets.filter(a=>a.t!==t);assets.length=0;assets.push(...keep);edAssetsChanged(snap);edSelSet(ed.sel.filter(s=>!s.a||s.a.t!==t));return}
-  if(b.dataset.def){const t=b.dataset.def,snap=edAssetsSnap(),keep=assets.filter(a=>a.t!==t);assets.length=0;assets.push(...keep,...defaultAssets().filter(a=>a.t===t));edAssetsChanged(snap);edSelSet([]);return}
-  const h=b.dataset.k&&edRowHit(b.dataset.k);if(!h)return;
+  if(b.dataset.del){const t=b.dataset.del,snap=edAssetsSnap(),keep=assets.filter(a=>a.t!==t||a.lk);assets.length=0;assets.push(...keep);edAssetsChanged(snap);edSelSet(ed.sel.filter(s=>!s.a||s.a.t!==t));return}
+  if(b.dataset.def){const t=b.dataset.def,snap=edAssetsSnap(),keep=assets.filter(a=>a.t!==t||a.lk);assets.length=0;assets.push(...keep,...defaultAssets().filter(a=>a.t===t));edAssetsChanged(snap);edSelSet([]);return}
+  const h=b.dataset.k&&edRowHit(b.dataset.k);if(!h)return;if(h.a&&h.a.hd)edHide([h.a],false);
   if(b.classList.contains('edlck')){edSelSet(edIn(h)?ed.sel.filter(s=>edKey(s)!==edKey(h)):[...ed.sel,h]);return}
   const o=h.a||h.m.o();edSelSet([h]);edFlyTo(o.x,o.z);edPicked()};
 // the roads, in the Roads drawer: tap one to pick it and go to it
@@ -399,7 +419,7 @@ function edRoadList(){const el=$('#edRoadList');$('#edRoadN').textContent=ROADS.
 function edStatus(p){if(p){const g=baseHeight(p.x,p.z),sl=Math.hypot(baseHeight(p.x+0.5,p.z)-baseHeight(p.x-0.5,p.z),baseHeight(p.x,p.z+0.5)-baseHeight(p.x,p.z-0.5));
     $('#edStatPos').textContent=`${edShortSpot(p.x,p.z)} · ground ${g>=0?'+':'−'}${edFmt(Math.abs(g))} ft · slope ${Math.round(sl*100)}%`}
   const b=[];if(ED_BRUSH.includes(ed.tool)||ed.tool==='add'&&ed.place==='scatter')b.push(`brush ${Math.round(edFt(ed.size))} ft`);b.push(`view from ${Math.round(edFt(ed.dist))} ft`,`${assets.length} things`);
-  if(ed.sel.length)b.push(`${ed.sel.length} selected`);if(ed.grid)b.push(`snap ${ed.grid} ft`);$('#edStatInfo').textContent=b.join(' · ')}
+  if(ed.sel.length)b.push(`${ed.sel.length} selected`);{const n=assets.filter(a=>a.hd).length;if(n)b.push(`${n} hidden`)}if(ed.grid)b.push(`snap ${ed.grid} ft`);$('#edStatInfo').textContent=b.join(' · ')}
 function edTipSet(){$('#edTip').textContent=say('edTip_'+ed.tool+(ed.tool==='add'&&ed.place!=='one'?'_'+ed.place:''));edStatus()}
 
 // ---------- roads ----------
@@ -612,7 +632,7 @@ function edDown(x,y,e){const p=edPick(x,y),t=ed.tool,mod=e&&(e.shiftKey||e.ctrlK
     if(!hit){if(!touch||ed.boxMode){ed.box={x0:x,y0:y,x1:x,y1:y,add:mod};edBoxDraw()}else{edSelSet([]);edMouse={pan:true,x,y}}return}
     if(mod){edSelSet(edIn(hit)?ed.sel.filter(s=>edKey(s)!==edKey(hit)):[...ed.sel,hit]);return}
     const prev=ed.sel,was=edIn(hit);if(!was)edSelSet([hit]);if(touch)ed.lp={t:performance.now(),x,y,prev,hit,was};
-    ed.drag={items:ed.sel.map(s=>{const o=s.a||s.m.o();return {a:s.a,m:s.m,dx:o.x-p.x,dz:o.z-p.z}}),snap:ed.sel.some(s=>s.a)?edAssetsSnap():null,moved:false}}}
+    ed.drag={items:ed.sel.filter(s=>!(s.a&&s.a.lk)).map(s=>{const o=s.a||s.m.o();return {a:s.a,m:s.m,dx:o.x-p.x,dz:o.z-p.z}}),snap:ed.sel.some(s=>s.a)?edAssetsSnap():null,moved:false}}}
 function edMove(x,y){
   if(edMouse){if(edMouse.pan)edPan(x-edMouse.x,y-edMouse.y);else{ed.yaw-=(x-edMouse.x)*0.006;ed.pitch=clamp(ed.pitch+(y-edMouse.y)*0.005,0.25,1.45)}edMouse.x=x;edMouse.y=y;return}
   if(ed.lp&&Math.hypot(x-ed.lp.x,y-ed.lp.y)>8)ed.lp=null;
@@ -677,6 +697,8 @@ addEventListener('keydown',e=>{const tg=e.target&&e.target.tagName;if(tg==='TEXT
   else if(c==='KeyG'||c==='Escape')editorClose();
   else if(c==='Delete'||c==='Backspace'){if(ed.tool==='roads')edRoadDelete(ed.rpt<0);else edDelete()}
   else if(c==='Enter'&&ed.drawing)edRoadFinish();
+  else if(c==='KeyH'&&edSelL().length)edHide(edSelL(),true);
+  else if(c==='KeyL'&&edSelL().length)edLock(edSelL(),!edSelL().every(a=>a.lk));
   else{const i=['Digit1','Digit2','Digit3','Digit4','Digit5','Digit6'].indexOf(c);if(i===5)edMapPane();else if(i>=0)edGroup(Object.keys(ED_GROUPS)[i])}});
 
 // ---------- saving, copying and loading ----------
