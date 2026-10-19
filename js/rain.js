@@ -5,7 +5,7 @@
 // bogging down. Rain also falls into holes and ruts, and standing rainwater drains away once it stops.
 // Weather (☰ menu): Auto brings showers now and then, Rain keeps it raining, Dry holds it off. The wet ground and the
 // weather save with the site (so they sync) and dry on for up to an hour while the game is closed. The Graphics setting
-// only changes how many raindrops are drawn.
+// only changes how much of the rain is drawn (drops, splashes, the far veil).
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 
 // ---------- the wet grid: one point a metre over the mesa top ----------
@@ -128,18 +128,89 @@ function wetSync(){document.querySelectorAll('#wetBar [data-wv]').forEach(b=>b.s
 {const bar=$('#wetBar');for(const [k,n] of WET_OPTS){const b=document.createElement('button');b.dataset.wv=k;b.textContent=n;b.onclick=()=>wetSet(k);bar.appendChild(b)}}
 $('#wetGround').onclick=()=>wetSet(wetView,!wetGround);
 wetSync();
-// raindrops: streaks in a box that follows the camera, moved by the GPU; the count follows the Graphics setting
-const RD_BOX=new THREE.Vector3(26,16,26);
-const rainMat=new THREE.ShaderMaterial({transparent:true,depthWrite:false,fog:false,
-  uniforms:{uCam:{value:new THREE.Vector3()},uT:{value:0},uBox:{value:RD_BOX},uA:{value:0}},
-  vertexShader:'attribute float e;uniform vec3 uCam;uniform float uT;uniform vec3 uBox;varying float vE;\nvoid main(){vec3 vel=vec3(1.4,-11.0,0.5);vec3 w=uCam+mod(position+vel*uT-uCam+uBox*0.5,uBox)-uBox*0.5;w-=normalize(vel)*0.8*e;vE=e;\ngl_Position=projectionMatrix*viewMatrix*vec4(w,1.0);}',
-  fragmentShader:'uniform float uA;varying float vE;\nvoid main(){gl_FragColor=vec4(0.86,0.9,0.95,uA*(1.0-0.75*vE));}'});
-let rainLines=null;
-function rainGfx(n){if(rainLines&&rainLines.userData.n===n)return;if(rainLines){scene.remove(rainLines);rainLines.geometry.dispose()}
-  const p=new Float32Array(n*6),e=new Float32Array(n*2);
-  for(let i=0;i<n;i++){const x=Math.random()*RD_BOX.x,y=Math.random()*RD_BOX.y,z=Math.random()*RD_BOX.z;p.set([x,y,z,x,y,z],i*6);e[i*2+1]=1}
-  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(p,3));g.setAttribute('e',new THREE.BufferAttribute(e,1));
-  rainLines=new THREE.LineSegments(g,rainMat);rainLines.frustumCulled=false;rainLines.visible=false;rainLines.renderOrder=3;rainLines.userData.n=n;scene.add(rainLines)}
+// raindrops: camera-facing streaks in a box that follows the camera, moved by the GPU. Each drop has its own length,
+// speed and a slight slant of its own; the wind (rainWind, in gusts like the grass's) leans them all. A second, fainter
+// layer fills a wider box past the near one, a soft veil (not on Low) of falling rain hangs in the haze further out, and streaks
+// looking toward the sun light up. The counts follow the Graphics setting (rainN, rainSp); how it rains does not
+const RD_BOX=new THREE.Vector3(24,16,24),RD_FAR=new THREE.Vector3(80,34,80),RAIN_WD=[0.8,0.6];
+const rainWind=new THREE.Vector2(),rainSunU={value:SUN_DIR},rainSunI={value:1};
+function rainDropMat(box,near,far,wid,alpha){return new THREE.ShaderMaterial({transparent:true,depthWrite:false,fog:false,side:THREE.DoubleSide,
+  uniforms:{uCam:{value:new THREE.Vector3()},uT:{value:0},uBox:{value:box},uA:{value:0},uWind:{value:rainWind},uSun:rainSunU,uSunI:rainSunI,uNear:{value:near},uFar:{value:far},uW:{value:wid},uK:{value:alpha}},
+  vertexShader:'attribute vec3 aP;attribute vec4 aR;uniform vec3 uCam;uniform float uT;uniform vec3 uBox;uniform vec2 uWind;uniform vec3 uSun;uniform float uNear,uFar,uW;varying vec2 vC;varying float vF;varying float vB;\n'+
+    'void main(){vec2 corner=position.xy;vec3 vel=vec3(uWind.x*(0.8+0.4*aR.y)+aR.z*0.5,-(7.5+3.0*aR.y),uWind.y*(0.8+0.4*aR.y)+aR.w*0.5);\n'+
+    'vec3 p=uCam+mod(aP*uBox+vel*uT-uCam+uBox*0.5,uBox)-uBox*0.5;vec3 ax=normalize(vel);vec3 tc=uCam-p;float d=length(tc);tc/=d;\n'+
+    'vec3 sd=normalize(cross(ax,tc));float L=(0.35+0.45*aR.x)*(0.8+0.4*aR.y);\n'+
+    'vec3 w=p-ax*L*corner.y+sd*max(uW,d*0.0016)*corner.x;vC=corner;\n'+
+    'vF=smoothstep(0.6,2.0,d)*(uNear>0.0?smoothstep(uNear*0.7,uNear,d):1.0)*(1.0-smoothstep(uFar*0.7,uFar,d));\n'+
+    'vB=pow(max(0.0,dot(-tc,uSun)),5.0);gl_Position=projectionMatrix*viewMatrix*vec4(w,1.0);}',
+  fragmentShader:'uniform float uA,uK,uSunI;varying vec2 vC;varying float vF;varying float vB;\n'+
+    'void main(){float a=(1.0-vC.x*vC.x)*smoothstep(0.0,0.25,vC.y)*smoothstep(1.0,0.55,vC.y)*vF*uA*uK;float b=vB*uSunI;\n'+
+    'gl_FragColor=vec4(mix(vec3(0.74,0.79,0.85),vec3(1.0,0.97,0.9),min(1.0,b*1.5)),min(1.0,a*(1.0+2.5*b)));}'})}
+const rainMat=rainDropMat(RD_BOX,0,RD_BOX.x*0.5,0.006,1),rainFarMat=rainDropMat(RD_FAR,RD_BOX.x*0.42,RD_FAR.x*0.5,0.012,0.55);
+let rainLines=null,rainFar=null;
+function rainDropMesh(n,mat){const g=new THREE.InstancedBufferGeometry();
+  g.setAttribute('position',new THREE.Float32BufferAttribute([-1,0,0,1,0,0,1,1,0,-1,1,0],3));g.setIndex([0,1,2,0,2,3]);
+  const p=new Float32Array(n*3),r=new Float32Array(n*4);for(let i=0;i<n*3;i++)p[i]=Math.random();for(let i=0;i<n*4;i++)r[i]=i%4<2?Math.random():Math.random()*2-1;
+  g.setAttribute('aP',new THREE.InstancedBufferAttribute(p,3));g.setAttribute('aR',new THREE.InstancedBufferAttribute(r,4));g.instanceCount=n;
+  const m=new THREE.Mesh(g,mat);m.frustumCulled=false;m.visible=false;m.renderOrder=3;m.userData.n=n;scene.add(m);return m}
+// the veil: an open cylinder round the camera, faint falling streaks in the fog colour; nearer ground hides it
+const rainVeilMat=new THREE.ShaderMaterial({transparent:true,depthWrite:false,fog:false,side:THREE.BackSide,
+  uniforms:{uT:{value:0},uA:{value:0},uC:{value:new THREE.Color()},uWind:{value:rainWind},uSunI:rainSunI},
+  vertexShader:'varying vec3 vL;void main(){vL=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
+  fragmentShader:'uniform float uT,uA,uSunI;uniform vec3 uC;uniform vec2 uWind;varying vec3 vL;\n'+
+    'float h(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}\n'+
+    'float n(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);return mix(mix(h(i),h(i+vec2(1,0)),f.x),mix(h(i+vec2(0,1)),h(i+1.0),f.x),f.y);}\n'+
+    'void main(){float an=atan(vL.z,vL.x)/6.2832;float lean=dot(uWind,normalize(vec2(-vL.z,vL.x)))*0.004;\n'+
+    'vec2 q=vec2((an+vL.y*lean)*260.0,vL.y*0.05+uT*0.35);float s=n(q*vec2(1.0,1.0))*0.6+n(q*vec2(2.3,0.7)+3.1)*0.4;\n'+
+    'float v=smoothstep(-1.0,0.1,vL.y/30.0)*(1.0-smoothstep(0.2,1.0,vL.y/30.0));\n'+
+    'gl_FragColor=vec4(mix(uC,vec3(0.93,0.95,0.97),0.35+0.2*uSunI),uA*v*(0.35+0.65*s*s));}'});
+const rainVeil=new THREE.Mesh(new THREE.CylinderGeometry(58,58,60,48,1,true),rainVeilMat);rainVeil.frustumCulled=false;rainVeil.visible=false;rainVeil.renderOrder=2;scene.add(rainVeil);
+// splashes where drops land near the camera: little crowns of spray thrown up off firm ground, rings that spread and
+// fade on puddles and the lake. One instanced draw; spawned on the CPU into a ring buffer
+const SP_LIFE=[0.28,0.9];
+const rsMat=new THREE.ShaderMaterial({transparent:true,depthWrite:false,fog:false,side:THREE.DoubleSide,
+  uniforms:{uCam:{value:new THREE.Vector3()},uT:{value:0},uSunI:rainSunI},
+  vertexShader:'attribute vec4 aS;attribute vec3 aK;uniform vec3 uCam;uniform float uT;varying vec2 vC;varying float vAge;varying float vKind;varying float vSeed;varying float vF;\n'+
+    'void main(){vec2 corner=position.xy;float life=aK.x>0.5?'+SP_LIFE[1].toFixed(2)+':'+SP_LIFE[0].toFixed(2)+';float t=(uT-aS.w)/life;vAge=t;vKind=aK.x;vSeed=aK.z;vC=corner;\n'+
+    'vec3 w;if(t<0.0||t>1.0){gl_Position=vec4(0.0,0.0,-2.0,1.0);return;}\n'+
+    'if(aK.x>0.5){w=aS.xyz+vec3(corner.x,0.0,corner.y)*aK.y;}\n'+
+    'else{vec2 f=normalize(uCam.xz-aS.xz);w=aS.xyz+vec3(-f.y,0.0,f.x)*corner.x*aK.y+vec3(0.0,(corner.y*0.5+0.5)*aK.y*1.1,0.0);}\n'+
+    'vF=1.0-smoothstep(9.0,13.0,distance(uCam,aS.xyz));gl_Position=projectionMatrix*viewMatrix*vec4(w,1.0);}',
+  fragmentShader:'uniform float uSunI;varying vec2 vC;varying float vAge;varying float vKind;varying float vSeed;varying float vF;\n'+
+    'void main(){float t=vAge,a=0.0;\n'+
+    'if(vKind>0.5){float r=length(vC),r1=t*0.95,r2=(t-0.22)*0.7;\n'+
+    'a=smoothstep(0.09,0.0,abs(r-r1))*(1.0-t)*(1.0-t)*0.9+(t>0.22?smoothstep(0.06,0.0,abs(r-r2))*(1.0-t)*0.5:0.0);\n'+
+    'a+=smoothstep(0.12,0.0,r)*smoothstep(0.25,0.0,t)*0.6;}\n'+
+    'else{vec2 p=vec2(vC.x,(vC.y*0.5+0.5)*1.1);float R=0.25+0.55*sqrt(t);\n'+
+    'vec2 e=vec2(p.x/R,(p.y-0.04)/(0.22*R));a=smoothstep(0.45,0.0,abs(length(e)-1.0))*0.85*(1.0-t);\n'+
+    'for(int i=0;i<6;i++){float fi=float(i),s=fract(sin(vSeed*91.7+fi*12.9)*437.5);float ang=(fi+s)/6.0*6.2832;\n'+
+    'float sp=0.5+0.5*s;vec2 dp=vec2(cos(ang)*sp*t*0.9,(1.6+0.8*s)*t-2.6*t*t);\n'+
+    'a+=smoothstep(0.13,0.05,length(p-dp))*(1.0-t*0.6);}\n'+
+    'a+=smoothstep(0.12,0.0,abs(p.x))*smoothstep(0.5*sin(3.1416*min(1.0,t*1.4)),0.0,p.y)*0.5;}\n'+
+    'gl_FragColor=vec4(vec3(0.9,0.93,0.96)*(0.85+0.3*uSunI),min(1.0,a)*vF*0.75);}'});
+let rsMesh=null,rsN=0,rsHead=0,rsAcc=0,rsT=0,rsS=null,rsK=null;
+function rsGfx(n){if(rsMesh&&rsN===n)return;if(rsMesh){scene.remove(rsMesh);rsMesh.geometry.dispose();rsMesh=null}rsN=n;rsHead=0;if(!n)return;
+  const g=new THREE.InstancedBufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute([-1,-1,0,1,-1,0,1,1,0,-1,1,0],3));g.setIndex([0,1,2,0,2,3]);
+  rsS=new THREE.InstancedBufferAttribute(new Float32Array(n*4).fill(-1e4),4);rsK=new THREE.InstancedBufferAttribute(new Float32Array(n*3),3);
+  rsS.setUsage(THREE.DynamicDrawUsage);rsK.setUsage(THREE.DynamicDrawUsage);g.setAttribute('aS',rsS);g.setAttribute('aK',rsK);g.instanceCount=n;
+  rsMesh=new THREE.Mesh(g,rsMat);rsMesh.frustumCulled=false;rsMesh.renderOrder=3;scene.add(rsMesh)}
+const rsFwd=new THREE.Vector3();
+function rsTick(dt,r){if(!rsMesh)return;rsT=(rsT+dt)%1000;rsMat.uniforms.uT.value=rsT;rsMat.uniforms.uCam.value.copy(camera.position);
+  // ring buffer times wrap with rsT: clear the ones born "in the future"
+  if(rsT<dt){const a=rsS.array;for(let i=3;i<a.length;i+=4)a[i]=-1e4;rsS.needsUpdate=true}
+  rsAcc+=r*rsN*1.6*dt;let n=Math.min(rsN>>2,rsAcc|0);rsAcc-=n;if(!n)return;
+  camera.getWorldDirection(rsFwd);const fl=Math.hypot(rsFwd.x,rsFwd.z)||1,cx=camera.position.x+rsFwd.x/fl*5,cz=camera.position.z+rsFwd.z/fl*5;
+  const S4=rsS.array,K3=rsK.array;let any=false;
+  while(n-->0){const ang=Math.random()*6.2832,rad=Math.sqrt(Math.random())*11,x=cx+Math.cos(ang)*rad,z=cz+Math.sin(ang)*rad;
+    let y=surfAt(x,z),ring=0;if(y<WATER){y=WATER;ring=1}else{const w=waterAt(x,z);if(w&&w.y>=y-0.02){y=w.y;ring=1}}
+    if(Math.abs(y-camera.position.y)>25)continue;const i=rsHead;rsHead=(rsHead+1)%rsN;any=true;
+    S4[i*4]=x;S4[i*4+1]=y+(ring?0.012:0.002);S4[i*4+2]=z;S4[i*4+3]=rsT;
+    K3[i*3]=ring;K3[i*3+1]=ring?0.14+Math.random()*0.16:0.1+Math.random()*0.08;K3[i*3+2]=Math.random()*10}
+  if(any){rsS.needsUpdate=true;rsK.needsUpdate=true}}
+function rainGfx(n,sp){if(!rainLines||rainLines.userData.n!==n){
+    for(const m of [rainLines,rainFar])if(m){scene.remove(m);m.geometry.dispose()}
+    rainLines=rainDropMesh(Math.max(1,n),rainMat);rainFar=rainDropMesh(Math.max(1,Math.round(n*0.6)),rainFarMat);rainLines.userData.off=rainFar.userData.off=!n;rainVeil.userData.off=n<1500}
+  rsGfx(sp|0)}
 // the sky greys over, the sun and its disc dim and the haze closes in
 const SKY0=scene.background.clone(),SKY_R=new THREE.Color(0x8e989f),FOG_FAR=scene.fog.far,SUN_I=sun.intensity,hemiL=scene.children.find(o=>o.isHemisphereLight),HEMI_I=hemiL?hemiL.intensity:0;
 const skyTint=new THREE.Color();
@@ -147,5 +218,12 @@ function rainFxTick(dt){const r=weather.r,v=ss(0,0.6,r);
   scene.background.copy(SKY0).lerp(SKY_R,v*0.85);scene.fog.color.copy(scene.background);scene.fog.far=FOG_FAR*gfxFog*(1-0.6*v);
   sun.intensity=SUN_I*(1-0.7*v);if(hemiL)hemiL.intensity=HEMI_I*(1+0.15*v);
   sky.material.color.copy(skyTint.setRGB(1,1,1).lerp(SKY_R,v*0.75));skySunVis.value=1-v;
-  if(!rainLines)return;rainLines.visible=r>0.03;if(!rainLines.visible)return;
-  rainMat.uniforms.uCam.value.copy(camera.position);rainMat.uniforms.uT.value=(rainMat.uniforms.uT.value+dt)%1000;rainMat.uniforms.uA.value=0.6*ss(0.03,0.5,r)}
+  rainSunI.value=sun.intensity/SUN_I;
+  // the breeze under the rain, in gusts that roll over the island like the grass's (mower.js)
+  const t=timeU.value,c=camera.position,gu=Math.pow(0.5+0.5*Math.sin((c.x*RAIN_WD[0]+c.z*RAIN_WD[1])*0.42-t*1.9+1.5*Math.sin((-0.6*c.x+0.8*c.z)*0.11+t*0.23)),3);
+  rainWind.set(RAIN_WD[0],RAIN_WD[1]).multiplyScalar(TU.rainWind*(0.7+0.9*gu));
+  const on=r>0.03;rsTick(dt,on?r:0);
+  if(!rainLines)return;const off=rainLines.userData.off;rainLines.visible=rainFar.visible=on&&!off;rainVeil.visible=on&&!off&&!rainVeil.userData.off;if(!rainLines.visible)return;
+  const a=0.6*ss(0.03,0.5,r);
+  for(const m of [rainMat,rainFarMat]){m.uniforms.uCam.value.copy(c);m.uniforms.uT.value=(m.uniforms.uT.value+dt)%1000;m.uniforms.uA.value=a}
+  rainVeil.position.set(c.x,c.y,c.z);rainVeilMat.uniforms.uT.value=(rainVeilMat.uniforms.uT.value+dt)%1000;rainVeilMat.uniforms.uA.value=0.5*ss(0.1,0.8,r);rainVeilMat.uniforms.uC.value.copy(scene.fog.color)}
