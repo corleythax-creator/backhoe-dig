@@ -31,6 +31,10 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - J18 Second ramp down the scarp: Cut and grade a new ramp down the scarp, steep enough to save time but gentle enough for a loaded truck to climb. (R7 F6 some none c2 5h)
 - J19 Drainage swale: Cut a shallow ditch so rain runs off the dig instead of pooling; the puddles drain along it into the lake. (R8 F6 most low c2 5h needs W01)
 - J20 Block retaining wall: Stack blocks into a wall at the scarp edge and backfill behind it; a check says whether it holds or leans. (R6 F7 some low c2 6h)
+- J21 Cross-country pipeline: A pipeline job along a long right of way with station markers: strip the topsoil, string the pipe, weld the joints, lower the line in with side booms, backfill, and restore the surface. Pay is by the foot. (R9 F8 some low c3 14h needs J04 M27)
+- J22 Trench safety rules: Deep trenches cave in if you ignore them: slope the walls or set a trench box, keep spoil 2 ft back from the edge, and watch the wet clay. A wall that slumps with a crew inside stops the job. (R9 F7 most low c2 6h)
+- J23 Asphalt road repair: Saw-cut a failed patch of road, dig it out, lay and roll base stone, tack the edges and run a hot-mix paver and roller over it. (R8 F7 some low c3 10h needs M07)
+- J24 Bid the job: Measure a plan, work out the yards and feet, bid it, then see if the real job came in over or under. Win a bid to take the work. (R7 F7 every none c2 6h needs J01 R02)
 
 ## M: New machines
 
@@ -60,6 +64,13 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - M24 ATV four-wheeler: A quad to blast around the fields and woods trails: throttle thumb, a rack on the back, mud on the tyres and a rumble you hear across the lake. (R6 F8 most low c1 4h)
 - M25 Tractor with a brush hog: A rear-mounted rotary cutter for tall grass and brush: drop the deck, engage the PTO and watch the field fall in swaths behind you. (R7 F8 most low c2 6h)
 - M26 Tractor loader and attachments: A front loader bucket, pallet forks, a post-hole auger and a bale spear that bolt onto the farm tractor. (R8 F7 most low c3 10h needs M19)
+- M27 Pipelayer with a side boom: A tracked pipelayer with a counterweight and a side boom that lifts a long pipe joint and lowers it exactly into the trench. (R9 F8 some low c2 8h)
+- M28 Chain trencher: A trencher that cuts a narrow ditch fast for cable and small pipe, throwing the spoil in a neat pile to one side. (R8 F7 some low c2 6h)
+- M29 Horizontal directional drill rig: A tracked drill rig that pushes a steerable bit down at an angle, with a drill-string rack, a mud tank and a tracker readout. (R9 F8 some low c3 12h)
+- M30 Vacuum excavation truck: A truck with a big vacuum hose that pulls the soil off a buried line without touching it, for exposing gas and fibre safely. (R8 F7 some low c2 6h needs J03)
+- M31 Water well drill rig: A truck-mounted rig that drills a well: add casing, watch the bit pass clay and rock layers and finish with a pump test. (R8 F7 rare low c2 7h)
+- M32 Rock crusher and screening plant: Feed quarry rock into a crusher, run it up a conveyor and screen it into piles of different stone sizes to load out. (R8 F8 some low c3 10h needs S03)
+- M33 Pile driver and vibratory hammer: Drive steel and timber piles for a dock or retaining wall, with the hammer pounding and the pile sinking foot by foot. (R7 F7 rare low c2 6h needs S18)
 
 ## X: Excavator and attachments
 
@@ -77,6 +88,9 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - X12 Tiltrotator: A bucket that tilts and turns on the stick, for sloped trench walls and tidy corners. (R6 F7 some none c2 5h needs X01)
 - X13 Dig-to guide: A string line and a see-through target in the trench; dug ground turns green when it is on grade and red when you go too deep. (R6 F7 every none c1 3h)
 - X14 Tipping over: Lift a heavy block far out to the side and the excavator rocks up onto its tracks' edge; too much and it tips. (R8 F7 some none c2 4h)
+- X15 GPS machine control: A design surface loaded into the cab, with a colour map of cut and fill and a bucket-tip readout that follows the grade as you dig. (R9 F7 some none c2 8h needs J06 X07)
+- X16 Quick coupler and attachment changes: Pull the pins or use the hydraulic coupler to swap a bucket, thumb, hammer or auger, and park each one on the ground. (R8 F6 every low c1 4h)
+- X17 Tracks and undercarriage: Tracks sink in soft ground, slip on wet slopes and pack with mud; a track that comes off is a stoppage until you jack it back. (R8 F6 most low c2 6h)
 
 ## D: Dirt and digging
 
@@ -94,6 +108,7 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - D12 Fill that settles: Fresh spoil is soft and ruts deep; over a few minutes piles settle and firm up, and driven-over fill packs hard. (R7 F4 every none c1 3h)
 - D13 Erosion: Rain carves little gullies down spoil piles and washes silt into the puddles and the trench. (R8 F6 some low c2 6h needs W01)
 - D14 Dig anywhere: Pick a spot on the site map and the dig grid moves there, so any part of the mesa can be dug, not only the trench area. (R4 F9 most high c3 12h)
+- D15 Groundwater and dewatering: Dig below the water table and the trench fills from the sides; set a sump and a pump to dry it out, and watch the cone of drawdown spread. (R9 F7 some low c2 7h)
 
 ## U: Buried utilities
 
@@ -106,6 +121,12 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - U07 Locator wand: Walk the site with a pipe locator that beeps over buried lines. (R7 F6 some none c1 4h)
 - U08 Abandoned lines: Old clay tile and rusty pipe nobody marked. (R6 F5 some low c1 3h)
 - U09 Gas service to the house: A branch off the gas main runs to the family house; dig the service line and set the meter. (R7 F6 rare low c2 5h)
+- U10 Bore under the road or creek: Set the drill rig, steer the bit under a road or creek by locator readings, then ream and pull the pipe back through without ever opening the surface. (R9 F8 some low c3 12h needs M29)
+- U11 Pressure test the line: Cap the new line, fill it with water, pump it to test pressure and watch the gauge for an hour. A drop means you dig for the leak. (R8 F6 some none c1 3h needs J04)
+- U12 Valves, hydrants and thrust blocks: Set tees, elbows, gate valves and a fire hydrant on the line and pour thrust blocks behind each bend so the pipe does not blow apart under pressure. (R8 F6 some low c2 6h needs J04)
+- U13 Sewer and manholes: Lay gravity sewer at a steady slope to a laser, set precast manholes with the crane and backfill around them. (R8 F7 some low c2 8h needs J06 M13)
+- U14 Bedding, tracer wire and warning tape: Bed the pipe in sand, run a tracer wire along it and lay warning tape a foot above, so the next crew knows what is under there. (R8 F4 some none c1 3h needs J04)
+- U15 Pipe network cutaway: A see-through view of the buried water network with moving water, pressure gauges and valves that open and shut, so you can watch a closed valve change the flow. (R9 F8 some low c2 8h needs U12)
 
 ## W: Weather and time of day
 
@@ -151,6 +172,7 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - S26 Cut and split firewood: Fell a dead tree with a chainsaw, buck it into rounds, split and stack it, and haul it to the cabin on a trailer for the woodstove. (R7 F7 some low c2 7h needs S24 H01)
 - S27 Trail cameras: Strap cameras to trees in the woods and check the photos later: deer at dawn, a fox, an owl, and maybe a bear. (R5 F8 some low c1 4h needs S24)
 - S28 Hidden spots in the woods: An old stone wall, a collapsed cabin, a spring and a rock overlook with a view of the lake, waiting to be found. (R5 F8 some low c1 4h needs S24)
+- S29 Pump station build: Dig a tank pit, set a tank and a pump house, tie in the pipeline and power, then start the pump and watch the new line fill and the gauges climb. (R8 F9 some low c3 12h needs J21 U12)
 
 ## L: Crew and people
 
@@ -234,6 +256,8 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - Y10 Share block builds: Copy a block build as text and load it on another device or another spot. (R1 F6 some none c1 3h)
 - Y11 Parkour course: A block obstacle course on foot on Dexter's Island, timed from start to finish line. (R1 F7 some none c1 3h)
 - Y12 Landmark hunt: Find hidden landmarks across the islands (the cliff bench, the crane, the flagpole) and tick them off. (R2 F6 some none c1 3h)
+- Y13 Operator certification ladder: Pass skill tests, like trenching to depth, loading a truck without a spill, and setting a pipe, to move up a ladder of operator ratings. (R6 F7 every none c2 6h)
+- Y14 Daily walk-around check: Before work, walk the machine: fluids, grease points, tracks, hoses and lights. Skip it and a small problem becomes a breakdown. (R9 F5 every none c1 3h needs M16)
 
 ## H: Cozy home life
 
@@ -310,6 +334,7 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - T11 Town works jobs: A water line dug on Main Street, a sidewalk to tear out. (R7 F7 some low c3 10h needs T01)
 - T12 Harbor city: A bigger city on the mainland shore: streets of shops and houses, a waterfront promenade, a public beach and its own marina, reached by the bridge or by boat. (R6 F8 most high c3 14h needs B01)
 - T13 City skyline: Downtown towers across the lake, seen from the islands and lit at dusk, ahead of building the city itself. (R6 F4 every low c1 4h)
+- T14 Material supplier orders: Order stone, sand, pipe and fittings by the load or the stick, and have them delivered to a laydown yard by truck. (R8 F6 most low c2 6h needs T04)
 
 ## R: Days and routine
 
