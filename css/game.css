@@ -291,7 +291,9 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
 .edpanel p{margin:0}.edpanel .hint{color:var(--muted);font-size:14px}
 .edihead{display:flex;flex-direction:column;gap:2px;min-width:0;max-width:340px}
 .edihead small{color:var(--muted);font-size:13px}
-.edsub{gap:4px}
+.edsub{gap:4px;order:-2}
+/* Add: what is being added and how, ahead of the brush and spacing */
+#edOpts .edpicked[data-for="add"],#edPlace{order:-1}
 .edpicked{color:var(--muted)}.edpicked b{color:var(--ink)}
 #edCard dl{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px;margin:0}
 #edCard dt{font:700 12px/1.5 var(--f-display);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}

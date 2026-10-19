@@ -6,7 +6,7 @@
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 const ed={tool:'raise',group:'shape',gtool:{shape:'raise',paint:'paint',things:'select',roads:'roads',inspect:'query'},size:15*FT,str:5,kind:'pine',mat:10,square:false,soft:false,keep:false,feather:0.5,x:0,z:10,yaw:0,pitch:0.95,dist:45,
   stroke:null,flatH:0,road:null,rpt:-1,drawing:false,roadSnap:null,bx:0,bz:0,hover:false,pend:null,refT:0,sel:[],drag:null,snap:null,changed:false,saveT:0,undo:[],redo:[],
-  look:false,pane:'',drawer:true,boxMode:false,box:null,lp:null,fly:null,home:null,grp:false,listF:'all',open:{},statT:0,listT:0};
+  look:false,pane:'',drawer:true,boxMode:false,box:null,lp:null,fly:null,home:null,grp:false,listF:'all',open:{},statT:0,listT:0,place:'one',gap:12,dens:5,erase:false,scat:null};
 const ED_TOOLS={raise:'Raise',lower:'Lower',flatten:'Flatten',smooth:'Smooth',dirt:'Worked dirt',grass:'Grass',select:'Select',add:'Add',query:'Query',roads:'Roads',paint:'Paint'};
 // the left bar's groups: their tools (picked in the bottom bar, or for Paint by the library's swatches), and whether the
 // drawer beside the bar has a part for them (the material library, the things to add and the On the map list, the roads)
@@ -47,7 +47,7 @@ function editorOpen(){if(edOn||bench.on)return;edOn=true;mapAssets=assets;
   ed.yaw=Math.atan2(camera.position.x-fv.x,camera.position.z-fv.z);ed.dist=45;ed.pitch=0.95;
   ed.home={x:ed.x,z:ed.z,yaw:ed.yaw,dist:ed.dist,pitch:ed.pitch};ed.drawer=!edNarrow();ed.pane=ED_GROUPS[ed.group].pane?ed.group:'';
   edTool(ed.tool);edCard(null);edSelSet([]);toast('Map editor. The game is paused while you edit.','',2600)}
-function editorClose(){if(!edOn)return;edStrokeEnd();edRoadFinish();edOn=false;document.body.classList.remove('editing');$('#editor').hidden=true;
+function editorClose(){if(!edOn)return;edStrokeEnd();edScatterEnd();edRoadFinish();edOn=false;document.body.classList.remove('editing');$('#editor').hidden=true;
   edBrushRing.visible=edSelRings.visible=edSoftRing.visible=false;ed.sel=[];ed.box=null;ed.lp=null;$('#edBox').hidden=true;ed.road=null;ed.rpt=-1;edRoadsDraw();clearKeys();firstCam=true;last=performance.now();
   if(ed.changed){edSave();mapReset();mapDirty=true;ed.changed=false}}
 $('#edDone').onclick=editorClose;
@@ -59,7 +59,7 @@ function edTool(t){if(t!=='roads'){edRoadFinish();ed.road=null;ed.rpt=-1}ed.tool
   const g=Object.keys(ED_GROUPS).find(k=>ED_GROUPS[k].tools.includes(t));if(g){ed.group=g;ed.gtool[g]=t}
   $('#edOpts').hidden=false;edSubDraw();
   document.querySelectorAll('#edOpts [data-for]').forEach(el=>el.hidden=!el.dataset.for.split(' ').includes(t));
-  $('#edSoftOpt').hidden=!(t==='paint'&&ed.soft);
+  $('#edSoftOpt').hidden=!(t==='paint'&&ed.soft);edPlaceSync();
   if(t!=='query')edCard(null);edBrushRing.visible=edSoftRing.visible=false;if(t==='roads')edRoadCard();edRoadsDraw();
   edMatMark();edKindMark();edPaneSync();edTipSet()}
 // tapping the picked group again folds the drawer away (or the bottom bar's options, for a group without a drawer part)
@@ -84,7 +84,45 @@ const edKindName=t=>PROPS[t]?PROPS[t].n:ED_KINDS[t]||t;
 {const all=[...Object.keys(ED_KINDS).map(k=>[k,0]),...Object.keys(PROPS).map(k=>[k,PROPS[k].cat||3])];
   $('#edKinds').innerHTML=ED_KIND_CATS.map((c,ci)=>`<h4>${c}</h4><div class="row">${all.filter(q=>q[1]===ci).map(q=>`<button class="sm" data-k="${q[0]}">${edKindName(q[0])}</button>`).join('')}</div>`).join('');
   document.querySelectorAll('#edKinds button').forEach(b=>b.onclick=()=>{ed.kind=b.dataset.k;edTool('add');edPicked()})}
-function edKindMark(){document.querySelectorAll('#edKinds button').forEach(b=>b.setAttribute('aria-pressed',ed.tool==='add'&&b.dataset.k===ed.kind));$('#edKindV').textContent=edKindName(ed.kind)}
+function edKindMark(){document.querySelectorAll('#edKinds button').forEach(b=>b.setAttribute('aria-pressed',ed.tool==='add'&&b.dataset.k===ed.kind));$('#edKindV').textContent=edKindName(ed.kind);edPlaceSync()}
+// ---------- placing in bulk (Add): One (then it is picked), Stamp (each tap another), Line (along a drag), Scatter (a brush) ----------
+const edCap=t=>PROPS[t]?PROPS[t].cap:ASSET_CAP[t]||300;
+const edRand=()=>({y:Math.random()*6.28,s:Math.random(),c:Math.random()});
+// a new thing at a spot: the catalogue's at full size (facing the camera unless a turn is given), trees and boulders a
+// little different each (r: its random numbers, kept by Line so a dragged line doesn't flicker)
+function edNewThing(t,x,z,yaw,r){r=r||edRand();x=clamp(x,-118,118);z=clamp(z,-118,118);const pr=PROPS[t];
+  return pr?{t,x,z,yaw:yaw!=null?yaw:Math.round(ed.yaw/(Math.PI/12))*Math.PI/12,s:1,c:pr.tint?Math.floor(r.c*PROP_TINT.length):0}:
+    {t,x,z,yaw:r.y,s:t==='rock'?0.7+r.s*0.6:0.85+r.s*0.4,c:Math.floor(r.c*6)}}
+// the bottom bar shows Spacing for Line and Scatter, Brush, Density and Erase for Scatter
+function edPlaceSync(){document.querySelectorAll('#edPlace button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.p===ed.place));
+  if(ed.tool==='add')document.querySelectorAll('#edOpts [data-place]').forEach(el=>el.hidden=!el.dataset.place.split(' ').includes(ed.place));
+  const P=PROPS[ed.kind];$('#edGapV').textContent=ed.place==='line'&&P&&P.run?'end to end':`${ed.gap} ft`;$('#edDensV').textContent=ed.dens;
+  $('#edErase').setAttribute('aria-pressed',ed.erase)}
+document.querySelectorAll('#edPlace button').forEach(b=>b.onclick=()=>{ed.place=b.dataset.p;edPlaceSync();edTipSet();edBrushRing.visible=false});
+{const g=$('#edGap'),d=$('#edDens');g.value=ed.gap;d.value=ed.dens;g.oninput=()=>{ed.gap=+g.value;edPlaceSync()};d.oninput=()=>{ed.dens=+d.value;edPlaceSync()}}
+$('#edErase').onclick=()=>{ed.erase=!ed.erase;edPlaceSync()};
+// Line: the things from where the drag started to where it is now; fences and gates end to end, the rest at the spacing,
+// each turned along the line (at most 200, and no more than the kind's cap)
+function edLineThings(L){const t=ed.kind,P=PROPS[t],dx=L.x1-L.x0,dz=L.z1-L.z0,len=Math.hypot(dx,dz),ux=len?dx/len:1,uz=len?dz/len:0,yaw=Math.atan2(-uz,ux);
+  const room=Math.max(0,edCap(t)-assets.filter(a=>a.t===t).length+L.items.length),run=P&&P.run,g=run?P.w:Math.max(0.3,ed.gap*FT);
+  const n=Math.min(200,room,run?Math.max(1,Math.round(len/g)):Math.floor(len/g)+1),out=[];
+  for(let i=0;i<n;i++){const k=run?i+0.5:i;out.push(edNewThing(t,L.x0+ux*g*k,L.z0+uz*g*k,yaw,L.rnd[i]=L.rnd[i]||edRand()))}
+  return {out,len}}
+function edLineSet(L,x,z){L.x1=x;L.z1=z;const gone=new Set(L.items),keep=assets.filter(a=>!gone.has(a)),{out,len}=edLineThings(L);
+  assets.length=0;assets.push(...keep,...out);L.items=out;assetsBuild();shpTreesRefresh();
+  $('#edStatInfo').textContent=`line ${edFmt(len,0)} ft · ${out.length} × ${edKindName(ed.kind).toLowerCase()}`}
+// Scatter, each frame while held: tries spots in the brush (more for a bigger brush and a higher density), keeping each
+// new one the spacing from every thing already there; Erase takes this kind away under the brush
+function edScatter(dt){const s=ed.scat,R=ed.size,t=ed.kind;
+  if(s.erase){const keep=assets.filter(a=>!(a.t===t&&Math.hypot(a.x-s.x,a.z-s.z)<R));if(keep.length<assets.length){assets.length=0;assets.push(...keep);s.dirty=true}}
+  else{const g=Math.max(0.5,ed.gap*FT),tries=Math.min(40,Math.ceil(ed.dens*dt*Math.PI*R*R/40));let n=assets.filter(a=>a.t===t).length;
+    for(let i=0;i<tries&&n<edCap(t);i++){const r=R*Math.sqrt(Math.random()),q=Math.random()*6.283,x=s.x+Math.cos(q)*r,z=s.z+Math.sin(q)*r;
+      if(Math.abs(x)>118||Math.abs(z)>118||baseHeight(x,z)<WATER||assets.some(a=>Math.hypot(a.x-x,a.z-z)<g))continue;
+      assets.push(edNewThing(t,x,z,null));n++;s.dirty=true}
+    if(n>=edCap(t)&&!s.capped){s.capped=true;toast(`The map holds at most ${edCap(t)} of these (${edKindName(t)}).`,'',2600)}}
+  const now=performance.now();if(s.dirty&&now-s.t>80){s.t=now;s.dirty=false;s.any=true;assetsBuild();shpTreesRefresh()}}
+function edScatterEnd(){const s=ed.scat;ed.scat=null;if(!s)return;if(s.dirty){s.any=true;assetsBuild();shpTreesRefresh()}
+  if(s.any){edPush({a:s.snap});ed.changed=true;edQueueSave();edListDraw();edStatus()}}
 // the view: Look makes one finger move the view whatever the tool; closer, farther, north up and back to where the editor opened
 $('#edLook').onclick=()=>{ed.look=!ed.look;$('#edLook').setAttribute('aria-pressed',ed.look)};
 $('#edZoomIn').onclick=()=>{ed.dist=clamp(ed.dist/1.4,8,900);edStatus()};$('#edZoomOut').onclick=()=>{ed.dist=clamp(ed.dist*1.4,8,900);edStatus()};
@@ -347,9 +385,9 @@ function edRoadList(){const el=$('#edRoadList');$('#edRoadN').textContent=ROADS.
 // ---------- the status line under the bottom bar: the spot under the pointer, the brush and the view, and a tip ----------
 function edStatus(p){if(p){const g=baseHeight(p.x,p.z),sl=Math.hypot(baseHeight(p.x+0.5,p.z)-baseHeight(p.x-0.5,p.z),baseHeight(p.x,p.z+0.5)-baseHeight(p.x,p.z-0.5));
     $('#edStatPos').textContent=`${edShortSpot(p.x,p.z)} · ground ${g>=0?'+':'−'}${edFmt(Math.abs(g))} ft · slope ${Math.round(sl*100)}%`}
-  const b=[];if(ED_BRUSH.includes(ed.tool))b.push(`brush ${Math.round(edFt(ed.size))} ft`);b.push(`view from ${Math.round(edFt(ed.dist))} ft`,`${assets.length} things`);
+  const b=[];if(ED_BRUSH.includes(ed.tool)||ed.tool==='add'&&ed.place==='scatter')b.push(`brush ${Math.round(edFt(ed.size))} ft`);b.push(`view from ${Math.round(edFt(ed.dist))} ft`,`${assets.length} things`);
   if(ed.sel.length)b.push(`${ed.sel.length} selected`);$('#edStatInfo').textContent=b.join(' · ')}
-function edTipSet(){$('#edTip').textContent=say('edTip_'+ed.tool);edStatus()}
+function edTipSet(){$('#edTip').textContent=say('edTip_'+ed.tool+(ed.tool==='add'&&ed.place!=='one'?'_'+ed.place:''));edStatus()}
 
 // ---------- roads ----------
 // Roads tool: tap a road to pick it, drag its points (dots) to move them, tap the picked road between points to add one,
@@ -457,8 +495,10 @@ function edDown(x,y,e){const p=edPick(x,y),t=ed.tool,mod=e&&(e.shiftKey||e.ctrlK
   if(t==='roads'){edRoadDown(p,x,y);return}
   if(t==='query'){edQuery(p.x,p.z);edRingAt(edBrushRing,p.x,p.z,0.5);ed.drag={query:true};return}
   // things from the catalogue come in at full size, their front to the camera
-  if(t==='add'){const b=edAssetsSnap(),pr=PROPS[ed.kind],a=pr?{t:ed.kind,x:p.x,z:p.z,yaw:Math.round(ed.yaw/(Math.PI/12))*Math.PI/12,s:1,c:pr.tint?Math.floor(Math.random()*PROP_TINT.length):0}:
-      {t:ed.kind,x:p.x,z:p.z,yaw:Math.random()*6.28,s:ed.kind==='rock'?0.7+Math.random()*0.6:0.85+Math.random()*0.4,c:Math.floor(Math.random()*6)};
+  if(t==='add'&&ed.place==='scatter'){ed.scat={x:p.x,z:p.z,snap:edAssetsSnap(),erase:ed.erase||!!(e&&e.altKey),t:0};edBrushAt(p.x,p.z);return}
+  if(t==='add'&&ed.place==='line'){ed.drag={line:{x0:p.x,z0:p.z,x1:p.x,z1:p.z,items:[],rnd:[]},snap:edAssetsSnap()};edLineSet(ed.drag.line,p.x,p.z);return}
+  if(t==='add'){if(assets.filter(a=>a.t===ed.kind).length>=edCap(ed.kind)){toast(`The map holds at most ${edCap(ed.kind)} of these (${edKindName(ed.kind)}).`,'',2600);return}
+    const b=edAssetsSnap(),a=edNewThing(ed.kind,p.x,p.z,null);
     assets.push(a);assetsBuild();shpTreesRefresh();ed.drag={items:[{a,dx:0,dz:0}],snap:b,added:true};edSelSet([{a}]);ed.changed=true;return}
   // Select: a tap picks one; Shift (or Ctrl) and a tap, or a long press, adds it or takes it away; a drag on empty ground
   // draws a box round several (with a mouse, or with Box select on); dragging a picked one moves them all
@@ -474,15 +514,19 @@ function edMove(x,y){
   const p=edPick(x,y);if(!p)return;
   const now=performance.now();if(now-ed.statT>80){ed.statT=now;edStatus(p)}
   if(ed.stroke){ed.bx=p.x;ed.bz=p.z;edBrushAt(p.x,p.z);return}
+  if(ed.scat){ed.scat.x=p.x;ed.scat.z=p.z;edBrushAt(p.x,p.z);return}
+  if(ed.drag&&ed.drag.line){edLineSet(ed.drag.line,p.x,p.z);return}
   const d=ed.drag;
   if(d&&d.query){edQuery(p.x,p.z);edRingAt(edBrushRing,p.x,p.z,0.5);return}
   if(d&&d.road){edRoadDrag(d,p);return}
   if(d&&d.items){let any=false;for(const q of d.items){if(q.a){q.a.x=clamp(p.x+q.dx,-118,118);q.a.z=clamp(p.z+q.dz,-118,118);any=true}else edPlaceMachine(q.m,p.x+q.dx,p.z+q.dz)}
     d.moved=true;if(any){assetsBuild();shpTreesRefresh()}edRingSel();return}
-  if(ED_BRUSH.includes(ed.tool)){edBrushAt(p.x,p.z)}}
-function edUp(){edMouse=null;ed.lp=null;edStrokeEnd();if(ed.box){edBoxEnd();return}const d=ed.drag;ed.drag=null;
+  if(ED_BRUSH.includes(ed.tool)||ed.tool==='add'&&ed.place==='scatter'){edBrushAt(p.x,p.z)}}
+function edUp(){edMouse=null;ed.lp=null;edStrokeEnd();edScatterEnd();if(ed.box){edBoxEnd();return}const d=ed.drag;ed.drag=null;
   if(d&&d.road){edRoadUp(d);return}
-  if(d&&d.items&&(d.moved||d.added)){if(d.snap){edPush({a:d.snap});ed.changed=true;edQueueSave()}edInspector();edListDraw()}}
+  // a laid line is one undo step, and picked when done
+  if(d&&d.line){if(d.line.items.length){edPush({a:d.snap});ed.changed=true;edQueueSave();edSelSet(d.line.items.map(a=>({a})))}return}
+  if(d&&d.items&&(d.moved||d.added)){if(d.snap){edPush({a:d.snap});ed.changed=true;edQueueSave()}edInspector();edListDraw();if(d.added&&ed.place==='one')edTool('select')}}
 function edGestStart(){const [a,b]=[...edPtrs.values()];
   edGest={d:Math.hypot(a.x-b.x,a.y-b.y)||1,ang:Math.atan2(b.y-a.y,b.x-a.x),mx:(a.x+b.x)/2,my:(a.y+b.y)/2,dist:ed.dist,yaw:ed.yaw}}
 canvas.addEventListener('pointerdown',e=>{if(!edOn)return;canvas.setPointerCapture(e.pointerId);edPtrs.set(e.pointerId,{x:e.clientX,y:e.clientY});
@@ -542,7 +586,7 @@ function editorFrame(dt,now){
   if(kx||kz)edPan(-kx*dt*700,-kz*dt*700);
   ed.yaw+=ek('KeyQ','KeyE')*dt*1.6;ed.dist=clamp(ed.dist*Math.exp(ek('KeyF','KeyR')*dt*1.5),8,900);
   // the brush works while held; the ground catches up a few times a second, and fully when the stroke ends
-  if(ed.stroke)edBrush(dt);
+  if(ed.stroke)edBrush(dt);if(ed.scat)edScatter(dt);
   if(ed.pend&&(ed.stroke||(ed.drag&&ed.drag.road))&&now-ed.refT>110){ed.refT=now;edRefresh(ed.pend,false);ed.pend=null}
   // a list row or road picked: the view glides there; a long press adds to the selection (or takes away)
   if(ed.fly){const k=1-Math.exp(-dt*7);ed.x+=(ed.fly.x-ed.x)*k;ed.z+=(ed.fly.z-ed.z)*k;if(Math.hypot(ed.fly.x-ed.x,ed.fly.z-ed.z)<0.05)ed.fly=null}

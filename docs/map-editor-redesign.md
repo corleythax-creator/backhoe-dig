@@ -225,7 +225,7 @@ Each step ships on its own as a version and leaves the editor working.
 | 3 | **On the map list.** The grouped list of things, machines and roads; tap to select and fly there; delete a kind, put back defaults | 5 |
 | 4 | **Selecting several.** Shift, long-press and box select; the selection survives tool changes; move, turn, size, colour and delete for many; one undo step each; the inspector for many | 6 |
 | 5 | **Library with pictures.** Thumbnails, groups, search, recent; size, colour and turn set before placing | 5 |
-| 6 | **Placing in bulk.** Stamp, Line (fences and cones along a drag) and Scatter (trees and boulders) | 6 |
+| 6 | **Placing in bulk** (shipped).  Stamp, Line (fences and cones along a drag) and Scatter (trees and boulders) | 6 |
 | 7 | **Exact edits.** X/Z numbers, snap grid and angles, the turn and size ring, align and space, copy and paste at the cursor, Row | 6 |
 | 8 | **Hide and lock.** Lock saved with the map (an optional seventh entry on each asset, so older maps still load and older code keeps them), hide for the session | 3 |
 | 9 | **Maps.** Named maps, file download and open, map stats, layer-by-layer start over, History ▾ | 5 |

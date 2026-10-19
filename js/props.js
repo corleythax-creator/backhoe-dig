@@ -9,13 +9,13 @@
 // n: name; w, d: footprint in metres (x across, z front to back) at size 100%; cap: most of that kind; solid: blocks
 // machines and the worker (with the solid box's half sizes, if not the footprint); deep: a footing below the ground, so
 // it sits on the highest ground under it and a slope never shows a gap; tint: takes the house colours; cat: its group in the
-// editor's Things library (ED_KIND_CATS, editor.js)
+// editor's Things library (ED_KIND_CATS, editor.js); run: laid end to end along a line (the editor's Line)
 const PROPS={
   house:{n:'House',cat:1,w:8,d:6.5,cap:40,solid:1,deep:1,tint:1},
   shed:{n:'Shed',cat:1,w:3,d:2.4,cap:60,solid:1,deep:1,tint:1},
   garage:{n:'Garage',cat:1,w:6.6,d:6.6,cap:40,solid:1,deep:1,tint:1},
-  fence:{n:'Fence (8 ft)',cat:2,w:2.44,d:0.15,cap:600,solid:[1.22,0.07],deep:1},
-  gate:{n:'Farm gate',cat:2,w:3.66,d:0.15,cap:120,solid:[1.83,0.07],deep:1},
+  fence:{n:'Fence (8 ft)',cat:2,run:1,w:2.44,d:0.15,cap:600,solid:[1.22,0.07],deep:1},
+  gate:{n:'Farm gate',cat:2,run:1,w:3.66,d:0.15,cap:120,solid:[1.83,0.07],deep:1},
   light:{n:'Light tower',cat:3,w:1.6,d:2.8,cap:40,solid:1},
   cone:{n:'Cone',cat:3,w:0.36,d:0.36,cap:400},
   barrel:{n:'Barrel',cat:3,w:0.6,d:0.6,cap:300,solid:[0.3,0.3]},
