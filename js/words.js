@@ -26,7 +26,7 @@ const WORDS=[
   ['skidFull','Machines','Bucket full. Raise the arms and drive to where it goes.'],
   ['stuck','Machines','Stuck in the mud. Rock it free: [lUp] then [lDown], and again.'],
   ['lawnBack','Machines','The grass has grown back. Time to mow again.'],['lawnDone','Machines','Lawn mowed in {time}. Nice stripes.','{time}: minutes:seconds'],
-  ['bucketFull','Digging','Bucket full. Boom up, swing, dump.'],['sand','Digging','Sand bedding. The gas main is right below. Go easy.'],
+  ['bucketFull','Digging','Bucket full. Boom up, swing, dump.'],['claySticks','Digging','Moist clay is stuck in the bucket. Shake it out: tip it and rock the curl fast, [rLeft] then [rRight], or bang it on the dump stop.'],['bedSticks','Machines','Clay is stuck in the bed. Shake it loose: drop the bed a little and run it up hard into the top stop.'],['sand','Digging','Sand bedding. The gas main is right below. Go easy.'],
   ['rock','Digging','Rock. You are past trench depth.'],['strike','Digging','LINE STRIKE! You hit the gas main.'],
   ['exposed','Digging','Gas main exposed. Nice and careful.'],
   ['trenchDone','Digging','Trench complete in {time}{strikes}{caves}','{time}: minutes:seconds; {strikes}: " · no strikes" or " · 2 strikes"; {caves}: " · 1 cave-in" or nothing'],

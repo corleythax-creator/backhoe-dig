@@ -41,7 +41,7 @@ const skArm=new THREE.Group(),skBkt=new THREE.Group(),skWheels=[];
 // the load heaped in the bucket
 const skLoad=new THREE.Mesh(new THREE.IcosahedronGeometry(0.5,1),M(0x7a5232,{map:null}));skLoad.scale.set(1.6,0.45,0.6);skLoad.position.set(0,-0.3,0.38);skLoad.visible=false;skBkt.add(skLoad);
 const skTip=new THREE.Vector3(),skTipL=new THREE.Vector3(),skTipR=new THREE.Vector3(),skLip=new THREE.Vector3();
-function skidReset(){Object.assign(sk,SK_START,{v:0,w:0,a:0,c:0.15,load:0,loadWet:0,run:0,dumped:0});sk.y=surfAt(sk.x,sk.z);skidPose()}
+function skidReset(){Object.assign(sk,SK_START,{v:0,w:0,a:0,c:0.15,load:0,stuck:0,loadWet:0,run:0,dumped:0});sk.y=surfAt(sk.x,sk.z);skidPose()}
 // arms and bucket from sk.a (arm lift) and sk.c (bucket curl, kept level as the arms rise)
 function skidPose(){skid.position.set(sk.x,sk.y,sk.z);skid.rotation.set(sk.pitch,sk.yaw,sk.roll,'YXZ');
   const e=SK_A0+sk.a;skArm.rotation.x=-e;skBkt.rotation.x=e-sk.c;skid.updateMatrixWorld(true);
@@ -73,7 +73,7 @@ function updateSkid(dt,drive,turn,arm,curl){
   const hf=(sample(-0.9,0.7)+sample(0.9,0.7))/2,hb=(sample(-0.9,-0.7)+sample(0.9,-0.7))/2,hr=(sample(0.9,0.7)+sample(0.9,-0.7))/2,hl=(sample(-0.9,0.7)+sample(-0.9,-0.7))/2,kk=Math.min(1,dt*10);
   sk.y+=((hf+hb)/2-sk.y)*kk;sk.pitch+=(-Math.atan2(hf-hb,1.4)-sk.pitch)*kk;sk.roll+=(Math.atan2(hr-hl,1.8)-sk.roll)*kk;
   // the loader: hydraulics slow a little with a full bucket
-  sk.a=clamp(sk.a+arm*TU.skArm*dt*full,...SK_ALIM);sk.c=clamp(sk.c+curl*TU.skCurl*dt,...SK_CLIM);
+  sk.a=clamp(sk.a+arm*TU.skArm*dt*full,...SK_ALIM);{const c=sk.c;sk.c=clamp(sk.c+curl*TU.skCurl*dt,...SK_CLIM);sk.cv=dt>0?(sk.c-c)/dt:0}
   skidPose();sndIn.skHyd=Math.min(1,Math.abs(arm)+Math.abs(curl));
   // scooping: the cutting edge under the ground on the dig site, the bucket near level
   const g=hAt(skTip.x,skTip.z);
@@ -84,11 +84,21 @@ function updateSkid(dt,drive,turn,arm,curl){
       if(sk.load>=TU.skCap-0.003)toast(say('skidFull'),'',2400)}}
   // dumping: tipped past about 20 degrees it pours off the lip, into the truck bed, onto the ground or over the cliff
   const f=clamp((-0.35-sk.c)/0.45,0,1);
-  if(f>0&&sk.load>0.0005){const out=Math.min(sk.load,f*(0.3+sk.load*2)*dt);sk.load-=out;sk.dumped+=out;
+  // dirt off the lip goes into the truck bed, onto the ground or over the cliff; sticky clay clings as in the excavator
+  // bucket (stickFrac, shakeOut in dirt.js) until the curl shakes it out
+  const drop=out=>{sk.dumped+=out;
     if(inBed(skLip)&&tr.load<TU.trCap){const take=Math.min(out,TU.trCap-tr.load),ff=take/(tr.load+take||1);
-      for(let q=0;q<3;q++)tr.loadC[q]+=(sk.loadC[q]-tr.loadC[q])*ff;for(let q=0;q<4;q++)tr.loadMix[q]+=(sk.loadMix[q]-tr.loadMix[q])*ff;tr.loadWet+=(sk.loadWet-tr.loadWet)*ff;tr.load+=take}
-    else if(Math.abs(skLip.x)<S/2-1&&Math.abs(skLip.z)<S/2-1){const gy=hAt(skLip.x,skLip.z);deposit(skLip.x,skLip.z,out,sk.loadC,sk.loadMix,dropSpread(skLip.y-gy),sk.loadWet);st.dirty=true;st.slumpT=2.5}
+      for(let q=0;q<3;q++)tr.loadC[q]+=(sk.loadC[q]-tr.loadC[q])*ff;for(let q=0;q<4;q++)tr.loadMix[q]+=(sk.loadMix[q]-tr.loadMix[q])*ff;tr.loadWet+=(sk.loadWet-tr.loadWet)*ff;tr.load+=take;return false}
+    if(Math.abs(skLip.x)<S/2-1&&Math.abs(skLip.z)<S/2-1){const gy=hAt(skLip.x,skLip.z);deposit(skLip.x,skLip.z,out,sk.loadC,sk.loadMix,dropSpread(skLip.y-gy),sk.loadWet);st.dirty=true;st.slumpT=2.5;return true}return false};
+  sk.stuck=Math.min(sk.stuck||0,sk.load);
+  if(f>0&&sk.load-sk.stuck>0.0005){
+    if(!sk.pouring){sk.pouring=true;sk.stuck=Math.min(sk.load,TU.skCap*0.4,sk.stuck+(sk.load-sk.stuck)*stickFrac(sk.loadMix,sk.loadWet))}
+    const out=Math.min(sk.load-sk.stuck,f*(0.3+sk.load*2)*dt);sk.load-=out;drop(out);
     for(let n=0;n<Math.ceil(out*60);n++)spawn(skLip,0.6);sndIn.skPour=out/dt;
-    if(sk.load<0.0005)sk.load=0}
+    if(sk.load-sk.stuck<0.0005){sk.load=sk.stuck;if(sk.stuck>TU.skCap*0.06&&!st.seenStick){st.seenStick=true;toast(say('claySticks'),'',4200)}}}
+  else sk.pouring=false;
+  {const fell=shakeOut(sk,sk.cv||0,TU.skCurl*0.45,sk.c<=SK_CLIM[0]+1e-4||sk.c>=SK_CLIM[1]-1e-4,f,dt);
+    if(fell>0){sk.stuck-=fell;sk.load-=fell;if(sk.stuck<0.0005){sk.load=Math.max(0,sk.load-sk.stuck);sk.stuck=0}
+      const onGround=drop(fell);if(sk.jolt){dirtThud(skLip,0.25+fell*3);if(onGround)shakeClods(skLip.x,skLip.z,fell);for(let n=0;n<Math.ceil(fell*120);n++)spawn(skLip,0.6)}}}
   skLoad.visible=sk.load>0.01;if(skLoad.visible){const s=0.35+0.65*Math.sqrt(sk.load/TU.skCap);skLoad.scale.set(1.6*s,0.45*s,0.6+0.2*s);tintLoad(skLoad.material,sk.loadC)}}
 skidReset();
