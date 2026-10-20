@@ -8,10 +8,10 @@ const ed={tool:'raise',group:'shape',gtool:{shape:'raise',paint:'paint',things:'
   stroke:null,flatH:0,road:null,rpt:-1,drawing:false,roadSnap:null,bx:0,bz:0,hover:false,pend:null,refT:0,sel:[],drag:null,snap:null,changed:false,saveT:0,undo:[],redo:[],
   look:false,pane:'',drawer:true,boxMode:false,box:null,lp:null,fly:null,home:null,grp:false,listF:'all',open:{},statT:0,listT:0,place:'one',gap:12,dens:5,erase:false,scat:null,meas:[],measClosed:false,
   grid:0,cur:null,curMouse:false,clip:null,xf:null,knob:null,hYaw:0,nudgeT:0,rowOpen:false,rowN:4,rowGap:0,rowDir:'along'};
-const ED_TOOLS={raise:'Raise',lower:'Lower',flatten:'Flatten',smooth:'Smooth',dirt:'Worked dirt',grass:'Grass',select:'Select',add:'Add',plant:'Plant',query:'Query',measure:'Measure',roads:'Roads',paint:'Paint'};
+const ED_TOOLS={raise:'Raise',lower:'Lower',flatten:'Flatten',smooth:'Smooth',dirt:'Worked dirt',grass:'Grass',tall:'Tall grass',notall:'No tall grass',select:'Select',add:'Add',plant:'Plant',query:'Query',measure:'Measure',roads:'Roads',paint:'Paint'};
 // the left bar's groups: their tools (picked in the bottom bar, or for Paint by the library's swatches), and whether the
 // drawer beside the bar has a part for them (the material library, the things to add and the On the map list, the roads)
-const ED_GROUPS={shape:{tools:['raise','lower','flatten','smooth']},paint:{tools:['paint','dirt','grass'],pane:1},things:{tools:['select','add','plant'],pane:1},roads:{tools:['roads'],pane:1},inspect:{tools:['query','measure']}};
+const ED_GROUPS={shape:{tools:['raise','lower','flatten','smooth']},paint:{tools:['paint','dirt','grass','tall','notall'],pane:1},things:{tools:['select','add','plant'],pane:1},roads:{tools:['roads'],pane:1},inspect:{tools:['query','measure']}};
 const ED_KIND_CATS=['Trees and rocks','Buildings','Fencing','Site gear','Yard'];
 // the editor's icons (24 px, drawn with lines), put in front of the words of every part with a data-ic
 const ED_ICONS={done:'M15 5l-7 7 7 7',undo:'M9 14L4 9l5-5M4 9h10a6 6 0 010 12h-3',redo:'M15 14l5-5-5-5M20 9H10a6 6 0 000 12h3',
@@ -24,7 +24,7 @@ const ED_ICONS={done:'M15 5l-7 7 7 7',undo:'M9 14L4 9l5-5M4 9h10a6 6 0 010 12h-3
 function edIcons(root){root.querySelectorAll('[data-ic]').forEach(b=>{if(b.querySelector('svg'))return;
   b.insertAdjacentHTML('afterbegin',`<svg viewBox="0 0 24 24" aria-hidden="true"><path d="${ED_ICONS[b.dataset.ic]}"/></svg>`)})}
 edIcons($('#editor'));
-const ED_BRUSH=['raise','lower','flatten','smooth','dirt','grass','paint'];
+const ED_BRUSH=['raise','lower','flatten','smooth','dirt','grass','tall','notall','paint'];
 const ED_KINDS={pine:'Pine tree',leafy:'Leafy tree',rock:'Boulder'};
 // the machines and the walker can be picked and moved: their state, scene object and pick radius
 // (home: where each starts, for Back to start)
@@ -151,24 +151,24 @@ function edScatterEnd(){const s=ed.scat;ed.scat=null;if(!s)return;if(s.dirty){s.
 $('#edLook').onclick=()=>{ed.look=!ed.look;$('#edLook').setAttribute('aria-pressed',ed.look)};
 $('#edZoomIn').onclick=()=>{ed.dist=clamp(ed.dist/1.4,8,900);edStatus()};$('#edZoomOut').onclick=()=>{ed.dist=clamp(ed.dist*1.4,8,900);edStatus()};
 $('#edNorth').onclick=()=>{ed.yaw=0};$('#edHome').onclick=()=>{if(ed.home){Object.assign(ed,ed.home);ed.fly=null}};
-// the material library: every texture by kind, plus Natural ground, which clears a material, and Worked dirt and Grass,
-// which pick the Dirt and Grass tools (they paint ED_P, not a material)
+// the material library: every texture by kind, plus Natural ground, which clears a material, Worked dirt and Grass,
+// which pick the Dirt and Grass tools (they paint ED_P, not a material), and Tall grass and No tall grass (ED_G)
 // (made again when the owner's own textures arrive or change, ownmat.js; theirs show their own thumbnail)
 function edMatPanel(){const N=MAT_BUILT,esc=t=>t.replace(/[&<>"]/g,c=>'&#'+c.charCodeAt(0)+';'),
     sw=m=>{const d=MAT_LIST[m-1];return !m?'<i class="nat"></i>':d.own?`<i class="own" style="background-image:url(${d.th})"></i>`:`<i style="background-size:${N*100}% 100%;background-position:${(m-1)/(N-1)*100}% 0"></i>`};
   const btn=m=>typeof m==='string'?`<button class="edmat" data-m="${m}"><i class="${m}"></i><span>${ED_TOOLS[m]}</span></button>`:
     `<button class="edmat" data-m="${m}">${sw(m)}<span>${m?esc(MAT_LIST[m-1].n):'Natural ground'}</span></button>`;
   let h=`<h3>Material library <small>${MAT_LIST.filter(Boolean).length} textures</small></h3>`;
-  MAT_CATS.forEach((c,ci)=>{const ms=ci?[]:[0,'dirt','grass'];MAT_LIST.forEach((d,i)=>{if(d.cat===ci)ms.push(i+1)});h+=`<h4>${c}</h4><div class="edmatgrid">${ms.map(btn).join('')}</div>`});
+  MAT_CATS.forEach((c,ci)=>{const ms=ci?[]:[0,'dirt','grass','tall','notall'];MAT_LIST.forEach((d,i)=>{if(d.cat===ci)ms.push(i+1)});h+=`<h4>${c}</h4><div class="edmatgrid">${ms.map(btn).join('')}</div>`});
   const box=$('#edMats');box.innerHTML=h;
-  box.querySelectorAll('.edmat').forEach(b=>b.onclick=()=>{const v=b.dataset.m;if(v==='dirt'||v==='grass')edTool(v);else{ed.mat=+v;edTool('paint')}edPicked()});edMatMark()}
-function edMatMark(){document.querySelectorAll('#edMats .edmat').forEach(b=>{const v=b.dataset.m;b.setAttribute('aria-pressed',ed.tool==='paint'?+v===ed.mat&&v!=='dirt'&&v!=='grass':v===ed.tool)});edMatLabel()}
+  box.querySelectorAll('.edmat').forEach(b=>b.onclick=()=>{const v=b.dataset.m;if(ED_TOOLS[v])edTool(v);else{ed.mat=+v;edTool('paint')}edPicked()});edMatMark()}
+function edMatMark(){document.querySelectorAll('#edMats .edmat').forEach(b=>{const v=b.dataset.m;b.setAttribute('aria-pressed',ed.tool==='paint'?+v===ed.mat&&!ED_TOOLS[v]:v===ed.tool)});edMatLabel()}
 edMatPanel();
 document.querySelectorAll('.edshape button').forEach(b=>b.onclick=()=>{ed.square=b.dataset.s==='sq';document.querySelectorAll('.edshape button').forEach(c=>c.setAttribute('aria-pressed',c===b))});
 // Hard edge lays whole cells; Soft edge fades the material out to the natural ground over the outer part of the brush
 document.querySelectorAll('.eddug button').forEach(b=>b.onclick=()=>{ed.keep=b.dataset.k==='keep';document.querySelectorAll('.eddug button').forEach(c=>c.setAttribute('aria-pressed',c===b))});
 document.querySelectorAll('.ededge button').forEach(b=>b.onclick=()=>{ed.soft=b.dataset.e==='soft';$('#edSoftOpt').hidden=!ed.soft;document.querySelectorAll('.ededge button').forEach(c=>c.setAttribute('aria-pressed',c===b))});
-function edMatLabel(){const d=matDef(ed.mat);$('#edMatV').textContent=ed.tool==='dirt'?'Worked dirt':ed.tool==='grass'?'Grass (over the dirt yards too)':d?`${d.n} (one tile is ${d.ft} ft)`:'Natural ground (clears materials)';
+function edMatLabel(){const d=matDef(ed.mat);$('#edMatV').textContent=ed.tool==='dirt'?'Worked dirt':ed.tool==='grass'?'Grass (over the dirt yards too)':ed.tool==='tall'?'Tall grass, to mow (grows back)':ed.tool==='notall'?'No tall grass (takes it away)':d?`${d.n} (one tile is ${d.ft} ft)`:'Natural ground (clears materials)';
   if(typeof ownMatPicked==='function')ownMatPicked()}
 edMatLabel();
 const edSizeIn=$('#edSize'),edStrIn=$('#edStr'),edSoftIn=$('#edSoft');
@@ -192,7 +192,8 @@ function edHit(x,z){let best=null,bd=1;
 
 // ---------- reshaping and painting ----------
 const edGrow=(r,a,b,c,d)=>r?[Math.min(r[0],a),Math.max(r[1],b),Math.min(r[2],c),Math.max(r[3],d)]:[a,b,c,d];
-function edStrokeStart(x,z){ed.stroke0=ed.tool;ed.stroke={h:ED_H.slice(),p:ED_P.slice(),m:ED_M.slice(),a:ED_A.slice(),ij:null};ed.bx=x;ed.bz=z;ed.flatH=baseHeight(x,z)}
+function edStrokeStart(x,z){ed.stroke0=ed.tool;ed.stroke={h:ED_H.slice(),p:ED_P.slice(),m:ED_M.slice(),a:ED_A.slice(),g:ED_G.slice(),ij:null,tn:0,tb:null};
+  if(ed.tool==='tall')for(let q=0;q<ED_G.length;q++)if(ED_G[q]){const x=ED_X0+q%ED_NX*ED_C,z=ED_Z0+((q/ED_NX)|0)*ED_C,b=ed.stroke.tb;ed.stroke.tn++;ed.stroke.tb=b?[Math.min(b[0],x),Math.max(b[1],x),Math.min(b[2],z),Math.max(b[3],z)]:[x,x,z,z]}ed.bx=x;ed.bz=z;ed.flatH=baseHeight(x,z)}
 // one frame of the brush: a soft round brush, strongest in the middle
 function edBrush(dt){const R=ed.size,cx=ed.bx,cz=ed.bz,t=ed.tool,k=ed.str/10;
   const i0=Math.max(3,Math.floor((cx-R-ED_X0)/ED_C)),i1=Math.min(ED_NX-4,Math.ceil((cx+R-ED_X0)/ED_C)),j0=Math.max(3,Math.floor((cz-R-ED_Z0)/ED_C)),j1=Math.min(ED_NZ-4,Math.ceil((cz+R-ED_Z0)/ED_C));
@@ -202,6 +203,16 @@ function edBrush(dt){const R=ed.size,cx=ed.bx,cz=ed.bz,t=ed.tool,k=ed.str/10;
   if(t==='paint'&&ed.keep&&paintKeep(cx,cz,R,ed.square)){ed.pend=edGrow(ed.pend,cx-R-0.6,cx+R+0.6,cz-R-0.6,cz+R+0.6);ed.changed=true}
   if((t==='paint'&&ed.mat!==MUD_ID&&!ed.keep||t==='grass'||t==='dirt')&&rutErase(cx,cz,R,t==='paint'&&ed.square,t==='dirt'?(x,z)=>soakAt(x,z)>0.3:null,t==='paint')){
     ed.pend=edGrow(ed.pend,cx-R-0.6,cx+R+0.6,cz-R-0.6,cz+R+0.6);ed.changed=true}
+  // tall grass goes on (or comes off) whole cells inside the ring, up to what the lawn holds (LAWN_MAX cells within
+  // LAWN_SPAN each way, mower.js; a cell here is 6.25 of the lawn's); the grass follows a few times a second
+  if(t==='tall'||t==='notall'){const v=t==='tall'?1:0,s=ed.stroke,qc=Math.round((cz-ED_Z0)/ED_C)*ED_NX+Math.round((cx-ED_X0)/ED_C),span=LAWN_SPAN*LAWN_GS-ED_C-0.4;let n=0;
+    for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const q=j*ED_NX+i,x=ED_X0+i*ED_C,z=ED_Z0+j*ED_C;if(Math.hypot(x-cx,z-cz)>R&&q!==qc||ED_G[q]===v)continue;
+      if(v){const b=s.tb||[x,x,z,z],nb=[Math.min(b[0],x),Math.max(b[1],x),Math.min(b[2],z),Math.max(b[3],z)];
+        if(s.tn>=Math.floor(LAWN_MAX/6.25)||nb[1]-nb[0]>span||nb[3]-nb[2]>span){if(!s.full){s.full=1;toast(say('edTallFull',{ft:Math.round(edFt(span))}),'',3500)}continue}
+        s.tn++;s.tb=nb}
+      ED_G[q]=v;n++}
+    if(!n)return;ed.stroke.ij=edGrow(ed.stroke.ij,i0,i1,j0,j1);ed.changed=true;
+    const now=performance.now();if(now-(ed.tallT||0)>400){ed.tallT=now;lawnLayout()}return}
   let hs=null,W=0;
   if(t==='smooth'||t==='flatten'){W=i1-i0+3;hs=new Float32Array(W*(j1-j0+3));
     for(let j=j0-1;j<=j1+1;j++)for(let i=i0-1;i<=i1+1;i++)hs[(j-j0+1)*W+i-i0+1]=baseHeight(ED_X0+i*ED_C,ED_Z0+j*ED_C)}
@@ -242,16 +253,17 @@ function edRefresh(r,full){if(!r)return;const [x0,x1,z0,z1]=r;baseCacheClear();
   if(assets.some(a=>a.x>x0-6&&a.x<x1+6&&a.z>z0-6&&a.z<z1+6)){assetsBuild();shpTreesRefresh()}
   if(full&&(x0<GX0+1||x1>GX1-1||z0<GZ0+1||z1>GZ1-1||x0<MID[0]+1||x1>MID[1]-1||z0<MID[2]+1||z1>MID[3]-1||x0<OUTER_MID[0]+1||x1>OUTER_MID[1]-1||z0<OUTER_MID[2]+1||z1>OUTER_MID[3]-1))buildSkirts()}
 function edStrokeEnd(){const s=ed.stroke;if(!s)return;ed.stroke=null;edRefresh(ed.pend,true);ed.pend=null;
-  if(!s.ij)return;const [i0,i1,j0,j1]=s.ij,w=i1-i0+1,h=new Float32Array(w*(j1-j0+1)),p=new Float32Array(h.length),m=new Uint8Array(h.length),c=new Uint8Array(h.length);
-  for(let j=j0;j<=j1;j++){const a=j*ED_NX+i0,b=j*ED_NX+i1+1,o=(j-j0)*w;h.set(s.h.subarray(a,b),o);p.set(s.p.subarray(a,b),o);m.set(s.m.subarray(a,b),o);c.set(s.a.subarray(a,b),o)}
+  if(!s.ij)return;const [i0,i1,j0,j1]=s.ij,w=i1-i0+1,h=new Float32Array(w*(j1-j0+1)),p=new Float32Array(h.length),m=new Uint8Array(h.length),c=new Uint8Array(h.length),tg=new Uint8Array(h.length);
+  for(let j=j0;j<=j1;j++){const a=j*ED_NX+i0,b=j*ED_NX+i1+1,o=(j-j0)*w;h.set(s.h.subarray(a,b),o);p.set(s.p.subarray(a,b),o);m.set(s.m.subarray(a,b),o);c.set(s.a.subarray(a,b),o);tg.set(s.g.subarray(a,b),o)}
   const t=ed.stroke0,mt=matDef(ed.mat);
-  edPush({g:[i0,i1,j0,j1],h,p,m,a:c,n:t==='paint'?(mt?`Painted ${mt.n.toLowerCase()}`:'Cleared paint'):ED_STROKE_N[t]||'Edited the ground'});edQueueSave();matTexUpdate()}
+  if(t==='tall'||t==='notall')lawnLayout();
+  edPush({g:[i0,i1,j0,j1],h,p,m,a:c,tg,n:t==='paint'?(mt?`Painted ${mt.n.toLowerCase()}`:'Cleared paint'):ED_STROKE_N[t]||'Edited the ground'});edQueueSave();matTexUpdate()}
 
 // ---------- undo ----------
 function edPush(u){const th=!u.g&&!u.roads&&!u.pl;if(!u.n)u.n=th?'Changed things':u.roads?edRoadsName(u.roads):'Edit';if(th)queueMicrotask(()=>{u.n=edThingsName(u.a)});ed.undo.push(u);if(ed.undo.length>30)ed.undo.shift();ed.redo.length=0;edUndoBtns()}
 function edUndoBtns(){$('#edUndo').disabled=!ed.undo.length;$('#edRedo').disabled=!ed.redo.length;$('#edHist').disabled=!ed.undo.length&&!ed.redo.length;if(!$('#edHistList').hidden)edHistDraw()}
 // each step's name for History: a brush stroke by its tool, roads and things by what changed from the copy kept for undo
-const ED_STROKE_N={raise:'Raised ground',lower:'Lowered ground',flatten:'Flattened ground',smooth:'Smoothed ground',dirt:'Painted worked dirt',grass:'Painted grass'};
+const ED_STROKE_N={raise:'Raised ground',lower:'Lowered ground',flatten:'Flattened ground',smooth:'Smoothed ground',dirt:'Painted worked dirt',grass:'Painted grass',tall:'Painted tall grass',notall:'Took away tall grass'};
 const edPlural=(n,w)=>n===1?`1 ${w}`:`${n} ${/(s|x|ch|sh)$/.test(w)?w+'es':/[^aeiou]y$/.test(w)?w.slice(0,-1)+'ies':w+'s'}`;
 const edKindWord=t=>edKindName(t).replace(/ \(.*\)/,'').toLowerCase();
 function edThingsName(before){const was=JSON.parse(before),now=assets,kinds=l=>[...new Set(l.map(a=>a.t))],word=l=>kinds(l).length===1?edKindWord(l[0].t):'thing';
@@ -279,9 +291,10 @@ $('#edHist').onclick=()=>{const el=$('#edHistList'),open=el.hidden;el.hidden=!op
 addEventListener('pointerdown',e=>{const el=$('#edHistList');if(!el.hidden&&!el.contains(e.target)&&e.target!==$('#edHist')){el.hidden=true;$('#edHist').setAttribute('aria-expanded',false)}},true);
 // swaps the saved state with the current one, so the same entry undoes and redoes
 function edSwap(u){
-  if(u.g){const [i0,i1,j0,j1]=u.g,w=i1-i0+1;
-    for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const q=j*ED_NX+i,o=(j-j0)*w+i-i0,a=ED_H[q],b=ED_P[q],c=ED_M[q],d=ED_A[q];ED_H[q]=u.h[o];ED_P[q]=u.p[o];ED_M[q]=u.m[o];ED_A[q]=u.a[o];u.h[o]=a;u.p[o]=b;u.m[o]=c;u.a[o]=d}
-    matU.tMatId.value.needsUpdate=true;matU.tMatCov.value.needsUpdate=true;matTexUpdate();
+  if(u.g){const [i0,i1,j0,j1]=u.g,w=i1-i0+1;let tall=false;
+    for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const q=j*ED_NX+i,o=(j-j0)*w+i-i0,a=ED_H[q],b=ED_P[q],c=ED_M[q],d=ED_A[q];ED_H[q]=u.h[o];ED_P[q]=u.p[o];ED_M[q]=u.m[o];ED_A[q]=u.a[o];u.h[o]=a;u.p[o]=b;u.m[o]=c;u.a[o]=d;
+      if(u.tg&&u.tg[o]!==ED_G[q]){const e=ED_G[q];ED_G[q]=u.tg[o];u.tg[o]=e;tall=true}}
+    matU.tMatId.value.needsUpdate=true;matU.tMatCov.value.needsUpdate=true;matTexUpdate();if(tall)lawnLayout();
     edRefresh([ED_X0+i0*ED_C-0.6,ED_X0+i1*ED_C+0.6,ED_Z0+j0*ED_C-0.6,ED_Z0+j1*ED_C+0.6],true)}
   else if(u.pl){const now=JSON.stringify(plant.list);plant.list.length=0;plant.list.push(...JSON.parse(u.pl));u.pl=now;plantChanged()}
   else if(u.roads){const now=edRoadsSnap();edRoadsSet(u.roads);u.roads=now;ed.road=null;ed.rpt=-1;edRoadCard();edRoadsDraw();edRefresh(u.rect,true)}
@@ -886,17 +899,17 @@ $('#edFileIn').onchange=()=>{const f=$('#edFileIn').files[0];$('#edFileIn').valu
     edMapOpen(edFreeName(f.name.replace(/(\.island)?\.json$/i,'').slice(0,40)||'Opened map'),t)})};
 // This map: things by kind, roads and their length, the ground shaped and painted, and its size
 function edStatsDraw(){const c={};for(const a of assets)c[a.t]=(c[a.t]||0)+1;let L=0;for(const r of ROADS)for(let i=0;i<r.pts.length-1;i++)L+=Math.hypot(r.pts[i+1][0]-r.pts[i][0],r.pts[i+1][1]-r.pts[i][1]);
-  let sh=0,pa=0;for(let q=0;q<ED_H.length;q++){if(Math.abs(ED_H[q])>0.02)sh++;if(ED_M[q]||Math.abs(ED_P[q])>0.05)pa++}
+  let sh=0,pa=0,tg=0;for(let q=0;q<ED_H.length;q++){if(Math.abs(ED_H[q])>0.02)sh++;if(ED_M[q]||Math.abs(ED_P[q])>0.05)pa++;if(ED_G[q])tg++}
   const sq=n=>`${Math.round(n*ED_C*ED_C/(FT*FT)).toLocaleString()} sq ft`,kb=Math.max(1,Math.round(mapEncode().length/1024));
   const rows=[['Things',`${assets.length}`],...Object.entries(c).sort((p,q)=>q[1]-p[1]).map(([t,n])=>['',edPlural(n,edKindWord(t))]),
-    ['Roads',ROADS.length?`${ROADS.length}, ${Math.round(edFt(L)).toLocaleString()} ft in all`:'None'],['Shaped',sh?sq(sh):'None'],['Painted',pa?sq(pa):'None'],['Size',`${kb} KB`]];
+    ['Roads',ROADS.length?`${ROADS.length}, ${Math.round(edFt(L)).toLocaleString()} ft in all`:'None'],['Shaped',sh?sq(sh):'None'],['Painted',pa?sq(pa):'None'],['Tall grass',tg?sq(tg):'None'],['Size',`${kb} KB`]];
   $('#edMapStats').innerHTML=rows.map(([a,b])=>`<dt>${a}</dt><dd>${b}</dd>`).join('')}
 // Start over, for the whole map or one layer: the layer goes back to the starting island (shape and paint cleared, the
 // first trees and boulders and roads back), saved, then the game reloads
 $('#edReset').onclick=e=>{const b=e.target.closest('button');if(!b)return;
   if(!b.dataset.arm){b.dataset.arm=1;const t=b.textContent;b.textContent='Tap again';setTimeout(()=>{if(b.dataset.arm){delete b.dataset.arm;b.textContent=t}},2500);return}
   const k=b.dataset.clear;if(k==='all'){try{localStorage.removeItem('bhd_map')}catch(e){}location.reload();return}
-  edSave();if(k==='shape')ED_H.fill(0);if(k==='paint'){ED_P.fill(0);ED_M.fill(0);ED_A.fill(0)}if(k==='things')mapAssets=null;if(k==='roads')mapRoads=null;
+  edSave();if(k==='shape')ED_H.fill(0);if(k==='paint'){ED_P.fill(0);ED_M.fill(0);ED_A.fill(0);tallDefault()}if(k==='things')mapAssets=null;if(k==='roads')mapRoads=null;
   try{localStorage.setItem('bhd_map',mapEncode())}catch(e){toast('Could not save the map on this device.','bad');return}location.reload()};
 
 // ---------- each frame while the editor is open (main.js hands it the frame) ----------

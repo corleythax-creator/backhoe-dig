@@ -13,7 +13,7 @@ a feature is roughly **steps × session length**, and the two levers are fewer s
 | You want to change | Use | Where |
 | --- | --- | --- |
 | How the screen looks: colours, fonts, sizes, corners, hiding, renaming, moving a part, docking bars, phone vs. computer layouts | Screen editor | ☰ → Edit the screen, or https://claude.ai/artifact/Bj6MjgPkszqEP2PJQqQ29t. Publish with your owner key |
-| The ground: sculpt, paint materials (32 of them, plus your own), roads, trees, boulders, where machines park | Map editor | ☰ → Map editor (or G) |
+| The ground: sculpt, paint materials (32 of them, plus your own), tall grass to mow, roads, trees, boulders, where machines park | Map editor | ☰ → Map editor (or G) |
 | Houses, sheds, fences, gates, light towers and props: place, move, turn, resize, copy, delete | Map editor → Things: Add (pick from the drawer; One, Stamp, Line for fence runs and cone lines, Scatter for woods), then Select (several at once, or a whole kind from On the map); exact spots in feet, Snap to a grid, the turn and size ring, Line up, Row, Copy and Paste; Hide (H) and Lock (L) |
 | Measure a distance, a slope or an area; send the machines back to where they start | Map editor → Inspect: Measure; Back to start with a machine picked (or every machine from On the map) |
 | Keep several maps, back one up as a file, see what a map holds, start one layer over, jump back several steps | Map editor → Map (named maps, Download file and Open a file, This map, Start over by layer); History ▾ in the top bar | Saved with the map, so it syncs |
