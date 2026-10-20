@@ -39,7 +39,7 @@ function famSign(lines,w,h,x,y,z,ry,bg,fg){
   const cv=document.createElement('canvas'),R=Math.round(256*w/h);cv.width=Math.min(1024,R);cv.height=Math.round(cv.width*h/w);
   const g=cv.getContext('2d');g.fillStyle=bg;g.fillRect(0,0,cv.width,cv.height);g.strokeStyle=fg;g.lineWidth=cv.height*0.04;g.strokeRect(cv.height*0.05,cv.height*0.05,cv.width-cv.height*0.1,cv.height-cv.height*0.1);
   g.fillStyle=fg;g.textAlign='center';g.textBaseline='middle';const fs=cv.height*0.7/lines.length;
-  lines.forEach((t,i)=>{g.font=`${i?600:800} ${Math.round(fs*(i?0.72:0.9))}px "Saira Condensed","Arial Narrow",Arial,sans-serif`;g.fillText(t,cv.width/2,cv.height*(0.5+(i-(lines.length-1)/2)*0.78/lines.length))});
+  lines.forEach((t,i)=>{g.font=`${i?600:700} ${Math.round(fs*(i?0.72:0.9))}px "Barlow Condensed","Arial Narrow",Arial,sans-serif`;g.fillText(t,cv.width/2,cv.height*(0.5+(i-(lines.length-1)/2)*0.78/lines.length))});
   const tex=new THREE.CanvasTexture(cv);tex.anisotropy=4;
   const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),M(0xffffff,{map:tex,flatShading:false,side:THREE.DoubleSide}));
   m.position.set(x,y,z);m.rotation.y=ry;scene.add(m);return m}

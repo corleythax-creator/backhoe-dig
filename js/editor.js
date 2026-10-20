@@ -54,7 +54,7 @@ function editorOpen(){if(edOn||bench.on)return;edOn=true;mapAssets=assets;
   ed.home={x:ed.x,z:ed.z,yaw:ed.yaw,dist:ed.dist,pitch:ed.pitch};ed.drawer=!edNarrow();ed.pane=ED_GROUPS[ed.group].pane?ed.group:'';
   edTool(ed.tool);edCard(null);edSelSet([]);edMapsDraw();edUndoBtns();toast('Map editor. The game is paused while you edit.','',2600)}
 function editorClose(){if(!edOn)return;$('#edHistList').hidden=true;edStrokeEnd();edScatterEnd();edRoadFinish();edOn=false;document.body.classList.remove('editing');$('#editor').hidden=true;
-  edBrushRing.visible=edSelRings.visible=edSoftRing.visible=edHRing.visible=edHKnob.visible=edMeasDots.visible=edMeasLine.visible=false;ed.sel=[];ed.box=null;ed.lp=null;$('#edBox').hidden=true;ed.road=null;ed.rpt=-1;edRoadsDraw();clearKeys();firstCam=true;last=performance.now();
+  edBrushRing.visible=edSelRings.visible=edSelShade[0].visible=edSelShade[1].visible=edSoftRing.visible=edHRing.visible=edHKnob.visible=edMeasDots.visible=edMeasLine.visible=false;ed.sel=[];ed.box=null;ed.lp=null;$('#edBox').hidden=true;ed.road=null;ed.rpt=-1;edRoadsDraw();clearKeys();firstCam=true;last=performance.now();
   if(assets.some(a=>a.hd)){for(const a of assets)delete a.hd;assetsBuild();shpTreesRefresh();edHiddenSync()}
   if(ed.changed){edSave();mapReset();mapDirty=true;ed.changed=false}}
 $('#edDone').onclick=editorClose;
@@ -324,10 +324,25 @@ const edRad=a=>PROPS[a.t]?propR(a):(a.t==='rock'?1.0:1.6)*a.s;
 // a ring round each picked one, all in one line set
 const edSelRings=(function(){const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(1200*48*3),3));g.setDrawRange(0,0);
   const l=new THREE.LineSegments(g,new THREE.LineBasicMaterial({color:0xf07a22,depthTest:false,transparent:true,opacity:0.95,fog:false,toneMapped:false}));l.renderOrder=20;l.frustumCulled=false;l.visible=false;scene.add(l);return l})();
+// and an orange shade over each picked one, seen through whatever stands in front: a box for placed things and machines,
+// a column for trees and boulders
+const edSelShade=[new THREE.BoxGeometry(1,1,1),new THREE.CylinderGeometry(1,1,1,16)].map(g=>{g.translate(0,0.5,0);
+  const m=new THREE.InstancedMesh(g,new THREE.MeshBasicMaterial({color:0xf07a22,transparent:true,opacity:0.3,depthTest:false,depthWrite:false,fog:false,toneMapped:false}),1200);
+  m.renderOrder=19;m.frustumCulled=false;m.visible=false;m.count=0;scene.add(m);return m});
+const edShadeH={pine:9,leafy:7,rock:1.1},edShadeO=new THREE.Object3D(),edShadeB=new THREE.Box3();
+function edShadeSel(){const n=[0,0],o=edShadeO;
+  for(const s of ed.sel){if(s.a&&s.a.hd)continue;let k=0;
+    if(s.m){const g=s.m.m();if(!g.visible)continue;edShadeB.setFromObject(g);if(edShadeB.isEmpty())continue;
+      o.position.set((edShadeB.min.x+edShadeB.max.x)/2,edShadeB.min.y,(edShadeB.min.z+edShadeB.max.z)/2);o.rotation.set(0,0,0);o.scale.set(edShadeB.max.x-edShadeB.min.x+0.2,edShadeB.max.y-edShadeB.min.y+0.2,edShadeB.max.z-edShadeB.min.z+0.2)}
+    else{const a=s.a,P=PROPS[a.t],y=hAt(a.x,a.z);o.position.set(a.x,y-0.1,a.z);o.rotation.set(0,a.yaw||0,0);
+      if(P)o.scale.set(P.w*a.s+0.2,(P.cat===1?4.5:1.6)*a.s,P.d*a.s+0.2);
+      else{k=1;const r=(a.t==='rock'?0.9:1.4)*a.s;o.scale.set(r,(edShadeH[a.t]||3)*a.s,r)}}
+    if(n[k]>=1200)continue;o.updateMatrix();edSelShade[k].setMatrixAt(n[k]++,o.matrix)}
+  edSelShade.forEach((m,i)=>{m.count=n[i];m.instanceMatrix.needsUpdate=true;m.visible=n[i]>0})}
 function edRingSel(){const at=edSelRings.geometry.attributes.position,P=at.array,k=ed.sel.length>60?12:24;let n=0;
   for(const s of ed.sel){if(n+2*k>at.count)break;const o=s.a||s.m.o(),r=s.a?edRad(s.a):s.m.r;
     for(let i=0;i<k;i++)for(const e of [i,i+1]){const t=e/k*Math.PI*2,x=o.x+Math.cos(t)*r,z=o.z+Math.sin(t)*r;P[n*3]=x;P[n*3+1]=hAt(x,z)+0.15;P[n*3+2]=z;n++}}
-  at.needsUpdate=true;edSelRings.geometry.setDrawRange(0,n);edSelRings.visible=n>0;edHandles()}
+  at.needsUpdate=true;edSelRings.geometry.setDrawRange(0,n);edSelRings.visible=n>0;edShadeSel();edHandles()}
 function edSelSet(list){ed.sel=list;edRingSel();edInspector();edListDraw();edStatus()}
 // the things and machines whose middles are inside a rectangle of the screen
 function edInRect(x0,y0,x1,y1,things){const rc=canvas.getBoundingClientRect(),out=[];
