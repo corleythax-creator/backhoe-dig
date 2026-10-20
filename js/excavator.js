@@ -66,7 +66,14 @@ box(0.14,0.03,0.03,STEEL,-0.48,0.85,-0.2,cab);box(0.3,0.04,0.25,STEEL,-0.25,-0.1
 const glass=new THREE.Mesh(new THREE.BoxGeometry(0.9,1.45,1.24),new THREE.MeshPhongMaterial({color:0x8fb4c8,transparent:true,opacity:0.2,depthWrite:false,shininess:80,envMap:skyEnv,combine:THREE.MixOperation,reflectivity:0.45}));
 glass.position.y=0.78; cab.add(glass);
 box(0.5,0.12,0.5,STEEL,0,0.42,-0.15,cab); box(0.5,0.55,0.12,STEEL,0,0.72,-0.4,cab);
-for(const x of [-0.33,0.33]){box(0.16,0.3,0.4,STEEL_L,x,0.42,0.0,cab);const j=cyl(0.025,0.025,0.16,10,STEEL,cab);j.position.set(x,0.64,0.08)}
+// the joysticks tilt with the sticks (exJoyTick): each turns about its boot on the console, cab (±0.34, 0.6, 0.15);
+// facing forward (+z) the operator's left is +x, so exJoy[0] (swing and stick) is at +x and exJoy[1] (boom and bucket) at -x
+const exJoy=[0.34,-0.34].map(x=>{const g=new THREE.Group();g.position.set(x,0.6,0.15);cab.add(g);return g});
+for(const x of [-0.33,0.33]){box(0.16,0.3,0.4,STEEL_L,x,0.42,0.0,cab);const j=cyl(0.025,0.025,0.16,10,STEEL,exJoy[x>0?0:1]);j.position.set(x-0.34*Math.sign(x),0.04,-0.07)}
+// where a hand holds a joystick, in its own frame (vr.js)
+const EX_JOY_GRIP=new THREE.Vector3(0,0.11,0.02);
+function exJoyTick(dt,l,r){const k=Math.min(1,dt*12);
+  for(const [g,[x,y]] of [[exJoy[0],l],[exJoy[1],r]]){g.rotation.x+=(y*0.32-g.rotation.x)*k;g.rotation.z+=(x*0.32-g.rotation.z)*k}}
 const lamp=cyl(0.07,0.09,0.1,28,STEEL,cab);lamp.rotation.x=Math.PI/2;lamp.position.set(0.3,1.66,0.6);
 const lens=cyl(0.06,0.06,0.02,28,LENS,cab);lens.rotation.x=Math.PI/2;lens.position.set(0.3,1.66,0.66);
 const lamp2=cyl(0.07,0.09,0.1,28,STEEL,cab);lamp2.rotation.x=Math.PI/2;lamp2.position.set(-0.3,1.66,0.6);

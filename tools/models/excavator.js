@@ -8,6 +8,8 @@
 // - each mesh's material named for the game material it gets: paint, paintD, steel, steelL, chrome, rubber, track
 //   (gets the mud), bucket (gets the dirt), glass, mirror, lens, redL, amber, black (cab plastics), seat, trim and
 //   screen (the cab display, drawn by the game; its mesh keeps its own UVs).
+// - joyL and joyR (optional): the operator's left and right joysticks above their boots, each in its own frame with the
+//   origin at its pivot, cab (0.34, 0.6, 0.15) and (-0.34, 0.6, 0.15) (facing forward, +x is the operator's left).
 // The rams, hoses and bucket linkage stay the game's own, since they move every frame.
 // Metres. Classic script, no modules.
 function buildExcavator(){
@@ -155,9 +157,12 @@ put('cab','black',RB(0.3,0.16,0.1,0.04,2),[0,1.19,-0.47],[-0.12,0,0]);
 for(const s of [-1,1]){const x=0.34*s;
   put('cab','black',RB(0.16,0.34,0.5,0.03,2),[x,0.3,-0.04]);put('cab','seat',RB(0.15,0.05,0.3,0.02,2),[x,0.6,-0.14]);
   put('cab','black',RB(0.14,0.06,0.18,0.02),[x,0.5,0.14],[0.15,0,0]);
-  put('cab','rubber',CY(0.022,0.05,0.07,16),[x,0.57,0.15]);put('cab','steel',CY(0.011,0.011,0.08,8),[x,0.63,0.16],[0.12,0,0]);
-  put('cab','black',CY(0.024,0.028,0.11,16),[x,0.71,0.17],[0.2,0,0]);put('cab','black',new T.SphereGeometry(0.026,16,10),[x,0.765,0.18]);
-  put('cab','redL',CY(0.008,0.008,0.012,10),[x-0.01*s,0.78,0.185]);put('cab','amber',CY(0.007,0.007,0.03,8),[x,0.73,0.2],[Math.PI/2,0,0])}
+  put('cab','rubber',CY(0.022,0.05,0.07,16),[x,0.57,0.15]);
+  // the stick above the boot moves: its own part, about the pivot (x, 0.6, 0.15)
+  const J=s>0?'joyL':'joyR';
+  put(J,'steel',CY(0.011,0.011,0.08,8),[0,0.03,0.01],[0.12,0,0]);
+  put(J,'black',CY(0.024,0.028,0.11,16),[0,0.11,0.02],[0.2,0,0]);put(J,'black',new T.SphereGeometry(0.026,16,10),[0,0.165,0.03]);
+  put(J,'redL',CY(0.008,0.008,0.012,10),[-0.01*s,0.18,0.035]);put(J,'amber',CY(0.007,0.007,0.03,8),[0,0.13,0.05],[Math.PI/2,0,0])}
 for(let i=0;i<3;i++)for(let j=0;j<2;j++)put('cab','steelL',RB(0.022,0.01,0.022,0.004),[0.31+j*0.035,0.475,-0.06+i*0.035]);
 // travel levers and pedals in front of the seat
 put('cab','black',RB(0.34,0.3,0.12,0.03,2),[0,0.25,0.5]);

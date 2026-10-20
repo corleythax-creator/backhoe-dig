@@ -72,7 +72,8 @@ const TUNE=[
   ['nightLight','Day and night','Moonlight and starlight at night',1,'pct',0,400,5],
   ['lampLight','Day and night','Headlights, lamps and lit windows',1,'pct',0,300,5],
   // VR headset (vr.js): how the right stick turns you on foot
-  ['vrTurn','VR','Turn speed on foot with the right stick (0 = 30° snap steps)',120*Math.PI/180,'deg',0,360,5]];
+  ['vrTurn','VR','Turn speed on foot with the right stick (0 = 30° snap steps)',120*Math.PI/180,'deg',0,360,5],
+  ['vrComfort','VR','Comfort vignette: how far the view darkens at its edges while you drive fast or turn (0 = off)',0.5,'pct',0,100,5]];
 // unit: [shown = code value × factor, label]
 const TUNE_U={mph:[1/0.44704,'mph'],ft:[1/0.3048,'ft'],deg:[180/Math.PI,'°/s'],yd3:[1.307951,'yd³'],pct:[100,'%'],s:[1,'s'],min:[1/60,'min'],in:[1/0.0254,'in']};
 const tuneShow=(e,v)=>v*TUNE_U[e[4]][0];
