@@ -3,11 +3,12 @@
 // not drawn in a headset, so a dashboard panel in the rig stands in for it. The Touch controllers are a game controller:
 // sticks as on a pad, triggers gas / reverse, B gets in and out, X next machine, A jumps (on foot) or flips the
 // excavator between Drive and Dig, right grip sprints, left grip hooks the trench box, right stick click hides the
-// panel, Y leaves VR. Right stick left / right turns you in 30° steps on foot.
+// panel, Y leaves VR. Right stick left / right turns you on foot: smoothly at the VR turn speed (TUNE vrTurn), or in
+// 30° steps when that is 0.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 renderer.xr.enabled=true;renderer.xr.setReferenceSpaceType('local');
 const rig=new THREE.Group();rig.add(camera);scene.add(rig);
-const vr={fake:false,mode:'',cam:'chase',gfx:null,yaw:0,snap:0,btn:{},panel:true,acc:1,headYaw:0};
+const vr={fake:false,mode:'',cam:'chase',gfx:null,yaw:0,snap:0,btn:{},panel:true,acc:1,headYaw:0,hudKey:'',turn:0};
 const vrOn=()=>renderer.xr.isPresenting||vr.fake;
 // the dashboard: a canvas on a panel low in front of you, like the gauges on a dash
 const vrHud=(()=>{const c=document.createElement('canvas');c.width=1024;c.height=420;
@@ -17,13 +18,15 @@ const vrHud=(()=>{const c=document.createElement('canvas');c.width=1024;c.height
   return {m,x:c.getContext('2d'),t}})();
 const VR_NAMES={dig:'Excavator · Dig',drive:'Excavator · Drive',truck:'Dump truck',mow:'Mower',skid:'Skid steer',walk:'On foot',boat:'Boat',bike:'Dirt bike'};
 function vrDraw(){const x=vrHud.x,W=1024,H=420,txt=s=>$(s).textContent;
-  x.clearRect(0,0,W,H);x.fillStyle='rgba(14,17,20,.82)';x.beginPath();x.moveTo(30,6);x.arcTo(W-6,6,W-6,H-6,30);x.arcTo(W-6,H-6,6,H-6,30);x.arcTo(6,H-6,6,6,30);x.arcTo(6,6,W-6,6,30);x.fill();
-  x.textAlign='center';x.textBaseline='middle';const font=(px,w)=>{x.font=`${w||700} ${px}px system-ui, sans-serif`};
   const te=$('#toastText'),msg=te.classList.contains('show')?te.textContent:'';
-  x.fillStyle='#ffb347';font(54);x.fillText(mode==='heavy'?hvCur().K.n.replace(/^./,c=>c.toUpperCase()):VR_NAMES[mode]||mode,W/2,58);
-  x.fillStyle='#fff';font(40,600);
   const rows=mode==='mow'?[txt('#mowVal'),'Lawn '+txt('#lawnVal')]:mode==='truck'?[txt('#haulVal'),'Bed '+txt('#truckVal')]:mode==='skid'?[txt('#tipVal'),'Bucket '+txt('#bucketVal')]:
     mode==='dig'||mode==='drive'?[txt('#tipVal'),'Bucket '+txt('#bucketVal')+' · Trench '+txt('#trenchVal')]:[txt('#trenchVal')?'Trench '+txt('#trenchVal'):'',txt('#gasVal')];
+  // a texture upload costs the headset a frame: draw and send it only when what it shows has changed
+  const key=mode+'|'+(mode==='heavy'?hvCur().K.n:'')+'|'+rows.join('|')+'|'+msg;if(key===vr.hudKey)return;vr.hudKey=key;
+  x.clearRect(0,0,W,H);x.fillStyle='rgba(14,17,20,.82)';x.beginPath();x.moveTo(30,6);x.arcTo(W-6,6,W-6,H-6,30);x.arcTo(W-6,H-6,6,H-6,30);x.arcTo(6,H-6,6,6,30);x.arcTo(6,6,W-6,6,30);x.fill();
+  x.textAlign='center';x.textBaseline='middle';const font=(px,w)=>{x.font=`${w||700} ${px}px system-ui, sans-serif`};
+  x.fillStyle='#ffb347';font(54);x.fillText(mode==='heavy'?hvCur().K.n.replace(/^./,c=>c.toUpperCase()):VR_NAMES[mode]||mode,W/2,58);
+  x.fillStyle='#fff';font(40,600);
   rows.forEach((r,i)=>x.fillText(r,W/2,140+i*62,W-60));
   x.fillStyle=msg?'#9fe08a':'#c8d0d8';font(msg?40:36,600);
   x.fillText(msg||say(mode==='walk'?'vrHintWalk':mode==='dig'||mode==='drive'?'vrHintEx':'vrHintRide'),W/2,H-62,W-50);
@@ -35,8 +38,9 @@ function vrPoll(){const s=renderer.xr.getSession();if(!s)return;
     const a=gp.axes,b=gp.buttons,ax=dz(a[2]||0),ay=-dz(a[3]||0),on=i=>!!(b[i]&&b[i].pressed);
     if(h==='left'){PA.lx=clamp(PA.lx+ax,-1,1);PA.ly=clamp(PA.ly+ay,-1,1);trig-=b[0]?b[0].value:0}
     else{
-      // on foot the right stick turns you in steps (smooth turning is what makes people sick) and does not tilt the view
-      if(mode==='walk'){if(Math.abs(ax)>0.7&&!vr.snap){vr.snap=Math.sign(ax);vr.yaw-=vr.snap*Math.PI/6}else if(Math.abs(ax)<0.3)vr.snap=0}
+      // on foot the right stick turns you (smoothly, eased in on the stick, or in steps for those it makes sick) and does not tilt the view
+      if(mode==='walk'){vr.turn=ax;if(TU.vrTurn>0)vr.snap=0;
+        else if(Math.abs(ax)>0.7&&!vr.snap){vr.snap=Math.sign(ax);vr.yaw-=vr.snap*Math.PI/6}else if(Math.abs(ax)<0.3)vr.snap=0}
       else{PA.rx=clamp(PA.rx+ax,-1,1);PA.ry=clamp(PA.ry+ay,-1,1)}
       trig+=b[0]?b[0].value:0;PA.sprint=PA.sprint||on(1)}
     if(ax||ay||on(0))used=true;
@@ -59,7 +63,8 @@ function vrFrame(dt){
   if(vr.mode!==mode){vr.mode=mode;vr.yaw=vr.headYaw=wk.view}
   const p=camera.position;rig.position.copy(p);
   // on foot your body turns with the snap turns and walks the way your head faces; in a machine you face its way
-  if(mode==='walk'){rig.rotation.set(0,vr.yaw+Math.PI,0);wk.view=vr.headYaw}
+  if(mode==='walk'){if(TU.vrTurn>0&&vr.turn){const t=vr.turn*Math.abs(vr.turn);vr.yaw-=t*TU.vrTurn*dt;vr.headYaw-=t*TU.vrTurn*dt}
+    rig.rotation.set(0,vr.yaw+Math.PI,0);wk.view=vr.headYaw}
   else rig.rotation.set(0,Math.atan2(look.x-p.x,look.z-p.z)+Math.PI,0);
   rig.updateMatrixWorld();
   vrHud.m.visible=vr.panel;if(vr.panel&&(vr.acc+=dt)>0.15){vr.acc=0;vrDraw()}}
@@ -72,7 +77,11 @@ function vrReset(){rig.position.set(0,0,0);rig.rotation.set(0,0,0);rig.updateMat
 async function enterVR(){showMenu(false);
   // a headset draws every frame twice at 72-90 fps: VR plays on Low graphics, and the setting comes back after
   let s;try{s=await navigator.xr.requestSession('immersive-vr',{optionalFeatures:['hand-tracking']})}catch(e){toast(say('vrFail'),'bad');return}
-  vr.cam=camMode;vr.gfx=gfxKey;vr.mode='';if(gfxKey!=='low')setGfx('low');
+  // smoothness: foveated edges and a slightly smaller eye buffer keep every frame inside the headset's 72 Hz, so head
+  // turns never drop frames (a dropped frame is the judder you feel when looking round)
+  if(renderer.xr.setFoveation)renderer.xr.setFoveation(1);renderer.xr.setFramebufferScaleFactor(0.9);
+  if(s.updateTargetFrameRate&&s.supportedFrameRates&&[...s.supportedFrameRates].includes(72))s.updateTargetFrameRate(72).catch(()=>{});
+  vr.cam=camMode;vr.hudKey='';vr.gfx=gfxKey;vr.mode='';if(gfxKey!=='low')setGfx('low');
   s.addEventListener('end',()=>{vrReset();camMode=vr.cam;fpReset();if(vr.gfx&&vr.gfx!==gfxKey)setGfx(vr.gfx);viewDirty=true;firstCam=true});
   await renderer.xr.setSession(s);started();toast(say('vrIn'),'good',6000)}
 $('#vrBtn').onclick=enterVR;
