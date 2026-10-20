@@ -76,15 +76,15 @@ function vrFakeHead(){camera.position.set(0,0,0);camera.rotation.set(-0.3,0,0)}
 function vrReset(){rig.position.set(0,0,0);rig.rotation.set(0,0,0);rig.updateMatrixWorld();vrHud.m.visible=false}
 async function enterVR(){showMenu(false);
   // a headset draws every frame twice at 72-90 fps. In the Quest's own browser the headset's chip draws it: VR plays on
-  // Low graphics, and the setting comes back after. Through a PC (Quest Link, Air Link, Virtual Desktop, SteamVR) the
+  // its own level (Graphics, In VR; Low unless picked), and the setting comes back after. Through a PC (Quest Link, Air Link, Virtual Desktop, SteamVR) the
   // PC draws it: the player's own Graphics setting stays, with no foveation and a full-size eye buffer
-  const onQuest=/OculusBrowser|Quest/.test(navigator.userAgent);
+  const onQuest=IS_QUEST;
   let s;try{s=await navigator.xr.requestSession('immersive-vr',{optionalFeatures:['hand-tracking']})}catch(e){toast(say('vrFail'),'bad');return}
   // smoothness (Quest): foveated edges and a slightly smaller eye buffer keep every frame inside the headset's 72 Hz, so head
   // turns never drop frames (a dropped frame is the judder you feel when looking round)
   if(renderer.xr.setFoveation)renderer.xr.setFoveation(onQuest?1:0);renderer.xr.setFramebufferScaleFactor(onQuest?0.9:1);
   if(onQuest&&s.updateTargetFrameRate&&s.supportedFrameRates&&[...s.supportedFrameRates].includes(72))s.updateTargetFrameRate(72).catch(()=>{});
-  vr.cam=camMode;vr.hudKey='';vr.gfx=gfxKey;vr.mode='';if(onQuest&&gfxKey!=='low')setGfx('low');
+  vr.cam=camMode;vr.hudKey='';vr.gfx=gfxKey;vr.mode='';if(onQuest&&gfxKey!==vrGfxKey())setGfx(vrGfxKey());
   s.addEventListener('end',()=>{vrReset();camMode=vr.cam;fpReset();if(vr.gfx&&vr.gfx!==gfxKey)setGfx(vr.gfx);viewDirty=true;firstCam=true});
   await renderer.xr.setSession(s);started();toast(say('vrIn'),'good',6000)}
 $('#vrBtn').onclick=enterVR;
