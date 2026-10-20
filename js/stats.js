@@ -13,16 +13,19 @@ const STAT_ZERO={mowCuts:0,mowTall:0,mowLawns:0,mowBest:0,mowDist:0,mowTime:0,mo
   // weather and water (rain.js, storm.js, water.js): volumes in cubic metres, the nearest strike in metres
   showers:0,rainTime:0,rainTop:0,bolts:0,boltNear:0,wipes:0,runoff:0,runPool:0,pumped:0,seeped:0,washed:0,silt:0};
 const stats=Object.assign({},STAT_ZERO);
-// how many times each lawn cell has been cut
-const statCuts=new Uint16Array(LAWN_N);
+// how many times each tall grass cell has been cut (on the lawn's grid, made again with it: statLayout)
+let statCuts=new Uint16Array(LAWN_N);
+function statLayout(rm){const c=new Uint16Array(LAWN_N);for(let n=0;n<LAWN_N;n++)if(rm[n]>=0&&rm[n]<statCuts.length)c[n]=statCuts[rm[n]];statCuts=c;statDirty=true;
+  heatDirty=true;heat.posT=0}
 let statDirty=false,statSaveT=0;
 function statSave(){if(window.syncHold)return;statDirty=false;statSaveT=performance.now();
-  const b=new Uint8Array(statCuts.buffer);let bin='';for(let k=0;k<b.length;k+=4096)bin+=String.fromCharCode.apply(null,b.subarray(k,k+4096));
+  const b=new Uint8Array(LAWN_ON*2);for(let c=0;c<LAWN_ON;c++){const v=statCuts[lawnCells[c]];b[c*2]=v&255;b[c*2+1]=v>>8}let bin='';for(let k=0;k<b.length;k+=4096)bin+=String.fromCharCode.apply(null,b.subarray(k,k+4096));
   const s={};for(const k in STAT_ZERO)s[k]=+(+stats[k]).toFixed(3);
-  try{localStorage.setItem(STAT_KEY,JSON.stringify({v:1,n:LAWN_N,s,cuts:btoa(bin),trail2:trailPack()}))}catch(e){}}
+  try{localStorage.setItem(STAT_KEY,JSON.stringify({v:1,g:[LAWN_GI,LAWN_GJ,LAWN_NX,LAWN_NZ],n:LAWN_ON,s,cuts:btoa(bin),trail2:trailPack()}))}catch(e){}}
 function statLoad(){let d=null;try{d=JSON.parse(localStorage.getItem(STAT_KEY))}catch(e){}
   if(d&&d.v===1&&d.s){for(const k in STAT_ZERO)if(isFinite(d.s[k]))stats[k]=+d.s[k];
-    if(d.n===LAWN_N&&typeof d.cuts==='string')try{const b=atob(d.cuts);if(b.length===LAWN_N*2){const u=new Uint8Array(statCuts.buffer);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i)}}catch(e){}}
+    // one count a grass cell (g: the grid it was saved on; none from before painted grass), kept while the grass is the same
+    if(typeof d.cuts==='string')try{const b=atob(d.cuts),L=lawnSaved(d.g||null,d.n);if(L&&b.length===d.n*2)for(let e=0;e<L.length;e+=2){const o=L[e+1]*2;statCuts[L[e]]=b.charCodeAt(o)|b.charCodeAt(o+1)<<8}}catch(e){}}
   if(d&&(d.trail2||d.trail))try{trailUnpack(d.trail2||d.trail,!d.trail2)}catch(e){}
   if(!stats.since)stats.since=Date.now()}
 // ---------- trails ----------
@@ -98,17 +101,17 @@ function heatCol(n){
 function heatScan(){let m=1;for(let n=0;n<LAWN_N;n++)if(statCuts[n]>m)m=statCuts[n];heatMax=m}
 // flat tiles, one quad a cell, 1.5 in above the ground
 const heatMesh=(function(){const g=new THREE.BufferGeometry();
-  g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(LAWN_N*18),3));g.setAttribute('color',new THREE.BufferAttribute(new Float32Array(LAWN_N*18),3));
+  g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(LAWN_MAX*18),3));g.setAttribute('color',new THREE.BufferAttribute(new Float32Array(LAWN_MAX*18),3));
   const m=new THREE.Mesh(g,new THREE.MeshBasicMaterial({vertexColors:true,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-8}));
   m.visible=false;m.frustumCulled=false;scene.add(m);return m})();
 const HEAT_Q=[[0,0],[0,1],[1,0],[1,0],[0,1],[1,1]];
 function heatPos(){const p=heatMesh.geometry.attributes.position.array,hs=new Float32Array(LAWN_VN);
   for(let j=0;j<=LAWN_NZ;j++)for(let i=0;i<=LAWN_NX;i++)hs[j*LAWN_VX+i]=hAt(LAWN_X0+i*LAWN_GS,LAWN_Z0+j*LAWN_GS)+0.04;
-  for(let j=0;j<LAWN_NZ;j++)for(let i=0;i<LAWN_NX;i++){const n=j*LAWN_NX+i;
-    for(let v=0;v<6;v++){const ii=i+HEAT_Q[v][0],jj=j+HEAT_Q[v][1],k=(n*6+v)*3;p[k]=LAWN_X0+ii*LAWN_GS;p[k+1]=hs[jj*LAWN_VX+ii];p[k+2]=LAWN_Z0+jj*LAWN_GS}}
-  heatMesh.geometry.attributes.position.needsUpdate=true}
+  for(let c=0;c<LAWN_ON;c++){const n=lawnCells[c],i=n%LAWN_NX,j=(n/LAWN_NX)|0;
+    for(let v=0;v<6;v++){const ii=i+HEAT_Q[v][0],jj=j+HEAT_Q[v][1],k=(c*6+v)*3;p[k]=LAWN_X0+ii*LAWN_GS;p[k+1]=hs[jj*LAWN_VX+ii];p[k+2]=LAWN_Z0+jj*LAWN_GS}}
+  heatMesh.geometry.setDrawRange(0,LAWN_ON*6);heatMesh.geometry.attributes.position.needsUpdate=true}
 function heatColors(){const c=heatMesh.geometry.attributes.color.array;
-  for(let n=0;n<LAWN_N;n++){const col=heatCol(n);for(let v=0;v<6;v++){const k=(n*6+v)*3;c[k]=col[0];c[k+1]=col[1];c[k+2]=col[2]}}
+  for(let c=0;c<LAWN_ON;c++){const col=heatCol(lawnCells[c]);for(let v=0;v<6;v++){const k=(c*6+v)*3;c[k]=col[0];c[k+1]=col[1];c[k+2]=col[2]}}
   heatMesh.geometry.attributes.color.needsUpdate=true}
 // the grass grows back all the time, so the colours refresh a few times a second while the heatmap or the panel is up
 function heatTick(dt){const panel=!statBox.hidden;if(!heat.on&&!panel)return;
@@ -133,7 +136,7 @@ function heatNext(){const i=HEAT_MODES.findIndex(m=>m[0]===heat.mode);setHeat(he
 $('#heatKey').onclick=heatNext;
 // the same map in the panel, north up, with the mower on it
 function heatDraw(){const cv=$('#heatCv'),W=LAWN_NX*4,Hh=LAWN_NZ*4;if(cv.width!==W){cv.width=W;cv.height=Hh}const g=cv.getContext('2d');
-  for(let j=0;j<LAWN_NZ;j++)for(let i=0;i<LAWN_NX;i++){g.fillStyle=heatCss(heatCol(j*LAWN_NX+i));g.fillRect(i*4,j*4,4,4)}
+  g.clearRect(0,0,W,Hh);for(let j=0;j<LAWN_NZ;j++)for(let i=0;i<LAWN_NX;i++){const n=j*LAWN_NX+i;if(lawn.dug[n]===2)continue;g.fillStyle=heatCss(heatCol(n));g.fillRect(i*4,j*4,4,4)}
   const mx=(mw.x-LAWN_X0)/LAWN_GS*4,mz=(mw.z-LAWN_Z0)/LAWN_GS*4;
   if(mx>-8&&mx<W+8&&mz>-8&&mz<Hh+8){g.save();g.translate(mx,mz);g.rotate(-mw.yaw);g.fillStyle='#c8291f';g.strokeStyle='#fff';g.lineWidth=2;
     g.beginPath();g.moveTo(0,9);g.lineTo(-6,-6);g.lineTo(6,-6);g.closePath();g.fill();g.stroke();g.restore()}
@@ -161,7 +164,7 @@ function statRows(){const S=stats,cellFt=LAWN_GS*LAWN_GS/(FT*FT),all=S.mowTime+S
     ['Water and runoff',[['Rain that ran off',sGal(S.runoff)],['Runoff into pools and holes',sGal(S.runPool)],['Groundwater seeped in',sGal(S.seeped)],['Water pumped out',sGal(S.pumped)]]],
     ['Soil',[['Dirt dug',sYd(S.exDug)],['Hauled off in the truck',sYd(S.trHauled)],['Moved by the skid steer',sYd(S.skMoved)],['Washed off by running water',sCf(S.washed)],['Settled as silt',sCf(S.silt)],['Cave-ins',sN(S.caves)]]],
     ['Mowing',[['Grass mowed',sN(S.mowCuts*cellFt)+' sq ft'],['Tall grass cut',sN(S.mowTall*cellFt)+' sq ft'],['Lawns finished',sN(S.mowLawns)],
-      ['Best lawn time',S.mowBest?sTime(S.mowBest):'—'],['Patch ever mowed',Math.round(cut/LAWN_N*100)+'%'],['Most cuts on one spot',sN(most)],
+      ['Best lawn time',S.mowBest?sTime(S.mowBest):'—'],['Tall grass ever mowed',Math.round(cut/Math.max(1,LAWN_ON)*100)+'%'],['Most cuts on one spot',sN(most)],
       ['Mower driven',sMi(S.mowDist)],['Time mowing',sTime(S.mowTime)],['Mower top speed',sMph(S.mowTop)]]],
     ['On foot',[['Walked',sMi(S.walkDist)],['Steps',sN(S.walkDist/0.76)],['Sprinted',sMi(S.sprintDist)],['Jumps',sN(S.jumps)],['Time on foot',sTime(S.walkTime)],['Top speed',sMph(S.walkTop)]]],
     ['Excavator',[['Dirt dug',sYd(S.exDug)],['Buckets dumped',sN(S.exDumps)],['Tracked',sMi(S.exDist)],['Time running it',sTime(S.exTime)],['Gas line strikes',sN(S.strikes)],['Cave-ins',sN(S.caves)]]],
