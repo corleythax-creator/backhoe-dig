@@ -8,18 +8,18 @@
 // pr resolution cap, auto lower it when slow, fps frame cap (0 none), fov degrees added, sh shadow map (0 off), shR how far
 // shadows reach either side of you in m (the same map spread wider, so softer), soft
 // shadow edges, filmic lighting, exp brightness, tex texture size, base ground texture, detail cut faces, painted
-// materials and machine grime, macro large-scale variation, pbr relief and wet sheen on materials that have those maps, aniso, tuft grass blades [amount, full-detail distance m,
+// materials and machine grime, macro large-scale variation, pbr relief and wet sheen on materials that have those maps, aniso, tuftQ how finely the grass and weeds are shaped (0 Simple to 3 Best, scenery.js), tuft grass blades [amount, full-detail distance m,
 // fade-out distance m, share kept far off], lawnFar lawn full detail within m, fog haze distance, wmFine fine puddle
 // water, treeR full-detail tree distance m, rainN raindrops, rainSp splashes where they land, splashN drops in a puddle splash, wakeN boat wake marks drawn, dirt the Dirt detail it sets when picked,
 // ao bloom grade the screen effects (post.js), model the detailed machine models (models.js), brush the share of undergrowth
 // drawn (brush.js)
 const GFX={
-  low:{name:'Low',pr:1.5,auto:true,fps:0,fov:0,sh:1024,shR:22,soft:false,filmic:false,exp:1,tex:'low',detail:0,base:1,macro:false,pbr:false,aniso:4,dirt:1,lawnFar:6,fog:1,wmFine:false,rainN:600,rainSp:160,splashN:250,wakeN:140,brush:0.35,model:false,ao:false,bloom:false,grade:false,treeR:45,tuft:[0.6,12,40,0.2]},
-  med:{name:'Medium',pr:1.5,auto:true,fps:0,fov:0,sh:2048,shR:32,soft:false,filmic:true,exp:1,tex:'med',detail:1,base:1,macro:false,pbr:false,aniso:8,dirt:2,lawnFar:15,fog:1,wmFine:true,rainN:1500,rainSp:400,splashN:600,wakeN:300,brush:0.7,model:true,ao:false,bloom:false,grade:false,treeR:90,tuft:[0.85,18,60,0.3]},
-  high:{name:'High',pr:2,auto:true,fps:0,fov:0,sh:4096,shR:45,soft:true,filmic:true,exp:1,tex:'high',detail:1,base:1,macro:true,pbr:true,aniso:16,dirt:4,lawnFar:1e9,fog:1,wmFine:true,rainN:3000,rainSp:900,splashN:1200,wakeN:640,brush:1,model:true,ao:false,bloom:false,grade:false,treeR:160,tuft:[1,25,80,0.35]}};
+  low:{name:'Low',pr:1.5,auto:true,fps:0,fov:0,sh:1024,shR:22,soft:false,filmic:false,exp:1,tex:'low',detail:0,base:1,macro:false,pbr:false,aniso:4,dirt:1,lawnFar:6,fog:1,wmFine:false,rainN:600,rainSp:160,splashN:250,wakeN:140,brush:0.35,model:false,ao:false,bloom:false,grade:false,treeR:45,tuftQ:0,tuft:[0.6,12,40,0.2]},
+  med:{name:'Medium',pr:1.5,auto:true,fps:0,fov:0,sh:2048,shR:32,soft:false,filmic:true,exp:1,tex:'med',detail:1,base:1,macro:false,pbr:false,aniso:8,dirt:2,lawnFar:15,fog:1,wmFine:true,rainN:1500,rainSp:400,splashN:600,wakeN:300,brush:0.7,model:true,ao:false,bloom:false,grade:false,treeR:90,tuftQ:0,tuft:[0.85,18,60,0.3]},
+  high:{name:'High',pr:2,auto:true,fps:0,fov:0,sh:4096,shR:45,soft:true,filmic:true,exp:1,tex:'high',detail:1,base:1,macro:true,pbr:true,aniso:16,dirt:4,lawnFar:1e9,fog:1,wmFine:true,rainN:3000,rainSp:900,splashN:1200,wakeN:640,brush:1,model:true,ao:false,bloom:false,grade:false,treeR:160,tuftQ:2,tuft:[1,25,80,0.35]}};
 // Ultra: High with the screen effects (post.js) and trees in full detail farther out; for strong PC graphics only, never
 // picked by itself
-GFX.ultra=Object.assign({},GFX.high,{name:'Ultra',ao:true,bloom:true,grade:true,treeR:220});
+GFX.ultra=Object.assign({},GFX.high,{name:'Ultra',tuftQ:3,ao:true,bloom:true,grade:true,treeR:220});
 let gfxKey='high',gfxOver={},gfxCur=Object.assign({},GFX.high);
 function gfxName(){return GFX[gfxKey].name+(Object.keys(gfxOver).length?' (custom)':'')}
 function gfxGuess(){if(PHONE||/OculusBrowser|Quest/.test(navigator.userAgent))return 'low';
@@ -54,6 +54,8 @@ function gfxApply(){const g=gfxCur=Object.assign({},GFX[gfxKey],gfxOver);
   mdlGfx(g.model);
   // undergrowth round the trees (brush.js)
   brushGfx(g.brush);
+  // how finely the grass and weeds are shaped (scenery.js)
+  tuftQuality(g.tuftQ);
   // raindrops drawn (rain.js); the rain itself is the same
   rainGfx(g.rainN,g.rainSp);
   // drops in the splash when something goes through a puddle (mud.js); the puddle itself is the same
@@ -106,6 +108,7 @@ const GFX_ROWS=[
   {id:'brush',label:'Undergrowth',hint:'Leafy shrubs round the trees.',opts:[[0,'Off'],[0.35,'Few'],[0.7,'Some'],[1,'Full']]},
   {id:'model',label:'Machine models',hint:'The detailed excavator, with a full cab inside, or the simple one. Detailed downloads about 1 MB once.',opts:[[true,'Detailed'],[false,'Simple']]},
   {id:'treeR',label:'Tree detail distance',hint:'How far trees keep their full model of branches and leaves.',min:20,max:400,step:5,fmt:v=>`${Math.round(v*FT_M)} ft`},
+  {id:'tuftQ',label:'Grass quality',hint:'How finely the grass and weeds are shaped: more blades, bent in more steps, finer leaves, petals and seed heads. Costs triangles.',opts:[[0,'Simple'],[1,'Good'],[2,'Fine'],[3,'Best']]},
   {id:'tuftA',label:'Grass blades',hint:'How many blades are drawn. The main triangle cost.',min:0,max:1,step:0.05,fmt:v=>`${Math.round(v*100)}%`},
   {id:'tuftR',label:'Grass distance',hint:'How far the blades reach before they thin out.',min:5,max:60,step:1,fmt:v=>`${Math.round(v*FT_M)} ft`},
   {id:'lawnFar',label:'Lawn full detail',hint:'The tall lawn is drawn simpler past this distance.',opts:[[6,'20 ft'],[15,'50 ft'],[30,'100 ft'],[1e9,'All']]},
