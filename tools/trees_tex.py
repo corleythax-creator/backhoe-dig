@@ -1,6 +1,7 @@
 """Makes the tree textures (js/trees.js) from the raw OpenAI GPT Image renders.
 
 Usage: python3 tools/trees_tex.py RAW_DIR
+       python3 tools/trees_tex.py --leaves LEAVES_PNG (only swaps the leaf clump in the existing atlas)
 RAW_DIR holds bark.png and birch.png (1024 square, opaque bark photos) and spruce.png (a spruce branch, stem running
 bottom to top), leaves.png (a leaf clump) and needles.png (a pine needle tuft), all cut out on a transparent background.
 Writes textures/tree_bark.jpg and textures/tree_birch.jpg (512 square, seamless) and the foliage atlas (1024 square):
@@ -88,5 +89,23 @@ def main(raw):
     at.getchannel('A').save(os.path.join(OUT, 'tree_leaves_a.jpg'), quality=90)
 
 
+def leaves_only(png):
+    """puts a new leaf clump into the atlas, keeping the spruce branch and needle tuft that are there"""
+    rgb = Image.open(os.path.join(OUT, 'tree_leaves.jpg')).convert('RGB')
+    at = rgb.copy()
+    at.putalpha(Image.open(os.path.join(OUT, 'tree_leaves_a.jpg')).convert('L'))
+    x0, y0, x1, y1 = BOX['leaves']
+    at.paste(Image.new('RGBA', (x1 - x0, y1 - y0), (0, 0, 0, 0)), (x0, y0))
+    im = Image.open(png).convert('RGBA')
+    im = grey(fit(im.crop(im.getchannel('A').point(lambda v: 255 if v > 24 else 0).getbbox()), x1 - x0, y1 - y0))
+    at.alpha_composite(im, (x0, y0))
+    at = bleed(at)
+    at.convert('RGB').save(os.path.join(OUT, 'tree_leaves.jpg'), quality=86)
+    at.getchannel('A').save(os.path.join(OUT, 'tree_leaves_a.jpg'), quality=90)
+
+
 if __name__ == '__main__':
-    main(sys.argv[1])
+    if sys.argv[1] == '--leaves':
+        leaves_only(sys.argv[2])
+    else:
+        main(sys.argv[1])

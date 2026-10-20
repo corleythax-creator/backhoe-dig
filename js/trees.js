@@ -146,7 +146,7 @@ function treeBroad(hi,o){const K=treeKit(hi?o.seed:o.seed+1),V=K.V,up=new V(0,1,
   const step=hi?1:Math.max(1,Math.round(pts.length/(o.clumps*0.22)));
   for(let k=0;k<pts.length;k+=step){const p=pts[k],q=p.clone().sub(C),nrm=new V(q.x/o.rx,q.y/o.ry*0.8+0.25,q.z/o.rx);const outer=Math.min(1,nrm.length());nrm.normalize();
     const kk=(0.45+0.35*outer)*(0.8+0.25*Math.max(-1,Math.min(1,q.y/o.ry))),v=0.94+0.12*K.rnd(),tint=[v,v*(0.97+0.06*K.rnd()),v*(0.9+0.15*K.rnd())];
-    for(let j=0,n=hi?3:2;j<n;j++)K.clump(p.clone().add(new V((K.rnd()-0.5)*0.4,(K.rnd()-0.5)*0.3,(K.rnd()-0.5)*0.4)),o.size*(hi?1:1.7)*(0.8+0.4*K.rnd()),FOL_UV.leaves,nrm,kk,tint)}
+    for(let j=0,n=hi?4:3;j<n;j++)K.clump(p.clone().add(new V((K.rnd()-0.5)*0.55,(K.rnd()-0.5)*0.4,(K.rnd()-0.5)*0.55)),o.size*(hi?1.1:1.8)*(0.8+0.4*K.rnd()),FOL_UV.leaves,nrm,kk,tint)}
   return K.done()}
 const TREE_BROAD={
   oak:{seed:301,trunk:2.3,rad:0.33,limbs:4,limbLen:2.6,out:1.35,spread:0.9,lift:0.05,wob:0.9,cy:4.7,rx:3.5,ry:2.3,clumps:150,size:1.35,stems:1,leader:false},
