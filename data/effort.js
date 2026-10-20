@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-20T03:01:00Z",
+ "updated": "2026-10-20T03:12:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -30,9 +30,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-19",
-   "dh": 158.7,
+   "dh": 160.7,
    "act": 6,
-   "versions": 22
+   "versions": 23
   }
  ],
  "extra": [
@@ -1581,6 +1581,15 @@ window.EFFORT = {
    "tris": 3280365,
    "chars": 1130463,
    "what": "Leaves and undergrowth get soft see-through edges instead of hard cut-outs, glow where the sun shines through them, and sway downwind with the weather's gusts (harder in a storm); shrubs now move from the ground up. Tunable on the Tuning tab (Trees: sway, sunlight through the leaves)"
+  },
+  {
+   "v": 172,
+   "asked": "2026-10-19T22:00:00-05:00",
+   "live": "2026-10-19T22:12:19-05:00",
+   "dh": 2,
+   "tris": 3279286,
+   "chars": 1131786,
+   "what": "VR turns smoothly on foot (tunable, or snap steps at 0) and holds a steady 72 Hz when you look round: foveated edges, a lighter eye buffer, the dash panel and rain cover drawn only when needed."
   }
  ]
 };
