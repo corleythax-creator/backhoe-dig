@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-20T22:27:00Z",
+ "updated": "2026-10-20T22:33:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -36,9 +36,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-20",
-   "dh": 24,
-   "act": 0.5,
-   "versions": 3
+   "dh": 26,
+   "act": 1,
+   "versions": 4
   }
  ],
  "extra": [
@@ -1641,6 +1641,15 @@ window.EFFORT = {
    "tris": 4379694,
    "chars": 1161381,
    "what": "VR looks better: a sharp dashboard in the headset, work gloves that grab the excavator's joysticks (which now move with the sticks), a Quest graphics level made for the headset, sharper PC VR on High and Ultra, and a comfort vignette while you drive or turn."
+  },
+  {
+   "v": 178,
+   "asked": "2026-10-20T17:05:00-05:00",
+   "live": "2026-10-20T17:33:32-05:00",
+   "dh": 2,
+   "tris": 4441233,
+   "chars": 1161385,
+   "what": "Leaf trees and bushes use a loose photo leaf spray with sky showing between the leaves instead of a solid clump, with more cards per clump so crowns stay full"
   }
  ]
 };
