@@ -44,43 +44,92 @@ const TUFTS=15000,tX=new Float32Array(TUFTS),tZ=new Float32Array(TUFTS),tS=new F
 // smooth value noise, 0 to 1, about one feature per unit
 function tuftNoise(x,z){const i=Math.floor(x),j=Math.floor(z),fx=x-i,fz=z-j,u=fx*fx*(3-2*fx),v=fz*fz*(3-2*fz);
   const a=hash(i,j),b=hash(i+1,j),c=hash(i,j+1),d=hash(i+1,j+1);return a+(b-a)*u+(c-a)*v+(a-b-c+d)*u*v}
-// the two shapes (flat shaded, coloured per vertex: dark down in the clump, sunlit and a little yellower at the tips).
-// aHead marks seed and flower heads (1), which take their colour from the clump's aTuft instead of its green, and their
-// stalks (2); clumps without heads (aTuft.y below 0) fold both away
-const TUFT_GEO=(function(){
-  function build(f){const P=[],C=[],A=[],I=[];
-    // one blade arching over from (rx,rz) along angle a: base quad then a tip, 3 triangles
-    const blade=(rx,rz,a,h,lean,w,tw,hv)=>{const ca=Math.cos(a),sa=Math.sin(a),v=[],c=[];
-      for(const [t,wf,k] of [[0,1,0.68],[0.5,0.72,0.9],[1,0,1.15]]){const o=lean*Math.pow(t,1.7),cx=rx+ca*o,cz=rz+sa*o,y=h*t*(1-0.18*t*lean/h),
-          ta=a+Math.PI/2+tw*t,px=Math.cos(ta)*w*wf,pz=Math.sin(ta)*w*wf,col=[k*(1+0.1*hv+0.08*t),k*(1+0.04*hv),k*(1-0.12*hv-0.14*t)];
-        if(wf>0){v.push([cx-px,y,cz-pz],[cx+px,y,cz+pz]);c.push(col,col)}else{v.push([cx,y,cz]);c.push(col)}}
-      const o=A.length;for(let q=0;q<5;q++){P.push(...v[q]);C.push(...c[q]);A.push(0)}for(const q of [0,1,3,0,3,2,2,3,4])I.push(o+q)};
-    const tri=(v,c,hd)=>{for(let q=0;q<3;q++){I.push(A.length);P.push(...v[q]);C.push(...c[q]);A.push(hd)}};
-    f(blade,tri);const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(P,3));g.setAttribute('color',new THREE.Float32BufferAttribute(C,3));
+// the shapes of grass and weed (flat shaded, coloured per vertex: dark down in the clump, sunlit and a little yellower
+// at the tips; the clump's own colour tints them). aHead marks seed and flower heads (1), which take their colour from
+// the clump's aTuft instead of its green, and their stalks (2); clumps without heads (aTuft.y below 0) fold both away.
+// Each shape is built at the Grass quality setting (gfx.js, tuftQuality): Simple is the first look (5 blades of 3
+// triangles); Good, Fine and Best add blades, bend them in more steps, and shape leaves, petals and seed heads finer
+const TUFT_Q=[{bl:5,seg:2,lf:1,pt:4,rs:6},{bl:7,seg:3,lf:2,pt:6,rs:7},{bl:10,seg:4,lf:3,pt:10,rs:8},{bl:13,seg:6,lf:4,pt:14,rs:9}];
+// grass (seed stalks as heads), broadleaf (dandelion and chicory: rosette and a flower), clover (trefoils and a round
+// head), thistle (spiny stem, purple tuft), plantain (broad upright leaves and a seed spike), sedge (stiff dark blades by
+// damp ground, brown seed clusters)
+const TUFT_NAMES=['grass','broadleaf','clover','thistle','plantain','sedge'];
+function tuftGeos(q){const Q=TUFT_Q[q];
+  function build(seed,f){let s=seed;const R=()=>{s=(s+0x6D2B79F5)|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
+    const P=[],C=[],A=[],I=[];
+    // one triangle (corners, their colours, head mark)
+    const tri=(v,c,hd)=>{for(let k=0;k<3;k++){I.push(A.length);P.push(...v[k]);C.push(...c[k]);A.push(hd)}};
+    // a strip rising from (rx,rz) toward angle a: height h, leaning out by lean, width w shaped by wf(t), twisting by
+    // tw, in n steps to a point; k0..k1 the shade from root to tip, hd the head mark
+    const strip=(rx,rz,a,h,lean,w,tw,hv,n,wf,k0,k1,hd,droop)=>{const ca=Math.cos(a),sa=Math.sin(a),v=[],c=[];
+      for(let i=0;i<=n;i++){const t=i/n,o=lean*Math.pow(t,1.7),cx=rx+ca*o,cz=rz+sa*o,y=h*t*(1-(droop||0.18)*t*lean/Math.max(h,0.01)),
+          ta=a+Math.PI/2+tw*t,ww=i<n?w*wf(t):0,px=Math.cos(ta)*ww,pz=Math.sin(ta)*ww,k=k0+(k1-k0)*t,col=[k*(1+0.1*hv+0.08*t),k*(1+0.04*hv),k*(1-0.12*hv-0.14*t)];
+        if(i<n){v.push([cx-px,y,cz-pz],[cx+px,y,cz+pz]);c.push(col,col)}else{v.push([cx,y,cz]);c.push(col)}}
+      // shared corners, so the blade shades smoothly along its bend
+      const o=A.length;for(let q=0;q<v.length;q++){P.push(...v[q]);C.push(...c[q]);A.push(hd)}
+      for(let i=0;i<n;i++){const a0=o+i*2;if(i<n-1)I.push(a0,a0+1,a0+3,a0,a0+3,a0+2);else I.push(a0,a0+1,a0+2)}};
+    // a leaf lying out from the root along a: length l, width w, tip up by up; from Good on, folded along its midrib in
+    // Q.lf steps, its edge toothed (teeth) or smooth
+    const leaf=(a,l,w,up,lift,teeth)=>{const ca=Math.cos(a),sa=Math.sin(a),n=Q.lf,r=[0.62,0.66,0.6],m=[0.92,0.95,0.86],t1=[1.05,1.08,0.95];
+      const at=(t,s)=>{const ww=w*Math.pow(Math.sin(Math.PI*Math.min(1,t*1.05)),0.7)*(teeth&&n>1&&t>0.1&&t<0.9?(Math.round(t*n*2)%2?1.25:0.8):1)*s,y=0.012+up*Math.pow(t,1.6)+(lift||0)*t*(1-t)*4;
+        return [ca*l*t-sa*ww,y+(s?0:0.006*n/2),sa*l*t+ca*ww]};
+      if(n===1){const O=[0,0.012,0],L=at(0.55,1),Rr=at(0.55,-1),T=at(1,0);tri([O,L,T],[r,m,t1],0);tri([O,T,Rr],[r,t1,m],0);return}
+      for(let i=0;i<n;i++){const t0=i/n,t1v=(i+1)/n,cA=i?m:r,cB=i===n-1?t1:m;
+        const m0=at(t0,0),m1=at(t1v,0),l0=at(t0,1),l1=at(t1v,1),r0=at(t0,-1),r1=at(t1v,-1);
+        tri([m0,l0,l1],[cA,cA,cB],0);tri([m0,l1,m1],[cA,cB,cB],0);tri([m0,r1,r0],[cA,cB,cA],0);tri([m0,m1,r1],[cA,cB,cB],0)}};
+    // a fan of n petals (or florets) round a centre at height y, radius r, cupped up by cup (heads: aHead 1)
+    const flower=(x,y,z,r,n,cup,ce,hc)=>{for(let k=0;k<n;k++){const a0=k/n*6.2832,a1=a0+6.2832/n*0.8,am=(a0+a1)/2;
+      tri([[x,y+0.006,z],[x+Math.cos(a0)*r*0.45,y+cup*0.4,z+Math.sin(a0)*r*0.45],[x+Math.cos(am)*r,y+cup,z+Math.sin(am)*r]],[ce,hc,hc],1);
+      if(n>4)tri([[x,y+0.006,z],[x+Math.cos(am)*r,y+cup,z+Math.sin(am)*r],[x+Math.cos(a1)*r*0.45,y+cup*0.4,z+Math.sin(a1)*r*0.45]],[ce,hc,hc],1)}};
+    // a thin stalk from the root to (x,h,z) (aHead 2: folds away with the head)
+    const stem=(x,h,z,ws,col,hd)=>{const n=Math.max(1,Math.round(Q.seg/2));let px=0,py=0,pz=0;
+      for(let i=1;i<=n;i++){const t=i/n,nx=x*Math.pow(t,1.5),ny=h*t,nz=z*Math.pow(t,1.5),w=ws*(1-0.5*t);
+        tri([[px-w,py,pz],[px+w,py,pz],[nx,ny,nz]],[col,col,col],hd);if(n>1)tri([[px,py,pz-w],[px,py,pz+w],[nx,ny,nz]],[col,col,col],hd);px=nx;py=ny;pz=nz}};
+    // a seed head: a narrow spike of n scales (or the first look's two triangles)
+    const spike=(x,y,z,len,wd,n,hd)=>{const h1=[1,1,1],h0=[0.8,0.8,0.8];
+      for(let k=0;k<n;k++){const t=k/n,y0=y+len*t,y1=y+len*(t+1/n)*1.02,a=k*2.4,ca=Math.cos(a)*wd*(1-0.4*t),sa=Math.sin(a)*wd*(1-0.4*t);
+        tri([[x,y0,z],[x+ca,(y0+y1)/2,z+sa],[x,y1,z]],[h0,h1,h1],hd);tri([[x,y0,z],[x,y1,z],[x-ca,(y0+y1)/2,z-sa]],[h0,h1,h1],hd)}};
+    f({R,tri,strip,leaf,flower,stem,spike});
+    const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(P,3));g.setAttribute('color',new THREE.Float32BufferAttribute(C,3));
     g.setAttribute('aHead',new THREE.Float32BufferAttribute(A,1));g.setIndex(I);g.computeVertexNormals();return g}
-  const R=Math.random,grass=(bl,n,hh)=>{for(let b=0;b<n;b++){const a=b*6.28/n+R()*0.6,ra=0.01+R()*0.035;
-    bl(Math.cos(a+1.9)*ra,Math.sin(a+1.9)*ra,a,hh*(0.55+0.45*R()),0.05+R()*0.13,0.02+R()*0.012,(R()-0.5)*1.2,R()*2-1)}};
-  // a seed stalk to height h leaning along a, with a narrow straw head (aHead) at the top
-  const stalk=(tri,a,h)=>{const ca=Math.cos(a),sa=Math.sin(a),lx=ca*h*0.12,lz=sa*h*0.12,ws=0.005,hw=0.016,hy=h*0.78,st=[0.5,0.55,0.32],hd=[1,1,1],hl=[0.8,0.8,0.8];
-    tri([[-sa*ws,0,ca*ws],[sa*ws,0,-ca*ws],[lx,h,lz]],[st,st,st],2);
-    tri([[lx*0.78,hy,lz*0.78],[lx*0.9+sa*hw,h*0.89,lz*0.9-ca*hw],[lx*0.9-sa*hw,h*0.89,lz*0.9+ca*hw]],[hl,hd,hd],1);
-    tri([[lx*0.9-sa*hw,h*0.89,lz*0.9+ca*hw],[lx*0.9+sa*hw,h*0.89,lz*0.9-ca*hw],[lx*1.04,h*1.02,lz*1.04]],[hd,hd,hd],1)};
-  // a flat leaf lying out from the root along a, tipped up a little (2 triangles)
-  const leaf=(tri,a,l,w,up)=>{const ca=Math.cos(a),sa=Math.sin(a),r=[0.62,0.66,0.6],m=[0.92,0.95,0.86],t=[1.05,1.08,0.95];
-    const L=[ca*l*0.55-sa*w,up*0.6+0.01,sa*l*0.55+ca*w],Rr=[ca*l*0.55+sa*w,up*0.6+0.01,sa*l*0.55-ca*w],T=[ca*l,up,sa*l],O=[0,0.012,0];
-    tri([O,L,T],[r,m,t],0);tri([O,T,Rr],[r,t,m],0)};
+  const W=t=>1-0.35*t,st=[0.5,0.55,0.32];
   return [
-    // grass: five blades, and two stalks gone to seed (21 triangles)
-    build((bl,tri)=>{grass(bl,5,0.34);for(let b=0;b<2;b++)stalk(tri,b*3.1+R()*0.8,0.5+R()*0.18)}),
-    // broadleaf: a rosette of six leaves close to the ground, and a stem with a four-petal flower facing up (17 triangles)
-    build((bl,tri)=>{for(let b=0;b<6;b++)leaf(tri,b*1.047+R()*0.3,0.11+R()*0.06,0.035+R()*0.012,0.03+R()*0.04);
-      const h=0.36+R()*0.08,hx=0.03,st=[0.45,0.55,0.32],hc=[1,1,1],ce=[0.75,0.7,0.5],r=0.065;
-      tri([[-0.006,0,0],[0.006,0,0],[hx,h,0]],[st,st,st],2);
-      for(let q=0;q<4;q++){const a0=q*1.571,a1=a0+1.571,y=h+0.006;
-        tri([[hx,h+0.012,0],[hx+Math.cos(a0)*r,y,Math.sin(a0)*r],[hx+Math.cos(a1)*r,y,Math.sin(a1)*r]],[ce,hc,hc],1)}})]})();
+    // grass: blades arching over, and two stalks gone to seed
+    build(11,({R,strip,stem,spike})=>{for(let b=0;b<Q.bl;b++){const a=b*6.28/Q.bl+R()*0.6,ra=0.01+R()*0.035+0.01*(Q.bl>7);
+        strip(Math.cos(a+1.9)*ra,Math.sin(a+1.9)*ra,a,0.34*(0.55+0.45*R()),0.05+R()*0.13,(0.02+R()*0.012)*(Q.bl>7?0.8:1),(R()-0.5)*1.2,R()*2-1,Q.seg,W,0.68,1.15,0)}
+      for(let b=0;b<2;b++){const a=b*3.1+R()*0.8,h=0.5+R()*0.18,lx=Math.cos(a)*h*0.12,lz=Math.sin(a)*h*0.12;stem(lx*0.8,h*0.8,lz*0.8,0.005,st,2);spike(lx*0.8,h*0.78,lz*0.8,h*0.24,0.016,Math.max(1,Q.seg-1),1)}}),
+    // broadleaf: a rosette of leaves close to the ground, and a stem with a flower facing up
+    build(23,({R,leaf,stem,flower})=>{for(let b=0;b<Q.rs-1;b++)leaf(b*6.28/(Q.rs-1)+R()*0.3,0.11+R()*0.06,0.035+R()*0.012,0.03+R()*0.04,0,true);
+      const h=0.36+R()*0.08;stem(0.03,h,0,0.006,[0.45,0.55,0.32],2);flower(0.03,h,0,0.065,Q.pt,0.012,[0.75,0.7,0.5],[1,1,1])}),
+    // clover: trefoils on short stems, and a round head of florets
+    build(37,({R,tri,stem,flower})=>{const n=3+(Q.lf>>1);for(let b=0;b<n;b++){const a=b*2.4+R()*0.5,d=0.03+R()*0.07,x=Math.cos(a)*d,z=Math.sin(a)*d,h=0.06+R()*0.05;
+        for(let l=0;l<3;l++){const la=a+l*2.094+R()*0.2,ca=Math.cos(la),sa=Math.sin(la),lw=0.016+R()*0.004;
+          // each leaflet a small round leaf out from the stem's top
+          const ox=x,oz=z,leafAt=(t,s)=>[ox+ca*0.035*t-sa*lw*Math.sin(Math.PI*t)*s,h+0.004*t,oz+sa*0.035*t+ca*lw*Math.sin(Math.PI*t)*s],m=[0.85,0.92,0.82],e=[1.0,1.05,0.95];
+          for(let i=0;i<Math.max(1,Q.lf-1);i++){const t0=i/Math.max(1,Q.lf-1),t1=(i+1)/Math.max(1,Q.lf-1);
+            tri([leafAt(t0,0),leafAt(t0,1),leafAt(t1,1)],[m,e,e],0);tri([leafAt(t0,0),leafAt(t1,1),leafAt(t1,0)],[m,e,m],0);
+            tri([leafAt(t0,0),leafAt(t1,-1),leafAt(t0,-1)],[m,e,e],0);tri([leafAt(t0,0),leafAt(t1,0),leafAt(t1,-1)],[m,m,e],0)}}
+        stem(x,h,z,0.003,[0.5,0.62,0.4],0)}
+      const h=0.13+R()*0.03;stem(0.02,h,0.01,0.003,[0.5,0.62,0.4],2);
+      for(let k=0;k<Math.max(2,Q.lf);k++)flower(0.02,h-0.006+k*0.008,0.01,0.014-k*0.002,Q.pt,0.012,[0.85,0.85,0.8],[1,1,1])}),
+    // thistle: a stiff stem with spiny leaves up it, a green bulb and a purple tuft
+    build(51,({R,strip,stem,flower,tri})=>{const h=0.62+R()*0.12,g=[0.55,0.62,0.5];stem(0.01,h,0,0.008,g,0);
+      const nl=2+Q.lf;for(let b=0;b<nl;b++){const t=0.12+0.7*b/nl,a=b*2.3+R()*0.4,y=h*t,l=0.13*(1-0.5*t),ca=Math.cos(a),sa=Math.sin(a),n=2+Q.lf;
+        for(let i=0;i<n;i++){const t0=i/n,t1=(i+1)/n,sp=(i%2?1:-1)*0.025*(1-t0),p0=[ca*l*t0+0.01*t,y+0.03*t0,sa*l*t0],p1=[ca*l*t1+0.01*t,y+0.05*t1,sa*l*t1];
+          tri([p0,p1,[p0[0]-sa*sp+ca*0.01,p0[1]+0.01,p0[2]+ca*sp+sa*0.01]],[g,[0.95,1,0.9],[1.05,1.1,1]],0)}}
+      const bx=0.01;for(let k=0;k<Math.max(4,Q.pt);k++){const a=k/Math.max(4,Q.pt)*6.2832,r=0.022;tri([[bx,h-0.03,0],[bx+Math.cos(a)*r,h,Math.sin(a)*r],[bx+Math.cos(a+0.8)*r,h,Math.sin(a+0.8)*r]],[g,g,g],0)}
+      flower(bx,h,0,0.02,Q.pt,0.035,[0.9,0.85,0.95],[1,1,1])}),
+    // plantain: broad ribbed leaves standing up and out, and a seed spike on a long stalk
+    build(67,({R,leaf,stem,spike})=>{for(let b=0;b<Q.rs-2;b++)leaf(b*6.28/(Q.rs-2)+R()*0.4,0.13+R()*0.05,0.04+R()*0.01,0.05+R()*0.05,0.03,false);
+      for(let b=0;b<1+(Q.lf>2);b++){const a=b*3+R(),h=0.28+R()*0.1,x=Math.cos(a)*0.03,z=Math.sin(a)*0.03;stem(x,h*0.7,z,0.004,[0.5,0.55,0.35],2);spike(x,h*0.7,z,h*0.3,0.011,1+Q.seg,1)}}),
+    // sedge: stiff narrow blades standing nearly straight, and brown seed clusters
+    build(83,({R,strip,stem,spike})=>{for(let b=0;b<Q.bl+3;b++){const a=b*6.28/(Q.bl+3)+R()*0.5,ra=0.005+R()*0.03;
+        strip(Math.cos(a)*ra,Math.sin(a)*ra,a,0.5*(0.6+0.4*R()),0.03+R()*0.08,0.011+R()*0.005,(R()-0.5)*0.4,R()*2-1,Q.seg+1,t=>1-0.6*t,0.55,1.05,0,0.05)}
+      for(let b=0;b<1+(Q.bl>7);b++){const a=b*2.8+R(),h=0.55+R()*0.1,x=Math.cos(a)*0.02,z=Math.sin(a)*0.02;stem(x,h,z,0.004,[0.45,0.5,0.32],2);spike(x,h,z,0.05,0.012,Math.max(2,Q.seg),1)}})]}
+let tuftQ=0;const TUFT_GEO=tuftGeos(0),TUFT_GQ=[TUFT_GEO];
 const TUFT_KINDS=TUFT_GEO.length;
 // per shape: how far out it is still drawn, as a share of the Graphics setting's distances (small things go first)
-const TUFT_KR=[1,0.65];
+const TUFT_KR=[1,0.65,0.5,0.85,0.65,0.9];
 // the clumps sit in 32 m squares, one instanced mesh per square and shape, so squares out of view or far away are skipped
 const TC_X0=-48,TC_Z0=-19,TC_W=32,TC_NX=3,TC_NZ=3;
 // thinning with distance, set each frame from the Graphics setting by tuftLod: share drawn up close, near and far
@@ -123,30 +172,46 @@ const tufts=new THREE.Group(),tuftMeshes=[];scene.add(tufts);
   const bad=(x,z)=>mesaR(x,z)>EDGE-0.8||roadAmt(x,z)>0.1||yardAt(x,z)>0.3||wallAt(x,z)||paintAt(x,z);
   // where clumps grow: patches every few metres, thinner on rocky slopes
   const dens=(x,z)=>ss(0.2,0.7,0.65*tuftNoise(x*0.17+3.1,z*0.17+7.3)+0.35*tuftNoise(x*0.6+11,z*0.6+5));
+  // the ground's plant communities, from the lie of the land: dry up the slopes and hilltops, the edges of roads and
+  // yards, damp hollows (lower than the ground 4 m round), and how weedy each stretch is (clean, lawn-like stretches and
+  // weedy drifts, a few dozen metres across). Each clump's shape is drawn from the weights these give (tuftZone)
+  const zone=(x,z)=>{const h=baseHeight(x,z),sl=(Math.abs(baseHeight(x+1,z)-baseHeight(x-1,z))+Math.abs(baseHeight(x,z+1)-baseHeight(x,z-1)))/2;
+    const dry=Math.min(1,ss(0.25,0.75,sl)+0.6*ss(3,9,h)+0.7*ss(0.62,0.85,tuftNoise(x*0.09+40,z*0.09+2)));
+    const edge=Math.max(1-ss(ROAD_W/2+0.4,ROAD_W/2+2.6,Math.abs(roadOff(x,z))),ss(0.02,0.2,yardAt(x,z)));
+    let ring=0;for(let k=0;k<6;k++)ring+=baseHeight(x+Math.cos(k*1.047)*4,z+Math.sin(k*1.047)*4);
+    const damp=ss(0.1,0.45,ring/6-h)*(1-dry)*ss(0.25,0.55,tuftNoise(x*0.07+90,z*0.07+15));
+    const weedy=ss(0.3,0.75,tuftNoise(x*0.05+120,z*0.05+60)),clover=ss(0.55,0.8,tuftNoise(x*0.13+150,z*0.13+33));
+    return {h,sl,dry,edge,damp,weedy,clover}};
+  const pick=Z=>{const w=[1-0.4*Z.weedy-0.5*Z.damp,(0.05+0.18*Z.weedy)*(1-Z.dry)*(1-Z.damp)+0.08*Z.edge,(0.02+0.9*Z.clover*Z.weedy)*(1-Z.dry)*(1-Z.damp),
+      (0.01+0.2*Z.weedy)*Z.dry+0.05*Z.edge*Z.weedy,0.3*Z.edge+0.05*Z.weedy*(1-Z.dry),1.4*Z.damp];
+    let t=Math.random()*w.reduce((a,b)=>a+b,0);for(let k=0;k<w.length;k++){t-=w[k];if(t<=0)return k}return 0};
+  // the clump's green by shape (grass, broadleaf, clover, thistle, plantain, sedge)
+  const LEAF=[[0.3,0.52,0.22],[0.25,0.49,0.23],[0.22,0.47,0.24],[0.42,0.53,0.38],[0.28,0.5,0.21],[0.3,0.47,0.24]];
   let n=0;
   while(n<TUFTS){let x,z,q=0;do{x=(Math.random()-0.5)*94;z=-18+Math.random()*96}while((bad(x,z)||Math.random()>0.12+0.88*dens(x,z))&&++q<60);
-    // a little cluster of one to four clumps
-    const k=1+Math.floor(Math.pow(Math.random(),2)*4);
+    // a little cluster of one to four clumps, mostly of one kind
+    const k=1+Math.floor(Math.pow(Math.random(),2)*4),Z0=zone(x,z),kind0=pick(Z0);
     for(let m=0;m<k&&n<TUFTS;m++){const a=Math.random()*6.3,r=m?0.12+Math.random()*0.3:0,px=x+Math.cos(a)*r,pz=z+Math.sin(a)*r;if(m&&bad(px,pz))continue;
-      const h=baseHeight(px,pz),sl=(Math.abs(baseHeight(px+1,pz)-baseHeight(px-1,pz))+Math.abs(baseHeight(px,pz+1)-baseHeight(px,pz-1)))/2;
-      const dry=Math.min(1,ss(0.25,0.75,sl)+0.6*ss(3,9,h)+0.7*ss(0.62,0.85,tuftNoise(px*0.09+40,pz*0.09+2)));
-      const edge=Math.max(1-ss(ROAD_W/2+0.4,ROAD_W/2+2.6,Math.abs(roadOff(px,pz))),ss(0.02,0.2,yardAt(px,pz)));
-      const seedA=0.04+0.4*ss(0.6,0.82,tuftNoise(px*0.12+20,pz*0.12+9))+0.22*edge;
-      const fd=ss(0.62,0.8,tuftNoise(px*0.1+70,pz*0.1+30))*(1-dry),flA=0.012+0.32*fd,bdA=0.06+0.12*(1-dry)*(1-edge);
-      const u=Math.random(),kind=u<flA?3:u<flA+bdA?2:u<flA+bdA+seedA?1:0;
-      tX[n]=px;tZ[n]=pz;tK[n]=kind>>1;tR[n]=Math.random()*6.3;
-      tS[n]=(kind===2?0.75+Math.random()*0.6:kind===3?0.85+Math.random()*0.35:0.7+Math.random()*0.6)*(1+0.25*edge);
+      const Z=m?zone(px,pz):Z0,{dry,edge}=Z,kind=m&&Math.random()<0.4?pick(Z):kind0,nv=Math.random();
+      // heads: grass gone to seed in drifts and along the edges; dandelions, daisies or asters in one-colour drifts, chicory
+      // blue by the roads; clover white or pink; thistles purple; plantain and sedge seed spikes brown
+      const seedA=0.04+0.4*ss(0.6,0.82,tuftNoise(px*0.12+20,pz*0.12+9))+0.22*edge+0.25*dry,fd=ss(0.62,0.8,tuftNoise(px*0.1+70,pz*0.1+30))*(1-dry);
+      let head=null;
+      if(kind===0){if(Math.random()<seedA)head=[0.78+0.12*nv,0.76+0.06*nv,0.48-0.06*nv]}
+      else if(kind===1){if(Math.random()<0.2+0.7*fd+0.3*edge){const fl=FLW[Math.floor(hash(Math.floor(px/9),Math.floor(pz/9))*3.999)];head=edge>0.5&&Math.random()<0.5?[0.55,0.66,1]:Math.random()<0.85?fl:FLW[Math.floor(Math.random()*3)]}}
+      else if(kind===2){if(Math.random()<0.7)head=hash(Math.floor(px/7)+3,Math.floor(pz/7))<0.7?[1,0.95,0.97]:[0.95,0.55,0.72]}
+      else if(kind===3){if(Math.random()<0.8)head=[0.72,0.36+0.1*nv,0.8]}
+      else if(Math.random()<0.85)head=kind===4?[0.6,0.5,0.32]:[0.5,0.38,0.22];
+      tX[n]=px;tZ[n]=pz;tK[n]=kind;tR[n]=Math.random()*6.3;
+      tS[n]=(kind===1?0.75+Math.random()*0.6:kind===0?0.7+Math.random()*0.6:0.8+Math.random()*0.5)*(1+0.25*edge);
       // dry clumps lie lower
-      const dk=kind<2&&Math.random()<0.06+0.6*dry;tH[n]=(0.8+Math.random()*0.45)*(dk?0.7:1);
-      // the green of the ground, a touch deeper in the lush flats; dry clumps straw coloured
-      const nv=Math.random(),lush=(1-dry)*0.15;
-      let cr=(0.3+0.05*nv)*(1-lush),cg=(0.52+0.08*nv)*(1-lush*0.4),cb=(0.22+0.04*nv)*(1-lush);
-      if(kind>=2){cr*=0.82;cg*=0.95;cb*=1.05}
-      const da=dk?0.7+0.3*Math.random():kind<2?0.25*dry*Math.random():0;cr+=(DRY[0]-cr)*da;cg+=(DRY[1]-cg)*da;cb+=(DRY[2]-cb)*da;
+      const dk=kind===0&&Math.random()<0.06+0.6*dry;tH[n]=(0.8+Math.random()*0.45)*(dk?0.7:1);
+      // the green of the ground, a touch deeper in the lush flats and the damp; dry clumps straw coloured
+      const lush=(1-dry)*0.15+0.1*Z.damp,L=LEAF[kind];
+      let cr=(L[0]+0.05*nv)*(1-lush),cg=(L[1]+0.08*nv)*(1-lush*0.4),cb=(L[2]+0.04*nv)*(1-lush);
+      const da=dk?0.7+0.3*Math.random():kind!==2&&kind!==5?0.25*dry*Math.random():0;cr+=(DRY[0]-cr)*da;cg+=(DRY[1]-cg)*da;cb+=(DRY[2]-cb)*da;
       col[n*3]=cr;col[n*3+1]=cg;col[n*3+2]=cb;
-      // seed heads straw to rust; a flower drift is all one colour (yellow, white or purple), with the odd stray
-      const fl=FLW[Math.floor(hash(Math.floor(px/9),Math.floor(pz/9))*3.999)],hc=kind===3?(Math.random()<0.85?fl:FLW[Math.floor(Math.random()*3)]):[0.78+0.12*nv,0.76+0.06*nv,0.48-0.06*nv];
-      hd[n*3]=kind&1?hc[0]:-1;hd[n*3+1]=hc[1];hd[n*3+2]=hc[2];n++}}
+      hd[n*3]=head?head[0]:-1;hd[n*3+1]=head?head[1]:0;hd[n*3+2]=head?head[2]:0;n++}}
   // into the squares' meshes: count each, then give every clump a slot (in random order, so ranks spread evenly)
   const cnt=new Int32Array(TC_NX*TC_NZ*TUFT_KINDS);
   for(let n=0;n<TUFTS;n++){const cx=Math.min(TC_NX-1,Math.max(0,Math.floor((tX[n]-TC_X0)/TC_W))),cz=Math.min(TC_NZ-1,Math.max(0,Math.floor((tZ[n]-TC_Z0)/TC_W)));
@@ -170,6 +235,9 @@ function tuftPut(n,show){const im=tuftMeshes[tMi[n]];tuftDirty.add(im);tVis[n]=s
   if(!show){im.setMatrixAt(tSl[n],ZERO_M);return}
   const s=tS[n];tO.position.set(tX[n],hAt(tX[n],tZ[n])-0.02,tZ[n]);tO.rotation.set((hash(n,1.7)-0.5)*0.24,tR[n],(hash(n,4.3)-0.5)*0.24);tO.scale.set(s,s*tH[n]*tuftCutK(n),s);
   tO.updateMatrix();im.setMatrixAt(tSl[n],tO.matrix)}
+// the Grass quality setting (gfx.js): every square's meshes take that build of their shape (made the first time it is picked)
+function tuftQuality(q){q=Math.max(0,Math.min(TUFT_Q.length-1,q|0));if(q===tuftQ)return;tuftQ=q;const G=TUFT_GQ[q]||(TUFT_GQ[q]=tuftGeos(q));
+  for(const im of tuftMeshes){const g=im.geometry,sg=G[im.userData.k];for(const a of ['position','color','normal','aHead'])g.setAttribute(a,sg.attributes[a]);g.setIndex(sg.index)}}
 function tuftFlush(){for(const im of tuftDirty)im.instanceMatrix.needsUpdate=true;tuftDirty.clear()}
 function updateTufts(i0,i1,j0,j1){
   for(let n=0;n<TUFTS;n++){const i=tI[n],j=tJ[n];if(i<0)continue;if(i<i0||i>i1||j<j0||j>j1)continue;const k=j*V+i;
@@ -221,8 +289,8 @@ function grassReset(){crA.fill(0);crTex.image.data.fill(0);crTex.needsUpdate=tru
 // TU.lawnGrow). Saved with the mowing (lawnSave), so it syncs. The clumps in each cell, for the mower to find:
 // tuftsInCell(k) are tCellL[tCellS[k]] up to tCellS[k+1]
 const fcT=new Float32Array(CR_NX*CR_NZ).fill(-1e9),fcAct=[],fcIn=new Uint8Array(CR_NX*CR_NZ),tCell=new Int32Array(TUFTS),tCellS=new Int32Array(CR_NX*CR_NZ+1),tCellL=new Int32Array(TUFTS);
-// how tall each shape stands at full size (m): the grass with its seed stalks, the broadleaf with its flower
-const TUFT_HK=[0.45,0.42];
+// how tall each shape stands at full size (m), with its seed stalks or flower
+const TUFT_HK=[0.45,0.42,0.15,0.7,0.38,0.6];
 {for(let n=0;n<TUFTS;n++){const i=Math.floor((tX[n]-CR_X0)/CR_C),j=Math.floor((tZ[n]-CR_Z0)/CR_C);tCell[n]=i<0||j<0||i>=CR_NX||j>=CR_NZ?-1:j*CR_NX+i;if(tCell[n]>=0)tCellS[tCell[n]+1]++}
   for(let k=0;k<CR_NX*CR_NZ;k++)tCellS[k+1]+=tCellS[k];const at=tCellS.slice(0,-1);for(let n=0;n<TUFTS;n++)if(tCell[n]>=0)tCellL[at[tCell[n]]++]=n}
 // a clump's height (share of full): cut down to the deck's height, then growing back
@@ -248,9 +316,9 @@ function fieldGrow(dt){if(!fcAct.length||(fcGrowT-=dt)>0)return;fcGrowT=1;
 function fieldSave(){const b=new Uint8Array(fcAct.length*3);let m=0;
   for(const k of fcAct){const a=lawn.t-fcT[k];if(a>=TU.lawnWait+TU.lawnGrow)continue;b[m++]=k&255;b[m++]=k>>8;b[m++]=1+Math.round(Math.max(0,a)/(TU.lawnWait+TU.lawnGrow)*254)}
   let bin='';for(let q=0;q<m;q++)bin+=String.fromCharCode(b[q]);return btoa(bin)}
-function fieldLoad(str){if(typeof str!=='string')return;let b;try{b=atob(str)}catch(e){return}
+function fieldLoad(str,away){if(typeof str!=='string')return;let b;try{b=atob(str)}catch(e){return}
   for(let q=0;q+2<b.length;q+=3){const k=b.charCodeAt(q)|b.charCodeAt(q+1)<<8;if(k>=fcT.length)continue;
-    fcT[k]=lawn.t-(b.charCodeAt(q+2)-1)/254*(TU.lawnWait+TU.lawnGrow);if(!fcIn[k]){fcIn[k]=1;fcAct.push(k)}fcRedraw(k)}
+    fcT[k]=lawn.t-(b.charCodeAt(q+2)-1)/254*(TU.lawnWait+TU.lawnGrow)-(away||0);if(!fcIn[k]){fcIn[k]=1;fcAct.push(k)}fcRedraw(k)}
   tuftFlush()}
 // every clump stands up at the start
 // each tuft's dig-grid point, or -1 off the grid; again when the grid moves (the lawn patch's are cleared by mower.js)

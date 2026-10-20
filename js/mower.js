@@ -210,7 +210,8 @@ function lawnSaved(g,n){const out=[];
 lawnLayout();
 // the lawn is saved in this browser so it is still mowed after a reload: two bytes a grass cell, how long ago it was cut on the
 // lawn clock (0 full grown) and the heading it was mown in (its grain), plus the mowing time, the mower's spot and the wall-clock time of the save.
-// Grass grows while the game runs, not while it is closed. Written at most every 2 s while it changes and when the page is hidden
+// Grass keeps growing while the game is closed: on load the cut grass (and the field grass, fieldLoad) is older by the
+// time since the save (up to a week). Written at most every 2 s while it changes and when the page is hidden
 const LAWN_KEY='bhd_lawn';let mwSaved=null;
 function lawnSave(){if(window.syncHold||typeof bench!=='undefined'&&bench.on)return;lawn.sDirty=false;lawn.saveT=performance.now();const b=new Uint8Array(LAWN_ON*2);
   for(let c=0;c<LAWN_ON;c++){const n=lawnCells[c],a=lawn.t-lawn.ct[n];if(lawn.dug[n]||a>=(TU.lawnWait+TU.lawnGrow))continue;
@@ -221,13 +222,13 @@ function lawnSave(){if(window.syncHold||typeof bench!=='undefined'&&bench.on)ret
     mw:{x:+mw.x.toFixed(2),z:+mw.z.toFixed(2),yaw:+mw.yaw.toFixed(3)}}))}catch(e){}}
 function lawnLoad(){let d=null;try{d=JSON.parse(localStorage.getItem(LAWN_KEY))}catch(e){}
   if(!d||(d.v!==2&&d.v!==3&&d.v!==4)||typeof d.cells!=='string')return;let b;try{b=atob(d.cells)}catch(e){return}
-  const L=lawnSaved(d.v===4?d.g:null,d.n);let cut=0;
+  const L=lawnSaved(d.v===4?d.g:null,d.n),away=isFinite(d.t)?Math.min(604800,Math.max(0,(Date.now()-d.t)/1000)):0;let cut=0;
   if(L&&b.length===d.n*2)for(let e=0;e<L.length;e+=2){const n=L[e],o=L[e+1],a=b.charCodeAt(o*2);if(!a)continue;
-    lawn.ct[n]=lawn.t-(a-1)/254*(TU.lawnWait+TU.lawnGrow);const q=b.charCodeAt(o*2+1);
+    lawn.ct[n]=lawn.t-(a-1)/254*(TU.lawnWait+TU.lawnGrow)-away;const q=b.charCodeAt(o*2+1);
     lawn.ga[n]=d.v>=3?q/255*Math.PI*2:q>=128?Math.PI/4:Math.PI*1.25;lawn.str[n]=Math.max(-1,Math.min(1,(Math.cos(lawn.ga[n])+Math.sin(lawn.ga[n]))*0.8));lawn.gd[n]=lawnG(n);lawnSet(n);cut++}
   if(cut){for(let j=0;j<=LAWN_NZ;j++)for(let i=0;i<=LAWN_NX;i++)lawnVert(i,j);lawnShade(0,LAWN_NX-1,0,LAWN_NZ-1);lawn.mDirty=lawn.cDirty=lawn.gDirty=lawn.mapDirty=true}
   if(cut&&d.el>0){const now=performance.now();lawn.startT=now-d.el*1000;if(d.done){lawn.done=true;lawn.doneT=now}}
-  lawnCount();if(lawn.pct>=0.97)lawn.done=true;fieldLoad(d.field);
+  lawnCount();if(lawn.pct>=0.97)lawn.done=true;fieldLoad(d.field,away);
   if(d.mw&&isFinite(d.mw.x)&&isFinite(d.mw.z)&&isFinite(d.mw.yaw))mwSaved=d.mw}
 try{lawnLoad()}catch(e){lawn.ct.fill(-1e9);lawn.gd.fill(1);lawn.str.fill(0);lawn.ga.fill(0);mwSaved=null;try{localStorage.removeItem(LAWN_KEY)}catch(e2){}}
 addEventListener('pagehide',lawnSave);

@@ -182,6 +182,21 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
   .tbar button,#menuBtn{height:40px}#menuBtn{width:40px}.tacts>button{height:36px}
   .bbar{min-height:34px}#mini{width:calc(96px*var(--ms));height:calc(96px*var(--ms));border-radius:14px}}
 #updBtn{position:absolute;left:50%;top:22%;transform:translateX(-50%);z-index:6;background:var(--gas);color:#1c1309;border:0;height:48px;font-size:18px;white-space:nowrap;border-radius:24px;box-shadow:var(--lift)}
+/* the lawn gauge: a small glass chip at the top middle while you are on a lawn patch, green once it is done */
+#lawnChip{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 12px);transform:translateX(-50%);z-index:3;zoom:var(--ms);min-width:170px;box-sizing:border-box;
+  display:grid;grid-template-columns:1fr auto;align-items:baseline;gap:5px 12px;padding:8px 14px 9px;border-radius:14px;background:var(--glass);border:1px solid var(--hud-line);box-shadow:var(--lift);pointer-events:none}
+#lawnChip[hidden]{display:none}
+#lawnChipName{font:600 13px/1 var(--f-display);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+#lawnChipVal{font:700 22px/1 var(--f-display);font-variant-numeric:tabular-nums}
+#lawnChip .bar{grid-column:1/-1;display:block}#lawnChipBar{background:#9bd46a}
+#lawnChip.done #lawnChipVal{color:var(--ok)}#lawnChip.done #lawnChipBar{background:var(--ok)}
+@container stage (max-width:640px){#lawnChip{top:calc(env(safe-area-inset-top,0px) + 64px)}}
+/* the site map's Lawns list: a row per patch, name, share and a meter */
+#lawnList{display:flex;flex-direction:column;gap:6px}
+#lawnList .lwrow{height:auto;display:grid;grid-template-columns:1fr auto;gap:6px 10px;align-items:baseline;padding:9px 12px;text-align:left;font:600 17px/1 var(--f-display)}
+#lawnList .lwrow b{font-variant-numeric:tabular-nums}
+#lawnList .lwrow>i{grid-column:1/-1;display:block;height:4px;border-radius:2px;background:rgba(255,255,255,.12);overflow:hidden}
+#lawnList .lwrow>i>i{display:block;height:100%;background:#9bd46a}
 #toast{position:absolute;left:0;right:0;top:30%;display:flex;justify-content:center}
 #toast span{font:700 20px/1.25 var(--f-display);letter-spacing:.03em;background:var(--hud);border:1px solid var(--hud-line);border-left:4px solid var(--machine);padding:10px 16px;border-radius:12px;text-align:center;max-width:80%;opacity:0;transform:translateY(6px);transition:opacity .25s,transform .25s;box-shadow:var(--lift)}
 #toast span.show{opacity:1;transform:none}
@@ -636,6 +651,8 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
   </footer>
   <div id="benchBar" hidden></div>
   <button id="heatKey" hidden title="Tap to change what the heatmap shows"><b id="heatName"></b><i id="heatBar"></i><span><span id="heatLo"></span><span id="heatHi"></span></span></button>
+  <!-- the lawn patch you are on (on foot or mowing): its name, share mowed and a meter (lawns.js) -->
+  <div id="lawnChip" hidden><span id="lawnChipName">Lawn</span><b id="lawnChipVal">0%</b><i class="bar"><i id="lawnChipBar"></i></i></div>
   <div id="toast"><span id="toastText"></span></div>
   <button id="updBtn" hidden></button>
 </div>
@@ -743,6 +760,7 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
         <div id="tpOpts" hidden><span>Go there:</span><button data-tp="foot">On foot</button><button data-tp="ex">Excavator</button><button data-tp="truck">Dump truck</button><button data-tp="mow">Mower</button><button data-tp="skid">Skid steer</button><button id="tpCancel">Cancel</button></div>
       </div>
       <section class="mapsec"><h3>Places</h3><div id="mapPlaces" role="group" aria-label="Show a place on the map"></div></section>
+      <section class="mapsec"><h3>Lawns</h3><div id="lawnList" role="group" aria-label="Lawn patches: how much of each is mowed"></div></section>
       <section class="mapsec"><h3>Layers</h3>
         <div id="trailBar" role="group" aria-label="Trails: where you have walked and driven"><span>Trails</span></div>
         <div id="trailKey" hidden><i></i><span><span>Less</span><span id="trailHi"></span></span></div>
@@ -871,7 +889,7 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
       <dt id="hkRightStick">Right stick</dt><dd id="hdRightStick">Left curls the bucket in (scoop), right dumps. Push up for boom down, pull for boom up.</dd>
       <dt id="hkDrive">Drive</dt><dd id="hdDrive">In the excavator, the Drive / Dig switch over the right stick (or Enter) flips between driving: the left stick moves the tracks, and digging: the sticks run the arm. It digs anywhere on Corley's, down the bank and in the beach sand to the water's edge.</dd>
       <dt id="hkTruck">Truck</dt><dd id="hdTruck">Swing a full bucket over the truck bed and dump. It starts parked on the dirt road that loops the mesa. Tap Truck to drive it: left stick steers and gives gas, right stick raises the bed. Pull back to brake; hold it at a stop to shift into reverse. A full load is heavy: it pulls slowly, stops long and leans in turns. Back up to the cliff edge and dump it over to haul it off, or take the ramp down the scarp and dump it in the Lower Bench yard.</dd>
-      <dt id="hkMow">Mow</dt><dd id="hdMow">A patch of tall grass grows north of the trench, with a zero-turn mower parked beside it. Tap Mow: each stick is a lap bar. Left stick up/down drives the left wheel, right stick up/down the right wheel. Both up goes straight, one up and one back spins it in place; the left stick sideways also turns it. On a keyboard, W and S drive it straight and A and D turn it; the number pad works the lap bars: 8 and 2 both forward or back, 4 and 6 spin in place, 7 and 1 the left bar, 9 and 3 the right bar. The blades run in Mow mode. Each pass lays the grass over the way you drove: it looks light when you look the same way and dark when you look against it, so the stripes swap as you walk around. The grass grows back: about a minute after a pass it starts coming up, and in about five minutes it is tall again, so a lawn left too long needs mowing again. Your mowing is saved with the rest of the site (it only grows while the game runs), and Reset leaves it mowed.</dd>
+      <dt id="hkMow">Mow</dt><dd id="hdMow">A patch of tall grass grows north of the trench, with a zero-turn mower parked beside it. Tap Mow: each stick is a lap bar. Left stick up/down drives the left wheel, right stick up/down the right wheel. Both up goes straight, one up and one back spins it in place; the left stick sideways also turns it. On a keyboard, W and S drive it straight and A and D turn it; the number pad works the lap bars: 8 and 2 both forward or back, 4 and 6 spin in place, 7 and 1 the left bar, 9 and 3 the right bar. The blades run in Mow mode. Each pass lays the grass over the way you drove: it looks light when you look the same way and dark when you look against it, so the stripes swap as you walk around. The grass grows back: about a minute after a pass it starts coming up, and in about five minutes it is tall again, so a lawn left too long needs mowing again. Your mowing is saved with the rest of the site (it only grows while the game runs), and Reset leaves it mowed. The mower cuts the field grass too, and the grass is split into lawns where the roads cross it (the tall grass, the Mesa top, West and East lawns): while you are on one, on foot or mowing, a small gauge at the top shows its name and how much is mowed, and the site map labels every lawn with its share and lists them under Lawns.</dd>
       <dt id="hkSoil">Soil</dt><dd id="hdSoil">Dark topsoil, then red clay that holds a steep wall. Sand means the gas main is close, and it slumps. Grey rock is past trench depth and slow going. Dug dirt fluffs up about a quarter, so it fills the truck faster than the hole it came from.</dd>
       <dt id="hkCaveIns">Cave-ins</dt><dd id="hdCaveIns">Walls deeper than about 5 ft, or with spoil piled within 2 ft of the edge, cave in after a while. Dirt trickling off the lip means get the bucket out.</dd>
       <dt id="hkGroundwater">Groundwater</dt><dd id="hdGroundwater">Below about 6 ft the hole meets the water table and slowly fills with muddy water. Dirt dug from under it comes up as mud: it sticks in the bucket and truck bed, and wet spoil bogs the truck and slows the tracks. Tap Pump (or P) to dewater the hole.</dd>
@@ -1154,7 +1172,7 @@ const GUI_FONTS=['"Barlow Condensed","Arial Narrow",system-ui,sans-serif','"Barl
   '"Arial Narrow",Arial,sans-serif','Verdana,sans-serif','"Trebuchet MS",sans-serif','Georgia,serif','Impact,"Arial Black",sans-serif','"Courier New",monospace'];
 // parts that are usually hidden until the game needs them, shown on request so they can be styled
 const GUI_PEEK=[['#menu','Menu'],['#help','Start card'],['#blkBar','Blocks bar'],['#walkBtns','Sprint and Jump'],['#seatBtn','Get in'],['#pumpBtn','Pump'],['#wipeBtn','Wipers'],
-  ['#boxBtn','Hook box'],['#lawnRow','Lawn gauge'],['#heatKey','Heatmap key'],['#updBtn','Update button'],['#keysBox','Keys panel'],['#ctrlsBox','Controls panel'],['#ctlMenu','Drive list'],['#gfxBox','Graphics panel']];
+  ['#boxBtn','Hook box'],['#lawnRow','Lawn gauge'],['#lawnChip','Lawn patch gauge'],['#heatKey','Heatmap key'],['#updBtn','Update button'],['#keysBox','Keys panel'],['#ctrlsBox','Controls panel'],['#ctlMenu','Drive list'],['#gfxBox','Graphics panel']];
 // ready-made groups (selector, name), picked from the Groups tab and then edited like any part
 const GUI_GROUPS=[['#hud button','Every button on the screen'],['.tbar button','Top bar buttons'],['#ctlMenu button','Machine buttons'],['.bbar button','Bottom bar buttons'],
   ['#menu button','Menu buttons'],['#blkBar button','Blocks bar buttons'],['.tbar, .bbar','The two bars'],['.srow','Gauges'],['.lbl','Gauge names'],
