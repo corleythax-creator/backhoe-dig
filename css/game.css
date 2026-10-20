@@ -147,6 +147,21 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
   .tbar button,#menuBtn{height:40px}#menuBtn{width:40px}.tacts>button{height:36px}
   .bbar{min-height:34px}#mini{width:calc(96px*var(--ms));height:calc(96px*var(--ms));border-radius:14px}}
 #updBtn{position:absolute;left:50%;top:22%;transform:translateX(-50%);z-index:6;background:var(--gas);color:#1c1309;border:0;height:48px;font-size:18px;white-space:nowrap;border-radius:24px;box-shadow:var(--lift)}
+/* the lawn gauge: a small glass chip at the top middle while you are on a lawn patch, green once it is done */
+#lawnChip{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 12px);transform:translateX(-50%);z-index:3;zoom:var(--ms);min-width:170px;box-sizing:border-box;
+  display:grid;grid-template-columns:1fr auto;align-items:baseline;gap:5px 12px;padding:8px 14px 9px;border-radius:14px;background:var(--glass);border:1px solid var(--hud-line);box-shadow:var(--lift);pointer-events:none}
+#lawnChip[hidden]{display:none}
+#lawnChipName{font:600 13px/1 var(--f-display);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+#lawnChipVal{font:700 22px/1 var(--f-display);font-variant-numeric:tabular-nums}
+#lawnChip .bar{grid-column:1/-1;display:block}#lawnChipBar{background:#9bd46a}
+#lawnChip.done #lawnChipVal{color:var(--ok)}#lawnChip.done #lawnChipBar{background:var(--ok)}
+@media (max-width:640px){#lawnChip{top:calc(env(safe-area-inset-top,0px) + 64px)}}
+/* the site map's Lawns list: a row per patch, name, share and a meter */
+#lawnList{display:flex;flex-direction:column;gap:6px}
+#lawnList .lwrow{height:auto;display:grid;grid-template-columns:1fr auto;gap:6px 10px;align-items:baseline;padding:9px 12px;text-align:left;font:600 17px/1 var(--f-display)}
+#lawnList .lwrow b{font-variant-numeric:tabular-nums}
+#lawnList .lwrow>i{grid-column:1/-1;display:block;height:4px;border-radius:2px;background:rgba(255,255,255,.12);overflow:hidden}
+#lawnList .lwrow>i>i{display:block;height:100%;background:#9bd46a}
 #toast{position:absolute;left:0;right:0;top:30%;display:flex;justify-content:center}
 #toast span{font:700 20px/1.25 var(--f-display);letter-spacing:.03em;background:var(--hud);border:1px solid var(--hud-line);border-left:4px solid var(--machine);padding:10px 16px;border-radius:12px;text-align:center;max-width:80%;opacity:0;transform:translateY(6px);transition:opacity .25s,transform .25s;box-shadow:var(--lift)}
 #toast span.show{opacity:1;transform:none}

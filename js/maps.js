@@ -99,6 +99,7 @@ function drawMap(cv,cx,cz,mpp,big){
   g.save();g.translate(X(TB.x),Y(TB.z));g.rotate(-TB.yaw);g.fillStyle='#d8a514';g.fillRect(-BX_W/2*sc-1,-BX_L/2*sc,BX_W*sc+2,BX_L*sc);g.restore();
   if(lawn.mapDirty||!lawnMap){updateLawnMap();lawn.mapDirty=false}
   g.drawImage(lawnMap,X(LAWN_X0),Y(LAWN_Z0),LAWN_NX*LAWN_GS*sc,LAWN_NZ*LAWN_GS*sc);
+  if(big)lawnsDraw(g,X,Y,sc,dpr);
   g.fillStyle='#b9b6ae';for(const b of blocks)g.fillRect(X(b.x-b.w/2),Y(b.z-b.d/2),Math.max(2,b.w*sc),Math.max(2,b.d*sc));
   if(big&&S*sc>40){g.strokeStyle='rgba(255,255,255,.4)';g.lineWidth=1.5*dpr;g.setLineDash([4*dpr,4*dpr]);g.strokeRect(X(GX0),Y(GZ0),S*sc,S*sc);g.setLineDash([]);}
   if(big){g.textAlign='center';g.textBaseline='middle';g.lineJoin='round';const fs=Math.max(12,Math.min(22,10+sc/dpr*4));
