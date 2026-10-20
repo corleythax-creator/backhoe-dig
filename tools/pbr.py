@@ -48,6 +48,24 @@ def make(mid):
     print(f"{mid:16s} relief {k:<4} roughness {lo:.2f}-{hi:.2f} (mean {r.mean():.2f})")
 
 
-if __name__ == '__main__':
-    for mid in (sys.argv[1:] or PBR):
+# the natural ground's relief (High graphics): textures/ground/dirt_n.jpg and grass_n.jpg at 1024 px, from the High
+# ground pack's colour textures (no sheen map; the ground has its own wet look). Run: python3 tools/pbr.py ground
+GROUND = {'dirt': (1.2, 4, .80, .95), 'grass': (1.0, 3, .80, .95)}
+
+
+def make_ground():
+    for n, v in GROUND.items():
+        mid = 'ground/high/' + n
+        PBR[mid] = v
         make(mid)
+        Image.open(os.path.join(TEX, mid + '_n.jpg')).resize((1024, 1024), Image.LANCZOS).save(os.path.join(TEX, 'ground', n + '_n.jpg'), quality=86, optimize=True)
+        os.remove(os.path.join(TEX, mid + '_n.jpg'))
+        os.remove(os.path.join(TEX, mid + '_r.jpg'))
+
+
+if __name__ == '__main__':
+    if sys.argv[1:] == ['ground']:
+        make_ground()
+    else:
+        for mid in (sys.argv[1:] or PBR):
+            make(mid)

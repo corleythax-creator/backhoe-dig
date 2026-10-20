@@ -218,7 +218,9 @@ function treeLayout(){const o=new THREE.Object3D(),n=TREE_SP.map(()=>0);
     const g=treeAheadNow>0?treeGrowK(k,sp.h*a.s*(a.sy||1),treeAheadNow):1;
     o.position.set(a.x,a.y-0.05,a.z);o.rotation.set((w-0.5)*0.06,a.yaw,(w2-0.5)*0.06);o.scale.set(a.s*g,a.s*(a.sy||1)*g,a.s*g);o.updateMatrix();
     sp.all.setMatrixAt(n[k],o.matrix);sp.col.set(a.c,n[k]*3);n[k]++}
-  TREE_SP.forEach((sp,k)=>{sp.all.count=n[k];sp.all.instanceMatrix.needsUpdate=true});treeLodDirty=true}
+  TREE_SP.forEach((sp,k)=>{sp.all.count=n[k];sp.all.instanceMatrix.needsUpdate=true});treeLodDirty=true;
+  // the undergrowth round them (brush.js, loaded next)
+  if(typeof brushLayout==='function')brushLayout()}
 // lay the trees out again when the date has moved a month or more from what they were grown to (or back to today);
 // true if it did. dn (daynight.js) and shpTreesRefresh (shadowproxy.js) load later and are only read here
 function treeRegrow(){const y=Math.max(0,(dn.t-Date.now())/TREE_YR);if(Math.abs(y-treeAheadNow)<1/12&&!(y===0&&treeAheadNow>0))return false;
