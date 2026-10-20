@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-20T03:46:00Z",
+ "updated": "2026-10-20T03:53:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -30,9 +30,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-19",
-   "dh": 161.2,
+   "dh": 161.7,
    "act": 6.5,
-   "versions": 24
+   "versions": 25
   }
  ],
  "extra": [
@@ -1599,6 +1599,15 @@ window.EFFORT = {
    "tris": 3280371,
    "chars": 1132129,
    "what": "Playing VR through a PC (Quest Link, Air Link, Virtual Desktop, SteamVR) keeps your Graphics setting, no foveation, full-size eye buffer; the Quest browser keeps Low."
+  },
+  {
+   "v": 174,
+   "asked": "2026-10-19T22:58:00-05:00",
+   "live": "2026-10-19T22:53:10-05:00",
+   "dh": 0.5,
+   "tris": 3279782,
+   "chars": 1133191,
+   "what": "Graphics panel gets an In VR level (Low, Medium, High) used inside the Meta Quest browser; Low unless picked."
   }
  ]
 };
