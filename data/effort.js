@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-20T02:12:00Z",
+ "updated": "2026-10-20T02:29:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -30,9 +30,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-19",
-   "dh": 126.7,
+   "dh": 136.7,
    "act": 5,
-   "versions": 17
+   "versions": 18
   }
  ],
  "extra": [
@@ -1536,6 +1536,15 @@ window.EFFORT = {
    "tris": 3061639,
    "chars": 1107353,
    "what": "The excavator becomes a detailed 3D model loaded from a file: steel track shoes round a toothed sprocket and idler, rollers, louvred hood, handrails, shaped boom, stick and bucket with real teeth, and a full cab inside (seat, joysticks, travel levers, pedals, display, roof window); the cab view sits back in the seat so the cab frames the view. Graphics > Machine models switches it (Simple on Low)"
+  },
+  {
+   "v": 167,
+   "asked": "2026-10-19T21:05:00-05:00",
+   "live": "2026-10-19T21:29:18-05:00",
+   "dh": 10,
+   "tris": 3061943,
+   "chars": 1110499,
+   "what": "Complete UI redesign: no more black bars; floating pro-sim glass HUD, grouped menu, new type and panels"
   }
  ]
 };
