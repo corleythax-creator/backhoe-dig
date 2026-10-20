@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-20T03:12:00Z",
+ "updated": "2026-10-20T03:46:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -30,9 +30,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-19",
-   "dh": 160.7,
-   "act": 6,
-   "versions": 23
+   "dh": 161.2,
+   "act": 6.5,
+   "versions": 24
   }
  ],
  "extra": [
@@ -1590,6 +1590,15 @@ window.EFFORT = {
    "tris": 3279286,
    "chars": 1131786,
    "what": "VR turns smoothly on foot (tunable, or snap steps at 0) and holds a steady 72 Hz when you look round: foveated edges, a lighter eye buffer, the dash panel and rain cover drawn only when needed."
+  },
+  {
+   "v": 173,
+   "asked": "2026-10-19T22:40:00-05:00",
+   "live": "2026-10-19T22:46:20-05:00",
+   "dh": 0.5,
+   "tris": 3280371,
+   "chars": 1132129,
+   "what": "Playing VR through a PC (Quest Link, Air Link, Virtual Desktop, SteamVR) keeps your Graphics setting, no foveation, full-size eye buffer; the Quest browser keeps Low."
   }
  ]
 };
