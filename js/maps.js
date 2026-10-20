@@ -103,7 +103,7 @@ function drawMap(cv,cx,cz,mpp,big){
   if(big&&S*sc>40){g.strokeStyle='rgba(255,255,255,.4)';g.lineWidth=1.5*dpr;g.setLineDash([4*dpr,4*dpr]);g.strokeRect(X(GX0),Y(GZ0),S*sc,S*sc);g.setLineDash([]);}
   if(big){g.textAlign='center';g.textBaseline='middle';g.lineJoin='round';const fs=Math.max(12,Math.min(22,10+sc/dpr*4));
     for(const [t,x,z,k] of MAP_LABELS){if(t==='DIG SITE'&&S*sc<40)continue;if(t==="CORLEY'S ISLAND"&&S*sc>=40)continue;
-      g.font=`800 ${Math.round(fs*k*dpr)}px Saira Condensed, sans-serif`;g.lineWidth=4*dpr;g.strokeStyle='rgba(12,16,12,.75)';g.strokeText(t,X(x),Y(z));g.fillStyle='#f6f3e8';g.fillText(t,X(x),Y(z))}}
+      g.font=`700 ${Math.round(fs*k*dpr)}px "Barlow Condensed", sans-serif`;g.lineWidth=4*dpr;g.strokeStyle='rgba(12,16,12,.75)';g.strokeText(t,X(x),Y(z));g.fillStyle='#f6f3e8';g.fillText(t,X(x),Y(z))}}
   const icon=(x,z,ang,fill,len,wid,active)=>{g.save();g.translate(X(x),Y(z));g.rotate(ang);
     const L=Math.max(len*sc,big?18*dpr:10*dpr),Wd=Math.max(wid*sc,big?12*dpr:7*dpr);
     if(active){g.beginPath();g.arc(0,0,L*0.95,0,Math.PI*2);g.fillStyle='rgba(255,255,255,.28)';g.fill();g.strokeStyle='rgba(255,255,255,.85)';g.lineWidth=1.5*dpr;g.stroke()}
@@ -129,10 +129,10 @@ function drawMap(cv,cx,cz,mpp,big){
     g.beginPath();g.moveTo(px-r*1.6,py);g.lineTo(px+r*1.6,py);g.moveTo(px,py-r*1.6);g.lineTo(px,py+r*1.6);g.stroke()}
   // north badge, and on the big map a scale bar in feet
   const nb=big?34*dpr:26*dpr,nx=big?12*dpr:W-nb-4*dpr,ny=big?12*dpr:4*dpr;g.fillStyle='rgba(20,23,19,.78)';g.beginPath();g.roundRect?g.roundRect(nx,ny,nb,nb,6*dpr):g.rect(nx,ny,nb,nb);g.fill();
-  g.fillStyle='#f3f5ef';g.font=`800 ${(big?19:16)*dpr}px Saira Condensed, sans-serif`;g.textAlign='center';g.textBaseline='middle';g.fillText('N',nx+nb/2,ny+nb/2+dpr);
+  g.fillStyle='#f3f5ef';g.font=`700 ${(big?19:16)*dpr}px "Barlow Condensed", sans-serif`;g.textAlign='center';g.textBaseline='middle';g.fillText('N',nx+nb/2,ny+nb/2+dpr);
   if(big){const ftpx=FT*sc,want=130*dpr/ftpx,step=[25,50,100,200,250,500,1000,2000,2500,5000].find(v=>v>=want*0.6)||5000,len=step*ftpx,bx=W-len-16*dpr,by=H-18*dpr;
     g.fillStyle='rgba(20,23,19,.78)';g.fillRect(bx-10*dpr,by-26*dpr,len+20*dpr,36*dpr);g.fillStyle='#f3f5ef';g.fillRect(bx,by,len,3*dpr);g.fillRect(bx,by-6*dpr,2*dpr,9*dpr);g.fillRect(bx+len-2*dpr,by-6*dpr,2*dpr,9*dpr);
-    g.font=`700 ${15*dpr}px Saira Condensed, sans-serif`;g.textBaseline='alphabetic';g.fillText(step>=1000?`${(step/5280).toFixed(step%5280?2:0)} mi · ${step.toLocaleString()} ft`:`${step} ft`,bx+len/2,by-8*dpr)}
+    g.font=`700 ${15*dpr}px "Barlow Condensed", sans-serif`;g.textBaseline='alphabetic';g.fillText(step>=1000?`${(step/5280).toFixed(step%5280?2:0)} mi · ${step.toLocaleString()} ft`:`${step} ft`,bx+len/2,by-8*dpr)}
 }
 // ---------- the big map's view: pan, zoom, places ----------
 const MAP_PLACES=[['Whole map',0,104,null],['Dig site',0,8,90],['Family Island',FAM_X,FAM_Z,200],["Jessica's",JES_X,JES_Z,120],["Dexter's",DEX_X,DEX_Z,120],
