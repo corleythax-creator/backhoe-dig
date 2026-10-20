@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-20T01:29:00Z",
+ "updated": "2026-10-20T02:12:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -30,9 +30,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-19",
-   "dh": 108.7,
-   "act": 4.5,
-   "versions": 16
+   "dh": 126.7,
+   "act": 5,
+   "versions": 17
   }
  ],
  "extra": [
@@ -1527,6 +1527,15 @@ window.EFFORT = {
    "tris": 3033464,
    "chars": 1100118,
    "what": "New Ultra graphics level for strong PCs: soft contact shade where things meet the ground, a glow round bright light and a camera-like colour grade, all tunable on the Tuning tab (Screen effects); three.js moved up from r128 to r147"
+  },
+  {
+   "v": 166,
+   "asked": "2026-10-19T20:30:00-05:00",
+   "live": "2026-10-19T21:12:39-05:00",
+   "dh": 18,
+   "tris": 3061639,
+   "chars": 1107353,
+   "what": "The excavator becomes a detailed 3D model loaded from a file: steel track shoes round a toothed sprocket and idler, rollers, louvred hood, handrails, shaped boom, stick and bucket with real teeth, and a full cab inside (seat, joysticks, travel levers, pedals, display, roof window); the cab view sits back in the seat so the cab frames the view. Graphics > Machine models switches it (Simple on Low)"
   }
  ]
 };
