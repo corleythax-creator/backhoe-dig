@@ -22,9 +22,15 @@ const GFX={
 GFX.ultra=Object.assign({},GFX.high,{name:'Ultra',tuftQ:3,ao:true,bloom:true,grade:true,treeR:220});
 let gfxKey='high',gfxOver={},gfxCur=Object.assign({},GFX.high);
 function gfxName(){return GFX[gfxKey].name+(Object.keys(gfxOver).length?' (custom)':'')}
-function gfxGuess(){if(PHONE||/OculusBrowser|Quest/.test(navigator.userAgent))return 'low';
+function gfxGuess(){if(PHONE||IS_QUEST)return 'low';
   try{const gl=renderer.getContext(),ext=gl.getExtension('WEBGL_debug_renderer_info'),r=ext?gl.getParameter(ext.UNMASKED_RENDERER_WEBGL):'';if(/intel/i.test(r))return 'med'}catch(e){}
   return 'high'}
+// the Meta Quest's own browser draws VR on the headset's chip: it has its own level (bhd_vrq, Low unless picked) that
+// replaces the setting while in the headset; through a PC the player's setting stays
+const IS_QUEST=/OculusBrowser|Quest/.test(navigator.userAgent);
+function vrGfxKey(){let k=null;try{k=localStorage.getItem('bhd_vrq')}catch(e){}return k==='med'||k==='high'?k:'low'}
+function vrGfxPick(k){try{localStorage.setItem('bhd_vrq',k)}catch(e){}vrGfxSync()}
+function vrGfxSync(){$('#vrGfxRow').hidden=!IS_QUEST;document.querySelectorAll('[data-vq]').forEach(b=>{b.setAttribute('aria-pressed',b.dataset.vq===vrGfxKey());b.onclick=()=>vrGfxPick(b.dataset.vq)})}
 // the preset with the panel's changes on top, put into effect
 function gfxApply(){const g=gfxCur=Object.assign({},GFX[gfxKey],gfxOver);
   // resolution cap (the auto resolution works under it); a preset stops at the screen's own, a picked one may go past it
@@ -139,7 +145,7 @@ for(const r of GFX_ROWS){
 // the panel shows the settings in effect, marks the ones changed from the preset, and the preset (or Custom)
 function gfxPanelSync(){
   document.querySelectorAll('[data-g]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.g===gfxKey&&!Object.keys(gfxOver).length));
-  $('#gfxMenuBtn').textContent=`Graphics: ${gfxName()}`;
+  $('#gfxMenuBtn').textContent=`Graphics: ${gfxName()}`;vrGfxSync();
   $('#gfxCustom').hidden=!Object.keys(gfxOver).length;
   for(const r of GFX_ROWS){if(Array.isArray(r))continue;const row=gfxList.querySelector(`[data-id="${r.id}"]`),v=gfxGet(r.id);
     const ti=r.id==='tuftA'?0:r.id==='tuftR'?1:-1,ch=r.id==='dirt'?false:ti>=0?!!gfxOver.tuft&&gfxOver.tuft[ti]!==GFX[gfxKey].tuft[ti]:r.id in gfxOver;row.classList.toggle('changed',ch);

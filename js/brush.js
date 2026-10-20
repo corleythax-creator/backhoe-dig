@@ -1,6 +1,6 @@
 // Corley's Island: undergrowth, the leafy shrubs and young growth round the trees, so a wood's edge reads as a thicket
 // and not trunks on a lawn. They are built from the trees' own photo leaf cards (trees.js) in three shapes, a low
-// mound, a round shrub and a tall leggy one, share the leaf material (and its breeze), and take an autumn tint near
+// mound, a round shrub and a tall leggy one, share the leaf texture, sway from the ground up in the same wind, and take an autumn tint near
 // their tree's. Where they go comes from each tree's spot (a hash), so every device puts the same ones in the same
 // places, and they are laid out again whenever the trees are (treeLayout, which the map editor calls on edits). Only
 // natural ground gets them: not on painted materials, roads, steep drops or water. The Graphics setting's Undergrowth
@@ -9,6 +9,8 @@
 const BRUSH_CAP=7000;let brushK=1;
 // the leaf texture is grey and takes these as [r, g, b] multipliers, as the trees' tints are
 const BRUSH_TINT=[[0.55,0.72,0.28],[0.42,0.6,0.25],[0.7,0.7,0.3],[0.95,0.72,0.25],[0.85,0.42,0.18],[0.6,0.66,0.26]];
+// the leaf material swaying from just above the ground, leaning more and fluttering harder than a tree's crown
+const brushMat=treeFolMat(0.08,7,0.05);
 const brushIMs=(function(){const out=[];
   // [seed, clumps, radius across, height, card size, needles share]
   for(const [seed,n,R,H,sz,nd] of [[901,22,0.85,0.55,0.55,0],[902,30,0.75,1.05,0.6,0.15],[903,26,0.55,1.6,0.55,0.3]]){
@@ -16,7 +18,7 @@ const brushIMs=(function(){const out=[];
     for(let i=0;i<n;i++){const a=K.rnd()*Math.PI*2,r=Math.sqrt(K.rnd()),h=Math.pow(K.rnd(),0.8);
       const p=new V(Math.cos(a)*R*r,0.12+h*H*(1-0.35*r*r),Math.sin(a)*R*r),nrm=p.clone().sub(c).setY((p.y-c.y)*0.6+0.25).normalize();
       K.clump(p,sz*(0.75+0.5*K.rnd())*(1-0.25*h),K.rnd()<nd?FOL_UV.needles:FOL_UV.leaves,nrm,0.55+0.45*h)}
-    const g=K.done().fol,im=new THREE.InstancedMesh(g,treeMats.fol,BRUSH_CAP);im.count=0;im.frustumCulled=false;im.receiveShadow=true;im.castShadow=false;
+    const g=K.done().fol,im=new THREE.InstancedMesh(g,brushMat,BRUSH_CAP);im.count=0;im.frustumCulled=false;im.receiveShadow=true;im.castShadow=false;
     im.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(BRUSH_CAP*3),3);scene.add(im);out.push(im)}
   return out})();
 // the undergrowth round every tree that stands, from the tree groups (trees.js)

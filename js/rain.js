@@ -273,8 +273,10 @@ function rainFxTick(dt){dnTick(dt);const r=weather.r,v=Math.max(ss(0,0.6,r),0.75
   rainVeil.position.set(c.x,c.y,c.z);rainVeilMat.uniforms.uT.value=(rainVeilMat.uniforms.uT.value+dt)%1000;rainVeilMat.uniforms.uA.value=0.5*ss(0.1,0.8,r);rainVeilMat.uniforms.uC.value.copy(scene.fog.color)}
 // the shelter map is drawn just before each frame (main.js), so the cabs it holds are where the machines are now
 // while it rains, every frame; while things drip after it, once a second (for the eaves, below)
-let rcNext=0;
+let rcNext=0,rcSkip=0;
 function rainCover(){if(!(rsMesh||rainLines&&!rainLines.userData.off))return;const now=performance.now(),due=rsMesh&&now>=rcNext;
+  // a headset draws the scene twice already: there the cover map is redrawn every third frame (and when it is read)
+  if(weather.r>0.03&&!due&&renderer.xr.isPresenting&&++rcSkip%3)return;
   if(weather.r>0.03||wetAll>0.08&&due){rcRender();if(due){rcNext=now+1000;rcRead()}}}
 
 // ---------- everything gets wet ----------
