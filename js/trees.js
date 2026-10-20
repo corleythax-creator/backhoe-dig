@@ -19,19 +19,39 @@ const treeTex=(()=>{const L=new THREE.TextureLoader(),T=(n,wrap)=>{const t=L.loa
     t.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());return t};
   // read as they are, like the game's other textures (no sRGB decode), so they sit with the rest of the scene
   return{bark:T('tree_bark',1),birch:T('tree_birch',1),fol:T('tree_leaves'),folA:T('tree_leaves_a'),barkN:null,birchN:null}})();
-// the breeze: the whole tree leans and the leaf cards flutter, more the higher up (the wood leans with them)
-function treeSwayShader(mat,flutter){mat.onBeforeCompile=sh=>{sh.uniforms.uWind=treeWindU;sh.uniforms.uDayK=dayKU;sh.uniforms.uSway=treeSwayU;
-  sh.vertexShader='uniform float uWind;\nuniform float uSway;\n'+sh.vertexShader.replace('#include <begin_vertex>',`#include <begin_vertex>
+// the breeze: the whole plant leans downwind and the leaf cards flutter, more the higher above base (m) they are (the
+// wood leans with them). treeGustU (1 calm, up to 3 in a storm) and treeWDU, the wind's way (x, z), follow the
+// weather's wind (rain.js) in treesTick; lean scales the lean and fl the flutter
+const treeGlowU={value:1},treeGustU={value:1},treeWDU={value:new THREE.Vector2(0.8,0.6)},treeSunV={value:new THREE.Vector3(0,1,0)};
+const TREE_A2C=renderer.capabilities.isWebGL2;
+function treeSwayShader(mat,flutter,base,lean,fl){base=base===undefined?1:base;lean=lean||1;fl=fl||0.03;
+  mat.customProgramCacheKey=()=>`sway${flutter?1:0}|${base}|${lean}|${fl}`;
+  mat.onBeforeCompile=sh=>{Object.assign(sh.uniforms,{uWind:treeWindU,uDayK:dayKU,uSway:treeSwayU,uGust:treeGustU,uWD:treeWDU,uSunV:treeSunV,uSunVis:skySunVis,uGlow:treeGlowU});
+  const f=n=>n.toFixed(4);
+  sh.vertexShader='uniform float uWind;\nuniform float uSway;\nuniform float uGust;\nuniform vec2 uWD;\nvarying vec3 vLfV;\n'+sh.vertexShader.replace('#include <begin_vertex>',`#include <begin_vertex>
 #ifdef USE_INSTANCING
-  float twPh=uWind+dot(instanceMatrix[3].xz,vec2(0.37,0.23)),twH=max(transformed.y-1.0,0.0)*uSway;
-  transformed.x+=(sin(twPh*1.3)+0.4*sin(twPh*2.9))*0.011*twH*twH*0.25;transformed.z+=cos(twPh*1.1)*0.008*twH*twH*0.25;
-  ${flutter?'transformed.xyz+=uSway*0.03*min(twH,1.0)*vec3(sin(twPh*4.3+position.x*2.1+position.y*1.3),0.5*sin(twPh*5.1+position.y*1.9),sin(twPh*3.9+position.z*2.3));':''}
-#endif`);
-  // light through the leaves: a little of their own colour glows, so a crown against the sun isn't a black cut-out
-  if(flutter)sh.fragmentShader='uniform float uDayK;\n'+sh.fragmentShader.replace('#include <emissivemap_fragment>','#include <emissivemap_fragment>\n  totalEmissiveRadiance+=diffuseColor.rgb*0.22*uDayK;')}}
+  // the wind's way in the plant's own (turned) frame, so every plant leans the same way on the ground
+  vec3 twW=vec3(uWD.x,0.0,uWD.y),twL=normalize(vec3(dot(instanceMatrix[0].xyz,twW),dot(instanceMatrix[1].xyz,twW),dot(instanceMatrix[2].xyz,twW))+1e-5);
+  float twPh=uWind+dot(instanceMatrix[3].xz,vec2(0.37,0.23)),twH=max(transformed.y-${f(base)},0.0)*uSway;
+  float twG=uGust*(0.75+0.25*sin(twPh*0.31+1.7)),twA=(sin(twPh*1.3)+0.4*sin(twPh*2.9)+0.5*twG)*0.0028*${f(lean)}*twH*twH*twG;
+  transformed.x+=twA*twL.x+cos(twPh*1.1)*0.002*${f(lean)}*twH*twH*twL.z;transformed.z+=twA*twL.z-cos(twPh*1.1)*0.002*${f(lean)}*twH*twH*twL.x;
+  ${flutter?`transformed.xyz+=uSway*${f(fl)}*twG*min(twH,1.0)*vec3(sin(twPh*4.3+position.x*2.1+position.y*1.3),0.5*sin(twPh*5.1+position.y*1.9),sin(twPh*3.9+position.z*2.3));`:''}
+#endif`).replace('#include <project_vertex>','#include <project_vertex>\nvLfV=-mvPosition.xyz;');
+  if(!flutter)return;
+  // light through the leaves: a little of their own colour always glows, so a crown against the sky isn't a black
+  // cut-out, and much more where the sun is behind them (looking toward it through the leaves)
+  sh.fragmentShader='uniform float uDayK;\nuniform float uGlow;\nuniform vec3 uSunV;\nuniform float uSunVis;\nvarying vec3 vLfV;\n'+sh.fragmentShader.replace('#include <emissivemap_fragment>',`#include <emissivemap_fragment>
+  totalEmissiveRadiance+=diffuseColor.rgb*uDayK*(0.18+0.75*uGlow*uSunVis*pow(max(dot(normalize(-vLfV),uSunV),0.0),4.0));`);
+  // soft leaf edges: with antialiasing the edge's alpha becomes coverage, sharpened to about a pixel so it neither
+  // shimmers nor smears (WebGL 2; elsewhere the plain cut-out)
+  if(TREE_A2C)sh.fragmentShader=sh.fragmentShader.replace('#include <alphatest_fragment>','diffuseColor.a=clamp((diffuseColor.a-0.45)/max(fwidth(diffuseColor.a)*1.4,1e-4)+0.5,0.0,1.0);\n#include <alphatest_fragment>')}}
+// the leaf material: the photo cards with soft edges (alpha to coverage) where the GPU can; base, lean and flutter as
+// treeSwayShader takes them (the undergrowth has its own, brush.js)
+function treeFolMat(base,lean,fl){const m=new THREE.MeshLambertMaterial({map:treeTex.fol,alphaMap:treeTex.folA,alphaTest:TREE_A2C?0.02:0.45,
+  alphaToCoverage:TREE_A2C,vertexColors:true});treeSwayShader(m,true,base,lean,fl);return m}
 const treeMats=(()=>{
   const wood=map=>{const m=new THREE.MeshPhongMaterial({map,shininess:4,specular:0x080808});treeSwayShader(m,false);return m};
-  const fol=new THREE.MeshLambertMaterial({map:treeTex.fol,alphaMap:treeTex.folA,alphaTest:0.45,vertexColors:true});treeSwayShader(fol,true);
+  const fol=treeFolMat(1,1,0.03);
   return{bark:wood(treeTex.bark),birch:wood(treeTex.birch),fol}})();
 // bark relief on High graphics (the pbr setting), its normal map fetched the first time
 function treePbr(on){for(const [k,n] of [['bark','tree_bark_n'],['birch','tree_birch_n']]){const m=treeMats[k];
@@ -231,7 +251,11 @@ function treeEntry(t,x,z,yaw,s,c,sy){const w=hash(x*1.3+0.7,z*2.1+0.3),w2=hash(z
   else{const p=ASSET_LT[(c|0)%6],v=0.9+0.2*w2;col=k===4?[p[0]*v*1.05,(p[1]*0.8+0.2)*v,p[2]*v*0.85]:[p[0]*v,p[1]*v,p[2]*v]}
   return{t,x,z,y:baseHeight(x,z),yaw,s,sy:sy||treeSy(t,x,z),c:col}}
 // every frame: the breeze, and when the camera has moved a few metres, which trees get the full model
-function treesTick(dt){const sw=TU.treeSway===undefined?1:TU.treeSway;treeWindU.value+=dt*(0.6+0.4*Math.min(2,sw));treeSwayU.value=sw;
+function treesTick(dt){const sw=TU.treeSway===undefined?1:TU.treeSway;
+  // the weather's wind (rain.js, m/s with its gusts) sets how hard and which way; the clock runs faster in a blow
+  if(typeof rainWind!=='undefined'){const w=rainWind.length();treeGustU.value=Math.min(3,1+0.3*w);if(w>0.05)treeWDU.value.set(rainWind.x/w,rainWind.y/w)}
+  treeWindU.value+=dt*(0.6+0.4*Math.min(2,sw))*(0.8+0.2*treeGustU.value);treeSwayU.value=sw;treeGlowU.value=TU.treeGlow;
+  treeSunV.value.copy(SUN_DIR).transformDirection(camera.matrixWorldInverse);
   const cx=camera.position.x,cz=camera.position.z;if(!treeLodDirty&&Math.hypot(cx-treeLodX,cz-treeLodZ)<Math.max(4,treeNearR*0.06))return;
   treeLodDirty=false;treeLodX=cx;treeLodZ=cz;const R2=treeNearR*treeNearR;
   for(const sp of TREE_SP){const A=sp.all.instanceMatrix.array,C=sp.col,parts=[[sp.hi,0],[sp.lo,0]];
