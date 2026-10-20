@@ -61,6 +61,10 @@ const TUNE=[
   ['pbrRelief','Ground look','Relief: how deep the bumps in gravel, brick and concrete look',1,'pct',0,300,5],
   ['pbrSheen','Ground look','Sheen: how strong the glints on wet and shiny ground are',1,'pct',0,300,5],
   ['pbrRain','Ground look','Extra sheen while it rains',1,'pct',0,400,5],
+  ['fxAo','Screen effects','Shade where things meet and in hollows (Ultra)',1,'pct',0,200,5],['fxAoR','Screen effects','How far that shade reaches',1.6,'ft',0.5,10,0.25],
+  ['fxBloom','Screen effects','Glow round bright light (Ultra)',0.2,'pct',0,200,5],['fxBloomThr','Screen effects','How bright light must be to glow',0.88,'pct',40,99,1],
+  ['fxCon','Screen effects','Contrast of the colour grade (Ultra)',0.3,'pct',0,100,5],['fxSat','Screen effects','Colour strength of the grade',0.97,'pct',50,150,1],
+  ['fxVig','Screen effects','Darker corners (vignette)',0.22,'pct',0,80,2],
   ['pbrFar','Ground look','Relief fades out by',180*0.3048,'ft',60,600,10],
   ['treeSway','Trees','How much the trees sway in the breeze',1,'pct',0,400,5],
   // how the clock runs (☰ menu, Time) and how dark the night gets
