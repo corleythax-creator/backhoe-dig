@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-20T22:12:00Z",
+ "updated": "2026-10-20T22:20:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -36,9 +36,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-20",
-   "dh": 5,
+   "dh": 14,
    "act": 0.5,
-   "versions": 1
+   "versions": 2
   }
  ],
  "extra": [
@@ -1623,6 +1623,15 @@ window.EFFORT = {
    "tris": 3281694,
    "chars": 1143196,
    "what": "Each lawn keeps its own mowed share; a small lawn gauge while you are on one; lawns labelled and listed on the site map"
+  },
+  {
+   "v": 176,
+   "asked": "2026-10-19T22:10:00-05:00",
+   "live": "2026-10-20T17:20:05-05:00",
+   "dh": 9,
+   "tris": 4367473,
+   "chars": 1151938,
+   "what": "Mowed grass grows back while the game is closed; clover, thistle, plantain and sedge grow by area; Graphics has a Grass quality setting."
   }
  ]
 };
