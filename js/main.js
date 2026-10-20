@@ -199,7 +199,7 @@ function frame(now){
     gv.style.color=st.strikes?'var(--danger)':st.exposed?'var(--ok)':'';
   }
   // flying dirt
-  particlesTick(dt);dustTick(dt);grimeTick();
+  particlesTick(dt);dustTick(dt);grimeTick();mdlTick(dt);
   // groundwater, the tailgate stream and the dirt sounds
   digTilesTick(dt);if(!bench.on)waterTick(dt);mudTick(dt);rainTick(dt);grassTick(dt);jesTick(dt);mainTick(dt);treesTick(dt);plantTick();
   pourStream(streams[1],tr.pourP,hAt(tr.pourP.x,tr.pourP.z),tr.pourRate,tr.loadC,now/1000);
@@ -235,7 +235,7 @@ function frame(now){
     else if(mode==='mow')fpEye(mower,0,1.42,0.02,0,-1.32,4.48);
     else if(mode==='walk'){const p=fpl.pitch,fx=Math.sin(wk.view),fz=Math.cos(wk.view);camera.position.set(wk.x+fx*0.1,wk.y+WK_H-0.12+wkBody.position.y,wk.z+fz*0.1);
       look.set(camera.position.x+fx*Math.cos(p)*5,camera.position.y+Math.sin(p)*5,camera.position.z+fz*Math.cos(p)*5)}
-    else fpEye(house,-0.72,2.2,0.5,0.62,-2.6,5.5);
+    else fpEye(house,-0.72,2.15,0.3,0.45,-1.75,5.5);
     camera.lookAt(look); firstCam=true;
   }
   fpTick(dt);
