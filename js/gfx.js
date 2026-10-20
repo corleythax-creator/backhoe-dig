@@ -1,4 +1,4 @@
-// Corley's Island: the Graphics setting (☰ menu, then Graphics): Low for phones, Medium for laptops, High for desktop PCs,
+// Corley's Island: the Graphics setting (☰ menu, then Graphics): Low for phones, Medium for laptops, High for desktop PCs, Ultra for strong ones,
 // and under them every setting on its own to play with. Each device keeps its own choice. The first time, it picks from
 // the device: phones get Low, Intel graphics Medium, anything else High. Changing one setting makes it Custom: the preset
 // with those changes on top (bhd_gfxc); picking a preset again clears them.
@@ -10,11 +10,15 @@
 // shadow edges, filmic lighting, exp brightness, tex texture size, base ground texture, detail cut faces, painted
 // materials and machine grime, macro large-scale variation, pbr relief and wet sheen on materials that have those maps, aniso, tuft grass blades [amount, full-detail distance m,
 // fade-out distance m, share kept far off], lawnFar lawn full detail within m, fog haze distance, wmFine fine puddle
-// water, treeR full-detail tree distance m, rainN raindrops, rainSp splashes where they land, splashN drops in a puddle splash, wakeN boat wake marks drawn, dirt the Dirt detail it sets when picked
+// water, treeR full-detail tree distance m, rainN raindrops, rainSp splashes where they land, splashN drops in a puddle splash, wakeN boat wake marks drawn, dirt the Dirt detail it sets when picked,
+// ao bloom grade the screen effects (post.js)
 const GFX={
-  low:{name:'Low',pr:1.5,auto:true,fps:0,fov:0,sh:1024,shR:22,soft:false,filmic:false,exp:1,tex:'low',detail:0,base:1,macro:false,pbr:false,aniso:4,dirt:1,lawnFar:6,fog:1,wmFine:false,rainN:600,rainSp:160,splashN:250,wakeN:140,treeR:45,tuft:[0.6,12,40,0.2]},
-  med:{name:'Medium',pr:1.5,auto:true,fps:0,fov:0,sh:2048,shR:32,soft:false,filmic:true,exp:1,tex:'med',detail:1,base:1,macro:false,pbr:false,aniso:8,dirt:2,lawnFar:15,fog:1,wmFine:true,rainN:1500,rainSp:400,splashN:600,wakeN:300,treeR:90,tuft:[0.85,18,60,0.3]},
-  high:{name:'High',pr:2,auto:true,fps:0,fov:0,sh:4096,shR:45,soft:true,filmic:true,exp:1,tex:'high',detail:1,base:1,macro:true,pbr:true,aniso:16,dirt:4,lawnFar:1e9,fog:1,wmFine:true,rainN:3000,rainSp:900,splashN:1200,wakeN:640,treeR:160,tuft:[1,25,80,0.35]}};
+  low:{name:'Low',pr:1.5,auto:true,fps:0,fov:0,sh:1024,shR:22,soft:false,filmic:false,exp:1,tex:'low',detail:0,base:1,macro:false,pbr:false,aniso:4,dirt:1,lawnFar:6,fog:1,wmFine:false,rainN:600,rainSp:160,splashN:250,wakeN:140,ao:false,bloom:false,grade:false,treeR:45,tuft:[0.6,12,40,0.2]},
+  med:{name:'Medium',pr:1.5,auto:true,fps:0,fov:0,sh:2048,shR:32,soft:false,filmic:true,exp:1,tex:'med',detail:1,base:1,macro:false,pbr:false,aniso:8,dirt:2,lawnFar:15,fog:1,wmFine:true,rainN:1500,rainSp:400,splashN:600,wakeN:300,ao:false,bloom:false,grade:false,treeR:90,tuft:[0.85,18,60,0.3]},
+  high:{name:'High',pr:2,auto:true,fps:0,fov:0,sh:4096,shR:45,soft:true,filmic:true,exp:1,tex:'high',detail:1,base:1,macro:true,pbr:true,aniso:16,dirt:4,lawnFar:1e9,fog:1,wmFine:true,rainN:3000,rainSp:900,splashN:1200,wakeN:640,ao:false,bloom:false,grade:false,treeR:160,tuft:[1,25,80,0.35]}};
+// Ultra: High with the screen effects (post.js) and trees in full detail farther out; for strong PC graphics only, never
+// picked by itself
+GFX.ultra=Object.assign({},GFX.high,{name:'Ultra',ao:true,bloom:true,grade:true,treeR:220});
 let gfxKey='high',gfxOver={},gfxCur=Object.assign({},GFX.high);
 function gfxName(){return GFX[gfxKey].name+(Object.keys(gfxOver).length?' (custom)':'')}
 function gfxGuess(){if(PHONE||/OculusBrowser|Quest/.test(navigator.userAgent))return 'low';
@@ -43,6 +47,8 @@ function gfxApply(){const g=gfxCur=Object.assign({},GFX[gfxKey],gfxOver);
   // puddles: a finer water surface with sky reflections, or a 1 ft one without (water.js); the water itself is the same
   if(WM_K!==(g.wmFine?1:GRID_K))wmSet(g.wmFine);
   mudGfx(g.wmFine);
+  // the screen effects: shade where things meet, glow, colour grade (post.js)
+  postGfx(g.ao,g.bloom,g.grade);
   // raindrops drawn (rain.js); the rain itself is the same
   rainGfx(g.rainN,g.rainSp);
   // drops in the splash when something goes through a puddle (mud.js); the puddle itself is the same
@@ -80,6 +86,10 @@ const GFX_ROWS=[
   {id:'filmic',label:'Filmic lighting',hint:'Camera-like light and colour. Off is plainer and faster.',opts:onOff},
   {id:'exp',label:'Brightness',min:0.6,max:1.4,step:0.05,fmt:v=>`${Math.round(v*100)}%`},
   {id:'fog',label:'Haze distance',hint:'How far you see before the air turns hazy.',min:0.4,max:2,step:0.1,fmt:v=>`${(760*v*FT_M/5280).toFixed(1)} mi`},
+  ['Screen effects'],
+  {id:'ao',label:'Contact shade',hint:'Soft shade where things meet the ground and in hollows (ambient occlusion). Costs a strong graphics card.',opts:onOff},
+  {id:'bloom',label:'Glow',hint:'A soft glow round the sun, lamps and bright glints.',opts:onOff},
+  {id:'grade',label:'Colour grade',hint:'Camera-like contrast and colour, with slightly darker corners. Adjust them on the screen editor\'s Tuning tab (Screen effects).',opts:onOff},
   ['Textures'],
   {id:'tex',label:'Texture size',hint:'Ground and machine textures. Bigger is sharper and uses more memory.',opts:[['low','512'],['med','1024'],['high','2048']]},
   {id:'base',label:'Ground texture',hint:'Grass and dirt detail on the ground.',opts:[[1,'On'],[0,'Off']]},

@@ -908,4 +908,4 @@ function editorFrame(dt,now){
   if(now-(ed.viewT||0)>200){ed.viewT=now;const t=viewText()+' · '+viewCode();if(t!==ed.viewS){ed.viewS=t;$('#edStatView').textContent=t}}
   sun.position.set(ed.x,fy,ed.z).addScaledVector(LIGHT_DIR,SUN_D);sun.target.position.set(ed.x,fy,ed.z);
   timeU.value=now/1000;updateSound(dt);
-  shadowProxyTick();lawnLod();tuftLod();renderer.render(scene,camera)}
+  shadowProxyTick();lawnLod();tuftLod();postRender()}

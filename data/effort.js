@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-19T21:55:00Z",
+ "updated": "2026-10-20T01:29:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -30,9 +30,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-19",
-   "dh": 98.7,
-   "act": 4,
-   "versions": 15
+   "dh": 108.7,
+   "act": 4.5,
+   "versions": 16
   }
  ],
  "extra": [
@@ -1518,6 +1518,15 @@ window.EFFORT = {
    "tris": 3033010,
    "chars": 1088062,
    "what": "Play in VR on a Meta Quest: sit in the cab and look round for real, walk the island on foot, Touch controllers drive every machine, a dashboard panel in front of you."
+  },
+  {
+   "v": 165,
+   "asked": "2026-10-19T19:25:00-05:00",
+   "live": "2026-10-19T20:29:21-05:00",
+   "dh": 10,
+   "tris": 3033464,
+   "chars": 1100118,
+   "what": "New Ultra graphics level for strong PCs: soft contact shade where things meet the ground, a glow round bright light and a camera-like colour grade, all tunable on the Tuning tab (Screen effects); three.js moved up from r128 to r147"
   }
  ]
 };
