@@ -23,7 +23,7 @@ const GUI_SCOPES=[{k:'all',n:'Every screen',q:[]},{k:'phone',n:'Phones and small
 const GUI_VARS=[['--machine','Accent (machine orange)','c'],['--gas','Highlight (hazard yellow)','c'],['--ink','Text','c'],['--muted','Labels and dim text','c'],
   ['--ok','Good (green)','c'],['--danger','Warning (red)','c'],['--bar','Bars background','c'],['--hud','Panels background','c'],['--hud-line','Divider lines','c'],
   ['--f-display','Headings and numbers font','f'],['--f-body','Body text font','f']];
-const GUI_FONTS=['"Saira Condensed","Arial Narrow",system-ui,sans-serif','"Saira",system-ui,sans-serif','system-ui,sans-serif','Arial,Helvetica,sans-serif',
+const GUI_FONTS=['"Barlow Condensed","Arial Narrow",system-ui,sans-serif','"Barlow",system-ui,sans-serif','system-ui,sans-serif','Arial,Helvetica,sans-serif',
   '"Arial Narrow",Arial,sans-serif','Verdana,sans-serif','"Trebuchet MS",sans-serif','Georgia,serif','Impact,"Arial Black",sans-serif','"Courier New",monospace'];
 // parts that are usually hidden until the game needs them, shown on request so they can be styled
 const GUI_PEEK=[['#menu','Menu'],['#help','Start card'],['#blkBar','Blocks bar'],['#walkBtns','Sprint and Jump'],['#seatBtn','Get in'],['#pumpBtn','Pump'],['#wipeBtn','Wipers'],

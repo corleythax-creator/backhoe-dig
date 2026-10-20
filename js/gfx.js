@@ -161,7 +161,7 @@ function gfxDraw(){const cv=gfxGraph,dpr=devicePixelRatio||1,w=cv.clientWidth,h=
   let t=0,n=0,sum=0;const fps=[];
   for(let k=1;k<=gfxFTn&&t<GRAPH_S*1000;k++){const ms=GFX_FT[(gfxFTi-k+GFX_FT.length)%GFX_FT.length];if(ms<=0)continue;t+=ms;const f=1000/ms;fps.push([t,f]);sum+=ms;n++}
   for(const [ft,f] of fps){const x=w-ft/(GRAPH_S*1000)*w,bw=Math.max(1,w*(1000/f)/(GRAPH_S*1000));g.fillStyle=col(f);g.fillRect(Math.floor(x),y(f),Math.ceil(bw)+1,h-y(f))}
-  g.font='600 13px Saira, sans-serif';g.textBaseline='bottom';
+  g.font='600 13px Barlow, sans-serif';g.textBaseline='bottom';
   for(const L of [30,60]){g.strokeStyle='rgba(243,245,239,.55)';g.setLineDash([4,4]);g.lineWidth=1;g.beginPath();g.moveTo(0,y(L)+0.5);g.lineTo(w,y(L)+0.5);g.stroke();
     g.fillStyle='rgba(243,245,239,.8)';g.fillText(String(L),4,y(L)-2)}
   g.setLineDash([]);
