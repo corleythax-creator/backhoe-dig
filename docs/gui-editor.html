@@ -435,6 +435,7 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
 .edowncard input:not([type=range]):not([type=file]),.edowncard select{flex:1 1 90px;min-width:0;font:600 15px/1.2 var(--f-display);padding:4px 6px;border-radius:5px;border:1px solid rgba(255,255,255,.25);background:#1d1a16;color:inherit}
 .edowncard input[type=number]{max-width:80px}
 .edmat i.dirt{background:linear-gradient(135deg,#8a6a3f,#6e5232 60%,#9a7a4a)}.edmat i.grass{background:linear-gradient(135deg,#6a9a40,#4a7a30)}
+.edmat i.tall{background:repeating-linear-gradient(100deg,#7fa64a 0 3px,#4d7a2c 3px 6px),#5d8a36}.edmat i.notall{background:linear-gradient(135deg,#7fa64a,#4d7a2c);position:relative}.edmat i.notall::after{content:'';position:absolute;inset:0;background:linear-gradient(45deg,transparent 45%,#c0392b 45% 55%,transparent 55%)}
 .edmat i.nat{background:linear-gradient(135deg,#5b8a3a,#4a7a30 60%,#8a6a3f)}
 #editor button.edmat[aria-pressed="true"]{background:var(--machine);color:#1c1309}
 #editor .row button[aria-pressed="true"]{background:var(--machine);color:#1c1309}
@@ -718,13 +719,13 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
     <div id="edInfo" class="edpanel" hidden></div>
     <div id="edOpts" class="edpanel">
       <span id="edSub" class="edsub row" role="group" aria-label="Tool"></span>
-      <span class="edopt" data-for="raise lower flatten smooth dirt grass paint add" data-place="scatter"><label for="edSize">Brush</label><input id="edSize" type="range" min="1" max="40" step="1"><output id="edSizeV"></output></span>
+      <span class="edopt" data-for="raise lower flatten smooth dirt grass tall notall paint add" data-place="scatter"><label for="edSize">Brush</label><input id="edSize" type="range" min="1" max="40" step="1"><output id="edSizeV"></output></span>
       <span class="edopt" data-for="raise lower flatten smooth dirt grass"><label for="edStr">Strength</label><input id="edStr" type="range" min="1" max="10" step="1"><output id="edStrV"></output></span>
       <span class="edshape row" data-for="paint" role="group" aria-label="Brush shape"><button class="sm" data-s="round" aria-pressed="true">Round</button><button class="sm" data-s="sq" aria-pressed="false">Square</button></span>
       <span class="ededge row" data-for="paint" role="group" aria-label="Brush edge"><button class="sm" data-e="hard" aria-pressed="true">Hard edge</button><button class="sm" data-e="soft" aria-pressed="false">Soft edge</button></span>
       <span id="edSoftOpt" class="edopt" data-for="paint" hidden><label for="edSoft">Softness</label><input id="edSoft" type="range" min="10" max="100" step="5"><output id="edSoftV"></output></span>
       <span class="eddug row" data-for="paint" role="group" aria-label="Dug ground"><button class="sm" data-k="level" aria-pressed="true">Level dug ground</button><button class="sm" data-k="keep" aria-pressed="false">Keep dug shape</button></span>
-      <span class="edpicked" data-for="paint dirt grass"><b id="edMatV"></b></span>
+      <span class="edpicked" data-for="paint dirt grass tall notall"><b id="edMatV"></b></span>
       <span class="edpicked" data-for="add">Adding <b id="edKindV"></b></span>
       <span id="edPlace" class="row" data-for="add" role="group" aria-label="How to place"><button class="sm" data-p="one">One</button><button class="sm" data-p="stamp">Stamp</button><button class="sm" data-p="line">Line</button><button class="sm" data-p="scatter">Scatter</button></span>
       <span class="edopt" data-for="add" data-place="line scatter"><label for="edGap">Spacing</label><input id="edGap" type="range" min="1" max="60" step="1"><output id="edGapV"></output></span>
@@ -814,6 +815,8 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
     <h1>Graphics</h1>
     <div class="gseg gpre"><button data-g="low">Low</button><button data-g="med">Medium</button><button data-g="high">High</button><button data-g="ultra">Ultra</button></div>
     <p class="devline">Low for phones, Medium for laptops, High for desktop PCs. Change anything below to make it your own<span id="gfxCustom" hidden> (now <b>Custom</b>: changed settings are marked)</span>. Saved on this device.</p>
+    <div id="vrGfxRow" hidden><p class="devline"><b>In VR</b> (Meta Quest browser): the level used while you are in the headset. Low keeps every frame smooth; try Medium or High if it stays smooth. Your setting above comes back when you leave VR.</p>
+      <div class="gseg" id="vrGfxSeg"><button data-vq="low">Low</button><button data-vq="med">Medium</button><button data-vq="high">High</button></div></div>
     <p id="gfxStats" class="gstats" aria-live="off"></p>
     <p id="gfxMem" class="gstats" aria-live="off" title="An estimate: what the game asks the GPU to hold. Browsers do not report the real figure."></p>
     <div class="ggraph"><canvas id="gfxGraph" aria-label="Frame rate over the last 10 seconds"></canvas><p id="gfxGraphCap" class="devline"></p></div>
@@ -985,17 +988,19 @@ const TUNE=[
   // only drawn on High graphics (Graphics → Material relief); how the ground looks, not what it does, so every device may use the same numbers
   ['pbrRelief','Ground look','Relief: how deep the bumps in gravel, brick and concrete look',1,'pct',0,300,5],
   ['pbrSheen','Ground look','Sheen: how strong the glints on wet and shiny ground are',1,'pct',0,300,5],
-  ['pbrRain','Ground look','Extra sheen while it rains',1,'pct',0,400,5],
+  ['pbrRain','Ground look','Extra sheen while it rains',1,'pct',0,400,5],['pbrGround','Ground look','Relief: how bumpy the natural dirt and grass look',0.9,'pct',0,300,5],
   ['fxAo','Screen effects','Shade where things meet and in hollows (Ultra)',1,'pct',0,200,5],['fxAoR','Screen effects','How far that shade reaches',1.6,'ft',0.5,10,0.25],
   ['fxBloom','Screen effects','Glow round bright light (Ultra)',0.2,'pct',0,200,5],['fxBloomThr','Screen effects','How bright light must be to glow',0.88,'pct',40,99,1],
   ['fxCon','Screen effects','Contrast of the colour grade (Ultra)',0.3,'pct',0,100,5],['fxSat','Screen effects','Colour strength of the grade',0.97,'pct',50,150,1],
   ['fxVig','Screen effects','Darker corners (vignette)',0.22,'pct',0,80,2],
   ['pbrFar','Ground look','Relief fades out by',180*0.3048,'ft',60,600,10],
-  ['treeSway','Trees','How much the trees sway in the breeze',1,'pct',0,400,5],
+  ['treeSway','Trees','How much the trees and undergrowth sway in the breeze',1,'pct',0,400,5],['treeGlow','Trees','How much sunlight shines through the leaves',1,'pct',0,300,5],
   // how the clock runs (☰ menu, Time) and how dark the night gets
   ['dayLen','Day and night','A whole day (24 hours) passes in',2880,'min',2,1440,1],
   ['nightLight','Day and night','Moonlight and starlight at night',1,'pct',0,400,5],
-  ['lampLight','Day and night','Headlights, lamps and lit windows',1,'pct',0,300,5]];
+  ['lampLight','Day and night','Headlights, lamps and lit windows',1,'pct',0,300,5],
+  // VR headset (vr.js): how the right stick turns you on foot
+  ['vrTurn','VR','Turn speed on foot with the right stick (0 = 30° snap steps)',120*Math.PI/180,'deg',0,360,5]];
 // unit: [shown = code value × factor, label]
 const TUNE_U={mph:[1/0.44704,'mph'],ft:[1/0.3048,'ft'],deg:[180/Math.PI,'°/s'],yd3:[1.307951,'yd³'],pct:[100,'%'],s:[1,'s'],min:[1/60,'min'],in:[1/0.0254,'in']};
 const tuneShow=(e,v)=>v*TUNE_U[e[4]][0];
@@ -1092,7 +1097,8 @@ const WORDS=[
   ['edTip_raise','Map editor','Raise: hold and drag on the ground to lift it.'],['edTip_lower','Map editor','Lower: hold and drag on the ground to take it down.'],
   ['edTip_flatten','Map editor','Flatten: hold and drag to level the ground to the height where you start.'],['edTip_smooth','Map editor','Smooth: hold and drag to even out bumps.'],
   ['edTip_paint','Map editor','Hold and drag to lay the material. Natural ground takes it back up; digging cuts through it.'],
-  ['edTip_dirt','Map editor','Hold and drag to paint worked dirt.'],['edTip_grass','Map editor','Hold and drag to paint grass, over the dirt yards too.'],
+  ['edTip_dirt','Map editor','Hold and drag to paint worked dirt.'],['edTip_grass','Map editor','Hold and drag to paint grass, over the dirt yards too.'],['edTip_tall','Map editor','Hold and drag to grow tall grass to mow. It grows back after mowing.'],['edTip_notall','Map editor','Hold and drag to take tall grass away.'],
+  ['edTallFull','Map editor','That is as much tall grass as the island holds (about 8,300 sq ft, within {ft} ft each way). Take some away to paint more.'],
   ['edTip_select','Map editor','Tap to pick. Shift-tap or a long press picks more; drag on empty ground (Box select on touch) to pick many; drag a picked one to move them all, its ring to turn or size them; the arrow keys nudge, H hides, L locks.'],
   ['edTip_plant','Map editor','Tap the ground to plant the picked tree; it grows with ☰ Time, Date. Planted sets how many years ago it went in. Dig up (or Alt and a tap) takes one of yours out.'],
   ['edTip_add','Map editor','Tap the ground to place it; keep holding to drag it into place. Then it is picked, to turn or size it.'],

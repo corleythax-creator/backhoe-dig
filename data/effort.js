@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-20T02:29:00Z",
+ "updated": "2026-10-20T03:53:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -30,9 +30,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-19",
-   "dh": 136.7,
-   "act": 5,
-   "versions": 18
+   "dh": 161.7,
+   "act": 6.5,
+   "versions": 25
   }
  ],
  "extra": [
@@ -1545,6 +1545,69 @@ window.EFFORT = {
    "tris": 3061943,
    "chars": 1110499,
    "what": "Complete UI redesign: no more black bars; floating pro-sim glass HUD, grouped menu, new type and panels"
+  },
+  {
+   "v": 168,
+   "asked": "2026-10-19T21:20:00-05:00",
+   "live": "2026-10-19T21:39:23-05:00",
+   "dh": 1,
+   "tris": 3062727,
+   "chars": 1112112,
+   "what": "Things picked in the map editor are shaded orange, so you can see what is selected."
+  },
+  {
+   "v": 169,
+   "asked": "2026-10-19T21:20:00-05:00",
+   "live": "2026-10-19T21:42:16-05:00",
+   "dh": 10,
+   "tris": 3267550,
+   "chars": 1118080,
+   "what": "Leafy shrubs in greens, olive, gold and rust now grow round the edges of every tree, so woods read as thickets (Graphics > Undergrowth; fewer on Low). On High and Ultra the natural dirt and grass get relief that catches the sun, tunable on the Tuning tab (Ground look)"
+  },
+  {
+   "v": 170,
+   "asked": "2026-10-19T21:25:00-05:00",
+   "live": "2026-10-19T22:00:15-05:00",
+   "dh": 7,
+   "tris": 3280397,
+   "chars": 1127621,
+   "what": "Paint the tall grass you mow anywhere in the map editor (Tall grass and No tall grass in Paint), up to about 8,300 sq ft."
+  },
+  {
+   "v": 171,
+   "asked": "2026-10-19T21:20:00-05:00",
+   "live": "2026-10-19T22:01:48-05:00",
+   "dh": 4,
+   "tris": 3280365,
+   "chars": 1130463,
+   "what": "Leaves and undergrowth get soft see-through edges instead of hard cut-outs, glow where the sun shines through them, and sway downwind with the weather's gusts (harder in a storm); shrubs now move from the ground up. Tunable on the Tuning tab (Trees: sway, sunlight through the leaves)"
+  },
+  {
+   "v": 172,
+   "asked": "2026-10-19T22:00:00-05:00",
+   "live": "2026-10-19T22:12:19-05:00",
+   "dh": 2,
+   "tris": 3279286,
+   "chars": 1131786,
+   "what": "VR turns smoothly on foot (tunable, or snap steps at 0) and holds a steady 72 Hz when you look round: foveated edges, a lighter eye buffer, the dash panel and rain cover drawn only when needed."
+  },
+  {
+   "v": 173,
+   "asked": "2026-10-19T22:40:00-05:00",
+   "live": "2026-10-19T22:46:20-05:00",
+   "dh": 0.5,
+   "tris": 3280371,
+   "chars": 1132129,
+   "what": "Playing VR through a PC (Quest Link, Air Link, Virtual Desktop, SteamVR) keeps your Graphics setting, no foveation, full-size eye buffer; the Quest browser keeps Low."
+  },
+  {
+   "v": 174,
+   "asked": "2026-10-19T22:58:00-05:00",
+   "live": "2026-10-19T22:53:10-05:00",
+   "dh": 0.5,
+   "tris": 3279782,
+   "chars": 1133191,
+   "what": "Graphics panel gets an In VR level (Low, Medium, High) used inside the Meta Quest browser; Low unless picked."
   }
  ]
 };

@@ -400,6 +400,7 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
 .edowncard input:not([type=range]):not([type=file]),.edowncard select{flex:1 1 90px;min-width:0;font:600 15px/1.2 var(--f-display);padding:4px 6px;border-radius:5px;border:1px solid rgba(255,255,255,.25);background:#1d1a16;color:inherit}
 .edowncard input[type=number]{max-width:80px}
 .edmat i.dirt{background:linear-gradient(135deg,#8a6a3f,#6e5232 60%,#9a7a4a)}.edmat i.grass{background:linear-gradient(135deg,#6a9a40,#4a7a30)}
+.edmat i.tall{background:repeating-linear-gradient(100deg,#7fa64a 0 3px,#4d7a2c 3px 6px),#5d8a36}.edmat i.notall{background:linear-gradient(135deg,#7fa64a,#4d7a2c);position:relative}.edmat i.notall::after{content:'';position:absolute;inset:0;background:linear-gradient(45deg,transparent 45%,#c0392b 45% 55%,transparent 55%)}
 .edmat i.nat{background:linear-gradient(135deg,#5b8a3a,#4a7a30 60%,#8a6a3f)}
 #editor button.edmat[aria-pressed="true"]{background:var(--machine);color:#1c1309}
 #editor .row button[aria-pressed="true"]{background:var(--machine);color:#1c1309}

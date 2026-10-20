@@ -11,19 +11,26 @@
 // materials and machine grime, macro large-scale variation, pbr relief and wet sheen on materials that have those maps, aniso, tuft grass blades [amount, full-detail distance m,
 // fade-out distance m, share kept far off], lawnFar lawn full detail within m, fog haze distance, wmFine fine puddle
 // water, treeR full-detail tree distance m, rainN raindrops, rainSp splashes where they land, splashN drops in a puddle splash, wakeN boat wake marks drawn, dirt the Dirt detail it sets when picked,
-// ao bloom grade the screen effects (post.js), model the detailed machine models (models.js)
+// ao bloom grade the screen effects (post.js), model the detailed machine models (models.js), brush the share of undergrowth
+// drawn (brush.js)
 const GFX={
-  low:{name:'Low',pr:1.5,auto:true,fps:0,fov:0,sh:1024,shR:22,soft:false,filmic:false,exp:1,tex:'low',detail:0,base:1,macro:false,pbr:false,aniso:4,dirt:1,lawnFar:6,fog:1,wmFine:false,rainN:600,rainSp:160,splashN:250,wakeN:140,model:false,ao:false,bloom:false,grade:false,treeR:45,tuft:[0.6,12,40,0.2]},
-  med:{name:'Medium',pr:1.5,auto:true,fps:0,fov:0,sh:2048,shR:32,soft:false,filmic:true,exp:1,tex:'med',detail:1,base:1,macro:false,pbr:false,aniso:8,dirt:2,lawnFar:15,fog:1,wmFine:true,rainN:1500,rainSp:400,splashN:600,wakeN:300,model:true,ao:false,bloom:false,grade:false,treeR:90,tuft:[0.85,18,60,0.3]},
-  high:{name:'High',pr:2,auto:true,fps:0,fov:0,sh:4096,shR:45,soft:true,filmic:true,exp:1,tex:'high',detail:1,base:1,macro:true,pbr:true,aniso:16,dirt:4,lawnFar:1e9,fog:1,wmFine:true,rainN:3000,rainSp:900,splashN:1200,wakeN:640,model:true,ao:false,bloom:false,grade:false,treeR:160,tuft:[1,25,80,0.35]}};
+  low:{name:'Low',pr:1.5,auto:true,fps:0,fov:0,sh:1024,shR:22,soft:false,filmic:false,exp:1,tex:'low',detail:0,base:1,macro:false,pbr:false,aniso:4,dirt:1,lawnFar:6,fog:1,wmFine:false,rainN:600,rainSp:160,splashN:250,wakeN:140,brush:0.35,model:false,ao:false,bloom:false,grade:false,treeR:45,tuft:[0.6,12,40,0.2]},
+  med:{name:'Medium',pr:1.5,auto:true,fps:0,fov:0,sh:2048,shR:32,soft:false,filmic:true,exp:1,tex:'med',detail:1,base:1,macro:false,pbr:false,aniso:8,dirt:2,lawnFar:15,fog:1,wmFine:true,rainN:1500,rainSp:400,splashN:600,wakeN:300,brush:0.7,model:true,ao:false,bloom:false,grade:false,treeR:90,tuft:[0.85,18,60,0.3]},
+  high:{name:'High',pr:2,auto:true,fps:0,fov:0,sh:4096,shR:45,soft:true,filmic:true,exp:1,tex:'high',detail:1,base:1,macro:true,pbr:true,aniso:16,dirt:4,lawnFar:1e9,fog:1,wmFine:true,rainN:3000,rainSp:900,splashN:1200,wakeN:640,brush:1,model:true,ao:false,bloom:false,grade:false,treeR:160,tuft:[1,25,80,0.35]}};
 // Ultra: High with the screen effects (post.js) and trees in full detail farther out; for strong PC graphics only, never
 // picked by itself
 GFX.ultra=Object.assign({},GFX.high,{name:'Ultra',ao:true,bloom:true,grade:true,treeR:220});
 let gfxKey='high',gfxOver={},gfxCur=Object.assign({},GFX.high);
 function gfxName(){return GFX[gfxKey].name+(Object.keys(gfxOver).length?' (custom)':'')}
-function gfxGuess(){if(PHONE||/OculusBrowser|Quest/.test(navigator.userAgent))return 'low';
+function gfxGuess(){if(PHONE||IS_QUEST)return 'low';
   try{const gl=renderer.getContext(),ext=gl.getExtension('WEBGL_debug_renderer_info'),r=ext?gl.getParameter(ext.UNMASKED_RENDERER_WEBGL):'';if(/intel/i.test(r))return 'med'}catch(e){}
   return 'high'}
+// the Meta Quest's own browser draws VR on the headset's chip: it has its own level (bhd_vrq, Low unless picked) that
+// replaces the setting while in the headset; through a PC the player's setting stays
+const IS_QUEST=/OculusBrowser|Quest/.test(navigator.userAgent);
+function vrGfxKey(){let k=null;try{k=localStorage.getItem('bhd_vrq')}catch(e){}return k==='med'||k==='high'?k:'low'}
+function vrGfxPick(k){try{localStorage.setItem('bhd_vrq',k)}catch(e){}vrGfxSync()}
+function vrGfxSync(){$('#vrGfxRow').hidden=!IS_QUEST;document.querySelectorAll('[data-vq]').forEach(b=>{b.setAttribute('aria-pressed',b.dataset.vq===vrGfxKey());b.onclick=()=>vrGfxPick(b.dataset.vq)})}
 // the preset with the panel's changes on top, put into effect
 function gfxApply(){const g=gfxCur=Object.assign({},GFX[gfxKey],gfxOver);
   // resolution cap (the auto resolution works under it); a preset stops at the screen's own, a picked one may go past it
@@ -51,6 +58,8 @@ function gfxApply(){const g=gfxCur=Object.assign({},GFX[gfxKey],gfxOver);
   postGfx(g.ao,g.bloom,g.grade);
   // machine models: the detailed one from its file, or the simple shapes (models.js)
   mdlGfx(g.model);
+  // undergrowth round the trees (brush.js)
+  brushGfx(g.brush);
   // raindrops drawn (rain.js); the rain itself is the same
   rainGfx(g.rainN,g.rainSp);
   // drops in the splash when something goes through a puddle (mud.js); the puddle itself is the same
@@ -100,6 +109,7 @@ const GFX_ROWS=[
   {id:'macro',label:'Ground variation',hint:'Large soft light and dark patches that hide the texture repeating.',opts:onOff},
   {id:'aniso',label:'Sharpness at an angle',hint:'Keeps far-off ground crisp (anisotropic filtering).',opts:[[1,'1x'],[2,'2x'],[4,'4x'],[8,'8x'],[16,'16x']]},
   ['Grass and scenery'],
+  {id:'brush',label:'Undergrowth',hint:'Leafy shrubs round the trees.',opts:[[0,'Off'],[0.35,'Few'],[0.7,'Some'],[1,'Full']]},
   {id:'model',label:'Machine models',hint:'The detailed excavator, with a full cab inside, or the simple one. Detailed downloads about 1 MB once.',opts:[[true,'Detailed'],[false,'Simple']]},
   {id:'treeR',label:'Tree detail distance',hint:'How far trees keep their full model of branches and leaves.',min:20,max:400,step:5,fmt:v=>`${Math.round(v*FT_M)} ft`},
   {id:'tuftA',label:'Grass blades',hint:'How many blades are drawn. The main triangle cost.',min:0,max:1,step:0.05,fmt:v=>`${Math.round(v*100)}%`},
@@ -132,7 +142,7 @@ for(const r of GFX_ROWS){
 // the panel shows the settings in effect, marks the ones changed from the preset, and the preset (or Custom)
 function gfxPanelSync(){
   document.querySelectorAll('[data-g]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.g===gfxKey&&!Object.keys(gfxOver).length));
-  $('#gfxMenuBtn').textContent=`Graphics: ${gfxName()}`;
+  $('#gfxMenuBtn').textContent=`Graphics: ${gfxName()}`;vrGfxSync();
   $('#gfxCustom').hidden=!Object.keys(gfxOver).length;
   for(const r of GFX_ROWS){if(Array.isArray(r))continue;const row=gfxList.querySelector(`[data-id="${r.id}"]`),v=gfxGet(r.id);
     const ti=r.id==='tuftA'?0:r.id==='tuftR'?1:-1,ch=r.id==='dirt'?false:ti>=0?!!gfxOver.tuft&&gfxOver.tuft[ti]!==GFX[gfxKey].tuft[ti]:r.id in gfxOver;row.classList.toggle('changed',ch);

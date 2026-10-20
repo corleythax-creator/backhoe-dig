@@ -139,7 +139,9 @@ const matGlslPost=()=>MAT_GL2?'if(matP>0.0){vec3 mc=matC*(1.0-0.19*mudF)*(1.0-0.
 // south (the texture's u and v on the ground), so it tilts the world normal that way
 const matGlslNorm=()=>MAT_GL2?'if(matNp>0.0){vec3 mnW=inverseTransformDirection(normal,viewMatrix);mnW=normalize(mnW+vec3(matNt.x,0.0,matNt.y)*1.1*matNp);normal=transformDirection(mnW,viewMatrix);}\n':'';
 // the Ground look tunings (tune.js) into the shader, read live each frame (relief, sheen, rain sheen, fade-out distance in metres)
-function matPbrSync(){matU.uPbr.value.set(TU.pbrRelief,TU.pbrSheen,TU.pbrRain,TU.pbrFar)}
+function matPbrSync(){matU.uPbr.value.set(TU.pbrRelief,TU.pbrSheen,TU.pbrRain,TU.pbrFar);
+  // the natural dirt and grass (terrain.js), with the same Material relief setting
+  if(typeof groundRelU!=='undefined'){groundRelU.value=matU.texPbr.value*TU.pbrGround;if(groundRelU.value>0)groundRelLoad()}}
 const matGlslSpec=()=>MAT_GL2?'specularStrength=mix(specularStrength,12.0,matS);\n':'';
 const matGlslShin=()=>MAT_GL2?'material.specularShininess=mix(material.specularShininess,90.0,matS);\n':'';
 const matGlslRefl=()=>MAT_GL2?`if(matS>0.0){vec3 mrN=inverseTransformDirection(normal,viewMatrix);vec3 mrV=normalize(vWP-cameraPosition);
