@@ -124,6 +124,8 @@
   </footer>
   <div id="benchBar" hidden></div>
   <button id="heatKey" hidden title="Tap to change what the heatmap shows"><b id="heatName"></b><i id="heatBar"></i><span><span id="heatLo"></span><span id="heatHi"></span></span></button>
+  <!-- the lawn patch you are on (on foot or mowing): its name, share mowed and a meter (lawns.js) -->
+  <div id="lawnChip" hidden><span id="lawnChipName">Lawn</span><b id="lawnChipVal">0%</b><i class="bar"><i id="lawnChipBar"></i></i></div>
   <div id="toast"><span id="toastText"></span></div>
   <button id="updBtn" hidden></button>
 </div>
@@ -231,6 +233,7 @@
         <div id="tpOpts" hidden><span>Go there:</span><button data-tp="foot">On foot</button><button data-tp="ex">Excavator</button><button data-tp="truck">Dump truck</button><button data-tp="mow">Mower</button><button data-tp="skid">Skid steer</button><button id="tpCancel">Cancel</button></div>
       </div>
       <section class="mapsec"><h3>Places</h3><div id="mapPlaces" role="group" aria-label="Show a place on the map"></div></section>
+      <section class="mapsec"><h3>Lawns</h3><div id="lawnList" role="group" aria-label="Lawn patches: how much of each is mowed"></div></section>
       <section class="mapsec"><h3>Layers</h3>
         <div id="trailBar" role="group" aria-label="Trails: where you have walked and driven"><span>Trails</span></div>
         <div id="trailKey" hidden><i></i><span><span>Less</span><span id="trailHi"></span></span></div>
@@ -357,7 +360,7 @@
       <dt id="hkRightStick">Right stick</dt><dd id="hdRightStick">Left curls the bucket in (scoop), right dumps. Push up for boom down, pull for boom up.</dd>
       <dt id="hkDrive">Drive</dt><dd id="hdDrive">In the excavator, the Drive / Dig switch over the right stick (or Enter) flips between driving: the left stick moves the tracks, and digging: the sticks run the arm. It digs anywhere on Corley's, down the bank and in the beach sand to the water's edge.</dd>
       <dt id="hkTruck">Truck</dt><dd id="hdTruck">Swing a full bucket over the truck bed and dump. It starts parked on the dirt road that loops the mesa. Tap Truck to drive it: left stick steers and gives gas, right stick raises the bed. Pull back to brake; hold it at a stop to shift into reverse. A full load is heavy: it pulls slowly, stops long and leans in turns. Back up to the cliff edge and dump it over to haul it off, or take the ramp down the scarp and dump it in the Lower Bench yard.</dd>
-      <dt id="hkMow">Mow</dt><dd id="hdMow">A patch of tall grass grows north of the trench, with a zero-turn mower parked beside it. Tap Mow: each stick is a lap bar. Left stick up/down drives the left wheel, right stick up/down the right wheel. Both up goes straight, one up and one back spins it in place; the left stick sideways also turns it. On a keyboard, W and S drive it straight and A and D turn it; the number pad works the lap bars: 8 and 2 both forward or back, 4 and 6 spin in place, 7 and 1 the left bar, 9 and 3 the right bar. The blades run in Mow mode. Each pass lays the grass over the way you drove: it looks light when you look the same way and dark when you look against it, so the stripes swap as you walk around. The grass grows back: about a minute after a pass it starts coming up, and in about five minutes it is tall again, so a lawn left too long needs mowing again. Your mowing is saved with the rest of the site (it only grows while the game runs), and Reset leaves it mowed.</dd>
+      <dt id="hkMow">Mow</dt><dd id="hdMow">A patch of tall grass grows north of the trench, with a zero-turn mower parked beside it. Tap Mow: each stick is a lap bar. Left stick up/down drives the left wheel, right stick up/down the right wheel. Both up goes straight, one up and one back spins it in place; the left stick sideways also turns it. On a keyboard, W and S drive it straight and A and D turn it; the number pad works the lap bars: 8 and 2 both forward or back, 4 and 6 spin in place, 7 and 1 the left bar, 9 and 3 the right bar. The blades run in Mow mode. Each pass lays the grass over the way you drove: it looks light when you look the same way and dark when you look against it, so the stripes swap as you walk around. The grass grows back: about a minute after a pass it starts coming up, and in about five minutes it is tall again, so a lawn left too long needs mowing again. Your mowing is saved with the rest of the site (it only grows while the game runs), and Reset leaves it mowed. The mower cuts the field grass too, and the grass is split into lawns where the roads cross it (the tall grass, the Mesa top, West and East lawns): while you are on one, on foot or mowing, a small gauge at the top shows its name and how much is mowed, and the site map labels every lawn with its share and lists them under Lawns.</dd>
       <dt id="hkSoil">Soil</dt><dd id="hdSoil">Dark topsoil, then red clay that holds a steep wall. Sand means the gas main is close, and it slumps. Grey rock is past trench depth and slow going. Dug dirt fluffs up about a quarter, so it fills the truck faster than the hole it came from.</dd>
       <dt id="hkCaveIns">Cave-ins</dt><dd id="hdCaveIns">Walls deeper than about 5 ft, or with spoil piled within 2 ft of the edge, cave in after a while. Dirt trickling off the lip means get the bucket out.</dd>
       <dt id="hkGroundwater">Groundwater</dt><dd id="hdGroundwater">Below about 6 ft the hole meets the water table and slowly fills with muddy water. Dirt dug from under it comes up as mud: it sticks in the bucket and truck bed, and wet spoil bogs the truck and slows the tracks. Tap Pump (or P) to dewater the hole.</dd>
@@ -425,6 +428,7 @@
 <script src="js/bike.js"></script>
 <script src="js/heavy.js"></script>
 <script src="js/plant.js"></script>
+<script src="js/lawns.js"></script>
 <script src="js/stats.js"></script>
 <script src="js/keys.js"></script>
 <script src="js/controls.js"></script>
