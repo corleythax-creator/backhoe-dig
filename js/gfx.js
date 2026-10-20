@@ -20,15 +20,24 @@ const GFX={
 // Ultra: High with the screen effects (post.js) and trees in full detail farther out; for strong PC graphics only, never
 // picked by itself
 GFX.ultra=Object.assign({},GFX.high,{name:'Ultra',ao:true,bloom:true,grade:true,treeR:220});
+// VR through a PC: the eye buffer drawn larger than the headset's own and scaled down (supersampling), for sharper edges
+// and fine detail; only the levels for strong graphics do it
+GFX.low.vrSS=GFX.med.vrSS=1;GFX.high.vrSS=1.25;GFX.ultra.vrSS=1.4;
+// Quest: made for VR in the Meta Quest's own browser, where the headset's chip draws every frame twice at 72 Hz. Sharp
+// shadows close round you (a small shadow area), the detailed machines, ground detail and filmic light kept, and what
+// costs the most cut back: grass blades, undergrowth and full-detail trees only near you, a shorter haze so less is
+// drawn far off, the plain puddle surface and fewer raindrops. Picked for you in the headset, never on a screen
+GFX.quest=Object.assign({},GFX.med,{name:'Quest',pr:1,auto:false,sh:2048,shR:16,tex:'med',aniso:4,dirt:2,lawnFar:8,fog:0.7,wmFine:false,
+  rainN:700,rainSp:180,splashN:260,wakeN:160,brush:0.3,model:true,treeR:50,tuft:[0.5,10,30,0.15],vrSS:0.9});
 let gfxKey='high',gfxOver={},gfxCur=Object.assign({},GFX.high);
 function gfxName(){return GFX[gfxKey].name+(Object.keys(gfxOver).length?' (custom)':'')}
 function gfxGuess(){if(PHONE||IS_QUEST)return 'low';
   try{const gl=renderer.getContext(),ext=gl.getExtension('WEBGL_debug_renderer_info'),r=ext?gl.getParameter(ext.UNMASKED_RENDERER_WEBGL):'';if(/intel/i.test(r))return 'med'}catch(e){}
   return 'high'}
-// the Meta Quest's own browser draws VR on the headset's chip: it has its own level (bhd_vrq, Low unless picked) that
+// the Meta Quest's own browser draws VR on the headset's chip: it has its own level (bhd_vrq, Quest unless picked) that
 // replaces the setting while in the headset; through a PC the player's setting stays
 const IS_QUEST=/OculusBrowser|Quest/.test(navigator.userAgent);
-function vrGfxKey(){let k=null;try{k=localStorage.getItem('bhd_vrq')}catch(e){}return k==='med'||k==='high'?k:'low'}
+function vrGfxKey(){let k=null;try{k=localStorage.getItem('bhd_vrq')}catch(e){}return k==='low'||k==='med'||k==='high'?k:'quest'}
 function vrGfxPick(k){try{localStorage.setItem('bhd_vrq',k)}catch(e){}vrGfxSync()}
 function vrGfxSync(){$('#vrGfxRow').hidden=!IS_QUEST;document.querySelectorAll('[data-vq]').forEach(b=>{b.setAttribute('aria-pressed',b.dataset.vq===vrGfxKey());b.onclick=()=>vrGfxPick(b.dataset.vq)})}
 // the preset with the panel's changes on top, put into effect

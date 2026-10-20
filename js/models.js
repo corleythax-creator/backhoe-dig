@@ -38,7 +38,7 @@ function mdlLoaderReady(cb){if(THREE.GLTFLoader){cb();return}const s=document.cr
 function mdlLoadEx(){if(mdl.ex||mdl.loading)return;mdl.loading=true;
   mdlLoaderReady(()=>new THREE.GLTFLoader().load('models/excavator.glb',gl=>{mdl.loading=false;mdl.ex=gl.scene;if(mdl.want)mdlExOn(true)},undefined,()=>{mdl.loading=false}))}
 // the excavator's part groups, by the model's node names
-function mdlExParts(){return {machine,house,cab,boom:boomP,stick:stickP,bucket:bucketP}}
+function mdlExParts(){return {machine,house,cab,joyL:exJoy[0],joyR:exJoy[1],boom:boomP,stick:stickP,bucket:bucketP}}
 function mdlExOn(on){
   if(on&&!mdl.ex){mdlLoadEx();return}
   if(on===mdl.on)return;mdl.on=on;const P=mdlExParts();
