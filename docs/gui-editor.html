@@ -815,8 +815,8 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
     <h1>Graphics</h1>
     <div class="gseg gpre"><button data-g="low">Low</button><button data-g="med">Medium</button><button data-g="high">High</button><button data-g="ultra">Ultra</button></div>
     <p class="devline">Low for phones, Medium for laptops, High for desktop PCs. Change anything below to make it your own<span id="gfxCustom" hidden> (now <b>Custom</b>: changed settings are marked)</span>. Saved on this device.</p>
-    <div id="vrGfxRow" hidden><p class="devline"><b>In VR</b> (Meta Quest browser): the level used while you are in the headset. Low keeps every frame smooth; try Medium or High if it stays smooth. Your setting above comes back when you leave VR.</p>
-      <div class="gseg" id="vrGfxSeg"><button data-vq="low">Low</button><button data-vq="med">Medium</button><button data-vq="high">High</button></div></div>
+    <div id="vrGfxRow" hidden><p class="devline"><b>In VR</b> (Meta Quest browser): the level used while you are in the headset. Quest is made for it: sharp shadows and the detailed machines close round you, less drawn far off. Low is lighter still; try Medium or High if it stays smooth. Your setting above comes back when you leave VR.</p>
+      <div class="gseg" id="vrGfxSeg"><button data-vq="quest">Quest</button><button data-vq="low">Low</button><button data-vq="med">Medium</button><button data-vq="high">High</button></div></div>
     <p id="gfxStats" class="gstats" aria-live="off"></p>
     <p id="gfxMem" class="gstats" aria-live="off" title="An estimate: what the game asks the GPU to hold. Browsers do not report the real figure."></p>
     <div class="ggraph"><canvas id="gfxGraph" aria-label="Frame rate over the last 10 seconds"></canvas><p id="gfxGraphCap" class="devline"></p></div>
@@ -1000,7 +1000,8 @@ const TUNE=[
   ['nightLight','Day and night','Moonlight and starlight at night',1,'pct',0,400,5],
   ['lampLight','Day and night','Headlights, lamps and lit windows',1,'pct',0,300,5],
   // VR headset (vr.js): how the right stick turns you on foot
-  ['vrTurn','VR','Turn speed on foot with the right stick (0 = 30° snap steps)',120*Math.PI/180,'deg',0,360,5]];
+  ['vrTurn','VR','Turn speed on foot with the right stick (0 = 30° snap steps)',120*Math.PI/180,'deg',0,360,5],
+  ['vrComfort','VR','Comfort vignette: how far the view darkens at its edges while you drive fast or turn (0 = off)',0.5,'pct',0,100,5]];
 // unit: [shown = code value × factor, label]
 const TUNE_U={mph:[1/0.44704,'mph'],ft:[1/0.3048,'ft'],deg:[180/Math.PI,'°/s'],yd3:[1.307951,'yd³'],pct:[100,'%'],s:[1,'s'],min:[1/60,'min'],in:[1/0.0254,'in']};
 const tuneShow=(e,v)=>v*TUNE_U[e[4]][0];

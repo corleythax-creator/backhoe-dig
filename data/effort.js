@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-20T22:20:00Z",
+ "updated": "2026-10-20T22:27:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -36,9 +36,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-20",
-   "dh": 14,
+   "dh": 24,
    "act": 0.5,
-   "versions": 2
+   "versions": 3
   }
  ],
  "extra": [
@@ -1632,6 +1632,15 @@ window.EFFORT = {
    "tris": 4367473,
    "chars": 1151938,
    "what": "Mowed grass grows back while the game is closed; clover, thistle, plantain and sedge grow by area; Graphics has a Grass quality setting."
+  },
+  {
+   "v": 177,
+   "asked": "2026-10-20T16:30:00-05:00",
+   "live": "2026-10-20T17:27:04-05:00",
+   "dh": 10,
+   "tris": 4379694,
+   "chars": 1161381,
+   "what": "VR looks better: a sharp dashboard in the headset, work gloves that grab the excavator's joysticks (which now move with the sticks), a Quest graphics level made for the headset, sharper PC VR on High and Ultra, and a comfort vignette while you drive or turn."
   }
  ]
 };

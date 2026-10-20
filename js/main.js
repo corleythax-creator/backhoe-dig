@@ -88,6 +88,8 @@ function frame(now){
   st.y+=((hf+hb)/2-0.18*st.sink-st.y)*k; st.pitch+=(-Math.atan2(hf-hb,3.6)-st.pitch)*k; st.roll+=(Math.atan2(hr-hl,2.2)-st.roll)*k;
   machine.position.set(st.x,st.y,st.z); machine.rotation.set(st.pitch,st.yaw,st.roll);
   house.rotation.y=st.swing;
+  // the cab's joysticks lean the way the sticks are pushed while the arm is worked
+  exJoyTick(dt,mode==='dig'?[Lx,Ly]:[0,0],mode==='dig'?[Rx,Ry]:[0,0]);
   boomP.rotation.x=-st.a1; stickP.rotation.x=-st.a2; bucketP.rotation.x=-st.a3;
   machine.updateMatrixWorld(true); updateLinkage(); jointJ.updateMatrixWorld(); updateRams(); updateHoses();
   tipMark.getWorldPosition(tip); midMark.getWorldPosition(mid); bucketP.getWorldQuaternion(q);
