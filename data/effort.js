@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-20T02:39:00Z",
+ "updated": "2026-10-20T02:42:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -30,9 +30,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-19",
-   "dh": 137.7,
+   "dh": 147.7,
    "act": 5.5,
-   "versions": 19
+   "versions": 20
   }
  ],
  "extra": [
@@ -1554,6 +1554,15 @@ window.EFFORT = {
    "tris": 3062727,
    "chars": 1112112,
    "what": "Things picked in the map editor are shaded orange, so you can see what is selected."
+  },
+  {
+   "v": 169,
+   "asked": "2026-10-19T21:20:00-05:00",
+   "live": "2026-10-19T21:42:16-05:00",
+   "dh": 10,
+   "tris": 3267550,
+   "chars": 1118080,
+   "what": "Leafy shrubs in greens, olive, gold and rust now grow round the edges of every tree, so woods read as thickets (Graphics > Undergrowth; fewer on Low). On High and Ultra the natural dirt and grass get relief that catches the sun, tunable on the Tuning tab (Ground look)"
   }
  ]
 };
