@@ -190,13 +190,13 @@
     <div id="edInfo" class="edpanel" hidden></div>
     <div id="edOpts" class="edpanel">
       <span id="edSub" class="edsub row" role="group" aria-label="Tool"></span>
-      <span class="edopt" data-for="raise lower flatten smooth dirt grass paint add" data-place="scatter"><label for="edSize">Brush</label><input id="edSize" type="range" min="1" max="40" step="1"><output id="edSizeV"></output></span>
+      <span class="edopt" data-for="raise lower flatten smooth dirt grass tall notall paint add" data-place="scatter"><label for="edSize">Brush</label><input id="edSize" type="range" min="1" max="40" step="1"><output id="edSizeV"></output></span>
       <span class="edopt" data-for="raise lower flatten smooth dirt grass"><label for="edStr">Strength</label><input id="edStr" type="range" min="1" max="10" step="1"><output id="edStrV"></output></span>
       <span class="edshape row" data-for="paint" role="group" aria-label="Brush shape"><button class="sm" data-s="round" aria-pressed="true">Round</button><button class="sm" data-s="sq" aria-pressed="false">Square</button></span>
       <span class="ededge row" data-for="paint" role="group" aria-label="Brush edge"><button class="sm" data-e="hard" aria-pressed="true">Hard edge</button><button class="sm" data-e="soft" aria-pressed="false">Soft edge</button></span>
       <span id="edSoftOpt" class="edopt" data-for="paint" hidden><label for="edSoft">Softness</label><input id="edSoft" type="range" min="10" max="100" step="5"><output id="edSoftV"></output></span>
       <span class="eddug row" data-for="paint" role="group" aria-label="Dug ground"><button class="sm" data-k="level" aria-pressed="true">Level dug ground</button><button class="sm" data-k="keep" aria-pressed="false">Keep dug shape</button></span>
-      <span class="edpicked" data-for="paint dirt grass"><b id="edMatV"></b></span>
+      <span class="edpicked" data-for="paint dirt grass tall notall"><b id="edMatV"></b></span>
       <span class="edpicked" data-for="add">Adding <b id="edKindV"></b></span>
       <span id="edPlace" class="row" data-for="add" role="group" aria-label="How to place"><button class="sm" data-p="one">One</button><button class="sm" data-p="stamp">Stamp</button><button class="sm" data-p="line">Line</button><button class="sm" data-p="scatter">Scatter</button></span>
       <span class="edopt" data-for="add" data-place="line scatter"><label for="edGap">Spacing</label><input id="edGap" type="range" min="1" max="60" step="1"><output id="edGapV"></output></span>
