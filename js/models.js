@@ -25,13 +25,13 @@ function mdlStd(hex,o){o=o||{};const m=new THREE.MeshStandardMaterial({color:hex
     m.normalMap=mdlTex(o.tex,'_n');m.normalScale.set(o.relief||0.6,o.relief||0.6);m.roughnessMap=mdlTex(o.tex,'_r');m.roughness=o.rough==null?1:o.rough}
   if(o.emissive)m.emissive.setHex(o.emissive);if(typeof wetPatch==='function')wetPatch(m);return m}
 function mdlMatsMake(){if(mdlMats)return mdlMats;const P=(h,o)=>mdlStd(h,Object.assign({tex:'paint'},o)),St=(h,o)=>mdlStd(h,Object.assign({tex:'steel',metal:0.65},o));
-  mdlMats={paint:P(0xe8701d),paintD:P(0xb8561a),paintW:P(0xe9ecea),paintR:P(0xa8231c),
+  mdlMats={paint:P(0xe8701d),paintD:P(0xb8561a),paintW:P(0xe9ecea),paintR:P(0xb3291f),paintB:P(0x1d3557),
     steel:St(0x2b2d2c),steelL:St(0x55595a),bed:St(0x6c7378,{metal:0.35}),bedD:St(0x4c5257,{metal:0.35}),bucket:St(0x55595a),
     chrome:mdlStd(0xc9ccc8,{metal:1,rough:0.18}),rim:mdlStd(0xb9bdbf,{metal:0.85,rough:0.35}),
     rubber:mdlStd(0x1b1c1b,{tex:'rubber',relief:0.8}),track:mdlStd(0x34332f,{tex:'steel',metal:0.5,relief:1}),tire:mdlStd(0x1b1c1b,{tex:'rubber',relief:1}),
     lens:LENS,redL:REDL,amber:AMBER,
     black:mdlStd(0x2a2c2e,{rough:0.55}),seat:mdlStd(0x34363a,{rough:0.85}),trim:mdlStd(0x8c8f92,{rough:0.6}),
-    mirror:mdlStd(0xdde4ea,{metal:1,rough:0.04}),glass:glass.material,
+    mirror:mdlStd(0xdde4ea,{metal:1,rough:0.04}),glass:glass.material,tint:mdlStd(0x1c2328,{rough:0.04,env:1.6}),
     screen:new THREE.MeshBasicMaterial({map:mdlScreenTex(),toneMapped:false})};
   mdlMats.glass.userData.noWet=true;
   return mdlMats}
@@ -150,7 +150,18 @@ function mdlOthersOn(on){const skip=new Set([skLoad,...hvs.map(h=>h.heap)]),gm=t
       else{const g=gm&&gm.find(e=>e.m===mt),pb=mdlFlatPbr(g?g.base:mt);if(!pb)return;u.mdlO=[null,mt];if(g){u.mdlOB=g.base;const c=mdlClone(pb);g.m=c;g.base=pb;o.material=c}else o.material=pb}}
     else if(u.mdlO){const [geo,mt]=u.mdlO;if(geo)o.geometry=geo;else{const g=gm&&gm.find(e=>e.m===o.material);if(g){g.m=mt;g.base=u.mdlOB}}o.material=mt;u.mdlO=null}})
   mdl.othersOn=on}
+// ---------- the pickups and four-wheelers (both sets, heavy.js): their own detailed models ----------
+const MDL_HV=['pickup','atv'];mdl.hv={};mdl.hvOn=false;
+function mdlLoadHv(k){if(mdl.hv[k]!==undefined)return;mdl.hv[k]=null;
+  mdlLoaderReady(()=>new THREE.GLTFLoader().load(`models/${k}.glb`,gl=>{mdl.hv[k]=gl.scene;mdl.hvOn=!mdl.want},undefined,()=>{}))}
+// each machine of those kinds shows the model's meshes in place of its kit-built one (on and off as the setting goes)
+function mdlHvOn(on){mdl.hvOn=on;const mats=mdlMatsMake();
+  for(const h of hvs){if(!MDL_HV.includes(h.k))continue;const src=mdl.hv[h.k];
+    if(on&&!src){mdlLoadHv(h.k);continue}
+    if(on&&!h.mdl){h.mdl=[];src.traverse(m=>{if(!m.isMesh)return;const mesh=new THREE.Mesh(m.geometry,mats[m.material.name]||mats.steel);mesh.name='mdl_'+m.name;
+        mesh.castShadow=m.material.name!=='tint';mesh.receiveShadow=true;if(!m.geometry.attributes.uv)mdlBoxUV(m.geometry);mesh.layers.enable(RAIN_LAYER);h.g.add(mesh);h.mdl.push(mesh)})}
+    for(const c of h.g.children)if(c.isMesh)c.visible=c.name.startsWith('mdl_')?on:!on}}
 // gfx.js: Detailed or Simple machine models (the other machines change on the next frame, once they all exist)
 function mdlGfx(detail){mdl.want=!!detail;mdlExOn(mdl.want);mdlTrOn(mdl.want)}
 // once a few seconds, the cab display's clock (only while the detailed model shows)
-function mdlTick(dt){if(!!mdl.othersOn!==mdl.want)mdlOthersOn(mdl.want);if(!mdl.on)return;mdlScrT+=dt;if(mdlScrT>5){mdlScrT=0;mdlScreenDraw()}}
+function mdlTick(dt){if(!!mdl.othersOn!==mdl.want)mdlOthersOn(mdl.want);if(mdl.hvOn!==mdl.want||mdl.want&&hvs.some(h=>MDL_HV.includes(h.k)&&!h.mdl&&mdl.hv[h.k]))mdlHvOn(mdl.want);if(!mdl.on)return;mdlScrT+=dt;if(mdlScrT>5){mdlScrT=0;mdlScreenDraw()}}
