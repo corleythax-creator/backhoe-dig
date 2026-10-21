@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-21T23:21:00Z",
+ "updated": "2026-10-21T23:31:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -42,9 +42,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-21",
-   "dh": 18,
-   "act": 1,
-   "versions": 2
+   "dh": 30,
+   "act": 1.5,
+   "versions": 3
   }
  ],
  "extra": [
@@ -1719,6 +1719,15 @@ window.EFFORT = {
    "tris": 4636659,
    "chars": 1185772,
    "what": "Every machine on physically based materials: the mower, skid steer, dirt bike, boats, dozers, loaders, semis, pickups and four-wheelers get worn paint, bare steel, rubber, chrome and glass that reflect the sky"
+  },
+  {
+   "v": 186,
+   "asked": "2026-10-20T22:50:00-05:00",
+   "live": "2026-10-21T18:31:40-05:00",
+   "dh": 12,
+   "tris": 4758955,
+   "chars": 1187049,
+   "what": "Detailed models for the pickups and four-wheelers: real wheel arches, tinted glass, chrome grille, alloy wheels and a lined bed on the pickup; knobby tyres, tube frame, shocks, racks and sculpted fenders on the four-wheeler"
   }
  ]
 };
