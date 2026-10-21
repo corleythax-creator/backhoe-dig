@@ -1,12 +1,14 @@
 """Makes the tree textures (js/trees.js) from the raw OpenAI GPT Image renders.
 
 Usage: python3 tools/trees_tex.py RAW_DIR
-       python3 tools/trees_tex.py --leaves LEAVES_PNG (only swaps the leaf clump in the existing atlas)
+       python3 tools/trees_tex.py --leaves NAME=PNG [NAME=PNG ...] (only swaps those leaf sprays in the existing atlas)
 RAW_DIR holds bark.png and birch.png (1024 square, opaque bark photos) and spruce.png (a spruce branch, stem running
-bottom to top), leaves.png (a leaf clump) and needles.png (a pine needle tuft), all cut out on a transparent background.
-Writes textures/tree_bark.jpg and textures/tree_birch.jpg (512 square, seamless) and the foliage atlas (1024 square):
-textures/tree_leaves.jpg its colour and tree_leaves_a.jpg its see-through mask (the shader's alphaMap): the spruce branch in the left 320 px column, the leaf clump top right of it and the
-needle tuft below it, at the UV boxes FOL_UV in js/trees.js reads. The leaf clump is turned grey (mean about 0.8) so
+bottom to top), leaves.png, oak.png and birch.png (loose leaf sprays: the maple, which the undergrowth also uses, the
+oak and the birch) and needles.png (a pine needle tuft), all cut out on a transparent background.
+Writes textures/tree_bark.jpg and textures/tree_birch.jpg (512 square, seamless) and the foliage atlas (2048 by 1024):
+textures/tree_leaves.jpg its colour and tree_leaves_a.jpg its see-through mask (the shader's alphaMap): the spruce branch in the left 320 px column, the maple spray top right of it and the
+needle tuft below it, the oak spray at x 1024 top and the birch below it (x 1536 on is spare), at the UV boxes FOL_UV in
+js/trees.js reads. The leaf sprays are turned grey (mean about 0.8) so
 each tree's tint (ASSET_LT, autumn golds to greens) colours it; the needles and branch keep their own green. The
 colour of see-through pixels is spread out from the foliage so the mipmaps don't fringe dark. Then run
 python3 tools/pbr.py tree_bark tree_birch for the bark relief (High graphics).
@@ -21,7 +23,10 @@ from textures import seamless, best_period  # noqa: E402
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 OUT = os.path.join(ROOT, 'textures')
 # atlas boxes in pixels (x0, y0, x1, y1), image y down; js/trees.js FOL_UV has the same in UV (v up)
-BOX = {'spruce': (0, 0, 320, 1024), 'leaves': (320, 0, 832, 512), 'needles': (320, 512, 832, 1024)}
+BOX = {'spruce': (0, 0, 320, 1024), 'leaves': (320, 0, 832, 512), 'needles': (320, 512, 832, 1024),
+       'oak': (1024, 0, 1536, 512), 'birch': (1024, 512, 1536, 1024)}
+SPRAYS = ('leaves', 'oak', 'birch')
+SIZE = (2048, 1024)
 
 
 def bark(raw, name, out):
@@ -78,10 +83,10 @@ def bleed(im):
 def main(raw):
     bark(raw, 'bark', 'tree_bark')
     bark(raw, 'birch', 'tree_birch')
-    at = Image.new('RGBA', (1024, 1024), (0, 0, 0, 0))
+    at = Image.new('RGBA', SIZE, (0, 0, 0, 0))
     for n, (x0, y0, x1, y1) in BOX.items():
         im = fit(cut(raw, n), x1 - x0, y1 - y0)
-        if n == 'leaves':
+        if n in SPRAYS:
             im = grey(im)
         at.alpha_composite(im, (x0, y0))
     at = bleed(at)
@@ -89,16 +94,18 @@ def main(raw):
     at.getchannel('A').save(os.path.join(OUT, 'tree_leaves_a.jpg'), quality=90)
 
 
-def leaves_only(png):
-    """puts a new leaf clump into the atlas, keeping the spruce branch and needle tuft that are there"""
-    rgb = Image.open(os.path.join(OUT, 'tree_leaves.jpg')).convert('RGB')
-    at = rgb.copy()
-    at.putalpha(Image.open(os.path.join(OUT, 'tree_leaves_a.jpg')).convert('L'))
-    x0, y0, x1, y1 = BOX['leaves']
-    at.paste(Image.new('RGBA', (x1 - x0, y1 - y0), (0, 0, 0, 0)), (x0, y0))
-    im = Image.open(png).convert('RGBA')
-    im = grey(fit(im.crop(im.getchannel('A').point(lambda v: 255 if v > 24 else 0).getbbox()), x1 - x0, y1 - y0))
-    at.alpha_composite(im, (x0, y0))
+def leaves_only(pngs):
+    """puts new leaf sprays ({name: png}) into the atlas, keeping everything else that is there"""
+    old = Image.open(os.path.join(OUT, 'tree_leaves.jpg')).convert('RGB')
+    old.putalpha(Image.open(os.path.join(OUT, 'tree_leaves_a.jpg')).convert('L'))
+    at = Image.new('RGBA', SIZE, (0, 0, 0, 0))
+    at.paste(old, (0, 0))
+    for n, png in pngs.items():
+        x0, y0, x1, y1 = BOX[n]
+        at.paste(Image.new('RGBA', (x1 - x0, y1 - y0), (0, 0, 0, 0)), (x0, y0))
+        im = Image.open(png).convert('RGBA')
+        im = grey(fit(im.crop(im.getchannel('A').point(lambda v: 255 if v > 24 else 0).getbbox()), x1 - x0, y1 - y0))
+        at.alpha_composite(im, (x0, y0))
     at = bleed(at)
     at.convert('RGB').save(os.path.join(OUT, 'tree_leaves.jpg'), quality=86)
     at.getchannel('A').save(os.path.join(OUT, 'tree_leaves_a.jpg'), quality=90)
@@ -106,6 +113,6 @@ def leaves_only(png):
 
 if __name__ == '__main__':
     if sys.argv[1] == '--leaves':
-        leaves_only(sys.argv[2])
+        leaves_only(dict(a.split('=', 1) for a in sys.argv[2:]))
     else:
         main(sys.argv[1])

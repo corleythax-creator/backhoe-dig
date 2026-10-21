@@ -11,7 +11,8 @@ const treeIMs=[];
 // the editor trees' tints: pines (near white, slight shifts) and leaf trees (autumn golds and oranges to greens), by c
 const ASSET_PT=[[1,1,1],[0.85,0.95,1.06],[1.08,1.04,0.82],[0.92,0.98,0.9]],ASSET_LT=[[0.98,0.78,0.26],[0.93,0.52,0.2],[0.56,0.64,0.3],[0.78,0.32,0.18],[0.46,0.6,0.28],[0.95,0.85,0.4]];
 // the atlas boxes of textures/tree_leaves.jpg as [u0, v0, u1, v1] (v up); tools/trees_tex.py BOX has them in pixels
-const FOL_UV={spruce:[0,0,0.3125,1],leaves:[0.3125,0.5,0.8125,1],needles:[0.3125,0,0.8125,0.5]};
+// (leaves is the maple spray, which the undergrowth uses too; a broadleaf's o.fol picks its spray)
+const FOL_UV={spruce:[0,0,0.15625,1],leaves:[0.15625,0.5,0.40625,1],needles:[0.15625,0,0.40625,0.5],oak:[0.5,0.5,0.75,1],birch:[0.5,0,0.75,0.5]};
 // full-detail distance (m), set by the Graphics setting (gfx.js); the breeze clock for the sway
 let treeNearR=PHONE?40:140,treeLodX=1e9,treeLodZ=1e9,treeLodDirty=true;
 const treeWindU={value:0},treeSwayU={value:1};
@@ -123,7 +124,7 @@ function treeRedPine(hi,o){o=o||{};const K=treeKit((hi?201:202)+(o.seed||0)),V=K
   return K.done()}
 // broadleaf: a trunk splitting into limbs, then branches and twigs, with leaf clumps at the twig ends and over the
 // crown's shell, shaded darker inside and underneath. o: trunk height, rad base radius, crown centre cy and radii
-// rx, ry, limb count and spread, wob how crooked, clumps (full detail) and clump size, stems for a clump of trunks; and
+// rx, ry, limb count and spread, fol its leaf spray (FOL_UV, the maple's by default), wob how crooked, clumps (full detail) and clump size, stems for a clump of trunks; and
 // for plant.js's small growth stages: so how far apart the stems stand, tw how crooked the trunk, rmin the thinnest limb
 function treeBroad(hi,o){const K=treeKit(hi?o.seed:o.seed+1),V=K.V,up=new V(0,1,0),C=new V(0,o.cy,0),ends=[];
   // the light model leaves out the twigs (their ends still place the clumps)
@@ -146,12 +147,12 @@ function treeBroad(hi,o){const K=treeKit(hi?o.seed:o.seed+1),V=K.V,up=new V(0,1,
   const step=hi?1:Math.max(1,Math.round(pts.length/(o.clumps*0.22)));
   for(let k=0;k<pts.length;k+=step){const p=pts[k],q=p.clone().sub(C),nrm=new V(q.x/o.rx,q.y/o.ry*0.8+0.25,q.z/o.rx);const outer=Math.min(1,nrm.length());nrm.normalize();
     const kk=(0.45+0.35*outer)*(0.8+0.25*Math.max(-1,Math.min(1,q.y/o.ry))),v=0.94+0.12*K.rnd(),tint=[v,v*(0.97+0.06*K.rnd()),v*(0.9+0.15*K.rnd())];
-    for(let j=0,n=hi?4:3;j<n;j++)K.clump(p.clone().add(new V((K.rnd()-0.5)*0.55,(K.rnd()-0.5)*0.4,(K.rnd()-0.5)*0.55)),o.size*(hi?1.1:1.8)*(0.8+0.4*K.rnd()),FOL_UV.leaves,nrm,kk,tint)}
+    for(let j=0,n=hi?4:3;j<n;j++)K.clump(p.clone().add(new V((K.rnd()-0.5)*0.55,(K.rnd()-0.5)*0.4,(K.rnd()-0.5)*0.55)),o.size*(hi?1.1:1.8)*(0.8+0.4*K.rnd()),FOL_UV[o.fol||'leaves'],nrm,kk,tint)}
   return K.done()}
 const TREE_BROAD={
-  oak:{seed:301,trunk:2.3,rad:0.33,limbs:4,limbLen:2.6,out:1.35,spread:0.9,lift:0.05,wob:0.9,cy:4.7,rx:3.5,ry:2.3,clumps:150,size:1.35,stems:1,leader:false},
+  oak:{fol:'oak',seed:301,trunk:2.3,rad:0.33,limbs:4,limbLen:2.6,out:1.35,spread:0.9,lift:0.05,wob:0.9,cy:4.7,rx:3.5,ry:2.3,clumps:150,size:1.35,stems:1,leader:false},
   maple:{seed:401,trunk:2.8,rad:0.27,limbs:4,limbLen:2.7,out:0.7,spread:0.6,lift:0.2,wob:0.5,cy:5.2,rx:2.8,ry:2.9,clumps:180,size:1.35,stems:1,leader:true},
-  birch:{seed:501,trunk:4.2,rad:0.14,limbs:3,limbLen:2.0,out:0.55,spread:0.55,lift:0.12,wob:0.35,cy:5.9,rx:1.9,ry:2.7,clumps:160,size:1.1,stems:2,leader:true}};
+  birch:{fol:'birch',seed:501,trunk:4.2,rad:0.14,limbs:3,limbLen:2.0,out:0.55,spread:0.55,lift:0.12,wob:0.35,cy:5.9,rx:1.9,ry:2.7,clumps:160,size:1.1,stems:2,leader:true}};
 // the species: name, which editor kind it stands for, its wood, and its shadow hull (cone or ellipsoid, a little inside
 // the foliage so the sunny side of the crown stays lit)
 const TREE_SP=[
