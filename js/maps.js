@@ -116,6 +116,7 @@ function drawMap(cv,cx,cz,mpp,big){
   hvs.forEach((h,i)=>{if(h.trailer){const s=Math.sin(h.ty),c=Math.cos(h.ty),kx=h.x-Math.sin(h.yaw)*HV_KP,kz=h.z-Math.cos(h.yaw)*HV_KP;icon(kx-s*8,kz-c*8,Math.atan2(c,s),'#2b2d30',14,2.8,false)}
     icon(h.x,h.z,Math.atan2(Math.cos(h.yaw),Math.sin(h.yaw)),h.K.col,h.K.len,h.K.wid,mode==='heavy'&&hvI===i)});
   icon(bk.x,bk.z,Math.atan2(Math.cos(bk.yaw),Math.sin(bk.yaw)),'#f2b705',2.2,0.8,mode==='bike');
+  for(const t of TWINS)icon(t.p.x,t.p.z,Math.atan2(Math.cos(t.p.yaw),Math.sin(t.p.yaw)),t.col,t.len,t.wid,false);
   boats.forEach((b,i)=>icon(b.x,b.z,Math.atan2(Math.cos(b.yaw),Math.sin(b.yaw)),'#f4f3ef',BT_L,BT_B,mode==='boat'&&btI===i));
   for(const b of lakeBoats)icon(b.x,b.z,Math.atan2(Math.cos(b.yaw),Math.sin(b.yaw)),b.kind==='tug'?'#9e2a22':'#c9ced1',b.hl*2,b.hb*2,false);
   icon(mw.x,mw.z,Math.atan2(Math.cos(mw.yaw),Math.sin(mw.yaw)),'#d8352a',2.2,1.4,mode==='mow');
