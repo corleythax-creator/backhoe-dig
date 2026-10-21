@@ -45,8 +45,8 @@ function hvKit(){const K=famKit();return {K,
 function hvMesh(k,parent){const m=new THREE.Mesh(famMerge(k.K.solid),famMat);m.castShadow=true;m.receiveShadow=true;m.layers.enable(RAIN_LAYER);parent.add(m);return m}
 // the dirt heaped in front of the blade or in the bucket
 function hvHeap(parent,x,y,z){const m=new THREE.Mesh(new THREE.IcosahedronGeometry(0.5,1),M(0x7a5232,{map:null}));m.position.set(x,y,z);m.visible=false;parent.add(m);return m}
-function hvMake(k){const K=HV_KINDS[k],g=new THREE.Group();scene.add(g);
-  const h={k,K,g,x:K.x,z:K.z,y:0,yaw:K.yaw,pitch:0,roll:0,v:0,w:0,steer:0,ty:K.yaw,a:0,c:0.1,rip:0,drag:1,load:0,loadC:[0.5,0.34,0.21],loadMix:[0,0,0,1],loadWet:0,run:0,thr:0,hyd:0,top:1,circ:[]};
+function hvMake(k,home){const K=HV_KINDS[k],g=new THREE.Group();scene.add(g);home=home||{x:K.x,z:K.z,yaw:K.yaw};
+  const h={k,K,g,home,x:home.x,z:home.z,y:0,yaw:home.yaw,pitch:0,roll:0,v:0,w:0,steer:0,ty:home.yaw,a:0,c:0.1,rip:0,drag:1,load:0,loadC:[0.5,0.34,0.21],loadMix:[0,0,0,1],loadWet:0,run:0,thr:0,hyd:0,top:1,circ:[]};
   const Y=DEX_Y,D=DEX_D,GL=DEX_GLASS,STEEL=0x8a8a86;
   if(k==='dozer'){const b=hvKit();
     for(const sx of [-1.05,1.05]){b.box(0.55,0.75,3.0,D,sx,0.4,0);for(const sz of [-1.45,1.45])b.cyl(0.38,0.38,0.56,10,0x3a3c40,sx,0.4,sz,0,Math.PI/2)}
@@ -111,6 +111,9 @@ function hvMake(k){const K=HV_KINDS[k],g=new THREE.Group();scene.add(g);
     for(const sx of [-0.16,0.16])b.box(0.12,0.08,0.05,0xfff6d8,sx,0.84,1.18);hvMesh(b,g)}
   hvs.push(h);return h}
 for(const k of ['dozer','loader','semi','pickup','atv'])hvMake(k);
+// and a set of Corley's own, parked in a row on the mesa's east lawn facing the dig, the semi behind them
+const HV_CORLEY=[['dozer',46,-38,-Math.PI/2],['loader',46,-28,-Math.PI/2],['pickup',46,-18,-Math.PI/2],['atv',46,-11,-Math.PI/2],['semi',60,-30,0]];
+for(const [k,x,z,yaw] of HV_CORLEY)hvMake(k,{x,z,yaw,island:'corley'});
 const hvV=new THREE.Vector3(),hvTip=new THREE.Vector3(),hvTipL=new THREE.Vector3(),hvTipR=new THREE.Vector3(),hvLip=new THREE.Vector3();
 function hvPose(h){h.g.position.set(h.x,h.y,h.z);h.g.rotation.set(h.pitch,h.yaw,h.roll,'YXZ');
   if(h.blade)h.blade.rotation.x=-h.a;
@@ -121,7 +124,7 @@ function hvPose(h){h.g.position.set(h.x,h.y,h.z);h.g.rotation.set(h.pitch,h.yaw,
   if(h.trailer){h.g.localToWorld(hvV.set(0,1.3,-HV_KP));const ts=Math.sin(h.ty),tc=Math.cos(h.ty),yA=surfAt(hvV.x-ts*HV_LT,hvV.z-tc*HV_LT),yK=hvV.y-1.3;
     h.trailer.position.set(hvV.x,yK,hvV.z);h.trailer.rotation.set(-Math.atan2(yK-yA,HV_LT),h.ty,0,'YXZ');
     for(const lz of HV_TC)h.circ.push([hvV.x+ts*lz,hvV.z+tc*lz,1.45])}}
-function hvReset(h){const K=h.K;Object.assign(h,{x:K.x,z:K.z,yaw:K.yaw,ty:K.yaw,mv:K.yaw,v:0,w:0,steer:0,a:0,c:0.1,rip:0,drag:1,load:0,loadWet:0,run:0});hvGround(h,1);hvPose(h)}
+function hvReset(h){const H=h.home;Object.assign(h,{x:H.x,z:H.z,yaw:H.yaw,ty:H.yaw,mv:H.yaw,v:0,w:0,steer:0,a:0,c:0.1,rip:0,drag:1,load:0,loadWet:0,run:0});hvGround(h,1);hvPose(h)}
 // sits it on the ground under its wheels or tracks (k: how far toward it this frame)
 function hvGround(h,k){const K=h.K,sy=Math.sin(h.yaw),cy=Math.cos(h.yaw),S=(lx,lz)=>surfAt(h.x+lx*cy+lz*sy,h.z-lx*sy+lz*cy);
   const fl=S(-K.hw,K.af),fr=S(K.hw,K.af),bl=S(-K.hw,K.ab),br=S(K.hw,K.ab),hf=(fl+fr)/2,hb=(bl+br)/2,L=K.af-K.ab,y=hb+(hf-hb)*(-K.ab/L);
@@ -244,5 +247,5 @@ function hvBucket(h,dt,arm,curl,on){const cap=TU.hvLdCap,full=1-0.15*h.load/cap;
   h.heap.visible=h.load>0.01;if(h.heap.visible){const s=0.35+0.65*Math.sqrt(h.load/cap);h.heap.scale.set(2.3*s,0.7*s,0.9+0.3*s);tintLoad(h.heap.material,h.loadC)}}
 // the one the worker is in, when it can dig (the dig grid follows it, digtiles.js)
 function hvDigger(){const R=WK_RIDES[wk.inside];return R&&R.m==='heavy'&&!R.o.K.trail&&!R.o.K.car?R.o:null}
-// the walker climbs in beside them (walker.js): they join WK_RIDES as hv0 to hv4
+// the walker climbs in beside them (walker.js): they join WK_RIDES as hv0 to hv4 (Dexter's) and hv5 to hv9 (Corley's)
 hvs.forEach((h,i)=>{WK_RIDES['hv'+i]={o:h,c:h.K.C,r:h.K.R,m:'heavy',n:h.K.n,pick(){hvI=i}};hvReset(h)});

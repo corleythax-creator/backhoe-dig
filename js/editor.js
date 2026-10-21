@@ -30,7 +30,7 @@ const ED_KINDS={pine:'Pine tree',leafy:'Leafy tree',rock:'Boulder'};
 // (home: where each starts, for Back to start)
 const ED_MACH=[{name:'Excavator',o:()=>st,m:()=>machine,r:2.6,home:()=>START},{name:'Dump truck',o:()=>tr,m:()=>truck,r:3.6,home:()=>TR_START},{name:'Mower',o:()=>mw,m:()=>mower,r:1.2,home:()=>MW_START},
   {name:'Skid steer',o:()=>sk,m:()=>skid,r:1.6,home:()=>SK_START},
-  ...hvs.map(h=>({name:h.K.n[0].toUpperCase()+h.K.n.slice(1),o:()=>h,m:()=>h.g,r:h.K.trail?3.6:2.4,home:()=>h.K})),{name:'You, on foot',o:()=>wk,m:()=>walker,r:0.8,home:()=>WK_START}];
+  ...hvs.map(h=>({name:h.K.n[0].toUpperCase()+h.K.n.slice(1)+(h.home.island==='corley'?" (Corley's)":''),o:()=>h,m:()=>h.g,r:h.K.trail?3.6:2.4,home:()=>h.home})),{name:'You, on foot',o:()=>wk,m:()=>walker,r:0.8,home:()=>WK_START}];
 const edFt=m=>m/FT,edFmt=(m,d)=>(m/FT).toFixed(d===undefined?1:d);
 // spots are given from the trench's middle, so the grid lines up with the numbers shown
 const ED_ZM=(TRENCH_Z0+TRENCH_Z1)/2;
