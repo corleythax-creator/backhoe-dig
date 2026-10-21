@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-21T03:03:00Z",
+ "updated": "2026-10-21T03:47:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -36,9 +36,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-20",
-   "dh": 67,
-   "act": 3,
-   "versions": 8
+   "dh": 77,
+   "act": 3.5,
+   "versions": 9
   }
  ],
  "extra": [
@@ -1686,6 +1686,15 @@ window.EFFORT = {
    "tris": 4468895,
    "chars": 1171967,
    "what": "The excavator and dump truck on physically based materials (worn painted steel, bare steel and rubber that reflect the sky) with a new rounded cab, hood, fenders, dump body and tailgate on the truck"
+  },
+  {
+   "v": 183,
+   "asked": "2026-10-20T22:05:00-05:00",
+   "live": "2026-10-20T22:47:46-05:00",
+   "dh": 10,
+   "tris": 4642001,
+   "chars": 1179289,
+   "what": "One of every machine on Corley's Island and on Dexter's: a second dozer, loader, semi, pickup and four-wheeler on Corley's east lawn, and twins of the excavator, dump truck, mower, skid steer and dirt bike, with every machine moved back to its home island"
   }
  ]
 };
