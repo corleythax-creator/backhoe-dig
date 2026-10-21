@@ -1,21 +1,37 @@
-// Corley's Island: detailed machine models from files (models/*.glb, glTF). The excavator's comes from
-// tools/build_model.js, and any model that keeps its contract (tools/models/excavator.js: a node per moving part, in
-// that part's own frame, materials named for the game's) can replace it. With the Graphics setting's Machine models on
-// Detailed, the file is fetched once and its parts go into the game's own part groups in place of the simple shapes,
-// which stay for the Simple setting; the rams, hoses and bucket linkage stay the game's own. Only how the machine looks
-// changes, never how it digs or moves (CLAUDE.md).
+// Corley's Island: detailed machine models from files (models/*.glb, glTF), on physically based materials. The
+// excavator's and the dump truck's come from tools/build_model.js, and any model that keeps its contract
+// (tools/models/excavator.js and truck.js: a node per moving part, in that part's own frame, materials named for the
+// game's) can replace them. With the Graphics setting's Machine models on Detailed, each file is fetched once and its
+// parts go into the game's own part groups in place of the simple shapes, which stay for the Simple setting; the parts
+// the model leaves to the game (the excavator's rams, hoses and linkage; the truck's chassis, tanks, lights, cab inside
+// and wheels) switch to the same physically based materials. Only how the machines look changes, never how they dig
+// or move (CLAUDE.md).
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 const MDL_LOADER='https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/loaders/GLTFLoader.js';
-const mdl={want:false,on:false,ex:null,loading:false,simple:null,swap:[]};
-// smooth-shaded copies of the game's flat-shaded materials, so curved parts read round; each gets the rain's wet look
-function mdlSmooth(base,o){const m=base.clone();m.flatShading=false;m.userData={};if(o)Object.assign(m,o);if(typeof wetPatch==='function')wetPatch(m);return m}
+const mdl={want:false,on:false,ex:null,loading:false,simple:null,swap:[],tr:null,trOn:false,trLoading:false,trSimple:null,trSwap:[]};
+// physically based, smooth-shaded stand-ins for the game's flat-shaded materials (the rams and hoses), so curved parts
+// read round: glossy ones (the chromed rods) as polished metal; each gets the rain's wet look
+function mdlSmooth(base){const shiny=(base.shininess||0)>50,m=new THREE.MeshStandardMaterial({color:base.color.clone(),metalness:shiny?0.95:0.3,roughness:shiny?0.15:0.5,envMap:skyEnv});
+  if(typeof wetPatch==='function')wetPatch(m);return m}
 let mdlMats=null;
-function mdlMatsMake(){if(mdlMats)return mdlMats;
-  const S=mdlSmooth;
-  mdlMats={paint:S(ORANGE),paintD:S(ORANGE_D),steel:S(STEEL),steelL:S(STEEL_L),chrome:S(CHROME),rubber:S(RUBBER),
-    track:S(M(0x34332f,{shininess:14,specular:0x1c1c1c})),bucket:S(STEEL_L),lens:S(LENS),redL:S(REDL),amber:S(AMBER),
-    black:S(M(0x3a3d40,{shininess:18,specular:0x1a1a1a})),seat:S(M(0x3a3c40,{shininess:4,specular:0x0a0a0a})),trim:S(M(0x8c8f92,{shininess:6})),
-    mirror:S(M(0x9aa9b4,{shininess:90,envMap:skyEnv,combine:THREE.MixOperation,reflectivity:1})),glass:glass.material,
+// physically based materials for the detailed models: paint, bare steel and rubber carry a seamless photo detail (the
+// wear, scratches and grime of textures/mach_*.jpg, tinted to the part's colour by dividing out the texture's mean, in linear light as the shader reads it), its
+// relief and roughness maps (tools/pbr.py), and the sky's reflection (skyEnv), so steel is metal and paint is paint
+const MDL_TEX={paint:[0.301,0.301,0.301],steel:[0.084,0.084,0.084],rubber:[0.049,0.049,0.049]},mdlTexC={};
+function mdlTex(id,kind){const k=id+kind;if(!mdlTexC[k]){const t=new THREE.TextureLoader().load(`textures/mach_${id}${kind}.jpg`);
+  t.wrapS=t.wrapT=THREE.RepeatWrapping;t.anisotropy=4;if(!kind)t.encoding=THREE.sRGBEncoding;mdlTexC[k]=t}return mdlTexC[k]}
+function mdlStd(hex,o){o=o||{};const m=new THREE.MeshStandardMaterial({color:hex,metalness:o.metal||0,roughness:o.rough==null?0.5:o.rough,envMap:skyEnv,envMapIntensity:o.env||1});
+  if(o.tex){const c=MDL_TEX[o.tex];m.map=mdlTex(o.tex,'');m.color.setRGB(m.color.r/c[0],m.color.g/c[1],m.color.b/c[2]);
+    m.normalMap=mdlTex(o.tex,'_n');m.normalScale.set(o.relief||0.6,o.relief||0.6);m.roughnessMap=mdlTex(o.tex,'_r');m.roughness=o.rough==null?1:o.rough}
+  if(o.emissive)m.emissive.setHex(o.emissive);if(typeof wetPatch==='function')wetPatch(m);return m}
+function mdlMatsMake(){if(mdlMats)return mdlMats;const P=(h,o)=>mdlStd(h,Object.assign({tex:'paint'},o)),St=(h,o)=>mdlStd(h,Object.assign({tex:'steel',metal:0.65},o));
+  mdlMats={paint:P(0xe8701d),paintD:P(0xb8561a),paintW:P(0xe9ecea),paintR:P(0xa8231c),
+    steel:St(0x2b2d2c),steelL:St(0x55595a),bed:St(0x6c7378,{metal:0.35}),bedD:St(0x4c5257,{metal:0.35}),bucket:St(0x55595a),
+    chrome:mdlStd(0xc9ccc8,{metal:1,rough:0.18}),rim:mdlStd(0xb9bdbf,{metal:0.85,rough:0.35}),
+    rubber:mdlStd(0x1b1c1b,{tex:'rubber',relief:0.8}),track:mdlStd(0x34332f,{tex:'steel',metal:0.5,relief:1}),tire:mdlStd(0x1b1c1b,{tex:'rubber',relief:1}),
+    lens:LENS,redL:REDL,amber:AMBER,
+    black:mdlStd(0x2a2c2e,{rough:0.55}),seat:mdlStd(0x34363a,{rough:0.85}),trim:mdlStd(0x8c8f92,{rough:0.6}),
+    mirror:mdlStd(0xdde4ea,{metal:1,rough:0.04}),glass:glass.material,
     screen:new THREE.MeshBasicMaterial({map:mdlScreenTex(),toneMapped:false})};
   mdlMats.glass.userData.noWet=true;
   return mdlMats}
@@ -51,10 +67,11 @@ function mdlExOn(on){
         const mesh=new THREE.Mesh(m.geometry,mat);mesh.name='mdl_'+m.name;mesh.castShadow=k!=='glass'&&k!=='screen';mesh.receiveShadow=k!=='glass';
         if(k==='track'||k==='bucket'){mesh.userData.grime=k;mesh.userData.grimeBase=mat;
           // dirt builds up on its own copy, as on the simple shapes (dirt.js); if that has started, join it now
-          if(grimeMats){const m2=mat.clone();mesh.material=m2;grimeMats.push({m:m2,base:mat,kind:k})}}
+          if(grimeMats){const m2=mdlClone(mat);mesh.material=m2;grimeMats.push({m:m2,base:mat,kind:k})}}
         if(!m.geometry.attributes.uv)mdlBoxUV(m.geometry);
         mesh.layers.enable(RAIN_LAYER);if(k==='glass')mesh.renderOrder=2;mesh.visible=false;par.add(mesh);mdl.swap.push(mesh)})}}
   for(const c of mdl.simple)c.visible=!on;glass.visible=!on;for(const m of mdl.swap)m.visible=on;
+  for(const g of Object.values(P))mdlRemat(g,on);
   // the rams and hoses turn smooth with the model
   if(!mdl.ramMat){mdl.ramMat={b:rams[0].barrel.material,r:rams[0].rod.material,e:rams[0].ea.material,h:HOSE};
     mdl.ramSm={b:mdlSmooth(mdl.ramMat.b),r:mdlSmooth(mdl.ramMat.r),e:mdlSmooth(mdl.ramMat.e),h:mdlSmooth(HOSE)}}
@@ -67,7 +84,34 @@ function mdlBoxUV(g){const P=g.attributes.position.array,Nm=g.attributes.normal.
   for(let v=0;v<n;v++){const o=v*3,ax=Math.abs(Nm[o]),ay=Math.abs(Nm[o+1]),az=Math.abs(Nm[o+2]);let u,w;
     if(ax>=ay&&ax>=az){u=P[o+2];w=P[o+1]}else if(ay>=az){u=P[o];w=P[o+2]}else{u=P[o];w=P[o+1]}UV[v*2]=u*0.9;UV[v*2+1]=w*0.9}
   g.setAttribute('uv',new THREE.BufferAttribute(UV,2))}
+// a copy of a material for one mesh's own dirt (dirt.js), with the rain's wet look put on again
+function mdlClone(m){const c=m.clone();c.userData={};if(typeof wetPatch==='function')wetPatch(c);return c}
+// the game's flat-shaded materials and the physically based ones that stand in for them on the detailed machines
+function mdlPbrMap(){if(mdl.pmap)return mdl.pmap;const m=mdlMatsMake();
+  mdl.pmap=new Map([[ORANGE,m.paint],[ORANGE_D,m.paintD],[STEEL,m.steel],[STEEL_L,m.steelL],[CHROME,m.chrome],[RUBBER,m.tire],
+    [WHITE,m.paintW],[WHITE_DS,m.paintW],[BEDM,m.bed],[BED_D,m.bedD]]);return mdl.pmap}
+// puts every mesh of a part group (the game's own, not the model's) on its physically based stand-in, or back; a mesh
+// carrying its own dirt (dirt.js grimeMats) gets its own copy, and the dirt follows it
+function mdlRemat(root,on){const map=mdlPbrMap(),gm=typeof grimeMats!=='undefined'&&grimeMats;
+  root.traverse(o=>{if(!o.isMesh||o.name.startsWith('mdl_'))return;const u=o.userData;
+    if(on){if(u.mdlOld)return;const cur=o.material,g=gm&&gm.find(e=>e.m===cur),pb=map.get(g?g.base:cur);if(!pb)return;
+      u.mdlOld=cur;if(g){u.mdlOldBase=g.base;const c=mdlClone(pb);g.m=c;g.base=pb;o.material=c}else o.material=pb}
+    else if(u.mdlOld){const g=gm&&gm.find(e=>e.m===o.material);if(g){g.m=u.mdlOld;g.base=u.mdlOldBase}o.material=u.mdlOld;u.mdlOld=null}})}
+// ---------- the dump truck ----------
+function mdlLoadTr(){if(mdl.tr||mdl.trLoading)return;mdl.trLoading=true;
+  mdlLoaderReady(()=>new THREE.GLTFLoader().load('models/truck.glb',gl=>{mdl.trLoading=false;mdl.tr=gl.scene;if(mdl.want)mdlTrOn(true)},undefined,()=>{mdl.trLoading=false}))}
+// the model's body panels go in place of the simple truck's painted ones (its white cab, hood and fenders, the dump body
+// and the tailgate); the rest of the truck stays, on the physically based materials
+function mdlTrOn(on){
+  if(on&&!mdl.tr){mdlLoadTr();return}
+  if(on===mdl.trOn)return;mdl.trOn=on;const P={body:tBody,bed:bedG,tail:tailP},PAINTED=[WHITE,WHITE_DS,BEDM,BED_D];
+  if(!mdl.trSimple){mdl.trSimple=[];for(const g of Object.values(P))for(const c of g.children)if(c.isMesh&&c!==heap&&PAINTED.includes(c.material))mdl.trSimple.push(c)}
+  if(on&&!mdl.trSwap.length){const mats=mdlMatsMake();
+    for(const [name,par] of Object.entries(P)){const node=mdl.tr.getObjectByName(name);if(!node)continue;
+      node.traverse(m=>{if(!m.isMesh)return;const mat=mats[m.material.name]||mats.steel,mesh=new THREE.Mesh(m.geometry,mat);mesh.name='mdl_'+m.name;
+        mesh.castShadow=mesh.receiveShadow=true;if(!m.geometry.attributes.uv)mdlBoxUV(m.geometry);mesh.layers.enable(RAIN_LAYER);mesh.visible=false;par.add(mesh);mdl.trSwap.push(mesh)})}}
+  for(const c of mdl.trSimple)c.visible=!on;for(const m of mdl.trSwap)m.visible=on;mdlRemat(truck,on)}
 // gfx.js: Detailed or Simple machine models
-function mdlGfx(detail){mdl.want=!!detail;mdlExOn(mdl.want)}
+function mdlGfx(detail){mdl.want=!!detail;mdlExOn(mdl.want);mdlTrOn(mdl.want)}
 // once a few seconds, the cab display's clock (only while the detailed model shows)
 function mdlTick(dt){if(!mdl.on)return;mdlScrT+=dt;if(mdlScrT>5){mdlScrT=0;mdlScreenDraw()}}

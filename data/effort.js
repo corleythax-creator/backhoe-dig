@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-21T02:35:00Z",
+ "updated": "2026-10-21T03:03:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -36,9 +36,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-20",
-   "dh": 51,
-   "act": 2.5,
-   "versions": 7
+   "dh": 67,
+   "act": 3,
+   "versions": 8
   }
  ],
  "extra": [
@@ -1677,6 +1677,15 @@ window.EFFORT = {
    "tris": 4432637,
    "chars": 1167046,
    "what": "Dexter's blue pickup and red four-wheeler: get in and drive them anywhere, with real engine sounds, sliding in hard turns, and their speed, acceleration, braking, steering and grip in the Tuning tab"
+  },
+  {
+   "v": 182,
+   "asked": "2026-10-20T21:35:00-05:00",
+   "live": "2026-10-20T22:03:51-05:00",
+   "dh": 16,
+   "tris": 4468895,
+   "chars": 1171967,
+   "what": "The excavator and dump truck on physically based materials (worn painted steel, bare steel and rubber that reflect the sky) with a new rounded cab, hood, fenders, dump body and tailgate on the truck"
   }
  ]
 };

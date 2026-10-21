@@ -29,7 +29,9 @@ PBR = {
     'grating': (0.6, 8, .35, .60), 'rebar': (0.6, 8, .35, .60),
     'brick': (1.0, 5, .55, .85), 'brick_old': (1.0, 5, .60, .90), 'herringbone': (1.0, 5, .55, .85),
     'cobble': (0.9, 6, .50, .80), 'flagstone': (1.0, 5, .50, .80),
-    'plywood': (1.0, 2, .55, .75), 'planks': (1.0, 3, .50, .75), 'shingles': (1.0, 5, .60, .85)}
+    'plywood': (1.0, 2, .55, .75), 'planks': (1.0, 3, .50, .75), 'shingles': (1.0, 5, .60, .85),
+    # the detailed machines' paint, bare steel and tyre rubber (js/models.js)
+    'mach_paint': (0.8, 2, .30, .65), 'mach_steel': (0.8, 3, .40, .75), 'mach_rubber': (0.8, 2, .75, .92)}
 
 
 def make(mid):

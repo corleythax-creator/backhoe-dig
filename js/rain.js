@@ -291,7 +291,7 @@ function wetPatch(m){if(!m||m.userData.wetP||m.userData.noWet||m===groundMat||tu
     f=f.includes('#include <normal_fragment_maps>')?f.replace('#include <normal_fragment_maps>','#include <normal_fragment_maps>\nfloat wW=uWetAll*clamp(inverseTransformDirection(normal,viewMatrix).y*0.6+0.4,0.0,1.0);diffuseColor.rgb*=1.0-0.32*wW;')
       :f.replace('#include <color_fragment>','#include <color_fragment>\nfloat wW=uWetAll*0.6;diffuseColor.rgb*=1.0-0.32*wW;');
     sh.fragmentShader=f.replace('#include <lights_phong_fragment>','#include <lights_phong_fragment>\nmaterial.specularColor=max(material.specularColor,vec3(0.25*wW));material.specularShininess=mix(material.specularShininess,max(material.specularShininess,80.0),wW);')
-      .replace('#include <lights_physical_fragment>','#include <lights_physical_fragment>\nmaterial.specularRoughness=mix(material.specularRoughness,min(material.specularRoughness,0.28),wW);')};
+      .replace('#include <lights_physical_fragment>','#include <lights_physical_fragment>\nmaterial.roughness=mix(material.roughness,min(material.roughness,0.28),wW);')};
   m.customProgramCacheKey=()=>key+'|wet';m.needsUpdate=true}
 function wetPatchAll(){scene.traverse(o=>{if(o.isMesh)(Array.isArray(o.material)?o.material:[o.material]).forEach(wetPatch)})}
 function wetTick(dt,r){wetAll=r>0.03?Math.min(1,wetAll+dt*(0.01+0.05*r)):Math.max(0,wetAll-dt/300);wetAllU.value=wetAll}
