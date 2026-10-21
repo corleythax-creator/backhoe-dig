@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-20T22:33:00Z",
+ "updated": "2026-10-21T01:28:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -36,9 +36,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-20",
-   "dh": 26,
-   "act": 1,
-   "versions": 4
+   "dh": 28,
+   "act": 1.5,
+   "versions": 5
   }
  ],
  "extra": [
@@ -1650,6 +1650,15 @@ window.EFFORT = {
    "tris": 4441233,
    "chars": 1161385,
    "what": "Leaf trees and bushes use a loose photo leaf spray with sky showing between the leaves instead of a solid clump, with more cards per clump so crowns stay full"
+  },
+  {
+   "v": 179,
+   "asked": "2026-10-20T20:02:00-05:00",
+   "live": "2026-10-20T20:28:24-05:00",
+   "dh": 2,
+   "tris": 4443187,
+   "chars": 1161663,
+   "what": "Oaks and birches get their own photo leaf sprays (lobed oak leaves with acorns, small birch leaves on drooping twigs); maples and the undergrowth keep the maple spray"
   }
  ]
 };
