@@ -17,6 +17,10 @@ Every sound in the game is cut from these field recordings on Freesound, all rel
 | o_run | [outboard motor boat onboard high speed.flac](https://freesound.org/s/637744/) | kyles |
 | f_run | [210314_0042_outboard.mp3](https://freesound.org/s/564422/) | titi2 |
 | g_run | [Marine diesel engine](https://freesound.org/s/264864/) | AugustSandberg |
+| p_idle | [Silverado 1500 5.3 startup and idle.m4a](https://freesound.org/s/610776/) | Therancher01 |
+| p_run | [pickup truck](https://freesound.org/s/745298/) | solarpsychedelic |
+| a_idle | [Quad Bike_ATV Engine.wav](https://freesound.org/s/379915/) | Alex_hears_things |
+| a_run | [ATV Revving engine.mp3](https://freesound.org/s/419091/) | SomeoneCool15 |
 | tracks | [construction equipment tracked.wav](https://freesound.org/s/88422/) | cognito perceptu |
 | hyd | [hydraulics.wav](https://freesound.org/s/212941/) | nuckan |
 | pour | [Pouring Gravel.mp3](https://freesound.org/s/271130/) | sassyde |
