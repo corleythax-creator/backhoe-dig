@@ -17,7 +17,7 @@ const sndVol=v=>(v/100)*(v/100);// sliders are perceptual: half way is a quarter
 
 // ---------- the recordings ----------
 // SND_FILES start (written by tools/sounds.py: a loop's length and the pad either side of it, the alarm's period, a sprite's hits as [start, length])
-const SND_FILES={"x_idle":{"loop":4.0,"pad":0.25},"x_work":{"loop":5.0,"pad":0.25},"t_idle":{"loop":4.0,"pad":0.25},"t_work":{"loop":4.0,"pad":0.25},"h_idle":{"loop":4.0,"pad":0.25},"s_run":{"loop":4.0,"pad":0.25},"m_idle":{"loop":3.0,"pad":0.25},"m_run":{"loop":4.0,"pad":0.25},"b_idle":{"loop":3.0,"pad":0.25},"b_run":{"loop":3.0,"pad":0.25},"o_idle":{"loop":4.0,"pad":0.25},"o_run":{"loop":4.0,"pad":0.25},"f_run":{"loop":5.0,"pad":0.25},"g_run":{"loop":5.0,"pad":0.25},"tracks":{"loop":5.0,"pad":0.25},"hyd":{"loop":1.39998,"pad":0.25},"pour":{"loop":5.0,"pad":0.25},"scrape":{"loop":1.5,"pad":0.25},"tire":{"loop":4.0,"pad":0.25},"wash":{"loop":5.0,"pad":0.25},"splash":{"loop":6.0,"pad":0.25},"trickle":{"loop":6.0,"pad":0.25},"alarm":{"period":1.19},"brake":{},"horn":{},"gate":{},"rocks":{},"cavein":{},"thud":{"hits":[[0.0,0.73],[0.81,0.73],[1.62,0.73],[2.4299,0.73],[3.2399,0.73]]},"dig":{"hits":[[0.0,0.63],[0.71,0.63],[1.42,0.63],[2.13,0.63],[2.84,0.63],[3.55,0.63],[4.26,0.63],[4.97,0.63]]},"slap":{"hits":[[0.0,0.63],[0.71,0.63],[1.42,0.63],[2.13,0.63],[2.84,0.63],[3.55,0.63]]},"step_g":{"hits":[[0.0,0.35],[0.43,0.35],[0.86,0.35],[1.29,0.35],[1.72,0.35],[2.15,0.35],[2.58,0.35],[3.01,0.35],[3.44,0.35],[3.87,0.35]]},"step_s":{"hits":[[0.0,0.35],[0.43,0.35],[0.86,0.35],[1.29,0.35],[1.72,0.35],[2.15,0.35],[2.58,0.35],[3.01,0.35],[3.44,0.35],[3.87,0.35]]},"gull":{"hits":[[0.0,1.13],[1.21,1.13],[2.42,1.13]]},"thun_n":{},"thun_f":{},"thun_r":{},"rain":{"loop":10.0,"pad":0.25},"rain_h":{"loop":8.0,"pad":0.25},"wind":{"loop":10.0,"pad":0.25},"birds":{"loop":15.0,"pad":0.25},"crickets":{"loop":10.0,"pad":0.25},"frogs":{"loop":15.0,"pad":0.25},"lap":{"loop":12.0,"pad":0.25}};
+const SND_FILES={"x_idle":{"loop":4.0,"pad":0.25},"x_work":{"loop":5.0,"pad":0.25},"t_idle":{"loop":4.0,"pad":0.25},"t_work":{"loop":4.0,"pad":0.25},"h_idle":{"loop":4.0,"pad":0.25},"s_run":{"loop":4.0,"pad":0.25},"m_idle":{"loop":3.0,"pad":0.25},"m_run":{"loop":4.0,"pad":0.25},"b_idle":{"loop":3.0,"pad":0.25},"b_run":{"loop":3.0,"pad":0.25},"o_idle":{"loop":4.0,"pad":0.25},"o_run":{"loop":4.0,"pad":0.25},"f_run":{"loop":5.0,"pad":0.25},"g_run":{"loop":5.0,"pad":0.25},"p_idle":{"loop":4.0,"pad":0.25},"p_run":{"loop":3.5,"pad":0.25},"a_idle":{"loop":3.0,"pad":0.25},"a_run":{"loop":1.5,"pad":0.25},"tracks":{"loop":5.0,"pad":0.25},"hyd":{"loop":1.39998,"pad":0.25},"pour":{"loop":5.0,"pad":0.25},"scrape":{"loop":1.5,"pad":0.25},"tire":{"loop":4.0,"pad":0.25},"wash":{"loop":5.0,"pad":0.25},"splash":{"loop":6.0,"pad":0.25},"trickle":{"loop":6.0,"pad":0.25},"alarm":{"period":1.19},"brake":{},"horn":{},"gate":{},"rocks":{},"cavein":{},"thud":{"hits":[[0.0,0.73],[0.81,0.73],[1.62,0.73],[2.4299,0.73],[3.2399,0.73]]},"dig":{"hits":[[0.0,0.63],[0.71,0.63],[1.42,0.63],[2.13,0.63],[2.84,0.63],[3.55,0.63],[4.26,0.63],[4.97,0.63]]},"slap":{"hits":[[0.0,0.63],[0.71,0.63],[1.42,0.63],[2.13,0.63],[2.84,0.63],[3.55,0.63]]},"step_g":{"hits":[[0.0,0.35],[0.43,0.35],[0.86,0.35],[1.29,0.35],[1.72,0.35],[2.15,0.35],[2.58,0.35],[3.01,0.35],[3.44,0.35],[3.87,0.35]]},"step_s":{"hits":[[0.0,0.35],[0.43,0.35],[0.86,0.35],[1.29,0.35],[1.72,0.35],[2.15,0.35],[2.58,0.35],[3.01,0.35],[3.44,0.35],[3.87,0.35]]},"gull":{"hits":[[0.0,1.13],[1.21,1.13],[2.42,1.13]]},"thun_n":{},"thun_f":{},"thun_r":{},"rain":{"loop":10.0,"pad":0.25},"rain_h":{"loop":8.0,"pad":0.25},"wind":{"loop":10.0,"pad":0.25},"birds":{"loop":15.0,"pad":0.25},"crickets":{"loop":10.0,"pad":0.25},"frogs":{"loop":15.0,"pad":0.25},"lap":{"loop":12.0,"pad":0.25}};
 // SND_FILES end
 const SND_RAW={};
 function sndFetch(){for(const n in SND_FILES)if(!SND_RAW[n])SND_RAW[n]=fetch('sounds/'+n+'.mp3').then(r=>{if(!r.ok)throw new Error(r.status);return r.arrayBuffer()})}
@@ -70,7 +70,8 @@ async function sndBuild(){
   snd.voices=[T,X,Mw,Sk,Bk,Ob,Fb,Tg,Hv];
   snd.engT=sndEngine('t_idle','t_work',700,1700,T.eng);snd.engX=sndEngine('x_idle','x_work',850,1800,X.eng);
   snd.engM=sndEngine('m_idle','m_run',880,1150,Mw.eng);snd.engS=sndEngine('s_run',null,950,1750,Sk.eng,1300);
-  snd.engH=sndEngine('h_idle','t_work',750,1650,Hv.eng);snd.engB=sndEngine('b_idle','b_run',1000,2000,Bk.eng);
+  snd.engH=sndEngine('h_idle','t_work',750,1650,Hv.eng);snd.engP=sndEngine('p_idle','p_run',700,2600,Hv.eng);snd.engA=sndEngine('a_idle','a_run',1300,4500,Hv.eng);
+  snd.hvTireG=sndGain(0,Hv.fx);snd.hvTire=sndLoopSrc('tire',sndFilter('lowpass',6000,0.6,snd.hvTireG));snd.engB=sndEngine('b_idle','b_run',1000,2000,Bk.eng);
   snd.engO=sndEngine('o_idle','o_run',800,2400,Ob.eng);snd.engF=sndEngine('f_run',null,900,2000,Fb.eng,1500);snd.engG=sndEngine('g_run',null,700,1200,Tg.eng,950);
   snd.engO.rpm=snd.engF.rpm=800;snd.engG.rpm=750;
   const noise=toBuf(c,noiseBuf(c.sampleRate,2,21));snd.noise=noise;
@@ -207,10 +208,18 @@ function updateSound(dt){
   // dirt bike: idles while you sit on it; the gas (and the back wheel spinning free in the air) sends the revs up
   const be=snd.engB,bT=1000+1000*Math.min(1,Math.max(0,bk.thr)*(bk.air?1:0.45)+Math.abs(bk.v)/TU.bkSpd*0.6);be.rpm+=(bT-be.rpm)*Math.min(1,dt*(bT>be.rpm?6:3));
   sndEngineTo(be,be.rpm,Math.max(0,bk.thr),quiet*0.65*bk.run,t);
-  // Dexter's heavy machine you are in (heavy.js): idles while you sit in it; driving and the hydraulics pull the revs up
-  {const R=WK_RIDES[wk.inside],h=R&&R.m==='heavy'?R.o:null,he=snd.engH;if(h)sndPlace(snd.H,h.x,h.y+1.6,h.z,t,cab==='heavy');
-    const hT=750+900*(h?Math.min(1,Math.abs(h.v)/h.top*0.7+h.hyd*0.5+Math.abs(h.thr)*0.2):0);he.rpm+=(hT-he.rpm)*Math.min(1,dt*3);
-    sndEngineTo(he,he.rpm,h?Math.min(1,Math.abs(h.thr)*0.7+h.hyd*0.6):0,quiet*0.8*(h?h.run:0),t)}
+  // Dexter's machine you are in (heavy.js): idles while you sit in it; driving and the hydraulics pull the revs up. The
+  // pickup shifts through four gears as it gathers speed; the four-wheeler's belt drive holds the revs up with the gas
+  {const R=WK_RIDES[wk.inside],h=R&&R.m==='heavy'?R.o:null,car=h&&h.K.car;if(h)sndPlace(snd.H,h.x,h.y+1.2,h.z,t,cab==='heavy'&&!h.K.rider);
+    const he=snd.engH,hT=750+900*(h&&!car?Math.min(1,Math.abs(h.v)/h.top*0.7+h.hyd*0.5+Math.abs(h.thr)*0.2):0);he.rpm+=(hT-he.rpm)*Math.min(1,dt*3);
+    sndEngineTo(he,he.rpm,h&&!car?Math.min(1,Math.abs(h.thr)*0.7+h.hyd*0.6):0,quiet*0.8*(h&&!car?h.run:0),t);
+    const sp=h?Math.abs(h.v):0,th=h?Math.max(0,h.thr*Math.sign(h.v||h.thr)):0;
+    const pe=snd.engP,pg=Math.min(3,Math.floor(sp/7)),pT=car==='pk'?(sp<0.3?700+th*500:1100+1300*Math.min(1,(sp-pg*7)/7)*(0.6+0.4*th)+th*300):700;pe.rpm+=(pT-pe.rpm)*Math.min(1,dt*(pT>pe.rpm?4:6));
+    sndEngineTo(pe,pe.rpm,th,quiet*0.8*(car==='pk'?h.run:0),t);
+    const ae=snd.engA,aT=car==='at'?1300+3200*Math.min(1,th*0.55+sp/Math.max(1,h.top)*0.6):1300;ae.rpm+=(aT-ae.rpm)*Math.min(1,dt*(aT>ae.rpm?6:4));
+    sndEngineTo(ae,ae.rpm,th,quiet*0.7*(car==='at'?h.run:0),t);
+    // tyres on dirt and gravel, and the scrub of a slide
+    snd.hvTire.playbackRate.setTargetAtTime(0.6+sp*0.06,t,0.1);snd.hvTireG.gain.setTargetAtTime(quiet*(car?Math.min(1,sp/6)*0.6+Math.min(1,(h.slide||0)*3)*Math.min(1,sp/4)*0.6:0),t,0.1)}
   // the boat you are in: idles while you are aboard, the throttle and speed send the revs up; water along the hull and
   // a knock now and then as it meets the swells (often, and harder, the faster it goes; a gentle lap at rest)
   {const R=WK_RIDES[wk.inside],ob=R&&R.m==='boat'?R.o:null,oe=snd.engO;

@@ -7,7 +7,10 @@
 // cliff or into the dump truck's bed. The dozer's ripper, at the back, goes down and up on the right stick left and right:
 // dragged through the ground it breaks up hard clay and rock (ripD, terrain.js), so the blade and the excavator then dig
 // it like loose fill. The semi steers like a truck and its lowboy follows on the fifth wheel; the right
-// stick looks round.
+// stick looks round. His pickup and four-wheeler (car: their Tuning prefix) drive like cars: the engine pulls hard from
+// a stop and fades toward top speed, the brakes bite before it backs up, the wheel turns less the faster you go, and
+// past what the tyres grip in a turn they slide, the way they travel lagging the way they point. The right stick looks
+// round; on the four-wheeler you sit on it, in the open.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 // ---------- the machines ----------
 // each kind: where it starts, its circles along it (C, R: for getting in and bumping into things), its corners (P: for
@@ -19,7 +22,13 @@ const HV_KINDS={
   loader:{n:'wheel loader',x:-198,z:246,yaw:0,C:[2.4,0.4,-1.8],R:1.4,P:[[-1.4,3.9],[1.4,3.9],[-1.2,-2.75],[1.2,-2.75]],hw:1.15,af:1.4,ab:-1.3,wb:2.7,
     eye:[0,2.75,-0.15,0,-0.8,5],lamp:[0,2.2,0.6,0,-1,12],cam:1.0,col:'#f2b705',len:6.6,wid:2.7},
   semi:{n:'semi',x:-178,z:268,yaw:Math.PI/2,C:[3.0,1.0,-1.0],R:1.35,P:[[-1.2,4.5],[1.2,4.5],[-1.2,-2.6],[1.2,-2.6]],hw:1.05,af:3.4,ab:-1.75,wb:5.15,
-    eye:[0.5,2.9,1.7,0,-0.25,10],lamp:[0,1.2,4.4,0,-1.2,16],cam:1.5,col:'#b3262c',len:7.0,wid:2.5,trail:true}};
+    eye:[0.5,2.9,1.7,0,-0.25,10],lamp:[0,1.2,4.4,0,-1.2,16],cam:1.5,col:'#b3262c',len:7.0,wid:2.5,trail:true},
+  // a full-size crew-cab pickup: 19 ft 4 in long, a 12 ft 2 in wheelbase, 32 in tyres
+  pickup:{n:'pickup',x:-186,z:236,yaw:Math.PI/2,C:[1.7,0,-1.7],R:1.05,P:[[-1.0,2.95],[1.0,2.95],[-1.0,-2.95],[1.0,-2.95]],hw:0.86,af:1.85,ab:-1.85,wb:3.7,
+    eye:[0.4,1.62,0.25,0,-0.12,10],lamp:[0,0.95,2.95,0,-1,16],cam:0.95,col:'#1d3557',len:5.9,wid:2.0,car:'pk',acc:4.2,brake:7.5},
+  // a utility four-wheeler: 7 ft long, a 50 in wheelbase, 25 in tyres
+  atv:{n:'four-wheeler',x:-190,z:256,yaw:0,C:[0.5,-0.5],R:0.66,P:[[-0.6,1.05],[0.6,1.05],[-0.6,-1.05],[0.6,-1.05]],hw:0.47,af:0.64,ab:-0.64,wb:1.28,
+    eye:[0,1.68,-0.12,0,-0.3,10],lamp:[0,0.95,1.0,0,-1,10],cam:0.55,col:'#c0392b',len:2.1,wid:1.2,car:'at',acc:5.5,brake:8,rider:true}};
 // the lowboy hangs on the fifth wheel HV_KP behind the semi's middle; its axles are HV_LT behind that
 const HV_KP=1.8,HV_LT=13.2,HV_TC=[-1.2,-4.4,-7.6,-10.8,-13.4];
 // the dozer's blade swings on its push arms; the loader's arms pivot high on the front frame, HV_LA0 down at rest
@@ -76,8 +85,32 @@ function hvMake(k){const K=HV_KINDS[k],g=new THREE.Group();scene.add(g);
     q.box(2.6,0.4,2.6,D,0,1.6,-2.2+o);q.box(2.6,0.35,1.6,D,0,1.05,-3.95+o,0.62);
     q.box(2.8,0.35,8.5,D,0,0.62,-8.9+o);q.box(2.7,0.05,8.4,0x7a5434,0,0.82,-8.9+o);q.box(2.8,0.45,3.4,D,0,1.1,-14.8+o);
     for(const sx of [-1.1,1.1])for(const sz of [-13.8,-15.0,-16.2])q.wheel(0.5,0.45,sx,0.5,sz+o,0x9a9ea2);hvMesh(q,t)}
+  if(k==='pickup'){const BODY=0x1d3557,TRIM=0x1b1c1e,CHROME=0xc8ccd0,b=hvKit();
+    for(const sx of [-0.86,0.86])for(const sz of [1.85,-1.85])b.wheel(0.41,0.3,sx,0.41,sz,0xb8bcc0);
+    b.box(1.0,0.22,5.4,TRIM,0,0.5,0);b.box(1.98,0.42,5.7,BODY,0,0.84,0.05);
+    // hood and nose: grille, bumper, headlamps
+    b.box(1.94,0.3,1.6,BODY,0,1.2,2.05,0.04);b.box(1.6,0.42,0.08,CHROME,0,1.0,2.9);b.box(1.5,0.3,0.1,TRIM,0,1.0,2.92);
+    b.box(2.02,0.22,0.24,CHROME,0,0.62,2.92);for(const sx of [-0.72,0.72])b.box(0.34,0.14,0.06,0xfff6d8,sx,1.12,2.92);
+    // the crew cab: doors, glass all round, the roof, mirrors
+    b.box(1.96,0.5,2.4,BODY,0,1.25,0.1);b.box(1.8,0.56,2.1,DEX_GLASS,0,1.78,0.0);b.box(1.84,0.08,2.0,BODY,0,2.08,-0.02);
+    b.box(1.8,0.62,0.06,DEX_GLASS,0,1.76,1.12,-0.5);for(const sx of [-0.92,0.92]){b.box(0.07,0.62,0.07,BODY,sx,1.76,1.1,-0.5);b.box(0.07,0.6,0.08,BODY,sx,1.78,-0.02);b.box(0.12,0.16,0.22,TRIM,sx*1.12,1.6,1.02)}
+    // the bed: floor, sides, the front wall and the tailgate, with the tail lamps
+    b.box(1.84,0.06,2.0,TRIM,0,1.04,-1.85);for(const sx of [-0.95,0.95])b.box(0.08,0.5,2.05,BODY,sx,1.3,-1.85);
+    b.box(1.9,0.5,0.08,BODY,0,1.3,-0.82);b.box(1.9,0.52,0.08,BODY,0,1.29,-2.87);for(const sx of [-0.9,0.9])b.box(0.14,0.36,0.06,0xb3262c,sx,1.3,-2.92);
+    b.box(2.0,0.2,0.22,CHROME,0,0.64,-2.92);for(const sx of [-0.99,0.99])for(const sz of [1.85,-1.85])b.box(0.06,0.14,1.05,TRIM,sx,1.04,sz);hvMesh(b,g)}
+  if(k==='atv'){const RED=0xc0392b,TRIM=0x1b1c1e,STEEL=0x55595a,b=hvKit();
+    for(const sx of [-0.47,0.47])for(const sz of [0.64,-0.64])b.wheel(0.31,0.26,sx,0.31,sz,0x8a8e92);
+    b.box(0.5,0.22,1.5,TRIM,0,0.45,0);b.box(0.44,0.36,0.55,0x3a3c40,0,0.56,0.02);
+    // the plastics: front and back fenders over the wheels, the nose, the tank
+    b.box(1.18,0.1,0.78,RED,0,0.74,0.62);b.box(0.66,0.26,0.42,RED,0,0.78,0.98,0.35);b.box(1.18,0.1,0.72,RED,0,0.76,-0.62);
+    for(const sx of [-0.5,0.5]){b.box(0.18,0.2,0.7,RED,sx,0.66,0.62);b.box(0.18,0.2,0.66,RED,sx,0.68,-0.62);b.box(0.24,0.04,0.42,TRIM,sx*0.82,0.52,0)}
+    b.box(0.36,0.2,0.38,RED,0,0.9,0.3);b.box(0.34,0.14,0.78,0x1a1a1a,0,0.92,-0.2);
+    // steel racks front and back, the bars and the lamps
+    b.box(0.92,0.04,0.46,STEEL,0,0.88,0.76);b.box(0.92,0.04,0.52,STEEL,0,0.9,-0.76);
+    b.cyl(0.025,0.025,0.4,6,TRIM,0,0.98,0.5,-0.45);b.box(0.78,0.04,0.04,TRIM,0,1.16,0.42);for(const sx of [-0.37,0.37])b.box(0.12,0.05,0.05,0x111111,sx,1.16,0.42);
+    for(const sx of [-0.16,0.16])b.box(0.12,0.08,0.05,0xfff6d8,sx,0.84,1.18);hvMesh(b,g)}
   hvs.push(h);return h}
-for(const k of ['dozer','loader','semi'])hvMake(k);
+for(const k of ['dozer','loader','semi','pickup','atv'])hvMake(k);
 const hvV=new THREE.Vector3(),hvTip=new THREE.Vector3(),hvTipL=new THREE.Vector3(),hvTipR=new THREE.Vector3(),hvLip=new THREE.Vector3();
 function hvPose(h){h.g.position.set(h.x,h.y,h.z);h.g.rotation.set(h.pitch,h.yaw,h.roll,'YXZ');
   if(h.blade)h.blade.rotation.x=-h.a;
@@ -88,7 +121,7 @@ function hvPose(h){h.g.position.set(h.x,h.y,h.z);h.g.rotation.set(h.pitch,h.yaw,
   if(h.trailer){h.g.localToWorld(hvV.set(0,1.3,-HV_KP));const ts=Math.sin(h.ty),tc=Math.cos(h.ty),yA=surfAt(hvV.x-ts*HV_LT,hvV.z-tc*HV_LT),yK=hvV.y-1.3;
     h.trailer.position.set(hvV.x,yK,hvV.z);h.trailer.rotation.set(-Math.atan2(yK-yA,HV_LT),h.ty,0,'YXZ');
     for(const lz of HV_TC)h.circ.push([hvV.x+ts*lz,hvV.z+tc*lz,1.45])}}
-function hvReset(h){const K=h.K;Object.assign(h,{x:K.x,z:K.z,yaw:K.yaw,ty:K.yaw,v:0,w:0,steer:0,a:0,c:0.1,rip:0,drag:1,load:0,loadWet:0,run:0});hvGround(h,1);hvPose(h)}
+function hvReset(h){const K=h.K;Object.assign(h,{x:K.x,z:K.z,yaw:K.yaw,ty:K.yaw,mv:K.yaw,v:0,w:0,steer:0,a:0,c:0.1,rip:0,drag:1,load:0,loadWet:0,run:0});hvGround(h,1);hvPose(h)}
 // sits it on the ground under its wheels or tracks (k: how far toward it this frame)
 function hvGround(h,k){const K=h.K,sy=Math.sin(h.yaw),cy=Math.cos(h.yaw),S=(lx,lz)=>surfAt(h.x+lx*cy+lz*sy,h.z-lx*sy+lz*cy);
   const fl=S(-K.hw,K.af),fr=S(K.hw,K.af),bl=S(-K.hw,K.ab),br=S(K.hw,K.ab),hf=(fl+fr)/2,hb=(bl+br)/2,L=K.af-K.ab,y=hb+(hf-hb)*(-K.ab/L);
@@ -113,20 +146,21 @@ function hvTick(dt,drive,turn,arm,curl){
 function hvDrive(h,dt,drive,turn,arm,curl,on){const K=h.K;
   h.run+=((on?1:0)-h.run)*Math.min(1,dt*(on?2:0.7));h.thr=drive;h.hyd=Math.min(1,Math.abs(arm)+Math.abs(curl));
   const mudN=mudAt(h.x,h.z),k=Math.max(0,1-0.45*mudN*TU.mudDrag);
-  const ox=h.x,oz=h.z,oyaw=h.yaw,oty=h.ty,bad0=wallCount(h.x,h.z,h.yaw,K.P)+(K.trail?hvTrailOut(h):0);
-  if(K.track){h.top=TU.hvDzSpd;h.v+=(drive*h.top*k*h.drag-h.v)*Math.min(1,dt*(drive?2:4));h.w+=(-turn*TU.hvDzTurn*k-h.w)*Math.min(1,dt*5);h.yaw+=h.w*dt}
+  const ox=h.x,oz=h.z,oyaw=h.yaw,oty=h.ty,omv=h.mv,bad0=wallCount(h.x,h.z,h.yaw,K.P)+(K.trail?hvTrailOut(h):0);
+  if(K.car)hvCar(h,dt,drive,turn,k,on);
+  else if(K.track){h.top=TU.hvDzSpd;h.v+=(drive*h.top*k*h.drag-h.v)*Math.min(1,dt*(drive?2:4));h.w+=(-turn*TU.hvDzTurn*k-h.w)*Math.min(1,dt*5);h.yaw+=h.w*dt}
   else{// the gas pulls it up to speed (the semi slowly), the brakes stop it harder; the wheel locks less the faster it goes
     h.top=K.trail?TU.hvSmSpd:TU.hvLdSpd;const tgt=drive*h.top*k,acc=K.trail?0.35:1.2,up=Math.abs(tgt)>Math.abs(h.v)&&tgt*h.v>=0;
     h.v+=(tgt-h.v)*Math.min(1,dt*(up?acc:acc*3));
     const lock=(K.trail?TU.hvSmLock:TU.hvLdLock)/(1+Math.abs(h.v)*0.06);h.steer+=(turn*lock-h.steer)*Math.min(1,dt*4);
     h.w=-h.v*Math.tan(h.steer)/K.wb;h.yaw+=h.w*dt}
   if(!on){if(Math.abs(h.v)<0.05)h.v=0;if(Math.abs(h.w)<0.01)h.w=0}
-  const sy=Math.sin(h.yaw),cy=Math.cos(h.yaw);h.x+=sy*h.v*dt;h.z+=cy*h.v*dt;
+  const sy=Math.sin(h.yaw),cy=Math.cos(h.yaw),mvd=K.car?h.mv:h.yaw;h.x+=Math.sin(mvd)*h.v*dt;h.z+=Math.cos(mvd)*h.v*dt;
   // the lowboy swings in behind the fifth wheel, never folding past about 75 degrees
   if(K.trail){h.ty+=h.v/HV_LT*Math.sin(h.yaw-h.ty)*dt;const d=Math.atan2(Math.sin(h.yaw-h.ty),Math.cos(h.yaw-h.ty));if(Math.abs(d)>1.3)h.ty=h.yaw-Math.sign(d)*1.3}
   // on the islands and decks, off steep ground, out of buildings, blocks and the other machines
   if(h.v||h.w){for(const lz of [K.P[0][1],K.P[2][1]]){const px=h.x+sy*lz,pz=h.z+cy*lz,q=landClamp(px,pz,1.0,1.4);if(q[0]!==px||q[1]!==pz){h.x+=q[0]-px;h.z+=q[1]-pz;h.v*=0.5}}
-    if(wallCount(h.x,h.z,h.yaw,K.P)+(K.trail?hvTrailOut(h):0)>bad0){h.x=ox;h.z=oz;h.yaw=oyaw;h.ty=oty;h.v=0;h.w=0}
+    if(wallCount(h.x,h.z,h.yaw,K.P)+(K.trail?hvTrailOut(h):0)>bad0){h.x=ox;h.z=oz;h.yaw=oyaw;h.ty=oty;h.mv=omv;h.v=0;h.w=0}
     if(blkPush(h,K.C,K.R))h.v*=0.5;
     for(const lz of K.C){const cx=h.x+sy*lz,cz=h.z+cy*lz;
       for(const [o,cs,r] of [[st,EX_C,EX_R],[tr,TR_C,TR_R],[mw,MW_C,MW_R],[sk,SK_C,SK_R],[bk,BK_C,BK_R]])for(const q of cs){const dx=cx-o.x-Math.sin(o.yaw)*q,dz=cz-o.z-Math.cos(o.yaw)*q,d=Math.hypot(dx,dz),m=K.R+r;
@@ -137,7 +171,29 @@ function hvDrive(h,dt,drive,turn,arm,curl,on){const K=h.K;
     if(K.track){stampRut(rx,rz,h.yaw,0.28,1.5,dt);splashMud(rx+sy*1.5*Math.sign(tv||1),rz+cy*1.5*Math.sign(tv||1),h.yaw,tv,0.3,0.8,dt)}
     else for(const lz of [K.af,K.ab]){stampRut(rx+sy*lz,rz+cy*lz,h.yaw,0.3,0.45,dt);splashMud(rx+sy*lz,rz+cy*lz,h.yaw,tv,0.3,0.6,dt)}}
   hvGround(h,Math.min(1,dt*10));
-  if(K.track)hvBlade(h,dt,arm,curl,on);else if(h.arm)hvBucket(h,dt,arm,curl,on);else hvPose(h)}
+  if(K.track)hvBlade(h,dt,arm,curl,on);else if(h.arm)hvBucket(h,dt,arm,curl,on);else hvPose(h);
+  if(K.rider&&wk.inside==='hv'+hvs.indexOf(h))hvRider(h)}
+// the pickup and the four-wheeler (K.car: their Tuning keys start with it). The gas pulls with K.acc m/s² from a stop,
+// fading to nothing at top speed; against the way it rolls, the pedal is the brake (K.brake m/s²) until it stops, then
+// it backs up; off the pedals it coasts down. The wheel locks less the faster it goes (at full lock, never past about
+// 1.4 g of turn). h.mv is the way it travels: it
+// follows the way it points only as fast as the tyres can hold (about 0.8 g at 100% grip), so a hard turn at speed
+// slides, and a sliding tyre scrubs speed off
+function hvCar(h,dt,drive,turn,k,on){const K=h.K,P=K.car,top=TU[P+'Spd']*k,rev=TU[P+'Rev']*k,v=h.v;h.top=TU[P+'Spd'];if(h.mv===undefined)h.mv=h.yaw;
+  if(drive*v<0&&Math.abs(v)>0.2){const b=K.brake*TU[P+'Brake']*Math.abs(drive)*dt;h.v=Math.abs(v)<=b?0:v-Math.sign(v)*b}
+  else if(drive){const lim=drive>0?top:rev,f=Math.max(0,1-Math.abs(v)/Math.max(0.1,lim*Math.abs(drive)));h.v+=Math.sign(drive)*K.acc*TU[P+'Acc']*f*dt;
+    if(Math.abs(h.v)>lim)h.v+=(Math.sign(h.v)*lim-h.v)*Math.min(1,dt*2)}
+  else{const c=(0.35+0.004*v*v)*dt;h.v=Math.abs(v)<=c?0:v-Math.sign(v)*c}
+  const lock=Math.min(TU[P+'Lock']/(1+Math.abs(h.v)*0.03),Math.atan(K.wb*14/Math.max(1,h.v*h.v)));h.steer+=(turn*lock-h.steer)*Math.min(1,dt*5);
+  h.w=-h.v*Math.tan(h.steer)/K.wb;h.yaw+=h.w*dt;
+  const d=Math.atan2(Math.sin(h.yaw-h.mv),Math.cos(h.yaw-h.mv)),hold=7.8*TU[P+'Grip']/Math.max(1,Math.abs(h.v))*dt;
+  h.mv+=clamp(d,-hold,hold);h.slide=Math.abs(Math.sin(d));if(h.slide>0.05)h.v*=1-Math.min(0.5,1.2*h.slide*dt)}
+// the rider on the four-wheeler: on the seat, boots on the footrests, hands on the bars, leaning a little into the turns
+const hvRV=new THREE.Vector3();
+function hvRider(h){h.g.localToWorld(hvRV.set(0,0.13,-0.22));Object.assign(wk,{x:h.x,z:h.z,y:h.y,yaw:h.yaw});walker.position.copy(hvRV);
+  walker.rotation.set(-h.pitch,h.yaw,h.roll-clamp(h.steer*h.v*0.04,-0.25,0.25),'YXZ');walker.visible=!(mode==='heavy'&&camMode==='cab');
+  wkBody.position.y=0;wkBody.rotation.x=0.22;wkHead.rotation.x=-0.1;
+  for(let s=0;s<2;s++){wkLegs[s].top.rotation.x=-1.15;wkLegs[s].low.rotation.x=1.25;wkArms[s].top.rotation.x=-0.95;wkArms[s].low.rotation.x=-0.55}}
 // the dozer's blade: down on the dig site it shaves the ground as it goes forward; what it cuts rolls up in front of it
 // and spills ahead (the blade, still down, picks it up again, so the heap goes along with it); lifted, it is left there
 // It bites hard ground slowly (soilRes, terrain.js) and lugs the dozer down doing it, unless the ripper broke it up first
@@ -187,6 +243,6 @@ function hvBucket(h,dt,arm,curl,on){const cap=TU.hvLdCap,full=1-0.15*h.load/cap;
     for(let n=0;n<Math.ceil(out*50);n++)spawn(hvLip,0.9)}
   h.heap.visible=h.load>0.01;if(h.heap.visible){const s=0.35+0.65*Math.sqrt(h.load/cap);h.heap.scale.set(2.3*s,0.7*s,0.9+0.3*s);tintLoad(h.heap.material,h.loadC)}}
 // the one the worker is in, when it can dig (the dig grid follows it, digtiles.js)
-function hvDigger(){const R=WK_RIDES[wk.inside];return R&&R.m==='heavy'&&!R.o.K.trail?R.o:null}
-// the walker climbs in beside them (walker.js): they join WK_RIDES as hv0, hv1, hv2
+function hvDigger(){const R=WK_RIDES[wk.inside];return R&&R.m==='heavy'&&!R.o.K.trail&&!R.o.K.car?R.o:null}
+// the walker climbs in beside them (walker.js): they join WK_RIDES as hv0 to hv4
 hvs.forEach((h,i)=>{WK_RIDES['hv'+i]={o:h,c:h.K.C,r:h.K.R,m:'heavy',n:h.K.n,pick(){hvI=i}};hvReset(h)});

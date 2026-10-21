@@ -35,6 +35,10 @@ CLIPS = {
     'o_run':   (637744, 'loop', 118.9, 4.0, {'hp': 30, 'what': 'outboard flat out, onboard'}),
     'f_run':   (564422, 'loop', 39.0, 5.0, {'hp': 30, 'what': 'fishing boat outboard'}),
     'g_run':   (264864, 'loop', 66.0, 5.0, {'hp': 25, 'what': 'tug (marine diesel)'}),
+    'p_idle':  (610776, 'loop', 25.0, 4.0, {'hp': 30, 'what': 'pickup idle (Silverado 5.3 V8)'}),
+    'p_run':   (745298, 'loop', 5.5, 3.5, {'hp': 30, 'what': 'pickup under way'}),
+    'a_idle':  (379915, 'loop', 8.5, 3.0, {'hp': 40, 'what': 'four-wheeler idle (quad bike)'}),
+    'a_run':   (419091, 'loop', 3.0, 1.5, {'hp': 40, 'what': 'four-wheeler revving'}),
     # machine effects
     'tracks':  (88422, 'loop', 8.0, 5.0, {'hp': 120, 'what': 'tracks clattering (tracked earthmover)'}),
     'hyd':     (212941, 'loop', 4.75, 1.4, {'hp': 150, 'what': 'hydraulic pump whine (forklift)'}),

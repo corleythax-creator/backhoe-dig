@@ -42,7 +42,7 @@ function frame(now){
   // Dexter's heavy machines: the left stick drives; the right stick runs the dozer's blade or the loader's arms and bucket
   // (as the skid steer's), and looks round from the semi
   let hDrive=0,hTurn=0,hArm=0,hCurl=0;
-  if(mode==='heavy'){hDrive=Ly;hTurn=Lx*Ts;boomIn=0;bucketIn=0;if(hvCur().K.trail){if(camMode==='chase')orbitYaw-=Rx*1.6*dt}else{hArm=-Ry;hCurl=-Rx}}
+  if(mode==='heavy'){hDrive=Ly;hTurn=Lx*Ts;boomIn=0;bucketIn=0;if(hvCur().K.trail||hvCur().K.car){if(camMode==='chase')orbitYaw-=Rx*1.6*dt}else{hArm=-Ry;hCurl=-Rx}}
   const res=st.res;
   st.swing-=swingIn*TU.exSwing*dt*res;
   st.a1=clamp(st.a1+boomIn*TU.exBoom*dt*res,...LIM.a1);
