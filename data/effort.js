@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-21T01:28:00Z",
+ "updated": "2026-10-21T02:06:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -36,9 +36,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-20",
-   "dh": 28,
-   "act": 1.5,
-   "versions": 5
+   "dh": 42,
+   "act": 2,
+   "versions": 6
   }
  ],
  "extra": [
@@ -1659,6 +1659,15 @@ window.EFFORT = {
    "tris": 4443187,
    "chars": 1161663,
    "what": "Oaks and birches get their own photo leaf sprays (lobed oak leaves with acorns, small birch leaves on drooping twigs); maples and the undergrowth keep the maple spray"
+  },
+  {
+   "v": 180,
+   "asked": "2026-10-20T20:05:00-05:00",
+   "live": "2026-10-20T21:06:15-05:00",
+   "dh": 14,
+   "tris": 4439892,
+   "chars": 1158210,
+   "what": "Every sound is now a real recording: diesel engines that rev, hydraulic whine, track clatter, the bucket biting, a real backup alarm, air brakes, outboards and thunder; plus wind, birds, crickets, frogs, lake waves, gulls, rain and footsteps, and a Nature slider"
   }
  ]
 };
