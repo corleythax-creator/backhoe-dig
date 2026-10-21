@@ -111,24 +111,6 @@ function dnFFTick(){const P=dnFF.geometry.attributes.position,c=camera.position;
     P.setXYZ(i,nx,g<WATER+0.5?-999:g+0.3+Math.random()*1.8,nz)}
   P.needsUpdate=true}
 
-// ---------- crickets and frogs (on the game's sound, sound.js) ----------
-let dnSnd=null;
-function dnSndTick(dt,k){if(!actx||!snd||!snd.master)return;const c=actx,t=c.currentTime;
-  if(!dnSnd){const sr=c.sampleRate,L=Math.round(sr*4),b=c.createBuffer(1,L,sr),d=b.getChannelData(0);
-    // a few crickets, each chirping its own pulses at its own pitch and pace, in a seamless 4 s loop
-    for(let q=0;q<5;q++){const f=4200+q*230+Math.random()*120,per=0.42+q*0.11,np=2+(q%3),amp=0.4+0.5*Math.random();
-      for(let s=Math.random()*per;s<4-0.1;s+=per)for(let j=0;j<np;j++){const s0=Math.round((s+j*0.022)*sr),n=Math.round(0.014*sr);
-        for(let i=0;i<n&&s0+i<L;i++)d[s0+i]+=amp*Math.sin(Math.PI*i/n)*Math.sin(2*Math.PI*f*i/sr)}}
-    const fr=c.createBuffer(1,Math.round(sr*0.55),sr),fd=fr.getChannelData(0);
-    // a frog's croak: a low buzz in a few quick pulses
-    for(let i=0;i<fd.length;i++){const u=i/sr,env=Math.max(0,Math.sin(Math.PI*u/0.55)),pul=Math.pow(Math.max(0,Math.sin(2*Math.PI*22*u)),2);
-      fd[i]=env*pul*(Math.sin(2*Math.PI*150*u)+0.5*Math.sin(2*Math.PI*300*u+1)+0.25*Math.sin(2*Math.PI*450*u))*0.5}
-    const g=c.createGain();g.gain.value=0;g.connect(snd.master);const src=c.createBufferSource();src.buffer=b;src.loop=true;src.connect(g);src.start();
-    const fg=c.createGain();fg.gain.value=0;fg.connect(snd.master);dnSnd={g,fg,frog:fr,next:3}}
-  const v=k*sndVol(sndCfg.fx)*(1-ss(0.05,0.4,weather.r));dnSnd.g.gain.setTargetAtTime(v*0.05,t,0.5);dnSnd.fg.gain.setTargetAtTime(v*0.35,t,0.5);
-  if(v>0.01&&(dnSnd.next-=dt)<=0){dnSnd.next=2+Math.random()*7;const s=c.createBufferSource();s.buffer=dnSnd.frog;s.playbackRate.value=0.75+Math.random()*0.5;
-    let o=dnSnd.fg;if(c.createStereoPanner){const pn=c.createStereoPanner();pn.pan.value=Math.random()*1.6-0.8;pn.connect(dnSnd.fg);o=pn}s.connect(o);s.start(t)}}
-
 // ---------- every frame (from rainFxTick, before the rain greys it over; from the map editor on its own) ----------
 function dnTick(dt){
   if(dn.run&&!edOn&&!bench.on)dn.t+=dt*86400000/TU.dayLen;

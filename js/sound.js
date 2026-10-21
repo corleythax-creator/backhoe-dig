@@ -1,12 +1,13 @@
-// Corley's Island: sound. Diesel engines are pre-rendered loops built from cylinder firings (combustion pulse, injector
-// knock, exhaust pipe and muffler resonances, valve-train tick) at a low and a high rev, cross-faded and re-pitched with
-// the revs; load opens a filter. Around them: turbo, tires on gravel, air brakes, bed and pump hydraulics, the relief
-// valve, track clank, bucket scrape, pouring dirt and the backup alarm. Each machine is panned and faded by distance
-// from the camera, with a short echo off the cliffs. The mower is a small gas V-twin with blade whine and the chop of
-// cut grass, and rain. Boats: a V6 outboard, hull slap and the wash along the sides, the tug's diesel and horn.
-// No sound files: everything is rendered on the first tap or key.
+// Corley's Island: sound. Every sound is a real recording: CC0 field recordings from Freesound, cut into seamless loops,
+// one-shots and sprites of hits by tools/sounds.py (sounds/*.mp3, credits in sounds/CREDITS.md). Each machine's engine is
+// an idle and a working recording, cross-faded and gently re-pitched with its revs, the throttle opening a filter; around
+// them: hydraulic pump whine and the relief valve, track clatter, the bucket biting and scraping, pouring dirt, tyres on
+// dirt, air brakes, the tailgate, the backup alarm, the boats' outboards, hull knocks and wash, the tug's diesel and horn,
+// and thunder. Each machine is panned and faded by distance from the camera, with an echo off the cliffs; from the cab
+// view your own machine is heard through the cab. Nature (wind, birds, crickets, frogs, the lake, rain, footsteps) is in
+// ambience.js. The files are fetched once the page has loaded and decoded on the first tap or key.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
-const SND_DEF={on:true,master:70,eng:80,alarm:60,fx:70};
+const SND_DEF={on:true,master:70,eng:80,alarm:60,fx:70,amb:60};
 const sndCfg=Object.assign({},SND_DEF);
 try{const s=JSON.parse(localStorage.getItem('bhd_sndcfg')||'null');if(s)Object.assign(sndCfg,s);else if(localStorage.getItem('bhd_snd')==='0')sndCfg.on=false}catch(e){}
 // what the frame loop tells the mixer each frame
@@ -14,197 +15,105 @@ const sndIn={hyd:0,relief:false,track:0,pour:0,dump:0,skHyd:0,skDig:0,skPour:0};
 let actx=null,snd=null;
 const sndVol=v=>(v/100)*(v/100);// sliders are perceptual: half way is a quarter of the power
 
-// ---------- offline DSP for the rendered loops ----------
+// ---------- the recordings ----------
+// SND_FILES start (written by tools/sounds.py: a loop's length and the pad either side of it, the alarm's period, a sprite's hits as [start, length])
+const SND_FILES={"x_idle":{"loop":4.0,"pad":0.25},"x_work":{"loop":5.0,"pad":0.25},"t_idle":{"loop":4.0,"pad":0.25},"t_work":{"loop":4.0,"pad":0.25},"h_idle":{"loop":4.0,"pad":0.25},"s_run":{"loop":4.0,"pad":0.25},"m_idle":{"loop":3.0,"pad":0.25},"m_run":{"loop":4.0,"pad":0.25},"b_idle":{"loop":3.0,"pad":0.25},"b_run":{"loop":3.0,"pad":0.25},"o_idle":{"loop":4.0,"pad":0.25},"o_run":{"loop":4.0,"pad":0.25},"f_run":{"loop":5.0,"pad":0.25},"g_run":{"loop":5.0,"pad":0.25},"tracks":{"loop":5.0,"pad":0.25},"hyd":{"loop":1.39998,"pad":0.25},"pour":{"loop":5.0,"pad":0.25},"scrape":{"loop":1.5,"pad":0.25},"tire":{"loop":4.0,"pad":0.25},"wash":{"loop":5.0,"pad":0.25},"splash":{"loop":6.0,"pad":0.25},"trickle":{"loop":6.0,"pad":0.25},"alarm":{"period":1.19},"brake":{},"horn":{},"gate":{},"rocks":{},"cavein":{},"thud":{"hits":[[0.0,0.73],[0.81,0.73],[1.62,0.73],[2.4299,0.73],[3.2399,0.73]]},"dig":{"hits":[[0.0,0.63],[0.71,0.63],[1.42,0.63],[2.13,0.63],[2.84,0.63],[3.55,0.63],[4.26,0.63],[4.97,0.63]]},"slap":{"hits":[[0.0,0.63],[0.71,0.63],[1.42,0.63],[2.13,0.63],[2.84,0.63],[3.55,0.63]]},"step_g":{"hits":[[0.0,0.35],[0.43,0.35],[0.86,0.35],[1.29,0.35],[1.72,0.35],[2.15,0.35],[2.58,0.35],[3.01,0.35],[3.44,0.35],[3.87,0.35]]},"step_s":{"hits":[[0.0,0.35],[0.43,0.35],[0.86,0.35],[1.29,0.35],[1.72,0.35],[2.15,0.35],[2.58,0.35],[3.01,0.35],[3.44,0.35],[3.87,0.35]]},"gull":{"hits":[[0.0,1.13],[1.21,1.13],[2.42,1.13]]},"thun_n":{},"thun_f":{},"thun_r":{},"rain":{"loop":10.0,"pad":0.25},"rain_h":{"loop":8.0,"pad":0.25},"wind":{"loop":10.0,"pad":0.25},"birds":{"loop":15.0,"pad":0.25},"crickets":{"loop":10.0,"pad":0.25},"frogs":{"loop":15.0,"pad":0.25},"lap":{"loop":12.0,"pad":0.25}};
+// SND_FILES end
+const SND_RAW={};
+function sndFetch(){for(const n in SND_FILES)if(!SND_RAW[n])SND_RAW[n]=fetch('sounds/'+n+'.mp3').then(r=>{if(!r.ok)throw new Error(r.status);return r.arrayBuffer()})}
+addEventListener('load',()=>setTimeout(sndFetch,1500));
+function sndDecode(n){return SND_RAW[n].then(a=>new Promise((ok,no)=>actx.decodeAudioData(a,ok,no))).catch(()=>null)}
 function sndRng(seed){let a=seed>>>0;return()=>{a=(a+0x6D2B79F5)>>>0;let t=a;t=Math.imul(t^(t>>>15),t|1);t^=t+Math.imul(t^(t>>>7),t|61);return((t^(t>>>14))>>>0)/4294967296}}
-function bq(type,f,q,sr){const w=2*Math.PI*f/sr,al=Math.sin(w)/(2*q),c=Math.cos(w),a0=1+al;
-  return type==='bp'?[al/a0,0,-al/a0,-2*c/a0,(1-al)/a0]:[(1-c)/2/a0,(1-c)/a0,(1-c)/2/a0,-2*c/a0,(1-al)/a0]}
-function bqRun(x,k){const y=new Float32Array(x.length);let x1=0,x2=0,y1=0,y2=0;
-  for(let i=0;i<x.length;i++){const v=x[i],o=k[0]*v+k[1]*x1+k[2]*x2-k[3]*y1-k[4]*y2;x2=x1;x1=v;y2=y1;y1=o;y[i]=o}return y}
-function hpRun(x,f,sr){const a=Math.exp(-2*Math.PI*f/sr),y=new Float32Array(x.length);let px=0,py=0;for(let i=0;i<x.length;i++){py=a*(py+x[i]-px);px=x[i];y[i]=py}return y}
-// a seamless loop: the tail is cross-faded into the head
-function sndLoop(s,L,X){const b=new Float32Array(L);for(let i=0;i<L;i++)b[i]=s[i+X];for(let i=0;i<X;i++){const t=i/X;b[i]=s[i+X]*t+s[i+X+L]*(1-t)}return b}
-function sndNorm(b,rms){let s=0;for(const v of b)s+=v*v;const k=rms/Math.sqrt(s/b.length||1);let pk=0;for(let i=0;i<b.length;i++){b[i]*=k;pk=Math.max(pk,Math.abs(b[i]))}
-  if(pk>0.95)for(let i=0;i<b.length;i++)b[i]*=0.95/pk;return b}
-// one engine loop at a fixed rpm: 6 cylinders, 4-stroke, firing every 120° of crank
-function renderEngine(sr,rpm,p){
-  const rnd=sndRng(p.seed),fire=120/(rpm*6),L=Math.round(p.cycles*6*fire*sr),X=Math.round(0.04*sr),W=Math.round(0.3*sr),n=W+L+X+X;
-  const e=new Float32Array(n),cyl=[1,0.9,1.06,0.95,1.1,0.92].map(v=>v*(1+0.08*(rnd()-0.5)));
-  const pl=Math.round(0.035*sr),tr=0.0005*sr,td=p.decay*sr,tk=0.0011*sr,tv=0.0004*sr,tc=0.0012*sr;
-  for(let k=0;;k++){const t0=Math.round((k*fire+(rnd()-0.5)*fire*p.jit)*sr)+W%Math.round(fire*sr);if(t0>=n)break;if(t0<0)continue;
-    // each firing: the low pressure thump, the exhaust valve's ringing crack, and the injector's knock
-    const a=cyl[k%6]*(1+p.var*(rnd()-0.5)),kn=p.knock*(0.7+0.6*rnd()),cf=p.crackF*(0.6+0.9*rnd()),ck=p.crack*(0.7+0.6*rnd()),ph=rnd()*6.28;
-    for(let i=0;i<pl&&t0+i<n;i++){const thump=Math.exp(-i/td)-Math.exp(-i/tr),knock=(rnd()*2-1)*Math.exp(-i/tk),crack=Math.sin(ph+2*Math.PI*cf*i/sr)*Math.exp(-i/tc);
-      e[t0+i]+=a*(thump+ck*crack+kn*knock)}
-    // valve train tick a little after each firing
-    const tv0=t0+Math.round((0.3+0.2*rnd())*fire*sr);for(let i=0;i<120&&tv0+i<n;i++)e[tv0+i]+=p.mech*(rnd()*2-1)*Math.exp(-i/tv)}
-  // exhaust pipe: a damped feedback comb (standing wave in the pipe)
-  const D=Math.max(2,Math.round(p.pipe*sr/1000)),y=new Float32Array(n);let lp=0;
-  for(let i=0;i<n;i++){const fb=i>=D?y[i-D]:0;lp+=(fb-lp)*0.35;y[i]=e[i]+p.fb*lp}
-  // muffler and body resonances, then the stack's top end
-  const o=new Float32Array(n);for(let i=0;i<n;i++)o[i]=y[i]*p.dry;
-  for(const [f,q,g] of p.res){const r=bqRun(y,bq('bp',f,q,sr));for(let i=0;i<n;i++)o[i]+=g*r[i]}
-  // tilt up through the bark and clatter (what a phone speaker can play), roll off the sub-bass
-  const lo=hpRun(o,45,sr),hi=hpRun(lo,p.tiltF,sr),hh=hpRun(hi,1200,sr);for(let i=0;i<n;i++)lo[i]+=p.tilt*hi[i]+p.tilt2*hh[i];
-  const out=bqRun(lo,bq('lp',p.lp,0.7,sr));
-  return sndNorm(sndLoop(out,L,X),0.22)
-}
 function noiseBuf(sr,sec,seed){const r=sndRng(seed),b=new Float32Array(Math.round(sr*sec));for(let i=0;i<b.length;i++)b[i]=r()*2-1;return b}
-// gravel: sparse crunchy clicks of random size, for tires rolling on dirt
-function renderGravel(sr){const r=sndRng(7),L=Math.round(sr*2),X=Math.round(0.03*sr),s=new Float32Array(L+X*2);
-  for(let k=0;k<1400;k++){const t0=Math.floor(r()*(s.length-400)),a=Math.pow(r(),3),d=8+r()*60;for(let i=0;i<300;i++)s[t0+i]+=a*(r()*2-1)*Math.exp(-i/d)}
-  return sndNorm(sndLoop(bqRun(hpRun(s,300,sr),bq('lp',5500,0.7,sr)),L,X),0.2)}
-// one metal clank: a few inharmonic modes, as a track shoe or tailgate rings
-function renderClank(sr,seed,modes,len){const r=sndRng(seed),n=Math.round(sr*len),b=new Float32Array(n);
-  for(const [f,d,a] of modes){const ph=r()*6.28,ff=f*(0.97+0.06*r());for(let i=0;i<n;i++)b[i]+=a*Math.sin(ph+2*Math.PI*ff*i/sr)*Math.exp(-i/(d*sr))}
-  for(let i=0;i<Math.min(n,200);i++)b[i]+=0.5*(r()*2-1)*Math.exp(-i/25);return sndNorm(b,0.18)}
-// air brake release: a sharp hiss that tails off
-function renderHiss(sr){const r=sndRng(11),n=Math.round(sr*0.9),s=new Float32Array(n);
-  for(let i=0;i<n;i++){const t=i/sr,env=Math.min(1,t/0.012)*Math.exp(-t/0.22);s[i]=(r()*2-1)*env}
-  return sndNorm(bqRun(hpRun(s,1800,sr),bq('lp',9000,0.7,sr)),0.2)}
-// backup alarm: a 1.1 kHz beep through a small horn speaker, soft edges
-function renderBeep(sr){const n=Math.round(sr*0.48),b=new Float32Array(n),f=1120;
-  for(let i=0;i<n;i++){const t=i/sr,env=Math.min(1,t/0.008,(0.48-t)/0.012);
-    b[i]=env*(Math.sin(2*Math.PI*f*t)+0.32*Math.sin(4*Math.PI*f*t+0.4)+0.14*Math.sin(6*Math.PI*f*t+1.1))}
-  return sndNorm(bqRun(b,bq('bp',1500,0.6,sr)),0.25)}
-// outdoor space: a few early reflections off the cliffs, then a short soft tail
-function renderSpace(c){const sr=c.sampleRate,n=Math.round(sr*0.9),ir=c.createBuffer(2,n,sr),r=sndRng(5);
-  for(let ch=0;ch<2;ch++){const d=ir.getChannelData(ch);
-    for(const [t,a] of [[0.031,0.5],[0.058,0.35],[0.093,0.3],[0.15,0.22],[0.21,0.15]]){const k=Math.round((t+ch*0.004*(r()-0.3))*sr);if(k<n)d[k]+=a*(r()<0.5?-1:1)}
-    for(let i=0;i<n;i++)d[i]+=(r()*2-1)*0.06*Math.exp(-i/sr/0.28)*Math.min(1,i/sr/0.04)}
-  return ir}
-// thunder: deep filtered noise that rolls in waves for several seconds; near is a hard crack first, then the roll
-function renderThunder(sr,seed,near){const r=sndRng(seed),n=Math.round(sr*7.5),b=new Float32Array(n);let a=0,l=0,hp=0,pk=0;
-  const rolls=[];for(let i=0;i<7;i++)rolls.push([0.2+r()*5.5,0.4+r()*1.2,0.4+r()*0.6]);
-  for(let i=0;i<n;i++){const t=i/sr,w=r()*2-1;a+=(w-a)*0.03;l+=(a-l)*0.06;
-    let e=Math.min(1,t/0.15)*Math.exp(-t*0.42)*0.5;for(const [t0,d,g] of rolls){const x=(t-t0)/d;if(x>-1&&x<3)e+=g*Math.exp(-x*x*(x<0?6:0.8))}
-    let v=l*8*e;if(near&&t<0.6){hp=w-hp*0.2;v+=hp*Math.exp(-t*9)*0.9+a*Math.exp(-t*4)*3}
-    b[i]=v;pk=Math.max(pk,Math.abs(v))}
-  for(let i=0;i<n;i++)b[i]*=0.9/pk;return b}
 function toBuf(c,a){const b=c.createBuffer(1,a.length,c.sampleRate);b.getChannelData(0).set(a);return b}
+// outdoor space: a few early reflections off the cliffs, then a soft tail
+function renderSpace(c){const sr=c.sampleRate,n=Math.round(sr*1.4),ir=c.createBuffer(2,n,sr),r=sndRng(5);
+  for(let ch=0;ch<2;ch++){const d=ir.getChannelData(ch);
+    for(const [t,a] of [[0.031,0.45],[0.058,0.32],[0.093,0.28],[0.15,0.2],[0.21,0.14],[0.33,0.08]]){const k=Math.round((t+ch*0.004*(r()-0.3))*sr);if(k<n)d[k]+=a*(r()<0.5?-1:1)}
+    let lp=0;for(let i=0;i<n;i++){lp+=((r()*2-1)-lp)*0.35;d[i]+=lp*0.1*Math.exp(-i/sr/0.38)*Math.min(1,i/sr/0.05)}}
+  return ir}
 
 // ---------- live graph ----------
-function sndLoopSrc(buf,dest,rate){const s=actx.createBufferSource();s.buffer=buf;s.loop=true;s.playbackRate.value=rate||1;s.connect(dest);s.start();return s}
 function sndGain(v,dest){const g=actx.createGain();g.gain.value=v;if(dest)g.connect(dest);return g}
 function sndFilter(type,f,q,dest){const b=actx.createBiquadFilter();b.type=type;b.frequency.value=f;b.Q.value=q;if(dest)b.connect(dest);return b}
+// a looping recording: its seamless stretch, from a random point in it so two machines on one recording don't phase
+function sndLoopSrc(n,dest,rate){const s=actx.createBufferSource(),b=snd.buf[n],f=SND_FILES[n]||{};s.buffer=b||snd.none;s.loop=true;
+  if(b&&f.loop){s.loopStart=f.pad;s.loopEnd=f.pad+f.loop}s.playbackRate.value=rate||1;s.connect(dest);s.start(0,b&&f.loop?f.pad+Math.random()*f.loop:0);return s}
+// a recording played once (a sprite plays one of its hits at random)
+function sndShot(n,dest,t,rate,gain){const b=snd&&snd.buf[n];if(!b)return null;const f=SND_FILES[n],s=actx.createBufferSource();s.buffer=b;s.playbackRate.value=rate||1;
+  const g=sndGain(gain==null?1:gain,dest);s.connect(g);if(f.hits){const h=f.hits[Math.random()*f.hits.length|0];s.start(t,h[0],h[1])}else s.start(t);
+  s.onended=()=>g.disconnect();return s}
 // a machine's output stage: distance gain, air absorption, stereo position, and a send to the shared space
 function sndVoice(){const pan=actx.createStereoPanner?actx.createStereoPanner():null,air=sndFilter('lowpass',18000,0.5),g=sndGain(0);
   g.connect(air);if(pan){air.connect(pan);pan.connect(snd.dry);pan.connect(snd.send)}else{air.connect(snd.dry);air.connect(snd.send)}
-  return {g,air,pan}}
-// an engine: two rpm layers, a load filter, into a bus
-function sndEngine(lo,hi,rLo,rHi,dest){const load=sndFilter('lowpass',1500,0.6,dest),lg=sndGain(0,load),hg=sndGain(0,load);
-  return {a:sndLoopSrc(lo,lg),b:sndLoopSrc(hi,hg),lg,hg,load,rLo,rHi,rpm:rLo}}
+  return {g,air,pan,eng:sndGain(0,g),fx:sndGain(0,g),alarm:sndGain(0,g)}}
+// an engine: an idle and a working recording (hi null: one recording round rNom), a load filter, into a bus
+function sndEngine(lo,hi,rLo,rHi,dest,rNom){const load=sndFilter('lowpass',4000,0.5,dest),lg=sndGain(0,load),hg=sndGain(0,load);
+  return {a:sndLoopSrc(lo,lg),b:hi?sndLoopSrc(hi,hg):null,lg,hg,load,rLo,rHi,rNom:rNom||rLo,rpm:rLo}}
 function sndStart(){
   if(actx){if(actx.state==='suspended'&&sndCfg.on&&!document.hidden)actx.resume();return}
   const AC=window.AudioContext||window.webkitAudioContext;if(!AC)return;
   try{actx=new AC()}catch(e){actx=null;return}
-  // the context has to start inside the tap; the rendering is spread over a few short tasks so the game doesn't hitch
-  const it=sndBuild();(function step(){if(!it.next().done)setTimeout(step,0)})();
+  // the context has to start inside the tap; the files decode in the background and the mixer is built when they are in
+  sndFetch();sndBuild();
 }
-function* sndBuild(){
-  const c=actx,sr=c.sampleRate;snd={};
-  snd.comp=c.createDynamicsCompressor();snd.comp.threshold.value=-12;snd.comp.ratio.value=4;snd.comp.attack.value=0.005;snd.comp.release.value=0.2;snd.comp.connect(c.destination);
+async function sndBuild(){
+  const c=actx,names=Object.keys(SND_FILES),bufs=await Promise.all(names.map(sndDecode));
+  snd={buf:{},none:c.createBuffer(1,1,c.sampleRate)};names.forEach((n,i)=>{if(bufs[i])snd.buf[n]=bufs[i]});
+  snd.comp=c.createDynamicsCompressor();snd.comp.threshold.value=-14;snd.comp.knee.value=8;snd.comp.ratio.value=4;snd.comp.attack.value=0.004;snd.comp.release.value=0.25;snd.comp.connect(c.destination);
   snd.master=sndGain(0,snd.comp);
-  snd.dry=sndGain(1,snd.master);snd.send=sndGain(0.16);const cv=c.createConvolver();cv.buffer=renderSpace(c);snd.send.connect(cv);cv.connect(snd.master);yield;
-  // the three user buses sit inside each machine's voice, so a machine's engine, alarm and effects pan together
+  snd.dry=sndGain(1,snd.master);snd.send=sndGain(0.14);const cv=c.createConvolver();cv.buffer=renderSpace(c);snd.send.connect(cv);cv.connect(snd.master);
+  // nature has its own slider; it is not placed on a machine (ambience.js pans its beds itself)
+  snd.amb=sndGain(0,snd.dry);snd.ambSend=sndGain(0,snd.send);
+  // the user buses sit inside each machine's voice, so a machine's engine, alarm and effects pan together
   const T=snd.T=sndVoice(),X=snd.X=sndVoice(),Mw=snd.M=sndVoice(),Sk=snd.S=sndVoice(),Bk=snd.B=sndVoice(),Ob=snd.O=sndVoice(),Fb=snd.F=sndVoice(),Tg=snd.G=sndVoice(),Hv=snd.H=sndVoice();
-  for(const v of [T,X,Mw,Sk,Bk,Ob,Fb,Tg,Hv]){v.eng=sndGain(0,v.g);v.fx=sndGain(0,v.g);v.alarm=sndGain(0,v.g)}
-  const tLo=toBuf(c,renderEngine(sr,750,{seed:3,cycles:10,decay:0.0055,jit:0.03,var:0.14,knock:0.8,mech:0.12,crack:0.8,crackF:550,tilt:2,tiltF:250,tilt2:2.5,pipe:6.5,fb:0.5,dry:0.35,
-      res:[[68,1.4,1.1],[185,2.6,0.6],[470,3.5,0.32],[1150,3,0.2],[2700,2,0.1]],lp:6200}));yield;
-  const tHi=toBuf(c,renderEngine(sr,1650,{seed:4,cycles:20,decay:0.0045,jit:0.02,var:0.08,knock:0.7,mech:0.1,crack:0.8,crackF:550,tilt:2,tiltF:250,tilt2:2.5,pipe:6.5,fb:0.5,dry:0.35,
-      res:[[68,1.4,1.0],[185,2.6,0.65],[470,3.5,0.36],[1150,3,0.24],[2700,2,0.12]],lp:7000}));yield;
-  const xLo=toBuf(c,renderEngine(sr,850,{seed:8,cycles:10,decay:0.0042,jit:0.035,var:0.12,knock:1.0,mech:0.18,crack:0.7,crackF:650,tilt:2,tiltF:250,tilt2:4,pipe:4,fb:0.38,dry:0.3,
-      res:[[92,1.5,1.0],[250,2.8,0.55],[690,3.5,0.32],[1750,3,0.22]],lp:4800}));yield;
-  const xHi=toBuf(c,renderEngine(sr,1800,{seed:9,cycles:20,decay:0.0036,jit:0.025,var:0.07,knock:0.9,mech:0.16,crack:0.7,crackF:650,tilt:2,tiltF:250,tilt2:4,pipe:4,fb:0.38,dry:0.3,
-      res:[[92,1.5,0.95],[250,2.8,0.6],[690,3.5,0.36],[1750,3,0.26]],lp:5200}));
-  yield;
-  // mower V-twin: renderEngine's six-cylinder spacing at 1/3 the rpm gives a twin's firing rate (about 57 Hz at 3,400 rpm);
-  // big jitter for the uneven 90° V beat, no injector knock, a small high muffler
-  const mLo=toBuf(c,renderEngine(sr,880,{seed:13,cycles:12,decay:0.0035,jit:0.22,var:0.3,knock:0.08,mech:0.22,crack:0.9,crackF:900,tilt:2,tiltF:300,tilt2:3,pipe:2.2,fb:0.3,dry:0.4,
-      res:[[140,1.6,0.9],[380,2.5,0.6],[1100,3,0.35],[2600,2.5,0.2]],lp:6500}));yield;
-  const mHi=toBuf(c,renderEngine(sr,1150,{seed:14,cycles:16,decay:0.003,jit:0.2,var:0.25,knock:0.08,mech:0.2,crack:0.9,crackF:900,tilt:2,tiltF:300,tilt2:3,pipe:2.2,fb:0.3,dry:0.4,
-      res:[[140,1.6,0.85],[380,2.5,0.65],[1100,3,0.4],[2600,2.5,0.24]],lp:7000}));yield;
-  snd.engT=sndEngine(tLo,tHi,750,1650,T.eng);snd.engX=sndEngine(xLo,xHi,850,1800,X.eng);snd.engM=sndEngine(mLo,mHi,880,1150,Mw.eng);
-  // the skid steer: a smaller diesel, the excavator's recording run a little faster
-  snd.engS=sndEngine(xLo,xHi,850,1800,Sk.eng);
-  // Dexter's heavy machines: the dump truck's big diesel
-  snd.engH=sndEngine(tLo,tHi,750,1650,Hv.eng);
-  // the dirt bike's single: renderEngine's six-cylinder spacing at 1/6 the rpm fires once every other turn (50 Hz idling
-  // up to 100 Hz flat out), a sharp crack and a short loud pipe
-  const bLo=toBuf(c,renderEngine(sr,1000,{seed:17,cycles:12,decay:0.004,jit:0.06,var:0.12,knock:0.3,mech:0.15,crack:1.1,crackF:1300,tilt:2,tiltF:400,tilt2:3,pipe:1.6,fb:0.35,dry:0.45,
-      res:[[110,1.5,0.9],[330,2.5,0.7],[900,3,0.45],[2400,2.5,0.25]],lp:8000}));yield;
-  const bHi=toBuf(c,renderEngine(sr,2000,{seed:18,cycles:20,decay:0.003,jit:0.04,var:0.08,knock:0.3,mech:0.14,crack:1.1,crackF:1500,tilt:2,tiltF:400,tilt2:3,pipe:1.6,fb:0.35,dry:0.45,
-      res:[[110,1.5,0.85],[330,2.5,0.75],[900,3,0.5],[2400,2.5,0.3]],lp:9000}));yield;
-  snd.engB=sndEngine(bLo,bHi,1000,2000,Bk.eng);
-  // boats: a V6 outboard (renderEngine's six cylinders as they are: 80 Hz at idle, about 250 Hz flat out), smooth and
-  // buzzy through a short underwater exhaust; the far fishing boat runs the same recording, the tug the truck's diesel
-  const oLo=toBuf(c,renderEngine(sr,800,{seed:23,cycles:12,decay:0.003,jit:0.02,var:0.08,knock:0.15,mech:0.25,crack:0.6,crackF:1100,tilt:2,tiltF:350,tilt2:3.5,pipe:1.2,fb:0.25,dry:0.5,
-      res:[[160,1.4,0.7],[520,2.5,0.6],[1300,3,0.45],[3100,2.5,0.25]],lp:7500}));yield;
-  const oHi=toBuf(c,renderEngine(sr,2400,{seed:24,cycles:30,decay:0.0025,jit:0.015,var:0.05,knock:0.15,mech:0.22,crack:0.6,crackF:1300,tilt:2,tiltF:350,tilt2:3.5,pipe:1.2,fb:0.25,dry:0.5,
-      res:[[160,1.4,0.6],[520,2.5,0.65],[1300,3,0.5],[3100,2.5,0.3]],lp:9000}));yield;
-  snd.engO=sndEngine(oLo,oHi,800,2400,Ob.eng);snd.engF=sndEngine(oLo,oHi,800,2400,Fb.eng);snd.engG=sndEngine(tLo,tHi,750,1650,Tg.eng);
+  snd.voices=[T,X,Mw,Sk,Bk,Ob,Fb,Tg,Hv];
+  snd.engT=sndEngine('t_idle','t_work',700,1700,T.eng);snd.engX=sndEngine('x_idle','x_work',850,1800,X.eng);
+  snd.engM=sndEngine('m_idle','m_run',880,1150,Mw.eng);snd.engS=sndEngine('s_run',null,950,1750,Sk.eng,1300);
+  snd.engH=sndEngine('h_idle','t_work',750,1650,Hv.eng);snd.engB=sndEngine('b_idle','b_run',1000,2000,Bk.eng);
+  snd.engO=sndEngine('o_idle','o_run',800,2400,Ob.eng);snd.engF=sndEngine('f_run',null,900,2000,Fb.eng,1500);snd.engG=sndEngine('g_run',null,700,1200,Tg.eng,950);
   snd.engO.rpm=snd.engF.rpm=800;snd.engG.rpm=750;
-  const noise=toBuf(c,noiseBuf(sr,2,21)),gravel=toBuf(c,renderGravel(sr));yield;
-  // the boat you drive: water rushing along the hull, and slaps as it meets the swells (renderSlap)
-  snd.washG=sndGain(0,Ob.fx);snd.washF=sndFilter('lowpass',400,0.8,snd.washG);sndLoopSrc(noise,snd.washF,0.6);
-  snd.slap=[toBuf(c,renderSlap(sr,51)),toBuf(c,renderSlap(sr,52))];snd.slapT=0;
-  // the tug's horn: two reedy notes a third apart
-  snd.horn=toBuf(c,renderHorn(sr));
-  // truck: turbo whistle and spool whoosh, tire roar, gravel crunch, bed hydraulics
-  snd.turbo=c.createOscillator();snd.turbo.type='sine';snd.turboG=sndGain(0,T.eng);snd.turbo.connect(snd.turboG);snd.turbo.start();
-  snd.whooshG=sndGain(0,T.eng);snd.whooshF=sndFilter('bandpass',2600,1.1,snd.whooshG);sndLoopSrc(noise,snd.whooshF);
-  snd.roarG=sndGain(0,T.fx);snd.roarF=sndFilter('lowpass',300,0.7,snd.roarG);sndLoopSrc(noise,snd.roarF,0.5);
-  snd.gravG=sndGain(0,T.fx);snd.grav=sndLoopSrc(gravel,snd.gravG);
-  snd.ptoG=sndGain(0,T.fx);snd.pto=c.createOscillator();snd.pto.type='sawtooth';snd.pto.connect(sndFilter('lowpass',700,1,snd.ptoG));snd.pto.start();
-  // excavator: pump whine and oil hiss, the relief valve, bucket scrape, pouring dirt
-  snd.pump=c.createOscillator();snd.pump.type='triangle';snd.pump2=c.createOscillator();snd.pump2.type='sine';
-  snd.pumpG=sndGain(0,X.fx);snd.pump.connect(snd.pumpG);const p2g=sndGain(0.35,snd.pumpG);snd.pump2.connect(p2g);snd.pump.start();snd.pump2.start();
-  snd.hissG=sndGain(0,X.fx);sndLoopSrc(noise,sndFilter('bandpass',1700,0.9,snd.hissG),0.8);
-  snd.reliefG=sndGain(0,X.fx);sndLoopSrc(noise,sndFilter('bandpass',2950,14,snd.reliefG),1.1);
-  snd.reliefT=c.createOscillator();snd.reliefT.frequency.value=2950;snd.reliefT.connect(sndGain(0.04,snd.reliefG));snd.reliefT.start();
-  snd.scrapeG=sndGain(0,X.fx);snd.scrapeF=sndFilter('bandpass',1100,1.2,snd.scrapeG);snd.scrape=sndLoopSrc(gravel,snd.scrapeF,0.6);
-  snd.pourG=sndGain(0,X.fx);sndLoopSrc(gravel,sndFilter('lowpass',1400,0.7,snd.pourG),0.45);
-  snd.dumpG=sndGain(0,T.fx);sndLoopSrc(gravel,sndFilter('lowpass',1100,0.7,snd.dumpG),0.4);
-  // mower: three blades whooshing through the deck, and the chop of tall grass going through them
-  snd.bladeG=sndGain(0,Mw.fx);snd.bladeF=sndFilter('bandpass',650,2.2,snd.bladeG);sndLoopSrc(noise,snd.bladeF,0.7);
-  snd.chopG=sndGain(0,Mw.fx);sndLoopSrc(gravel,sndFilter('bandpass',2600,0.9,snd.chopG),1.3);
-  // rain: a soft hiss all around (not placed on a machine), with a little low patter
-  snd.rainG=sndGain(0,snd.dry);sndLoopSrc(noise,sndFilter('highpass',900,0.5,sndFilter('lowpass',6500,0.5,snd.rainG)),0.9);
-  snd.rainLoG=sndGain(0,snd.dry);sndLoopSrc(gravel,sndFilter('lowpass',700,0.6,snd.rainLoG),1.6);
-  // splashing through puddles: a low slosh with a wet hiss on top
-  snd.splashG=sndGain(0,snd.dry);sndLoopSrc(gravel,sndFilter('bandpass',420,0.9,snd.splashG),0.7);sndLoopSrc(noise,sndFilter('bandpass',1800,1.2,snd.splashG),1.1);
-  // one-shots
-  snd.clank=[toBuf(c,renderClank(sr,31,[[430,0.05,1],[1010,0.035,0.7],[1690,0.025,0.5],[2760,0.018,0.3]],0.16)),
-             toBuf(c,renderClank(sr,32,[[380,0.05,1],[920,0.04,0.6],[1820,0.022,0.5],[3100,0.015,0.25]],0.16))];
-  snd.gate=toBuf(c,renderClank(sr,33,[[150,0.12,1],[410,0.08,0.7],[880,0.05,0.4],[1600,0.03,0.25]],0.5));
-  snd.thunder=[toBuf(c,renderThunder(sr,41,false)),toBuf(c,renderThunder(sr,42,true))];yield;
-  snd.hiss=toBuf(c,renderHiss(sr));snd.beep=toBuf(c,renderBeep(sr));
-  snd.trackT=0;snd.beepT=0;snd.boost=0;snd.gear=0;snd.gearT=0;snd.moved=0;snd.bedMax=0;
+  const noise=toBuf(c,noiseBuf(c.sampleRate,2,21));snd.noise=noise;
+  const noiseSrc=(dest,rate)=>{const s=c.createBufferSource();s.buffer=noise;s.loop=true;s.playbackRate.value=rate||1;s.connect(dest);s.start(0,Math.random()*2);return s};
+  // the boat you drive: water rushing along the hull, and knocks as it meets the swells
+  snd.washG=sndGain(0,Ob.fx);snd.washF=sndFilter('lowpass',1500,0.6,snd.washG);snd.wash=sndLoopSrc('wash',snd.washF);snd.slapT=0;
+  // truck: turbo whoosh, tyre roar on the road, crunch on dirt, the bed pump
+  snd.whooshG=sndGain(0,T.eng);noiseSrc(sndFilter('bandpass',2600,1.1,snd.whooshG));
+  snd.roarG=sndGain(0,T.fx);snd.roarF=sndFilter('lowpass',300,0.7,snd.roarG);noiseSrc(snd.roarF,0.5);
+  snd.gravG=sndGain(0,T.fx);snd.grav=sndLoopSrc('tire',sndFilter('lowpass',6000,0.6,snd.gravG));
+  snd.ptoG=sndGain(0,T.fx);snd.pto=sndLoopSrc('hyd',snd.ptoG);
+  // excavator: pump whine, the relief valve, track clatter, the bucket in the ground, pouring dirt
+  snd.pumpG=sndGain(0,X.fx);snd.pump=sndLoopSrc('hyd',snd.pumpG);
+  snd.reliefG=sndGain(0,X.fx);snd.relief=sndLoopSrc('hyd',sndFilter('bandpass',2900,3,snd.reliefG),1.4);noiseSrc(sndFilter('bandpass',2950,14,snd.reliefG),1.1);
+  snd.trackG=sndGain(0,X.fx);snd.tracks=sndLoopSrc('tracks',snd.trackG);
+  snd.scrapeG=sndGain(0,X.fx);snd.scrapeF=sndFilter('lowpass',1200,0.6,snd.scrapeG);snd.scrape=sndLoopSrc('scrape',snd.scrapeF,0.8);snd.digT=0;
+  snd.pourG=sndGain(0,X.fx);sndLoopSrc('pour',sndFilter('lowpass',5000,0.6,snd.pourG),0.9);
+  snd.dumpG=sndGain(0,T.fx);sndLoopSrc('pour',sndFilter('lowpass',2500,0.6,snd.dumpG),0.7);snd.dumpOn=0;
+  // skid steer: its pump and the bucket emptying
+  snd.skPumpG=sndGain(0,Sk.fx);snd.skPump=sndLoopSrc('hyd',snd.skPumpG,1.1);
+  snd.skPourG=sndGain(0,Sk.fx);sndLoopSrc('pour',sndFilter('lowpass',4000,0.6,snd.skPourG),1);
+  // splashing through puddles
+  snd.splashG=sndGain(0,snd.dry);sndLoopSrc('splash',snd.splashG);
+  snd.beepT=0;snd.boost=0;snd.gear=0;snd.gearT=0;snd.moved=0;snd.bedMax=0;
   snd.ready=true;sndApply();if(!sndCfg.on)c.suspend();
 }
-// a wave slapping a hull: a soft low thump with a splash of spray on top
-function renderSlap(sr,seed){const r=sndRng(seed),n=Math.round(sr*0.35),b=new Float32Array(n);
-  for(let i=0;i<n;i++){const t=i/sr;b[i]=Math.sin(2*Math.PI*(95+40*r())*t)*Math.exp(-t*22)*0.9+(r()*2-1)*Math.exp(-t*30)*0.5}
-  return sndNorm(bqRun(b,bq('lp',1800,0.7,sr)),0.2)}
-// a ship's horn: two sawtooth notes (A2 and C#3) with a slow swell, held about two seconds
-function renderHorn(sr){const n=Math.round(sr*2.6),b=new Float32Array(n);
-  for(let i=0;i<n;i++){const t=i/sr,env=ss(0,0.15,t)*(1-ss(2.1,2.6,t));let v=0;for(const f of [110,138.6])for(let h=1;h<9;h++)v+=Math.sin(2*Math.PI*f*h*t+h)/h;b[i]=v*env}
-  return sndNorm(bqRun(bqRun(b,bq('lp',1400,0.8,sr)),bq('bp',420,0.9,sr)),0.25)}
 // thunder from a strike d metres away: it arrives at the speed of sound, quieter and duller the farther it came
-function sndThunder(d){if(!snd||!snd.ready||!sndCfg.on)return;const near=d<800,t=actx.currentTime+d/343,f=sndFilter('lowpass',near?3000:Math.max(220,1500-d*0.45),0.5,snd.dry);
-  sndShot(snd.thunder[near?1:0],f,t,0.85+Math.random()*0.25,Math.min(1,700/d)*sndVol(sndCfg.fx)*1.4);setTimeout(()=>f.disconnect(),(d/343+9)*1000)}
-function sndShot(buf,dest,t,rate,gain){const s=actx.createBufferSource();s.buffer=buf;s.playbackRate.value=rate||1;const g=sndGain(gain==null?1:gain,dest);s.connect(g);s.start(t);s.onended=()=>g.disconnect();return s}
+function sndThunder(d){if(!snd||!snd.ready||!sndCfg.on)return;const near=d<800,t=actx.currentTime+d/343,f=sndFilter('lowpass',near?8000:Math.max(350,2600-d*0.7),0.5,snd.amb);
+  sndShot(near?'thun_n':Math.random()<0.5?'thun_f':'thun_r',f,t,0.9+Math.random()*0.15,Math.min(1,700/d)*1.3);setTimeout(()=>f.disconnect(),(d/343+16)*1000)}
 for(const ev of ['pointerdown','keydown','touchend'])addEventListener(ev,sndStart,{capture:true,passive:true});
 document.addEventListener('visibilitychange',()=>{if(!actx)return;if(document.hidden)actx.suspend();else if(sndCfg.on)actx.resume()});
 
 // ---------- settings ----------
+const SND_SLIDERS=['master','eng','alarm','fx','amb'];
 function sndSave(){try{localStorage.setItem('bhd_sndcfg',JSON.stringify(sndCfg))}catch(e){}}
 function sndApply(){
   $('#soundBtn').textContent=sndCfg.on?'Sound':'Sound: off';
   const tg=$('#sndOn');if(tg){tg.textContent=sndCfg.on?'Sound on':'Sound off';tg.setAttribute('aria-pressed',sndCfg.on)}
-  for(const k of ['master','eng','alarm','fx']){const el=$('#snd_'+k);if(el){el.value=sndCfg[k];$('#snd_'+k+'_v').textContent=sndCfg[k]+'%'}}
+  for(const k of SND_SLIDERS){const el=$('#snd_'+k);if(el){el.value=sndCfg[k];$('#snd_'+k+'_v').textContent=sndCfg[k]+'%'}}
   if(!snd||!snd.ready)return;const t=actx.currentTime;
   snd.master.gain.setTargetAtTime(sndCfg.on?sndVol(sndCfg.master)*2.4:0,t,0.03);
-  for(const v of [snd.T,snd.X,snd.M,snd.S,snd.B,snd.O,snd.F,snd.G]){v.eng.gain.setTargetAtTime(sndVol(sndCfg.eng),t,0.03);v.fx.gain.setTargetAtTime(sndVol(sndCfg.fx),t,0.03);v.alarm.gain.setTargetAtTime(sndVol(sndCfg.alarm),t,0.03)}
+  snd.amb.gain.setTargetAtTime(sndVol(sndCfg.amb),t,0.03);snd.ambSend.gain.setTargetAtTime(sndVol(sndCfg.amb)*0.5,t,0.03);
+  for(const v of snd.voices){v.eng.gain.setTargetAtTime(sndVol(sndCfg.eng),t,0.03);v.fx.gain.setTargetAtTime(sndVol(sndCfg.fx),t,0.03);v.alarm.gain.setTargetAtTime(sndVol(sndCfg.alarm),t,0.03)}
 }
 function setSound(on){sndCfg.on=on;sndSave();if(!actx){if(on)sndStart();sndApply();return}
   sndApply();if(on)actx.resume();else setTimeout(()=>{if(!sndCfg.on)actx.suspend()},150)}
@@ -213,96 +122,104 @@ function showSound(on){sndBox.hidden=!on;if(on)sndApply()}
 $('#sndOn').onclick=()=>setSound(!sndCfg.on);
 $('#sndDone').onclick=()=>showSound(false);
 $('#sndReset').onclick=()=>{Object.assign(sndCfg,SND_DEF);sndSave();sndApply();if(actx&&sndCfg.on)actx.resume()};
-for(const k of ['master','eng','alarm','fx'])$('#snd_'+k).addEventListener('input',e=>{sndCfg[k]=+e.target.value;sndSave();sndApply()});
+for(const k of SND_SLIDERS)$('#snd_'+k).addEventListener('input',e=>{sndCfg[k]=+e.target.value;sndSave();sndApply()});
 sndBox.addEventListener('pointerdown',e=>{if(e.target===sndBox)showSound(false)});
 addEventListener('keydown',e=>{if(e.code==='Escape')showSound(false)});
 sndApply();
 
 // ---------- per frame ----------
 const sndR=new THREE.Vector3();
-// distance gain, air absorption and stereo position of a point, from the camera
-function sndPlace(v,x,y,z,t){sndR.setFromMatrixColumn(camera.matrixWorld,0);
+// distance gain, air absorption and stereo position of a point, from the camera; the machine you ride in the cab view is
+// heard through the cab: close, centred and muffled
+function sndPlace(v,x,y,z,t,cab){
+  if(cab){v.g.gain.setTargetAtTime(1.15,t,0.08);v.air.frequency.setTargetAtTime(1400,t,0.08);if(v.pan)v.pan.pan.setTargetAtTime(0,t,0.08);return}
+  sndR.setFromMatrixColumn(camera.matrixWorld,0);
   const dx=x-camera.position.x,dy=y-camera.position.y,dz=z-camera.position.z,d=Math.hypot(dx,dy,dz)||1;
   v.g.gain.setTargetAtTime(1/(1+(d/22)*(d/22)),t,0.05);
   v.air.frequency.setTargetAtTime(Math.max(1800,18000/(1+d/18)),t,0.08);
   if(v.pan)v.pan.pan.setTargetAtTime(clamp((dx*sndR.x+dy*sndR.y+dz*sndR.z)/d*0.8,-0.8,0.8),t,0.05)}
-// two layers cross-faded by rpm, each re-pitched to it; load opens the filter
-function sndEngineTo(e,rpm,load,lvl,t){
-  const w=clamp((rpm-e.rLo)/(e.rHi-e.rLo),0,1);
-  e.a.playbackRate.setTargetAtTime(rpm/e.rLo,t,0.03);e.b.playbackRate.setTargetAtTime(rpm/e.rHi,t,0.03);
-  e.lg.gain.setTargetAtTime(Math.cos(w*Math.PI/2)*lvl,t,0.04);e.hg.gain.setTargetAtTime(Math.sin(w*Math.PI/2)*lvl,t,0.04);
-  e.load.frequency.setTargetAtTime(900+4200*load+rpm*0.9,t,0.05)}
+// the idle and working recordings cross-faded by rpm and re-pitched toward it (to the 0.7 power: a recording pushed far
+// off its own pitch stops sounding real); load opens the filter. w overrides the cross-fade (the mower's blades)
+function sndEngineTo(e,rpm,load,lvl,t,w){
+  if(!e.b){e.a.playbackRate.setTargetAtTime(Math.pow(rpm/e.rNom,0.7),t,0.05);e.lg.gain.setTargetAtTime(lvl,t,0.05)}
+  else{if(w==null)w=ss(e.rLo,e.rHi,rpm);
+    e.a.playbackRate.setTargetAtTime(Math.pow(rpm/e.rLo,0.7),t,0.05);e.b.playbackRate.setTargetAtTime(Math.pow(rpm/e.rHi,0.7),t,0.05);
+    e.lg.gain.setTargetAtTime(Math.cos(w*Math.PI/2)*lvl,t,0.06);e.hg.gain.setTargetAtTime(Math.sin(w*Math.PI/2)*lvl,t,0.06)}
+  e.load.frequency.setTargetAtTime(3200+9000*load+rpm*1.2,t,0.06)}
 function updateSound(dt){
   if(!snd||!snd.ready||actx.state!=='running')return;
-  const t=actx.currentTime,quiet=bench.on?0:1;
-  sndPlace(snd.T,tr.x,tr.y+1.6,tr.z,t);sndPlace(snd.X,st.x,st.y+1.4,st.z,t);sndPlace(snd.M,mw.x,mw.y+0.6,mw.z,t);sndPlace(snd.S,sk.x,sk.y+1.2,sk.z,t);sndPlace(snd.B,bk.x,bk.y+0.6,bk.z,t);
+  const t=actx.currentTime,quiet=bench.on?0:1,cab=camMode==='cab'?mode:'';
+  sndPlace(snd.T,tr.x,tr.y+1.6,tr.z,t,cab==='truck');sndPlace(snd.X,st.x,st.y+1.4,st.z,t,cab==='dig'||cab==='drive');sndPlace(snd.M,mw.x,mw.y+0.6,mw.z,t);
+  sndPlace(snd.S,sk.x,sk.y+1.2,sk.z,t,cab==='skid');sndPlace(snd.B,bk.x,bk.y+0.6,bk.z,t);
   // truck: automatic box, five gears forward; revs climb through each and drop on the upshift
   const sp=Math.abs(tr.v),drive=tr.drive||0,pto=tr.bedIn>0?1:0;let gi=0,frac;
   if(tr.gear<0)frac=Math.min(1,sp/2.7);else{gi=Math.min(4,Math.floor(sp/1.8));frac=Math.min(1,(sp-gi*1.8)/1.8)}
   if(gi!==snd.gear){snd.gearT=gi>snd.gear?0.3:0;snd.gear=gi}snd.gearT-=dt;
-  let rT=sp<0.25?680+drive*420:(gi===0?820:1150)+frac*(gi===0?1100:780);
+  let rT=sp<0.25?700+drive*420:(gi===0?820:1150)+frac*(gi===0?1100:780);
   if(pto)rT=Math.max(rT,1250);if(snd.gearT>0)rT*=0.78;
   const e=snd.engT;e.rpm+=(rT-e.rpm)*Math.min(1,dt*(rT>e.rpm?4:7));
   const tl=Math.max(snd.gearT>0?0.15:drive,pto*0.6);
-  sndEngineTo(e,e.rpm,tl,quiet*(0.55+0.45*tl),t);
+  sndEngineTo(e,e.rpm,tl,quiet*(0.6+0.4*tl),t);
   snd.boost+=((e.rpm-700)/1300*tl-snd.boost)*Math.min(1,dt*(tl>0.2?0.9:2.5));// turbo spools slowly, drops fast
-  const bo=clamp(snd.boost,0,1);
-  snd.turbo.frequency.setTargetAtTime(1900+4600*bo,t,0.08);snd.turboG.gain.setTargetAtTime(quiet*0.05*bo*bo,t,0.08);
-  snd.whooshG.gain.setTargetAtTime(quiet*0.12*bo,t,0.08);
-  const ground=tr.soft?1.2:tr.road?0.8:1;
-  snd.roarF.frequency.setTargetAtTime(200+sp*55,t,0.1);snd.roarG.gain.setTargetAtTime(quiet*Math.min(1,sp/9)*0.5,t,0.1);
-  snd.grav.playbackRate.setTargetAtTime(0.55+sp*0.12,t,0.1);snd.gravG.gain.setTargetAtTime(quiet*Math.min(1,sp/5)*0.55*ground,t,0.1);
-  snd.pto.frequency.setTargetAtTime(150+e.rpm*0.06,t,0.05);snd.ptoG.gain.setTargetAtTime(quiet*pto*0.07,t,0.05);
+  const bo=clamp(snd.boost,0,1);snd.whooshG.gain.setTargetAtTime(quiet*0.07*bo,t,0.08);
+  const ground=tr.soft?1.2:tr.road?0.6:1;
+  snd.roarF.frequency.setTargetAtTime(200+sp*55,t,0.1);snd.roarG.gain.setTargetAtTime(quiet*Math.min(1,sp/9)*(tr.road?0.45:0.25),t,0.1);
+  snd.grav.playbackRate.setTargetAtTime(0.6+sp*0.08,t,0.1);snd.gravG.gain.setTargetAtTime(quiet*Math.min(1,sp/5)*0.7*ground,t,0.1);
+  snd.pto.playbackRate.setTargetAtTime(e.rpm/1500,t,0.05);snd.ptoG.gain.setTargetAtTime(quiet*pto*0.3,t,0.05);
   // air brakes let go with a psst once the truck rolls to a stop
-  if(sp>2)snd.moved=1;if(snd.moved&&sp<0.05&&tr.brakeOn){snd.moved=0;sndShot(snd.hiss,snd.T.fx,t+0.25,0.95+0.1*Math.random(),0.8*quiet)}
+  if(sp>2)snd.moved=1;if(snd.moved&&sp<0.05&&tr.brakeOn){snd.moved=0;sndShot('brake',snd.T.fx,t+0.25,0.95+0.1*Math.random(),0.7*quiet)}
   // tailgate bangs shut when the bed comes back down
-  snd.bedMax=Math.max(snd.bedMax,tr.bed);if(tr.bed<0.015&&snd.bedMax>0.25){sndShot(snd.gate,snd.T.fx,t,0.9+0.1*Math.random(),0.9*quiet);snd.bedMax=0}
+  snd.bedMax=Math.max(snd.bedMax,tr.bed);if(tr.bed<0.015&&snd.bedMax>0.25){sndShot('gate',snd.T.fx,t,0.85+0.1*Math.random(),0.9*quiet);snd.bedMax=0}
   if(tr.bed<0.015)snd.bedMax=0;
-  snd.dumpG.gain.setTargetAtTime(quiet*Math.min(1,sndIn.dump*0.8),t,0.06);
-  {const r=quiet*sndVol(sndCfg.fx)*ss(0,0.7,weather.r);snd.rainG.gain.setTargetAtTime(r*0.2,t,0.3);snd.rainLoG.gain.setTargetAtTime(r*0.12,t,0.3)}
-  snd.splashG.gain.setTargetAtTime(quiet*sndVol(sndCfg.fx)*splashLvl*0.5,t,0.08);
-  // backup alarm, scheduled on the audio clock: half a second on, half off, as long as it is in reverse
-  const rev=tr.gear<0&&tr.shiftT<=0&&!bench.on;
-  if(rev){if(snd.beepT<t)snd.beepT=t+0.05;while(snd.beepT<t+0.15){sndShot(snd.beep,snd.T.alarm,snd.beepT,1,1);snd.beepT+=1}}
+  // a load sliding out of the bed: the first rush of rock, then the pour
+  const dm=Math.min(1,sndIn.dump*0.8);if(dm>0.15&&!snd.dumpOn){snd.dumpOn=1;sndShot('rocks',snd.T.fx,t,0.75+0.1*Math.random(),0.6*quiet)}else if(dm<0.05)snd.dumpOn=0;
+  snd.dumpG.gain.setTargetAtTime(quiet*dm*0.9,t,0.06);
+  snd.splashG.gain.setTargetAtTime(quiet*sndVol(sndCfg.fx)*splashLvl*0.6,t,0.08);
+  // backup alarm, scheduled on the audio clock at the recorded beeper's own pace, as long as it is in reverse
+  const rev=tr.gear<0&&tr.shiftT<=0&&!bench.on,per=(SND_FILES.alarm||{}).period||1;
+  if(rev){if(snd.beepT<t)snd.beepT=t+0.05;while(snd.beepT<t+0.15){sndShot('alarm',snd.T.alarm,snd.beepT,1,0.8);snd.beepT+=per}}
   // excavator: demand pulls it off idle; hard soil and a relief valve blowing lug it down
   const hyd=Math.min(1,sndIn.hyd),dig=st.below?1:0,lug=dig?1-st.res:0,rel=sndIn.relief?1:0;
   const xT=850+1000*Math.min(1,hyd*1.4+dig*0.3)-220*lug-120*rel;
   const x=snd.engX;x.rpm+=(xT-x.rpm)*Math.min(1,dt*2.5);
   const xl=Math.min(1,hyd*0.7+lug*0.5+rel*0.6);
-  sndEngineTo(x,x.rpm,xl,quiet*0.9*(0.6+0.4*xl),t);
-  const pf=x.rpm*9/60;snd.pump.frequency.setTargetAtTime(pf,t,0.04);snd.pump2.frequency.setTargetAtTime(pf*2,t,0.04);
-  snd.pumpG.gain.setTargetAtTime(quiet*(0.012+0.05*hyd+0.05*rel),t,0.05);snd.hissG.gain.setTargetAtTime(quiet*(0.03*hyd+0.06*rel),t,0.05);
-  snd.reliefG.gain.setTargetAtTime(quiet*0.32*rel,t,0.03);
-  const rock=st.soil===3?1:0;snd.scrapeF.frequency.setTargetAtTime(rock?2400:1000,t,0.05);snd.scrape.playbackRate.setTargetAtTime(rock?1:0.6,t,0.05);
-  snd.scrapeG.gain.setTargetAtTime(quiet*dig*Math.min(1,hyd*1.5)*(0.35+0.4*rock),t,0.04);
+  sndEngineTo(x,x.rpm,xl,quiet*0.9*(0.65+0.35*xl),t);
+  // the pump turns with the engine; demand and the relief valve load it and its whine comes up
+  snd.pump.playbackRate.setTargetAtTime(x.rpm/1500,t,0.05);snd.pumpG.gain.setTargetAtTime(quiet*(0.04+0.3*hyd+0.2*rel),t,0.05);
+  snd.relief.playbackRate.setTargetAtTime(x.rpm/1100,t,0.05);snd.reliefG.gain.setTargetAtTime(quiet*0.35*rel,t,0.03);
+  // tracks: the clatter of the shoes round the sprocket and idler, faster and louder with speed
+  const tk=bench.on?0:Math.min(1,sndIn.track);snd.tracks.playbackRate.setTargetAtTime(0.8+0.35*tk,t,0.1);snd.trackG.gain.setTargetAtTime(quiet*0.8*ss(0.03,0.6,tk),t,0.08);
+  // the bucket in the ground: a bite of soil now and then, and the teeth scraping (bright and loud on rock)
+  const rock=st.soil===3?1:0,bite=dig*Math.min(1,hyd*1.5);
+  snd.scrapeF.frequency.setTargetAtTime(rock?9000:1300,t,0.05);snd.scrape.playbackRate.setTargetAtTime(rock?1:0.75,t,0.05);
+  snd.scrapeG.gain.setTargetAtTime(quiet*bite*(0.3+0.5*rock),t,0.04);
+  if(bite>0.1&&!bench.on){snd.digT-=dt*(0.8+bite*1.5);if(snd.digT<=0){snd.digT=0.4+Math.random()*0.6;sndShot('dig',snd.X.fx,t+0.01,(rock?1.1:0.8)+0.2*Math.random(),(0.35+0.4*bite)*(0.6+0.4*Math.random()))}}
   snd.pourG.gain.setTargetAtTime(quiet*Math.min(1,sndIn.pour*1.6)*0.9,t,0.05);
-  // tracks: a clank per shoe passing the sprocket
-  if(sndIn.track>0.05&&!bench.on){snd.trackT-=dt*sndIn.track*15;if(snd.trackT<=0){snd.trackT+=1;
-    sndShot(snd.clank[Math.random()<0.5?0:1],snd.X.fx,t+0.01,0.88+0.24*Math.random(),0.35+0.25*Math.random())}}else snd.trackT=Math.random()*0.5;
-  // mower: runs while it is the machine in hand, held at the governor; tall grass in the blades drags the revs down
-  const mb=mw.blades,mm=snd.engM,mT=900+250*mb-90*mw.load;mm.rpm+=(mT-mm.rpm)*Math.min(1,dt*3);
-  sndEngineTo(mm,mm.rpm,Math.min(1,0.25+0.75*mw.load),quiet*0.8*mb,t);
-  snd.bladeF.frequency.setTargetAtTime(500+250*mb-80*mw.load,t,0.1);snd.bladeG.gain.setTargetAtTime(quiet*0.22*mb*mb,t,0.1);
-  snd.chopG.gain.setTargetAtTime(quiet*0.35*mw.load*mb,t,0.05);
+  // mower: runs while it is the machine in hand, held at the governor; driving and cutting bring in the mowing recording,
+  // and tall grass in the blades drags the revs down
+  const mb=mw.blades,mm=snd.engM,mT=900+200*mb-90*mw.load;mm.rpm+=(mT-mm.rpm)*Math.min(1,dt*3);
+  sndEngineTo(mm,mm.rpm,Math.min(1,0.3+0.7*mw.load),quiet*0.8*mb,t,Math.min(1,Math.abs(mw.v)/2+Math.abs(mw.w)*0.3+mw.load));
   // skid steer: runs while you drive it; driving, the loader and the bucket biting the ground pull the revs up
-  const sr=sk.run,ss_=snd.engS,sT=950+800*Math.min(1,Math.abs(sk.v)/TU.skSpd*0.6+sndIn.skHyd*0.6+sndIn.skDig*0.5);ss_.rpm+=(sT*1.08-ss_.rpm)*Math.min(1,dt*3);
-  sndEngineTo(ss_,ss_.rpm,Math.min(1,sndIn.skHyd*0.6+sndIn.skDig),quiet*0.7*sr,t);sndIn.skDig=Math.max(0,sndIn.skDig-dt*3);
+  const sr=sk.run,ss_=snd.engS,sT=950+800*Math.min(1,Math.abs(sk.v)/TU.skSpd*0.6+sndIn.skHyd*0.6+sndIn.skDig*0.5);ss_.rpm+=(sT-ss_.rpm)*Math.min(1,dt*3);
+  sndEngineTo(ss_,ss_.rpm,Math.min(1,sndIn.skHyd*0.6+sndIn.skDig),quiet*0.75*sr,t);
+  snd.skPump.playbackRate.setTargetAtTime(ss_.rpm/1400,t,0.05);snd.skPumpG.gain.setTargetAtTime(quiet*sr*(0.03+0.25*Math.min(1,sndIn.skHyd)),t,0.05);
+  snd.skPourG.gain.setTargetAtTime(quiet*Math.min(1,sndIn.skPour*1.6)*0.8,t,0.05);sndIn.skDig=Math.max(0,sndIn.skDig-dt*3);
   // dirt bike: idles while you sit on it; the gas (and the back wheel spinning free in the air) sends the revs up
   const be=snd.engB,bT=1000+1000*Math.min(1,Math.max(0,bk.thr)*(bk.air?1:0.45)+Math.abs(bk.v)/TU.bkSpd*0.6);be.rpm+=(bT-be.rpm)*Math.min(1,dt*(bT>be.rpm?6:3));
-  sndEngineTo(be,be.rpm,Math.max(0,bk.thr),quiet*0.6*bk.run,t);
+  sndEngineTo(be,be.rpm,Math.max(0,bk.thr),quiet*0.65*bk.run,t);
   // Dexter's heavy machine you are in (heavy.js): idles while you sit in it; driving and the hydraulics pull the revs up
-  {const R=WK_RIDES[wk.inside],h=R&&R.m==='heavy'?R.o:null,he=snd.engH;if(h)sndPlace(snd.H,h.x,h.y+1.6,h.z,t);
+  {const R=WK_RIDES[wk.inside],h=R&&R.m==='heavy'?R.o:null,he=snd.engH;if(h)sndPlace(snd.H,h.x,h.y+1.6,h.z,t,cab==='heavy');
     const hT=750+900*(h?Math.min(1,Math.abs(h.v)/h.top*0.7+h.hyd*0.5+Math.abs(h.thr)*0.2):0);he.rpm+=(hT-he.rpm)*Math.min(1,dt*3);
-    sndEngineTo(he,he.rpm,h?Math.min(1,Math.abs(h.thr)*0.7+h.hyd*0.6):0,quiet*0.75*(h?h.run:0),t)}
+    sndEngineTo(he,he.rpm,h?Math.min(1,Math.abs(h.thr)*0.7+h.hyd*0.6):0,quiet*0.8*(h?h.run:0),t)}
   // the boat you are in: idles while you are aboard, the throttle and speed send the revs up; water along the hull and
-  // a slap now and then as it meets the swells (often, and harder, the faster it goes; a gentle lap at rest)
+  // a knock now and then as it meets the swells (often, and harder, the faster it goes; a gentle lap at rest)
   {const R=WK_RIDES[wk.inside],ob=R&&R.m==='boat'?R.o:null,oe=snd.engO;
     if(ob){const sy=Math.sin(ob.yaw),cy=Math.cos(ob.yaw);sndPlace(snd.O,ob.x-sy*2.6,ob.y+0.6,ob.z-cy*2.6,t)}
     const sp=ob?Math.abs(ob.v):0,th=ob?Math.abs(ob.thr||0):0,oT=800+1600*Math.min(1,Math.max(th,sp/TU.btSpeed));oe.rpm+=(oT-oe.rpm)*Math.min(1,dt*(oT>oe.rpm?3:2));
     sndEngineTo(oe,oe.rpm,th,quiet*(ob?0.75:0),t);
-    snd.washF.frequency.setTargetAtTime(300+70*sp,t,0.1);snd.washG.gain.setTargetAtTime(quiet*(ob?0.05+0.45*ss(0.3,9,sp):0),t,0.15);
+    snd.wash.playbackRate.setTargetAtTime(0.7+0.05*sp,t,0.2);snd.washF.frequency.setTargetAtTime(700+250*sp,t,0.1);snd.washG.gain.setTargetAtTime(quiet*(ob?0.08+0.6*ss(0.3,9,sp):0),t,0.15);
     if(ob&&!bench.on){snd.slapT-=dt*(0.4+sp*0.35+Math.abs(ob.rkv||0)*3);if(snd.slapT<=0){snd.slapT=0.4+Math.random()*1.4;
-      sndShot(snd.slap[Math.random()<0.5?0:1],snd.O.fx,t+0.01,0.85+0.3*Math.random(),(0.25+0.5*ss(0,8,sp))*(0.6+0.4*Math.random()))}}}
+      sndShot('slap',snd.O.fx,t+0.01,0.8+0.3*Math.random(),(0.3+0.5*ss(0,8,sp))*(0.6+0.4*Math.random()))}}}
   // the boats out on the lake: the nearest fishing boat's outboard, and the tug's diesel and horn
   {let nf=null,nd=1e9;for(const b of lakeBoats){if(b.eng!==1)continue;const d=Math.hypot(b.x-camera.position.x,b.z-camera.position.z);if(d<nd){nd=d;nf=b}}
     const fe=snd.engF;if(nf){sndPlace(snd.F,nf.x,nf.y+0.5,nf.z,t);const fT=900+1100*Math.min(1,nf.v/6);fe.rpm+=(fT-fe.rpm)*Math.min(1,dt*2)}
@@ -310,5 +227,6 @@ function updateSound(dt){
     const tg=lakeBoats.find(b=>b.kind==='tug'),ge=snd.engG;if(tg){sndPlace(snd.G,tg.x,tg.y+2,tg.z,t);const gT=700+500*Math.min(1,tg.v/2.4);ge.rpm+=(gT-ge.rpm)*Math.min(1,dt*1.5)}
     sndEngineTo(ge,ge.rpm,0.5,quiet*(tg?0.9:0),t);
     // a horn carries across the water: it fades with distance far more gently than the engines
-    if(tg&&tg.hornQ){tg.hornQ=false;const d=Math.hypot(tg.x-camera.position.x,tg.z-camera.position.z);sndShot(snd.horn,snd.dry,t+0.05+d/343,1,quiet*sndVol(sndCfg.fx)*1.6*Math.min(1,50/(d+10)))}}
+    if(tg&&tg.hornQ){tg.hornQ=false;const d=Math.hypot(tg.x-camera.position.x,tg.z-camera.position.z);sndShot('horn',snd.dry,t+0.05+d/343,0.85,quiet*sndVol(sndCfg.fx)*1.4*Math.min(1,50/(d+10)))}}
+  ambTick(dt,t,quiet);
 }
