@@ -46,16 +46,27 @@ renderer.setPixelRatio(pr);
 let glResets=0;try{glResets=+localStorage.getItem('bhd_glresets')||0}catch(e){}
 canvas.addEventListener('webglcontextlost',e=>{e.preventDefault();glResets++;try{localStorage.setItem('bhd_glresets',glResets)}catch(e){}
   if(typeof toast==='function')toast(say('glReset'),'bad',4500)});
-renderer.shadowMap.enabled=true; renderer.shadowMap.type=PHONE?THREE.PCFShadowMap:THREE.PCFSoftShadowMap;
+renderer.shadowMap.enabled=true; renderer.shadowMap.type=THREE.PCFShadowMap;
 // lighting is done in linear space and tone mapped like a camera; colours stay written as the sRGB values they were
 // picked as, and the patched chunks below turn them linear before lighting
-renderer.outputEncoding=THREE.sRGBEncoding;
+renderer.outputColorSpace=THREE.SRGBColorSpace;THREE.ColorManagement.enabled=false;
+// three.js lights are in physical units (since r155); LI turns the intensities the game was tuned with into them
+const LI=Math.PI;
+// an instanced mesh is culled and ray-picked by a sphere round all its copies, worked out once; work it out again
+// whenever the copies move or their number changes (trees, boulders and things placed in the map editor)
+Object.defineProperty(THREE.InstancedMesh.prototype,'boundingSphere',{configurable:true,
+  get(){const k=this.instanceMatrix.version+'/'+this.count;if(this._bsK!==k){this._bsK=k;this._bs=null}return this._bs},
+  set(v){this._bs=v;this._bsK=this.instanceMatrix?this.instanceMatrix.version+'/'+this.count:''}});
 renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=0.8;
 (function(){
   const lin=c=>`${c}=mix(${c}/12.92,pow((${c}+0.055)/1.055,vec3(2.4)),step(vec3(0.04045),${c}));`;
   const C=THREE.ShaderChunk;
   C.color_fragment+='\n'+lin('diffuseColor.rgb');
   C.emissivemap_fragment+='\n'+lin('totalEmissiveRadiance');
+  // a corner whose triangles cancel out (a fold or a sliver) has a zero normal, which normalize turns into NaN and
+  // bloom smears into a black blot: face it at the camera instead
+  C.normal_fragment_begin=C.normal_fragment_begin.replace('vec3 normal = normalize( vNormal );',
+    'vec3 normal = dot( vNormal, vNormal ) > 1e-12 ? normalize( vNormal ) : vec3( 0.0, 0.0, 1.0 );');
   // Phong reflections follow Fresnel: faint face-on, strong at grazing angles, as on paint, glass and water
   const ph=THREE.ShaderLib.phong;
   ph.fragmentShader=ph.fragmentShader.replace('#include <envmap_fragment>',C.envmap_fragment.replace(/specularStrength \* reflectivity/g,
@@ -116,8 +127,8 @@ const sky=(function(){
 
 const camera=new THREE.PerspectiveCamera(60,1,0.05,2400);
 // warm sun as the key, a cooler and much dimmer sky fill, so shade reads blue-grey and lit faces stand out
-scene.add(new THREE.HemisphereLight(0xb8d0ea,0x5b5a3c,0.5));
-const sun=new THREE.DirectionalLight(0xfff0dc,1.6);
+scene.add(new THREE.HemisphereLight(0xb8d0ea,0x5b5a3c,0.5*LI));
+const sun=new THREE.DirectionalLight(0xfff0dc,1.6*LI);
 sun.castShadow=true; sun.shadow.mapSize.set(PHONE?1024:2048,PHONE?1024:2048);
 // the shadow box's half width is the Graphics setting shR (gfx.js); the sun sits SUN_D m back so tall things at its edges still cast
 const SUN_D=80;Object.assign(sun.shadow.camera,{left:-14,right:14,top:14,bottom:-14,near:1,far:SUN_D+90});

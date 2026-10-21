@@ -140,7 +140,7 @@ const tuftMats=TUFT_GEO.map(()=>{const mat=M(0xffffff,{side:THREE.DoubleSide,ver
   mat.onBeforeCompile=sh=>{sh.uniforms.uTime=timeU;sh.uniforms.uDayK=dayKU;sh.uniforms.uThin=thin;sh.uniforms.uSun={value:SUN_DIR};sh.uniforms.uPush=lawnPush;
     sh.uniforms.tCrush={value:crTex};sh.uniforms.uCrO={value:new THREE.Vector4(CR_X0,CR_Z0,1/(CR_NX*CR_C),1/(CR_NZ*CR_C))};Object.assign(sh.uniforms,wetU);
     sh.vertexShader='uniform float uTime;\nuniform vec4 uThin;\nuniform vec4 uPush[5];\nuniform sampler2D tCrush;\nuniform vec4 uCrO;\nuniform sampler2D tWet;\nuniform vec4 uWetO;\nattribute vec4 aTuft;\nattribute float aHead;\nvarying vec3 vLW;\nvarying float vTip;\n'+sh.vertexShader
-      .replace('#include <color_vertex>','vColor=vec3(1.0);\n#ifdef USE_COLOR\nvColor*=color;\n#endif\n#ifdef USE_INSTANCING_COLOR\nvColor*=mix(instanceColor,aTuft.yzw,step(0.5,aHead)*step(aHead,1.5));\n#endif')
+      .replace('#include <color_vertex>','vColor=vec4(1.0);\n#ifdef USE_COLOR\nvColor.rgb*=color;\n#endif\n#ifdef USE_INSTANCING_COLOR\nvColor.rgb*=mix(instanceColor,aTuft.yzw,step(0.5,aHead)*step(aHead,1.5));\n#endif')
       .replace('#include <project_vertex>',
       '#ifdef USE_INSTANCING\nvec3 root=instanceMatrix[3].xyz;\n#else\nvec3 root=vec3(0.0);\n#endif\n'+
       'float fs=uThin.x*(uThin.w+(1.0-uThin.w)*(1.0-smoothstep(uThin.y,uThin.z,distance(root,cameraPosition))));\n'+
@@ -159,7 +159,7 @@ const tuftMats=TUFT_GEO.map(()=>{const mat=M(0xffffff,{side:THREE.DoubleSide,ver
       // and it leans away from the machines and the worker (uPush, set by updateMower)
       'for(int m=0;m<5;m++){vec2 d=root.xz-uPush[m].xy;float l=length(d),f=(1.0-smoothstep(uPush[m].z*0.55,uPush[m].z+0.35,l))*(1.0-fla);\n'+
       'if(f>0.0){mvPosition.xz+=d/max(l,0.05)*hg*0.9*f;mvPosition.y-=hg*0.6*f;}}\n'+
-      'vColor*=(1.0+0.18*gust*smoothstep(0.05,0.3,hg)*(1.0-fla))*mix(vec3(1.0),vec3(1.3,1.22,0.78),fla)*(1.0-0.22*wet);\n'+
+      'vColor.rgb*=(1.0+0.18*gust*smoothstep(0.05,0.3,hg)*(1.0-fla))*mix(vec3(1.0),vec3(1.3,1.22,0.78),fla)*(1.0-0.22*wet);\n'+
       'vLW=mvPosition.xyz;vTip=smoothstep(0.03,0.3,hg);\n'+
       'mvPosition=modelViewMatrix*mvPosition;\ngl_Position=projectionMatrix*mvPosition;');
     // looking toward the sun the blades glow where light comes through them
@@ -374,7 +374,7 @@ function patchUpdate(P,x0,x1,z0,z1){const g=P.g,pa=g.attributes.position,ca=g.at
   if(i0>i1||j0>j1)return;
   for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const v=j*P.VX+i,x=P.X0+i*P.CO,z=P.Z0+j*P.CO,h=baseHeight(x,z);
     pa.array[v*3+1]=h;da.array[v]=groundColor(x,z,h,c);ca.array[v*3]=c[0];ca.array[v*3+1]=c[1];ca.array[v*3+2]=c[2];ma.array[v]=c[3]}
-  for(const [a,w] of [[pa,3],[ca,3],[da,1],[ma,1]]){a.updateRange.offset=j0*P.VX*w;a.updateRange.count=(j1-j0+1)*P.VX*w;a.needsUpdate=true}}
+  for(const [a,w] of [[pa,3],[ca,3],[da,1],[ma,1]]){a.addUpdateRange(j0*P.VX*w,(j1-j0+1)*P.VX*w);a.needsUpdate=true}}
 // skirts hide any hairline gap where a finer grid meets a coarser one; rebuilt when the editor reshapes the ground
 function buildSkirts(){
   const sp=[],si=[];let q=0;

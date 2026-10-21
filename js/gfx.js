@@ -48,7 +48,7 @@ function gfxApply(){const g=gfxCur=Object.assign({},GFX[gfxKey],gfxOver);
   sun.castShadow=g.sh>0;
   if(g.sh>0&&sun.shadow.mapSize.x!==g.sh){sun.shadow.mapSize.set(g.sh,g.sh);if(sun.shadow.map){sun.shadow.map.dispose();sun.shadow.map=null}}
   const sc=sun.shadow.camera;if(sc.right!==g.shR){sc.left=sc.bottom=-g.shR;sc.right=sc.top=g.shR;sc.updateProjectionMatrix()}
-  const st=g.soft?THREE.PCFSoftShadowMap:THREE.PCFShadowMap;
+  const st=THREE.PCFShadowMap;sun.shadow.radius=g.soft?1.5:1;
   // lighting: filmic, or a plain exposure that keeps about the same brightness for much less work per pixel
   const tm=g.filmic?THREE.ACESFilmicToneMapping:THREE.LinearToneMapping,te=(g.filmic?0.8:0.75)*g.exp;
   if(renderer.shadowMap.type!==st||renderer.toneMapping!==tm){renderer.shadowMap.type=st;renderer.toneMapping=tm;

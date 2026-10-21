@@ -65,12 +65,14 @@ const postWhite=new THREE.DataTexture(new Uint8Array([255,255,255,255]),1,1),pos
 postWhite.needsUpdate=postBlack.needsUpdate=true;
 function postPass(mat,target){postTri.material=mat;renderer.setRenderTarget(target);renderer.render(postScene,postCam)}
 // the off-screen pictures, made or remade at the drawing size; the scene's is multisampled like the screen and holds
-// the tone-mapped colours still linear (three r147 tone maps into any target), in half floats where the GPU can draw
+// the tone-mapped colours still linear (postSize marks the target so three.js tone maps into it, as it does the screen), in half floats where the GPU can draw
 // them so dark colours don't band; the last pass turns them into screen colours
 function postSize(w,h){if(postRT&&postRT.width===w&&postRT.height===h)return;
   for(const t of [postRT,postAO,postAOB,...postBl])if(t)t.dispose();if(postRT)postRT.depthTexture.dispose();
   const ty=renderer.extensions.has('EXT_color_buffer_float')?THREE.HalfFloatType:THREE.UnsignedByteType;
   postRT=new THREE.WebGLRenderTarget(w,h,{samples:4,type:ty});
+  // the picture is tone mapped as it is drawn, as on screen (three.js does that only for the screen and the headset)
+  postRT.isXRRenderTarget=true;postRT.texture.colorSpace=THREE.LinearSRGBColorSpace;
   postRT.depthTexture=new THREE.DepthTexture(w,h);
   const o={depthBuffer:false,type:ty};postAO=new THREE.WebGLRenderTarget(w>>1,h>>1,o);postAOB=new THREE.WebGLRenderTarget(w>>1,h>>1,o);
   postBl=[];for(let i=1;i<=5;i++)postBl.push(new THREE.WebGLRenderTarget(Math.max(1,w>>i),Math.max(1,h>>i),o))}

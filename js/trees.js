@@ -24,7 +24,7 @@ const treeTex=(()=>{const L=new THREE.TextureLoader(),T=(n,wrap)=>{const t=L.loa
 // wood leans with them). treeGustU (1 calm, up to 3 in a storm) and treeWDU, the wind's way (x, z), follow the
 // weather's wind (rain.js) in treesTick; lean scales the lean and fl the flutter
 const treeGlowU={value:1},treeGustU={value:1},treeWDU={value:new THREE.Vector2(0.8,0.6)},treeSunV={value:new THREE.Vector3(0,1,0)};
-const TREE_A2C=renderer.capabilities.isWebGL2;
+const TREE_A2C=true; // WebGL 2 only (since r163)
 function treeSwayShader(mat,flutter,base,lean,fl){base=base===undefined?1:base;lean=lean||1;fl=fl||0.03;
   mat.customProgramCacheKey=()=>`sway${flutter?1:0}|${base}|${lean}|${fl}`;
   mat.onBeforeCompile=sh=>{Object.assign(sh.uniforms,{uWind:treeWindU,uDayK:dayKU,uSway:treeSwayU,uGust:treeGustU,uWD:treeWDU,uSunV:treeSunV,uSunVis:skySunVis,uGlow:treeGlowU});
@@ -46,10 +46,11 @@ function treeSwayShader(mat,flutter,base,lean,fl){base=base===undefined?1:base;l
   // soft leaf edges: with antialiasing the edge's alpha becomes coverage, sharpened to about a pixel so it neither
   // shimmers nor smears (WebGL 2; elsewhere the plain cut-out)
   if(TREE_A2C)sh.fragmentShader=sh.fragmentShader.replace('#include <alphatest_fragment>','diffuseColor.a=clamp((diffuseColor.a-0.45)/max(fwidth(diffuseColor.a)*1.4,1e-4)+0.5,0.0,1.0);\n#include <alphatest_fragment>')}}
-// the leaf material: the photo cards with soft edges (alpha to coverage) where the GPU can; base, lean and flutter as
+// the leaf material: the photo cards, cut out on the sharpened edge (real alpha to coverage, which three.js has applied
+// since r163, leaves the crowns see-through); base, lean and flutter as
 // treeSwayShader takes them (the undergrowth has its own, brush.js)
 function treeFolMat(base,lean,fl){const m=new THREE.MeshLambertMaterial({map:treeTex.fol,alphaMap:treeTex.folA,alphaTest:TREE_A2C?0.02:0.45,
-  alphaToCoverage:TREE_A2C,vertexColors:true});treeSwayShader(m,true,base,lean,fl);return m}
+  vertexColors:true});treeSwayShader(m,true,base,lean,fl);return m}
 const treeMats=(()=>{
   const wood=map=>{const m=new THREE.MeshPhongMaterial({map,shininess:4,specular:0x080808});treeSwayShader(m,false);return m};
   const fol=treeFolMat(1,1,0.03);
@@ -262,5 +263,5 @@ function treesTick(dt){const sw=TU.treeSway===undefined?1:TU.treeSway;
   for(const sp of TREE_SP){const A=sp.all.instanceMatrix.array,C=sp.col,parts=[[sp.hi,0],[sp.lo,0]];
     for(let i=0;i<sp.all.count;i++){const dx=A[i*16+12]-cx,dz=A[i*16+14]-cz,P=parts[dx*dx+dz*dz<R2?0:1],j=P[1]++;
       for(const im of P[0])im.instanceMatrix.array.set(A.subarray(i*16,i*16+16),j*16);P[0][1].instanceColor.array.set(C.subarray(i*3,i*3+3),j*3)}
-    for(const [ims,n] of parts)for(const im of ims){im.count=n;im.instanceMatrix.updateRange.count=n*16;im.instanceMatrix.needsUpdate=true;
-      if(im.instanceColor){im.instanceColor.updateRange.count=n*3;im.instanceColor.needsUpdate=true}}}}
+    for(const [ims,n] of parts)for(const im of ims){im.count=n;im.instanceMatrix.clearUpdateRanges();im.instanceMatrix.addUpdateRange(0,n*16);im.instanceMatrix.needsUpdate=true;
+      if(im.instanceColor){im.instanceColor.clearUpdateRanges();im.instanceColor.addUpdateRange(0,n*3);im.instanceColor.needsUpdate=true}}}}
