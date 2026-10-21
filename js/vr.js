@@ -18,7 +18,7 @@ const vrOn=()=>renderer.xr.isPresenting||vr.fake;
 // the dashboard: a canvas on a panel low in front of you, like the gauges on a dash
 // (the canvas is twice the size it is drawn at, for sharp text; as a scene panel it is mipmapped and filtered at a slant)
 const vrHud=(()=>{const c=document.createElement('canvas');c.width=2048;c.height=840;
-  const t=new THREE.CanvasTexture(c);t.encoding=THREE.sRGBEncoding;t.anisotropy=renderer.capabilities.getMaxAnisotropy();
+  const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=renderer.capabilities.getMaxAnisotropy();
   const m=new THREE.Mesh(new THREE.PlaneGeometry(0.5,0.205),new THREE.MeshBasicMaterial({map:t,transparent:true,depthTest:false,depthWrite:false,fog:false,toneMapped:false}));
   m.position.set(0,-0.42,-0.7);m.rotation.x=-0.55;m.renderOrder=20;m.frustumCulled=false;m.visible=false;rig.add(m);
   const x=c.getContext('2d');x.scale(2,2);return {m,x,t,c}})();

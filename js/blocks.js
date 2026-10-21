@@ -24,8 +24,8 @@ let blkOn=false,blkWake=0,blkMat=0,blkReach=12,blkFPTold=false;
 const blkGeo=new THREE.BoxGeometry(1,1,1),blkMeshes=[];
 function blkTileMat(mt,ft){mt.onBeforeCompile=sh=>{sh.uniforms.uTile={value:1/(ft*FT)};
   sh.vertexShader='uniform float uTile;\n'+sh.vertexShader.replace('#include <project_vertex>',`#include <project_vertex>
-  #ifdef USE_UV
-  {vec4 bw=modelMatrix*instanceMatrix*vec4(transformed,1.0);vec3 an=abs(normal);vUv=(an.x>0.5?bw.zy:an.y>0.5?bw.xz:bw.xy)*uTile;}
+  #ifdef USE_MAP
+  {vec4 bw=modelMatrix*instanceMatrix*vec4(transformed,1.0);vec3 an=abs(normal);vMapUv=(an.x>0.5?bw.zy:an.y>0.5?bw.xz:bw.xy)*uTile;}
   #endif`)}}
 function blkNewMesh(mt){const im=new THREE.InstancedMesh(blkGeo,mt,BLK_MAX);
   im.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(BLK_MAX*3),3);

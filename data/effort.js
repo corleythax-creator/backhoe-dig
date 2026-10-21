@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-21T03:47:00Z",
+ "updated": "2026-10-21T06:16:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -39,6 +39,12 @@ window.EFFORT = {
    "dh": 77,
    "act": 3.5,
    "versions": 9
+  },
+  {
+   "d": "2026-10-21",
+   "dh": 12,
+   "act": 0.5,
+   "versions": 1
   }
  ],
  "extra": [
@@ -1695,6 +1701,15 @@ window.EFFORT = {
    "tris": 4642001,
    "chars": 1179289,
    "what": "One of every machine on Corley's Island and on Dexter's: a second dozer, loader, semi, pickup and four-wheeler on Corley's east lawn, and twins of the excavator, dump truck, mower, skid steer and dirt bike, with every machine moved back to its home island"
+  },
+  {
+   "v": 184,
+   "asked": "2026-10-20T22:35:00-05:00",
+   "live": "2026-10-21T01:16:13-05:00",
+   "dh": 12,
+   "tris": 4629798,
+   "chars": 1181228,
+   "what": "The game now runs on the latest three.js (r186, up from r147): same look on every graphics level, with newer WebGL and VR (WebXR) support underneath, and a fix for a black blot Ultra could show on folded parts."
   }
  ]
 };

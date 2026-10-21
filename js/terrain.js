@@ -99,9 +99,9 @@ function mapDecode(text){const doc=JSON.parse(text);if(!doc||doc.game!=='backhoe
   return {h,p,m,a,tg,as,rs}}
 try{const t=localStorage.getItem('bhd_map');if(t){const m=mapDecode(t);ED_H.set(m.h);ED_P.set(m.p);ED_M.set(m.m);ED_A.set(m.a);if(m.tg)ED_G.set(m.tg);mapAssets=m.as;mapRoads=m.rs}}catch(e){}
 // the painted ids for the ground shader, one texel per cell (materials.js); editor.js flags it when they change
-matU.tMatId.value=new THREE.DataTexture(ED_M,ED_NX,ED_NZ,THREE.LuminanceFormat,THREE.UnsignedByteType);
+matU.tMatId.value=new THREE.DataTexture(ED_M,ED_NX,ED_NZ,THREE.RedFormat,THREE.UnsignedByteType);
 matU.tMatId.value.unpackAlignment=1;matU.tMatId.value.needsUpdate=true;
-matU.tMatCov.value=new THREE.DataTexture(ED_A,ED_NX,ED_NZ,THREE.LuminanceFormat,THREE.UnsignedByteType);
+matU.tMatCov.value=new THREE.DataTexture(ED_A,ED_NX,ED_NZ,THREE.RedFormat,THREE.UnsignedByteType);
 matU.tMatCov.value.unpackAlignment=1;matU.tMatCov.value.needsUpdate=true;
 // the site sits on a grassy island 24 ft above the lake: a rocky bank drops to a sand beach all round (shore). It is
 // about 525 ft across, centred north of the dig so its south rim (where the bridge starts) stays put, with wide lawns
@@ -558,13 +558,13 @@ function updateTerrain(){
     colors[k*3]=r;colors[k*3+1]=g;colors[k*3+2]=b;
   }
   const off=ja*V*3,cnt=(jb-ja+1)*V*3;
-  pos.updateRange.offset=off;pos.updateRange.count=cnt;
-  const ca=geo.attributes.color;ca.updateRange.offset=off;ca.updateRange.count=cnt;
-  const da=geo.attributes.dirt;da.updateRange.offset=off/3;da.updateRange.count=cnt/3;da.needsUpdate=true;
-  const wa=geo.attributes.wetT;wa.updateRange.offset=off/3;wa.updateRange.count=cnt/3;wa.needsUpdate=true;
-  const sa=geo.attributes.soilD;sa.updateRange.offset=off/3;sa.updateRange.count=cnt/3;sa.needsUpdate=true;
-  const ma=geo.attributes.matA;ma.updateRange.offset=off/3;ma.updateRange.count=cnt/3;ma.needsUpdate=true;
-  const ua=geo.attributes.mudW;ua.updateRange.offset=off/3;ua.updateRange.count=cnt/3;ua.needsUpdate=true;
+  pos.addUpdateRange(off,cnt);
+  const ca=geo.attributes.color;ca.addUpdateRange(off,cnt);
+  const da=geo.attributes.dirt;da.addUpdateRange(off/3,cnt/3);da.needsUpdate=true;
+  const wa=geo.attributes.wetT;wa.addUpdateRange(off/3,cnt/3);wa.needsUpdate=true;
+  const sa=geo.attributes.soilD;sa.addUpdateRange(off/3,cnt/3);sa.needsUpdate=true;
+  const ma=geo.attributes.matA;ma.addUpdateRange(off/3,cnt/3);ma.needsUpdate=true;
+  const ua=geo.attributes.mudW;ua.addUpdateRange(off/3,cnt/3);ua.needsUpdate=true;
   pos.needsUpdate=true; ca.needsUpdate=true;
   snapClods(ja,jb);updateShadowCaster();
 }

@@ -63,7 +63,7 @@ const MUD_STAGES=[{id:'mud_drying',c:[0.446,0.323,0.221]},{id:'mud_cracked',c:[0
 // WebGL2 (nearly every device): the ground shader draws the painted materials itself, per pixel, so a hard edge is a
 // sharp line wherever it falls between the mesh's vertices, with the texture on Medium and High graphics. Without
 // WebGL2 the vertex colours carry the materials' plain colours (matTint, terrain.js), edges blurred over a cell
-const MAT_GL2=renderer.capabilities.isWebGL2;
+const MAT_GL2=true; // three.js draws with WebGL 2 only (since r163)
 // the ground shader's material uniforms: the painted-id and cover maps (one texel per editor cell, ED_M and ED_A, set
 // up in terrain.js), the texture array holding just the materials the map uses, each id's mean colour and tiles per
 // metre, and its layer; for Mud, the layers of its drier looks and their colours over its own
@@ -175,7 +175,7 @@ function matTexUpdate(){if(!MAT_GL2||!texOn||!gfxDetail)return;
   const x2=cv.getContext('2d');layers.forEach((m,l)=>{x2.drawImage(matImg[m],0,0,T,T);data.set(x2.getImageData(0,0,T,T).data,l*T*T*4);
     const d=typeof m==='number'?matDef(m):null,r=d&&d.pbr&&matImg[d.id+'_r'];
     if(r&&r.complete){x2.drawImage(r,0,0,T,T);const q=x2.getImageData(0,0,T,T).data,o=l*T*T*4;for(let i=3;i<q.length;i+=4)data[o+i]=255-q[i-3]}});
-  const t=new THREE.DataTexture2DArray(data,T,T,L);t.format=THREE.RGBAFormat;t.wrapS=t.wrapT=THREE.RepeatWrapping;
+  const t=new THREE.DataArrayTexture(data,T,T,L);t.format=THREE.RGBAFormat;t.wrapS=t.wrapT=THREE.RepeatWrapping;
   t.magFilter=THREE.LinearFilter;t.minFilter=THREE.LinearMipmapLinearFilter;t.generateMipmaps=true;t.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());t.needsUpdate=true;
   if(matU.tMatArr.value)matU.tMatArr.value.dispose();matU.tMatArr.value=t;
   for(let m=0;m<MAT_MAX;m++)matU.uMatLS.value[m*2]=-1;matU.uMatN.value.fill(-1);
