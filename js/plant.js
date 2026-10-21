@@ -12,12 +12,12 @@ const PLANT_STAGE_TOP=[2.4,6,1e9],PLANT_STAGES=['Sapling','Young','Full grown'];
 const PLANT_FORMS={
   spruce:[hi=>treeSpruce(hi,{H:1.3,R:0.42,tr:0.025,y0:0.12,dy:0.45,seed:7}),hi=>treeSpruce(hi,{H:4.2,R:1.15,tr:0.09,y0:0.25,dy:0.75,seed:13})],
   redpine:[hi=>treeRedPine(hi,{H:1.4,cf:0.12,tr:0.03,nl:7,seed:7}),hi=>treeRedPine(hi,{H:4.6,cf:0.2,tr:0.1,nl:10,seed:13})],
-  oak:[hi=>treeBroad(hi,{seed:311,trunk:0.7,rad:0.022,limbs:3,limbLen:0.45,out:1.0,spread:0.8,lift:0.1,wob:0.5,cy:1.15,rx:0.5,ry:0.45,clumps:28,size:0.42,stems:1,leader:true,tw:0.15,rmin:0.004}),
-    hi=>treeBroad(hi,{seed:321,trunk:1.5,rad:0.09,limbs:4,limbLen:1.3,out:1.0,spread:0.75,lift:0.08,wob:0.7,cy:3.0,rx:1.6,ry:1.3,clumps:90,size:0.9,stems:1,leader:true,tw:0.5,rmin:0.02})],
+  oak:[hi=>treeBroad(hi,{fol:'oak',seed:311,trunk:0.7,rad:0.022,limbs:3,limbLen:0.45,out:1.0,spread:0.8,lift:0.1,wob:0.5,cy:1.15,rx:0.5,ry:0.45,clumps:28,size:0.42,stems:1,leader:true,tw:0.15,rmin:0.004}),
+    hi=>treeBroad(hi,{fol:'oak',seed:321,trunk:1.5,rad:0.09,limbs:4,limbLen:1.3,out:1.0,spread:0.75,lift:0.08,wob:0.7,cy:3.0,rx:1.6,ry:1.3,clumps:90,size:0.9,stems:1,leader:true,tw:0.5,rmin:0.02})],
   maple:[hi=>treeBroad(hi,{seed:411,trunk:0.8,rad:0.02,limbs:3,limbLen:0.4,out:0.6,spread:0.55,lift:0.2,wob:0.4,cy:1.25,rx:0.4,ry:0.5,clumps:28,size:0.42,stems:1,leader:true,tw:0.15,rmin:0.004}),
     hi=>treeBroad(hi,{seed:421,trunk:1.7,rad:0.08,limbs:4,limbLen:1.4,out:0.6,spread:0.55,lift:0.2,wob:0.45,cy:3.2,rx:1.3,ry:1.5,clumps:100,size:0.95,stems:1,leader:true,tw:0.5,rmin:0.02})],
-  birch:[hi=>treeBroad(hi,{seed:511,trunk:0.9,rad:0.018,limbs:3,limbLen:0.35,out:0.5,spread:0.5,lift:0.12,wob:0.3,cy:1.3,rx:0.35,ry:0.5,clumps:26,size:0.38,stems:1,leader:true,tw:0.15,rmin:0.004}),
-    hi=>treeBroad(hi,{seed:521,trunk:2.4,rad:0.06,limbs:3,limbLen:1.1,out:0.5,spread:0.5,lift:0.12,wob:0.3,cy:3.4,rx:0.95,ry:1.4,clumps:90,size:0.8,stems:2,so:0.1,leader:true,tw:0.4,rmin:0.02})]};
+  birch:[hi=>treeBroad(hi,{fol:'birch',seed:511,trunk:0.9,rad:0.018,limbs:3,limbLen:0.35,out:0.5,spread:0.5,lift:0.12,wob:0.3,cy:1.3,rx:0.35,ry:0.5,clumps:26,size:0.38,stems:1,leader:true,tw:0.15,rmin:0.004}),
+    hi=>treeBroad(hi,{fol:'birch',seed:521,trunk:2.4,rad:0.06,limbs:3,limbLen:1.1,out:0.5,spread:0.5,lift:0.12,wob:0.3,cy:3.4,rx:0.95,ry:1.4,clumps:90,size:0.8,stems:2,so:0.1,leader:true,tw:0.4,rmin:0.02})]};
 // what you've planted: [{k species, x, z, yaw, t (game time it went in, ms), c:[r,g,b] foliage tint}]; sp: the species Plant sets
 const plant={list:[],sp:0,sig:'',dirty:true,lodX:1e9,lodZ:1e9,mapYr:0};
 try{const d=JSON.parse(localStorage.getItem(PLANT_KEY)||'null');if(d&&Array.isArray(d.trees)){plant.list=d.trees.filter(a=>a&&isFinite(a.x)&&isFinite(a.z)&&isFinite(a.t)&&TREE_SP[a.k]);plant.sp=TREE_SP[d.sp]?d.sp:0}}catch(e){}
