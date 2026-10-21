@@ -129,7 +129,7 @@ const skyEnvRT=new THREE.WebGLCubeRenderTarget(64,{generateMipmaps:true,minFilte
 const skyEnvScene=new THREE.Scene(),skyEnvCam=new THREE.CubeCamera(1,2000,skyEnvRT),skyEnvGnd=new THREE.MeshBasicMaterial({color:0x4a4a32,fog:false,toneMapped:false});
 {const gnd=new THREE.Mesh(new THREE.CircleGeometry(900,24).rotateX(-Math.PI/2),skyEnvGnd);gnd.position.y=-12;skyEnvScene.add(gnd,new THREE.Mesh(sky.geometry,sky.material))}
 // k: how bright the ground under the sky is (1 by day)
-function skyEnvUpdate(k){skyEnvGnd.color.setHex(0x4a4a32).multiplyScalar(k);skyEnvScene.background=scene.background;skyEnvCam.update(renderer,skyEnvScene)}
+function skyEnvUpdate(k){skyEnvGnd.color.setHex(0x4a4a32).multiplyScalar(k);skyEnvScene.background=scene.background;skyEnvCam.update(renderer,skyEnvScene);skyEnv.needsPMREMUpdate=true}
 skyEnvUpdate(1);
 // straight-up normals for flat-shaded ground: lighting takes its slope from the faces, but the shadow lookup needs a
 // real normal (an all-zero one gives no shadow at all)
