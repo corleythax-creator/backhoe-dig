@@ -111,7 +111,46 @@ function mdlTrOn(on){
       node.traverse(m=>{if(!m.isMesh)return;const mat=mats[m.material.name]||mats.steel,mesh=new THREE.Mesh(m.geometry,mat);mesh.name='mdl_'+m.name;
         mesh.castShadow=mesh.receiveShadow=true;if(!m.geometry.attributes.uv)mdlBoxUV(m.geometry);mesh.layers.enable(RAIN_LAYER);mesh.visible=false;par.add(mesh);mdl.trSwap.push(mesh)})}}
   for(const c of mdl.trSimple)c.visible=!on;for(const m of mdl.trSwap)m.visible=on;mdlRemat(truck,on)}
-// gfx.js: Detailed or Simple machine models
+// ---------- every other machine: the same materials on its own shapes ----------
+// The mower, skid steer, dirt bike, boats and the heavy machines (both sets) keep their shapes but go physically
+// based too. Each part is sorted by its colour: rubber (near black), bare steel (greys), chrome (light greys), the cab
+// glass, lamps (very bright, kept as they are, so they still light up at night) and paint (anything with colour).
+// Parts painted by vertex colour (heavy.js and family.js kits, the bike, the boats) are regrouped by that sort into
+// one geometry with a material per group; the rest change material by the sort of their own colour
+function mdlSort(c){const mx=Math.max(c.r,c.g,c.b),mn=Math.min(c.r,c.g,c.b),sat=mx>0?(mx-mn)/mx:0,lum=0.3*c.r+0.59*c.g+0.11*c.b;
+  if(Math.abs(c.r-0.235)<0.02&&Math.abs(c.g-0.29)<0.02&&Math.abs(c.b-0.322)<0.02)return 'glass';
+  if(lum>0.85)return 'lamp';if(sat<0.2){if(mx<0.14)return 'rubber';if(lum>0.6)return 'chrome';return 'steel'}return 'paint'}
+const MDL_SORTS=['paint','steel','rubber','chrome','glass','lamp'],mdlVC={};
+// the materials for vertex-coloured parts: the vertex colour carries the hue, the photo detail the wear
+function mdlVCMat(sort,side){const key=sort+side;if(mdlVC[key])return mdlVC[key];
+  const o=sort==='paint'?{tex:'paint'}:sort==='steel'?{tex:'steel',metal:0.6}:sort==='rubber'?{tex:'rubber',relief:0.8}:sort==='chrome'?{metal:1,rough:0.2}:sort==='glass'?{rough:0.06,env:1.4}:{rough:0.15,emissive:0x2a261c};
+  const m=mdlStd(0xffffff,o);m.vertexColors=true;m.side=side;return mdlVC[key]=m}
+// a vertex-coloured geometry regrouped by sort, with box-projected texture coordinates
+function mdlSplit(g){g=g.index?g.toNonIndexed():g;const P=g.attributes.position,Nm=g.attributes.normal,C=g.attributes.color,n=P.count/3,c=new THREE.Color(),tris=MDL_SORTS.map(()=>[]);
+  for(let t=0;t<n;t++){c.fromBufferAttribute(C,t*3);tris[MDL_SORTS.indexOf(mdlSort(c))].push(t)}
+  const tot=n*3,Pa=new Float32Array(tot*3),Na=new Float32Array(tot*3),Ca=new Float32Array(tot*3),out=new THREE.BufferGeometry();let o=0;
+  tris.forEach((list,gi)=>{const start=o;for(const t of list)for(let v=0;v<3;v++){const i=t*3+v;
+      Pa.set([P.getX(i),P.getY(i),P.getZ(i)],o*3);Na.set(Nm?[Nm.getX(i),Nm.getY(i),Nm.getZ(i)]:[0,1,0],o*3);Ca.set([C.getX(i),C.getY(i),C.getZ(i)],o*3);o++}
+    if(o>start)out.addGroup(start,o-start,gi)});
+  out.setAttribute('position',new THREE.BufferAttribute(Pa,3));out.setAttribute('normal',new THREE.BufferAttribute(Na,3));out.setAttribute('color',new THREE.BufferAttribute(Ca,3));
+  if(!Nm)out.computeVertexNormals();mdlBoxUV(out);out.computeBoundingSphere();return out}
+// a flat material's stand-in, by the sort of its colour (lamps, see-through and glowing ones stay as they are)
+const mdlFlat=new Map();
+function mdlFlatPbr(m){if(mdlFlat.has(m))return mdlFlat.get(m);let r=null;
+  if(m.type==='MeshPhongMaterial'&&!m.transparent&&!(m.emissive&&m.emissive.getHex())&&!m.vertexColors){const sort=mdlSort(m.color),h=m.color.getHex();
+    r=sort==='paint'?mdlStd(h,{tex:'paint'}):sort==='steel'?mdlStd(h,{tex:'steel',metal:0.6}):sort==='rubber'?mdlStd(h,{tex:'rubber',relief:0.8}):sort==='chrome'?mdlStd(h,{metal:1,rough:0.2}):sort==='glass'?mdlStd(h,{rough:0.06,env:1.4}):null;
+    if(r)r.side=m.side}
+  mdlFlat.set(m,r);return r}
+// the machines this covers, and what on them is not paintwork (the loads, tinted as they fill)
+function mdlOthers(){return [mower,skid,bike,...boats.map(b=>b.g),...hvs.flatMap(h=>h.trailer?[h.g,h.trailer]:[h.g])]}
+function mdlOthersOn(on){const skip=new Set([skLoad,...hvs.map(h=>h.heap)]),gm=typeof grimeMats!=='undefined'&&grimeMats;
+  for(const root of mdlOthers())root.traverse(o=>{if(!o.isMesh||skip.has(o)||o.isInstancedMesh)return;const u=o.userData;
+    if(on){if(u.mdlO)return;const mt=o.material;if(Array.isArray(mt))return;
+      if(mt.vertexColors&&o.geometry.attributes.color){u.mdlO=[o.geometry,mt];if(!u.mdlG)u.mdlG=mdlSplit(o.geometry);o.geometry=u.mdlG;o.material=MDL_SORTS.map(k=>mdlVCMat(k,mt.side))}
+      else{const g=gm&&gm.find(e=>e.m===mt),pb=mdlFlatPbr(g?g.base:mt);if(!pb)return;u.mdlO=[null,mt];if(g){u.mdlOB=g.base;const c=mdlClone(pb);g.m=c;g.base=pb;o.material=c}else o.material=pb}}
+    else if(u.mdlO){const [geo,mt]=u.mdlO;if(geo)o.geometry=geo;else{const g=gm&&gm.find(e=>e.m===o.material);if(g){g.m=mt;g.base=u.mdlOB}}o.material=mt;u.mdlO=null}})
+  mdl.othersOn=on}
+// gfx.js: Detailed or Simple machine models (the other machines change on the next frame, once they all exist)
 function mdlGfx(detail){mdl.want=!!detail;mdlExOn(mdl.want);mdlTrOn(mdl.want)}
 // once a few seconds, the cab display's clock (only while the detailed model shows)
-function mdlTick(dt){if(!mdl.on)return;mdlScrT+=dt;if(mdlScrT>5){mdlScrT=0;mdlScreenDraw()}}
+function mdlTick(dt){if(!!mdl.othersOn!==mdl.want)mdlOthersOn(mdl.want);if(!mdl.on)return;mdlScrT+=dt;if(mdlScrT>5){mdlScrT=0;mdlScreenDraw()}}

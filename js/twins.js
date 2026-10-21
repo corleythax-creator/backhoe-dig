@@ -48,7 +48,7 @@ for(const t of TWINS){t.p=twHome(t);twSolid(t);
   WK_RIDES['twin_'+t.k]={o:{get x(){return t.p.x},get z(){return t.p.z},get yaw(){return t.p.yaw}},c:t.c,r:t.r,m:t.m,n:t.n,pick(){twSwap(t)}}}
 // every frame: once the machines have their poses, take their pictures; again when the machine models change (models.js)
 let twSig='',twFrames=0;
-function twinTick(){if(++twFrames<3)return;const sig=(typeof mdl!=='undefined'?[mdl.on,mdl.trOn]:[]).join();
+function twinTick(){if(++twFrames<3)return;const sig=(typeof mdl!=='undefined'?[mdl.on,mdl.trOn,mdl.othersOn]:[]).join();
   if(sig===twSig&&TWINS.every(t=>t.g))return;twSig=sig;for(const t of TWINS)twPicture(t)}
 // the save (save.js): each twin's state, and putting it back
 function twSave(){const r={};for(const t of TWINS){const q={};for(const k of t.keys){const v=t.p[k];q[k]=Array.isArray(v)?v.map(x=>+x.toFixed(4)):typeof v==='number'?+v.toFixed(4):v}r[t.k]=q}return r}
