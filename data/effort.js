@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-21T02:06:00Z",
+ "updated": "2026-10-21T02:35:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -36,9 +36,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-20",
-   "dh": 42,
-   "act": 2,
-   "versions": 6
+   "dh": 51,
+   "act": 2.5,
+   "versions": 7
   }
  ],
  "extra": [
@@ -1668,6 +1668,15 @@ window.EFFORT = {
    "tris": 4439892,
    "chars": 1158210,
    "what": "Every sound is now a real recording: diesel engines that rev, hydraulic whine, track clatter, the bucket biting, a real backup alarm, air brakes, outboards and thunder; plus wind, birds, crickets, frogs, lake waves, gulls, rain and footsteps, and a Nature slider"
+  },
+  {
+   "v": 181,
+   "asked": "2026-10-20T21:20:00-05:00",
+   "live": "2026-10-20T21:35:48-05:00",
+   "dh": 9,
+   "tris": 4432637,
+   "chars": 1167046,
+   "what": "Dexter's blue pickup and red four-wheeler: get in and drive them anywhere, with real engine sounds, sliding in hard turns, and their speed, acceleration, braking, steering and grip in the Tuning tab"
   }
  ]
 };
