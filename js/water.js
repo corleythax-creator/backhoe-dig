@@ -24,7 +24,7 @@ function wmSet(fine){WM_K=fine?1:GRID_K;WM_N=96*GRID_K/WM_K;wmMesh.geometry.disp
   wmMesh.geometry.setAttribute('color',new THREE.Float32BufferAttribute(new Float32Array((WM_N+1)*(WM_N+1)*3),3));
   wmMat.envMap=wmMatD.envMap=fine?skyEnv:null;wmMat.needsUpdate=wmMatD.needsUpdate=true;wmI0=-1;waterT=0}
 wmSet(false);
-function waterClear(){Wt.fill(-1e9);Rq.fill(0);Rs.fill(0);Tu.fill(0);runAny=false;mudA.fill(0);soakMax.fill(0);crkA.fill(0);geo.attributes.crk.updateRange.count=-1;geo.attributes.crk.needsUpdate=true;pumpOn=false;waterAny=puddleAny=false;waterSeen=false;wmMesh.visible=false}
+function waterClear(){Wt.fill(-1e9);Rq.fill(0);Rs.fill(0);Tu.fill(0);runAny=false;mudA.fill(0);soakMax.fill(0);crkA.fill(0);geo.attributes.crk.clearUpdateRanges();geo.attributes.crk.needsUpdate=true;pumpOn=false;waterAny=puddleAny=false;waterSeen=false;wmMesh.visible=false}
 // ---------- runoff: rain that runs downhill ----------
 // Over the dig area rain that the soil can't take (more of it the wetter the soil) runs off as a thin film, Rq (m): each
 // step it moves toward the lowest neighbouring surface, so it gathers into rills down spoil piles and ruts and pours into
@@ -96,7 +96,7 @@ function waterTick(dt){
     // a film thinner than 3 mm is not shown; rain builds one up in a dug spot instead of losing it
     if(Wt[k]<=h+0.001&&!(rain&&Wt[k]>-1e8&&h<H0[k]-0.02))Wt[k]=-1e9;else if(Wt[k]>h+0.003){any=true;if(Wt[k]<H0[k]-1)hole=true;mudA[k]=1;wetT[k]=timeU.value}
     if(Math.abs(Wt[k]-w0)>1e-4)moved=true}
-  if(crk){const a=geo.attributes.crk;a.updateRange.offset=cJ0*V*2;a.updateRange.count=(cJ1-cJ0+1)*V*2;a.needsUpdate=true}
+  if(crk){const a=geo.attributes.crk;a.addUpdateRange(cJ0*V*2,(cJ1-cJ0+1)*V*2);a.needsUpdate=true}
   // waterAny: a flooded hole (the Pump button); puddleAny: any water at all
   if(runAny){any=true;moved=true}
   waterAny=hole;puddleAny=any;waterMoved=moved;if(!hole)pumpOn=false;

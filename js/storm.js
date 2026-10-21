@@ -77,4 +77,4 @@ function stormTick(dt){const c=camera.position,cv=weather.c,r=weather.r,u=cloudM
   if(r>0.55&&!bench.on&&(lgT-=dt*r)<=0){lgT=10+Math.random()*30;lightning()}
   lgAge+=dt;let f=0;for(const p of lgPulse){const t=lgAge-p;if(t>=0)f+=Math.exp(-t*22)*(t<0.05?1:0.7)}
   bolt.visible=f>0.05;boltMat.opacity=Math.min(1,f);u.uFlash.value=f;
-  if(f>0.01){if(hemiL)hemiL.intensity+=f*1.4;scene.background.lerp(stormFog.setRGB(0.85,0.88,0.95),Math.min(0.6,f*0.5));scene.fog.color.copy(scene.background)}}
+  if(f>0.01){if(hemiL)hemiL.intensity+=f*1.4*LI;scene.background.lerp(stormFog.setRGB(0.85,0.88,0.95),Math.min(0.6,f*0.5));scene.fog.color.copy(scene.background)}}

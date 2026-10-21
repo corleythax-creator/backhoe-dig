@@ -259,7 +259,7 @@ const SKY_R=new THREE.Color(0x8e989f),FOG_FAR=scene.fog.far,SUN_I=sun.intensity,
 const skyTint=new THREE.Color(),skyGrey=new THREE.Color();
 function rainFxTick(dt){dnTick(dt);const r=weather.r,v=Math.max(ss(0,0.6,r),0.75*ss(0.3,1,weather.c));
   scene.background.copy(DAY.bg).lerp(skyGrey.copy(SKY_R).multiplyScalar(DAY.lum),v*0.85);scene.fog.color.copy(scene.background);scene.fog.far=FOG_FAR*gfxFog*DAY.fogK*(1-0.6*v);
-  sun.intensity*=1-0.7*v;if(hemiL)hemiL.intensity=DAY.hemiI*(1+0.15*v);
+  sun.intensity*=1-0.7*v;if(hemiL)hemiL.intensity=DAY.hemiI*LI*(1+0.15*v);
   sky.material.color.copy(skyTint.setRGB(1,1,1).lerp(SKY_R,v*0.75));skySunVis.value=1-v;
   rainSunI.value=sun.intensity/SUN_I;stormTick(dt);
   // the breeze under the rain, in gusts that roll over the island like the grass's (mower.js)

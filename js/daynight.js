@@ -83,7 +83,7 @@ const dnPools=(function(){const P=[],U=[],I=[];
 
 // ---------- headlights: one spot on the machine you are in, or the worker's headlamp ----------
 // it is always in the scene (dark by day), so nothing has to compile again when it comes on
-const dnHead=new THREE.SpotLight(0xfff1dc,0,46,0.6,0.55,1.1);dnHead.castShadow=false;scene.add(dnHead,dnHead.target);
+const dnHead=new THREE.SpotLight(0xfff1dc,0,46,0.6,0.55,0);dnHead.castShadow=false;scene.add(dnHead,dnHead.target);
 const dnHP=new THREE.Vector3(),dnHT=new THREE.Vector3();
 function dnHeadPlace(){
   // [part, lamp x y z, aim x y z] in the part's own frame, forward along +z
@@ -139,13 +139,13 @@ function dnTick(dt){
   DAY.cloud.setRGB(1,1,1).multiplyScalar(0.06+0.04*moonK+0.9*ss(-8,6,h)).lerp(dnSunC,0.35*ss(-4,1,h)*(1-ss(4,14,h)));
   // the lights: the sun by day, the moon at night (shadows fall from whichever it is, never quite flat)
   const sunI=1.6*ss(-1.5,6,h)*(0.6+0.4*ss(6,30,h)),moonI=0.32*moonK*nl;
-  if(h>-3){sun.color.copy(dnSunC);sun.intensity=sunI;LIGHT_DIR.copy(SUN_DIR)}else{sun.color.copy(dnMoonC);sun.intensity=moonI;LIGHT_DIR.copy(dnMoonDir)}
+  if(h>-3){sun.color.copy(dnSunC);sun.intensity=sunI*LI;LIGHT_DIR.copy(SUN_DIR)}else{sun.color.copy(dnMoonC);sun.intensity=moonI*LI;LIGHT_DIR.copy(dnMoonDir)}
   if(LIGHT_DIR.y<0.07){LIGHT_DIR.y=0.07;LIGHT_DIR.normalize()}
   DAY.hemiI=0.5*(0.12*nl*(1+0.6*moonK)+0.88*ss(-10,8,h));const hk=ss(-8,6,h);
   if(hemiL0){hemiL0.color.copy(dnHemiSky.setHex(0x5d74a8).lerp(dnCa.setHex(0xb8d0ea),hk));hemiL0.groundColor.copy(dnHemiGnd.setHex(0x15171c).lerp(dnCa.setHex(0x5b5a3c),hk))}
   dayKU.value=ss(-2,10,h);
   // the base the rain works from (rain.js); the map editor shows it as it is
-  scene.background.copy(DAY.bg);scene.fog.color.copy(DAY.bg);if(hemiL0)hemiL0.intensity=DAY.hemiI;
+  scene.background.copy(DAY.bg);scene.fog.color.copy(DAY.bg);if(hemiL0)hemiL0.intensity=DAY.hemiI*LI;
   if(edOn||bench.on){scene.fog.far=760*gfxFog;sky.material.color.setRGB(1,1,1);skySunVis.value=1}
   // the mountains take the horizon's light, the far range all of it
   dnCa.copy(skyU.uHor.value);dnCa.r/=DN_HOR0.r;dnCa.g/=DN_HOR0.g;dnCa.b/=DN_HOR0.b;
@@ -155,7 +155,7 @@ function dnTick(dt){
   famGlowMat.color.setScalar(0.65+0.35*lamp);famWinMat.emissive.copy(dnWarm).multiplyScalar(0.7*win*Math.min(1.5,ll));
   for(const m of dnHalos){m.visible=lamp>0.01;m.material.color.copy(m.userData.col).multiplyScalar(lamp*Math.min(1.5,ll))}
   dnPools.visible=lamp>0.01;dnPoolMat.color.setHex(0xffd9a0).multiplyScalar(0.45*lamp*ll);
-  const head=1-ss(-4,4,h);dnHead.intensity=2.2*head*ll;if(head>0.01)dnHeadPlace();
+  const head=1-ss(-4,4,h);dnHead.intensity=2.2*head*ll*LI;if(head>0.01)dnHeadPlace();
   // the machines' lamp lenses (LENS, excavator.js) shine with them
   LENS.emissive.setHex(0x554a30).lerp(dnCa.copy(dnWarm).multiplyScalar(1.3*Math.min(1.5,ll)),head);
   // fireflies and night sounds

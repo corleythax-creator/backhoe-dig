@@ -7,7 +7,7 @@
 // and wheels) switch to the same physically based materials. Only how the machines look changes, never how they dig
 // or move (CLAUDE.md).
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
-const MDL_LOADER='https://cdn.jsdelivr.net/npm/three@0.147.0/examples/js/loaders/GLTFLoader.js';
+const MDL_LOADER='three/addons/loaders/GLTFLoader.js';
 const mdl={want:false,on:false,ex:null,loading:false,simple:null,swap:[],tr:null,trOn:false,trLoading:false,trSimple:null,trSwap:[]};
 // physically based, smooth-shaded stand-ins for the game's flat-shaded materials (the rams and hoses), so curved parts
 // read round: glossy ones (the chromed rods) as polished metal; each gets the rain's wet look
@@ -19,7 +19,7 @@ let mdlMats=null;
 // relief and roughness maps (tools/pbr.py), and the sky's reflection (skyEnv), so steel is metal and paint is paint
 const MDL_TEX={paint:[0.301,0.301,0.301],steel:[0.084,0.084,0.084],rubber:[0.049,0.049,0.049]},mdlTexC={};
 function mdlTex(id,kind){const k=id+kind;if(!mdlTexC[k]){const t=new THREE.TextureLoader().load(`textures/mach_${id}${kind}.jpg`);
-  t.wrapS=t.wrapT=THREE.RepeatWrapping;t.anisotropy=4;if(!kind)t.encoding=THREE.sRGBEncoding;mdlTexC[k]=t}return mdlTexC[k]}
+  t.wrapS=t.wrapT=THREE.RepeatWrapping;t.anisotropy=4;if(!kind)t.colorSpace=THREE.SRGBColorSpace;mdlTexC[k]=t}return mdlTexC[k]}
 function mdlStd(hex,o){o=o||{};const m=new THREE.MeshStandardMaterial({color:hex,metalness:o.metal||0,roughness:o.rough==null?0.5:o.rough,envMap:skyEnv,envMapIntensity:o.env||1});
   if(o.tex){const c=MDL_TEX[o.tex];m.map=mdlTex(o.tex,'');m.color.setRGB(m.color.r/c[0],m.color.g/c[1],m.color.b/c[2]);
     m.normalMap=mdlTex(o.tex,'_n');m.normalScale.set(o.relief||0.6,o.relief||0.6);m.roughnessMap=mdlTex(o.tex,'_r');m.roughness=o.rough==null?1:o.rough}
@@ -48,9 +48,9 @@ function mdlScreenDraw(){const g=mdlScr.getContext('2d'),W=320,H=224;g.fillStyle
   g.textAlign='right';g.fillText('1022 h',W-16,190);
   g.fillStyle='#f07a22';g.fillRect(16,152,64,16);g.fillStyle='#0b1418';g.font='700 13px sans-serif';g.textAlign='center';g.fillText('P MODE',48,165);
   if(mdlScrTex)mdlScrTex.needsUpdate=true}
-// the classic-script glTF loader, fetched the first time a detailed model is wanted
-function mdlLoaderReady(cb){if(THREE.GLTFLoader){cb();return}const s=document.createElement('script');s.src=MDL_LOADER;s.onload=cb;
-  s.onerror=()=>{mdl.loading=false};document.head.appendChild(s)}
+// the glTF loader (an ES module, mapped in index.html's import map), fetched the first time a detailed model is wanted
+function mdlLoaderReady(cb){if(THREE.GLTFLoader){cb();return}
+  import(MDL_LOADER).then(m=>{THREE.GLTFLoader=m.GLTFLoader;cb()},()=>{mdl.loading=mdl.trLoading=false})}
 function mdlLoadEx(){if(mdl.ex||mdl.loading)return;mdl.loading=true;
   mdlLoaderReady(()=>new THREE.GLTFLoader().load('models/excavator.glb',gl=>{mdl.loading=false;mdl.ex=gl.scene;if(mdl.want)mdlExOn(true)},undefined,()=>{mdl.loading=false}))}
 // the excavator's part groups, by the model's node names
