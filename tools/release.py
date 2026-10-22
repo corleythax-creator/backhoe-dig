@@ -8,7 +8,7 @@ Options: --asked is when the owner asked (Central, YYYY-MM-DDTHH:MM); --dh devel
 
 Steps: fetch main and merge it into the branch; take the next version after main's last one (another session releasing at
 the same time just pushes this one to the number after); run tools/scene-check.js
-(stops on any error); add the entry and the day's hours to data/effort.js (live time is now, Central; the day's act
+(stops on any error); add the entry and the day's hours to data/effort.js and CHANGELOG.md (live time is now, Central; the day's act
 gains 0.5 when no release that day sits in the same half hour); commit and push the branch; merge it into main with
 --no-ff (a first-parent release commit, as tools/versions.py needs) and push; make the snapshot with tools/versions.py
 (unshallowing first, and stopping if it would delete anything outside the new snapshot), commit and push; bring the
@@ -17,6 +17,7 @@ republish the screen editor artifact (a script can't publish it). The claude.ai 
 """
 import argparse, datetime, json, os, re, subprocess, sys
 from zoneinfo import ZoneInfo
+from changelog import changelog
 
 ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 CT = ZoneInfo('America/Chicago')
@@ -134,6 +135,8 @@ def main():
         path = os.path.join(ROOT, 'data', 'effort.js')
         s = add_entry(open(path, encoding='utf-8').read(), v, asked, now, o.dh, chk['tris'], chk['chars'], o.what)
         open(path, 'w', encoding='utf-8').write(s)
+        open(os.path.join(ROOT, 'CHANGELOG.md'), 'w', encoding='utf-8').write(changelog(effort(s)))
+        git('add', 'CHANGELOG.md')
         git('commit', '-qam', f'v{v}: effort entry for {o.title}' + TRAILER)
         git('checkout', '-q', '-B', 'main', base)
         git('merge', '--no-ff', '-q', branch, '-m', f'v{v}: {o.title} (merge {branch})' + TRAILER)
