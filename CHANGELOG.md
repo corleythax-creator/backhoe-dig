@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Thursday, October 22, 2026
 
+- **v200** (5:23 PM) Ultra graphics: shade coloured by the real sky, soft sun shadows that sharpen where things touch the ground, rain beading and running on the machines, and soaked ground that mirrors the sky.
 - **v199** (5:13 PM) Drive a pickup to the new Lakeside General Store in town for mulch, tools and groceries; carry them (T on foot) into the bed, where they slide if you brake hard, and spread the mulch at home.
 - **v198** (5:05 PM) Corley's backhoe is here at the end of his machine row: drive it on four wheels, scoop with the loader, then swing the seat round (Drive / Dig), drop the outriggers and dig with the hoe.
 - **v197** (4:45 PM) Bucket angle matters: teeth into the cut fill the bucket, dragging it flat only skims. Quick coupler: set the bucket down (.) and pick up a thumb to carry blocks, a hammer to break rock, or an auger to bore holes.

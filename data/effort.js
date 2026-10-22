@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-22T22:13:00Z",
+ "updated": "2026-10-22T22:23:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -48,9 +48,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-22",
-   "dh": 57,
+   "dh": 71,
    "act": 1.5,
-   "versions": 4
+   "versions": 5
   }
  ],
  "extra": [
@@ -1851,6 +1851,15 @@ window.EFFORT = {
    "tris": 5239637,
    "chars": 1282302,
    "what": "Drive a pickup to the new Lakeside General Store in town for mulch, tools and groceries; carry them (T on foot) into the bed, where they slide if you brake hard, and spread the mulch at home."
+  },
+  {
+   "v": 200,
+   "asked": "2026-10-22T20:50:00-05:00",
+   "live": "2026-10-22T17:23:57-05:00",
+   "dh": 14,
+   "tris": 5234189,
+   "chars": 1292836,
+   "what": "Ultra graphics: shade coloured by the real sky, soft sun shadows that sharpen where things touch the ground, rain beading and running on the machines, and soaked ground that mirrors the sky."
   }
  ]
 };

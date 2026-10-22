@@ -78,7 +78,7 @@ function postSize(w,h){if(postRT&&postRT.width===w&&postRT.height===h)return;
   postBl=[];for(let i=1;i<=5;i++)postBl.push(new THREE.WebGLRenderTarget(Math.max(1,w>>i),Math.max(1,h>>i),o))}
 function postOn(){return (POST.ao||POST.bloom||POST.grade)&&!renderer.xr.isPresenting}
 // draws the frame: straight to the screen, or through the effects
-function postRender(){if(!postOn()){renderer.render(scene,camera);return}
+function postRender(){ultraTick();if(!postOn()){renderer.render(scene,camera);return}
   renderer.getDrawingBufferSize(postSz);postSize(postSz.x,postSz.y);
   renderer.setRenderTarget(postRT);renderer.render(scene,camera);
   // the effects' own few draws don't count toward the frame's triangles and draws (fps counter, speed test)
@@ -99,3 +99,30 @@ function postRender(){if(!postOn()){renderer.render(scene,camera);return}
 // gfx.js: which effects the Graphics setting has on; with none, the off-screen pictures are let go
 function postGfx(ao,bloom,grade){POST.ao=!!ao;POST.bloom=!!bloom;POST.grade=!!grade;
   if(!(ao||bloom||grade)&&postRT){for(const t of [postRT,postAO,postAOB,...postBl])t.dispose();postRT.depthTexture.dispose();postRT=postAO=postAOB=null;postBl=[]}}
+
+// ---------- Ultra lighting (gfx.js skyLight, shSoft, wetDrops) ----------
+// Sky lighting: the sky fill (the hemisphere light daynight.js sets each frame) takes the colour of the sky as it is
+// against the clear noon sky it was tuned under (only its colour: how bright it is stays daynight.js's and rain.js's),
+// and the ground's bounce takes the sun's colour and strength, in the light and in the reflections' ground (skyEnvTint,
+// core.js), so the shade turns warm at sunset, blue at dusk and grey under rain. Soft sun shadows: the shadow radius
+// asks the patched shadow chunk (core.js) for contact-hardening shadows, its blur per metre of fall worked out for the
+// shadow area in use (shR). Rain on the machines: rain.js (wetDropsSet). Wet ground shine: groundWetU (terrain.js).
+// Strengths are the Ultra tunings (TU)
+const ULTRA={sky:false,pcss:false,drops:false,wetG:false};
+const ulSky=new THREE.Color(),ulRef=new THREE.Color(),ulC=new THREE.Color(),ulG=new THREE.Color();
+function ulMean(top,hor,glow,out){return out.copy(top).multiplyScalar(0.55).add(ulC.copy(hor).multiplyScalar(0.45)).add(ulG.copy(glow).multiplyScalar(0.12))}
+// a colour's hue and saturation only (its mean channel 1)
+function ulHue(c){const m=Math.max(1e-4,(c.r+c.g+c.b)/3);return c.multiplyScalar(1/m)}
+ulHue(ulMean(new THREE.Color(0x4f86bd),new THREE.Color(0xbfd2dd),new THREE.Color(0),ulRef));
+function ulMix(c,k,lo,hi){c.r=1+(Math.min(hi,Math.max(lo,c.r))-1)*k;c.g=1+(Math.min(hi,Math.max(lo,c.g))-1)*k;c.b=1+(Math.min(hi,Math.max(lo,c.b))-1)*k;return c}
+function ultraGfx(sky,pcss,drops,wetG){ULTRA.sky=!!sky;ULTRA.pcss=!!pcss;ULTRA.drops=!!drops;ULTRA.wetG=!!wetG;if(!sky)skyEnvTint.setRGB(1,1,1);wetDropsSet(drops)}
+// every frame before the scene is drawn (postRender)
+function ultraTick(){
+  if(ULTRA.sky&&hemiL0){const k=TU.ultraSky;
+    ulHue(ulMean(skyU.uTop.value,skyU.uHor.value,skyU.uGlow.value,ulSky).multiply(sky.material.color));
+    ulSky.r/=ulRef.r;ulSky.g/=ulRef.g;ulSky.b/=ulRef.b;hemiL0.color.multiply(ulMix(ulSky,k,0.45,2.2));
+    const sk=Math.min(1,sun.intensity/(1.6*LI))*Math.min(1,Math.max(0,LIGHT_DIR.y*2.5));
+    ulHue(ulG.copy(sun.color));ulMix(ulG,0.6*k,0.5,1.8).multiplyScalar(1+(0.4*sk-0.15)*Math.min(k,1.5));
+    hemiL0.groundColor.multiply(ulG);skyEnvTint.copy(ulG)}
+  groundWetU.value=ULTRA.wetG?TU.ultraWetGround:0;
+  if(ULTRA.pcss){const c=sun.shadow.camera,q=TU.ultraShSoft*(c.far-c.near)/(2*c.right);sun.shadow.radius=1000+Math.min(q,0.5)*1e4}}
