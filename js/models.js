@@ -1,7 +1,8 @@
 // Corley's Island: detailed machine models from files (models/*.glb, glTF), on physically based materials. The
 // excavator's and the dump truck's come from tools/build_model.js, and any model that keeps its contract
 // (tools/models/excavator.js and truck.js: a node per moving part, in that part's own frame, materials named for the
-// game's) can replace them. With the Graphics setting's Machine models on Detailed, each file is fetched once and its
+// game's) can replace them, and so can the heavy machines' (tools/models/dozer.js, loader.js, semi.js, pickup.js and
+// atv.js). With the Graphics setting's Machine models on Detailed, each file is fetched once and its
 // parts go into the game's own part groups in place of the simple shapes, which stay for the Simple setting; the parts
 // the model leaves to the game (the excavator's rams, hoses and linkage; the truck's chassis, tanks, lights, cab inside
 // and wheels) switch to the same physically based materials. Only how the machines look changes, never how they dig
@@ -24,8 +25,14 @@ function mdlStd(hex,o){o=o||{};const m=new THREE.MeshStandardMaterial({color:hex
   if(o.tex){const c=MDL_TEX[o.tex];m.map=mdlTex(o.tex,'');m.color.setRGB(m.color.r/c[0],m.color.g/c[1],m.color.b/c[2]);
     m.normalMap=mdlTex(o.tex,'_n');m.normalScale.set(o.relief||0.6,o.relief||0.6);m.roughnessMap=mdlTex(o.tex,'_r');m.roughness=o.rough==null?1:o.rough}
   if(o.emissive)m.emissive.setHex(o.emissive);if(typeof wetPatch==='function')wetPatch(m);return m}
+// a library material (textures/<id>.jpg with its relief and roughness, tools/pbr.py) on a machine: the lowboy's oak deck,
+// its boards turned to run along the trailer
+function mdlLib(id,o){const L=k=>{const t=new THREE.TextureLoader().load(`textures/${id}${k}.jpg`);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.anisotropy=4;
+    t.center.set(0.5,0.5);t.rotation=o.turn||0;if(!k)t.colorSpace=THREE.SRGBColorSpace;return t};
+  const m=new THREE.MeshStandardMaterial({color:0xffffff,map:L(''),normalMap:L('_n'),roughnessMap:L('_r'),roughness:1,envMap:skyEnv,envMapIntensity:0.6});
+  m.normalScale.set(o.relief||1,o.relief||1);if(typeof wetPatch==='function')wetPatch(m);return m}
 function mdlMatsMake(){if(mdlMats)return mdlMats;const P=(h,o)=>mdlStd(h,Object.assign({tex:'paint'},o)),St=(h,o)=>mdlStd(h,Object.assign({tex:'steel',metal:0.65},o));
-  mdlMats={paint:P(0xe8701d),paintD:P(0xb8561a),paintW:P(0xe9ecea),paintR:P(0xb3291f),paintB:P(0x1d3557),
+  mdlMats={paint:P(0xe8701d),paintD:P(0xb8561a),paintW:P(0xe9ecea),paintR:P(0xb3291f),paintB:P(0x1d3557),paintY:P(0xf2b705),deck:mdlLib('planks',{turn:Math.PI/2}),
     steel:St(0x2b2d2c),steelL:St(0x55595a),bed:St(0x6c7378,{metal:0.35}),bedD:St(0x4c5257,{metal:0.35}),bucket:St(0x55595a),
     chrome:mdlStd(0xc9ccc8,{metal:1,rough:0.18}),rim:mdlStd(0xb9bdbf,{metal:0.85,rough:0.35}),
     rubber:mdlStd(0x1b1c1b,{tex:'rubber',relief:0.8}),track:mdlStd(0x34332f,{tex:'steel',metal:0.5,relief:1}),tire:mdlStd(0x1b1c1b,{tex:'rubber',relief:1}),
@@ -150,17 +157,41 @@ function mdlOthersOn(on){const skip=new Set([skLoad,...hvs.map(h=>h.heap)]),gm=t
       else{const g=gm&&gm.find(e=>e.m===mt),pb=mdlFlatPbr(g?g.base:mt);if(!pb)return;u.mdlO=[null,mt];if(g){u.mdlOB=g.base;const c=mdlClone(pb);g.m=c;g.base=pb;o.material=c}else o.material=pb}}
     else if(u.mdlO){const [geo,mt]=u.mdlO;if(geo)o.geometry=geo;else{const g=gm&&gm.find(e=>e.m===o.material);if(g){g.m=mt;g.base=u.mdlOB}}o.material=mt;u.mdlO=null}})
   mdl.othersOn=on}
-// ---------- the pickups and four-wheelers (both sets, heavy.js): their own detailed models ----------
-const MDL_HV=['pickup','atv'];mdl.hv={};mdl.hvOn=false;
+// ---------- the dozers, loaders, semis, pickups and four-wheelers (both sets, heavy.js): their own detailed models ----------
+const MDL_HV=['dozer','loader','semi','pickup','atv'];mdl.hv={};mdl.hvOn=false;
 function mdlLoadHv(k){if(mdl.hv[k]!==undefined)return;mdl.hv[k]=null;
   mdlLoaderReady(()=>new THREE.GLTFLoader().load(`models/${k}.glb`,gl=>{mdl.hv[k]=gl.scene;mdl.hvOn=!mdl.want},undefined,()=>{}))}
-// each machine of those kinds shows the model's meshes in place of its kit-built one (on and off as the setting goes)
+// a machine's part groups (hvMake), by the model's node names
+const mdlHvParts=h=>({body:h.g,blade:h.blade,ripper:h.ripG,arm:h.arm,bucket:h.bkt,trailer:h.trailer});
+// each machine of those kinds shows the model's meshes in its part groups in place of its kit-built ones (on and off as
+// the setting goes), and a hydraulic ram between each pair of the model's ram pins
 function mdlHvOn(on){mdl.hvOn=on;const mats=mdlMatsMake();
-  for(const h of hvs){if(!MDL_HV.includes(h.k))continue;const src=mdl.hv[h.k];
+  for(const h of hvs){if(!MDL_HV.includes(h.k))continue;const src=mdl.hv[h.k],P=mdlHvParts(h);
     if(on&&!src){mdlLoadHv(h.k);continue}
-    if(on&&!h.mdl){h.mdl=[];src.traverse(m=>{if(!m.isMesh)return;const mesh=new THREE.Mesh(m.geometry,mats[m.material.name]||mats.steel);mesh.name='mdl_'+m.name;
-        mesh.castShadow=m.material.name!=='tint';mesh.receiveShadow=true;if(!m.geometry.attributes.uv)mdlBoxUV(m.geometry);mesh.layers.enable(RAIN_LAYER);h.g.add(mesh);h.mdl.push(mesh)})}
-    for(const c of h.g.children)if(c.isMesh)c.visible=c.name.startsWith('mdl_')?on:!on}}
+    if(on&&!h.mdl){h.mdl=[];const pins={};
+      for(const [name,par] of Object.entries(P)){const node=par&&src.getObjectByName(name);if(!node)continue;
+        node.traverse(m=>{const pin=/^ram_(.+)_([ab])$/.exec(m.name);if(pin){(pins[pin[1]]=pins[pin[1]]||{})[pin[2]]={par,p:m.position.clone(),o:m.userData};return}
+          if(!m.isMesh)return;const k=m.material.name,mesh=new THREE.Mesh(m.geometry,mats[k]||mats.steel);mesh.name='mdl_'+m.name;
+          mesh.castShadow=k!=='tint';mesh.receiveShadow=true;if(!m.geometry.attributes.uv)mdlBoxUV(m.geometry);mesh.layers.enable(RAIN_LAYER);if(k==='tint')mesh.renderOrder=2;
+          par.add(mesh);h.mdl.push(mesh)})}
+      h.rams=Object.values(pins).filter(r=>r.a&&r.b).map(r=>mdlRam(r,mats));mdlRamPose(h)}
+    for(const g of Object.values(P))if(g)for(const c of g.children)if(c.isMesh&&c!==h.heap)c.visible=c.name.startsWith('mdl_')?on:!on;
+    for(const r of h.rams||[])r.ga.visible=r.gb.visible=on}}
+// a ram: the barrel (in the machine's paint) turning on one pin, the chromed rod on the other, an eye round each pin
+function mdlRam(r,mats){const o=r.a.o,rad=o.r||0.07,lb=o.lb||0.6,lr=o.lr||0.6,bk=o.bk||0;
+  const end=(par,p)=>{const g=new THREE.Group();g.position.copy(p);par.add(g);return g},ga=end(r.a.par,r.a.p),gb=end(r.b.par,r.b.p);
+  const cyl=(g,rd,len,z0,mat)=>{const geo=new THREE.CylinderGeometry(rd,rd,len,18);geo.rotateX(Math.PI/2);geo.translate(0,0,z0+len/2);mdlBoxUV(geo);
+    const m=new THREE.Mesh(geo,mat);m.castShadow=m.receiveShadow=true;m.layers.enable(RAIN_LAYER);g.add(m);return m};
+  cyl(ga,rad,lb+bk,-bk,mats[o.m||'paintY']);cyl(ga,rad*1.12,0.06,lb-0.06,mats.steel);cyl(ga,rad*1.1,0.08,-bk,mats.steel);
+  const rod=cyl(gb,rad*0.55,lr,0,mats.chrome);
+  for(const g of [ga,gb]){const eye=new THREE.Mesh(new THREE.CylinderGeometry(rad*0.85,rad*0.85,rad*2.2,14),mats.steel);g.add(eye)}
+  return {ga,gb,rod,lb,lr}}
+// points each ram's ends at each other as the parts move (heavy.js hvPose, with the machine's world matrices up to date)
+const mdlRV=new THREE.Vector3();
+function mdlRamPose(h){h.g.updateMatrixWorld(true);
+  for(const r of h.rams){r.ga.up.set(1,0,0).transformDirection(h.g.matrixWorld);r.gb.up.copy(r.ga.up);
+    r.gb.getWorldPosition(mdlRV);r.ga.lookAt(mdlRV);const d=mdlRV.distanceTo(r.ga.getWorldPosition(mdlRV));
+    r.ga.getWorldPosition(mdlRV);r.gb.lookAt(mdlRV);r.rod.scale.z=Math.max(1,(d-r.lb+0.04)/r.lr)}}
 // gfx.js: Detailed or Simple machine models (the other machines change on the next frame, once they all exist)
 function mdlGfx(detail){mdl.want=!!detail;mdlExOn(mdl.want);mdlTrOn(mdl.want)}
 // once a few seconds, the cab display's clock (only while the detailed model shows)
