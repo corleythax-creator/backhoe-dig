@@ -64,7 +64,7 @@ function sitePick(o,keys){const r={};for(const k of keys){const v=o[k];r[k]=Arra
 function rigSave(){if(window.syncHold)return;site.rigT=performance.now();site.rigSig=rigSig();const now=performance.now();
   const S0=sitePick(st,ST_KEYS);S0.el=st.startT?Math.round(((st.done?st.doneT:now)-st.startT)/1000):0;
   try{localStorage.setItem(RIG_KEY,JSON.stringify({v:1,home:1,tw:twSave(),t:Date.now(),st:S0,tr:sitePick(tr,TR_KEYS),
-    tb:sitePick(TB,['x','z','y','ty','yaw','hooked','seated']),sk:sitePick(sk,SK_KEYS),bt:boats.map(b=>[+b.x.toFixed(3),+b.z.toFixed(3),+b.yaw.toFixed(4)]),bk:[+bk.x.toFixed(3),+bk.z.toFixed(3),+bk.yaw.toFixed(4)],hv:hvs.map(h=>[h.x,h.z,h.yaw,h.ty,h.a,h.c,h.rip].map(v=>+v.toFixed(4))),wk:Object.assign(sitePick(wk,['x','z','yaw']),{in:wk.inside}),
+    tb:sitePick(TB,['x','z','y','ty','yaw','hooked','seated']),sk:sitePick(sk,SK_KEYS),bt:boats.map(b=>[+b.x.toFixed(3),+b.z.toFixed(3),+b.yaw.toFixed(4)]),bk:[+bk.x.toFixed(3),+bk.z.toFixed(3),+bk.yaw.toFixed(4)],hv:hvs.map(h=>[h.x,h.z,h.yaw,h.ty,h.a,h.c,h.rip].map(v=>+v.toFixed(4))),wk:Object.assign(sitePick(wk,['x','z','yaw']),{in:wk.inside,tm:[trim.on?1:0,+trim.line.toFixed(4),+trim.spool.toFixed(3)]}),
     blocks:blocks.map(b=>({x:b.x,z:b.z,y:+b.y.toFixed(4),w:b.w,d:b.d,h:b.h,m:b.m,c:b.c.map(x=>+x.toFixed(3))}))}))}catch(e){}}
 function rigLoad(){let d=null;try{d=JSON.parse(localStorage.getItem(RIG_KEY))}catch(e){}
   if(!d||d.v!==1)return;const ok=v=>typeof v==='number'?isFinite(v):typeof v==='boolean'||Array.isArray(v)&&v.every(isFinite);
@@ -86,14 +86,14 @@ function rigLoad(){let d=null;try{d=JSON.parse(localStorage.getItem(RIG_KEY))}ca
     Object.assign(sk,{x:SK_START.x,z:SK_START.z,yaw:SK_START.yaw,stuck:0});sk.y=surfAt(sk.x,sk.z);skidPose();
     if(TB.hooked){TB.hooked=false;chain.visible=false;TB.ty=boxRest();TB.y=Math.max(TB.y,TB.ty);boxMask()}}
   else twLoad(d.tw);
-  if(d.wk&&[d.wk.x,d.wk.z,d.wk.yaw].every(isFinite)){Object.assign(wk,{x:d.wk.x,z:d.wk.z,yaw:d.wk.yaw,view:d.wk.yaw});wk.y=wkFloor(wk.x,wk.z,0,1e9);wk.inside=['ex','truck','mow','skid','bike',...boats.map((b,i)=>'boat'+i),...hvs.map((h,i)=>'hv'+i)].includes(d.wk.in)&&home?d.wk.in:null;if(wk.inside&&WK_RIDES[wk.inside].pick)WK_RIDES[wk.inside].pick()}
+  if(d.wk&&[d.wk.x,d.wk.z,d.wk.yaw].every(isFinite)){trimLoad(d.wk.tm);Object.assign(wk,{x:d.wk.x,z:d.wk.z,yaw:d.wk.yaw,view:d.wk.yaw});wk.y=wkFloor(wk.x,wk.z,0,1e9);wk.inside=['ex','truck','mow','skid','bike',...boats.map((b,i)=>'boat'+i),...hvs.map((h,i)=>'hv'+i)].includes(d.wk.in)&&home?d.wk.in:null;if(wk.inside&&WK_RIDES[wk.inside].pick)WK_RIDES[wk.inside].pick()}
   if(home&&Array.isArray(d.bk)&&d.bk.length===3&&d.bk.every(isFinite)){Object.assign(bk,{x:d.bk[0],z:d.bk[1],yaw:d.bk[2],v:0,vy:0,air:false});bk.y=surfAt(bk.x,bk.z);bikePose()}
   // Dexter's heavy machines (heavy.js): where each is, the semi's trailer and the blade or arms and bucket
   if(home&&Array.isArray(d.hv))d.hv.forEach((p,i)=>{const h=hvs[i];if(h&&Array.isArray(p)&&p.length>=6&&p.every(isFinite)){
     Object.assign(h,{x:p[0],z:p[1],yaw:p[2],ty:p[3],a:clamp(p[4],...(h.K.track?HV_BLIM:HV_ALIM)),c:clamp(p[5],...HV_CLIM),rip:clamp(p[6]||0,0,1),v:0,w:0});hvGround(h,1);hvPose(h)}});
   if(home&&Array.isArray(d.bt))d.bt.forEach((p,i)=>{if(boats[i]&&Array.isArray(p)&&p.length===3&&p.every(isFinite))Object.assign(boats[i],{x:p[0],z:p[1],yaw:p[2],v:0})});
   site.rigSig=rigSig()}
-function rigSig(){return [TWINS.reduce((a,t)=>a+t.p.x+t.p.z*3,0),st.x,st.z,st.yaw,st.swing,st.a1,st.a2,st.a3,st.load,tr.x,tr.z,tr.yaw,tr.bed,tr.load,tr.hauled,TB.x,TB.z,TB.y,sk.x,sk.z,sk.yaw,sk.a,sk.c,sk.load,bk.x,bk.z,bk.yaw,hvs.reduce((a,h)=>a+h.x+h.z*3+h.yaw*7+h.ty*11+h.a*13+h.c*17+h.rip*19,0),wk.x,wk.z,wk.inside?1:0,boats.reduce((a,b)=>a+b.x+b.z*3+b.yaw*7,0),blocks.length,blocks.reduce((a,b)=>a+b.x+b.z*3+b.y*7+b.m,0)]
+function rigSig(){return [TWINS.reduce((a,t)=>a+t.p.x+t.p.z*3,0),st.x,st.z,st.yaw,st.swing,st.a1,st.a2,st.a3,st.load,tr.x,tr.z,tr.yaw,tr.bed,tr.load,tr.hauled,TB.x,TB.z,TB.y,sk.x,sk.z,sk.yaw,sk.a,sk.c,sk.load,bk.x,bk.z,bk.yaw,hvs.reduce((a,h)=>a+h.x+h.z*3+h.yaw*7+h.ty*11+h.a*13+h.c*17+h.rip*19,0),wk.x,wk.z,wk.inside?1:0,(trim.on?1:0)+trim.line*10+trim.spool,boats.reduce((a,b)=>a+b.x+b.z*3+b.yaw*7,0),blocks.length,blocks.reduce((a,b)=>a+b.x+b.z*3+b.y*7+b.m,0)]
   .map(v=>Math.round(v*100)).join(',')}
 // the ground is written at most every 4 s while it changes, the machines every 2 s while they move, both when the page is hidden
 function siteTick(){if(bench.on)return;const now=performance.now();
