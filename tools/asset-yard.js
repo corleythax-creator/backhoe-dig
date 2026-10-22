@@ -54,6 +54,11 @@ const PAGE=async look=>{
         lod:sp.tris,h:sp.h})})}
   scene.updateMatrixWorld(true);
   const shown=o=>{for(;o;o=o.parent)if(!o.visible)return false;return true};
+  // a skinned mesh (the worker) in the pose the game has it in: each vertex and normal carried by its bones
+  const posed=o=>{const g=o.geometry,P=g.attributes.position,N=g.attributes.normal,n=new THREE.BufferGeometry(),pa=new Float32Array(P.count*3),na=new Float32Array(P.count*3),v=new THREE.Vector3(),w=new THREE.Vector3();
+    o.skeleton.update();for(let i=0;i<P.count;i++){o.getVertexPosition(i,v);v.toArray(pa,i*3);if(N){w.fromBufferAttribute(P,i).addScaledVector(w.clone().fromBufferAttribute(N,i),0.01);o.applyBoneTransform(i,w);w.sub(v).normalize().toArray(na,i*3)}}
+    n.setAttribute('position',new THREE.BufferAttribute(pa,3));if(N)n.setAttribute('normal',new THREE.BufferAttribute(na,3));for(const a of ['uv','color'])if(g.attributes[a])n.setAttribute(a,g.attributes[a]);if(g.index)n.setIndex(g.index);
+    for(const gr of g.groups)n.addGroup(gr.start,gr.count,gr.materialIndex);return n};
   const rel=p=>{try{const u=new URL(p,location.href);return u.pathname.replace(/^\//,'')}catch(e){return null}};
   const SLOTS=['map','normalMap','roughnessMap','metalnessMap','alphaMap','emissiveMap','aoMap','bumpMap'];
   const out=[],cv=new Map();
@@ -61,7 +66,7 @@ const PAGE=async look=>{
     const M0=new THREE.Matrix4().makeRotationY(s.f?s.f.yaw:0).setPosition(s.f?s.f.x:0,s.f?s.f.y:0,s.f?s.f.z:0),inv=M0.clone().invert();
     let list=s.meshes;
     if(!list){list=[];for(const r of s.roots)r.traverse(o=>{if((o.isMesh||o.isInstancedMesh)&&shown(o)&&o.geometry&&o.geometry.attributes.position)
-      [].concat(o.material).some(m=>m.visible!==false&&m.opacity>0.01)&&list.push({geo:o.geometry,mat:o.material,m:inv.clone().multiply(o.isInstancedMesh?o.matrixWorld.clone().multiply((()=>{const t=new THREE.Matrix4();o.getMatrixAt(0,t);return t})()):o.matrixWorld)})})}
+      [].concat(o.material).some(m=>m.visible!==false&&m.opacity>0.01)&&list.push({geo:o.isSkinnedMesh?posed(o):o.geometry,mat:o.material,m:inv.clone().multiply(o.isInstancedMesh?o.matrixWorld.clone().multiply((()=>{const t=new THREE.Matrix4();o.getMatrixAt(0,t);return t})()):o.matrixWorld)})})}
     const R=new THREE.Group(),gc=new Map(),mc=new Map();let tris=0,verts=0,draws=0;const mats=new Set();
     const mat=(m,tint)=>{const key=m.uuid+(tint?'t':'');if(mc.has(key))return mc.get(key);
       const u={kind:m.type,flat:!!m.flatShading,vc:!!m.vertexColors,side:m.side,tr:!!m.transparent,op:m.opacity,at:m.alphaTest||0,tex:{}};
@@ -69,11 +74,11 @@ const PAGE=async look=>{
       if(m.emissive){u.em=m.emissive.getHex();u.emi=m.emissiveIntensity}
       if(m.metalness!==undefined){u.metal=m.metalness;u.rough=m.roughness;u.envI=m.envMapIntensity}
       if(m.normalScale)u.ns=m.normalScale.x;
-      for(const sl of SLOTS){const t=m[sl],im=t&&t.image;if(!im||!im.width)continue;const src=im.currentSrc||im.src;let p=src&&rel(src);
+      for(const sl of SLOTS){const t=m[sl],im=t&&t.image;if(!im||!im.width)continue;let src=im.currentSrc||im.src;if(src&&/^(blob|data):/.test(src))src=null;let p=src&&rel(src);
         // a texture the game draws itself (the load's grey detail, the cab screen) goes in as a picture
-        if(!src){if(!cv.has(im)){const c=document.createElement('canvas');c.width=Math.min(512,im.width);c.height=Math.round(im.height*c.width/im.width);c.getContext('2d').drawImage(im,0,0,c.width,c.height);cv.set(im,c.toDataURL('image/jpeg',0.85))}p=cv.get(im)}
+        if(!src){if(!cv.has(im)){const c=document.createElement('canvas');c.width=Math.min(s.id==='worker'?1024:512,im.width);c.height=Math.round(im.height*c.width/im.width);c.getContext('2d').drawImage(im,0,0,c.width,c.height);cv.set(im,(m.alphaTest||m.transparent)&&sl==='map'?c.toDataURL('image/png'):c.toDataURL('image/jpeg',0.85))}p=cv.get(im)}
         if(!p)continue;
-        u.tex[sl]={p,rep:[t.repeat.x,t.repeat.y],off:[t.offset.x,t.offset.y],rot:t.rotation,ctr:[t.center.x,t.center.y],srgb:t.colorSpace===THREE.SRGBColorSpace}}
+        u.tex[sl]={p,rep:[t.repeat.x,t.repeat.y],off:[t.offset.x,t.offset.y],rot:t.rotation,ctr:[t.center.x,t.center.y],fy:t.flipY,srgb:t.colorSpace===THREE.SRGBColorSpace}}
       const c=m.color?m.color.clone():new THREE.Color(1,1,1);if(tint&&s.tint)c.multiply(new THREE.Color(...s.tint));
       const e=new THREE.MeshStandardMaterial({color:c,name:m.name||m.type});e.userData=u;mc.set(key,e);return e};
     // the file's copy of a geometry: only the attributes its materials read (a flat-shaded one needs no normals, an
@@ -104,7 +109,7 @@ server.listen(0,async()=>{const port=server.address().port,errs=[];
     const all=[];
     for(const look of ['detail','simple']){
       await p.evaluate(on=>{document.getElementById('help').hidden=true;mdlGfx(on)},look==='detail');
-      await p.waitForFunction(on=>on?mdl.on&&mdl.trOn&&mdl.othersOn&&mdl.hvOn&&hvs.every(h=>!MDL_HV.includes(h.k)||h.mdl):!mdl.on&&!mdl.trOn&&!mdl.othersOn&&!mdl.hvOn,look==='detail',{timeout:180000,polling:500});
+      await p.waitForFunction(on=>on?mdl.on&&mdl.trOn&&mdl.othersOn&&mdl.hvOn&&hvs.every(h=>!MDL_HV.includes(h.k)||h.mdl)&&wkMdl.g:!mdl.on&&!mdl.trOn&&!mdl.othersOn&&!mdl.hvOn,look==='detail',{timeout:180000,polling:500});
       await p.waitForTimeout(3000);all.push(...await p.evaluate(PAGE,look))}
     fs.mkdirSync(path.join(OUT,'yard'),{recursive:true});
     const meta=all.map(({glb,...r})=>{const f=`yard/${r.id}${r.look==='simple'?'_simple':''}.json`;fs.writeFileSync(path.join(OUT,f),JSON.stringify({glb}));
