@@ -2,6 +2,10 @@
 
 Every version of Corley's Island, newest first, grouped by the day it went live (Central time). Made from `data/effort.js` by `tools/changelog.py`; don't edit it by hand. [Play any old version](https://corleys-island.vercel.app/versions/) · [Build log with charts](https://corleys-island.vercel.app/build.html)
 
+## Thursday, October 22, 2026
+
+- **v196** (4:24 PM) Take out the string trimmer on foot (9) to weed-eat where the mower can't reach, and bump out more line (0) as it wears; footsteps now squelch through mud and knock hollow on the bridge decks and docks.
+
 ## Wednesday, October 21, 2026
 
 - **v195** (10:28 PM) Ten fixes to what's there: Space no longer flips the wipers on foot; a second finger can't freeze a held stick and keys can't stick after Cmd on a Mac; switching to Walk with no room to climb out keeps you in the machine; an idle device no longer makes the other one reload through sync; a map edit is saved even if you leave within a second; water, puddles, soaking and settling heaps run the same on a slow phone as on a PC; puddles no longer fill and dry twice along mud-tile seams; less stutter from the mud loop; lighter clouds on Low; faster loading with no console spam from the machine models; and the dig site test's Lower Bench cut moved off the bridge end so it passes
