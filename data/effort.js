@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-22T01:10:00Z",
+ "updated": "2026-10-22T01:16:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -42,9 +42,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-21",
-   "dh": 72,
+   "dh": 72.5,
    "act": 3,
-   "versions": 9
+   "versions": 10
   }
  ],
  "extra": [
@@ -1782,6 +1782,15 @@ window.EFFORT = {
    "tris": 4876416,
    "chars": 1195296,
    "what": "The hub page is now one template shared by all of Corley's games (only its settings differ), with a Roadmap count of items done"
+  },
+  {
+   "v": 193,
+   "asked": "2026-10-21T20:15:00-05:00",
+   "live": "2026-10-21T20:16:44-05:00",
+   "dh": 0.5,
+   "tris": 5029939,
+   "chars": 1195296,
+   "what": "The hub's documents with code in them fit a phone screen instead of scrolling the page sideways"
   }
  ]
 };
