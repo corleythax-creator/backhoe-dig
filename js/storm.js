@@ -12,11 +12,11 @@ const STORM_GLSL='float sh(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43
   'float sn(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);return mix(mix(sh(i),sh(i+vec2(1,0)),f.x),mix(sh(i+vec2(0,1)),sh(i+1.0),f.x),f.y);}\n'+
   'float fbm(vec2 p){float s=0.0,a=0.5;for(int i=0;i<5;i++){s+=a*sn(p);p=p*2.03+17.1;a*=0.5;}return s;}\n';
 const cloudMat=new THREE.ShaderMaterial({transparent:true,depthWrite:false,fog:false,side:THREE.DoubleSide,
-  uniforms:{uC:{value:0.18},uT:{value:0},uOff:{value:new THREE.Vector2()},uCam:{value:new THREE.Vector3()},uFog:{value:new THREE.Color()},uSunI:rainSunI,uFlash:{value:0},uDay:{value:DAY.cloud}},
+  uniforms:{uC:{value:0.18},uQ:{value:1},uT:{value:0},uOff:{value:new THREE.Vector2()},uCam:{value:new THREE.Vector3()},uFog:{value:new THREE.Color()},uSunI:rainSunI,uFlash:{value:0},uDay:{value:DAY.cloud}},
   vertexShader:'varying vec3 vW;void main(){vec4 w=modelMatrix*vec4(position,1.0);vW=w.xyz;gl_Position=projectionMatrix*viewMatrix*w;}',
-  fragmentShader:'uniform float uC,uT,uSunI,uFlash;uniform vec2 uOff;uniform vec3 uCam,uFog,uDay;varying vec3 vW;\n'+STORM_GLSL+
+  fragmentShader:'uniform float uC,uQ,uT,uSunI,uFlash;uniform vec2 uOff;uniform vec3 uCam,uFog,uDay;varying vec3 vW;\n'+STORM_GLSL+
     // density: billowing noise thresholded by how much of the sky is covered; thick cloud is dark underneath in a storm
-    'void main(){vec2 p=(vW.xz+uOff)/950.0;float d=fbm(p)*0.75+0.25*fbm(p*3.3+vec2(uT*0.004,0.0));\n'+
+    'void main(){vec2 p=(vW.xz+uOff)/950.0;float d=fbm(p);if(uQ>0.5)d=d*0.75+0.25*fbm(p*3.3+vec2(uT*0.004,0.0));\n'+
     'float th=0.78-0.62*uC,den=smoothstep(th,th+0.22-0.12*uC,d);\n'+
     'vec3 lit=vec3(1.0,0.98,0.95)*(0.72+0.28*uSunI),dark=mix(vec3(0.6,0.63,0.67),vec3(0.2,0.22,0.25),smoothstep(0.5,1.0,uC));\n'+
     'vec3 col=mix(lit,dark,smoothstep(0.1,0.9,den)*(0.35+0.65*uC)*(0.7+0.3*smoothstep(0.55,0.95,d)))*uDay+uFlash*vec3(0.75,0.8,1.0)*den;\n'+
@@ -61,7 +61,7 @@ function lightning(){const c=camera.position,a=Math.random()*Math.PI*2,d=450+Mat
 
 // ---------- every frame (from rainFxTick, after it sets the sky and the lights) ----------
 const STORM_WD=new THREE.Vector2(0.8,0.6),stormFog=new THREE.Color();
-function stormTick(dt){const c=camera.position,cv=weather.c,r=weather.r,u=cloudMat.uniforms;
+function stormTick(dt){const c=camera.position,cv=weather.c,r=weather.r,u=cloudMat.uniforms;u.uQ.value=gfxCur.cloudQ===0?0:1;
   u.uC.value=cv;u.uT.value=(u.uT.value+dt)%10000;u.uOff.value.addScaledVector(STORM_WD,-dt*(4+TU.rainWind*3));
   u.uCam.value.copy(c);u.uFog.value.copy(scene.fog.color);clouds.position.set(c.x,CL_Y,c.z);
   // under a heavy sky the blue goes out of the dome down to the horizon

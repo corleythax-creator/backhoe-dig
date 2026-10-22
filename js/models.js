@@ -72,7 +72,7 @@ function mdlExOn(on){
     for(const [name,par] of Object.entries(P)){const node=mdl.ex.getObjectByName(name);if(!node)continue;
       node.traverse(m=>{if(!m.isMesh)return;const k=m.material.name,mat=mats[k]||mats.steel;
         const mesh=new THREE.Mesh(m.geometry,mat);mesh.name='mdl_'+m.name;mesh.castShadow=k!=='glass'&&k!=='screen';mesh.receiveShadow=k!=='glass';
-        if(k==='track'||k==='bucket'){mesh.userData.grime=k;mesh.userData.grimeBase=mat;
+        if(k==='track'||k==='bucket'){mesh.userData.grime=k;mdlSide(mesh).grimeBase=mat;
           // dirt builds up on its own copy, as on the simple shapes (dirt.js); if that has started, join it now
           if(grimeMats){const m2=mdlClone(mat);mesh.material=m2;grimeMats.push({m:m2,base:mat,kind:k})}}
         if(!m.geometry.attributes.uv)mdlBoxUV(m.geometry);
@@ -92,6 +92,8 @@ function mdlBoxUV(g){const P=g.attributes.position.array,Nm=g.attributes.normal.
     if(ax>=ay&&ax>=az){u=P[o+2];w=P[o+1]}else if(ay>=az){u=P[o];w=P[o+2]}else{u=P[o];w=P[o+1]}UV[v*2]=u*0.9;UV[v*2+1]=w*0.9}
   g.setAttribute('uv',new THREE.BufferAttribute(UV,2))}
 // a copy of a material for one mesh's own dirt (dirt.js), with the rain's wet look put on again
+// what a mesh's swaps keep (the materials and geometry it had): off userData, which every clone copies through JSON
+const MDL_SIDE=new WeakMap();function mdlSide(o){let u=MDL_SIDE.get(o);if(!u)MDL_SIDE.set(o,u={});return u}
 function mdlClone(m){const c=m.clone();c.userData={};if(typeof wetPatch==='function')wetPatch(c);return c}
 // the game's flat-shaded materials and the physically based ones that stand in for them on the detailed machines
 function mdlPbrMap(){if(mdl.pmap)return mdl.pmap;const m=mdlMatsMake();
@@ -100,7 +102,7 @@ function mdlPbrMap(){if(mdl.pmap)return mdl.pmap;const m=mdlMatsMake();
 // puts every mesh of a part group (the game's own, not the model's) on its physically based stand-in, or back; a mesh
 // carrying its own dirt (dirt.js grimeMats) gets its own copy, and the dirt follows it
 function mdlRemat(root,on){const map=mdlPbrMap(),gm=typeof grimeMats!=='undefined'&&grimeMats;
-  root.traverse(o=>{if(!o.isMesh||o.name.startsWith('mdl_'))return;const u=o.userData;
+  root.traverse(o=>{if(!o.isMesh||o.name.startsWith('mdl_'))return;const u=mdlSide(o);
     if(on){if(u.mdlOld)return;const cur=o.material,g=gm&&gm.find(e=>e.m===cur),pb=map.get(g?g.base:cur);if(!pb)return;
       u.mdlOld=cur;if(g){u.mdlOldBase=g.base;const c=mdlClone(pb);g.m=c;g.base=pb;o.material=c}else o.material=pb}
     else if(u.mdlOld){const g=gm&&gm.find(e=>e.m===o.material);if(g){g.m=u.mdlOld;g.base=u.mdlOldBase}o.material=u.mdlOld;u.mdlOld=null}})}
@@ -151,7 +153,7 @@ function mdlFlatPbr(m){if(mdlFlat.has(m))return mdlFlat.get(m);let r=null;
 // the machines this covers, and what on them is not paintwork (the loads, tinted as they fill)
 function mdlOthers(){return [mower,skid,bike,...boats.map(b=>b.g),...hvs.flatMap(h=>h.trailer?[h.g,h.trailer]:[h.g])]}
 function mdlOthersOn(on){const skip=new Set([skLoad,...hvs.map(h=>h.heap)]),gm=typeof grimeMats!=='undefined'&&grimeMats;
-  for(const root of mdlOthers())root.traverse(o=>{if(!o.isMesh||skip.has(o)||o.isInstancedMesh)return;const u=o.userData;
+  for(const root of mdlOthers())root.traverse(o=>{if(!o.isMesh||skip.has(o)||o.isInstancedMesh)return;const u=mdlSide(o);
     if(on){if(u.mdlO)return;const mt=o.material;if(Array.isArray(mt))return;
       if(mt.vertexColors&&o.geometry.attributes.color){u.mdlO=[o.geometry,mt];if(!u.mdlG)u.mdlG=mdlSplit(o.geometry);o.geometry=u.mdlG;o.material=MDL_SORTS.map(k=>mdlVCMat(k,mt.side))}
       else{const g=gm&&gm.find(e=>e.m===mt),pb=mdlFlatPbr(g?g.base:mt);if(!pb)return;u.mdlO=[null,mt];if(g){u.mdlOB=g.base;const c=mdlClone(pb);g.m=c;g.base=pb;o.material=c}else o.material=pb}}

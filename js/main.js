@@ -155,7 +155,8 @@ function frame(now){
   }
   if(!bench.on)caveTick(dt);slopeTick(dt);
   // terrain
-  if(st.slumpT>0){st.slumpT-=dt;for(let n=0;n<3*GRID_K;n++)if(slump())st.dirty=true}
+  // slump passes by the second (as many as 60 FPS took), so a phone settles a heap as a PC does
+  if(st.slumpT>0){st.slumpT-=dt;st.slAcc=(st.slAcc||0)+dt*180*GRID_K;for(;st.slAcc>=1;st.slAcc--)if(slump())st.dirty=true}
   if(st.dirty){
     updateTufts(dI0-1,dI1+1,dJ0-1,dJ1+1);lawnTerrain();
     updateTerrain();st.dirty=false;site.dirty=true;mapDirty=true;blkTerrainMoved();

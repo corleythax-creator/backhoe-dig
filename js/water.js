@@ -65,7 +65,7 @@ function runoffStep(dt){const r=weather.r,rain=r>0.02;if(!rain&&!runAny)return f
   if(runIn+runPool+washed+silt>0){stats.runoff+=runIn*CA;stats.runPool+=runPool*CA;stats.washed+=washed*CA;stats.silt+=silt*CA;statDirty=true}
   return any}
 function waterTick(dt){
-  waterT-=dt;if(waterT>0||cI1<cI0)return;const step=0.25;waterT=step;runoffStep(step);
+  waterT-=dt;if(waterT>0||cI1<cI0)return;const step=0.25;waterT+=step;runoffStep(step);
   let any=false,hole=false,moved=false,crk=false;seeping=0;const rain=weather.r>0.02,dry=(dryT-=step)<=0;if(dry)dryT=2.5;
   for(let j=cJ0;j<=cJ1;j++)for(let i=cI0;i<=cI1;i++){const k=j*V+i,h=H[k],w0=Wt[k];
     // soaked ground holds water near the surface: painted Mud everywhere while it is soaked, other rain-soaked ground only
