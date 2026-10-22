@@ -71,6 +71,25 @@ renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=0
   const ph=THREE.ShaderLib.phong;
   ph.fragmentShader=ph.fragmentShader.replace('#include <envmap_fragment>',C.envmap_fragment.replace(/specularStrength \* reflectivity/g,
     'specularStrength*reflectivity*(0.12+0.88*pow(1.0-clamp(dot(normal,normalize(vViewPosition)),0.0,1.0),5.0))'));
+  // soft sun shadows (Ultra, gfx.js shSoft): a shadow radius of 1000 or more asks for contact-hardening shadows, sharp
+  // where a thing meets the ground and softer the farther the shadow falls from it. The blockers round the point are found
+  // at three heights above it (the map only answers nearer or farther, so each test asks "farther by this much?"), their
+  // mean distance sets the blur, and an 8-tap spiral blurs by it. (radius-1000)/1e4 is the blur in map widths per unit of
+  // shadow depth (post.js works it out from the shadow area and the Softness tuning); smaller radii draw as before
+  const pf='float radius = shadowRadius * texelSize.x;';
+  if(C.shadowmap_pars_fragment.includes(pf))C.shadowmap_pars_fragment=C.shadowmap_pars_fragment.replace(pf,pf+`
+				if ( shadowRadius >= 1000.0 ) {
+					float q = ( shadowRadius - 1000.0 ) * 1e-4, ph = interleavedGradientNoise( gl_FragCoord.xy ) * PI2, oc = 0.0, dd = 0.0;
+					for ( int i = 0; i < 6; i ++ ) {
+						vec2 o = shadowCoord.xy + vogelDiskSample( i, 6, ph ) * q * 0.06;
+						float a = 1.0 - texture( shadowMap, vec3( o, shadowCoord.z ) ), b = 1.0 - texture( shadowMap, vec3( o, shadowCoord.z - 0.008 ) ), c = 1.0 - texture( shadowMap, vec3( o, shadowCoord.z - 0.03 ) );
+						oc += a; dd += ( a + b ) * 0.004 + ( b + c ) * 0.011 + c * 0.015;
+					}
+					if ( oc < 0.01 ) return 1.0;
+					float rr = max( 1.25 * texelSize.x, q * dd / oc ), s = 0.0;
+					for ( int i = 0; i < 8; i ++ ) s += texture( shadowMap, vec3( shadowCoord.xy + vogelDiskSample( i, 8, ph + 1.3 ) * rr, shadowCoord.z ) );
+					return mix( 1.0, s * 0.125, shadowIntensity );
+				}`);
 })();
 const scene=new THREE.Scene();
 scene.background=new THREE.Color(0xbfd2dd);
@@ -140,7 +159,9 @@ const skyEnvRT=new THREE.WebGLCubeRenderTarget(64,{generateMipmaps:true,minFilte
 const skyEnvScene=new THREE.Scene(),skyEnvCam=new THREE.CubeCamera(1,2000,skyEnvRT),skyEnvGnd=new THREE.MeshBasicMaterial({color:0x4a4a32,fog:false,toneMapped:false});
 {const gnd=new THREE.Mesh(new THREE.CircleGeometry(900,24).rotateX(-Math.PI/2),skyEnvGnd);gnd.position.y=-12;skyEnvScene.add(gnd,new THREE.Mesh(sky.geometry,sky.material))}
 // k: how bright the ground under the sky is (1 by day)
-function skyEnvUpdate(k){skyEnvGnd.color.setHex(0x4a4a32).multiplyScalar(k);skyEnvScene.background=scene.background;skyEnvCam.update(renderer,skyEnvScene);skyEnv.needsPMREMUpdate=true}
+// skyEnvTint: the light the ground under it takes from the sun (Ultra's sky lighting, post.js; white otherwise)
+const skyEnvTint=new THREE.Color(1,1,1);
+function skyEnvUpdate(k){skyEnvGnd.color.setHex(0x4a4a32).multiplyScalar(k).multiply(skyEnvTint);skyEnvScene.background=scene.background;skyEnvCam.update(renderer,skyEnvScene);skyEnv.needsPMREMUpdate=true}
 skyEnvUpdate(1);
 // straight-up normals for flat-shaded ground: lighting takes its slope from the faces, but the shadow lookup needs a
 // real normal (an all-zero one gives no shadow at all)

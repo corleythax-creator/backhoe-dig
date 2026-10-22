@@ -284,17 +284,46 @@ function rainCover(){if(!(rsMesh||rainLines&&!rainLines.userData.off))return;con
 // and dries over about five minutes after. Every lit material (wetPatch, from main.js before the first frame) darkens
 // with it and turns glossy, the tops most; the ground and the grass have their own wet look. How it looks only
 const wetAllU={value:0};let wetAll=0;
+// rain on the machines (Ultra, gfx.js wetDrops, set by post.js): the physically based materials (the detailed machines'
+// paint, steel, glass and rubber, models.js) also get beads of water on their tops and drops running down their sides,
+// placed in the part's own frame so they ride along with it. They show as it gets wet and go as it dries; the runs move
+// only while it rains (wetDropT). Drawn within about 70 ft. Only how it looks
+let wetDropsOn=false;const wetDropU={value:0},wetDropT={value:0};
+const WET_DROP_GLSL='uniform float uDrops,uDropT;varying vec3 vDropP,vDropN;\n'+
+  'vec2 wdH(vec2 c){return fract(sin(vec2(dot(c,vec2(127.1,311.7)),dot(c,vec2(269.5,183.3))))*43758.5453);}\n'+
+  // a bead in some of the cells, a smooth cap 0-1 high
+  'float wdBead(vec2 p,float th){vec2 c=floor(p),h=wdH(c);if(fract(h.x*7.13+h.y*3.7)>th)return 0.0;vec2 o=fract(p)-0.5-(h-0.5)*0.45;float d=length(o)/(0.12+0.16*h.y);return max(0.0,1.0-d*d);}\n'+
+  // a drop running down a side (x across, y up, in m): a bead at its head and a thin wet trail above it
+  'float wdRun(vec2 p,float t){float cx=floor(p.x*22.0),fx=fract(p.x*22.0)-0.5;vec2 h=wdH(vec2(cx,3.1));if(h.x>0.45)return 0.0;\n'+
+  ' float L=0.5+h.y,sy=p.y/L+h.x*5.0,sg=floor(sy),fy=fract(sy),hs=fract(sin(sg*91.7+cx*7.3)*4375.85),x=fx-(hs-0.5)*0.5;\n'+
+  ' float head=1.0-fract(hs*3.0+t*(0.3+0.4*hs)/L),dv=(fy-head)*L,lx=1.0-x*x/0.0324;\n'+
+  ' float tr=dv>0.0&&lx>0.0?lx*exp(-dv*5.0)*0.45:0.0,d=length(vec2(x/0.3,dv/0.012));return max(tr,max(0.0,1.0-d*d));}\n'+
+  // the normal tilted by a height field (from its slope on the screen)
+  'vec3 wdBump(vec3 n,float h,vec3 pos){vec3 dx=dFdx(pos),dy=dFdy(pos);float hx=dFdx(h),hy=dFdy(h);vec3 r1=cross(dy,n),r2=cross(n,dx);float det=dot(dx,r1);\n'+
+  ' return normalize(abs(det)*n-sign(det)*(hx*r1+hy*r2));}\n';
+const WET_DROP_FS='float wD=0.0;{float fd=uDrops*smoothstep(0.08,0.4,uWetAll)*(1.0-smoothstep(8.0,22.0,length(vViewPosition)));\n'+
+  ' if(fd>0.001){float up=inverseTransformDirection(normal,viewMatrix).y,hg=0.0,top=smoothstep(0.35,0.75,up),sd=1.0-smoothstep(0.35,0.75,abs(up));\n'+
+  '  vec3 an=abs(vDropN);vec2 sp=vec2(an.x>an.z?vDropP.z:vDropP.x,vDropP.y);\n'+
+  '  if(top>0.0)hg=max(wdBead(vDropP.xz*28.0,0.6*min(uDrops,1.5)),wdBead(vDropP.xz*13.0+17.0,0.3*min(uDrops,2.0)))*top;\n'+
+  '  if(sd>0.0)hg=max(hg,max(wdRun(sp,uDropT)*min(uDrops,1.0),0.8*wdBead(sp*vec2(30.0,22.0)+5.0,0.3*min(uDrops,2.0)))*sd);\n'+
+  '  hg*=min(fd,1.0);wD=smoothstep(0.0,0.25,hg);normal=wdBump(normal,hg*0.006,-vViewPosition);diffuseColor.rgb*=1.0-0.18*wD;}}\n';
 function wetPatch(m){if(!m||m.userData.wetP||m.userData.noWet||m===groundMat||tuftMats.includes(m))return;
   const t=m.type;if(t!=='MeshPhongMaterial'&&t!=='MeshStandardMaterial'&&t!=='MeshLambertMaterial')return;if(m.transparent&&m.opacity<0.7)return;
-  m.userData.wetP=true;const old=m.onBeforeCompile,key=m.customProgramCacheKey();
-  m.onBeforeCompile=function(sh,r){if(old)old.call(this,sh,r);sh.uniforms.uWetAll=wetAllU;let f='uniform float uWetAll;\n'+sh.fragmentShader;
-    f=f.includes('#include <normal_fragment_maps>')?f.replace('#include <normal_fragment_maps>','#include <normal_fragment_maps>\nfloat wW=uWetAll*clamp(inverseTransformDirection(normal,viewMatrix).y*0.6+0.4,0.0,1.0);diffuseColor.rgb*=1.0-0.32*wW;')
+  m.userData.wetP=true;const old=m.onBeforeCompile,key=m.customProgramCacheKey(),drops=()=>wetDropsOn&&t==='MeshStandardMaterial';
+  m.onBeforeCompile=function(sh,r){if(old)old.call(this,sh,r);sh.uniforms.uWetAll=wetAllU;let f='uniform float uWetAll;\n'+sh.fragmentShader;const dr=drops();
+    if(dr){sh.uniforms.uDrops=wetDropU;sh.uniforms.uDropT=wetDropT;f=WET_DROP_GLSL+f;
+      sh.vertexShader='varying vec3 vDropP,vDropN;\n'+sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvDropP=transformed*length(modelMatrix[0].xyz);vDropN=objectNormal;')}
+    f=f.includes('#include <normal_fragment_maps>')?f.replace('#include <normal_fragment_maps>','#include <normal_fragment_maps>\nfloat wW=uWetAll*clamp(inverseTransformDirection(normal,viewMatrix).y*0.6+0.4,0.0,1.0);diffuseColor.rgb*=1.0-0.32*wW;'+(dr?WET_DROP_FS:''))
       :f.replace('#include <color_fragment>','#include <color_fragment>\nfloat wW=uWetAll*0.6;diffuseColor.rgb*=1.0-0.32*wW;');
     sh.fragmentShader=f.replace('#include <lights_phong_fragment>','#include <lights_phong_fragment>\nmaterial.specularColor=max(material.specularColor,vec3(0.25*wW));material.specularShininess=mix(material.specularShininess,max(material.specularShininess,80.0),wW);')
-      .replace('#include <lights_physical_fragment>','#include <lights_physical_fragment>\nmaterial.roughness=mix(material.roughness,min(material.roughness,0.28),wW);')};
-  m.customProgramCacheKey=()=>key+'|wet';m.needsUpdate=true}
+      .replace('#include <lights_physical_fragment>','#include <lights_physical_fragment>\nmaterial.roughness=mix(material.roughness,min(material.roughness,0.28),wW);'+(dr?'material.roughness=mix(material.roughness,0.04,wD);':''))};
+  m.customProgramCacheKey=()=>key+'|wet'+(drops()?'|drops':'');m.needsUpdate=true}
+// post.js turns the beads on or off; the materials that have them are built again
+function wetDropsSet(on){on=!!on;if(on===wetDropsOn)return;wetDropsOn=on;
+  scene.traverse(o=>{if(o.isMesh)for(const m of [].concat(o.material))if(m&&m.userData.wetP&&m.type==='MeshStandardMaterial')m.needsUpdate=true})}
 function wetPatchAll(){scene.traverse(o=>{if(o.isMesh)(Array.isArray(o.material)?o.material:[o.material]).forEach(wetPatch)})}
-function wetTick(dt,r){wetAll=r>0.03?Math.min(1,wetAll+dt*(0.01+0.05*r)):Math.max(0,wetAll-dt/300);wetAllU.value=wetAll}
+function wetTick(dt,r){wetAll=r>0.03?Math.min(1,wetAll+dt*(0.01+0.05*r)):Math.max(0,wetAll-dt/300);wetAllU.value=wetAll;
+  if(wetDropsOn){wetDropU.value=TU.ultraDrops;if(r>0.03)wetDropT.value=(wetDropT.value+dt*(0.4+0.6*r))%1000}}
 // drips: once a second the shelter map comes back from the GPU and the edges of roofs within about 40 ft are found
 // (cover that drops away by more than 2 ft to the next spot); drops fall from them while it rains and for a while after
 const rcPix=new Uint8Array(RC_N*RC_N*4),rcEdges=[];let rcCX=0,rcCZ=0,rcTop=0,dripAcc=0;

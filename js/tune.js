@@ -71,6 +71,10 @@ const TUNE=[
   ['fxBloom','Screen effects','Glow round bright light (Ultra)',0.2,'pct',0,200,5],['fxBloomThr','Screen effects','How bright light must be to glow',0.88,'pct',40,99,1],
   ['fxCon','Screen effects','Contrast of the colour grade (Ultra)',0.3,'pct',0,100,5],['fxSat','Screen effects','Colour strength of the grade',0.97,'pct',50,150,1],
   ['fxVig','Screen effects','Darker corners (vignette)',0.22,'pct',0,80,2],
+  // Ultra lighting (post.js): how much the sky colours the shade, how soft the sun's shadows get, the rain on the machines
+  ['ultraSky','Ultra','Sky lighting: how much the sky as it is colours the shade and reflections',1,'pct',0,200,5],
+  ['ultraShSoft','Ultra','Soft sun shadows: blur per foot a shadow falls from what casts it',0.03,'pct',0,10,0.5],
+  ['ultraDrops','Ultra','Rain on machines: how many beads and runs of water',1,'pct',0,300,5],
   ['pbrFar','Ground look','Relief fades out by',180*0.3048,'ft',60,600,10],
   ['treeSway','Trees','How much the trees and undergrowth sway in the breeze',1,'pct',0,400,5],['treeGlow','Trees','How much sunlight shines through the leaves',1,'pct',0,300,5],
   // how the clock runs (☰ menu, Time) and how dark the night gets
