@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Wednesday, October 21, 2026
 
+- **v195** (10:28 PM) Ten fixes to what's there: Space no longer flips the wipers on foot; a second finger can't freeze a held stick and keys can't stick after Cmd on a Mac; switching to Walk with no room to climb out keeps you in the machine; an idle device no longer makes the other one reload through sync; a map edit is saved even if you leave within a second; water, puddles, soaking and settling heaps run the same on a slow phone as on a PC; puddles no longer fill and dry twice along mud-tile seams; less stutter from the mud loop; lighter clouds on Low; faster loading with no console spam from the machine models; and the dig site test's Lower Bench cut moved off the bridge end so it passes
 - **v194** (8:33 PM) The idea board audited against the game: 26 ideas built moved to a new Completed section, 51 marked part built with how far along
 - **v193** (8:16 PM) The hub's documents with code in them fit a phone screen instead of scrolling the page sideways
 - **v192** (8:10 PM) The hub page is now one template shared by all of Corley's games (only its settings differ), with a Roadmap count of items done
