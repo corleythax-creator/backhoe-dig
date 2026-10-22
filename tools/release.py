@@ -154,7 +154,9 @@ def main():
         sh('python3', 'tools/versions.py')
         if not git('status', '--porcelain'):
             break  # another release's snapshot commit already holds this one
-        bad = [l for l in git('status', '--porcelain').splitlines() if l[:2].strip() == 'D' or not (l[3:].startswith('versions/v') or l[3:] == 'versions/list.js')]
+        # (sh strips the output, so the first line can lose its leading space: split each line rather than slicing it)
+        st = [l.split(None, 1) for l in git('status', '--porcelain').splitlines()]
+        bad = [' '.join(l) for l in st if l[0] == 'D' or not (l[1].startswith('versions/v') or l[1] == 'versions/list.js')]
         if bad:
             sys.exit('versions.py changed more than the snapshots; nothing committed:\n' + '\n'.join(bad[:20]))
         git('add', 'versions')
