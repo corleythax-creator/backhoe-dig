@@ -5,6 +5,7 @@ A 3D excavator game in plain HTML, CSS and JavaScript (three.js r186, no build s
 - Live: https://corleys-island.vercel.app (https://backhoe-dig.vercel.app still works)
 - Build time: https://corleys-island.vercel.app/build.html (reads `data/effort.js`); every version in plain text: `CHANGELOG.md`
 - Every version, playable: https://corleys-island.vercel.app/versions/
+- Hub, every doc in one place (roadmap, design doc, changelog, ideas, credits): https://corleys-island.vercel.app/hub.html
 - Claude version: https://claude.ai/artifact/6nxYC5EK3422JouxaZx2DF
 
 ## Files
@@ -83,6 +84,8 @@ A 3D excavator game in plain HTML, CSS and JavaScript (three.js r186, no build s
 | `build.html` | Build-time page: ask-to-live per version, triangles, developer-hour estimate |
 | `versions/` | A playable snapshot of every version (`versions/vN/`), the list page, and `list.js`. Made by `tools/versions.py` |
 | `data/effort.js` | Build-time data. The master dashboard reads it for hours |
+| `hub.html` | The hub: the version, the places to go and every doc (`DOCS` in it lists them, read live) |
+| `docs/GDD.md`, `docs/ROADMAP.md`, `CREDITS.md` | The game design doc, the roadmap and where every asset comes from (add a row for anything brought in) |
 | `CHANGELOG.md` | Every version, newest first, made from `data/effort.js` by `tools/changelog.py` (release.py runs it) |
 | `tools/versions.py` | Rebuilds `versions/` from `main`'s history after a release |
 | `docs/WORKFLOW.md` | The owner's playbook: what to change in the editors, when and how to ask Claude so it costs the fewest tokens |

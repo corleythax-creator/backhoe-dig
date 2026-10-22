@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Wednesday, October 21, 2026
 
+- **v191** (7:41 PM) A hub page (hub.html) with everything about the game in one place: the version, the roadmap, a design doc, the changelog, the ideas and the credits, with links to the game, the build log and the editors
 - **v190** (7:32 PM) A plain-text CHANGELOG.md on GitHub listing every version, newest first and grouped by day, rebuilt by each release
 - **v189** (7:21 PM) The worker on foot is now a realistic rigged man (MakeHuman CC0): real skin and face with stubble, T-shirt, jeans, work boots, a hi-vis vest with reflective bands and a hard hat, posed by the same walk, run, jump, swim and ride moves
 - **v188** (7:17 PM) Detailed models for the dozers, wheel loaders and semis: tracks with real shoes, rollers and a raised sprocket, a curved blade and ripper on working rams; deep-lug tyres, Z-bar arms and a curved bucket on the loader; a long-hood red semi with chrome grille, stacks and tanks pulling a lowboy with an oak plank deck
