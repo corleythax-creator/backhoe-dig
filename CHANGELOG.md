@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Wednesday, October 21, 2026
 
+- **v193** (8:16 PM) The hub's documents with code in them fit a phone screen instead of scrolling the page sideways
 - **v192** (8:10 PM) The hub page is now one template shared by all of Corley's games (only its settings differ), with a Roadmap count of items done
 - **v191** (7:41 PM) A hub page (hub.html) with everything about the game in one place: the version, the roadmap, a design doc, the changelog, the ideas and the credits, with links to the game, the build log and the editors
 - **v190** (7:32 PM) A plain-text CHANGELOG.md on GitHub listing every version, newest first and grouped by day, rebuilt by each release
