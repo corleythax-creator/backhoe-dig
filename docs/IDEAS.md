@@ -4,8 +4,8 @@ Ids match the idea board artifact (https://claude.ai/artifact/FMrDEa4VsKvPS5Z3kt
 artifact page with capabilities {mcp: Claude Code Remote send_message}). When the owner sends picks, find them here. None are started
 unless the board's `DONE` says so; when one ships, add it to `DONE` (d, n, part, pc) and republish. An entry with no `part` is
 built in full: the board moves it out of the open list (and the ranking and Next up) into its Completed section. Part-built
-entries (`part:true, pc:NN`) stay in the open list with their percent. As of Oct 22, 2026 (v193, audited against the
-changelog and the code): 392 ideas, 26 built, 51 part built, 315 not started. The list below keeps every idea, built or not.
+entries (`part:true, pc:NN`) stay in the open list with their percent. As of Oct 22, 2026 (v200, audited against the
+changelog and the code): 392 ideas, 32 built, 49 part built, 311 not started. The list below keeps every idea, built or not.
 
 Scoring (same rubric as Cruise Brandon's, set for a dig site): realism 1-10 = how much more like a real job site it feels;
 fun 1-10; seen every / most / some / rare (1, .85, .65, .45); phone none / low / high (1, .92, .75) = risk to 30 FPS on the
