@@ -22,7 +22,7 @@ const BH_PARK={sw:0,hb:1.1,hs:-1.75,hk:1.6};
 // outriggers: pivots at x ±BH_LEG[0], 1.55 m legs, folded up at BH_UP from straight down; wheels: [x, radius, z]
 const BH_LEG=[0.75,1.2,-2.2],BH_LL=1.55,BH_UP=2.75,BH_WF=[0.92,0.48,1.1],BH_WR=[0.98,0.68,-1.1];
 // 7 ft 9 in wide over the loader bucket, 24 ft long parked; its circles, corners and where it turns its head
-HV_KINDS.backhoe={n:'backhoe',x:46,z:-2,yaw:-Math.PI/2,C:[2.3,0.8,-0.8,-2.5],R:1.2,P:[[-1.2,3.5],[1.2,3.5],[-1.2,-3.0],[1.2,-3.0]],hw:0.95,af:1.1,ab:-1.1,wb:2.2,
+HV_KINDS.backhoe={n:'backhoe',x:46,z:11,yaw:-Math.PI/2,C:[2.3,0.8,-0.8,-2.5],R:1.2,P:[[-1.2,3.5],[1.2,3.5],[-1.2,-3.0],[1.2,-3.0]],hw:0.95,af:1.1,ab:-1.1,wb:2.2,
   eye:[0,2.5,-0.62,0,-0.6,5],lamp:[0,3.1,0.2,0,-1,12],cam:1.0,col:'#f2b705',len:7.3,wid:2.35,hoe:true};
 function bhG(par,x,y,z){const g=new THREE.Group();g.position.set(x,y,z);par.add(g);return g}
 // the kit-built machine (Machine models: Simple): a part group for each moving part, as the model's nodes
@@ -138,5 +138,5 @@ function bhLoad(d){if(!Array.isArray(d))return;hvs.filter(h=>h.K.hoe).forEach((h
   hvGround(h,1);hvPose(h)})}
 function bhSig(){return hvs.reduce((a,h)=>h.K.hoe?a+h.sw+h.hb*3+h.hs*5+h.hk*7+h.outT*11+(h.hoe?13:0)+h.hl.load*17+h.load*19:a,0)}
 // Corley's, at the end of his row on the east lawn; the walker climbs in as he does the others (walker.js WK_RIDES)
-{const h=hvMake('backhoe',{x:46,z:-2,yaw:-Math.PI/2,island:'corley'}),i=hvs.indexOf(h);bhBuild(h);bhReset(h);
+{const h=hvMake('backhoe',{x:46,z:11,yaw:-Math.PI/2,island:'corley'}),i=hvs.indexOf(h);bhBuild(h);bhReset(h);
   WK_RIDES['hv'+i]={o:h,c:h.K.C,r:h.K.R,m:'heavy',n:h.K.n,pick(){hvI=i}};hvReset(h)}
