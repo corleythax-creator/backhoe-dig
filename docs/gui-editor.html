@@ -82,7 +82,7 @@ canvas#view{position:fixed;inset:0;width:100%;height:100%;display:block;touch-ac
 .tacts{flex:none;margin-left:auto;display:flex;align-items:center;gap:2px;padding:3px;border-radius:14px;background:var(--glass);border:1px solid var(--hud-line);box-shadow:var(--lift);pointer-events:auto}
 .tacts>button{height:40px;border:0;background:transparent;border-radius:11px;padding:0 12px}
 .ib{display:inline-flex;align-items:center;gap:7px}
-#blkBtn[aria-pressed="true"],#pumpBtn[aria-pressed="true"],#wipeBtn[aria-pressed="true"],#ctlBtn[aria-expanded="true"]{background:rgba(255,138,31,.18);color:var(--machine);box-shadow:inset 0 0 0 1px rgba(255,138,31,.55)}
+#blkBtn[aria-pressed="true"],#pumpBtn[aria-pressed="true"],#gripBtn[aria-pressed="true"],#wipeBtn[aria-pressed="true"],#ctlBtn[aria-expanded="true"]{background:rgba(255,138,31,.18);color:var(--machine);box-shadow:inset 0 0 0 1px rgba(255,138,31,.55)}
 @media (hover:hover){.tacts>button:hover{background:var(--glass-hi)}}
 .row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 button{pointer-events:auto;touch-action:manipulation;font:600 15px/1 var(--f-display);letter-spacing:.07em;text-transform:uppercase;color:var(--ink);background:var(--glass);border:1px solid var(--hud-line);border-radius:12px;height:42px;padding:0 14px;cursor:pointer;
@@ -156,9 +156,9 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 .exswitch[hidden]{display:none}
 .exswitch button{height:40px;min-width:76px;padding:0 14px;font-size:17px;border:0;border-radius:20px;background:transparent;color:var(--muted)}
 .exswitch button[aria-pressed="true"]{background:var(--machine);color:#1c1309}
-#jumpBtn,#sprintBtn,#plantBtn{height:46px;min-width:78px;padding:0 14px;font-size:17px;border-radius:23px;box-shadow:var(--lift)}
+#jumpBtn,#sprintBtn,#plantBtn,#trimBtn,#bumpBtn{height:46px;min-width:78px;padding:0 14px;font-size:17px;border-radius:23px;box-shadow:var(--lift)}
 #jumpBtn{background:var(--machine);color:#1c1309;border:0}
-#sprintBtn[aria-pressed="true"]{background:rgba(255,138,31,.2);color:var(--machine);border-color:var(--machine)}
+#sprintBtn[aria-pressed="true"],#trimBtn[aria-pressed="true"]{background:rgba(255,138,31,.2);color:var(--machine);border-color:var(--machine)}
 #jumpBtn:active{transform:translateY(1px)}
 /* bottom layer: each stick's caption under it, the frame rate between them; no bar, the words carry a shadow */
 .bbar{grid-area:3/1/4/4;position:relative;z-index:2;pointer-events:none;display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;min-height:40px;box-sizing:border-box;
@@ -572,6 +572,8 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
       <button id="pumpBtn" hidden aria-pressed="false">Pump</button>
       <button id="wipeBtn" hidden aria-pressed="false">Wipers</button>
       <button id="boxBtn" hidden>Hook box</button>
+      <button id="cplBtn" hidden>Coupler</button>
+      <button id="gripBtn" hidden aria-pressed="false">Grip</button>
       <button id="blkBtn" class="ib" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9zM12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg><span>Blocks</span></button>
       <button id="ctlBtn" class="ib" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="2"/><path d="M3.5 12H10M14 12h6.5M12 14v6.5"/></svg><span>Drive</span></button>
       <button id="camBtn" data-cam="chase" aria-label="Camera: chase or cab view"><span id="camChase">Chase</span><span id="camCab">Cab</span></button>
@@ -639,7 +641,7 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
     </div>
     <div class="stickwrap">
       <div class="exswitch" id="exSwitch" role="group" aria-label="Excavator: drive or dig"><button id="exDrive" aria-pressed="false">Drive</button><button id="exDig" aria-pressed="true">Dig</button></div>
-      <div class="walkbtns" id="walkBtns" hidden><button id="sprintBtn" aria-pressed="false">Sprint</button><button id="jumpBtn">Jump</button><button id="plantBtn">Plant</button></div>
+      <div class="walkbtns" id="walkBtns" hidden><button id="sprintBtn" aria-pressed="false">Sprint</button><button id="jumpBtn">Jump</button><button id="plantBtn">Plant</button><button id="trimBtn" aria-pressed="false">Trimmer</button><button id="bumpBtn" hidden>Bump</button></div>
       <div class="stick" id="stickR"><div class="knob"></div></div>
     </div>
   </div>
@@ -945,6 +947,15 @@ const TUNE=[
   ['exStick','Excavator','Stick rate',0.8,'deg',5,180,1],['exBucket','Excavator','Bucket curl rate',1.3,'deg',5,240,1],
   ['exCap','Excavator','Bucket holds',1.0,'yd3',0.2,5,0.05],
   ['exPour','Excavator','How fast the bucket pours',1,'pct',10,500,5],['exSpill','Excavator','Spill from a fast swing with a full bucket',1,'pct',0,500,5],
+  // the bucket's angle (D08): teeth leading into the cut dig as deep as they go; dragged flat or back first it only skims
+  ['bkAngle','Excavator','How much the bucket\'s angle in the cut matters (0% = it digs the same at any angle)',1,'pct',0,100,5],
+  ['bkSkim','Excavator','A bucket dragged flat or back first only skims',0.05,'in',0.5,12,0.5],
+  // the quick coupler's attachments (coupler.js)
+  ['cpReach','Attachments','The coupler picks up an attachment from',0.9,'ft',1,8,0.25],
+  ['cpHammer','Attachments','Hammer: how much faster than the bucket it gets through rock and clay',4,'pct',100,1000,10],
+  ['cpAuger','Attachments','Auger: how fast it bores (of the bucket\'s dig speed)',0.8,'pct',10,300,5],
+  ['cpBore','Attachments','Auger: hole across',0.5,'in',12,36,1],
+  ['cpGrip','Attachments','Thumb: biggest block it can grip (each way)',1.25,'ft',1,10,0.5],
   ['trTop','Dump truck','Top speed',8.9,'mph',2,60,0.5],['trRev','Dump truck','Top speed in reverse or bed up',2.7,'mph',1,30,0.5],
   ['trSteer','Dump truck','Steering rate',1.1,'deg',10,240,1],['trGrip','Dump truck','Grip in turns',1,'pct',20,300,5],
   ['trBrake','Dump truck','Braking',1,'pct',10,400,5],['trLoadMass','Dump truck','How much a full load weighs it down',1,'pct',0,300,5],
@@ -971,9 +982,12 @@ const TUNE=[
   ['atLock','Four-wheeler','Steering lock',0.7,'deg',10,50,1],['atGrip','Four-wheeler','Grip in turns (lower slides sooner)',0.85,'pct',20,400,5],
   ['wkRun','On foot','Jog (stick all the way)',2.8,'mph',1,20,0.1],['wkSwim','On foot','Swim',1.1,'mph',0.5,10,0.1],['wkSprint','On foot','Sprint',5.6,'mph',1,40,0.1],
   ['wkJump','On foot','Jump height',6.2*6.2/(2*9.8),'ft',0.5,30,0.1],['wkGrav','On foot','Gravity (how floaty a jump is)',1,'pct',10,300,5],
-  ['wkLook','On foot','Camera turn speed with the stick',1,'pct',20,400,5],['wkReachUp','On foot','How high the worker reaches for blocks',2.3,'ft',2,20,0.5],['blkReach','On foot','Farthest block reach (cab view)',80*0.3048,'ft',10,300,5],
+  ['stepMud','On foot','Footsteps squelch where the ground is wetter than',0.45,'pct',5,100,5],['wkLook','On foot','Camera turn speed with the stick',1,'pct',20,400,5],['wkReachUp','On foot','How high the worker reaches for blocks',2.3,'ft',2,20,0.5],['blkReach','On foot','Farthest block reach (cab view)',80*0.3048,'ft',10,300,5],
   ['bkSpd','Dirt bike','Top speed',13.4,'mph',5,60,0.5],['bkPull','Dirt bike','Engine pull',1,'pct',20,300,5],['bkLock','Dirt bike','Steering lock at a crawl',0.55,'deg',5,60,1],
   ['btSpeed','Boats','Top speed',11,'mph',2,60,0.5],['btTurn','Boats','Turn rate at speed',0.9,'deg',10,180,1],
+  ['trimLine','String trimmer','Line out after a bump (longest)',0.15,'in',2,12,0.25],['trimMin','String trimmer','Shortest line that still cuts',0.025,'in',0.25,6,0.25],
+  ['trimBump','String trimmer','Line one bump feeds out',0.04,'in',0.25,6,0.25],['trimWear','String trimmer','Line worn away per second of cutting',0.006,'in',0.02,2,0.02],
+  ['trimSpool','String trimmer','Line on a full spool',25*0.3048,'ft',2,100,1],
   ['lawnCut','Grass','Mower cuts the grass to',0.09,'in',1,24,0.5],['lawnWait','Grass','Wait before cut grass grows',45,'s',0,1200,5],['lawnGrow','Grass','Time to grow back tall',240,'s',10,3600,10],
   ['rainGap','Weather','Dry spell between showers (average)',510,'min',0.5,120,0.5],['rainLen','Weather','Shower length (average)',180,'min',0.5,60,0.5],
   ['soak','Weather','How fast rain soaks the ground',1,'pct',10,500,5],
@@ -1076,6 +1090,22 @@ const WORDS=[
   ['boxHooked','Digging','Box hooked. Swing it over the trench and press {key} to set it.','{key}: the drop box key or button'],
   ['boxSet','Digging','Trench box set. The walls between its panels are safe.'],['boxDown','Digging','Box set down. Set it in a cut to hold the walls.'],
   ['boxFar','Digging','Bring the bucket over the box to hook it.'],['boxMode','Digging','Switch to Dig to handle the box.'],
+  ['bkSkim','Digging','Dragged flat, the bucket only skims. Curl it so the teeth point into the cut, [rLeft], and pull the stick in.'],
+  ['cpDrop','Attachments','{att} set down. Lower the coupler onto another attachment and press {key} to pick it up.','{att}: the attachment; {key}: the coupler key or button'],
+  ['cpPick','Attachments','{att} on. {what}','{att}: the attachment; {what}: what it does'],
+  ['cpFar','Attachments','Lower the coupler onto an attachment on the ground to pick it up: bucket, thumb, hammer or auger.'],
+  ['cpMode','Attachments','Switch to Dig to change attachments.'],
+  ['cpLow','Attachments','Lower the coupler near the ground to set the attachment down.'],
+  ['cpGripNo','Attachments','The thumb grips blocks. Lower the coupler onto the thumb and press {key} to fit it.','{key}: the coupler key or button'],
+  ['cpBare','Attachments','Nothing on the coupler. Lower it onto an attachment and press {key}.','{key}: the coupler key or button'],
+  ['cpWhatBucket','Attachments','Digs and carries dirt.'],
+  ['cpWhatThumb','Attachments','Lower it over a block and press {key} to grip it; press again to let go.','{key}: the grip key or button'],
+  ['cpWhatHammer','Attachments','Push it into rock or hard clay to break it up, then fit the bucket and dig the rubble out fast.'],
+  ['cpWhatAuger','Attachments','Lower it straight down into the ground to bore a round hole.'],
+  ['cpGripNone','Attachments','No block between the jaws. Lower the thumb over one.'],
+  ['cpGripBig','Attachments','Too big for the thumb ({size}).','{size}: the block'],
+  ['cpGripped','Attachments','Gripped. Swing it where you want and press {key} to let go.','{key}: the grip key or button'],
+  ['cpNoDig','Attachments','The {att} cannot dig. Fit the bucket with {key}.','{att}: the attachment; {key}: the coupler key or button'],
   ['walkKb','On foot','On foot. [jump] jumps, [place] sets a block, [enter] gets into a machine.'],
   ['walkTouch','On foot','On foot. Tap Jump to jump. Walk up to a machine and tap Get in.'],
   ['walkPad','On foot','On foot. A jumps, X sets a block, B gets into a machine.'],
@@ -1104,6 +1134,11 @@ const WORDS=[
   ['capL_semi','Captions','{lv} Gas / brake\n{lh} Steer','Left stick, Semi'],['capR_semi','Captions','{rh} Look around','Right stick, Semi'],
   ['boatTip','Boats','At the helm. [lUp] [lDown] throttle, [lLeft] [lRight] steer. Run it up on a beach to leave it on the sand; [enter] to climb out.',''],
   ['capL_boat','Captions','{lv} Throttle / reverse\n{lh} Steer','Left stick, Boat'],['capR_boat','Captions','{rh} Look around','Right stick, Boat'],
+  ['trimOn','On foot','String trimmer running: swing it along fences, trees, rocks and edges the mower can\'t reach. Line {line} in; [trimBump] bumps out more, [trim] puts it away.','{line}: inches of line out'],
+  ['trimWorn','On foot','The trimmer line has worn too short to cut: [trimBump] to bump out more',''],
+  ['trimEmpty','On foot','The trimmer spool is empty: put it away ([trim]) and take it out again for a fresh spool',''],
+  ['trimBumped','On foot','Bumped the line out to {line} in ({spool} ft left on the spool)','{line}: inches out; {spool}: feet left'],
+  ['trimWalk','On foot','Get out and walk to use the string trimmer',''],
   ['swimming','On foot','Swimming. Head for a beach to wade out; [sprint] swims harder.',''],
   ['fromTable','On foot','Back from {game} at the pavilion.','{game}: chess or checkers'],
   ['famSit','On foot','Sitting down to {game}...','{game}: chess or checkers'],
@@ -1197,7 +1232,7 @@ const GUI_FONTS=['"Barlow Condensed","Arial Narrow",system-ui,sans-serif','"Barl
   '"Arial Narrow",Arial,sans-serif','Verdana,sans-serif','"Trebuchet MS",sans-serif','Georgia,serif','Impact,"Arial Black",sans-serif','"Courier New",monospace'];
 // parts that are usually hidden until the game needs them, shown on request so they can be styled
 const GUI_PEEK=[['#menu','Menu'],['#help','Start card'],['#blkBar','Blocks bar'],['#walkBtns','Sprint and Jump'],['#seatBtn','Get in'],['#pumpBtn','Pump'],['#wipeBtn','Wipers'],
-  ['#boxBtn','Hook box'],['#lawnRow','Lawn gauge'],['#lawnChip','Lawn patch gauge'],['#heatKey','Heatmap key'],['#updBtn','Update button'],['#keysBox','Keys panel'],['#ctrlsBox','Controls panel'],['#ctlMenu','Drive list'],['#gfxBox','Graphics panel']];
+  ['#boxBtn','Hook box'],['#cplBtn','Coupler'],['#gripBtn','Thumb grip'],['#lawnRow','Lawn gauge'],['#lawnChip','Lawn patch gauge'],['#heatKey','Heatmap key'],['#updBtn','Update button'],['#keysBox','Keys panel'],['#ctrlsBox','Controls panel'],['#ctlMenu','Drive list'],['#gfxBox','Graphics panel']];
 // ready-made groups (selector, name), picked from the Groups tab and then edited like any part
 const GUI_GROUPS=[['#hud button','Every button on the screen'],['.tbar button','Top bar buttons'],['#ctlMenu button','Machine buttons'],['.bbar button','Bottom bar buttons'],
   ['#menu button','Menu buttons'],['#blkBar button','Blocks bar buttons'],['.tbar, .bbar','The two bars'],['.srow','Gauges'],['.lbl','Gauge names'],
