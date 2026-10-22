@@ -307,7 +307,23 @@ const WET_DROP_FS='float wD=0.0;{float fd=uDrops*smoothstep(0.08,0.4,uWetAll)*(1
   '  if(top>0.0)hg=max(wdBead(vDropP.xz*18.0,0.35*min(uDrops,2.0)),wdBead(vDropP.xz*9.0+17.0,0.2*min(uDrops,3.0)))*top;\n'+
   '  if(sd>0.0)hg=max(hg,max(wdRun(sp,uDropT)*min(uDrops,1.0),0.8*wdBead(sp*vec2(18.0,14.0)+5.0,0.15*min(uDrops,4.0)))*sd);\n'+
   '  hg*=min(fd,1.0);wD=smoothstep(0.0,0.25,hg);normal=wdBump(normal,hg*0.006,-vViewPosition);diffuseColor.rgb*=1.0-0.18*wD;}}\n';
-function wetPatch(m){if(!m||m.userData.wetP||m.userData.noWet||m===groundMat||tuftMats.includes(m))return;
+// the cab glass (the excavator's and the truck's see-through windows, which the wet look leaves alone) beads up and runs
+// the same way, each drop a lens of water catching the sky and the sun, on every face but the one under a windscreen
+// (the part's front, +z), whose drops and wipers are the windscreen's own (WS). The excavator's glass is one box, so it
+// is drawn from both sides while there are drops, to show them from the cab too (the truck's panes have both faces)
+const WET_GLASS=[glass.material,TGLASS];glass.material.userData.side2=true;
+function wetGlassPatch(m){m.userData.wetP=m.userData.glassP=true;const old=m.onBeforeCompile,key=m.customProgramCacheKey();
+  m.onBeforeCompile=function(sh,r){if(old)old.call(this,sh,r);if(!wetDropsOn)return;
+    Object.assign(sh.uniforms,{uWetAll:wetAllU,uDrops:wetDropU,uDropT:wetDropT});
+    // drops a third the size of the paint's (glass is seen close up), clear in the middle and dark at the edge
+    sh.vertexShader='varying vec3 vDropP,vDropN;\n'+sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvDropP=transformed*length(modelMatrix[0].xyz)*3.0;vDropN=objectNormal;');
+    sh.fragmentShader='uniform float uWetAll;\n'+WET_DROP_GLSL+sh.fragmentShader.replace('#include <normal_fragment_maps>','#include <normal_fragment_maps>\n'+
+      WET_DROP_FS.replace('hg*=min(fd,1.0);','hg*=min(fd,1.0)*(1.0-step(0.7,vDropN.z));').replace('diffuseColor.rgb*=1.0-0.18*wD;',
+        'diffuseColor.a=max(diffuseColor.a,wD*(0.1+0.45*(1.0-smoothstep(0.15,0.8,hg))));'))
+      .replace('#include <lights_phong_fragment>','#include <lights_phong_fragment>\nmaterial.specularShininess=mix(material.specularShininess,300.0,wD);material.specularColor=max(material.specularColor,vec3(wD));')};
+  m.customProgramCacheKey=()=>key+'|wetg'+(wetDropsOn?'|drops':'');m.needsUpdate=true}
+function wetPatch(m){if(m&&!m.userData.wetP&&WET_GLASS.includes(m)){wetGlassPatch(m);return}
+  if(!m||m.userData.wetP||m.userData.noWet||m===groundMat||tuftMats.includes(m))return;
   const t=m.type;if(t!=='MeshPhongMaterial'&&t!=='MeshStandardMaterial'&&t!=='MeshLambertMaterial')return;if(m.transparent&&m.opacity<0.7)return;
   m.userData.wetP=true;const old=m.onBeforeCompile,key=m.customProgramCacheKey(),drops=()=>wetDropsOn&&t==='MeshStandardMaterial';
   m.onBeforeCompile=function(sh,r){if(old)old.call(this,sh,r);sh.uniforms.uWetAll=wetAllU;let f='uniform float uWetAll;\n'+sh.fragmentShader;const dr=drops();
@@ -320,7 +336,7 @@ function wetPatch(m){if(!m||m.userData.wetP||m.userData.noWet||m===groundMat||tu
   m.customProgramCacheKey=()=>key+'|wet'+(drops()?'|drops':'');m.needsUpdate=true}
 // post.js turns the beads on or off; the materials that have them are built again
 function wetDropsSet(on){on=!!on;if(on===wetDropsOn)return;wetDropsOn=on;
-  scene.traverse(o=>{if(o.isMesh)for(const m of [].concat(o.material))if(m&&m.userData.wetP&&m.type==='MeshStandardMaterial')m.needsUpdate=true})}
+  scene.traverse(o=>{if(o.isMesh)for(const m of [].concat(o.material))if(m&&m.userData.wetP&&(m.type==='MeshStandardMaterial'||m.userData.glassP)){m.needsUpdate=true;if(m.userData.side2)m.side=on?THREE.DoubleSide:THREE.FrontSide}})}
 function wetPatchAll(){scene.traverse(o=>{if(o.isMesh)(Array.isArray(o.material)?o.material:[o.material]).forEach(wetPatch)})}
 function wetTick(dt,r){wetAll=r>0.03?Math.min(1,wetAll+dt*(0.01+0.05*r)):Math.max(0,wetAll-dt/300);wetAllU.value=wetAll;
   if(wetDropsOn){wetDropU.value=TU.ultraDrops;if(r>0.03)wetDropT.value=(wetDropT.value+dt*(0.4+0.6*r))%1000}}
