@@ -3,7 +3,7 @@
 A 3D excavator game in plain HTML, CSS and JavaScript (three.js r186, no build step). Dig a 3 ft trench on a grassy mesa above a mountain lake (about 295 ft across: a high top with Lookout Knoll and West Rise, and a ramp down a 24 ft rocky scarp to the Lower Bench dirt yard), expose the gas main without hitting it, load the dump truck and haul the spoil over the cliff edge. Then mow the patch of tall grass with the zero-turn mower.
 
 - Live: https://corleys-island.vercel.app (https://backhoe-dig.vercel.app still works)
-- Build time: https://corleys-island.vercel.app/build.html (reads `data/effort.js`)
+- Build time: https://corleys-island.vercel.app/build.html (reads `data/effort.js`); every version in plain text: `CHANGELOG.md`
 - Every version, playable: https://corleys-island.vercel.app/versions/
 - Claude version: https://claude.ai/artifact/6nxYC5EK3422JouxaZx2DF
 
@@ -83,6 +83,7 @@ A 3D excavator game in plain HTML, CSS and JavaScript (three.js r186, no build s
 | `build.html` | Build-time page: ask-to-live per version, triangles, developer-hour estimate |
 | `versions/` | A playable snapshot of every version (`versions/vN/`), the list page, and `list.js`. Made by `tools/versions.py` |
 | `data/effort.js` | Build-time data. The master dashboard reads it for hours |
+| `CHANGELOG.md` | Every version, newest first, made from `data/effort.js` by `tools/changelog.py` (release.py runs it) |
 | `tools/versions.py` | Rebuilds `versions/` from `main`'s history after a release |
 | `docs/WORKFLOW.md` | The owner's playbook: what to change in the editors, when and how to ask Claude so it costs the fewest tokens |
 | `.github/workflows/check.yml` | Loads the game headless after each game change on `main` (free on GitHub's machines; `ISLAND_RUNNER` moves it to a self-hosted runner) and fails on page errors |
@@ -182,7 +183,7 @@ A skin is JSON: `{v:1, t, L:{all|phone|big:{vars, el:{selector:{hide, x, y, sc, 
 - **Worker model:** `models/worker.glb` is built in Blender 4.2 with the MPFB2 extension from MakeHuman's CC0 asset packs ("makehuman_system_assets" and "skins02", unpacked into MPFB's user data folder): `blender -b --python tools/build_worker.py -- /tmp/worker.glb`, then `NODE_PATH=<dir with @gltf-transform/core, functions, extensions and sharp> node tools/pack_worker.js /tmp/worker.glb models/worker.glb` (1024 px JPEG textures, about 2 MB). The script picks the body, skin, hair and clothes, and makes the hi-vis vest (the shirt cut down and painted) and the hard hat; it keeps the game_engine skeleton's bone names (`thigh_l`, `upperarm_r`, `spine_01`…), which `wkMdlSetup` looks up.
 - **Ship a version:** `python3 tools/release.py --asked 2026-10-18T09:15 --dh 6 --title "Name" --what "Build-log line" --trailer "Co-Authored-By: …"` from the feature branch does steps 1 to 4 below (and rebuilds the screen editor page if the screen changed); `--dry-run` stops after the merge and the scene check. By hand, the steps are:
   1. Merge the latest `main` into your branch and re-test.
-  2. Take the next version number after `main`'s last entry in `data/effort.js`; add the entry (asked and live times in Central, developer hours, `tris` and `chars` from `tools/scene-check.js`, a plain description) and add the hours to the day in `days`.
+  2. Take the next version number after `main`'s last entry in `data/effort.js`; add the entry (asked and live times in Central, developer hours, `tris` and `chars` from `tools/scene-check.js`, a plain description) and add the hours to the day in `days`. Run `python3 tools/changelog.py` to rebuild `CHANGELOG.md` from it.
   3. Merge to `main` so the release is a first-parent commit on `main` (a pull request merge or `git merge --no-ff`); `tools/versions.py` finds each version that way. Push: Vercel deploys `main`.
   4. Run `python3 tools/versions.py`, commit `versions/`, push.
   5. (On hold for now, as of v100: skip this step unless the owner says to resume.) Publish the claude.ai artifact from `main`: the page from `<title>` to before `</html>` of `index.html`, with `css/game.css`, every `js/*.js` and `data/effort.js` at the same paths. If the publish is refused because another session published since, read the files it names, confirm `main` already has them, then publish again.
