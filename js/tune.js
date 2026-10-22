@@ -15,6 +15,15 @@ const TUNE=[
   ['exStick','Excavator','Stick rate',0.8,'deg',5,180,1],['exBucket','Excavator','Bucket curl rate',1.3,'deg',5,240,1],
   ['exCap','Excavator','Bucket holds',1.0,'yd3',0.2,5,0.05],
   ['exPour','Excavator','How fast the bucket pours',1,'pct',10,500,5],['exSpill','Excavator','Spill from a fast swing with a full bucket',1,'pct',0,500,5],
+  // the bucket's angle (D08): teeth leading into the cut dig as deep as they go; dragged flat or back first it only skims
+  ['bkAngle','Excavator','How much the bucket\'s angle in the cut matters (0% = it digs the same at any angle)',1,'pct',0,100,5],
+  ['bkSkim','Excavator','A bucket dragged flat or back first only skims',0.05,'in',0.5,12,0.5],
+  // the quick coupler's attachments (coupler.js)
+  ['cpReach','Attachments','The coupler picks up an attachment from',0.9,'ft',1,8,0.25],
+  ['cpHammer','Attachments','Hammer: how much faster than the bucket it gets through rock and clay',4,'pct',100,1000,10],
+  ['cpAuger','Attachments','Auger: how fast it bores (of the bucket\'s dig speed)',0.8,'pct',10,300,5],
+  ['cpBore','Attachments','Auger: hole across',0.5,'in',12,36,1],
+  ['cpGrip','Attachments','Thumb: biggest block it can grip (each way)',1.25,'ft',1,10,0.5],
   ['trTop','Dump truck','Top speed',8.9,'mph',2,60,0.5],['trRev','Dump truck','Top speed in reverse or bed up',2.7,'mph',1,30,0.5],
   ['trSteer','Dump truck','Steering rate',1.1,'deg',10,240,1],['trGrip','Dump truck','Grip in turns',1,'pct',20,300,5],
   ['trBrake','Dump truck','Braking',1,'pct',10,400,5],['trLoadMass','Dump truck','How much a full load weighs it down',1,'pct',0,300,5],

@@ -45,6 +45,8 @@ const KEY_ACTIONS=[
   {id:'blkFar',g:'Blocks',n:'Reach farther',d:'In first person on foot, push the block out from you (the mouse wheel does too)',k:['BracketRight']},
   {id:'blkNear',g:'Blocks',n:'Reach nearer',d:'In first person on foot, pull the block back toward you',k:['BracketLeft']},
   {id:'box',g:'Site',n:'Trench box',d:'Hook it to the bucket, or set it down',k:['KeyT']},
+  {id:'coupler',g:'Site',n:'Quick coupler',d:'In Dig: set the attachment down, or pick up the one the coupler is lowered onto (bucket, thumb, hammer, auger)',k:['Period'],s:'ride'},
+  {id:'grip',g:'Site',n:'Thumb grip',d:'With the thumb on: grip the block between its jaws, or let it go',k:['Comma'],s:'ride'},
   {id:'pump',g:'Site',n:'Pump',d:'Dewater a flooded hole',k:['KeyP']},
   {id:'wipers',g:'Site',n:'Wipers',d:'Turn the windscreen wipers on or off in the excavator and the truck',k:['Space'],s:'ride'},
   {id:'cam',g:'View',n:'Cab view',d:'Switch between the cab (or your own eyes) and the chase camera',k:['KeyC']},

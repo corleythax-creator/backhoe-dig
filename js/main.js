@@ -93,7 +93,7 @@ function frame(now){
   boomP.rotation.x=-st.a1; stickP.rotation.x=-st.a2; bucketP.rotation.x=-st.a3;
   machine.updateMatrixWorld(true); updateLinkage(); jointJ.updateMatrixWorld(); updateRams(); updateHoses();
   tipMark.getWorldPosition(tip); midMark.getWorldPosition(mid); bucketP.getWorldQuaternion(q);
-  updateBox(dt);blkTick(dt);
+  updateBox(dt);cplTick(dt);blkTick(dt);
 
   // dig
   const g=hAt(tip.x,tip.z);
@@ -102,12 +102,17 @@ function frame(now){
   {const ti=Math.max(0,Math.min(N,Math.round(gI(tip.x)))),tj=Math.max(0,Math.min(N,Math.round(gJ(tip.z))));
     st.soil=st.below?matAt(tj*V+ti,tip.y):-1;
     st.res=st.soil<0?1:soilRes(tj*V+ti,tip.y)*(st.load>=TU.exCap-0.002?0.5:1);
+    // the hammer and the auger get through hard ground faster; a bare coupler or the thumb hardly goes in (coupler.js)
+    if(st.soil>=0)st.res=cplRes(st.res);
     if(st.soil===2&&!st.seenSand){st.seenSand=true;toast(say('sand'),'',3200)}
     if(st.soil===3&&!st.seenRock){st.seenRock=true;toast(say('rock'),'',3000)}
     st.rumT-=dt;if(padUsed&&st.soil>=0&&st.rumT<=0&&(Math.abs(swingIn)+Math.abs(stickIn)+Math.abs(boomIn)+Math.abs(bucketIn))>0.1){st.rumT=0.12;rumble(140,0.15+0.55*(1-SOIL[st.soil].h))}}
   if(st.below&&!bench.on){
-    if(st.load<TU.exCap-0.002){
-      const got=dig(tip,TU.exCap-st.load);
+    // another attachment on the coupler works the ground its own way (coupler.js)
+    if(cpl.fit!=='bucket')cplWork(dt);
+    // the bucket cuts as deep as its teeth only with them leading; dragged flat it skims (bkCut)
+    else if(st.load<TU.exCap-0.002){
+      const got=dig(bkCut(g,dt),TU.exCap-st.load);
       if(got>0){const f=got/(st.load+got);for(let q=0;q<3;q++)st.loadC[q]+=(digC[q]-st.loadC[q])*f;for(let q=0;q<4;q++)st.loadMix[q]+=(digMix[q]-st.loadMix[q])*f;
         st.loadWet+=((underWater(tip)?1:mudAt(tip.x,tip.z))-st.loadWet)*f;
         st.load+=got;statDug(got);st.dirty=true;st.slumpT=2.5;if(Math.random()<0.5)spawn(tip.clone().setY(g+0.05),1.2)}

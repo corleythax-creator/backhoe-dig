@@ -618,15 +618,16 @@ const digC=[0,0,0],digMix=[0,1,0,0];
 // grid box holding every hole dug so far, scanned for walls that could cave in
 let cI0=N+1,cI1=-1,cJ0=N+1,cJ1=-1;
 function growDug(i0,i1,j0,j1){growSl(i0,i1,j0,j1);const mg=3*GRID_K;cI0=Math.max(0,Math.min(cI0,i0-mg));cI1=Math.min(N,Math.max(cI1,i1+mg));cJ0=Math.max(0,Math.min(cJ0,j0-mg));cJ1=Math.min(N,Math.max(cJ1,j1+mg))}
-function dig(tip,cap){
-  const r=0.55,list=[],vk=[0,0,0,0];let vol=0,cr=0,cg=0,cb=0;
+// o (optional): r, the reach round the tip (the bucket's 0.55 m); flat, a flat bottom (the auger's bore) instead of a bowl
+function dig(tip,cap,o){
+  const r=o&&o.r||0.55,flat=!!(o&&o.flat),list=[],vk=[0,0,0,0];let vol=0,cr=0,cg=0,cb=0;
   const i0=Math.max(0,Math.floor(gI(tip.x-r))),i1=Math.min(N,Math.ceil(gI(tip.x+r)));
   const j0=Math.max(0,Math.floor(gJ(tip.z-r))),j1=Math.min(N,Math.ceil(gJ(tip.z+r)));
   for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){
     const x=gX(i),z=gZ(j),d=Math.hypot(x-tip.x,z-tip.z);
     if(d>r)continue;
     const k=j*V+i;if(digKeep[k])continue;
-    const t=Math.max(tip.y+(d/r)*(d/r)*0.35,H0[k]-FLOOR);
+    const t=Math.max(flat?tip.y:tip.y+(d/r)*(d/r)*0.35,H0[k]-FLOOR);
     const dh=H[k]-t;
     if(dh>0){const y=H[k]-dh/2,m=matAt(k,y),c=matColor(k,m),v=dh*CA*(1+(SOIL[m].sw-1)*TU.fluff),ck=clodKind(m,H0[k]-y);list.push(k,dh);vol+=v;cr+=c[0]*v;cg+=c[1]*v;cb+=c[2]*v;if(ck>=0)vk[ck]+=v}
   }
