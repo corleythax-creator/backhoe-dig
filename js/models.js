@@ -1,8 +1,8 @@
 // Corley's Island: detailed machine models from files (models/*.glb, glTF), on physically based materials. The
 // excavator's and the dump truck's come from tools/build_model.js, and any model that keeps its contract
 // (tools/models/excavator.js and truck.js: a node per moving part, in that part's own frame, materials named for the
-// game's) can replace them, and so can the heavy machines' (tools/models/dozer.js, loader.js, semi.js, pickup.js and
-// atv.js). With the Graphics setting's Machine models on Detailed, each file is fetched once and its
+// game's) can replace them, and so can the heavy machines' (tools/models/dozer.js, loader.js, semi.js, pickup.js,
+// atv.js and backhoe.js). With the Graphics setting's Machine models on Detailed, each file is fetched once and its
 // parts go into the game's own part groups in place of the simple shapes, which stay for the Simple setting; the parts
 // the model leaves to the game (the excavator's rams, hoses and linkage; the truck's chassis, tanks, lights, cab inside
 // and wheels) switch to the same physically based materials. Only how the machines look changes, never how they dig
@@ -152,7 +152,7 @@ function mdlFlatPbr(m){if(mdlFlat.has(m))return mdlFlat.get(m);let r=null;
   mdlFlat.set(m,r);return r}
 // the machines this covers, and what on them is not paintwork (the loads, tinted as they fill)
 function mdlOthers(){return [mower,skid,bike,...boats.map(b=>b.g),...hvs.flatMap(h=>h.trailer?[h.g,h.trailer]:[h.g])]}
-function mdlOthersOn(on){const skip=new Set([skLoad,...hvs.map(h=>h.heap)]),gm=typeof grimeMats!=='undefined'&&grimeMats;
+function mdlOthersOn(on){const skip=new Set([skLoad,...hvs.flatMap(h=>[h.heap,h.hheap])]),gm=typeof grimeMats!=='undefined'&&grimeMats;
   for(const root of mdlOthers())root.traverse(o=>{if(!o.isMesh||skip.has(o)||o.isInstancedMesh)return;const u=mdlSide(o);
     if(on){if(u.mdlO)return;const mt=o.material;if(Array.isArray(mt))return;
       if(mt.vertexColors&&o.geometry.attributes.color){u.mdlO=[o.geometry,mt];if(!u.mdlG)u.mdlG=mdlSplit(o.geometry);o.geometry=u.mdlG;o.material=MDL_SORTS.map(k=>mdlVCMat(k,mt.side))}
@@ -160,11 +160,11 @@ function mdlOthersOn(on){const skip=new Set([skLoad,...hvs.map(h=>h.heap)]),gm=t
     else if(u.mdlO){const [geo,mt]=u.mdlO;if(geo)o.geometry=geo;else{const g=gm&&gm.find(e=>e.m===o.material);if(g){g.m=mt;g.base=u.mdlOB}}o.material=mt;u.mdlO=null}})
   mdl.othersOn=on}
 // ---------- the dozers, loaders, semis, pickups and four-wheelers (both sets, heavy.js): their own detailed models ----------
-const MDL_HV=['dozer','loader','semi','pickup','atv'];mdl.hv={};mdl.hvOn=false;
+const MDL_HV=['dozer','loader','semi','pickup','atv','backhoe'];mdl.hv={};mdl.hvOn=false;
 function mdlLoadHv(k){if(mdl.hv[k]!==undefined)return;mdl.hv[k]=null;
   mdlLoaderReady(()=>new THREE.GLTFLoader().load(`models/${k}.glb`,gl=>{mdl.hv[k]=gl.scene;mdl.hvOn=!mdl.want},undefined,()=>{}))}
 // a machine's part groups (hvMake), by the model's node names
-const mdlHvParts=h=>({body:h.g,blade:h.blade,ripper:h.ripG,arm:h.arm,bucket:h.bkt,trailer:h.trailer});
+const mdlHvParts=h=>Object.assign({body:h.g,blade:h.blade,ripper:h.ripG,arm:h.arm,bucket:h.bkt,trailer:h.trailer},h.parts);
 // each machine of those kinds shows the model's meshes in its part groups in place of its kit-built ones (on and off as
 // the setting goes), and a hydraulic ram between each pair of the model's ram pins
 function mdlHvOn(on){mdl.hvOn=on;const mats=mdlMatsMake();
@@ -177,7 +177,7 @@ function mdlHvOn(on){mdl.hvOn=on;const mats=mdlMatsMake();
           mesh.castShadow=k!=='tint';mesh.receiveShadow=true;if(!m.geometry.attributes.uv)mdlBoxUV(m.geometry);mesh.layers.enable(RAIN_LAYER);if(k==='tint')mesh.renderOrder=2;
           par.add(mesh);h.mdl.push(mesh)})}
       h.rams=Object.values(pins).filter(r=>r.a&&r.b).map(r=>mdlRam(r,mats));mdlRamPose(h)}
-    for(const g of Object.values(P))if(g)for(const c of g.children)if(c.isMesh&&c!==h.heap)c.visible=c.name.startsWith('mdl_')?on:!on;
+    for(const g of Object.values(P))if(g)for(const c of g.children)if(c.isMesh&&c!==h.heap&&c!==h.hheap)c.visible=c.name.startsWith('mdl_')?on:!on;
     for(const r of h.rams||[])r.ga.visible=r.gb.visible=on}}
 // a ram: the barrel (in the machine's paint) turning on one pin, the chromed rod on the other, an eye round each pin
 function mdlRam(r,mats){const o=r.a.o,rad=o.r||0.07,lb=o.lb||0.6,lr=o.lr||0.6,bk=o.bk||0;

@@ -218,7 +218,7 @@ function frame(now){
     if(mode==='truck'){look.set(tr.x,tr.y+1.6,tr.z);cyaw=tr.yaw+Math.PI+orbitYaw;cd=camDist+3}
     else if(mode==='skid'){look.set(sk.x+Math.sin(sk.yaw)*1.2,sk.y+1.0,sk.z+Math.cos(sk.yaw)*1.2);cyaw=sk.yaw+Math.PI+orbitYaw;cd=camDist*0.7}
     else if(mode==='boat'){const b=btCur();look.set(b.x+Math.sin(b.yaw)*0.8,b.y+1.0,b.z+Math.cos(b.yaw)*0.8);cyaw=b.yaw+Math.PI+orbitYaw;cd=camDist*0.85}
-    else if(mode==='heavy'){const h=hvCur();look.set(h.x+Math.sin(h.yaw)*1.0,h.y+1.6,h.z+Math.cos(h.yaw)*1.0);cyaw=h.yaw+Math.PI+orbitYaw;cd=camDist*h.K.cam}
+    else if(mode==='heavy'){const h=hvCur(),f=h.K.hoe?h.camF:1;look.set(h.x+Math.sin(h.yaw)*f,h.y+1.6,h.z+Math.cos(h.yaw)*f);cyaw=h.yaw+Math.PI+orbitYaw+(h.K.hoe?h.camO:0);cd=camDist*h.K.cam}
     else if(mode==='bike'){look.set(bk.x+Math.sin(bk.yaw)*0.6,bk.y+1.0,bk.z+Math.cos(bk.yaw)*0.6);cyaw=bk.yaw+Math.PI+orbitYaw;cd=camDist*0.55}
     else if(mode==='mow'){look.set(mw.x+Math.sin(mw.yaw)*0.8,mw.y+0.7,mw.z+Math.cos(mw.yaw)*0.8);cyaw=mw.yaw+Math.PI+orbitYaw;cd=camDist*0.6}
     else if(mode==='walk'){look.set(wk.x,wk.y+1.35,wk.z);cyaw=wk.view+Math.PI+orbitYaw;cd=camDist*0.5;
@@ -234,7 +234,7 @@ function frame(now){
     if(mode==='truck')fpEye(sprung,-0.55,1.6,1.95,0.25,-1,12.05);
     else if(mode==='skid')fpEye(skid,0,1.72,0.0,0,-0.9,4.5);
     else if(mode==='boat')fpEye(btCur().g,0,1.62,-0.47,0,-1.1,8);
-    else if(mode==='heavy')fpEye(hvCur().g,...hvCur().K.eye);
+    else if(mode==='heavy')fpEye(hvCur().g,...(hvCur().eye||hvCur().K.eye));
     else if(mode==='bike')fpEye(bike,0,1.62-bk.comp,-0.12,0,-0.35,1);
     else if(mode==='mow')fpEye(mower,0,1.42,0.02,0,-1.32,4.48);
     else if(mode==='walk'){const p=fpl.pitch,fx=Math.sin(wk.view),fz=Math.cos(wk.view);camera.position.set(wk.x+fx*0.1,wk.y+WK_H-0.12+wkBody.position.y,wk.z+fz*0.1);

@@ -118,13 +118,14 @@ const hvV=new THREE.Vector3(),hvTip=new THREE.Vector3(),hvTipL=new THREE.Vector3
 function hvPose(h){h.g.position.set(h.x,h.y,h.z);h.g.rotation.set(h.pitch,h.yaw,h.roll,'YXZ');
   if(h.blade)h.blade.rotation.x=-h.a;
   if(h.ripG)h.ripG.position.y=HV_RIP0-HV_RIPY-h.rip*(HV_RIP0+TU.hvRipD);
+  if(h.K.hoe)bhParts(h);
   if(h.arm){const e=HV_LA0-h.a;h.arm.rotation.x=e;h.bkt.rotation.x=-e-h.c}
   h.g.updateMatrixWorld(true);if(h.rams&&h.rams.length&&h.rams[0].ga.visible)mdlRamPose(h);
   const sy=Math.sin(h.yaw),cy=Math.cos(h.yaw);h.circ.length=0;for(const lz of h.K.C)h.circ.push([h.x+sy*lz,h.z+cy*lz,h.K.R]);
   if(h.trailer){h.g.localToWorld(hvV.set(0,1.3,-HV_KP));const ts=Math.sin(h.ty),tc=Math.cos(h.ty),yA=surfAt(hvV.x-ts*HV_LT,hvV.z-tc*HV_LT),yK=hvV.y-1.3;
     h.trailer.position.set(hvV.x,yK,hvV.z);h.trailer.rotation.set(-Math.atan2(yK-yA,HV_LT),h.ty,0,'YXZ');
     for(const lz of HV_TC)h.circ.push([hvV.x+ts*lz,hvV.z+tc*lz,1.45])}}
-function hvReset(h){const H=h.home;Object.assign(h,{x:H.x,z:H.z,yaw:H.yaw,ty:H.yaw,mv:H.yaw,v:0,w:0,steer:0,a:0,c:0.1,rip:0,drag:1,load:0,loadWet:0,run:0});hvGround(h,1);hvPose(h)}
+function hvReset(h){const H=h.home;if(h.K.hoe)bhReset(h);Object.assign(h,{x:H.x,z:H.z,yaw:H.yaw,ty:H.yaw,mv:H.yaw,v:0,w:0,steer:0,a:0,c:0.1,rip:0,drag:1,load:0,loadWet:0,run:0});hvGround(h,1);hvPose(h)}
 // sits it on the ground under its wheels or tracks (k: how far toward it this frame)
 function hvGround(h,k){const K=h.K,sy=Math.sin(h.yaw),cy=Math.cos(h.yaw),S=(lx,lz)=>surfAt(h.x+lx*cy+lz*sy,h.z-lx*sy+lz*cy);
   const fl=S(-K.hw,K.af),fr=S(K.hw,K.af),bl=S(-K.hw,K.ab),br=S(K.hw,K.ab),hf=(fl+fr)/2,hb=(bl+br)/2,L=K.af-K.ab,y=hb+(hf-hb)*(-K.ab/L);
@@ -145,7 +146,7 @@ function hvTake(h,got,p){const f=got/(h.load+got);for(let q=0;q<3;q++)h.loadC[q]
 // every frame: drive (+ forward), turn (+ right), arm (+ raise the blade or arms) and curl (+ curl back); 0 when parked
 function hvTick(dt,drive,turn,arm,curl){
   for(let i=0;i<hvs.length;i++){const h=hvs[i],on=mode==='heavy'&&hvI===i&&wk.inside==='hv'+i&&!bench.on;
-    if(on)hvDrive(h,dt,drive,turn,arm,curl,true);else hvDrive(h,dt,0,0,0,0,false)}}
+    if(on&&h.K.hoe)bhTick(h,dt,drive,turn,arm,curl);else if(on)hvDrive(h,dt,drive,turn,arm,curl,true);else hvDrive(h,dt,0,0,0,0,false)}}
 function hvDrive(h,dt,drive,turn,arm,curl,on){const K=h.K;
   h.run+=((on?1:0)-h.run)*Math.min(1,dt*(on?2:0.7));h.thr=drive;h.hyd=Math.min(1,Math.abs(arm)+Math.abs(curl));
   const mudN=mudAt(h.x,h.z),k=Math.max(0,1-0.45*mudN*TU.mudDrag);
@@ -153,9 +154,9 @@ function hvDrive(h,dt,drive,turn,arm,curl,on){const K=h.K;
   if(K.car)hvCar(h,dt,drive,turn,k,on);
   else if(K.track){h.top=TU.hvDzSpd;h.v+=(drive*h.top*k*h.drag-h.v)*Math.min(1,dt*(drive?2:4));h.w+=(-turn*TU.hvDzTurn*k-h.w)*Math.min(1,dt*5);h.yaw+=h.w*dt}
   else{// the gas pulls it up to speed (the semi slowly), the brakes stop it harder; the wheel locks less the faster it goes
-    h.top=K.trail?TU.hvSmSpd:TU.hvLdSpd;const tgt=drive*h.top*k,acc=K.trail?0.35:1.2,up=Math.abs(tgt)>Math.abs(h.v)&&tgt*h.v>=0;
+    h.top=K.trail?TU.hvSmSpd:K.hoe?TU.bhSpd:TU.hvLdSpd;const tgt=drive*h.top*k,acc=K.trail?0.35:1.2,up=Math.abs(tgt)>Math.abs(h.v)&&tgt*h.v>=0;
     h.v+=(tgt-h.v)*Math.min(1,dt*(up?acc:acc*3));
-    const lock=(K.trail?TU.hvSmLock:TU.hvLdLock)/(1+Math.abs(h.v)*0.06);h.steer+=(turn*lock-h.steer)*Math.min(1,dt*4);
+    const lock=(K.trail?TU.hvSmLock:K.hoe?TU.bhLock:TU.hvLdLock)/(1+Math.abs(h.v)*0.06);h.steer+=(turn*lock-h.steer)*Math.min(1,dt*4);
     h.w=-h.v*Math.tan(h.steer)/K.wb;h.yaw+=h.w*dt}
   if(!on){if(Math.abs(h.v)<0.05)h.v=0;if(Math.abs(h.w)<0.01)h.w=0}
   const sy=Math.sin(h.yaw),cy=Math.cos(h.yaw),mvd=K.car?h.mv:h.yaw;h.x+=Math.sin(mvd)*h.v*dt;h.z+=Math.cos(mvd)*h.v*dt;
@@ -174,7 +175,7 @@ function hvDrive(h,dt,drive,turn,arm,curl,on){const K=h.K;
     if(K.track){stampRut(rx,rz,h.yaw,0.28,1.5,dt);splashMud(rx+sy*1.5*Math.sign(tv||1),rz+cy*1.5*Math.sign(tv||1),h.yaw,tv,0.3,0.8,dt)}
     else for(const lz of [K.af,K.ab]){stampRut(rx+sy*lz,rz+cy*lz,h.yaw,0.3,0.45,dt);splashMud(rx+sy*lz,rz+cy*lz,h.yaw,tv,0.3,0.6,dt)}}
   hvGround(h,Math.min(1,dt*10));
-  if(K.track)hvBlade(h,dt,arm,curl,on);else if(h.arm)hvBucket(h,dt,arm,curl,on);else hvPose(h);
+  if(K.track)hvBlade(h,dt,arm,curl,on);else if(h.arm)hvBucket(h,dt,arm,curl,on);else if(K.hoe)bhWork(h,dt,arm,curl,on);else hvPose(h);
   if(K.rider&&wk.inside==='hv'+hvs.indexOf(h))hvRider(h)}
 // the pickup and the four-wheeler (K.car: their Tuning keys start with it). The gas pulls with K.acc m/s² from a stop,
 // fading to nothing at top speed; against the way it rolls, the pedal is the brake (K.brake m/s²) until it stops, then
@@ -247,5 +248,6 @@ function hvBucket(h,dt,arm,curl,on){const cap=TU.hvLdCap,full=1-0.15*h.load/cap;
   h.heap.visible=h.load>0.01;if(h.heap.visible){const s=0.35+0.65*Math.sqrt(h.load/cap);h.heap.scale.set(2.3*s,0.7*s,0.9+0.3*s);tintLoad(h.heap.material,h.loadC)}}
 // the one the worker is in, when it can dig (the dig grid follows it, digtiles.js)
 function hvDigger(){const R=WK_RIDES[wk.inside];return R&&R.m==='heavy'&&!R.o.K.trail&&!R.o.K.car?R.o:null}
-// the walker climbs in beside them (walker.js): they join WK_RIDES as hv0 to hv4 (Dexter's) and hv5 to hv9 (Corley's)
+// the walker climbs in beside them (walker.js): they join WK_RIDES as hv0 to hv4 (Dexter's) and hv5 to hv9 (Corley's);
+// Corley's backhoe (backhoe.js) joins as hv10
 hvs.forEach((h,i)=>{WK_RIDES['hv'+i]={o:h,c:h.K.C,r:h.K.R,m:'heavy',n:h.K.n,pick(){hvI=i}};hvReset(h)});
