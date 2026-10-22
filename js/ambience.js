@@ -1,7 +1,7 @@
 // Corley's Island: the sound of the place, on sound.js's mixer and the Nature slider: wind (stronger up high and in a
 // storm, in slow gusts), birds by day, crickets by night and frogs near the water, waves lapping whichever shore is near
 // (from the side it is on), gulls over the lake, rain in two strengths (muffled on the roof from the cab view), and
-// footsteps on foot by surface: gravel and dirt, grass, or wading. All recordings (sounds/, tools/sounds.py).
+// footsteps on foot by surface: gravel and dirt, grass, mud (a squelch), bridge decks (a hollow knock), or wading. All recordings (sounds/, tools/sounds.py).
 // Each bed plays its loop twice from different points, panned apart, so it is wide rather than one point in the middle.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 let ambNight=0,amb=null;
@@ -28,9 +28,25 @@ function ambLake(){const cx=camera.position.x,cz=camera.position.z;let near=hAt(
 // one footstep at the walker's feet, by what is under them
 function ambStep(t,k){const x=wk.x,z=wk.z,g=hAt(x,z),fx=sndVol(sndCfg.fx);
   if(lakeY(x,z)>wk.y+0.08){sndShot('slap',amb.stepG,t,1.1+0.3*Math.random(),0.5*k*fx);return}
+  // on a bridge deck, a dock or the covered footbridge: a hollow knock off the boards
+  if(Math.abs(wk.y-deckAt(x,z))<0.15){ambKnock(t,k,fx);return}
+  const hard=wk.y>g+0.3;// on a block
+  // in mud (the soil water, water.js and mud.js, not the paint): a squelch, the boot sucking out after it
+  if(!hard&&mudAt(x,z)>TU.stepMud){ambSquelch(t,k,fx);return}
   const m=paintAt(x,z),id=m?MAT_LIST[m-1].id:'',soft=!m&&Math.abs(g-h0At(x,z))<0.04&&roadAmt(x,z)<0.5||/grass|sod|lawn|moss|clover|meadow/.test(id);
-  const hard=wk.y>g+0.3;// on a block, a deck or a bridge
   sndShot(soft&&!hard?'step_s':'step_g',amb.stepG,t,(hard?0.85:1)*(0.92+0.16*Math.random()),(soft?0.55:0.45)*k*fx)}
+// a short burst of the shared noise through a filter, with a quick attack and a decay (from f0 to f1 Hz if f1 is given)
+function ambNoise(t,type,f0,f1,q,len,gain){const s=actx.createBufferSource(),b=sndFilter(type,f0,q),g=sndGain(0,amb.stepG);s.buffer=snd.noise;s.connect(b);b.connect(g);
+  if(f1)b.frequency.exponentialRampToValueAtTime(f1,t+len);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(gain,t+0.006);g.gain.exponentialRampToValueAtTime(0.001,t+len);
+  s.start(t,Math.random()*1.5,len+0.02);s.onended=()=>{b.disconnect();g.disconnect()}}
+// a boot on a deck: the thump of the boards (a falling low tone), their hollow ring and the scuff of the sole
+function ambKnock(t,k,fx){const o=actx.createOscillator(),g=sndGain(0,amb.stepG),f=88+30*Math.random();o.type='sine';
+  o.frequency.setValueAtTime(f*1.7,t);o.frequency.exponentialRampToValueAtTime(f,t+0.05);g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(0.55*k*fx,t+0.004);
+  g.gain.exponentialRampToValueAtTime(0.001,t+0.24);o.connect(g);o.start(t);o.stop(t+0.26);o.onended=()=>g.disconnect();
+  ambNoise(t,'bandpass',330+90*Math.random(),0,7,0.16,0.5*k*fx);sndShot('step_g',amb.stepG,t,0.8+0.1*Math.random(),0.16*k*fx)}
+// a boot in mud: a wet slap going down, then the suck as it pulls free
+function ambSquelch(t,k,fx){sndShot('slap',amb.stepG,t,0.55+0.15*Math.random(),0.42*k*fx);
+  ambNoise(t,'lowpass',700,0,0.7,0.09,0.3*k*fx);ambNoise(t+0.07+0.05*Math.random(),'bandpass',1900+400*Math.random(),380,4,0.16,0.35*k*fx)}
 function ambTick(dt,t,quiet){
   if(!amb){if(!snd.buf.wind)return;ambBuild()}
   const r=weather.r,dry=1-ss(0.05,0.4,r),cab=camMode==='cab'&&mode!=='walk',inside=cab?0.45:1;

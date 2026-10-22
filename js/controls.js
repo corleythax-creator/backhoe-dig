@@ -10,6 +10,7 @@ function resetState(){
   for(let k=0;k<V*V;k++)spoilC.set(SOIL[SPOIL].c,k*3);
   clearClods();wetT.fill(-1e4);comp.fill(0);clearDust();waterClear();mudReset();rainReset();
   blkReset();mowReset();skidReset();walkReset();if(typeof twReset==='function')twReset();Object.assign(TB,TB_START,{hooked:false,seated:false});TB.y=TB.ty=boxRest();prot.fill(0);chain.visible=false;
+  if(typeof cplReset==='function')cplReset();
 }
 resetState();
 const LIM={a1:[-0.55,1.3],a2:[-2.65,-0.45],a3:[-2.85,0.35]};
@@ -37,12 +38,12 @@ const keys={};
 // keyboard: every key runs the action it is bound to in keys.js (standard: WASD/arrows the left stick, IJKL the right stick);
 // the sticks' captions show the keys once one is pressed
 const MODES=['dig','drive','truck','mow','skid','walk'];let kbUsed=false;
-const KEY_RUN={dig:()=>setMode('dig'),drive:()=>setMode('drive'),exSwap:()=>exSwap(),truck:()=>setMode('truck'),mow:()=>setMode('mow'),skid:()=>setMode('skid'),walk:()=>setMode('walk'),
+const KEY_RUN={dig:()=>setMode('dig'),drive:()=>setMode('drive'),exSwap:()=>exSwap(),bhOut:()=>bhOut(),truck:()=>setMode('truck'),mow:()=>setMode('mow'),skid:()=>setMode('skid'),walk:()=>setMode('walk'),
   nextMode:e=>setMode(MODES[(MODES.indexOf(mode)+(e.shiftKey?MODES.length-1:1))%MODES.length]),
   stats:()=>showStats(statBox.hidden),heat:()=>{if(!heat.on)setHeat(true);else if(heat.mode!==HEAT_MODES[HEAT_MODES.length-1][0])heatNext();else setHeat(false)},
-  enter:()=>seatToggle(),jump:()=>walkJump(),plant:()=>plantHere(),plantKind:()=>plantNext(),blocks:()=>setBlocks(!blkOn),place:()=>placeBlock(),lift:()=>removeBlock(),size:()=>blkCube(1),blkTurn:()=>blkTurn(),blkLock:()=>toast(say('blkSnap',{snap:blkLockNext()}),'',1400),blkFar:()=>blkReachBy(2),blkNear:()=>blkReachBy(-2),
+  enter:()=>seatToggle(),jump:()=>walkJump(),plant:()=>plantHere(),trim:()=>trimSet(!trim.on),trimBump:()=>trimBump(),plantKind:()=>plantNext(),carry:()=>pbAct(),blocks:()=>setBlocks(!blkOn),place:()=>placeBlock(),lift:()=>removeBlock(),size:()=>blkCube(1),blkTurn:()=>blkTurn(),blkLock:()=>toast(say('blkSnap',{snap:blkLockNext()}),'',1400),blkFar:()=>blkReachBy(2),blkNear:()=>blkReachBy(-2),
   blkMat:()=>{let m=blkMat;do m=(m+1)%MAT_MAX;while(m&&!MAT_LIST[m-1]);setBlkMat(m);toast(say('blkMat',{mat:blkMatName(blkMat)}),'',1400)},
-  box:()=>hookBox(),lookAhead:()=>{if(camMode==='cab')fpl.home=true;fpl.zt=1},pump:()=>setPump(!pumpOn),wipers:()=>setWipers(!wipeOn),cam:()=>$('#camBtn').click(),map:()=>toggleMap(),sound:()=>setSound(!sndCfg.on),help:()=>{help.hidden=!help.hidden}};
+  box:()=>hookBox(),coupler:()=>cplAct(),grip:()=>cplGrip(),lookAhead:()=>{if(camMode==='cab')fpl.home=true;fpl.zt=1},pump:()=>setPump(!pumpOn),wipers:()=>setWipers(!wipeOn),cam:()=>$('#camBtn').click(),map:()=>toggleMap(),sound:()=>setSound(!sndCfg.on),help:()=>{help.hidden=!help.hidden}};
 addEventListener('keydown',e=>{const c=e.code;
   if((e.ctrlKey||e.metaKey||e.altKey)&&!/^(Control|Alt|Meta)/.test(c))return;
   if(c==='Escape'){help.hidden=true;return}
@@ -154,20 +155,22 @@ const aimEl=$('#aim');
 function setCaps(){const m=mode,two=(a,b)=>`${keyLabel(a)} ${keyLabel(b)}`,lh=kbUsed?two('lLeft','lRight'):'◀ ▶',lv=kbUsed?two('lUp','lDown'):'▲ ▼',rh=kbUsed?two('rLeft','rRight'):'◀ ▶',rv=kbUsed?two('rUp','rDown'):'▲ ▼';
   for(const b of document.querySelectorAll('.seg button'))b.dataset.k=keyLabel(b.id.slice(4).toLowerCase());
   const sv={lh,lv,rh,rv},cap=id=>{const h=say(id,sv,true);return h.includes('<br>')?h:h+'<br>&nbsp;'},kb=m==='mow'&&kbUsed?'Kb':'';
-  if(m==='heavy'){$('#capL').innerHTML=cap('capL_'+hvCur().k);$('#capR').innerHTML=cap('capR_'+hvCur().k);return}
+  if(m==='heavy'){const k=hvCur().k+(hvCur().hoe?'Hoe':'');$('#capL').innerHTML=cap('capL_'+k);$('#capR').innerHTML=cap('capR_'+k);return}
   $('#capL').innerHTML=cap('capL_'+(m==='dig'||m==='drive'||m==='mow'||m==='walk'||m==='skid'||m==='boat'||m==='bike'?m+kb:'truck'));
   $('#capR').innerHTML=cap('capR_'+(m==='truck'||m==='mow'||m==='walk'||m==='skid'||m==='boat'||m==='bike'?m+kb:'dig'));}
 // the excavator's Drive / Dig switch (over the right stick while you are in it): flips between driving the tracks and
 // running the arm; exLast is the one you were last in, which Excavator in the Drive list goes back to
 let exLast='dig';
-function exSwap(){if(mode!=='dig'&&mode!=='drive')return;setMode(mode==='dig'?'drive':'dig');toast(say(mode==='drive'?'exDriving':'exDigging'),'',2200)}
+// (in the backhoe it swivels the seat between the wheel and the hoe, backhoe.js)
+const bhIn=()=>mode==='heavy'&&!!hvCur().K.hoe;
+function exSwap(){if(bhIn()){bhSwap();return}if(mode!=='dig'&&mode!=='drive')return;setMode(mode==='dig'?'drive':'dig');toast(say(mode==='drive'?'exDriving':'exDigging'),'',2200)}
 function setMode(m){if(m===mode)return;
   // no room to climb out: stay in the machine, as Get out does (seatToggle), rather than turn up where you got in
   if(m==='walk'&&wk.inside&&!wkPlaceOut(wk.inside)){toast(say('noRoomOut'));return}
-  mode=m;setTurnSens();const ex=m==='dig'||m==='drive';if(ex)exLast=m;$('#exSwitch').hidden=!ex;
-  $('#exDrive').setAttribute('aria-pressed',m==='drive');$('#exDig').setAttribute('aria-pressed',m==='dig');$('#modeDig').setAttribute('aria-pressed',ex);
+  mode=m;setTurnSens();const ex=m==='dig'||m==='drive';if(ex)exLast=m;$('#exSwitch').hidden=!ex&&!bhIn();
+  $('#exDrive').setAttribute('aria-pressed',m==='drive');$('#exDig').setAttribute('aria-pressed',m==='dig');bhSwitch();$('#modeDig').setAttribute('aria-pressed',ex);
   for(const [id,k] of [['#modeDrive','drive'],['#modeTruck','truck'],['#modeMow','mow'],['#modeSkid','skid'],['#modeWalk','walk']])$(id).setAttribute('aria-pressed',m===k);
-  $('#walkBtns').hidden=m!=='walk';if(m!=='walk')setSprint(false);
+  $('#walkBtns').hidden=m!=='walk';if(m!=='walk'){setSprint(false);trimSet(false)}
   // switching to Walk from a machine you climbed into sets you down beside it
   if(m==='walk'){wk.inside=null;wk.view=wk.yaw}
   setCaps();markTile();firstCam=true;fpReset();if(m==='mow'&&!lawn.startT&&!lawn.done)toast(say(kbUsed?'mowKb':'mowTouch'),'',3800);
@@ -176,7 +179,7 @@ function setMode(m){if(m===mode)return;
   if(m==='bike')toast(say('bikeTip'),'',4200);
   if(m==='heavy')toast(say(hvCur().k+'Tip'),'',5200);
   if(m==='walk')toast(say(padUsed?'walkPad':kbUsed?'walkKb':'walkTouch'),'',3800)}
-$('#modeDig').onclick=()=>setMode(exLast);$('#exDrive').onclick=()=>{if(mode==='dig')exSwap()};$('#exDig').onclick=()=>{if(mode==='drive')exSwap()}; $('#modeDrive').onclick=()=>setMode('drive'); $('#modeTruck').onclick=()=>setMode('truck'); $('#modeMow').onclick=()=>setMode('mow'); $('#modeSkid').onclick=()=>setMode('skid'); $('#modeWalk').onclick=()=>setMode('walk');
+$('#modeDig').onclick=()=>setMode(exLast);$('#exDrive').onclick=()=>{if(mode==='dig'||bhIn()&&hvCur().hoe)exSwap()};$('#exDig').onclick=()=>{if(mode==='drive'||bhIn()&&!hvCur().hoe)exSwap()}; $('#modeDrive').onclick=()=>setMode('drive'); $('#modeTruck').onclick=()=>setMode('truck'); $('#modeMow').onclick=()=>setMode('mow'); $('#modeSkid').onclick=()=>setMode('skid'); $('#modeWalk').onclick=()=>setMode('walk');
 $('#camBtn').onclick=()=>{camMode=camMode==='chase'?'cab':'chase';fpReset();$('#camBtn').dataset.cam=camMode};
 // Drive (top right) drops the machine list; picking one, or tapping the scene, closes it
 function showCtl(on){$('#ctlMenu').hidden=!on;$('#ctlBtn').setAttribute('aria-expanded',on)}

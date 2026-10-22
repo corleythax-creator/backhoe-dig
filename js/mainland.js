@@ -213,3 +213,87 @@ function mainLot(K,x,z,w,d,h,col,face,awn){const y=Math.min(baseHeight(x-w/2,z-d
   for(const s of [-1,1])T.box(0.12,2.5,0.12,0x8a8a86,7.5+s*1.9,baseHeight(7.5,568)+1.25,568);
   famAdd(T);
 })();
+
+// ---------- the Lakeside General Store, at the south end of Main Street ----------
+// where the pickups' beds fill up (pickup.js): a brick store with a glass front under a steel canopy, a parking lot in
+// front where Main Street ends, and the garden centre under a shade roof on its west side. It is built physically based:
+// the library's brick, broom-finish concrete, asphalt, corrugated steel and planks with their relief and roughness maps
+// (relief only on High graphics, Material relief: shopPbr), and metal, glass and paint that read as metal, glass and
+// paint. The pictures load the first time the camera comes near (shopLoad, from pickup.js), so the phone downloads them
+// only for a trip to town. SHOP.st: where each kind of stock is taken; pickup.js draws the stock on them
+const SHOP={x:0,z:752,fz:744,lib:[],st:{mulch:[-20.6,746.2],tools:[-4.6,743.3],groc:[4.6,743.2]},loaded:false};
+// a library material: its mean colour until the pictures are in
+function shopLib(id){const d=MAT_LIST.find(m=>m.id===id),m=new THREE.MeshStandardMaterial({color:0xffffff,roughness:0.85,envMap:skyEnv,envMapIntensity:0.5});
+  m.color.setRGB(d.c[0],d.c[1],d.c[2]);m.userData.ft=d.ft;m.userData.lib=id;SHOP.lib.push(m);return m}
+function shopStd(c,metal,rough,o){const m=new THREE.MeshStandardMaterial(Object.assign({color:c,metalness:metal,roughness:rough,envMap:skyEnv},o||{}));m.userData.ft=4;return m}
+function shopLoad(){if(SHOP.loaded)return;SHOP.loaded=true;
+  for(const m of SHOP.lib){const L=k=>{const t=new THREE.TextureLoader().load(`textures/${m.userData.lib}${k}.jpg`);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.anisotropy=4;if(!k)t.colorSpace=THREE.SRGBColorSpace;return t};
+    m.map=L('');m.color.setScalar(1);m.roughness=1;m.userData.n=L('_n');m.userData.r=L('_r');m.needsUpdate=true}
+  shopPbr(SHOP.pbr)}
+// relief and sheen maps on (High graphics) or off
+function shopPbr(on){SHOP.pbr=!!on;if(!SHOP.loaded)return;for(const m of SHOP.lib){m.normalMap=on?m.userData.n:null;m.roughnessMap=on?m.userData.r:null;m.roughness=on?1:0.85;m.needsUpdate=true}}
+// parts merged per material, with texture coordinates in world metres (each material's tile size in feet), so brick
+// courses and concrete joints keep their real size on every part
+function shopKit(){const parts=new Map(),O=new THREE.Object3D(),n=new THREE.Vector3(),a=new THREE.Vector3(),b=new THREE.Vector3();O.rotation.order='YXZ';
+  function put(mat,g,x,y,z,ry,rx){O.position.set(x||0,y||0,z||0);O.rotation.set(rx||0,ry||0,0);O.updateMatrix();
+    if(g.index)g=g.toNonIndexed();g.applyMatrix4(O.matrix);const P=g.attributes.position.array,t=1/(mat.userData.ft*0.3048),uv=new Float32Array(P.length/3*2);
+    for(let i=0;i<P.length;i+=9){a.set(P[i+3]-P[i],P[i+4]-P[i+1],P[i+5]-P[i+2]);b.set(P[i+6]-P[i],P[i+7]-P[i+1],P[i+8]-P[i+2]);n.crossVectors(a,b);
+      const ax=Math.abs(n.x),ay=Math.abs(n.y),az=Math.abs(n.z);
+      for(let k=0;k<3;k++){const q=i+k*3,o=(i/3+k)*2;if(ay>=ax&&ay>=az){uv[o]=P[q]*t;uv[o+1]=P[q+2]*t}else if(ax>=az){uv[o]=P[q+2]*t;uv[o+1]=P[q+1]*t}else{uv[o]=P[q]*t;uv[o+1]=P[q+1]*t}}}
+    g.setAttribute('uv',new THREE.BufferAttribute(uv,2));if(!parts.has(mat))parts.set(mat,[]);parts.get(mat).push(g)}
+  return {put,box:(mat,w,h,d,x,y,z,ry,rx)=>put(mat,new THREE.BoxGeometry(w,h,d),x,y,z,ry,rx),
+    cyl:(mat,r,h,x,y,z)=>put(mat,new THREE.CylinderGeometry(r,r,h,10),x,y,z),
+    // a sheet lying on the ground, lift above it, x0 to x1 by z0 to z1
+    sheet:(mat,x0,x1,z0,z1,lift)=>{const g=new THREE.PlaneGeometry(x1-x0,z1-z0,Math.max(1,Math.round((x1-x0)/2)),Math.max(1,Math.round((z1-z0)/2)));g.rotateX(-Math.PI/2);
+      const p=g.attributes.position;for(let i=0;i<p.count;i++){const x=p.getX(i)+(x0+x1)/2,z=p.getZ(i)+(z0+z1)/2;p.setXYZ(i,x,baseHeight(x,z)+lift,z)}put(mat,g)},
+    add(){for(const [mat,list] of parts){let n=0;for(const g of list)n+=g.attributes.position.count;const P=new Float32Array(n*3),U=new Float32Array(n*2);let o=0;
+      for(const g of list){P.set(g.attributes.position.array,o*3);U.set(g.attributes.uv.array,o*2);o+=g.attributes.position.count;g.dispose()}
+      const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.BufferAttribute(P,3));geo.setAttribute('uv',new THREE.BufferAttribute(U,2));geo.computeVertexNormals();geo.computeBoundingSphere();
+      const m=new THREE.Mesh(geo,mat);m.castShadow=true;m.receiveShadow=true;m.layers.enable(RAIN_LAYER);scene.add(m)}}}}
+(function(){const K=shopKit(),F=famKit(),fz=SHOP.fz,g0=baseHeight(0,fz),fl=g0+0.14,yb=g0-0.5,top=fl+6.2,par=top+0.7,mid=(par+yb)/2,hgt=par-yb;
+  const brick=shopLib('brick'),conc=shopLib('concrete_broom'),asph=shopLib('asphalt'),corr=shopLib('corrugated'),cap=shopLib('concrete'),roof=shopLib('concrete_old'),wood=shopLib('planks');
+  const bronze=shopStd(0x3b3631,0.85,0.35),glass=shopStd(0x18232a,0.25,0.04,{envMapIntensity:1.6}),green=shopStd(0x23402f,0.3,0.45),galv=shopStd(0x9aa0a4,0.9,0.38),
+    paint=shopStd(0xe9e6dc,0,0.75),dark=shopStd(0x2b2d2f,0.2,0.6),pot=shopStd(0x1e1f20,0,0.55);
+  // the store: brick walls with a parapet and its concrete coping, pilasters down the sides, a roll-up door on the east
+  K.box(brick,30,hgt,0.35,0,mid,fz+15.825);for(const s of [-1,1]){K.box(brick,0.35,hgt,16,s*14.825,mid,fz+8);for(const z of [fz+3,fz+8,fz+13])K.box(brick,0.14,hgt,0.6,s*15.07,mid,z)}
+  for(const s of [-1,1])K.box(brick,5,hgt,0.35,s*12.5,mid,fz+0.175);K.box(brick,20,par-fl-3.3,0.35,0,(par+fl+3.3)/2,fz+0.175);K.box(brick,20,fl-yb,0.35,0,(fl+yb)/2,fz+0.175);
+  K.box(roof,29.3,0.2,15.3,0,top,fz+8);K.box(cap,30.3,0.25,0.42,0,fl+3.42,fz+0.12);
+  for(const z of [fz+0.15,fz+15.85])K.box(cap,30.3,0.12,0.5,0,par+0.06,z);for(const s of [-1,1])K.box(cap,0.5,0.12,16.2,s*14.85,par+0.06,fz+8);
+  K.box(corr,3.6,3.8,0.08,15.06,fl+1.9,fz+10,Math.PI/2);K.box(dark,0.12,0.2,3.8,15.07,fl+3.9,fz+10);
+  // the glass front: bronze mullions, a transom, the sliding doors in the middle with their push bars and kick plates
+  K.box(glass,20,3.3,0.04,0,fl+1.65,fz+0.2);
+  for(const x of [-10,-8.75,-6.25,-3.75,-1.25,0,1.25,3.75,6.25,8.75,10])K.box(bronze,0.1,3.3,0.16,x,fl+1.65,fz+0.16);
+  for(const y of [fl+0.06,fl+2.45,fl+3.26])K.box(bronze,20.1,y===fl+0.06?0.12:0.1,0.16,0,y,fz+0.16);
+  for(const s of [-1,1]){K.box(galv,0.9,0.04,0.06,s*0.62,fl+1.05,fz+0.1);K.box(galv,1.1,0.25,0.02,s*0.62,fl+0.14,fz+0.17)}
+  // the canopy over the walk on its posts, lit underneath
+  const cy=fl+3.55;K.box(green,31,0.34,3.9,0,cy+0.17,fz-1.9);K.box(galv,30.8,0.03,3.7,0,cy-0.005,fz-1.9);
+  for(const x of [-14.6,-7.5,7.5,14.6])K.box(green,0.16,cy-g0+0.1,0.16,x,(cy+g0-0.1)/2,fz-3.6);
+  for(const x of [-11,-5.5,0,5.5,11])F.lit(new THREE.BoxGeometry(0.5,0.04,0.5),0xfff1c8,x,cy-0.03,fz-1.9);
+  // the walk in front: broom-finish concrete with its curb; the lot: asphalt with painted stalls, two lamp poles
+  K.sheet(conc,-15.5,15.5,fz-3.8,fz+0.02,0.12);K.box(conc,31,0.3,0.16,0,baseHeight(0,fz-3.8)-0.03,fz-3.8);
+  K.sheet(asph,-27.5,17.5,724.5,fz-3.8,0.04);
+  for(let x=-25.4;x<16;x+=3.2)if(Math.abs(x)>4.2)K.sheet(paint,x-0.06,x+0.06,fz-10.4,fz-4.6,0.055);
+  for(const [x,z] of [[-13,731],[10,731]]){const y=baseHeight(x,z);F.cyl(0.25,0.3,0.6,10,0xa3a19a,x,y+0.3,z);F.cyl(0.08,0.11,8,8,0x3a3d40,x,y+4.3,z);
+    for(const s of [-1,1]){F.box(1.0,0.08,0.08,0x3a3d40,x+s*0.5,y+8.2,z);F.box(0.55,0.14,0.32,0x2f3236,x+s*1.05,y+8.15,z);F.lit(new THREE.BoxGeometry(0.45,0.03,0.24),0xfff1c8,x+s*1.05,y+8.07,z)}
+    SOLIDS.push({x,z,hx:0.3,hz:0.3})}
+  // the garden centre: a concrete pad under a shade roof of corrugated steel on galvanized posts, two pallets of bagged
+  // mulch, and benches of potted shrubs along the back
+  const gy=baseHeight(-21,749)+3.4;K.sheet(conc,-27.4,-15.2,fz-3.8,fz+14.2,0.07);
+  K.box(corr,11.6,0.05,17.6,-21.3,gy,fz+5.2);for(const z of [fz-3.7,fz+14])K.box(green,11.8,0.28,0.1,-21.3,gy-0.08,z);K.box(green,0.1,0.28,17.8,-27.15,gy-0.08,fz+5.2);
+  for(const x of [-26.9,-21.3,-15.7])for(const z of [fz-3.4,fz+5.2,fz+13.7]){if(x===-15.7&&z>fz)continue;const y=baseHeight(x,z);K.cyl(galv,0.06,gy-y,x,(gy+y)/2,z);SOLIDS.push({x,z,hx:0.1,hz:0.1})}
+  for(const px of [-21.9,-19.3]){const y=baseHeight(px,fz+2.2)+0.07;for(const dz of [-0.45,0,0.45])K.box(wood,1.2,0.1,0.14,px,y+0.05,fz+2.2+dz);for(let dx=-0.52;dx<0.6;dx+=0.26)K.box(wood,0.12,0.03,1.0,px+dx,y+0.115,fz+2.2)}
+  SOLIDS.push({x:-20.6,z:fz+2.2,hx:1.35,hz:0.55});
+  for(let i=0;i<9;i++){const x=-26.2,z=fz+5.6+i*0.95,y=baseHeight(x,z)+0.07;if(i===0)K.box(wood,1.0,0.06,8.8,x,y+0.62,fz+9.4);
+    for(const lx of [-0.28,0.24]){const r=0.16+0.04*((i+lx*3)%2);K.put(pot,new THREE.CylinderGeometry(r,r*0.8,r*1.5,12),x+lx,y+0.65+r*0.75,z);
+      F.geo(new THREE.IcosahedronGeometry(r*1.5,1),[0x3d6b2f,0x4f7a36,0x2f5a2a][(i+(lx>0?1:0))%3],x+lx,y+0.65+r*1.5+r*1.1,z,i)}}
+  for(const z of [fz+5.4,fz+13.4])K.box(galv,0.06,0.6,0.06,-26.2,baseHeight(-26.2,z)+0.37,z);SOLIDS.push({x:-26.2,z:fz+9.4,hx:0.55,hz:4.5});
+  // by the doors: a steel shelf of toolboxes and a stand of groceries
+  {const [x,z]=SHOP.st.tools,y=baseHeight(x,z)+0.12;for(const s of [-1,1])K.box(galv,0.05,1.8,0.5,x+s*0.92,y+0.9,z);K.box(dark,1.85,1.7,0.03,x,y+0.95,z+0.24);
+    for(const h of [0.12,0.62,1.12])K.box(galv,1.85,0.03,0.5,x,y+h,z);SOLIDS.push({x,z,hx:0.95,hz:0.3})}
+  {const [x,z]=SHOP.st.groc,y=baseHeight(x,z)+0.12;K.box(wood,1.95,0.05,0.8,x,y+0.8,z);for(const s of [-1,1])for(const t of [-1,1])K.box(dark,0.05,0.8,0.05,x+s*0.92,y+0.4,z+t*0.35);
+    SOLIDS.push({x,z,hx:1.0,hz:0.45})}
+  SOLIDS.push({x:0,z:fz+8,hx:15.1,hz:8.1});
+  K.add();famAdd(F);
+  famSign(['LAKESIDE GENERAL STORE','Garden · Hardware · Groceries'],13,2.1,0,fl+5.05,fz-0.03,Math.PI,'#23402f','#f1ead8');
+  famSign(['GARDEN CENTER','Mulch · Soil · Plants'],4.6,1.3,-21.3,gy+0.85,fz-3.78,Math.PI,'#23402f','#f1ead8');
+  SHOP.y=fl})();

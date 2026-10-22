@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-22T03:28:00Z",
+ "updated": "2026-10-22T22:13:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -45,6 +45,12 @@ window.EFFORT = {
    "dh": 80.5,
    "act": 4,
    "versions": 12
+  },
+  {
+   "d": "2026-10-22",
+   "dh": 57,
+   "act": 1.5,
+   "versions": 4
   }
  ],
  "extra": [
@@ -1809,6 +1815,42 @@ window.EFFORT = {
    "tris": 5162523,
    "chars": 1197434,
    "what": "Ten fixes to what's there: Space no longer flips the wipers on foot; a second finger can't freeze a held stick and keys can't stick after Cmd on a Mac; switching to Walk with no room to climb out keeps you in the machine; an idle device no longer makes the other one reload through sync; a map edit is saved even if you leave within a second; water, puddles, soaking and settling heaps run the same on a slow phone as on a PC; puddles no longer fill and dry twice along mud-tile seams; less stutter from the mud loop; lighter clouds on Low; faster loading with no console spam from the machine models; and the dig site test's Lower Bench cut moved off the bridge end so it passes"
+  },
+  {
+   "v": 196,
+   "asked": "2026-10-22T20:50:00-05:00",
+   "live": "2026-10-22T16:24:25-05:00",
+   "dh": 11,
+   "tris": 5162261,
+   "chars": 1213205,
+   "what": "Take out the string trimmer on foot (9) to weed-eat where the mower can't reach, and bump out more line (0) as it wears; footsteps now squelch through mud and knock hollow on the bridge decks and docks."
+  },
+  {
+   "v": 197,
+   "asked": "2026-10-22T20:50:00-05:00",
+   "live": "2026-10-22T16:45:26-05:00",
+   "dh": 12,
+   "tris": 4637679,
+   "chars": 1232370,
+   "what": "Bucket angle matters: teeth into the cut fill the bucket, dragging it flat only skims. Quick coupler: set the bucket down (.) and pick up a thumb to carry blocks, a hammer to break rock, or an auger to bore holes."
+  },
+  {
+   "v": 198,
+   "asked": "2026-10-22T20:50:00-05:00",
+   "live": "2026-10-22T17:05:34-05:00",
+   "dh": 20,
+   "tris": 5201322,
+   "chars": 1251284,
+   "what": "Corley's backhoe is here at the end of his machine row: drive it on four wheels, scoop with the loader, then swing the seat round (Drive / Dig), drop the outriggers and dig with the hoe."
+  },
+  {
+   "v": 199,
+   "asked": "2026-10-22T20:50:00-05:00",
+   "live": "2026-10-22T17:13:40-05:00",
+   "dh": 14,
+   "tris": 5239637,
+   "chars": 1282302,
+   "what": "Drive a pickup to the new Lakeside General Store in town for mulch, tools and groceries; carry them (T on foot) into the bed, where they slide if you brake hard, and spread the mulch at home."
   }
  ]
 };

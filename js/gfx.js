@@ -15,9 +15,9 @@
 // drawn (brush.js), skyLight shade and reflections coloured by the sky as it is, shSoft contact-hardening sun shadows,
 // wetDrops beads and runs of rain on the machines, wetGround soaked ground mirroring the sky (all four Ultra, post.js)
 const GFX={
-  low:{name:'Low',pr:1.5,auto:true,fps:0,fov:0,sh:1024,shR:22,soft:false,filmic:false,exp:1,tex:'low',detail:0,base:1,macro:false,pbr:false,aniso:4,dirt:1,lawnFar:6,fog:1,wmFine:false,cloudQ:0,rainN:600,rainSp:160,splashN:250,wakeN:140,brush:0.35,model:false,ao:false,bloom:false,grade:false,skyLight:false,shSoft:false,wetDrops:false,wetGround:false,treeR:45,tuftQ:0,tuft:[0.6,12,40,0.2]},
-  med:{name:'Medium',pr:1.5,auto:true,fps:0,fov:0,sh:2048,shR:32,soft:false,filmic:true,exp:1,tex:'med',detail:1,base:1,macro:false,pbr:false,aniso:8,dirt:2,lawnFar:15,fog:1,wmFine:true,cloudQ:1,rainN:1500,rainSp:400,splashN:600,wakeN:300,brush:0.7,model:true,ao:false,bloom:false,grade:false,skyLight:false,shSoft:false,wetDrops:false,wetGround:false,treeR:90,tuftQ:0,tuft:[0.85,18,60,0.3]},
-  high:{name:'High',pr:2,auto:true,fps:0,fov:0,sh:4096,shR:45,soft:true,filmic:true,exp:1,tex:'high',detail:1,base:1,macro:true,pbr:true,aniso:16,dirt:4,lawnFar:1e9,fog:1,wmFine:true,cloudQ:1,rainN:3000,rainSp:900,splashN:1200,wakeN:640,brush:1,model:true,ao:false,bloom:false,grade:false,skyLight:false,shSoft:false,wetDrops:false,wetGround:false,treeR:160,tuftQ:2,tuft:[1,25,80,0.35]}};
+  low:{name:'Low',trimClips:1,pr:1.5,auto:true,fps:0,fov:0,sh:1024,shR:22,soft:false,filmic:false,exp:1,tex:'low',detail:0,base:1,macro:false,pbr:false,aniso:4,dirt:1,lawnFar:6,fog:1,wmFine:false,cloudQ:0,rainN:600,rainSp:160,splashN:250,wakeN:140,brush:0.35,model:false,ao:false,bloom:false,grade:false,skyLight:false,shSoft:false,wetDrops:false,wetGround:false,treeR:45,tuftQ:0,tuft:[0.6,12,40,0.2]},
+  med:{name:'Medium',trimClips:2,pr:1.5,auto:true,fps:0,fov:0,sh:2048,shR:32,soft:false,filmic:true,exp:1,tex:'med',detail:1,base:1,macro:false,pbr:false,aniso:8,dirt:2,lawnFar:15,fog:1,wmFine:true,cloudQ:1,rainN:1500,rainSp:400,splashN:600,wakeN:300,brush:0.7,model:true,ao:false,bloom:false,grade:false,skyLight:false,shSoft:false,wetDrops:false,wetGround:false,treeR:90,tuftQ:0,tuft:[0.85,18,60,0.3]},
+  high:{name:'High',trimClips:4,pr:2,auto:true,fps:0,fov:0,sh:4096,shR:45,soft:true,filmic:true,exp:1,tex:'high',detail:1,base:1,macro:true,pbr:true,aniso:16,dirt:4,lawnFar:1e9,fog:1,wmFine:true,cloudQ:1,rainN:3000,rainSp:900,splashN:1200,wakeN:640,brush:1,model:true,ao:false,bloom:false,grade:false,skyLight:false,shSoft:false,wetDrops:false,wetGround:false,treeR:160,tuftQ:2,tuft:[1,25,80,0.35]}};
 // Ultra: High with the screen effects (post.js) and trees in full detail farther out; for strong PC graphics only, never
 // picked by itself
 GFX.ultra=Object.assign({},GFX.high,{name:'Ultra',tuftQ:3,ao:true,bloom:true,grade:true,treeR:220,skyLight:true,shSoft:true,wetDrops:true,wetGround:true});
@@ -56,7 +56,7 @@ function gfxApply(){const g=gfxCur=Object.assign({},GFX[gfxKey],gfxOver);
     scene.traverse(o=>{if(o.material)for(const m of [].concat(o.material))m.needsUpdate=true})}
   renderer.toneMappingExposure=te;
   // ground detail: the cut-face detail, material library and machine grime (detail), and the grass and dirt textures (base)
-  gfxDetail=g.detail;gfxBase=g.base;matU.texPbr.value=g.pbr?1:0;treePbr(g.pbr);
+  gfxDetail=g.detail;gfxBase=g.base;matU.texPbr.value=g.pbr?1:0;treePbr(g.pbr);shopPbr(g.pbr);
   // trees drawn with the full model out to this distance, the light one beyond (trees.js)
   if(treeNearR!==g.treeR){treeNearR=g.treeR;treeLodDirty=true}if(texOn){texMixU.value=gfxDetail;texBaseU.value=gfxBase;matTexUpdate()}
   // the ground pack's size, its filtering and the large-scale variation map (terrain.js)

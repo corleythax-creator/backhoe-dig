@@ -51,8 +51,8 @@ function frame(now){
   if(bench.on){benchTick(dt);driveIn=0;turnIn=0;tThr=0;tSteer=0;tBed=0;mL=0;mR=0}
   updateTruck(dt,tThr,tSteer,tBed);updateMower(dt,mL,mR);if(bench.on){sDrive=sTurn=sArm=sCurl=0}updateSkid(dt,sDrive,sTurn,sArm,sCurl);
   siteTick();
-  if(mode==='walk'&&!bench.on)updateWalker(dt,Lx,Ly,Rx*Ts,Ry);else updateWalker(dt,0,0,0,0);
-  boatTick(dt,bThr,bSteer);lakeBoatsTick(dt);bikeTick(dt,kThr,kSteer);hvTick(dt,hDrive,hTurn,hArm,hCurl);twinTick();
+  if(mode==='walk'&&!bench.on)updateWalker(dt,Lx,Ly,Rx*Ts,Ry);else updateWalker(dt,0,0,0,0);trimTick(dt);
+  boatTick(dt,bThr,bSteer);lakeBoatsTick(dt);bikeTick(dt,kThr,kSteer);hvTick(dt,hDrive,hTurn,hArm,hCurl);pbTick(dt);twinTick();
   statTick(dt);
   // what the mixer hears: hydraulic demand, a ram pushed against its stop (relief valve), tracks moving
   {const end=(v,l,i)=>(i>0.1&&v>=l[1]-1e-4)||(i<-0.1&&v<=l[0]+1e-4);
@@ -93,7 +93,7 @@ function frame(now){
   boomP.rotation.x=-st.a1; stickP.rotation.x=-st.a2; bucketP.rotation.x=-st.a3;
   machine.updateMatrixWorld(true); updateLinkage(); jointJ.updateMatrixWorld(); updateRams(); updateHoses();
   tipMark.getWorldPosition(tip); midMark.getWorldPosition(mid); bucketP.getWorldQuaternion(q);
-  updateBox(dt);blkTick(dt);
+  updateBox(dt);cplTick(dt);blkTick(dt);
 
   // dig
   const g=hAt(tip.x,tip.z);
@@ -102,12 +102,17 @@ function frame(now){
   {const ti=Math.max(0,Math.min(N,Math.round(gI(tip.x)))),tj=Math.max(0,Math.min(N,Math.round(gJ(tip.z))));
     st.soil=st.below?matAt(tj*V+ti,tip.y):-1;
     st.res=st.soil<0?1:soilRes(tj*V+ti,tip.y)*(st.load>=TU.exCap-0.002?0.5:1);
+    // the hammer and the auger get through hard ground faster; a bare coupler or the thumb hardly goes in (coupler.js)
+    if(st.soil>=0)st.res=cplRes(st.res);
     if(st.soil===2&&!st.seenSand){st.seenSand=true;toast(say('sand'),'',3200)}
     if(st.soil===3&&!st.seenRock){st.seenRock=true;toast(say('rock'),'',3000)}
     st.rumT-=dt;if(padUsed&&st.soil>=0&&st.rumT<=0&&(Math.abs(swingIn)+Math.abs(stickIn)+Math.abs(boomIn)+Math.abs(bucketIn))>0.1){st.rumT=0.12;rumble(140,0.15+0.55*(1-SOIL[st.soil].h))}}
   if(st.below&&!bench.on){
-    if(st.load<TU.exCap-0.002){
-      const got=dig(tip,TU.exCap-st.load);
+    // another attachment on the coupler works the ground its own way (coupler.js)
+    if(cpl.fit!=='bucket')cplWork(dt);
+    // the bucket cuts as deep as its teeth only with them leading; dragged flat it skims (bkCut)
+    else if(st.load<TU.exCap-0.002){
+      const got=dig(bkCut(g,dt),TU.exCap-st.load);
       if(got>0){const f=got/(st.load+got);for(let q=0;q<3;q++)st.loadC[q]+=(digC[q]-st.loadC[q])*f;for(let q=0;q<4;q++)st.loadMix[q]+=(digMix[q]-st.loadMix[q])*f;
         st.loadWet+=((underWater(tip)?1:mudAt(tip.x,tip.z))-st.loadWet)*f;
         st.load+=got;statDug(got);st.dirty=true;st.slumpT=2.5;if(Math.random()<0.5)spawn(tip.clone().setY(g+0.05),1.2)}
@@ -194,10 +199,10 @@ function frame(now){
     $('#haulVal').textContent=(mode==='truck'?`${Math.round(Math.abs(tr.v)*2.237)} mph · ${tr.shiftT>0?'N':tr.gear>0?'D':'R'} · `:'')+`Hauled ${(tr.hauled*1.308).toFixed(1)} yd³`;
     // in Mow mode the lawn takes the bucket's place, so the card keeps its height
     lawnsTick(dt);
-    {const lr=$('#lawnRow'),show=mode==='mow';if(lr.hidden===show){lr.hidden=!show;$('#bucketPanel').hidden=show}
+    {const lr=$('#lawnRow'),show=mode==='mow'||mode==='walk'&&trim.on;if(lr.hidden===show){lr.hidden=!show;$('#bucketPanel').hidden=show}
       if(show){const lp=Math.floor(lawnPct()*100),ls=lawn.startT?Math.round(((lawn.done?lawn.doneT:now)-lawn.startT)/1000):0;
         $('#lawnVal').textContent=`${lp}% · ${Math.floor(ls/60)}:${String(ls%60).padStart(2,'0')}`;$('#lawnBar i').style.width=lp+'%';
-        $('#mowVal').textContent=`${(Math.abs(mw.v)*2.237).toFixed(1)} mph · blades ${mw.load>0.2?'cutting':'on'}`}}
+        $('#mowVal').textContent=mode==='mow'?`${(Math.abs(mw.v)*2.237).toFixed(1)} mph · blades ${mw.load>0.2?'cutting':'on'}`:`Trimmer line ${trimIn(trim.line)} in · spool ${Math.round(trim.spool/0.3048)} ft${trim.line<TU.trimMin?' · bump it':''}`}}
     const gv=$('#gasVal');
     gv.textContent=st.strikes?`Gas main: ${st.strikes} strike${st.strikes>1?'s':''}`:st.exposed?'Gas main: exposed ✓':'Gas main: buried';
     gv.style.color=st.strikes?'var(--danger)':st.exposed?'var(--ok)':'';
@@ -218,7 +223,7 @@ function frame(now){
     if(mode==='truck'){look.set(tr.x,tr.y+1.6,tr.z);cyaw=tr.yaw+Math.PI+orbitYaw;cd=camDist+3}
     else if(mode==='skid'){look.set(sk.x+Math.sin(sk.yaw)*1.2,sk.y+1.0,sk.z+Math.cos(sk.yaw)*1.2);cyaw=sk.yaw+Math.PI+orbitYaw;cd=camDist*0.7}
     else if(mode==='boat'){const b=btCur();look.set(b.x+Math.sin(b.yaw)*0.8,b.y+1.0,b.z+Math.cos(b.yaw)*0.8);cyaw=b.yaw+Math.PI+orbitYaw;cd=camDist*0.85}
-    else if(mode==='heavy'){const h=hvCur();look.set(h.x+Math.sin(h.yaw)*1.0,h.y+1.6,h.z+Math.cos(h.yaw)*1.0);cyaw=h.yaw+Math.PI+orbitYaw;cd=camDist*h.K.cam}
+    else if(mode==='heavy'){const h=hvCur(),f=h.K.hoe?h.camF:1;look.set(h.x+Math.sin(h.yaw)*f,h.y+1.6,h.z+Math.cos(h.yaw)*f);cyaw=h.yaw+Math.PI+orbitYaw+(h.K.hoe?h.camO:0);cd=camDist*h.K.cam}
     else if(mode==='bike'){look.set(bk.x+Math.sin(bk.yaw)*0.6,bk.y+1.0,bk.z+Math.cos(bk.yaw)*0.6);cyaw=bk.yaw+Math.PI+orbitYaw;cd=camDist*0.55}
     else if(mode==='mow'){look.set(mw.x+Math.sin(mw.yaw)*0.8,mw.y+0.7,mw.z+Math.cos(mw.yaw)*0.8);cyaw=mw.yaw+Math.PI+orbitYaw;cd=camDist*0.6}
     else if(mode==='walk'){look.set(wk.x,wk.y+1.35,wk.z);cyaw=wk.view+Math.PI+orbitYaw;cd=camDist*0.5;
@@ -234,7 +239,7 @@ function frame(now){
     if(mode==='truck')fpEye(sprung,-0.55,1.6,1.95,0.25,-1,12.05);
     else if(mode==='skid')fpEye(skid,0,1.72,0.0,0,-0.9,4.5);
     else if(mode==='boat')fpEye(btCur().g,0,1.62,-0.47,0,-1.1,8);
-    else if(mode==='heavy')fpEye(hvCur().g,...hvCur().K.eye);
+    else if(mode==='heavy')fpEye(hvCur().g,...(hvCur().eye||hvCur().K.eye));
     else if(mode==='bike')fpEye(bike,0,1.62-bk.comp,-0.12,0,-0.35,1);
     else if(mode==='mow')fpEye(mower,0,1.42,0.02,0,-1.32,4.48);
     else if(mode==='walk'){const p=fpl.pitch,fx=Math.sin(wk.view),fz=Math.cos(wk.view);camera.position.set(wk.x+fx*0.1,wk.y+WK_H-0.12+wkBody.position.y,wk.z+fz*0.1);

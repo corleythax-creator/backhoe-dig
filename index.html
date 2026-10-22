@@ -45,6 +45,8 @@
       <button id="pumpBtn" hidden aria-pressed="false">Pump</button>
       <button id="wipeBtn" hidden aria-pressed="false">Wipers</button>
       <button id="boxBtn" hidden>Hook box</button>
+      <button id="cplBtn" hidden>Coupler</button>
+      <button id="gripBtn" hidden aria-pressed="false">Grip</button>
       <button id="blkBtn" class="ib" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9zM12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg><span>Blocks</span></button>
       <button id="ctlBtn" class="ib" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="2"/><path d="M3.5 12H10M14 12h6.5M12 14v6.5"/></svg><span>Drive</span></button>
       <button id="camBtn" data-cam="chase" aria-label="Camera: chase or cab view"><span id="camChase">Chase</span><span id="camCab">Cab</span></button>
@@ -112,7 +114,7 @@
     </div>
     <div class="stickwrap">
       <div class="exswitch" id="exSwitch" role="group" aria-label="Excavator: drive or dig"><button id="exDrive" aria-pressed="false">Drive</button><button id="exDig" aria-pressed="true">Dig</button></div>
-      <div class="walkbtns" id="walkBtns" hidden><button id="sprintBtn" aria-pressed="false">Sprint</button><button id="jumpBtn">Jump</button><button id="plantBtn">Plant</button></div>
+      <div class="walkbtns" id="walkBtns" hidden><button id="sprintBtn" aria-pressed="false">Sprint</button><button id="jumpBtn">Jump</button><button id="plantBtn">Plant</button><button id="trimBtn" aria-pressed="false">Trimmer</button><button id="bumpBtn" hidden>Bump</button><button id="bedBtn" hidden>Load</button></div>
       <div class="stick" id="stickR"><div class="knob"></div></div>
     </div>
   </div>
@@ -378,6 +380,7 @@
       <dt id="hkDexterSIsland">Dexter's Island</dt><dd id="hdDexterSIsland">Drive west from the Family Island's roundabout over the wide yellow haul bridge (any machine, or on foot) to Dexter's gravel yard: his equipment shed, the office trailer, the diesel tank, a skid steer, a dozer, a wheel loader and a semi with a lowboy trailer parked in the yard, light towers, a cone course to weave through and dirt piles to climb. All of his machines drive: see Skid steer, and Dozer, loader and semi.</dd>
       <dt id="hkSkidSteer">Skid steer</dt><dd id="hdSkidSteer">Dexter's skid steer starts parked in his yard. Tap Skid (or press 6), or walk up to it and tap Get in. Left stick drives: push to go, pull to back up, sideways to turn, and it spins in place. Right stick runs the loader: up lowers the arms, down raises them, left curls the bucket back and right dumps it; the bucket stays level as the arms go up. Drive it over the bridges to the dig site and it scoops dirt with the bucket down on the ground, then dumps it in a pile, over the cliff, or into the dump truck's bed. The status card shows its load, speed and how deep the bucket edge is.</dd>
       <dt id="hkDextersMachines">Dozer, loader and semi</dt><dd id="hdDextersMachines">Dexter's dozer, wheel loader and red semi are parked in his yard; walk up to one and tap Get in. The left stick drives and steers each. In the dozer the right stick up and down lowers and raises the blade: blade down on the dig site, it shaves the ground and shoves the dirt ahead of it. Right stick left and right raises and lowers the ripper at the back: drag it through hard clay or rock and the ground breaks up, so the blade (and the excavator) dig it like loose fill. In the loader it lowers and raises the arms and curls and dumps the bucket, which scoops on the dig site and loads the dump truck. The semi's lowboy trailer follows behind, so swing wide on the turns.</dd>
+      <dt id="hkBackhoe">Backhoe</dt><dd id="hdBackhoe">Corley's backhoe loader is parked at the end of his row of machines on the mesa's east lawn, facing the dig; walk up to it and tap Get in. At the wheel the left stick drives on four wheels and steers the fronts, and the right stick runs the loader bucket up front: up and down lowers and raises the arms, left curls it to scoop, right dumps. Tap Dig (or press Enter) to swivel the seat round to the hoe: the outriggers come down and level the machine, and the sticks run the hoe as the excavator's arm (left swings and reaches the stick out and in, right lowers and raises the boom, curls and dumps the bucket). It digs the dig site and loads the dump truck. Semicolon raises or lowers the outriggers; tap Drive to turn back to the wheel, and they come up. It won't drive with them down.</dd>
       <dt id="hkJessicaSIsland">Jessica's Island</dt><dd id="hdJessicaSIsland">Walk east from the Family Island's roundabout and over the red covered bridge (on foot only; machines stay behind). Lantern-lit paths wind through the forest to a stone cottage with a herb garden and a bench at the cliff edge. Step inside: the roof lifts off so you can look down into the library, with shelves to the ceiling, a rolling ladder, armchairs by the fire and a cat asleep on the window seat. Cab view walks you around at eye level.</dd>
       <dt id="hkStats">Stats</dt><dd id="hdStats">☰ then Stats (or O) shows everything you've done: grass mowed, lawns finished and your best time, distance walked, sprinted and driven in each machine, jumps, dirt dug and hauled, time in each machine and top speeds. It also counts your trees: how many of each species, their ages (worked out from their real size with a forestry growth curve), trunks, shade, wood and carbon held, plus a Tree guide of age by height for every species. Its lawn heatmap shows how many times each spot has been cut, how far the grass has grown back, or the way it was last mowed; turn it on to see it over the lawn itself (U, press again to change what it shows). Tap the key at the top of the screen to switch what it shows.</dd>
       <dt id="hkLook">Look</dt><dd id="hdLook">Drag the scene to look around.</dd>
@@ -415,6 +418,7 @@
 <script defer src="js/excavator.js"></script>
 <script defer src="js/truck.js"></script>
 <script defer src="js/trenchbox.js"></script>
+<script defer src="js/coupler.js"></script>
 <script defer src="js/dirt.js"></script>
 <script defer src="js/water.js"></script>
 <script defer src="js/mud.js"></script>
@@ -434,7 +438,10 @@
 <script defer src="js/lakeboats.js"></script>
 <script defer src="js/bike.js"></script>
 <script defer src="js/heavy.js"></script>
+<script defer src="js/backhoe.js"></script>
+<script defer src="js/pickup.js"></script>
 <script defer src="js/plant.js"></script>
+<script defer src="js/trimmer.js"></script>
 <script defer src="js/lawns.js"></script>
 <script defer src="js/stats.js"></script>
 <script defer src="js/keys.js"></script>
