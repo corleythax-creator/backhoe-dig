@@ -13,14 +13,14 @@
 // water, cloudQ the clouds' fine billows (0 off: half the sky's noise), treeR full-detail tree distance m, rainN raindrops, rainSp splashes where they land, splashN drops in a puddle splash, wakeN boat wake marks drawn, dirt the Dirt detail it sets when picked,
 // ao bloom grade the screen effects (post.js), model the detailed machine models (models.js), brush the share of undergrowth
 // drawn (brush.js), skyLight shade and reflections coloured by the sky as it is, shSoft contact-hardening sun shadows,
-// wetDrops beads and runs of rain on the machines (all three Ultra, post.js)
+// wetDrops beads and runs of rain on the machines, wetGround soaked ground mirroring the sky (all four Ultra, post.js)
 const GFX={
-  low:{name:'Low',pr:1.5,auto:true,fps:0,fov:0,sh:1024,shR:22,soft:false,filmic:false,exp:1,tex:'low',detail:0,base:1,macro:false,pbr:false,aniso:4,dirt:1,lawnFar:6,fog:1,wmFine:false,cloudQ:0,rainN:600,rainSp:160,splashN:250,wakeN:140,brush:0.35,model:false,ao:false,bloom:false,grade:false,skyLight:false,shSoft:false,wetDrops:false,treeR:45,tuftQ:0,tuft:[0.6,12,40,0.2]},
-  med:{name:'Medium',pr:1.5,auto:true,fps:0,fov:0,sh:2048,shR:32,soft:false,filmic:true,exp:1,tex:'med',detail:1,base:1,macro:false,pbr:false,aniso:8,dirt:2,lawnFar:15,fog:1,wmFine:true,cloudQ:1,rainN:1500,rainSp:400,splashN:600,wakeN:300,brush:0.7,model:true,ao:false,bloom:false,grade:false,skyLight:false,shSoft:false,wetDrops:false,treeR:90,tuftQ:0,tuft:[0.85,18,60,0.3]},
-  high:{name:'High',pr:2,auto:true,fps:0,fov:0,sh:4096,shR:45,soft:true,filmic:true,exp:1,tex:'high',detail:1,base:1,macro:true,pbr:true,aniso:16,dirt:4,lawnFar:1e9,fog:1,wmFine:true,cloudQ:1,rainN:3000,rainSp:900,splashN:1200,wakeN:640,brush:1,model:true,ao:false,bloom:false,grade:false,skyLight:false,shSoft:false,wetDrops:false,treeR:160,tuftQ:2,tuft:[1,25,80,0.35]}};
+  low:{name:'Low',pr:1.5,auto:true,fps:0,fov:0,sh:1024,shR:22,soft:false,filmic:false,exp:1,tex:'low',detail:0,base:1,macro:false,pbr:false,aniso:4,dirt:1,lawnFar:6,fog:1,wmFine:false,cloudQ:0,rainN:600,rainSp:160,splashN:250,wakeN:140,brush:0.35,model:false,ao:false,bloom:false,grade:false,skyLight:false,shSoft:false,wetDrops:false,wetGround:false,treeR:45,tuftQ:0,tuft:[0.6,12,40,0.2]},
+  med:{name:'Medium',pr:1.5,auto:true,fps:0,fov:0,sh:2048,shR:32,soft:false,filmic:true,exp:1,tex:'med',detail:1,base:1,macro:false,pbr:false,aniso:8,dirt:2,lawnFar:15,fog:1,wmFine:true,cloudQ:1,rainN:1500,rainSp:400,splashN:600,wakeN:300,brush:0.7,model:true,ao:false,bloom:false,grade:false,skyLight:false,shSoft:false,wetDrops:false,wetGround:false,treeR:90,tuftQ:0,tuft:[0.85,18,60,0.3]},
+  high:{name:'High',pr:2,auto:true,fps:0,fov:0,sh:4096,shR:45,soft:true,filmic:true,exp:1,tex:'high',detail:1,base:1,macro:true,pbr:true,aniso:16,dirt:4,lawnFar:1e9,fog:1,wmFine:true,cloudQ:1,rainN:3000,rainSp:900,splashN:1200,wakeN:640,brush:1,model:true,ao:false,bloom:false,grade:false,skyLight:false,shSoft:false,wetDrops:false,wetGround:false,treeR:160,tuftQ:2,tuft:[1,25,80,0.35]}};
 // Ultra: High with the screen effects (post.js) and trees in full detail farther out; for strong PC graphics only, never
 // picked by itself
-GFX.ultra=Object.assign({},GFX.high,{name:'Ultra',tuftQ:3,ao:true,bloom:true,grade:true,treeR:220,skyLight:true,shSoft:true,wetDrops:true});
+GFX.ultra=Object.assign({},GFX.high,{name:'Ultra',tuftQ:3,ao:true,bloom:true,grade:true,treeR:220,skyLight:true,shSoft:true,wetDrops:true,wetGround:true});
 // VR through a PC: the eye buffer drawn larger than the headset's own and scaled down (supersampling), for sharper edges
 // and fine detail; only the levels for strong graphics do it
 GFX.low.vrSS=GFX.med.vrSS=1;GFX.high.vrSS=1.25;GFX.ultra.vrSS=1.4;
@@ -67,7 +67,7 @@ function gfxApply(){const g=gfxCur=Object.assign({},GFX[gfxKey],gfxOver);
   // the screen effects: shade where things meet, glow, colour grade (post.js)
   postGfx(g.ao,g.bloom,g.grade);
   // sky lighting, soft sun shadows and rain on the machines (post.js)
-  ultraGfx(g.skyLight,g.shSoft&&g.sh>0,g.wetDrops);
+  ultraGfx(g.skyLight,g.shSoft&&g.sh>0,g.wetDrops,g.wetGround);
   // machine models: the detailed one from its file, or the simple shapes (models.js)
   mdlGfx(g.model);
   // undergrowth round the trees (brush.js)
@@ -138,6 +138,7 @@ const GFX_ROWS=[
   {id:'rainN',label:'Raindrops',opts:[[0,'Off'],[600,'600'],[1500,'1500'],[3000,'3000'],[6000,'6000']]},
   {id:'rainSp',label:'Rain splashes',hint:'Spray and spreading rings where the drops land near you.',opts:[[0,'Off'],[160,'160'],[400,'400'],[900,'900'],[1800,'1800']]},
   {id:'wetDrops',label:'Rain on machines',hint:'Beads of water on the machines\' paint and glass, running down the sides while it rains.',opts:onOff},
+  {id:'wetGround',label:'Wet ground shine',hint:'Soaked dirt and mud shine with a film of water that mirrors the sky, most at a slant.',opts:onOff},
   {id:'splashN',label:'Puddle splash',opts:[[0,'Off'],[250,'250'],[600,'600'],[1200,'1200'],[2400,'2400']]},
   {id:'wakeN',label:'Boat wakes',opts:[[0,'Off'],[140,'140'],[300,'300'],[640,'640']]}];
 function camFovBase(){return innerWidth<innerHeight?68:58}

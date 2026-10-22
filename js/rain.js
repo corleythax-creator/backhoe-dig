@@ -287,7 +287,7 @@ const wetAllU={value:0};let wetAll=0;
 // rain on the machines (Ultra, gfx.js wetDrops, set by post.js): the physically based materials (the detailed machines'
 // paint, steel, glass and rubber, models.js) also get beads of water on their tops and drops running down their sides,
 // placed in the part's own frame so they ride along with it. They show as it gets wet and go as it dries; the runs move
-// only while it rains (wetDropT). Drawn within about 70 ft. Only how it looks
+// only while it rains (wetDropT). Drawn within about 45 ft. Only how it looks
 let wetDropsOn=false;const wetDropU={value:0},wetDropT={value:0};
 const WET_DROP_GLSL='uniform float uDrops,uDropT;varying vec3 vDropP,vDropN;\n'+
   'vec2 wdH(vec2 c){return fract(sin(vec2(dot(c,vec2(127.1,311.7)),dot(c,vec2(269.5,183.3))))*43758.5453);}\n'+
@@ -301,11 +301,11 @@ const WET_DROP_GLSL='uniform float uDrops,uDropT;varying vec3 vDropP,vDropN;\n'+
   // the normal tilted by a height field (from its slope on the screen)
   'vec3 wdBump(vec3 n,float h,vec3 pos){vec3 dx=dFdx(pos),dy=dFdy(pos);float hx=dFdx(h),hy=dFdy(h);vec3 r1=cross(dy,n),r2=cross(n,dx);float det=dot(dx,r1);\n'+
   ' return normalize(abs(det)*n-sign(det)*(hx*r1+hy*r2));}\n';
-const WET_DROP_FS='float wD=0.0;{float fd=uDrops*smoothstep(0.08,0.4,uWetAll)*(1.0-smoothstep(8.0,22.0,length(vViewPosition)));\n'+
+const WET_DROP_FS='float wD=0.0;{float fd=uDrops*smoothstep(0.08,0.4,uWetAll)*(1.0-smoothstep(4.0,14.0,length(vViewPosition)));\n'+
   ' if(fd>0.001){float up=inverseTransformDirection(normal,viewMatrix).y,hg=0.0,top=smoothstep(0.35,0.75,up),sd=1.0-smoothstep(0.35,0.75,abs(up));\n'+
   '  vec3 an=abs(vDropN);vec2 sp=vec2(an.x>an.z?vDropP.z:vDropP.x,vDropP.y);\n'+
-  '  if(top>0.0)hg=max(wdBead(vDropP.xz*28.0,0.6*min(uDrops,1.5)),wdBead(vDropP.xz*13.0+17.0,0.3*min(uDrops,2.0)))*top;\n'+
-  '  if(sd>0.0)hg=max(hg,max(wdRun(sp,uDropT)*min(uDrops,1.0),0.8*wdBead(sp*vec2(30.0,22.0)+5.0,0.3*min(uDrops,2.0)))*sd);\n'+
+  '  if(top>0.0)hg=max(wdBead(vDropP.xz*18.0,0.35*min(uDrops,2.0)),wdBead(vDropP.xz*9.0+17.0,0.2*min(uDrops,3.0)))*top;\n'+
+  '  if(sd>0.0)hg=max(hg,max(wdRun(sp,uDropT)*min(uDrops,1.0),0.8*wdBead(sp*vec2(18.0,14.0)+5.0,0.15*min(uDrops,4.0)))*sd);\n'+
   '  hg*=min(fd,1.0);wD=smoothstep(0.0,0.25,hg);normal=wdBump(normal,hg*0.006,-vViewPosition);diffuseColor.rgb*=1.0-0.18*wD;}}\n';
 function wetPatch(m){if(!m||m.userData.wetP||m.userData.noWet||m===groundMat||tuftMats.includes(m))return;
   const t=m.type;if(t!=='MeshPhongMaterial'&&t!=='MeshStandardMaterial'&&t!=='MeshLambertMaterial')return;if(m.transparent&&m.opacity<0.7)return;
