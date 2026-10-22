@@ -223,3 +223,6 @@ function mergeStatic(group,skip){
   }
 }
 [machine,house,cab,boomP,stickP,bucketP].forEach(g=>mergeStatic(g,[glass,loadMesh,sideL[0],sideL[1],hLink,jPin]));
+// the bucket's own shapes (and the detailed model's, models.js) sit in bkG, so the quick coupler (coupler.js) can set it
+// down on the ground and take another attachment; the load and the tooth and middle marks stay on the coupler
+const bkG=new THREE.Group();for(const c of [...bucketP.children])if(c!==loadMesh&&c!==tipMark&&c!==midMark)bkG.add(c);bucketP.add(bkG);

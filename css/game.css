@@ -47,7 +47,7 @@ canvas#view{position:fixed;inset:0;width:100%;height:100%;display:block;touch-ac
 .tacts{flex:none;margin-left:auto;display:flex;align-items:center;gap:2px;padding:3px;border-radius:14px;background:var(--glass);border:1px solid var(--hud-line);box-shadow:var(--lift);pointer-events:auto}
 .tacts>button{height:40px;border:0;background:transparent;border-radius:11px;padding:0 12px}
 .ib{display:inline-flex;align-items:center;gap:7px}
-#blkBtn[aria-pressed="true"],#pumpBtn[aria-pressed="true"],#wipeBtn[aria-pressed="true"],#ctlBtn[aria-expanded="true"]{background:rgba(255,138,31,.18);color:var(--machine);box-shadow:inset 0 0 0 1px rgba(255,138,31,.55)}
+#blkBtn[aria-pressed="true"],#pumpBtn[aria-pressed="true"],#gripBtn[aria-pressed="true"],#wipeBtn[aria-pressed="true"],#ctlBtn[aria-expanded="true"]{background:rgba(255,138,31,.18);color:var(--machine);box-shadow:inset 0 0 0 1px rgba(255,138,31,.55)}
 @media (hover:hover){.tacts>button:hover{background:var(--glass-hi)}}
 .row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 button{pointer-events:auto;touch-action:manipulation;font:600 15px/1 var(--f-display);letter-spacing:.07em;text-transform:uppercase;color:var(--ink);background:var(--glass);border:1px solid var(--hud-line);border-radius:12px;height:42px;padding:0 14px;cursor:pointer;
