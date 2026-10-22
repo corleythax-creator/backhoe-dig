@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-22T21:45:00Z",
+ "updated": "2026-10-22T22:05:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -48,9 +48,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-22",
-   "dh": 23,
-   "act": 1,
-   "versions": 2
+   "dh": 43,
+   "act": 1.5,
+   "versions": 3
   }
  ],
  "extra": [
@@ -1833,6 +1833,15 @@ window.EFFORT = {
    "tris": 4637679,
    "chars": 1232370,
    "what": "Bucket angle matters: teeth into the cut fill the bucket, dragging it flat only skims. Quick coupler: set the bucket down (.) and pick up a thumb to carry blocks, a hammer to break rock, or an auger to bore holes."
+  },
+  {
+   "v": 198,
+   "asked": "2026-10-22T20:50:00-05:00",
+   "live": "2026-10-22T17:05:34-05:00",
+   "dh": 20,
+   "tris": 5201322,
+   "chars": 1251284,
+   "what": "Corley's backhoe is here at the end of his machine row: drive it on four wheels, scoop with the loader, then swing the seat round (Drive / Dig), drop the outriggers and dig with the hoe."
   }
  ]
 };
