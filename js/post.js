@@ -115,7 +115,7 @@ function ulMean(top,hor,glow,out){return out.copy(top).multiplyScalar(0.55).add(
 function ulHue(c){const m=Math.max(1e-4,(c.r+c.g+c.b)/3);return c.multiplyScalar(1/m)}
 ulHue(ulMean(new THREE.Color(0x4f86bd),new THREE.Color(0xbfd2dd),new THREE.Color(0),ulRef));
 function ulMix(c,k,lo,hi){c.r=1+(Math.min(hi,Math.max(lo,c.r))-1)*k;c.g=1+(Math.min(hi,Math.max(lo,c.g))-1)*k;c.b=1+(Math.min(hi,Math.max(lo,c.b))-1)*k;return c}
-function ultraGfx(sky,pcss,drops,wetG){ULTRA.sky=!!sky;ULTRA.pcss=!!pcss;ULTRA.drops=!!drops;ULTRA.wetG=!!wetG;if(!sky)skyEnvTint.setRGB(1,1,1);wetDropsSet(drops)}
+function ultraGfx(sky,pcss,drops,wetG){ULTRA.sky=!!sky;ULTRA.pcss=!!pcss;ULTRA.drops=!!drops;ULTRA.wetG=!!wetG;if(!sky)skyEnvTint.setRGB(1,1,1);skyEnvSize(sky?256:64);wetDropsSet(drops)}
 // every frame before the scene is drawn (postRender)
 function ultraTick(){
   if(ULTRA.sky&&hemiL0){const k=TU.ultraSky;

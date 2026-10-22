@@ -141,7 +141,7 @@ const matGlslNorm=()=>MAT_GL2?'if(matNp>0.0){vec3 mnW=inverseTransformDirection(
 // the Ground look tunings (tune.js) into the shader, read live each frame (relief, sheen, rain sheen, fade-out distance in metres)
 function matPbrSync(){matU.uPbr.value.set(TU.pbrRelief,TU.pbrSheen,TU.pbrRain,TU.pbrFar);
   // the natural dirt and grass (terrain.js), with the same Material relief setting
-  if(typeof groundRelU!=='undefined'){groundRelU.value=matU.texPbr.value*TU.pbrGround;if(groundRelU.value>0)groundRelLoad()}}
+  if(typeof groundRelU!=='undefined'){groundRelU.value=matU.texPbr.value*TU.pbrGround;faceRelU.value=matU.texPbr.value*TU.pbrFace;if(groundRelU.value>0)groundRelLoad()}}
 const matGlslSpec=()=>MAT_GL2?'specularStrength=mix(specularStrength,12.0,matS);\n':'';
 const matGlslShin=()=>MAT_GL2?'material.specularShininess=mix(material.specularShininess,90.0,matS);\n':'';
 const matGlslRefl=()=>MAT_GL2?`if(matS>0.0){vec3 mrN=inverseTransformDirection(normal,viewMatrix);vec3 mrV=normalize(vWP-cameraPosition);

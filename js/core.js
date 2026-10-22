@@ -160,9 +160,17 @@ const skyEnvScene=new THREE.Scene(),skyEnvCam=new THREE.CubeCamera(1,2000,skyEnv
 {const gnd=new THREE.Mesh(new THREE.CircleGeometry(900,24).rotateX(-Math.PI/2),skyEnvGnd);gnd.position.y=-12;skyEnvScene.add(gnd,new THREE.Mesh(sky.geometry,sky.material))}
 // k: how bright the ground under the sky is (1 by day)
 // skyEnvTint: the light the ground under it takes from the sun (Ultra's sky lighting, post.js; white otherwise)
-const skyEnvTint=new THREE.Color(1,1,1);
-function skyEnvUpdate(k){skyEnvGnd.color.setHex(0x4a4a32).multiplyScalar(k).multiply(skyEnvTint);skyEnvScene.background=scene.background;skyEnvCam.update(renderer,skyEnvScene);skyEnv.needsPMREMUpdate=true}
+const skyEnvTint=new THREE.Color(1,1,1);let skyEnvK=1;
+function skyEnvUpdate(k){skyEnvK=k;skyEnvGnd.color.setHex(0x4a4a32).multiplyScalar(k).multiply(skyEnvTint);skyEnvScene.background=scene.background;skyEnvCam.update(renderer,skyEnvScene);skyEnv.needsPMREMUpdate=true}
 skyEnvUpdate(1);
+// the map's size in pixels a side: 64, or 256 for Ultra's sky lighting (post.js), sharp enough to show the clouds in
+// paint and glass. The cube keeps its texture object (every material holds it); its GPU copies are made again. three.js
+// keeps the blurred copy it makes for physically based materials (PMREM) and fills it again when the cube is caught,
+// whatever its size: one that no longer fits the cube is thrown away here and a new one made
+{const P=THREE.PMREMGenerator.prototype,f=P._fromTexture;
+  P._fromTexture=function(e,t){if(t&&e.isCubeTexture&&e.image[0]&&t.height!==4*Math.pow(2,Math.floor(Math.log2(e.image[0].width)))){t.dispose();t=null}return f.call(this,e,t)}}
+function skyEnvSize(n){if(skyEnvRT.width===n)return;skyEnv.image[0].width=skyEnv.image[0].height=n;skyEnvRT.width=skyEnvRT.height=n;
+  skyEnvRT.viewport.set(0,0,n,n);skyEnvRT.scissor.set(0,0,n,n);skyEnvRT.dispose();skyEnv.dispose();skyEnvUpdate(skyEnvK)}
 // straight-up normals for flat-shaded ground: lighting takes its slope from the faces, but the shadow lookup needs a
 // real normal (an all-zero one gives no shadow at all)
 function upNormals(n){const a=new Float32Array(n);for(let i=1;i<n;i+=3)a[i]=1;return a}

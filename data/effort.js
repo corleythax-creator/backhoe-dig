@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-22T22:23:00Z",
+ "updated": "2026-10-22T23:18:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -48,9 +48,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-22",
-   "dh": 71,
-   "act": 1.5,
-   "versions": 5
+   "dh": 76,
+   "act": 2,
+   "versions": 6
   }
  ],
  "extra": [
@@ -1860,6 +1860,15 @@ window.EFFORT = {
    "tris": 5234189,
    "chars": 1292836,
    "what": "Ultra graphics: shade coloured by the real sky, soft sun shadows that sharpen where things touch the ground, rain beading and running on the machines, and soaked ground that mirrors the sky."
+  },
+  {
+   "v": 201,
+   "asked": "2026-10-22T17:35:00-05:00",
+   "live": "2026-10-22T18:18:28-05:00",
+   "dh": 5,
+   "tris": 5235947,
+   "chars": 1297029,
+   "what": "Ultra and High graphics: dug trench walls show real relief (bucket-tooth grooves, cracks, pebbles and roots catch the light), Ultra's sky reflections in paint and glass are four times as sharp, and rain beads and runs down the cab windows, seen from inside the cab too."
   }
  ]
 };
