@@ -64,7 +64,7 @@ function rainTick(dt){
   if(raining){stats.rainTime+=dt;if(weather.r>stats.rainTop)stats.rainTop=weather.r}
   if(raining!==rainWas){rainWas=raining;if(raining){toast(say('rainIn'),'',3600);stats.showers++;statDirty=true}else if(!bench.on)toast(say('rainOut'),'',3600)}
   // once a second: soak or dry the soil, and show it
-  rainT-=dt;if(rainT<=0){rainT=1;let any=weather.r>0.02;if(!any)for(let k=0;k<rainW.length;k+=7)if(rainW[k]>0){any=true;break}
+  rainT-=dt;if(rainT<=0){rainT+=1;let any=weather.r>0.02;if(!any)for(let k=0;k<rainW.length;k+=7)if(rainW[k]>0){any=true;break}
     if(any){rainSim(1);rainTexDirty=true;if((rainSaveT-=1)<=0){rainSaveT=20;site.dirty=true}}}
   if(rainTexDirty)rainTexUpdate();
   rainFxTick(dt)}

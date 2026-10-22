@@ -22,7 +22,7 @@ let mtWet=false,mtWaterT=0,mtDryT=0,mtFine=false;
 const cellOk=(ci,cj)=>ci>=0&&cj>=0&&ci<FNX&&cj<FNZ&&!tileMade(FX0+(ci+0.5)*FC,FZ0+(cj+0.5)*FC);
 const tileOf=(ci,cj)=>ci<0||cj<0||ci>=FNX||cj>=FNZ?-1:mtIdx[((cj/MT)|0)*MT_NX+((ci/MT)|0)];
 // a vertex moves only when all four cells around it are drawn by tiles, so tile edges against the mid mesh stay put
-function vOk(i,j){for(const [a,b] of [[i-1,j-1],[i,j-1],[i-1,j],[i,j]])if(!cellOk(a,b)||tileOf(a,b)<0)return false;return true}
+function vOk(i,j){return cellOk(i-1,j-1)&&tileOf(i-1,j-1)>=0&&cellOk(i,j-1)&&tileOf(i,j-1)>=0&&cellOk(i-1,j)&&tileOf(i-1,j)>=0&&cellOk(i,j)&&tileOf(i,j)>=0}
 // the mid mesh's surface (bilinear over its 0.5 m points), which tile edges have to meet
 function midH(x,z){const fx=(x-MID[0])/0.5,fz=(z-MID[2])/0.5,i=Math.floor(fx),j=Math.floor(fz),u=fx-i,v=fz-j,x0=MID[0]+i*0.5,z0=MID[2]+j*0.5;
   if(u<1e-6&&v<1e-6)return baseHeight(x0,z0);
@@ -113,15 +113,16 @@ function mtWaterMesh(t){const K=mtFine?1:2,n=MT/K+1,g=new THREE.PlaneGeometry(1,
   if(t.wm){t.wm.geometry.dispose();t.wm.geometry=g}else{t.wm=new THREE.Mesh(g,wmMat);t.wm.frustumCulled=false;t.wm.receiveShadow=true;t.wm.visible=false;scene.add(t.wm)}
   t.wK=K;t.wDirty=true}
 function mtWaterTick(dt){
-  if(!mtWet||(mtWaterT-=dt)>0)return;const step=0.25;mtWaterT=step;let moving=false;
+  if(!mtWet||(mtWaterT-=dt)>0)return;const step=0.25;mtWaterT+=step;let moving=false;
   const rain=weather.r>0.02,dry=(mtDryT-=step)<=0;if(dry)mtDryT=2.5;
   for(const t of mTiles){let any=false;
     for(let j=0;j<=MT;j++)for(let i=0;i<=MT;i++){const gi=t.i0+i,gj=t.j0+j;if(gi>FNX||gj>FNZ)continue;const v=gj*FV+gi,h=FH0[v]+FD[v],w0=FW[v];
-      if(!vOk(gi,gj))continue;const soak=fineSoak(v,FX0+gi*FC,FZ0+gj*FC),sat=soak>SAT_MUD,top=FH0[v]-SAT_DEPTH;
-      if(sat&&h<top){if(FW[v]<h)FW[v]=h;if(FW[v]<top)FW[v]=Math.min(top,FW[v]+SEEP*TU.seep*step)}
+      if(!vOk(gi,gj))continue;const soak=fineSoak(v,FX0+gi*FC,FZ0+gj*FC),sat=soak>SAT_MUD,top=FH0[v]-SAT_DEPTH,own=i>0&&j>0;
+      // a seam point is stepped by the tile west or north of it (vOk means it is there), so it fills, drains and dries once
+      if(own){if(sat&&h<top){if(FW[v]<h)FW[v]=h;if(FW[v]<top)FW[v]=Math.min(top,FW[v]+SEEP*TU.seep*step)}
       if(rain&&h<FH0[v]-0.02){if(FW[v]<h)FW[v]=h;if(FW[v]<top)FW[v]=Math.min(top,FW[v]+weather.r*RAIN_IN*step)}
       else if(!rain&&FW[v]>-1e8&&(!sat||FW[v]>top))FW[v]-=RAIN_DRAIN*step;
-      if(dry&&FM[v]>0&&FW[v]<-1e8){FM[v]--;t.dirty=true}
+      if(dry&&FM[v]>0&&FW[v]<-1e8){FM[v]--;t.dirty=true}}
       // ruts dry out pale, then cracked, as in the dig zone (waterTick)
       if(dry){let cx=0,cy=0;
         if(Math.abs(FD[v])>0.02){const s=Math.max(FM[v]/255,soak,FW[v]>-1e8?1:0);if(s*255>FWX[v])FWX[v]=Math.round(s*255);const m=FWX[v]/255;

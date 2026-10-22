@@ -19,7 +19,7 @@ const DIGT_PLAN=[
   {name:"Dexter's yard",p:[-196,236],ox:-8,oz:8},
   {name:'Family Island',p:[24,212],ox:8,oz:8},
   {name:"Jessica's Island",p:[196,236],ox:8,oz:8},
-  {name:'Lower Bench',p:[6,50],ox:8,oz:8},
+  {name:'Lower Bench',p:[6,50],ox:8,oz:-8},  // north of the middle: the Family Island bridge lands just south of it, and its end can't be dug
   {name:"Mesa top, to the grid's east edge",p:[10,-6],ox:-16,oz:-16,edge:true},
   {name:'East lawn',p:[60,-6],ox:8,oz:8},
   {name:'Back on the mesa top',back:[10,-6]},

@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-22T01:33:00Z",
+ "updated": "2026-10-22T03:28:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -42,9 +42,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-21",
-   "dh": 74.5,
-   "act": 3.5,
-   "versions": 11
+   "dh": 80.5,
+   "act": 4,
+   "versions": 12
   }
  ],
  "extra": [
@@ -1800,6 +1800,15 @@ window.EFFORT = {
    "tris": 5124128,
    "chars": 1195296,
    "what": "The idea board audited against the game: 26 ideas built moved to a new Completed section, 51 marked part built with how far along"
+  },
+  {
+   "v": 195,
+   "asked": "2026-10-21T21:40:00-05:00",
+   "live": "2026-10-21T22:28:37-05:00",
+   "dh": 6,
+   "tris": 5162523,
+   "chars": 1197434,
+   "what": "Ten fixes to what's there: Space no longer flips the wipers on foot; a second finger can't freeze a held stick and keys can't stick after Cmd on a Mac; switching to Walk with no room to climb out keeps you in the machine; an idle device no longer makes the other one reload through sync; a map edit is saved even if you leave within a second; water, puddles, soaking and settling heaps run the same on a slow phone as on a PC; puddles no longer fill and dry twice along mud-tile seams; less stutter from the mud loop; lighter clouds on Low; faster loading with no console spam from the machine models; and the dig site test's Lower Bench cut moved off the bridge end so it passes"
   }
  ]
 };
