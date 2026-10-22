@@ -1,0 +1,343 @@
+<title>Corley's Island Asset Yard</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.min.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/"}}</script>
+<style>
+/* Layout: a parts-yard catalogue. Sticky stencil header, then bins of swatches and machines laid out like sample boards, each bin with its own sort. */
+:root{
+  --bg:#eeede8; --panel:#f8f7f3; --ink:#1f2124; --mute:#62656b; --line:#d3d1c9;
+  --hi:#e3a90b; --hiInk:#3a2c00; --chip:#e4e2da; --stage1:#f8f7f3; --stage2:#dcdad1;
+  --display:"Barlow Condensed","Arial Narrow",Arial,sans-serif;
+  --body:"IBM Plex Sans",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,Consolas,monospace;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#17181a;--panel:#202226;--ink:#e9e7e1;--mute:#9a9ca2;--line:#34363b;--hi:#f0b51c;--hiInk:#2a1f00;--chip:#2b2d32;--stage1:#3a3d43;--stage2:#202226;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#17181a;--panel:#202226;--ink:#e9e7e1;--mute:#9a9ca2;--line:#34363b;--hi:#f0b51c;--hiInk:#2a1f00;--chip:#2b2d32;--stage1:#3a3d43;--stage2:#202226;color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font:15px/1.5 var(--body)}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--panel)}
+.wrap{max-width:1240px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+header.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--panel);border-bottom:1px solid var(--line)}
+header.top .wrap{display:flex;flex-wrap:wrap;align-items:center;gap:10px 18px;padding-block:10px}
+.brand{font:700 22px/1 var(--display);letter-spacing:.04em;text-transform:uppercase;display:flex;align-items:center;gap:10px}
+.brand i{width:28px;height:14px;background:repeating-linear-gradient(-45deg,var(--hi) 0 6px,var(--ink) 6px 12px);display:inline-block}
+nav{display:flex;flex-wrap:wrap;gap:4px;flex:1;min-width:0}
+nav a{font:500 13px/1 var(--mono);color:var(--mute);text-decoration:none;padding:6px 8px;border-radius:4px}
+nav a:hover,nav a:focus-visible{background:var(--chip);color:var(--ink);outline:none}
+#q{font:14px var(--body);background:var(--bg);color:var(--ink);border:1px solid var(--line);border-radius:4px;padding:7px 10px;width:200px;max-width:100%}
+#q:focus-visible,select:focus-visible{outline:2px solid var(--hi);outline-offset:1px}
+.intro{padding-block:28px 8px;display:grid;grid-template-columns:minmax(0,1.3fr) minmax(0,1fr);gap:24px;align-items:end}
+.intro h1{font:700 clamp(36px,6vw,64px)/.95 var(--display);text-transform:uppercase;letter-spacing:.01em;margin:0;text-wrap:balance}
+.intro p{color:var(--mute);margin:10px 0 0;max-width:60ch}
+.tally{display:grid;grid-template-columns:repeat(4,1fr);border:1px solid var(--line);background:var(--panel)}
+.tally div{padding:12px 14px;border-right:1px solid var(--line);min-width:0}
+.tally div:last-child{border-right:0}
+.tally b{display:block;font:700 30px/1 var(--display);font-variant-numeric:tabular-nums}
+.tally span{font:12px var(--mono);color:var(--mute);text-transform:uppercase;letter-spacing:.06em}
+section{padding-block:30px 6px;scroll-margin-top:70px}
+.sh{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px 14px;border-bottom:3px solid var(--ink);padding-bottom:6px;margin-bottom:12px}
+.sh h2{font:700 30px/1 var(--display);text-transform:uppercase;letter-spacing:.02em;margin:0}
+.sh .ct{font:500 13px var(--mono);background:var(--hi);color:var(--hiInk);padding:2px 7px}
+.sh p{flex-basis:100%;margin:2px 0 0;color:var(--mute);max-width:75ch}
+.bar{display:flex;flex-wrap:wrap;align-items:center;gap:8px 14px;margin-bottom:14px;font:12px var(--mono);color:var(--mute)}
+.bar label{display:flex;align-items:center;gap:6px;text-transform:uppercase;letter-spacing:.06em}
+.bar select{font:13px var(--body);background:var(--panel);color:var(--ink);border:1px solid var(--line);border-radius:4px;padding:5px 8px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:4px;overflow:hidden}
+.seg button{font:500 12px/1 var(--mono);padding:7px 10px;border:0;background:var(--panel);color:var(--mute);cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--panel)}
+.seg button:focus-visible,.dir:focus-visible{outline:2px solid var(--hi);outline-offset:-2px}
+.dir{font:500 12px/1 var(--mono);padding:7px 10px;border:1px solid var(--line);border-radius:4px;background:var(--panel);color:var(--ink);cursor:pointer}
+h3{font:700 18px/1.1 var(--display);text-transform:uppercase;letter-spacing:.06em;color:var(--mute);margin:22px 0 10px}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px}
+.grid.m3{grid-template-columns:repeat(auto-fill,minmax(min(100%,250px),1fr))}
+.card{background:var(--panel);border:1px solid var(--line);display:flex;flex-direction:column;min-width:0}
+.sw{position:relative;aspect-ratio:1;max-width:100%;background:var(--chip);cursor:zoom-in;border:0;padding:0;display:block;width:100%;overflow:hidden}
+.sw img{width:100%;height:100%;object-fit:cover;display:block}
+.sw:focus-visible{outline:3px solid var(--hi);outline-offset:-3px}
+.st{position:relative;aspect-ratio:4/3;max-width:100%;width:100%;border:0;padding:0;display:block;cursor:pointer;background:radial-gradient(circle at 50% 38%,var(--stage1),var(--stage2))}
+.st canvas{width:100%;height:100%;display:block}
+.st .ld{position:absolute;inset:0;display:grid;place-items:center;font:12px var(--mono);color:var(--mute)}
+.st:focus-visible{outline:3px solid var(--hi);outline-offset:-3px}
+.st .rank{position:absolute;left:8px;top:8px;font:700 15px/1 var(--display);background:var(--hi);color:var(--hiInk);padding:4px 7px;font-variant-numeric:tabular-nums}
+.cb{padding:9px 11px 11px;display:flex;flex-direction:column;gap:6px;min-width:0}
+.cb strong{font-weight:600;font-size:14.5px;line-height:1.25}
+.meta{font:12px/1.4 var(--mono);color:var(--mute);overflow-wrap:anywhere}
+.stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:1px;background:var(--line);border:1px solid var(--line)}
+.stats div{background:var(--panel);padding:5px 6px;min-width:0}
+.stats b{display:block;font:500 13px/1.2 var(--mono);font-variant-numeric:tabular-nums}
+.stats span{font:10px/1.2 var(--mono);color:var(--mute);text-transform:uppercase;letter-spacing:.05em}
+.stats div.on{background:var(--hi)}.stats div.on b,.stats div.on span{color:var(--hiInk)}
+.tags{display:flex;flex-wrap:wrap;gap:4px}
+.tag{font:500 11px/1 var(--mono);padding:4px 6px;background:var(--chip);color:var(--mute);border-radius:3px;text-transform:uppercase;letter-spacing:.04em}
+.tag.pbr,.tag.on{background:var(--hi);color:var(--hiInk)}
+.maps{display:flex;gap:4px}
+.maps button{flex:1;font:500 11px/1 var(--mono);padding:6px 0;border:1px solid var(--line);background:transparent;color:var(--mute);cursor:pointer;border-radius:3px}
+.maps button[aria-pressed="true"]{background:var(--ink);color:var(--panel);border-color:var(--ink)}
+.maps button:focus-visible{outline:2px solid var(--hi)}
+.wide .sw{aspect-ratio:auto;height:auto}
+.wide .sw img{height:auto;object-fit:contain}
+.snd{display:grid;grid-template-columns:repeat(auto-fill,minmax(min(100%,290px),1fr));gap:8px}
+.srow{display:grid;grid-template-columns:auto minmax(0,1fr);gap:10px;align-items:center;background:var(--panel);border:1px solid var(--line);padding:8px 10px}
+.play{width:36px;height:36px;border-radius:50%;border:2px solid var(--ink);background:transparent;color:var(--ink);cursor:pointer;display:grid;place-items:center}
+.play svg{width:14px;height:14px;fill:currentColor}
+.play.on{background:var(--hi);border-color:var(--hi);color:var(--hiInk)}
+.play:focus-visible{outline:2px solid var(--hi);outline-offset:2px}
+.srow a{color:var(--mute)}
+.pbar{height:3px;background:var(--chip);margin-top:4px}
+.pbar i{display:block;height:100%;width:0;background:var(--hi)}
+.tw{overflow-x:auto;border:1px solid var(--line)}
+table{border-collapse:collapse;width:100%;font-size:14px;background:var(--panel)}
+th,td{text-align:left;padding:7px 10px;border-bottom:1px solid var(--line);white-space:nowrap}
+th{font:500 11px var(--mono);text-transform:uppercase;letter-spacing:.06em;color:var(--mute);padding:0}
+th button{all:unset;display:block;padding:8px 10px;cursor:pointer;width:100%;box-sizing:border-box}
+th button:focus-visible{outline:2px solid var(--hi);outline-offset:-2px}
+th[aria-sort] button{color:var(--ink)}
+th[aria-sort="descending"] button::after{content:" ↓"}th[aria-sort="ascending"] button::after{content:" ↑"}
+td.n,th.n{text-align:right}
+td.n{font-variant-numeric:tabular-nums;font-family:var(--mono);font-size:13px}
+td .bx{display:inline-block;height:6px;background:var(--hi);vertical-align:middle;margin-right:6px}
+tbody tr{cursor:pointer}tbody tr:hover td{background:var(--chip)}
+dialog{border:0;padding:0;background:var(--panel);color:var(--ink);max-width:min(94vw,1100px);max-height:94vh;width:100%}
+dialog::backdrop{background:rgba(0,0,0,.72)}
+#lb img{display:block;max-width:100%;max-height:80vh;margin:auto}
+dialog .cap{display:flex;flex-wrap:wrap;justify-content:space-between;gap:8px 12px;align-items:center;padding:10px 14px;font:13px var(--mono)}
+dialog .cap>button{font:500 13px var(--mono);background:var(--ink);color:var(--panel);border:0;padding:7px 12px;cursor:pointer}
+#mv{height:min(68vh,640px);position:relative;background:radial-gradient(circle at 50% 38%,var(--stage1),var(--stage2));touch-action:none;cursor:grab}
+#mv canvas{display:block;width:100%!important;height:100%!important}
+#mvst{display:flex;flex-wrap:wrap;gap:4px 14px;color:var(--mute)}
+#mvst b{color:var(--ink);font-weight:500}
+.ctl{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+footer{padding-block:40px;color:var(--mute);font-size:13px}
+[data-hide]{display:none!important}
+@media (max-width:760px){.intro{grid-template-columns:1fr}#q{width:100%}.tally{grid-template-columns:repeat(2,1fr)}.tally div:nth-child(2){border-right:0}.tally div:nth-child(-n+2){border-bottom:1px solid var(--line)}}
+@media (prefers-reduced-motion:no-preference){.sw img{transition:transform .25s}.sw:hover img{transform:scale(1.04)}}
+</style>
+<header class="top"><div class="wrap">
+  <div class="brand"><i></i>Asset Yard</div>
+  <nav><a href="#machines">Machines</a><a href="#things">Things</a><a href="#trees">Trees</a><a href="#compare">Compare</a><a href="#library">Materials</a><a href="#ground">Ground</a><a href="#sounds">Sounds</a><a href="#shots">Shots</a></nav>
+  <input id="q" type="search" placeholder="Filter by name…" aria-label="Filter assets by name">
+</div></header>
+<main class="wrap">
+  <div class="intro">
+    <div><h1>Every model, texture and sound in Corley's Island</h1>
+    <p>The machines, boats, things and trees are exported from the running game, so each one is the exact set of meshes and materials the game draws. Tap one to turn it round and see its wireframe. Every bin sorts: by triangles, size, file size, length and more.</p></div>
+    <div class="tally" id="tally"></div>
+  </div>
+  <section id="machines"><div class="sh"><h2>Machines and boats</h2><span class="ct" id="mct"></span><p>Everything you can drive or ride, plus the boats on the lake, the crane barge and the worker. The Graphics setting's Machine models picks Detailed (the glTF models with photo-textured paint, steel and rubber) or Simple (the shapes built in code, used on Low graphics).</p></div>
+    <div class="bar" id="mbar"></div><div id="mgrid"></div></section>
+  <section id="things"><div class="sh"><h2>Things to place</h2><span class="ct" id="pct"></span><p>The map editor's Add catalogue. Each kind is one model drawn as an instanced mesh, so a hundred fence sections cost one draw. Max is how many of that kind the game draws.</p></div>
+    <div class="bar" id="pbar"></div><div class="grid m3" id="pgrid"></div></section>
+  <section id="trees"><div class="sh"><h2>Trees</h2><span class="ct" id="tct"></span><p>The five species at full detail, with the far level of detail the game swaps to at range, and the bark and leaf textures they share. Leaves are grey in the texture; each tree tints them.</p></div>
+    <div class="bar" id="tbar"></div><div class="grid m3" id="tgrid"></div><h3>Tree textures</h3><div class="bar" id="ttbar"></div><div class="grid" id="ttgrid"></div></section>
+  <section id="compare"><div class="sh"><h2>Compare all models</h2><span class="ct" id="cct"></span><p>Every 3D asset in one table. Tap a column to sort by it, tap a row to open the model. Draws are the separate meshes the GPU is asked to draw for one copy.</p></div>
+    <div class="bar" id="cbar"></div><div class="tw"><table id="ctab"></table></div></section>
+  <section id="library"><div class="sh"><h2>Material library</h2><span class="ct" id="libct"></span><p>What the map editor's Paint tool lays on the ground and blocks (<code>MAT_LIST</code> in materials.js). Tile size is how many feet one repeat of the texture covers. PBR marks the ones with relief and sheen maps for High graphics.</p></div>
+    <div class="bar" id="lbar"></div><div id="libgrid"></div></section>
+  <section id="ground"><div class="sh"><h2>Natural ground</h2><span class="ct" id="gct"></span><p>The undug island surface in three resolution tiers (the Graphics setting picks one), its normal maps, the macro tint, and the looks painted mud takes as it dries.</p></div>
+    <div class="bar" id="gbar"></div><div class="grid" id="ggrid"></div></section>
+  <section id="mtex"><div class="sh"><h2>Machine textures</h2><span class="ct" id="xct"></span><p>The photo detail the Detailed machines wear: paint, rubber and bare steel, each with relief and roughness maps.</p></div>
+    <div class="bar" id="xbar"></div><div class="grid" id="xgrid"></div><h3>Other</h3><div class="grid wide" id="ograid"></div></section>
+  <section id="sounds"><div class="sh"><h2>Sounds</h2><span class="ct" id="sct"></span><p>All cut from CC0 field recordings on Freesound (sounds/CREDITS.md). Engines come as idle and working loops the game cross-fades by RPM.</p></div>
+    <div class="bar" id="sbar"></div><div id="sgrid"></div></section>
+  <section id="shots"><div class="sh"><h2>Title screen shots</h2><span class="ct" id="shct"></span></div><div class="grid" id="shgrid"></div></section>
+</main>
+<footer class="wrap" id="foot">Snapshot of the backhoe-dig repo.</footer>
+<dialog id="lb"><img id="lbimg" alt=""><div class="cap"><span id="lbcap"></span><button id="lbx" type="button">Close</button></div></dialog>
+<dialog id="md"><div id="mv"></div><div class="cap"><div style="min-width:0"><strong id="mdn" style="font:600 15px var(--body)"></strong><div id="mvst"></div></div>
+  <div class="ctl"><div class="seg" id="mdlook" hidden><button type="button" data-l="detail" aria-pressed="true">Detailed</button><button type="button" data-l="simple" aria-pressed="false">Simple</button></div>
+  <div class="seg"><button type="button" id="mdwire" aria-pressed="false">Wireframe</button><button type="button" id="mdspin" aria-pressed="true">Spin</button></div><button id="mdx" type="button">Close</button></div></div></dialog>
+<audio id="au" preload="none"></audio>
+<script type="module">
+import * as THREE from 'three';
+import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';
+import {OrbitControls} from 'three/addons/controls/OrbitControls.js';
+const $=s=>document.querySelector(s),esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const kb=k=>k>=1024?(k/1024).toFixed(1)+' MB':k+' KB',FT=3.28084,ft=m=>(m*FT).toFixed(1),num=n=>n.toLocaleString('en-US');
+const store={get(k){try{return localStorage.getItem(k)}catch(e){return null}},set(k,v){try{localStorage.setItem(k,v)}catch(e){}}};
+const D=await fetch('yard/data.json').then(r=>r.json());
+$('#foot').textContent=`Exported from the backhoe-dig repo on ${new Date(D.made+'T12:00').toLocaleDateString('en-US',{month:'long',day:'numeric',year:'numeric'})}. Sizes are file sizes; a model's download is its exported glTF.`;
+
+// ---------- sorting: each bin has a metric picker and a direction button; the choice is remembered on this device ----------
+// keys: [label, value of an item, default direction (-1 biggest first), shows as]
+function sorter(bar,key,keys,def,render,extra=''){let st={};try{st=JSON.parse(store.get('ay_'+key)||'{}')}catch(e){}
+  const k0=keys[st.k]?st.k:def,S={k:k0,d:st.d||keys[k0][2]};
+  bar.innerHTML=`<label for="${key}_s">Sort by <select id="${key}_s">${Object.entries(keys).map(([k,v])=>`<option value="${k}">${v[0]}</option>`).join('')}</select></label><button class="dir" type="button" id="${key}_d"></button>${extra}`;
+  const sel=bar.querySelector('select'),dir=bar.querySelector('.dir');sel.value=S.k;
+  const go=()=>{dir.textContent=S.d<0?'Biggest first ↓':'Smallest first ↑';if(keys[S.k][3]==='abc')dir.textContent=S.d<0?'Z to A':'A to Z';store.set('ay_'+key,JSON.stringify(S));render()};
+  sel.onchange=()=>{S.k=sel.value;S.d=keys[S.k][2];go()};dir.onclick=()=>{S.d=-S.d;go()};
+  S.sort=a=>{const f=keys[S.k][1];return [...a].sort((x,y)=>{const p=f(x),q=f(y);return (typeof p==='string'?p.localeCompare(q):p-q)*S.d})};
+  S.key=()=>S.k;setTimeout(go);return S}
+
+// ---------- 3D: the game's materials rebuilt from each export's extras, one shared renderer for the thumbnails ----------
+// textures load before the materials that use them are built (a clone of a texture still loading would never upload)
+const texC={},texP={},TL=new THREE.TextureLoader();
+const texLoad=p=>texP[p]=texP[p]||TL.loadAsync(p).then(t=>texC[p]=t,()=>null);
+function tex(t){const k=t.p;if(!texC[k])return null;const x=texC[k].clone();x.wrapS=x.wrapT=THREE.RepeatWrapping;x.repeat.set(...t.rep);x.offset.set(...t.off);x.rotation=t.rot||0;if(t.ctr)x.center.set(...t.ctr);
+  x.colorSpace=t.srgb?THREE.SRGBColorSpace:THREE.NoColorSpace;x.anisotropy=4;x.needsUpdate=true;return x}
+function gameMat(m){const u=m.userData||{},o={color:m.color,vertexColors:!!u.vc,flatShading:!!u.flat,side:u.side||0,transparent:!!u.tr,opacity:u.op==null?1:u.op,alphaTest:u.at||0};let n;
+  if(u.kind==='MeshPhongMaterial')n=new THREE.MeshPhongMaterial(Object.assign(o,{shininess:u.shin,specular:u.spec}));
+  else if(u.kind==='MeshLambertMaterial')n=new THREE.MeshLambertMaterial(o);
+  else if(u.kind==='MeshBasicMaterial')n=new THREE.MeshBasicMaterial(o);
+  else n=new THREE.MeshStandardMaterial(Object.assign(o,{metalness:u.metal||0,roughness:u.rough==null?0.5:u.rough,envMapIntensity:u.envI==null?1:u.envI}));
+  if(u.em!=null&&n.emissive){n.emissive.setHex(u.em);n.emissiveIntensity=u.emi==null?1:u.emi}
+  for(const sl in u.tex||{}){const t=tex(u.tex[sl]);if(!(sl in n)||!t)continue;n[sl]=t;if(sl==='normalMap'&&u.ns)n.normalScale.set(u.ns,u.ns)}
+  return n}
+const glbC={};
+function loadModel(f){if(!glbC[f])glbC[f]=fetch(f).then(r=>r.json()).then(j=>new Promise((ok,bad)=>{const s=atob(j.glb),u=new Uint8Array(s.length);for(let i=0;i<s.length;i++)u[i]=s.charCodeAt(i);
+  new GLTFLoader().parse(u.buffer,'',async g=>{const ps=[];g.scene.traverse(n=>{if(n.isMesh)[].concat(n.material).forEach(m=>Object.values(m.userData.tex||{}).forEach(t=>ps.push(texLoad(t.p))))});await Promise.all(ps);const mc=new Map();g.scene.traverse(n=>{if(n.isMesh){const fix=m=>{if(!mc.has(m))mc.set(m,gameMat(m));return mc.get(m)};n.material=Array.isArray(n.material)?n.material.map(fix):fix(n.material);n.castShadow=true}});ok(g.scene)},bad)}));
+  return glbC[f].then(s=>s.clone())}
+// the game's daylight: its sky and sun, filmic tone mapping, and the sky caught into a cube for reflections (core.js)
+function stage(r){const sc=new THREE.Scene();sc.add(new THREE.HemisphereLight(0xb8d0ea,0x5b5a3c,0.5*Math.PI));
+  const sun=new THREE.DirectionalLight(0xfff0dc,1.6*Math.PI);sun.position.set(6,10,7);sun.castShadow=true;sun.shadow.mapSize.set(1024,1024);sun.shadow.bias=-0.0004;sc.add(sun,sun.target);
+  r.toneMapping=THREE.ACESFilmicToneMapping;r.toneMappingExposure=0.8;r.shadowMap.enabled=true;
+  const es=new THREE.Scene(),dome=new THREE.Mesh(new THREE.SphereGeometry(500,32,16),new THREE.ShaderMaterial({side:THREE.BackSide,depthWrite:false,
+    vertexShader:'varying vec3 p;void main(){p=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.);}',
+    fragmentShader:'varying vec3 p;void main(){float h=normalize(p).y;vec3 c=h>0.?mix(vec3(.78,.86,.95),vec3(.32,.52,.82),pow(h,.6)):vec3(.29,.29,.2);gl_FragColor=vec4(c,1.);}'}));
+  es.add(dome);const pm=new THREE.PMREMGenerator(r);sc.environment=pm.fromScene(es,0.02).texture;
+  const gnd=new THREE.Mesh(new THREE.CircleGeometry(1,48).rotateX(-Math.PI/2),new THREE.ShadowMaterial({opacity:0.28}));gnd.receiveShadow=true;sc.add(gnd);
+  return {sc,sun,gnd,
+    put(o,cam,view){const b=new THREE.Box3().setFromObject(o),c=b.getCenter(new THREE.Vector3()),sz=b.getSize(new THREE.Vector3()),d=Math.max(sz.length(),0.5);
+      o.position.set(-c.x,-b.min.y,-c.z);sc.add(o);gnd.scale.setScalar(d*1.4);gnd.position.y=0.002;
+      const sh=sun.shadow.camera;sh.left=sh.bottom=-d;sh.right=sh.top=d;sh.near=0.1;sh.far=d*6;sh.updateProjectionMatrix();sun.position.set(d*0.9,d*1.6,d*1.1);
+      const ty=sz.y*0.42;cam.near=d/200;cam.far=d*20;cam.position.set(d*1.03,ty+d*0.6,d*1.3);cam.lookAt(0,ty,0);cam.updateProjectionMatrix();return {d,ty}}}}
+const TW=480,TH=360;let thumbR=null,thumbS=null;
+function thumbStage(){if(!thumbR){thumbR=new THREE.WebGLRenderer({antialias:true,alpha:true,preserveDrawingBuffer:true});thumbR.setPixelRatio(1);thumbR.setSize(TW,TH,false);thumbS=stage(thumbR)}return thumbS}
+const thumbQ=[];let thumbBusy=false;
+async function thumbNext(){if(thumbBusy||!thumbQ.length)return;thumbBusy=true;const {cv,f}=thumbQ.shift();
+  try{const o=await loadModel(f),S=thumbStage(),cam=new THREE.PerspectiveCamera(30,TW/TH,0.1,100);S.put(o,cam);thumbR.render(S.sc,cam);S.sc.remove(o);
+    if(cv.dataset.f===f){const x=cv.getContext('2d');cv.width=TW;cv.height=TH;x.clearRect(0,0,TW,TH);x.drawImage(thumbR.domElement,0,0);cv.parentNode.querySelector('.ld')?.remove()}}
+  catch(e){const l=cv.parentNode.querySelector('.ld');if(l)l.textContent='Model failed to load'}
+  thumbBusy=false;thumbNext()}
+const thumbIO=new IntersectionObserver(es=>{for(const e of es)if(e.isIntersecting){thumbIO.unobserve(e.target);const cv=e.target.querySelector('canvas');if(cv.dataset.done!==cv.dataset.f){cv.dataset.done=cv.dataset.f;thumbQ.push({cv,f:cv.dataset.f});thumbNext()}}},{rootMargin:'300px'});
+function thumbsIn(el){el.querySelectorAll('.st').forEach(s=>thumbIO.observe(s))}
+
+// ---------- the models ----------
+const MODELS=D.models,byId={};for(const m of MODELS){(byId[m.id]=byId[m.id]||{})[m.look]=m}
+let look=store.get('ay_look')==='simple'?'simple':'detail';
+const cur=id=>byId[id][look]||byId[id].detail;
+const LEN=m=>m.size[2],WID=m=>m.size[0],HGT=m=>m.size[1];
+const MKEYS={tris:['Triangles',m=>m.tris,-1],verts:['Vertices',m=>m.verts,-1],draws:['Draws (meshes)',m=>m.draws,-1],mats:['Materials',m=>m.mats,-1],
+  len:['Length',LEN,-1],wid:['Width',WID,-1],hgt:['Height',HGT,-1],dl:['Download size',m=>m.kb,-1],tpf:['Triangles per foot of length',m=>m.tris/(LEN(m)*FT),-1],name:['Name',m=>m.n,1,'abc']};
+const statCell=(k,l,v)=>`<div data-k="${k}"><b>${v}</b><span>${l}</span></div>`;
+function m3card(m,i,S,more=''){const on=S.key();const cells=[['tris','Tris',num(m.tris)],['draws','Draws',m.draws],['mats','Mats',m.mats],['len','Long',ft(LEN(m))+' ft'],['wid','Wide',ft(WID(m))+' ft'],['hgt','High',ft(HGT(m))+' ft']];
+  return `<div class="card" data-name="${esc((m.n+' '+m.id+' '+m.g).toLowerCase())}"><button class="st" type="button" data-id="${m.id}" aria-label="Open ${esc(m.n)} in 3D"><span class="rank">${i+1}</span><canvas data-f="${m.f}" width="${TW}" height="${TH}"></canvas><span class="ld">Loading model…</span></button>
+  <div class="cb"><strong>${esc(m.n)}</strong><div class="stats">${cells.map(([k,l,v])=>statCell(k,l,v).replace('<div',k===on?'<div class="on"':'<div')).join('')}</div>
+  <span class="meta">${num(m.verts)} vertices · ${kb(m.kb)} download${more}</span></div></div>`}
+function lookSeg(id){return `<div class="seg" id="${id}" role="group" aria-label="Machine models"><button type="button" data-l="detail" aria-pressed="${look==='detail'}">Detailed</button><button type="button" data-l="simple" aria-pressed="${look==='simple'}">Simple</button></div>`}
+const renders=[];
+function setLook(l){look=l;store.set('ay_look',l);document.querySelectorAll('[data-l]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.l===l));renders.forEach(r=>r())}
+document.addEventListener('click',e=>{const b=e.target.closest('[data-l]');if(b)setLook(b.dataset.l)});
+// machines and boats
+{const ids=[...new Set(MODELS.filter(m=>['Machines','Boats','People'].includes(m.g)).map(m=>m.id))],grid=$('#mgrid');
+  const S=sorter($('#mbar'),'mach',MKEYS,'tris',render,`<label>Models ${lookSeg('mlook')}</label>`);
+  function render(){const L=S.sort(ids.map(cur));
+    grid.innerHTML=`<div class="grid m3">${L.map((m,i)=>m3card(m,i,S,byId[m.id].simple&&byId[m.id].simple.tris!==byId[m.id].detail.tris?` · ${look==='detail'?'Simple':'Detailed'}: ${num(byId[m.id][look==='detail'?'simple':'detail'].tris)} tris`:'')).join('')}</div>`;thumbsIn(grid);applyFilter()}
+  renders.push(render);$('#mct').textContent=ids.length+' models'}
+// things to place
+{const L0=MODELS.filter(m=>m.g==='Things'),grid=$('#pgrid');
+  const K=Object.assign({},MKEYS,{cap:['Most placed',m=>m.cap,-1],area:['Footprint',m=>m.foot[0]*m.foot[1],-1],all:['Triangles at the most placed',m=>m.tris*m.cap,-1]});delete K.tpf;
+  const S=sorter($('#pbar'),'prop',K,'tris',render);
+  function render(){grid.innerHTML=S.sort(L0).map((m,i)=>m3card(m,i,S,` · up to ${m.cap} placed (${num(m.tris*m.cap)} tris) · footprint ${ft(m.foot[0])} × ${ft(m.foot[1])} ft`)).join('');thumbsIn(grid);applyFilter()}
+  $('#pct').textContent=L0.length+' kinds'}
+// trees
+{const L0=MODELS.filter(m=>m.g==='Trees'),grid=$('#tgrid');
+  const K=Object.assign({},MKEYS,{far:['Far detail triangles',m=>m.lod[2]+m.lod[3],-1],th:['Tree height',m=>m.h,-1]});delete K.tpf;delete K.len;delete K.wid;
+  const S=sorter($('#tbar'),'tree',K,'tris',render);
+  function render(){grid.innerHTML=S.sort(L0).map((m,i)=>m3card(m,i,S,` · trunk ${num(m.lod[0])} + leaves ${num(m.lod[1])} tris near, ${num(m.lod[2]+m.lod[3])} far · typical height ${ft(m.h)} ft`)).join('');thumbsIn(grid);applyFilter()}
+  $('#tct').textContent=L0.length+' species · '+D.trees.length+' textures'}
+
+// ---------- compare table ----------
+{const COLS=[['n','Model',m=>m.n,1],['g','Group',m=>m.g,1],['tris','Triangles',m=>m.tris,-1],['verts','Vertices',m=>m.verts,-1],['draws','Draws',m=>m.draws,-1],['mats','Materials',m=>m.mats,-1],
+    ['len','Length (ft)',LEN,-1],['wid','Width (ft)',WID,-1],['hgt','Height (ft)',HGT,-1],['kb','Download',m=>m.kb,-1]];
+  let st={k:'tris',d:-1};try{Object.assign(st,JSON.parse(store.get('ay_cmp')||'{}'))}catch(e){}
+  let grp='All';const G=['All','Machines','Boats','Things','Trees','People'];
+  $('#cbar').innerHTML=`<div class="seg" role="group" aria-label="Group">${G.map(g=>`<button type="button" data-g="${g}" aria-pressed="${g===grp}">${g}</button>`).join('')}</div><label>Machines ${lookSeg('clook')}</label>`;
+  $('#cbar').addEventListener('click',e=>{const b=e.target.closest('[data-g]');if(!b)return;grp=b.dataset.g;$('#cbar').querySelectorAll('[data-g]').forEach(x=>x.setAttribute('aria-pressed',x===b));render()});
+  function render(){const ids=[...new Set(MODELS.map(m=>m.id))],c=COLS.find(c=>c[0]===st.k)||COLS[2];
+    const L=ids.map(cur).filter(m=>grp==='All'||m.g===grp).sort((x,y)=>{const p=c[2](x),q=c[2](y);return (typeof p==='string'?p.localeCompare(q):p-q)*st.d});
+    const max=Math.max(...L.map(m=>m.tris));
+    $('#ctab').innerHTML=`<thead><tr>${COLS.map(([k,l],i)=>`<th class="${i>1?'n':''}"${k===st.k?` aria-sort="${st.d<0?'descending':'ascending'}"`:''}><button type="button" data-k="${k}">${l}</button></th>`).join('')}</tr></thead>
+    <tbody>${L.map(m=>`<tr data-id="${m.id}" data-name="${esc((m.n+' '+m.id).toLowerCase())}"><td>${esc(m.n)}</td><td>${m.g}</td><td class="n"><span class="bx" style="width:${Math.max(1,Math.round(m.tris/max*60))}px"></span>${num(m.tris)}</td><td class="n">${num(m.verts)}</td><td class="n">${m.draws}</td><td class="n">${m.mats}</td><td class="n">${ft(LEN(m))}</td><td class="n">${ft(WID(m))}</td><td class="n">${ft(HGT(m))}</td><td class="n">${kb(m.kb)}</td></tr>`).join('')}</tbody>`;
+    $('#cct').textContent=L.length+' models · '+num(L.reduce((a,m)=>a+m.tris,0))+' triangles';applyFilter()}
+  $('#ctab').addEventListener('click',e=>{const b=e.target.closest('th button');if(b){const c=COLS.find(c=>c[0]===b.dataset.k);st=st.k===c[0]?{k:c[0],d:-st.d}:{k:c[0],d:c[3]};store.set('ay_cmp',JSON.stringify(st));render();return}
+    const r=e.target.closest('tr[data-id]');if(r)openModel(r.dataset.id)});
+  renders.push(render)}
+
+// ---------- textures ----------
+const px=i=>i.w*i.h,res=i=>`${i.w}×${i.h} px`;
+const sw=(i,alt)=>`<button class="sw" type="button" data-full="${esc(i.p)}" data-cap="${esc(alt)} · ${i.w}×${i.h} · ${kb(i.kb)}"><img loading="lazy" src="${esc(i.t)}" alt="${esc(alt)}"></button>`;
+const card=(i,extra='')=>`<div class="card" data-name="${esc((i.n+' '+i.p).toLowerCase())}">${sw(i,i.n)}<div class="cb"><strong>${esc(i.n)}</strong>${i.note?`<span class="meta">${esc(i.note)}</span>`:''}<span class="meta">${esc(i.p)}<br>${res(i)} · ${kb(i.kb)}</span>${extra}</div></div>`;
+const TKEYS={kb:['File size',i=>i.kb,-1],px:['Resolution',px,-1],kbpx:['Bytes per pixel',i=>i.kb/px(i),-1],name:['Name',i=>i.n,1,'abc']};
+function texBin(bar,key,grid,list,def='kb'){const S=sorter(bar,key,TKEYS,def,()=>{grid.innerHTML=S.sort(list).map(i=>card(i)).join('');applyFilter()})}
+texBin($('#ttbar'),'ttex',$('#ttgrid'),D.trees);
+const mudWet=Object.assign({},D.lib.find(m=>m.id==='mud').maps[0],{n:'Mud, wet',note:'Freshly painted, soaked'});
+texBin($('#gbar'),'gtex',$('#ggrid'),[...D.ground,mudWet,...D.mud],'px');$('#gct').textContent=(D.ground.length+D.mud.length)+' files';
+texBin($('#xbar'),'xtex',$('#xgrid'),D.mach,'name');$('#xct').textContent=D.mach.length+' textures';
+$('#ograid').innerHTML=D.misc.map(i=>card(Object.assign({},i,{t:i.p}))).join('');
+$('#shgrid').innerHTML=D.shots.map(i=>card(i)).join('');$('#shct').textContent=D.shots.length+' images';
+// material library
+{const tot=m=>m.maps.reduce((a,x)=>a+x.kb,0),cats=[...new Set(D.lib.map(m=>m.cat))];
+  const K={cat:['Group',m=>cats.indexOf(m.cat)+m.n/1e9||0,1,'abc'],ft:['Tile size',m=>+m.ft,-1],kb:['File size (all maps)',tot,-1],maps:['Number of maps',m=>m.maps.length,-1],name:['Name',m=>m.n,1,'abc']};
+  K.cat[1]=m=>String(cats.indexOf(m.cat)).padStart(2,'0')+m.n;
+  const one=m=>{const c0=m.maps[0];return `<div class="card" data-name="${esc((m.n+' '+m.id).toLowerCase())}">${sw(c0,m.n+' · Colour')}<div class="cb"><strong>${esc(m.n)}</strong>
+      <span class="meta">${esc(m.id)} · ${esc(m.cat)}<br>tile ${m.ft} ft · ${res(c0)} · ${kb(tot(m))}${m.sh?' · shine '+m.sh:''}</span>
+      <div class="tags">${m.pbr?'<span class="tag pbr">PBR</span>':''}<span class="tag">${m.maps.length} map${m.maps.length>1?'s':''}</span></div>
+      ${m.maps.length>1?`<div class="maps">${m.maps.map((x,j)=>`<button type="button" aria-pressed="${!j}" data-t="${esc(x.t)}" data-p="${esc(x.p)}" data-cap="${esc(m.n+' · '+x.k)} · ${x.w}×${x.h} · ${kb(x.kb)}">${x.k==='Colour'?'Color':x.k}</button>`).join('')}</div>`:''}</div></div>`};
+  const S=sorter($('#lbar'),'lib',K,'cat',()=>{const L=S.sort(D.lib);
+    $('#libgrid').innerHTML=S.key()==='cat'?cats.map(c=>`<h3>${esc(c)}</h3><div class="grid">${L.filter(m=>m.cat===c).map(one).join('')}</div>`).join(''):`<div class="grid">${L.map(one).join('')}</div>`;applyFilter()});
+  $('#libct').textContent=D.lib.length+' materials';
+  $('#libgrid').addEventListener('click',e=>{const b=e.target.closest('.maps button');if(!b)return;const cd=b.closest('.card'),s=cd.querySelector('.sw');
+    cd.querySelectorAll('.maps button').forEach(x=>x.setAttribute('aria-pressed',x===b));s.querySelector('img').src=b.dataset.t;s.dataset.full=b.dataset.p;s.dataset.cap=b.dataset.cap})}
+const nTex=D.lib.reduce((a,m)=>a+m.maps.length,0)+D.ground.length+D.mud.length+D.trees.length+D.mach.length+D.misc.length;
+
+// ---------- sounds ----------
+const SN={x_idle:'Excavator idle',x_work:'Excavator working',t_idle:'Dump truck idle',t_work:'Dump truck working',h_idle:'Dozer, loader, semi idle',s_run:'Skid steer',m_idle:'Mower idle',m_run:'Mower running',b_idle:'Dirt bike idle',b_run:'Dirt bike running',o_idle:'Outboard idle',o_run:'Outboard at speed',f_run:'Small boat outboard',g_run:'Marine diesel (tug)',p_idle:'Pickup idle',p_run:'Pickup driving',a_idle:'Four-wheeler idle',a_run:'Four-wheeler revving',
+  tracks:'Tracks rolling',hyd:'Hydraulics',pour:'Gravel pouring',scrape:'Bucket scrape',tire:'Tires on dirt',alarm:'Backup alarm',brake:'Air brakes',horn:'Ferry horn',gate:'Tailgate shut',rocks:'Rocks falling',cavein:'Cave-in',thud:'Dirt thud',dig:'Digging soil',
+  wash:'Bow wash',splash:'Splash',trickle:'Trickle',slap:'Water slap on hull',lap:'Lake waves',step_g:'Footsteps, gravel',step_s:'Footsteps, grass',
+  gull:'Gulls',thun_n:'Thunder, near',thun_f:'Thunder, far',thun_r:'Thunder, rolling',rain:'Light rain',rain_h:'Medium rain',wind:'Wind in the forest',birds:'Morning birds',crickets:'Crickets',frogs:'Frogs and crickets'};
+const SG=[['Engines',/_(idle|run|work)$/],['Machine work',/^(tracks|hyd|pour|scrape|tire|alarm|brake|horn|gate|rocks|cavein|thud|dig)$/],['Water',/^(wash|splash|trickle|slap|lap)$/],['Footsteps',/^step_/],['Weather and nature',/./]];
+const sgOf=s=>SG.findIndex(([,re])=>re.test(s.f)),snm=s=>SN[s.f]||s.f,secs=s=>s.sec<60?s.sec.toFixed(1)+' s':Math.floor(s.sec/60)+':'+String(Math.round(s.sec%60)).padStart(2,'0');
+const PL='<svg viewBox="0 0 10 10"><path d="M2 1l7 4-7 4z"/></svg>',PA='<svg viewBox="0 0 10 10"><path d="M2 1h2v8H2zM6 1h2v8H6z"/></svg>';
+{const K={grp:['Group',s=>String(sgOf(s))+snm(s),1,'abc'],sec:['Length',s=>s.sec,-1],kb:['File size',s=>s.kb,-1],kbps:['Bit rate',s=>s.kb/s.sec,-1],name:['Name',snm,1,'abc']};
+  const row=s=>`<div class="srow" data-name="${esc((snm(s)+' '+s.f+' '+(s.by||'')).toLowerCase())}"><button class="play" type="button" data-f="${esc(s.f)}" aria-label="Play ${esc(snm(s))}">${PL}</button><div style="min-width:0"><strong style="font-size:14px">${esc(snm(s))}</strong><div class="meta">${esc(s.f)}.mp3 · ${secs(s)} · ${kb(s.kb)} · ${Math.round(s.kb*8/s.sec)} kbps${s.by?` · <a href="${esc(s.u)}" target="_blank" rel="noopener">${esc(s.by)}</a>`:''}</div><div class="pbar"><i></i></div></div></div>`;
+  const S=sorter($('#sbar'),'snd',K,'grp',()=>{stop();au.pause();const L=S.sort(D.sounds);
+    $('#sgrid').innerHTML=S.key()==='grp'?SG.map(([g],k)=>{const ss=L.filter(s=>sgOf(s)===k);return ss.length?`<h3>${g}</h3><div class="snd">${ss.map(row).join('')}</div>`:''}).join(''):`<div class="snd">${L.map(row).join('')}</div>`;applyFilter()});
+  $('#sct').textContent=D.sounds.length+' clips · '+Math.round(D.sounds.reduce((a,s)=>a+s.sec,0)/60)+' min'}
+const au=$('#au');let curP=null;
+function stop(){if(curP){curP.classList.remove('on');curP.innerHTML=PL;const b=curP.closest('.srow')?.querySelector('.pbar i');if(b)b.style.width='0'}curP=null}
+$('#sgrid').addEventListener('click',e=>{const b=e.target.closest('.play');if(!b)return;if(curP===b){au.pause();stop();return}
+  stop();curP=b;au.src='sounds/'+b.dataset.f+'.mp3';au.play().then(()=>{b.classList.add('on');b.innerHTML=PA}).catch(stop)});
+au.addEventListener('timeupdate',()=>{if(curP&&au.duration){const b=curP.closest('.srow')?.querySelector('.pbar i');if(b)b.style.width=(au.currentTime/au.duration*100)+'%'}});
+au.addEventListener('ended',stop);
+
+// ---------- tally ----------
+{const ids=[...new Set(MODELS.map(m=>m.id))];
+  $('#tally').innerHTML=`<div><b>${ids.length}</b><span>Models</span></div><div><b>${nTex}</b><span>Textures</span></div><div><b>${D.sounds.length}</b><span>Sounds</span></div><div><b>${Math.round(ids.reduce((a,id)=>a+byId[id].detail.tris,0)/1000)}k</b><span>Triangles</span></div>`}
+
+// ---------- the 3D viewer ----------
+let V=null,vModel=null,vId=null,spin=true,wire=false;
+function viewer(){if(V)return V;const el=$('#mv'),r=new THREE.WebGLRenderer({antialias:true,alpha:true});r.setPixelRatio(Math.min(2,devicePixelRatio));el.appendChild(r.domElement);
+  const S=stage(r),cam=new THREE.PerspectiveCamera(30,1,0.1,100),oc=new OrbitControls(cam,r.domElement);oc.enableDamping=true;oc.autoRotateSpeed=1.4;
+  const size=()=>{const w=el.clientWidth,h=el.clientHeight;if(!w)return;r.setSize(w,h,false);cam.aspect=w/h;cam.updateProjectionMatrix()};new ResizeObserver(size).observe(el);
+  r.setAnimationLoop(()=>{if(!$('#md').open)return;oc.autoRotate=spin&&!matchMedia('(prefers-reduced-motion: reduce)').matches;oc.update();r.render(S.sc,cam)});
+  return V={r,S,cam,oc,size}}
+function setWire(o){o.traverse(n=>{if(n.isMesh)[].concat(n.material).forEach(m=>m.wireframe=wire)})}
+async function showModel(id){const m=cur(id),v=viewer();vId=id;$('#mdn').textContent=m.n;
+  $('#mvst').innerHTML=`<span><b>${num(m.tris)}</b> triangles</span><span><b>${num(m.verts)}</b> vertices</span><span><b>${m.draws}</b> draws</span><span><b>${m.mats}</b> materials</span><span><b>${ft(LEN(m))} × ${ft(WID(m))} × ${ft(HGT(m))}</b> ft L×W×H</span><span><b>${kb(m.kb)}</b></span>`;
+  $('#mdlook').hidden=!byId[id].simple;
+  const o=await loadModel(m.f);if(vId!==id||cur(id)!==m)return;if(vModel){v.S.sc.remove(vModel)}vModel=o;
+  setWire(o);v.size();const {d,ty}=v.S.put(o,v.cam);v.oc.target.set(0,ty,0);v.oc.minDistance=d*0.25;v.oc.maxDistance=d*4;v.oc.update()}
+function openModel(id){$('#md').showModal();showModel(id)}
+renders.push(()=>{if($('#md').open&&vId)showModel(vId)});
+document.addEventListener('click',e=>{const s=e.target.closest('.st');if(s)openModel(s.dataset.id)});
+$('#mdx').onclick=()=>$('#md').close();$('#md').addEventListener('click',e=>{if(e.target===$('#md'))$('#md').close()});
+$('#mdwire').onclick=e=>{wire=!wire;e.target.setAttribute('aria-pressed',wire);if(vModel)setWire(vModel)};
+$('#mdspin').onclick=e=>{spin=!spin;e.target.setAttribute('aria-pressed',spin)};
+
+// ---------- lightbox and filter ----------
+const lb=$('#lb');document.addEventListener('click',e=>{const s=e.target.closest('.sw');if(!s)return;$('#lbimg').src=s.dataset.full;$('#lbimg').alt=s.dataset.cap;$('#lbcap').textContent=s.dataset.cap;lb.showModal()});
+$('#lbx').onclick=()=>lb.close();lb.addEventListener('click',e=>{if(e.target===lb)lb.close()});
+function applyFilter(){const q=$('#q').value.trim().toLowerCase();document.querySelectorAll('[data-name]').forEach(el=>{if(q&&!el.dataset.name.includes(q))el.setAttribute('data-hide','');else el.removeAttribute('data-hide')})}
+$('#q').addEventListener('input',applyFilter);
+</script>
