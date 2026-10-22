@@ -35,6 +35,7 @@ const KEY_ACTIONS=[
   {id:'sprint',g:'On foot',n:'Sprint',d:'Hold to run flat out, about 12 mph',k:['ShiftLeft','ShiftRight'],s:'walk'},
   {id:'plant',g:'On foot',n:'Plant a tree',d:'A sapling of the chosen kind in front of you (next to one of yours: dig it up). Slide ☰ Time, Date ahead to see it grow',k:['Digit7'],s:'walk'},
   {id:'plantKind',g:'On foot',n:'Tree to plant',d:'Steps through spruce, red pine, oak, sugar maple and birch',k:['Digit8'],s:'walk'},
+  {id:'carry',g:'On foot',n:'Carry: load and unload',d:'At the store, take what is stocked there (or put it back); at a pickup\'s tailgate, load what you carry or take out the top thing; anywhere else set it down, empty a bag of mulch on Corley\'s island, or pick a thing up',k:['KeyG'],s:'walk'},
   {id:'blocks',g:'Blocks',n:'Blocks on / off',d:'Show the block bar and the outline where one lands',k:['KeyB']},
   {id:'place',g:'Blocks',n:'Place block',d:'Under the bucket, in front of you on foot, or at the dot in first person',k:['KeyE']},
   {id:'lift',g:'Blocks',n:'Lift block',d:'The top block under the bucket, the one in front of you, or the one at the dot',k:['KeyX']},

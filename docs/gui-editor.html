@@ -156,7 +156,7 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 .exswitch[hidden]{display:none}
 .exswitch button{height:40px;min-width:76px;padding:0 14px;font-size:17px;border:0;border-radius:20px;background:transparent;color:var(--muted)}
 .exswitch button[aria-pressed="true"]{background:var(--machine);color:#1c1309}
-#jumpBtn,#sprintBtn,#plantBtn{height:46px;min-width:78px;padding:0 14px;font-size:17px;border-radius:23px;box-shadow:var(--lift)}
+#jumpBtn,#sprintBtn,#plantBtn,#bedBtn{height:46px;min-width:78px;padding:0 14px;font-size:17px;border-radius:23px;box-shadow:var(--lift)}
 #jumpBtn{background:var(--machine);color:#1c1309;border:0}
 #sprintBtn[aria-pressed="true"]{background:rgba(255,138,31,.2);color:var(--machine);border-color:var(--machine)}
 #jumpBtn:active{transform:translateY(1px)}
@@ -639,7 +639,7 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
     </div>
     <div class="stickwrap">
       <div class="exswitch" id="exSwitch" role="group" aria-label="Excavator: drive or dig"><button id="exDrive" aria-pressed="false">Drive</button><button id="exDig" aria-pressed="true">Dig</button></div>
-      <div class="walkbtns" id="walkBtns" hidden><button id="sprintBtn" aria-pressed="false">Sprint</button><button id="jumpBtn">Jump</button><button id="plantBtn">Plant</button></div>
+      <div class="walkbtns" id="walkBtns" hidden><button id="sprintBtn" aria-pressed="false">Sprint</button><button id="jumpBtn">Jump</button><button id="plantBtn">Plant</button><button id="bedBtn" hidden>Load</button></div>
       <div class="stick" id="stickR"><div class="knob"></div></div>
     </div>
   </div>
@@ -960,6 +960,10 @@ const TUNE=[
   ['pkSpd','Pickup','Top speed',35*0.44704,'mph',5,120,1],['pkRev','Pickup','Top speed in reverse',10*0.44704,'mph',2,30,1],
   ['pkAcc','Pickup','Acceleration (engine pull)',1,'pct',20,400,5],['pkBrake','Pickup','Braking',1,'pct',20,400,5],
   ['pkLock','Pickup','Steering lock',0.6,'deg',10,50,1],['pkGrip','Pickup','Grip in turns (lower slides sooner)',1,'pct',20,400,5],
+  // the pickups' beds and the store in town (pickup.js)
+  ['bedGrip','Pickup bed','How well loads grip the bed (lower slides sooner)',0.45,'pct',5,150,5],['bedMax','Pickup bed','Most things the bed holds',32,'n',1,40,1],
+  ['bedReach','Pickup bed','How far from the bed you can load it',0.9,'ft',1,10,0.5],['mulchW','Pickup bed','A bag of mulch spreads this wide',1.8,'ft',2,20,0.5],
+  ['shopRestock','Pickup bed','The store restocks one of each every',180,'min',0.5,60,0.5],
   ['atSpd','Four-wheeler','Top speed',30*0.44704,'mph',5,90,1],['atRev','Four-wheeler','Top speed in reverse',7*0.44704,'mph',2,25,1],
   ['atAcc','Four-wheeler','Acceleration (engine pull)',1,'pct',20,400,5],['atBrake','Four-wheeler','Braking',1,'pct',20,400,5],
   ['atLock','Four-wheeler','Steering lock',0.7,'deg',10,50,1],['atGrip','Four-wheeler','Grip in turns (lower slides sooner)',0.85,'pct',20,400,5],
@@ -1010,7 +1014,7 @@ const TUNE=[
   ['vrTurn','VR','Turn speed on foot with the right stick (0 = 30° snap steps)',120*Math.PI/180,'deg',0,360,5],
   ['vrComfort','VR','Comfort vignette: how far the view darkens at its edges while you drive fast or turn (0 = off)',0.5,'pct',0,100,5]];
 // unit: [shown = code value × factor, label]
-const TUNE_U={mph:[1/0.44704,'mph'],ft:[1/0.3048,'ft'],deg:[180/Math.PI,'°/s'],yd3:[1.307951,'yd³'],pct:[100,'%'],s:[1,'s'],min:[1/60,'min'],in:[1/0.0254,'in']};
+const TUNE_U={mph:[1/0.44704,'mph'],ft:[1/0.3048,'ft'],deg:[180/Math.PI,'°/s'],yd3:[1.307951,'yd³'],pct:[100,'%'],s:[1,'s'],min:[1/60,'min'],in:[1/0.0254,'in'],n:[1,'']};
 const tuneShow=(e,v)=>v*TUNE_U[e[4]][0];
 const tuneCode=(e,d)=>d/TUNE_U[e[4]][0];
 // the values the game runs on
@@ -1137,6 +1141,19 @@ const WORDS=[
   ['plantWalk','Planting','Get out and walk to plant a tree',''],
   ['plantWet','Planting','Too wet to plant here: find dry ground',''],
   ['plantFull','Planting','That makes {n} planted trees, the most there can be: dig one up first','{n}: how many'],
+  ['pbHint','Pickup bed','The bed carries mulch, tools and groceries: drive to the Lakeside General Store at the south end of Main Street, over the bridges to the mainland. [carry] loads and unloads here at the tailgate.',''],
+  ['pbWalk','Pickup bed','Get out and walk to load or unload a pickup',''],
+  ['pbNothing','Pickup bed','Nothing to carry here: stand by a pickup\'s tailgate or the store\'s stock',''],
+  ['shopTake','Pickup bed','Bought a {item} ({n} so far). Carry it to a pickup\'s tailgate and press [carry]','{item}: what it is; {n}: how many bought'],
+  ['shopOut','Pickup bed','Sold out of {items} for now: more comes in every {min} min','{items}: what; {min}: minutes'],
+  ['shopBack','Pickup bed','Put the {item} back','{item}: what it is'],
+  ['bedLoad','Pickup bed','Loaded the {item}: {n} in the bed','{item}: what it is; {n}: how many in the bed'],
+  ['bedUnload','Pickup bed','Took out the {item} ({n} left in the bed). [carry] sets it down; a bag of mulch spreads on Corley\'s island','{item}: what it is; {n}: how many left'],
+  ['bedFull','Pickup bed','The bed is full',''],['bedMoving','Pickup bed','Stop the pickup first',''],
+  ['bedLost','Pickup bed','A {item} slid out of the pickup\'s bed!','{item}: what it is'],['bedLostLake','Pickup bed','A {item} slid out of the bed into the lake!','{item}: what it is'],
+  ['mulchSpread','Pickup bed','Spread a bag of mulch, about {ft} ft across ({n} bags spread)','{ft}: feet across; {n}: bags spread in all'],
+  ['mulchNoPaint','Pickup bed','Set the bag down: mulch spreads on Corley\'s island, off the bridges',''],
+  ['itemDown','Pickup bed','Set the {item} down','{item}: what it is'],['itemUp','Pickup bed','Picked up the {item}','{item}: what it is'],
   ['glReset','Other','The phone reset the graphics (low on memory). A lower Dirt detail helps.']];
 const WORDS_BY={};for(const w of WORDS)WORDS_BY[w[0]]=w;
 // the owner's words if the skin has them, else the game's own; html: escaped, with the filled-in parts in bold and the

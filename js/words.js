@@ -105,6 +105,19 @@ const WORDS=[
   ['plantWalk','Planting','Get out and walk to plant a tree',''],
   ['plantWet','Planting','Too wet to plant here: find dry ground',''],
   ['plantFull','Planting','That makes {n} planted trees, the most there can be: dig one up first','{n}: how many'],
+  ['pbHint','Pickup bed','The bed carries mulch, tools and groceries: drive to the Lakeside General Store at the south end of Main Street, over the bridges to the mainland. [carry] loads and unloads here at the tailgate.',''],
+  ['pbWalk','Pickup bed','Get out and walk to load or unload a pickup',''],
+  ['pbNothing','Pickup bed','Nothing to carry here: stand by a pickup\'s tailgate or the store\'s stock',''],
+  ['shopTake','Pickup bed','Bought a {item} ({n} so far). Carry it to a pickup\'s tailgate and press [carry]','{item}: what it is; {n}: how many bought'],
+  ['shopOut','Pickup bed','Sold out of {items} for now: more comes in every {min} min','{items}: what; {min}: minutes'],
+  ['shopBack','Pickup bed','Put the {item} back','{item}: what it is'],
+  ['bedLoad','Pickup bed','Loaded the {item}: {n} in the bed','{item}: what it is; {n}: how many in the bed'],
+  ['bedUnload','Pickup bed','Took out the {item} ({n} left in the bed). [carry] sets it down; a bag of mulch spreads on Corley\'s island','{item}: what it is; {n}: how many left'],
+  ['bedFull','Pickup bed','The bed is full',''],['bedMoving','Pickup bed','Stop the pickup first',''],
+  ['bedLost','Pickup bed','A {item} slid out of the pickup\'s bed!','{item}: what it is'],['bedLostLake','Pickup bed','A {item} slid out of the bed into the lake!','{item}: what it is'],
+  ['mulchSpread','Pickup bed','Spread a bag of mulch, about {ft} ft across ({n} bags spread)','{ft}: feet across; {n}: bags spread in all'],
+  ['mulchNoPaint','Pickup bed','Set the bag down: mulch spreads on Corley\'s island, off the bridges',''],
+  ['itemDown','Pickup bed','Set the {item} down','{item}: what it is'],['itemUp','Pickup bed','Picked up the {item}','{item}: what it is'],
   ['glReset','Other','The phone reset the graphics (low on memory). A lower Dirt detail helps.']];
 const WORDS_BY={};for(const w of WORDS)WORDS_BY[w[0]]=w;
 // the owner's words if the skin has them, else the game's own; html: escaped, with the filled-in parts in bold and the

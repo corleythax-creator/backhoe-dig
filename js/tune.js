@@ -31,6 +31,10 @@ const TUNE=[
   ['pkSpd','Pickup','Top speed',35*0.44704,'mph',5,120,1],['pkRev','Pickup','Top speed in reverse',10*0.44704,'mph',2,30,1],
   ['pkAcc','Pickup','Acceleration (engine pull)',1,'pct',20,400,5],['pkBrake','Pickup','Braking',1,'pct',20,400,5],
   ['pkLock','Pickup','Steering lock',0.6,'deg',10,50,1],['pkGrip','Pickup','Grip in turns (lower slides sooner)',1,'pct',20,400,5],
+  // the pickups' beds and the store in town (pickup.js)
+  ['bedGrip','Pickup bed','How well loads grip the bed (lower slides sooner)',0.45,'pct',5,150,5],['bedMax','Pickup bed','Most things the bed holds',32,'n',1,40,1],
+  ['bedReach','Pickup bed','How far from the bed you can load it',0.9,'ft',1,10,0.5],['mulchW','Pickup bed','A bag of mulch spreads this wide',1.8,'ft',2,20,0.5],
+  ['shopRestock','Pickup bed','The store restocks one of each every',180,'min',0.5,60,0.5],
   ['atSpd','Four-wheeler','Top speed',30*0.44704,'mph',5,90,1],['atRev','Four-wheeler','Top speed in reverse',7*0.44704,'mph',2,25,1],
   ['atAcc','Four-wheeler','Acceleration (engine pull)',1,'pct',20,400,5],['atBrake','Four-wheeler','Braking',1,'pct',20,400,5],
   ['atLock','Four-wheeler','Steering lock',0.7,'deg',10,50,1],['atGrip','Four-wheeler','Grip in turns (lower slides sooner)',0.85,'pct',20,400,5],
@@ -81,7 +85,7 @@ const TUNE=[
   ['vrTurn','VR','Turn speed on foot with the right stick (0 = 30° snap steps)',120*Math.PI/180,'deg',0,360,5],
   ['vrComfort','VR','Comfort vignette: how far the view darkens at its edges while you drive fast or turn (0 = off)',0.5,'pct',0,100,5]];
 // unit: [shown = code value × factor, label]
-const TUNE_U={mph:[1/0.44704,'mph'],ft:[1/0.3048,'ft'],deg:[180/Math.PI,'°/s'],yd3:[1.307951,'yd³'],pct:[100,'%'],s:[1,'s'],min:[1/60,'min'],in:[1/0.0254,'in']};
+const TUNE_U={mph:[1/0.44704,'mph'],ft:[1/0.3048,'ft'],deg:[180/Math.PI,'°/s'],yd3:[1.307951,'yd³'],pct:[100,'%'],s:[1,'s'],min:[1/60,'min'],in:[1/0.0254,'in'],n:[1,'']};
 const tuneShow=(e,v)=>v*TUNE_U[e[4]][0];
 const tuneCode=(e,d)=>d/TUNE_U[e[4]][0];
 // the values the game runs on
