@@ -8,7 +8,7 @@ The order follows the idea board's priority scores (realism, fun, how often you'
 
 These have shipped in part; each is listed with what's left.
 
-- [ ] **Q15 Ultra graphics** (45%): the rest of the machines and the ground on Ultra: soft shadows, ambient occlusion, wet sheen
+- [ ] **Q15 Ultra graphics** (55%): every machine is now on PBR materials with detailed models (v185 to v189) and Ultra has ambient occlusion (Q07, built); left: soft shadows, wet sheen and drops on the machines, and the rest of the ground
 - [ ] **M08 Pickup truck** (40%): the lowboy trailer and hauling the mini excavator
 - [ ] **J15 Pay and the day's log** (40%): fuel, hour meters and pay
 - [ ] **A05 / A07 Footsteps and rain** (60% / 40%): squelch in mud, hollow bridge decks, rain on the porch roofs
@@ -48,4 +48,4 @@ The GDD's open question: what pulls you back tomorrow. This milestone answers it
 
 ## Done
 
-See `CHANGELOG.md` for every version, and the idea board's Done list for the ideas that shipped.
+See `CHANGELOG.md` for every version, and the idea board's Completed section for the ideas that shipped in full.
