@@ -173,7 +173,7 @@ function sorter(bar,key,keys,def,render,extra=''){let st={};try{st=JSON.parse(st
 // textures load before the materials that use them are built (a clone of a texture still loading would never upload)
 const texC={},texP={},TL=new THREE.TextureLoader();
 const texLoad=p=>texP[p]=texP[p]||TL.loadAsync(p).then(t=>texC[p]=t,()=>null);
-function tex(t){const k=t.p;if(!texC[k])return null;const x=texC[k].clone();x.wrapS=x.wrapT=THREE.RepeatWrapping;x.repeat.set(...t.rep);x.offset.set(...t.off);x.rotation=t.rot||0;if(t.ctr)x.center.set(...t.ctr);
+function tex(t){const k=t.p;if(!texC[k])return null;const x=texC[k].clone();x.wrapS=x.wrapT=THREE.RepeatWrapping;x.repeat.set(...t.rep);x.offset.set(...t.off);x.rotation=t.rot||0;if(t.ctr)x.center.set(...t.ctr);x.flipY=t.fy!==false;
   x.colorSpace=t.srgb?THREE.SRGBColorSpace:THREE.NoColorSpace;x.anisotropy=4;x.needsUpdate=true;return x}
 function gameMat(m){const u=m.userData||{},o={color:m.color,vertexColors:!!u.vc,flatShading:!!u.flat,side:u.side||0,transparent:!!u.tr,opacity:u.op==null?1:u.op,alphaTest:u.at||0};let n;
   if(u.kind==='MeshPhongMaterial')n=new THREE.MeshPhongMaterial(Object.assign(o,{shininess:u.shin,specular:u.spec}));
@@ -200,7 +200,7 @@ function stage(r){const sc=new THREE.Scene();sc.add(new THREE.HemisphereLight(0x
     put(o,cam,view){const b=new THREE.Box3().setFromObject(o),c=b.getCenter(new THREE.Vector3()),sz=b.getSize(new THREE.Vector3()),d=Math.max(sz.length(),0.5);
       o.position.set(-c.x,-b.min.y,-c.z);sc.add(o);gnd.scale.setScalar(d*1.4);gnd.position.y=0.002;
       const sh=sun.shadow.camera;sh.left=sh.bottom=-d;sh.right=sh.top=d;sh.near=0.1;sh.far=d*6;sh.updateProjectionMatrix();sun.position.set(d*0.9,d*1.6,d*1.1);
-      const ty=sz.y*0.42;cam.near=d/200;cam.far=d*20;cam.position.set(d*1.03,ty+d*0.6,d*1.3);cam.lookAt(0,ty,0);cam.updateProjectionMatrix();return {d,ty}}}}
+      const ty=sz.y*0.42;cam.near=d/200;cam.far=d*30;const k=Math.max(1,sz.y*0.62/Math.tan(Math.PI/12)/(d*1.75));cam.position.set(d*1.03*k,ty+d*0.6*k,d*1.3*k);cam.lookAt(0,ty,0);cam.updateProjectionMatrix();return {d,ty}}}}
 const TW=480,TH=360;let thumbR=null,thumbS=null;
 function thumbStage(){if(!thumbR){thumbR=new THREE.WebGLRenderer({antialias:true,alpha:true,preserveDrawingBuffer:true});thumbR.setPixelRatio(1);thumbR.setSize(TW,TH,false);thumbS=stage(thumbR)}return thumbS}
 const thumbQ=[];let thumbBusy=false;
