@@ -100,7 +100,9 @@ function siteTick(){if(bench.on)return;const now=performance.now();
   if(waterMoved)site.dirty=true;
   if(site.dirty&&now-site.saveT>4000)siteSave();
   if(now-site.rigT>2000){const s=rigSig();if(s!==site.rigSig){site.rigSig=s;rigSave()}else site.rigT=now}}
-function siteSaveAll(){if(bench.on)return;siteSave();rigSave()}
+// on the way out: the rigs only if they moved (or the trench clock runs), so an idle device doesn't look changed to the
+// sync and reload the other one; a map edit still waiting to save goes first
+function siteSaveAll(){if(bench.on)return;try{if(ed.pend)edSave()}catch(e){}siteSave();if(rigSig()!==site.rigSig||st.startT&&!st.done)rigSave()}
 addEventListener('pagehide',siteSaveAll);
 document.addEventListener('visibilitychange',()=>{if(document.hidden)siteSaveAll()});
 siteLoad();rigLoad();

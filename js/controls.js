@@ -25,10 +25,11 @@ function makeStick(el){
     knob.style.transform=`translate(${dx}px,${dy}px)`;
     const dz=v=>Math.abs(v)<0.12?0:(v-Math.sign(v)*0.12)/0.88;
     s.x=dz(dx/max);s.y=dz(-dy/max);};
-  el.addEventListener('pointerdown',e=>{e.preventDefault();s.id=e.pointerId;el.setPointerCapture(e.pointerId);move(e);started()});
+  el.addEventListener('pointerdown',e=>{e.preventDefault();if(s.id!==null)return;s.id=e.pointerId;el.setPointerCapture(e.pointerId);move(e);started()});
   el.addEventListener('pointermove',e=>{if(e.pointerId===s.id)move(e)});
   const end=e=>{if(e.pointerId!==s.id)return;s.id=null;s.x=s.y=0;knob.style.transform=''};
-  el.addEventListener('pointerup',end);el.addEventListener('pointercancel',end);
+  // a second finger on a held stick is ignored; losing the capture lets go too, so a lost pointerup can't lock the stick
+  el.addEventListener('pointerup',end);el.addEventListener('pointercancel',end);el.addEventListener('lostpointercapture',end);
   return s;
 }
 const SL=makeStick($('#stickL')),SR=makeStick($('#stickR'));
@@ -50,9 +51,11 @@ addEventListener('keydown',e=>{const c=e.code;
   if(acts.length||c.startsWith('Arrow')||c==='Space'||c==='Tab')e.preventDefault();
   if(edOn)return;
   if(!kbUsed){kbUsed=true;padUsed=false;document.body.classList.add('kb');setCaps()}
-  if(!e.repeat)for(const id of acts)if(KEY_RUN[id])KEY_RUN[id](e);
+  // a key shared by an on-foot action and a machine one (s:'walk', s:'ride', keys.js) runs only the one for where you are
+  if(!e.repeat)for(const id of acts){const sc=KEY_BY[id].s;if(sc&&(sc==='walk')!==(mode==='walk'))continue;if(KEY_RUN[id])KEY_RUN[id](e)}
   started()});
-addEventListener('keyup',e=>{keys[e.code]=false});
+// macOS sends no keyup for keys let go while Cmd is down, so Cmd's own keyup lets go of everything
+addEventListener('keyup',e=>{keys[e.code]=false;if(e.key==='Meta')clearKeys()});
 const clearKeys=()=>{for(const k in keys)keys[k]=false};
 addEventListener('blur',clearKeys);document.addEventListener('visibilitychange',clearKeys);
 const held=id=>keyBind[id].some(c=>c&&keys[c]),kv=(a,b)=>(held(a)?1:0)-(held(b)?1:0);
@@ -158,12 +161,15 @@ function setCaps(){const m=mode,two=(a,b)=>`${keyLabel(a)} ${keyLabel(b)}`,lh=kb
 // running the arm; exLast is the one you were last in, which Excavator in the Drive list goes back to
 let exLast='dig';
 function exSwap(){if(mode!=='dig'&&mode!=='drive')return;setMode(mode==='dig'?'drive':'dig');toast(say(mode==='drive'?'exDriving':'exDigging'),'',2200)}
-function setMode(m){if(m===mode)return;mode=m;setTurnSens();const ex=m==='dig'||m==='drive';if(ex)exLast=m;$('#exSwitch').hidden=!ex;
+function setMode(m){if(m===mode)return;
+  // no room to climb out: stay in the machine, as Get out does (seatToggle), rather than turn up where you got in
+  if(m==='walk'&&wk.inside&&!wkPlaceOut(wk.inside)){toast(say('noRoomOut'));return}
+  mode=m;setTurnSens();const ex=m==='dig'||m==='drive';if(ex)exLast=m;$('#exSwitch').hidden=!ex;
   $('#exDrive').setAttribute('aria-pressed',m==='drive');$('#exDig').setAttribute('aria-pressed',m==='dig');$('#modeDig').setAttribute('aria-pressed',ex);
   for(const [id,k] of [['#modeDrive','drive'],['#modeTruck','truck'],['#modeMow','mow'],['#modeSkid','skid'],['#modeWalk','walk']])$(id).setAttribute('aria-pressed',m===k);
   $('#walkBtns').hidden=m!=='walk';if(m!=='walk')setSprint(false);
   // switching to Walk from a machine you climbed into sets you down beside it
-  if(m==='walk'){if(wk.inside){wkPlaceOut(wk.inside);wk.inside=null}wk.view=wk.yaw}
+  if(m==='walk'){wk.inside=null;wk.view=wk.yaw}
   setCaps();markTile();firstCam=true;fpReset();if(m==='mow'&&!lawn.startT&&!lawn.done)toast(say(kbUsed?'mowKb':'mowTouch'),'',3800);
   if(m==='skid')toast(say(kbUsed?'skidKb':'skidTouch'),'',4200);
   if(m==='boat')toast(say('boatTip'),'',4200);

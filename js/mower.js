@@ -231,8 +231,11 @@ function lawnLoad(){let d=null;try{d=JSON.parse(localStorage.getItem(LAWN_KEY))}
   lawnCount();if(lawn.pct>=0.97)lawn.done=true;fieldLoad(d.field,away);
   if(d.mw&&isFinite(d.mw.x)&&isFinite(d.mw.z)&&isFinite(d.mw.yaw))mwSaved=d.mw}
 try{lawnLoad()}catch(e){lawn.ct.fill(-1e9);lawn.gd.fill(1);lawn.str.fill(0);lawn.ga.fill(0);mwSaved=null;try{localStorage.removeItem(LAWN_KEY)}catch(e2){}}
-addEventListener('pagehide',lawnSave);
-document.addEventListener('visibilitychange',()=>{if(document.hidden)lawnSave()});
+// only when something changed (or the mowing clock runs): load ages the grass by the save's time, so an idle device
+// writes nothing new for the sync
+const lawnOut=()=>{if(lawn.sDirty||lawn.startT&&!lawn.done)lawnSave()};
+addEventListener('pagehide',lawnOut);
+document.addEventListener('visibilitychange',()=>{if(document.hidden)lawnOut()});
 // share of the grass that counts as mowed: below half its height (refreshed a few times a second)
 function lawnCount(){let c=0,live=0;for(let k=0;k<LAWN_ON;k++){const n=lawnCells[k];if(lawn.dug[n])continue;live++;if(lawnG(n)<0.5)c++}lawn.pct=live>0?c/live:1}
 function lawnPct(){return lawn.pct}
