@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-22T22:05:00Z",
+ "updated": "2026-10-22T22:13:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -48,9 +48,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-22",
-   "dh": 43,
+   "dh": 57,
    "act": 1.5,
-   "versions": 3
+   "versions": 4
   }
  ],
  "extra": [
@@ -1842,6 +1842,15 @@ window.EFFORT = {
    "tris": 5201322,
    "chars": 1251284,
    "what": "Corley's backhoe is here at the end of his machine row: drive it on four wheels, scoop with the loader, then swing the seat round (Drive / Dig), drop the outriggers and dig with the hoe."
+  },
+  {
+   "v": 199,
+   "asked": "2026-10-22T20:50:00-05:00",
+   "live": "2026-10-22T17:13:40-05:00",
+   "dh": 14,
+   "tris": 5239637,
+   "chars": 1282302,
+   "what": "Drive a pickup to the new Lakeside General Store in town for mulch, tools and groceries; carry them (T on foot) into the bed, where they slide if you brake hard, and spread the mulch at home."
   }
  ]
 };
