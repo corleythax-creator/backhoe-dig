@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-21T23:31:00Z",
+ "updated": "2026-10-22T00:00:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -42,9 +42,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-21",
-   "dh": 30,
-   "act": 1.5,
-   "versions": 3
+   "dh": 36,
+   "act": 2,
+   "versions": 4
   }
  ],
  "extra": [
@@ -1728,6 +1728,15 @@ window.EFFORT = {
    "tris": 4758955,
    "chars": 1187049,
    "what": "Detailed models for the pickups and four-wheelers: real wheel arches, tinted glass, chrome grille, alloy wheels and a lined bed on the pickup; knobby tyres, tube frame, shocks, racks and sculpted fenders on the four-wheeler"
+  },
+  {
+   "v": 187,
+   "asked": "2026-10-21T18:25:00-05:00",
+   "live": "2026-10-21T19:00:35-05:00",
+   "dh": 6,
+   "tris": 4794106,
+   "chars": 1187049,
+   "what": "The detailed dump truck is rebuilt: a rounded hood with framed intakes, a cab with rounded corners, rubber window gaskets and roof clearance lights, and a dump body with a boxed top rail, side braces and a gusseted cab protector."
   }
  ]
 };
