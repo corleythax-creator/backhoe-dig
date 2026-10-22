@@ -40,7 +40,7 @@ const MODES=['dig','drive','truck','mow','skid','walk'];let kbUsed=false;
 const KEY_RUN={dig:()=>setMode('dig'),drive:()=>setMode('drive'),exSwap:()=>exSwap(),truck:()=>setMode('truck'),mow:()=>setMode('mow'),skid:()=>setMode('skid'),walk:()=>setMode('walk'),
   nextMode:e=>setMode(MODES[(MODES.indexOf(mode)+(e.shiftKey?MODES.length-1:1))%MODES.length]),
   stats:()=>showStats(statBox.hidden),heat:()=>{if(!heat.on)setHeat(true);else if(heat.mode!==HEAT_MODES[HEAT_MODES.length-1][0])heatNext();else setHeat(false)},
-  enter:()=>seatToggle(),jump:()=>walkJump(),plant:()=>plantHere(),plantKind:()=>plantNext(),blocks:()=>setBlocks(!blkOn),place:()=>placeBlock(),lift:()=>removeBlock(),size:()=>blkCube(1),blkTurn:()=>blkTurn(),blkLock:()=>toast(say('blkSnap',{snap:blkLockNext()}),'',1400),blkFar:()=>blkReachBy(2),blkNear:()=>blkReachBy(-2),
+  enter:()=>seatToggle(),jump:()=>walkJump(),plant:()=>plantHere(),trim:()=>trimSet(!trim.on),trimBump:()=>trimBump(),plantKind:()=>plantNext(),blocks:()=>setBlocks(!blkOn),place:()=>placeBlock(),lift:()=>removeBlock(),size:()=>blkCube(1),blkTurn:()=>blkTurn(),blkLock:()=>toast(say('blkSnap',{snap:blkLockNext()}),'',1400),blkFar:()=>blkReachBy(2),blkNear:()=>blkReachBy(-2),
   blkMat:()=>{let m=blkMat;do m=(m+1)%MAT_MAX;while(m&&!MAT_LIST[m-1]);setBlkMat(m);toast(say('blkMat',{mat:blkMatName(blkMat)}),'',1400)},
   box:()=>hookBox(),lookAhead:()=>{if(camMode==='cab')fpl.home=true;fpl.zt=1},pump:()=>setPump(!pumpOn),wipers:()=>setWipers(!wipeOn),cam:()=>$('#camBtn').click(),map:()=>toggleMap(),sound:()=>setSound(!sndCfg.on),help:()=>{help.hidden=!help.hidden}};
 addEventListener('keydown',e=>{const c=e.code;
@@ -167,7 +167,7 @@ function setMode(m){if(m===mode)return;
   mode=m;setTurnSens();const ex=m==='dig'||m==='drive';if(ex)exLast=m;$('#exSwitch').hidden=!ex;
   $('#exDrive').setAttribute('aria-pressed',m==='drive');$('#exDig').setAttribute('aria-pressed',m==='dig');$('#modeDig').setAttribute('aria-pressed',ex);
   for(const [id,k] of [['#modeDrive','drive'],['#modeTruck','truck'],['#modeMow','mow'],['#modeSkid','skid'],['#modeWalk','walk']])$(id).setAttribute('aria-pressed',m===k);
-  $('#walkBtns').hidden=m!=='walk';if(m!=='walk')setSprint(false);
+  $('#walkBtns').hidden=m!=='walk';if(m!=='walk'){setSprint(false);trimSet(false)}
   // switching to Walk from a machine you climbed into sets you down beside it
   if(m==='walk'){wk.inside=null;wk.view=wk.yaw}
   setCaps();markTile();firstCam=true;fpReset();if(m==='mow'&&!lawn.startT&&!lawn.done)toast(say(kbUsed?'mowKb':'mowTouch'),'',3800);

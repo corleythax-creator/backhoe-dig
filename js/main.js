@@ -51,7 +51,7 @@ function frame(now){
   if(bench.on){benchTick(dt);driveIn=0;turnIn=0;tThr=0;tSteer=0;tBed=0;mL=0;mR=0}
   updateTruck(dt,tThr,tSteer,tBed);updateMower(dt,mL,mR);if(bench.on){sDrive=sTurn=sArm=sCurl=0}updateSkid(dt,sDrive,sTurn,sArm,sCurl);
   siteTick();
-  if(mode==='walk'&&!bench.on)updateWalker(dt,Lx,Ly,Rx*Ts,Ry);else updateWalker(dt,0,0,0,0);
+  if(mode==='walk'&&!bench.on)updateWalker(dt,Lx,Ly,Rx*Ts,Ry);else updateWalker(dt,0,0,0,0);trimTick(dt);
   boatTick(dt,bThr,bSteer);lakeBoatsTick(dt);bikeTick(dt,kThr,kSteer);hvTick(dt,hDrive,hTurn,hArm,hCurl);twinTick();
   statTick(dt);
   // what the mixer hears: hydraulic demand, a ram pushed against its stop (relief valve), tracks moving
@@ -194,10 +194,10 @@ function frame(now){
     $('#haulVal').textContent=(mode==='truck'?`${Math.round(Math.abs(tr.v)*2.237)} mph · ${tr.shiftT>0?'N':tr.gear>0?'D':'R'} · `:'')+`Hauled ${(tr.hauled*1.308).toFixed(1)} yd³`;
     // in Mow mode the lawn takes the bucket's place, so the card keeps its height
     lawnsTick(dt);
-    {const lr=$('#lawnRow'),show=mode==='mow';if(lr.hidden===show){lr.hidden=!show;$('#bucketPanel').hidden=show}
+    {const lr=$('#lawnRow'),show=mode==='mow'||mode==='walk'&&trim.on;if(lr.hidden===show){lr.hidden=!show;$('#bucketPanel').hidden=show}
       if(show){const lp=Math.floor(lawnPct()*100),ls=lawn.startT?Math.round(((lawn.done?lawn.doneT:now)-lawn.startT)/1000):0;
         $('#lawnVal').textContent=`${lp}% · ${Math.floor(ls/60)}:${String(ls%60).padStart(2,'0')}`;$('#lawnBar i').style.width=lp+'%';
-        $('#mowVal').textContent=`${(Math.abs(mw.v)*2.237).toFixed(1)} mph · blades ${mw.load>0.2?'cutting':'on'}`}}
+        $('#mowVal').textContent=mode==='mow'?`${(Math.abs(mw.v)*2.237).toFixed(1)} mph · blades ${mw.load>0.2?'cutting':'on'}`:`Trimmer line ${trimIn(trim.line)} in · spool ${Math.round(trim.spool/0.3048)} ft${trim.line<TU.trimMin?' · bump it':''}`}}
     const gv=$('#gasVal');
     gv.textContent=st.strikes?`Gas main: ${st.strikes} strike${st.strikes>1?'s':''}`:st.exposed?'Gas main: exposed ✓':'Gas main: buried';
     gv.style.color=st.strikes?'var(--danger)':st.exposed?'var(--ok)':'';
