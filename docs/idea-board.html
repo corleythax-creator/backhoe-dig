@@ -91,6 +91,10 @@ tbody tr:hover td{background:rgba(245,184,0,.07)}
 .bnote{color:var(--s);font-size:13px;max-width:60ch}
 .bnote.part{color:var(--m)}
 tr.done td{opacity:.6}
+.dhd{font:400 20px var(--f-disp);color:var(--gold);margin:0;display:flex;align-items:center;gap:8px}
+.cdone .wrow{grid-template-columns:minmax(0,1fr) auto}.cdone .wn{color:var(--muted)}.cdone .wp{color:var(--s);font-size:13px;font-weight:600;white-space:nowrap}
+.tkbuilt{color:var(--s);margin-top:8px}
+@media (max-width:600px){.cdone .wrow{grid-template-columns:1fr}}
 .bar{position:fixed;left:0;right:0;bottom:0;background:linear-gradient(180deg,rgba(40,32,22,.96),rgba(18,15,10,.98));border-top:1px solid rgba(245,184,0,.5);padding:8px max(16px,env(safe-area-inset-right,0px)) calc(8px + env(safe-area-inset-bottom,0px)) max(16px,env(safe-area-inset-left,0px));box-shadow:0 -10px 30px rgba(0,0,0,.45);z-index:5}
 .bar .in{max-width:1280px;margin:0 auto;display:flex;flex-wrap:wrap;align-items:center;justify-content:space-between;gap:6px 12px}
 .sum{display:flex;flex-wrap:wrap;gap:4px 18px;font-variant-numeric:tabular-nums;font-size:14px;align-items:baseline;color:var(--muted)}
@@ -249,7 +253,7 @@ tr.on .rin{background:var(--amber);color:var(--amber-ink);border-color:var(--amb
       <label>Realism at least <select id="fp"><option value="0">Any</option><option>3</option><option>5</option><option>6</option><option>7</option><option>8</option></select></label>
       <label>Fun at least <select id="ff"><option value="0">Any</option><option>3</option><option>5</option><option>6</option><option>7</option><option>8</option></select></label>
       <label>Category <select id="fgs"><option value="">All categories</option></select></label>
-      <label>Status <select id="fd"><option value="">All</option><option value="open">Not built</option><option value="done">Built or started</option></select></label>
+      <label>Status <select id="fd"><option value="">All open</option><option value="open">Not started</option><option value="part">Part built</option></select></label>
       <label>Hidden <select id="fh"><option value="">Leave out hidden</option><option value="all">Show hidden too</option><option value="only">Only hidden</option></select></label>
       <label><input id="fo" type="checkbox"> Ranked only</label>
       <label><input id="fph" type="checkbox"> Hide high phone cost</label>
@@ -325,6 +329,12 @@ tr.on .rin{background:var(--amber);color:var(--amber-ink);border-color:var(--amb
       <tbody id="tb"></tbody>
     </table>
   </div>
+
+  <section class="panel cdone" id="pdone" aria-labelledby="donehd">
+    <h2 class="dhd" id="donehd">Completed <span id="donen" class="badge"></span></h2>
+    <p class="hint">Ideas built in full, newest first. They are off the list above, the ranking and Next up; part-built ones stay above with their percent.</p>
+    <div id="doneb"></div>
+  </section>
 </div>
 
 <div class="bar">
@@ -742,6 +752,28 @@ const I=[
 ];
 // built (or partly built) ideas: date and what is in the game; part: more steps left (still pickable); pc: percent done
 const DONE={
+E08:{d:"Oct 18 (v146)",n:"The map editor keeps several named maps on the device and switches between them, downloads a map as a file and opens one, and shows what a map holds."},
+I05:{d:"Oct 18 (v135, v140), Oct 20 (v175)",n:"Every island keeps its own ground: holes dug on Corley's, the Family Island, Dexter's and Jessica's stay and save where you left them, each lawn keeps its own mowed share, and the blocks and machines stay put, so a half-done job waits for you."},
+Q07:{d:"Oct 19 (v165)",n:"On Ultra graphics, contact shade (ambient occlusion) darkens the creases in the trench, the hollows and the ground under the machines."},
+J22:{d:"Oct 17 (v23, v24), Oct 18 (v116)",part:true,pc:60,n:"Walls cut deeper than about 4 ft, or with spoil within 2 ft of the edge, cave in after a warning trickle; the trench box holds the walls it stands between, and soaked clay faces slump after rain. Still to come: a crew in the trench, and a slump with them inside stopping the job."},
+D15:{d:"Oct 17 (v43)",part:true,pc:70,n:"Dig below about 6 ft and groundwater seeps in from the sides, levels out and makes mud; the pump dries the trench out. Still to come: a sump and the cone of drawdown spreading round it."},
+D12:{d:"Oct 17 (v32, v68)",part:true,pc:50,n:"Fresh spoil ruts deep, and tracks and tyres press loose fill down by up to 30%, so driven-over fill packs hard. Still to come: piles settling and firming up on their own over a few minutes."},
+B02:{d:"Oct 20 (v181)",part:true,pc:40,n:"Dexter's blue crew-cab pickup drives anywhere, with a V8 that shifts through its gears. Still to come: trips to town and carrying mulch, tools and groceries in the bed."},
+S13:{d:"Oct 17 (v74, v77, v81), Oct 18 (v117)",part:true,pc:60,n:"A sign at each bridge end names the island ahead (Family Island, Dexter's Island, Jessica's Island), and Dexter's yard and the spoil yard have their own. Still to come: pointer signs at the roundabout and to the mainland."},
+S16:{d:"Oct 18 (v115)",part:true,pc:75,n:"Every island's cliffs became a rocky bank and a sand beach that slopes into the water. Still to come: driftwood."},
+I16:{d:"Oct 18 (v115), Oct 19 (v153)",part:true,pc:45,n:"The Family Island has a sand beach and you can wade in and swim. Still to come: a rope swing off a big oak and a floating raft to swim out to."},
+S18:{d:"Oct 18 (v119), Oct 19 (v154, v156)",part:true,pc:45,n:"The lakeside town has a marina with a pier, finger slips and boats moored at them, and a runabout you can take out. Still to come: a breakwater, a fuel dock and a bait shop."},
+S21:{d:"Oct 18 (v119)",part:true,pc:25,n:"The lakeside town has a boardwalk on its beach. Still to come: the ice-cream window, bait shop, cafe and visitors."},
+T12:{d:"Oct 18 (v119)",part:true,pc:45,n:"A lakeside town on the mainland to the south: Main Street with a block of shops each side and a cross street, a boardwalk on the beach and a marina, reached over a trestle and causeway or by boat. Still to come: a bigger city with streets of houses and a waterfront promenade."},
+S24:{d:"Oct 18 (v119)",part:true,pc:30,n:"A pine and leaf woods on the mainland to the north, reached over a trestle, with birdsong by day. Still to come: trails, ferns, fallen logs and a creek to cross."},
+K14:{d:"Oct 18 (v119)",part:true,pc:20,n:"A hayfield with a fence and round bales on the mainland to the north. Still to come: mowing it in rows with a tractor, and an acres meter."},
+Q06:{d:"Oct 17 (v34)",part:true,pc:40,n:"The lake reflects the sky, more strongly at low angles. Still to come: the cliffs and islands mirrored in calm water."},
+C06:{d:"Oct 18 (v109)",part:true,pc:50,n:"The screen editor can swap the two sticks for every device or just phones. Still to come: a left-handed switch each player sets for themself."},
+A03:{d:"Oct 20 (v180)",part:true,pc:50,n:"The tracks clatter with a real recording as the machines drive. Still to come: idler squeal that rises with speed."},
+X17:{d:"Oct 17 (v68, v69), Oct 18 (v122)",part:true,pc:50,n:"Tracks sink and dig in in soft mud and pack with wet clay that slows them. Still to come: slipping on wet slopes, and a thrown track to jack back on."},
+R09:{d:"Oct 20 (v176)",part:true,pc:30,n:"Mowed grass grows back while the game is closed. Still to come: mud drying and puddles soaking away while you are gone, and a note of what changed."},
+S12:{d:"Oct 19 (v157)",part:true,pc:40,n:"Dexter's dirt bike track has a tabletop jump, whoops and banked turns. Still to come: building your own dirt ramps and launching the truck or a side-by-side off them."},
+E03:{d:"Oct 18 (v113)",part:true,pc:70,n:"The map editor's Add catalogue places cones, barrels, pallets, a porta-potty, signs, light towers, fences and more. Still to come: trailers and pipe stacks."},
 M24:{d:"Oct 20 (v181)",n:"Dexter's red four-wheeler, parked in his yard: get on and ride it anywhere, sliding in hard turns, with a real quad engine. Its top speed, acceleration, braking, steering and grip are in the Tuning tab."},
 M08:{d:"Oct 20 (v181)",part:true,pc:40,n:"Dexter's blue crew-cab pickup drives like a car with a V8 that shifts through its gears; top speed, acceleration, braking, steering and grip are in the Tuning tab. Still to come: the lowboy trailer and hauling the mini excavator."},
 A02:{d:"Oct 20 (v180)",n:"Real recordings everywhere: wind in gusts that blows harder up on the mesa and in a storm, birds by day, frogs near the water at night, and waves lapping the nearest shore from its side."},
@@ -757,7 +789,7 @@ S04:{d:"Oct 17 (v81), Oct 18 (v149)",n:"Diesel light towers stand in Dexter's ya
 X06:{d:"Oct 18 (v149)",part:true,pc:50,n:"After dusk the machine you are in lights the ground ahead (the excavator's cab lamps, the truck's headlights; on foot a headlamp) and the lamp lenses glow. Still to come: lights on the boom and an amber beacon."},
 D14:{d:"Oct 18 (v125 to v144)",n:"Dig anywhere on Corley's and the three islands: the map is cut into 105 ft tiles, the dig grid follows the excavator or skid steer, and every hole is kept, drawn and saved when you leave it. The Dig site test (☰, or ?digtest) checks it and times it on your phone."},
 B10:{d:"Oct 18 (v123)",n:"A lattice-boom crawler crane on a deck barge with spud poles, a stack of steel pipe piles and a stack of plate girders works along the temporary timber trestles: for each span it lifts a pile, upends it, drives it with a vibratory hammer, then swings a girder into place, and the span turns to steel with a concrete deck. The town trestle first, then the north one; about 4 minutes a span (Tuning: Bridges), saved and synced, and the temporary signs come down when a trestle is done."},
-Q15:{d:"Oct 18 (v114), Oct 20 (v182)",part:true,pc:45,n:"The excavator and the dump truck on physically based materials: painted steel, bare steel and rubber with wear, scratches, relief and roughness, reflecting the sky, and a new rounded cab, hood, fenders, dump body and tailgate on the truck (Detailed machine models). Relief and wet sheen on 28 painted materials (gravel, brick, cobble, concrete and more) on High graphics: bumps from normal maps that fade with distance, sheen from roughness maps plus extra sheen in rain, with Ground look sliders in the Tuning tab. Still to come: sky lighting, soft sun shadows, bloom, better trees, relief on the natural grass and dirt."},
+Q15:{d:"Oct 18 (v114), Oct 19 (v165, v169), Oct 20 (v182), Oct 21 (v185 to v189)",part:true,pc:55,n:"Ultra graphics for strong PCs (contact shade, glow and a camera-like colour grade). Every machine on physically based materials (worn paint, bare steel, rubber, chrome and glass that reflect the sky), with detailed models of the excavator, dump truck, dozers, loaders, semis, pickups and four-wheelers, and a realistic rigged worker. Relief and wet sheen on 28 painted materials and on the natural dirt and grass on High graphics, with Ground look sliders in the Tuning tab. Still to come: sky lighting, soft sun shadows, wet-surface darkening and drops on the machines in Ultra, and the rest of the ground."},
 D02:{d:"Oct 17 (v68, v69, v73)",n:"Tracks and tires sink up to 9 in and leave ruts with berms; push on in deep mud and they dig in and spin until you rock free (forward, back, forward). Rain or painted Mud soaks the ground, and it bogs anywhere on the mesa."},
 H14:{d:"Oct 17 (v76)",n:"A chess table and a checkers table at the Family Island pavilion, set up to play. Walk up and Get in becomes Play chess or Play checkers: the island saves and opens Mesa at full quality, and its Corley's Island link brings you back beside the table."},
 Q02:{d:"Oct 17 (v68, v80, v85)",n:"Tracks and tyres leave rounded ruts with the tread printed in the bottom, and lay the field grass flat the way they drove; the trampled tracks spring back over a few minutes."},
@@ -780,10 +812,10 @@ C01:{d:"Oct 17 (v60, v78)",part:true,pc:40,n:"In cab view drag to look round, on
 I04:{d:"Oct 17 (v83)",part:true,pc:50,n:"Tap the site map to teleport there on foot or with a machine. Still to come: sailing between docks."},
 J15:{d:"Oct 17 (v93)",part:true,pc:40,n:"Stats (menu, or O) count dirt dug and hauled, grass mowed, distance and time in each machine. Still to come: fuel, hour meters and pay."},
 Q04:{d:"Oct 17 (v32)",part:true,pc:40,n:"The bucket gets dirty and tracks and tyres get muddy as you work. Still to come: washing clean in rain or at a wash spot."},
-D01:{d:"Oct 17 (v32), Oct 19 (v116)",n:"Moist clay clings in the excavator bucket, the skid steer bucket and the truck bed when tipped (most when moist, less dry or as slop) and takes up room until shaken out: rock the curl fast or slam it into the dump stop; bump the truck bed into its top stop. It falls as big lumps."},
-D06:{d:"Oct 17 (v22, v80), Oct 19 (v116)",n:"Each soil holds its own angle, piles too (dry sand 32°, topsoil 36°, lumpy clay 42°): damp sand and soil stand steeper, soaked faces a foot or more tall slump (sand to about 26°, clay to about 29°), so piles and trench walls can let go after rain, and a growing pile slides in small avalanches to just under its angle."},
+D01:{d:"Oct 17 (v32), Oct 18 (v116)",n:"Moist clay clings in the excavator bucket, the skid steer bucket and the truck bed when tipped (most when moist, less dry or as slop) and takes up room until shaken out: rock the curl fast or slam it into the dump stop; bump the truck bed into its top stop. It falls as big lumps."},
+D06:{d:"Oct 17 (v22, v80), Oct 18 (v116)",n:"Each soil holds its own angle, piles too (dry sand 32°, topsoil 36°, lumpy clay 42°): damp sand and soil stand steeper, soaked faces a foot or more tall slump (sand to about 26°, clay to about 29°), so piles and trench walls can let go after rain, and a growing pile slides in small avalanches to just under its angle."},
 W03:{d:"Oct 17 (v47)",part:true,pc:40,n:"Wind comes in gusts that roll across the grass. Still to come: dust off the piles and trees swaying harder."},
-X11:{d:"Oct 17 (v32), Oct 19 (v122)",n:"Working wet clay packs into the excavator undercarriage (most while turning, up to about 800 lb): the tracks drag and turn slower, and lumps show on the track frames. It drops off in clumps as you drive, faster on firm ground and when you rock the tracks back and forth, and slowly as it dries."},
+X11:{d:"Oct 17 (v32), Oct 18 (v122)",n:"Working wet clay packs into the excavator undercarriage (most while turning, up to about 800 lb): the tracks drag and turn slower, and lumps show on the track frames. It drops off in clumps as you drive, faster on firm ground and when you rock the tracks back and forth, and slowly as it dries."},
 I11:{d:"Oct 17 (v77)",part:true,pc:30,n:"Jessica's Island is a forest mesa with lantern-lit gravel paths, a cliff bench and her stone cottage. Still to come: a lookout tower and a campsite."},
 E05:{d:"Oct 17 (v60)",part:true,pc:30,n:"Copy map gives a few KB of text to paste into Load a map on another device. Still to come: opening a map from a link, and a gallery."},
 Q09:{d:"Oct 17 (v52, v87)",part:true,pc:40,n:"Graphics Low is the light preset for phones, and the Graphics panel shows the frame rate live. Still to come: a preset that holds 60."},
@@ -840,6 +872,15 @@ function renderWip(){
 }
 {const ws=$("wipg");for(const k of Object.keys(G)){const n=I.filter(r=>r[1]===k&&DONE[r[0]]&&DONE[r[0]].part).length;if(!n)continue;const o=document.createElement("option");o.value=k;o.textContent=G[k]+" ("+n+")";ws.appendChild(o)}
  ws.addEventListener("change",renderWip);$("wips").addEventListener("change",renderWip);$("wipn").textContent=I.filter(r=>DONE[r[0]]&&DONE[r[0]].part).length;renderWip()}
+// Completed: every idea built in full, newest version first
+function doneVer(d){const m=(d||"").match(/v(\d+)/g);return m?Math.max(...m.map(x=>+x.slice(1))):0}
+function renderDone(){const b=$("doneb");b.textContent="";
+  const rows=I.filter(r=>DONE[r[0]]&&!DONE[r[0]].part).sort((x,y)=>doneVer(DONE[y[0]].d)-doneVer(DONE[x[0]].d)||x[0].localeCompare(y[0]));
+  $("donen").textContent=rows.length;
+  if(!rows.length)b.appendChild(el("div","empty","Nothing built in full yet."));
+  for(const r of rows){const d=DONE[r[0]],w=el("div","wrow"),t=el("div","wt");t.append(el("span",null,r[0]),r[2]);
+    const g=el("span","wtag",GS[r[1]]);g.style.setProperty("--gc",GC[r[1]]);t.appendChild(g);
+    w.append(t,el("div","wp","Built "+d.d),el("div","wn",d.n));b.appendChild(w)}}
 const TRACKS=[["pipe","Pipeline job","Lay a real pipeline: pipelayer, valves, tests, a bore under the road and a pump station at the end.",["J04","M27","U14","U12","U11","J22","J21","U15","S29","M29","U10"]],["road","Build a road","Stake it, cut and fill, crown and drain it, test the compaction, pave and stripe it.",["J06","J37","J05","M07","M06","J26","J25","J38","J27","J04","J29","J23","B18","B20"]],["quarry","Quarry and mining","Drill and blast a bench, load haul trucks, crush and stockpile stone, sell it by the ton, reclaim the pit.",["S03","D16","M34","J40","D17","M36","M35","J43","M32","M38","J45","J16","J46","J44","J48"]],["farm","Farm, field and woods","Mow the big hayfield, bale hay, and ride ATVs and side-by-sides through woods you can explore.",["M19","M25","K14","K15","M26","I32","M24","S24","S25","S26","S27","S28","S32","S33"]],["cozy","Cozy lake life","Sauna, fish fry, porch picking, mist, stars and the neighbors: the down-home feel of the lake.",["H01","H08","H21","H22","H26","H31","W12","W14","W15","A09","L09","S34","H25","I33"]],["rail","Trains and traffic","Busy road, trains on the shore, a rail crossing with gates, track work and a ride to town.",["B11","B12","B13","B14","B15","B16"]],["fleet","The yard fleet","Drive the loader and dozer, haul with the articulated truck, fuel and fix the machines.",["M02","M03","M05","M06","M07","M09","M10","M11","M16","X16","Y14"]],["excav","Excavator craft","Couplers, thumb and hammer, tilt, grade guides, GPS control and a machine that tips and wears.",["X01","X02","X03","X07","X12","X13","X15","X14","X09","X17","X18"]],["wet","Weather and wet ground","Rain you can see land, storms, mud, groundwater, erosion and the drainage that answers them.",["W01","W09","W03","W05","W08","W13","D02","D13","D15","J19","J34","J35","J39"]],["fam","Family Island life","The islands, the ferry, the family and the evenings together.",["I01","I02","I03","I04","I06","I07","I16","I17","I21","I28"]],["biz","Business and simulation","Work orders, money, bids, supplies and the ladder of operator skill.",["R02","J01","J15","J24","T04","T14","T06","Y13"]]];
 
 // ---- Next up and Tracks: what to build next, from the built marks and the "needs" links ----
@@ -909,7 +950,8 @@ function renderAcc(bodyId,groups,openSet,icons){
     const bar=el("div","tkb"),bi=el("i");bi.style.width=pc+"%";bar.appendChild(bi);
     sm.append(top,bar);if(nx)sm.appendChild(el("div","tkn","Next: "+nx[0]+" "+nx[2]));
     const body=el("div","tkbody");body.appendChild(el("div","tkd",d));
-    for(const r of rows)body.appendChild(xrow(r,{next:nx&&nx[0]===r[0]}));
+    for(const r of rows)if(stOf(r[0])!=="built")body.appendChild(xrow(r,{next:nx&&nx[0]===r[0]}));
+    const bl=rows.filter(r=>stOf(r[0])==="built");if(bl.length)body.appendChild(el("div","tkd tkbuilt","Built (in Completed): "+bl.map(r=>r[0]+" "+r[2]).join(", ")));
     dt.append(sm,body);b.appendChild(dt)}
 }
 $("tkall").addEventListener("click",()=>{trackList().forEach(t=>tkOpen.add(t[0]));renderTracks()});
@@ -952,7 +994,7 @@ function render(){
   const q=$("q").value.trim().toLowerCase(),s=$("fs").value,mp=+$("fp").value,mf=+$("ff").value,only=$("fo").checked,fd=$("fd").value,fh=$("fh").value,nph=$("fph").checked;
   RK=new Map([...picks].map((id,i)=>[id,i+1]));
   const nf=(s?1:0)+(mp?1:0)+(mf?1:0)+(only?1:0)+(fd?1:0)+(fh?1:0)+(nph?1:0)+FG.size;$("fcount").textContent=nf;$("fcount").hidden=!nf;
-  shown=I.filter(r=>{const n=N(r);return(!FG.size||FG.has(r[1]))&&(!s||n.c===+s)&&n.R>=mp&&n.F>=mf&&(!only||picks.has(r[0]))&&(!nph||n.ph!=="high")&&(!fd||(fd==="done")===!!DONE[r[0]])&&(fh==="all"||(fh==="only")===hid.has(r[0]))&&(!q||(r[0]+" "+r[2]+" "+r[3]+" "+G[r[1]]).toLowerCase().includes(q))});
+  shown=I.filter(r=>{const n=N(r);return(!FG.size||FG.has(r[1]))&&(!s||n.c===+s)&&n.R>=mp&&n.F>=mf&&(!only||picks.has(r[0]))&&(!nph||n.ph!=="high")&&stOf(r[0])!=="built"&&(!fd||stOf(r[0])===fd)&&(fh==="all"||(fh==="only")===hid.has(r[0]))&&(!q||(r[0]+" "+r[2]+" "+r[3]+" "+G[r[1]]).toLowerCase().includes(q))});
   shown.sort((a,b)=>{const x=key(a),y=key(b);const c=typeof x==="string"?x.localeCompare(y):x-y;if(c)return c*sortD;const t=prio(b)-prio(a);if(t)return t;return a[0].localeCompare(b[0])});
   document.querySelectorAll("th button[data-k]").forEach(b=>{const on=b.dataset.k===sortK;b.classList.toggle("sorted",on);b.querySelector(".arr").textContent=on&&sortD<0?"▼":"▲"});
   new Set([...document.querySelectorAll("th button[data-k]")].map(b=>b.closest("th"))).forEach(th=>th.setAttribute("aria-sort",th.querySelector("button.sorted")?(sortD<0?"descending":"ascending"):"none"));
@@ -975,7 +1017,7 @@ function render(){
     tr.append(c0,idCell(r),ci,cc,sc,pc);
     tb.appendChild(tr)
   }
-  syncSortp();$("count").textContent=shown.length+" of "+I.length+" shown"+(hid.size?" · "+hid.size+" hidden":"");
+  syncSortp();$("count").textContent=shown.length+" of "+I.filter(r=>stOf(r[0])!=="built").length+" open shown"+(hid.size?" · "+hid.size+" hidden":"");
   totals()
 }
 function totals(){
@@ -1012,8 +1054,8 @@ $("send").addEventListener("click",async()=>{
   catch(e){const c=e&&e.code;st.textContent=(c==="consent_denied"||c==="not_granted"?"Sending needs your OK for the Claude Code Remote connector. ":"Couldn't send ("+(c||"error")+"). ")+"Use Copy and paste it into a chat instead."}
   sending=false;totals()
 });
-(function(){const st=$("stats"),add=(b,t)=>{const x=el("span","stat");x.append(el("b",null,b),t);st.appendChild(x)};add(I.length,"ideas");add(Object.keys(G).length,"groups");add("~"+Math.round(I.reduce((a,r)=>a+COST[N(r).c][1],0)),"sessions in all")})();
-render();
+(function(){const st=$("stats"),add=(b,t)=>{const x=el("span","stat");x.append(el("b",null,b),t);st.appendChild(x)};add(I.length,"ideas");add(I.filter(r=>stOf(r[0])==="built").length,"built");add(I.filter(r=>stOf(r[0])==="part").length,"part built");add(Object.keys(G).length,"groups");add("~"+Math.round(I.reduce((a,r)=>a+COST[N(r).c][1],0)),"sessions in all")})();
+renderDone();render();
 if(window.claude&&window.claude.use)window.claude.use("mcp").then(m=>{MCP=m;if(!m)$("send").hidden=true;totals()}).catch(()=>{$("send").hidden=true});
 else $("send").hidden=true;
 </script>

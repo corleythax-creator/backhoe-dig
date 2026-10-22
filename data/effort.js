@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-22T00:17:00Z",
+ "updated": "2026-10-22T01:33:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -42,9 +42,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-21",
-   "dh": 56,
-   "act": 2,
-   "versions": 5
+   "dh": 74.5,
+   "act": 3.5,
+   "versions": 11
   }
  ],
  "extra": [
@@ -1746,6 +1746,60 @@ window.EFFORT = {
    "tris": 5070010,
    "chars": 1190306,
    "what": "Detailed models for the dozers, wheel loaders and semis: tracks with real shoes, rollers and a raised sprocket, a curved blade and ripper on working rams; deep-lug tyres, Z-bar arms and a curved bucket on the loader; a long-hood red semi with chrome grille, stacks and tanks pulling a lowboy with an oak plank deck"
+  },
+  {
+   "v": 189,
+   "asked": "2026-10-21T18:30:00-05:00",
+   "live": "2026-10-21T19:21:42-05:00",
+   "dh": 10,
+   "tris": 5117385,
+   "chars": 1195296,
+   "what": "The worker on foot is now a realistic rigged man (MakeHuman CC0): real skin and face with stubble, T-shirt, jeans, work boots, a hi-vis vest with reflective bands and a hard hat, posed by the same walk, run, jump, swim and ride moves"
+  },
+  {
+   "v": 190,
+   "asked": "2026-10-21T19:15:00-05:00",
+   "live": "2026-10-21T19:32:08-05:00",
+   "dh": 1,
+   "tris": 5000626,
+   "chars": 1195296,
+   "what": "A plain-text CHANGELOG.md on GitHub listing every version, newest first and grouped by day, rebuilt by each release"
+  },
+  {
+   "v": 191,
+   "asked": "2026-10-21T19:40:00-05:00",
+   "live": "2026-10-21T19:41:45-05:00",
+   "dh": 4,
+   "tris": 5118248,
+   "chars": 1195296,
+   "what": "A hub page (hub.html) with everything about the game in one place: the version, the roadmap, a design doc, the changelog, the ideas and the credits, with links to the game, the build log and the editors"
+  },
+  {
+   "v": 192,
+   "asked": "2026-10-21T19:55:00-05:00",
+   "live": "2026-10-21T20:10:22-05:00",
+   "dh": 1,
+   "tris": 4876416,
+   "chars": 1195296,
+   "what": "The hub page is now one template shared by all of Corley's games (only its settings differ), with a Roadmap count of items done"
+  },
+  {
+   "v": 193,
+   "asked": "2026-10-21T20:15:00-05:00",
+   "live": "2026-10-21T20:16:44-05:00",
+   "dh": 0.5,
+   "tris": 5029939,
+   "chars": 1195296,
+   "what": "The hub's documents with code in them fit a phone screen instead of scrolling the page sideways"
+  },
+  {
+   "v": 194,
+   "asked": "2026-10-21T20:25:00-05:00",
+   "live": "2026-10-21T20:33:46-05:00",
+   "dh": 2,
+   "tris": 5124128,
+   "chars": 1195296,
+   "what": "The idea board audited against the game: 26 ideas built moved to a new Completed section, 51 marked part built with how far along"
   }
  ]
 };

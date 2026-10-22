@@ -72,6 +72,7 @@ and paste the code (`view 40,-150,315,55,148`); Claude opens its headless screen
 
 ## 3. What runs on its own
 
+- **Everything in one place**: https://corleys-island.vercel.app/hub.html shows the version, the roadmap, the design doc, the changelog (rebuilt by every release), the ideas and the credits, with links to the game, the build log and the editors. To change the roadmap or the design doc, edit `docs/ROADMAP.md` or `docs/GDD.md` on GitHub (the pencil button) or ask Claude.
 - **Releases**: `tools/release.py` does the whole release in one step (version number, build log, merge, snapshot).
 - **Checks**: every change to the game on `main` is loaded headless by GitHub (the `check` workflow, free on this
   public repo); a red X on the commit means the game threw an error. GitHub emails you when it fails.
