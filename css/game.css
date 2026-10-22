@@ -47,7 +47,7 @@ canvas#view{position:fixed;inset:0;width:100%;height:100%;display:block;touch-ac
 .tacts{flex:none;margin-left:auto;display:flex;align-items:center;gap:2px;padding:3px;border-radius:14px;background:var(--glass);border:1px solid var(--hud-line);box-shadow:var(--lift);pointer-events:auto}
 .tacts>button{height:40px;border:0;background:transparent;border-radius:11px;padding:0 12px}
 .ib{display:inline-flex;align-items:center;gap:7px}
-#blkBtn[aria-pressed="true"],#pumpBtn[aria-pressed="true"],#wipeBtn[aria-pressed="true"],#ctlBtn[aria-expanded="true"]{background:rgba(255,138,31,.18);color:var(--machine);box-shadow:inset 0 0 0 1px rgba(255,138,31,.55)}
+#blkBtn[aria-pressed="true"],#pumpBtn[aria-pressed="true"],#gripBtn[aria-pressed="true"],#wipeBtn[aria-pressed="true"],#ctlBtn[aria-expanded="true"]{background:rgba(255,138,31,.18);color:var(--machine);box-shadow:inset 0 0 0 1px rgba(255,138,31,.55)}
 @media (hover:hover){.tacts>button:hover{background:var(--glass-hi)}}
 .row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 button{pointer-events:auto;touch-action:manipulation;font:600 15px/1 var(--f-display);letter-spacing:.07em;text-transform:uppercase;color:var(--ink);background:var(--glass);border:1px solid var(--hud-line);border-radius:12px;height:42px;padding:0 14px;cursor:pointer;
@@ -121,9 +121,9 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 .exswitch[hidden]{display:none}
 .exswitch button{height:40px;min-width:76px;padding:0 14px;font-size:17px;border:0;border-radius:20px;background:transparent;color:var(--muted)}
 .exswitch button[aria-pressed="true"]{background:var(--machine);color:#1c1309}
-#jumpBtn,#sprintBtn,#plantBtn,#bedBtn{height:46px;min-width:78px;padding:0 14px;font-size:17px;border-radius:23px;box-shadow:var(--lift)}
+#jumpBtn,#sprintBtn,#plantBtn,#trimBtn,#bumpBtn,#bedBtn{height:46px;min-width:78px;padding:0 14px;font-size:17px;border-radius:23px;box-shadow:var(--lift)}
 #jumpBtn{background:var(--machine);color:#1c1309;border:0}
-#sprintBtn[aria-pressed="true"]{background:rgba(255,138,31,.2);color:var(--machine);border-color:var(--machine)}
+#sprintBtn[aria-pressed="true"],#trimBtn[aria-pressed="true"]{background:rgba(255,138,31,.2);color:var(--machine);border-color:var(--machine)}
 #jumpBtn:active{transform:translateY(1px)}
 /* bottom layer: each stick's caption under it, the frame rate between them; no bar, the words carry a shadow */
 .bbar{grid-area:3/1/4/4;position:relative;z-index:2;pointer-events:none;display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;min-height:40px;box-sizing:border-box;

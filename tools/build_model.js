@@ -1,13 +1,13 @@
-// Corley's Island: writes models/<name>.glb from tools/models/<name>.js (the excavator, dump truck, pickup, atv, dozer, loader and semi; name them to
+// Corley's Island: writes models/<name>.glb from tools/models/<name>.js (the excavator, dump truck, pickup, atv, dozer, loader, semi and backhoe; name them to
 // build only those). It runs the builder in headless Chromium with three.js r147 (the game's version) and its exporter,
 // and prints the size and triangles per part.
-//   NODE_PATH=$(npm root -g) node tools/build_model.js [excavator] [truck] [pickup] [atv] [dozer] [loader] [semi]
+//   NODE_PATH=$(npm root -g) node tools/build_model.js [excavator] [truck] [pickup] [atv] [dozer] [loader] [semi] [backhoe]
 const {chromium}=require('playwright'),fs=require('fs'),path=require('path');
 const root=path.resolve(__dirname,'..'),CDN='https://cdn.jsdelivr.net/npm/three@0.147.0/';
 (async()=>{const b=await chromium.launch();try{const p=await b.newPage();p.on('pageerror',e=>{console.error(e.message);process.exitCode=1});
   await p.setContent('<html><body></body></html>');
   for(const f of ['build/three.min.js','examples/js/utils/BufferGeometryUtils.js','examples/js/geometries/RoundedBoxGeometry.js','examples/js/exporters/GLTFExporter.js'])await p.addScriptTag({url:CDN+f});
-  for(const name of process.argv.slice(2).length?process.argv.slice(2):['excavator','truck','pickup','atv','dozer','loader','semi']){
+  for(const name of process.argv.slice(2).length?process.argv.slice(2):['excavator','truck','pickup','atv','dozer','loader','semi','backhoe']){
   await p.addScriptTag({path:path.join(root,`tools/models/${name}.js`)});
   const r=await p.evaluate(fn=>new Promise((ok,no)=>{const g=window[fn](),tri={};
     g.traverse(o=>{if(o.isMesh){const n=o.geometry.index?o.geometry.index.count/3:o.geometry.attributes.position.count/3;tri[o.parent.name]=(tri[o.parent.name]||0)+n}});

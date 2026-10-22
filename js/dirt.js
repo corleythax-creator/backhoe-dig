@@ -262,7 +262,7 @@ const MUD=new THREE.Color(0.36,0.26,0.17);let grimeMats=null;
 function grimeTick(){
   if(!grimeMats){if(!texMixU.value)return;grimeMats=[];
     const own=(mesh,base,kind)=>{const m=base.clone();mesh.material=m;grimeMats.push({m,base,kind})};
-    for(const c of bucketP.children)if(c.isMesh&&c.userData.grime==='bucket')own(c,mdlSide(c).grimeBase,'bucket');else if(c.isMesh&&(c.material===STEEL||c.material===STEEL_L))own(c,c.material,'bucket');
+    for(const c of bkG.children)if(c.isMesh&&c.userData.grime==='bucket')own(c,mdlSide(c).grimeBase,'bucket');else if(c.isMesh&&(c.material===STEEL||c.material===STEEL_L))own(c,c.material,'bucket');
     for(const c of machine.children)if(c.isMesh&&c.userData.grime==='track')own(c,mdlSide(c).grimeBase,'track');else if(c.isMesh&&c.material===RUBBER)own(c,RUBBER,'track');
     for(const w of wheels)for(const c of w.children)if(c.isMesh&&c.material===RUBBER)own(c,RUBBER,'tire')}
   for(const g of grimeMats){const a=g.kind==='bucket'?st.grime*0.65:g.kind==='track'?st.mud*0.7:tr.mud*0.7;

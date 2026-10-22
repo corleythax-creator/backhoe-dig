@@ -167,7 +167,8 @@ function blkTerrainMoved(){if(blocks.length)blkWake=Math.max(blkWake,0.3)}
 function blkTick(dt){
   if(blkWake>0){blkWake-=dt;
     const order=blocks.slice().sort((a,b)=>a.y-b.y);let moving=false;
-    for(let i=0;i<order.length;i++){const b=order[i];let ty=blkGround(b.x,b.z,b.w,b.d);
+    // a block in the thumb's jaws (coupler.js) goes where the thumb takes it
+    for(let i=0;i<order.length;i++){const b=order[i];if(b===cpl.held)continue;let ty=blkGround(b.x,b.z,b.w,b.d);
       for(let j=0;j<i;j++){const o=order[j];if(blkOver(o,b.x,b.z,b.w,b.d))ty=Math.max(ty,o.y+o.h)}
       if(ty>=b.y){b.y=ty;b.vy=0}
       else{b.vy+=9.8*dt;b.y=Math.max(ty,b.y-b.vy*dt);if(b.y>ty)moving=true;
