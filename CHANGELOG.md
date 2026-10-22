@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Thursday, October 22, 2026
 
+- **v198** (5:05 PM) Corley's backhoe is here at the end of his machine row: drive it on four wheels, scoop with the loader, then swing the seat round (Drive / Dig), drop the outriggers and dig with the hoe.
 - **v197** (4:45 PM) Bucket angle matters: teeth into the cut fill the bucket, dragging it flat only skims. Quick coupler: set the bucket down (.) and pick up a thumb to carry blocks, a hammer to break rock, or an auger to bore holes.
 - **v196** (4:24 PM) Take out the string trimmer on foot (9) to weed-eat where the mower can't reach, and bump out more line (0) as it wears; footsteps now squelch through mud and knock hollow on the bridge decks and docks.
 
