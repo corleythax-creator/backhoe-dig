@@ -176,8 +176,10 @@ function mainLot(K,x,z,w,d,h,col,face,awn){const y=Math.min(baseHeight(x-w/2,z-d
   // a post and two-rail fence along the hayfield's south edge, a gap where the lane runs in, and round bales on the stubble
   for(let x=24;x<=400;x+=3.5){const z=-306,y=baseHeight(x,z);N.box(0.16,1.3,0.16,0x7a6a55,x,y+0.55,z);
     if(x+3.5<=400)for(const ry of [0.55,1.0])N.box(3.5,0.1,0.06,0x8c7b62,x+1.75,baseHeight(x+1.75,z)+ry,z)}
-  for(let i=0;i<26;i++){const x=40+rnd()*340,z=-320-rnd()*220;if(Math.abs(roadOff(x,z))<4)continue;
-    N.cyl(0.75,0.75,1.3,12,0xc2a45a,x,baseHeight(x,z)+0.7,z,rnd()*6.3,0,Math.PI/2)}
+  const RB=famKit();
+  for(let i=0;i<26;i++){const x=40+rnd()*340,z=-320-rnd()*220;if(Math.abs(roadOff(x,z))<4)continue;const yaw=rnd()*6.3;
+    RB.cyl(0.75,0.75,1.3,12,0xc2a45a,x,baseHeight(x,z)+0.7,z,yaw,0,Math.PI/2);famSpot('roundbale',x,baseHeight(x,z),z,yaw)}
+  famAddSpot('roundbale',RB);
   famSign(['FIELD AND WOODS','Trail west · Hayfield east'],4.6,1.5,-7,baseHeight(-7,-300)+2.0,-300,0,'#2f5a33','#ffffff');
   for(const s of [-1,1])N.box(0.12,2.5,0.12,0x8a8a86,-7+s*2.1,baseHeight(-7,-300)+1.25,-300);
   famAdd(N);
@@ -192,18 +194,19 @@ function mainLot(K,x,z,w,d,h,col,face,awn){const y=Math.min(baseHeight(x-w/2,z-d
 
   // ---------- south: the lakeside town ----------
   const T=famKit(),COLS=[0xb5654a,0xd9cdb0,0x7d9aa8,0xc9b27a,0x9c4f3f,0xe4e0d4,0x8f9a7a,0xb98b5e],AWN=[0x2f6b4f,0xb8322a,0x2a4f7a,0xd08a22];
-  let li=0;const lot=(x,z,w,d,h,face)=>{mainLot(T,x,z,w,d,h,COLS[li%COLS.length],face,AWN[(li*3)%AWN.length]);li++};
+  const LK=famKit(),BK=famKit();let li=0;const lot=(x,z,w,d,h,face)=>{mainLot(T,x,z,w,d,h,COLS[li%COLS.length],face,AWN[(li*3)%AWN.length]);li++};
   // Main Street: a block of shops each side, facing the street, with sidewalks and lamps
   for(const s of [-1,1]){for(let i=0;i<7;i++){const z=588+i*19+(i>2?8:0),w=15+((i*7+(s>0?3:0))%4),h=5.5+((i*5+(s>0?2:0))%5)*1.3;if(Math.abs(z-652)<10)continue;
       lot(s*(4+2+6.5),z,w,13,h,s>0?-Math.PI/2:Math.PI/2)}
     for(let z=568;z<724;z+=6){const x=s*5,y=baseHeight(x,z);T.box(2,0.16,6,0xbdb8ac,x,y+0.08,z)}
-    for(let z=574;z<724;z+=22){const x=s*5.6,y=baseHeight(x,z);T.cyl(0.07,0.1,5,8,0x2f3236,x,y+2.5,z);T.box(0.5,0.2,0.5,0x2f3236,x,y+5.05,z);T.lit(new THREE.BoxGeometry(0.4,0.05,0.4),0xfff1c8,x,y+4.93,z)}}
+    for(let z=574;z<724;z+=22){const x=s*5.6,y=baseHeight(x,z);LK.cyl(0.07,0.1,5,8,0x2f3236,x,y+2.5,z);LK.box(0.5,0.2,0.5,0x2f3236,x,y+5.05,z);LK.lit(new THREE.BoxGeometry(0.4,0.05,0.4),0xfff1c8,x,y+4.93,z);
+      famSpot('lamp',x,y+0.16,z,0)}}
   // along the cross street, both sides
   for(const s of [-1,1])for(let i=0;i<5;i++){const x=s*(30+i*22);lot(x,652-13,16,12,5+((i*3)%4)*1.4,0);lot(x,652+13,16,12,5.5+((i*2)%3)*1.5,Math.PI)}
   // a boardwalk along the top of the beach, and a few benches on it looking out at the islands
   for(let x=-160;x<160;x+=6){if(Math.abs(x)<7)continue;const z0=mainRimS(x)+3,z1=mainRimS(x+6)+3,y=Math.max(baseHeight(x+3,(z0+z1)/2),WATER+1.8);
     T.box(6.1,0.16,3.6,0x8c6e4c,x+3,y+0.25,(z0+z1)/2,-Math.atan2(z1-z0,6));
-    if(((x+160)/6|0)%5===2)T.box(1.6,0.45,0.5,0x5c4632,x+3,y+0.55,(z0+z1)/2+1.2)}
+    if(((x+160)/6|0)%5===2){BK.box(1.6,0.45,0.5,0x5c4632,x+3,y+0.55,(z0+z1)/2+1.2);famSpot('bench',x+3,y+0.33,(z0+z1)/2+1.2,Math.PI,0.9)}}
   // the marina: a pier out from the beach east of town with finger slips and boats tied up
   {const X=72,Z0=mainRimS(X)+2,Y=WATER+1.1,Lp=46;T.box(3,0.2,Lp,0x8c6e4c,X,Y,Z0-Lp/2);
     for(let t=0;t<=Lp;t+=4)for(const s of [-1,1])T.cyl(0.14,0.14,4,6,0x5c4632,X+s*1.4,Y-1.9,Z0-t);
@@ -211,7 +214,7 @@ function mainLot(K,x,z,w,d,h,col,face,awn){const y=Math.min(baseHeight(x-w/2,z-d
       for(const [dz,col] of [[-3,0xf2f2ee],[3,i===1?0x2a4f7a:0xf2f2ee]]){T.box(2.4,0.9,6,col,X+7,WATER+0.35,z+dz,Math.PI/2);T.box(1.4,0.8,2,0xdadfe2,X+6.6,WATER+1.1,z+dz,Math.PI/2)}}}
   famSign(['LAKESIDE','Main Street'],4.2,1.5,7.5,baseHeight(7.5,568)+2.0,568,Math.PI,'#1f4d6b','#ffffff');
   for(const s of [-1,1])T.box(0.12,2.5,0.12,0x8a8a86,7.5+s*1.9,baseHeight(7.5,568)+1.25,568);
-  famAdd(T);
+  famAdd(T);famAddSpot('lamp',LK);famAddSpot('bench',BK);
 })();
 
 // ---------- the Lakeside General Store, at the south end of Main Street ----------

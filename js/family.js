@@ -80,11 +80,14 @@ function famBridge(b,K,o){
     const [ax,az]=W(t,0.3-b.hw),[bx,bz]=W(t,b.hw-0.3);BOAT_WALLS.push({ax,az,bx,bz,r:0.9})};
   for(const t of o.piers)pier(t);
   for(const t of [0,L]){const [x,z]=W(t,0),g=baseHeight(x,z);if(g<Y-1)continue;at(t,0,Y-1.6,2*b.hw+1.2,3,3,CON)}
-  // street lamps, staggered, their heads lit
+  // street lamps, staggered, their heads lit, reaching over the road (lampArm, models.js on Detailed)
+  const LK=famKit();
   for(let t=6,s=1;t<L-3;t+=24,s=-s){const u=s*(b.hw+0.45),[x,z]=W(t,u);
-    K.cyl(0.08,0.11,6.2,8,0x55595c,x,Y+3.1,z);
-    const [ax,az]=W(t,u-s*0.7);K.box(1.5,0.1,0.12,0x55595c,ax,Y+6.1,az,yaw+Math.PI/2);
-    const [hx,hz]=W(t,u-s*1.35);K.box(0.55,0.16,0.3,0x45484a,hx,Y+6.0,hz,yaw);K.lit(new THREE.BoxGeometry(0.42,0.04,0.22),0xfff1c8,hx,Y+5.91,hz,yaw)}
+    LK.cyl(0.08,0.11,6.2,8,0x55595c,x,Y+3.1,z);
+    const [ax,az]=W(t,u-s*0.7);LK.box(1.5,0.1,0.12,0x55595c,ax,Y+6.1,az,yaw+Math.PI/2);
+    const [hx,hz]=W(t,u-s*1.35);LK.box(0.55,0.16,0.3,0x45484a,hx,Y+6.0,hz,yaw);LK.lit(new THREE.BoxGeometry(0.42,0.04,0.22),0xfff1c8,hx,Y+5.91,hz,yaw);
+    famSpot('lampArm',x,Y-0.02,z,Math.atan2(s*b.uz,-s*b.ux))}
+  famAddSpot('lampArm',LK);
   return {W,at,yaw}}
 
 (function(){
@@ -176,9 +179,12 @@ function famPlay(g){try{siteSaveAll()}catch(e){}try{lawnSave()}catch(e){}
     K.box(10.2,0.35,0.3,TIM,X,y+3.3,Z-3.2);K.box(10.2,0.35,0.3,TIM,X,y+3.3,Z+3.2);
     K.geo(famGable(6.4,1.8,10.2),0xb98a5a,X,y+3.45,Z);const sl=Math.atan2(1.8,3.2),rl=Math.hypot(3.2,1.8)+0.8;
     for(const s of [-1,1])K.box(11.2,0.2,rl,0x5b3a2a,X,y+3.45+0.9-0.05,Z+s*1.75,0,s*sl);
-    for(const dx of [-2.5,2.5]){const tx=X+dx;K.box(1.0,0.08,2.4,0x9a6b42,tx,y+0.82,Z);
-      for(const s of [-1,1]){K.box(0.32,0.06,2.4,0x9a6b42,tx+s*0.75,y+0.48,Z);K.box(0.08,0.85,0.08,0x6b4428,tx+s*0.4,y+0.42,Z-1);K.box(0.08,0.85,0.08,0x6b4428,tx+s*0.4,y+0.42,Z+1)}
-      SOLIDS.push({x:tx,z:Z,hx:0.9,hz:1.2})}
+    // the tables (picnic8, models.js on Detailed: its top 0.76 m up, level with the boards)
+    const PK=famKit();
+    for(const dx of [-2.5,2.5]){const tx=X+dx;PK.box(1.0,0.08,2.4,0x9a6b42,tx,y+0.82,Z);
+      for(const s of [-1,1]){PK.box(0.32,0.06,2.4,0x9a6b42,tx+s*0.75,y+0.48,Z);PK.box(0.08,0.85,0.08,0x6b4428,tx+s*0.4,y+0.42,Z-1);PK.box(0.08,0.85,0.08,0x6b4428,tx+s*0.4,y+0.42,Z+1)}
+      famSpot('picnic8',tx,y+0.1,Z,Math.PI/2);SOLIDS.push({x:tx,z:Z,hx:0.9,hz:1.2})}
+    famAddSpot('picnic8',PK);
     for(const g of FAM_GAMES)famBoard(K,g,y+0.86)}
   // fire pit: a ring of stones round glowing embers and crossed logs, with log benches round it
   {const X=40,Z=280,y=G(X,Z);
@@ -193,8 +199,9 @@ function famPlay(g){try{siteSaveAll()}catch(e){}try{lawnSave()}catch(e){}
     for(let i=0;i<7;i++)K.box(FW,FH/7,0.03,i%2?0xf4f2ee:0xb3263a,fx,fy+FH/2-FH/14-i*FH/7,Z);
     K.box(FW*0.42,FH*4/7,0.04,0x2b3d78,X+0.08+FW*0.21,fy+FH/2-FH*2/7,Z);
     SOLIDS.push({x:X,z:Z,hx:0.6,hz:0.6});
-    const BX=-9,BZ=172,by=G(BX,BZ);K.box(2.2,0.08,0.5,0x8a5c38,BX,by+0.48,BZ);K.box(2.2,0.5,0.08,0x8a5c38,BX,by+0.85,BZ+0.25);
-    for(const s of [-1,1])K.box(0.1,0.48,0.5,0x55595c,BX+s*0.95,by+0.24,BZ)}
+    const BX=-9,BZ=172,by=G(BX,BZ),BK=famKit();BK.box(2.2,0.08,0.5,0x8a5c38,BX,by+0.48,BZ);BK.box(2.2,0.5,0.08,0x8a5c38,BX,by+0.85,BZ+0.25);
+    for(const s of [-1,1])BK.box(0.1,0.48,0.5,0x55595c,BX+s*0.95,by+0.24,BZ);
+    famSpot('bench',BX,by,BZ,Math.PI,1.1);famAddSpot('bench',BK)}
   // a stone curb round the roundabout's middle
   for(let i=0;i<24;i++){const a=i/24*Math.PI*2;K.box(2.3,0.25,0.35,0x9b9890,FAM_X+Math.sin(a)*8.3,FAM_Y+0.1,FAM_Z-Math.cos(a)*8.3,-a)}
   {const y=G(-2.7,170);famSign(['FAMILY ISLAND'],4.6,1.1,-6.4,y+2.0,169,Math.PI,'#6b3a22','#f6e7c8');K.box(0.15,2.6,0.15,0x5a3b26,-8.5,y+1.3,169);K.box(0.15,2.6,0.15,0x5a3b26,-4.3,y+1.3,169)}
