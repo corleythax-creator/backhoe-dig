@@ -23,11 +23,19 @@ function famMerge(list){let n=0;for(const g of list)n+=g.attributes.position.cou
   const m=new THREE.BufferGeometry();m.setAttribute('position',new THREE.BufferAttribute(P,3));m.setAttribute('color',new THREE.BufferAttribute(C,3));
   m.computeVertexNormals();m.computeBoundingSphere();return m}
 const famMat=M(0xffffff,{vertexColors:true}),famGlowMat=new THREE.MeshBasicMaterial({vertexColors:true}),famWinMat=M(0xffffff,{vertexColors:true,shininess:60,specular:0x333333});
-// a kit's parts into the scene, as one mesh per kind
-function famAdd(K){
-  if(K.solid.length){const m=new THREE.Mesh(famMerge(K.solid),famMat);m.castShadow=true;m.receiveShadow=true;m.layers.enable(RAIN_LAYER);scene.add(m)}
-  if(K.glow.length)scene.add(new THREE.Mesh(famMerge(K.glow),famGlowMat));
-  if(K.win.length){const m=new THREE.Mesh(famMerge(K.win),famWinMat);m.receiveShadow=true;scene.add(m)}}
+// a kit's parts into the scene, as one mesh per kind; returns the meshes
+function famAdd(K){const out=[];
+  if(K.solid.length){const m=new THREE.Mesh(famMerge(K.solid),famMat);m.castShadow=true;m.receiveShadow=true;m.layers.enable(RAIN_LAYER);scene.add(m);out.push(m)}
+  if(K.glow.length){const m=new THREE.Mesh(famMerge(K.glow),famGlowMat);scene.add(m);out.push(m)}
+  if(K.win.length){const m=new THREE.Mesh(famMerge(K.win),famWinMat);m.receiveShadow=true;scene.add(m);out.push(m)}
+  return out}
+// things that stand in many places and have a detailed model (models.js, with Machine models on Detailed: cones, light
+// towers, barriers, lamps, benches...): MDL_SPOTS[kind] lists where each stands, [x, y, z, yaw, scale] (the model's
+// origin on the ground under its middle, its front +z turned by yaw), and MDL_SPOT_SIMPLE[kind] the kit meshes drawn
+// for them otherwise. A kind's simple parts go in a kit of their own, added with famAddSpot
+const MDL_SPOTS={},MDL_SPOT_SIMPLE={};
+function famSpot(k,x,y,z,yaw,s){(MDL_SPOTS[k]=MDL_SPOTS[k]||[]).push([x,y,z,yaw||0,s||1])}
+function famAddSpot(k,K){const ms=famAdd(K);(MDL_SPOT_SIMPLE[k]=MDL_SPOT_SIMPLE[k]||[]).push(...ms);return ms}
 // a gable: a triangular prism along x, width d across z, height h, length L, its base at y=0
 function famGable(d,h,L){const a=-L/2,b=L/2,p=-d/2,q=d/2,v=[
   a,0,p, a,h,0, a,0,q,  b,0,q, b,h,0, b,0,p,
