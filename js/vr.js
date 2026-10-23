@@ -9,12 +9,18 @@
 // headset straight from its picture, so its text stays sharp; elsewhere it is a panel in the scene, drawn at twice the
 // size. Work gloves follow the controllers and take hold of the excavator's joysticks when you reach for them. Through a
 // PC the eye buffer is supersampled on High and Ultra (vrSS, gfx.js) at the highest refresh rate offered. The view
-// darkens at its edges while you drive fast or turn (TUNE vrComfort), the motion your inner ear does not feel.
+// darkens at its edges while you drive fast or turn (TUNE vrComfort), the motion your inner ear does not feel. The
+// near clip sits farther out than on a screen (VR_NEAR): a headset's depth buffer can be coarser than a screen's, and at
+// the screen's 2 in, trim and panels a few mm off a machine's body flickered in stripes through it (PC VR).
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 renderer.xr.enabled=true;renderer.xr.setReferenceSpaceType('local');
 const rig=new THREE.Group();rig.add(camera);scene.add(rig);
 const vr={fake:false,mode:'',cam:'chase',gfx:null,yaw:0,snap:0,btn:{},panel:true,acc:1,headYaw:0,hudKey:'',turn:0,quad:null,proj:null,quadOn:false,quadDirty:false,lp:new THREE.Vector3(),ly:0,motion:0};
 const vrOn=()=>renderer.xr.isPresenting||vr.fake;
+// the near clip in m, on foot and seated (in a cab the walls and glass are close by): depth resolves 5 and 2 times finer
+// than at the screen's camera.near, which comes back when you leave
+const VR_NEAR={walk:0.25,seat:0.1},CAM_NEAR=camera.near;
+function vrNear(n){if(camera.near!==n){camera.near=n;camera.updateProjectionMatrix()}}
 // the dashboard: a canvas on a panel low in front of you, like the gauges on a dash
 // (the canvas is twice the size it is drawn at, for sharp text; as a scene panel it is mipmapped and filtered at a slant)
 const vrHud=(()=>{const c=document.createElement('canvas');c.width=2048;c.height=840;
@@ -67,6 +73,7 @@ function vrFrame(dt){
   if(camMode!=='cab'){camMode='cab';fpReset()}
   fpl.yaw=fpl.pitch=0;fpl.zt=fpl.zoom=1;shake=0;
   if(vr.mode!==mode){vr.mode=mode;vr.yaw=vr.headYaw=wk.view}
+  vrNear(mode==='walk'?VR_NEAR.walk:VR_NEAR.seat);
   const p=camera.position;rig.position.copy(p);
   // on foot your body turns with the snap turns and walks the way your head faces; in a machine you face its way
   if(mode==='walk'){if(TU.vrTurn>0&&vr.turn){const t=vr.turn*Math.abs(vr.turn);vr.yaw-=t*TU.vrTurn*dt;vr.headYaw-=t*TU.vrTurn*dt}
@@ -82,7 +89,7 @@ function vrAfter(){camera.matrixWorld.decompose(camera.position,camera.quaternio
   const f=tmp.set(0,0,-1).applyQuaternion(camera.quaternion);if(Math.hypot(f.x,f.z)>0.05)vr.headYaw=Math.atan2(f.x,f.z)}
 // headless checks (vr.fake): a head at the rig's middle, looking a little down, as the headset would put it
 function vrFakeHead(){camera.position.set(0,0,0);camera.rotation.set(-0.3,0,0)}
-function vrReset(){rig.position.set(0,0,0);rig.rotation.set(0,0,0);rig.updateMatrixWorld();vrHud.m.visible=false;vrVig.visible=false;
+function vrReset(){vrNear(CAM_NEAR);rig.position.set(0,0,0);rig.rotation.set(0,0,0);rig.updateMatrixWorld();vrHud.m.visible=false;vrVig.visible=false;
   vr.quad=vr.proj=null;vr.quadOn=false;for(const h of vrHands)h.glove.visible=false}
 // ---------- the dashboard as a headset layer ----------
 // The layer sits in the headset's own space, which is the rig's (the headset's poses are in it), so it stays where the
