@@ -86,7 +86,7 @@ A 3D excavator game in plain HTML, CSS and JavaScript (three.js r186, no build s
 | `tools/textures.py` | Turns the raw 1024 px renders into the library textures, the swatch sheet and the mean colours in `js/materials.js` |
 | `tools/trees_tex.py` | Makes the tree textures from the raw GPT Image renders: the seamless bark and birch bark, and the foliage atlas (`tree_leaves.jpg` and its mask `tree_leaves_a.jpg`: spruce branch, leaf clump turned grey for the tints, pine needle tuft) |
 | `tools/pbr.py` | Makes each material's relief and sheen maps from its own texture (`python3 tools/pbr.py [id ...]`); the per-material numbers (blur, relief steepness, roughness range) are the table at its top, so retuning a material's look is an edit there and a re-run |
-| `shots/*.jpg` | Start-card tiles: in-game screenshots of the excavator, dump truck, mower and the worker on foot |
+| `shots/*.jpg` | Start-card tiles: in-game shots of every machine you can ride (and the worker on foot), taken at Ultra by `tools/shots.js` (run through `tools/play.js --steps`; its header has the command). A tile under More machines starts you in that kind's copy nearest the island picked (`tileRide`, controls.js) |
 | `build.html` | Build-time page: ask-to-live per version, triangles, developer-hour estimate |
 | `versions/` | A playable snapshot of every version (`versions/vN/`), the list page, and `list.js`. Made by `tools/versions.py` |
 | `data/effort.js` | Build-time data. The master dashboard reads it for hours |
@@ -174,7 +174,7 @@ A skin is JSON: `{v:1, t, L:{all|phone|big:{vars, el:{selector:{hide, x, y, sc, 
   | `bhd_tune`, `bhd_tune_live` | Tuning: this device's unpublished numbers, the live tuning last loaded | `js/tune.js`, `js/gui.js` |
   | `bhd_mats` | Your own textures known to this device (names, settings, thumbnails; pictures load from the server as used) | `js/ownmat.js`, `js/materials.js` |
   | `bhd_seen`, `bhd_glresets` | Start card seen, graphics resets counted for the speed test | `js/controls.js`, `js/core.js` |
-  | `bhd_startIsl` | The start card's island (Corley's, Dexter's or Jessica's): picking a tile on Dexter's or Jessica's takes you there in that machine, or on foot if it has no room (`startOn`, `START_ISL` in maps.js) | `js/controls.js` |
+  | `bhd_startIsl` | The start card's island (Corley's, Dexter's or Jessica's): picking a tile on Dexter's or Jessica's takes you there in that machine (one already on that island stays put), or on foot if it has no room (`startOn`, `START_ISL` in maps.js) | `js/controls.js` |
   | `bhd_table` (sessionStorage, this tab only) | Which pavilion game you sat down at, so coming back from Mesa skips the start card and stands you by the table | `js/family.js`, `js/save.js` |
 
   **Sync devices** (☰, Vercel site only) carries `bhd_site`, `bhd_rigs`, `bhd_lawn`, `bhd_map` and `bhd_stats` (a save from before stats synced leaves the device's own alone) between devices under an 8-character code, through the `island_peek`, `island_get` and `island_put` functions in Supabase (the `island_saves` table, for now in the fuel-model project; `supabase/island_sync.sql` sets it up). Pulls on open and on coming back into view, pushes every 15 s and on hide; the first save to reach the server wins.

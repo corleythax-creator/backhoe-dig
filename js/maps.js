@@ -226,11 +226,13 @@ function tpGo(k,quiet){if(!tpPick||bench.on)return;
   firstCam=true;toggleMap(false);if(quiet)return;
   toast(say('tpDone',{ft:Math.round(dist/10)*10,how:k==='foot'?'on foot':'in the '+WK_RIDES[k].n}),'good')}
 for(const b of document.querySelectorAll('#tpOpts [data-tp]'))b.onclick=()=>tpGo(b.dataset.tp);
-// the start card's island (controls.js): to Dexter's yard or Jessica's paths, in the machine picked (it comes with you)
-// or on foot if there is no room for it there
+// the start card's island (controls.js): to Dexter's yard or Jessica's paths, in the ride picked (a WK_RIDES key, or
+// 'foot'). A machine already there stays where it is; one from elsewhere comes with you, or you go on foot if there is
+// no room for it there
 const START_ISL={dexter:[-190,248],jessica:[201,246.5]};
-function startOn(isl,m){const S=START_ISL[isl];if(!S)return;const k=m==='walk'?'foot':m==='dig'||m==='drive'?'ex':m==='truck'?'truck':m==='mow'?'mow':'foot';
-  tpPick={x:S[0],z:S[1]};const kk=k!=='foot'&&!tpSpot(k,S[0],S[1])?'foot':k;tpGo(kk,true);tpSet(null);
+function startOn(isl,k){const S=START_ISL[isl];if(!S)return;let kk=k;
+  if(k==='foot'||Math.hypot(WK_RIDES[k].o.x-S[0],WK_RIDES[k].o.z-S[1])>80){
+    tpPick={x:S[0],z:S[1]};kk=k!=='foot'&&!tpSpot(k,S[0],S[1])?'foot':k;tpGo(kk,true);tpSet(null)}
   toast(say('startIsl',{island:isl==='dexter'?"Dexter's Island":"Jessica's Island",how:kk==='foot'?'on foot':'in the '+WK_RIDES[kk].n}),'good',3200)}
 $('#tpCancel').onclick=()=>tpSet(null);
 $('#mini').addEventListener('click',()=>toggleMap(true));

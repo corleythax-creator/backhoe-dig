@@ -23,7 +23,7 @@ const MUD=[['textures/mud_drying.jpg','Mud, drying','Damp, matte stage of painte
 const TREES=[['tree_bark','Bark','Spruce, red pine, oak, maple trunks'],['tree_bark_n','Bark normal',''],['tree_birch','Birch bark','Paper birch trunks'],['tree_birch_n','Birch normal',''],
   ['tree_leaves','Leaves','Grey, tinted per tree'],['tree_leaves_a','Leaves alpha','Leaf cut-out mask']].map(([f,n,d])=>[`textures/${f}.jpg`,n,d]);
 const MACH=['paint','rubber','steel'].flatMap(k=>[['','Colour'],['_n','normal'],['_r','roughness']].map(([x,d])=>[`textures/mach_${k}${x}.jpg`,`Machine ${k}${x?' '+d:''}`,x?'':d]));
-const SHOTS=['dig','truck','mow','walk'].map(f=>[`shots/${f}.jpg`,f[0].toUpperCase()+f.slice(1),'Title screen shot']);
+const SHOTS=['dig','truck','mow','walk','skid','backhoe','mini','dozer','loader','semi','pickup','atv','bike','boat'].map(f=>[`shots/${f}.jpg`,f[0].toUpperCase()+f.slice(1),'Start card shot (tools/shots.js)']);
 const types={'.html':'text/html','.js':'text/javascript','.css':'text/css','.jpg':'image/jpeg','.png':'image/png','.json':'application/json'};
 const server=http.createServer((req,res)=>{const f=path.join(root,decodeURIComponent(req.url.split('?')[0]));
   if(!f.startsWith(root)||!fs.existsSync(f)||fs.statSync(f).isDirectory()){res.writeHead(404);res.end();return}

@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-23T02:07:00Z",
+ "updated": "2026-10-23T03:10:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -48,9 +48,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-22",
-   "dh": 113.25,
-   "act": 3.5,
-   "versions": 10
+   "dh": 115.75,
+   "act": 4,
+   "versions": 11
   }
  ],
  "extra": [
@@ -1905,6 +1905,15 @@ window.EFFORT = {
    "tris": 5234294,
    "chars": 1350035,
    "what": "The start card now has an island row: pick Corley's, Dexter's or Jessica's Island, then a machine or On foot, and you start there (the machine comes with you)."
+  },
+  {
+   "v": 206,
+   "asked": "2026-10-22T21:15:00-05:00",
+   "live": "2026-10-22T22:10:08-05:00",
+   "dh": 2.5,
+   "tris": 5240022,
+   "chars": 1354352,
+   "what": "The start card shows every machine you can ride, with new pictures: the excavator, dump truck, mower and On foot up top, and a More machines grid with the skid steer, backhoe, mini excavator, dozer, wheel loader, semi, pickup, four-wheeler, dirt bike and boat. Each starts you in the one on the island you picked."
   }
  ]
 };

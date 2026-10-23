@@ -241,9 +241,13 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 /* the start card leads with a tile per machine (and on foot); tapping one starts the game in that mode */
 #help .card{max-width:600px}
 .pick{display:grid;grid-template-columns:1fr 1fr;gap:10px;flex:none}
+/* the rest of the machines under More machines: smaller tiles, as many to a row as fit */
+#pickMore{margin:4px 0 -4px;font:700 17px/1 var(--f-display);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.pick.more{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+.pick.more .tile .tn{font-size:18px;bottom:24px}.pick.more .tile .ts{font-size:13px;bottom:7px}
 /* short landscape screens (phones on their side): all four tiles in one row so none is cut off */
 @media (orientation:landscape) and (max-height:560px){#help .card{max-width:900px;padding:14px 18px;gap:10px}#help .card h1{font-size:28px}.pick{grid-template-columns:repeat(4,1fr)}
-  .tile .tn{font-size:19px;bottom:24px}.tile .ts{font-size:12px;bottom:7px}}
+  .tile .tn{font-size:19px;bottom:24px}.tile .ts{font-size:12px;bottom:7px}.pick.more{grid-template-columns:repeat(5,1fr)}.pick.more .tile .tn{font-size:16px;bottom:21px}.pick.more .tile .ts{font-size:11px;bottom:6px}}
 /* the controls list hides behind the Controls button */
 #ctrlBtn{flex:none}#ctrlBtn[aria-expanded="true"]{border-color:var(--machine);color:var(--machine)}
 #ctrlBox{display:flex;flex-direction:column;gap:14px}#ctrlBox[hidden]{display:none}
@@ -261,6 +265,7 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 .card button.tile[aria-pressed="true"]{border-color:var(--machine);box-shadow:0 0 0 2px var(--machine)}
 @media (hover:hover){.card button.tile:hover{border-color:var(--machine);transform:translateY(-2px);box-shadow:0 10px 26px rgba(0,0,0,.45)}}
 @media (max-width:380px){.tile .tn{font-size:20px;bottom:26px}.tile .ts{font-size:13px}}
+@media (max-width:380px){.pick.more .tile .tn{font-size:16px;bottom:22px}.pick.more .tile .ts{font-size:12px}}
 #help .card{overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y}
 @media (max-height:420px){#benchBar{top:calc(var(--pt) + 56px)}}
 @media (prefers-reduced-motion:reduce){#toast span,#flash,.bar>i{transition:none}}

@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Thursday, October 22, 2026
 
+- **v206** (10:10 PM) The start card shows every machine you can ride, with new pictures: the excavator, dump truck, mower and On foot up top, and a More machines grid with the skid steer, backhoe, mini excavator, dozer, wheel loader, semi, pickup, four-wheeler, dirt bike and boat. Each starts you in the one on the island you picked.
 - **v205** (9:07 PM) The start card now has an island row: pick Corley's, Dexter's or Jessica's Island, then a machine or On foot, and you start there (the machine comes with you).
 - **v204** (8:48 PM) In VR, the stripes that flickered on machines as you walked up to them are gone: the headset sees depth more finely.
 - **v203** (8:21 PM) Fuel burn is off: machines never run dry, no low-fuel warnings or fill-ups, and Stats drops the fuel rows (hour meters and pay still run)
