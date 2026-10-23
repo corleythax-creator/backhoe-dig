@@ -79,6 +79,11 @@ function btModel(hull){const g=new THREE.Group(),K=famKit();
 const boats=BT_SPOTS.map((s,i)=>{const d=BT_DOCKS[i],t=d.len-(s.at||3.4),u=(s.side||1)*(d.hw+BT_B/2+0.12);
   const home={x:d.x0+d.ux*t-d.uz*u,z:d.z0+d.uz*t+d.ux*u,yaw:Math.atan2(d.ux,d.uz)};
   return {n:s.n,home,x:home.x,z:home.z,yaw:home.yaw,v:0,y:WATER,pitch:0,roll:0,g:btModel(s.hull)}});
+// the detailed model (models.js, tools/models/boat.js): each boat's topsides in its own hull colour, the windscreen see-through
+const btScreen=new THREE.MeshStandardMaterial({color:0xcfe3ea,transparent:true,opacity:0.28,roughness:0.05,metalness:0,envMap:skyEnv,depthWrite:false});
+MDL_KIT.boat={sets:()=>boats.map(b=>({body:b.g})),after(on){if(!on)return;const hull=mdlMatOf('plastic#e8b923'),scr=mdlMatOf('glass#b9d4dc');
+  boats.forEach((b,i)=>{for(const m of b.g.children){if(!m.name.startsWith('mdl_'))continue;
+    if(m.material===hull)m.material=mdlMatOf('plastic#'+BT_SPOTS[i].hull.toString(16).padStart(6,'0'));else if(m.material===scr){m.material=btScreen;m.castShadow=false}}})}};
 let btI=0;
 const btCur=()=>boats[btI];
 // the walker climbs in at any of them (walker.js): the boats join WK_RIDES as boat0, boat1…

@@ -194,7 +194,75 @@ function mdlRamPose(h){h.g.updateMatrixWorld(true);
   for(const r of h.rams){r.ga.up.set(1,0,0).transformDirection(h.g.matrixWorld);r.gb.up.copy(r.ga.up);
     r.gb.getWorldPosition(mdlRV);r.ga.lookAt(mdlRV);const d=mdlRV.distanceTo(r.ga.getWorldPosition(mdlRV));
     r.ga.getWorldPosition(mdlRV);r.gb.lookAt(mdlRV);r.rod.scale.z=Math.max(1,(d-r.lb+0.04)/r.lr)}}
+// ---------- everything else with a detailed model of its own (tools/models/<file>.js, models/<file>.glb) ----------
+// A material in these files is named for one of mdlMats, or for a kind and a colour: 'paint#e8701d', 'steel#…' (bare
+// metal with the wear detail), 'rubber#…', 'plastic#…' (moulded, scuffed), 'matte#…' (fabric, foam, dull resin), 'metal#…'
+// (polished: chrome, stainless, galvanized), 'glass#…' (tinted), 'glow#…' (a lamp, lit as the kits' lamps are) and
+// 'win#…' (window glass that lights up at night like the kits' windows); or 'lib:<id>' for a library material
+// (textures/<id>.jpg, 'lib:planks:turn' turned a quarter). Each is made once and shared
+const mdlNamed={};
+function mdlMatOf(k){const m=mdlMatsMake();if(m[k])return m[k];if(mdlNamed[k])return mdlNamed[k];let r=null;
+  const lib=/^lib:([a-z0-9_]+)(:turn)?$/.exec(k),c=/^([a-z]+)#([0-9a-fA-F]{6})$/.exec(k);
+  if(lib)r=mdlLib(lib[1],{turn:lib[2]?Math.PI/2:0});
+  else if(c){const h=parseInt(c[2],16),t=c[1];
+    r=t==='paint'?mdlStd(h,{tex:'paint'}):t==='steel'?mdlStd(h,{tex:'steel',metal:0.65}):t==='rubber'?mdlStd(h,{tex:'rubber',relief:0.8}):
+      t==='plastic'?mdlStd(h,{tex:'paint',relief:0.25,rough:0.75}):t==='matte'?mdlStd(h,{tex:'rubber',relief:0.5}):t==='metal'?mdlStd(h,{metal:1,rough:0.25}):
+      t==='glass'?mdlStd(h,{rough:0.04,env:1.6}):t==='win'?mdlStd(h,{rough:0.06,env:1.4}):t==='glow'?new THREE.MeshBasicMaterial({color:h}):null;
+    if(r&&(t==='glow'||t==='win')){r.userData.lit={t,c:new THREE.Color(h)};(mdl.lit=mdl.lit||[]).push(r)}}
+  return mdlNamed[k]=r||m.steel}
+// the lamps and windows follow the kits' (daynight.js dims the lamps by day and lights the windows at night)
+function mdlLitTick(){for(const m of mdl.lit||[]){const L=m.userData.lit;if(L.t==='glow')m.color.copy(L.c).multiply(famGlowMat.color);else m.emissive.copy(famWinMat.emissive)}}
+const mdlLoad=(f,ok)=>mdlLoaderReady(()=>new THREE.GLTFLoader().load(`models/${f}.glb`,gl=>{gl.scene.updateMatrixWorld(true);ok(gl.scene)},undefined,()=>{}));
+// a node's own meshes as [geometry in the node's frame (with box-projected texture coordinates), material], made once
+function mdlNodeParts(node){if(node.userData.mdlParts)return node.userData.mdlParts;const inv=new THREE.Matrix4().copy(node.matrixWorld).invert(),M4=new THREE.Matrix4(),out=[];
+  for(const m of node.children){if(!m.isMesh)continue;const g=m.geometry.clone();g.applyMatrix4(M4.multiplyMatrices(inv,m.matrixWorld));
+    if(!g.attributes.uv)mdlBoxUV(g);g.computeBoundingSphere();out.push([g,mdlMatOf(m.material.name)])}
+  return node.userData.mdlParts=out}
+const mdlShadeOk=mt=>!mt.transparent&&!(mt.userData.lit&&mt.userData.lit.t==='glow')&&!(mt.isMeshStandardMaterial&&mt.envMapIntensity>1.3);
+// ---- machines and kit-built things (MDL_KIT[file]): sets() gives each copy's part groups by the model's node names,
+// {body: group, arm: group, ...}; keep() lists meshes of those groups that stay as they are (loads, lamps the game
+// lights). On Detailed each node's meshes go into its group and the group's own meshes hide (only once the file is in,
+// and only in groups that got a node); after(on) for anything else. Registered by each machine's file, or below
+const MDL_KIT={};mdl.kit={};mdl.kitOn=false;mdl.kitN=0;mdl.kitDirty=false;
+function mdlKitOn(on){mdl.kitOn=on;mdl.kitDirty=false;mdl.kitN++;
+  for(const f in MDL_KIT){const K=MDL_KIT[f],src=mdl.kit[f];
+    if(on&&src===undefined){mdl.kit[f]=null;mdlLoad(f,sc=>{mdl.kit[f]=sc;mdl.kitDirty=true})}
+    const keep=new Set(K.keep?K.keep():[]);
+    for(const set of K.sets())for(const name in set){const par=set[name];if(!par)continue;const u=mdlSide(par);
+      if(on&&!u.kit&&src){const node=src.getObjectByName(name),parts=node&&mdlNodeParts(node);if(!parts||!parts.length)continue;
+        u.kit=parts.map(([g,mt])=>{const ms=new THREE.Mesh(g,mt);ms.name='mdl_'+name;ms.castShadow=mdlShadeOk(mt);ms.receiveShadow=true;
+          ms.layers.enable(RAIN_LAYER);if(mt.envMapIntensity>1.3)ms.renderOrder=2;par.add(ms);return ms})}
+      if(!u.kit)continue;
+      for(const c of par.children)if(c.isMesh&&!keep.has(c))c.visible=c.name.startsWith('mdl_')?on:!on}
+    if(K.after)K.after(on&&!!src)}}
+// ---- things standing in many places (MDL_SPOTS, family.js) and things placed from the map editor (props.js): a kind
+// whose node is in one of these files is drawn as one instanced mesh per material in place of its simple parts
+const MDL_SPOT_FILES=['site','town'];mdl.spotF={};mdl.spotIM={};mdl.propIM={};mdl.spotsOn=false;
+function mdlFindNode(k){for(const f of MDL_SPOT_FILES){const sc=mdl.spotF[f],n=sc&&sc.getObjectByName(k);if(n&&mdlNodeParts(n).length)return n}return null}
+function mdlInst(node,cap){return mdlNodeParts(node).map(([g,mt])=>{const im=new THREE.InstancedMesh(g,mt,cap);im.castShadow=mdlShadeOk(mt);im.receiveShadow=true;
+  im.layers.enable(RAIN_LAYER);if(mt.envMapIntensity>1.3)im.renderOrder=2;im.visible=false;scene.add(im);return im})}
+function mdlSpotsOn(on){mdl.spotsOn=on;mdl.spotsDirty=false;
+  if(on)for(const f of MDL_SPOT_FILES)if(mdl.spotF[f]===undefined){mdl.spotF[f]=null;mdlLoad(f,sc=>{mdl.spotF[f]=sc;mdl.spotsDirty=true})}
+  const o=new THREE.Object3D();
+  for(const k in MDL_SPOTS){let ims=mdl.spotIM[k];const L=MDL_SPOTS[k];
+    if(on&&!ims){const node=mdlFindNode(k);if(node){ims=mdl.spotIM[k]=mdlInst(node,L.length);
+      L.forEach(([x,y,z,yaw,s],i)=>{o.position.set(x,y,z);o.rotation.set(0,yaw,0);o.scale.setScalar(s);o.updateMatrix();for(const im of ims)im.setMatrixAt(i,o.matrix)});
+      for(const im of ims){im.instanceMatrix.needsUpdate=true;im.computeBoundingSphere()}}}
+    const show=on&&!!ims;for(const im of ims||[])im.visible=show;for(const m of MDL_SPOT_SIMPLE[k]||[])m.visible=!show}
+  if(typeof propIMs!=='undefined')for(const k in propIMs){const im=propIMs[k];let ims=mdl.propIM[k];
+    if(on&&!ims){const node=mdlFindNode(k);if(node){ims=mdl.propIM[k]=mdlInst(node,PROPS[k].cap);
+      for(const m of ims){m.instanceMatrix=im.instanceMatrix;m.instanceColor=im.instanceColor;m.frustumCulled=false}}}}
+  mdlPropsSync()}
+// every frame: the placed things' detailed copies keep the count the editor's list gives (propsBuild)
+function mdlPropsSync(){for(const k in mdl.propIM){const im=propIMs[k],det=mdl.spotsOn;
+  for(const m of mdl.propIM[k]){m.count=im.count;m.visible=det&&im.count>0}im.visible=!det&&im.count>0}}
 // gfx.js: Detailed or Simple machine models (the other machines change on the next frame, once they all exist)
 function mdlGfx(detail){mdl.want=!!detail;mdlExOn(mdl.want);mdlTrOn(mdl.want)}
 // once a few seconds, the cab display's clock (only while the detailed model shows)
-function mdlTick(dt){if(!!mdl.othersOn!==mdl.want)mdlOthersOn(mdl.want);if(mdl.hvOn!==mdl.want||mdl.want&&hvs.some(h=>MDL_HV.includes(h.k)&&!h.mdl&&mdl.hv[h.k]))mdlHvOn(mdl.want);if(!mdl.on)return;mdlScrT+=dt;if(mdlScrT>5){mdlScrT=0;mdlScreenDraw()}}
+function mdlTick(dt){if(!!mdl.othersOn!==mdl.want)mdlOthersOn(mdl.want);if(mdl.kitOn!==mdl.want||mdl.kitDirty)mdlKitOn(mdl.want);
+  if(mdl.spotsOn!==mdl.want||mdl.spotsDirty)mdlSpotsOn(mdl.want);else if(mdl.want)mdlPropsSync();if(mdl.lit)mdlLitTick();if(mdl.hvOn!==mdl.want||mdl.want&&hvs.some(h=>MDL_HV.includes(h.k)&&!h.mdl&&mdl.hv[h.k]))mdlHvOn(mdl.want);if(!mdl.on)return;mdlScrT+=dt;if(mdlScrT>5){mdlScrT=0;mdlScreenDraw()}}
+// ---------- the trench box, and the quick coupler with its thumb, hammer and auger (tools/models/tbox.js and
+// attach.js). trenchbox.js and coupler.js load before this file, so they are registered here; the crane chain stays
+// the game's, and the thumb's jaw and the auger's bit keep moving in their own groups ----------
+MDL_KIT.tbox={sets:()=>[{tbox}]};
+MDL_KIT.attach={sets:()=>[{coupler:cplG,thumb:thG,thumbJaw:thJaw,hammer:hmG,auger:agG,augerBit:agBit}]};

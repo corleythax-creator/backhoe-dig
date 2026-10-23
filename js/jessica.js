@@ -361,8 +361,9 @@ function jesCatTick(dt,t){const k=jesCat,c=k.g.position;
         if(i%3===0)K.geo(new THREE.IcosahedronGeometry(0.07,0),[0xb38be0,0xf2c94c,0xf08aa8][(i/3)%3|0],px,y+0.64,pz)}
       SOLIDS.push({x:X+dx,z:Z+0.3,hx:0.65,hz:1.5})}}
   // a bench at the east cliff, looking out over the lake to the mountains
-  {const X=236.5,Z=245,y=G(X,Z);K.box(0.5,0.08,2.2,0x8a5c38,X,y+0.48,Z);K.box(0.08,0.5,2.2,0x8a5c38,X-0.25,y+0.85,Z);
-    for(const s of [-1,1])K.box(0.5,0.48,0.1,0x55595c,X,y+0.24,Z+s*0.95);SOLIDS.push({x:X,z:Z,hx:0.3,hz:1.1})}
+  {const X=236.5,Z=245,y=G(X,Z),BK=famKit();BK.box(0.5,0.08,2.2,0x8a5c38,X,y+0.48,Z);BK.box(0.08,0.5,2.2,0x8a5c38,X-0.25,y+0.85,Z);
+    for(const s of [-1,1])BK.box(0.5,0.48,0.1,0x55595c,X,y+0.24,Z+s*0.95);SOLIDS.push({x:X,z:Z,hx:0.3,hz:1.1});
+    famSpot('bench',X,y,Z,Math.PI/2,1.1);famAddSpot('bench',BK)}
   // a wooden arch with her name where the path leaves the bridge
   {const X=168,Z=245,y=G(X,Z);for(const s of [-1,1])K.box(0.22,2.9,0.22,0x6b4428,X,y+1.45,Z+s*1.35);K.box(0.3,0.25,3.2,0x6b4428,X,y+2.95,Z);
     famSign(["JESSICA'S"],2.2,0.55,X-0.17,y+2.5,Z,-Math.PI/2,'#6b3a22','#f6e7c8');

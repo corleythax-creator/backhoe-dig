@@ -38,10 +38,21 @@ const mnI=(function(){const h=hvMake('mini'),Y=DEX_Y,D=DEX_D,STEEL=0x55595a,RUB=
   const kp=new THREE.Group();kp.position.set(0,-0.24,1.1);sp.add(kp);h.mnBkt=kp;
   const c=hvKit();c.box(0.42,0.3,0.06,STEEL,0,-0.12,0.02);c.box(0.42,0.06,0.3,STEEL,0,-0.28,0.14);for(const sx of [-0.21,0.21])c.box(0.04,0.3,0.3,STEEL,sx,-0.12,0.14);
   for(let i=0;i<4;i++)c.box(0.05,0.04,0.1,0x3a3c40,-0.15+i*0.1,-0.3,0.33);hvMesh(c,kp);
+  // the bucket's side links and H-link, drawn by the detailed model only (mnLink)
+  h.mnSL=new THREE.Group();h.mnHL=new THREE.Group();sp.add(h.mnSL,h.mnHL);
   return hvs.indexOf(h)})();
 // the boom (h.a: raise) and the stick and bucket (h.c: curl in) on the right stick
 function mnWork(h,dt,arm,curl,on){if(on){h.a=clamp(h.a+arm*0.7*dt,...HV_BLIM);h.c=clamp(h.c+curl*0.9*dt,...HV_CLIM)}
-  const r=h.a*1.6,f=h.c;h.mnBoom.rotation.x=-r;h.mnStick.rotation.x=0.55-r*0.35-f*0.9;h.mnBkt.rotation.x=0.4-f*1.3;hvPose(h)}
+  const r=h.a*1.6,f=h.c;h.mnBoom.rotation.x=-r;h.mnStick.rotation.x=0.55-r*0.35-f*0.9;h.mnBkt.rotation.x=0.4-f*1.3;mnLink(h);hvPose(h)}
+// the bucket linkage of the detailed model, in the stick's frame: side links MN_L long from their pin on the stick
+// (MN_S) to the joint, the H-link MN_L on from the joint to the bucket's link pin (MN_B in the bucket's frame, round the
+// bucket pin MN_P); the joint is the bucket ram's rod end, on the stick's top side
+const MN_S=[-0.1204,0.8804],MN_B=[0.1581,0.0867],MN_P=[-0.24,1.1],MN_L=0.26;
+function mnLink(h){const t=h.mnBkt.rotation.x,c=Math.cos(t),s=Math.sin(t),by=MN_P[0]+MN_B[0]*c-MN_B[1]*s,bz=MN_P[1]+MN_B[0]*s+MN_B[1]*c;
+  const dy=by-MN_S[0],dz=bz-MN_S[1],d=Math.hypot(dy,dz),k=Math.sqrt(Math.max(0,MN_L*MN_L-d*d/4)),my=(MN_S[0]+by)/2,mz=(MN_S[1]+bz)/2,ey=dy/d,ez=dz/d;
+  let jy=my+k*ez,jz=mz-k*ey;if(my-k*ez>jy){jy=my-k*ez;jz=mz+k*ey}
+  h.mnSL.position.set(0,MN_S[0],MN_S[1]);h.mnSL.rotation.x=Math.atan2(MN_S[0]-jy,jz-MN_S[1]);
+  h.mnHL.position.set(0,jy,jz);h.mnHL.rotation.x=Math.atan2(jy-by,bz-jz)}
 // ---------- the trailer ----------
 const DK_V=new THREE.Vector3();
 function tgMake(h){const K=hvKit(),D=DEX_D,STEEL=0x55595a;
@@ -81,4 +92,15 @@ function tgTick(h,dt){const T=h.tag,d=T.d,ox=d.x,oz=d.z,oty=h.ty,oy=d.y;
     o.x=d.x+w*nc+u*ns;o.z=d.z-w*ns+u*nc;o.yaw+=dy;if(o.mv!==undefined)o.mv+=dy;if(o.ty!==undefined&&!o.tag)o.ty+=dy;hvPose(o)}}
 // on Dexter's pickup (not Corley's)
 for(const h of hvs)if(h.k==='pickup'&&h.home.island!=='corley'){tgMake(h);break}
+// ---------- the detailed models (models.js MDL_KIT; tools/models/mini.js and tag.js) ----------
+// each node goes into the part group of its name; the mini's rams run between the model's ram pins (models.js mdlRam,
+// posed by hvPose), the bucket ram's rod on the H-link's end
+const mnParts=h=>({body:h.g,house:h.mnHouse,boom:h.mnBoom,stick:h.mnStick,bucket:h.mnBkt,sideLink:h.mnSL,hLink:h.mnHL});
+MDL_KIT.mini={sets:()=>[mnParts(hvs[mnI])],
+  after(on){const h=hvs[mnI],src=mdl.kit.mini;
+    if(on&&!h.rams&&src){const P=mnParts(h),pins={};
+      src.traverse(m=>{const pin=/^ram_(.+)_([ab])$/.exec(m.name),par=pin&&m.parent&&P[m.parent.name];if(par)(pins[pin[1]]=pins[pin[1]]||{})[pin[2]]={par,p:m.position.clone(),o:m.userData}});
+      h.rams=Object.values(pins).filter(r=>r.a&&r.b).map(r=>mdlRam(r,mdlMatsMake()))}
+    for(const r of h.rams||[])r.ga.visible=r.gb.visible=on;if(on){mnLink(h);hvPose(h)}}};
+MDL_KIT.tag={sets:()=>hvs.filter(h=>h.tag).map(h=>({trailer:h.tag.g,rampL:h.tag.ramps[0],rampR:h.tag.ramps[1]}))};
 WK_RIDES['hv'+mnI]={o:hvs[mnI],c:hvs[mnI].K.C,r:hvs[mnI].K.R,m:'heavy',n:hvs[mnI].K.n,pick(){hvI=mnI}};hvReset(hvs[mnI]);
