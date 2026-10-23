@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Thursday, October 22, 2026
 
+- **v202** (8:13 PM) Jessica's library gets a tuxedo cat by the fire who watches you and purrs when you pet her, and a far cozier room (wingback chairs, a writing desk, a globe, fairy lights, curtains, a painting, firelight); Dexter's pickup tows a new equipment trailer and his new mini excavator rides on it; machines log engine hours, burn fuel you buy at the pumps and earn pay, with a day's log in Stats; work lights on the boom and amber beacons; rain drums on porch roofs; a free Orbit camera; and Ultra steps down to High on a PC that can't hold it.
 - **v201** (6:18 PM) Ultra and High graphics: dug trench walls show real relief (bucket-tooth grooves, cracks, pebbles and roots catch the light), Ultra's sky reflections in paint and glass are four times as sharp, and rain beads and runs down the cab windows, seen from inside the cab too.
 - **v200** (5:23 PM) Ultra graphics: shade coloured by the real sky, soft sun shadows that sharpen where things touch the ground, rain beading and running on the machines, and soaked ground that mirrors the sky.
 - **v199** (5:13 PM) Drive a pickup to the new Lakeside General Store in town for mulch, tools and groceries; carry them (T on foot) into the bed, where they slide if you brake hard, and spread the mulch at home.

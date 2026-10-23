@@ -118,7 +118,7 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 /* the camera toggle: chase and cab side by side, the one in use lit */
 #camBtn{display:flex;align-items:stretch;gap:2px;padding:3px;background:rgba(0,0,0,.25)}
 #camBtn span{display:flex;align-items:center;padding:0 11px;border-radius:8px;color:var(--muted)}
-#camBtn[data-cam="chase"] #camChase,#camBtn[data-cam="cab"] #camCab{background:var(--ink);color:#11151a}
+#camBtn[data-cam="chase"] #camChase,#camBtn[data-cam="cab"] #camCab,#camBtn[data-cam="orbit"] #camOrbit{background:var(--ink);color:#11151a}
 /* right column: the minimap, the block bar under it */
 .rpane{grid-area:2/3/3/4;z-index:2;min-height:0;max-height:100%;box-sizing:border-box;display:flex;flex-direction:column;align-items:flex-end;gap:8px;padding:6px var(--pr) 8px 0}
 #mini{flex:none;display:block;width:calc(118px*var(--ms));height:calc(118px*var(--ms));border-radius:16px;border:2px solid rgba(255,255,255,.2);background:#1e2a30;pointer-events:auto;cursor:pointer;box-shadow:var(--lift)}
@@ -576,7 +576,7 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
       <button id="gripBtn" hidden aria-pressed="false">Grip</button>
       <button id="blkBtn" class="ib" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9zM12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg><span>Blocks</span></button>
       <button id="ctlBtn" class="ib" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="2"/><path d="M3.5 12H10M14 12h6.5M12 14v6.5"/></svg><span>Drive</span></button>
-      <button id="camBtn" data-cam="chase" aria-label="Camera: chase or cab view"><span id="camChase">Chase</span><span id="camCab">Cab</span></button>
+      <button id="camBtn" data-cam="chase" aria-label="Camera: chase, cab or orbit view"><span id="camChase">Chase</span><span id="camCab">Cab</span><span id="camOrbit">Orbit</span></button>
       <button id="statsTop" hidden>Stats</button>
     </div>
     <!-- the menu, in groups: play, build, the world (time, date, weather), settings, tools -->
@@ -964,6 +964,7 @@ const TUNE=[
   ['skSpd','Skid steer','Top speed',3.1,'mph',1,25,0.1],['skTurn','Skid steer','Turn rate',1.7,'deg',10,300,1],
   ['skArm','Skid steer','Arm rate',0.55,'deg',5,180,1],['skCurl','Skid steer','Bucket curl rate',0.9,'deg',5,240,1],
   ['skCap','Skid steer','Bucket holds',0.38,'yd3',0.1,3,0.05],
+  ['mnSpd','Mini excavator','Track speed',0.85,'mph',0.5,8,0.1],['mnTurn','Mini excavator','Turn rate',0.7,'deg',5,120,1],
   ['hvDzSpd','Dozer','Top speed',2.4,'mph',1,15,0.1],['hvDzTurn','Dozer','Turn rate',0.6,'deg',5,120,1],['hvDzBlade','Dozer','Blade rate',0.35,'deg',5,90,1],
   ['hvDzCap','Dozer','Blade carries',1.9,'yd3',0.5,8,0.1],['hvRipD','Dozer','Ripper reaches down',0.75,'ft',0.5,3,0.1],
   ['hvLdSpd','Wheel loader','Top speed',5.4,'mph',2,30,0.5],['hvLdLock','Wheel loader','Steering lock',0.7,'deg',10,50,1],
@@ -1020,21 +1021,32 @@ const TUNE=[
   ['pbrRelief','Ground look','Relief: how deep the bumps in gravel, brick and concrete look',1,'pct',0,300,5],
   ['pbrSheen','Ground look','Sheen: how strong the glints on wet and shiny ground are',1,'pct',0,300,5],
   ['pbrRain','Ground look','Extra sheen while it rains',1,'pct',0,400,5],['pbrGround','Ground look','Relief: how bumpy the natural dirt and grass look',0.9,'pct',0,300,5],
+  ['pbrFace','Ground look','Relief: how deep the bucket-tooth grooves, cracks, pebbles and roots on dug faces look',1,'pct',0,300,5],
   ['fxAo','Screen effects','Shade where things meet and in hollows (Ultra)',1,'pct',0,200,5],['fxAoR','Screen effects','How far that shade reaches',1.6,'ft',0.5,10,0.25],
   ['fxBloom','Screen effects','Glow round bright light (Ultra)',0.2,'pct',0,200,5],['fxBloomThr','Screen effects','How bright light must be to glow',0.88,'pct',40,99,1],
   ['fxCon','Screen effects','Contrast of the colour grade (Ultra)',0.3,'pct',0,100,5],['fxSat','Screen effects','Colour strength of the grade',0.97,'pct',50,150,1],
   ['fxVig','Screen effects','Darker corners (vignette)',0.22,'pct',0,80,2],
+  // Ultra lighting (post.js): how much the sky colours the shade, how soft the sun's shadows get, the rain on the machines
+  ['ultraSky','Ultra','Sky lighting: how much the sky as it is colours the shade and reflections',1,'pct',0,200,5],
+  ['ultraShSoft','Ultra','Soft sun shadows: blur per foot a shadow falls from what casts it',0.03,'pct',0,10,0.5],
+  ['ultraDrops','Ultra','Rain on machines: how many beads and runs of water',1,'pct',0,300,5],
+  ['ultraWetGround','Ultra','Wet ground shine: how strongly soaked dirt and mud mirror the sky',1,'pct',0,300,5],
   ['pbrFar','Ground look','Relief fades out by',180*0.3048,'ft',60,600,10],
   ['treeSway','Trees','How much the trees and undergrowth sway in the breeze',1,'pct',0,400,5],['treeGlow','Trees','How much sunlight shines through the leaves',1,'pct',0,300,5],
   // how the clock runs (☰ menu, Time) and how dark the night gets
   ['dayLen','Day and night','A whole day (24 hours) passes in',2880,'min',2,1440,1],
   ['nightLight','Day and night','Moonlight and starlight at night',1,'pct',0,400,5],
   ['lampLight','Day and night','Headlights, lamps and lit windows',1,'pct',0,300,5],
+  // fuel and pay (fuel.js)
+  ['fuelUse','Work and pay','Fuel use (100% burns what the real machine does in an hour of game time)',1,'pct',0,500,5],
+  ['fuelPrice','Work and pay','Fuel price, a gallon',3.85,'usd',0,20,0.05],
+  ['payDig','Work and pay','Pay for dirt dug, a yd³',9,'usd',0,200,0.5],['payHaul','Work and pay','Pay for dirt hauled off in the truck, a yd³',14,'usd',0,200,0.5],
+  ['paySkid','Work and pay','Pay for dirt moved by the skid steer, a yd³',6,'usd',0,200,0.5],['payMow','Work and pay','Pay for grass mowed, a 1,000 sq ft',8,'usd',0,200,0.5],
   // VR headset (vr.js): how the right stick turns you on foot
   ['vrTurn','VR','Turn speed on foot with the right stick (0 = 30° snap steps)',120*Math.PI/180,'deg',0,360,5],
   ['vrComfort','VR','Comfort vignette: how far the view darkens at its edges while you drive fast or turn (0 = off)',0.5,'pct',0,100,5]];
 // unit: [shown = code value × factor, label]
-const TUNE_U={mph:[1/0.44704,'mph'],ft:[1/0.3048,'ft'],deg:[180/Math.PI,'°/s'],yd3:[1.307951,'yd³'],pct:[100,'%'],s:[1,'s'],min:[1/60,'min'],in:[1/0.0254,'in'],n:[1,'']};
+const TUNE_U={mph:[1/0.44704,'mph'],ft:[1/0.3048,'ft'],deg:[180/Math.PI,'°/s'],yd3:[1.307951,'yd³'],pct:[100,'%'],s:[1,'s'],min:[1/60,'min'],in:[1/0.0254,'in'],n:[1,''],usd:[1,'$']};
 const tuneShow=(e,v)=>v*TUNE_U[e[4]][0];
 const tuneCode=(e,d)=>d/TUNE_U[e[4]][0];
 // the values the game runs on
@@ -1122,6 +1134,8 @@ const WORDS=[
   ['loaderFull','Wheel loader','Bucket full. Lift the arms and dump it in the truck bed or on a pile.',''],
   ['capL_dozer','Captions','{lv} Drive fwd / back\n{lh} Turn','Left stick, Dozer'],['capR_dozer','Captions','{rh} Ripper up / down\n{rv} Blade down / up','Right stick, Dozer'],
   ['dozerRock','Dozer','Hard ground: the blade barely bites. Lower the ripper ([rRight]) and drive over it to break it up first.',''],
+  ['capL_mini','Captions','{lv} Drive fwd / back\n{lh} Turn','Left stick, Mini excavator'],['capR_mini','Captions','{rh} Curl in / reach out\n{rv} Boom down / up','Right stick, Mini excavator'],
+  ['trailerTip','Pickup','Dexter\'s pickup tows his equipment trailer. Stop and the ramps fold down: drive the mini excavator or the four-wheeler up onto the deck, climb out, and pull away; it rides along.',''],
   ['capL_loader','Captions','{lv} Drive fwd / back\n{lh} Steer','Left stick, Wheel loader'],['capR_loader','Captions','{rh} Curl / dump\n{rv} Arms down / up','Right stick, Wheel loader'],
   ['backhoeTip','Backhoe','In Corley\'s backhoe. [lUp] [lDown] drive, [lLeft] [lRight] steer; [rUp] [rDown] lower and raise the loader, [rLeft] [rRight] curl and dump. Tap Dig or [exSwap] to swivel round to the hoe. [enter] to climb out.',''],
   ['capL_backhoe','Captions','{lv} Drive fwd / back\n{lh} Steer','Left stick, Backhoe at the wheel'],['capR_backhoe','Captions','{rh} Curl / dump\n{rv} Loader down / up','Right stick, Backhoe at the wheel'],
@@ -1180,6 +1194,13 @@ const WORDS=[
   ['tpNoRoom','Other','No room there. Pick an open spot on land.'],['tpLake','Other','That is the lake. Pick a spot on land.'],
   ['tpDone','Other','Teleported {ft} ft {how}.','{ft}: distance; {how}: on foot, in the dump truck…'],
   ['gfx','Other','Graphics: {name}','{name}: Low, Medium, High'],
+  ['petCat','Other','She shuts her eyes, leans into your hand and purrs.'],['petCatBtn','Other','Pet the cat','The Get in button by the cat in Jessica\'s library'],
+  ['orbitTip','Other','Orbit camera: drag to circle round, scroll or pinch to zoom from close in to high overhead. It holds still as the machine turns.'],
+  ['fuelLow','Work','The {machine} is down to {pct}% fuel. Fill up at {where}: stop beside the pump.','{machine}, {pct}: fuel left, {where}: the nearest pump'],
+  ['fuelOut','Work','The {machine} has run out of fuel. Fill it at {where}: bring fuel in the truck, or drive another machine there.','{machine}, {where}: the nearest pump'],
+  ['fuelFilled','Work','Filled the {machine}: {gal} gal for {cost}. Tank {left}% full.','{machine}, {gal}, {cost}, {left}'],
+  ['payDay','Work','A new day. Yesterday paid {pay} after fuel.','{pay}: what the day paid'],
+  ['ultraSlow','Other','Ultra was too slow here ({fps} fps), so Graphics went to High. Pick Ultra again in Graphics to keep it.','{fps}: frames per second'],
   ['todRun','Time of day','The clock runs: a day passes in {min} min','{min}: minutes (Tuning: Day and night)'],
   ['todStop','Time of day','The clock is stopped at {time}','{time}: like 6:40 PM'],
   ['todNow','Time of day','Back to the real time: {time}','{time}: like 6:40 PM'],

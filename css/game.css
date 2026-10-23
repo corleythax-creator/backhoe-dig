@@ -83,7 +83,7 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 /* the camera toggle: chase and cab side by side, the one in use lit */
 #camBtn{display:flex;align-items:stretch;gap:2px;padding:3px;background:rgba(0,0,0,.25)}
 #camBtn span{display:flex;align-items:center;padding:0 11px;border-radius:8px;color:var(--muted)}
-#camBtn[data-cam="chase"] #camChase,#camBtn[data-cam="cab"] #camCab{background:var(--ink);color:#11151a}
+#camBtn[data-cam="chase"] #camChase,#camBtn[data-cam="cab"] #camCab,#camBtn[data-cam="orbit"] #camOrbit{background:var(--ink);color:#11151a}
 /* right column: the minimap, the block bar under it */
 .rpane{grid-area:2/3/3/4;z-index:2;min-height:0;max-height:100%;box-sizing:border-box;display:flex;flex-direction:column;align-items:flex-end;gap:8px;padding:6px var(--pr) 8px 0}
 #mini{flex:none;display:block;width:calc(118px*var(--ms));height:calc(118px*var(--ms));border-radius:16px;border:2px solid rgba(255,255,255,.2);background:#1e2a30;pointer-events:auto;cursor:pointer;box-shadow:var(--lift)}

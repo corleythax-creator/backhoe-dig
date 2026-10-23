@@ -4,16 +4,16 @@
 
 The order follows the idea board's priority scores (realism, fun, how often you'd see it, phone risk), grouped so each milestone gives you one thing you can feel.
 
-## 1. Finish what's half built (now)
+## 1. Finish what's half built (done, Oct 23)
 
 These have shipped in part; each is listed with what's left.
 
-- [ ] **Q15 Ultra graphics** (55%): every machine is now on PBR materials with detailed models (v185 to v189) and Ultra has ambient occlusion (Q07, built); left: soft shadows, wet sheen and drops on the machines, and the rest of the ground
-- [ ] **M08 Pickup truck** (40%): the lowboy trailer and hauling the mini excavator
-- [ ] **J15 Pay and the day's log** (40%): fuel, hour meters and pay
-- [ ] **A05 / A07 Footsteps and rain** (60% / 40%): squelch in mud, hollow bridge decks, rain on the porch roofs
-- [ ] **X06 Machine lights** (50%): boom lights and an amber beacon
-- [ ] **C01 Camera** (40%): free orbit and zoom
+- [x] **Q15 Ultra graphics**: PBR machines and detailed models, ambient occlusion, soft shadows, sky light, wet sheen and drops, relief on the dug faces; a PC that can't hold Ultra steps down to High by itself
+- [x] **M08 Pickup truck**: Dexter's pickup tows a 16 ft equipment trailer with fold-down ramps, and hauls his new mini excavator
+- [x] **J15 Pay and the day's log**: fuel burned and bought, hour meters, pay for the work and the day's log
+- [x] **A05 / A07 Footsteps and rain**: squelch in mud, hollow bridge decks, rain drumming on the porch roofs
+- [x] **X06 Machine lights**: work lights on the boom and amber beacons
+- [x] **C01 Camera**: the Orbit camera, free to circle and zoom from close in to high overhead
 
 ## 2. A reason to come back: jobs and pay (next)
 

@@ -211,7 +211,7 @@ function wkPlaceOut(k){const R=WK_RIDES[k];if(R.out)return R.out();const o=R.o,s
 // the Family Island's pavilion, family.js); driving, it climbs out
 function seatToggle(){
   if(mode==='walk'){const k=wkNear();
-    if(!k){const g=famGameNear();if(g){famPlay(g);return}
+    if(!k){const g=famGameNear();if(g){if(g.pet)jesPet();else famPlay(g);return}
       toast(say('getInFar'));return}
     wk.inside=k;walker.visible=false;if(WK_RIDES[k].pick)WK_RIDES[k].pick();setMode(WK_RIDES[k].m);toast(say('inMachine',{machine:WK_RIDES[k].n,key:kbUsed?keyLabel('enter'):padUsed?'B':'Get out'}),'',2600);return}
   const k=rideOf(mode);if(!k)return;

@@ -113,7 +113,8 @@ function drawMap(cv,cx,cz,mpp,big){
   const hy=st.yaw+st.swing;
   g.strokeStyle='#f07a22';g.lineWidth=Math.max(2,0.3*sc);g.beginPath();g.moveTo(X(st.x),Y(st.z));g.lineTo(X(tip.x),Y(tip.z));g.stroke();
   icon(sk.x,sk.z,Math.atan2(Math.cos(sk.yaw),Math.sin(sk.yaw)),'#f2b705',2.8,1.8,mode==='skid');
-  hvs.forEach((h,i)=>{if(h.trailer){const s=Math.sin(h.ty),c=Math.cos(h.ty),kx=h.x-Math.sin(h.yaw)*HV_KP,kz=h.z-Math.cos(h.yaw)*HV_KP;icon(kx-s*8,kz-c*8,Math.atan2(c,s),'#2b2d30',14,2.8,false)}
+  hvs.forEach((h,i)=>{if(h.tag){const d=h.tag.d;icon(d.x-d.s*3.5,d.z-d.c*3.5,Math.atan2(d.c,d.s),'#2b2d30',6,2.1,false)}
+    if(h.trailer){const s=Math.sin(h.ty),c=Math.cos(h.ty),kx=h.x-Math.sin(h.yaw)*HV_KP,kz=h.z-Math.cos(h.yaw)*HV_KP;icon(kx-s*8,kz-c*8,Math.atan2(c,s),'#2b2d30',14,2.8,false)}
     icon(h.x,h.z,Math.atan2(Math.cos(h.yaw),Math.sin(h.yaw)),h.K.col,h.K.len,h.K.wid,mode==='heavy'&&hvI===i)});
   icon(bk.x,bk.z,Math.atan2(Math.cos(bk.yaw),Math.sin(bk.yaw)),'#f2b705',2.2,0.8,mode==='bike');
   for(const t of TWINS)icon(t.p.x,t.p.z,Math.atan2(Math.cos(t.p.yaw),Math.sin(t.p.yaw)),t.col,t.len,t.wid,false);

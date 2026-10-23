@@ -53,7 +53,7 @@ const KEY_ACTIONS=[
   {id:'grip',g:'Site',n:'Thumb grip',d:'With the thumb on: grip the block between its jaws, or let it go',k:['Comma'],s:'ride'},
   {id:'pump',g:'Site',n:'Pump',d:'Dewater a flooded hole',k:['KeyP']},
   {id:'wipers',g:'Site',n:'Wipers',d:'Turn the windscreen wipers on or off in the excavator and the truck',k:['Space'],s:'ride'},
-  {id:'cam',g:'View',n:'Cab view',d:'Switch between the cab (or your own eyes) and the chase camera',k:['KeyC']},
+  {id:'cam',g:'View',n:'Camera',d:'Switch the camera: chase, then the cab (or your own eyes), then the free orbit camera',k:['KeyC']},
   {id:'lookAhead',g:'View',n:'Look ahead',d:'In cab view, turn your head back to straight ahead and zoom out',k:['KeyR']},
   {id:'zoom',g:'View',n:'Zoom',d:'Hold to zoom in, in cab view (the mouse wheel or a pinch zooms too, but on foot with blocks on the wheel sets their reach)',k:['KeyZ']},
   {id:'map',g:'View',n:'Big map',d:'Open or close the site map',k:['KeyM']},

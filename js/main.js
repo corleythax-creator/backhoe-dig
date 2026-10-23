@@ -42,6 +42,8 @@ function frame(now){
   // Dexter's heavy machines: the left stick drives; the right stick runs the dozer's blade or the loader's arms and bucket
   // (as the skid steer's), and looks round from the semi
   let hDrive=0,hTurn=0,hArm=0,hCurl=0;
+  // run dry (fuel.js): the engine dies and the controls do nothing until you fill up
+  if(fuelOut()){swingIn=stickIn=driveIn=turnIn=boomIn=bucketIn=0;tThr=tBed=0;mL=mR=0;sDrive=sTurn=sArm=sCurl=0}
   if(mode==='heavy'){hDrive=Ly;hTurn=Lx*Ts;boomIn=0;bucketIn=0;if(hvCur().K.trail||hvCur().K.car){if(camMode==='chase')orbitYaw-=Rx*1.6*dt}else{hArm=-Ry;hCurl=-Rx}}
   const res=st.res;
   st.swing-=swingIn*TU.exSwing*dt*res;
@@ -230,6 +232,8 @@ function frame(now){
       // inside Jessica's cottage the roof lifts off and the camera looks down from above the walls
       if(jesIn){cd=camDist*0.42;op=Math.max(op,1.05)}}
     else{const fx=Math.sin(hy),fz=Math.cos(hy);look.set(st.x+fx*4,st.y+0.8,st.z+fz*4);cyaw=hy+Math.PI+orbitYaw}
+    // the orbit camera keeps its bearing as the machine turns under it (on foot the view is yours to turn already)
+    if(camFree&&mode!=='walk'){const base=cyaw-orbitYaw;if(camBase!==null){const d=Math.atan2(Math.sin(base-camBase),Math.cos(base-camBase));orbitYaw-=d;cyaw-=d}camBase=base}else camBase=null;
     camT.set(look.x+Math.sin(cyaw)*Math.cos(op)*cd,look.y+Math.sin(op)*cd,look.z+Math.cos(cyaw)*Math.cos(op)*cd);
     camT.y=Math.max(camT.y,surfAt(camT.x,camT.z)+1.2,WATER+0.9);
     if(firstCam){camera.position.copy(camT);firstCam=false}else camera.position.lerp(camT,Math.min(1,dt*5));
@@ -265,6 +269,8 @@ function frame(now){
     // auto resolution: step down when slow; step back up only after a long steady run, and never within 30 s of a step down
     if(!bench.on&&!vrOn()&&gfxCur.auto&&f<48&&pr>1){if(++lowN>=3){pr=Math.max(1,pr-0.25);viewDirty=true;lowN=0;prHold=now+30000}}else lowN=0;
     if(!bench.on&&!vrOn()&&gfxCur.auto&&f>=58&&pr<maxPR&&now>prHold){if(++hiN>=8){pr=Math.min(maxPR,pr+0.25);viewDirty=true;hiN=0}}else hiN=0;
+    // Ultra guard: still under 40 fps at the lowest resolution for about 15 s, and Ultra steps down to High (gfx.js)
+    if(!bench.on&&!vrOn()&&gfxKey==='ultra'&&f<40&&pr<=1.01){if(++ultraLowN>=30)ultraGuard(f)}else ultraLowN=0;
     $('#resVal').textContent=pr.toFixed(2).replace(/0$/,'')+'x';
     const t=renderer.info.render.triangles;$('#triVal').textContent=t>=1e6?(t/1e6).toFixed(2)+'M':t>=1e3?Math.round(t/1e3)+'k':t;fpsFrames=0;fpsTime=0}
 }

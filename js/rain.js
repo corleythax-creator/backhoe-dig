@@ -344,7 +344,13 @@ function wetTick(dt,r){wetAll=r>0.03?Math.min(1,wetAll+dt*(0.01+0.05*r)):Math.ma
 // (cover that drops away by more than 2 ft to the next spot); drops fall from them while it rains and for a while after
 const rcPix=new Uint8Array(RC_N*RC_N*4),rcEdges=[];let rcCX=0,rcCZ=0,rcTop=0,dripAcc=0;
 const rcH=k=>{const a=rcPix[k*4+3]/255,d=(255/256)*(rcPix[k*4]/255/16777216+rcPix[k*4+1]/255/65536+rcPix[k*4+2]/255/256+a);return d>0.999?-1e5:rcTop-d*RC_R};
+// the roof over the worker on foot: cover within about 30 ft over their head (a porch, the pavilion, a room, the
+// covered bridge; a high deck far above doesn't count), for the rain on the roof (ambience.js); its height above them, or 0
+let rcRoof=0;
+function rcOver(x,z){const px=RC_S/RC_N,i=Math.floor((x-rcCX)/px+RC_N/2),j=Math.floor((rcCZ-z)/px+RC_N/2);
+  return i<0||j<0||i>=RC_N||j>=RC_N?-1e5:rcH(j*RC_N+i)}
 function rcRead(){renderer.readRenderTargetPixels(rcRT,0,0,RC_N,RC_N,rcPix);const v=rcU.uRC.value;rcCX=v.x;rcCZ=v.y;rcTop=v.z;rcEdges.length=0;
+  {const h=mode==='walk'&&!wk.inside?rcOver(wk.x,wk.z)-wk.y:0;rcRoof=h>1.7&&h<9?h:0}
   const px=RC_S/RC_N,R=Math.round(12/px),c=RC_N>>1;
   for(let y=c-R;y<c+R;y++)for(let x=c-R;x<c+R;x++){const k=y*RC_N+x,h=rcH(k);if(h<-1e4)continue;
     for(const [dx,dy] of [[1,0],[-1,0],[0,1],[0,-1]]){const hn=rcH(k+dy*RC_N+dx);if(hn>h-0.6)continue;

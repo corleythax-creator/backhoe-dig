@@ -121,7 +121,7 @@ function hvPose(h){h.g.position.set(h.x,h.y,h.z);h.g.rotation.set(h.pitch,h.yaw,
   if(h.K.hoe)bhParts(h);
   if(h.arm){const e=HV_LA0-h.a;h.arm.rotation.x=e;h.bkt.rotation.x=-e-h.c}
   h.g.updateMatrixWorld(true);if(h.rams&&h.rams.length&&h.rams[0].ga.visible)mdlRamPose(h);
-  const sy=Math.sin(h.yaw),cy=Math.cos(h.yaw);h.circ.length=0;for(const lz of h.K.C)h.circ.push([h.x+sy*lz,h.z+cy*lz,h.K.R]);
+  const sy=Math.sin(h.yaw),cy=Math.cos(h.yaw);h.circ.length=0;for(const lz of h.K.C)h.circ.push([h.x+sy*lz,h.z+cy*lz,h.K.R]);if(h.tag)h.circ.push(...h.tag.circ);
   if(h.trailer){h.g.localToWorld(hvV.set(0,1.3,-HV_KP));const ts=Math.sin(h.ty),tc=Math.cos(h.ty),yA=surfAt(hvV.x-ts*HV_LT,hvV.z-tc*HV_LT),yK=hvV.y-1.3;
     h.trailer.position.set(hvV.x,yK,hvV.z);h.trailer.rotation.set(-Math.atan2(yK-yA,HV_LT),h.ty,0,'YXZ');
     for(const lz of HV_TC)h.circ.push([hvV.x+ts*lz,hvV.z+tc*lz,1.45])}}
@@ -152,7 +152,7 @@ function hvDrive(h,dt,drive,turn,arm,curl,on){const K=h.K;
   const mudN=mudAt(h.x,h.z),k=Math.max(0,1-0.45*mudN*TU.mudDrag);
   const ox=h.x,oz=h.z,oyaw=h.yaw,oty=h.ty,omv=h.mv,bad0=wallCount(h.x,h.z,h.yaw,K.P)+(K.trail?hvTrailOut(h):0);
   if(K.car)hvCar(h,dt,drive,turn,k,on);
-  else if(K.track){h.top=TU.hvDzSpd;h.v+=(drive*h.top*k*h.drag-h.v)*Math.min(1,dt*(drive?2:4));h.w+=(-turn*TU.hvDzTurn*k-h.w)*Math.min(1,dt*5);h.yaw+=h.w*dt}
+  else if(K.track){h.top=K.mini?TU.mnSpd:TU.hvDzSpd;h.v+=(drive*h.top*k*h.drag-h.v)*Math.min(1,dt*(drive?2:4));h.w+=(-turn*(K.mini?TU.mnTurn:TU.hvDzTurn)*k-h.w)*Math.min(1,dt*5);h.yaw+=h.w*dt}
   else{// the gas pulls it up to speed (the semi slowly), the brakes stop it harder; the wheel locks less the faster it goes
     h.top=K.trail?TU.hvSmSpd:K.hoe?TU.bhSpd:TU.hvLdSpd;const tgt=drive*h.top*k,acc=K.trail?0.35:1.2,up=Math.abs(tgt)>Math.abs(h.v)&&tgt*h.v>=0;
     h.v+=(tgt-h.v)*Math.min(1,dt*(up?acc:acc*3));
@@ -161,6 +161,8 @@ function hvDrive(h,dt,drive,turn,arm,curl,on){const K=h.K;
   if(!on){if(Math.abs(h.v)<0.05)h.v=0;if(Math.abs(h.w)<0.01)h.w=0}
   const sy=Math.sin(h.yaw),cy=Math.cos(h.yaw),mvd=K.car?h.mv:h.yaw;h.x+=Math.sin(mvd)*h.v*dt;h.z+=Math.cos(mvd)*h.v*dt;
   // the lowboy swings in behind the fifth wheel, never folding past about 75 degrees
+  // Dexter's pickup tows its equipment trailer (trailer.js)
+  if(h.tag)tgTick(h,dt);
   if(K.trail){h.ty+=h.v/HV_LT*Math.sin(h.yaw-h.ty)*dt;const d=Math.atan2(Math.sin(h.yaw-h.ty),Math.cos(h.yaw-h.ty));if(Math.abs(d)>1.3)h.ty=h.yaw-Math.sign(d)*1.3}
   // on the islands and decks, off steep ground, out of buildings, blocks and the other machines
   if(h.v||h.w){for(const lz of [K.P[0][1],K.P[2][1]]){const px=h.x+sy*lz,pz=h.z+cy*lz,q=landClamp(px,pz,1.0,1.4);if(q[0]!==px||q[1]!==pz){h.x+=q[0]-px;h.z+=q[1]-pz;h.v*=0.5}}
@@ -175,7 +177,7 @@ function hvDrive(h,dt,drive,turn,arm,curl,on){const K=h.K;
     if(K.track){stampRut(rx,rz,h.yaw,0.28,1.5,dt);splashMud(rx+sy*1.5*Math.sign(tv||1),rz+cy*1.5*Math.sign(tv||1),h.yaw,tv,0.3,0.8,dt)}
     else for(const lz of [K.af,K.ab]){stampRut(rx+sy*lz,rz+cy*lz,h.yaw,0.3,0.45,dt);splashMud(rx+sy*lz,rz+cy*lz,h.yaw,tv,0.3,0.6,dt)}}
   hvGround(h,Math.min(1,dt*10));
-  if(K.track)hvBlade(h,dt,arm,curl,on);else if(h.arm)hvBucket(h,dt,arm,curl,on);else if(K.hoe)bhWork(h,dt,arm,curl,on);else hvPose(h);
+  if(K.mini)mnWork(h,dt,arm,curl,on);else if(K.track)hvBlade(h,dt,arm,curl,on);else if(h.arm)hvBucket(h,dt,arm,curl,on);else if(K.hoe)bhWork(h,dt,arm,curl,on);else hvPose(h);
   if(K.rider&&wk.inside==='hv'+hvs.indexOf(h))hvRider(h)}
 // the pickup and the four-wheeler (K.car: their Tuning keys start with it). The gas pulls with K.acc m/s² from a stop,
 // fading to nothing at top speed; against the way it rolls, the pedal is the brake (K.brake m/s²) until it stops, then
@@ -247,7 +249,7 @@ function hvBucket(h,dt,arm,curl,on){const cap=TU.hvLdCap,full=1-0.15*h.load/cap;
     for(let n=0;n<Math.ceil(out*50);n++)spawn(hvLip,0.9)}
   h.heap.visible=h.load>0.01;if(h.heap.visible){const s=0.35+0.65*Math.sqrt(h.load/cap);h.heap.scale.set(2.3*s,0.7*s,0.9+0.3*s);tintLoad(h.heap.material,h.loadC)}}
 // the one the worker is in, when it can dig (the dig grid follows it, digtiles.js)
-function hvDigger(){const R=WK_RIDES[wk.inside];return R&&R.m==='heavy'&&!R.o.K.trail&&!R.o.K.car?R.o:null}
+function hvDigger(){const R=WK_RIDES[wk.inside];return R&&R.m==='heavy'&&!R.o.K.trail&&!R.o.K.car&&!R.o.K.mini?R.o:null}
 // the walker climbs in beside them (walker.js): they join WK_RIDES as hv0 to hv4 (Dexter's) and hv5 to hv9 (Corley's);
 // Corley's backhoe (backhoe.js) joins as hv10
 hvs.forEach((h,i)=>{WK_RIDES['hv'+i]={o:h,c:h.K.C,r:h.K.R,m:'heavy',n:h.K.n,pick(){hvI=i}};hvReset(h)});

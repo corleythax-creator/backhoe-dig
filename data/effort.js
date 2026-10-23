@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-22T23:18:00Z",
+ "updated": "2026-10-23T01:13:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -48,9 +48,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-22",
-   "dh": 76,
-   "act": 2,
-   "versions": 6
+   "dh": 110,
+   "act": 2.5,
+   "versions": 7
   }
  ],
  "extra": [
@@ -1869,6 +1869,15 @@ window.EFFORT = {
    "tris": 5235947,
    "chars": 1297029,
    "what": "Ultra and High graphics: dug trench walls show real relief (bucket-tooth grooves, cracks, pebbles and roots catch the light), Ultra's sky reflections in paint and glass are four times as sharp, and rain beads and runs down the cab windows, seen from inside the cab too."
+  },
+  {
+   "v": 202,
+   "asked": "2026-10-22T18:50:00-05:00",
+   "live": "2026-10-22T20:13:45-05:00",
+   "dh": 34,
+   "tris": 5246817,
+   "chars": 1346586,
+   "what": "Jessica's library gets a tuxedo cat by the fire who watches you and purrs when you pet her, and a far cozier room (wingback chairs, a writing desk, a globe, fairy lights, curtains, a painting, firelight); Dexter's pickup tows a new equipment trailer and his new mini excavator rides on it; machines log engine hours, burn fuel you buy at the pumps and earn pay, with a day's log in Stats; work lights on the boom and amber beacons; rain drums on porch roofs; a free Orbit camera; and Ultra steps down to High on a PC that can't hold it."
   }
  ]
 };
