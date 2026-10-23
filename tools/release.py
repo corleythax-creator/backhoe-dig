@@ -12,7 +12,8 @@ the same time just pushes this one to the number after); run tools/scene-check.j
 gains 0.5 when no release that day sits in the same half hour); commit and push the branch; merge it into main with
 --no-ff (a first-parent release commit, as tools/versions.py needs) and push; make the snapshot with tools/versions.py
 (unshallowing first, and stopping if it would delete anything outside the new snapshot), commit and push; bring the
-branch up to main. If the screen's markup, CSS or js/gui.js changed, it rebuilds docs/gui-editor.html and says to
+branch up to main; then wait for the Vercel site to serve the new version (up to 10 minutes) and say whether it is
+live. If the screen's markup, CSS or js/gui.js changed, it rebuilds docs/gui-editor.html and says to
 republish the screen editor artifact (a script can't publish it). The claude.ai game artifact stays on hold (CLAUDE.md).
 """
 import argparse, datetime, json, os, re, subprocess, sys
@@ -28,6 +29,22 @@ def sh(*a, check=True, capture=True, env=None):
     if check and r.returncode:
         sys.exit(f"failed: {' '.join(a)}\n{(r.stdout or '')[-2000:]}{(r.stderr or '')[-2000:]}")
     return (r.stdout or '').strip()
+
+
+LIVE = 'https://corleys-island.vercel.app'
+
+
+def live_wait(v, mins=10):
+    """Polls the live site's build log until it lists version v; True once it does."""
+    import time
+    end = time.time() + mins * 60
+    while True:
+        t = sh('curl', '-sS', '--max-time', '20', f'{LIVE}/data/effort.js?t={int(time.time())}', check=False)
+        if v in [int(n) for n in re.findall(r'"v":\s*(\d+)', t)]:
+            return True
+        if time.time() > end:
+            return False
+        time.sleep(15)
 
 
 def git(*a, **k):
@@ -173,7 +190,12 @@ def main():
     git('merge', '-q', '--ff-only', 'main')
     push('-q', 'origin', branch)
 
-    print(f'v{v} released: live {now:%b %d %I:%M %p} Central, {chk["tris"]} tris, {chk["chars"]} chars.')
+    print(f'v{v} released: merged {now:%b %d %I:%M %p} Central, {chk["tris"]} tris, {chk["chars"]} chars.')
+    print(f'Waiting for {LIVE} to serve v{v}...', flush=True)
+    if live_wait(v):
+        print(f'LIVE: {LIVE} is serving v{v}.')
+    else:
+        print(f'NOT LIVE YET: {LIVE} still is not serving v{v} after 10 minutes; check the Vercel deployment.')
     if gui_changed:
         print('The screen changed: republish docs/gui-editor.html to the screen editor artifact (CLAUDE.md).')
 
