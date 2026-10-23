@@ -373,6 +373,21 @@ function person(part,x,y,z,fy,shirt,cap,hl,hr,o){o=o||{};const SK='matte#c68a62'
 }
 
 // ---------- merge: one mesh per material in each node ----------
+// small parts share a near enough material, so each boat draws in a dozen or so calls
+const A=(o,...pairs)=>{for(let i=0;i<pairs.length;i+=2)for(const k of pairs[i].split(' '))o[k]=pairs[i+1];return o},HULL={};
+A(HULL,'matte#c9c4b6 matte#d0ccc0 matte#e8e4da','matte#c9c4b6','plastic#eeeae0','plastic#f4f2ec');
+const ALIAS={fish:A({},'matte#4b5a3c matte#4f5a45','matte#5b6b48','matte#8c8f92','seat','matte#b08a5a','matte#d8c49a','metal#b8bcc0 matte#d8d4c8 paint#c9ccc8 lens','chrome',
+    'paint#2a2c2f plastic#2a2c2f steel#3a3d40','paint#1d1e20','rubber#1b1c1b rubber#3a342e','rubber#2a2b2d','paint#8b9297 paint#6c7176','paint#a4abb0',
+    'plastic#2b5a8a','matte#2b4d6e','plastic#5a6a3a plastic#1f8a3a','matte#3f6e4a','paintR redL','matte#c8562a','matte#3b2e25','black'),
+  sail:A({},'matte#8a6d4a','lib:planks','matte#34507a','matte#2a4f7a','matte#3b2e25 paint#2a2c2f steel#3a3d40 rubber#1b1c1b rubber#3a342e','black',
+    'matte#f2f2ee matte#d8d0bc matte#e8e4da paint#e5e1d4 paint#e9e6dc paint#f1efe9','paint#ece8dc','metal#9aa0a4 metal#c9ccc8','metal#c4c8cb',
+    'paint#c0392b redL','matte#d84a2a','lens','chrome'),
+  sailHullA:HULL,sailHullB:HULL,
+  tug:A({},'black rubber#262626 rubber#1d1d1d','tire','steel#3a3d40 steel#5a5d60 paint#2d3138 paint#4a5a3a','paint#2b2b2b','chrome lens','metal#c9ccc8',
+    'matte#e8b51a','paint#e8601c','paint#d6d6d2 paint#f2f1ec','paint#eeeeea','tint','win#2b3a44'),
+  barge:A({},'matte#5e4129','matte#6b4a2e','steel#4a4c4b','paint#2b2b2b')};
+for(const [part,ms] of Object.entries(parts)){const al=ALIAS[part]||{},mats={};
+  for(const [mat,list] of Object.entries(ms)){const k=al[mat]||mat;(mats[k]=mats[k]||[]).push(...list)}parts[part]=mats}
 const root=new T.Group();root.name='lakeboats';
 for(const [part,mats] of Object.entries(parts)){const g=new T.Group();g.name=part;root.add(g);
   for(const [mat,list] of Object.entries(mats)){let m=BGU.mergeBufferGeometries(list);m=BGU.mergeVertices(m,1e-4);
