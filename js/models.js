@@ -229,8 +229,8 @@ function mdlKitOn(on){mdl.kitOn=on;mdl.kitDirty=false;mdl.kitN++;
     if(on&&src===undefined){mdl.kit[f]=null;mdlLoad(f,sc=>{mdl.kit[f]=sc;mdl.kitDirty=true})}
     const keep=new Set(K.keep?K.keep():[]);
     for(const set of K.sets())for(const name in set){const par=set[name];if(!par)continue;const u=mdlSide(par);
-      if(on&&!u.kit&&src){const node=src.getObjectByName(name);if(!node)continue;
-        u.kit=mdlNodeParts(node).map(([g,mt])=>{const ms=new THREE.Mesh(g,mt);ms.name='mdl_'+name;ms.castShadow=mdlShadeOk(mt);ms.receiveShadow=true;
+      if(on&&!u.kit&&src){const node=src.getObjectByName(name),parts=node&&mdlNodeParts(node);if(!parts||!parts.length)continue;
+        u.kit=parts.map(([g,mt])=>{const ms=new THREE.Mesh(g,mt);ms.name='mdl_'+name;ms.castShadow=mdlShadeOk(mt);ms.receiveShadow=true;
           ms.layers.enable(RAIN_LAYER);if(mt.envMapIntensity>1.3)ms.renderOrder=2;par.add(ms);return ms})}
       if(!u.kit)continue;
       for(const c of par.children)if(c.isMesh&&!keep.has(c))c.visible=c.name.startsWith('mdl_')?on:!on}
@@ -238,7 +238,7 @@ function mdlKitOn(on){mdl.kitOn=on;mdl.kitDirty=false;mdl.kitN++;
 // ---- things standing in many places (MDL_SPOTS, family.js) and things placed from the map editor (props.js): a kind
 // whose node is in one of these files is drawn as one instanced mesh per material in place of its simple parts
 const MDL_SPOT_FILES=['site','town'];mdl.spotF={};mdl.spotIM={};mdl.propIM={};mdl.spotsOn=false;
-function mdlFindNode(k){for(const f of MDL_SPOT_FILES){const sc=mdl.spotF[f],n=sc&&sc.getObjectByName(k);if(n)return n}return null}
+function mdlFindNode(k){for(const f of MDL_SPOT_FILES){const sc=mdl.spotF[f],n=sc&&sc.getObjectByName(k);if(n&&mdlNodeParts(n).length)return n}return null}
 function mdlInst(node,cap){return mdlNodeParts(node).map(([g,mt])=>{const im=new THREE.InstancedMesh(g,mt,cap);im.castShadow=mdlShadeOk(mt);im.receiveShadow=true;
   im.layers.enable(RAIN_LAYER);if(mt.envMapIntensity>1.3)im.renderOrder=2;im.visible=false;scene.add(im);return im})}
 function mdlSpotsOn(on){mdl.spotsOn=on;mdl.spotsDirty=false;
