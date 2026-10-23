@@ -42,30 +42,36 @@ const DEX_Y=0xf2b705,DEX_D=0x2b2d30,DEX_GLASS=0x3c4a52;
     K.box(0.08,2.2,1.0,0x5a6268,X+W/2+0.07,y+1.1,Z+3);
     famSign(["DEXTER'S EQUIPMENT"],8,1.3,X,y+H+0.55,Z+D/2+0.12,0,'#2b2d30','#f2b705');
     SOLIDS.push({x:X,z:Z,hx:W/2+0.1,hz:D/2+0.15})}
-  // the office trailer on blocks, with steps up to the door
-  {const X=-180,Z=227,y=G(X,Z);for(const dx of [-5,-1.7,1.7,5])K.box(0.4,0.6,3,0x9b9a94,X+dx,y+0.3,Z);
+  // the office trailer on blocks, with steps up to the door (each of these kinds has a detailed model in
+  // models/site.glb, drawn at its famSpot in place of its own kit on Detailed: models.js)
+  {const X=-180,Z=227,y=G(X,Z),K=famKit();for(const dx of [-5,-1.7,1.7,5])K.box(0.4,0.6,3,0x9b9a94,X+dx,y+0.3,Z);
     K.box(12,2.8,3.4,0xeeeeea,X,y+2,Z);K.box(12.1,0.15,3.5,0xb9b9b4,X,y+3.45,Z);
     for(const dx of [-4.2,-1.6,3.6])K.box(1.4,0.9,0.06,DEX_GLASS,X+dx,y+2.3,Z+1.72);K.box(0.95,2.0,0.06,0x8a9198,X+1.2,y+1.65,Z+1.72);
     for(let i=0;i<3;i++)K.box(1.2,0.18,0.35,0x8a8a86,X+1.2,y+0.45+i*0.3-0.15,Z+2.6-i*0.3);K.box(1.6,0.08,1.0,0x8a8a86,X+1.2,y+0.62+0.3,Z+2.2);
+    famAddSpot('office',K);famSpot('office',X,y,Z);
     famSign(['OFFICE'],2.2,0.55,X-1.6,y+3.05,Z+1.74,0,'#ffffff','#2b2d30');
     SOLIDS.push({x:X,z:Z,hx:6.1,hz:1.8})}
   // diesel tank on saddles, with its pump
-  {const X=-193,Z=226,y=G(X,Z);for(const dx of [-1.4,1.4])K.box(0.4,0.9,2.0,0x8a8a86,X+dx,y+0.45,Z);
+  {const X=-193,Z=226,y=G(X,Z),K=famKit();for(const dx of [-1.4,1.4])K.box(0.4,0.9,2.0,0x8a8a86,X+dx,y+0.45,Z);
     K.cyl(1.05,1.05,4.2,12,0xd8d8d4,X,y+1.9,Z,0,0,Math.PI/2);K.cyl(1.07,1.07,0.4,12,DEX_Y,X,y+1.9,Z,0,0,Math.PI/2);
     K.box(0.6,1.4,0.4,0xc0392b,X+2.8,y+0.7,Z+1.0);K.box(0.05,0.05,0.9,DEX_D,X+2.8,y+1.1,Z+1.5,0,0.6);
+    famAddSpot('fueltank',K);famSpot('fueltank',X,y,Z);
     famSign(['DIESEL'],1.6,0.45,X,y+3.25,Z,0,'#c0392b','#ffffff');
     SOLIDS.push({x:X,z:Z,hx:2.4,hz:1.2},{x:X+2.8,z:Z+1.0,hx:0.35,hz:0.25})}
   // concrete pipe stacked by the office, Jersey barriers behind the shed
   for(const [dx,dy] of [[-1.3,0],[1.3,0],[0,1.1]]){const x=-168+dx,z=232,y=G(x,z)+0.65+dy;K.cyl(0.65,0.65,2.4,10,0xa9a6a0,x,y,z,0,Math.PI/2,0)}
   SOLIDS.push({x:-168,z:232,hx:2,hz:1.25});
-  for(let i=0;i<9;i++){const x=-230+i*3.4,z=212,y=G(x,z);K.box(3.2,0.3,0.8,0xc9c6bf,x,y+0.15,z);K.box(3.2,0.55,0.55,0xc9c6bf,x,y+0.55,z);K.box(3.2,0.3,0.3,0xc9c6bf,x,y+0.95,z)}
+  {const KB=famKit();for(let i=0;i<9;i++){const x=-230+i*3.4,z=212,y=G(x,z);KB.box(3.2,0.3,0.8,0xc9c6bf,x,y+0.15,z);KB.box(3.2,0.55,0.55,0xc9c6bf,x,y+0.55,z);KB.box(3.2,0.3,0.3,0xc9c6bf,x,y+0.95,z);famSpot('barrier',x,y,z)}
+    famAddSpot('barrier',KB)}
   SOLIDS.push({x:-216.4,z:212,hx:15.4,hz:0.45});
   // two light towers on their trailers
-  for(const [x,z] of [[-168,258],[-235,233]]){const y=G(x,z);K.box(1.4,0.7,2.6,DEX_Y,x,y+0.75,z);for(const s of [-1,1])K.cyl(0.35,0.35,0.25,8,0x1d1d1f,x+s*0.8,y+0.35,z,0,0,Math.PI/2);
+  {const KL=famKit();for(const [x,z] of [[-168,258],[-235,233]]){const y=G(x,z),K=KL;K.box(1.4,0.7,2.6,DEX_Y,x,y+0.75,z);for(const s of [-1,1])K.cyl(0.35,0.35,0.25,8,0x1d1d1f,x+s*0.8,y+0.35,z,0,0,Math.PI/2);
     K.cyl(0.08,0.12,8,6,0x8a8a86,x,y+5.1,z);K.box(2.2,0.15,0.15,0x8a8a86,x,y+9,z);for(const dx of [-0.8,-0.27,0.27,0.8]){K.box(0.42,0.42,0.2,0x3a3a3a,x+dx,y+9.35,z);K.lit(new THREE.BoxGeometry(0.34,0.34,0.04),0xfff6d8,x+dx,y+9.35,z+0.11)}
-    SOLIDS.push({x,z,hx:0.75,hz:1.35})}
+    SOLIDS.push({x,z,hx:0.75,hz:1.35});famSpot('light',x,y,z)}
+    famAddSpot('light',KL)}
   // a cone course to weave through
-  for(let i=0;i<10;i++){const x=-190+i*2.4,z=255+(i%2?1.2:-1.2),y=G(x,z);K.box(0.42,0.04,0.42,0xe0661e,x,y+0.02,z);K.cyl(0.03,0.17,0.62,8,0xe0661e,x,y+0.33,z);K.cyl(0.085,0.12,0.12,8,0xf2f2ee,x,y+0.38,z)}
+  {const KC=famKit();for(let i=0;i<10;i++){const x=-190+i*2.4,z=255+(i%2?1.2:-1.2),y=G(x,z);KC.box(0.42,0.04,0.42,0xe0661e,x,y+0.02,z);KC.cyl(0.03,0.17,0.62,8,0xe0661e,x,y+0.33,z);KC.cyl(0.085,0.12,0.12,8,0xf2f2ee,x,y+0.38,z);famSpot('cone',x,y,z,i*0.61)}
+    famAddSpot('cone',KC)}
   famAdd(K);
 })();
 
@@ -80,10 +86,13 @@ const DEX_Y=0xf2b705,DEX_D=0x2b2d30,DEX_GLASS=0x3c4a52;
     else if(s<2*L+PR){x=TRK_B[0]-(s-L-PR);z=TRK_A[1]+TRK_R+u;yaw=-Math.PI/2}
     else{const a=Math.PI/2+(s-2*L-PR)/TRK_R;x=TRK_A[0]+Math.cos(a)*(TRK_R+u);z=TRK_A[1]+Math.sin(a)*(TRK_R+u);yaw=-a}
     return [x,z,yaw]};
+  // (the tyres and bales have detailed models in models/site.glb, drawn at their famSpots on Detailed: models.js)
+  const KT=famKit(),KB=famKit();
   for(const [s0,s1] of [[L,L+PR],[2*L+PR,TRK_LEN]])for(let s=s0+0.6;s<s1;s+=0.75){const [x,z]=at(s,-hw-0.45),y=G(x,z);
-    K.cyl(0.33,0.33,0.24,10,0x1d1d1f,x,y+0.04,z);K.cyl(0.2,0.2,0.26,8,0x4a3a2a,x,y+0.05,z)}
-  const bale=(s,u)=>{const [x,z,yaw]=at(s,u),y=G(x,z);K.box(0.5,0.45,1.1,0xc9a75a,x,y+0.22,z,yaw);K.box(0.04,0.03,1.12,0x8a6f38,x,y+0.3,z,yaw)};
+    KT.cyl(0.33,0.33,0.24,10,0x1d1d1f,x,y+0.04,z);KT.cyl(0.2,0.2,0.26,8,0x4a3a2a,x,y+0.05,z);famSpot('tyre',x,y,z,s*1.7)}
+  const bale=(s,u)=>{const [x,z,yaw]=at(s,u),y=G(x,z);KB.box(0.5,0.45,1.1,0xc9a75a,x,y+0.22,z,yaw);KB.box(0.04,0.03,1.12,0x8a6f38,x,y+0.3,z,yaw);famSpot('bale',x,y,z,yaw)};
   for(const s of [L/2-6.5,L/2+6.5,L+PR+3,L+PR+16.5])for(const u of [-hw-0.9,hw+0.9])bale(s,u);
+  famAddSpot('tyre',KT);famAddSpot('bale',KB);
   // the start line across the south straight, and the sign
   {const s=L+PR+1.2;for(let u=-hw;u<hw;u+=0.5){const [x,z,yaw]=at(s,u+0.25),y=G(x,z);K.box(0.5,0.02,0.3,(u/0.5|0)%2?0x1d1d1f:0xf2f2ee,x,y+0.012,z,yaw)}
     const [x,z]=at(s,hw+1.6),y=G(x,z);for(const d of [-1.6,1.6])K.box(0.12,2.2,0.12,DEX_D,x+d,y+1.1,z);
