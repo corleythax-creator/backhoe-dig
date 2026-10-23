@@ -135,7 +135,7 @@ const GFX_ROWS=[
   {id:'aniso',label:'Sharpness at an angle',hint:'Keeps far-off ground crisp (anisotropic filtering).',opts:[[1,'1x'],[2,'2x'],[4,'4x'],[8,'8x'],[16,'16x']]},
   ['Grass and scenery'],
   {id:'brush',label:'Undergrowth',hint:'Leafy shrubs round the trees.',opts:[[0,'Off'],[0.35,'Few'],[0.7,'Some'],[1,'Full']]},
-  {id:'model',label:'Machine models',hint:'Detailed machines (the excavator with a full cab inside, the dump truck, dozers, loaders, semis, pickups and four-wheelers) or the simple ones. Detailed downloads about 7 MB once.',opts:[[true,'Detailed'],[false,'Simple']]},
+  {id:'model',label:'Machine models',hint:'Detailed models (every machine and boat, the excavator with a full cab inside, the trench box and attachments, and the yards\' and towns\' cones, light towers, barriers, lamps, benches and tables) or the simple ones. Detailed downloads about 17 MB once.',opts:[[true,'Detailed'],[false,'Simple']]},
   {id:'treeR',label:'Tree detail distance',hint:'How far trees keep their full model of branches and leaves.',min:20,max:400,step:5,fmt:v=>`${Math.round(v*FT_M)} ft`},
   {id:'tuftQ',label:'Grass quality',hint:'How finely the grass and weeds are shaped: more blades, bent in more steps, finer leaves, petals and seed heads. Costs triangles.',opts:[[0,'Simple'],[1,'Good'],[2,'Fine'],[3,'Best']]},
   {id:'tuftA',label:'Grass blades',hint:'How many blades are drawn. The main triangle cost.',min:0,max:1,step:0.05,fmt:v=>`${Math.round(v*100)}%`},
