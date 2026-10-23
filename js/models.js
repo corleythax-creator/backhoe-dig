@@ -218,7 +218,7 @@ function mdlNodeParts(node){if(node.userData.mdlParts)return node.userData.mdlPa
   for(const m of node.children){if(!m.isMesh)continue;const g=m.geometry.clone();g.applyMatrix4(M4.multiplyMatrices(inv,m.matrixWorld));
     if(!g.attributes.uv)mdlBoxUV(g);g.computeBoundingSphere();out.push([g,mdlMatOf(m.material.name)])}
   return node.userData.mdlParts=out}
-const mdlShadeOk=mt=>!(mt.userData.lit&&mt.userData.lit.t==='glow')&&!(mt.isMeshStandardMaterial&&mt.envMapIntensity>1.3);
+const mdlShadeOk=mt=>!mt.transparent&&!(mt.userData.lit&&mt.userData.lit.t==='glow')&&!(mt.isMeshStandardMaterial&&mt.envMapIntensity>1.3);
 // ---- machines and kit-built things (MDL_KIT[file]): sets() gives each copy's part groups by the model's node names,
 // {body: group, arm: group, ...}; keep() lists meshes of those groups that stay as they are (loads, lamps the game
 // lights). On Detailed each node's meshes go into its group and the group's own meshes hide (only once the file is in,
