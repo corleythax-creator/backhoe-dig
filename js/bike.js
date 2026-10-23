@@ -15,6 +15,8 @@ const BK_START={x:TRK_B[0]-0.2,z:TRK_A[1]+TRK_R,yaw:-Math.PI/2};
 const bk={x:0,z:0,y:0,yaw:0,v:0,vy:0,air:false,pitch:0,lean:0,steer:0,comp:0,cv:0,rollF:0,rollR:0,run:0,thr:0};
 const bike=new THREE.Group();scene.add(bike);
 const bkBody=new THREE.Group(),bkArm=new THREE.Group(),bkHead=new THREE.Group(),bkSteer=new THREE.Group(),bkWF=new THREE.Group(),bkWR=new THREE.Group(),bkStand=new THREE.Group();
+// the fork's lower legs, which slide up the steering axis with the front wheel (only the detailed model has them)
+const bkFork=new THREE.Group();
 (function(){
   const mat=M(0xffffff,{vertexColors:true,flatShading:false,shininess:60,specular:0x404040});
   const mesh=(K,parent)=>{const m=new THREE.Mesh(famMerge(K.solid),mat);m.castShadow=true;m.receiveShadow=true;parent.add(m)};
@@ -58,7 +60,7 @@ const bkBody=new THREE.Group(),bkArm=new THREE.Group(),bkHead=new THREE.Group(),
     K.box(0.27,0.25,0.02,Y,0,0.0,0.12,0,0.15);K.box(0.2,0.14,0.022,0xf4f3ef,0,0.0,0.125,0,0.15);
     K.box(0.15,0.03,0.52,Y,0,-BK_FORK+BK_WR+0.1,0.06,0,BK_RAKE-0.1);
     mesh(K,bkSteer)}
-  bkSteer.add(bkWF);wheel(bkWF);
+  bkSteer.add(bkWF);wheel(bkWF);bkSteer.add(bkFork);
   bkWR.position.set(0,BK_WR,-BK_WB/2);bike.add(bkWR);wheel(bkWR);
   // the kickstand, down on the left while it is parked
   {const K=famKit();K.box(0.025,0.46,0.025,DARK,0.1,-0.21,0,0,0,0.42);mesh(K,bkStand)}
@@ -66,7 +68,7 @@ const bkBody=new THREE.Group(),bkArm=new THREE.Group(),bkHead=new THREE.Group(),
 })();
 function bikeReset(){Object.assign(bk,BK_START,{v:0,vy:0,air:false,steer:-0.3,lean:-0.15,comp:0,cv:0});bk.y=surfAt(bk.x,bk.z);bk.pitch=0;bikePose()}
 function bikePose(){const b=bk;bike.position.set(b.x,b.y,b.z);bike.rotation.set(-b.pitch,b.yaw,b.lean,'YXZ');
-  const c=b.comp;bkBody.position.y=-c;bkSteer.rotation.y=-b.steer;bkWF.position.set(0,-BK_FORK+c/Math.cos(BK_RAKE),0);
+  const c=b.comp;bkBody.position.y=-c;bkSteer.rotation.y=-b.steer;bkWF.position.set(0,-BK_FORK+c/Math.cos(BK_RAKE),0);bkFork.position.y=c/Math.cos(BK_RAKE);
   bkArm.position.set(0,BK_PIV[0]-c,BK_PIV[1]);bkArm.rotation.x=Math.asin((BK_WR-BK_PIV[0]+c)/0.62);
   bkWF.rotation.x=b.rollF;bkWR.rotation.x=b.rollR;bkStand.visible=!b.run&&!b.v}
 const bkV=new THREE.Vector3();
@@ -117,6 +119,8 @@ function bikeTick(dt,thr,steer){
     Object.assign(wk,{x:b.x,z:b.z,y:b.y,yaw:b.yaw});walker.position.copy(bkV);walker.rotation.set(-b.pitch,b.yaw,b.lean,'YXZ');
     walker.visible=!(mode==='bike'&&camMode==='cab');wkBody.position.y=0;wkBody.rotation.x=0.3;wkHead.rotation.x=-0.2;
     for(let s=0;s<2;s++){wkLegs[s].top.rotation.x=-0.85+up*2;wkLegs[s].low.rotation.x=1.15-up*2;wkArms[s].top.rotation.x=-1.05;wkArms[s].low.rotation.x=-0.4}}}
+// the detailed model (models.js, tools/models/bike.js): a node for each part group
+MDL_KIT.bike={sets:()=>[{body:bkBody,steer:bkSteer,fork:bkFork,wf:bkWF,wr:bkWR,arm:bkArm,stand:bkStand}]};
 // the walker climbs on beside it (walker.js)
 WK_RIDES.bike={o:bk,c:BK_C,r:BK_R,m:'bike',n:'dirt bike'};
 bikeReset();
