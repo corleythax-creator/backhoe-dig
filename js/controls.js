@@ -234,9 +234,19 @@ const islBtns=[...document.querySelectorAll('#startIsl [data-isl]')];
 function markIsl(){for(const b of islBtns)b.setAttribute('aria-pressed',b.dataset.isl===startIsl)}
 for(const b of islBtns)b.onclick=()=>{startIsl=b.dataset.isl;try{localStorage.setItem('bhd_startIsl',startIsl)}catch(e){}markIsl()};
 markIsl();
+// each tile is a ride (a WK_RIDES key, or 'foot'); a kind there are several of (data-k 'boat', or 'hv:dozer' and the
+// like for the heavy machines on Corley's and Dexter's) means the one nearest the island picked
 const tiles=[...document.querySelectorAll('.tile')];
-for(const t of tiles)t.onclick=()=>{startIn(t.dataset.m);if(startIsl!=='corley')startOn(startIsl,t.dataset.m)};
-function markTile(){const m=mode==='drive'?'dig':mode;for(const t of tiles)t.setAttribute('aria-pressed',t.dataset.m===m)}
+const rideKind=k=>!k?'':k.startsWith('boat')?'boat':/^hv\d/.test(k)?'hv:'+hvs[+k.slice(2)].k:k;
+function tileRide(t){const k=t.dataset.k;if(!k)return t.dataset.m==='walk'?'foot':rideOf(t.dataset.m);
+  const [x,z]=START_ISL[startIsl]||[0,0];let best=null,bd=1e9;
+  for(const r in WK_RIDES)if(rideKind(r)===k){const o=WK_RIDES[r].o,d=Math.hypot(o.x-x,o.z-z);if(d<bd){bd=d;best=r}}
+  return best}
+for(const t of tiles)t.onclick=()=>{const k=tileRide(t);if(!k)return;
+  if(k==='foot')startIn('walk');else{const R=WK_RIDES[k];wk.inside=k;walker.visible=false;if(R.pick)R.pick();firstCam=true;startIn(R.m)}
+  if(startIsl!=='corley')startOn(startIsl,k)};
+function markTile(){const r=mode==='walk'?'foot':rideKind(wk.inside||rideOf(mode));
+  for(const t of tiles)t.setAttribute('aria-pressed',(t.dataset.k||(t.dataset.m==='walk'?'foot':rideOf(t.dataset.m)))===r)}
 markTile();
 help.addEventListener('click',e=>{if(e.target===help)startIn(mode)});
 $('#ctrlBtn').onclick=()=>{const b=$('#ctrlBtn'),box=$('#ctrlBox'),on=box.hidden;box.hidden=!on;b.setAttribute('aria-expanded',on);b.textContent=on?'Hide controls':'Controls';if(on)box.scrollIntoView({block:'start',behavior:'smooth'})};
