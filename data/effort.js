@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-23T01:21:00Z",
+ "updated": "2026-10-23T01:48:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -48,9 +48,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-22",
-   "dh": 110.5,
-   "act": 2.5,
-   "versions": 8
+   "dh": 111.25,
+   "act": 3,
+   "versions": 9
   }
  ],
  "extra": [
@@ -1887,6 +1887,15 @@ window.EFFORT = {
    "tris": 5238854,
    "chars": 1347233,
    "what": "Fuel burn is off: machines never run dry, no low-fuel warnings or fill-ups, and Stats drops the fuel rows (hour meters and pay still run)"
+  },
+  {
+   "v": 204,
+   "asked": "2026-10-22T20:20:00-05:00",
+   "live": "2026-10-22T20:48:05-05:00",
+   "dh": 0.75,
+   "tris": 5239409,
+   "chars": 1347871,
+   "what": "In VR, the stripes that flickered on machines as you walked up to them are gone: the headset sees depth more finely."
   }
  ]
 };
