@@ -41,13 +41,21 @@ const skArm=new THREE.Group(),skBkt=new THREE.Group(),skWheels=[];
 // the load heaped in the bucket
 const skLoad=new THREE.Mesh(new THREE.IcosahedronGeometry(0.5,1),M(0x7a5232,{map:null}));skLoad.scale.set(1.6,0.45,0.6);skLoad.position.set(0,-0.3,0.38);skLoad.visible=false;skBkt.add(skLoad);
 const skTip=new THREE.Vector3(),skTipL=new THREE.Vector3(),skTipR=new THREE.Vector3(),skLip=new THREE.Vector3();
+// the detailed model (models.js, tools/models/skid.js) in these part groups when Machine models are Detailed, with its
+// lift and tilt rams drawn pin to pin (mdlRam) and posed with the arms (skidPose)
+const skRams=[];
+MDL_KIT.skid={sets:()=>[{body:skid.children[0],arm:skArm,bucket:skBkt},...skWheels.map(W=>({[W.side>0?'wheelL':'wheelR']:W.g}))],keep:()=>[skLoad],
+  after(on){if(on&&!skRams.length){const mats=mdlMatsMake(),V=(x,y,z)=>new THREE.Vector3(x,y,z),body=skid.children[0];
+      for(const s of [-1,1])skRams.push(mdlRam({a:{par:body,p:V(s*0.7,1.12,-1.0),o:{r:0.055,lb:0.8,lr:0.27}},b:{par:skArm,p:V(s*0.7,0.15,0.8)}},mats),
+        mdlRam({a:{par:skArm,p:V(s*0.62,0.45,1.62),o:{r:0.045,lb:0.48,lr:0.22}},b:{par:skBkt,p:V(s*0.62,0.26,0)}},mats));skidPose()}
+    for(const r of skRams)r.ga.visible=r.gb.visible=on}};
 function skidReset(){Object.assign(sk,SK_START,{v:0,w:0,a:0,c:0.15,load:0,stuck:0,loadWet:0,run:0,dumped:0});sk.y=surfAt(sk.x,sk.z);skidPose()}
 // arms and bucket from sk.a (arm lift) and sk.c (bucket curl, kept level as the arms rise)
 function skidPose(){skid.position.set(sk.x,sk.y,sk.z);skid.rotation.set(sk.pitch,sk.yaw,sk.roll,'YXZ');
   const e=SK_A0+sk.a;skArm.rotation.x=-e;skBkt.rotation.x=e-sk.c;skid.updateMatrixWorld(true);
   skBkt.localToWorld(skTip.set(0,-0.46,0.76));skBkt.localToWorld(skTipL.set(-0.5,-0.46,0.6));skBkt.localToWorld(skTipR.set(0.5,-0.46,0.6));skBkt.localToWorld(skLip.set(0,-0.3,0.85));
   // dirt pours forward off the lip as the bucket tips
-  skLip.x+=Math.sin(sk.yaw)*0.45;skLip.z+=Math.cos(sk.yaw)*0.45}
+  skLip.x+=Math.sin(sk.yaw)*0.45;skLip.z+=Math.cos(sk.yaw)*0.45;if(skRams.length)mdlRamPose({g:skid,rams:skRams})}
 // every frame: drive (in, turn: left stick), arms (arm: up/down) and bucket (curl: back/dump); all 0 when parked
 function updateSkid(dt,drive,turn,arm,curl){
   const on=mode==='skid'&&!bench.on;sk.run+=((on?1:0)-sk.run)*Math.min(1,dt*(on?2:0.7));
