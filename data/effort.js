@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-23T03:10:00Z",
+ "updated": "2026-10-23T15:41:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -51,6 +51,12 @@ window.EFFORT = {
    "dh": 115.75,
    "act": 4,
    "versions": 11
+  },
+  {
+   "d": "2026-10-23",
+   "dh": 96,
+   "act": 0.5,
+   "versions": 1
   }
  ],
  "extra": [
@@ -1914,6 +1920,15 @@ window.EFFORT = {
    "tris": 5240022,
    "chars": 1354352,
    "what": "The start card shows every machine you can ride, with new pictures: the excavator, dump truck, mower and On foot up top, and a More machines grid with the skid steer, backhoe, mini excavator, dozer, wheel loader, semi, pickup, four-wheeler, dirt bike and boat. Each starts you in the one on the island you picked."
+  },
+  {
+   "v": 207,
+   "asked": "2026-10-23T08:40:00-05:00",
+   "live": "2026-10-23T10:41:55-05:00",
+   "dh": 96,
+   "tris": 4698371,
+   "chars": 1368792,
+   "what": "Detailed models for the most-seen things that were still simple shapes, on Medium graphics and up: the zero-turn mower, skid steer with working lift and tilt rams, dirt bike with a sliding fork, the runabouts at every dock, Dexter's mini excavator and tag trailer, the trench box, the quick coupler with its thumb, hammer and auger, the lake's fishing boats, sailboats, tug and spoil barge, Dexter's cones, light towers, Jersey barriers, diesel tank, office trailer, track bales and tyres, and the street and bridge lamps, park benches, pavilion picnic tables and round hay bales; cones, light towers, benches and picnic tables placed in the map editor get them too, and the start card shows the new machines. Phones on Low keep the simple shapes"
   }
  ]
 };

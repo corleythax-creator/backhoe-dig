@@ -2,6 +2,10 @@
 
 Every version of Corley's Island, newest first, grouped by the day it went live (Central time). Made from `data/effort.js` by `tools/changelog.py`; don't edit it by hand. [Play any old version](https://corleys-island.vercel.app/versions/) · [Build log with charts](https://corleys-island.vercel.app/build.html)
 
+## Friday, October 23, 2026
+
+- **v207** (10:41 AM) Detailed models for the most-seen things that were still simple shapes, on Medium graphics and up: the zero-turn mower, skid steer with working lift and tilt rams, dirt bike with a sliding fork, the runabouts at every dock, Dexter's mini excavator and tag trailer, the trench box, the quick coupler with its thumb, hammer and auger, the lake's fishing boats, sailboats, tug and spoil barge, Dexter's cones, light towers, Jersey barriers, diesel tank, office trailer, track bales and tyres, and the street and bridge lamps, park benches, pavilion picnic tables and round hay bales; cones, light towers, benches and picnic tables placed in the map editor get them too, and the start card shows the new machines. Phones on Low keep the simple shapes
+
 ## Thursday, October 22, 2026
 
 - **v206** (10:10 PM) The start card shows every machine you can ride, with new pictures: the excavator, dump truck, mower and On foot up top, and a More machines grid with the skid steer, backhoe, mini excavator, dozer, wheel loader, semi, pickup, four-wheeler, dirt bike and boat. Each starts you in the one on the island you picked.
