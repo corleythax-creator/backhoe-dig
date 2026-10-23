@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-23T01:13:00Z",
+ "updated": "2026-10-23T01:21:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -48,9 +48,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-22",
-   "dh": 110,
+   "dh": 110.5,
    "act": 2.5,
-   "versions": 7
+   "versions": 8
   }
  ],
  "extra": [
@@ -1878,6 +1878,15 @@ window.EFFORT = {
    "tris": 5246817,
    "chars": 1346586,
    "what": "Jessica's library gets a tuxedo cat by the fire who watches you and purrs when you pet her, and a far cozier room (wingback chairs, a writing desk, a globe, fairy lights, curtains, a painting, firelight); Dexter's pickup tows a new equipment trailer and his new mini excavator rides on it; machines log engine hours, burn fuel you buy at the pumps and earn pay, with a day's log in Stats; work lights on the boom and amber beacons; rain drums on porch roofs; a free Orbit camera; and Ultra steps down to High on a PC that can't hold it."
+  },
+  {
+   "v": 203,
+   "asked": "2026-10-22T20:15:00-05:00",
+   "live": "2026-10-22T20:21:56-05:00",
+   "dh": 0.5,
+   "tris": 5238854,
+   "chars": 1347233,
+   "what": "Fuel burn is off: machines never run dry, no low-fuel warnings or fill-ups, and Stats drops the fuel rows (hour meters and pay still run)"
   }
  ]
 };
