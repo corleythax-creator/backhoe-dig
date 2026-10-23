@@ -261,3 +261,8 @@ function mdlGfx(detail){mdl.want=!!detail;mdlExOn(mdl.want);mdlTrOn(mdl.want)}
 // once a few seconds, the cab display's clock (only while the detailed model shows)
 function mdlTick(dt){if(!!mdl.othersOn!==mdl.want)mdlOthersOn(mdl.want);if(mdl.kitOn!==mdl.want||mdl.kitDirty)mdlKitOn(mdl.want);
   if(mdl.spotsOn!==mdl.want||mdl.spotsDirty)mdlSpotsOn(mdl.want);else if(mdl.want)mdlPropsSync();if(mdl.lit)mdlLitTick();if(mdl.hvOn!==mdl.want||mdl.want&&hvs.some(h=>MDL_HV.includes(h.k)&&!h.mdl&&mdl.hv[h.k]))mdlHvOn(mdl.want);if(!mdl.on)return;mdlScrT+=dt;if(mdlScrT>5){mdlScrT=0;mdlScreenDraw()}}
+// ---------- the trench box, and the quick coupler with its thumb, hammer and auger (tools/models/tbox.js and
+// attach.js). trenchbox.js and coupler.js load before this file, so they are registered here; the crane chain stays
+// the game's, and the thumb's jaw and the auger's bit keep moving in their own groups ----------
+MDL_KIT.tbox={sets:()=>[{tbox}]};
+MDL_KIT.attach={sets:()=>[{coupler:cplG,thumb:thG,thumbJaw:thJaw,hammer:hmG,auger:agG,augerBit:agBit}]};

@@ -144,7 +144,7 @@ function cplTick(dt){
   if(b){b.x=tip.x;b.z=tip.z;b.y=Math.max(blkGround(b.x,b.z,b.w,b.d),tip.y-b.h*0.6);b.vy=0;blkWake=Math.max(blkWake,0.05)}
   thJaw.rotation.x+=((b?0.12:0.85)-thJaw.rotation.x)*Math.min(1,dt*6);
   const boring=cpl.fit==='auger'&&st.below&&!bench.on;cpl.spin=boring?Math.min(1,cpl.spin+dt*3):Math.max(0,cpl.spin-dt);agBit.rotation.z-=cpl.spin*9*dt;
-  hmG.position.z=cpl.fit==='hammer'&&st.below&&!bench.on?Math.sin(performance.now()*0.09)*0.018:0;
+  if(cpl.fit==='hammer')hmG.position.z=st.below&&!bench.on?Math.sin(performance.now()*0.09)*0.018:0;
   // the flights carry the spoil up and out round the hole, a little at a time
   cpl.spoilT-=dt;if(cpl.spoil>0.002&&cpl.spoilT<=0){cpl.spoilT=0.3;cpl.spoilA+=2.1;const R=TU.cpBore/2+0.5;
     deposit(tip.x+Math.cos(cpl.spoilA)*R,tip.z+Math.sin(cpl.spoilA)*R,cpl.spoil,cpl.spoilC,cpl.spoilM,0.6,0);cpl.spoil=0}
