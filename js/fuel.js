@@ -5,6 +5,9 @@
 // the fuel you buy, and each day's work goes in the day's log (Stats). Pay rates, the fuel price and fuel use are in
 // the Tuning tab (Work and pay). Everything here is kept in the stats (stats.js), so it saves and syncs with them.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
+// fuel burn is off for now (the owner's call): the tanks stay full, nothing runs dry, no low-fuel warnings or fill-ups,
+// and Stats leaves out the fuel rows; hour meters and pay still run. Set it true to bring the whole fuel game back.
+const FUEL_BURN=false;
 // each machine: its tank (gal), the burn idling and working hard (gal an hour), its hour meter when you got it
 const FUEL={ex:{n:'excavator',tank:66,idle:1.3,full:4.6,h0:1022},tr:{n:'dump truck',tank:100,idle:1.0,full:7.5,h0:4318},
   sk:{n:'skid steer',tank:24,idle:0.6,full:2.6,h0:611},mw:{n:'mower',tank:12,idle:0.3,full:1.4,h0:287}};
@@ -27,7 +30,7 @@ const FUEL_PUMPS=[{x:-190.2,z:227,n:"Dexter's diesel tank"},{x:FC_X+Math.cos(FC_
 const fuelKey=m=>m==='dig'||m==='drive'?'ex':m==='truck'?'tr':m==='skid'?'sk':m==='mow'?'mw':null;
 const fuelLeft=k=>Math.max(0,FUEL[k].tank-stats[k+'Use']);
 // the machine you are in has run dry: its controls do nothing (main.js)
-function fuelOut(){const k=fuelKey(mode);return !!k&&stats[k+'Use']>=FUEL[k].tank-1e-6}
+function fuelOut(){const k=fuelKey(mode);return FUEL_BURN&& !!k&&stats[k+'Use']>=FUEL[k].tank-1e-6}
 // the hour meter, in hours
 const fuelHrs=k=>FUEL[k].h0+stats[k+'Hrs']/3600;
 // game seconds for a real one, at the clock's speed (daynight.js)
@@ -51,6 +54,8 @@ function fuelTick(dt,busy){payRoll();const k=fuelKey(mode);
   const F=FUEL[k],g=fuelGameS(dt),o=k==='ex'?st:k==='tr'?tr:k==='sk'?sk:mw;
   fuel.load+=((busy?1:0)-fuel.load)*Math.min(1,dt*1.5);
   stats[k+'Hrs']+=g;stats.dHrs+=g;
+  // burn off: a tank left part used by an older save fills back up, free
+  if(!FUEL_BURN){if(stats[k+'Use']>0)stats[k+'Use']=0;fuel.warn[k]=0;statDirty=true;return}
   if(stats[k+'Use']<F.tank){const b=Math.min(F.tank-stats[k+'Use'],(F.idle+(F.full-F.idle)*fuel.load)*g/3600*TU.fuelUse);stats[k+'Use']+=b;stats.fuelGal+=b;stats.dGal+=b}
   statDirty=true;
   // filling up: stopped within about 20 ft of a pump, a quick 12 gal a second
@@ -68,7 +73,7 @@ function fuelFillEnd(){const f=fuel.fill;if(!f)return;fuel.fill=null;
 // the Stats panel's rows (stats.js): the day's log, the pay, and each machine's hour meter and tank
 function fuelRows(){const S=stats,sqft=n=>Math.round(n).toLocaleString()+' sq ft',gal=v=>v.toFixed(v<10?1:0)+' gal',hrs=s=>(s/3600).toFixed(1)+' h';payRoll();
   return [['Today on the job',[['Day',new Date(dn.t).toLocaleDateString([],{weekday:'long',month:'short',day:'numeric'})],['Dirt dug',sYd(S.dDug)],['Hauled off',sYd(S.dHaul)],
-      ['Moved by the skid steer',sYd(S.dSkid)],['Grass mowed',sqft(S.dMow)],['Engine hours',hrs(S.dHrs)],['Fuel burned',gal(S.dGal)],
-      ['Earned',usd(S.dEarn)],['Fuel bought',usd(S.dFuelCost)],['The day paid',usd(S.dEarn-S.dFuelCost)],['Yesterday paid',S.yEarn?usd(S.yEarn):'—']]],
-    ['Pay',[['Earned, all time',usd(S.earned)],['Fuel bought',usd(S.fuelCost)],['In the bank',usd(S.earned-S.fuelCost)],['Fuel burned, all time',gal(S.fuelGal)]]],
-    ['Hour meters and fuel',Object.keys(FUEL).map(k=>[FUEL[k].n[0].toUpperCase()+FUEL[k].n.slice(1),`${fuelHrs(k).toFixed(1)} h · ${gal(fuelLeft(k))} of ${FUEL[k].tank} (${Math.round(fuelLeft(k)/FUEL[k].tank*100)}%)`])]]}
+      ['Moved by the skid steer',sYd(S.dSkid)],['Grass mowed',sqft(S.dMow)],['Engine hours',hrs(S.dHrs)],...(FUEL_BURN?[['Fuel burned',gal(S.dGal)]]:[]),
+      ['Earned',usd(S.dEarn)],...(FUEL_BURN?[['Fuel bought',usd(S.dFuelCost)]]:[]),['The day paid',usd(S.dEarn-S.dFuelCost)],['Yesterday paid',S.yEarn?usd(S.yEarn):'—']]],
+    ['Pay',[['Earned, all time',usd(S.earned)],...(FUEL_BURN?[['Fuel bought',usd(S.fuelCost)]]:[]),['In the bank',usd(S.earned-S.fuelCost)],...(FUEL_BURN?[['Fuel burned, all time',gal(S.fuelGal)]]:[])]],
+    [FUEL_BURN?'Hour meters and fuel':'Hour meters',Object.keys(FUEL).map(k=>[FUEL[k].n[0].toUpperCase()+FUEL[k].n.slice(1),`${fuelHrs(k).toFixed(1)} h`+(FUEL_BURN?` · ${gal(fuelLeft(k))} of ${FUEL[k].tank} (${Math.round(fuelLeft(k)/FUEL[k].tank*100)}%)`:'')])]]}

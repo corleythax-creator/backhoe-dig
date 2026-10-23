@@ -106,8 +106,8 @@ const TUNE=[
   ['nightLight','Day and night','Moonlight and starlight at night',1,'pct',0,400,5],
   ['lampLight','Day and night','Headlights, lamps and lit windows',1,'pct',0,300,5],
   // fuel and pay (fuel.js)
-  ['fuelUse','Work and pay','Fuel use (100% burns what the real machine does in an hour of game time)',1,'pct',0,500,5],
-  ['fuelPrice','Work and pay','Fuel price, a gallon',3.85,'usd',0,20,0.05],
+  ['fuelUse','Work and pay','Fuel use (100% burns what the real machine does in an hour of game time; does nothing while fuel burn is off, FUEL_BURN in fuel.js)',1,'pct',0,500,5],
+  ['fuelPrice','Work and pay','Fuel price, a gallon (does nothing while fuel burn is off)',3.85,'usd',0,20,0.05],
   ['payDig','Work and pay','Pay for dirt dug, a yd³',9,'usd',0,200,0.5],['payHaul','Work and pay','Pay for dirt hauled off in the truck, a yd³',14,'usd',0,200,0.5],
   ['paySkid','Work and pay','Pay for dirt moved by the skid steer, a yd³',6,'usd',0,200,0.5],['payMow','Work and pay','Pay for grass mowed, a 1,000 sq ft',8,'usd',0,200,0.5],
   // VR headset (vr.js): how the right stick turns you on foot

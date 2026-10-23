@@ -131,7 +131,7 @@ const WORDS=[
   ['fuelLow','Work','The {machine} is down to {pct}% fuel. Fill up at {where}: stop beside the pump.','{machine}, {pct}: fuel left, {where}: the nearest pump'],
   ['fuelOut','Work','The {machine} has run out of fuel. Fill it at {where}: bring fuel in the truck, or drive another machine there.','{machine}, {where}: the nearest pump'],
   ['fuelFilled','Work','Filled the {machine}: {gal} gal for {cost}. Tank {left}% full.','{machine}, {gal}, {cost}, {left}'],
-  ['payDay','Work','A new day. Yesterday paid {pay} after fuel.','{pay}: what the day paid'],
+  ['payDay','Work','A new day. Yesterday paid {pay}.','{pay}: what the day paid'],
   ['ultraSlow','Other','Ultra was too slow here ({fps} fps), so Graphics went to High. Pick Ultra again in Graphics to keep it.','{fps}: frames per second'],
   ['todRun','Time of day','The clock runs: a day passes in {min} min','{min}: minutes (Tuning: Day and night)'],
   ['todStop','Time of day','The clock is stopped at {time}','{time}: like 6:40 PM'],
