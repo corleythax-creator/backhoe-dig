@@ -216,16 +216,22 @@ function tpSpot(k,x,z){const y0=k==='foot'?wk.yaw:WK_RIDES[k].o.yaw;
   for(let d=0;d<=15;d+=1.5)for(let a=0,n=d?Math.ceil(d*4):1;a<n;a++){const px=x+Math.cos(a/n*Math.PI*2)*d,pz=z+Math.sin(a/n*Math.PI*2)*d;
     for(let q=0;q<(k==='foot'?1:4);q++){const yaw=y0+q*Math.PI/2;if(tpFits(k,px,pz,yaw))return {x:px,z:pz,yaw}}}
   return null}
-function tpGo(k){if(!tpPick||bench.on)return;
+function tpGo(k,quiet){if(!tpPick||bench.on)return;
   const p=tpSpot(k,tpPick.x,tpPick.z);if(!p){toast(say('tpNoRoom'),'bad');return}
   const from=wk.inside?WK_RIDES[wk.inside].o:wk,dist=Math.hypot(p.x-from.x,p.z-from.z)/FT;
   if(k==='foot'){Object.assign(wk,{x:p.x,z:p.z,vy:0,ground:true,airT:0,jumpQ:0,landT:0,spd:0,inside:null});wk.y=wkFloor(p.x,p.z,0,1e9);setMode('walk')}
   else{const R=WK_RIDES[k],o=R.o;Object.assign(o,{x:p.x,z:p.z,yaw:p.yaw,pitch:0,roll:0,sink:0,spin:0});o.y=surfAt(p.x,p.z);
     if(o===tr)Object.assign(tr,{v:0,steer:0,stuck:0,mud:0});else if(o===mw)Object.assign(mw,{l:0,r:0,vl:0,vr:0,v:0,w:0});else if(o===sk)Object.assign(sk,{v:0,w:0});
     wk.inside=k;walker.visible=false;setMode(rideOf(mode)===k?mode:R.m)}
-  firstCam=true;toggleMap(false);
+  firstCam=true;toggleMap(false);if(quiet)return;
   toast(say('tpDone',{ft:Math.round(dist/10)*10,how:k==='foot'?'on foot':'in the '+WK_RIDES[k].n}),'good')}
 for(const b of document.querySelectorAll('#tpOpts [data-tp]'))b.onclick=()=>tpGo(b.dataset.tp);
+// the start card's island (controls.js): to Dexter's yard or Jessica's paths, in the machine picked (it comes with you)
+// or on foot if there is no room for it there
+const START_ISL={dexter:[-190,248],jessica:[201,246.5]};
+function startOn(isl,m){const S=START_ISL[isl];if(!S)return;const k=m==='walk'?'foot':m==='dig'||m==='drive'?'ex':m==='truck'?'truck':m==='mow'?'mow':'foot';
+  tpPick={x:S[0],z:S[1]};const kk=k!=='foot'&&!tpSpot(k,S[0],S[1])?'foot':k;tpGo(kk,true);tpSet(null);
+  toast(say('startIsl',{island:isl==='dexter'?"Dexter's Island":"Jessica's Island",how:kk==='foot'?'on foot':'in the '+WK_RIDES[kk].n}),'good',3200)}
 $('#tpCancel').onclick=()=>tpSet(null);
 $('#mini').addEventListener('click',()=>toggleMap(true));
 $('#mapClose').onclick=()=>toggleMap(false);

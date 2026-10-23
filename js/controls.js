@@ -227,8 +227,15 @@ const statusEl=$('#status');try{statusEl.classList.toggle('min',localStorage.get
 statusEl.onclick=()=>{const m=statusEl.classList.toggle('min');try{localStorage.setItem('bhd_hudmin',m?'1':'0')}catch(e){}};
 // the start card: tap a machine (or On foot) to start in that mode; tapping outside the card keeps the current one
 function startIn(m){setMode(m);help.hidden=true;try{localStorage.setItem('bhd_seen','1')}catch(e){}}
+// the island to start on (remembered): Corley's leaves you where you are; Dexter's or Jessica's takes you there in what
+// you picked (startOn, maps.js)
+let startIsl='corley';try{const v=localStorage.getItem('bhd_startIsl');if(v==='dexter'||v==='jessica')startIsl=v}catch(e){}
+const islBtns=[...document.querySelectorAll('#startIsl [data-isl]')];
+function markIsl(){for(const b of islBtns)b.setAttribute('aria-pressed',b.dataset.isl===startIsl)}
+for(const b of islBtns)b.onclick=()=>{startIsl=b.dataset.isl;try{localStorage.setItem('bhd_startIsl',startIsl)}catch(e){}markIsl()};
+markIsl();
 const tiles=[...document.querySelectorAll('.tile')];
-for(const t of tiles)t.onclick=()=>startIn(t.dataset.m);
+for(const t of tiles)t.onclick=()=>{startIn(t.dataset.m);if(startIsl!=='corley')startOn(startIsl,t.dataset.m)};
 function markTile(){const m=mode==='drive'?'dig':mode;for(const t of tiles)t.setAttribute('aria-pressed',t.dataset.m===m)}
 markTile();
 help.addEventListener('click',e=>{if(e.target===help)startIn(mode)});

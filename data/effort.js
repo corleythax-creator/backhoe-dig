@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-23T01:48:00Z",
+ "updated": "2026-10-23T02:07:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -48,9 +48,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-22",
-   "dh": 111.25,
-   "act": 3,
-   "versions": 9
+   "dh": 113.25,
+   "act": 3.5,
+   "versions": 10
   }
  ],
  "extra": [
@@ -1896,6 +1896,15 @@ window.EFFORT = {
    "tris": 5239409,
    "chars": 1347871,
    "what": "In VR, the stripes that flickered on machines as you walked up to them are gone: the headset sees depth more finely."
+  },
+  {
+   "v": 205,
+   "asked": "2026-10-22T20:55:00-05:00",
+   "live": "2026-10-22T21:07:15-05:00",
+   "dh": 2,
+   "tris": 5234294,
+   "chars": 1350035,
+   "what": "The start card now has an island row: pick Corley's, Dexter's or Jessica's Island, then a machine or On foot, and you start there (the machine comes with you)."
   }
  ]
 };

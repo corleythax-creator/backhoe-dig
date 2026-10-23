@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Thursday, October 22, 2026
 
+- **v205** (9:07 PM) The start card now has an island row: pick Corley's, Dexter's or Jessica's Island, then a machine or On foot, and you start there (the machine comes with you).
 - **v204** (8:48 PM) In VR, the stripes that flickered on machines as you walked up to them are gone: the headset sees depth more finely.
 - **v203** (8:21 PM) Fuel burn is off: machines never run dry, no low-fuel warnings or fill-ups, and Stats drops the fuel rows (hour meters and pay still run)
 - **v202** (8:13 PM) Jessica's library gets a tuxedo cat by the fire who watches you and purrs when you pet her, and a far cozier room (wingback chairs, a writing desk, a globe, fairy lights, curtains, a painting, firelight); Dexter's pickup tows a new equipment trailer and his new mini excavator rides on it; machines log engine hours, burn fuel you buy at the pumps and earn pay, with a day's log in Stats; work lights on the boom and amber beacons; rain drums on porch roofs; a free Orbit camera; and Ultra steps down to High on a PC that can't hold it.

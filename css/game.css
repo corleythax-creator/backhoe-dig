@@ -254,6 +254,10 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 .tile .ts{bottom:9px;font:600 15px/1.15 var(--f-display);text-transform:none;letter-spacing:.01em;color:#e4e8dc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tile::after{content:"";position:absolute;inset:45% 0 0;background:linear-gradient(transparent,rgba(8,10,7,.85))}
 .tile .tn,.tile .ts{z-index:1}
+/* where to start: three islands in a row over the machine tiles */
+#startIsl{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:4px;border-radius:14px;background:rgba(0,0,0,.25);border:1px solid var(--hud-line)}
+.card #startIsl button{height:44px;font-size:17px;border-radius:10px;background:transparent;color:var(--muted);padding:0 6px;line-height:1.05}
+.card #startIsl button[aria-pressed="true"]{background:var(--ink);color:#11151a}
 .card button.tile[aria-pressed="true"]{border-color:var(--machine);box-shadow:0 0 0 2px var(--machine)}
 @media (hover:hover){.card button.tile:hover{border-color:var(--machine);transform:translateY(-2px);box-shadow:0 10px 26px rgba(0,0,0,.45)}}
 @media (max-width:380px){.tile .tn{font-size:20px;bottom:26px}.tile .ts{font-size:13px}}
