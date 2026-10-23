@@ -60,6 +60,11 @@ const lakeBoats=[
   {kind:'sail',route:LB_ROUTES.sailA,spd:2.6,turn:0.18,hl:3.9,hb:0.9,hr:3.5,mass:1.6,wakeK:0.45,heel:0.14,g:lbSailModel(0x1f3a5f)},
   {kind:'sail',route:LB_ROUTES.sailB,spd:2.3,turn:0.18,hl:3.9,hb:0.9,hr:3.5,mass:1.6,wakeK:0.45,heel:-0.12,g:lbSailModel(0xf2f1ec)},
   {kind:'tug',route:LB_ROUTES.tug,spd:2.2,turn:0.1,hl:10,hb:2.8,hr:6,mass:5,wakeK:1.2,eng:2,g:lbTugModel()}];
+// the detailed models (models.js, Machine models Detailed; tools/models/lakeboats.js): each boat's group takes its
+// kind's node, and a child group the part that differs boat to boat (the fishing boats' and sloops' hulls, and the
+// sloops' sails bellied to their own leeward side; the barge ahead of the tug)
+MDL_KIT.lakeboats={sets:()=>{const n={};return lakeBoats.map(b=>{if(!b.mdlSub){b.mdlSub=new THREE.Group();b.g.add(b.mdlSub)}
+  if(b.kind==='tug')return {tug:b.g,barge:b.mdlSub};const v=(n[b.kind]=(n[b.kind]||0)+1)>1?'B':'A';return {[b.kind]:b.g,[b.kind+'Hull'+v]:b.mdlSub}})}};
 // each starts at a corner of its route, facing the next
 for(const b of lakeBoats){const [x,z]=b.route[0],[nx,nz]=b.route[1];Object.assign(b,{x,z,wp:1,yaw:Math.atan2(nx-x,nz-z),v:b.spd,y:WATER,pitch:0,roll:0,rk:0,rkv:0,hornT:0,hornQ:false})}
 // every hull a wave can rock: your boats, then these (their order is the wake marks' owner index)
