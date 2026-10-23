@@ -302,6 +302,9 @@ for(const sd of [1,-1]){const sw=new THREE.Group();sw.position.set(sd*0.46,0,1.5
   mergeStatic(sw,[wh]);mergeStatic(wh,[]);mwCasters.push({sw,wh})}
 mergeStatic(mower,[...mwBars,...mwWheels,...mwCasters.map(c=>c.sw)]);
 mower.traverse(o=>{if(o.isMesh&&!o.material.transparent)o.receiveShadow=true});
+// the detailed model (models.js, tools/models/mower.js) in these part groups when Machine models are Detailed
+MDL_KIT.mower={sets:()=>[{body:mower,barL:mwBars[0],barR:mwBars[1],wheelL:mwWheels[0],wheelR:mwWheels[1],caster:mwCasters[0].sw,cast:mwCasters[0].wh},
+  {caster:mwCasters[1].sw,cast:mwCasters[1].wh}]};
 const MW_C=[0.0,0.85],MW_R=0.72;
 // the first reset (page load) puts the mower where it was left; the Reset button sends it home
 function mowReset(){Object.assign(mw,MW_START,mwSaved||{},{l:0,r:0,vl:0,vr:0,v:0,w:0,load:0,blades:0});mwSaved=null;mw.y=surfAt(mw.x,mw.z);lawnReset()}
