@@ -49,10 +49,10 @@ function mdlScreenTex(){if(!mdlScrTex){mdlScrTex=new THREE.CanvasTexture(mdlScr)
 function mdlScreenDraw(){const g=mdlScr.getContext('2d'),W=320,H=224;g.fillStyle='#0b1418';g.fillRect(0,0,W,H);
   const gauge=(cx,v,lab,col)=>{g.lineWidth=10;g.strokeStyle='#22343b';g.beginPath();g.arc(cx,92,46,Math.PI*0.8,Math.PI*2.2);g.stroke();
     g.strokeStyle=col;g.beginPath();g.arc(cx,92,46,Math.PI*0.8,Math.PI*(0.8+1.4*v));g.stroke();g.fillStyle='#cfe3ea';g.font='600 18px sans-serif';g.textAlign='center';g.fillText(lab,cx,100)};
-  gauge(80,0.72,'FUEL','#4fd36b');gauge(240,0.46,'TEMP','#4fb6ff');
+  const fl=typeof fuelLeft==='function'?fuelLeft('ex')/FUEL.ex.tank:0.72;gauge(80,fl,'FUEL',fl<0.1?'#ff5a4a':fl<0.25?'#f0b022':'#4fd36b');gauge(240,0.46,'TEMP','#4fb6ff');
   g.fillStyle='#cfe3ea';g.font='600 22px sans-serif';g.textAlign='left';
   const t=typeof dn!=='undefined'&&typeof dnTime==='function'?dnTime(dn.t):'';g.fillText(t,16,190);
-  g.textAlign='right';g.fillText('1022 h',W-16,190);
+  g.textAlign='right';g.fillText((typeof fuelHrs==='function'?fuelHrs('ex').toFixed(1):'1022')+' h',W-16,190);
   g.fillStyle='#f07a22';g.fillRect(16,152,64,16);g.fillStyle='#0b1418';g.font='700 13px sans-serif';g.textAlign='center';g.fillText('P MODE',48,165);
   if(mdlScrTex)mdlScrTex.needsUpdate=true}
 // the glTF loader (an ES module, mapped in index.html's import map), fetched the first time a detailed model is wanted

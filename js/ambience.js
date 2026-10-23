@@ -62,8 +62,14 @@ function ambTick(dt,t,quiet){
   // the lake lapping the shore nearest you, from its side; livelier when the wind is up
   amb.lapG.gain.setTargetAtTime(quiet*inside*amb.lake*(0.5+0.3*ss(0.2,1,r))*0.8,t,0.6);if(amb.lapP)amb.lapP.pan.setTargetAtTime(amb.lakePan,t,0.6);
   // rain: light rain comes in first, the heavy layer with the downpour; on the cab roof it is duller and closer
-  amb.rain.g.gain.setTargetAtTime(quiet*ss(0,0.5,r)*0.6*(cab?0.8:1),t,0.5);amb.rainH.g.gain.setTargetAtTime(quiet*ss(0.35,1,r)*0.75*(cab?1.2:1),t,0.5);
-  amb.rain.f.frequency.setTargetAtTime(cab?1600:16000,t,0.2);amb.rainH.f.frequency.setTargetAtTime(cab?1100:16000,t,0.2);
+  // on foot under a roof (rain.js finds it in the shelter map) the rain is on the roof over you: a duller, nearer drum
+  // with drops pattering on the boards and dripping off the eaves, deeper the lower the roof
+  const roof=!cab&&rcRoof>0&&r>0.03,rk=roof?ss(9,2.5,rcRoof):0;amb.roof=(amb.roof||0)+((roof?1:0)-(amb.roof||0))*Math.min(1,dt*2);const ro=amb.roof;
+  amb.rain.g.gain.setTargetAtTime(quiet*ss(0,0.5,r)*0.6*(cab?0.8:1+0.25*ro),t,0.5);amb.rainH.g.gain.setTargetAtTime(quiet*ss(0.35,1,r)*0.75*(cab?1.2:1+0.3*ro),t,0.5);
+  amb.rain.f.frequency.setTargetAtTime(cab?1600:roof?2600-900*rk:16000,t,0.2);amb.rainH.f.frequency.setTargetAtTime(cab?1100:roof?1900-700*rk:16000,t,0.2);
+  if(ro>0.2&&quiet){amb.patT=(amb.patT||0)-dt*(6+30*r)*ro;while(amb.patT<0){amb.patT+=0.4+Math.random()*0.8;const fx=sndVol(sndCfg.amb),tt=t+Math.random()*0.05;
+      if(Math.random()<0.8)ambNoise(tt,'bandpass',900+1800*Math.random()-500*rk,0,6,0.03+0.03*Math.random(),(0.05+0.08*Math.random())*ro*fx);
+      else ambNoise(tt,'bandpass',2400+1200*Math.random(),1400,9,0.09,0.06*ro*fx)}}
   // a gull now and then over the lake by day
   if((amb.gullT-=dt)<=0){amb.gullT=7+Math.random()*18;if(amb.lake>0.25&&day>0.5&&dry>0.5&&quiet){const pn=actx.createStereoPanner?actx.createStereoPanner():null,d=0.25+0.75*Math.random();
     let o=snd.amb;if(pn){pn.pan.value=Math.random()*1.6-0.8;pn.connect(snd.amb);o=pn;setTimeout(()=>pn.disconnect(),4000)}sndShot('gull',o,t+0.02,0.9+0.2*Math.random(),0.35*d*amb.lake)}}

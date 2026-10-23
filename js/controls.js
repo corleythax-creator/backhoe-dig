@@ -101,6 +101,10 @@ function rumble(ms,mag){const gp=getPad(),va=gp&&gp.vibrationActuator;
   if(va&&va.playEffect)va.playEffect('dual-rumble',{duration:ms,strongMagnitude:mag,weakMagnitude:mag*0.6}).catch(()=>{});vrRumble(ms,mag)}
 // orbit drag on the scene; in cab view the same drag turns your head instead (see fpTurn)
 let orbitYaw=0,orbitPitch=0.42,camDist=9.5,drag=null;
+// the orbit camera (camFree, in chase view): it holds its bearing as the machine turns, swings right over the top and zooms
+// from close in to high overhead; the chase camera's limits come back when you leave it
+let camFree=false,camBase=null;
+const camPitchMax=()=>camFree?1.52:1.3,camPitchMin=()=>camFree?0.02:0.08,camDistMin=()=>camFree?2.5:5,camDistMax=()=>camFree?70:22;
 const camPtrs=new Map();let pinch=0;
 // (with the mouse taken for mouse look the browser refuses pointer capture; the click still has to go through)
 canvas.addEventListener('pointerdown',e=>{if(edOn)return;camPtrs.set(e.pointerId,{x:e.clientX,y:e.clientY});try{canvas.setPointerCapture(e.pointerId)}catch(err){}
@@ -112,10 +116,10 @@ canvas.addEventListener('pointerdown',e=>{if(edOn)return;camPtrs.set(e.pointerId
 canvas.addEventListener('contextmenu',e=>{if(document.pointerLockElement===canvas)e.preventDefault()});
 canvas.addEventListener('pointermove',e=>{const p=camPtrs.get(e.pointerId);if(p){p.x=e.clientX;p.y=e.clientY}
   // two fingers in cab view pinch to zoom
-  if(camPtrs.size===2&&pinch>0){const [a,b]=camPtrs.values(),d=Math.hypot(a.x-b.x,a.y-b.y);if(camMode==='cab')fpl.zt=clamp(fpl.zt*d/pinch,1,FP_ZOOM);pinch=d;return}
+  if(camPtrs.size===2&&pinch>0){const [a,b]=camPtrs.values(),d=Math.hypot(a.x-b.x,a.y-b.y);if(camMode!=='cab'&&d>0)camDist=clamp(camDist*pinch/d,camDistMin(),camDistMax());if(camMode==='cab')fpl.zt=clamp(fpl.zt*d/pinch,1,FP_ZOOM);pinch=d;return}
   if(!drag||e.pointerId!==drag.id)return;const dx=e.clientX-drag.x,dy=e.clientY-drag.y;drag.x=e.clientX;drag.y=e.clientY;
   if(camMode==='cab'){if(document.pointerLockElement!==canvas)fpTurn(dx*0.006,dy*0.005)}
-  else{orbitYaw-=dx*0.006;orbitPitch=clamp(orbitPitch+dy*0.005,0.08,1.3)}});
+  else{orbitYaw-=dx*0.006;orbitPitch=clamp(orbitPitch+dy*0.005,camPitchMin(),camPitchMax())}});
 const dend=e=>{camPtrs.delete(e.pointerId);if(camPtrs.size<2)pinch=0;if(drag&&e.pointerId===drag.id)drag=null};
 // with blocks on, a left click on the scene (not a drag) sets a block, in Dig or Walk mode and either view (the click
 // that takes the mouse in cab view sets one too; once it is taken, pointerdown above does it)
@@ -125,7 +129,7 @@ canvas.addEventListener('pointerup',dend);canvas.addEventListener('pointercancel
 canvas.addEventListener('wheel',e=>{if(edOn)return;e.preventDefault();
   // in first person on foot with blocks on, the wheel pushes the block out and pulls it back instead of zooming
   if(blkOn&&blkFP()){blkReachBy(-e.deltaY*(e.deltaMode?0.67:0.02));return}
-  if(camMode==='cab')fpl.zt=clamp(fpl.zt*Math.exp(-e.deltaY*0.0015),1,FP_ZOOM);else camDist=clamp(camDist+e.deltaY*0.01,5,22)},{passive:false});
+  if(camMode==='cab')fpl.zt=clamp(fpl.zt*Math.exp(-e.deltaY*0.0015),1,FP_ZOOM);else camDist=clamp(camDist*Math.exp(e.deltaY*(camFree?0.0012:0.001)),camDistMin(),camDistMax())},{passive:false});
 // first person (cab view): where the eyes look. On foot the body turns with the view (wk.view) and fpl.pitch tilts the
 // head; in a machine fpl.yaw and fpl.pitch turn the head in the seat. Drag the scene to look (on a PC, a click takes the
 // mouse for mouse look until Esc); the wheel, a pinch or a held Z zooms; R looks straight ahead again
@@ -180,7 +184,11 @@ function setMode(m){if(m===mode)return;
   if(m==='heavy')toast(say(hvCur().k+'Tip'),'',5200);
   if(m==='walk')toast(say(padUsed?'walkPad':kbUsed?'walkKb':'walkTouch'),'',3800)}
 $('#modeDig').onclick=()=>setMode(exLast);$('#exDrive').onclick=()=>{if(mode==='dig'||bhIn()&&hvCur().hoe)exSwap()};$('#exDig').onclick=()=>{if(mode==='drive'||bhIn()&&!hvCur().hoe)exSwap()}; $('#modeDrive').onclick=()=>setMode('drive'); $('#modeTruck').onclick=()=>setMode('truck'); $('#modeMow').onclick=()=>setMode('mow'); $('#modeSkid').onclick=()=>setMode('skid'); $('#modeWalk').onclick=()=>setMode('walk');
-$('#camBtn').onclick=()=>{camMode=camMode==='chase'?'cab':'chase';fpReset();$('#camBtn').dataset.cam=camMode};
+// Chase, then Cab, then Orbit, then back to Chase
+function camSet(m,free){camMode=m;camFree=!!free&&m==='chase';camBase=null;fpReset();
+  if(!camFree){camDist=clamp(camDist,5,22);orbitPitch=clamp(orbitPitch,0.08,1.3)}$('#camBtn').dataset.cam=camMode==='cab'?'cab':camFree?'orbit':'chase';
+  if(camFree&&!camSet.told){camSet.told=true;toast(say('orbitTip'),'',4200)}}
+$('#camBtn').onclick=()=>{if(camMode==='cab')camSet('chase',true);else if(camFree)camSet('chase',false);else camSet('cab')};
 // Drive (top right) drops the machine list; picking one, or tapping the scene, closes it
 function showCtl(on){$('#ctlMenu').hidden=!on;$('#ctlBtn').setAttribute('aria-expanded',on)}
 $('#ctlBtn').onclick=()=>{showCtl($('#ctlMenu').hidden);showMenu(false)};

@@ -7,7 +7,9 @@ const jesGround=groundPatch(125,275,170,320,1.5,[]);
 // roofs are seen from inside too, so both faces draw
 const jesRoofMat=M(0xffffff,{vertexColors:true,side:THREE.DoubleSide});
 const JB=BRIDGES[2],jesGlass=new THREE.MeshPhongMaterial({color:0xcfe3ea,transparent:true,opacity:0.22,depthWrite:false,shininess:80});
-let jesIn=false,jesRoof=null,jesBridgeRoof=null,jesInside=null,jesFire=null;const jesSmoke=[];
+let jesIn=false,jesRoof=null,jesBridgeRoof=null,jesInside=null,jesCeil=null,jesFire=null;const jesSmoke=[],jesSteam=[];
+const jesLight=new THREE.PointLight(0xffb066,0,9,1.4);jesLight.castShadow=false;
+function jesLightGfx(on){jesLight.visible=!!on}
 function jesMesh(list,mat,shadow){if(!list.length)return null;const m=new THREE.Mesh(famMerge(list),mat);if(shadow){m.castShadow=true;m.receiveShadow=true;m.layers.enable(RAIN_LAYER)}scene.add(m);return m}
 
 // ---------- the covered bridge ----------
@@ -42,7 +44,7 @@ function jesMesh(list,mat,shadow){if(!list.length)return null;const m=new THREE.
 
 // ---------- the cottage and its library ----------
 (function(){
-  const K=famKit(),R=famKit(),I=famKit(),GL=famKit();
+  const K=famKit(),R=famKit(),I=famKit(),GL=famKit(),CE=famKit();
   const CX=JES_CX,CZ=JES_CZ,W=8,D=6.5,T=0.35,WH=3.2,y0=JES_Y;
   const PLASTER=0xe9dfc6,BEAM=0x5a3b26,STONE=0x8f8a84,MOSS=0x56704a,WOOD=0x8a5f3c,DARK=0x4a3020,TRIM=0xf2ead8;
   const xw=CX-W/2-T/2,xe=CX+W/2+T/2,zn=CZ-D/2-T/2,zs=CZ+D/2+T/2;
@@ -104,7 +106,13 @@ function jesMesh(list,mat,shadow){if(!list.length)return null;const m=new THREE.
       for(let i=0;i<n;i++){let p=a0+(a1-a0)*i/n+0.04;const end=a0+(a1-a0)*(i+1)/n-0.04;
         while(p<end-0.03){const w=0.03+rnd()*0.045,h=Math.min(room,0.24+rnd()*0.14);if(p+w>end)break;
           if(rnd()<0.08){p+=0.06;continue}
-          box(p+w/2,w,y0+lv[k]+0.02+h/2,h,0.24,BOOKS[(rnd()*BOOKS.length)|0],-dir*0.03);p+=w+0.004}}}
+          // now and then a few lying flat in a stack, with room to spare beside them
+          if(rnd()<0.05&&p+0.22<end&&room>0.14){for(let q=0;q<3;q++)box(p+0.1,0.19-q*0.012,y0+lv[k]+0.035+q*0.034,0.032,0.21-q*0.01,BOOKS[(rnd()*BOOKS.length)|0],-dir*0.03);p+=0.23;continue}
+          const col=BOOKS[(rnd()*BOOKS.length)|0],yb=y0+lv[k]+0.02;box(p+w/2,w,yb+h/2,h,0.24,col,-dir*0.03);
+          // gilt bands and a title label on the spine of about half of them
+          if(rnd()<0.5){const g=rnd()<0.75?0xc9a04a:0xe8dcc0;box(p+w/2,w+0.002,yb+h*0.82,0.012,0.006,g,dir*0.093);box(p+w/2,w+0.002,yb+h*0.18,0.012,0.006,g,dir*0.093);
+            if(rnd()<0.5)box(p+w/2,w*0.7,yb+h*0.55,h*0.22,0.006,g===0xe8dcc0?0xc9a04a:0xe8dcc0,dir*0.093)}
+          p+=w+0.004}}}
     if(alongX)SOLIDS.push({x:(a0+a1)/2,z:c,hx:(a1-a0)/2,hz:dep/2});else SOLIDS.push({x:c,z:(a0+a1)/2,hx:dep/2,hz:(a1-a0)/2})}
   shelves(true,CZ-D/2,1,CX-W/2,CX+W/2);
   shelves(true,CZ+D/2,-1,CX-W/2+0.38,CX-1.45);shelves(true,CZ+D/2,-1,CX+1.45,CX+W/2-0.9);
@@ -114,14 +122,11 @@ function jesMesh(list,mat,shadow){if(!list.length)return null;const m=new THREE.
   {const lx=CX-1.4,zb=CZ-D/2+1.15,zt=CZ-D/2+0.45,len=Math.hypot(zb-zt,2.95),ang=-Math.atan2(zb-zt,2.95);
     for(const s of [-1,1])I.box(0.06,len,0.07,0x7a5232,lx+s*0.24,y0+1.47,(zb+zt)/2,0,ang);
     for(let i=1;i<9;i++){const f=i/9;I.box(0.48,0.04,0.05,0x7a5232,lx,y0+2.95*f,zb+(zt-zb)*f)}}
-  // the window seat: a cushioned bench in the south window with pillows, a plaid blanket and a sleeping cat
+  // the window seat: a cushioned bench in the south window with pillows and a plaid blanket (the ginger cat asleep on
+  // it is below, with the tuxedo cat)
   I.box(2.6,0.5,0.62,0x6b4428,CX,y0+0.25,CZ+D/2-0.31);I.box(2.5,0.12,0.58,0x6f86a8,CX,y0+0.56,CZ+D/2-0.31);
   for(const [dx,col] of [[-1.0,0xd9a93c],[-0.62,0xc76f7a],[0.95,0xe8dcc0]])I.box(0.42,0.36,0.14,col,CX+dx,y0+0.8,CZ+D/2-0.12,0,-0.25);
   I.box(0.9,0.05,0.6,0xa33b2f,CX+0.35,y0+0.63,CZ+D/2-0.32);I.box(0.9,0.055,0.06,0x2f4f3a,CX+0.35,y0+0.635,CZ+D/2-0.42);
-  {const cx=CX-0.2,cz=CZ+D/2-0.33,cy=y0+0.72,ORANGE=0xd9873a;const b=new THREE.IcosahedronGeometry(0.2,1);b.scale(1.3,0.7,1);I.geo(b,ORANGE,cx,cy,cz);
-    I.geo(new THREE.IcosahedronGeometry(0.12,0),ORANGE,cx+0.24,cy+0.04,cz+0.04);
-    for(const s of [-1,1])I.geo(new THREE.ConeGeometry(0.04,0.08,4),ORANGE,cx+0.27,cy+0.15,cz+0.04+s*0.06);
-    const tail=new THREE.CylinderGeometry(0.035,0.035,0.4,5);I.geo(tail,ORANGE,cx-0.15,cy-0.05,cz+0.18,0,Math.PI/2,0.3)}
   SOLIDS.push({x:CX,z:CZ+D/2-0.31,hx:1.3,hz:0.31});
   // the fireplace: a stone surround and chimney breast, a wooden mantel with candles and a clock, logs and a fire
   {const fx=CX+W/2;for(const s of [-1,1])I.box(0.6,1.5,0.6,STONE,fx-0.3,y0+0.75,CZ+s*0.9);I.box(0.6,0.65,1.2,STONE,fx-0.3,y0+1.175,CZ);
@@ -135,23 +140,210 @@ function jesMesh(list,mat,shadow){if(!list.length)return null;const m=new THREE.
     jesFire=new THREE.Mesh(famMerge(F.glow),famGlowMat);jesFire.position.set(fx-0.3,y0+0.1,CZ);scene.add(jesFire)}
   // two armchairs facing the fire, a rug, a side table with books and a teacup, a reading lamp
   I.box(2.9,0.015,3.5,0xe8dcc0,CX+1.5,y0+0.05,CZ);I.box(2.6,0.02,3.2,0x7a2d2d,CX+1.5,y0+0.055,CZ);I.box(1.8,0.022,2.4,0x9a4a3a,CX+1.5,y0+0.057,CZ);
-  for(const [dz,col] of [[-1.15,0x3f6b4a],[1.15,0x9a4a2e]]){const x=CX+1.25,z=CZ+dz;
-    I.box(0.85,0.42,0.85,col,x,y0+0.25,z);I.box(0.75,0.1,0.75,col,x+0.04,y0+0.5,z);I.box(0.2,0.95,0.85,col,x-0.36,y0+0.67,z);
-    for(const s of [-1,1])I.box(0.85,0.62,0.16,col,x,y0+0.36,z+s*0.37);SOLIDS.push({x,z,hx:0.45,hz:0.45})}
+  // two wingback armchairs: turned legs, a deep seat cushion, rolled arms, wings and a button-tufted back
+  for(const [dz,col,dk] of [[-1.15,0x3f6b4a,0x335a3e],[1.15,0x9a4a2e,0x7e3c25]]){const x=CX+1.25,z=CZ+dz;
+    for(const [a,b] of [[-1,-1],[-1,1],[1,-1],[1,1]])I.cyl(0.03,0.022,0.12,6,0x4a3020,x+a*0.34,y0+0.1,z+b*0.34);
+    I.box(0.82,0.26,0.82,dk,x,y0+0.29,z);I.box(0.66,0.13,0.62,col,x+0.06,y0+0.48,z);I.cyl(0.065,0.065,0.62,10,col,x+0.39,y0+0.48,z,0,Math.PI/2);
+    I.box(0.18,0.9,0.74,col,x-0.34,y0+0.82,z);I.cyl(0.09,0.09,0.74,10,col,x-0.34,y0+1.27,z,0,Math.PI/2);
+    for(let i=0;i<6;i++)I.geo(new THREE.IcosahedronGeometry(0.018,0),dk,x-0.245,y0+0.75+((i/3)|0)*0.25,z+((i%3)-1)*0.2,i);
+    for(const s of [-1,1]){I.box(0.72,0.36,0.12,col,x+0.02,y0+0.58,z+s*0.36);I.cyl(0.075,0.075,0.72,10,col,x+0.02,y0+0.78,z+s*0.36,0,0,Math.PI/2);
+      I.box(0.26,0.5,0.1,col,x-0.24,y0+1.02,z+s*0.36,0,-s*0.12)}
+    SOLIDS.push({x,z,hx:0.45,hz:0.45})}
   {const tx=CX+1.15,tz=CZ;I.cyl(0.3,0.3,0.04,10,0x6b4428,tx,y0+0.6,tz);I.cyl(0.04,0.06,0.58,6,0x5a3b26,tx,y0+0.3,tz);
     I.box(0.24,0.05,0.17,0x2a3a5a,tx-0.06,y0+0.645,tz-0.05);I.box(0.22,0.05,0.16,0x7a2b2b,tx-0.05,y0+0.695,tz-0.04,0.3);
     I.cyl(0.07,0.07,0.01,8,0xf3ead6,tx+0.12,y0+0.625,tz+0.1);I.cyl(0.04,0.035,0.07,8,0xf3ead6,tx+0.12,y0+0.665,tz+0.1);SOLIDS.push({x:tx,z:tz,hx:0.3,hz:0.3})}
   {const lx=CX+0.55,lz=CZ-1.95;I.cyl(0.18,0.2,0.04,8,0x2b2b2b,lx,y0+0.04,lz);I.cyl(0.025,0.025,1.5,6,0x2b2b2b,lx,y0+0.8,lz);I.lit(new THREE.CylinderGeometry(0.16,0.26,0.28,8,1,true),0xffe0a0,lx,y0+1.6,lz)}
   // a potted fern in the corner by the window seat
   I.cyl(0.18,0.14,0.32,8,0xa65a3a,CX-1.7,y0+0.16,CZ+D/2-0.35);for(let i=0;i<5;i++)I.geo(new THREE.ConeGeometry(0.08,0.5,4),0x4f8a3e,CX-1.7+Math.cos(i*1.3)*0.08,y0+0.55,CZ+D/2-0.35+Math.sin(i*1.3)*0.08,i,Math.cos(i*1.3)*0.4,Math.sin(i*1.3)*0.4);
+  // ---- the cozy extras ----
+  const IRON=0x2b2724,BRASS=0xc9a04a,CREAM=0xf3ead6;
+  // under the roof (and lifted with it when you walk in, so the camera sees down past them): exposed oak tie beams and a
+  // wrought-iron candle chandelier on a chain from the middle one
+  for(const bx of [-2.6,0,2.6])CE.box(0.2,0.22,D,0x4e3322,CX+bx,y0+WH-0.12,CZ);
+  {const hy=y0+2.45;for(let i=0;i<5;i++)CE.geo(new THREE.TorusGeometry(0.03,0.007,4,8),IRON,CX,y0+WH-0.27-i*0.055,CZ,i*1.57);
+    CE.geo(new THREE.TorusGeometry(0.42,0.018,5,24),IRON,CX,hy,CZ,0,Math.PI/2);CE.cyl(0.02,0.02,0.4,6,IRON,CX,hy+0.2,CZ);
+    for(let i=0;i<6;i++){const a=i*Math.PI/3,x=CX+Math.cos(a)*0.42,z=CZ+Math.sin(a)*0.42;CE.cyl(0.045,0.03,0.03,8,IRON,x,hy+0.02,z);
+      CE.cyl(0.022,0.022,0.13,6,CREAM,x,hy+0.1,z);CE.lit(new THREE.ConeGeometry(0.016,0.05,5),0xffc866,x,hy+0.19,z)}}
+  // bunches of lavender, sage and rosemary drying on a twine strung under the mantel shelf
+  {const fx=CX+W/2-0.82;I.box(0.006,0.006,2.4,0xd8c79a,fx,y0+1.47,CZ);
+    for(let i=0;i<9;i++){const z=CZ-1.1+i*0.275;const b=new THREE.ConeGeometry(0.045,0.2,6);b.rotateX(Math.PI);
+      I.geo(b,[0x8a6fb0,0x7d9a6a,0x5f7a4a,0x9a7bb8,0x6f8a5a,0x8a6a4a][i%6],fx,y0+1.33,z,i);I.box(0.025,0.025,0.025,0xa33b2f,fx,y0+1.44,z)}}
+  // fairy lights strung along the top of the shelves, drooping a little between their hooks
+  function fairy(alongX,c,a0,a1){const n=Math.round((a1-a0)/0.16);let px=null;
+    for(let i=0;i<=n;i++){const f=i/n,a=a0+(a1-a0)*f,sag=0.07*Math.sin(Math.PI*((f*6)%1)),y=y0+3.06-sag,x=alongX?a:c,z=alongX?c:a;
+      I.lit(new THREE.IcosahedronGeometry(0.018,0),i%3===1?0xffe6b0:0xffcf7a,x,y,z);
+      if(px){const dx=x-px[0],dy=y-px[1],dz=z-px[2],l=Math.hypot(dx,dy,dz);I.box(0.004,0.004,l,0x3a3a2a,(x+px[0])/2,(y+px[1])/2,(z+px[2])/2,Math.atan2(dx,dz),-Math.asin(dy/l))}
+      px=[x,y,z]}}
+  fairy(true,CZ-D/2+0.42,CX-W/2+0.1,CX+W/2-0.1);fairy(true,CZ+D/2-0.42,CX-W/2+0.45,CX-1.5);fairy(true,CZ+D/2-0.42,CX+1.5,CX+W/2-0.95);
+  // the writing desk under the north shelves: turned legs, a drawer, a green banker's lamp, an open book, ink and quill
+  {const dx=CX-2.3,dz=CZ-1.6,top=y0+0.76;I.box(1.3,0.045,0.66,0x6e4528,dx,top,dz);I.box(1.22,0.12,0.6,0x5e3a22,dx,top-0.08,dz);
+    I.box(0.5,0.08,0.01,0x7a5232,dx,top-0.08,dz+0.305);I.box(0.06,0.015,0.015,BRASS,dx,top-0.08,dz+0.315);
+    for(const [a,b] of [[-1,-1],[-1,1],[1,-1],[1,1]])I.cyl(0.028,0.02,0.7,6,0x5e3a22,dx+a*0.58,y0+0.38,dz+b*0.27);
+    I.cyl(0.07,0.08,0.02,10,BRASS,dx-0.42,top+0.03,dz-0.14);I.cyl(0.012,0.012,0.3,6,BRASS,dx-0.42,top+0.18,dz-0.14);
+    const sh=new THREE.CylinderGeometry(0.08,0.08,0.34,10,1,true,0,Math.PI);sh.rotateZ(Math.PI/2);I.geo(sh,0x1f5a36,dx-0.42,top+0.33,dz-0.1,0,0.15);
+    I.lit(new THREE.BoxGeometry(0.3,0.012,0.1),0xfff0c8,dx-0.42,top+0.3,dz-0.1);
+    I.box(0.2,0.012,0.27,0xefe6cf,dx-0.02,top+0.035,dz+0.04,0.1,0,-0.06);I.box(0.2,0.012,0.27,0xefe6cf,dx+0.18,top+0.035,dz+0.06,0.1,0,0.06);I.box(0.42,0.01,0.29,0x7a2b2b,dx+0.08,top+0.026,dz+0.05,0.1);
+    I.cyl(0.03,0.034,0.05,8,0x1a2030,dx+0.42,top+0.05,dz-0.15);I.geo(new THREE.ConeGeometry(0.012,0.26,4),CREAM,dx+0.45,top+0.17,dz-0.13,0,0.2,-0.35);
+    for(let i=0;i<3;i++)I.box(0.26-i*0.02,0.05,0.19,[0x2f4f3a,0x6a3550,0xb08a3a][i],dx+0.5,top+0.05+i*0.05,dz+0.16,0.2*i-0.15);
+    I.cyl(0.04,0.036,0.09,10,0xc76f4a,dx+0.28,top+0.07,dz-0.22);
+    SOLIDS.push({x:dx,z:dz,hx:0.66,hz:0.34});
+    // its chair: a spindle-back Windsor pulled out a little
+    const cx=dx+0.1,cz=dz+0.68;I.box(0.46,0.05,0.44,0x7a5232,cx,y0+0.46,cz);for(const [a,b] of [[-1,-1],[-1,1],[1,-1],[1,1]])I.cyl(0.02,0.018,0.45,6,0x6b4428,cx+a*0.19,y0+0.23,cz+b*0.18,0,b*0.08,-a*0.08);
+    for(let i=0;i<6;i++)I.cyl(0.011,0.011,0.5,5,0x6b4428,cx-0.19+i*0.076,y0+0.73,cz+0.2,0,-0.12);I.box(0.5,0.05,0.05,0x7a5232,cx,y0+0.98,cz+0.23);
+    I.box(0.4,0.06,0.38,0x9a4a3a,cx,y0+0.5,cz);SOLIDS.push({x:cx,z:cz,hx:0.24,hz:0.24})}
+  // a globe on a tripod stand in the south-west corner
+  {const gx=CX-3.05,gz=CZ+2.0;for(let i=0;i<3;i++){const a=i*2.09;I.cyl(0.015,0.02,0.72,5,0x5e3a22,gx+Math.cos(a)*0.12,y0+0.36,gz+Math.sin(a)*0.12,0,Math.sin(a)*0.2,-Math.cos(a)*0.2)}
+    I.geo(new THREE.TorusGeometry(0.27,0.012,4,24),BRASS,gx,y0+1.0,gz,0.4);I.geo(new THREE.IcosahedronGeometry(0.25,2),0x3d6b8a,gx,y0+1.0,gz);
+    for(const [a,b,r] of [[0.3,0.5,0.1],[2.0,0.2,0.12],[3.6,-0.4,0.09],[4.8,0.7,0.07],[1.2,-0.8,0.06]])I.geo(new THREE.IcosahedronGeometry(r,1),0xc8b27a,gx+Math.cos(a)*Math.cos(b)*0.2,y0+1.0+Math.sin(b)*0.2,gz+Math.sin(a)*Math.cos(b)*0.2);
+    SOLIDS.push({x:gx,z:gz,hx:0.2,hz:0.2})}
+  // stacks of books on the floor and the window seat
+  for(const [x,z,n,r] of [[CX-3.2,CZ+1.25,6,0.2],[CX+1.95,CZ-1.95,4,-0.3],[CX+1.05,CZ+D/2-0.33,3,0.1],[CX-3.3,CZ-1.15,5,0.5]])
+    for(let i=0;i<n;i++){const yy=(x===CX+1.05?y0+0.62:y0+0.05)+0.03+i*0.06;I.box(0.3-(i%3)*0.03,0.055,0.22+(i%2)*0.03,BOOKS[(i*3+n)%BOOKS.length],x,yy,z,r+((i*7)%5-2)*0.12)}
+  // the armchairs made up: a cable-knit throw over the green one, a cushion in each, and a pouf with a book on it
+  I.box(0.62,0.6,0.04,0xefe4cc,CX+0.87,y0+0.85,CZ-1.15,0,0,-0.12);I.box(0.5,0.035,0.62,0xefe4cc,CX+1.25,y0+0.57,CZ-1.15);
+  for(let i=0;i<5;i++)I.box(0.012,0.6,0.045,0xd8ccb0,CX+0.87,y0+0.85,CZ-1.39+i*0.12,0,0,-0.12);
+  for(const [dz,col] of [[-1.15,0xd9a93c],[1.15,0x3f6b4a]])I.box(0.14,0.36,0.42,col,CX+1.0,y0+0.75,CZ+dz,0,0,-0.2);
+  I.cyl(0.28,0.3,0.36,12,0x7a5a3a,CX+2.1,y0+0.2,CZ-1.15);I.cyl(0.29,0.29,0.03,12,0x8a6a4a,CX+2.1,y0+0.39,CZ-1.15);I.box(0.22,0.04,0.16,0x2a3a5a,CX+2.1,y0+0.42,CZ-1.12,0.4);
+  SOLIDS.push({x:CX+2.1,z:CZ-1.15,hx:0.3,hz:0.3});
+  // a teapot and a plate of shortbread on the side table
+  {const tx=CX+1.15,tz=CZ;const pot=new THREE.IcosahedronGeometry(0.07,2);pot.scale(1,0.8,1);I.geo(pot,0x3f6b8a,tx+0.04,y0+0.675,tz-0.15);
+    I.cyl(0.03,0.035,0.025,8,0x3f6b8a,tx+0.04,y0+0.73,tz-0.15);I.geo(new THREE.ConeGeometry(0.014,0.09,6),0x3f6b8a,tx+0.12,y0+0.69,tz-0.15,0,0,-1.0);
+    I.geo(new THREE.TorusGeometry(0.035,0.009,4,10),0x3f6b8a,tx-0.04,y0+0.68,tz-0.15);
+    I.cyl(0.08,0.07,0.01,10,CREAM,tx-0.12,y0+0.625,tz+0.12);for(let i=0;i<4;i++)I.box(0.04,0.012,0.04,0xe0b870,tx-0.12+((i%2)-0.5)*0.05,y0+0.637+(i>1?0.012:0),tz+0.12+(i<2?-0.02:0.02),i)}
+  // the main rug's medallion and border, and a round sage rug under the desk
+  I.box(0.9,0.004,0.9,0xd9b56a,CX+1.5,y0+0.07,CZ,Math.PI/4);I.box(0.62,0.004,0.62,0x2f4f6a,CX+1.5,y0+0.073,CZ,Math.PI/4);I.box(0.3,0.004,0.3,0xd9b56a,CX+1.5,y0+0.076,CZ,Math.PI/4);
+  for(let i=0;i<14;i++){const f=(i+0.5)/14-0.5;for(const s of [-1,1]){I.box(0.07,0.004,0.07,0xe8dcc0,CX+1.5+s*1.18,y0+0.068,CZ+f*2.9,Math.PI/4);if(i<11)I.box(0.07,0.004,0.07,0xe8dcc0,CX+1.5+f*2.9*11/14,y0+0.068,CZ+s*1.48,Math.PI/4)}}
+  I.cyl(1.05,1.05,0.012,24,0xc9b98f,CX-2.3,y0+0.05,CZ-1.3);I.cyl(0.95,0.95,0.014,24,0x7d8f6a,CX-2.3,y0+0.052,CZ-1.3);I.cyl(0.55,0.55,0.016,20,0xa8b48a,CX-2.3,y0+0.054,CZ-1.3);
+  // velvet curtains tied back at the windows, on brass rods
+  function curtain(alongX,c,a,s){const fold=k=>[0x6e2430,0x7d2d38][k%2];
+    for(let k=0;k<5;k++){const o=a+s*k*0.05,pinch=k*0.012;
+      if(alongX)I.box(0.05,1.75,0.06,fold(k),o,y0+1.62,c-0.05,0,0,s*pinch);else I.box(0.06,1.4,0.05,fold(k),c-0.05,y0+1.75,o,0,-s*pinch)}
+    if(alongX)I.box(0.3,0.05,0.08,BRASS,a+s*0.1,y0+1.25,c-0.08);else I.box(0.08,0.05,0.3,BRASS,c-0.08,y0+1.4,a+s*0.1)}
+  I.cyl(0.015,0.015,3.0,6,BRASS,CX,y0+2.5,CZ+D/2-0.1,0,0,Math.PI/2);curtain(true,CZ+D/2,CX-1.4,1);curtain(true,CZ+D/2,CX+1.4,-1);
+  for(const m of [-2.2,2.2]){I.cyl(0.013,0.013,1.3,6,BRASS,CX+W/2-0.1,y0+2.45,CZ+m,0,Math.PI/2);curtain(false,CX+W/2,CZ+m-0.6,1);curtain(false,CX+W/2,CZ+m+0.6,-1)}
+  // candles in jars on the south window sill, and a sprig of ivy trailing off each end of the mantel
+  I.box(2.7,0.04,0.16,TRIM,CX,y0+0.95,CZ+D/2-0.08);
+  for(const dx of [-0.95,-0.75,0.85]){I.cyl(0.04,0.04,0.08,8,0xd8d0b8,CX+dx,y0+1.01,CZ+D/2-0.08);I.lit(new THREE.ConeGeometry(0.013,0.035,5),0xffc866,CX+dx,y0+1.07,CZ+D/2-0.08)}
+  for(const s of [-1,1])for(let i=0;i<7;i++)I.geo(new THREE.IcosahedronGeometry(0.035,0),i%2?0x4f7a3e:0x3f6a34,CX+W/2-0.75+(i%2)*0.03,y0+1.6-i*0.07,CZ+s*(1.32+i*0.015),i);
+  // a little framed photo on the mantel
+  I.box(0.03,0.16,0.13,BRASS,CX+W/2-0.5,y0+1.69,CZ-0.45,0,0,-0.12);I.box(0.032,0.12,0.09,0x8aa0b0,CX+W/2-0.505,y0+1.69,CZ-0.45,0,0,-0.12);
+  // at the hearth: fire irons on a stand, a basket of split logs, embers glowing under the grate
+  {const fx=CX+W/2;I.cyl(0.08,0.1,0.03,8,IRON,fx-0.75,y0+0.1,CZ+1.2);I.cyl(0.012,0.012,0.75,5,IRON,fx-0.75,y0+0.47,CZ+1.2);
+    for(let i=0;i<3;i++){const a=i*2.09;I.box(0.012,0.6,0.012,IRON,fx-0.75+Math.cos(a)*0.05,y0+0.45,CZ+1.2+Math.sin(a)*0.05)}I.geo(new THREE.TorusGeometry(0.05,0.008,4,10),BRASS,fx-0.75,y0+0.86,CZ+1.2,0,Math.PI/2);
+    I.cyl(0.24,0.2,0.3,10,0x8a6a3a,fx-0.8,y0+0.15,CZ-1.65);for(let i=0;i<5;i++)I.cyl(0.05,0.05,0.5,6,i%2?0x6b4a30:0x8a6040,fx-0.8+((i%3)-1)*0.08,y0+0.33+(i>2?0.06:0),CZ-1.65+((i%2)-0.5)*0.1,0.3*i,Math.PI/2,0);
+    I.lit(new THREE.BoxGeometry(0.3,0.03,0.55),0xff6a1e,fx-0.3,y0+0.12,CZ);
+    SOLIDS.push({x:fx-0.8,z:CZ-1.65,hx:0.24,hz:0.24})}
+  // trailing pothos in pots on top of the shelves, their vines hanging down the shelf fronts
+  for(const [px,pz,dz] of [[CX-3.2,CZ+D/2-0.2,-1],[CX+2.4,CZ+D/2-0.2,-1],[CX-0.6,CZ-D/2+0.2,1],[CX+3.4,CZ-D/2+0.2,1]]){const py=y0+3.22;
+    I.cyl(0.1,0.08,0.13,10,0xe8e0d0,px,py,pz);for(let i=0;i<5;i++)I.geo(new THREE.IcosahedronGeometry(0.05,0),i%2?0x4f8a3e:0x6a9a4a,px+(i-2)*0.04,py+0.09,pz,i);
+    for(let k=0;k<4;k++){const vx=px+(k-1.5)*0.09;for(let i=0;i<7+(k%3)*3;i++)I.geo(new THREE.IcosahedronGeometry(0.03,0),i%2?0x4f8a3e:0x6a9a4a,vx+Math.sin(i*1.7+k)*0.025,py-0.05-i*0.1,pz+dz*0.24,i+k)}}
+  // the cat's corner by the fire: a round bed with a plaid cushion, food and water bowls
+  I.cyl(0.36,0.33,0.1,16,0x5a3b26,CX+2.62,y0+0.1,CZ+0.15);I.geo(new THREE.TorusGeometry(0.31,0.07,6,18),0x8a5a3a,CX+2.62,y0+0.16,CZ+0.15,0,Math.PI/2);
+  I.cyl(0.29,0.29,0.04,16,0xa33b2f,CX+2.62,y0+0.15,CZ+0.15);for(const d of [-0.12,0,0.12])I.box(0.58,0.004,0.035,0x2f4f3a,CX+2.62,y0+0.172,CZ+0.15+d);
+  for(const [dz,col] of [[2.2,0xd9cfb4],[2.48,0x6f86a8]]){I.cyl(0.08,0.065,0.05,12,col,CX+3.55,y0+0.075,CZ+dz);I.cyl(0.065,0.065,0.005,12,dz>2.3?0x9ec4d8:0x8a5a3a,CX+3.55,y0+0.1,CZ+dz)}
   famAdd(K);jesRoof=jesMesh(R.solid,jesRoofMat,true);jesInside=jesMesh(I.solid,famMat,false);
   if(I.glow.length){const g=new THREE.Mesh(famMerge(I.glow),famGlowMat);jesInside.add(g);g.position.set(0,0,0)}
   jesMesh(GL.solid,jesGlass,false);
+  jesCeil=jesMesh(CE.solid,famMat,false);if(CE.glow.length)jesCeil.add(new THREE.Mesh(famMerge(CE.glow),famGlowMat));
+  // an oil painting over the mantel: the lake at dusk, mountains, pines and a lit cottage window, in a gilt frame
+  {const cv=document.createElement('canvas');cv.width=384;cv.height=272;const g=cv.getContext('2d');
+    let gr=g.createLinearGradient(0,0,0,170);gr.addColorStop(0,'#2f3f6a');gr.addColorStop(0.55,'#c9757a');gr.addColorStop(1,'#f2b866');g.fillStyle=gr;g.fillRect(0,0,384,272);
+    g.fillStyle='#fff2c8';g.beginPath();g.arc(270,120,16,0,7);g.fill();
+    const ridge=(y,a,col,seed)=>{g.fillStyle=col;g.beginPath();g.moveTo(0,272);for(let x=0;x<=384;x+=8)g.lineTo(x,y-a*Math.abs(Math.sin(x*0.013*seed+seed))-a*0.4*Math.sin(x*0.05+seed));g.lineTo(384,272);g.fill()};
+    ridge(150,60,'#4a4a6a',1.3);ridge(165,35,'#3a4a5a',2.1);
+    gr=g.createLinearGradient(0,170,0,272);gr.addColorStop(0,'#e0a070');gr.addColorStop(1,'#3a4a6a');g.fillStyle=gr;g.fillRect(0,172,384,100);
+    g.fillStyle='rgba(255,240,200,0.5)';for(let i=0;i<9;i++)g.fillRect(250+Math.sin(i)*10,180+i*7,40-i*3,2);
+    g.fillStyle='#1f2a24';for(let i=0;i<14;i++){const x=i<7?i*18:250+i*10,h=40+((i*37)%30);g.beginPath();g.moveTo(x,190);g.lineTo(x+9,190-h);g.lineTo(x+18,190);g.fill()}
+    g.fillStyle='#2a201a';g.fillRect(140,168,34,22);g.beginPath();g.moveTo(136,170);g.lineTo(157,154);g.lineTo(178,170);g.fill();g.fillStyle='#ffd27a';g.fillRect(150,175,7,6);
+    for(let i=0;i<2200;i++){g.fillStyle=`rgba(${i%2?255:0},${i%2?240:0},${i%2?210:0},0.05)`;g.fillRect(Math.random()*384,Math.random()*272,3,1)}
+    const t=new THREE.CanvasTexture(cv);t.colorSpace=THREE.NoColorSpace;
+    const fx=CX+W/2-0.5,py=y0+2.38;const pm=new THREE.Mesh(new THREE.PlaneGeometry(1.0,0.7),new THREE.MeshLambertMaterial({map:t}));pm.position.set(fx-0.035,py,CZ);pm.rotation.y=-Math.PI/2;jesInside.add(pm);
+    const Fr=famKit();for(const [w,h,y,z] of [[1.16,0.08,py+0.39,CZ],[1.16,0.08,py-0.39,CZ],[0.08,0.86,py,CZ-0.54],[0.08,0.86,py,CZ+0.54]])Fr.box(0.06,h,w===0.08?0.08:w,0xb08a3a,fx-0.03,y,z);
+    jesInside.add(new THREE.Mesh(famMerge(Fr.solid),famMat))}
+  // steam curling off the teacup
+  {const sm=new THREE.MeshBasicMaterial({color:0xffffff,transparent:true,opacity:0.16,depthWrite:false}),sg=new THREE.IcosahedronGeometry(0.02,1);
+    for(let i=0;i<4;i++){const m=new THREE.Mesh(sg,sm);m.userData={t:i*0.6,x:CX+1.27,y:y0+0.7,z:CZ+0.1};jesInside.add(m);jesSteam.push(m)}}
+  // the warm light of the fire and lamps over the room (Medium graphics and up): flickers with the fire, stronger at night
+  jesLight.position.set(CX+W/2-1.0,y0+1.0,CZ);scene.add(jesLight);
   // chimney smoke: a few soft puffs rising and drifting off
   const pg=new THREE.IcosahedronGeometry(0.45,0);
   for(let i=0;i<7;i++){const m=new THREE.Mesh(pg,new THREE.MeshLambertMaterial({color:0xe2e2e0,transparent:true,opacity:0,depthWrite:false,flatShading:true}));
     m.userData={t:i*0.9,x:chx,y:chTop+0.3,z:CZ};scene.add(m);jesSmoke.push(m)}
 })();
+
+// ---------- the tuxedo cat ----------
+// Sits up in her bed by the fire: black coat with a white bib, muzzle, blaze and socks, green eyes. She breathes, swishes
+// her tail, flicks an ear, blinks slowly and turns her head to watch you; walk up to her and Get in becomes Pet the cat
+// (she shuts her eyes, leans into your hand and purrs). Smooth shaded, apart from the merged room, so she can move
+const jesCat=(function(){
+  const fur=M(0x151517,{flatShading:false,shininess:18,specular:0x2a2a30}),wht=M(0xf1eee6,{flatShading:false,shininess:10,specular:0x222222}),
+    pink=M(0xd98f95,{flatShading:false,shininess:20}),eyeM=M(0x9cc43a,{flatShading:false,shininess:120,specular:0xffffff,emissive:0x1a2408}),
+    blk=new THREE.MeshBasicMaterial({color:0x050505});
+  const C=new THREE.Group(),sph=(r,m,x,y,z,sx,sy,sz,par)=>{const o=new THREE.Mesh(new THREE.SphereGeometry(r,20,14),m);o.position.set(x,y,z);o.scale.set(sx||1,sy||1,sz||1);o.castShadow=true;(par||C).add(o);return o};
+  const body=new THREE.Group();C.add(body);
+  // haunches and back, the chest rising out of them, the white bib down the front
+  sph(0.13,fur,0,0.12,-0.06,1.0,0.95,1.25,body);const chest=sph(0.1,fur,0,0.215,0.045,0.92,1.35,0.95,body);chest.rotation.x=-0.25;
+  sph(0.075,wht,0,0.2,0.118,0.86,1.5,0.62,body);sph(0.05,wht,0,0.11,0.13,0.9,1.1,0.6,body);
+  // front legs with white socks, and the hind feet tucked beside the haunches
+  for(const s of [-1,1]){const l=new THREE.Mesh(new THREE.CylinderGeometry(0.025,0.028,0.16,10),fur);l.position.set(s*0.045,0.085,0.105);l.castShadow=true;body.add(l);
+    sph(0.026,wht,s*0.045,0.035,0.11,1,1.2,1,body);sph(0.03,wht,s*0.045,0.015,0.125,1,0.65,1.4,body);sph(0.034,wht,s*0.105,0.016,0.02,0.95,0.6,1.8,body)}
+  // the head: skull, white muzzle and chin, a white blaze between the eyes, pink nose, green eyes with slit pupils
+  const head=new THREE.Group();head.position.set(0,0.335,0.075);C.add(head);
+  sph(0.075,fur,0,0,0,1.06,0.92,0.95,head);sph(0.04,wht,0,-0.027,0.058,1.25,0.8,0.85,head);sph(0.03,wht,0,-0.05,0.045,1,0.7,1,head);
+  sph(0.022,wht,0,0.008,0.066,0.55,1.7,0.45,head);sph(0.01,pink,0,-0.012,0.094,1.3,0.75,0.8,head);
+  const eyes=[];for(const s of [-1,1]){const e=new THREE.Group();e.position.set(s*0.031,0.012,0.06);head.add(e);
+    const b=new THREE.Mesh(new THREE.SphereGeometry(0.016,14,10),eyeM);e.add(b);const pu=new THREE.Mesh(new THREE.BoxGeometry(0.004,0.019,0.002),blk);pu.position.z=0.0155;e.add(pu);eyes.push(e)}
+  const ears=[];for(const s of [-1,1]){const e=new THREE.Group();e.position.set(s*0.045,0.058,-0.005);e.rotation.z=-s*0.32;head.add(e);
+    const o=new THREE.Mesh(new THREE.ConeGeometry(0.03,0.058,10),fur);o.position.y=0.026;o.castShadow=true;e.add(o);
+    const i=new THREE.Mesh(new THREE.ConeGeometry(0.019,0.04,8),pink);i.position.set(0,0.022,0.009);e.add(i);ears.push(e)}
+  // whiskers fanning out from the muzzle
+  {const v=[];for(const s of [-1,1])for(let k=0;k<3;k++){const y=-0.025-k*0.006;v.push(s*0.03,y,0.085,s*0.12,y+0.012-k*0.014,0.1-k*0.01)}
+    const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(v,3));head.add(new THREE.LineSegments(g,new THREE.LineBasicMaterial({color:0xf4f2ea,transparent:true,opacity:0.8})))}
+  // the tail: a chain of tapering segments curled round her feet, each joint swishing a beat behind the last
+  const tail=[];{let par=C;const N=9;for(let i=0;i<N;i++){const j=new THREE.Group(),r=0.024-i*0.0012,L=0.048;
+      if(i===0)j.position.set(0,0.035,-0.18);else j.position.set(0,0,L);par.add(j);
+      const sg=new THREE.Mesh(new THREE.CylinderGeometry(r*0.92,r,L+0.006,10),fur);sg.rotation.x=Math.PI/2;sg.position.z=L/2;sg.castShadow=true;j.add(sg);
+      if(i===N-1)sph(r*0.95,fur,0,0,L,1,1,1,j);tail.push(j);par=j}}
+  C.position.set(JES_CX+2.62,JES_Y+0.17,JES_CZ+0.15);C.rotation.y=-Math.PI/2;scene.add(C);
+  SOLIDS.push({x:JES_CX+2.62,z:JES_CZ+0.15,hx:0.34,hz:0.34});
+  return {g:C,body,chest,head,eyes,ears,tail,yaw:0,pet:0,blink:3,ear:2,earI:0,earT:0,purr:null}})();
+// and the ginger tabby, curled up asleep on the window seat with her nose under her tail; her side rises and falls
+const jesGinger=(function(){const o=M(0xd9873a,{flatShading:false,shininess:12,specular:0x221a10}),od=M(0xa85a24,{flatShading:false,shininess:12}),cr=M(0xf2dcc0,{flatShading:false,shininess:8});
+  const G=new THREE.Group(),sph=(r,m,x,y,z,sx,sy,sz,par)=>{const q=new THREE.Mesh(new THREE.SphereGeometry(r,18,12),m);q.position.set(x,y,z);q.scale.set(sx,sy,sz);q.castShadow=true;(par||G).add(q);return q};
+  const body=new THREE.Group();G.add(body);sph(0.16,o,0,0.09,0,1.25,0.62,1.0,body);sph(0.1,cr,0.02,0.05,0.09,1.1,0.45,0.6,body);
+  // tabby stripes over her back
+  for(let i=0;i<5;i++){const t=new THREE.Mesh(new THREE.TorusGeometry(0.135,0.012,6,16,Math.PI*0.9),od);t.position.set(-0.13+i*0.06,0.08,0);t.rotation.set(0,Math.PI/2,0);t.scale.set(1,0.72,1);body.add(t)}
+  const head=new THREE.Group();head.position.set(0.17,0.07,0.07);G.add(head);sph(0.07,o,0,0,0,1.05,0.85,1,head);sph(0.032,cr,0.05,-0.02,0.02,1,0.75,1,head);
+  for(const s of [-1,1]){const e=new THREE.Mesh(new THREE.ConeGeometry(0.027,0.05,8),o);e.position.set(-0.005,0.06,s*0.04);e.rotation.set(s*0.5,0,-0.5);head.add(e)}
+  for(const s of [-1,1]){const l=new THREE.Mesh(new THREE.BoxGeometry(0.024,0.003,0.004),new THREE.MeshBasicMaterial({color:0x3a2010}));l.position.set(0.055,0.012,0.02+s*0.026);l.rotation.y=-0.5;head.add(l)}
+  const tail=new THREE.Mesh(new THREE.TorusGeometry(0.15,0.025,8,20,Math.PI*1.1),o);tail.rotation.set(Math.PI/2,0,0.6);tail.position.set(0.02,0.03,0.02);G.add(tail);
+  for(let i=0;i<4;i++){const r=new THREE.Mesh(new THREE.TorusGeometry(0.026,0.008,5,10),od);const a=0.6+i*0.8;r.position.set(0.02+Math.cos(a)*0.15,0.03,0.02+Math.sin(a)*0.15);r.rotation.set(0,-a,0);G.add(r)}
+  G.position.set(JES_CX-0.2,JES_Y+0.62,JES_CZ+6.5/2-0.33);G.rotation.y=0.2;scene.add(G);return {g:G,body}})();
+// within reach of the cat on foot: Get in becomes Pet the cat (walker.js)
+function jesCatNear(){if(mode!=='walk'||wk.inside)return null;const c=jesCat.g.position;
+  return Math.hypot(wk.x-c.x,wk.z-c.z)<1.25&&Math.abs(wk.y-JES_Y)<1?{b:say('petCatBtn'),pet:true}:null}
+function jesPet(){const first=jesCat.pet<=0;jesCat.pet=6;if(first)toast(say('petCat'),'good',2600)}
+// the purr: soft low noise pulsed about 25 times a second, louder while petted, on the ambience slider (sound.js)
+function jesPurrMake(){const c=actx,sr=c.sampleRate,src=c.createBufferSource();src.buffer=toBuf(c,noiseBuf(sr,2,77));src.loop=true;
+  const lp=sndFilter('lowpass',340,0.7),am=sndGain(0.5),out=sndGain(0,snd.amb),lfo=c.createOscillator(),lg=sndGain(0.5);
+  lfo.frequency.value=25;lfo.connect(lg);lg.connect(am.gain);src.connect(lp);lp.connect(am);am.connect(out);src.start();lfo.start();return out}
+function jesCatTick(dt,t){const k=jesCat,c=k.g.position;
+  // breathing, a slow tail swish (lazier while petted)
+  const br=Math.sin(t*1.7);k.body.scale.set(1+0.012*br,1+0.018*br,1+0.012*br);
+  const sw=k.pet>0?0.35:1;for(let i=0;i<k.tail.length;i++){const j=k.tail[i];j.rotation.y=(i===0?-1.7:0.38)+sw*0.16*Math.sin(t*1.4-i*0.55);j.rotation.x=i===0?0.05:-0.015*i}
+  // watch the worker when they are in the room, otherwise gaze at the room; petted, she lifts her chin into your hand
+  let want=0,tilt=0;const dx=wk.x-c.x,dz=wk.z-c.z,d=Math.hypot(dx,dz);
+  if(mode==='walk'&&d<7){const a=Math.atan2(dx,dz)-k.g.rotation.y;want=Math.max(-1.1,Math.min(1.1,Math.atan2(Math.sin(a),Math.cos(a))));tilt=-Math.min(0.35,0.5/Math.max(0.6,d))}
+  if(k.pet>0){k.pet-=dt;want*=0.4;tilt=-0.45}
+  k.yaw+=(want-k.yaw)*Math.min(1,dt*3);k.head.rotation.y=k.yaw;k.head.rotation.x+=(tilt-k.head.rotation.x)*Math.min(1,dt*3);k.head.rotation.z=k.pet>0?0.18*Math.sin(t*1.3):0;
+  // slow blinks; eyes shut while petted
+  k.blink-=dt;let lid=1;if(k.blink<0){lid=Math.abs(k.blink+0.12)/0.12;if(k.blink<-0.24)k.blink=2.5+Math.random()*4}
+  if(k.pet>0)lid=0.08;for(const e of k.eyes)e.scale.y=Math.max(0.08,Math.min(1,lid));
+  // now and then one ear flicks
+  k.ear-=dt;if(k.ear<0){k.ear=3+Math.random()*6;k.earI=Math.random()<0.5?0:1;k.earT=0.25}
+  for(let i=0;i<2;i++){const e=k.ears[i];e.rotation.x=i===k.earI&&k.earT>0?-0.6*Math.sin(k.earT/0.25*Math.PI):0}if(k.earT>0)k.earT-=dt;
+  // the purr
+  if(snd&&snd.ready){if(!k.purr)k.purr=jesPurrMake();const v=(k.pet>0?Math.min(1,k.pet):0)*Math.max(0,1-d/5)*0.5*(0.75+0.25*br);k.purr.gain.setTargetAtTime(v,actx.currentTime,0.15)}}
 
 // ---------- outside: garden, bench, lanterns, an arch at the bridge, the forest ----------
 (function(){
@@ -194,10 +386,13 @@ const jesTrees=(function(){
 // the worker (the cottage's or the covered bridge's) lifts off in the chase view so you can see in
 function jesTick(dt){
   const t=timeU.value,cx=camera.position.x-JES_CX,cz=camera.position.z-JES_CZ,near=cx*cx+cz*cz<90*90;
-  jesInside.visible=near;jesFire.visible=near;
-  if(near){jesFire.scale.set(1,0.8+0.18*Math.sin(t*11)+0.1*Math.sin(t*23.7),1+0.06*Math.sin(t*7.3))}
+  jesInside.visible=near;jesFire.visible=near;jesCat.g.visible=jesGinger.g.visible=near;
+  if(near){const fl=0.8+0.18*Math.sin(t*11)+0.1*Math.sin(t*23.7);jesFire.scale.set(1,fl,1+0.06*Math.sin(t*7.3));jesCatTick(dt,t);{const b=Math.sin(t*1.25);jesGinger.body.scale.set(1,1+0.03*b,1+0.015*b)}
+    for(const m of jesSteam){const u=m.userData;u.t+=dt;if(u.t>2.4)u.t-=2.4;const a=u.t/2.4;m.position.set(u.x+Math.sin(u.t*2.1)*0.02,u.y+a*0.28,u.z+a*0.03);m.scale.setScalar(0.6+a*2.2)}}
+  // the room's warm light: firelight flicker, brighter after dark, out when you are away
+  if(jesLight.visible){const night=1-ss(-6,8,dn.el);jesLight.intensity=near?(0.9+1.6*night)*(0.9+0.12*Math.sin(t*9.3)+0.06*Math.sin(t*21.1))*LI:0}
   for(const m of jesSmoke){const u=m.userData;u.t+=dt;if(u.t>6.3)u.t-=6.3;const a=u.t/6.3;
     m.position.set(u.x+a*2.6+Math.sin(u.t*1.3)*0.2,u.y+a*5.5,u.z+a*1.2);m.scale.setScalar(0.45+a*1.6);m.material.opacity=0.42*Math.min(1,a*6)*(1-a)}
   const foot=mode==='walk'&&!wk.inside&&camMode!=='cab';
-  jesIn=foot&&Math.abs(wk.x-JES_CX)<4.3&&Math.abs(wk.z-JES_CZ)<3.5;jesRoof.visible=!jesIn;
+  jesIn=foot&&Math.abs(wk.x-JES_CX)<4.3&&Math.abs(wk.z-JES_CZ)<3.5;jesRoof.visible=!jesIn;jesCeil.visible=near&&!jesIn;
   const [bt,bu]=deckLocal(JB,wk.x,wk.z);jesBridgeRoof.visible=!(foot&&bt>-1&&bt<JB.len+1&&Math.abs(bu)<JB.hw+0.6)}

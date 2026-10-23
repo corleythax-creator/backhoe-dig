@@ -20,6 +20,8 @@ const GFX={
   high:{name:'High',trimClips:4,pr:2,auto:true,fps:0,fov:0,sh:4096,shR:45,soft:true,filmic:true,exp:1,tex:'high',detail:1,base:1,macro:true,pbr:true,aniso:16,dirt:4,lawnFar:1e9,fog:1,wmFine:true,cloudQ:1,rainN:3000,rainSp:900,splashN:1200,wakeN:640,brush:1,model:true,ao:false,bloom:false,grade:false,skyLight:false,shSoft:false,wetDrops:false,wetGround:false,treeR:160,tuftQ:2,tuft:[1,25,80,0.35]}};
 // Ultra: High with the screen effects (post.js) and trees in full detail farther out; for strong PC graphics only, never
 // picked by itself
+// the extra lamps: the warm light in Jessica's library and the boom's work light (Low keeps the glowing lamps only)
+GFX.low.extraLt=false;GFX.med.extraLt=GFX.high.extraLt=true;
 GFX.ultra=Object.assign({},GFX.high,{name:'Ultra',tuftQ:3,ao:true,bloom:true,grade:true,treeR:220,skyLight:true,shSoft:true,wetDrops:true,wetGround:true});
 // VR through a PC: the eye buffer drawn larger than the headset's own and scaled down (supersampling), for sharper edges
 // and fine detail; only the levels for strong graphics do it
@@ -30,6 +32,7 @@ GFX.low.vrSS=GFX.med.vrSS=1;GFX.high.vrSS=1.25;GFX.ultra.vrSS=1.4;
 // drawn far off, the plain puddle surface and fewer raindrops. Picked for you in the headset, never on a screen
 GFX.quest=Object.assign({},GFX.med,{name:'Quest',pr:1,auto:false,sh:2048,shR:16,tex:'med',aniso:4,dirt:2,lawnFar:8,fog:0.7,wmFine:false,
   rainN:700,rainSp:180,splashN:260,wakeN:160,brush:0.3,model:true,treeR:50,tuft:[0.5,10,30,0.15],vrSS:0.9});
+GFX.quest.extraLt=false;
 let gfxKey='high',gfxOver={},gfxCur=Object.assign({},GFX.high);
 function gfxName(){return GFX[gfxKey].name+(Object.keys(gfxOver).length?' (custom)':'')}
 function gfxGuess(){if(PHONE||IS_QUEST)return 'low';
@@ -66,6 +69,8 @@ function gfxApply(){const g=gfxCur=Object.assign({},GFX[gfxKey],gfxOver);
   mudGfx(g.wmFine);
   // the screen effects: shade where things meet, glow, colour grade (post.js)
   postGfx(g.ao,g.bloom,g.grade);
+  // the warm light in Jessica's library (jessica.js) and the boom's work light (daynight.js)
+  jesLightGfx(g.extraLt);dnBoomGfx(g.extraLt);
   // sky lighting, soft sun shadows and rain on the machines (post.js)
   ultraGfx(g.skyLight,g.shSoft&&g.sh>0,g.wetDrops,g.wetGround);
   // machine models: the detailed one from its file, or the simple shapes (models.js)
@@ -83,7 +88,11 @@ function gfxApply(){const g=gfxCur=Object.assign({},GFX[gfxKey],gfxOver);
   // field of view and haze (effects.js, rain.js)
   gfxFov=g.fov;gfxFog=g.fog;scene.fog.far=760*g.fog;if(typeof resize==='function')resize();
   if(typeof gfxPanelSync==='function')gfxPanelSync()}
-function setGfx(k,picked){gfxKey=GFX[k]?k:gfxGuess();
+// Ultra is for strong PCs: when a PC can't hold it (main.js counts the slow seconds), it goes to High once and says so;
+// picking Ultra again keeps it (the guard rests until the page reloads)
+let ultraLowN=0,ultraGuardOff=false;
+function ultraGuard(f){ultraLowN=0;if(ultraGuardOff)return;ultraGuardOff=true;setGfx('high',true);toast(say('ultraSlow',{fps:f}),'bad')}
+function setGfx(k,picked){gfxKey=GFX[k]?k:gfxGuess();if(picked&&gfxKey==='ultra'&&typeof ultraLowN!=='undefined')ultraLowN=0;
   if(picked){gfxOver={};try{localStorage.removeItem('bhd_gfxc')}catch(e){}}
   gfxApply();
   // dirt detail follows the setting when picked (or the first time), and stays its own setting after that

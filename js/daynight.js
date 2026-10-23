@@ -92,6 +92,37 @@ function dnHeadPlace(){
   else{const fx=Math.sin(wk.view),fz=Math.cos(wk.view);dnHP.set(wk.x+fx*0.2,wk.y+1.75,wk.z+fz*0.2);dnHT.set(wk.x+fx*9,wk.y,wk.z+fz*9)}
   dnHead.position.copy(dnHP);dnHead.target.position.copy(dnHT)}
 
+// ---------- work lights on the boom and amber beacons ----------
+// Two work lamps on the excavator's boom (their lenses glow with the others) throw a light on the bucket's work after
+// dark (Medium graphics and up: a second lamp costs every pixel a little); a rotating amber beacon on the excavator's
+// cab and the dump truck's flashes while you run that machine, day and night
+const dnBoomL=new THREE.SpotLight(0xfff4e0,0,30,0.62,0.55,0);dnBoomL.castShadow=false;scene.add(dnBoomL,dnBoomL.target);
+function dnBoomGfx(on){dnBoomL.visible=!!on}
+const dnBoomG=new THREE.Group();dnBoomG.position.set(0,1.0,2.3);boomP.add(dnBoomG);
+for(const x of [-0.2,0.2]){const l=new THREE.Group();l.position.set(x,0,0);l.rotation.x=0.3;dnBoomG.add(l);
+  const hb=new THREE.Mesh(new THREE.BoxGeometry(0.17,0.14,0.12),STEEL);hb.castShadow=true;l.add(hb);
+  const ln=new THREE.Mesh(new THREE.CylinderGeometry(0.055,0.055,0.02,20),LENS);ln.rotation.x=Math.PI/2;ln.position.z=0.065;l.add(ln);
+  const br=new THREE.Mesh(new THREE.BoxGeometry(0.04,0.1,0.04),STEEL);br.position.y=-0.1;l.add(br)}
+const DN_BEACONS=[],dnBP=new THREE.Vector3();
+function dnBeacon(par,x,y,z,on){const g=new THREE.Group();g.position.set(x,y,z);par.add(g);
+  const base=new THREE.Mesh(new THREE.CylinderGeometry(0.075,0.085,0.05,16),STEEL);base.position.y=0.025;g.add(base);
+  const mat=M(0xffa21a,{flatShading:false,shininess:90,specular:0x664422,emissive:0x2a1400,transparent:true,opacity:0.9});
+  const dome=new THREE.Mesh(new THREE.CylinderGeometry(0.058,0.065,0.11,20),mat);dome.position.y=0.105;g.add(dome);
+  const cap=new THREE.Mesh(new THREE.SphereGeometry(0.058,16,8,0,Math.PI*2,0,Math.PI/2),mat);cap.position.y=0.16;g.add(cap);
+  const halo=new THREE.Sprite(new THREE.SpriteMaterial({map:dnHaloTex,color:0xff9a1a,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending}));
+  halo.position.y=0.11;halo.visible=false;g.add(halo);DN_BEACONS.push({g,mat,halo,on,ph:DN_BEACONS.length*1.7});return g}
+dnBeacon(cab,0.36,1.63,-0.5,()=>mode==='dig'||mode==='drive');
+dnBeacon(tBody,0.55,2.95,2.52,()=>mode==='truck');
+function dnLightsTick(lamp){const t=timeU.value,dark=0.35+0.65*lamp;
+  for(const b of DN_BEACONS){const on=b.on();b.halo.visible=on;
+    if(!on){b.mat.emissive.setHex(0x2a1400);continue}
+    // the reflector turns about 1.4 times a second: one sharp flash each turn as it sweeps past you
+    const c=Math.cos(t*8.8+b.ph),f=Math.pow(Math.max(0,c),5)+0.18*Math.max(0,-c);
+    b.mat.emissive.setRGB(0.16+0.95*f,0.08+0.5*f,0.01);b.halo.material.opacity=Math.min(1,f*dark*1.2);b.halo.scale.setScalar(0.35+(0.9+1.6*lamp)*f)}
+  // the boom lamps light the bucket's work after dark, when you are in the excavator
+  const ex=(mode==='dig'||mode==='drive')&&dnBoomL.visible,k=ex?lamp*TU.lampLight:0;dnBoomL.intensity=2.4*k*LI;
+  if(k>0.01){dnBoomG.localToWorld(dnBP.set(0,0.05,0.1));dnBoomL.position.copy(dnBP);bkG.getWorldPosition(dnBoomL.target.position)}}
+
 // ---------- fireflies over the land round you on a dry night ----------
 const DN_FF=PHONE?90:200;
 const dnFF=(function(){const g=new THREE.BufferGeometry(),p=new Float32Array(DN_FF*3).fill(-999),a=new Float32Array(DN_FF*3);
@@ -156,6 +187,7 @@ function dnTick(dt){
   for(const m of dnHalos){m.visible=lamp>0.01;m.material.color.copy(m.userData.col).multiplyScalar(lamp*Math.min(1.5,ll))}
   dnPools.visible=lamp>0.01;dnPoolMat.color.setHex(0xffd9a0).multiplyScalar(0.45*lamp*ll);
   const head=1-ss(-4,4,h);dnHead.intensity=2.2*head*ll*LI;if(head>0.01)dnHeadPlace();
+  dnLightsTick(head);
   // the machines' lamp lenses (LENS, excavator.js) shine with them
   LENS.emissive.setHex(0x554a30).lerp(dnCa.copy(dnWarm).multiplyScalar(1.3*Math.min(1.5,ll)),head);
   // fireflies and night sounds

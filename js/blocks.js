@@ -65,7 +65,17 @@ function blkGround(x,z,w,d){const mx=Math.max(1,Math.ceil(w/CELL)),mz=Math.max(1
   for(let a=0;a<=mx;a++)for(let b=0;b<=mz;b++)y=Math.max(y,hAt(x-w/2+w*a/mx,z-d/2+d*b/mz));return y}
 // ground or block top at a point: what tracks, tires and flying dirt land on
 function surfAt(x,z){let y=hAt(x,z);
-  for(const b of blocks)if(Math.abs(x-b.x)<=b.w/2&&Math.abs(z-b.z)<=b.d/2&&b.y+b.h>y)y=b.y+b.h;return y}
+  for(const b of blocks)if(Math.abs(x-b.x)<=b.w/2&&Math.abs(z-b.z)<=b.d/2&&b.y+b.h>y)y=b.y+b.h;return MOVE_DECKS.length?moveDeckAt(x,z,y):y}
+// moving decks that are ground to drive on: the equipment trailer's (trailer.js). Each: its origin x, y, z, heading (s, c:
+// sin and cos) and pitch (sp, cp), the deck from u0 back to u1 (along it) within hw across, top high; and its two ramps
+// (rl long at ±rx, rw half wide), ground when they are down (ramp 1)
+const MOVE_DECKS=[];
+function moveDeckAt(x,z,y){for(const d of MOVE_DECKS){const dx=x-d.x,dz=z-d.z;if(dx*dx+dz*dz>d.r2)continue;const u=dx*d.s+dz*d.c,v=dx*d.c-dz*d.s;
+    if(Math.abs(v)>d.hw)continue;let yl=-1e9;
+    if(u<=d.u0&&u>=d.u1)yl=d.top;
+    else if(d.ramp>0.99&&u<d.u1&&Math.abs(Math.abs(v)-d.rx)<d.rw){const a=Math.asin(Math.min(1,d.top/d.rl)),t=d.u1-u;if(t<=d.rl*Math.cos(a))yl=d.top-t*Math.tan(a)}
+    if(yl>-1e8){const wy=d.y+yl*d.cp-u*d.sp;if(wy>y)y=wy}}
+  return y}
 function blkHit(x,y,z){for(const b of blocks)if(Math.abs(x-b.x)<b.w/2&&Math.abs(z-b.z)<b.d/2&&y>b.y-0.05&&y<b.y+b.h)return b;return null}
 // a machine is a row of circles of radius r along its heading (offsets lz); pushes it out of blocks too tall to climb
 function blkCircleD(o,lz,b){const cx=o.x+Math.sin(o.yaw)*lz,cz=o.z+Math.cos(o.yaw)*lz,hx=b.w/2,hz=b.d/2;

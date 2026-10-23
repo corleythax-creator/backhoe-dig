@@ -118,7 +118,8 @@ function famGameNear(){if(mode!=='walk'||wk.inside)return null;
     for(const g of FAM_GAMES){const l=document.createElement('link');l.rel='prefetch';l.href=MESA_URL+g.k+'/';document.head.appendChild(l)}}
   for(const g of FAM_GAMES){const dx=Math.max(0,Math.abs(wk.x-g.x)-0.9),dz=Math.max(0,Math.abs(wk.z-g.z)-1.2);
     if(Math.hypot(dx,dz)<1.1&&Math.abs(wk.y-baseHeight(g.x,g.z))<1)return g}
-  return null}
+  // the cat in Jessica's library (jessica.js)
+  return jesCatNear()}
 // sit down: save everything, then go to the game. On the website the page itself goes (and Mesa's back link returns
 // here); in the claude.ai version, or an old version, the game opens in a new tab instead
 function famPlay(g){try{siteSaveAll()}catch(e){}try{lawnSave()}catch(e){}

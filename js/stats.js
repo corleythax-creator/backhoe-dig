@@ -11,7 +11,11 @@ const STAT_KEY='bhd_stats',HEAT_KEY='bhd_heat';
 const STAT_ZERO={mowCuts:0,mowTall:0,mowLawns:0,mowBest:0,mowDist:0,mowTime:0,mowTop:0,walkDist:0,sprintDist:0,jumps:0,walkTime:0,walkTop:0,
   exDug:0,exDumps:0,exDist:0,exTime:0,strikes:0,caves:0,trDist:0,trTime:0,trTop:0,trHauled:0,skDist:0,skTime:0,skTop:0,skMoved:0,blocks:0,treesFelled:0,since:0,
   // weather and water (rain.js, storm.js, water.js): volumes in cubic metres, the nearest strike in metres
-  showers:0,rainTime:0,rainTop:0,bolts:0,boltNear:0,wipes:0,runoff:0,runPool:0,pumped:0,seeped:0,washed:0,silt:0};
+  showers:0,rainTime:0,rainTop:0,bolts:0,boltNear:0,wipes:0,runoff:0,runPool:0,pumped:0,seeped:0,washed:0,silt:0,
+  // fuel, hour meters and pay (fuel.js): engine game-seconds and gallons used since the last fill per machine, dollars;
+  // the day's log (d…) for the day dDay, and what yesterday paid
+  exHrs:0,trHrs:0,skHrs:0,mwHrs:0,exUse:0,trUse:0,skUse:0,mwUse:0,fuelGal:0,fuelCost:0,earned:0,
+  dDay:0,dDug:0,dHaul:0,dSkid:0,dMow:0,dGal:0,dHrs:0,dEarn:0,dFuelCost:0,yEarn:0};
 const stats=Object.assign({},STAT_ZERO);
 // how many times each tall grass cell has been cut (on the lawn's grid, made again with it: statLayout)
 let statCuts=new Uint16Array(LAWN_N);
@@ -48,9 +52,9 @@ statLoad();
 addEventListener('pagehide',()=>{if(statDirty&&!bench.on)statSave()});
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&statDirty&&!bench.on)statSave()});
 // mowCut (mower.js) calls this for each cell it cuts that had grown back at all; g is how grown it was
-function statCut(n,g){if(statCuts[n]<65535)statCuts[n]++;stats.mowCuts++;if(g>=0.95)stats.mowTall++;statDirty=true;heatDirty=true}
+function statCut(n,g){if(statCuts[n]<65535)statCuts[n]++;stats.mowCuts++;if(g>=0.95)stats.mowTall++;statDirty=true;heatDirty=true;payMow(LAWN_GS*LAWN_GS/(FT*FT))}
 function statLawnDone(s){stats.mowLawns++;if(s>0&&(!stats.mowBest||s<stats.mowBest))stats.mowBest=s;statDirty=true}
-function statDug(v){stats.exDug+=v;statDirty=true}
+function statDug(v){stats.exDug+=v;statDirty=true;payDug(v)}
 // every frame: distance, time and top speed for whatever is in hand. Only time spent moving counts, so a device left
 // open doesn't keep changing its save (and syncing). A long gap (the map editor, a hidden tab) or a jump of more than
 // a few metres in a frame (a teleport, Reset, a sync reload) starts the count afresh
@@ -58,9 +62,9 @@ const statPrev={m:'',x:0,z:0,yaw:0,arm:0,t:0,hauled:0,dumped:0,strikes:0,caves:0
 function statTick(dt){if(bench.on)return;const now=performance.now(),P=statPrev;
   const o=mode==='boat'?btCur():mode==='heavy'?hvCur():mode==='bike'?bk:mode==='mow'?mw:mode==='truck'?tr:mode==='skid'?sk:mode==='walk'?wk:st;
   const arm=mode==='dig'?st.swing+st.a1+st.a2+st.a3:mode==='truck'?tr.bed:mode==='skid'?sk.a+sk.c:0;
-  const fresh=P.m!==mode||now-P.t>250;
+  const fresh=P.m!==mode||now-P.t>250;let busy=false;
   if(!fresh){const d=Math.hypot(o.x-P.x,o.z-P.z),moved=d>1e-4||Math.abs(o.yaw-P.yaw)>1e-4||Math.abs(arm-P.arm)>1e-5;
-    if(d<3&&moved){const v=d/Math.max(dt,1e-3);statDirty=true;
+    if(d<3&&moved){busy=true;const v=d/Math.max(dt,1e-3);statDirty=true;
       if(mode==='mow'){stats.mowDist+=d;stats.mowTime+=dt;stats.mowTop=Math.max(stats.mowTop,Math.abs(mw.v))}
       else if(mode==='truck'){stats.trDist+=d;stats.trTime+=dt;stats.trTop=Math.max(stats.trTop,Math.abs(tr.v))}
       else if(mode==='skid'){stats.skDist+=d;stats.skTime+=dt;stats.skTop=Math.max(stats.skTop,Math.abs(sk.v))}
@@ -71,10 +75,11 @@ function statTick(dt){if(bench.on)return;const now=performance.now(),P=statPrev;
       trailAdd(mode==='drive'||mode==='dig'?'ex':mode,o.x,o.z,d)}
     if(mode==='walk'&&P.ground&&!wk.ground&&wk.vy>0){stats.jumps++;statDirty=true}}
   // counters the machines keep themselves: only the rises count (Reset and loading a save put them back)
-  const up=(k,v,sk2)=>{const dv=v-P[k];if(!fresh&&dv>0&&dv<50){stats[sk2]+=dv;statDirty=true}P[k]=v};
-  up('hauled',tr.hauled,'trHauled');up('dumped',sk.dumped,'skMoved');up('strikes',st.strikes,'strikes');up('caves',st.caves,'caves');up('blocks',blocks.length,'blocks');
+  const up=(k,v,sk2,pay)=>{const dv=v-P[k];if(!fresh&&dv>0&&dv<50){stats[sk2]+=dv;statDirty=true;if(pay)pay(dv)}P[k]=v};
+  up('hauled',tr.hauled,'trHauled',payHaul);up('dumped',sk.dumped,'skMoved',paySkid);up('strikes',st.strikes,'strikes');up('caves',st.caves,'caves');up('blocks',blocks.length,'blocks');
   if(!fresh&&st.pouring&&!P.pour){stats.exDumps++;statDirty=true}
   P.pour=st.pouring;P.ground=wk.ground;P.m=mode;P.x=o.x;P.z=o.z;P.yaw=o.yaw;P.arm=arm;P.t=now;
+  fuelTick(dt,busy);
   if(statDirty&&now-statSaveT>5000)statSave();
   heatTick(dt)}
 
@@ -158,7 +163,7 @@ const weatherWord=()=>weather.mode==='rain'?' (set to Rain)':weather.mode==='dry
 function sTime(s){s=Math.round(s);const h=Math.floor(s/3600),m=Math.floor(s/60)%60;return h?`${h} h ${m} min`:m?`${m} min ${s%60} s`:`${s} s`}
 function statRows(){const S=stats,cellFt=LAWN_GS*LAWN_GS/(FT*FT),all=S.mowTime+S.walkTime+S.exTime+S.trTime+S.skTime;
   let cut=0,most=0;for(let n=0;n<LAWN_N;n++){if(statCuts[n])cut++;if(statCuts[n]>most)most=statCuts[n]}
-  return [['Right now',statNow()],
+  return [['Right now',statNow()],...fuelRows(),
     ['Weather',[['Showers',sN(S.showers)],['Time raining',sTime(S.rainTime)],['Hardest rain',S.rainTop?sPct(S.rainTop):'—'],['Lightning strikes',sN(S.bolts)],
       ['Closest strike',S.boltNear?sMi(S.boltNear):'—'],['Wiper sweeps',sN(S.wipes)]]],
     ['Water and runoff',[['Rain that ran off',sGal(S.runoff)],['Runoff into pools and holes',sGal(S.runPool)],['Groundwater seeped in',sGal(S.seeped)],['Water pumped out',sGal(S.pumped)]]],

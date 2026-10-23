@@ -32,6 +32,7 @@ const TUNE=[
   ['skSpd','Skid steer','Top speed',3.1,'mph',1,25,0.1],['skTurn','Skid steer','Turn rate',1.7,'deg',10,300,1],
   ['skArm','Skid steer','Arm rate',0.55,'deg',5,180,1],['skCurl','Skid steer','Bucket curl rate',0.9,'deg',5,240,1],
   ['skCap','Skid steer','Bucket holds',0.38,'yd3',0.1,3,0.05],
+  ['mnSpd','Mini excavator','Track speed',0.85,'mph',0.5,8,0.1],['mnTurn','Mini excavator','Turn rate',0.7,'deg',5,120,1],
   ['hvDzSpd','Dozer','Top speed',2.4,'mph',1,15,0.1],['hvDzTurn','Dozer','Turn rate',0.6,'deg',5,120,1],['hvDzBlade','Dozer','Blade rate',0.35,'deg',5,90,1],
   ['hvDzCap','Dozer','Blade carries',1.9,'yd3',0.5,8,0.1],['hvRipD','Dozer','Ripper reaches down',0.75,'ft',0.5,3,0.1],
   ['hvLdSpd','Wheel loader','Top speed',5.4,'mph',2,30,0.5],['hvLdLock','Wheel loader','Steering lock',0.7,'deg',10,50,1],
@@ -104,11 +105,16 @@ const TUNE=[
   ['dayLen','Day and night','A whole day (24 hours) passes in',2880,'min',2,1440,1],
   ['nightLight','Day and night','Moonlight and starlight at night',1,'pct',0,400,5],
   ['lampLight','Day and night','Headlights, lamps and lit windows',1,'pct',0,300,5],
+  // fuel and pay (fuel.js)
+  ['fuelUse','Work and pay','Fuel use (100% burns what the real machine does in an hour of game time)',1,'pct',0,500,5],
+  ['fuelPrice','Work and pay','Fuel price, a gallon',3.85,'usd',0,20,0.05],
+  ['payDig','Work and pay','Pay for dirt dug, a yd³',9,'usd',0,200,0.5],['payHaul','Work and pay','Pay for dirt hauled off in the truck, a yd³',14,'usd',0,200,0.5],
+  ['paySkid','Work and pay','Pay for dirt moved by the skid steer, a yd³',6,'usd',0,200,0.5],['payMow','Work and pay','Pay for grass mowed, a 1,000 sq ft',8,'usd',0,200,0.5],
   // VR headset (vr.js): how the right stick turns you on foot
   ['vrTurn','VR','Turn speed on foot with the right stick (0 = 30° snap steps)',120*Math.PI/180,'deg',0,360,5],
   ['vrComfort','VR','Comfort vignette: how far the view darkens at its edges while you drive fast or turn (0 = off)',0.5,'pct',0,100,5]];
 // unit: [shown = code value × factor, label]
-const TUNE_U={mph:[1/0.44704,'mph'],ft:[1/0.3048,'ft'],deg:[180/Math.PI,'°/s'],yd3:[1.307951,'yd³'],pct:[100,'%'],s:[1,'s'],min:[1/60,'min'],in:[1/0.0254,'in'],n:[1,'']};
+const TUNE_U={mph:[1/0.44704,'mph'],ft:[1/0.3048,'ft'],deg:[180/Math.PI,'°/s'],yd3:[1.307951,'yd³'],pct:[100,'%'],s:[1,'s'],min:[1/60,'min'],in:[1/0.0254,'in'],n:[1,''],usd:[1,'$']};
 const tuneShow=(e,v)=>v*TUNE_U[e[4]][0];
 const tuneCode=(e,d)=>d/TUNE_U[e[4]][0];
 // the values the game runs on
