@@ -151,7 +151,7 @@ function frame(now){
   let pourA=0,pourY=0;
   // dirt leaving the bucket goes into the truck bed under it (what does not fit spills) or onto the ground
   const exDrop=(out,spr)=>{
-    if(inBed(mid)&&tr.load<TU.trCap){const take=Math.min(out,TU.trCap-tr.load);if(take>0){const f=take/(tr.load+take);for(let q=0;q<3;q++)tr.loadC[q]+=(st.loadC[q]-tr.loadC[q])*f;for(let q=0;q<4;q++)tr.loadMix[q]+=(st.loadMix[q]-tr.loadMix[q])*f;tr.loadWet+=(st.loadWet-tr.loadWet)*f}tr.load+=take;
+    if(inBed(mid)&&tr.load<TU.trCap){const take=Math.min(out,TU.trCap-tr.load);if(take>0){const f=take/(tr.load+take);for(let q=0;q<3;q++)tr.loadC[q]+=(st.loadC[q]-tr.loadC[q])*f;for(let q=0;q<4;q++)tr.loadMix[q]+=(st.loadMix[q]-tr.loadMix[q])*f;tr.loadWet+=(st.loadWet-tr.loadWet)*f;if(padUsed)rumbleDig(Math.min(0.5,0.12+take*25))}tr.load+=take;
       if(out-take>0){deposit(mid.x,mid.z,out-take,st.loadC,st.loadMix,spr,st.loadWet);st.dirty=true;st.slumpT=2.5}
       if(!tr.loadedOnce){tr.loadedOnce=true;toast(say('truckFirst'),'good')}
       if(tr.load>=TU.trCap*0.99&&!tr.fullWarned){tr.fullWarned=true;toast(say('truckFull'),'',3500)}}

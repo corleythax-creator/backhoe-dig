@@ -385,7 +385,7 @@ function updateMower(dt,inL,inR){
   const on=mode==='mow'&&!bench.on;mw.blades+=((on?1:0)-mw.blades)*Math.min(1,dt*(on?2:1));
   let cutN=0;if(on)cutN=mowCut();
   mw.load+=((cutN>0?Math.min(1,0.35+cutN*0.12):0)-mw.load)*Math.min(1,dt*(cutN?6:2));
-  if(cutN){clipSpawn(Math.min(6,cutN*2));
+  if(cutN){clipSpawn(Math.min(6,cutN*2));if(padUsed)rumbleDig(0.1+0.04*Math.min(5,cutN));
     if(!lawn.startT)lawn.startT=performance.now();started()}
   // the grass grows back: once the lawn is under half mowed again, it is a fresh job
   lawn.t+=dt;lawnGrow();fieldGrow(dt);lawn.pctT-=dt;if(lawn.pctT<=0){lawn.pctT=0.25;lawnCount()}
