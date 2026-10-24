@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-24T16:05:00Z",
+ "updated": "2026-10-24T16:14:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -60,9 +60,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-24",
-   "dh": 3.5,
+   "dh": 8.5,
    "act": 1,
-   "versions": 2
+   "versions": 3
   }
  ],
  "extra": [
@@ -2016,6 +2016,15 @@ window.EFFORT = {
    "tris": 5372395,
    "chars": 1378461,
    "what": "The menu now fits on screen at every UI size (it scrolls instead of running off the bottom), and a big orange VR button sits on the top bar and the start card, one press into the headset."
+  },
+  {
+   "v": 217,
+   "asked": "2026-10-24T10:50:00-05:00",
+   "live": "2026-10-24T11:14:47-05:00",
+   "dh": 5,
+   "tris": 4567645,
+   "chars": 1396872,
+   "what": "Backhoe load test (☰ or ?bhtest): from the cab it checks every hoe control, digs and dumps six buckets into the dump truck, and reports pass times, cubic yards an hour and cab FPS"
   }
  ]
 };
