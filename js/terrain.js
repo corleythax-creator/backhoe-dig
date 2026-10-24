@@ -685,6 +685,8 @@ function deposit(x,z,vol,col,mix,spread,wet){
   touch(i0,i1,j0,j1);growSl(i0,i1,j0,j1);
   for(let n=0;n<list.length;n+=2){const k=list[n],a=vol*list[n+1]/sum/CA;H[k]+=a;mixSpoil(k,col||SOIL[SPOIL].c,a);if(a>0.002){wetT[k]=timeU.value+(wet>0.3?600:0);comp[k]=0;soakMax[k]=0;if(wet>0.3)mudA[k]=Math.max(mudA[k],wet)}}
   dropMix(x,z,r,vol*DIRT,mix||CRUMB_MIX,col||SOIL[SPOIL].c,'dump');
+  // dirt pouring out of a bucket or a bed thumps the controller, a heavier pour harder (controls.js)
+  if(padUsed)rumbleDig(Math.min(0.5,0.12+vol*25));
   dustPuff(x,hAt(x,z)+0.2,z,vol*30*(1-(wet||0)),col);
 }
 // each layer holds its own slope: sand runs, clay stands steep, rock barely moves; what slides keeps its colour as loose fill.
