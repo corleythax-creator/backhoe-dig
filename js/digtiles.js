@@ -141,7 +141,10 @@ function digMoveTo(x0,z0,fresh){const t0=performance.now();
 // where it would leave a sheer wall against ground outside the grid that slumps in once the grid moves (the dig site
 // test found this on the phone). After a move the machine is at most 16 m from the middle, well inside the 20 m limit
 const DIG_FOLLOW=12;
-function digTilesTick(dt){treeFallTick(dt);keepCheck();const o=wk.inside==='ex'?st:wk.inside==='skid'?sk:hvDigger();if(!o)return;digBasePrefetch(o);
+// the machine being worked, climbed into or picked with a mode button (Dig / Drive, Skid, or VR's next machine) without
+// the worker getting in
+function digTilesTick(dt){treeFallTick(dt);keepCheck();const w=wk.inside||(mode==='dig'||mode==='drive'?'ex':mode==='skid'?'skid':null);
+  const o=w==='ex'?st:w==='skid'?sk:hvDigger();if(!o)return;digBasePrefetch(o);
   const cx=GX0+S/2,cz=GZ0+S/2;if(Math.abs(o.x-cx)<S/2-DIG_FOLLOW&&Math.abs(o.z-cz)<S/2-DIG_FOLLOW)return;
   const R=DIG_REGIONS.find(R=>o.x>=R.r[0]&&o.x<=R.r[1]&&o.z>=R.r[2]&&o.z<=R.r[3]);if(!R)return;
   const cl=(v,r)=>Math.max(r[0],Math.min(r[1],v)),x0=cl(Math.round(o.x/TILE)*TILE-S/2,R.x),z0=cl(Math.round(o.z/TILE)*TILE-S/2,R.z);
