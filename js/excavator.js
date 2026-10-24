@@ -112,8 +112,30 @@ for(const x of [-0.12,0.12])box(0.04,0.3,0.36,STEEL,x,0.14,0.22,bucketP);
 for(const x of [-0.3,0,0.3])for(let i=1;i<6;i++){const a=shellPt(i/7),b=shellPt((i+1)/7);beam(0.05,0.035,bucketP,STEEL,a[1]+0.045,a[0],b[1]+0.045,b[0]).position.x=x}
 for(const x of [-0.49,0.49])box(0.04,0.22,0.26,STEEL,x,-0.12,L3-0.06,bucketP);
 pinX(0.055,0.3,STEEL,bucketP,0.22,0.25);
-const loadMesh=new THREE.Mesh(new THREE.DodecahedronGeometry(0.42,2),M(0x6b4426));
-loadMesh.position.set(0,-0.3,0.55); loadMesh.visible=false; bucketP.add(loadMesh);
+// ---------- the dirt in a bucket ----------
+// the load is drawn as the dirt's surface across the bucket's mouth: a w x l grid in its own frame (x across the mouth,
+// z along it, y out of it, 0 at the rim), dep deep inside. ldMoundSet lifts it with how full the bucket is (f, 1 =
+// what the bucket holds): a loose, lumpy surface that settles a little lower at the walls, then past full a crown
+// heaped over the rim (heap: how far over full it can heap, TUNE bkHeap), with clods standing out of it
+// LD_RES: the grid's squares across for each Dirt detail setting (dirt.js), which builds it again (ldMoundRes)
+const LD_RES={1:16,2:22,4:30,16:44};
+function ldMound(w,l,dep,mat){const m=new THREE.Mesh(new THREE.BufferGeometry(),mat);m.userData.ld={w,l,dep};m.castShadow=true;m.visible=false;
+  ldMoundRes(m,typeof DIRT!=='undefined'?DIRT:1);return m}
+function ldMoundRes(m,dirt){const d=m.userData.ld,nx=LD_RES[dirt]||16,nz=Math.round(nx*d.l/d.w),g=new THREE.PlaneGeometry(d.w,d.l,nx,nz);g.rotateX(-Math.PI/2);
+  const n=g.attributes.position.count,R=new Float32Array(n),Q=new Float32Array(n),q=16/nx;
+  for(let i=0;i<n;i++){R[i]=Math.random()-0.5;Q[i]=Math.random()<0.07*q*q?0.6+Math.random()*0.8:0}
+  m.geometry.dispose();m.geometry=g;Object.assign(d,{R,Q,f:-1})}
+function ldMoundSet(m,f,heap){const d=m.userData.ld;f=Math.max(0,f);if(Math.abs(f-d.f)<0.002)return;d.f=f;
+  const p=m.geometry.attributes.position,fu=Math.min(f,1),over=heap>0?Math.min(1,Math.max(0,(f-1)/heap)):0,lump=0.012+0.03*Math.min(1,f*2);
+  for(let i=0;i<p.count;i++){const x=p.getX(i)/(d.w/2),z=p.getZ(i)/(d.l/2),r2=Math.min(1,x*x*0.8+z*z*0.8),edge=Math.max(Math.abs(x),Math.abs(z));
+    // a level fill (lower at the walls), then the crown, then lumps and the odd clod, both less at the walls
+    let y=-d.dep*(1-fu)-0.06*d.dep*r2*(1-over)+0.55*d.dep*over*(1-r2)*(1-r2*0.4);
+    y+=(d.R[i]*lump+d.Q[i]*0.05*Math.min(1,f))*(1-edge*edge*0.7);
+    p.setY(i,y)}
+  p.needsUpdate=true;m.geometry.computeVertexNormals();m.geometry.computeBoundingSphere()}
+// the excavator's: its mouth is the rim line from the lip back to the heel, facing the bucket's -y
+const loadMesh=ldMound(0.84,0.98,0.5,M(0x6b4426,{side:THREE.DoubleSide}));
+loadMesh.position.set(0,-0.335,0.51); loadMesh.rotation.x=Math.PI-0.232; bucketP.add(loadMesh);
 const tipMark=new THREE.Object3D(); tipMark.position.set(0,-0.02,L3+0.18); bucketP.add(tipMark);
 const midMark=new THREE.Object3D(); midMark.position.set(0,-0.3,0.55); bucketP.add(midMark);
 // bucket linkage: two side links from the stick and an H-link to the bucket meet where the bucket ram pushes

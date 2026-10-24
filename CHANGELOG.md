@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Saturday, October 24, 2026
 
+- **v224** (4:59 PM) The dirt in the excavator and backhoe buckets is a lumpy mound that heaps over the rim and spills when overfull, a bucket gauge shows how full (bar and %), and VR no longer flashes when the sky reflections update
 - **v223** (4:42 PM) Controllers also buzz when a bucket, blade or bed dumps dirt (heavier pours harder) and while the mower or string trimmer cuts grass
 - **v222** (4:14 PM) The first dig and dump no longer freeze: their effects are drawn once while the game loads, so the browser builds their shaders then; the load tests now time every frame and list any freeze with what caused it
 - **v221** (2:40 PM) Xbox pad and Quest controllers buzz while any machine digs (backhoe, skid steer, dozer, loader, auger), harder in rock; Controller strength setting in Tuning

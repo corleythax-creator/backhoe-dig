@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-24T21:42:00Z",
+ "updated": "2026-10-24T21:59:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -60,9 +60,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-24",
-   "dh": 25.75,
+   "dh": 32.75,
    "act": 4,
-   "versions": 9
+   "versions": 10
   }
  ],
  "extra": [
@@ -2079,6 +2079,15 @@ window.EFFORT = {
    "tris": 5099498,
    "chars": 1415374,
    "what": "Controllers also buzz when a bucket, blade or bed dumps dirt (heavier pours harder) and while the mower or string trimmer cuts grass"
+  },
+  {
+   "v": 224,
+   "asked": "2026-10-24T15:43:00-05:00",
+   "live": "2026-10-24T16:59:48-05:00",
+   "dh": 7,
+   "tris": 5364657,
+   "chars": 1424715,
+   "what": "The dirt in the excavator and backhoe buckets is a lumpy mound that heaps over the rim and spills when overfull, a bucket gauge shows how full (bar and %), and VR no longer flashes when the sky reflections update"
   }
  ]
 };

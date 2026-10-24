@@ -161,6 +161,21 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 #lawnChip .bar{grid-column:1/-1;display:block}#lawnChipBar{background:#9bd46a}
 #lawnChip.done #lawnChipVal{color:var(--ok)}#lawnChip.done #lawnChipBar{background:var(--ok)}
 @media (max-width:640px){#lawnChip{top:calc(env(safe-area-inset-top,0px) + 64px)}}
+/* the bucket gauge: how full the bucket (or blade) in use is, past 100% as it heaps over its rim (the tick marks full),
+   amber once heaped, red while it spills */
+#bucketChip{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 72px);transform:translateX(-50%);z-index:3;zoom:var(--ms);min-width:220px;box-sizing:border-box;
+  display:grid;grid-template-columns:1fr auto;align-items:baseline;gap:6px 12px;padding:9px 16px 10px;border-radius:14px;background:var(--glass);border:1px solid var(--hud-line);box-shadow:var(--lift);pointer-events:none}
+#bucketChip[hidden]{display:none}
+#bucketChipName{font:600 14px/1 var(--f-display);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+#bucketChipVal{font:700 26px/1 var(--f-display);font-variant-numeric:tabular-nums}
+#bucketChip .bar{grid-column:1/-1;display:block;position:relative;height:8px;border-radius:4px}
+#bucketChipBar{background:var(--machine)}
+#bucketChipFull{position:absolute;top:-3px;bottom:-3px;width:2px;margin-left:-1px;background:#fff;opacity:.8;left:100%}
+#bucketChipSub{grid-column:1/-1;font:700 13px/1 var(--f-display);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+#bucketChipSub:empty{display:none}
+#bucketChip.heaped #bucketChipVal,#bucketChip.heaped #bucketChipSub{color:var(--gas)}#bucketChip.heaped #bucketChipBar{background:var(--gas)}
+#bucketChip.spill #bucketChipVal,#bucketChip.spill #bucketChipSub{color:var(--danger)}#bucketChip.spill #bucketChipBar{background:var(--danger)}
+@media (max-width:640px){#bucketChip{top:calc(env(safe-area-inset-top,0px) + 124px)}}
 /* the site map's Lawns list: a row per patch, name, share and a meter */
 #lawnList{display:flex;flex-direction:column;gap:6px}
 #lawnList .lwrow{height:auto;display:grid;grid-template-columns:1fr auto;gap:6px 10px;align-items:baseline;padding:9px 12px;text-align:left;font:600 17px/1 var(--f-display)}

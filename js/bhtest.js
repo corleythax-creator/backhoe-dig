@@ -29,7 +29,8 @@ const LDT={
     o:()=>st,lim:k=>k==='swing'?[-1e9,1e9]:LIM[k],cap:()=>TU.exCap,load:()=>st.load,frame:()=>machine,king:()=>0,
     set(j){Object.assign(st,j);house.rotation.y=st.swing;boomP.rotation.x=-st.a1;stickP.rotation.x=-st.a2;bucketP.rotation.x=-st.a3;machine.updateMatrixWorld(true)},
     tip:v=>tipMark.getWorldPosition(v),mid:v=>midMark.getWorldPosition(v),up(){bucketP.getWorldQuaternion(bhtQ);return bhtV.set(0,-1,0).applyQuaternion(bhtQ).y}}};
-const bht={on:false,headless:false,kind:'bh',ph:'',t:0,pt:0,pass:0,passes:[],checks:[],parts:[],lastNow:0,u:[0,0,0,0],x0:0,z0:0,camK:0};
+// fill: how full the autopilot digs the bucket before lifting (0.97; over 1 to heap it and dig on into a spill)
+const bht={fill:0.97,on:false,headless:false,kind:'bh',ph:'',t:0,pt:0,pass:0,passes:[],checks:[],parts:[],lastNow:0,u:[0,0,0,0],x0:0,z0:0,camK:0};
 const bhtYd=m=>(m*1.308).toFixed(2)+' cu yd',bhtDeg=r=>Math.round(r*180/Math.PI)+'°';
 function bhtH(){return hvs.find(h=>h.K.hoe)}
 function bhtM(){return LDT[bht.kind]}
@@ -122,7 +123,7 @@ function bhtStep(dt){const M=bhtM(),o=M.o(),[S,K,B,C]=M.J,u=[0,0,0,0];bench.t+=d
     else if(bht.ph==='plunge'){u[2]=-0.7*bht.boomS;u[3]=bht.upS*bhtTo(tip.up,M.mouth,3);if(tip.w.y<g-BHT_CUT||load>0.02*cap||bht.pt>4)bhtGo('drag')}
     // pull the stick in with the teeth held BHT_CUT under the ground, curling the bucket up as it fills
     else if(bht.ph==='drag'){u[1]=-0.8*bht.stickS;u[2]=clamp(-(tip.w.y-(g-BHT_CUT))*3,-1,1)*bht.boomS;u[3]=bht.upS*bhtTo(tip.up,M.mouth+0.5*load/cap,3);
-      if(load>=cap*0.97||(bht.stickS>0?o[K]<=bht.dragEnd:o[K]>=bht.dragEnd)||tip.r<M.rIn||bht.pt>8){P.dig=bht.pt;P.got=load;bhtGo('curl')}}
+      if(load>=cap*(bht.fill||0.97)||(bht.stickS>0?o[K]<=bht.dragEnd:o[K]>=bht.dragEnd)||tip.r<M.rIn||bht.pt>8){P.dig=bht.pt;P.got=load;bhtGo('curl')}}
     else if(bht.ph==='curl'){u[3]=bhtTo(o[C],bht.hold);u[2]=bht.boomS*(Math.abs(o[C]-bht.hold)<0.6?1:0.3);if(tip.w.y>g+0.5&&Math.abs(o[C]-bht.hold)<0.3||bht.pt>4){P.curl=bht.pt;bhtGo('out')}}
     // swing out once the bucket clears the bed's sides, reaching to the dump pose as it goes
     else if(bht.ph==='out'){const mid=bhtAt('mid'),clear=mid.l.y>bht.floor+1.0;u[0]=clear?bhtTo(o[S],U[S]):0;u[1]=bhtTo(o[K],U[K]);u[2]=bhtTo(o[B],U[B]);u[3]=bhtTo(o[C],bht.hold);

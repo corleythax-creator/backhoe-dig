@@ -113,8 +113,7 @@ function particlesTick(dt){
   pInst.count=n;if(n)pInst.instanceMatrix.needsUpdate=true;
 }
 
-// ---------- bucket load and truck heap ----------
-const LOAD_DETAIL={1:7,2:10,4:15,16:31};
+// ---------- truck heap (the buckets' loads are ldMound's, excavator.js) ----------
 function heapY(x,z){const e=Math.max(Math.abs(x)/1.05,Math.abs(z)/(BED_L/2-0.1));
   return -0.5+(1-0.65*e*e)+0.07*Math.sin(x*5.1+z*3.7)+0.05*Math.cos(z*6.3)
     +0.035*Math.sin(x*13.1+z*2.3)*Math.sin(z*11.7-x*1.9)+0.02*Math.sin(x*29.3+z*23.9)}
@@ -146,7 +145,8 @@ function updateHeapClods(){
 function setDirtLevel(L,save){
   DIRT=[1,2,4,16].includes(+L)?+L:1;
   buildClods();buildParticles();buildHeapClods();buildDust();
-  const lg=lumpGeo(LOAD_DETAIL[DIRT],0.2,0.6);lg.scale(0.42,0.42,0.42);loadMesh.geometry.dispose();loadMesh.geometry=lg;
+  // the loads in the digging buckets (ldMound, excavator.js) on a finer grid
+  ldMoundRes(loadMesh,DIRT);if(typeof hvs!=='undefined')for(const h of hvs)if(h.hheap&&h.hheap.userData.ld)ldMoundRes(h.hheap,DIRT);
   heap.geometry.dispose();heap.geometry=heapGeometry();
   document.querySelectorAll('.sizes button[data-d]').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.d===DIRT));
   if(save!==false)try{localStorage.setItem('bhd_dirt',DIRT)}catch(e){}

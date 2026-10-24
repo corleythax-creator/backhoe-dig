@@ -161,7 +161,16 @@ const skyEnvScene=new THREE.Scene(),skyEnvCam=new THREE.CubeCamera(1,2000,skyEnv
 // k: how bright the ground under the sky is (1 by day)
 // skyEnvTint: the light the ground under it takes from the sun (Ultra's sky lighting, post.js; white otherwise)
 const skyEnvTint=new THREE.Color(1,1,1);let skyEnvK=1;
-function skyEnvUpdate(k){skyEnvK=k;skyEnvGnd.color.setHex(0x4a4a32).multiplyScalar(k).multiply(skyEnvTint);skyEnvScene.background=scene.background;skyEnvCam.update(renderer,skyEnvScene);skyEnv.needsPMREMUpdate=true}
+// three.js makes its blurred copy of the cube (PMREM) the first time a shiny material is drawn after the cube changes,
+// in the middle of drawing the frame. In a headset that frame is drawn eye by eye, and the copy's own renders switch the
+// render target and viewport between the eyes' draws, so the rest of that eye drew wrong for a frame: the screen
+// flashed, whenever the sky had moved enough to be caught again (every few minutes, at no time you could see coming).
+// skyEnvBake makes the copy at once instead, by drawing one shiny speck into a 1 px target with the headset off
+const skyEnvBakeS=new THREE.Scene(),skyEnvBakeC=new THREE.PerspectiveCamera(),skyEnvBakeRT=new THREE.WebGLRenderTarget(1,1);
+{const m=new THREE.Mesh(new THREE.PlaneGeometry(1,1),new THREE.MeshStandardMaterial({envMap:skyEnv}));m.position.z=-2;skyEnvBakeS.add(m,skyEnvBakeC)}
+function skyEnvBake(){const xr=renderer.xr.enabled,t=renderer.getRenderTarget(),f=renderer.getActiveCubeFace(),l=renderer.getActiveMipmapLevel();
+  renderer.xr.enabled=false;renderer.setRenderTarget(skyEnvBakeRT);renderer.render(skyEnvBakeS,skyEnvBakeC);renderer.setRenderTarget(t,f,l);renderer.xr.enabled=xr}
+function skyEnvUpdate(k){skyEnvK=k;skyEnvGnd.color.setHex(0x4a4a32).multiplyScalar(k).multiply(skyEnvTint);skyEnvScene.background=scene.background;skyEnvCam.update(renderer,skyEnvScene);skyEnv.needsPMREMUpdate=true;skyEnvBake()}
 skyEnvUpdate(1);
 // the map's size in pixels a side: 64, or 256 for Ultra's sky lighting (post.js), sharp enough to show the clouds in
 // paint and glass. The cube keeps its texture object (every material holds it); its GPU copies are made again. three.js
