@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Saturday, October 24, 2026
 
+- **v216** (11:05 AM) The menu now fits on screen at every UI size (it scrolls instead of running off the bottom), and a big orange VR button sits on the top bar and the start card, one press into the headset.
 - **v215** (10:59 AM) Xbox controllers over Bluetooth work seamlessly: the pad you press is the one used, unmapped pads read right, Android's echo keys dropped, B can't back out of the game, and a dropped connection says so
 
 ## Friday, October 23, 2026

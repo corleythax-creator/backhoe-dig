@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-24T15:59:00Z",
+ "updated": "2026-10-24T16:05:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -60,9 +60,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-24",
-   "dh": 2,
-   "act": 0.5,
-   "versions": 1
+   "dh": 3.5,
+   "act": 1,
+   "versions": 2
   }
  ],
  "extra": [
@@ -2007,6 +2007,15 @@ window.EFFORT = {
    "tris": 5156634,
    "chars": 1377172,
    "what": "Xbox controllers over Bluetooth work seamlessly: the pad you press is the one used, unmapped pads read right, Android's echo keys dropped, B can't back out of the game, and a dropped connection says so"
+  },
+  {
+   "v": 216,
+   "asked": "2026-10-24T10:45:00-05:00",
+   "live": "2026-10-24T11:05:10-05:00",
+   "dh": 1.5,
+   "tris": 5372395,
+   "chars": 1378461,
+   "what": "The menu now fits on screen at every UI size (it scrolls instead of running off the bottom), and a big orange VR button sits on the top bar and the start card, one press into the headset."
   }
  ]
 };
