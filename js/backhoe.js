@@ -57,8 +57,13 @@ function bhBuild(h){const g=h.g,Y=DEX_Y,D=DEX_D,GL=DEX_GLASS,ST=0x8a8a86,P=h.par
   for(const s of [-1,1]){const n=s<0?'L':'R',lg=bhG(g,s*BH_LEG[0],BH_LEG[1],BH_LEG[2]),k=hvKit();k.box(0.2,1.5,0.2,Y,0,-0.72,0);hvMesh(k,lg);
     const pd=bhG(lg,0,-BH_LL,0),q=hvKit();q.box(0.4,0.08,0.46,ST,0,-0.12,0);hvMesh(q,pd);P['leg'+n]=lg;P['pad'+n]=pd}}
 // back to how it is parked: the hoe tucked, outriggers up, at the wheel, both buckets empty
-function bhReset(h){Object.assign(h,BH_PARK,{a:0,c:0.1,out:0,outT:0,seat:0,hoe:false,spin:0,hin:null,hres:1,camO:0,camF:1});
+function bhReset(h){Object.assign(h,BH_PARK,{a:0,c:0.1,out:0,outT:0,seat:0,hoe:false,spin:0,hin:null,hres:1,camO:0,camF:1,atk:1,tp:null,skimT:0,fillR:0});
   h.hl={load:0,loadC:[0.5,0.34,0.21],loadMix:[0,0,0,1],loadWet:0};h.eye=h.K.eye.slice()}
+// the hoe's dig: the cutting edge's direction in the hoe bucket's frame (heel to teeth along its floor), the deepest cut
+// teeth-first (m), the teeth speed that fills at the full rate (m/s), the cut thickness that does (m), and how wide a
+// quick full dump scatters (m)
+const BH_EDGE=new THREE.Vector3(0,0.26,0.97).normalize(),BH_CUT=0.5,BH_TV=1.0,BH_THICK=0.2,BH_SCAT=0.55;
+const bhV=new THREE.Vector3(),bhE=new THREE.Vector3(),bhS=new THREE.Vector3(),bhCut=new THREE.Vector3();
 const bhLoc=new THREE.Vector3(),bhT=new THREE.Vector3(),bhM=new THREE.Vector3(),bhL=new THREE.Vector3(),bhR=new THREE.Vector3(),bhQ=new THREE.Quaternion();
 // (clamp is controls.js's, later in the load order: bhParts runs once at load, so it keeps its own)
 const bhSS=t=>t*t*(3-2*t),bhC=(v,a,b)=>Math.max(a,Math.min(b,v));
@@ -94,9 +99,12 @@ function bhWork(h,dt,arm,curl,on){const P=h.parts,mv=(v,t,s)=>v<t?Math.min(t,v+s
   h.seat=mv(h.seat,h.hoe?1:0,dt/TU.bhSeatT);const o0=h.out;h.out=mv(h.out,h.outT,dt/TU.bhOutT);h.spin+=h.v*dt;
   const la=h.hoe?0:arm,lc=h.hoe?0:curl,cap=TU.bhLdCap,full=1-0.15*h.load/cap;
   h.a=clamp(h.a+la*TU.bhLdArm*dt*full,...BH_ALIM);h.c=clamp(h.c+lc*TU.bhLdCurl*dt,...BH_CLIM);
-  const I=h.hin&&h.seat>0.97?h.hin:[0,0,0,0],r=h.hres;
+  // the hoe's hydraulics: one pump feeds every ram, so working several at once shares its flow (TU.bhFlow: how many
+  // run at full speed together); the boom lifts a loaded bucket slower (TU.bhLoadSlow) and lowers a little quicker
+  const I=h.hin&&h.seat>0.97?h.hin:[0,0,0,0],dem=Math.abs(I[0])+Math.abs(I[1])+Math.abs(I[2])+Math.abs(I[3]),r=h.hres*(dem>TU.bhFlow?TU.bhFlow/dem:1);
+  const bl=I[2]>0?1-TU.bhLoadSlow*h.hl.load/TU.bhCap:1.08;
   h.sw=clamp(h.sw-I[0]*TU.bhSwing*dt*r,...BH_LIM.sw);h.hs=clamp(h.hs+I[1]*TU.bhStick*dt*r,...BH_LIM.hs);
-  h.hb=clamp(h.hb+I[2]*TU.bhBoom*dt*r,...BH_LIM.hb);h.hk=clamp(h.hk+I[3]*TU.bhBucket*dt*r,...BH_LIM.hk);
+  h.hb=clamp(h.hb+I[2]*TU.bhBoom*dt*r*bl,...BH_LIM.hb);h.hk=clamp(h.hk+I[3]*TU.bhBucket*dt*r,...BH_LIM.hk);
   h.hyd=Math.min(1,Math.abs(la)+Math.abs(lc)+Math.abs(I[0])+Math.abs(I[1])+Math.abs(I[2])+Math.abs(I[3])+(h.out!==o0?0.5:0));
   // the views: at the hoe the chase camera comes round to the front and looks back over the cab, and in the cab you
   // look back and down at the bucket
@@ -112,15 +120,34 @@ function bhWork(h,dt,arm,curl,on){const P=h.parts,mv=(v,t,s)=>v<t?Math.min(t,v+s
     if(got>0){bhTake(h,got,bhT);if(h.load>=cap-0.003)toast(say('loaderFull'),'',2400)}}
   {const f=clamp((-0.35-h.c)/0.45,0,1);if(f>0&&h.load>0.0005){const out=Math.min(h.load,f*(0.4+h.load*1.5)*dt);h.load-=out;bhDrop(h,bhM,out);for(let n=0;n<Math.ceil(out*50);n++)spawn(bhM,0.8)}}
   h.heap.visible=h.load>0.01;if(h.heap.visible){const s=0.35+0.65*Math.sqrt(h.load/cap);h.heap.scale.set(2.0*s,0.6*s,0.8+0.25*s);tintLoad(h.heap.material,h.loadC)}
-  // the hoe: its teeth under the ground on the dig site bite as the excavator's do (hard ground slows the hydraulics),
-  // and it pours once its mouth turns down
+  // the hoe: its teeth under the ground on the dig site bite as the excavator's do (hard ground slows the hydraulics).
+  // The bucket fills over the stroke, not at a touch: only teeth moving through the ground bring dirt in, and how much
+  // each second goes with how fast they move (BH_TV), how thick a cut they take (BH_THICK) and whether they lead
+  // (h.atk: curled teeth-first they cut as deep as they are, dragged flat or heel first they only skim TU.bhSkim).
+  // A good stroke in loam fills it in about TU.bhFillT; hard ground slows the teeth and so the filling too
   const L=h.hl,hc=TU.bhCap,K=P.hoe;K.localToWorld(bhT.set(...BH_TIP));K.localToWorld(bhM.set(...BH_MID));K.getWorldQuaternion(bhQ);
-  const up=bhLoc.set(0,0.26,0.97).applyQuaternion(bhQ).y,below=bhT.y<hAt(bhT.x,bhT.z)&&!blkHit(bhT.x,bhT.y,bhT.z)&&inDig(bhT.x,bhT.z,0.5);h.hres=1;
+  const up=bhLoc.set(0,0.26,0.97).applyQuaternion(bhQ).y,gt=hAt(bhT.x,bhT.z),below=bhT.y<gt&&!blkHit(bhT.x,bhT.y,bhT.z)&&inDig(bhT.x,bhT.z,0.5);h.hres=1;
+  let tv=0;if(h.tp&&dt>0){bhV.subVectors(bhT,h.tp);tv=bhV.length()/dt;
+    // slower than about 2 in a second the teeth are only resting; the last angle holds
+    if(tv>0.05){bhE.copy(BH_EDGE).applyQuaternion(bhQ);h.atk+=(ss(-0.1,0.6,bhV.dot(bhE)/(tv*dt))-h.atk)*Math.min(1,dt*10)}}
+  (h.tp||(h.tp=new THREE.Vector3())).copy(bhT);h.fillR=0;
   if(below){const k=Math.round(gJ(bhT.z))*V+Math.round(gI(bhT.x));h.hres=soilRes(k,bhT.y)*(L.load>=hc-0.002?0.5:1);
-    if(on&&h.hoe&&L.load<hc-0.002&&up>-0.3){const got=dig(bhT,hc-L.load);if(got>0){bhTake(L,got,bhT);statDug(got);if(Math.random()<0.5)spawn(bhT,1.0);
-      if(L.load>=hc-0.003)toast(say('bhFull'),'',2600)}}}
-  {const f=clamp((0.1-up)/0.45,0,1);if(f>0&&L.load>0.0005){const out=Math.min(L.load,f*(0.35+L.load*1.6)*TU.exPour*dt);L.load-=out;bhDrop(L,bhM,out);
-    for(let n=0;n<Math.ceil(out*80);n++)spawn(bhM,0.6)}}
+    if(on&&h.hoe&&L.load<hc-0.002&&up>-0.3){
+      const ka=1-TU.bhAngle*(1-h.atk),D=TU.bhSkim+(BH_CUT-TU.bhSkim)*ka*ka,cut=Math.min(gt-bhT.y,D);
+      bhCut.copy(bhT);bhCut.y=gt-cut;
+      const rate=hc/TU.bhFillT*bhC(tv/BH_TV,0,1.25)*ss(0,BH_THICK,cut),want=Math.min(hc-L.load,rate*dt);
+      if(want>1e-6){const got=dig(bhCut,want);if(got>0){h.fillR=got/dt;bhTake(L,got,bhT);statDug(got);if(Math.random()<0.5)spawn(bhT,1.0);
+        if(L.load>=hc-0.003)toast(say('bhFull'),'',2600)}}
+      if(ka<0.4&&gt-bhT.y>D+0.04&&tv>0.1){h.skimT=(h.skimT||0)+dt;if(h.skimT>2.5&&!h.toldSkim){h.toldSkim=true;toast(say('bhSkim'),'',4600)}}}}
+  // it pours once its mouth turns down. Moist clay clings and pours slower; a quick, wide-open dump throws the load
+  // wider (BH_SCAT), so dumping near the edge of the bed or from a flick of the bucket misses some
+  {const f=clamp((0.1-up)/0.45,0,1);if(f>0&&L.load>0.0005){const stick=stickFrac(L.loadMix,L.loadWet),out=Math.min(L.load,f*(0.35+L.load*1.6)*TU.exPour*(1-2.5*stick)*dt);L.load-=out;
+      const sr=0.08+BH_SCAT*clamp(out/dt/hc,0,1.5)/1.5*TU.bhScatter;
+      for(let n=0;n<3;n++){const a=Math.random()*6.283,r=sr*Math.sqrt(Math.random());bhS.set(bhM.x+Math.cos(a)*r,bhM.y,bhM.z+Math.sin(a)*r);bhDrop(L,bhS,out/3)}
+      for(let n=0;n<Math.ceil(out*80);n++)spawn(bhM,0.6)}
+    // a bucket heaped past about three quarters, swung or lifted fast and not curled up tight, loses some over the lip
+    else if(!below&&L.load>hc*0.75){const I2=h.hin||[0,0,0,0],armV=Math.abs(I2[0])*TU.bhSwing+Math.abs(I2[1])*TU.bhStick+Math.abs(I2[2])*TU.bhBoom,tuck=clamp((1.75-h.hk)/0.8,0.15,1);
+      if(armV>0.2){const out=Math.min(L.load,(L.load/hc-0.75)/0.25*armV*hc*0.03*tuck*TU.bhSpill*dt);L.load-=out;bhDrop(L,bhM,out);if(Math.random()<armV*dt*8)spawn(bhM,0.4)}}}
   h.hheap.visible=L.load>0.005;if(h.hheap.visible){const s=0.35+0.65*Math.sqrt(L.load/hc);h.hheap.scale.set(0.55*s,0.45*s,0.6*s);tintLoad(h.hheap.material,L.loadC)}}
 // Drive / Dig (Enter, or the switch over the right stick): swivel the seat to the hoe (the outriggers come down) or
 // back to the wheel (they come up)
