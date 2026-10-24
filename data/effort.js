@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-24T16:14:00Z",
+ "updated": "2026-10-24T17:38:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -60,9 +60,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-24",
-   "dh": 8.5,
-   "act": 1,
-   "versions": 3
+   "dh": 11.5,
+   "act": 1.5,
+   "versions": 4
   }
  ],
  "extra": [
@@ -2025,6 +2025,15 @@ window.EFFORT = {
    "tris": 4567645,
    "chars": 1396872,
    "what": "Backhoe load test (☰ or ?bhtest): from the cab it checks every hoe control, digs and dumps six buckets into the dump truck, and reports pass times, cubic yards an hour and cab FPS"
+  },
+  {
+   "v": 218,
+   "asked": "2026-10-24T12:29:00-05:00",
+   "live": "2026-10-24T12:38:33-05:00",
+   "dh": 3,
+   "tris": 4133189,
+   "chars": 1400797,
+   "what": "The backhoe's hoe fills over the stroke, not at a touch: teeth speed, cut thickness and leading teeth set how fast; flat or heel-first only skims. A heaped bucket swung fast spills, quick dumps scatter and can miss the bed, moist clay pours slow, the pump's flow is shared between functions and a full bucket slows the boom"
   }
  ]
 };
