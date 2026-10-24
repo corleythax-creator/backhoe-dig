@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Friday, October 23, 2026
 
+- **v213** (9:49 PM) The excavator digs again when it was picked with a mode button or VR's next-machine button instead of climbed into: the dig area now follows it wherever it drives.
 - **v212** (9:45 PM) The excavator's hoses are rebuilt only when they move, and Dexter's parked machines are checked in turns once they have settled: about 1 ms less game work every frame
 - **v211** (9:37 PM) In the rain the overhead cover map (what keeps rain off under roofs) is drawn every third frame instead of every frame, and its once-a-second read-back no longer stalls the frame where the device allows
 - **v210** (9:25 PM) The detailed machines, Dexter's machines, the twins and the attachments cast their shadows from merged parts: the shadow pass drops from about 440 draws to about 140, same shadows

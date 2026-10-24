@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-24T02:45:00Z",
+ "updated": "2026-10-24T02:49:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -54,9 +54,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-23",
-   "dh": 106.5,
+   "dh": 108,
    "act": 2,
-   "versions": 6
+   "versions": 7
   }
  ],
  "extra": [
@@ -1974,6 +1974,15 @@ window.EFFORT = {
    "tris": 4994297,
    "chars": 1374725,
    "what": "The excavator's hoses are rebuilt only when they move, and Dexter's parked machines are checked in turns once they have settled: about 1 ms less game work every frame"
+  },
+  {
+   "v": 213,
+   "asked": "2026-10-23T20:50:00-05:00",
+   "live": "2026-10-23T21:49:35-05:00",
+   "dh": 1.5,
+   "tris": 4856994,
+   "chars": 1374939,
+   "what": "The excavator digs again when it was picked with a mode button or VR's next-machine button instead of climbed into: the dig area now follows it wherever it drives."
   }
  ]
 };
