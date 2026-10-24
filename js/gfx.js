@@ -15,7 +15,7 @@
 // drawn (brush.js), skyLight shade and reflections coloured by the sky as it is (and a sharper reflection map), shSoft
 // contact-hardening sun shadows, wetDrops beads and runs of rain on the machines and their cab glass, wetGround soaked ground mirroring the sky (all four Ultra, post.js)
 const GFX={
-  low:{name:'Low',trimClips:1,pr:1.5,auto:true,fps:0,fov:0,sh:1024,shR:22,soft:false,filmic:false,exp:1,tex:'low',detail:0,base:1,macro:false,pbr:false,aniso:4,dirt:1,lawnFar:6,fog:1,wmFine:false,cloudQ:0,rainN:600,rainSp:160,splashN:250,wakeN:140,brush:0.35,model:false,ao:false,bloom:false,grade:false,skyLight:false,shSoft:false,wetDrops:false,wetGround:false,treeR:45,tuftQ:0,tuft:[0.6,12,40,0.2]},
+  low:{name:'Low',trimClips:1,pr:1.5,auto:true,fps:0,fov:0,sh:1024,shR:22,soft:false,filmic:false,exp:1,tex:'low',detail:0,base:1,macro:false,pbr:false,aniso:4,dirt:1,lawnFar:0,fog:1,wmFine:false,cloudQ:0,rainN:600,rainSp:160,splashN:250,wakeN:140,brush:0.35,model:false,ao:false,bloom:false,grade:false,skyLight:false,shSoft:false,wetDrops:false,wetGround:false,treeR:45,tuftQ:0,tuft:[0.6,12,40,0.2]},
   med:{name:'Medium',trimClips:2,pr:1.5,auto:true,fps:0,fov:0,sh:2048,shR:32,soft:false,filmic:true,exp:1,tex:'med',detail:1,base:1,macro:false,pbr:false,aniso:8,dirt:2,lawnFar:15,fog:1,wmFine:true,cloudQ:1,rainN:1500,rainSp:400,splashN:600,wakeN:300,brush:0.7,model:true,ao:false,bloom:false,grade:false,skyLight:false,shSoft:false,wetDrops:false,wetGround:false,treeR:90,tuftQ:0,tuft:[0.85,18,60,0.3]},
   high:{name:'High',trimClips:4,pr:2,auto:true,fps:0,fov:0,sh:4096,shR:45,soft:true,filmic:true,exp:1,tex:'high',detail:1,base:1,macro:true,pbr:true,aniso:16,dirt:4,lawnFar:1e9,fog:1,wmFine:true,cloudQ:1,rainN:3000,rainSp:900,splashN:1200,wakeN:640,brush:1,model:true,ao:false,bloom:false,grade:false,skyLight:false,shSoft:false,wetDrops:false,wetGround:false,treeR:160,tuftQ:2,tuft:[1,25,80,0.35]}};
 // Ultra: High with the screen effects (post.js) and trees in full detail farther out; for strong PC graphics only, never
@@ -140,7 +140,7 @@ const GFX_ROWS=[
   {id:'tuftQ',label:'Grass quality',hint:'How finely the grass and weeds are shaped: more blades, bent in more steps, finer leaves, petals and seed heads. Costs triangles.',opts:[[0,'Simple'],[1,'Good'],[2,'Fine'],[3,'Best']]},
   {id:'tuftA',label:'Grass blades',hint:'How many blades are drawn. The main triangle cost.',min:0,max:1,step:0.05,fmt:v=>`${Math.round(v*100)}%`},
   {id:'tuftR',label:'Grass distance',hint:'How far the blades reach before they thin out.',min:5,max:60,step:1,fmt:v=>`${Math.round(v*FT_M)} ft`},
-  {id:'lawnFar',label:'Lawn full detail',hint:'The tall lawn is drawn simpler past this distance.',opts:[[6,'20 ft'],[15,'50 ft'],[30,'100 ft'],[1e9,'All']]},
+  {id:'lawnFar',label:'Lawn full detail',hint:'The tall lawn is drawn simpler past this distance.',opts:[[0,'On it only'],[6,'20 ft'],[15,'50 ft'],[30,'100 ft'],[1e9,'All']]},
   ['Effects'],
   {id:'dirt',label:'Dirt detail',hint:'Clods, flying dirt and lumpy loads. 16x is for screenshots.',opts:[[1,'1x'],[2,'2x'],[4,'4x'],[16,'16x']]},
   {id:'wmFine',label:'Puddle water',hint:'Fine water with sky reflections, or simple.',opts:[[true,'Fine'],[false,'Simple']]},

@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-24T02:49:00Z",
+ "updated": "2026-10-24T03:00:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -54,9 +54,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-23",
-   "dh": 108,
-   "act": 2,
-   "versions": 7
+   "dh": 108.5,
+   "act": 2.5,
+   "versions": 8
   }
  ],
  "extra": [
@@ -1983,6 +1983,15 @@ window.EFFORT = {
    "tris": 4856994,
    "chars": 1374939,
    "what": "The excavator digs again when it was picked with a mode button or VR's next-machine button instead of climbed into: the dig area now follows it wherever it drives."
+  },
+  {
+   "v": 214,
+   "asked": "2026-10-23T20:51:00-05:00",
+   "live": "2026-10-23T22:00:54-05:00",
+   "dh": 0.5,
+   "tris": 4078114,
+   "chars": 1374956,
+   "what": "Low graphics draws the simpler lawn unless you are standing on it or mowing (234,000 to 58,000 triangles near the lawn); Lawn full detail gets an 'On it only' choice"
   }
  ]
 };
