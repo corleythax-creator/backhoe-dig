@@ -275,8 +275,9 @@ function rainFxTick(dt){dnTick(dt);const r=weather.r,v=Math.max(ss(0,0.6,r),0.75
 // while it rains, every frame; while things drip after it, once a second (for the eaves, below)
 let rcNext=0,rcSkip=0;
 function rainCover(){if(!(rsMesh||rainLines&&!rainLines.userData.off))return;const now=performance.now(),due=rsMesh&&now>=rcNext;
-  // a headset draws the scene twice already: there the cover map is redrawn every third frame (and when it is read)
-  if(weather.r>0.03&&!due&&renderer.xr.isPresenting&&++rcSkip%3)return;
+  // the cover map is redrawn every third frame (and when it is read): it is fixed to the ground, so it only has to keep
+  // up with where you are
+  if(weather.r>0.03&&!due&&++rcSkip%3)return;
   if(weather.r>0.03||wetAll>0.08&&due){rcRender();if(due){rcNext=now+1000;rcRead()}}}
 
 // ---------- everything gets wet ----------
@@ -349,7 +350,15 @@ const rcH=k=>{const a=rcPix[k*4+3]/255,d=(255/256)*(rcPix[k*4]/255/16777216+rcPi
 let rcRoof=0;
 function rcOver(x,z){const px=RC_S/RC_N,i=Math.floor((x-rcCX)/px+RC_N/2),j=Math.floor((rcCZ-z)/px+RC_N/2);
   return i<0||j<0||i>=RC_N||j>=RC_N?-1e5:rcH(j*RC_N+i)}
-function rcRead(){renderer.readRenderTargetPixels(rcRT,0,0,RC_N,RC_N,rcPix);const v=rcU.uRC.value;rcCX=v.x;rcCZ=v.y;rcTop=v.z;rcEdges.length=0;
+// read back without waiting for the GPU where it can (WebGL 2): the map's place is kept with it until the pixels arrive.
+// A read still out after 3 s means this device never answers, and it goes back to reading straight away (rcSync)
+let rcBusy=0,rcSync=false,rcTok=0;
+function rcRead(){const v=rcU.uRC.value,cx=v.x,cz=v.y,top=v.z,now=performance.now();
+  if(rcBusy&&now-rcBusy>3000){rcSync=true;rcBusy=0;rcTok++}
+  if(!rcSync&&renderer.readRenderTargetPixelsAsync){if(rcBusy)return;rcBusy=now;const tok=++rcTok;
+    renderer.readRenderTargetPixelsAsync(rcRT,0,0,RC_N,RC_N,rcPix).then(()=>{if(tok===rcTok)rcReadDone(cx,cz,top)},()=>{}).finally(()=>{if(tok===rcTok)rcBusy=0})}
+  else{renderer.readRenderTargetPixels(rcRT,0,0,RC_N,RC_N,rcPix);rcReadDone(cx,cz,top)}}
+function rcReadDone(cx,cz,top){rcCX=cx;rcCZ=cz;rcTop=top;rcEdges.length=0;
   {const h=mode==='walk'&&!wk.inside?rcOver(wk.x,wk.z)-wk.y:0;rcRoof=h>1.7&&h<9?h:0}
   const px=RC_S/RC_N,R=Math.round(12/px),c=RC_N>>1;
   for(let y=c-R;y<c+R;y++)for(let x=c-R;x<c+R;x++){const k=y*RC_N+x,h=rcH(k);if(h<-1e4)continue;

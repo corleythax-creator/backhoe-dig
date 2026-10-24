@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-24T02:25:00Z",
+ "updated": "2026-10-24T02:37:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -54,9 +54,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-23",
-   "dh": 103.5,
-   "act": 1.5,
-   "versions": 4
+   "dh": 105,
+   "act": 2,
+   "versions": 5
   }
  ],
  "extra": [
@@ -1956,6 +1956,15 @@ window.EFFORT = {
    "tris": 5209019,
    "chars": 1372675,
    "what": "The detailed machines, Dexter's machines, the twins and the attachments cast their shadows from merged parts: the shadow pass drops from about 440 draws to about 140, same shadows"
+  },
+  {
+   "v": 211,
+   "asked": "2026-10-23T20:51:00-05:00",
+   "live": "2026-10-23T21:37:35-05:00",
+   "dh": 1.5,
+   "tris": 5398137,
+   "chars": 1373378,
+   "what": "In the rain the overhead cover map (what keeps rain off under roofs) is drawn every third frame instead of every frame, and its once-a-second read-back no longer stalls the frame where the device allows"
   }
  ]
 };
