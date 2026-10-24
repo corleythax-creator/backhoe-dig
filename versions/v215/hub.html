@@ -1,0 +1,179 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Game Hub</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Saira+Condensed:wght@600;700;800&family=Saira:wght@400;500;600&display=swap">
+<style>
+/* The game hub: one template shared by every game on the master dashboard. Only the HUB block in the script differs between games.
+   Layout: one column; a summary strip, the places to go, then one doc at a time picked from the tabs */
+:root{
+  --bg:#f3f1ec; --panel:#ffffff; --ink:#1b1d1a; --muted:#545a52; --line:#d6d3cb;
+  --machine:#d9631a; --machine-soft:#f6dcc8; --ok:#2f7d4a; --grid:#e6e3dc;
+  --f-display:"Saira Condensed","Arial Narrow",system-ui,sans-serif; --f-body:"Saira",system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#141613; --panel:#1d201c; --ink:#eef0ea; --muted:#b4bbae; --line:#343a33;
+  --machine:#f28a3c; --machine-soft:#4a2c17; --ok:#86d98f; --grid:#2a2f29; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141613; --panel:#1d201c; --ink:#eef0ea; --muted:#b4bbae; --line:#343a33;
+  --machine:#f28a3c; --machine-soft:#4a2c17; --ok:#86d98f; --grid:#2a2f29; color-scheme:dark}
+html,body{margin:0;background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:18px;line-height:1.5}
+main{max-width:980px;margin:0 auto;padding-block:28px 60px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:flex;flex-direction:column;gap:28px}
+h1{margin:0;font:800 clamp(38px,7vw,60px)/1 var(--f-display);letter-spacing:.01em;text-wrap:balance}
+h1 .hl{color:var(--machine)}
+h2{margin:0 0 12px;font:800 28px/1.1 var(--f-display);letter-spacing:.02em}
+.lede{margin:10px 0 0;color:var(--muted);max-width:62ch;font-size:19px}
+.strip{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+.stat{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:14px 16px;min-width:0}
+.stat .k{font:700 14px/1.2 var(--f-display);letter-spacing:.12em;text-transform:uppercase;color:var(--muted)}
+.stat .v{font:800 38px/1.05 var(--f-display);margin-top:6px;font-variant-numeric:tabular-nums}
+.stat .s{font-size:16px;color:var(--muted);margin-top:4px}
+.stat.hot{border-color:var(--machine)}
+.stat.hot .v{color:var(--machine)}
+.go{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+.go a{display:block;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px 16px;color:var(--ink);text-decoration:none;min-width:0}
+.go a:hover,.go a:focus-visible{border-color:var(--machine)}
+.go b{display:block;font:800 21px/1.15 var(--f-display);letter-spacing:.02em;color:var(--machine)}
+.go span{display:block;font-size:15px;color:var(--muted);margin-top:2px}
+.tabs{display:flex;flex-wrap:wrap;gap:8px}
+.tabs button{font:700 17px/1 var(--f-display);letter-spacing:.06em;text-transform:uppercase;padding:10px 14px;border-radius:10px;border:1px solid var(--line);background:var(--panel);color:var(--ink);cursor:pointer}
+.tabs button[aria-selected="true"]{background:var(--machine);border-color:var(--machine);color:#fff}
+#doc{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:6px 22px 18px;min-width:0;overflow-wrap:anywhere}
+#doc h1{font-size:clamp(30px,5vw,42px);margin:16px 0 8px}
+#doc h2{margin:26px 0 8px;padding-top:6px;border-top:1px solid var(--line)}
+#doc h3{font:800 22px/1.2 var(--f-display);margin:18px 0 6px}
+#doc a{color:var(--machine);font-weight:600}
+#doc ul{padding-left:1.2em}
+#doc li{margin:3px 0}
+#doc li:has(> input[type=checkbox]){list-style:none;margin-left:-1.2em}
+#doc input[type=checkbox]{accent-color:var(--ok);margin-right:6px}
+#doc code{font-size:.88em;background:var(--grid);padding:1px 5px;border-radius:5px}
+#doc table{border-collapse:collapse;width:100%;font-size:16px;display:block;overflow-x:auto}
+#doc th{font:700 13px/1.2 var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-align:left;padding:8px 10px;border-bottom:2px solid var(--line)}
+#doc td{padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
+#doc em{color:var(--muted)}
+#doc pre{overflow-x:auto;background:var(--grid);padding:10px 12px;border-radius:8px}
+#doc pre code{background:none;padding:0}
+.edit{font-size:15px;color:var(--muted);margin:14px 0 0}
+.edit a{color:var(--machine)}
+footer{color:var(--muted);font-size:15px}
+footer a{color:var(--machine)}
+</style>
+</head>
+<body>
+<main>
+  <header>
+    <h1><span id="name"></span> <span class="hl">hub</span></h1>
+    <p class="lede" id="lede"></p>
+  </header>
+  <div class="strip" id="strip"></div>
+  <section aria-labelledby="go-h">
+    <h2 id="go-h">Go to</h2>
+    <nav class="go" id="go"></nav>
+  </section>
+  <section aria-labelledby="docs-h">
+    <h2 id="docs-h">Documents</h2>
+    <div class="tabs" role="tablist" id="tabs"></div>
+  </section>
+  <article id="doc" role="tabpanel" aria-live="polite"></article>
+  <footer>The documents are the files in the repo, read live; change a file and this page shows it after the next deploy. <a href="https://corley-master-dashboard.vercel.app">All of Corley's games</a></footer>
+</main>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/marked/12.0.2/marked.min.js"></script>
+<script>
+// ---- this game's settings: the only part that differs between games ----
+const HUB={
+  name:"Corley's Island",
+  lede:"A true-to-life construction sim on islands in a mountain lake.",
+  repo:'https://github.com/corleythax-creator/backhoe-dig',
+  effort:'data/effort.js',                    // build log with versions and hours (window.EFFORT), or null
+  ideas:{md:'docs/IDEAS.md',board:'docs/idea-board.html'}, // idea list and the board's DONE list, or null
+  // places to go: [url, name, what it is]; the first is the game itself
+  go:[
+    ['./','Play','The live game'],
+    ['build.html','Build log','Hours and versions, charted'],
+    ['versions/','Old versions','Every version, playable'],
+    ['https://claude.ai/artifact/FMrDEa4VsKvPS5Z3ktTrS3','Idea board','Score and pick what comes next'],
+    ['https://claude.ai/artifact/6nxYC5EK3422JouxaZx2DF','Claude version','The game on claude.ai'],
+    ['https://claude.ai/artifact/Bj6MjgPkszqEP2PJQqQ29t','Screen editor','Restyle the HUD and publish it'],
+    ['docs/island-plans.html','Island plans','The islands, laid out'],
+    ['docs/dig-plans.html','Dig plans','How digging anywhere works'],
+    ['docs/image-prompts.html','Image prompts','The art prompts for textures'],
+  ],
+  // documents, in tab order: [#hash, tab name, repo path]; the first four are every game's set
+  docs:[
+    ['roadmap','Roadmap','docs/ROADMAP.md'],
+    ['gdd','Design doc','docs/GDD.md'],
+    ['changelog','Changelog','CHANGELOG.md'],
+    ['credits','Credits','CREDITS.md'],
+    ['ideas','Ideas','docs/IDEAS.md'],
+    ['workflow','Workflow','docs/WORKFLOW.md'],
+    ['sounds','Sound credits','sounds/CREDITS.md'],
+    ['mapeditor','Map editor','docs/map-editor.md'],
+  ],
+};
+// ---- the template: the same in every game ----
+const $=id=>document.getElementById(id),DOCS=HUB.docs,REPO=HUB.repo;
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const day=t=>new Date(t).toLocaleDateString('en-US',{month:'short',day:'numeric',timeZone:'America/Chicago'});
+document.title=HUB.name+' Hub';
+$('name').textContent=HUB.name;
+$('lede').textContent=HUB.lede+' Everything about it in one place: where it stands, where it\'s going, and every document behind it.';
+$('go').innerHTML=[...HUB.go,[REPO,'Code','Every file, on GitHub']].map(([h,n,s])=>`<a href="${h}"${/^https?:/.test(h)?' target="_blank" rel="noopener"':''}><b>${esc(n)}</b><span>${esc(s)}</span></a>`).join('');
+
+// summary strip: version and hours from the build log, roadmap boxes ticked, ideas done; each shows when its file loads
+const ST={};
+const stat=(k,v,s,hot)=>`<div class="stat${hot?' hot':''}"><div class="k">${k}</div><div class="v">${v}</div><div class="s">${esc(s)}</div></div>`;
+const strip=()=>$('strip').innerHTML=['version','shipped','hours','roadmap','ideas'].map(k=>ST[k]||'').join('');
+const text=p=>fetch(p,{cache:'no-cache'}).then(r=>{if(!r.ok)throw r.status;return r.text()});
+if(HUB.effort)text(HUB.effort).then(s=>{
+  const V=JSON.parse(s.slice(s.indexOf('{'),s.lastIndexOf('}')+1)).versions||[];if(!V.length)return;
+  const last=V[V.length-1],h=V.reduce((a,v)=>a+(v.dh||0),0);
+  ST.version=stat('Version','v'+last.v,'live '+day(last.live),1);
+  ST.shipped=stat('Versions shipped',V.length,'since '+day(V[0].live));
+  if(h)ST.hours=stat('Developer hours',Math.round(h).toLocaleString('en-US'),'one developer by hand');
+  strip();
+}).catch(()=>{});
+text('docs/ROADMAP.md').then(s=>{
+  const all=(s.match(/^\s*- \[[ xX]\]/gm)||[]).length,done=(s.match(/^\s*- \[[xX]\]/gm)||[]).length;
+  if(all){ST.roadmap=stat('Roadmap',`${done}/${all}`,'items done');strip()}
+}).catch(()=>{});
+if(HUB.ideas)Promise.all([text(HUB.ideas.md),HUB.ideas.board?text(HUB.ideas.board):''])
+  .then(([md,html])=>{
+    const all=(md.match(/^- [A-Z]\d\d /gm)||[]).length,i=html.indexOf('const DONE={');if(!all)return;
+    const d=i<0?'':html.slice(i,html.indexOf('};',i)),ids=(d.match(/^[A-Z]\d\d:/gm)||[]).length,part=(d.match(/part:true/g)||[]).length;
+    ST.ideas=stat('Ideas done',`${ids-part}/${all}`,part?`${part} part done`:'on the idea list');strip();
+  }).catch(()=>{});
+
+// tabs: one doc at a time, kept in the #hash; links inside a doc to another listed doc open its tab
+$('tabs').innerHTML=DOCS.map(([id,n])=>`<button role="tab" id="t-${id}" aria-selected="false" data-id="${id}">${esc(n)}</button>`).join('');
+$('tabs').onclick=e=>{const b=e.target.closest('button');if(b)location.hash=b.dataset.id};
+const cache={};
+async function show(){
+  const [id,,path]=DOCS.find(d=>d[0]===location.hash.slice(1))||DOCS[0];
+  for(const b of $('tabs').children)b.setAttribute('aria-selected',b.dataset.id===id);
+  $('doc').setAttribute('aria-labelledby','t-'+id);
+  try{
+    cache[path]??=await text(path);
+    $('doc').innerHTML=marked.parse(cache[path])+`<p class="edit"><a href="${REPO}/blob/main/${path}" target="_blank" rel="noopener">${path} on GitHub</a></p>`;
+  }catch(err){$('doc').innerHTML=`<p>Couldn't load ${esc(path)} (${esc(err)}). <a href="${REPO}/blob/main/${path}">Open it on GitHub</a>.</p>`}
+  // repo-relative links: another listed doc opens its tab, anything else opens on GitHub
+  const base=path.includes('/')?path.slice(0,path.lastIndexOf('/')+1):'';
+  for(const a of $('doc').querySelectorAll('a[href]')){
+    const h=a.getAttribute('href');if(/^(https?:|#|mailto:)/.test(h))continue;
+    const full=new URL(h,'https://x/'+base).pathname.slice(1),hit=DOCS.find(d=>d[2]===full);
+    a.href=hit?'#'+hit[0]:`${REPO}/blob/main/${full}`;
+  }
+  // a listed doc's path written as code opens its tab too
+  for(const c of $('doc').querySelectorAll('code')){
+    const hit=DOCS.find(d=>d[2]===c.textContent);
+    if(hit&&!c.closest('a')){const a=document.createElement('a');a.href='#'+hit[0];c.replaceWith(a);a.append(c)}
+  }
+}
+addEventListener('hashchange',()=>{show();$('doc').scrollIntoView({block:'start'})});
+show();
+</script>
+</body>
+</html>

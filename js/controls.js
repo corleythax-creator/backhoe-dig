@@ -72,13 +72,30 @@ function keyAxes(dt){const f=mode!=='walk'&&held('fine')?0.3:1;
 // game controller (standard mapping): sticks = the two on-screen sticks, triggers = gas / reverse when driving,
 // LB/RB switch machine, Y cab view, View map, Menu help, B closes (or gets in and out of machines), A sets a block,
 // D-pad runs blocks (in Walk mode A jumps and X sets a block); a line strike rumbles
-const PA={lx:0,ly:0,rx:0,ry:0,thr:0,sprint:false},padPrev=[];let padIdx=-1,padUsed=false;
-addEventListener('gamepadconnected',e=>{padIdx=e.gamepad.index;toast(say('padReady'),'good',3500)});
-addEventListener('gamepaddisconnected',e=>{if(e.gamepad.index===padIdx)padIdx=-1;for(const k in PA)PA[k]=0;padPrev.length=0});
-function getPad(){if(!navigator.getGamepads)return null;const all=navigator.getGamepads();
-  if(padIdx<0||!all[padIdx])padIdx=[...all].findIndex(g=>g&&g.connected);return padIdx<0?null:all[padIdx]}
-function usePad(){if(!padUsed){padUsed=true;kbUsed=false;document.body.classList.remove('kb');setCaps()}started()}
-function padButton(i){usePad();
+const PA={lx:0,ly:0,rx:0,ry:0,thr:0,sprint:false},padPrev=[];let padIdx=-1,padUsed=false,padBackT=0;
+addEventListener('gamepadconnected',e=>{if(padIdx<0||e.gamepad.mapping==='standard')padIdx=e.gamepad.index;padPrev.length=0;toast(say('padReady'),'good',3500)});
+addEventListener('gamepaddisconnected',e=>{if(e.gamepad.index!==padIdx)return;padIdx=-1;for(const k in PA)PA[k]=0;padPrev.length=0;if(padUsed)toast(say('padLost'),'',3500)});
+// the pad in use: the one last pressed, else the first connected (standard mapping first: Bluetooth can add a ghost pad)
+function getPad(){if(!navigator.getGamepads)return null;const all=[...navigator.getGamepads()].filter(g=>g&&g.connected);
+  for(const g of all)if(g.index!==padIdx&&g.buttons.some(b=>b.pressed)){padIdx=g.index;padPrev.length=0}
+  let gp=all.find(g=>g.index===padIdx);if(!gp){gp=all.find(g=>g.mapping==='standard')||all[0];padIdx=gp?gp.index:-1}
+  return gp?padStd(gp):null}
+// a pad the browser leaves unmapped (an Xbox pad over Bluetooth in Firefox on Linux) reads in the Linux layout: axes LX LY LT
+// RX RY RT, D-pad X Y; buttons A B X Y LB RB View Menu Xbox LS RS. Triggers rest at -1 but read 0 until first touched
+const padTrigSeen=[];
+function padStd(gp){if(gp.mapping==='standard'||gp.axes.length<6||gp.buttons.length<11)return gp;
+  const a=gp.axes,btn=(on,v)=>({pressed:on,value:v}),trig=i=>{if(a[i]<-0.5)padTrigSeen[i]=true;return padTrigSeen[i]?clamp((a[i]+1)/2,0,1):0},
+    B=gp.buttons,b=i=>B[i]||btn(false,0),lt=trig(2),rt=trig(5),dx=a[6]||0,dy=a[7]||0;
+  return {index:gp.index,id:gp.id,mapping:'standard',vibrationActuator:gp.vibrationActuator,axes:[a[0],a[1],a[3],a[4]],
+    buttons:[b(0),b(1),b(2),b(3),b(4),b(5),btn(lt>0.3,lt),btn(rt>0.3,rt),b(6),b(7),b(9),b(10),btn(dy<-0.5,+(dy<-0.5)),btn(dy>0.5,+(dy>0.5)),btn(dx<-0.5,+(dx<-0.5)),btn(dx>0.5,+(dx>0.5)),b(8)]}}
+// Android turns some pad buttons into keys as well (A Enter, the D-pad arrows, B Back): drop those echoes so they neither
+// drive nor press a focused button, and keep one page of history so B never leaves the game
+const PAD_ECHO={Enter:0,NumpadEnter:0,Space:0,Escape:1,BrowserBack:1,ArrowUp:12,ArrowDown:13,ArrowLeft:14,ArrowRight:15};
+addEventListener('keydown',e=>{const i=PAD_ECHO[e.code];if(i===undefined||padIdx<0)return;const gp=getPad(),b=gp&&gp.buttons[i];
+  if(b&&b.pressed){e.preventDefault();e.stopImmediatePropagation()}},true);
+addEventListener('popstate',()=>{const gp=padIdx<0?null:getPad();if(gp&&gp.buttons[1].pressed||performance.now()-padBackT<800)history.pushState({pad:1},'')});
+function usePad(){if(!padUsed){padUsed=true;kbUsed=false;document.body.classList.remove('kb');setCaps();if(!(history.state&&history.state.pad))history.pushState({pad:1},'')}started()}
+function padButton(i){usePad();if(i===1)padBackT=performance.now();
   if(i===4||i===5)setMode(MODES[(MODES.indexOf(mode)+(i===5?1:MODES.length-1))%MODES.length]);
   else if(i===3)$('#camBtn').click();
   else if(i===0&&mode==='walk')walkJump();
