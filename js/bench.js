@@ -2,7 +2,7 @@
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 // ---------- speed test ----------
 const LEVELS=[0,8,24,56,120,248],LEVEL_S=5,WARM=1.5;
-// kind: 'speed' (this test), 'dig' (the dig site test, digtest.js) or 'bh' (the backhoe load test, bhtest.js); the
+// kind: 'speed' (this test), 'dig' (the dig site test, digtest.js) or 'load' (the backhoe and excavator load tests, bhtest.js); the
 // other two run through the same hooks
 const bench={on:false,kind:'speed',t:0,lvl:-1,steps:[],clones:[],built:false,barT:0,pr:0};
 // diagnosis: before the levels, the plain scene is measured with one feature switched off at a time, then everything
@@ -86,7 +86,7 @@ function showBenchResults(){$('#benchTitle').textContent='Speed test results';
     'Load levels:',...rows.map(r=>`${r.machines} excavators + ${r.machines} trucks | ${fmtTris(r.tris)} tris | ${Math.round(r.calls)} draws | ${r.avg.toFixed(1)} avg FPS | ${r.low.toFixed(0)} 1% low`)].join('\n');
   $('#bench').hidden=false;
 }
-function benchTick(dt){if(bench.kind==='dig'){digTestTick(dt);return}if(bench.kind==='bh'){bhtTick(dt);return}
+function benchTick(dt){if(bench.kind==='dig'){digTestTick(dt);return}if(bench.kind==='load'){bhtTick(dt);return}
   bench.t+=dt;
   const lvl=Math.min(bench.steps.length-1,Math.floor(bench.t/LEVEL_S));
   if(lvl!==bench.lvl)benchStep(lvl);
@@ -94,14 +94,14 @@ function benchTick(dt){if(bench.kind==='dig'){digTestTick(dt);return}if(bench.ki
   st.a1=0.75+0.25*Math.sin(u*1.3);st.a2=-1.45+0.3*Math.sin(u*0.9+1);st.a3=-1.6+0.9*Math.sin(u*1.7);st.swing+=dt*0.7;
   if(bench.t>=LEVEL_S*bench.steps.length)endBench();
 }
-function benchCamera(){if(bench.kind==='dig'){digTestCam();return}if(bench.kind==='bh'){bhtCam();return}
+function benchCamera(){if(bench.kind==='dig'){digTestCam();return}if(bench.kind==='load'){bhtCam();return}
   const u=bench.t%LEVEL_S,seg=Math.floor(u/(LEVEL_S/4)),k=u-seg*(LEVEL_S/4);
   if(seg===0){const a=st.yaw+st.swing+Math.PI+k*1.4;look.set(st.x,st.y+1.5,st.z);camera.position.set(st.x+Math.sin(a)*9,st.y+4,st.z+Math.cos(a)*9);camera.lookAt(look)}
   else if(seg===1){house.localToWorld(camera.position.set(-0.72,2.2,0.5));house.localToWorld(look.set(-0.1+Math.sin(k*2.5)*3,-0.4,6));camera.lookAt(look)}
   else if(seg===2){const a=0.8+bench.t*0.35;camera.position.set(Math.sin(a)*24,9,Math.cos(a)*24);camera.lookAt(look.set(0,0,0))}
   else{const a=bench.t*0.3;camera.position.set(Math.sin(a)*5,28,Math.cos(a)*5);camera.lookAt(look.set(0,0,0))}
 }
-function benchSample(dt){if(bench.kind==='dig'){digTestSample();return}if(bench.kind==='bh'){bhtSample();return}
+function benchSample(dt){if(bench.kind==='dig'){digTestSample();return}if(bench.kind==='load'){bhtSample(dt);return}
   const s=bench.steps[bench.lvl];if(!s)return;
   if(bench.t-bench.lvl*LEVEL_S>=WARM){s.ft.push(dt);s.tris+=renderer.info.render.triangles;s.calls+=renderer.info.render.calls;s.k++}
   bench.barT-=dt;
