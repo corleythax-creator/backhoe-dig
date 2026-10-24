@@ -109,7 +109,7 @@ function frame(now){
     if(st.soil===2&&!st.seenSand){st.seenSand=true;toast(say('sand'),'',3200)}
     if(st.soil===3&&!st.seenRock){st.seenRock=true;toast(say('rock'),'',3000)}
     st.rumT-=dt;if(padUsed&&st.soil>=0&&st.rumT<=0&&(Math.abs(swingIn)+Math.abs(stickIn)+Math.abs(boomIn)+Math.abs(bucketIn))>0.1){st.rumT=0.12;rumble(140,0.15+0.55*(1-SOIL[st.soil].h))}}
-  if(st.below&&!bench.on){
+  if(st.below&&(!bench.on||bench.kind==='load')){
     // another attachment on the coupler works the ground its own way (coupler.js)
     if(cpl.fit!=='bucket')cplWork(dt);
     // the bucket cuts as deep as its teeth only with them leading; dragged flat it skims (bkCut)
@@ -150,7 +150,7 @@ function frame(now){
   pourStream(streams[0],mid,pourY,pourA,st.loadC,now/1000);
   // a heaped bucket swung or lifted fast loses crumbs over the rim
   {const armV=Math.abs(swingIn)*TU.exSwing+Math.abs(boomIn)*TU.exBoom+Math.abs(stickIn)*TU.exStick;
-    if(f===0&&!st.below&&!bench.on&&st.load>TU.exCap*0.7&&armV>0.2){const out=Math.min(st.load,(st.load/TU.exCap-0.7)/0.3*armV*0.006*TU.exSpill*dt);st.load-=out;
+    if(f===0&&!st.below&&(!bench.on||bench.kind==='load')&&st.load>TU.exCap*0.7&&armV>0.2){const out=Math.min(st.load,(st.load/TU.exCap-0.7)/0.3*armV*0.006*TU.exSpill*dt);st.load-=out;
       if(inBed(mid))tr.load=Math.min(TU.trCap,tr.load+out);else{deposit(mid.x,mid.z,out,st.loadC,st.loadMix,1,st.loadWet);st.dirty=true}
       if(Math.random()<armV*dt*8)spawn(mid,0.4)}}
   // gas main

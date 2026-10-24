@@ -151,7 +151,7 @@ const HV_IDLE=30,HV_IDLE_N=12,hvIdle=[];let hvRR=0;
 function hvSum(h){let s=0,n=1;for(const k in h){const v=h[k];if(typeof v==='number')s+=v*(n++ +0.37);
   else if(v&&typeof v==='object'&&!v.isObject3D&&!Array.isArray(v)&&k!=='K'&&k!=='home')for(const q in v)if(typeof v[q]==='number')s+=v[q]*(n++ +0.37)}return s}
 function hvTick(dt,drive,turn,arm,curl){hvRR=(hvRR+1)%HV_IDLE_N;
-  for(let i=0;i<hvs.length;i++){const h=hvs[i],on=mode==='heavy'&&hvI===i&&wk.inside==='hv'+i&&(!bench.on||bench.kind==='bh'),I=hvIdle[i]||(hvIdle[i]={still:0,dt:0,x:NaN,z:0,yaw:0});
+  for(let i=0;i<hvs.length;i++){const h=hvs[i],on=mode==='heavy'&&hvI===i&&wk.inside==='hv'+i&&(!bench.on||bench.kind==='load'),I=hvIdle[i]||(hvIdle[i]={still:0,dt:0,x:NaN,z:0,yaw:0});
     if(on){I.still=0;I.dt=0;if(h.K.hoe)bhTick(h,dt,drive,turn,arm,curl);else hvDrive(h,dt,drive,turn,arm,curl,true);continue}
     I.dt=Math.min(0.1,I.dt+dt);const same=h.x===I.x&&h.z===I.z&&h.yaw===I.yaw;
     if(I.still>=HV_IDLE&&i%HV_IDLE_N!==hvRR&&same)continue;
