@@ -79,6 +79,7 @@ and paste the code (`view 40,-150,315,55,148`); Claude opens its headless screen
 - **Testing in a session**: `tools/play.js` runs game code headless in one step instead of a hand-written script.
 - **Dig checks**: the same `check` workflow runs the dig site test's checks (digging across tile edges, the grid following the machine between islands, saves) and goes red if one fails.
 - **Frame rate on your phone**: open https://corleys-island.vercel.app/?digtest=low and put the phone down. It digs at every dig site and drives between the islands by itself for about 2 minutes, then puts your site back and shows FPS for each part (30 passes). Copy results and paste them to Claude if anything is red. `?speedtest` runs the older speed test the same way.
+- **Backhoe controls and loading speed**: open https://corleys-island.vercel.app/?bhtest=low (or ☰ → Backhoe load test). From the backhoe's cab it works each hoe control, then digs and dumps six buckets into the dump truck by itself (about a minute), and shows which controls passed, how long a pass takes, cubic yards an hour, minutes to fill the truck and the cab's FPS. Copy results and paste them to Claude.
 - **Art prompts**: `docs/IMAGE_PROMPTS.md` has ready-to-paste ChatGPT prompts for textures, icons, sprites and concept art (Ultra source quality); `tools/make_tiers.py` cuts a saved image into the Ultra / High / Medium / Low sizes.
 
 ## 4. Systems that would let you do more yourself
