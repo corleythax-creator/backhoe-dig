@@ -18,6 +18,8 @@ const TUNE=[
   // the bucket's angle (D08): teeth leading into the cut dig as deep as they go; dragged flat or back first it only skims
   ['bkAngle','Excavator','How much the bucket\'s angle in the cut matters (0% = it digs the same at any angle)',1,'pct',0,100,5],
   ['bkSkim','Excavator','A bucket dragged flat or back first only skims',0.05,'in',0.5,12,0.5],
+  ['exFillT','Excavator','A good stroke in loam fills the bucket in',3.0,'s',0.3,10,0.1],['exCutV','Excavator','Teeth speed through the ground that fills at the full rate',1.2,'fts',0.5,10,0.25],
+  ['exThick','Excavator','Cut thickness that fills at the full rate',0.25,'in',1,24,0.5],['exCutD','Excavator','Deepest bite with the teeth leading',1.6,'ft',0.5,8,0.25],
   // the quick coupler's attachments (coupler.js)
   ['cpReach','Attachments','The coupler picks up an attachment from',0.9,'ft',1,8,0.25],
   ['cpHammer','Attachments','Hammer: how much faster than the bucket it gets through rock and clay',4,'pct',100,1000,10],
@@ -44,6 +46,8 @@ const TUNE=[
   ['bhOutT','Backhoe','Outriggers down or up in',2.2,'s',0.5,10,0.1],['bhSeatT','Backhoe','Seat swivels round in',1.2,'s',0.3,5,0.1],
   // the hoe's dig, dump and hydraulics (backhoe.js)
   ['bhFillT','Backhoe','A good hoe stroke in loam fills the bucket in',2.5,'s',0.3,10,0.1],
+  ['bhCutV','Backhoe','Hoe teeth speed through the ground that fills at the full rate',1.0,'fts',0.5,10,0.25],['bhThick','Backhoe','Hoe cut thickness that fills at the full rate',0.2,'in',1,24,0.5],
+  ['bhCutD','Backhoe','Deepest hoe bite with the teeth leading',0.5,'ft',0.5,5,0.25],
   ['bhAngle','Backhoe','How much the hoe bucket\'s angle in the cut matters (0% = it digs the same at any angle)',1,'pct',0,100,5],
   ['bhSkim','Backhoe','A hoe bucket dragged flat or heel first only skims',0.04,'in',0.5,12,0.5],
   ['bhSpill','Backhoe','Spill from a heaped hoe bucket swung fast',1,'pct',0,500,5],
@@ -122,7 +126,7 @@ const TUNE=[
   ['vrTurn','VR','Turn speed on foot with the right stick (0 = 30° snap steps)',120*Math.PI/180,'deg',0,360,5],
   ['vrComfort','VR','Comfort vignette: how far the view darkens at its edges while you drive fast or turn (0 = off)',0.5,'pct',0,100,5]];
 // unit: [shown = code value × factor, label]
-const TUNE_U={mph:[1/0.44704,'mph'],ft:[1/0.3048,'ft'],deg:[180/Math.PI,'°/s'],yd3:[1.307951,'yd³'],pct:[100,'%'],s:[1,'s'],min:[1/60,'min'],in:[1/0.0254,'in'],n:[1,''],usd:[1,'$']};
+const TUNE_U={mph:[1/0.44704,'mph'],ft:[1/0.3048,'ft'],fts:[1/0.3048,'ft/s'],deg:[180/Math.PI,'°/s'],yd3:[1.307951,'yd³'],pct:[100,'%'],s:[1,'s'],min:[1/60,'min'],in:[1/0.0254,'in'],n:[1,''],usd:[1,'$']};
 const tuneShow=(e,v)=>v*TUNE_U[e[4]][0];
 const tuneCode=(e,d)=>d/TUNE_U[e[4]][0];
 // the values the game runs on

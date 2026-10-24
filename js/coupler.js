@@ -18,7 +18,7 @@ function bkAttack(dt){if(st.atk===undefined)st.atk=1;
     if(d>0.05*dt){bkE.copy(BK_EDGE).applyQuaternion(q);st.atk+=(ss(-0.1,0.6,bkVel.dot(bkE)/d)-st.atk)*Math.min(1,dt*10)}}
   bkPrev.copy(tip);bkPrevOk=true}
 // where the bucket cuts to: as deep as the teeth with them leading, only bkSkim under the surface (g) dragged flat
-function bkCut(g,dt){const k=1-TU.bkAngle*(1-st.atk),D=TU.bkSkim+(1.6-TU.bkSkim)*k*k;bkTip.copy(tip);bkTip.y=Math.max(tip.y,g-D);
+function bkCut(g,dt){const k=1-TU.bkAngle*(1-st.atk),D=TU.bkSkim+(TU.exCutD-TU.bkSkim)*k*k;bkTip.copy(tip);bkTip.y=Math.max(tip.y,g-D);
   if(k<0.4&&g-tip.y>D+0.04){cpl.skimT+=dt;if(cpl.skimT>2.5&&!cpl.toldSkim){cpl.toldSkim=true;toast(say('bkSkim'),'',4600)}}
   return bkTip}
 // ---------- the coupler and the attachments ----------

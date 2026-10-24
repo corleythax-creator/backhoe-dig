@@ -112,9 +112,13 @@ function frame(now){
   if(st.below&&(!bench.on||bench.kind==='load')){
     // another attachment on the coupler works the ground its own way (coupler.js)
     if(cpl.fit!=='bucket')cplWork(dt);
-    // the bucket cuts as deep as its teeth only with them leading; dragged flat it skims (bkCut)
+    // the bucket cuts as deep as its teeth only with them leading; dragged flat it skims (bkCut). It fills over the
+    // stroke, as the backhoe's does: only teeth moving through the ground bring dirt in, at a rate that goes with how fast
+    // they move (TU.exCutV) and how thick a cut they take (TU.exThick), so a good stroke in loam fills it in about
+    // TU.exFillT; hard ground slows the arm and so the filling too
     else if(st.load<TU.exCap-0.002){
-      const got=dig(bkCut(g,dt),TU.exCap-st.load);
+      const cp=bkCut(g,dt),tv=bkPrevOk&&dt>0?bkVel.length()/dt:0,rate=TU.exCap/TU.exFillT*clamp(tv/TU.exCutV,0,1.25)*ss(0,TU.exThick,g-cp.y);
+      const want=Math.min(TU.exCap-st.load,rate*dt),got=want>1e-6?dig(cp,want):0;
       if(got>0){const f=got/(st.load+got);for(let q=0;q<3;q++)st.loadC[q]+=(digC[q]-st.loadC[q])*f;for(let q=0;q<4;q++)st.loadMix[q]+=(digMix[q]-st.loadMix[q])*f;
         st.loadWet+=((underWater(tip)?1:mudAt(tip.x,tip.z))-st.loadWet)*f;
         st.load+=got;statDug(got);st.dirty=true;st.slumpT=2.5;if(Math.random()<0.5)spawn(tip.clone().setY(g+0.05),1.2)}
