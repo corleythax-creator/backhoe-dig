@@ -18,6 +18,7 @@ const TUNE=[
   // the bucket's angle (D08): teeth leading into the cut dig as deep as they go; dragged flat or back first it only skims
   ['bkAngle','Excavator','How much the bucket\'s angle in the cut matters (0% = it digs the same at any angle)',1,'pct',0,100,5],
   ['bkSkim','Excavator','A bucket dragged flat or back first only skims',0.05,'in',0.5,12,0.5],
+  ['bkHeap','Digging','How far over full a digging bucket heaps before the rest spills over its rim',0.25,'pct',0,60,5],
   ['exFillT','Excavator','A good stroke in loam fills the bucket in',3.0,'s',0.3,10,0.1],['exCutV','Excavator','Teeth speed through the ground that fills at the full rate',1.2,'fts',0.5,10,0.25],
   ['exThick','Excavator','Cut thickness that fills at the full rate',0.25,'in',1,24,0.5],['exCutD','Excavator','Deepest bite with the teeth leading',1.6,'ft',0.5,8,0.25],
   // the quick coupler's attachments (coupler.js)

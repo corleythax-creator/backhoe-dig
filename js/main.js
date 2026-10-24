@@ -6,6 +6,24 @@ for(const g of [machine,truck])g.traverse(o=>{if(o.isMesh&&!o.material.transpare
 function fpEye(o,px,py,pz,dx,dy,dz){o.localToWorld(camera.position.set(px,py,pz));
   const y=Math.atan2(dx,dz)+fpl.yaw,p=clamp(Math.atan2(dy,Math.hypot(dx,dz))+fpl.pitch,-1.45,1.45),c=Math.cos(p)*10;
   o.localToWorld(look.set(px+Math.sin(y)*c,py+Math.sin(p)*10,pz+Math.cos(y)*c))}
+// the bucket (or blade) in use for the bucket gauge: its load, what it holds, how far it heaps over full, whether it is
+// spilling over its rim; null on foot and in machines without one
+function bucketNow(){
+  if(mode==='dig'||mode==='drive')return {n:'Excavator bucket',l:Math.max(st.load,st.stuck||0),c:TU.exCap,h:TU.bkHeap,s:(st.spillT||0)>0};
+  if(mode==='skid')return {n:'Skid steer bucket',l:sk.load,c:TU.skCap,h:0,s:false};
+  if(mode==='heavy'){const h=hvCur();if(!h)return null;
+    if(h.K.hoe)return h.hoe?{n:'Hoe bucket',l:h.hl.load,c:TU.bhCap,h:TU.bkHeap,s:(h.spillT||0)>0}:{n:'Loader bucket',l:h.load,c:TU.bhLdCap,h:0,s:false};
+    if(h.k==='dozer')return {n:'Blade',l:h.load,c:TU.hvDzCap,h:0,s:false};if(h.k==='loader')return {n:'Loader bucket',l:h.load,c:TU.hvLdCap,h:0,s:false}}
+  return null}
+function bucketChip(){const b=bucketNow(),el=$('#bucketChip');if(el.hidden===!!b)el.hidden=!b;if(!b)return;
+  const f=b.l/b.c,pct=Math.round(f*100),span=1+b.h,heaped=f>1.005;
+  if($('#bucketChipName').textContent!==b.n)$('#bucketChipName').textContent=b.n;
+  $('#bucketChipVal').textContent=`${(b.l*1.308).toFixed(2)} yd³ · ${pct}%`;$('#bucketChipBar').style.width=Math.min(100,f/span*100)+'%';$('#bucketChipFull').style.left=(100/span)+'%';
+  $('#bucketChipSub').textContent=b.s?'Spilling over the rim':heaped?'Heaped over the rim':'';el.classList.toggle('heaped',heaped&&!b.s);el.classList.toggle('spill',b.s)}
+// a heaped-full bucket still cutting: what it cuts and has no room for spills back over its sides, falling by the bucket
+function exOver(v,dt){const a=Math.random()*6.283,x=mid.x+Math.cos(a)*0.5,z=mid.z+Math.sin(a)*0.5;
+  if(inDig(x,z,0.5)){deposit(x,z,v,digC.slice(),digMix.slice(),0.9,mudAt(x,z));st.dirty=true;st.slumpT=2.5}
+  st.spillT=0.5;for(let n=0;n<Math.min(3,Math.ceil(v*200));n++)spawn(mid,0.7)}
 function frame(now){
   // frame cap (Graphics panel): skip this display refresh if the last frame was too recent
   if(gfxCur.fps&&!bench.on&&!vrOn()&&now-last<900/gfxCur.fps)return;
@@ -116,15 +134,17 @@ function frame(now){
     // stroke, as the backhoe's does: only teeth moving through the ground bring dirt in, at a rate that goes with how fast
     // they move (TU.exCutV) and how thick a cut they take (TU.exThick), so a good stroke in loam fills it in about
     // TU.exFillT; hard ground slows the arm and so the filling too
-    else if(st.load<TU.exCap-0.002){
+    // It heaps over its rim to TU.bkHeap past full; what it cuts beyond that spills back over the sides (exOver)
+    else{
       const cp=bkCut(g,dt),tv=bkPrevOk&&dt>0?bkVel.length()/dt:0,rate=TU.exCap/TU.exFillT*clamp(tv/TU.exCutV,0,1.25)*ss(0,TU.exThick,g-cp.y);
-      const want=Math.min(TU.exCap-st.load,rate*dt),got=want>1e-6?dig(cp,want):0;
+      const hcap=TU.exCap*(1+TU.bkHeap),room=Math.max(0,hcap-st.load),want=rate*dt,cut=want>1e-6?dig(cp,want):0,got=Math.min(cut,room);
+      if(cut>got+1e-7){exOver(cut-got,dt);if(!fullWarned){toast(say('bucketFull'));fullWarned=true}}
       if(got>0){const f=got/(st.load+got);for(let q=0;q<3;q++)st.loadC[q]+=(digC[q]-st.loadC[q])*f;for(let q=0;q<4;q++)st.loadMix[q]+=(digMix[q]-st.loadMix[q])*f;
         st.loadWet+=((underWater(tip)?1:mudAt(tip.x,tip.z))-st.loadWet)*f;
         st.load+=got;statDug(got);st.dirty=true;st.slumpT=2.5;if(Math.random()<0.5)spawn(tip.clone().setY(g+0.05),1.2)}
-    }else if(!fullWarned){toast(say('bucketFull'));fullWarned=true}
+    }
   }
-  if(st.load<TU.exCap*0.9)fullWarned=false;
+  if(st.load<TU.exCap)fullWarned=false;st.spillT=Math.max(0,(st.spillT||0)-dt);
   // spill: bucket interior points along local -y
   const up=tmp.set(0,-1,0).applyQuaternion(q).y;
   const f=clamp((0.25-up)/0.5,0,1);
@@ -152,8 +172,11 @@ function frame(now){
     if(fell>0){st.stuck-=fell;st.load-=fell;exDrop(fell,1);if(st.stuck<0.0005){st.load=Math.max(0,st.load-st.stuck);st.stuck=0}
       if(st.jolt){dirtThud(mid,0.25+fell*3);if(!inBed(mid))shakeClods(mid.x,mid.z,fell);for(let n=0;n<Math.ceil(fell*120);n++)spawn(mid,0.7);rumble(120,0.4)}}}
   pourStream(streams[0],mid,pourY,pourA,st.loadC,now/1000);
-  // a heaped bucket swung or lifted fast loses crumbs over the rim
+  // a heaped bucket swung or lifted fast loses crumbs over the rim; what is heaped over full sheds faster, and slowly
+  // even held still, unless the bucket is curled up tight
   {const armV=Math.abs(swingIn)*TU.exSwing+Math.abs(boomIn)*TU.exBoom+Math.abs(stickIn)*TU.exStick;
+    if(f===0&&!st.below&&st.load>TU.exCap&&(!bench.on||bench.kind==='load')){const tuck=clamp((up-0.55)/0.4,0,1),out=Math.min(st.load-TU.exCap,(st.load-TU.exCap)*(0.08+0.9*armV)*(1-0.85*tuck)*TU.exSpill*dt);
+      if(out>1e-6){st.load-=out;exDrop(out,1.2);if(out>0.02*TU.exCap*dt)st.spillT=0.4;if(Math.random()<dt*(4+armV*20))spawn(mid,0.5)}}
     if(f===0&&!st.below&&(!bench.on||bench.kind==='load')&&st.load>TU.exCap*0.7&&armV>0.2){const out=Math.min(st.load,(st.load/TU.exCap-0.7)/0.3*armV*0.006*TU.exSpill*dt);st.load-=out;
       if(inBed(mid))tr.load=Math.min(TU.trCap,tr.load+out);else{deposit(mid.x,mid.z,out,st.loadC,st.loadMix,1,st.loadWet);st.dirty=true}
       if(Math.random()<armV*dt*8)spawn(mid,0.4)}}
@@ -189,7 +212,7 @@ function frame(now){
     const skm=mode==='skid',bl=skm?sk.load:st.load,pct=Math.round(bl/(skm?TU.skCap:TU.exCap)*100);
     $('#bucketVal').textContent=`${(bl*1.308).toFixed(2)} yd³ · ${pct}%`;
     $('#bucketBar').style.width=pct+'%';
-    $('#bucketPanel').classList.toggle('full',pct>=99);
+    $('#bucketPanel').classList.toggle('full',pct>=99);bucketChip();
     const dep=h0At(tip.x,tip.z)-tip.y;
     if(skm){const sd=h0At(skTip.x,skTip.z)-skTip.y;$('#tipVal').textContent=`${(Math.abs(sk.v)*2.237).toFixed(1)} mph · edge ${(Math.abs(sd)*3.281).toFixed(1)} ft ${sd>0?'below':'above'} grade`}else
     $('#tipVal').textContent=(dep>0?`Tip ${(dep*3.281).toFixed(1)} ft below grade`:`Tip ${(-dep*3.281).toFixed(1)} ft above grade`)+(st.soil>=0?` · ${SOIL[st.soil].n}`:'');
@@ -221,7 +244,7 @@ function frame(now){
   dirtSndTick(dt);
   // bucket load visual
   const lv=Math.max(st.load,st.stuck);loadMesh.visible=lv>0.01;
-  if(loadMesh.visible){const s=0.35+0.75*Math.sqrt(lv/TU.exCap);loadMesh.scale.set(s,s*0.6,s*1.15);tintLoad(loadMesh.material,st.loadC)}
+  if(loadMesh.visible){ldMoundSet(loadMesh,lv/TU.exCap,TU.bkHeap);tintLoad(loadMesh.material,st.loadC)}
   // camera
   const hy=st.yaw+st.swing;
   if(camMode==='chase'){

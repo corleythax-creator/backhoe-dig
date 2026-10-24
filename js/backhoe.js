@@ -52,7 +52,8 @@ function bhBuild(h){const g=h.g,Y=DEX_Y,D=DEX_D,GL=DEX_GLASS,ST=0x8a8a86,P=h.par
   P.stick=bhG(P.boom,0,BH_BT[0],BH_BT[1]);{const k=hvKit();k.box(0.22,2.6,0.26,Y,0,-0.75,-0.02);hvMesh(k,P.stick)}
   P.hoe=bhG(P.stick,0,-BH_SL,0);{const k=hvKit();k.box(0.6,0.5,0.06,Y,0,-0.25,-0.26,0.35);k.box(0.6,0.06,0.5,Y,0,-0.78,0.1,-0.25);for(const sx of [-0.3,0.3])k.box(0.03,0.8,0.55,Y,sx,-0.4,0.02);
     k.box(0.6,0.04,0.12,ST,0,-0.82,0.42);hvMesh(k,P.hoe)}
-  h.hheap=hvHeap(P.hoe,0,-0.42,0.02);
+  // the dirt in the hoe bucket (ldMound, excavator.js): its mouth faces the bucket's own (0, 0.26, 0.97)
+  h.hheap=ldMound(0.56,0.7,0.5,M(0x7a5232,{side:THREE.DoubleSide}));h.hheap.position.set(0,-0.42,0.25);h.hheap.rotation.x=Math.atan2(0.97,0.26);P.hoe.add(h.hheap);
   // the outriggers and their pads
   for(const s of [-1,1]){const n=s<0?'L':'R',lg=bhG(g,s*BH_LEG[0],BH_LEG[1],BH_LEG[2]),k=hvKit();k.box(0.2,1.5,0.2,Y,0,-0.72,0);hvMesh(k,lg);
     const pd=bhG(lg,0,-BH_LL,0),q=hvKit();q.box(0.4,0.08,0.46,ST,0,-0.12,0);hvMesh(q,pd);P['leg'+n]=lg;P['pad'+n]=pd}}
@@ -132,12 +133,16 @@ function bhWork(h,dt,arm,curl,on){const P=h.parts,mv=(v,t,s)=>v<t?Math.min(t,v+s
     if(tv>0.05){bhE.copy(BH_EDGE).applyQuaternion(bhQ);h.atk+=(ss(-0.1,0.6,bhV.dot(bhE)/(tv*dt))-h.atk)*Math.min(1,dt*10)}}
   (h.tp||(h.tp=new THREE.Vector3())).copy(bhT);h.fillR=0;
   if(below){const k=Math.round(gJ(bhT.z))*V+Math.round(gI(bhT.x));h.hres=soilRes(k,bhT.y)*(L.load>=hc-0.002?0.5:1);
-    if(on&&h.hoe&&L.load<hc-0.002&&up>-0.3){
+    // it heaps over its rim to TU.bkHeap past full; what it cuts beyond that spills back over the sides
+    if(on&&h.hoe&&up>-0.3){
       const ka=1-TU.bhAngle*(1-h.atk),D=TU.bhSkim+(TU.bhCutD-TU.bhSkim)*ka*ka,cut=Math.min(gt-bhT.y,D);
       bhCut.copy(bhT);bhCut.y=gt-cut;
-      const rate=hc/TU.bhFillT*bhC(tv/TU.bhCutV,0,1.25)*ss(0,TU.bhThick,cut),want=Math.min(hc-L.load,rate*dt);
-      if(want>1e-6){const got=dig(bhCut,want);if(got>0){h.fillR=got/dt;bhTake(L,got,bhT);statDug(got);if(Math.random()<0.5)spawn(bhT,1.0);
-        if(L.load>=hc-0.003)toast(say('bhFull'),'',2600)}}
+      const rate=hc/TU.bhFillT*bhC(tv/TU.bhCutV,0,1.25)*ss(0,TU.bhThick,cut),want=rate*dt,room=Math.max(0,hc*(1+TU.bkHeap)-L.load);
+      if(want>1e-6){const cutV=dig(bhCut,want),got=Math.min(cutV,room);
+        if(cutV>got+1e-7){const a=Math.random()*6.283,x=bhM.x+Math.cos(a)*0.4,z=bhM.z+Math.sin(a)*0.4;h.spillT=0.5;
+          if(inDig(x,z,0.5)){deposit(x,z,cutV-got,digC.slice(),digMix.slice(),0.8,mudAt(x,z));st.dirty=true;st.slumpT=2.5}
+          for(let n=0;n<Math.min(3,Math.ceil((cutV-got)*200));n++)spawn(bhM,0.6);if(!h.toldFull){h.toldFull=true;toast(say('bhFull'),'',2600)}}
+        if(got>0){h.fillR=got/dt;bhTake(L,got,bhT);statDug(got);if(Math.random()<0.5)spawn(bhT,1.0)}}
       if(ka<0.4&&gt-bhT.y>D+0.04&&tv>0.1){h.skimT=(h.skimT||0)+dt;if(h.skimT>2.5&&!h.toldSkim){h.toldSkim=true;toast(say('bhSkim'),'',4600)}}}}
   // it pours once its mouth turns down. Moist clay clings and pours slower; a quick, wide-open dump throws the load
   // wider (BH_SCAT), so dumping near the edge of the bed or from a flick of the bucket misses some
@@ -148,7 +153,11 @@ function bhWork(h,dt,arm,curl,on){const P=h.parts,mv=(v,t,s)=>v<t?Math.min(t,v+s
     // a bucket heaped past about three quarters, swung or lifted fast and not curled up tight, loses some over the lip
     else if(!below&&L.load>hc*0.75){const I2=h.hin||[0,0,0,0],armV=Math.abs(I2[0])*TU.bhSwing+Math.abs(I2[1])*TU.bhStick+Math.abs(I2[2])*TU.bhBoom,tuck=clamp((1.75-h.hk)/0.8,0.15,1);
       if(armV>0.2){const out=Math.min(L.load,(L.load/hc-0.75)/0.25*armV*hc*0.03*tuck*TU.bhSpill*dt);L.load-=out;bhDrop(L,bhM,out);if(Math.random()<armV*dt*8)spawn(bhM,0.4)}}}
-  h.hheap.visible=L.load>0.005;if(h.hheap.visible){const s=0.35+0.65*Math.sqrt(L.load/hc);h.hheap.scale.set(0.55*s,0.45*s,0.6*s);tintLoad(h.hheap.material,L.loadC)}}
+  // what is heaped over full sheds as it moves (slowly even held still, little when curled up tight)
+  if(!below&&L.load>hc){const I3=h.hin||[0,0,0,0],armV=Math.abs(I3[0])*TU.bhSwing+Math.abs(I3[1])*TU.bhStick+Math.abs(I3[2])*TU.bhBoom,tuck=clamp((h.hk-0.9)/0.8,0,1),
+      out=Math.min(L.load-hc,(L.load-hc)*(0.08+0.9*armV)*(1-0.85*tuck)*TU.bhSpill*dt);if(out>1e-6){L.load-=out;bhDrop(L,bhM,out);if(out>0.02*hc*dt)h.spillT=0.4;if(Math.random()<dt*(4+armV*20))spawn(bhM,0.4)}}
+  if(L.load<hc)h.toldFull=false;h.spillT=Math.max(0,(h.spillT||0)-dt);
+  h.hheap.visible=L.load>0.005;if(h.hheap.visible){ldMoundSet(h.hheap,L.load/hc,TU.bkHeap);tintLoad(h.hheap.material,L.loadC)}}
 // Drive / Dig (Enter, or the switch over the right stick): swivel the seat to the hoe (the outriggers come down) or
 // back to the wheel (they come up)
 function bhSwap(){const h=hvCur();if(!h||!h.K.hoe)return;h.hoe=!h.hoe;h.outT=h.hoe?1:0;toast(say(h.hoe?'bhHoe':'bhRoad'),'',3600);bhSwitch();setCaps()}

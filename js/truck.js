@@ -378,7 +378,7 @@ function applyTextures(){
   for(const mt of [ORANGE,ORANGE_D,STEEL,STEEL_L,RUBBER,WHITE,WHITE_DS,BEDM,BED_D]){mt.map=texGrime;mt.needsUpdate=true}
   const grey=greyDetail(texDirt);heap.material.map=grey;heap.material.needsUpdate=true;
   ORANGE.color.setHex(0xf27a22);ORANGE_D.color.setHex(0xc85e1c);
-  loadMesh.material.map=grey;loadMesh.material.needsUpdate=true;
+  loadMesh.material.map=grey;loadMesh.material.needsUpdate=true;if(typeof hvs!=='undefined')for(const h of hvs)if(h.hheap){h.hheap.material.map=grey;h.hheap.material.needsUpdate=true}
   pMat.map=texDirt;pMat.color.setHex(0xc26330);pMat.needsUpdate=true;
   matTexUpdate();
   // concrete blocks wear the poured concrete texture and boulders the bedrock (materials.js), brightened back to their colours
