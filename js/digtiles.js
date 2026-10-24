@@ -124,7 +124,7 @@ function digMoveTo(x0,z0,fresh){const t0=performance.now();
   st.cave=null;st.caveRisk=0;cI0=N+1;cI1=-1;cJ0=N+1;cJ1=-1;sI0=N+1;sI1=-1;sJ0=N+1;sJ1=-1;slInit=false;
   digInit();const blankW=-1e9;spoilC.fill(0);for(let k=0;k<V*V;k++)spoilC.set(SOIL[SPOIL].c,k*3);
   comp.fill(0);Wt.fill(blankW);mudA.fill(0);soakMax.fill(0);paintD.fill(0);crkA.fill(0);wetT.fill(-1e4);clearClods();
-  const p=pos.array;for(let k=0;k<V*V;k++){p[k*3]=gX(k%V);p[k*3+2]=gZ((k/V)|0)}geo.computeBoundingSphere();
+  const p=pos.array;for(let k=0;k<V*V;k++){p[k*3]=gX(k%V);p[k*3+2]=gZ((k/V)|0)}geo.computeBoundingSphere();terBound(0,N);
   // tiles coming in: stored ones oldest first, so where two share an edge the one dug last wins; new ground takes the ruts
   const ins=DIG_TILES.map(t=>({t,g:tileStore.get(tileKeyOf(t))||null})).sort((a,b)=>(a.g?a.g.t:0)-(b.g?b.g.t:0));
   for(const {t,g} of ins){tileStore.delete(tileKeyOf(t));if(g)tilePut(t,g);else{tilePut(t,null);tileAdoptRuts(t)}}

@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-24T01:56:00Z",
+ "updated": "2026-10-24T02:06:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -54,9 +54,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-23",
-   "dh": 98,
-   "act": 1,
-   "versions": 2
+   "dh": 100.5,
+   "act": 1.5,
+   "versions": 3
   }
  ],
  "extra": [
@@ -1938,6 +1938,15 @@ window.EFFORT = {
    "tris": 3979275,
    "chars": 1369927,
    "what": "Trees out of view are no longer drawn (their shadows stay): about a third fewer triangles looking ahead, more when turned away"
+  },
+  {
+   "v": 209,
+   "asked": "2026-10-23T20:51:00-05:00",
+   "live": "2026-10-23T21:06:26-05:00",
+   "dh": 2.5,
+   "tris": 4087127,
+   "chars": 1371274,
+   "what": "The dig grid's ground is drawn as 16 blocks, so the parts behind you or off to the side are no longer drawn (up to about 200,000 fewer triangles)"
   }
  ]
 };
