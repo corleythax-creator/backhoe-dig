@@ -77,6 +77,7 @@ const WORDS=[
   ['bhOutDown','Backhoe','The outriggers are down. Raise them ([bhOut]) before you drive.',''],
   ['bhOutDn','Backhoe','Outriggers down.',''],['bhOutUp','Backhoe','Outriggers up.',''],
   ['bhFull','Backhoe','Hoe bucket full. Lift it out, swing over the truck bed or a pile and open the bucket to dump.',''],
+  ['bhSkim','Backhoe','The hoe is only skimming. Curl the bucket so the teeth lead into the cut, [rLeft], then pull the stick in.',''],
   ['pickupTip','Pickup','In Dexter\'s pickup. [lUp] gas, [lDown] brake and back up, [lLeft] [lRight] steer; take the corners easy at speed or it slides. [enter] to climb out.',''],
   ['atvTip','Four-wheeler','On Dexter\'s four-wheeler. [lUp] gas, [lDown] brake and back up, [lLeft] [lRight] steer; it goes anywhere and slides in a hard turn. [enter] to climb off.',''],
   ['capL_pickup','Captions','{lv} Gas / brake\n{lh} Steer','Left stick, Pickup'],['capR_pickup','Captions','{rh} Look around','Right stick, Pickup'],
