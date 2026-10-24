@@ -114,8 +114,11 @@ function pollPad(){for(const k in PA)PA[k]=0;PA.sprint=false;const gp=getPad();i
   PA.lx=dz(ax[0]||0);PA.ly=-dz(ax[1]||0);PA.rx=dz(ax[2]||0);PA.ry=-dz(ax[3]||0);PA.thr=bv(7)-bv(6);PA.sprint=!!(b[10]&&b[10].pressed);
   for(let i=0;i<b.length;i++){const on=b[i].pressed;if(on&&!padPrev[i])padButton(i);padPrev[i]=on}
   if(PA.lx||PA.ly||PA.rx||PA.ry||Math.abs(PA.thr)>0.05)usePad()}
-function rumble(ms,mag){const gp=getPad(),va=gp&&gp.vibrationActuator;
+function rumble(ms,mag){mag=Math.min(1,mag*TU.rumble);if(mag<=0)return;const gp=getPad(),va=gp&&gp.vibrationActuator;
   if(va&&va.playEffect)va.playEffect('dual-rumble',{duration:ms,strongMagnitude:mag,weakMagnitude:mag*0.6}).catch(()=>{});vrRumble(ms,mag)}
+// the steady buzz of teeth in the ground, from whichever machine is digging: one pulse each 0.12 s at most, harder ground harder
+let digRumT=0;
+function rumbleDig(mag){const t=performance.now();if(t-digRumT<120)return;digRumT=t;rumble(140,mag)}
 // orbit drag on the scene; in cab view the same drag turns your head instead (see fpTurn)
 let orbitYaw=0,orbitPitch=0.42,camDist=9.5,drag=null;
 // the orbit camera (camFree, in chase view): it holds its bearing as the machine turns, swings right over the top and zooms

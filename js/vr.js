@@ -67,7 +67,10 @@ function vrButton(h,i){
   else if(h==='left'&&i===1)hookBox();
   else if(h==='left'&&i===5){const s=renderer.xr.getSession();if(s)s.end()}}
 function vrRumble(ms,mag){const s=renderer.xr.getSession();if(!s)return;
-  for(const src of s.inputSources){const a=src.gamepad&&src.gamepad.hapticActuators&&src.gamepad.hapticActuators[0];if(a&&a.pulse)try{a.pulse(mag,ms)}catch(e){}}}
+  // Quest Browser takes the older hapticActuators pulse; newer browsers the pad's vibrationActuator
+  for(const src of s.inputSources){const gp=src.gamepad;if(!gp)continue;const a=gp.hapticActuators&&gp.hapticActuators[0],va=gp.vibrationActuator;
+    if(a&&a.pulse)try{a.pulse(mag,ms)}catch(e){}
+    else if(va&&va.playEffect)try{va.playEffect('dual-rumble',{duration:ms,strongMagnitude:mag,weakMagnitude:mag*0.6}).catch(()=>{})}catch(e){}}}
 // after the game has placed the camera at the seat: move the rig there and let the headset do the looking
 function vrFrame(dt){
   if(camMode!=='cab'){camMode='cab';fpReset()}
