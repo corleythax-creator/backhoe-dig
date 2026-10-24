@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Saturday, October 24, 2026
 
+- **v222** (4:14 PM) The first dig and dump no longer freeze: their effects are drawn once while the game loads, so the browser builds their shaders then; the load tests now time every frame and list any freeze with what caused it
 - **v221** (2:40 PM) Xbox pad and Quest controllers buzz while any machine digs (backhoe, skid steer, dozer, loader, auger), harder in rock; Controller strength setting in Tuning
 - **v220** (2:25 PM) The excavator's bucket fills over the stroke like the backhoe's (about 3 s in loam), and every dig number for both (fill time, teeth speed, cut thickness, deepest bite) is on the Tuning tab
 - **v219** (1:32 PM) Load test for the excavator as well as the backhoe (☰ or ?extest); at each dump the camera comes out behind the truck to watch the bucket pour until it is empty

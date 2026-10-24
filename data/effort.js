@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-24T19:40:00Z",
+ "updated": "2026-10-24T21:14:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -60,9 +60,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-24",
-   "dh": 20,
-   "act": 3,
-   "versions": 7
+   "dh": 25,
+   "act": 3.5,
+   "versions": 8
   }
  ],
  "extra": [
@@ -2061,6 +2061,15 @@ window.EFFORT = {
    "tris": 5410460,
    "chars": 1408336,
    "what": "Xbox pad and Quest controllers buzz while any machine digs (backhoe, skid steer, dozer, loader, auger), harder in rock; Controller strength setting in Tuning"
+  },
+  {
+   "v": 222,
+   "asked": "2026-10-24T13:43:00-05:00",
+   "live": "2026-10-24T16:14:42-05:00",
+   "dh": 5,
+   "tris": 5450822,
+   "chars": 1415028,
+   "what": "The first dig and dump no longer freeze: their effects are drawn once while the game loads, so the browser builds their shaders then; the load tests now time every frame and list any freeze with what caused it"
   }
  ]
 };
