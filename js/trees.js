@@ -252,16 +252,27 @@ function treeEntry(t,x,z,yaw,s,c,sy){const w=hash(x*1.3+0.7,z*2.1+0.3),w2=hash(z
   if(t==='pine'){const p=ASSET_PT[(c|0)%4],v=0.9+0.2*w2;col=[p[0]*v,p[1]*v,p[2]*v]}
   else{const p=ASSET_LT[(c|0)%6],v=0.9+0.2*w2;col=k===4?[p[0]*v*1.05,(p[1]*0.8+0.2)*v,p[2]*v*0.85]:[p[0]*v,p[1]*v,p[2]*v]}
   return{t,x,z,y:baseHeight(x,z),yaw,s,sy:sy||treeSy(t,x,z),c:col}}
-// every frame: the breeze, and when the camera has moved a few metres, which trees get the full model
+// trees out of view are left out of the drawn meshes: the camera's view widened by about 15 degrees all round (TREE_CULL)
+// so it can turn a little before the next sort, which comes when it has turned about 10 degrees. In a headset, which
+// looks every way, they all draw. The shadows come from the hulls (shadowproxy.js), so they stay
+const treeFr=new THREE.Frustum(),treeFrM=new THREE.Matrix4(),treeSph=new THREE.Sphere(),treeLodF=new THREE.Vector3(),treeCamF=new THREE.Vector3(),TREE_CULL=0.27;
+let treeLodV=0;
+// every frame: the breeze, and when the camera has moved a few metres or turned, which trees are drawn and which get the
+// full model
 function treesTick(dt){const sw=TU.treeSway===undefined?1:TU.treeSway;
   // the weather's wind (rain.js, m/s with its gusts) sets how hard and which way; the clock runs faster in a blow
   if(typeof rainWind!=='undefined'){const w=rainWind.length();treeGustU.value=Math.min(3,1+0.3*w);if(w>0.05)treeWDU.value.set(rainWind.x/w,rainWind.y/w)}
   treeWindU.value+=dt*(0.6+0.4*Math.min(2,sw))*(0.8+0.2*treeGustU.value);treeSwayU.value=sw;treeGlowU.value=TU.treeGlow;
   treeSunV.value.copy(SUN_DIR).transformDirection(camera.matrixWorldInverse);
-  const cx=camera.position.x,cz=camera.position.z;if(!treeLodDirty&&Math.hypot(cx-treeLodX,cz-treeLodZ)<Math.max(4,treeNearR*0.06))return;
-  treeLodDirty=false;treeLodX=cx;treeLodZ=cz;const R2=treeNearR*treeNearR;
+  const cx=camera.position.x,cz=camera.position.z,cull=!vrOn(),fv=cull?camera.fov*camera.aspect:0;camera.getWorldDirection(treeCamF);
+  if(!treeLodDirty&&Math.hypot(cx-treeLodX,cz-treeLodZ)<Math.max(4,treeNearR*0.06)&&(!cull||treeCamF.dot(treeLodF)>0.985)&&fv===treeLodV)return;
+  treeLodDirty=false;treeLodX=cx;treeLodZ=cz;treeLodF.copy(treeCamF);treeLodV=fv;const R2=treeNearR*treeNearR;
+  if(cull){camera.updateMatrixWorld();treeFrM.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse);treeFr.setFromProjectionMatrix(treeFrM)}
   for(const sp of TREE_SP){const A=sp.all.instanceMatrix.array,C=sp.col,parts=[[sp.hi,0],[sp.lo,0]];
-    for(let i=0;i<sp.all.count;i++){const dx=A[i*16+12]-cx,dz=A[i*16+14]-cz,P=parts[dx*dx+dz*dz<R2?0:1],j=P[1]++;
+    for(let i=0;i<sp.all.count;i++){const dx=A[i*16+12]-cx,dz=A[i*16+14]-cz,d2=dx*dx+dz*dz;
+      if(cull){const s=Math.hypot(A[i*16+4],A[i*16+5],A[i*16+6]);treeSph.center.set(A[i*16+12],A[i*16+13]+sp.h*0.5*s,A[i*16+14]);
+        treeSph.radius=sp.h*0.6*s+Math.sqrt(d2)*TREE_CULL;if(!treeFr.intersectsSphere(treeSph))continue}
+      const P=parts[d2<R2?0:1],j=P[1]++;
       for(const im of P[0])im.instanceMatrix.array.set(A.subarray(i*16,i*16+16),j*16);P[0][1].instanceColor.array.set(C.subarray(i*3,i*3+3),j*3)}
     for(const [ims,n] of parts)for(const im of ims){im.count=n;im.instanceMatrix.clearUpdateRanges();im.instanceMatrix.addUpdateRange(0,n*16);im.instanceMatrix.needsUpdate=true;
       if(im.instanceColor){im.instanceColor.clearUpdateRanges();im.instanceColor.addUpdateRange(0,n*3);im.instanceColor.needsUpdate=true}}}}

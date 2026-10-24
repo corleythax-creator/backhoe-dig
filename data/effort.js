@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-23T15:41:00Z",
+ "updated": "2026-10-24T01:56:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -54,9 +54,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-23",
-   "dh": 96,
-   "act": 0.5,
-   "versions": 1
+   "dh": 98,
+   "act": 1,
+   "versions": 2
   }
  ],
  "extra": [
@@ -1929,6 +1929,15 @@ window.EFFORT = {
    "tris": 4698371,
    "chars": 1368792,
    "what": "Detailed models for the most-seen things that were still simple shapes, on Medium graphics and up: the zero-turn mower, skid steer with working lift and tilt rams, dirt bike with a sliding fork, the runabouts at every dock, Dexter's mini excavator and tag trailer, the trench box, the quick coupler with its thumb, hammer and auger, the lake's fishing boats, sailboats, tug and spoil barge, Dexter's cones, light towers, Jersey barriers, diesel tank, office trailer, track bales and tyres, and the street and bridge lamps, park benches, pavilion picnic tables and round hay bales; cones, light towers, benches and picnic tables placed in the map editor get them too, and the start card shows the new machines. Phones on Low keep the simple shapes"
+  },
+  {
+   "v": 208,
+   "asked": "2026-10-23T20:51:00-05:00",
+   "live": "2026-10-23T20:56:49-05:00",
+   "dh": 2,
+   "tris": 3979275,
+   "chars": 1369927,
+   "what": "Trees out of view are no longer drawn (their shadows stay): about a third fewer triangles looking ahead, more when turned away"
   }
  ]
 };
