@@ -552,8 +552,20 @@ function skyOcc(k,h){const i=k%V,j=(k/V)|0;let occ=0;
     for(let q=n;q<n+6;q+=3){const ii=i+AO_S[q],jj=j+AO_S[q+1];if(ii<0||ii>N||jj<0||jj>N)continue;const e=(H[jj*V+ii]-h)/AO_S[q+2];if(e>s)s=e}
     occ+=Math.atan(s)}
   return occ/(8*1.5708)}
-const terrain=new THREE.Mesh(geo,groundMat);
-terrain.receiveShadow=true; terrain.frustumCulled=false; scene.add(terrain);
+// drawn as TER_B x TER_B blocks that share the grid's vertices, each with its own triangles and bounds, so the blocks out
+// of view are skipped; terBound keeps each block's bounds round its ground as it is dug, dumped or the grid moves
+const TER_B=4,TER_Q=N/TER_B,terBlocks=[],terrain=new THREE.Group();scene.add(terrain);
+for(let bj=0;bj<TER_B;bj++)for(let bi=0;bi<TER_B;bi++){const g=new THREE.BufferGeometry(),src=geo.index.array,I=new Uint32Array(TER_Q*TER_Q*6);let o=0;
+  for(const n in geo.attributes)g.setAttribute(n,geo.attributes[n]);
+  for(let j=bj*TER_Q;j<(bj+1)*TER_Q;j++){const q=(j*N+bi*TER_Q)*6;I.set(src.subarray(q,q+TER_Q*6),o);o+=TER_Q*6}
+  g.setIndex(new THREE.BufferAttribute(I,1));g.boundingSphere=new THREE.Sphere();
+  const m=new THREE.Mesh(g,groundMat);m.receiveShadow=true;m.userData.b=[bi,bj];terrain.add(m);terBlocks.push(m)}
+function terBound(ja,jb){const p=geo.attributes.position.array;
+  for(const m of terBlocks){const [bi,bj]=m.userData.b,j0=bj*TER_Q,j1=j0+TER_Q,i0=bi*TER_Q,i1=i0+TER_Q;if(j1<ja||j0>jb)continue;
+    let lo=1e9,hi=-1e9;for(let j=j0;j<=j1;j++)for(let k=j*V+i0;k<=j*V+i1;k++){const y=p[k*3+1];if(y<lo)lo=y;if(y>hi)hi=y}
+    const hx=(p[(j0*V+i1)*3]-p[(j0*V+i0)*3])/2,hz=(p[(j1*V+i0)*3+2]-p[(j0*V+i0)*3+2])/2,hy=(hi-lo)/2;
+    m.geometry.boundingSphere.center.set(p[(j0*V+i0)*3]+hx,lo+hy,p[(j0*V+i0)*3+2]+hz);m.geometry.boundingSphere.radius=Math.sqrt(hx*hx+hy*hy+hz*hz)+1}}
+terBound(0,N);
 const pos=geo.attributes.position;
 let dI0=0,dI1=N,dJ0=0,dJ1=N,winOn=true;
 function touch(i0,i1,j0,j1){if(!winOn){dI0=i0;dI1=i1;dJ0=j0;dJ1=j1;winOn=true}else{dI0=Math.min(dI0,i0);dI1=Math.max(dI1,i1);dJ0=Math.min(dJ0,j0);dJ1=Math.max(dJ1,j1)}}
@@ -583,7 +595,7 @@ function updateTerrain(){
   const ma=geo.attributes.matA;ma.addUpdateRange(off/3,cnt/3);ma.needsUpdate=true;
   const ua=geo.attributes.mudW;ua.addUpdateRange(off/3,cnt/3);ua.needsUpdate=true;
   pos.needsUpdate=true; ca.needsUpdate=true;
-  snapClods(ja,jb);updateShadowCaster();
+  terBound(ja,jb);snapClods(ja,jb);updateShadowCaster();
 }
 // outside the dig zone: the mud tiles' ground once mud.js has loaded (farH), else the mesa
 let farGround=null;
