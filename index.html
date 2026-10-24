@@ -51,6 +51,7 @@
       <button id="ctlBtn" class="ib" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="2"/><path d="M3.5 12H10M14 12h6.5M12 14v6.5"/></svg><span>Drive</span></button>
       <button id="camBtn" data-cam="chase" aria-label="Camera: chase, cab or orbit view"><span id="camChase">Chase</span><span id="camCab">Cab</span><span id="camOrbit">Orbit</span></button>
       <button id="statsTop" hidden>Stats</button>
+      <button id="vrTop" class="vrgo" hidden aria-label="Play in VR">🥽 VR</button>
     </div>
     <!-- the menu, in groups: play, build, the world (time, date, weather), settings, tools -->
     <div id="menu" hidden>
@@ -352,6 +353,7 @@
 <div id="help">
   <div class="card">
     <h1 id="helpTitle">Corley's Island</h1>
+    <button id="vrStart" class="vrgo" hidden>🥽 Play in VR</button>
     <div id="startIsl" role="group" aria-label="Pick where to start"><button data-isl="corley" id="islCorley">Corley's Island</button><button data-isl="dexter" id="islDexter">Dexter's Island</button><button data-isl="jessica" id="islJessica">Jessica's Island</button></div>
     <div class="pick" role="group" aria-label="Pick what to run">
       <button class="tile" data-m="dig"><img src="shots/dig.jpg" alt="" width="720" height="450"><span class="tn" id="tnDig">Excavator</span><span class="ts" id="tsDig">Dig and load the truck</span></button>

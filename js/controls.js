@@ -203,11 +203,14 @@ const help=$('#help');
 $('#helpBtn').onclick=()=>{help.hidden=false;showMenu(false)};
 $('#soundBtn').onclick=()=>{showSound(true);showMenu(false)};
 $('#keysBtn').onclick=()=>{showKeys(true);showMenu(false)};
-function showMenu(on){$('#menu').hidden=!on;$('#menuBtn').setAttribute('aria-expanded',on)}
+function showMenu(on){const m=$('#menu');m.hidden=!on;$('#menuBtn').setAttribute('aria-expanded',on);if(on)menuFit()}
+// the menu's top in its own (zoomed) pixels, so its height limit (game.css) keeps it inside the window at any UI size
+function menuFit(){const m=$('#menu');if(m.hidden)return;const r=m.getBoundingClientRect(),z=r.height/(m.offsetHeight||1)||1;m.style.setProperty('--mtop',Math.ceil(r.top/z)+'px')}
+addEventListener('resize',menuFit);
 $('#menuBtn').onclick=()=>{showMenu($('#menu').hidden);showCtl(false)};
 $('#view').addEventListener('pointerdown',()=>{showMenu(false);showCtl(false)});
 let uiScale=1;
-function setUiScale(v){uiScale=+v||1;const h=$('#hud');h.style.setProperty('--s',uiScale);h.style.setProperty('--ms',Math.min(uiScale,1.5));h.style.setProperty('--cs',Math.min(uiScale,1.3));h.classList.toggle('lg',uiScale>1.2);
+function setUiScale(v){uiScale=+v||1;const h=$('#hud');h.style.setProperty('--s',uiScale);h.style.setProperty('--ms',Math.min(uiScale,1.5));h.style.setProperty('--cs',Math.min(uiScale,1.3));h.classList.toggle('lg',uiScale>1.2);menuFit();
   document.querySelectorAll('.sizes button[data-s]').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.s===uiScale));try{localStorage.setItem('bhd_ui',uiScale)}catch(e){}}
 document.querySelectorAll('.sizes button[data-s]').forEach(b=>b.onclick=()=>setUiScale(b.dataset.s));
 try{setUiScale(localStorage.getItem('bhd_ui')||1)}catch(e){setUiScale(1)}

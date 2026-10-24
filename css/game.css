@@ -49,6 +49,9 @@ canvas#view{position:fixed;inset:0;width:100%;height:100%;display:block;touch-ac
 .ib{display:inline-flex;align-items:center;gap:7px}
 #blkBtn[aria-pressed="true"],#pumpBtn[aria-pressed="true"],#gripBtn[aria-pressed="true"],#wipeBtn[aria-pressed="true"],#ctlBtn[aria-expanded="true"]{background:rgba(255,138,31,.18);color:var(--machine);box-shadow:inset 0 0 0 1px rgba(255,138,31,.55)}
 @media (hover:hover){.tacts>button:hover{background:var(--glass-hi)}}
+/* VR: one big button straight into the headset (top bar and start card), shown only where WebXR VR is offered */
+.tacts>button.vrgo{background:var(--machine);color:#1c1309;font-weight:700;padding:0 16px;margin-left:4px}
+.card button.vrgo{flex:none;height:64px;min-height:64px;font-size:24px;font-weight:700;background:var(--machine);color:#1c1309;border:0;border-radius:14px}
 .row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 button{pointer-events:auto;touch-action:manipulation;font:600 15px/1 var(--f-display);letter-spacing:.07em;text-transform:uppercase;color:var(--ink);background:var(--glass);border:1px solid var(--hud-line);border-radius:12px;height:42px;padding:0 14px;cursor:pointer;
   transition:background-color .12s,color .12s,box-shadow .12s}
@@ -58,7 +61,9 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 /* menus drop from the top bar as glass sheets: rows of plain buttons under small group headings */
 #menu,#ctlMenu{position:absolute;top:100%;margin-top:8px;z-index:3;box-sizing:border-box;display:flex;flex-direction:column;gap:1px;pointer-events:auto;
   background:linear-gradient(180deg,rgba(24,29,35,.97),rgba(15,18,22,.97));box-shadow:0 18px 50px rgba(0,0,0,.5);border:1px solid var(--hud-line);border-radius:16px;padding:6px}
-#menu{left:var(--pl);min-width:240px;max-height:calc(100dvh - 80px);overflow-y:auto;overscroll-behavior:contain}
+/* the menu zooms with the UI size (--ms), so its height limit is divided by it to keep the bottom on screen; --mtop is
+   where it starts, measured as it opens (controls.js) */
+#menu{left:var(--pl);min-width:240px;max-height:calc((100dvh - 12px)/var(--ms,1) - var(--mtop,72px));overflow-y:auto;overscroll-behavior:contain}
 #menu button{height:42px;font:600 17px/1 var(--f-body);letter-spacing:0;text-transform:none;border:0;background:transparent;text-align:left;padding:0 12px;border-radius:10px}
 @media (hover:hover){#menu>button:hover{background:var(--glass-hi)}}
 .mhead{padding:12px 12px 4px;font:600 11px/1 var(--f-display);letter-spacing:.2em;text-transform:uppercase;color:var(--machine)}
