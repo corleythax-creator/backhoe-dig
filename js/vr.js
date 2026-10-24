@@ -168,5 +168,7 @@ async function enterVR(){showMenu(false);
   // foveated edges on the Quest's chip only (three.js turns it fully on as the session starts, so it is set after)
   if(renderer.xr.setFoveation)renderer.xr.setFoveation(onQuest?1:0);
   vr.lp.copy(rig.position);vr.motion=0;vrQuadMake(s);started();toast(say('vrIn'),'good',6000)}
-$('#vrBtn').onclick=enterVR;
-if(navigator.xr&&navigator.xr.isSessionSupported)navigator.xr.isSessionSupported('immersive-vr').then(ok=>{$('#vrBtn').hidden=!ok}).catch(()=>{});
+// three ways in, one press each: the menu, a big VR button on the top bar, and one on the start card
+const VR_BTNS=['#vrBtn','#vrTop','#vrStart'];
+VR_BTNS.forEach(q=>$(q).onclick=enterVR);
+if(navigator.xr&&navigator.xr.isSessionSupported)navigator.xr.isSessionSupported('immersive-vr').then(ok=>{VR_BTNS.forEach(q=>$(q).hidden=!ok)}).catch(()=>{});
