@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-24T18:32:00Z",
+ "updated": "2026-10-24T19:25:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -60,9 +60,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-24",
-   "dh": 15.5,
-   "act": 2,
-   "versions": 5
+   "dh": 18.5,
+   "act": 2.5,
+   "versions": 6
   }
  ],
  "extra": [
@@ -2043,6 +2043,15 @@ window.EFFORT = {
    "tris": 4085990,
    "chars": 1406380,
    "what": "Load test for the excavator as well as the backhoe (☰ or ?extest); at each dump the camera comes out behind the truck to watch the bucket pour until it is empty"
+  },
+  {
+   "v": 220,
+   "asked": "2026-10-24T13:59:00-05:00",
+   "live": "2026-10-24T14:25:29-05:00",
+   "dh": 3,
+   "tris": 5007724,
+   "chars": 1407541,
+   "what": "The excavator's bucket fills over the stroke like the backhoe's (about 3 s in loam), and every dig number for both (fill time, teeth speed, cut thickness, deepest bite) is on the Tuning tab"
   }
  ]
 };
