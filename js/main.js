@@ -266,7 +266,7 @@ function frame(now){
   const fv=mode==='boat'?btCur():mode==='heavy'?hvCur():mode==='bike'?bk:mode==='truck'?tr:mode==='mow'?mw:mode==='skid'?sk:mode==='walk'?wk:st;sun.position.set(fv.x,fv.y,fv.z).addScaledVector(LIGHT_DIR,SUN_D); sun.target.position.set(fv.x,fv.y,fv.z);
   {const o=groundOcc.value;o[0].set(st.x,st.z,st.yaw,0);o[2].set(tr.x,tr.z,tr.yaw,0)}
   timeU.value=now/1000;
-  shadowProxyTick();lawnLod();tuftLod();rainCover();if(vr.fake)vrFakeHead();postRender();if(vrOn())vrAfter();
+  shadowProxyTick();lawnLod();tuftLod();rainCover();if(vr.fake)vrFakeHead();const wm=warmPre();postRender();warmPost(wm);if(vrOn())vrAfter();
   if(bench.on)benchSample(dt);
   fpsFrames++;fpsTime+=dt;
   if(fpsTime>=0.5){const f=Math.round(fpsFrames/fpsTime);const fe=$('#fpsVal');fe.textContent=f;fe.style.color=f>=50?'var(--ok)':f>=30?'var(--gas)':'var(--danger)';
@@ -278,8 +278,23 @@ function frame(now){
     $('#resVal').textContent=pr.toFixed(2).replace(/0$/,'')+'x';
     const t=renderer.info.render.triangles;$('#triVal').textContent=t>=1e6?(t/1e6).toFixed(2)+'M':t>=1e3?Math.round(t/1e3)+'k':t;fpsFrames=0;fpsTime=0}
 }
+// first-use warm-up: what only shows while digging and dumping (the pour streams, flying dirt, clods, dust, packed clay,
+// the loads in the buckets and the truck bed, mud and water films, the trench walls' shadow caster) is drawn in the first frames after the game opens,
+// behind the start card, and again once the textures are in (they change those materials), so the browser builds
+// their shaders and uploads their textures then, not with a freeze of a second or more the first time you dig or dump
+// (the load tests' freeze check, bhtest.js, times it). warmN: frames still to warm
+let warmN=3;
+function warmList(){const l=[...streams.map(s=>s.m),loadMesh,heap,pInst,packMesh,dustPts,typeof mfInst!=='undefined'?mfInst:null,typeof rgInst!=='undefined'?rgInst:null,typeof wmMesh!=='undefined'?wmMesh:null];
+  l.push(shMesh);for(const k of CLODS)l.push(k.mesh);for(const h of hvs){l.push(h.heap,h.hheap)}return l.filter(Boolean)}
+function warmPre(){if(warmN<=0||bench.on)return null;warmN--;const keep=[];
+  for(const o of warmList()){keep.push([o,o.visible,o.count,o.isPoints?o.geometry.drawRange.count:0]);o.visible=true;if(o.isInstancedMesh)o.count=Math.max(1,o.count);if(o.isPoints)o.geometry.setDrawRange(0,Math.max(1,o.geometry.drawRange.count))}
+  // the pour stream takes the dirt texture when it first pours (pourStream, dirt.js): give it now
+  for(const s of streams)if(pMat.map&&s.m.material.map!==pMat.map){s.m.material.map=pMat.map;s.m.material.needsUpdate=true}
+  return keep}
+function warmPost(keep){if(!keep)return;for(const [o,v,c,d] of keep){o.visible=v;if(o.isInstancedMesh)o.count=c;if(o.isPoints)o.geometry.setDrawRange(0,d)}}
 // textures may finish loading before the later scripts arrive: apply them now if they are in, otherwise when they are
-if([texGrass,texDirt,texGrime].every(t=>t.image&&t.image.width))applyTextures();else texManager.onLoad=applyTextures;
+const texReady=()=>{applyTextures();warmN=Math.max(warmN,3)};
+if([texGrass,texDirt,texGrime].every(t=>t.image&&t.image.width))texReady();else texManager.onLoad=texReady;
 // every lit material gets its wet look before anything is drawn, so nothing compiles twice (rain.js)
 wetPatchAll();
 // the renderer runs the loop: a WebXR headset only draws frames asked for through it (vr.js)

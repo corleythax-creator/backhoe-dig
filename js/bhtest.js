@@ -67,7 +67,7 @@ function ldTestStart(kind){
     if(cpl.fit!=='bucket'){cplReset();if(typeof cplPlace==='function')cplPlace()}
     Object.assign(st,{x:S.x,z:S.z,yaw:S.yaw,y:hAt(S.x,S.z),stuck:0,sink:0,load:0,swing:0,a1:0.75,a2:-1.45,a3:-1.6});wk.inside='ex';setMode('dig');
     machine.position.set(st.x,st.y,st.z);machine.rotation.set(0,st.yaw,0);M.set({})}
-  camSet('cab');fpReset();digTilesTick(0);const o=M.o();bht.x0=o.x;bht.z0=o.z;
+  bhtTimeOn();camSet('cab');fpReset();digTilesTick(0);const o=M.o();bht.x0=o.x;bht.z0=o.z;
   // the truck alongside, empty, its bed in the arm's swing
   const f=M.frame();f.updateMatrixWorld(true);const B=f.localToWorld(new THREE.Vector3(M.bed[0],0,M.bed[1]+M.king()));
   Object.assign(tr,{yaw:o.yaw,v:0,spin:0,steer:0,bed:0,load:0,stuck:0,gear:1,brakeOn:true});tr.x=B.x+Math.sin(o.yaw)*1.55;tr.z=B.z+Math.cos(o.yaw)*1.55;
@@ -148,6 +148,10 @@ function bhtFinish(){const M=bhtM(),o=M.o(),ps=bht.passes,cap=M.cap(),n=ps.lengt
   if(bht.kind==='bh')bhtCheck('The loader stays still at the hoe',Math.abs(o.a-bht.ld)<1e-4&&Math.abs(o.c-bht.lc)<1e-4,'with the right stick working the hoe');
   const cyc=n?ps.reduce((a,p)=>a+p.t,0)/n:0;bht.cyc=cyc;bht.per=n?got/n:0;
   bhtCheck(`A pass takes under ${BHT_CYCLE} s`,cyc>0&&cyc<BHT_CYCLE,`${cyc.toFixed(1)} s on average, dig to dump and back`);
+  // a freeze is judged only when frames are drawn (not headless, where the browser stalls on its own), and the test's own
+  // pose finding (bhtPlan) is not the game's
+  const long=(bht.hitches||[]).filter(h=>h.ms>=BHT_LONG*1000&&!h.own);
+  if(!bht.headless)bhtCheck(`No freeze over ${BHT_LONG} s`,!long.length,long.length?`${long.length} freeze${long.length>1?'s':''}, the first ${bhtHitchTxt(long[0])}`:'none');
   bht.ph='done';bht.on=false}
 
 function bhtTick(dt){if(bht.freeze){bhtSticks([0,0,0,0]);return}if(bht.ph==='done'){if(!bht.headless)bhtEnd();return}
@@ -163,8 +167,35 @@ function bhtCam(){if(bht.ph==='in'&&bht.pt<0.05)return;const M=bhtM(),m=M.mid(bh
     const px=back.x+(back.x-c.x)*0.6+(c.x-M.o().x)*0.25,pz=back.z+(back.z-c.z)*0.6+(c.z-M.o().z)*0.25,py=Math.max(c.y+4,surfAt(px,pz)+1.5);
     camera.position.lerp(bhtV.set(px,py,pz),k);look.lerp(m,k)}
   camera.lookAt(look)}
+// ---------- freezes ----------
+// while a test runs the frame's big parts are each timed (wrapped in place: game scripts call them by their global
+// name), and a frame that takes over BHT_HITCH s is kept with its slowest parts and whatever it had to get ready for
+// the first time: a new shader program (three.js builds one the first time a kind of material is drawn), a texture or
+// a mesh sent to the graphics card. BHT_LONG: a freeze the player feels, which fails the test
+const BHT_HITCH=0.2,BHT_LONG=0.5,BHT_TIMED={postRender:'Drawing the frame',updateTerrain:'Rebuilding the dug ground',updateTufts:'Grass on the dug ground',
+  dig:'Digging',deposit:'Dumping on the ground',pourStream:'The pour stream',spawn:'Flying dirt',dropMix:'Clods',dustPuff:'Dust',slopeTick:'Slopes settling',caveTick:'Cave-ins',
+  digTilesTick:'Moving the dig grid',updateTruck:'The truck',hvTick:'Heavy machines',mudTick:'Mud',rainTick:'Rain',grassTick:'Grass',waterTick:'Water',updateSound:'Sound',
+  dirtSndTick:'Dirt sounds',dirtThud:'Dump thud',shadowProxyTick:'Shadows',lawnLod:'Lawn detail',tuftLod:'Grass detail',rainCover:'Rain cover',treesTick:'Trees',mainTick:'Gas main',
+  updateWalker:'The worker',updateSkid:'Skid steer',updateMower:'Mower',boatTick:'Boats',bikeTick:'Dirt bike',updateRams:'Rams',updateHoses:'Hoses',updateLinkage:'Linkage',
+  blkTick:'Blocks',cplTick:'Coupler',updateBox:'Trench box',fpTick:'Cab view',statTick:'Stats',bhtPlan:'The test working out its poses'};
+const bhtOrig={};
+function bhtTimeOn(){bht.sec={};bht.hitches=[];bht.progs=new Set(renderer.info.programs||[]);bht.mem=Object.assign({},renderer.info.memory);
+  for(const n in BHT_TIMED){const f=window[n];if(typeof f!=='function'||bhtOrig[n])continue;bhtOrig[n]=f;
+    window[n]=function(){const t=performance.now();try{return f.apply(this,arguments)}finally{bht.sec[n]=(bht.sec[n]||0)+performance.now()-t}}}}
+// what this frame got ready for the first time
+// which object a new shader program was built for: its name, or its parent's, or its kind and colour
+function bhtWho(prog){let who=null;scene.traverse(o=>{if(who||!o.material)return;for(const m of [].concat(o.material)){const pr=renderer.properties.get(m);
+    if(pr&&pr.currentProgram===prog){let n=o,s='';while(n&&!s){s=n.name;n=n.parent}who=(s?s+' ':'')+o.type+(m.color?' #'+m.color.getHexString():'')+(o.visible?'':' (hidden)');return}}});return who}
+function bhtNew(){const ps=renderer.info.programs||[],np=[];for(const p of ps)if(!bht.progs.has(p)){bht.progs.add(p);const w=bhtWho(p);np.push((p.name||String(p.cacheKey||'').split(',')[0])+(w?' for '+w:''))}
+  const m=renderer.info.memory,o=bht.mem,r={prog:np,tex:Math.max(0,m.textures-o.textures),geo:Math.max(0,m.geometries-o.geometries)};bht.mem=Object.assign({},m);return r}
+function bhtHitch(ft,part){const sec=bht.sec;bht.sec={};const nw=bhtNew();if(ft<BHT_HITCH&&!bht.logAll)return;
+  const top=Object.keys(sec).filter(n=>sec[n]>=5).sort((a,b)=>sec[b]-sec[a]).slice(0,4).map(n=>[BHT_TIMED[n],Math.round(sec[n])]);
+  // (some timed parts run inside others, so this undercounts the time outside them: it errs low)
+  const work=Object.keys(sec).reduce((a,n)=>a+sec[n],0),h={ms:Math.round(ft*1000),part,pass:bht.pass,top,...nw,gpu:Math.max(0,Math.round(ft*1000-work)),own:(sec.bhtPlan||0)>=ft*500};if(ft>=BHT_HITCH)bht.hitches.push(h);if(bht.logAll)(bht.log||(bht.log=[])).push(h)}
+const bhtHitchTxt=h=>`${(h.ms/1000).toFixed(1)} s${h.pass?' in pass '+h.pass:''}, ${h.part}${h.own?' (the test\'s own setup, not counted)':''}: `+(h.top.length?h.top.map(([n,ms])=>`${n} ${ms} ms`).join(', '):'no timed part stood out')+(h.gpu>=100?`, the browser and graphics card ${h.gpu} ms outside the game's code`:'')+
+  (h.prog.length?`; ${h.prog.length} new shader${h.prog.length>1?'s':''} (${h.prog.join(', ')})`:'')+(h.tex?`; ${h.tex} texture${h.tex>1?'s':''} uploaded`:'')+(h.geo?`; ${h.geo} new mesh${h.geo>1?'es':''}`:'');
 function bhtSample(dt){bht.camDt=dt;const now=performance.now(),ft=bht.lastNow?(now-bht.lastNow)/1000:0;bht.lastNow=now;
-  const k=({in:0,swap:0,ctl:1,reach:2,plunge:3,drag:3,curl:3,out:4,dump:5})[bht.ph],p=bht.parts[k];if(!ft||!p)return;if(bht.pt>0.2){p.ft.push(ft);p.tris+=renderer.info.render.triangles;p.k++}
+  const k=({in:0,swap:0,ctl:1,reach:2,plunge:3,drag:3,curl:3,out:4,dump:5})[bht.ph],p=bht.parts[k];if(p&&ft)bhtHitch(ft,p.name);if(!ft||!p)return;if(bht.pt>0.2){p.ft.push(ft);p.tris+=renderer.info.render.triangles;p.k++}
   bench.barT-=ft;if(bench.barT<=0){bench.barT=0.2;const M=bhtM(),P=bht.pass?` · pass ${bht.pass} of ${BHT_PASSES}`:'',L=M.load();
     $('#benchBar').innerHTML=`${M.name.toUpperCase()} LOAD TEST${P}<small>${p.name} · bucket ${L<0.003*M.cap()?'empty':bhtYd(L)} · ${bhtYd(tr.load)} in the truck</small>`}}
 
@@ -179,31 +210,35 @@ function bhtResults(){const M=bhtM();
   if(slow)sum+=`<p>Slowest part: <b>${slow.name}</b>, ${slow.avg.toFixed(1)} FPS on average.</p>`;
   sum+=`<div class="lbl" style="margin-top:8px">Controls and loading</div><div class="big ${bad.length?'fps-bad':'fps-good'}">${bad.length?bad.length+' of '+bht.checks.length+' failed':'All '+bht.checks.length+' passed'}</div>`;
   if(cyc)sum+=`<p>A pass took ${cyc.toFixed(1)} s and put ${bhtYd(per)} in the truck: ${bhtYd(hr)} an hour, a full truck in about ${Math.round(fill)} minutes.</p>`;
+  const hs=bht.hitches||[];
+  if(hs.length)sum+=`<p>${hs.length} slow frame${hs.length>1?'s':''} (over ${BHT_HITCH} s), the worst ${(Math.max(...hs.map(h=>h.ms))/1000).toFixed(1)} s: see Freezes below.</p>`;
   let diag='<tr><th>Check</th><th>Result</th></tr>';
   for(const c of bht.checks)diag+=`<tr><td>${c.name}<br><small style="color:var(--muted)">${c.note}</small></td><td class="${c.ok?'fps-good':'fps-bad'}">${c.ok?'Pass':'Fail'}</td></tr>`;
   let table='<tr><th>Part</th><th>Avg FPS</th><th>1% low</th><th>Worst</th></tr>';
   for(const r of rows)table+=`<tr><td>${r.name}</td><td class="${r.avg?cls(r.avg):''}">${r.avg?r.avg.toFixed(1):'–'}</td><td class="${r.low?cls(r.low):''}">${r.low?r.low.toFixed(0):'–'}</td><td>${r.worst?Math.round(r.worst)+' ms':'–'}</td></tr>`;
   table+='<tr><th>Pass</th><th>Time</th><th>Bucket</th><th>In the bed</th></tr>';
   bht.passes.forEach((p,i)=>{table+=`<tr><td>${i+1}</td><td>${p.t?p.t.toFixed(1)+' s':'–'}</td><td>${bhtYd(p.got||0)}</td><td>${bhtYd(p.inBed||0)}</td></tr>`});
+  if(hs.length){table+='<tr><th colspan="4">Freezes (slow frames, with what was slow in them)</th></tr>';for(const h of hs.slice(0,12))table+=`<tr><td colspan="4">${bhtHitchTxt(h)}</td></tr>`}
   const text=[`Corley's Island ${M.name.toLowerCase()} load test, game version ${ver}`,`GPU: ${gpu}`,`Graphics: ${gfxName()}${PHONE?' (phone)':''}`,`Resolution: ${w}x${h} (${maxPR}x)`,
     `Frame rate in the cab: ${slow?(fpsOk?'PASS':'FAIL')+`, slowest ${slow.name} at ${slow.avg.toFixed(1)} FPS`:'not measured'}`,`Checks: ${bad.length?bad.length+' of '+bht.checks.length+' FAILED':'all '+bht.checks.length+' passed'}`,
     cyc?`Speed: ${cyc.toFixed(1)} s a pass, ${bhtYd(per)} a pass, ${bhtYd(hr)} an hour, a full truck in about ${Math.round(fill)} min`:'Speed: not measured',
     ...bht.checks.map(c=>`${c.ok?'pass':'FAIL'} | ${c.name} | ${c.note}`),'Parts:',
     ...rows.map(r=>`${r.name} | ${r.avg?r.avg.toFixed(1)+' avg FPS | '+r.low.toFixed(0)+' 1% low | '+Math.round(r.worst)+' ms worst | '+fmtTris(r.tris)+' tris':'not timed'}`),'Passes:',
-    ...bht.passes.map((p,i)=>`${i+1} | ${p.t?p.t.toFixed(1)+' s':'-'} | dig ${(p.dig||0).toFixed(1)} s | bucket ${bhtYd(p.got||0)} | in the bed ${bhtYd(p.inBed||0)}`)].join('\n');
-  return {title:`${M.name} load test results`,sum,diag,table,device,text,fpsOk,checksOk:!bad.length,checks:bht.checks,rows}}
+    ...bht.passes.map((p,i)=>`${i+1} | ${p.t?p.t.toFixed(1)+' s':'-'} | dig ${(p.dig||0).toFixed(1)} s | bucket ${bhtYd(p.got||0)} | in the bed ${bhtYd(p.inBed||0)}`),
+    `Freezes (frames over ${BHT_HITCH} s): ${hs.length?hs.length:'none'}`,...hs.slice(0,20).map(bhtHitchTxt)].join('\n');
+  return {title:`${M.name} load test results`,sum,diag,table,device,text,fpsOk,checksOk:!bad.length,hitches:hs,checks:bht.checks,rows}}
 // done: the results are kept for the reload (digtest.js shows them), which puts the player's site back
 function bhtEnd(){bht.on=false;bhtSticks([0,0,0,0]);const r=bhtResults();try{sessionStorage.setItem(DIGT_RES,JSON.stringify(r))}catch(e){}
   $('#benchBar').innerHTML=`${bhtM().name.toUpperCase()} LOAD TEST DONE<small>Putting your site back…</small>`;location.reload()}
 // headless: the game's own frame stepped 20 times a game second with the drawing left out, until the script is done
 // (or a step limit) or, with `until`, until until() is true, when the drawing and the frame loop are put back (for a
-// screenshot, the script stopped where it is). Without `until` the page is left in the test's state (bench.on stays set so nothing saves), so use a
+// screenshot, the script stopped where it is, or with `live` going on drawn from there). Without `until` the page is left in the test's state (bench.on stays set so nothing saves), so use a
 // throwaway page (tools/play.js)
-function ldTestRun(kind,until){ldTestStart(kind||'bh');bht.headless=true;renderer.setAnimationLoop(null);const draw=postRender;postRender=()=>{};
+function ldTestRun(kind,until,live){ldTestStart(kind||'bh');bht.headless=true;renderer.setAnimationLoop(null);const draw=postRender;postRender=()=>{};
   const last0=last;let t=last,n=0;try{while(n<8000&&bht.ph!=='done'&&!(until&&until())){frame(t+=50);n++}}finally{postRender=draw}
   // the frame clock went on ahead of the real one (the browser's frame times, not performance.now()): set it back, or
   // the next real frame would step back in time
-  if(until){bht.headless=false;bht.freeze=true;last=last0;renderer.setAnimationLoop(frame);return {ph:bht.ph,pass:bht.pass}}
+  if(until){bht.headless=false;bht.freeze=!live;bht.lastNow=0;last=last0;renderer.setAnimationLoop(frame);return {ph:bht.ph,pass:bht.pass}}
   if(bht.ph!=='done')bhtCheck('The test finished',false,`stuck at "${bht.ph}" on pass ${bht.pass}`);
   const r=bhtResults();return {ok:r.checksOk,checks:r.checks.map(c=>`${c.ok?'pass':'FAIL'} | ${c.name} | ${c.note}`),passes:r.text.split('Passes:')[1]}}
 
