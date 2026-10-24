@@ -160,7 +160,7 @@ function updateRams(){
   }
 }
 
-// flexible hydraulic hoses: sagging tubes rebuilt every frame between moving fittings
+// flexible hydraulic hoses: sagging tubes rebuilt between moving fittings whenever their ends move
 const hoses=[],HS=32,HR=12,hT=new THREE.Vector3(),hN=new THREE.Vector3(),hBn=new THREE.Vector3(),hP=new THREE.Vector3(),hA=new THREE.Vector3(),hE=new THREE.Vector3(),hC=new THREE.Vector3(),hRef=new THREE.Vector3(1,0,0);
 function wp(obj,x,y,z){const v=new THREE.Vector3(x,y,z);return out=>obj.localToWorld(out.copy(v))}
 function rp(r,t){return out=>out.copy(r.wA).addScaledVector(r.wD,t<0?r.cbl+t:t)}
@@ -169,11 +169,14 @@ function hose(fa,fb,sag,rad){
   for(let i=0;i<HS;i++)for(let j=0;j<HR;j++){const a=i*HR+j,b=i*HR+(j+1)%HR;idx.push(a,a+HR,b,b,a+HR,b+HR)}
   const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(pa,3));g.setAttribute('normal',new THREE.BufferAttribute(new Float32Array(nv*3),3));g.setIndex(idx);
   const hm=new THREE.Mesh(g,HOSE);hm.castShadow=true;hm.frustumCulled=false;scene.add(hm);
-  hoses.push({fa,fb,sag,rad:rad||0.032,g,pa});
+  hoses.push({fa,fb,sag,rad:rad||0.032,g,pa,e:[NaN,0,0,0,0,0]});
 }
 function updateHoses(){
   for(const h of hoses){
-    h.fa(hA);h.fb(hE);const L=hA.distanceTo(hE);
+    h.fa(hA);h.fb(hE);
+    // a hose whose ends have not moved keeps its shape (most frames: the machine parked, or only another one working)
+    const e=h.e;if(e[0]===hA.x&&e[1]===hA.y&&e[2]===hA.z&&e[3]===hE.x&&e[4]===hE.y&&e[5]===hE.z)continue;
+    e[0]=hA.x;e[1]=hA.y;e[2]=hA.z;e[3]=hE.x;e[4]=hE.y;e[5]=hE.z;const L=hA.distanceTo(hE);
     hC.addVectors(hA,hE).multiplyScalar(0.5);hC.y-=h.sag*L;
     for(let i=0;i<=HS;i++){const t=i/HS,u=1-t;
       hP.set(u*u*hA.x+2*u*t*hC.x+t*t*hE.x,u*u*hA.y+2*u*t*hC.y+t*t*hE.y,u*u*hA.z+2*u*t*hC.z+t*t*hE.z);

@@ -144,9 +144,19 @@ function hvTrailOut(h){h.g.localToWorld(hvV.set(0,0,-HV_KP));const ts=Math.sin(h
 function hvTake(h,got,p){const f=got/(h.load+got);for(let q=0;q<3;q++)h.loadC[q]+=(digC[q]-h.loadC[q])*f;for(let q=0;q<4;q++)h.loadMix[q]+=(digMix[q]-h.loadMix[q])*f;
   h.loadWet+=(mudAt(p.x,p.z)-h.loadWet)*f;h.load+=got;st.dirty=true;st.slumpT=2.5}
 // every frame: drive (+ forward), turn (+ right), arm (+ raise the blade or arms) and curl (+ curl back); 0 when parked
-function hvTick(dt,drive,turn,arm,curl){
-  for(let i=0;i<hvs.length;i++){const h=hvs[i],on=mode==='heavy'&&hvI===i&&wk.inside==='hv'+i&&!bench.on;
-    if(on&&h.K.hoe)bhTick(h,dt,drive,turn,arm,curl);else if(on)hvDrive(h,dt,drive,turn,arm,curl,true);else hvDrive(h,dt,0,0,0,0,false)}}
+// a machine nobody is in that has sat still for HV_IDLE updates (every number of its state the same, to a hair, after
+// each one) is looked at again only every HV_IDLE_N frames, taking turns, or at once if it is moved (teleport, editor):
+// the ground going down or up under it shows within a quarter second, and it runs every frame again until it settles
+const HV_IDLE=30,HV_IDLE_N=12,hvIdle=[];let hvRR=0;
+function hvSum(h){let s=0,n=1;for(const k in h){const v=h[k];if(typeof v==='number')s+=v*(n++ +0.37);
+  else if(v&&typeof v==='object'&&!v.isObject3D&&!Array.isArray(v)&&k!=='K'&&k!=='home')for(const q in v)if(typeof v[q]==='number')s+=v[q]*(n++ +0.37)}return s}
+function hvTick(dt,drive,turn,arm,curl){hvRR=(hvRR+1)%HV_IDLE_N;
+  for(let i=0;i<hvs.length;i++){const h=hvs[i],on=mode==='heavy'&&hvI===i&&wk.inside==='hv'+i&&!bench.on,I=hvIdle[i]||(hvIdle[i]={still:0,dt:0,x:NaN,z:0,yaw:0});
+    if(on){I.still=0;I.dt=0;if(h.K.hoe)bhTick(h,dt,drive,turn,arm,curl);else hvDrive(h,dt,drive,turn,arm,curl,true);continue}
+    I.dt=Math.min(0.1,I.dt+dt);const same=h.x===I.x&&h.z===I.z&&h.yaw===I.yaw;
+    if(I.still>=HV_IDLE&&i%HV_IDLE_N!==hvRR&&same)continue;
+    const a=hvSum(h);hvDrive(h,I.dt,0,0,0,0,false);I.dt=0;
+    I.still=same&&Math.abs(hvSum(h)-a)<1e-5?I.still+1:0;I.x=h.x;I.z=h.z;I.yaw=h.yaw}}
 function hvDrive(h,dt,drive,turn,arm,curl,on){const K=h.K;
   h.run+=((on?1:0)-h.run)*Math.min(1,dt*(on?2:0.7));h.thr=drive;h.hyd=Math.min(1,Math.abs(arm)+Math.abs(curl));
   const mudN=mudAt(h.x,h.z),k=Math.max(0,1-0.45*mudN*TU.mudDrag);
