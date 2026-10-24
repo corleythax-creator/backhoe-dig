@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-24T19:25:00Z",
+ "updated": "2026-10-24T19:40:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -60,9 +60,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-24",
-   "dh": 18.5,
-   "act": 2.5,
-   "versions": 6
+   "dh": 20,
+   "act": 3,
+   "versions": 7
   }
  ],
  "extra": [
@@ -2052,6 +2052,15 @@ window.EFFORT = {
    "tris": 5007724,
    "chars": 1407541,
    "what": "The excavator's bucket fills over the stroke like the backhoe's (about 3 s in loam), and every dig number for both (fill time, teeth speed, cut thickness, deepest bite) is on the Tuning tab"
+  },
+  {
+   "v": 221,
+   "asked": "2026-10-24T14:35:00-05:00",
+   "live": "2026-10-24T14:40:48-05:00",
+   "dh": 1.5,
+   "tris": 5410460,
+   "chars": 1408336,
+   "what": "Xbox pad and Quest controllers buzz while any machine digs (backhoe, skid steer, dozer, loader, auger), harder in rock; Controller strength setting in Tuning"
   }
  ]
 };
