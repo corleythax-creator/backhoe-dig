@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-24T02:37:00Z",
+ "updated": "2026-10-24T02:45:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -54,9 +54,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-23",
-   "dh": 105,
+   "dh": 106.5,
    "act": 2,
-   "versions": 5
+   "versions": 6
   }
  ],
  "extra": [
@@ -1965,6 +1965,15 @@ window.EFFORT = {
    "tris": 5398137,
    "chars": 1373378,
    "what": "In the rain the overhead cover map (what keeps rain off under roofs) is drawn every third frame instead of every frame, and its once-a-second read-back no longer stalls the frame where the device allows"
+  },
+  {
+   "v": 212,
+   "asked": "2026-10-23T20:51:00-05:00",
+   "live": "2026-10-23T21:45:14-05:00",
+   "dh": 1.5,
+   "tris": 4994297,
+   "chars": 1374725,
+   "what": "The excavator's hoses are rebuilt only when they move, and Dexter's parked machines are checked in turns once they have settled: about 1 ms less game work every frame"
   }
  ]
 };
