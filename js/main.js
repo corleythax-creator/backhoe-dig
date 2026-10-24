@@ -108,7 +108,7 @@ function frame(now){
     if(st.soil>=0)st.res=cplRes(st.res);
     if(st.soil===2&&!st.seenSand){st.seenSand=true;toast(say('sand'),'',3200)}
     if(st.soil===3&&!st.seenRock){st.seenRock=true;toast(say('rock'),'',3000)}
-    st.rumT-=dt;if(padUsed&&st.soil>=0&&st.rumT<=0&&(Math.abs(swingIn)+Math.abs(stickIn)+Math.abs(boomIn)+Math.abs(bucketIn))>0.1){st.rumT=0.12;rumble(140,0.15+0.55*(1-SOIL[st.soil].h))}}
+    if(padUsed&&st.soil>=0&&(Math.abs(swingIn)+Math.abs(stickIn)+Math.abs(boomIn)+Math.abs(bucketIn))>0.1)rumbleDig(0.15+0.55*(1-SOIL[st.soil].h))}
   if(st.below&&(!bench.on||bench.kind==='load')){
     // another attachment on the coupler works the ground its own way (coupler.js)
     if(cpl.fit!=='bucket')cplWork(dt);
