@@ -106,7 +106,7 @@ function trimTick(dt){
   // cutting: up to speed, line long enough to reach, head down on the ground (not swinging over a block edge)
   let cut=0;
   if(trim.rev>0.8&&trim.line>=TU.trimMin&&ly<0.45){cut=trimCut(wx,wz,TRIM_HEAD+trim.line,wk.yaw+sw);
-    if(cut){trim.line=Math.max(0,trim.line-TU.trimWear*dt);if(!lawn.startT)lawn.startT=performance.now();started();
+    if(cut){trim.line=Math.max(0,trim.line-TU.trimWear*dt);if(!lawn.startT)lawn.startT=performance.now();started();if(padUsed)rumbleDig(0.12);
       const n=Math.min(cut,gfxCur.trimClips||0);if(n)trimClips(n,wx,trim.hy+0.08,wz)}}
   trim.cutK+=((cut?1:0)-trim.cutK)*Math.min(1,dt*(cut?10:4));
   if(trim.line<TU.trimMin&&!trim.worn){trim.worn=true;toast(say(trim.spool>0.005?'trimWorn':'trimEmpty',{}),'bad',3000)}

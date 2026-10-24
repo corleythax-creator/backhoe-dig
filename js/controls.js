@@ -116,7 +116,8 @@ function pollPad(){for(const k in PA)PA[k]=0;PA.sprint=false;const gp=getPad();i
   if(PA.lx||PA.ly||PA.rx||PA.ry||Math.abs(PA.thr)>0.05)usePad()}
 function rumble(ms,mag){mag=Math.min(1,mag*TU.rumble);if(mag<=0)return;const gp=getPad(),va=gp&&gp.vibrationActuator;
   if(va&&va.playEffect)va.playEffect('dual-rumble',{duration:ms,strongMagnitude:mag,weakMagnitude:mag*0.6}).catch(()=>{});vrRumble(ms,mag)}
-// the steady buzz of teeth in the ground, from whichever machine is digging: one pulse each 0.12 s at most, harder ground harder
+// the steady buzz of work through the hands (teeth in the ground, a load pouring out, blades in grass), from whichever
+// machine is at it: one pulse each 0.12 s at most, so two at once never stack
 let digRumT=0;
 function rumbleDig(mag){const t=performance.now();if(t-digRumT<120)return;digRumT=t;rumble(140,mag)}
 // orbit drag on the scene; in cab view the same drag turns your head instead (see fpTurn)
