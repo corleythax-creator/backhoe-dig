@@ -62,7 +62,7 @@ function bhReset(h){Object.assign(h,BH_PARK,{a:0,c:0.1,out:0,outT:0,seat:0,hoe:f
 // the hoe's dig: the cutting edge's direction in the hoe bucket's frame (heel to teeth along its floor), the deepest cut
 // teeth-first (m), the teeth speed that fills at the full rate (m/s), the cut thickness that does (m), and how wide a
 // quick full dump scatters (m)
-const BH_EDGE=new THREE.Vector3(0,0.26,0.97).normalize(),BH_CUT=0.5,BH_TV=1.0,BH_THICK=0.2,BH_SCAT=0.55;
+const BH_EDGE=new THREE.Vector3(0,0.26,0.97).normalize(),BH_SCAT=0.55;
 const bhV=new THREE.Vector3(),bhE=new THREE.Vector3(),bhS=new THREE.Vector3(),bhCut=new THREE.Vector3();
 const bhLoc=new THREE.Vector3(),bhT=new THREE.Vector3(),bhM=new THREE.Vector3(),bhL=new THREE.Vector3(),bhR=new THREE.Vector3(),bhQ=new THREE.Quaternion();
 // (clamp is controls.js's, later in the load order: bhParts runs once at load, so it keeps its own)
@@ -122,7 +122,7 @@ function bhWork(h,dt,arm,curl,on){const P=h.parts,mv=(v,t,s)=>v<t?Math.min(t,v+s
   h.heap.visible=h.load>0.01;if(h.heap.visible){const s=0.35+0.65*Math.sqrt(h.load/cap);h.heap.scale.set(2.0*s,0.6*s,0.8+0.25*s);tintLoad(h.heap.material,h.loadC)}
   // the hoe: its teeth under the ground on the dig site bite as the excavator's do (hard ground slows the hydraulics).
   // The bucket fills over the stroke, not at a touch: only teeth moving through the ground bring dirt in, and how much
-  // each second goes with how fast they move (BH_TV), how thick a cut they take (BH_THICK) and whether they lead
+  // each second goes with how fast they move (TU.bhCutV), how thick a cut they take (TU.bhThick) and whether they lead
   // (h.atk: curled teeth-first they cut as deep as they are, dragged flat or heel first they only skim TU.bhSkim).
   // A good stroke in loam fills it in about TU.bhFillT; hard ground slows the teeth and so the filling too
   const L=h.hl,hc=TU.bhCap,K=P.hoe;K.localToWorld(bhT.set(...BH_TIP));K.localToWorld(bhM.set(...BH_MID));K.getWorldQuaternion(bhQ);
@@ -133,9 +133,9 @@ function bhWork(h,dt,arm,curl,on){const P=h.parts,mv=(v,t,s)=>v<t?Math.min(t,v+s
   (h.tp||(h.tp=new THREE.Vector3())).copy(bhT);h.fillR=0;
   if(below){const k=Math.round(gJ(bhT.z))*V+Math.round(gI(bhT.x));h.hres=soilRes(k,bhT.y)*(L.load>=hc-0.002?0.5:1);
     if(on&&h.hoe&&L.load<hc-0.002&&up>-0.3){
-      const ka=1-TU.bhAngle*(1-h.atk),D=TU.bhSkim+(BH_CUT-TU.bhSkim)*ka*ka,cut=Math.min(gt-bhT.y,D);
+      const ka=1-TU.bhAngle*(1-h.atk),D=TU.bhSkim+(TU.bhCutD-TU.bhSkim)*ka*ka,cut=Math.min(gt-bhT.y,D);
       bhCut.copy(bhT);bhCut.y=gt-cut;
-      const rate=hc/TU.bhFillT*bhC(tv/BH_TV,0,1.25)*ss(0,BH_THICK,cut),want=Math.min(hc-L.load,rate*dt);
+      const rate=hc/TU.bhFillT*bhC(tv/TU.bhCutV,0,1.25)*ss(0,TU.bhThick,cut),want=Math.min(hc-L.load,rate*dt);
       if(want>1e-6){const got=dig(bhCut,want);if(got>0){h.fillR=got/dt;bhTake(L,got,bhT);statDug(got);if(Math.random()<0.5)spawn(bhT,1.0);
         if(L.load>=hc-0.003)toast(say('bhFull'),'',2600)}}
       if(ka<0.4&&gt-bhT.y>D+0.04&&tv>0.1){h.skimT=(h.skimT||0)+dt;if(h.skimT>2.5&&!h.toldSkim){h.toldSkim=true;toast(say('bhSkim'),'',4600)}}}}
