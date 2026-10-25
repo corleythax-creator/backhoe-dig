@@ -240,7 +240,7 @@ function frame(now){
   // flying dirt
   particlesTick(dt);dustTick(dt);grimeTick();mdlTick(dt);wkMdlPose();
   // groundwater, the tailgate stream and the dirt sounds
-  digTilesTick(dt);if(!bench.on)waterTick(dt);mudTick(dt);rainTick(dt);lakeTick(dt);grassTick(dt);jesTick(dt);mainTick(dt);treesTick(dt);plantTick();
+  digTilesTick(dt);if(!bench.on)waterTick(dt);mudTick(dt);rainTick(dt);lakeTick(dt);grassTick(dt);jesTick(dt);mainTick(dt);brTick(dt);treesTick(dt);plantTick();
   pourStream(streams[1],tr.pourP,hAt(tr.pourP.x,tr.pourP.z),tr.pourRate,tr.loadC,now/1000);
   dirtSndTick(dt);
   // bucket load visual

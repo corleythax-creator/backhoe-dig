@@ -1,6 +1,6 @@
 // Corley's Island: the Family Island south across the water (its ground, the family house, the picnic pavilion, the fire
-// pit, the flagpole, trees, road ends and signs) and the steel bridges in BRIDGES (terrain.js): the truss bridge from the
-// Lower Bench and the mainland bridge, which runs on as a timber trestle (mainland.js).
+// pit, the flagpole, trees, road ends and signs), and famBridge, the steel deck-truss bridge Dexter's haul bridge is
+// built from (dexter.js). The other bridges are on the bridge kit (bridges.js).
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 const famGround=groundPatch(FAM_PATCH[0],FAM_PATCH[1],FAM_PATCH[2],FAM_PATCH[3],1.5,[]);
 // low-poly parts gathered by colour into a few merged meshes: solid (lit, flat shaded), glow (lamps, embers) and win
@@ -112,10 +112,6 @@ function famBridge(b,K,o){
   return {W,at,yaw}}
 
 (function(){
-  // the truss bridge from the Lower Bench: dark green steel
-  const K1=famKit(),B1=BRIDGES[0];famBridge(B1,K1,{depth:1.5,steel:0x3f5e4e,piers:[34,69]});famAdd(K1);
-  // the mainland bridge: grey steel, running on as a timber trestle and a causeway to the town (mainland.js)
-  const K2=famKit(),B2=BRIDGES[1];famBridge(B2,K2,{depth:1.4,steel:0x5d6a74,piers:[30,64,98]});famAdd(K2);
   // the spoil yard on Corley's north lawn, where the truck dumps now the cliff is gone
   {const x=6,z=-41,y=baseHeight(x,z),K=famKit();for(const s of [-1,1])K.box(0.12,2.6,0.12,0x8a8a86,x+s*1.9,y+1.3,z);famAdd(K);
     famSign(['SPOIL YARD','Dump loads here'],4.2,1.4,x,y+2.1,z+0.07,0,'#c9601c','#ffffff')}
