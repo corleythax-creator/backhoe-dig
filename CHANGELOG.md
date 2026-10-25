@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Sunday, October 25, 2026
 
+- **v230** (11:59 AM) Island tour test, first person (menu, start card, or ?tourfp): the same run seen through the player's eyes, the head looking round like a person's, mostly the way ahead with glances at machines, boats, bridges, the crane barge, houses and the town, from a fixed seed so runs compare
 - **v229** (11:47 AM) A Tests row on the start card (Island tour, Speed, Dig site, Backhoe load, Excavator load): each test is one tap from loading the game
 - **v228** (11:35 AM) Island tour test (menu, or ?tourtest=low|medium|high|ultra): plays a run through the touch stick from Dexter's on foot to the four-wheeler, to the dock, into Dexter's boat and right round the lake past the town, marina, crane barge, bridges and hayfield, with the game running as in play, and reports per leg frame rate, 1% low, worst frame, stutters, main-thread time, triangles and draw calls, plus long tasks, freezes with their causes, memory and script errors; tourRun() checks the route headless
 - **v227** (11:14 AM) Mouse look in every view (click the scene, Esc frees it), a chase camera that eases round behind turning machines and drifts back behind them on the move, Messages setting (Few by default: only warnings and answers to what you did, tips on All only) with a small strip at the bottom, no on-screen sticks on mouse and keyboard (Sticks: Auto/On/Off), minimap sizes Off to XL, flatter squarer buttons
