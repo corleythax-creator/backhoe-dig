@@ -110,6 +110,10 @@ const TUNE=[
   ['pbrSheen','Ground look','Sheen: how strong the glints on wet and shiny ground are',1,'pct',0,300,5],
   ['pbrRain','Ground look','Extra sheen while it rains',1,'pct',0,400,5],['pbrGround','Ground look','Relief: how bumpy the natural dirt and grass look',0.9,'pct',0,300,5],
   ['pbrFace','Ground look','Relief: how deep the bucket-tooth grooves, cracks, pebbles and roots on dug faces look',1,'pct',0,300,5],
+  // the camera with a mouse: a click on the scene takes the mouse and moving it looks round (Esc lets it go); the chase
+  // camera swings round behind a turning machine and drifts back behind it while it moves (main.js, controls.js)
+  ['mouseLook','Camera','Mouse look speed',1,'pct',20,400,5],['camFollow','Camera','How quickly the chase camera swings round behind a turning machine',1,'pct',10,400,5],
+  ['camBack','Camera','The chase camera drifts back behind a moving machine this long after you last turned it (0 = never)',2.5,'s',0,30,0.5],
   ['rumble','Controller','How hard the controller shakes (Xbox pad and Quest controllers; 0% = off)',1,'pct',0,200,5],
   ['fxAo','Screen effects','Shade where things meet and in hollows (Ultra)',1,'pct',0,200,5],['fxAoR','Screen effects','How far that shade reaches',1.6,'ft',0.5,10,0.25],
   ['fxBloom','Screen effects','Glow round bright light (Ultra)',0.2,'pct',0,200,5],['fxBloomThr','Screen effects','How bright light must be to glow',0.88,'pct',40,99,1],

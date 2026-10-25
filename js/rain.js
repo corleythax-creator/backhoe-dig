@@ -433,4 +433,4 @@ function wsTick(dt,r){let wetMax=0;
     if(mode===ws.mode)wetMax=m}
   // the button shows in the excavator and the truck while it rains, or while the glass is wet or the wipers run
   const show=WS.some(ws=>ws.mode===mode)&&(r>0.03||wetMax>0.1||wipeOn),bt=$('#wipeBtn');if(bt.hidden===show)bt.hidden=!show;
-  if(!wipeTipped&&!wipeOn&&camMode==='cab'&&wetMax>0.4){wipeTipped=true;toast(say('wipeTip'),'',4000)}}
+  if(!wipeTipped&&!wipeOn&&camMode==='cab'&&wetMax>0.4){wipeTipped=true;toast(say('wipeTip'),'tip',4000)}}

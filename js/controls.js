@@ -95,7 +95,7 @@ addEventListener('keydown',e=>{const i=PAD_ECHO[e.code];if(i===undefined||padIdx
   if(b&&b.pressed){e.preventDefault();e.stopImmediatePropagation()}},true);
 addEventListener('popstate',()=>{const gp=padIdx<0?null:getPad();if(gp&&gp.buttons[1].pressed||performance.now()-padBackT<800)history.pushState({pad:1},'')});
 function usePad(){if(!padUsed){padUsed=true;kbUsed=false;document.body.classList.remove('kb');setCaps();if(!(history.state&&history.state.pad))history.pushState({pad:1},'')}started()}
-function padButton(i){usePad();if(i===1)padBackT=performance.now();
+function padButton(i){usePad();inT=performance.now();if(i===1)padBackT=performance.now();
   if(i===4||i===5)setMode(MODES[(MODES.indexOf(mode)+(i===5?1:MODES.length-1))%MODES.length]);
   else if(i===3)$('#camBtn').click();
   else if(i===0&&mode==='walk')walkJump();
@@ -133,7 +133,9 @@ canvas.addEventListener('pointerdown',e=>{if(edOn)return;camPtrs.set(e.pointerId
   drag={id:e.pointerId,x:e.clientX,y:e.clientY,x0:e.clientX,y0:e.clientY,t0:performance.now(),btn:e.button,mouse:e.pointerType==='mouse',locked:document.pointerLockElement===canvas};
   // with the mouse taken on foot and blocks on, a click sets a block where the dot is and a right click lifts one
   if(document.pointerLockElement===canvas&&blkOn&&blkFP()){if(e.button===0)placeBlock();else if(e.button===2)removeBlock();return}
-  if(camMode==='cab'&&e.pointerType==='mouse'&&e.button===0&&!PHONE)fpMouseLock(true)});
+  // with a mouse, a click on the scene takes it for mouse look in any view (Esc lets it go); with blocks on in chase
+  // view the pointer stays free, since a click there sets a block where it points
+  if(e.pointerType==='mouse'&&e.button===0&&!PHONE&&!(blkOn&&!blkFP()))fpMouseLock(true)});
 canvas.addEventListener('contextmenu',e=>{if(document.pointerLockElement===canvas)e.preventDefault()});
 canvas.addEventListener('pointermove',e=>{const p=camPtrs.get(e.pointerId);if(p){p.x=e.clientX;p.y=e.clientY}
   // two fingers in cab view pinch to zoom
@@ -160,22 +162,25 @@ function fpTurn(dx,dy){const k=1/fpl.zoom;fpl.home=false;
   if(mode==='walk')wk.view-=dx*k;else fpl.yaw=clamp(fpl.yaw-dx*k,-FP_YAW,FP_YAW);
   fpl.pitch=clamp(fpl.pitch-dy*k,-FP_DOWN,FP_UP)}
 function fpReset(){fpl.yaw=fpl.pitch=0;fpl.zt=1;fpl.home=false}
-let fpLockTold=false;
 function fpMouseLock(on){
   if(on){if(document.pointerLockElement===canvas||!canvas.requestPointerLock)return;
-    try{const r=canvas.requestPointerLock();if(r&&r.catch)r.catch(()=>{})}catch(e){}
-    if(!fpLockTold){fpLockTold=true;toast(say('mouseLook'),'',4200)}}
+    try{const r=canvas.requestPointerLock();if(r&&r.catch)r.catch(()=>{})}catch(e){}}
   else if(document.pointerLockElement===canvas)document.exitPointerLock()}
+// while the mouse is taken a small line under the top bar says how to let it go
+const lockHint=$('#lockHint');
+document.addEventListener('pointerlockchange',()=>{const on=document.pointerLockElement===canvas;if(on)lockHint.textContent=say('lockHint');lockHint.hidden=!on});
+// mouse look: in cab view it turns your head (or you, on foot); in chase view it circles the camera round, as a drag does
 // (some browsers send a wild jump as the mouse is taken: skip any single move that large)
-document.addEventListener('mousemove',e=>{if(document.pointerLockElement!==canvas||camMode!=='cab'||edOn)return;
-  if(Math.abs(e.movementX)<300&&Math.abs(e.movementY)<300)fpTurn(e.movementX*0.0025,e.movementY*0.0025)});
+document.addEventListener('mousemove',e=>{if(document.pointerLockElement!==canvas||edOn)return;
+  const mx=e.movementX,my=e.movementY,k=0.0025*TU.mouseLook;if(Math.abs(mx)>=300||Math.abs(my)>=300)return;
+  if(camMode==='cab')fpTurn(mx*k,my*k);else{orbitYaw-=mx*k;orbitPitch=clamp(orbitPitch+my*k*0.85,camPitchMin(),camPitchMax())}});
 // eases the head back to straight ahead after R; ends at once if you look somewhere
 function fpTick(dt){if(fpl.home){const k=Math.min(1,dt*8);fpl.yaw-=fpl.yaw*k;fpl.pitch-=fpl.pitch*k;if(Math.abs(fpl.yaw)+Math.abs(fpl.pitch)<0.003){fpl.yaw=fpl.pitch=0;fpl.home=false}}
   const zt=camMode!=='cab'?1:held('zoom')?Math.max(fpl.zt,3):fpl.zt;fpl.zoom+=(zt-fpl.zoom)*Math.min(1,dt*10);
   const f=camFov/fpl.zoom;if(Math.abs(camera.fov-f)>0.01){camera.fov=f;camera.updateProjectionMatrix()}
-  if(camMode!=='cab'||edOn||!help.hidden)fpMouseLock(false);
+  if(edOn||!help.hidden||!bigEl.hidden||!menuEl.hidden||blkOn&&!blkFP())fpMouseLock(false);
   const aim=camMode==='cab'&&mode==='walk'&&!bench.on;if(aimEl.hidden===aim)aimEl.hidden=!aim}
-const aimEl=$('#aim');
+const aimEl=$('#aim'),bigEl=$('#bigmap'),menuEl=$('#menu');
 
 function setCaps(){const m=mode,two=(a,b)=>`${keyLabel(a)} ${keyLabel(b)}`,lh=kbUsed?two('lLeft','lRight'):'◀ ▶',lv=kbUsed?two('lUp','lDown'):'▲ ▼',rh=kbUsed?two('rLeft','rRight'):'◀ ▶',rv=kbUsed?two('rUp','rDown'):'▲ ▼';
   for(const b of document.querySelectorAll('.seg button'))b.dataset.k=keyLabel(b.id.slice(4).toLowerCase());
@@ -188,7 +193,7 @@ function setCaps(){const m=mode,two=(a,b)=>`${keyLabel(a)} ${keyLabel(b)}`,lh=kb
 let exLast='dig';
 // (in the backhoe it swivels the seat between the wheel and the hoe, backhoe.js)
 const bhIn=()=>mode==='heavy'&&!!hvCur().K.hoe;
-function exSwap(){if(bhIn()){bhSwap();return}if(mode!=='dig'&&mode!=='drive')return;setMode(mode==='dig'?'drive':'dig');toast(say(mode==='drive'?'exDriving':'exDigging'),'',2200)}
+function exSwap(){if(bhIn()){bhSwap();return}if(mode!=='dig'&&mode!=='drive')return;setMode(mode==='dig'?'drive':'dig');toast(say(mode==='drive'?'exDriving':'exDigging'),'tip',2200)}
 function setMode(m){if(m===mode)return;
   // no room to climb out: stay in the machine, as Get out does (seatToggle), rather than turn up where you got in
   if(m==='walk'&&wk.inside&&!wkPlaceOut(wk.inside)){toast(say('noRoomOut'));return}
@@ -198,17 +203,17 @@ function setMode(m){if(m===mode)return;
   $('#walkBtns').hidden=m!=='walk';if(m!=='walk'){setSprint(false);trimSet(false)}
   // switching to Walk from a machine you climbed into sets you down beside it
   if(m==='walk'){wk.inside=null;wk.view=wk.yaw}
-  setCaps();markTile();firstCam=true;fpReset();if(m==='mow'&&!lawn.startT&&!lawn.done)toast(say(kbUsed?'mowKb':'mowTouch'),'',3800);
-  if(m==='skid')toast(say(kbUsed?'skidKb':'skidTouch'),'',4200);
-  if(m==='boat')toast(say('boatTip'),'',4200);
-  if(m==='bike')toast(say('bikeTip'),'',4200);
-  if(m==='heavy')toast(say(hvCur().k+'Tip'),'',5200);
-  if(m==='walk')toast(say(padUsed?'walkPad':kbUsed?'walkKb':'walkTouch'),'',3800)}
+  setCaps();markTile();firstCam=true;fpReset();if(m==='mow'&&!lawn.startT&&!lawn.done)toast(say(kbUsed?'mowKb':'mowTouch'),'tip',3800);
+  if(m==='skid')toast(say(kbUsed?'skidKb':'skidTouch'),'tip',4200);
+  if(m==='boat')toast(say('boatTip'),'tip',4200);
+  if(m==='bike')toast(say('bikeTip'),'tip',4200);
+  if(m==='heavy')toast(say(hvCur().k+'Tip'),'tip',5200);
+  if(m==='walk')toast(say(padUsed?'walkPad':kbUsed?'walkKb':'walkTouch'),'tip',3800)}
 $('#modeDig').onclick=()=>setMode(exLast);$('#exDrive').onclick=()=>{if(mode==='dig'||bhIn()&&hvCur().hoe)exSwap()};$('#exDig').onclick=()=>{if(mode==='drive'||bhIn()&&!hvCur().hoe)exSwap()}; $('#modeDrive').onclick=()=>setMode('drive'); $('#modeTruck').onclick=()=>setMode('truck'); $('#modeMow').onclick=()=>setMode('mow'); $('#modeSkid').onclick=()=>setMode('skid'); $('#modeWalk').onclick=()=>setMode('walk');
 // Chase, then Cab, then Orbit, then back to Chase
 function camSet(m,free){camMode=m;camFree=!!free&&m==='chase';camBase=null;fpReset();
   if(!camFree){camDist=clamp(camDist,5,22);orbitPitch=clamp(orbitPitch,0.08,1.3)}$('#camBtn').dataset.cam=camMode==='cab'?'cab':camFree?'orbit':'chase';
-  if(camFree&&!camSet.told){camSet.told=true;toast(say('orbitTip'),'',4200)}}
+  if(camFree&&!camSet.told){camSet.told=true;toast(say('orbitTip'),'tip',4200)}}
 $('#camBtn').onclick=()=>{if(camMode==='cab')camSet('chase',true);else if(camFree)camSet('chase',false);else camSet('cab')};
 // Drive (top right) drops the machine list; picking one, or tapping the scene, closes it
 function showCtl(on){$('#ctlMenu').hidden=!on;$('#ctlBtn').setAttribute('aria-expanded',on)}
@@ -235,6 +240,21 @@ function setUiScale(v){uiScale=+v||1;const h=$('#hud');h.style.setProperty('--s'
   document.querySelectorAll('.sizes button[data-s]').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.s===uiScale));try{localStorage.setItem('bhd_ui',uiScale)}catch(e){}}
 document.querySelectorAll('.sizes button[data-s]').forEach(b=>b.onclick=()=>setUiScale(b.dataset.s));
 try{setUiScale(localStorage.getItem('bhd_ui')||1)}catch(e){setUiScale(1)}
+// minimap size (☰ Minimap, saved on this device): off, or small to extra large; a bigger one also shows more ground (maps.js)
+const MINI_PX=[0,96,130,190,260];let miniSz=2;
+function setMiniSz(v){miniSz=clamp(Math.round(+v),0,4);if(!(miniSz>=0))miniSz=2;const m=$('#mini');m.hidden=!miniSz;if(miniSz)m.style.setProperty('--mm',MINI_PX[miniSz]+'px');
+  for(const b of document.querySelectorAll('[data-mm]'))b.setAttribute('aria-pressed',+b.dataset.mm===miniSz);try{localStorage.setItem('bhd_mini',miniSz)}catch(e){}}
+document.querySelectorAll('[data-mm]').forEach(b=>b.onclick=()=>setMiniSz(b.dataset.mm));
+{let v=2;try{const t=localStorage.getItem('bhd_mini');if(t!==null)v=+t}catch(e){}setMiniSz(v)}
+// the on-screen sticks (☰ Sticks, saved on this device): Auto shows them on a touch screen, or once the screen is touched,
+// and leaves a mouse and keyboard without them (the keys and mouse do their work); On and Off force it
+let stkPref='auto',stkTouch=matchMedia('(pointer: coarse)').matches;try{const v=localStorage.getItem('bhd_stk');if(v==='on'||v==='off')stkPref=v}catch(e){}
+function stickShow(){document.body.classList.toggle('nostk',!(stkPref==='on'||stkPref==='auto'&&stkTouch));
+  for(const b of document.querySelectorAll('[data-stk]'))b.setAttribute('aria-pressed',b.dataset.stk===stkPref)}
+function setStk(v){stkPref=v;try{localStorage.setItem('bhd_stk',v)}catch(e){}stickShow()}
+document.querySelectorAll('[data-stk]').forEach(b=>b.onclick=()=>setStk(b.dataset.stk));
+addEventListener('pointerdown',e=>{if(e.pointerType==='touch'&&!stkTouch){stkTouch=true;stickShow()}},true);
+stickShow();
 // turn sensitivity (above the left stick): scales the left / right input of the mode you are in, swing, tracks, steering,
 // the mower's spin and looking round on foot, from 25% to 200%. Each mode keeps its own (the mower starts at 60%, the
 // rest at 100%), saved on this device once moved. The slider sits in the Controls panel
@@ -301,5 +321,13 @@ document.addEventListener('visibilitychange',()=>{if(!document.hidden)verCheck(t
 addEventListener('pageshow',e=>{if(e.persisted)verCheck(true)});
 setInterval(()=>{if(!document.hidden)verCheck(false)},600000);
 
-let toastTimer=0;
-function toast(t,kind,ms){const el=$('#toastText');el.textContent=t;el.className='show '+(kind||'');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.className=kind||'',ms||2200)}
+// messages (☰ Messages, saved on this device): All shows every one; Few, the default, only answers to what you just did
+// (a key, click, tap or pad button in the last second) and warnings; Off shows none. Tips ('tip') show on All only
+// (var: a script before this one may show a message while the game loads)
+var toastTimer=0,msgLvl='few',inT=0;try{const v=localStorage.getItem('bhd_msg');if(v==='all'||v==='off')msgLvl=v}catch(e){}
+addEventListener('pointerdown',()=>{inT=performance.now()},true);addEventListener('keydown',()=>{inT=performance.now()},true);
+function setMsgLvl(v){msgLvl=v;for(const b of document.querySelectorAll('[data-msg]'))b.setAttribute('aria-pressed',b.dataset.msg===v);try{localStorage.setItem('bhd_msg',v)}catch(e){}}
+document.querySelectorAll('[data-msg]').forEach(b=>b.onclick=()=>setMsgLvl(b.dataset.msg));setMsgLvl(msgLvl);
+function toast(t,kind,ms){kind=kind||'';
+  if(msgLvl==='off'||kind==='tip'&&msgLvl!=='all'||msgLvl==='few'&&kind!=='bad'&&performance.now()-inT>1000)return;
+  if(kind==='tip')kind='';const el=$('#toastText');el.textContent=t;el.className='show '+(kind||'');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.className=kind||'',ms||2200)}

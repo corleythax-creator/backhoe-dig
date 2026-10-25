@@ -82,7 +82,7 @@ function tgPose(h){const T=h.tag,d=T.d;h.g.localToWorld(DK_V.set(0,0.5,-TG_KP));
 // deck moves with it
 function tgTick(h,dt){const T=h.tag,d=T.d,ox=d.x,oz=d.z,oty=h.ty,oy=d.y;
   const v=h.v||0;h.ty+=v/TG_LT*Math.sin((h.mv===undefined?h.yaw:h.mv)-h.ty)*dt;const f=Math.atan2(Math.sin(h.yaw-h.ty),Math.cos(h.yaw-h.ty));if(Math.abs(f)>1.4)h.ty=h.yaw-Math.sign(f)*1.4;
-  if(!T.told&&mode==='heavy'&&hvCur()===h&&wk.inside){T.told=true;toast(say('trailerTip'),'',5200)}
+  if(!T.told&&mode==='heavy'&&hvCur()===h&&wk.inside){T.told=true;toast(say('trailerTip'),'tip',5200)}
   T.still=Math.abs(v)<0.15?T.still+dt:0;T.ramp=clamp(T.ramp+(T.still>0.8?dt*0.9:T.still>0?0:-dt*1.35),0,1);
   tgPose(h);
   const dy=h.ty-oty;if(Math.abs(d.x-ox)+Math.abs(d.z-oz)+Math.abs(dy)<1e-6)return;
