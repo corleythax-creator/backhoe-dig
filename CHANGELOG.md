@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Sunday, October 25, 2026
 
+- **v226** (10:27 AM) Jessica's golf cart by the arch on her path, and a go-kart on Corley's, Dexter's and Jessica's islands; both on the start card, with their own Tuning
 - **v225** (9:18 AM) The start card shows every machine as a small icon in one grid; Jessica's Island offers only the mower, four-wheeler, dirt bike, boat and on foot
 
 ## Saturday, October 24, 2026
