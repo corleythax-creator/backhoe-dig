@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-25T15:27:00Z",
+ "updated": "2026-10-25T16:14:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -66,9 +66,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-25",
-   "dh": 6.5,
-   "act": 1,
-   "versions": 2
+   "dh": 12.5,
+   "act": 1.5,
+   "versions": 3
   }
  ],
  "extra": [
@@ -2112,6 +2112,15 @@ window.EFFORT = {
    "tris": 5446195,
    "chars": 1431118,
    "what": "Jessica's golf cart by the arch on her path, and a go-kart on Corley's, Dexter's and Jessica's islands; both on the start card, with their own Tuning"
+  },
+  {
+   "v": 227,
+   "asked": "2026-10-25T09:57:00-05:00",
+   "live": "2026-10-25T11:14:03-05:00",
+   "dh": 6,
+   "tris": 4418557,
+   "chars": 1438431,
+   "what": "Mouse look in every view (click the scene, Esc frees it), a chase camera that eases round behind turning machines and drifts back behind them on the move, Messages setting (Few by default: only warnings and answers to what you did, tips on All only) with a small strip at the bottom, no on-screen sticks on mouse and keyboard (Sticks: Auto/On/Off), minimap sizes Off to XL, flatter squarer buttons"
   }
  ]
 };
