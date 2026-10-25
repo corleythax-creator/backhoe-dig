@@ -700,7 +700,7 @@ function dig(tip,cap,o){
   if(padUsed)rumbleDig(0.15+0.55*(1-hh/vol));
   return vol*s;
 }
-function deposit(x,z,vol,col,mix,spread,wet){
+function deposit(x,z,vol,col,mix,spread,wet,quiet){
   const r=0.9*(spread||1),list=[];let sum=0;
   const i0=Math.max(0,Math.floor(gI(x-r))),i1=Math.min(N,Math.ceil(gI(x+r)));
   const j0=Math.max(0,Math.floor(gJ(z-r))),j1=Math.min(N,Math.ceil(gJ(z+r)));
@@ -713,7 +713,8 @@ function deposit(x,z,vol,col,mix,spread,wet){
   for(let n=0;n<list.length;n+=2){const k=list[n],a=vol*list[n+1]/sum/CA;H[k]+=a;mixSpoil(k,col||SOIL[SPOIL].c,a);if(a>0.002){wetT[k]=timeU.value+(wet>0.3?600:0);comp[k]=0;soakMax[k]=0;if(wet>0.3)mudA[k]=Math.max(mudA[k],wet)}}
   dropMix(x,z,r,vol*DIRT,mix||CRUMB_MIX,col||SOIL[SPOIL].c,'dump');
   // dirt pouring out of a bucket or a bed thumps the controller, a heavier pour harder (controls.js)
-  if(padUsed)rumbleDig(Math.min(0.5,0.12+vol*25));
+  // (quiet: dirt that only trickles off by itself, clay shed from the tracks or a heaped bucket's overflow, doesn't)
+  if(padUsed&&!quiet)rumbleDig(Math.min(0.5,0.12+vol*25));
   dustPuff(x,hAt(x,z)+0.2,z,vol*30*(1-(wet||0)),col);
 }
 // each layer holds its own slope: sand runs, clay stands steep, rock barely moves; what slides keeps its colour as loose fill.

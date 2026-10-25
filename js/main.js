@@ -22,7 +22,7 @@ function bucketChip(){const b=bucketNow(),el=$('#bucketChip');if(el.hidden===!!b
   $('#bucketChipSub').textContent=b.s?'Spilling over the rim':heaped?'Heaped over the rim':'';el.classList.toggle('heaped',heaped&&!b.s);el.classList.toggle('spill',b.s)}
 // a heaped-full bucket still cutting: what it cuts and has no room for spills back over its sides, falling by the bucket
 function exOver(v,dt){const a=Math.random()*6.283,x=mid.x+Math.cos(a)*0.5,z=mid.z+Math.sin(a)*0.5;
-  if(inDig(x,z,0.5)){deposit(x,z,v,digC.slice(),digMix.slice(),0.9,mudAt(x,z));st.dirty=true;st.slumpT=2.5}
+  if(inDig(x,z,0.5)){deposit(x,z,v,digC.slice(),digMix.slice(),0.9,mudAt(x,z),true);st.dirty=true;st.slumpT=2.5}
   st.spillT=0.5;for(let n=0;n<Math.min(3,Math.ceil(v*200));n++)spawn(mid,0.7)}
 function frame(now){
   // frame cap (Graphics panel): skip this display refresh if the last frame was too recent

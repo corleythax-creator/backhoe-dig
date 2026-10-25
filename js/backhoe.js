@@ -147,7 +147,7 @@ function bhWork(h,dt,arm,curl,on){const P=h.parts,mv=(v,t,s)=>v<t?Math.min(t,v+s
       const rate=hc/TU.bhFillT*bhC(tv/TU.bhCutV,0,1.25)*ss(0,TU.bhThick,cut),want=rate*dt,room=Math.max(0,hc*(1+TU.bkHeap)-L.load);
       if(want>1e-6){const cutV=dig(bhCut,want),got=Math.min(cutV,room);
         if(cutV>got+1e-7){const a=Math.random()*6.283,x=bhM.x+Math.cos(a)*0.4,z=bhM.z+Math.sin(a)*0.4;h.spillT=0.5;
-          if(inDig(x,z,0.5)){deposit(x,z,cutV-got,digC.slice(),digMix.slice(),0.8,mudAt(x,z));st.dirty=true;st.slumpT=2.5}
+          if(inDig(x,z,0.5)){deposit(x,z,cutV-got,digC.slice(),digMix.slice(),0.8,mudAt(x,z),true);st.dirty=true;st.slumpT=2.5}
           for(let n=0;n<Math.min(3,Math.ceil((cutV-got)*200));n++)spawn(bhM,0.6);if(!h.toldFull){h.toldFull=true;toast(say('bhFull'),'',2600)}}
         if(got>0){h.fillR=got/dt;bhTake(L,got,bhT);statDug(got);if(Math.random()<0.5)spawn(bhT,1.0)}}
       if(ka<0.4&&gt-bhT.y>D+0.04&&tv>0.1){h.skimT=(h.skimT||0)+dt;if(h.skimT>2.5&&!h.toldSkim){h.toldSkim=true;toast(say('bhSkim'),'',4600)}}}}
