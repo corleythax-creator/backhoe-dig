@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Sunday, October 25, 2026
 
+- **v251** (6:50 PM) The start map now reaches the lakeside town on the mainland, with its own button to start there; the place labels are smaller and flatter.
 - **v250** (6:33 PM) The Family Island has its own button on the start map: tap it to start there on foot or in the nearest of any machine.
 - **v249** (6:08 PM) The excavator's bucket is drawn 20% bigger each way, the size of a 20-ton machine's 1 cu yd bucket, so the dirt it shows matches what it holds; a heaped load crowns higher over the rim
 - **v248** (5:39 PM) The controller stops rumbling: the motors are reset once the last pulse is over or the game loses focus, and dirt trickling off by itself (clay shed from the tracks, a heaped bucket's overflow) no longer buzzes it

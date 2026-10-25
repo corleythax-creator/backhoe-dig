@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-25T23:33:00Z",
+ "updated": "2026-10-25T23:50:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -66,9 +66,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-25",
-   "dh": 146.75,
+   "dh": 148.25,
    "act": 8,
-   "versions": 26
+   "versions": 27
   }
  ],
  "extra": [
@@ -2328,6 +2328,15 @@ window.EFFORT = {
    "tris": 5627416,
    "chars": 1702859,
    "what": "The Family Island has its own button on the start map: tap it to start there on foot or in the nearest of any machine."
+  },
+  {
+   "v": 251,
+   "asked": "2026-10-25T18:33:00-05:00",
+   "live": "2026-10-25T18:50:07-05:00",
+   "dh": 1.5,
+   "tris": 5633851,
+   "chars": 1703027,
+   "what": "The start map now reaches the lakeside town on the mainland, with its own button to start there; the place labels are smaller and flatter."
   }
  ]
 };
