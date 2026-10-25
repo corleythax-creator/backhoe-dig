@@ -339,14 +339,15 @@ const texReady=()=>{applyTextures();warmN=Math.max(warmN,3);warmAll={t0:performa
 // frame while the start card is up, where a hitch can't be felt. (The island tour test, tourtest.js, waits for this and
 // times it; warmIdle says when nothing is left to do)
 let warmAll=null;
-// the places a player gets to (where the island tour test goes): the rain cover's top-down pass and the sun's shadow
-// pass draw what is there once each, inside one call with nothing drawn on screen, so their own depth shaders for what
-// is only found there are built before you arrive. Only behind the start card or while the tour test gets ready
+// the places a player gets to (where the island tour test goes): the rain cover's top-down pass draws what is there
+// once, inside one call with nothing drawn on screen, so its depth shaders for what is only found there are built
+// before you arrive. Only behind the start card or while the tour test gets ready
 const WARM_AT=[[-190,248],[-200,205],[FAM_X,FAM_Z],[JES_X,JES_Z],[72,540],[0,600],[0,652],[0,-5],[40,-330]];
 function warmAt(x,z){const c=camera.position.clone(),sp=sun.position.clone(),stp=sun.target.position.clone(),y=Math.max(WATER,baseHeight(x,z))+2;
   try{camera.position.set(x,y,z);camera.updateMatrixWorld();if(typeof rcRender==='function'&&typeof rcRT!=='undefined')rcRender();
-    sun.position.set(x,y,z).addScaledVector(LIGHT_DIR,SUN_D);sun.target.position.set(x,y,z);sun.updateMatrixWorld();sun.target.updateMatrixWorld();
-    if(sun.castShadow&&renderer.shadowMap.enabled){renderer.shadowMap.needsUpdate=true;renderer.shadowMap.render([sun],scene,camera)}}catch(e){}
+    // (the sun's shadow pass was drawn here too, but called outside a frame it left WebGL failing every draw after it,
+    // GL_INVALID_OPERATION, and the screen froze on its last picture; v239)
+    }catch(e){}
   finally{camera.position.copy(c);camera.updateMatrixWorld();sun.position.copy(sp);sun.target.position.copy(stp);sun.updateMatrixWorld();sun.target.updateMatrixWorld();renderer.shadowMap.needsUpdate=true}}
 const warmQuiet=()=>!help.hidden||typeof tour!=='undefined'&&tour.on&&tour.ph==='ready';
 function warmIdle(){const W=warmAll;return !W||W.pend===0&&W.still>=1&&(!W.q||!W.q.length||help.hidden)&&(!W.at||!W.at.length||!warmQuiet())}

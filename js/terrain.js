@@ -214,13 +214,15 @@ if(mapRoads){ROADS.length=0;ROADS.push(...mapRoads);mapRoads=ROADS}
 const ISLAND_ROADS=[
   {w:4.2,mid:1,pts:[[0,-13],[0,-44],[0,-84]]},
   // the mainland: over each causeway, the north trail into the woods and the lane along the hayfield, and the town's
-  // main street, beach road and cross street
+  // main street, beach road (east of Main Street it turns into the marina's car park) and cross street; the town's are
+  // paved over in mainland.js (mainStreets)
   {w:6,mid:0,pts:[[0,-213],[0,-296],[0,-336]]},
   {w:3.2,mid:1,pts:[[0,-336],[-30,-346],[-90,-370],[-150,-362],[-220,-396],[-300,-410],[-380,-440]]},
   {w:3.6,mid:1,pts:[[0,-336],[60,-333],[180,-337],[320,-331],[400,-334]]},
   {w:6,mid:0,pts:[[0,500],[0,566]]},
   {w:8,mid:0,pts:[[0,566],[0,725]]},
-  {w:5,mid:0,pts:[[-170,576],[-60,574],[0,574],[60,574],[170,577]]},
+  {w:5,mid:0,pts:[[-170,576],[-60,574],[0,574]]},
+  {w:5,mid:0,pts:[[0,574],[26,574],[36,582],[57.5,586.4]]},
   {w:6,mid:0,pts:[[-140,652],[0,652],[140,652]]},
   {w:4.8,mid:0,pts:[[0,63,FAM_Y],[0,72,FAM_Y]]},
   {w:4.8,mid:0,pts:[[0,165,FAM_Y],[0,234,FAM_Y]]},
