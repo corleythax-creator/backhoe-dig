@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-25T21:50:00Z",
+ "updated": "2026-10-25T22:03:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -66,9 +66,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-25",
-   "dh": 123.5,
-   "act": 6,
-   "versions": 19
+   "dh": 125.5,
+   "act": 6.5,
+   "versions": 20
   }
  ],
  "extra": [
@@ -2265,6 +2265,15 @@ window.EFFORT = {
    "tris": 5641908,
    "chars": 1663218,
    "what": "About 60 new things to place, in the map editor or on foot from the Blocks bar's What list: street lights, lamp posts, floodlights, spotlights, path and string lights and lantern hooks that glow after dark in any colour, plus road gear, site gear, garden, yard and play things (and jack-o'-lanterns)."
+  },
+  {
+   "v": 244,
+   "asked": "2026-10-25T16:55:00-05:00",
+   "live": "2026-10-25T17:03:59-05:00",
+   "dh": 2,
+   "tris": 5632241,
+   "chars": 1665680,
+   "what": "The distant train shows on the maps: the line across the north, each train as a dark bar with a red dot at its locomotive (blue for Amtrak), and a train badge on the minimap's edge pointing the way to it."
   }
  ]
 };

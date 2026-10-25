@@ -128,10 +128,12 @@ function trainTick(dt){const M=trnMeshes(),cnt={};for(const k of TRN_TYPES)cnt[k
   if(mdl.want)trnModels();const want=!!(mdl.want&&trn.glb);
   if(trn.glbOn!==want){trn.glbOn=want;for(const t of TRN_TYPES){const im=M[t],G=want&&trn.glb[t];[im.geometry,im.material]=G||im.userData.box}}
   trnHazeU.value=clamp(0.42+0.7*(1-scene.fog.far/(760*gfxFog)),0.2,0.97);
-  const v=TU.trSpeed,P=Math.max(TU.trEvery,(trn.L+TRN_LMAX)/v+20),t=Date.now()/1000,K=Math.floor(t/P),night=1-dayKU.value;let nl=0;
+  const v=TU.trSpeed,P=Math.max(TU.trEvery,(trn.L+TRN_LMAX)/v+20),t=Date.now()/1000,K=Math.floor(t/P),night=1-dayKU.value;let nl=0;trn.live=[];
   for(const k of trn.runs.keys())if(k<K-1)trn.runs.delete(k);
   for(let k=K-1;k<=K;k++){let R=trn.runs.get(k);if(!R){R={C:trnConsist(k),h:0};trn.runs.set(k,R)}
     const C=R.C,front=(t-k*P)*v*C.vk,dir=k&1;if(front-C.len>trn.L)continue;const sOf=d=>dir?trn.L-d:d;
+    // for the maps: the open stretch the train covers, and its lead locomotive
+    {const a=trn.S[trn.pw],b=trn.S[trn.pe],f=clamp(sOf(front),a,b),e=clamp(sOf(front-C.len),a,b);if(f!==e)trn.live.push({f,e,p:trnAt(sOf(front)),amtk:C.vk>1})}
     // the horn: leaving the tunnel, and a quarter mile before the next
     const out=(dir?trn.L-trn.S[trn.pe]:trn.S[trn.pw])+30,inn=(dir?trn.L-trn.S[trn.pw]:trn.S[trn.pe])-400;
     if(R.h===0&&front>out){R.h=1;if(front<out+60)trainHorn(trnAt(sOf(front)))}
@@ -152,3 +154,22 @@ function trainHorn(p){if(typeof snd==='undefined'||!snd||!snd.ready||!sndCfg.on|
   if(pan){pan.pan.value=clamp((dx*-f.z+dz*f.x)/d,-1,1)*0.7;lp.connect(pan);pan.connect(g)}else lp.connect(g);
   for(const [a,b] of [[0,1.7],[2.2,4.3]]){g.gain.setTargetAtTime(k,t0+a,0.06);g.gain.setTargetAtTime(0,t0+b,0.12)}
   for(const fr of [311.1,370,415.3,493.9,622.3]){const o=actx.createOscillator(),og=sndGain(0.2,lp);o.type='sawtooth';o.frequency.value=fr;o.connect(og);o.start(t0);o.stop(t0+5.2)}}
+
+// ---- on the minimap and the site map (maps.js drawMap): the line, and each train as a dark bar along it with a dot at
+// the lead locomotive (Cruise Brandon's look: red for a freight, blue for Amtrak). The line is far off the minimap's
+// patch of ground, so while a train is out there the minimap pins a marker to its edge, pointing the way to it
+function trainMapDraw(g,X,Y,sc,W,H,dpr,big){if(!trn.X.length)return;const seg=(a,b)=>{g.beginPath();let first=true;
+    for(let i=trnIdx(Math.min(a,b));i<=Math.min(trn.X.length-1,trnIdx(Math.max(a,b))+1);i++){const x=X(trn.X[i]),y=Y(trn.Z[i]);first?g.moveTo(x,y):g.lineTo(x,y);first=false}g.stroke()};
+  g.save();g.lineCap=g.lineJoin='round';const a=trn.S[trn.pw],b=trn.S[trn.pe];
+  g.strokeStyle='rgba(125,122,114,.95)';g.lineWidth=Math.max(3*dpr,9*sc);seg(a,b);
+  g.strokeStyle='#2a2826';g.lineWidth=Math.max(1.2*dpr,2.6*sc);g.setLineDash([2*dpr,2*dpr]);seg(a,b);g.setLineDash([]);
+  for(const T of trn.live){g.strokeStyle='rgba(14,14,18,.9)';g.lineWidth=Math.max(4*dpr,3.4*sc);seg(T.f,T.e)}
+  const pad=(big?22:12)*dpr;
+  for(const T of trn.live){const col=T.amtk?'#1d4fa0':'#ff3b30',x=X(T.p[0]),y=Y(T.p[2]);
+    if(x>-4&&x<W+4&&y>-4&&y<H+4){g.beginPath();g.arc(x,y,Math.max(4*dpr,2*sc),0,Math.PI*2);g.fillStyle=col;g.fill();g.strokeStyle='#fff';g.lineWidth=1.5*dpr;g.stroke();continue}
+    // off the map: a badge on the edge toward it, an arrow pointing out
+    const dx=x-W/2,dy=y-H/2,k=Math.min((W/2-pad)/Math.abs(dx||1e-6),(H/2-pad)/Math.abs(dy||1e-6)),ex=W/2+dx*k,ey=H/2+dy*k,ang=Math.atan2(dy,dx),r=(big?11:8)*dpr;
+    g.save();g.translate(ex,ey);g.shadowColor='rgba(0,0,0,.55)';g.shadowBlur=4*dpr;g.beginPath();g.arc(0,0,r,0,Math.PI*2);g.fillStyle=col;g.fill();g.shadowColor='transparent';
+    g.strokeStyle='#fff';g.lineWidth=1.5*dpr;g.stroke();g.rotate(ang);g.beginPath();g.moveTo(r+5*dpr,0);g.lineTo(r+0.5*dpr,-3.5*dpr);g.lineTo(r+0.5*dpr,3.5*dpr);g.closePath();g.fillStyle='#fff';g.fill();g.rotate(-ang);
+    g.fillStyle='#fff';g.fillRect(-r*0.45,-r*0.42,r*0.9,r*0.62);g.fillStyle=col;g.fillRect(-r*0.3,-r*0.3,r*0.6,r*0.22);g.fillStyle='#fff';g.fillRect(-r*0.5,r*0.3,r,r*0.12);g.restore()}
+  g.restore()}
