@@ -268,9 +268,10 @@ function tileRide(t){const k=t.dataset.k;if(!k)return t.dataset.m==='walk'?'foot
 for(const t of tiles)t.onclick=()=>{const k=tileRide(t);if(!k)return;
   if(k==='foot')startIn('walk');else{const R=WK_RIDES[k];wk.inside=k;walker.visible=false;if(R.pick)R.pick();firstCam=true;startIn(R.m)}
   if(startIsl!=='corley')startOn(startIsl,k)};
-// Jessica's Island is reached on foot over the covered bridge, so it only offers the small rides (by data-k, or data-m)
-const ISL_TILES={jessica:['walk','mow','hv:atv','bike','boat']};
-function showTiles(){const L=ISL_TILES[startIsl];for(const t of tiles)t.hidden=!!L&&!L.includes(t.dataset.k||t.dataset.m)}
+// Jessica's Island is reached on foot over the covered bridge, so it only offers the small rides (by data-k, or data-m);
+// a tile with data-only shows on that island alone (her golf cart)
+const ISL_TILES={jessica:['walk','mow','hv:atv','bike','boat','hv:kart','hv:golf']};
+function showTiles(){const L=ISL_TILES[startIsl];for(const t of tiles)t.hidden=!!L&&!L.includes(t.dataset.k||t.dataset.m)||!!t.dataset.only&&t.dataset.only!==startIsl}
 markIsl();showTiles();
 function markTile(){const r=mode==='walk'?'foot':rideKind(wk.inside||rideOf(mode));
   for(const t of tiles)t.setAttribute('aria-pressed',(t.dataset.k||(t.dataset.m==='walk'?'foot':rideOf(t.dataset.m)))===r)}

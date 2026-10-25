@@ -204,12 +204,13 @@ function hvCar(h,dt,drive,turn,k,on){const K=h.K,P=K.car,top=TU[P+'Spd']*k,rev=T
   h.w=-h.v*Math.tan(h.steer)/K.wb;h.yaw+=h.w*dt;
   const d=Math.atan2(Math.sin(h.yaw-h.mv),Math.cos(h.yaw-h.mv)),hold=7.8*TU[P+'Grip']/Math.max(1,Math.abs(h.v))*dt;
   h.mv+=clamp(d,-hold,hold);h.slide=Math.abs(Math.sin(d));if(h.slide>0.05)h.v*=1-Math.min(0.5,1.2*h.slide*dt)}
-// the rider on the four-wheeler: on the seat, boots on the footrests, hands on the bars, leaning a little into the turns
+// the rider on the four-wheeler: on the seat, boots on the footrests, hands on the bars, leaning a little into the turns.
+// The golf cart and go-karts (carts.js) seat him at K.seat with his legs at K.legs [hip, knee] and his back at K.lean
 const hvRV=new THREE.Vector3();
-function hvRider(h){h.g.localToWorld(hvRV.set(0,0.13,-0.22));Object.assign(wk,{x:h.x,z:h.z,y:h.y,yaw:h.yaw});walker.position.copy(hvRV);
+function hvRider(h){const K=h.K,S=K.seat||[0,0.13,-0.22],L=K.legs||[-1.15,1.25];h.g.localToWorld(hvRV.set(S[0],S[1],S[2]));Object.assign(wk,{x:h.x,z:h.z,y:h.y,yaw:h.yaw});walker.position.copy(hvRV);
   walker.rotation.set(-h.pitch,h.yaw,h.roll-clamp(h.steer*h.v*0.04,-0.25,0.25),'YXZ');walker.visible=!(mode==='heavy'&&camMode==='cab');
-  wkBody.position.y=0;wkBody.rotation.x=0.22;wkHead.rotation.x=-0.1;
-  for(let s=0;s<2;s++){wkLegs[s].top.rotation.x=-1.15;wkLegs[s].low.rotation.x=1.25;wkArms[s].top.rotation.x=-0.95;wkArms[s].low.rotation.x=-0.55}}
+  wkBody.position.y=0;wkBody.rotation.x=K.lean??0.22;wkHead.rotation.x=-0.1;
+  for(let s=0;s<2;s++){wkLegs[s].top.rotation.x=L[0];wkLegs[s].low.rotation.x=L[1];wkArms[s].top.rotation.x=-0.95;wkArms[s].low.rotation.x=-0.55}}
 // the dozer's blade: down on the dig site it shaves the ground as it goes forward; what it cuts rolls up in front of it
 // and spills ahead (the blade, still down, picks it up again, so the heap goes along with it); lifted, it is left there
 // It bites hard ground slowly (soilRes, terrain.js) and lugs the dozer down doing it, unless the ripper broke it up first
@@ -261,5 +262,5 @@ function hvBucket(h,dt,arm,curl,on){const cap=TU.hvLdCap,full=1-0.15*h.load/cap;
 // the one the worker is in, when it can dig (the dig grid follows it, digtiles.js)
 function hvDigger(){const R=WK_RIDES[wk.inside];return R&&R.m==='heavy'&&!R.o.K.trail&&!R.o.K.car&&!R.o.K.mini?R.o:null}
 // the walker climbs in beside them (walker.js): they join WK_RIDES as hv0 to hv4 (Dexter's) and hv5 to hv9 (Corley's);
-// Corley's backhoe (backhoe.js) joins as hv10
+// Corley's backhoe (backhoe.js) joins as hv10, the mini excavator (trailer.js) next, then the golf cart and go-karts (carts.js)
 hvs.forEach((h,i)=>{WK_RIDES['hv'+i]={o:h,c:h.K.C,r:h.K.R,m:'heavy',n:h.K.n,pick(){hvI=i}};hvReset(h)});

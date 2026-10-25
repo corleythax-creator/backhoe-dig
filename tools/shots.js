@@ -10,7 +10,7 @@ const SHOTS=[
   ['dig','ex',9,2,55,2.2,2],['truck','truck',9.5,1.6,-40,2.2],['mow','mow',3.6,0.6,-35,1.4],['walk','foot',3.2,1.1,-20,0.3],
   ['skid','skid',5.2,1.1,-38,1.6],['backhoe','hv:backhoe',8.5,1.5,-40,2.2],['mini','hv:mini',6,1.2,-38,1.8],
   ['dozer','hv:dozer',7.5,1.4,-38,2],['loader','hv:loader',9.5,1.6,-38,2.4],['semi','hv:semi',11,1.8,-35,2.2],
-  ['pickup','hv:pickup',7.5,1,-38,1.4],['atv','hv:atv',3.6,0.7,-38,1],['bike','bike',3.4,0.7,-50,0.7],['boat','boat0',7,0.8,-140,2.6]];
+  ['pickup','hv:pickup',7.5,1,-38,1.4],['atv','hv:atv',3.6,0.7,-38,1],['kart','hv14',3,0.4,-38,0.9],['golf','hv:golf',4.2,0.9,40,1.2],['bike','bike',3.4,0.7,-50,0.7],['boat','boat0',7,0.8,-140,2.6]];
 module.exports=async(page)=>{const want=(process.env.SHOTS||'').split(',').filter(Boolean),out=[];
   await page.evaluate(()=>{ultraGuardOff=true;setGfx('ultra');setWeather('dry');weather.amt=0;dnSet(10.5*60);
     document.querySelectorAll('body>*').forEach(e=>{if(e!==renderer.domElement)e.style.display='none'})});
