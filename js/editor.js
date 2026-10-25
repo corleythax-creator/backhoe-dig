@@ -12,7 +12,6 @@ const ED_TOOLS={raise:'Raise',lower:'Lower',flatten:'Flatten',smooth:'Smooth',di
 // the left bar's groups: their tools (picked in the bottom bar, or for Paint by the library's swatches), and whether the
 // drawer beside the bar has a part for them (the material library, the things to add and the On the map list, the roads)
 const ED_GROUPS={shape:{tools:['raise','lower','flatten','smooth']},paint:{tools:['paint','dirt','grass','tall','notall'],pane:1},things:{tools:['select','add','plant'],pane:1},roads:{tools:['roads'],pane:1},inspect:{tools:['query','measure']}};
-const ED_KIND_CATS=['Trees and rocks','Buildings','Fencing','Site gear','Yard'];
 // the editor's icons (24 px, drawn with lines), put in front of the words of every part with a data-ic
 const ED_ICONS={done:'M15 5l-7 7 7 7',undo:'M9 14L4 9l5-5M4 9h10a6 6 0 010 12h-3',redo:'M15 14l5-5-5-5M20 9H10a6 6 0 000 12h3',
   look:'M12 3v18M3 12h18M9 6l3-3 3 3M9 18l3 3 3-3M6 9l-3 3 3 3M18 9l3 3-3 3',zin:'M10.5 4a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM15.5 15.5L21 21M7.5 10.5h6M10.5 7.5v6',
@@ -388,8 +387,9 @@ function edTreeBlock(){const C=treeCensus('main');if(!C.n)return '';
 function edTreeLine(a){const v=treeVitalsOf(a);return `${TREE_STAGES[v.st]} · ${sN(v.age)} yr old · trunk ${sIn(v.D)} · crown ${edFmt(v.crown,0)} ft wide · grows ${(v.grow/2.54).toFixed(1)} in a year · holds ${sLb(v.co2)} of CO₂`}
 const edSlider=(id,lab,min,max,step,val,unit)=>`<span class="edopt"><label for="${id}">${lab}</label><input id="${id}" type="range" min="${min}" max="${max}" step="${step}" value="${val}"><output id="${id}V">${val}${unit}</output></span>`;
 // the colours a kind can take (scenery.js tints the trees, props.js the buildings' walls), as swatches
-const edFam=t=>t==='pine'||t==='leafy'?t:PROPS[t]&&PROPS[t].tint?'house':null;
-function edFams(){return {pine:{n:'Needles',c:ASSET_PT.map(t=>[0.3*t[0],0.46*t[1],0.26*t[2]])},leafy:{n:'Leaves',c:ASSET_LT},house:{n:'Walls',c:PROP_TINT.map(t=>[0.9*t[0],0.88*t[1],0.84*t[2]])}}}
+const edFam=t=>t==='pine'||t==='leafy'?t:PROPS[t]&&PROPS[t].tint?'house':propGlow(t)?'glow':null;
+function edFams(){return {pine:{n:'Needles',c:ASSET_PT.map(t=>[0.3*t[0],0.46*t[1],0.26*t[2]])},leafy:{n:'Leaves',c:ASSET_LT},house:{n:'Walls',c:PROP_TINT.map(t=>[0.9*t[0],0.88*t[1],0.84*t[2]])},
+  glow:{n:'Light',c:LAMP_COLS.map(h=>{const c=new THREE.Color(h);return [c.r,c.g,c.b]})}}}
 function edInspector(){const S=ed.sel,el=$('#edInfo');edBottomSync();if(!S.length){el.innerHTML='';return}
   const L=edSelL(),nl=L.length-edSelA().length;
   // only locked things picked: they can be unlocked or hidden, nothing else

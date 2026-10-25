@@ -45,6 +45,7 @@ const KEY_ACTIONS=[
   {id:'size',g:'Blocks',n:'Block size',d:'Steps through cubes, 1 to 10 ft (the block bar sets wide, long and tall one by one, down to 1 in)',k:['KeyV']},
   {id:'blkTurn',g:'Blocks',n:'Turn block',d:'A quarter turn: wide and long swap',k:['KeyQ']},
   {id:'blkLock',g:'Blocks',n:'Block snap',d:'Grid, grid plus flush against nearby blocks, nearby blocks only, or free (exactly where you aim)',k:['Backslash']},
+  {id:'blkWhat',g:'Blocks',n:'Block or thing',d:'On foot, the next in the What list: a block, then the things to set down (lights, signs, garden and yard things…)',k:['KeyT'],s:'walk'},
   {id:'blkMat',g:'Blocks',n:'Block material',d:'Next material: plain concrete, then the library',k:['KeyY']},
   {id:'blkFar',g:'Blocks',n:'Reach farther',d:'In first person on foot, push the block out from you (the mouse wheel does too)',k:['BracketRight']},
   {id:'blkNear',g:'Blocks',n:'Reach nearer',d:'In first person on foot, pull the block back toward you',k:['BracketLeft']},

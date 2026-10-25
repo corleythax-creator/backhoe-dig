@@ -128,6 +128,8 @@ const TUNE=[
   ['ultraWetGround','Ultra','Wet ground shine: how strongly soaked dirt and mud mirror the sky',1,'pct',0,300,5],
   ['pbrFar','Ground look','Relief fades out by',180*0.3048,'ft',60,600,10],
   ['treeSway','Trees','How much the trees and undergrowth sway in the breeze',1,'pct',0,400,5],['treeGlow','Trees','How much sunlight shines through the leaves',1,'pct',0,300,5],
+  // the freight line far across the lake (train.js)
+  ['trSpeed','Train','The distant trains run at',35*0.44704,'mph',10,80,1],['trEvery','Train','A train comes out of the tunnel every',300,'min',1,60,1],
   // how the clock runs (☰ menu, Time) and how dark the night gets
   ['dayLen','Day and night','A whole day (24 hours) passes in',2880,'min',2,1440,1],
   ['nightLight','Day and night','Moonlight and starlight at night',1,'pct',0,400,5],

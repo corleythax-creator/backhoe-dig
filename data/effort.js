@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-25T21:01:00Z",
+ "updated": "2026-10-25T22:14:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -66,9 +66,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-25",
-   "dh": 94,
-   "act": 5.5,
-   "versions": 16
+   "dh": 130.5,
+   "act": 6.5,
+   "versions": 21
   }
  ],
  "extra": [
@@ -2238,6 +2238,51 @@ window.EFFORT = {
    "tris": 5617683,
    "chars": 1606447,
    "what": "Main Street and the cross street paved with curbs, gutters, sidewalks, curb ramps, a four-way stop, crosswalks, storm drains and manholes; the screen no longer freezes after the start card's warm-up"
+  },
+  {
+   "v": 241,
+   "asked": "2026-10-25T16:10:00-05:00",
+   "live": "2026-10-25T16:15:43-05:00",
+   "dh": 1.5,
+   "tris": 5624533,
+   "chars": 1607532,
+   "what": "Feet and wheels stand on the town's sidewalks, curbs and asphalt instead of sinking in; a curb is a step up on foot"
+  },
+  {
+   "v": 242,
+   "asked": "2026-10-25T16:05:00-05:00",
+   "live": "2026-10-25T16:27:35-05:00",
+   "dh": 10,
+   "tris": 5767486,
+   "chars": 1624463,
+   "what": "A freight line runs along the foot of the north mountains across the lake: Cruise Brandon's CN and CPKC freights (and now and then Amtrak's City of New Orleans) come out of one tunnel every few minutes, cross on a rock causeway and go into the other, blowing the horn, headlights on at night."
+  },
+  {
+   "v": 243,
+   "asked": "2026-10-25T16:04:00-05:00",
+   "live": "2026-10-25T16:50:02-05:00",
+   "dh": 18,
+   "tris": 5641908,
+   "chars": 1663218,
+   "what": "About 60 new things to place, in the map editor or on foot from the Blocks bar's What list: street lights, lamp posts, floodlights, spotlights, path and string lights and lantern hooks that glow after dark in any colour, plus road gear, site gear, garden, yard and play things (and jack-o'-lanterns)."
+  },
+  {
+   "v": 244,
+   "asked": "2026-10-25T16:55:00-05:00",
+   "live": "2026-10-25T17:03:59-05:00",
+   "dh": 2,
+   "tris": 5632241,
+   "chars": 1665680,
+   "what": "The distant train shows on the maps: the line across the north, each train as a dark bar with a red dot at its locomotive (blue for Amtrak), and a train badge on the minimap's edge pointing the way to it."
+  },
+  {
+   "v": 245,
+   "asked": "2026-10-25T16:20:00-05:00",
+   "live": "2026-10-25T17:14:34-05:00",
+   "dh": 5,
+   "tris": 5624387,
+   "chars": 1671054,
+   "what": "Porches, steps, slabs, decks, lots, walks, curbs, the cottage floor and the editor's pallets, gazebo and sandbox are now stood on at their real height; edges up to a step step up, higher ones are walls"
   }
  ]
 };

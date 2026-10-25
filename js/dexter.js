@@ -21,7 +21,7 @@ const DEX_Y=0xf2b705,DEX_D=0x2b2d30,DEX_GLASS=0x3c4a52;
   const K=famKit(),G=(x,z)=>baseHeight(x,z);
   // equipment shed: blue-grey ribbed steel, a low roof, three roll-up doors facing the yard, a light over each
   {const X=-213,Z=226,W=22,D=12,H=6.5,y=G(X,Z),WALL=0x8fa3ad,RIB=0x7d919b,ROOF=0x6b7780,TRIM=0xc0392b;
-    K.box(W+0.4,0.3,D+0.4,0x9b9a94,X,y+0.1,Z);K.box(W,H,D,WALL,X,y+H/2,Z);
+    K.box(W+0.4,0.3,D+0.4,0x9b9a94,X,y+0.1,Z);walkPad(X,Z,W/2+0.2,D/2+0.2,0,y+0.25);K.box(W,H,D,WALL,X,y+H/2,Z);
     for(let x=X-W/2+0.3;x<X+W/2;x+=0.6)for(const s of [-1,1])K.box(0.12,H,0.06,RIB,x,y+H/2,Z+s*(D/2+0.03));
     for(let z=Z-D/2+0.3;z<Z+D/2;z+=0.6)for(const s of [-1,1])K.box(0.06,H,0.12,RIB,X+s*(W/2+0.03),y+H/2,z);
     K.geo(famGable(D,1.6,W),WALL,X,y+H,Z);const ra=Math.atan2(1.6,D/2),rl=Math.hypot(D/2,1.6)+0.6,mo=rl/2;
@@ -37,7 +37,7 @@ const DEX_Y=0xf2b705,DEX_D=0x2b2d30,DEX_GLASS=0x3c4a52;
   {const X=-180,Z=227,y=G(X,Z),K=famKit();for(const dx of [-5,-1.7,1.7,5])K.box(0.4,0.6,3,0x9b9a94,X+dx,y+0.3,Z);
     K.box(12,2.8,3.4,0xeeeeea,X,y+2,Z);K.box(12.1,0.15,3.5,0xb9b9b4,X,y+3.45,Z);
     for(const dx of [-4.2,-1.6,3.6])K.box(1.4,0.9,0.06,DEX_GLASS,X+dx,y+2.3,Z+1.72);K.box(0.95,2.0,0.06,0x8a9198,X+1.2,y+1.65,Z+1.72);
-    for(let i=0;i<3;i++)K.box(1.2,0.18,0.35,0x8a8a86,X+1.2,y+0.45+i*0.3-0.15,Z+2.6-i*0.3);K.box(1.6,0.08,1.0,0x8a8a86,X+1.2,y+0.62+0.3,Z+2.2);
+    for(let i=0;i<3;i++)K.box(1.2,0.18,0.35,0x8a8a86,X+1.2,y+0.45+i*0.3-0.15,Z+2.6-i*0.3);K.box(1.6,0.08,1.0,0x8a8a86,X+1.2,y+0.62+0.3,Z+2.2);walkPad(X+1.2,Z+2.29,0.8,0.49,Math.PI,y,{rise:0.96});
     famAddSpot('office',K);famSpot('office',X,y,Z);
     famSign(['OFFICE'],2.2,0.55,X-1.6,y+3.05,Z+1.74,0,'#ffffff','#2b2d30');
     SOLIDS.push({x:X,z:Z,hx:6.1,hz:1.8})}

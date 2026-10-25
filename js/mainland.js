@@ -251,12 +251,13 @@ function mainSignsAdd(){const cv=document.createElement('canvas');cv.width=1024;
   for(const s of [-1,1])for(let i=0;i<5;i++){const x=s*(30+i*22);lot(x,652-13,16,12,5+((i*3)%4)*1.4,0);lot(x,652+13,16,12,5.5+((i*2)%3)*1.5,Math.PI)}
   // a boardwalk along the top of the beach, and a few benches on it looking out at the islands
   // (a gap where the marina's boat ramp crosses it, marina.js)
-  for(let x=-160;x<160;x+=6){if(Math.abs(x)<7||Math.abs(x+3-107)<4)continue;const z0=mainRimS(x)+3,z1=mainRimS(x+6)+3,y=Math.max(baseHeight(x+3,(z0+z1)/2),WATER+1.8);
-    T.box(6.1,0.16,3.6,0x8c6e4c,x+3,y+0.25,(z0+z1)/2,-Math.atan2(z1-z0,6));
-    if(((x+160)/6|0)%5===2){BK.box(1.6,0.45,0.5,0x5c4632,x+3,y+0.55,(z0+z1)/2+1.2);famSpot('bench',x+3,y+0.33,(z0+z1)/2+1.2,Math.PI,0.9)}}
+  // (and none where it would lie on the beach road west of Main Street)
+  for(let x=-160;x<160;x+=6){if(Math.abs(x)<7||Math.abs(x+3-107)<4)continue;if(x+3<0&&Math.abs(mainRimS(x+3)+3-(x+3<-60?576-2*(x+173)/110:574))<4.4)continue;const z0=mainRimS(x)+3,z1=mainRimS(x+6)+3,y=Math.max(baseHeight(x+3,(z0+z1)/2),WATER+1.8);
+    T.box(6.1,0.16,3.6,0x8c6e4c,x+3,y+0.07,(z0+z1)/2,-Math.atan2(z1-z0,6));walkPad(x+3,(z0+z1)/2,3.05,1.8,-Math.atan2(z1-z0,6),y+0.15);
+    if(((x+160)/6|0)%5===2){BK.box(1.6,0.45,0.5,0x5c4632,x+3,y+0.37,(z0+z1)/2+1.2);famSpot('bench',x+3,y+0.15,(z0+z1)/2+1.2,Math.PI,0.9)}}
   // street trees along Main Street between the lamps, each in a square of brick pavers with an iron grate
   const TR=[];for(const sx of [-1,1])for(const z of [595,617,637,667,683,705]){const x=sx*4.85,y=baseHeight(x,z);TR.push(treeEntry('leafy',x,z,(z*0.37)%6.3,0.62,(z/22|0)%6));
-    T.box(1.3,0.04,1.3,0x8a4a36,x,y+0.18,z);T.box(1.0,0.03,1.0,0x2a2c2f,x,y+0.2,z)}
+    T.box(1.3,0.04,1.3,0x8a4a36,x,y+0.18,z);T.box(1.0,0.03,1.0,0x2a2c2f,x,y+0.2,z);walkPad(x,z,0.65,0.65,0,y+0.2)}
   treeGroup('town',TR);
   // a post clock at the foot of Main Street: a fluted iron post, a head with a face each way and the hands at ten past ten
   {const X=-7.5,Z=570,y=baseHeight(X,Z);T.cyl(0.32,0.38,0.5,10,0x1f2a24,X,y+0.25,Z);T.cyl(0.12,0.14,3.6,10,0x1f2a24,X,y+2.2,Z);T.box(0.95,0.95,0.42,0x1f2a24,X,y+4.4,Z);
@@ -321,21 +322,21 @@ function shopKit(){const parts=new Map(),O=new THREE.Object3D(),n=new THREE.Vect
   for(const s of [-1,1]){K.box(galv,0.9,0.04,0.06,s*0.62,fl+1.05,fz+0.1);K.box(galv,1.1,0.25,0.02,s*0.62,fl+0.14,fz+0.17)}
   // the canopy over the walk on its posts, lit underneath
   const cy=fl+3.55;K.box(green,31,0.34,3.9,0,cy+0.17,fz-1.9);K.box(galv,30.8,0.03,3.7,0,cy-0.005,fz-1.9);
-  for(const x of [-14.6,-7.5,7.5,14.6])K.box(green,0.16,cy-g0+0.1,0.16,x,(cy+g0-0.1)/2,fz-3.6);
+  for(const x of [-14.6,-7.5,7.5,14.6]){K.box(green,0.16,cy-g0+0.1,0.16,x,(cy+g0-0.1)/2,fz-3.6);SOLIDS.push({x,z:fz-3.6,hx:0.08,hz:0.08})}
   for(const x of [-11,-5.5,0,5.5,11])F.lit(new THREE.BoxGeometry(0.5,0.04,0.5),0xfff1c8,x,cy-0.03,fz-1.9);
   // the walk in front: broom-finish concrete with its curb; the lot: asphalt with painted stalls, two lamp poles
-  K.sheet(conc,-15.5,15.5,fz-3.8,fz+0.02,0.12);K.box(conc,31,0.3,0.16,0,baseHeight(0,fz-3.8)-0.03,fz-3.8);
-  K.sheet(asph,-27.5,17.5,724.5,fz-3.8,0.04);
+  K.sheet(conc,-15.5,15.5,fz-3.8,fz+0.02,0.12);walkPad(0,fz-1.89,15.5,1.91,0,0,{l:0.12});K.box(conc,31,0.3,0.16,0,baseHeight(0,fz-3.8)-0.03,fz-3.8);
+  K.sheet(asph,-27.5,17.5,724.5,fz-3.8,0.04);walkPad(-5,(724.5+fz-3.8)/2,22.5,(fz-3.8-724.5)/2,0,0,{l:0.04});
   for(let x=-25.4;x<16;x+=3.2)if(Math.abs(x)>4.2)K.sheet(paint,x-0.06,x+0.06,fz-10.4,fz-4.6,0.055);
   for(const [x,z] of [[-13,731],[10,731]]){const y=baseHeight(x,z);F.cyl(0.25,0.3,0.6,10,0xa3a19a,x,y+0.3,z);F.cyl(0.08,0.11,8,8,0x3a3d40,x,y+4.3,z);
     for(const s of [-1,1]){F.box(1.0,0.08,0.08,0x3a3d40,x+s*0.5,y+8.2,z);F.box(0.55,0.14,0.32,0x2f3236,x+s*1.05,y+8.15,z);F.lit(new THREE.BoxGeometry(0.45,0.03,0.24),0xfff1c8,x+s*1.05,y+8.07,z)}
     SOLIDS.push({x,z,hx:0.3,hz:0.3})}
   // the garden centre: a concrete pad under a shade roof of corrugated steel on galvanized posts, two pallets of bagged
   // mulch, and benches of potted shrubs along the back
-  const gy=baseHeight(-21,749)+3.4;K.sheet(conc,-27.4,-15.2,fz-3.8,fz+14.2,0.07);
+  const gy=baseHeight(-21,749)+3.4;K.sheet(conc,-27.4,-15.2,fz-3.8,fz+14.2,0.07);walkPad(-21.3,fz+5.2,6.1,9,0,0,{l:0.07});
   K.box(corr,11.6,0.05,17.6,-21.3,gy,fz+5.2);for(const z of [fz-3.7,fz+14])K.box(green,11.8,0.28,0.1,-21.3,gy-0.08,z);K.box(green,0.1,0.28,17.8,-27.15,gy-0.08,fz+5.2);
   for(const x of [-26.9,-21.3,-15.7])for(const z of [fz-3.4,fz+5.2,fz+13.7]){if(x===-15.7&&z>fz)continue;const y=baseHeight(x,z);K.cyl(galv,0.06,gy-y,x,(gy+y)/2,z);SOLIDS.push({x,z,hx:0.1,hz:0.1})}
-  for(const px of [-21.9,-19.3]){const y=baseHeight(px,fz+2.2)+0.07;for(const dz of [-0.45,0,0.45])K.box(wood,1.2,0.1,0.14,px,y+0.05,fz+2.2+dz);for(let dx=-0.52;dx<0.6;dx+=0.26)K.box(wood,0.12,0.03,1.0,px+dx,y+0.115,fz+2.2)}
+  for(const px of [-21.9,-19.3]){const y=baseHeight(px,fz+2.2)+0.07;walkPad(px,fz+2.2,0.6,0.5,0,y+0.13);for(const dz of [-0.45,0,0.45])K.box(wood,1.2,0.1,0.14,px,y+0.05,fz+2.2+dz);for(let dx=-0.52;dx<0.6;dx+=0.26)K.box(wood,0.12,0.03,1.0,px+dx,y+0.115,fz+2.2)}
   SOLIDS.push({x:-20.6,z:fz+2.2,hx:1.35,hz:0.55});
   for(let i=0;i<9;i++){const x=-26.2,z=fz+5.6+i*0.95,y=baseHeight(x,z)+0.07;if(i===0)K.box(wood,1.0,0.06,8.8,x,y+0.62,fz+9.4);
     for(const lx of [-0.28,0.24]){const r=0.16+0.04*((i+lx*3)%2);K.put(pot,new THREE.CylinderGeometry(r,r*0.8,r*1.5,12),x+lx,y+0.65+r*0.75,z);
@@ -359,6 +360,17 @@ function shopKit(){const parts=new Map(),O=new THREE.Object3D(),n=new THREE.Vect
 // warning pads), a double yellow line, curb inlets to the storm drains and manhole covers. The beach road is paved
 // without curbs. Like the rest of the town it is laid on the ground as it is at load (baseHeight)
 const MST={x:4,z0:556,z1:724.5,cz:652,cw:3.5,walk:1.85,curb:0.15,top:0.17,lift:0.04};
+// curb ramps where the crosswalks land: the sidewalk slopes down to the gutter over 4 ft. Each: the span along the
+// curb (a0..a1), which axis the curb runs along, the curb line and which way the sidewalk lies from it
+const MST_RAMPS=[];for(const s of [-1,1]){const X=MST.x,C0=MST.cz-MST.cw,C1=MST.cz+MST.cw;for(const [z0,z1] of [[C0-5,C0-2],[C1+2,C1+5]])MST_RAMPS.push({a0:z0,a1:z1,ax:'z',c:s*X,o:s});
+  for(const [x0,x1] of s<0?[[-9.3,-6.3]]:[[6.3,9.3]])for(const t of [-1,1])MST_RAMPS.push({a0:x0,a1:x1,ax:'x',c:t<0?C0:C1,o:t})}
+// the sidewalk's top above the ground at x, z (lower down the ramps)
+function mstRamp(x,z){for(const r of MST_RAMPS){const a=r.ax==='z'?z:x,d=(r.ax==='z'?x-r.c:z-r.c)*r.o;if(a>=r.a0&&a<=r.a1&&d>=0&&d<1.25)return 0.045+(MST.top-0.045)*d/1.25}return MST.top}
+// how far the paving stands above the ground at x, z (0 off it): the asphalt of Main Street and the cross street, and
+// the curbs and sidewalks; what feet and wheels stand on (groundLift)
+function mstLift(x,z){if(z<MST.z0||z>MST.z1)return 0;const ax=Math.abs(x),C0=MST.cz-MST.cw,C1=MST.cz+MST.cw,WE=MST.x+MST.curb+MST.walk;
+  if(ax<MST.x)return MST.lift;if(ax>140)return 0;if(z>=C0&&z<=C1)return MST.lift;if(z<576.5||ax>128)return 0;
+  return ax<=WE||z>=C0-3.3&&z<C0||z>C1&&z<=C1+3.3?mstRamp(x,z):0}
 function mainStreets(){const K=shopKit(),F=famKit(),G=baseHeight,asph=shopLib('asphalt'),walk=shopLib('concrete_broom'),conc=shopLib('concrete'),
     joint=shopStd(0x6a6862,0,0.95),yel=shopStd(0xd8b024,0,0.6),wht=shopStd(0xe9e7e0,0,0.6),pad=shopStd(0xd9a91c,0,0.8),
     X=MST.x,W=X+MST.curb,WE=W+MST.walk,C0=MST.cz-MST.cw,C1=MST.cz+MST.cw,XE=140,WX=128,BZ=576.5;
@@ -369,13 +381,10 @@ function mainStreets(){const K=shopKit(),F=famKit(),G=baseHeight,asph=shopLib('a
   const ribbon=(mat,pts,w,lift)=>{const P=[],tri=(a,b,c)=>{if((b[2]-a[2])*(c[0]-a[0])-(b[0]-a[0])*(c[2]-a[2])<0)[b,c]=[c,b];P.push(...a,...b,...c)};
     for(let i=0;i<pts.length-1;i++){const [ax,az]=pts[i],[bx,bz]=pts[i+1],L=Math.hypot(bx-ax,bz-az),ux=(bx-ax)/L,uz=(bz-az)/L,n=Math.max(1,Math.round(L/2));
       const v=(t,s)=>{const x=ax+ux*t-uz*s*w/2,z=az+uz*t+ux*s*w/2;return [x,G(x,z)+lift,z]};
-      for(let k=0;k<n;k++){const t0=k/n*L,t1=(k+1)/n*L+(k===n-1&&i<pts.length-2?w/2:0),a=v(t0,-1),b=v(t0,1),c=v(t1,-1),d=v(t1,1);tri(a,c,b);tri(b,c,d)}}
+      for(let k=0;k<n;k++){const t0=k/n*L,t1=(k+1)/n*L+(k===n-1&&i<pts.length-2?w/2:0),a=v(t0,-1),b=v(t0,1),c=v(t1,-1),d=v(t1,1);tri(a,c,b);tri(b,c,d)}
+      walkPad((ax+bx)/2,(az+bz)/2,w/2,L/2,Math.atan2(ux,uz),0,{l:lift})}
     const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(P,3));K.put(mat,g)};
-  // curb ramps where the crosswalks land: the sidewalk slopes down to the gutter over 4 ft. Each: the span along the
-  // curb (a0..a1), which axis the curb runs along, the curb line and which way the sidewalk lies from it
-  const RAMPS=[];for(const s of [-1,1]){for(const [z0,z1] of [[C0-5,C0-2],[C1+2,C1+5]])RAMPS.push({a0:z0,a1:z1,ax:'z',c:s*X,o:s});
-    for(const [x0,x1] of s<0?[[-9.3,-6.3]]:[[6.3,9.3]])for(const t of [-1,1])RAMPS.push({a0:x0,a1:x1,ax:'x',c:t<0?C0:C1,o:t})}
-  const rampAt=(x,z)=>{for(const r of RAMPS){const a=r.ax==='z'?z:x,d=(r.ax==='z'?x-r.c:z-r.c)*r.o;if(a>=r.a0&&a<=r.a1&&d>=0&&d<1.25)return 0.045+(MST.top-0.045)*d/1.25}return MST.top};
+  const RAMPS=MST_RAMPS,rampAt=mstRamp;
   // the curb along a run from a to b of one axis at c (o: the sidewalk's side), low across the ramps; the gutter beside it
   const curb=(ax,a,b,c,o)=>{const cut=[a,b];for(const r of RAMPS)if(r.ax===ax&&Math.abs(r.c-c)<0.01)cut.push(r.a0,r.a1);cut.sort((p,q)=>p-q);
     for(let i=0;i<cut.length-1;i++){const p0=Math.max(a,cut[i]),p1=Math.min(b,cut[i+1]);if(p1-p0<0.01)continue;const n=Math.ceil((p1-p0)/1.5);
@@ -420,4 +429,4 @@ function mainStreets(){const K=shopKit(),F=famKit(),G=baseHeight,asph=shopLib('a
     F.cyl(0.035,0.035,2.5,6,0x9aa0a4,x,g+1.25,z);F.geo(new THREE.CylinderGeometry(0.36,0.36,0.02,8,1,false,Math.PI/8),0x8a8e91,x+Math.sin(ry)*0.045,g+2.25,z+Math.cos(ry)*0.045,ry,Math.PI/2);
     const m=new THREE.Mesh(sgeo,smat);m.position.set(x+Math.sin(ry)*0.06,g+2.25,z+Math.cos(ry)*0.06);m.rotation.y=ry;scene.add(m);SOLIDS.push({x,z,hx:0.1,hz:0.1})}
   K.add();famAdd(F)}
-mainStreets();
+mainStreets();groundLift=mstLift;
