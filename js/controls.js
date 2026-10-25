@@ -110,13 +110,20 @@ function padButton(i){usePad();inT=performance.now();if(i===1)padBackT=performan
   else if(i===8)toggleMap();
   else if(i===9)help.hidden=!help.hidden;
   else if(i===1){const open=!help.hidden||!$('#bigmap').hidden;help.hidden=true;toggleMap(false);if(!open&&(mode==='walk'||wk.inside))seatToggle()}}
-function pollPad(){for(const k in PA)PA[k]=0;PA.sprint=false;const gp=getPad();if(!gp)return;
+function pollPad(){for(const k in PA)PA[k]=0;PA.sprint=false;rumbleWatch();const gp=getPad();if(!gp)return;
   const dz=v=>Math.abs(v)<0.15?0:(v-Math.sign(v)*0.15)/0.85,ax=gp.axes,b=gp.buttons,bv=i=>b[i]?b[i].value:0;
   PA.lx=dz(ax[0]||0);PA.ly=-dz(ax[1]||0);PA.rx=dz(ax[2]||0);PA.ry=-dz(ax[3]||0);PA.thr=bv(7)-bv(6);PA.sprint=!!(b[10]&&b[10].pressed);
   for(let i=0;i<b.length;i++){const on=b[i].pressed;if(on&&!padPrev[i])padButton(i);padPrev[i]=on}
   if(PA.lx||PA.ly||PA.rx||PA.ry||Math.abs(PA.thr)>0.05)usePad()}
+let rumEnd=0;
 function rumble(ms,mag){mag=Math.min(1,mag*TU.rumble);if(mag<=0)return;const gp=getPad(),va=gp&&gp.vibrationActuator;
-  if(va&&va.playEffect)va.playEffect('dual-rumble',{duration:ms,strongMagnitude:mag,weakMagnitude:mag*0.6}).catch(()=>{});vrRumble(ms,mag)}
+  if(va&&va.playEffect)va.playEffect('dual-rumble',{duration:ms,strongMagnitude:mag,weakMagnitude:mag*0.6}).catch(()=>{});vrRumble(ms,mag);
+  rumEnd=Math.max(rumEnd,performance.now()+ms)}
+// some pads (Xbox on Chrome/Edge) keep buzzing after a run of overlapping pulses, or when the tab loses focus mid-pulse:
+// once the last pulse is over, or the game is left, the motors are told to stop outright
+function rumbleStop(){rumEnd=0;const gp=getPad(),va=gp&&gp.vibrationActuator;if(va&&va.reset)try{va.reset().catch(()=>{})}catch(e){}}
+function rumbleWatch(){if(rumEnd&&performance.now()>rumEnd+60)rumbleStop()}
+addEventListener('blur',rumbleStop);addEventListener('pagehide',rumbleStop);document.addEventListener('visibilitychange',()=>{if(document.hidden)rumbleStop()});
 // the steady buzz of work through the hands (teeth in the ground, a load pouring out, blades in grass), from whichever
 // machine is at it: one pulse each 0.12 s at most, so two at once never stack
 let digRumT=0;

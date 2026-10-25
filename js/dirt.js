@@ -327,7 +327,7 @@ function packTick(dt,drive,turn){
 function shedPack(v){v=Math.min(v,st.pack||0);if(v<=1e-6)return;st.pack-=v;st.packAcc=(st.packAcc||0)+v;
   if(st.packAcc<0.004)return;const a=st.packAcc;st.packAcc=0;
   const sd=Math.random()<0.5?-1:1,lz=(Math.random()*2-1)*1.9,sy=Math.sin(st.yaw),cy=Math.cos(st.yaw),x=st.x+sd*1.1*cy+lz*sy,z=st.z-sd*1.1*sy+lz*cy;
-  if(inDig(x,z,0.5)){deposit(x,z,a,st.packC,[0,0.3,0.7,0],0.45,0);st.dirty=true;st.slumpT=Math.max(st.slumpT,1)}
+  if(inDig(x,z,0.5)){deposit(x,z,a,st.packC,[0,0.3,0.7,0],0.45,0,true);st.dirty=true;st.slumpT=Math.max(st.slumpT,1)}
   dropClods(CLAY,x,z,0.35,a*120*DIRT,st.packC,1.5)}
 // the ground's colour at x,z (loose fill keeps the colour of what was dumped there)
 function groundC(x,z){const i=Math.round(gI(x)),j=Math.round(gJ(z));if(i<0||i>N||j<0||j>N)return MUD_C;const k=j*V+i,m=matAt(k,H[k]-0.03);return m===0?MUD_C:matColor(k,m)}

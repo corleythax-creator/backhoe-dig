@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Sunday, October 25, 2026
 
+- **v248** (5:39 PM) The controller stops rumbling: the motors are reset once the last pulse is over or the game loses focus, and dirt trickling off by itself (clay shed from the tracks, a heaped bucket's overflow) no longer buzzes it
 - **v247** (5:33 PM) The start card opens on a map of the islands, drawn live with your machines on it; tap Corley's, Dexter's or Jessica's Island and it shows the machines you can take there, with ‹ Map to go back.
 - **v246** (5:24 PM) People walk the town's sidewalks, cross at the crosswalks, window-shop and go in and out of the General Store; cars drive into town, keep right, take turns at the four-way stop, wait for you and park at the store or the marina, where the driver walks in and comes back out. Graphics setting Townsfolk sets how many.
 - **v245** (5:14 PM) Porches, steps, slabs, decks, lots, walks, curbs, the cottage floor and the editor's pallets, gazebo and sandbox are now stood on at their real height; edges up to a step step up, higher ones are walls
