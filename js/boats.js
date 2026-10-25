@@ -7,15 +7,15 @@ const BT_L=5.2,BT_B=2.1,BT_DRAFT=0.32,BT_DECK=WATER+0.9;
 // the circles along the hull (metres along it from the middle) and their radius, for getting in (wkNear) and bumping
 const BT_C=[-1.7,-0.6,0.5,1.6],BT_R=0.95;
 // each island's dock: the island's middle and the way out to the beach it starts from; the boat's hull colour. The town's
-// boat ties up on the open (west) side of the marina pier mainland.js draws (dock: that pier's deck, at: metres back from
-// its end, side: which side of it)
-const BT_MAR_X=72,BT_MAR_Z=mainRimS(72)+2;
+// boat ties up on the open (west) side of the marina pier marina.js draws (dock: that pier's deck, at: metres back from
+// its end, clear of the T-head, side: which side of it)
+const BT_MAR_X=MAR.x,BT_MAR_Z=MAR.z0;
 const BT_SPOTS=[
   {n:"Corley's",cx:0,cz:MZ,dx:-1,dz:0,hull:0xe8b923},
   {n:'Family',cx:FAM_X,cz:FAM_Z,dx:-0.6,dz:0.8,hull:0x1f3a5f},
   {n:"Jessica's",cx:JES_X,cz:JES_Z,dx:0,dz:1,hull:0xa8322a},
   {n:"Dexter's",cx:DEX_X,cz:DEX_Z,dx:0,dz:-1,hull:0x2f6b4a},
-  {n:'Town',dock:{x0:BT_MAR_X,z0:BT_MAR_Z,x1:BT_MAR_X,z1:BT_MAR_Z-46,hw:1.5,y:WATER+1.2,drawn:1},at:6,side:-1,hull:0x6d7f8c}];
+  {n:'Town',dock:{x0:BT_MAR_X,z0:BT_MAR_Z,x1:BT_MAR_X,z1:BT_MAR_Z-MAR.len,hw:1.5,y:MAR.y,drawn:1},at:9,side:-1,hull:0x6d7f8c}];
 // out from the middle to where the beach is just under the deck, then on until the water is deep enough to moor in
 function btDockPlan(s){if(s.dock){const d=s.dock,dx=d.x1-d.x0,dz=d.z1-d.z0,len=Math.hypot(dx,dz);
     const b=Object.assign({y1:d.y,dock:1,len,ux:dx/len,uz:dz/len},d);BRIDGES.push(b);return b}
@@ -25,9 +25,6 @@ function btDockPlan(s){if(s.dock){const d=s.dock,dx=d.x1-d.x0,dz=d.z1-d.z0,len=M
   const b={x0:s.cx+s.dx*t0,z0:s.cz+s.dz*t0,x1:s.cx+s.dx*t1,z1:s.cz+s.dz*t1,hw:1.2,y:BT_DECK,y1:BT_DECK,dock:1,len:t1-t0,ux:s.dx,uz:s.dz};
   BRIDGES.push(b);return b}
 const BT_DOCKS=BT_SPOTS.map(btDockPlan);
-// the marina's finger slips walk too, and the boats moored at them are in the way (the hulls mainland.js draws)
-for(let i=0;i<3;i++){const z=BT_MAR_Z-14-i*12;BRIDGES.push({x0:BT_MAR_X+1.5,z0:z,x1:BT_MAR_X+10.5,z1:z,hw:0.8,y:WATER+1.19,y1:WATER+1.19,dock:1,len:9,ux:1,uz:0,drawn:1});
-  for(const dz of [-3,3])BOAT_WALLS.push({ax:BT_MAR_X+5,az:z+dz,bx:BT_MAR_X+9,bz:z+dz,r:1.25})}
 // ---------- the docks: boards across two stringers on piles, pile tops standing proud as posts, cleats by the boat ----------
 (function(){const K=famKit(),WOOD=[0x8d6b4b,0x80603f,0x97765a],PILE=0x5a4632;
   for(const b of BT_DOCKS){if(b.drawn)continue;const ry=Math.atan2(b.ux,b.uz),P=(t,u)=>[b.x0+b.ux*t-b.uz*u,b.z0+b.uz*t+b.ux*u];

@@ -1,6 +1,6 @@
 // Corley's Island: the mainland across the lake (mainHeight in terrain.js). To the north the field and woods: a mown
 // hayfield with a fence and round bales east of the trail, a pine and leaf woods west of it. To the south the lakeside
-// town: a boardwalk on the beach, a marina, Main Street with a block of shops each side and a cross street. Both are
+// town: a boardwalk on the beach, a marina (marina.js), Main Street with a block of shops each side and a cross street. Both are
 // reached by temporary crossings, a timber trestle (BRIDGES with temp set) and a rock causeway (CAUSEWAYS); the crane
 // on its barge replaces the trestles with steel spans one at a time (mainTick).
 const mainGround=[groundPatch(-450,450,-572,-196,4,[MAIN_FINE[0]]),groundPatch(...MAIN_FINE[0],1,[]),
@@ -163,14 +163,59 @@ function mainTick(dt){
 function craneSave(){return {n:CRN.n,t:Math.round(CRN.t)}}
 function craneLoad(d){if(d&&isFinite(d.n)){CRN.n=Math.max(0,Math.min(crnSpans.length,d.n|0));CRN.t=Math.max(0,+d.t||0)}crnShow(CRN.n,CRN.t/Math.max(10,TU.craneSpan))}
 
-// a shop or house on a town lot: a block with a parapet, two rows of windows and a door on the face toward the street
-// (face: the yaw it looks along), and a coloured awning; solid to the machines and the worker
-function mainLot(K,x,z,w,d,h,col,face,awn){const y=Math.min(baseHeight(x-w/2,z-d/2),baseHeight(x+w/2,z+d/2),baseHeight(x-w/2,z+d/2),baseHeight(x+w/2,z-d/2));
-  const fx=Math.sin(face),fz=Math.cos(face),F=(o,s)=>[x+fx*o+fz*s,z+fz*o-fx*s];
-  K.box(w,h+1,d,col,x,y+(h-1)/2,z,face);K.box(w+0.3,0.5,d+0.3,0xd8d2c4,x,y+h+0.15,z,face);
-  for(let s=-w/2+1.6;s<=w/2-1.5;s+=2.4){for(const wy of [h>7?h-2.4:null,h>4.5?h-4.6:null])if(wy){const [a,b]=F(d/2+0.03,s);K.box(1.3,1.4,0.06,0x2c3a44,a,y+wy,b,face)}}
-  {const [a,b]=F(d/2+0.03,0);K.box(1.2,2.2,0.08,0x4a3424,a,y+1.1,b,face);const [c,e]=F(d/2+0.7,0);K.box(w*0.8,0.1,1.4,awn,c,y+2.9,e,face,-0.25)}
+// the town's shop signs: one picture holds them all (MAIN_SHOPS, two columns of 16), drawn as one mesh once the lots are
+// built (mainSignsAdd). Each: its name, a line under it, the board colour and the lettering colour, serif or not
+const MAIN_SHOPS=[["Lakeside Bakery","Bread · Pies · Coffee","#2f4a3a","#e9d9a6",1],["Harbor Books","New & Used","#1f3a5f","#f1ead8",1],
+  ["Pine & Anchor","Cafe","#e9e1cc","#23402f",0],["Ridge Outfitters","Camp · Fish · Hike","#3a2a20","#e0b45a",0],["Hometown Hardware","Since 1948","#b8322a","#ffffff",0],
+  ["Main St. Diner","Breakfast All Day","#e9e1cc","#b8322a",0],["Lakeside Pharmacy","Rx · Gifts","#ffffff","#1f5a7a",0],["Post Office","U.S. Mail","#1f3a5f","#ffffff",0],
+  ["First Lake Bank","Est. 1912","#23402f","#e0c27a",1],["Barber Shop","Walk-ins Welcome","#2b2d2f","#f1ead8",1],["Wildflower","Florist","#e8d6dc","#6b2a44",1],
+  ["Mountain Coffee","Roasted Here","#3a2a20","#f1ead8",0],["Lakeside Pizza","Slices · Pies","#23402f","#f4d27a",0],["Antiques","& Oddities","#5a2a22","#e9d9a6",1],
+  ["Tackle & Trail","Bait · Licenses","#2f5a33","#ffffff",0],["The Sweet Shop","Fudge · Candy","#f3d9e2","#8a2a52",1],["Lake Realty","Homes · Cabins · Land","#ffffff","#1f3a5f",0],
+  ["Village Deli","Sandwiches","#e9e1cc","#2f4a3a",0],["Gallery on Main","Local Art","#2b2d2f","#ffffff",1],["Toy Chest","Toys · Games","#2a5f9a","#f4d27a",0],
+  ["Laundromat","Open 7 Days","#ffffff","#2a5f9a",0],["Copper Kettle","Pub & Grill","#2b2d2f","#d08a42",1],["Bike & Paddle","Rentals · Repairs","#d08a22","#ffffff",0],
+  ["Lakeview Hotel","Rooms","#1f3a5f","#e0c27a",1],["Corner Market","Groceries","#2f6b4f","#ffffff",0],["Quilt Barn","Fabric · Yarn","#7e2f26","#f1ead8",1],
+  ["Hair Studio","Cuts · Color","#e9e1cc","#2b2d2f",1],["Thrift & Treasure","Second Hand","#5a3a6b","#f1ead8",0],["Town Library","Books · Story Time","#23402f","#f1ead8",1],
+  ["Town Hall","Lakeside","#e9e6dc","#1f3a5f",1],["Ice House","Ice · Firewood","#2a5f9a","#ffffff",0],["Lakeside Theater","Movies Fri · Sat","#5a2a22","#f4d27a",1]];
+const mainSignList=[];
+// a shop or house on a town lot: a block with its parapet and cornice; a storefront on the face toward the street (face:
+// the yaw it looks along) with pilasters, display windows over kick plates, a door, flower boxes, a striped awning in its
+// colour and the shop's sign above; two floors of windows with sills and lintels over it. Solid to the machines and the worker
+function mainLot(K,x,z,w,d,h,col,face,awn,si){const y=Math.min(baseHeight(x-w/2,z-d/2),baseHeight(x+w/2,z+d/2),baseHeight(x-w/2,z+d/2),baseHeight(x+w/2,z-d/2));
+  const fx=Math.sin(face),fz=Math.cos(face),F=(o,s)=>[x+fx*o+fz*s,z+fz*o-fx*s],TR=0xe9e4d6,DK=0x2a2c2f,c=new THREE.Color(col).multiplyScalar(0.72).getHex();
+  K.box(w,h+1,d,col,x,y+(h-1)/2,z,face);
+  // the roof: a dark membrane inside a parapet with a stone coping, and on most a rooftop unit and a vent
+  K.box(w-0.4,0.06,d-0.4,0x4a4c4e,x,y+h+0.03,z,face);for(const s of [-1,1]){const [a,b]=F(0,s*(w/2-0.12));K.box(0.24,0.7,d,col,a,y+h+0.35,b,face);const [e,f]=F(s*(d/2-0.12),0);K.box(w,0.7,0.24,col,e,y+h+0.35,f,face)}
+  for(const s of [-1,1]){const [a,b]=F(0,s*(w/2-0.1));K.box(0.36,0.1,d+0.1,0xd8d2c4,a,y+h+0.75,b,face);const [e,f]=F(s*(d/2-0.1),0);K.box(w+0.1,0.1,0.36,0xd8d2c4,e,y+h+0.75,f,face)}
+  if(si%3){const [a,b]=F(-d*0.15,(si%2?1:-1)*w*0.2);K.box(1.6,1.0,1.2,0xa9adb0,a,y+h+0.53,b,face);K.box(1.4,0.06,1.0,0x55595c,a,y+h+1.06,b,face);const [e,f]=F(-d*0.3,-(si%2?1:-1)*w*0.25);K.cyl(0.15,0.15,0.9,8,0x8a8e91,e,y+h+0.48,f)}
+  {const [a,b]=F(d/2+0.18,0);K.box(w+0.25,0.3,0.36,TR,a,y+h-0.25,b,face);const [e,f]=F(d/2+0.06,0);K.box(w,0.5,0.12,c,e,y+h-0.75,f,face)}
+  // the storefront: pilasters at the ends, a kick plate and display window each side of the door, a transom
+  for(const s of [-1,1]){const [a,b]=F(d/2+0.1,s*(w/2-0.25));K.box(0.5,4.2,0.2,TR,a,y+2.1,b,face)}
+  {const [a,b]=F(d/2+0.08,0);K.box(w-0.6,0.25,0.16,TR,a,y+3.05,b,face)}
+  const pw=(w-0.9)/2-0.8;for(const s of [-1,1]){const so=s*(0.8+pw/2),[a,b]=F(d/2+0.05,so),[e,f]=F(d/2+0.1,so),[g,k]=F(d/2+0.35,so);
+    K.box(pw,0.6,0.1,c,a,y+0.3,b,face);K.box(pw,2.2,0.06,0x2c3a44,a,y+1.75,b,face);K.box(pw+0.1,0.08,0.14,TR,e,y+0.62,f,face);K.box(0.08,2.2,0.12,TR,e,y+1.75,f,face);
+    K.box(pw-0.4,0.3,0.4,0x6b4a30,g,y+0.75,k,face);K.box(pw-0.5,0.16,0.36,0x3d6b2f,g,y+0.96,k,face);
+    const fc=[0xc94c6a,0xe8b923,0xf2efe6,0x8a4fa8][(si+s+4)%4];for(let q=-(pw-0.7)/2;q<=(pw-0.7)/2;q+=0.22){const [m,n]=F(d/2+0.35+((q*7)%2?0.08:-0.08),so+q);K.box(0.11,0.1,0.11,fc,m,y+1.07,n,face+q)}}
+  {const [a,b]=F(d/2+0.05,0);K.box(1.2,2.3,0.08,0x4a3424,a,y+1.15,b,face);K.box(1.2,0.5,0.06,0x2c3a44,a,y+2.65,b,face);const [e,f]=F(d/2+0.1,0);K.box(0.7,1.2,0.04,0x2c3a44,e,y+1.5,f,face)}
+  // the awning: stripes of its colour and white, sloping out over the walk, with a valance
+  {const n=Math.max(4,Math.round((w-1)/0.6)),sw=(w-1)/n;for(let i=0;i<n;i++){const s=-(w-1)/2+sw*(i+0.5),[a,b]=F(d/2+0.75,s);K.box(sw+0.005,0.06,1.5,i%2?0xf2efe6:awn,a,y+2.95,b,face,-0.32);
+    const [e,f]=F(d/2+1.48,s);K.box(sw+0.005,0.3,0.04,i%2?0xf2efe6:awn,e,y+2.6,f,face)}}
+  // the sign over the awning (MAIN_SHOPS[si]), on a dark board
+  {const sw=Math.min(w-1.6,8.5),[a,b]=F(d/2+0.1,0);K.box(sw+0.24,1.14,0.08,DK,a,y+3.75,b,face);const [e,f]=F(d/2+0.15,0);mainSignList.push({x:e,y:y+3.75,z:f,ry:face,w:sw,h:0.95,i:si%MAIN_SHOPS.length})}
+  // the upper floors: windows with a sill under and a lintel over each
+  for(let wy=5.7;wy+1.1<h;wy+=2.8)for(let s=-w/2+1.5;s<=w/2-1.4;s+=2.3){const [a,b]=F(d/2+0.03,s),[e,f]=F(d/2+0.1,s);
+    K.box(1.1,1.6,0.06,0x2c3a44,a,y+wy,b,face);K.box(1.4,0.1,0.18,TR,e,y+wy-0.86,f,face);K.box(1.35,0.16,0.1,TR,e,y+wy+0.88,f,face)}
   SOLIDS.push({x,z,hx:(Math.abs(fz)*w+Math.abs(fx)*d)/2+0.1,hz:(Math.abs(fx)*w+Math.abs(fz)*d)/2+0.1})}
+// the shop signs: the lettering drawn into one picture, and every sign a quad of it, as one mesh
+function mainSignsAdd(){const cv=document.createElement('canvas');cv.width=1024;cv.height=1024;const g=cv.getContext('2d'),SW=512,SH=64;
+  MAIN_SHOPS.forEach(([n,sub,bg,fg,serif],i)=>{const x0=(i%2)*SW,y0=((i/2)|0)*SH,ff=serif?'Georgia,"Times New Roman",serif':'"Barlow Condensed","Arial Narrow",Arial,sans-serif';
+    g.fillStyle=bg;g.fillRect(x0,y0,SW,SH);g.strokeStyle=fg;g.lineWidth=2;g.strokeRect(x0+4,y0+4,SW-8,SH-8);g.fillStyle=fg;g.textAlign='center';g.textBaseline='middle';
+    g.font=`700 ${serif?32:36}px ${ff}`;let t=serif?n:n.toUpperCase(),m=g.measureText(t).width;if(m>SW-40)g.font=`700 ${Math.floor((serif?32:36)*(SW-40)/m)}px ${ff}`;g.fillText(t,x0+SW/2,y0+25);
+    g.font=`${serif?'italic ':''}600 15px ${ff}`;g.fillText(serif?sub:sub.toUpperCase(),x0+SW/2,y0+50)});
+  const tex=new THREE.CanvasTexture(cv);tex.anisotropy=4;tex.colorSpace=THREE.SRGBColorSpace;const P=[],U=[],v=new THREE.Vector3();
+  for(const s of mainSignList){const u0=(s.i%2)/2,v1=1-((s.i/2)|0)/16,v0=v1-1/16,cs=Math.cos(s.ry),sn=Math.sin(s.ry),pt=(a,b)=>{v.set(a*cs,b,-a*sn);return [s.x+v.x,s.y+v.y,s.z+v.z]};
+    const A=pt(-s.w/2,-s.h/2),B=pt(s.w/2,-s.h/2),C=pt(s.w/2,s.h/2),D=pt(-s.w/2,s.h/2);P.push(...A,...B,...C,...A,...C,...D);U.push(u0,v0,u0+0.5,v0,u0+0.5,v1,u0,v0,u0+0.5,v1,u0,v1)}
+  const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(P,3));geo.setAttribute('uv',new THREE.Float32BufferAttribute(U,2));geo.computeVertexNormals();
+  const m=new THREE.Mesh(geo,M(0xffffff,{map:tex,flatShading:false}));m.receiveShadow=true;scene.add(m);return m}
 
 (function(){let sd=31;const rnd=()=>{sd=(sd+0x6D2B79F5)|0;let t=Math.imul(sd^(sd>>>15),1|sd);t=(t+Math.imul(t^(t>>>7),61|t))^t;return((t^(t>>>14))>>>0)/4294967296};
   // ---------- north: the field and woods ----------
@@ -196,7 +241,7 @@ function mainLot(K,x,z,w,d,h,col,face,awn){const y=Math.min(baseHeight(x-w/2,z-d
 
   // ---------- south: the lakeside town ----------
   const T=famKit(),COLS=[0xb5654a,0xd9cdb0,0x7d9aa8,0xc9b27a,0x9c4f3f,0xe4e0d4,0x8f9a7a,0xb98b5e],AWN=[0x2f6b4f,0xb8322a,0x2a4f7a,0xd08a22];
-  const LK=famKit(),BK=famKit();let li=0;const lot=(x,z,w,d,h,face)=>{mainLot(T,x,z,w,d,h,COLS[li%COLS.length],face,AWN[(li*3)%AWN.length]);li++};
+  const LK=famKit(),BK=famKit();let li=0;const lot=(x,z,w,d,h,face)=>{mainLot(T,x,z,w,d,h,COLS[li%COLS.length],face,AWN[(li*3)%AWN.length],li);li++};
   // Main Street: a block of shops each side, facing the street, with sidewalks and lamps
   for(const s of [-1,1]){for(let i=0;i<7;i++){const z=588+i*19+(i>2?8:0),w=15+((i*7+(s>0?3:0))%4),h=5.5+((i*5+(s>0?2:0))%5)*1.3;if(Math.abs(z-652)<10)continue;
       lot(s*(4+2+6.5),z,w,13,h,s>0?-Math.PI/2:Math.PI/2)}
@@ -206,17 +251,22 @@ function mainLot(K,x,z,w,d,h,col,face,awn){const y=Math.min(baseHeight(x-w/2,z-d
   // along the cross street, both sides
   for(const s of [-1,1])for(let i=0;i<5;i++){const x=s*(30+i*22);lot(x,652-13,16,12,5+((i*3)%4)*1.4,0);lot(x,652+13,16,12,5.5+((i*2)%3)*1.5,Math.PI)}
   // a boardwalk along the top of the beach, and a few benches on it looking out at the islands
-  for(let x=-160;x<160;x+=6){if(Math.abs(x)<7)continue;const z0=mainRimS(x)+3,z1=mainRimS(x+6)+3,y=Math.max(baseHeight(x+3,(z0+z1)/2),WATER+1.8);
+  // (a gap where the marina's boat ramp crosses it, marina.js)
+  for(let x=-160;x<160;x+=6){if(Math.abs(x)<7||Math.abs(x+3-107)<4)continue;const z0=mainRimS(x)+3,z1=mainRimS(x+6)+3,y=Math.max(baseHeight(x+3,(z0+z1)/2),WATER+1.8);
     T.box(6.1,0.16,3.6,0x8c6e4c,x+3,y+0.25,(z0+z1)/2,-Math.atan2(z1-z0,6));
     if(((x+160)/6|0)%5===2){BK.box(1.6,0.45,0.5,0x5c4632,x+3,y+0.55,(z0+z1)/2+1.2);famSpot('bench',x+3,y+0.33,(z0+z1)/2+1.2,Math.PI,0.9)}}
-  // the marina: a pier out from the beach east of town with finger slips and boats tied up
-  {const X=72,Z0=mainRimS(X)+2,Y=WATER+1.1,Lp=46;T.box(3,0.2,Lp,0x8c6e4c,X,Y,Z0-Lp/2);
-    for(let t=0;t<=Lp;t+=4)for(const s of [-1,1])T.cyl(0.14,0.14,4,6,0x5c4632,X+s*1.4,Y-1.9,Z0-t);
-    for(let i=0;i<3;i++){const z=Z0-14-i*12;T.box(9,0.18,1.6,0x8c6e4c,X+6,Y,z);
-      for(const [dz,col] of [[-3,0xf2f2ee],[3,i===1?0x2a4f7a:0xf2f2ee]]){T.box(2.4,0.9,6,col,X+7,WATER+0.35,z+dz,Math.PI/2);T.box(1.4,0.8,2,0xdadfe2,X+6.6,WATER+1.1,z+dz,Math.PI/2)}}}
+  // street trees along Main Street between the lamps, each in a square of brick pavers with an iron grate
+  const TR=[];for(const sx of [-1,1])for(let z=585;z<724;z+=22){if(Math.abs(z-652)<9)continue;const x=sx*5.3,y=baseHeight(x,z);TR.push(treeEntry('leafy',x,z,(z*0.37)%6.3,0.62,(z/22|0)%6));
+    T.box(1.3,0.04,1.3,0x8a4a36,x,y+0.18,z);T.box(1.0,0.03,1.0,0x2a2c2f,x,y+0.2,z)}
+  treeGroup('town',TR);
+  // a post clock at the foot of Main Street: a fluted iron post, a head with a face each way and the hands at ten past ten
+  {const X=-7.5,Z=570,y=baseHeight(X,Z);T.cyl(0.32,0.38,0.5,10,0x1f2a24,X,y+0.25,Z);T.cyl(0.12,0.14,3.6,10,0x1f2a24,X,y+2.2,Z);T.box(0.95,0.95,0.42,0x1f2a24,X,y+4.4,Z);
+    T.cyl(0,0.3,0.4,8,0x1f2a24,X,y+5.08,Z);for(const s of [-1,1]){T.cyl(0.4,0.4,0.03,20,0xf4f1e6,X,y+4.4,Z+s*0.22,0,Math.PI/2);
+      T.box(0.04,0.22,0.02,0x111111,X+0.05,y+4.48,Z+s*0.24,0,0,-0.5);T.box(0.03,0.32,0.02,0x111111,X-0.07,y+4.52,Z+s*0.245,0,0,0.6)}
+    SOLIDS.push({x:X,z:Z,hx:0.4,hz:0.4})}
   famSign(['LAKESIDE','Main Street'],4.2,1.5,7.5,baseHeight(7.5,568)+2.0,568,Math.PI,'#1f4d6b','#ffffff');
   for(const s of [-1,1])T.box(0.12,2.5,0.12,0x8a8a86,7.5+s*1.9,baseHeight(7.5,568)+1.25,568);
-  famAdd(T);famAddSpot('lamp',LK);famAddSpot('bench',BK);
+  famAdd(T);famAddSpot('lamp',LK);famAddSpot('bench',BK);mainSignsAdd();
 })();
 
 // ---------- the Lakeside General Store, at the south end of Main Street ----------
@@ -227,8 +277,8 @@ function mainLot(K,x,z,w,d,h,col,face,awn){const y=Math.min(baseHeight(x-w/2,z-d
 // paint. The pictures load the first time the camera comes near (shopLoad, from pickup.js), so the phone downloads them
 // only for a trip to town. SHOP.st: where each kind of stock is taken; pickup.js draws the stock on them
 const SHOP={x:0,z:752,fz:744,lib:[],st:{mulch:[-20.6,746.2],tools:[-4.6,743.3],groc:[4.6,743.2]},loaded:false};
-// a library material: its mean colour until the pictures are in
-function shopLib(id){const d=MAT_LIST.find(m=>m.id===id),m=new THREE.MeshStandardMaterial({color:0xffffff,roughness:0.85,envMap:skyEnv,envMapIntensity:0.5});
+// a library material: its mean colour until the pictures are in (one per id, shared with the marina)
+function shopLib(id){const m0=SHOP.lib.find(m=>m.userData.lib===id);if(m0)return m0;const d=MAT_LIST.find(m=>m.id===id),m=new THREE.MeshStandardMaterial({color:0xffffff,roughness:0.85,envMap:skyEnv,envMapIntensity:0.5});
   m.color.setRGB(d.c[0],d.c[1],d.c[2]);m.userData.ft=d.ft;m.userData.lib=id;SHOP.lib.push(m);return m}
 function shopStd(c,metal,rough,o){const m=new THREE.MeshStandardMaterial(Object.assign({color:c,metalness:metal,roughness:rough,envMap:skyEnv},o||{}));m.userData.ft=4;return m}
 function shopLoad(){if(SHOP.loaded)return;SHOP.loaded=true;

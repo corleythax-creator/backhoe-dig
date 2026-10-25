@@ -202,6 +202,85 @@ Do these in batches ("a 6x4 sheet of 24 icons, equal cells, in this order: ...")
 **U06 Produce, pantry and finds** -> `ui/items.png`. Needs: H04, H08, H18, D04, H11
 > [STYLE] A 6x4 sheet of 24 small items: tomato, okra, pepper, egg, bass, bream, shell, sea glass, driftwood, old bottle, horseshoe, arrowhead, time capsule, coffee mug, s'more, ice cream, trowel, trimmer line, gas can, seed packet, apple, peach, pumpkin, jar.
 
+## M: The lakeside town and marina (signs, storefronts, decals and surfaces)
+
+The town and marina are drawn in code today (`js/mainland.js`, `js/marina.js`): the signs are lettered by the game, the walls,
+boats and awnings are flat colours. These replace them piece by piece. Use the exact wording given, so the pictures match what the
+game says; ask ChatGPT to "check every letter" and redo any sign with a misspelling. Sign art is front-on, filling the frame, with
+no wall, pole or shadow round it. Save to `art/source/<id>.png`; the file name after the arrow is where the game will look.
+
+Add for every sign: "Flat front-on view, the sign fills the whole image edge to edge, crisp legible lettering, real materials (painted
+wood, gold leaf, enamel, weathering), even light, no background, no perspective, no mock-up."
+
+**M01 Marina sign** -> `town/sign_marina.png` (4.9:1, about 1536x312)
+> [STYLE] A carved and painted wooden sign for a lake marina, navy blue board with a raised gold-leaf border and a small anchor at each end. Large serif capitals "LAKESIDE MARINA", and under it in smaller lettering "Harbor Master · Bait & Tackle · Ice". Lightly sun-faded paint, fine wood grain showing through.
+
+**M02 Fuel dock sign** -> `town/sign_fuel.png` (3.4:1)
+> [STYLE] A weathered enamel marina fuel sign, red with white lettering: "FUEL DOCK" large, under it "Gas · Diesel · Ice · Pump-out". A thin white pinstripe border, a few rust freckles at the screw holes.
+
+**M03 Dockside Grill sign** -> `town/sign_grill.png` (5.3:1)
+> [STYLE] A cream-painted board-and-batten sign with dark red hand-lettered style capitals "DOCKSIDE GRILL", a small crossed fish-and-fork emblem, and under it "Burgers · Fish Tacos · Cold Drinks". Rustic lakeside restaurant, real paint on wood.
+
+**M04 Grill menu chalkboard** -> `town/menu_grill.png` (2:3 portrait)
+> [STYLE] A real chalkboard menu in a wooden frame for a lakeside grill: "TODAY" at the top, then Walleye Tacos $14, Lake Burger $12, Fried Pickles $7, Shore Lunch $16, Lemonade $4, Root Beer Float $5, drawn in white and coloured chalk with a small sketch of a fish.
+
+**M05 Ice cream stand sign** -> `town/sign_scoops.png` (3.7:1)
+> [STYLE] A cheerful vintage ice cream stand sign, white board with pink lettering "SCOOPS" in a rounded retro script and "Ice Cream · Shakes" beneath, a little cone drawing at one end, pink and white candy stripes along the bottom edge.
+
+**M06 Shop signs, four sheets** -> `town/shop_signs_a.png` ... `_d.png` (each 1536x1024: 2 columns by 4 rows, every sign 8:1)
+> [STYLE] A sheet of eight separate small-town storefront signs laid out in a neat grid of 2 columns and 4 rows on plain black, each sign a long 8:1 board filling its cell, front-on: [the eight names below]. Mix of styles as on a real old main street: gold leaf on dark green or black glass, painted wood with a border, enamel, carved serif. Each sign shows its name large and its line under it smaller.
+
+Sheet a: Lakeside Bakery (Bread · Pies · Coffee), Harbor Books (New & Used), Pine & Anchor (Cafe), Ridge Outfitters (Camp · Fish · Hike), Hometown Hardware (Since 1948), Main St. Diner (Breakfast All Day), Lakeside Pharmacy (Rx · Gifts), Post Office (U.S. Mail).
+Sheet b: First Lake Bank (Est. 1912), Barber Shop (Walk-ins Welcome), Wildflower (Florist), Mountain Coffee (Roasted Here), Lakeside Pizza (Slices · Pies), Antiques (& Oddities), Tackle & Trail (Bait · Licenses), The Sweet Shop (Fudge · Candy).
+Sheet c: Lake Realty (Homes · Cabins · Land), Village Deli (Sandwiches), Gallery on Main (Local Art), Toy Chest (Toys · Games), Laundromat (Open 7 Days), Copper Kettle (Pub & Grill), Bike & Paddle (Rentals · Repairs), Lakeview Hotel (Rooms).
+Sheet d: Corner Market (Groceries), Quilt Barn (Fabric · Yarn), Hair Studio (Cuts · Color), Thrift & Treasure (Second Hand), Town Library (Books · Story Time), Town Hall (Lakeside), Ice House (Ice · Firewood), Lakeside Theater (Movies Fri · Sat).
+(The order is the game's `MAIN_SHOPS` list; keep it, the game cuts the sheets in that order.)
+
+**M07 Shop window interiors** -> `town/windows.png` (2048x1024: a 4x2 grid, each 2:1)
+> [STYLE] Eight photos of shop interiors seen straight through a shop's display window from the sidewalk, each a 2:1 cell in a 4 by 2 grid: a bakery counter with bread and pies, a bookshop's shelves and a reading chair, hardware aisles with tools on pegboard, a diner counter with stools, a florist's buckets of flowers, an outdoor outfitter with kayaks and jackets, a coffee shop with an espresso machine, a toy shop. Warm interior lighting, slight reflection of the street on the glass, no people, no readable brand names.
+
+**M08 Upstairs windows** -> `town/upper_windows.png` (1024x1024: a 4x4 grid)
+> [STYLE] Sixteen different upstairs apartment windows on an old brick main street, front-on, each cell one double-hung window opening (glass only, no frame): half-drawn blinds, lace curtains, a plant on the sill, a cat, dark glass, a lamp glowing, a reflection of sky. Realistic photo, even light.
+
+**M09 Painted lap siding** -> `materials/siding_lap.jpg`. Needs: the Harbor House [TEXTURE]
+> [STYLE][TEXTURE] Painted wooden lap (clapboard) siding seen straight on, horizontal boards about 4 inches exposed, soft grey-blue paint slightly chalky and weathered, faint wood grain, tiny nail heads, a few hairline paint cracks. Ask again in white and in sage green.
+
+**M10 Board and batten, barn red** -> `materials/board_batten.jpg`. Needs: the Dockside Grill [TEXTURE]
+> [STYLE][TEXTURE] Vertical board-and-batten siding painted deep barn red, battens every 2 feet, sun-faded and slightly peeling at the bottom edge, wood grain showing.
+
+**M11 Dock decking, grey weathered** -> `materials/dock_deck.jpg`. Needs: the pier and slips [TEXTURE]
+> [STYLE][TEXTURE] Top-down view of a weathered timber dock: 2x6 boards running left to right with 1/4 inch gaps showing dark water below, silver-grey sun-bleached cedar with darker wet patches near the gaps, galvanized nail heads in pairs, a little bird lime and scuffing. The pattern repeats every 4 boards across, seamless.
+
+**M12 Breakwater stone** -> `materials/riprap.jpg`. Needs: the breakwater [TEXTURE]
+> [STYLE][TEXTURE] Close view of a rough grey granite boulder's surface for a lake breakwater: speckled grey and pink granite, lichen spots, a dark wet band, a few green algae streaks. Seamless; this goes on each boulder.
+
+**M13 Standing-seam metal roof** -> `materials/roof_seam.jpg` [TEXTURE]
+> [STYLE][TEXTURE] Standing-seam steel roof seen straight on, charcoal grey, seams every 16 inches, faint weathering streaks and a little pollen in the seams.
+
+**M14 Awning canvas** -> `materials/awning_stripes.jpg` [TEXTURE]
+> [STYLE][TEXTURE] Woven outdoor awning canvas with wide vertical stripes, alternating forest green and cream, the fabric weave visible up close, slightly sun-faded. Ask again in red and white, navy and white, and mustard and white.
+
+**M15 Boat hulls and names** -> `town/boat_names.png` (transparent PNG, 2048x1024: a grid of 12)
+> [STYLE] Twelve boat transom names as clean vinyl lettering on transparent background, each centred in its own cell with a hailing port under it "LAKESIDE": Reel Time, Knot On Call, Seas the Day, Lake Effect, Miss Corley, Dock Holiday, Aqua Therapy, Sunset Serenade, Fishful Thinking, Wet Willie, Second Wind, Liquid Asset. Mix of script and block styles in navy, black, red and gold.
+
+**M16 Gelcoat hull** -> `materials/gelcoat.jpg` [TEXTURE]
+> [STYLE][TEXTURE] Glossy white fibreglass boat hull gelcoat, close, very slight orange-peel texture, faint grey scuffs, a thin yellowish waterline stain along the bottom fifth. Seamless left to right.
+
+**M17 Flags** -> `town/flags.png` (transparent PNG, 1536x1024)
+> [STYLE] A sheet of flat flags on transparent background, each in its own cell, slightly rippled cloth: the US flag, a navy marina burgee with a gold anchor, a red-and-white "diver down" flag, and nautical signal flags A to F.
+
+**M18 Life ring** -> `town/life_ring.png` (transparent PNG, square)
+> [STYLE] Top view of an orange-and-white life ring with grab rope, the words "LAKESIDE MARINA" printed round it in black, on transparent background.
+
+**M19 Marina notices** -> `town/notices.png` (1536x1024, a 3x2 grid)
+> [STYLE] Six weathered notice signs for a lake marina, each front-on in its cell: "NO WAKE" (white with orange diamond), "SLOW 5 MPH", "NO SWIMMING OFF DOCKS", "LIFE JACKETS SAVE LIVES", "PUBLIC BOAT RAMP", "FISH CLEANING STATION". Real enamel and aluminium road-sign look, a little sun-faded.
+
+**M20 Harbor House concept** -> `concept/harbor_house.png`
+> [STYLE] [concept sheet] A two-storey New England style marina office and bait shop: grey-blue clapboard, white trim, navy shutters, a cedar-shingle roof with a white cupola and fish weathervane, a deep porch with rocking chairs facing the docks, an ice chest and bait cooler by the door.
+
+**M21 Dockside Grill concept** -> `concept/dockside_grill.png`
+> [STYLE] [concept sheet] A red board-and-batten lakeside grill with roll-up glass garage doors, a plank deck over the beach with tables, striped umbrellas and string lights at dusk.
+
 ## S: Scenery concept sheets (reference art, not textures; use as guides when building)
 
 Add: "Three-quarter view on a plain light grey background, realistic 3D game-model render style, front, side and back views of the same object on one sheet."
