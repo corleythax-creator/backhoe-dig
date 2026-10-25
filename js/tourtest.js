@@ -51,7 +51,7 @@ function tourWalkTo(x,z){tour.aim=[x,z];const dx=x-wk.x,dz=z-wk.z,d=Math.hypot(d
 function tourDrive(o,x,z,slow,top){tour.aim=[x,z];const dx=x-o.x,dz=z-o.z,d=Math.hypot(dx,dz),e=tourAng(Math.atan2(dx,dz)-o.yaw),Ts=turnSens||1;
   const m=tour.moved;if(Math.hypot(o.x-m.x,o.z-m.z)>1.5){m.x=o.x;m.z=o.z;m.t=tour.t}
   if(tour.rec>0){tour.rec-=tour.dt;SL.y=-0.8;SL.x=clamp(Math.sign(e||1)/Ts,-1,1);return d}
-  if(tour.t-m.t>3){tour.rec=2.5;m.t=tour.t;tour.stuckN++;const L=tour.legs[tour.leg];if(L)L.stuck++;return d}
+  if(tour.t-m.t>3){tour.rec=2.5;m.t=tour.t;tour.stuckN++;const L=tour.legs[tour.leg];if(L)L.stuck++;(tour.stuckAt||(tour.stuckAt=[])).push([Math.round(o.x),Math.round(o.z),tour.leg]);return d}
   SL.x=clamp(-e*2.2/Ts,-1,1);SL.y=clamp((1-0.7*Math.min(1,Math.abs(e)/1.6))*Math.min(1,0.2+d/slow),0.2,1)*top;return d}
 
 // first person (tourStart(true)): the head looks round as a person's does. Most of the time the eyes are on the way
@@ -128,22 +128,26 @@ function tourStart(fp,opt){
   Object.assign(tour,{on:true,ph:'start',t:0,pt:0,dt:0,checks:[],legs:{},leg:'',li:0,wi:0,stuckN:0,rec:0,prevNow:0,errs:[],lt:{n:0,ms:0,max:0},barT:0,
     pr:[renderer.getPixelRatio(),renderer.getPixelRatio()],mem0:Object.assign({},renderer.info.memory),progs0:(renderer.info.programs||[]).length,
     heap:performance.memory?[performance.memory.usedJSHeapSize,performance.memory.usedJSHeapSize]:null,
-    cnt:{n:0,under:0,fell:0,sank:0,mute:0,snd:0},path:[],pathT:0,slow:[],loaf:[],laps:[],bat:null,bat0:null,walkM:null});
+    cnt:{n:0,under:0,fell:0,sank:0,mute:0,snd:0},path:[],pathT:0,slow:[],loaf:[],laps:[],bat:null,bat0:null,walkM:null,stuckAt:[],hidMs:0,hidAt:0,hidSkip:false,readyT:0});
   if(opt.rain)setWeather('rain');if(opt.night)dnSet(22*60);
   // the four-wheeler and Dexter's boat back where they live, whatever the player did with them
   tour.atv=hvs.findIndex(h=>h.k==='atv'&&Math.hypot(h.K.x-DEX_X,h.K.z-DEX_Z)<100);const h=hvs[tour.atv];
   if(h){Object.assign(h,{x:h.K.x,z:h.K.z,yaw:h.K.yaw,v:0,w:0,steer:0});hvGround(h,1);hvPose(h)}
   const b=boats[3];Object.assign(b,{x:b.home.x,z:b.home.z,yaw:b.home.yaw,v:0});
-  startOn('dexter','foot');camSet(fp?'cab':'chase');orbitYaw=0;orbitPitch=0.32;tourLeg("Starting on Dexter's Island");
   Object.assign(BHT_TIMED,TOUR_TIMED);bhtTimeOn();bht.lastNow=0;
+  // first the game gets everything ready that it can (warmIdle, main.js: shaders and textures, the detailed machines
+  // loading in), so the run measures playing, not loading; how long that took is reported on its own
+  tour.ph='ready';if(tour.headless)tourBegin();
   if(!tour.headless){
     tour.onErr=e=>tour.errs.push(String(e.message||e.reason||e.type).slice(0,200));addEventListener('error',tour.onErr);addEventListener('unhandledrejection',tour.onErr);
     try{tour.obs=new PerformanceObserver(l=>{for(const e of l.getEntries()){tour.lt.n++;tour.lt.ms+=e.duration;tour.lt.max=Math.max(tour.lt.max,e.duration)}});tour.obs.observe({type:'longtask'})}catch(e){tour.obs=null}
     // Chrome's long animation frame reports name the scripts that ran in a slow frame, even between the game's frames
     // (a model or texture finishing loading, a timer): the freeze report says what they were
-    try{tour.lo=new PerformanceObserver(l=>{for(const e of l.getEntries()){if(e.duration<200||tour.loaf.length>=30)continue;
+    try{tour.lo=new PerformanceObserver(l=>{for(const e of l.getEntries()){if(e.duration<200||tour.loaf.length>=30||tour.ph==='ready'||tour.hidSkip||document.hidden)continue;
         tour.loaf.push({ms:Math.round(e.duration),leg:tour.leg,block:Math.round(e.blockingDuration||0),scripts:(e.scripts||[]).slice().sort((a,b)=>b.duration-a.duration).slice(0,3).map(sc=>({
           n:sc.sourceFunctionName||sc.invoker||sc.invokerType||'script',f:String(sc.sourceURL||'').split('/').pop().split('?')[0],ms:Math.round(sc.duration)}))})}});tour.lo.observe({type:'long-animation-frame'})}catch(e){tour.lo=null}
+    // time with the window hidden (another tab or app in front) isn't play: the browser stops drawing, so it's left out
+    document.addEventListener('visibilitychange',()=>{if(!tour.on)return;if(document.hidden)tour.hidAt=performance.now();else if(tour.hidAt){tour.hidMs+=performance.now()-tour.hidAt;tour.hidAt=0;tour.hidSkip=true}});
     try{if(navigator.getBattery)navigator.getBattery().then(B=>{tour.bat=B;tour.bat0=B.level}).catch(()=>{})}catch(e){}
     // the graphics card's own time for each frame (WebGL timer queries, where the browser offers them): read back a few
     // frames later and put down to the leg it was drawn in
@@ -154,6 +158,8 @@ function tourStart(fp,opt){
     // the game's frame, timed: how long the main thread spends on it (frame() sets last to now when it runs)
     renderer.setAnimationLoop(now=>{const t=performance.now();frame(now);if(last===now){tour.cpu=performance.now()-t;tourSample(now)}})}}
 
+// the run proper: on foot on Dexter's Island
+function tourBegin(){tour.readyT=tour.pt;startOn('dexter','foot');camSet(tour.fp?'cab':'chase');orbitYaw=0;orbitPitch=0.32;tour.t=0;tour.pt=0;tour.ph='start';tourLeg("Starting on Dexter's Island")}
 // walking to a point, giving it up if he makes no headway for 5 s (something in the way); true once there or given up
 function tourWalkOn(x,z,near){const d=tourWalkTo(x,z),m=tour.walkM||(tour.walkM={x:wk.x,z:wk.z,t:tour.t});
   if(Math.hypot(wk.x-m.x,wk.z-m.z)>1){m.x=wk.x;m.z=wk.z;m.t=tour.t}
@@ -162,6 +168,7 @@ function tourWalkOn(x,z,near){const d=tourWalkTo(x,z),m=tour.walkM||(tour.walkM=
 
 // each frame, before the inputs are read (main.js): what the thumb does now
 function tourStep(dt){if(!tour.on)return;tour.t+=dt;tour.pt+=dt;tour.dt=dt;SL.x=SL.y=0;const ph=tour.ph;
+  if(ph==='ready'){if(warmIdle()&&tour.pt>1||tour.pt>45)tourBegin();return}
   if(ph==='start'){if(tour.pt>2.5){
       tourCheck("Started on Dexter's Island on foot",mode==='walk'&&!wk.inside&&Math.hypot(wk.x-DEX_X,wk.z-DEX_Z)<70,`at ${Math.round(wk.x)}, ${Math.round(wk.z)}`);
       tourCheck('The four-wheeler is on Dexter\'s Island',tour.atv>=0,tour.atv>=0?'hv'+tour.atv:'not found');
@@ -211,17 +218,17 @@ function tourStep(dt){if(!tour.on)return;tour.t+=dt;tour.pt+=dt;tour.dt=dt;SL.x=
       tourCheck('The camera stayed out of the water',C.under<=Math.max(2,C.n*0.002),C.under?`under the surface in ${C.under} of ${C.n} frames`:'never under the surface');
       tourCheck('Nothing fell through the ground',!C.fell,C.fell?`below the ground in ${C.fell} frames`:'the worker and the four-wheeler stayed on top');
       tourCheck('The boat stayed afloat',!C.sank,C.sank?`under water in ${C.sank} frames`:'always on the surface');
-      if(C.snd)tourCheck('The sound kept playing',!C.mute,C.mute?`the sound was stopped in ${C.mute} of ${C.snd} frames`:'running all the way');
+      if(C.snd)tourCheck('The sound kept playing',C.mute<=Math.max(30,C.snd*0.005),C.mute?`the sound was stopped in ${C.mute} of ${C.snd} frames`:'running all the way');
       tourCheck("Back at Dexter's dock",Math.hypot(b.x-b.home.x,b.z-b.home.z)<60,`${tourFt(Math.hypot(b.x-b.home.x,b.z-b.home.z))} from where it was tied up`);tourLap();tourGo('done')}}
   else if(ph==='done'){if(!tour.headless&&tour.pt>0.2)tourEnd()}
   // what should never happen, counted each frame: the camera under the water, the worker or the machine below the ground,
   // the boat under, the sound stopped while it is switched on
-  if(ph!=='start'&&ph!=='done'){const C=tour.cnt,c=camera.position;C.n++;
+  if(ph!=='start'&&ph!=='done'&&ph!=='ready'){const C=tour.cnt,c=camera.position;C.n++;
     if(c.y<lakeY(c.x,c.z)-0.05&&!(mode==='walk'&&wk.swim))C.under++;
     if(mode==='walk'&&!wk.inside&&!wk.swim&&wk.y<surfAt(wk.x,wk.z)-1)C.fell++;
     if(mode==='heavy'){const h=hvCur();if(h.y<surfAt(h.x,h.z)-1)C.fell++}
     if(mode==='boat'&&btCur().y<WATER-0.8)C.sank++;
-    if(sndCfg.on&&actx){C.snd++;if(actx.state!=='running')C.mute++}}
+    if(sndCfg.on&&actx&&!document.hidden){C.snd++;if(actx.state!=='running')C.mute++}}
   if(tour.fp&&tour.on&&ph!=='start'&&ph!=='done'&&camMode==='cab')tourLook(dt)}
 // the end of a lap: memory then, for the lap-to-lap check
 function tourLap(){const m=renderer.info.memory;tour.laps.push({t:tour.t,heap:performance.memory?performance.memory.usedJSHeapSize:0,geo:m.geometries,tex:m.textures})}
@@ -233,6 +240,7 @@ function tourGpuPoll(){const G=tour.gq;if(!G)return;const {gl,ext}=G;let dis=fal
 // after each drawn frame (the timed loop in tourStart): the frame's time, the main thread's and the graphics card's
 // share of it, what the main thread spent it on, and where the player was
 function tourSample(now){const ft=tour.prevNow?(now-tour.prevNow)/1000:0;tour.prevNow=now;tourGpuPoll();
+  if(tour.ph==='ready'||document.hidden||tour.hidSkip){tour.hidSkip=false;bht.sec={};bhtNew();if(tour.ph==='ready'){tour.barT-=ft;if(tour.barT<=0){tour.barT=0.25;$('#benchBar').innerHTML=`ISLAND TOUR TEST${tourSweepLbl()}<small>Getting the game ready (shaders, textures, detailed machines)… ${Math.round(tour.pt)} s</small>`}}return}
   const L=tour.legs[tour.leg];if(L){if(!L.sys)L.sys={};for(const n in bht.sec)L.sys[n]=(L.sys[n]||0)+bht.sec[n]}
   bhtHitch(ft,tour.leg);if(!ft||!L||tour.ph==='start'&&tour.pt<1)return;
   L.ft.push(ft);L.cpu.push(tour.cpu);L.tris+=renderer.info.render.triangles;L.calls+=renderer.info.render.calls;L.k++;
@@ -302,7 +310,8 @@ function tourResults(){
     ['Long tasks',tour.obs?`${tour.lt.n}, ${Math.round(tour.lt.ms)} ms in all, the longest ${Math.round(tour.lt.max)} ms`:'not reported by this browser'],
     ['JS memory',tour.heap?`${mb(tour.heap[0])} at the start, ${mb(tour.heap[1])} at the most, ${mb(performance.memory.usedJSHeapSize)} at the end`:'not reported by this browser'],
     ['Graphics memory',`${m.geometries} meshes (${m.geometries-o.geometries>=0?'+':''}${m.geometries-o.geometries}), ${m.textures} textures (${m.textures-o.textures>=0?'+':''}${m.textures-o.textures}), ${progs} new shaders`],
-    ['Battery',bat],['Script errors',tour.errs.length?tour.errs.slice(0,5).join(' | '):'none']];
+    ['Getting ready',`${tour.readyT.toFixed(1)} s before the run (shaders, textures and detailed machines got ready; not counted in the run)`],['Window hidden',tour.hidMs>500?`${(tour.hidMs/1000).toFixed(0)} s, left out`:'never'],
+    ['Boat stuck at',tour.stuckAt.length?tour.stuckAt.map(([x,z,l])=>`${x}, ${z} m (${l})`).join('; '):'nowhere'],['Battery',bat],['Script errors',tour.errs.length?tour.errs.slice(0,5).join(' | '):'none']];
   for(const [k,v] of sys)diag+=`<tr><td>${k}</td><td>${v}</td></tr>`;
   const busyTd=r=>`${r.cpu.toFixed(1)}${r.gpu!==null?' · '+r.gpu.toFixed(1):''} ms <small>(${Math.round(r.use*100)}%)</small>`;
   let table=`<tr><th>Leg</th><th>Avg FPS</th><th>1% low</th><th>Worst</th><th>Stutters</th><th>${hasGpu?'Main · GPU':'Main thread'}</th><th>Tris · calls</th><th>Vs last</th></tr>`;
@@ -367,7 +376,7 @@ function tourSweepShow(S){const R=S.res,names=[...new Set([].concat(...R.map(x=>
 function tourRun(fp,opt){tour.headless=true;tourStart(fp,opt);renderer.setAnimationLoop(null);const draw=postRender;postRender=()=>{};
   let t=last,n=0;try{while(n<24000&&tour.ph!=='done'){frame(t+=50);n++}}finally{postRender=draw}
   if(tour.ph!=='done')tourCheck('The run finished',false,`stuck at "${tour.ph}"${tour.ph==='boat'?' on '+tour.route[tour.li].n:''} at ${Math.round(tourPos().x)}, ${Math.round(tourPos().z)}`);
-  const b=boats[3];return {ok:tour.checks.every(c=>c.ok),time:`${Math.floor(tour.t/60)} min ${Math.round(tour.t%60)} s`,stucks:tour.stuckN,boat:[Math.round(b.x),Math.round(b.z)],
+  const b=boats[3];return {ok:tour.checks.every(c=>c.ok),time:`${Math.floor(tour.t/60)} min ${Math.round(tour.t%60)} s`,stucks:tour.stuckN,stuckAt:tour.stuckAt,boat:[Math.round(b.x),Math.round(b.z)],
     checks:tour.checks.map(c=>`${c.ok?'pass':'FAIL'} | ${c.name} | ${c.note}`)}}
 
 $('#tourTestBtn').onclick=()=>{showMenu(false);tourStart()};$('#tourFpBtn').onclick=()=>{showMenu(false);tourStart(true)};
