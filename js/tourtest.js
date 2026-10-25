@@ -72,7 +72,7 @@ function tourSights(){const S=TOUR_SEE.map(([n,x,z])=>({n,x,z,y:Math.max(WATER,b
   const p=crnBarge.position;S.push({n:'the crane barge',x:p.x,z:p.z,y:p.y+8});return S}
 // the eye: where it is, which way the seat faces (world yaw) and how far the seat's own view tips down
 function tourEye(){if(mode==='walk')return {x:wk.x,y:wk.y+WK_H,z:wk.z,yaw:0,p0:0,walk:true};
-  const o=mode==='boat'?btCur():hvCur(),E=mode==='boat'?[0,1.62,-0.47,0,-1.1,8]:(o.eye||o.K.eye);
+  const o=mode==='boat'?btCur():hvCur(),E=mode==='boat'?[0,1.62,-0.47,0,-1.5,8]:(o.eye||o.K.eye);
   return {x:o.x,y:o.y+E[1],z:o.z,yaw:o.yaw+Math.atan2(E[3],E[5]),p0:Math.atan2(E[4],Math.hypot(E[3],E[5])),walk:false}}
 function tourLook(dt){const L=tour.look,E=tourEye(),lim=E.walk?Math.PI:1.25;L.t-=dt;
   // climbing in or out sets the view straight (setMode): the head starts again from rest
