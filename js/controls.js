@@ -279,16 +279,16 @@ const statusEl=$('#status');try{statusEl.classList.toggle('min',localStorage.get
 statusEl.onclick=()=>{const m=statusEl.classList.toggle('min');try{localStorage.setItem('bhd_hudmin',m?'1':'0')}catch(e){}};
 // the start card: tap a machine (or On foot) to start in that mode; tapping outside the card keeps the current one
 function startIn(m){setMode(m);help.hidden=true;try{localStorage.setItem('bhd_seen','1')}catch(e){}}
-// the island to start on (remembered): Corley's leaves you where you are; the Family Island, Dexter's or Jessica's takes you there in what
+// the island to start on (remembered): Corley's leaves you where you are; the lakeside town on the mainland, the Family Island, Dexter's or Jessica's takes you there in what
 // you picked (startOn, maps.js)
-let startIsl='corley';try{const v=localStorage.getItem('bhd_startIsl');if(v==='dexter'||v==='jessica'||v==='family')startIsl=v}catch(e){}
+let startIsl='corley';try{const v=localStorage.getItem('bhd_startIsl');if(v==='dexter'||v==='jessica'||v==='family'||v==='town')startIsl=v}catch(e){}
 const islBtns=[...document.querySelectorAll('#startIsl [data-isl]')];
 function markIsl(){for(const b of islBtns)b.setAttribute('aria-pressed',b.dataset.isl===startIsl)}
 for(const b of islBtns)b.onclick=()=>{startIsl=b.dataset.isl;try{localStorage.setItem('bhd_startIsl',startIsl)}catch(e){}markIsl();showTiles();islStep(true)};
 // the start card opens on a map of the islands (the minimap's drawing, kept up to date while it shows: where the
 // machines are, the editor's ground); each island's button sits on it. Tapping one shows that island's machines, and
 // ‹ Map goes back. ISL_PIN: where each button sits on the map (metres), ISL_BOX the part of the world it shows
-const ISL_BOX=[-300,300,-115,360],ISL_PIN={corley:[0,102],family:[0,245],dexter:[-200,312],jessica:[200,312]};
+const ISL_BOX=[-360,360,-115,800],ISL_PIN={corley:[0,100],family:[0,245],dexter:[-200,305],jessica:[200,305],town:[0,700]};
 for(const b of islBtns){const p=ISL_PIN[b.dataset.isl];b.style.left=(p[0]-ISL_BOX[0])/(ISL_BOX[1]-ISL_BOX[0])*100+'%';b.style.top=(p[1]-ISL_BOX[2])/(ISL_BOX[3]-ISL_BOX[2])*100+'%'}
 function islStep(pick){$('#startMap').hidden=pick;$('#islHead').hidden=!pick;$('#pickAll').hidden=!pick;
   if(pick)$('#islName').textContent=(islBtns.find(b=>b.dataset.isl===startIsl)||islBtns[0]).textContent;else islMapDraw()}
