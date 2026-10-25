@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-25T23:08:00Z",
+ "updated": "2026-10-25T23:33:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -66,9 +66,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-25",
-   "dh": 145.75,
-   "act": 7.5,
-   "versions": 25
+   "dh": 146.75,
+   "act": 8,
+   "versions": 26
   }
  ],
  "extra": [
@@ -2319,6 +2319,15 @@ window.EFFORT = {
    "tris": 5599961,
    "chars": 1702656,
    "what": "The excavator's bucket is drawn 20% bigger each way, the size of a 20-ton machine's 1 cu yd bucket, so the dirt it shows matches what it holds; a heaped load crowns higher over the rim"
+  },
+  {
+   "v": 250,
+   "asked": "2026-10-25T18:21:00-05:00",
+   "live": "2026-10-25T18:33:39-05:00",
+   "dh": 1,
+   "tris": 5627416,
+   "chars": 1702859,
+   "what": "The Family Island has its own button on the start map: tap it to start there on foot or in the nearest of any machine."
   }
  ]
 };
