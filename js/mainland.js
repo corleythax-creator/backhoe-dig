@@ -242,12 +242,11 @@ function mainSignsAdd(){const cv=document.createElement('canvas');cv.width=1024;
   // ---------- south: the lakeside town ----------
   const T=famKit(),COLS=[0xb5654a,0xd9cdb0,0x7d9aa8,0xc9b27a,0x9c4f3f,0xe4e0d4,0x8f9a7a,0xb98b5e],AWN=[0x2f6b4f,0xb8322a,0x2a4f7a,0xd08a22];
   const LK=famKit(),BK=famKit();let li=0;const lot=(x,z,w,d,h,face)=>{mainLot(T,x,z,w,d,h,COLS[li%COLS.length],face,AWN[(li*3)%AWN.length],li);li++};
-  // Main Street: a block of shops each side, facing the street, with sidewalks and lamps
+  // Main Street: a block of shops each side, facing the street, with lamps at the curb (the paving: mainStreets)
   for(const s of [-1,1]){for(let i=0;i<7;i++){const z=588+i*19+(i>2?8:0),w=15+((i*7+(s>0?3:0))%4),h=5.5+((i*5+(s>0?2:0))%5)*1.3;if(Math.abs(z-652)<10)continue;
       lot(s*(4+2+6.5),z,w,13,h,s>0?-Math.PI/2:Math.PI/2)}
-    for(let z=568;z<724;z+=6){const x=s*5,y=baseHeight(x,z);T.box(2,0.16,6,0xbdb8ac,x,y+0.08,z)}
-    for(let z=574;z<724;z+=22){const x=s*5.6,y=baseHeight(x,z);LK.cyl(0.07,0.1,5,8,0x2f3236,x,y+2.5,z);LK.box(0.5,0.2,0.5,0x2f3236,x,y+5.05,z);LK.lit(new THREE.BoxGeometry(0.4,0.05,0.4),0xfff1c8,x,y+4.93,z);
-      famSpot('lamp',x,y+0.16,z,0)}}
+    for(const z of [584,606,628,672,694,716]){const x=s*4.6,y=baseHeight(x,z);LK.cyl(0.07,0.1,5,8,0x2f3236,x,y+2.5,z);LK.box(0.5,0.2,0.5,0x2f3236,x,y+5.05,z);LK.lit(new THREE.BoxGeometry(0.4,0.05,0.4),0xfff1c8,x,y+4.93,z);
+      famSpot('lamp',x,y+0.17,z,0)}}
   // along the cross street, both sides
   for(const s of [-1,1])for(let i=0;i<5;i++){const x=s*(30+i*22);lot(x,652-13,16,12,5+((i*3)%4)*1.4,0);lot(x,652+13,16,12,5.5+((i*2)%3)*1.5,Math.PI)}
   // a boardwalk along the top of the beach, and a few benches on it looking out at the islands
@@ -256,7 +255,7 @@ function mainSignsAdd(){const cv=document.createElement('canvas');cv.width=1024;
     T.box(6.1,0.16,3.6,0x8c6e4c,x+3,y+0.25,(z0+z1)/2,-Math.atan2(z1-z0,6));
     if(((x+160)/6|0)%5===2){BK.box(1.6,0.45,0.5,0x5c4632,x+3,y+0.55,(z0+z1)/2+1.2);famSpot('bench',x+3,y+0.33,(z0+z1)/2+1.2,Math.PI,0.9)}}
   // street trees along Main Street between the lamps, each in a square of brick pavers with an iron grate
-  const TR=[];for(const sx of [-1,1])for(let z=585;z<724;z+=22){if(Math.abs(z-652)<9)continue;const x=sx*5.3,y=baseHeight(x,z);TR.push(treeEntry('leafy',x,z,(z*0.37)%6.3,0.62,(z/22|0)%6));
+  const TR=[];for(const sx of [-1,1])for(const z of [595,617,637,667,683,705]){const x=sx*4.85,y=baseHeight(x,z);TR.push(treeEntry('leafy',x,z,(z*0.37)%6.3,0.62,(z/22|0)%6));
     T.box(1.3,0.04,1.3,0x8a4a36,x,y+0.18,z);T.box(1.0,0.03,1.0,0x2a2c2f,x,y+0.2,z)}
   treeGroup('town',TR);
   // a post clock at the foot of Main Street: a fluted iron post, a head with a face each way and the hands at ten past ten
@@ -352,3 +351,73 @@ function shopKit(){const parts=new Map(),O=new THREE.Object3D(),n=new THREE.Vect
   famSign(['LAKESIDE GENERAL STORE','Garden · Hardware · Groceries'],13,2.1,0,fl+5.05,fz-0.03,Math.PI,'#23402f','#f1ead8');
   famSign(['GARDEN CENTER','Mulch · Soil · Plants'],4.6,1.3,-21.3,gy+0.85,fz-3.78,Math.PI,'#23402f','#f1ead8');
   SHOP.y=fl})();
+
+// ---------- the town's streets (mainStreets) ----------
+// Main Street (x ±4, from the causeway to the store's lot) and the cross street (z 652) paved in asphalt over their
+// gravel (ISLAND_ROADS, terrain.js), with a concrete gutter, a 6 in curb and a raised broom-finish sidewalk scored every
+// 5 ft each side; a four-way stop where they meet (stop bars, stop signs, crosswalks landing on curb ramps with yellow
+// warning pads), a double yellow line, curb inlets to the storm drains and manhole covers. The beach road is paved
+// without curbs. Like the rest of the town it is laid on the ground as it is at load (baseHeight)
+const MST={x:4,z0:556,z1:724.5,cz:652,cw:3.5,walk:1.85,curb:0.15,top:0.17,lift:0.04};
+function mainStreets(){const K=shopKit(),F=famKit(),G=baseHeight,asph=shopLib('asphalt'),walk=shopLib('concrete_broom'),conc=shopLib('concrete'),
+    joint=shopStd(0x6a6862,0,0.95),yel=shopStd(0xd8b024,0,0.6),wht=shopStd(0xe9e7e0,0,0.6),pad=shopStd(0xd9a91c,0,0.8),
+    X=MST.x,W=X+MST.curb,WE=W+MST.walk,C0=MST.cz-MST.cw,C1=MST.cz+MST.cw,XE=140,WX=128,BZ=576.5;
+  // a sheet over the ground, lifted lift(x, z) (or a number) above it, cut every step metres
+  const sheet=(mat,x0,x1,z0,z1,lift,step)=>{const g=new THREE.PlaneGeometry(x1-x0,z1-z0,Math.max(1,Math.round((x1-x0)/step)),Math.max(1,Math.round((z1-z0)/step)));g.rotateX(-Math.PI/2);
+    const p=g.attributes.position;for(let i=0;i<p.count;i++){const x=p.getX(i)+(x0+x1)/2,z=p.getZ(i)+(z0+z1)/2;p.setXYZ(i,x,G(x,z)+(typeof lift==='function'?lift(x,z):lift),z)}K.put(mat,g)};
+  // a strip w wide along a line of points on the ground
+  const ribbon=(mat,pts,w,lift)=>{const P=[],tri=(a,b,c)=>{if((b[2]-a[2])*(c[0]-a[0])-(b[0]-a[0])*(c[2]-a[2])<0)[b,c]=[c,b];P.push(...a,...b,...c)};
+    for(let i=0;i<pts.length-1;i++){const [ax,az]=pts[i],[bx,bz]=pts[i+1],L=Math.hypot(bx-ax,bz-az),ux=(bx-ax)/L,uz=(bz-az)/L,n=Math.max(1,Math.round(L/2));
+      const v=(t,s)=>{const x=ax+ux*t-uz*s*w/2,z=az+uz*t+ux*s*w/2;return [x,G(x,z)+lift,z]};
+      for(let k=0;k<n;k++){const t0=k/n*L,t1=(k+1)/n*L+(k===n-1&&i<pts.length-2?w/2:0),a=v(t0,-1),b=v(t0,1),c=v(t1,-1),d=v(t1,1);tri(a,c,b);tri(b,c,d)}}
+    const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(P,3));K.put(mat,g)};
+  // curb ramps where the crosswalks land: the sidewalk slopes down to the gutter over 4 ft. Each: the span along the
+  // curb (a0..a1), which axis the curb runs along, the curb line and which way the sidewalk lies from it
+  const RAMPS=[];for(const s of [-1,1]){for(const [z0,z1] of [[C0-5,C0-2],[C1+2,C1+5]])RAMPS.push({a0:z0,a1:z1,ax:'z',c:s*X,o:s});
+    for(const [x0,x1] of s<0?[[-9.3,-6.3]]:[[6.3,9.3]])for(const t of [-1,1])RAMPS.push({a0:x0,a1:x1,ax:'x',c:t<0?C0:C1,o:t})}
+  const rampAt=(x,z)=>{for(const r of RAMPS){const a=r.ax==='z'?z:x,d=(r.ax==='z'?x-r.c:z-r.c)*r.o;if(a>=r.a0&&a<=r.a1&&d>=0&&d<1.25)return 0.045+(MST.top-0.045)*d/1.25}return MST.top};
+  // the curb along a run from a to b of one axis at c (o: the sidewalk's side), low across the ramps; the gutter beside it
+  const curb=(ax,a,b,c,o)=>{const cut=[a,b];for(const r of RAMPS)if(r.ax===ax&&Math.abs(r.c-c)<0.01)cut.push(r.a0,r.a1);cut.sort((p,q)=>p-q);
+    for(let i=0;i<cut.length-1;i++){const p0=Math.max(a,cut[i]),p1=Math.min(b,cut[i+1]);if(p1-p0<0.01)continue;const n=Math.ceil((p1-p0)/1.5);
+      for(let k=0;k<n;k++){const q0=p0+(p1-p0)*k/n,q1=p0+(p1-p0)*(k+1)/n,m=(q0+q1)/2,cx=ax==='z'?c+o*MST.curb/2:m,cz=ax==='z'?m:c+o*MST.curb/2,g=G(cx,cz);
+        const low=RAMPS.some(r=>r.ax===ax&&Math.abs(r.c-c)<0.01&&m>r.a0&&m<r.a1),top=low?0.05:MST.top;
+        if(ax==='z')K.box(conc,MST.curb,top+0.1,q1-q0,cx,g+(top-0.1)/2,cz);else K.box(conc,q1-q0,top+0.1,MST.curb,cx,g+(top-0.1)/2,cz)}}
+    if(ax==='z')sheet(conc,Math.min(c,c-o*0.42),Math.max(c,c-o*0.42),a,b,MST.lift+0.006,1.5);else sheet(conc,a,b,Math.min(c,c-o*0.42),Math.max(c,c-o*0.42),MST.lift+0.006,1.5)};
+  // the asphalt: Main Street, the cross street each side of it, the beach road west and east (into the marina's car park)
+  sheet(asph,-X,X,MST.z0,MST.z1,MST.lift,2);for(const s of [-1,1])sheet(asph,s<0?-XE:X,s<0?-X:XE,C0,C1,MST.lift,2);
+  ribbon(asph,[[-170,576],[-60,574],[-X,574]],5,MST.lift);ribbon(asph,[[X,574],[26,574],[36,582],[58.5,586.6]],5,MST.lift);
+  // curbs, gutters and sidewalks along Main Street (from the beach road to the store's lot, round the cross street) and the cross street
+  for(const s of [-1,1]){for(const [z0,z1] of [[BZ,C0],[C1,MST.z1]]){curb('z',z0,z1,s*X,s);sheet(walk,Math.min(s*W,s*WE),Math.max(s*W,s*WE),z0,z1,rampAt,0.6);
+      for(let z=z0+1.5;z<z1-0.5;z+=1.5)sheet(joint,Math.min(s*W,s*WE),Math.max(s*W,s*WE),z-0.012,z+0.012,(x,zz)=>rampAt(x,zz)+0.004,2)}
+    K.box(conc,MST.walk+MST.curb,MST.top+0.1,MST.curb,s*(X+(MST.walk+MST.curb)/2),G(s*5,BZ)+(MST.top-0.1)/2,BZ+MST.curb/2);
+    for(const t of [-1,1]){const c=t<0?C0:C1,w0=t<0?C0-3.3:C1,w1=t<0?C0:C1+3.3;curb('x',s<0?-XE:X,s<0?-X:XE,c,t);
+      sheet(walk,s<0?-WX:WE,s<0?-WE:WX,w0,w1,rampAt,0.6);for(let x=WE+1.5;x<WX-0.5;x+=1.5)sheet(joint,s*x-0.012,s*x+0.012,w0,w1,(xx,z)=>rampAt(xx,z)+0.004,2)}}
+  // the warning pads at the foot of each ramp
+  for(const r of RAMPS){const y=(x,z)=>rampAt(x,z)+0.006;if(r.ax==='z')sheet(pad,Math.min(r.c+r.o*MST.curb,r.c+r.o*0.75),Math.max(r.c+r.o*MST.curb,r.c+r.o*0.75),r.a0+0.3,r.a1-0.3,y,0.3);
+    else sheet(pad,r.a0+0.3,r.a1-0.3,Math.min(r.c+r.o*MST.curb,r.c+r.o*0.75),Math.max(r.c+r.o*MST.curb,r.c+r.o*0.75),y,0.3)}
+  // markings: double yellow lines, stop bars and crosswalks of wide white bars
+  const L=MST.lift+0.008;for(const o of [-0.12,0.12]){for(const [z0,z1] of [[MST.z0,C0-6.2],[C1+6.2,MST.z1-0.5]])sheet(yel,o-0.05,o+0.05,z0,z1,L,3);
+    for(const s of [-1,1])sheet(yel,s<0?-XE:10.5,s<0?-10.5:XE,MST.cz+o-0.05,MST.cz+o+0.05,L,3)}
+  sheet(wht,-X+0.4,0,C0-6,C0-5.6,L,1);sheet(wht,0,X-0.4,C1+5.6,C1+6,L,1);sheet(wht,-10.3,-9.9,MST.cz,C1-0.4,L,1);sheet(wht,9.9,10.3,C0+0.4,MST.cz,L,1);
+  for(let x=-3.6;x<=3.61;x+=0.9)for(const [z0,z1] of [[C0-5,C0-2],[C1+2,C1+5]])sheet(wht,x-0.22,x+0.22,z0,z1,L,1);
+  for(let z=C0+0.5;z<=C1-0.49;z+=0.9)for(const [x0,x1] of [[-9.3,-6.3],[6.3,9.3]])sheet(wht,x0,x1,z-0.22,z+0.22,L,1);
+  // curb inlets: a cast grate in the gutter, the dark mouth in the curb face, the cover behind it with its drains-to-lake medallion
+  const inlet=(x,z,ax,o)=>{const g=G(x,z),gx=ax==='z'?x-o*0.24:x,gz=ax==='z'?z:z-o*0.24,ry=ax==='z'?0:Math.PI/2;
+    F.box(0.46,0.03,0.92,0x1c1d1e,gx,g+MST.lift+0.012,gz,ry);for(let i=-2;i<=2;i++){const a=i*0.08;F.box(0.03,0.035,0.86,0x4a4946,gx+(ax==='z'?a:0),g+MST.lift+0.02,gz+(ax==='z'?0:a),ry)}
+    F.box(0.03,0.09,1.1,0x111213,ax==='z'?x+o*0.005:x,g+MST.lift+0.075,ax==='z'?z:z+o*0.005,ry);
+    const hx=ax==='z'?x+o*(MST.curb+0.35):x,hz=ax==='z'?z:z+o*(MST.curb+0.35);F.box(0.6,0.02,1.3,0xb9b6ad,hx,g+MST.top+0.01,hz,ry);F.cyl(0.08,0.08,0.012,10,0x2a5f9a,hx,g+MST.top+0.025,hz)};
+  for(const s of [-1,1]){for(const z of [588,620,640.5,664,698,721])inlet(s*X,z,'z',s);for(const x of [24,60,96,126])for(const t of [-1,1])inlet(s*x,t<0?C0:C1,'x',t)}
+  // manhole covers in the lanes: a cast iron lid in its frame with a raised cross, and a few water valve boxes in the sidewalks
+  const hole=(x,z)=>{const g=G(x,z)+MST.lift;F.cyl(0.4,0.4,0.03,18,0x57544e,x,g+0.008,z);F.cyl(0.33,0.33,0.03,18,0x3b3a37,x,g+0.016,z);
+    for(const a of [0.4,0.4+Math.PI/2])F.box(0.56,0.012,0.05,0x302f2c,x,g+0.033,z,a)};
+  for(const [x,z] of [[-2,598],[2,626],[0,MST.cz],[-2,688],[2,712],[-2,566],[-30,650.2],[30,653.8],[-70,653.8],[70,650.2],[-110,650.2],[110,653.8]])hole(x,z);
+  for(const [x,z] of [[-5.6,601],[5.6,679],[-40,646],[80,657.8]]){const g=G(x,z)+MST.top;F.box(0.28,0.012,0.28,0x45433f,x,g+0.006,z)}
+  // a stop sign at each corner, on the right before the stop bar, facing the traffic that stops there
+  const cv=document.createElement('canvas');cv.width=cv.height=128;{const g=cv.getContext('2d'),R=62,P=n=>{g.beginPath();for(let i=0;i<8;i++){const a=Math.PI/8+i*Math.PI/4;g.lineTo(64+Math.cos(a)*n,64+Math.sin(a)*n)}g.closePath()};
+    g.fillStyle='#ffffff';P(R);g.fill();g.fillStyle='#b8202a';P(R-5);g.fill();g.fillStyle='#ffffff';g.font='700 38px "Barlow Condensed","Arial Narrow",Arial,sans-serif';g.textAlign='center';g.textBaseline='middle';g.fillText('STOP',64,66)}
+  const tex=new THREE.CanvasTexture(cv);tex.colorSpace=THREE.SRGBColorSpace;const smat=M(0xffffff,{map:tex,transparent:true,alphaTest:0.5,flatShading:false}),sgeo=new THREE.PlaneGeometry(0.76,0.76);
+  for(const [x,z,ry] of [[-X-0.9,C0-6.6,Math.PI],[X+0.9,C1+6.6,0],[-10.8,C1+0.9,-Math.PI/2],[10.8,C0-0.9,Math.PI/2]]){const g=G(x,z)+MST.top;
+    F.cyl(0.035,0.035,2.5,6,0x9aa0a4,x,g+1.25,z);F.geo(new THREE.CylinderGeometry(0.36,0.36,0.02,8,1,false,Math.PI/8),0x8a8e91,x+Math.sin(ry)*0.045,g+2.25,z+Math.cos(ry)*0.045,ry,Math.PI/2);
+    const m=new THREE.Mesh(sgeo,smat);m.position.set(x+Math.sin(ry)*0.06,g+2.25,z+Math.cos(ry)*0.06);m.rotation.y=ry;scene.add(m);SOLIDS.push({x,z,hx:0.1,hz:0.1})}
+  K.add();famAdd(F)}
+mainStreets();
