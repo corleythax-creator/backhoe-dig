@@ -339,8 +339,19 @@ const texReady=()=>{applyTextures();warmN=Math.max(warmN,3);warmAll={t0:performa
 // frame while the start card is up, where a hitch can't be felt. (The island tour test, tourtest.js, waits for this and
 // times it; warmIdle says when nothing is left to do)
 let warmAll=null;
-function warmIdle(){const W=warmAll;return !W||W.pend===0&&W.still>=1&&(!W.q||!W.q.length||help.hidden)}
-function warmAllTick(){const W=warmAll;if(!W||bench.on||vrOn())return;const now=performance.now();
+// the places a player gets to (where the island tour test goes): the rain cover's top-down pass and the sun's shadow
+// pass draw what is there once each, inside one call with nothing drawn on screen, so their own depth shaders for what
+// is only found there are built before you arrive. Only behind the start card or while the tour test gets ready
+const WARM_AT=[[-190,248],[-200,205],[FAM_X,FAM_Z],[JES_X,JES_Z],[72,540],[0,600],[0,652],[0,-5],[40,-330]];
+function warmAt(x,z){const c=camera.position.clone(),sp=sun.position.clone(),stp=sun.target.position.clone(),y=Math.max(WATER,baseHeight(x,z))+2;
+  try{camera.position.set(x,y,z);camera.updateMatrixWorld();if(typeof rcRender==='function'&&typeof rcRT!=='undefined')rcRender();
+    sun.position.set(x,y,z).addScaledVector(LIGHT_DIR,SUN_D);sun.target.position.set(x,y,z);sun.updateMatrixWorld();sun.target.updateMatrixWorld();
+    if(sun.castShadow&&renderer.shadowMap.enabled){renderer.shadowMap.needsUpdate=true;renderer.shadowMap.render([sun],scene,camera)}}catch(e){}
+  finally{camera.position.copy(c);camera.updateMatrixWorld();sun.position.copy(sp);sun.target.position.copy(stp);sun.updateMatrixWorld();sun.target.updateMatrixWorld();renderer.shadowMap.needsUpdate=true}}
+const warmQuiet=()=>!help.hidden||typeof tour!=='undefined'&&tour.on&&tour.ph==='ready';
+function warmIdle(){const W=warmAll;return !W||W.pend===0&&W.still>=1&&(!W.q||!W.q.length||help.hidden)&&(!W.at||!W.at.length||!warmQuiet())}
+function warmAllTick(){const W=warmAll;if(!W||bench.on||vrOn())return;const now=performance.now();W.f=(W.f||0)+1;
+  if(!W.at)W.at=WARM_AT.slice();if(W.at.length&&W.f%8===0&&W.mats&&warmQuiet())warmAt(...W.at.pop());
   if(!W.q){W.q=[];const seen=new Set();scene.traverse(o=>{for(const m of [].concat(o.material||[]))for(const k in m){const t=m[k];if(t&&t.isTexture&&!seen.has(t)){seen.add(t);W.q.push(t)}}})}
   if(!help.hidden)for(let i=0;i<3&&W.q.length;i++){const t=W.q.pop(),im=t.image;if(im&&(im.width||im.data||Array.isArray(im)))try{renderer.initTexture(t)}catch(e){}}
   if(now<W.next)return;W.next=now+4000;
@@ -348,7 +359,7 @@ function warmAllTick(){const W=warmAll;if(!W||bench.on||vrOn())return;const now=
   if(ms.size>W.mats){W.mats=ms.size;W.still=0;W.pend++;
     try{const p=renderer.compileAsync?renderer.compileAsync(scene,camera):(renderer.compile(scene,camera),null);if(p&&p.then)p.then(()=>W.pend--,()=>W.pend--);else W.pend--}catch(e){W.pend--}}
   else W.still++;
-  if(now-W.t0>180000&&W.pend===0&&(!W.q.length||help.hidden))warmAll=null}
+  if(now-W.t0>180000&&W.pend===0&&(!W.q.length||help.hidden)&&(!W.at.length||!warmQuiet()))warmAll=null}
 if([texGrass,texDirt,texGrime].every(t=>t.image&&t.image.width))texReady();else texManager.onLoad=texReady;
 // every lit material gets its wet look before anything is drawn, so nothing compiles twice (rain.js)
 wetPatchAll();

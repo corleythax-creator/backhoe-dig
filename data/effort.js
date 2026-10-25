@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-25T19:23:00Z",
+ "updated": "2026-10-25T19:41:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -66,9 +66,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-25",
-   "dh": 70.5,
-   "act": 4,
-   "versions": 12
+   "dh": 72,
+   "act": 4.5,
+   "versions": 13
   }
  ],
  "extra": [
@@ -2202,6 +2202,15 @@ window.EFFORT = {
    "tris": 5462376,
    "chars": 1552090,
    "what": "Dexter's haul bridge is now an old riveted railroad truss repainted safety yellow over its black, chipped through in places, with laced members, steel road plate between heavy timber wheel guards, old concrete piers with timber fender piles, and work lights on the portals, still 26 ft clear for a raised boom."
+  },
+  {
+   "v": 237,
+   "asked": "2026-10-25T14:20:00-05:00",
+   "live": "2026-10-25T14:41:21-05:00",
+   "dh": 1.5,
+   "tris": 5456607,
+   "chars": 1553599,
+   "what": "The rain cover's top-down pass and the sun's shadow pass draw each place a player gets to once behind the start card (Dexter's, the Family Island, Jessica's, the marina, town, Corley's, the hayfield), so their own depth shaders are built before you arrive and the last half-second hitch on reaching Dexter's goes"
   }
  ]
 };
