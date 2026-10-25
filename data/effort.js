@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-25T19:48:00Z",
+ "updated": "2026-10-25T20:11:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -66,9 +66,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-25",
-   "dh": 86,
-   "act": 4.5,
-   "versions": 14
+   "dh": 87,
+   "act": 5,
+   "versions": 15
   }
  ],
  "extra": [
@@ -2220,6 +2220,15 @@ window.EFFORT = {
    "tris": 5599465,
    "chars": 1597223,
    "what": "A full marina (pier to a fuel dock, finger piers of bobbing boats, breakwater and lighthouse, Harbor House, grill, ice cream stand, ramp, boat rack) and real storefronts with signs, awnings and street trees on Main Street"
+  },
+  {
+   "v": 239,
+   "asked": "2026-10-25T15:05:00-05:00",
+   "live": "2026-10-25T15:11:46-05:00",
+   "dh": 1,
+   "tris": 5605015,
+   "chars": 1597442,
+   "what": "Map editor: zooming all the way out now shows the whole map instead of plain sky, and the bucket gauge no longer sits over the editor. Added a test that deletes half the trees and stops at the Map card."
   }
  ]
 };

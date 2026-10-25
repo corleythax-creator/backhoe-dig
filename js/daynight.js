@@ -177,7 +177,8 @@ function dnTick(dt){
   dayKU.value=ss(-2,10,h);
   // the base the rain works from (rain.js); the map editor shows it as it is
   scene.background.copy(DAY.bg);scene.fog.color.copy(DAY.bg);if(hemiL0)hemiL0.intensity=DAY.hemiI*LI;
-  if(edOn||bench.on){scene.fog.far=760*gfxFog;sky.material.color.setRGB(1,1,1);skySunVis.value=1}
+  // the map editor pushes the haze back as its camera pulls away, so the island never fades into the sky
+  if(edOn||bench.on){const k=edOn?Math.max(1,ed.dist/300):1;scene.fog.near=90*k;scene.fog.far=760*gfxFog*k;sky.material.color.setRGB(1,1,1);skySunVis.value=1}else scene.fog.near=90;
   // the mountains take the horizon's light, the far range all of it
   dnCa.copy(skyU.uHor.value);dnCa.r/=DN_HOR0.r;dnCa.g/=DN_HOR0.g;dnCa.b/=DN_HOR0.b;
   if(MTN_MATS[0])MTN_MATS[0].emissive.setHex(0x6a7686).multiply(dnCa);if(MTN_MATS[1])MTN_MATS[1].color.copy(dnCa);
