@@ -38,7 +38,8 @@ function mdlMatsMake(){if(mdlMats)return mdlMats;const P=(h,o)=>mdlStd(h,Object.
     rubber:mdlStd(0x1b1c1b,{tex:'rubber',relief:0.8}),track:mdlStd(0x34332f,{tex:'steel',metal:0.5,relief:1}),tire:mdlStd(0x1b1c1b,{tex:'rubber',relief:1}),
     lens:LENS,redL:REDL,amber:AMBER,
     black:mdlStd(0x2a2c2e,{rough:0.55}),seat:mdlStd(0x34363a,{rough:0.85}),trim:mdlStd(0x8c8f92,{rough:0.6}),
-    mirror:mdlStd(0xdde4ea,{metal:1,rough:0.04}),glass:glass.material,tint:mdlStd(0x1c2328,{rough:0.04,env:1.6}),
+    // the cab glass (tint) is see-through, so from the seat you look out at the world, not at a dark pane
+    mirror:mdlStd(0xdde4ea,{metal:1,rough:0.04}),glass:glass.material,tint:Object.assign(mdlStd(0x1c2328,{rough:0.04,env:1.6}),{transparent:true,opacity:0.45,depthWrite:false}),
     screen:new THREE.MeshBasicMaterial({map:mdlScreenTex(),toneMapped:false})};
   mdlMats.glass.userData.noWet=true;
   return mdlMats}
@@ -177,7 +178,7 @@ function mdlHvOn(on){mdl.hvOn=on;const mats=mdlMatsMake();
           mesh.castShadow=k!=='tint';mesh.receiveShadow=true;if(!m.geometry.attributes.uv)mdlBoxUV(m.geometry);mesh.layers.enable(RAIN_LAYER);if(k==='tint')mesh.renderOrder=2;
           par.add(mesh);h.mdl.push(mesh)})}
       h.rams=Object.values(pins).filter(r=>r.a&&r.b).map(r=>mdlRam(r,mats));mdlRamPose(h)}
-    for(const g of Object.values(P))if(g)for(const c of g.children)if(c.isMesh&&c!==h.heap&&c!==h.hheap)c.visible=c.name.startsWith('mdl_')?on:!on;
+    for(const g of Object.values(P))if(g)for(const c of g.children)if((c.isMesh||c.userData.simple)&&c!==h.heap&&c!==h.hheap)c.visible=c.name.startsWith('mdl_')?on:!on;
     for(const r of h.rams||[])r.ga.visible=r.gb.visible=on}}
 // a ram: the barrel (in the machine's paint) turning on one pin, the chromed rod on the other, an eye round each pin
 function mdlRam(r,mats){const o=r.a.o,rad=o.r||0.07,lb=o.lb||0.6,lr=o.lr||0.6,bk=o.bk||0;
@@ -233,7 +234,7 @@ function mdlKitOn(on){mdl.kitOn=on;mdl.kitDirty=false;mdl.kitN++;
         u.kit=parts.map(([g,mt])=>{const ms=new THREE.Mesh(g,mt);ms.name='mdl_'+name;ms.castShadow=mdlShadeOk(mt);ms.receiveShadow=true;
           ms.layers.enable(RAIN_LAYER);if(mt.envMapIntensity>1.3)ms.renderOrder=2;par.add(ms);return ms})}
       if(!u.kit)continue;
-      for(const c of par.children)if(c.isMesh&&!keep.has(c))c.visible=c.name.startsWith('mdl_')?on:!on}
+      for(const c of par.children)if((c.isMesh||c.userData.simple)&&!keep.has(c))c.visible=c.name.startsWith('mdl_')?on:!on}
     if(K.after)K.after(on&&!!src)}}
 // ---- things standing in many places (MDL_SPOTS, family.js) and things placed from the map editor (props.js): a kind
 // whose node is in one of these files is drawn as one instanced mesh per material in place of its simple parts

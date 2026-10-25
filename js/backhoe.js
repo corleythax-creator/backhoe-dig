@@ -43,6 +43,13 @@ function bhBuild(h){const g=h.g,Y=DEX_Y,D=DEX_D,GL=DEX_GLASS,ST=0x8a8a86,P=h.par
   P.bucket=bhG(P.arm,0,0,BH_AL);{const k=hvKit();k.box(2.3,0.7,0.07,Y,0,-0.08,-0.1);k.box(2.3,0.07,0.9,Y,0,-0.43,0.38);k.box(2.3,0.06,0.38,Y,0,0.29,0.17);
     for(const sx of [-1.15,1.15])k.box(0.05,0.75,0.95,Y,sx,-0.08,0.38);k.box(2.32,0.04,0.14,ST,0,-0.45,0.86);hvMesh(k,P.bucket)}
   h.heap=hvHeap(P.bucket,0,-0.25,0.38);
+  // from the seat (simple shapes; the detailed model has its own): the dash pedestal, column and display ahead, and
+  // behind the seat the hoe's console with its two levers; the wheel turns as you steer (hvPose)
+  ctlGroup(g,k=>{k.box(0.5,0.5,0.18,CTL_PAN,0,1.55,0.03);k.box(0.12,0.5,0.12,CTL_PAN,0,1.75,-0.13,0.4);
+    k.box(0.24,0.18,0.08,0x111214,-0.38,1.85,0.11,-0.3);k.box(0.2,0.14,0.01,CTL_SCR,-0.38,1.85,0.065,-0.3);ctlGauge(k,0.035,0.2,1.8,-0.075,0.2,0.5);
+    k.box(1.1,0.4,0.22,CTL_PAN,0,1.5,-1.53);for(const s of [-1,1]){k.box(0.18,0.2,0.24,CTL_PAN,s*0.32,1.78,-1.47);
+      k.cyl(0.012,0.012,0.36,6,0x9aa0a4,s*0.32,2.02,-1.41,0.25);k.cyl(0.035,0.03,0.08,8,CTL_RUB,s*0.32,2.2,-1.37)}});
+  ctlWheel(h,g,0,2.02,-0.23,0.75,0.18,3);
   // the swivel seat
   P.seat=bhG(g,0,1.3,-0.75);{const k=hvKit();k.box(0.5,0.12,0.48,0x2b2d30,0,0.4,0.02);k.box(0.48,0.56,0.12,0x2b2d30,0,0.72,-0.22);hvMesh(k,P.seat)}
   // the hoe: swing casting, boom (two straight lengths), stick, bucket
@@ -110,7 +117,7 @@ function bhWork(h,dt,arm,curl,on){const P=h.parts,mv=(v,t,s)=>v<t?Math.min(t,v+s
   // the views: at the hoe the chase camera comes round to the front and looks back over the cab, and in the cab you
   // look back and down at the bucket
   h.camO=Math.PI*h.seat;h.camF=1-4*h.seat;{const a=Math.PI*h.seat,E=h.K.eye;
-    h.eye[0]=0.13*Math.sin(a);h.eye[1]=E[1];h.eye[2]=-0.75+0.13*Math.cos(a);h.eye[3]=5*Math.sin(a);h.eye[4]=-0.6-0.5*h.seat;h.eye[5]=5*Math.cos(a)}
+    h.eye[0]=0.13*Math.sin(a);h.eye[1]=E[1];h.eye[2]=-0.75+0.13*Math.cos(a);h.eye[3]=5*Math.sin(a);h.eye[4]=-1.62+0.52*h.seat;h.eye[5]=5*Math.cos(a)}
   hvPose(h);
   // the loader: it scoops with the cutting edge under the ground on the dig site and the bucket near level, and pours
   // off the lip once it is tipped past about 20 degrees
