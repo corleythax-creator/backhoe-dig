@@ -259,12 +259,26 @@ function frame(now){
       // inside Jessica's cottage the roof lifts off and the camera looks down from above the walls
       if(jesIn){cd=camDist*0.42;op=Math.max(op,1.05)}}
     else{const fx=Math.sin(hy),fz=Math.cos(hy);look.set(st.x+fx*4,st.y+0.8,st.z+fz*4);cyaw=hy+Math.PI+orbitYaw}
+    // any turn of orbitYaw since the last frame is yours (mouse, drag, stick or pad)
+    if(Math.abs(orbitYaw-camOY)>1e-5)camUserT=now;
     // the orbit camera keeps its bearing as the machine turns under it (on foot the view is yours to turn already)
     if(camFree&&mode!=='walk'){const base=cyaw-orbitYaw;if(camBase!==null){const d=Math.atan2(Math.sin(base-camBase),Math.cos(base-camBase));orbitYaw-=d;cyaw-=d}camBase=base}else camBase=null;
-    camT.set(look.x+Math.sin(cyaw)*Math.cos(op)*cd,look.y+Math.sin(op)*cd,look.z+Math.cos(cyaw)*Math.cos(op)*cd);
+    // the chase camera drifts back behind a machine on the move a while after you last turned it (not on foot, where the
+    // view steers you, nor at the excavator's controls, where it already follows the swing)
+    const spd=firstCam?0:Math.hypot(look.x-camLkP.x,look.z-camLkP.z)/Math.max(dt,1e-3);camLkP.copy(look);
+    if(!camFree&&mode!=='walk'&&mode!=='dig'&&TU.camBack>0&&now-camUserT>TU.camBack*1000&&spd>1){
+      const o=Math.atan2(Math.sin(orbitYaw),Math.cos(orbitYaw)),n=o*Math.exp(-dt*1.4);cyaw+=n-orbitYaw;orbitYaw=n}
+    camOY=orbitYaw;
+    // the machine's own turn is eased so the camera swings round behind it rather than snapping with it; your own turn
+    // (orbitYaw) goes straight through so the mouse feels direct. On foot the view is the steering, so it isn't eased
+    const base=cyaw-orbitYaw;
+    if(firstCam||mode==='walk')camBS=base;else camBS+=Math.atan2(Math.sin(base-camBS),Math.cos(base-camBS))*(1-Math.exp(-dt*6*TU.camFollow));
+    const yw=camBS+orbitYaw;
+    if(firstCam)camLk.copy(look);else camLk.lerp(look,1-Math.exp(-dt*14));
+    camT.set(camLk.x+Math.sin(yw)*Math.cos(op)*cd,camLk.y+Math.sin(op)*cd,camLk.z+Math.cos(yw)*Math.cos(op)*cd);
     camT.y=Math.max(camT.y,surfAt(camT.x,camT.z)+1.2,WATER+0.9);
-    if(firstCam){camera.position.copy(camT);firstCam=false}else camera.position.lerp(camT,Math.min(1,dt*5));
-    camera.lookAt(look);
+    if(firstCam){camera.position.copy(camT);firstCam=false}else camera.position.lerp(camT,1-Math.exp(-dt*25));
+    camera.lookAt(camLk);
   }else{
     // the seat's eye point and its straight-ahead look, turned by where you have turned your head (fpl)
     if(mode==='truck')fpEye(sprung,-0.55,1.6,1.95,0.25,-1,12.05);

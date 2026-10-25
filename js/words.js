@@ -57,6 +57,7 @@ const WORDS=[
   ['walkKb','On foot','On foot. [jump] jumps, [place] sets a block, [enter] gets into a machine.'],
   ['walkTouch','On foot','On foot. Tap Jump to jump. Walk up to a machine and tap Get in.'],
   ['walkPad','On foot','On foot. A jumps, X sets a block, B gets into a machine.'],
+  ['lockHint','Other','Esc frees the mouse'],
   ['mouseLook','On foot','Mouse look. Move the mouse to look around, wheel or [zoom] zooms, [lookAhead] looks ahead. Esc frees the mouse.'],
   ['bikeTip','Dirt bike','On Dexter\'s dirt bike. [lUp] gas, [lDown] brake and back up, [lLeft] [lRight] steer. Hit the jump with some speed; gas in the air lifts the front. [enter] to climb off.',''],
   ['capL_bike','Captions','{lv} Gas / brake\n{lh} Steer','Left stick, Dirt bike'],['capR_bike','Captions','{rh} Look around','Right stick, Dirt bike'],

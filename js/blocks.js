@@ -192,7 +192,7 @@ function blkTick(dt){
   if(blkGhost.visible){const p=blkAim(),c=p.ok?0xf5c518:0xff5143;
     blkGhost.position.set(p.x,p.y+p.h/2+0.005,p.z);blkGhost.scale.set(p.w+0.01,p.h+0.01,p.d+0.01);ghostFill.color.setHex(c);ghostLine.color.setHex(c)}
   if(blkOn&&blkReachEl.hidden===blkFP()){blkUI();
-    if(blkFP()&&!blkFPTold){blkFPTold=true;toast(say('blkFP'),'',4200)}}}
+    if(blkFP()&&!blkFPTold){blkFPTold=true;toast(say('blkFP'),'tip',4200)}}}
 $('#blkBtn').onclick=()=>setBlocks(!blkOn);
 $('#blkPlace').onclick=placeBlock;$('#blkRemove').onclick=removeBlock;$('#blkTurn').onclick=blkTurn;
 document.querySelectorAll('#blkBar .bstep button').forEach(b=>b.onclick=()=>{const k=b.parentNode.dataset.k,s=+b.dataset.d;

@@ -168,7 +168,7 @@ function mapsTick(dt){
   const fv=mapFocus(),open=!$('#bigmap').hidden;
   // the ground tiles fill in behind play (a little each frame), faster while the site map is open
   if(mapTilesDone()<MPT_NX*MPT_NZ){const c=open?mapAt(...mapBox().map(v=>v/2)):fv;mapBuild(open?14:gfxKey==='low'?1.5:3,c.x,c.z)}
-  const mini=$('#mini');drawMap(mini,fv.x,fv.z,84/(mini.clientWidth||84),false);
+  const mini=$('#mini'),mpx=mini.clientWidth;if(mpx)drawMap(mini,fv.x,fv.z,84*Math.pow(mpx/118,0.6)/mpx,false);
   // the trails layer catches up with new travel once a second while the map is open
   if(open){mapBigT-=dt;if(mapBigT<=0&&trailDirty&&trailShow!=='off'){mapBigT=1;trailSync()}else drawBig()}
 }

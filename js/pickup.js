@@ -155,7 +155,7 @@ function pbTick(dt){for(const h of hvs)if(h.pb)pbSlide(h,dt);
   if((pbS.looseT-=dt)<0){pbS.looseT=1;for(const o of pbS.loose)o.m.position.y=surfAt(o.x,o.z)}
   if((pbS.btnT-=dt)>0)return;pbS.btnT=0.15;const c=pbCtx(),b=$('#bedBtn'),t=c?(c.a==='buy'?'Take '+PB_KINDS[c.k].s:PB_BTN[c.a]):'';
   if(b.hidden===!!c)b.hidden=!c;if(c&&b.textContent!==t)b.textContent=t;
-  if(!pbS.hint&&mode==='walk'&&!wk.inside&&!pbS.hold&&pbNearBed()){pbS.hint=true;toast(say('pbHint'),'',6000)}}
+  if(!pbS.hint&&mode==='walk'&&!wk.inside&&!pbS.hold&&pbNearBed()){pbS.hint=true;toast(say('pbHint'),'tip',6000)}}
 
 // ---------- saved with the rigs (save.js) ----------
 function pbSave(){return {b:hvs.map(h=>h.pb?h.pb.it.map(i=>PB_KINDS[i.k].c).join(''):''),l:pbS.loose.map(o=>[PB_KINDS[o.k].c,+o.x.toFixed(2),+o.z.toFixed(2),+o.yaw.toFixed(2)]),

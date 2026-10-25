@@ -77,6 +77,9 @@
       <button id="keysBtn">Keys</button>
       <button id="syncBtn" hidden>Sync devices</button>
       <div class="sizes"><span>UI size</span><button data-s="1">1x</button><button data-s="1.5">1.5x</button><button data-s="2">2x</button></div>
+      <div class="sizes" id="miniRow"><span>Minimap</span><button data-mm="0">Off</button><button data-mm="1">S</button><button data-mm="2">M</button><button data-mm="3">L</button><button data-mm="4">XL</button></div>
+      <div class="sizes" id="stickRow"><span>Sticks</span><button data-stk="auto">Auto</button><button data-stk="on">On</button><button data-stk="off">Off</button></div>
+      <div class="sizes" id="msgRow"><span>Messages</span><button data-msg="all">All</button><button data-msg="few">Few</button><button data-msg="off">Off</button></div>
       <div class="mhead">Tools</div>
       <button id="benchBtn">Speed test</button>
       <button id="digTestBtn">Dig site test</button>
@@ -133,6 +136,8 @@
   <div id="bucketChip" hidden><span id="bucketChipName">Bucket</span><b id="bucketChipVal">0%</b><i class="bar"><i id="bucketChipBar"></i><i id="bucketChipFull"></i></i><span id="bucketChipSub"></span></div>
   <div id="lawnChip" hidden><span id="lawnChipName">Lawn</span><b id="lawnChipVal">0%</b><i class="bar"><i id="lawnChipBar"></i></i></div>
   <div id="toast"><span id="toastText"></span></div>
+  <!-- while the mouse is taken for mouse look: how to let it go (controls.js) -->
+  <div id="lockHint" hidden></div>
   <button id="updBtn" hidden></button>
 </div>
 
