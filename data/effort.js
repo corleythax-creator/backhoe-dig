@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-24T21:59:00Z",
+ "updated": "2026-10-25T14:18:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -63,6 +63,12 @@ window.EFFORT = {
    "dh": 32.75,
    "act": 4,
    "versions": 10
+  },
+  {
+   "d": "2026-10-25",
+   "dh": 1.5,
+   "act": 0.5,
+   "versions": 1
   }
  ],
  "extra": [
@@ -2088,6 +2094,15 @@ window.EFFORT = {
    "tris": 5364657,
    "chars": 1424715,
    "what": "The dirt in the excavator and backhoe buckets is a lumpy mound that heaps over the rim and spills when overfull, a bucket gauge shows how full (bar and %), and VR no longer flashes when the sky reflections update"
+  },
+  {
+   "v": 225,
+   "asked": "2026-10-25T09:05:00-05:00",
+   "live": "2026-10-25T09:18:26-05:00",
+   "dh": 1.5,
+   "tris": 4283916,
+   "chars": 1424395,
+   "what": "The start card shows every machine as a small icon in one grid; Jessica's Island offers only the mower, four-wheeler, dirt bike, boat and on foot"
   }
  ]
 };
