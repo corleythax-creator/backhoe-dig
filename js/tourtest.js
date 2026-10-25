@@ -116,7 +116,7 @@ function tourLook(dt){const L=tour.look,E=tourEye(),lim=E.walk?Math.PI:1.25;L.t-
 const tourOpt={rain:false,night:false,laps:1};try{Object.assign(tourOpt,JSON.parse(localStorage.getItem('bhd_tourOpt')||'{}'))}catch(e){}
 // more of the game's work timed for the tour's freeze and cost reports (bhtest.js times the rest; missing ones are skipped)
 const TOUR_TIMED={mapsTick:'Minimap',mdlTick:'Detailed models',jesTick:"Jessica's Island",particlesTick:'Particles',dustTick:'Dust',lakeBoatsTick:'Boats on the lake',
-  crnTick:'The crane',famTick:'Family Island',wkMdlPose:'The worker\'s pose',grimeTick:'Grime',plantTick:'Planted trees',daynightTick:'Time of day',stormTick:'Storms',ambienceTick:'Ambience'};
+  crnTick:'The crane',famTick:'Family Island',wkMdlPose:'The worker\'s pose',grimeTick:'Grime',plantTick:'Planted trees',daynightTick:'Time of day',stormTick:'Storms',ambienceTick:'Ambience',tfTick:'Townsfolk'};
 // where the player is: on foot, in the boat or on the machine
 const tourPos=()=>mode==='walk'?wk:mode==='boat'?btCur():mode==='heavy'?hvCur():wk;
 
