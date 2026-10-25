@@ -19,6 +19,8 @@ const BLK_GRIDS=[1,2,3,6,12];let blkGrid=12;
 try{const q=JSON.parse(localStorage.getItem('bhd_blkSnap')||'null');if(q){if(BLK_LOCKS.some(l=>l[0]===q.lock))blkLock=q.lock;if(BLK_GRIDS.includes(q.grid))blkGrid=q.grid}}catch(e){}
 function blkSnapSave(){try{localStorage.setItem('bhd_blkSnap',JSON.stringify({lock:blkLock,grid:blkGrid}))}catch(e){}}
 let blkOn=false,blkWake=0,blkMat=0,blkReach=12,blkFPTold=false;
+// what the bar sets down: '' a block, or a kind of thing from the map editor's catalogue (props.js: thPlace and the rest)
+let blkThing='';
 // one instanced mesh per material in use; the texture is laid on in world space so any size tiles it evenly and
 // neighbouring blocks line up. Plain concrete (blkMesh) gets its texture in applyTextures (truck.js)
 const blkGeo=new THREE.BoxGeometry(1,1,1),blkMeshes=[];
@@ -130,7 +132,7 @@ function blkAim(){const w=blkDim.w*IN,d=blkDim.d*IN,h=blkDim.h*IN,[ax,az]=blkTar
   else{p.ok=true;p.why=''}
   return p}
 const blkSizeTxt=(w,d,h)=>`${blkInTxt(w)} × ${blkInTxt(d)} × ${blkInTxt(h)}`;
-function placeBlock(){
+function placeBlock(){if(blkThing){if(!blkOn)setBlocks(true);thPlace();return}
   if(mode!=='dig'&&mode!=='walk'){toast(say('blkWrongMode'));return}
   if(!blkOn)setBlocks(true);
   const p=blkAim();if(!p.ok){toast(p.why);return}
@@ -141,7 +143,7 @@ function placeBlock(){
 const blkFt=b=>blkSizeTxt(Math.round(b.w/IN),Math.round(b.d/IN),Math.round(b.h/IN));
 // the highest block the bucket is over or touching comes away; on foot, the highest one within reach just in front;
 // in first person, the first one the middle of the screen meets (out to the longest reach)
-function removeBlock(){
+function removeBlock(){if(blkThing){thLift();return}
   if(mode!=='dig'&&mode!=='walk'){toast(say('blkLiftMode'));return}
   let best=-1,top=-1e9;const walk=mode==='walk';
   if(blkFP()){const r=blkRay(TU.blkReach/FT);if(r.hit&&r.hit!=='ground')best=blocks.indexOf(r.hit)}
@@ -153,23 +155,36 @@ function removeBlock(){
   const b=blocks.splice(best,1)[0];blkWake=1.5;
   toast(say('blkLifted',{size:blkFt(b),n:blocks.length}),'good',1600)}
 // ---------- the block bar ----------
-function setBlocks(on){blkOn=on;const btn=$('#blkBtn');btn.setAttribute('aria-pressed',on);$('#blkBar').hidden=!on;
+function setBlocks(on){if(on&&!$('#blkWhat').options.length)blkWhatOpts();blkOn=on;const btn=$('#blkBtn');btn.setAttribute('aria-pressed',on);$('#blkBar').hidden=!on;
   if(on&&mode!=='dig'&&mode!=='walk')setMode('dig');blkUI()}
 const blkReachEl=$('#blkReach');
 function blkUI(){for(const k of ['w','d','h'])$(`#blkBar .bstep[data-k="${k}"] b`).textContent=blkInTxt(blkDim[k]);
   $('#blkGridRow b').textContent=blkInTxt(blkGrid);$('#blkGridRow').hidden=blkLock!=='grid'&&blkLock!=='gridblocks';
   $('#blkLock').textContent=BLK_LOCKS.find(l=>l[0]===blkLock)[1];
   blkReachEl.querySelector('b').textContent=`${Math.round(blkReach)} ft`;blkReachEl.hidden=!blkFP();
-  const s=$('#blkMat');if(+s.value!==blkMat)s.value=blkMat}
+  const s=$('#blkMat');if(+s.value!==blkMat)s.value=blkMat;
+  // a thing: no size or material, but a colour for the lights and the ones that take the house colours
+  const th=!!blkThing,P=PROPS[blkThing];for(const e of document.querySelectorAll('#blkBar .bstep[data-k="w"],#blkBar .bstep[data-k="d"],#blkBar .bstep[data-k="h"],#blkMat'))e.hidden=th;
+  const w=$('#blkWhat');if(w.value!==blkThing)w.value=blkThing;
+  const cs=$('#blkCol'),cl=th&&(propGlow(blkThing)?LAMP_COL_N:P.tint?PROP_TINT.map((_,i)=>i?'Colour '+i:'White'):null);cs.hidden=!cl;
+  if(cl&&cs.dataset.k!==blkThing){cs.dataset.k=blkThing;cs.innerHTML=cl.map((n,i)=>`<option value="${i}">${n}</option>`).join('');thCol=Math.min(thCol,cl.length-1)}
+  if(cl)cs.value=thCol;$('#blkTurn').setAttribute('aria-label',th?'Turn the thing an eighth of a turn':'Turn the block a quarter turn')}
+// the What list: a block, then every kind of thing by its group in the Things library
+function setBlkThing(t){blkThing=PROPS[t]?t:'';thTurn=0;blkUI()}
+function blkWhatOpts(){const s=$('#blkWhat');s.textContent='';s.add(new Option('Block',''));
+  ED_KIND_CATS.forEach((c,ci)=>{const ks=Object.keys(PROPS).filter(k=>(PROPS[k].cat||3)===ci);if(!ks.length)return;const g=document.createElement('optgroup');g.label=c;
+    for(const k of ks)g.appendChild(new Option(PROPS[k].n,k));s.appendChild(g)});
+  s.value=blkThing;s.onchange=()=>{setBlkThing(s.value);s.blur()};
+  $('#blkCol').onchange=e=>{thCol=+e.target.value;e.target.blur()}}
 // one step up or down the BLK_IN list
 function blkStepDim(k,dir){const i=BLK_IN.findIndex(v=>v>=blkDim[k]),j=dir>0?(BLK_IN[i]>blkDim[k]?i:i+1):i-1;
   blkDim[k]=BLK_IN[clamp(j,0,BLK_IN.length-1)];blkUI()}
 function blkLockNext(){blkLock=BLK_LOCKS[(BLK_LOCKS.findIndex(l=>l[0]===blkLock)+1)%BLK_LOCKS.length][0];blkSnapSave();blkUI();return BLK_LOCKS.find(l=>l[0]===blkLock)[1]}
 // the size key and the D-pad step through cubes, 1 to 10 ft
-function blkCube(dir){const n=((Math.round(Math.max(blkDim.w,blkDim.d,blkDim.h)/12)-1+dir)%BLK_FT+BLK_FT)%BLK_FT+1;blkDim.w=blkDim.d=blkDim.h=n*12;blkUI();
+function blkCube(dir){if(blkThing)return;const n=((Math.round(Math.max(blkDim.w,blkDim.d,blkDim.h)/12)-1+dir)%BLK_FT+BLK_FT)%BLK_FT+1;blkDim.w=blkDim.d=blkDim.h=n*12;blkUI();
   toast(say('blkSize',{size:blkSizeTxt(n*12,n*12,n*12)}),'',1200)}
 // turn the block a quarter turn: width and length swap
-function blkTurn(){[blkDim.w,blkDim.d]=[blkDim.d,blkDim.w];blkUI()}
+function blkTurn(){if(blkThing){thTurnBy();return}[blkDim.w,blkDim.d]=[blkDim.d,blkDim.w];blkUI()}
 function blkReachBy(ft){blkReach=clamp(blkReach+ft,BLK_REACH[0],TU.blkReach/FT);blkUI()}
 function setBlkMat(m){m=m|0;blkMat=matIdOk(m)?m:0;blkUI()}
 function blkTerrainMoved(){if(blocks.length)blkWake=Math.max(blkWake,0.3)}
@@ -188,7 +203,7 @@ function blkTick(dt){
     for(const b of blocks){const im=blkMeshOf(b.m),i=im.count++;blkO.position.set(b.x,b.y+b.h/2,b.z);blkO.scale.set(b.w,b.h,b.d);blkO.updateMatrix();
       im.setMatrixAt(i,blkO.matrix);im.setColorAt(i,blkCol.setRGB(b.c[0],b.c[1],b.c[2]))}
     for(const im of blkMeshes)if(im){im.instanceMatrix.needsUpdate=true;im.instanceColor.needsUpdate=true}}
-  blkGhost.visible=blkOn&&(mode==='dig'||mode==='walk')&&!bench.on;
+  blkGhost.visible=blkOn&&!blkThing&&(mode==='dig'||mode==='walk')&&!bench.on;thTick();
   if(blkGhost.visible){const p=blkAim(),c=p.ok?0xf5c518:0xff5143;
     blkGhost.position.set(p.x,p.y+p.h/2+0.005,p.z);blkGhost.scale.set(p.w+0.01,p.h+0.01,p.d+0.01);ghostFill.color.setHex(c);ghostLine.color.setHex(c)}
   if(blkOn&&blkReachEl.hidden===blkFP()){blkUI();

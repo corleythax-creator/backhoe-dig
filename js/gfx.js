@@ -22,6 +22,8 @@ const GFX={
 // picked by itself
 // the extra lamps: the warm light in Jessica's library and the boom's work light (Low keeps the glowing lamps only)
 GFX.low.extraLt=false;GFX.med.extraLt=GFX.high.extraLt=true;
+// two real spotlights from the placed lights nearest the camera (props.js); the glow and the pools of light are on every level
+GFX.low.propLt=GFX.med.propLt=false;GFX.high.propLt=true;
 GFX.ultra=Object.assign({},GFX.high,{name:'Ultra',tuftQ:3,ao:true,bloom:true,grade:true,treeR:220,skyLight:true,shSoft:true,wetDrops:true,wetGround:true});
 // VR through a PC: the eye buffer drawn larger than the headset's own and scaled down (supersampling), for sharper edges
 // and fine detail; only the levels for strong graphics do it
@@ -75,7 +77,7 @@ function gfxApply(){const g=gfxCur=Object.assign({},GFX[gfxKey],gfxOver);
   // the screen effects: shade where things meet, glow, colour grade (post.js)
   postGfx(g.ao,g.bloom,g.grade);
   // the warm light in Jessica's library (jessica.js) and the boom's work light (daynight.js)
-  jesLightGfx(g.extraLt);dnBoomGfx(g.extraLt);
+  jesLightGfx(g.extraLt);dnBoomGfx(g.extraLt);if(typeof propLampGfx==='function')propLampGfx(g.propLt);
   // sky lighting, soft sun shadows and rain on the machines (post.js)
   ultraGfx(g.skyLight,g.shSoft&&g.sh>0,g.wetDrops,g.wetGround);
   // machine models: the detailed one from its file, or the simple shapes (models.js)

@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Sunday, October 25, 2026
 
+- **v243** (4:50 PM) About 60 new things to place, in the map editor or on foot from the Blocks bar's What list: street lights, lamp posts, floodlights, spotlights, path and string lights and lantern hooks that glow after dark in any colour, plus road gear, site gear, garden, yard and play things (and jack-o'-lanterns).
 - **v242** (4:27 PM) A freight line runs along the foot of the north mountains across the lake: Cruise Brandon's CN and CPKC freights (and now and then Amtrak's City of New Orleans) come out of one tunnel every few minutes, cross on a rock causeway and go into the other, blowing the horn, headlights on at night.
 - **v241** (4:15 PM) Feet and wheels stand on the town's sidewalks, curbs and asphalt instead of sinking in; a curb is a step up on foot
 - **v240** (4:01 PM) Main Street and the cross street paved with curbs, gutters, sidewalks, curb ramps, a four-way stop, crosswalks, storm drains and manholes; the screen no longer freezes after the start card's warm-up

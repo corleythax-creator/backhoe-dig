@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-25T21:27:00Z",
+ "updated": "2026-10-25T21:50:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -66,9 +66,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-25",
-   "dh": 105.5,
-   "act": 5.5,
-   "versions": 18
+   "dh": 123.5,
+   "act": 6,
+   "versions": 19
   }
  ],
  "extra": [
@@ -2256,6 +2256,15 @@ window.EFFORT = {
    "tris": 5767486,
    "chars": 1624463,
    "what": "A freight line runs along the foot of the north mountains across the lake: Cruise Brandon's CN and CPKC freights (and now and then Amtrak's City of New Orleans) come out of one tunnel every few minutes, cross on a rock causeway and go into the other, blowing the horn, headlights on at night."
+  },
+  {
+   "v": 243,
+   "asked": "2026-10-25T16:04:00-05:00",
+   "live": "2026-10-25T16:50:02-05:00",
+   "dh": 18,
+   "tris": 5641908,
+   "chars": 1663218,
+   "what": "About 60 new things to place, in the map editor or on foot from the Blocks bar's What list: street lights, lamp posts, floodlights, spotlights, path and string lights and lantern hooks that glow after dark in any colour, plus road gear, site gear, garden, yard and play things (and jack-o'-lanterns)."
   }
  ]
 };
