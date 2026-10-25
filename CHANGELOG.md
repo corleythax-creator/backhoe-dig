@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Sunday, October 25, 2026
 
+- **v240** (4:01 PM) Main Street and the cross street paved with curbs, gutters, sidewalks, curb ramps, a four-way stop, crosswalks, storm drains and manholes; the screen no longer freezes after the start card's warm-up
 - **v239** (3:11 PM) Map editor: zooming all the way out now shows the whole map instead of plain sky, and the bucket gauge no longer sits over the editor. Added a test that deletes half the trees and stops at the Map card.
 - **v238** (2:48 PM) A full marina (pier to a fuel dock, finger piers of bobbing boats, breakwater and lighthouse, Harbor House, grill, ice cream stand, ramp, boat rack) and real storefronts with signs, awnings and street trees on Main Street
 - **v237** (2:41 PM) The rain cover's top-down pass and the sun's shadow pass draw each place a player gets to once behind the start card (Dexter's, the Family Island, Jessica's, the marina, town, Corley's, the hayfield), so their own depth shaders are built before you arrive and the last half-second hitch on reaching Dexter's goes

@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-25T20:11:00Z",
+ "updated": "2026-10-25T21:01:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -66,9 +66,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-25",
-   "dh": 87,
-   "act": 5,
-   "versions": 15
+   "dh": 94,
+   "act": 5.5,
+   "versions": 16
   }
  ],
  "extra": [
@@ -2229,6 +2229,15 @@ window.EFFORT = {
    "tris": 5605015,
    "chars": 1597442,
    "what": "Map editor: zooming all the way out now shows the whole map instead of plain sky, and the bucket gauge no longer sits over the editor. Added a test that deletes half the trees and stops at the Map card."
+  },
+  {
+   "v": 240,
+   "asked": "2026-10-25T15:20:00-05:00",
+   "live": "2026-10-25T16:01:49-05:00",
+   "dh": 7,
+   "tris": 5617683,
+   "chars": 1606447,
+   "what": "Main Street and the cross street paved with curbs, gutters, sidewalks, curb ramps, a four-way stop, crosswalks, storm drains and manholes; the screen no longer freezes after the start card's warm-up"
   }
  ]
 };
