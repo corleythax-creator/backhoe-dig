@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Sunday, October 25, 2026
 
+- **v246** (5:24 PM) People walk the town's sidewalks, cross at the crosswalks, window-shop and go in and out of the General Store; cars drive into town, keep right, take turns at the four-way stop, wait for you and park at the store or the marina, where the driver walks in and comes back out. Graphics setting Townsfolk sets how many.
 - **v245** (5:14 PM) Porches, steps, slabs, decks, lots, walks, curbs, the cottage floor and the editor's pallets, gazebo and sandbox are now stood on at their real height; edges up to a step step up, higher ones are walls
 - **v244** (5:03 PM) The distant train shows on the maps: the line across the north, each train as a dark bar with a red dot at its locomotive (blue for Amtrak), and a train badge on the minimap's edge pointing the way to it.
 - **v243** (4:50 PM) About 60 new things to place, in the map editor or on foot from the Blocks bar's What list: street lights, lamp posts, floodlights, spotlights, path and string lights and lantern hooks that glow after dark in any colour, plus road gear, site gear, garden, yard and play things (and jack-o'-lanterns).

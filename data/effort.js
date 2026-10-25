@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-25T22:14:00Z",
+ "updated": "2026-10-25T22:24:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -66,9 +66,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-25",
-   "dh": 130.5,
+   "dh": 140.5,
    "act": 6.5,
-   "versions": 21
+   "versions": 22
   }
  ],
  "extra": [
@@ -2283,6 +2283,15 @@ window.EFFORT = {
    "tris": 5624387,
    "chars": 1671054,
    "what": "Porches, steps, slabs, decks, lots, walks, curbs, the cottage floor and the editor's pallets, gazebo and sandbox are now stood on at their real height; edges up to a step step up, higher ones are walls"
+  },
+  {
+   "v": 246,
+   "asked": "2026-10-25T16:20:00-05:00",
+   "live": "2026-10-25T17:24:43-05:00",
+   "dh": 10,
+   "tris": 5629992,
+   "chars": 1698619,
+   "what": "People walk the town's sidewalks, cross at the crosswalks, window-shop and go in and out of the General Store; cars drive into town, keep right, take turns at the four-way stop, wait for you and park at the store or the marina, where the driver walks in and comes back out. Graphics setting Townsfolk sets how many."
   }
  ]
 };
