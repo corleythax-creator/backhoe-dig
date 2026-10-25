@@ -38,7 +38,7 @@ const tour={on:false,headless:false,ph:'',t:0,pt:0,checks:[],legs:{},leg:'',li:0
   prevNow:0,cpu:0,errs:[],lt:{n:0,ms:0,max:0},barT:0};
 const tourFt=m=>Math.round(m/FT)+' ft',tourAng=a=>Math.atan2(Math.sin(a),Math.cos(a));
 function tourCheck(name,ok,note){tour.checks.push({name,ok:!!ok,note:note||''})}
-function tourGo(ph,leg){tour.ph=ph;tour.pt=0;tour.wi=0;tour.rec=0;tour.moved={x:1e9,z:1e9,t:tour.t};if(leg)tourLeg(leg)}
+function tourGo(ph,leg){tour.ph=ph;tour.pt=0;tour.wi=0;tour.rec=0;tour.detour=null;tour.moved={x:1e9,z:1e9,t:tour.t};if(leg)tourLeg(leg)}
 function tourLeg(n){tour.leg=n;if(!tour.legs[n])tour.legs[n]={name:n,ft:[],cpu:[],gpu:[],sys:{},tris:0,calls:0,k:0,t0:tour.t,t:0,stuck:0}}
 // the left stick pushed the way (x, z) lies from the worker, turned into the camera's frame as a thumb would push it
 // (walker.js moves along the camera's heading); returns the distance left
@@ -48,11 +48,15 @@ function tourWalkTo(x,z){tour.aim=[x,z];const dx=x-wk.x,dz=z-wk.z,d=Math.hypot(d
 // steers o (the four-wheeler or the boat: + steer turns right, so the yaw falls) at (x, z) and works the throttle: easing
 // off for a sharp turn and in the last `slow` m. A machine that has made under 1.5 m in 3 s is stuck: it backs off for
 // 2.5 s with the wheel over, and a leg counts its stucks
-function tourDrive(o,x,z,slow,top){tour.aim=[x,z];const dx=x-o.x,dz=z-o.z,d=Math.hypot(dx,dz),e=tourAng(Math.atan2(dx,dz)-o.yaw),Ts=turnSens||1;
+function tourDrive(o,x,z,slow,top){const dr=Math.hypot(x-o.x,z-o.z);
+  // after backing off something, it goes round it: a point to one side first, then on to the target
+  if(tour.detour){const [qx,qz]=tour.detour;if(Math.hypot(qx-o.x,qz-o.z)<6||dr<10)tour.detour=null;else{x=qx;z=qz}}
+  tour.aim=[x,z];const dx=x-o.x,dz=z-o.z,d=Math.hypot(dx,dz),e=tourAng(Math.atan2(dx,dz)-o.yaw),Ts=turnSens||1;
   const m=tour.moved;if(Math.hypot(o.x-m.x,o.z-m.z)>1.5){m.x=o.x;m.z=o.z;m.t=tour.t}
-  if(tour.rec>0){tour.rec-=tour.dt;SL.y=-0.8;SL.x=clamp(Math.sign(e||1)/Ts,-1,1);return d}
-  if(tour.t-m.t>3){tour.rec=2.5;m.t=tour.t;tour.stuckN++;const L=tour.legs[tour.leg];if(L)L.stuck++;(tour.stuckAt||(tour.stuckAt=[])).push([Math.round(o.x),Math.round(o.z),tour.leg]);return d}
-  SL.x=clamp(-e*2.2/Ts,-1,1);SL.y=clamp((1-0.7*Math.min(1,Math.abs(e)/1.6))*Math.min(1,0.2+d/slow),0.2,1)*top;return d}
+  if(tour.rec>0){tour.rec-=tour.dt;SL.y=-0.8;SL.x=clamp(Math.sign(e||1)/Ts,-1,1);return dr}
+  if(tour.t-m.t>3){tour.rec=2.5;m.t=tour.t;tour.stuckN++;const L=tour.legs[tour.leg];if(L)L.stuck++;(tour.stuckAt||(tour.stuckAt=[])).push([Math.round(o.x),Math.round(o.z),tour.leg]);
+    if(dr>14){const b=Math.atan2(dx,dz),sd=tour.stuckN%2?1:-1;tour.detour=[o.x+Math.sin(b)*10+Math.cos(b)*18*sd,o.z+Math.cos(b)*10-Math.sin(b)*18*sd]}return dr}
+  SL.x=clamp(-e*2.2/Ts,-1,1);SL.y=clamp((1-0.7*Math.min(1,Math.abs(e)/1.6))*Math.min(1,0.2+d/slow),0.2,1)*top;return dr}
 
 // first person (tourStart(true)): the head looks round as a person's does. Most of the time the eyes are on the way
 // ahead (where the thumb is taking him, a little down), and every few seconds they go to something worth a look nearby,
@@ -210,7 +214,7 @@ function tourStep(dt){if(!tour.on)return;tour.t+=dt;tour.pt+=dt;tour.dt=dt;SL.x=
       if(mode!=='boat'){tourGo('done');return}
       if(++tour.li>=tour.route.length){tourGo('moor','Mooring');return}
       // out the way it came in, clear of the pier and the town's boat, before the next leg
-      const nx=tour.route[tour.li];tour.route[tour.li]=Object.assign({},nx,{p:[[64,528],[58,495],...nx.p]});tourGo('boat',nx.n)}
+      const nx=tour.route[tour.li];tour.route[tour.li]=Object.assign({},nx,{p:[[64,528],[58,495],...nx.p]});tourGo('boat',nx.n);tour.rec=3.5}
     else if(tour.pt>240){tourCheck('Walked through town (boardwalk, Main Street, the cross street) and back into the boat',false,`still at ${Math.round(wk.x)}, ${Math.round(wk.z)} after 4 min`);tourGo('done')}}
   else if(ph==='moor'){const b=boats[3];if(b.v>0.3)SL.y=-0.6;
     if(Math.abs(b.v)<0.3||tour.pt>6){if(tour.fp){const L=tour.look;tourCheck('Looked round in first person',L.n>=6&&L.names.size>=4&&(L.vmax||0)<=1.01,`${L.n} glances at ${L.names.size} different things (${[...L.names].slice(0,8).join(', ')}), the head turned up to ${Math.round(L.max*180/Math.PI)}° from the seat, never faster than ${Math.round((L.vmax||0)*180/Math.PI)}°/s`)}
