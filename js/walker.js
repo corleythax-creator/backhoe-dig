@@ -135,7 +135,9 @@ function updateWalker(dt,mx,mz,lookX,lookY){
   if(wk.ground&&sp>0.3&&wk.y-hAt(wk.x,wk.z)<0.2)grassCrush(wk.x,wk.z,Math.atan2(vx,vz),0.16,0.22,1.2+0.25*sp,0.55,dt);
   // steep ground (a trench wall) stops you on foot; jump to get up it. Off the dig he scrambles up the rocky banks
   const ox=wk.x,oz=wk.z,lim=wk.y+WK_STEP,g0=wkGround(ox,oz,lim);wk.x+=vx*dt;wk.z+=vz*dt;
-  {const g1=wkGround(wk.x,wk.z,lim),run=Math.hypot(wk.x-ox,wk.z-oz);if(run>1e-5&&g1>wk.y+0.02&&(g1-g0)/run>(inDig(wk.x,wk.z)?1.3:2.5)){wk.x=ox;wk.z=oz}}
+  // too steep to walk up stops you; a curb (groundLift) is a step up, so the slope is the ground's under it
+  {const g1=wkGround(wk.x,wk.z,lim),run=Math.hypot(wk.x-ox,wk.z-oz),st=groundLift?groundLift(wk.x,wk.z)-groundLift(ox,oz):0;
+    if(run>1e-5&&g1>wk.y+0.02&&(g1-g0-st)/run>(inDig(wk.x,wk.z)?1.3:2.5)){wk.x=ox;wk.z=oz}}
   wk.x=clamp(wk.x,-WK_BOUND.x,WK_BOUND.x);wk.z=clamp(wk.z,WK_BOUND.z0,WK_BOUND.z1);
   // a bridge's railings keep him on the deck unless he jumps over them (the covered footbridge's walls always do)
   for(const b of BRIDGES){if(b.dock)continue;const [t0,u0]=deckLocal(b,ox,oz);if(t0<0||t0>b.len||Math.abs(u0)>b.hw-0.4)continue;

@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-25T21:01:00Z",
+ "updated": "2026-10-25T21:27:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -66,9 +66,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-25",
-   "dh": 94,
+   "dh": 105.5,
    "act": 5.5,
-   "versions": 16
+   "versions": 18
   }
  ],
  "extra": [
@@ -2238,6 +2238,24 @@ window.EFFORT = {
    "tris": 5617683,
    "chars": 1606447,
    "what": "Main Street and the cross street paved with curbs, gutters, sidewalks, curb ramps, a four-way stop, crosswalks, storm drains and manholes; the screen no longer freezes after the start card's warm-up"
+  },
+  {
+   "v": 241,
+   "asked": "2026-10-25T16:10:00-05:00",
+   "live": "2026-10-25T16:15:43-05:00",
+   "dh": 1.5,
+   "tris": 5624533,
+   "chars": 1607532,
+   "what": "Feet and wheels stand on the town's sidewalks, curbs and asphalt instead of sinking in; a curb is a step up on foot"
+  },
+  {
+   "v": 242,
+   "asked": "2026-10-25T16:05:00-05:00",
+   "live": "2026-10-25T16:27:35-05:00",
+   "dh": 10,
+   "tris": 5767486,
+   "chars": 1624463,
+   "what": "A freight line runs along the foot of the north mountains across the lake: Cruise Brandon's CN and CPKC freights (and now and then Amtrak's City of New Orleans) come out of one tunnel every few minutes, cross on a rock causeway and go into the other, blowing the horn, headlights on at night."
   }
  ]
 };
