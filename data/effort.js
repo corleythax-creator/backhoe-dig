@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-25T18:51:00Z",
+ "updated": "2026-10-25T19:07:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -66,9 +66,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-25",
-   "dh": 61,
-   "act": 3.5,
-   "versions": 9
+   "dh": 62.5,
+   "act": 4,
+   "versions": 10
   }
  ],
  "extra": [
@@ -2175,6 +2175,15 @@ window.EFFORT = {
    "tris": 5462158,
    "chars": 1545293,
    "what": "Corley's bridge is now a riveted forest-green 1931 truss on granite piers with acorn lamps, the mainland bridge a cable-stayed span from a 140 ft pylon, Jessica's footbridge a New England covered bridge with a cedar shake roof, and the trestles and the crane's steel spans are rebuilt in creosoted timber and riveted girders, all in weathered real materials that darken in the rain."
+  },
+  {
+   "v": 234,
+   "asked": "2026-10-25T13:50:00-05:00",
+   "live": "2026-10-25T14:07:41-05:00",
+   "dh": 1.5,
+   "tris": 5465557,
+   "chars": 1546106,
+   "what": "The lake is murkier, a lake's green that hides the bed within a few feet, and boat wakes are lacy white foam lit like the water, greying at dusk."
   }
  ]
 };
