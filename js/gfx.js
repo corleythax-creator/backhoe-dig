@@ -10,14 +10,14 @@
 // shadow edges, filmic lighting, exp brightness, tex texture size, base ground texture, detail cut faces, painted
 // materials and machine grime, macro large-scale variation, pbr relief and wet sheen on materials that have those maps, aniso, tuftQ how finely the grass and weeds are shaped (0 Simple to 3 Best, scenery.js), tuft grass blades [amount, full-detail distance m,
 // fade-out distance m, share kept far off], lawnFar lawn full detail within m, fog haze distance, wmFine fine puddle
-// water, cloudQ the clouds' fine billows (0 off: half the sky's noise), treeR full-detail tree distance m, rainN raindrops, rainSp splashes where they land, splashN drops in a puddle splash, wakeN boat wake marks drawn, dirt the Dirt detail it sets when picked,
+// water, lakeQ the lake's ripples (0 two layers, 1 and rain rings, 2 and a fine close-up layer, lake.js), cloudQ the clouds' fine billows (0 off: half the sky's noise), treeR full-detail tree distance m, rainN raindrops, rainSp splashes where they land, splashN drops in a puddle splash, wakeN boat wake marks drawn, dirt the Dirt detail it sets when picked,
 // ao bloom grade the screen effects (post.js), model the detailed machine models (models.js), brush the share of undergrowth
 // drawn (brush.js), skyLight shade and reflections coloured by the sky as it is (and a sharper reflection map), shSoft
 // contact-hardening sun shadows, wetDrops beads and runs of rain on the machines and their cab glass, wetGround soaked ground mirroring the sky (all four Ultra, post.js)
 const GFX={
-  low:{name:'Low',trimClips:1,pr:1.5,auto:true,fps:0,fov:0,sh:1024,shR:22,soft:false,filmic:false,exp:1,tex:'low',detail:0,base:1,macro:false,pbr:false,aniso:4,dirt:1,lawnFar:0,fog:1,wmFine:false,cloudQ:0,rainN:600,rainSp:160,splashN:250,wakeN:140,brush:0.35,model:false,ao:false,bloom:false,grade:false,skyLight:false,shSoft:false,wetDrops:false,wetGround:false,treeR:45,tuftQ:0,tuft:[0.6,12,40,0.2]},
-  med:{name:'Medium',trimClips:2,pr:1.5,auto:true,fps:0,fov:0,sh:2048,shR:32,soft:false,filmic:true,exp:1,tex:'med',detail:1,base:1,macro:false,pbr:false,aniso:8,dirt:2,lawnFar:15,fog:1,wmFine:true,cloudQ:1,rainN:1500,rainSp:400,splashN:600,wakeN:300,brush:0.7,model:true,ao:false,bloom:false,grade:false,skyLight:false,shSoft:false,wetDrops:false,wetGround:false,treeR:90,tuftQ:0,tuft:[0.85,18,60,0.3]},
-  high:{name:'High',trimClips:4,pr:2,auto:true,fps:0,fov:0,sh:4096,shR:45,soft:true,filmic:true,exp:1,tex:'high',detail:1,base:1,macro:true,pbr:true,aniso:16,dirt:4,lawnFar:1e9,fog:1,wmFine:true,cloudQ:1,rainN:3000,rainSp:900,splashN:1200,wakeN:640,brush:1,model:true,ao:false,bloom:false,grade:false,skyLight:false,shSoft:false,wetDrops:false,wetGround:false,treeR:160,tuftQ:2,tuft:[1,25,80,0.35]}};
+  low:{name:'Low',trimClips:1,pr:1.5,auto:true,fps:0,fov:0,sh:1024,shR:22,soft:false,filmic:false,exp:1,tex:'low',detail:0,base:1,macro:false,pbr:false,aniso:4,dirt:1,lawnFar:0,fog:1,wmFine:false,cloudQ:0,rainN:600,rainSp:160,splashN:250,wakeN:140,brush:0.35,model:false,ao:false,bloom:false,grade:false,skyLight:false,shSoft:false,wetDrops:false,wetGround:false,lakeQ:0,treeR:45,tuftQ:0,tuft:[0.6,12,40,0.2]},
+  med:{name:'Medium',trimClips:2,pr:1.5,auto:true,fps:0,fov:0,sh:2048,shR:32,soft:false,filmic:true,exp:1,tex:'med',detail:1,base:1,macro:false,pbr:false,aniso:8,dirt:2,lawnFar:15,fog:1,wmFine:true,cloudQ:1,rainN:1500,rainSp:400,splashN:600,wakeN:300,brush:0.7,model:true,ao:false,bloom:false,grade:false,skyLight:false,shSoft:false,wetDrops:false,wetGround:false,lakeQ:1,treeR:90,tuftQ:0,tuft:[0.85,18,60,0.3]},
+  high:{name:'High',trimClips:4,pr:2,auto:true,fps:0,fov:0,sh:4096,shR:45,soft:true,filmic:true,exp:1,tex:'high',detail:1,base:1,macro:true,pbr:true,aniso:16,dirt:4,lawnFar:1e9,fog:1,wmFine:true,cloudQ:1,rainN:3000,rainSp:900,splashN:1200,wakeN:640,brush:1,model:true,ao:false,bloom:false,grade:false,skyLight:false,shSoft:false,wetDrops:false,wetGround:false,lakeQ:2,treeR:160,tuftQ:2,tuft:[1,25,80,0.35]}};
 // Ultra: High with the screen effects (post.js) and trees in full detail farther out; for strong PC graphics only, never
 // picked by itself
 // the extra lamps: the warm light in Jessica's library and the boom's work light (Low keeps the glowing lamps only)
@@ -30,7 +30,7 @@ GFX.low.vrSS=GFX.med.vrSS=1;GFX.high.vrSS=1.25;GFX.ultra.vrSS=1.4;
 // shadows close round you (a small shadow area), the detailed machines, ground detail and filmic light kept, and what
 // costs the most cut back: grass blades, undergrowth and full-detail trees only near you, a shorter haze so less is
 // drawn far off, the plain puddle surface and fewer raindrops. Picked for you in the headset, never on a screen
-GFX.quest=Object.assign({},GFX.med,{name:'Quest',pr:1,auto:false,sh:2048,shR:16,tex:'med',aniso:4,dirt:2,lawnFar:8,fog:0.7,wmFine:false,
+GFX.quest=Object.assign({},GFX.med,{name:'Quest',pr:1,auto:false,sh:2048,shR:16,tex:'med',aniso:4,dirt:2,lawnFar:8,fog:0.7,wmFine:false,lakeQ:0,
   rainN:700,rainSp:180,splashN:260,wakeN:160,brush:0.3,model:true,treeR:50,tuft:[0.5,10,30,0.15],vrSS:0.9});
 GFX.quest.extraLt=false;
 // the bridges' detail parts: gusset and cover plates, lacing and lattice, braces, lamp trim, the covered bridge's
@@ -70,6 +70,8 @@ function gfxApply(){const g=gfxCur=Object.assign({},GFX[gfxKey],gfxOver);
   // puddles: a finer water surface with sky reflections, or a 1 ft one without (water.js); the water itself is the same
   if(WM_K!==(g.wmFine?1:GRID_K))wmSet(g.wmFine);
   mudGfx(g.wmFine);
+  // the lake: close-up ripples and rain rings (lake.js)
+  lakeGfx(g.lakeQ);
   // the screen effects: shade where things meet, glow, colour grade (post.js)
   postGfx(g.ao,g.bloom,g.grade);
   // the warm light in Jessica's library (jessica.js) and the boom's work light (daynight.js)
@@ -148,6 +150,7 @@ const GFX_ROWS=[
   {id:'lawnFar',label:'Lawn full detail',hint:'The tall lawn is drawn simpler past this distance.',opts:[[0,'On it only'],[6,'20 ft'],[15,'50 ft'],[30,'100 ft'],[1e9,'All']]},
   ['Effects'],
   {id:'dirt',label:'Dirt detail',hint:'Clods, flying dirt and lumpy loads. 16x is for screenshots.',opts:[[1,'1x'],[2,'2x'],[4,'4x'],[16,'16x']]},
+  {id:'lakeQ',label:'Lake water',hint:'Fine ripples close up and rain rings on the lake, or plainer water.',opts:[[0,'Simple'],[1,'Good'],[2,'Fine']]},
   {id:'wmFine',label:'Puddle water',hint:'Fine water with sky reflections, or simple.',opts:[[true,'Fine'],[false,'Simple']]},
   {id:'rainN',label:'Raindrops',opts:[[0,'Off'],[600,'600'],[1500,'1500'],[3000,'3000'],[6000,'6000']]},
   {id:'rainSp',label:'Rain splashes',hint:'Spray and spreading rings where the drops land near you.',opts:[[0,'Off'],[160,'160'],[400,'400'],[900,'900'],[1800,'1800']]},

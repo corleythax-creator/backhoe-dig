@@ -18,17 +18,17 @@
 // eye, the work light, the chase camera's distance and the colour on the map
 const HV_KINDS={
   dozer:{n:'dozer',x:-212,z:247,yaw:0,C:[1.0,-0.9],R:1.6,P:[[-1.55,2.25],[1.55,2.25],[-1.35,-1.95],[1.35,-1.95]],hw:1.05,af:1.45,ab:-1.45,
-    eye:[0,2.35,-0.6,0,-0.7,4.5],lamp:[0,1.6,1.3,0,-1,10],cam:0.9,col:'#f2b705',len:4.4,wid:3.1,track:true},
+    eye:[0,2.35,-0.75,0,-1.46,4.5],lamp:[0,1.6,1.3,0,-1,10],cam:0.9,col:'#f2b705',len:4.4,wid:3.1,track:true},
   loader:{n:'wheel loader',x:-198,z:246,yaw:0,C:[2.4,0.4,-1.8],R:1.4,P:[[-1.4,3.9],[1.4,3.9],[-1.2,-2.75],[1.2,-2.75]],hw:1.15,af:1.4,ab:-1.3,wb:2.7,
     eye:[0,2.75,-0.15,0,-0.8,5],lamp:[0,2.2,0.6,0,-1,12],cam:1.0,col:'#f2b705',len:6.6,wid:2.7},
   semi:{n:'semi',x:-178,z:268,yaw:Math.PI/2,C:[3.0,1.0,-1.0],R:1.35,P:[[-1.2,4.5],[1.2,4.5],[-1.2,-2.6],[1.2,-2.6]],hw:1.05,af:3.4,ab:-1.75,wb:5.15,
-    eye:[0.5,2.9,1.7,0,-0.25,10],lamp:[0,1.2,4.4,0,-1.2,16],cam:1.5,col:'#b3262c',len:7.0,wid:2.5,trail:true},
+    eye:[0.5,2.9,1.45,0,-1.76,10],lamp:[0,1.2,4.4,0,-1.2,16],cam:1.5,col:'#b3262c',len:7.0,wid:2.5,trail:true},
   // a full-size crew-cab pickup: 19 ft 4 in long, a 12 ft 2 in wheelbase, 32 in tyres
   pickup:{n:'pickup',x:-186,z:236,yaw:Math.PI/2,C:[1.7,0,-1.7],R:1.05,P:[[-1.0,2.95],[1.0,2.95],[-1.0,-2.95],[1.0,-2.95]],hw:0.86,af:1.85,ab:-1.85,wb:3.7,
     eye:[0.4,1.62,0.25,0,-0.12,10],lamp:[0,0.95,2.95,0,-1,16],cam:0.95,col:'#1d3557',len:5.9,wid:2.0,car:'pk',acc:4.2,brake:7.5},
   // a utility four-wheeler: 7 ft long, a 50 in wheelbase, 25 in tyres
   atv:{n:'four-wheeler',x:-190,z:256,yaw:0,C:[0.5,-0.5],R:0.66,P:[[-0.6,1.05],[0.6,1.05],[-0.6,-1.05],[0.6,-1.05]],hw:0.47,af:0.64,ab:-0.64,wb:1.28,
-    eye:[0,1.68,-0.12,0,-0.3,10],lamp:[0,0.95,1.0,0,-1,10],cam:0.55,col:'#c0392b',len:2.1,wid:1.2,car:'at',acc:5.5,brake:8,rider:true}};
+    eye:[0,1.68,-0.2,0,-3,10],lamp:[0,0.95,1.0,0,-1,10],cam:0.55,col:'#c0392b',len:2.1,wid:1.2,car:'at',acc:5.5,brake:8,rider:true}};
 // the lowboy hangs on the fifth wheel HV_KP behind the semi's middle; its axles are HV_LT behind that
 const HV_KP=1.8,HV_LT=13.2,HV_TC=[-1.2,-4.4,-7.6,-10.8,-13.4];
 // the dozer's blade swings on its push arms; the loader's arms pivot high on the front frame, HV_LA0 down at rest
@@ -43,6 +43,10 @@ function hvKit(){const K=famKit();return {K,
   cyl:(r0,r1,h,seg,col,x,y,z,rx,rz)=>K.cyl(r0,r1,h,seg,col,x,y,z,0,rx||0,rz||0),
   wheel:(r,w,x,y,z,rim)=>{K.cyl(r,r,w,12,0x1d1d1f,x,y,z,0,0,Math.PI/2);K.cyl(r*0.55,r*0.55,w+0.04,8,rim||0xd9a404,x,y,z,0,0,Math.PI/2)}}}
 function hvMesh(k,parent){const m=new THREE.Mesh(famMerge(k.K.solid),famMat);m.castShadow=true;m.receiveShadow=true;m.layers.enable(RAIN_LAYER);parent.add(m);return m}
+// a windscreen you look out through: see-through glass (only the simple shapes need it; the detailed models have their
+// own tinted glass, and being a mesh of the body group it hides with the rest when they show)
+const hvGlassMat=M(DEX_GLASS,{transparent:true,opacity:0.22,shininess:90,specular:0x777777,depthWrite:false});
+function hvGlass(par,build){const b=hvKit();build(b);const m=new THREE.Mesh(famMerge(b.K.solid),hvGlassMat);m.renderOrder=2;par.add(m);return m}
 // the dirt heaped in front of the blade or in the bucket
 function hvHeap(parent,x,y,z){const m=new THREE.Mesh(new THREE.IcosahedronGeometry(0.5,1),M(0x7a5232,{map:null}));m.position.set(x,y,z);m.visible=false;parent.add(m);return m}
 function hvMake(k,home){const K=HV_KINDS[k],g=new THREE.Group();scene.add(g);home=home||{x:K.x,z:K.z,yaw:K.yaw};
@@ -75,7 +79,7 @@ function hvMake(k,home){const K=HV_KINDS[k],g=new THREE.Group();scene.add(g);hom
     for(const sx of [-1.35,1.35])u.box(0.07,0.95,1.0,Y,sx,-0.42,0.48);u.box(2.74,0.06,0.14,STEEL,0,-0.9,1.0);hvMesh(u,bk);
     h.heap=hvHeap(bk,0,-0.62,0.5)}
   if(k==='semi'){const RED=0xb3262c,CHROME=0xc8ccd0,b=hvKit();
-    b.box(1.0,0.4,7.0,D,0,1.0,0.3);b.box(2.4,2.5,2.0,RED,0,2.45,1.5);b.box(2.2,0.9,0.06,GL,0,3.0,2.52);
+    b.box(1.0,0.4,7.0,D,0,1.0,0.3);b.box(2.4,2.5,2.0,RED,0,2.45,1.5);hvGlass(g,w=>w.box(2.2,0.9,0.06,GL,0,3.0,2.52));
     b.box(2.1,1.2,1.8,RED,0,1.85,3.4);b.box(1.5,1.0,0.1,CHROME,0,1.85,4.32);b.box(2.3,0.25,0.3,CHROME,0,0.75,4.4);
     for(const sx of [-1.1,1.1]){b.cyl(0.09,0.09,2.4,8,CHROME,sx*1.08,3.1,0.4);b.cyl(0.32,0.32,1.0,10,CHROME,sx*1.15,0.95,2.0,Math.PI/2)}
     for(const sx of [-1.05,1.05]){b.wheel(0.55,0.32,sx,0.55,3.4,CHROME);for(const sz of [-1.1,-2.4])b.wheel(0.55,0.5,sx,0.55,sz,CHROME)}
@@ -92,8 +96,8 @@ function hvMake(k,home){const K=HV_KINDS[k],g=new THREE.Group();scene.add(g);hom
     b.box(1.94,0.3,1.6,BODY,0,1.2,2.05,0.04);b.box(1.6,0.42,0.08,CHROME,0,1.0,2.9);b.box(1.5,0.3,0.1,TRIM,0,1.0,2.92);
     b.box(2.02,0.22,0.24,CHROME,0,0.62,2.92);for(const sx of [-0.72,0.72])b.box(0.34,0.14,0.06,0xfff6d8,sx,1.12,2.92);
     // the crew cab: doors, glass all round, the roof, mirrors
-    b.box(1.96,0.5,2.4,BODY,0,1.25,0.1);b.box(1.8,0.56,2.1,DEX_GLASS,0,1.78,0.0);b.box(1.84,0.08,2.0,BODY,0,2.08,-0.02);
-    b.box(1.8,0.62,0.06,DEX_GLASS,0,1.76,1.12,-0.5);for(const sx of [-0.92,0.92]){b.box(0.07,0.62,0.07,BODY,sx,1.76,1.1,-0.5);b.box(0.07,0.6,0.08,BODY,sx,1.78,-0.02);b.box(0.12,0.16,0.22,TRIM,sx*1.12,1.6,1.02)}
+    for(const sx of [-0.94,0.94])b.box(0.08,0.5,2.4,BODY,sx,1.25,0.1);b.box(1.96,0.5,0.3,BODY,0,1.25,1.15);b.box(1.96,0.5,0.1,BODY,0,1.25,-1.05);b.box(1.8,0.05,2.1,TRIM,0,1.02,0.0);b.box(1.8,0.56,2.1,DEX_GLASS,0,1.78,0.0);b.box(1.84,0.08,2.0,BODY,0,2.08,-0.02);
+    hvGlass(g,w=>w.box(1.8,0.62,0.06,DEX_GLASS,0,1.76,1.12,-0.5));for(const sx of [-0.92,0.92]){b.box(0.07,0.62,0.07,BODY,sx,1.76,1.1,-0.5);b.box(0.07,0.6,0.08,BODY,sx,1.78,-0.02);b.box(0.12,0.16,0.22,TRIM,sx*1.12,1.6,1.02)}
     // the bed: floor, sides, the front wall and the tailgate, with the tail lamps
     b.box(1.84,0.06,2.0,TRIM,0,1.04,-1.85);for(const sx of [-0.95,0.95])b.box(0.08,0.5,2.05,BODY,sx,1.3,-1.85);
     b.box(1.9,0.5,0.08,BODY,0,1.3,-0.82);b.box(1.9,0.52,0.08,BODY,0,1.29,-2.87);for(const sx of [-0.9,0.9])b.box(0.14,0.36,0.06,0xb3262c,sx,1.3,-2.92);
@@ -107,9 +111,42 @@ function hvMake(k,home){const K=HV_KINDS[k],g=new THREE.Group();scene.add(g);hom
     b.box(0.36,0.2,0.38,RED,0,0.9,0.3);b.box(0.34,0.14,0.78,0x1a1a1a,0,0.92,-0.2);
     // steel racks front and back, the bars and the lamps
     b.box(0.92,0.04,0.46,STEEL,0,0.88,0.76);b.box(0.92,0.04,0.52,STEEL,0,0.9,-0.76);
-    b.cyl(0.025,0.025,0.4,6,TRIM,0,0.98,0.5,-0.45);b.box(0.78,0.04,0.04,TRIM,0,1.16,0.42);for(const sx of [-0.37,0.37])b.box(0.12,0.05,0.05,0x111111,sx,1.16,0.42);
+    b.cyl(0.025,0.025,0.4,6,TRIM,0,0.98,0.5,-0.45);
     for(const sx of [-0.16,0.16])b.box(0.12,0.08,0.05,0xfff6d8,sx,0.84,1.18);hvMesh(b,g)}
-  hvs.push(h);return h}
+  hvSeat(h);hvs.push(h);return h}
+// the controls in front of the seat, for each kind, for the simple shapes (ctlGroup, family.js): laid out as the
+// detailed model's own (tools/models/<kind>.js), so the cab view (K.eye) frames them the same either way
+function hvSeat(h){const k=h.k,g=h.g,BLK=0x111214;
+  if(k==='dozer')ctlGroup(g,b=>{// the dash low under the front glass with its monitor, the armrest pods and joysticks
+    b.box(0.9,0.26,0.16,CTL_PAN,0,1.78,-0.08);b.box(0.9,0.04,0.2,BLK,0,1.92,-0.09);
+    for(const gx of [-0.3,-0.16])ctlGauge(b,0.035,gx,1.84,-0.165,0.3,gx*5);
+    b.box(0.26,0.2,0.08,BLK,0.36,2.02,-0.14,-0.4);b.box(0.22,0.15,0.01,CTL_SCR,0.36,2.03,-0.185,-0.4);
+    for(const s of [-1,1]){b.box(0.13,0.1,0.42,CTL_PAN,s*0.34,1.9,-0.69);b.cyl(0.016,0.02,0.12,6,BLK,s*0.34,2.0,-0.58);b.cyl(0.035,0.03,0.09,8,CTL_RUB,s*0.34,2.08,-0.57)}});
+  if(k==='loader'){ctlGroup(g,b=>{// the column pedestal, the display on the left, the right-hand pod and joystick
+    b.box(0.18,0.6,0.18,CTL_PAN,0,2.16,0.35,0.3);b.box(0.3,0.22,0.08,BLK,-0.42,2.48,0.4,-0.4);b.box(0.25,0.17,0.01,CTL_SCR,-0.42,2.49,0.355,-0.4);
+    ctlGauge(b,0.04,0,2.42,0.27,0.5,0.4);b.box(0.14,0.1,0.46,CTL_PAN,0.36,2.44,-0.25);b.cyl(0.016,0.02,0.12,6,BLK,0.36,2.55,-0.11);b.cyl(0.035,0.03,0.09,8,CTL_RUB,0.36,2.63,-0.1)});
+    ctlWheel(h,g,0,2.56,0.2,0.75,0.19,3)}
+  if(k==='semi'){ctlGroup(g,b=>{// the dash right across the cab, the gauge panel in front of the driver, the centre stack
+    b.box(1.9,0.4,0.42,CTL_PAN,0,2.4,2.2);b.box(1.9,0.04,0.46,BLK,0,2.61,2.19);b.box(0.9,0.22,0.03,BLK,0.45,2.5,1.98,-0.35);
+    for(const [gx,gy,r] of [[0.2,2.52,0.045],[0.38,2.53,0.06],[0.56,2.53,0.06],[0.74,2.52,0.045]])ctlGauge(b,r,gx,gy,1.965,0.35,gx*4);
+    b.box(0.4,0.34,0.06,CTL_PAN,-0.1,2.3,1.99,-0.3);b.box(0.26,0.14,0.01,CTL_SCR,-0.1,2.38,1.955,-0.3);
+    for(let i=0;i<5;i++)b.box(0.035,0.02,0.02,i%2?0xd8a51e:0x9aa0a4,-0.2+i*0.05,2.24,1.96,-0.3);
+    b.cyl(0.012,0.012,0.6,6,BLK,0.05,2.15,1.6,-0.35);b.cyl(0.035,0.035,0.06,8,BLK,0.1,2.45,1.7);b.box(0.04,0.06,0.03,0xf2c21b,0.78,2.66,2.0)});
+    ctlWheel(h,g,0.5,2.5,1.78,0.9,0.24,6)}
+  if(k==='pickup'){ctlGroup(g,b=>{// the dash under the windscreen, the hooded instrument cluster, the centre stack and its screen
+    b.box(1.74,0.16,0.36,CTL_PAN,0,1.42,0.8);b.box(1.6,0.04,0.2,BLK,0,1.51,0.88);b.box(0.46,0.07,0.14,BLK,0.4,1.53,0.7);
+    b.box(0.42,0.1,0.02,0x0f1012,0.4,1.46,0.63);ctlGauge(b,0.04,0.29,1.46,0.618,0.1,0.8);ctlGauge(b,0.04,0.51,1.46,0.618,0.1,-0.4);
+    b.box(0.34,0.36,0.1,CTL_PAN,-0.02,1.3,0.66,0.2);b.box(0.26,0.16,0.01,CTL_SCR,-0.02,1.4,0.605,0.2);
+    for(const sx of [-0.85,0.85])b.box(0.12,0.06,0.02,0x0f1012,sx*0.92,1.45,0.62)});
+    ctlWheel(h,g,0.4,1.44,0.58,0.9,0.19,4)}
+  if(k==='atv'){// the handlebars on the steering head: bar, clamp, grips, brake levers, thumb throttle and the pod with its
+    // speedo; they turn with the front wheels (hvPose, h.barG)
+    const tb=new THREE.Group();tb.userData.simple=true;tb.position.set(0,1.0,0.45);g.add(tb);h.barG=tb;
+    ctlGroup(tb,b=>{b.box(0.1,0.05,0.07,0x55595a,0,0.11,-0.02);
+      b.cyl(0.013,0.013,0.42,8,0x9aa0a4,0,0.115,-0.03,0,Math.PI/2);for(const s of [-1,1]){b.cyl(0.013,0.013,0.17,6,0x9aa0a4,s*0.28,0.13,-0.01,0,s*1.35);
+        b.cyl(0.019,0.019,0.12,8,CTL_RUB,s*0.38,0.148,0.015,0,Math.PI/2+s*0.1);b.cyl(0.006,0.006,0.15,5,0x8a8e92,s*0.33,0.15,0.07,0,Math.PI/2-s*0.35);b.box(0.04,0.03,0.04,BLK,s*0.25,0.15,0.02)}
+      b.box(0.03,0.035,0.02,BLK,-0.3,0.15,-0.02);b.box(0.2,0.08,0.12,BLK,0,0.15,-0.05);b.box(0.1,0.05,0.01,0x6fb7c9,0,0.18,-0.098,0.5);
+      for(const sx of [-0.07,0.07])b.box(0.016,0.01,0.006,sx<0?0x3cbf4a:0xd8a51e,sx,0.19,-0.09,0.5)})}}
 for(const k of ['dozer','loader','semi','pickup','atv'])hvMake(k);
 // and a set of Corley's own, parked in a row on the mesa's east lawn facing the dig, the semi behind them
 const HV_CORLEY=[['dozer',46,-38,-Math.PI/2],['loader',46,-28,-Math.PI/2],['pickup',46,-18,-Math.PI/2],['atv',46,-11,-Math.PI/2],['semi',60,-30,0]];
@@ -120,6 +157,7 @@ function hvPose(h){h.g.position.set(h.x,h.y,h.z);h.g.rotation.set(h.pitch,h.yaw,
   if(h.ripG)h.ripG.position.y=HV_RIP0-HV_RIPY-h.rip*(HV_RIP0+TU.hvRipD);
   if(h.K.hoe)bhParts(h);
   if(h.arm){const e=HV_LA0-h.a;h.arm.rotation.x=e;h.bkt.rotation.x=-e-h.c}
+  if(h.swG)h.swG.rotation.z=h.steer*h.swK;if(h.barG)h.barG.rotation.y=-h.steer;
   h.g.updateMatrixWorld(true);if(h.rams&&h.rams.length&&h.rams[0].ga.visible)mdlRamPose(h);
   const sy=Math.sin(h.yaw),cy=Math.cos(h.yaw);h.circ.length=0;for(const lz of h.K.C)h.circ.push([h.x+sy*lz,h.z+cy*lz,h.K.R]);if(h.tag)h.circ.push(...h.tag.circ);
   if(h.trailer){h.g.localToWorld(hvV.set(0,1.3,-HV_KP));const ts=Math.sin(h.ty),tc=Math.cos(h.ty),yA=surfAt(hvV.x-ts*HV_LT,hvV.z-tc*HV_LT),yK=hvV.y-1.3;

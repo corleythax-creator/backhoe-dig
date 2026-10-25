@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-25T16:59:00Z",
+ "updated": "2026-10-25T18:15:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -66,9 +66,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-25",
-   "dh": 20,
-   "act": 2,
-   "versions": 6
+   "dh": 38,
+   "act": 3,
+   "versions": 8
   }
  ],
  "extra": [
@@ -2148,6 +2148,24 @@ window.EFFORT = {
    "tris": 5418010,
    "chars": 1462866,
    "what": "Island tour test, first person (menu, start card, or ?tourfp): the same run seen through the player's eyes, the head looking round like a person's, mostly the way ahead with glances at machines, boats, bridges, the crane barge, houses and the town, from a fixed seed so runs compare"
+  },
+  {
+   "v": 231,
+   "asked": "2026-10-25T11:15:00-05:00",
+   "live": "2026-10-25T12:28:51-05:00",
+   "dh": 6,
+   "tris": 5457172,
+   "chars": 1471763,
+   "what": "The lake looks real: wind ripples, sky reflections that grow at a slant, sun glitter, clear shallows over the sand, deep water dark teal, foam lapping the beaches and rain rings when it rains (Graphics: Lake water)."
+  },
+  {
+   "v": 232,
+   "asked": "2026-10-25T11:34:00-05:00",
+   "live": "2026-10-25T13:15:35-05:00",
+   "dh": 12,
+   "tris": 5457266,
+   "chars": 1506447,
+   "what": "Every first-person ride shows its controls (dashboards, wheels that turn, the four-wheeler's handlebars, the boat's helm, see-through windscreens and cab glass); the island tour test's head moves smoothly like a person's, the route walks through town from the marina, and the results add the graphics card's time and headroom, a verdict that knows when the screen caps the frame rate, per-leg system costs, a map of the slowest spots, the scripts in slow frames, camera/ground/boat/sound checks, rain, night, 2-lap heat and leak checks, an every-graphics-level sweep, comparison with the last run and a shared results board; shaders and textures are got ready behind the start card"
   }
  ]
 };
