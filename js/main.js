@@ -331,18 +331,24 @@ function warmPre(){if(warmN<=0||bench.on)return null;warmN--;const keep=[];
   return keep}
 function warmPost(keep){if(!keep)return;for(const [o,v,c,d] of keep){o.visible=v;if(o.isInstancedMesh)o.count=c;if(o.isPoints)o.geometry.setDrawRange(0,d)}}
 // textures may finish loading before the later scripts arrive: apply them now if they are in, otherwise when they are
-const texReady=()=>{applyTextures();warmN=Math.max(warmN,3);warmAll={f:0}};
-// the rest of the world's first use, behind the start card: once the textures are in, every shader the scene can need
-// is built (compileAsync: in the background where the browser can) and every texture uploaded, three a frame, so arriving
-// somewhere new (Dexter's yard, the town) doesn't stall while the browser gets them ready (the island tour test's freeze
-// check, tourtest.js, times it). It only works while the start card is up, where a hitch can't be felt; what isn't
-// ready by the time the card closes is got ready as it comes into view, as before
+const texReady=()=>{applyTextures();warmN=Math.max(warmN,3);warmAll={t0:performance.now(),next:0,mats:0,pend:0,still:0}};
+// the rest of the world's first use. Shaders: every material in the scene, hidden or far away, has its shader built in
+// the background (compileAsync, which waits on the browser's parallel compiling instead of stalling a frame), once the
+// textures are in and again whenever new materials turn up (the detailed machines load later), checked every 4 s for
+// the first 3 minutes; on Windows a shader built at first sight can stall a second or more. Textures: uploaded three a
+// frame while the start card is up, where a hitch can't be felt. (The island tour test, tourtest.js, waits for this and
+// times it; warmIdle says when nothing is left to do)
 let warmAll=null;
-function warmAllTick(){const W=warmAll;if(!W||bench.on||vrOn())return;if(help.hidden){warmAll=null;return}W.f++;
-  if(!W.done&&W.f>20){W.done=true;try{const p=renderer.compileAsync?renderer.compileAsync(scene,camera):(renderer.compile(scene,camera),null);if(p&&p.catch)p.catch(()=>{})}catch(e){}}
+function warmIdle(){const W=warmAll;return !W||W.pend===0&&W.still>=1&&(!W.q||!W.q.length||help.hidden)}
+function warmAllTick(){const W=warmAll;if(!W||bench.on||vrOn())return;const now=performance.now();
   if(!W.q){W.q=[];const seen=new Set();scene.traverse(o=>{for(const m of [].concat(o.material||[]))for(const k in m){const t=m[k];if(t&&t.isTexture&&!seen.has(t)){seen.add(t);W.q.push(t)}}})}
-  for(let i=0;i<3&&W.q.length;i++){const t=W.q.pop(),im=t.image;if(im&&(im.width||im.data||Array.isArray(im)))try{renderer.initTexture(t)}catch(e){}}
-  if(W.done&&!W.q.length)warmAll=null}
+  if(!help.hidden)for(let i=0;i<3&&W.q.length;i++){const t=W.q.pop(),im=t.image;if(im&&(im.width||im.data||Array.isArray(im)))try{renderer.initTexture(t)}catch(e){}}
+  if(now<W.next)return;W.next=now+4000;
+  const ms=new Set();scene.traverse(o=>{if(o.material)for(const m of [].concat(o.material))ms.add(m)});
+  if(ms.size>W.mats){W.mats=ms.size;W.still=0;W.pend++;
+    try{const p=renderer.compileAsync?renderer.compileAsync(scene,camera):(renderer.compile(scene,camera),null);if(p&&p.then)p.then(()=>W.pend--,()=>W.pend--);else W.pend--}catch(e){W.pend--}}
+  else W.still++;
+  if(now-W.t0>180000&&W.pend===0&&(!W.q.length||help.hidden))warmAll=null}
 if([texGrass,texDirt,texGrime].every(t=>t.image&&t.image.width))texReady();else texManager.onLoad=texReady;
 // every lit material gets its wet look before anything is drawn, so nothing compiles twice (rain.js)
 wetPatchAll();
