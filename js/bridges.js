@@ -1,9 +1,9 @@
-// Corley's Island: the bridges' kit, and the two road bridges off the Family Island: Corley's bridge (three riveted
-// Parker through-truss spans in forest green on granite piers, 1931) and the mainland bridge (an inverted-Y concrete
-// pylon on the middle pier and two fans of stay cables). Jessica's covered bridge (jessica.js) and the temporary trestles
-// and the crane's steel spans (mainland.js) are built with the same kit; Dexter's haul bridge is still famBridge
-// (family.js). The decks are BRIDGES (terrain.js): nothing here changes where anything drives, walks or floats, and the
-// piers stand where they stood, so the boats pass the same way (BOAT_WALLS).
+// Corley's Island: the bridges' kit, and the three road bridges off the Family Island: Corley's bridge (three riveted
+// Parker through-truss spans in forest green on granite piers, 1931), the mainland bridge (an inverted-Y concrete pylon
+// on the middle pier and two fans of stay cables) and Dexter's haul bridge (an old railroad Warren truss in safety
+// yellow). Jessica's covered bridge (jessica.js) and the temporary trestles and the crane's steel spans (mainland.js) are
+// built with the same kit. The decks are BRIDGES (terrain.js): nothing here changes where anything drives, walks or
+// floats, and the piers stand where they stood, so the boats pass the same way (BOAT_WALLS).
 // Parts are merged per material into a few meshes (brKit), with texture coordinates in metres so stone courses, boards
 // and rivets keep their real size. The finishes (weathered paint, rivet plates, granite ashlar, barn-red boards, cedar
 // shakes, creosoted and weathered timber, lacing and lattice) are drawn here the first time they are wanted; concrete,
@@ -28,12 +28,13 @@ function brNoise(S,cx,cy,o,seed){const F=new Float32Array(S*S),rnd=brRand(seed);
 const BR_S=512;
 function brField(){const N=BR_S*BR_S;return {S:BR_S,N,C:new Float32Array(N*3),H:new Float32Array(N),R:new Float32Array(N)}}
 function brMix(o,i,r,g,b,e){o.C[i*3]+=(r-o.C[i*3])*e;o.C[i*3+1]+=(g-o.C[i*3+1])*e;o.C[i*3+2]+=(b-o.C[i*3+2])*e}
-// painted steel, chalky with age: mottled, chipped to rust in places, rust weeping down from where water sits
-function brGenPaint(d,seed){const o=brField(),{S,N}=o,[pr,pg,pb]=d.col,rnd=brRand(seed),m=brNoise(S,4,4,4,seed+1),f=brNoise(S,24,24,3,seed+2),ch=brNoise(S,40,40,2,seed+3);
-  for(let i=0;i<N;i++){const k=0.9+0.22*(m[i]-0.5)+0.1*(f[i]-0.5),chalk=brSS(0.62,0.85,m[i])*0.3,chip=brSS(0.78,0.86,ch[i]*0.75+f[i]*0.25);
+// painted steel, chalky with age: mottled, chipped to rust in places (through an older coat round the chips when under
+// is given; chipA: how chipped, lower is more), rust weeping down from where water sits
+function brGenPaint(d,seed){const o=brField(),{S,N}=o,[pr,pg,pb]=d.col,rnd=brRand(seed),m=brNoise(S,4,4,4,seed+1),f=brNoise(S,24,24,3,seed+2),ch=brNoise(S,40,40,2,seed+3),ca=d.chipA||0.78;
+  for(let i=0;i<N;i++){const k=0.9+0.22*(m[i]-0.5)+0.1*(f[i]-0.5),chalk=brSS(0.62,0.85,m[i])*0.3,v=ch[i]*0.75+f[i]*0.25,chip=brSS(ca,ca+0.08,v),old=d.under?brSS(ca-0.08,ca-0.03,v):0;
     let r=pr*k,g=pg*k,b=pb*k;const gr=(r+g+b)/3+0.07;r+=(gr-r)*chalk;g+=(gr-g)*chalk;b+=(gr-b)*chalk;
-    o.C[i*3]=r;o.C[i*3+1]=g;o.C[i*3+2]=b;brMix(o,i,0.34+0.1*f[i],0.19+0.05*f[i],0.11,chip);
-    o.H[i]=0.6+0.05*f[i]-0.3*chip;o.R[i]=0.48+0.1*m[i]+0.35*chip+0.12*chalk}
+    o.C[i*3]=r;o.C[i*3+1]=g;o.C[i*3+2]=b;if(old)brMix(o,i,d.under[0]*k,d.under[1]*k,d.under[2]*k,old);brMix(o,i,0.34+0.1*f[i],0.19+0.05*f[i],0.11,chip);
+    o.H[i]=0.6+0.05*f[i]-0.12*old-0.25*chip;o.R[i]=0.48+0.1*m[i]+0.35*chip+0.12*chalk}
   for(let s=0;s<44;s++){const x0=rnd()*S|0,y0=rnd()*S|0,len=40+rnd()*210,w=1+rnd()*3,a0=0.12+rnd()*0.32;
     for(let dy=0;dy<len;dy++){const a=a0*Math.pow(1-dy/len,1.6),y=(y0+dy)%S,wob=Math.round(Math.sin((dy+x0)*0.07)*1.2);
       for(let dx=-Math.ceil(w);dx<=Math.ceil(w);dx++){const x=((x0+dx+wob)%S+S)%S,i=y*S+x,e=a*Math.max(0,1-Math.abs(dx)/(w+0.5));
@@ -108,16 +109,18 @@ function brTexOut(o,k){const {S,C,H,R}=o;
 // col: the plain colour (sRGB) drawn on Low and until the picture is in; tile: metres one picture covers; k: relief;
 // uv: 'world' (from the face's direction, so courses and streaks stay level and upright) or 'local' (along each member);
 // dry: rain doesn't change it
-const BR_GREEN=[0.27,0.42,0.32],BR_GREY=[0.45,0.51,0.55];
+const BR_GREEN=[0.27,0.42,0.32],BR_GREY=[0.45,0.51,0.55],BR_YEL=[0.86,0.65,0.07],BR_OLD=[0.15,0.16,0.16];
 const BR_DEF={
   paintG:{gen:brGenPaint,col:BR_GREEN,tile:1.6,k:4,seed:11},rivetG:{gen:brGenRivet,col:BR_GREEN,tile:0.6,k:10,seed:12},
   paintS:{gen:brGenPaint,col:BR_GREY,tile:1.6,k:4,seed:21},rivetS:{gen:brGenRivet,col:BR_GREY,tile:0.6,k:10,seed:22},
+  paintY:{gen:brGenPaint,col:BR_YEL,tile:1.6,k:4,seed:81,under:BR_OLD,chipA:0.93},rivetY:{gen:brGenRivet,col:BR_YEL,tile:0.6,k:10,seed:82,under:BR_OLD,chipA:0.94},
   ashlar:{gen:brGenAshlar,col:[0.47,0.47,0.45],tile:2.4,k:12,seed:31,rough:0.9},
   barn:{gen:brGenBarn,col:[0.50,0.16,0.11],tile:1.0,k:6,seed:41,rough:0.8},
   shakes:{gen:brGenShakes,col:[0.42,0.41,0.39],tile:1.0,k:10,seed:51,rough:0.9},
   creo:{gen:brGenWood,col:[0.17,0.13,0.10],tile:1.4,k:6,seed:61,uv:'local',wz:0.5,rough:0.62,tar:1},
   beam:{gen:brGenWood,col:[0.44,0.34,0.24],tile:1.4,k:6,seed:71,uv:'local',wz:0.35,rough:0.82},
   laceG:{gen:brGenLace,col:BR_GREEN,tile:0.7,alpha:1},xlatG:{gen:brGenXlat,col:BR_GREEN,tile:0.5,alpha:1},xlatS:{gen:brGenXlat,col:BR_GREY,tile:0.5,alpha:1},
+  laceY:{gen:brGenLace,col:BR_YEL,tile:0.7,alpha:1},xlatY:{gen:brGenXlat,col:BR_YEL,tile:0.5,alpha:1},
   asphalt:{lib:'asphalt'},concrete:{lib:'concrete'},concOld:{lib:'concrete_old'},planks:{lib:'planks'},rust:{lib:'rustplate'},
   iron:{col:[0.08,0.08,0.08],metal:0.5,rough:0.5},white:{col:[0.88,0.86,0.80],rough:0.75},
   lineW:{col:[0.86,0.85,0.80],rough:0.8},lineY:{col:[0.85,0.66,0.15],rough:0.8},
@@ -190,6 +193,9 @@ function brKit(F){const parts=new Map(),M4=new THREE.Matrix4(),a=new THREE.Vecto
       const x=S.clone().addScaledVector(y,-S.dot(y));if(x.lengthSq()<1e-6)x.crossVectors(BR_UP,y);if(x.lengthSq()<1e-6)x.set(1,0,0);x.normalize();const z=new THREE.Vector3().crossVectors(x,y);
       const g=brBoxGeo(w,L,h);if(o.w1!==undefined){const p=g.attributes.position;for(let i=0;i<p.count;i++){const f=p.getY(i)/L+0.5;p.setX(i,p.getX(i)*(1+(o.w1/w-1)*f));p.setZ(i,p.getZ(i)*(1+(o.h1/h-1)*f))}g.computeVertexNormals()}
       M4.makeBasis(x,y,z).setPosition((A.x+B.x)/2,(A.y+B.y)/2,(A.z+B.z)/2);put(key,g,M4,o)},
+    // a plate w wide on the upper face of a member h deep running from A to B (a riveted cover plate)
+    plate(key,A,B,h,w,o={}){const p=new THREE.Vector3().crossVectors(F.C,new THREE.Vector3().subVectors(B,A)).normalize();if(p.y<0)p.negate();p.multiplyScalar(h/2+0.013);
+      K.seg(key,A.clone().add(p),B.clone().add(p),w,0.025,o)},
     // a box square to the deck: w across, h high, d along, centred t along, u out, at height y
     box(key,w,h,d,t,u,y,o={}){K.seg(key,F.P(t-d/2,u,y),F.P(t+d/2,u,y),w,h,o)},
     // a round bar from A (radius r) to B (radius o.r1)
@@ -267,8 +273,8 @@ function brAcorn(K,G,x,y0,z){const V=(h)=>new THREE.Vector3(x,y0+h,z);
     for(const s of [-1,1]){const u=s*TU,B=i=>P(X(i),u,yb),T=i=>P(X(i),u,yt(i));
       // chords and end posts, riveted cover plates along the top
       K.seg('paintG',B(0),B(n),0.42,0.5);K.seg('paintG',B(0),T(1),0.5,0.5);K.seg('paintG',B(n),T(n-1),0.5,0.5);
-      for(let i=1;i<n-1;i++){K.seg('paintG',T(i),T(i+1),0.5,0.45);K.seg('rivetG',P(X(i),u,yt(i)+0.235),P(X(i+1),u,yt(i+1)+0.235),0.6,0.025,{det:1})}
-      for(const [i0,i1] of [[0,1],[n,n-1]])K.seg('rivetG',P(X(i0),u,yb+0.1),P(X(i1),u,yt(i1)+0.1),0.6,0.025,{det:1});
+      for(let i=1;i<n-1;i++){K.seg('paintG',T(i),T(i+1),0.5,0.45);K.plate('rivetG',T(i),T(i+1),0.45,0.6,{det:1})}
+      for(const [i0,i1] of [[0,1],[n,n-1]])K.plate('rivetG',B(i0),T(i1),0.5,0.6,{det:1});
       // verticals: two channels each, laced between on both faces
       for(let i=1;i<n;i++){for(const o of [-0.13,0.13])K.seg('paintG',P(X(i)+o,u,yb+0.25),P(X(i)+o,u,yt(i)-0.22),0.34,0.07);
         const y0=yb+0.35,y1=yt(i)-0.3;for(const f of [-0.172,0.172])K.quad('laceG',[P(X(i)-0.13,u+f,y0),P(X(i)-0.13,u+f,y1),P(X(i)+0.13,u+f,y1),P(X(i)+0.13,u+f,y0)],[[0,0],[y1-y0,0],[y1-y0,0.7],[0,0.7]],{det:1})}
@@ -341,5 +347,59 @@ function brAcorn(K,G,x,y0,z){const V=(h)=>new THREE.Vector3(x,y0+h,z);
   for(const [t,s] of [[8,-1],[36.1,-1],[61,-1],[84.7,-1],[23.7,1],[48.5,1],[75.5,1],[99,1]]){const u=s*(hw+0.45);
     K.rod('galv',P(t,u,Y),P(t,u,Y+8.6),0.075,{seg:10,r1:0.05});K.seg('galv',P(t,u,Y+8.55),P(t,u-s*1.5,Y+8.68),0.06,0.06,{S:F.A});K.box('galv',0.8,0.09,0.3,t,u-s*1.75,Y+8.68);
     const [hx,hz]=F.W(t,u-s*1.75);G.lit(new THREE.BoxGeometry(0.62,0.03,0.22),0xfff1c8,hx,Y+8.62,hz,F.yaw)}
+  K.add();famAdd(G);
+})();
+
+// ---------- Dexter's haul bridge: from the Family Island west to Dexter's yard ----------
+// an old railroad bridge converted for haul trucks: three heavy riveted Warren through-trusses with verticals, the webs
+// built of laced channels, repainted safety yellow over the old black (chipped through in places), 26 ft clear under
+// the portals for a raised boom; steel road plate between heavy timber wheel guards, a pipe railing, old concrete piers
+// with cutwaters and timber fender piles, and riveted lattice portals carrying the island signs and work lights
+(function(){
+  const b=BRIDGES[3],F=brFrame(b),K=brKit(F),G=famKit(),L=F.L,Y=F.Y(0),hw=b.hw,P=F.P,TU=hw+0.95,H=8.9,piers=[31,62],ends=[0,...piers,L];
+  // a web member: two channels sep apart in the truss's plane, laced between on both faces
+  const laced=(A,B,sep,w)=>{const d=new THREE.Vector3().subVectors(B,A),len=d.length(),p=new THREE.Vector3().crossVectors(F.C,d).normalize().multiplyScalar(sep/2);
+    for(const s of [-1,1])K.seg('paintY',A.clone().addScaledVector(p,s),B.clone().addScaledVector(p,s),w,0.08);
+    for(const f of [-1,1]){const o=F.C.clone().multiplyScalar(f*(w/2+0.004)),a0=A.clone().add(o),b0=B.clone().add(o);
+      K.quad('laceY',[a0.clone().sub(p),b0.clone().sub(p),b0.clone().add(p),a0.clone().add(p)],[[0,0],[len,0],[len,0.7],[0,0.7]],{det:1})}};
+  // deck: steel road plate (its seams), heavy timber wheel guards, a pipe railing on an edge stringer each side
+  K.seg('rust',P(0,0,Y-0.04),P(L,0,Y-0.04),2*hw+0.2,0.08);
+  for(let t=1.2;t<L;t+=2.4)K.seg('iron',P(t,-hw,Y+0.003),P(t,hw,Y+0.003),0.05,0.01,{S:F.A,det:1});
+  for(const s of [-1,1]){const u=s*(hw+0.4);K.seg('creo',P(0,s*(hw-0.2),Y+0.18),P(L,s*(hw-0.2),Y+0.18),0.36,0.36);
+    K.rod('paintY',P(0,u,Y+1.08),P(L,u,Y+1.08),0.035,{seg:8});K.rod('paintY',P(0,u,Y+0.58),P(L,u,Y+0.58),0.03,{seg:8});
+    for(let t=0;t<=L+0.01;t+=2.4)K.rod('paintY',P(t,u,Y-0.05),P(t,u,Y+1.1),0.03,{seg:8})}
+  for(let k=0;k<ends.length-1;k++){const a=ends[k]+0.45,e=ends[k+1]-0.45,n=2*Math.max(2,Math.round((e-a)/10)),X=i=>a+(e-a)*i/n,yb=Y-0.6,yt=Y+H;
+    for(const s of [-1,1]){const u=s*TU,B=i=>P(X(i),u,yb),T=i=>P(X(i),u,yt),trim=(A,Bp,c)=>{const d=new THREE.Vector3().subVectors(Bp,A).normalize().multiplyScalar(c);return [A.clone().add(d),Bp.clone().sub(d)]};
+      // chords and inclined end posts with riveted cover plates
+      K.seg('paintY',B(0),B(n),0.55,0.6);K.seg('paintY',T(1),T(n-1),0.6,0.55);K.seg('paintY',B(0),T(1),0.6,0.6);K.seg('paintY',B(n),T(n-1),0.6,0.6);
+      K.plate('rivetY',T(1),T(n-1),0.55,0.7,{det:1});K.plate('rivetY',B(0),T(1),0.6,0.7,{det:1});K.plate('rivetY',B(n),T(n-1),0.6,0.7,{det:1});
+      // a laced vertical at every joint and a laced diagonal in every inner panel, rising and falling in turn
+      for(let i=1;i<n;i++)laced(P(X(i),u,yb+0.3),P(X(i),u,yt-0.28),0.32,0.45);
+      for(let i=1;i<n-1;i++)laced(...(i%2?trim(T(i),B(i+1),0.45):trim(B(i),T(i+1),0.45)),0.36,0.45);
+      // riveted gusset plates on both faces of every joint, bearing shoes on pedestals at the ends
+      for(let i=0;i<=n;i++)for(const f of [-0.31,0.31]){K.seg('rivetY',P(X(i),u+f,yb-0.3),P(X(i),u+f,yb+0.85),0.02,1.15,{det:1});
+        if(i>0&&i<n)K.seg('rivetY',P(X(i),u+f,yt-0.85),P(X(i),u+f,yt+0.3),0.02,1.15,{det:1})}
+      for(const i of [0,n])K.box('iron',0.8,0.85,0.9,X(i),u,Y-1.325)}
+    // floor beams at the joints under the stringers; struts, crossed rods and knee braces overhead; a latticed portal at each end
+    for(let i=0;i<=n;i++){K.seg('paintY',P(X(i),-TU,Y-0.85),P(X(i),TU,Y-0.85),0.35,1.3,{S:F.A});
+      for(const dy of [-0.66,0.66])K.seg('paintY',P(X(i),-TU+0.25,Y-0.85+dy),P(X(i),TU-0.25,Y-0.85+dy),0.45,0.04,{S:F.A,det:1})}
+    for(const u of [-3.75,-1.25,1.25,3.75,-(hw+0.4),hw+0.4])K.seg('paintY',P(X(0),u,Y-0.5),P(X(n),u,Y-0.5),0.3,0.84);
+    for(let i=1;i<n;i++){const portal=i===1||i===n-1;K.seg('paintY',P(X(i),-TU,yt),P(X(i),TU,yt),portal?0.45:0.35,portal?0.6:0.42,{S:F.A});
+      if(i<n-1)for(const s of [-1,1])K.rod('paintY',P(X(i),-TU*s,yt),P(X(i+1),TU*s,yt),0.035,{seg:6,det:1});
+      for(const s of [-1,1])K.seg('paintY',P(X(i),s*(TU-0.25),yt-(portal?2.3:1.4)),P(X(i),s*(TU-(portal?1.5:1.2)),yt-(portal?0.98:0.25)),0.12,0.22,{S:F.A,det:!portal});
+      if(portal){K.quad('xlatY',[P(X(i),-TU+0.3,yt-0.95),P(X(i),TU-0.3,yt-0.95),P(X(i),TU-0.3,yt-0.24),P(X(i),-TU+0.3,yt-0.24)],[[0,0],[2*TU-0.6,0],[2*TU-0.6,0.5],[0,0.5]],{det:1});
+        K.seg('paintY',P(X(i),-TU+0.3,yt-0.98),P(X(i),TU-0.3,yt-0.98),0.32,0.06,{S:F.A})}}
+    // the island's name on each end portal, facing the road in, and two work lights inside it
+    if(k===0||k===ends.length-2){const i=k===0?1:n-1,dir=k===0?-1:1,p=P(X(i)+dir*0.35,0,yt-0.45);
+      famSign([k===0?"DEXTER'S ISLAND":'FAMILY ISLAND'],5.0,1.1,p.x,p.y,p.z,dir<0?Math.atan2(-b.ux,-b.uz):F.yaw,'#2b2d30','#f2b705');
+      for(const s of [-1,1]){const t=X(i)-dir*0.5,[x,z]=F.W(t,s*2.6);K.box('iron',0.5,0.3,0.4,t,s*2.6,yt-0.5);G.lit(new THREE.BoxGeometry(0.4,0.04,0.3),0xfff6d8,x,yt-0.66,z,F.yaw)}}}
+  // old concrete piers with cutwaters, timber fender piles off each end, seats at the bridge ends
+  for(const t of piers){const [cx,cz]=F.W(t,0),g=baseHeight(cx,cz),hc=TU+1.0;
+    K.prism('concOld',[[-1.4,-hc],[0,-hc-1.4],[1.4,-hc],[1.4,hc],[0,hc+1.4],[-1.4,hc]].map(([al,c])=>F.W(t+al,c)),g-1.5,Y-2.2,{s:0.96});
+    K.box('concOld',2*hc+0.8,0.45,3.2,t,0,Y-1.975);
+    for(const s of [-1,1]){for(const al of [-0.9,0,0.9]){const [x,z]=F.W(t+al,s*(hc+1.9));K.rod('creo',new THREE.Vector3(x,baseHeight(x,z)-0.5,z),new THREE.Vector3(x,WATER+1.5,z),0.17,{seg:8,det:1})}
+      K.seg('creo',P(t-1.2,s*(hc+1.9),WATER+1.15),P(t+1.2,s*(hc+1.9),WATER+1.15),0.25,0.3,{det:1})}
+    const [ax,az]=F.W(t,-hc-1.9),[bx,bz]=F.W(t,hc+1.9);BOAT_WALLS.push({ax,az,bx,bz,r:1.6})}
+  brAbut(K,F,0,-1,2*TU+2.2,Y-1.75,'concOld');brAbut(K,F,L,1,2*TU+2.2,Y-1.75,'concOld');
   K.add();famAdd(G);
 })();

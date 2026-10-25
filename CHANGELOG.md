@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Sunday, October 25, 2026
 
+- **v236** (2:23 PM) Dexter's haul bridge is now an old riveted railroad truss repainted safety yellow over its black, chipped through in places, with laced members, steel road plate between heavy timber wheel guards, old concrete piers with timber fender piles, and work lights on the portals, still 26 ft clear for a raised boom.
 - **v235** (2:15 PM) Every material's shader is built in the background whenever new ones appear (the detailed machines load later), so first sight of Dexter's yard, town or a machine no longer stalls for seconds on Windows; the island tour test waits for the game to be ready and reports that time on its own, leaves out time with the window hidden, allows a blip in the sound, and its boat backs out of the marina and steers round boats in its way
 - **v234** (2:07 PM) The lake is murkier, a lake's green that hides the bed within a few feet, and boat wakes are lacy white foam lit like the water, greying at dusk.
 - **v233** (1:51 PM) Corley's bridge is now a riveted forest-green 1931 truss on granite piers with acorn lamps, the mainland bridge a cable-stayed span from a 140 ft pylon, Jessica's footbridge a New England covered bridge with a cedar shake roof, and the trestles and the crane's steel spans are rebuilt in creosoted timber and riveted girders, all in weathered real materials that darken in the rain.
