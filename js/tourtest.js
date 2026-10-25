@@ -1,5 +1,5 @@
-// Corley's Island: the island tour test. Hands off: ☰ → Island tour test, or open the game with ?tourtest (=low, medium,
-// high or ultra for that Graphics setting). It plays a run the way a player does, through the left touch stick and Get in
+// Corley's Island: the island tour test. Hands off: ☰ → Island tour test (or its first person run), or open the game with
+// ?tourtest or ?tourfp (=low, medium, high or ultra for that Graphics setting). It plays a run the way a player does, through the left touch stick and Get in
 // / Get out: starts on Dexter's Island on foot, walks to the four-wheeler and climbs on, drives it to the boat dock,
 // climbs off, walks out along the dock into Dexter's boat and takes it right round the lake (under the Corley's–Family
 // bridge, round Jessica's, along the town waterfront and marina, under the mainland bridge past the crane barge, round
@@ -39,20 +39,60 @@ function tourGo(ph,leg){tour.ph=ph;tour.pt=0;tour.wi=0;tour.rec=0;tour.moved={x:
 function tourLeg(n){tour.leg=n;if(!tour.legs[n])tour.legs[n]={name:n,ft:[],cpu:[],tris:0,calls:0,k:0,t0:tour.t,t:0,stuck:0}}
 // the left stick pushed the way (x, z) lies from the worker, turned into the camera's frame as a thumb would push it
 // (walker.js moves along the camera's heading); returns the distance left
-function tourWalkTo(x,z){const dx=x-wk.x,dz=z-wk.z,d=Math.hypot(dx,dz);if(d<0.05)return d;
+function tourWalkTo(x,z){tour.aim=[x,z];const dx=x-wk.x,dz=z-wk.z,d=Math.hypot(dx,dz);if(d<0.05)return d;
   const c=camMode==='cab'?wk.view:wk.view+orbitYaw,fx=Math.sin(c),fz=Math.cos(c),ux=dx/d,uz=dz/d,k=Math.min(1,0.35+d/1.5);
   SL.y=(ux*fx+uz*fz)*k;SL.x=(uz*fx-ux*fz)*k;return d}
 // steers o (the four-wheeler or the boat: + steer turns right, so the yaw falls) at (x, z) and works the throttle: easing
 // off for a sharp turn and in the last `slow` m. A machine that has made under 1.5 m in 3 s is stuck: it backs off for
 // 2.5 s with the wheel over, and a leg counts its stucks
-function tourDrive(o,x,z,slow,top){const dx=x-o.x,dz=z-o.z,d=Math.hypot(dx,dz),e=tourAng(Math.atan2(dx,dz)-o.yaw),Ts=turnSens||1;
+function tourDrive(o,x,z,slow,top){tour.aim=[x,z];const dx=x-o.x,dz=z-o.z,d=Math.hypot(dx,dz),e=tourAng(Math.atan2(dx,dz)-o.yaw),Ts=turnSens||1;
   const m=tour.moved;if(Math.hypot(o.x-m.x,o.z-m.z)>1.5){m.x=o.x;m.z=o.z;m.t=tour.t}
   if(tour.rec>0){tour.rec-=tour.dt;SL.y=-0.8;SL.x=clamp(Math.sign(e||1)/Ts,-1,1);return d}
   if(tour.t-m.t>3){tour.rec=2.5;m.t=tour.t;tour.stuckN++;const L=tour.legs[tour.leg];if(L)L.stuck++;return d}
   SL.x=clamp(-e*2.2/Ts,-1,1);SL.y=clamp((1-0.7*Math.min(1,Math.abs(e)/1.6))*Math.min(1,0.2+d/slow),0.2,1)*top;return d}
 
-function tourStart(){
-  if(tour.on||bench.on||edOn)return;
+// first person (tourStart(true)): the head looks round as a person's does. Most of the time the eyes are on the way
+// ahead (where the thumb is taking him, a little down), and every few seconds they go to something worth a look nearby,
+// a machine, a boat, a bridge, the crane barge, a house, the town, hold there a second or two and come back. A look is a
+// quick turn that slows as it lands (a saccade and the head following), with a slight drift while it rests. It turns
+// the head through fpTurn, as the mouse does, so the seat's limits hold; on foot the body turns with it (the stick is
+// worked out from the view, so he still walks to where he's going). The picks come from a fixed seed so runs compare.
+const TOUR_SEE=[["Corley's dig site",0,-5],['the family house',FAM_X,FAM_Z],["Jessica's cottage",JES_X,JES_Z],['the marina',72,530],
+  ['the town',0,600],['the hayfield',40,-330]];
+let tourSeed=1;const tourRnd=()=>(tourSeed=(tourSeed*1664525+1013904223)>>>0)/4294967296;
+// what there is to look at: the places above, every bridge's middle, the machines, the boats on the lake and at the docks, the crane barge
+function tourSights(){const S=TOUR_SEE.map(([n,x,z])=>({n,x,z,y:Math.max(WATER,baseHeight(x,z))+3}));
+  for(const b of BRIDGES)if(!b.dock)S.push({n:'the bridge',x:(b.x0+b.x1)/2,z:(b.z0+b.z1)/2,y:b.y+1});
+  for(const h of hvs)S.push({n:'the '+h.K.n,x:h.x,z:h.z,y:h.y+1.3});
+  for(const b of boats)if(b!==boats[3])S.push({n:b.n+' boat',x:b.x,z:b.z,y:b.y+1});
+  for(const o of lakeBoats)S.push({n:'a boat on the lake',x:o.x,z:o.z,y:WATER+1.5});
+  const p=crnBarge.position;S.push({n:'the crane barge',x:p.x,z:p.z,y:p.y+8});return S}
+// the eye: where it is, which way the seat faces (world yaw) and how far the seat's own view tips down
+function tourEye(){if(mode==='walk')return {x:wk.x,y:wk.y+WK_H,z:wk.z,yaw:0,p0:0,walk:true};
+  const o=mode==='boat'?btCur():hvCur(),E=mode==='boat'?[0,1.62,-0.47,0,-1.1,8]:(o.eye||o.K.eye);
+  return {x:o.x,y:o.y+E[1],z:o.z,yaw:o.yaw+Math.atan2(E[3],E[5]),p0:Math.atan2(E[4],Math.hypot(E[3],E[5])),walk:false}}
+function tourLook(dt){const L=tour.look,E=tourEye(),lim=E.walk?Math.PI:1.6;L.t-=dt;
+  if(L.t<=0){
+    // after a glance always back to the way ahead; from ahead, a glance about half the time if there is something to see
+    let pick=null;if(L.ahead){const near=tourSights().filter(s=>{const d=Math.hypot(s.x-E.x,s.z-E.z),r=E.walk?[4,80]:[20,260];
+        return d>r[0]&&d<r[1]&&(L.seen[s.n+Math.round(s.x)]||-99)<tour.t-20&&Math.abs(tourAng(Math.atan2(s.x-E.x,s.z-E.z)-(E.walk?wk.view:E.yaw)))<lim});
+      if(near.length&&tourRnd()<0.55)pick=near[Math.floor(tourRnd()*near.length)]}
+    if(pick){L.sight=pick;L.ahead=false;L.t=0.9+tourRnd()*1.8;L.seen[pick.n+Math.round(pick.x)]=tour.t;L.n++;L.names.add(pick.n)}
+    else{L.sight={ahead:true};L.ahead=true;L.t=1.8+tourRnd()*3.5;L.dn=-0.05-tourRnd()*0.12;L.side=(tourRnd()-0.5)*0.35}}
+  // where the eyes want to be (world yaw, pitch): the sight, or the way ahead with a little wander either side
+  let ty,tp;const S=L.sight;
+  if(S&&!S.ahead){ty=Math.atan2(S.x-E.x,S.z-E.z);tp=Math.atan2(S.y-E.y,Math.hypot(S.x-E.x,S.z-E.z))}
+  else{const a=tour.aim||[E.x+Math.sin(E.yaw),E.z+Math.cos(E.yaw)];ty=Math.atan2(a[0]-E.x,a[1]-E.z)+(L.side||0)*(E.walk?0.5:1);tp=L.dn||-0.08}
+  // a slight drift while resting, never still
+  const tt=tour.t;ty+=Math.sin(tt*0.9)*0.025+Math.sin(tt*2.3)*0.01;tp+=Math.sin(tt*1.3)*0.015;
+  // the eased turn: fast at first, slowing as it lands, never faster than 3.5 rad/s
+  const k=1-Math.exp(-dt*7),cap=3.5*dt;
+  if(E.walk){const dy=clamp(tourAng(ty-wk.view)*k,-cap,cap),np=clamp(fpl.pitch+(clamp(tp,-0.9,0.7)-fpl.pitch)*k,-FP_DOWN,FP_UP);fpTurn(-dy,fpl.pitch-np)}
+  else{const want=clamp(tourAng(ty-E.yaw),-lim,lim),dy=clamp((want-fpl.yaw)*k,-cap,cap),np=clamp(fpl.pitch+(clamp(tp-E.p0,-0.8,0.7)-fpl.pitch)*k,-FP_DOWN,FP_UP);
+    fpTurn(-dy,fpl.pitch-np);L.max=Math.max(L.max,Math.abs(fpl.yaw))}}
+
+function tourStart(fp){
+  if(tour.on||bench.on||edOn)return;tour.fp=!!fp;tourSeed=1;tour.look={t:0,sight:null,ahead:true,seen:{},n:0,names:new Set(),max:0};tour.aim=null;
   // whatever the player did last is saved first; nothing is saved from here until the page reloads
   siteSaveAll();window.syncHold=true;
   help.hidden=true;showMenu(false);toggleMap(false);$('#bench').hidden=true;$('#benchBar').hidden=false;
@@ -63,7 +103,7 @@ function tourStart(){
   tour.atv=hvs.findIndex(h=>h.k==='atv'&&Math.hypot(h.K.x-DEX_X,h.K.z-DEX_Z)<100);const h=hvs[tour.atv];
   if(h){Object.assign(h,{x:h.K.x,z:h.K.z,yaw:h.K.yaw,v:0,w:0,steer:0});hvGround(h,1);hvPose(h)}
   const b=boats[3];Object.assign(b,{x:b.home.x,z:b.home.z,yaw:b.home.yaw,v:0});
-  startOn('dexter','foot');camSet('chase');orbitYaw=0;orbitPitch=0.32;tourLeg("Starting on Dexter's Island");
+  startOn('dexter','foot');camSet(fp?'cab':'chase');orbitYaw=0;orbitPitch=0.32;tourLeg("Starting on Dexter's Island");
   bhtTimeOn();bht.lastNow=0;
   if(!tour.headless){
     tour.onErr=e=>tour.errs.push(String(e.message||e.reason||e.type).slice(0,200));addEventListener('error',tour.onErr);addEventListener('unhandledrejection',tour.onErr);
@@ -99,8 +139,10 @@ function tourStep(dt){if(!tour.on)return;tour.t+=dt;tour.pt+=dt;tour.dt=dt;SL.x=
       if(++tour.wi>=L.p.length){Lg.t=tour.t-Lg.t0;tourCheck(`Boat: ${L.n}`,!Lg.skip,`${Lg.t.toFixed(0)} s${Lg.stuck?`, stuck ${Lg.stuck}×`:''}${Lg.skip?`, ${Lg.skip} waypoint${Lg.skip>1?'s':''} missed`:''}`);
         if(++tour.li>=TOUR_LEGS.length){tourGo('moor','Mooring');return}tour.wi=0;tourLeg(TOUR_LEGS[tour.li].n)}}}
   else if(ph==='moor'){const b=boats[3];if(b.v>0.3)SL.y=-0.6;
-    if(Math.abs(b.v)<0.3||tour.pt>6){tourCheck("Back at Dexter's dock",Math.hypot(b.x-boats[3].home.x,b.z-boats[3].home.z)<60,`${tourFt(Math.hypot(b.x-b.home.x,b.z-b.home.z))} from where it was tied up`);tourGo('done')}}
-  else if(ph==='done'){if(!tour.headless&&tour.pt>0.2)tourEnd()}}
+    if(Math.abs(b.v)<0.3||tour.pt>6){if(tour.fp){const L=tour.look;tourCheck('Looked round in first person',L.n>=10&&L.names.size>=5,`${L.n} glances at ${L.names.size} different things (${[...L.names].slice(0,8).join(', ')}), the head turned up to ${Math.round(L.max*180/Math.PI)}° from the seat`)}
+      tourCheck("Back at Dexter's dock",Math.hypot(b.x-boats[3].home.x,b.z-boats[3].home.z)<60,`${tourFt(Math.hypot(b.x-b.home.x,b.z-b.home.z))} from where it was tied up`);tourGo('done')}}
+  else if(ph==='done'){if(!tour.headless&&tour.pt>0.2)tourEnd()}
+  if(tour.fp&&tour.on&&ph!=='start'&&ph!=='done'&&camMode==='cab')tourLook(dt)}
 
 // after each drawn frame (the timed loop in tourStart): the frame's time and the main thread's share of it
 function tourSample(now){const ft=tour.prevNow?(now-tour.prevNow)/1000:0;tour.prevNow=now;
@@ -139,28 +181,30 @@ function tourResults(){
   let table='<tr><th>Leg</th><th>Avg FPS</th><th>1% low</th><th>Worst</th><th>Stutters</th><th>Main thread</th><th>Tris · calls</th></tr>';
   for(const r of rows)table+=`<tr><td>${r.name}${r.stuck?` <small>(stuck ${r.stuck}×)</small>`:''}</td><td class="${cls(r.avg)}">${r.avg.toFixed(1)}</td><td class="${cls(r.low)}">${r.low.toFixed(0)}</td><td>${Math.round(r.worst)} ms</td><td>${r.stut}</td><td>${r.cpu.toFixed(1)} ms (95%: ${r.cpu95.toFixed(1)})</td><td>${fmtTris(r.tris)} · ${Math.round(r.calls)}</td></tr>`;
   if(hs.length){table+='<tr><th colspan="7">Freezes (slow frames, with what was slow in them)</th></tr>';for(const x of hs.slice(0,12))table+=`<tr><td colspan="7">${bhtHitchTxt(x)}</td></tr>`}
-  const text=[`Corley's Island tour test, game version ${ver}`,`GPU: ${gpu}`,`Graphics: ${gfxName()}${PHONE?' (phone)':''}`,`Resolution: ${w}x${h}`,
+  const text=[`Corley's Island tour test${tour.fp?' (first person)':''}, game version ${ver}`,`GPU: ${gpu}`,`Graphics: ${gfxName()}${PHONE?' (phone)':''}`,`Resolution: ${w}x${h}`,
     `Frame rate: ${avg?avg.toFixed(1)+' FPS average':'not measured'}${slow?`, slowest leg ${slow.name} at ${slow.avg.toFixed(1)}`:''}`,
     `Stutters: ${stut} · freezes over ${BHT_HITCH} s: ${hs.length} · typical frame ${ftMed.toFixed(1)} ms, main thread ${cpuMed.toFixed(1)} ms${bound?' ('+bound+')':''}`,
     `Checks: ${bad.length?bad.length+' of '+tour.checks.length+' FAILED':'all '+tour.checks.length+' passed'}`,...tour.checks.map(c=>`${c.ok?'pass':'FAIL'} | ${c.name} | ${c.note}`),
     ...sys.map(([k,v])=>`${k}: ${v}`),'Legs:',
     ...rows.map(r=>`${r.name} | ${r.avg.toFixed(1)} avg FPS | ${r.low.toFixed(0)} 1% low | ${Math.round(r.worst)} ms worst | ${r.stut} stutters | main thread ${r.cpu.toFixed(1)} ms (95% ${r.cpu95.toFixed(1)}) | ${fmtTris(r.tris)} tris | ${Math.round(r.calls)} calls${r.stuck?' | stuck '+r.stuck+'x':''}`),
     `Freezes: ${hs.length?hs.length:'none'}`,...hs.slice(0,20).map(bhtHitchTxt)].join('\n');
-  return {title:'Island tour test results',sum,diag,table,device,text,fpsOk,checksOk:!bad.length&&!tour.errs.length,checks:tour.checks,rows}}
+  return {title:`Island tour test${tour.fp?', first person,':''} results`,sum,diag,table,device,text,fpsOk,checksOk:!bad.length&&!tour.errs.length,checks:tour.checks,rows}}
 // done: the results are kept for the reload (digtest.js shows them), which puts the player's site back
 function tourEnd(){tour.on=false;SL.x=SL.y=0;const r=tourResults();try{sessionStorage.setItem(DIGT_RES,JSON.stringify(r))}catch(e){}
   if(tour.obs)tour.obs.disconnect();$('#benchBar').innerHTML='ISLAND TOUR TEST DONE<small>Putting your site back…</small>';location.reload()}
 // headless: the game's own frame stepped 20 times a game second with the drawing left out, until the run is done (or a
 // step limit). The page is left in the test's state (nothing saves), so use a throwaway page (tools/play.js)
-function tourRun(){tour.headless=true;tourStart();renderer.setAnimationLoop(null);const draw=postRender;postRender=()=>{};
+function tourRun(fp){tour.headless=true;tourStart(fp);renderer.setAnimationLoop(null);const draw=postRender;postRender=()=>{};
   let t=last,n=0;try{while(n<16000&&tour.ph!=='done'){frame(t+=50);n++}}finally{postRender=draw}
   if(tour.ph!=='done')tourCheck('The run finished',false,`stuck at "${tour.ph}"${tour.ph==='boat'?' on '+TOUR_LEGS[tour.li].n:''}`);
   const b=boats[3];return {ok:tour.checks.every(c=>c.ok),time:`${Math.floor(tour.t/60)} min ${Math.round(tour.t%60)} s`,stucks:tour.stuckN,boat:[Math.round(b.x),Math.round(b.z)],
     checks:tour.checks.map(c=>`${c.ok?'pass':'FAIL'} | ${c.name} | ${c.note}`)}}
 
-$('#tourTestBtn').onclick=()=>{showMenu(false);tourStart()};
+$('#tourTestBtn').onclick=()=>{showMenu(false);tourStart()};$('#tourFpBtn').onclick=()=>{showMenu(false);tourStart(true)};
 // the start card's Tests row: each runs its ☰ Tools test straight away
 for(const b of document.querySelectorAll('#startTests [data-test]'))b.onclick=()=>{help.hidden=true;$('#'+b.dataset.test).click()};
 {const q=new URLSearchParams(location.search);
-  if(q.has('tourtest')){const g=(q.get('tourtest')||'').toLowerCase();q.delete('tourtest');const qs=q.toString();
-    history.replaceState(null,'',location.pathname+(qs?'?'+qs:'')+location.hash);setTimeout(()=>{if(GFX[g])setGfx(g);tourStart()},5000)}}
+  // ?tourtest runs it in chase view, ?tourfp in first person (=low, medium, high or ultra for that Graphics setting)
+  const k=q.has('tourfp')?'tourfp':q.has('tourtest')?'tourtest':null;
+  if(k){const g=(q.get(k)||'').toLowerCase();q.delete(k);const qs=q.toString();
+    history.replaceState(null,'',location.pathname+(qs?'?'+qs:'')+location.hash);setTimeout(()=>{if(GFX[g])setGfx(g);tourStart(k==='tourfp')},5000)}}

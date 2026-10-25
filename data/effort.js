@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-25T16:47:00Z",
+ "updated": "2026-10-25T16:59:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -66,9 +66,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-25",
-   "dh": 18,
+   "dh": 20,
    "act": 2,
-   "versions": 5
+   "versions": 6
   }
  ],
  "extra": [
@@ -2139,6 +2139,15 @@ window.EFFORT = {
    "tris": 5449016,
    "chars": 1457963,
    "what": "A Tests row on the start card (Island tour, Speed, Dig site, Backhoe load, Excavator load): each test is one tap from loading the game"
+  },
+  {
+   "v": 230,
+   "asked": "2026-10-25T11:18:00-05:00",
+   "live": "2026-10-25T11:59:24-05:00",
+   "dh": 2,
+   "tris": 5418010,
+   "chars": 1462866,
+   "what": "Island tour test, first person (menu, start card, or ?tourfp): the same run seen through the player's eyes, the head looking round like a person's, mostly the way ahead with glances at machines, boats, bridges, the crane barge, houses and the town, from a fixed seed so runs compare"
   }
  ]
 };
