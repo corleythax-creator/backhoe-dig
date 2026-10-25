@@ -166,12 +166,20 @@ function wakeEmit(b,dt,sx,sz,own){const sp=Math.abs(b.v);if(sp<0.8){b.wakeT=0;re
   for(const sd of [-1,1,0]){const i=wakeHead;wakeHead=(wakeHead+1)%WAKE_MAX;
     wkX[i]=sx+px*sd*0.6;wkZ[i]=sz+pz*sd*0.6;wkVX[i]=px*sd*out;wkVZ[i]=pz*sd*out;wkYaw[i]=back-sd*0.33*Math.sign(b.v);
     wkAge[i]=0;wkLife[i]=sd?6+3*k:3.5;wkK[i]=sd?k:k*0.8;wkTrail[i]=sd?0:1;wkOwn[i]=own;wkHit[i]=0}}
-const wakeTex=(()=>{const c=document.createElement('canvas');c.width=64;c.height=32;const g=c.getContext('2d'),r=g.createRadialGradient(32,16,1,32,16,30);
-  r.addColorStop(0,'rgba(255,255,255,0.9)');r.addColorStop(0.45,'rgba(235,245,250,0.45)');r.addColorStop(1,'rgba(255,255,255,0)');g.setTransform(1,0,0,0.5,0,8);g.fillStyle=r;g.fillRect(0,0,64,64);
-  g.setTransform(1,0,0,1,0,0);for(let n=0;n<90;n++){g.fillStyle='rgba(255,255,255,'+(0.2+Math.random()*0.4)+')';g.fillRect(8+Math.random()*48,6+Math.random()*20,1+Math.random()*2,1)}
+// a wake mark: churned foam in lace, thickest down its middle and fading out at the edges (alpha only; the foam is lit
+// like the water round it, so it greys at dusk and is gone at night)
+const wakeTex=(()=>{const W=128,H=64,c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d');
+  g.strokeStyle='#fff';g.fillStyle='#fff';
+  for(let n=0;n<520;n++){const x=Math.random()*W,y=H/2+(Math.random()+Math.random()+Math.random()-1.5)*H*0.42,r=0.6+Math.random()*Math.random()*4;
+    g.globalAlpha=0.35+Math.random()*0.6;g.lineWidth=0.5+Math.random()*1.2;g.beginPath();g.ellipse(x,y,r*1.6,r,0,0,7);if(Math.random()<0.3)g.fill();else g.stroke()}
+  g.globalAlpha=1;g.globalCompositeOperation='destination-in';const r=g.createRadialGradient(W/2,W/2,2,W/2,W/2,W/2);
+  r.addColorStop(0,'rgba(255,255,255,1)');r.addColorStop(0.5,'rgba(255,255,255,0.55)');r.addColorStop(1,'rgba(255,255,255,0)');
+  g.setTransform(1,0,0,H/W,0,0);g.fillStyle=r;g.fillRect(0,0,W,W);
   return new THREE.CanvasTexture(c)})();
-const wakeMesh=new THREE.InstancedMesh(new THREE.PlaneGeometry(1,1).rotateX(-Math.PI/2),
-  new THREE.MeshBasicMaterial({map:wakeTex,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,color:0xe8f0f2}),WAKE_MAX);
+// how strong each mark is rides in its instance colour's red, read as alpha
+const wakeMat=new THREE.MeshStandardMaterial({color:0xe9efee,roughness:0.85,metalness:0,alphaMap:wakeTex,transparent:true,depthWrite:false});
+wakeMat.onBeforeCompile=sh=>{sh.fragmentShader=sh.fragmentShader.replace('#include <color_fragment>','#include <color_fragment>\n#ifdef USE_COLOR\ndiffuseColor.a*=vColor.r;diffuseColor.rgb=diffuse;\n#endif')};
+const wakeMesh=new THREE.InstancedMesh(new THREE.PlaneGeometry(1,1).rotateX(-Math.PI/2),wakeMat,WAKE_MAX);
 wakeMesh.frustumCulled=false;wakeMesh.count=0;wakeMesh.renderOrder=2;scene.add(wakeMesh);
 const wakeO=new THREE.Object3D(),wakeC=new THREE.Color();
 function wakeGfx(n){wakeDraw=Math.min(WAKE_MAX,n|0)}

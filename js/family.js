@@ -1,6 +1,5 @@
 // Corley's Island: the Family Island south across the water (its ground, the family house, the picnic pavilion, the fire
-// pit, the flagpole, trees, road ends and signs) and the steel bridges in BRIDGES (terrain.js): the truss bridge from the
-// Lower Bench and the mainland bridge, which runs on as a timber trestle (mainland.js).
+// pit, the flagpole, trees, road ends and signs). The bridges are on the bridge kit (bridges.js).
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 const famGround=groundPatch(FAM_PATCH[0],FAM_PATCH[1],FAM_PATCH[2],FAM_PATCH[3],1.5,[]);
 // low-poly parts gathered by colour into a few merged meshes: solid (lit, flat shaded), glow (lamps, embers) and win
@@ -73,49 +72,7 @@ function famSign(lines,w,h,x,y,z,ry,bg,fg){
   const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),M(0xffffff,{map:tex,flatShading:false,side:THREE.DoubleSide}));
   m.position.set(x,y,z);m.rotation.y=ry;scene.add(m);return m}
 
-// ---------- bridges ----------
-// in each deck's own frame: t metres along it, u out from its centreline, y up
-function famBridge(b,K,o){
-  const yaw=Math.atan2(b.ux,b.uz),W=(t,u)=>[b.x0+b.ux*t-b.uz*u,b.z0+b.uz*t+b.ux*u];
-  const put=(fn,t,u,y,...a)=>{const [x,z]=W(t,u);fn(...a,x,y,z,yaw)};
-  const at=(t,u,y,w,h,d,col,rx)=>{const [x,z]=W(t,u);K.box(w,h,d,col,x,y,z,yaw,rx)};
-  const L=b.len,Y=b.y,D=o.depth,steel=o.steel,CON=0x9b9a94;
-  // deck, asphalt, painted lines (white edges, dashed yellow centre), curbs and railings
-  at(L/2,0,Y-0.27,2*b.hw+1,0.5,L,CON);
-  at(L/2,0,Y+0.01,2*b.hw,0.06,L,0x3b3d40);
-  for(const s of [-1,1])at(L/2,s*(b.hw-0.35),Y+0.045,0.15,0.02,L,0xe8e6de);
-  for(let t=2;t<L-2;t+=9)at(t+1.5,0,Y+0.045,0.15,0.02,3,0xe2b52a);
-  for(const s of [-1,1]){const u=s*(b.hw+0.2);at(L/2,u,Y+0.14,0.4,0.3,L,0xa8a69f);
-    at(L/2,u,Y+1.15,0.12,0.12,L,steel);at(L/2,u,Y+0.7,0.08,0.08,L,steel);
-    for(let t=0;t<=L+0.01;t+=2.5)at(t,u,Y+0.65,0.12,1.0,0.12,steel)}
-  // a deck truss under each edge: chords, verticals and diagonals, with a cross beam at every panel point
-  const NP=Math.max(2,Math.round(L/(D*1.1))),P=L/NP;
-  for(const s of [-1,1]){const u=s*(b.hw-0.4);
-    at(L/2,u,Y-0.75,0.5,0.5,L,steel);at(L/2,u,Y-0.5-D,0.5,0.5,L,steel);
-    for(let i=0;i<=NP;i++){at(i*P,u,Y-0.5-D/2,0.35,D,0.35,steel);
-      if(i<NP){const up=i%2===0,dl=Math.hypot(P,D),ang=Math.atan2(P,D)*(up?1:-1);at(i*P+P/2,u,Y-0.5-D/2,0.3,dl,0.3,steel,ang)}}}
-  for(let i=0;i<=NP;i++)at(i*P,0,Y-0.5-D,2*b.hw-0.4,0.3,0.3,steel);
-  // concrete piers: two columns and a cap wherever the ground falls well below the truss, and an abutment at each end
-  const pier=(t)=>{const [x,z]=W(t,0),g=baseHeight(x,z)-2,top=Y-0.75-D,hgt=top-g;if(hgt<1)return;
-    for(const s of [-1,1])at(t,s*(b.hw-0.4),g+hgt/2,1.4,hgt,1.4,CON);at(t,0,top-0.4,2*b.hw+0.6,0.8,1.8,CON);
-    const [ax,az]=W(t,0.3-b.hw),[bx,bz]=W(t,b.hw-0.3);BOAT_WALLS.push({ax,az,bx,bz,r:0.9})};
-  for(const t of o.piers)pier(t);
-  for(const t of [0,L]){const [x,z]=W(t,0),g=baseHeight(x,z);if(g<Y-1)continue;at(t,0,Y-1.6,2*b.hw+1.2,3,3,CON)}
-  // street lamps, staggered, their heads lit, reaching over the road (lampArm, models.js on Detailed)
-  const LK=famKit();
-  for(let t=6,s=1;t<L-3;t+=24,s=-s){const u=s*(b.hw+0.45),[x,z]=W(t,u);
-    LK.cyl(0.08,0.11,6.2,8,0x55595c,x,Y+3.1,z);
-    const [ax,az]=W(t,u-s*0.7);LK.box(1.5,0.1,0.12,0x55595c,ax,Y+6.1,az,yaw+Math.PI/2);
-    const [hx,hz]=W(t,u-s*1.35);LK.box(0.55,0.16,0.3,0x45484a,hx,Y+6.0,hz,yaw);LK.lit(new THREE.BoxGeometry(0.42,0.04,0.22),0xfff1c8,hx,Y+5.91,hz,yaw);
-    famSpot('lampArm',x,Y-0.02,z,Math.atan2(s*b.uz,-s*b.ux))}
-  famAddSpot('lampArm',LK);
-  return {W,at,yaw}}
-
 (function(){
-  // the truss bridge from the Lower Bench: dark green steel
-  const K1=famKit(),B1=BRIDGES[0];famBridge(B1,K1,{depth:1.5,steel:0x3f5e4e,piers:[34,69]});famAdd(K1);
-  // the mainland bridge: grey steel, running on as a timber trestle and a causeway to the town (mainland.js)
-  const K2=famKit(),B2=BRIDGES[1];famBridge(B2,K2,{depth:1.4,steel:0x5d6a74,piers:[30,64,98]});famAdd(K2);
   // the spoil yard on Corley's north lawn, where the truck dumps now the cliff is gone
   {const x=6,z=-41,y=baseHeight(x,z),K=famKit();for(const s of [-1,1])K.box(0.12,2.6,0.12,0x8a8a86,x+s*1.9,y+1.3,z);famAdd(K);
     famSign(['SPOIL YARD','Dump loads here'],4.2,1.4,x,y+2.1,z+0.07,0,'#c9601c','#ffffff')}

@@ -16,40 +16,42 @@ function mainRod(K,a,b,r,col,seg){const dx=b[0]-a[0],dy=b[1]-a[1],dz=b[2]-a[2],l
 
 // each temporary trestle in steel-span lengths of about 20 m, the order the crane replaces them in: the south trestle
 // from the mainland bridge outward, then the north one from Corley's lawn outward. Each span has its timber (tr) and
-// its steel (st: plate girders, a concrete deck, a railing and a pipe-pile bent), one shown at a time
+// its steel (st), one shown at a time, both on the bridge kit (bridges.js). Timber: a crosswise plank deck with running
+// boards, wheel guards, a rail on posts and timber stringers on bents of creosoted piles (batter piles splayed out at
+// each end), cross-braced. Steel, to match Corley's bridge: two riveted plate girders in grey with stiffeners and
+// cross frames, a concrete deck with curbs and a lattice railing, on a pipe-pile bent (or a concrete seat where the
+// ground is close) at the far end, and at the near end of the first span
 const crnSpans=[];
 function mainSpanKits(b){
-  const L=b.len,yaw=Math.atan2(b.ux,b.uz),W=(t,u)=>[b.x0+b.ux*t-b.uz*u,b.z0+b.uz*t+b.ux*u],Y=t=>b.y+(b.y1-b.y)*t/L;
-  const pit=Math.atan2(b.y-b.y1,L),hw=b.hw,NS=Math.max(1,Math.round(L/20)),SL=L/NS,NB=Math.max(2,Math.round(L/6));
-  const TIM=0x6e5236,DECK=0x8a6c4a,STL=0x5a5f63,GIRD=0x6b7a84,CON=0xa3a19a;
-  for(let i=0;i<NS;i++){const t0=i*SL,t1=t0+SL,tm=t0+SL/2,last=i===NS-1;
-    const T=famKit(),S=famKit(),at=(K,t,u,y,w,h,d,col,rx,rz)=>{const [x,z]=W(t,u);K.box(w,h,d,col,x,y,z,yaw,rx,rz)};
-    // timber: plank deck, wheel guards, rails and posts, steel stringers, and the pile bents in this stretch
-    at(T,tm,0,Y(tm)-0.09,2*hw,0.18,SL,DECK,pit);
-    for(const s of [-1,1]){at(T,tm,s*(hw-0.2),Y(tm)+0.12,0.3,0.25,SL,TIM,pit);
-      at(T,tm,s*(hw+0.1),Y(tm)+1.0,0.12,0.2,SL,TIM,pit);at(T,tm,s*(hw+0.1),Y(tm)+0.55,0.1,0.16,SL,TIM,pit);
-      for(let t=Math.ceil(t0/2.4)*2.4;t<t1-0.01||(last&&t<=t1+0.01);t+=2.4)at(T,t,s*(hw+0.1),Y(t)+0.55,0.2,1.1,0.2,TIM)}
-    for(const u of [-2.4,-0.8,0.8,2.4])at(T,tm,u,Y(tm)-0.48,0.3,0.6,SL,STL,pit);
-    const trW=[],stW=[],wall=(Wl,t,u,r)=>{const [ax,az]=W(t,-u),[bx,bz]=W(t,u);Wl.push({ax,az,bx,bz,r})};
-    for(let k=0;k<=NB;k++){const t=k*L/NB;if(t<t0-1e-6||(t>=t1-1e-6&&!(last&&t<=t1+1e-6)))continue;const top=Y(t)-1.0;at(T,t,0,top,2*hw+0.9,0.45,0.5,TIM);wall(trW,t,hw+0.2,0.35);
-      let lo=1e9;for(const u of [-2.4,0,2.4]){const [x,z]=W(t,u),g=baseHeight(x,z),h=top-0.2-g;lo=Math.min(lo,g);if(h>0.3)T.cyl(0.17,0.19,h,7,TIM,x,g+h/2,z)}
+  const L=b.len,F=brFrame(b),Y=F.Y,hw=b.hw,NS=Math.max(1,Math.round(L/20)),SL=L/NS,NB=Math.max(2,Math.round(L/6)),at=(t,u,dy)=>F.P(t,u,Y(t)+dy),V=(x,y,z)=>new THREE.Vector3(x,y,z);
+  for(let i=0;i<NS;i++){const t0=i*SL,t1=t0+SL,tm=t0+SL/2,last=i===NS-1,T=brKit(F),S=brKit(F);
+    T.seg('planks',at(t0,0,-0.09),at(t1,0,-0.09),2*hw,0.18,{uv:'local'});
+    for(const s of [-1,1]){T.seg('beam',at(t0,s*1.15,0.025),at(t1,s*1.15,0.025),0.6,0.05);T.seg('creo',at(t0,s*(hw-0.2),0.16),at(t1,s*(hw-0.2),0.16),0.3,0.25);
+      T.seg('creo',at(t0,s*(hw+0.1),1.0),at(t1,s*(hw+0.1),1.0),0.12,0.2);T.seg('creo',at(t0,s*(hw+0.1),0.55),at(t1,s*(hw+0.1),0.55),0.1,0.16);
+      for(let t=Math.ceil(t0/2.4)*2.4;t<t1-0.01||(last&&t<=t1+0.01);t+=2.4)T.seg('creo',at(t,s*(hw+0.1),0),at(t,s*(hw+0.1),1.1),0.2,0.2)}
+    for(const u of [-2.4,-0.8,0.8,2.4])T.seg('creo',at(t0,u,-0.48),at(t1,u,-0.48),0.3,0.6);
+    const trW=[],stW=[],wall=(Wl,t,u,r)=>{const [ax,az]=F.W(t,-u),[bx,bz]=F.W(t,u);Wl.push({ax,az,bx,bz,r})};
+    for(let k=0;k<=NB;k++){const t=k*L/NB;if(t<t0-1e-6||(t>=t1-1e-6&&!(last&&t<=t1+1e-6)))continue;const top=Y(t)-1.0;T.box('creo',2*hw+0.9,0.45,0.5,t,0,top);wall(trW,t,hw+0.2,0.35);
+      let lo=1e9;for(const u of [-2.4,0,2.4]){const [x,z]=F.W(t,u),g=baseHeight(x,z),h=top-0.2-g;lo=Math.min(lo,g);if(h>0.3)T.rod('creo',V(x,g,z),V(x,top-0.2,z),0.19,{seg:10,r1:0.17})}
+      for(const s of [-1,1]){const [x,z]=F.W(t,s*3.3),h=top-0.2-baseHeight(x,z);if(h>0.6){const [xb,zb]=F.W(t,s*(3.3+h/6));T.rod('creo',V(xb,baseHeight(xb,zb),zb),V(x,top-0.2,z),0.18,{seg:10,r1:0.16,det:1})}}
       const hb=Math.min(3.2,top-0.4-Math.max(lo,WATER+0.2));
-      if(hb>0.6){const dl=Math.hypot(4.8,hb),a=Math.atan2(hb,4.8);for(const sg of [-1,1])at(T,t,0,top-0.4-hb/2,dl,0.24,0.12,TIM,0,sg*a)}}
-    // steel: two plate girders with stiffeners, a concrete deck with curbs, a steel railing, and a pipe-pile bent (or a
-    // concrete abutment where the ground is close) at the far end, and at the near end of the first span
-    at(S,tm,0,Y(tm)-0.15,2*hw+0.8,0.3,SL,CON,pit);at(S,tm,0,Y(tm)+0.005,2*hw-0.6,0.02,SL,0x45474a,pit);
-    for(const s of [-1,1]){at(S,tm,s*(hw+0.15),Y(tm)+0.12,0.4,0.25,SL,0xb4b2aa,pit);
-      at(S,tm,s*2.2,Y(tm)-0.78,0.05,0.9,SL,GIRD,pit);for(const dy of [-0.32,-1.24])at(S,tm,s*2.2,Y(tm)+dy,0.5,0.06,SL,GIRD,pit);
-      for(let t=t0+1.5;t<t1;t+=2.5){at(S,t,s*2.2,Y(t)-0.78,0.35,0.85,0.03,GIRD)}
-      at(S,tm,s*(hw+0.25),Y(tm)+1.05,0.1,0.1,SL,STL,pit);at(S,tm,s*(hw+0.25),Y(tm)+0.6,0.08,0.08,SL,STL,pit);
-      for(let t=t0+0.5;t<t1;t+=2)at(S,t,s*(hw+0.25),Y(t)+0.6,0.1,0.95,0.1,STL)}
-    for(const t of i===0?[t0,t1]:[t1]){const capY=Y(t)-1.6,[cx,cz]=W(t,0),gc=baseHeight(cx,cz);
-      if(gc>capY-0.6){at(S,t,0,(Y(t)-0.3+gc-1)/2,2*hw+1,Y(t)-0.3-gc+1,1.6,CON);continue}
-      at(S,t,0,capY,2*hw+1,0.7,0.9,STL);wall(stW,t,2.2,0.5);for(const u of [-2.2,2.2]){const [x,z]=W(t,u),g=baseHeight(x,z)-1,h=capY-0.35-g;if(h>0.3)S.cyl(0.45,0.45,h,12,0x7d5a43,x,g+h/2,z)}}
-    const tr=mainGroup(T),st=mainGroup(S);st.visible=false;crnSpans.push({b,i,t0,t1,tm,SL,W,Y,tr,st,last,trW,stW})}
+      if(hb>0.6)for(const sg of [-1,1])T.seg('creo',F.P(t+sg*0.22,-2.6,top-0.4-hb),F.P(t+sg*0.22,2.6,top-0.4),0.12,0.24,{S:F.A})}
+    S.seg('concOld',at(t0,0,-0.15),at(t1,0,-0.15),2*hw+0.8,0.3);S.seg('asphalt',at(t0,0,-0.005),at(t1,0,-0.005),2*hw-0.7,0.05);
+    for(const s of [-1,1]){const g=s*2.2,ur=s*(hw+0.3);S.seg('concOld',at(t0,s*(hw+0.15),0.12),at(t1,s*(hw+0.15),0.12),0.4,0.25);
+      S.seg('paintS',at(t0,g,-0.78),at(t1,g,-0.78),0.05,0.9);for(const dy of [-0.32,-1.24])S.seg('paintS',at(t0,g,dy),at(t1,g,dy),0.5,0.06);
+      for(const dy of [-0.28,-1.28])S.seg('rivetS',at(t0,g,dy),at(t1,g,dy),0.54,0.02,{det:1});
+      for(let t=t0+1.5;t<t1;t+=2.5)for(const f of [-1,1])S.seg('paintS',at(t,g+f*0.125,-1.2),at(t,g+f*0.125,-0.36),0.2,0.03);
+      S.seg('paintS',at(t0,ur,1.1),at(t1,ur,1.1),0.09,0.09);S.seg('paintS',at(t0,ur,0.3),at(t1,ur,0.3),0.07,0.07);
+      for(let t=t0+0.5;t<t1;t+=2)S.seg('paintS',at(t,ur,0.24),at(t,ur,1.14),0.09,0.09);
+      S.quad('xlatS',[at(t0,ur,0.34),at(t1,ur,0.34),at(t1,ur,1.06),at(t0,ur,1.06)],[[t0,0],[t1,0],[t1,0.5],[t0,0.5]],{det:1})}
+    for(let t=t0+2.5;t<t1-1;t+=5)for(const s of [-1,1])S.rod('paintS',at(t,-2.2*s,-0.4),at(t,2.2*s,-1.2),0.04,{seg:6,det:1});
+    for(const t of i===0?[t0,t1]:[t1]){const capY=Y(t)-1.6,[cx,cz]=F.W(t,0),gc=baseHeight(cx,cz);
+      if(gc>capY-0.6){S.box('concOld',2*hw+1,Y(t)-0.3-gc+1,1.6,t,0,(Y(t)-0.3+gc-1)/2);continue}
+      S.box('paintS',2*hw+1,0.7,0.9,t,0,capY);wall(stW,t,2.2,0.5);for(const u of [-2.2,2.2]){const [x,z]=F.W(t,u),g=baseHeight(x,z)-1,h=capY-0.35-g;if(h>0.3)S.rod('rust',V(x,g,z),V(x,capY-0.35,z),0.45,{seg:14})}}
+    const tr=new THREE.Group(),st=new THREE.Group();scene.add(tr,st);T.add(tr);S.add(st);st.visible=false;crnSpans.push({b,i,t0,t1,tm,SL,W:F.W,Y,tr,st,last,trW,stW})}
   // a yellow limit sign at each end, taken down when the last span is steel
-  b.signs=[];for(const [t,ry] of [[-1.5,yaw+Math.PI],[L+1.5,yaw]]){const [x,z]=W(t,hw+1.3),y=baseHeight(x,z),K=famKit();
-    for(const s of [-1,1]){const [px,pz]=W(t,hw+1.3+s*1.9);K.box(0.12,2.5,0.12,0x8a8a86,px,y+1.25,pz)}
+  const yaw=F.yaw;b.signs=[];for(const [t,ry] of [[-1.5,yaw+Math.PI],[L+1.5,yaw]]){const [x,z]=F.W(t,hw+1.3),y=baseHeight(x,z),K=famKit();
+    for(const s of [-1,1]){const [px,pz]=F.W(t,hw+1.3+s*1.9);K.box(0.12,2.5,0.12,0x8a8a86,px,y+1.25,pz)}
     b.signs.push(mainGroup(K),famSign(['TEMPORARY BRIDGE','10 MPH · 40 TON LIMIT'],4.4,1.5,x,y+2.0,z,ry,'#e2b52a','#1a1a1a'))}}
 mainSpanKits(BRIDGES[4]);mainSpanKits(BRIDGES[5]);
 
