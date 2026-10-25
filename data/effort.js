@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-25T22:33:00Z",
+ "updated": "2026-10-25T22:39:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -66,9 +66,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-25",
-   "dh": 143.5,
+   "dh": 144.25,
    "act": 7,
-   "versions": 23
+   "versions": 24
   }
  ],
  "extra": [
@@ -2301,6 +2301,15 @@ window.EFFORT = {
    "tris": 5731501,
    "chars": 1701526,
    "what": "The start card opens on a map of the islands, drawn live with your machines on it; tap Corley's, Dexter's or Jessica's Island and it shows the machines you can take there, with ‹ Map to go back."
+  },
+  {
+   "v": 248,
+   "asked": "2026-10-25T17:25:00-05:00",
+   "live": "2026-10-25T17:39:43-05:00",
+   "dh": 0.75,
+   "tris": 5631520,
+   "chars": 1702332,
+   "what": "The controller stops rumbling: the motors are reset once the last pulse is over or the game loses focus, and dirt trickling off by itself (clay shed from the tracks, a heaped bucket's overflow) no longer buzzes it"
   }
  ]
 };
