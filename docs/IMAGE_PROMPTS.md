@@ -281,6 +281,179 @@ Sheet d: Corner Market (Groceries), Quilt Barn (Fabric · Yarn), Hair Studio (Cu
 **M21 Dockside Grill concept** -> `concept/dockside_grill.png`
 > [STYLE] [concept sheet] A red board-and-batten lakeside grill with roll-up glass garage doors, a plank deck over the beach with tables, striped umbrellas and string lights at dusk.
 
+## X: Things to place (the v243 catalogue: lights, road gear, site gear, garden, yard and play)
+
+The things in the map editor's Things drawer and the block bar's What list (`PROPS` in `js/props.js`) are drawn in flat vertex
+colours today. These are the surfaces, faces and glows a texturing pass would give them, grouped so one material serves many
+things. Some materials are already in the library, so don't make them again: concrete, planks, plywood, corrugated, fabric,
+granite, flagstone, shingles, mulch, sand, tree bark, yellow steel, rust plate, galvanised grating. Seamless tiles get
+`[STYLE][TEXTURE]` (and the PBR block after them for Ultra); faces and decals are front-on, filling the frame, with no pole, wall or
+shadow round them; transparent ones say so. Signs with words: use the exact wording and ask ChatGPT to "check every letter".
+Save each to `art/source/<id>.png`; the file name after the arrow is where the game will look (`textures/things/`).
+
+### Seamless materials (tile 1 m / 3 ft unless the prompt says otherwise)
+
+**X01 Traffic-orange plastic** -> `things/plastic_orange.jpg`. Cones, drums, barricade rails, windsock
+> [STYLE][TEXTURE] Moulded high-visibility orange HDPE plastic, faint mould texture, light scuffs, road grime in a few streaks, satin sheen.
+
+**X02 Reflective sheeting stripes** -> `things/reflective_stripe.jpg`. Barricade rails, traffic drum bands. Tile 2 ft wide
+> [STYLE][TEXTURE] Retroreflective road-work sheeting: diagonal orange and white stripes at 45°, each stripe 6 in wide, fine micro-prism honeycomb grain in the white, light dust. Tiles left to right and top to bottom with the stripes meeting.
+
+**X03 Galvanised steel pole** -> `things/galvanised.jpg`. Street lights, floodlights, scaffold, flag pole, hoop pole
+> [STYLE][TEXTURE] Hot-dip galvanised steel: dull silver-grey spangle crystals, faint white zinc bloom, a few dark weather streaks running vertically.
+
+**X04 Black powder coat** -> `things/powdercoat_black.jpg`. Lamp posts, lantern hooks, path lights, grill cart, string-light wire poles' hardware
+> [STYLE][TEXTURE] Satin black powder-coated cast metal, fine orange-peel texture, tiny chips showing grey metal, light dust.
+
+**X05 Cast aluminium light housing** -> `things/alu_housing.jpg`. Street light head, floodlight bodies
+> [STYLE][TEXTURE] Grey die-cast aluminium with fine cooling-fin grooves running one way, matte, light grime in the grooves.
+
+**X06 Precast concrete barrier** -> `things/concrete_precast.jpg`. Jersey barriers, culvert pipes, hydrant pad
+> [STYLE][TEXTURE] Precast highway-barrier concrete: smooth pale grey with formwork pinholes, faint horizontal form lines, tyre-black scuffs low down, rust drip stains.
+
+**X07 Fresh lumber, face** -> `things/lumber_face.jpg`. Lumber stack, pallets, job-site dunnage
+> [STYLE][TEXTURE] Stacked fresh-cut kiln-dried pine 2x6 boards seen side-on: pale yellow wood with grain lines and knots, thin dark gaps between boards, a faint grade-stamp shape with no readable letters.
+
+**X08 Lumber end grain** -> `things/lumber_end.jpg`. Lumber stack ends, firewood ends
+> [STYLE][TEXTURE] A wall of sawn board and log ends: pale growth rings, saw marks, a few cracks and darker heartwood, tightly packed.
+
+**X09 Sandbag weave** -> `things/sandbag.jpg`. Sandbag wall
+> [STYLE][TEXTURE] Woven polypropylene sandbag fabric, tan, tight basket weave with loose fibres and sand dust, stretched over lumpy fill.
+
+**X10 Silt fence geotextile** -> `things/silt_fabric.jpg`. Silt fence
+> [STYLE][TEXTURE] Black woven geotextile silt-fence fabric, fine grid weave, mud splashes on the lower third, a few small tears.
+
+**X11 Tyre rubber, tread and sidewall** -> `things/tyre.jpg`. Tire stacks, wheels on the arrow board, generator and wheelbarrow
+> [STYLE][TEXTURE] Black tyre rubber: a band of chunky worn tread across the top half, sidewall with fine radial ribs below, grey dust, no lettering.
+
+**X12 Shipping container steel** -> `things/container_red.jpg`. Shipping container. Tile 2 m
+> [STYLE][TEXTURE] Corrugated shipping-container side panel, trapezoid vertical ribs, faded oxide-red marine paint, rust blooms at the dents, white chalk scuffs.
+
+**X13 Pressure-treated wood** -> `things/wood_treated.jpg`. Raised bed, sandbox, swing set, woodpile rack, coop legs
+> [STYLE][TEXTURE] Pressure-treated pine boards, greenish-brown with incising slits and grain, slightly weathered, nail heads.
+
+**X14 White-painted wood** -> `things/wood_white.jpg`. Garden arbor, gazebo, Adirondack chair, picket fence
+> [STYLE][TEXTURE] Glossy white exterior paint over wood, grain showing faintly through, a few brushed edges and small chips.
+
+**X15 Cedar boards** -> `things/wood_cedar.jpg`. Flower planter, birdhouse, little free library, beehive stand
+> [STYLE][TEXTURE] Rough-sawn western red cedar boards, warm red-brown with honey streaks, fine fibrous saw texture.
+
+**X16 Round hay bale wrap** -> `things/hay_round.jpg`. Round hay bale. Tile 1.5 m
+> [STYLE][TEXTURE] The rolled outer surface of a round hay bale: dry golden-green hay strands wound in one direction, net-wrap twine faintly across it, seed heads and darker stems.
+
+**X17 Straw bale** -> `things/straw_square.jpg`. Straw bales, scarecrow
+> [STYLE][TEXTURE] Cut face of a square straw bale: pale gold straw stalks packed lengthwise, a few clipped ends, dust, one orange baling twine crossing.
+
+**X18 Fieldstone** -> `things/fieldstone.jpg`. Fire pit ring, wishing well
+> [STYLE][TEXTURE] A dry-laid fieldstone wall of rounded grey, tan and rust stones of mixed sizes with dark gaps and a little moss.
+
+**X19 Tent nylon** -> `things/tent_nylon.jpg`. Camping tent
+> [STYLE][TEXTURE] Forest-green ripstop nylon, small square ripstop grid, soft sheen, a few creases.
+
+**X20 Striped canvas** -> `things/canvas_stripe.jpg`. Hammock, patio umbrella (make a second in blue and white)
+> [STYLE][TEXTURE] Heavy cotton canvas in red and cream stripes 3 in wide, visible weave, slightly faded.
+
+**X21 Trampoline mat and pad** -> `things/trampoline.jpg`. Trampoline
+> [STYLE][TEXTURE] Top half: black woven polypropylene jumping mat with a fine grid; bottom half: blue vinyl safety pad with stitched seams. Seamless left to right.
+
+**X22 Boxwood foliage** -> `things/foliage_box.jpg`. Hedges, shrubs, arbor greenery
+> [STYLE][TEXTURE] A clipped boxwood hedge face: dense small oval leaves, dark and light greens, a few sunlit tips and dark gaps, no sky.
+
+**X23 Flower bed blooms** -> `things/blooms.jpg`. Flower beds, planters, arbor roses
+> [STYLE][TEXTURE] Top-down cottage flower bed: petunias, marigolds, zinnias and salvia in red, yellow, purple, pink and white among green leaves, dark mulch peeking through.
+
+**X24 Pumpkin skin** -> `things/pumpkin.jpg`. Jack-o'-lanterns. Tile 30 cm
+> [STYLE][TEXTURE] Close-up pumpkin rind: deep orange with paler vertical rib lines, waxy sheen, small speckles and a few soil marks.
+
+**X25 Chicken wire** -> `things/chicken_wire.png`. Coop run, garden fencing. Transparent PNG, tile 30 cm
+> [STYLE] Seamless galvanised hexagonal chicken-wire mesh on a fully transparent background, thin twisted wires, even spacing, flat front-on.
+
+**X26 Net mesh** -> `things/net_mesh.png`. Soccer goal, basketball net, trampoline enclosure. Transparent PNG, tile 30 cm
+> [STYLE] Seamless white knotted sports netting in a 4 in square mesh on a fully transparent background, flat front-on.
+
+### Faces, signs and decals (not tiling)
+
+**X40 Stop sign face** -> `things/sign_stop.png`. Transparent PNG, 1:1
+> [STYLE] A real US octagonal STOP sign face, front-on: retroreflective red with a white border and the word "STOP" in white highway lettering, slight weathering, transparent outside the octagon. Check every letter.
+
+**X41 Speed limit face** -> `things/sign_speed.jpg`. 3:4 portrait
+> [STYLE] A US regulatory speed sign face, front-on: white with a thin black border, "SPEED" over "LIMIT" over a large "15" in black highway lettering, light grime. Check every letter.
+
+**X42 Road-work sign face** -> `things/sign_work.png`. Transparent PNG, 1:1 diamond
+> [STYLE] An orange diamond road-work sign face, front-on: black border, "ROAD WORK AHEAD" in three lines of black highway lettering, transparent outside the diamond. Check every letter.
+
+**X43 Arrow board panel** -> `things/arrowboard_off.jpg`, `things/arrowboard_on.jpg`. 2:1
+> [STYLE] The black matrix panel of a trailer arrow board, front-on: a grid of round amber lamp lenses forming a right-pointing arrow. (a) lamps off, dull amber glass; (b) the arrow lamps lit bright amber with a soft glow, the other lenses dark. Two images, same framing.
+
+**X44 American flag** -> `things/flag_us.jpg`. 19:10
+> [STYLE] A US flag, cloth texture, flat front-on and filling the frame, 13 red and white stripes and 50 white stars on blue in correct rows, gentle fabric weave, no wrinkles or shadows.
+
+**X45 Windsock fabric** -> `things/windsock.jpg`. 4:1
+> [STYLE] Unrolled airfield windsock fabric, flat: five bands of fluorescent orange and white nylon, stitched seams, slightly faded.
+
+**X46 Container doors** -> `things/container_doors.jpg`. 1:1
+> [STYLE] The door end of a 20 ft shipping container, front-on: two oxide-red corrugated doors, four vertical locking bars with cam handles, hinges, rust streaks, a blank grey data plate with no readable text.
+
+**X47 Fuel tank placard** -> `things/tank_diesel.png`. Transparent PNG, 2:1
+> [STYLE] A white rectangular decal reading "DIESEL FUEL" over "NO SMOKING" in red block letters, front-on, slightly worn, transparent outside it. Check every letter.
+
+**X48 Generator side** -> `things/genset_side.jpg`. 2:1
+> [STYLE] The side of a yellow portable job-site generator, front-on: louvred black vents, a grey control panel with outlets, hour meter and breakers, no brand name.
+
+**X49 Job box front** -> `things/jobbox_front.jpg`. 2:1
+> [STYLE] The front of a blue steel job-site gang box, front-on: ribbed lid edge, a hasp and padlock, stamped steel corners, scratches, no brand name.
+
+**X50 Little free library** -> `things/bookbox_front.jpg`. 1:1
+> [STYLE] The glass front of a red-painted little free library box, front-on: two shelves of colourful books behind the glass door, a small white sign above reading "LITTLE FREE LIBRARY" and below it "Take a book · Share a book". Check every letter.
+
+**X51 Jack-o'-lantern faces** -> `things/jack_faces.png`. Transparent PNG, 4:1
+> [STYLE] Four carved pumpkin faces side by side (friendly grin, toothy, surprised, spooky), each a front-on view of the carved openings glowing warm orange from a candle inside, transparent around each pumpkin.
+
+**X52 Basketball backboard** -> `things/backboard.jpg`. 7:4
+> [STYLE] A white acrylic basketball backboard, front-on: red-orange border and shooting square, light scuffs, no logo.
+
+**X53 Cornhole top** -> `things/cornhole_top.jpg`. 1:2 portrait
+> [STYLE] A cornhole board top, front-on from above: natural birch plywood with a navy stripe down the left side and a round 6 in hole a third of the way down, light bag scuffs, no logo.
+
+**X54 Mailbox side** -> `things/mailbox.jpg`. 2:1
+> [STYLE] The side of a black steel rural mailbox, front-on: domed top, a red flag folded down, a strip of small brass house-number stickers reading "1 2 7", light rust at the bottom edge.
+
+### Light glows (transparent PNG, for the lamps' halos and the pools on the ground)
+
+**X60 Lamp halo** -> `things/glow_halo.png`. 1:1
+> [STYLE] A single soft round light halo on a fully transparent background: bright white centre fading smoothly to nothing, faint 6-point star flare, no hard edges, centred.
+
+**X61 Street light pool** -> `things/pool_round.png`. 1:1, black background (used as brightness)
+> [STYLE] A top-down pool of light cast on the ground by a street lamp: soft bright white middle fading to black at the edges, slightly uneven like a real LED street light pattern, on pure black.
+
+**X62 Floodlight throw** -> `things/pool_flood.png`. 1:2 portrait, black background
+> [STYLE] A top-down floodlight beam pattern on the ground: a long soft white oval brightest near the bottom (nearest the lamp) and fading forward to black, faint lens banding, on pure black.
+
+**X63 Flame sheet** -> `things/flame_sheet.png`. Transparent PNG, 4x2
+> [STYLE] A 4x2 sheet of eight frames of a small campfire flame on a transparent background, orange-yellow with white-hot cores and soft edges, each frame in its own equal cell, for animation.
+
+**X64 String-light bulb** -> `things/bulb_glow.png`. Transparent PNG, 1:1
+> [STYLE] One glowing warm-white Edison string-light bulb seen front-on: glass globe with a visible filament, bright glow and soft halo, black socket at the top, transparent background.
+
+### Concept sheets (reference for the detailed models)
+
+Add the S section's concept line: "Three-quarter view on a plain light grey background, realistic 3D game-model render style, front, side and back views of the same object on one sheet."
+
+**X80 Lights** -> `concept/things_lights.png`
+> [STYLE] [concept sheet] A set of outdoor lights: cobra-head LED street light on a 25 ft pole, black acorn lamp post, twin floodlights on a pole, ground spotlight, black path light bollard, Edison string lights between two wood poles, shepherd's-hook lantern. Show each lit at night as a second row.
+
+**X81 Road and traffic** -> `concept/things_road.png`
+> [STYLE] [concept sheet] Type III barricade, concrete Jersey barrier, orange traffic drum, trailer arrow board, stop sign, speed limit sign, red fire hydrant, rural mailbox, windsock.
+
+**X82 Site gear** -> `concept/things_site.png`
+> [STYLE] [concept sheet] Stacked concrete culvert pipes, banded lumber bundle on dunnage, sandbag wall, blue job box, yellow portable generator, 20 ft shipping container, scaffold tower with planks, silt fence, tyre stack, wheelbarrow, diesel tank on a stand.
+
+**X83 Farm and garden** -> `concept/things_garden.png`
+> [STYLE] [concept sheet] Round hay bale, stacked straw bales, cedar planter of flowers, raised vegetable bed, stone bird bath, birdhouse on a post, white rose arbor, boxwood shrub and hedge, flower bed, jack-o'-lanterns, scarecrow, garden gnome, two beehives, stone wishing well, little free library, red chicken coop with a run.
+
+**X84 Yard and play** -> `concept/things_yard.png`
+> [STYLE] [concept sheet] Stone fire pit, stainless gas grill, Adirondack chair, hammock on a stand, patio table with umbrella, white octagonal gazebo, firewood rack, flag pole, dog house, dome camping tent, wooden swing set, trampoline with net, sandbox with toys, portable basketball hoop, backyard soccer goal, cornhole board.
+
 ## S: Scenery concept sheets (reference art, not textures; use as guides when building)
 
 Add: "Three-quarter view on a plain light grey background, realistic 3D game-model render style, front, side and back views of the same object on one sheet."
