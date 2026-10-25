@@ -276,10 +276,19 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 .tile .tn{position:absolute;left:2px;right:2px;bottom:4px;z-index:1;font:700 13px/1.05 var(--f-display);letter-spacing:.02em;text-shadow:0 1px 3px rgba(0,0,0,.95);overflow-wrap:anywhere}
 .tile .ts{display:none}
 .tile::after{content:"";position:absolute;inset:40% 0 0;background:linear-gradient(transparent,rgba(8,10,7,.9))}
-/* where to start: three islands in a row over the machine tiles */
-#startIsl{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:4px;border-radius:14px;background:rgba(0,0,0,.25);border:1px solid var(--hud-line)}
-.card #startIsl button{height:44px;font-size:17px;border-radius:10px;background:transparent;color:var(--muted);padding:0 6px;line-height:1.05}
-.card #startIsl button[aria-pressed="true"]{background:var(--ink);color:#11151a}
+/* where to start: first a map of the islands with a button on each, then the island's machines */
+#startMap{position:relative;flex:none;width:min(100%,calc(58vh*600/475));aspect-ratio:600/475;margin:0 auto;border-radius:14px;overflow:hidden;border:1px solid var(--hud-line);background:#1a4769}
+#startMap[hidden]{display:none}
+#startMapCv{position:absolute;inset:0;width:100%;height:100%;display:block}
+#startMapHint{position:absolute;left:0;right:0;top:10px;margin:0;text-align:center;pointer-events:none;font:700 20px/1 var(--f-display);letter-spacing:.05em;text-transform:uppercase;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.9)}
+#startIsl{position:absolute;inset:0}
+.card #startIsl button{position:absolute;transform:translate(-50%,-50%);height:48px;font-size:19px;padding:0 16px;border-radius:24px;white-space:nowrap;background:rgba(12,15,18,.8);color:var(--ink);border:2px solid #fff;box-shadow:var(--lift)}
+.card #startIsl button[aria-pressed="true"]{background:var(--machine);color:#1c1309;border-color:#fff}
+@media (hover:hover){.card #startIsl button:hover{background:var(--machine);color:#1c1309}}
+@media (max-width:520px){.card #startIsl button{height:auto;min-height:44px;max-width:31%;padding:6px 10px;font-size:16px;line-height:1.05;white-space:normal}}
+#islHead{display:flex;align-items:center;gap:12px;flex:none}
+#islHead[hidden],#pickAll[hidden]{display:none}
+#islHead h2{margin:0;font:700 24px/1.1 var(--f-display);letter-spacing:.03em}
 .card button.tile[aria-pressed="true"]{border-color:var(--machine);box-shadow:0 0 0 2px var(--machine)}
 @media (hover:hover){.card button.tile:hover{border-color:var(--machine);transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.45)}}
 @media (max-width:380px){#pickAll{grid-template-columns:repeat(4,1fr)}.tile .tn{font-size:12px}}
