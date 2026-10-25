@@ -187,6 +187,8 @@ function dnTick(dt){
   famGlowMat.color.setScalar(0.65+0.35*lamp);famWinMat.emissive.copy(dnWarm).multiplyScalar(0.7*win*Math.min(1.5,ll));
   for(const m of dnHalos){m.visible=lamp>0.01;m.material.color.copy(m.userData.col).multiplyScalar(lamp*Math.min(1.5,ll))}
   dnPools.visible=lamp>0.01;dnPoolMat.color.setHex(0xffd9a0).multiplyScalar(0.45*lamp*ll);
+  // the lights placed from the editor or on foot (props.js)
+  propLampTick(lamp,ll,dt);
   const head=1-ss(-4,4,h);dnHead.intensity=2.2*head*ll*LI;if(head>0.01)dnHeadPlace();
   dnLightsTick(head);
   // the machines' lamp lenses (LENS, excavator.js) shine with them

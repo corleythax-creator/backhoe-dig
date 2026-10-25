@@ -133,6 +133,7 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 /* Block bar under the map: one glass box of rows (material, size steppers, first-person reach), then turn / lift / place */
 #blkBar{display:flex;flex-direction:column;width:220px;min-height:0;overflow-y:auto;overscroll-behavior:contain;background:var(--hud);border:1px solid var(--hud-line);border-radius:14px;padding:4px 6px;pointer-events:auto;zoom:var(--ms);box-shadow:var(--lift)}
 #blkBar>*+*{border-top:1px solid var(--hud-line)}
+#blkBar [hidden]{display:none}
 .bstep{flex:none;display:flex;align-items:center;gap:2px;height:40px;padding-left:6px}.bstep[hidden]{display:none}
 .bstep span{flex:1;font:600 12px/1 var(--f-display);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 .bstep b{font:700 17px/1 var(--f-display);color:var(--ink);min-width:48px;text-align:center;font-variant-numeric:tabular-nums}
@@ -140,8 +141,8 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 #blkLock{flex:0 0 auto;min-width:112px;color:var(--machine)}
 #blkBar .row{flex:none;flex-wrap:nowrap;align-items:stretch;gap:4px;padding:6px 0 2px}#blkBar .row button{flex:1;padding:0 4px;background:rgba(255,255,255,.06)}
 #blkPlace{background:var(--machine)!important;color:#1c1309;border-color:var(--machine)}
-#blkMat{flex:none;pointer-events:auto;width:100%;height:40px;padding:0 4px;font:600 15px/1 var(--f-display);color:var(--ink);background:transparent;border:0}
-#blkMat option,#blkMat optgroup{color:#111;background:#fff}
+#blkMat,#blkWhat,#blkCol{flex:none;pointer-events:auto;width:100%;height:40px;padding:0 4px;font:600 15px/1 var(--f-display);color:var(--ink);background:transparent;border:0}
+#blkBar option,#blkBar optgroup{color:#111;background:#fff}
 /* the sticks, in the thumb zones at the foot of the view */
 .sticks{grid-area:2/2/3/4;align-self:end;z-index:1;display:flex;justify-content:space-between;align-items:flex-end;padding:0 calc(var(--pr) + 8px) 6px calc(var(--pl) + 8px)}
 .stickwrap{position:relative}
@@ -677,7 +678,9 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
   <aside class="rpane">
     <canvas id="mini" title="Tap for the big map (M)"></canvas>
     <div id="blkBar" hidden>
+      <select id="blkWhat" aria-label="What to set down: a block or a thing"></select>
       <select id="blkMat" aria-label="Block material"></select>
+      <select id="blkCol" aria-label="Its colour" hidden></select>
       <div class="bstep" data-k="w"><span>Wide</span><button class="sm sq" data-d="-1" aria-label="Narrower">−</button><b>2 ft</b><button class="sm sq" data-d="1" aria-label="Wider">+</button></div>
       <div class="bstep" data-k="d"><span>Long</span><button class="sm sq" data-d="-1" aria-label="Shorter">−</button><b>2 ft</b><button class="sm sq" data-d="1" aria-label="Longer">+</button></div>
       <div class="bstep" data-k="h"><span>Tall</span><button class="sm sq" data-d="-1" aria-label="Lower">−</button><b>2 ft</b><button class="sm sq" data-d="1" aria-label="Taller">+</button></div>
@@ -1276,6 +1279,11 @@ const WORDS=[
   ['blkNone','Blocks','No blocks set yet.'],['blkDot','Blocks','Put the dot on a block to pick it up.'],
   ['blkFace','Blocks','Face a block within reach to pick it up.'],['blkBucket','Blocks','Bring the bucket onto a block to pick it up.'],
   ['blkSize','Blocks','Block size {size}'],['blkSnap','Blocks','Block snap: {snap}'],['blkMat','Blocks','Block material: {mat}'],
+  ['blkWhat','Blocks','Setting down: {what}','{what}: a block or the thing'],
+  ['thSet','Blocks','{what} set down. [lift] picks it back up.','{what}: the thing'],['thLifted','Blocks','{what} picked up','{what}: the thing'],
+  ['thNone','Blocks','Face a thing within reach to pick it up.'],['thLocked','Blocks','That one is locked in the map editor.'],
+  ['thCap','Blocks','That\'s all {n} of {what}. Pick some up first.','{n}: how many; {what}: the thing'],
+  ['thWater','Blocks','Things go on dry ground.'],['thStand','Blocks','You are standing there. Step back.'],
   ['blkFP','Blocks','Blocks go where the dot is. The mouse wheel (or [blkNear] [blkFar]) pulls them in and pushes them out.'],
   ['rainIn','Weather and water','Rain coming in. Dirt, clay and low ground will turn to mud.'],
   ['wipeTip','Weather and water','Rain on the glass. [wipers] runs the wipers.'],

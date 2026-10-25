@@ -42,6 +42,7 @@ const KEY_RUN={dig:()=>setMode('dig'),drive:()=>setMode('drive'),exSwap:()=>exSw
   nextMode:e=>setMode(MODES[(MODES.indexOf(mode)+(e.shiftKey?MODES.length-1:1))%MODES.length]),
   stats:()=>showStats(statBox.hidden),heat:()=>{if(!heat.on)setHeat(true);else if(heat.mode!==HEAT_MODES[HEAT_MODES.length-1][0])heatNext();else setHeat(false)},
   enter:()=>seatToggle(),jump:()=>walkJump(),plant:()=>plantHere(),trim:()=>trimSet(!trim.on),trimBump:()=>trimBump(),plantKind:()=>plantNext(),carry:()=>pbAct(),blocks:()=>setBlocks(!blkOn),place:()=>placeBlock(),lift:()=>removeBlock(),size:()=>blkCube(1),blkTurn:()=>blkTurn(),blkLock:()=>toast(say('blkSnap',{snap:blkLockNext()}),'',1400),blkFar:()=>blkReachBy(2),blkNear:()=>blkReachBy(-2),
+  blkWhat:()=>{if(!blkOn)setBlocks(true);const ks=['',...Object.keys(PROPS)];setBlkThing(ks[(ks.indexOf(blkThing)+1)%ks.length]);toast(say('blkWhat',{what:blkThing?PROPS[blkThing].n:'Block'}),'',1200)},
   blkMat:()=>{let m=blkMat;do m=(m+1)%MAT_MAX;while(m&&!MAT_LIST[m-1]);setBlkMat(m);toast(say('blkMat',{mat:blkMatName(blkMat)}),'',1400)},
   box:()=>hookBox(),coupler:()=>cplAct(),grip:()=>cplGrip(),lookAhead:()=>{if(camMode==='cab')fpl.home=true;fpl.zt=1},pump:()=>setPump(!pumpOn),wipers:()=>setWipers(!wipeOn),cam:()=>$('#camBtn').click(),map:()=>toggleMap(),sound:()=>setSound(!sndCfg.on),help:()=>{help.hidden=!help.hidden}};
 addEventListener('keydown',e=>{const c=e.code;
