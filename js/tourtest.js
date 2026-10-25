@@ -71,7 +71,7 @@ function tourSights(){const S=TOUR_SEE.map(([n,x,z])=>({n,x,z,y:Math.max(WATER,b
 function tourEye(){if(mode==='walk')return {x:wk.x,y:wk.y+WK_H,z:wk.z,yaw:0,p0:0,walk:true};
   const o=mode==='boat'?btCur():hvCur(),E=mode==='boat'?[0,1.62,-0.47,0,-1.1,8]:(o.eye||o.K.eye);
   return {x:o.x,y:o.y+E[1],z:o.z,yaw:o.yaw+Math.atan2(E[3],E[5]),p0:Math.atan2(E[4],Math.hypot(E[3],E[5])),walk:false}}
-function tourLook(dt){const L=tour.look,E=tourEye(),lim=E.walk?Math.PI:2.3;L.t-=dt;
+function tourLook(dt){const L=tour.look,E=tourEye(),lim=E.walk?Math.PI:1.6;L.t-=dt;
   if(L.t<=0){
     // after a glance always back to the way ahead; from ahead, a glance about half the time if there is something to see
     let pick=null;if(L.ahead){const near=tourSights().filter(s=>{const d=Math.hypot(s.x-E.x,s.z-E.z),r=E.walk?[4,80]:[20,260];
