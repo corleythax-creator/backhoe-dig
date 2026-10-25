@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-25T19:15:00Z",
+ "updated": "2026-10-25T19:23:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -66,9 +66,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-25",
-   "dh": 65.5,
+   "dh": 70.5,
    "act": 4,
-   "versions": 11
+   "versions": 12
   }
  ],
  "extra": [
@@ -2193,6 +2193,15 @@ window.EFFORT = {
    "tris": 5459243,
    "chars": 1548795,
    "what": "Every material's shader is built in the background whenever new ones appear (the detailed machines load later), so first sight of Dexter's yard, town or a machine no longer stalls for seconds on Windows; the island tour test waits for the game to be ready and reports that time on its own, leaves out time with the window hidden, allows a blip in the sound, and its boat backs out of the marina and steers round boats in its way"
+  },
+  {
+   "v": 236,
+   "asked": "2026-10-25T13:58:00-05:00",
+   "live": "2026-10-25T14:23:42-05:00",
+   "dh": 5,
+   "tris": 5462376,
+   "chars": 1552090,
+   "what": "Dexter's haul bridge is now an old riveted railroad truss repainted safety yellow over its black, chipped through in places, with laced members, steel road plate between heavy timber wheel guards, old concrete piers with timber fender piles, and work lights on the portals, still 26 ft clear for a raised boom."
   }
  ]
 };
