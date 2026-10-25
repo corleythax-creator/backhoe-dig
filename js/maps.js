@@ -230,7 +230,7 @@ for(const b of document.querySelectorAll('#tpOpts [data-tp]'))b.onclick=()=>tpGo
 // the start card's island (controls.js): to Dexter's yard or Jessica's paths, in the ride picked (a WK_RIDES key, or
 // 'foot'). A machine already there stays where it is; one from elsewhere comes with you, or you go on foot if there is
 // no room for it there
-const START_ISL={dexter:[-190,248],jessica:[201,246.5],family:[0,220]},START_ISL_N={dexter:"Dexter's Island",jessica:"Jessica's Island",family:'the Family Island'};
+const START_ISL={dexter:[-190,248],jessica:[201,246.5],family:[0,220],town:[0,690]},START_ISL_N={town:'the lakeside town',dexter:"Dexter's Island",jessica:"Jessica's Island",family:'the Family Island'};
 function startOn(isl,k){const S=START_ISL[isl];if(!S)return;let kk=k;
   if(k==='foot'||Math.hypot(WK_RIDES[k].o.x-S[0],WK_RIDES[k].o.z-S[1])>80){
     tpPick={x:S[0],z:S[1]};kk=k!=='foot'&&!tpSpot(k,S[0],S[1])?'foot':k;tpGo(kk,true);tpSet(null)}
