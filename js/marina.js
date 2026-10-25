@@ -194,6 +194,9 @@ function marBoat(kind,o,x,z,yaw){const K=famKit();MAR_KIND[kind](K,o);const g=ne
   for(let i=0;i<12;i++){const a=i/12*Math.PI*2;F.cyl(0.025,0.025,0.9,4,0x3a3d40,lx+Math.cos(a)*1.4,y0+6.9,lz+Math.sin(a)*1.4)}
   F.cyl(0.62,0.62,0.25,12,0x3a3d40,lx,y0+6.65,lz);F.lit(new THREE.CylinderGeometry(0.56,0.56,1.05,12),0xfff6d8,lx,y0+7.3,lz);for(let i=0;i<6;i++){const a=i/6*Math.PI*2;F.box(0.06,1.1,0.06,0x3a3d40,lx+Math.cos(a)*0.6,y0+7.3,lz+Math.sin(a)*0.6)}F.cyl(0.0,0.75,0.75,12,0xb8322a,lx,y0+8.2,lz);
   F.cyl(0.02,0.02,0.6,4,0x2a2c2f,lx,y0+8.8,lz);F.lit(new THREE.BoxGeometry(0.5,0.6,0.5),0xfff6d8,lx,y0+7.3,lz);
+  // you can walk the breakwater's crest out to the lighthouse; its pad and tower
+  for(let i=0;i<MAR_BW.length-1;i++){const [ax,az]=MAR_BW[i],[bx,bz]=MAR_BW[i+1],len=Math.hypot(bx-ax,bz-az);walkPad((ax+bx)/2,(az+bz)/2,1.6,len/2+0.8,Math.atan2(bx-ax,bz-az),crest+0.25)}
+  walkPad(lx,lz,2.3,2.3,0,y0);SOLIDS.push({x:lx,z:lz,hx:1.2,hz:1.2});
   K.add();famAdd(F);famAdd(RK);
   // the beam: two long cones back to back, bright at the lamp and fading out, drawn added to the night
   const g=new THREE.ConeGeometry(2.2,46,14,1,true);g.translate(0,-23,0);g.rotateX(Math.PI/2);
@@ -237,6 +240,8 @@ function marBoat(kind,o,x,z,yaw){const K=famKit();MAR_KIND[kind](K,o);const g=ne
     // the porch: a plank deck with steps, white posts and railings, a low shed roof with its sign on the fascia
     const pz=hz-D/2-1.6,py=fl;K.box(planks,W+1,0.12,3.2,hx,py-0.06,pz);F.box(W+1,py-g0,0.1,0xe0ddd4,hx,(py+g0)/2,pz-1.6);
     for(let i=0;i<3;i++)K.box(planks,3,0.12,0.32,hx,py-0.18-i*0.15,pz-1.75-i*0.32);
+    walkPad(hx,pz,W/2+0.5,1.6,0,py);walkPad(hx,pz-2.07,1.5,0.48,0,py-0.57,{rise:0.57});
+    for(const s of [-1,1])SOLIDS.push({x:hx+s*4.5,z:pz-1.45,hx:2.95,hz:0.08});
     for(const dx of [-7.4,-4.4,-1.6,1.6,4.4,7.4])F.box(0.18,2.9,0.18,TR,hx+dx,py+1.45,pz-1.45);
     for(const [a,b] of [[-7.4,-4.4],[-4.4,-1.6],[1.6,4.4],[4.4,7.4]]){F.box(b-a,0.08,0.1,TR,hx+(a+b)/2,py+0.95,pz-1.45);F.box(b-a,0.06,0.06,TR,hx+(a+b)/2,py+0.12,pz-1.45);
       for(let x=a+0.18;x<b-0.1;x+=0.18)F.box(0.04,0.8,0.04,TR,hx+x,py+0.53,pz-1.45)}
@@ -277,7 +282,11 @@ function marBoat(kind,o,x,z,yaw){const K=famKit();MAR_KIND[kind](K,o);const g=ne
     for(let i=0;i<5;i++){const x=gx-5.6+i*2.8,z=dz1+2.4+(i%2)*0.7;F.cyl(0.42,0.42,0.05,12,0xd9d2bf,x,dy+0.74,z);F.cyl(0.04,0.06,0.72,6,0x2a2c2f,x,dy+0.37,z);
       for(const a of [0,Math.PI*2/3,Math.PI*4/3])F.box(0.38,0.45,0.38,0x3a3d40,x+Math.sin(a)*0.75,dy+0.23,z+Math.cos(a)*0.75,a);
       F.cyl(0.02,0.02,2.4,4,0xe9e6dc,x,dy+1.2,z);F.cyl(0.02,1.25,0.45,8,UMB[i],x,dy+2.3,z)}
-    SOLIDS.push({x:gx,z:(dz0+dz1)/2+0.6,hx:W/2+1,hz:2.0});
+    walkPad(gx,(dz0+dz1)/2,W/2+1,2.6,0,dy);SOLIDS.push({x:gx,z:dz1+0.08,hx:W/2+1,hz:0.08});
+    for(let i=0;i<5;i++)SOLIDS.push({x:gx-5.6+i*2.8,z:dz1+2.4+(i%2)*0.7,hx:0.45,hz:0.45});
+    // steps down off its east end
+    {const xe=gx+W/2+1,zm=(dz0+dz1)/2+1.2,n=Math.max(1,Math.round((dy-G(xe+0.5,zm))/0.15));for(let i=0;i<n;i++)K.box(planks,0.32,0.12,1.6,xe+0.16+i*0.32,dy-0.06-(i+1)*(dy-G(xe+0.5,zm))/(n+1),zm);
+      walkPad(xe+n*0.16,zm,0.8,n*0.16,-Math.PI/2,dy-(dy-G(xe+0.5,zm))*(n+1)/n+0.02,{rise:(dy-G(xe+0.5,zm))*(n+1)/n-0.02})}
     // string lights from the eaves out to poles at the deck's corners, sagging between
     const poles=[[gx-W/2-0.9,dz1+0.2],[gx+W/2+0.9,dz1+0.2],[gx,dz1+0.2]];for(const [x,z] of poles)F.cyl(0.07,0.08,3.6,6,0x5c4632,x,dy+1.8,z);
     for(const [a,b] of [[[gx-W/2,dy+3.4,dz0],poles[0]],[[gx,dy+3.4,dz0],poles[2]],[[gx+W/2,dy+3.4,dz0],poles[1]],[poles[0],poles[2]],[poles[2],poles[1]]]){
@@ -294,7 +303,7 @@ function marBoat(kind,o,x,z,yaw){const K=famKit();MAR_KIND[kind](K,o);const g=ne
     for(const dx of [-2.6,2.6]){const x=ix+dx,z=iz-2.4,y=G(x,z);BK.box(1.6,0.06,0.45,0x2f4a3a,x,y+0.45,z);for(const s of [-1,1])BK.box(0.06,0.45,0.45,0x2a2c2f,x+s*0.7,y+0.22,z);famSpot('bench',x,y,z,Math.PI,0.9)}}
 
   // the boat ramp: grooved concrete from the car park down the bank and into the water, a dock alongside it
-  {const R=MAR.ramp;K.sheet(conc,R-3,R+3,526,583,0.05);for(let z=528;z<556;z+=0.6)K.sheet(groove,R-2.9,R+2.9,z,z+0.08,0.06);
+  {const R=MAR.ramp;K.sheet(conc,R-3,R+3,526,583,0.05);walkPad(R,554.5,3,28.5,0,0,{l:0.05});for(let z=528;z<556;z+=0.6)K.sheet(groove,R-2.9,R+2.9,z,z+0.08,0.06);
     famSign(['PUBLIC BOAT RAMP','No Wake · Slow Down'],2.6,0.95,R+4.6,G(R+4.6,562)+1.9,562,Math.PI,'#2f5a33','#ffffff');for(const s of [-1,1])F.box(0.1,2.4,0.1,0x8a8a86,R+4.6+s*1.2,G(R+4.6,562)+1.2,562)}
   // the dry-stack rack: galvanized columns and arms five bays wide, boats on it three high bow-in, under a steel roof
   {const x0=113,NB=5,BW=3,rz=572,y=G(x0+NB*BW/2,rz),levels=[1.3,3.4,5.5];
@@ -307,7 +316,7 @@ function marBoat(kind,o,x,z,yaw){const K=famKit();MAR_KIND[kind](K,o);const g=ne
     famAdd(RK)}
   // the car park: asphalt with painted stalls between the buildings and the cross street, lamp poles at its middle,
   // and a boat on its trailer waiting by the ramp
-  {K.sheet(asph,58,131,582,612,0.04);for(let x=60.5;x<129;x+=3)for(const [z0,z1] of [[583,588.5],[605.5,611]])K.sheet(paint,x-0.06,x+0.06,z0,z1,0.055);
+  {K.sheet(asph,58,131,582,612,0.04);walkPad(94.5,597,36.5,15,0,0,{l:0.04});for(let x=60.5;x<129;x+=3)for(const [z0,z1] of [[583,588.5],[605.5,611]])K.sheet(paint,x-0.06,x+0.06,z0,z1,0.055);
     for(const [x,z] of [[72,597],[91,597],[110,597]]){const y=G(x,z);F.cyl(0.25,0.3,0.6,10,0xa3a19a,x,y+0.3,z);F.cyl(0.08,0.11,8,8,0x3a3d40,x,y+4.3,z);
       for(const s of [-1,1]){F.box(1.0,0.08,0.08,0x3a3d40,x+s*0.5,y+8.2,z);F.box(0.55,0.14,0.32,0x2f3236,x+s*1.05,y+8.15,z);F.lit(new THREE.BoxGeometry(0.45,0.03,0.24),0xfff1c8,x+s*1.05,y+8.07,z)}
       SOLIDS.push({x,z,hx:0.3,hz:0.3})}
