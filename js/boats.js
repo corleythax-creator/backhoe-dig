@@ -59,7 +59,6 @@ function btModel(hull){const g=new THREE.Group(),K=famKit();
   K.box(BT_B*0.84,0.04,BT_L*0.62,0xd9d6cf,0,0.12,-0.45);K.box(BT_B*0.62,0.06,1.1,0xeeede8,0,0.5,1.75);
   // centre console, its dash and wheel, the leaning post behind it, a bench at the stern and a cushion on the bow
   K.box(0.78,0.82,0.62,0xf4f3ef,0,0.55,0.35);K.box(0.7,0.06,0.32,0x2e3033,0,0.98,0.48,0,-0.5);
-  K.cyl(0.16,0.16,0.03,16,0x1d1e20,0,1.0,0.22,0,-0.9);K.cyl(0.02,0.02,0.2,6,0x1d1e20,0,0.96,0.28,0,-0.9);
   K.box(0.7,0.55,0.4,0xd2d0ca,0,0.42,-0.45);K.box(0.74,0.12,0.44,0x384049,0,0.74,-0.45);K.box(0.74,0.4,0.08,0x384049,0,0.96,-0.66);
   K.box(BT_B*0.82,0.36,0.5,0xe7e5df,0,0.3,-2.25);K.box(BT_B*0.82,0.08,0.52,0x384049,0,0.52,-2.25);
   K.box(BT_B*0.5,0.08,0.7,0x384049,0,0.57,1.6);
@@ -87,6 +86,10 @@ MDL_KIT.boat={sets:()=>boats.map(b=>({body:b.g})),after(on){if(!on)return;const 
 let btI=0;
 const btCur=()=>boats[btI];
 // the walker climbs in at any of them (walker.js): the boats join WK_RIDES as boat0, boat1…
+// at the helm (simple shapes; the detailed model has its own): the wheel on its tilted shaft, turning as you steer
+// (boatTick), and the throttle and shift lever on the starboard side of the console
+boats.forEach(b=>{ctlWheel(b,b.g,0,1.0,0.22,0.67,0.17,2.2);
+  ctlGroup(b.g,k=>{k.box(0.08,0.14,0.14,CTL_DARK,-0.43,0.82,0.3);k.cyl(0.012,0.012,0.18,6,0xb8bcc0,-0.47,0.9,0.3,0.5);k.cyl(0.025,0.025,0.08,8,CTL_RUB,-0.47,0.98,0.26,0,Math.PI/2)})});
 boats.forEach((b,i)=>{WK_RIDES['boat'+i]={o:b,c:BT_C,r:BT_R,reach:0.8,m:'boat',n:'boat',pick(){btI=i},out:()=>btOut(b)}});
 // climbing out: onto the dock or the sand beside it if there is one (dry ground first, then shallow water), else into the lake
 function btOut(b){const sy=Math.sin(b.yaw),cy=Math.cos(b.yaw),gap=BT_B/2+WK_R+0.3,len=BT_L/2+0.5;
@@ -107,7 +110,7 @@ function btWalls(){btWallList.length=0;for(const w of BOAT_WALLS)btWallList.push
 function btGround(x,z){return farGround?farGround(x,z):baseHeight(x,z)}
 // thr: throttle (+ ahead), steer (+ right). Idle boats bob where they are left
 function boatTick(dt,thr,steer){
-  for(let i=0;i<boats.length;i++){const b=boats[i],drive=mode==='boat'&&btI===i&&wk.inside==='boat'+i&&!bench.on,th=drive?thr:0,sr=drive?steer:0;b.thr=th;
+  for(let i=0;i<boats.length;i++){const b=boats[i],drive=mode==='boat'&&btI===i&&wk.inside==='boat'+i&&!bench.on,th=drive?thr:0,sr=drive?steer:0;b.thr=th;b.swS=(b.swS||0)+(sr-(b.swS||0))*Math.min(1,dt*4);if(b.swG)b.swG.rotation.z=b.swS*b.swK;
     const sy=Math.sin(b.yaw),cy=Math.cos(b.yaw),h=BT_L/2-0.4;
     const bx=b.x+sy*h,bz=b.z+cy*h,sx=b.x-sy*h,sz=b.z-cy*h,wB=lakeY(bx,bz),wS=lakeY(sx,sz),gB=btGround(bx,bz),gS=btGround(sx,sz),gM=btGround(b.x,b.z);
     // how much of the hull sits on the bottom (a beach): there it only creeps, as if shoved along, and comes to a stop a

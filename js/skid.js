@@ -21,6 +21,11 @@ const skArm=new THREE.Group(),skBkt=new THREE.Group(),skWheels=[];
   for(const x of [-0.6,0.6]){for(const z of [-0.35,0.72])box(0.08,1.05,0.08,D,x,1.62,z,body);box(0.04,0.9,1.0,GL,x,1.6,0.2,body)}
   box(1.32,0.1,1.25,Y,0,2.18,0.2,body);box(0.5,0.12,0.5,BLK,0,1.2,0.05,body);box(0.5,0.55,0.1,BLK,0,1.48,-0.2,body);
   for(let i=-2;i<=2;i++)box(0.03,0.95,0.03,D,i*0.25,1.6,0.74,body);
+  // from the seat (the detailed model has its own): the joysticks on their pods either side, the display on the post
+  ctlGroup(body,k=>{for(const s of [-1,1]){k.box(0.12,0.24,0.32,CTL_PAN,s*0.38,1.25,0.12);k.box(0.1,0.04,0.2,0x111214,s*0.38,1.39,0.14);
+    k.cyl(0.04,0.03,0.04,10,CTL_RUB,s*0.38,1.42,0.2);k.cyl(0.008,0.008,0.08,6,0x9aa0a4,s*0.38,1.46,0.2);k.box(0.05,0.13,0.06,CTL_RUB,s*0.38,1.55,0.22,0.15);
+    k.box(0.02,0.012,0.02,0xf2a21b,s*0.38,1.62,0.24)}
+    k.box(0.18,0.13,0.04,0x111214,-0.42,1.98,0.68,-0.3);k.box(0.15,0.1,0.006,CTL_SCR,-0.42,1.98,0.656,-0.3)});
   // the uprights at the back that carry the arms
   for(const x of [-0.82,0.82])box(0.16,1.25,0.45,Y,x,1.25,-0.75,body);
   // wheels (each spins as its side drives)

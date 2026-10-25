@@ -282,12 +282,12 @@ function frame(now){
     camera.lookAt(camLk);
   }else{
     // the seat's eye point and its straight-ahead look, turned by where you have turned your head (fpl)
-    if(mode==='truck')fpEye(sprung,-0.55,1.6,1.95,0.25,-1,12.05);
+    if(mode==='truck')fpEye(sprung,-0.55,1.6,1.72,0.25,-1.5,12.05);
     else if(mode==='skid')fpEye(skid,0,1.72,0.0,0,-0.9,4.5);
-    else if(mode==='boat')fpEye(btCur().g,0,1.62,-0.47,0,-1.1,8);
+    else if(mode==='boat')fpEye(btCur().g,0,1.62,-0.47,0,-1.5,8);
     else if(mode==='heavy')fpEye(hvCur().g,...(hvCur().eye||hvCur().K.eye));
     else if(mode==='bike')fpEye(bike,0,1.62-bk.comp,-0.12,0,-0.35,1);
-    else if(mode==='mow')fpEye(mower,0,1.42,0.02,0,-1.32,4.48);
+    else if(mode==='mow')fpEye(mower,0,1.42,-0.12,0,-1.45,4.48);
     else if(mode==='walk'){const p=fpl.pitch,fx=Math.sin(wk.view),fz=Math.cos(wk.view);camera.position.set(wk.x+fx*0.1,wk.y+WK_H-0.12+wkBody.position.y,wk.z+fz*0.1);
       look.set(camera.position.x+fx*Math.cos(p)*5,camera.position.y+Math.sin(p)*5,camera.position.z+fz*Math.cos(p)*5)}
     else fpEye(house,-0.72,2.15,0.3,0.45,-1.75,5.5);
@@ -304,7 +304,7 @@ function frame(now){
   const fv=mode==='boat'?btCur():mode==='heavy'?hvCur():mode==='bike'?bk:mode==='truck'?tr:mode==='mow'?mw:mode==='skid'?sk:mode==='walk'?wk:st;sun.position.set(fv.x,fv.y,fv.z).addScaledVector(LIGHT_DIR,SUN_D); sun.target.position.set(fv.x,fv.y,fv.z);
   {const o=groundOcc.value;o[0].set(st.x,st.z,st.yaw,0);o[2].set(tr.x,tr.z,tr.yaw,0)}
   timeU.value=now/1000;
-  shadowProxyTick();lawnLod();tuftLod();rainCover();if(vr.fake)vrFakeHead();const wm=warmPre();postRender();warmPost(wm);if(vrOn())vrAfter();
+  shadowProxyTick();lawnLod();tuftLod();rainCover();if(vr.fake)vrFakeHead();warmAllTick();const wm=warmPre();postRender();warmPost(wm);if(vrOn())vrAfter();
   if(bench.on)benchSample(dt);
   fpsFrames++;fpsTime+=dt;
   if(fpsTime>=0.5){const f=Math.round(fpsFrames/fpsTime);const fe=$('#fpsVal');fe.textContent=f;fe.style.color=f>=50?'var(--ok)':f>=30?'var(--gas)':'var(--danger)';
@@ -331,7 +331,18 @@ function warmPre(){if(warmN<=0||bench.on)return null;warmN--;const keep=[];
   return keep}
 function warmPost(keep){if(!keep)return;for(const [o,v,c,d] of keep){o.visible=v;if(o.isInstancedMesh)o.count=c;if(o.isPoints)o.geometry.setDrawRange(0,d)}}
 // textures may finish loading before the later scripts arrive: apply them now if they are in, otherwise when they are
-const texReady=()=>{applyTextures();warmN=Math.max(warmN,3)};
+const texReady=()=>{applyTextures();warmN=Math.max(warmN,3);warmAll={f:0}};
+// the rest of the world's first use, behind the start card: once the textures are in, every shader the scene can need
+// is built (compileAsync: in the background where the browser can) and every texture uploaded, three a frame, so arriving
+// somewhere new (Dexter's yard, the town) doesn't stall while the browser gets them ready (the island tour test's freeze
+// check, tourtest.js, times it). It only works while the start card is up, where a hitch can't be felt; what isn't
+// ready by the time the card closes is got ready as it comes into view, as before
+let warmAll=null;
+function warmAllTick(){const W=warmAll;if(!W||bench.on||vrOn())return;if(help.hidden){warmAll=null;return}W.f++;
+  if(!W.done&&W.f>20){W.done=true;try{const p=renderer.compileAsync?renderer.compileAsync(scene,camera):(renderer.compile(scene,camera),null);if(p&&p.catch)p.catch(()=>{})}catch(e){}}
+  if(!W.q){W.q=[];const seen=new Set();scene.traverse(o=>{for(const m of [].concat(o.material||[]))for(const k in m){const t=m[k];if(t&&t.isTexture&&!seen.has(t)){seen.add(t);W.q.push(t)}}})}
+  for(let i=0;i<3&&W.q.length;i++){const t=W.q.pop(),im=t.image;if(im&&(im.width||im.data||Array.isArray(im)))try{renderer.initTexture(t)}catch(e){}}
+  if(W.done&&!W.q.length)warmAll=null}
 if([texGrass,texDirt,texGrime].every(t=>t.image&&t.image.width))texReady();else texManager.onLoad=texReady;
 // every lit material gets its wet look before anything is drawn, so nothing compiles twice (rain.js)
 wetPatchAll();

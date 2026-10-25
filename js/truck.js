@@ -38,7 +38,7 @@ for(const z of [-2.2,-1.6,-2.8]){const ax=cyl(0.07,0.07,1.9,10,STEEL,tBody);ax.r
 const ax2=cyl(0.07,0.07,2.0,10,STEEL,tBody);ax2.rotation.z=Math.PI/2;ax2.position.set(0,0.55,3.1);
 for(const x of [-1.15,1.15])box(0.06,0.5,1.9,BED_D,x,1.15,-2.2,tBody);
 // wheels
-const wheels=[],frontWheels=[];
+const wheels=[],frontWheels=[];let trSW=null;
 function makeWheel(x,z,dual){const g=new THREE.Group();g.rotation.order='YXZ';g.position.set(x,0.55,z);g.userData={lx:x,lz:z,off:0};truck.add(g);
   const offs=dual?[-0.21,0.21]:[0];
   for(const o of offs){const t=new THREE.Mesh(new THREE.CylinderGeometry(0.55,0.55,0.38,48,1),RUBBER);t.castShadow=true;g.add(t);t.rotation.z=Math.PI/2;t.position.x=o;
@@ -205,11 +205,17 @@ for(let i=0;i<4;i++)box(2.0,0.02,0.02,STEEL,0,2.18,3.0+i*0.25,tBody);
   box(2.2,0.3,0.32,SEATM,0,2.05,2.42,tBody);box(2.2,0.04,0.36,BLACK,0,2.205,2.4,tBody);
   for(const gx of [-0.72,-0.55,-0.38]){cylZ(0.055,0.02,24,LENS,gx,2.12,2.255,tBody);add(new THREE.TorusGeometry(0.055,0.01,4,24),CHROME,gx,2.12,2.25,tBody)}
   for(let i=0;i<6;i++)box(0.05,0.03,0.02,i%2?AMBER:STEEL_L,0.05+i*0.09,2.12,2.255,tBody);
-  {const sw=new THREE.Group();sw.position.set(-0.55,2.22,2.15);sw.rotation.x=0.65;tBody.add(sw);
-    add(new THREE.TorusGeometry(0.2,0.025,8,36),BLACK,0,0,0,sw);add(new THREE.CylinderGeometry(0.05,0.05,0.04,24),BLACK,0,0,0,sw,Math.PI/2);
-    for(const a of [0,2.1,4.2]){const sp=box(0.18,0.025,0.02,BLACK,Math.cos(a)*0.11,Math.sin(a)*0.11,0,sw);sp.rotation.z=a}
-    sw.updateMatrix();for(const c of [...sw.children]){c.updateMatrix();c.matrix.premultiply(sw.matrix);c.matrix.decompose(c.position,c.quaternion,c.scale);sw.remove(c);tBody.add(c)}tBody.remove(sw)}
-  add(new THREE.CylinderGeometry(0.035,0.04,0.42,16),BLACK,-0.55,2.094,2.318,tBody,2.214);
+  // the instrument binnacle on the dash in front of the wheel, where you see it over the rim: speedometer, tach,
+  // air pressure and fuel, faces tipped up toward the seat
+  box(0.66,0.14,0.26,SEATM,-0.55,2.27,2.4,tBody);{const h=box(0.7,0.03,0.3,BLACK,-0.55,2.355,2.38,tBody);h.rotation.x=-0.12;h.castShadow=false}
+  for(const [gx,r] of [[-0.74,0.05],[-0.62,0.06],[-0.48,0.06],[-0.36,0.05]]){const d=add(new THREE.CylinderGeometry(r,r,0.02,20),LENS,gx,2.3,2.27,tBody,Math.PI/2+0.35);d.castShadow=false;
+    const b=add(new THREE.TorusGeometry(r,0.008,4,20),CHROME,gx,2.304,2.262,tBody,0.35);b.castShadow=false;
+    const n=box(0.006,r*0.8,0.004,AMBER,gx-r*0.2,2.31,2.258,tBody);n.rotation.set(0.35,0,0.7);n.castShadow=false}
+  // the steering wheel on its column: it turns with the front wheels (truck pose, trSW)
+  {const t=new THREE.Group();t.position.set(-0.55,2.3,2.12);t.rotation.x=0.7;tBody.add(t);const sw=new THREE.Group();t.add(sw);trSW=sw;
+    add(new THREE.TorusGeometry(0.2,0.022,6,28),BLACK,0,0,0,sw);add(new THREE.CylinderGeometry(0.05,0.05,0.04,24),BLACK,0,0,0,sw,Math.PI/2);
+    for(const a of [0,Math.PI,-Math.PI/2])add(new THREE.BoxGeometry(0.16,0.025,0.02),BLACK,Math.cos(a)*0.1,Math.sin(a)*0.1,0,sw,0,0,a);
+    add(new THREE.CylinderGeometry(0.035,0.04,0.36,16),BLACK,0,0,0.19,sw,Math.PI/2);sw.traverse(m=>{if(m.isMesh)m.castShadow=false})}
   add(new THREE.CylinderGeometry(0.012,0.012,0.3,8),CHROME,-0.15,1.95,2.05,tBody,0.3);add(new THREE.SphereGeometry(0.035,12,8),BLACK,-0.15,2.1,2.1,tBody);
   // exhaust: rain cap, clamps, stand-off brackets, flex pipe down under the cab
   {const sx=-1.0,sz=1.0;
@@ -333,7 +339,7 @@ function updateTruck(dt,thr,steerIn,bedIn){
   sprung.position.y=1.0+tr.sh;sprung.rotation.set(tr.sp,0,tr.sr);
   const sP=Math.sin(tr.pitch),sR=Math.sin(tr.roll),kw=Math.min(1,dt*20);
   for(const w of wheels){const u=w.userData;u.off+=(clamp(smp(u.lx,u.lz)-(tr.y-u.lz*sP+u.lx*sR),-0.2,0.2)-u.off)*kw;w.position.y=0.55+u.off;w.rotation.x=tr.rollA}
-  for(const w of frontWheels)w.rotation.y=tr.steer;
+  for(const w of frontWheels)w.rotation.y=tr.steer;if(trSW)trSW.rotation.z=-tr.steer*5;
   TAIL.emissive.setHex(tr.brakeOn?0xff2a10:0x400804);REV.emissive.setHex(tr.gear<0&&tr.shiftT<=0?0xfff0c0:0x202018);
   // clods off the rear tires in loose dirt
   if(soft&&Math.abs(tr.v)>2&&Math.random()<Math.abs(tr.v)*dt*1.2){truck.localToWorld(tv.set(Math.random()<0.5?0.95:-0.95,0.2,REAR-Math.sign(tr.v)*0.9));spawn(tv,0.9)}
