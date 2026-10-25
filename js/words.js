@@ -136,7 +136,7 @@ const WORDS=[
   ['padReady','Other','Controller ready. LB / RB switch machine, Y cab view.'],['padLost','Other','Controller disconnected. Press any button on it to carry on.'],['reset','Other','Fresh ground. Paint is back.'],['saveFull','Other','The site is too big to save in this browser ({mb} MB). Digging since the last save is not kept.','{mb}: how big the save is, in MB'],
   ['tpNoRoom','Other','No room there. Pick an open spot on land.'],['tpLake','Other','That is the lake. Pick a spot on land.'],
   ['tpDone','Other','Teleported {ft} ft {how}.','{ft}: distance; {how}: on foot, in the dump truck…'],
-  ['startIsl','Other','Starting on {island}, {how}.','{island}: Dexter\'s or Jessica\'s Island; {how}: on foot, in the excavator…'],
+  ['startIsl','Other','Starting on {island}, {how}.','{island}: the Family Island, Dexter\'s or Jessica\'s Island; {how}: on foot, in the excavator…'],
   ['gfx','Other','Graphics: {name}','{name}: Low, Medium, High'],
   ['petCat','Other','She shuts her eyes, leans into your hand and purrs.'],['petCatBtn','Other','Pet the cat','The Get in button by the cat in Jessica\'s library'],
   ['orbitTip','Other','Orbit camera: drag to circle round, scroll or pinch to zoom from close in to high overhead. It holds still as the machine turns.'],
