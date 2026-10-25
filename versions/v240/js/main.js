@@ -346,7 +346,7 @@ const WARM_AT=[[-190,248],[-200,205],[FAM_X,FAM_Z],[JES_X,JES_Z],[72,540],[0,600
 function warmAt(x,z){const c=camera.position.clone(),sp=sun.position.clone(),stp=sun.target.position.clone(),y=Math.max(WATER,baseHeight(x,z))+2;
   try{camera.position.set(x,y,z);camera.updateMatrixWorld();if(typeof rcRender==='function'&&typeof rcRT!=='undefined')rcRender();
     // (the sun's shadow pass was drawn here too, but called outside a frame it left WebGL failing every draw after it,
-    // GL_INVALID_OPERATION, and the screen froze on its last picture; v239)
+    // GL_INVALID_OPERATION, and the screen froze on its last picture; v240)
     }catch(e){}
   finally{camera.position.copy(c);camera.updateMatrixWorld();sun.position.copy(sp);sun.target.position.copy(stp);sun.updateMatrixWorld();sun.target.updateMatrixWorld();renderer.shadowMap.needsUpdate=true}}
 const warmQuiet=()=>!help.hidden||typeof tour!=='undefined'&&tour.on&&tour.ph==='ready';
