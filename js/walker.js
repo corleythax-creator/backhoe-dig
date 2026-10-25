@@ -37,9 +37,13 @@ walker.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
 const wkMdl={g:null,loading:false,j:null};
 function wkMdlLoad(){if(wkMdl.g||wkMdl.loading)return;wkMdl.loading=true;
   mdlLoaderReady(()=>new THREE.GLTFLoader().load('models/worker.glb',gl=>{wkMdl.loading=false;wkMdlSetup(gl.scene)},undefined,()=>{wkMdl.loading=false}))}
-function wkMdlSetup(g){g.updateMatrixWorld(true);const bones={},inv=new THREE.Matrix4().copy(g.matrixWorld).invert(),q=new THREE.Quaternion(),s=new THREE.Vector3(),p=new THREE.Vector3();
+function wkMdlSetup(g){wkMdl.j=wkRig(g,true);wkMdl.g=g;walker.add(g);wkBody.visible=false;for(const l of wkLegs)l.top.visible=false;wkMdlPose()}
+// the joints of a copy of the man (the worker's, or a townsperson's, townfolk.js), each turned about the body's own axes
+// (wkMdlTurn); mats: set up the worker's materials too (the townsfolk set their own)
+const WK_X=new THREE.Vector3(1,0,0);
+function wkRig(g,mats){g.updateMatrixWorld(true);const bones={},inv=new THREE.Matrix4().copy(g.matrixWorld).invert(),q=new THREE.Quaternion(),s=new THREE.Vector3(),p=new THREE.Vector3();
   g.traverse(o=>{if(o.isBone)bones[o.name]=o;
-    if(o.isMesh){o.castShadow=o.receiveShadow=true;o.frustumCulled=false;const m=o.material;m.envMap=skyEnv;
+    if(o.isMesh&&mats){o.castShadow=o.receiveShadow=true;o.frustumCulled=false;const m=o.material;m.envMap=skyEnv;
       if(/high-poly/.test(m.name)){m.roughness=0.08;m.userData.noWet=true}
       else if(/body/.test(m.name))m.roughness=0.62;
       else if(m.name==='vest'){m.roughness=0.8;m.emissiveMap=m.map;m.emissive.setRGB(0.1,0.1,0.1)}
@@ -48,7 +52,7 @@ function wkMdlSetup(g){g.updateMatrixWorld(true);const bones={},inv=new THREE.Ma
       if(m.alphaTest)m.alphaToCoverage=true;wetPatch(m)}});
   // each bone's parent's turn in the body's frame at rest, to carry a turn about the body's axes into the bone's own frame
   const rest=b=>{inv.clone().multiply(b.matrixWorld).decompose(p,q,s);return q.clone()};
-  const X=new THREE.Vector3(1,0,0),j=(n,droop,pre)=>{const b=bones[n];if(!b)return null;return {b,q0:b.quaternion.clone(),pq:rest(b.parent),droop:droop||null,pre:pre||null}};
+  const X=WK_X,j=(n,droop,pre)=>{const b=bones[n];if(!b)return null;return {b,q0:b.quaternion.clone(),pq:rest(b.parent),droop:droop||null,pre:pre||null}};
   // the arms hang about 8° out from his sides
   const drop=(n,c,side)=>{const a=inv.clone().multiply(bones[n].matrixWorld),b=inv.clone().multiply(bones[c].matrixWorld),d=new THREE.Vector3().setFromMatrixPosition(b).sub(new THREE.Vector3().setFromMatrixPosition(a)).normalize();
     return new THREE.Quaternion().setFromUnitVectors(d,new THREE.Vector3(side*0.14,-1,0.02).normalize())};
@@ -56,17 +60,17 @@ function wkMdlSetup(g){g.updateMatrixWorld(true);const bones={},inv=new THREE.Ma
   const dl2=drop('lowerarm_l','hand_l',Math.sign(new THREE.Vector3().setFromMatrixPosition(bones.upperarm_l.matrixWorld).x)),dr2=drop('lowerarm_r','hand_r',Math.sign(new THREE.Vector3().setFromMatrixPosition(bones.upperarm_r.matrixWorld).x));
   // the left side is the one at +x: the shapes' first leg and arm are at -x
   const L=new THREE.Vector3().setFromMatrixPosition(bones.thigh_l.matrixWorld).x>0?1:0;
-  wkMdl.j={sp:['spine_01','spine_02','spine_03'].map(n=>j(n)),neck:j('neck_01'),head:j('head'),
+  const J={sp:['spine_01','spine_02','spine_03'].map(n=>j(n)),neck:j('neck_01'),head:j('head'),
     legs:[0,1].map(s=>{const k=(s===L)?'l':'r';return {top:j('thigh_'+k),low:j('calf_'+k)}}),
     arms:[0,1].map(s=>{const k=(s===L)?'l':'r';return {top:j('upperarm_'+k,k==='l'?dl:dr),low:j('lowerarm_'+k,k==='l'?dl2:dr2,(k==='l'?dl:dr).clone().invert())}}),
     fingers:Object.keys(bones).filter(n=>/^(index|middle|ring|pinky)_0[123]_/.test(n)).map(n=>j(n)),X};
   // the hand's curl rests in the file's frame; his fingers curl in a little, as they do when the hand is relaxed
-  for(const f of wkMdl.j.fingers)f.b.quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(X,0.35));
-  wkMdl.g=g;walker.add(g);wkBody.visible=false;for(const l of wkLegs)l.top.visible=false;wkMdlPose()}
+  for(const f of J.fingers)f.b.quaternion.multiply(new THREE.Quaternion().setFromAxisAngle(X,0.35));
+  return J}
 // turns joint J by angle a about the body's x axis (forward and back), after its droop; a forearm first undoes its
 // upper arm's droop, so the elbow bends about the body's x axis too
 const wkMQ=new THREE.Quaternion(),wkMQ2=new THREE.Quaternion();
-function wkMdlTurn(J,a){if(!J)return;wkMQ.setFromAxisAngle(wkMdl.j.X,a);if(J.droop)wkMQ.multiply(J.droop);if(J.pre)wkMQ.premultiply(J.pre);
+function wkMdlTurn(J,a){if(!J)return;wkMQ.setFromAxisAngle(WK_X,a);if(J.droop)wkMQ.multiply(J.droop);if(J.pre)wkMQ.premultiply(J.pre);
   wkMQ2.copy(J.pq).invert().multiply(wkMQ).multiply(J.pq);J.b.quaternion.copy(wkMQ2).multiply(J.q0)}
 function wkMdlPose(){const J=wkMdl.j;if(!J||!walker.visible)return;
   const lean=wkBody.rotation.x;for(const s of J.sp)wkMdlTurn(s,lean/3);

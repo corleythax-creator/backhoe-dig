@@ -10,7 +10,7 @@
 // shadow edges, filmic lighting, exp brightness, tex texture size, base ground texture, detail cut faces, painted
 // materials and machine grime, macro large-scale variation, pbr relief and wet sheen on materials that have those maps, aniso, tuftQ how finely the grass and weeds are shaped (0 Simple to 3 Best, scenery.js), tuft grass blades [amount, full-detail distance m,
 // fade-out distance m, share kept far off], lawnFar lawn full detail within m, fog haze distance, wmFine fine puddle
-// water, lakeQ the lake's ripples (0 two layers, 1 and rain rings, 2 and a fine close-up layer, lake.js), cloudQ the clouds' fine billows (0 off: half the sky's noise), treeR full-detail tree distance m, rainN raindrops, rainSp splashes where they land, splashN drops in a puddle splash, wakeN boat wake marks drawn, dirt the Dirt detail it sets when picked,
+// water, lakeQ the lake's ripples (0 two layers, 1 and rain rings, 2 and a fine close-up layer, lake.js), cloudQ the clouds' fine billows (0 off: half the sky's noise), treeR full-detail tree distance m, rainN raindrops, rainSp splashes where they land, splashN drops in a puddle splash, town the townsfolk (0 off to 3 busy, townfolk.js), wakeN boat wake marks drawn, dirt the Dirt detail it sets when picked,
 // ao bloom grade the screen effects (post.js), model the detailed machine models (models.js), brush the share of undergrowth
 // drawn (brush.js), skyLight shade and reflections coloured by the sky as it is (and a sharper reflection map), shSoft
 // contact-hardening sun shadows, wetDrops beads and runs of rain on the machines and their cab glass, wetGround soaked ground mirroring the sky (all four Ultra, post.js)
@@ -21,6 +21,7 @@ const GFX={
 // Ultra: High with the screen effects (post.js) and trees in full detail farther out; for strong PC graphics only, never
 // picked by itself
 // the extra lamps: the warm light in Jessica's library and the boom's work light (Low keeps the glowing lamps only)
+GFX.low.town=1;GFX.med.town=2;GFX.high.town=3;
 GFX.low.extraLt=false;GFX.med.extraLt=GFX.high.extraLt=true;
 GFX.ultra=Object.assign({},GFX.high,{name:'Ultra',tuftQ:3,ao:true,bloom:true,grade:true,treeR:220,skyLight:true,shSoft:true,wetDrops:true,wetGround:true});
 // VR through a PC: the eye buffer drawn larger than the headset's own and scaled down (supersampling), for sharper edges
@@ -32,6 +33,7 @@ GFX.low.vrSS=GFX.med.vrSS=1;GFX.high.vrSS=1.25;GFX.ultra.vrSS=1.4;
 // drawn far off, the plain puddle surface and fewer raindrops. Picked for you in the headset, never on a screen
 GFX.quest=Object.assign({},GFX.med,{name:'Quest',pr:1,auto:false,sh:2048,shR:16,tex:'med',aniso:4,dirt:2,lawnFar:8,fog:0.7,wmFine:false,lakeQ:0,
   rainN:700,rainSp:180,splashN:260,wakeN:160,brush:0.3,model:true,treeR:50,tuft:[0.5,10,30,0.15],vrSS:0.9});
+GFX.quest.town=1;
 GFX.quest.extraLt=false;
 // the bridges' detail parts: gusset and cover plates, lacing and lattice, braces, lamp trim, the covered bridge's
 // lattice and rafters, batter piles (bridges.js); Low leaves them out
@@ -92,6 +94,8 @@ function gfxApply(){const g=gfxCur=Object.assign({},GFX[gfxKey],gfxOver);
   splashGfx(g.splashN);
   // boat wake marks drawn (boats.js); the wakes themselves are the same
   if(typeof wakeGfx==='function')wakeGfx(g.wakeN);
+  // people and cars in town (townfolk.js): how many; each device's own, never saved
+  if(typeof tfGfx==='function')tfGfx(g.town);
   // field of view and haze (effects.js, rain.js)
   gfxFov=g.fov;gfxFog=g.fog;scene.fog.far=760*g.fog;if(typeof resize==='function')resize();
   if(typeof gfxPanelSync==='function')gfxPanelSync()}
@@ -157,7 +161,8 @@ const GFX_ROWS=[
   {id:'wetDrops',label:'Rain on machines',hint:'Beads of water on the machines\' paint and glass, running down the sides while it rains.',opts:onOff},
   {id:'wetGround',label:'Wet ground shine',hint:'Soaked dirt and mud shine with a film of water that mirrors the sky, most at a slant.',opts:onOff},
   {id:'splashN',label:'Puddle splash',opts:[[0,'Off'],[250,'250'],[600,'600'],[1200,'1200'],[2400,'2400']]},
-  {id:'wakeN',label:'Boat wakes',opts:[[0,'Off'],[140,'140'],[300,'300'],[640,'640']]}];
+  {id:'wakeN',label:'Boat wakes',opts:[[0,'Off'],[140,'140'],[300,'300'],[640,'640']]},
+  {id:'town',label:'Townsfolk',hint:'People walking the town and cars driving its streets. Fewer cost less on phones.',opts:[[0,'Off'],[1,'Few'],[2,'Some'],[3,'Busy']]}];
 function camFovBase(){return innerWidth<innerHeight?68:58}
 // grass blades are one array in GFX; the panel shows its amount and distance, the fade-out distance follows
 function gfxGet(id){const g=gfxCur;if(id==='tuftA')return g.tuft[0];if(id==='tuftR')return g.tuft[1];if(id==='dirt')return DIRT;return g[id]}
