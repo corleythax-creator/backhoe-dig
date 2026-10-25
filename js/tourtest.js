@@ -159,6 +159,8 @@ function tourRun(){tour.headless=true;tourStart();renderer.setAnimationLoop(null
     checks:tour.checks.map(c=>`${c.ok?'pass':'FAIL'} | ${c.name} | ${c.note}`)}}
 
 $('#tourTestBtn').onclick=()=>{showMenu(false);tourStart()};
+// the start card's Tests row: each runs its ☰ Tools test straight away
+for(const b of document.querySelectorAll('#startTests [data-test]'))b.onclick=()=>{help.hidden=true;$('#'+b.dataset.test).click()};
 {const q=new URLSearchParams(location.search);
   if(q.has('tourtest')){const g=(q.get('tourtest')||'').toLowerCase();q.delete('tourtest');const qs=q.toString();
     history.replaceState(null,'',location.pathname+(qs?'?'+qs:'')+location.hash);setTimeout(()=>{if(GFX[g])setGfx(g);tourStart()},5000)}}
