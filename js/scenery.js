@@ -1,16 +1,10 @@
-// Corley's Island: lake, mountains, field grass, outer ground, gas main, stakes and trees.
+// Corley's Island: mountains, field grass, outer ground, gas main, stakes and trees.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 // ---------- scenery ----------
 const timeU={value:0};
 // the mountain ranges' materials, dimmed at night by daynight.js
 const MTN_MATS=[];
 (function(){
-  // lake: low-poly water with gentle animated swells
-  const wg=new THREE.PlaneGeometry(3400,3400,150,150);wg.rotateX(-Math.PI/2);
-  const wm=new THREE.MeshPhongMaterial({color:0x1f5d72,specular:0xfff2dc,shininess:90,flatShading:true,envMap:skyEnv,combine:THREE.MixOperation,reflectivity:0.7});
-  wm.onBeforeCompile=sh=>{sh.uniforms.uTime=timeU;sh.vertexShader='uniform float uTime;\n'+sh.vertexShader.replace('#include <begin_vertex>',
-    '#include <begin_vertex>\nvec4 wpos=modelMatrix*vec4(transformed,1.0);\ntransformed.y+=sin(wpos.x*0.09+uTime*1.1)*0.16+cos(wpos.z*0.11+uTime*0.8)*0.13+sin((wpos.x+wpos.z)*0.23+uTime*1.7)*0.06;')};
-  const water=new THREE.Mesh(wg,wm);water.position.y=WATER;water.receiveShadow=true;scene.add(water);
   // two mountain layers far across the lake: a lit front range, and pale hazy peaks behind it
   function range(R0,R1,NR,NA,lo,hi,hazeA,hazeB,phase,unlit){
     const pp=[],cc=[],ix=[],hz=[0.75,0.82,0.87];
