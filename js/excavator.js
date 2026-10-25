@@ -83,6 +83,9 @@ const mirror=cyl(0.15,0.15,0.03,48,STEEL,cab);mirror.rotation.set(Math.PI/2,0,0.
 const mGlass=cyl(0.13,0.13,0.01,48,M(0x9aa9b4,{shininess:90,envMap:skyEnv,combine:THREE.MixOperation,reflectivity:1}),cab);mGlass.rotation.set(Math.PI/2,0,0.5);mGlass.position.set(-0.77,1.12,0.97);
 // boom (bent)
 const L1=5.7,L2=2.9,L3=1.1,KN=2.7;
+// the bucket is drawn at L3 and then scaled by BK_S to a 20-ton machine's 1 cu yd digging bucket (about 43 in wide,
+// 5 ft pin to teeth), so the dirt it shows matches what it holds (TUNE exCap)
+const BK_S=1.2;
 const boomP=new THREE.Group(); boomP.position.set(0.42,1.0,0.95); house.add(boomP);
 box(0.5,0.45,0.5,ORANGE_D,0,-0.1,0.0,boomP);
 beam(0.44,0.54,boomP,ORANGE,0,0,0.75,KN);edges(0.44,0.54,boomP,ORANGE,0,0,0.75,KN);
@@ -129,20 +132,20 @@ function ldMoundSet(m,f,heap){const d=m.userData.ld;f=Math.max(0,f);if(Math.abs(
   const p=m.geometry.attributes.position,fu=Math.min(f,1),over=heap>0?Math.min(1,Math.max(0,(f-1)/heap)):0,lump=0.012+0.03*Math.min(1,f*2);
   for(let i=0;i<p.count;i++){const x=p.getX(i)/(d.w/2),z=p.getZ(i)/(d.l/2),r2=Math.min(1,x*x*0.8+z*z*0.8),edge=Math.max(Math.abs(x),Math.abs(z));
     // a level fill (lower at the walls), then the crown, then lumps and the odd clod, both less at the walls
-    let y=-d.dep*(1-fu)-0.06*d.dep*r2*(1-over)+0.55*d.dep*over*(1-r2)*(1-r2*0.4);
+    let y=-d.dep*(1-fu)-0.06*d.dep*r2*(1-over)+0.65*d.dep*over*(1-r2)*(1-r2*0.4);
     y+=(d.R[i]*lump+d.Q[i]*0.05*Math.min(1,f))*(1-edge*edge*0.7);
     p.setY(i,y)}
   p.needsUpdate=true;m.geometry.computeVertexNormals();m.geometry.computeBoundingSphere()}
 // the excavator's: its mouth is the rim line from the lip back to the heel, facing the bucket's -y
 const loadMesh=ldMound(0.84,0.98,0.5,M(0x6b4426,{side:THREE.DoubleSide}));
-loadMesh.position.set(0,-0.335,0.51); loadMesh.rotation.x=Math.PI-0.232; bucketP.add(loadMesh);
-const tipMark=new THREE.Object3D(); tipMark.position.set(0,-0.02,L3+0.18); bucketP.add(tipMark);
-const midMark=new THREE.Object3D(); midMark.position.set(0,-0.3,0.55); bucketP.add(midMark);
+loadMesh.position.set(0,-0.335*BK_S,0.51*BK_S); loadMesh.rotation.x=Math.PI-0.232; loadMesh.scale.setScalar(BK_S); bucketP.add(loadMesh);
+const tipMark=new THREE.Object3D(); tipMark.position.set(0,-0.02*BK_S,(L3+0.18)*BK_S); bucketP.add(tipMark);
+const midMark=new THREE.Object3D(); midMark.position.set(0,-0.3*BK_S,0.55*BK_S); bucketP.add(midMark);
 // bucket linkage: two side links from the stick and an H-link to the bucket meet where the bucket ram pushes
 const unitBox=new THREE.BoxGeometry(1,1,1);
 function linkMesh(w,h,mat,parent){const lm=new THREE.Mesh(unitBox,mat);lm.scale.set(w,h,1);lm.castShadow=true;parent.add(lm);return lm}
 function setLink(lm,y0,z0,y1,z1,x){const dy=y1-y0,dz=z1-z0;lm.position.set(x||0,(y0+y1)/2,(z0+z1)/2);lm.rotation.x=-Math.atan2(dy,dz);lm.scale.z=Math.max(0.01,Math.hypot(dy,dz))}
-const LS=new THREE.Vector3(0,0.05,L2-0.42),LB=new THREE.Vector3(0,0.22,0.25),LR1=0.46,LR2=0.42;
+const LS=new THREE.Vector3(0,0.05,L2-0.42),LB=new THREE.Vector3(0,0.22*BK_S,0.25*BK_S),LR1=0.46,LR2=0.42;
 const jointJ=new THREE.Object3D();stickP.add(jointJ);
 const sideL=[linkMesh(0.05,0.12,STEEL,stickP),linkMesh(0.05,0.12,STEEL,stickP)];
 const hLink=linkMesh(0.3,0.11,ORANGE_D,stickP);
@@ -250,4 +253,4 @@ function mergeStatic(group,skip){
 [machine,house,cab,boomP,stickP,bucketP].forEach(g=>mergeStatic(g,[glass,loadMesh,sideL[0],sideL[1],hLink,jPin]));
 // the bucket's own shapes (and the detailed model's, models.js) sit in bkG, so the quick coupler (coupler.js) can set it
 // down on the ground and take another attachment; the load and the tooth and middle marks stay on the coupler
-const bkG=new THREE.Group();for(const c of [...bucketP.children])if(c!==loadMesh&&c!==tipMark&&c!==midMark)bkG.add(c);bucketP.add(bkG);
+const bkG=new THREE.Group();for(const c of [...bucketP.children])if(c!==loadMesh&&c!==tipMark&&c!==midMark)bkG.add(c);bucketP.add(bkG);bkG.scale.setScalar(BK_S);
