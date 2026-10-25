@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-25T19:41:00Z",
+ "updated": "2026-10-25T19:48:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -66,9 +66,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-25",
-   "dh": 72,
+   "dh": 86,
    "act": 4.5,
-   "versions": 13
+   "versions": 14
   }
  ],
  "extra": [
@@ -2211,6 +2211,15 @@ window.EFFORT = {
    "tris": 5456607,
    "chars": 1553599,
    "what": "The rain cover's top-down pass and the sun's shadow pass draw each place a player gets to once behind the start card (Dexter's, the Family Island, Jessica's, the marina, town, Corley's, the hayfield), so their own depth shaders are built before you arrive and the last half-second hitch on reaching Dexter's goes"
+  },
+  {
+   "v": 238,
+   "asked": "2026-10-25T13:35:00-05:00",
+   "live": "2026-10-25T14:48:31-05:00",
+   "dh": 14,
+   "tris": 5599465,
+   "chars": 1597223,
+   "what": "A full marina (pier to a fuel dock, finger piers of bobbing boats, breakwater and lighthouse, Harbor House, grill, ice cream stand, ramp, boat rack) and real storefronts with signs, awnings and street trees on Main Street"
   }
  ]
 };
