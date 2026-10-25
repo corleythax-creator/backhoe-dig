@@ -2,6 +2,10 @@
 
 Every version of Corley's Island, newest first, grouped by the day it went live (Central time). Made from `data/effort.js` by `tools/changelog.py`; don't edit it by hand. [Play any old version](https://corleys-island.vercel.app/versions/) · [Build log with charts](https://corleys-island.vercel.app/build.html)
 
+## Sunday, October 25, 2026
+
+- **v225** (9:18 AM) The start card shows every machine as a small icon in one grid; Jessica's Island offers only the mower, four-wheeler, dirt bike, boat and on foot
+
 ## Saturday, October 24, 2026
 
 - **v224** (4:59 PM) The dirt in the excavator and backhoe buckets is a lumpy mound that heaps over the rim and spills when overfull, a bucket gauge shows how full (bar and %), and VR no longer flashes when the sky reflections update

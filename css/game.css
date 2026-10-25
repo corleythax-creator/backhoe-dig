@@ -258,34 +258,30 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 .ver{font:600 14px/1.2 var(--f-display);letter-spacing:.05em;color:var(--muted);text-align:right;padding:4px 6px 2px}
 .card .ver{text-align:center;font-size:15px!important;margin-top:-6px}
 .card button{background:var(--machine);color:#1c1309;height:52px;font-size:20px;border:0;border-radius:14px}
-/* the start card leads with a tile per machine (and on foot); tapping one starts the game in that mode */
+/* the start card leads with a small icon per machine (and on foot), as many to a row as fit; tapping one starts the
+   game in that mode. The two groups read as one grid, and the island picked can hide the ones it has no room for */
 #help .card{max-width:600px}
-.pick{display:grid;grid-template-columns:1fr 1fr;gap:10px;flex:none}
-/* the rest of the machines under More machines: smaller tiles, as many to a row as fit */
-#pickMore{margin:4px 0 -4px;font:700 17px/1 var(--f-display);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
-.pick.more{grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
-.pick.more .tile .tn{font-size:18px;bottom:24px}.pick.more .tile .ts{font-size:13px;bottom:7px}
-/* short landscape screens (phones on their side): all four tiles in one row so none is cut off */
-@media (orientation:landscape) and (max-height:560px){#help .card{max-width:900px;padding:14px 18px;gap:10px}#help .card h1{font-size:28px}.pick{grid-template-columns:repeat(4,1fr)}
-  .tile .tn{font-size:19px;bottom:24px}.tile .ts{font-size:12px;bottom:7px}.pick.more{grid-template-columns:repeat(5,1fr)}.pick.more .tile .tn{font-size:16px;bottom:21px}.pick.more .tile .ts{font-size:11px;bottom:6px}}
+#pickAll{display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:6px;flex:none}
+.pick{display:contents}
+#pickMore{display:none}
+/* short landscape screens (phones on their side): a wider card fits more icons to a row */
+@media (orientation:landscape) and (max-height:560px){#help .card{max-width:900px;padding:14px 18px;gap:10px}#help .card h1{font-size:28px}}
 /* the controls list hides behind the Controls button */
 #ctrlBtn{flex:none}#ctrlBtn[aria-expanded="true"]{border-color:var(--machine);color:var(--machine)}
 #ctrlBox{display:flex;flex-direction:column;gap:14px}#ctrlBox[hidden]{display:none}
-.card button.tile{position:relative;height:auto;aspect-ratio:16/10;padding:0;overflow:hidden;border-radius:14px;background:var(--well);border:1px solid var(--hud-line);color:var(--ink);text-align:left;transition:transform .15s,border-color .15s,box-shadow .15s}
+.card button.tile{position:relative;height:auto;aspect-ratio:1;padding:0;overflow:hidden;border-radius:12px;background:var(--well);border:1px solid var(--hud-line);color:var(--ink);text-align:center;transition:transform .15s,border-color .15s,box-shadow .15s}
+.card button.tile[hidden]{display:none}
 .tile img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
-.tile .tn,.tile .ts{position:absolute;left:10px;right:10px;text-shadow:0 1px 3px rgba(0,0,0,.9)}
-.tile .tn{bottom:30px;font:700 24px/1 var(--f-display);letter-spacing:.05em}
-.tile .ts{bottom:9px;font:600 15px/1.15 var(--f-display);text-transform:none;letter-spacing:.01em;color:#e4e8dc;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.tile::after{content:"";position:absolute;inset:45% 0 0;background:linear-gradient(transparent,rgba(8,10,7,.85))}
-.tile .tn,.tile .ts{z-index:1}
+.tile .tn{position:absolute;left:2px;right:2px;bottom:4px;z-index:1;font:700 13px/1.05 var(--f-display);letter-spacing:.02em;text-shadow:0 1px 3px rgba(0,0,0,.95);overflow-wrap:anywhere}
+.tile .ts{display:none}
+.tile::after{content:"";position:absolute;inset:40% 0 0;background:linear-gradient(transparent,rgba(8,10,7,.9))}
 /* where to start: three islands in a row over the machine tiles */
 #startIsl{display:grid;grid-template-columns:repeat(3,1fr);gap:4px;padding:4px;border-radius:14px;background:rgba(0,0,0,.25);border:1px solid var(--hud-line)}
 .card #startIsl button{height:44px;font-size:17px;border-radius:10px;background:transparent;color:var(--muted);padding:0 6px;line-height:1.05}
 .card #startIsl button[aria-pressed="true"]{background:var(--ink);color:#11151a}
 .card button.tile[aria-pressed="true"]{border-color:var(--machine);box-shadow:0 0 0 2px var(--machine)}
-@media (hover:hover){.card button.tile:hover{border-color:var(--machine);transform:translateY(-2px);box-shadow:0 10px 26px rgba(0,0,0,.45)}}
-@media (max-width:380px){.tile .tn{font-size:20px;bottom:26px}.tile .ts{font-size:13px}}
-@media (max-width:380px){.pick.more .tile .tn{font-size:16px;bottom:22px}.pick.more .tile .ts{font-size:12px}}
+@media (hover:hover){.card button.tile:hover{border-color:var(--machine);transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.45)}}
+@media (max-width:380px){#pickAll{grid-template-columns:repeat(4,1fr)}.tile .tn{font-size:12px}}
 #help .card{overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y}
 @media (max-height:420px){#benchBar{top:calc(var(--pt) + 56px)}}
 @media (prefers-reduced-motion:reduce){#toast span,#flash,.bar>i{transition:none}}
