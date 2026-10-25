@@ -23,6 +23,27 @@ function famMerge(list){let n=0;for(const g of list)n+=g.attributes.position.cou
   const m=new THREE.BufferGeometry();m.setAttribute('position',new THREE.BufferAttribute(P,3));m.setAttribute('color',new THREE.BufferAttribute(C,3));
   m.computeVertexNormals();m.computeBoundingSphere();return m}
 const famMat=M(0xffffff,{vertexColors:true}),famGlowMat=new THREE.MeshBasicMaterial({vertexColors:true}),famWinMat=M(0xffffff,{vertexColors:true,shininess:60,specular:0x333333});
+// ---------- the controls you see from a machine's seat (cab view): dash, gauges, steering wheel, bars, levers ----------
+// Built for the simple shapes, in groups of their own flagged userData.simple: the detailed models (models.js) have
+// their own insides, so mdlHvOn / mdlKitOn hide these groups with the simple meshes when they show. Machines with no
+// detailed model (golf cart, go-karts) keep them always. Small parts, so they cast no shadow. ctlKit is hvKit's
+// box and cylinder (x, y, z then the tilt about x and z) for files that load before heavy.js.
+const CTL_RUB=0x161718,CTL_DARK=0x2a2c2f,CTL_PAN=0x24262a,CTL_SCR=0x18323f,CTL_DIAL=0xe6e2d6,CTL_NEEDLE=0xd8381e;
+function ctlKit(){const K=famKit();return {K,box:(w,h,d,col,x,y,z,rx,rz)=>K.box(w,h,d,col,x,y,z,0,rx||0,rz||0),
+  cyl:(r0,r1,h,seg,col,x,y,z,rx,rz)=>K.cyl(r0,r1,h,seg,col,x,y,z,0,rx||0,rz||0)}}
+function ctlGroup(par,build,keep){const g=new THREE.Group();if(!keep)g.userData.simple=true;par.add(g);const b=ctlKit();build(b,g);
+  const m=new THREE.Mesh(famMerge(b.K.solid),famMat);m.receiveShadow=true;g.add(m);return g}
+// a round gauge facing back toward the seat, its face tipped back by tilt: bezel, dial, needle at angle ang
+function ctlGauge(b,r,x,y,z,tilt,ang){const t=tilt||0,a=ang===undefined?0.6:ang,ny=Math.sin(t),nz=-Math.cos(t),uy=Math.cos(t),uz=Math.sin(t);
+  b.cyl(r*1.2,r*1.2,0.02,10,CTL_RUB,x,y,z,Math.PI/2+t);b.cyl(r,r,0.02,10,CTL_DIAL,x,y+ny*0.006,z+nz*0.006,Math.PI/2+t);
+  b.K.box(r*0.07+0.004,r*0.8,0.004,CTL_NEEDLE,x-Math.sin(a)*r*0.32,y+ny*0.018+Math.cos(a)*r*0.32*uy,z+nz*0.018+Math.cos(a)*r*0.32*uz,0,t,a)}
+// a steering wheel at x, y, z, its face tipped back by tilt (0 upright, π/2 flat): rim, three spokes, hub and the
+// column running forward and down into the dash. It turns with the steering: o.swG, o.swK times the road wheels' angle
+function ctlWheel(o,par,x,y,z,tilt,r,rot,col,keep){const t=new THREE.Group();if(!keep)t.userData.simple=true;t.position.set(x,y,z);t.rotation.x=tilt;par.add(t);
+  const s=ctlGroup(t,b=>{b.K.geo(new THREE.TorusGeometry(r,r*0.085,5,18),CTL_RUB,0,0,0);b.cyl(r*0.24,r*0.26,0.06,10,col||CTL_DARK,0,0,0.02,Math.PI/2);
+    for(const a of [0,Math.PI,-Math.PI/2])b.K.box(r*0.78,0.022,0.016,CTL_DARK,Math.cos(a)*r*0.5,Math.sin(a)*r*0.5,0.01,0,0,a);
+    b.cyl(0.032,0.04,0.34,8,CTL_DARK,0,0,0.2,Math.PI/2)},true);
+  o.swG=s;o.swK=rot||4;return s}
 // a kit's parts into the scene, as one mesh per kind; returns the meshes
 function famAdd(K){const out=[];
   if(K.solid.length){const m=new THREE.Mesh(famMerge(K.solid),famMat);m.castShadow=true;m.receiveShadow=true;m.layers.enable(RAIN_LAYER);scene.add(m);out.push(m)}

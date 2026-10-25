@@ -12,7 +12,7 @@
 // two ramps TG_RL long at ±TG_RX
 const TG_KP=3.15,TG_LT=4.0,TG_U0=-0.75,TG_U1=-5.95,TG_TOP=0.58,TG_HW=1.04,TG_RL=1.65,TG_RX=0.6,TG_RW=0.24;
 HV_KINDS.mini={n:'mini excavator',x:-201,z:236,yaw:Math.PI/2,C:[0.75,-0.6],R:1.0,P:[[-0.88,1.55],[0.88,1.55],[-0.88,-1.15],[0.88,-1.15]],hw:0.68,af:0.85,ab:-0.85,
-  eye:[0,1.75,-0.15,0,-0.7,4.5],lamp:[0,1.9,0.3,0,-1,8],cam:0.6,col:'#f2b705',len:3.6,wid:1.7,track:true,mini:true};
+  eye:[0,1.75,-0.15,0,-1.04,4.5],lamp:[0,1.9,0.3,0,-1,8],cam:0.6,col:'#f2b705',len:3.6,wid:1.7,track:true,mini:true};
 // ---------- the mini excavator ----------
 const mnI=(function(){const h=hvMake('mini'),Y=DEX_Y,D=DEX_D,STEEL=0x55595a,RUB=0x1d1d1f;
   // undercarriage: two rubber tracks on their frames, idlers and rollers, the blade on its arms at the front
