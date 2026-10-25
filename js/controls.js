@@ -284,7 +284,20 @@ function startIn(m){setMode(m);help.hidden=true;try{localStorage.setItem('bhd_se
 let startIsl='corley';try{const v=localStorage.getItem('bhd_startIsl');if(v==='dexter'||v==='jessica')startIsl=v}catch(e){}
 const islBtns=[...document.querySelectorAll('#startIsl [data-isl]')];
 function markIsl(){for(const b of islBtns)b.setAttribute('aria-pressed',b.dataset.isl===startIsl)}
-for(const b of islBtns)b.onclick=()=>{startIsl=b.dataset.isl;try{localStorage.setItem('bhd_startIsl',startIsl)}catch(e){}markIsl();showTiles()};
+for(const b of islBtns)b.onclick=()=>{startIsl=b.dataset.isl;try{localStorage.setItem('bhd_startIsl',startIsl)}catch(e){}markIsl();showTiles();islStep(true)};
+// the start card opens on a map of the islands (the minimap's drawing, kept up to date while it shows: where the
+// machines are, the editor's ground); each island's button sits on it. Tapping one shows that island's machines, and
+// ‹ Map goes back. ISL_PIN: where each button sits on the map (metres), ISL_BOX the part of the world it shows
+const ISL_BOX=[-300,300,-115,360],ISL_PIN={corley:[0,102],dexter:[-200,312],jessica:[200,312]};
+for(const b of islBtns){const p=ISL_PIN[b.dataset.isl];b.style.left=(p[0]-ISL_BOX[0])/(ISL_BOX[1]-ISL_BOX[0])*100+'%';b.style.top=(p[1]-ISL_BOX[2])/(ISL_BOX[3]-ISL_BOX[2])*100+'%'}
+function islStep(pick){$('#startMap').hidden=pick;$('#islHead').hidden=!pick;$('#pickAll').hidden=!pick;
+  if(pick)$('#islName').textContent=(islBtns.find(b=>b.dataset.isl===startIsl)||islBtns[0]).textContent;else islMapDraw()}
+let islMapT=0;
+function islMapDraw(){clearTimeout(islMapT);const cv=$('#startMapCv');if(help.hidden||$('#startMap').hidden)return;
+  if(typeof drawMap==='function'&&cv.clientWidth){const cx=(ISL_BOX[0]+ISL_BOX[1])/2,cz=(ISL_BOX[2]+ISL_BOX[3])/2;
+    if(mapTilesDone()<MPT_NX*MPT_NZ)mapBuild(40,cx,cz);drawMap(cv,cx,cz,(ISL_BOX[1]-ISL_BOX[0])/cv.clientWidth,false)}
+  islMapT=setTimeout(islMapDraw,typeof mapTilesDone!=='function'||mapTilesDone()<MPT_NX*MPT_NZ?250:500)}
+$('#islBack').onclick=()=>islStep(false);$('#helpBtn').addEventListener('click',()=>islStep(false));
 // each tile is a ride (a WK_RIDES key, or 'foot'); a kind there are several of (data-k 'boat', or 'hv:dozer' and the
 // like for the heavy machines on Corley's and Dexter's) means the one nearest the island picked
 const tiles=[...document.querySelectorAll('.tile')];
@@ -300,7 +313,7 @@ for(const t of tiles)t.onclick=()=>{const k=tileRide(t);if(!k)return;
 // a tile with data-only shows on that island alone (her golf cart)
 const ISL_TILES={jessica:['walk','mow','hv:atv','bike','boat','hv:kart','hv:golf']};
 function showTiles(){const L=ISL_TILES[startIsl];for(const t of tiles)t.hidden=!!L&&!L.includes(t.dataset.k||t.dataset.m)||!!t.dataset.only&&t.dataset.only!==startIsl}
-markIsl();showTiles();
+markIsl();showTiles();islStep(false);
 function markTile(){const r=mode==='walk'?'foot':rideKind(wk.inside||rideOf(mode));
   for(const t of tiles)t.setAttribute('aria-pressed',(t.dataset.k||(t.dataset.m==='walk'?'foot':rideOf(t.dataset.m)))===r)}
 markTile();
