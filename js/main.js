@@ -34,7 +34,8 @@ function frame(now){
   if(viewDirty&&!renderer.xr.isPresenting){viewDirty=false;const want=bench.on?(bench.pr||maxPR):pr;if(renderer.getPixelRatio()!==want)renderer.setPixelRatio(want);resize()}
   // the map editor has the frame while it is open; the game stands still
   if(edOn){editorFrame(dt,now);return}
-  // inputs
+  // inputs (the island tour test pushes the left stick itself, tourtest.js)
+  if(tour.on)tourStep(dt);
   keyAxes(dt);pollPad();vrPoll();
   const Lx=clamp(SL.x+KA.lx+PA.lx,-1,1),Ly=clamp(SL.y+KA.ly+PA.ly+(mode==='dig'||mode==='mow'||mode==='walk'?0:PA.thr),-1,1),Rx=clamp(SR.x+KA.rx+PA.rx,-1,1),Ry=clamp(SR.y+KA.ry+PA.ry,-1,1);
   let swingIn=0,stickIn=0,driveIn=0,turnIn=0,boomIn=-Ry,bucketIn=Rx;
@@ -239,7 +240,7 @@ function frame(now){
   // flying dirt
   particlesTick(dt);dustTick(dt);grimeTick();mdlTick(dt);wkMdlPose();
   // groundwater, the tailgate stream and the dirt sounds
-  digTilesTick(dt);if(!bench.on)waterTick(dt);mudTick(dt);rainTick(dt);grassTick(dt);jesTick(dt);mainTick(dt);treesTick(dt);plantTick();
+  digTilesTick(dt);if(!bench.on)waterTick(dt);mudTick(dt);rainTick(dt);lakeTick(dt);grassTick(dt);jesTick(dt);mainTick(dt);marinaTick(dt);brTick(dt);treesTick(dt);plantTick();
   pourStream(streams[1],tr.pourP,hAt(tr.pourP.x,tr.pourP.z),tr.pourRate,tr.loadC,now/1000);
   dirtSndTick(dt);
   // bucket load visual
@@ -281,12 +282,12 @@ function frame(now){
     camera.lookAt(camLk);
   }else{
     // the seat's eye point and its straight-ahead look, turned by where you have turned your head (fpl)
-    if(mode==='truck')fpEye(sprung,-0.55,1.6,1.95,0.25,-1,12.05);
+    if(mode==='truck')fpEye(sprung,-0.55,1.6,1.72,0.25,-1.5,12.05);
     else if(mode==='skid')fpEye(skid,0,1.72,0.0,0,-0.9,4.5);
-    else if(mode==='boat')fpEye(btCur().g,0,1.62,-0.47,0,-1.1,8);
+    else if(mode==='boat')fpEye(btCur().g,0,1.62,-0.47,0,-1.5,8);
     else if(mode==='heavy')fpEye(hvCur().g,...(hvCur().eye||hvCur().K.eye));
     else if(mode==='bike')fpEye(bike,0,1.62-bk.comp,-0.12,0,-0.35,1);
-    else if(mode==='mow')fpEye(mower,0,1.42,0.02,0,-1.32,4.48);
+    else if(mode==='mow')fpEye(mower,0,1.42,-0.12,0,-1.45,4.48);
     else if(mode==='walk'){const p=fpl.pitch,fx=Math.sin(wk.view),fz=Math.cos(wk.view);camera.position.set(wk.x+fx*0.1,wk.y+WK_H-0.12+wkBody.position.y,wk.z+fz*0.1);
       look.set(camera.position.x+fx*Math.cos(p)*5,camera.position.y+Math.sin(p)*5,camera.position.z+fz*Math.cos(p)*5)}
     else fpEye(house,-0.72,2.15,0.3,0.45,-1.75,5.5);
@@ -303,7 +304,7 @@ function frame(now){
   const fv=mode==='boat'?btCur():mode==='heavy'?hvCur():mode==='bike'?bk:mode==='truck'?tr:mode==='mow'?mw:mode==='skid'?sk:mode==='walk'?wk:st;sun.position.set(fv.x,fv.y,fv.z).addScaledVector(LIGHT_DIR,SUN_D); sun.target.position.set(fv.x,fv.y,fv.z);
   {const o=groundOcc.value;o[0].set(st.x,st.z,st.yaw,0);o[2].set(tr.x,tr.z,tr.yaw,0)}
   timeU.value=now/1000;
-  shadowProxyTick();lawnLod();tuftLod();rainCover();if(vr.fake)vrFakeHead();const wm=warmPre();postRender();warmPost(wm);if(vrOn())vrAfter();
+  shadowProxyTick();lawnLod();tuftLod();rainCover();if(vr.fake)vrFakeHead();warmAllTick();const wm=warmPre();postRender();warmPost(wm);if(vrOn())vrAfter();
   if(bench.on)benchSample(dt);
   fpsFrames++;fpsTime+=dt;
   if(fpsTime>=0.5){const f=Math.round(fpsFrames/fpsTime);const fe=$('#fpsVal');fe.textContent=f;fe.style.color=f>=50?'var(--ok)':f>=30?'var(--gas)':'var(--danger)';
@@ -330,7 +331,35 @@ function warmPre(){if(warmN<=0||bench.on)return null;warmN--;const keep=[];
   return keep}
 function warmPost(keep){if(!keep)return;for(const [o,v,c,d] of keep){o.visible=v;if(o.isInstancedMesh)o.count=c;if(o.isPoints)o.geometry.setDrawRange(0,d)}}
 // textures may finish loading before the later scripts arrive: apply them now if they are in, otherwise when they are
-const texReady=()=>{applyTextures();warmN=Math.max(warmN,3)};
+const texReady=()=>{applyTextures();warmN=Math.max(warmN,3);warmAll={t0:performance.now(),next:0,mats:0,pend:0,still:0}};
+// the rest of the world's first use. Shaders: every material in the scene, hidden or far away, has its shader built in
+// the background (compileAsync, which waits on the browser's parallel compiling instead of stalling a frame), once the
+// textures are in and again whenever new materials turn up (the detailed machines load later), checked every 4 s for
+// the first 3 minutes; on Windows a shader built at first sight can stall a second or more. Textures: uploaded three a
+// frame while the start card is up, where a hitch can't be felt. (The island tour test, tourtest.js, waits for this and
+// times it; warmIdle says when nothing is left to do)
+let warmAll=null;
+// the places a player gets to (where the island tour test goes): the rain cover's top-down pass and the sun's shadow
+// pass draw what is there once each, inside one call with nothing drawn on screen, so their own depth shaders for what
+// is only found there are built before you arrive. Only behind the start card or while the tour test gets ready
+const WARM_AT=[[-190,248],[-200,205],[FAM_X,FAM_Z],[JES_X,JES_Z],[72,540],[0,600],[0,652],[0,-5],[40,-330]];
+function warmAt(x,z){const c=camera.position.clone(),sp=sun.position.clone(),stp=sun.target.position.clone(),y=Math.max(WATER,baseHeight(x,z))+2;
+  try{camera.position.set(x,y,z);camera.updateMatrixWorld();if(typeof rcRender==='function'&&typeof rcRT!=='undefined')rcRender();
+    sun.position.set(x,y,z).addScaledVector(LIGHT_DIR,SUN_D);sun.target.position.set(x,y,z);sun.updateMatrixWorld();sun.target.updateMatrixWorld();
+    if(sun.castShadow&&renderer.shadowMap.enabled){renderer.shadowMap.needsUpdate=true;renderer.shadowMap.render([sun],scene,camera)}}catch(e){}
+  finally{camera.position.copy(c);camera.updateMatrixWorld();sun.position.copy(sp);sun.target.position.copy(stp);sun.updateMatrixWorld();sun.target.updateMatrixWorld();renderer.shadowMap.needsUpdate=true}}
+const warmQuiet=()=>!help.hidden||typeof tour!=='undefined'&&tour.on&&tour.ph==='ready';
+function warmIdle(){const W=warmAll;return !W||W.pend===0&&W.still>=1&&(!W.q||!W.q.length||help.hidden)&&(!W.at||!W.at.length||!warmQuiet())}
+function warmAllTick(){const W=warmAll;if(!W||bench.on||vrOn())return;const now=performance.now();W.f=(W.f||0)+1;
+  if(!W.at)W.at=WARM_AT.slice();if(W.at.length&&W.f%8===0&&W.mats&&warmQuiet())warmAt(...W.at.pop());
+  if(!W.q){W.q=[];const seen=new Set();scene.traverse(o=>{for(const m of [].concat(o.material||[]))for(const k in m){const t=m[k];if(t&&t.isTexture&&!seen.has(t)){seen.add(t);W.q.push(t)}}})}
+  if(!help.hidden)for(let i=0;i<3&&W.q.length;i++){const t=W.q.pop(),im=t.image;if(im&&(im.width||im.data||Array.isArray(im)))try{renderer.initTexture(t)}catch(e){}}
+  if(now<W.next)return;W.next=now+4000;
+  const ms=new Set();scene.traverse(o=>{if(o.material)for(const m of [].concat(o.material))ms.add(m)});
+  if(ms.size>W.mats){W.mats=ms.size;W.still=0;W.pend++;
+    try{const p=renderer.compileAsync?renderer.compileAsync(scene,camera):(renderer.compile(scene,camera),null);if(p&&p.then)p.then(()=>W.pend--,()=>W.pend--);else W.pend--}catch(e){W.pend--}}
+  else W.still++;
+  if(now-W.t0>180000&&W.pend===0&&(!W.q.length||help.hidden)&&(!W.at.length||!warmQuiet()))warmAll=null}
 if([texGrass,texDirt,texGrime].every(t=>t.image&&t.image.width))texReady();else texManager.onLoad=texReady;
 // every lit material gets its wet look before anything is drawn, so nothing compiles twice (rain.js)
 wetPatchAll();

@@ -13,31 +13,53 @@ function jesLightGfx(on){jesLight.visible=!!on}
 function jesMesh(list,mat,shadow){if(!list.length)return null;const m=new THREE.Mesh(famMerge(list),mat);if(shadow){m.castShadow=true;m.receiveShadow=true;m.layers.enable(RAIN_LAYER)}scene.add(m);return m}
 
 // ---------- the covered bridge ----------
+// a New England covered bridge on the bridge kit (bridges.js): barn-red board-and-batten siding with small daylight
+// windows trimmed white, Town lattice trusses inside (planks crossing every 3 ft), a plank floor with running boards, a
+// silver cedar shake roof that lifts off in the chase view (jesBridgeRoof), white-trimmed portals, granite piers
 (function(){
-  const K=famKit(),R=famKit(),L=JB.len,X0=JB.x0,Z=JB.z0,hw=JB.hw,sl=Math.atan2(JB.y1-JB.y,L),Y=t=>JB.y+(JB.y1-JB.y)*t/L;
-  const RED=0x8e3b2c,TRIM=0xefe6d2,WOOD=0x7a5434,STONE=0x8f8a84,ROOF=0x4f554a;
-  // a member running along the bridge, centred t metres along it, dz across, dy above the deck
-  const run=(Kc,t,dz,dy,len,h,d,col)=>Kc.box(len,h,d,col,X0+t,Y(t)+dy,Z+dz,0,0,sl);
-  run(K,L/2,0,-0.15,L,0.3,2*hw+0.5,WOOD);
-  for(let t=0.6;t<L;t+=1.2)run(K,t,0,0.005,0.04,0.02,2*hw,0x5e3f26);
-  for(const s of [-1,1]){run(K,L/2,s*(hw+0.1),0.55,L,1.1,0.12,RED);run(K,L/2,s*(hw+0.1),1.12,L,0.1,0.24,TRIM);run(K,L/2,s*(hw+0.1),2.65,L,0.25,0.24,RED);
-    for(let t=0;t<=L+0.01;t+=L/Math.round(L/2.4))K.box(0.18,2.6,0.18,RED,X0+t,Y(t)+1.35,Z+s*(hw+0.1));
-    run(K,L/2,s*(hw-0.3),-0.6,L,0.6,0.3,WOOD)}
-  // stone piers, and a white-trimmed portal at each end
-  for(const t of [L/3,2*L/3]){const g=baseHeight(X0+t,Z)-2,top=Y(t)-0.9;K.box(2,top-g,2*hw+1.4,STONE,X0+t,(top+g)/2,Z);K.box(2.4,0.3,2*hw+1.8,0xa29d96,X0+t,top-0.15,Z);
-    BOAT_WALLS.push({ax:X0+t,az:Z-hw-0.2,bx:X0+t,bz:Z+hw+0.2,r:1.1})}
-  for(const t of [0,L]){for(const s of [-1,1])K.box(0.26,2.8,0.26,TRIM,X0+t,Y(t)+1.4,Z+s*(hw+0.15));K.box(0.26,0.26,2*hw+0.6,TRIM,X0+t,Y(t)+2.75,Z)}
-  // lanterns hanging inside
-  for(let t=8;t<L-4;t+=11){K.box(0.04,0.4,0.04,0x333333,X0+t,Y(t)+2.45,Z);K.box(0.26,0.3,0.26,0x2f2f2f,X0+t,Y(t)+2.15,Z);K.lit(new THREE.BoxGeometry(0.2,0.22,0.2),0xffd27a,X0+t,Y(t)+2.1,Z)}
+  const F=brFrame(JB),K=brKit(F),R=brKit(F),G=famKit(),L=F.L,hw=JB.hw,X0=JB.x0,Z=JB.z0,Y=F.Y,WU=hw+0.12,at=(t,u,dy)=>F.P(t,u,Y(t)+dy);
+  // floor: crosswise planks on floor beams over two big timbers, two running boards
+  K.seg('planks',at(0,0,-0.08),at(L,0,-0.08),2*WU+0.1,0.16,{uv:'local'});
+  for(const s of [-1,1]){K.seg('beam',at(0,s*0.55,0.025),at(L,s*0.55,0.025),0.5,0.05);K.seg('beam',at(0,s*(WU-0.15),-0.6),at(L,s*(WU-0.15),-0.6),0.3,0.5)}
+  for(let t=0.4;t<L;t+=1.2)K.seg('beam',at(t,-WU-0.05,-0.3),at(t,WU+0.05,-0.3),0.2,0.28,{S:F.A});
+  // a Town lattice truss inside each wall: chords, and planks crossing at 50 degrees every 3 ft
+  const LB=0.34,LT=2.57,RUN=(LT-LB)/Math.tan(50*Math.PI/180);
+  for(const s of [-1,1]){const u=s*(WU-0.2);K.seg('beam',at(0,u,0.17),at(L,u,0.17),0.22,0.34);K.seg('beam',at(0,u,2.72),at(L,u,2.72),0.22,0.3);
+    for(let t0=-RUN;t0<L;t0+=0.9)for(const dir of [1,-1]){const f0=Math.max(0,(0.15-t0)/RUN),f1=Math.min(1,(L-0.15-t0)/RUN);if(f1-f0<0.05)continue;
+      const y0=dir>0?LB:LT,y1=dir>0?LT:LB,p=f=>at(t0+f*RUN,u+dir*0.045,y0+(y1-y0)*f);K.seg('beam',p(f0),p(f1),0.07,0.24,{det:1})}}
+  // the siding, with a row of small windows along each side, trimmed white
+  const NW=Math.round(L/4.65),PW=L/NW,WH=0.38,S0=1.5,S1=2.05;
+  for(const s of [-1,1]){const u=s*WU,uo=u+s*0.035;
+    K.seg('barn',at(0,u,0.6),at(L,u,0.6),0.05,1.9);K.seg('barn',at(0,u,2.525),at(L,u,2.525),0.05,0.95);
+    for(let k=0;k<=NW;k++){const a=k?(k-0.5)*PW+WH:0,b=k<NW?(k+0.5)*PW-WH:L;K.seg('barn',at(a,u,(S0+S1)/2),at(b,u,(S0+S1)/2),0.05,S1-S0)}
+    for(let k=0;k<NW;k++){const c=(k+0.5)*PW;for(const y of [S0-0.04,S1+0.04])K.seg('white',at(c-WH-0.07,uo,y),at(c+WH+0.07,uo,y),0.05,0.07,{det:1});
+      for(const e of [-1,1])K.seg('white',at(c+e*(WH+0.035),uo,S0),at(c+e*(WH+0.035),uo,S1),0.05,0.07,{det:1})}}
+  // white portal trim at each end
+  for(const t of [0,L]){for(const s of [-1,1])K.seg('white',at(t,s*(WU+0.03),-0.3),at(t,s*(WU+0.03),3.0),0.14,0.22);K.seg('white',at(t,-WU-0.1,2.86),at(t,WU+0.1,2.86),0.12,0.24,{S:F.A})}
+  // the roof: cedar shakes over boards and rafters, white fascia and rake boards, red gables, tie beams across
+  const EU=WU+0.45,EY=2.95,RY=4.5,SLP=Math.hypot(EU,RY-EY);
+  for(const s of [-1,1]){const out=new THREE.Vector3(0,1,0).addScaledVector(F.C,s);
+    R.quad('shakes',[at(-0.4,s*EU,EY),at(L+0.4,s*EU,EY),at(L+0.4,0,RY),at(-0.4,0,RY)],[[-0.4,0],[L+0.4,0],[L+0.4,SLP],[-0.4,SLP]],{hint:out});
+    R.quad('beam',[at(-0.4,s*EU,EY-0.08),at(L+0.4,s*EU,EY-0.08),at(L+0.4,0,RY-0.08),at(-0.4,0,RY-0.08)],[[0,-0.4],[0,L+0.4],[SLP,L+0.4],[SLP,-0.4]],{hint:out.clone().negate()});
+    R.seg('white',at(-0.4,s*(EU+0.02),EY-0.05),at(L+0.4,s*(EU+0.02),EY-0.05),0.04,0.2);
+    for(let t=0.45;t<L;t+=0.9)R.seg('beam',at(t,s*(WU-0.05),EY+0.05),at(t,0,RY-0.14),0.06,0.16,{S:F.A,det:1})}
+  R.seg('shakes',at(-0.45,0,RY+0.03),at(L+0.45,0,RY+0.03),0.36,0.1,{uv:'world'});
+  for(let t=1.4;t<L;t+=2.79)R.seg('beam',at(t,-WU+0.1,2.92),at(t,WU-0.1,2.92),0.18,0.18,{S:F.A});
+  for(const [t,d] of [[0,-1],[L,1]]){const o=F.A.clone().multiplyScalar(d);
+    R.poly('barn',[at(t,-WU,2.75),at(t,WU,2.75),at(t,0,RY-0.05)],o);R.poly('beam',[at(t-d*0.06,-WU,2.75),at(t-d*0.06,WU,2.75),at(t-d*0.06,0,RY-0.05)],o.clone().negate());
+    for(const s of [-1,1])R.seg('white',at(t+d*0.05,s*(EU+0.02),EY-0.08),at(t+d*0.05,0,RY+0.06),0.05,0.2,{S:F.A})}
+  // granite piers with cutwaters, an old-concrete coping and timber bolsters under the floor; seats at the ends
+  for(const t of [L/3,2*L/3]){const [cx,cz]=F.W(t,0),g=baseHeight(cx,cz),top=Y(t)-0.95;
+    K.prism('ashlar',[[-1.1,-2.5],[0,-3.4],[1.1,-2.5],[1.1,2.5],[0,3.4],[-1.1,2.5]].map(([al,c])=>F.W(t+al,c)),g-1.5,top,{s:0.95});
+    K.box('concOld',5.4,0.3,2.6,t,0,top+0.15);K.box('beam',2*WU+0.3,0.2,1.6,t,0,top+0.4);
+    const [ax,az]=F.W(t,-3),[bx,bz]=F.W(t,3);BOAT_WALLS.push({ax,az,bx,bz,r:1.2})}
+  brAbut(K,F,0,-1,2*WU+1.2,Y(0)-0.45,'ashlar');brAbut(K,F,L,1,2*WU+1.2,Y(L)-0.45,'ashlar');
+  // lanterns hanging from a beam inside
+  for(let t=8;t<L-4;t+=11){K.seg('beam',at(t,-WU+0.1,2.8),at(t,WU-0.1,2.8),0.15,0.15,{S:F.A});
+    G.box(0.04,0.45,0.04,0x333333,X0+t,Y(t)+2.5,Z);G.box(0.26,0.3,0.26,0x2f2f2f,X0+t,Y(t)+2.15,Z);G.lit(new THREE.BoxGeometry(0.2,0.22,0.2),0xffd27a,X0+t,Y(t)+2.1,Z)}
   // bollards keep the machines off at the Family Island end
-  for(const s of [-1,1]){K.cyl(0.12,0.14,0.9,8,0xe5b322,X0-0.6,JB.y+0.45,Z+s*1.1);SOLIDS.push({x:X0-0.6,z:Z+s*1.1,hx:0.14,hz:0.14})}
-  // the roof: red gables and a weathered shingle roof
-  R.geo(famGable(2*hw+0.7,1.5,L+0.5),RED,X0+L/2,Y(L/2)+2.77,Z,0,0,sl);
-  // each slope from the ridge out past the wall, so the two meet at the ridge
-  const ra=Math.atan2(1.5,hw+0.35),rl=Math.hypot(hw+0.35,1.5)+0.55,mo=rl/2;
-  for(const s of [-1,1])R.box(L+1.0,0.14,rl,ROOF,X0+L/2,Y(L/2)+2.77+1.5+0.08-mo*Math.sin(ra),Z+s*mo*Math.cos(ra),0,s*ra,sl);
-  R.box(L+1.0,0.16,0.22,0x3d423a,X0+L/2,Y(L/2)+4.3,Z,0,0,sl);
-  famAdd(K);jesBridgeRoof=jesMesh(R.solid,jesRoofMat,true);
+  for(const s of [-1,1]){G.cyl(0.12,0.14,0.9,8,0xe5b322,X0-0.6,JB.y+0.45,Z+s*1.1);SOLIDS.push({x:X0-0.6,z:Z+s*1.1,hx:0.14,hz:0.14})}
+  K.add();famAdd(G);const RG=new THREE.Group();scene.add(RG);R.add(RG);jesBridgeRoof=RG;
   famSign(["JESSICA'S ISLAND"],3.4,0.75,X0-0.14,JB.y+3.35,Z,-Math.PI/2,'#8e3b2c','#fff4dc');
   famSign(['FAMILY ISLAND'],3.4,0.75,X0+L+0.14,JB.y1+3.35,Z,Math.PI/2,'#8e3b2c','#fff4dc');
 })();

@@ -7,15 +7,15 @@ const BT_L=5.2,BT_B=2.1,BT_DRAFT=0.32,BT_DECK=WATER+0.9;
 // the circles along the hull (metres along it from the middle) and their radius, for getting in (wkNear) and bumping
 const BT_C=[-1.7,-0.6,0.5,1.6],BT_R=0.95;
 // each island's dock: the island's middle and the way out to the beach it starts from; the boat's hull colour. The town's
-// boat ties up on the open (west) side of the marina pier mainland.js draws (dock: that pier's deck, at: metres back from
-// its end, side: which side of it)
-const BT_MAR_X=72,BT_MAR_Z=mainRimS(72)+2;
+// boat ties up on the open (west) side of the marina pier marina.js draws (dock: that pier's deck, at: metres back from
+// its end, clear of the T-head, side: which side of it)
+const BT_MAR_X=MAR.x,BT_MAR_Z=MAR.z0;
 const BT_SPOTS=[
   {n:"Corley's",cx:0,cz:MZ,dx:-1,dz:0,hull:0xe8b923},
   {n:'Family',cx:FAM_X,cz:FAM_Z,dx:-0.6,dz:0.8,hull:0x1f3a5f},
   {n:"Jessica's",cx:JES_X,cz:JES_Z,dx:0,dz:1,hull:0xa8322a},
   {n:"Dexter's",cx:DEX_X,cz:DEX_Z,dx:0,dz:-1,hull:0x2f6b4a},
-  {n:'Town',dock:{x0:BT_MAR_X,z0:BT_MAR_Z,x1:BT_MAR_X,z1:BT_MAR_Z-46,hw:1.5,y:WATER+1.2,drawn:1},at:6,side:-1,hull:0x6d7f8c}];
+  {n:'Town',dock:{x0:BT_MAR_X,z0:BT_MAR_Z,x1:BT_MAR_X,z1:BT_MAR_Z-MAR.len,hw:1.5,y:MAR.y,drawn:1},at:9,side:-1,hull:0x6d7f8c}];
 // out from the middle to where the beach is just under the deck, then on until the water is deep enough to moor in
 function btDockPlan(s){if(s.dock){const d=s.dock,dx=d.x1-d.x0,dz=d.z1-d.z0,len=Math.hypot(dx,dz);
     const b=Object.assign({y1:d.y,dock:1,len,ux:dx/len,uz:dz/len},d);BRIDGES.push(b);return b}
@@ -25,9 +25,6 @@ function btDockPlan(s){if(s.dock){const d=s.dock,dx=d.x1-d.x0,dz=d.z1-d.z0,len=M
   const b={x0:s.cx+s.dx*t0,z0:s.cz+s.dz*t0,x1:s.cx+s.dx*t1,z1:s.cz+s.dz*t1,hw:1.2,y:BT_DECK,y1:BT_DECK,dock:1,len:t1-t0,ux:s.dx,uz:s.dz};
   BRIDGES.push(b);return b}
 const BT_DOCKS=BT_SPOTS.map(btDockPlan);
-// the marina's finger slips walk too, and the boats moored at them are in the way (the hulls mainland.js draws)
-for(let i=0;i<3;i++){const z=BT_MAR_Z-14-i*12;BRIDGES.push({x0:BT_MAR_X+1.5,z0:z,x1:BT_MAR_X+10.5,z1:z,hw:0.8,y:WATER+1.19,y1:WATER+1.19,dock:1,len:9,ux:1,uz:0,drawn:1});
-  for(const dz of [-3,3])BOAT_WALLS.push({ax:BT_MAR_X+5,az:z+dz,bx:BT_MAR_X+9,bz:z+dz,r:1.25})}
 // ---------- the docks: boards across two stringers on piles, pile tops standing proud as posts, cleats by the boat ----------
 (function(){const K=famKit(),WOOD=[0x8d6b4b,0x80603f,0x97765a],PILE=0x5a4632;
   for(const b of BT_DOCKS){if(b.drawn)continue;const ry=Math.atan2(b.ux,b.uz),P=(t,u)=>[b.x0+b.ux*t-b.uz*u,b.z0+b.uz*t+b.ux*u];
@@ -59,7 +56,6 @@ function btModel(hull){const g=new THREE.Group(),K=famKit();
   K.box(BT_B*0.84,0.04,BT_L*0.62,0xd9d6cf,0,0.12,-0.45);K.box(BT_B*0.62,0.06,1.1,0xeeede8,0,0.5,1.75);
   // centre console, its dash and wheel, the leaning post behind it, a bench at the stern and a cushion on the bow
   K.box(0.78,0.82,0.62,0xf4f3ef,0,0.55,0.35);K.box(0.7,0.06,0.32,0x2e3033,0,0.98,0.48,0,-0.5);
-  K.cyl(0.16,0.16,0.03,16,0x1d1e20,0,1.0,0.22,0,-0.9);K.cyl(0.02,0.02,0.2,6,0x1d1e20,0,0.96,0.28,0,-0.9);
   K.box(0.7,0.55,0.4,0xd2d0ca,0,0.42,-0.45);K.box(0.74,0.12,0.44,0x384049,0,0.74,-0.45);K.box(0.74,0.4,0.08,0x384049,0,0.96,-0.66);
   K.box(BT_B*0.82,0.36,0.5,0xe7e5df,0,0.3,-2.25);K.box(BT_B*0.82,0.08,0.52,0x384049,0,0.52,-2.25);
   K.box(BT_B*0.5,0.08,0.7,0x384049,0,0.57,1.6);
@@ -87,6 +83,10 @@ MDL_KIT.boat={sets:()=>boats.map(b=>({body:b.g})),after(on){if(!on)return;const 
 let btI=0;
 const btCur=()=>boats[btI];
 // the walker climbs in at any of them (walker.js): the boats join WK_RIDES as boat0, boat1…
+// at the helm (simple shapes; the detailed model has its own): the wheel on its tilted shaft, turning as you steer
+// (boatTick), and the throttle and shift lever on the starboard side of the console
+boats.forEach(b=>{ctlWheel(b,b.g,0,1.0,0.22,0.67,0.17,2.2);
+  ctlGroup(b.g,k=>{k.box(0.08,0.14,0.14,CTL_DARK,-0.43,0.82,0.3);k.cyl(0.012,0.012,0.18,6,0xb8bcc0,-0.47,0.9,0.3,0.5);k.cyl(0.025,0.025,0.08,8,CTL_RUB,-0.47,0.98,0.26,0,Math.PI/2)})});
 boats.forEach((b,i)=>{WK_RIDES['boat'+i]={o:b,c:BT_C,r:BT_R,reach:0.8,m:'boat',n:'boat',pick(){btI=i},out:()=>btOut(b)}});
 // climbing out: onto the dock or the sand beside it if there is one (dry ground first, then shallow water), else into the lake
 function btOut(b){const sy=Math.sin(b.yaw),cy=Math.cos(b.yaw),gap=BT_B/2+WK_R+0.3,len=BT_L/2+0.5;
@@ -107,7 +107,7 @@ function btWalls(){btWallList.length=0;for(const w of BOAT_WALLS)btWallList.push
 function btGround(x,z){return farGround?farGround(x,z):baseHeight(x,z)}
 // thr: throttle (+ ahead), steer (+ right). Idle boats bob where they are left
 function boatTick(dt,thr,steer){
-  for(let i=0;i<boats.length;i++){const b=boats[i],drive=mode==='boat'&&btI===i&&wk.inside==='boat'+i&&!bench.on,th=drive?thr:0,sr=drive?steer:0;b.thr=th;
+  for(let i=0;i<boats.length;i++){const b=boats[i],drive=mode==='boat'&&btI===i&&wk.inside==='boat'+i&&!bench.on,th=drive?thr:0,sr=drive?steer:0;b.thr=th;b.swS=(b.swS||0)+(sr-(b.swS||0))*Math.min(1,dt*4);if(b.swG)b.swG.rotation.z=b.swS*b.swK;
     const sy=Math.sin(b.yaw),cy=Math.cos(b.yaw),h=BT_L/2-0.4;
     const bx=b.x+sy*h,bz=b.z+cy*h,sx=b.x-sy*h,sz=b.z-cy*h,wB=lakeY(bx,bz),wS=lakeY(sx,sz),gB=btGround(bx,bz),gS=btGround(sx,sz),gM=btGround(b.x,b.z);
     // how much of the hull sits on the bottom (a beach): there it only creeps, as if shoved along, and comes to a stop a
@@ -166,12 +166,20 @@ function wakeEmit(b,dt,sx,sz,own){const sp=Math.abs(b.v);if(sp<0.8){b.wakeT=0;re
   for(const sd of [-1,1,0]){const i=wakeHead;wakeHead=(wakeHead+1)%WAKE_MAX;
     wkX[i]=sx+px*sd*0.6;wkZ[i]=sz+pz*sd*0.6;wkVX[i]=px*sd*out;wkVZ[i]=pz*sd*out;wkYaw[i]=back-sd*0.33*Math.sign(b.v);
     wkAge[i]=0;wkLife[i]=sd?6+3*k:3.5;wkK[i]=sd?k:k*0.8;wkTrail[i]=sd?0:1;wkOwn[i]=own;wkHit[i]=0}}
-const wakeTex=(()=>{const c=document.createElement('canvas');c.width=64;c.height=32;const g=c.getContext('2d'),r=g.createRadialGradient(32,16,1,32,16,30);
-  r.addColorStop(0,'rgba(255,255,255,0.9)');r.addColorStop(0.45,'rgba(235,245,250,0.45)');r.addColorStop(1,'rgba(255,255,255,0)');g.setTransform(1,0,0,0.5,0,8);g.fillStyle=r;g.fillRect(0,0,64,64);
-  g.setTransform(1,0,0,1,0,0);for(let n=0;n<90;n++){g.fillStyle='rgba(255,255,255,'+(0.2+Math.random()*0.4)+')';g.fillRect(8+Math.random()*48,6+Math.random()*20,1+Math.random()*2,1)}
+// a wake mark: churned foam in lace, thickest down its middle and fading out at the edges (alpha only; the foam is lit
+// like the water round it, so it greys at dusk and is gone at night)
+const wakeTex=(()=>{const W=128,H=64,c=document.createElement('canvas');c.width=W;c.height=H;const g=c.getContext('2d');
+  g.strokeStyle='#fff';g.fillStyle='#fff';
+  for(let n=0;n<520;n++){const x=Math.random()*W,y=H/2+(Math.random()+Math.random()+Math.random()-1.5)*H*0.42,r=0.6+Math.random()*Math.random()*4;
+    g.globalAlpha=0.35+Math.random()*0.6;g.lineWidth=0.5+Math.random()*1.2;g.beginPath();g.ellipse(x,y,r*1.6,r,0,0,7);if(Math.random()<0.3)g.fill();else g.stroke()}
+  g.globalAlpha=1;g.globalCompositeOperation='destination-in';const r=g.createRadialGradient(W/2,W/2,2,W/2,W/2,W/2);
+  r.addColorStop(0,'rgba(255,255,255,1)');r.addColorStop(0.5,'rgba(255,255,255,0.55)');r.addColorStop(1,'rgba(255,255,255,0)');
+  g.setTransform(1,0,0,H/W,0,0);g.fillStyle=r;g.fillRect(0,0,W,W);
   return new THREE.CanvasTexture(c)})();
-const wakeMesh=new THREE.InstancedMesh(new THREE.PlaneGeometry(1,1).rotateX(-Math.PI/2),
-  new THREE.MeshBasicMaterial({map:wakeTex,transparent:true,depthWrite:false,blending:THREE.AdditiveBlending,color:0xe8f0f2}),WAKE_MAX);
+// how strong each mark is rides in its instance colour's red, read as alpha
+const wakeMat=new THREE.MeshStandardMaterial({color:0xe9efee,roughness:0.85,metalness:0,alphaMap:wakeTex,transparent:true,depthWrite:false});
+wakeMat.onBeforeCompile=sh=>{sh.fragmentShader=sh.fragmentShader.replace('#include <color_fragment>','#include <color_fragment>\n#ifdef USE_COLOR\ndiffuseColor.a*=vColor.r;diffuseColor.rgb=diffuse;\n#endif')};
+const wakeMesh=new THREE.InstancedMesh(new THREE.PlaneGeometry(1,1).rotateX(-Math.PI/2),wakeMat,WAKE_MAX);
 wakeMesh.frustumCulled=false;wakeMesh.count=0;wakeMesh.renderOrder=2;scene.add(wakeMesh);
 const wakeO=new THREE.Object3D(),wakeC=new THREE.Color();
 function wakeGfx(n){wakeDraw=Math.min(WAKE_MAX,n|0)}

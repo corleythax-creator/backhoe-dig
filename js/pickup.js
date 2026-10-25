@@ -150,7 +150,7 @@ $('#bedBtn').addEventListener('pointerdown',e=>{e.preventDefault();pbAct()});
 // Carry button says what it will do (a few times a second)
 function pbTick(dt){for(const h of hvs)if(h.pb)pbSlide(h,dt);
   pbS.rt+=dt;if(pbS.rt>=TU.shopRestock){pbS.rt=0;let ch=false;for(const k of PB_K)if(pbS.stock[k]<PB_KINDS[k].max){pbS.stock[k]++;ch=true}if(ch)pbStockDraw()}
-  if(!SHOP.loaded&&Math.hypot(camera.position.x-SHOP.x,camera.position.z-SHOP.z)<320)shopLoad();
+  if(!SHOP.loaded&&(Math.hypot(camera.position.x-SHOP.x,camera.position.z-SHOP.z)<320||Math.hypot(camera.position.x-95,camera.position.z-530)<320))shopLoad();
   if(pbS.hold&&mode==='walk'&&!wk.inside)for(let s=0;s<2;s++){wkArms[s].top.rotation.x=-0.75;wkArms[s].low.rotation.x=-0.85}
   if((pbS.looseT-=dt)<0){pbS.looseT=1;for(const o of pbS.loose)o.m.position.y=surfAt(o.x,o.z)}
   if((pbS.btnT-=dt)>0)return;pbS.btnT=0.15;const c=pbCtx(),b=$('#bedBtn'),t=c?(c.a==='buy'?'Take '+PB_KINDS[c.k].s:PB_BTN[c.a]):'';

@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-25T16:14:00Z",
+ "updated": "2026-10-25T19:48:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -66,9 +66,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-25",
-   "dh": 12.5,
-   "act": 1.5,
-   "versions": 3
+   "dh": 86,
+   "act": 4.5,
+   "versions": 14
   }
  ],
  "extra": [
@@ -2121,6 +2121,105 @@ window.EFFORT = {
    "tris": 4418557,
    "chars": 1438431,
    "what": "Mouse look in every view (click the scene, Esc frees it), a chase camera that eases round behind turning machines and drifts back behind them on the move, Messages setting (Few by default: only warnings and answers to what you did, tips on All only) with a small strip at the bottom, no on-screen sticks on mouse and keyboard (Sticks: Auto/On/Off), minimap sizes Off to XL, flatter squarer buttons"
+  },
+  {
+   "v": 228,
+   "asked": "2026-10-25T11:20:00-05:00",
+   "live": "2026-10-25T11:35:37-05:00",
+   "dh": 5,
+   "tris": 5447769,
+   "chars": 1456927,
+   "what": "Island tour test (menu, or ?tourtest=low|medium|high|ultra): plays a run through the touch stick from Dexter's on foot to the four-wheeler, to the dock, into Dexter's boat and right round the lake past the town, marina, crane barge, bridges and hayfield, with the game running as in play, and reports per leg frame rate, 1% low, worst frame, stutters, main-thread time, triangles and draw calls, plus long tasks, freezes with their causes, memory and script errors; tourRun() checks the route headless"
+  },
+  {
+   "v": 229,
+   "asked": "2026-10-25T11:36:00-05:00",
+   "live": "2026-10-25T11:47:39-05:00",
+   "dh": 0.5,
+   "tris": 5449016,
+   "chars": 1457963,
+   "what": "A Tests row on the start card (Island tour, Speed, Dig site, Backhoe load, Excavator load): each test is one tap from loading the game"
+  },
+  {
+   "v": 230,
+   "asked": "2026-10-25T11:18:00-05:00",
+   "live": "2026-10-25T11:59:24-05:00",
+   "dh": 2,
+   "tris": 5418010,
+   "chars": 1462866,
+   "what": "Island tour test, first person (menu, start card, or ?tourfp): the same run seen through the player's eyes, the head looking round like a person's, mostly the way ahead with glances at machines, boats, bridges, the crane barge, houses and the town, from a fixed seed so runs compare"
+  },
+  {
+   "v": 231,
+   "asked": "2026-10-25T11:15:00-05:00",
+   "live": "2026-10-25T12:28:51-05:00",
+   "dh": 6,
+   "tris": 5457172,
+   "chars": 1471763,
+   "what": "The lake looks real: wind ripples, sky reflections that grow at a slant, sun glitter, clear shallows over the sand, deep water dark teal, foam lapping the beaches and rain rings when it rains (Graphics: Lake water)."
+  },
+  {
+   "v": 232,
+   "asked": "2026-10-25T11:34:00-05:00",
+   "live": "2026-10-25T13:15:35-05:00",
+   "dh": 12,
+   "tris": 5457266,
+   "chars": 1506447,
+   "what": "Every first-person ride shows its controls (dashboards, wheels that turn, the four-wheeler's handlebars, the boat's helm, see-through windscreens and cab glass); the island tour test's head moves smoothly like a person's, the route walks through town from the marina, and the results add the graphics card's time and headroom, a verdict that knows when the screen caps the frame rate, per-leg system costs, a map of the slowest spots, the scripts in slow frames, camera/ground/boat/sound checks, rain, night, 2-lap heat and leak checks, an every-graphics-level sweep, comparison with the last run and a shared results board; shaders and textures are got ready behind the start card"
+  },
+  {
+   "v": 233,
+   "asked": "2026-10-25T11:48:00-05:00",
+   "live": "2026-10-25T13:51:32-05:00",
+   "dh": 23,
+   "tris": 5462158,
+   "chars": 1545293,
+   "what": "Corley's bridge is now a riveted forest-green 1931 truss on granite piers with acorn lamps, the mainland bridge a cable-stayed span from a 140 ft pylon, Jessica's footbridge a New England covered bridge with a cedar shake roof, and the trestles and the crane's steel spans are rebuilt in creosoted timber and riveted girders, all in weathered real materials that darken in the rain."
+  },
+  {
+   "v": 234,
+   "asked": "2026-10-25T13:50:00-05:00",
+   "live": "2026-10-25T14:07:41-05:00",
+   "dh": 1.5,
+   "tris": 5465557,
+   "chars": 1546106,
+   "what": "The lake is murkier, a lake's green that hides the bed within a few feet, and boat wakes are lacy white foam lit like the water, greying at dusk."
+  },
+  {
+   "v": 235,
+   "asked": "2026-10-25T13:29:00-05:00",
+   "live": "2026-10-25T14:15:38-05:00",
+   "dh": 3,
+   "tris": 5459243,
+   "chars": 1548795,
+   "what": "Every material's shader is built in the background whenever new ones appear (the detailed machines load later), so first sight of Dexter's yard, town or a machine no longer stalls for seconds on Windows; the island tour test waits for the game to be ready and reports that time on its own, leaves out time with the window hidden, allows a blip in the sound, and its boat backs out of the marina and steers round boats in its way"
+  },
+  {
+   "v": 236,
+   "asked": "2026-10-25T13:58:00-05:00",
+   "live": "2026-10-25T14:23:42-05:00",
+   "dh": 5,
+   "tris": 5462376,
+   "chars": 1552090,
+   "what": "Dexter's haul bridge is now an old riveted railroad truss repainted safety yellow over its black, chipped through in places, with laced members, steel road plate between heavy timber wheel guards, old concrete piers with timber fender piles, and work lights on the portals, still 26 ft clear for a raised boom."
+  },
+  {
+   "v": 237,
+   "asked": "2026-10-25T14:20:00-05:00",
+   "live": "2026-10-25T14:41:21-05:00",
+   "dh": 1.5,
+   "tris": 5456607,
+   "chars": 1553599,
+   "what": "The rain cover's top-down pass and the sun's shadow pass draw each place a player gets to once behind the start card (Dexter's, the Family Island, Jessica's, the marina, town, Corley's, the hayfield), so their own depth shaders are built before you arrive and the last half-second hitch on reaching Dexter's goes"
+  },
+  {
+   "v": 238,
+   "asked": "2026-10-25T13:35:00-05:00",
+   "live": "2026-10-25T14:48:31-05:00",
+   "dh": 14,
+   "tris": 5599465,
+   "chars": 1597223,
+   "what": "A full marina (pier to a fuel dock, finger piers of bobbing boats, breakwater and lighthouse, Harbor House, grill, ice cream stand, ramp, boat rack) and real storefronts with signs, awnings and street trees on Main Street"
   }
  ]
 };

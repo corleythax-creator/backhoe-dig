@@ -1,11 +1,11 @@
-// Corley's Island: Dexter's Island, west of the Family Island across a wide yellow steel haul bridge the machines can
-// drive: a gravel yard with an equipment shed, an office trailer, a fuel tank, his machines (the skid steer, skid.js; the
+// Corley's Island: Dexter's Island, west of the Family Island across the old yellow railroad truss the machines
+// drive (bridges.js): a gravel yard with an equipment shed, an office trailer, a fuel tank, his machines (the skid steer, skid.js; the
 // dozer, wheel loader and semi with a lowboy trailer, heavy.js; all drivable), light towers, a cone course and dirt piles to practise on.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 const dexGround=groundPatch(-275,-125,170,320,1.5,[TRK_BOX]);
 // the dirt bike track's jump, whoops and berms need a finer mesh than the yard (terrain.js, trkH)
 const trkGround=groundPatch(TRK_BOX[0],TRK_BOX[1],TRK_BOX[2],TRK_BOX[3],0.5,[]);
-const DB=BRIDGES[3];
+
 // parts placed in a machine's own frame (x across, z forward) at x0,z0 turned by yaw, standing on ground y0
 function dexFrame(K,x0,z0,yaw,y0){const c=Math.cos(yaw),s=Math.sin(yaw),W=(lx,lz)=>[x0+lx*c+lz*s,z0-lx*s+lz*c];
   return {W,
@@ -15,16 +15,6 @@ function dexFrame(K,x0,z0,yaw,y0){const c=Math.cos(yaw),s=Math.sin(yaw),W=(lx,lz
     wheel:(r,w,lx,ly,lz,rim)=>{const [x,z]=W(lx,lz);K.cyl(r,r,w,12,0x1d1d1f,x,y0+ly,z,yaw,0,Math.PI/2);K.cyl(r*0.55,r*0.55,w+0.04,8,rim||0xd9a404,x,y0+ly,z,yaw,0,Math.PI/2)},
     lit:(g,col,lx,ly,lz)=>{const [x,z]=W(lx,lz);K.lit(g,col,x,y0+ly,z,yaw)}}}
 const DEX_Y=0xf2b705,DEX_D=0x2b2d30,DEX_GLASS=0x3c4a52;
-
-// ---------- the haul bridge ----------
-(function(){
-  const K=famKit(),F=famBridge(DB,K,{depth:1.5,steel:0xd9a404,piers:[31,62]});famAdd(K);
-  famSign(["DEXTER'S ISLAND"],5.0,1.1,DB.x0-1.2,DB.y+6.9,DB.z0,Math.PI/2,'#2b2d30','#f2b705');
-  famSign(['FAMILY ISLAND'],5.0,1.1,DB.x1+1.2,DB.y+6.9,DB.z0,-Math.PI/2,'#2b2d30','#f2b705');
-  // a steel portal at each end to hang the signs on, tall enough for a raised boom
-  const P=famKit();for(const x of [DB.x0-1.2,DB.x1+1.2]){for(const s of [-1,1])P.box(0.4,7.5,0.4,0xd9a404,x,DB.y+3.75,DB.z0+s*(DB.hw+0.8));P.box(0.5,0.5,2*DB.hw+2,0xd9a404,x,DB.y+7.6,DB.z0)}
-  famAdd(P);void F;
-})();
 
 // ---------- the yard ----------
 (function(){
