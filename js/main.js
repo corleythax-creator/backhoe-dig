@@ -34,7 +34,8 @@ function frame(now){
   if(viewDirty&&!renderer.xr.isPresenting){viewDirty=false;const want=bench.on?(bench.pr||maxPR):pr;if(renderer.getPixelRatio()!==want)renderer.setPixelRatio(want);resize()}
   // the map editor has the frame while it is open; the game stands still
   if(edOn){editorFrame(dt,now);return}
-  // inputs
+  // inputs (the island tour test pushes the left stick itself, tourtest.js)
+  if(tour.on)tourStep(dt);
   keyAxes(dt);pollPad();vrPoll();
   const Lx=clamp(SL.x+KA.lx+PA.lx,-1,1),Ly=clamp(SL.y+KA.ly+PA.ly+(mode==='dig'||mode==='mow'||mode==='walk'?0:PA.thr),-1,1),Rx=clamp(SR.x+KA.rx+PA.rx,-1,1),Ry=clamp(SR.y+KA.ry+PA.ry,-1,1);
   let swingIn=0,stickIn=0,driveIn=0,turnIn=0,boomIn=-Ry,bucketIn=Rx;

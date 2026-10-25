@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-25T16:14:00Z",
+ "updated": "2026-10-25T16:59:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -66,9 +66,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-25",
-   "dh": 12.5,
-   "act": 1.5,
-   "versions": 3
+   "dh": 20,
+   "act": 2,
+   "versions": 6
   }
  ],
  "extra": [
@@ -2121,6 +2121,33 @@ window.EFFORT = {
    "tris": 4418557,
    "chars": 1438431,
    "what": "Mouse look in every view (click the scene, Esc frees it), a chase camera that eases round behind turning machines and drifts back behind them on the move, Messages setting (Few by default: only warnings and answers to what you did, tips on All only) with a small strip at the bottom, no on-screen sticks on mouse and keyboard (Sticks: Auto/On/Off), minimap sizes Off to XL, flatter squarer buttons"
+  },
+  {
+   "v": 228,
+   "asked": "2026-10-25T11:20:00-05:00",
+   "live": "2026-10-25T11:35:37-05:00",
+   "dh": 5,
+   "tris": 5447769,
+   "chars": 1456927,
+   "what": "Island tour test (menu, or ?tourtest=low|medium|high|ultra): plays a run through the touch stick from Dexter's on foot to the four-wheeler, to the dock, into Dexter's boat and right round the lake past the town, marina, crane barge, bridges and hayfield, with the game running as in play, and reports per leg frame rate, 1% low, worst frame, stutters, main-thread time, triangles and draw calls, plus long tasks, freezes with their causes, memory and script errors; tourRun() checks the route headless"
+  },
+  {
+   "v": 229,
+   "asked": "2026-10-25T11:36:00-05:00",
+   "live": "2026-10-25T11:47:39-05:00",
+   "dh": 0.5,
+   "tris": 5449016,
+   "chars": 1457963,
+   "what": "A Tests row on the start card (Island tour, Speed, Dig site, Backhoe load, Excavator load): each test is one tap from loading the game"
+  },
+  {
+   "v": 230,
+   "asked": "2026-10-25T11:18:00-05:00",
+   "live": "2026-10-25T11:59:24-05:00",
+   "dh": 2,
+   "tris": 5418010,
+   "chars": 1462866,
+   "what": "Island tour test, first person (menu, start card, or ?tourfp): the same run seen through the player's eyes, the head looking round like a person's, mostly the way ahead with glances at machines, boats, bridges, the crane barge, houses and the town, from a fixed seed so runs compare"
   }
  ]
 };

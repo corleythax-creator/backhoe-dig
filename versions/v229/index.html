@@ -1,0 +1,504 @@
+<!doctype html>
+<html lang="en">
+<head>
+<script>(function(){try{var P='bhd-v229:',S=Storage.prototype,g=S.getItem,s=S.setItem,r=S.removeItem;S.getItem=function(k){return g.call(this,P+k)};S.setItem=function(k,x){return s.call(this,P+k,x)};S.removeItem=function(k){return r.call(this,P+k)}}catch(e){}})();</script>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<style>[hidden]{display:none!important}:root{padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}body{margin:0}</style>
+<title>Corley's Island</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@500;600;700&family=Barlow:wght@500;600;700&display=swap">
+<link rel="stylesheet" href="css/game.css">
+
+<canvas id="view" aria-label="3D jobsite with an excavator"></canvas>
+<div id="aim" hidden></div>
+<div id="flash"></div>
+<div id="hud">
+  <!-- top layer (no bar: the parts float over the view): menu at the left, the job gauges (hidden for now), then the
+       action cluster at the right: Pump / Wipers / Hook box when they apply, Blocks, Drive (the machines), the camera -->
+  <header class="tbar">
+    <button id="menuBtn" class="sq" aria-label="Menu" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10"/></svg></button>
+    <div class="brand">Corley's<b>Island</b></div>
+    <div class="status" id="status" title="Tap to show less or more">
+      <div class="srow" id="bucketPanel">
+        <div class="line"><span class="lbl">Bucket</span><span class="val" id="bucketVal">0.00 yd³ · 0%</span></div>
+        <div class="bar"><i id="bucketBar"></i></div>
+        <div class="sub" id="tipVal">Tip 2.0 ft above grade</div>
+      </div>
+      <div class="srow">
+        <div class="line"><span class="lbl">Trench</span><span class="val" id="trenchVal">0% · 0:00</span></div>
+        <div class="bar" id="trenchBar"><i></i></div>
+        <div class="sub" id="gasVal">Gas main: buried</div>
+      </div>
+      <div class="srow">
+        <div class="line"><span class="lbl">Truck</span><span class="val" id="truckVal">0.0 / 12 yd³</span></div>
+        <div class="bar"><i id="truckBar"></i></div>
+        <div class="sub" id="haulVal">Hauled 0.0 yd³</div>
+      </div>
+      <div class="srow" id="lawnRow" hidden>
+        <div class="line"><span class="lbl">Lawn</span><span class="val" id="lawnVal">0% · 0:00</span></div>
+        <div class="bar" id="lawnBar"><i></i></div>
+        <div class="sub" id="mowVal">0.0 mph · blades on</div>
+      </div>
+    </div>
+    <div class="tacts">
+      <button id="pumpBtn" hidden aria-pressed="false">Pump</button>
+      <button id="wipeBtn" hidden aria-pressed="false">Wipers</button>
+      <button id="boxBtn" hidden>Hook box</button>
+      <button id="cplBtn" hidden>Coupler</button>
+      <button id="gripBtn" hidden aria-pressed="false">Grip</button>
+      <button id="blkBtn" class="ib" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9zM12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg><span>Blocks</span></button>
+      <button id="ctlBtn" class="ib" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="2"/><path d="M3.5 12H10M14 12h6.5M12 14v6.5"/></svg><span>Drive</span></button>
+      <button id="camBtn" data-cam="chase" aria-label="Camera: chase, cab or orbit view"><span id="camChase">Chase</span><span id="camCab">Cab</span><span id="camOrbit">Orbit</span></button>
+      <button id="statsTop" hidden>Stats</button>
+      <button id="vrTop" class="vrgo" hidden aria-label="Play in VR">🥽 VR</button>
+    </div>
+    <!-- the menu, in groups: play, build, the world (time, date, weather), settings, tools -->
+    <div id="menu" hidden>
+      <div class="mhead">Play</div>
+      <button id="vrBtn" hidden>🥽 Play in VR</button>
+      <button id="helpBtn">How to play</button>
+      <button id="ctrlsBtn">Controls</button>
+      <button id="statsBtn">Stats</button>
+      <div class="mhead">Build</div>
+      <button id="editBtn">Map editor</button>
+      <button id="guiBtn">Edit the screen</button>
+      <div class="mhead">World</div>
+      <!-- time of day: the clock, a slider through the day, run or stop it, back to the real time (daynight.js) -->
+      <div class="tod" id="todRow"><div class="sizes"><span>Time</span><b id="todVal">--</b><button id="todRun">Stop</button><button id="todNow">Now</button></div>
+        <input id="todSlider" type="range" min="0" max="1439" step="5" aria-label="Time of day">
+        <div class="sizes" id="dateHead"><span>Date</span><b id="dateVal">--</b><button id="plantKindBtn">Spruce</button></div>
+        <input id="dateSlider" type="range" min="0" max="1000" step="1" aria-label="Date, up to 100 years ahead">
+        <div class="todsub" id="todSub"></div></div>
+      <div class="sizes"><span>Weather</span><button data-w="auto">Auto</button><button data-w="rain">Rain</button><button data-w="dry">Dry</button></div>
+      <div class="mhead">Settings</div>
+      <button id="gfxMenuBtn">Graphics</button>
+      <button id="soundBtn">Sound</button>
+      <button id="keysBtn">Keys</button>
+      <button id="syncBtn" hidden>Sync devices</button>
+      <div class="sizes"><span>UI size</span><button data-s="1">1x</button><button data-s="1.5">1.5x</button><button data-s="2">2x</button></div>
+      <div class="sizes" id="miniRow"><span>Minimap</span><button data-mm="0">Off</button><button data-mm="1">S</button><button data-mm="2">M</button><button data-mm="3">L</button><button data-mm="4">XL</button></div>
+      <div class="sizes" id="stickRow"><span>Sticks</span><button data-stk="auto">Auto</button><button data-stk="on">On</button><button data-stk="off">Off</button></div>
+      <div class="sizes" id="msgRow"><span>Messages</span><button data-msg="all">All</button><button data-msg="few">Few</button><button data-msg="off">Off</button></div>
+      <div class="mhead">Tools</div>
+      <button id="benchBtn">Speed test</button>
+      <button id="digTestBtn">Dig site test</button>
+      <button id="bhTestBtn">Backhoe load test</button>
+      <button id="exTestBtn">Excavator load test</button>
+      <button id="tourTestBtn">Island tour test</button>
+      <button id="resetBtn">Reset</button>
+      <div class="ver" id="verMenu"></div>
+    </div>
+    <!-- Drive: which machine (or on foot) the sticks drive, dropping from the Drive button -->
+    <nav id="ctlMenu" class="seg" role="group" aria-label="Control mode" hidden>
+      <button id="modeDig" data-k="1" aria-pressed="true"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 20h11v-5H2zM4 15v-3h5v3M9 13l5-8 6 4-2 5h-3"/></svg><span>Excavator</span></button>
+      <button id="modeDrive" data-k="2" aria-pressed="false" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="2" y="14" width="20" height="7" rx="3.5"/><path d="M6 14v-4h9v4M9 10V6h5"/><circle cx="6.5" cy="17.5" r="1"/><circle cx="17.5" cy="17.5" r="1"/></svg><span>Drive</span></button>
+      <button id="modeTruck" data-k="3" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 16V8l11-2v10M13 10h5l4 4v2H13"/><circle cx="6" cy="18" r="2"/><circle cx="17" cy="18" r="2"/></svg><span>Truck</span></button>
+      <button id="modeMow" data-k="4" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 16h14v-4H6zM9 12V7h5l2 5M17 14h4"/><circle cx="6" cy="18" r="2"/><circle cx="16" cy="18" r="2"/></svg><span>Mow</span></button>
+      <button id="modeSkid" data-k="6" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 17V7h8l3 4v6M5 11h11M16 12l4-3 2 5h-5"/><circle cx="7" cy="19" r="2"/><circle cx="14" cy="19" r="2"/></svg><span>Skid</span></button>
+      <button id="modeWalk" data-k="5" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="13" cy="4" r="2"/><path d="M8 11l4-4 3 3 3 1M12 7l-1 7 3 3v4M11 14l-3 7"/></svg><span>Walk</span></button>
+    </nav>
+  </header>
+  <!-- right column: the minimap, and the block bar under it while Blocks is on -->
+  <aside class="rpane">
+    <canvas id="mini" title="Tap for the big map (M)"></canvas>
+    <div id="blkBar" hidden>
+      <select id="blkMat" aria-label="Block material"></select>
+      <div class="bstep" data-k="w"><span>Wide</span><button class="sm sq" data-d="-1" aria-label="Narrower">−</button><b>2 ft</b><button class="sm sq" data-d="1" aria-label="Wider">+</button></div>
+      <div class="bstep" data-k="d"><span>Long</span><button class="sm sq" data-d="-1" aria-label="Shorter">−</button><b>2 ft</b><button class="sm sq" data-d="1" aria-label="Longer">+</button></div>
+      <div class="bstep" data-k="h"><span>Tall</span><button class="sm sq" data-d="-1" aria-label="Lower">−</button><b>2 ft</b><button class="sm sq" data-d="1" aria-label="Taller">+</button></div>
+      <div class="bstep" id="blkReach" hidden data-k="reach"><span>Reach</span><button class="sm sq" data-d="-1" aria-label="Nearer">−</button><b>12 ft</b><button class="sm sq" data-d="1" aria-label="Farther">+</button></div>
+      <div class="bstep"><span>Snap</span><button id="blkLock" class="sm" aria-label="How blocks snap: grid, grid and blocks, blocks only, or free">Grid</button></div>
+      <div class="bstep" id="blkGridRow" data-k="grid"><span>Grid</span><button class="sm sq" data-d="-1" aria-label="Finer grid">−</button><b>1 ft</b><button class="sm sq" data-d="1" aria-label="Coarser grid">+</button></div>
+      <div class="row"><button id="blkTurn" class="sm" aria-label="Turn the block a quarter turn">Turn</button><button id="blkRemove" class="sm">Lift</button><button id="blkPlace" class="sm">Place</button></div>
+    </div>
+  </aside>
+  <!-- the two sticks in the thumb zones, between the bars; Get in, Sprint and Jump sit on top of them -->
+  <div class="sticks">
+    <div class="stickwrap">
+      <button id="seatBtn" hidden>Get in</button>
+      <div class="stick" id="stickL"><div class="knob"></div></div>
+    </div>
+    <div class="stickwrap">
+      <div class="exswitch" id="exSwitch" role="group" aria-label="Excavator: drive or dig"><button id="exDrive" aria-pressed="false">Drive</button><button id="exDig" aria-pressed="true">Dig</button></div>
+      <div class="walkbtns" id="walkBtns" hidden><button id="sprintBtn" aria-pressed="false">Sprint</button><button id="jumpBtn">Jump</button><button id="plantBtn">Plant</button><button id="trimBtn" aria-pressed="false">Trimmer</button><button id="bumpBtn" hidden>Bump</button><button id="bedBtn" hidden>Load</button></div>
+      <div class="stick" id="stickR"><div class="knob"></div></div>
+    </div>
+  </div>
+  <!-- bottom layer (no bar): what each stick does (under its stick), and the frame rate between them -->
+  <footer class="bbar">
+    <div class="cap" id="capL"><b>◀ ▶</b> Swing<br><b>▲ ▼</b> Stick out / in</div>
+    <div class="stats" aria-live="off"><b id="fpsVal">--</b> fps · <b id="triVal">--</b> tris · <b id="resVal">--</b></div>
+    <div class="cap" id="capR"><b>◀ ▶</b> Curl / dump<br><b>▲ ▼</b> Boom down / up</div>
+  </footer>
+  <div id="benchBar" hidden></div>
+  <button id="heatKey" hidden title="Tap to change what the heatmap shows"><b id="heatName"></b><i id="heatBar"></i><span><span id="heatLo"></span><span id="heatHi"></span></span></button>
+  <!-- the lawn patch you are on (on foot or mowing): its name, share mowed and a meter (lawns.js) -->
+  <div id="bucketChip" hidden><span id="bucketChipName">Bucket</span><b id="bucketChipVal">0%</b><i class="bar"><i id="bucketChipBar"></i><i id="bucketChipFull"></i></i><span id="bucketChipSub"></span></div>
+  <div id="lawnChip" hidden><span id="lawnChipName">Lawn</span><b id="lawnChipVal">0%</b><i class="bar"><i id="lawnChipBar"></i></i></div>
+  <div id="toast"><span id="toastText"></span></div>
+  <!-- while the mouse is taken for mouse look: how to let it go (controls.js) -->
+  <div id="lockHint" hidden></div>
+  <button id="updBtn" hidden></button>
+</div>
+
+<div id="editor" hidden>
+  <div class="edbar" id="edTop">
+    <button id="edDone" class="sm go edico" data-ic="done">Done</button>
+    <h2>Map editor <small id="edMapNm"></small></h2>
+    <div class="row" role="group" aria-label="Undo"><button id="edUndo" class="sm edico" data-ic="undo" disabled>Undo</button><button id="edRedo" class="sm edico" data-ic="redo" disabled>Redo</button></div>
+    <button id="edHist" class="sm" aria-expanded="false">History ▾</button>
+    <div class="row" id="edView" role="group" aria-label="View"><button id="edLook" class="sm edico" data-ic="look" aria-pressed="false">Look</button><button id="edZoomIn" class="sm edico" data-ic="zin">Closer</button><button id="edZoomOut" class="sm edico" data-ic="zout">Farther</button><button id="edNorth" class="sm edico" data-ic="north">North up</button><button id="edHome" class="sm edico" data-ic="home">Start view</button><button id="edViewCopy" class="sm edico" data-ic="eye" title="Copy where you are looking, to paste to Claude">Copy view</button></div>
+    <button id="edGrid" class="sm edico" data-ic="grid" aria-pressed="false">Snap off</button>
+    <button id="edPanelBtn" class="sm edico" data-ic="panel" aria-pressed="true">Panel</button>
+  </div>
+  <nav class="edtools" id="edRail" aria-label="Editor tools">
+    <button data-g="shape" data-ic="shape">Shape</button><button data-g="paint" data-ic="paint">Paint</button><button data-g="things" data-ic="things">Things</button><button data-g="roads" data-ic="roads">Roads</button><button data-g="inspect" data-ic="inspect">Inspect</button>
+    <button id="edFileBtn" data-g="map" data-ic="map" class="edmapbtn">Map</button>
+  </nav>
+  <aside id="edDrawer" class="eddrawer" hidden>
+    <section class="edsec" data-g="paint">
+      <div id="edMats" class="edmats"></div>
+      <div id="edOwn" class="edown" data-for="paint"><div class="row"><button class="sm" id="edOwnAdd">+ Your own texture</button><button class="sm" id="edOwnEdit" hidden>Edit this texture</button></div>
+          <div id="edOwnCard" class="edowncard" hidden>
+            <label class="edownpic"><canvas id="edOwnPrev" width="128" height="128"></canvas><input type="file" id="edOwnFile" accept="image/*"><span id="edOwnPick">Pick a photo or picture</span></label>
+            <span class="edopt"><label for="edOwnName">Name</label><input id="edOwnName" maxlength="40" autocomplete="off"></span>
+            <span class="edopt"><label for="edOwnFt">One tile is</label><input id="edOwnFt" type="number" min="0.5" max="40" step="0.5" value="4"><output>ft</output></span>
+            <span class="edopt"><label for="edOwnCat">Kind</label><select id="edOwnCat"></select></span>
+            <span class="edopt"><label for="edOwnSh">Shine</label><input id="edOwnSh" type="range" min="0" max="100" step="5" value="0"><output id="edOwnShV">0%</output></span>
+            <span class="edopt"><label for="edOwnKey">Owner key</label><input id="edOwnKey" type="password" autocomplete="off"></span>
+            <div class="row"><button class="sm" id="edOwnGo">Add to the library</button><button class="sm" id="edOwnX">Cancel</button></div>
+            <p class="hint" id="edOwnMsg">The picture is made into a seamless tile. It reaches every device once added.</p></div></div>
+    </section>
+    <section class="edsec" data-g="things">
+      <h3>Add</h3>
+      <div id="edKinds" class="edkinds" role="group" aria-label="What to add"></div>
+      <h3>On the map <small id="edListN"></small></h3>
+      <div class="edfilter row" role="group" aria-label="Show"><button class="sm" data-f="all" aria-pressed="true">All</button><button class="sm" data-f="near" aria-pressed="false">Near the view</button><button class="sm" data-f="sel" aria-pressed="false">Selected</button><button class="sm" data-f="lock" aria-pressed="false">Locked</button></div>
+      <div id="edList" class="edlist"></div>
+    </section>
+    <section class="edsec" data-g="roads">
+      <h3>Roads <small id="edRoadN"></small></h3>
+      <div id="edRoadList" class="edlist"></div>
+    </section>
+    <section class="edsec" data-g="map" id="edFile">
+      <h3>Maps <small id="edMapsN"></small></h3>
+      <p class="hint">Each map keeps its own ground, paint, things and roads, saved on this device as you edit. Opening another map reloads the game.</p>
+      <span class="edopt"><label for="edMapNameIn">This map</label><input id="edMapNameIn" maxlength="40" autocomplete="off"></span>
+      <div id="edMapList" class="edlist"></div>
+      <div class="row"><button id="edMapNew" class="sm">New map</button><button id="edMapDup" class="sm">Duplicate</button></div>
+      <h3>Map file</h3>
+      <div class="row"><button id="edDownload" class="sm">Download file</button><button id="edOpenFile" class="sm">Open a file</button><input type="file" id="edFileIn" accept=".json,application/json" hidden></div>
+      <div class="row"><button id="edCopy" class="sm">Copy map</button><button id="edPasteBtn" class="sm">Load a map</button></div>
+      <textarea id="edCopyBox" readonly hidden aria-label="Copied map"></textarea>
+      <div id="edPasteBox" hidden><textarea id="edPaste" placeholder="Paste a copied map here" aria-label="Map to load"></textarea><div class="row"><button id="edLoad" class="sm go">Load it</button></div></div>
+      <h3>This map</h3>
+      <dl id="edMapStats" class="edstats"></dl>
+      <h3>Start over</h3>
+      <p class="hint">Takes this map, or one layer of it, back to how the island starts. Tap twice.</p>
+      <div class="row" id="edReset"><button class="sm danger" data-clear="all">Everything</button><button class="sm danger" data-clear="shape">Shape</button><button class="sm danger" data-clear="paint">Paint</button><button class="sm danger" data-clear="things">Things</button><button class="sm danger" data-clear="roads">Roads</button></div>
+    </section>
+  </aside>
+  <div class="edbottom" id="edBottom">
+    <div id="edCard" class="edpanel" hidden></div>
+    <div id="edInfo" class="edpanel" hidden></div>
+    <div id="edOpts" class="edpanel">
+      <span id="edSub" class="edsub row" role="group" aria-label="Tool"></span>
+      <span class="edopt" data-for="raise lower flatten smooth dirt grass tall notall paint add" data-place="scatter"><label for="edSize">Brush</label><input id="edSize" type="range" min="1" max="40" step="1"><output id="edSizeV"></output></span>
+      <span class="edopt" data-for="raise lower flatten smooth dirt grass"><label for="edStr">Strength</label><input id="edStr" type="range" min="1" max="10" step="1"><output id="edStrV"></output></span>
+      <span class="edshape row" data-for="paint" role="group" aria-label="Brush shape"><button class="sm" data-s="round" aria-pressed="true">Round</button><button class="sm" data-s="sq" aria-pressed="false">Square</button></span>
+      <span class="ededge row" data-for="paint" role="group" aria-label="Brush edge"><button class="sm" data-e="hard" aria-pressed="true">Hard edge</button><button class="sm" data-e="soft" aria-pressed="false">Soft edge</button></span>
+      <span id="edSoftOpt" class="edopt" data-for="paint" hidden><label for="edSoft">Softness</label><input id="edSoft" type="range" min="10" max="100" step="5"><output id="edSoftV"></output></span>
+      <span class="eddug row" data-for="paint" role="group" aria-label="Dug ground"><button class="sm" data-k="level" aria-pressed="true">Level dug ground</button><button class="sm" data-k="keep" aria-pressed="false">Keep dug shape</button></span>
+      <span class="edpicked" data-for="paint dirt grass tall notall"><b id="edMatV"></b></span>
+      <span class="edpicked" data-for="add">Adding <b id="edKindV"></b></span>
+      <span id="edPlace" class="row" data-for="add" role="group" aria-label="How to place"><button class="sm" data-p="one">One</button><button class="sm" data-p="stamp">Stamp</button><button class="sm" data-p="line">Line</button><button class="sm" data-p="scatter">Scatter</button></span>
+      <span class="edopt" data-for="add" data-place="line scatter"><label for="edGap">Spacing</label><input id="edGap" type="range" min="1" max="60" step="1"><output id="edGapV"></output></span>
+      <span class="edopt" data-for="add" data-place="scatter"><label for="edDens">Density</label><input id="edDens" type="range" min="1" max="10" step="1"><output id="edDensV"></output></span>
+      <span class="row" data-for="add" data-place="scatter"><button id="edErase" class="sm" aria-pressed="false">Erase</button></span>
+      <span id="edPlantSp" class="row" data-for="plant" role="group" aria-label="Tree to plant"></span>
+      <span class="edopt" data-for="plant"><label for="edPlantAge">Planted</label><input id="edPlantAge" type="range" min="0" max="80" step="1"><output id="edPlantAgeV"></output></span>
+      <span class="row" data-for="plant"><button id="edPlantDig" class="sm" aria-pressed="false">Dig up</button></span>
+      <span class="row" data-for="roads"><button id="edRoadNew" class="sm">New road</button><button id="edRoadFin" class="sm go" hidden>Finish road</button></span>
+      <span class="row" data-for="select"><button id="edBoxBtn" class="sm edico" data-ic="box" aria-pressed="false">Box select</button><button id="edAllBtn" class="sm">Select all in view</button><button id="edClipPaste" class="sm" hidden>Paste</button><button id="edShowAll" class="sm" hidden>Show hidden</button></span>
+    </div>
+  </div>
+  <div id="edStat" class="edstat"><span id="edStatPos"></span><span id="edStatInfo"></span><span id="edStatView"></span><span id="edTip"></span></div>
+  <div id="edBox" hidden></div>
+  <div id="edHistList" class="edhist" role="menu" hidden></div>
+</div>
+<div id="bigmap" hidden>
+  <div class="mapcard">
+    <div class="mapview">
+      <canvas id="big" aria-label="Site map: drag to move, pinch or scroll to zoom, tap to pick a spot"></canvas>
+      <div id="mapCtl" role="group" aria-label="Map view">
+        <button id="mapZin" class="sq" aria-label="Zoom in"><svg viewBox="0 0 24 24"><path d="M12 5v14M5 12h14"/></svg></button>
+        <button id="mapZout" class="sq" aria-label="Zoom out"><svg viewBox="0 0 24 24"><path d="M5 12h14"/></svg></button>
+        <button id="mapFit" class="sq" aria-label="Show the whole map"><svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
+        <button id="mapMe" class="sq" aria-label="Centre on you"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="4"/><path d="M12 2v4M12 18v4M2 12h4M18 12h4"/></svg></button>
+      </div>
+      <div id="mapWhere" aria-live="polite"></div>
+    </div>
+    <div class="mapside">
+      <div class="maphead"><h2>Site map</h2><button id="mapClose">Close</button></div>
+      <div id="tpBar"><span id="tpHint">Tap the map to teleport there</span>
+        <div id="tpOpts" hidden><span>Go there:</span><button data-tp="foot">On foot</button><button data-tp="ex">Excavator</button><button data-tp="truck">Dump truck</button><button data-tp="mow">Mower</button><button data-tp="skid">Skid steer</button><button id="tpCancel">Cancel</button></div>
+      </div>
+      <section class="mapsec"><h3>Places</h3><div id="mapPlaces" role="group" aria-label="Show a place on the map"></div></section>
+      <section class="mapsec"><h3>Lawns</h3><div id="lawnList" role="group" aria-label="Lawn patches: how much of each is mowed"></div></section>
+      <section class="mapsec"><h3>Layers</h3>
+        <div id="trailBar" role="group" aria-label="Trails: where you have walked and driven"><span>Trails</span></div>
+        <div id="trailKey" hidden><i></i><span><span>Less</span><span id="trailHi"></span></span></div>
+        <div id="wetBar" role="group" aria-label="Soil wetness: show where the ground is wetter"><span>Soil wetness</span></div>
+        <div id="wetKey" hidden><i></i><span><span id="wetLo">Dry</span><span id="wetHi">Soaked · standing water</span></span><button id="wetGround" class="sm" aria-pressed="false">Show on the ground too</button></div>
+      </section>
+      <section class="mapsec"><h3>Key</h3>
+        <div class="legend">
+          <span><i class="tri" style="--c:#f07a22"></i>Excavator</span><span><i class="tri" style="--c:#e9ecea"></i>Dump truck</span><span><i class="tri" style="--c:#d8352a"></i>Mower</span><span><i class="tri" style="--c:#f2b705"></i>Skid steer</span>
+          <span><i style="background:#2fb7e8;border-radius:50%;width:14px;height:14px;box-shadow:0 0 0 2px #fff"></i>You on foot</span><span><i style="background:#f5c518;height:4px"></i>Gas main</span>
+          <span><i style="background:#f2f2ee;height:4px"></i>Trench paint</span><span><i style="background:#d8a514"></i>Trench box</span><span><i style="background:#7a5232"></i>Dug or dumped</span><span><i style="background:#b9b6ae"></i>Block</span>
+          <span><i style="background:#b89a6b"></i>Road</span><span><i style="background:#8d6a52"></i>Building</span><span><i style="background:#a2a4a6"></i>Bridge</span><span><i style="background:#9c7c56"></i>Temporary bridge</span>
+          <span><i style="background:#a3a64c"></i>Tall grass</span><span><i style="background:radial-gradient(circle at 35% 35%,#6c8a40,#24401c);border-radius:50%"></i>Trees</span><span><i style="background:linear-gradient(90deg,#4a8f99,#173f55)"></i>Lake</span>
+        </div>
+      </section>
+    </div>
+  </div>
+</div>
+<div id="bench" hidden>
+  <div class="card">
+    <h1 id="benchTitle">Speed test results</h1>
+    <div id="benchSummary" class="ticket"></div>
+    <div class="tablewrap"><table id="benchDiag" class="btab"></table></div>
+    <div class="tablewrap"><table id="benchTable" class="btab"></table></div>
+    <p id="benchDevice" class="devline"></p>
+    <div class="row"><button id="benchCopy">Copy results</button><button id="benchClose" class="ghost">Close</button></div>
+    <textarea id="benchText" readonly hidden></textarea>
+  </div>
+</div>
+<!-- Controls: every input at a glance, keyboard (the player's own keys), mouse and touch, controller -->
+<div id="ctrlsBox" hidden>
+  <div class="card">
+    <h1>Controls</h1>
+    <div class="row" id="ctrlsTabs"><button data-t="kb" aria-pressed="true">Keyboard</button><button data-t="mouse" aria-pressed="false">Mouse &amp; touch</button><button data-t="pad" aria-pressed="false">Controller</button></div>
+    <!-- how hard left and right turn, for the machine you are in (or on foot) -->
+    <div class="turnbox"><span class="lbl">Turn</span><input id="turnSl" type="range" min="25" max="200" step="5" value="100" aria-label="Turn sensitivity"><b id="turnBtn">100% · Dig</b></div>
+    <div id="ctrlsList"></div>
+    <div class="row"><button id="ctrlsDone">Done</button><button id="ctrlsKeys" class="ghost">Change keys</button></div>
+  </div>
+</div>
+<div id="keysBox" hidden>
+  <div class="card">
+    <h1>Keys</h1>
+    <p class="devline">What every key does, and which keys you use. Tap a box, then press the key you want. Each key does one job (or one on foot and one in a machine): giving it to a new job takes it from the old one. Saved on this device.</p>
+    <p class="devline" id="keysNote" aria-live="polite"></p>
+    <div id="keysList"></div>
+    <div class="row"><button id="keysDone">Done</button><button id="keysReset" class="ghost">Defaults</button></div>
+  </div>
+</div>
+<div id="gfxBox" hidden>
+  <div class="card">
+    <h1>Graphics</h1>
+    <div class="gseg gpre"><button data-g="low">Low</button><button data-g="med">Medium</button><button data-g="high">High</button><button data-g="ultra">Ultra</button></div>
+    <p class="devline">Low for phones, Medium for laptops, High for desktop PCs. Change anything below to make it your own<span id="gfxCustom" hidden> (now <b>Custom</b>: changed settings are marked)</span>. Saved on this device.</p>
+    <div id="vrGfxRow" hidden><p class="devline"><b>In VR</b> (Meta Quest browser): the level used while you are in the headset. Quest is made for it: sharp shadows and the detailed machines close round you, less drawn far off. Low is lighter still; try Medium or High if it stays smooth. Your setting above comes back when you leave VR.</p>
+      <div class="gseg" id="vrGfxSeg"><button data-vq="quest">Quest</button><button data-vq="low">Low</button><button data-vq="med">Medium</button><button data-vq="high">High</button></div></div>
+    <p id="gfxStats" class="gstats" aria-live="off"></p>
+    <p id="gfxMem" class="gstats" aria-live="off" title="An estimate: what the game asks the GPU to hold. Browsers do not report the real figure."></p>
+    <div class="ggraph"><canvas id="gfxGraph" aria-label="Frame rate over the last 10 seconds"></canvas><p id="gfxGraphCap" class="devline"></p></div>
+    <div id="gfxList"></div>
+    <div class="row"><button id="gfxDone">Done</button><button id="gfxReset" class="ghost">Preset again</button></div>
+  </div>
+</div>
+<div id="statBox" hidden>
+  <div class="card">
+    <h1>Stats</h1>
+    <p class="devline">Everything you've done on the island, kept on this device and synced with your site.</p>
+    <div id="statList"></div>
+    <div id="treeGuide"><h2>Tree guide</h2></div>
+    <div id="statHeat">
+      <h2>Lawn heatmap</h2>
+      <div class="gseg"><button data-h="cut" aria-pressed="false">Times cut</button><button data-h="grow" aria-pressed="false">Grass height</button><button data-h="dir" aria-pressed="false">Mow direction</button></div>
+      <canvas id="heatCv" aria-label="Map of the lawn, north up"></canvas>
+      <i id="heatBar2" class="hbar"></i><div class="hends"><span id="heatLo2"></span><span id="heatHi2"></span></div>
+      <button id="heatOn" class="ghost" aria-pressed="false">Heatmap on the lawn: off</button>
+      <button id="statTrail" class="ghost">Where I've walked and driven</button>
+    </div>
+    <div class="row"><button id="statDone">Done</button><button id="statClear" class="ghost">Clear stats</button></div>
+  </div>
+</div>
+<div id="sndBox" hidden>
+  <div class="card">
+    <h1>Sound</h1>
+    <button id="sndOn" class="ghost" aria-pressed="true">Sound on</button>
+    <div class="sliders">
+      <label for="snd_master">Master</label><output id="snd_master_v"></output><input id="snd_master" type="range" min="0" max="100" step="5">
+      <label for="snd_eng">Engines</label><output id="snd_eng_v"></output><input id="snd_eng" type="range" min="0" max="100" step="5">
+      <label for="snd_alarm">Backup alarm</label><output id="snd_alarm_v"></output><input id="snd_alarm" type="range" min="0" max="100" step="5">
+      <label for="snd_fx">Hydraulics, tires and dirt</label><output id="snd_fx_v"></output><input id="snd_fx" type="range" min="0" max="100" step="5">
+      <label for="snd_amb">Nature: wind, birds, rain and lake</label><output id="snd_amb_v"></output><input id="snd_amb" type="range" min="0" max="100" step="5">
+    </div>
+    <p class="devline">N turns sound on and off. Phones in silent mode may mute the game.</p>
+    <div class="row"><button id="sndDone">Done</button><button id="sndReset" class="ghost">Defaults</button></div>
+  </div>
+</div>
+<div id="syncBox" hidden>
+  <div class="card">
+    <h1>Sync devices</h1>
+    <div id="syncOff">
+      <p>Play the same site on your phone and computer: the dig, the machines and the lawn.</p>
+      <button id="syncNew">Get a sync code</button>
+      <p class="devline">Already have a code from your other device? Type it here. Your other device's site replaces the one on this device.</p>
+      <div class="row"><input id="syncIn" type="text" inputmode="text" autocomplete="off" autocapitalize="characters" spellcheck="false" maxlength="12" placeholder="7Q4K-M2XP" aria-label="Sync code"><button id="syncJoin">Join</button></div>
+      <button id="syncDone2" class="ghost">Close</button>
+    </div>
+    <div id="syncOn" hidden>
+      <p>Type this code on your other device, in ☰ then Sync devices:</p>
+      <div id="syncCode" class="synccode"></div>
+      <div class="row"><button id="syncDone">Done</button><button id="syncStop" class="ghost">Stop syncing here</button></div>
+    </div>
+    <p id="syncMsg" class="devline" aria-live="polite"></p>
+  </div>
+</div>
+<div id="help">
+  <div class="card">
+    <h1 id="helpTitle">Corley's Island</h1>
+    <button id="vrStart" class="vrgo" hidden>🥽 Play in VR</button>
+    <div id="startIsl" role="group" aria-label="Pick where to start"><button data-isl="corley" id="islCorley">Corley's Island</button><button data-isl="dexter" id="islDexter">Dexter's Island</button><button data-isl="jessica" id="islJessica">Jessica's Island</button></div>
+    <div id="pickAll">
+    <div class="pick" role="group" aria-label="Pick what to run">
+      <button class="tile" data-m="dig"><img src="shots/dig.jpg" alt="" width="720" height="450"><span class="tn" id="tnDig">Excavator</span><span class="ts" id="tsDig">Dig and load the truck</span></button>
+      <button class="tile" data-m="truck"><img src="shots/truck.jpg" alt="" width="720" height="450"><span class="tn" id="tnTruck">Dump truck</span><span class="ts" id="tsTruck">Haul to the cliff</span></button>
+      <button class="tile" data-m="mow"><img src="shots/mow.jpg" alt="" width="720" height="450"><span class="tn" id="tnMow">Mower</span><span class="ts" id="tsMow">Cut the tall grass</span></button>
+      <button class="tile" data-m="walk"><img src="shots/walk.jpg" alt="" width="720" height="450"><span class="tn" id="tnWalk">On foot</span><span class="ts" id="tsWalk">Walk, jump, build</span></button>
+    </div>
+    <h2 class="pickh" id="pickMore">More machines</h2>
+    <div class="pick more" role="group" aria-label="More machines">
+      <button class="tile" data-m="skid" data-k="skid"><img src="shots/skid.jpg" alt="" width="720" height="450" loading="lazy" decoding="async"><span class="tn" id="tnSkid">Skid steer</span><span class="ts" id="tsSkid">Scoop, carry and grade</span></button>
+      <button class="tile" data-m="heavy" data-k="hv:backhoe"><img src="shots/backhoe.jpg" alt="" width="720" height="450" loading="lazy" decoding="async"><span class="tn" id="tnBackhoe">Backhoe</span><span class="ts" id="tsBackhoe">Loader and hoe in one</span></button>
+      <button class="tile" data-m="heavy" data-k="hv:mini"><img src="shots/mini.jpg" alt="" width="720" height="450" loading="lazy" decoding="async"><span class="tn" id="tnMini">Mini excavator</span><span class="ts" id="tsMini">Small digs in tight spots</span></button>
+      <button class="tile" data-m="heavy" data-k="hv:dozer"><img src="shots/dozer.jpg" alt="" width="720" height="450" loading="lazy" decoding="async"><span class="tn" id="tnDozer">Dozer</span><span class="ts" id="tsDozer">Push dirt, rip hard ground</span></button>
+      <button class="tile" data-m="heavy" data-k="hv:loader"><img src="shots/loader.jpg" alt="" width="720" height="450" loading="lazy" decoding="async"><span class="tn" id="tnLoader">Wheel loader</span><span class="ts" id="tsLoader">Scoop and load the truck</span></button>
+      <button class="tile" data-m="heavy" data-k="hv:semi"><img src="shots/semi.jpg" alt="" width="720" height="450" loading="lazy" decoding="async"><span class="tn" id="tnSemi">Semi</span><span class="ts" id="tsSemi">Pull the lowboy trailer</span></button>
+      <button class="tile" data-m="heavy" data-k="hv:pickup"><img src="shots/pickup.jpg" alt="" width="720" height="450" loading="lazy" decoding="async"><span class="tn" id="tnPickup">Pickup</span><span class="ts" id="tsPickup">Get around the islands</span></button>
+      <button class="tile" data-m="heavy" data-k="hv:atv"><img src="shots/atv.jpg" alt="" width="720" height="450" loading="lazy" decoding="async"><span class="tn" id="tnAtv">Four-wheeler</span><span class="ts" id="tsAtv">Goes anywhere</span></button>
+      <button class="tile" data-m="heavy" data-k="hv:kart"><img src="shots/kart.jpg" alt="" width="720" height="450" loading="lazy" decoding="async"><span class="tn" id="tnKart">Go-kart</span><span class="ts" id="tsKart">Low, quick and sharp</span></button>
+      <button class="tile" data-m="heavy" data-k="hv:golf" data-only="jessica"><img src="shots/golf.jpg" alt="" width="720" height="450" loading="lazy" decoding="async"><span class="tn" id="tnGolf">Golf cart</span><span class="ts" id="tsGolf">Jessica's quiet ride</span></button>
+      <button class="tile" data-m="bike" data-k="bike"><img src="shots/bike.jpg" alt="" width="720" height="450" loading="lazy" decoding="async"><span class="tn" id="tnBike">Dirt bike</span><span class="ts" id="tsBike">Dexter's motocross track</span></button>
+      <button class="tile" data-m="boat" data-k="boat"><img src="shots/boat.jpg" alt="" width="720" height="450" loading="lazy" decoding="async"><span class="tn" id="tnBoat">Boat</span><span class="ts" id="tsBoat">Cruise the lake</span></button>
+    </div>
+    </div>
+    <!-- the tests, one tap from the start card (the same as ☰ Tools; tourtest.js) -->
+    <div id="startTests" role="group" aria-label="Run a test"><span>Tests</span><button data-test="tourTestBtn">Island tour</button><button data-test="benchBtn">Speed</button><button data-test="digTestBtn">Dig site</button><button data-test="bhTestBtn">Backhoe load</button><button data-test="exTestBtn">Excavator load</button></div>
+    <button id="ctrlBtn" class="ghost" aria-expanded="false" aria-controls="ctrlBox">Controls</button>
+    <div id="ctrlBox" hidden>
+    <dl class="keys">
+      <dt id="hkLeftStick">Left stick</dt><dd id="hdLeftStick">Swing left/right. Push up to reach the stick out, pull down to bring it in.</dd>
+      <dt id="hkRightStick">Right stick</dt><dd id="hdRightStick">Left curls the bucket in (scoop), right dumps. Push up for boom down, pull for boom up.</dd>
+      <dt id="hkDrive">Drive</dt><dd id="hdDrive">In the excavator, the Drive / Dig switch over the right stick (or Enter) flips between driving: the left stick moves the tracks, and digging: the sticks run the arm. It digs anywhere on Corley's, down the bank and in the beach sand to the water's edge.</dd>
+      <dt id="hkTruck">Truck</dt><dd id="hdTruck">Swing a full bucket over the truck bed and dump. It starts parked on the dirt road that loops the mesa. Tap Truck to drive it: left stick steers and gives gas, right stick raises the bed. Pull back to brake; hold it at a stop to shift into reverse. A full load is heavy: it pulls slowly, stops long and leans in turns. Back up to the cliff edge and dump it over to haul it off, or take the ramp down the scarp and dump it in the Lower Bench yard.</dd>
+      <dt id="hkMow">Mow</dt><dd id="hdMow">A patch of tall grass grows north of the trench, with a zero-turn mower parked beside it. Tap Mow: each stick is a lap bar. Left stick up/down drives the left wheel, right stick up/down the right wheel. Both up goes straight, one up and one back spins it in place; the left stick sideways also turns it. On a keyboard, W and S drive it straight and A and D turn it; the number pad works the lap bars: 8 and 2 both forward or back, 4 and 6 spin in place, 7 and 1 the left bar, 9 and 3 the right bar. The blades run in Mow mode. Each pass lays the grass over the way you drove: it looks light when you look the same way and dark when you look against it, so the stripes swap as you walk around. The grass grows back: about a minute after a pass it starts coming up, and in about five minutes it is tall again, so a lawn left too long needs mowing again. Your mowing is saved with the rest of the site (it only grows while the game runs), and Reset leaves it mowed. The mower cuts the field grass too, and the grass is split into lawns where the roads cross it (the tall grass, the Mesa top, West and East lawns): while you are on one, on foot or mowing, a small gauge at the top shows its name and how much is mowed, and the site map labels every lawn with its share and lists them under Lawns.</dd>
+      <dt id="hkSoil">Soil</dt><dd id="hdSoil">Dark topsoil, then red clay that holds a steep wall. Sand means the gas main is close, and it slumps. Grey rock is past trench depth and slow going. Dug dirt fluffs up about a quarter, so it fills the truck faster than the hole it came from.</dd>
+      <dt id="hkCaveIns">Cave-ins</dt><dd id="hdCaveIns">Walls deeper than about 5 ft, or with spoil piled within 2 ft of the edge, cave in after a while. Dirt trickling off the lip means get the bucket out.</dd>
+      <dt id="hkGroundwater">Groundwater</dt><dd id="hdGroundwater">Below about 6 ft the hole meets the water table and slowly fills with muddy water. Dirt dug from under it comes up as mud: it sticks in the bucket and truck bed, and wet spoil bogs the truck and slows the tracks. Tap Pump (or P) to dewater the hole.</dd>
+      <dt id="hkMud">Mud</dt><dd id="hdMud">Paint Mud anywhere on the mesa with the map editor's Paint tool to lay soaked ground. It dries out over about 20 minutes, turning matte, then pale and cracked, and firms up as it goes; rain soaks it again (the editor's Query tool tells you how wet it is). Dug or dumped dirt and ruts that got soaked dry out the same way, pale and then cracked, until they are dug again or rained on. Tracks and tires sink up to 9 in and squeeze the mud into lumpy berms, leaving their tread in the bottom, and the ruts fill with puddles: drive or walk through them and the muddy water splashes, the faster the bigger. Painting anything else over ruts smooths them away (painting Dirt on soaked ground keeps them). Mud slows the machines and coats them, and pushing on in it digs them in until the tracks or tires spin and throw mud. Stuck? Rock it free: forward, then back, then forward again. On Low graphics the puddles are drawn more simply and less mud and spray flies; the mud itself is the same on every device.</dd>
+      <dt id="hkPlant">Planting trees</dt><dd id="hdPlant">On foot, press 7 (or tap Plant) to set a sapling in front of you; 8 (or the tree button on ☰ Time's Date row) picks spruce, red pine, oak, sugar maple or birch. Each grows at its real species' rate from the date it went in: slide ☰ Time, Date ahead and watch it go from sapling to young tree to full grown. Plant beside one of yours to dig it up; the map editor's Things, Plant does the same from above, and can put in trees planted years ago. The island's own trees grow with the Date too, and Stats and the site map count yours. Your trees sync between devices.</dd>
+      <dt id="hkTime">Day and night</dt><dd id="hdTime">The sun crosses the sky where it really would over a lake in the Arkansas mountains on today's date, and the shadows follow it; then dusk, stars, the Milky Way, the moon in its real phase and the odd shooting star. Lamps, light towers, lanterns and windows come on as the sun goes down, the machine you are in lights the way (on foot you have a headlamp), and fireflies, crickets and frogs come out. ☰ then Time: drag the slider to any time of day, Stop or Run the clock, or Now for the real time. The Date slider below it runs up to 100 years ahead. A whole day passes in 48 minutes (Tuning: Day and night). Each device keeps its own time.</dd>
+      <dt id="hkRain">Rain</dt><dd id="hdRain">Showers roll through now and then (☰ then Weather: Auto, or Rain to keep it raining, or Dry). Rain soaks the ground: dug dirt, dirt yards, clay and topsoil turn to mud first, dirt roads and grass get soft, sand and gravel drain, and rock and paving stay hard. Low ground soaks fastest. Rain fills holes and ruts with puddles. When it stops the ground dries over several minutes (sand fast, clay slow) and the puddles drain away; it keeps drying while the game is closed. Phones on Low graphics draw fewer raindrops; the rain and the mud it makes are the same on every device.</dd>
+      <dt id="hkTrenchBox">Trench box</dt><dd id="hdTrenchBox">Swing the bucket over the yellow box and press T (controller X, or the Hook box button). It hangs from the bucket and turns with the swing. Lower it into the trench and press again to set it. Walls between its panels can't slump or cave in, so dig deep inside it and leapfrog it along the trench.</dd>
+      <dt id="hkWalk">Walk</dt><dd id="hdWalk">Tap Walk (or press 5) to get out and walk around as the site worker. The left stick walks the way the camera faces; push it all the way to jog, and hold Shift (controller: click the left stick) to sprint; on a touch screen tap Sprint, which stays on until you stop. The right stick turns the camera and looks up and down. Tap Jump (Space) to jump about 6 ft: onto any block, and up a stack two blocks at a time. Trench walls are too steep to walk up, so jump out. Cab view looks through his eyes: drag the scene to look around (on a PC, click it for mouse look; Esc frees the mouse). Walk up to the excavator, the dump truck or the mower and tap Get in (F) to climb in and drive it; press F (or Get out) again to climb out beside it.</dd>
+      <dt id="hkBlocks">Blocks</dt><dd id="hdBlocks">Tap Blocks (or press B), set how wide, long and tall it is (1 to 10 ft each; V steps through cubes, Turn or Q swaps wide and long) and pick plain concrete or any material from the library (Y steps through them). A yellow outline shows where one lands under the bucket, or right in front of you in Walk mode; tap Place (E), or left click the scene, to set it. In Walk mode in first person (Cab view) it goes where the dot in the middle of the screen points: the mouse wheel (or Reach, or [ and ]) pushes it out and pulls it back, up to 80 ft, a click places it while the mouse is taken, and aiming at the side of a block sets the new one against it. They snap to a 1 ft grid and stack. Lift (X) picks up the top block under the bucket, the one in front of you, or the one the dot is on. Tracks and tires roll over a 1 ft block; taller ones stop them.</dd>
+      <dt id="hkFamilyIsland">Family Island</dt><dd id="hdFamilyIsland">A steel truss bridge runs from the Lower Bench, south across the water, to the Family Island: the family house with its porch, a picnic pavilion, a fire pit, the flagpole and a roundabout. Drive any machine or walk across. The pavilion has a chess table and a checkers table: walk up to one and tap Play chess or Play checkers (F) to sit down and play it in Mesa; its Corley's Island link brings you back beside the table. The road west leads to Dexter's haul bridge, the road east to Jessica's footbridge, and the mainland bridge to the south is still being built.</dd>
+      <dt id="hkDexterSIsland">Dexter's Island</dt><dd id="hdDexterSIsland">Drive west from the Family Island's roundabout over the wide yellow haul bridge (any machine, or on foot) to Dexter's gravel yard: his equipment shed, the office trailer, the diesel tank, a skid steer, a dozer, a wheel loader and a semi with a lowboy trailer parked in the yard, light towers, a cone course to weave through and dirt piles to climb. All of his machines drive: see Skid steer, and Dozer, loader and semi.</dd>
+      <dt id="hkSkidSteer">Skid steer</dt><dd id="hdSkidSteer">Dexter's skid steer starts parked in his yard. Tap Skid (or press 6), or walk up to it and tap Get in. Left stick drives: push to go, pull to back up, sideways to turn, and it spins in place. Right stick runs the loader: up lowers the arms, down raises them, left curls the bucket back and right dumps it; the bucket stays level as the arms go up. Drive it over the bridges to the dig site and it scoops dirt with the bucket down on the ground, then dumps it in a pile, over the cliff, or into the dump truck's bed. The status card shows its load, speed and how deep the bucket edge is.</dd>
+      <dt id="hkDextersMachines">Dozer, loader and semi</dt><dd id="hdDextersMachines">Dexter's dozer, wheel loader and red semi are parked in his yard; walk up to one and tap Get in. The left stick drives and steers each. In the dozer the right stick up and down lowers and raises the blade: blade down on the dig site, it shaves the ground and shoves the dirt ahead of it. Right stick left and right raises and lowers the ripper at the back: drag it through hard clay or rock and the ground breaks up, so the blade (and the excavator) dig it like loose fill. In the loader it lowers and raises the arms and curls and dumps the bucket, which scoops on the dig site and loads the dump truck. The semi's lowboy trailer follows behind, so swing wide on the turns.</dd>
+      <dt id="hkBackhoe">Backhoe</dt><dd id="hdBackhoe">Corley's backhoe loader is parked at the end of his row of machines on the mesa's east lawn, facing the dig; walk up to it and tap Get in. At the wheel the left stick drives on four wheels and steers the fronts, and the right stick runs the loader bucket up front: up and down lowers and raises the arms, left curls it to scoop, right dumps. Tap Dig (or press Enter) to swivel the seat round to the hoe: the outriggers come down and level the machine, and the sticks run the hoe as the excavator's arm (left swings and reaches the stick out and in, right lowers and raises the boom, curls and dumps the bucket). It digs the dig site and loads the dump truck. Semicolon raises or lowers the outriggers; tap Drive to turn back to the wheel, and they come up. It won't drive with them down.</dd>
+      <dt id="hkJessicaSIsland">Jessica's Island</dt><dd id="hdJessicaSIsland">Walk east from the Family Island's roundabout and over the red covered bridge (on foot only; machines stay behind). Lantern-lit paths wind through the forest to a stone cottage with a herb garden and a bench at the cliff edge. Step inside: the roof lifts off so you can look down into the library, with shelves to the ceiling, a rolling ladder, armchairs by the fire and a cat asleep on the window seat. Cab view walks you around at eye level.</dd>
+      <dt id="hkStats">Stats</dt><dd id="hdStats">☰ then Stats (or O) shows everything you've done: grass mowed, lawns finished and your best time, distance walked, sprinted and driven in each machine, jumps, dirt dug and hauled, time in each machine and top speeds. It also counts your trees: how many of each species, their ages (worked out from their real size with a forestry growth curve), trunks, shade, wood and carbon held, plus a Tree guide of age by height for every species. Its lawn heatmap shows how many times each spot has been cut, how far the grass has grown back, or the way it was last mowed; turn it on to see it over the lawn itself (U, press again to change what it shows). Tap the key at the top of the screen to switch what it shows.</dd>
+      <dt id="hkLook">Look</dt><dd id="hdLook">Drag the scene to look around.</dd>
+      <dt id="hkMap">Map</dt><dd id="hdMap">Tap the minimap or press M for the big map. Its Soil wetness row shows how wet the soil on the mesa is: All shades it from dry (clear) to soaked (deep blue), and Damp+, Wet+ or Soaked show only the ground at least that wet; standing water shows bright blue. Show on the ground too tints the ground itself the same way.</dd>
+      <dt id="hkMapEditor">Map editor</dt><dd id="hdMapEditor">☰ menu, then Map editor (or G). The game pauses while you edit. The tool groups run down the left (keys 1 to 5), with a drawer beside them for the group's library or list; the picked tool's options and whatever you have selected sit in the bar along the bottom. Shape: Raise, Lower, Flatten and Smooth reshape the ground under a round brush. Paint lays a material from the library (gravel, concrete, steel plate, brick, wood and more, and worked dirt and grass) under a round or square brush, hard edged or soft edged (Softness sets how much of the brush fades out into the ground); Natural ground clears it, and digging cuts through it; + Your own texture adds a picture of yours to the library. Things: Add places trees, boulders and things from the catalogue (houses, sheds, garages, fences, gates, light towers, cones, barrels, pallets, porta-potties, signs, benches, picnic tables, dumpsters): One at a time, Stamp (a tap each), Line (drag a line and fences and gates go end to end along it, other things at the spacing) or Scatter (a brush that scatters them; Erase takes them away). Select picks a tree, boulder, placed thing or machine; Shift-tap or a long press picks more, and a drag on empty ground (Box select on touch) picks everything in the box. Drag a picked one to move them all; the bottom bar turns, sizes, colours, copies or deletes them. Exact edits: East and South type one thing's spot in feet from the trench; Snap in the top bar (off, 1, 2, 5 or 10 ft) puts moves and new things on the grid, turns in 15° steps, fence and gate ends together and things beside a road at its edge facing it; with Select, a ring round the picked things turns them (drag its knob) or sizes them (drag its edge); the arrow keys nudge them 1 ft (Shift 10 ft); Line up, Space evenly and Face one way tidy several; Row makes copies in a line (along or across, end to end or at a spacing); Copy (Ctrl+C), Ctrl+X and Paste (Ctrl+V, at the pointer, or the middle of the view on touch) keep their shape, and Duplicate (Ctrl+D) puts a copy alongside. Hide (H) leaves the picked things out of the view while you edit, to get at what is behind them (Show hidden, tapping a hidden one's row, or closing the editor brings them back; it isn't saved). Lock (L) is saved with the map: a locked thing can't be picked on the ground or in a box, moved, turned, sized, copied or deleted until it is unlocked; On the map has 👁 and 🔒 on each row and for each kind, and a Locked filter. On the map, in the drawer, lists every thing and machine by kind: tap one to go to it, tick several, select or delete a whole kind. Roads: tap a road to pick it (or pick it from the list), drag its dots to move them, tap the picked road between dots to add one, or tap New road and lay one point by point; set its width, grass up the middle and grading. Inspect: Query reads the height, slope and surface of any spot. Measure lays points on the ground (tap; drag one to move it; Snap puts them on the grid) and gives the length of the path, straight and over the ground, the start-to-end rise or fall and slope, and with three or more points the area inside (in square feet, and acres once it is big); tap the first point or Close the shape to go round, Delete takes away the last point, Esc clears. Back to start, in the bottom bar with a machine picked, sends it (or you, on foot) to where it starts the game; the Machines group in On the map sends them all. Move the view with two fingers (pinch to zoom, twist to turn), or turn Look on to move it with one finger; Closer, Farther, North up and Start view are in the top bar (mouse: right button turns, wheel zooms; keys WASD, Q E, R F). Undo and Redo step through your edits, and History lists them by name to jump back to any. The map saves on this device as you edit. Map keeps several named maps (rename this one, make a new one or a duplicate, open or delete the others), downloads the map as a file or opens one, copies it as text or loads copied text, shows what the map holds, and starts over: everything, or just the shape, paint, things or roads.</dd>
+      <dt id="hkScreen">Screen</dt><dd id="hdScreen">Controls (☰ menu) lists every key, mouse, touch and controller input, and its Turn slider sets how fast left and right turn in the mode you are in, from 25% to 200%; each mode keeps its own (the mower starts at 60%, the rest at 100%): the excavator swing and tracks, the truck steering, the mower spin and looking round on foot. Each device remembers its own. Speed test, Reset, Sound (on/off and volume sliders), Graphics and UI size (1x, 1.5x, 2x) are in the ☰ menu. Graphics has Low for phones, Medium for laptops and High for desktop PCs, and under them every setting on its own to play with: resolution, frame cap, field of view, shadows, lighting, brightness, haze, texture size and sharpness, ground detail, grass blades, Dirt detail (16x is for screenshots and fast computers), puddle water and raindrops, with the frame rate and triangle count shown live, an estimate of the GPU memory in use (textures, geometry and the screen) and a graph of the frame rate over the last 10 seconds (average, 1% low and slowest frame). Each device remembers its own. The site is saved in this browser: the dig, the dumped dirt, the excavator, the truck and its load, the trench box, blocks and the mowing are all still there when you come back. Reset starts fresh ground. To play the same site on your phone and computer, open ☰ then Sync devices: get a code on one and type it on the other.</dd>
+      <dt id="hkLookingAround">Looking around</dt><dd id="hdLookingAround">In cab view (C) drag the scene to turn your head, in any machine or on foot: look out the side windows, behind you, up at the boom or down at the bucket. On a PC, click the scene to take the mouse for mouse look; Esc gives it back. Zoom with the mouse wheel, a two-finger pinch, or hold Z for a quick look. R turns your head back to straight ahead.</dd>
+      <dt id="hkController">Controller</dt><dd id="hdController">Sticks work like the two on-screen sticks. Triggers are gas and reverse when driving. LB / RB switch machine · Y cab view · right stick click looks ahead · A place block (in Walk mode A jumps, X places and a left stick click sprints) · D-pad up blocks on/off, left/right block size (cubes, 1 to 10 ft), down pick up · View map · Menu this help · B closes, or gets you in and out of machines.</dd>
+      <dt id="hkKeys">Keys</dt><dd id="hdKeys">Every key can be changed under Keys in the ☰ menu, which also lists what each one does. The standard keys: WASD (or arrows) is the left stick and IJKL the right stick, in every mode but Mow. Mow: W S drive straight, A D turn, and the number pad works the lap bars (8 2 both, 4 6 spin in place, 7 1 left bar, 9 3 right bar). 1 Dig · 2 Drive · 3 Truck · 4 Mow · 5 Walk · 6 Skid steer (Tab cycles). Hold Shift for slow, fine moves in a machine (on foot it sprints). C cab view (R look ahead · Z zoom) · M map · P pump · N sound on/off · H this help. Blocks: B on/off · E place · V size · X pick up. Walk: Space jump · Shift sprint · E place block · F get in and out.</dd>
+    </dl>
+    <p id="hScoop">To scoop: boom down until the teeth bite, curl in while pulling the stick toward you, boom up, swing, then dump.</p>
+    </div>
+    <p class="buildlink"><a id="buildLink" href="https://corleys-island.vercel.app/build.html" target="_blank" rel="noopener">See how long this took to build</a></p>
+    <p class="ver" id="verHelp"></p>
+  </div>
+</div>
+
+<script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.min.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/"}}</script>
+<!-- three.js ships as an ES module only; this puts it in the shared global THREE for the game scripts, which are
+     deferred so they run after it, in order -->
+<script type="module">import * as T from 'three';window.THREE=Object.assign({},T);</script>
+<script defer src="data/effort.js"></script>
+<script defer src="js/core.js"></script>
+<script defer src="js/tune.js"></script>
+<script defer src="js/words.js"></script>
+<script defer src="js/materials.js"></script>
+<script defer src="js/terrain.js"></script>
+<script defer src="js/trees.js"></script>
+<script defer src="js/brush.js"></script>
+<script defer src="js/scenery.js"></script>
+<script defer src="js/family.js"></script>
+<script defer src="js/jessica.js"></script>
+<script defer src="js/dexter.js"></script>
+<script defer src="js/mainland.js"></script>
+<script defer src="js/excavator.js"></script>
+<script defer src="js/truck.js"></script>
+<script defer src="js/trenchbox.js"></script>
+<script defer src="js/coupler.js"></script>
+<script defer src="js/dirt.js"></script>
+<script defer src="js/water.js"></script>
+<script defer src="js/mud.js"></script>
+<script defer src="js/daynight.js"></script>
+<script defer src="js/rain.js"></script>
+<script defer src="js/storm.js"></script>
+<script defer src="js/digtiles.js"></script>
+<script defer src="js/post.js"></script>
+<script defer src="js/models.js"></script>
+<script defer src="js/gfx.js"></script>
+<script defer src="js/blocks.js"></script>
+<script defer src="js/props.js"></script>
+<script defer src="js/mower.js"></script>
+<script defer src="js/skid.js"></script>
+<script defer src="js/walker.js"></script>
+<script defer src="js/boats.js"></script>
+<script defer src="js/lakeboats.js"></script>
+<script defer src="js/bike.js"></script>
+<script defer src="js/heavy.js"></script>
+<script defer src="js/backhoe.js"></script>
+<script defer src="js/trailer.js"></script>
+<script defer src="js/pickup.js"></script>
+<script defer src="js/carts.js"></script>
+<script defer src="js/plant.js"></script>
+<script defer src="js/trimmer.js"></script>
+<script defer src="js/lawns.js"></script>
+<script defer src="js/stats.js"></script>
+<script defer src="js/keys.js"></script>
+<script defer src="js/controls.js"></script>
+<script defer src="js/twins.js"></script>
+<script defer src="js/save.js"></script>
+<script defer src="js/sync.js"></script>
+<script defer src="js/gui.js"></script>
+<script defer src="js/effects.js"></script>
+<script defer src="js/sound.js"></script>
+<script defer src="js/dirtsound.js"></script>
+<script defer src="js/ambience.js"></script>
+<script defer src="js/maps.js"></script>
+<script defer src="js/shadowproxy.js"></script>
+<script defer src="js/editor.js"></script>
+<script defer src="js/ownmat.js"></script>
+<script defer src="js/bench.js"></script>
+<script defer src="js/digtest.js"></script>
+<script defer src="js/bhtest.js"></script>
+<script defer src="js/tourtest.js"></script>
+<script defer src="js/vr.js"></script>
+<script defer src="js/fuel.js"></script>
+<script defer src="js/main.js"></script>
+
+<a id="verPill" href="../" aria-label="Version 229. Back to all versions">&#9664; v229</a><style>#verPill{position:fixed;left:0;top:50%;transform:translateY(-50%);z-index:2147483000;padding:12px 12px 12px calc(env(safe-area-inset-left,0px) + 10px);font:800 18px/1 "Saira Condensed","Arial Narrow",sans-serif;letter-spacing:.04em;color:#1c1309;background:#f5c518;border-radius:0 12px 12px 0;text-decoration:none;box-shadow:0 3px 10px rgba(0,0,0,.35)}</style>
+</html>

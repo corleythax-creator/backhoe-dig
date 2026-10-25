@@ -85,6 +85,8 @@
       <button id="digTestBtn">Dig site test</button>
       <button id="bhTestBtn">Backhoe load test</button>
       <button id="exTestBtn">Excavator load test</button>
+      <button id="tourTestBtn">Island tour test</button>
+      <button id="tourFpBtn">Island tour test, first person</button>
       <button id="resetBtn">Reset</button>
       <div class="ver" id="verMenu"></div>
     </div>
@@ -386,6 +388,8 @@
       <button class="tile" data-m="boat" data-k="boat"><img src="shots/boat.jpg" alt="" width="720" height="450" loading="lazy" decoding="async"><span class="tn" id="tnBoat">Boat</span><span class="ts" id="tsBoat">Cruise the lake</span></button>
     </div>
     </div>
+    <!-- the tests, one tap from the start card (the same as ☰ Tools; tourtest.js) -->
+    <div id="startTests" role="group" aria-label="Run a test"><span>Tests</span><button data-test="tourTestBtn">Island tour</button><button data-test="tourFpBtn">Tour, first person</button><button data-test="benchBtn">Speed</button><button data-test="digTestBtn">Dig site</button><button data-test="bhTestBtn">Backhoe load</button><button data-test="exTestBtn">Excavator load</button></div>
     <button id="ctrlBtn" class="ghost" aria-expanded="false" aria-controls="ctrlBox">Controls</button>
     <div id="ctrlBox" hidden>
     <dl class="keys">
@@ -492,6 +496,7 @@
 <script defer src="js/bench.js"></script>
 <script defer src="js/digtest.js"></script>
 <script defer src="js/bhtest.js"></script>
+<script defer src="js/tourtest.js"></script>
 <script defer src="js/vr.js"></script>
 <script defer src="js/fuel.js"></script>
 <script defer src="js/main.js"></script>
