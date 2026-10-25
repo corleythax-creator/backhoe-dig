@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Sunday, October 25, 2026
 
+- **v244** (5:03 PM) The distant train shows on the maps: the line across the north, each train as a dark bar with a red dot at its locomotive (blue for Amtrak), and a train badge on the minimap's edge pointing the way to it.
 - **v243** (4:50 PM) About 60 new things to place, in the map editor or on foot from the Blocks bar's What list: street lights, lamp posts, floodlights, spotlights, path and string lights and lantern hooks that glow after dark in any colour, plus road gear, site gear, garden, yard and play things (and jack-o'-lanterns).
 - **v242** (4:27 PM) A freight line runs along the foot of the north mountains across the lake: Cruise Brandon's CN and CPKC freights (and now and then Amtrak's City of New Orleans) come out of one tunnel every few minutes, cross on a rock causeway and go into the other, blowing the horn, headlights on at night.
 - **v241** (4:15 PM) Feet and wheels stand on the town's sidewalks, curbs and asphalt instead of sinking in; a curb is a step up on foot
