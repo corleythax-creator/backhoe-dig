@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-25T16:35:00Z",
+ "updated": "2026-10-25T16:47:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -66,9 +66,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-25",
-   "dh": 17.5,
+   "dh": 18,
    "act": 2,
-   "versions": 4
+   "versions": 5
   }
  ],
  "extra": [
@@ -2130,6 +2130,15 @@ window.EFFORT = {
    "tris": 5447769,
    "chars": 1456927,
    "what": "Island tour test (menu, or ?tourtest=low|medium|high|ultra): plays a run through the touch stick from Dexter's on foot to the four-wheeler, to the dock, into Dexter's boat and right round the lake past the town, marina, crane barge, bridges and hayfield, with the game running as in play, and reports per leg frame rate, 1% low, worst frame, stutters, main-thread time, triangles and draw calls, plus long tasks, freezes with their causes, memory and script errors; tourRun() checks the route headless"
+  },
+  {
+   "v": 229,
+   "asked": "2026-10-25T11:36:00-05:00",
+   "live": "2026-10-25T11:47:39-05:00",
+   "dh": 0.5,
+   "tris": 5449016,
+   "chars": 1457963,
+   "what": "A Tests row on the start card (Island tour, Speed, Dig site, Backhoe load, Excavator load): each test is one tap from loading the game"
   }
  ]
 };
