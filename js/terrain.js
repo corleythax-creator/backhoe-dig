@@ -601,8 +601,11 @@ function updateTerrain(){
 }
 // outside the dig zone: the mud tiles' ground once mud.js has loaded (farH), else the mesa
 let farGround=null;
+// raised ground that is not a deck, so feet and wheels stand on it: the town's sidewalks and curbs (mainland.js sets
+// it, mstLift): metres above the ground at x, z, or 0
+let groundLift=null;
 function hAt(x,z){
-  if(!inDig(x,z)){const g=farGround?farGround(x,z):baseHeight(x,z),d=deckAt(x,z);return d>g?d:g}
+  if(!inDig(x,z)){const g=(farGround?farGround(x,z):baseHeight(x,z))+(groundLift?groundLift(x,z):0),d=deckAt(x,z);return d>g?d:g}
   let fx=gI(x),fz=gJ(z);
   fx=Math.max(0,Math.min(N-0.001,fx)); fz=Math.max(0,Math.min(N-0.001,fz));
   const i=fx|0,j=fz|0,u=fx-i,v=fz-j,k=j*V+i;
