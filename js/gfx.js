@@ -33,6 +33,9 @@ GFX.low.vrSS=GFX.med.vrSS=1;GFX.high.vrSS=1.25;GFX.ultra.vrSS=1.4;
 GFX.quest=Object.assign({},GFX.med,{name:'Quest',pr:1,auto:false,sh:2048,shR:16,tex:'med',aniso:4,dirt:2,lawnFar:8,fog:0.7,wmFine:false,lakeQ:0,
   rainN:700,rainSp:180,splashN:260,wakeN:160,brush:0.3,model:true,treeR:50,tuft:[0.5,10,30,0.15],vrSS:0.9});
 GFX.quest.extraLt=false;
+// the bridges' detail parts: gusset and cover plates, lacing and lattice, braces, lamp trim, the covered bridge's
+// lattice and rafters, batter piles (bridges.js); Low leaves them out
+GFX.low.brDet=false;GFX.med.brDet=GFX.high.brDet=GFX.ultra.brDet=GFX.quest.brDet=true;
 let gfxKey='high',gfxOver={},gfxCur=Object.assign({},GFX.high);
 function gfxName(){return GFX[gfxKey].name+(Object.keys(gfxOver).length?' (custom)':'')}
 function gfxGuess(){if(PHONE||IS_QUEST)return 'low';
@@ -77,6 +80,8 @@ function gfxApply(){const g=gfxCur=Object.assign({},GFX[gfxKey],gfxOver);
   ultraGfx(g.skyLight,g.shSoft&&g.sh>0,g.wetDrops,g.wetGround);
   // machine models: the detailed one from its file, or the simple shapes (models.js)
   mdlGfx(g.model);
+  // the bridges: their detail parts, pictures (not on Low) and relief (bridges.js)
+  brGfx(g);
   // undergrowth round the trees (brush.js)
   brushGfx(g.brush);
   // how finely the grass and weeds are shaped (scenery.js)

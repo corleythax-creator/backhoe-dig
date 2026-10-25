@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-25T18:15:00Z",
+ "updated": "2026-10-25T19:07:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -66,9 +66,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-25",
-   "dh": 38,
-   "act": 3,
-   "versions": 8
+   "dh": 62.5,
+   "act": 4,
+   "versions": 10
   }
  ],
  "extra": [
@@ -2166,6 +2166,24 @@ window.EFFORT = {
    "tris": 5457266,
    "chars": 1506447,
    "what": "Every first-person ride shows its controls (dashboards, wheels that turn, the four-wheeler's handlebars, the boat's helm, see-through windscreens and cab glass); the island tour test's head moves smoothly like a person's, the route walks through town from the marina, and the results add the graphics card's time and headroom, a verdict that knows when the screen caps the frame rate, per-leg system costs, a map of the slowest spots, the scripts in slow frames, camera/ground/boat/sound checks, rain, night, 2-lap heat and leak checks, an every-graphics-level sweep, comparison with the last run and a shared results board; shaders and textures are got ready behind the start card"
+  },
+  {
+   "v": 233,
+   "asked": "2026-10-25T11:48:00-05:00",
+   "live": "2026-10-25T13:51:32-05:00",
+   "dh": 23,
+   "tris": 5462158,
+   "chars": 1545293,
+   "what": "Corley's bridge is now a riveted forest-green 1931 truss on granite piers with acorn lamps, the mainland bridge a cable-stayed span from a 140 ft pylon, Jessica's footbridge a New England covered bridge with a cedar shake roof, and the trestles and the crane's steel spans are rebuilt in creosoted timber and riveted girders, all in weathered real materials that darken in the rain."
+  },
+  {
+   "v": 234,
+   "asked": "2026-10-25T13:50:00-05:00",
+   "live": "2026-10-25T14:07:41-05:00",
+   "dh": 1.5,
+   "tris": 5465557,
+   "chars": 1546106,
+   "what": "The lake is murkier, a lake's green that hides the bed within a few feet, and boat wakes are lacy white foam lit like the water, greying at dusk."
   }
  ]
 };
