@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-25T19:07:00Z",
+ "updated": "2026-10-25T19:15:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -66,9 +66,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-25",
-   "dh": 62.5,
+   "dh": 65.5,
    "act": 4,
-   "versions": 10
+   "versions": 11
   }
  ],
  "extra": [
@@ -2184,6 +2184,15 @@ window.EFFORT = {
    "tris": 5465557,
    "chars": 1546106,
    "what": "The lake is murkier, a lake's green that hides the bed within a few feet, and boat wakes are lacy white foam lit like the water, greying at dusk."
+  },
+  {
+   "v": 235,
+   "asked": "2026-10-25T13:29:00-05:00",
+   "live": "2026-10-25T14:15:38-05:00",
+   "dh": 3,
+   "tris": 5459243,
+   "chars": 1548795,
+   "what": "Every material's shader is built in the background whenever new ones appear (the detailed machines load later), so first sight of Dexter's yard, town or a machine no longer stalls for seconds on Windows; the island tour test waits for the game to be ready and reports that time on its own, leaves out time with the window hidden, allows a blip in the sound, and its boat backs out of the marina and steers round boats in its way"
   }
  ]
 };
