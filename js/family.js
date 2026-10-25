@@ -149,10 +149,14 @@ function famPlay(g){try{siteSaveAll()}catch(e){}try{lawnSave()}catch(e){}
     const ps=Math.atan2(0.5,PW);K.box(14+PW+0.4,0.18,PW+0.5,ROOF,X+PW/2,py+3.2,Z+5+PW/2,0,ps);K.box(PW+0.5,0.18,10.2,ROOF,X+7+PW/2,py+3.2,Z,0,0,-ps);
     for(let i=0;i<3;i++)K.box(2.0,0.2,0.4,0x8d8781,DX,py-0.15-i*0.2,Z+5+PW+0.2+i*0.4);
     for(const dx of [2.5,4.2]){const cx=X+dx,cz=Z+6.2;K.box(0.7,0.08,0.7,0x6b4428,cx,py+0.55,cz);K.box(0.7,0.8,0.08,0x6b4428,cx,py+0.95,cz-0.33);K.box(0.06,0.06,0.9,0x6b4428,cx-0.3,py+0.12,cz,0,0.3);K.box(0.06,0.06,0.9,0x6b4428,cx+0.3,py+0.12,cz,0,0.3)}
-    SOLIDS.push({x:X+PW/2,z:Z+PW/2,hx:7+PW/2+0.1,hz:5+PW/2+0.1})}
+    // the house is solid, the porch walks: its deck, the steps down to the drive, the railings and rocking chairs solid
+    SOLIDS.push({x:X,z:Z,hx:7.3,hz:5.3});walkPad(X+PW/2,Z+5+PW/2,7+PW/2,PW/2,0,py+0.1);walkPad(X+7+PW/2,Z,PW/2,5,0,py+0.1);
+    walkPad(DX,Z+5+PW+0.7,1.0,0.7,Math.PI,y-0.05,{rise:0.65});
+    for(let i=0;i<posts.length-1;i++){if(i===3)continue;const [ax,az]=posts[i],[bx,bz]=posts[i+1];SOLIDS.push({x:(ax+bx)/2,z:(az+bz)/2,hx:Math.abs(bx-ax)/2+0.1,hz:Math.abs(bz-az)/2+0.1})}
+    for(const dx of [2.5,4.2])SOLIDS.push({x:X+dx,z:Z+6.2,hx:0.36,hz:0.4})}
   // picnic pavilion: a slab, six timber posts, a gable roof and two tables, with room to walk in under it
   {const X=26,Z=264,y=G(X,Z)+0.02,TIM=0x7f5634;
-    K.box(11,0.2,7.5,0xa9a69e,X,y+0.05,Z);
+    K.box(11,0.2,7.5,0xa9a69e,X,y+0.05,Z);walkPad(X,Z,5.5,3.75,0,y+0.15);
     for(const dx of [-4.8,0,4.8])for(const dz of [-3.2,3.2]){K.box(0.35,3.2,0.35,TIM,X+dx,y+1.75,Z+dz);SOLIDS.push({x:X+dx,z:Z+dz,hx:0.2,hz:0.2})}
     K.box(10.2,0.35,0.3,TIM,X,y+3.3,Z-3.2);K.box(10.2,0.35,0.3,TIM,X,y+3.3,Z+3.2);
     K.geo(famGable(6.4,1.8,10.2),0xb98a5a,X,y+3.45,Z);const sl=Math.atan2(1.8,3.2),rl=Math.hypot(3.2,1.8)+0.8;
@@ -180,8 +184,8 @@ function famPlay(g){try{siteSaveAll()}catch(e){}try{lawnSave()}catch(e){}
     const BX=-9,BZ=172,by=G(BX,BZ),BK=famKit();BK.box(2.2,0.08,0.5,0x8a5c38,BX,by+0.48,BZ);BK.box(2.2,0.5,0.08,0x8a5c38,BX,by+0.85,BZ+0.25);
     for(const s of [-1,1])BK.box(0.1,0.48,0.5,0x55595c,BX+s*0.95,by+0.24,BZ);
     famSpot('bench',BX,by,BZ,Math.PI,1.1);famAddSpot('bench',BK)}
-  // a stone curb round the roundabout's middle
-  for(let i=0;i<24;i++){const a=i/24*Math.PI*2;K.box(2.3,0.25,0.35,0x9b9890,FAM_X+Math.sin(a)*8.3,FAM_Y+0.1,FAM_Z-Math.cos(a)*8.3,-a)}
+  // a stone curb round the roundabout's middle, a step high
+  for(let i=0;i<24;i++){const a=i/24*Math.PI*2,x=FAM_X+Math.sin(a)*8.3,z=FAM_Z-Math.cos(a)*8.3;K.box(2.3,0.25,0.35,0x9b9890,x,FAM_Y+0.025,z,-a);walkPad(x,z,1.15,0.175,-a,FAM_Y+0.15)}
   {const y=G(-2.7,170);famSign(['FAMILY ISLAND'],4.6,1.1,-6.4,y+2.0,169,Math.PI,'#6b3a22','#f6e7c8');K.box(0.15,2.6,0.15,0x5a3b26,-8.5,y+1.3,169);K.box(0.15,2.6,0.15,0x5a3b26,-4.3,y+1.3,169)}
   famAdd(K);
 })();

@@ -263,7 +263,7 @@ function brAcorn(K,G,x,y0,z){const V=(h)=>new THREE.Vector3(x,y0+h,z);
   for(let t=2;t<L-3;t+=9)K.seg('lineY',P(t,0,Y+0.025),P(t+3,0,Y+0.025),0.15,0.01);
   for(const t of [0.15,...piers,L-0.15])K.seg('iron',P(t,-hw,Y+0.022),P(t,hw,Y+0.022),0.3,0.012,{S:F.A,det:1});
   // curbs and a lattice railing along each side
-  for(const s of [-1,1]){const u=s*(hw+0.42);K.seg('concOld',P(0,s*(hw+0.22),Y+0.12),P(L,s*(hw+0.22),Y+0.12),0.45,0.28);
+  for(const s of [-1,1]){const u=s*(hw+0.42);K.seg('concOld',P(0,s*(hw+0.22),Y+0.12),P(L,s*(hw+0.22),Y+0.12),0.45,0.28);walkStrip(b,s*(hw+0.22),0.225,0.26);
     K.seg('paintG',P(0,u,Y+1.27),P(L,u,Y+1.27),0.1,0.1);K.seg('paintG',P(0,u,Y+0.33),P(L,u,Y+0.33),0.08,0.08);
     for(let t=0;t<=L+0.01;t+=2.5)K.seg('paintG',P(t,u,Y+0.26),P(t,u,Y+1.3),0.1,0.1);
     K.quad('xlatG',[P(0,u,Y+0.37),P(L,u,Y+0.37),P(L,u,Y+1.22),P(0,u,Y+1.22)],[[0,0],[L,0],[L,0.5],[0,0.5]],{det:1})}
@@ -322,7 +322,7 @@ function brAcorn(K,G,x,y0,z){const V=(h)=>new THREE.Vector3(x,y0+h,z);
   for(const s of [-1,1])K.seg('lineY',P(0,s*0.1,Y+0.025),P(L,s*0.1,Y+0.025),0.1,0.01);
   for(const t of [0.15,L-0.15])K.seg('stain',P(t,-hw,Y+0.022),P(t,hw,Y+0.022),0.35,0.012,{S:F.A,det:1});
   // curbs, and a parapet of stainless posts and rails with glass between
-  for(const s of [-1,1]){const u=s*(hw+0.28);K.seg('concrete',P(0,s*(hw-0.05),Y+0.1),P(L,s*(hw-0.05),Y+0.1),0.3,0.22);
+  for(const s of [-1,1]){const u=s*(hw+0.28);K.seg('concrete',P(0,s*(hw-0.05),Y+0.1),P(L,s*(hw-0.05),Y+0.1),0.3,0.22);walkStrip(b,s*(hw-0.05),0.15,0.21);
     for(let t=0.4;t<L;t+=1.6)K.rod('stain',P(t,u,Y+0.05),P(t,u,Y+1.12),0.035,{seg:8});
     K.rod('stain',P(0,u,Y+1.12),P(L,u,Y+1.12),0.045,{seg:10});K.rod('stain',P(0,u,Y+0.2),P(L,u,Y+0.2),0.025,{seg:8,det:1});
     K.seg('glass',P(0,u,Y+0.64),P(L,u,Y+0.64),0.02,0.86)}
@@ -365,7 +365,7 @@ function brAcorn(K,G,x,y0,z){const V=(h)=>new THREE.Vector3(x,y0+h,z);
   // deck: steel road plate (its seams), heavy timber wheel guards, a pipe railing on an edge stringer each side
   K.seg('rust',P(0,0,Y-0.04),P(L,0,Y-0.04),2*hw+0.2,0.08);
   for(let t=1.2;t<L;t+=2.4)K.seg('iron',P(t,-hw,Y+0.003),P(t,hw,Y+0.003),0.05,0.01,{S:F.A,det:1});
-  for(const s of [-1,1]){const u=s*(hw+0.4);K.seg('creo',P(0,s*(hw-0.2),Y+0.18),P(L,s*(hw-0.2),Y+0.18),0.36,0.36);
+  for(const s of [-1,1]){const u=s*(hw+0.4);K.seg('creo',P(0,s*(hw-0.2),Y+0.18),P(L,s*(hw-0.2),Y+0.18),0.36,0.36);walkStrip(b,s*(hw-0.2),0.18,0.36);
     K.rod('paintY',P(0,u,Y+1.08),P(L,u,Y+1.08),0.035,{seg:8});K.rod('paintY',P(0,u,Y+0.58),P(L,u,Y+0.58),0.03,{seg:8});
     for(let t=0;t<=L+0.01;t+=2.4)K.rod('paintY',P(t,u,Y-0.05),P(t,u,Y+1.1),0.03,{seg:8})}
   for(let k=0;k<ends.length-1;k++){const a=ends[k]+0.45,e=ends[k+1]-0.45,n=2*Math.max(2,Math.round((e-a)/10)),X=i=>a+(e-a)*i/n,yb=Y-0.6,yt=Y+H;

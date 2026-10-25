@@ -20,7 +20,7 @@ function jesMesh(list,mat,shadow){if(!list.length)return null;const m=new THREE.
   const F=brFrame(JB),K=brKit(F),R=brKit(F),G=famKit(),L=F.L,hw=JB.hw,X0=JB.x0,Z=JB.z0,Y=F.Y,WU=hw+0.12,at=(t,u,dy)=>F.P(t,u,Y(t)+dy);
   // floor: crosswise planks on floor beams over two big timbers, two running boards
   K.seg('planks',at(0,0,-0.08),at(L,0,-0.08),2*WU+0.1,0.16,{uv:'local'});
-  for(const s of [-1,1]){K.seg('beam',at(0,s*0.55,0.025),at(L,s*0.55,0.025),0.5,0.05);K.seg('beam',at(0,s*(WU-0.15),-0.6),at(L,s*(WU-0.15),-0.6),0.3,0.5)}
+  for(const s of [-1,1]){K.seg('beam',at(0,s*0.55,0.025),at(L,s*0.55,0.025),0.5,0.05);walkStrip(JB,s*0.55,0.25,0.05);walkStrip(JB,s*(WU-0.2),0.11,0.34);K.seg('beam',at(0,s*(WU-0.15),-0.6),at(L,s*(WU-0.15),-0.6),0.3,0.5)}
   for(let t=0.4;t<L;t+=1.2)K.seg('beam',at(t,-WU-0.05,-0.3),at(t,WU+0.05,-0.3),0.2,0.28,{S:F.A});
   // a Town lattice truss inside each wall: chords, and planks crossing at 50 degrees every 3 ft
   const LB=0.34,LT=2.57,RUN=(LT-LB)/Math.tan(50*Math.PI/180);
@@ -104,7 +104,7 @@ function jesMesh(list,mat,shadow){if(!list.length)return null;const m=new THREE.
   K.box(1.4,0.12,0.12,TRIM,xw-T/2-0.02,y0+2.31,CZ);
   I.box(1.2,2.2,0.07,0x2f5a46,CX-W/2+0.62,y0+1.1,CZ-0.7);
   K.geo(famGable(1.9,0.7,1.1),PLASTER,xw-T/2-0.55,y0+2.5,CZ);for(const s of [-1,1])K.box(1.3,0.08,1.25,MOSS,xw-T/2-0.55,y0+2.86,CZ+s*0.5,0,s*0.65);
-  K.box(0.9,0.12,1.6,STONE,xw-T/2-0.45,y0+0.06,CZ);
+  K.box(0.9,0.12,1.6,STONE,xw-T/2-0.45,y0+0.06,CZ);walkPad(xw-T/2-0.45,CZ,0.45,0.8,0,y0+0.12);
   K.box(0.2,0.3,0.2,0x2b2b2b,xw-T/2-0.12,y0+2.0,CZ+1.0);K.lit(new THREE.BoxGeometry(0.15,0.2,0.15),0xffd27a,xw-T/2-0.16,y0+1.98,CZ+1.0);
   // the roof (lifts off when you walk in): plaster gables and a mossy green roof with a ridge
   R.geo(famGable(D+2*T,3.0,W+2*T),PLASTER,CX,y0+WH,CZ);
@@ -115,7 +115,7 @@ function jesMesh(list,mat,shadow){if(!list.length)return null;const m=new THREE.
   const chx=xe+T/2+0.54,chTop=y0+WH+4.2;K.box(1.0,chTop-y0,1.4,STONE,chx,(chTop+y0)/2,CZ);K.box(1.2,0.2,1.6,0x77726d,chx,chTop+0.1,CZ);
   SOLIDS.push({x:chx,z:CZ,hx:0.5,hz:0.7});
   // ---- inside ----
-  I.box(W,0.05,D,WOOD,CX,y0+0.02,CZ);for(let x=CX-W/2+0.25;x<CX+W/2;x+=0.25)I.box(0.015,0.01,D,0x6e4a2e,x,y0+0.05,CZ);
+  I.box(W,0.05,D,WOOD,CX,y0+0.02,CZ);walkPad(CX,CZ,W/2,D/2,0,y0+0.045);for(let x=CX-W/2+0.25;x<CX+W/2;x+=0.25)I.box(0.015,0.01,D,0x6e4a2e,x,y0+0.05,CZ);
   // bookshelves along a wall: uprights, seven shelves, books in leather colours (heights and widths vary, one leans)
   let sd=5;const rnd=()=>{sd=(sd*16807)%2147483647;return sd/2147483647};
   const BOOKS=[0x7a2b2b,0x2f4f3a,0x2a3a5a,0xb08a3a,0x5a3a26,0xd9cfb4,0x6a3550,0x3d5f6b,0x8c5a2b,0x1f2a3a];
@@ -153,7 +153,7 @@ function jesMesh(list,mat,shadow){if(!list.length)return null;const m=new THREE.
   // the fireplace: a stone surround and chimney breast, a wooden mantel with candles and a clock, logs and a fire
   {const fx=CX+W/2;for(const s of [-1,1])I.box(0.6,1.5,0.6,STONE,fx-0.3,y0+0.75,CZ+s*0.9);I.box(0.6,0.65,1.2,STONE,fx-0.3,y0+1.175,CZ);
     I.box(0.1,0.85,1.2,0x1f1a17,fx-0.05,y0+0.43,CZ);I.box(0.5,0.02,1.2,0x2a2420,fx-0.3,y0+0.09,CZ);
-    I.box(1.1,0.08,2.8,0x77726d,fx-0.55,y0+0.04,CZ);I.box(0.8,0.12,2.7,0x6b4428,fx-0.4,y0+1.55,CZ);I.box(0.5,WH-1.61,1.6,STONE,fx-0.25,y0+1.61+(WH-1.61)/2,CZ);
+    I.box(1.1,0.08,2.8,0x77726d,fx-0.55,y0+0.04,CZ);walkPad(fx-0.55,CZ,0.55,1.4,0,y0+0.08);I.box(0.8,0.12,2.7,0x6b4428,fx-0.4,y0+1.55,CZ);I.box(0.5,WH-1.61,1.6,STONE,fx-0.25,y0+1.61+(WH-1.61)/2,CZ);
     for(const dz of [-1.0,1.05])I.cyl(0.035,0.035,0.2,6,0xf3ead6,fx-0.45,y0+1.71,CZ+dz);for(const dz of [-1.0,1.05])I.lit(new THREE.ConeGeometry(0.025,0.06,5),0xffd27a,fx-0.45,y0+1.84,CZ+dz);
     I.box(0.12,0.3,0.24,0x5a3b26,fx-0.45,y0+1.76,CZ+0.3);I.box(0.02,0.18,0.18,0xf3ead6,fx-0.52,y0+1.78,CZ+0.3);
     for(let i=0;i<3;i++)I.cyl(0.07,0.07,0.9,6,0x4a3020,fx-0.3,y0+0.12+i*0.05,CZ+(i-1)*0.12,0,Math.PI/2+0.2*(i-1),0);

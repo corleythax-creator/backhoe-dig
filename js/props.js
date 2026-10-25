@@ -20,7 +20,7 @@ const PROPS={
   light:{n:'Light tower',cat:5,w:1.6,d:2.8,cap:40,solid:1,lamp:['tower',[[-0.55,7.55,-0.27],[-0.18,7.55,-0.27],[0.18,7.55,-0.27],[0.55,7.55,-0.27]]]},
   cone:{n:'Cone',cat:3,w:0.36,d:0.36,cap:400},
   barrel:{n:'Barrel',cat:3,w:0.6,d:0.6,cap:300,solid:[0.3,0.3]},
-  pallet:{n:'Pallet',cat:3,w:1.22,d:1.02,cap:300},
+  pallet:{n:'Pallet',cat:3,w:1.22,d:1.02,cap:300,pad:[0.11,0.61,0.51]},
   potty:{n:'Porta-potty',cat:3,w:1.12,d:1.12,cap:40,solid:1},
   sign:{n:'Sign',cat:3,w:0.9,d:0.12,cap:200,solid:[0.08,0.08]},
   bench:{n:'Bench',cat:4,w:1.8,d:0.6,cap:120,solid:1},
@@ -60,13 +60,13 @@ const PROPS={
   haybale:{n:'Round hay bale',cat:7,w:1.2,d:1.5,cap:120,solid:1},
   straw:{n:'Straw bales',cat:7,w:0.9,d:0.95,cap:200,solid:1},
   planter:{n:'Flower planter',cat:7,w:1.2,d:0.45,cap:200,solid:1},
-  raisedbed:{n:'Raised garden bed',cat:7,w:2.4,d:1.2,cap:80},
+  raisedbed:{n:'Raised garden bed',cat:7,w:2.4,d:1.2,cap:80,pad:[0.3,1.2,0.6]},
   birdbath:{n:'Bird bath',cat:7,w:0.65,d:0.65,cap:60,solid:[0.2,0.2]},
   birdhouse:{n:'Birdhouse',cat:7,w:0.3,d:0.3,cap:60,solid:[0.05,0.05]},
   arbor:{n:'Garden arbor',cat:7,w:1.5,d:0.7,cap:40},
   shrub:{n:'Shrub',cat:7,w:1.2,d:1.2,cap:400},
   hedge:{n:'Hedge (8 ft)',cat:7,run:1,w:2.44,d:0.8,cap:400,solid:[1.22,0.4]},
-  flowers:{n:'Flower bed',cat:7,w:1.9,d:1.9,cap:200},
+  flowers:{n:'Flower bed',cat:7,w:1.9,d:1.9,cap:200,pad:[0.06,0.67,0.67]},
   pumpkins:{n:'Jack-o\'-lanterns',cat:7,w:1.0,d:0.8,cap:200,lamp:['jack',[[0,0.24,0.18]]]},
   scarecrow:{n:'Scarecrow',cat:7,w:1.4,d:0.3,cap:40,solid:[0.06,0.06]},
   gnome:{n:'Garden gnome',cat:7,w:0.25,d:0.25,cap:200},
@@ -80,14 +80,14 @@ const PROPS={
   adirondack:{n:'Adirondack chair',cat:4,w:0.8,d:0.9,cap:80,tint:1},
   hammock:{n:'Hammock',cat:4,w:3.6,d:1.0,cap:30},
   umbrella:{n:'Patio table',cat:4,w:2.6,d:2.6,cap:40,solid:[0.5,0.5]},
-  gazebo:{n:'Gazebo',cat:4,w:3.6,d:3.6,cap:10,tint:1,deep:1},
+  gazebo:{n:'Gazebo',cat:4,w:3.6,d:3.6,cap:10,tint:1,deep:1,pad:[0.2,1.7,1.7]},
   woodpile:{n:'Firewood stack',cat:4,w:1.6,d:0.5,cap:40,solid:1},
   flagpole:{n:'Flag pole',cat:4,w:0.3,d:0.3,cap:40,solid:[0.06,0.06]},
   doghouse:{n:'Dog house',cat:4,w:1.0,d:1.2,cap:20,solid:1,tint:1},
   tent:{n:'Camping tent',cat:8,w:1.8,d:2.2,cap:20,solid:1},
   swing:{n:'Swing set',cat:8,w:3.2,d:1.6,cap:20},
-  trampoline:{n:'Trampoline',cat:8,w:3.7,d:3.7,cap:10},
-  sandbox:{n:'Sandbox',cat:8,w:2.4,d:2.4,cap:20},
+  trampoline:{n:'Trampoline',cat:8,w:3.7,d:3.7,cap:10,pad:[0.9,1.17,1.17]},
+  sandbox:{n:'Sandbox',cat:8,w:2.4,d:2.4,cap:20,pad:[0.18,1.15,1.15]},
   hoop:{n:'Basketball hoop',cat:8,w:1.8,d:1.4,cap:20,solid:[0.5,0.3]},
   goal:{n:'Soccer goal',cat:8,w:3.8,d:1.3,cap:10},
   cornhole:{n:'Cornhole board',cat:8,w:0.61,d:1.22,cap:40}};
@@ -298,10 +298,12 @@ function propPts(a){const p=PROPS[a.t],hw=p.w/2*a.s,hd=p.d/2*a.s,c=Math.cos(a.ya
 function propY(a){const P=PROPS[a.t];if(!P.deep)return surfAt(a.x,a.z);let y=-1e9;for(const [x,z] of propPts(a))y=Math.max(y,surfAt(x,z));return y}
 // the instances and the solid boxes from the asset list; assetsBuild (scenery.js) calls it after every change
 function propsBuild(){const o=new THREE.Object3D(),col=new THREE.Color(),n={};
-  for(let i=SOLIDS.length-1;i>=0;i--)if(SOLIDS[i].prop)SOLIDS.splice(i,1);
+  for(let i=SOLIDS.length-1;i>=0;i--)if(SOLIDS[i].prop)SOLIDS.splice(i,1);walkPadsDrop('prop');
   for(const k in PROPS)n[k]=0;
   for(const a of assets){const P=PROPS[a.t];if(a.hd||!P||n[a.t]>=P.cap)continue;const im=propIMs[a.t],i=n[a.t]++;
-    o.position.set(a.x,propY(a),a.z);o.rotation.set(0,a.yaw,0);o.scale.setScalar(a.s);o.updateMatrix();im.setMatrixAt(i,o.matrix);
+    const py=propY(a);o.position.set(a.x,py,a.z);o.rotation.set(0,a.yaw,0);
+    // what you can stand on (a pallet, the gazebo's floor, the sandbox): its top (pad: [height, half width, half depth])
+    if(P.pad)walkPad(a.x,a.z,P.pad[1]*a.s,P.pad[2]*a.s,a.yaw,py+P.pad[0]*a.s,{tag:'prop'});o.scale.setScalar(a.s);o.updateMatrix();im.setMatrixAt(i,o.matrix);
     const t=P.tint?PROP_TINT[(a.c|0)%PROP_TINT.length]:[1,1,1];im.setColorAt(i,col.setRGB(t[0],t[1],t[2]));
     if(P.solid){const [lx,lz]=Array.isArray(P.solid)?P.solid:[P.w/2,P.d/2],c=Math.cos(a.yaw),s=Math.sin(a.yaw),L=lx*a.s,Z=lz*a.s;
       SOLIDS.push({x:a.x,z:a.z,lx:L,lz:Z,cs:c,sn:s,hx:Math.abs(c)*L+Math.abs(s)*Z,hz:Math.abs(s)*L+Math.abs(c)*Z,prop:1})}}
