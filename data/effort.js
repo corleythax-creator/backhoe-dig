@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-25T14:18:00Z",
+ "updated": "2026-10-25T15:27:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -66,9 +66,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-25",
-   "dh": 1.5,
-   "act": 0.5,
-   "versions": 1
+   "dh": 6.5,
+   "act": 1,
+   "versions": 2
   }
  ],
  "extra": [
@@ -2103,6 +2103,15 @@ window.EFFORT = {
    "tris": 4283916,
    "chars": 1424395,
    "what": "The start card shows every machine as a small icon in one grid; Jessica's Island offers only the mower, four-wheeler, dirt bike, boat and on foot"
+  },
+  {
+   "v": 226,
+   "asked": "2026-10-25T09:40:00-05:00",
+   "live": "2026-10-25T10:27:41-05:00",
+   "dh": 5,
+   "tris": 5446195,
+   "chars": 1431118,
+   "what": "Jessica's golf cart by the arch on her path, and a go-kart on Corley's, Dexter's and Jessica's islands; both on the start card, with their own Tuning"
   }
  ]
 };

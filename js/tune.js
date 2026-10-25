@@ -66,6 +66,13 @@ const TUNE=[
   ['atSpd','Four-wheeler','Top speed',30*0.44704,'mph',5,90,1],['atRev','Four-wheeler','Top speed in reverse',7*0.44704,'mph',2,25,1],
   ['atAcc','Four-wheeler','Acceleration (engine pull)',1,'pct',20,400,5],['atBrake','Four-wheeler','Braking',1,'pct',20,400,5],
   ['atLock','Four-wheeler','Steering lock',0.7,'deg',10,50,1],['atGrip','Four-wheeler','Grip in turns (lower slides sooner)',0.85,'pct',20,400,5],
+  // the golf cart and the go-karts (carts.js)
+  ['gcSpd','Golf cart','Top speed',14*0.44704,'mph',3,40,1],['gcRev','Golf cart','Top speed in reverse',6*0.44704,'mph',2,20,1],
+  ['gcAcc','Golf cart','Acceleration (motor pull)',1,'pct',20,400,5],['gcBrake','Golf cart','Braking',1,'pct',20,400,5],
+  ['gcLock','Golf cart','Steering lock',0.6,'deg',10,50,1],['gcGrip','Golf cart','Grip in turns (lower slides sooner)',1,'pct',20,400,5],
+  ['gkSpd','Go-kart','Top speed',28*0.44704,'mph',5,80,1],['gkRev','Go-kart','Top speed in reverse',4*0.44704,'mph',2,15,1],
+  ['gkAcc','Go-kart','Acceleration (engine pull)',1,'pct',20,400,5],['gkBrake','Go-kart','Braking',1,'pct',20,400,5],
+  ['gkLock','Go-kart','Steering lock',0.55,'deg',10,50,1],['gkGrip','Go-kart','Grip in turns (lower slides sooner)',1.3,'pct',20,400,5],
   ['wkRun','On foot','Jog (stick all the way)',2.8,'mph',1,20,0.1],['wkSwim','On foot','Swim',1.1,'mph',0.5,10,0.1],['wkSprint','On foot','Sprint',5.6,'mph',1,40,0.1],
   ['wkJump','On foot','Jump height',6.2*6.2/(2*9.8),'ft',0.5,30,0.1],['wkGrav','On foot','Gravity (how floaty a jump is)',1,'pct',10,300,5],
   ['stepMud','On foot','Footsteps squelch where the ground is wetter than',0.45,'pct',5,100,5],['wkLook','On foot','Camera turn speed with the stick',1,'pct',20,400,5],['wkReachUp','On foot','How high the worker reaches for blocks',2.3,'ft',2,20,0.5],['blkReach','On foot','Farthest block reach (cab view)',80*0.3048,'ft',10,300,5],

@@ -210,7 +210,7 @@ function updateSound(dt){
   sndEngineTo(be,be.rpm,Math.max(0,bk.thr),quiet*0.65*bk.run,t);
   // Dexter's machine you are in (heavy.js): idles while you sit in it; driving and the hydraulics pull the revs up. The
   // pickup shifts through four gears as it gathers speed; the four-wheeler's belt drive holds the revs up with the gas
-  {const R=WK_RIDES[wk.inside],h=R&&R.m==='heavy'?R.o:null,car=h&&h.K.car;if(h)sndPlace(snd.H,h.x,h.y+1.2,h.z,t,cab==='heavy'&&!h.K.rider);
+  {const R=WK_RIDES[wk.inside],h=R&&R.m==='heavy'?R.o:null,car=h&&(h.K.snd??h.K.car);if(h)sndPlace(snd.H,h.x,h.y+1.2,h.z,t,cab==='heavy'&&!h.K.rider);
     const he=snd.engH,hT=750+900*(h&&!car?Math.min(1,Math.abs(h.v)/h.top*0.7+h.hyd*0.5+Math.abs(h.thr)*0.2):0);he.rpm+=(hT-he.rpm)*Math.min(1,dt*3);
     sndEngineTo(he,he.rpm,h&&!car?Math.min(1,Math.abs(h.thr)*0.7+h.hyd*0.6):0,quiet*0.8*(h&&!car?h.run:0),t);
     const sp=h?Math.abs(h.v):0,th=h?Math.max(0,h.thr*Math.sign(h.v||h.thr)):0;
