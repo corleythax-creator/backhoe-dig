@@ -1,8 +1,8 @@
 // Corley's Island: the lake. The swells are the same three waves lakeY (walker.js) rides, so boats and the swimmer
 // keep to the surface; on top of them the drawn water has fine wind ripples from a generated slope map (lkNrm, two
 // layers drifting different ways, a third close up on High and Ultra), sky reflections that grow at a slant (Fresnel),
-// a glitter of sun, colour from how deep it is (the lake bed baked from baseHeight into lkBed, so the shallows are
-// clear over the sand and the deep water dark teal), foam lapping the waterline with the swells, and rain rings while
+// a glitter of sun, colour from how deep it is (the lake bed baked from baseHeight into lkBed, so the sand shows
+// faintly through the murky shallows and the deep water dark teal), foam lapping the waterline with the swells, and rain rings while
 // it rains. What it costs is the Graphics setting lakeQ (0 Low: two ripple layers, no rain rings); the water itself,
 // where it stands and what floats on it, is the same on every device.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
@@ -84,10 +84,10 @@ vec2 lkRain(vec2 p,float t){vec2 s=vec2(0.0);p*=1.6;vec2 c=floor(p);
       if(uRain>0.01&&lkDist<45.0)s+=lkRain(vWP.xz,uTime)*uRain*(1.0-lkDist/45.0);
       #endif
       lkN=normalize(vec3(-s.x,1.0,-s.y));
-      // light through the water: the path down to the bed and back (bent at the surface) dims it; the shallows
-      // take the bed's sandy green, the deep water dark teal
-      float cv=max(dot(lkV,lkN),0.02),ct=sqrt(1.0-(1.0-cv*cv)/1.78),T=exp(-lkD/ct*0.38);
-      diffuseColor.rgb=mix(vec3(0.075,0.16,0.12),vec3(0.012,0.05,0.062),smoothstep(0.2,6.0,lkD));
+      // light through the water: the path down to the bed and back (bent at the surface) dims it, a lake's green
+      // murk hiding the bed within a few feet; the shallows take a silty green, the deep water dark teal
+      float cv=max(dot(lkV,lkN),0.02),ct=sqrt(1.0-(1.0-cv*cv)/1.78),T=exp(-lkD/ct*0.95);
+      diffuseColor.rgb=mix(vec3(0.085,0.13,0.085),vec3(0.014,0.048,0.05),smoothstep(0.2,4.0,lkD));
       diffuseColor.a=1.0-T;
       // foam lapping the waterline (it rides the swells, since lkD does), in lace from the noise
       float fn=texture2D(uNrm,vWP.xz/9.0+vec2(0.0,0.006)*uTime).b;
