@@ -48,7 +48,7 @@ function edRingAt(l,x,z,r,sq){const p=l.geometry.attributes.position.array;
 
 // ---------- open and close ----------
 function editorOpen(){if(edOn||bench.on)return;edOn=true;mapAssets=assets;
-  document.body.classList.add('editing');$('#editor').hidden=false;showMenu(false);help.hidden=true;toggleMap(false);clearKeys();
+  document.body.classList.add('editing');$('#editor').hidden=false;$('#bucketChip').hidden=true;showMenu(false);help.hidden=true;toggleMap(false);clearKeys();
   const fv=mode==='boat'?btCur():mode==='heavy'?hvCur():mode==='bike'?bk:mode==='truck'?tr:mode==='mow'?mw:mode==='skid'?sk:mode==='walk'?wk:st;ed.x=fv.x;ed.z=fv.z;
   ed.yaw=Math.atan2(camera.position.x-fv.x,camera.position.z-fv.z);ed.dist=45;ed.pitch=0.95;
   ed.home={x:ed.x,z:ed.z,yaw:ed.yaw,dist:ed.dist,pitch:ed.pitch};ed.drawer=!edNarrow();ed.pane=ED_GROUPS[ed.group].pane?ed.group:'';
