@@ -359,6 +359,17 @@ function shopKit(){const parts=new Map(),O=new THREE.Object3D(),n=new THREE.Vect
 // warning pads), a double yellow line, curb inlets to the storm drains and manhole covers. The beach road is paved
 // without curbs. Like the rest of the town it is laid on the ground as it is at load (baseHeight)
 const MST={x:4,z0:556,z1:724.5,cz:652,cw:3.5,walk:1.85,curb:0.15,top:0.17,lift:0.04};
+// curb ramps where the crosswalks land: the sidewalk slopes down to the gutter over 4 ft. Each: the span along the
+// curb (a0..a1), which axis the curb runs along, the curb line and which way the sidewalk lies from it
+const MST_RAMPS=[];for(const s of [-1,1]){const X=MST.x,C0=MST.cz-MST.cw,C1=MST.cz+MST.cw;for(const [z0,z1] of [[C0-5,C0-2],[C1+2,C1+5]])MST_RAMPS.push({a0:z0,a1:z1,ax:'z',c:s*X,o:s});
+  for(const [x0,x1] of s<0?[[-9.3,-6.3]]:[[6.3,9.3]])for(const t of [-1,1])MST_RAMPS.push({a0:x0,a1:x1,ax:'x',c:t<0?C0:C1,o:t})}
+// the sidewalk's top above the ground at x, z (lower down the ramps)
+function mstRamp(x,z){for(const r of MST_RAMPS){const a=r.ax==='z'?z:x,d=(r.ax==='z'?x-r.c:z-r.c)*r.o;if(a>=r.a0&&a<=r.a1&&d>=0&&d<1.25)return 0.045+(MST.top-0.045)*d/1.25}return MST.top}
+// how far the paving stands above the ground at x, z (0 off it): the asphalt of Main Street and the cross street, and
+// the curbs and sidewalks; what feet and wheels stand on (groundLift)
+function mstLift(x,z){if(z<MST.z0||z>MST.z1)return 0;const ax=Math.abs(x),C0=MST.cz-MST.cw,C1=MST.cz+MST.cw,WE=MST.x+MST.curb+MST.walk;
+  if(ax<MST.x)return MST.lift;if(ax>140)return 0;if(z>=C0&&z<=C1)return MST.lift;if(z<576.5||ax>128)return 0;
+  return ax<=WE||z>=C0-3.3&&z<C0||z>C1&&z<=C1+3.3?mstRamp(x,z):0}
 function mainStreets(){const K=shopKit(),F=famKit(),G=baseHeight,asph=shopLib('asphalt'),walk=shopLib('concrete_broom'),conc=shopLib('concrete'),
     joint=shopStd(0x6a6862,0,0.95),yel=shopStd(0xd8b024,0,0.6),wht=shopStd(0xe9e7e0,0,0.6),pad=shopStd(0xd9a91c,0,0.8),
     X=MST.x,W=X+MST.curb,WE=W+MST.walk,C0=MST.cz-MST.cw,C1=MST.cz+MST.cw,XE=140,WX=128,BZ=576.5;
@@ -371,11 +382,7 @@ function mainStreets(){const K=shopKit(),F=famKit(),G=baseHeight,asph=shopLib('a
       const v=(t,s)=>{const x=ax+ux*t-uz*s*w/2,z=az+uz*t+ux*s*w/2;return [x,G(x,z)+lift,z]};
       for(let k=0;k<n;k++){const t0=k/n*L,t1=(k+1)/n*L+(k===n-1&&i<pts.length-2?w/2:0),a=v(t0,-1),b=v(t0,1),c=v(t1,-1),d=v(t1,1);tri(a,c,b);tri(b,c,d)}}
     const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(P,3));K.put(mat,g)};
-  // curb ramps where the crosswalks land: the sidewalk slopes down to the gutter over 4 ft. Each: the span along the
-  // curb (a0..a1), which axis the curb runs along, the curb line and which way the sidewalk lies from it
-  const RAMPS=[];for(const s of [-1,1]){for(const [z0,z1] of [[C0-5,C0-2],[C1+2,C1+5]])RAMPS.push({a0:z0,a1:z1,ax:'z',c:s*X,o:s});
-    for(const [x0,x1] of s<0?[[-9.3,-6.3]]:[[6.3,9.3]])for(const t of [-1,1])RAMPS.push({a0:x0,a1:x1,ax:'x',c:t<0?C0:C1,o:t})}
-  const rampAt=(x,z)=>{for(const r of RAMPS){const a=r.ax==='z'?z:x,d=(r.ax==='z'?x-r.c:z-r.c)*r.o;if(a>=r.a0&&a<=r.a1&&d>=0&&d<1.25)return 0.045+(MST.top-0.045)*d/1.25}return MST.top};
+  const RAMPS=MST_RAMPS,rampAt=mstRamp;
   // the curb along a run from a to b of one axis at c (o: the sidewalk's side), low across the ramps; the gutter beside it
   const curb=(ax,a,b,c,o)=>{const cut=[a,b];for(const r of RAMPS)if(r.ax===ax&&Math.abs(r.c-c)<0.01)cut.push(r.a0,r.a1);cut.sort((p,q)=>p-q);
     for(let i=0;i<cut.length-1;i++){const p0=Math.max(a,cut[i]),p1=Math.min(b,cut[i+1]);if(p1-p0<0.01)continue;const n=Math.ceil((p1-p0)/1.5);
@@ -420,4 +427,4 @@ function mainStreets(){const K=shopKit(),F=famKit(),G=baseHeight,asph=shopLib('a
     F.cyl(0.035,0.035,2.5,6,0x9aa0a4,x,g+1.25,z);F.geo(new THREE.CylinderGeometry(0.36,0.36,0.02,8,1,false,Math.PI/8),0x8a8e91,x+Math.sin(ry)*0.045,g+2.25,z+Math.cos(ry)*0.045,ry,Math.PI/2);
     const m=new THREE.Mesh(sgeo,smat);m.position.set(x+Math.sin(ry)*0.06,g+2.25,z+Math.cos(ry)*0.06);m.rotation.y=ry;scene.add(m);SOLIDS.push({x,z,hx:0.1,hz:0.1})}
   K.add();famAdd(F)}
-mainStreets();
+mainStreets();groundLift=mstLift;
