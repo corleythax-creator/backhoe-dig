@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-25T16:59:00Z",
+ "updated": "2026-10-25T17:28:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -66,9 +66,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-25",
-   "dh": 20,
-   "act": 2,
-   "versions": 6
+   "dh": 26,
+   "act": 2.5,
+   "versions": 7
   }
  ],
  "extra": [
@@ -2148,6 +2148,15 @@ window.EFFORT = {
    "tris": 5418010,
    "chars": 1462866,
    "what": "Island tour test, first person (menu, start card, or ?tourfp): the same run seen through the player's eyes, the head looking round like a person's, mostly the way ahead with glances at machines, boats, bridges, the crane barge, houses and the town, from a fixed seed so runs compare"
+  },
+  {
+   "v": 231,
+   "asked": "2026-10-25T11:15:00-05:00",
+   "live": "2026-10-25T12:28:51-05:00",
+   "dh": 6,
+   "tris": 5457172,
+   "chars": 1471763,
+   "what": "The lake looks real: wind ripples, sky reflections that grow at a slant, sun glitter, clear shallows over the sand, deep water dark teal, foam lapping the beaches and rain rings when it rains (Graphics: Lake water)."
   }
  ]
 };
