@@ -57,7 +57,7 @@ canvas#view{position:fixed;inset:0;width:100%;height:100%;display:block;touch-ac
   padding:calc(env(safe-area-inset-top,0px) + 10px) var(--pr) 4px var(--pl);zoom:var(--ms)}
 .tbar button{height:44px;font-size:15px;padding:0 14px;white-space:nowrap}
 .tbar svg,.ib svg{width:20px;height:20px;flex:none;fill:none;stroke:currentColor;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
-#menuBtn{flex:none;width:44px;padding:0;display:grid;place-items:center;border-radius:50%}
+#menuBtn{flex:none;width:44px;padding:0;display:grid;place-items:center;border-radius:8px}
 #menuBtn svg{width:22px;height:22px}
 #menuBtn[aria-expanded="true"]{background:var(--machine);color:#1c1309;border-color:var(--machine)}
 .brand{flex:none;padding:0 4px;font:600 12px/1 var(--f-display);letter-spacing:.22em;text-transform:uppercase;color:var(--machine);text-shadow:0 1px 3px rgba(0,0,0,.7)}
@@ -65,7 +65,7 @@ canvas#view{position:fixed;inset:0;width:100%;height:100%;display:block;touch-ac
 @container stage (max-width:1000px){.brand{display:none}}
 /* the gauges: one glass cell per job; tap to hide the detail lines (hidden for now; the game keeps them up to date) */
 .status{flex:1 1 auto;min-width:0;display:flex;align-items:stretch;gap:6px;cursor:pointer;pointer-events:auto}
-.srow{flex:1 1 0;min-width:0;max-width:220px;display:flex;flex-direction:column;justify-content:center;gap:4px;padding:7px 12px;border-radius:12px;background:var(--glass);border:1px solid var(--hud-line)}
+.srow{flex:1 1 0;min-width:0;max-width:220px;display:flex;flex-direction:column;justify-content:center;gap:4px;padding:7px 12px;border-radius:8px;background:var(--glass);border:1px solid var(--hud-line)}
 .srow[hidden]{display:none}
 .line{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:0 6px}
 .lbl{font:600 12px/1 var(--f-display);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
@@ -79,19 +79,19 @@ canvas#view{position:fixed;inset:0;width:100%;height:100%;display:block;touch-ac
 #trenchBar>i{background:var(--ok)}#lawnBar>i{background:#9bd46a}
 .full .val{color:var(--gas)}
 /* the action cluster at the top right: one glass strip, the buttons inside it borderless */
-.tacts{flex:none;margin-left:auto;display:flex;align-items:center;gap:2px;padding:3px;border-radius:14px;background:var(--glass);border:1px solid var(--hud-line);box-shadow:var(--lift);pointer-events:auto}
-.tacts>button{height:40px;border:0;background:transparent;border-radius:11px;padding:0 12px}
+.tacts{flex:none;margin-left:auto;display:flex;align-items:center;gap:2px;padding:3px;border-radius:9px;background:var(--glass);border:1px solid var(--hud-line);box-shadow:var(--lift);pointer-events:auto}
+.tacts>button{height:40px;border:0;background:transparent;border-radius:6px;padding:0 12px}
 .ib{display:inline-flex;align-items:center;gap:7px}
 #blkBtn[aria-pressed="true"],#pumpBtn[aria-pressed="true"],#gripBtn[aria-pressed="true"],#wipeBtn[aria-pressed="true"],#ctlBtn[aria-expanded="true"]{background:rgba(255,138,31,.18);color:var(--machine);box-shadow:inset 0 0 0 1px rgba(255,138,31,.55)}
 @media (hover:hover){.tacts>button:hover{background:var(--glass-hi)}}
 /* VR: one big button straight into the headset (top bar and start card), shown only where WebXR VR is offered */
 .tacts>button.vrgo{background:var(--machine);color:#1c1309;font-weight:700;padding:0 16px;margin-left:4px}
-.card button.vrgo{flex:none;height:64px;min-height:64px;font-size:24px;font-weight:700;background:var(--machine);color:#1c1309;border:0;border-radius:14px}
+.card button.vrgo{flex:none;height:64px;min-height:64px;font-size:24px;font-weight:700;background:var(--machine);color:#1c1309;border:0;border-radius:8px}
 .row{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-button{pointer-events:auto;touch-action:manipulation;font:600 15px/1 var(--f-display);letter-spacing:.07em;text-transform:uppercase;color:var(--ink);background:var(--glass);border:1px solid var(--hud-line);border-radius:12px;height:42px;padding:0 14px;cursor:pointer;
+button{pointer-events:auto;touch-action:manipulation;font:600 15px/1 var(--f-display);letter-spacing:.07em;text-transform:uppercase;color:var(--ink);background:var(--glass);border:1px solid var(--hud-line);border-radius:7px;height:42px;padding:0 14px;cursor:pointer;
   transition:background-color .12s,color .12s,box-shadow .12s}
 button:focus-visible{outline:2px solid var(--gas);outline-offset:2px}
-button.sm{height:34px;padding:0 10px;font-size:13px;border-radius:9px}
+button.sm{height:34px;padding:0 10px;font-size:13px;border-radius:6px}
 button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 /* menus drop from the top bar as glass sheets: rows of plain buttons under small group headings */
 #menu,#ctlMenu{position:absolute;top:100%;margin-top:8px;z-index:3;box-sizing:border-box;display:flex;flex-direction:column;gap:1px;pointer-events:auto;
@@ -126,7 +126,7 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 #camBtn[data-cam="chase"] #camChase,#camBtn[data-cam="cab"] #camCab,#camBtn[data-cam="orbit"] #camOrbit{background:var(--ink);color:#11151a}
 /* right column: the minimap, the block bar under it */
 .rpane{grid-area:2/3/3/4;z-index:2;min-height:0;max-height:100%;box-sizing:border-box;display:flex;flex-direction:column;align-items:flex-end;gap:8px;padding:6px var(--pr) 8px 0}
-#mini{flex:none;display:block;width:calc(118px*var(--ms));height:calc(118px*var(--ms));border-radius:16px;border:2px solid rgba(255,255,255,.2);background:#1e2a30;pointer-events:auto;cursor:pointer;box-shadow:var(--lift)}
+#mini{flex:none;display:block;width:calc(var(--mm,130px)*var(--ms));height:calc(var(--mm,130px)*var(--ms));border-radius:8px;border:1px solid rgba(255,255,255,.28);background:#1e2a30;pointer-events:auto;cursor:pointer;box-shadow:var(--lift)}
 /* UI size (menu): --s for the sticks, --ms for the top layer, the map and the block bar, --cs for the bottom layer */
 #hud{--s:1;--ms:1;--cs:1}
 #toast,#benchBar{zoom:var(--s)}
@@ -154,14 +154,14 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
   background:radial-gradient(circle at 50% 35%,#ffb066,var(--machine) 55%,#d96a0c);border:2px solid rgba(255,255,255,.55);box-shadow:0 4px 12px rgba(0,0,0,.4)}
 /* Get in over the left stick; Sprint and Jump over the right one in Walk mode (Sprint lights up while it is on) */
 #seatBtn,.walkbtns{position:absolute;bottom:100%;margin-bottom:12px;zoom:var(--cs)}
-#seatBtn{left:0;min-width:110px;height:46px;font-size:17px;border-radius:23px;background:var(--machine);color:#1c1309;border:0;box-shadow:var(--lift);white-space:nowrap}
+#seatBtn{left:0;min-width:110px;height:46px;font-size:17px;border-radius:8px;background:var(--machine);color:#1c1309;border:0;box-shadow:var(--lift);white-space:nowrap}
 .walkbtns{right:0;display:flex;gap:8px}.walkbtns[hidden]{display:none}
 /* the excavator's Drive / Dig switch over the right stick: the lit half is what the sticks run */
-.exswitch{position:absolute;bottom:100%;right:0;margin-bottom:12px;zoom:var(--cs);display:flex;border-radius:24px;padding:3px;background:var(--glass);border:1px solid var(--hud-line);box-shadow:var(--lift);pointer-events:auto}
+.exswitch{position:absolute;bottom:100%;right:0;margin-bottom:12px;zoom:var(--cs);display:flex;border-radius:9px;padding:3px;background:var(--glass);border:1px solid var(--hud-line);box-shadow:var(--lift);pointer-events:auto}
 .exswitch[hidden]{display:none}
-.exswitch button{height:40px;min-width:76px;padding:0 14px;font-size:17px;border:0;border-radius:20px;background:transparent;color:var(--muted)}
+.exswitch button{height:40px;min-width:76px;padding:0 14px;font-size:17px;border:0;border-radius:6px;background:transparent;color:var(--muted)}
 .exswitch button[aria-pressed="true"]{background:var(--machine);color:#1c1309}
-#jumpBtn,#sprintBtn,#plantBtn,#trimBtn,#bumpBtn,#bedBtn{height:46px;min-width:78px;padding:0 14px;font-size:17px;border-radius:23px;box-shadow:var(--lift)}
+#jumpBtn,#sprintBtn,#plantBtn,#trimBtn,#bumpBtn,#bedBtn{height:46px;min-width:78px;padding:0 14px;font-size:17px;border-radius:8px;box-shadow:var(--lift)}
 #jumpBtn{background:var(--machine);color:#1c1309;border:0}
 #sprintBtn[aria-pressed="true"],#trimBtn[aria-pressed="true"]{background:rgba(255,138,31,.2);color:var(--machine);border-color:var(--machine)}
 #jumpBtn:active{transform:translateY(1px)}
@@ -175,7 +175,7 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 .cap{font:600 14px/1.35 var(--f-display);color:var(--ink);letter-spacing:.04em;white-space:nowrap;text-shadow:0 1px 2px rgba(0,0,0,.9),0 0 10px rgba(0,0,0,.6)}
 .cap b{color:var(--machine);font-weight:700}
 #capR{margin-left:auto;text-align:right}
-.stats{margin-left:auto;padding:5px 10px;border-radius:999px;background:var(--glass);font:500 12px/1 var(--f-display);letter-spacing:.06em;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+.stats{margin-left:auto;padding:5px 10px;border-radius:6px;background:var(--glass);font:500 12px/1 var(--f-display);letter-spacing:.06em;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
 .stats b{color:var(--ink);font-weight:700}
 /* narrow screens (a phone upright): the gauges take a row of their own, the frame rate a line of its own */
 @container stage (max-width:640px){.tbar{flex-wrap:wrap}.status{order:3;flex-basis:100%}
@@ -185,8 +185,8 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 /* short screens (a phone on its side): a slimmer top layer and minimap */
 @container stage (max-height:440px){.tbar{min-height:50px;padding-top:calc(env(safe-area-inset-top,0px) + 6px)}.status .sub{display:none}#ctlMenu button{height:40px}
   .tbar button,#menuBtn{height:40px}#menuBtn{width:40px}.tacts>button{height:36px}
-  .bbar{min-height:34px}#mini{width:calc(96px*var(--ms));height:calc(96px*var(--ms));border-radius:14px}}
-#updBtn{position:absolute;left:50%;top:22%;transform:translateX(-50%);z-index:6;background:var(--gas);color:#1c1309;border:0;height:48px;font-size:18px;white-space:nowrap;border-radius:24px;box-shadow:var(--lift)}
+  .bbar{min-height:34px}#mini{width:calc(var(--mm,130px)*.8*var(--ms));height:calc(var(--mm,130px)*.8*var(--ms))}}
+#updBtn{position:absolute;left:50%;top:22%;transform:translateX(-50%);z-index:6;background:var(--gas);color:#1c1309;border:0;height:48px;font-size:18px;white-space:nowrap;border-radius:8px;box-shadow:var(--lift)}
 /* the lawn gauge: a small glass chip at the top middle while you are on a lawn patch, green once it is done */
 #lawnChip{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 12px);transform:translateX(-50%);z-index:3;zoom:var(--ms);min-width:170px;box-sizing:border-box;
   display:grid;grid-template-columns:1fr auto;align-items:baseline;gap:5px 12px;padding:8px 14px 9px;border-radius:14px;background:var(--glass);border:1px solid var(--hud-line);box-shadow:var(--lift);pointer-events:none}
@@ -217,8 +217,8 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 #lawnList .lwrow b{font-variant-numeric:tabular-nums}
 #lawnList .lwrow>i{grid-column:1/-1;display:block;height:4px;border-radius:2px;background:rgba(255,255,255,.12);overflow:hidden}
 #lawnList .lwrow>i>i{display:block;height:100%;background:#9bd46a}
-#toast{position:absolute;left:0;right:0;top:30%;display:flex;justify-content:center}
-#toast span{font:700 20px/1.25 var(--f-display);letter-spacing:.03em;background:var(--hud);border:1px solid var(--hud-line);border-left:4px solid var(--machine);padding:10px 16px;border-radius:12px;text-align:center;max-width:80%;opacity:0;transform:translateY(6px);transition:opacity .25s,transform .25s;box-shadow:var(--lift)}
+#toast{position:absolute;left:0;right:0;bottom:calc(env(safe-area-inset-bottom,0px) + 64px);display:flex;justify-content:center;pointer-events:none;z-index:3}
+#toast span{font:600 17px/1.25 var(--f-display);letter-spacing:.03em;background:rgba(12,15,18,.72);border:0;border-left:3px solid var(--machine);padding:7px 14px;border-radius:6px;text-align:center;max-width:80%;opacity:0;transform:translateY(6px);transition:opacity .25s,transform .25s;box-shadow:var(--lift)}
 #toast span.show{opacity:1;transform:none}
 #toast span.bad{border-left-color:var(--danger);color:#ffd9d5}
 #toast span.good{border-left-color:var(--ok)}
@@ -292,7 +292,7 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 .buildlink a{color:var(--machine);font-weight:600}
 .ver{font:600 14px/1.2 var(--f-display);letter-spacing:.05em;color:var(--muted);text-align:right;padding:4px 6px 2px}
 .card .ver{text-align:center;font-size:15px!important;margin-top:-6px}
-.card button{background:var(--machine);color:#1c1309;height:52px;font-size:20px;border:0;border-radius:14px}
+.card button{background:var(--machine);color:#1c1309;height:52px;font-size:20px;border:0;border-radius:8px}
 /* the start card leads with a small icon per machine (and on foot), as many to a row as fit; tapping one starts the
    game in that mode. The two groups read as one grid, and the island picked can hide the ones it has no room for */
 #help .card{max-width:600px}
@@ -548,6 +548,21 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
 #wetKey>span{display:flex;justify-content:space-between;gap:10px;font:600 15px/1.2 var(--f-display);color:var(--muted)}
 #wetGround{align-self:flex-start;margin-top:4px}
 
+/* the minimap's size is ☰ Minimap (--mm, controls.js); Off hides it */
+#mini[hidden]{display:none}
+/* while the mouse is taken for mouse look: one quiet line under the top bar (controls.js) */
+#lockHint{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 64px);transform:translateX(-50%);z-index:3;pointer-events:none;
+  font:600 14px/1 var(--f-display);letter-spacing:.06em;text-transform:uppercase;color:rgba(255,255,255,.62);text-shadow:0 1px 3px rgba(0,0,0,.8)}
+#lockHint[hidden]{display:none}
+/* mouse and keyboard (☰ Sticks, Auto off a touch screen): no on-screen sticks, and the buttons that stay (Get in, Drive / Dig,
+   Sprint, Jump) sit lower and smaller over the key captions */
+.nostk .stick{display:none}
+.nostk .sticks{padding-bottom:4px}
+.nostk #seatBtn,.nostk #jumpBtn,.nostk #sprintBtn,.nostk #plantBtn,.nostk #trimBtn,.nostk #bumpBtn,.nostk #bedBtn{height:36px;min-width:0;font-size:15px;box-shadow:none}
+.nostk .exswitch button{height:32px;min-width:60px;font-size:15px}
+.nostk .tbar button{height:38px}
+.nostk #menuBtn{width:38px}
+
 </style>
 <div class="app">
   <div class="side">
@@ -629,6 +644,9 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
       <button id="keysBtn">Keys</button>
       <button id="syncBtn" hidden>Sync devices</button>
       <div class="sizes"><span>UI size</span><button data-s="1">1x</button><button data-s="1.5">1.5x</button><button data-s="2">2x</button></div>
+      <div class="sizes" id="miniRow"><span>Minimap</span><button data-mm="0">Off</button><button data-mm="1">S</button><button data-mm="2">M</button><button data-mm="3">L</button><button data-mm="4">XL</button></div>
+      <div class="sizes" id="stickRow"><span>Sticks</span><button data-stk="auto">Auto</button><button data-stk="on">On</button><button data-stk="off">Off</button></div>
+      <div class="sizes" id="msgRow"><span>Messages</span><button data-msg="all">All</button><button data-msg="few">Few</button><button data-msg="off">Off</button></div>
       <div class="mhead">Tools</div>
       <button id="benchBtn">Speed test</button>
       <button id="digTestBtn">Dig site test</button>
@@ -685,6 +703,8 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
   <div id="bucketChip" hidden><span id="bucketChipName">Bucket</span><b id="bucketChipVal">0%</b><i class="bar"><i id="bucketChipBar"></i><i id="bucketChipFull"></i></i><span id="bucketChipSub"></span></div>
   <div id="lawnChip" hidden><span id="lawnChipName">Lawn</span><b id="lawnChipVal">0%</b><i class="bar"><i id="lawnChipBar"></i></i></div>
   <div id="toast"><span id="toastText"></span></div>
+  <!-- while the mouse is taken for mouse look: how to let it go (controls.js) -->
+  <div id="lockHint" hidden></div>
   <button id="updBtn" hidden></button>
 </div>
 
@@ -1090,6 +1110,10 @@ const TUNE=[
   ['pbrSheen','Ground look','Sheen: how strong the glints on wet and shiny ground are',1,'pct',0,300,5],
   ['pbrRain','Ground look','Extra sheen while it rains',1,'pct',0,400,5],['pbrGround','Ground look','Relief: how bumpy the natural dirt and grass look',0.9,'pct',0,300,5],
   ['pbrFace','Ground look','Relief: how deep the bucket-tooth grooves, cracks, pebbles and roots on dug faces look',1,'pct',0,300,5],
+  // the camera with a mouse: a click on the scene takes the mouse and moving it looks round (Esc lets it go); the chase
+  // camera swings round behind a turning machine and drifts back behind it while it moves (main.js, controls.js)
+  ['mouseLook','Camera','Mouse look speed',1,'pct',20,400,5],['camFollow','Camera','How quickly the chase camera swings round behind a turning machine',1,'pct',10,400,5],
+  ['camBack','Camera','The chase camera drifts back behind a moving machine this long after you last turned it (0 = never)',2.5,'s',0,30,0.5],
   ['rumble','Controller','How hard the controller shakes (Xbox pad and Quest controllers; 0% = off)',1,'pct',0,200,5],
   ['fxAo','Screen effects','Shade where things meet and in hollows (Ultra)',1,'pct',0,200,5],['fxAoR','Screen effects','How far that shade reaches',1.6,'ft',0.5,10,0.25],
   ['fxBloom','Screen effects','Glow round bright light (Ultra)',0.2,'pct',0,200,5],['fxBloomThr','Screen effects','How bright light must be to glow',0.88,'pct',40,99,1],
@@ -1194,6 +1218,7 @@ const WORDS=[
   ['walkKb','On foot','On foot. [jump] jumps, [place] sets a block, [enter] gets into a machine.'],
   ['walkTouch','On foot','On foot. Tap Jump to jump. Walk up to a machine and tap Get in.'],
   ['walkPad','On foot','On foot. A jumps, X sets a block, B gets into a machine.'],
+  ['lockHint','Other','Esc frees the mouse'],
   ['mouseLook','On foot','Mouse look. Move the mouse to look around, wheel or [zoom] zooms, [lookAhead] looks ahead. Esc frees the mouse.'],
   ['bikeTip','Dirt bike','On Dexter\'s dirt bike. [lUp] gas, [lDown] brake and back up, [lLeft] [lRight] steer. Hit the jump with some speed; gas in the air lifts the front. [enter] to climb off.',''],
   ['capL_bike','Captions','{lv} Gas / brake\n{lh} Steer','Left stick, Dirt bike'],['capR_bike','Captions','{rh} Look around','Right stick, Dirt bike'],
