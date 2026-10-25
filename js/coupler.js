@@ -25,7 +25,7 @@ function bkCut(g,dt){const k=1-TU.bkAngle*(1-st.atk),D=TU.bkSkim+(TU.exCutD-TU.b
 const CPL_KINDS=['bucket','thumb','hammer','auger'],CPL_NAME={bucket:'Bucket',thumb:'Thumb',hammer:'Hammer',auger:'Auger',none:'Coupler'};
 // the tooth point of each in the coupler's frame (tipMark); parked: turned rx about its length and rz on its side, the
 // pin that far off the ground; and where each one lies at first, beside the dig (x, z, heading)
-const CPL_TIP={bucket:[0,-0.02,L3+0.18],thumb:[0,-0.74,0.98],hammer:[0,-0.22,1.76],auger:[0,-0.2,2.2],none:[0,-0.1,0.5]};
+const CPL_TIP={bucket:[0,-0.02*BK_S,(L3+0.18)*BK_S],thumb:[0,-0.74,0.98],hammer:[0,-0.22,1.76],auger:[0,-0.2,2.2],none:[0,-0.1,0.5]};
 const CPL_PARK={bucket:{rx:Math.PI,rz:0,h:0.2},thumb:{rx:0,rz:Math.PI/2,h:0.38},hammer:{rx:0,rz:0,h:0.45},auger:{rx:0,rz:0,h:0.45}};
 const CPL_HOME={thumb:[4.4,1.6,Math.PI/2],hammer:[4.4,3.2,Math.PI/2],auger:[4.4,4.8,Math.PI/2]};
 const cpl={fit:'bucket',park:{},held:null,jaw:0.85,spin:0,hamT:0,spoil:0,spoilT:0,spoilA:0,skimT:0,toldSkim:false,toldNoDig:false,mdlOn:false,g:{bucket:bkG}};
