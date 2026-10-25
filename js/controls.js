@@ -256,8 +256,7 @@ function startIn(m){setMode(m);help.hidden=true;try{localStorage.setItem('bhd_se
 let startIsl='corley';try{const v=localStorage.getItem('bhd_startIsl');if(v==='dexter'||v==='jessica')startIsl=v}catch(e){}
 const islBtns=[...document.querySelectorAll('#startIsl [data-isl]')];
 function markIsl(){for(const b of islBtns)b.setAttribute('aria-pressed',b.dataset.isl===startIsl)}
-for(const b of islBtns)b.onclick=()=>{startIsl=b.dataset.isl;try{localStorage.setItem('bhd_startIsl',startIsl)}catch(e){}markIsl()};
-markIsl();
+for(const b of islBtns)b.onclick=()=>{startIsl=b.dataset.isl;try{localStorage.setItem('bhd_startIsl',startIsl)}catch(e){}markIsl();showTiles()};
 // each tile is a ride (a WK_RIDES key, or 'foot'); a kind there are several of (data-k 'boat', or 'hv:dozer' and the
 // like for the heavy machines on Corley's and Dexter's) means the one nearest the island picked
 const tiles=[...document.querySelectorAll('.tile')];
@@ -269,6 +268,10 @@ function tileRide(t){const k=t.dataset.k;if(!k)return t.dataset.m==='walk'?'foot
 for(const t of tiles)t.onclick=()=>{const k=tileRide(t);if(!k)return;
   if(k==='foot')startIn('walk');else{const R=WK_RIDES[k];wk.inside=k;walker.visible=false;if(R.pick)R.pick();firstCam=true;startIn(R.m)}
   if(startIsl!=='corley')startOn(startIsl,k)};
+// Jessica's Island is reached on foot over the covered bridge, so it only offers the small rides (by data-k, or data-m)
+const ISL_TILES={jessica:['walk','mow','hv:atv','bike','boat']};
+function showTiles(){const L=ISL_TILES[startIsl];for(const t of tiles)t.hidden=!!L&&!L.includes(t.dataset.k||t.dataset.m)}
+markIsl();showTiles();
 function markTile(){const r=mode==='walk'?'foot':rideKind(wk.inside||rideOf(mode));
   for(const t of tiles)t.setAttribute('aria-pressed',(t.dataset.k||(t.dataset.m==='walk'?'foot':rideOf(t.dataset.m)))===r)}
 markTile();
