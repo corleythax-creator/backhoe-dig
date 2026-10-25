@@ -610,11 +610,16 @@ let groundLift=null;
 // o.l metres above the ground under it (it follows the ground); o.rise: how much higher its far (+z) end is (a stair
 // or a ramp). Kept on a 4 m grid; padAt is the highest pad top at x, z
 const WALK_PADS=[],WP_C=4,WP_G=new Map(),wpKey=(i,j)=>(i+4096)*8192+(j+4096);
-function walkPad(x,z,hx,hz,yaw,top,o){const c=Math.cos(yaw||0),s=Math.sin(yaw||0),p={x,z,hx,hz,c,s,t:top,l:o&&o.l!==undefined?o.l:null,rise:o&&o.rise||0};
+function walkPad(x,z,hx,hz,yaw,top,o){const c=Math.cos(yaw||0),s=Math.sin(yaw||0),p={x,z,hx,hz,c,s,t:top,l:o&&o.l!==undefined?o.l:null,rise:o&&o.rise||0,tag:o&&o.tag};
   WALK_PADS.push(p);const ex=Math.abs(c)*hx+Math.abs(s)*hz,ez=Math.abs(s)*hx+Math.abs(c)*hz;
   for(let i=Math.floor((x-ex)/WP_C);i<=Math.floor((x+ex)/WP_C);i++)for(let j=Math.floor((z-ez)/WP_C);j<=Math.floor((z+ez)/WP_C);j++){const k=wpKey(i,j);
     if(!WP_G.has(k))WP_G.set(k,[]);WP_G.get(k).push(p)}
   return p}
+// the pads with a tag (the editor's props: props.js) taken out again, to be laid afresh
+function walkPadsDrop(tag){for(let i=WALK_PADS.length-1;i>=0;i--)if(WALK_PADS[i].tag===tag)WALK_PADS.splice(i,1);
+  for(const [k,L] of WP_G){const f=L.filter(p=>p.tag!==tag);if(f.length)WP_G.set(k,f);else WP_G.delete(k)}}
+// a raised strip along a bridge deck (a curb, a running board): u across it, half wide hw, its top dy over the deck
+function walkStrip(b,u,hw,dy){walkPad(b.x0+b.ux*b.len/2-b.uz*u,b.z0+b.uz*b.len/2+b.ux*u,hw,b.len/2,Math.atan2(b.ux,b.uz),b.y+dy,{rise:b.y1-b.y})}
 function padAt(x,z){const L=WP_G.get(wpKey(Math.floor(x/WP_C),Math.floor(z/WP_C)));if(!L)return -1e9;let y=-1e9;
   for(const p of L){const dx=x-p.x,dz=z-p.z,u=dx*p.c-dz*p.s,v=dx*p.s+dz*p.c;if(u<-p.hx||u>p.hx||v<-p.hz||v>p.hz)continue;
     const t=(p.l===null?p.t:baseHeight(x,z)+p.l)+(p.rise?p.rise*(v+p.hz)/(2*p.hz):0);if(t>y)y=t}

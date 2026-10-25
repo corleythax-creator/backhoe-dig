@@ -196,7 +196,7 @@ function marBoat(kind,o,x,z,yaw){const K=famKit();MAR_KIND[kind](K,o);const g=ne
   F.cyl(0.02,0.02,0.6,4,0x2a2c2f,lx,y0+8.8,lz);F.lit(new THREE.BoxGeometry(0.5,0.6,0.5),0xfff6d8,lx,y0+7.3,lz);
   // you can walk the breakwater's crest out to the lighthouse; its pad and tower
   for(let i=0;i<MAR_BW.length-1;i++){const [ax,az]=MAR_BW[i],[bx,bz]=MAR_BW[i+1],len=Math.hypot(bx-ax,bz-az);walkPad((ax+bx)/2,(az+bz)/2,1.6,len/2+0.8,Math.atan2(bx-ax,bz-az),crest+0.25)}
-  walkPad(lx,lz,2.3,2.3,0,y0);SOLIDS.push({x:lx,z:lz,hx:1.2,hz:1.2});
+  walkPad(lx,lz,1.85,1.85,0,y0);SOLIDS.push({x:lx,z:lz,hx:1.25,hz:1.25});
   K.add();famAdd(F);famAdd(RK);
   // the beam: two long cones back to back, bright at the lamp and fading out, drawn added to the night
   const g=new THREE.ConeGeometry(2.2,46,14,1,true);g.translate(0,-23,0);g.rotateX(Math.PI/2);
