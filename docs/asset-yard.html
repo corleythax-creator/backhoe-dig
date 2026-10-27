@@ -124,7 +124,7 @@ footer{padding-block:40px;color:var(--mute);font-size:13px}
     <p>The machines, boats, things and trees are exported from the running game, so each one is the exact set of meshes and materials the game draws. Tap one to turn it round and see its wireframe. Every bin sorts: by triangles, size, file size, length and more.</p></div>
     <div class="tally" id="tally"></div>
   </div>
-  <section id="machines"><div class="sh"><h2>Machines and boats</h2><span class="ct" id="mct"></span><p>Everything you can drive or ride, plus the boats on the lake, the crane barge and the worker. The Graphics setting's Machine models picks Detailed (the glTF models with photo-textured paint, steel and rubber) or Simple (the shapes built in code, used on Low graphics).</p></div>
+  <section id="machines"><div class="sh"><h2>Machines, boats, trains and cars</h2><span class="ct" id="mct"></span><p>Everything you can drive or ride, the boats on the lake, the freight and Amtrak cars, the town's traffic, the crane barge and the worker. The Graphics setting's Machine models picks Detailed (the glTF models with photo-textured paint, steel and rubber) or Simple (the shapes built in code, used on Low graphics).</p></div>
     <div class="bar" id="mbar"></div><div id="mgrid"></div></section>
   <section id="things"><div class="sh"><h2>Things to place</h2><span class="ct" id="pct"></span><p>The map editor's Add catalogue. Each kind is one model drawn as an instanced mesh, so a hundred fence sections cost one draw. Max is how many of that kind the game draws.</p></div>
     <div class="bar" id="pbar"></div><div class="grid m3" id="pgrid"></div></section>
@@ -229,7 +229,7 @@ const renders=[];
 function setLook(l){look=l;store.set('ay_look',l);document.querySelectorAll('[data-l]').forEach(b=>b.setAttribute('aria-pressed',b.dataset.l===l));renders.forEach(r=>r())}
 document.addEventListener('click',e=>{const b=e.target.closest('[data-l]');if(b)setLook(b.dataset.l)});
 // machines and boats
-{const ids=[...new Set(MODELS.filter(m=>['Machines','Boats','People'].includes(m.g)).map(m=>m.id))],grid=$('#mgrid');
+{const ids=[...new Set(MODELS.filter(m=>['Machines','Boats','Trains','Town traffic','People'].includes(m.g)).map(m=>m.id))],grid=$('#mgrid');
   const S=sorter($('#mbar'),'mach',MKEYS,'tris',render,`<label>Models ${lookSeg('mlook')}</label>`);
   function render(){const L=S.sort(ids.map(cur));
     grid.innerHTML=`<div class="grid m3">${L.map((m,i)=>m3card(m,i,S,byId[m.id].simple&&byId[m.id].simple.tris!==byId[m.id].detail.tris?` · ${look==='detail'?'Simple':'Detailed'}: ${num(byId[m.id][look==='detail'?'simple':'detail'].tris)} tris`:'')).join('')}</div>`;thumbsIn(grid);applyFilter()}
@@ -251,7 +251,7 @@ document.addEventListener('click',e=>{const b=e.target.closest('[data-l]');if(b)
 {const COLS=[['n','Model',m=>m.n,1],['g','Group',m=>m.g,1],['tris','Triangles',m=>m.tris,-1],['verts','Vertices',m=>m.verts,-1],['draws','Draws',m=>m.draws,-1],['mats','Materials',m=>m.mats,-1],
     ['len','Length (ft)',LEN,-1],['wid','Width (ft)',WID,-1],['hgt','Height (ft)',HGT,-1],['kb','Download',m=>m.kb,-1]];
   let st={k:'tris',d:-1};try{Object.assign(st,JSON.parse(store.get('ay_cmp')||'{}'))}catch(e){}
-  let grp='All';const G=['All','Machines','Boats','Things','Trees','People'];
+  let grp='All';const G=['All','Machines','Boats','Trains','Town traffic','Things','Trees','People'];
   $('#cbar').innerHTML=`<div class="seg" role="group" aria-label="Group">${G.map(g=>`<button type="button" data-g="${g}" aria-pressed="${g===grp}">${g}</button>`).join('')}</div><label>Machines ${lookSeg('clook')}</label>`;
   $('#cbar').addEventListener('click',e=>{const b=e.target.closest('[data-g]');if(!b)return;grp=b.dataset.g;$('#cbar').querySelectorAll('[data-g]').forEach(x=>x.setAttribute('aria-pressed',x===b));render()});
   function render(){const ids=[...new Set(MODELS.map(m=>m.id))],c=COLS.find(c=>c[0]===st.k)||COLS[2];

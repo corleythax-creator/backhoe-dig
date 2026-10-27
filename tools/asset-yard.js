@@ -39,13 +39,19 @@ const PAGE=async look=>{
   const tw=k=>TWINS.find(t=>t.k===k);
   for(const [id,k,n] of [['excavator','ex','Excavator'],['truck','truck','Dump truck'],['skid','skid','Skid steer'],['mower','mow','Zero-turn mower'],['bike','bike','Dirt bike']])
     S.push({id,n,g:'Machines',roots:tw(k).vis(),f:fr(tw(k).o())});
-  const HN={dozer:'Dozer',loader:'Wheel loader',semi:'Semi and lowboy',pickup:'Pickup',atv:'Four-wheeler'};
+  const HN={dozer:'Dozer',loader:'Wheel loader',semi:'Semi and lowboy',pickup:'Pickup',atv:'Four-wheeler',backhoe:'Backhoe loader',mini:'Mini excavator',golf:'Golf cart',kart:'Go-kart'};
   for(const k in HN){const h=hvs.find(h=>h.k===k);if(h)S.push({id:k,n:HN[k],g:'Machines',roots:[h.g,h.trailer].filter(Boolean),f:fr(h)})}
   const seen=new Set();boats.forEach((b,i)=>{const key=b.g.children.map(c=>c.geometry&&c.geometry.attributes.position.count).join();if(seen.has(key))return;seen.add(key);
     S.push({id:'boat'+i,n:b.n||'Boat '+(i+1),g:'Boats',roots:[b.g],f:fr(b)})});
   const LN={fish:'Fishing boat',sail:'Sailboat',tug:'Tug and spoil barge'};const ls=new Set();
   lakeBoats.forEach((b,i)=>{if(ls.has(b.kind))return;ls.add(b.kind);S.push({id:'lake_'+b.kind,n:LN[b.kind]||b.kind,g:'Boats',roots:[b.g],f:frOf(b.g)})});
   S.push({id:'crane',n:'Crawler crane on its barge',g:'Boats',roots:[crnBarge],f:frOf(crnBarge)});
+  // the freight and Amtrak cars and the town's traffic, straight from their model files (the game draws them instanced)
+  if(look==='detail'){const L=new THREE.GLTFLoader(),ld=f=>new Promise(ok=>L.load(f,g=>ok(g.scene),undefined,()=>ok(null)));
+    const TN={loco_cn:'CN locomotive',loco_cp:'CPKC locomotive',box:'Boxcar',tank:'Tank car',hopper:'Covered hopper',stack:'Double-stack well car',gondola:'Gondola',loco_amtk:'Amtrak locomotive',viewliner:'Amtrak Viewliner',superliner:'Amtrak Superliner'};
+    for(const k in TN){const g=await ld('models/tr_'+k+'.glb');if(g)S.push({id:'train_'+k,n:TN[k],g:'Trains',roots:[g]})}
+    const CN={sedan:'Sedan',sedan2:'Sedan, second',suv:'SUV',suv2:'Full-size SUV',truck:'Pickup (town)',truck2:'Pickup, second (town)',minivan:'Minivan','hatchback-sports':'Sports hatchback',van:'Van'};
+    for(const k in CN){const g=await ld('models/cars/'+k+'.glb');if(g)S.push({id:'car_'+k,n:CN[k],g:'Town traffic',roots:[g]})}}
   walker.visible=true;S.push({id:'worker',n:'Worker',g:'People',roots:[walker],f:frOf(walker)});
   if(look==='simple'){for(let i=S.length-1;i>=0;i--)if(S[i].g!=='Machines')S.splice(i,1)}
   else{for(const k in PROPS){const im=propIMs[k];S.push({id:'prop_'+k,n:PROPS[k].n,g:'Things',meshes:[{geo:im.geometry,mat:im.material,m:new THREE.Matrix4()}],cap:PROPS[k].cap,foot:[PROPS[k].w,PROPS[k].d]})}
