@@ -1,7 +1,7 @@
 # Image prompts for ChatGPT (textures, graphics, art)
 
 Paste prompts into ChatGPT's image maker. Each one has an id, the file name to save it as, and the idea it serves (ids from `docs/IDEAS.md`).
-Each prompt says under it whether the game already has it (In game, with the file; Drawn by the game, made in code; Close match; Not in the game yet), checked Oct 27, 2026 (v251). This is the library to generate from and store. Keep what you like in `art/source/<id>.png`
+Each prompt says under it whether the game already has it (In game, with the file; Drawn by the game, made in code; Close match; Needs an upgrade; Not in the game yet), and an Upgrade line (poor or passable) when what the game has today looks cheap, checked Oct 27, 2026 (v251). This is the library to generate from and store. Keep what you like in `art/source/<id>.png`
 (full size, untouched) and let `tools/make_tiers.py` cut the phone sizes.
 
 ## How the quality tiers work
@@ -128,14 +128,17 @@ In game: `textures/planks.jpg` (Deck planks)
 **P06 Painted white clapboard** -> `materials/clapboard_white.jpg`. Needs: I02 farmhouse
 > [STYLE][TEXTURE] White-painted horizontal lap siding, slight dirt streaks, clean shadow-free lines.
 Not in the game yet: still to make.
+Upgrade: poor. The family house and the cottages have plain flat-colour walls today.
 
 **P07 Cedar shingle roof** -> `materials/shingle_cedar.jpg`. Needs: H01, S22
 > [STYLE][TEXTURE] Weathered cedar shake roof shingles in staggered rows, silver-brown with moss in a few lower edges.
 Close match: `textures/shingles.jpg` is roof shingles; no cedar shakes yet
+Upgrade: passable. The covered bridge has cedar shakes drawn by the game; every other roof is a plain colour.
 
 **P08 Red barn board** -> `materials/barn_red.jpg`. Needs: H10, I10
 > [STYLE][TEXTURE] Old red barn vertical board-and-batten siding, flaking paint over grey wood.
 Not in the game yet: still to make.
+Upgrade: passable. The covered bridge has barn-red boards drawn by the game; nothing else uses them yet.
 
 **P09 Concrete, poured and stained** -> `materials/concrete_pbr.jpg`. Needs: J07, J12
 > [STYLE][TEXTURE] Poured concrete slab, pale grey, small pinholes, trowel swirls, hairline cracks and faint stains.
@@ -147,7 +150,8 @@ In game: `textures/asphalt.jpg`
 
 **P11 Bridge truss steel** -> `materials/truss_steel.jpg`. Needs: B01, B10
 > [STYLE][TEXTURE] Dull grey-green painted structural steel with bolt-head rows and light rust streaks.
-Not in the game yet: still to make.
+Drawn by the game: the truss paint, rivets and rust are drawn by the bridge kit (bridges.js)
+Upgrade: passable. The bridges have truss paint and rivets drawn by the game; a photo texture would look truer up close.
 
 **P12 Pipe: PVC, ductile iron** -> `materials/pipe_pvc.jpg`, `materials/pipe_iron.jpg`. Needs: J04
 > [STYLE][TEXTURE] (a) Smooth white PVC pipe surface with a faint printed-stripe feel but no text; (b) rough dark-grey cast ductile iron with a red-oxide coat. Two separate 1:1 squares.
@@ -164,12 +168,14 @@ Drawn by the game: shore foam is drawn by the lake shader
 **P15 Leaf atlas, autumn** -> `materials/leaves_fall.png`. Needs: W04, Q15. Transparent PNG
 > [STYLE] A 4x4 sheet of 16 separate autumn leaves (oak, maple, birch, aspen) in reds, oranges, golds and browns, each flat top-down on a transparent background, even spacing, no overlap, no shadows.
 Close match: `textures/tree_leaves.jpg` and `tree_leaves_a.jpg` are summer leaves; no autumn atlas yet
+Upgrade: passable. The trees only have summer leaves.
 
 ## F: Effects and sprites (transparent PNGs)
 
 **F01 Smoke puffs** -> `fx/smoke.png`. Needs: Q01
 > [STYLE] A 4x4 sheet of 16 soft diesel smoke puffs of different shapes in grey-black on a transparent background, soft-edged, each in its own equal cell, no ground, no glow.
 Close match: the game draws its own chimney smoke puffs; no smoke sprite sheet yet
+Upgrade: passable. Chimney smoke is a few soft puffs drawn by the game; machines have no exhaust smoke yet.
 
 **F02 Dust puffs** -> `fx/dust.png`. Needs: Q03, D07
 > [STYLE] A 4x4 sheet of 16 tan-brown dust puffs on transparent, soft edges, varied sizes, equal cells.
@@ -263,10 +269,12 @@ wood, gold leaf, enamel, weathering), even light, no background, no perspective,
 **M01 Marina sign** -> `town/sign_marina.png` (4.9:1, about 1536x312)
 > [STYLE] A carved and painted wooden sign for a lake marina, navy blue board with a raised gold-leaf border and a small anchor at each end. Large serif capitals "LAKESIDE MARINA", and under it in smaller lettering "Harbor Master · Bait & Tackle · Ice". Lightly sun-faded paint, fine wood grain showing through.
 Drawn by the game: the marina sign is painted by the game
+Upgrade: passable. The sign is plain lettering painted by the game on a flat board.
 
 **M02 Fuel dock sign** -> `town/sign_fuel.png` (3.4:1)
 > [STYLE] A weathered enamel marina fuel sign, red with white lettering: "FUEL DOCK" large, under it "Gas · Diesel · Ice · Pump-out". A thin white pinstripe border, a few rust freckles at the screw holes.
 Drawn by the game: the fuel dock sign is painted by the game
+Upgrade: passable. The sign is plain lettering painted by the game on a flat board.
 
 **M03 Dockside Grill sign** -> `town/sign_grill.png` (5.3:1)
 > [STYLE] A cream-painted board-and-batten sign with dark red hand-lettered style capitals "DOCKSIDE GRILL", a small crossed fish-and-fork emblem, and under it "Burgers · Fish Tacos · Cold Drinks". Rustic lakeside restaurant, real paint on wood.
@@ -283,6 +291,7 @@ Not in the game yet: still to make.
 **M06 Shop signs, four sheets** -> `town/shop_signs_a.png` ... `_d.png` (each 1536x1024: 2 columns by 4 rows, every sign 8:1)
 > [STYLE] A sheet of eight separate small-town storefront signs laid out in a neat grid of 2 columns and 4 rows on plain black, each sign a long 8:1 board filling its cell, front-on: [the eight names below]. Mix of styles as on a real old main street: gold leaf on dark green or black glass, painted wood with a border, enamel, carved serif. Each sign shows its name large and its line under it smaller.
 Drawn by the game: the storefront signs are painted by the game
+Upgrade: passable. The shop signs are plain lettering painted by the game.
 
 Sheet a: Lakeside Bakery (Bread · Pies · Coffee), Harbor Books (New & Used), Pine & Anchor (Cafe), Ridge Outfitters (Camp · Fish · Hike), Hometown Hardware (Since 1948), Main St. Diner (Breakfast All Day), Lakeside Pharmacy (Rx · Gifts), Post Office (U.S. Mail).
 Sheet b: First Lake Bank (Est. 1912), Barber Shop (Walk-ins Welcome), Wildflower (Florist), Mountain Coffee (Roasted Here), Lakeside Pizza (Slices · Pies), Antiques (& Oddities), Tackle & Trail (Bait · Licenses), The Sweet Shop (Fudge · Candy).
@@ -301,10 +310,12 @@ Not in the game yet: still to make.
 **M09 Painted lap siding** -> `materials/siding_lap.jpg`. Needs: the Harbor House [TEXTURE]
 > [STYLE][TEXTURE] Painted wooden lap (clapboard) siding seen straight on, horizontal boards about 4 inches exposed, soft grey-blue paint slightly chalky and weathered, faint wood grain, tiny nail heads, a few hairline paint cracks. Ask again in white and in sage green.
 Not in the game yet: still to make.
+Upgrade: poor. The marina buildings have plain-colour walls today.
 
 **M10 Board and batten, barn red** -> `materials/board_batten.jpg`. Needs: the Dockside Grill [TEXTURE]
 > [STYLE][TEXTURE] Vertical board-and-batten siding painted deep barn red, battens every 2 feet, sun-faded and slightly peeling at the bottom edge, wood grain showing.
 Not in the game yet: still to make.
+Upgrade: poor. The red buildings have plain-colour walls today.
 
 **M11 Dock decking, grey weathered** -> `materials/dock_deck.jpg`. Needs: the pier and slips [TEXTURE]
 > [STYLE][TEXTURE] Top-down view of a weathered timber dock: 2x6 boards running left to right with 1/4 inch gaps showing dark water below, silver-grey sun-bleached cedar with darker wet patches near the gaps, galvanized nail heads in pairs, a little bird lime and scuffing. The pattern repeats every 4 boards across, seamless.
@@ -313,14 +324,17 @@ Not in the game yet: still to make.
 **M12 Breakwater stone** -> `materials/riprap.jpg`. Needs: the breakwater [TEXTURE]
 > [STYLE][TEXTURE] Close view of a rough grey granite boulder's surface for a lake breakwater: speckled grey and pink granite, lichen spots, a dark wet band, a few green algae streaks. Seamless; this goes on each boulder.
 Not in the game yet: still to make.
+Upgrade: poor. The breakwater is plain grey stone shapes.
 
 **M13 Standing-seam metal roof** -> `materials/roof_seam.jpg` [TEXTURE]
 > [STYLE][TEXTURE] Standing-seam steel roof seen straight on, charcoal grey, seams every 16 inches, faint weathering streaks and a little pollen in the seams.
 Not in the game yet: still to make.
+Upgrade: poor. The metal roofs are a plain colour.
 
 **M14 Awning canvas** -> `materials/awning_stripes.jpg` [TEXTURE]
 > [STYLE][TEXTURE] Woven outdoor awning canvas with wide vertical stripes, alternating forest green and cream, the fabric weave visible up close, slightly sun-faded. Ask again in red and white, navy and white, and mustard and white.
 Not in the game yet: still to make.
+Upgrade: poor. The awnings are a plain colour.
 
 **M15 Boat hulls and names** -> `town/boat_names.png` (transparent PNG, 2048x1024: a grid of 12)
 > [STYLE] Twelve boat transom names as clean vinyl lettering on transparent background, each centred in its own cell with a hailing port under it "LAKESIDE": Reel Time, Knot On Call, Seas the Day, Lake Effect, Miss Corley, Dock Holiday, Aqua Therapy, Sunset Serenade, Fishful Thinking, Wet Willie, Second Wind, Liquid Asset. Mix of script and block styles in navy, black, red and gold.
@@ -329,6 +343,7 @@ Not in the game yet: still to make.
 **M16 Gelcoat hull** -> `materials/gelcoat.jpg` [TEXTURE]
 > [STYLE][TEXTURE] Glossy white fibreglass boat hull gelcoat, close, very slight orange-peel texture, faint grey scuffs, a thin yellowish waterline stain along the bottom fifth. Seamless left to right.
 Not in the game yet: still to make.
+Upgrade: poor. The boat hulls are a plain flat colour.
 
 **M17 Flags** -> `town/flags.png` (transparent PNG, 1536x1024)
 > [STYLE] A sheet of flat flags on transparent background, each in its own cell, slightly rippled cloth: the US flag, a navy marina burgee with a gold anchor, a red-and-white "diver down" flag, and nautical signal flags A to F.
@@ -357,18 +372,22 @@ Add: "Three-quarter view on a plain light grey background, realistic 3D game-mod
 **S01 Job trailer, porta-john, fuel tank, pipe rack** -> `concept/site_props.png`. Needs: S01, S02
 > [STYLE] [concept sheet] A construction site prop set: office trailer, porta-john, skid fuel tank, PVC pipe rack, traffic cones, barricade, caution tape stand, job sign, light tower.
 Reference art: a guide for building, not a game file.
+Upgrade: poor. The job trailer, porta-john, fuel tank and site props are simple flat-shaded shapes.
 
 **S02 Lighthouse** -> `concept/lighthouse.png`. Needs: S22, I12
 > [STYLE] [concept sheet] A small white lighthouse with a red lantern room and stair, on a rocky point.
 Reference art: a guide for building, not a game file.
+Upgrade: passable. The marina lighthouse is simple shapes with plain colours.
 
 **S03 Marina and boardwalk** -> `concept/marina.png`. Needs: S18, S21
 > [STYLE] [concept sheet] A small lake marina: floating slips, breakwater, fuel dock, bait shop, ice-cream window, cafe, with boats at the slips.
 Reference art: a guide for building, not a game file.
+Upgrade: passable. The marina is built, partly textured; good for checking its look.
 
 **S04 Farmhouse on Family Island** -> `concept/farmhouse.png`. Needs: I02
 > [STYLE] [concept sheet] A big white farmhouse with a deep porch, green shutters, a dock and a lawn.
 Reference art: a guide for building, not a game file.
+Upgrade: poor. The family house is simple flat-colour boxes.
 
 **S05 Your cabin** -> `concept/cabin.png`. Needs: H01, S11, I13
 > [STYLE] [concept sheet] A small timber lake cabin with porch swing, woodstove chimney, rain barrel and fire pit. Also show it in four build stages: footings, frame, roof, finished.
@@ -377,6 +396,7 @@ Reference art: a guide for building, not a game file.
 **S06 Lake boats** -> `concept/boats.png`. Needs: M21, M22, S19, S20
 > [STYLE] [concept sheet] Runabout, pontoon, fishing boat, johnboat, sailboat, kayak, paddleboard, tug and barge.
 Reference art: a guide for building, not a game file.
+Upgrade: poor. The runabouts at the docks and the lake boats are simple flat-shaded shapes.
 
 **S07 Animals** -> `concept/animals.png`. Needs: S09, S23, H05, H06
 > [STYLE] [concept sheet] Deer, goose, eagle, heron, turtle, otter, a friendly dog, a hen and rooster.
@@ -385,10 +405,58 @@ Reference art: a guide for building, not a game file.
 **S08 Mountain town main street** -> `concept/town.png`. Needs: T01-T05
 > [STYLE] [concept sheet] A small mountain town main street: hardware store, diner, gas station, equipment dealer, feed store, with sidewalks and street lamps.
 Reference art: a guide for building, not a game file.
+Upgrade: passable. The town is built and partly textured; good for checking its look.
 
 **S09 Trees by season** -> `concept/trees.png`. Needs: W04, Q15
 > [STYLE] [concept sheet] One oak, one maple and one pine each in summer, autumn and winter.
 Reference art: a guide for building, not a game file.
+Upgrade: passable. The trees are textured but have no autumn or winter look.
+
+## R: Upgrades (things in the game that look cheap today)
+
+Reference sheets to rebuild the flat-shaded models as real ones, the way the town's cars were made from image sheets. Each one ends with the sheet rule below.
+
+Add: "Three-quarter view on a plain light grey background, photorealistic 3D game-model render style with true-to-life materials, front, side and back views of each object on one sheet, each object labelled by nothing but its position, even spacing, real-world proportions."
+
+**R01 Family Island pavilion, fire pit and flagpole** -> `concept/fam_pavilion.png`. Needs: I02, H07
+> [STYLE] [concept sheet] An open timber picnic pavilion with a green standing-seam metal roof on heavy posts, two long picnic tables under it, a stone fire ring with log benches, and a tall white flagpole with a US flag.
+Needs an upgrade: poor. The pavilion, fire pit and flagpole are simple flat-shaded shapes.
+
+**R02 Jessica's stone and timber cottage** -> `concept/jes_cottage.png`. Needs: L08, H25
+> [STYLE] [concept sheet] A small storybook cottage of grey fieldstone walls and dark stained timber beams, steep cedar-shake roof, a stone chimney, deep-set windows with green trim, a heavy plank door and a lantern; also a cutaway of the library inside: shelves to the ceiling, a rolling ladder, a window seat and two armchairs by the fire.
+Needs an upgrade: poor. The cottage is simple shapes with plain colours (no stone or timber texture).
+
+**R03 Dexter's equipment shed and office trailer** -> `concept/dex_yard.png`. Needs: L07, S01
+> [STYLE] [concept sheet] A tall steel equipment shed with a big roll-up door and corrugated siding, a white office trailer on blocks with wooden steps, a skid fuel tank in a steel bund, and a parts rack, all working-yard worn.
+Needs an upgrade: poor. Dexter's shed and trailer are simple flat-shaded boxes.
+
+**R04 Placeable things A: construction** -> `concept/props_build.png`. Needs: S01, S02, B20
+> [STYLE] [concept sheet] A set of construction site props: water-filled barricade, concrete Jersey barrier, orange traffic drum, trailer arrow board, portable generator, steel job box, 20 ft shipping container, scaffold tower, stack of concrete culvert pipes, lumber stack, sandbag wall, silt fence, stack of old tyres, wheelbarrow, roll-off dumpster, porta-john.
+Needs an upgrade: poor. These are flat-shaded shapes in the map editor's Add list and the Blocks bar.
+
+**R05 Placeable things B: home and garden** -> `concept/props_home.png`. Needs: H13, K06
+> [STYLE] [concept sheet] A set of backyard props: wooden picnic table, park bench, Adirondack chair, rope hammock on a stand, patio table with umbrella, kettle grill, small gazebo, garden arbor, stone bird bath, birdhouse on a post, stone wishing well, little free library box, chicken coop, two beehives, dog house, raised garden bed, flower planter.
+Needs an upgrade: poor. These are flat-shaded shapes in the map editor's Add list and the Blocks bar.
+
+**R06 Placeable things C: lights and signs** -> `concept/props_lights.png`. Needs: S13, X06
+> [STYLE] [concept sheet] A set of outdoor lights and street furniture: cobra-head street light, black acorn lamp post, flood light on a pole, ground spotlight, garden path light, café string lights, lantern on a shepherd's hook, stop sign, speed limit sign, red fire hydrant, rural mailbox on a post, windsock on a mast, flag pole.
+Needs an upgrade: poor. These are flat-shaded shapes in the map editor's Add list and the Blocks bar.
+
+**R07 Placeable things D: play and farm** -> `concept/props_play.png`. Needs: I08, K15
+> [STYLE] [concept sheet] A set of yard and farm props: wooden swing set, round trampoline, square sandbox, basketball hoop on a pole, soccer goal, pair of cornhole boards, dome camping tent, round hay bale, stacked square straw bales, scarecrow, garden gnome, firewood stack, steel fire pit, carved jack-o'-lantern.
+Needs an upgrade: poor. These are flat-shaded shapes in the map editor's Add list and the Blocks bar.
+
+**R08 Placeable buildings: house, shed, garage** -> `concept/props_buildings.png`. Needs: H01, H10
+> [STYLE] [concept sheet] Three small buildings: a one-storey lake house with lap siding, a porch and a shingle roof; a wooden garden shed with a double door; a two-car detached garage with a roll-up door.
+Needs an upgrade: poor. The editor's house, shed and garage are simple flat-colour boxes.
+
+**R09 Golf cart and go-kart** -> `concept/carts.png`. Needs: I22
+> [STYLE] [concept sheet] A two-seat electric golf cart with a white canopy and a rear bag rack, and a small petrol go-kart with a bare tube frame, bucket seat and fat slicks.
+Needs an upgrade: poor. These two have no detailed model; they are always simple flat-shaded shapes.
+
+**R10 Runabout boat at the docks** -> `concept/runabout.png`. Needs: M21, S19
+> [STYLE] [concept sheet] An 18 ft centre-console aluminium-and-fibreglass runabout with an outboard motor, a T-top, cushions, a cooler seat and cleats, white gelcoat with a navy stripe.
+Needs an upgrade: poor. The boats you drive are simple flat-shaded shapes.
 
 ## How to store them
 
