@@ -37,6 +37,14 @@ for l in lines:
         g = m.groups()
         entry = {'id': g[0], 'title': g[1], 'file': g[2].replace('`', ''), 'needs': g[3] if len(g) > 3 else '', 'text': ''}
         cur['items'].append(entry); continue
+    m = re.match(r'^Upgrade: (poor|passable)\. (.*)$', l)
+    if m and entry is not None:
+        entry['up'], entry['upw'] = m.group(1), m.group(2)
+        continue
+    m = re.match(r'^Needs an upgrade: (poor|passable)\. (.*)$', l)
+    if m and entry is not None:
+        entry['st'], entry['up'], entry['upw'] = 'up', m.group(1), m.group(2)
+        continue
     m = re.match(r'^(In game|Drawn by the game|Close match|Not in the game yet|Reference art): (.*)$', l)
     if m and entry is not None:
         entry['st'] = {'In game': 'game', 'Drawn by the game': 'code', 'Close match': 'close', 'Reference art': 'ref'}.get(m.group(1), 'todo')
