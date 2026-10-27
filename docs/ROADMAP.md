@@ -14,7 +14,15 @@ Most buildings, docks and the town still use flat colours. Give them true-to-lif
 - [ ] **Ground that reads true:** long weedy grass where nobody mows, wet sand at the waterline, a proper rock face in deep cuts (G04, G09, G06)
 - [ ] **Machines that work hard:** exhaust smoke when the engine loads up, heat haze over the stacks, and machines that get muddier and wash clean in rain (Q01, Q08, Q04)
 
-## 2. Weather and seasons
+## 2. The view from the seat
+
+The look of a modern PC construction sim, seen from inside the cab (owner, Oct 27). This goes on the Ultra tier first; High gets what it can carry, and the phone stays above 30 FPS.
+
+- [ ] **Q17 Real operator cab:** the full cab around you: pillars, roof hatch, mirrors, joysticks, seat, and a live gauge monitor, with dust and rain on the glass
+- [ ] **Q18 Photo-scanned trees and logs:** real bark, mixed pines and autumn hardwoods, fallen logs, stumps and boulders
+- [ ] **Q19 Dense grass and brush:** thick, wind-swayed grass, weeds and shrubs that flatten under the tracks, scaled to the Graphics setting
+
+## 3. Weather and seasons
 
 - [ ] **W14 Autumn colours:** maples and oaks turn red, orange and gold, leaves drift down and lie on the lawns (G05, P15)
 - [ ] **W12 / W06 Morning mist:** fog on the lake at dawn that burns off and leaves dew on the grass
@@ -22,7 +30,7 @@ Most buildings, docks and the town still use flat colours. Give them true-to-lif
 - [ ] **W08 Rainbow after a shower**
 - [ ] **W04 Winter:** snow on the islands and the mountains, the lake edges icing over (G12)
 
-## 3. A town that lives
+## 4. A town that lives
 
 The town, its streets and its traffic shipped in v240 to v246. Next, give it places to go and people who know you.
 
@@ -33,7 +41,7 @@ The town, its streets and its traffic shipped in v240 to v246. Next, give it pla
 - [ ] **B12 Traffic reacts to you:** honks, yields, pulls over for a machine on the road
 - [ ] **T10 / T13 Town lights and skyline:** the town glowing across the water at night
 
-## 4. Life on the lake
+## 5. Life on the lake
 
 - [ ] **S19 Boats on the lake:** more boats out on the water, coming and going from the marina (75% done)
 - [ ] **I23 Mail boat:** makes the island rounds with the post
@@ -42,13 +50,13 @@ The town, its streets and its traffic shipped in v240 to v246. Next, give it pla
 - [ ] **M22 Kayak and paddleboard**
 - [ ] **S22 Lighthouse on the point:** finish it, with its beam sweeping at night (60% done)
 
-## 5. People at home
+## 6. People at home
 
 - [ ] **L07 Dexter in his yard:** walks the yard, waves, asks you to move a pile
 - [ ] **L08 Jessica at home:** reads by the fire or tends her herbs, and chats when you come by
 - [ ] **L09 Earl, the old-timer:** a neighbour with a boat and a thousand stories
 
-## 6. Jobs and pay (later)
+## 7. Jobs and pay (later)
 
 Kept from the old roadmap and pushed to the end.
 
