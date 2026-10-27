@@ -5,7 +5,7 @@ artifact page with capabilities {mcp: Claude Code Remote send_message}). When th
 unless the board's `DONE` says so; when one ships, add it to `DONE` (d, n, part, pc) and republish. An entry with no `part` is
 built in full: the board moves it out of the open list (and the ranking and Next up) into its Completed section. Part-built
 entries (`part:true, pc:NN`) stay in the open list with their percent. As of Oct 22, 2026 (v202; v200 audited against the
-changelog and the code): 392 ideas, 38 built, 43 part built, 311 not started. The list below keeps every idea, built or not.
+changelog and the code): 395 ideas, 38 built, 43 part built, 314 not started. The list below keeps every idea, built or not.
 
 Scoring (same rubric as Cruise Brandon's, set for a dig site): realism 1-10 = how much more like a real job site it feels;
 fun 1-10; seen every / most / some / rare (1, .85, .65, .45); phone none / low / high (1, .92, .75) = risk to 30 FPS on the
@@ -284,6 +284,9 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - Q14 Wakes and spray: A boat throws a V wake that spreads and fades, and spray off the bow at speed. (R8 F5 most low c1 3h needs M21)
 - Q15 PC high graphics tier: A PC-only graphics level behind the Graphics setting: HDR sky lighting, soft shadows, ambient occlusion, bloom, tone mapping, PBR ground and machine materials with wet-surface darkening and rain droplets, and richer autumn trees. Aims at the look of a modern construction sim (lit, wet, autumn-coloured); Low stays as is for the phone, and what the ground does stays the same on every device. Owner's high priority (Oct 18). (R9 F6 every none c3 16h needs Q07)
 - Q16 Blast dust and debris: A blast throws a dust cloud and chunks of rock that fall with a thud, and the ground shakes through the cab. (R8 F9 some high c2 6h needs J40)
+- Q17 Real operator cab: A fully modelled cab for each machine as you see it from the seat: pillars, roof frame and hatch, door handle and latches, mirrors, joysticks and pedals, the seat, and a monitor with live gauges and the clock. The glass carries dust, rain beads and wiper arcs. On Low it's simpler, but what you see out of it is the same. (R9 F8 every low c3 12h needs Q15)
+- Q18 Photo-scanned trees and logs: Trees, fallen logs, stumps and boulders that look photo-scanned in place of the flat-shaded ones, with real bark, mixed pines and autumn hardwoods. They step down to lighter models with distance and on the phone. (R9 F5 every high c2 8h)
+- Q19 Dense grass and brush: Instanced clumps of grass, weeds, dry tall grass and shrubs that sway in the wind and flatten under tracks. How thick they grow depends on the Graphics setting (thick on Ultra, sparse on the phone). (R8 F5 every high c2 6h)
 
 ## E: Map editor
 
