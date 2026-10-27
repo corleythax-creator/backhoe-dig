@@ -1,7 +1,7 @@
 # Image prompts for ChatGPT (textures, graphics, art)
 
 Paste prompts into ChatGPT's image maker. Each one has an id, the file name to save it as, and the idea it serves (ids from `docs/IDEAS.md`).
-Nothing here is built into the game yet; this is the library to generate from and store. Keep what you like in `art/source/<id>.png`
+Each prompt says under it whether the game already has it (In game, with the file; Drawn by the game, made in code; Close match; Not in the game yet), checked Oct 27, 2026 (v251). This is the library to generate from and store. Keep what you like in `art/source/<id>.png`
 (full size, untouched) and let `tools/make_tiers.py` cut the phone sizes.
 
 ## How the quality tiers work
@@ -49,135 +49,177 @@ ask for it.
 
 **G01 Dirt, dry red clay** -> `ground/dirt.jpg`. Needs: the dig site, Q15
 > [STYLE][TEXTURE] Dry packed red-brown clay soil with tiny pebbles, fine hairline cracks, a few crumbs and faint tyre-scuff grain; rust-orange with small darker patches.
+In game: `textures/ground/*/dirt.jpg`, the ground pack
 
 **G02 Dirt, wet** -> `ground/dirt_wet.jpg`. Needs: W01, D02, Q15 wet-surface darkening
 > [STYLE][TEXTURE] The same red clay but soaked: dark chocolate-red, smooth glossy-looking surface, tiny water beads, a few shallow standing-water films, and fine smooth sticky texture.
+Drawn by the game: wet ground darkens and shines in the ground shader as it soaks; no separate image
 
 **G03 Grass, summer** -> `ground/grass.jpg`. Needs: K01, K10
 > [STYLE][TEXTURE] Mown lawn grass seen from above: tight short blades in many directions, mid-green with yellow-green and a few dry straw blades, tiny clover leaves scattered. Blade-level detail.
+In game: `textures/ground/*/grass.jpg`, and the Lawn sod material `textures/grass2.jpg`
 
 **G04 Grass, long and weedy** -> `ground/grass_long.jpg`. Needs: K08, S10
 > [STYLE][TEXTURE] Unmown field grass seen from above: long blades lying in swirls, golden-green with seed heads, dandelion leaves and a few white clover flowers.
+Not in the game yet: still to make.
 
 **G05 Grass, autumn** -> `ground/grass_fall.jpg`. Needs: W04, Q15 richer autumn
 > [STYLE][TEXTURE] Lawn grass in autumn from above: dry khaki and straw-gold blades mixed with green, scattered fallen oak and maple leaves in red, orange and brown, a few acorns.
+Not in the game yet: still to make.
 
 **G06 Rock layer** -> `ground/rock.jpg`. Needs: D03, S03, X03
 > [STYLE][TEXTURE] Grey-tan sandstone bedrock from above: flat fractured slabs with crisp joint lines, layered strata, lichen specks, little chips and grit in the cracks.
+In game: `textures/granite.jpg` (Bedrock)
 
 **G07 Gravel road** -> `ground/gravel_road.jpg`. Needs: rim road, M06
 > [STYLE][TEXTURE] Compacted crushed-limestone gravel road: grey-beige angular stones of mixed size, dust in the gaps, two faint darker tyre-track lines running vertically through the middle third only if they still tile.
+In game: `textures/gravel.jpg` (Crushed gravel)
 
 **G08 Sand, beach** -> `ground/sand_beach.jpg`. Needs: S16, H19
 > [STYLE][TEXTURE] Pale warm beach sand from above: fine grains, soft ripple lines, a few shell fragments, tiny dark pebbles, a little driftwood splinter.
+In game: `textures/sand.jpg`
 
 **G09 Wet sand at the waterline** -> `ground/sand_wet.jpg`. Needs: S16, W10
 > [STYLE][TEXTURE] Wet dark-tan sand as the tide leaves it: smooth glossy surface, fine ripples, tiny air-bubble holes, a few small pebbles.
+Close match: `textures/gravel_wet.jpg` is wet gravel; no wet sand yet
 
 **G10 Mud, rutted** -> `ground/mud_ruts.jpg`. Needs: D02, mud.js
 > [STYLE][TEXTURE] Churned brown mud with overlapping tyre and track ruts, glossy brown water pooled in the ruts, clods and smears, sticky texture.
+In game: `textures/mud.jpg`
 
 **G11 Cracked dry mud** -> `ground/mud_cracked.jpg`. Needs: soakMax, D12
 > [STYLE][TEXTURE] Sun-dried pale clay mud broken into curled polygon plates with deep cracks, light tan on top, darker in the cracks.
+In game: `textures/mud_cracked.jpg`, and `textures/mud_drying.jpg` on the way there
 
 **G12 Snow** -> `ground/snow.jpg`. Needs: W04, R07
 > [STYLE][TEXTURE] Fresh snow from above: soft sparkling blue-white surface, gentle wind ripples, tiny ice crystals, a few grass tips poking out.
+Not in the game yet: still to make.
 
 **G13 Machine grime overlay** -> `ground/grime.jpg`. Needs: Q04, X11 (matches the existing grime layer)
 > [STYLE][TEXTURE] A grey-scale grime and dirt-streak mask: soft vertical drips, speckles and smudges, mid-grey base, no hard edges.
+In game: `textures/ground/*/grime.jpg`
 
 **G14 Macro variation** -> `ground/macro.jpg`. Needs: ground on High/Ultra
 > [STYLE][TEXTURE] A very soft low-frequency grey cloud map of large blotches, no fine detail, mid-grey average, tiling; it only brightens and darkens big patches of ground.
+In game: `textures/ground/macro.jpg`
 
 ## P: Materials and surfaces (machines, buildings, props)
 
 **P01 Painted yellow steel with wear** -> `materials/yellowsteel_pbr.jpg`. Needs: Q15 machine PBR
 > [STYLE][TEXTURE] Safety-yellow painted construction-machine steel, orange-peel paint grain, edge wear showing grey metal, light dust, tiny scratches, a few rivets.
+In game: `textures/yellowsteel.jpg`, and `textures/mach_paint.jpg` on the machines
 
 **P02 Rubber track pad / rubber** -> `materials/rubber.jpg`
 > [STYLE][TEXTURE] Black rubber with a worn cross-hatch tread and fine dust, matte.
+In game: `textures/mach_rubber.jpg` (the tracks and tyres)
 
 **P03 Diamond plate** -> `materials/diamond_pbr.jpg`
 > [STYLE][TEXTURE] Raised diamond-pattern steel tread plate, bright scuffed steel with dark dirt in the grooves.
+In game: `textures/diamond.jpg`
 
 **P04 Rusty corrugated metal** -> `materials/corrugated_rust.jpg`. Needs: S01, H10
 > [STYLE][TEXTURE] Old corrugated roofing sheet, vertical ribs, faded blue-grey paint peeling to orange rust, bolt heads.
+In game: `textures/corrugated.jpg`
 
 **P05 Weathered wood planks, porch** -> `materials/planks_porch.jpg`. Needs: H01, S05, S21
 > [STYLE][TEXTURE] Grey-brown weathered horizontal deck boards with tight gaps, nail heads, knots and sun-bleached grain.
+In game: `textures/planks.jpg` (Deck planks)
 
 **P06 Painted white clapboard** -> `materials/clapboard_white.jpg`. Needs: I02 farmhouse
 > [STYLE][TEXTURE] White-painted horizontal lap siding, slight dirt streaks, clean shadow-free lines.
+Not in the game yet: still to make.
 
 **P07 Cedar shingle roof** -> `materials/shingle_cedar.jpg`. Needs: H01, S22
 > [STYLE][TEXTURE] Weathered cedar shake roof shingles in staggered rows, silver-brown with moss in a few lower edges.
+Close match: `textures/shingles.jpg` is roof shingles; no cedar shakes yet
 
 **P08 Red barn board** -> `materials/barn_red.jpg`. Needs: H10, I10
 > [STYLE][TEXTURE] Old red barn vertical board-and-batten siding, flaking paint over grey wood.
+Not in the game yet: still to make.
 
 **P09 Concrete, poured and stained** -> `materials/concrete_pbr.jpg`. Needs: J07, J12
 > [STYLE][TEXTURE] Poured concrete slab, pale grey, small pinholes, trowel swirls, hairline cracks and faint stains.
+In game: `textures/concrete.jpg`, `textures/concrete_old.jpg`
 
 **P10 Asphalt, bridge road** -> `materials/asphalt_pbr.jpg`. Needs: B01
 > [STYLE][TEXTURE] Worn dark asphalt with aggregate showing, sealed crack lines and fine grit; no lane markings.
+In game: `textures/asphalt.jpg`
 
 **P11 Bridge truss steel** -> `materials/truss_steel.jpg`. Needs: B01, B10
 > [STYLE][TEXTURE] Dull grey-green painted structural steel with bolt-head rows and light rust streaks.
+Not in the game yet: still to make.
 
 **P12 Pipe: PVC, ductile iron** -> `materials/pipe_pvc.jpg`, `materials/pipe_iron.jpg`. Needs: J04
 > [STYLE][TEXTURE] (a) Smooth white PVC pipe surface with a faint printed-stripe feel but no text; (b) rough dark-grey cast ductile iron with a red-oxide coat. Two separate 1:1 squares.
+Not in the game yet: still to make.
 
 **P13 Water, lake surface (tiling)** -> `materials/water_lake.jpg`. Needs: Q13
 > [STYLE][TEXTURE] Calm lake water from above, deep teal blue, small soft ripple rings and long swell lines, bright thin highlights on ripple tops, no foam.
+Drawn by the game: the lake shader (ripples, reflections, glitter, shallows)
 
 **P14 Shore foam strip** -> `materials/foam_strip.png`. Needs: Q11, Q14. Transparent PNG
 > [STYLE] A horizontal tileable strip (4:1), broken white foam lace and bubbles on a transparent background, soft edges, tiling left to right.
+Drawn by the game: shore foam is drawn by the lake shader
 
 **P15 Leaf atlas, autumn** -> `materials/leaves_fall.png`. Needs: W04, Q15. Transparent PNG
 > [STYLE] A 4x4 sheet of 16 separate autumn leaves (oak, maple, birch, aspen) in reds, oranges, golds and browns, each flat top-down on a transparent background, even spacing, no overlap, no shadows.
+Close match: `textures/tree_leaves.jpg` and `tree_leaves_a.jpg` are summer leaves; no autumn atlas yet
 
 ## F: Effects and sprites (transparent PNGs)
 
 **F01 Smoke puffs** -> `fx/smoke.png`. Needs: Q01
 > [STYLE] A 4x4 sheet of 16 soft diesel smoke puffs of different shapes in grey-black on a transparent background, soft-edged, each in its own equal cell, no ground, no glow.
+Close match: the game draws its own chimney smoke puffs; no smoke sprite sheet yet
 
 **F02 Dust puffs** -> `fx/dust.png`. Needs: Q03, D07
 > [STYLE] A 4x4 sheet of 16 tan-brown dust puffs on transparent, soft edges, varied sizes, equal cells.
+Drawn by the game: dust is drawn as soft points by the game
 
 **F03 Rain drops and ring splashes** -> `fx/rain.png`. Needs: W01, W09
 > [STYLE] A 4x2 sheet on transparent: top row four thin angled rain streaks, bottom row four expanding water-ring splashes seen from above, white-blue.
+Drawn by the game: rain drops, splashes and rings are drawn by the game
 
 **F04 Sparks** -> `fx/sparks.png`. Needs: Q05, U04
 > [STYLE] A 4x2 sheet of bright orange-yellow spark bursts and streaks on transparent, hot white centres.
+Not in the game yet: still to make.
 
 **F05 Snow and fireflies** -> `fx/specks.png`. Needs: W04, W11
 > [STYLE] A 4x2 sheet on transparent: top row soft white snowflakes, bottom row warm yellow-green glowing fireflies with soft halos.
+Close match: fireflies are drawn by the game; no snow yet
 
 **F06 Cloud sprites** -> `fx/clouds.png`. Needs: W02, W06
 > [STYLE] A 3x2 sheet of six puffy realistic cumulus clouds, soft white with light grey undersides, on transparent, no sky.
+Drawn by the game: the sky draws its own clouds
 
 ## E: Sky, water and environment
 
 **E01 Skybox panorama, noon** -> `sky/noon.jpg`. Needs: Q15 HDR sky
 > [STYLE] A seamless 2:1 equirectangular sky panorama, noon, clear blue gradient to pale horizon haze, a few thin cirrus streaks, no sun disc, no ground, left and right edges match.
+Drawn by the game: the sky is drawn live through the day
 
 **E02 Skybox, sunset over the lake** -> `sky/sunset.jpg`. Needs: W02
 > [STYLE] A seamless 2:1 equirectangular sky panorama at sunset: gold and orange glow at one side, violet and navy overhead, streaks of pink cloud, no ground, edges match.
+Drawn by the game: the sunset is drawn live by the sky
 
 **E03 Skybox, night** -> `sky/night.jpg`. Needs: W02
 > [STYLE] A seamless 2:1 equirectangular night sky: deep navy, thin Milky Way band, a few hundred stars, no moon, no ground, edges match.
+Drawn by the game: the night sky is drawn live
 
 **E04 Skybox, fog morning** -> `sky/fog.jpg`. Needs: W06
 > [STYLE] A seamless 2:1 equirectangular misty dawn sky: soft grey-pink gradient, no features, edges match.
+Not in the game yet: still to make.
 
 **E05 Distant mountain ridgeline** -> `sky/mountains.png`. Needs: B04, T01, T13
 > [STYLE] A seamless horizontally tiling strip (6:1) of layered blue-grey pine mountain ridges fading into haze, transparent above the top ridge, realistic, three depth layers.
+Drawn by the game: the north mountains are built as 3D ground
 
 **E06 Far-shore town lights** -> `sky/town_night.png`. Needs: S08, T10
 > [STYLE] A tileable 8:1 strip of a far lakeshore at night: small clusters of warm yellow window lights and a few white street lights, on transparent.
+Not in the game yet: still to make.
 
 **E07 Skyline** -> `sky/skyline.png`. Needs: T13, T12
 > [STYLE] A tileable 8:1 hazy blue-grey city skyline of simple blocky towers in silhouette with a few lit windows, transparent above.
+Not in the game yet: still to make.
 
 ## U: Interface icons (flat, readable at phone size)
 
@@ -186,21 +228,27 @@ Do these in batches ("a 6x4 sheet of 24 icons, equal cells, in this order: ...")
 
 **U01 Machine icons** -> `ui/machines.png`. Needs: M01-M23
 > [STYLE] A 6x4 sheet, equal cells, in this order: excavator, dump truck, wheel loader, skid steer, bulldozer, backhoe loader, mini excavator, motor grader, roller, water truck, articulated hauler, concrete mixer, crane truck, side-by-side, johnboat, kayak, pontoon boat, floatplane, tractor, telehandler, zero-turn mower, pickup truck, lowboy trailer, golf cart.
+Not in the game yet: still to make.
 
 **U02 Tool and attachment icons** -> `ui/tools.png`. Needs: X01-X05, X12
 > [STYLE] A 4x3 sheet in this order: bucket, thumb, hydraulic hammer, ditching bucket, auger, tiltrotator, quick coupler, pallet forks, grapple, angle broom, box blade, ripper.
+Not in the game yet: still to make.
 
 **U03 Utility marks** -> `ui/utility_marks.png`. Needs: J02, U01
 > [STYLE] A 6x1 sheet of flat spray-paint style survey marks and flags on transparent: yellow gas, red power, blue water, orange telecom, green sewer, white dig-line; no words.
+Not in the game yet: still to make.
 
 **U04 Weather and time icons** -> `ui/weather.png`. Needs: W01-W06, R03
 > [STYLE] A 4x2 sheet: sun, cloud, rain, thunderstorm, fog, snow, moon, wind.
+Not in the game yet: still to make.
 
 **U05 Badges** -> `ui/badges.png`. Needs: Y01
 > [STYLE] A 4x3 sheet of 12 round achievement badges, each a different construction subject (first trench, yardage, safety, perfect grade, pipe layer, pond, lighthouse, regatta, fish, garden, mower, bridge), in bright metal-rimmed enamel style, no text.
+Not in the game yet: still to make.
 
 **U06 Produce, pantry and finds** -> `ui/items.png`. Needs: H04, H08, H18, D04, H11
 > [STYLE] A 6x4 sheet of 24 small items: tomato, okra, pepper, egg, bass, bream, shell, sea glass, driftwood, old bottle, horseshoe, arrowhead, time capsule, coffee mug, s'more, ice cream, trowel, trimmer line, gas can, seed packet, apple, peach, pumpkin, jar.
+Not in the game yet: still to make.
 
 ## M: The lakeside town and marina (signs, storefronts, decals and surfaces)
 
@@ -214,21 +262,27 @@ wood, gold leaf, enamel, weathering), even light, no background, no perspective,
 
 **M01 Marina sign** -> `town/sign_marina.png` (4.9:1, about 1536x312)
 > [STYLE] A carved and painted wooden sign for a lake marina, navy blue board with a raised gold-leaf border and a small anchor at each end. Large serif capitals "LAKESIDE MARINA", and under it in smaller lettering "Harbor Master · Bait & Tackle · Ice". Lightly sun-faded paint, fine wood grain showing through.
+Drawn by the game: the marina sign is painted by the game
 
 **M02 Fuel dock sign** -> `town/sign_fuel.png` (3.4:1)
 > [STYLE] A weathered enamel marina fuel sign, red with white lettering: "FUEL DOCK" large, under it "Gas · Diesel · Ice · Pump-out". A thin white pinstripe border, a few rust freckles at the screw holes.
+Drawn by the game: the fuel dock sign is painted by the game
 
 **M03 Dockside Grill sign** -> `town/sign_grill.png` (5.3:1)
 > [STYLE] A cream-painted board-and-batten sign with dark red hand-lettered style capitals "DOCKSIDE GRILL", a small crossed fish-and-fork emblem, and under it "Burgers · Fish Tacos · Cold Drinks". Rustic lakeside restaurant, real paint on wood.
+Not in the game yet: still to make.
 
 **M04 Grill menu chalkboard** -> `town/menu_grill.png` (2:3 portrait)
 > [STYLE] A real chalkboard menu in a wooden frame for a lakeside grill: "TODAY" at the top, then Walleye Tacos $14, Lake Burger $12, Fried Pickles $7, Shore Lunch $16, Lemonade $4, Root Beer Float $5, drawn in white and coloured chalk with a small sketch of a fish.
+Not in the game yet: still to make.
 
 **M05 Ice cream stand sign** -> `town/sign_scoops.png` (3.7:1)
 > [STYLE] A cheerful vintage ice cream stand sign, white board with pink lettering "SCOOPS" in a rounded retro script and "Ice Cream · Shakes" beneath, a little cone drawing at one end, pink and white candy stripes along the bottom edge.
+Not in the game yet: still to make.
 
 **M06 Shop signs, four sheets** -> `town/shop_signs_a.png` ... `_d.png` (each 1536x1024: 2 columns by 4 rows, every sign 8:1)
 > [STYLE] A sheet of eight separate small-town storefront signs laid out in a neat grid of 2 columns and 4 rows on plain black, each sign a long 8:1 board filling its cell, front-on: [the eight names below]. Mix of styles as on a real old main street: gold leaf on dark green or black glass, painted wood with a border, enamel, carved serif. Each sign shows its name large and its line under it smaller.
+Drawn by the game: the storefront signs are painted by the game
 
 Sheet a: Lakeside Bakery (Bread · Pies · Coffee), Harbor Books (New & Used), Pine & Anchor (Cafe), Ridge Outfitters (Camp · Fish · Hike), Hometown Hardware (Since 1948), Main St. Diner (Breakfast All Day), Lakeside Pharmacy (Rx · Gifts), Post Office (U.S. Mail).
 Sheet b: First Lake Bank (Est. 1912), Barber Shop (Walk-ins Welcome), Wildflower (Florist), Mountain Coffee (Roasted Here), Lakeside Pizza (Slices · Pies), Antiques (& Oddities), Tackle & Trail (Bait · Licenses), The Sweet Shop (Fudge · Candy).
@@ -238,48 +292,63 @@ Sheet d: Corner Market (Groceries), Quilt Barn (Fabric · Yarn), Hair Studio (Cu
 
 **M07 Shop window interiors** -> `town/windows.png` (2048x1024: a 4x2 grid, each 2:1)
 > [STYLE] Eight photos of shop interiors seen straight through a shop's display window from the sidewalk, each a 2:1 cell in a 4 by 2 grid: a bakery counter with bread and pies, a bookshop's shelves and a reading chair, hardware aisles with tools on pegboard, a diner counter with stools, a florist's buckets of flowers, an outdoor outfitter with kayaks and jackets, a coffee shop with an espresso machine, a toy shop. Warm interior lighting, slight reflection of the street on the glass, no people, no readable brand names.
+Not in the game yet: still to make.
 
 **M08 Upstairs windows** -> `town/upper_windows.png` (1024x1024: a 4x4 grid)
 > [STYLE] Sixteen different upstairs apartment windows on an old brick main street, front-on, each cell one double-hung window opening (glass only, no frame): half-drawn blinds, lace curtains, a plant on the sill, a cat, dark glass, a lamp glowing, a reflection of sky. Realistic photo, even light.
+Not in the game yet: still to make.
 
 **M09 Painted lap siding** -> `materials/siding_lap.jpg`. Needs: the Harbor House [TEXTURE]
 > [STYLE][TEXTURE] Painted wooden lap (clapboard) siding seen straight on, horizontal boards about 4 inches exposed, soft grey-blue paint slightly chalky and weathered, faint wood grain, tiny nail heads, a few hairline paint cracks. Ask again in white and in sage green.
+Not in the game yet: still to make.
 
 **M10 Board and batten, barn red** -> `materials/board_batten.jpg`. Needs: the Dockside Grill [TEXTURE]
 > [STYLE][TEXTURE] Vertical board-and-batten siding painted deep barn red, battens every 2 feet, sun-faded and slightly peeling at the bottom edge, wood grain showing.
+Not in the game yet: still to make.
 
 **M11 Dock decking, grey weathered** -> `materials/dock_deck.jpg`. Needs: the pier and slips [TEXTURE]
 > [STYLE][TEXTURE] Top-down view of a weathered timber dock: 2x6 boards running left to right with 1/4 inch gaps showing dark water below, silver-grey sun-bleached cedar with darker wet patches near the gaps, galvanized nail heads in pairs, a little bird lime and scuffing. The pattern repeats every 4 boards across, seamless.
+Not in the game yet: still to make.
 
 **M12 Breakwater stone** -> `materials/riprap.jpg`. Needs: the breakwater [TEXTURE]
 > [STYLE][TEXTURE] Close view of a rough grey granite boulder's surface for a lake breakwater: speckled grey and pink granite, lichen spots, a dark wet band, a few green algae streaks. Seamless; this goes on each boulder.
+Not in the game yet: still to make.
 
 **M13 Standing-seam metal roof** -> `materials/roof_seam.jpg` [TEXTURE]
 > [STYLE][TEXTURE] Standing-seam steel roof seen straight on, charcoal grey, seams every 16 inches, faint weathering streaks and a little pollen in the seams.
+Not in the game yet: still to make.
 
 **M14 Awning canvas** -> `materials/awning_stripes.jpg` [TEXTURE]
 > [STYLE][TEXTURE] Woven outdoor awning canvas with wide vertical stripes, alternating forest green and cream, the fabric weave visible up close, slightly sun-faded. Ask again in red and white, navy and white, and mustard and white.
+Not in the game yet: still to make.
 
 **M15 Boat hulls and names** -> `town/boat_names.png` (transparent PNG, 2048x1024: a grid of 12)
 > [STYLE] Twelve boat transom names as clean vinyl lettering on transparent background, each centred in its own cell with a hailing port under it "LAKESIDE": Reel Time, Knot On Call, Seas the Day, Lake Effect, Miss Corley, Dock Holiday, Aqua Therapy, Sunset Serenade, Fishful Thinking, Wet Willie, Second Wind, Liquid Asset. Mix of script and block styles in navy, black, red and gold.
+Not in the game yet: still to make.
 
 **M16 Gelcoat hull** -> `materials/gelcoat.jpg` [TEXTURE]
 > [STYLE][TEXTURE] Glossy white fibreglass boat hull gelcoat, close, very slight orange-peel texture, faint grey scuffs, a thin yellowish waterline stain along the bottom fifth. Seamless left to right.
+Not in the game yet: still to make.
 
 **M17 Flags** -> `town/flags.png` (transparent PNG, 1536x1024)
 > [STYLE] A sheet of flat flags on transparent background, each in its own cell, slightly rippled cloth: the US flag, a navy marina burgee with a gold anchor, a red-and-white "diver down" flag, and nautical signal flags A to F.
+Not in the game yet: still to make.
 
 **M18 Life ring** -> `town/life_ring.png` (transparent PNG, square)
 > [STYLE] Top view of an orange-and-white life ring with grab rope, the words "LAKESIDE MARINA" printed round it in black, on transparent background.
+Not in the game yet: still to make.
 
 **M19 Marina notices** -> `town/notices.png` (1536x1024, a 3x2 grid)
 > [STYLE] Six weathered notice signs for a lake marina, each front-on in its cell: "NO WAKE" (white with orange diamond), "SLOW 5 MPH", "NO SWIMMING OFF DOCKS", "LIFE JACKETS SAVE LIVES", "PUBLIC BOAT RAMP", "FISH CLEANING STATION". Real enamel and aluminium road-sign look, a little sun-faded.
+Not in the game yet: still to make.
 
 **M20 Harbor House concept** -> `concept/harbor_house.png`
 > [STYLE] [concept sheet] A two-storey New England style marina office and bait shop: grey-blue clapboard, white trim, navy shutters, a cedar-shingle roof with a white cupola and fish weathervane, a deep porch with rocking chairs facing the docks, an ice chest and bait cooler by the door.
+Reference art: a guide for building, not a game file.
 
 **M21 Dockside Grill concept** -> `concept/dockside_grill.png`
 > [STYLE] [concept sheet] A red board-and-batten lakeside grill with roll-up glass garage doors, a plank deck over the beach with tables, striped umbrellas and string lights at dusk.
+Reference art: a guide for building, not a game file.
 
 ## S: Scenery concept sheets (reference art, not textures; use as guides when building)
 
@@ -287,30 +356,39 @@ Add: "Three-quarter view on a plain light grey background, realistic 3D game-mod
 
 **S01 Job trailer, porta-john, fuel tank, pipe rack** -> `concept/site_props.png`. Needs: S01, S02
 > [STYLE] [concept sheet] A construction site prop set: office trailer, porta-john, skid fuel tank, PVC pipe rack, traffic cones, barricade, caution tape stand, job sign, light tower.
+Reference art: a guide for building, not a game file.
 
 **S02 Lighthouse** -> `concept/lighthouse.png`. Needs: S22, I12
 > [STYLE] [concept sheet] A small white lighthouse with a red lantern room and stair, on a rocky point.
+Reference art: a guide for building, not a game file.
 
 **S03 Marina and boardwalk** -> `concept/marina.png`. Needs: S18, S21
 > [STYLE] [concept sheet] A small lake marina: floating slips, breakwater, fuel dock, bait shop, ice-cream window, cafe, with boats at the slips.
+Reference art: a guide for building, not a game file.
 
 **S04 Farmhouse on Family Island** -> `concept/farmhouse.png`. Needs: I02
 > [STYLE] [concept sheet] A big white farmhouse with a deep porch, green shutters, a dock and a lawn.
+Reference art: a guide for building, not a game file.
 
 **S05 Your cabin** -> `concept/cabin.png`. Needs: H01, S11, I13
 > [STYLE] [concept sheet] A small timber lake cabin with porch swing, woodstove chimney, rain barrel and fire pit. Also show it in four build stages: footings, frame, roof, finished.
+Reference art: a guide for building, not a game file.
 
 **S06 Lake boats** -> `concept/boats.png`. Needs: M21, M22, S19, S20
 > [STYLE] [concept sheet] Runabout, pontoon, fishing boat, johnboat, sailboat, kayak, paddleboard, tug and barge.
+Reference art: a guide for building, not a game file.
 
 **S07 Animals** -> `concept/animals.png`. Needs: S09, S23, H05, H06
 > [STYLE] [concept sheet] Deer, goose, eagle, heron, turtle, otter, a friendly dog, a hen and rooster.
+Reference art: a guide for building, not a game file.
 
 **S08 Mountain town main street** -> `concept/town.png`. Needs: T01-T05
 > [STYLE] [concept sheet] A small mountain town main street: hardware store, diner, gas station, equipment dealer, feed store, with sidewalks and street lamps.
+Reference art: a guide for building, not a game file.
 
 **S09 Trees by season** -> `concept/trees.png`. Needs: W04, Q15
 > [STYLE] [concept sheet] One oak, one maple and one pine each in summer, autumn and winter.
+Reference art: a guide for building, not a game file.
 
 ## How to store them
 

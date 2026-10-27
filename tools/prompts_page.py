@@ -37,6 +37,11 @@ for l in lines:
         g = m.groups()
         entry = {'id': g[0], 'title': g[1], 'file': g[2].replace('`', ''), 'needs': g[3] if len(g) > 3 else '', 'text': ''}
         cur['items'].append(entry); continue
+    m = re.match(r'^(In game|Drawn by the game|Close match|Not in the game yet|Reference art): (.*)$', l)
+    if m and entry is not None:
+        entry['st'] = {'In game': 'game', 'Drawn by the game': 'code', 'Close match': 'close', 'Reference art': 'ref'}.get(m.group(1), 'todo')
+        entry['where'] = '' if m.group(2) == 'still to make.' else m.group(2).replace('`', '')
+        continue
     if l.startswith('Add:'):
         cur['add'] = l[4:].strip().strip('"')
         continue
@@ -53,9 +58,23 @@ for s in sections:
         it['pbr'] = s['key'] in 'GP' and it['tex'] and it['id'] not in ('P13',)
         it['sprite'] = s['key'] in 'FUS' or it['png']
 
-data = {'style': style, 'texture': texture, 'pbr': pbr, 'sections': sections}
+# every texture file the game ships, named as the material library names it, so the page can list them all
+import os, glob
+names = dict(re.findall(r"id:'([^']+)',n:'([^']+)'", open('js/materials.js', encoding='utf-8').read()))
+names.update({'tree_bark': 'Tree bark', 'tree_birch': 'Birch bark', 'tree_leaves': 'Tree leaves', 'tree_leaves_a': 'Tree leaves, second set',
+              'mach_paint': 'Machine paint', 'mach_steel': 'Machine steel', 'mach_rubber': 'Machine rubber', 'mud_cracked': 'Cracked mud', 'mud_drying': 'Drying mud'})
+lib = []
+for f in sorted(glob.glob('textures/*.jpg')):
+    b = os.path.basename(f)[:-4]
+    if b.endswith(('_n', '_r')) or b == 'thumbs': continue
+    lib.append({'f': f, 'n': names.get(b, b.replace('_', ' ').capitalize()), 'pbr': os.path.exists(f'textures/{b}_n.jpg')})
+for b, n in (('dirt', 'Ground dirt'), ('grass', 'Ground grass'), ('grime', 'Machine grime')):
+    lib.append({'f': f'textures/ground/high/{b}.jpg', 'n': n + ' (ground pack, Low to Ultra sizes)', 'pbr': os.path.exists(f'textures/ground/{b}_n.jpg')})
+lib.append({'f': 'textures/ground/macro.jpg', 'n': 'Ground macro variation', 'pbr': False})
+
+data = {'lib': lib, 'style': style, 'texture': texture, 'pbr': pbr, 'sections': sections}
 payload = json.dumps(data, ensure_ascii=False).replace('</', '<\\/')
 
 page = open('tools/prompts_page.tpl.html', encoding='utf-8').read().replace('/*DATA*/null', payload)
 open('docs/image-prompts.html', 'w', encoding='utf-8').write(page)
-print(sum(len(s['items']) for s in sections), 'prompts in', len(sections), 'sections')
+print(sum(len(s['items']) for s in sections), 'prompts in', len(sections), 'sections;', len(lib), 'textures in the game')
