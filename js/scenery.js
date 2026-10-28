@@ -33,7 +33,8 @@ const MTN_MATS=[];
 // grass (also the dry straw clumps) and seed-head grass, low broadleaf weeds and wildflowers. They grow in patches with bare-ish ground
 // between, in little clusters: lush and green down on the flats, dry and straw coloured up the slopes and hilltops,
 // seed heads in drifts and along the roads and yards, flowers in drifts of one colour
-const TUFTS=15000,tX=new Float32Array(TUFTS),tZ=new Float32Array(TUFTS),tS=new Float32Array(TUFTS),tR=new Float32Array(TUFTS),tI=new Int32Array(TUFTS),tJ=new Int32Array(TUFTS),
+// the field's own clumps, then the wild growth (tall grass gone to seed and bushes, Q19) in the rough ground
+const TUFTS_FIELD=15000,TUFTS_TALL=2600,TUFTS_BUSH=700,TUFTS=TUFTS_FIELD+TUFTS_TALL+TUFTS_BUSH,tX=new Float32Array(TUFTS),tZ=new Float32Array(TUFTS),tS=new Float32Array(TUFTS),tR=new Float32Array(TUFTS),tI=new Int32Array(TUFTS),tJ=new Int32Array(TUFTS),
   tK=new Uint8Array(TUFTS),tGone=new Uint8Array(TUFTS),tVis=new Uint8Array(TUFTS),tH=new Float32Array(TUFTS),tMi=new Uint16Array(TUFTS),tSl=new Int32Array(TUFTS);
 // smooth value noise, 0 to 1, about one feature per unit
 function tuftNoise(x,z){const i=Math.floor(x),j=Math.floor(z),fx=x-i,fz=z-j,u=fx*fx*(3-2*fx),v=fz*fz*(3-2*fz);
@@ -46,8 +47,9 @@ function tuftNoise(x,z){const i=Math.floor(x),j=Math.floor(z),fx=x-i,fz=z-j,u=fx
 const TUFT_Q=[{bl:5,seg:2,lf:1,pt:4,rs:6},{bl:7,seg:3,lf:2,pt:6,rs:7},{bl:10,seg:4,lf:3,pt:10,rs:8},{bl:13,seg:6,lf:4,pt:14,rs:9}];
 // grass (seed stalks as heads), broadleaf (dandelion and chicory: rosette and a flower), clover (trefoils and a round
 // head), thistle (spiny stem, purple tuft), plantain (broad upright leaves and a seed spike), sedge (stiff dark blades by
-// damp ground, brown seed clusters)
-const TUFT_NAMES=['grass','broadleaf','clover','thistle','plantain','sedge'];
+// damp ground, brown seed clusters), and the wild growth of the rough ground: tall grass (knee to waist high, long
+// arching blades and feathery seed plumes) and a bush (woody stems up to clusters of leaves)
+const TUFT_NAMES=['grass','broadleaf','clover','thistle','plantain','sedge','tall grass','bush'];
 function tuftGeos(q){const Q=TUFT_Q[q];
   function build(seed,f){let s=seed;const R=()=>{s=(s+0x6D2B79F5)|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
     const P=[],C=[],A=[],I=[];
@@ -119,21 +121,40 @@ function tuftGeos(q){const Q=TUFT_Q[q];
     // sedge: stiff narrow blades standing nearly straight, and brown seed clusters
     build(83,({R,strip,stem,spike})=>{for(let b=0;b<Q.bl+3;b++){const a=b*6.28/(Q.bl+3)+R()*0.5,ra=0.005+R()*0.03;
         strip(Math.cos(a)*ra,Math.sin(a)*ra,a,0.5*(0.6+0.4*R()),0.03+R()*0.08,0.011+R()*0.005,(R()-0.5)*0.4,R()*2-1,Q.seg+1,t=>1-0.6*t,0.55,1.05,0,0.05)}
-      for(let b=0;b<1+(Q.bl>7);b++){const a=b*2.8+R(),h=0.55+R()*0.1,x=Math.cos(a)*0.02,z=Math.sin(a)*0.02;stem(x,h,z,0.004,[0.45,0.5,0.32],2);spike(x,h,z,0.05,0.012,Math.max(2,Q.seg),1)}})]}
+      for(let b=0;b<1+(Q.bl>7);b++){const a=b*2.8+R(),h=0.55+R()*0.1,x=Math.cos(a)*0.02,z=Math.sin(a)*0.02;stem(x,h,z,0.004,[0.45,0.5,0.32],2);spike(x,h,z,0.05,0.012,Math.max(2,Q.seg),1)}}),
+    // tall grass: long blades arching out and over from a wide base, and stalks gone to seed in feathery plumes
+    build(97,({R,strip,stem,spike})=>{const nb=Q.bl+4;for(let b=0;b<nb;b++){const a=b*6.28/nb+R()*0.5,ra=0.015+R()*0.06;
+        strip(Math.cos(a+1.9)*ra,Math.sin(a+1.9)*ra,a,0.55+0.3*R(),0.12+R()*0.25,0.012+R()*0.006,(R()-0.5)*0.8,R()*2-1,Q.seg+1,W,0.55,1.15,0,0.35)}
+      const ns=3+(Q.bl>7?2:0)+(Q.bl>10?1:0);for(let b=0;b<ns;b++){const a=b*6.28/ns+R()*0.9,h=0.85+R()*0.25,lx=Math.cos(a)*h*0.14,lz=Math.sin(a)*h*0.14;
+        stem(lx,h,lz,0.004,[0.62,0.6,0.4],2);spike(lx,h-0.02,lz,0.15+R()*0.07,0.028,Math.max(2,Q.seg+1),1)}}),
+    // bush: a few woody stems (head colour, so they stay bark brown under the leaf tint) up to clusters of small leaves
+    // round a dome, darker deep inside and sunlit at the outside
+    build(113,({R,tri,stem})=>{const nc=4+Q.lf,nl=[5,6,8,10][q],cs=[];
+      for(let c=0;c<nc;c++){const a=c*6.28/nc+R()*0.7,u=0.35+0.55*R(),x=Math.cos(a)*0.42*u,z=Math.sin(a)*0.42*u,y=0.25+0.45*(1-u*u*0.6)+R()*0.1;cs.push([x,y,z]);
+        stem(x*0.85,y*0.9,z*0.85,0.012,[1,1,1],1)}
+      for(const [cx,cy,cz] of cs)for(let l=0;l<nl*2;l++){const a=R()*6.28,e=R()*1.4-0.3,r=0.06+0.12*R(),nx=Math.cos(a)*Math.cos(e),ny=Math.sin(e),nz=Math.sin(a)*Math.cos(e);
+        const px=cx+nx*r,py=cy+ny*r*0.8,pz=cz+nz*r,t=R()*6.28,tx=Math.cos(t),tz=Math.sin(t),ln=0.05+0.03*R(),wd=0.022+0.01*R();
+        // a leaf: a diamond along (tx, lift, tz), its sides across that and the outward normal
+        const ux=tx*ln,uy=0.4*ln*(R()-0.3),uz=tz*ln,sx=(ny*uz-nz*uy),sy=(nz*ux-nx*uz),sz=(nx*uy-ny*ux),sl=Math.hypot(sx,sy,sz)||1,k=0.55+0.5*(r/0.18)*(0.6+0.4*ny),cl=[k*0.95,k,k*0.9];
+        const A=[px-ux,py-uy,pz-uz],B=[px+ux,py+uy,pz+uz],L=[px+sx/sl*wd,py+sy/sl*wd,pz+sz/sl*wd],Rr=[px-sx/sl*wd,py-sy/sl*wd,pz-sz/sl*wd];
+        tri([A,L,B],[cl,cl,cl],0);tri([A,B,Rr],[cl,cl,cl],0)}})]}
 let tuftQ=0;const TUFT_GEO=tuftGeos(0),TUFT_GQ=[TUFT_GEO];
 const TUFT_KINDS=TUFT_GEO.length;
 // per shape: how far out it is still drawn, as a share of the Graphics setting's distances (small things go first)
-const TUFT_KR=[1,0.65,0.5,0.85,0.65,0.9];
+const TUFT_KR=[1,0.65,0.5,0.85,0.65,0.9,1.6,1.8];
+// per shape: how hard the wind moves it (the tall grass is long and springy, a bush's leaves only flutter)
+const TUFT_SWAY=[1,1,1,1,1,1,0.3,0.06];
 // the clumps sit in 32 m squares, one instanced mesh per square and shape, so squares out of view or far away are skipped
 const TC_X0=-48,TC_Z0=-19,TC_W=32,TC_NX=3,TC_NZ=3;
 // thinning with distance, set each frame from the Graphics setting by tuftLod: share drawn up close, near and far
 // distances (m) and the share still drawn far off. Each clump has a rank (aTuft.x): it shrinks away as the share drops
 // below its rank, and the ones left grow a little to fill in
+let tuftMats0=0;
 const tuftMats=TUFT_GEO.map(()=>{const mat=M(0xffffff,{side:THREE.DoubleSide,vertexColors:true}),thin={value:new THREE.Vector4(1,25,80,0.35)};
-  mat.userData.thin=thin;
-  mat.onBeforeCompile=sh=>{sh.uniforms.uTime=timeU;sh.uniforms.uDayK=dayKU;sh.uniforms.uThin=thin;sh.uniforms.uSun={value:SUN_DIR};sh.uniforms.uPush=lawnPush;
+  mat.userData.thin=thin;const sway={value:TUFT_SWAY[tuftMats0++]};
+  mat.onBeforeCompile=sh=>{sh.uniforms.uSway=sway;sh.uniforms.uTime=timeU;sh.uniforms.uDayK=dayKU;sh.uniforms.uThin=thin;sh.uniforms.uSun={value:SUN_DIR};sh.uniforms.uPush=lawnPush;
     sh.uniforms.tCrush={value:crTex};sh.uniforms.uCrO={value:new THREE.Vector4(CR_X0,CR_Z0,1/(CR_NX*CR_C),1/(CR_NZ*CR_C))};Object.assign(sh.uniforms,wetU);
-    sh.vertexShader='uniform float uTime;\nuniform vec4 uThin;\nuniform vec4 uPush[5];\nuniform sampler2D tCrush;\nuniform vec4 uCrO;\nuniform sampler2D tWet;\nuniform vec4 uWetO;\nattribute vec4 aTuft;\nattribute float aHead;\nvarying vec3 vLW;\nvarying float vTip;\n'+sh.vertexShader
+    sh.vertexShader='uniform float uTime;\nuniform float uSway;\nuniform vec4 uThin;\nuniform vec4 uPush[5];\nuniform sampler2D tCrush;\nuniform vec4 uCrO;\nuniform sampler2D tWet;\nuniform vec4 uWetO;\nattribute vec4 aTuft;\nattribute float aHead;\nvarying vec3 vLW;\nvarying float vTip;\n'+sh.vertexShader
       .replace('#include <color_vertex>','vColor=vec4(1.0);\n#ifdef USE_COLOR\nvColor.rgb*=color;\n#endif\n#ifdef USE_INSTANCING_COLOR\nvColor.rgb*=mix(instanceColor,aTuft.yzw,step(0.5,aHead)*step(aHead,1.5));\n#endif')
       .replace('#include <project_vertex>',
       '#ifdef USE_INSTANCING\nvec3 root=instanceMatrix[3].xyz;\n#else\nvec3 root=vec3(0.0);\n#endif\n'+
@@ -148,7 +169,7 @@ const tuftMats=TUFT_GEO.map(()=>{const mat=M(0xffffff,{side:THREE.DoubleSide,ver
         'float wet=texture2D(tWet,(root.xz-uWetO.xy)*uWetO.zw).r;\n':'float fla=0.0,wet=0.0;vec2 cd=vec2(0.0);\n')+
       'float gust=pow(0.5+0.5*sin(dot(root.xz,wd)*0.42-uTime*1.9+1.5*sin(dot(root.xz,vec2(-0.6,0.8))*0.11+uTime*0.23)),3.0);\n'+
       'float fl=sin(uTime*5.3+root.x*2.1+root.z*1.7)*0.5+sin(uTime*3.1+root.x*1.7-root.z*1.1)*0.5;\n'+
-      'mvPosition.xz+=wd*hg*hg*(0.25+1.1*gust+0.2*fl+0.4*wet)*(1.0-fla);mvPosition.y-=hg*hg*(0.4*gust+0.5*wet)*(1.0-fla);\n'+
+      'mvPosition.xz+=wd*hg*hg*uSway*(0.25+1.1*gust+0.2*fl+0.4*wet)*(1.0-fla);mvPosition.y-=hg*hg*uSway*(0.4*gust+0.5*wet)*(1.0-fla);\n'+
       'mvPosition.xz+=cd*hg*0.9*fla;mvPosition.y-=hg*0.8*fla;\n'+
       // and it leans away from the machines and the worker (uPush, set by updateMower)
       'for(int m=0;m<5;m++){vec2 d=root.xz-uPush[m].xy;float l=length(d),f=(1.0-smoothstep(uPush[m].z*0.55,uPush[m].z+0.35,l))*(1.0-fla);\n'+
@@ -182,7 +203,7 @@ const tufts=new THREE.Group(),tuftMeshes=[];scene.add(tufts);
   // the clump's green by shape (grass, broadleaf, clover, thistle, plantain, sedge)
   const LEAF=[[0.3,0.52,0.22],[0.25,0.49,0.23],[0.22,0.47,0.24],[0.42,0.53,0.38],[0.28,0.5,0.21],[0.3,0.47,0.24]];
   let n=0;
-  while(n<TUFTS){let x,z,q=0;do{x=(Math.random()-0.5)*94;z=-18+Math.random()*96}while((bad(x,z)||Math.random()>0.12+0.88*dens(x,z))&&++q<60);
+  while(n<TUFTS_FIELD){let x,z,q=0;do{x=(Math.random()-0.5)*94;z=-18+Math.random()*96}while((bad(x,z)||Math.random()>0.12+0.88*dens(x,z))&&++q<60);
     // a little cluster of one to four clumps, mostly of one kind
     const k=1+Math.floor(Math.pow(Math.random(),2)*4),Z0=zone(x,z),kind0=pick(Z0);
     for(let m=0;m<k&&n<TUFTS;m++){const a=Math.random()*6.3,r=m?0.12+Math.random()*0.3:0,px=x+Math.cos(a)*r,pz=z+Math.sin(a)*r;if(m&&bad(px,pz))continue;
@@ -206,6 +227,23 @@ const tufts=new THREE.Group(),tuftMeshes=[];scene.add(tufts);
       const da=dk?0.7+0.3*Math.random():kind!==2&&kind!==5?0.25*dry*Math.random():0;cr+=(DRY[0]-cr)*da;cg+=(DRY[1]-cg)*da;cb+=(DRY[2]-cb)*da;
       col[n*3]=cr;col[n*3+1]=cg;col[n*3+2]=cb;
       hd[n*3]=head?head[0]:-1;hd[n*3+1]=head?head[1]:0;hd[n*3+2]=head?head[2]:0;n++}}
+  // the wild growth, in the rough: a band in from the mesa's rim, and drifts across the rest that grow thicker where it
+  // is dry, never along the roads and yards. Tall grass in stands of a few clumps, green to straw and rusty broomsedge
+  // with pale or purple-brown plumes; bushes one by one, more of them toward the rim
+  const wildW=(x,z,Z)=>Math.max(ss(EDGE-15,EDGE-3,mesaR(x,z)),ss(0.5,0.78,tuftNoise(x*0.045+210,z*0.045+80))*(0.45+0.55*Z.dry))*(1-0.9*Z.edge);
+  const TALL=[[0.36,0.5,0.22],[0.55,0.55,0.3],[0.74,0.63,0.37],[0.72,0.46,0.25]],PLUME=[[0.88,0.82,0.66],[0.8,0.72,0.55],[0.58,0.44,0.42]];
+  const BUSH=[[0.32,0.48,0.2],[0.26,0.42,0.18],[0.42,0.5,0.22],[0.6,0.5,0.2],[0.66,0.36,0.16]];
+  for(const kind of [6,7]){const end=kind===6?TUFTS_FIELD+TUFTS_TALL:TUFTS;
+    while(n<end){let x,z,Z,q=0;do{x=(Math.random()-0.5)*94;z=-18+Math.random()*96;Z=bad(x,z)?null:zone(x,z)}while((!Z||Math.random()>wildW(x,z,Z)*(kind===7?0.4+0.6*ss(EDGE-15,EDGE-3,mesaR(x,z)):1))&&++q<80);
+      if(!Z)continue;
+      const k=kind===6?2+Math.floor(Math.random()*4):1,nv=hash(Math.floor(x/6)+11,Math.floor(z/6)-4);
+      for(let m=0;m<k&&n<end;m++){const a=Math.random()*6.3,r=m?0.25+Math.random()*0.45:0,px=x+Math.cos(a)*r,pz=z+Math.sin(a)*r;if(m&&bad(px,pz))continue;
+        tX[n]=px;tZ[n]=pz;tK[n]=kind;tR[n]=Math.random()*6.3;tS[n]=kind===6?0.8+Math.random()*0.5:0.75+Math.random()*0.7;tH[n]=kind===6?0.8+Math.random()*0.45:0.8+Math.random()*0.4;
+        // one colour per stand (a few metres), drier toward straw on the dry ground
+        const P=kind===6?TALL[Math.min(3,Math.floor(nv*2+Z.dry*2.2))]:BUSH[Math.floor(hash(Math.floor(px/4),Math.floor(pz/4)+7)*BUSH.length)],v=0.88+0.24*Math.random();
+        col[n*3]=P[0]*v;col[n*3+1]=P[1]*v;col[n*3+2]=P[2]*v;
+        const hc=kind===6?(Math.random()<0.8?PLUME[Math.floor(nv*2.999)]:null):[0.36,0.28,0.2];
+        hd[n*3]=hc?hc[0]:-1;hd[n*3+1]=hc?hc[1]:0;hd[n*3+2]=hc?hc[2]:0;n++}}}
   // into the squares' meshes: count each, then give every clump a slot (in random order, so ranks spread evenly)
   const cnt=new Int32Array(TC_NX*TC_NZ*TUFT_KINDS);
   for(let n=0;n<TUFTS;n++){const cx=Math.min(TC_NX-1,Math.max(0,Math.floor((tX[n]-TC_X0)/TC_W))),cz=Math.min(TC_NZ-1,Math.max(0,Math.floor((tZ[n]-TC_Z0)/TC_W)));
@@ -250,11 +288,14 @@ let tuftFarBox=null,tuftFarT=0;
 function tuftFarMark(x0,x1,z0,z1){const b=tuftFarBox;tuftFarBox=b?[Math.min(b[0],x0),Math.max(b[1],x1),Math.min(b[2],z0),Math.max(b[3],z1)]:[x0,x1,z0,z1]}
 // every frame: each shape's thinning from the Graphics setting, and how many clumps each square draws (none when every
 // clump in it would be shrunk away)
-function tuftLod(){const g=typeof gfxCur!=='undefined'?gfxCur.tuft:[1,25,80,0.35],cx=camera.position.x,cz=camera.position.z;
-  for(let k=0;k<TUFT_KINDS;k++)tuftMats[k].userData.thin.value.set(g[0],g[1]*TUFT_KR[k],g[2]*TUFT_KR[k],k?0:g[3]);
+// the wild growth (tall grass and bushes) takes its own share from the Graphics setting's Wild growth (wild), and stays
+// in view far off like the field grass, being big
+function tuftLod(){const g=typeof gfxCur!=='undefined'?gfxCur.tuft:[1,25,80,0.35],wl=typeof gfxCur!=='undefined'&&gfxCur.wild!=null?gfxCur.wild:1,cx=camera.position.x,cz=camera.position.z;
+  const amt=k=>k>5?g[0]*wl:g[0],far=k=>k===0||k>5?g[3]:0;
+  for(let k=0;k<TUFT_KINDS;k++)tuftMats[k].userData.thin.value.set(amt(k),g[1]*TUFT_KR[k],g[2]*TUFT_KR[k],far(k));
   for(const im of tuftMeshes){const k=im.userData.k,n=im.userData.n;if(!n)continue;
-    const d=Math.hypot(Math.max(0,Math.abs(cx-im.userData.cx)-TC_W/2),Math.max(0,Math.abs(cz-im.userData.cz)-TC_W/2)),fl=k?0:g[3];
-    const f=g[0]*(fl+(1-fl)*(1-ss(g[1]*TUFT_KR[k],g[2]*TUFT_KR[k],d)));
+    const d=Math.hypot(Math.max(0,Math.abs(cx-im.userData.cx)-TC_W/2),Math.max(0,Math.abs(cz-im.userData.cz)-TC_W/2)),fl=far(k);
+    const f=amt(k)*(fl+(1-fl)*(1-ss(g[1]*TUFT_KR[k],g[2]*TUFT_KR[k],d)));
     im.count=Math.min(n,Math.ceil(f*n)+1);im.visible=f>0.002}}
 // ---------- trampled grass ----------
 // a 0.5 m grid over the field grass: how flat it is (0 standing, 1 laid flat) and which way it was pushed. Tracks and
@@ -284,7 +325,7 @@ function grassReset(){crA.fill(0);crTex.image.data.fill(0);crTex.needsUpdate=tru
 // tuftsInCell(k) are tCellL[tCellS[k]] up to tCellS[k+1]
 const fcT=new Float32Array(CR_NX*CR_NZ).fill(-1e9),fcAct=[],fcIn=new Uint8Array(CR_NX*CR_NZ),tCell=new Int32Array(TUFTS),tCellS=new Int32Array(CR_NX*CR_NZ+1),tCellL=new Int32Array(TUFTS);
 // how tall each shape stands at full size (m), with its seed stalks or flower
-const TUFT_HK=[0.45,0.42,0.15,0.7,0.38,0.6];
+const TUFT_HK=[0.45,0.42,0.15,0.7,0.38,0.6,1.0,0.85];
 {for(let n=0;n<TUFTS;n++){const i=Math.floor((tX[n]-CR_X0)/CR_C),j=Math.floor((tZ[n]-CR_Z0)/CR_C);tCell[n]=i<0||j<0||i>=CR_NX||j>=CR_NZ?-1:j*CR_NX+i;if(tCell[n]>=0)tCellS[tCell[n]+1]++}
   for(let k=0;k<CR_NX*CR_NZ;k++)tCellS[k+1]+=tCellS[k];const at=tCellS.slice(0,-1);for(let n=0;n<TUFTS;n++)if(tCell[n]>=0)tCellL[at[tCell[n]]++]=n}
 // a clump's height (share of full): cut down to the deck's height, then growing back
