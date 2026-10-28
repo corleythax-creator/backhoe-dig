@@ -5,7 +5,7 @@ artifact page with capabilities {mcp: Claude Code Remote send_message}). When th
 unless the board's `DONE` says so; when one ships, add it to `DONE` (d, n, part, pc) and republish. An entry with no `part` is
 built in full: the board moves it out of the open list (and the ranking and Next up) into its Completed section. Part-built
 entries (`part:true, pc:NN`) stay in the open list with their percent. As of Oct 22, 2026 (v202; v200 audited against the
-changelog and the code): 395 ideas, 38 built, 43 part built, 314 not started. The list below keeps every idea, built or not.
+changelog and the code): 395 ideas, 39 built, 43 part built, 313 not started. The list below keeps every idea, built or not.
 
 Scoring (same rubric as Cruise Brandon's, set for a dig site): realism 1-10 = how much more like a real job site it feels;
 fun 1-10; seen every / most / some / rare (1, .85, .65, .45); phone none / low / high (1, .92, .75) = risk to 30 FPS on the

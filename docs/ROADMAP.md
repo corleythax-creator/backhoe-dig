@@ -20,7 +20,7 @@ The look of a modern PC construction sim, seen from inside the cab (owner, Oct 2
 
 - [ ] **Q17 Real operator cab:** the full cab around you: pillars, roof hatch, mirrors, joysticks, seat, and a live gauge monitor, with dust and rain on the glass
 - [ ] **Q18 Photo-scanned trees and logs:** real bark, mixed pines and autumn hardwoods, fallen logs, stumps and boulders
-- [ ] **Q19 Dense grass and brush:** thick, wind-swayed grass, weeds and shrubs that flatten under the tracks, scaled to the Graphics setting
+- [x] **Q19 Dense grass and brush (v252):** thick, wind-swayed grass, weeds and shrubs that flatten under the tracks, scaled to the Graphics setting
 
 ## 3. Weather and seasons
 
