@@ -20,8 +20,8 @@ const DEX_Y=0xf2b705,DEX_D=0x2b2d30,DEX_GLASS=0x3c4a52;
 (function(){
   const K=famKit(),G=(x,z)=>baseHeight(x,z);
   // equipment shed: blue-grey ribbed steel, a low roof, three roll-up doors facing the yard, a light over each
-  {const X=-213,Z=226,W=22,D=12,H=6.5,y=G(X,Z),WALL=0x8fa3ad,RIB=0x7d919b,ROOF=0x6b7780,TRIM=0xc0392b;
-    K.box(W+0.4,0.3,D+0.4,0x9b9a94,X,y+0.1,Z);walkPad(X,Z,W/2+0.2,D/2+0.2,0,y+0.25);K.box(W,H,D,WALL,X,y+H/2,Z);
+  {const X=-213,Z=226,W=22,D=12,H=6.5,y=G(X,Z),WALL='corrugated~',RIB=0x7d919b,ROOF='corrugated',TRIM=0xc0392b;
+    K.box(W+0.4,0.3,D+0.4,'concrete',X,y+0.1,Z);walkPad(X,Z,W/2+0.2,D/2+0.2,0,y+0.25);K.box(W,H,D,WALL,X,y+H/2,Z);
     for(let x=X-W/2+0.3;x<X+W/2;x+=0.6)for(const s of [-1,1])K.box(0.12,H,0.06,RIB,x,y+H/2,Z+s*(D/2+0.03));
     for(let z=Z-D/2+0.3;z<Z+D/2;z+=0.6)for(const s of [-1,1])K.box(0.06,H,0.12,RIB,X+s*(W/2+0.03),y+H/2,z);
     K.geo(famGable(D,1.6,W),WALL,X,y+H,Z);const ra=Math.atan2(1.6,D/2),rl=Math.hypot(D/2,1.6)+0.6,mo=rl/2;
@@ -34,22 +34,22 @@ const DEX_Y=0xf2b705,DEX_D=0x2b2d30,DEX_GLASS=0x3c4a52;
     SOLIDS.push({x:X,z:Z,hx:W/2+0.1,hz:D/2+0.15})}
   // the office trailer on blocks, with steps up to the door (each of these kinds has a detailed model in
   // models/site.glb, drawn at its famSpot in place of its own kit on Detailed: models.js)
-  {const X=-180,Z=227,y=G(X,Z),K=famKit();for(const dx of [-5,-1.7,1.7,5])K.box(0.4,0.6,3,0x9b9a94,X+dx,y+0.3,Z);
+  {const X=-180,Z=227,y=G(X,Z),K=famKit();for(const dx of [-5,-1.7,1.7,5])K.box(0.4,0.6,3,'cmu',X+dx,y+0.3,Z);
     K.box(12,2.8,3.4,0xeeeeea,X,y+2,Z);K.box(12.1,0.15,3.5,0xb9b9b4,X,y+3.45,Z);
     for(const dx of [-4.2,-1.6,3.6])K.box(1.4,0.9,0.06,DEX_GLASS,X+dx,y+2.3,Z+1.72);K.box(0.95,2.0,0.06,0x8a9198,X+1.2,y+1.65,Z+1.72);
-    for(let i=0;i<3;i++)K.box(1.2,0.18,0.35,0x8a8a86,X+1.2,y+0.45+i*0.3-0.15,Z+2.6-i*0.3);K.box(1.6,0.08,1.0,0x8a8a86,X+1.2,y+0.62+0.3,Z+2.2);walkPad(X+1.2,Z+2.29,0.8,0.49,Math.PI,y,{rise:0.96});
+    for(let i=0;i<3;i++)K.box(1.2,0.18,0.35,'diamond',X+1.2,y+0.45+i*0.3-0.15,Z+2.6-i*0.3);K.box(1.6,0.08,1.0,'diamond',X+1.2,y+0.62+0.3,Z+2.2);walkPad(X+1.2,Z+2.29,0.8,0.49,Math.PI,y,{rise:0.96});
     famAddSpot('office',K);famSpot('office',X,y,Z);
     famSign(['OFFICE'],2.2,0.55,X-1.6,y+3.05,Z+1.74,0,'#ffffff','#2b2d30');
     SOLIDS.push({x:X,z:Z,hx:6.1,hz:1.8})}
   // diesel tank on saddles, with its pump
-  {const X=-193,Z=226,y=G(X,Z),K=famKit();for(const dx of [-1.4,1.4])K.box(0.4,0.9,2.0,0x8a8a86,X+dx,y+0.45,Z);
+  {const X=-193,Z=226,y=G(X,Z),K=famKit();for(const dx of [-1.4,1.4])K.box(0.4,0.9,2.0,'concrete',X+dx,y+0.45,Z);
     K.cyl(1.05,1.05,4.2,12,0xd8d8d4,X,y+1.9,Z,0,0,Math.PI/2);K.cyl(1.07,1.07,0.4,12,DEX_Y,X,y+1.9,Z,0,0,Math.PI/2);
     K.box(0.6,1.4,0.4,0xc0392b,X+2.8,y+0.7,Z+1.0);K.box(0.05,0.05,0.9,DEX_D,X+2.8,y+1.1,Z+1.5,0,0.6);
     famAddSpot('fueltank',K);famSpot('fueltank',X,y,Z);
     famSign(['DIESEL'],1.6,0.45,X,y+3.25,Z,0,'#c0392b','#ffffff');
     SOLIDS.push({x:X,z:Z,hx:2.4,hz:1.2},{x:X+2.8,z:Z+1.0,hx:0.35,hz:0.25})}
   // concrete pipe stacked by the office, Jersey barriers behind the shed
-  for(const [dx,dy] of [[-1.3,0],[1.3,0],[0,1.1]]){const x=-168+dx,z=232,y=G(x,z)+0.65+dy;K.cyl(0.65,0.65,2.4,10,0xa9a6a0,x,y,z,0,Math.PI/2,0)}
+  for(const [dx,dy] of [[-1.3,0],[1.3,0],[0,1.1]]){const x=-168+dx,z=232,y=G(x,z)+0.65+dy;K.cyl(0.65,0.65,2.4,10,'concrete',x,y,z,0,Math.PI/2,0)}
   SOLIDS.push({x:-168,z:232,hx:2,hz:1.25});
   {const KB=famKit();for(let i=0;i<9;i++){const x=-230+i*3.4,z=212,y=G(x,z);KB.box(3.2,0.3,0.8,0xc9c6bf,x,y+0.15,z);KB.box(3.2,0.55,0.55,0xc9c6bf,x,y+0.55,z);KB.box(3.2,0.3,0.3,0xc9c6bf,x,y+0.95,z);famSpot('barrier',x,y,z)}
     famAddSpot('barrier',KB)}

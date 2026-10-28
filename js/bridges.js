@@ -121,7 +121,8 @@ const BR_DEF={
   beam:{gen:brGenWood,col:[0.44,0.34,0.24],tile:1.4,k:6,seed:71,uv:'local',wz:0.35,rough:0.82},
   laceG:{gen:brGenLace,col:BR_GREEN,tile:0.7,alpha:1},xlatG:{gen:brGenXlat,col:BR_GREEN,tile:0.5,alpha:1},xlatS:{gen:brGenXlat,col:BR_GREY,tile:0.5,alpha:1},
   laceY:{gen:brGenLace,col:BR_YEL,tile:0.7,alpha:1},xlatY:{gen:brGenXlat,col:BR_YEL,tile:0.5,alpha:1},
-  asphalt:{lib:'asphalt'},concrete:{lib:'concrete'},concOld:{lib:'concrete_old'},planks:{lib:'planks'},rust:{lib:'rustplate'},
+  asphalt:{lib:'asphalt'},concrete:{lib:'concrete'},concBroom:{lib:'concrete_broom'},shingles:{lib:'shingles'},flagstone:{lib:'flagstone'},
+  cobble:{lib:'cobble'},brick:{lib:'brick'},cmu:{lib:'cmu'},corrugated:{lib:'corrugated'},gravel:{lib:'gravel'},plywood:{lib:'plywood'},diamond:{lib:'diamond'},concOld:{lib:'concrete_old'},planks:{lib:'planks'},rust:{lib:'rustplate'},
   iron:{col:[0.08,0.08,0.08],metal:0.5,rough:0.5},white:{col:[0.88,0.86,0.80],rough:0.75},
   lineW:{col:[0.86,0.85,0.80],rough:0.8},lineY:{col:[0.85,0.66,0.15],rough:0.8},
   stain:{col:[0.74,0.75,0.76],metal:1,rough:0.3,dry:1},galv:{col:[0.6,0.62,0.63],metal:0.8,rough:0.45},cable:{col:[0.93,0.93,0.91],rough:0.35},
@@ -180,6 +181,7 @@ function brKit(F){const parts=new Map(),M4=new THREE.Matrix4(),a=new THREE.Vecto
       for(let i=0;i<P.length;i+=9){a.set(P[i+3]-P[i],P[i+4]-P[i+1],P[i+5]-P[i+2]);b.set(P[i+6]-P[i],P[i+7]-P[i+1],P[i+8]-P[i+2]);n.crossVectors(a,b);
         const ax=Math.abs(n.x),ay=Math.abs(n.y),az=Math.abs(n.z);
         for(let k=0;k<3;k++){const q=i+k*3,w=(i/3+k)*2;if(ay>=ax&&ay>=az){uv[w]=P[q]*t;uv[w+1]=P[q+2]*t}else if(ax>=az){uv[w]=P[q+2]*t;uv[w+1]=P[q+1]*t}else{uv[w]=P[q]*t;uv[w+1]=P[q+1]*t}}}
+      if(o&&o.swap)for(let i=0;i<uv.length;i+=2){const t0=uv[i];uv[i]=uv[i+1];uv[i+1]=t0}
       g.setAttribute('uv',new THREE.BufferAttribute(uv,2))}
     else{const uv=g.attributes.uv.array;for(let i=0;i<uv.length;i++)uv[i]*=t}
     const det=!!(o&&o.det),k=key+(det?'|d':'');if(!parts.has(k))parts.set(k,{key,det,list:[]});parts.get(k).list.push(g)}
@@ -223,6 +225,8 @@ function brKit(F){const parts=new Map(),M4=new THREE.Matrix4(),a=new THREE.Vecto
         K.poly(key,[at(t0,sec[i]),at(t1,sec[i]),at(t1,sec[j]),at(t0,sec[j])],F.C.clone().multiplyScalar(mid[0]).add(new THREE.Vector3(0,mid[1],0)),o)}
       const tri=THREE.ShapeUtils.triangulateShape(sec.map(([c,y])=>new THREE.Vector2(c,y)),[]).flat();
       for(const [t,s] of [[t0,-1],[t1,1]])tris(key,sec.map(p=>at(t,p)),tri,F.A.clone().multiplyScalar(s),o)},
+    // any geometry (normals set, in world place), texture coordinates from its faces' directions (famLibAdd)
+    geo(key,g,o){put(key,g,null,o,'world')},
     // into the scene (or a group), one mesh per material and kind; returns the meshes
     add(parent){const out=[];for(const {key,det,list} of parts.values()){let N=0;for(const g of list)N+=g.attributes.position.count;
         const P=new Float32Array(N*3),Nn=new Float32Array(N*3),U=new Float32Array(N*2);let at=0;
@@ -403,3 +407,5 @@ function brAcorn(K,G,x,y0,z){const V=(h)=>new THREE.Vector3(x,y0+h,z);
   brAbut(K,F,0,-1,2*TU+2.2,Y-1.75,'concOld');brAbut(K,F,L,1,2*TU+2.2,Y-1.75,'concOld');
   K.add();famAdd(G);
 })();
+// the island kits built before this file loaded (family.js) get their material parts now
+for(const L of FAM_LIBQ.splice(0))famLibAdd(L);

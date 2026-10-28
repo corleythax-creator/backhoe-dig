@@ -387,7 +387,7 @@ Upgrade: passable. The marina is built, partly textured; good for checking its l
 **S04 Farmhouse on Family Island** -> `concept/farmhouse.png`. Needs: I02
 > [STYLE] [concept sheet] A big white farmhouse with a deep porch, green shutters, a dock and a lawn.
 Reference art: a guide for building, not a game file.
-Upgrade: poor. The family house is simple flat-colour boxes.
+Upgrade: passable. The family house is simple boxes, but since v252 wears the library's wood, shingles, stone, planks and flagstone.
 
 **S05 Your cabin** -> `concept/cabin.png`. Needs: H01, S11, I13
 > [STYLE] [concept sheet] A small timber lake cabin with porch swing, woodstove chimney, rain barrel and fire pit. Also show it in four build stages: footings, frame, roof, finished.
@@ -420,15 +420,15 @@ Add: "Three-quarter view on a plain light grey background, photorealistic 3D gam
 
 **R01 Family Island pavilion, fire pit and flagpole** -> `concept/fam_pavilion.png`. Needs: I02, H07
 > [STYLE] [concept sheet] An open timber picnic pavilion with a green standing-seam metal roof on heavy posts, two long picnic tables under it, a stone fire ring with log benches, and a tall white flagpole with a US flag.
-Needs an upgrade: poor. The pavilion, fire pit and flagpole are simple flat-shaded shapes.
+Needs an upgrade: passable. The pavilion, fire pit and flagpole are simple shapes; since v252 the pavilion has a broom-finish slab, timber and a cedar-shake roof.
 
 **R02 Jessica's stone and timber cottage** -> `concept/jes_cottage.png`. Needs: L08, H25
 > [STYLE] [concept sheet] A small storybook cottage of grey fieldstone walls and dark stained timber beams, steep cedar-shake roof, a stone chimney, deep-set windows with green trim, a heavy plank door and a lantern; also a cutaway of the library inside: shelves to the ceiling, a rolling ladder, a window seat and two armchairs by the fire.
-Needs an upgrade: poor. The cottage is simple shapes with plain colours (no stone or timber texture).
+Needs an upgrade: passable. The cottage is simple shapes; since v252 its base and chimney are cobblestone and its framing timber, the walls still plain plaster.
 
 **R03 Dexter's equipment shed and office trailer** -> `concept/dex_yard.png`. Needs: L07, S01
 > [STYLE] [concept sheet] A tall steel equipment shed with a big roll-up door and corrugated siding, a white office trailer on blocks with wooden steps, a skid fuel tank in a steel bund, and a parts rack, all working-yard worn.
-Needs an upgrade: poor. Dexter's shed and trailer are simple flat-shaded boxes.
+Needs an upgrade: passable. Dexter's shed and trailer are simple boxes; since v252 the shed is corrugated steel on a concrete slab, the trailer on block piers.
 
 **R04 Placeable things A: construction** -> `concept/props_build.png`. Needs: S01, S02, B20
 > [STYLE] [concept sheet] A set of construction site props: water-filled barricade, concrete Jersey barrier, orange traffic drum, trailer arrow board, portable generator, steel job box, 20 ft shipping container, scaffold tower, stack of concrete culvert pipes, lumber stack, sandbag wall, silt fence, stack of old tyres, wheelbarrow, roll-off dumpster, porta-john.
