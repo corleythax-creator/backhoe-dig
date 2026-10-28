@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-28T01:33:00Z",
+ "updated": "2026-10-28T02:26:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -72,9 +72,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-27",
-   "dh": 12,
-   "act": 2,
-   "versions": 4
+   "dh": 24,
+   "act": 2.5,
+   "versions": 5
   }
  ],
  "extra": [
@@ -2379,6 +2379,15 @@ window.EFFORT = {
    "tris": 6174749,
    "chars": 1709971,
    "what": "The marina's Harbor House has weathered grey lap siding, the Dockside Grill red board-and-batten, and the pier, its fingers, the gangway and the decks real grey dock planks; the farmhouse has a real shingle roof. All photo-scanned, with their own relief and sheen (Medium graphics and up)."
+  },
+  {
+   "v": 256,
+   "asked": "2026-10-27T20:20:00-05:00",
+   "live": "2026-10-27T21:26:01-05:00",
+   "dh": 12,
+   "tris": 6353012,
+   "chars": 1711489,
+   "what": "The town's traffic is all new detailed cars — sedans, hatchbacks, wagons, SUVs, minivans, pickups and vans with real wheels and tyres, glass you can see the seats through, lamps and mirrors, each in its own glossy colour — and Main Street's shops have brick, plaster and siding walls with the street trees and lamps no longer poking through the awnings."
   }
  ]
 };
