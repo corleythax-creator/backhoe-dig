@@ -176,15 +176,16 @@ const MAIN_SHOPS=[["Lakeside Bakery","Bread · Pies · Coffee","#2f4a3a","#e9d9a
   ["Lakeview Hotel","Rooms","#1f3a5f","#e0c27a",1],["Corner Market","Groceries","#2f6b4f","#ffffff",0],["Quilt Barn","Fabric · Yarn","#7e2f26","#f1ead8",1],
   ["Hair Studio","Cuts · Color","#e9e1cc","#2b2d2f",1],["Thrift & Treasure","Second Hand","#5a3a6b","#f1ead8",0],["Town Library","Books · Story Time","#23402f","#f1ead8",1],
   ["Town Hall","Lakeside","#e9e6dc","#1f3a5f",1],["Ice House","Ice · Firewood","#2a5f9a","#ffffff",0],["Lakeside Theater","Movies Fri · Sat","#5a2a22","#f4d27a",1]];
-const mainSignList=[];
+const mainSignList=[],MAIN_GAPS=[];
 // a shop or house on a town lot: a block with its parapet and cornice; a storefront on the face toward the street (face:
 // the yaw it looks along) with pilasters, display windows over kick plates, a door, flower boxes, a striped awning in its
-// colour and the shop's sign above; two floors of windows with sills and lintels over it. Solid to the machines and the worker
-function mainLot(K,x,z,w,d,h,col,face,awn,si){const y=Math.min(baseHeight(x-w/2,z-d/2),baseHeight(x+w/2,z+d/2),baseHeight(x-w/2,z+d/2),baseHeight(x+w/2,z-d/2));
+// colour and the shop's sign above; two floors of windows with sills and lintels over it. Its walls are a photo-scanned
+// library material (wl: brick, old brick, plaster or siding); col is its trim. Solid to the machines and the worker
+function mainLot(K,x,z,w,d,h,col,face,awn,si,wl){wl=wl||col;const y=Math.min(baseHeight(x-w/2,z-d/2),baseHeight(x+w/2,z+d/2),baseHeight(x-w/2,z+d/2),baseHeight(x+w/2,z-d/2));
   const fx=Math.sin(face),fz=Math.cos(face),F=(o,s)=>[x+fx*o+fz*s,z+fz*o-fx*s],TR=0xe9e4d6,DK=0x2a2c2f,c=new THREE.Color(col).multiplyScalar(0.72).getHex();
-  K.box(w,h+1,d,col,x,y+(h-1)/2,z,face);
+  K.box(w,h+1,d,wl,x,y+(h-1)/2,z,face);
   // the roof: a dark membrane inside a parapet with a stone coping, and on most a rooftop unit and a vent
-  K.box(w-0.4,0.06,d-0.4,0x4a4c4e,x,y+h+0.03,z,face);for(const s of [-1,1]){const [a,b]=F(0,s*(w/2-0.12));K.box(0.24,0.7,d,col,a,y+h+0.35,b,face);const [e,f]=F(s*(d/2-0.12),0);K.box(w,0.7,0.24,col,e,y+h+0.35,f,face)}
+  K.box(w-0.4,0.06,d-0.4,0x4a4c4e,x,y+h+0.03,z,face);for(const s of [-1,1]){const [a,b]=F(0,s*(w/2-0.12));K.box(0.24,0.7,d,wl,a,y+h+0.35,b,face);const [e,f]=F(s*(d/2-0.12),0);K.box(w,0.7,0.24,wl,e,y+h+0.35,f,face)}
   for(const s of [-1,1]){const [a,b]=F(0,s*(w/2-0.1));K.box(0.36,0.1,d+0.1,0xd8d2c4,a,y+h+0.75,b,face);const [e,f]=F(s*(d/2-0.1),0);K.box(w+0.1,0.1,0.36,0xd8d2c4,e,y+h+0.75,f,face)}
   if(si%3){const [a,b]=F(-d*0.15,(si%2?1:-1)*w*0.2);K.box(1.6,1.0,1.2,0xa9adb0,a,y+h+0.53,b,face);K.box(1.4,0.06,1.0,0x55595c,a,y+h+1.06,b,face);const [e,f]=F(-d*0.3,-(si%2?1:-1)*w*0.25);K.cyl(0.15,0.15,0.9,8,0x8a8e91,e,y+h+0.48,f)}
   {const [a,b]=F(d/2+0.18,0);K.box(w+0.25,0.3,0.36,TR,a,y+h-0.25,b,face);const [e,f]=F(d/2+0.06,0);K.box(w,0.5,0.12,c,e,y+h-0.75,f,face)}
@@ -197,8 +198,8 @@ function mainLot(K,x,z,w,d,h,col,face,awn,si){const y=Math.min(baseHeight(x-w/2,
     const fc=[0xc94c6a,0xe8b923,0xf2efe6,0x8a4fa8][(si+s+4)%4];for(let q=-(pw-0.7)/2;q<=(pw-0.7)/2;q+=0.22){const [m,n]=F(d/2+0.35+((q*7)%2?0.08:-0.08),so+q);K.box(0.11,0.1,0.11,fc,m,y+1.07,n,face+q)}}
   {const [a,b]=F(d/2+0.05,0);K.box(1.2,2.3,0.08,0x4a3424,a,y+1.15,b,face);K.box(1.2,0.5,0.06,0x2c3a44,a,y+2.65,b,face);const [e,f]=F(d/2+0.1,0);K.box(0.7,1.2,0.04,0x2c3a44,e,y+1.5,f,face)}
   // the awning: stripes of its colour and white, sloping out over the walk, with a valance
-  {const n=Math.max(4,Math.round((w-1)/0.6)),sw=(w-1)/n;for(let i=0;i<n;i++){const s=-(w-1)/2+sw*(i+0.5),[a,b]=F(d/2+0.75,s);K.box(sw+0.005,0.06,1.5,i%2?0xf2efe6:awn,a,y+2.95,b,face,-0.32);
-    const [e,f]=F(d/2+1.48,s);K.box(sw+0.005,0.3,0.04,i%2?0xf2efe6:awn,e,y+2.6,f,face)}}
+  {const n=Math.max(4,Math.round((w-1)/0.6)),sw=(w-1)/n;for(let i=0;i<n;i++){const s=-(w-1)/2+sw*(i+0.5),[a,b]=F(d/2+0.58,s);K.box(sw+0.005,0.06,1.15,i%2?0xf2efe6:awn,a,y+2.95,b,face,-0.32);
+    const [e,f]=F(d/2+1.13,s);K.box(sw+0.005,0.3,0.04,i%2?0xf2efe6:awn,e,y+2.62,f,face)}}
   // the sign over the awning (MAIN_SHOPS[si]), on a dark board
   {const sw=Math.min(w-1.6,8.5),[a,b]=F(d/2+0.1,0);K.box(sw+0.24,1.14,0.08,DK,a,y+3.75,b,face);const [e,f]=F(d/2+0.15,0);mainSignList.push({x:e,y:y+3.75,z:f,ry:face,w:sw,h:0.95,i:si%MAIN_SHOPS.length})}
   // the upper floors: windows with a sill under and a lintel over each
@@ -241,11 +242,13 @@ function mainSignsAdd(){const cv=document.createElement('canvas');cv.width=1024;
 
   // ---------- south: the lakeside town ----------
   const T=famKit(),COLS=[0xb5654a,0xd9cdb0,0x7d9aa8,0xc9b27a,0x9c4f3f,0xe4e0d4,0x8f9a7a,0xb98b5e],AWN=[0x2f6b4f,0xb8322a,0x2a4f7a,0xd08a22];
-  const LK=famKit(),BK=famKit();let li=0;const lot=(x,z,w,d,h,face)=>{mainLot(T,x,z,w,d,h,COLS[li%COLS.length],face,AWN[(li*3)%AWN.length],li);li++};
-  // Main Street: a block of shops each side, facing the street, with lamps at the curb (the paving: mainStreets)
-  for(const s of [-1,1]){for(let i=0;i<7;i++){const z=588+i*19+(i>2?8:0),w=15+((i*7+(s>0?3:0))%4),h=5.5+((i*5+(s>0?2:0))%5)*1.3;if(Math.abs(z-652)<10)continue;
-      lot(s*(4+2+6.5),z,w,13,h,s>0?-Math.PI/2:Math.PI/2)}
-    for(const z of [584,606,628,672,694,716]){const x=s*4.6,y=baseHeight(x,z);LK.cyl(0.07,0.1,5,8,0x2f3236,x,y+2.5,z);LK.box(0.5,0.2,0.5,0x2f3236,x,y+5.05,z);LK.lit(new THREE.BoxGeometry(0.4,0.05,0.4),0xfff1c8,x,y+4.93,z);
+  const WALLS=['brick','plaster','sidingW','brickOld','sidingG','brick','sidingR','plaster','brickOld','sidingB','sidingW'];
+  const LK=famKit(),BK=famKit();let li=0;const lot=(x,z,w,d,h,face)=>{mainLot(T,x,z,w,d,h,COLS[li%COLS.length],face,AWN[(li*3)%AWN.length],li,WALLS[li%WALLS.length]);li++};
+  // Main Street: a block of shops each side, facing the street, at least 2 m apart, with lamps at the curb (the paving:
+  // mainStreets) and a street tree in each gap (MAIN_GAPS)
+  for(const s of [-1,1]){let e0=null;for(let i=0;i<7;i++){const z=588+i*19+(i>2?8:0),w=14+((i*7+(s>0?3:0))%4),h=5.5+((i*5+(s>0?2:0))%5)*1.3;if(Math.abs(z-652)<10){e0=null;continue}
+      lot(s*(4+2+6.5),z,w,13,h,s>0?-Math.PI/2:Math.PI/2);if(e0!==null&&z-w/2-e0>=1.8)MAIN_GAPS.push([s,(e0+z-w/2)/2]);e0=z+w/2}
+    for(const z of [584,606,628,672,694,716]){const x=s*4.42,y=baseHeight(x,z);LK.cyl(0.07,0.1,5,8,0x2f3236,x,y+2.5,z);LK.box(0.5,0.2,0.5,0x2f3236,x,y+5.05,z);LK.lit(new THREE.BoxGeometry(0.4,0.05,0.4),0xfff1c8,x,y+4.93,z);
       famSpot('lamp',x,y+0.17,z,0)}}
   // along the cross street, both sides
   for(const s of [-1,1])for(let i=0;i<5;i++){const x=s*(30+i*22);lot(x,652-13,16,12,5+((i*3)%4)*1.4,0);lot(x,652+13,16,12,5.5+((i*2)%3)*1.5,Math.PI)}
@@ -255,9 +258,10 @@ function mainSignsAdd(){const cv=document.createElement('canvas');cv.width=1024;
   for(let x=-160;x<160;x+=6){if(Math.abs(x)<7||Math.abs(x+3-107)<4)continue;if(x+3<0&&Math.abs(mainRimS(x+3)+3-(x+3<-60?576-2*(x+173)/110:574))<4.4)continue;const z0=mainRimS(x)+3,z1=mainRimS(x+6)+3,y=Math.max(baseHeight(x+3,(z0+z1)/2),WATER+1.8);
     T.box(6.1,0.16,3.6,0x8c6e4c,x+3,y+0.07,(z0+z1)/2,-Math.atan2(z1-z0,6));walkPad(x+3,(z0+z1)/2,3.05,1.8,-Math.atan2(z1-z0,6),y+0.15);
     if(((x+160)/6|0)%5===2){BK.box(1.6,0.45,0.5,0x5c4632,x+3,y+0.37,(z0+z1)/2+1.2);famSpot('bench',x+3,y+0.15,(z0+z1)/2+1.2,Math.PI,0.9)}}
-  // street trees along Main Street between the lamps, each in a square of brick pavers with an iron grate
-  const TR=[];for(const sx of [-1,1])for(const z of [595,617,637,667,683,705]){const x=sx*4.85,y=baseHeight(x,z);TR.push(treeEntry('leafy',x,z,(z*0.37)%6.3,0.62,(z/22|0)%6));
-    T.box(1.3,0.04,1.3,0x8a4a36,x,y+0.18,z);T.box(1.0,0.03,1.0,0x2a2c2f,x,y+0.2,z);walkPad(x,z,0.65,0.65,0,y+0.2)}
+  // street trees along Main Street in the gaps between the shops (clear of the awnings and walls), each in a square of
+  // brick pavers with an iron grate
+  const TR=[];for(const [sx,z] of MAIN_GAPS){const x=sx*4.75,y=baseHeight(x,z);TR.push(treeEntry('leafy',x,z,(z*0.37)%6.3,0.48,(z/22|0)%6,1.15));
+    T.box(1.0,0.04,1.0,0x8a4a36,x,y+0.18,z);T.box(0.8,0.03,0.8,0x2a2c2f,x,y+0.2,z);walkPad(x,z,0.5,0.5,0,y+0.2)}
   treeGroup('town',TR);
   // a post clock at the foot of Main Street: a fluted iron post, a head with a face each way and the hands at ten past ten
   {const X=-7.5,Z=570,y=baseHeight(X,Z);T.cyl(0.32,0.38,0.5,10,0x1f2a24,X,y+0.25,Z);T.cyl(0.12,0.14,3.6,10,0x1f2a24,X,y+2.2,Z);T.box(0.95,0.95,0.42,0x1f2a24,X,y+4.4,Z);
