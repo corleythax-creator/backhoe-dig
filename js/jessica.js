@@ -74,7 +74,7 @@ function jesMesh(list,mat,shadow){if(!list.length)return null;const m=new THREE.
   // where it reaches the floor
   function wall(alongX,c,a,b,holes){
     const piece=(p0,p1,q0,q1)=>{if(p1-p0<1e-3||q1-q0<1e-3)return;const m=(p0+p1)/2,w=p1-p0,ym=y0+(q0+q1)/2;
-      if(alongX)K.box(w,q1-q0,T,PLASTER,m,ym,c);else K.box(T,q1-q0,w,PLASTER,c,ym,m);
+      if(alongX)K.box(w,q1-q0,T,'plaster',m,ym,c);else K.box(T,q1-q0,w,'plaster',c,ym,m);
       if(q0===0){if(alongX)SOLIDS.push({x:m,z:c,hx:w/2,hz:T/2});else SOLIDS.push({x:c,z:m,hx:T/2,hz:w/2})}};
     let p=a;for(const o of holes){piece(p,o.a0,0,WH);piece(o.a0,o.a1,0,o.y0);piece(o.a0,o.a1,o.y1,WH);p=o.a1}piece(p,b,0,WH)}
   // windows: a white frame and cross bars on both faces, glass in the middle
@@ -103,7 +103,7 @@ function jesMesh(list,mat,shadow){if(!list.length)return null;const m=new THREE.
   // the front door, swung open inside, under a little gabled canopy with a lantern beside it
   K.box(1.4,0.12,0.12,TRIM,xw-T/2-0.02,y0+2.31,CZ);
   I.box(1.2,2.2,0.07,0x2f5a46,CX-W/2+0.62,y0+1.1,CZ-0.7);
-  K.geo(famGable(1.9,0.7,1.1),PLASTER,xw-T/2-0.55,y0+2.5,CZ);for(const s of [-1,1])K.box(1.3,0.08,1.25,MOSS,xw-T/2-0.55,y0+2.86,CZ+s*0.5,0,s*0.65);
+  K.geo(famGable(1.9,0.7,1.1),'plaster',xw-T/2-0.55,y0+2.5,CZ);for(const s of [-1,1])K.box(1.3,0.08,1.25,MOSS,xw-T/2-0.55,y0+2.86,CZ+s*0.5,0,s*0.65);
   K.box(0.9,0.12,1.6,'flagstone',xw-T/2-0.45,y0+0.06,CZ);walkPad(xw-T/2-0.45,CZ,0.45,0.8,0,y0+0.12);
   K.box(0.2,0.3,0.2,0x2b2b2b,xw-T/2-0.12,y0+2.0,CZ+1.0);K.lit(new THREE.BoxGeometry(0.15,0.2,0.15),0xffd27a,xw-T/2-0.16,y0+1.98,CZ+1.0);
   // the roof (lifts off when you walk in): plaster gables and a mossy green roof with a ridge

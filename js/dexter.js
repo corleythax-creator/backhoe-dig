@@ -35,7 +35,7 @@ const DEX_Y=0xf2b705,DEX_D=0x2b2d30,DEX_GLASS=0x3c4a52;
   // the office trailer on blocks, with steps up to the door (each of these kinds has a detailed model in
   // models/site.glb, drawn at its famSpot in place of its own kit on Detailed: models.js)
   {const X=-180,Z=227,y=G(X,Z),K=famKit();for(const dx of [-5,-1.7,1.7,5])K.box(0.4,0.6,3,'cmu',X+dx,y+0.3,Z);
-    K.box(12,2.8,3.4,0xeeeeea,X,y+2,Z);K.box(12.1,0.15,3.5,0xb9b9b4,X,y+3.45,Z);
+    K.box(12,2.8,3.4,'sidingW',X,y+2,Z);K.box(12.1,0.15,3.5,0xb9b9b4,X,y+3.45,Z);
     for(const dx of [-4.2,-1.6,3.6])K.box(1.4,0.9,0.06,DEX_GLASS,X+dx,y+2.3,Z+1.72);K.box(0.95,2.0,0.06,0x8a9198,X+1.2,y+1.65,Z+1.72);
     for(let i=0;i<3;i++)K.box(1.2,0.18,0.35,'diamond',X+1.2,y+0.45+i*0.3-0.15,Z+2.6-i*0.3);K.box(1.6,0.08,1.0,'diamond',X+1.2,y+0.62+0.3,Z+2.2);walkPad(X+1.2,Z+2.29,0.8,0.49,Math.PI,y,{rise:0.96});
     famAddSpot('office',K);famSpot('office',X,y,Z);

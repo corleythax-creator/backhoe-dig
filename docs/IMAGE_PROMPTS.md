@@ -128,7 +128,7 @@ In game: `textures/planks.jpg` (Deck planks)
 **P06 Painted white clapboard** -> `materials/clapboard_white.jpg`. Needs: I02 farmhouse
 > [STYLE][TEXTURE] White-painted horizontal lap siding, slight dirt streaks, clean shadow-free lines.
 Not in the game yet: still to make.
-Upgrade: poor. The family house and the cottages have plain flat-colour walls today.
+Upgrade: passable. Since v254 the family house wears a photo-scanned cream clapboard (`textures/siding_white.jpg`, ambientCG); the editor's cottages are still plain.
 
 **P07 Cedar shingle roof** -> `materials/shingle_cedar.jpg`. Needs: H01, S22
 > [STYLE][TEXTURE] Weathered cedar shake roof shingles in staggered rows, silver-brown with moss in a few lower edges.
@@ -138,7 +138,7 @@ Upgrade: passable. The covered bridge has cedar shakes drawn by the game; every 
 **P08 Red barn board** -> `materials/barn_red.jpg`. Needs: H10, I10
 > [STYLE][TEXTURE] Old red barn vertical board-and-batten siding, flaking paint over grey wood.
 Not in the game yet: still to make.
-Upgrade: passable. The covered bridge has barn-red boards drawn by the game; nothing else uses them yet.
+Upgrade: passable. The covered bridge has barn-red boards drawn by the game; a photo-scanned red board siding (`textures/siding_red.jpg`) is in the game, ready for the barns.
 
 **P09 Concrete, poured and stained** -> `materials/concrete_pbr.jpg`. Needs: J07, J12
 > [STYLE][TEXTURE] Poured concrete slab, pale grey, small pinholes, trowel swirls, hairline cracks and faint stains.
