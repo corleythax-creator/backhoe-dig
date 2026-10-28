@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-28T00:43:00Z",
+ "updated": "2026-10-28T01:15:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -72,9 +72,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-27",
-   "dh": 8,
-   "act": 1,
-   "versions": 2
+   "dh": 10,
+   "act": 1.5,
+   "versions": 3
   }
  ],
  "extra": [
@@ -2361,6 +2361,15 @@ window.EFFORT = {
    "tris": 6180169,
    "chars": 1709759,
    "what": "The Family Island house, pavilion and flagpole, Jessica's cottage and Dexter's shed and trailer now wear real materials: wood board walls, shingle and cedar-shake roofs, stone bases and chimneys, plank porches, flagstone steps, corrugated steel and concrete, at their real size and darkening in the rain (Medium graphics and up; Low keeps plain colours)."
+  },
+  {
+   "v": 254,
+   "asked": "2026-10-27T19:55:00-05:00",
+   "live": "2026-10-27T20:15:27-05:00",
+   "dh": 2,
+   "tris": 6251584,
+   "chars": 1710242,
+   "what": "The Family Island house is now a cream clapboard farmhouse, Jessica's cottage has real plaster walls and Dexter's office trailer white siding, all from photo-scanned textures with their own relief and sheen (Medium graphics and up)."
   }
  ]
 };
