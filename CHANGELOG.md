@@ -2,6 +2,10 @@
 
 Every version of Corley's Island, newest first, grouped by the day it went live (Central time). Made from `data/effort.js` by `tools/changelog.py`; don't edit it by hand. [Play any old version](https://corleys-island.vercel.app/versions/) · [Build log with charts](https://corleys-island.vercel.app/build.html)
 
+## Tuesday, October 27, 2026
+
+- **v252** (7:24 PM) Tall grass gone to seed and leafy bushes fill the rough ground of Corley's mesa, thickest toward the rim; they sway, flatten under tracks, mow down and go when dug. Graphics has a new Wild growth setting.
+
 ## Sunday, October 25, 2026
 
 - **v251** (6:50 PM) The start map now reaches the lakeside town on the mainland, with its own button to start there; the place labels are smaller and flatter.
