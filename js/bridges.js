@@ -122,7 +122,11 @@ const BR_DEF={
   laceG:{gen:brGenLace,col:BR_GREEN,tile:0.7,alpha:1},xlatG:{gen:brGenXlat,col:BR_GREEN,tile:0.5,alpha:1},xlatS:{gen:brGenXlat,col:BR_GREY,tile:0.5,alpha:1},
   laceY:{gen:brGenLace,col:BR_YEL,tile:0.7,alpha:1},xlatY:{gen:brGenXlat,col:BR_YEL,tile:0.5,alpha:1},
   asphalt:{lib:'asphalt'},concrete:{lib:'concrete'},concBroom:{lib:'concrete_broom'},shingles:{lib:'shingles'},flagstone:{lib:'flagstone'},
-  cobble:{lib:'cobble'},brick:{lib:'brick'},cmu:{lib:'cmu'},corrugated:{lib:'corrugated'},gravel:{lib:'gravel'},plywood:{lib:'plywood'},diamond:{lib:'diamond'},concOld:{lib:'concrete_old'},planks:{lib:'planks'},rust:{lib:'rustplate'},
+  cobble:{lib:'cobble'},brick:{lib:'brick'},cmu:{lib:'cmu'},corrugated:{lib:'corrugated'},gravel:{lib:'gravel'},plywood:{lib:'plywood'},diamond:{lib:'diamond'},
+  // photo-scanned siding, plaster and decking (ambientCG, CC0) with their own relief and sheen maps; not in the Paint library
+  sidingW:{lib:'siding_white',col:[0.79,0.76,0.62],tile:1.22,rough:0.8},sidingB:{lib:'siding_brown',col:[0.29,0.24,0.19],tile:1.22,rough:0.85},
+  sidingR:{lib:'siding_red',col:[0.31,0.21,0.19],tile:1.22,rough:0.85},sidingG:{lib:'siding_grey',col:[0.39,0.35,0.30],tile:1.4,rough:0.85},
+  plaster:{lib:'plaster',col:[0.75,0.75,0.72],tile:2.0,rough:0.9},deckG:{lib:'deck_grey',col:[0.35,0.31,0.27],tile:1.07,rough:0.85},concOld:{lib:'concrete_old'},planks:{lib:'planks'},rust:{lib:'rustplate'},
   iron:{col:[0.08,0.08,0.08],metal:0.5,rough:0.5},white:{col:[0.88,0.86,0.80],rough:0.75},
   lineW:{col:[0.86,0.85,0.80],rough:0.8},lineY:{col:[0.85,0.66,0.15],rough:0.8},
   stain:{col:[0.74,0.75,0.76],metal:1,rough:0.3,dry:1},galv:{col:[0.6,0.62,0.63],metal:0.8,rough:0.45},cable:{col:[0.93,0.93,0.91],rough:0.35},

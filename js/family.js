@@ -131,10 +131,9 @@ function famPlay(g){try{siteSaveAll()}catch(e){}try{lawnSave()}catch(e){}
   const K=famKit(),G=(x,z)=>baseHeight(x,z);
   // the family house: a big timber house with a stone base, a steep roof, a stone chimney and a porch along the front
   // and the east side
-  {const X=-34,Z=212,y=G(X,Z+6.5)+0.05,WALL='beam~',TRIM=0x5a3b26,ROOF='shingles',STONE='ashlar',GLASS=0x6f8fa4,WHITE=0xeeeae0;
+  {const X=-34,Z=212,y=G(X,Z+6.5)+0.05,WALL='sidingW',TRIM=0x5a3b26,ROOF='shingles',STONE='ashlar',GLASS=0x6f8fa4,WHITE=0xeeeae0;
     K.box(14.4,0.7,10.4,STONE,X,y+0.2,Z);
     K.box(14,5,10,WALL,X,y+3.05,Z);
-    for(let r=0;r<8;r++)K.box(14.06,0.06,10.06,TRIM,X,y+0.9+r*0.62,Z);
     K.geo(famGable(10,3.6,14),WALL,X,y+5.55,Z);
     const sl=Math.atan2(3.6,5),rl=Math.hypot(5,3.6)+0.9;
     for(const s of [-1,1])K.box(15.2,0.25,rl,ROOF,X,y+5.55+1.8+0.1,Z+s*2.55,0,s*sl);
