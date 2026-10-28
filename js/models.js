@@ -37,7 +37,11 @@ function mdlMatsMake(){if(mdlMats)return mdlMats;const P=(h,o)=>mdlStd(h,Object.
     chrome:mdlStd(0xc9ccc8,{metal:1,rough:0.18}),rim:mdlStd(0xb9bdbf,{metal:0.85,rough:0.35}),
     rubber:mdlStd(0x1b1c1b,{tex:'rubber',relief:0.8}),track:mdlStd(0x34332f,{tex:'steel',metal:0.5,relief:1}),tire:mdlStd(0x1b1c1b,{tex:'rubber',relief:1}),
     lens:LENS,redL:REDL,amber:AMBER,
-    black:mdlStd(0x2a2c2e,{rough:0.55}),seat:mdlStd(0x34363a,{rough:0.85}),trim:mdlStd(0x8c8f92,{rough:0.6}),
+    black:mdlStd(0x2a2c2e,{rough:0.55}),
+    // the town's cars (townfolk.js gives each its own paint): gloss black trim, textured black plastic, the underside,
+    // plates, brake discs and callipers
+    carpaint:mdlStd(0x9aa0a6,{rough:0.22,metal:0.3,env:1.2}),gloss:mdlStd(0x0e0f10,{rough:0.15,env:1.2}),plastic:mdlStd(0x1e1f20,{tex:'rubber',relief:0.4,rough:0.8}),
+    under:mdlStd(0x151617,{rough:0.9}),plate:mdlStd(0xe8e6df,{rough:0.4}),disc:St(0x6b6e70),caliper:mdlStd(0x2b2d30,{rough:0.5}),seat:mdlStd(0x34363a,{rough:0.85}),trim:mdlStd(0x8c8f92,{rough:0.6}),
     // the cab glass (tint) is see-through, so from the seat you look out at the world, not at a dark pane
     mirror:mdlStd(0xdde4ea,{metal:1,rough:0.04}),glass:glass.material,tint:Object.assign(mdlStd(0x1c2328,{rough:0.04,env:1.6}),{transparent:true,opacity:0.45,depthWrite:false}),
     screen:new THREE.MeshBasicMaterial({map:mdlScreenTex(),toneMapped:false})};

@@ -30,7 +30,9 @@ const NAMED={paint:P_(0xe8701d),paintD:P_(0xb8561a),paintW:P_(0xe9ecea),paintR:P
   rubber:std(0x1b1c1b,{tex:'rubber',relief:0.8}),track:std(0x34332f,{tex:'steel',metal:0.5,relief:1}),tire:std(0x1b1c1b,{tex:'rubber',relief:1}),
   lens:std(0xfff6d8,{emissive:0x554a30,rough:0.1}),redL:std(0xd0281c,{emissive:0x400804,rough:0.2}),amber:std(0xffa21a,{emissive:0x402400,rough:0.2}),
   black:std(0x2a2c2e,{rough:0.55}),seat:std(0x34363a,{rough:0.85}),trim:std(0x8c8f92,{rough:0.6}),mirror:std(0xdde4ea,{metal:1,rough:0.04}),
-  glass:std(0x3c4a52,{rough:0.05,env:1.4}),tint:std(0x1c2328,{rough:0.04,env:1.6}),screen:std(0x0b1418,{emissive:0x10202a}),deck:null};
+  glass:std(0x3c4a52,{rough:0.05,env:1.4}),
+  carpaint:std(0x8e2a2a,{rough:0.22,metal:0.3,env:1.2}),gloss:std(0x0e0f10,{rough:0.15,env:1.2}),plastic:std(0x1e1f20,{tex:'rubber',relief:0.4,rough:0.8}),under:std(0x151617,{rough:0.9}),
+  plate:std(0xe8e6df,{rough:0.4}),disc:St(0x6b6e70),caliper:std(0x2b2d30,{rough:0.5}),tint:std(0x1c2328,{rough:0.04,env:1.6}),screen:std(0x0b1418,{emissive:0x10202a}),deck:null};
 function lib(id,turn){const L=k=>{const t=tex('textures/'+id+k+'.jpg',!k);t.center.set(0.5,0.5);t.rotation=turn?Math.PI/2:0;return t};
   const m=new THREE.MeshStandardMaterial({map:L(''),normalMap:L('_n'),roughnessMap:L('_r'),roughness:1,envMapIntensity:0.6});return m}
 NAMED.deck=lib('planks',true);const cache={};

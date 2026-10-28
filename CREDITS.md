@@ -24,8 +24,8 @@ Every sound is cut from CC0 (public domain) field recordings on Freesound by `to
 | Model | Source | Licence |
 |---|---|---|
 | `models/worker.glb`, the worker on foot | MakeHuman base mesh, skeleton and skins ("makehuman_system_assets", "skins02") built in Blender with MPFB2 by `tools/build_worker.py` | CC0 |
-| `models/peds/` (the townsfolk's bodies and their 32-character atlas) and `models/cars/*.glb` (the town's traffic) | From cruise-brandon, the owner's other game: bodies made in Blender from GPT Image character sheets (its `tools/peds/`), cars made from GPT Image reference sheets (its `tools/vehicles/`) | The game's own |
-| Every other `models/*.glb` (excavator, dump truck, dozer, loader, semi, pickup, four-wheeler) | Built from code for this game by `tools/build_model.js` | The game's own |
+| `models/peds/` (the townsfolk's bodies and their 32-character atlas) | From cruise-brandon, the owner's other game: bodies made in Blender from GPT Image character sheets (its `tools/peds/`) | The game's own |
+| Every other `models/*.glb` (excavator, dump truck, dozer, loader, semi, pickup, four-wheeler, the town's traffic cars) | Built from code for this game by `tools/build_model.js` | The game's own |
 | The trees, props, islands and everything else drawn in `js/` | Built from code for this game | The game's own |
 
 ## Textures
