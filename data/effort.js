@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-28T03:19:00Z",
+ "updated": "2026-10-28T04:13:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -72,9 +72,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-27",
-   "dh": 40,
-   "act": 3,
-   "versions": 6
+   "dh": 54,
+   "act": 3.5,
+   "versions": 7
   }
  ],
  "extra": [
@@ -2397,6 +2397,15 @@ window.EFFORT = {
    "tris": 6398308,
    "chars": 1742199,
    "what": "Every shop in town now has a glass storefront onto a furnished, lit room — cafés with tables, stores with stocked shelves, salons, offices, the laundromat — with staff working and customers browsing, queueing and sitting inside; the upper windows show rooms that light up at night; the General Store's glass front looks onto its aisles and checkouts; and the new Lakeside Brewing Co. has a taproom of tanks and a bar plus a big lawn beer garden of picnic tables under string lights, with a fire pit, cornhole and a food truck."
+  },
+  {
+   "v": 258,
+   "asked": "2026-10-27T22:45:00-05:00",
+   "live": "2026-10-27T23:13:46-05:00",
+   "dh": 14,
+   "tris": 6811405,
+   "chars": 1760628,
+   "what": "The town now has neighbourhoods: streets of about forty colonials, capes and ranches with porches, glass windows onto lit rooms, driveways with cars in them and more parked at the curb, mailboxes, fences and yard trees — and woods that thicken around the edges so the town fades into the country."
   }
  ]
 };
