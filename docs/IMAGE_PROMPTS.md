@@ -133,7 +133,7 @@ Upgrade: passable. Since v254 the family house wears a photo-scanned cream clapb
 **P07 Cedar shingle roof** -> `materials/shingle_cedar.jpg`. Needs: H01, S22
 > [STYLE][TEXTURE] Weathered cedar shake roof shingles in staggered rows, silver-brown with moss in a few lower edges.
 Close match: `textures/shingles.jpg` is roof shingles; no cedar shakes yet
-Upgrade: passable. The covered bridge has cedar shakes drawn by the game; every other roof is a plain colour.
+Upgrade: passable. The covered bridge has cedar shakes drawn by the game; since v255 the farmhouse has photo-scanned grey shingles (`textures/roof_grey.jpg`, Poly Haven).
 
 **P08 Red barn board** -> `materials/barn_red.jpg`. Needs: H10, I10
 > [STYLE][TEXTURE] Old red barn vertical board-and-batten siding, flaking paint over grey wood.
@@ -310,16 +310,16 @@ Not in the game yet: still to make.
 **M09 Painted lap siding** -> `materials/siding_lap.jpg`. Needs: the Harbor House [TEXTURE]
 > [STYLE][TEXTURE] Painted wooden lap (clapboard) siding seen straight on, horizontal boards about 4 inches exposed, soft grey-blue paint slightly chalky and weathered, faint wood grain, tiny nail heads, a few hairline paint cracks. Ask again in white and in sage green.
 Not in the game yet: still to make.
-Upgrade: poor. The marina buildings have plain-colour walls today.
+Upgrade: passable. Since v255 the Harbor House wears a photo-scanned weathered grey lap siding (`textures/siding_grey.jpg`); a painted blue-grey version would match its old colour.
 
 **M10 Board and batten, barn red** -> `materials/board_batten.jpg`. Needs: the Dockside Grill [TEXTURE]
 > [STYLE][TEXTURE] Vertical board-and-batten siding painted deep barn red, battens every 2 feet, sun-faded and slightly peeling at the bottom edge, wood grain showing.
 Not in the game yet: still to make.
-Upgrade: poor. The red buildings have plain-colour walls today.
+Upgrade: passable. Since v255 the Dockside Grill wears photo-scanned red boards run upright (`textures/siding_red.jpg`) between its battens.
 
 **M11 Dock decking, grey weathered** -> `materials/dock_deck.jpg`. Needs: the pier and slips [TEXTURE]
 > [STYLE][TEXTURE] Top-down view of a weathered timber dock: 2x6 boards running left to right with 1/4 inch gaps showing dark water below, silver-grey sun-bleached cedar with darker wet patches near the gaps, galvanized nail heads in pairs, a little bird lime and scuffing. The pattern repeats every 4 boards across, seamless.
-Not in the game yet: still to make.
+In game: `textures/deck_grey.jpg` (photo-scanned, ambientCG Planks023A) on the marina pier, fingers, gangway and decks since v255
 
 **M12 Breakwater stone** -> `materials/riprap.jpg`. Needs: the breakwater [TEXTURE]
 > [STYLE][TEXTURE] Close view of a rough grey granite boulder's surface for a lake breakwater: speckled grey and pink granite, lichen spots, a dark wet band, a few green algae streaks. Seamless; this goes on each boulder.
