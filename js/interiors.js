@@ -113,9 +113,10 @@ function rmWinTex(){const C=document.createElement('canvas');C.width=1024;C.heig
 function rmWinAdd(x,y,z,f,w,h){const i=(Math.abs(Math.round(x*7.3+z*3.1+y*5.7)))%16,u0=(i%4)/4,v1=1-(i/4|0)/4,v0=v1-0.25,c=Math.cos(f),s=Math.sin(f);
   const pt=(a,b)=>[x+c*a,y+b,z-s*a],A=pt(-w/2,-h/2),B=pt(w/2,-h/2),C=pt(w/2,h/2),D=pt(-w/2,h/2);
   RM_WIN.P.push(...A,...B,...C,...A,...C,...D);RM_WIN.U.push(u0,v0,u0+0.25,v0,u0+0.25,v1,u0,v0,u0+0.25,v1,u0,v1)}
-function rmWinsBuild(){if(!RM_WIN.P.length)return;const [t,te]=rmWinTex(),geo=new THREE.BufferGeometry();
+// the panes laid so far as one mesh (called by each part of town once its windows are in; the picture is made once)
+function rmWinsBuild(){if(!RM_WIN.P.length)return;const geo=new THREE.BufferGeometry();
   geo.setAttribute('position',new THREE.Float32BufferAttribute(RM_WIN.P,3));geo.setAttribute('uv',new THREE.Float32BufferAttribute(RM_WIN.U,2));geo.computeVertexNormals();
-  RM_WIN.mat=new THREE.MeshStandardMaterial({map:t,emissiveMap:te,emissive:0x000000,roughness:0.9,color:0x9a9a9a});
-  const m=new THREE.Mesh(geo,RM_WIN.mat);m.receiveShadow=true;scene.add(m)}
+  if(!RM_WIN.mat){const [t,te]=rmWinTex();RM_WIN.mat=new THREE.MeshStandardMaterial({map:t,emissiveMap:te,emissive:0x000000,roughness:0.9,color:0x9a9a9a})}
+  const m=new THREE.Mesh(geo,RM_WIN.mat);m.receiveShadow=true;scene.add(m);RM_WIN.P=[];RM_WIN.U=[]}
 // the rooms light up as the windows do (daynight.js sets famWinMat's glow)
 function rmWinTick(){if(RM_WIN.mat)RM_WIN.mat.emissive.copy(famWinMat.emissive).multiplyScalar(1.6)}

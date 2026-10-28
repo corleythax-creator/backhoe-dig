@@ -11,7 +11,7 @@
 // They are each device's own: not saved or synced, and how many is the Graphics setting Townsfolk (gfx.js `town`), fewer
 // after dark. Nothing loads or moves until the camera comes within TF_NEAR of the town.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
-const TF_NEAR=360,TF_BOX=[-180,180,540,760],TF_CARS={sedan:4,hatch:3,wagon:1,suv:4,minivan:2,pickup:3,van:1};
+const TF_NEAR=360,TF_BOX=[-200,200,540,780],TF_CARS={sedan:4,hatch:3,wagon:1,suv:4,minivan:2,pickup:3,van:1};
 // the paints, as often as they are seen on the road: whites, blacks, silvers and greys most, then a few colours (metallic: m)
 const TF_PAINT=[[0xe9e9e6,0,4],[0xf2f0ea,0,2],[0x101113,0,3],[0xa9adb0,1,3],[0x5a5e62,1,3],[0x2b2e33,1,2],[0x7e1416,1,2],[0x1c335c,1,2],[0x23382d,1,1],[0xb3a284,1,1],[0x6e869b,1,1],[0x8a4a1c,1,1]];
 // [people, cars] for the Townsfolk setting: Off, Few, Some, Busy
@@ -19,7 +19,7 @@ const TF_N=[[0,0],[8,3],[14,5],[24,7]];
 // in the rooms (TF_ROOMS, interiors.js): customers in each shop besides its staff, for the setting; how near the camera
 // must come for a room to fill (it empties again past TF_RFAR); the most drawn in the rooms at once
 const TF_RN=[0,1,2,3],TF_RNEAR=70,TF_RFAR=95,TF_ROOM_CAP=110;
-const tf={q:2,on:false,load:0,bodies:null,chars:null,tex:null,M:null,cars:{},people:[],drive:[],t:0,spawnT:0,o:new THREE.Object3D(),fr:new THREE.Frustum(),fm:new THREE.Matrix4(),v:new THREE.Vector3()};
+const tf={q:2,on:false,parked:[],parkedOn:false,load:0,bodies:null,chars:null,tex:null,M:null,cars:{},people:[],drive:[],t:0,spawnT:0,o:new THREE.Object3D(),fr:new THREE.Frustum(),fm:new THREE.Matrix4(),v:new THREE.Vector3()};
 function tfGfx(q){tf.q=q??2;if(tf.M)for(const k in tf.M)tf.M[k].m.castShadow=!!gfxCur.pbr}
 // ---------- the walks: sidewalk centre lines, crosswalks (x) and the ways to the store's door ----------
 const MSX=5.3,MCN=646.85,MCS=657.15,TF_DOOR=[0,742.4],TF_GATE=[64,679.5];
@@ -108,7 +108,7 @@ function tfLoad(){if(tf.load)return;tf.load=1;const B='models/peds/',j=u=>fetch(
   const t=new Promise((ok,no)=>new THREE.TextureLoader().load(B+(gfxCur.pbr?'peds_atlas.webp':'peds_atlas_1k.webp'),ok,undefined,no));
   Promise.all([j('bodies.json'),j('peds.json'),t]).then(([bd,ch,tx])=>{tx.colorSpace=THREE.SRGBColorSpace;tx.anisotropy=4;
     tf.bodies=bd;tf.chars=ch.chars;tf.GC=ch.cols;tf.GR=ch.rows;tf.tex=tx;tf.use=new Array(ch.chars.length).fill(0);tfMeshes();tf.load=2}).catch(e=>{console.warn('townsfolk:',e);tf.load=-1});
-  mdlLoad('cars',sc=>{for(const o of (sc.getObjectByName('cars')||sc).children.slice())if(TF_CARS[o.name])tfCarModel(o.name,o)})}
+  mdlLoad('cars',sc=>{const top=sc.getObjectByName('cars')||sc;for(const k in TF_CARS){const hi=top.getObjectByName(k),lo=top.getObjectByName(k+'_lo');if(hi&&lo)tfCarModel(k,hi,lo)}})}
 function tfMeshes(){const C=tf.GC.toFixed(1),R=tf.GR.toFixed(1),mat=new THREE.MeshStandardMaterial({map:tf.tex,roughness:0.88,envMap:skyEnv,envMapIntensity:0.5});
   mat.onBeforeCompile=sh=>{sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\n'+TF_GLSL)
     .replace('#include <beginnormal_vertex>','#include <beginnormal_vertex>\nvec3 pdP=position,pdN=objectNormal;pdGirth(pdP,pdN);pdSkin(pdP,pdN);objectNormal=pdN;')
@@ -125,14 +125,15 @@ function tfMeshes(){const C=tf.GC.toFixed(1),R=tf.GR.toFixed(1),mat=new THREE.Me
     const m=new THREE.InstancedMesh(g,mat,cap);m.count=0;m.frustumCulled=false;m.castShadow=!!gfxCur.pbr;m.receiveShadow=true;m.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
     scene.add(m);tf.M[k]={m,walk,n:0,cap}}}
 // a car model (a node of models/cars.glb, standing on y = 0, nose to +z) on the game's materials; its paint is set per
-// car (tfCarPaint), and its wheels (wheel_* nodes, their origins at the hubs) turn about x
-function tfCarModel(k,root){root.position.set(0,0,0);root.rotation.set(0,0,0);root.updateMatrixWorld(true);
-  const box=new THREE.Box3().setFromObject(root),sz=box.getSize(new THREE.Vector3());
+// car (tfCarPaint), and its wheels (wheel_* nodes, their origins at the hubs) turn about x. Each car holds the detailed
+// model and its light one (<kind>_lo), and shows the light one past TF_CAR_HI (tfDraw)
+function tfCarModel(k,hi,lo){const root=new THREE.Group();for(const o of [hi,lo]){o.position.set(0,0,0);o.rotation.set(0,0,0);root.add(o)}lo.visible=false;root.updateMatrixWorld(true);
+  const box=new THREE.Box3().setFromObject(hi),sz=box.getSize(new THREE.Vector3());
   root.traverse(o=>{if(o.isMesh){const n=o.material.name;o.material=mdlMatOf(n);o.userData.paint=n==='carpaint';o.castShadow=!/^(tint|under|seat)$/.test(n);o.receiveShadow=true}
     if(/^wheel_/.test(o.name)){const t=o.children.find(c=>/_tire$/.test(c.name));t.geometry.computeBoundingBox();o.userData.q0=o.quaternion.clone();o.userData.r=t.geometry.boundingBox.max.y}});
   tf.cars[k]={g:root,len:sz.z,wid:sz.x-0.2}}
 // a paint for a new car: picked by how common it is; clear-coated on High graphics
-function tfCarPaint(){const W=TF_PAINT.reduce((n,p)=>n+p[2],0);let r=Math.random()*W,p=TF_PAINT[0];for(const q of TF_PAINT){r-=q[2];if(r<0){p=q;break}}
+function tfCarPaint(u){const W=TF_PAINT.reduce((n,p)=>n+p[2],0);let r=(u??Math.random())*W,p=TF_PAINT[0];for(const q of TF_PAINT){r-=q[2];if(r<0){p=q;break}}
   const k=p[0]+'_'+!!gfxCur.pbr;tf.paint=tf.paint||{};if(tf.paint[k])return tf.paint[k];
   const o={color:p[0],metalness:p[1]?0.55:0.05,roughness:p[1]?0.32:0.28,envMap:skyEnv,envMapIntensity:1.1};
   return tf.paint[k]=gfxCur.pbr?new THREE.MeshPhysicalMaterial(Object.assign(o,{clearcoat:1,clearcoatRoughness:0.08})):new THREE.MeshStandardMaterial(o)}
@@ -252,6 +253,15 @@ function tfRoomStep(p,dt){const sp=p.spot,R=p.room;
   if(sp.staff||Math.random()<0.45){p.look=sp.sit?0:(Math.random()-0.5)*1.4;return}
   // done: a customer goes (when nobody is looking) and someone else comes in to another spot
   if(!tfSeen(p.x,p.z,1.5))tfDrop(p)}
+// ---------- the cars parked in the neighbourhoods' driveways and at their curbs (TF_PARKED, suburbs.js) ----------
+// each always the same kind and colour; solid while shown (they come and go with the townsfolk)
+const TF_CAR_HI=45;
+function tfParkedShow(on){if(on===tf.parkedOn)return;tf.parkedOn=on;const ks=Object.keys(TF_CARS);
+  if(on&&!tf.parked.length&&ks.every(k=>tf.cars[k]))TF_PARKED.forEach((P,i)=>{const h=hash(P.x*0.37+1.3,P.z*0.71-0.4),k=P.k||ks[Math.floor(h*ks.length)%ks.length],M=tf.cars[k],g=M.g.clone(true);
+    g.traverse(o=>{if(o.userData.paint)o.material=tfCarPaint(hash(P.z*0.53,P.x*0.29+2.2))});g.position.set(P.x,P.y,P.z);g.rotation.y=P.yaw;scene.add(g);
+    const c=Math.abs(Math.cos(P.yaw)),s=Math.abs(Math.sin(P.yaw));tf.parked.push({g,x:P.x,z:P.z,sol:{x:P.x,z:P.z,hx:(s*M.len+c*M.wid)/2,hz:(c*M.len+s*M.wid)/2}})});
+  if(on&&!tf.parked.length){tf.parkedOn=false;return}
+  for(const c of tf.parked){c.g.visible=on;const i=SOLIDS.indexOf(c.sol);if(on&&i<0)SOLIDS.push(c.sol);else if(!on&&i>=0)SOLIDS.splice(i,1)}}
 // ---------- each frame ----------
 function tfTick(dt){if(!tf.q){if(tf.on)tfShow(false);return}
   const cx=camera.position.x,cz=camera.position.z,B=TF_BOX,dd=Math.hypot(Math.max(B[0]-cx,0,cx-B[1]),Math.max(B[2]-cz,0,cz-B[3]));
@@ -265,11 +275,11 @@ function tfTick(dt){if(!tf.q){if(tf.on)tfShow(false);return}
     else if(walkers.length>wantP){const p=walkers.find(p=>p.inside||!tfSeen(p.x,p.z,1));if(p)tfDrop(p)}
     if(tf.drive.reduce((n,c)=>n+(c.st==='park'?0.5:1),0)<wantC&&Object.keys(tf.cars).length>=3&&Math.random()<0.5)tfSpawnCar()}
   for(const c of tf.drive.slice())tfCarStep(c,dt);
-  tfRoomsTick();
+  tfRoomsTick();if(!tf.parkedOn&&Object.keys(tf.cars).length===Object.keys(TF_CARS).length)tfParkedShow(true);
   for(const p of tf.people.slice()){if(p.room){tfRoomStep(p,dt);continue}tfWalkStep(p,dt);p.y+=(baseHeight(p.x,p.z)+tfLift(p.x,p.z)-p.y)*Math.min(1,dt*8)}
   if(mode==='walk'&&walker.visible){for(const c of tf.drive)wkPushRound(c,[-c.len*0.3,0,c.len*0.3],c.wid/2);for(const p of tf.people)if(!p.inside)wkPushRound(p,[0],0.22)}
   tfDraw()}
-function tfShow(on){tf.on=on;for(const k in tf.M||{})tf.M[k].m.visible=on;for(const c of tf.drive)c.g.visible=on;
+function tfShow(on){tf.on=on;for(const k in tf.M||{})tf.M[k].m.visible=on;for(const c of tf.drive)c.g.visible=on;tfParkedShow(on);
   if(!on){for(const c of tf.drive.slice())tfCarDrop(c);for(const p of tf.people.slice())tfDrop(p)}}
 function tfDraw(){const M=tf.M,o3=tf.o,cx=camera.position.x,cz=camera.position.z;for(const k in M)M[k].n=0;
   for(const p of tf.people){if(p.inside)continue;const B=M[p.body];if(!B||B.n>=B.cap)continue;
@@ -277,4 +287,4 @@ function tfDraw(){const M=tf.M,o3=tf.o,cx=camera.position.x,cz=camera.position.z
     o3.position.set(p.x,p.y+(p.sit?-0.42*p.sc:Math.abs(Math.cos(p.ph))*0.025*p.amp*p.sc),p.z);o3.rotation.set(0,p.yaw,0);o3.scale.setScalar(p.sc);o3.updateMatrix();
     const i=B.n++,w=B.walk.array;B.m.setMatrixAt(i,o3.matrix);w[4*i]=p.ph;w[4*i+1]=p.sit?-1:p.amp;w[4*i+2]=p.cell;w[4*i+3]=p.g}
   for(const k in M){const B=M[k];B.m.count=B.n;B.m.instanceMatrix.needsUpdate=true;B.walk.needsUpdate=true}
-  for(const c of tf.drive)c.g.visible=(c.x-cx)**2+(c.z-cz)**2<400*400}
+  for(const c of [...tf.drive,...tf.parked]){const d2=(c.x-cx)**2+(c.z-cz)**2;c.g.visible=d2<400*400;const hi=d2<TF_CAR_HI*TF_CAR_HI;c.g.children[0].visible=hi;c.g.children[1].visible=!hi}}
