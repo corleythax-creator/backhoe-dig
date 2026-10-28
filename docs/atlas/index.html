@@ -1,0 +1,226 @@
+<title>Corley's Island Atlas</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IM+Fell+English+SC&family=IM+Fell+English:ital@0;1&family=Libre+Franklin:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+/* Layout: an atlas plate. The painted map is the page; a ledger of proposals runs beside it (below it on a phone). */
+:root{
+  --bg:#e9ecea; --sheet:#f7f8f6; --ink:#1c2422; --muted:#5b6662; --rule:#c9cfcb;
+  --lake:#1d4a63; --stake:#d2601a; --stake-soft:rgba(210,96,26,.16); --today:#ffffff;
+  --display:"IM Fell English SC","IM Fell English",Georgia,serif; --italic:"IM Fell English",Georgia,serif;
+  --body:"Libre Franklin",system-ui,-apple-system,"Segoe UI",sans-serif; --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0f1517; --sheet:#172023; --ink:#e4e9e6; --muted:#97a39e; --rule:#2c373a; --lake:#7fb3cc; --stake:#f0843f; --stake-soft:rgba(240,132,63,.18); color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0f1517; --sheet:#172023; --ink:#e4e9e6; --muted:#97a39e; --rule:#2c373a; --lake:#7fb3cc; --stake:#f0843f; --stake-soft:rgba(240,132,63,.18); color-scheme:dark}
+html,body{background:var(--bg);color:var(--ink)}
+body{font-family:var(--body);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:20px 40px}
+.wrap{max-width:1320px;margin:0 auto;display:grid;gap:18px}
+header{display:grid;gap:6px;border-bottom:1px solid var(--rule);padding-bottom:14px}
+.eyebrow{font:500 12px var(--mono);letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0}
+h1{font-family:var(--display);font-weight:400;font-size:clamp(34px,6vw,58px);line-height:1;margin:0;letter-spacing:.01em;text-wrap:balance}
+.lede{margin:0;max-width:68ch;color:var(--muted);font-size:15px;line-height:1.55}
+.main{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:900px){.main{grid-template-columns:minmax(0,1fr)}}
+.plate{position:sticky;top:calc(env(safe-area-inset-top,0px) + 10px);display:grid;gap:10px;min-width:0}
+@media (max-width:900px){.plate{position:static}}
+.mapbox{position:relative;width:100%;max-width:100%;height:min(86vh,1100px);border:1px solid var(--rule);background:#3c5a3a;overflow:hidden;touch-action:none;border-radius:3px}
+@media (max-width:900px){.mapbox{height:78vh}}
+svg#map{width:100%;height:100%;display:block;cursor:grab;user-select:none;-webkit-user-select:none}
+svg#map.drag{cursor:grabbing}
+.tools{position:absolute;right:10px;top:10px;display:flex;flex-direction:column;gap:6px}
+.tools button{width:40px;height:40px;border:1px solid rgba(0,0,0,.35);background:rgba(247,248,246,.92);color:#1c2422;font:600 20px var(--body);border-radius:4px;cursor:pointer}
+.bar{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:space-between}
+.chips{display:flex;flex-wrap:wrap;gap:6px}
+.chip{font:500 14px var(--body);border:1px solid var(--rule);background:var(--sheet);color:var(--ink);padding:7px 12px;border-radius:999px;cursor:pointer}
+.chip[aria-pressed="true"]{border-color:var(--ink)}
+.chip[aria-pressed="false"]{color:var(--muted);text-decoration:line-through}
+.chip.prop[aria-pressed="true"]{background:var(--stake);border-color:var(--stake);color:#fff}
+.scale{font:500 12px var(--mono);color:var(--muted)}
+button:focus-visible,.card:focus-visible{outline:2px solid var(--stake);outline-offset:2px}
+/* the ledger */
+.ledger{display:grid;gap:14px;min-width:0}
+.sum{background:var(--sheet);border:1px solid var(--rule);border-radius:3px;padding:16px;display:grid;gap:10px}
+.sum h2,.sec{font-family:var(--display);font-weight:400;font-size:26px;margin:0;text-wrap:balance}
+.sum p{margin:0;font-size:14.5px;line-height:1.55}
+.kv{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px}
+.kv div{display:grid;gap:2px}.kv b{font:500 16px var(--mono);font-variant-numeric:tabular-nums}.kv span{font-size:12px;color:var(--muted);letter-spacing:.04em;text-transform:uppercase}
+.sec{margin-top:6px}
+.cards{display:grid;gap:12px}
+.card{background:var(--sheet);border:1px solid var(--rule);border-radius:3px;overflow:hidden;display:grid;grid-template-columns:200px minmax(0,1fr);scroll-margin-top:20px;transition:border-color .2s,box-shadow .2s}
+.card.on{border-color:var(--stake);box-shadow:0 0 0 2px var(--stake)}
+@media (max-width:560px){.card{grid-template-columns:minmax(0,1fr)}}
+.card img{width:100%;height:100%;min-height:150px;object-fit:cover;display:block;aspect-ratio:3/2}
+.card .noimg{min-height:150px;display:grid;place-items:center;background:var(--stake-soft);font-family:var(--italic);font-style:italic;color:var(--muted);font-size:14px;padding:12px;text-align:center}
+.card .tx{padding:14px 16px;display:grid;gap:7px;align-content:start;min-width:0}
+.card h3{margin:0;display:flex;gap:10px;align-items:center;font:600 18px/1.2 var(--body);text-wrap:balance}
+.num{flex:none;width:28px;height:28px;border-radius:50%;background:var(--stake);color:#fff;display:grid;place-items:center;font:600 14px var(--mono)}
+.card p{margin:0;font-size:14.5px;line-height:1.5}
+.facts{display:flex;flex-wrap:wrap;gap:6px 14px;font:500 12.5px var(--mono);color:var(--muted);font-variant-numeric:tabular-nums}
+.facts span b{color:var(--ink);font-weight:500}
+.go{justify-self:start;font:500 13px var(--body);color:var(--stake);background:none;border:0;padding:2px 0;cursor:pointer;text-decoration:underline;text-underline-offset:3px}
+.foot{font-size:12.5px;color:var(--muted);line-height:1.5;max-width:80ch}
+/* map text (sizes are in metres; the svg scales them) */
+.lbl{font-family:var(--display);fill:#fbfaf3;paint-order:stroke;stroke:rgba(20,28,24,.78);stroke-linejoin:round;pointer-events:none}
+.wtr{font-family:var(--italic);font-style:italic;fill:#cfe3ec;letter-spacing:.35em;pointer-events:none;opacity:.9}
+.sml{font-family:var(--italic);font-style:italic;fill:#fbfaf3;paint-order:stroke;stroke:rgba(20,28,24,.75);stroke-linejoin:round;pointer-events:none}
+.pl{fill:var(--stake-soft);stroke:#f07a32;stroke-dasharray:9 6;stroke-linejoin:round}
+.pline{fill:none;stroke:#f07a32;stroke-linecap:round;stroke-linejoin:round}
+.medal{cursor:pointer}
+.medal circle{fill:#d2601a;stroke:#fff}
+.medal text{font-family:var(--mono);font-weight:500;fill:#fff;text-anchor:middle;dominant-baseline:central;pointer-events:none}
+.medal.on circle{fill:#fff;stroke:#d2601a}.medal.on text{fill:#d2601a}
+.ptitle{font-family:var(--body);font-weight:600;fill:#fff;paint-order:stroke;stroke:rgba(120,45,8,.9);stroke-linejoin:round;pointer-events:none}
+@media (prefers-reduced-motion:reduce){.card{transition:none}}
+</style>
+
+<div class="wrap">
+  <header>
+    <p class="eyebrow">Corley's Island · world map as of v258 · north up</p>
+    <h1>Corley's Island Atlas</h1>
+    <p class="lede">The whole world painted from the game's own ground, trees, bridges and buildings: the four islands, the field and woods, the lakeside town and its new neighbourhoods. Past the edge of today's world are ten proposals, in orange, that carry it out to the lake shores and up the South Range.</p>
+  </header>
+  <div class="main">
+    <div class="plate">
+      <div class="mapbox" id="box">
+        <svg id="map" viewBox="-760 -1020 1520 2500" role="img" aria-label="Painted map of Corley's Island and the lake, with proposals"><g id="vp"></g></svg>
+        <div class="tools"><button id="zin" aria-label="Zoom in">+</button><button id="zout" aria-label="Zoom out">−</button><button id="zre" aria-label="Show the whole map" style="font-size:15px">⤢</button></div>
+      </div>
+      <div class="bar"><div class="chips" id="chips"></div><span class="scale" id="pos">Drag to move · pinch or scroll to zoom</span></div>
+    </div>
+    <div class="ledger">
+      <div class="sum">
+        <h2>Out to the borders, and up</h2>
+        <p>Today's world (the white dashed line) is all lake down the middle with land only north and south. The proposals fill its empty sides with shore work, link them with one road round the lake, and send a haul road up the mountain behind town.</p>
+        <div class="kv" id="kv"></div>
+      </div>
+      <h2 class="sec">Proposals</h2>
+      <div class="cards" id="cards"></div>
+      <p class="foot">Sizes are in feet from the map; heights on the mountains are the painting's, to be settled when the ground is built. Hours are one experienced three.js developer working by hand. The concept pictures are AI-generated mood pictures, not the layout. Pick any by number and they go on the idea board.</p>
+    </div>
+  </div>
+</div>
+
+<script>
+const FT=3.28084,NS='http://www.w3.org/2000/svg',vp=document.getElementById('vp'),svg=document.getElementById('map');
+const F={x0:-760,z0:-1020,w:1520,h:2500},PLAY={x0:-460.8,z0:-588,x1:460.8,z1:845.6};
+const el=(t,a,p)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);(p||vp).appendChild(e);return e};
+const ft=m=>Math.round(m*FT).toLocaleString('en-US');
+const layers={};const layer=(id,name)=>{const g=el('g',{id:'L'+id});layers[id]={g,name,on:true};return g};
+// ---------- the painting ----------
+el('image',{href:'map.jpg',x:F.x0,y:F.z0,width:F.w,height:F.h,preserveAspectRatio:'none'});
+// today's edge
+const edge=layer('edge','Today\'s edge');
+el('rect',{x:PLAY.x0,y:PLAY.z0,width:PLAY.x1-PLAY.x0,height:PLAY.z1-PLAY.z0,fill:'none',stroke:'#fff','stroke-opacity':.75,'stroke-width':2.2,'stroke-dasharray':'14 10'},edge);
+const T=(g,x,z,s,c,fs,rot,ls)=>{const t=el('text',{x,y:z,'text-anchor':'middle','font-size':fs,class:c,'stroke-width':fs*.16,transform:rot?`rotate(${rot} ${x} ${z})`:'',...(ls?{'letter-spacing':ls}:{})},g);t.dataset.fs=fs;t.dataset.sw=.16;t.textContent=s;return t};
+T(edge,PLAY.x0+6,PLAY.z0-8,'Edge of today\'s world','sml',13,0).setAttribute('text-anchor','start');
+// ---------- names ----------
+const names=layer('names','Names');
+T(names,-300,120,'THE LAKE','wtr',34);T(names,300,430,'THE LAKE','wtr',26);
+T(names,0,-96,"Corley's Island",'lbl',24);T(names,0,-70,'dig site','sml',13);
+T(names,0,318,'Family Island','lbl',24);
+T(names,-200,190,"Dexter's Island",'lbl',19);T(names,205,190,"Jessica's Island",'lbl',19);
+T(names,-235,-452,'The Woods','lbl',26);T(names,232,-452,'Hayfield','lbl',26);
+T(names,0,842,'Lakeside Town','lbl',30);T(names,108,512,'marina','sml',13);T(names,0,792,'General Store','sml',12);
+T(names,-235,775,'woods','sml',13);T(names,235,775,'woods','sml',13);
+T(names,13,-262,'north trestle','sml',11,90);T(names,13,385,'cable-stayed bridge','sml',11,90);T(names,13,525,'causeway','sml',10,90);
+T(names,-112,238,'haul bridge','sml',11);T(names,116,238,'covered footbridge','sml',11);
+T(names,0,-950,'North Range','lbl',36,0,'.08em');T(names,-330,1330,'South Range','lbl',36,0,'.08em');
+T(names,-610,-505,'freight line','sml',14,-48);T(names,640,-470,'freight line','sml',14,50);
+// ---------- proposals ----------
+const P=[
+ {n:1,id:'summit',name:'Summit Road & Granite Quarry',img:'img/summit.jpg',hrs:30,
+  what:'A gravel haul road leaves the General Store lot and switchbacks up the South Range: a granite quarry bench two thirds of the way up, a fire lookout on the summit with the whole lake below. Haul rock down to the causeways and town; the steepest drive in the game.',
+  road:[[0,800],[30,850],[-70,895],[90,945],[-60,1000],[120,1050],[-20,1105],[40,1150]],quarry:[[10,1150],[110,1150],[130,1215],[30,1235],[-10,1200]],
+  top:[[110,1215],[170,1250],[100,1280],[125,1330]],pin:[125,1330],at:[60,1195],facts:()=>[['road',ft(len(P[0].road)+len(P[0].top))+' ft'],['climb','about 1,000 ft'],['quarry bench','660 ft up']]},
+ {n:2,id:'quarry',name:'West Shore Rock Quarry',img:'img/quarry.jpg',hrs:14,
+  what:'New land past the west edge: a hard-rock quarry in the shore hills with a crusher and a barge dock. Rock goes by deck barge to wherever the lake needs riprap, a breakwater or a new causeway.',
+  poly:[[-735,-60],[-585,-80],[-560,90],[-575,230],[-720,240]],line:[[-580,110],[-505,110]],at:[-650,80],facts:()=>[['site',acres(P[1].poly)],['dock','245 ft']]},
+ {n:3,id:'gravel',name:'East Shore Gravel Pit',img:'img/gravel.jpg',hrs:14,
+  what:'Across the lake, a sand and gravel pit with a wash plant and stockpiles, and a conveyor out to a loading dock. Sand for the beaches, gravel for roads and pads, and a pit pond that fills when it rains.',
+  poly:[[565,170],[715,150],[735,420],[580,440],[555,300]],line:[[565,300],[495,300]],at:[650,295],facts:()=>[['site',acres(P[2].poly)],['conveyor','230 ft']]},
+ {n:4,id:'camp',name:'Pine Point Campground',img:'img/camp.jpg',hrs:10,
+  what:'West of town along Beach Road: RV pads and log cabins on a gravel loop, a fire ring, a concrete boat launch and a dock. Townsfolk camp here at weekends, and it gives the boats a second ramp.',
+  poly:[[-660,585],[-380,575],[-360,800],[-650,810]],line:[[-450,585],[-450,548]],at:[-515,690],facts:()=>[['site',acres(P[3].poly)],['sites','about 30']]},
+ {n:5,id:'yard',name:'Contractor Yard & Batch Plant',img:'img/yard.jpg',hrs:12,
+  what:'East of town at the end of the Cross Street: a fenced equipment yard with a steel shop, and a ready-mix plant with mixer trucks. The home base for jobs in town, and where new machines are bought and parked.',
+  poly:[[370,600],[620,600],[620,790],[370,790]],at:[495,695],facts:()=>[['yard',acres(P[4].poly)],['plant tower','about 70 ft']]},
+ {n:6,id:'timber',name:'Timber Camp',img:'img/timber.jpg',hrs:16,
+  what:'Logging comes to The Woods: a clearing with a small sawmill, log decks and skid trails off the existing trail. Fell, skid and load logs; the cleared patches grow back over the game\'s seasons.',
+  poly:[[-450,-575],[-300,-580],[-290,-470],[-440,-455]],at:[-370,-520],facts:()=>[['clearing',acres(P[5].poly)],['skid trails','about 0.4 mi']]},
+ {n:7,id:'farm',name:'Hayfield Farmstead',img:'img/farm.jpg',hrs:10,
+  what:'Past the hayfield\'s east fence: a red gambrel barn, a silo, a farmhouse and a farm pond with an earthen dam to dig and keep. The round bales in the hayfield finally have somewhere to go.',
+  poly:[[480,-570],[715,-560],[720,-395],[485,-400]],at:[600,-480],facts:()=>[['farm',acres(P[6].poly)],['pond','about 120 ft across']]},
+ {n:8,id:'depot',name:'Freight Depot & Siding',img:'img/depot.jpg',hrs:12,
+  what:'Where the freight line comes out of the hills in the north-west: a brick station, a passing siding and a loadout. Trains already pass every few minutes; here one stops, and logs and rock leave the world by rail.',
+  poly:[[-650,-590],[-540,-660],[-500,-610],[-610,-545]],at:[-575,-600],facts:()=>[['siding','about 1,000 ft'],['road from the woods','0.2 mi']]},
+ {n:9,id:'heron',name:'Heron Rock',img:null,hrs:5,
+  what:'A granite islet in the open east half of the lake, with a short white lighthouse, a fishing dock and a few windswept pines. A boat trip with a view of all four islands.',
+  circle:[330,70,30],at:[330,70],facts:()=>[['across','200 ft'],['from Jessica\'s','about 400 ft']]},
+ {n:10,id:'loop',name:'Lake Loop Road',img:null,hrs:12,
+  what:'One two-lane road round the lake, from the end of Beach Road up the west shore past the quarry and the camp to the woods trail, and from the Cross Street up the east shore past the gravel pit and the farm. Every shore proposal is on it, and the field no longer needs the island bridges to reach town.',
+  road:[[-170,576],[-400,560],[-560,470],[-620,250],[-640,0],[-610,-300],[-520,-470],[-420,-520]],road2:[[140,652],[380,640],[560,480],[620,250],[630,0],[600,-300],[520,-470],[460,-500]],at:[-612,-150],
+  facts:()=>[['length',(Math.round((len(P[9].road)+len(P[9].road2))*FT/528)/10)+' mi'],['bridges','none needed']]},
+];
+function len(pts){let s=0;for(let i=1;i<pts.length;i++)s+=Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]);return s}
+function acres(poly){let a=0;for(let i=0;i<poly.length;i++){const [x1,z1]=poly[i],[x2,z2]=poly[(i+1)%poly.length];a+=x1*z2-x2*z1}return (Math.abs(a)/2*10.7639/43560).toFixed(1)+' acres'}
+const prop=layer('prop','Proposals'),medals=layer('medals','');layers.medals.hide=true;
+const pts=a=>a.map(p=>p.join(',')).join(' ');
+for(const p of P){
+  if(p.poly)el('polygon',{points:pts(p.poly),class:'pl','stroke-width':2.4},prop);
+  if(p.quarry)el('polygon',{points:pts(p.quarry),class:'pl','stroke-width':2.4},prop);
+  if(p.circle){el('circle',{cx:p.circle[0],cy:p.circle[1],r:p.circle[2],class:'pl','stroke-width':2.4},prop)}
+  for(const k of ['road','road2','top'])if(p[k]){el('polyline',{points:pts(p[k]),class:'pline','stroke-width':p.id==='loop'?5:6,'stroke-dasharray':p.id==='loop'?'12 8':'',opacity:.95},prop);
+    if(p.id!=='loop')el('polyline',{points:pts(p[k]),fill:'none',stroke:'#f5e6cf','stroke-width':2,'stroke-dasharray':'6 6'},prop)}
+  if(p.line)el('polyline',{points:pts(p.line),class:'pline','stroke-width':4},prop);
+  if(p.pin){const [x,z]=p.pin;el('path',{d:`M${x},${z-22} l9,22 h-18z`,fill:'#fff',stroke:'#d2601a','stroke-width':2},prop)}
+  const g=el('g',{class:'medal',tabindex:0,role:'button','aria-label':`Proposal ${p.n}: ${p.name}`},medals);
+  el('circle',{cx:p.at[0],cy:p.at[1],r:17,'stroke-width':3},g);const t=el('text',{x:p.at[0],y:p.at[1]+1,'font-size':17},g);t.textContent=p.n;
+  const nm=el('text',{x:p.at[0],y:p.at[1]+36,'text-anchor':'middle','font-size':14,class:'ptitle','stroke-width':3.2},g);nm.textContent=p.name;
+  p.g=g;g.addEventListener('click',e=>{e.stopPropagation();pick(p,false)});g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();pick(p,false)}});
+}
+// ---------- the ledger ----------
+const kv=document.getElementById('kv'),hrs=P.reduce((s,p)=>s+p.hrs,0)+24;
+for(const [b,s] of [[`${ft(PLAY.x1-PLAY.x0)} × ${ft(PLAY.z1-PLAY.z0)} ft`,'today'],[`${ft(F.w)} × ${ft(F.h)} ft`,'with all ten'],[hrs+' h','dev time, all in']]){const d=document.createElement('div');d.innerHTML=`<b>${b}</b><span>${s}</span>`;kv.appendChild(d)}
+const cards=document.getElementById('cards');
+for(const p of P){const c=document.createElement('article');c.className='card';c.id='p-'+p.id;c.tabIndex=-1;
+  c.innerHTML=(p.img?`<img src="${p.img}" alt="Concept picture: ${p.name}" loading="lazy">`:`<div class="noimg">No concept picture yet</div>`)+
+  `<div class="tx"><h3><span class="num">${p.n}</span>${p.name}</h3><p>${p.what}</p><div class="facts">${p.facts().map(([k,v])=>`<span>${k} <b>${v}</b></span>`).join('')}<span>about <b>${p.hrs} h</b></span></div><button class="go">Show on the map</button></div>`;
+  c.querySelector('.go').onclick=()=>pick(p,true);p.card=c;cards.appendChild(c)}
+{const c=document.createElement('article');c.className='card';c.innerHTML=`<div class="noimg">Groundwork for all of them</div><div class="tx"><h3><span class="num" style="background:var(--muted)">0</span>A bigger world</h3><p>The ground, the minimap tiles, the map editor and the saves stop at today's dashed edge. Growing them to the new frame (with far-off ground drawn more simply so the phone stays above 30 FPS) comes first; the proposals then go in one at a time.</p><div class="facts"><span>about <b>24 h</b></span></div></div>`;cards.prepend(c)}
+let sel=null;
+function pick(p,fly){if(sel){sel.g.classList.remove('on');sel.card.classList.remove('on')}sel=p;if(!p)return;p.g.classList.add('on');p.card.classList.add('on');
+  if(fly){const s=420;setView(p.at[0]-s*aspect()/2,p.at[1]-s/2,s*aspect());document.getElementById('box').scrollIntoView({behavior:'smooth',block:'nearest'})}
+  else p.card.scrollIntoView({behavior:'smooth',block:'nearest'})}
+svg.addEventListener('click',()=>pick(null));
+// layer chips
+const chips=document.getElementById('chips');
+for(const id of ['prop','names','edge']){const L=layers[id],b=document.createElement('button');b.className='chip'+(id==='prop'?' prop':'');b.textContent=L.name;b.setAttribute('aria-pressed','true');
+  b.onclick=()=>{L.on=!L.on;L.g.style.display=L.on?'':'none';if(id==='prop')layers.medals.g.style.display=L.on?'':'none';b.setAttribute('aria-pressed',L.on)};chips.appendChild(b)}
+// ---------- pan and zoom ----------
+let V={x:F.x0,y:F.z0,w:F.w,h:F.h};
+const aspect=()=>{const r=svg.getBoundingClientRect();return r.width/r.height||.6};
+function setView(x,y,w){const a=aspect();w=Math.min(Math.max(w,120),Math.max(F.w,F.h*a)*1.05);const h=w/a;
+  x=Math.min(Math.max(x,F.x0-w*.1),F.x0+F.w-w*.9);y=Math.min(Math.max(y,F.z0-h*.1),F.z0+F.h-h*.9);V={x,y,w,h};svg.setAttribute('viewBox',`${x} ${y} ${w} ${h}`);rescale()}
+// labels and medals keep a readable size on screen: scaled up when the whole map shows, true size when zoomed in
+function rescale(){const r=svg.getBoundingClientRect(),mpp=V.w/(r.width||1),k=Math.min(2.4,Math.max(1,mpp/1.5)),far=mpp>1.9;
+  for(const t of vp.querySelectorAll('text.sml,text.ptitle'))t.style.display=far?'none':'';
+  for(const t of vp.querySelectorAll('text[data-fs]')){const f=+t.dataset.fs*k;t.setAttribute('font-size',f);t.setAttribute('stroke-width',f*+t.dataset.sw)}
+  for(const p of P){const [x,z]=p.at;p.g.setAttribute('transform',`translate(${x} ${z}) scale(${k}) translate(${-x} ${-z})`)}}
+function fit(){const a=aspect();if(F.w/F.h>a)setView(F.x0,F.z0+F.h/2-F.w/a/2,F.w);else{const w=F.h*a;setView(F.x0+F.w/2-w/2,F.z0,w)}}
+const toMap=(cx,cy)=>{const r=svg.getBoundingClientRect();return [V.x+(cx-r.left)/r.width*V.w,V.y+(cy-r.top)/r.height*V.h]};
+const zoom=(k,cx,cy)=>{const [mx,my]=cx==null?[V.x+V.w/2,V.y+V.h/2]:toMap(cx,cy);setView(mx-(mx-V.x)*k,my-(my-V.y)*k,V.w*k)};
+document.getElementById('zin').onclick=()=>zoom(.7);document.getElementById('zout').onclick=()=>zoom(1/.7);document.getElementById('zre').onclick=fit;
+svg.addEventListener('wheel',e=>{e.preventDefault();zoom(e.deltaY>0?1.15:1/1.15,e.clientX,e.clientY)},{passive:false});
+const ptr=new Map();let last=null,moved=false;
+svg.addEventListener('pointerdown',e=>{ptr.set(e.pointerId,[e.clientX,e.clientY]);moved=false;last=null});
+svg.addEventListener('pointermove',e=>{const [mx,my]=toMap(e.clientX,e.clientY);document.getElementById('pos').textContent=`${ft(mx)} ft east · ${ft(my)} ft south of the mesa top`;
+  if(!ptr.has(e.pointerId))return;const prev=ptr.get(e.pointerId);ptr.set(e.pointerId,[e.clientX,e.clientY]);
+  if(ptr.size===1){const r=svg.getBoundingClientRect();if(Math.abs(e.clientX-prev[0])+Math.abs(e.clientY-prev[1])>1){moved=true;svg.classList.add('drag')}setView(V.x-(e.clientX-prev[0])/r.width*V.w,V.y-(e.clientY-prev[1])/r.height*V.h,V.w)}
+  else if(ptr.size===2){const [a,b]=[...ptr.values()],d=Math.hypot(a[0]-b[0],a[1]-b[1]);if(last)zoom(last/d,(a[0]+b[0])/2,(a[1]+b[1])/2);last=d;moved=true}});
+const up=e=>{ptr.delete(e.pointerId);last=null;svg.classList.remove('drag')};svg.addEventListener('pointerup',up);svg.addEventListener('pointercancel',up);svg.addEventListener('pointerleave',up);
+svg.addEventListener('click',e=>{if(moved){e.stopPropagation();moved=false}},true);
+fit();addEventListener('resize',fit);
+</script>

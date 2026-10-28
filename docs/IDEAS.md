@@ -463,3 +463,19 @@ phone), w = 0.5 by default. Columns below: R, F, seen, phone, cost, hour guess, 
 - I31 Saturday regatta: Sailboats race a course round the buoys while the town watches from the shore. (R6 F7 rare low c2 7h needs S19)
 - I32 Fall hayride: The family climbs on a hay wagon behind the tractor for a bumpy ride round the field at sunset, with pumpkins in the back. (R5 F8 rare low c1 3h needs M25 I02)
 - I33 Lakeside potluck: The families bring dishes to a long table by the water; whatever you grew or caught is on it. (R5 F7 rare low c1 4h needs I02)
+
+## G: The wider world
+
+From the Corley's Island Atlas (https://claude.ai/artifact/EgtPPFgP793Www9YgzZRPb, Oct 28 2026, v258): a painted map of the whole world with proposals out to the borders and up the South Range.
+
+- G01 A bigger world: Grow the ground, the minimap, the map editor and the saves past today's edge to the atlas frame (about 4,990 x 8,200 ft), with far-off ground drawn simply so the phone stays above 30 FPS. Groundwork for the rest of this group. (R5 F6 every low c3 24h)
+- G02 Summit Road and granite quarry: A gravel haul road leaves the General Store lot and switchbacks about 1,000 ft up the South Range to a granite quarry bench and a fire lookout on the summit. Haul rock down to town and the causeways. (R8 F9 most low c3 30h needs G01)
+- G03 West shore rock quarry: New land past the west edge: a hard-rock quarry in the shore hills with a crusher and a barge dock; rock goes by deck barge for riprap, breakwaters and causeways. (R8 F7 some low c2 14h needs G01)
+- G04 East shore gravel pit: A sand and gravel pit across the lake with a wash plant, stockpiles and a conveyor to a loading dock; a pit pond fills when it rains. (R8 F7 some low c2 14h needs G01)
+- G05 Pine Point campground: West of town on Beach Road: RV pads and log cabins on a gravel loop, a fire ring, a second boat launch and a dock; townsfolk camp at weekends. (R5 F6 some low c2 10h needs G01)
+- G06 Contractor yard and batch plant: East of town at the end of the Cross Street: a fenced equipment yard with a steel shop, and a ready-mix plant with mixer trucks; home base for jobs in town. (R8 F7 most low c2 12h needs G01)
+- G07 Timber camp: Logging in The Woods: a clearing with a small sawmill, log decks and skid trails off the trail; fell, skid and load logs, and the patches grow back over the seasons. (R8 F8 some low c2 16h)
+- G08 Hayfield farmstead: Past the hayfield's east fence: a red gambrel barn, a silo, a farmhouse and a farm pond with an earthen dam; the round bales finally have somewhere to go. (R6 F7 some low c2 10h needs G01)
+- G09 Freight depot and siding: Where the freight line comes out of the hills in the north-west: a brick station, a passing siding and a loadout, so a train stops and logs and rock leave by rail. (R7 F7 some low c2 12h needs G01)
+- G10 Heron Rock: A granite islet in the open east half of the lake with a short white lighthouse, a fishing dock and windswept pines; a boat trip with a view of all four islands. (R5 F6 some none c1 5h)
+- G11 Lake Loop Road: One two-lane road round the lake, up the west shore past the quarry and camp to the woods trail and up the east shore past the gravel pit and farm, so the field reaches town without the island bridges. (R7 F7 most low c2 12h needs G01)
