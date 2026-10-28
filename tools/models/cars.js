@@ -13,7 +13,9 @@
 // Classic script, no modules.
 function buildCars(){
 const T=THREE,BGU=T.BufferGeometryUtils,mtx=new T.Matrix4(),q=new T.Quaternion(),e=new T.Euler(),V=(x,y,z)=>new T.Vector3(x,y,z);
-const RB=(w,h,d,r,s)=>new T.RoundedBoxGeometry(w,h,d,s||1,Math.min(r,w/2-1e-4,h/2-1e-4,d/2-1e-4));
+// LO: the light version drawn far off (node <name>_lo): a coarser skin, plain boxes, no cabin seats or small parts
+let LO=false;
+const RB=(w,h,d,r,s)=>LO?new T.BoxGeometry(w,h,d):new T.RoundedBoxGeometry(w,h,d,s||1,Math.min(r,w/2-1e-4,h/2-1e-4,d/2-1e-4));
 const CY=(rt,rb,h,n)=>new T.CylinderGeometry(rt,rb,h,n||20);
 const ss=(a,b,x)=>{const t=Math.min(1,Math.max(0,(x-a)/(b-a)));return t*t*(3-2*t)};
 // a table of [z, value] read with straight lines between, softened over r metres (straight glass, rounded edges)
@@ -25,9 +27,9 @@ function crs(p0,p1,p2,p3,t){const d=(a,b)=>Math.pow(Math.hypot(b[0]-a[0],b[1]-a[
   const A1=L(p0,p1,0,t1),A2=L(p1,p2,t1,t2),A3=L(p2,p3,t2,t3),B1=L(A1,A2,0,t2),B2=L(A2,A3,t1,t3);return L(B1,B2,t1,t2)}
 // the subdivisions of each span of the section: bottom, sill corner, lower side, upper side, shoulder ledge, side glass,
 // roof edge (the A and C pillars where the glass slopes), roof, hood and deck
-const SEG=[2,1,6,6,1,3,2,4],NSEG=SEG.length;
+const SEG_HI=[2,1,6,6,1,3,2,4],SEG_LO=[1,1,3,2,1,2,1,2],NSEG=SEG_HI.length;let SEG=SEG_HI;
 
-function car(name,S){
+function car(name,S){SEG=LO?SEG_LO:SEG_HI;
   const parts={},put=(part,mat,g,p,r,sc)=>{g=g.index?g.toNonIndexed():g.clone();e.set(...(r||[0,0,0]));q.setFromEuler(e);
       mtx.compose(V(...(p||[0,0,0])),q,V(...(sc||[1,1,1])));g.applyMatrix4(mtx);
       for(const k of Object.keys(g.attributes))if(k!=='position'&&k!=='normal')g.deleteAttribute(k);
@@ -45,8 +47,8 @@ function car(name,S){
     if(f>0)x=x+(Math.min(x,xin)-x)*f;return [x,y,z,f]}
   // the stations along the car: even spacing, finer round the arches and ends, and a line at every edge of the glass,
   // pillars and seams so they come out straight
-  const zs=[];for(let z=z0;z<=z1+1e-6;z+=0.1)zs.push(z);for(const zc of [zf,zr])for(let z=zc-AR-0.04;z<=zc+AR+0.04;z+=0.04)zs.push(z);
-  for(let k=0;k<=5;k++){const a=Math.PI/2*k/5;zs.push(z1-RND+Math.sin(a)*RND,z0+RND-Math.sin(a)*RND)}
+  const zs=[];for(let z=z0;z<=z1+1e-6;z+=LO?0.3:0.1)zs.push(z);for(const zc of [zf,zr])for(let z=zc-AR-0.04;z<=zc+AR+0.04;z+=LO?0.12:0.04)zs.push(z);
+  for(let k=0;k<=(LO?2:5);k++){const a=Math.PI/2*k/(LO?2:5);zs.push(z1-RND+Math.sin(a)*RND,z0+RND-Math.sin(a)*RND)}
   const G=S.glass,brk=[G.ws,G.ws+0.07,G.rf,G.rr,G.dk,G.sf,G.sr,...(G.bp||[]).flatMap(b=>[b-0.045,b+0.045]),...(S.seams||[]).flatMap(s=>[s-0.006,s+0.006]),...(S.extra||[])];
   for(const b of brk)if(b>z0&&b<z1)zs.push(b);zs.sort((a,b)=>a-b);const Z=[];for(const z of zs)if(z>=z0-1e-6&&z<=z1+1e-6&&(!Z.length||z-Z[Z.length-1]>0.004))Z.push(Math.min(z1,Math.max(z0,z)));
   const VS=[];for(let i=0;i<NSEG;i++)for(let k=0;k<SEG[i];k++)VS.push([i,k/SEG[i]]);VS.push([NSEG-1,1]);
@@ -78,31 +80,31 @@ function car(name,S){
   put(B,'under',RB(wI*2,bl-fl-0.02,cz1-cz0,0.04),[0,(bl+fl)/2-0.02,(cz0+cz1)/2]);
   put(B,'plastic',RB(wI*2-0.02,0.2,0.4,0.06),[0,bl+0.04,cz1-0.22]);put(B,'gloss',new T.TorusGeometry(0.17,0.02,8,24),[-0.37,bl+0.16,cz1-0.48],[-1.15,0,0]);
   // (the seats sit low in the tub, their headrests below the roof lining)
-  for(const row of S.seats||[[0.55,2],[-0.35,3]]){const [sz,n]=row,ws=n===2?0.5:wI*2-0.1,hr=Math.min(ytop(sz-0.3)-0.12,fl+1.0),cu=fl+0.32,bh=hr-0.16-cu;
+  if(!LO)for(const row of S.seats||[[0.55,2],[-0.35,3]]){const [sz,n]=row,ws=n===2?0.5:wI*2-0.1,hr=Math.min(ytop(sz-0.3)-0.12,fl+1.0),cu=fl+0.32,bh=hr-0.16-cu;
     for(const x of n===2?[-0.37,0.37]:[0]){put(B,'seat',RB(ws,0.16,0.5,0.05,1),[x,cu,sz]);put(B,'seat',RB(ws,bh,0.13,0.05,1),[x,cu+bh/2+0.04,sz-0.28],[-0.16,0,0]);
       for(const hx of n===2?[0]:[-0.4,0,0.4])put(B,'seat',RB(0.24,0.16,0.09,0.04,1),[x+hx,hr-0.08,sz-0.36])}}
 
   // ---------- the front: grille, headlamps, bumper and its intake, plate ----------
   const F=S.front,fz=z1;
   {const gy=F.grille,gw=F.gw;put(B,'gloss',RB(gw*2,gy[1]-gy[0],0.08,0.03),[0,(gy[0]+gy[1])/2,fz-0.03]);
-    for(let y=gy[0]+0.04;y<gy[1]-0.02;y+=0.045)put(B,F.chromeBars?'chrome':'plastic',RB(gw*2-0.06,0.012,0.02,0.005,1),[0,y,fz+0.012]);
+    if(!LO)for(let y=gy[0]+0.04;y<gy[1]-0.02;y+=0.045)put(B,F.chromeBars?'chrome':'plastic',RB(gw*2-0.06,0.012,0.02,0.005,1),[0,y,fz+0.012]);
     put(B,F.chromeBars?'chrome':'gloss',RB(gw*2+0.04,0.03,0.05,0.012),[0,gy[1]+0.005,fz-0.005]);
     const iy=F.intake;put(B,'plastic',RB(F.iw*2,iy[1]-iy[0],0.06,0.025),[0,(iy[0]+iy[1])/2,fz-0.045]);
     put(B,'plate',RB(0.52,0.12,0.012,0.008,1),[0,(iy[0]+iy[1])/2+0.01,fz+0.02]);
     for(const s of [-1,1]){const [y0,y1]=F.ly,hz=fz-0.09,x0=F.lx[0],x1=Math.min(F.lx[1],sideAt(hz+0.06,(y0+y1)/2)-0.03);
       put(B,'gloss',RB(x1-x0,y1-y0,0.16,0.035),[s*(x0+x1)/2,(y0+y1)/2,hz]);
       put(B,'lens',RB((x1-x0)*0.96,(y1-y0)*0.8,0.04,0.02),[s*(x0+x1)/2,(y0+y1)/2,hz+0.07]);
-      for(const k of [0.3,0.7])put(B,'chrome',CY(0.032,0.032,0.03,14),[s*(x0+(x1-x0)*k),(y0+y1)/2,hz+0.07],[Math.PI/2,0,0]);
+      if(!LO)for(const k of [0.3,0.7])put(B,'chrome',CY(0.032,0.032,0.03,14),[s*(x0+(x1-x0)*k),(y0+y1)/2,hz+0.07],[Math.PI/2,0,0]);
       put(B,'amber',RB((x1-x0)*0.9,0.018,0.03,0.008,1),[s*(x0+x1)/2,y0+0.01,hz+0.08]);
       // the lamp wraps round the corner onto the side
-      const lz=fz-0.12;put(B,'lens',RB(0.03,(y1-y0)*0.7,0.16,0.012),[s*(sideAt(lz,(y0+y1)/2)-0.004),(y0+y1)/2,lz]);
+      const lz=fz-0.12;if(!LO)put(B,'lens',RB(0.03,(y1-y0)*0.7,0.16,0.012),[s*(sideAt(lz,(y0+y1)/2)-0.004),(y0+y1)/2,lz]);
       put(B,'plastic',CY(0.05,0.05,0.03,14),[s*(F.iw-0.06),(iy[0]+iy[1])/2,fz+0.005],[Math.PI/2,0,0])}}
 
   // ---------- the back: tail lamps wrapping round, a reflector strip, plate and its lamp, exhaust ----------
   const R=S.rear,rz=z0;
   if(R){for(const s of [-1,1]){const [y0,y1]=R.ly,x0=R.lx[0],x1=Math.min(R.lx[1],sideAt(rz+0.03,(y0+y1)/2)-0.025);put(B,'redL',RB(x1-x0,y1-y0,0.07,0.025),[s*(x0+x1)/2,(y0+y1)/2,rz+0.035]);
       put(B,'lens',RB((x1-x0)*0.35,(y1-y0)*0.3,0.075,0.012),[s*(x0+(x1-x0)*0.35),(y0+y1)/2-(y1-y0)*0.2,rz+0.03]);
-      const lz=rz+0.12;put(B,'redL',RB(0.03,(y1-y0)*0.8,0.18,0.012),[s*(sideAt(lz,(y0+y1)/2)-0.004),(y0+y1)/2,lz]);
+      const lz=rz+0.12;if(!LO)put(B,'redL',RB(0.03,(y1-y0)*0.8,0.18,0.012),[s*(sideAt(lz,(y0+y1)/2)-0.004),(y0+y1)/2,lz]);
       put(B,'redL',RB(0.12,0.03,0.02,0.008,1),[s*(R.iw-0.08),R.bump[0]+0.04,rz+0.03])}
     put(B,'plastic',RB(R.iw*2,R.bump[1]-R.bump[0],0.06,0.025),[0,(R.bump[0]+R.bump[1])/2,rz+0.05]);
     put(B,'plate',RB(0.52,0.12,0.012,0.008,1),[0,R.plate,rz-0.015]);put(B,'gloss',RB(0.58,0.17,0.02,0.01,1),[0,R.plate,rz-0.005]);
@@ -113,29 +115,29 @@ function car(name,S){
   {const mz=G.ws-0.12,my=ybelt(mz)+0.12;for(const s of [-1,1]){const x=sideAt(mz,my-0.1);
       put(B,'plastic',RB(0.12,0.06,0.1,0.02),[s*(x+0.03),my-0.06,mz]);put(B,'carpaint',RB(0.08,0.13,0.2,0.04),[s*(x+0.12),my,mz-0.02],[0,s*0.15,0]);
       put(B,'mirror',RB(0.012,0.1,0.16,0.03),[s*(x+0.12),my,mz-0.115],[0,s*0.15,0]);put(B,'amber',RB(0.012,0.02,0.1,0.006,1),[s*(x+0.165),my-0.035,mz+0.01],[0,s*0.15,0]);
-      for(const hz of S.handles||[]){const hy=ybelt(hz)-0.09;put(B,S.chromeHandles?'chrome':'carpaint',RB(0.03,0.035,0.17,0.014),[s*(sideAt(hz,hy)+0.008),hy,hz])}}
-    for(const s of [-1,1]){const y=ytop(G.ws+0.035)+0.02;put(B,'gloss',RB(0.55,0.012,0.022,0.005,1),[s*0.28,y,G.ws+0.04],[0,s*0.12,0])}
+      if(!LO)for(const hz of S.handles||[]){const hy=ybelt(hz)-0.09;put(B,S.chromeHandles?'chrome':'carpaint',RB(0.03,0.035,0.17,0.014),[s*(sideAt(hz,hy)+0.008),hy,hz])}}
+    if(!LO)for(const s of [-1,1]){const y=ytop(G.ws+0.035)+0.02;put(B,'gloss',RB(0.55,0.012,0.022,0.005,1),[s*0.28,y,G.ws+0.04],[0,s*0.12,0])}
     const az=G.rr+0.18;put(B,'gloss',RB(0.06,0.06,0.2,0.03),[0,ytop(az)+cr(az)+0.02,az]);
     if(S.rails){const rx=hw(0)-tg(0)-0.12;for(const s of [-1,1]){const pts=[];for(let z=G.rr+0.05;z<=G.rf-0.05;z+=0.2)pts.push(V(s*rx,ytop(z)+0.04,z));
         put(B,'gloss',new T.TubeGeometry(new T.CatmullRomCurve3(pts),24,0.018,6));for(const z of [G.rr+0.08,G.rf-0.08])put(B,'gloss',RB(0.05,0.05,0.08,0.02),[s*rx,ytop(z)+0.02,z])}}}
   // a lip round each wheel arch over the skin's cut edge, and the dark liner of the wheel well inside it
   for(const zc of [zf,zr]){if(S.bed&&zc===zr)continue;const pts=[];for(let k=0;k<=24;k++){const a=0.12+(Math.PI-0.24)*k/24,y=WR+Math.sin(a)*(AR+0.008),z=zc+Math.cos(a)*(AR+0.008);
       if(y<yb(z)+0.02)continue;pts.push([z,y])}
-    for(const s of [-1,1]){put(B,S.cladding?'plastic':'carpaint',new T.TubeGeometry(new T.CatmullRomCurve3(pts.map(([z,y])=>V(s*(sideAt(z,y)-0.012),y,z))),32,0.032,6));
-      const lw=hw(zc)-xin+0.02,g=new T.CylinderGeometry(AR+0.005,AR+0.005,lw,20,1,true,0.15,Math.PI-0.3);g.rotateZ(Math.PI/2);put(B,'under',g,[s*(xin+lw/2-0.01),WR,zc],[0,0,0],[1,1,1]);
+    for(const s of [-1,1]){if(!LO)put(B,S.cladding?'plastic':'carpaint',new T.TubeGeometry(new T.CatmullRomCurve3(pts.map(([z,y])=>V(s*(sideAt(z,y)-0.012),y,z))),32,0.032,6));
+      const lw=hw(zc)-xin+0.02,g=new T.CylinderGeometry(AR+0.005,AR+0.005,lw,LO?6:20,1,true,0.15,Math.PI-0.3);g.rotateZ(Math.PI/2);put(B,'under',g,[s*(xin+lw/2-0.01),WR,zc],[0,0,0],[1,1,1]);
       const g2=g.clone();g2.scale(-1,1,1);put(B,'under',g2,[s*(xin+lw/2-0.01),WR,zc])}}
   // underneath: the fuel tank, the exhaust run and the axles, dark, so a low view shows a car not a shell
-  put(B,'under',RB(1.0,0.12,0.8,0.03),[0,yb(0)+0.02,zr+AR+0.2]);put(B,'under',CY(0.035,0.035,S.L*0.7,8),[0.3,yb(0)-0.02,-0.2],[Math.PI/2,0,0]);
-  for(const zc of [zf,zr])put(B,'under',CY(0.045,0.045,WX*2-0.3,8),[0,WR,zc],[0,0,Math.PI/2]);
+  if(!LO)put(B,'under',RB(1.0,0.12,0.8,0.03),[0,yb(0)+0.02,zr+AR+0.2]);if(!LO)put(B,'under',CY(0.035,0.035,S.L*0.7,8),[0.3,yb(0)-0.02,-0.2],[Math.PI/2,0,0]);
+  if(!LO)for(const zc of [zf,zr])put(B,'under',CY(0.045,0.045,WX*2-0.3,8),[0,WR,zc],[0,0,Math.PI/2]);
   if(S.bed)S.bed(put,{z0,zr,WR,WX,AR,hw,ybelt});
 
   // ---------- merge: one mesh per material, and the four wheels as their own nodes ----------
-  const root=new T.Group();root.name=name;
+  const root=new T.Group();root.name=LO?name+'_lo':name;
   const bodyG=new T.Group();bodyG.name='body';root.add(bodyG);
-  for(const [mat,list] of Object.entries(parts[B])){const m=BGU.mergeVertices(BGU.mergeBufferGeometries(list),1e-5);const mesh=new T.Mesh(m,new T.MeshStandardMaterial({name:mat}));mesh.name=name+'_'+mat;bodyG.add(mesh)}
-  const W=wheel(WR,TW,S.rim||5);
+  for(const [mat,list] of Object.entries(parts[B])){const m=BGU.mergeVertices(BGU.mergeBufferGeometries(list),1e-5);const mesh=new T.Mesh(m,new T.MeshStandardMaterial({name:mat}));mesh.name=root.name+'_'+mat;bodyG.add(mesh)}
+  const W=LO?wheelLo(WR,TW):wheel(WR,TW,S.rim||5);
   for(const [k,x,z] of [['fl',WX,zf],['fr',-WX,zf],['rl',WX,zr],['rr',-WX,zr]]){const g=new T.Group();g.name='wheel_'+k;g.position.set(x,WR,z);if(x<0)g.rotation.y=Math.PI;
-    for(const [mat,geo] of W){const mesh=new T.Mesh(geo,new T.MeshStandardMaterial({name:mat}));mesh.name=name+'_w'+k+'_'+mat;g.add(mesh)}root.add(g)}
+    for(const [mat,geo] of W){const mesh=new T.Mesh(geo,new T.MeshStandardMaterial({name:mat}));mesh.name=root.name+'_w'+k+'_'+mat;g.add(mesh)}root.add(g)}
   return root}
 
 // a wheel, its face to +x: the tyre (rounded shoulders, four tread grooves), the alloy (n spokes cut from a disc, a deep
@@ -164,6 +166,10 @@ function wheel(WR,TW,n){const key=WR+'_'+TW+'_'+n;if(wheelC[key])return wheelC[k
   // the wheel turns about x: no rotation changes it except the turning, so the tread and spokes are what show it
   return wheelC[key]=res}
 
+// the light wheel: a rounded tyre and a plain alloy face
+function wheelLo(WR,TW){const hw=TW/2,RR=WR*0.62,prof=[[RR,-hw],[WR-0.04,-hw],[WR,-hw+0.05],[WR,hw-0.05],[WR-0.04,hw],[RR,hw]];
+  const tire=new T.LatheGeometry(prof.map(([r,y])=>new T.Vector2(r,y)),12);tire.rotateZ(Math.PI/2);
+  const rim=new T.CylinderGeometry(RR,RR,TW-0.04,12);rim.rotateZ(Math.PI/2);return [['tire',tire],['rim',rim]]}
 // ---------- the cars: their sizes, and the heights and widths their skins are swept from (z from the tail) ----------
 const sedan={L:4.82,WB:2.83,fo:0.97,WR:0.335,WX:0.8,TW:0.225,
   yb:[[-2.41,0.4],[-2.2,0.25],[-1.9,0.19],[1.9,0.19],[2.2,0.25],[2.41,0.3]],
@@ -240,5 +246,5 @@ const pickup=Object.assign({},suv,{L:5.85,WB:3.68,fo:1.0,WR:0.39,WX:0.86,TW:0.25
 pickup.rear=null;
 
 const root=new T.Group();root.name='cars';
-for(const [n,s] of Object.entries({sedan,hatch,wagon,suv,minivan,pickup,van}))root.add(car(n,s));
+for(const lo of [false,true]){LO=lo;for(const [n,s] of Object.entries({sedan,hatch,wagon,suv,minivan,pickup,van}))root.add(car(n,s))}LO=false;
 return root}
