@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Tuesday, October 27, 2026
 
+- **v253** (7:43 PM) The Family Island house, pavilion and flagpole, Jessica's cottage and Dexter's shed and trailer now wear real materials: wood board walls, shingle and cedar-shake roofs, stone bases and chimneys, plank porches, flagstone steps, corrugated steel and concrete, at their real size and darkening in the rain (Medium graphics and up; Low keeps plain colours).
 - **v252** (7:24 PM) Tall grass gone to seed and leafy bushes fill the rough ground of Corley's mesa, thickest toward the rim; they sway, flatten under tracks, mow down and go when dug. Graphics has a new Wild growth setting.
 
 ## Sunday, October 25, 2026

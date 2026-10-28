@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-28T00:24:00Z",
+ "updated": "2026-10-28T00:43:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -72,9 +72,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-27",
-   "dh": 5,
-   "act": 0.5,
-   "versions": 1
+   "dh": 8,
+   "act": 1,
+   "versions": 2
   }
  ],
  "extra": [
@@ -2352,6 +2352,15 @@ window.EFFORT = {
    "tris": 6231714,
    "chars": 1708202,
    "what": "Tall grass gone to seed and leafy bushes fill the rough ground of Corley's mesa, thickest toward the rim; they sway, flatten under tracks, mow down and go when dug. Graphics has a new Wild growth setting."
+  },
+  {
+   "v": 253,
+   "asked": "2026-10-27T19:30:00-05:00",
+   "live": "2026-10-27T19:43:09-05:00",
+   "dh": 3,
+   "tris": 6180169,
+   "chars": 1709759,
+   "what": "The Family Island house, pavilion and flagpole, Jessica's cottage and Dexter's shed and trailer now wear real materials: wood board walls, shingle and cedar-shake roofs, stone bases and chimneys, plank porches, flagstone steps, corrugated steel and concrete, at their real size and darkening in the rain (Medium graphics and up; Low keeps plain colours)."
   }
  ]
 };

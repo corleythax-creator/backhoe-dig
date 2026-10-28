@@ -6,12 +6,16 @@ const famGround=groundPatch(FAM_PATCH[0],FAM_PATCH[1],FAM_PATCH[2],FAM_PATCH[3],
 // (window glass, which lights up at night). Lamps (by colour: 1 street and bridge lamps, 2 light towers, 3 lanterns) also
 // go in FAM_LAMPS ([x, y, z, kind]) for their halos and the light they throw on the ground after dark (daynight.js)
 const FAM_LAMPS=[],FAM_LAMP_K={0xfff1c8:1,0xfff6d8:2,0xffd27a:3},FAM_WIN={0x6f8fa4:1,0x2c3a44:1};
-function famKit(){const solid=[],glow=[],win=[],O=new THREE.Object3D();O.rotation.order='YXZ';
+// A part given a material key instead of a colour ('shingles', 'planks', 'ashlar'... BR_DEF in bridges.js) is drawn
+// in that material's picture, sized in real metres, with the bridges' Graphics tiers and rain wetness (famLibAdd);
+// a key ending in ~ turns the picture a quarter (wood grain running along a wall instead of up it).
+function famKit(){const solid=[],glow=[],win=[],lib={},O=new THREE.Object3D();O.rotation.order='YXZ';
   function add(L,g,col,x,y,z,ry,rx,rz){O.position.set(x,y,z);O.rotation.set(rx||0,ry||0,rz||0);O.updateMatrix();
     if(g.index)g=g.toNonIndexed();g.deleteAttribute('uv');g.applyMatrix4(O.matrix);
+    if(typeof col==='string'){(lib[col]=lib[col]||[]).push(g);return}
     const c=new THREE.Color(col),n=g.attributes.position.count,a=new Float32Array(n*3);
     for(let i=0;i<n;i++){a[i*3]=c.r;a[i*3+1]=c.g;a[i*3+2]=c.b}g.setAttribute('color',new THREE.BufferAttribute(a,3));L.push(g)}
-  return {solid,glow,win,
+  return {solid,glow,win,lib,
     box:(w,h,d,col,x,y,z,ry,rx,rz)=>add(FAM_WIN[col]?win:solid,new THREE.BoxGeometry(w,h,d),col,x,y,z,ry,rx,rz),
     cyl:(r0,r1,h,seg,col,x,y,z,ry,rx,rz)=>add(solid,new THREE.CylinderGeometry(r0,r1,h,seg),col,x,y,z,ry,rx,rz),
     geo:(g,col,x,y,z,ry,rx,rz)=>add(solid,g,col,x,y,z,ry,rx,rz),
@@ -44,7 +48,11 @@ function ctlWheel(o,par,x,y,z,tilt,r,rot,col,keep){const t=new THREE.Group();if(
     b.cyl(0.032,0.04,0.34,8,CTL_DARK,0,0,0.2,Math.PI/2)},true);
   o.swG=s;o.swK=rot||4;return s}
 // a kit's parts into the scene, as one mesh per kind; returns the meshes
+// material parts go through the bridge kit; kits built before bridges.js has loaded wait in FAM_LIBQ for it
+const FAM_LIBQ=[];
+function famLibAdd(lib){const B=brKit(null);for(const k in lib)for(const g of lib[k]){if(!g.attributes.normal)g.computeVertexNormals();B.geo(k.replace('~',''),g,{swap:k.endsWith('~')})}return B.add()}
 function famAdd(K){const out=[];
+  if(K.lib&&Object.keys(K.lib).length){if(typeof brKit==='function')out.push(...famLibAdd(K.lib));else FAM_LIBQ.push(K.lib)}
   if(K.solid.length){const m=new THREE.Mesh(famMerge(K.solid),famMat);m.castShadow=true;m.receiveShadow=true;m.layers.enable(RAIN_LAYER);scene.add(m);out.push(m)}
   if(K.glow.length){const m=new THREE.Mesh(famMerge(K.glow),famGlowMat);scene.add(m);out.push(m)}
   if(K.win.length){const m=new THREE.Mesh(famMerge(K.win),famWinMat);m.receiveShadow=true;scene.add(m);out.push(m)}
@@ -123,7 +131,7 @@ function famPlay(g){try{siteSaveAll()}catch(e){}try{lawnSave()}catch(e){}
   const K=famKit(),G=(x,z)=>baseHeight(x,z);
   // the family house: a big timber house with a stone base, a steep roof, a stone chimney and a porch along the front
   // and the east side
-  {const X=-34,Z=212,y=G(X,Z+6.5)+0.05,WALL=0x9a6a44,TRIM=0x5a3b26,ROOF=0x46494d,STONE=0x8d8781,GLASS=0x6f8fa4,WHITE=0xeeeae0;
+  {const X=-34,Z=212,y=G(X,Z+6.5)+0.05,WALL='beam~',TRIM=0x5a3b26,ROOF='shingles',STONE='ashlar',GLASS=0x6f8fa4,WHITE=0xeeeae0;
     K.box(14.4,0.7,10.4,STONE,X,y+0.2,Z);
     K.box(14,5,10,WALL,X,y+3.05,Z);
     for(let r=0;r<8;r++)K.box(14.06,0.06,10.06,TRIM,X,y+0.9+r*0.62,Z);
@@ -131,7 +139,7 @@ function famPlay(g){try{siteSaveAll()}catch(e){}try{lawnSave()}catch(e){}
     const sl=Math.atan2(3.6,5),rl=Math.hypot(5,3.6)+0.9;
     for(const s of [-1,1])K.box(15.2,0.25,rl,ROOF,X,y+5.55+1.8+0.1,Z+s*2.55,0,s*sl);
     K.box(15.2,0.3,0.4,TRIM,X,y+9.2,Z);
-    K.box(1.4,8.6,1.4,STONE,X-5.2,y+5.0,Z-2.2);K.box(1.6,0.3,1.6,0x6f6a65,X-5.2,y+9.4,Z-2.2);
+    K.box(1.4,8.6,1.4,STONE,X-5.2,y+5.0,Z-2.2);K.box(1.6,0.3,1.6,'concOld',X-5.2,y+9.4,Z-2.2);
     for(const s of [-1,1]){K.box(0.3,5.1,0.3,TRIM,X+s*7,y+3.05,Z+5);K.box(0.3,5.1,0.3,TRIM,X+s*7,y+3.05,Z-5)}
     // windows (frame, glass, sill) round the ground floor, two up in each gable, and the front door
     const win=(x,yy,z,ry,w,h)=>{K.box(w+0.3,h+0.3,0.12,WHITE,x,yy,z,ry);K.box(w,h,0.16,GLASS,x,yy,z,ry);K.box(w+0.5,0.12,0.3,WHITE,x,yy-h/2-0.15,z,ry);K.box(0.08,h,0.18,WHITE,x,yy,z,ry)};
@@ -141,13 +149,13 @@ function famPlay(g){try{siteSaveAll()}catch(e){}try{lawnSave()}catch(e){}
     const DX=X+1.3;K.box(1.5,2.6,0.12,WHITE,DX,y+1.85,Z+5.02);K.box(1.2,2.3,0.18,0xa3402e,DX,y+1.7,Z+5.04);K.box(0.12,0.12,0.24,0xd8b04a,DX+0.4,y+1.7,Z+5.1);
     // porch: deck, posts, rails, a roof sloping off the wall, steps down to the drive, two rocking chairs
     const PW=2.6,py=y+0.5;
-    K.box(14+PW,0.2,PW,0x7a5434,X+PW/2,py,Z+5+PW/2);K.box(PW,0.2,10,0x7a5434,X+7+PW/2,py,Z);
+    K.box(14+PW,0.2,PW,'planks',X+PW/2,py,Z+5+PW/2);K.box(PW,0.2,10,'planks',X+7+PW/2,py,Z);
     const posts=[];for(let i=0;i<=7;i++)posts.push([X-7+0.2+i*(14+PW-0.4)/7,Z+5+PW-0.2]);for(let i=1;i<=4;i++)posts.push([X+7+PW-0.2,Z+5+PW-0.2-i*(10+PW-0.4)/4]);
     for(const [px,pz] of posts)K.box(0.22,2.9,0.22,WHITE,px,py+1.55,pz);
     for(let i=0;i<posts.length-1;i++){const [ax,az]=posts[i],[bx,bz]=posts[i+1];if(i===3)continue;
       K.box(Math.abs(bx-ax)+0.1,0.1,Math.abs(bz-az)+0.1,WHITE,(ax+bx)/2,py+1.0,(az+bz)/2)}
     const ps=Math.atan2(0.5,PW);K.box(14+PW+0.4,0.18,PW+0.5,ROOF,X+PW/2,py+3.2,Z+5+PW/2,0,ps);K.box(PW+0.5,0.18,10.2,ROOF,X+7+PW/2,py+3.2,Z,0,0,-ps);
-    for(let i=0;i<3;i++)K.box(2.0,0.2,0.4,0x8d8781,DX,py-0.15-i*0.2,Z+5+PW+0.2+i*0.4);
+    for(let i=0;i<3;i++)K.box(2.0,0.2,0.4,'flagstone',DX,py-0.15-i*0.2,Z+5+PW+0.2+i*0.4);
     for(const dx of [2.5,4.2]){const cx=X+dx,cz=Z+6.2;K.box(0.7,0.08,0.7,0x6b4428,cx,py+0.55,cz);K.box(0.7,0.8,0.08,0x6b4428,cx,py+0.95,cz-0.33);K.box(0.06,0.06,0.9,0x6b4428,cx-0.3,py+0.12,cz,0,0.3);K.box(0.06,0.06,0.9,0x6b4428,cx+0.3,py+0.12,cz,0,0.3)}
     // the house is solid, the porch walks: its deck, the steps down to the drive, the railings and rocking chairs solid
     SOLIDS.push({x:X,z:Z,hx:7.3,hz:5.3});walkPad(X+PW/2,Z+5+PW/2,7+PW/2,PW/2,0,py+0.1);walkPad(X+7+PW/2,Z,PW/2,5,0,py+0.1);
@@ -155,12 +163,12 @@ function famPlay(g){try{siteSaveAll()}catch(e){}try{lawnSave()}catch(e){}
     for(let i=0;i<posts.length-1;i++){if(i===3)continue;const [ax,az]=posts[i],[bx,bz]=posts[i+1];SOLIDS.push({x:(ax+bx)/2,z:(az+bz)/2,hx:Math.abs(bx-ax)/2+0.1,hz:Math.abs(bz-az)/2+0.1})}
     for(const dx of [2.5,4.2])SOLIDS.push({x:X+dx,z:Z+6.2,hx:0.36,hz:0.4})}
   // picnic pavilion: a slab, six timber posts, a gable roof and two tables, with room to walk in under it
-  {const X=26,Z=264,y=G(X,Z)+0.02,TIM=0x7f5634;
-    K.box(11,0.2,7.5,0xa9a69e,X,y+0.05,Z);walkPad(X,Z,5.5,3.75,0,y+0.15);
+  {const X=26,Z=264,y=G(X,Z)+0.02,TIM='beam';
+    K.box(11,0.2,7.5,'concBroom',X,y+0.05,Z);walkPad(X,Z,5.5,3.75,0,y+0.15);
     for(const dx of [-4.8,0,4.8])for(const dz of [-3.2,3.2]){K.box(0.35,3.2,0.35,TIM,X+dx,y+1.75,Z+dz);SOLIDS.push({x:X+dx,z:Z+dz,hx:0.2,hz:0.2})}
-    K.box(10.2,0.35,0.3,TIM,X,y+3.3,Z-3.2);K.box(10.2,0.35,0.3,TIM,X,y+3.3,Z+3.2);
-    K.geo(famGable(6.4,1.8,10.2),0xb98a5a,X,y+3.45,Z);const sl=Math.atan2(1.8,3.2),rl=Math.hypot(3.2,1.8)+0.8;
-    for(const s of [-1,1])K.box(11.2,0.2,rl,0x5b3a2a,X,y+3.45+0.9-0.05,Z+s*1.75,0,s*sl);
+    K.box(10.2,0.35,0.3,'beam~',X,y+3.3,Z-3.2);K.box(10.2,0.35,0.3,'beam~',X,y+3.3,Z+3.2);
+    K.geo(famGable(6.4,1.8,10.2),'beam~',X,y+3.45,Z);const sl=Math.atan2(1.8,3.2),rl=Math.hypot(3.2,1.8)+0.8;
+    for(const s of [-1,1])K.box(11.2,0.2,rl,'shakes',X,y+3.45+0.9-0.05,Z+s*1.75,0,s*sl);
     // the tables (picnic8, models.js on Detailed: its top 0.76 m up, level with the boards)
     const PK=famKit();
     for(const dx of [-2.5,2.5]){const tx=X+dx;PK.box(1.0,0.08,2.4,0x9a6b42,tx,y+0.82,Z);
@@ -176,7 +184,7 @@ function famPlay(g){try{siteSaveAll()}catch(e){}try{lawnSave()}catch(e){}
     for(let i=0;i<4;i++){const a=i/4*Math.PI*2+0.4,bx=X+Math.cos(a)*3.4,bz=Z+Math.sin(a)*3.4;K.cyl(0.24,0.24,2.2,8,0x6b4a30,bx,y+0.24,bz,Math.PI/2-a,0,Math.PI/2)}
     SOLIDS.push({x:X,z:Z,hx:1.4,hz:1.4})}
   // flagpole at the north rim where the bridge comes in, and a bench looking back across the water at Corley's
-  {const X=9,Z=176,y=G(X,Z);K.box(1.2,0.3,1.2,0x9b9a94,X,y+0.15,Z);K.cyl(0.06,0.09,10,8,0xd9dcdf,X,y+5,Z);K.geo(new THREE.IcosahedronGeometry(0.16,0),0xd8b04a,X,y+10.1,Z);
+  {const X=9,Z=176,y=G(X,Z);K.box(1.2,0.3,1.2,'concrete',X,y+0.15,Z);K.cyl(0.06,0.09,10,8,0xd9dcdf,X,y+5,Z);K.geo(new THREE.IcosahedronGeometry(0.16,0),0xd8b04a,X,y+10.1,Z);
     const FW=2.4,FH=1.3,fx=X+FW/2+0.08,fy=y+9.2;
     for(let i=0;i<7;i++)K.box(FW,FH/7,0.03,i%2?0xf4f2ee:0xb3263a,fx,fy+FH/2-FH/14-i*FH/7,Z);
     K.box(FW*0.42,FH*4/7,0.04,0x2b3d78,X+0.08+FW*0.21,fy+FH/2-FH*2/7,Z);

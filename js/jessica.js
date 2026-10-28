@@ -68,7 +68,7 @@ function jesMesh(list,mat,shadow){if(!list.length)return null;const m=new THREE.
 (function(){
   const K=famKit(),R=famKit(),I=famKit(),GL=famKit(),CE=famKit();
   const CX=JES_CX,CZ=JES_CZ,W=8,D=6.5,T=0.35,WH=3.2,y0=JES_Y;
-  const PLASTER=0xe9dfc6,BEAM=0x5a3b26,STONE=0x8f8a84,MOSS=0x56704a,WOOD=0x8a5f3c,DARK=0x4a3020,TRIM=0xf2ead8;
+  const PLASTER=0xe9dfc6,BEAM='beam',STONE=0x8f8a84,MOSS=0x56704a,WOOD=0x8a5f3c,DARK=0x4a3020,TRIM=0xf2ead8;
   const xw=CX-W/2-T/2,xe=CX+W/2+T/2,zn=CZ-D/2-T/2,zs=CZ+D/2+T/2;
   // a wall along x (at z=c) or along z (at x=c) from a to b, with openings {a0, a1, y0, y1}; it also stands in SOLIDS
   // where it reaches the floor
@@ -94,17 +94,17 @@ function jesMesh(list,mat,shadow){if(!list.length)return null;const m=new THREE.
   win(true,zs,CX-1.3,CX+1.3,0.95,2.35,1);win(false,xe,CZ-2.65,CZ-1.75,1.1,2.3,1);win(false,xe,CZ+1.75,CZ+2.65,1.1,2.3,1);
   // stone base and dark timber framing outside
   const ox=W/2+T+0.05,oz=D/2+T+0.05;
-  K.box(2*ox,0.75,0.1,STONE,CX,y0+0.37,CZ-oz);K.box(2*ox,0.75,0.1,STONE,CX,y0+0.37,CZ+oz);K.box(0.1,0.75,2*oz,STONE,CX+ox,y0+0.37,CZ);
-  for(const s of [-1,1])K.box(0.1,0.75,oz-0.7,STONE,CX-ox,y0+0.37,CZ+s*(oz+0.7)/2);
+  K.box(2*ox,0.75,0.1,'cobble',CX,y0+0.37,CZ-oz);K.box(2*ox,0.75,0.1,'cobble',CX,y0+0.37,CZ+oz);K.box(0.1,0.75,2*oz,'cobble',CX+ox,y0+0.37,CZ);
+  for(const s of [-1,1])K.box(0.1,0.75,oz-0.7,'cobble',CX-ox,y0+0.37,CZ+s*(oz+0.7)/2);
   for(const [a,b] of [[-1,-1],[-1,1],[1,-1],[1,1]])K.box(0.24,WH,0.24,BEAM,CX+a*ox,y0+WH/2,CZ+b*oz);
-  for(const s of [-1,1]){K.box(2*ox,0.18,0.08,BEAM,CX,y0+WH-0.05,CZ+s*oz);K.box(2*ox,0.14,0.08,BEAM,CX,y0+0.85,CZ+s*oz);
+  for(const s of [-1,1]){K.box(2*ox,0.18,0.08,'beam~',CX,y0+WH-0.05,CZ+s*oz);K.box(2*ox,0.14,0.08,'beam~',CX,y0+0.85,CZ+s*oz);
     for(const dx of [-2.6,2.6])K.box(0.18,WH-0.9,0.08,BEAM,CX+dx,y0+0.85+(WH-0.9)/2,CZ+s*oz);
-    K.box(0.08,0.18,2*oz,BEAM,CX+s*ox,y0+WH-0.05,CZ)}
+    K.box(0.08,0.18,2*oz,'beam~',CX+s*ox,y0+WH-0.05,CZ)}
   // the front door, swung open inside, under a little gabled canopy with a lantern beside it
   K.box(1.4,0.12,0.12,TRIM,xw-T/2-0.02,y0+2.31,CZ);
   I.box(1.2,2.2,0.07,0x2f5a46,CX-W/2+0.62,y0+1.1,CZ-0.7);
   K.geo(famGable(1.9,0.7,1.1),PLASTER,xw-T/2-0.55,y0+2.5,CZ);for(const s of [-1,1])K.box(1.3,0.08,1.25,MOSS,xw-T/2-0.55,y0+2.86,CZ+s*0.5,0,s*0.65);
-  K.box(0.9,0.12,1.6,STONE,xw-T/2-0.45,y0+0.06,CZ);walkPad(xw-T/2-0.45,CZ,0.45,0.8,0,y0+0.12);
+  K.box(0.9,0.12,1.6,'flagstone',xw-T/2-0.45,y0+0.06,CZ);walkPad(xw-T/2-0.45,CZ,0.45,0.8,0,y0+0.12);
   K.box(0.2,0.3,0.2,0x2b2b2b,xw-T/2-0.12,y0+2.0,CZ+1.0);K.lit(new THREE.BoxGeometry(0.15,0.2,0.15),0xffd27a,xw-T/2-0.16,y0+1.98,CZ+1.0);
   // the roof (lifts off when you walk in): plaster gables and a mossy green roof with a ridge
   R.geo(famGable(D+2*T,3.0,W+2*T),PLASTER,CX,y0+WH,CZ);
@@ -112,7 +112,7 @@ function jesMesh(list,mat,shadow){if(!list.length)return null;const m=new THREE.
   for(const s of [-1,1])R.box(W+2*T+0.9,0.22,rl,MOSS,CX,y0+WH+3.0+0.12-mo*Math.sin(ra),CZ+s*mo*Math.cos(ra),0,s*ra);
   R.box(W+2*T+0.9,0.2,0.3,0x435a3a,CX,y0+WH+3.05,CZ);
   // the stone chimney on the east gable
-  const chx=xe+T/2+0.54,chTop=y0+WH+4.2;K.box(1.0,chTop-y0,1.4,STONE,chx,(chTop+y0)/2,CZ);K.box(1.2,0.2,1.6,0x77726d,chx,chTop+0.1,CZ);
+  const chx=xe+T/2+0.54,chTop=y0+WH+4.2;K.box(1.0,chTop-y0,1.4,'cobble',chx,(chTop+y0)/2,CZ);K.box(1.2,0.2,1.6,0x77726d,chx,chTop+0.1,CZ);
   SOLIDS.push({x:chx,z:CZ,hx:0.5,hz:0.7});
   // ---- inside ----
   I.box(W,0.05,D,WOOD,CX,y0+0.02,CZ);walkPad(CX,CZ,W/2,D/2,0,y0+0.045);for(let x=CX-W/2+0.25;x<CX+W/2;x+=0.25)I.box(0.015,0.01,D,0x6e4a2e,x,y0+0.05,CZ);
