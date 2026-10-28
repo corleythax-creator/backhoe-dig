@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-28T02:26:00Z",
+ "updated": "2026-10-28T03:19:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -72,9 +72,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-27",
-   "dh": 24,
-   "act": 2.5,
-   "versions": 5
+   "dh": 40,
+   "act": 3,
+   "versions": 6
   }
  ],
  "extra": [
@@ -2388,6 +2388,15 @@ window.EFFORT = {
    "tris": 6353012,
    "chars": 1711489,
    "what": "The town's traffic is all new detailed cars — sedans, hatchbacks, wagons, SUVs, minivans, pickups and vans with real wheels and tyres, glass you can see the seats through, lamps and mirrors, each in its own glossy colour — and Main Street's shops have brick, plaster and siding walls with the street trees and lamps no longer poking through the awnings."
+  },
+  {
+   "v": 257,
+   "asked": "2026-10-27T21:35:00-05:00",
+   "live": "2026-10-27T22:19:39-05:00",
+   "dh": 16,
+   "tris": 6398308,
+   "chars": 1742199,
+   "what": "Every shop in town now has a glass storefront onto a furnished, lit room — cafés with tables, stores with stocked shelves, salons, offices, the laundromat — with staff working and customers browsing, queueing and sitting inside; the upper windows show rooms that light up at night; the General Store's glass front looks onto its aisles and checkouts; and the new Lakeside Brewing Co. has a taproom of tanks and a bar plus a big lawn beer garden of picnic tables under string lights, with a fire pit, cornhole and a food truck."
   }
  ]
 };

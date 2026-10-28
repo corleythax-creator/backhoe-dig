@@ -16,12 +16,15 @@ const TF_NEAR=360,TF_BOX=[-180,180,540,760],TF_CARS={sedan:4,hatch:3,wagon:1,suv
 const TF_PAINT=[[0xe9e9e6,0,4],[0xf2f0ea,0,2],[0x101113,0,3],[0xa9adb0,1,3],[0x5a5e62,1,3],[0x2b2e33,1,2],[0x7e1416,1,2],[0x1c335c,1,2],[0x23382d,1,1],[0xb3a284,1,1],[0x6e869b,1,1],[0x8a4a1c,1,1]];
 // [people, cars] for the Townsfolk setting: Off, Few, Some, Busy
 const TF_N=[[0,0],[8,3],[14,5],[24,7]];
+// in the rooms (TF_ROOMS, interiors.js): customers in each shop besides its staff, for the setting; how near the camera
+// must come for a room to fill (it empties again past TF_RFAR); the most drawn in the rooms at once
+const TF_RN=[0,1,2,3],TF_RNEAR=70,TF_RFAR=95,TF_ROOM_CAP=110;
 const tf={q:2,on:false,load:0,bodies:null,chars:null,tex:null,M:null,cars:{},people:[],drive:[],t:0,spawnT:0,o:new THREE.Object3D(),fr:new THREE.Frustum(),fm:new THREE.Matrix4(),v:new THREE.Vector3()};
 function tfGfx(q){tf.q=q??2;if(tf.M)for(const k in tf.M)tf.M[k].m.castShadow=!!gfxCur.pbr}
 // ---------- the walks: sidewalk centre lines, crosswalks (x) and the ways to the store's door ----------
-const MSX=5.3,MCN=646.85,MCS=657.15,TF_DOOR=[0,742.4];
+const MSX=5.3,MCN=646.85,MCS=657.15,TF_DOOR=[0,742.4],TF_GATE=[64,679.5];
 const TF_WALK=[[[-MSX,580],[-MSX,MCN]],[[MSX,580],[MSX,MCN]],[[-MSX,MCS],[-MSX,723]],[[MSX,MCS],[MSX,723]],
-  [[-MSX,MCN],[-127,MCN]],[[MSX,MCN],[127,MCN]],[[-MSX,MCS],[-127,MCS]],[[MSX,MCS],[127,MCS]],
+  [[-MSX,MCN],[-127,MCN]],[[MSX,MCN],[127,MCN]],[[-MSX,MCS],[-127,MCS]],[[MSX,MCS],[64,MCS]],[[64,MCS],[127,MCS]],[[64,MCS],[64,661],TF_GATE],
   {x:1,p:[[-MSX,MCN],[-5,645],[5,645],[MSX,MCN]]},{x:1,p:[[-MSX,MCS],[-5,659],[5,659],[MSX,MCS]]},
   {x:1,p:[[-MSX,MCN],[-7.8,648.3],[-7.8,655.7],[-MSX,MCS]]},{x:1,p:[[MSX,MCN],[7.8,648.3],[7.8,655.7],[MSX,MCS]]},
   [[-MSX,723],[-5.9,727],[-5.9,741.6],TF_DOOR],[[MSX,723],[6,727],[6,741.6],TF_DOOR]].map(e=>{const p=e.p||e,L=[0];
@@ -29,13 +32,13 @@ const TF_WALK=[[[-MSX,580],[-MSX,MCN]],[[MSX,580],[MSX,MCN]],[[-MSX,MCS],[-MSX,7
 // the nodes where walks meet, each with its walks
 const TF_NODES=[];
 for(const e of TF_WALK)for(const end of ['a','b']){const q=end==='a'?e.p[0]:e.p[e.p.length-1];let n=TF_NODES.find(n=>Math.hypot(n.x-q[0],n.z-q[1])<0.05);
-  if(!n)TF_NODES.push(n={x:q[0],z:q[1],e:[],door:Math.hypot(q[0]-TF_DOOR[0],q[1]-TF_DOOR[1])<0.05});n.e.push(e);e[end]=n}
+  if(!n)TF_NODES.push(n={x:q[0],z:q[1],e:[],door:[TF_DOOR,TF_GATE].some(D=>Math.hypot(q[0]-D[0],q[1]-D[1])<0.05)});n.e.push(e);e[end]=n}
 // a point s along a polyline {p, L}: [x, z, dx, dz]
 function tfAt(w,s){const p=w.p,L=w.L;let i=1;while(i<p.length-1&&L[i]<s)i++;const a=p[i-1],b=p[i],d=L[i]-L[i-1]||1,t=Math.min(1,Math.max(0,(s-L[i-1])/d));
   return [a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,(b[0]-a[0])/d,(b[1]-a[1])/d]}
 const tfLine=pts=>{const L=[0];for(let i=1;i<pts.length;i++)L.push(L[i-1]+Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]));return {p:pts,L,len:L[L.length-1]}};
 // how high the surface is above the ground where someone stands: the asphalt, the raised sidewalks and the store's walk
-function tfLift(x,z){if(z>724.5)return z>740.2&&Math.abs(x)<15.5?0.12:0.04;if(x>56&&z<615)return 0.04;
+function tfLift(x,z){if(Math.abs(x-TF_GATE[0])<1.4&&z>658.8&&z<TF_GATE[1]+0.5)return z<661?0.17-(z-658.8)/2.2*0.14:0.03;if(z>724.5)return z>740.2&&Math.abs(x)<15.5?0.12:0.04;if(x>56&&z<615)return 0.04;
   if(Math.abs(x)<MST.x+0.1&&z>556||Math.abs(z-MST.cz)<MST.cw+0.1&&Math.abs(x)>MST.x)return MST.lift;
   if(Math.abs(x)<MST.x+MST.curb+MST.walk+0.2&&z>576||Math.abs(z-MST.cz)<MST.cw+3.5&&Math.abs(x)<128)return MST.top;return 0}
 // ---------- the drives: poses [x, z, heading of travel, flags] joined by smooth curves ----------
@@ -93,6 +96,7 @@ const TF_GLSL=`attribute vec3 aSk;attribute vec4 aWalk;
 mat3 pdRot(float a){float c=cos(a),s=sin(a);return mat3(1.,0.,0.,0.,c,s,0.,-s,c);}
 vec3 pdRx(vec3 q,float a,float y){q.y-=y;q=pdRot(a)*q;q.y+=y;return q;}
 void pdPart(float pP,inout vec3 p,inout vec3 n){pP=floor(pP+0.5);if(pP<0.5)return;float leg=pP<2.5||(pP>4.5&&pP<6.5)?1.:0.,L=mod(pP,2.);
+  if(aWalk.y<-0.5){if(pP>4.5){float k=leg>0.5?1.5:-1.1;p=pdRx(p,k,leg>0.5?0.490:1.100);n=pdRot(k)*n;}float s=leg>0.5?-1.5:-0.22;p=pdRx(p,s,leg>0.5?0.910:1.420);n=pdRot(s)*n;return;}
   float am=abs(aWalk.y),sg=leg>0.5?(L>0.5?1.:-1.):(L>0.5?-1.:1.),sw=sin(aWalk.x)*am*sg,cw=cos(aWalk.x)*sg;
   if(pP>4.5){if(leg>0.5){float k=am*1.5*max(0.,-cw)+am*0.25;p=pdRx(p,k,0.490);n=pdRot(k)*n;}
     else{float e=-0.22-am*0.5*max(0.,-sin(aWalk.x)*sg);p=pdRx(p,e,1.100);n=pdRot(e)*n;}}
@@ -111,7 +115,7 @@ function tfMeshes(){const C=tf.GC.toFixed(1),R=tf.GR.toFixed(1),mat=new THREE.Me
     .replace('#include <begin_vertex>','#include <begin_vertex>\ntransformed=pdP;')
     .replace('#include <uv_vertex>',`#include <uv_vertex>\nvMapUv=(vMapUv+vec2(mod(aWalk.z,${C}),${R}-1.-floor(aWalk.z/${C}+0.01)))/vec2(${C},${R});`)};
   mat.customProgramCacheKey=()=>'townfolk-'+C+'x'+R;
-  const cap=TF_N[3][0]+TF_N[3][1]+4;tf.M={};
+  const cap=TF_N[3][0]+TF_N[3][1]+4+TF_ROOM_CAP;tf.M={};
   for(const k of ['m','f','k']){const b=tf.bodies[k];if(!b)continue;const g=new THREE.BufferGeometry();
     g.setAttribute('position',new THREE.Float32BufferAttribute(b.p,3));g.setAttribute('normal',new THREE.Float32BufferAttribute(Float32Array.from(b.n,v=>v/1000),3));
     g.setAttribute('uv',new THREE.Float32BufferAttribute(Float32Array.from(b.uv,v=>v/65535),2));
@@ -138,7 +142,7 @@ function tfLook(){const C=tf.chars;let best=0,bs=1e9;for(let i=0;i<C.length;i++)
   const c=C[best];tf.use[best]++;return {ci:best,body:c.body,cell:c.cell,sc:c.h/1.75*(0.97+Math.random()*0.06),g:Math.round((c.wx||1)*100)*1000+Math.round((c.wz||1)*100)}}
 function tfPerson(o){const p=Object.assign(tfLook(),{x:0,z:0,y:0,yaw:0,ph:Math.random()*6,amp:0,spd:0,vt:TU.tfWalk*(0.82+Math.random()*0.32),side:0.32,wait:0,inside:0,blk:0,look:0},o);
   p.y=baseHeight(p.x,p.z)+tfLift(p.x,p.z);tf.people.push(p);return p}
-function tfDrop(p){const i=tf.people.indexOf(p);if(i>=0){tf.people.splice(i,1);tf.use[p.ci]--}}
+function tfDrop(p){const i=tf.people.indexOf(p);if(i>=0){tf.people.splice(i,1);tf.use[p.ci]--;if(p.room){p.room.n--;if(p.spot&&p.spot.who===p)p.spot.who=null}}}
 // someone on the walks at a random spot (out of sight unless fill: the walks are empty, as when the town first comes near)
 function tfSpawnWalker(fill){for(let t=0;t<8;t++){const w=TF_WALK[(Math.random()*TF_WALK.length)|0];if(w.x)continue;const s=Math.random()*w.len,[x,z]=tfAt(w,s);
     if(!fill&&tfSeen(x,z,1)&&Math.hypot(x-camera.position.x,z-camera.position.z)<90)continue;
@@ -227,28 +231,50 @@ function tfCarStep(c,dt){const P=c.path;
     else tfCarDrop(c)}
   // a car stuck a long while (blocked in) gives up once nobody is looking
   else if(c.stuck>40&&!tfSeen(c.x,c.z,3))tfCarDrop(c)}
+// ---------- the people in the rooms: staff at their posts, customers browsing, queueing, sitting at tables ----------
+// a room within TF_RNEAR of the camera fills to its staff and customers (its big counts, or TF_RN beside its staff),
+// each on a spot of their own; past TF_RFAR it empties. Now and then a customer goes (when nobody is looking) and
+// someone else comes to another spot; a spot with a path (a waiter, a bartender, a shopper) is walked round and round,
+// along lines clear of the furniture
+function tfRoomsTick(){const cx=camera.position.x,cz=camera.position.z;let n=tf.people.reduce((k,p)=>k+(p.room?1:0),0);
+  for(const R of TF_ROOMS){const d=Math.hypot(R.x-cx,R.z-cz)-R.r;
+    if(d>TF_RFAR){if(R.n)for(const p of tf.people.slice())if(p.room===R)tfDrop(p);continue}
+    if(d>TF_RNEAR&&!R.n)continue;const staff=R.spots.filter(sp=>sp.staff).length,want=Math.min(R.spots.length,staff+(R.big?R.big[tf.q]:TF_RN[tf.q]));
+    while(R.n<want&&n<TF_ROOM_CAP){const free=R.spots.filter(sp=>!sp.who),st=free.filter(sp=>sp.staff),sp=st.length?st[0]:free[(Math.random()*free.length)|0];if(!sp)break;
+      const p=tfPerson({room:R,spot:sp,x:sp.x,z:sp.z,yaw:sp.yaw,sit:sp.sit?1:0,t:6+Math.random()*30,look:0,s:sp.at||0});p.y=sp.path&&R.ground?baseHeight(sp.x,sp.z):sp.y;sp.who=p;R.n++;n++}}}
+function tfRoomStep(p,dt){const sp=p.spot,R=p.room;
+  if(sp.path){// walking the aisles, stopping at a table now and then
+    if(p.wait>0){p.wait-=dt;p.spd=0}else{p.spd+=(p.vt*0.8-p.spd)*Math.min(1,dt*2);p.s=(p.s+p.spd*dt)%sp.path.len;if(Math.random()<dt*0.05)p.wait=2+Math.random()*5}
+    const [x,z,dx,dz]=tfAt(sp.path,p.s);p.x=x;p.z=z;p.y=R.ground?baseHeight(x,z):sp.y;let d=Math.atan2(dx,dz)-p.yaw;d=Math.atan2(Math.sin(d),Math.cos(d));p.yaw+=d*Math.min(1,dt*5);
+    p.amp+=(Math.min(1,p.spd/1.2)*0.42-p.amp)*Math.min(1,dt*6);p.ph+=p.spd*dt*Math.PI*2/(1.5*p.sc);return}
+  p.spd=0;p.amp+=(0-p.amp)*Math.min(1,dt*6);let a=sp.yaw+p.look-p.yaw;a=Math.atan2(Math.sin(a),Math.cos(a));p.yaw+=a*Math.min(1,dt*2.5);
+  p.t-=dt;if(p.t>0)return;p.t=6+Math.random()*25;
+  if(sp.staff||Math.random()<0.45){p.look=sp.sit?0:(Math.random()-0.5)*1.4;return}
+  // done: a customer goes (when nobody is looking) and someone else comes in to another spot
+  if(!tfSeen(p.x,p.z,1.5))tfDrop(p)}
 // ---------- each frame ----------
 function tfTick(dt){if(!tf.q){if(tf.on)tfShow(false);return}
   const cx=camera.position.x,cz=camera.position.z,B=TF_BOX,dd=Math.hypot(Math.max(B[0]-cx,0,cx-B[1]),Math.max(B[2]-cz,0,cz-B[3]));
   if(dd>TF_NEAR){if(tf.on)tfShow(false);return}
   if(!tf.load)tfLoad();if(tf.load!==2)return;
   dt=Math.min(dt,0.1);tf.t+=dt;camera.updateMatrixWorld();tf.fm.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse);tf.fr.setFromProjectionMatrix(tf.fm);
-  const night=typeof dn==='object'?Math.min(1,Math.max(0.3,(dn.el+8)/14)):1,[np,nc]=TF_N[tf.q],wantP=Math.round(np*night),wantC=Math.round(nc*night),walkers=tf.people.filter(p=>!p.car);
+  const night=typeof dn==='object'?Math.min(1,Math.max(0.3,(dn.el+8)/14)):1,[np,nc]=TF_N[tf.q],wantP=Math.round(np*night),wantC=Math.round(nc*night),walkers=tf.people.filter(p=>!p.car&&!p.room);
   if(!tf.on){tfShow(true);while(walkers.length<wantP){const p=tfSpawnWalker(true);if(!p)break;walkers.push(p)}}
   tf.spawnT-=dt;if(tf.spawnT<=0){tf.spawnT=1.5+Math.random()*2;
     if(walkers.length<wantP)tfSpawnWalker(false);
     else if(walkers.length>wantP){const p=walkers.find(p=>p.inside||!tfSeen(p.x,p.z,1));if(p)tfDrop(p)}
     if(tf.drive.reduce((n,c)=>n+(c.st==='park'?0.5:1),0)<wantC&&Object.keys(tf.cars).length>=3&&Math.random()<0.5)tfSpawnCar()}
   for(const c of tf.drive.slice())tfCarStep(c,dt);
-  for(const p of tf.people.slice()){tfWalkStep(p,dt);p.y+=(baseHeight(p.x,p.z)+tfLift(p.x,p.z)-p.y)*Math.min(1,dt*8)}
+  tfRoomsTick();
+  for(const p of tf.people.slice()){if(p.room){tfRoomStep(p,dt);continue}tfWalkStep(p,dt);p.y+=(baseHeight(p.x,p.z)+tfLift(p.x,p.z)-p.y)*Math.min(1,dt*8)}
   if(mode==='walk'&&walker.visible){for(const c of tf.drive)wkPushRound(c,[-c.len*0.3,0,c.len*0.3],c.wid/2);for(const p of tf.people)if(!p.inside)wkPushRound(p,[0],0.22)}
   tfDraw()}
 function tfShow(on){tf.on=on;for(const k in tf.M||{})tf.M[k].m.visible=on;for(const c of tf.drive)c.g.visible=on;
   if(!on){for(const c of tf.drive.slice())tfCarDrop(c);for(const p of tf.people.slice())tfDrop(p)}}
 function tfDraw(){const M=tf.M,o3=tf.o,cx=camera.position.x,cz=camera.position.z;for(const k in M)M[k].n=0;
   for(const p of tf.people){if(p.inside)continue;const B=M[p.body];if(!B||B.n>=B.cap)continue;
-    if((p.x-cx)**2+(p.z-cz)**2>220*220||!tfSeen(p.x,p.z,1.3))continue;
-    o3.position.set(p.x,p.y+Math.abs(Math.cos(p.ph))*0.025*p.amp*p.sc,p.z);o3.rotation.set(0,p.yaw,0);o3.scale.setScalar(p.sc);o3.updateMatrix();
-    const i=B.n++,w=B.walk.array;B.m.setMatrixAt(i,o3.matrix);w[4*i]=p.ph;w[4*i+1]=p.amp;w[4*i+2]=p.cell;w[4*i+3]=p.g}
+    if((p.x-cx)**2+(p.z-cz)**2>(p.room?TF_RFAR*TF_RFAR:220*220)||!tfSeen(p.x,p.z,1.3))continue;
+    o3.position.set(p.x,p.y+(p.sit?-0.42*p.sc:Math.abs(Math.cos(p.ph))*0.025*p.amp*p.sc),p.z);o3.rotation.set(0,p.yaw,0);o3.scale.setScalar(p.sc);o3.updateMatrix();
+    const i=B.n++,w=B.walk.array;B.m.setMatrixAt(i,o3.matrix);w[4*i]=p.ph;w[4*i+1]=p.sit?-1:p.amp;w[4*i+2]=p.cell;w[4*i+3]=p.g}
   for(const k in M){const B=M[k];B.m.count=B.n;B.m.instanceMatrix.needsUpdate=true;B.walk.needsUpdate=true}
   for(const c of tf.drive)c.g.visible=(c.x-cx)**2+(c.z-cz)**2<400*400}
