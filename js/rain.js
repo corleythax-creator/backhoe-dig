@@ -331,7 +331,7 @@ function wetPatch(m){if(m&&!m.userData.wetP&&WET_GLASS.includes(m)){wetGlassPatc
     if(dr){sh.uniforms.uDrops=wetDropU;sh.uniforms.uDropT=wetDropT;f=WET_DROP_GLSL+f;
       sh.vertexShader='varying vec3 vDropP,vDropN;\n'+sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvDropP=transformed*length(modelMatrix[0].xyz);vDropN=objectNormal;')}
     f=f.includes('#include <normal_fragment_maps>')?f.replace('#include <normal_fragment_maps>','#include <normal_fragment_maps>\nfloat wW=uWetAll*clamp(inverseTransformDirection(normal,viewMatrix).y*0.6+0.4,0.0,1.0);diffuseColor.rgb*=1.0-0.32*wW;'+(dr?WET_DROP_FS:''))
-      :f.replace('#include <color_fragment>','#include <color_fragment>\nfloat wW=uWetAll*0.6;diffuseColor.rgb*=1.0-0.32*wW;');
+      :f.replace('#include <color_fragment>','#include <color_fragment>\nfloat wW=uWetAll*0.6;diffuseColor.rgb*=1.0-0.32*wW;'+(dr?'float wD=0.0;':''));
     sh.fragmentShader=f.replace('#include <lights_phong_fragment>','#include <lights_phong_fragment>\nmaterial.specularColor=max(material.specularColor,vec3(0.25*wW));material.specularShininess=mix(material.specularShininess,max(material.specularShininess,80.0),wW);')
       .replace('#include <lights_physical_fragment>','#include <lights_physical_fragment>\nmaterial.roughness=mix(material.roughness,min(material.roughness,0.28),wW);'+(dr?'material.roughness=mix(material.roughness,0.04,wD);':''))};
   m.customProgramCacheKey=()=>key+'|wet'+(drops()?'|drops':'');m.needsUpdate=true}

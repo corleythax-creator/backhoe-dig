@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-25T23:50:00Z",
+ "updated": "2026-10-28T00:24:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -69,6 +69,12 @@ window.EFFORT = {
    "dh": 148.25,
    "act": 8,
    "versions": 27
+  },
+  {
+   "d": "2026-10-27",
+   "dh": 5,
+   "act": 0.5,
+   "versions": 1
   }
  ],
  "extra": [
@@ -2337,6 +2343,15 @@ window.EFFORT = {
    "tris": 5633851,
    "chars": 1703027,
    "what": "The start map now reaches the lakeside town on the mainland, with its own button to start there; the place labels are smaller and flatter."
+  },
+  {
+   "v": 252,
+   "asked": "2026-10-27T19:00:00-05:00",
+   "live": "2026-10-27T19:24:58-05:00",
+   "dh": 5,
+   "tris": 6231714,
+   "chars": 1708202,
+   "what": "Tall grass gone to seed and leafy bushes fill the rough ground of Corley's mesa, thickest toward the rim; they sway, flatten under tracks, mow down and go when dug. Graphics has a new Wild growth setting."
   }
  ]
 };
