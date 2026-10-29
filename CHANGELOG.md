@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Wednesday, October 28, 2026
 
+- **v260** (10:10 PM) The island tour test can be stopped: tap its banner and your game comes back (a graphics sweep ends too).
 - **v259** (9:59 PM) Walk into every shop, the General Store, the brewery and every house: doors open as you come up, furnished rooms (houses get a living room, kitchen and bedroom), and the camera stays in the room with you.
 
 ## Tuesday, October 27, 2026
