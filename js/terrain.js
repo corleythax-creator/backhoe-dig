@@ -430,13 +430,12 @@ const texManager=new THREE.LoadingManager(),texLoader=new THREE.TextureLoader(te
 let texTier=(()=>{let k=null,c=null;try{k=localStorage.getItem('bhd_gfx');c=JSON.parse(localStorage.getItem('bhd_gfxc')||'null')}catch(e){}
   if(c&&['low','med','high'].includes(c.tex))return c.tex;return k==='low'||k==='med'||k==='high'?k:PHONE?'low':'high'})();
 // the pack's grime is centred on mid grey; the machines multiply it straight onto their paint, so it is lifted to
-// near white (mean 0.9) keeping a gentle spread of stains
-function grimeLift(im){try{const c=document.createElement('canvas');c.width=im.width;c.height=im.height;const x2=c.getContext('2d');x2.drawImage(im,0,0);
-  const d=x2.getImageData(0,0,c.width,c.height),p=d.data;for(let i=0;i<p.length;i+=4)for(let q=0;q<3;q++)p[i+q]=Math.min(255,230+(p[i+q]-128)*0.6);
-  x2.putImageData(d,0,0);return c}catch(e){return im}}
+// near white (mean 0.9) keeping a gentle spread of stains: baked into grime_lift.jpg (tools/bake_tex.py), as doing it
+// here held up the start by seconds
+const texFile=n=>n==='grime'?'grime_lift':n;
 // anisotropic filtering (sharper ground at a slant), capped by what the GPU offers; the Graphics setting sets it (texAnisoSet)
 let texAnisoN=Math.min({low:4,med:8,high:16}[texTier],renderer.capabilities.getMaxAnisotropy());
-function loadTex(name){const t=texLoader.load(`textures/ground/${texTier}/${name}.jpg`,name==='grime'?tx=>{tx.image=grimeLift(tx.image);tx.needsUpdate=true}:undefined);
+function loadTex(name){const t=texLoader.load(`textures/ground/${texTier}/${texFile(name)}.jpg`);
   t.wrapS=t.wrapT=THREE.RepeatWrapping;t.anisotropy=texAnisoN;return t}
 const texGrass=loadTex('grass'),texDirt=loadTex('dirt'),texGrime=loadTex('grime');
 // relief of the natural dirt and grass (Material relief, High graphics; made by tools/pbr.py ground): fetched the first
@@ -455,8 +454,8 @@ function macroSet(on){macroU.value=on?TEX_K.macro:0;
 // swaps the three maps to another size's images (the textures stay the same objects, so every material keeps them). The
 // old image stays on screen until the new one has loaded, then the old GPU copy is freed. A quick second change wins
 function texTierSet(k){if(!['low','med','high'].includes(k)||k===texTier)return;texTier=k;
-  for(const [t,n] of [[texGrass,'grass'],[texDirt,'dirt'],[texGrime,'grime']])new THREE.ImageLoader().load(`textures/ground/${k}/${n}.jpg`,im=>{
-    if(k!==texTier)return;t.dispose();t.image=n==='grime'?grimeLift(im):im;t.needsUpdate=true})}
+  for(const [t,n] of [[texGrass,'grass'],[texDirt,'dirt'],[texGrime,'grime']])new THREE.ImageLoader().load(`textures/ground/${k}/${texFile(n)}.jpg`,im=>{
+    if(k!==texTier)return;t.dispose();t.image=im;t.needsUpdate=true})}
 // texture repeats per metre (grass, dirt) and how strongly the macro map (one tile per 40 m) lightens and darkens
 const TEX_K={grass:0.22,dirt:0.45,macro:1.5};
 // texMixU gates the extras (cut-face detail, material library, machine grime); texBaseU is the plain grass and dirt

@@ -370,25 +370,19 @@ function updateTruck(dt,thr,steerIn,bedIn){
       if(tr.jolt){dirtThud(tr.pourP,0.4+fell);if(onGround)shakeClods(tr.pourP.x,tr.pourP.z,fell);bedG.localToWorld(tv.set(0,0.4,0.2));for(let n=0;n<Math.ceil(fell*60);n++)spawn(tv,1.2)}}}
   if(tr.load<TU.trCap*0.95)tr.fullWarned=false;
 }
-// a grey copy of a texture (mean 0.8, or mean) so what wears it keeps its own colour: the dirt for the bucket load and
-// truck heap, which take any soil colour, and library textures for the blocks and boulders
-function greyDetail(t,mean){try{const im=t.image,c=document.createElement('canvas');c.width=im.width;c.height=im.height;
-  const x2=c.getContext('2d');x2.drawImage(im,0,0);const d=x2.getImageData(0,0,c.width,c.height),p=d.data;let sum=0;
-  for(let i=0;i<p.length;i+=4)sum+=p[i]*0.3+p[i+1]*0.59+p[i+2]*0.11;const k=(mean||0.8)*255/(sum/(p.length/4));
-  for(let i=0;i<p.length;i+=4){const l=Math.min(255,(p[i]*0.3+p[i+1]*0.59+p[i+2]*0.11)*k);p[i]=p[i+1]=p[i+2]=l}
-  x2.putImageData(d,0,0);const g=new THREE.CanvasTexture(c);g.wrapS=g.wrapT=THREE.RepeatWrapping;return g}catch(e){return null}}
 function tintLoad(mat,c){const k=mat.map?1.25:1;mat.color.setRGB(Math.min(1,c[0]*k),Math.min(1,c[1]*k),Math.min(1,c[2]*k))}
 // called by main.js once every script has loaded (the images can finish before the later scripts arrive)
 function applyTextures(){
   texOn=true;texMixU.value=gfxDetail;texBaseU.value=gfxBase;
   for(const mt of [ORANGE,ORANGE_D,STEEL,STEEL_L,RUBBER,WHITE,WHITE_DS,BEDM,BED_D]){mt.map=texGrime;mt.needsUpdate=true}
-  const grey=greyDetail(texDirt);heap.material.map=grey;heap.material.needsUpdate=true;
+  // (grey copies baked by tools/bake_tex.py: greying a big picture at load held up the start by seconds)
+  const grey=new THREE.TextureLoader().load(`textures/ground/${texTier}/dirt_grey.jpg`);grey.wrapS=grey.wrapT=THREE.RepeatWrapping;heap.material.map=grey;heap.material.needsUpdate=true;
   ORANGE.color.setHex(0xf27a22);ORANGE_D.color.setHex(0xc85e1c);
   loadMesh.material.map=grey;loadMesh.material.needsUpdate=true;if(typeof hvs!=='undefined')for(const h of hvs)if(h.hheap){h.hheap.material.map=grey;h.hheap.material.needsUpdate=true}
   pMat.map=texDirt;pMat.color.setHex(0xc26330);pMat.needsUpdate=true;
   matTexUpdate();
   // concrete blocks wear the poured concrete texture and boulders the bedrock (materials.js), brightened back to their colours
-  const lib=(id,mean,mt)=>new THREE.TextureLoader().load(`textures/${id}.jpg`,t=>{const g=greyDetail(t,mean);if(!g)return;
+  const lib=(id,mean,mt)=>new THREE.TextureLoader().load(`textures/${id}_grey.jpg`,g=>{g.wrapS=g.wrapT=THREE.RepeatWrapping;
     g.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());mt.map=g;mt.color.setScalar(1/mean);mt.needsUpdate=true});
   lib('concrete',0.85,blkMesh.material);lib('granite',0.8,assetIMs.rock[0].material);
 }

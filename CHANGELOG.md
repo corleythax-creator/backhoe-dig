@@ -2,6 +2,10 @@
 
 Every version of Corley's Island, newest first, grouped by the day it went live (Central time). Made from `data/effort.js` by `tools/changelog.py`; don't edit it by hand. [Play any old version](https://corleys-island.vercel.app/versions/) · [Build log with charts](https://corleys-island.vercel.app/build.html)
 
+## Thursday, October 29, 2026
+
+- **v261** (6:21 PM) Faster loading, and a new start screen: a big map of the islands and town, tap where you want to start. No more machine tiles or test buttons on it (tests are in ☰ Tools).
+
 ## Wednesday, October 28, 2026
 
 - **v260** (10:10 PM) The island tour test can be stopped: tap its banner and your game comes back (a graphics sweep ends too).
