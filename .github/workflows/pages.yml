@@ -1,0 +1,41 @@
+# Corley's Island: hosts the old-versions page on GitHub Pages (Vercel doesn't carry versions/, see .vercelignore).
+# Only v1 and the newest snapshot are published (Pages sites are limited to about 1 GB); list.js is trimmed to match.
+# Site: https://corleythax-creator.github.io/backhoe-dig/versions/
+# One-time setup: repo Settings > Pages > Source: GitHub Actions.
+name: pages
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+    paths: ['versions/**', 'data/effort.js', '.github/workflows/pages.yml']
+concurrency: { group: pages, cancel-in-progress: true }
+permissions: { contents: read, pages: write, id-token: write }
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    environment: { name: github-pages, url: '${{ steps.deploy.outputs.page_url }}' }
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: |
+            data/effort.js
+            versions/index.html
+            versions/list.js
+            versions/v1
+          sparse-checkout-cone-mode: false
+      - name: Add the newest snapshot and trim the list
+        run: |
+          NEWEST=$(node -e "global.window={};require('./versions/list.js');console.log(Math.max(...Object.keys(window.SNAPSHOTS).map(Number)))")
+          echo "newest snapshot: v$NEWEST"
+          git sparse-checkout add "versions/v$NEWEST"
+          mkdir -p _site/data _site/versions
+          cp data/effort.js _site/data/
+          cp versions/index.html _site/versions/
+          cp -r versions/v1 "versions/v$NEWEST" _site/versions/
+          node -e "global.window={};require('./versions/list.js');const s=window.SNAPSHOTS,o={};for(const k of ['1','$NEWEST'])if(k in s)o[k]=s[k];require('fs').writeFileSync('_site/versions/list.js','// Trimmed by .github/workflows/pages.yml: v1 and the newest snapshot only.\nwindow.SNAPSHOTS = '+JSON.stringify(o)+';\n')"
+          cat _site/versions/list.js
+      - uses: actions/upload-pages-artifact@v3
+        with: { path: _site }
+      - id: deploy
+        uses: actions/deploy-pages@v4
