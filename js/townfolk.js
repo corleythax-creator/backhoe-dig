@@ -138,8 +138,10 @@ function tfCarPaint(u){const W=TF_PAINT.reduce((n,p)=>n+p[2],0);let r=(u??Math.r
   const o={color:p[0],metalness:p[1]?0.55:0.05,roughness:p[1]?0.32:0.28,envMap:skyEnv,envMapIntensity:1.1};
   return tf.paint[k]=gfxCur.pbr?new THREE.MeshPhysicalMaterial(Object.assign(o,{clearcoat:1,clearcoatRoughness:0.08})):new THREE.MeshStandardMaterial(o)}
 // ---------- people ----------
-// a person's look: the character least seen in town just now (children a third as often), a little taller or shorter
-function tfLook(){const C=tf.chars;let best=0,bs=1e9;for(let i=0;i<C.length;i++){const sc=tf.use[i]*(C[i].body==='k'?3:1)+Math.random()*0.9;if(sc<bs){bs=sc;best=i}}
+// a person's look: the character least seen in town just now (children a third as often), a little taller or shorter;
+// never one the owner left out (TU.tfOut, a bit per character), unless every one is
+function tfOff(i){const m=TU.tfOut||0;return i<32&&Math.floor(m/2**i)%2===1}
+function tfLook(){const C=tf.chars,all=C.every((c,i)=>tfOff(i));let best=0,bs=1e9;for(let i=0;i<C.length;i++){if(!all&&tfOff(i))continue;const sc=tf.use[i]*(C[i].body==='k'?3:1)+Math.random()*0.9;if(sc<bs){bs=sc;best=i}}
   const c=C[best];tf.use[best]++;return {ci:best,body:c.body,cell:c.cell,sc:c.h/1.75*(0.97+Math.random()*0.06),g:Math.round((c.wx||1)*100)*1000+Math.round((c.wz||1)*100)}}
 function tfPerson(o){const p=Object.assign(tfLook(),{x:0,z:0,y:0,yaw:0,ph:Math.random()*6,amp:0,spd:0,vt:TU.tfWalk*(0.82+Math.random()*0.32),side:0.32,wait:0,inside:0,blk:0,look:0},o);
   p.y=baseHeight(p.x,p.z)+tfLift(p.x,p.z);tf.people.push(p);return p}
