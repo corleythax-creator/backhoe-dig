@@ -105,6 +105,8 @@ const TUNE=[
   ['caveDepth','Cave-ins','Walls start to cave in deeper than',1.2,'ft',1,30,0.5],['caveSpoil','Cave-ins','Spoil this close to the edge loads the wall',0.64,'ft',0,10,0.5],
   // the townsfolk (townfolk.js): how fast the town's cars drive its streets and its people walk
   ['tfCarV','Town','Town traffic speed',11.2,'mph',5,45,1],['tfWalk','Town','Townsfolk walking pace',1.3,'mph',1,5,0.1],
+  // indoors (interiors.js): how the eye adjusts in a shop or house, and its room light (Medium graphics and up)
+  ['inAdapt','Town','Indoors, the view brightens by',0.9,'pct',0,300,5],['inLamp','Town','Indoors, the room light',1.6,'n',0,6,0.1],
   ['craneSpan','Bridges','The crane builds a steel span in about',240,'min',1,60,1],
   ['caveRate','Cave-ins','How fast a bad wall gives way (0% = never)',1,'pct',0,500,5],['caveWarn','Cave-ins','Dirt trickles off the lip for',2.2,'s',0,20,0.5],
   // only drawn on High graphics (Graphics → Material relief); how the ground looks, not what it does, so every device may use the same numbers

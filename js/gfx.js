@@ -65,7 +65,7 @@ function gfxApply(){const g=gfxCur=Object.assign({},GFX[gfxKey],gfxOver);
   const tm=g.filmic?THREE.ACESFilmicToneMapping:THREE.LinearToneMapping,te=(g.filmic?0.8:0.75)*g.exp;
   if(renderer.shadowMap.type!==st||renderer.toneMapping!==tm){renderer.shadowMap.type=st;renderer.toneMapping=tm;
     scene.traverse(o=>{if(o.material)for(const m of [].concat(o.material))m.needsUpdate=true})}
-  renderer.toneMappingExposure=te;
+  rmExp0=te;renderer.toneMappingExposure=te*rmAdapt;
   // ground detail: the cut-face detail, material library and machine grime (detail), and the grass and dirt textures (base)
   gfxDetail=g.detail;gfxBase=g.base;matU.texPbr.value=g.pbr?1:0;treePbr(g.pbr);shopPbr(g.pbr);
   // trees drawn with the full model out to this distance, the light one beyond (trees.js)

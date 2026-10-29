@@ -278,6 +278,8 @@ function frame(now){
     if(firstCam)camLk.copy(look);else camLk.lerp(look,1-Math.exp(-dt*14));
     camT.set(camLk.x+Math.sin(yw)*Math.cos(op)*cd,camLk.y+Math.sin(op)*cd,camLk.z+Math.cos(yw)*Math.cos(op)*cd);
     camT.y=Math.max(camT.y,surfAt(camT.x,camT.z)+1.2,WATER+0.9);
+    // on foot in a shop or a house the camera stays in the room (interiors.js)
+    if(mode==='walk')rmCamClip(camLk,camT);
     if(firstCam){camera.position.copy(camT);firstCam=false}else camera.position.lerp(camT,1-Math.exp(-dt*25));
     camera.lookAt(camLk);
   }else{

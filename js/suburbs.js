@@ -51,21 +51,23 @@ const SUB_SIDING=['sidingW','sidingG','sidingB','sidingR','sidingW','sidingG'],S
 function subHouse(K,x,z,f,kind,u){const W=kind==='ranch'?13:kind==='cape'?9.6:10.4,D=kind==='ranch'?8.6:8.2,n=kind==='col'?2:1,Hs=2.8,Rr=kind==='cape'?3.6:kind==='ranch'?1.7:2.4;
   const yF=rmGroundMax(x,z,f,W+1,D+1)+0.45,R=rmKit(K,x,z,yF,f),sf=Math.sin(f),cf=Math.cos(f),wl=SUB_SIDING[Math.floor(u*97)%SUB_SIDING.length],
     WH=0xf4f3ef,door=SUB_DOOR[Math.floor(u*53)%SUB_DOOR.length],shut=SUB_SHUT[Math.floor(u*31)%SUB_SHUT.length],roof=u>0.5?'shingles':'roofG',HT=Hs*n;
-  // foundation, walls, corner boards, the band between floors
-  R.box(W+0.08,1.4,D+0.08,'concOld',0,0,-1.4);R.box(W,HT,D,wl,0,0,0);
+  // foundation, corner boards, the band between floors (the walls go up once the windows and door are known)
+  R.box(W+0.08,1.4,D+0.08,'concOld',0,0,-1.4);if(n>1)R.box(W,HT-Hs,D,wl,0,0,Hs);
   for(const o of [-1,1])for(const s of [-1,1])R.box(0.14,HT,0.14,WH,o*(D/2+0.01),s*(W/2+0.01),0);if(n>1)R.box(W+0.06,0.12,D+0.06,WH,0,0,Hs);
   // the gable roof, its ridge along the street; fascia boards; a brick chimney at one end
   {const P=R.P(0,0);K.geo(famGable(D,Rr,W),wl,P[0],yF+HT,P[1],f);const hd=D/2+0.4,a=Math.atan2(Rr,D/2),L=hd/Math.cos(a);
     for(const t of [-1,1]){const [px,pz]=R.P(t*hd/2,0);K.box(W+0.7,0.14,L,roof,px,yF+HT+Rr-(hd/2)*Math.tan(a)+0.07,pz,f,t*a);const [bx,bz]=R.P(t*(hd-0.02),0);K.box(W+0.7,0.2,0.05,WH,bx,yF+HT+Rr-hd*Math.tan(a)-0.02,bz,f)}
     const [rx,rz]=R.P(0,0);K.box(W+0.72,0.12,0.24,0x3a3a38,rx,yF+HT+Rr+0.1,rz,f);
     const cs=(u>0.3?1:-1)*(W/2-0.75);R.box(0.85,HT+Rr+1.4,0.75,'brick',-D*0.12,cs,-0.3);R.box(1.0,0.12,0.9,0x6b6a64,-D*0.12,cs,HT+Rr+1.1)}
-  // windows: a pane onto a lit room, its glass, white casing and sill, shutters
-  const win=(o,s,y,yaw,w,h,sh)=>{const [px,pz]=R.P(o,s),fx=Math.sin(yaw),fz=Math.cos(yaw),rx=Math.cos(yaw),rz=-Math.sin(yaw);
-    rmWinAdd(px+fx*0.012,yF+y,pz+fz*0.012,yaw,w,h);K.box(w,h,0.02,'glass',px+fx*0.04,yF+y,pz+fz*0.04,yaw);
+  // windows: its glass, white casing and sill, shutters; upstairs and in the garage a pane onto a lit room, downstairs a
+  // hole in the wall onto the real one (holes: front and each side's, for the walls)
+  const holes={f:[],[-1]:[],[1]:[]},S1=kind==='ranch'?W/2-4.05:W/2;
+  const win=(o,s,y,yaw,w,h,sh,hole)=>{const [px,pz]=R.P(o,s),fx=Math.sin(yaw),fz=Math.cos(yaw),rx=Math.cos(yaw),rz=-Math.sin(yaw);
+    if(hole&&y<Hs)hole.push({m:hole===holes.f?s:o,w,y0:y-h/2,y1:y+h/2});else rmWinAdd(px+fx*0.012,yF+y,pz+fz*0.012,yaw,w,h);K.box(w,h,0.02,'glass',px+fx*0.04,yF+y,pz+fz*0.04,yaw);
     for(const t of [-1,1]){K.box(0.09,h+0.18,0.08,WH,px+fx*0.05+rx*t*(w/2+0.045),yF+y,pz+fz*0.05+rz*t*(w/2+0.045),yaw);K.box(w+0.18,0.09,0.08,WH,px+fx*0.05,yF+y+t*(h/2+0.045),pz+fz*0.05,yaw)}
     K.box(0.04,h,0.05,WH,px+fx*0.05,yF+y,pz+fz*0.05,yaw);K.box(w,0.04,0.05,WH,px+fx*0.05,yF+y+h*0.08,pz+fz*0.05,yaw);
     if(sh)for(const t of [-1,1])K.box(w*0.5,h+0.1,0.05,shut,px+fx*0.04+rx*t*(w*0.75+0.12),yF+y,pz+fz*0.04+rz*t*(w*0.75+0.12),yaw)};
-  const front=(s,y,w,h)=>win(D/2,s,y,f,w,h,1),side=(t,o,y)=>win(o,t*W/2,y,f+t*Math.PI/2,0.9,1.3,0);
+  const front=(s,y,w,h)=>win(D/2,s,y,f,w,h,1,holes.f),side=(t,o,y)=>win(o,t*W/2,y,f+t*Math.PI/2,0.9,1.3,0,t>0&&kind==='ranch'?null:holes[t]);
   const ds=kind==='ranch'?-W/2+3.4:0,gs=W/2-2.1;
   if(kind==='col'){for(const s of [-3.3,-1.9,1.9,3.3])front(s,1.45,0.9,1.45);for(const s of [-3.6,-1.8,0,1.8,3.6])front(s,Hs+1.45,0.9,1.35)}
   else if(kind==='cape'){for(const s of [-2.8,-1.6,1.6,2.8])front(s,1.45,0.9,1.4);
@@ -78,8 +80,17 @@ function subHouse(K,x,z,f,kind,u){const W=kind==='ranch'?13:kind==='cape'?9.6:10
     for(const t of [-1,1]){const [lx,lz]=R.P(D/2+0.06,gs+t*2.1);K.lit(new THREE.BoxGeometry(0.12,0.22,0.1),0xffe2a8,lx,yF+2.2,lz,f)}}
   for(const t of [-1,1])for(const o of [-D/4,D/4])side(t,o,1.45);if(n>1)for(const t of [-1,1])side(t,0,Hs+1.45);if(kind==='cape')for(const t of [-1,1])side(t,0,HT+1.3);
   // the door with its casing and a lamp; a porch (col) or a stoop, and the steps down to the walk
-  {const [dx,dz]=R.P(D/2+0.03,ds);K.box(1.0,2.1,0.06,door,dx,yF+1.05,dz,f);const [kx,kz]=R.P(D/2+0.08,ds+0.35);K.box(0.05,0.05,0.06,0xc9a64a,kx,yF+1.0,kz,f);
-    for(const t of [-1,1]){const [cx,cz]=R.P(D/2+0.05,ds+t*0.6);K.box(0.12,2.25,0.08,WH,cx,yF+1.12,cz,f)}const [hx,hz]=R.P(D/2+0.05,ds);K.box(1.34,0.14,0.1,WH,hx,yF+2.2,hz,f);
+  // the walls: siding outside, paint inside, holes for the windows and the front door (it swings in as the worker comes
+  // up: rmDoor, interiors.js); a ranch's garage stays a solid block at its end. Inside, its rooms (rmHome)
+  {const T=0.18,inn=[0xeee7da,0xe3e8e4,0xefe4d6,0xe6e4ee,0xf2efe6][Math.floor(u*41)%5];
+    rmWall(R,'s',D/2,-1,-W/2,S1,T,Hs,wl,inn,[...holes.f,{m:ds,w:1.04,y0:0,y1:2.12}]);rmWall(R,'s',-D/2,1,-W/2,S1,T,Hs,wl,inn,[]);
+    rmWall(R,'o',-W/2,1,-D/2+T,D/2-T,T,Hs,wl,inn,holes[-1]);
+    if(S1<W/2){R.box(W/2-S1,HT,D,wl,0,(S1+W/2)/2,0);R.solid(0,(S1+W/2)/2,W/2-S1,D);rmWall(R,'o',S1,-1,-D/2+T,D/2-T,0.04,Hs,inn,inn,[])}
+    else rmWall(R,'o',W/2,-1,-D/2+T,D/2-T,T,Hs,wl,inn,holes[1]);
+    const sa=-W/2+T,sb=S1-(S1<W/2?0.04:T),[px,pz]=R.P(0,(sa+sb)/2),cs=(u>0.3?1:-1)*(W/2-0.75);R.solid(-D*0.12,cs,0.85,0.75);
+    walkPad(px,pz,(sb-sa)/2,D/2-T,f,yF+0.03);rmHome(R,{s0:sa,s1:sb,o0:-D/2+T,o1:D/2-T,H:Hs,cs,co:-D*0.12,stairs:n>1,u,inn});
+    {const c=Math.abs(cf),s=Math.abs(sf);SOLIDS.push({x,z,hx:(c*W+s*D)/2+0.05,hz:(s*W+c*D)/2+0.05,foot:1})}const [hx,hz]=R.P(D/2-0.06,ds-0.5);rmDoor('house'+door,hx,yF+0.03,hz,f,1.0);if(R.spots.length)rmAdd(R,Math.max(W,D)/2)}
+  {    for(const t of [-1,1]){const [cx,cz]=R.P(D/2+0.05,ds+t*0.6);K.box(0.12,2.25,0.08,WH,cx,yF+1.12,cz,f)}const [hx,hz]=R.P(D/2+0.05,ds);K.box(1.34,0.14,0.1,WH,hx,yF+2.2,hz,f);
     const [lx,lz]=R.P(D/2+0.1,ds+0.85);K.lit(new THREE.BoxGeometry(0.14,0.24,0.12),0xffe2a8,lx,yF+1.8,lz,f)}
   const pw=kind==='col'?W-1.6:2.2,pd=kind==='col'?2.2:1.4,po=D/2+pd/2;
   R.box(pw,0.16,pd,'deckG',po,ds,-0.16);{const [px,pz]=R.P(po,ds);walkPad(px,pz,Math.abs(cf)*pw/2+Math.abs(sf)*pd/2,Math.abs(sf)*pw/2+Math.abs(cf)*pd/2,0,yF)}
@@ -93,8 +104,6 @@ function subHouse(K,x,z,f,kind,u){const W=kind==='ranch'?13:kind==='cape'?9.6:10
   // shrubs along the front, clear of the steps and the porch
   for(const s of [-W/2+0.6,-W/2+1.5,W/2-1.5,W/2-0.6]){if(kind==='col'&&Math.abs(s)<pw/2+0.3||kind==='ranch'&&Math.abs(s-gs)<2.1||Math.abs(s-ds)<1.3)continue;
     const [bx,bz]=R.P(D/2+(kind==='col'?pd+0.6:0.55),s),r=0.45+0.15*((s*7+u*10)%1+1)%1;K.geo(new THREE.IcosahedronGeometry(r,1),[0x2f5a2a,0x3d6b2f,0x4a7a36][Math.floor(u*7+s)&1?1:2],bx,baseHeight(bx,bz)+r*0.75,bz)}
-  // solid: the house (and the porch's posts above)
-  {const c=Math.abs(cf),s=Math.abs(sf);SOLIDS.push({x,z,hx:(c*W+s*D)/2+0.05,hz:(s*W+c*D)/2+0.05})}
   return {W,D,ds,gs,kind,yF,pd}}
 // ---------- lots along every street ----------
 function subLots(){const H=famKit(),FN=famKit(),trees=[],conc=shopLib('concrete'),R=SUB.RW/2,PL=R+SUB.GS+SUB.SW;let k=0;
