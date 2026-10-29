@@ -211,7 +211,7 @@ function setMode(m){if(m===mode)return;
   $('#walkBtns').hidden=m!=='walk';if(m!=='walk'){setSprint(false);trimSet(false)}
   // switching to Walk from a machine you climbed into sets you down beside it
   if(m==='walk'){wk.inside=null;wk.view=wk.yaw}
-  setCaps();markTile();firstCam=true;fpReset();if(m==='mow'&&!lawn.startT&&!lawn.done)toast(say(kbUsed?'mowKb':'mowTouch'),'tip',3800);
+  setCaps();firstCam=true;fpReset();if(m==='mow'&&!lawn.startT&&!lawn.done)toast(say(kbUsed?'mowKb':'mowTouch'),'tip',3800);
   if(m==='skid')toast(say(kbUsed?'skidKb':'skidTouch'),'tip',4200);
   if(m==='boat')toast(say('boatTip'),'tip',4200);
   if(m==='bike')toast(say('bikeTip'),'tip',4200);
@@ -277,46 +277,29 @@ turnSl.oninput=()=>{setTurnSens(turnSl.value);try{localStorage.setItem('bhd_turn
 turnSl.onchange=()=>turnSl.blur();
 const statusEl=$('#status');try{statusEl.classList.toggle('min',localStorage.getItem('bhd_hudmin')==='1')}catch(e){}
 statusEl.onclick=()=>{const m=statusEl.classList.toggle('min');try{localStorage.setItem('bhd_hudmin',m?'1':'0')}catch(e){}};
-// the start card: tap a machine (or On foot) to start in that mode; tapping outside the card keeps the current one
+// the start screen (#help): the map of the islands and the town, drawn live; tap anywhere on land to start there on
+// foot (tpGo, maps.js: the nearest spot with room), or Carry on where I was. The machines stay where they were parked
+// (walk up to one and Get in). The tests are in ☰ Tools only, so a stray tap can't start one
 function startIn(m){setMode(m);help.hidden=true;try{localStorage.setItem('bhd_seen','1')}catch(e){}}
-// the island to start on (remembered): Corley's leaves you where you are; the lakeside town on the mainland, the Family Island, Dexter's or Jessica's takes you there in what
-// you picked (startOn, maps.js)
-let startIsl='corley';try{const v=localStorage.getItem('bhd_startIsl');if(v==='dexter'||v==='jessica'||v==='family'||v==='town')startIsl=v}catch(e){}
-const islBtns=[...document.querySelectorAll('#startIsl [data-isl]')];
-function markIsl(){for(const b of islBtns)b.setAttribute('aria-pressed',b.dataset.isl===startIsl)}
-for(const b of islBtns)b.onclick=()=>{startIsl=b.dataset.isl;try{localStorage.setItem('bhd_startIsl',startIsl)}catch(e){}markIsl();showTiles();islStep(true)};
-// the start card opens on a map of the islands (the minimap's drawing, kept up to date while it shows: where the
-// machines are, the editor's ground); each island's button sits on it. Tapping one shows that island's machines, and
-// ‹ Map goes back. ISL_PIN: where each button sits on the map (metres), ISL_BOX the part of the world it shows
-const ISL_BOX=[-360,360,-115,800],ISL_PIN={corley:[0,100],family:[0,245],dexter:[-200,305],jessica:[200,305],town:[0,700]};
-for(const b of islBtns){const p=ISL_PIN[b.dataset.isl];b.style.left=(p[0]-ISL_BOX[0])/(ISL_BOX[1]-ISL_BOX[0])*100+'%';b.style.top=(p[1]-ISL_BOX[2])/(ISL_BOX[3]-ISL_BOX[2])*100+'%'}
-function islStep(pick){$('#startMap').hidden=pick;$('#islHead').hidden=!pick;$('#pickAll').hidden=!pick;
-  if(pick)$('#islName').textContent=(islBtns.find(b=>b.dataset.isl===startIsl)||islBtns[0]).textContent;else islMapDraw()}
+// the part of the world the map shows (metres), fitted whole into the canvas, and where each place's name sits on it
+const ISL_BOX=[-250,250,-60,770],ISL_PIN={corley:[0,95],family:[0,212],dexter:[-200,292],jessica:[200,292],town:[0,735]};
+function islMapView(){const cv=$('#startMapCv'),w=cv.clientWidth||1,h=cv.clientHeight||1;
+  return {cx:(ISL_BOX[0]+ISL_BOX[1])/2,cz:(ISL_BOX[2]+ISL_BOX[3])/2,mpp:Math.max((ISL_BOX[1]-ISL_BOX[0])/w,(ISL_BOX[3]-ISL_BOX[2])/h),w,h}}
+const startReady=()=>typeof tpGo==='function'&&typeof warmIdle==='function';
 let islMapT=0;
-function islMapDraw(){clearTimeout(islMapT);const cv=$('#startMapCv');if(help.hidden||$('#startMap').hidden)return;
-  if(typeof drawMap==='function'&&cv.clientWidth){const cx=(ISL_BOX[0]+ISL_BOX[1])/2,cz=(ISL_BOX[2]+ISL_BOX[3])/2;
-    if(mapTilesDone()<MPT_NX*MPT_NZ)mapBuild(40,cx,cz);drawMap(cv,cx,cz,(ISL_BOX[1]-ISL_BOX[0])/cv.clientWidth,false)}
-  islMapT=setTimeout(islMapDraw,typeof mapTilesDone!=='function'||mapTilesDone()<MPT_NX*MPT_NZ?250:500)}
-$('#islBack').onclick=()=>islStep(false);$('#helpBtn').addEventListener('click',()=>islStep(false));
-// each tile is a ride (a WK_RIDES key, or 'foot'); a kind there are several of (data-k 'boat', or 'hv:dozer' and the
-// like for the heavy machines on Corley's and Dexter's) means the one nearest the island picked
-const tiles=[...document.querySelectorAll('.tile')];
-const rideKind=k=>!k?'':k.startsWith('boat')?'boat':/^hv\d/.test(k)?'hv:'+hvs[+k.slice(2)].k:k;
-function tileRide(t){const k=t.dataset.k;if(!k)return t.dataset.m==='walk'?'foot':rideOf(t.dataset.m);
-  const [x,z]=START_ISL[startIsl]||[0,0];let best=null,bd=1e9;
-  for(const r in WK_RIDES)if(rideKind(r)===k){const o=WK_RIDES[r].o,d=Math.hypot(o.x-x,o.z-z);if(d<bd){bd=d;best=r}}
-  return best}
-for(const t of tiles)t.onclick=()=>{const k=tileRide(t);if(!k)return;
-  if(k==='foot')startIn('walk');else{const R=WK_RIDES[k];wk.inside=k;walker.visible=false;if(R.pick)R.pick();firstCam=true;startIn(R.m)}
-  if(startIsl!=='corley')startOn(startIsl,k)};
-// Jessica's Island is reached on foot over the covered bridge, so it only offers the small rides (by data-k, or data-m);
-// a tile with data-only shows on that island alone (her golf cart)
-const ISL_TILES={jessica:['walk','mow','hv:atv','bike','boat','hv:kart','hv:golf']};
-function showTiles(){const L=ISL_TILES[startIsl];for(const t of tiles)t.hidden=!!L&&!L.includes(t.dataset.k||t.dataset.m)||!!t.dataset.only&&t.dataset.only!==startIsl}
-markIsl();showTiles();islStep(false);
-function markTile(){const r=mode==='walk'?'foot':rideKind(wk.inside||rideOf(mode));
-  for(const t of tiles)t.setAttribute('aria-pressed',(t.dataset.k||(t.dataset.m==='walk'?'foot':rideOf(t.dataset.m)))===r)}
-markTile();
+function islMapDraw(){clearTimeout(islMapT);if(help.hidden)return;const cv=$('#startMapCv'),V=islMapView(),ok=startReady();
+  if(typeof drawMap==='function'&&cv.clientWidth){if(mapTilesDone()<MPT_NX*MPT_NZ)mapBuild(40,V.cx,V.cz);drawMap(cv,V.cx,V.cz,V.mpp,false)}
+  for(const e of document.querySelectorAll('#startIsl [data-isl]')){const [x,z]=ISL_PIN[e.dataset.isl];const hw=e.offsetWidth/2+4;e.style.left=clamp((x-V.cx)/V.mpp+V.w/2,hw,Math.max(hw,V.w-hw))+'px';e.style.top=((z-V.cz)/V.mpp+V.h/2)+'px'}
+  const t=ok?'Tap the map where you want to start':'Loading the island…';if($('#startMapHint').textContent!==t)$('#startMapHint').textContent=t;
+  $('#startMap').classList.toggle('ready',ok);
+  islMapT=setTimeout(islMapDraw,typeof mapTilesDone!=='function'||mapTilesDone()<MPT_NX*MPT_NZ||!ok?250:500)}
+$('#startMapCv').addEventListener('click',e=>{if(!startReady())return;const r=e.currentTarget.getBoundingClientRect(),V=islMapView(),
+    x=V.cx+(e.clientX-r.left-V.w/2)*V.mpp,z=V.cz+(e.clientY-r.top-V.h/2)*V.mpp;
+  if(!landIn(x,z,0,0,true)&&!tpSpot('foot',x,z)){toast(say('tpLake'),'bad');return}
+  tpPick={x,z};tpGo('foot',true);tpSet(null);startIn('walk');toast(say('startIsl',{island:mapPlace(x,z),how:'on foot'}),'good',2600)});
+$('#startResume').onclick=()=>startIn(mode);
+$('#helpBtn').addEventListener('click',()=>islMapDraw());addEventListener('resize',()=>islMapDraw());
+islMapDraw();
 help.addEventListener('click',e=>{if(e.target===help)startIn(mode)});
 $('#ctrlBtn').onclick=()=>{const b=$('#ctrlBtn'),box=$('#ctrlBox'),on=box.hidden;box.hidden=!on;b.setAttribute('aria-expanded',on);b.textContent=on?'Hide controls':'Controls';if(on)box.scrollIntoView({block:'start',behavior:'smooth'})};
 function started(){if(!st.startT)st.startT=performance.now()}
