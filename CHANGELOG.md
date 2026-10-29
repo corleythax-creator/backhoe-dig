@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Thursday, October 29, 2026
 
+- **v262** (6:23 PM) Townsfolk page: every pedestrian in 3D against a height chart, switch characters out of town (published live), photo prompts to rebuild them photoreal
 - **v261** (6:21 PM) Faster loading, and a new start screen: a big map of the islands and town, tap where you want to start. No more machine tiles or test buttons on it (tests are in ☰ Tools).
 
 ## Wednesday, October 28, 2026
