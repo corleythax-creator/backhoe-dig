@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-28T04:13:00Z",
+ "updated": "2026-10-29T02:59:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -75,6 +75,12 @@ window.EFFORT = {
    "dh": 54,
    "act": 3.5,
    "versions": 7
+  },
+  {
+   "d": "2026-10-28",
+   "dh": 14,
+   "act": 0.5,
+   "versions": 1
   }
  ],
  "extra": [
@@ -2406,6 +2412,15 @@ window.EFFORT = {
    "tris": 6811405,
    "chars": 1760628,
    "what": "The town now has neighbourhoods: streets of about forty colonials, capes and ranches with porches, glass windows onto lit rooms, driveways with cars in them and more parked at the curb, mailboxes, fences and yard trees — and woods that thicken around the edges so the town fades into the country."
+  },
+  {
+   "v": 259,
+   "asked": "2026-10-28T20:25:00-05:00",
+   "live": "2026-10-28T21:59:52-05:00",
+   "dh": 14,
+   "tris": 6885602,
+   "chars": 1776791,
+   "what": "Walk into every shop, the General Store, the brewery and every house: doors open as you come up, furnished rooms (houses get a living room, kitchen and bedroom), and the camera stays in the room with you."
   }
  ]
 };

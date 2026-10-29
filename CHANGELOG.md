@@ -2,6 +2,10 @@
 
 Every version of Corley's Island, newest first, grouped by the day it went live (Central time). Made from `data/effort.js` by `tools/changelog.py`; don't edit it by hand. [Play any old version](https://corleys-island.vercel.app/versions/) · [Build log with charts](https://corleys-island.vercel.app/build.html)
 
+## Wednesday, October 28, 2026
+
+- **v259** (9:59 PM) Walk into every shop, the General Store, the brewery and every house: doors open as you come up, furnished rooms (houses get a living room, kitchen and bedroom), and the camera stays in the room with you.
+
 ## Tuesday, October 27, 2026
 
 - **v258** (11:13 PM) The town now has neighbourhoods: streets of about forty colonials, capes and ranches with porches, glass windows onto lit rooms, driveways with cars in them and more parked at the curb, mailboxes, fences and yard trees — and woods that thicken around the edges so the town fades into the country.
