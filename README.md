@@ -4,7 +4,7 @@ A 3D excavator game in plain HTML, CSS and JavaScript (three.js r186, no build s
 
 - Live: https://corleys-island.vercel.app (https://backhoe-dig.vercel.app still works)
 - Build time: https://corleys-island.vercel.app/build.html (reads `data/effort.js`); every version in plain text: `CHANGELOG.md`
-- Every version, playable: https://corleys-island.vercel.app/versions/
+- Every version, playable: https://corleythax-creator.github.io/backhoe-dig/versions/
 - Hub, every doc in one place (roadmap, design doc, changelog, ideas, credits): https://corleys-island.vercel.app/hub.html
 - Claude version: https://claude.ai/artifact/6nxYC5EK3422JouxaZx2DF
 
