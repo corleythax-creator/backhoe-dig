@@ -131,7 +131,7 @@ function crnPose(keys,u){let i=0;while(i<keys.length-2&&u>keys[i+1][0])i++;const
 function crnShow(n,u){crnSpans.forEach((s,k)=>{const steel=k<n||(k===n&&u>=0.86);s.tr.visible=!steel;s.st.visible=steel});
   for(const b of [BRIDGES[4],BRIDGES[5]]){const left=crnSpans.some((s,k)=>s.b===b&&!(k<n||(k===n&&u>=0.86)));for(const g of b.signs)if(g)g.visible=left}}
 const crnV=[new THREE.Vector3(),new THREE.Vector3(),new THREE.Vector3(),new THREE.Vector3()];
-function mainTick(dt){rmWinTick();
+function mainTick(dt){rmWinTick();rmDoorsTick(dt);rmInsideTick(dt);
   const NS=crnSpans.length,T=Math.max(10,TU.craneSpan);
   if(CRN.n<NS){CRN.t+=dt;if(CRN.t>=T){CRN.t=0;CRN.n++;if(typeof site!=='undefined')site.dirty=true;
       const s=crnSpans[CRN.n-1],near=Math.hypot(camera.position.x-crnBarge.position.x,camera.position.z-crnBarge.position.z)<320;
@@ -202,9 +202,9 @@ function mainLot(K,x,z,w,d,h,col,face,awn,si,wl){wl=wl||col;const y=rmGroundMax(
     K.box(pw-0.4,0.3,0.4,0x6b4a30,g,y+0.75,k,face);K.box(pw-0.5,0.16,0.36,0x3d6b2f,g,y+0.96,k,face);
     const fc=[0xc94c6a,0xe8b923,0xf2efe6,0x8a4fa8][(si+s+4)%4];for(let q=-(pw-0.7)/2;q<=(pw-0.7)/2;q+=0.22){const [m,n]=F(d/2+0.35+((q*7)%2?0.08:-0.08),so+q);K.box(0.11,0.1,0.11,fc,m,y+1.07,n,face+q)}}
   // the door: a glazed timber door under a glass transom, the posts each side of it
-  {const [a,b]=F(d/2+0.03,0),DW=0x4a3424;for(const s of [-1,1]){const [e,f]=F(d/2+0.03,s*0.55);K.box(0.1,2.3,0.07,DW,e,y+1.15,f,face);const [g,k]=F(d/2+0.05,s*0.7);K.box(0.22,2.95,0.16,TR,g,y+1.475,k,face)}
-    K.box(1.2,0.22,0.07,DW,a,y+0.11,b,face);K.box(1.2,0.12,0.07,DW,a,y+2.24,b,face);K.box(1.0,1.96,0.02,'glass',a,y+1.2,b,face);K.box(1.2,0.6,0.02,'glass',a,y+2.6,b,face);
-    const [e,f]=F(d/2+0.08,0.3);K.box(0.04,0.04,0.5,0xc9ccc8,e,y+1.05,f,face+Math.PI/2)}
+  // (the door itself swings in as the worker comes up to it: rmDoor, interiors.js)
+  {const [a,b]=F(d/2+0.03,0);for(const s of [-1,1]){const [g,k]=F(d/2+0.05,s*0.7);K.box(0.22,2.95,0.16,TR,g,y+1.475,k,face)}
+    K.box(1.2,0.6,0.02,'glass',a,y+2.6,b,face);const [e,f]=F(d/2+0.03,-0.6);rmDoor('shop',e,y,f,face,1.2)}
   // the awning: stripes of its colour and white, sloping out over the walk, with a valance
   {const n=Math.max(4,Math.round((w-1)/0.6)),sw=(w-1)/n;for(let i=0;i<n;i++){const s=-(w-1)/2+sw*(i+0.5),[a,b]=F(d/2+0.58,s);K.box(sw+0.005,0.06,1.15,i%2?0xf2efe6:awn,a,y+2.95,b,face,-0.32);
     const [e,f]=F(d/2+1.13,s);K.box(sw+0.005,0.3,0.04,i%2?0xf2efe6:awn,e,y+2.62,f,face)}}
@@ -216,7 +216,11 @@ function mainLot(K,x,z,w,d,h,col,face,awn,si,wl){wl=wl||col;const y=rmGroundMax(
     for(const t of [-1,1]){const [m,n]=F(d/2+0.05,s+t*0.57);K.box(0.06,1.66,0.08,TR,m,y+wy,n,face);K.box(1.2,0.06,0.08,TR,g,y+wy+t*0.81,k,face)}
     K.box(0.04,1.6,0.06,TR,g,y+wy,k,face);K.box(1.1,0.04,0.06,TR,g,y+wy+0.15,k,face);
     K.box(1.4,0.1,0.18,TR,e,y+wy-0.86,f,face);K.box(1.35,0.16,0.1,TR,e,y+wy+0.88,f,face)}
-  SOLIDS.push({x,z,hx:(Math.abs(fz)*w+Math.abs(fx)*d)/2+0.1,hz:(Math.abs(fx)*w+Math.abs(fz)*d)/2+0.1})}
+  // solid: the building behind the shop, its side walls and the storefront either side of the door; the shop's floor to
+  // walk on, and its room (the camera stays in it)
+  SOLIDS.push({x,z,hx:(Math.abs(fz)*w+Math.abs(fx)*d)/2+0.1,hz:(Math.abs(fx)*w+Math.abs(fz)*d)/2+0.1,foot:1});{const [a,b]=F(-RD/2,0);rmSolid(a,b,face,w/2+0.1,(d-RD)/2+0.1)}
+  for(const t of [-1,1]){const [a,b]=F(d/2-RD/2,t*(w/2-0.2));rmSolid(a,b,face,0.3,RD/2+0.1);const [e,f]=F(d/2,t*(w/4+0.35));rmSolid(e,f,face,w/4-0.25,0.14)}
+  walkPad(F0[0],F0[1],w/2-0.1,RD/2,face,y+0.03);rmRoom(F0[0],F0[1],face,w/2-0.55,RD/2,y,y+2.9)}
 // the shop signs: the lettering drawn into one picture, and every sign a quad of it, as one mesh
 function mainSignsAdd(){const cv=document.createElement('canvas');cv.width=1024;cv.height=1024;const g=cv.getContext('2d'),SW=512,SH=64;
   MAIN_SHOPS.forEach(([n,sub,bg,fg,serif],i)=>{const x0=(i%2)*SW,y0=((i/2)|0)*SH,ff=serif?'Georgia,"Times New Roman",serif':'"Barlow Condensed","Arial Narrow",Arial,sans-serif';
@@ -300,7 +304,8 @@ function mainBrewery(){const K=famKit(),PK=famKit(),{x,z,w,d,h}=BREW,y=rmGroundM
   for(let s=-w/2+0.35;s<=w/2-0.3;s+=(w-0.7)/8)B.box(0.1,4.2,0.14,ST,o0-0.15,s,0.4);B.box(w-0.7,0.1,0.14,ST,o0-0.15,0,2.6);
   for(const s of [-1,1])B.box(0.08,2.4,0.06,ST,o0-0.12,s*0.9,0.4);
   const doors=[-6,0,6];for(const [a,b] of [[-10,-7.5],[-4.5,-1.5],[1.5,4.5],[7.5,10]])B.box(b-a,3.2,0.35,W,-o0+0.175,(a+b)/2,0);B.box(w,h-3.2,0.35,W,-o0+0.175,0,3.2);
-  for(const s of doors){B.box(3,3.2,0.02,'glass',-o0+0.2,s,0);for(let k=0;k<=5;k++)B.box(3,0.06,0.08,ST,-o0+0.2,s,k*0.64-0.03+(k?0:0.03));for(const t of [-1,0,1])B.box(0.06,3.2,0.08,ST,-o0+0.2,s+t*1.47,0)}
+  // (the middle one rolled up onto the patio: the way in)
+  B.box(3.1,0.42,0.42,ST,-o0+0.3,0,2.8);for(const s of doors){if(!s)continue;B.box(3,3.2,0.02,'glass',-o0+0.2,s,0);for(let k=0;k<=5;k++)B.box(3,0.06,0.08,ST,-o0+0.2,s,k*0.64-0.03+(k?0:0.03));for(const t of [-1,0,1])B.box(0.06,3.2,0.08,ST,-o0+0.2,s+t*1.47,0)}
   // the roof, its parapet and coping; the sign across the front; a grain silo by the east wall
   B.box(w,0.25,d,0x4a4c4e,0,0,h);for(const s of [-1,1]){B.box(0.3,0.7,d,W,0,s*(w/2-0.15),h);B.box(w,0.7,0.3,W,s*(o0-0.15),0,h);B.box(w+0.1,0.08,0.4,0xd8d2c4,s*(o0-0.15),0,h+0.7)}
   famSign(['LAKESIDE BREWING CO.','Taproom · Beer Garden · Est. 2019'],10,1.7,x,y+5.75,z-o0-0.04,Math.PI,'#1f2a24','#e8c27a');
@@ -319,7 +324,11 @@ function mainBrewery(){const K=famKit(),PK=famKit(),{x,z,w,d,h}=BREW,y=rmGroundM
   for(let o=-4;o<=3;o+=1.75){const [a,b]=B.P(o,-7.3);K.lit(new THREE.CylinderGeometry(0.1,0.18,0.2,10),0xffe2a8,a,y+3.1,b)}
   B.spot(-3.6,-8.55,Math.PI/2,{staff:1});B.spot(0.6,-8.55,Math.PI/2,{staff:1,path:B.path([[3.2,-8.55],[-4.4,-8.55],[3.2,-8.55]]),at:3});B.spot(-0.3,5.6,Math.PI/2,{staff:1});
   for(const o of [-4.0,-2.6,-1.2,0.2,1.6,3.0])B.spot(o,-6.55,-Math.PI/2);B.spot(-5.0,1.0,Math.PI/2);B.spot(4.6,0.5,-Math.PI*0.75);B.spot(5.2,1.1,Math.PI);
-  rmAdd(B,9,[0,4,7,11]);SOLIDS.push({x,z,hx:w/2+0.1,hz:d/2+0.1});
+  rmAdd(B,9,[0,4,7,11]);
+  // solid: the walls (but the open door), the tanks, kettles, bar and back bar; the floor to walk on, and the room
+  SOLIDS.push({x,z,hx:w/2+0.1,hz:d/2+0.1,foot:1});for(const t of [-1,1]){B.solid(0,t*(w/2-0.2),0.45,d+0.2);B.solid(-o0+0.2,t*(w/4+0.75),w/2-1.5,0.45)}B.solid(o0-0.2,0,w+0.2,0.45);
+  B.solid(-0.3,7.4,1.8,9.6);B.solid(-5.6,4.6,3.9,1.8);B.solid(-0.6,-7.3,0.8,8.5);B.solid(-0.6,-9.45,0.5,8.5);
+  walkPad(x,z,w/2-0.3,d/2-0.3,Math.PI,y+0.03);rmRoom(x,z,Math.PI,w/2-0.35,d/2-0.35,y,y+h-0.2);
   // the patio behind, its high-top tables, and the path from the sidewalk down the side to the garden's gate
   const pz=z+o0,G0=G(x,pz+2.5);K.box(w,0.25,5,'concBroom',x,G0+0.0,pz+2.5);walkPad(x,pz+2.5,w/2,2.5,0,G0+0.125);
   const GD={x:64,z:695.5,r:32,spots:[],ground:1},spot=(sx,sz,yaw,k)=>{const sp=Object.assign({x:sx,z:sz,y:padAt(sx,sz)>-1e8?padAt(sx,sz):G(sx,sz),yaw},k||{});GD.spots.push(sp);return sp};
@@ -417,10 +426,11 @@ function shopKit(){const parts=new Map(),O=new THREE.Object3D(),n=new THREE.Vect
   for(const z of [fz+0.15,fz+15.85])K.box(cap,30.3,0.12,0.5,0,par+0.06,z);for(const s of [-1,1])K.box(cap,0.5,0.12,16.2,s*14.85,par+0.06,fz+8);
   K.box(corr,3.6,3.8,0.08,15.06,fl+1.9,fz+10,Math.PI/2);K.box(dark,0.12,0.2,3.8,15.07,fl+3.9,fz+10);
   // the glass front: bronze mullions, a transom, the sliding doors in the middle with their push bars and kick plates
-  K.box(glass,20,3.3,0.04,0,fl+1.65,fz+0.2);
-  for(const x of [-10,-8.75,-6.25,-3.75,-1.25,0,1.25,3.75,6.25,8.75,10])K.box(bronze,0.1,3.3,0.16,x,fl+1.65,fz+0.16);
-  for(const y of [fl+0.06,fl+2.45,fl+3.26])K.box(bronze,20.1,y===fl+0.06?0.12:0.1,0.16,0,y,fz+0.16);
-  for(const s of [-1,1]){K.box(galv,0.9,0.04,0.06,s*0.62,fl+1.05,fz+0.1);K.box(galv,1.1,0.25,0.02,s*0.62,fl+0.14,fz+0.17)}
+  // (the doors slide apart as the worker comes up to them: rmDoor, interiors.js)
+  for(const s of [-1,1])K.box(glass,8.75,3.3,0.04,s*5.625,fl+1.65,fz+0.2);K.box(glass,2.5,0.85,0.04,0,fl+2.875,fz+0.2);
+  for(const x of [-10,-8.75,-6.25,-3.75,-1.25,1.25,3.75,6.25,8.75,10])K.box(bronze,0.1,3.3,0.16,x,fl+1.65,fz+0.16);
+  for(const y of [fl+0.06,fl+2.45,fl+3.26])for(const s of [-1,1])K.box(bronze,y===fl+2.45?10.05:8.8,y===fl+0.06?0.12:0.1,0.16,s*(y===fl+2.45?5.025:5.65),y,fz+0.16);
+  rmDoor('slide',0,fl,fz+0.28,Math.PI,1.25,1.2);rmDoor('slide',1.25,fl,fz+0.28,Math.PI,1.25,-1.2);
   // the canopy over the walk on its posts, lit underneath
   const cy=fl+3.55;K.box(green,31,0.34,3.9,0,cy+0.17,fz-1.9);K.box(galv,30.8,0.03,3.7,0,cy-0.005,fz-1.9);
   for(const x of [-14.6,-7.5,7.5,14.6]){K.box(green,0.16,cy-g0+0.1,0.16,x,(cy+g0-0.1)/2,fz-3.6);SOLIDS.push({x,z:fz-3.6,hx:0.08,hz:0.08})}
@@ -448,15 +458,18 @@ function shopKit(){const parts=new Map(),O=new THREE.Object3D(),n=new THREE.Vect
     for(const h of [0.12,0.62,1.12])K.box(galv,1.85,0.03,0.5,x,y+h,z);SOLIDS.push({x,z,hx:0.95,hz:0.3})}
   {const [x,z]=SHOP.st.groc,y=baseHeight(x,z)+0.12;K.box(wood,1.95,0.05,0.8,x,y+0.8,z);for(const s of [-1,1])for(const t of [-1,1])K.box(dark,0.05,0.8,0.05,x+s*0.92,y+0.4,z+t*0.35);
     SOLIDS.push({x,z,hx:1.0,hz:0.45})}
-  SOLIDS.push({x:0,z:fz+8,hx:15.1,hz:8.1});
+  // solid: the back and side walls, the front either side of the doors
+  SOLIDS.push({x:0,z:fz+8,hx:15.1,hz:8.1,foot:1},{x:0,z:fz+15.85,hx:15.1,hz:0.25});for(const s of [-1,1])SOLIDS.push({x:s*14.85,z:fz+8,hx:0.25,hz:8.1},{x:s*8.2,z:fz+0.18,hx:6.95,hz:0.2});
   // inside, through the glass: a polished floor, rows of gondola shelves full of goods, shelves along the back wall,
   // produce tables, three checkouts by the doors, rows of lights; cashiers and shoppers (TF_ROOMS)
-  {const fi=Math.max(fl,rmGroundMax(0,fz+8,0,29.2,15.2)+0.03),R=rmKit(F,0,fz+8,fi,Math.PI);R.box(29.2,fi-yb,15.2,0xb9b6ad,0,0,yb-fi);
+  {const fi=Math.max(fl,rmGroundMax(0,fz+8,0,29.2,15.2)+0.03),R=rmKit(F,0,fz+8,fi,Math.PI);R.box(29.2,fi-yb,15.2,0xb9b6ad,0,0,yb-fi);walkPad(0,fz+8,14.6,7.6,0,fi);rmRoom(0,fz+8,Math.PI,14.6,7.6,fi,fl+6);
+    // the entrance: the floor stands over the sloping walk, so a gentle concrete ramp runs up to it through the doors
+    {const z0=fz-1.8,z1=fz+0.45,t0=baseHeight(0,z0)+0.12,L=z1-z0,ri=Math.max(0,fi-t0);if(ri>0.05){K.box(conc,2.7,0.12,Math.hypot(L,ri),0,t0+ri/2-0.06,(z0+z1)/2,0,-Math.atan2(ri,L));walkPad(0,(z0+z1)/2,1.35,L/2,0,t0,{rise:ri})}}
     for(const s of [-12,-8,-4,4,8,12])for(let o=-5.6;o<=1.4;o+=1.25){rmShelf(R,o,s-0.25,-Math.PI/2,1.2,s*3+o*5+60);rmShelf(R,o,s+0.25,Math.PI/2,1.2,s*7+o*3+90)}
     for(let s=-13.2;s<=13.21;s+=1.3)rmShelf(R,-7.15,s,0,1.2,s*11+7);
     for(const s of [-12,-8,-4,4,8,12])for(let o=-6.2;o<=2.0;o+=4.1){const [a,b]=R.P(o,s);F.lit(new THREE.BoxGeometry(0.3,0.05,3.6),0xfff8ea,a,fl+5.2,b,0)}
-    for(const s of [-10,-7])for(const o of [4.3]){R.box(2.2,0.8,1.1,0x6b4a30,o,s,0,Math.PI/2);for(let k=0;k<18;k++)R.box(0.18,0.12,0.18,[0x3d8a4a,0xc8402e,0xe8a23a,0xe0d050][(k+(s>-8?2:0))%4],o-0.8+(k%6)*0.32,s-0.35+(k/6|0)*0.35,0.8)}
-    for(const s of [3.5,6.5,9.5]){R.box(0.8,0.95,2.4,0x2a2c2f,4.6,s,0);R.box(0.85,0.04,2.45,0x8a8e91,4.6,s,0.95);R.box(0.3,0.25,0.25,0x1e1f20,4.6,s,0.99);
+    for(const s of [-10,-7])for(const o of [4.3]){R.box(2.2,0.8,1.1,0x6b4a30,o,s,0,Math.PI/2);R.solid(o,s,2.3,1.2,Math.PI/2);for(let k=0;k<18;k++)R.box(0.18,0.12,0.18,[0x3d8a4a,0xc8402e,0xe8a23a,0xe0d050][(k+(s>-8?2:0))%4],o-0.8+(k%6)*0.32,s-0.35+(k/6|0)*0.35,0.8)}
+    for(const s of [3.5,6.5,9.5]){R.box(0.8,0.95,2.4,0x2a2c2f,4.6,s,0);R.solid(4.6,s,0.9,2.5);R.box(0.85,0.04,2.45,0x8a8e91,4.6,s,0.95);R.box(0.3,0.25,0.25,0x1e1f20,4.6,s,0.99);
       R.spot(4.6,s+0.7,-Math.PI/2,{staff:1});R.spot(4.4,s-0.75,Math.PI/2);R.spot(5.7,s-0.8,Math.PI)}
     for(const s of [-10,-6,-2,2,6,10])for(const o of [-4.6,-1.3])R.spot(o,s+((o*3|0)%2?0.6:-0.6),((s+o*2)|0)%2?Math.PI/2:-Math.PI/2);
     R.spot(5.5,-8.5,Math.PI*0.8);R.spot(3.2,-11.4,Math.PI/2);R.spot(-6.1,0.5,Math.PI);

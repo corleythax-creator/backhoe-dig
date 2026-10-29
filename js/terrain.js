@@ -191,8 +191,10 @@ const SOLIDS=[];
 // ax,az to bx,bz, r out from it. family.js, jessica.js and boats.js fill it as they build them; a trestle's bents are kept
 // with its spans instead (crnSpans in mainland.js), as they change from timber to steel
 const BOAT_WALLS=[];
-// how far to move a circle (x, z, radius r) so it clears a solid, [dx, dz], or null when it is clear already
-function solidOut(s,x,z,r){let dx=x-s.x,dz=z-s.z,hx=s.hx,hz=s.hz;const rot=s.sn!==undefined;
+// how far to move a circle (x, z, radius r) so it clears a solid, [dx, dz], or null when it is clear already. A foot:1
+// entry is only a building's footprint (one you can walk into: its walls are solids of their own), which keeps things
+// placed round it out of it but stops nothing
+function solidOut(s,x,z,r){if(s.foot)return null;let dx=x-s.x,dz=z-s.z,hx=s.hx,hz=s.hz;const rot=s.sn!==undefined;
   if(rot){const a=dx*s.cs-dz*s.sn;dz=dx*s.sn+dz*s.cs;dx=a;hx=s.lx;hz=s.lz}
   const nx=dx-Math.max(-hx,Math.min(hx,dx)),nz=dz-Math.max(-hz,Math.min(hz,dz)),d=Math.hypot(nx,nz);if(d>=r)return null;
   let px=0,pz=0;if(d>1e-4){px=nx/d*(r-d);pz=nz/d*(r-d)}else if(hx-Math.abs(dx)<hz-Math.abs(dz))px=Math.sign(dx||1)*(hx-Math.abs(dx)+r);else pz=Math.sign(dz||1)*(hz-Math.abs(dz)+r);
