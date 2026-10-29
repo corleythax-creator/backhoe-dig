@@ -254,7 +254,7 @@ function tourSample(now){const ft=tour.prevNow?(now-tour.prevNow)/1000:0;tour.pr
   const p=renderer.getPixelRatio();tour.pr[0]=Math.min(tour.pr[0],p);tour.pr[1]=Math.max(tour.pr[1],p);
   if(tour.heap)tour.heap[1]=Math.max(tour.heap[1],performance.memory.usedJSHeapSize);
   tour.barT-=ft;if(tour.barT<=0){tour.barT=0.25;const f=L.ft.slice(-30),fps=f.length/f.reduce((a,b)=>a+b,0);
-    $('#benchBar').innerHTML=`ISLAND TOUR TEST${tour.fp?' · FIRST PERSON':''}${tourSweepLbl()} · ${Math.round(fps)} FPS<small>${tour.leg} · ${Math.floor(tour.t/60)}:${String(Math.floor(tour.t%60)).padStart(2,'0')}</small>`}}
+    $('#benchBar').innerHTML=`ISLAND TOUR TEST${tour.fp?' · FIRST PERSON':''}${tourSweepLbl()} · ${Math.round(fps)} FPS<small>${tour.leg} · ${Math.floor(tour.t/60)}:${String(Math.floor(tour.t%60)).padStart(2,'0')} · tap here to stop</small>`}}
 
 // the route on the site map with the slow frames on it (a dot sized by how long the frame took): a picture in the results
 function tourMap(){try{const P=tour.path;if(P.length<4)return '';let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9;for(const [x,z] of P){x0=Math.min(x0,x);x1=Math.max(x1,x);z0=Math.min(z0,z);z1=Math.max(z1,z)}
@@ -352,6 +352,13 @@ function tourEnd(){tour.on=false;SL.x=SL.y=0;const r=tourResults();
   if(S){S.res.push({g:gfxKey,name:GFX[gfxKey].name,avg:r.rec.avg,busy:r.rec.busy,legs:r.rec.legs,fails:r.checks.filter(c=>!c.ok).length});try{sessionStorage.setItem('bhd_tsweep',JSON.stringify(S))}catch(e){}}
   else{try{sessionStorage.setItem(DIGT_RES,JSON.stringify(r));sessionStorage.setItem('bhd_tourShow','1')}catch(e){}}
   if(tour.obs)tour.obs.disconnect();if(tour.lo)tour.lo.disconnect();$('#benchBar').innerHTML='ISLAND TOUR TEST DONE<small>Putting your site back…</small>';setTimeout(()=>location.reload(),400)}
+// stopped by the player (a tap on the banner): no results are kept, a sweep ends, the graphics level and the clock go back,
+// and the page reloads to put the site back, as at the end
+function tourQuit(){const S=tourSweepGet();if(!tour.on&&!S)return;tour.on=false;SL.x=SL.y=0;
+  try{sessionStorage.removeItem('bhd_tsweep')}catch(e){}if(S)setGfx(S.orig);
+  try{if(tour.keepClock===null)localStorage.removeItem('bhd_clock');else if(tour.keepClock!==undefined)localStorage.setItem('bhd_clock',tour.keepClock)}catch(e){}
+  if(tour.obs)tour.obs.disconnect();if(tour.lo)tour.lo.disconnect();$('#benchBar').innerHTML='ISLAND TOUR TEST STOPPED<small>Putting your site back…</small>';setTimeout(()=>location.reload(),400)}
+$('#benchBar').addEventListener('click',()=>{if(tour.on||tourSweepGet())tourQuit()});
 // the shared board (Supabase, supabase/island_tour.sql; on the Vercel site only, as sync is): every finished run
 function tourPut(r){if(!sync.on)return;const d={legs:r.rec.legs,fails:r.checks.filter(c=>!c.ok).map(c=>c.name),busy:r.rec.busy,text:r.text.slice(0,20000)};
   syncRpc('island_tour_put',{p_v:+r.rec.v||0,p_device:r.device,p_gfx:gfxKey,p_kind:r.rec.kind,p_fps:+r.rec.avg.toFixed(2),p_data:d},true).catch(()=>{})}
@@ -365,7 +372,7 @@ function tourSweep(fp){if(tour.on||bench.on)return;const S={left:['low','med','h
 function tourSweepNext(){const S=tourSweepGet();if(!S)return;
   if(!S.left.length){try{sessionStorage.removeItem('bhd_tsweep')}catch(e){}setGfx(S.orig);tourSweepShow(S);return}
   const g=S.left.shift();try{sessionStorage.setItem('bhd_tsweep',JSON.stringify(S))}catch(e){}help.hidden=true;setGfx(g);
-  $('#benchBar').hidden=false;$('#benchBar').innerHTML=`ISLAND TOUR TEST · SWEEP<small>Next: ${GFX[g].name}…</small>`;setTimeout(()=>tourStart(S.fp,S.opt),4000)}
+  $('#benchBar').hidden=false;$('#benchBar').innerHTML=`ISLAND TOUR TEST · SWEEP<small>Next: ${GFX[g].name}… · tap here to stop</small>`;setTimeout(()=>{if(tourSweepGet())tourStart(S.fp,S.opt)},4000)}
 function tourSweepShow(S){const R=S.res,names=[...new Set([].concat(...R.map(x=>Object.keys(x.legs))))],cls=f=>f>=55?'fps-good':f>=30?'fps-mid':'fps-bad';
   let table='<tr><th>Leg</th>'+R.map(x=>`<th>${x.name}</th>`).join('')+'</tr>';
   table+='<tr><td><b>Whole tour</b></td>'+R.map(x=>`<td class="${cls(x.avg)}"><b>${x.avg.toFixed(1)}</b> <small>${x.busy.toFixed(1)} ms</small></td>`).join('')+'</tr>';

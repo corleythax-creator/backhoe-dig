@@ -101,7 +101,7 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 #blkBar [hidden]{display:none}
 .bstep{flex:none;display:flex;align-items:center;gap:2px;height:40px;padding-left:6px}.bstep[hidden]{display:none}
 .bstep span{flex:1;font:600 12px/1 var(--f-display);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
-.bstep b{font:700 17px/1 var(--f-display);color:var(--ink);min-width:48px;text-align:center;font-variant-numeric:tabular-nums}
+.bstep b{font:700 17px/1 var(--f-display);color:var(--ink);min-width:48px;text-align:center;font-variant-numeric:tabular-nums;pointer-events:auto;cursor:pointer}
 .bstep button{border:0;background:transparent}
 #blkLock{flex:0 0 auto;min-width:112px;color:var(--machine)}
 #blkBar .row{flex:none;flex-wrap:nowrap;align-items:stretch;gap:4px;padding:6px 0 2px}#blkBar .row button{flex:1;padding:0 4px;background:rgba(255,255,255,.06)}

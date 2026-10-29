@@ -136,7 +136,7 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 #blkBar [hidden]{display:none}
 .bstep{flex:none;display:flex;align-items:center;gap:2px;height:40px;padding-left:6px}.bstep[hidden]{display:none}
 .bstep span{flex:1;font:600 12px/1 var(--f-display);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
-.bstep b{font:700 17px/1 var(--f-display);color:var(--ink);min-width:48px;text-align:center;font-variant-numeric:tabular-nums}
+.bstep b{font:700 17px/1 var(--f-display);color:var(--ink);min-width:48px;text-align:center;font-variant-numeric:tabular-nums;pointer-events:auto;cursor:pointer}
 .bstep button{border:0;background:transparent}
 #blkLock{flex:0 0 auto;min-width:112px;color:var(--machine)}
 #blkBar .row{flex:none;flex-wrap:nowrap;align-items:stretch;gap:4px;padding:6px 0 2px}#blkBar .row button{flex:1;padding:0 4px;background:rgba(255,255,255,.06)}
@@ -1132,6 +1132,8 @@ const TUNE=[
   ['caveDepth','Cave-ins','Walls start to cave in deeper than',1.2,'ft',1,30,0.5],['caveSpoil','Cave-ins','Spoil this close to the edge loads the wall',0.64,'ft',0,10,0.5],
   // the townsfolk (townfolk.js): how fast the town's cars drive its streets and its people walk
   ['tfCarV','Town','Town traffic speed',11.2,'mph',5,45,1],['tfWalk','Town','Townsfolk walking pace',1.3,'mph',1,5,0.1],
+  // indoors (interiors.js): how the eye adjusts in a shop or house, and its room light (Medium graphics and up)
+  ['inAdapt','Town','Indoors, the view brightens by',0.9,'pct',0,300,5],['inLamp','Town','Indoors, the room light',1.6,'n',0,6,0.1],
   ['craneSpan','Bridges','The crane builds a steel span in about',240,'min',1,60,1],
   ['caveRate','Cave-ins','How fast a bad wall gives way (0% = never)',1,'pct',0,500,5],['caveWarn','Cave-ins','Dirt trickles off the lip for',2.2,'s',0,20,0.5],
   // only drawn on High graphics (Graphics → Material relief); how the ground looks, not what it does, so every device may use the same numbers
