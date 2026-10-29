@@ -393,12 +393,11 @@ function tourRun(fp,opt){tour.headless=true;tourStart(fp,opt);renderer.setAnimat
 $('#tourTestBtn').onclick=()=>{showMenu(false);tourStart()};$('#tourFpBtn').onclick=()=>{showMenu(false);tourStart(true)};
 // the start card's Tests row: each runs its ☰ Tools test straight away; the Tour row sets the tour's conditions and runs
 // the sweep
-for(const b of document.querySelectorAll('#startTests [data-test]'))b.onclick=()=>{help.hidden=true;$('#'+b.dataset.test).click()};
 function tourOptShow(){for(const b of document.querySelectorAll('#startTourOpt [data-to]')){const k=b.dataset.to;b.setAttribute('aria-pressed',k==='laps'?tourOpt.laps>1:!!tourOpt[k])}}
 for(const b of document.querySelectorAll('#startTourOpt [data-to]'))b.onclick=()=>{const k=b.dataset.to;if(k==='laps')tourOpt.laps=tourOpt.laps>1?1:2;else tourOpt[k]=!tourOpt[k];
   try{localStorage.setItem('bhd_tourOpt',JSON.stringify(tourOpt))}catch(e){}tourOptShow()};
 tourOptShow();
-$('#tourSweepBtn').onclick=()=>{help.hidden=true;tourSweep(false)};
+$('#tourSweepBtn').onclick=()=>{help.hidden=true;showMenu(false);tourSweep(false)};
 // after the reload: other devices' latest runs from the shared board under this run's results
 if((()=>{try{const v=sessionStorage.getItem('bhd_tourShow');sessionStorage.removeItem('bhd_tourShow');return v}catch(e){return null}})()&&sync.on)
   syncRpc('island_tour_list',{p_n:12}).then(L=>{if(!Array.isArray(L)||!L.length)return;let h='<tr><th colspan="8">Latest runs on every device (the shared board)</th></tr>';

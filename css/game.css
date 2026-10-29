@@ -261,37 +261,31 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 .card button{background:var(--machine);color:#1c1309;height:52px;font-size:20px;border:0;border-radius:8px}
 /* the start card leads with a small icon per machine (and on foot), as many to a row as fit; tapping one starts the
    game in that mode. The two groups read as one grid, and the island picked can hide the ones it has no room for */
-#help .card{max-width:600px}
-#pickAll{display:grid;grid-template-columns:repeat(auto-fill,minmax(70px,1fr));gap:6px;flex:none}
-.pick{display:contents}
+/* the start screen: the whole screen is the map, with the title and hint over it and two buttons under it */
+#help{background:#0b0e11}
+#help #startCard{max-width:1280px;width:100%;height:100%;padding:16px;gap:12px}
+#startTop{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:6px 18px;flex:none}
+#startCard h1{font-size:32px}
+#startMapHint{font:700 24px/1.15 var(--f-display)!important;letter-spacing:.03em;color:var(--machine)}
+#startMap{position:relative;flex:1 1 auto;min-height:260px;border-radius:14px;overflow:hidden;border:1px solid var(--hud-line);background:#1a4769;cursor:progress}
+#startMap.ready{cursor:crosshair}
+#startMapCv{position:absolute;inset:0;width:100%;height:100%;display:block;touch-action:manipulation}
+#startIsl{position:absolute;inset:0;pointer-events:none}
+#startIsl span{position:absolute;transform:translate(-50%,-50%);padding:4px 10px;border-radius:5px;white-space:nowrap;background:rgba(12,15,18,.7);color:#f3f5ef;font:700 16px/1.1 var(--f-display);letter-spacing:.05em;text-transform:uppercase;border:1px solid rgba(255,255,255,.18)}
+#startBar{display:flex;gap:10px;flex:none}
+#startBar button{flex:1;height:56px;font-size:20px}
+#startTourOpt{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
+#startTourOpt span{font:500 15px/1 var(--f-body);color:var(--muted);margin-right:4px}
+#startTourOpt button{height:36px;padding:0 12px;font-size:14px}
+#startTourOpt button[aria-pressed="true"]{background:var(--machine);color:#1c1309;border-color:var(--machine)}
+@media (max-width:520px){#startCard h1{font-size:24px}#startMapHint{font-size:19px!important}#startIsl span{font-size:12px;padding:3px 6px}#startBar button{height:50px;font-size:17px}}
 #pickMore{display:none}
 /* short landscape screens (phones on their side): a wider card fits more icons to a row */
-@media (orientation:landscape) and (max-height:560px){#help .card{max-width:900px;padding:14px 18px;gap:10px}#help .card h1{font-size:28px}}
+@media (orientation:landscape) and (max-height:560px){#help #startCard{padding:10px 14px;gap:8px}#startCard h1{font-size:24px}#startMapHint{font-size:19px!important}#startBar button{height:44px}}
 /* the controls list hides behind the Controls button */
 #ctrlBtn{flex:none}#ctrlBtn[aria-expanded="true"]{border-color:var(--machine);color:var(--machine)}
 #ctrlBox{display:flex;flex-direction:column;gap:14px}#ctrlBox[hidden]{display:none}
-.card button.tile{position:relative;height:auto;aspect-ratio:1;padding:0;overflow:hidden;border-radius:12px;background:var(--well);border:1px solid var(--hud-line);color:var(--ink);text-align:center;transition:transform .15s,border-color .15s,box-shadow .15s}
-.card button.tile[hidden]{display:none}
-.tile img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;display:block}
-.tile .tn{position:absolute;left:2px;right:2px;bottom:4px;z-index:1;font:700 13px/1.05 var(--f-display);letter-spacing:.02em;text-shadow:0 1px 3px rgba(0,0,0,.95);overflow-wrap:anywhere}
-.tile .ts{display:none}
-.tile::after{content:"";position:absolute;inset:40% 0 0;background:linear-gradient(transparent,rgba(8,10,7,.9))}
 /* where to start: first a map of the islands with a button on each, then the island's machines */
-#startMap{position:relative;flex:none;width:min(100%,calc(62vh*720/915));aspect-ratio:720/915;margin:0 auto;border-radius:14px;overflow:hidden;border:1px solid var(--hud-line);background:#1a4769}
-#startMap[hidden]{display:none}
-#startMapCv{position:absolute;inset:0;width:100%;height:100%;display:block}
-#startMapHint{position:absolute;left:0;right:0;top:8px;margin:0;text-align:center;pointer-events:none;font:700 15px/1 var(--f-display);letter-spacing:.05em;text-transform:uppercase;color:#fff;text-shadow:0 1px 4px rgba(0,0,0,.9)}
-#startIsl{position:absolute;inset:0}
-.card #startIsl button{position:absolute;transform:translate(-50%,-50%);height:30px;font-size:14px;letter-spacing:.06em;padding:0 9px;border-radius:4px;white-space:nowrap;background:rgba(12,15,18,.72);color:#f3f5ef;border:1px solid rgba(255,255,255,.35);box-shadow:0 1px 3px rgba(0,0,0,.5)}
-.card #startIsl button[aria-pressed="true"]{background:var(--machine);color:#1c1309;border-color:var(--machine)}
-@media (hover:hover){.card #startIsl button:hover{background:var(--machine);color:#1c1309}}
-@media (max-width:520px){.card #startIsl button{height:26px;font-size:12px;padding:0 7px}}
-#islHead{display:flex;align-items:center;gap:12px;flex:none}
-#islHead[hidden],#pickAll[hidden]{display:none}
-#islHead h2{margin:0;font:700 24px/1.1 var(--f-display);letter-spacing:.03em}
-.card button.tile[aria-pressed="true"]{border-color:var(--machine);box-shadow:0 0 0 2px var(--machine)}
-@media (hover:hover){.card button.tile:hover{border-color:var(--machine);transform:translateY(-2px);box-shadow:0 6px 16px rgba(0,0,0,.45)}}
-@media (max-width:380px){#pickAll{grid-template-columns:repeat(4,1fr)}.tile .tn{font-size:12px}}
 #help .card{overscroll-behavior:contain;-webkit-overflow-scrolling:touch;touch-action:pan-y}
 @media (max-height:420px){#benchBar{top:calc(var(--pt) + 56px)}}
 @media (prefers-reduced-motion:reduce){#toast span,#flash,.bar>i{transition:none}}
@@ -539,7 +533,3 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
 .nostk #menuBtn{width:38px}
 
 /* the start card's Tests row: small buttons, one tap to run a test (tourtest.js) */
-#startTests,#startTourOpt{display:flex;flex-wrap:wrap;align-items:center;gap:6px}
-#startTests span,#startTourOpt span{font:500 15px/1 var(--f-body);color:var(--muted);margin-right:4px}
-.card #startTests button,.card #startTourOpt button{height:36px;padding:0 12px;font-size:14px;background:rgba(255,255,255,.04);color:var(--ink);border:1px solid var(--hud-line);border-radius:6px}
-.card #startTourOpt button[aria-pressed="true"]{background:var(--machine);color:#1c1309;border-color:var(--machine)}

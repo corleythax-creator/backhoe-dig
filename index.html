@@ -87,6 +87,7 @@
       <button id="exTestBtn">Excavator load test</button>
       <button id="tourTestBtn">Island tour test</button>
       <button id="tourFpBtn">Island tour test, first person</button>
+      <div id="startTourOpt" role="group" aria-label="Island tour conditions"><span>Tour</span><button data-to="rain" aria-pressed="false">Rain</button><button data-to="night" aria-pressed="false">Night</button><button data-to="laps" aria-pressed="false">2 laps</button><button id="tourSweepBtn">Every graphics level</button></div>
       <button id="resetBtn">Reset</button>
       <div class="ver" id="verMenu"></div>
     </div>
@@ -363,41 +364,16 @@
   </div>
 </div>
 <div id="help">
-  <div class="card">
-    <h1 id="helpTitle">Corley's Island</h1>
+  <div class="card" id="startCard">
+    <!-- the start screen: the map of the islands and the town (drawn live, controls.js islMapDraw); tap anywhere on
+         land to start there on foot. The machines are where they were parked: walk up to one and Get in -->
+    <div id="startTop"><h1 id="helpTitle">Corley's Island</h1><p id="startMapHint">Loading the island…</p></div>
     <button id="vrStart" class="vrgo" hidden>🥽 Play in VR</button>
-    <!-- step 1: the map of the islands (drawn live, controls.js islMapDraw); tap an island to see its machines -->
-    <div id="startMap"><canvas id="startMapCv" aria-hidden="true"></canvas><p id="startMapHint">Tap where to start</p>
-    <div id="startIsl" role="group" aria-label="Pick where to start"><button data-isl="corley" id="islCorley">Corley's Island</button><button data-isl="family" id="islFamily">Family Island</button><button data-isl="dexter" id="islDexter">Dexter's Island</button><button data-isl="jessica" id="islJessica">Jessica's Island</button><button data-isl="town" id="islTown">Lakeside Town</button></div></div>
-    <!-- step 2: the island picked, back to the map, and what you can drive there -->
-    <div id="islHead" hidden><button id="islBack" class="sm">‹ Map</button><h2 id="islName">Corley's Island</h2></div>
-    <div id="pickAll" hidden>
-    <div class="pick" role="group" aria-label="Pick what to run">
-      <button class="tile" data-m="dig"><img src="shots/dig.jpg" alt="" width="720" height="450"><span class="tn" id="tnDig">Excavator</span><span class="ts" id="tsDig">Dig and load the truck</span></button>
-      <button class="tile" data-m="truck"><img src="shots/truck.jpg" alt="" width="720" height="450"><span class="tn" id="tnTruck">Dump truck</span><span class="ts" id="tsTruck">Haul to the cliff</span></button>
-      <button class="tile" data-m="mow"><img src="shots/mow.jpg" alt="" width="720" height="450"><span class="tn" id="tnMow">Mower</span><span class="ts" id="tsMow">Cut the tall grass</span></button>
-      <button class="tile" data-m="walk"><img src="shots/walk.jpg" alt="" width="720" height="450"><span class="tn" id="tnWalk">On foot</span><span class="ts" id="tsWalk">Walk, jump, build</span></button>
-    </div>
-    <h2 class="pickh" id="pickMore">More machines</h2>
-    <div class="pick more" role="group" aria-label="More machines">
-      <button class="tile" data-m="skid" data-k="skid"><img src="shots/skid.jpg" alt="" width="720" height="450" loading="lazy" decoding="async"><span class="tn" id="tnSkid">Skid steer</span><span class="ts" id="tsSkid">Scoop, carry and grade</span></button>
-      <button class="tile" data-m="heavy" data-k="hv:backhoe"><img src="shots/backhoe.jpg" alt="" width="720" height="450" loading="lazy" decoding="async"><span class="tn" id="tnBackhoe">Backhoe</span><span class="ts" id="tsBackhoe">Loader and hoe in one</span></button>
-      <button class="tile" data-m="heavy" data-k="hv:mini"><img src="shots/mini.jpg" alt="" width="720" height="450" loading="lazy" decoding="async"><span class="tn" id="tnMini">Mini excavator</span><span class="ts" id="tsMini">Small digs in tight spots</span></button>
-      <button class="tile" data-m="heavy" data-k="hv:dozer"><img src="shots/dozer.jpg" alt="" width="720" height="450" loading="lazy" decoding="async"><span class="tn" id="tnDozer">Dozer</span><span class="ts" id="tsDozer">Push dirt, rip hard ground</span></button>
-      <button class="tile" data-m="heavy" data-k="hv:loader"><img src="shots/loader.jpg" alt="" width="720" height="450" loading="lazy" decoding="async"><span class="tn" id="tnLoader">Wheel loader</span><span class="ts" id="tsLoader">Scoop and load the truck</span></button>
-      <button class="tile" data-m="heavy" data-k="hv:semi"><img src="shots/semi.jpg" alt="" width="720" height="450" loading="lazy" decoding="async"><span class="tn" id="tnSemi">Semi</span><span class="ts" id="tsSemi">Pull the lowboy trailer</span></button>
-      <button class="tile" data-m="heavy" data-k="hv:pickup"><img src="shots/pickup.jpg" alt="" width="720" height="450" loading="lazy" decoding="async"><span class="tn" id="tnPickup">Pickup</span><span class="ts" id="tsPickup">Get around the islands</span></button>
-      <button class="tile" data-m="heavy" data-k="hv:atv"><img src="shots/atv.jpg" alt="" width="720" height="450" loading="lazy" decoding="async"><span class="tn" id="tnAtv">Four-wheeler</span><span class="ts" id="tsAtv">Goes anywhere</span></button>
-      <button class="tile" data-m="heavy" data-k="hv:kart"><img src="shots/kart.jpg" alt="" width="720" height="450" loading="lazy" decoding="async"><span class="tn" id="tnKart">Go-kart</span><span class="ts" id="tsKart">Low, quick and sharp</span></button>
-      <button class="tile" data-m="heavy" data-k="hv:golf" data-only="jessica"><img src="shots/golf.jpg" alt="" width="720" height="450" loading="lazy" decoding="async"><span class="tn" id="tnGolf">Golf cart</span><span class="ts" id="tsGolf">Jessica's quiet ride</span></button>
-      <button class="tile" data-m="bike" data-k="bike"><img src="shots/bike.jpg" alt="" width="720" height="450" loading="lazy" decoding="async"><span class="tn" id="tnBike">Dirt bike</span><span class="ts" id="tsBike">Dexter's motocross track</span></button>
-      <button class="tile" data-m="boat" data-k="boat"><img src="shots/boat.jpg" alt="" width="720" height="450" loading="lazy" decoding="async"><span class="tn" id="tnBoat">Boat</span><span class="ts" id="tsBoat">Cruise the lake</span></button>
-    </div>
-    </div>
-    <!-- the tests, one tap from the start card (the same as ☰ Tools; tourtest.js) -->
-    <div id="startTests" role="group" aria-label="Run a test"><span>Tests</span><button data-test="tourTestBtn">Island tour</button><button data-test="tourFpBtn">Tour, first person</button><button data-test="benchBtn">Speed</button><button data-test="digTestBtn">Dig site</button><button data-test="bhTestBtn">Backhoe load</button><button data-test="exTestBtn">Excavator load</button></div>
-    <div id="startTourOpt" role="group" aria-label="Island tour conditions"><span>Tour</span><button data-to="rain" aria-pressed="false">Rain</button><button data-to="night" aria-pressed="false">Night</button><button data-to="laps" aria-pressed="false">2 laps</button><button id="tourSweepBtn">Every graphics level</button></div>
-    <button id="ctrlBtn" class="ghost" aria-expanded="false" aria-controls="ctrlBox">Controls</button>
+    <div id="startMap"><canvas id="startMapCv" aria-label="Map: tap where to start"></canvas>
+      <div id="startIsl" aria-hidden="true"><span data-isl="corley" id="islCorley">Corley's Island</span><span data-isl="family" id="islFamily">Family Island</span><span data-isl="dexter" id="islDexter">Dexter's Island</span><span data-isl="jessica" id="islJessica">Jessica's Island</span><span data-isl="town" id="islTown">Lakeside Town</span></div>
+      <div id="startPin" hidden></div></div>
+    <div id="startBar"><button id="startResume" class="ghost">Carry on where I was</button>
+    <button id="ctrlBtn" class="ghost" aria-expanded="false" aria-controls="ctrlBox">Controls</button></div>
     <div id="ctrlBox" hidden>
     <dl class="keys">
       <dt id="hkLeftStick">Left stick</dt><dd id="hdLeftStick">Swing left/right. Push up to reach the stick out, pull down to bring it in.</dd>
