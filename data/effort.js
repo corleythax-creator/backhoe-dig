@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-30T01:01:00Z",
+ "updated": "2026-10-30T02:43:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -84,9 +84,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-29",
-   "dh": 34.25,
-   "act": 2,
-   "versions": 6
+   "dh": 44.25,
+   "act": 2.5,
+   "versions": 7
   }
  ],
  "extra": [
@@ -2490,6 +2490,15 @@ window.EFFORT = {
    "tris": 5516374,
    "chars": 1786559,
    "what": "The map editor lays paved streets with curbs, sidewalks and a centre line (New street, or Paved on a road's card), lines them with street lights, lamp posts, trees, benches, hydrants or planters at any spacing, and places things and roads anywhere, the mainland's town included; every street and thing stays editable."
+  },
+  {
+   "v": 267,
+   "asked": "2026-10-29T20:05:00-05:00",
+   "live": "2026-10-29T21:43:26-05:00",
+   "dh": 10,
+   "tris": 5517152,
+   "chars": 1794156,
+   "what": "Three times the people and cars in town; every car has a driver at the wheel who gets out when it parks; cars pass through, loop the neighbourhoods and stop for people at four new mid-block crosswalks"
   }
  ]
 };

@@ -6,7 +6,7 @@
 // alloy with a brake disc and calliper.
 // The contract with the game, so Blender or bought cars can replace these:
 // - one node per car (sedan, hatch, suv, wagon, minivan, pickup, van), in the car's own frame: origin on the ground under
-//   its middle, x right, y up, z forward (nose to +z), metres; it holds body (the meshes that don't move) and four
+//   its middle, x to the car's left (the driver's side), y up, z forward (nose to +z), metres; it holds body (the meshes that don't move) and four
 //   wheel nodes (wheel_fl, wheel_fr, wheel_rl, wheel_rr) whose origins are the hubs, turning about x;
 // - materials: carpaint (the game gives each car its colour), tint (the glass), gloss (gloss black), plastic (textured
 //   black), under (the underside), chrome, lens, redL, amber, plate, seat, mirror, tire, rim, disc, caliper.
@@ -78,7 +78,7 @@ function car(name,S){SEG=LO?SEG_LO:SEG_HI;
   // ---------- the cabin, seen through the glass: a dark tub to the beltline, dash, wheel, seats and headrests ----------
   const cz0=G.sr+0.1,cz1=G.ws-0.05,bl=ybelt((cz0+cz1)/2),wI=hw((cz0+cz1)/2)-0.09,fl=yb(0)+0.15;
   put(B,'under',RB(wI*2,bl-fl-0.02,cz1-cz0,0.04),[0,(bl+fl)/2-0.02,(cz0+cz1)/2]);
-  put(B,'plastic',RB(wI*2-0.02,0.2,0.4,0.06),[0,bl+0.04,cz1-0.22]);put(B,'gloss',new T.TorusGeometry(0.17,0.02,8,24),[-0.37,bl+0.16,cz1-0.48],[-1.15,0,0]);
+  put(B,'plastic',RB(wI*2-0.02,0.2,0.4,0.06),[0,bl+0.04,cz1-0.22]);put(B,'gloss',new T.TorusGeometry(0.17,0.02,8,24),[0.37,bl+0.16,cz1-0.48],[-1.15,0,0]);
   // (the seats sit low in the tub, their headrests below the roof lining)
   if(!LO)for(const row of S.seats||[[0.55,2],[-0.35,3]]){const [sz,n]=row,ws=n===2?0.5:wI*2-0.1,hr=Math.min(ytop(sz-0.3)-0.12,fl+1.0),cu=fl+0.32,bh=hr-0.16-cu;
     for(const x of n===2?[-0.37,0.37]:[0]){put(B,'seat',RB(ws,0.16,0.5,0.05,1),[x,cu,sz]);put(B,'seat',RB(ws,bh,0.13,0.05,1),[x,cu+bh/2+0.04,sz-0.28],[-0.16,0,0]);

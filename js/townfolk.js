@@ -17,7 +17,7 @@ const TF_NEAR=360,TF_BOX=[-200,200,540,780],TF_CARS={sedan:4,hatch:3,wagon:1,suv
 // the paints, as often as they are seen on the road: whites, blacks, silvers and greys most, then a few colours (metallic: m)
 const TF_PAINT=[[0xe9e9e6,0,4],[0xf2f0ea,0,2],[0x101113,0,3],[0xa9adb0,1,3],[0x5a5e62,1,3],[0x2b2e33,1,2],[0x7e1416,1,2],[0x1c335c,1,2],[0x23382d,1,1],[0xb3a284,1,1],[0x6e869b,1,1],[0x8a4a1c,1,1]];
 // [people, cars] for the Townsfolk setting: Off, Few, Some, Busy
-const TF_N=[[0,0],[8,3],[14,5],[24,7]];
+const TF_N=[[0,0],[24,9],[42,15],[72,21]];
 // in the rooms (TF_ROOMS, interiors.js): customers in each shop besides its staff, for the setting; how near the camera
 // must come for a room to fill (it empties again past TF_RFAR); the most drawn in the rooms at once
 const TF_RN=[0,1,2,3],TF_RNEAR=70,TF_RFAR=95,TF_ROOM_CAP=110;
@@ -25,8 +25,11 @@ const tf={q:2,on:false,parked:[],parkedOn:false,load:0,bodies:null,chars:null,te
 function tfGfx(q){tf.q=q??2;if(tf.M)for(const k in tf.M)tf.M[k].m.castShadow=!!gfxCur.pbr}
 // ---------- the walks: sidewalk centre lines, crosswalks (x) and the ways to the store's door ----------
 const MSX=5.3,MCN=646.85,MCS=657.15,TF_DOOR=[0,742.4],TF_GATE=[64,679.5];
-const TF_WALK=[[[-MSX,580],[-MSX,MCN]],[[MSX,580],[MSX,MCN]],[[-MSX,MCS],[-MSX,723]],[[MSX,MCS],[MSX,723]],
-  [[-MSX,MCN],[-127,MCN]],[[MSX,MCN],[127,MCN]],[[-MSX,MCS],[-127,MCS]],[[MSX,MCS],[64,MCS]],[[64,MCS],[127,MCS]],[[64,MCS],[64,661],TF_GATE],
+// (the sidewalks are cut where the mid-block crosswalks land, MST_XW in mainland.js)
+const [TF_XN,TF_XS]=MST_XW.z,TF_XX=MST_XW.x[1];
+const TF_WALK=[[[-MSX,580],[-MSX,TF_XN]],[[-MSX,TF_XN],[-MSX,MCN]],[[MSX,580],[MSX,TF_XN]],[[MSX,TF_XN],[MSX,MCN]],[[-MSX,MCS],[-MSX,TF_XS]],[[-MSX,TF_XS],[-MSX,723]],[[MSX,MCS],[MSX,TF_XS]],[[MSX,TF_XS],[MSX,723]],
+  [[-MSX,MCN],[-TF_XX,MCN]],[[-TF_XX,MCN],[-127,MCN]],[[MSX,MCN],[TF_XX,MCN]],[[TF_XX,MCN],[127,MCN]],[[-MSX,MCS],[-TF_XX,MCS]],[[-TF_XX,MCS],[-127,MCS]],[[MSX,MCS],[TF_XX,MCS]],[[TF_XX,MCS],[64,MCS]],[[64,MCS],[127,MCS]],[[64,MCS],[64,661],TF_GATE],
+  {x:1,p:[[-MSX,TF_XN],[MSX,TF_XN]]},{x:1,p:[[-MSX,TF_XS],[MSX,TF_XS]]},{x:1,p:[[-TF_XX,MCN],[-TF_XX,MCS]]},{x:1,p:[[TF_XX,MCN],[TF_XX,MCS]]},
   {x:1,p:[[-MSX,MCN],[-5,645],[5,645],[MSX,MCN]]},{x:1,p:[[-MSX,MCS],[-5,659],[5,659],[MSX,MCS]]},
   {x:1,p:[[-MSX,MCN],[-7.8,648.3],[-7.8,655.7],[-MSX,MCS]]},{x:1,p:[[MSX,MCN],[7.8,648.3],[7.8,655.7],[MSX,MCS]]},
   [[-MSX,723],[-5.9,727],[-5.9,741.6],TF_DOOR],[[MSX,723],[6,727],[6,741.6],TF_DOOR]].map(e=>{const p=e.p||e,L=[0];
@@ -42,7 +45,7 @@ const tfLine=pts=>{const L=[0];for(let i=1;i<pts.length;i++)L.push(L[i-1]+Math.h
 // how high the surface is above the ground where someone stands: the asphalt, the raised sidewalks and the store's walk
 function tfLift(x,z){if(Math.abs(x-TF_GATE[0])<1.4&&z>658.8&&z<TF_GATE[1]+0.5)return z<661?0.17-(z-658.8)/2.2*0.14:0.03;if(z>724.5)return z>740.2&&Math.abs(x)<15.5?0.12:0.04;if(x>56&&z<615)return 0.04;
   if(Math.abs(x)<MST.x+0.1&&z>556||Math.abs(z-MST.cz)<MST.cw+0.1&&Math.abs(x)>MST.x)return MST.lift;
-  if(Math.abs(x)<MST.x+MST.curb+MST.walk+0.2&&z>576||Math.abs(z-MST.cz)<MST.cw+3.5&&Math.abs(x)<128)return MST.top;return 0}
+  if(Math.abs(x)<MST.x+MST.curb+MST.walk+0.2&&z>576||Math.abs(z-MST.cz)<MST.cw+3.5&&Math.abs(x)<128)return mstRamp(x,z);return 0}
 // ---------- the drives: poses [x, z, heading of travel, flags] joined by smooth curves ----------
 // flags: 's' a stop sign (the car stops with its middle here, waits its turn), 'r' the stretch up to here is driven in
 // reverse (backing out of a stall). Keep right: Main Street's lanes at x ±2, the cross street's at z 650.25 (west) and
@@ -54,14 +57,16 @@ function tfLane(pts,o){const n=pts.length,P=[];for(let i=0;i<n;i++){const a=pts[
     k=o/Math.max(0.5,Math.cos(d1===null||d2===null?0:Math.atan2(Math.sin(d2-d1),Math.cos(d2-d1))/2));P.push([c[0]-Math.cos(h)*k,c[1]+Math.sin(h)*k,h])}return P}
 const TF_BWR=[[-176,576.1],[-170,576],[-60,574],[-4,574]],TF_BER=[[4,574],[26,574],[36,582],[57.5,586.4]];
 const TF_IN={E:[[146,650.25,W_],[140,650.25,W_]],W:[[-146,653.75,E_],[-140,653.75,E_]],B:tfLane(TF_BWR,1.25).slice(0,3)};
-const TF_TO_ST={E:[[13.1,650.25,W_,'s'],[-2,657.5,S_],[-2,716,S_]],W:[[-13.1,653.75,E_,'s'],[-2,661,S_],[-2,716,S_]],
+// the right turns at the four-way stop, round the curb's corner close in (a wide bezier would cut over the sidewalk)
+const TF_RT_N=[[13.1,650.25,W_,'s'],[5.5,650.25,W_],[2,646.75,N_]],TF_RT_S=[[-13.1,653.75,E_,'s'],[-5.5,653.75,E_],[-2,657.25,S_]];
+const TF_TO_ST={E:[[13.1,650.25,W_,'s'],[-2,657.5,S_],[-2,716,S_]],W:[...TF_RT_S,[-2,661,S_],[-2,716,S_]],
   B:[[-8,575.25,E_],[-2,581,S_],[-2,639.5,S_,'s'],[-2,716,S_]]};
 const TF_BEACH_E=[[8,575.25,E_],...tfLane(TF_BER,1.25).slice(1)],TF_BEACH_W=tfLane(TF_BER.slice().reverse(),1.25).slice(0,3);
-const TF_TO_MAR={E:[[13.1,650.25,W_,'s'],[2,639,N_],[2,579.5,N_],[6.5,575.25,E_],...TF_BEACH_E],W:[[-13.1,653.75,E_,'s'],[2,642,N_],[2,579.5,N_],[6.5,575.25,E_],...TF_BEACH_E],B:TF_BEACH_E.slice(1)};
+const TF_TO_MAR={E:[...TF_RT_N,[2,639,N_],[2,579.5,N_],[6.5,575.25,E_],...TF_BEACH_E],W:[[-13.1,653.75,E_,'s'],[2,642,N_],[2,579.5,N_],[6.5,575.25,E_],...TF_BEACH_E],B:[[-8,575.25,E_],...TF_BEACH_E]};
 const TF_OUT_N={E:[[6.5,653.75,E_],[140,653.75,E_],[146,653.75,E_]],W:[[-6.5,650.25,W_],[-140,650.25,W_],[-146,650.25,W_]],
-  B:[[2,581,N_],...tfLane(TF_BWR.slice().reverse(),1.25).slice(1)]};
+  B:[[2,581,N_],...tfLane(TF_BWR.slice().reverse(),1.25)]};
 const TF_OUT_S={E:[[-2,581,S_],[-2,639.5,S_,'s'],[6.5,653.75,E_],[140,653.75,E_],[146,653.75,E_]],W:[[-2,581,S_],[-2,639.5,S_,'s'],[-6.5,650.25,W_],[-140,650.25,W_],[-146,650.25,W_]],
-  B:tfLane(TF_BWR.slice().reverse(),1.25).slice(1)};
+  B:tfLane(TF_BWR.slice().reverse(),1.25)};
 // the stalls: the General Store's lot (nose to the store; the ones clear of its lamp poles) and the marina car park's north row;
 // the aisles have a lane each way
 const TF_STALLS=[...[-7.8,-11,-20.6,-23.8,8.2,14.6].map(x=>({k:'st',x,z:736.5,car:null})),...Array.from({length:14},(_,i)=>({k:'mar',x:65+i*3,z:585.9,car:null}))];
@@ -74,7 +79,7 @@ function tfArrive(from,S){const P=[...TF_IN[from]];
   return P}
 function tfLeave(S,to){const P=[];
   if(S.k==='st'){const s=S.x<0?-1:1,bx=S.x+s*3.1;P.push([S.x,S.z,N_],[bx,s<0?729.5:727.5,s<0?W_:E_,'r'],[bx,s<0?729.5:727.5,s<0?E_:W_],[2,722,N_],[2,664.6,N_,'s'],...TF_OUT_N[to])}
-  else P.push([S.x,S.z,S_],[S.x+3.2,590.8,E_,'r'],[S.x+3.2,590.8,W_],[62,590.8,W_],...TF_BEACH_W,...TF_OUT_S[to]);
+  else P.push([S.x,S.z,S_],[S.x+3.2,590.8,E_,'r'],[S.x+3.2,590.8,W_],[62,590.8,W_],...TF_BEACH_W,[6,572.75,W_],...TF_OUT_S[to]);
   return P}
 // samples every half metre: position, heading of travel, reverse, the speed it can be taken at, distance along; and the
 // stops (stop signs, and where a car changes from reverse to forward)
@@ -148,11 +153,11 @@ function tfCarPaint(u){const W=TF_PAINT.reduce((n,p)=>n+p[2],0);let r=(u??Math.r
   return tf.paint[k]=gfxCur.pbr?new THREE.MeshPhysicalMaterial(Object.assign(o,{clearcoat:1,clearcoatRoughness:0.08})):new THREE.MeshStandardMaterial(o)}
 // ---------- people ----------
 // a person's look: the character least seen in town just now (children a third as often), a little taller or shorter;
-// never one the owner left out (TU.tfOut, a bit per character), unless every one is
+// never one the owner left out (TU.tfOut, a bit per character), unless every one is; a driver is never a child
 function tfOff(i){const m=TU.tfOut||0;return i<32&&Math.floor(m/2**i)%2===1}
-function tfLook(){const C=tf.chars,all=C.every((c,i)=>tfOff(i));let best=0,bs=1e9;for(let i=0;i<C.length;i++){if(!all&&tfOff(i))continue;const sc=tf.use[i]*(C[i].body==='k'?3:1)+Math.random()*0.9;if(sc<bs){bs=sc;best=i}}
+function tfLook(adult){const C=tf.chars,all=C.every((c,i)=>tfOff(i));let best=0,bs=1e9;for(let i=0;i<C.length;i++){if(!all&&tfOff(i)||adult&&C[i].body==='k'&&C.some(c=>c.body!=='k'))continue;const sc=tf.use[i]*(C[i].body==='k'?3:1)+Math.random()*0.9;if(sc<bs){bs=sc;best=i}}
   const c=C[best];tf.use[best]++;return {ci:best,body:c.id,sc:0.97+Math.random()*0.06,g:0}}
-function tfPerson(o){const p=Object.assign(tfLook(),{x:0,z:0,y:0,yaw:0,ph:Math.random()*6,amp:0,spd:0,vt:TU.tfWalk*(0.82+Math.random()*0.32),side:0.32,wait:0,inside:0,blk:0,look:0},o);
+function tfPerson(o){const p=Object.assign(tfLook(o&&o.drv),{x:0,z:0,y:0,yaw:0,ph:Math.random()*6,amp:0,spd:0,vt:TU.tfWalk*(0.82+Math.random()*0.32),side:0.32,wait:0,inside:0,blk:0,look:0},o);
   p.y=baseHeight(p.x,p.z)+tfLift(p.x,p.z);tf.people.push(p);return p}
 function tfDrop(p){const i=tf.people.indexOf(p);if(i>=0){tf.people.splice(i,1);tf.use[p.ci]--;if(p.room){p.room.n--;if(p.spot&&p.spot.who===p)p.spot.who=null}}}
 // someone on the walks at a random spot (out of sight unless fill: the walks are empty, as when the town first comes near)
@@ -164,16 +169,17 @@ function tfSeen(x,z,r){tf.v.set(x,baseHeight(x,z)+1,z);return tf.fr.intersectsSp
 // what someone walking at (x, z) toward (dx, dz) would bump into within reach: another person, the worker, a car
 function tfBlocked(p,dx,dz,reach){const rx=-dz,rz=dx;
   const hit=(x,z,r)=>{const ox=x-p.x,oz=z-p.z,f=ox*dx+oz*dz;return f>0&&f<reach+r&&Math.abs(ox*rx+oz*rz)<0.32+r};
-  if(!(p.ghost>0))for(const q of tf.people)if(q!==p&&!q.inside&&hit(q.x,q.z,0.25))return true;
+  if(!(p.ghost>0))for(const q of tf.people)if(q!==p&&!q.inside&&!q.drv&&hit(q.x,q.z,0.25))return true;
   if(walker.visible&&mode==='walk'&&hit(wk.x,wk.z,0.3))return true;
   if(!(p.ghost>0))for(const c of tf.drive)if(c.v>0.3||c.st!=='park')for(const lz of [-1.4,0,1.4])if(hit(c.x+Math.sin(c.yaw)*lz,c.z+Math.cos(c.yaw)*lz,1.0))return true;
   return false}
-// a crosswalk is clear to step onto: no car within 14 m of its middle moving, none on it
-function tfXOk(w){const [mx,mz]=tfAt(w,w.len/2);for(const c of tf.drive){const d=Math.hypot(c.x-mx,c.z-mz);if(d<5||d<14&&c.v>0.6)return false}return true}
+// a crosswalk is clear to step onto: no car on it or at its edge, none headed over it that could not stop short of it
+function tfXOk(w){const [mx,mz]=tfAt(w,w.len/2);for(const c of tf.drive){const ox=mx-c.x,oz=mz-c.z,d=Math.hypot(ox,oz);if(d<c.len/2+2.2)return false;
+    if(c.v>0.6){const fx=Math.sin(c.yaw),fz=Math.cos(c.yaw),f=ox*fx+oz*fz;if(f>-c.len/2&&f<c.len/2+8+c.v*3.5&&Math.abs(ox*fz-oz*fx)<4)return false}}return true}
 function tfWalkStep(p,dt){
   if(p.inside>0){p.inside-=dt;if(p.inside<=0){p.inside=0;if(p.car){p.path=tfLine(p.path.p.slice().reverse());p.s=0;p.back=true}}return}
   let dx,dz,x,z;
-  if(p.path){if(p.s>=p.path.len){if(p.back){p.car.boardT=1.2;tfDrop(p);return}p.inside=15+Math.random()*50;p.spd=0;return}
+  if(p.path){if(p.s>=p.path.len){if(p.back){const c=p.car;c.boardT=1.2;c.ped=null;c.drv=p;Object.assign(p,{drv:c,sit:1,path:null,back:false});tfDriverPlace(c);return}p.inside=15+Math.random()*50;p.spd=0;return}
     [x,z,dx,dz]=tfAt(p.path,p.s)}
   else{const w=p.w,[ax,az,ex,ez]=tfAt(w,p.s);dx=ex*p.dir;dz=ez*p.dir;x=ax-dz*p.side;z=az+dx*p.side;
     // at a walk's end: on to another (round the corner, over a crosswalk, into the store) or turn back
@@ -181,7 +187,10 @@ function tfWalkStep(p,dt){
     // now and then a look in a shop window (the shops face the street: away from it)
     if(!w.x&&p.wait<=0&&Math.random()<dt*0.035&&(Math.abs(x)>MSX-0.6&&Math.abs(x)<MSX+0.7&&z<724||Math.abs(Math.abs(z-MST.cz)-5.15)<0.7)){p.wait=3+Math.random()*6;
       p.look=Math.abs(z-MST.cz)<6&&Math.abs(x)>MSX+1?(z<MST.cz?N_:S_):(x<0?W_:E_)}
-    p.xw=false;if(w.x&&!p.xok&&(p.dir>0?p.s<0.6:p.s>w.len-0.6)){if(tfXOk(w))p.xok=true;else{p.spd=0;p.xw=true;p.amp+=(0-p.amp)*Math.min(1,dt*6);return}}}
+    p.xw=false;if(w.x&&!p.xok&&(p.dir>0?p.s<0.6:p.s>w.len-0.6)){if(tfXOk(w))p.xok=true;else{p.spd=0;p.xw=true;p.amp+=(0-p.amp)*Math.min(1,dt*6);return}}
+    // at a side street's mouth (SUB_APRONS, suburbs.js) with a car turning in or out: wait at its edge
+    if(!w.x)for(const A of SUB_APRONS){const ox=A[0]-x;if(Math.abs(ox)<4.6&&Math.abs(ox)>3.1&&ox*dx>0&&z>A[1]-0.6&&z<A[2]+0.6&&
+      tf.drive.some(c=>c.v>0.3&&Math.abs(c.x-A[0])<9&&Math.abs(c.z-(A[1]+A[2])/2)<10)){p.spd=0;p.amp+=(0-p.amp)*Math.min(1,dt*6);return}}}
   if(p.wait>0){p.wait-=dt;p.spd=0;p.amp+=(0-p.amp)*Math.min(1,dt*6);let d=p.look-p.yaw;d=Math.atan2(Math.sin(d),Math.cos(d));p.yaw+=d*Math.min(1,dt*3);return}
   // held up a while by someone in the way: step to the other side, and if that does not do it, edge round them
   if(p.ghost>0)p.ghost-=dt;const bl=tfBlocked(p,dx,dz,0.9);p.blk=bl?p.blk+dt:0;if(p.blk>2){if(!p.path&&!p.flip){p.side=-p.side;p.flip=1}else{p.ghost=2.5;p.flip=0}p.blk=0}
@@ -194,55 +203,95 @@ function tfWalkStep(p,dt){
 function tfPick(p,n,w){let opts=n.e.filter(e=>e!==w);if(!opts.length){opts=[w];if(Math.random()<0.4){p.wait=2+Math.random()*4;p.look=p.yaw+Math.PI}}
   const e=opts[(Math.random()*opts.length)|0];p.w=e;p.xok=false;p.dir=e.a===n?1:-1;p.s=p.dir>0?0:e.len}
 // ---------- cars ----------
+// the driver's seat of each kind (tools/models/cars.js; the wheel on the left, +x): how far forward of the car's middle,
+// and the seated driver's height above the ground (low in the seat, the head clear of the roof)
+const TF_SEAT={sedan:[0.38,0.18],hatch:[0.3,0.2],wagon:[0.38,0.18],suv:[0.35,0.32],minivan:[1.0,0.32],pickup:[0.55,0.38],van:[1.2,0.4]},TF_SEAT_X=0.37;
+// the trips through town without stopping, from each entry: on along the cross street, or turning onto Main Street for the
+// beach road (or up from the beach road onto the cross street); and round the neighbourhoods (L, keeping off the four-way
+// stop): west, down the street at x -107, along z 700 and back up x -63 and out west; east, down x 107, along z 734 and
+// up x 160 to its end in the woods (SUB_STREETS, suburbs.js: their lanes 1.5 m either side of the middle)
+const TF_THRU={E:{W:[[13.1,650.25,W_,'s'],[-140,650.25,W_],[-146,650.25,W_]],B:[...TF_RT_N,[2,639,N_],...TF_OUT_N.B],
+    L:[[112,650.25,W_],[105.5,660,S_],[105.5,727,S_],[112,735.5,E_],[153,735.5,E_],[161.5,727,N_],[161.5,624,N_]]},
+  W:{E:[[-13.1,653.75,E_,'s'],[140,653.75,E_],[146,653.75,E_]],B:[[-13.1,653.75,E_,'s'],[2,642,N_],...TF_OUT_N.B],
+    L:[[-113,653.75,E_],[-108.5,659,S_],[-108.5,694,S_],[-102,701.5,E_],[-68,701.5,E_],[-61.5,695,N_],[-61.5,659,N_],[-67,650.25,W_],[-140,650.25,W_],[-146,650.25,W_]]},
+  B:{E:[[-8,575.25,E_],...TF_OUT_S.E],W:[[-8,575.25,E_],...TF_OUT_S.W]}};
 function tfSpawnCar(){const ks=Object.keys(tf.cars);if(!ks.length)return;const ends=['E','W','B'].filter(k=>{const [x,z]=TF_IN[k][0];return (!tfSeen(x,z,3)||Math.hypot(x-camera.position.x,z-camera.position.z)>110)&&
     !tf.drive.some(c=>Math.hypot(c.x-x,c.z-z)<c.len+6)});
   // (and clear of any car still pulling away from it, so two never start inside each other)
-  const free=TF_STALLS.filter(s=>!s.car);if(!ends.length||!free.length)return;
-  const from=ends[(Math.random()*ends.length)|0],pick=Math.random()<0.55?free.filter(s=>s.k==='st'):free.filter(s=>s.k==='mar'),S=(pick.length?pick:free)[(Math.random()*(pick.length?pick:free).length)|0];
+  // (the rest only pass through: all of them once a third of the cars, or every stall, are parking)
+  const free=TF_STALLS.filter(s=>!s.car);if(!ends.length)return;
+  // (and while the four-way stop is backed up, only trips round the neighbourhoods, which keep off it)
+  const jam=tf.drive.filter(q=>q.st!=='park'&&q.v<0.3&&Math.abs(q.x)<40&&Math.abs(q.z-MST.cz)<40).length>=4,
+    from=ends[(Math.random()*ends.length)|0],mar=free.filter(s=>s.k==='mar');if(jam&&from==='B')return;
+  const thru=jam||!free.length||tf.drive.filter(c=>c.S).length>=TF_N[tf.q][1]/3||Math.random()<0.25,pick=Math.random()<0.55?free.filter(s=>s.k==='st'):mar,
+    S=thru?null:(pick.length?pick:free)[(Math.random()*(pick.length?pick:free).length)|0],tos=Object.keys(TF_THRU[from]).filter(k=>k!=='L'),to=TF_THRU[from].L&&(jam||Math.random()<0.55)?'L':tos[(Math.random()*tos.length)|0];
   let r=Math.random()*ks.reduce((n,k)=>n+TF_CARS[k],0),k=ks[0];for(const q of ks){r-=TF_CARS[q];if(r<0){k=q;break}}
   const M=tf.cars[k],g=M.g.clone(true),paint=tfCarPaint();scene.add(g);const wheels=[];g.traverse(o=>{if(o.userData.q0){o.userData.q0=o.quaternion.clone();wheels.push(o)}if(o.userData.paint)o.material=paint});
   // (a clone's userData is a JSON copy, so each wheel's rest turn is taken again from its own quaternion)
-  const c={k,g,wheels,len:M.len,wid:M.wid,S,path:tfPath(tfArrive(from,S),true),s:0,i:0,v:8,yaw:0,x:0,z:0,st:'in',si:0,wait:0,arr:0,stuck:0,rot:0};S.car=c;tf.drive.push(c);tfCarPlace(c)}
-function tfCarDrop(c){scene.remove(c.g);if(c.S&&c.S.car===c)c.S.car=null;tf.drive.splice(tf.drive.indexOf(c),1);if(c.ped)tfDrop(c.ped)}
+  const c={k,g,wheels,len:M.len,wid:M.wid,S,path:S?tfPath(tfArrive(from,S),true):tfPath([...TF_IN[from],...TF_THRU[from][to]],false),s:0,i:0,v:8,yaw:0,x:0,z:0,st:S?'in':'out',si:0,wait:0,arr:0,stuck:0,rot:0,yld:0};
+  if(S)S.car=c;tf.drive.push(c);c.drv=tfPerson({drv:c,car:c,sit:1});tfCarPlace(c)}
+function tfCarDrop(c){scene.remove(c.g);if(c.S&&c.S.car===c)c.S.car=null;tf.drive.splice(tf.drive.indexOf(c),1);if(c.ped)tfDrop(c.ped);if(c.drv)tfDrop(c.drv)}
+// the driver in the seat, sitting, facing the way the car faces
+function tfDriverPlace(c){const p=c.drv,[sz,sy]=TF_SEAT[c.k]||TF_SEAT.sedan,h=c.yaw,k=Math.cos(h),n=Math.sin(h);
+  p.x=c.x+k*TF_SEAT_X+n*sz;p.z=c.z-n*TF_SEAT_X+k*sz;p.y=c.g.position.y+sy;p.yaw=h;p.amp=0}
 function tfCarPlace(c){const P=c.path;while(c.i<P.n-2&&P.S[c.i+1]<c.s)c.i++;const i=c.i,t=Math.min(1,Math.max(0,(c.s-P.S[i])/((P.S[i+1]-P.S[i])||1)));
   c.x=P.X[i]+(P.X[i+1]-P.X[i])*t;c.z=P.Z[i]+(P.Z[i+1]-P.Z[i])*t;const h=P.F[i]+Math.atan2(Math.sin(P.F[i+1]-P.F[i]),Math.cos(P.F[i+1]-P.F[i]))*t;c.yaw=h;
-  const f=c.len*0.36,sy=Math.sin(h),cy=Math.cos(h),yf=baseHeight(c.x+sy*f,c.z+cy*f),yb=baseHeight(c.x-sy*f,c.z-cy*f);
-  c.g.position.set(c.x,(yf+yb)/2+0.04,c.z);c.g.rotation.set(0,0,0);c.g.rotateY(h);c.g.rotateX(-Math.atan2(yf-yb,2*f))}
+  const f=c.len*0.36,sy=Math.sin(h),cy=Math.cos(h),ax=c.x+sy*f,az=c.z+cy*f,bx=c.x-sy*f,bz=c.z-cy*f,yf=baseHeight(ax,az)+Math.max(0.04,raiseAt(ax,az)),yb=baseHeight(bx,bz)+Math.max(0.04,raiseAt(bx,bz));
+  c.g.position.set(c.x,(yf+yb)/2,c.z);c.g.rotation.set(0,0,0);c.g.rotateY(h);c.g.rotateX(-Math.atan2(yf-yb,2*f));if(c.drv)tfDriverPlace(c)}
 // the way ahead clear? the slowest speed it allows (people, the worker, machines, other cars; looking along the path)
 function tfCarAhead(c){const P=c.path,rev=P.R[Math.min(P.n-1,c.i+1)],j=Math.min(P.n-1,c.i+(rev?4:10)),ax=P.X[j]-c.x,az=P.Z[j]-c.z,al=Math.hypot(ax,az)||1,dx=ax/al,dz=az/al,rx=-dz,rz=dx,
     reach=3+c.v*1.6,half=c.len/2;let lim=1e9;
-  const see=(x,z,r)=>{const ox=x-c.x,oz=z-c.z,f=ox*dx+oz*dz;if(f<=0||f>half+reach+r||Math.abs(ox*rx+oz*rz)>c.wid/2+0.25+r)return;lim=Math.min(lim,Math.sqrt(2*4*Math.max(0,f-half-r-1.1)))};
+  // (by: the car that holds it up most, if a car does)
+  const see=(x,z,r,q)=>{const ox=x-c.x,oz=z-c.z,f=ox*dx+oz*dz;if(f<=0||f>half+reach+r||Math.abs(ox*rx+oz*rz)>c.wid/2+0.25+r)return;const l=Math.sqrt(2*4*Math.max(0,f-half-r-1.1));if(l<lim){lim=l;c.by=q||null}};c.by=null;
   // (anyone waiting at the curb to cross is waiting for it; held up long by someone who will not move, it edges on)
-  if(c.stuck>8)lim=1;else for(const p of tf.people)if(!p.inside&&!p.xw)see(p.x,p.z,0.3);
+  // (and someone on a crosswalk ahead, or waiting at its curb: stop at its yield line and let them over; for someone
+  // waiting, a few seconds at most, and not once in the four-way stop's junction, which it must clear)
+  if(c.stuck>8)lim=1;else for(const p of tf.people){if(p.inside||p.drv||p.room)continue;if(!p.xw)see(p.x,p.z,0.3);
+    if(rev||!p.w||!p.w.x||!p.xw&&!p.xok)continue;const [mx,mz]=tfAt(p.w,p.w.len/2),fx=Math.sin(c.yaw),fz=Math.cos(c.yaw),ox=mx-c.x,oz=mz-c.z,f=ox*fx+oz*fz;
+    if(f>half+(p.xw?3.2:1.6)&&f<half+25&&Math.abs(ox*fz-oz*fx)<3){if(p.xw){c.yw=1;if(c.yld>=4||Math.abs(c.x)<9&&Math.abs(c.z-MST.cz)<9)continue}const l=Math.sqrt(2*3*Math.max(0,f-half-3.2));if(l<lim){lim=l;c.by=null}}}
   if(walker.visible&&mode==='walk')see(wk.x,wk.z,0.35);
   for(const k in WK_RIDES){const R=WK_RIDES[k],o=R.o;if(!o||!R.c)continue;if(Math.abs(o.x-c.x)>30||Math.abs(o.z-c.z)>30)continue;for(const lz of R.c)see(o.x+Math.sin(o.yaw)*lz,o.z+Math.cos(o.yaw)*lz,R.r)}
   // (an oncoming car only when right in its path: lanes pass close on the bends; two held up by each other where their
   // ways cross: the first in the list goes)
-  for(const q of tf.drive)if(q!==c){const on=Math.sin(q.yaw)*dx+Math.cos(q.yaw)*dz<-0.5&&q.st!=='park';if(c.ign===q){if(Math.hypot(q.x-c.x,q.z-c.z)>9)c.ign=null;else continue}
-    if(on&&c.stuck>4||c.stuck>6&&q.stuck>6&&tf.drive.indexOf(c)<tf.drive.indexOf(q)){c.ign=q;continue}for(const lz of [-q.len*0.3,0,q.len*0.3])see(q.x+Math.sin(q.yaw)*lz,q.z+Math.cos(q.yaw)*lz,on?0.2:1.0)}
+  // (held up over 20 s by other cars, which can only be a knot of them: it eases on through them a few seconds)
+  if(c.stuck>20)c.gh=3;if(!(c.gh>0))for(const q of tf.drive)if(q!==c){const on=Math.sin(q.yaw)*dx+Math.cos(q.yaw)*dz<-0.5&&q.st!=='park';if(c.ign===q){if(Math.hypot(q.x-c.x,q.z-c.z)>9)c.ign=null;else continue}
+    if(on&&c.stuck>4||c.stuck>6&&q.stuck>6&&tf.drive.indexOf(c)<tf.drive.indexOf(q)){c.ign=q;continue}for(const lz of [-q.len*0.3,0,q.len*0.3])see(q.x+Math.sin(q.yaw)*lz,q.z+Math.cos(q.yaw)*lz,on?0.2:1.0,q)}
   return lim}
-// the four-way stop: its turn once it has stopped a moment, the junction is clear and nobody stopped before it is waiting
-function tfMyTurn(c){if(c.wait<1.2)return false;
-  for(const q of tf.drive)if(q!==c){if(Math.abs(q.x)<7.5&&Math.abs(q.z-MST.cz)<7&&q.v>0.05)return false;if(q.atSign&&q.wait>=1.2&&(q.arr<c.arr||q.arr===c.arr&&tf.drive.indexOf(q)<tf.drive.indexOf(c)))return false}
-  return true}
+// the four-way stop: its turn once it has stopped a moment, no other car is in the junction and nobody stopped before it is waiting
+// (the cars given their turn hold the junction until they have gone in and out again, two let go in the same moment
+// would meet; but a car may go with those coming the other way when neither turns left)
+const tfInJ=q=>Math.abs(q.x)<7.5&&Math.abs(q.z-MST.cz)<7;
+// a car's way over the junction from its stop sign: the heading it comes in on, and whether it turns left
+function tfMove(c){const P=c.path,i=P.stop[c.si].i,j=Math.min(P.n-1,i+44),d=P.H[j]-P.H[i];return {h:P.H[i],left:Math.atan2(Math.sin(d),Math.cos(d))>0.6}}
+function tfMyTurn(c){if(c.wait<1.2)return false;const m=tfMove(c),
+    ok=q=>{const n=q.atSign?tfMove(q):q.mv;if(!n||n.left||m.left)return false;const d=n.h-m.h;return Math.abs(Math.atan2(Math.sin(d),Math.cos(d)))>2.6};
+  tf.jset=(tf.jset||[]).filter(q=>tf.drive.includes(q)&&(tf.t-q.jt<2.5||tfInJ(q)));
+  for(const q of tf.jset)if(q!==c&&!ok(q))return false;
+  for(const q of tf.drive)if(q!==c){if(tfInJ(q)&&!tf.jset.includes(q))return false;if(q.atSign&&q.wait>=1.2&&(q.arr<c.arr||q.arr===c.arr&&tf.drive.indexOf(q)<tf.drive.indexOf(c))&&!ok(q))return false}
+  c.mv=m;c.jt=tf.t;tf.jset.push(c);return true}
 function tfCarStep(c,dt){const P=c.path;
-  if(c.st==='park'){if(c.boardT>0){c.boardT-=dt;if(c.boardT<=0){c.boardT=0;c.ped=null;const to=['E','W','B'][(Math.random()*3)|0];c.path=tfPath(tfLeave(c.S,to),false);c.s=0;c.i=0;c.si=0;c.st='out';c.S.car=null}}return}
+  if(c.st==='park'){if(c.boardT>0){c.boardT-=dt;if(c.boardT<=0){c.boardT=0;const to=['E','W','B'][(Math.random()*3)|0];c.path=tfPath(tfLeave(c.S,to),false);c.s=0;c.i=0;c.si=0;c.st='out';c.S.car=null}}return}
   const nx=P.stop[c.si];let vt=P.V[Math.min(P.n-1,c.i+1)];c.atSign=false;
   if(P.park){const d=P.len-c.s;vt=Math.min(vt,Math.sqrt(2*2.2*Math.max(0,d))+(d>0.03?0.2:0))}
   if(nx){const d=P.S[nx.i]-c.s;vt=Math.min(vt,Math.sqrt(2*3*Math.max(0,d-0.05)));
     if(d<0.35&&c.v<0.25){if(!c.wait)c.arr=tf.t;c.wait+=dt;c.atSign=!!nx.sign;
       if(nx.cusp?c.wait>0.8:tfMyTurn(c)){c.si++;c.wait=0;c.atSign=false;c.s=P.S[nx.i]+0.02}else vt=0}}
-  const lim=tfCarAhead(c);vt=Math.min(vt,lim);c.stuck=vt<0.1&&!c.atSign?c.stuck+dt:0;
+  c.yw=0;const lim=tfCarAhead(c);vt=Math.min(vt,lim);c.yld=c.yw?c.yld+(c.v<0.3?dt:0):0;
+  // stuck: held up by people, the worker, a machine, or cars in a knot; not when queued behind cars that are going,
+  // waiting at the stop sign or letting people over. qd: how many cars back in such a queue (worked out along it
+  // frame by frame; round a knot it only grows)
+  const B=c.by;c.qd=lim>=0.3?0:!B?(c.yw?0:1e9):B.atSign||B.yw||B.v>0.3?1:(B.qd??1e9)+1;c.stuck=vt<0.3&&!c.atSign&&c.qd>25?c.stuck+dt:0;
   c.v+=Math.max(-5*dt,Math.min(2*dt,vt-c.v));if(c.v<0.02&&vt<0.02)c.v=0;
   c.s=Math.min(P.len,c.s+c.v*dt);tfCarPlace(c);c.rot+=c.v*dt*(P.R[c.i+1]?-1:1);
   for(const w of c.wheels){w.quaternion.setFromAxisAngle(WK_X,c.rot/(w.userData.r||0.35)).multiply(w.userData.q0)}
   if(c.s>=P.len-0.05&&(c.v<0.1||!P.park)){
     if(P.park){c.st='park';c.v=0;const s=Math.sin(c.yaw),k=Math.cos(c.yaw),lx=k*(c.wid/2+0.4),lz=-s*(c.wid/2+0.4),x=c.x+lx+s*0.4,z=c.z+lz+k*0.4,
         door=c.S.k==='st'?TF_DOOR:c.S.x>=80?[93,577.7]:[46,579.3],mid=c.S.k==='st'?[x,741.4]:[x,581.3];
-      c.ped=tfPerson({path:tfLine([[x,z],mid,door]),s:0,car:c,x,z,yaw:c.yaw+Math.PI/2})}
+      const p=c.drv;c.drv=null;Object.assign(p,{drv:null,sit:0,path:tfLine([[x,z],mid,door]),s:0,x,z,yaw:c.yaw+Math.PI/2,spd:0,back:false,inside:0});
+      p.y=baseHeight(x,z)+tfLift(x,z);c.ped=p}
     else tfCarDrop(c)}
-  // a car stuck a long while (blocked in) gives up once nobody is looking
-  else if(c.stuck>40&&!tfSeen(c.x,c.z,3))tfCarDrop(c)}
+  // a car stuck a long while (blocked in) gives up once nobody is looking, or after a minute and a half anyway
+  else if(c.stuck>40&&!tfSeen(c.x,c.z,3)||c.stuck>90)tfCarDrop(c);if(c.gh>0)c.gh-=dt}
 // ---------- the people in the rooms: staff at their posts, customers browsing, queueing, sitting at tables ----------
 // a room within TF_RNEAR of the camera fills to its staff and customers (its big counts, or TF_RN beside its staff),
 // each on a spot of their own; past TF_RFAR it empties. Now and then a customer goes (when nobody is looking) and
@@ -287,14 +336,14 @@ function tfTick(dt){if(!tf.q){if(tf.on)tfShow(false);return}
     if(tf.drive.reduce((n,c)=>n+(c.st==='park'?0.5:1),0)<wantC&&Object.keys(tf.cars).length>=3&&Math.random()<0.5)tfSpawnCar()}
   for(const c of tf.drive.slice())tfCarStep(c,dt);
   tfRoomsTick();if(!tf.parkedOn&&Object.keys(tf.cars).length===Object.keys(TF_CARS).length)tfParkedShow(true);
-  for(const p of tf.people.slice()){if(p.room){tfRoomStep(p,dt);continue}tfWalkStep(p,dt);p.y+=(baseHeight(p.x,p.z)+tfLift(p.x,p.z)-p.y)*Math.min(1,dt*8)}
-  if(mode==='walk'&&walker.visible){for(const c of tf.drive)wkPushRound(c,[-c.len*0.3,0,c.len*0.3],c.wid/2);for(const p of tf.people)if(!p.inside)wkPushRound(p,[0],0.22)}
+  for(const p of tf.people.slice()){if(p.room){tfRoomStep(p,dt);continue}if(p.drv)continue;tfWalkStep(p,dt);p.y+=(baseHeight(p.x,p.z)+tfLift(p.x,p.z)-p.y)*Math.min(1,dt*8)}
+  if(mode==='walk'&&walker.visible){for(const c of tf.drive)wkPushRound(c,[-c.len*0.3,0,c.len*0.3],c.wid/2);for(const p of tf.people)if(!p.inside&&!p.drv)wkPushRound(p,[0],0.22)}
   tfDraw()}
 function tfShow(on){tf.on=on;for(const k in tf.M||{})tf.M[k].m.visible=on;for(const c of tf.drive)c.g.visible=on;tfParkedShow(on);
   if(!on){for(const c of tf.drive.slice())tfCarDrop(c);for(const p of tf.people.slice())tfDrop(p)}}
 function tfDraw(){const M=tf.M,o3=tf.o,cx=camera.position.x,cz=camera.position.z;for(const k in M)M[k].n=0;
   for(const p of tf.people){if(p.inside)continue;const B=M[p.body];if(!B||B.n>=B.cap)continue;
-    if((p.x-cx)**2+(p.z-cz)**2>(p.room?TF_RFAR*TF_RFAR:220*220)||!tfSeen(p.x,p.z,1.3))continue;
+    if((p.x-cx)**2+(p.z-cz)**2>(p.room?TF_RFAR*TF_RFAR:p.drv?TF_CAR_HI*TF_CAR_HI:220*220)||!tfSeen(p.x,p.z,1.3))continue;
     o3.position.set(p.x,p.y+(p.sit?-0.42*p.sc:Math.abs(Math.cos(p.ph))*0.025*p.amp*p.sc),p.z);o3.rotation.set(0,p.yaw,0);o3.scale.setScalar(p.sc);o3.updateMatrix();
     if(!B.texing)tfTex(B);const i=B.n++,w=B.walk.array;B.m.setMatrixAt(i,o3.matrix);w[4*i]=p.ph;w[4*i+1]=p.sit?-1:p.amp;w[4*i+2]=0;w[4*i+3]=p.g}
   for(const k in M){const B=M[k];B.m.count=B.n;B.m.instanceMatrix.needsUpdate=true;B.walk.needsUpdate=true}
