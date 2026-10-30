@@ -68,7 +68,7 @@ function updateLawnMap(){
 const MAP_LABELS=[['DIG SITE',GX0+S/2,GZ0-4,1],["CORLEY'S ISLAND",0,-EDGE-8,1.2],['FAMILY ISLAND',FAM_X,FAM_Z-FAM_R-6,1.2],["JESSICA'S ISLAND",JES_X,JES_Z-JES_R-8,1.1],
   ["DEXTER'S ISLAND",DEX_X,DEX_Z-DEX_R-8,1.1],['THE LAKE',-130,120,1.3],['THE LAKE',170,390,1.3],['THE WOODS',-220,-450,1.3],['HAYFIELD',210,-440,1.3],['LAKESIDE TOWN',0,690,1.4],['MARINA BEACH',-120,545,1],['GENERAL STORE',0,770,0.9],['MARINA',100,505,0.9]];
 // the map at canvas cv, centred on cx, cz at mpp metres a CSS pixel (big: the site map, with its layers and labels)
-function drawMap(cv,cx,cz,mpp,big){
+function drawMap(cv,cx,cz,mpp,big,bare){
   const dpr=Math.min(2,devicePixelRatio||1),W=Math.round(cv.clientWidth*dpr),H=Math.round(cv.clientHeight*dpr);if(!W||!H)return;
   if(!mapTiles.some(t=>t&&t.cv&&!t.hs))mapBuild(250,cx,cz);
   if(cv.width!==W||cv.height!==H){cv.width=W;cv.height=H}
@@ -105,6 +105,8 @@ function drawMap(cv,cx,cz,mpp,big){
   if(big){g.textAlign='center';g.textBaseline='middle';g.lineJoin='round';const fs=Math.max(12,Math.min(22,10+sc/dpr*4));
     for(const [t,x,z,k] of MAP_LABELS){if(t==='DIG SITE'&&S*sc<40)continue;if(t==="CORLEY'S ISLAND"&&S*sc>=40)continue;
       g.font=`700 ${Math.round(fs*k*dpr)}px "Barlow Condensed", sans-serif`;g.lineWidth=4*dpr;g.strokeStyle='rgba(12,16,12,.75)';g.strokeText(t,X(x),Y(z));g.fillStyle='#f6f3e8';g.fillText(t,X(x),Y(z))}}
+  // (bare: the ground, roads, bridges and buildings only, for the start screen's picture, tools/bake_startmap.js)
+  if(bare)return;
   const icon=(x,z,ang,fill,len,wid,active)=>{g.save();g.translate(X(x),Y(z));g.rotate(ang);
     const L=Math.max(len*sc,big?18*dpr:10*dpr),Wd=Math.max(wid*sc,big?12*dpr:7*dpr);
     if(active){g.beginPath();g.arc(0,0,L*0.95,0,Math.PI*2);g.fillStyle='rgba(255,255,255,.28)';g.fill();g.strokeStyle='rgba(255,255,255,.85)';g.lineWidth=1.5*dpr;g.stroke()}

@@ -281,25 +281,17 @@ statusEl.onclick=()=>{const m=statusEl.classList.toggle('min');try{localStorage.
 // foot (tpGo, maps.js: the nearest spot with room), or Carry on where I was. The machines stay where they were parked
 // (walk up to one and Get in). The tests are in ☰ Tools only, so a stray tap can't start one
 function startIn(m){setMode(m);help.hidden=true;try{localStorage.setItem('bhd_seen','1')}catch(e){}}
-// the part of the world the map shows (metres), fitted whole into the canvas, and where each place's name sits on it
-const ISL_BOX=[-250,250,-60,770],ISL_PIN={corley:[0,95],family:[0,212],dexter:[-200,292],jessica:[200,292],town:[0,735]};
-function islMapView(){const cv=$('#startMapCv'),w=cv.clientWidth||1,h=cv.clientHeight||1;
-  return {cx:(ISL_BOX[0]+ISL_BOX[1])/2,cz:(ISL_BOX[2]+ISL_BOX[3])/2,mpp:Math.max((ISL_BOX[1]-ISL_BOX[0])/w,(ISL_BOX[3]-ISL_BOX[2])/h),w,h}}
+// the map, its names and a tap on it are js/start.js's (SPICK), which counts a tap from the moment the page opens; once
+// the world is ready a tap starts you there at once, and one made while it loaded is acted on then
 const startReady=()=>typeof tpGo==='function'&&typeof warmIdle==='function';
-let islMapT=0;
-function islMapDraw(){clearTimeout(islMapT);if(help.hidden)return;const cv=$('#startMapCv'),V=islMapView(),ok=startReady();
-  if(typeof drawMap==='function'&&cv.clientWidth){if(mapTilesDone()<MPT_NX*MPT_NZ)mapBuild(40,V.cx,V.cz);drawMap(cv,V.cx,V.cz,V.mpp,false)}
-  for(const e of document.querySelectorAll('#startIsl [data-isl]')){const [x,z]=ISL_PIN[e.dataset.isl];const hw=e.offsetWidth/2+4;e.style.left=clamp((x-V.cx)/V.mpp+V.w/2,hw,Math.max(hw,V.w-hw))+'px';e.style.top=((z-V.cz)/V.mpp+V.h/2)+'px'}
-  const t=ok?'Tap the map where you want to start':'Loading the island…';if($('#startMapHint').textContent!==t)$('#startMapHint').textContent=t;
-  $('#startMap').classList.toggle('ready',ok);
-  islMapT=setTimeout(islMapDraw,typeof mapTilesDone!=='function'||mapTilesDone()<MPT_NX*MPT_NZ||!ok?250:500)}
-$('#startMapCv').addEventListener('click',e=>{if(!startReady())return;const r=e.currentTarget.getBoundingClientRect(),V=islMapView(),
-    x=V.cx+(e.clientX-r.left-V.w/2)*V.mpp,z=V.cz+(e.clientY-r.top-V.h/2)*V.mpp;
-  if(!landIn(x,z,0,0,true)&&!tpSpot('foot',x,z)){toast(say('tpLake'),'bad');return}
-  tpPick={x,z};tpGo('foot',true);tpSet(null);startIn('walk');toast(say('startIsl',{island:mapPlace(x,z),how:'on foot'}),'good',2600)});
+SPICK.go=()=>{const p=SPICK.pick;if(!p)return;if(!startReady()){$('#startMapHint').textContent='Starting there as soon as the island has loaded…';return}
+  SPICK.pick=null;startLay();if(!landIn(p.x,p.z,0,0,true)&&!tpSpot('foot',p.x,p.z)){toast(say('tpLake'),'bad');return}
+  tpPick={x:p.x,z:p.z};tpGo('foot',true);tpSet(null);startIn('walk');toast(say('startIsl',{island:mapPlace(p.x,p.z),how:'on foot'}),'good',2600)};
+function startWait(){if(!startReady()){setTimeout(startWait,200);return}$('#startMap').classList.add('ready');
+  if(SPICK.pick)SPICK.go();else $('#startMapHint').textContent='Tap the map where you want to start'}
+startWait();
 $('#startResume').onclick=()=>startIn(mode);
-$('#helpBtn').addEventListener('click',()=>islMapDraw());addEventListener('resize',()=>islMapDraw());
-islMapDraw();
+$('#helpBtn').addEventListener('click',()=>requestAnimationFrame(startLay));
 help.addEventListener('click',e=>{if(e.target===help)startIn(mode)});
 $('#ctrlBtn').onclick=()=>{const b=$('#ctrlBtn'),box=$('#ctrlBox'),on=box.hidden;box.hidden=!on;b.setAttribute('aria-expanded',on);b.textContent=on?'Hide controls':'Controls';if(on)box.scrollIntoView({block:'start',behavior:'smooth'})};
 function started(){if(!st.startT)st.startT=performance.now()}
