@@ -48,7 +48,7 @@ function boxUV(g){const p=g.attributes.position.array,n=g.attributes.normal.arra
 new GLTFLoader().load('models/'+P.get('name')+'.glb',gl=>{const top=gl.scene.children[0].children.length?gl.scene.children[0]:gl.scene;
   let list=top.children.filter(n=>!want||want.includes(n.name));const G=new THREE.Group();let x=0,tri=0;
   const groups=[];for(const n of list){const g=new THREE.Group();n.traverse(m=>{if(!m.isMesh)return;const geo=m.geometry;if(!geo.attributes.uv)boxUV(geo);
-      const ms=new THREE.Mesh(geo,matOf(m.material.name));ms.castShadow=ms.receiveShadow=true;m.updateWorldMatrix(true,false);ms.applyMatrix4(m.matrixWorld);g.add(ms);
+      const ms=new THREE.Mesh(geo,/^own:/.test(m.material.name)?m.material:matOf(m.material.name));ms.castShadow=ms.receiveShadow=true;m.updateWorldMatrix(true,false);ms.applyMatrix4(m.matrixWorld);g.add(ms);
       tri+=(geo.index?geo.index.count:geo.attributes.position.count)/3});groups.push(g)}
   // several nodes of one machine (moving parts) stay together; separate things (no shared bounds) go side by side
   const sep=want&&want.length>1&&P.get('apart')!=='0'||P.get('apart')==='1';

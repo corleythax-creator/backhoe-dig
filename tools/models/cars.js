@@ -247,4 +247,62 @@ pickup.rear=null;
 
 const root=new T.Group();root.name='cars';
 for(const lo of [false,true]){LO=lo;for(const [n,s] of Object.entries({sedan,hatch,wagon,suv,minivan,pickup,van}))root.add(car(n,s))}LO=false;
-return root}
+return window.bmRead?carsImport(root):root}
+
+// ---------- the photo-textured cars (CREDITS.md): tools/models/cars_src/<kind>.glb in place of the built ones ----------
+// Each source is turned nose to +z, scaled to the car's real length (len, metres), stood on y = 0 and centred; its wheel
+// meshes (nodes named wheel..., not the steering wheel) are split by corner into wheel_fl .. wheel_rr about their hubs;
+// its materials become the game's by name (map; paint: the body colour, which the game sets per car; a texture's
+// near-white texels when paintTex names it; untextured see-through glass: tint), and the rest keep their own textures
+// as own:<name>, which townfolk.js leaves as they are. The built car's light version (<kind>_lo) is stretched to fit.
+const CARS_SRC={
+  sedan:{len:4.6,paint:['solar_body'],map:{solar_glass_rim:'gloss',plastic:'plastic'}},
+  hatch:{len:4.04,paintTex:'MODERNHATCH_body'},
+  wagon:{len:4.47,paint:['body'],map:{chrome:'chrome',plastic:'plastic',void:'under'}},
+  suv:{len:4.32,paint:['dust_body'],map:{dust_glass_rim:'gloss'}},
+  van:{len:5.41,paint:['varnish'],map:{chrome:'chrome',black_plastic:'plastic',wheel_rubber:'tire',brakelights_red:'redL',back_blinkers:'amber',blinker_lamps:'amber',
+    front_lamps:'lens',rearlights_white:'lens',sits_leather:'seat',metal:'rim',metal_dark:'disc',brakes:'caliper',mirror_left:'mirror',mirror_right:'mirror'}}};
+async function carsImport(root){const T=THREE,BGU=T.BufferGeometryUtils;
+  for(const [kind,C] of Object.entries(CARS_SRC)){
+    const b64=await window.bmRead('tools/models/cars_src/'+kind+'.glb'),bin=Uint8Array.from(atob(b64),c=>c.charCodeAt(0)).buffer;
+    const gl=await new Promise((ok,no)=>new T.GLTFLoader().parse(bin,'',ok,no));gl.scene.updateMatrixWorld(true);
+    // every mesh as [non-indexed geometry in the model's frame, material, is a wheel]
+    const parts=[];gl.scene.traverse(o=>{if(!o.isMesh)return;let w=false;for(let a=o;a;a=a.parent)if(/wheel/i.test(a.name)&&!/driv|steer/i.test(a.name))w=true;
+      const g=(o.geometry.index?o.geometry.toNonIndexed():o.geometry.clone()).applyMatrix4(o.matrixWorld);
+      for(const k of Object.keys(g.attributes))if(!/^(position|normal|uv)$/.test(k))g.deleteAttribute(k);parts.push([g,o.material,w])});
+    // nose to +z (the source's length along x is turned; C.turn adds half a turn), real length, on the ground, centred
+    const box=new T.Box3();for(const [g] of parts){g.computeBoundingBox();box.union(g.boundingBox)}const sz=box.getSize(new T.Vector3());
+    const m=new T.Matrix4(),yaw=(sz.x>sz.z?Math.PI/2:0)+(C.turn?Math.PI:0),k=C.len/Math.max(sz.x,sz.z);
+    for(const [g] of parts)g.applyMatrix4(m.makeRotationY(yaw)).scale(k,k,k);
+    box.makeEmpty();for(const [g] of parts){g.computeBoundingBox();box.union(g.boundingBox)}const c=box.getCenter(new T.Vector3());
+    for(const [g] of parts)g.translate(-c.x,-box.min.y,-c.z);
+    // a material's game name, or its own (textures kept, opaque ones written as JPEG)
+    const own={},nameOf=mt=>{const n=mt.name;if(n.startsWith('own:'))return n;if((C.paint||[]).includes(n))return 'carpaint';if(C.map&&C.map[n])return C.map[n];
+      if(mt.transparent&&!mt.map)return 'tint';if(!own[n]){own[n]=mt;mt.name='own:'+n;for(const t of [mt.map,mt.normalMap,mt.roughnessMap,mt.metalnessMap])if(t&&!mt.transparent)t.userData.mimeType='image/jpeg'}return mt.name};
+    // near-white texels of a painted texture: sampled at each triangle's middle
+    let px=null,pw=0,ph=0;const ptm=C.paintTex&&parts.map(p=>p[1]).find(mt=>mt.name===C.paintTex);
+    if(ptm){const im=ptm.map.image;pw=im.width;ph=im.height;const cv=document.createElement('canvas');cv.width=pw;cv.height=ph;const cx=cv.getContext('2d');cx.drawImage(im,0,0);px=cx.getImageData(0,0,pw,ph).data}
+    const isPaint=(uv,i)=>{let u=(uv.getX(i)+uv.getX(i+1)+uv.getX(i+2))/3,v=(uv.getY(i)+uv.getY(i+1)+uv.getY(i+2))/3;u-=Math.floor(u);v-=Math.floor(v);
+      const o=4*(Math.min(ph-1,Math.floor(v*ph))*pw+Math.min(pw-1,Math.floor(u*pw))),r=px[o],gg=px[o+1],bb=px[o+2];return Math.min(r,gg,bb)>110&&Math.max(r,gg,bb)-Math.min(r,gg,bb)<20};
+    // sort the triangles into the body or a wheel corner, by material
+    const bins={},add=(grp,key,mt,g,i)=>{const B=(bins[grp]=bins[grp]||{}),e=B[key]=B[key]||{mt,a:{}};for(const [an,at] of Object.entries(g.attributes)){if(an==='uv'&&!key.startsWith('own:'))continue;
+      const L=e.a[an]=e.a[an]||[];for(let j=0;j<3;j++)for(let q=0;q<at.itemSize;q++)L.push(at.array[(i+j)*at.itemSize+q])}};
+    for(const [g,mt,w] of parts){const P=g.attributes.position,key=nameOf(mt);
+      for(let i=0;i<P.count;i+=3){let grp='body';
+        if(w){const x=(P.getX(i)+P.getX(i+1)+P.getX(i+2))/3,z=(P.getZ(i)+P.getZ(i+1)+P.getZ(i+2))/3;grp=(z>0?'f':'r')+(x>0?'l':'r')}
+        add(grp,ptm&&mt===ptm&&isPaint(g.attributes.uv,i)?'carpaint':key,mt,g,i)}}
+    const geoOf=e=>{let g=new T.BufferGeometry();for(const [an,L] of Object.entries(e.a))g.setAttribute(an,new T.Float32BufferAttribute(L,an==='uv'?2:3));
+      if(!g.attributes.normal)g.computeVertexNormals();return BGU.mergeVertices(g,1e-5)};
+    const mk=(e,key,name)=>{const mesh=new T.Mesh(geoOf(e),key.startsWith('own:')?e.mt:new T.MeshStandardMaterial({name:key}));mesh.name=name;return mesh};
+    const car=new T.Group();car.name=kind;const body=new T.Group();body.name='body';car.add(body);
+    for(const [key,e] of Object.entries(bins.body))body.add(mk(e,key,kind+'_'+key.replace(':','_')));
+    for(const q of ['fl','fr','rl','rr']){const B=bins[q];if(!B)throw new Error(kind+': no wheel at '+q);
+      const wb=new T.Box3(),ms=Object.entries(B).map(([key,e])=>{const mesh=mk(e,key,kind+'_w'+q+'_'+key.replace(':','_'));mesh.geometry.computeBoundingBox();wb.union(mesh.geometry.boundingBox);return mesh});
+      const hub=wb.getCenter(new T.Vector3()),wg=new T.Group();wg.name='wheel_'+q;wg.position.copy(hub);let big=null,br=0;
+      for(const mesh of ms){mesh.geometry.translate(-hub.x,-hub.y,-hub.z);mesh.geometry.computeBoundingBox();const r=mesh.geometry.boundingBox.max.y;if(r>br){br=r;big=mesh}wg.add(mesh)}
+      big.name=kind+'_w'+q+'_tire';car.add(wg)}
+    // swap it in for the built car, and stretch the built light one over it
+    const old=root.getObjectByName(kind),lo=root.getObjectByName(kind+'_lo');root.add(car);root.remove(old);
+    const nb=new T.Box3().setFromObject(car).getSize(new T.Vector3()),lb=new T.Box3().setFromObject(lo).getSize(new T.Vector3());lo.scale.set(nb.x/lb.x,nb.y/lb.y,nb.z/lb.z);
+    root.remove(lo);root.add(lo)}
+  return root}
