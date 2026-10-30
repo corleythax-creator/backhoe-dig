@@ -1021,7 +1021,8 @@
     "prop": false,
     "about": "riding a motorbike or ATV: seat 32 in up, hands on the bars, feet on the pegs (BARS)"
    }
-  ]
+  ],
+  "drive_seat": 0.36
  },
  "from": "human-forge"
 }
