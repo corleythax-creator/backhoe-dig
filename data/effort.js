@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-30T00:47:00Z",
+ "updated": "2026-10-30T01:01:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -84,9 +84,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-29",
-   "dh": 24.25,
-   "act": 1.5,
-   "versions": 5
+   "dh": 34.25,
+   "act": 2,
+   "versions": 6
   }
  ],
  "extra": [
@@ -2481,6 +2481,15 @@ window.EFFORT = {
    "tris": 5518819,
    "chars": 1773293,
    "what": "Townsfolk rebuilt as real people: 32 MakeHuman characters with their own bodies, skins, hair and clothes, walking about their own joints"
+  },
+  {
+   "v": 266,
+   "asked": "2026-10-29T19:15:00-05:00",
+   "live": "2026-10-29T20:01:03-05:00",
+   "dh": 10,
+   "tris": 5516374,
+   "chars": 1786559,
+   "what": "The map editor lays paved streets with curbs, sidewalks and a centre line (New street, or Paved on a road's card), lines them with street lights, lamp posts, trees, benches, hydrants or planters at any spacing, and places things and roads anywhere, the mainland's town included; every street and thing stays editable."
   }
  ]
 };
