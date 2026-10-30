@@ -488,10 +488,14 @@ function shopKit(){const parts=new Map(),O=new THREE.Object3D(),n=new THREE.Vect
 // warning pads), a double yellow line, curb inlets to the storm drains and manhole covers. The beach road is paved
 // without curbs. Like the rest of the town it is laid on the ground as it is at load (baseHeight)
 const MST={x:4,z0:556,z1:724.5,cz:652,cw:3.5,walk:1.85,curb:0.15,top:0.17,lift:0.04};
+// the mid-block crosswalks: across Main Street at these z (between the shops, clear of the lamps, trees, inlets and
+// manholes) and across the cross street at these x (in the gaps between its first and second shops)
+const MST_XW={z:[611,685.5],x:[-42,42]};
 // curb ramps where the crosswalks land: the sidewalk slopes down to the gutter over 4 ft. Each: the span along the
 // curb (a0..a1), which axis the curb runs along, the curb line and which way the sidewalk lies from it
 const MST_RAMPS=[];for(const s of [-1,1]){const X=MST.x,C0=MST.cz-MST.cw,C1=MST.cz+MST.cw;for(const [z0,z1] of [[C0-5,C0-2],[C1+2,C1+5]])MST_RAMPS.push({a0:z0,a1:z1,ax:'z',c:s*X,o:s});
-  for(const [x0,x1] of s<0?[[-9.3,-6.3]]:[[6.3,9.3]])for(const t of [-1,1])MST_RAMPS.push({a0:x0,a1:x1,ax:'x',c:t<0?C0:C1,o:t})}
+  for(const [x0,x1] of s<0?[[-9.3,-6.3]]:[[6.3,9.3]])for(const t of [-1,1])MST_RAMPS.push({a0:x0,a1:x1,ax:'x',c:t<0?C0:C1,o:t});
+  for(const z of MST_XW.z)MST_RAMPS.push({a0:z-1.5,a1:z+1.5,ax:'z',c:s*X,o:s});for(const x of MST_XW.x)MST_RAMPS.push({a0:x-1.5,a1:x+1.5,ax:'x',c:s<0?C0:C1,o:s})}
 // the sidewalk's top above the ground at x, z (lower down the ramps)
 function mstRamp(x,z){for(const r of MST_RAMPS){const a=r.ax==='z'?z:x,d=(r.ax==='z'?x-r.c:z-r.c)*r.o;if(a>=r.a0&&a<=r.a1&&d>=0&&d<1.25)return 0.045+(MST.top-0.045)*d/1.25}return MST.top}
 // how far the paving stands above the ground at x, z (0 off it): the asphalt of Main Street and the cross street, and
@@ -533,11 +537,16 @@ function mainStreets(){const K=shopKit(),F=famKit(),G=baseHeight,asph=shopLib('a
   for(const r of RAMPS){const y=(x,z)=>rampAt(x,z)+0.006;if(r.ax==='z')sheet(pad,Math.min(r.c+r.o*MST.curb,r.c+r.o*0.75),Math.max(r.c+r.o*MST.curb,r.c+r.o*0.75),r.a0+0.3,r.a1-0.3,y,0.3);
     else sheet(pad,r.a0+0.3,r.a1-0.3,Math.min(r.c+r.o*MST.curb,r.c+r.o*0.75),Math.max(r.c+r.o*MST.curb,r.c+r.o*0.75),y,0.3)}
   // markings: double yellow lines, stop bars and crosswalks of wide white bars
-  const L=MST.lift+0.008;for(const o of [-0.12,0.12]){for(const [z0,z1] of [[MST.z0,C0-6.2],[C1+6.2,MST.z1-0.5]])sheet(yel,o-0.05,o+0.05,z0,z1,L,3);
-    for(const s of [-1,1])sheet(yel,s<0?-XE:10.5,s<0?-10.5:XE,MST.cz+o-0.05,MST.cz+o+0.05,L,3)}
+  // (the yellow lines broken over the mid-block crosswalks: runs from a to b less the spans round each of cut)
+  const L=MST.lift+0.008,runs=(a,b,cut)=>{const R=[];let p=a;for(const c of cut.filter(c=>c>a&&c<b).sort((u,v)=>u-v)){R.push([p,c-2.5]);p=c+2.5}R.push([p,b]);return R};
+  for(const o of [-0.12,0.12]){for(const [a,b] of [[MST.z0,C0-6.2],[C1+6.2,MST.z1-0.5]])for(const [z0,z1] of runs(a,b,MST_XW.z))sheet(yel,o-0.05,o+0.05,z0,z1,L,3);
+    for(const s of [-1,1])for(const [x0,x1] of runs(s<0?-XE:10.5,s<0?-10.5:XE,MST_XW.x))sheet(yel,x0,x1,MST.cz+o-0.05,MST.cz+o+0.05,L,3)}
   sheet(wht,-X+0.4,0,C0-6,C0-5.6,L,1);sheet(wht,0,X-0.4,C1+5.6,C1+6,L,1);sheet(wht,-10.3,-9.9,MST.cz,C1-0.4,L,1);sheet(wht,9.9,10.3,C0+0.4,MST.cz,L,1);
   for(let x=-3.6;x<=3.61;x+=0.9)for(const [z0,z1] of [[C0-5,C0-2],[C1+2,C1+5]])sheet(wht,x-0.22,x+0.22,z0,z1,L,1);
   for(let z=C0+0.5;z<=C1-0.49;z+=0.9)for(const [x0,x1] of [[-9.3,-6.3],[6.3,9.3]])sheet(wht,x0,x1,z-0.22,z+0.22,L,1);
+  // the mid-block crosswalks, each with a yield line before it in each lane (where cars wait for people crossing)
+  for(const z of MST_XW.z){for(let x=-3.6;x<=3.61;x+=0.9)sheet(wht,x-0.22,x+0.22,z-1.5,z+1.5,L,1);sheet(wht,-X+0.4,0,z-2.9,z-2.5,L,1);sheet(wht,0,X-0.4,z+2.5,z+2.9,L,1)}
+  for(const x of MST_XW.x){for(let z=C0+0.5;z<=C1-0.49;z+=0.9)sheet(wht,x-1.5,x+1.5,z-0.22,z+0.22,L,1);sheet(wht,x+2.5,x+2.9,C0+0.4,MST.cz,L,1);sheet(wht,x-2.9,x-2.5,MST.cz,C1-0.4,L,1)}
   // curb inlets: a cast grate in the gutter, the dark mouth in the curb face, the cover behind it with its drains-to-lake medallion
   const inlet=(x,z,ax,o)=>{const g=G(x,z),gx=ax==='z'?x-o*0.24:x,gz=ax==='z'?z:z-o*0.24,ry=ax==='z'?0:Math.PI/2;
     F.box(0.46,0.03,0.92,0x1c1d1e,gx,g+MST.lift+0.012,gz,ry);for(let i=-2;i<=2;i++){const a=i*0.08;F.box(0.03,0.035,0.86,0x4a4946,gx+(ax==='z'?a:0),g+MST.lift+0.02,gz+(ax==='z'?0:a),ry)}
