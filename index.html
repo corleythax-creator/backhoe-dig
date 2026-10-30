@@ -365,11 +365,12 @@
 </div>
 <div id="help">
   <div class="card" id="startCard">
-    <!-- the start screen: the map of the islands and the town (drawn live, controls.js islMapDraw); tap anywhere on
-         land to start there on foot. The machines are where they were parked: walk up to one and Get in -->
+    <!-- the start screen: the map of the islands and the town (a picture, shots/startmap.jpg, so it shows at once);
+         tap anywhere on land to start there on foot (js/start.js, controls.js). The machines are where they were
+         parked: walk up to one and Get in -->
     <div id="startTop"><h1 id="helpTitle">Corley's Island</h1><p id="startMapHint">Loading the island…</p></div>
     <button id="vrStart" class="vrgo" hidden>🥽 Play in VR</button>
-    <div id="startMap"><canvas id="startMapCv" aria-label="Map: tap where to start"></canvas>
+    <div id="startMap" role="button" aria-label="Map: tap where to start"><img id="startMapImg" src="shots/startmap.jpg" alt="" fetchpriority="high">
       <div id="startIsl" aria-hidden="true"><span data-isl="corley" id="islCorley">Corley's Island</span><span data-isl="family" id="islFamily">Family Island</span><span data-isl="dexter" id="islDexter">Dexter's Island</span><span data-isl="jessica" id="islJessica">Jessica's Island</span><span data-isl="town" id="islTown">Lakeside Town</span></div>
       <div id="startPin" hidden></div></div>
     <div id="startBar"><button id="startResume" class="ghost">Carry on where I was</button>
@@ -413,6 +414,8 @@
   </div>
 </div>
 
+<!-- the start screen's map counts a tap before the game has loaded (no defer: it runs as soon as it arrives) -->
+<script src="js/start.js"></script>
 <script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.min.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/"}}</script>
 <!-- three.js ships as an ES module only; this puts it in the shared global THREE for the game scripts, which are
      deferred so they run after it, in order -->
