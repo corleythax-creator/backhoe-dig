@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Thursday, October 29, 2026
 
+- **v266** (8:01 PM) The map editor lays paved streets with curbs, sidewalks and a centre line (New street, or Paved on a road's card), lines them with street lights, lamp posts, trees, benches, hydrants or planters at any spacing, and places things and roads anywhere, the mainland's town included; every street and thing stays editable.
 - **v265** (7:47 PM) Townsfolk rebuilt as real people: 32 MakeHuman characters with their own bodies, skins, hair and clothes, walking about their own joints
 - **v264** (7:38 PM) The start map shows the moment the game opens (a finished picture, no blank patches), and a tap counts straight away: you start there as soon as the world has loaded.
 - **v263** (7:19 PM) Floating bucket and lawn percentage gauges switched off for now
