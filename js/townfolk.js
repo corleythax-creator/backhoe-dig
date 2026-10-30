@@ -8,7 +8,7 @@
 // triangles, or folk_lo.bin, ~3,000, below High) and texture (folk/<id>.webp, folk_lo/), skinned to 9 parts and drawn
 // as one instanced mesh per character whose limbs swing in the vertex shader about its own joints (TF_GLSL, from
 // cruise-brandon's PD_GLSL). The traffic cars are cruise-brandon's (the owner's other game, its CREDITS.md):
-// models/cars.glb, tools/models/cars.js: sedans, hatchbacks, wagons, SUVs, minivans, pickups and vans on treaded tyres
+// models/cars.glb, tools/models/cars.js (sedan, hatchback, wagon, SUV and van from the CC-BY models in CREDITS.md): sedans, hatchbacks, wagons, SUVs, minivans, pickups and vans on treaded tyres
 // and alloys, each in its own clear-coated colour.
 // They are each device's own: not saved or synced, and how many is the Graphics setting Townsfolk (gfx.js `town`), fewer
 // after dark. Nothing loads or moves until the camera comes within TF_NEAR of the town.
@@ -139,11 +139,11 @@ function tfMeshes(buf,lod,texDir){const cap=TF_N[3][0]+TF_N[3][1]+4+TF_ROOM_CAP;
 function tfTex(B){if(B.texing)return;B.texing=1;new THREE.TextureLoader().load(B.tex,t=>{t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=4;
   const M=B.m.material;M.map=t;M.color.set(0xffffff);M.needsUpdate=true},undefined,()=>{})}
 // a car model (a node of models/cars.glb, standing on y = 0, nose to +z) on the game's materials; its paint is set per
-// car (tfCarPaint), and its wheels (wheel_* nodes, their origins at the hubs) turn about x. Each car holds the detailed
+// car (tfCarPaint), its own:<name> materials keep the model's textures, and its wheels (wheel_* nodes, their origins at the hubs) turn about x. Each car holds the detailed
 // model and its light one (<kind>_lo), and shows the light one past TF_CAR_HI (tfDraw)
 function tfCarModel(k,hi,lo){const root=new THREE.Group();for(const o of [hi,lo]){o.position.set(0,0,0);o.rotation.set(0,0,0);root.add(o)}lo.visible=false;root.updateMatrixWorld(true);
   const box=new THREE.Box3().setFromObject(hi),sz=box.getSize(new THREE.Vector3());
-  root.traverse(o=>{if(o.isMesh){const n=o.material.name;o.material=mdlMatOf(n);o.userData.paint=n==='carpaint';o.castShadow=!/^(tint|under|seat)$/.test(n);o.receiveShadow=true}
+  root.traverse(o=>{if(o.isMesh){const n=o.material.name;if(/^own:/.test(n)){o.material.envMap=skyEnv;o.material.envMapIntensity=0.8}else o.material=mdlMatOf(n);o.userData.paint=n==='carpaint';o.castShadow=!/^(tint|under|seat)$/.test(n);o.receiveShadow=true}
     if(/^wheel_/.test(o.name)){const t=o.children.find(c=>/_tire$/.test(c.name));t.geometry.computeBoundingBox();o.userData.q0=o.quaternion.clone();o.userData.r=t.geometry.boundingBox.max.y}});
   tf.cars[k]={g:root,len:sz.z,wid:sz.x-0.2}}
 // a paint for a new car: picked by how common it is; clear-coated on High graphics
