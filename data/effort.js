@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-30T02:43:00Z",
+ "updated": "2026-10-30T03:25:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -84,9 +84,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-29",
-   "dh": 44.25,
-   "act": 2.5,
-   "versions": 7
+   "dh": 49.25,
+   "act": 3,
+   "versions": 8
   }
  ],
  "extra": [
@@ -2499,6 +2499,15 @@ window.EFFORT = {
    "tris": 5517152,
    "chars": 1794156,
    "what": "Three times the people and cars in town; every car has a driver at the wheel who gets out when it parks; cars pass through, loop the neighbourhoods and stop for people at four new mid-block crosswalks"
+  },
+  {
+   "v": 268,
+   "asked": "2026-10-29T22:05:00-05:00",
+   "live": "2026-10-29T22:25:59-05:00",
+   "dh": 5,
+   "tris": 5524008,
+   "chars": 1794364,
+   "what": "The town's sedans, hatchbacks, wagons, SUVs and vans are now detailed photo-textured models (free CC-BY cars), still in every paint colour with turning wheels"
   }
  ]
 };
