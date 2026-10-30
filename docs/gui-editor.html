@@ -192,6 +192,8 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 #lawnChip{position:absolute;left:50%;top:calc(env(safe-area-inset-top,0px) + 12px);transform:translateX(-50%);z-index:3;zoom:var(--ms);min-width:170px;box-sizing:border-box;
   display:grid;grid-template-columns:1fr auto;align-items:baseline;gap:5px 12px;padding:8px 14px 9px;border-radius:14px;background:var(--glass);border:1px solid var(--hud-line);box-shadow:var(--lift);pointer-events:none}
 #lawnChip[hidden]{display:none}
+/* the floating percentage gauges (bucket, lawn patch) are switched off for now (owner, Oct 30); delete this line to bring them back */
+#bucketChip,#lawnChip{display:none!important}
 #lawnChipName{font:600 13px/1 var(--f-display);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
 #lawnChipVal{font:700 22px/1 var(--f-display);font-variant-numeric:tabular-nums}
 #lawnChip .bar{grid-column:1/-1;display:block}#lawnChipBar{background:#9bd46a}
