@@ -319,7 +319,7 @@ $('publish').onclick=async()=>{const b=$('publish');b.disabled=true;setStatus('P
 
 // ---------- start ----------
 ['pStyle','pNew','pCrew'].forEach((id,i)=>$(id).textContent=[STYLE,NEW,CREW][i]);
-Promise.all([fetch('models/peds/peds.json').then(r=>r.json()),fetch('models/peds/folk.json').then(r=>r.json()),fetch('models/peds/folk_hi.bin').then(r=>r.arrayBuffer())]).then(([pj,fj,buf])=>{
+Promise.all([fetch('models/peds/peds.json').then(r=>r.json()),fetch('models/peds/folk.json').then(r=>r.json()),fetch('models/peds/folk_hi.b64.txt').then(r=>r.text()).then(t=>{const b=atob(t.trim()),u=new Uint8Array(b.length);for(let i=0;i<b.length;i++)u[i]=b.charCodeAt(i);return u.buffer})]).then(([pj,fj,buf])=>{
   st.chars=pj.chars;setupGL();const byId={};for(const f of fj.chars)byId[f.id]=f;
   for(const c of st.chars){const f=byId[c.id];if(!f)continue;c.folk=f;const m=new THREE.Mesh(folkGeo(buf,f.hi),mat);m.visible=false;m.frustumCulled=false;scene.add(m);mesh[c.id]=m}
   const g=$('grid');st.chars.forEach((c,i)=>g.appendChild(card(c,i)));refresh();
