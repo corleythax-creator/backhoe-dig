@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-30T00:38:00Z",
+ "updated": "2026-10-30T00:47:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -84,9 +84,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-29",
-   "dh": 10.25,
+   "dh": 24.25,
    "act": 1.5,
-   "versions": 4
+   "versions": 5
   }
  ],
  "extra": [
@@ -2472,6 +2472,15 @@ window.EFFORT = {
    "tris": 5523752,
    "chars": 1772338,
    "what": "The start map shows the moment the game opens (a finished picture, no blank patches), and a tap counts straight away: you start there as soon as the world has loaded."
+  },
+  {
+   "v": 265,
+   "asked": "2026-10-29T18:35:00-05:00",
+   "live": "2026-10-29T19:47:27-05:00",
+   "dh": 14,
+   "tris": 5518819,
+   "chars": 1773293,
+   "what": "Townsfolk rebuilt as real people: 32 MakeHuman characters with their own bodies, skins, hair and clothes, walking about their own joints"
   }
  ]
 };
