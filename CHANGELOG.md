@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Thursday, October 29, 2026
 
+- **v269** (11:04 PM) On High and Ultra graphics the townsfolk are the same 32 people rebuilt in Human Forge with a real skeleton and animation: they walk with a true stride at their own pace, stand easy or talk with their hands at counters, sit properly in chairs and benches and hold the wheel when driving; Low and Medium keep the light ones for phones.
 - **v268** (10:25 PM) The town's sedans, hatchbacks, wagons, SUVs and vans are now detailed photo-textured models (free CC-BY cars), still in every paint colour with turning wheels
 - **v267** (9:43 PM) Three times the people and cars in town; every car has a driver at the wheel who gets out when it parks; cars pass through, loop the neighbourhoods and stop for people at four new mid-block crosswalks
 - **v266** (8:01 PM) The map editor lays paved streets with curbs, sidewalks and a centre line (New street, or Paved on a road's card), lines them with street lights, lamp posts, trees, benches, hydrants or planters at any spacing, and places things and roads anywhere, the mainland's town included; every street and thing stays editable.
