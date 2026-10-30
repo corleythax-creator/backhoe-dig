@@ -130,7 +130,7 @@ const WORDS=[
   ['edTip_query','Map editor','Tap or drag over the ground to read its height, slope and surface.'],
   ['edTip_measure','Map editor','Tap the ground to lay points: the length shows, and with three or more the area. Drag a point to move it; tap the first one to close the shape.'],
   ['edViewCopied','Map editor','View copied: {code}. Paste it to Claude to show where you are looking ({where}).','the view code, where it looks'],
-  ['edTip_roads','Map editor','Tap a road to pick it, drag its dots, tap it between dots to add one.'],
+  ['edTip_roads','Map editor','Tap a road or street to pick it, drag its dots, tap it between dots to add one. New street lays a paved one with curbs and sidewalks.'],
   ['vrIn','VR','In VR: sticks as on a controller, triggers gas / reverse. B gets in and out, X next machine, Y leaves VR.'],['vrFail','VR','Could not start VR on this device.'],
   ['vrHintWalk','VR','B get in · A jump · X next machine · Y leave VR'],['vrHintEx','VR','B get out · A drive / dig · X next machine · Y leave VR'],['vrHintRide','VR','B get out · X next machine · Y leave VR'],
   ['padReady','Other','Controller ready. LB / RB switch machine, Y cab view.'],['padLost','Other','Controller disconnected. Press any button on it to carry on.'],['reset','Other','Fresh ground. Paint is back.'],['saveFull','Other','The site is too big to save in this browser ({mb} MB). Digging since the last save is not kept.','{mb}: how big the save is, in MB'],
