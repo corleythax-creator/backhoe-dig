@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-29T23:23:00Z",
+ "updated": "2026-10-30T00:38:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -84,9 +84,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-29",
-   "dh": 8,
-   "act": 0.5,
-   "versions": 2
+   "dh": 10.25,
+   "act": 1.5,
+   "versions": 4
   }
  ],
  "extra": [
@@ -2454,6 +2454,24 @@ window.EFFORT = {
    "tris": 6904852,
    "chars": 1778162,
    "what": "Townsfolk page: every pedestrian in 3D against a height chart, switch characters out of town (published live), photo prompts to rebuild them photoreal"
+  },
+  {
+   "v": 263,
+   "asked": "2026-10-29T19:15:00-05:00",
+   "live": "2026-10-29T19:19:22-05:00",
+   "dh": 0.25,
+   "tris": 6893246,
+   "chars": 1769800,
+   "what": "Floating bucket and lawn percentage gauges switched off for now"
+  },
+  {
+   "v": 264,
+   "asked": "2026-10-29T19:02:00-05:00",
+   "live": "2026-10-29T19:38:04-05:00",
+   "dh": 2,
+   "tris": 5523752,
+   "chars": 1772338,
+   "what": "The start map shows the moment the game opens (a finished picture, no blank patches), and a tap counts straight away: you start there as soon as the world has loaded."
   }
  ]
 };
