@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Thursday, October 29, 2026
 
+- **v264** (7:38 PM) The start map shows the moment the game opens (a finished picture, no blank patches), and a tap counts straight away: you start there as soon as the world has loaded.
 - **v263** (7:19 PM) Floating bucket and lawn percentage gauges switched off for now
 - **v262** (6:23 PM) Townsfolk page: every pedestrian in 3D against a height chart, switch characters out of town (published live), photo prompts to rebuild them photoreal
 - **v261** (6:21 PM) Faster loading, and a new start screen: a big map of the islands and town, tap where you want to start. No more machine tiles or test buttons on it (tests are in ☰ Tools).
