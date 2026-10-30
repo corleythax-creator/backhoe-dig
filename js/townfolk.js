@@ -22,7 +22,7 @@ const TF_N=[[0,0],[8,3],[14,5],[24,7]];
 // must come for a room to fill (it empties again past TF_RFAR); the most drawn in the rooms at once
 const TF_RN=[0,1,2,3],TF_RNEAR=70,TF_RFAR=95,TF_ROOM_CAP=110;
 const tf={q:2,on:false,parked:[],parkedOn:false,load:0,bodies:null,chars:null,tex:null,M:null,cars:{},people:[],drive:[],t:0,spawnT:0,o:new THREE.Object3D(),fr:new THREE.Frustum(),fm:new THREE.Matrix4(),v:new THREE.Vector3()};
-function tfGfx(q){tf.q=q??2;if(tf.M)for(const k in tf.M)tf.M[k].m.castShadow=!!gfxCur.pbr}
+function tfGfx(q){tf.q=q??2;if(tf.M)for(const k in tf.M){const B=tf.M[k];B.m.castShadow=!!gfxCur.pbr;if(B.fg&&B.fg.object)B.fg.object.castShadow=!!gfxCur.pbr}}
 // ---------- the walks: sidewalk centre lines, crosswalks (x) and the ways to the store's door ----------
 const MSX=5.3,MCN=646.85,MCS=657.15,TF_DOOR=[0,742.4],TF_GATE=[64,679.5];
 const TF_WALK=[[[-MSX,580],[-MSX,MCN]],[[MSX,580],[MSX,MCN]],[[-MSX,MCS],[-MSX,723]],[[MSX,MCS],[MSX,723]],
@@ -133,6 +133,28 @@ function tfMeshes(buf,lod,texDir){const cap=TF_N[3][0]+TF_N[3][1]+4+TF_ROOM_CAP;
 // a character's texture, the first time someone in town wears it
 function tfTex(B){if(B.texing)return;B.texing=1;new THREE.TextureLoader().load(B.tex,t=>{t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=4;
   const M=B.m.material;M.map=t;M.color.set(0xffffff);M.needsUpdate=true},undefined,()=>{})}
+// ---------- Human Forge (High and Ultra graphics, gfxCur.forge): the same 32 people rigged with a skeleton and real
+// animation clips (models/people, from the human-forge repo; README "Townsfolk"), one GPU-skinned crowd per character
+// in use. The runtime loads with the townsfolk (near town only); until it and a character's crowd are ready, or if
+// either fails, that character draws on its old mesh. The crowds' clocks are never run (no forge.update): each person
+// keeps their own clip time (p.ct), handed over as the clip's offset, since tfDraw packs whoever is in view every frame
+const TF_FG_CLIPS=['walk','idle','talk','sit'];
+function tfForge(){const F=tf.F||(tf.F={st:0});if(F.st||!gfxCur.forge)return;F.st=1;
+  const go=()=>HumanForge.load(THREE,'models/people/').then(f=>{F.f=f;F.ref=f.library.anims.ref_pelvis||0.97;F.st=2}).catch(e=>{console.warn('townsfolk forge:',e);F.st=-1});
+  if(window.HumanForge)return go();const s=document.createElement('script');s.src='models/people/human-forge.js';s.onload=go;s.onerror=()=>{F.st=-1};document.head.appendChild(s)}
+// a character's crowd, the first time someone in view wears that look; the walk's ground speed scales with the
+// person's size (the clip's own speed is a 6 ft person's)
+function tfForgeCrowd(B,id){B.fg=1;const F=tf.F;
+  F.f.crowd('island_'+id,{max:B.cap,clips:TF_FG_CLIPS,lod:gfxCur.forge,castShadow:true,receiveShadow:true}).then(c=>{const m=c.object,M=m.material;
+    M.roughness=0.86;M.envMap=skyEnv;M.envMapIntensity=0.5;m.castShadow=!!gfxCur.pbr;m.visible=false;c.stride=F.f.clips.walk.speed*c.type.hip/F.ref;scene.add(m);B.fg=c})
+    .catch(e=>console.warn('townsfolk forge:',id,e))}
+// person p as instance i of crowd c: walking (pace = their speed), sitting (the clip's origin is on the floor under the
+// seat's middle, its seat 18 in up like the rooms' chairs and benches), or standing easy or talking (staff and customers)
+function tfFgPose(p,c,i,dt){let k=p.sit?'sit':p.spd>(p.fk==='walk'?0.15:0.3)?'walk':0;
+  if(!k){if(p.fk!=='idle'&&p.fk!=='talk'||p.t>(p.tp??0)+1)p.tk=Math.random()<(p.room?p.spot.staff?0.5:0.35:0.06);p.tp=p.t;k=p.tk?'talk':'idle'}
+  const A=c.clips[k];if(k!==p.fk){p.fk=k;p.ct=k==='walk'?0.1:Math.random()*A.duration}
+  p.ct=(p.ct+dt*(k==='walk'?p.spd/(c.stride*p.sc):1))%A.duration;
+  const f=p.sit?0.05:0;c.place(i,{x:p.x+Math.sin(p.yaw)*f,y:p.y,z:p.z+Math.cos(p.yaw)*f,heading:p.yaw,scale:p.sc});c.anim(i,k,{offset:p.ct})}
 // a car model (a node of models/cars.glb, standing on y = 0, nose to +z) on the game's materials; its paint is set per
 // car (tfCarPaint), and its wheels (wheel_* nodes, their origins at the hubs) turn about x. Each car holds the detailed
 // model and its light one (<kind>_lo), and shows the light one past TF_CAR_HI (tfDraw)
@@ -277,7 +299,7 @@ function tfParkedShow(on){if(on===tf.parkedOn)return;tf.parkedOn=on;const ks=Obj
 function tfTick(dt){if(!tf.q){if(tf.on)tfShow(false);return}
   const cx=camera.position.x,cz=camera.position.z,B=TF_BOX,dd=Math.hypot(Math.max(B[0]-cx,0,cx-B[1]),Math.max(B[2]-cz,0,cz-B[3]));
   if(dd>TF_NEAR){if(tf.on)tfShow(false);return}
-  if(!tf.load)tfLoad();if(tf.load!==2)return;
+  if(!tf.load)tfLoad();if(tf.load!==2)return;if(gfxCur.forge&&!(tf.F&&tf.F.st))tfForge();
   dt=Math.min(dt,0.1);tf.t+=dt;camera.updateMatrixWorld();tf.fm.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse);tf.fr.setFromProjectionMatrix(tf.fm);
   const night=typeof dn==='object'?Math.min(1,Math.max(0.3,(dn.el+8)/14)):1,[np,nc]=TF_N[tf.q],wantP=Math.round(np*night),wantC=Math.round(nc*night),walkers=tf.people.filter(p=>!p.car&&!p.room);
   if(!tf.on){tfShow(true);while(walkers.length<wantP){const p=tfSpawnWalker(true);if(!p)break;walkers.push(p)}}
@@ -289,13 +311,15 @@ function tfTick(dt){if(!tf.q){if(tf.on)tfShow(false);return}
   tfRoomsTick();if(!tf.parkedOn&&Object.keys(tf.cars).length===Object.keys(TF_CARS).length)tfParkedShow(true);
   for(const p of tf.people.slice()){if(p.room){tfRoomStep(p,dt);continue}tfWalkStep(p,dt);p.y+=(baseHeight(p.x,p.z)+tfLift(p.x,p.z)-p.y)*Math.min(1,dt*8)}
   if(mode==='walk'&&walker.visible){for(const c of tf.drive)wkPushRound(c,[-c.len*0.3,0,c.len*0.3],c.wid/2);for(const p of tf.people)if(!p.inside)wkPushRound(p,[0],0.22)}
-  tfDraw()}
+  tfDraw(dt)}
 function tfShow(on){tf.on=on;for(const k in tf.M||{})tf.M[k].m.visible=on;for(const c of tf.drive)c.g.visible=on;tfParkedShow(on);
-  if(!on){for(const c of tf.drive.slice())tfCarDrop(c);for(const p of tf.people.slice())tfDrop(p)}}
-function tfDraw(){const M=tf.M,o3=tf.o,cx=camera.position.x,cz=camera.position.z;for(const k in M)M[k].n=0;
+  if(!on){for(const k in tf.M||{}){const c=tf.M[k].fg;if(c&&c.object)c.object.visible=false}for(const c of tf.drive.slice())tfCarDrop(c);for(const p of tf.people.slice())tfDrop(p)}}
+function tfDraw(dt){const M=tf.M,o3=tf.o,cx=camera.position.x,cz=camera.position.z,fo=tf.F&&tf.F.st===2&&!!gfxCur.forge;for(const k in M)M[k].n=M[k].fn=0;
   for(const p of tf.people){if(p.inside)continue;const B=M[p.body];if(!B||B.n>=B.cap)continue;
     if((p.x-cx)**2+(p.z-cz)**2>(p.room?TF_RFAR*TF_RFAR:220*220)||!tfSeen(p.x,p.z,1.3))continue;
     o3.position.set(p.x,p.y+(p.sit?-0.42*p.sc:Math.abs(Math.cos(p.ph))*0.025*p.amp*p.sc),p.z);o3.rotation.set(0,p.yaw,0);o3.scale.setScalar(p.sc);o3.updateMatrix();
+    if(fo){if(!B.fg)tfForgeCrowd(B,p.body);if(B.fg!==1){tfFgPose(p,B.fg,B.fn++,dt);continue}}
     if(!B.texing)tfTex(B);const i=B.n++,w=B.walk.array;B.m.setMatrixAt(i,o3.matrix);w[4*i]=p.ph;w[4*i+1]=p.sit?-1:p.amp;w[4*i+2]=0;w[4*i+3]=p.g}
-  for(const k in M){const B=M[k];B.m.count=B.n;B.m.instanceMatrix.needsUpdate=true;B.walk.needsUpdate=true}
+  for(const k in M){const B=M[k];B.m.count=B.n;B.m.visible=tf.on&&B.n>0;B.m.instanceMatrix.needsUpdate=true;B.walk.needsUpdate=true;
+    const c=B.fg;if(c&&c.object){c.object.count=B.fn;c.object.visible=fo&&tf.on&&B.fn>0}}
   for(const c of [...tf.drive,...tf.parked]){const d2=(c.x-cx)**2+(c.z-cz)**2;c.g.visible=d2<400*400;const hi=d2<TF_CAR_HI*TF_CAR_HI;c.g.children[0].visible=hi;c.g.children[1].visible=!hi}}
