@@ -3,11 +3,13 @@
 // and the beach road, which keep right, stop at the four-way stop and take their turn, wait for anyone in the way (people,
 // the worker, a machine, another car), and park at the General Store or the marina, where the driver gets out, walks in,
 // comes back a while later and drives off.
-// The people and cars are cruise-brandon's (the owner's other game, its CREDITS.md): photo-textured bodies of a man, a
-// woman and a child (models/peds/bodies.json, ~3,000 triangles each, skinned to 9 parts) painted as 32 characters in one
-// atlas (peds_atlas.webp, _1k below High; peds.json), drawn as one instanced mesh per body whose limbs swing in the vertex
-// shader (TF_GLSL, cruise-brandon's PD_GLSL); and its traffic cars (models/cars.glb, tools/models/cars.js: sedans,
-// hatchbacks, wagons, SUVs, minivans, pickups and vans on treaded tyres and alloys, each in its own clear-coated colour).
+// The people are 32 characters (models/peds/peds.json) each built whole from MakeHuman's CC0 bodies, skins, hair and
+// clothes by tools/peds (build_folk.py in Blender, pack_folk.py): its own mesh (models/peds/folk_hi.bin, ~7,000
+// triangles, or folk_lo.bin, ~3,000, below High) and texture (folk/<id>.webp, folk_lo/), skinned to 9 parts and drawn
+// as one instanced mesh per character whose limbs swing in the vertex shader about its own joints (TF_GLSL, from
+// cruise-brandon's PD_GLSL). The traffic cars are cruise-brandon's (the owner's other game, its CREDITS.md):
+// models/cars.glb, tools/models/cars.js: sedans, hatchbacks, wagons, SUVs, minivans, pickups and vans on treaded tyres
+// and alloys, each in its own clear-coated colour.
 // They are each device's own: not saved or synced, and how many is the Graphics setting Townsfolk (gfx.js `town`), fewer
 // after dark. Nothing loads or moves until the camera comes within TF_NEAR of the town.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
@@ -91,39 +93,46 @@ function tfPath(poses,park){const X=[],Z=[],R=[],stop=[];
     const k=dh/Math.max(0.5,S[b]-S[a]),lot=Z[i]>723||X[i]>56&&Z[i]<615;V[i]=Math.min(TU.tfCarV,Math.sqrt(2/Math.max(k,1e-4)),lot?3.5:1e9,R[i]?1.4:1e9)}
   for(let i=n-2;i>=0;i--)V[i]=Math.min(V[i],Math.sqrt(V[i+1]*V[i+1]+2*2.2*(S[i+1]-S[i])));
   return {X,Z,R,S,H,F,V,stop,n,len:S[n-1],park}}
-// ---------- loading: the bodies and their atlas, then the cars, once the town is near ----------
-const TF_GLSL=`attribute vec3 aSk;attribute vec4 aWalk;
+// ---------- loading: the people and their textures, then the cars, once the town is near ----------
+// the limbs swing about each character's own joint heights (uJ: knee, hip, elbow, shoulder, from tools/peds)
+const TF_GLSL=`attribute vec3 aSk;attribute vec4 aWalk;uniform vec4 uJ;
 mat3 pdRot(float a){float c=cos(a),s=sin(a);return mat3(1.,0.,0.,0.,c,s,0.,-s,c);}
 vec3 pdRx(vec3 q,float a,float y){q.y-=y;q=pdRot(a)*q;q.y+=y;return q;}
 void pdPart(float pP,inout vec3 p,inout vec3 n){pP=floor(pP+0.5);if(pP<0.5)return;float leg=pP<2.5||(pP>4.5&&pP<6.5)?1.:0.,L=mod(pP,2.);
-  if(aWalk.y<-0.5){if(pP>4.5){float k=leg>0.5?1.5:-1.1;p=pdRx(p,k,leg>0.5?0.490:1.100);n=pdRot(k)*n;}float s=leg>0.5?-1.5:-0.22;p=pdRx(p,s,leg>0.5?0.910:1.420);n=pdRot(s)*n;return;}
+  if(aWalk.y<-0.5){if(pP>4.5){float k=leg>0.5?1.5:-1.1;p=pdRx(p,k,leg>0.5?uJ.x:uJ.z);n=pdRot(k)*n;}float s=leg>0.5?-1.5:-0.22;p=pdRx(p,s,leg>0.5?uJ.y:uJ.w);n=pdRot(s)*n;return;}
   float am=abs(aWalk.y),sg=leg>0.5?(L>0.5?1.:-1.):(L>0.5?-1.:1.),sw=sin(aWalk.x)*am*sg,cw=cos(aWalk.x)*sg;
-  if(pP>4.5){if(leg>0.5){float k=am*1.5*max(0.,-cw)+am*0.25;p=pdRx(p,k,0.490);n=pdRot(k)*n;}
-    else{float e=-0.22-am*0.5*max(0.,-sin(aWalk.x)*sg);p=pdRx(p,e,1.100);n=pdRot(e)*n;}}
-  float a=leg>0.5?sw:sw*0.85;p=pdRx(p,a,leg>0.5?0.910:1.420);n=pdRot(a)*n;}
-void pdSkin(inout vec3 p,inout vec3 n){vec3 p1=p,n1=n,p2=p,n2=n;pdPart(aSk.x,p1,n1);pdPart(aSk.y,p2,n2);p=mix(p1,p2,aSk.z);n=normalize(mix(n1,n2,aSk.z));}
-void pdGirth(inout vec3 p,inout vec3 n){float w=floor(aWalk.w+0.5);if(w<1.)return;
-  vec2 g=mix(vec2(floor(w/1000.),mod(w,1000.))/100.,vec2(1.),smoothstep(1.42,1.52,p.y));p.xz*=g;n.xz/=g;n=normalize(n);}`;
-function tfLoad(){if(tf.load)return;tf.load=1;const B='models/peds/',j=u=>fetch(B+u).then(r=>{if(!r.ok)throw new Error(u);return r.json()});
-  const t=new Promise((ok,no)=>new THREE.TextureLoader().load(B+(gfxCur.pbr?'peds_atlas.webp':'peds_atlas_1k.webp'),ok,undefined,no));
-  Promise.all([j('bodies.json'),j('peds.json'),t]).then(([bd,ch,tx])=>{tx.colorSpace=THREE.SRGBColorSpace;tx.anisotropy=4;
-    tf.bodies=bd;tf.chars=ch.chars;tf.GC=ch.cols;tf.GR=ch.rows;tf.tex=tx;tf.use=new Array(ch.chars.length).fill(0);tfMeshes();tf.load=2}).catch(e=>{console.warn('townsfolk:',e);tf.load=-1});
+  if(pP>4.5){if(leg>0.5){float k=am*1.5*max(0.,-cw)+am*0.25;p=pdRx(p,k,uJ.x);n=pdRot(k)*n;}
+    else{float e=-0.22-am*0.5*max(0.,-sin(aWalk.x)*sg);p=pdRx(p,e,uJ.z);n=pdRot(e)*n;}}
+  float a=leg>0.5?sw:sw*0.85;p=pdRx(p,a,leg>0.5?uJ.y:uJ.w);n=pdRot(a)*n;}
+void pdSkin(inout vec3 p,inout vec3 n){vec3 p1=p,n1=n,p2=p,n2=n;pdPart(aSk.x,p1,n1);pdPart(aSk.y,p2,n2);p=mix(p1,p2,aSk.z);n=normalize(mix(n1,n2,aSk.z));}`;
+// each character's mesh (folk_hi.bin on High graphics, folk_lo.bin below) and texture (folk/<id>.webp, folk_lo/), loaded
+// when someone first wears that look
+function tfLoad(){if(tf.load)return;tf.load=1;const B='models/peds/',lod=gfxCur.pbr?'hi':'lo',j=u=>fetch(B+u).then(r=>{if(!r.ok)throw new Error(u);return r});
+  Promise.all([j('peds.json').then(r=>r.json()),j('folk.json').then(r=>r.json()),j('folk_'+lod+'.bin').then(r=>r.arrayBuffer())]).then(([ch,fk,buf])=>{
+    const by={};for(const f of fk.chars)by[f.id]=f;tf.chars=ch.chars.filter(c=>by[c.id]);for(const c of tf.chars)c.folk=by[c.id];
+    tf.use=new Array(tf.chars.length).fill(0);tfMeshes(buf,lod,B+(lod==='hi'?'folk/':'folk_lo/'));tf.load=2}).catch(e=>{console.warn('townsfolk:',e);tf.load=-1});
   mdlLoad('cars',sc=>{const top=sc.getObjectByName('cars')||sc;for(const k in TF_CARS){const hi=top.getObjectByName(k),lo=top.getObjectByName(k+'_lo');if(hi&&lo)tfCarModel(k,hi,lo)}})}
-function tfMeshes(){const C=tf.GC.toFixed(1),R=tf.GR.toFixed(1),mat=new THREE.MeshStandardMaterial({map:tf.tex,roughness:0.88,envMap:skyEnv,envMapIntensity:0.5});
-  mat.onBeforeCompile=sh=>{sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\n'+TF_GLSL)
-    .replace('#include <beginnormal_vertex>','#include <beginnormal_vertex>\nvec3 pdP=position,pdN=objectNormal;pdGirth(pdP,pdN);pdSkin(pdP,pdN);objectNormal=pdN;')
-    .replace('#include <begin_vertex>','#include <begin_vertex>\ntransformed=pdP;')
-    .replace('#include <uv_vertex>',`#include <uv_vertex>\nvMapUv=(vMapUv+vec2(mod(aWalk.z,${C}),${R}-1.-floor(aWalk.z/${C}+0.01)))/vec2(${C},${R});`)};
-  mat.customProgramCacheKey=()=>'townfolk-'+C+'x'+R;
-  const cap=TF_N[3][0]+TF_N[3][1]+4+TF_ROOM_CAP;tf.M={};
-  for(const k of ['m','f','k']){const b=tf.bodies[k];if(!b)continue;const g=new THREE.BufferGeometry();
-    g.setAttribute('position',new THREE.Float32BufferAttribute(b.p,3));g.setAttribute('normal',new THREE.Float32BufferAttribute(Float32Array.from(b.n,v=>v/1000),3));
-    g.setAttribute('uv',new THREE.Float32BufferAttribute(Float32Array.from(b.uv,v=>v/65535),2));
-    g.setAttribute('aSk',new THREE.Float32BufferAttribute(Float32Array.from(b.sk,(v,i)=>i%3===2?v/255:v),3));
-    g.setIndex(b.p.length/3>65535?new THREE.Uint32BufferAttribute(b.i,1):new THREE.Uint16BufferAttribute(b.i,1));
-    const walk=new THREE.InstancedBufferAttribute(new Float32Array(cap*4),4);walk.setUsage(THREE.DynamicDrawUsage);g.setAttribute('aWalk',walk);
-    const m=new THREE.InstancedMesh(g,mat,cap);m.count=0;m.frustumCulled=false;m.castShadow=!!gfxCur.pbr;m.receiveShadow=true;m.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-    scene.add(m);tf.M[k]={m,walk,n:0,cap}}}
+// one character's mesh from the packed file (layout in tools/peds/pack_folk.py)
+function tfGeo(buf,r){const g=new THREE.BufferGeometry(),nv=r.nv,n=new Int8Array(buf,r.n,nv*4),N=new Float32Array(nv*3),k=new Uint8Array(buf,r.sk,nv*4),K=new Float32Array(nv*3);
+  for(let i=0;i<nv;i++){N[3*i]=n[4*i]/127;N[3*i+1]=n[4*i+1]/127;N[3*i+2]=n[4*i+2]/127;K[3*i]=k[4*i];K[3*i+1]=k[4*i+1];K[3*i+2]=k[4*i+2]/255}
+  g.setAttribute('position',new THREE.Float32BufferAttribute(Float32Array.from(new Int16Array(buf,r.p,nv*3),v=>v/1000),3));g.setAttribute('normal',new THREE.BufferAttribute(N,3));
+  g.setAttribute('uv',new THREE.Float32BufferAttribute(Float32Array.from(new Uint16Array(buf,r.uv,nv*2),v=>v/65535),2));g.setAttribute('aSk',new THREE.BufferAttribute(K,3));
+  g.setIndex(new THREE.BufferAttribute(r.u32?new Uint32Array(buf,r.i,r.ni):new Uint16Array(buf,r.i,r.ni),1));return g}
+// one instanced mesh per character, each on its own material (its texture, its joints) sharing one shader; hair,
+// eyebrows and glasses cut out of the texture
+function tfMeshes(buf,lod,texDir){const cap=TF_N[3][0]+TF_N[3][1]+4+TF_ROOM_CAP;tf.M={};
+  for(const c of tf.chars){const f=c.folk,J=f.joint,uJ={value:new THREE.Vector4(J.knee,J.hip,J.elbow,J.shoulder)};
+    const mat=new THREE.MeshStandardMaterial({roughness:0.86,envMap:skyEnv,envMapIntensity:0.5,alphaTest:0.5,side:THREE.DoubleSide,color:0x808080});
+    mat.onBeforeCompile=sh=>{sh.uniforms.uJ=uJ;sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\n'+TF_GLSL)
+      .replace('#include <beginnormal_vertex>','#include <beginnormal_vertex>\nvec3 pdP=position,pdN=objectNormal;pdSkin(pdP,pdN);objectNormal=pdN;')
+      .replace('#include <begin_vertex>','#include <begin_vertex>\ntransformed=pdP;')};
+    mat.customProgramCacheKey=()=>'townfolk2';
+    const g=tfGeo(buf,f[lod]),walk=new THREE.InstancedBufferAttribute(new Float32Array(cap*4),4);walk.setUsage(THREE.DynamicDrawUsage);g.setAttribute('aWalk',walk);
+    const m=new THREE.InstancedMesh(g,mat,cap);m.count=0;m.frustumCulled=false;m.castShadow=!!gfxCur.pbr;m.receiveShadow=true;m.instanceMatrix.setUsage(THREE.DynamicDrawUsage);m.visible=tf.on;
+    scene.add(m);tf.M[c.id]={m,walk,n:0,cap,tex:texDir+c.id+'.webp'}}}
+// a character's texture, the first time someone in town wears it
+function tfTex(B){if(B.texing)return;B.texing=1;new THREE.TextureLoader().load(B.tex,t=>{t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=4;
+  const M=B.m.material;M.map=t;M.color.set(0xffffff);M.needsUpdate=true},undefined,()=>{})}
 // a car model (a node of models/cars.glb, standing on y = 0, nose to +z) on the game's materials; its paint is set per
 // car (tfCarPaint), and its wheels (wheel_* nodes, their origins at the hubs) turn about x. Each car holds the detailed
 // model and its light one (<kind>_lo), and shows the light one past TF_CAR_HI (tfDraw)
@@ -142,7 +151,7 @@ function tfCarPaint(u){const W=TF_PAINT.reduce((n,p)=>n+p[2],0);let r=(u??Math.r
 // never one the owner left out (TU.tfOut, a bit per character), unless every one is
 function tfOff(i){const m=TU.tfOut||0;return i<32&&Math.floor(m/2**i)%2===1}
 function tfLook(){const C=tf.chars,all=C.every((c,i)=>tfOff(i));let best=0,bs=1e9;for(let i=0;i<C.length;i++){if(!all&&tfOff(i))continue;const sc=tf.use[i]*(C[i].body==='k'?3:1)+Math.random()*0.9;if(sc<bs){bs=sc;best=i}}
-  const c=C[best];tf.use[best]++;return {ci:best,body:c.body,cell:c.cell,sc:c.h/1.75*(0.97+Math.random()*0.06),g:Math.round((c.wx||1)*100)*1000+Math.round((c.wz||1)*100)}}
+  const c=C[best];tf.use[best]++;return {ci:best,body:c.id,sc:0.97+Math.random()*0.06,g:0}}
 function tfPerson(o){const p=Object.assign(tfLook(),{x:0,z:0,y:0,yaw:0,ph:Math.random()*6,amp:0,spd:0,vt:TU.tfWalk*(0.82+Math.random()*0.32),side:0.32,wait:0,inside:0,blk:0,look:0},o);
   p.y=baseHeight(p.x,p.z)+tfLift(p.x,p.z);tf.people.push(p);return p}
 function tfDrop(p){const i=tf.people.indexOf(p);if(i>=0){tf.people.splice(i,1);tf.use[p.ci]--;if(p.room){p.room.n--;if(p.spot&&p.spot.who===p)p.spot.who=null}}}
@@ -287,6 +296,6 @@ function tfDraw(){const M=tf.M,o3=tf.o,cx=camera.position.x,cz=camera.position.z
   for(const p of tf.people){if(p.inside)continue;const B=M[p.body];if(!B||B.n>=B.cap)continue;
     if((p.x-cx)**2+(p.z-cz)**2>(p.room?TF_RFAR*TF_RFAR:220*220)||!tfSeen(p.x,p.z,1.3))continue;
     o3.position.set(p.x,p.y+(p.sit?-0.42*p.sc:Math.abs(Math.cos(p.ph))*0.025*p.amp*p.sc),p.z);o3.rotation.set(0,p.yaw,0);o3.scale.setScalar(p.sc);o3.updateMatrix();
-    const i=B.n++,w=B.walk.array;B.m.setMatrixAt(i,o3.matrix);w[4*i]=p.ph;w[4*i+1]=p.sit?-1:p.amp;w[4*i+2]=p.cell;w[4*i+3]=p.g}
+    if(!B.texing)tfTex(B);const i=B.n++,w=B.walk.array;B.m.setMatrixAt(i,o3.matrix);w[4*i]=p.ph;w[4*i+1]=p.sit?-1:p.amp;w[4*i+2]=0;w[4*i+3]=p.g}
   for(const k in M){const B=M[k];B.m.count=B.n;B.m.instanceMatrix.needsUpdate=true;B.walk.needsUpdate=true}
   for(const c of [...tf.drive,...tf.parked]){const d2=(c.x-cx)**2+(c.z-cz)**2;c.g.visible=d2<400*400;const hi=d2<TF_CAR_HI*TF_CAR_HI;c.g.children[0].visible=hi;c.g.children[1].visible=!hi}}
