@@ -110,10 +110,10 @@ a{color:inherit;text-decoration-color:var(--hi);text-underline-offset:3px}
     <div class="dinfo">
       <div style="display:flex;align-items:start;justify-content:space-between;gap:10px">
         <div><h2 id="dName" style="margin:0"></h2><div class="id" id="dId" style="font:13px var(--mono);color:var(--mute)"></div></div>
-        <button id="dClose" type="button" aria-label="Close">Close</button>
+        <div style="display:flex;gap:8px"><button id="dWalk" type="button">Walk</button><button id="dClose" type="button" aria-label="Close">Close</button></div>
       </div>
       <div class="facts" id="dFacts"></div>
-      <p class="hint">Drag the figure to turn it round. The prompts below make the photo references for a new, photoreal model of this person (step 1 of the plan further down). Paste them into ChatGPT or any image tool, front first, then the back in the same chat.</p>
+      <p class="hint">Drag the figure to turn it round, or press Walk. The prompts below make photo references of this person: a face for their head texture, or a look to model next. Paste them into ChatGPT or any image tool, front first, then the back in the same chat.</p>
       <div class="prompt"><div class="ph"><b>Front reference</b><button type="button" data-copy="pFront">Copy</button></div><pre id="pFront"></pre></div>
       <div class="prompt"><div class="ph"><b>Back reference (same chat)</b><button type="button" data-copy="pBack">Copy</button></div><pre id="pBack"></pre></div>
       <div class="prompt"><div class="ph"><b>Face close-up (for the texture)</b><button type="button" data-copy="pFace">Copy</button></div><pre id="pFace"></pre></div>
@@ -124,26 +124,26 @@ a{color:inherit;text-decoration-color:var(--hi);text-underline-offset:3px}
 
   <section class="plan">
     <div>
-      <h2>Why they look rough today</h2>
+      <h2>How they're built now</h2>
       <div class="now">
-        <div><b>Three bodies for 32 people</b>Every man, woman and child shares one of three 3,000-triangle meshes, so silhouettes repeat: no hair volume, no collars, hoods, caps or bags in 3D.</div>
-        <div><b>Projected photos</b>Each look is a photo wrapped onto the mesh (the atlas). Where the photo didn't reach, colours smear, so sides, armpits and the backs of legs blur.</div>
-        <div><b>Low texture detail</b>Each person gets a 512 px square on PC and 256 px on the phone, with no relief or sheen maps, so cloth and skin read flat in sunlight.</div>
-        <div><b>Stiff walk</b>Limbs swing from 9 parts in the shader. There are no elbows bending, head turns or weight shifts.</div>
+        <div><b>A real person each</b>Every character is its own MakeHuman body, built from age, build and ancestry, with its own skin, eyes, eyebrows, hair and clothes. Nobody shares a mesh any more.</div>
+        <div><b>Real clothes and hair</b>Collars, sleeves, cuffs, shoes and hair are modelled, not painted on. Colours are tinted per person, and anything a shirt covers is cut from the trousers so it can't poke through.</div>
+        <div><b>Two sizes</b>About 7,000 triangles each on High and Ultra, and about 3,000 on the phone. Each person's texture loads only once someone in town wears that look.</div>
+        <div><b>Same walk</b>Limbs still swing in the game's walk, now about each person's own hip, knee, shoulder and elbow, so kids and tall men both move right.</div>
       </div>
     </div>
     <div>
-      <h2>The plan to make them look better</h2>
+      <h2>What would make them better still</h2>
       <div class="steps">
-        <div class="step"><div class="n">Step 1 · you, 2 min each</div><h3>Photo references</h3><p>For each person you keep, paste the front and back prompts (open a character above). Save the pair as <code>&lt;id&gt;_front.png</code> and <code>&lt;id&gt;_back.png</code> and send them in the chat.</p></div>
-        <div class="step"><div class="n">Step 2 · Claude</div><h3>Image to 3D</h3><p>Claude runs the front image through an image-to-3D model on your Hugging Face account (TRELLIS or Hunyuan3D 2.1). That gives a real mesh with hair, collars and shoes, textured from the photo.</p></div>
-        <div class="step"><div class="n">Step 3 · Claude</div><h3>Game-ready</h3><p>Trim each model to about 6,000 triangles for PC (keeping today's 3,000 for the phone), skin it to a proper skeleton with elbows, knees, neck and spine, and bake a 1024 px colour, relief and sheen texture.</p></div>
-        <div class="step"><div class="n">Step 4 · Claude</div><h3>Better walk and light</h3><p>Real walk, idle and look-around cycles, skin that lets light through a little, and cloth sheen on High and Ultra. Phone keeps the light version so it stays above 30 FPS.</p></div>
+        <div class="step"><div class="n">Clothes</div><h3>More outfits</h3><p>The free (CC0) packs have no hoodies, jackets, ball caps or backpacks. MakeHuman's CC-BY packs do (shirts02-03, pants02-03, shoes02-03, hair02-03, hats03); they only need a credit line.</p></div>
+        <div class="step"><div class="n">Motion</div><h3>A real skeleton</h3><p>Drive the full MakeHuman skeleton in the game (as the worker on foot does) for bending elbows, turning heads and shifting weight. That costs more per person, so it would be for the nearest ones.</p></div>
+        <div class="step"><div class="n">Ultra</div><h3>Relief and sheen</h3><p>Add the skins' and clothes' normal and roughness maps on Ultra, for pores, seams and fabric weave in sunlight.</p></div>
+        <div class="step"><div class="n">Your call</div><h3>Faces from photos</h3><p>The prompts on each card make a face close-up. A face photo can be projected onto that person's head texture for a one-of-a-kind townsperson.</p></div>
       </div>
     </div>
     <div>
       <h2>Prompts for the whole cast</h2>
-      <p class="hint" style="max-width:70ch">Each character's own prompts are in its card. These help with the set as a whole: keeping everyone in the same style, and new people for the town.</p>
+      <p class="hint" style="max-width:70ch">Each character's own prompts are in its card. These are for the cast as a whole: keeping everyone in one style, and new people for the town.</p>
       <div class="prompts">
         <div class="prompt"><div class="ph"><b>Style block (paste first, once per chat)</b><button type="button" data-copy="pStyle">Copy</button></div><pre id="pStyle"></pre></div>
         <div class="prompt"><div class="ph"><b>Line-up check (all kept people in one picture)</b><button type="button" data-copy="pLineup">Copy</button></div><pre id="pLineup"></pre></div>
@@ -217,32 +217,44 @@ function refresh(){const n=st.chars.length,o=st.chars.filter((c,i)=>isOut(st.out
   if(dirty)setStatus(o===n?'Unpublished change. With everyone left out the game would ignore it and use everyone.':'Unpublished change: publish to send it to the game.');
   $('pLineup').textContent=LINEUP(st.chars.filter((c,i)=>!isOut(st.out,i)).map(c=>c.id))}
 
-// ---------- drawing the people (the game's townfolk.js, without the walk) ----------
-let R,scene,cam,mesh={},tex,mat;
+// ---------- drawing the people: models/peds/folk (tools/peds), limbs swung by the game's own walk (TF_GLSL) ----------
+let R,scene,cam,mesh={},texs={},mat,folk=null,walkT=0,walking=false;
 const H=2.05; // metres of chart shown
-function setupGL(bodies,atlas,cols,rows){R=new THREE.WebGLRenderer({antialias:true,alpha:true,preserveDrawingBuffer:true});R.outputEncoding=THREE.sRGBEncoding;
+const U={uJ:{value:new THREE.Vector4(0.49,0.91,1.1,1.42)},uWalk:{value:new THREE.Vector2(0,0)}};
+const GLSL=`attribute vec4 aSk;uniform vec4 uJ;uniform vec2 uWalk;
+mat3 pdRot(float a){float c=cos(a),s=sin(a);return mat3(1.,0.,0.,0.,c,s,0.,-s,c);}
+vec3 pdRx(vec3 q,float a,float y){q.y-=y;q=pdRot(a)*q;q.y+=y;return q;}
+void pdPart(float pP,inout vec3 p,inout vec3 n){pP=floor(pP+0.5);if(pP<0.5)return;float leg=pP<2.5||(pP>4.5&&pP<6.5)?1.:0.,L=mod(pP,2.);
+  float am=abs(uWalk.y),sg=leg>0.5?(L>0.5?1.:-1.):(L>0.5?-1.:1.),sw=sin(uWalk.x)*am*sg,cw=cos(uWalk.x)*sg;
+  if(pP>4.5){if(leg>0.5){float k=am*1.5*max(0.,-cw)+am*0.25;p=pdRx(p,k,uJ.x);n=pdRot(k)*n;}
+    else{float e=-0.22-am*0.5*max(0.,-sin(uWalk.x)*sg);p=pdRx(p,e,uJ.z);n=pdRot(e)*n;}}
+  float a=leg>0.5?sw:sw*0.85;p=pdRx(p,a,leg>0.5?uJ.y:uJ.w);n=pdRot(a)*n;}
+void pdSkin(inout vec3 p,inout vec3 n){vec3 p1=p,n1=n,p2=p,n2=n;pdPart(aSk.x,p1,n1);pdPart(aSk.y,p2,n2);p=mix(p1,p2,aSk.z);n=normalize(mix(n1,n2,aSk.z));}`;
+function setupGL(){R=new THREE.WebGLRenderer({antialias:true,alpha:true,preserveDrawingBuffer:true});R.outputEncoding=THREE.sRGBEncoding;
   scene=new THREE.Scene();scene.add(new THREE.HemisphereLight(0xf2f5ff,0x8a7f70,0.95));const sun=new THREE.DirectionalLight(0xffffff,0.9);sun.position.set(2,4,5);scene.add(sun);
   const back=new THREE.DirectionalLight(0xffffff,0.35);back.position.set(-3,2,-4);scene.add(back);
-  cam=new THREE.OrthographicCamera(-H*0.3,H*0.3,H,0,-10,10);cam.position.set(0,0,5);cam.lookAt(0,0,0);cam.position.set(0,0,5);
-  tex=atlas;tex.encoding=THREE.sRGBEncoding;tex.repeat.set(1/cols,1/rows);tex.anisotropy=4;
-  mat=new THREE.MeshStandardMaterial({map:tex,roughness:0.88});
-  for(const k of ['m','f','k']){const b=bodies[k];if(!b)continue;const g=new THREE.BufferGeometry();
-    g.setAttribute('position',new THREE.Float32BufferAttribute(b.p.slice(),3));
-    g.setAttribute('normal',new THREE.Float32BufferAttribute(Float32Array.from(b.n,v=>v/1000),3));
-    g.setAttribute('uv',new THREE.Float32BufferAttribute(Float32Array.from(b.uv,v=>v/65535),2));
-    g.setIndex(b.i);const m=new THREE.Mesh(g,mat);m.visible=false;scene.add(m);mesh[k]={m,p0:Float32Array.from(b.p)}}}
-// pose one character: its body, its square of the atlas, its girth (wider or slimmer below the shoulders) and height
-function pose(c,yaw){const cols=1/tex.repeat.x,rows=1/tex.repeat.y;tex.offset.set((c.cell%cols)/cols,(rows-1-Math.floor(c.cell/cols))/rows);
-  for(const k in mesh)mesh[k].m.visible=k===c.body;const M=mesh[c.body];if(!M)return;
-  const p=M.m.geometry.attributes.position,a=p.array,p0=M.p0,wx=c.wx||1,wz=c.wz||1;
-  for(let i=0;i<a.length;i+=3){const y=p0[i+1],t=Math.min(1,Math.max(0,(y-1.42)/0.1)),s=t*t*(3-2*t);a[i]=p0[i]*(wx+(1-wx)*s);a[i+1]=y;a[i+2]=p0[i+2]*(wz+(1-wz)*s)}
-  p.needsUpdate=true;M.m.geometry.computeBoundingSphere();const sc=c.h/1.75;M.m.scale.setScalar(sc);M.m.rotation.y=yaw}
+  cam=new THREE.OrthographicCamera(-H*0.3,H*0.3,H,0,-10,10);cam.position.set(0,0,5);cam.lookAt(0,0,0);
+  mat=new THREE.MeshStandardMaterial({roughness:0.85,alphaTest:0.5,side:THREE.DoubleSide});
+  mat.onBeforeCompile=sh=>{Object.assign(sh.uniforms,U);sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\n'+GLSL)
+    .replace('#include <beginnormal_vertex>','#include <beginnormal_vertex>\nvec3 pdP=position,pdN=objectNormal;pdSkin(pdP,pdN);objectNormal=pdN;')
+    .replace('#include <begin_vertex>','#include <begin_vertex>\ntransformed=pdP;')}}
+// one character's mesh from the packed file (tools/peds/pack_folk.py has the layout)
+function folkGeo(buf,r){const g=new THREE.BufferGeometry(),nv=r.nv;
+  g.setAttribute('position',new THREE.Float32BufferAttribute(Float32Array.from(new Int16Array(buf,r.p,nv*3),v=>v/1000),3));
+  const n=new Int8Array(buf,r.n,nv*4),N=new Float32Array(nv*3);for(let i=0;i<nv;i++){N[3*i]=n[4*i]/127;N[3*i+1]=n[4*i+1]/127;N[3*i+2]=n[4*i+2]/127}
+  g.setAttribute('normal',new THREE.BufferAttribute(N,3));
+  g.setAttribute('uv',new THREE.Float32BufferAttribute(Float32Array.from(new Uint16Array(buf,r.uv,nv*2),v=>v/65535),2));
+  const k=new Uint8Array(buf,r.sk,nv*4);g.setAttribute('aSk',new THREE.Float32BufferAttribute(Float32Array.from(k,(v,i)=>i%4===2?v/255:v),4));
+  g.setIndex(new THREE.BufferAttribute(r.u32?new Uint32Array(buf,r.i,r.ni):new Uint16Array(buf,r.i,r.ni),1));return g}
+function texOf(id){return texs[id]||(texs[id]=new Promise(ok=>new THREE.TextureLoader().load('models/peds/folk/'+id+'.webp',t=>{t.encoding=THREE.sRGBEncoding;t.anisotropy=4;t.flipY=true;ok(t)},undefined,()=>ok(null))))}
+function pose(c,yaw,tex){for(const k in mesh)mesh[k].visible=k===c.id;const M=mesh[c.id];if(!M)return;
+  const f=c.folk,j=f.joint;U.uJ.value.set(j.knee,j.hip,j.elbow,j.shoulder);mat.map=tex;M.rotation.y=yaw}
 // the height chart behind a figure: a line every foot, numbered
 function chart(ctx,w,h){const cs=getComputedStyle(document.documentElement);ctx.fillStyle=cs.getPropertyValue('--stage');ctx.fillRect(0,0,w,h);
   ctx.strokeStyle=cs.getPropertyValue('--chart');ctx.fillStyle=cs.getPropertyValue('--mute');ctx.lineWidth=Math.max(1,w/300);ctx.font=`500 ${Math.round(w/16)}px "IBM Plex Mono",monospace`;
   for(let f=1;f*0.3048<H;f++){const y=Math.round(h-f*0.3048/H*h)+0.5;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(w,y);ctx.stroke();ctx.fillText(f+'′',w*0.04,y-w*0.02)}}
-function shoot(c,yaw,canvas){const w=canvas.width,h=canvas.height;if(R.domElement.width!==w||R.domElement.height!==h)R.setSize(w,h,false);
-  cam.left=-H*0.3;cam.right=H*0.3;cam.top=H;cam.bottom=0;cam.updateProjectionMatrix();pose(c,yaw);R.render(scene,cam);
+async function shoot(c,yaw,canvas,walk){const tex=await texOf(c.id),w=canvas.width,h=canvas.height;if(R.domElement.width!==w||R.domElement.height!==h)R.setSize(w,h,false);
+  cam.updateProjectionMatrix();U.uWalk.value.set(walk?walkT:0,walk?0.55:0);pose(c,yaw,tex);R.render(scene,cam);
   const ctx=canvas.getContext('2d');chart(ctx,w,h);ctx.drawImage(R.domElement,0,0)}
 
 function card(c,i){const el=document.createElement('div');el.className='card';el.dataset.i=i;el.tabIndex=0;el.setAttribute('role','button');
@@ -258,9 +270,11 @@ function card(c,i){const el=document.createElement('div');el.className='card';el
 // ---------- the close up ----------
 let yaw=0.35,drag=null,spin=null;
 function facts(){const c=st.chars[st.sel],out=isOut(st.out,st.sel);
-  $('dFacts').innerHTML='';for(const t of [BODY[c.body]+' body',ftIn(c.h)+' tall','atlas square '+(c.cell+1),'3,000 triangles',out?'Left out':'Walks in town']){const s=document.createElement('span');s.className='tag'+(t==='Left out'?' out':'');s.textContent=t;$('dFacts').appendChild(s)}}
+  $('dFacts').innerHTML='';for(const t of [BODY[c.body],ftIn(c.h)+' tall',(c.folk?c.folk.hi.tris.toLocaleString()+' triangles (High), '+c.folk.lo.tris.toLocaleString()+' (phone)':''),out?'Left out':'Walks in town'].filter(Boolean)){const s=document.createElement('span');s.className='tag'+(t==='Left out'?' out':'');s.textContent=t;$('dFacts').appendChild(s)}}
 function drawView(){if(st.sel<0)return;const v=$('view'),r=v.getBoundingClientRect(),d=Math.min(2,devicePixelRatio||1),w=Math.round(r.width*d),h=Math.round(r.height*d);
-  if(w<10)return;if(v.width!==w||v.height!==h){v.width=w;v.height=h}shoot(st.chars[st.sel],yaw,v)}
+  if(w<10)return;if(v.width!==w||v.height!==h){v.width=w;v.height=h}shoot(st.chars[st.sel],yaw,v,walking)}
+let lastT=0;function walkLoop(t){if(!walking||st.sel<0){walking=false;$('dWalk').textContent='Walk';return}walkT+=Math.min(0.05,(t-(lastT||t))/1000)*7;lastT=t;drawView();requestAnimationFrame(walkLoop)}
+$('dWalk').onclick=()=>{walking=!walking;$('dWalk').textContent=walking?'Stop':'Walk';lastT=0;if(walking)requestAnimationFrame(walkLoop);else drawView()};
 function open(i){st.sel=i;const c=st.chars[i];$('detail').hidden=false;$('dName').textContent=LOOK[c.id]?LOOK[c.id][0]:c.id;$('dId').textContent=c.id;
   const p=prompts(c);$('pFront').textContent=p.front;$('pBack').textContent=p.back;$('pFace').textContent=p.face;facts();
   document.querySelectorAll('.card').forEach(el=>el.classList.toggle('sel',+el.dataset.i===i));yaw=0.35;drawView();
@@ -305,10 +319,10 @@ $('publish').onclick=async()=>{const b=$('publish');b.disabled=true;setStatus('P
 
 // ---------- start ----------
 ['pStyle','pNew','pCrew'].forEach((id,i)=>$(id).textContent=[STYLE,NEW,CREW][i]);
-Promise.all([fetch('models/peds/peds.json').then(r=>r.json()),fetch('models/peds/bodies.json').then(r=>r.json()),
-  new Promise((ok,no)=>new THREE.TextureLoader().load('models/peds/peds_atlas_1k.webp',ok,undefined,no))]).then(([pj,bodies,atlas])=>{
-  st.chars=pj.chars;setupGL(bodies,atlas,pj.cols,pj.rows);const g=$('grid');
-  st.chars.forEach((c,i)=>g.appendChild(card(c,i)));refresh();
-  let i=0;const next=()=>{if(i>=st.chars.length)return;shoot(st.chars[i],0.35,g.children[i].querySelector('canvas'));i++;requestAnimationFrame(next)};next();
+Promise.all([fetch('models/peds/peds.json').then(r=>r.json()),fetch('models/peds/folk.json').then(r=>r.json()),fetch('models/peds/folk_hi.bin').then(r=>r.arrayBuffer())]).then(([pj,fj,buf])=>{
+  st.chars=pj.chars;setupGL();const byId={};for(const f of fj.chars)byId[f.id]=f;
+  for(const c of st.chars){const f=byId[c.id];if(!f)continue;c.folk=f;const m=new THREE.Mesh(folkGeo(buf,f.hi),mat);m.visible=false;m.frustumCulled=false;scene.add(m);mesh[c.id]=m}
+  const g=$('grid');st.chars.forEach((c,i)=>g.appendChild(card(c,i)));refresh();
+  (async()=>{for(let i=0;i<st.chars.length;i++)await shoot(st.chars[i],0.35,g.children[i].querySelector('canvas'))})();
   setStatus('');loadLive()}).catch(e=>setStatus('The characters did not load: '+e.message,true));
 </script>
