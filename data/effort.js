@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-30T04:04:00Z",
+ "updated": "2026-10-30T23:21:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -87,6 +87,12 @@ window.EFFORT = {
    "dh": 55.25,
    "act": 3.5,
    "versions": 9
+  },
+  {
+   "d": "2026-10-30",
+   "dh": 0.5,
+   "act": 0.5,
+   "versions": 1
   }
  ],
  "extra": [
@@ -2517,6 +2523,15 @@ window.EFFORT = {
    "tris": 5525963,
    "chars": 1797564,
    "what": "On High and Ultra graphics the townsfolk are the same 32 people rebuilt in Human Forge with a real skeleton and animation: they walk with a true stride at their own pace, stand easy or talk with their hands at counters, sit properly in chairs and benches and hold the wheel when driving; Low and Medium keep the light ones for phones."
+  },
+  {
+   "v": 270,
+   "asked": "2026-10-30T17:50:00-05:00",
+   "live": "2026-10-30T18:21:04-05:00",
+   "dh": 0.5,
+   "tris": 5524949,
+   "chars": 1797564,
+   "what": "Townsfolk (High and Ultra) run on Human Forge's newer people runtime (1.1): same people and animations, clearer load errors."
   }
  ]
 };
