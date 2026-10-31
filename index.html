@@ -119,6 +119,10 @@
     </div>
   </aside>
   <!-- the two sticks in the thumb zones, between the bars; Get in, Sprint and Jump sit on top of them -->
+  <!-- shop counters and the wallet: above the bars and sticks -->
+  <div id="gunShop" hidden><h3 id="gsHead">Lakeside Guns</h3><div id="gsList"></div><button id="gsClose">Done</button></div>
+  <div id="townShop" hidden><h3 id="tsHead">Shop</h3><p id="tsWho"></p><div id="tsList"></div><button id="tsClose">Done</button></div>
+  <div id="cashChip" hidden><b>Wallet</b><span id="cashVal">$0</span></div>
   <div class="sticks">
     <div class="stickwrap">
       <button id="seatBtn" hidden>Get in</button>
@@ -129,7 +133,6 @@
       <div class="walkbtns" id="walkBtns" hidden><button id="sprintBtn" aria-pressed="false">Sprint</button><button id="jumpBtn">Jump</button><button id="plantBtn">Plant</button><button id="trimBtn" aria-pressed="false">Trimmer</button><button id="bumpBtn" hidden>Bump</button><button id="bedBtn" hidden>Load</button><button id="gunBtn" aria-pressed="true">Pistol</button><button id="reloadBtn" hidden>Reload</button><button id="fireBtn" hidden>Fire</button></div><div id="gunCross" hidden></div>
       <div id="gunVit" hidden><div id="gunWant">☆☆☆</div><div id="gunLife"><i id="gunLifeBar"></i></div></div><div id="gunHurtFx"></div>
       <div id="gunHud" hidden><b id="gunHudN">PISTOL</b><span id="gunHudA">15 / 45</span></div>
-      <div id="gunShop" hidden><h3 id="gsHead">Lakeside Guns</h3><div id="gsList"></div><button id="gsClose">Done</button></div>
       <div class="stick" id="stickR"><div class="knob"></div></div>
     </div>
   </div>
@@ -491,6 +494,7 @@
 <script defer src="js/plant.js"></script>
 <script defer src="js/trimmer.js"></script>
 <script defer src="js/pistol.js"></script>
+<script defer src="js/town.js"></script>
 <script defer src="js/lawns.js"></script>
 <script defer src="js/stats.js"></script>
 <script defer src="js/keys.js"></script>

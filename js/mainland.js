@@ -344,7 +344,7 @@ function mainBrewery(){const K=famKit(),PK=famKit(),{x,z,w,d,h}=BREW,y=rmGroundM
   for(let o=-4;o<=3;o+=1.75){const [a,b]=B.P(o,-7.3);K.lit(new THREE.CylinderGeometry(0.1,0.18,0.2,10),0xffe2a8,a,y+3.1,b)}
   B.spot(-3.6,-8.55,Math.PI/2,{staff:1});B.spot(0.6,-8.55,Math.PI/2,{staff:1,path:B.path([[3.2,-8.55],[-4.4,-8.55],[3.2,-8.55]]),at:3});B.spot(-0.3,5.6,Math.PI/2,{staff:1});
   for(const o of [-4.0,-2.6,-1.2,0.2,1.6,3.0])B.spot(o,-6.55,-Math.PI/2);B.spot(-5.0,1.0,Math.PI/2);B.spot(4.6,0.5,-Math.PI*0.75);B.spot(5.2,1.1,Math.PI);
-  rmAdd(B,9,[0,4,7,11]);
+  rmAdd(B,9,[0,4,7,11]).hrs=[11,23];B.nm='Lakeside Brewing Co.';
   // solid: the walls (but the open door), the tanks, kettles, bar and back bar; the floor to walk on, and the room
   SOLIDS.push({x,z,hx:w/2+0.1,hz:d/2+0.1,foot:1});for(const t of [-1,1]){B.solid(0,t*(w/2-0.2),0.45,d+0.2);B.solid(-o0+0.2,t*(w/4+0.75),w/2-1.5,0.45)}B.solid(o0-0.2,0,w+0.2,0.45);
   B.solid(-0.3,7.4,1.8,9.6);B.solid(-5.6,4.6,3.9,1.8);B.solid(-0.6,-7.3,0.8,8.5);B.solid(-0.6,-9.45,0.5,8.5);
@@ -396,7 +396,7 @@ function mainBrewery(){const K=famKit(),PK=famKit(),{x,z,w,d,h}=BREW,y=rmGroundM
     for(const sp of T.spots)GD.spots.push(sp);SOLIDS.push({x:tx,z:tz+0.5,hx:1.2,hz:3.6})}
   // a server or two walking the aisles between the tables
   for(let k=0;k<2;k++){const sp=spot(44,682,0,{staff:1,path:rmLine([[44,682],[62,682],[62,706],[44,706],[44,682]]),at:k*21})}
-  rmAdd(GD,32,[0,10,20,32]);famAdd(K)}
+  rmAdd(GD,32,[0,10,20,32]).hrs=[11,23];famAdd(K)}
 mainBrewery();
 
 // ---------- the Lakeside General Store, at the south end of Main Street ----------
@@ -548,7 +548,7 @@ function shopKit(){const parts=new Map(),O=new THREE.Object3D(),n=new THREE.Vect
     R.spot(5.5,-8.5,Math.PI*0.8);R.spot(3.2,-11.4,Math.PI/2);R.spot(-6.1,0.5,Math.PI);
     // shoppers walking the aisles, round and round, and a clerk up and down the main one
     for(const [a,b,t] of [[-10,-6,0],[2,6,9],[6,10,4]])R.spot(2.7,a,0,{staff:1,path:R.path([[2.7,a],[-6.55,a],[-6.55,b],[2.7,b],[2.7,a]]),at:t});
-    R.spot(2.7,0,0,{staff:1,path:R.path([[2.7,0],[-6.4,0],[2.7,0]])});rmAdd(R,16,[0,6,11,18])}
+    R.spot(2.7,0,0,{staff:1,path:R.path([[2.7,0],[-6.4,0],[2.7,0]])});rmAdd(R,16,[0,6,11,18]);R.hrs=[7,21];R.nm='Lakeside General Store';R.store=1}
   K.add();famAdd(F);
   famSign(['LAKESIDE GENERAL STORE','Garden · Hardware · Groceries'],13,2.1,0,fl+5.05,fz-0.03,Math.PI,'#23402f','#f1ead8');
   famSign(['GARDEN CENTER','Mulch · Soil · Plants'],4.6,1.3,-21.3,gy+0.85,fz-3.78,Math.PI,'#23402f','#f1ead8');

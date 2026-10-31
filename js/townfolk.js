@@ -461,7 +461,8 @@ function tfCarStep(c,dt){const P=c.path;
 function tfRoomsTick(){const cx=camera.position.x,cz=camera.position.z;let n=tf.people.reduce((k,p)=>k+(p.room?1:0),0);
   for(const R of TF_ROOMS){const d=Math.hypot(R.x-cx,R.z-cz)-R.r;
     if(d>TF_RFAR){if(R.n)for(const p of tf.people.slice())if(p.room===R)tfDrop(p);continue}
-    if(d>TF_RNEAR&&!R.n)continue;const staff=R.spots.filter(sp=>sp.staff).length,want=Math.min(R.spots.length,staff+(R.big?R.big[tf.q]:TF_RN[tf.q]));
+    if(d>TF_RNEAR&&!R.n)continue;const staff=R.spots.filter(sp=>sp.staff).length,want=townRoomOpen(R)?Math.min(R.spots.length,staff+Math.round((R.big?R.big[tf.q]:TF_RN[tf.q])*townBusy(R))):0;
+    if(R.n>want)townRoomEmpty(R,want);
     while(R.n<want&&n<Math.min(TF_ROOM_CAP,tfShopLeft())){const free=R.spots.filter(sp=>!sp.who),st=free.filter(sp=>sp.staff),sp=st.length?st[0]:free[(Math.random()*free.length)|0];if(!sp)break;
       const p=tfPerson({room:R,spot:sp,x:sp.x,z:sp.z,yaw:sp.yaw,sit:sp.sit?1:0,t:6+Math.random()*30,look:0,s:sp.at||0});p.y=sp.path&&R.ground?baseHeight(sp.x,sp.z):sp.y;sp.who=p;R.n++;n++}}}
 function tfRoomStep(p,dt){const sp=p.spot,R=p.room;
@@ -489,7 +490,7 @@ function tfTick(dt){if(!tf.q){if(tf.on)tfShow(false);return}
   if(dd>TF_NEAR){if(tf.on)tfShow(false);return}
   if(!tf.load)tfLoad();if(tf.load!==2)return;if(gfxCur.forge&&!(tf.F&&tf.F.st))tfForge();
   dt=Math.min(dt,0.1);tf.t+=dt;camera.updateMatrixWorld();tf.fm.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse);tf.fr.setFromProjectionMatrix(tf.fm);
-  const night=typeof dn==='object'?Math.min(1,Math.max(0.3,(dn.el+8)/14)):1,[np,nc]=TF_N[tf.q],left=tfLeft(),wantP=Math.min(left,Math.round(np*night)),wantC=Math.min(Math.max(0,left-wantP),Math.round(nc*night)),walkers=tf.people.filter(p=>!p.car&&!p.room);
+  const night=townBusy(),[np,nc]=TF_N[tf.q],left=tfLeft(),wantP=Math.min(left,Math.round(np*night)),wantC=Math.min(Math.max(0,left-wantP),Math.round(nc*night)),walkers=tf.people.filter(p=>!p.car&&!p.room);
   if(!tf.on){tfShow(true);while(walkers.length<wantP){const p=tfSpawnWalker(true);if(!p)break;walkers.push(p)}}
   tf.spawnT-=dt;if(tf.spawnT<=0){tf.spawnT=1.5+Math.random()*2;
     if(walkers.length<wantP)tfSpawnWalker(false);
