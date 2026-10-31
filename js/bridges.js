@@ -130,7 +130,7 @@ const BR_DEF={
   // scanned granite for the breakwater's boulders (ambientCG); standing-seam metal roofing and woven awning canvas (Poly
   // Haven), both neutral grey, so they're used as 'seam@rrggbb' / 'canvas@rrggbb': that colour, the scan's detail (brMat)
   rockBW:{lib:'rock_bw',col:[0.63,0.60,0.60],tile:1.1,rough:0.9},seam:{lib:'roof_seam',col:[0.72,0.72,0.72],tile:2.0,rough:0.5,metal:0.6},
-  canvas:{lib:'canvas',col:[0.86,0.86,0.86],tile:0.45,rough:0.9},
+  canvas:{lib:'canvas',col:[0.86,0.86,0.86],tile:0.45,rough:0.9},roofFlat:{lib:'roof_flat',col:[0.23,0.21,0.20],tile:8,rough:0.8},
   iron:{col:[0.08,0.08,0.08],metal:0.5,rough:0.5},white:{col:[0.88,0.86,0.80],rough:0.75},
   lineW:{col:[0.86,0.85,0.80],rough:0.8},lineY:{col:[0.85,0.66,0.15],rough:0.8},
   stain:{col:[0.74,0.75,0.76],metal:1,rough:0.3,dry:1},galv:{col:[0.6,0.62,0.63],metal:0.8,rough:0.45},cable:{col:[0.93,0.93,0.91],rough:0.35},
