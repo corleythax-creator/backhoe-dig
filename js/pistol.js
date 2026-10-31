@@ -643,12 +643,14 @@ function gunShopNear(){for(const S of GUN_SHOPS)if(Math.hypot(wk.x-S.x,wk.z-S.z)
 function gunShopOpen(){const S=gunShopNear();if(!S)return;gun.shop=S;if(document.pointerLockElement)document.exitPointerLock();gunShopDraw();$('#gunShop').hidden=false}
 function gunShopClose(){gun.shop=null;$('#gunShop').hidden=true}
 function gunShopDraw(){$('#gsList').innerHTML=GUN_K.map(k=>{const W=GUNS[k],A=gun.am[k],own=gun.own[k],full=A[1]>=W.max;
+    const P=TOWN_GUN[k]||[0,0],box=Math.min(W.max-A[1],TOWN_BOX),ac=box*P[1];
   return `<div class="gsRow"><div class="gsTxt"><b>${W.n}</b><small>${W.d} · ${own?A[0]+' / '+A[1]:'damage '+Math.round(TU[W.dm]*W.pel)}</small></div>`+
-    `<button data-k="${k}" data-a="take"${own&&gun.k===k&&gun.eq?' disabled':''}>${own?(gun.k===k&&gun.eq?'In hand':'Hold'):'Take'}</button>`+
-    `<button data-k="${k}" data-a="ammo"${!own||full?' disabled':''}>${full?'Ammo full':'Ammo'}</button></div>`}).join('')}
+    `<button data-k="${k}" data-a="take"${own&&gun.k===k&&gun.eq?' disabled':''}>${own?(gun.k===k&&gun.eq?'In hand':'Hold'):P[0]?'Buy '+usd(P[0]):'Take'}</button>`+
+    `<button data-k="${k}" data-a="ammo"${!own||full?' disabled':''}>${full?'Ammo full':box+' for '+usd(ac)}</button></div>`}).join('')+`<div class="gsCash">In your wallet: <b>${usd(townCash())}</b></div>`}
 $('#gsList').addEventListener('click',e=>{const b=e.target.closest('button');if(!b||b.disabled)return;const k=b.dataset.k,W=GUNS[k];
-  if(b.dataset.a==='take'){const fresh=!gun.own[k];gun.own[k]=1;gunTake(k);if(fresh)toast(say('gunGot',{gun:W.n}),'good',3600)}
-  else{const A=gun.am[k],n=W.max-A[1];A[1]=W.max;gunClick('shell');gunHudDraw();toast(say('gunAmmoGot',{gun:W.s,n}),'',2400)}
+  const P=TOWN_GUN[k]||[0,0];
+  if(b.dataset.a==='take'){const fresh=!gun.own[k];if(fresh&&P[0]&&!townPay(P[0],W.n))return;gun.own[k]=1;gunTake(k);if(fresh)toast(say('gunGot',{gun:W.n}),'good',3600)}
+  else{const A=gun.am[k],n=Math.min(W.max-A[1],TOWN_BOX);if(!townPay(n*P[1],W.s+' ammo'))return;A[1]+=n;gunClick('shell');gunHudDraw();toast(say('gunAmmoGot',{gun:W.s,n}),'',2400)}
   gunShopDraw()});
 $('#gsClose').addEventListener('click',gunShopClose);
 // ---------- saved with the rigs (save.js) ----------
