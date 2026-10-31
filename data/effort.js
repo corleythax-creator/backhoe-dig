@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-31T02:11:00Z",
+ "updated": "2026-10-31T02:14:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -90,9 +90,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-30",
-   "dh": 56.25,
+   "dh": 66.25,
    "act": 3,
-   "versions": 13
+   "versions": 14
   }
  ],
  "extra": [
@@ -2640,6 +2640,15 @@ window.EFFORT = {
    "tris": 5812680,
    "chars": 1869089,
    "what": "Streets laid in the map editor can be brick, cobblestone, fan cobbles or old brick (Surface on the street's card): photo-scanned paving whose bricks and cobbles stand up out of their joints and cast little shadows in the sun with Material relief on."
+  },
+  {
+   "v": 283,
+   "asked": "2026-10-30T19:55:00-05:00",
+   "live": "2026-10-30T21:14:14-05:00",
+   "dh": 10,
+   "tris": 5809658,
+   "chars": 1885702,
+   "what": "The town's lawns look real: photo-scanned deep green grass with blades up close, thicker along the paths, clover with white flowers, weeds and fallen autumn leaves; in the rain the town's lawns and ground get wet and dark."
   }
  ]
 };
