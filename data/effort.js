@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-31T01:25:00Z",
+ "updated": "2026-10-31T01:26:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -90,9 +90,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-30",
-   "dh": 32.25,
+   "dh": 36.25,
    "act": 2,
-   "versions": 7
+   "versions": 8
   }
  ],
  "extra": [
@@ -2586,6 +2586,15 @@ window.EFFORT = {
    "tris": 5814500,
    "chars": 1853144,
    "what": "20 Paint library materials (gravel, sand, soils, rock, concrete, asphalt, pavers, cobble, brick, flagstone, planks, diamond plate, corrugated) swapped for CC0 ambientCG photo scans with their own relief and sheen maps; tools/cc0.py"
+  },
+  {
+   "v": 277,
+   "asked": "2026-10-31T19:52:00-05:00",
+   "live": "2026-10-30T20:26:09-05:00",
+   "dh": 4,
+   "tris": 5710458,
+   "chars": 1856765,
+   "what": "Town paving and roads gather puddles in the rain that spread the longer it rains and drain after, mirror the sky, ring with raindrops (Puddle water: Fine) and stay out from under roofs"
   }
  ]
 };
