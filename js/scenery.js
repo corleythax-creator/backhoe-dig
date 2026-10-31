@@ -445,16 +445,41 @@ function stake(x,z,flagColor){
 [[-3,PIPE_Z],[3,PIPE_Z],[-7,PIPE_Z],[7,PIPE_Z]].forEach(p=>stake(p[0],p[1],0xf5c518));
 // placed assets (trees and boulders, and the things of props.js) as {t: type, x, z, yaw, s: size, c: tint}; the map editor moves, adds and removes them.
 // The trees are drawn by trees.js (its 'main' group); the boulders here
+// ---------- boulders ----------
+// photo-scanned stone (ambientCG Rock046L, lichen-spotted granite, and Rock028, a dark grey; made by
+// tools/trees_scan.py) on lumpy shapes: an icosphere pushed out by layered waves, cut into a few flat faces the way split
+// granite breaks and flattened underneath, a little darker low down and in its hollows. UVs are projected per face along
+// its main axis; the scans' relief shows on High graphics (rockPbr). detail 2 is 320 triangles, 1 is 80
+const ROCK_TEX=(()=>{const L=new THREE.TextureLoader(),T=n=>{const t=L.load(`textures/${n}.jpg`);t.wrapS=t.wrapT=THREE.RepeatWrapping;
+    t.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());return t};
+  return{granite:T('rock_granite'),dark:T('rock_dark'),graniteN:null,darkN:null}})();
+const ROCK_MATS=['granite','dark'].map(k=>new THREE.MeshPhongMaterial({map:ROCK_TEX[k],vertexColors:true,shininess:5,specular:0x101010}));
+// gfx.js (through treePbr): the stone's relief on High, its normal maps fetched the first time
+function rockPbr(on){['granite','dark'].forEach((k,i)=>{const m=ROCK_MATS[i];
+  if(on&&!ROCK_TEX[k+'N']){const t=new THREE.TextureLoader().load(`textures/rock_${k}_n.jpg`);t.wrapS=t.wrapT=THREE.RepeatWrapping;ROCK_TEX[k+'N']=t}
+  const want=on?ROCK_TEX[k+'N']:null;if(m.normalMap!==want){m.normalMap=want;m.normalScale.set(1.4,1.4);m.needsUpdate=true}})}
+function rockShape(seed,detail){let sd=seed;const rnd=()=>{sd=(sd*16807)%2147483647;return sd/2147483647},V=THREE.Vector3;
+  const W=[];for(let k=0;k<9;k++)W.push([new V(rnd()-0.5,rnd()-0.5,rnd()-0.5).normalize(),1.5+rnd()*k*0.9,rnd()*6.28,0.16/(1+k*0.45)]);
+  const cuts=[];for(let k=0;k<4;k++){const a=rnd()*6.28,e=k?(rnd()-0.3)*0.9:1.2;cuts.push([new V(Math.cos(a)*Math.cos(e),Math.sin(e),Math.sin(a)*Math.cos(e)),(0.7+0.15*rnd())*0.8])}
+  const sx=1.05+0.25*rnd(),sy=0.6+0.2*rnd(),sz=0.85+0.2*rnd();
+  const g=new THREE.IcosahedronGeometry(0.8,detail),P=g.attributes.position,u=new V(),q=new V(),C=new Float32Array(P.count*3);
+  for(let i=0;i<P.count;i++){u.fromBufferAttribute(P,i).normalize();let n=0;for(const [d,f,ph,a] of W)n+=a*Math.sin(u.dot(d)*f*3+ph);
+    q.copy(u).multiplyScalar(0.8*(1+n));for(const [c,o] of cuts){const t=q.dot(c);if(t>o)q.addScaledVector(c,-(t-o)*0.92)}
+    if(q.y<-0.3)q.y=-0.3+(q.y+0.3)*0.25;q.set(q.x*sx,q.y*sy,q.z*sz);P.setXYZ(i,q.x,q.y,q.z);
+    const k=(0.68+0.32*ss(-0.3,0.35,q.y))*(0.84+0.16*ss(-0.12,0.12,n));C[i*3]=C[i*3+1]=C[i*3+2]=k}
+  g.setAttribute('color',new THREE.BufferAttribute(C,3));
+  // smooth normals over the corners the faces share (the icosphere's faces each have their own), then UVs per face
+  const fn=new V(),a=new V(),b=new V(),c=new V(),acc=new Map(),key=i=>`${P.getX(i).toFixed(4)},${P.getY(i).toFixed(4)},${P.getZ(i).toFixed(4)}`,UV=new Float32Array(P.count*2);
+  for(let i=0;i<P.count;i+=3){a.fromBufferAttribute(P,i);b.fromBufferAttribute(P,i+1);c.fromBufferAttribute(P,i+2);fn.subVectors(c,b).cross(a.clone().sub(b));
+    for(let j=0;j<3;j++){const kk=key(i+j);if(!acc.has(kk))acc.set(kk,new V());acc.get(kk).add(fn)}
+    const ax=Math.abs(fn.x),ay=Math.abs(fn.y),az=Math.abs(fn.z);
+    for(let j=0;j<3;j++){const x=P.getX(i+j),y=P.getY(i+j),z=P.getZ(i+j),[s0,t0]=ax>=ay&&ax>=az?[z+0.37,y]:ay>=az?[x,z+0.71]:[x+0.13,y];UV[(i+j)*2]=s0*0.6;UV[(i+j)*2+1]=t0*0.6}}
+  const N=g.attributes.normal;for(let i=0;i<P.count;i++){const v=acc.get(key(i)).clone().normalize();N.setXYZ(i,v.x,v.y,v.z)}
+  g.setAttribute('uv',new THREE.BufferAttribute(UV,2));g.computeBoundingSphere();return g}
 const ASSET_CAP={pine:600,leafy:300,rock:400},assetIMs={},assets=mapAssets?mapAssets.slice():[];
 (function rocks(){
-  function colorize(g,fn){if(g.index)g=g.toNonIndexed();const p=g.attributes.position,c=new Float32Array(p.count*3);
-    for(let i=0;i<p.count;i++){const col=fn(p.getX(i),p.getY(i),p.getZ(i));c[i*3]=col[0];c[i*3+1]=col[1];c[i*3+2]=col[2]}
-    g.setAttribute('color',new THREE.BufferAttribute(c,3));return g}
-  // boulder: a lumpy grey stone, lighter on top
-  const rockGeo=(function(){const g=new THREE.IcosahedronGeometry(0.8,1),p=g.attributes.position;
-    for(let i=0;i<p.count;i++){const x=p.getX(i),y=p.getY(i),z=p.getZ(i),n=1+0.22*Math.sin(x*5.1+y*3.3)*Math.cos(z*4.7-y*2.1);p.setXYZ(i,x*n*1.15,y*n*0.62,z*n)}
-    g.computeVertexNormals();return colorize(g,(x,y)=>{const k=0.62+0.3*Math.min(1,Math.max(0,(y+0.3)/0.8));return[0.62*k,0.6*k,0.56*k]})})();
-  const rocks=new THREE.InstancedMesh(rockGeo,M(0xffffff,{vertexColors:true}),ASSET_CAP.rock);
+  // boulder: the photo-scanned granite (rockShape)
+  const rocks=new THREE.InstancedMesh(rockShape(11,2),ROCK_MATS[0],ASSET_CAP.rock);
   // colour buffer sized to capacity up front (three r128 sizes it by the live count, which starts at 0 here)
   rocks.castShadow=true;rocks.receiveShadow=true;rocks.frustumCulled=false;
   rocks.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(rocks.instanceMatrix.count*3),3);rocks.count=0;scene.add(rocks);
@@ -503,3 +528,61 @@ function assetsBuild(){const o=new THREE.Object3D(),c=new THREE.Color(),n={pine:
   treeGroup('main',T);
   // the things placed from the editor's catalogue (props.js, which loads later)
   if(typeof propsBuild==='function')propsBuild()}
+
+// ---------- the town's boulders ----------
+// Clusters of a big boulder, a medium one or two and a scatter of small stones on the town's open grass (the mainland,
+// RT_BOX): one where the hash of an 18 m square says so, kept to natural ground (no paint, roads, streets, sidewalks,
+// walk pads, other solids, tree trunks, water or steep ground), the same on every device. Each stone stands in a ring
+// of the field's own grass clumps (the tuft shapes and material above, so they sway, thin out with distance and follow
+// the Grass quality setting the same), with tall grass and a weed or two hugging its foot. The big and medium boulders
+// are solids (SOLIDS, rk:1). Built once every script has loaded (the town's streets and solids are there then), and
+// again by edRefresh over the town
+const RT_BOX=[-180,180,548,800],RT_CELL=18;
+const rtShapes=[rockShape(21,2),rockShape(22,2),rockShape(23,2),rockShape(24,1),rockShape(25,1)];
+const rtIMs=rtShapes.map((g,i)=>ROCK_MATS.map(m=>{const im=new THREE.InstancedMesh(g,m,i<3?150:400);im.count=0;im.frustumCulled=false;im.castShadow=true;im.receiveShadow=true;
+  im.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(im.instanceMatrix.count*3),3);scene.add(im);return im}));
+let rtTuftMs=[];
+function rocksTown(){for(let i=SOLIDS.length-1;i>=0;i--)if(SOLIDS[i].rk)SOLIDS.splice(i,1);
+  for(const im of rtTuftMs){tufts.remove(im);tuftMeshes.splice(tuftMeshes.indexOf(im),1);im.geometry.dispose()}rtTuftMs=[];
+  const trunks=[];for(const g in treeGroups)for(const a of treeGroups[g])if(a.x>RT_BOX[0]-5&&a.x<RT_BOX[1]+5&&a.z>RT_BOX[2]-5&&a.z<RT_BOX[3]+5)trunks.push(a);
+  const others=SOLIDS.slice();
+  // open natural ground r round x, z
+  const open=(x,z,r)=>{if(baseHeight(x,z)<WATER+2||paintAt(x,z)||Math.abs(roadOff(x,z))<ROAD_W/2+2.5||raiseAt(x,z)>0.01)return false;
+    for(let k=0;k<6;k++){const a=k*1.047,px=x+Math.cos(a)*r,pz=z+Math.sin(a)*r;if(raiseAt(px,pz)>0.01||paintAt(px,pz)||Math.abs(baseHeight(px,pz)-baseHeight(x,z))>0.5)return false}
+    for(const t of trunks)if(Math.hypot(t.x-x,t.z-z)<r+2)return false;
+    for(const q of others)if(Math.abs(x-q.x)<q.hx+r+2&&Math.abs(z-q.z)<q.hz+r+2)return false;
+    return true};
+  const o=new THREE.Object3D(),col=new THREE.Color(),n=rtIMs.map(()=>[0,0]),T=[];
+  // a stone of shape k (0 to 2 big, 3 and 4 small) at x, z, size s, sunk by sink; its ring of clumps
+  const put=(k,x,z,s,sink,w,h)=>{const m=h<0.5?0:1,im=rtIMs[k][m];if(n[k][m]>=im.instanceMatrix.count)return;
+    o.position.set(x,baseHeight(x,z)-sink*s,z);o.rotation.set((h-0.5)*0.3,h*40,(w-0.5)*0.3);o.scale.set(s,s*(0.85+0.3*w),s);o.updateMatrix();
+    im.setMatrixAt(n[k][m],o.matrix);const v=0.85+0.3*w;col.setRGB(v,v,v*0.97);im.setColorAt(n[k][m],col);n[k][m]++;
+    const R=0.8*s*1.1,nt=Math.round(5+14*Math.min(1.6,s));
+    for(let i=0;i<nt;i++){const hh=hash(x*3.1+i*1.7,z*2.3-i*0.9),a=i/nt*6.283+hh*0.8,d=R*(0.7+0.65*hash(z*1.9+i,x*0.7-i)),px=x+Math.cos(a)*d,pz=z+Math.sin(a)*d;
+      if(raiseAt(px,pz)>0.01||paintAt(px,pz))continue;T.push([px,pz,hh<0.7?0:hh<0.9?6:1,hh])}};
+  for(let cx=RT_BOX[0];cx<RT_BOX[1];cx+=RT_CELL)for(let cz=RT_BOX[2];cz<RT_BOX[3];cz+=RT_CELL){const h=hash(cx*0.37+4.1,cz*0.53-2.7);if(h>0.3)continue;
+    const x=cx+RT_CELL*hash(cx*1.7,cz*0.9+5),z=cz+RT_CELL*hash(cz*1.3-3,cx*0.7),s=1.0+1.0*hash(x*2.1,z*1.1);
+    if(!open(x,z,1.2*s))continue;
+    put(Math.floor(h/0.1)%3,x,z,s,0.2,hash(x,z+1),hash(z,x+2));SOLIDS.push({x,z,hx:0.75*s,hz:0.75*s,rk:1});
+    // a medium one alongside, and the small stones round them
+    const nm=hash(x+3,z)<0.6?1:0,nsm=2+Math.floor(hash(x,z+3)*5);
+    for(let i=0;i<nm;i++){const a=hash(x*0.3+i,z)*6.28,d=1.2*s+0.6,mx=x+Math.cos(a)*d,mz=z+Math.sin(a)*d,ms=s*(0.4+0.25*hash(mx,mz));
+      if(!open(mx,mz,0.9*ms))continue;put((Math.floor(h/0.1)+1)%3,mx,mz,ms,0.25,hash(mx,mz+1),hash(mz,mx+2));SOLIDS.push({x:mx,z:mz,hx:0.75*ms,hz:0.75*ms,rk:1})}
+    for(let i=0;i<nsm;i++){const a=hash(x*0.7-i,z*1.3+i)*6.28,d=1.0*s+0.4+1.8*hash(x+i,z-i),sx=x+Math.cos(a)*d,sz=z+Math.sin(a)*d;
+      if(raiseAt(sx,sz)>0.01||paintAt(sx,sz)||Math.abs(roadOff(sx,sz))<ROAD_W/2+1)continue;put(3+(i&1),sx,sz,0.18+0.22*hash(sx,sz),0.3,hash(sx,sz+1),hash(sz,sx+2))}}
+  rtIMs.forEach((P,k)=>P.forEach((im,m)=>{im.count=n[k][m];im.instanceMatrix.needsUpdate=true;im.instanceColor.needsUpdate=true}));
+  // the clumps, in 32 m squares by shape like the field's (tuftLod draws each square's share by its distance)
+  const GRN=[[0.32,0.52,0.22],[0.25,0.49,0.23],null,null,null,null,[0.5,0.53,0.27]],sq=new Map();
+  for(const t of T){const kk=`${Math.floor(t[0]/32)},${Math.floor(t[1]/32)},${t[2]}`;if(!sq.has(kk))sq.set(kk,[]);sq.get(kk).push(t)}
+  for(const [kk,L] of sq){const k=L[0][2],G=TUFT_GQ[tuftQ][k],g=new THREE.BufferGeometry();
+    for(const a of ['position','color','normal','aHead'])g.setAttribute(a,G.attributes[a]);g.setIndex(G.index);
+    const A=new Float32Array(L.length*4);g.setAttribute('aTuft',new THREE.InstancedBufferAttribute(A,4));
+    const im=new THREE.InstancedMesh(g,tuftMats[k],L.length);im.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(L.length*3),3);im.receiveShadow=true;im.frustumCulled=false;
+    let sx=0,sz=0;L.forEach(([x,z,,hh],i)=>{sx+=x;sz+=z;const s=k===6?0.55+0.4*hh:0.95+0.6*hh;
+      o.position.set(x,hAt(x,z)-0.02,z);o.rotation.set((hh-0.5)*0.24,hh*50,(hash(x,z)-0.5)*0.24);o.scale.set(s,s*(0.85+0.4*hash(z,x)),s);o.updateMatrix();im.setMatrixAt(i,o.matrix);
+      const c=GRN[k],v=0.85+0.3*hash(x*2,z*2),dry=k===0&&hash(x*5,z*5)<0.3?0.5:0;col.setRGB((c[0]+(0.68-c[0])*dry)*v,(c[1]+(0.6-c[1])*dry)*v,(c[2]+(0.33-c[2])*dry)*v);im.setColorAt(i,col);
+      // seed heads on some of the grass, the weeds' flowers yellow
+      const hd=k===0&&hh<0.25?[0.8,0.76,0.48]:k===1?[1,0.84,0.18]:k===6?[0.84,0.78,0.6]:null;
+      A[i*4]=(i+0.5)/L.length;A[i*4+1]=hd?hd[0]:-1;A[i*4+2]=hd?hd[1]:0;A[i*4+3]=hd?hd[2]:0});
+    Object.assign(im.userData,{cx:sx/L.length,cz:sz/L.length,n:L.length,k});tuftMeshes.push(im);tufts.add(im);rtTuftMs.push(im)}}
+document.addEventListener('DOMContentLoaded',rocksTown);

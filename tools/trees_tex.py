@@ -1,4 +1,5 @@
 """Makes the tree textures (js/trees.js) from the raw OpenAI GPT Image renders.
+Superseded for everything but the birch bark by tools/trees_scan.py (CC0 photo scans): run that one after this.
 
 Usage: python3 tools/trees_tex.py RAW_DIR
        python3 tools/trees_tex.py --leaves NAME=PNG [NAME=PNG ...] (only swaps those leaf sprays in the existing atlas)

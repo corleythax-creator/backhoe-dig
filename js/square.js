@@ -79,7 +79,7 @@ function sqString(F,a,b,sag){const L=Math.hypot(b[0]-a[0],b[2]-a[2]),n=Math.ceil
     for(let i=0;i<8;i++){const a=i*Math.PI/4+Math.PI/8,[px,pz]=oc(a);F.box(0.2,3.0,0.2,WH,px,top+1.5,pz);
       if(i!==5){const [qx,qz]=oc(a+Math.PI/4),L=Math.hypot(qx-px,qz-pz),yl=Math.atan2(qx-px,qz-pz);for(const dy of [0.95,0.12])F.box(0.08,0.08,L,WH,(px+qx)/2,top+dy,(pz+qz)/2,yl);
         for(let t=0.15;t<0.9;t+=0.12)F.box(0.04,0.8,0.04,WH,px+(qx-px)*t,top+0.53,pz+(qz-pz)*t);F.box(0.12,0.25,L,WH,(px+qx)/2,top+2.88,(pz+qz)/2,yl)}}
-    F.cyl(0.2,r+0.6,2.0,8,0x2f5a3a,ax,top+4.0,z,Math.PI/8);F.cyl(r+0.6,r+0.6,0.15,8,WH,ax,top+2.98,z,Math.PI/8);F.cyl(0.5,0.6,0.7,8,WH,ax,top+5.3,z,Math.PI/8);F.cyl(0,0.55,0.8,8,0x2f5a3a,ax,top+6.05,z,Math.PI/8);F.cyl(0.05,0.05,0.9,6,0xc9a640,ax,top+6.8,z);
+    F.cyl(0.2,r+0.6,2.0,8,famTint('seam',0x2f5a3a),ax,top+4.0,z,Math.PI/8);F.cyl(r+0.6,r+0.6,0.15,8,WH,ax,top+2.98,z,Math.PI/8);F.cyl(0.5,0.6,0.7,8,WH,ax,top+5.3,z,Math.PI/8);F.cyl(0,0.55,0.8,8,famTint('seam',0x2f5a3a),ax,top+6.05,z,Math.PI/8);F.cyl(0.05,0.05,0.9,6,0xc9a640,ax,top+6.8,z);
     for(let k=0;k<6;k++){const zs=z-r-0.15-k*0.32,ys=y+1.1-k*1.1/6;F.box(2.4,ys-y+0.05,0.34,0xb9b6ad,ax,(ys+y)/2,zs)}
     walkPad(ax,z,r*0.9,r*0.9,Math.PI/8,top+0.04);walkPad(ax,z-r-1.0,1.2,1.0,0,y,{rise:1.14});
     for(const [o,s] of [[-1.6,0.6],[-0.5,1.6],[0.6,1.4],[1.5,0.4]])spot(ax+o,z+s,top+0.04,Math.PI,{staff:1});

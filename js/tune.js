@@ -81,7 +81,7 @@ const TUNE=[
   ['trimLine','String trimmer','Line out after a bump (longest)',0.15,'in',2,12,0.25],['trimMin','String trimmer','Shortest line that still cuts',0.025,'in',0.25,6,0.25],
   ['trimBump','String trimmer','Line one bump feeds out',0.04,'in',0.25,6,0.25],['trimWear','String trimmer','Line worn away per second of cutting',0.006,'in',0.02,2,0.02],
   ['gunRate','Pistol','Shortest time between shots',0.22,'s',0.05,2,0.01],['gunRange','Pistol','How far a shot carries',90,'ft',30,600,10],
-  ['gunFlee','Pistol','How fast people run from shots',4.5,'mph',3,16,0.5],['townPop','Pistol','How many townsfolk live in town when the game starts (each one killed is gone until the next start)',150,'',0,1000,10],['runKill','Pistol','How fast a machine has to be going to run someone down (slower, they jump clear)',6,'mph',1,30,0.5],['gunWrist','Pistol','Wrist turn holding the pistol',1.4,'deg',-180,180,5],['gunBody','Pistol','How long someone shot stays down before they go (when out of sight)',40,'s',5,600,5],
+  ['gunFlee','Pistol','How fast people run from shots',4.5,'mph',3,16,0.5],['townPop','Pistol','How many townsfolk live in town when the game starts (each one killed is gone until the next start)',150,'',0,1000,10],['shopPop','Pistol','How many shopfolk (people in the shops and houses) there are when the game starts',60,'',0,500,5],['runKill','Pistol','How fast a machine has to be going to run someone down (slower, they jump clear)',6,'mph',1,30,0.5],['gunWrist','Pistol','Wrist turn holding the pistol',1.4,'deg',-180,180,5],['gunBody','Pistol','How long someone shot stays down before they go (when out of sight)',40,'s',5,600,5],
   ['trimSpool','String trimmer','Line on a full spool',25*0.3048,'ft',2,100,1],
   ['lawnCut','Grass','Mower cuts the grass to',0.09,'in',1,24,0.5],['lawnWait','Grass','Wait before cut grass grows',45,'s',0,1200,5],['lawnGrow','Grass','Time to grow back tall',240,'s',10,3600,10],
   ['rainGap','Weather','Dry spell between showers (average)',1800,'min',0.5,120,0.5],['rainLen','Weather','Shower length (average)',150,'min',0.5,60,0.5],
@@ -128,6 +128,10 @@ const TUNE=[
   ['fxBloom','Screen effects','Glow round bright light (Ultra)',0.2,'pct',0,200,5],['fxBloomThr','Screen effects','How bright light must be to glow',0.88,'pct',40,99,1],
   ['fxCon','Screen effects','Contrast of the colour grade (Ultra)',0.3,'pct',0,100,5],['fxSat','Screen effects','Colour strength of the grade',0.97,'pct',50,150,1],
   ['fxVig','Screen effects','Darker corners (vignette)',0.22,'pct',0,80,2],
+  ['fxBounce','Screen effects','Light bounced off nearby things onto others, taking their colour (Ultra, with Contact shade)',1,'pct',0,300,5],
+  ['fxContact','Screen effects','Fine sun shadows where small things touch (Ultra, with Contact shade)',0.55,'pct',0,100,5],['fxContactL','Screen effects','How far those fine shadows reach',0.6,'ft',0.1,3,0.05],
+  ['fxWarm','Screen effects','Warm light and cool shade in the colour grade',0.4,'pct',0,100,5],['fxSharp','Screen effects','Sharpening (with the colour grade)',0.35,'pct',0,100,5],
+  ['fxDof','Screen effects','Far blur, like a camera lens (with the colour grade; 0% = off)',0.5,'pct',0,100,5],
   // Ultra lighting (post.js): how much the sky colours the shade, how soft the sun's shadows get, the rain on the machines
   ['ultraSky','Ultra','Sky lighting: how much the sky as it is colours the shade and reflections',1,'pct',0,200,5],
   ['ultraShSoft','Ultra','Soft sun shadows: blur per foot a shadow falls from what casts it',0.03,'pct',0,10,0.5],
@@ -140,6 +144,9 @@ const TUNE=[
   // how the clock runs (☰ menu, Time) and how dark the night gets
   ['dayLen','Day and night','A whole day (24 hours) passes in',2880,'min',2,1440,1],
   ['nightLight','Day and night','Moonlight and starlight at night',1,'pct',0,400,5],
+  // the clouds in 3D (storm.js, Medium graphics and up)
+  ['clBase','Weather','Cloud base height',460,'ft',500,6000,50],['clDense','Weather','How thick the clouds are',1,'pct',20,400,5],
+  ['clShadow','Weather','How dark the cloud shadows on the ground are',0.8,'pct',0,100,5],
   ['lampLight','Day and night','Headlights, lamps and lit windows',1,'pct',0,300,5],
   // fuel and pay (fuel.js)
   ['fuelUse','Work and pay','Fuel use (100% burns what the real machine does in an hour of game time; does nothing while fuel burn is off, FUEL_BURN in fuel.js)',1,'pct',0,500,5],

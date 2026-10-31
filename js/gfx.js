@@ -10,14 +10,14 @@
 // shadow edges, filmic lighting, exp brightness, tex texture size, base ground texture, detail cut faces, painted
 // materials and machine grime, macro large-scale variation, pbr relief and wet sheen on materials that have those maps, aniso, tuftQ how finely the grass and weeds are shaped (0 Simple to 3 Best, scenery.js), tuft grass blades [amount, full-detail distance m,
 // fade-out distance m, share kept far off], lawnFar lawn full detail within m, fog haze distance, wmFine fine puddle
-// water, lakeQ the lake's ripples (0 two layers, 1 and rain rings, 2 and a fine close-up layer, lake.js), cloudQ the clouds' fine billows (0 off: half the sky's noise), treeR full-detail tree distance m, rainN raindrops, rainSp splashes where they land, splashN drops in a puddle splash, town the townsfolk (0 off to 3 busy, townfolk.js), wakeN boat wake marks drawn, dirt the Dirt detail it sets when picked,
+// water, lakeQ the lake's ripples (0 two layers, 1 and rain rings, 2 and a fine close-up layer, lake.js), cloudQ the clouds (0 a flat layer without its fine billows; 1 to 3 heaps in 3D with their shadows, drawn finer each step, storm.js), treeR full-detail tree distance m, rainN raindrops, rainSp splashes where they land, splashN drops in a puddle splash, town the townsfolk (0 off to 3 busy, townfolk.js), wakeN boat wake marks drawn, dirt the Dirt detail it sets when picked,
 // ao bloom grade the screen effects (post.js), model the detailed machine models (models.js), brush the share of undergrowth
 // drawn (brush.js), wild the share of the wild growth drawn (tall grass and bushes, scenery.js), turf and turfR the share of the town's lawn grass, weeds and leaves drawn and how far out in m (turf.js), skyLight shade and reflections coloured by the sky as it is (and a sharper reflection map), shSoft
 // contact-hardening sun shadows, wetDrops beads and runs of rain on the machines and their cab glass, wetGround soaked ground mirroring the sky (all four Ultra, post.js)
 const GFX={
   low:{name:'Low',trimClips:1,pr:1.5,auto:true,fps:0,fov:0,sh:1024,shR:22,soft:false,filmic:false,exp:1,tex:'low',detail:0,base:1,macro:false,pbr:false,aniso:4,dirt:1,lawnFar:0,fog:1,wmFine:false,cloudQ:0,rainN:600,rainSp:160,splashN:250,wakeN:140,brush:0.35,model:false,ao:false,bloom:false,grade:false,skyLight:false,shSoft:false,wetDrops:false,wetGround:false,lakeQ:0,treeR:45,tuftQ:0,tuft:[0.6,12,40,0.2]},
   med:{name:'Medium',trimClips:2,pr:1.5,auto:true,fps:0,fov:0,sh:2048,shR:32,soft:false,filmic:true,exp:1,tex:'med',detail:1,base:1,macro:false,pbr:false,aniso:8,dirt:2,lawnFar:15,fog:1,wmFine:true,cloudQ:1,rainN:1500,rainSp:400,splashN:600,wakeN:300,brush:0.7,model:true,ao:false,bloom:false,grade:false,skyLight:false,shSoft:false,wetDrops:false,wetGround:false,lakeQ:1,treeR:90,tuftQ:0,tuft:[0.85,18,60,0.3]},
-  high:{name:'High',trimClips:4,pr:2,auto:true,fps:0,fov:0,sh:4096,shR:45,soft:true,filmic:true,exp:1,tex:'high',detail:1,base:1,macro:true,pbr:true,aniso:16,dirt:4,lawnFar:1e9,fog:1,wmFine:true,cloudQ:1,rainN:3000,rainSp:900,splashN:1200,wakeN:640,brush:1,model:true,ao:false,bloom:false,grade:false,skyLight:false,shSoft:false,wetDrops:false,wetGround:false,lakeQ:2,treeR:160,tuftQ:2,tuft:[1,25,80,0.35]}};
+  high:{name:'High',trimClips:4,pr:2,auto:true,fps:0,fov:0,sh:4096,shR:45,soft:true,filmic:true,exp:1,tex:'high',detail:1,base:1,macro:true,pbr:true,aniso:16,dirt:4,lawnFar:1e9,fog:1,wmFine:true,cloudQ:2,rainN:3000,rainSp:900,splashN:1200,wakeN:640,brush:1,model:true,ao:false,bloom:false,grade:false,skyLight:false,shSoft:false,wetDrops:false,wetGround:false,lakeQ:2,treeR:160,tuftQ:2,tuft:[1,25,80,0.35]}};
 // Ultra: High with the screen effects (post.js) and trees in full detail farther out; for strong PC graphics only, never
 // picked by itself
 // the extra lamps: the warm light in Jessica's library and the boom's work light (Low keeps the glowing lamps only)
@@ -30,7 +30,7 @@ GFX.low.extraLt=false;GFX.med.extraLt=GFX.high.extraLt=true;
 GFX.low.propLt=GFX.med.propLt=false;GFX.high.propLt=true;
 // the townsfolk from Human Forge (townfolk.js), at that level of detail: the phone keeps the old ones
 GFX.low.forge=GFX.med.forge='';GFX.high.forge='md';
-GFX.ultra=Object.assign({},GFX.high,{name:'Ultra',forge:'hi',wild:1,turfR:75,tuftQ:3,ao:true,bloom:true,grade:true,treeR:220,skyLight:true,shSoft:true,wetDrops:true,wetGround:true});
+GFX.ultra=Object.assign({},GFX.high,{name:'Ultra',forge:'hi',wild:1,turfR:75,tuftQ:3,ao:true,bloom:true,grade:true,treeR:220,skyLight:true,shSoft:true,wetDrops:true,wetGround:true,cloudQ:3});
 // VR through a PC: the eye buffer drawn larger than the headset's own and scaled down (supersampling), for sharper edges
 // and fine detail; only the levels for strong graphics do it
 GFX.low.vrSS=GFX.med.vrSS=1;GFX.high.vrSS=1.25;GFX.ultra.vrSS=1.4;
@@ -38,7 +38,7 @@ GFX.low.vrSS=GFX.med.vrSS=1;GFX.high.vrSS=1.25;GFX.ultra.vrSS=1.4;
 // shadows close round you (a small shadow area), the detailed machines, ground detail and filmic light kept, and what
 // costs the most cut back: grass blades, undergrowth and full-detail trees only near you, a shorter haze so less is
 // drawn far off, the plain puddle surface and fewer raindrops. Picked for you in the headset, never on a screen
-GFX.quest=Object.assign({},GFX.med,{name:'Quest',pr:1,auto:false,sh:2048,shR:16,tex:'med',aniso:4,dirt:2,lawnFar:8,fog:0.7,wmFine:false,lakeQ:0,
+GFX.quest=Object.assign({},GFX.med,{name:'Quest',pr:1,auto:false,sh:2048,shR:16,tex:'med',aniso:4,dirt:2,lawnFar:8,fog:0.7,wmFine:false,lakeQ:0,cloudQ:0,
   rainN:700,rainSp:180,splashN:260,wakeN:160,brush:0.3,wild:0.35,turf:0.35,turfR:22,model:true,treeR:50,tuft:[0.5,10,30,0.15],vrSS:0.9});
 GFX.quest.town=1;
 GFX.quest.extraLt=false;
@@ -71,7 +71,7 @@ function gfxApply(){const g=gfxCur=Object.assign({},GFX[gfxKey],gfxOver);
     scene.traverse(o=>{if(o.material)for(const m of [].concat(o.material))m.needsUpdate=true})}
   rmExp0=te;renderer.toneMappingExposure=te*rmAdapt;
   // ground detail: the cut-face detail, material library and machine grime (detail), and the grass and dirt textures (base)
-  gfxDetail=g.detail;gfxBase=g.base;matU.texPbr.value=g.pbr?1:0;treePbr(g.pbr);shopPbr(g.pbr);stPbr(g.pbr);
+  gfxDetail=g.detail;gfxBase=g.base;matU.texPbr.value=g.pbr?1:0;treePbr(g.pbr);shopPbr(g.pbr);
   // trees drawn with the full model out to this distance, the light one beyond (trees.js)
   if(treeNearR!==g.treeR){treeNearR=g.treeR;treeLodDirty=true}if(texOn){texMixU.value=gfxDetail;texBaseU.value=gfxBase;matTexUpdate()}
   // the ground pack's size, its filtering and the large-scale variation map (terrain.js)
@@ -141,9 +141,9 @@ const GFX_ROWS=[
   {id:'exp',label:'Brightness',min:0.6,max:1.4,step:0.05,fmt:v=>`${Math.round(v*100)}%`},
   {id:'fog',label:'Haze distance',hint:'How far you see before the air turns hazy.',min:0.4,max:2,step:0.1,fmt:v=>`${(760*v*FT_M/5280).toFixed(1)} mi`},
   ['Screen effects'],
-  {id:'ao',label:'Contact shade',hint:'Soft shade where things meet the ground and in hollows (ambient occlusion). Costs a strong graphics card.',opts:onOff},
+  {id:'ao',label:'Contact shade',hint:'Soft shade where things meet the ground and in hollows (ambient occlusion), fine sun shadows where small things touch, and light bounced off nearby things in their colour. Costs a strong graphics card.',opts:onOff},
   {id:'bloom',label:'Glow',hint:'A soft glow round the sun, lamps and bright glints.',opts:onOff},
-  {id:'grade',label:'Colour grade',hint:'Camera-like contrast and colour, with slightly darker corners. Adjust them on the screen editor\'s Tuning tab (Screen effects).',opts:onOff},
+  {id:'grade',label:'Colour grade',hint:'Camera-like contrast and colour with warm light and cool shade, sharpening, a soft blur far off, and slightly darker corners. Adjust them on the screen editor\'s Tuning tab (Screen effects).',opts:onOff},
   ['Textures'],
   {id:'tex',label:'Texture size',hint:'Ground and machine textures. Bigger is sharper and uses more memory.',opts:[['low','512'],['med','1024'],['high','2048']]},
   {id:'base',label:'Ground texture',hint:'Grass and dirt detail on the ground.',opts:[[1,'On'],[0,'Off']]},

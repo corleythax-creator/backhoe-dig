@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-31T02:21:00Z",
+ "updated": "2026-10-31T03:24:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -90,9 +90,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-30",
-   "dh": 67.25,
-   "act": 3,
-   "versions": 15
+   "dh": 121.25,
+   "act": 4,
+   "versions": 25
   }
  ],
  "extra": [
@@ -2658,6 +2658,96 @@ window.EFFORT = {
    "tris": 6051407,
    "chars": 1886165,
    "what": "The town starts each game with a set number of townsfolk (townPop, 150); each one killed is gone until the next start and the crowd thins out"
+  },
+  {
+   "v": 285,
+   "asked": "2026-10-30T20:00:00-05:00",
+   "live": "2026-10-30T21:27:00-05:00",
+   "dh": 3,
+   "tris": 5815154,
+   "chars": 1887412,
+   "what": "Zoom in on the start map and it sharpens: paved streets with their lines and crosswalks, sidewalks and walkways, roofs with shadows, leafy trees and bridge railings."
+  },
+  {
+   "v": 286,
+   "asked": "2026-10-31T20:30:00-05:00",
+   "live": "2026-10-30T21:27:38-05:00",
+   "dh": 5,
+   "tris": 5706578,
+   "chars": 1889187,
+   "what": "On Ultra the puddles on the paving reflect the trees, lamps, people and buildings round them; rain splashes are smaller and fainter"
+  },
+  {
+   "v": 287,
+   "asked": "2026-10-30T20:57:00-05:00",
+   "live": "2026-10-30T21:27:57-05:00",
+   "dh": 5,
+   "tris": 5821294,
+   "chars": 1891248,
+   "what": "Townsfolk react to where they are shot: head shots drop them, chest shots stagger them over, gut shots double them up, leg shots put them down crawling, arm shots spin them and they run"
+  },
+  {
+   "v": 288,
+   "asked": "2026-10-30T21:05:00-05:00",
+   "live": "2026-10-30T21:30:53-05:00",
+   "dh": 4,
+   "tris": 5818519,
+   "chars": 1895561,
+   "what": "Breakwater boulders in photo-scanned granite, standing-seam metal roofs on the Dockside Grill and bandstand, woven canvas on every awning stripe; tintable scanned kit materials (famTint)"
+  },
+  {
+   "v": 289,
+   "asked": "2026-10-30T21:24:00-05:00",
+   "live": "2026-10-30T21:32:22-05:00",
+   "dh": 1.5,
+   "tris": 5813015,
+   "chars": 1895678,
+   "what": "Main Street in town is paved in red brick, its bricks standing up out of their joints with Material relief; the cross street stays asphalt."
+  },
+  {
+   "v": 290,
+   "asked": "2026-10-30T21:32:00-05:00",
+   "live": "2026-10-30T21:32:55-05:00",
+   "dh": 1,
+   "tris": 5806695,
+   "chars": 1896132,
+   "what": "A Shopfolk count beside Townsfolk: the people in shops and houses start each game at shopPop (60) and those shot indoors are gone until the next start"
+  },
+  {
+   "v": 291,
+   "asked": "2026-10-30T21:20:00-05:00",
+   "live": "2026-10-30T21:44:59-05:00",
+   "dh": 6,
+   "tris": 5819051,
+   "chars": 1901026,
+   "what": "Ultra: contact shadows toward the sun, light bouncing nearby colour onto things, sharpening, a far lens blur and a warm-light cool-shade grade (all tunable under Screen effects)"
+  },
+  {
+   "v": 292,
+   "asked": "2026-10-30T21:30:00-05:00",
+   "live": "2026-10-30T21:54:24-05:00",
+   "dh": 0.5,
+   "tris": 5818779,
+   "chars": 1901026,
+   "what": "The start map's close-up shows Main Street in brick with its crosswalks, as it is in town now."
+  },
+  {
+   "v": 293,
+   "asked": "2026-10-31T19:46:00-05:00",
+   "live": "2026-10-30T22:23:33-05:00",
+   "dh": 14,
+   "tris": 5886948,
+   "chars": 1919552,
+   "what": "Photo-scanned leaf trees in autumn colours, pines from scanned needles, logs and stumps in the woods, split-granite boulders with grass round their feet, clustered on the town's lawns"
+  },
+  {
+   "v": 294,
+   "asked": "2026-10-30T21:45:00-05:00",
+   "live": "2026-10-30T22:24:31-05:00",
+   "dh": 14,
+   "tris": 5900463,
+   "chars": 1934011,
+   "what": "Real 3D clouds: rounded heaps with sunlit tops, grey undersides and glowing edges toward the sun, that roll in dark before a shower, and their shadows drifting across the island (Medium graphics and up)."
   }
  ]
 };
