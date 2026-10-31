@@ -71,7 +71,7 @@ function gfxApply(){const g=gfxCur=Object.assign({},GFX[gfxKey],gfxOver);
     scene.traverse(o=>{if(o.material)for(const m of [].concat(o.material))m.needsUpdate=true})}
   rmExp0=te;renderer.toneMappingExposure=te*rmAdapt;
   // ground detail: the cut-face detail, material library and machine grime (detail), and the grass and dirt textures (base)
-  gfxDetail=g.detail;gfxBase=g.base;matU.texPbr.value=g.pbr?1:0;treePbr(g.pbr);shopPbr(g.pbr);
+  gfxDetail=g.detail;gfxBase=g.base;matU.texPbr.value=g.pbr?1:0;treePbr(g.pbr);shopPbr(g.pbr);stPbr(g.pbr);
   // trees drawn with the full model out to this distance, the light one beyond (trees.js)
   if(treeNearR!==g.treeR){treeNearR=g.treeR;treeLodDirty=true}if(texOn){texMixU.value=gfxDetail;texBaseU.value=gfxBase;matTexUpdate()}
   // the ground pack's size, its filtering and the large-scale variation map (terrain.js)

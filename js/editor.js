@@ -282,7 +282,7 @@ function edRoadsName(before){const was=JSON.parse(before);if(ROADS.length>was.le
   for(let i=0;i<ROADS.length;i++){const r=ROADS[i],b=was[i];if(!b)continue;
     if(r.pts.length>b.pts.length)return 'Added a road point';if(r.pts.length<b.pts.length)return 'Deleted a road point';
     if(r.w!==b.w)return 'Road width';if(r.mid!==b.mid)return 'Grass up the middle';if(!!r.pv!==!!b.pv)return r.pv?'Paved a road':'Unpaved a road';
-    if(!!r.cb!==!!b.cb)return 'Curbs';if((r.sw||0)!==(b.sw||0))return 'Sidewalks';if(!!r.cl!==!!b.cl)return 'Centre line';if(edGraded(r)!==edGraded(b))return edGraded(r)?'Graded a road':'Ungraded a road';
+    if(!!r.cb!==!!b.cb)return 'Curbs';if((r.sw||0)!==(b.sw||0))return 'Sidewalks';if(!!r.cl!==!!b.cl)return 'Centre line';if((r.sf||0)!==(b.sf||0))return 'Street surface';if(edGraded(r)!==edGraded(b))return edGraded(r)?'Graded a road':'Ungraded a road';
     if(JSON.stringify(r.pts)!==JSON.stringify(b.pts))return r.pts.some((q,k)=>b.pts[k]&&q[2]!==b.pts[k][2]&&q[0]===b.pts[k][0])?'Road point height':'Moved a road point'}
   return 'Changed a road'}
 // History: every step that can be undone or redone, newest at the top; tapping one undoes or redoes up to just after it
@@ -512,7 +512,7 @@ $('#edList').onclick=e=>{const b=e.target.closest('button');if(!b)return;const e
 // the roads, in the Roads drawer: tap one to pick it and go to it
 function edRoadList(){const el=$('#edRoadList');$('#edRoadN').textContent=ROADS.length?`${ROADS.length}`:'';if($('#edDrawer').hidden||ed.pane!=='roads')return;
   el.innerHTML=ROADS.map((r,i)=>{let L=0;for(let k=0;k<r.pts.length-1;k++)L+=Math.hypot(r.pts[k+1][0]-r.pts[k][0],r.pts[k+1][1]-r.pts[k][1]);
-    return `<div class="edlr"><button class="edlrn" data-r="${i}" aria-pressed="${r===ed.road}"><span>${r.pv?'Street':edGraded(r)?'Graded road':r.mid?'Road':'Track'} ${i+1}</span><small>${Math.round(edFt(r.w))} ft wide${r.pv&&r.sw?` · ${Math.round(edFt(r.sw))} ft sidewalks`:''} · ${edFmt(L,0)} ft long · ${r.pts.length} points</small></button></div>`}).join('')||'<p class="hint">No roads yet. New road, in the bottom bar, lays one.</p>';
+    return `<div class="edlr"><button class="edlrn" data-r="${i}" aria-pressed="${r===ed.road}"><span>${r.pv?(r.sf?ST_SURF[r.sf].n+' street':'Street'):edGraded(r)?'Graded road':r.mid?'Road':'Track'} ${i+1}</span><small>${Math.round(edFt(r.w))} ft wide${r.pv&&r.sw?` · ${Math.round(edFt(r.sw))} ft sidewalks`:''} · ${edFmt(L,0)} ft long · ${r.pts.length} points</small></button></div>`}).join('')||'<p class="hint">No roads yet. New road, in the bottom bar, lays one.</p>';
   el.querySelectorAll('[data-r]').forEach(b=>b.onclick=()=>{const r=ROADS[+b.dataset.r];if(!r)return;if(ed.tool!=='roads')edTool('roads');ed.road=r;ed.rpt=-1;
     const q=r.pts[Math.floor(r.pts.length/2)];if(q)edFlyTo(q[0],q[1]);edRoadCard();edRoadsDraw();edPicked()})}
 
@@ -627,9 +627,10 @@ function edRoadCard(){const ob=$('#edRoadNew'),sb=$('#edStreetNew'),fb=$('#edRoa
   edRoadList();if(ed.tool!=='roads')return;const r=ed.road;if(!r){edCard(null);return}
   let L=0,steep=0;for(let i=0;i<r.pts.length-1;i++){const a=r.pts[i],b=r.pts[i+1],l=Math.hypot(b[0]-a[0],b[1]-a[1]);L+=l;if(a.length>2&&b.length>2&&l>0.1)steep=Math.max(steep,Math.abs(b[2]-a[2])/l)}
   const g=edGraded(r),q=ed.rpt>=0?r.pts[ed.rpt]:null;
-  edCard(`<h3>${ed.drawing?(r.pv?'New street':'New road'):r.pv?'Street (paved'+(r.cb?', curbs':'')+(r.sw?', sidewalks':'')+')':g?'Graded road (cut and filled to each point\u2019s height)':r.mid?'Road (follows the ground)':'Track (follows the ground)'}</h3><dl><dt>Length</dt><dd id="edRdLen">${edFmt(L,0)} ft · ${r.pts.length} points</dd>${g?`<dt>Steepest</dt><dd>${Math.round(steep*100)}%</dd>`:''}</dl>
+  edCard(`<h3>${ed.drawing?(r.pv?'New street':'New road'):r.pv?'Street ('+(r.sf?ST_SURF[r.sf].n.toLowerCase():'paved')+(r.cb?', curbs':'')+(r.sw?', sidewalks':'')+')':g?'Graded road (cut and filled to each point\u2019s height)':r.mid?'Road (follows the ground)':'Track (follows the ground)'}</h3><dl><dt>Length</dt><dd id="edRdLen">${edFmt(L,0)} ft · ${r.pts.length} points</dd>${g?`<dt>Steepest</dt><dd>${Math.round(steep*100)}%</dd>`:''}</dl>
     <div class="edopt"><label for="edRdW">Width</label><input id="edRdW" type="range" min="6" max="${r.pv?40:26}" step="1" value="${Math.round(edFt(r.w))}"><output id="edRdWV">${Math.round(edFt(r.w))} ft</output></div>
     <div class="row"><button id="edRdPv" class="sm" aria-pressed="${!!r.pv}">Paved</button>${r.pv?`<button id="edRdCb" class="sm" aria-pressed="${!!r.cb}">Curbs</button><button id="edRdCl" class="sm" aria-pressed="${!!r.cl}">Centre line</button>`:''}</div>
+    ${r.pv?`<div class="row" id="edRdSf" role="group" aria-label="Surface">${ST_SURF.map((d,f)=>`<button class="sm" data-sf="${f}" aria-pressed="${(r.sf||0)===f}">${d?d.n:'Asphalt'}</button>`).join('')}</div>`:''}
     ${r.pv?`<div class="edopt"><label for="edRdSw">Sidewalks</label><input id="edRdSw" type="range" min="0" max="16" step="1" value="${Math.round(edFt(r.sw||0))}"><output id="edRdSwV">${r.sw?Math.round(edFt(r.sw))+' ft':'none'}</output></div>
     <div class="edline" id="edRdLine"><b>Line the street</b><div class="row"><select id="edRdLk" aria-label="What to line it with">${ED_LINE_KINDS.map(([k,n])=>`<option value="${k}"${k===ed.lineK?' selected':''}>${n}</option>`).join('')}</select>
       <select id="edRdLs" aria-label="Which sides">${[['both','Both sides'],['stagger','Staggered'],['left','Left side'],['right','Right side']].map(([k,n])=>`<option value="${k}"${k===ed.lineS?' selected':''}>${n}</option>`).join('')}</select></div>
@@ -644,10 +645,13 @@ function edRoadCard(){const ob=$('#edRoadNew'),sb=$('#edStreetNew'),fb=$('#edRoa
   const md=$('#edRdMid');if(md)md.onclick=()=>{ed.roadSnap=edRoadsSnap();r.mid=r.mid?0:1;edRoadsChanged(box(),true);edRoadCommit(box());edRoadCard()};
   // paving: a dirt road becomes a street (asphalt, curbs, 6 ft sidewalks, a centre line) and back; streets.js draws it
   const flip=(k,on)=>{ed.roadSnap=edRoadsSnap();const b0=box();if(on)r[k]=1;else delete r[k];
-    if(k==='pv'){if(on){r.mid=0;r.cb=1;r.cl=1;r.sw=6*FT;if(r.w<20*FT)r.w=24*FT}else{delete r.cb;delete r.cl;delete r.sw;r.w=Math.min(r.w,8)}}
+    if(k==='pv'){if(on){r.mid=0;r.cb=1;r.cl=1;r.sw=6*FT;if(r.w<20*FT)r.w=24*FT}else{delete r.cb;delete r.cl;delete r.sw;delete r.sf;r.w=Math.min(r.w,8)}}
     const bb=edUnion(b0,box());edRoadsChanged(bb,true);edRoadCommit(bb);edRoadCard()};
   $('#edRdPv').onclick=()=>flip('pv',!r.pv);
   if(r.pv){$('#edRdCb').onclick=()=>flip('cb',!r.cb);$('#edRdCl').onclick=()=>flip('cl',!r.cl);
+    // the surface: asphalt, or brick or cobblestone with real relief (ST_SURF, streets.js)
+    document.querySelectorAll('#edRdSf [data-sf]').forEach(b=>b.onclick=()=>{const f=+b.dataset.sf;if((r.sf||0)===f)return;ed.roadSnap=edRoadsSnap();if(f)r.sf=f;else delete r.sf;
+      edRoadsChanged(box(),true);edRoadCommit(box());edRoadCard()});
     const sw=$('#edRdSw');sw.oninput=()=>{$('#edRdSwV').textContent=+sw.value?sw.value+' ft':'none'};
     sw.onchange=()=>{ed.roadSnap=edRoadsSnap();const b0=box();if(+sw.value)r.sw=+sw.value*FT;else delete r.sw;const bb=edUnion(b0,box());edRoadsChanged(bb,true);edRoadCommit(bb);edRoadCard()};
     $('#edRdLk').onchange=e=>{ed.lineK=e.target.value};$('#edRdLs').onchange=e=>{ed.lineS=e.target.value};

@@ -79,7 +79,7 @@ function mapEncode(){const doc={game:'backhoe-dig',v:1,g:[ED_X0,ED_Z0]},h=edBox(
   const m=edBox(ED_M,1,Uint8Array),fa=new Uint8Array(ED_A.length);for(let q=0;q<fa.length;q++)if(ED_M[q])fa[q]=255-ED_A[q];
   const a=edBox(fa,1,Uint8Array);if(h)doc.h=h;if(p)doc.p=p;if(m)doc.m=m;if(a)doc.a=a;doc.tg=edBox(ED_G,1,Uint8Array)||0;
   if(mapAssets)doc.assets=mapAssets.map(a=>[a.t,+a.x.toFixed(2),+a.z.toFixed(2),+a.yaw.toFixed(2),+a.s.toFixed(2),a.c,...(a.lk?[1]:[])]);
-  if(mapRoads)doc.roads=mapRoads.map(r=>[+r.w.toFixed(2),r.mid,r.pts.map(q=>q.map(v=>+v.toFixed(2))),...(r.pv?[{c:r.cb?1:0,s:+(r.sw||0).toFixed(2),l:r.cl?1:0}]:[])]);
+  if(mapRoads)doc.roads=mapRoads.map(r=>[+r.w.toFixed(2),r.mid,r.pts.map(q=>q.map(v=>+v.toFixed(2))),...(r.pv?[{c:r.cb?1:0,s:+(r.sw||0).toFixed(2),l:r.cl?1:0,...(r.sf?{f:r.sf}:{})}]:[])]);
   return JSON.stringify(doc)}
 // reads a map into new layers; throws on anything that is not one
 function mapDecode(text){const doc=JSON.parse(text);if(!doc||doc.game!=='backhoe-dig'||doc.v!==1)throw new Error('not a Corley\'s Island map');
@@ -94,9 +94,10 @@ function mapDecode(text){const doc=JSON.parse(text);if(!doc||doc.game!=='backhoe
   const as=Array.isArray(doc.assets)?doc.assets.filter(a=>Array.isArray(a)&&typeof a[0]==='string'&&/^[a-z]{2,16}$/.test(a[0])&&isFinite(a[1])&&isFinite(a[2]))
     .map(a=>Object.assign({t:a[0],x:+a[1],z:+a[2],yaw:+a[3]||0,s:Math.max(0.3,Math.min(3,+a[4]||1)),c:(a[5]|0)>=0?a[5]|0:0},a[6]===1?{lk:1}:{})):null;
   // roads: 1.5 to 8 m wide (streets to 12), 2 to 200 points each; graded only when every point has a height; a fourth
-  // entry makes it a paved street (streets.js): c curbs, s sidewalk width (to 5 m), l centre line
+  // entry makes it a paved street (streets.js): c curbs, s sidewalk width (to 5 m), l centre line, f its surface when
+  // not asphalt (1 brick, 2 cobblestone, 3 fan cobbles, 4 old brick: ST_SURF)
   const rs=Array.isArray(doc.roads)?doc.roads.slice(0,60).filter(r=>Array.isArray(r)&&isFinite(r[0])&&Array.isArray(r[2])&&r[2].length>=2&&r[2].length<=200&&r[2].every(q=>Array.isArray(q)&&q.length>=2&&q.slice(0,3).every(isFinite)))
-    .map(r=>{const g=r[2].every(q=>q.length>2),o=r[3]&&typeof r[3]==='object'?r[3]:null,pv=o?{pv:1,cb:o.c?1:0,sw:Math.max(0,Math.min(5,+o.s||0)),cl:o.l?1:0}:{};
+    .map(r=>{const g=r[2].every(q=>q.length>2),o=r[3]&&typeof r[3]==='object'?r[3]:null,pv=o?{pv:1,cb:o.c?1:0,sw:Math.max(0,Math.min(5,+o.s||0)),cl:o.l?1:0,...(o.f>=1&&o.f<=4?{sf:o.f|0}:{})}:{};
       return Object.assign({w:Math.max(1.5,Math.min(o?12:8,+r[0])),mid:o?0:r[1]?1:0,pts:r[2].map(q=>g?[+q[0],+q[1],+q[2]]:[+q[0],+q[1]])},pv)}):null;
   return {h,p,m,a,tg,as,rs}}
 try{const t=localStorage.getItem('bhd_map');if(t){const m=mapDecode(t);ED_H.set(m.h);ED_P.set(m.p);ED_M.set(m.m);ED_A.set(m.a);if(m.tg)ED_G.set(m.tg);mapAssets=m.as;mapRoads=m.rs}}catch(e){}

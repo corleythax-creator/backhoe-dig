@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-31T02:08:00Z",
+ "updated": "2026-10-31T02:11:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -90,9 +90,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-30",
-   "dh": 49.25,
+   "dh": 56.25,
    "act": 3,
-   "versions": 12
+   "versions": 13
   }
  ],
  "extra": [
@@ -2631,6 +2631,15 @@ window.EFFORT = {
    "tris": 5813184,
    "chars": 1862310,
    "what": "The pistol is now Poly Haven's photo-scanned service pistol, gripped in the worker's own hand; in first person you see his real arm holding it"
+  },
+  {
+   "v": 282,
+   "asked": "2026-10-30T20:38:00-05:00",
+   "live": "2026-10-30T21:11:56-05:00",
+   "dh": 7,
+   "tris": 5812680,
+   "chars": 1869089,
+   "what": "Streets laid in the map editor can be brick, cobblestone, fan cobbles or old brick (Surface on the street's card): photo-scanned paving whose bricks and cobbles stand up out of their joints and cast little shadows in the sun with Material relief on."
   }
  ]
 };
