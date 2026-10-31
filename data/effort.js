@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-30T23:21:00Z",
+ "updated": "2026-10-31T00:17:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -90,9 +90,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-30",
-   "dh": 0.5,
-   "act": 0.5,
-   "versions": 1
+   "dh": 18.5,
+   "act": 1,
+   "versions": 2
   }
  ],
  "extra": [
@@ -2532,6 +2532,15 @@ window.EFFORT = {
    "tris": 5524949,
    "chars": 1797564,
    "what": "Townsfolk (High and Ultra) run on Human Forge's newer people runtime (1.1): same people and animations, clearer load errors."
+  },
+  {
+   "v": 271,
+   "asked": "2026-10-30T17:45:00-05:00",
+   "live": "2026-10-30T19:17:02-05:00",
+   "dh": 18,
+   "tris": 5817513,
+   "chars": 1838868,
+   "what": "Harbor Square, the town's new centre on the waterfront at the foot of Main Street: a seawall promenade with steps down to the beach, café tables and a flagpole, and a town green with a fountain, a bandstand with a band under festoon lights, market stalls, shade trees and the brick Town Hall, whose clock keeps the game's time. Behind the town the ground climbs into wooded foothills: Overlook Road switchbacks up and the Lookout Trail climbs the face to the Lakeside Overlook, 160 ft above town, looking back over the town and the islands. The map has no more straight edges: the town's shore runs on into the mountains, and the field and woods end in beaches."
   }
  ]
 };

@@ -9,14 +9,14 @@
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 const SUB={RW:6,GS:0.9,SW:1.4,lots:[],houses:0};
 // [x0, z0, x1, z1] centre lines (each along x or z)
-const SUB_STREETS=[[-63,598,-63,645.2],[-63,658.8,-63,750],[-107,598,-107,645.2],[-107,658.8,-107,750],[-155,598,-155,750],[-155,598,-63,598],
+const SUB_STREETS=[[-63,658.8,-63,750],[-63,750,-63,782],[-107,598,-107,645.2],[-107,658.8,-107,750],[-155,598,-155,750],[-155,598,-107,598],
   [-155,700,-30,700],[-155,750,-63,750],[-140,652,-155,652],[107,658.8,107,734],[17.5,734,160,734],[160,618,160,750],[140,652,160,652]];
 // where they meet the cross street over its sidewalk: [x, the walk's z0, z1, which way the side street runs]
-const SUB_APRONS=[[-63,645.2,648.5,-1],[-63,655.5,658.8,1],[-107,645.2,648.5,-1],[-107,655.5,658.8,1],[107,655.5,658.8,1]];
+const SUB_APRONS=[[-63,655.5,658.8,1],[-107,645.2,648.5,-1],[-107,655.5,658.8,1],[107,655.5,658.8,1]];
 // TF_PARKED: {x, y, z, yaw} the parked cars (townfolk.js)
 const TF_PARKED=[];
 // ---------- what a lot must keep clear of ----------
-const SUB_KEEP=[[-28,18,722,763],[34,94,676,715],[41,67,672,680],[56,134,579,615],[-140,140,644,660],[-8,8,550,726],[100,132,560,580]];
+const SUB_KEEP=[[-104,-18,556,634],[24,36,736,790],[-28,18,722,763],[34,94,676,715],[41,67,672,680],[56,134,579,615],[-140,140,644,660],[-8,8,550,726],[100,132,560,580]];
 function subClear(x,z){if(Math.abs(x)>178||z>766||z<588)return false;if(baseHeight(x,z)-WATER<2)return false;
   for(const [a,b,c,d] of SUB_KEEP)if(x>a&&x<b&&z>c&&z<d)return false;
   if(Math.abs(roadOff(x,z))<ROAD_W/2+2)return false;
@@ -142,7 +142,9 @@ function subWoods(trees){let sd=91;const rnd=()=>{sd=(sd*16807)%2147483647;retur
     for(const L of SUB.lots)if(x>L[0]+1&&x<L[1]-1&&z>L[2]+1&&z<L[3]-1)return false;return true};
   // how thick the woods are: open round town, thick past the last streets and toward the edge of the ground
   const dens=(x,z)=>{const e=Math.max((Math.abs(x)-150)/40,(z-745)/15,0);return Math.min(1,0.08+e*0.9)};
-  for(let g=0;g<26000&&pts.length<1500;g++){const x=-300+rnd()*600,z=588+rnd()*188;if(rnd()>dens(x,z))continue;if(pts.some(p=>(p[0]-x)**2+(p[1]-z)**2<12))continue;if(!free(x,z,2.6))continue;pts.push([x,z])}
+  const cell=new Map();
+  for(let g=0;g<36000&&pts.length<1900;g++){const x=-430+rnd()*860,z=588+rnd()*188;if(z>fhZ(x)-4||rnd()>dens(x,z))continue;const ci=Math.floor(x/4),cj=Math.floor(z/4);let hit=false;for(let a=-1;a<=1&&!hit;a++)for(let b=-1;b<=1&&!hit;b++)for(const p of cell.get((ci+a)*4096+cj+b)||[])if((p[0]-x)**2+(p[1]-z)**2<12){hit=true;break}
+    if(hit||!free(x,z,2.6))continue;pts.push([x,z]);const k=ci*4096+cj;if(!cell.has(k))cell.set(k,[]);cell.get(k).push([x,z])}
   for(const [x,z] of pts){const pine=rnd()<(Math.abs(x)>170||z>748?0.55:0.3);trees.push(treeEntry(pine?'pine':'leafy',x,z,rnd()*6.3,0.75+rnd()*0.6,(rnd()*6)|0))}
   // thickets and young growth along the woods' edge
   let nb=0;for(let g=0;g<5000&&nb<400;g++){const x=-260+rnd()*520,z=592+rnd()*180,d=dens(x,z);if(d<0.25||d>0.9||rnd()>0.5)continue;if(!free(x,z,1.2))continue;

@@ -4,8 +4,8 @@
 // The map's ground covers the whole world, the islands and both mainland shores, in square tiles of MPT_PX pixels at
 // MPT_MPP metres a pixel, coloured as the ground itself is (groundColor, with hill shading, lake depth and every tree).
 // Tiles are built a few rows a frame, nearest the player first, so nothing stalls; the map editor clears them (mapReset).
-const MPT_PX=128,MPT_MPP=0.8,MPT_M=MPT_PX*MPT_MPP,MPT_NX=9,MPT_NZ=14,MAPW_X0=-MPT_NX*MPT_M/2,MAPW_Z0=-588,
-  MAPW_X1=MAPW_X0+MPT_NX*MPT_M,MAPW_Z1=MAPW_Z0+MPT_NZ*MPT_M,MAP_FIT=[-452,452,-584,792],mapTiles=[];
+const MPT_PX=128,MPT_MPP=0.8,MPT_M=MPT_PX*MPT_MPP,MPT_NX=9,MPT_NZ=15,MAPW_X0=-MPT_NX*MPT_M/2,MAPW_Z0=-588,
+  MAPW_X1=MAPW_X0+MPT_NX*MPT_M,MAPW_Z1=MAPW_Z0+MPT_NZ*MPT_M,MAP_FIT=[-452,452,-584,950],mapTiles=[];
 let digLayer=null,mapDirty=true,mapT=0,mapBigT=0,mapJob=null,mapTreeList=null;
 function mapReset(){mapTiles.length=0;mapJob=null;mapTreeList=null}
 // every tree in the world as [x, z, crown radius, shade], read from the tree instance meshes (rocks are left out) and the
@@ -66,7 +66,7 @@ function updateLawnMap(){
   x2.putImageData(img,0,0)}
 // place names on the big map: [name, x, z, size], drawn at every zoom
 const MAP_LABELS=[['DIG SITE',GX0+S/2,GZ0-4,1],["CORLEY'S ISLAND",0,-EDGE-8,1.2],['FAMILY ISLAND',FAM_X,FAM_Z-FAM_R-6,1.2],["JESSICA'S ISLAND",JES_X,JES_Z-JES_R-8,1.1],
-  ["DEXTER'S ISLAND",DEX_X,DEX_Z-DEX_R-8,1.1],['THE LAKE',-130,120,1.3],['THE LAKE',170,390,1.3],['THE WOODS',-220,-450,1.3],['HAYFIELD',210,-440,1.3],['LAKESIDE TOWN',0,690,1.4],['MARINA BEACH',-120,545,1],['GENERAL STORE',0,770,0.9],['MARINA',100,505,0.9]];
+  ["DEXTER'S ISLAND",DEX_X,DEX_Z-DEX_R-8,1.1],['THE LAKE',-130,120,1.3],['THE LAKE',170,390,1.3],['THE WOODS',-220,-450,1.3],['HAYFIELD',210,-440,1.3],['LAKESIDE TOWN',0,690,1.4],['MARINA BEACH',-120,545,1],['GENERAL STORE',0,770,0.9],['HARBOR SQUARE',-60,592,0.8],['OVERLOOK',8,915,0.9],['FOOTHILLS',-150,880,1.1],['MARINA',100,505,0.9]];
 // the map at canvas cv, centred on cx, cz at mpp metres a CSS pixel (big: the site map, with its layers and labels)
 function drawMap(cv,cx,cz,mpp,big,bare){
   const dpr=Math.min(2,devicePixelRatio||1),W=Math.round(cv.clientWidth*dpr),H=Math.round(cv.clientHeight*dpr);if(!W||!H)return;
@@ -142,7 +142,7 @@ function drawMap(cv,cx,cz,mpp,big,bare){
 }
 // ---------- the big map's view: pan, zoom, places ----------
 const MAP_PLACES=[['Whole map',0,104,null],['Dig site',0,8,90],['Family Island',FAM_X,FAM_Z,200],["Jessica's",JES_X,JES_Z,120],["Dexter's",DEX_X,DEX_Z,120],
-  ['Woods & field',0,-440,330],['Lakeside town',0,640,260]];
+  ['Woods & field',0,-440,330],['Lakeside town',0,640,260],['Overlook',8,880,200]];
 const mapV={cx:0,cz:104,mpp:0,anim:null,hover:null};
 function mapBox(){const c=$('#big');return [c.clientWidth||1,c.clientHeight||1]}
 function mapFitMpp(){const [w,h]=mapBox();return Math.max((MAP_FIT[1]-MAP_FIT[0])/w,(MAP_FIT[3]-MAP_FIT[2])/h)}

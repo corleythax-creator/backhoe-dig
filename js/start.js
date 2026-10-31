@@ -5,7 +5,7 @@
 // SPICK.box: the part of the world that always shows whole (metres: x0, x1, z0, z1), fitted into the map's box; img:
 // what the picture covers (all the map there is; a wide screen sees more of it, and past its edges the frame carries on
 // in the lake's blue and the woods' green, which the picture's edges fade into); shore: where the mainland begins
-const SPICK={box:[-250,250,-60,770],img:[-460.8,460.8,-60,845],shore:582,lake:'#1a4769',woods:'#284a26',pick:null,go:null,pins:{corley:[0,95],family:[0,212],dexter:[-200,292],jessica:[200,292],town:[0,735]}};
+const SPICK={box:[-250,250,-60,770],img:[-460.8,460.8,-60,948],shore:582,lake:'#1a4769',woods:'#284a26',pick:null,go:null,pins:{corley:[0,95],family:[0,212],dexter:[-200,292],jessica:[200,292],town:[0,735]}};
 function startView(){const el=document.getElementById('startMap'),w=el.clientWidth||1,h=el.clientHeight||1,B=SPICK.box;
   return {cx:(B[0]+B[1])/2,cz:(B[2]+B[3])/2,mpp:Math.max((B[1]-B[0])/w,(B[3]-B[2])/h),w,h}}
 const startPx=(V,x,z)=>[(x-V.cx)/V.mpp+V.w/2,(z-V.cz)/V.mpp+V.h/2];

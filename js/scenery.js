@@ -6,15 +6,16 @@ const timeU={value:0};
 const MTN_MATS=[];
 (function(){
   // two mountain layers far across the lake: a lit front range, and pale hazy peaks behind it
-  function range(R0,R1,NR,NA,lo,hi,hazeA,hazeB,phase,unlit){
+  // (the front one is mtnFrontY's, terrain.js: stood back behind the town and rising out of the mainland where they meet)
+  function range(R0,R1,NR,NA,lo,hi,hazeA,hazeB,phase,unlit,front){
     const pp=[],cc=[],ix=[],hz=[0.75,0.82,0.87];
     for(let ri=0;ri<=NR;ri++)for(let ai=0;ai<=NA;ai++){
-      const t=ri/NR,r=R0+(R1-R0)*Math.pow(t,0.85),a=ai/NA*Math.PI*2,x=Math.cos(a)*r,z=Math.sin(a)*r;
+      const t=ri/NR,a=ai/NA*Math.PI*2,R0a=front?mtnR0(a):R0,r=R0a+(R1-R0a)*Math.pow(t,0.85),x=Math.cos(a)*r,z=Math.sin(a)*r;
       const env=ss(0,0.3,t)*(1-0.5*ss(0.8,1,t)),side=0.5+0.5*Math.sin(a+2.4+phase);
       const n=(1-Math.abs(Math.sin(a*7+r*0.013+phase)))*0.5+(1-Math.abs(Math.sin(a*17+r*0.031+1.3+phase)))*0.3+(1-Math.abs(Math.sin(a*37-r*0.05+2.1)))*0.2;
-      const hh=env*(0.45+0.55*side)*(lo+hi*n*n);
+      const hh=front?mtnFrontY(r,a)-WATER+6:env*(0.45+0.55*side)*(lo+hi*n*n);
       pp.push(x,WATER-6+hh,z);
-      const f=hh/(lo+hi),j=hash(ri*3.3+phase,ai*1.7)*0.06;let c;
+      const f=front?mtnF*270/(lo+hi):hh/(lo+hi),j=hash(ri*3.3+phase,ai*1.7)*0.06;let c;
       if(f<0.08)c=[0.26,0.4,0.26];else if(f<0.3)c=[0.18+j,0.32+j,0.22];else if(f<0.56+j)c=[0.46+j,0.44+j,0.43+j];else c=[0.95,0.96,0.98];
       const hk=hazeA+(hazeB-hazeA)*t;cc.push(c[0]+(hz[0]-c[0])*hk,c[1]+(hz[1]-c[1])*hk,c[2]+(hz[2]-c[2])*hk);
     }
@@ -25,7 +26,7 @@ const MTN_MATS=[];
       :new THREE.MeshPhongMaterial({vertexColors:true,flatShading:true,fog:false,side:THREE.DoubleSide,shininess:2,specular:0x000000,emissive:0x6a7686});
     const m=new THREE.Mesh(g,mat);m.renderOrder=-0.5;scene.add(m);MTN_MATS.push(mat);
   }
-  range(790,1080,40,220,30,240,0.42,0.66,0,false);
+  range(790,1080,40,220,30,240,0.42,0.66,0,false,true);
   range(1080,1320,28,200,60,430,0.7,0.85,1.7,true);
 })();
 // ---------- field grass ----------
@@ -367,10 +368,11 @@ const MID=[-58,58,-32,92];
 // steep ground, sand at the lake, the yards and the roads, and any painted material (how much covers it into c[3])
 function groundColor(x,z,h,c){const n=hash(x*3.55+0.3,z*2.65+0.7);
   const sl=(Math.abs(baseHeight(x+1,z)-baseHeight(x-1,z))+Math.abs(baseHeight(x,z+1)-baseHeight(x,z-1)))/2;
-  const rock=ss(0.55,1.1,sl),sand=1-ss(WATER+1.6,WATER+2.4,h),low=ss(-4,-20,h)*ss(EDGE-1,EDGE+2,mesaR(x,z));
+  // (and on the foothills' face, outcrops where it steepens)
+  const rock=Math.max(ss(0.55,1.1,sl),z>FH_Z0?ss(0.4,0.55,sl)*ss(0.72,0.86,tuftNoise(x*0.06,z*0.06)):0),sand=1-ss(WATER+1.6,WATER+2.4,h),low=ss(-4,-20,h)*ss(EDGE-1,EDGE+2,mesaR(x,z));
   let r=0.30+0.08*n+0.05*low,g=0.50+0.09*n-0.02*low,b=0.24+0.04*n;
   // the mainland's hayfield, mown in rows, and the darker woods floor
-  const hf=mainField(x,z),wf=mainWoods(x,z);
+  const hf=mainField(x,z),wf=Math.max(mainWoods(x,z),mainForest(x,z));
   if(hf>0){const st=0.5+0.5*Math.sin(z*0.9);r+=(0.58+0.08*st+0.04*n-r)*hf;g+=(0.55+0.05*st-g)*hf;b+=(0.28-b)*hf}
   if(wf>0){r-=0.1*wf;g-=0.12*wf;b-=0.05*wf}
   const strata=0.06*Math.sin(h*1.4+n);
@@ -398,6 +400,10 @@ const FAM_PATCH=[-111,111,136,352];
 const OUTER_MID=[-128,128,-128,128];
 // the mainland (mainland.js): 4 m ground, with 1 m where each causeway lands
 const MAIN_FINE=[[-42,42,-300,-196],[-42,42,480,600]];
+// the town side in four meshes (mainland.js): 6 m out to where it runs under the mountains, 4 m over the town and the
+// foothills, 2 m over the switchback road; [rect, step] where a finer one meets a coarser one, for the skirts
+const MAIN_TOWN=[-450,450,480,780],MAIN_FOOT=[-258,258,780,1068],MAIN_ROAD=[-110,110,780,952];
+const MAIN_SEAMS=[[MAIN_TOWN,2],[MAIN_FOOT,4],[MAIN_ROAD,2]];
 groundPatch(-160,160,-160,160,2,[OUTER_MID,[FAM_PATCH[0],FAM_PATCH[1],FAM_PATCH[2],160]]);
 midPatch=groundPatch(MID[0],MID[1],MID[2],MID[3],0.5,[[GX0,GX1,GZ0,GZ1]]);
 const outPatch=groundPatch(OUTER_MID[0],OUTER_MID[1],OUTER_MID[2],OUTER_MID[3],1,[MID]);
@@ -418,6 +424,7 @@ function buildSkirts(){
   for(const R of [[GX0,GX1,GZ0,GZ1],...digSkirtRects]){run(t=>[t,R[2]],R[0],R[1],0.5,0.6);run(t=>[t,R[3]],R[0],R[1],0.5,0.6);run(t=>[R[0],t],R[2],R[3],0.5,0.6);run(t=>[R[1],t],R[2],R[3],0.5,0.6)}
   run(t=>[t,OUTER_MID[2]],OUTER_MID[0],OUTER_MID[1],1,2);run(t=>[t,OUTER_MID[3]],OUTER_MID[0],OUTER_MID[1],1,2);run(t=>[OUTER_MID[0],t],OUTER_MID[2],OUTER_MID[3],1,2);run(t=>[OUTER_MID[1],t],OUTER_MID[2],OUTER_MID[3],1,2);
   for(const R of MAIN_FINE){run(t=>[t,R[2]],R[0],R[1],1,2);run(t=>[t,R[3]],R[0],R[1],1,2);run(t=>[R[0],t],R[2],R[3],1,2);run(t=>[R[1],t],R[2],R[3],1,2)}
+  for(const [R,st] of MAIN_SEAMS){run(t=>[t,R[2]],R[0],R[1],st,2);run(t=>[t,R[3]],R[0],R[1],st,2);run(t=>[R[0],t],R[2],R[3],st,2);run(t=>[R[1],t],R[2],R[3],st,2)}
   run(t=>[t,MID[2]],MID[0],MID[1],0.5,2);run(t=>[t,MID[3]],MID[0],MID[1],0.5,2);run(t=>[MID[0],t],MID[2],MID[3],0.5,2);run(t=>[MID[1],t],MID[2],MID[3],0.5,2);
   const sg=new THREE.BufferGeometry();sg.setAttribute('position',new THREE.Float32BufferAttribute(sp,3));sg.setAttribute('normal',new THREE.Float32BufferAttribute(new Float32Array(sp.length),3));sg.setIndex(si);
   if(skirtMesh){skirtMesh.geometry.dispose();skirtMesh.geometry=sg}else{skirtMesh=new THREE.Mesh(sg,M(0x4a6a34,{side:THREE.DoubleSide}));scene.add(skirtMesh)}}

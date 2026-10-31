@@ -96,7 +96,7 @@ const edCap=t=>PROPS[t]?PROPS[t].cap:ASSET_CAP[t]||300;
 const edRand=()=>({y:Math.random()*6.28,s:Math.random(),c:Math.random()});
 // a new thing at a spot: the catalogue's at full size (facing the camera unless a turn is given), trees and boulders a
 // little different each (r: its random numbers, kept by Line so a dragged line doesn't flicker)
-function edNewThing(t,x,z,yaw,r){r=r||edRand();x=clamp(x,-555,765);z=clamp(z,-555,765);const pr=PROPS[t];
+function edNewThing(t,x,z,yaw,r){r=r||edRand();x=clamp(x,-555,MAIN_ZMAX);z=clamp(z,-555,MAIN_ZMAX);const pr=PROPS[t];
   return pr?{t,x,z,yaw:yaw!=null?yaw:Math.round(ed.yaw/(Math.PI/12))*Math.PI/12,s:1,c:pr.tint?Math.floor(r.c*PROP_TINT.length):0}:
     {t,x,z,yaw:r.y,s:t==='rock'?0.7+r.s*0.6:0.85+r.s*0.4,c:Math.floor(r.c*6)}}
 // the bottom bar shows Spacing for Line and Scatter, Brush, Density and Erase for Scatter
@@ -431,7 +431,7 @@ function edInspector(){const S=ed.sel,el=$('#edInfo');edBottomSync();if(!S.lengt
   // exact spot in feet from the trench, as the Spot line gives it
   const px=$('#edSelPX'),pz=$('#edSelPZ');
   if(px)px.onchange=pz.onchange=()=>{const x=+px.value*FT,z=+pz.value*FT+ED_ZM;if(!isFinite(x)||!isFinite(z))return;
-    if(one.a){const b=edAssetsSnap();one.a.x=clamp(x,-555,765);one.a.z=clamp(z,-555,765);edAssetsChanged(b)}else edPlaceMachine(one.m,x,z);
+    if(one.a){const b=edAssetsSnap();one.a.x=clamp(x,-555,MAIN_ZMAX);one.a.z=clamp(z,-555,MAIN_ZMAX);edAssetsChanged(b)}else edPlaceMachine(one.m,x,z);
     edRingSel();edInspector()};
   const al=$('#edAlLine');if(al){al.onclick=()=>edAlign('line');$('#edAlFace').onclick=()=>edAlign('face');const sp=$('#edAlSpace');if(sp)sp.onclick=()=>edAlign('space')}
   const rb=$('#edRowBtn');if(rb){rb.onclick=()=>{ed.rowOpen=!ed.rowOpen;edInspector()};$('#edSelClip').onclick=()=>edClipCopy(false)}
@@ -461,7 +461,7 @@ function edCopy(){const as=edSelA();if(!as.length)return;const b=edAssetsSnap();
   if(as.length===1){const a0=as[0],P=PROPS[a0.t],w=P?(P.w+(P.d>0.5?0.6:0))*a0.s:0;
     out=[Object.assign({},a0,P?{x:a0.x+Math.cos(a0.yaw)*w,z:a0.z-Math.sin(a0.yaw)*w}:{x:a0.x+2.5*a0.s,z:a0.z+1.5*a0.s})]}
   else{const rx=Math.cos(ed.yaw),rz=-Math.sin(ed.yaw);let p0=1e9,p1=-1e9;for(const a of as){const p=a.x*rx+a.z*rz,r=edRad(a);p0=Math.min(p0,p-r);p1=Math.max(p1,p+r)}
-    const w=p1-p0+1;out=as.map(a=>Object.assign({},a,{x:clamp(a.x+rx*w,-555,765),z:clamp(a.z+rz*w,-555,765)}))}
+    const w=p1-p0+1;out=as.map(a=>Object.assign({},a,{x:clamp(a.x+rx*w,-555,MAIN_ZMAX),z:clamp(a.z+rz*w,-555,MAIN_ZMAX)}))}
   assets.push(...out);edAssetsChanged(b);edSelSet(out.map(a=>({a})))}
 function edDelete(){const as=edSelA();if(!as.length)return;const b=edAssetsSnap(),gone=new Set(as),keep=assets.filter(a=>!gone.has(a));
   assets.length=0;assets.push(...keep);edAssetsChanged(b);edSelSet(ed.sel.filter(s=>!gone.has(s.a)))}
@@ -727,10 +727,10 @@ function edSnapThing(a){const P=PROPS[a.t];if(!ed.grid||!P)return false;
 function edXfBegin(as){if(ed.xf)return ed.xf;const q=as.map(a=>({a,x:a.x,z:a.z,yaw:a.yaw,s:a.s}));let cx=0,cz=0;
   for(const o of q){cx+=o.x/q.length;cz+=o.z/q.length}return ed.xf={snap:edAssetsSnap(),q,cx,cz}}
 function edXfTurn(d,grp){const b=ed.xf,c=Math.cos(d),n=Math.sin(d);
-  for(const q of b.q){q.a.yaw=q.yaw+d;if(grp){const ox=q.x-b.cx,oz=q.z-b.cz;q.a.x=clamp(b.cx+ox*c+oz*n,-555,765);q.a.z=clamp(b.cz-ox*n+oz*c,-555,765)}}
+  for(const q of b.q){q.a.yaw=q.yaw+d;if(grp){const ox=q.x-b.cx,oz=q.z-b.cz;q.a.x=clamp(b.cx+ox*c+oz*n,-555,MAIN_ZMAX);q.a.z=clamp(b.cz-ox*n+oz*c,-555,MAIN_ZMAX)}}
   assetsBuild();shpTreesRefresh();edRingSel()}
 function edXfSize(f,grp){const b=ed.xf;
-  for(const q of b.q){q.a.s=clamp(q.s*f,0.3,3);if(grp){q.a.x=clamp(b.cx+(q.x-b.cx)*f,-555,765);q.a.z=clamp(b.cz+(q.z-b.cz)*f,-555,765)}}
+  for(const q of b.q){q.a.s=clamp(q.s*f,0.3,3);if(grp){q.a.x=clamp(b.cx+(q.x-b.cx)*f,-555,MAIN_ZMAX);q.a.z=clamp(b.cz+(q.z-b.cz)*f,-555,MAIN_ZMAX)}}
   assetsBuild();shpTreesRefresh();edRingSel()}
 function edXfEnd(){const b=ed.xf;ed.xf=null;if(b)edAssetsChanged(b.snap)}
 // the ring round the picked things (with Select): drag its knob, which sits on the side nearest the view, to turn them,
@@ -757,7 +757,7 @@ function edHandleMove(d,p){const b=ed.xf;if(!b)return;
 function edNudge(c,ft){const r=c==='ArrowRight'?[1,0]:c==='ArrowLeft'?[-1,0]:c==='ArrowUp'?[0,1]:[0,-1],cy=Math.cos(ed.yaw),sy=Math.sin(ed.yaw);
   let vx=cy*r[0]-sy*r[1],vz=-sy*r[0]-cy*r[1];if(Math.abs(vx)>Math.abs(vz)){vx=Math.sign(vx);vz=0}else{vz=Math.sign(vz);vx=0}
   const dx=vx*ft*FT,dz=vz*ft*FT,as=edSelA(),now=performance.now();
-  if(as.length){if(now-ed.nudgeT>700)edPush({a:edAssetsSnap()});for(const a of as){a.x=clamp(a.x+dx,-555,765);a.z=clamp(a.z+dz,-555,765)}
+  if(as.length){if(now-ed.nudgeT>700)edPush({a:edAssetsSnap()});for(const a of as){a.x=clamp(a.x+dx,-555,MAIN_ZMAX);a.z=clamp(a.z+dz,-555,MAIN_ZMAX)}
     assetsBuild();shpTreesRefresh();ed.changed=true;edQueueSave()}
   ed.nudgeT=now;for(const s of ed.sel)if(s.m){const o=s.m.o();edPlaceMachine(s.m,o.x+dx,o.z+dz)}
   edRingSel();edInspector()}
@@ -770,7 +770,7 @@ function edAlign(how){const as=edSelA();if(as.length<2)return;const b=edAssetsSn
     const th=0.5*Math.atan2(2*xz,xx-zz),ux=Math.cos(th),uz=Math.sin(th),t=a=>(a.x-cx)*ux+(a.z-cz)*uz;
     if(how==='line')for(const a of as){const k=t(a);a.x=cx+ux*k;a.z=cz+uz*k}
     else{const o=as.slice().sort((p,q)=>t(p)-t(q)),t0=t(o[0]),t1=t(o[o.length-1]);
-      o.forEach((a,i)=>{const k=t0+(t1-t0)*i/(o.length-1)-t(a);a.x=clamp(a.x+ux*k,-555,765);a.z=clamp(a.z+uz*k,-555,765)})}}
+      o.forEach((a,i)=>{const k=t0+(t1-t0)*i/(o.length-1)-t(a);a.x=clamp(a.x+ux*k,-555,MAIN_ZMAX);a.z=clamp(a.z+uz*k,-555,MAIN_ZMAX)})}}
   edAssetsChanged(b);edRingSel();edInspector()}
 // how far a thing reaches from its middle along a direction
 const edHalf=(a,ux,uz)=>{const P=PROPS[a.t];if(!P)return edRad(a);const c=Math.cos(a.yaw),n=Math.sin(a.yaw);
@@ -782,7 +782,7 @@ function edRowMake(){const as=edSelA();if(!as.length)return;const a0=as[0],al=ed
   const step=ed.rowGap?ed.rowGap*FT:p1-p0,k={};for(const a of as)k[a.t]=(k[a.t]||0)+1;
   let n=ed.rowN;for(const t in k)n=Math.min(n,Math.floor((edCap(t)-assets.filter(a=>a.t===t).length)/k[t]));
   if(n<ed.rowN)toast(n>0?`Only room for ${n} more on the map.`:'The map holds no more of these.','',2600);if(n<1)return;
-  const b=edAssetsSnap(),out=[];for(let i=1;i<=n;i++)for(const a of as)out.push(Object.assign({},a,{x:clamp(a.x+ux*step*i,-555,765),z:clamp(a.z+uz*step*i,-555,765)}));
+  const b=edAssetsSnap(),out=[];for(let i=1;i<=n;i++)for(const a of as)out.push(Object.assign({},a,{x:clamp(a.x+ux*step*i,-555,MAIN_ZMAX),z:clamp(a.z+uz*step*i,-555,MAIN_ZMAX)}));
   assets.push(...out);ed.rowOpen=false;edAssetsChanged(b);edSelSet([...as,...out].map(a=>({a})))}
 // Copy (Ctrl+C) and Cut (Ctrl+X) keep the picked things' shape; Paste (Ctrl+V) puts them down with their middle at the
 // mouse pointer (on touch, the middle of the view), on the grid when Snap is on, and picks them
@@ -791,14 +791,14 @@ function edClipCopy(cut){const as=edSelA();if(!as.length)return;let cx=0,cz=0;fo
   toast(`${cut?'Cut':'Copied'} ${as.length===1?edKindName(as[0].t).toLowerCase():as.length+' things'}. Paste with ${navigator.maxTouchPoints?'Paste':'Ctrl+V'}.`,'',2000);if(cut)edDelete()}
 function edClipPaste(){const c=ed.clip;if(!c)return;const k={};for(const a of c)k[a.t]=(k[a.t]||0)+1;
   for(const t in k)if(assets.filter(a=>a.t===t).length+k[t]>edCap(t)){toast(`The map holds at most ${edCap(t)} of these (${edKindName(t)}).`,'',2600);return}
-  const [x,z]=edSnapXZ(...(ed.curMouse&&ed.cur?[ed.cur.x,ed.cur.z]:[ed.x,ed.z])),b=edAssetsSnap(),out=c.map(a=>Object.assign({},a,{x:clamp(x+a.x,-555,765),z:clamp(z+a.z,-555,765)}));
+  const [x,z]=edSnapXZ(...(ed.curMouse&&ed.cur?[ed.cur.x,ed.cur.z]:[ed.x,ed.z])),b=edAssetsSnap(),out=c.map(a=>Object.assign({},a,{x:clamp(x+a.x,-555,MAIN_ZMAX),z:clamp(z+a.z,-555,MAIN_ZMAX)}));
   assets.push(...out);if(ed.tool!=='select')edTool('select');edAssetsChanged(b);edSelSet(out.map(a=>({a})))}
 $('#edClipPaste').onclick=edClipPaste;
 
 // ---------- pointer: tools, and look around with two fingers, the right mouse button or the Look tool ----------
 const edPtrs=new Map();let edGest=null,edMouse=null;
 function edPan(dx,dy){ed.fly=null;const s=ed.dist*0.0019*(720/Math.max(320,innerHeight)),c=Math.cos(ed.yaw),n=Math.sin(ed.yaw);
-  ed.x=clamp(ed.x+(-c*dx-n*dy)*s,-430,430);ed.z=clamp(ed.z+(n*dx-c*dy)*s,-555,765)}
+  ed.x=clamp(ed.x+(-c*dx-n*dy)*s,-430,430);ed.z=clamp(ed.z+(n*dx-c*dy)*s,-555,MAIN_ZMAX)}
 function edDown(x,y,e){const p=edPick(x,y),t=ed.tool,mod=e&&(e.shiftKey||e.ctrlKey||e.metaKey),touch=e&&e.pointerType!=='mouse';
   if(ed.look||!p){edMouse={pan:true,x,y};return}
   if(ED_BRUSH.includes(t)){edStrokeStart(p.x,p.z);edBrushAt(p.x,p.z);return}
@@ -838,7 +838,7 @@ function edMove(x,y){
   // can also meet a fence end or a road edge
   if(d&&d.items){let any=false,px=p.x,pz=p.z;const q0=d.items[0];
     if(ed.grid){const [sx,sz]=edSnapXZ(px+q0.dx,pz+q0.dz);px=sx-q0.dx;pz=sz-q0.dz}
-    for(const q of d.items){if(q.a){if(q.yaw0===undefined)q.yaw0=q.a.yaw;q.a.x=clamp(px+q.dx,-555,765);q.a.z=clamp(pz+q.dz,-555,765);any=true}else edPlaceMachine(q.m,px+q.dx,pz+q.dz)}
+    for(const q of d.items){if(q.a){if(q.yaw0===undefined)q.yaw0=q.a.yaw;q.a.x=clamp(px+q.dx,-555,MAIN_ZMAX);q.a.z=clamp(pz+q.dz,-555,MAIN_ZMAX);any=true}else edPlaceMachine(q.m,px+q.dx,pz+q.dz)}
     if(d.items.length===1&&q0.a){q0.a.yaw=q0.yaw0;edSnapThing(q0.a)}
     d.moved=true;if(any){assetsBuild();shpTreesRefresh()}edRingSel();return}
   if(ED_BRUSH.includes(ed.tool)||ed.tool==='add'&&ed.place==='scatter'){edBrushAt(p.x,p.z)}}
