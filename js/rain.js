@@ -49,7 +49,12 @@ function setWeather(m,picked){weather.mode=m;
 document.querySelectorAll('.sizes button[data-w]').forEach(b=>b.onclick=()=>setWeather(b.dataset.w,true));
 setWeather(weather.mode,false);
 let rainT=0,rainTexDirty=true,rainWas=false,rainSaveT=0;
+// the soil water off the mesa's grid (the town's lawns and the rest of the mainland), one value for all of it, soaking
+// and drying like open grass; read through rainFarSoak (the lawns, turf.js) and drawn as the far ground's wet look (farWetU)
+let rainFarW=0;const farWetU={value:0};
+function rainFarSoak(){return ss(0.25,0.9,rainFarW)}
 function rainSim(sec){const r=weather.r;
+  rainFarW=Math.max(0,Math.min(1,rainFarW+(r>0.02?r*SOAK_RATE*TU.soak*(1-rainFarW):-DRY_RATE*1200/TU.mudDry)*sec));farWetU.value=rainFarSoak();
   for(let k=0;k<rainW.length;k++){if(!rainK[k]&&!rainW[k])continue;let w=rainW[k];
     if(r>0.02)w+=r*SOAK_RATE*TU.soak*rainLow[k]*(1-w)*sec;else w-=DRY_RATE*1200/TU.mudDry*rainDry[k]/rainLow[k]*sec;
     rainW[k]=Math.max(0,Math.min(1,w))}}
@@ -64,15 +69,16 @@ function rainTick(dt){
   if(raining){stats.rainTime+=dt;if(weather.r>stats.rainTop)stats.rainTop=weather.r}
   if(raining!==rainWas){rainWas=raining;if(raining){toast(say('rainIn'),'',3600);stats.showers++;statDirty=true}else if(!bench.on)toast(say('rainOut'),'',3600)}
   // once a second: soak or dry the soil, and show it
-  rainT-=dt;if(rainT<=0){rainT+=1;let any=weather.r>0.02;if(!any)for(let k=0;k<rainW.length;k+=7)if(rainW[k]>0){any=true;break}
+  rainT-=dt;if(rainT<=0){rainT+=1;let any=weather.r>0.02||rainFarW>0;if(!any)for(let k=0;k<rainW.length;k+=7)if(rainW[k]>0){any=true;break}
     if(any){rainSim(1);rainTexDirty=true;if((rainSaveT-=1)<=0){rainSaveT=20;site.dirty=true}}}
   if(rainTexDirty)rainTexUpdate();
   rainFxTick(dt)}
 // the save: soil water (bytes, base64) and the weather, with the time so drying carries on while the game is closed
 function rainSave(){const b=new Uint8Array(rainW.length);for(let k=0;k<b.length;k++)b[k]=Math.round(rainW[k]*255);
-  return {w:siteB64(b),pm:1,r:+weather.r.toFixed(3),c:+weather.c.toFixed(3),want:+weather.want.toFixed(3),next:Math.round(weather.next),t:Date.now()}}
+  return {w:siteB64(b),fw:+rainFarW.toFixed(3),pm:1,r:+weather.r.toFixed(3),c:+weather.c.toFixed(3),want:+weather.want.toFixed(3),next:Math.round(weather.next),t:Date.now()}}
 function rainLoad(d){if(!d||typeof d.w!=='string')return;let b;try{b=siteUnB64(d.w)}catch(e){return}if(b.length!==rainW.length)return;
   for(let k=0;k<b.length;k++)rainW[k]=b[k]/255;
+  rainFarW=isFinite(d.fw)?Math.max(0,Math.min(1,d.fw)):0;farWetU.value=rainFarSoak();
   // saved before painted Mud could dry (pm), when it was always soaked: it starts soaked
   if(!d.pm)for(let k=0;k<b.length;k++)if(rainMud[k])rainW[k]=1;
   if(isFinite(d.r))weather.r=d.r;weather.c=isFinite(d.c)?d.c:weather.r>0.05?1:0.18;if(isFinite(d.want)&&weather.mode==='auto')weather.want=d.want;if(isFinite(d.next))weather.next=d.next;
@@ -80,7 +86,7 @@ function rainLoad(d){if(!d||typeof d.w!=='string')return;let b;try{b=siteUnB64(d
   const gone=isFinite(d.t)?Math.min(3600,Math.max(0,(Date.now()-d.t)/1000)):0;
   if(gone>5&&weather.mode!=='rain'){const r=weather.r;weather.r=0;for(let s=0;s<gone;s+=10)rainSim(Math.min(10,gone-s));weather.r=weather.mode==='auto'&&weather.next>gone?r:0;rainDrain(gone)}
   rainTexDirty=true}
-function rainReset(){rainW.fill(0);rainTexDirty=true}
+function rainReset(){rainW.fill(0);rainFarW=0;farWetU.value=0;rainTexDirty=true}
 // standing rainwater above the water table drains: in the dig zone, and the mud tiles
 function rainDrain(sec){const d=RAIN_DRAIN*TU.puddleDrain*sec;
   for(let j=cJ0;j<=cJ1;j++)for(let i=cI0;i<=cI1;i++){const k=j*V+i;if(Wt[k]<-1e8)continue;const g=H0[k]-TU.wtDepth;if(Wt[k]>g){Wt[k]=Math.max(g,Wt[k]-d);if(Wt[k]<=H[k]+0.001)Wt[k]=-1e9}}

@@ -2,7 +2,7 @@
 // ground there is a deep, photo-scanned lawn (groundColor, scenery.js; textures/ground grass); on it stand instanced
 // clumps of lawn grass, thicker and taller along the paths, walks and kerbs, with clover in drifts (white heads),
 // dandelion and plantain rosettes by the edges, and fallen autumn leaves scattered in drifts and blown up against the
-// edges. The grass sways in the wind and leans away from the worker; in the wet (soakAt, mud.js) it all darkens.
+// edges. The grass sways in the wind and leans away from the worker; in the wet (the soil water: rainFarSoak, rain.js) it all darkens.
 // Built lazily in 24 m squares as the camera comes near (from the ground and the things on it as they are: baseHeight,
 // padAt, roads and SOLIDS), dropped when far behind, and rebuilt where the map editor changes things (turfEdRefresh).
 // How thick it grows and how far it reaches is the Graphics setting's Town lawns (turf, gfx.js); the phone gets a light
@@ -12,7 +12,7 @@
 const TURF_BOX=[-192,192,544,784],TURF_W=24,TURF_NX=(TURF_BOX[1]-TURF_BOX[0])/TURF_W,TURF_NZ=(TURF_BOX[3]-TURF_BOX[2])/TURF_W,TURF_C=0.5;
 // the kinds: lawn grass, dandelion, clover, plantain (tuft shapes, scenery.js) and fallen leaves (their own)
 const TURF_TUFT=[0,1,2,4],TURF_KINDS=5,TURF_SWAY=[5,2.5,2.5,2,0],TURF_KR=[0.35,0.55,0.55,0.55,0.7];
-const turf={sq:new Map(),q:-1,t:0,wetT:0};
+const turf={sq:new Map(),q:-1,t:0,wetT:0,job:null};
 // fallen leaves: five flat leaves bent along the midrib and curling up a little at the edges, scattered over 0.45 m;
 // near white with a little mottling, the clump's own colour tints them
 function turfLeafGeo(){let s=77;const R=()=>{s=(s*16807)%2147483647;return s/2147483647},P=[],C=[],A=[];
@@ -62,19 +62,21 @@ function turfLawn(x,z,sol){if(baseHeight(x,z)<WATER+0.4||padAt(x,z)>-1e8||roadAm
   for(const s of sol){let dx=x-s.x,dz=z-s.z,hx=s.hx,hz=s.hz;if(s.sn!==undefined){const a=dx*s.cs-dz*s.sn;dz=dx*s.sn+dz*s.cs;dx=a;hx=s.lx;hz=s.lz}
     if(Math.abs(dx)<hx+0.1&&Math.abs(dz)<hz+0.1)return false}
   return true}
-// one square's clumps, from a seed of its own so a rebuild comes out the same
-function turfBuild(si,sj){const X0=TURF_BOX[0]+si*TURF_W,Z0=TURF_BOX[2]+sj*TURF_W,B=2,NX=TURF_W/TURF_C+2*B,cx=X0+TURF_W/2,cz=Z0+TURF_W/2;
+// one square's clumps, from a seed of its own so a rebuild comes out the same; a generator that stops every few rows,
+// so turfLod can spread a square over frames (turfBuild runs one straight through)
+function turfBuild(si,sj){const G=turfBuildG(si,sj);let r;do r=G.next();while(!r.done);return r.value}
+function* turfBuildG(si,sj){const X0=TURF_BOX[0]+si*TURF_W,Z0=TURF_BOX[2]+sj*TURF_W,B=2,NX=TURF_W/TURF_C+2*B,cx=X0+TURF_W/2,cz=Z0+TURF_W/2;
   let s=(si*7919+sj*104729+1)|0;const R=()=>{s=(s+0x6D2B79F5)|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296};
   const r=TURF_W*0.75,sol=SOLIDS.filter(o=>Math.abs(o.x-cx)<r+Math.max(o.hx,o.hz,o.lx||0,o.lz||0)&&Math.abs(o.z-cz)<r+Math.max(o.hx,o.hz,o.lx||0,o.lz||0));
   // the lawn on a 0.5 m grid, two cells past the square each way, then how near each cell is to the lawn's edge
   const g=new Uint8Array(NX*NX);let any=false;
-  for(let j=0;j<NX;j++)for(let i=0;i<NX;i++){const x=X0+(i-B+0.5)*TURF_C,z=Z0+(j-B+0.5)*TURF_C;if(turfLawn(x,z,sol)){g[j*NX+i]=1;any=true}}
+  for(let j=0;j<NX;j++){for(let i=0;i<NX;i++){const x=X0+(i-B+0.5)*TURF_C,z=Z0+(j-B+0.5)*TURF_C;if(turfLawn(x,z,sol)){g[j*NX+i]=1;any=true}}if(j%6===5)yield}
   const S={si,sj,cx,cz,meshes:[],cols:[],soak:0};if(!any)return S;
   const P=[[],[],[],[],[]],o=new THREE.Object3D();
   const add=(k,x,z,sc,sy,col,head,yaw)=>{o.position.set(x,turfY(x,z)+(k===4?0.003:-0.015),z);o.rotation.set(k===4?0:(R()-0.5)*0.2,yaw===undefined?R()*6.28:yaw,k===4?0:(R()-0.5)*0.2);
     o.scale.set(sc,sy,sc);o.updateMatrix();P[k].push([o.matrix.clone(),col,head])};
   const LEAVES=[[0.86,0.42,0.12],[0.66,0.26,0.09],[0.5,0.32,0.15],[0.88,0.64,0.2],[0.72,0.2,0.08],[0.42,0.27,0.13]];
-  for(let j=B;j<NX-B;j++)for(let i=B;i<NX-B;i++){if(!g[j*NX+i])continue;
+  for(let j=B;j<NX-B;j++){if(j%8===0)yield;for(let i=B;i<NX-B;i++){if(!g[j*NX+i])continue;
     let e=0;for(let dj=-2;dj<=2&&e<1;dj++)for(let di=-2;di<=2;di++)if(!g[(j+dj)*NX+i+di]){e=Math.max(e,Math.max(Math.abs(di),Math.abs(dj))===1?1:0.5);if(e===1)break}
     const bx=X0+(i-B)*TURF_C,bz=Z0+(j-B)*TURF_C,J=()=>[bx+R()*TURF_C,bz+R()*TURF_C];
     // the lawn's green, deeper in the lush drifts and toward the edges, yellower in the worn and dry ones
@@ -88,7 +90,7 @@ function turfBuild(si,sj){const X0=TURF_BOX[0]+si*TURF_W,Z0=TURF_BOX[2]+sj*TURF_
     if(R()<0.04+0.45*cl+0.2*e){const [x,z]=J();add(2,x,z,0.9+0.4*R(),0.8+0.5*R(),[0.18+0.04*R(),0.36+0.05*R(),0.15],R()<0.6?(R()<0.85?[1,0.97,0.94]:[0.95,0.72,0.82]):null)}
     if(R()<0.015+0.18*e){const [x,z]=J();add(1,x,z,0.6+0.4*R(),0.5+0.3*R(),[0.19,0.36,0.14],R()<0.15?[1,0.82,0.16]:null)}
     if(R()<0.01+0.2*e){const [x,z]=J();add(3,x,z,0.6+0.4*R(),0.45+0.3*R(),[0.22,0.37,0.15],R()<0.4?[0.5,0.42,0.28]:null)}
-    if(R()<0.03+0.22*lv+0.45*e){const [x,z]=J();const c=LEAVES[Math.floor(R()*LEAVES.length)],v=0.8+0.3*R();add(4,x,z,0.8+0.5*R(),1,[c[0]*v,c[1]*v,c[2]*v],null)}}
+    if(R()<0.03+0.22*lv+0.45*e){const [x,z]=J();const c=LEAVES[Math.floor(R()*LEAVES.length)],v=0.8+0.3*R();add(4,x,z,0.8+0.5*R(),1,[c[0]*v,c[1]*v,c[2]*v],null)}}}
   for(let k=0;k<TURF_KINDS;k++){const L=P[k];if(!L.length){S.meshes.push(null);S.cols.push(null);continue}
     // shuffled, so the ranks thin out evenly
     for(let a=L.length-1;a>0;a--){const b=Math.floor(R()*(a+1));[L[a],L[b]]=[L[b],L[a]]}
@@ -101,8 +103,9 @@ function turfBuild(si,sj){const X0=TURF_BOX[0]+si*TURF_W,Z0=TURF_BOX[2]+sj*TURF_
     im.userData.n=n;im.userData.k=k;S.meshes.push(im);S.cols.push(col);turfGroup.add(im)}
   turfWet(S,true);return S}
 function turfDrop(S){for(const im of S.meshes)if(im){turfGroup.remove(im);im.geometry.dispose();im.dispose()}}
-// in the wet the lawn and the leaves darken, the grass toward a deeper green (soakAt: the soil water, mud.js)
-function turfWet(S,force){let w=0;for(const [dx,dz] of [[0,0],[-8,-8],[8,-8],[-8,8],[8,8]])w+=soakAt(S.cx+dx,S.cz+dz);w/=5;
+// in the wet the lawn and the leaves darken, the grass toward a deeper green: the soil water (soakAt, mud.js, on the
+// mesa's grid; off it, which is the whole town, rainFarSoak, rain.js)
+function turfWet(S,force){let w=0;for(const [dx,dz] of [[0,0],[-8,-8],[8,-8],[-8,8],[8,8]]){const x=S.cx+dx,z=S.cz+dz;w+=rwIdx(x,z)<0?rainFarSoak():soakAt(x,z)}w/=5;
   if(!force&&Math.abs(w-S.soak)<0.04)return;S.soak=w;
   S.meshes.forEach((im,k)=>{if(!im)return;const c=S.cols[k],a=im.instanceColor.array,d=1-0.4*w,dg=1-0.3*w;
     for(let q=0;q<a.length;q+=3){a[q]=c[q]*d;a[q+1]=c[q+1]*dg;a[q+2]=c[q+2]*d}im.instanceColor.needsUpdate=true})}
@@ -115,14 +118,17 @@ function turfLod(){const G=typeof gfxCur!=='undefined'&&gfxCur.turf!=null?gfxCur
     for(const a of ['position','color','normal','aHead'])im.geometry.setAttribute(a,G.attributes[a]);im.geometry.setIndex(G.index)})}
   if(!on)return;
   const dq=(si,sj)=>Math.hypot(Math.max(0,Math.abs(cx-(TURF_BOX[0]+(si+0.5)*TURF_W))-TURF_W/2),Math.max(0,Math.abs(cz-(TURF_BOX[2]+(sj+0.5)*TURF_W))-TURF_W/2));
-  let best=null,bd=g[2]+4;
-  for(let sj=0;sj<TURF_NZ;sj++)for(let si=0;si<TURF_NX;si++){const key=sj*TURF_NX+si,d=dq(si,sj);if(!turf.sq.has(key)&&d<bd){bd=d;best=[si,sj,key]}}
-  if(best)turf.sq.set(best[2],turfBuild(best[0],best[1]));
+  // the square being built goes on for about 3 ms a frame; when it is done, the nearest missing one starts
+  if(!turf.job){let best=null,bd=g[2]+4;
+    for(let sj=0;sj<TURF_NZ;sj++)for(let si=0;si<TURF_NX;si++){const key=sj*TURF_NX+si,d=dq(si,sj);if(!turf.sq.has(key)&&d<bd){bd=d;best=[si,sj,key]}}
+    if(best)turf.job={key:best[2],G:turfBuildG(best[0],best[1])}}
+  if(turf.job){const t0=performance.now();let r;do r=turf.job.G.next();while(!r.done&&performance.now()-t0<3);
+    if(r.done){turf.sq.set(turf.job.key,r.value);turf.job=null}}
   const wet=(turf.wetT+=1)%90===0;
   for(const [key,S] of turf.sq){const d=dq(S.si,S.sj);if(d>g[2]+60){turfDrop(S);turf.sq.delete(key);continue}
     if(wet&&d<g[2])turfWet(S);
     for(const im of S.meshes){if(!im)continue;const k=im.userData.k,n=im.userData.n,f=g[0]*(1-ss(g[1]*TURF_KR[k],g[2]*TURF_KR[k],d));
       im.count=Math.min(n,Math.ceil(f*n)+1);im.visible=f>0.002}}}
 // after the map editor lays a road or places or moves a thing in an area (metres): its squares are built again
-function turfEdRefresh(x0,x1,z0,z1){for(const [key,S] of turf.sq){const X0=TURF_BOX[0]+S.si*TURF_W,Z0=TURF_BOX[2]+S.sj*TURF_W;
+function turfEdRefresh(x0,x1,z0,z1){turf.job=null;for(const [key,S] of turf.sq){const X0=TURF_BOX[0]+S.si*TURF_W,Z0=TURF_BOX[2]+S.sj*TURF_W;
   if(x1>X0-2&&x0<X0+TURF_W+2&&z1>Z0-2&&z0<Z0+TURF_W+2){turfDrop(S);turf.sq.delete(key)}}}
