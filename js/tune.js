@@ -82,7 +82,7 @@ const TUNE=[
   ['trimBump','String trimmer','Line one bump feeds out',0.04,'in',0.25,6,0.25],['trimWear','String trimmer','Line worn away per second of cutting',0.006,'in',0.02,2,0.02],
   ['trimSpool','String trimmer','Line on a full spool',25*0.3048,'ft',2,100,1],
   ['lawnCut','Grass','Mower cuts the grass to',0.09,'in',1,24,0.5],['lawnWait','Grass','Wait before cut grass grows',45,'s',0,1200,5],['lawnGrow','Grass','Time to grow back tall',240,'s',10,3600,10],
-  ['rainGap','Weather','Dry spell between showers (average)',510,'min',0.5,120,0.5],['rainLen','Weather','Shower length (average)',180,'min',0.5,60,0.5],
+  ['rainGap','Weather','Dry spell between showers (average)',1800,'min',0.5,120,0.5],['rainLen','Weather','Shower length (average)',150,'min',0.5,60,0.5],
   ['soak','Weather','How fast rain soaks the ground',1,'pct',10,500,5],
   ['rainHard','Weather','How hard it rains',1,'pct',10,300,5],['puddleDrain','Weather','How fast puddles drain',1,'pct',0,1000,10],
   ['rainWind','Weather','Wind in the rain (leans the drops)',2.2,'mph',0,40,0.5],

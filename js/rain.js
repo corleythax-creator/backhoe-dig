@@ -40,7 +40,7 @@ function rainEdRefresh(x0,x1,z0,z1){rainBase(Math.floor((x0-RW_X0)/RW_C)-1,Math.
 // ---------- weather ----------
 // r: how hard it is raining now (0-1), easing toward want; next: seconds until Auto changes its mind
 // c: how much of the sky the cloud covers (0-1); a shower's clouds roll in first and the rain follows them (storm.js)
-const weather={mode:'auto',r:0,want:0,next:240,c:0.18};
+const weather={mode:'auto',r:0,want:0,next:900,c:0.18};
 try{const m=localStorage.getItem('bhd_weather');if(['auto','rain','dry'].includes(m))weather.mode=m}catch(e){}
 function setWeather(m,picked){weather.mode=m;
   if(m==='rain')weather.want=0.8;else if(m==='dry')weather.want=0;else weather.next=Math.min(weather.next,60);
