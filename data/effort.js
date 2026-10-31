@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-31T14:20:00Z",
+ "updated": "2026-10-31T15:40:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -96,9 +96,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-31",
-   "dh": 101,
-   "act": 3.5,
-   "versions": 10
+   "dh": 104,
+   "act": 4,
+   "versions": 11
   }
  ],
  "extra": [
@@ -2916,6 +2916,15 @@ window.EFFORT = {
    "tris": 6031798,
    "chars": 2111315,
    "what": "Dust billows and is lit by the sun (dim at night); the excavator and dump truck smoke from their stacks, darker as they work; rooms behind the town's windows now have real depth as you walk past (Machines tuning: exhaust)"
+  },
+  {
+   "v": 313,
+   "asked": "2026-10-31T10:05:00-05:00",
+   "live": "2026-10-31T10:40:02-05:00",
+   "dh": 3,
+   "tris": 6026325,
+   "chars": 2116228,
+   "what": "A loading screen over the start map: a big percent and bar while the game, its pictures and models load and its shaders warm up; the map and Carry on wait until it is done, so the first minutes in the world no longer stutter"
   }
  ]
 };
