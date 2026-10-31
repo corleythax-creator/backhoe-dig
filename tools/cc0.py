@@ -43,6 +43,8 @@ SCANS = {
     'canvas': ('ph:rough_linen', None, 'G', 0.86),
     # the boats' gelcoat: fine scuffs and orange peel over every hull's own colour (boats.js btGel)
     'gelcoat': ('Plastic013B', None, 'G', 0.9),
+    # the town's flat shop roofs: a weathered bitumen membrane
+    'roof_flat': ('ph:bitumen', None),
     # painted Mud: churned wet ruts, then damp and matte as it dries, then pale baked plates (all at Mud's own tile size)
     # the machines' wear detail under each part's own colour (models.js MDL_TEX, kept at the old mean brightness)
     'mach_paint': ('PaintedMetal001', None, 'G', 0.582, 'k0.5'), 'mach_steel': ('Metal038', None, 'G', 0.317, 'k3'),

@@ -45,8 +45,11 @@ function rmShelf(R,o,s,yl,w,seed){seed=Math.abs(Math.round(seed));R.solid(o,s,w,
 // the counter (w wide, the staff behind it facing out) with a till on it
 function rmCounter(R,o,s,w,col,top){R.solid(o,s,w+0.06,0.7);R.box(w,1.0,0.6,col,o,s,0);R.box(w+0.06,0.04,0.66,top||0x3a3330,o,s,1.0);
   R.box(0.32,0.22,0.28,0x2a2c2f,o,s+w/2-0.35,1.04);R.box(0.26,0.18,0.02,0x9ad0e0,o+0.1,s+w/2-0.35,1.15)}
-// the shops' kinds by sign (MAIN_SHOPS): eat, shop, salon, office, wash, art
-const RM_KIND={0:'eat',2:'eat',5:'eat',11:'eat',12:'eat',17:'eat',21:'eat',15:'eat',9:'salon',26:'salon',7:'office',8:'office',16:'office',23:'office',29:'office',31:'office',20:'wash',18:'art',13:'art'};
+// the shops' kinds by sign (MAIN_SHOPS): eat, shop, salon, office, wash, art, gun
+const RM_KIND={0:'eat',2:'eat',5:'eat',11:'eat',12:'eat',17:'eat',21:'eat',15:'eat',9:'salon',26:'salon',7:'office',8:'office',16:'office',23:'office',29:'office',31:'office',20:'wash',18:'art',13:'art',27:'gun'};
+// the gun shops' counters and wall racks (pistol.js stocks them and sells from them): {x, z, y, yaw at the counter, rack:
+// [[x, y, z, yaw] where a long gun hangs], case: the same for the pistols lying in the glass case}
+const GUN_SHOPS=[];
 // a shop's ground floor room: w across, d deep, its glass at o = d/2 (the room's middle at o = 0), floor at y
 function rmFurnish(K,x,z,y,f,w,d,si,wall){const R=rmKit(K,x,z,y,f),kind=RM_KIND[si]||'shop',back=-d/2,W=w/2-0.3,wood=[0x8a6440,0x5a3b26,0xb08a5a][si%3];
   // the room: a timber floor, painted walls and ceiling, its lights
@@ -74,6 +77,17 @@ function rmFurnish(K,x,z,y,f,w,d,si,wall){const R=rmKit(K,x,z,y,f),kind=RM_KIND[
   else if(kind==='art'){for(const s of [-1,1])for(let o=back+0.8;o<d/2-0.8;o+=1.4)R.box(0.03,0.6+(Math.abs(o*7|0)%3)*0.2,0.8,rmC(o*3+s*5+si),o,s*(W+0.01),1.3);
     for(let s=-W+1;s<W-0.8;s+=1.5)R.box(1.1,0.7,0.04,rmC(s*5+si+20),back+0.05,s,1.2);R.box(1.6,0.45,0.45,0x2a2c2f,0,0,0);R.solid(0,0,1.7,0.55);
     R.spot(0.9,-1.2,-Math.PI/2);R.spot(-0.8,1.6,Math.PI/2);R.spot(back+1.0,1,0+Math.PI);R.spot(0,-0.5,Math.PI,{sit:1});rmCounter(R,d/2-1.0,W-0.8,1.0,wood)}
+  else if(kind==='gun'){// a gun shop: a glass case across the room with handguns in it, long guns on a slatwall behind,
+    // shelves of ammunition and gear down the sides, a target-shooting poster or two
+    R.solid(back+1.6,0,Math.min(2*W-1.2,5.2)+0.06,0.7);const cw=Math.min(2*W-1.2,5.2);R.box(cw,0.85,0.6,0x2a2622,back+1.6,0,0);
+    R.box(cw-0.1,0.22,0.52,'glass',back+1.6,0,0.85);R.box(cw+0.06,0.03,0.66,'glass',back+1.6,0,1.07);R.box(cw-0.2,0.02,0.48,0x5a1f1f,back+1.6,0,0.86);
+    const cs=[];for(let k=0;k<6;k++){const [a,b]=R.P(back+1.55+(k%2?0.1:-0.1),-cw/2+0.5+k*(cw-1)/5);cs.push([a,y+0.89,b,f+(k%2?0.4:-0.3)])}
+    R.box(2*W-0.2,1.6,0.04,0x3a3a36,back+0.04,0,0.8);for(let k=0;k<9;k++)R.box(2*W-0.2,0.012,0.05,0x2a2a27,back+0.06,0,0.85+k*0.18);
+    for(const s of [-1,1])for(let o=back+2.6;o<d/2-1.6;o+=1.25)rmShelf(R,o,s*(W-0.25),s>0?-Math.PI/2:Math.PI/2,1.2,si+o*3+s*11+20);
+    for(const s of [-1,1])R.box(0.03,0.7,0.5,s>0?0xe9e2cc:0xd8c890,back+2.0,s*(W+0.01),1.5);
+    R.spots.pop();R.spot(back+0.9,-0.8,0,{staff:1});R.spot(back+0.9,1.0,0,{staff:1});R.spot(back+2.3,-1.1,Math.PI);R.spot(-0.4,-W+1.0,-Math.PI/2);
+    const rack=[];for(let k=0;k<3;k++)for(const s of (W>2.2?[-W/2-0.2,W/2+0.2]:[0])){const [a,b]=R.P(back+0.12,s);rack.push([a,y+1.15+k*0.38,b,f+Math.PI/2])}
+    const [cx,cz]=R.P(back+2.15,0);GUN_SHOPS.push({x:cx,z:cz,y,yaw:f+Math.PI,rack,case:cs})}
   else{// a store: shelves down both sides and across the back, a stand in the middle, the till by the door
     for(const s of [-1,1])for(let o=back+0.9;o<(s>0?d/2-2.4:d/2-1.4);o+=1.25)rmShelf(R,o,s*(W-0.25),s>0?-Math.PI/2:Math.PI/2,1.2,si+o*3+s*11+20);
     for(let s=-W+1.3;s<=W-1.3+1e-6;s+=1.3)rmShelf(R,back+0.3,s,0,1.2,si+s*5+40);

@@ -184,7 +184,7 @@ const MAIN_SHOPS=[["Lakeside Bakery","Bread · Pies · Coffee","#2f4a3a","#e9d9a
   ["Village Deli","Sandwiches","#e9e1cc","#2f4a3a",0],["Gallery on Main","Local Art","#2b2d2f","#ffffff",1],["Toy Chest","Toys · Games","#2a5f9a","#f4d27a",0],
   ["Laundromat","Open 7 Days","#ffffff","#2a5f9a",0],["Copper Kettle","Pub & Grill","#2b2d2f","#d08a42",1],["Bike & Paddle","Rentals · Repairs","#d08a22","#ffffff",0],
   ["Lakeview Hotel","Rooms","#1f3a5f","#e0c27a",1],["Corner Market","Groceries","#2f6b4f","#ffffff",0],["Quilt Barn","Fabric · Yarn","#7e2f26","#f1ead8",1],
-  ["Hair Studio","Cuts · Color","#e9e1cc","#2b2d2f",1],["Thrift & Treasure","Second Hand","#5a3a6b","#f1ead8",0],["Town Library","Books · Story Time","#23402f","#f1ead8",1],
+  ["Hair Studio","Cuts · Color","#e9e1cc","#2b2d2f",1],["Lakeside Guns","Firearms · Ammo","#2b2d2f","#d8b25a",0],["Town Library","Books · Story Time","#23402f","#f1ead8",1],
   ["Town Hall","Lakeside","#e9e6dc","#1f3a5f",1],["Ice House","Ice · Firewood","#2a5f9a","#ffffff",0],["Lakeside Theater","Movies Fri · Sat","#5a2a22","#f4d27a",1]];
 const mainSignList=[],MAIN_GAPS=[];
 // a shop or house on a town lot: a block with its parapet and cornice; a storefront on the face toward the street (face:
@@ -199,9 +199,9 @@ function mainLot(K,x,z,w,d,h,col,face,awn,si,wl){wl=wl||col;const y=rmGroundMax(
   K.box(w,h-RH,RD,wl,F0[0],y+(RH+h)/2,F0[1],face);K.box(w,1,RD,wl,F0[0],y-0.5,F0[1],face);
   for(const s of [-1,1]){const [a,b]=F(d/2-RD/2,s*(w/2-0.125));K.box(0.25,RH,RD,wl,a,y+RH/2,b,face)}
   rmAdd(rmFurnish(K,F0[0],F0[1],y,face,w-0.5,RD,si%MAIN_SHOPS.length,[0xf0e6d2,0xe3ecea,0xf3e3d8,0xe6e8f0,0xefe9d0][si%5]),Math.max(w,RD)/2);
-  // the roof: a dark membrane inside a parapet with a stone coping, and on most a rooftop unit and a vent
-  K.box(w-0.4,0.06,d-0.4,0x4a4c4e,x,y+h+0.03,z,face);for(const s of [-1,1]){const [a,b]=F(0,s*(w/2-0.12));K.box(0.24,0.7,d,wl,a,y+h+0.35,b,face);const [e,f]=F(s*(d/2-0.12),0);K.box(w,0.7,0.24,wl,e,y+h+0.35,f,face)}
-  for(const s of [-1,1]){const [a,b]=F(0,s*(w/2-0.1));K.box(0.36,0.1,d+0.1,0xd8d2c4,a,y+h+0.75,b,face);const [e,f]=F(s*(d/2-0.1),0);K.box(w+0.1,0.1,0.36,0xd8d2c4,e,y+h+0.75,f,face)}
+  // the roof: a scanned bitumen membrane inside a parapet with a concrete coping, and on most a rooftop unit and a vent
+  K.box(w-0.4,0.06,d-0.4,'roofFlat',x,y+h+0.03,z,face);for(const s of [-1,1]){const [a,b]=F(0,s*(w/2-0.12));K.box(0.24,0.7,d,wl,a,y+h+0.35,b,face);const [e,f]=F(s*(d/2-0.12),0);K.box(w,0.7,0.24,wl,e,y+h+0.35,f,face)}
+  for(const s of [-1,1]){const [a,b]=F(0,s*(w/2-0.1));K.box(0.36,0.1,d+0.1,'concrete',a,y+h+0.75,b,face);const [e,f]=F(s*(d/2-0.1),0);K.box(w+0.1,0.1,0.36,'concrete',e,y+h+0.75,f,face)}
   if(si%3){const [a,b]=F(-d*0.15,(si%2?1:-1)*w*0.2);K.box(1.6,1.0,1.2,0xa9adb0,a,y+h+0.53,b,face);K.box(1.4,0.06,1.0,0x55595c,a,y+h+1.06,b,face);const [e,f]=F(-d*0.3,-(si%2?1:-1)*w*0.25);K.cyl(0.15,0.15,0.9,8,0x8a8e91,e,y+h+0.48,f)}
   {const [a,b]=F(d/2+0.18,0);K.box(w+0.25,0.3,0.36,TR,a,y+h-0.25,b,face);const [e,f]=F(d/2+0.06,0);K.box(w,0.5,0.12,c,e,y+h-0.75,f,face)}
   // the storefront: pilasters at the ends, a kick plate and display window each side of the door, a transom
@@ -231,17 +231,15 @@ function mainLot(K,x,z,w,d,h,col,face,awn,si,wl){wl=wl||col;const y=rmGroundMax(
   SOLIDS.push({x,z,hx:(Math.abs(fz)*w+Math.abs(fx)*d)/2+0.1,hz:(Math.abs(fx)*w+Math.abs(fz)*d)/2+0.1,foot:1});{const [a,b]=F(-RD/2,0);rmSolid(a,b,face,w/2+0.1,(d-RD)/2+0.1)}
   for(const t of [-1,1]){const [a,b]=F(d/2-RD/2,t*(w/2-0.2));rmSolid(a,b,face,0.3,RD/2+0.1);const [e,f]=F(d/2,t*(w/4+0.35));rmSolid(e,f,face,w/4-0.25,0.14)}
   walkPad(F0[0],F0[1],w/2-0.1,RD/2,face,y+0.03);rmRoom(F0[0],F0[1],face,w/2-0.55,RD/2,y,y+2.9)}
-// the shop signs: the lettering drawn into one picture, and every sign a quad of it, as one mesh
-function mainSignsAdd(){const cv=document.createElement('canvas');cv.width=1024;cv.height=1024;const g=cv.getContext('2d'),SW=512,SH=64;
-  MAIN_SHOPS.forEach(([n,sub,bg,fg,serif],i)=>{const x0=(i%2)*SW,y0=((i/2)|0)*SH,ff=serif?'Georgia,"Times New Roman",serif':'"Barlow Condensed","Arial Narrow",Arial,sans-serif';
-    g.fillStyle=bg;g.fillRect(x0,y0,SW,SH);g.strokeStyle=fg;g.lineWidth=2;g.strokeRect(x0+4,y0+4,SW-8,SH-8);g.fillStyle=fg;g.textAlign='center';g.textBaseline='middle';
-    g.font=`700 ${serif?32:36}px ${ff}`;let t=serif?n:n.toUpperCase(),m=g.measureText(t).width;if(m>SW-40)g.font=`700 ${Math.floor((serif?32:36)*(SW-40)/m)}px ${ff}`;g.fillText(t,x0+SW/2,y0+25);
-    g.font=`${serif?'italic ':''}600 15px ${ff}`;g.fillText(serif?sub:sub.toUpperCase(),x0+SW/2,y0+50)});
-  const tex=new THREE.CanvasTexture(cv);tex.anisotropy=4;tex.colorSpace=THREE.SRGBColorSpace;const P=[],U=[],v=new THREE.Vector3();
+// the shop signs: painted boards (famSignPaint, family.js) drawn into one picture, and every sign a quad of it, as one mesh
+function mainSignsAdd(){const cv=document.createElement('canvas');cv.width=2048;cv.height=2048;const g=cv.getContext('2d'),SW=1024,SH=128;
+  MAIN_SHOPS.forEach(([n,sub,bg,fg,serif],i)=>famSignPaint(g,(i%2)*SW,((i/2)|0)*SH,SW,SH,bg,fg,serif,
+    [[serif?n:n.toUpperCase(),serif?0.44:0.5,0.4,700],[serif?sub:sub.toUpperCase(),0.2,0.77,600,serif]],i*97+5));
+  const tex=new THREE.CanvasTexture(cv);tex.anisotropy=8;tex.colorSpace=THREE.SRGBColorSpace;const P=[],U=[],v=new THREE.Vector3();
   for(const s of mainSignList){const u0=(s.i%2)/2,v1=1-((s.i/2)|0)/16,v0=v1-1/16,cs=Math.cos(s.ry),sn=Math.sin(s.ry),pt=(a,b)=>{v.set(a*cs,b,-a*sn);return [s.x+v.x,s.y+v.y,s.z+v.z]};
     const A=pt(-s.w/2,-s.h/2),B=pt(s.w/2,-s.h/2),C=pt(s.w/2,s.h/2),D=pt(-s.w/2,s.h/2);P.push(...A,...B,...C,...A,...C,...D);U.push(u0,v0,u0+0.5,v0,u0+0.5,v1,u0,v0,u0+0.5,v1,u0,v1)}
   const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(P,3));geo.setAttribute('uv',new THREE.Float32BufferAttribute(U,2));geo.computeVertexNormals();
-  const m=new THREE.Mesh(geo,M(0xffffff,{map:tex,flatShading:false}));m.receiveShadow=true;scene.add(m);return m}
+  const m=new THREE.Mesh(geo,famSignMat(tex));m.receiveShadow=true;scene.add(m);return m}
 
 (function(){let sd=31;const rnd=()=>{sd=(sd+0x6D2B79F5)|0;let t=Math.imul(sd^(sd>>>15),1|sd);t=(t+Math.imul(t^(t>>>7),61|t))^t;return((t^(t>>>14))>>>0)/4294967296};
   // ---------- north: the field and woods ----------
