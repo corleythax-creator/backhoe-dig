@@ -282,7 +282,8 @@ statusEl.onclick=()=>{const m=statusEl.classList.toggle('min');try{localStorage.
 // the start screen (#help): the map of the islands and the town, drawn live; tap anywhere on land to start there on
 // foot (tpGo, maps.js: the nearest spot with room), or Carry on where I was. The machines stay where they were parked
 // (walk up to one and Get in). The tests are in ☰ Tools only, so a stray tap can't start one
-function startIn(m){setMode(m);help.hidden=true;try{localStorage.setItem('bhd_seen','1')}catch(e){}}
+// on foot you start in first person, and on a PC with the mouse taken for mouse look (the tap that starts counts)
+function startIn(m){setMode(m);help.hidden=true;if(m==='walk'){if(camMode!=='cab')camSet('cab');if(!PHONE)fpMouseLock(true)}try{localStorage.setItem('bhd_seen','1')}catch(e){}}
 // the map, its names and a tap on it are js/start.js's (SPICK); its loading cover (LOADP) keeps taps off the map until
 // the world is loaded and its shaders built, then a tap starts you there at once
 const startReady=()=>LOADP.done&&typeof tpGo==='function'&&typeof warmIdle==='function';

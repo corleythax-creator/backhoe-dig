@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Saturday, October 31, 2026
 
+- **v317** (11:22 AM) Cars and townsfolk have their shaders built and pictures uploaded in the background before they show, so town no longer stutters as they spawn; you start on foot in first person with mouse look
 - **v316** (11:20 AM) Excavator gets a rounded counterweight, track pins, boom lines, real teeth, mirrors and steps; dug dirt shows clods, stones and soil layers and dries in patches; field, road and yard edges wander and blend with uncut grass along the hayfield; the worker walks heel to toe with hip sway and arm swing
 - **v315** (10:55 AM) The loading screen can no longer sit at 0%: the bar keeps sweeping while the page is busy, a seconds counter shows it is working, and any error shows on it and lets you in
 - **v314** (10:54 AM) The town comes alive: spend the island's pay at every shop counter (menus and prices, coffee puts a spring in your step, the bank and the hotel), shops keep real hours and the streets fill and empty with the time of day, passersby greet you and Carry talks to anyone, and nine named regulars who remember you

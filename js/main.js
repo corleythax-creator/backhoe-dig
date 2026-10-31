@@ -307,7 +307,7 @@ function frame(now){
   const fv=mode==='boat'?btCur():mode==='heavy'?hvCur():mode==='bike'?bk:mode==='truck'?tr:mode==='mow'?mw:mode==='skid'?sk:mode==='walk'?wk:st;sun.position.set(fv.x,fv.y,fv.z).addScaledVector(LIGHT_DIR,SUN_D); sun.target.position.set(fv.x,fv.y,fv.z);
   {const o=groundOcc.value;o[0].set(st.x,st.z,st.yaw,0);o[2].set(tr.x,tr.z,tr.yaw,0)}
   timeU.value=now/1000;
-  shadowProxyTick();lawnLod();tuftLod();turfLod();rainCover();if(vr.fake)vrFakeHead();warmAllTick();const wm=warmPre();postRender();warmPost(wm);if(vrOn())vrAfter();
+  shadowProxyTick();lawnLod();tuftLod();turfLod();rainCover();if(vr.fake)vrFakeHead();warmAllTick();gpuWarmTick();const wm=warmPre();postRender();warmPost(wm);if(vrOn())vrAfter();
   if(bench.on)benchSample(dt);
   fpsFrames++;fpsTime+=dt;
   if(fpsTime>=0.5){const f=Math.round(fpsFrames/fpsTime);const fe=$('#fpsVal');fe.textContent=f;fe.style.color=f>=50?'var(--ok)':f>=30?'var(--gas)':'var(--danger)';
@@ -371,6 +371,19 @@ function warmAllTick(){const W=warmAll;if(!W||bench.on||vrOn())return;const now=
     try{const p=renderer.compileAsync?renderer.compileAsync(scene,camera):(renderer.compile(scene,camera),null);if(p&&p.then)p.then(()=>W.pend--,()=>W.pend--);else W.pend--}catch(e){W.pend--}}
   else W.still++;
   if(now-W.t0>180000&&W.pend===0&&(!W.q.length||help.hidden)&&(!W.at.length||!warmQuiet()))warmAll=null}
+// warming one thing before it first shows (the town's cars, a townsperson's look or crowd, a close-up hero), at any
+// time in the game: its shaders built in the background (compileAsync, hidden parts too) and its textures uploaded one
+// a frame (gpuWarmTick), then the promise resolves and the caller shows it. Without it the frame it first appears in
+// builds its shaders and uploads its pictures there and then: the stutter as cars and people come into town
+const gpuQ=[];
+function gpuUp(tx){return new Promise(r=>gpuQ.push({tx:[...tx],done:r}))}
+function gpuWarm(o){const tx=new Set(),ok=im=>im&&(im.width||im.data||Array.isArray(im));
+  o.traverse(m=>{for(const M of [].concat(m.material||[]))for(const k in M){const t=M[k];if(t&&t.isTexture&&ok(t.image))tx.add(t)}});
+  let p=null;try{p=renderer.compileAsync(o,camera,scene)}catch(e){}
+  return Promise.all([p&&p.then?p.catch(()=>{}):null,gpuUp(tx)])}
+// (a few milliseconds' worth a frame, at least one)
+function gpuWarmTick(){const t0=performance.now();while(gpuQ.length){const j=gpuQ[0],t=j.tx.pop();if(t)try{renderer.initTexture(t)}catch(e){}
+  if(!j.tx.length){gpuQ.shift();j.done()}if(performance.now()-t0>3)break}}
 if([texGrass,texDirt,texGrime].every(t=>t.image&&t.image.width))texReady();else texManager.onLoad=texReady;
 // every lit material gets its wet look before anything is drawn, so nothing compiles twice (rain.js)
 wetPatchAll();
