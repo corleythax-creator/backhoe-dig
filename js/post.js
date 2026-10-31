@@ -113,7 +113,7 @@ function pudSsrTick(){const on=pudLvl>0.001&&gfxCur.wmFine;pudSsrU.uSsr.value.x=
   pudSsrU.uPrevVP.value.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse)}
 function postOn(){return (POST.ao||POST.bloom||POST.grade)&&!renderer.xr.isPresenting}
 // draws the frame: straight to the screen, or through the effects
-function postRender(){ultraTick();if(!postOn()){pudSsrU.uSsr.value.x=0;renderer.render(scene,camera);return}
+function postRender(){ultraTick();clVolRender();if(!postOn()){pudSsrU.uSsr.value.x=0;renderer.render(scene,camera);return}
   renderer.getDrawingBufferSize(postSz);postSize(postSz.x,postSz.y);
   // the puddles' reflections (rain.js) read the picture as it was last frame (they can't read the one being drawn)
   if(pudSsrRT)pudSsrU.tSsr.value=pudSsrRT.texture;

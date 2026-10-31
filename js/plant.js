@@ -61,7 +61,7 @@ function plantChanged(){plant.dirty=true;plantSave();plantMapDirty()}
 // the tint a new tree takes, like the island's own (treeEntry, trees.js)
 function plantTint(k,x,z){const w=hash(x*2.7+1.1,z*1.9-0.4),v=0.9+0.2*hash(z*1.7,x*0.9);
   if(TREE_SP[k].t==='pine'){const p=ASSET_PT[Math.floor(w*4)%4];return p.map(c=>c*v)}
-  const p=ASSET_LT[Math.floor(w*6)%6];return k===4?[p[0]*v*1.05,(p[1]*0.8+0.2)*v,p[2]*v*0.85]:p.map(c=>c*v)}
+  return treeLeafTint(k,Math.floor(w*6)%6,v)}
 // Plant: a sapling 4 ft in front of the worker, or dig up your own tree if one stands within 3 ft of that spot
 function plantHere(){if(mode!=='walk'||wk.inside){toast(say('plantWalk',{}),'',2200);return}
   const x=wk.x+Math.sin(wk.yaw)*1.2,z=wk.z+Math.cos(wk.yaw)*1.2;

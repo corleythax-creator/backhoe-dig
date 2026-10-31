@@ -24,13 +24,9 @@ function sqString(F,a,b,sag){const L=Math.hypot(b[0]-a[0],b[2]-a[2]),n=Math.ceil
   for(let i=0;i<n;i++){const [p,q]=[P[i],P[i+1]],l=Math.hypot(q[0]-p[0],q[1]-p[1],q[2]-p[2]);F.box(0.015,0.015,l,0x1a1a1a,(p[0]+q[0])/2,(p[1]+q[1])/2,(p[2]+q[2])/2,Math.atan2(q[0]-p[0],q[2]-p[2]),-Math.asin((q[1]-p[1])/l));
     if(i)F.lit(new THREE.BoxGeometry(0.08,0.11,0.08),0xffe2a8,p[0],p[1]-0.09,p[2])}}
 
-(function(){const K=shopKit(),F=famKit(),LK=famKit(),BK=famKit(),G=baseHeight,brk=shopLib('herringbone'),pav=shopLib('pavers'),
+(function(){const K=shopKit(),F=famKit(),G=baseHeight,brk=shopLib('herringbone'),pav=shopLib('pavers'),
     IRON=0x1f2a24,WH=0xf2efe6,TR=0xe9e4d6,ax=SQ.ax,R={x:-58,z:590,r:48,spots:[],ground:1};
   const on=(x,z)=>G(x,z)+0.05,spot=(x,z,y,yaw,k)=>{const sp=Object.assign({x,z,y,yaw},k||{});R.spots.push(sp);return sp};
-  const bench=(x,z,yaw,y)=>{y=y===undefined?on(x,z):y;const c=Math.cos(yaw),s=Math.sin(yaw);BK.box(1.6,0.45,0.5,0x5c4632,x,y+0.22,z,yaw);famSpot('bench',x,y,z,yaw,0.9);
-    for(const t of [-0.4,0.4])spot(x+c*t,z-s*t,y,yaw,{sit:1});SOLIDS.push({x,z,lx:0.8,lz:0.3,cs:c,sn:s,hx:Math.abs(c)*0.8+Math.abs(s)*0.3,hz:Math.abs(s)*0.8+Math.abs(c)*0.3})};
-  const lamp=(x,z,y)=>{y=y===undefined?on(x,z):y;LK.cyl(0.07,0.1,4.2,8,0x2f3236,x,y+2.1,z);LK.box(0.45,0.18,0.45,0x2f3236,x,y+4.25,z);LK.lit(new THREE.BoxGeometry(0.36,0.05,0.36),0xfff1c8,x,y+4.13,z);
-    famSpot('lamp',x,y,z,0);SOLIDS.push({x,z,hx:0.12,hz:0.12})};
 
   // ---------- the waterfront ----------
   // the promenade: pavers from the seawall to the beach road (over the old bank at the wall's level), on east as a plaza
@@ -47,14 +43,9 @@ function sqString(F,a,b,sag){const L=Math.hypot(b[0]-a[0],b[2]-a[2]),n=Math.ceil
   {const yb=G(ax,WZ-4.6),n=13,rise=(ty-yb)/n;for(let k=0;k<n;k++){const z=WZ-0.3-(n-k-0.5)*0.32,y=yb+rise*(k+1);F.box(SW1-SW0,y-yb+0.3,0.34,0xb9b6ad,ax,(y+yb-0.3)/2,z)}
     for(const x of [SW0-0.3,SW1+0.3])F.box(0.6,ty-yb+0.6,4.6,'ashlar',x,(ty+yb)/2,WZ-2.1);walkPad(ax,WZ-2.3,SW1-ax,2.2,0,yb,{rise:ty-yb});
     for(const x of [SW0-0.3,SW1+0.3])SOLIDS.push({x,z:WZ-2.1,hx:0.3,hz:2.3})}
-  // benches looking out at the islands, lamps, people at the rail
-  for(const x of [-107,-97,-87,-77,-45,-35]){bench(x,560.2,Math.PI,py(x,560.2));lamp(x+5,559.2,py(x+5,559.2))}
+  // people at the rail (the benches, lamps, café tables, stalls, bollards and shade trees are the editor's things:
+  // sqThings, scenery.js; the people at them come from sqSpots below)
   for(const x of [-104,-92,-80,-70,-50,-40,-30,-23])spot(x,558.7,py(x,558.7),Math.PI);
-  // café tables by the foot of Main Street, under umbrellas
-  for(const [x,z] of [[-31,563.2],[-26,565.6],[-21,563.2],[-16,565.8],[-12,562.6]]){const y=py(x,z),c=[0x2f6b4f,0xe9e1cc,0xb8322a][Math.abs(x)%3];
-    F.cyl(0.4,0.4,0.04,16,0x2b2d2f,x,y+0.74,z);F.cyl(0.04,0.04,0.74,8,0x2b2d2f,x,y+0.37,z);F.cyl(0.03,0.03,2.4,6,TR,x,y+1.2,z);F.cyl(0.04,1.35,0.45,12,c,x,y+2.3,z);
-    for(let i=0;i<3;i++){const a=i*2.09+0.4,cx=x+Math.cos(a)*0.75,cz=z+Math.sin(a)*0.75,yl=Math.atan2(x-cx,z-cz);F.box(0.42,0.05,0.42,0x2b2d2f,cx,y+0.45,cz,yl);F.box(0.42,0.45,0.04,0x2b2d2f,cx-Math.sin(yl)*0.2,y+0.68,cz-Math.cos(yl)*0.2,yl);
-      spot(cx,cz,y,yl,{sit:1})}SOLIDS.push({x,z,hx:0.45,hz:0.45})}
   // the flagpole and the founding stone, either side of the steps
   {const x=ax-7,z=566,y=py(x,z);F.cyl(0.6,0.7,0.4,16,0xb9b6ad,x,y+0.2,z);F.cyl(0.07,0.1,13,10,WH,x,y+6.9,z);F.cyl(0.13,0.13,0.13,10,0xc9a640,x,y+13.46,z);
     const cv=document.createElement('canvas');cv.width=190;cv.height=100;const g=cv.getContext('2d');for(let i=0;i<13;i++){g.fillStyle=i%2?'#f4f1e8':'#b22234';g.fillRect(0,i*100/13,190,100/13+0.5)}
@@ -64,9 +55,6 @@ function sqString(F,a,b,sag){const L=Math.hypot(b[0]-a[0],b[2]-a[2]),n=Math.ceil
     const fm=new THREE.Mesh(fg,M(0xffffff,{map:tex,side:THREE.DoubleSide,flatShading:false}));fm.position.set(x+1.2,y+12.6,z);scene.add(fm);SOLIDS.push({x,z,hx:0.6,hz:0.6})}
   {const x=ax+7,z=566,y=py(x,z);F.box(2.2,0.35,1.2,0xa9a69e,x,y+0.17,z);F.box(1.8,1.4,0.7,'ashlar',x,y+1.05,z);F.box(1.9,0.12,0.8,0xb9b6ad,x,y+1.8,z);
     famSign(['HARBOR SQUARE','Town of Lakeside · Founded 1872'],1.4,0.62,x,y+1.1,z-0.37,Math.PI,'#5a4a2e','#e8d6a0');SOLIDS.push({x,z,hx:1.1,hz:0.6})}
-  // the beach road through the square is laid in brick (mainStreets); bollards line it, gaps where the walks cross
-  for(let x=-104;x<=-8;x+=3.5){if(Math.abs(x-(ax+4))<2.5||Math.abs(x-SQ.gx1)<2.5)continue;const zc=x<-60?576-2*(x+170)/110:574;
-    for(const s of [-1,1]){const z=zc+s*2.85,y=G(x,z);F.cyl(0.11,0.12,0.9,10,IRON,x,y+0.45,z);F.cyl(0.13,0.13,0.06,10,0xb08d3a,x,y+0.93,z);SOLIDS.push({x,z,hx:0.12,hz:0.12})}}
 
   // ---------- the green ----------
   // brick walks: along the road (on to Main Street's sidewalk), round the lawn, across it and up its axis; rings round
@@ -99,23 +87,11 @@ function sqString(F,a,b,sag){const L=Math.hypot(b[0]-a[0],b[2]-a[2]),n=Math.ceil
     const poles=[[-88,589],[-88,609],[-34,589],[-34,609]];for(const [px,pz] of poles){const gy=G(px,pz);F.box(0.16,5.2,0.16,0x5c4632,px,gy+2.6,pz);SOLIDS.push({x:px,z:pz,hx:0.1,hz:0.1})}
     for(const [i,k] of [[4,0],[2,1],[6,2],[0,3]]){const [px,pz]=oc(i*Math.PI/4+Math.PI/8),[qx,qz]=poles[k];sqString(F,[px,top+2.85,pz],[qx,G(qx,qz)+5.0,qz],0.9)}
     sqString(F,[poles[0][0],G(...poles[0])+5,poles[0][1]],[poles[1][0],G(...poles[1])+5,poles[1][1]],0.8);sqString(F,[poles[2][0],G(...poles[2])+5,poles[2][1]],[poles[3][0],G(...poles[3])+5,poles[3][1]],0.8)}
-  // the market: a row of stalls under white and striped canopies along the east walk, a vendor behind each table and
-  // shoppers in front
-  for(const [k,z] of [584.5,590.5,596.5,603.5,609.2].entries()){const x=-30.5,y=on(x,z),cc=[WH,0x2f6b4f,WH,0xb8322a,WH][k];
-    for(const sx of [-1.3,1.3])for(const sz of [-1.3,1.3])F.box(0.07,2.4,0.07,TR,x+sx,y+1.2,z+sz);F.cyl(0,2.05,0.8,4,cc,x,y+2.8,z,Math.PI/4);
-    F.box(0.8,0.78,2.6,0xa6743e,x+0.9,y+0.39,z);for(let i=0;i<5;i++)F.box(0.36,0.2,0.4,rmC(k*3+i),x+0.95,y+0.88,z-1.05+i*0.52);
-    spot(x-0.3,z,y,Math.PI/2,{staff:1});spot(x+2.2,z-0.5,y,-Math.PI/2);spot(x+2.3,z+0.6,y,-Math.PI/2);SOLIDS.push({x:x+0.6,z,hx:1.0,hz:1.4})}
-  // shade trees round the green and along the promenade's back, benches facing in, lamps on the walks
-  treeGroup('square',[[-94,584],[-82,583.2],[-42,583.2],[-32,584.5],[-94.5,606.5],[-82,608.5],[-41,608.5],[-94,595],
-    [-105,569.5],[-90,569.5],[-78,569.5],[-44,569.5]].map(([x,z],i)=>treeEntry('leafy',x,z,i*1.7,0.72+(i%4)*0.07,(i*5)%6,1.1)));
-  for(const x of [-92,-86,-40,-34])bench(x,609.9,Math.PI);for(const z of [586,592,606])bench(-97.2,z,Math.PI/2);for(const x of [-70,-52])bench(x,598,Math.PI);
-  for(const [x,z] of [[ax-5.6,SQ.fz],[ax+5.6,SQ.fz]])bench(x,z,x<ax?Math.PI/2:-Math.PI/2);
-  for(const [x,z] of [[-90,580.8],[-74,580.8],[-48,580.8],[-32,580.8],[-97.6,590],[-97.6,604],[-88,610.6],[-34,610.6],[ax-2,604.5+5],[ax+2,604.5+5]])lamp(x,z);
   // people on the lawn, in twos and threes; and a few walking round the green and along the promenade
   for(const [x,z] of [[-84,596],[-80,601],[-44,597],[-40,602],[-70,590],[-52,590],[-55,607]]){const a=(x*7+z)%6.28;spot(x,z,G(x,z),a);spot(x+Math.sin(a)*1.1,z+Math.cos(a)*1.1,G(x,z),a+Math.PI)}
   const loop=rmLine([[SQ.gx1,SQ.gz0],[SQ.gx0,SQ.gz0],[SQ.gx0,SQ.gz1],[SQ.gx1,SQ.gz1],[SQ.gx1,SQ.gz0]]),prom=rmLine([[-110,568.6],[-20,568.6],[-110,568.6]]);
   for(let k=0;k<2;k++){spot(SQ.gx1,SQ.gz0,on(SQ.gx1,SQ.gz0),0,{staff:1,path:loop,at:k*90});spot(-110,568.6,py(-110,568.6),0,{staff:1,path:prom,at:k*80+20})}
-  rmAdd(R,R.r,[0,16,30,48]);
+  rmAdd(R,R.r,[0,16,30,48]);SQ.room=R;
 
   // ---------- the Town Hall ----------
   // two floors of red brick with white trim and tall windows, a slate-grey gable roof, a portico of four columns under a
@@ -146,7 +122,15 @@ function sqString(F,a,b,sag){const L=Math.hypot(b[0]-a[0],b[2]-a[2]),n=Math.ceil
     for(const sx of [-1,1])for(const sz of [-1,1])F.box(0.5,3.0,0.5,WH,x+sx*1.85,c0+0.35+1.5,tz+sz*1.85);for(const sx of [-1,1]){F.box(4.2,0.12,0.12,WH,x,c0+1.1,tz+sx*1.85);F.box(0.12,0.12,4.2,WH,x+sx*1.85,c0+1.1,tz)}
     F.box(4.3,0.45,4.3,WH,x,b0+0.2,tz);F.cyl(0,3.1,5.6,8,0x4f7a6a,x,b0+3.2,tz,Math.PI/8);F.cyl(0.12,0.12,0.25,10,0xc9a640,x,b0+6.1,tz);F.cyl(0.02,0.02,1.2,4,0x2a2c2f,x,b0+6.7,tz);F.box(0.05,0.05,1.0,0x2a2c2f,x,b0+7.0,tz,0.6);
     SOLIDS.push({x,z,hx:W/2+0.2,hz:D/2+0.2});for(const dx of [-4.2,-1.4,1.4,4.2])SOLIDS.push({x:x+dx,z:pz,hx:0.4,hz:0.4})}
-  K.add();famAdd(F);famAddSpot('lamp',LK);famAddSpot('bench',BK)})();
+  K.add();famAdd(F)})();
+// the people's spots at the square's benches, café tables and market stalls, from where they stand now (sit in PROPS):
+// propsBuild calls it after every change to the things; anyone on a spot that went (or moved) leaves
+function sqSpots(){const R=SQ.room;if(!R)return;const old=R.spots.filter(sp=>sp.of),keep=R.spots.filter(sp=>!sp.of);
+  for(const a of assets){const P=PROPS[a.t];if(a.hd||!P||!P.sit||a.x<SQ.px0-2||a.x>SQ.px1+2||a.z<SQ.wall||a.z>SQ.gz1+2)continue;
+    const c=Math.cos(a.yaw)*a.s,s=Math.sin(a.yaw)*a.s,y=propY(a);
+    P.sit.forEach(([u,v,t,k],i)=>{const x=a.x+u*c+v*s,z=a.z-u*s+v*c,o=old.find(sp=>sp.of===a&&sp.i===i&&Math.abs(sp.x-x)+Math.abs(sp.z-z)+Math.abs(sp.y-y)<0.01);
+      keep.push(o||Object.assign({x,z,y,yaw:a.yaw+t,of:a,i},k===1?{staff:1}:k===2?{}:{sit:1}))})}
+  for(const sp of old)if(sp.who&&!keep.includes(sp)&&typeof tfDrop==='function')tfDrop(sp.who);R.spots=keep}
 // the town clock keeps the game's time (dnMin, daynight.js); its hands move once a game minute
 let sqMin=-1;
 function sqTick(){if(!SQ.hands.length)return;const m=Math.floor(dnMin(dn.t));if(m===sqMin)return;sqMin=m;

@@ -10,7 +10,8 @@
 // n: name; w, d: footprint in metres (x across, z front to back) at size 100%; cap: most of that kind; solid: blocks
 // machines and the worker (with the solid box's half sizes, if not the footprint); deep: a footing below the ground, so
 // it sits on the highest ground under it and a slope never shows a gap; tint: takes the house colours; cat: its group in the
-// editor's Things library (ED_KIND_CATS below); run: laid end to end along a line (the editor's Line)
+// editor's Things library (ED_KIND_CATS below); run: laid end to end along a line (the editor's Line); sit: where
+// townsfolk sit or stand by it, [x, z, turn from its own, 1 staff or 2 standing] on the model (Harbor Square's people use them: sqSpots)
 const PROPS={
   house:{n:'House',cat:1,w:8,d:6.5,cap:40,solid:1,deep:1,tint:1},
   shed:{n:'Shed',cat:1,w:3,d:2.4,cap:60,solid:1,deep:1,tint:1},
@@ -23,11 +24,14 @@ const PROPS={
   pallet:{n:'Pallet',cat:3,w:1.22,d:1.02,cap:300,pad:[0.11,0.61,0.51]},
   potty:{n:'Porta-potty',cat:3,w:1.12,d:1.12,cap:40,solid:1},
   sign:{n:'Sign',cat:3,w:0.9,d:0.12,cap:200,solid:[0.08,0.08]},
-  bench:{n:'Bench',cat:4,w:1.8,d:0.6,cap:120,solid:1},
+  bench:{n:'Bench',cat:4,w:1.8,d:0.6,cap:120,solid:1,sit:[[-0.45,0,0],[0.45,0,0]]},
+  cafe:{n:'Café table',cat:4,w:2.0,d:2.0,cap:80,solid:[0.45,0.45],sit:[0,1,2].map(i=>{const a=i*2.09+0.4,x=Math.cos(a)*0.75,z=Math.sin(a)*0.75;return [x,z,Math.atan2(-x,-z)]})},
+  stall:{n:'Market stall',cat:4,w:2.8,d:2.8,cap:40,solid:[1.4,1.3],sit:[[0,-0.3,0,1],[0.5,2.2,Math.PI,2],[-0.6,2.3,Math.PI,2]]},
   picnic:{n:'Picnic table',cat:4,w:1.8,d:1.6,cap:80,solid:1},
   dumpster:{n:'Dumpster',cat:3,w:2.0,d:1.8,cap:60,solid:1,deep:1},
   // lights (lamp: its kind in LAMP_K and where its lamps are on the model)
   streetlt:{n:'Street light',cat:5,w:0.6,d:0.6,cap:120,solid:[0.15,0.15],lamp:['street',[[0,7.66,2.1]]]},
+  lamp:{n:'Park lamp',cat:5,w:0.5,d:0.5,cap:150,solid:[0.12,0.12],lamp:['post',[[0,4.13,0]]]},
   lamppost:{n:'Lamp post',cat:5,w:0.5,d:0.5,cap:150,solid:[0.12,0.12],lamp:['post',[[0,3.82,0]]]},
   flood:{n:'Floodlight',cat:5,w:0.9,d:0.6,cap:80,solid:[0.12,0.12],lamp:['flood',[[-0.25,4.31,0.2],[0.25,4.31,0.2]]]},
   uplight:{n:'Ground spotlight',cat:5,w:0.3,d:0.3,cap:200,lamp:['up',[[0,0.32,0.06]]]},
@@ -82,6 +86,7 @@ const PROPS={
   umbrella:{n:'Patio table',cat:4,w:2.6,d:2.6,cap:40,solid:[0.5,0.5]},
   gazebo:{n:'Gazebo',cat:4,w:3.6,d:3.6,cap:10,tint:1,deep:1,pad:[0.2,1.7,1.7]},
   woodpile:{n:'Firewood stack',cat:4,w:1.6,d:0.5,cap:40,solid:1},
+  bollard:{n:'Bollard',cat:6,w:0.26,d:0.26,cap:300,solid:[0.12,0.12]},
   flagpole:{n:'Flag pole',cat:4,w:0.3,d:0.3,cap:40,solid:[0.06,0.06]},
   doghouse:{n:'Dog house',cat:4,w:1.0,d:1.2,cap:20,solid:1,tint:1},
   tent:{n:'Camping tent',cat:8,w:1.8,d:2.2,cap:20,solid:1},
@@ -153,6 +158,13 @@ const PROP_MODELS={
   // ---------- lights ----------
   streetlt:B=>{B.cyl(0.22,0.26,0.5,10,0x9a978f,0,0.25,0);B.cyl(0.07,0.11,7.3,10,0x8c9094,0,4.1,0);B.box(0.08,0.08,2.1,0x8c9094,0,7.72,1.0,-0.06,0,0);
     B.box(0.38,0.16,0.75,0x7d8186,0,7.8,2.1);B.box(0.3,0.03,0.56,0xfff4d8,0,7.7,2.1)},
+  // Harbor Square's: the park lamp, the café table under its umbrella, the market stall (its counter at the front), the bollard
+  lamp:B=>{B.cyl(0.07,0.1,4.2,8,0x2f3236,0,2.1,0);B.box(0.45,0.18,0.45,0x2f3236,0,4.25,0);B.box(0.36,0.05,0.36,0xfff1c8,0,4.13,0)},
+  cafe:B=>{const D=0x2b2d2f;B.cyl(0.4,0.4,0.04,16,D,0,0.74,0);B.cyl(0.04,0.04,0.74,8,D,0,0.37,0);B.cyl(0.03,0.03,2.4,6,0xe9e4d6,0,1.2,0);B.cyl(0.04,1.35,0.45,12,0x2f6b4f,0,2.3,0);
+    for(const [x,z,yl] of PROPS.cafe.sit){B.box(0.42,0.05,0.42,D,x,0.45,z,0,yl,0);B.box(0.42,0.45,0.04,D,x-Math.sin(yl)*0.2,0.68,z-Math.cos(yl)*0.2,0,yl,0);B.cyl(0.02,0.02,0.45,6,D,x,0.22,z)}},
+  stall:B=>{for(const x of [-1.3,1.3])for(const z of [-1.3,1.3])B.box(0.07,2.4,0.07,0xe9e4d6,x,1.2,z);B.cyl(0,2.05,0.8,4,0xf2efe6,0,2.8,0,0,Math.PI/4,0);
+    B.box(2.6,0.78,0.8,0xa6743e,0,0.39,0.9);[0xc0392b,0xe6a23c,0x6a8f3a,0x8e5a9b,0xd9c27a].forEach((c,i)=>B.box(0.4,0.2,0.36,c,-1.05+i*0.52,0.88,0.95))},
+  bollard:B=>{B.cyl(0.11,0.12,0.9,10,0x1f2a24,0,0.45,0);B.cyl(0.13,0.13,0.06,10,0xb08d3a,0,0.93,0)},
   lamppost:B=>{B.cyl(0.18,0.22,0.35,10,0x1f2326,0,0.18,0);B.cyl(0.05,0.07,3.2,8,0x1f2326,0,1.95,0);B.cyl(0.09,0.09,0.08,8,0x1f2326,0,3.58,0);
     B.cyl(0.16,0.11,0.42,8,0xfff0c8,0,3.83,0);B.cyl(0.02,0.25,0.2,8,0x1f2326,0,4.13,0);B.cyl(0.02,0.03,0.18,6,0x1f2326,0,4.3,0)},
   flood:B=>{B.box(0.5,0.1,0.5,0x8d8a84,0,0.05,0);B.cyl(0.06,0.08,4.2,8,0x9a9ea2,0,2.2,0);B.box(0.72,0.06,0.06,0x5a5a5a,0,4.25,0);
@@ -308,7 +320,7 @@ function propsBuild(){const o=new THREE.Object3D(),col=new THREE.Color(),n={};
     if(P.solid){const [lx,lz]=Array.isArray(P.solid)?P.solid:[P.w/2,P.d/2],c=Math.cos(a.yaw),s=Math.sin(a.yaw),L=lx*a.s,Z=lz*a.s;
       SOLIDS.push({x:a.x,z:a.z,lx:L,lz:Z,cs:c,sn:s,hx:Math.abs(c)*L+Math.abs(s)*Z,hz:Math.abs(s)*L+Math.abs(c)*Z,prop:1})}}
   for(const k in PROPS){const im=propIMs[k];im.count=n[k];im.visible=n[k]>0;im.instanceMatrix.needsUpdate=true;im.instanceColor.needsUpdate=true}
-  propLampsBuild()}
+  propLampsBuild();if(typeof sqSpots==='function')sqSpots()}
 // for the editor: how near a ground point is to a thing (under 1 is on it), its ring's radius and its name
 function propHit(a,x,z){const P=PROPS[a.t],c=Math.cos(a.yaw),s=Math.sin(a.yaw),dx=x-a.x,dz=z-a.z,u=dx*c-dz*s,v=dx*s+dz*c;
   return Math.max(Math.abs(u)/(P.w/2*a.s+0.4),Math.abs(v)/(P.d/2*a.s+0.4))}

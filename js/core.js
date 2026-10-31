@@ -91,6 +91,23 @@ renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=0
 					return mix( 1.0, s * 0.125, shadowIntensity );
 				}`);
 })();
+// cloud shadows (storm.js): the sun's light dims under the clouds on every lit material. Their numbers are shared by all
+// of them (CS_U): uCSMap the clouds' cover map, uCSA (its offset x and z in m, 1 / its size in m, the shadow's strength;
+// 0 is no shadows), uCSB (the sun's slant in x and z per m of height, the clouds' middle height, where cover starts),
+// uCSW how soft the edge of the cover is. Every material's own onBeforeCompile still runs; the shared numbers are added
+// after it to any shader with lights
+const CS_U={uCSMap:{value:null},uCSA:{value:new THREE.Vector4()},uCSB:{value:new THREE.Vector4()},uCSW:{value:0.1}};
+(function(){const C=THREE.ShaderChunk,P=THREE.Material.prototype,base=P.onBeforeCompile,K=Symbol('obc');
+  C.lights_pars_begin+='\nuniform sampler2D uCSMap;uniform vec4 uCSA,uCSB;uniform float uCSW;\n'+
+    'float csShade(vec3 gp){if(uCSA.w<=0.0)return 1.0;vec3 w=transpose(mat3(viewMatrix))*(gp-viewMatrix[3].xyz);\n'+
+    '  float c=texture(uCSMap,(w.xz+uCSB.xy*(uCSB.z-w.y)+uCSA.xy)*uCSA.z).r;return 1.0-uCSA.w*smoothstep(uCSB.w,uCSB.w+uCSW,c);}\n';
+  const dl='getDirectionalLightInfo( directionalLight, directLight );';
+  if(C.lights_fragment_begin.includes(dl))C.lights_fragment_begin=C.lights_fragment_begin.replace(dl,dl+'\n\t\tdirectLight.color *= csShade( geometryPosition );');
+  const use=sh=>{if(sh.fragmentShader.includes('lights_pars_begin'))Object.assign(sh.uniforms,CS_U)};
+  const def=function(sh){use(sh)};def.toString=()=>base.toString();
+  Object.defineProperty(P,'onBeforeCompile',{configurable:true,get(){return this[K]||def},
+    set(f){if(!f){this[K]=null;return}const w=function(sh,r){f.call(this,sh,r);use(sh)};w.toString=()=>String(f);this[K]=w}});
+})();
 const scene=new THREE.Scene();
 scene.background=new THREE.Color(0xbfd2dd);
 scene.fog=new THREE.Fog(0xbfd2dd,90,760);

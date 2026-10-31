@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-31T02:54:00Z",
+ "updated": "2026-10-31T03:52:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -90,9 +90,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-30",
-   "dh": 93.25,
-   "act": 3.5,
-   "versions": 23
+   "dh": 151.25,
+   "act": 4.5,
+   "versions": 29
   }
  ],
  "extra": [
@@ -2730,6 +2730,60 @@ window.EFFORT = {
    "tris": 5818779,
    "chars": 1901026,
    "what": "The start map's close-up shows Main Street in brick with its crosswalks, as it is in town now."
+  },
+  {
+   "v": 293,
+   "asked": "2026-10-31T19:46:00-05:00",
+   "live": "2026-10-30T22:23:33-05:00",
+   "dh": 14,
+   "tris": 5886948,
+   "chars": 1919552,
+   "what": "Photo-scanned leaf trees in autumn colours, pines from scanned needles, logs and stumps in the woods, split-granite boulders with grass round their feet, clustered on the town's lawns"
+  },
+  {
+   "v": 294,
+   "asked": "2026-10-30T21:45:00-05:00",
+   "live": "2026-10-30T22:24:31-05:00",
+   "dh": 14,
+   "tris": 5900463,
+   "chars": 1934011,
+   "what": "Real 3D clouds: rounded heaps with sunlit tops, grey undersides and glowing edges toward the sun, that roll in dark before a shower, and their shadows drifting across the island (Medium graphics and up)."
+  },
+  {
+   "v": 295,
+   "asked": "2026-10-30T22:15:00-05:00",
+   "live": "2026-10-30T22:27:37-05:00",
+   "dh": 4,
+   "tris": 5901409,
+   "chars": 1935181,
+   "what": "Harbor Square's benches, park lamps, café tables, market stalls, bollards and shade trees are now map editor things you can select, move, copy and delete; townsfolk sit wherever the benches go"
+  },
+  {
+   "v": 296,
+   "asked": "2026-10-30T21:50:00-05:00",
+   "live": "2026-10-30T22:29:49-05:00",
+   "dh": 7,
+   "tris": 5898100,
+   "chars": 1942036,
+   "what": "Machines on High: glossy clear-coated paint, chipped edges, polished and rusty bare steel, dust on top, and caked mud on the bucket and tracks that builds as you dig (Machines tunings)"
+  },
+  {
+   "v": 297,
+   "asked": "2026-10-30T21:45:00-05:00",
+   "live": "2026-10-30T22:44:20-05:00",
+   "dh": 3,
+   "tris": 7340486,
+   "chars": 1944098,
+   "what": "The 3D clouds read smooth and soft: no grain or boxy patches in them, from blending each frame with the last and finer light through the cloud."
+  },
+  {
+   "v": 298,
+   "asked": "2026-10-30T19:45:00-05:00",
+   "live": "2026-10-30T22:52:21-05:00",
+   "dh": 16,
+   "tris": 5896280,
+   "chars": 1944098,
+   "what": "Trees, pines, fallen logs, stumps and boulders are photo-scanned now: full autumn crowns of real leaves (red maples, bronze oaks, yellow birches), real pine and fir needles and bark, logs and stumps lying in the woods, and boulder clusters round town in tufts of grass."
   }
  ]
 };

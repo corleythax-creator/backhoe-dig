@@ -21,26 +21,72 @@ let mdlMats=null;
 const MDL_TEX={paint:[0.293,0.293,0.293],steel:[0.082,0.082,0.082],rubber:[0.047,0.047,0.047],gel:[0.785,0.785,0.785]},mdlTexC={};
 function mdlTex(id,kind){const k=id+kind;if(!mdlTexC[k]){const t=new THREE.TextureLoader().load(id==='gel'?`textures/gelcoat${kind}.jpg`:`textures/mach_${id}${kind}.jpg`);
   t.wrapS=t.wrapT=THREE.RepeatWrapping;t.anisotropy=4;if(!kind)t.colorSpace=THREE.SRGBColorSpace;mdlTexC[k]=t}return mdlTexC[k]}
-function mdlStd(hex,o){o=o||{};const m=new THREE.MeshStandardMaterial({color:hex,metalness:o.metal||0,roughness:o.rough==null?0.5:o.rough,envMap:skyEnv,envMapIntensity:o.env||1});
+// ---------- wear and dirt on the machines (High: the relief setting, gfx.js) ----------
+// One shader patch on the paint, bare steel and rubber of the detailed machines, worked out in each part's own frame (so
+// it rides with the part): paint chipped to dark steel along its edges and in spots (edges found from how fast the
+// surface turns, per metre, so they hold at any distance), sun-faded patches and rain streaks down the upright faces;
+// bare steel polished bright on its edges and in scratches, rusty in hollows; dust settled on whatever faces up; and
+// caked mud with its own relief, more of it the dirtier the part (uDirt: dirt.js grimeTick for the bucket, tracks and
+// tyres; a little always on rubber and steel). Strength TU.machWear; the paint's clear coat TU.machCoat
+const WEAR={on:false,mats:[]},WEAR_U={value:1},WEAR_DIRT0={paint:0,steel:0.12,rubber:0.3};
+const WEAR_GLSL='uniform float uWear,uDirt;varying vec3 vWrP,vWrN;\n'+
+  'float wH(float n){return fract(sin(n)*43758.5453);}\n'+
+  'float wN(vec3 p){vec3 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);float n=dot(i,vec3(1.0,57.0,113.0));\n'+
+  ' return mix(mix(mix(wH(n),wH(n+1.0),f.x),mix(wH(n+57.0),wH(n+58.0),f.x),f.y),mix(mix(wH(n+113.0),wH(n+114.0),f.x),mix(wH(n+170.0),wH(n+171.0),f.x),f.y),f.z);}\n'+
+  'float wF(vec3 p){return 0.5*wN(p)+0.25*wN(p*2.03+1.7)+0.125*wN(p*4.01+3.1)+0.0625*wN(p*8.1+5.3);}\n';
+// after the roughness and metalness are read: the masks and what they do to the colour, roughness and metalness
+const WEAR_FS='vec3 wp=vWrP,wn=normalize(vWrN);float wEdge=smoothstep(3.0,14.0,length(fwidth(wn))/max(length(fwidth(wp)),1e-4));\n'+
+  'float wA=wF(wp*3.1),wB=wN(wp*23.0),wUp=smoothstep(0.35,0.9,wn.y),wChip=0.0,wHt=0.0;\n'+
+  '#ifdef WR_PAINT\n wChip=uWear*smoothstep(0.8,0.86,wA*0.45+wB*0.55+wEdge*0.35);\n'+
+  ' diffuseColor.rgb=mix(diffuseColor.rgb,vec3(0.085,0.08,0.075)+vec3(0.06,0.025,0.0)*wB,min(wChip,1.0));metalnessFactor=mix(metalnessFactor,0.85,min(wChip,1.0));roughnessFactor=mix(roughnessFactor,0.45,min(wChip,1.0));\n'+
+  ' float wFade=uWear*smoothstep(0.45,0.8,wF(wp*0.6+9.0));diffuseColor.rgb*=1.0+0.1*wFade;roughnessFactor=min(1.0,roughnessFactor+0.12*wFade);\n'+
+  ' diffuseColor.rgb*=1.0-0.2*uWear*(1.0-abs(wn.y))*smoothstep(0.55,0.85,wN(vec3((wp.x+wp.z)*11.0,wp.y*0.7,0.0)));wHt-=0.002*wChip;\n'+
+  '#endif\n#ifdef WR_STEEL\n float wPol=min(1.0,uWear*(wEdge*0.9+0.45*smoothstep(0.72,0.86,wN(vec3(wp.x*45.0,wp.y*2.5,wp.z*45.0)))));\n'+
+  ' roughnessFactor=mix(roughnessFactor,0.2,wPol);metalnessFactor=mix(metalnessFactor,1.0,wPol);diffuseColor.rgb=mix(diffuseColor.rgb,vec3(0.38,0.37,0.35),wPol*0.7);\n'+
+  ' float wRu=uWear*smoothstep(0.64,0.8,wF(wp*2.3+7.0))*(1.0-wEdge);diffuseColor.rgb=mix(diffuseColor.rgb,vec3(0.15,0.065,0.03)*(0.7+0.6*wB),wRu*0.75);\n'+
+  ' metalnessFactor=mix(metalnessFactor,0.15,wRu);roughnessFactor=mix(roughnessFactor,0.95,wRu);wHt+=0.001*wRu*wB;\n'+
+  '#endif\n float wDust=min(1.0,uWear*wUp*smoothstep(0.45,0.8,wA)*0.4);diffuseColor.rgb=mix(diffuseColor.rgb,vec3(0.30,0.25,0.19)*(0.9+0.2*wB),wDust);\n'+
+  ' roughnessFactor=mix(roughnessFactor,1.0,wDust);metalnessFactor*=1.0-wDust;\n'+
+  ' float wT=mix(0.86,0.12,clamp(uDirt,0.0,1.0)),wMud=uDirt>0.0?smoothstep(wT,wT+0.07,wF(wp*4.3+3.0)+0.08*(1.0-wUp)):0.0;\n'+
+  ' diffuseColor.rgb=mix(diffuseColor.rgb,vec3(0.17,0.115,0.065)*(0.7+0.6*wB),wMud);roughnessFactor=mix(roughnessFactor,0.88,wMud);metalnessFactor*=1.0-wMud;\n'+
+  ' wHt+=wMud*0.01*(0.4+0.6*wN(wp*29.0))+wDust*0.0006*wB;\n';
+// after the normal map: the mud's lumps and the chips' steps bent into the normal (from the height's change on screen)
+const WEAR_NS='{vec3 wdx=dFdx(-vViewPosition),wdy=dFdy(-vViewPosition),wr1=cross(wdy,normal),wr2=cross(normal,wdx);float wdet=dot(wdx,wr1);\n'+
+  ' normal=normalize(abs(wdet)*normal-sign(wdet)*(dFdx(wHt)*wr1+dFdy(wHt)*wr2));}\n';
+function wearPatch(m,kind){if(!m||m.userData.wearP)return;m.userData.wearP=true;m.userData.wear=kind;
+  const dirt={value:WEAR_DIRT0[kind]||0};m.userData.wDirtU=dirt;WEAR.mats.push(m);
+  const old=m.onBeforeCompile,key=m.customProgramCacheKey();
+  m.onBeforeCompile=function(sh,r){if(old)old.call(this,sh,r);if(!WEAR.on)return;sh.uniforms.uWear=WEAR_U;sh.uniforms.uDirt=dirt;
+    sh.vertexShader='varying vec3 vWrP,vWrN;\n'+sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvWrP=transformed*length(modelMatrix[0].xyz);vWrN=objectNormal;');
+    sh.fragmentShader='#define WR_'+kind.toUpperCase()+'\n'+WEAR_GLSL+sh.fragmentShader.replace('#include <metalnessmap_fragment>','#include <metalnessmap_fragment>\n'+WEAR_FS)
+      .replace('#include <normal_fragment_maps>','#include <normal_fragment_maps>\n'+WEAR_NS)
+      .replace('#include <lights_physical_fragment>','#include <lights_physical_fragment>\n#ifdef USE_CLEARCOAT\nmaterial.clearcoat*=(1.0-min(wChip,1.0))*(1.0-wDust)*(1.0-wMud);\n#endif\n')};
+  m.customProgramCacheKey=function(){return key+(WEAR.on?'|wear'+kind:'')}}
+// gfx.js: on with the relief setting; the paint's clear coat with it
+function wearGfx(on){on=!!on;if(on===WEAR.on)return;WEAR.on=on;for(const m of WEAR.mats){if(m.isMeshPhysicalMaterial)m.clearcoat=on?m.userData.coat:0;m.needsUpdate=true}}
+function wearTick(){WEAR_U.value=TU.machWear;if(!WEAR.on)return;for(const m of WEAR.mats)if(m.isMeshPhysicalMaterial&&m.userData.coat){const c=Math.max(0.001,TU.machCoat*m.userData.coat);if(m.clearcoat!==c)m.clearcoat=c}}
+function mdlStd(hex,o){o=o||{};const m=new (o.coat?THREE.MeshPhysicalMaterial:THREE.MeshStandardMaterial)({color:hex,metalness:o.metal||0,roughness:o.rough==null?0.5:o.rough,envMap:skyEnv,envMapIntensity:o.env||1});
+  // paint under a clear coat: the photo detail's roughness below, a gloss layer over it (with the wear: chips and dust take it off)
+  if(o.coat){m.userData.coat=o.coat;m.clearcoat=WEAR.on?o.coat:0;m.clearcoatRoughness=o.coatR||0.12}
   if(o.tex){const c=MDL_TEX[o.tex];m.map=mdlTex(o.tex,'');m.color.setRGB(m.color.r/c[0],m.color.g/c[1],m.color.b/c[2]);
     m.normalMap=mdlTex(o.tex,'_n');m.normalScale.set(o.relief||0.6,o.relief||0.6);m.roughnessMap=mdlTex(o.tex,'_r');m.roughness=o.rough==null?1:o.rough}
-  if(o.emissive)m.emissive.setHex(o.emissive);if(typeof wetPatch==='function')wetPatch(m);return m}
+  if(o.emissive)m.emissive.setHex(o.emissive);if(o.tex&&!o.noWear)wearPatch(m,o.tex);if(typeof wetPatch==='function')wetPatch(m);return m}
 // a library material (textures/<id>.jpg with its relief and roughness, tools/pbr.py) on a machine: the lowboy's oak deck,
 // its boards turned to run along the trailer
 function mdlLib(id,o){const L=k=>{const t=new THREE.TextureLoader().load(`textures/${id}${k}.jpg`);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.anisotropy=4;
     t.center.set(0.5,0.5);t.rotation=o.turn||0;if(!k)t.colorSpace=THREE.SRGBColorSpace;return t};
   const m=new THREE.MeshStandardMaterial({color:0xffffff,map:L(''),normalMap:L('_n'),roughnessMap:L('_r'),roughness:1,envMap:skyEnv,envMapIntensity:0.6});
   m.normalScale.set(o.relief||1,o.relief||1);if(typeof wetPatch==='function')wetPatch(m);return m}
-function mdlMatsMake(){if(mdlMats)return mdlMats;const P=(h,o)=>mdlStd(h,Object.assign({tex:'paint'},o)),St=(h,o)=>mdlStd(h,Object.assign({tex:'steel',metal:0.65},o));
+function mdlMatsMake(){if(mdlMats)return mdlMats;const P=(h,o)=>mdlStd(h,Object.assign({tex:'paint',coat:1},o)),St=(h,o)=>mdlStd(h,Object.assign({tex:'steel',metal:0.65},o));
   mdlMats={paint:P(0xe8701d),paintD:P(0xb8561a),paintW:P(0xe9ecea),paintR:P(0xb3291f),paintB:P(0x1d3557),paintY:P(0xf2b705),deck:mdlLib('planks',{turn:Math.PI/2}),
-    steel:St(0x2b2d2c),steelL:St(0x55595a),bed:St(0x6c7378,{metal:0.35}),bedD:St(0x4c5257,{metal:0.35}),bucket:St(0x55595a),
+    steel:St(0x2b2d2c),steelL:St(0x55595a),bed:St(0x6c7378,{metal:0.35}),bedD:St(0x4c5257,{metal:0.35}),bucket:St(0x6a6e70,{metal:0.85}),
     chrome:mdlStd(0xc9ccc8,{metal:1,rough:0.18}),rim:mdlStd(0xb9bdbf,{metal:0.85,rough:0.35}),
     rubber:mdlStd(0x1b1c1b,{tex:'rubber',relief:0.8}),track:mdlStd(0x34332f,{tex:'steel',metal:0.5,relief:1}),tire:mdlStd(0x1b1c1b,{tex:'rubber',relief:1}),
     lens:LENS,redL:REDL,amber:AMBER,
     black:mdlStd(0x2a2c2e,{rough:0.55}),
     // the town's cars (townfolk.js gives each its own paint): gloss black trim, textured black plastic, the underside,
     // plates, brake discs and callipers
-    carpaint:mdlStd(0x9aa0a6,{rough:0.22,metal:0.3,env:1.2}),gloss:mdlStd(0x0e0f10,{rough:0.15,env:1.2}),plastic:mdlStd(0x1e1f20,{tex:'rubber',relief:0.4,rough:0.8}),
+    carpaint:mdlStd(0x9aa0a6,{rough:0.35,metal:0.3,env:1.2,coat:1,coatR:0.05}),gloss:mdlStd(0x0e0f10,{rough:0.15,env:1.2}),plastic:mdlStd(0x1e1f20,{tex:'rubber',relief:0.4,rough:0.8,noWear:1}),
     under:mdlStd(0x151617,{rough:0.9}),plate:mdlStd(0xe8e6df,{rough:0.4}),disc:St(0x6b6e70),caliper:mdlStd(0x2b2d30,{rough:0.5}),seat:mdlStd(0x34363a,{rough:0.85}),trim:mdlStd(0x8c8f92,{rough:0.6}),
     // the cab glass (tint) is see-through, so from the seat you look out at the world, not at a dark pane
     mirror:mdlStd(0xdde4ea,{metal:1,rough:0.04}),glass:glass.material,tint:Object.assign(mdlStd(0x1c2328,{rough:0.04,env:1.6}),{transparent:true,opacity:0.45,depthWrite:false}),
@@ -99,7 +145,7 @@ function mdlBoxUV(g){const P=g.attributes.position.array,Nm=g.attributes.normal.
 // a copy of a material for one mesh's own dirt (dirt.js), with the rain's wet look put on again
 // what a mesh's swaps keep (the materials and geometry it had): off userData, which every clone copies through JSON
 const MDL_SIDE=new WeakMap();function mdlSide(o){let u=MDL_SIDE.get(o);if(!u)MDL_SIDE.set(o,u={});return u}
-function mdlClone(m){const c=m.clone();c.userData={};if(typeof wetPatch==='function')wetPatch(c);return c}
+function mdlClone(m){const c=m.clone(),w=m.userData.wear,coat=m.userData.coat;c.userData={};if(coat)c.userData.coat=coat;if(w)wearPatch(c,w);if(typeof wetPatch==='function')wetPatch(c);return c}
 // the game's flat-shaded materials and the physically based ones that stand in for them on the detailed machines
 function mdlPbrMap(){if(mdl.pmap)return mdl.pmap;const m=mdlMatsMake();
   mdl.pmap=new Map([[ORANGE,m.paint],[ORANGE_D,m.paintD],[STEEL,m.steel],[STEEL_L,m.steelL],[CHROME,m.chrome],[RUBBER,m.tire],
@@ -137,7 +183,7 @@ function mdlSort(c){const mx=Math.max(c.r,c.g,c.b),mn=Math.min(c.r,c.g,c.b),sat=
 const MDL_SORTS=['paint','steel','rubber','chrome','glass','lamp'],mdlVC={};
 // the materials for vertex-coloured parts: the vertex colour carries the hue, the photo detail the wear
 function mdlVCMat(sort,side){const key=sort+side;if(mdlVC[key])return mdlVC[key];
-  const o=sort==='paint'?{tex:'paint'}:sort==='steel'?{tex:'steel',metal:0.6}:sort==='rubber'?{tex:'rubber',relief:0.8}:sort==='chrome'?{metal:1,rough:0.2}:sort==='glass'?{rough:0.06,env:1.4}:{rough:0.15,emissive:0x2a261c};
+  const o=sort==='paint'?{tex:'paint',coat:1}:sort==='steel'?{tex:'steel',metal:0.6}:sort==='rubber'?{tex:'rubber',relief:0.8}:sort==='chrome'?{metal:1,rough:0.2}:sort==='glass'?{rough:0.06,env:1.4}:{rough:0.15,emissive:0x2a261c};
   const m=mdlStd(0xffffff,o);m.vertexColors=true;m.side=side;return mdlVC[key]=m}
 // a vertex-coloured geometry regrouped by sort, with box-projected texture coordinates
 function mdlSplit(g){g=g.index?g.toNonIndexed():g;const P=g.attributes.position,Nm=g.attributes.normal,C=g.attributes.color,n=P.count/3,c=new THREE.Color(),tris=MDL_SORTS.map(()=>[]);
@@ -152,7 +198,7 @@ function mdlSplit(g){g=g.index?g.toNonIndexed():g;const P=g.attributes.position,
 const mdlFlat=new Map();
 function mdlFlatPbr(m){if(mdlFlat.has(m))return mdlFlat.get(m);let r=null;
   if(m.type==='MeshPhongMaterial'&&!m.transparent&&!(m.emissive&&m.emissive.getHex())&&!m.vertexColors){const sort=mdlSort(m.color),h=m.color.getHex();
-    r=sort==='paint'?mdlStd(h,{tex:'paint'}):sort==='steel'?mdlStd(h,{tex:'steel',metal:0.6}):sort==='rubber'?mdlStd(h,{tex:'rubber',relief:0.8}):sort==='chrome'?mdlStd(h,{metal:1,rough:0.2}):sort==='glass'?mdlStd(h,{rough:0.06,env:1.4}):null;
+    r=sort==='paint'?mdlStd(h,{tex:'paint',coat:1}):sort==='steel'?mdlStd(h,{tex:'steel',metal:0.6}):sort==='rubber'?mdlStd(h,{tex:'rubber',relief:0.8}):sort==='chrome'?mdlStd(h,{metal:1,rough:0.2}):sort==='glass'?mdlStd(h,{rough:0.06,env:1.4}):null;
     if(r)r.side=m.side}
   mdlFlat.set(m,r);return r}
 // the machines this covers, and what on them is not paintwork (the loads, tinted as they fill)
@@ -210,8 +256,8 @@ function mdlMatOf(k){const m=mdlMatsMake();if(m[k])return m[k];if(mdlNamed[k])re
   const lib=/^lib:([a-z0-9_]+)(:turn)?$/.exec(k),c=/^([a-z]+)#([0-9a-fA-F]{6})$/.exec(k);
   if(lib)r=mdlLib(lib[1],{turn:lib[2]?Math.PI/2:0});
   else if(c){const h=parseInt(c[2],16),t=c[1];
-    r=t==='paint'?mdlStd(h,{tex:'paint'}):t==='steel'?mdlStd(h,{tex:'steel',metal:0.65}):t==='rubber'?mdlStd(h,{tex:'rubber',relief:0.8}):
-      t==='plastic'?mdlStd(h,{tex:'paint',relief:0.25,rough:0.75}):t==='gel'?mdlStd(h,{tex:'gel',relief:0.15,rough:0.55,env:1.1}):t==='matte'?mdlStd(h,{tex:'rubber',relief:0.5}):t==='metal'?mdlStd(h,{metal:1,rough:0.25}):
+    r=t==='paint'?mdlStd(h,{tex:'paint',coat:1}):t==='steel'?mdlStd(h,{tex:'steel',metal:0.65}):t==='rubber'?mdlStd(h,{tex:'rubber',relief:0.8}):
+      t==='plastic'?mdlStd(h,{tex:'paint',relief:0.25,rough:0.75,noWear:1}):t==='gel'?mdlStd(h,{tex:'gel',relief:0.15,rough:0.55,env:1.1,coat:1,noWear:1}):t==='matte'?mdlStd(h,{tex:'rubber',relief:0.5,noWear:1}):t==='metal'?mdlStd(h,{metal:1,rough:0.25}):
       t==='glass'?mdlStd(h,{rough:0.04,env:1.6}):t==='win'?mdlStd(h,{rough:0.06,env:1.4}):t==='glow'?new THREE.MeshBasicMaterial({color:h}):null;
     if(r&&(t==='glow'||t==='win')){r.userData.lit={t,c:new THREE.Color(h)};(mdl.lit=mdl.lit||[]).push(r)}}
   return mdlNamed[k]=r||m.steel}
