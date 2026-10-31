@@ -26,14 +26,20 @@ module.exports=async p=>{const dir=path.join(__dirname,'..','shots','startdet');
       const X=x=>(x-x0)*k,Y=z=>(z-z0)*k,inT=(x,z,m)=>x>x0-m&&x<x0+tx+m&&z>z0-m&&z<z0+tz+m,line=(pts,w,col,dash)=>{g.strokeStyle=col;g.lineWidth=w*k;g.setLineDash(dash?dash.map(v=>v*k):[]);
         g.beginPath();pts.forEach((q,m)=>m?g.lineTo(X(q[0]),Y(q[1])):g.moveTo(X(q[0]),Y(q[1])));g.stroke();g.setLineDash([])};
       g.lineCap='butt';g.lineJoin='round';
-      // the town's paved streets (mainStreets, mainland.js): asphalt, a double yellow line on Main and the cross street,
-      // white crosswalks at the four-way stop
-      for(const r of ISLAND_ROADS){if(r.mid||r.pts.some(q=>q[1]<550))continue;if(!r.pts.some(q=>inT(q[0],q[1],200)))continue;
-        line(r.pts,r.w,'#3b3d40');line(r.pts,r.w*0.9,'#45474a');
-        if(r.w>=6){const o=0.12;line(r.pts.map(q=>r.pts[0][0]===r.pts[1][0]?[q[0]-o,q[1]]:[q[0],q[1]-o]),0.1,'#e8b923');line(r.pts.map(q=>r.pts[0][0]===r.pts[1][0]?[q[0]+o,q[1]]:[q[0],q[1]+o]),0.1,'#e8b923')}}
-      if(inT(0,MST.cz,20)){g.fillStyle='#45474a';g.fillRect(X(-MST.x),Y(MST.cz-MST.cw),2*MST.x*k,2*MST.cw*k);g.fillStyle='#ecebe6';
-        for(let s=-MST.x+0.3;s<MST.x-0.3;s+=0.9){g.fillRect(X(s),Y(MST.cz-MST.cw-2.6),0.45*k,2.2*k);g.fillRect(X(s),Y(MST.cz+MST.cw+0.4),0.45*k,2.2*k)}
-        for(let s=-MST.cw+0.3;s<MST.cw-0.3;s+=0.9){g.fillRect(X(-MST.x-2.6),Y(s+MST.cz),2.2*k,0.45*k);g.fillRect(X(MST.x+0.4),Y(s+MST.cz),2.2*k,0.45*k)}}
+      // the town's paved streets (mainStreets, mainland.js): asphalt, Main Street in brick, and their markings as the game
+      // paints them: double yellow lines broken at the crosswalks, stop bars, crosswalks of wide white bars
+      for(const r of ISLAND_ROADS){if(r.mid||r.pts.some(q=>q[1]<550))continue;if(!r.pts.some(q=>inT(q[0],q[1],200)))continue;line(r.pts,r.w,'#3b3d40');line(r.pts,r.w*0.9,'#45474a')}
+      if(inT(0,MST.cz,180)){const sh=(col,x0,x1,z0,z1)=>{g.fillStyle=col;g.fillRect(X(x0),Y(z0),(x1-x0)*k,(z1-z0)*k)},C0=MST.cz-MST.cw,C1=MST.cz+MST.cw,Xm=MST.x,XE=140,YL='#e3b52a',WH='#ecebe6';
+        for(const t of [-1,1])sh('#45474a',t<0?-XE:Xm,t<0?-Xm:XE,C0,C1);
+        sh('#9a8885',-Xm,Xm,MST.z0,MST.z1);g.fillStyle='rgba(60,40,36,.28)';for(let z=MST.z0;z<MST.z1;z+=0.4)g.fillRect(X(-Xm),Y(z),2*Xm*k,0.07*k);
+        const runs=(a,b,cut)=>{const R=[];let q=a;for(const c of cut.filter(c=>c>a&&c<b).sort((u,v)=>u-v)){R.push([q,c-2.5]);q=c+2.5}R.push([q,b]);return R};
+        for(const o of [-0.12,0.12]){for(const [a,b] of [[MST.z0,C0-6.2],[C1+6.2,MST.z1-0.5]])for(const [z0,z1] of runs(a,b,MST_XW.z))sh(YL,o-0.05,o+0.05,z0,z1);
+          for(const t of [-1,1])for(const [x0,x1] of runs(t<0?-XE:10.5,t<0?-10.5:XE,MST_XW.x))sh(YL,x0,x1,MST.cz+o-0.05,MST.cz+o+0.05)}
+        sh(WH,-Xm+0.4,0,C0-6,C0-5.6);sh(WH,0,Xm-0.4,C1+5.6,C1+6);sh(WH,-10.3,-9.9,MST.cz,C1-0.4);sh(WH,9.9,10.3,C0+0.4,MST.cz);
+        for(let x=-3.6;x<=3.61;x+=0.9)for(const [z0,z1] of [[C0-5,C0-2],[C1+2,C1+5]])sh(WH,x-0.22,x+0.22,z0,z1);
+        for(let z=C0+0.5;z<=C1-0.49;z+=0.9)for(const [x0,x1] of [[-9.3,-6.3],[6.3,9.3]])sh(WH,x0,x1,z-0.22,z+0.22);
+        for(const z of MST_XW.z){for(let x=-3.6;x<=3.61;x+=0.9)sh(WH,x-0.22,x+0.22,z-1.5,z+1.5);sh(WH,-Xm+0.4,0,z-2.9,z-2.5);sh(WH,0,Xm-0.4,z+2.5,z+2.9)}
+        for(const x of MST_XW.x){for(let z=C0+0.5;z<=C1-0.49;z+=0.9)sh(WH,x-1.5,x+1.5,z-0.22,z+0.22);sh(WH,x+2.5,x+2.9,C0+0.4,MST.cz);sh(WH,x-2.9,x-2.5,MST.cz,C1-0.4)}}
       // causeways and bridges: the deck, its edges or railings, and boards on the timber ones
       for(const b of CAUSEWAYS.concat(BRIDGES)){if(!inT((b.x0+b.x1)/2,(b.z0+b.z1)/2,b.len/2+20))continue;const cw=CAUSEWAYS.includes(b),tim=b.temp||b.dock,ft=b.foot;
         g.save();g.translate(X(b.x0),Y(b.z0));g.rotate(Math.atan2(b.uz,b.ux));const L=b.len*k,hw=b.hw*k;
