@@ -1,0 +1,1028 @@
+{
+ "people": [
+  {
+   "id": "island_cal_f",
+   "file": "island_cal_f.glb",
+   "bytes": 542104,
+   "height": 1.64,
+   "lods": {
+    "hi": {
+     "tris": 9123,
+     "verts": 5466
+    },
+    "md": {
+     "tris": 3875,
+     "verts": 2586
+    },
+    "lo": {
+     "tris": 1647,
+     "verts": 1274
+    }
+   },
+   "gender": 0,
+   "age": 38,
+   "tags": [
+    "island",
+    "town"
+   ],
+   "name": "cal_f"
+  },
+  {
+   "id": "island_cal_k",
+   "file": "island_cal_k.glb",
+   "bytes": 561380,
+   "height": 1.38,
+   "lods": {
+    "hi": {
+     "tris": 9242,
+     "verts": 5667
+    },
+    "md": {
+     "tris": 4095,
+     "verts": 2873
+    },
+    "lo": {
+     "tris": 1737,
+     "verts": 1383
+    }
+   },
+   "gender": 1,
+   "age": 10,
+   "tags": [
+    "island",
+    "town"
+   ],
+   "name": "cal_k"
+  },
+  {
+   "id": "island_cal_m",
+   "file": "island_cal_m.glb",
+   "bytes": 543084,
+   "height": 1.78,
+   "lods": {
+    "hi": {
+     "tris": 9130,
+     "verts": 5632
+    },
+    "md": {
+     "tris": 3837,
+     "verts": 2670
+    },
+    "lo": {
+     "tris": 1637,
+     "verts": 1337
+    }
+   },
+   "gender": 1,
+   "age": 42,
+   "tags": [
+    "island",
+    "town"
+   ],
+   "name": "cal_m"
+  },
+  {
+   "id": "island_f15_pack",
+   "file": "island_f15_pack.glb",
+   "bytes": 591336,
+   "height": 1.6,
+   "lods": {
+    "hi": {
+     "tris": 9129,
+     "verts": 5887
+    },
+    "md": {
+     "tris": 3888,
+     "verts": 2765
+    },
+    "lo": {
+     "tris": 1668,
+     "verts": 1366
+    }
+   },
+   "gender": 0,
+   "age": 15,
+   "tags": [
+    "island",
+    "town"
+   ],
+   "name": "f15_pack"
+  },
+  {
+   "id": "island_f16_teen",
+   "file": "island_f16_teen.glb",
+   "bytes": 589688,
+   "height": 1.63,
+   "lods": {
+    "hi": {
+     "tris": 9135,
+     "verts": 6137
+    },
+    "md": {
+     "tris": 4292,
+     "verts": 2986
+    },
+    "lo": {
+     "tris": 2373,
+     "verts": 1849
+    }
+   },
+   "gender": 0,
+   "age": 16,
+   "tags": [
+    "island",
+    "town"
+   ],
+   "name": "f16_teen"
+  },
+  {
+   "id": "island_f25_capri",
+   "file": "island_f25_capri.glb",
+   "bytes": 605892,
+   "height": 1.68,
+   "lods": {
+    "hi": {
+     "tris": 9213,
+     "verts": 5983
+    },
+    "md": {
+     "tris": 4163,
+     "verts": 3028
+    },
+    "lo": {
+     "tris": 1770,
+     "verts": 1492
+    }
+   },
+   "gender": 0,
+   "age": 25,
+   "tags": [
+    "island",
+    "town"
+   ],
+   "name": "f25_capri"
+  },
+  {
+   "id": "island_f25_pink",
+   "file": "island_f25_pink.glb",
+   "bytes": 775272,
+   "height": 1.6,
+   "lods": {
+    "hi": {
+     "tris": 9291,
+     "verts": 7942
+    },
+    "md": {
+     "tris": 4081,
+     "verts": 3722
+    },
+    "lo": {
+     "tris": 1741,
+     "verts": 1815
+    }
+   },
+   "gender": 0,
+   "age": 25,
+   "tags": [
+    "island",
+    "town"
+   ],
+   "name": "f25_pink"
+  },
+  {
+   "id": "island_f28_maroon",
+   "file": "island_f28_maroon.glb",
+   "bytes": 546856,
+   "height": 1.66,
+   "lods": {
+    "hi": {
+     "tris": 9134,
+     "verts": 5961
+    },
+    "md": {
+     "tris": 3811,
+     "verts": 2811
+    },
+    "lo": {
+     "tris": 1627,
+     "verts": 1394
+    }
+   },
+   "gender": 0,
+   "age": 28,
+   "tags": [
+    "island",
+    "town"
+   ],
+   "name": "f28_maroon"
+  },
+  {
+   "id": "island_f30_jog",
+   "file": "island_f30_jog.glb",
+   "bytes": 589932,
+   "height": 1.62,
+   "lods": {
+    "hi": {
+     "tris": 9129,
+     "verts": 5828
+    },
+    "md": {
+     "tris": 3772,
+     "verts": 2654
+    },
+    "lo": {
+     "tris": 1615,
+     "verts": 1270
+    }
+   },
+   "gender": 0,
+   "age": 30,
+   "tags": [
+    "island",
+    "town"
+   ],
+   "name": "f30_jog"
+  },
+  {
+   "id": "island_f35_denim",
+   "file": "island_f35_denim.glb",
+   "bytes": 603524,
+   "height": 1.7,
+   "lods": {
+    "hi": {
+     "tris": 9124,
+     "verts": 5929
+    },
+    "md": {
+     "tris": 3805,
+     "verts": 2679
+    },
+    "lo": {
+     "tris": 1623,
+     "verts": 1243
+    }
+   },
+   "gender": 0,
+   "age": 35,
+   "tags": [
+    "island",
+    "town"
+   ],
+   "name": "f35_denim"
+  },
+  {
+   "id": "island_f45_mom",
+   "file": "island_f45_mom.glb",
+   "bytes": 618040,
+   "height": 1.63,
+   "lods": {
+    "hi": {
+     "tris": 9168,
+     "verts": 6011
+    },
+    "md": {
+     "tris": 3976,
+     "verts": 2982
+    },
+    "lo": {
+     "tris": 1697,
+     "verts": 1478
+    }
+   },
+   "gender": 0,
+   "age": 45,
+   "tags": [
+    "island",
+    "town"
+   ],
+   "name": "f45_mom"
+  },
+  {
+   "id": "island_f50_scrubs",
+   "file": "island_f50_scrubs.glb",
+   "bytes": 597480,
+   "height": 1.65,
+   "lods": {
+    "hi": {
+     "tris": 9219,
+     "verts": 6077
+    },
+    "md": {
+     "tris": 4116,
+     "verts": 3091
+    },
+    "lo": {
+     "tris": 1752,
+     "verts": 1526
+    }
+   },
+   "gender": 0,
+   "age": 52,
+   "tags": [
+    "island",
+    "town"
+   ],
+   "name": "f50_scrubs"
+  },
+  {
+   "id": "island_f55_teal",
+   "file": "island_f55_teal.glb",
+   "bytes": 585920,
+   "height": 1.6,
+   "lods": {
+    "hi": {
+     "tris": 9215,
+     "verts": 6076
+    },
+    "md": {
+     "tris": 4165,
+     "verts": 3126
+    },
+    "lo": {
+     "tris": 1771,
+     "verts": 1521
+    }
+   },
+   "gender": 0,
+   "age": 55,
+   "tags": [
+    "island",
+    "town"
+   ],
+   "name": "f55_teal"
+  },
+  {
+   "id": "island_f70_cardigan",
+   "file": "island_f70_cardigan.glb",
+   "bytes": 646580,
+   "height": 1.6,
+   "lods": {
+    "hi": {
+     "tris": 9200,
+     "verts": 6198
+    },
+    "md": {
+     "tris": 4118,
+     "verts": 3095
+    },
+    "lo": {
+     "tris": 1746,
+     "verts": 1516
+    }
+   },
+   "gender": 0,
+   "age": 72,
+   "tags": [
+    "island",
+    "town"
+   ],
+   "name": "f70_cardigan"
+  },
+  {
+   "id": "island_f80_jacket",
+   "file": "island_f80_jacket.glb",
+   "bytes": 668040,
+   "height": 1.58,
+   "lods": {
+    "hi": {
+     "tris": 9309,
+     "verts": 6179
+    },
+    "md": {
+     "tris": 4444,
+     "verts": 3270
+    },
+    "lo": {
+     "tris": 2163,
+     "verts": 1751
+    }
+   },
+   "gender": 0,
+   "age": 80,
+   "tags": [
+    "island",
+    "town"
+   ],
+   "name": "f80_jacket"
+  },
+  {
+   "id": "island_k7_boy",
+   "file": "island_k7_boy.glb",
+   "bytes": 540544,
+   "height": 1.22,
+   "lods": {
+    "hi": {
+     "tris": 9248,
+     "verts": 5490
+    },
+    "md": {
+     "tris": 3987,
+     "verts": 2622
+    },
+    "lo": {
+     "tris": 1696,
+     "verts": 1281
+    }
+   },
+   "gender": 1,
+   "age": 7,
+   "tags": [
+    "island",
+    "town"
+   ],
+   "name": "k7_boy"
+  },
+  {
+   "id": "island_k8_girl",
+   "file": "island_k8_girl.glb",
+   "bytes": 571148,
+   "height": 1.28,
+   "lods": {
+    "hi": {
+     "tris": 9128,
+     "verts": 5660
+    },
+    "md": {
+     "tris": 3888,
+     "verts": 2682
+    },
+    "lo": {
+     "tris": 1651,
+     "verts": 1323
+    }
+   },
+   "gender": 0,
+   "age": 8,
+   "tags": [
+    "island",
+    "town"
+   ],
+   "name": "k8_girl"
+  },
+  {
+   "id": "island_k9_girl",
+   "file": "island_k9_girl.glb",
+   "bytes": 572832,
+   "height": 1.33,
+   "lods": {
+    "hi": {
+     "tris": 9127,
+     "verts": 5894
+    },
+    "md": {
+     "tris": 3891,
+     "verts": 2765
+    },
+    "lo": {
+     "tris": 1665,
+     "verts": 1331
+    }
+   },
+   "gender": 0,
+   "age": 9,
+   "tags": [
+    "island",
+    "town"
+   ],
+   "name": "k9_girl"
+  },
+  {
+   "id": "island_m14_pack",
+   "file": "island_m14_pack.glb",
+   "bytes": 559556,
+   "height": 1.62,
+   "lods": {
+    "hi": {
+     "tris": 9111,
+     "verts": 5521
+    },
+    "md": {
+     "tris": 3877,
+     "verts": 2670
+    },
+    "lo": {
+     "tris": 1653,
+     "verts": 1266
+    }
+   },
+   "gender": 1,
+   "age": 14,
+   "tags": [
+    "island",
+    "town"
+   ],
+   "name": "m14_pack"
+  },
+  {
+   "id": "island_m15_skate",
+   "file": "island_m15_skate.glb",
+   "bytes": 596480,
+   "height": 1.7,
+   "lods": {
+    "hi": {
+     "tris": 9241,
+     "verts": 5762
+    },
+    "md": {
+     "tris": 4216,
+     "verts": 3006
+    },
+    "lo": {
+     "tris": 1783,
+     "verts": 1495
+    }
+   },
+   "gender": 1,
+   "age": 15,
+   "tags": [
+    "island",
+    "town"
+   ],
+   "name": "m15_skate"
+  },
+  {
+   "id": "island_m17_hoops",
+   "file": "island_m17_hoops.glb",
+   "bytes": 602636,
+   "height": 1.83,
+   "lods": {
+    "hi": {
+     "tris": 9250,
+     "verts": 6070
+    },
+    "md": {
+     "tris": 4021,
+     "verts": 2904
+    },
+    "lo": {
+     "tris": 1703,
+     "verts": 1354
+    }
+   },
+   "gender": 1,
+   "age": 17,
+   "tags": [
+    "island",
+    "town"
+   ],
+   "name": "m17_hoops"
+  },
+  {
+   "id": "island_m25_hoodie",
+   "file": "island_m25_hoodie.glb",
+   "bytes": 554912,
+   "height": 1.8,
+   "lods": {
+    "hi": {
+     "tris": 9246,
+     "verts": 5672
+    },
+    "md": {
+     "tris": 3992,
+     "verts": 2754
+    },
+    "lo": {
+     "tris": 1697,
+     "verts": 1372
+    }
+   },
+   "gender": 1,
+   "age": 25,
+   "tags": [
+    "island",
+    "town"
+   ],
+   "name": "m25_hoodie"
+  },
+  {
+   "id": "island_m30_run",
+   "file": "island_m30_run.glb",
+   "bytes": 608116,
+   "height": 1.78,
+   "lods": {
+    "hi": {
+     "tris": 9127,
+     "verts": 6061
+    },
+    "md": {
+     "tris": 3884,
+     "verts": 2854
+    },
+    "lo": {
+     "tris": 1653,
+     "verts": 1363
+    }
+   },
+   "gender": 1,
+   "age": 30,
+   "tags": [
+    "island",
+    "town"
+   ],
+   "name": "m30_run"
+  },
+  {
+   "id": "island_m30_tee",
+   "file": "island_m30_tee.glb",
+   "bytes": 557972,
+   "height": 1.85,
+   "lods": {
+    "hi": {
+     "tris": 9123,
+     "verts": 5617
+    },
+    "md": {
+     "tris": 3894,
+     "verts": 2730
+    },
+    "lo": {
+     "tris": 1662,
+     "verts": 1300
+    }
+   },
+   "gender": 1,
+   "age": 30,
+   "tags": [
+    "island",
+    "town"
+   ],
+   "name": "m30_tee"
+  },
+  {
+   "id": "island_m35_office",
+   "file": "island_m35_office.glb",
+   "bytes": 529632,
+   "height": 1.74,
+   "lods": {
+    "hi": {
+     "tris": 9129,
+     "verts": 5626
+    },
+    "md": {
+     "tris": 3837,
+     "verts": 2665
+    },
+    "lo": {
+     "tris": 1636,
+     "verts": 1334
+    }
+   },
+   "gender": 1,
+   "age": 35,
+   "tags": [
+    "island",
+    "town"
+   ],
+   "name": "m35_office"
+  },
+  {
+   "id": "island_m35_vest",
+   "file": "island_m35_vest.glb",
+   "bytes": 549704,
+   "height": 1.75,
+   "lods": {
+    "hi": {
+     "tris": 9250,
+     "verts": 5634
+    },
+    "md": {
+     "tris": 4047,
+     "verts": 2749
+    },
+    "lo": {
+     "tris": 1713,
+     "verts": 1346
+    }
+   },
+   "gender": 1,
+   "age": 35,
+   "tags": [
+    "island",
+    "town"
+   ],
+   "name": "m35_vest"
+  },
+  {
+   "id": "island_m40_cargo",
+   "file": "island_m40_cargo.glb",
+   "bytes": 547012,
+   "height": 1.79,
+   "lods": {
+    "hi": {
+     "tris": 9307,
+     "verts": 5561
+    },
+    "md": {
+     "tris": 4119,
+     "verts": 2804
+    },
+    "lo": {
+     "tris": 1749,
+     "verts": 1460
+    }
+   },
+   "gender": 1,
+   "age": 44,
+   "tags": [
+    "island",
+    "town"
+   ],
+   "name": "m40_cargo"
+  },
+  {
+   "id": "island_m40_yard",
+   "file": "island_m40_yard.glb",
+   "bytes": 542128,
+   "height": 1.76,
+   "lods": {
+    "hi": {
+     "tris": 9154,
+     "verts": 5450
+    },
+    "md": {
+     "tris": 3894,
+     "verts": 2636
+    },
+    "lo": {
+     "tris": 1665,
+     "verts": 1390
+    }
+   },
+   "gender": 1,
+   "age": 42,
+   "tags": [
+    "island",
+    "town"
+   ],
+   "name": "m40_yard"
+  },
+  {
+   "id": "island_m50_tie",
+   "file": "island_m50_tie.glb",
+   "bytes": 536528,
+   "height": 1.8,
+   "lods": {
+    "hi": {
+     "tris": 9136,
+     "verts": 5569
+    },
+    "md": {
+     "tris": 3865,
+     "verts": 2609
+    },
+    "lo": {
+     "tris": 1649,
+     "verts": 1277
+    }
+   },
+   "gender": 1,
+   "age": 54,
+   "tags": [
+    "island",
+    "town"
+   ],
+   "name": "m50_tie"
+  },
+  {
+   "id": "island_m60_cap",
+   "file": "island_m60_cap.glb",
+   "bytes": 681700,
+   "height": 1.77,
+   "lods": {
+    "hi": {
+     "tris": 9126,
+     "verts": 6195
+    },
+    "md": {
+     "tris": 3893,
+     "verts": 2948
+    },
+    "lo": {
+     "tris": 1661,
+     "verts": 1417
+    }
+   },
+   "gender": 1,
+   "age": 62,
+   "tags": [
+    "island",
+    "town"
+   ],
+   "name": "m60_cap"
+  },
+  {
+   "id": "island_m65_church",
+   "file": "island_m65_church.glb",
+   "bytes": 608992,
+   "height": 1.76,
+   "lods": {
+    "hi": {
+     "tris": 9135,
+     "verts": 6049
+    },
+    "md": {
+     "tris": 3775,
+     "verts": 2750
+    },
+    "lo": {
+     "tris": 1618,
+     "verts": 1327
+    }
+   },
+   "gender": 1,
+   "age": 66,
+   "tags": [
+    "island",
+    "town"
+   ],
+   "name": "m65_church"
+  },
+  {
+   "id": "island_m70_flannel",
+   "file": "island_m70_flannel.glb",
+   "bytes": 640844,
+   "height": 1.74,
+   "lods": {
+    "hi": {
+     "tris": 9129,
+     "verts": 6193
+    },
+    "md": {
+     "tris": 3835,
+     "verts": 2917
+    },
+    "lo": {
+     "tris": 1638,
+     "verts": 1429
+    }
+   },
+   "gender": 1,
+   "age": 72,
+   "tags": [
+    "island",
+    "town"
+   ],
+   "name": "m70_flannel"
+  }
+ ],
+ "anims": {
+  "file": "anims.glb",
+  "fps": 30,
+  "ref_hip": 0.9628,
+  "ref_pelvis": 0.9742,
+  "ref_height": 1.8162,
+  "wheel": {
+   "center": [
+    0,
+    0.76,
+    0.44
+   ],
+   "radius": 0.19,
+   "tilt": 25
+  },
+  "bars": {
+   "grips": 0.33,
+   "height": 1.08,
+   "z": 0.42,
+   "seat": 0.82,
+   "pegs": [
+    0.22,
+    0.38,
+    0.0
+   ]
+  },
+  "seat": 0.46,
+  "clips": [
+   {
+    "name": "idle",
+    "length": 8.0,
+    "speed": 0,
+    "loop": true,
+    "prop": false,
+    "about": "standing easy, breathing and shifting weight"
+   },
+   {
+    "name": "walk",
+    "length": 1.06,
+    "speed": 1.358,
+    "loop": true,
+    "prop": false,
+    "about": "walking, about 3 mph"
+   },
+   {
+    "name": "run",
+    "length": 0.68,
+    "speed": 3.382,
+    "loop": true,
+    "prop": false,
+    "about": "running, about 7.5 mph"
+   },
+   {
+    "name": "talk",
+    "length": 4.0,
+    "speed": 0,
+    "loop": true,
+    "prop": false,
+    "about": "standing, talking with the hands"
+   },
+   {
+    "name": "wave",
+    "length": 1.6,
+    "speed": 0,
+    "loop": true,
+    "prop": false,
+    "about": "standing, waving the right hand"
+   },
+   {
+    "name": "cheer",
+    "length": 1.2,
+    "speed": 0,
+    "loop": true,
+    "prop": false,
+    "about": "jumping with both fists up"
+   },
+   {
+    "name": "clap",
+    "length": 1.0,
+    "speed": 0,
+    "loop": true,
+    "prop": false,
+    "about": "standing, clapping"
+   },
+   {
+    "name": "point",
+    "length": 4.0,
+    "speed": 0,
+    "loop": true,
+    "prop": false,
+    "about": "pointing ahead with the right hand"
+   },
+   {
+    "name": "sit",
+    "length": 8.0,
+    "speed": 0,
+    "loop": true,
+    "prop": false,
+    "about": "seated on a chair or bleacher (origin on the floor under the seat's middle, seat 18 in)"
+   },
+   {
+    "name": "sit_cheer",
+    "length": 1.4,
+    "speed": 0,
+    "loop": true,
+    "prop": false,
+    "about": "seated, rising with both fists up"
+   },
+   {
+    "name": "sit_clap",
+    "length": 1.0,
+    "speed": 0,
+    "loop": true,
+    "prop": false,
+    "about": "seated, clapping"
+   },
+   {
+    "name": "shovel",
+    "length": 2.6,
+    "speed": 0,
+    "loop": true,
+    "prop": true,
+    "about": "digging with a shovel and tossing to the right (prop: the shovel)"
+   },
+   {
+    "name": "carry",
+    "length": 1.06,
+    "speed": 1.358,
+    "loop": true,
+    "prop": true,
+    "about": "walking with a box or bag held in front (prop: the load)"
+   },
+   {
+    "name": "sandbag",
+    "length": 2.4,
+    "speed": 0,
+    "loop": true,
+    "prop": true,
+    "about": "lifting a sandbag from the ground and laying it ahead to the right (prop: the bag)"
+   },
+   {
+    "name": "drive",
+    "length": 6.0,
+    "speed": 0,
+    "loop": true,
+    "prop": false,
+    "about": "driving: seated 14 in up, hands on the wheel (WHEEL), checking the mirror"
+   },
+   {
+    "name": "ride",
+    "length": 3.6,
+    "speed": 0,
+    "loop": true,
+    "prop": false,
+    "about": "riding a motorbike or ATV: seat 32 in up, hands on the bars, feet on the pegs (BARS)"
+   }
+  ],
+  "drive_seat": 0.36
+ },
+ "from": "human-forge"
+}
