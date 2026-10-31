@@ -57,7 +57,7 @@ Drawn by the game: wet ground darkens and shines in the ground shader as it soak
 
 **G03 Grass, summer** -> `ground/grass.jpg`. Needs: K01, K10
 > [STYLE][TEXTURE] Mown lawn grass seen from above: tight short blades in many directions, mid-green with yellow-green and a few dry straw blades, tiny clover leaves scattered. Blade-level detail.
-In game: `textures/ground/*/grass.jpg`, and the Lawn sod material `textures/grass2.jpg`
+In game: `textures/ground/*/grass.jpg`, and the Lawn sod material `textures/grass2.jpg` (ambientCG Grass006 since v279)
 
 **G04 Grass, long and weedy** -> `ground/grass_long.jpg`. Needs: K08, S10
 > [STYLE][TEXTURE] Unmown field grass seen from above: long blades lying in swirls, golden-green with seed heads, dandelion leaves and a few white clover flowers.
@@ -132,7 +132,7 @@ Upgrade: passable. Since v254 the family house wears a photo-scanned cream clapb
 
 **P07 Cedar shingle roof** -> `materials/shingle_cedar.jpg`. Needs: H01, S22
 > [STYLE][TEXTURE] Weathered cedar shake roof shingles in staggered rows, silver-brown with moss in a few lower edges.
-Close match: `textures/shingles.jpg` is roof shingles; no cedar shakes yet
+Close match: `textures/shingles.jpg` is roof shingles (Poly Haven grey_roof_01 since v279); no cedar shakes yet
 Upgrade: passable. The covered bridge has cedar shakes drawn by the game; since v255 the farmhouse has photo-scanned grey shingles (`textures/roof_grey.jpg`, Poly Haven).
 
 **P08 Red barn board** -> `materials/barn_red.jpg`. Needs: H10, I10
