@@ -11,12 +11,12 @@
 // the area (x0, x1, z0, z1) and the squares' size (m)
 const TURF_BOX=[-192,192,544,784],TURF_W=24,TURF_NX=(TURF_BOX[1]-TURF_BOX[0])/TURF_W,TURF_NZ=(TURF_BOX[3]-TURF_BOX[2])/TURF_W,TURF_C=0.5;
 // the kinds: lawn grass, dandelion, clover, plantain (tuft shapes, scenery.js) and fallen leaves (their own)
-const TURF_TUFT=[0,1,2,4],TURF_KINDS=5,TURF_SWAY=[5,2.5,2.5,2,0],TURF_KR=[0.55,0.6,0.6,0.6,0.7];
+const TURF_TUFT=[0,1,2,4],TURF_KINDS=5,TURF_SWAY=[5,2.5,2.5,2,0],TURF_KR=[0.35,0.55,0.55,0.55,0.7];
 const turf={sq:new Map(),q:-1,t:0,wetT:0};
 // fallen leaves: five flat leaves bent along the midrib and curling up a little at the edges, scattered over 0.45 m;
 // near white with a little mottling, the clump's own colour tints them
 function turfLeafGeo(){let s=77;const R=()=>{s=(s*16807)%2147483647;return s/2147483647},P=[],C=[],A=[];
-  for(let l=0;l<5;l++){const r=Math.sqrt(R())*0.22,a=R()*6.28,cx=Math.cos(a)*r,cz=Math.sin(a)*r,yw=R()*6.28,L=0.07+R()*0.05,W=L*(0.45+R()*0.25),
+  for(let l=0;l<5;l++){const r=Math.sqrt(R())*0.22,a=R()*6.28,cx=Math.cos(a)*r,cz=Math.sin(a)*r,yw=R()*6.28,L=0.09+R()*0.06,W=L*(0.45+R()*0.25),
       c=Math.cos(yw),sn=Math.sin(yw),y0=0.006+l*0.0015,sh=0.75+R()*0.35;
     const at=(u,v,y)=>[cx+u*c-v*sn,y0+y,cz+u*sn+v*c];
     const B=at(-L/2,0,0),T=at(L/2,0,0.004),M=at(0,0,0.002),Lf=at(-L*0.05,W/2,0.012),Rt=at(-L*0.05,-W/2,0.01);
@@ -80,10 +80,11 @@ function turfBuild(si,sj){const X0=TURF_BOX[0]+si*TURF_W,Z0=TURF_BOX[2]+sj*TURF_
     // the lawn's green, deeper in the lush drifts and toward the edges, yellower in the worn and dry ones
     const lu=tuftNoise(bx*0.09+17,bz*0.09+41),dr=ss(0.6,0.85,tuftNoise(bx*0.05+60,bz*0.05+9)),cl=ss(0.5,0.78,tuftNoise(bx*0.18+150,bz*0.18+33)),
       lv=ss(0.42,0.8,tuftNoise(bx*0.07+300,bz*0.07+70));
-    const gc=()=>{const v=0.85+0.3*R(),d=dr*0.6*R();return [(0.19+0.06*lu+0.18*d)*v,(0.33+0.05*lu+0.04*d)*v*(1+0.06*e),(0.11+0.04*lu+0.03*d)*v]};
-    const ng=1+(R()<0.35+0.6*e?1:0);
-    for(let m=0;m<ng;m++){const [x,z]=J(),tall=e>0&&R()<0.6*e;
-      add(0,x,z,0.75+0.4*R(),(tall?0.5+0.3*R():0.26+0.14*R())*(1+0.15*lu),gc(),tall&&R()<0.35?[0.72+0.1*R(),0.66,0.42]:null)}
+    const gc=()=>{const v=0.9+0.3*R(),d=dr*0.6*R();return [(0.22+0.07*lu+0.2*d)*v,(0.38+0.06*lu+0.04*d)*v*(1+0.06*e),(0.12+0.04*lu+0.03*d)*v]};
+    // small upright tufts, two or three to a cell and more along the edges, where they grow taller and some go to seed
+    const ng=2+(R()<0.5?1:0)+(R()<e?2:0);
+    for(let m=0;m<ng;m++){const [x,z]=J(),tall=e>0&&R()<0.6*e,sc=0.3+0.16*R();
+      add(0,x,z,sc,sc*(tall?1.5+0.6*R():0.9+0.4*R())*(1+0.15*lu),gc(),tall&&R()<0.3?[0.72+0.1*R(),0.66,0.42]:null)}
     if(R()<0.04+0.45*cl+0.2*e){const [x,z]=J();add(2,x,z,0.9+0.4*R(),0.8+0.5*R(),[0.18+0.04*R(),0.36+0.05*R(),0.15],R()<0.6?(R()<0.85?[1,0.97,0.94]:[0.95,0.72,0.82]):null)}
     if(R()<0.015+0.18*e){const [x,z]=J();add(1,x,z,0.6+0.4*R(),0.5+0.3*R(),[0.19,0.36,0.14],R()<0.15?[1,0.82,0.16]:null)}
     if(R()<0.01+0.2*e){const [x,z]=J();add(3,x,z,0.6+0.4*R(),0.45+0.3*R(),[0.22,0.37,0.15],R()<0.4?[0.5,0.42,0.28]:null)}
