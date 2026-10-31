@@ -133,10 +133,32 @@ function rmWinAdd(x,y,z,f,w,h){const i=(Math.abs(Math.round(x*7.3+z*3.1+y*5.7)))
 // the panes laid so far as one mesh (called by each part of town once its windows are in; the picture is made once)
 function rmWinsBuild(){if(!RM_WIN.P.length)return;const geo=new THREE.BufferGeometry();
   geo.setAttribute('position',new THREE.Float32BufferAttribute(RM_WIN.P,3));geo.setAttribute('uv',new THREE.Float32BufferAttribute(RM_WIN.U,2));geo.computeVertexNormals();
-  if(!RM_WIN.mat){const [t,te]=rmWinTex();RM_WIN.mat=new THREE.MeshStandardMaterial({map:t,emissiveMap:te,emissive:0x000000,roughness:0.9,color:0x9a9a9a})}
+  if(!RM_WIN.mat){const [t,te]=rmWinTex();RM_WIN.mat=new THREE.MeshStandardMaterial({map:t,emissiveMap:te,emissive:0x000000,roughness:0.9,color:0x9a9a9a});rmWinDeep(RM_WIN.mat)}
   const m=new THREE.Mesh(geo,RM_WIN.mat);m.receiveShadow=true;scene.add(m);RM_WIN.P=[];RM_WIN.U=[]}
+// real depth behind the glass (Medium and up; Low keeps the flat picture): each pane is the front of a room 2.6 m deep,
+// and the view ray through it is followed into that box (interior mapping). Where it meets the back wall it shows the
+// middle of the room's picture (its furniture); the side walls, floor and ceiling take the picture's own wall, floor and
+// ceiling colour from its edges, darker the deeper they go; the curtains hang at the glass. So rooms shift and open up
+// as you walk past instead of sliding by like posters. The pane's frame comes from the screen derivatives of its
+// position and picture coordinates, so it holds for any window, turned any way, and for buildings moved in the editor
+const RM_DEEP={value:0};
+function rmWinDeep(m){m.onBeforeCompile=sh=>{sh.uniforms.uRoomD=RM_DEEP;
+  sh.fragmentShader='uniform float uRoomD;\n'+sh.fragmentShader.replace('#include <map_fragment>',
+    'vec2 rmA=vMapUv,rmG1=dFdx(vMapUv),rmG2=dFdy(vMapUv);float rmK=1.0;\n'+
+    'if(uRoomD>0.0){vec2 pL=vMapUv*4.0,cl=floor(pL),pc=pL-cl;vec3 ps=-vViewPosition,q1=dFdx(ps),q2=dFdy(ps);vec2 s1=dFdx(pL),s2=dFdy(pL);\n'+
+    ' float dt=s1.x*s2.y-s2.x*s1.y;vec3 rT=(q1*s2.y-q2*s1.y)/dt,rB=(q2*s1.x-q1*s2.x)/dt,rN=normalize(cross(rT,rB));if(dot(rN,ps)<0.0)rN=-rN;\n'+
+    ' vec3 dv=normalize(ps);float ra=dot(dv,rT)/dot(rT,rT),rb=dot(dv,rB)/dot(rB,rB),rc=max(dot(dv,rN),1e-3);\n'+
+    ' float tx=ra>0.0?(1.0-pc.x)/ra:-pc.x/min(ra,-1e-5),ty=rb>0.0?(1.0-pc.y)/rb:-pc.y/min(rb,-1e-5),tz=uRoomD/rc,tt=min(tx,min(ty,tz));\n'+
+    ' vec3 h=vec3(pc+tt*vec2(ra,rb),tt*rc);vec2 sc;\n'+
+    ' if(tt==tz)sc=vec2(0.2+0.6*h.x,0.18+0.64*h.y);\n'+
+    ' else if(tt==tx){sc=vec2(ra>0.0?0.85:0.15,0.3+0.4*h.y);rmK=0.82;}\n'+
+    ' else if(rb<0.0)sc=vec2(0.3+0.4*h.x,0.06+0.08*h.z/uRoomD);else sc=vec2(0.3+0.4*h.x,0.95);\n'+
+    ' rmK*=1.0-0.35*h.z/uRoomD;if(pc.x<0.09||pc.x>0.91){sc=pc;rmK=1.0;}rmA=(cl+sc)*0.25;}\n'+
+    'vec4 sampledDiffuseColor=textureGrad(map,rmA,rmG1,rmG2);diffuseColor*=sampledDiffuseColor;diffuseColor.rgb*=rmK;')
+    .replace('#include <emissivemap_fragment>','totalEmissiveRadiance*=textureGrad(emissiveMap,rmA,rmG1,rmG2).rgb*rmK;')};
+  m.customProgramCacheKey=()=>'rmdeep'}
 // the rooms light up as the windows do (daynight.js sets famWinMat's glow)
-function rmWinTick(){if(RM_WIN.mat)RM_WIN.mat.emissive.copy(famWinMat.emissive).multiplyScalar(1.6)}
+function rmWinTick(){if(RM_WIN.mat)RM_WIN.mat.emissive.copy(famWinMat.emissive).multiplyScalar(1.6);RM_DEEP.value=gfxCur.tex==='low'?0:2.6}
 
 // ---------- going in ----------
 // Every shop, the General Store, the brewery and the houses can be walked into: their walls are solids with a gap at the

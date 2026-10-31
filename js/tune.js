@@ -134,6 +134,7 @@ const TUNE=[
   ['fxCon','Screen effects','Contrast of the colour grade (Ultra)',0.3,'pct',0,100,5],['fxSat','Screen effects','Colour strength of the grade',0.97,'pct',50,150,1],
   ['fxVig','Screen effects','Darker corners (vignette)',0.22,'pct',0,80,2],
   // the machines' wear and paint (High, models.js wearPatch)
+  ['exhaust','Machines','How much the engines smoke from their stacks (0 = none)',1,'pct',0,300,5],
   ['machWear','Machines','How worn the machines look: chipped paint, polished and rusty steel, dust (High)',1,'pct',0,200,5],['machCoat','Machines','Gloss of the clear coat on machine paint (High)',0.6,'pct',0,100,5],
   ['fxBounce','Screen effects','Light bounced off nearby things onto others, taking their colour (Ultra, with Contact shade)',1,'pct',0,300,5],
   ['fxContact','Screen effects','Fine sun shadows where small things touch (Ultra, with Contact shade)',0.55,'pct',0,100,5],['fxContactL','Screen effects','How far those fine shadows reach',0.6,'ft',0.1,3,0.05],
