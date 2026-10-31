@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-31T02:32:00Z",
+ "updated": "2026-10-31T02:44:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -90,9 +90,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-30",
-   "dh": 86.75,
+   "dh": 92.75,
    "act": 3.5,
-   "versions": 21
+   "versions": 22
   }
  ],
  "extra": [
@@ -2712,6 +2712,15 @@ window.EFFORT = {
    "tris": 5806695,
    "chars": 1896132,
    "what": "A Shopfolk count beside Townsfolk: the people in shops and houses start each game at shopPop (60) and those shot indoors are gone until the next start"
+  },
+  {
+   "v": 291,
+   "asked": "2026-10-30T21:20:00-05:00",
+   "live": "2026-10-30T21:44:59-05:00",
+   "dh": 6,
+   "tris": 5819051,
+   "chars": 1901026,
+   "what": "Ultra: contact shadows toward the sun, light bouncing nearby colour onto things, sharpening, a far lens blur and a warm-light cool-shade grade (all tunable under Screen effects)"
   }
  ]
 };
