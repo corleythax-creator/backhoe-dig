@@ -78,7 +78,7 @@ function postSize(w,h){if(postRT&&postRT.width===w&&postRT.height===h)return;
   postBl=[];for(let i=1;i<=5;i++)postBl.push(new THREE.WebGLRenderTarget(Math.max(1,w>>i),Math.max(1,h>>i),o))}
 function postOn(){return (POST.ao||POST.bloom||POST.grade)&&!renderer.xr.isPresenting}
 // draws the frame: straight to the screen, or through the effects
-function postRender(){ultraTick();if(!postOn()){renderer.render(scene,camera);return}
+function postRender(){ultraTick();clVolRender();if(!postOn()){renderer.render(scene,camera);return}
   renderer.getDrawingBufferSize(postSz);postSize(postSz.x,postSz.y);
   renderer.setRenderTarget(postRT);renderer.render(scene,camera);
   // the effects' own few draws don't count toward the frame's triangles and draws (fps counter, speed test)
