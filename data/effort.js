@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-31T03:23:00Z",
+ "updated": "2026-10-31T03:29:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -90,9 +90,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-30",
-   "dh": 107.25,
+   "dh": 132.25,
    "act": 4,
-   "versions": 24
+   "versions": 27
   }
  ],
  "extra": [
@@ -2739,6 +2739,33 @@ window.EFFORT = {
    "tris": 5886948,
    "chars": 1919552,
    "what": "Photo-scanned leaf trees in autumn colours, pines from scanned needles, logs and stumps in the woods, split-granite boulders with grass round their feet, clustered on the town's lawns"
+  },
+  {
+   "v": 294,
+   "asked": "2026-10-30T21:45:00-05:00",
+   "live": "2026-10-30T22:24:31-05:00",
+   "dh": 14,
+   "tris": 5900463,
+   "chars": 1934011,
+   "what": "Real 3D clouds: rounded heaps with sunlit tops, grey undersides and glowing edges toward the sun, that roll in dark before a shower, and their shadows drifting across the island (Medium graphics and up)."
+  },
+  {
+   "v": 295,
+   "asked": "2026-10-30T22:15:00-05:00",
+   "live": "2026-10-30T22:27:37-05:00",
+   "dh": 4,
+   "tris": 5901409,
+   "chars": 1935181,
+   "what": "Harbor Square's benches, park lamps, café tables, market stalls, bollards and shade trees are now map editor things you can select, move, copy and delete; townsfolk sit wherever the benches go"
+  },
+  {
+   "v": 296,
+   "asked": "2026-10-30T21:50:00-05:00",
+   "live": "2026-10-30T22:29:49-05:00",
+   "dh": 7,
+   "tris": 5898100,
+   "chars": 1942036,
+   "what": "Machines on High: glossy clear-coated paint, chipped edges, polished and rusty bare steel, dust on top, and caked mud on the bucket and tracks that builds as you dig (Machines tunings)"
   }
  ]
 };
