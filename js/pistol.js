@@ -20,16 +20,18 @@ const GUN_GRIP=0.004,GUN_HEAD=0.84;
 // pistol's is TU.gunRate), spread (rad) and how much each quick shot adds, pellets, reach (times TU.gunRange), reload
 // seconds (shell: a shell at a time), auto: fires while held, long: two hands to the shoulder; in its own frame (x his
 // left, y up, z along the barrel, the origin in his right palm on the grip) the muzzle, where the left hand holds it and
-// the magazine; the bang (filters, pitch, the low thump, loudness, echo, how fast it dies)
+// the magazine; the bang (filters, pitch, the low thump, loudness, echo, how fast it dies); the kick it gives the view
+// (rad: rc, the part of it that stays: rk) and the shake; where the empty case leaves it (ej, out to his right) and which
+// case (cs), and when (after the pump or the bolt: ejT)
 const GUNS={
   pistol:{n:'Service pistol',s:'Pistol',mag:15,max:150,dm:'gunDmgP',rt:0,spr:0.004,bl:0.012,pel:1,rng:1,rl:1.7,muz:[0,0.05,0.18],fore:[0.032,-0.03,0.004],mg:[0,-0.07,-0.012],
-    bang:{lp:7500,hp:180,r:1,th:120,v:1.6,e:0.9,dk:9},d:'15 rounds a magazine. Quick and handy'},
+    bang:{lp:7500,hp:180,r:1,th:120,v:1.6,e:0.9,dk:9},rc:0.04,rk:0.012,sh:0.35,ej:[-0.012,0.045,0.06],cs:'p',ejT:0,d:'15 rounds a magazine. Quick and handy'},
   shotgun:{n:'Pump shotgun',s:'Shotgun',mag:6,max:60,dm:'gunDmgS',rt:0.95,spr:0.05,bl:0,pel:9,rng:0.45,rl:0.55,shell:1,long:1,muz:[0,0.06,0.77],fore:[0,0.008,0.36],mg:[0,0.0,0.14],
-    bang:{lp:4800,hp:90,r:0.72,th:75,v:2.1,e:1.2,dk:6},d:'6 shells of 9 pellets. Brutal up close'},
+    bang:{lp:4800,hp:90,r:0.72,th:75,v:2.1,e:1.2,dk:6},rc:0.1,rk:0.03,sh:1,ej:[-0.025,0.05,0.13],cs:'s',ejT:0.42,d:'6 shells of 9 pellets. Brutal up close'},
   rifle:{n:'Bolt-action rifle',s:'Rifle',mag:5,max:60,dm:'gunDmgR',rt:1.3,spr:0.0012,bl:0,pel:1,rng:3.5,rl:2.6,long:1,muz:[0,0.05,0.97],fore:[0,0.0,0.3],mg:[0,-0.03,0.17],
-    bang:{lp:9500,hp:140,r:0.82,th:95,v:2.3,e:1.5,dk:5},d:'5 rounds and a scope. One shot, a long way off'},
+    bang:{lp:9500,hp:140,r:0.82,th:95,v:2.3,e:1.5,dk:5},rc:0.08,rk:0.02,sh:0.75,ej:[-0.02,0.05,0.12],cs:'r',ejT:0.55,d:'5 rounds and a scope. One shot, a long way off'},
   carbine:{n:'Carbine',s:'Carbine',mag:30,max:300,dm:'gunDmgC',rt:0.095,spr:0.006,bl:0.007,pel:1,rng:2.2,rl:2.2,auto:1,long:1,muz:[0,0.06,0.69],fore:[0,0.032,0.29],mg:[0,-0.07,0.13],
-    bang:{lp:8200,hp:200,r:1.08,th:105,v:1.7,e:1.1,dk:10},d:'30 rounds. Hold to fire'}};
+    bang:{lp:8200,hp:200,r:1.08,th:105,v:1.7,e:1.1,dk:10},rc:0.022,rk:0.009,sh:0.28,ej:[-0.02,0.07,0.07],cs:'c',ejT:0,d:'30 rounds. Hold to fire'}};
 const GUN_K=Object.keys(GUNS);
 const gun={eq:true,on:false,fp:false,aim:0,cool:0,kick:0,flash:0,told:false,shots:0,downs:0,k:'pistol',own:{pistol:1},am:{},rl:0,rlT:0,rlC:0,bl:0,trig:false,shop:null,racked:0};
 for(const k of GUN_K)gun.am[k]=[GUNS[k].mag,GUNS[k].mag*3];
@@ -89,7 +91,7 @@ function gunYaw(){return camMode==='cab'?wk.view:wk.view+orbitYaw}
 // after updateWalker: while aiming he faces the shot and holds the gun out at the shoulder (right arm, wkArms[0])
 function gunTick(dt){gun.cool=Math.max(0,gun.cool-dt);gun.flash=Math.max(0,gun.flash-dt);gun.kick=Math.max(0,gun.kick-dt*6);gun.bl=Math.max(0,gun.bl-dt*0.08);
   for(const p of tf.people)if(p.flee>0){p.flee-=dt;if(p.flee<=0){p.flee=0;if(p.vt0){p.vt=p.vt0;p.vt0=0}}}
-  gunFxTick(dt);if(gun.racked<GUN_SHOPS.length)gunRackFill();
+  gunFxTick(dt);gunCsTick(dt);gunLightTick(dt);if(gun.racked<GUN_SHOPS.length)gunRackFill();
   if(gun.shop&&(mode!=='walk'||Math.hypot(wk.x-gun.shop.x,wk.z-gun.shop.z)>3))gunShopClose();
   const on=gunHas(),fp=on&&camMode==='cab';if(gun.on!==on){gun.on=on;$('#fireBtn').hidden=!on;$('#reloadBtn').hidden=!on;$('#gunHud').hidden=!on;if(on)gunHudDraw()}if(gun.fp!==fp){gun.fp=fp;$('#gunCross').hidden=!fp}
   if(on&&!gun.told&&tf.on){gun.told=true;toast(say('gunTip',{}),'',4200)}
@@ -215,7 +217,7 @@ function gunFire(){if(!gunHas()){if(mode==='walk'&&trim.on)toast(say('gunTrim',{
   const W=gunW(),Am=gun.am[gun.k];if(gun.cool>0)return;
   if(gun.rl>0){if(!(W.shell&&Am[0]>0))return;gun.rl=0;gunHudDraw()}
   if(Am[0]<=0){gun.cool=0.3;gun.trig=false;gunClick('dry');if(Am[1]>0)gunReload();else toast(say('gunNoAmmo',{gun:W.s}),'',2600);return}
-  Am[0]--;gun.cool=W.rt||TU.gunRate;gun.aim=1.4;gun.kick=1;gun.flash=0.05;gun.shots++;started();gunBang(W);gunHudDraw();
+  Am[0]--;gun.cool=W.rt||TU.gunRate;gun.aim=1.4;gun.kick=1;gun.flash=0.05;gun.shots++;started();gunBang(W);gunHudDraw();gunRecoil(W);gun.ejQ.push([W.ejT,gun.k])
   if(W.shell)gunClick('pump',0.32);else if(gun.k==='rifle')gunClick('bolt',0.4);
   const R=TU.gunRange*W.rng,fp=camMode==='cab',d=gunD,o=gunV;
   if(fp){camera.updateMatrixWorld();o.copy(camera.position);camera.getWorldDirection(d)}
@@ -269,6 +271,50 @@ function gunScare(x,z,not){for(const p of tf.people){if(p===not||p.dead||p.hurt|
 // p runs away from the worker: back along their walk if that is the way away, at TU.gunFlee
 function gunRun(p,s){if(p.room||p.drv||p.hurt||p.dead)return;p.wait=0;if(!p.vt0)p.vt0=p.vt;p.vt=TU.gunFlee*(0.85+Math.random()*0.3);p.flee=Math.max(p.flee||0,s);
   if(p.w&&!p.path){const [,,ex,ez]=tfAt(p.w,p.s);p.dir=ex*(p.x-wk.x)+ez*(p.z-wk.z)>=0?1:-1}}
+// ---------- the kick: the view, the light, the smoke, the empty cases ----------
+// a shot kicks the view up (most of it springs back, rk stays and climbs while the carbine runs; first person only, a
+// nudge in the chase view) and shakes it (TU.gunKick, TU.gunShake); the muzzle lights up round him and leaves a wisp
+Object.assign(gun,{cp:0,cy:0,sh:0,ejQ:[],ft:0});
+function gunRecoil(W){const fp=camMode==='cab',k=TU.gunKick;gun.cp+=W.rc*k*(fp?1:0.35);gun.cy+=(Math.random()-0.5)*W.rc*0.5*k*(fp?1:0.35);
+  if(fp)fpl.pitch=Math.min(1.3,fpl.pitch+W.rk*k);gun.sh=Math.min(1.5,gun.sh+W.sh*TU.gunShake);gun.ft=0;
+  gunL(gunV,...W.muz).add(gunH);gunFlashL.position.copy(gunV);if(gunFlashL.parent)gunFlashL.intensity=W.long?16:11;
+  gunFlash.scale.setScalar(W.long?1.3+Math.random()*0.5:0.9+Math.random()*0.4);dustPuff(gunV.x,gunV.y,gunV.z,W.pel>1?0.8:0.4,[0.25,0.25,0.25])}
+// after the camera is set (main.js): the kick and shake on top of it, dying away
+function gunCamFx(dt){if(gun.cp<1e-4&&gun.sh<1e-3&&Math.abs(gun.cy)<1e-4)return;const e=Math.exp(-dt*14);gun.cp*=e;gun.cy*=e;gun.sh*=Math.exp(-dt*11);
+  const t=performance.now()/1000,s=gun.sh*(camMode==='cab'?1:0.6);camera.rotateY(gun.cy+Math.sin(t*71)*0.004*s);camera.rotateX(gun.cp+Math.sin(t*93+1)*0.005*s);camera.rotateZ(Math.sin(t*57+2)*0.006*s);
+  camera.position.y+=Math.sin(t*83)*0.006*s;camera.updateMatrixWorld()}
+// the flash's light: a warm point light at the muzzle for a frame or two, on High and Ultra graphics (a light more for
+// every material to shade, so not on Low and Medium; it joins and leaves the scene when the setting changes)
+const gunFlashL=new THREE.PointLight(0xffb060,0,9,2);gunFlashL.castShadow=false;
+function gunLightTick(dt){const want=!!(gfxCur&&gfxCur.pbr);if(want!==!!gunFlashL.parent){if(want)scene.add(gunFlashL);else scene.remove(gunFlashL)}
+  gun.ft+=dt;if(gunFlashL.parent)gunFlashL.intensity=gunFlashL.intensity>0.05&&gun.ft<0.08?gunFlashL.intensity*Math.exp(-dt*45):0}
+// the empty cases: brass (pistol, rifle, carbine) and the shotgun's red hulls with brass heads, thrown out to his right
+// as each shot goes (the shotgun's at the pump, the rifle's at the bolt), tumbling, bouncing with a tink and lying where
+// they stop; the oldest picked up again (instanced, GUN_CS cases at most; not saved)
+const GUN_CS=160,GUN_CSK={p:[0.0045,0.019],c:[0.0048,0.045],r:[0.0056,0.054],s:[0.0105,0.065]};
+const gunCs=[],gunCsM={};
+{const M=(c,me,ro)=>{const m=new THREE.MeshStandardMaterial({color:c,metalness:me,roughness:ro});m.envMap=skyEnv;m.envMapIntensity=1;return m};
+  const mk=(id,m,cap)=>{const g=new THREE.CylinderGeometry(1,1,1,10);if(cap)g.scale(1.04,cap,1.04).translate(0,-0.5+cap/2,0);const im=new THREE.InstancedMesh(g,m,GUN_CS);im.count=0;im.frustumCulled=false;im.castShadow=true;scene.add(im);gunCsM[id]=im};
+  mk('brass',M(0xc8963c,0.95,0.3));mk('hull',M(0x9a1c18,0.05,0.45));mk('head',M(0xc8963c,0.95,0.3),0.25)}
+let gunCsH=0;
+function gunEject(k){if(!gunHas()||gun.k!==k)return;const W=GUNS[k],C=GUN_CSK[W.cs];gunL(gunP,...W.ej).add(gunH);
+  const o=gunCs[gunCsH]||(gunCs[gunCsH]={p:new THREE.Vector3(),v:new THREE.Vector3(),q:new THREE.Quaternion(),w:new THREE.Vector3()});o.i=gunCsH;gunCsH=(gunCsH+1)%GUN_CS;
+  o.p.copy(gunP);o.v.copy(gunX).multiplyScalar(-(1.6+Math.random()*1.2)).addScaledVector(gunY,1.2+Math.random()*1.2).addScaledVector(gunZ,-0.3-Math.random()*0.4);
+  o.q.setFromUnitVectors(GUN_UP,gunZ);o.w.set((Math.random()-0.5)*30,(Math.random()-0.5)*10,(Math.random()-0.5)*30);o.r=C[0];o.l=C[1];o.s=W.cs==='s';o.live=1;o.b=0;
+  for(const id of ['brass','hull','head'])gunCsM[id].count=Math.max(gunCsM[id].count,Math.min(GUN_CS,gunCs.length))}
+const gunCsQ=new THREE.Quaternion(),gunCsS=new THREE.Vector3(),gunCsZ=new THREE.Matrix4().makeScale(0,0,0);
+function gunCsTick(dt){for(let j=gun.ejQ.length-1;j>=0;j--){const e=gun.ejQ[j];e[0]-=dt;if(e[0]<=0){gun.ejQ.splice(j,1);gunEject(e[1])}}
+  let ch=false;for(const o of gunCs){if(!o||!o.live)continue;ch=true;o.v.y-=9.8*dt;o.p.addScaledVector(o.v,dt);
+    const wl=o.w.length();if(wl>1e-3)o.q.multiply(gunCsQ.setFromAxisAngle(gunCsS.copy(o.w).divideScalar(wl),wl*dt));
+    const g=surfAt(o.p.x,o.p.z)+o.r;if(o.p.y<g){o.p.y=g;if(o.v.y<-0.6&&o.b<3){o.b++;gunTink(o.p,o.s,-o.v.y)}o.v.y=-o.v.y*0.32;o.v.x*=0.55;o.v.z*=0.55;o.w.multiplyScalar(0.5);
+      if(Math.abs(o.v.y)<0.35){o.live=0;o.q.setFromAxisAngle(GUN_UP,Math.random()*6.283).multiply(gunCsQ.setFromAxisAngle(WK_X,Math.PI/2))}}
+    gunCsSet(o)}
+  if(ch)for(const id of ['brass','hull','head'])gunCsM[id].instanceMatrix.needsUpdate=true}
+function gunCsSet(o){gunMM.compose(o.p,o.q,gunCsS.set(o.r,o.l,o.r));gunCsM.brass.setMatrixAt(o.i,o.s?gunCsZ:gunMM);gunCsM.hull.setMatrixAt(o.i,o.s?gunMM:gunCsZ);gunCsM.head.setMatrixAt(o.i,o.s?gunMM:gunCsZ)}
+// a case landing: a bright tink off brass, a dull tap off a plastic hull
+function gunTink(p,hull,v){if(!gunSndOk())return;const c=actx,d=p.distanceTo(camera.position),g=sndVol(sndCfg.fx)*Math.min(1,v/3)*0.35/(1+(d/8)**2);if(g<0.002)return;
+  const t=c.currentTime+Math.random()*0.01,out=sndGain(1,snd.dry);if(hull)gunNz(out,t,'bandpass',900,2,0.05,g);else{gunTone(out,t,5200+Math.random()*1800,4800,0.09,g*0.5);gunNz(out,t,'bandpass',6500,4,0.03,g*0.6)}
+  setTimeout(()=>out.disconnect(),400)}
 // ---------- reloading ----------
 function gunReload(){const W=gunW(),A=gun.am[gun.k];if(!gunHas()||gun.rl>0)return;if(A[0]>=W.mag){toast(say('gunFull',{gun:W.s}),'',1400);return}
   if(A[1]<=0){toast(say('gunNoAmmo',{gun:W.s}),'',2600);return}gun.rl=gun.rlT=W.rl;gun.rlC=0;gun.trig=false;gunHudDraw()}

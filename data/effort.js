@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-31T05:42:00Z",
+ "updated": "2026-10-31T06:04:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -96,9 +96,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-31",
-   "dh": 20,
-   "act": 1,
-   "versions": 3
+   "dh": 34,
+   "act": 1.5,
+   "versions": 4
   }
  ],
  "extra": [
@@ -2853,6 +2853,15 @@ window.EFFORT = {
    "tris": 6035301,
    "chars": 2037563,
    "what": "Names and hailing port on the marina's slip boats; detailed rooftop HVAC units (curb, panelled casing, louvred coils, fan and guard) and capped vent stacks on Main Street"
+  },
+  {
+   "v": 306,
+   "asked": "2026-10-31T00:20:00-05:00",
+   "live": "2026-10-31T01:04:58-05:00",
+   "dh": 14,
+   "tris": 6028549,
+   "chars": 2050563,
+   "what": "Shots kick and shake the view, light up the street and throw out empty cases that tink on the ground; people shot dead go limp as they fall, sprawl on their back or face, bounce as they land and lie along the slope."
   }
  ]
 };
