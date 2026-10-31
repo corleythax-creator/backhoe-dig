@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Saturday, October 31, 2026
 
+- **v304** (12:21 AM) The sky's colours now come from sunlight in the air (deep blue at noon, peach and mauve at dusk); thin high cloud, sunbeams between the clouds, rainbows after rain, and the clouds in the lake and on the paint.
 - **v303** (12:12 AM) Every sign a painted wood board with carved, gilt or shadowed lettering; the runabouts' names in vinyl on their hulls; a waterline stain on every gelcoat hull; Main Street's flat roofs in scanned bitumen with concrete coping
 
 ## Friday, October 30, 2026

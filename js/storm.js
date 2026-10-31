@@ -65,12 +65,12 @@ function clMakeNoise(){const N=64,n=N*N*N,hs=(i,s)=>{const h=Math.sin(i*12.9898+
 const clU={uWx:CS_U.uCSMap,uNz:{value:null},uCam:{value:new THREE.Vector3()},uPI:{value:new THREE.Matrix4()},uCW:{value:new THREE.Matrix4()},
   uSun:{value:new THREE.Vector3()},uSunC:{value:new THREE.Color()},uAmbT:{value:new THREE.Color()},uAmbB:{value:new THREE.Color()},uFog:{value:new THREE.Color()},
   uOff:{value:new THREE.Vector2()},uOff3:{value:new THREE.Vector3()},uTh:{value:0.8},uW:{value:0.1},uDen:{value:0.02},uFlash:{value:0},uFrame:{value:0},
-  uBase:{value:460},uTop:{value:1300},uHaze:{value:5000}};
+  uBase:{value:460},uTop:{value:1300},uHaze:{value:5000},uCir:{value:0},uBeam:{value:0},uBow:{value:0},uMid:{value:800},uSlant:{value:new THREE.Vector2()},uWd:{value:new THREE.Vector2(0.8,0.6)}};
 function clVolMat(q){const Q=CL_Q[q];return new THREE.ShaderMaterial({uniforms:clU,depthTest:false,depthWrite:false,
-  defines:{STEPS:Q.n,LSTEPS:Q.l,DET:Q.det,CL_R:CL_R.toFixed(1),CL_MAXD:CL_MAXD.toFixed(1),CL_MAP:CL_MAP.toFixed(1)},
+  defines:{STEPS:Q.n,LSTEPS:Q.l,DET:Q.det,CL_R:CL_R.toFixed(1),CL_MAXD:CL_MAXD.toFixed(1),CL_MAP:CL_MAP.toFixed(1),CL_CIR:'8000.0'},
   vertexShader:'uniform mat4 uPI,uCW;varying vec3 vD;void main(){vec4 v=uPI*vec4(position.xy,1.0,1.0);vD=mat3(uCW)*(v.xyz/v.w);gl_Position=vec4(position.xy,0.0,1.0);}',
   fragmentShader:'precision highp sampler3D;uniform sampler2D uWx;uniform sampler3D uNz;uniform vec3 uCam,uSun,uSunC,uAmbT,uAmbB,uFog,uOff3;uniform vec2 uOff;\n'+
-    'uniform float uTh,uW,uDen,uFlash,uFrame,uBase,uTop,uHaze;varying vec3 vD;\n'+
+    'uniform float uTh,uW,uDen,uFlash,uFrame,uBase,uTop,uHaze,uCir,uBeam,uBow,uMid;uniform vec2 uSlant,uWd;varying vec3 vD;\n'+
     'float hg(float c,float g){float g2=g*g;return (1.0-g2)/pow(1.0+g2-2.0*g*c,1.5);}\n'+
     'vec2 sph(vec3 o,vec3 d,float r){float b=dot(o,d),c=dot(o,o)-r*r,h=b*b-c;if(h<0.0)return vec2(-1.0);h=sqrt(h);return vec2(-b-h,-b+h);}\n'+
     // how thick the cloud is at p (per m), h its height through the layer (0 base, 1 top)
@@ -79,26 +79,40 @@ function clVolMat(q){const Q=CL_Q[q];return new THREE.ShaderMaterial({uniforms:c
     '  float d=smoothstep(0.0,0.05,h)*smoothstep(0.0,0.25,sqrt(c)*(1.0-0.25*c)-h*0.8);if(d<=0.0)return 0.0;\n'+
     '  vec2 n=texture(uNz,(p+uOff3)/900.0).rg;float a=(1.0-n.r)*(0.55+0.3*h);d=(d-a)/(1.0-a);\n'+
     '  if(det&&d>0.0)d-=(1.0-texture(uNz,(p+uOff3*1.6)/420.0).g)*0.5*(1.0-d)*(1.0-0.4*h);return max(d,0.0)*uDen;}\n'+
+    // a rainbow's colours across its band, x 0 the violet inside edge to 1 the red outside
+    'vec3 bowc(float x){float h=(1.0-x)*0.78;return clamp(vec3(abs(h*6.0-3.0)-1.0,2.0-abs(h*6.0-2.0),2.0-abs(h*6.0-4.0)),0.0,1.0)*sin(x*3.14159);}\n'+
     'void main(){vec3 d=normalize(vD),C=vec3(uCam.x,-CL_R,uCam.z),o=uCam-C;float r0=length(o);\n'+
-    '  vec2 a=sph(o,d,CL_R+uBase),b=sph(o,d,CL_R+uTop);float t0,t1;\n'+
-    '  if(r0<CL_R+uBase){t0=a.y;t1=b.y;}else if(r0<CL_R+uTop){t0=0.0;t1=a.x>0.0?a.x:b.y;}else{if(b.x<0.0){gl_FragColor=vec4(0);return;}t0=b.x;t1=a.x>0.0?a.x:b.y;}\n'+
-    '  t1=min(t1,CL_MAXD);if(t1<=t0){gl_FragColor=vec4(0);return;}\n'+
-    '  float dt=(t1-t0)/float(STEPS),jit=fract(sin(dot(gl_FragCoord.xy,vec2(12.9898,78.233)))*43758.5453+uFrame*0.618034);\n'+
-    '  float cs=dot(d,uSun),ph=0.7*hg(cs,0.6)+0.3*hg(cs,-0.25),T=1.0,tw=0.0,ws=0.0,t=t0+dt*jit;vec3 col=vec3(0.0);\n'+
+    '  vec2 a=sph(o,d,CL_R+uBase),b=sph(o,d,CL_R+uTop);float t0=0.0,t1=-1.0;\n'+
+    '  if(r0<CL_R+uBase){t0=a.y;t1=b.y;}else if(r0<CL_R+uTop){t0=0.0;t1=a.x>0.0?a.x:b.y;}else if(b.x>=0.0){t0=b.x;t1=a.x>0.0?a.x:b.y;}\n'+
+    '  t1=min(t1,CL_MAXD);float jit=fract(sin(dot(gl_FragCoord.xy,vec2(12.9898,78.233)))*43758.5453+uFrame*0.618034);\n'+
+    '  float cs=dot(d,uSun),T=1.0,tw=0.0,ws=0.0;vec3 col=vec3(0.0);\n'+
+    '  if(t1>t0){float dt=(t1-t0)/float(STEPS),ph=min(4.0,0.5*hg(cs,0.6)+0.5*hg(cs,-0.25)),t=t0+dt*jit;\n'+
     // long strides through clear air, short ones inside a cloud
     '  float di=max(10.0,dt*0.3);\n'+
     '  for(int i=0;i<STEPS*3;i++){if(t>t1)break;vec3 p=uCam+d*t;float h=(length(p-C)-CL_R-uBase)/(uTop-uBase),s=dens(p,h,DET==1),st=s>0.00005?di:dt;\n'+
-    '    if(s>0.00005){float od=0.0,ls=26.0*(0.7+0.6*jit);vec3 q=p;\n'+
-    '      for(int j=0;j<LSTEPS;j++){q+=uSun*ls;od+=dens(q,(length(q-C)-CL_R-uBase)/(uTop-uBase),false)*ls;ls*=1.6;}\n'+
+    '    if(s>0.00005){float od=0.0,ls=30.0*(0.7+0.6*jit);vec3 q=p;\n'+
+    '      for(int j=0;j<LSTEPS;j++){q+=uSun*ls;od+=dens(q,(length(q-C)-CL_R-uBase)/(uTop-uBase),false)*ls;ls*=1.75;}\n'+
     // light through the cloud toward the sun, with a softer second lobe for light scattered many times
-    '      float lt=max(exp(-od),0.6*exp(-0.22*od)),pw=1.0-0.55*exp(-od*1.5);\n'+
-    '      vec3 L=uSunC*lt*ph*pw+mix(uAmbB,uAmbT,clamp(h*1.4,0.0,1.0));float ts=exp(-s*st);\n'+
+    '      float pw=1.0-0.55*exp(-od*1.5);\n'+
+    '      vec3 L=uSunC*(exp(-od)*ph+0.6*exp(-0.22*od)*0.9)*pw+mix(uAmbB,uAmbT,clamp(h*1.4,0.0,1.0));float ts=exp(-s*st);\n'+
     '      col+=T*L*(1.0-ts);tw+=T*(1.0-ts)*t;ws+=T*(1.0-ts);T*=ts;if(T<0.015)break;}\n'+
-    '    t+=st;}\n'+
-    '  float A=1.0-T;if(A<0.002){gl_FragColor=vec4(0);return;}\n'+
-    '  float md=tw/max(ws,1e-5),fd=1.0-smoothstep(CL_MAXD*0.55,CL_MAXD,md);\n'+
-    '  col=mix(col,uFog*A,1.0-exp(-md/uHaze));col+=uFlash*vec3(0.75,0.8,1.0)*A;\n'+
-    '  gl_FragColor=vec4(col*fd,A*fd);}'})}
+    '    t+=st;}}\n'+
+    '  float A=1.0-T;if(A>0.002){float md=tw/max(ws,1e-5),fd=1.0-smoothstep(CL_MAXD*0.55,CL_MAXD,md);\n'+
+    '    col=mix(col,uFog*A,1.0-exp(-md/uHaze));col+=uFlash*vec3(0.75,0.8,1.0)*A;col*=fd;A*=fd;}else{col=vec3(0.0);A=0.0;}\n'+
+    // high thin cloud about 26,000 ft up behind the heaps: streaks drawn out along the wind, in patches
+    '  if(uCir>0.001&&d.y>-0.01){float tc=sph(o,d,CL_R+CL_CIR).y;if(tc>0.0){vec2 w=(uCam+d*tc).xz+uOff*1.8,q=vec2(dot(w,uWd),dot(w,vec2(-uWd.y,uWd.x)));\n'+
+    '    float n=texture(uNz,vec3(q.x/16000.0,q.y/3000.0,0.31)).r*0.6+texture(uNz,vec3(q.x/5200.0,q.y/900.0,0.73)).g*0.4,pa=texture(uWx,w/(CL_MAP*4.0)).r;\n'+
+    '    float cc=smoothstep(0.55,0.9,n*0.75+pa*0.45-0.35*(1.0-uCir))*uCir*(1.0-smoothstep(30000.0,60000.0,tc))*smoothstep(-0.01,0.05,d.y);\n'+
+    '    vec3 lc=uSunC*(0.5+0.1*hg(cs,0.7))+uAmbT;lc=mix(lc,uFog,1.0-exp(-tc/(uHaze*7.0)));float ca=cc*0.5;col+=(1.0-A)*lc*ca;A+=(1.0-A)*ca;}}\n'+
+    // sunbeams: the haze under the clouds lit by the sun between their shadows, out to the cloud base, brightest near the sun
+    '  if(uBeam>0.001&&d.y>-0.05){float tb=t1>t0?min(t0,3000.0):3000.0,sb=tb/8.0,li=0.0;\n'+
+    '    for(int i=0;i<8;i++){vec3 p=uCam+d*(sb*(float(i)+jit));li+=1.0-smoothstep(uTh,uTh+0.1,texture(uWx,(p.xz+uSlant*(uMid-p.y)+uOff)/CL_MAP).r);}\n'+
+    '    col+=uSunC*min(8.0,hg(cs,0.7))*0.03*uBeam*(li/8.0-uTh*0.85)*(tb/3000.0)*(1.0-A*0.7);}\n'+
+    // a rainbow opposite the sun after rain while the sun shines: the bow at 42 degrees, the fainter second bow outside
+    // it the other way round, and the sky a little brighter inside
+    '  if(uBow>0.001&&d.y>0.0){float ang=degrees(acos(clamp(-cs,-1.0,1.0))),x1=(ang-40.4)/2.2,x2=(53.8-ang)/3.4;vec3 rb=vec3(0.04)*smoothstep(40.6,36.0,ang);\n'+
+    '    if(x1>0.0&&x1<1.0)rb+=bowc(x1);if(x2>0.0&&x2<1.0)rb+=bowc(x2)*0.35;col+=rb*uBow*0.3*(1.0-A*0.85)*smoothstep(0.0,0.08,d.y);}\n'+
+    '  gl_FragColor=vec4(col,A);}'})}
 // laid over the sky: a ball round the camera drawn at the far plane, so anything nearer (the mountains too) hides the clouds
 const clLay=new THREE.Mesh(new THREE.SphereGeometry(2300,32,16),new THREE.ShaderMaterial({uniforms:{uRT:{value:null},uRes:{value:new THREE.Vector2(1,1)}},
   transparent:true,depthWrite:false,fog:false,side:THREE.BackSide,blending:THREE.CustomBlending,blendSrc:THREE.OneFactor,blendDst:THREE.OneMinusSrcAlphaFactor,
@@ -142,21 +156,44 @@ const clSunC=new THREE.Color();
 function clVolTick(dt,cv,off){const q=gfxCur.cloudQ|0,on=q>0&&!renderer.xr.isPresenting&&!!CL_Q[q];
   if(on&&!clU.uNz.value){CS_U.uCSMap.value=clMakeMap();clU.uNz.value=clMakeNoise()}
   clV.on=on;clV.q=q;clLay.visible=on;clouds.visible=!on;
-  if(!on){CS_U.uCSA.value.w=0;return}
+  if(!on){CS_U.uCSA.value.w=0;clEnv.visible=false;return}
   // the share of sky covered: a few fair-weather heaps on a dry day, a solid grey deck before a shower
   const cover=0.06+0.94*Math.pow(cv,1.15),th=1-cover,base=TU.clBase,thick=TU.clDense;
   clU.uTh.value=Math.max(0.0,th-0.04);clU.uW.value=0.22+0.1*cv;clU.uOff.value.copy(off);
   clU.uOff3.value.x=off.x*0.25;clU.uOff3.value.z=off.y*0.25;clU.uOff3.value.y=(clU.uOff3.value.y+dt*1.2)%1e5;
   clU.uBase.value=base-80*ss(0.5,1,cv);clU.uTop.value=base+420+700*ss(0.3,0.9,cv);
-  clU.uDen.value=0.012*thick*(1+2.5*ss(0.4,1,cv));clU.uHaze.value=4200*gfxFog*(1-0.55*ss(0.4,1,cv));
+  clU.uDen.value=0.03*thick*(1+2.5*ss(0.4,1,cv));clU.uHaze.value=4200*gfxFog*(1-0.55*ss(0.4,1,cv));
   // lit by the sun (or the moon at night) as it reaches the land, rain and all, and by the sky's own colour
   clU.uSun.value.copy(LIGHT_DIR);clSunC.copy(sun.color).multiplyScalar(1.5*sun.intensity/SUN_I);clU.uSunC.value.copy(clSunC);
-  const amb=clU.uAmbT.value.copy(skyU.uHor.value).lerp(skyU.uTop.value,0.45).multiplyScalar(1.05*(1-0.45*ss(0.5,1,cv)));
+  const amb=clU.uAmbT.value.copy(skyU.uTop.value).lerp(skyU.uHor.value,0.35).multiplyScalar(0.85*(1-0.45*ss(0.5,1,cv)));
   amb.lerp(DAY.cloud,0.25*DAY.lum);clU.uAmbB.value.copy(amb).multiplyScalar(0.5);
   clU.uFog.value.copy(scene.fog.color);clU.uFlash.value=cloudMat.uniforms.uFlash.value;
   // the shadows: the same cover cast down the sun's slant; softer once the whole sky is grey (the sun is gone then)
   const sy=Math.max(0.12,LIGHT_DIR.y),S=CS_U;S.uCSA.value.set(off.x,off.y,1/CL_MAP,TU.clShadow*ss(-2,8,dn.el)*(1-0.7*ss(0.55,0.95,cv)));
-  S.uCSB.value.set(LIGHT_DIR.x/sy,LIGHT_DIR.z/sy,(clU.uBase.value+clU.uTop.value)*0.5-0.15*(clU.uTop.value-clU.uBase.value),clU.uTh.value+0.02);S.uCSW.value=0.16}
+  S.uCSB.value.set(LIGHT_DIR.x/sy,LIGHT_DIR.z/sy,(clU.uBase.value+clU.uTop.value)*0.5-0.15*(clU.uTop.value-clU.uBase.value),clU.uTh.value+0.02);S.uCSW.value=0.16;
+  clU.uSlant.value.set(S.uCSB.value.x,S.uCSB.value.y);clU.uMid.value=S.uCSB.value.z;
+  // high thin cloud: some on a fair day, more as a front comes in ahead of the rain, hidden once the deck closes over
+  clU.uCir.value=TU.clCirrus*(0.45+0.55*ss(0.2,0.6,cv))*(1-ss(0.7,0.95,cv));
+  // sunbeams where the sun breaks between the clouds: none from a clear sky or a solid grey one
+  clU.uBeam.value=TU.clBeams*ss(0.12,0.35,cv)*(1-ss(0.75,0.95,cv))*ss(-1,4,dn.el);
+  // a rainbow: rain in the air (a while after it stops too) with the sun out behind you, below 42 degrees up
+  clV.wet=Math.max((clV.wet||0)-dt/240,ss(0.04,0.3,weather.r));
+  clU.uBow.value=TU.clRainbow*clV.wet*skySunVis.value*ss(0.5,4,dn.el)*(1-ss(36,42,dn.el));
+  clEnvTick()}
+// the clouds in the reflections (core.js skyEnv): the same cover seen on a plane through the clouds' middle, plainly lit,
+// in the dome-and-ground scene the reflections are caught from; daynight.js catches it again as they drift
+const clEnv=new THREE.Mesh(new THREE.SphereGeometry(1000,32,16),new THREE.ShaderMaterial({side:THREE.BackSide,transparent:true,depthWrite:false,fog:false,
+  uniforms:{uWx:CS_U.uCSMap,uOff:clU.uOff,uTh:clU.uTh,uW:clU.uW,uSunC:clU.uSunC,uAmb:clU.uAmbT,uFog:clU.uFog,uMid:clU.uMid,uSun:clU.uSun,uC:{value:new THREE.Vector2()}},
+  vertexShader:'varying vec3 vD;void main(){vD=position;gl_Position=projectionMatrix*modelViewMatrix*vec4(position,1.0);}',
+  fragmentShader:'uniform sampler2D uWx;uniform vec2 uOff,uC;uniform float uTh,uW,uMid;uniform vec3 uSunC,uAmb,uFog,uSun;varying vec3 vD;\n'+
+    'void main(){vec3 d=normalize(vD);if(d.y<0.02){gl_FragColor=vec4(0.0);return;}float t=min(uMid/d.y,12000.0);\n'+
+    '  float c=clamp((texture2D(uWx,(uC+d.xz*t+uOff)/'+CL_MAP.toFixed(1)+').r-uTh)/uW,0.0,1.0),a=smoothstep(0.0,0.5,c)*(1.0-smoothstep(5000.0,12000.0,t));\n'+
+    '  vec3 col=mix(uSunC*(0.55+0.35*max(0.0,dot(d,uSun)))+uAmb*0.8,uAmb*0.7,smoothstep(0.3,1.0,c)*0.6);col=mix(col,uFog,smoothstep(1500.0,9000.0,t));\n'+
+    '  gl_FragColor=vec4(col,a);}'}));
+clEnv.renderOrder=1;clEnv.visible=false;skyEnvScene.add(clEnv);
+function clEnvTick(){clEnv.visible=clV.on;clEnv.material.uniforms.uC.value.set(camera.position.x,camera.position.z)}
+// what daynight.js compares to know the reflections need catching again: the clouds every 60 m of drift
+function clEnvSig(){return clV.on?Math.round(clU.uOff.value.x/60)+'/'+Math.round(clU.uOff.value.y/60)+'/'+Math.round(clU.uTh.value*40):''}
 
 // ---------- curtains of rain out over the water ----------
 // each is a tall streaky sheet turned to the camera, from the lake up into the cloud, 500 to 1,300 m out; they drift with
