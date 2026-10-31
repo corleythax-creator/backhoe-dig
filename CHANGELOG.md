@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Saturday, October 31, 2026
 
+- **v320** (4:39 PM) If the phone's connection drops one of the game's files while loading, the page loads again by itself instead of stopping on an error like "Can't find variable: snd"
 - **v319** (4:11 PM) Digging no longer gets slower the longer you dig: the ground only settles and redraws round what just changed (a long dig had it redoing the whole site every frame, 40+ ms), the grass only follows the ground where it changed, and the speed tests wait for the game to finish warming up
 - **v318** (12:19 PM) Cloud noise textures build a few milliseconds a frame instead of one multi-second freeze when the game loads
 - **v317** (11:22 AM) Cars and townsfolk have their shaders built and pictures uploaded in the background before they show, so town no longer stutters as they spawn; you start on foot in first person with mouse look
