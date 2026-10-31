@@ -129,7 +129,10 @@ function tfLoad(){if(tf.load)return;tf.load=1;const B='models/peds/',lod=gfxCur.
   Promise.all([j('peds.json').then(r=>r.json()),j('folk.json').then(r=>r.json()),j('folk_'+lod+'.bin').then(r=>r.arrayBuffer())]).then(([ch,fk,buf])=>{
     const by={};for(const f of fk.chars)by[f.id]=f;tf.chars=ch.chars.filter(c=>by[c.id]);for(const c of tf.chars)c.folk=by[c.id];
     tf.use=new Array(tf.chars.length).fill(0);tfMeshes(buf,lod,B+(lod==='hi'?'folk/':'folk_lo/'));tf.load=2}).catch(e=>{console.warn('townsfolk:',e);tf.load=-1});
-  mdlLoad('cars',sc=>{const top=sc.getObjectByName('cars')||sc;for(const k in TF_CARS){const hi=top.getObjectByName(k),lo=top.getObjectByName(k+'_lo');if(hi&&lo)tfCarModel(k,hi,lo)}})}
+  mdlLoad('cars',sc=>{const top=sc.getObjectByName('cars')||sc;for(const k in TF_CARS){const hi=top.getObjectByName(k),lo=top.getObjectByName(k+'_lo');if(hi&&lo)tfCarModel(k,hi,lo)}
+    // no car drives in until every kind's shaders and pictures are ready (gpuWarm, main.js), so none stalls a frame
+    const W=new THREE.Group();for(const k in tf.cars){const g=tf.cars[k].g.clone(true);g.traverse(o=>{if(o.userData.paint)o.material=tfCarPaint(0.5)});W.add(g)}
+    gpuWarm(W).then(()=>{tf.carsOk=1})})}
 // one character's mesh from the packed file (layout in tools/peds/pack_folk.py)
 function tfGeo(buf,r){const g=new THREE.BufferGeometry(),nv=r.nv,n=new Int8Array(buf,r.n,nv*4),N=new Float32Array(nv*3),k=new Uint8Array(buf,r.sk,nv*4),K=new Float32Array(nv*3);
   for(let i=0;i<nv;i++){N[3*i]=n[4*i]/127;N[3*i+1]=n[4*i+1]/127;N[3*i+2]=n[4*i+2]/127;K[3*i]=k[4*i];K[3*i+1]=k[4*i+1];K[3*i+2]=k[4*i+2]/255}
@@ -140,17 +143,20 @@ function tfGeo(buf,r){const g=new THREE.BufferGeometry(),nv=r.nv,n=new Int8Array
 // eyebrows and glasses cut out of the texture
 function tfMeshes(buf,lod,texDir){const cap=TF_N[3][0]+TF_N[3][1]+4+TF_ROOM_CAP;tf.M={};
   for(const c of tf.chars){const f=c.folk,J=f.joint,uJ={value:new THREE.Vector4(J.knee,J.hip,J.elbow,J.shoulder)};
-    const mat=new THREE.MeshStandardMaterial({roughness:0.86,envMap:skyEnv,envMapIntensity:0.5,alphaTest:0.5,side:THREE.DoubleSide,color:0x808080});
-    mat.onBeforeCompile=sh=>{sh.uniforms.uJ=uJ;sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\n'+TF_GLSL)
-      .replace('#include <beginnormal_vertex>','#include <beginnormal_vertex>\nvec3 pdP=position,pdN=objectNormal;pdSkin(pdP,pdN);objectNormal=pdN;')
-      .replace('#include <begin_vertex>','#include <begin_vertex>\ntransformed=pdP;')};
-    mat.customProgramCacheKey=()=>'townfolk2';
-    const g=tfGeo(buf,f[lod]),walk=new THREE.InstancedBufferAttribute(new Float32Array(cap*4),4);walk.setUsage(THREE.DynamicDrawUsage);g.setAttribute('aWalk',walk);
+    const mat=tfMat(uJ),g=tfGeo(buf,f[lod]),walk=new THREE.InstancedBufferAttribute(new Float32Array(cap*4),4);walk.setUsage(THREE.DynamicDrawUsage);g.setAttribute('aWalk',walk);
     const m=new THREE.InstancedMesh(g,mat,cap);m.count=0;m.frustumCulled=false;m.castShadow=!!gfxCur.pbr;m.receiveShadow=true;m.instanceMatrix.setUsage(THREE.DynamicDrawUsage);m.visible=tf.on;
-    scene.add(m);tf.M[c.id]={m,walk,n:0,cap,tex:texDir+c.id+'.webp'}}}
+    scene.add(m);tf.M[c.id]={m,walk,n:0,cap,tex:texDir+c.id+'.webp'}}
+  // the textured look's shader, built now in the background so the first picture to arrive doesn't stall a frame
+  const c0=tf.chars[0];if(c0){const W=new THREE.InstancedMesh(tf.M[c0.id].m.geometry,tfMat({value:new THREE.Vector4()}),1),t=new THREE.DataTexture(new Uint8Array(4),1,1);
+    t.colorSpace=THREE.SRGBColorSpace;t.needsUpdate=true;W.material.map=t;W.material.color.set(0xffffff);W.castShadow=!!gfxCur.pbr;gpuWarm(W)}}
+function tfMat(uJ){const mat=new THREE.MeshStandardMaterial({roughness:0.86,envMap:skyEnv,envMapIntensity:0.5,alphaTest:0.5,side:THREE.DoubleSide,color:0x808080});
+  mat.onBeforeCompile=sh=>{sh.uniforms.uJ=uJ;sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\n'+TF_GLSL)
+    .replace('#include <beginnormal_vertex>','#include <beginnormal_vertex>\nvec3 pdP=position,pdN=objectNormal;pdSkin(pdP,pdN);objectNormal=pdN;')
+    .replace('#include <begin_vertex>','#include <begin_vertex>\ntransformed=pdP;')};
+  mat.customProgramCacheKey=()=>'townfolk2';return mat}
 // a character's texture, the first time someone in town wears it
 function tfTex(B){if(B.texing)return;B.texing=1;new THREE.TextureLoader().load(B.tex,t=>{t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=4;
-  const M=B.m.material;M.map=t;M.color.set(0xffffff);M.needsUpdate=true},undefined,()=>{})}
+  gpuUp([t]).then(()=>{const M=B.m.material;M.map=t;M.color.set(0xffffff);M.needsUpdate=true})},undefined,()=>{})}
 // ---------- Human Forge (High and Ultra graphics, gfxCur.forge): the same 32 people rigged with a skeleton and real
 // animation clips (models/people, from the human-forge repo; README "Townsfolk"), one GPU-skinned crowd per character
 // in use. The runtime loads with the townsfolk (near town only); until it and a character's crowd are ready, or if
@@ -164,7 +170,8 @@ function tfForge(){const F=tf.F||(tf.F={st:0});if(F.st||!gfxCur.forge)return;F.s
 // person's size (the clip's own speed is a 6 ft person's)
 function tfForgeCrowd(B,id){B.fg=1;const F=tf.F;
   F.f.preload(['island_'+id]).then(([t])=>{tfDieClips(t);return F.f.crowd('island_'+id,{max:B.cap,clips:TF_FG_CLIPS,lod:gfxCur.forge,castShadow:true,receiveShadow:true}).then(c=>{const m=c.object,M=m.material;
-    M.roughness=0.86;M.envMap=skyEnv;M.envMapIntensity=0.5;m.castShadow=!!gfxCur.pbr;m.visible=false;c.stride=F.f.clips.walk.speed*c.type.hip/F.ref;c.runS=(F.f.clips.run||F.f.clips.walk).speed*c.type.hip/F.ref;scene.add(m);B.fg=c})})
+    M.roughness=0.86;M.envMap=skyEnv;M.envMapIntensity=0.5;m.castShadow=!!gfxCur.pbr;m.visible=false;c.stride=F.f.clips.walk.speed*c.type.hip/F.ref;c.runS=(F.f.clips.run||F.f.clips.walk).speed*c.type.hip/F.ref;scene.add(m);
+      return gpuWarm(m).then(()=>{B.fg=c})})})
     .catch(e=>console.warn('townsfolk forge:',id,e))}
 // person p as instance i of crowd c: walking (pace = their speed), sitting (the clip's origin is on the floor under the
 // seat's middle, its seat 18 in up like the rooms' chairs and benches), driving (its seat 14 in up: lifted to where the
@@ -199,7 +206,8 @@ function tfUhPick(cx,cz){const F=tf.F,U=F.uh||(F.uh={free:[],res:[],busy:0}),R=T
 function tfUhUse(id){const U=tf.F.uh,i=U.res.indexOf(id);if(i>=0)U.res.splice(i,1);U.res.push(id)}
 function tfUhLoad(body){const F=tf.F,U=F.uh,id='island_'+body;U.busy=1;tfUhUse(id);
   F.f.hero(id,{ultra:true,autoLod:false,castShadow:!!gfxCur.pbr,receiveShadow:true}).then(h=>{U.busy=0;if(!h.ultra){h.dispose();return}
-    h.object.traverse(o=>{if(o.isMesh){const M=o.material;M.envMap=skyEnv;M.envMapIntensity=0.5;o.castShadow=!!gfxCur.pbr}});h.object.visible=false;scene.add(h.object);(U.types||(U.types={}))[id]=h.type;tfUhPool(h)})
+    h.object.traverse(o=>{if(o.isMesh){const M=o.material;M.envMap=skyEnv;M.envMapIntensity=0.5;o.castShadow=!!gfxCur.pbr}});h.object.visible=false;scene.add(h.object);(U.types||(U.types={}))[id]=h.type;
+    U.busy=1;return gpuWarm(h.object).then(()=>{U.busy=0;tfUhPool(h)})})
     .catch(e=>{U.busy=0;console.warn('townsfolk ultra:',id,e)})}
 function tfUhFree(p){const h=p.uh;p.uh=null;h.object.visible=false;tfUhPool(h)}
 // into the pool, dropping the oldest idle hero past TF_UH_POOL; then free the GPU copies of characters past TF_UH_KEEP
@@ -470,7 +478,7 @@ function tfRoomStep(p,dt){const sp=p.spot,R=p.room;
 // each always the same kind and colour; solid while shown (they come and go with the townsfolk)
 const TF_CAR_HI=45;
 function tfParkedShow(on){if(on===tf.parkedOn)return;tf.parkedOn=on;const ks=Object.keys(TF_CARS);
-  if(on&&!tf.parked.length&&ks.every(k=>tf.cars[k]))TF_PARKED.forEach((P,i)=>{const h=hash(P.x*0.37+1.3,P.z*0.71-0.4),k=P.k||ks[Math.floor(h*ks.length)%ks.length],M=tf.cars[k],g=M.g.clone(true);
+  if(on&&!tf.parked.length&&tf.carsOk&&ks.every(k=>tf.cars[k]))TF_PARKED.forEach((P,i)=>{const h=hash(P.x*0.37+1.3,P.z*0.71-0.4),k=P.k||ks[Math.floor(h*ks.length)%ks.length],M=tf.cars[k],g=M.g.clone(true);
     g.traverse(o=>{if(o.userData.paint)o.material=tfCarPaint(hash(P.z*0.53,P.x*0.29+2.2))});g.position.set(P.x,P.y,P.z);g.rotation.y=P.yaw;scene.add(g);
     const c=Math.abs(Math.cos(P.yaw)),s=Math.abs(Math.sin(P.yaw));tf.parked.push({g,x:P.x,z:P.z,sol:{x:P.x,z:P.z,hx:(s*M.len+c*M.wid)/2,hz:(c*M.len+s*M.wid)/2}})});
   if(on&&!tf.parked.length){tf.parkedOn=false;return}
@@ -486,10 +494,10 @@ function tfTick(dt){if(!tf.q){if(tf.on)tfShow(false);return}
   tf.spawnT-=dt;if(tf.spawnT<=0){tf.spawnT=1.5+Math.random()*2;
     if(walkers.length<wantP)tfSpawnWalker(false);
     else if(walkers.length>wantP){const p=walkers.find(p=>p.inside||!tfSeen(p.x,p.z,1));if(p)tfDrop(p)}
-    if(tf.drive.reduce((n,c)=>n+(c.st==='park'?0.5:1),0)<wantC&&Object.keys(tf.cars).length>=3&&Math.random()<0.5)tfSpawnCar()}
+    if(tf.carsOk&&tf.drive.reduce((n,c)=>n+(c.st==='park'?0.5:1),0)<wantC&&Object.keys(tf.cars).length>=3&&Math.random()<0.5)tfSpawnCar()}
   for(const c of tf.drive.slice())tfCarStep(c,dt);
   tfRunOver(dt);
-  tfRoomsTick();if(!tf.parkedOn&&Object.keys(tf.cars).length===Object.keys(TF_CARS).length)tfParkedShow(true);
+  tfRoomsTick();if(!tf.parkedOn&&tf.carsOk&&Object.keys(tf.cars).length===Object.keys(TF_CARS).length)tfParkedShow(true);
   for(const p of tf.people.slice()){if(p.hit)tfHitStep(p,dt);if(p.hurt&&!p.dead)p.hurt+=dt;
     if(p.dead||p.hurt){const t=p.dead||p.hurt;if(p.dead)p.dead+=dt;if(p.fly)tfFly(p,dt);if(t>TU.gunBody&&(!tfSeen(p.x,p.z,1)||t>TU.gunBody*3))tfDrop(p);continue}if(p.cower>0){p.cower=Math.max(0,p.cower-dt);continue}if(p.room){tfRoomStep(p,dt);continue}if(p.drv||p.cop)continue;tfWalkStep(p,dt);p.y+=(baseHeight(p.x,p.z)+tfLift(p.x,p.z)-p.y)*Math.min(1,dt*8)}
   if(mode==='walk'&&walker.visible){for(const c of tf.drive)wkPushRound(c,[-c.len*0.3,0,c.len*0.3],c.wid/2);for(const p of tf.people)if(!p.inside&&!p.drv&&!p.dead&&!p.hurt)wkPushRound(p,[0],0.22)}
