@@ -55,7 +55,7 @@ function trimSet(on){trim.pend=false;if(on&&(mode!=='walk'||wk.inside)){toast(sa
   if(on===trim.on)return;trim.on=on;
   // put away, it gets a full spool and fresh line
   if(!on){trim.spool=TU.trimSpool;trim.line=TU.trimLine;trim.worn=trim.empty=false}
-  else{if(!(trim.spool>=0))trim.spool=TU.trimSpool;toast(say('trimOn',{line:trimIn(trim.line)}),'',3600);started()}
+  else{if(gun.eq)gunEquip(false,1);if(!(trim.spool>=0))trim.spool=TU.trimSpool;toast(say('trimOn',{line:trimIn(trim.line)}),'',3600);started()}
   $('#trimBtn').setAttribute('aria-pressed',on);$('#bumpBtn').hidden=!on}
 // tap the head on the ground: line comes off the spool, the guard's blade trims it to length
 function trimBump(){if(!trim.on||mode!=='walk')return;

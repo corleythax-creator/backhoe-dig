@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-31T01:26:00Z",
+ "updated": "2026-10-31T02:21:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -90,9 +90,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-30",
-   "dh": 36.25,
-   "act": 2,
-   "versions": 8
+   "dh": 67.25,
+   "act": 3,
+   "versions": 15
   }
  ],
  "extra": [
@@ -2595,6 +2595,69 @@ window.EFFORT = {
    "tris": 5710458,
    "chars": 1856765,
    "what": "Town paving and roads gather puddles in the rain that spread the longer it rains and drain after, mirror the sky, ring with raindrops (Puddle water: Fine) and stay out from under roofs"
+  },
+  {
+   "v": 278,
+   "asked": "2026-10-30T20:18:00-05:00",
+   "live": "2026-10-30T20:38:57-05:00",
+   "dh": 3,
+   "tris": 5808921,
+   "chars": 1859853,
+   "what": "Equip the pistol (G or the Pistol button), click to fire while it is out, and see it in your hand in first person"
+  },
+  {
+   "v": 279,
+   "asked": "2026-10-30T20:35:00-05:00",
+   "live": "2026-10-30T20:58:15-05:00",
+   "dh": 3,
+   "tris": 5810269,
+   "chars": 1859871,
+   "what": "Broom concrete, plywood, steel road plate, concrete block and shingles from Poly Haven scans; lawn sod, bar grating and landscape fabric from ambientCG, all CC0 with relief and sheen"
+  },
+  {
+   "v": 280,
+   "asked": "2026-10-30T20:30:00-05:00",
+   "live": "2026-10-30T21:01:54-05:00",
+   "dh": 3,
+   "tris": 5812316,
+   "chars": 1863651,
+   "what": "Desktop in town: a Townsfolk counter bottom right (alive, dead, shot and run over); driving a machine into someone above 6 mph (runKill) knocks them flying"
+  },
+  {
+   "v": 281,
+   "asked": "2026-10-30T20:27:00-05:00",
+   "live": "2026-10-30T21:08:28-05:00",
+   "dh": 4,
+   "tris": 5813184,
+   "chars": 1862310,
+   "what": "The pistol is now Poly Haven's photo-scanned service pistol, gripped in the worker's own hand; in first person you see his real arm holding it"
+  },
+  {
+   "v": 282,
+   "asked": "2026-10-30T20:38:00-05:00",
+   "live": "2026-10-30T21:11:56-05:00",
+   "dh": 7,
+   "tris": 5812680,
+   "chars": 1869089,
+   "what": "Streets laid in the map editor can be brick, cobblestone, fan cobbles or old brick (Surface on the street's card): photo-scanned paving whose bricks and cobbles stand up out of their joints and cast little shadows in the sun with Material relief on."
+  },
+  {
+   "v": 283,
+   "asked": "2026-10-30T19:55:00-05:00",
+   "live": "2026-10-30T21:14:14-05:00",
+   "dh": 10,
+   "tris": 5809658,
+   "chars": 1885702,
+   "what": "The town's lawns look real: photo-scanned deep green grass with blades up close, thicker along the paths, clover with white flowers, weeds and fallen autumn leaves; in the rain the town's lawns and ground get wet and dark."
+  },
+  {
+   "v": 284,
+   "asked": "2026-10-30T21:20:00-05:00",
+   "live": "2026-10-30T21:21:36-05:00",
+   "dh": 1,
+   "tris": 6051407,
+   "chars": 1886165,
+   "what": "The town starts each game with a set number of townsfolk (townPop, 150); each one killed is gone until the next start and the crowd thins out"
   }
  ]
 };

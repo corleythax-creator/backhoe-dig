@@ -1,34 +1,27 @@
 // Corley's Island: the worker's pistol. On foot he has it in his right hand from the start (put away while the
-// trimmer is out, swimming or in a machine). Fire (KEY gunFire, the Fire button, or a click on the view with blocks
-// off) shoots the way he faces (first person: at the crosshair, #gunCross; chase view: at the nearest person close
+// trimmer is out, swimming or in a machine). Pistol (KEY gun, the Pistol button) takes it out or puts it away; while
+// it is out Fire (KEY gunShoot, the Fire button, or a click on the view, pointer taken or not, ahead of blocks) shoots the way he faces (first person: at the crosshair, #gunCross; chase view: at the nearest person close
 // to that way, gunAssist): he turns that way and brings the gun up, and the shot is a ray that stops at the first townsperson (townfolk.js), wall or other solid (SOLIDS,
 // terrain.js) or the ground, out to TU.gunRange. A head shot or a second body shot drops them (tfFall: over
 // backwards; the body stays TU.gunBody, then goes when out of sight); a first body shot and every shot near anyone
 // sends the people round about running off (TU.gunFlee) for a while. Nothing here is saved.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
-const GUN_MUZZLE=0.17,GUN_HEAD=0.84;
-const gun={on:false,fp:false,aim:0,cool:0,kick:0,flash:0,told:false,shots:0,downs:0};
-// ---------- the model: a black polymer-frame 9 mm, barrel along +z, the grip down -y, its origin in the palm ----------
-const gunSteel=new THREE.MeshStandardMaterial({color:0x1d1f22,metalness:0.75,roughness:0.36,envMap:skyEnv}),
-  gunPoly=new THREE.MeshStandardMaterial({color:0x151617,metalness:0.05,roughness:0.78,envMap:skyEnv});
+const GUN_GRIP=0.004,GUN_MUZZLE=0.18,GUN_HEAD=0.84;
+const gun={eq:true,on:false,fp:false,aim:0,cool:0,kick:0,flash:0,told:false,shots:0,downs:0};
+// ---------- the model: Poly Haven's photo-scanned service pistol (models/pistol, CC0), turned so the barrel runs along
+// +z and the grip down -y, its origin in the palm; its own colour, metal/roughness and normal maps ----------
 const gunMdl=new THREE.Group();gunMdl.visible=false;gunMdl.matrixAutoUpdate=false;scene.add(gunMdl);
-{const b=(w,h,d,m,x,y,z,rx)=>{const o=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),m);o.position.set(x,y,z);if(rx)o.rotation.x=rx;o.castShadow=true;gunMdl.add(o);return o};
-  b(0.028,0.03,0.186,gunSteel,0,0.052,0.05);                                   // slide
-  b(0.03,0.006,0.03,gunSteel,0,0.069,0.12);b(0.03,0.007,0.012,gunSteel,0,0.069,-0.035);// sights
-  for(let i=0;i<5;i++)b(0.0295,0.022,0.003,gunPoly,0,0.052,-0.03+i*0.007);       // serrations
-  b(0.026,0.02,0.17,gunPoly,0,0.027,0.045);                                     // frame and dust cover
-  b(0.027,0.115,0.044,gunPoly,0,-0.03,-0.012,-0.22);                            // grip
-  b(0.024,0.012,0.046,gunPoly,0,-0.088,-0.026,-0.22);                           // magazine base
-  b(0.022,0.004,0.05,gunPoly,0,0.002,0.045);b(0.022,0.024,0.004,gunPoly,0,0.01,0.07);// trigger guard
-  b(0.006,0.018,0.006,gunSteel,0,0.012,0.042,0.25);                             // trigger
-  const br=new THREE.Mesh(new THREE.CylinderGeometry(0.0055,0.0055,0.01,10),gunSteel);br.rotation.x=Math.PI/2;br.position.set(0,0.052,0.146);gunMdl.add(br)}
+mdlLoaderReady(()=>new THREE.GLTFLoader().load('models/pistol/pistol.gltf',gl=>{const g=gl.scene;g.rotation.y=-Math.PI/2;g.position.set(0,GUN_GRIP,0.004);
+  g.traverse(o=>{if(!o.isMesh)return;o.castShadow=true;o.frustumCulled=false;const m=o.material;m.envMap=skyEnv;m.envMapIntensity=0.8;m.side=THREE.FrontSide});gunMdl.add(g)},undefined,e=>console.warn('pistol:',e)));
 // the muzzle flash: two crossed cards and a star, glowing, a frame or two
-const gunFlash=new THREE.Group();gunFlash.position.set(0,0.052,GUN_MUZZLE);gunFlash.visible=false;gunMdl.add(gunFlash);
+const gunFlash=new THREE.Group();gunFlash.position.set(0,0.05,GUN_MUZZLE);gunFlash.visible=false;gunMdl.add(gunFlash);
 {const m=new THREE.MeshBasicMaterial({color:0xffc870,transparent:true,opacity:0.95,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide});
   for(const r of [0,Math.PI/2]){const c=new THREE.Mesh(new THREE.PlaneGeometry(0.07,0.2),m);c.rotation.set(Math.PI/2,r,0);c.position.z=0.09;gunFlash.add(c)}
   const s=new THREE.Mesh(new THREE.CircleGeometry(0.06,7),m);gunFlash.add(s)}
 // ---------- in hand ----------
-const gunHas=()=>mode==='walk'&&!wk.inside&&!wk.swim&&!trim.on&&!bench.on;
+function gunEquip(on,quiet){if(on&&trim.on)trimSet(false);gun.eq=!!on;$('#gunBtn').setAttribute('aria-pressed',gun.eq);if(!quiet)toast(say(on?'gunOut':'gunAway',{}),'',1800)}
+const gunReady=()=>gunHas();
+const gunHas=()=>gun.eq&&mode==='walk'&&!wk.inside&&!wk.swim&&!trim.on&&!bench.on;
 const gunV=new THREE.Vector3(),gunE=new THREE.Vector3(),gunH=new THREE.Vector3(),gunX=new THREE.Vector3(),gunY=new THREE.Vector3(),gunZ=new THREE.Vector3(),gunD=new THREE.Vector3();
 // the way he aims: where the camera looks, level with the view
 function gunYaw(){return camMode==='cab'?wk.view:wk.view+orbitYaw}
@@ -39,17 +32,29 @@ function gunTick(dt){gun.cool=Math.max(0,gun.cool-dt);gun.flash=Math.max(0,gun.f
   if(on&&!gun.told&&tf.on){gun.told=true;toast(say('gunTip',{}),'',4200)}
   if(!on){gun.aim=0;return}
   gun.aim=Math.max(0,gun.aim-dt);
-  if(gun.aim>0){wk.yaw=gunYaw();const p=camMode==='cab'?fpl.pitch:-(orbitPitch-0.32)*0.6,A=wkArms[0];
-    A.top.rotation.x=-Math.PI/2-p*0.9-gun.kick*0.35;A.low.rotation.x=-0.05-gun.kick*0.25}
+  // in first person he always holds it out, a little high, so it sits low and right in the view
+  if(gun.aim>0||fp){wk.yaw=gunYaw();const p=fp?fpl.pitch+0.08:-(orbitPitch-0.32)*0.6,A=wkArms[0];
+    A.top.rotation.x=-Math.PI/2-p*0.9-gun.kick*0.35;A.low.rotation.x=-0.05-(fp?0.25:0)-gun.kick*0.25}
   else{const A=wkArms[0];A.low.rotation.x=Math.min(A.low.rotation.x,-0.35)}}
 // after wkMdlPose (main.js): the gun into his right palm, along the forearm, or along the shot while aiming
-function gunPlace(){const show=gunHas()&&walker.visible;gunMdl.visible=show;if(!show)return;
-  walker.updateMatrixWorld(true);const J=wkMdl.j,low=J&&J.arms[0].low&&J.arms[0].low.b,hand=low&&low.children.find(c=>c.isBone&&/hand/.test(c.name));
-  if(hand){low.getWorldPosition(gunE);hand.getWorldPosition(gunH)}
+const gunQF=new THREE.Quaternion(),GUN_UP=new THREE.Vector3(0,1,0);
+function gunPlace(){const show=gunHas()&&walker.visible,J=wkMdl.j,fp=show&&camMode==='cab';gunMdl.visible=show;
+  // put away: the hand back to its easy curl (wkRig)
+  if(!show&&J&&gun.fist){if(gun.h0){const h=J.arms[0].low.b.children.find(c=>c.isBone&&/hand/.test(c.name));if(h)h.quaternion.copy(gun.h0)}for(const f of J.fingers)if(f.b.name.endsWith(gun.fist))f.b.quaternion.copy(f.q0).multiply(gunQF.setFromAxisAngle(WK_X,0.35));gun.fist=null}
+  // in first person he is drawn too (walker.js) and the camera is in his head: the head is shrunk away
+  if(J&&J.head&&gun.headOff!==fp){gun.headOff=fp;J.head.b.scale.setScalar(fp?0.001:1)}
+  if(!show)return;walker.updateMatrixWorld(true);const low=J&&J.arms[0].low&&J.arms[0].low.b,hand=low&&low.children.find(c=>c.isBone&&/hand/.test(c.name));
+  // his fingers close round the grip (the index finger less, along the trigger guard), and the grip sits in the palm:
+  // half way from the wrist to the middle finger's knuckle
+  // the wrist turned so the palm faces in, thumb up, round an upright grip
+  if(hand){if(!gun.h0)gun.h0=hand.quaternion.clone();hand.quaternion.copy(gun.h0).multiply(gunQF.setFromAxisAngle(GUN_UP,TU.gunWrist));walker.updateMatrixWorld(true);
+    low.getWorldPosition(gunE);hand.getWorldPosition(gunH);const sf=hand.name.slice(-2),mid=hand.children.find(c=>/^middle_01/.test(c.name));
+    if(gun.fist!==sf){gun.fist=sf;for(const f of J.fingers)if(f.b.name.endsWith(sf)){const ix=/^index/.test(f.b.name);f.b.quaternion.copy(f.q0).multiply(gunQF.setFromAxisAngle(WK_X,ix?0.55:1.35))}}
+    if(mid){mid.getWorldPosition(gunV);gunH.lerp(gunV,0.55)}}
   else{const A=wkArms[0].low;A.getWorldPosition(gunE);gunH.set(0,-0.31,0.03);A.localToWorld(gunH)}
-  gunZ.subVectors(gunH,gunE).normalize();if(gun.aim>0){camera.getWorldDirection(gunD);gunZ.lerp(gunD,0.8).normalize()}
+  gunZ.subVectors(gunH,gunE).normalize();if(gun.aim>0||fp){camera.getWorldDirection(gunD);gunZ.lerp(gunD,fp?0.95:0.8).normalize()}
   const y=wk.yaw;gunX.set(Math.cos(y),0,-Math.sin(y));gunY.crossVectors(gunZ,gunX).normalize();gunX.crossVectors(gunY,gunZ);
-  gunMdl.matrix.makeBasis(gunX,gunY,gunZ);gunMdl.matrix.setPosition(gunH.addScaledVector(gunZ,0.035).addScaledVector(gunY,-0.01));gunMdl.matrixWorldNeedsUpdate=true;
+  gunMdl.matrix.makeBasis(gunX,gunY,gunZ);gunMdl.matrix.setPosition(gunH);gunMdl.matrixWorldNeedsUpdate=true;
   gunFlash.visible=gun.flash>0;if(gunFlash.visible)gunFlash.rotation.z=Math.random()*6.28}
 // ---------- the shot ----------
 // distance t along ray (o, unit d) where it first meets solid s (its box on the ground plan, as tall as it needs), or Infinity
@@ -104,4 +109,5 @@ function gunBang(){if(!snd||!snd.ready||!sndCfg.on||!actx||actx.state!=='running
   const o=c.createOscillator(),og=sndGain(0,snd.dry);o.type='sine';o.frequency.setValueAtTime(120,t);o.frequency.exponentialRampToValueAtTime(42,t+0.16);o.connect(og);
   og.gain.setValueAtTime(v*0.9,t);og.gain.exponentialRampToValueAtTime(0.001,t+0.22);o.start(t);o.stop(t+0.25);
   s.onended=()=>{g.disconnect();e.disconnect();og.disconnect()}}
+$('#gunBtn').addEventListener('pointerdown',e=>{e.preventDefault();gunEquip(!gun.eq)});
 $('#fireBtn').addEventListener('pointerdown',e=>{e.preventDefault();gunFire()});
