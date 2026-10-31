@@ -40,4 +40,4 @@ function brushLayout(){const o=new THREE.Object3D(),n=[0,0,0],col=new THREE.Colo
       brushIMs[k].setColorAt(n[k],col);n[k]++}}
   brushIMs.forEach((im,k)=>{im.count=n[k];im.instanceMatrix.needsUpdate=true;im.instanceColor.needsUpdate=true})}
 // gfx.js: the share of the undergrowth drawn
-function brushGfx(k){if(k===brushK)return;brushK=k;brushLayout()}
+function brushGfx(k){if(typeof fmGrassK==='function')fmGrassK(k);if(k===brushK)return;brushK=k;brushLayout()}

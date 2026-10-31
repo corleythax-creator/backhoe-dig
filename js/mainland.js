@@ -642,3 +642,27 @@ function mainStreets(){const K=shopKit(),F=famKit(),G=baseHeight,asph=shopLib('a
     const m=new THREE.Mesh(sgeo,smat);m.position.set(x+Math.sin(ry)*0.06,g+2.25,z+Math.cos(ry)*0.06);m.rotation.y=ry;scene.add(m);SOLIDS.push({x,z,hx:0.1,hz:0.1})}
   K.add();famAdd(F)}
 mainStreets();groundLift=mstLift;
+// ---------- the hayfield's margins: uncut grass ----------
+// Where the hayfield meets the lawn, the trail and the woods (mainField's wandering edge, terrain.js) a band of tall uncut
+// grass, thick in the margin and thinning out both ways, green on the lawn's side and going to straw on the field's, so
+// no edge is a clean line. Looks only, nothing walks into it; the Graphics setting's Undergrowth draws a share of it
+// (fmGrassK, from brushGfx). Placed from a fixed seed, so every device has the same; rebuilt on map edits (edRefresh).
+const FMG_N=7000;let fmGrass=null,fmGrassN=0,fmGrassF=1;
+function fmGrassBuild(){
+  if(!fmGrass){const P=[],C=[];let s=7;const R=()=>{s=(s*16807)%2147483647;return s/2147483647};
+    // one clump: five arching blades of three triangles, dark at the root and sunlit at the tip
+    for(let b=0;b<5;b++){const a=b/5*6.283+R()*0.8,h=0.55+R()*0.5,l=0.12+R()*0.2,w=0.035+R()*0.02,ca=Math.cos(a),sa=Math.sin(a),rx=(R()-0.5)*0.2,rz=(R()-0.5)*0.2;
+      const pt=t=>[rx+ca*l*t*t,h*t*(1-0.15*t),rz+sa*l*t*t],px=-sa*w,pz=ca*w,p0=pt(0),p1=pt(0.55),p2=pt(1);
+      const v=[[p0[0]-px,p0[1],p0[2]-pz],[p0[0]+px,p0[1],p0[2]+pz],[p1[0]-px*0.7,p1[1],p1[2]-pz*0.7],[p1[0]+px*0.7,p1[1],p1[2]+pz*0.7],p2],kc=[0.42,0.42,0.75,0.75,1];
+      for(const f of [[0,1,3],[0,3,2],[2,3,4]])for(const q of f){P.push(...v[q]);C.push(kc[q],kc[q],kc[q]*0.92)}}
+    const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(P,3));g.setAttribute('color',new THREE.Float32BufferAttribute(C,3));g.computeVertexNormals();
+    fmGrass=new THREE.InstancedMesh(g,M(0xffffff,{vertexColors:true,side:THREE.DoubleSide}),FMG_N);fmGrass.receiveShadow=true;scene.add(fmGrass)}
+  let s=91;const R=()=>{s=(s*16807)%2147483647;return s/2147483647},O=new THREE.Object3D(),c=new THREE.Color();let n=0;
+  for(let t=0;t<FMG_N*40&&n<FMG_N;t++){const x=R()*428-6,z=-556+R()*264,hf=mainField(x,z),band=4*hf*(1-hf);
+    if(R()>Math.pow(band,0.8)*0.9+0.04*hf||Math.abs(roadOff(x,z))<ROAD_W/2+0.8)continue;const y=baseHeight(x,z);if(y-WATER<0.6)continue;
+    const k=0.85+0.3*R(),st=ss(0.25,0.8,hf+0.25*(R()-0.5));
+    O.position.set(x,y-0.03,z);O.rotation.set((R()-0.5)*0.2,R()*6.283,(R()-0.5)*0.2);const sc=0.75+0.6*R();O.scale.set(sc,sc*(0.8+0.5*(1-st)),sc);O.updateMatrix();
+    fmGrass.setMatrixAt(n,O.matrix);c.setRGB((0.34+0.42*st)*k,(0.5+0.17*st)*k,(0.2+0.17*st)*k);fmGrass.setColorAt(n,c);n++}
+  fmGrassN=n;fmGrass.count=Math.round(n*fmGrassF);fmGrass.instanceMatrix.needsUpdate=true;if(fmGrass.instanceColor)fmGrass.instanceColor.needsUpdate=true;fmGrass.computeBoundingSphere()}
+function fmGrassK(k){fmGrassF=k;if(fmGrass)fmGrass.count=Math.round(fmGrassN*k)}
+fmGrassBuild();
