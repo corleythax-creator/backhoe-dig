@@ -421,12 +421,16 @@ function groundColor(x,z,h,c){const n=hash(x*3.55+0.3,z*2.65+0.7);
     r+=(0.19+0.05*lu+0.08*dr+0.03*n-r)*tw;g+=(0.33+0.04*lu+0.02*dr+0.04*n-g)*tw;b+=(0.12+0.03*lu+0.01*n-b)*tw}
   // the mainland's hayfield, mown in rows, and the darker woods floor
   const hf=mainField(x,z),wf=Math.max(mainWoods(x,z),mainForest(x,z));
-  if(hf>0){const st=0.5+0.5*Math.sin(z*0.9);r+=(0.58+0.08*st+0.04*n-r)*hf;g+=(0.55+0.05*st-g)*hf;b+=(0.28-b)*hf}
+  // stubble in mown rows that bend a little with the ground, greener where regrowth comes through in drifts, paler
+  // where the windrows lay; along its margins a band of uncut grass, darker and greener, between the field and the lawn
+  let fd=0;if(hf>0){const st=0.5+0.5*Math.sin(z*0.9+0.8*Math.sin(x*0.031)),pv=tuftNoise(x*0.11+5,z*0.11+2),gr=ss(0.5,0.8,tuftNoise(x*0.035+9,z*0.035+4)),band=4*hf*(1-hf);
+    r+=(0.58+0.08*st+0.04*n-0.1*gr+0.05*(pv-0.5)-0.06*band-r)*hf;g+=(0.55+0.05*st+0.03*gr+0.03*(pv-0.5)+0.02*band-g)*hf;b+=(0.28+0.02*gr-0.02*band-b)*hf;
+    fd=hf*(1-0.8*gr)*(0.1+0.22*pv)}
   if(wf>0){r-=0.1*wf;g-=0.12*wf;b-=0.05*wf}
   const strata=0.06*Math.sin(h*1.4+n);
   r+=(0.50+0.06*n+strata-r)*rock;g+=(0.44+0.05*n+strata-g)*rock;b+=(0.38+0.04*n+strata-b)*rock;
   r+=(0.80-r)*sand;g+=(0.72-g)*sand;b+=(0.52-b)*sand;
-  c[0]=r;c[1]=g;c[2]=b;const ya=yardTint(x,z,c,n),ka=trkTint(x,z,c,n),ra=roadTint(x,z,c,n),mc=matTint(x,z,c);c[3]=mc;return Math.min(1,Math.max(rock*0.95+sand*0.4,ra*0.9,ya*0.85,ka))*(MAT_GL2?1:1-mc)}
+  c[0]=r;c[1]=g;c[2]=b;const ya=yardTint(x,z,c,n),ka=trkTint(x,z,c,n),ra=roadTint(x,z,c,n),mc=matTint(x,z,c);c[3]=mc;return Math.min(1,Math.max(rock*0.95+sand*0.4,ra*0.9,ya*0.85,ka,fd))*(MAT_GL2?1:1-mc)}
 let midPatch=null,skirtMesh=null;
 // a ground mesh over a rectangle at CO metres, leaving out the cells inside any of the holes (where a finer mesh sits)
 function groundPatch(X0,X1,Z0,Z1,CO,holes){

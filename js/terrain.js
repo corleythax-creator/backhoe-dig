@@ -224,8 +224,13 @@ function causewayH(x,z){let y=-1e9;for(const c of CAUSEWAYS){const [t,u]=deckLoc
   const e=Math.max(Math.abs(u)-c.hw,-t,0),top=c.y+(c.y1-c.y)*Math.max(0,Math.min(1,t/c.len));
   const h=top-0.8*e-0.3*Math.sin(x*1.3+z*0.9)*ss(0,1.5,e);if(h>y)y=h}return y}
 // how much of the mainland ground is the hayfield (east of the north trail) or the woods floor (west of it); 0 to 1
-function mainField(x,z){return z>-300?0:ss(16,24,x)*ss(-300,-308,z)*(1-ss(390,420,x))}
-function mainWoods(x,z){return z>-300?0:ss(-16,-26,x)*ss(-300,-308,z)}
+// edges that wander: value noise (0 to 1) for breaking up where one kind of ground meets another, so no seam runs straight
+function tintNoise(x,z){const i=Math.floor(x),j=Math.floor(z),fx=x-i,fz=z-j,u=fx*fx*(3-2*fx),v=fz*fz*(3-2*fz);
+  const a=hash(i,j),b=hash(i+1,j),c=hash(i,j+1),d=hash(i+1,j+1);return a+(b-a)*u+(c-a)*v+(a-b-c+d)*u*v}
+// metres an edge is pushed in or out: a few metres in long sweeps, a metre or two in shorter wiggles
+function mainEdgeN(x,z){return 9*(tintNoise(x*0.04+3.1,z*0.04+7.7)-0.5)+4.5*(tintNoise(x*0.13+0.4,z*0.13+11.3)-0.5)+1.6*(tintNoise(x*0.45+6,z*0.45+2)-0.5)}
+function mainField(x,z){if(z>-292)return 0;const e=mainEdgeN(x,z);return ss(14+e,27+e,x)*ss(-299+e*0.5,-311+e*0.5,z)*(1-ss(386+e,420+e,x))}
+function mainWoods(x,z){if(z>-292)return 0;const e=mainEdgeN(x+50,z);return ss(-14+e,-28+e,x)*ss(-299+e*0.5,-311+e*0.5,z)}
 // the forest floor round the town: up the foothills and out past the town's woods, but not on the overlook's clearing
 function mainForest(x,z){if(z<FH_Z0)return 0;return ss(0,24,Math.max(z-fhZ(x)+6,Math.abs(x)-300))*ss(1.3,2.2,Math.hypot((x-FH_OV.x)/FH_OV.rx,(z-FH_OV.z)/FH_OV.rz))}
 // on the mainland, at least lim in from its shore and inside the part that is drawn
@@ -340,7 +345,7 @@ function roadAt(x,z){RD_o=99;RD_gd=99;
 function roadOff(x,z){roadAt(x,z);return RD_o}
 function roadAmt(x,z){return 1-ss(ROAD_W/2-0.35,ROAD_W/2+0.45,Math.abs(roadOff(x,z)))}
 // packed tan dirt, darker in the two wheel tracks, a little grass up the middle; blends colour c (rgb array) toward it, returns the amount
-function roadTint(x,z,c,n){const o=Math.abs(roadOff(x,z)),a=1-ss(ROAD_W/2-0.35,ROAD_W/2+0.45,o);if(a<=0)return 0;
+function roadTint(x,z,c,n){const o=Math.abs(roadOff(x,z)),e=0.5*(tintNoise(x*0.7,z*0.7)-0.5)+0.3*(tintNoise(x*2.1+5,z*2.1+3)-0.5),a=1-ss(ROAD_W/2-0.45+e,ROAD_W/2+0.55+e,o);if(a<=0)return 0;
   const rut=1-0.17*Math.exp(-((o-0.95)/0.32)*((o-0.95)/0.32)),mid=0.35*(1-ss(0.15,0.45,o))*RD_mid,v=0.92+0.16*n;
   const rc=[0.58*v*rut,0.47*v*rut,0.33*v*rut];rc[0]+=(0.36-rc[0])*mid;rc[1]+=(0.5-rc[1])*mid;rc[2]+=(0.26-rc[2])*mid;
   for(let q=0;q<3;q++)c[q]+=(rc[q]-c[q])*a;return a*(1-mid)}
@@ -351,7 +356,9 @@ function hill(x,z,cx,cz,rx,rz,h){const t=Math.hypot((x-cx)/rx,(z-cz)/rz);return 
 function yardAt(x,z){const r=coreR(x,z),sp=1-ss(1,4,Math.hypot(Math.max(0,Math.abs(x)-12),Math.max(0,Math.abs(z+52)-8))),zs=scarpZ(x),dx=Math.abs(x-DEX_X)<DEX_R+8&&Math.abs(z-DEX_Z)<DEX_R+8?1-ss(DEX_R-9,DEX_R-4,dexR(x,z)):0;
   return Math.max(0,Math.min(1,Math.max(ss(zs+3,zs+6,z)*(1-ss(37,42,r)),ss(0.15,0.4,hill(x,z,-22,4,9,6,1)),dx,sp)+edSample(ED_P,x,z)))}
 // colour c (rgb array) toward packed dirt by the yard amount; returns the amount
-function yardTint(x,z,c,n){const a=yardAt(x,z);if(a<=0)return 0;const v=0.86+0.2*n;
+function yardTint(x,z,c,n){let a=yardAt(x,z);if(a<=0)return 0;
+  // the yard's edge, ragged: dirt pushed out into the grass in places, grass creeping in at others
+  if(a<1)a=Math.max(0,Math.min(1,a+2.4*a*(1-a)*(tintNoise(x*0.45+2,z*0.45+9)+0.6*tintNoise(x*1.6,z*1.6)-0.8)));if(a<=0)return 0;const v=0.86+0.2*n;
   c[0]+=(0.55*v-c[0])*a;c[1]+=(0.42*v-c[1])*a;c[2]+=(0.29*v-c[2])*a;return a}
 // the generated ground plus the editor's raise and lower
 function baseHeight(x,z){return groundHeight(x,z)+edSample(ED_H,x,z)}
@@ -521,7 +528,7 @@ const texGrass=loadTex('grass'),texDirt=loadTex('dirt'),texGrime=loadTex('grime'
 // relief of the natural dirt and grass (Material relief, High graphics; made by tools/pbr.py ground): fetched the first
 // time relief is on, and groundRelU (relief strength, 0 off) set each frame by matPbrSync (materials.js); faceRelU the
 // same for the cut-face detail on dug and dumped dirt (no map: its own pattern is the height, FACE_GLSL)
-const texGrassN=new THREE.Texture(),texDirtN=new THREE.Texture(),groundRelU={value:0},groundRelFarU={value:0},faceRelU={value:0};
+const texGrassN=new THREE.Texture(),texDirtN=new THREE.Texture(),groundRelU={value:0},groundRelFarU={value:0},faceRelU={value:0},spoilU={value:1};
 for(const t of [texGrassN,texDirtN]){t.wrapS=t.wrapT=THREE.RepeatWrapping;t.generateMipmaps=true;t.minFilter=THREE.LinearMipmapLinearFilter}
 function groundRelLoad(){if(texDirtN.image)return;for(const [t,n] of [[texGrassN,'grass_n'],[texDirtN,'dirt_n']])new THREE.ImageLoader().load(`textures/ground/${n}.jpg`,im=>{t.image=im;t.anisotropy=texAnisoN;t.needsUpdate=true})}
 function texAnisoSet(n){n=Math.max(1,Math.min(n,renderer.capabilities.getMaxAnisotropy()));if(n===texAnisoN)return;texAnisoN=n;
@@ -548,19 +555,48 @@ const FACE_GLSL=`
 float fh(vec2 p){p=fract(p*vec2(123.34,456.21));p+=dot(p,p+45.32);return fract(p.x*p.y);}
 float fn(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);return mix(mix(fh(i),fh(i+vec2(1.0,0.0)),f.x),mix(fh(i+vec2(0.0,1.0)),fh(i+vec2(1.0,1.0)),f.x),f.y);}
 float fb(vec2 p){return 0.5*fn(p)+0.3*fn(p*2.03+7.1)+0.2*fn(p*4.01+3.3);}
-vec3 faceDetail(vec3 wp,float d,float pz){
+// cells: distance to the nearest and second-nearest random point (clods are the cells, the cracks between them the edges)
+vec2 fvor(vec2 p){vec2 i=floor(p),f=fract(p);float d1=8.0,d2=8.0;
+  for(int y=-1;y<=1;y++)for(int x=-1;x<=1;x++){vec2 g=vec2(float(x),float(y)),o=vec2(fh(i+g),fh(i+g+17.3));vec2 r=g+o-f;float e=dot(r,r);
+    if(e<d1){d2=d1;d1=e;}else if(e<d2)d2=e;}return vec2(sqrt(d1),sqrt(d2));}
+vec3 faceDetail(vec3 wp,float d,float pz,float wet,float sp){
   vec3 wn=normalize(cross(dFdx(wp),dFdy(wp)));float steep=1.0-abs(wn.y);
   vec2 along=normalize(vec2(-wn.z,wn.x)+vec2(1e-4,0.0));vec2 fc=vec2(dot(wp.xz,along),wp.y);
   vec2 uv=steep>0.35?fc:wp.xz;
-  float w=0.06*sin(wp.x*1.7+wp.z*0.9);vec3 m=vec3(1.0);
+  float w=0.06*sin(wp.x*1.7+wp.z*0.9),wb=0.05*(fn(vec2(fc.x*1.3,3.0))-0.5);vec3 m=vec3(1.0);
   bool sand=abs(wp.x)<12.5&&abs(wp.z-pz)<0.55+0.08*sin(wp.x*0.8)&&d>0.95+w&&d<1.62+w;
-  if(d<-0.02){m*=0.82+0.36*fb(uv*9.0);}
+  if(d<-0.02){m*=0.82+0.36*fb(uv*9.0);
+    // dumped spoil: clods of every size with dark gaps between them, lit on their tops, broken crumbs, and stones
+    // turned up from below (grey, a few large); sp is the Ground look tuning pbrSpoil
+    vec2 q=mat2(0.8,0.6,-0.6,0.8)*wp.xz*6.5+wp.y*1.7,v1=fvor(q),v2=fvor(q*2.6+3.1);
+    float gap=smoothstep(0.0,0.16,v1.y-v1.x),gap2=smoothstep(0.0,0.12,v2.y-v2.x),top=1.0-v1.x;
+    m*=mix(vec3(1.0),mix(vec3(0.5,0.47,0.44),vec3(1.0),gap)*mix(0.8,1.0,gap2)*(0.9+0.22*top*wn.y),sp);
+    vec2 sc=wp.xz*4.2+vec2(wp.y,0.0),si=floor(sc),sf=fract(sc)-0.5-0.3*(vec2(fh(si+3.7),fh(si+9.1))-0.5);float sz=0.1+0.14*fh(si+5.5);
+    float st=step(1.0-0.09*sp,fh(si+0.5))*smoothstep(sz,sz*0.6,length(sf*vec2(1.0,1.35)));
+    m=mix(m,vec3(1.55,1.62,1.75)*(0.75+0.35*fn(sc*9.0)+0.25*(sf.x+sf.y)),min(1.0,st));}
   else if(d<0.3+w){float r=abs(sin(fb(uv*3.0)*14.0+uv.x*6.0));float root=smoothstep(0.07,0.0,r)*step(0.55,fn(uv*5.0));
-    m*=0.85+0.3*fb(uv*12.0);m=mix(m,vec3(1.45,1.22,0.92),root*0.75);}
+    m*=0.85+0.3*fb(uv*12.0);m=mix(m,vec3(1.45,1.22,0.92),root*0.75);
+    // the topsoil's dark, root-matted crown at the top of a cut, fading into the soil under it
+    m*=mix(0.7,1.0,smoothstep(0.0,0.2+wb,d)*(0.7+0.3*steep)+0.3*(1.0-steep));}
   else if(sand){m*=0.9+0.14*(0.5+0.5*sin(uv.y*90.0+fb(uv*4.0)*6.0));}
   else if(d<1.95+2.0*w){float mot=fb(uv*2.5);m*=mix(vec3(1.0),vec3(0.78,0.87,0.96),smoothstep(0.55,0.75,mot)*0.85);
+    // rusty iron mottles in the subsoil clay
+    m=mix(m,m*vec3(1.28,0.98,0.72),smoothstep(0.64,0.8,fb(uv*3.3+11.0))*0.55*sp);
     vec2 pc=uv*14.0;float peb=step(0.92,fh(floor(pc)))*smoothstep(0.42,0.18,length(fract(pc)-0.5));m=mix(m,vec3(1.3,1.22,1.1),peb*0.8);}
   else{float c=abs(fb(uv*3.0)-0.5);m*=0.78+0.26*smoothstep(0.0,0.045,c);}
+  if(d>0.0){
+    // horizons on a cut face: dark tongues of topsoil reaching down into the soil below along old root channels, a
+    // pale leached band under them, and fine level bedding lines through the deeper layers
+    float tg=smoothstep(0.55,0.0,d-0.3-wb-0.25*fn(vec2(fc.x*4.0,1.0))*step(0.5,fn(vec2(fc.x*1.1,7.0))));
+    m*=mix(1.0,0.84,tg*steep*sp*step(0.3+w,d));m*=1.0+0.1*sp*steep*smoothstep(0.08,0.0,abs(d-0.42-wb))*(1.0-tg);
+    m*=1.0+0.06*sp*steep*smoothstep(0.5,1.0,d)*sin(wp.y*48.0+fb(vec2(fc.x*0.7,wp.y*2.0))*7.0);
+    // the crumbly lip: soil broken loose along the top edge of a cut, in crumbs and small overhangs
+    float lip=smoothstep(0.35,0.75,steep)*smoothstep(0.18,0.02,d);vec2 cv=fvor(fc*22.0);
+    m*=mix(1.0,mix(0.62,1.08,smoothstep(0.0,0.1,cv.y-cv.x)),lip*sp);
+    // a fresh cut is moist inside: deeper soil holds its damp longest, and the face dries from its top edge down
+    m*=1.0-0.14*wet*smoothstep(0.1,1.2,d)*steep;}
+  // dug and dumped dirt dries pale on the clods' tops first, the hollows staying damp
+  m*=1.0+0.07*(1.0-wet)*wn.y*sp;
   if(d>0.0)m*=1.0-0.2*smoothstep(0.35,0.8,steep)*smoothstep(0.55,1.0,0.5+0.5*sin(fc.x*34.9));
   return m;}
 vec3 faceBump(vec3 n,float h,vec3 pos){vec3 dx=dFdx(pos),dy=dFdy(pos);float hx=dFdx(h),hy=dFdy(h);vec3 r1=cross(dy,n),r2=cross(n,dx);float det=dot(dx,r1);
@@ -601,11 +637,11 @@ groundMat.onBeforeCompile=sh=>{
   sh.vertexShader='attribute float dirt;\nattribute float wetT;\nattribute float soilD;\nattribute float matA;\nattribute float mudW;\nattribute vec2 crk;\nvarying vec2 vCrk;\nuniform float uTime;\nuniform sampler2D tWet;\nuniform vec4 uWetO;\nvarying float vMud;\nvarying float vRain;\nvarying float vSoil;\nvarying float vDirt;\nvarying float vWet;\nvarying float vSD;\nvarying float vMatA;\nvarying vec2 vWXZ;\nvarying vec3 vWP;\n'+sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvCrk=crk;\nvDirt=dirt;\nvMud=mudW;\nvSD=soilD;\nvMatA=matA;\nvWet=exp(-max(0.0,uTime-wetT)/100.0);\nvWP=(modelMatrix*vec4(transformed,1.0)).xyz;\nvWXZ=vWP.xz;'+(WET_VTX?'\nvec4 wt=texture2D(tWet,(vWXZ-uWetO.xy)*uWetO.zw);vMud=max(vMud,wt.g);vRain=wt.r;vSoil=wt.b;':'\nvRain=0.0;vSoil=0.0;'));
   // texture detail goes in ahead of the vertex colour so it is turned linear with it. groundOcc: sky light under the
   // excavator and truck, dimmed by distance to each footprint (x, z, yaw, unused; half width, half length, forward offset, unused)
-  sh.uniforms.tCrack={value:texCrack};sh.uniforms.uOcc=groundOcc;Object.assign(sh.uniforms,matU);sh.uniforms.tGrassN={value:texGrassN};sh.uniforms.tDirtN={value:texDirtN};sh.uniforms.uGRel=groundRelU;sh.uniforms.uGRelFar=groundRelFarU;sh.uniforms.uFRel=faceRelU;sh.uniforms.uGWet=groundWetU;sh.uniforms.uFarWet=farWetU;
-  sh.fragmentShader=`#define GRASS_K ${TEX_K.grass.toFixed(3)}\n#define DIRT_K ${TEX_K.dirt.toFixed(3)}\n`+'uniform sampler2D tGrass;\nuniform sampler2D tDirt;\nuniform sampler2D tGrassN;\nuniform sampler2D tDirtN;\nuniform float uGRel,uGRelFar,uGWet,uFRel,uFarWet;\nuniform sampler2D tMacro;\nuniform float uMacro;\nuniform float texMix;\nuniform float texBase;\nuniform float uPipeZ;\nuniform vec4 uOcc[4];\nuniform sampler2D tWet;\nuniform vec4 uWetO;\nuniform float uWetView;\nuniform float uWetMin;\nuniform sampler2D tCrack;\nvarying vec2 vCrk;\nvarying float vMud;\nvarying float vRain;\nvarying float vSoil;\nvarying float vDirt;\nvarying float vWet;\nvarying float vSD;\nvarying float vMatA;\nvarying vec2 vWXZ;\nvarying vec3 vWP;\n'+MAT_GLSL_HEAD+FACE_GLSL+sh.fragmentShader.replace('#include <normal_fragment_maps>','#include <normal_fragment_maps>\n'+matGlslNorm()+GROUND_REL_GLSL()+FACE_REL_GLSL()).replace('#include <specularmap_fragment>','#include <specularmap_fragment>\nspecularStrength*=(1.0+7.0*vWet*vDirt*(1.0-mudF))*mix(1.0,0.5,max(mudF,rainF));\n'+matGlslSpec()).replace('#include <lights_phong_fragment>','#include <lights_phong_fragment>\nmaterial.specularShininess=mix(material.specularShininess,24.0,max(mudF,rainF));\n'+matGlslShin()).replace('#include <color_fragment>',
+  sh.uniforms.tCrack={value:texCrack};sh.uniforms.uOcc=groundOcc;Object.assign(sh.uniforms,matU);sh.uniforms.tGrassN={value:texGrassN};sh.uniforms.tDirtN={value:texDirtN};sh.uniforms.uGRel=groundRelU;sh.uniforms.uGRelFar=groundRelFarU;sh.uniforms.uFRel=faceRelU;sh.uniforms.uSpoil=spoilU;sh.uniforms.uGWet=groundWetU;sh.uniforms.uFarWet=farWetU;
+  sh.fragmentShader=`#define GRASS_K ${TEX_K.grass.toFixed(3)}\n#define DIRT_K ${TEX_K.dirt.toFixed(3)}\n`+'uniform sampler2D tGrass;\nuniform sampler2D tDirt;\nuniform sampler2D tGrassN;\nuniform sampler2D tDirtN;\nuniform float uGRel,uGRelFar,uGWet,uFRel,uFarWet,uSpoil;\nuniform sampler2D tMacro;\nuniform float uMacro;\nuniform float texMix;\nuniform float texBase;\nuniform float uPipeZ;\nuniform vec4 uOcc[4];\nuniform sampler2D tWet;\nuniform vec4 uWetO;\nuniform float uWetView;\nuniform float uWetMin;\nuniform sampler2D tCrack;\nvarying vec2 vCrk;\nvarying float vMud;\nvarying float vRain;\nvarying float vSoil;\nvarying float vDirt;\nvarying float vWet;\nvarying float vSD;\nvarying float vMatA;\nvarying vec2 vWXZ;\nvarying vec3 vWP;\n'+MAT_GLSL_HEAD+FACE_GLSL+sh.fragmentShader.replace('#include <normal_fragment_maps>','#include <normal_fragment_maps>\n'+matGlslNorm()+GROUND_REL_GLSL()+FACE_REL_GLSL()).replace('#include <specularmap_fragment>','#include <specularmap_fragment>\nspecularStrength*=(1.0+1.2*wetP*(1.0-mudF))*mix(1.0,0.5,max(mudF,rainF));\n'+matGlslSpec()).replace('#include <lights_phong_fragment>','#include <lights_phong_fragment>\nmaterial.specularShininess=mix(material.specularShininess,24.0,max(mudF,rainF));\n'+matGlslShin()).replace('#include <color_fragment>',
     (WET_VTX?'float mudF=vMud,rainF=vRain,soilW=vSoil;\n':'vec4 wt=texture2D(tWet,(vWXZ-uWetO.xy)*uWetO.zw);float mudF=max(vMud,wt.g),rainF=wt.r,soilW=wt.b;\n')+
     // off the wet grid (the town and the rest of the mainland): the far soil water (rain.js), wet and darker on the grass
-    'vec2 fwq=(vWXZ-uWetO.xy)*uWetO.zw;float fwOff=(fwq.x<0.0||fwq.y<0.0||fwq.x>1.0||fwq.y>1.0)?uFarWet:0.0;rainF=max(rainF,0.7*fwOff);\n'+'vec3 tg=texture2D(tGrass,vWXZ*GRASS_K).rgb/vec3(0.267,0.359,0.158);\nvec3 td=texture2D(tDirt,vWXZ*DIRT_K).rgb/vec3(0.491,0.467,0.431);\nvec3 gd=clamp(mix(tg,td,vDirt),0.0,2.2)*(uMacro>0.0?mix(1.0,texture2D(tMacro,vWXZ*0.025).r/0.502,uMacro):1.0);float gk=0.8;\n'+matGlsl()+'diffuseColor.rgb*=mix(vec3(1.0),gd,gk*texBase);\nfloat crkD=vDirt*(1.0-smoothstep(0.4,1.0,vSD));diffuseColor.rgb*=1.0+0.2*vCrk.x*crkD;\ndiffuseColor.rgb*=(1.0-0.32*max(vWet*vDirt,0.6*mudF))*(1.0-0.12*rainF)*(1.0-0.28*fwOff*(1.0-vDirt));\nfloat faceH=0.0;if(vDirt>0.01&&texMix>0.5){vec3 fdm=faceDetail(vWP,vSD,uPipeZ);diffuseColor.rgb*=mix(vec3(1.0),fdm,vDirt);faceH=dot(fdm,vec3(0.3333))*vDirt;}\n#include <color_fragment>\nif(vCrk.y*crkD>0.01){float cl=texMix>0.5?dot(texture2D(tCrack,vWXZ*0.547).rgb,vec3(0.299,0.587,0.114))/0.56:1.0;diffuseColor.rgb=mix(diffuseColor.rgb,(diffuseColor.rgb*0.5+vec3(0.2,0.15,0.1))*cl,vCrk.y*crkD);}\n'+matGlslPost()+'if(uWetView>0.5){float sw=max(soilW,vMud);float on=uWetMin>0.0?step(uWetMin,sw):smoothstep(0.03,0.08,sw);vec3 wc=uWetMin>0.0?vec3(0.02,0.1,0.5):mix(vec3(0.45,0.68,0.78),vec3(0.01,0.05,0.38),sw);diffuseColor.rgb=mix(diffuseColor.rgb,wc,0.8*on);}\n').replace('#include <lights_fragment_end>',
+    'vec2 fwq=(vWXZ-uWetO.xy)*uWetO.zw;float fwOff=(fwq.x<0.0||fwq.y<0.0||fwq.x>1.0||fwq.y>1.0)?uFarWet:0.0;rainF=max(rainF,0.7*fwOff);\n'+'vec3 tg=texture2D(tGrass,vWXZ*GRASS_K).rgb/vec3(0.267,0.359,0.158);\nvec3 td=texture2D(tDirt,vWXZ*DIRT_K).rgb/vec3(0.491,0.467,0.431);\nfloat dB=vDirt,eBand=0.0;if(texMix>0.5&&vDirt>0.003&&vDirt<0.997){float eb=fn(vWXZ*0.9)*0.6+fn(vWXZ*3.7+5.3)*0.4;eBand=4.0*vDirt*(1.0-vDirt);dB=clamp(vDirt+(eb-0.5)*1.7*eBand,0.0,1.0);eBand*=smoothstep(0.35,0.7,eb);}\nvec3 gd=clamp(mix(tg,td,dB),0.0,2.2)*(uMacro>0.0?mix(1.0,texture2D(tMacro,vWXZ*0.025).r/0.502,uMacro):1.0);float gk=0.8;\n'+matGlsl()+'diffuseColor.rgb*=mix(vec3(1.0),gd,gk*texBase);diffuseColor.rgb*=mix(vec3(1.0),vec3(1.07,1.0,0.84),0.55*eBand);\nfloat crkD=vDirt*(1.0-smoothstep(0.4,1.0,vSD));diffuseColor.rgb*=1.0+0.2*vCrk.x*crkD;\nfloat wetP=vWet*vDirt;if(texMix>0.5&&wetP>0.002)wetP=vDirt*clamp((vWet-0.45*fn(vWXZ*1.9)-0.2*fn(vWXZ*8.3))*2.4+0.35,0.0,1.0)*smoothstep(0.0,0.12,vWet);\ndiffuseColor.rgb*=(1.0-0.32*max(wetP,0.6*mudF))*(1.0-0.12*rainF)*(1.0-0.28*fwOff*(1.0-vDirt));\nfloat faceH=0.0;if(vDirt>0.01&&texMix>0.5){vec3 fdm=faceDetail(vWP,vSD,uPipeZ,vWet,uSpoil);diffuseColor.rgb*=mix(vec3(1.0),fdm,vDirt);faceH=dot(fdm,vec3(0.3333))*vDirt;}\n#include <color_fragment>\nif(vCrk.y*crkD>0.01){float cl=texMix>0.5?dot(texture2D(tCrack,vWXZ*0.547).rgb,vec3(0.299,0.587,0.114))/0.56:1.0;diffuseColor.rgb=mix(diffuseColor.rgb,(diffuseColor.rgb*0.5+vec3(0.2,0.15,0.1))*cl,vCrk.y*crkD);}\n'+matGlslPost()+'if(uWetView>0.5){float sw=max(soilW,vMud);float on=uWetMin>0.0?step(uWetMin,sw):smoothstep(0.03,0.08,sw);vec3 wc=uWetMin>0.0?vec3(0.02,0.1,0.5):mix(vec3(0.45,0.68,0.78),vec3(0.01,0.05,0.38),sw);diffuseColor.rgb=mix(diffuseColor.rgb,wc,0.8*on);}\n').replace('#include <lights_fragment_end>',
     'float skyO=1.0;\nfor(int m=0;m<4;m+=2){vec2 d=vWXZ-uOcc[m].xy;float c=cos(uOcc[m].z),s=sin(uOcc[m].z);vec2 l=vec2(d.x*c-d.y*s,d.x*s+d.y*c-uOcc[m+1].z);vec2 q=abs(l)-uOcc[m+1].xy;\nfloat dist=length(max(q,0.0))+min(max(q.x,q.y),0.0);skyO*=1.0-0.75*(1.0-smoothstep(-0.4,1.6,dist));}\nirradiance*=skyO;\n'+matGlslRefl()+GROUND_WET_GLSL()+'#include <lights_fragment_end>');
   // while it rains, water runs down wet slopes off the dig area too (the ramp, the roads, bare banks; grass drinks it): thin rills that stream
   // downhill, quicker on steeper ground, shining like the sky; uRunoff (rain.js) is how hard it is raining
