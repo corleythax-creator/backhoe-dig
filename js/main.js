@@ -334,7 +334,7 @@ function warmPre(){if(warmN<=0||bench.on)return null;warmN--;const keep=[];
   return keep}
 function warmPost(keep){if(!keep)return;for(const [o,v,c,d] of keep){o.visible=v;if(o.isInstancedMesh)o.count=c;if(o.isPoints)o.geometry.setDrawRange(0,d)}}
 // textures may finish loading before the later scripts arrive: apply them now if they are in, otherwise when they are
-const texReady=()=>{applyTextures();warmN=Math.max(warmN,3);warmAll={t0:performance.now(),next:0,mats:0,pend:0,still:0}};
+const texReady=()=>{applyTextures();warmN=Math.max(warmN,3);warmAll={t0:performance.now(),next:0,mats:0,pend:0,still:0};LOADP.warm=true};
 // the rest of the world's first use. Shaders: every material in the scene, hidden or far away, has its shader built in
 // the background (compileAsync, which waits on the browser's parallel compiling instead of stalling a frame), once the
 // textures are in and again whenever new materials turn up (the detailed machines load later), checked every 4 s for
@@ -354,11 +354,18 @@ function warmAt(x,z){const c=camera.position.clone(),sp=sun.position.clone(),stp
   finally{camera.position.copy(c);camera.updateMatrixWorld();sun.position.copy(sp);sun.target.position.copy(stp);sun.updateMatrixWorld();sun.target.updateMatrixWorld();renderer.shadowMap.needsUpdate=true}}
 const warmQuiet=()=>!help.hidden||typeof tour!=='undefined'&&tour.on&&tour.ph==='ready';
 function warmIdle(){const W=warmAll;return !W||W.pend===0&&W.still>=1&&(!W.q||!W.q.length||help.hidden)&&(!W.at||!W.at.length||!warmQuiet())}
+// the textures still to upload: every one in the scene whose picture is in and that isn't uploaded or queued yet (the
+// queue is topped up with the ones that arrive later at each 4 s check)
+function warmTexQ(W){if(!W.q){W.q=[];W.up=new Set();W.q0=0}const inQ=new Set(W.q),ok=im=>im&&(im.width||im.data||Array.isArray(im));
+  scene.traverse(o=>{for(const m of [].concat(o.material||[]))for(const k in m){const t=m[k];if(t&&t.isTexture&&!W.up.has(t)&&!inQ.has(t)&&ok(t.image)){inQ.add(t);W.q.push(t)}}});
+  W.q0=Math.max(W.q0,W.up.size+W.q.length)}
+// how far the warming is, 0 to 1, for the loading cover (start.js): texture uploads, the places visited, the shaders
+function warmFrac(){const W=warmAll;if(!W)return LOADP.warm?1:0;const q=W.q0?1-W.q.length/W.q0:0,a=W.at?1-W.at.length/WARM_AT.length:0,c=W.pend===0&&W.still>=1?1:W.mats?.5:0;return (q+a+c)/3}
 function warmAllTick(){const W=warmAll;if(!W||bench.on||vrOn())return;const now=performance.now();W.f=(W.f||0)+1;
   if(!W.at)W.at=WARM_AT.slice();if(W.at.length&&W.f%8===0&&W.mats&&warmQuiet())warmAt(...W.at.pop());
-  if(!W.q){W.q=[];const seen=new Set();scene.traverse(o=>{for(const m of [].concat(o.material||[]))for(const k in m){const t=m[k];if(t&&t.isTexture&&!seen.has(t)){seen.add(t);W.q.push(t)}}})}
-  if(!help.hidden)for(let i=0;i<3&&W.q.length;i++){const t=W.q.pop(),im=t.image;if(im&&(im.width||im.data||Array.isArray(im)))try{renderer.initTexture(t)}catch(e){}}
-  if(now<W.next)return;W.next=now+4000;
+  if(!W.q)warmTexQ(W);
+  if(!help.hidden)for(let i=0;i<(LOADP.done?3:6)&&W.q.length;i++){const t=W.q.pop();W.up.add(t);try{renderer.initTexture(t)}catch(e){}}
+  if(now<W.next)return;W.next=now+4000;warmTexQ(W);
   const ms=new Set();scene.traverse(o=>{if(o.material)for(const m of [].concat(o.material))ms.add(m)});
   if(ms.size>W.mats){W.mats=ms.size;W.still=0;W.pend++;
     try{const p=renderer.compileAsync?renderer.compileAsync(scene,camera):(renderer.compile(scene,camera),null);if(p&&p.then)p.then(()=>W.pend--,()=>W.pend--);else W.pend--}catch(e){W.pend--}}

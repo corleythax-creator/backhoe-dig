@@ -298,6 +298,16 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 #startMapHint{font:700 24px/1.15 var(--f-display)!important;letter-spacing:.03em;color:var(--machine)}
 #startMap{position:relative;flex:1 1 auto;min-height:260px;border-radius:14px;overflow:hidden;border:1px solid var(--hud-line);background:#1a4769;cursor:progress}
 #startMap.ready{cursor:crosshair}
+/* the loading cover over the map (js/start.js, LOADP): a percent and a bar, until everything is in and its shaders are built */
+#startLoad{position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:rgba(8,11,14,.72);transition:opacity .4s}
+#startLoad.gone{opacity:0;pointer-events:none}#startLoad[hidden]{display:none}
+#startLoadPct{font:700 64px/1 var(--f-display);color:#f3f5ef;letter-spacing:.02em;font-variant-numeric:tabular-nums}
+#startLoadBar{position:relative;width:min(420px,76%);height:14px;border-radius:7px;background:rgba(255,255,255,.14);overflow:hidden}
+#startLoadFill{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--machine);border-radius:7px;transition:width .3s}
+#startLoadFill::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.45),transparent);animation:startLoadShine 1.2s linear infinite}
+@keyframes startLoadShine{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+#startLoadWhat{font:600 20px/1.2 var(--f-body);color:#d5dbd2}
+#startBar button:disabled{opacity:.45}
 #startMapImg{position:absolute;max-width:none;display:block;pointer-events:none;user-select:none}
 #startDet{position:absolute;inset:0;pointer-events:none}#startDet[hidden],#startDet img[hidden]{display:none}
 #startDet img{position:absolute;max-width:none;display:block;user-select:none;opacity:0;transition:opacity .3s}#startDet img.on{opacity:1}
@@ -314,7 +324,7 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 #startTourOpt span{font:500 15px/1 var(--f-body);color:var(--muted);margin-right:4px}
 #startTourOpt button{height:36px;padding:0 12px;font-size:14px}
 #startTourOpt button[aria-pressed="true"]{background:var(--machine);color:#1c1309;border-color:var(--machine)}
-@media (max-width:520px){#startCard h1{font-size:24px}#startMapHint{font-size:19px!important}#startIsl span{font-size:12px;padding:3px 6px}#startBar button{height:50px;font-size:17px}}
+@media (max-width:520px){#startCard h1{font-size:24px}#startMapHint{font-size:19px!important}#startLoadPct{font-size:48px}#startIsl span{font-size:12px;padding:3px 6px}#startBar button{height:50px;font-size:17px}}
 #pickMore{display:none}
 /* short landscape screens (phones on their side): a wider card fits more icons to a row */
 @media (orientation:landscape) and (max-height:560px){#help #startCard{padding:10px 14px;gap:8px}#startCard h1{font-size:24px}#startMapHint{font-size:19px!important}#startBar button{height:44px}}
