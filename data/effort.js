@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-31T15:54:00Z",
+ "updated": "2026-10-31T15:55:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -96,9 +96,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-31",
-   "dh": 118,
+   "dh": 118.5,
    "act": 4,
-   "versions": 12
+   "versions": 13
   }
  ],
  "extra": [
@@ -2934,6 +2934,15 @@ window.EFFORT = {
    "tris": 7602615,
    "chars": 2141092,
    "what": "The town comes alive: spend the island's pay at every shop counter (menus and prices, coffee puts a spring in your step, the bank and the hotel), shops keep real hours and the streets fill and empty with the time of day, passersby greet you and Carry talks to anyone, and nine named regulars who remember you"
+  },
+  {
+   "v": 315,
+   "asked": "2026-10-31T10:55:00-05:00",
+   "live": "2026-10-31T10:55:35-05:00",
+   "dh": 0.5,
+   "tris": 6035038,
+   "chars": 2117052,
+   "what": "The loading screen can no longer sit at 0%: the bar keeps sweeping while the page is busy, a seconds counter shows it is working, and any error shows on it and lets you in"
   }
  ]
 };
