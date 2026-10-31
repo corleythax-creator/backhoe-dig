@@ -6,7 +6,7 @@
 // what the picture covers (all the map there is; a wide screen sees more of it, and past its edges the frame carries on
 // in the lake's blue and the woods' green, which the picture's edges fade into); shore: where the mainland begins.
 // The first tap zooms in twice as close round the spot (zoom, its centre in metres), the second starts you there
-const SPICK={box:[-250,250,-60,770],img:[-460.8,460.8,-60,948],shore:582,lake:'#1a4769',woods:'#284a26',pick:null,go:null,zoom:null,pins:{corley:[0,95],family:[0,212],dexter:[-200,292],jessica:[200,292],town:[0,735]}};
+const SPICK={box:[-250,250,-60,945],img:[-460.8,460.8,-60,948],shore:582,lake:'#1a4769',woods:'#284a26',pick:null,go:null,zoom:null,pins:{corley:[0,95],family:[0,212],dexter:[-200,292],jessica:[200,292],town:[0,735],harbor:[-60,598],hills:[-130,880]}};
 function startView(){const el=document.getElementById('startMap'),w=el.clientWidth||1,h=el.clientHeight||1,B=SPICK.box,Z=SPICK.zoom;
   const mpp=Math.max((B[1]-B[0])/w,(B[3]-B[2])/h)/(Z?2:1);if(!Z)return {cx:(B[0]+B[1])/2,cz:(B[2]+B[3])/2,mpp,w,h};
   // zoomed: centred on the tap, kept inside the picture where it fits

@@ -103,7 +103,7 @@ function wkPushBlocks(){let bump=false;
   return bump}
 // the machines are solid too (a row of circles each, as for blocks)
 // on foot he goes anywhere in the drawn world: the beaches, down into the lake, out along the mainland shores
-const WK_BOUND={x:428,z0:-553,z1:763};
+const WK_BOUND={x:428,z0:-553,z1:MAIN_ZMAX};
 // the lake's surface at x,z: the swells the water shader moves it by (scenery.js)
 function lakeY(x,z){const t=timeU.value;return WATER+Math.sin(x*0.09+t*1.1)*0.16+Math.cos(z*0.11+t*0.8)*0.13+Math.sin((x+z)*0.23+t*1.7)*0.06}
 // deeper than WK_FLOAT (about 4.6 ft) he floats, treading water with his head out; shallower he wades, slowed by the water.
