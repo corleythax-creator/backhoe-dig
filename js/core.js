@@ -58,6 +58,8 @@ Object.defineProperty(THREE.InstancedMesh.prototype,'boundingSphere',{configurab
   get(){const k=this.instanceMatrix.version+'/'+this.count;if(this._bsK!==k){this._bsK=k;this._bs=null}return this._bs},
   set(v){this._bs=v;this._bsK=this.instanceMatrix?this.instanceMatrix.version+'/'+this.count:''}});
 renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=0.8;
+// exAdapt: the eye adjusting outdoors (post.js aeRead), on top of the Graphics setting's exposure and the rooms' rmAdapt
+let exAdapt=1;
 (function(){
   const lin=c=>`${c}=mix(${c}/12.92,pow((${c}+0.055)/1.055,vec3(2.4)),step(vec3(0.04045),${c}));`;
   const C=THREE.ShaderChunk;
@@ -123,15 +125,17 @@ const CS_U={uCSMap:{value:null},uCSA:{value:new THREE.Vector4()},uCSB:{value:new
 // the haze (every Graphics level): it thickens with the true distance from the camera (not the depth along the view, which
 // thinned it at the screen's sides and shifted it as the camera turned), lies thicker low over the lake than up high,
 // and toward the sun takes the sun's light, the same glow the sky has round the sun (so far ground meets the sky behind
-// it) and a broader warm sheen at the tuning's strength, as the sky's own haze round the sun (skyLut) has. HZ_U,
-// shared by every material with haze (post.js hazeTick):
-// uHzSun the way to the sun and the sheen's strength, uHzSunC the sun's light in the haze (dark at night and under
-// cloud), uHzLow the lake's height, 1 / the height in m over which the haze thins, and how much it thins
-const HZ_U={uHzSun:{value:new THREE.Vector4(0,1,0,1)},uHzSunC:{value:new THREE.Color(0)},uHzLow:{value:new THREE.Vector3(-7.3,1/60,0.6)}};
+// it), and by day its colour changes round the horizon as the sky's does just above it (skyLut): warm and bright toward
+// the sun, bluer away from it, so far ground meets the sky behind it at every hour. HZ_U, shared by every material with
+// haze (post.js hazeTick): uHzSun the way to the sun, uHzSunC the sun's light in the haze (dark at night and under
+// cloud), uHzLow the lake's height, 1 / the height in m over which the haze thins, and how much it thins, uHzRing the
+// haze colour's multiplier at every 22.5° round from the sun's side (0) to the side away from it (8)
+const HZ_U={uHzSun:{value:new THREE.Vector4(0,1,0,1)},uHzSunC:{value:new THREE.Color(0)},uHzLow:{value:new THREE.Vector3(-7.3,1/60,0.6)},
+  uHzRing:{value:Array.from({length:9},()=>new THREE.Vector3(1,1,1))}};
 (function(){const C=THREE.ShaderChunk;
   C.fog_pars_vertex+='\n#ifdef USE_FOG\n\tvarying vec3 vFogPos;\n#endif';
   C.fog_vertex+='\n#ifdef USE_FOG\n\tvFogPos = mvPosition.xyz;\n#endif';
-  C.fog_pars_fragment+='\n#ifdef USE_FOG\n\tvarying vec3 vFogPos;\n\tuniform vec4 uHzSun;\n\tuniform vec3 uHzSunC, uHzLow;\n#endif';
+  C.fog_pars_fragment+='\n#ifdef USE_FOG\n\tvarying vec3 vFogPos;\n\tuniform vec4 uHzSun;\n\tuniform vec3 uHzSunC, uHzLow, uHzRing[ 9 ];\n#endif';
   C.fog_fragment=`#ifdef USE_FOG
 	vec3 hzW = transpose( mat3( viewMatrix ) ) * vFogPos;
 	float hzD = length( hzW );
@@ -144,7 +148,9 @@ const HZ_U={uHzSun:{value:new THREE.Vector4(0,1,0,1)},uHzSunC:{value:new THREE.C
 		float fogFactor = max( 1.0 - exp( - 2.8 * hzT * hzT ), smoothstep( 0.8 * fogFar, fogFar, hzD ) );
 	#endif
 	float hzS = max( dot( hzW / max( hzD, 1e-4 ), uHzSun.xyz ), 0.0 );
-	vec3 hzColor = fogColor + uHzSunC * ( 0.32 * pow( hzS, 10.0 ) + 0.22 * uHzSun.w * hzS * hzS * hzS );
+	float hzA = acos( clamp( dot( normalize( hzW.xz + 1e-5 ), normalize( uHzSun.xz + 1e-5 ) ), -1.0, 1.0 ) ) * 2.5464791;
+	int hzI = int( min( hzA, 7.0 ) );
+	vec3 hzColor = fogColor * mix( uHzRing[ hzI ], uHzRing[ hzI + 1 ], hzA - float( hzI ) ) + uHzSunC * 0.32 * pow( hzS, 10.0 );
 	gl_FragColor.rgb = mix( gl_FragColor.rgb, hzColor, fogFactor );
 #endif`;
 })();
@@ -269,6 +275,16 @@ const sunFar=new THREE.DirectionalLight(0xffffff,0);sunFar.castShadow=false;sunF
 Object.assign(sunFar.shadow.camera,{left:-160,right:160,top:160,bottom:-160,near:1,far:840});
 sunFar.shadow.bias=-0.0005;sunFar.shadow.normalBias=0.15;sunFar.shadow.autoUpdate=false;
 scene.add(sunFar);scene.add(sunFar.target);
+// the near map: pushed ahead of the camera by a share of its width (TU.shAhead; what is behind the camera is never seen,
+// so its texels go where you look) and held to its own texel grid, so shadow edges stand still as you move instead of
+// crawling. sun.target is where the near map is meant to be (main.js, editor.js put it at you); this moves it each frame
+const sunNearV=new THREE.Vector3(),sunNearX=new THREE.Vector3(),sunNearY=new THREE.Vector3();
+function sunSnap(p,R,n,X,Y){X.set(0,1,0).cross(LIGHT_DIR).normalize();Y.copy(LIGHT_DIR).cross(X);
+  const t=2*R/n,ax=p.dot(X),ay=p.dot(Y);p.addScaledVector(X,Math.round(ax/t)*t-ax).addScaledVector(Y,Math.round(ay/t)*t-ay)}
+function sunNearTick(){if(!sun.castShadow)return;const R=sun.shadow.camera.right,p=sun.target.position;
+  camera.getWorldDirection(sunNearV);sunNearV.y=0;if(sunNearV.lengthSq()>1e-6)sunNearV.normalize();
+  p.addScaledVector(sunNearV,R*TU.shAhead);sunSnap(p,R,sun.shadow.mapSize.x,sunNearX,sunNearY);
+  sun.position.copy(p).addScaledVector(LIGHT_DIR,SUN_D);sun.updateMatrixWorld();sun.target.updateMatrixWorld()}
 const sunFarC=new THREE.Vector3(),sunFarV=new THREE.Vector3(),sunFarX=new THREE.Vector3(),sunFarY=new THREE.Vector3(),sunFarL=new THREE.Vector3();let sunFarN=0,sunFarScanT=0;
 // small instanced things (grass, tufts, pebbles: under 6 ft across) cast into the near map only; in the far one they
 // would be a few texels and cost as much as the rest of it. Looked for every 3 s, as scattering adds more
@@ -284,9 +300,7 @@ function sunFarTick(){if(!sunFar.visible)return;
   camera.getWorldDirection(sunFarV);sunFarV.y=0;if(sunFarV.lengthSq()>1e-6)sunFarV.normalize();
   sunFarC.copy(sun.target.position).addScaledVector(sunFarV,R*0.45);
   // held to the map's own texel grid (the shadow camera's sideways and up axes), so its edges don't crawl as you move
-  sunFarX.set(0,1,0).cross(LIGHT_DIR).normalize();sunFarY.copy(LIGHT_DIR).cross(sunFarX);
-  const t=2*R/sunFar.shadow.mapSize.x,ax=sunFarC.dot(sunFarX),ay=sunFarC.dot(sunFarY);
-  sunFarC.addScaledVector(sunFarX,Math.round(ax/t)*t-ax).addScaledVector(sunFarY,Math.round(ay/t)*t-ay);
+  sunSnap(sunFarC,R,sunFar.shadow.mapSize.x,sunFarX,sunFarY);
   sunFar.target.position.copy(sunFarC);sunFar.position.copy(sunFarC).addScaledVector(LIGHT_DIR,fc.far/2);
   sunFar.updateMatrixWorld();sunFar.target.updateMatrixWorld();sunFar.shadow.needsUpdate=true}
 // sky reflections: the dome over a dull ground, caught into a small cube map for glass, paint, chrome and water; daynight.js
