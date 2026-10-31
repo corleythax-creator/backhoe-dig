@@ -72,7 +72,7 @@ function frame(now){
   if(bench.on){benchTick(dt);driveIn=0;turnIn=0;tThr=0;tSteer=0;tBed=0;mL=0;mR=0}
   updateTruck(dt,tThr,tSteer,tBed);updateMower(dt,mL,mR);if(bench.on){sDrive=sTurn=sArm=sCurl=0}updateSkid(dt,sDrive,sTurn,sArm,sCurl);
   siteTick();
-  if(mode==='walk'&&!bench.on)updateWalker(dt,Lx,Ly,Rx*Ts,Ry);else updateWalker(dt,0,0,0,0);trimTick(dt);
+  if(mode==='walk'&&!bench.on)updateWalker(dt,Lx,Ly,Rx*Ts,Ry);else updateWalker(dt,0,0,0,0);trimTick(dt);gunTick(dt);
   boatTick(dt,bThr,bSteer);lakeBoatsTick(dt);trainTick(dt);bikeTick(dt,kThr,kSteer);hvTick(dt,hDrive,hTurn,hArm,hCurl);pbTick(dt);twinTick();
   statTick(dt);
   // what the mixer hears: hydraulic demand, a ram pushed against its stop (relief valve), tracks moving
@@ -238,7 +238,7 @@ function frame(now){
     gv.style.color=st.strikes?'var(--danger)':st.exposed?'var(--ok)':'';
   }
   // flying dirt
-  particlesTick(dt);dustTick(dt);grimeTick();mdlTick(dt);wkMdlPose();
+  particlesTick(dt);dustTick(dt);grimeTick();mdlTick(dt);wkMdlPose();gunPlace();
   // groundwater, the tailgate stream and the dirt sounds
   digTilesTick(dt);if(!bench.on)waterTick(dt);mudTick(dt);rainTick(dt);lakeTick(dt);grassTick(dt);jesTick(dt);mainTick(dt);marinaTick(dt);tfTick(dt);brTick(dt);treesTick(dt);plantTick();
   pourStream(streams[1],tr.pourP,hAt(tr.pourP.x,tr.pourP.z),tr.pourRate,tr.loadC,now/1000);
