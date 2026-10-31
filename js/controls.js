@@ -288,10 +288,10 @@ SPICK.go=()=>{const p=SPICK.pick;if(!p)return;if(!startReady()){$('#startMapHint
   SPICK.pick=null;startLay();if(!landIn(p.x,p.z,0,0,true)&&!tpSpot('foot',p.x,p.z)){toast(say('tpLake'),'bad');return}
   tpPick={x:p.x,z:p.z};tpGo('foot',true);tpSet(null);startIn('walk');toast(say('startIsl',{island:mapPlace(p.x,p.z),how:'on foot'}),'good',2600)};
 function startWait(){if(!startReady()){setTimeout(startWait,200);return}$('#startMap').classList.add('ready');
-  if(SPICK.pick)SPICK.go();else $('#startMapHint').textContent='Tap the map where you want to start'}
+  if(SPICK.pick)SPICK.go();else $('#startMapHint').textContent=SPICK.zoom?'Tap again where you want to start':'Tap the map to zoom in'}
 startWait();
 $('#startResume').onclick=()=>startIn(mode);
-$('#helpBtn').addEventListener('click',()=>requestAnimationFrame(startLay));
+$('#helpBtn').addEventListener('click',()=>requestAnimationFrame(()=>{startUnzoom();$('#startMapHint').textContent='Tap the map to zoom in'}));
 help.addEventListener('click',e=>{if(e.target===help)startIn(mode)});
 $('#ctrlBtn').onclick=()=>{const b=$('#ctrlBtn'),box=$('#ctrlBox'),on=box.hidden;box.hidden=!on;b.setAttribute('aria-expanded',on);b.textContent=on?'Hide controls':'Controls';if(on)box.scrollIntoView({block:'start',behavior:'smooth'})};
 function started(){if(!st.startT)st.startT=performance.now()}
