@@ -11,11 +11,11 @@ const BT_C=[-1.7,-0.6,0.5,1.6],BT_R=0.95;
 // its end, clear of the T-head, side: which side of it)
 const BT_MAR_X=MAR.x,BT_MAR_Z=MAR.z0;
 const BT_SPOTS=[
-  {n:"Corley's",cx:0,cz:MZ,dx:-1,dz:0,hull:0xe8b923},
-  {n:'Family',cx:FAM_X,cz:FAM_Z,dx:-0.6,dz:0.8,hull:0x1f3a5f},
-  {n:"Jessica's",cx:JES_X,cz:JES_Z,dx:0,dz:1,hull:0xa8322a},
-  {n:"Dexter's",cx:DEX_X,cz:DEX_Z,dx:0,dz:-1,hull:0x2f6b4a},
-  {n:'Town',dock:{x0:BT_MAR_X,z0:BT_MAR_Z,x1:BT_MAR_X,z1:BT_MAR_Z-MAR.len,hw:1.5,y:MAR.y,drawn:1},at:9,side:-1,hull:0x6d7f8c}];
+  {n:"Corley's",cx:0,cz:MZ,dx:-1,dz:0,hull:0xe8b923,nm:['Miss Corley','#1f3a5f',1]},
+  {n:'Family',cx:FAM_X,cz:FAM_Z,dx:-0.6,dz:0.8,hull:0x1f3a5f,nm:['Seas the Day','#e8c27a',1]},
+  {n:"Jessica's",cx:JES_X,cz:JES_Z,dx:0,dz:1,hull:0xa8322a,nm:['REEL TIME','#ffffff',0]},
+  {n:"Dexter's",cx:DEX_X,cz:DEX_Z,dx:0,dz:-1,hull:0x2f6b4a,nm:['DOCK HOLIDAY','#f2f1ec',0]},
+  {n:'Town',dock:{x0:BT_MAR_X,z0:BT_MAR_Z,x1:BT_MAR_X,z1:BT_MAR_Z-MAR.len,hw:1.5,y:MAR.y,drawn:1},at:9,side:-1,hull:0x6d7f8c,nm:['Lake Effect','#ffffff',1]}];
 // out from the middle to where the beach is just under the deck, then on until the water is deep enough to moor in
 function btDockPlan(s){if(s.dock){const d=s.dock,dx=d.x1-d.x0,dz=d.z1-d.z0,len=Math.hypot(dx,dz);
     const b=Object.assign({y1:d.y,dock:1,len,ux:dx/len,uz:dz/len},d);BRIDGES.push(b);return b}
@@ -70,10 +70,24 @@ function btModel(hull){const g=new THREE.Group(),K=famKit();
   // the windscreen, wrapped round the front of the console
   const ws=new THREE.Mesh(new THREE.BoxGeometry(0.82,0.32,0.02),btGlass);ws.position.set(0,1.12,0.66);ws.rotation.x=-0.45;g.add(ws);
   scene.add(g);return g}
+// a boat's name in vinyl lettering on both sides of the hull aft, set into the topsides' lean: script (an italic serif)
+// or block capitals, a thin dark outline round each letter. Its own group, so the detailed model's swap leaves it be
+function btName(g,[t,col,script]){const cv=document.createElement('canvas');cv.width=1024;cv.height=200;const c=cv.getContext('2d');
+  const ff=script?'italic 700 130px Georgia,"Times New Roman",serif':'700 140px "Barlow Condensed","Arial Narrow",Arial,sans-serif';c.font=ff;
+  const k=Math.min(1,980/c.measureText(t).width);c.font=script?`italic 700 ${Math.round(130*k)}px Georgia,serif`:`700 ${Math.round(140*k)}px "Barlow Condensed","Arial Narrow",Arial,sans-serif`;
+  c.textAlign='center';c.textBaseline='middle';c.lineJoin='round';c.lineWidth=10*k;c.strokeStyle=famShade(col,col==='#1f3a5f'?0.85:-0.75);c.strokeText(t,512,104);c.fillStyle=col;c.fillText(t,512,104);
+  const tex=new THREE.CanvasTexture(cv);tex.anisotropy=8;tex.colorSpace=THREE.SRGBColorSpace;
+  const mat=new THREE.MeshStandardMaterial({map:tex,transparent:true,depthWrite:false,roughness:0.35,envMap:skyEnv,envMapIntensity:0.8,polygonOffset:true,polygonOffsetFactor:-2});
+  // each vertex laid onto the topsides where it falls (btSection), a little proud of them
+  const G=new THREE.Group();
+  for(const sd of [-1,1]){const p=new THREE.PlaneGeometry(1.9,0.37,16,2);p.rotateY(sd*Math.PI/2);p.translate(0,0.25,-BT_L/2+0.24*BT_L);const P=p.attributes.position;
+    for(let i=0;i<P.count;i++){const y=P.getY(i),s=btSection((P.getZ(i)+BT_L/2)/BT_L);P.setX(i,sd*(s.w*(0.88+0.12*(y-s.chine)/(s.top-s.chine))+0.035))}
+    p.computeVertexNormals();const m=new THREE.Mesh(p,mat);m.renderOrder=1;G.add(m)}
+  g.add(G);return g}
 // boats: where each is, its speed (m/s along the bow), how it sits (y, pitch, roll) and its model
 const boats=BT_SPOTS.map((s,i)=>{const d=BT_DOCKS[i],t=d.len-(s.at||3.4),u=(s.side||1)*(d.hw+BT_B/2+0.12);
   const home={x:d.x0+d.ux*t-d.uz*u,z:d.z0+d.uz*t+d.ux*u,yaw:Math.atan2(d.ux,d.uz)};
-  return {n:s.n,home,x:home.x,z:home.z,yaw:home.yaw,v:0,y:WATER,pitch:0,roll:0,g:btModel(s.hull)}});
+  return {n:s.n,home,x:home.x,z:home.z,yaw:home.yaw,v:0,y:WATER,pitch:0,roll:0,g:btName(btModel(s.hull),s.nm)}});
 // the detailed model (models.js, tools/models/boat.js): each boat's topsides in its own hull colour (glossy gelcoat, MDL_GEL), the windscreen see-through
 const btScreen=new THREE.MeshStandardMaterial({color:0xcfe3ea,transparent:true,opacity:0.28,roughness:0.05,metalness:0,envMap:skyEnv,depthWrite:false});
 MDL_KIT.boat={sets:()=>boats.map(b=>({body:b.g})),after(on){if(!on)return;const hull=mdlMatOf('gel#e8b923'),scr=mdlMatOf('glass#b9d4dc');

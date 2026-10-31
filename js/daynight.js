@@ -152,6 +152,10 @@ function dnTick(dt){
   const el=SUN_DIR.dot(dnMoonDir);dn.ill=(1-el)/2;dn.wax=((mrd[0]-srd[0])%(2*Math.PI)+2*Math.PI)%(2*Math.PI)<Math.PI;
   // the sky
   dnKey(DN_SKY,h,1,skyU.uTop.value);dnKey(DN_SKY,h,2,skyU.uHor.value);dnKey(DN_SKY,h,3,skyU.uGlow.value);
+  // by day the colours worked out from the air (core.js skyLut) take over from the table; the table keeps the night
+  const pk=skyU.uPhysK.value=ss(-10,-3,h);if(h>-12)skyLutTick(h);
+  if(pk>0){skyU.uTop.value.lerp(skyAtm.zen,pk);skyU.uHor.value.lerp(skyAtm.hor,pk);
+    dnCa.copy(skyAtm.sunH).sub(skyAtm.hor);dnCa.r=Math.max(0,dnCa.r);dnCa.g=Math.max(0,dnCa.g);dnCa.b=Math.max(0,dnCa.b);skyU.uGlow.value.lerp(dnCa,pk)}
   const nl=TU.nightLight,moonUp=ss(-1,6,dn.mel),moonK=dn.ill*moonUp*(1-ss(-8,-3,h));
   if(moonK>0){const b=0.035*moonK*Math.min(2,nl);skyU.uTop.value.r+=b*0.5;skyU.uTop.value.g+=b*0.7;skyU.uTop.value.b+=b;skyU.uHor.value.r+=b*0.6;skyU.uHor.value.g+=b*0.7;skyU.uHor.value.b+=b*0.9}
   dnKey(DN_SUNC,h,1,dnSunC);skyU.uSunC.value.copy(dnSunC).multiplyScalar(ss(-3,2,h));
@@ -198,7 +202,7 @@ function dnTick(dt){
   const ff=night*(1-ss(0.05,0.3,weather.r));dnFF.visible=ff>0.01;if(dnFF.visible){dnFF.material.uniforms.uA.value=ff;dnFF.material.uniforms.uT.value=timeU.value%1000;dnFF.material.uniforms.uPx.value=renderer.getPixelRatio();dnFFTick()}
   dnSndTick(dt,night);
   // the reflections catch the sky again when it has changed enough to see
-  dn.envT-=dt;if(dn.envT<=0){const sig=[skyU.uTop.value.getHexString(),skyU.uHor.value.getHexString(),skyU.uGlow.value.getHexString(),sky.material.color.getHexString(),Math.round(SUN_DIR.x*50),Math.round(SUN_DIR.y*50),Math.round(SUN_DIR.z*50)].join();
+  dn.envT-=dt;if(dn.envT<=0){const sig=[skyU.uTop.value.getHexString(),skyU.uHor.value.getHexString(),skyU.uGlow.value.getHexString(),sky.material.color.getHexString(),Math.round(SUN_DIR.x*50),Math.round(SUN_DIR.y*50),Math.round(SUN_DIR.z*50),clEnvSig()].join();
     if(sig!==dn.envSig){dn.envSig=sig;skyEnvUpdate(DAY.lum)}dn.envT=0.4}
   if(Math.abs(dn.t-dn.saved)>600000||(dn.run&&performance.now()-dn.saveT>20000)){dn.saveT=performance.now();dnSave()}
   if((dn.uiT-=dt)<=0){dn.uiT=0.5;dnUI()}}

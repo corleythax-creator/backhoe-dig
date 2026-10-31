@@ -154,6 +154,8 @@ const TUNE=[
   // the clouds in 3D (storm.js, Medium graphics and up)
   ['clBase','Weather','Cloud base height',460,'ft',500,6000,50],['clDense','Weather','How thick the clouds are',1,'pct',20,400,5],
   ['clShadow','Weather','How dark the cloud shadows on the ground are',0.8,'pct',0,100,5],
+  ['clCirrus','Weather','High thin cloud',1,'pct',0,200,5],['clBeams','Weather','Sunbeams between the clouds',1,'pct',0,300,5],
+  ['clRainbow','Weather','Rainbows after rain',1,'pct',0,200,5],
   ['lampLight','Day and night','Headlights, lamps and lit windows',1,'pct',0,300,5],
   // fuel and pay (fuel.js)
   ['fuelUse','Work and pay','Fuel use (100% burns what the real machine does in an hour of game time; does nothing while fuel burn is off, FUEL_BURN in fuel.js)',1,'pct',0,500,5],

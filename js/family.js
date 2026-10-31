@@ -30,6 +30,16 @@ function famMerge(list){let n=0;for(const g of list)n+=g.attributes.position.cou
 // famGelGfx). famGelMesh merges a kit's parts with box-projected texture coordinates, FAM_GEL_T metres to a tile
 const FAM_GEL_T=1.4,famGelMat=new THREE.MeshStandardMaterial({vertexColors:true,roughness:0.32,metalness:0,envMap:skyEnv,envMapIntensity:0.9,side:THREE.DoubleSide});
 let famGelTex=null;
+// the waterline stain on a hull's gelcoat: a tea-brown band from just under the waterline (y 0 in the boat's own frame)
+// to a hand's width above it, streaky along the hull, as a lake leaves on boats that sit in it
+function famStain(m){m.userData.stain=1;const old=m.onBeforeCompile,k=m.customProgramCacheKey();
+  m.onBeforeCompile=function(sh,r){if(old)old.call(this,sh,r);
+    sh.vertexShader='varying vec3 vGelP;\n'+sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvGelP=position;');
+    sh.fragmentShader='varying vec3 vGelP;\n'+sh.fragmentShader.replace('#include <color_fragment>','#include <color_fragment>\n'+
+      '{float s=smoothstep(0.2,0.03,vGelP.y)*smoothstep(-0.3,-0.06,vGelP.y);s*=0.55+0.25*sin(vGelP.z*9.0+sin(vGelP.z*2.3)*3.0)+0.2*sin(vGelP.z*31.0);'+
+      'diffuseColor.rgb*=mix(vec3(1.0),vec3(0.78,0.69,0.5),clamp(s,0.0,1.0)*0.6);}')};
+  m.customProgramCacheKey=()=>k+'gelStain'}
+famStain(famGelMat);
 function famGelMesh(list){const g=famMerge(list),P=g.attributes.position.array,N=g.attributes.normal.array,uv=new Float32Array(P.length/3*2),t=1/FAM_GEL_T;
   for(let i=0;i<P.length;i+=9){let ax=0,ay=0,az=0;for(let k=0;k<9;k+=3){ax+=Math.abs(N[i+k]);ay+=Math.abs(N[i+k+1]);az+=Math.abs(N[i+k+2])}
     for(let k=0;k<3;k++){const q=i+k*3,o=(i/3+k)*2;if(ay>=ax&&ay>=az){uv[o]=P[q]*t;uv[o+1]=P[q+2]*t}else if(ax>=az){uv[o]=P[q+2]*t;uv[o+1]=P[q+1]*t}else{uv[o]=P[q]*t;uv[o+1]=P[q+1]*t}}}
@@ -88,13 +98,40 @@ function famGable(d,h,L){const a=-L/2,b=L/2,p=-d/2,q=d/2,v=[
   a,0,q, a,h,0, b,h,0,  a,0,q, b,h,0, b,0,q];
   const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(v,3));return g}
 // a sign board with lettering, large and plain so it reads from a machine's cab
+// a painted sign board into a canvas at x0, y0, W by H: the board colour over faint wood grain, weathered toward its
+// edges, a bevelled moulding round it (lit from above), a pinstripe in the lettering colour, and the rows of lettering
+// with a soft shadow under them as if carved and painted; serif lettering is gilded (a sheen down each letter).
+// rows: [text, size and height down the board (fractions of H), weight, italic]
+const famShade=(c,k)=>{const o=new THREE.Color(c);return '#'+(k<0?o.lerp(new THREE.Color(0),-k):o.lerp(new THREE.Color(0xffffff),k)).getHexString()};
+function famSignPaint(g,x0,y0,W,H,bg,fg,serif,rows,seed){let sd=seed|0||7;const rnd=()=>{sd=(sd*16807)%2147483647;return sd/2147483647};
+  g.save();g.beginPath();g.rect(x0,y0,W,H);g.clip();g.fillStyle=bg;g.fillRect(x0,y0,W,H);
+  // the grain: long faint streaks along the board, lighter and darker, and a fine speckle
+  for(let i=0,n=Math.round(H/2.5);i<n;i++){const y=y0+rnd()*H,a=0.025+rnd()*0.05;g.strokeStyle=rnd()<0.5?`rgba(0,0,0,${a})`:`rgba(255,255,255,${a*0.7})`;
+    g.lineWidth=0.6+rnd()*H*0.025;g.beginPath();g.moveTo(x0,y);for(let x=0;x<=W;x+=W/8)g.lineTo(x0+x,y+Math.sin(x*0.013+i)*H*0.012);g.stroke()}
+  for(let i=0;i<W*H/90;i++){g.fillStyle=`rgba(${rnd()<0.5?'0,0,0':'255,255,255'},${0.03+rnd()*0.04})`;g.fillRect(x0+rnd()*W,y0+rnd()*H,1+rnd()*1.5,1)}
+  // weathering: darker toward the edges, a few hairline scratches
+  const vg=g.createRadialGradient(x0+W/2,y0+H/2,Math.min(W,H)*0.3,x0+W/2,y0+H/2,Math.max(W,H)*0.62);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,0.22)');g.fillStyle=vg;g.fillRect(x0,y0,W,H);
+  g.strokeStyle='rgba(255,255,255,0.08)';g.lineWidth=0.7;for(let i=0;i<6;i++){const x=x0+rnd()*W,y=y0+rnd()*H;g.beginPath();g.moveTo(x,y);g.lineTo(x+(rnd()-0.5)*W*0.08,y+(rnd()-0.5)*H*0.2);g.stroke()}
+  // the moulding: a light top and left, a dark bottom and right, a shadow inside it, then the pinstripe
+  const b=Math.max(3,H*0.07);g.fillStyle=famShade(bg,0.28);g.fillRect(x0,y0,W,b);g.fillRect(x0,y0,b,H);g.fillStyle=famShade(bg,-0.45);g.fillRect(x0,y0+H-b,W,b);g.fillRect(x0+W-b,y0,b,H);
+  g.strokeStyle='rgba(0,0,0,0.3)';g.lineWidth=b*0.4;g.strokeRect(x0+b*1.2,y0+b*1.2,W-b*2.4,H-b*2.4);
+  g.strokeStyle=fg;g.lineWidth=Math.max(1.5,H*0.018);g.strokeRect(x0+b*1.9,y0+b*1.9,W-b*3.8,H-b*3.8);
+  const ff=serif?'Georgia,"Times New Roman",serif':'"Barlow Condensed","Arial Narrow",Arial,sans-serif';g.textAlign='center';g.textBaseline='middle';
+  for(const [t,sz,yf,wt,it] of rows){let fs=H*sz;g.font=`${it?'italic ':''}${wt||700} ${Math.round(fs)}px ${ff}`;const m=g.measureText(t).width,room=W-b*6;
+    if(m>room){fs*=room/m;g.font=`${it?'italic ':''}${wt||700} ${Math.round(fs)}px ${ff}`}const ty=y0+H*yf;
+    g.shadowColor='rgba(0,0,0,0.5)';g.shadowBlur=fs*0.08;g.shadowOffsetX=fs*0.03;g.shadowOffsetY=fs*0.045;
+    if(serif){const gr=g.createLinearGradient(0,ty-fs/2,0,ty+fs/2);gr.addColorStop(0,famShade(fg,0.35));gr.addColorStop(0.5,fg);gr.addColorStop(0.55,famShade(fg,-0.25));gr.addColorStop(1,famShade(fg,0.1));g.fillStyle=gr}
+    else g.fillStyle=fg;g.fillText(t,x0+W/2,ty);
+    g.shadowColor='transparent';g.lineWidth=Math.max(0.6,fs*0.02);g.strokeStyle=famShade(fg,-0.35);g.strokeText(t,x0+W/2,ty)}
+  g.restore()}
+// a sign's material: painted wood, a little sheen, the sky in it
+const famSignMat=(tex,o)=>new THREE.MeshStandardMaterial(Object.assign({map:tex,roughness:0.62,metalness:0,envMap:skyEnv,envMapIntensity:0.45},o||{}));
 function famSign(lines,w,h,x,y,z,ry,bg,fg){
-  const cv=document.createElement('canvas'),R=Math.round(256*w/h);cv.width=Math.min(1024,R);cv.height=Math.round(cv.width*h/w);
-  const g=cv.getContext('2d');g.fillStyle=bg;g.fillRect(0,0,cv.width,cv.height);g.strokeStyle=fg;g.lineWidth=cv.height*0.04;g.strokeRect(cv.height*0.05,cv.height*0.05,cv.width-cv.height*0.1,cv.height-cv.height*0.1);
-  g.fillStyle=fg;g.textAlign='center';g.textBaseline='middle';const fs=cv.height*0.7/lines.length;
-  lines.forEach((t,i)=>{g.font=`${i?600:700} ${Math.round(fs*(i?0.72:0.9))}px "Barlow Condensed","Arial Narrow",Arial,sans-serif`;g.fillText(t,cv.width/2,cv.height*(0.5+(i-(lines.length-1)/2)*0.78/lines.length))});
-  const tex=new THREE.CanvasTexture(cv);tex.anisotropy=4;
-  const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),M(0xffffff,{map:tex,flatShading:false,side:THREE.DoubleSide}));
+  const cv=document.createElement('canvas'),R=Math.round(512*w/h);cv.width=Math.min(2048,R);cv.height=Math.round(cv.width*h/w);
+  const g=cv.getContext('2d'),n=lines.length,fs=0.7/n;
+  famSignPaint(g,0,0,cv.width,cv.height,bg,fg,false,lines.map((t,i)=>[t,fs*(i?0.72:0.9),0.5+(i-(n-1)/2)*0.78/n,i?600:700]),lines[0].length*31+n);
+  const tex=new THREE.CanvasTexture(cv);tex.anisotropy=8;tex.colorSpace=THREE.SRGBColorSpace;
+  const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),famSignMat(tex,{side:THREE.DoubleSide}));
   m.position.set(x,y,z);m.rotation.y=ry;scene.add(m);return m}
 
 (function(){
