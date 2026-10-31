@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Friday, October 30, 2026
 
+- **v290** (9:32 PM) A Shopfolk count beside Townsfolk: the people in shops and houses start each game at shopPop (60) and those shot indoors are gone until the next start
 - **v289** (9:32 PM) Main Street in town is paved in red brick, its bricks standing up out of their joints with Material relief; the cross street stays asphalt.
 - **v288** (9:30 PM) Breakwater boulders in photo-scanned granite, standing-seam metal roofs on the Dockside Grill and bandstand, woven canvas on every awning stripe; tintable scanned kit materials (famTint)
 - **v287** (9:27 PM) Townsfolk react to where they are shot: head shots drop them, chest shots stagger them over, gut shots double them up, leg shots put them down crawling, arm shots spin them and they run
