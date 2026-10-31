@@ -48,17 +48,22 @@ addEventListener('resize',startLay);startLay();
 const LOADP={js:0,mgr:[],warm:false,done:false,shown:0,cap:60};
 document.addEventListener('load',e=>{if(e.target.tagName==='SCRIPT'&&e.target.defer)LOADP.js++},true);
 document.addEventListener('error',e=>{if(e.target.tagName==='SCRIPT'&&e.target.defer)LOADP.js++},true);
-function loadTick(){if(LOADP.done)return;const jsN=document.querySelectorAll('script[defer]').length||1,js=Math.min(1,LOADP.js/jsN);
+// a page error shows on the cover (so it can be reported) and lets you in a few seconds later, rather than hanging
+addEventListener('error',e=>{if(e.message&&!/ResizeObserver/.test(e.message)&&!LOADP.err){LOADP.err=e.message;LOADP.errT=performance.now()}});
+function loadTick(){try{loadStep()}catch(e){if(!LOADP.err){LOADP.err=String(e&&e.message||e);LOADP.errT=performance.now()}loadStep(true)}}
+function loadStep(bad){if(LOADP.done)return;if(bad){loadEnd();return}const jsN=document.querySelectorAll('script[defer]').length||1,js=Math.min(1,LOADP.js/jsN);
   const game=js>=1&&typeof tpGo==='function'&&typeof warmIdle==='function',now=performance.now();
   // the files to wait for: those asked for by 2 s after the scripts ran (things fetched later, as they come into use, load
   // on in the background rather than holding the cover up)
   if(game&&!LOADP.gameT)LOADP.gameT=now;let al=0,at=0;for(const [l,t] of LOADP.mgr){al+=l;at+=t}
   if(LOADP.gameT&&now-LOADP.gameT>2000&&LOADP.goal===undefined)LOADP.goal=at;if(LOADP.goal!==undefined)at=LOADP.goal;al=Math.min(al,at);
   const a=at?al/at:0,w=typeof warmFrac==='function'?warmFrac():0;
-  const done=LOADP.goal!==undefined&&al>=at&&LOADP.warm&&warmIdle()||now>LOADP.cap*1000;
+  const done=LOADP.goal!==undefined&&al>=at&&LOADP.warm&&warmIdle()||now>LOADP.cap*1000||LOADP.err&&now-LOADP.errT>4000;
   const p=done?100:Math.min(99,45*js+30*a*(game?1:.8)+25*w);LOADP.shown=Math.max(LOADP.shown,p);
   const pct=Math.floor(LOADP.shown),L=document.getElementById('startLoad');
   document.getElementById('startLoadPct').textContent=pct+'%';document.getElementById('startLoadFill').style.width=LOADP.shown+'%';L.setAttribute('aria-valuenow',pct);
-  document.getElementById('startLoadWhat').textContent=!game?'Loading the game':al<at?`Loading pictures and models: ${al} of ${at}`:'Getting the island ready';
-  if(!done)return;LOADP.done=true;L.classList.add('gone');setTimeout(()=>L.hidden=true,450);document.getElementById('startResume').disabled=false;clearInterval(LOADP.iv)}
+  const sec=now>8000?` · ${Math.round(now/1000)} s`:'';
+  document.getElementById('startLoadWhat').textContent=LOADP.err?'Hit a problem: '+LOADP.err.slice(0,120):(!game?'Loading the game':al<at?`Loading pictures and models: ${al} of ${at}`:'Getting the island ready')+sec;
+  if(done)loadEnd()}
+function loadEnd(){const L=document.getElementById('startLoad');LOADP.done=true;L.classList.add('gone');setTimeout(()=>L.hidden=true,450);document.getElementById('startResume').disabled=false;clearInterval(LOADP.iv)}
 LOADP.iv=setInterval(loadTick,150);
