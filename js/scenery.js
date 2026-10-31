@@ -527,7 +527,7 @@ function assetsBuild(){const o=new THREE.Object3D(),c=new THREE.Color(),n={pine:
   const im=assetIMs.rock[0];im.count=n.rock;im.instanceMatrix.needsUpdate=true;im.instanceColor.needsUpdate=true;
   treeGroup('main',T);
   // the things placed from the editor's catalogue (props.js, which loads later)
-  if(typeof propsBuild==='function')propsBuild()}
+  if(typeof propsBuild==='function')propsBuild();if(typeof fxBuild==='function')fxBuild()}
 
 // ---------- the town's boulders ----------
 // Clusters of a big boulder, a medium one or two and a scatter of small stones on the town's open grass (the mainland,

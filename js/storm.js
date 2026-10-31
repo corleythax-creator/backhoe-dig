@@ -31,12 +31,12 @@ clouds.frustumCulled=false;clouds.renderOrder=-0.9;scene.add(clouds);
 // share of sky covered is just 1 - the threshold) shaped by billowing 3D noise, lit by the sun through the cloud toward
 // it (dark undersides, bright rims round the sun) and by the sky. The layer curves down with the earth (a small earth,
 // so it meets the horizon in about 4 miles), fades into the haze with distance, and is drawn at a half or a third of
-// the screen's size into clRT (it is soft) before each frame, then laid over the sky behind everything nearer. The
+// the screen's size (it is soft) before each frame, blended with the frames before, then laid over the sky behind everything nearer. The
 // ground beneath gets the same cover map as moving shadows (CS_U, core.js), cast along the sun's slant.
 const CL_MAP=6000,CL_R=40000,CL_MAXD=14000,CL_Q=[null,{d:3,n:28,l:3,det:0},{d:2,n:40,l:4,det:1},{d:2,n:64,l:6,det:1}];
 const clV={on:false,q:0,mat:{},done:false,rt:null,frame:0,off3:new THREE.Vector3()};
 // the cover map: tiling noise, smooth and lumpy, ranked so its values are spread evenly over 0 to 1
-function clMakeMap(){const N=256,v=new Float32Array(N*N),hs=(x,y,s)=>{const h=Math.sin(x*127.1+y*311.7+s*74.7)*43758.5453;return h-Math.floor(h)};
+function clMakeMap(){const N=512,v=new Float32Array(N*N),hs=(x,y,s)=>{const h=Math.sin(x*127.1+y*311.7+s*74.7)*43758.5453;return h-Math.floor(h)};
   const vn=(x,y,p,s)=>{const ix=Math.floor(x),iy=Math.floor(y),fx=x-ix,fy=y-iy,u=fx*fx*(3-2*fx),w=fy*fy*(3-2*fy),a=(ix%p+p)%p,b=(iy%p+p)%p,a1=(a+1)%p,b1=(b+1)%p;
     return (hs(a,b,s)*(1-u)+hs(a1,b,s)*u)*(1-w)+(hs(a,b1,s)*(1-u)+hs(a1,b1,s)*u)*w};
   const wo=(x,y,p,s)=>{const ix=Math.floor(x),iy=Math.floor(y);let m=9;for(let j=-1;j<=1;j++)for(let i=-1;i<=1;i++){const cx=ix+i,cy=iy+j,a=(cx%p+p)%p,b=(cy%p+p)%p;
@@ -56,10 +56,10 @@ function clMakeNoise(){const N=64,n=N*N*N,hs=(i,s)=>{const h=Math.sin(i*12.9898+
   const vn=p=>{const out=new Float32Array(n),c=N/p;for(let z=0;z<N;z++)for(let y=0;y<N;y++)for(let x=0;x<N;x++){const fx=x/c,fy=y/c,fz=z/c,ix=Math.floor(fx),iy=Math.floor(fy),iz=Math.floor(fz);
       const u=fx-ix,v=fy-iy,w=fz-iz,su=u*u*(3-2*u),sv=v*v*(3-2*v),sw=w*w*(3-2*w),h=(a,b,cc)=>hs((((iz+cc)%p)*p+((iy+b)%p))*p+((ix+a)%p),p*7);
       out[(z*N+y)*N+x]=((h(0,0,0)*(1-su)+h(1,0,0)*su)*(1-sv)+(h(0,1,0)*(1-su)+h(1,1,0)*su)*sv)*(1-sw)+((h(0,0,1)*(1-su)+h(1,0,1)*su)*(1-sv)+(h(0,1,1)*(1-su)+h(1,1,1)*su)*sv)*sw}return out};
-  const w4=wor(4),w8=wor(8),w16=wor(16),w32=wor(32),v4=vn(4),v8=vn(8),v16=vn(16),d=new Uint8Array(n*2);
+  const w4=wor(4),w8=wor(8),w16=wor(16),v4=vn(4),v8=vn(8),v16=vn(16),d=new Uint8Array(n*2);
   for(let i=0;i<n;i++){const wf=1-(0.625*w4[i]+0.25*w8[i]+0.125*w16[i]),pf=0.55*v4[i]+0.3*v8[i]+0.15*v16[i];
     // smooth noise carved by the cells: round heaps, not blobs
-    const r=Math.min(1,Math.max(0,wf+(pf-0.5)*0.8));d[i*2]=r*255;d[i*2+1]=(1-(0.625*w16[i]+0.25*w32[i]+0.125*w32[(i*7)%n]))*255}
+    const r=Math.min(1,Math.max(0,wf+(pf-0.5)*0.8));d[i*2]=r*255;d[i*2+1]=(1-(0.6*w8[i]+0.4*w16[i]))*255}
   const t=new THREE.Data3DTexture(d,N,N,N);t.format=THREE.RGFormat;t.type=THREE.UnsignedByteType;
   t.wrapS=t.wrapT=t.wrapR=THREE.RepeatWrapping;t.magFilter=t.minFilter=THREE.LinearFilter;t.unpackAlignment=1;t.needsUpdate=true;return t}
 const clU={uWx:CS_U.uCSMap,uNz:{value:null},uCam:{value:new THREE.Vector3()},uPI:{value:new THREE.Matrix4()},uCW:{value:new THREE.Matrix4()},
@@ -78,18 +78,18 @@ function clVolMat(q){const Q=CL_Q[q];return new THREE.ShaderMaterial({uniforms:c
     'float dens(vec3 p,float h,bool det){float c=clamp((texture(uWx,(p.xz+uOff)/CL_MAP).r-uTh)/uW,0.0,1.0);if(c<=0.0||h<0.0||h>1.0)return 0.0;\n'+
     '  float d=smoothstep(0.0,0.05,h)*smoothstep(0.0,0.25,sqrt(c)*(1.0-0.25*c)-h*0.8);if(d<=0.0)return 0.0;\n'+
     '  vec2 n=texture(uNz,(p+uOff3)/900.0).rg;float a=(1.0-n.r)*(0.55+0.3*h);d=(d-a)/(1.0-a);\n'+
-    '  if(det&&d>0.0)d-=(1.0-texture(uNz,(p+uOff3*1.6)/240.0).g)*0.5*(1.0-d)*(1.0-0.4*h);return max(d,0.0)*uDen;}\n'+
+    '  if(det&&d>0.0)d-=(1.0-texture(uNz,(p+uOff3*1.6)/420.0).g)*0.5*(1.0-d)*(1.0-0.4*h);return max(d,0.0)*uDen;}\n'+
     'void main(){vec3 d=normalize(vD),C=vec3(uCam.x,-CL_R,uCam.z),o=uCam-C;float r0=length(o);\n'+
     '  vec2 a=sph(o,d,CL_R+uBase),b=sph(o,d,CL_R+uTop);float t0,t1;\n'+
     '  if(r0<CL_R+uBase){t0=a.y;t1=b.y;}else if(r0<CL_R+uTop){t0=0.0;t1=a.x>0.0?a.x:b.y;}else{if(b.x<0.0){gl_FragColor=vec4(0);return;}t0=b.x;t1=a.x>0.0?a.x:b.y;}\n'+
     '  t1=min(t1,CL_MAXD);if(t1<=t0){gl_FragColor=vec4(0);return;}\n'+
-    '  float dt=(t1-t0)/float(STEPS),jit=fract(52.9829189*fract(dot(gl_FragCoord.xy,vec2(0.06711056,0.00583715)))+uFrame*0.618034);\n'+
+    '  float dt=(t1-t0)/float(STEPS),jit=fract(sin(dot(gl_FragCoord.xy,vec2(12.9898,78.233)))*43758.5453+uFrame*0.618034);\n'+
     '  float cs=dot(d,uSun),ph=0.7*hg(cs,0.6)+0.3*hg(cs,-0.25),T=1.0,tw=0.0,ws=0.0,t=t0+dt*jit;vec3 col=vec3(0.0);\n'+
     // long strides through clear air, short ones inside a cloud
     '  float di=max(10.0,dt*0.3);\n'+
     '  for(int i=0;i<STEPS*3;i++){if(t>t1)break;vec3 p=uCam+d*t;float h=(length(p-C)-CL_R-uBase)/(uTop-uBase),s=dens(p,h,DET==1),st=s>0.00005?di:dt;\n'+
-    '    if(s>0.00005){float od=0.0,ls=35.0;vec3 q=p;\n'+
-    '      for(int j=0;j<LSTEPS;j++){q+=uSun*ls;od+=dens(q,(length(q-C)-CL_R-uBase)/(uTop-uBase),false)*ls;ls*=1.9;}\n'+
+    '    if(s>0.00005){float od=0.0,ls=26.0*(0.7+0.6*jit);vec3 q=p;\n'+
+    '      for(int j=0;j<LSTEPS;j++){q+=uSun*ls;od+=dens(q,(length(q-C)-CL_R-uBase)/(uTop-uBase),false)*ls;ls*=1.6;}\n'+
     // light through the cloud toward the sun, with a softer second lobe for light scattered many times
     '      float lt=max(exp(-od),0.6*exp(-0.22*od)),pw=1.0-0.55*exp(-od*1.5);\n'+
     '      vec3 L=uSunC*lt*ph*pw+mix(uAmbB,uAmbT,clamp(h*1.4,0.0,1.0));float ts=exp(-s*st);\n'+
@@ -109,16 +109,34 @@ clLay.frustumCulled=false;clLay.renderOrder=-0.9;clLay.visible=false;scene.add(c
 const clQuad=new THREE.Mesh(new THREE.BufferGeometry().setAttribute('position',new THREE.Float32BufferAttribute([-1,-1,0,3,-1,0,-1,3,0],3))),
   clScene=new THREE.Scene(),clCam=new THREE.Camera(),clSz=new THREE.Vector2();
 clQuad.frustumCulled=false;clScene.add(clQuad);
-// before each frame is drawn (post.js postRender): the clouds into clRT from the camera as it now is
-function clVolRender(){if(!clV.on)return;const Q=CL_Q[clV.q];renderer.getDrawingBufferSize(clSz);
+// each frame's march is blended with the last frame's, found again by direction (the clouds are far off, so turning the
+// camera is what moves them) and held to the new frame's neighbours so nothing smears: the march's grain averages out
+const clHist={rt:[null,null],i:0,fresh:true,pvp:new THREE.Matrix4(),vr:new THREE.Matrix4()};
+const clBlend=new THREE.ShaderMaterial({uniforms:{tNew:{value:null},tOld:{value:null},uPI:clU.uPI,uCW:clU.uCW,uPVP:{value:clHist.pvp},uK:{value:0},uTx:{value:new THREE.Vector2()}},
+  depthTest:false,depthWrite:false,
+  vertexShader:'uniform mat4 uPI,uCW;varying vec3 vD;varying vec2 vUv;void main(){vec4 v=uPI*vec4(position.xy,1.0,1.0);vD=mat3(uCW)*(v.xyz/v.w);vUv=position.xy*0.5+0.5;gl_Position=vec4(position.xy,0.0,1.0);}',
+  fragmentShader:'uniform sampler2D tNew,tOld;uniform mat4 uPVP;uniform float uK;uniform vec2 uTx;varying vec3 vD;varying vec2 vUv;\n'+
+    'void main(){vec4 c=texture(tNew,vUv);if(uK<=0.0){gl_FragColor=c;return;}vec4 lo=c,hi=c;\n'+
+    '  for(int j=-1;j<=1;j++)for(int i=-1;i<=1;i++){vec4 n=texture(tNew,vUv+vec2(i,j)*uTx);lo=min(lo,n);hi=max(hi,n);}\n'+
+    '  vec4 q=uPVP*vec4(normalize(vD),0.0);if(q.w<=0.0){gl_FragColor=c;return;}vec2 uv=q.xy/q.w*0.5+0.5;\n'+
+    '  if(uv.x<0.0||uv.y<0.0||uv.x>1.0||uv.y>1.0){gl_FragColor=c;return;}\n'+
+    '  gl_FragColor=mix(c,clamp(texture(tOld,uv),lo,hi),uK);}'});
+// before each frame is drawn (post.js postRender): the clouds into clV.rt from the camera as it now is, then blended
+function clVolRender(){if(!clV.on){clHist.fresh=true;return}const Q=CL_Q[clV.q];renderer.getDrawingBufferSize(clSz);
   const w=Math.max(1,Math.round(clSz.x/Q.d)),h=Math.max(1,Math.round(clSz.y/Q.d));
-  if(!clV.rt||clV.rt.width!==w||clV.rt.height!==h){if(clV.rt)clV.rt.dispose();clV.rt=new THREE.WebGLRenderTarget(w,h,{depthBuffer:false});
-    clV.rt.texture.minFilter=clV.rt.texture.magFilter=THREE.LinearFilter;clLay.material.uniforms.uRT.value=clV.rt.texture}
+  if(!clV.rt||clV.rt.width!==w||clV.rt.height!==h){for(const r of [clV.rt,...clHist.rt])if(r)r.dispose();
+    const mk=()=>{const r=new THREE.WebGLRenderTarget(w,h,{depthBuffer:false,type:THREE.HalfFloatType});r.texture.minFilter=r.texture.magFilter=THREE.LinearFilter;return r};
+    clV.rt=mk();clHist.rt=[mk(),mk()];clHist.fresh=true}
   clLay.material.uniforms.uRes.value.copy(clSz);
   camera.updateMatrixWorld();clU.uCam.value.copy(camera.position);clU.uPI.value.copy(camera.projectionMatrixInverse);clU.uCW.value.copy(camera.matrixWorld);
   clU.uFrame.value=clV.frame=(clV.frame+1)%64;clLay.position.copy(camera.position);
   clQuad.material=clV.mat[clV.q]||(clV.mat[clV.q]=clVolMat(clV.q));
   const t=renderer.getRenderTarget(),xr=renderer.xr.enabled;renderer.xr.enabled=false;renderer.setRenderTarget(clV.rt);renderer.render(clScene,clCam);
+  const bu=clBlend.uniforms,a=clHist.rt[clHist.i],b=clHist.rt[1-clHist.i];bu.tNew.value=clV.rt.texture;bu.tOld.value=b.texture;
+  bu.uK.value=clHist.fresh||clV.q!==clHist.q?0:0.85;bu.uTx.value.set(1/w,1/h);clQuad.material=clBlend;renderer.setRenderTarget(a);renderer.render(clScene,clCam);
+  clLay.material.uniforms.uRT.value=a.texture;clHist.i=1-clHist.i;clHist.fresh=false;clHist.q=clV.q;
+  // this frame's view, turned only, to find its pixels again next frame
+  clHist.vr.copy(camera.matrixWorldInverse).setPosition(0,0,0);clHist.pvp.multiplyMatrices(camera.projectionMatrix,clHist.vr);
   renderer.setRenderTarget(t);renderer.xr.enabled=xr}
 const clSunC=new THREE.Color();
 function clVolTick(dt,cv,off){const q=gfxCur.cloudQ|0,on=q>0&&!renderer.xr.isPresenting&&!!CL_Q[q];

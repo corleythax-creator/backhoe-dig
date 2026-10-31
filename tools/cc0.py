@@ -12,8 +12,9 @@ js/materials.js, and its 96 px swatch into textures/thumbs.jpg. Credit a new sca
   ft    feet the tile covers in the game (None keeps the entry's own)
   then optional extras: 'T' to transpose it (corner to corner), so stripes across the scan run down it; a number to
         scale its colour to that mean brightness (0-1), for a scan shot darker or lighter than the real thing; 'G' to
-        make it neutral grey first, for a texture the game tints (a 'name@rrggbb' material in the bridge kit, bridges.js)
-An id that isn't in MAT_LIST is a texture for the building kits only (BR_DEF in bridges.js): written at 1024 px, its
+        make it neutral grey first ('O': fill an open grate's holes from its opacity map as deep shadow; 'k0.5': scale its contrast), for a texture the game tints (a 'name@rrggbb' material in the bridge kit, bridges.js)
+Mud's drier looks (MUD_STAGES in materials.js) are done like library ones, their colours going into MUD_STAGES. A
+material without pbr:1 (Mud and its looks) gets just its colour map. An id in neither list is a texture for the building kits only (BR_DEF in bridges.js): written at 1024 px, its
 mean colour printed for BR_DEF's col, nothing else touched.
 A scan's maps replace tools/pbr.py's for that id: don't run pbr.py on these ids (it would remake them from the colour).
 """
@@ -36,10 +37,18 @@ SCANS = {
     'planks': ('Planks029S', 7.9), 'diamond': ('DiamondPlate009', 3), 'corrugated': ('CorrugatedSteel009', None, 'T'),
     'concrete_broom': ('ph:brushed_concrete_04', 6.6, 0.64), 'plywood': ('ph:plywood', 1.64, 0.66), 'rustplate': ('ph:rust_coarse_01', 7.2),
     'cmu': ('ph:concrete_block_wall', 5.33, 0.5), 'shingles': ('ph:grey_roof_01', 26),
-    'grass2': ('Grass006', 4), 'grating': ('MetalWalkway004', 3), 'fabric': ('Fabric039', 2, 0.15),
+    'grass2': ('Grass006', 4), 'grating': ('MetalWalkway004', 3, 'O'), 'fabric': ('Fabric039', 2, 0.15),
     # the building kits' own: breakwater boulders, standing-seam metal roofs, awning canvas
     'rock_bw': ('Granite005B', None), 'roof_seam': ('ph:box_profile_metal_sheet', None, 'G', 0.72),
-    'canvas': ('ph:rough_linen', None, 'G', 0.86)}
+    'canvas': ('ph:rough_linen', None, 'G', 0.86),
+    # the boats' gelcoat: fine scuffs and orange peel over every hull's own colour (boats.js btGel)
+    'gelcoat': ('Plastic013B', None, 'G', 0.9),
+    # painted Mud: churned wet ruts, then damp and matte as it dries, then pale baked plates (all at Mud's own tile size)
+    # the machines' wear detail under each part's own colour (models.js MDL_TEX, kept at the old mean brightness)
+    'mach_paint': ('PaintedMetal001', None, 'G', 0.582, 'k0.5'), 'mach_steel': ('Metal038', None, 'G', 0.317, 'k3'),
+    'mach_rubber': ('Rubber004', None, 'G', 0.243, 'k0.7'),
+    'yellowsteel': ('PaintedMetal001', 4), 'steel_polished': ('Metal009', 4),
+    'mud': ('ph:muddy_tracks', 7.4), 'mud_drying': ('ph:brown_mud_dry', None), 'mud_cracked': ('ph:mud_cracked_dry_03', None)}
 PH = {'Color': 'diff', 'NormalDX': 'nor_dx', 'Roughness': 'rough'}
 
 
@@ -77,6 +86,8 @@ def fetch(scan):
 
 def make(mid, js, size=SIZE):
     scan, ft, *extra = SCANS[mid]
+    e = re.search(r"\{id:'" + mid + r"'[^}]*\}", js)
+    relief = size != SIZE or bool(e and 'pbr:1' in e.group(0))
     maps = fetch(scan)
     if 'G' in extra:
         maps['Color'] = maps['Color'].convert('L').convert('RGB')
@@ -84,7 +95,11 @@ def make(mid, js, size=SIZE):
     if lift:
         a = np.asarray(maps['Color'], dtype=np.float64)
         maps['Color'] = Image.fromarray(np.uint8(np.clip(a * (lift * 255 / a.mean()), 0, 255)))
-    if 'Opacity' in maps:
+    k = next((float(e[1:]) for e in extra if isinstance(e, str) and e[:1] == 'k'), None)
+    if k:
+        a = np.asarray(maps['Color'], dtype=np.float64)
+        maps['Color'] = Image.fromarray(np.uint8(np.clip(a.mean() + (a - a.mean()) * k, 0, 255)))
+    if 'O' in extra:
         # an open grate or mesh: its holes show deep shadow (the ground has no see-through), flat and rough
         o = np.asarray(maps.pop('Opacity'), dtype=np.float64)[..., None] / 255
         mix = lambda k, under: Image.fromarray(np.uint8(np.squeeze(np.asarray(maps[k], dtype=np.float64) * (o if maps[k].mode == 'RGB' else o[..., 0]) + np.array(under) * (1 - (o if maps[k].mode == 'RGB' else o[..., 0])))))
@@ -94,7 +109,7 @@ def make(mid, js, size=SIZE):
         maps = {k: v.transpose(Image.TRANSPOSE) for k, v in maps.items()}
         r, g, b = maps['NormalDX'].split()
         maps['NormalDX'] = Image.merge('RGB', (g, r, b))
-    for key, suf in (('Color', ''), ('NormalDX', '_n'), ('Roughness', '_r')):
+    for key, suf in (('Color', ''), ('NormalDX', '_n'), ('Roughness', '_r'))[:3 if relief else 1]:
         maps[key].resize((size, size), Image.LANCZOS).save(os.path.join(TEX, mid + suf + '.jpg'), quality=86, optimize=True)
     im = Image.open(os.path.join(TEX, mid + '.jpg'))
     c = np.asarray(im, dtype=np.float64).mean(axis=(0, 1)) / 255
@@ -106,7 +121,7 @@ def make(mid, js, size=SIZE):
         return re.sub(r'ft:[\d.]+', f'ft:{ft:g}', s) if ft else s
     js, n = re.subn(r"\{id:'" + mid + r"'[^}]*\}", entry, js)
     if n != 1:
-        sys.exit(f'{mid}: not found in MAT_LIST')
+        sys.exit(f'{mid}: not found in MAT_LIST or MUD_STAGES')
     print(f'{mid:14s} <- {scan:16s} c:[{c[0]:.3f},{c[1]:.3f},{c[2]:.3f}]' + (f' ft:{ft:g}' if ft else ''))
     return js, im
 
@@ -115,7 +130,11 @@ def main(ids):
     js = open(JS).read()
     order = re.findall(r"\{id:'(\w+)'", js[js.index('const MAT_LIST'):js.index('];', js.index('const MAT_LIST'))])
     sheet = Image.open(os.path.join(TEX, 'thumbs.jpg')).convert('RGB')
+    stages = re.findall(r"\{id:'(\w+)'", js[js.index('const MUD_STAGES'):js.index('];', js.index('const MUD_STAGES'))])
     for mid in ids:
+        if mid in stages:
+            js, _ = make(mid, js)
+            continue
         if mid not in order:
             make(mid, js, 1024)
             continue

@@ -45,7 +45,6 @@ function btHullGeo(sides){const NS=18,pts=[],ix=[];
   for(let i=0;i<NS;i++)for(const k of sides?[0,3]:[1,2]){const a=i*5+k,b=a+5;ix.push(a,b,a+1,a+1,b,b+1)}
   if(sides)ix.push(0,1,4,1,3,4,1,2,3);
   const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pts,3));g.setIndex(ix);return g}
-const btMat=M(0xffffff,{vertexColors:true,flatShading:false,shininess:70,specular:0x555555,envMap:skyEnv,combine:THREE.MixOperation,reflectivity:0.18,side:THREE.DoubleSide});
 const btGlass=new THREE.MeshPhongMaterial({color:0xb9d4dc,transparent:true,opacity:0.3,shininess:90,depthWrite:false});
 function btModel(hull){const g=new THREE.Group(),K=famKit();
   // painted topsides over a white bottom, a dark rub rail along the gunwale
@@ -67,7 +66,7 @@ function btModel(hull){const g=new THREE.Group(),K=famKit();
   // bow and stern cleats, navigation lights
   for(const z of [2.35,-2.45])K.box(0.2,0.05,0.06,0xb8bcc0,0,z>0?0.66:0.58,z);
   K.box(0.1,0.06,0.06,0xd12a2a,0.3,0.7,2.2);K.box(0.1,0.06,0.06,0x1fa34a,-0.3,0.7,2.2);
-  const m=new THREE.Mesh(famMerge(K.solid),btMat);m.castShadow=true;m.receiveShadow=true;g.add(m);
+  const m=famGelMesh(K.solid);m.castShadow=true;m.receiveShadow=true;g.add(m);
   // the windscreen, wrapped round the front of the console
   const ws=new THREE.Mesh(new THREE.BoxGeometry(0.82,0.32,0.02),btGlass);ws.position.set(0,1.12,0.66);ws.rotation.x=-0.45;g.add(ws);
   scene.add(g);return g}
@@ -75,11 +74,11 @@ function btModel(hull){const g=new THREE.Group(),K=famKit();
 const boats=BT_SPOTS.map((s,i)=>{const d=BT_DOCKS[i],t=d.len-(s.at||3.4),u=(s.side||1)*(d.hw+BT_B/2+0.12);
   const home={x:d.x0+d.ux*t-d.uz*u,z:d.z0+d.uz*t+d.ux*u,yaw:Math.atan2(d.ux,d.uz)};
   return {n:s.n,home,x:home.x,z:home.z,yaw:home.yaw,v:0,y:WATER,pitch:0,roll:0,g:btModel(s.hull)}});
-// the detailed model (models.js, tools/models/boat.js): each boat's topsides in its own hull colour, the windscreen see-through
+// the detailed model (models.js, tools/models/boat.js): each boat's topsides in its own hull colour (glossy gelcoat, MDL_GEL), the windscreen see-through
 const btScreen=new THREE.MeshStandardMaterial({color:0xcfe3ea,transparent:true,opacity:0.28,roughness:0.05,metalness:0,envMap:skyEnv,depthWrite:false});
-MDL_KIT.boat={sets:()=>boats.map(b=>({body:b.g})),after(on){if(!on)return;const hull=mdlMatOf('plastic#e8b923'),scr=mdlMatOf('glass#b9d4dc');
+MDL_KIT.boat={sets:()=>boats.map(b=>({body:b.g})),after(on){if(!on)return;const hull=mdlMatOf('gel#e8b923'),scr=mdlMatOf('glass#b9d4dc');
   boats.forEach((b,i)=>{for(const m of b.g.children){if(!m.name.startsWith('mdl_'))continue;
-    if(m.material===hull)m.material=mdlMatOf('plastic#'+BT_SPOTS[i].hull.toString(16).padStart(6,'0'));else if(m.material===scr){m.material=btScreen;m.castShadow=false}}})}};
+    if(m.material===hull)m.material=mdlMatOf('gel#'+BT_SPOTS[i].hull.toString(16).padStart(6,'0'));else if(m.material===scr){m.material=btScreen;m.castShadow=false}}})}};
 let btI=0;
 const btCur=()=>boats[btI];
 // the walker climbs in at any of them (walker.js): the boats join WK_RIDES as boat0, boat1…

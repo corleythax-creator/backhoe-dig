@@ -52,7 +52,7 @@ function editorOpen(){if(edOn||bench.on)return;edOn=true;mapAssets=assets;
   ed.yaw=Math.atan2(camera.position.x-fv.x,camera.position.z-fv.z);ed.dist=45;ed.pitch=0.95;
   ed.home={x:ed.x,z:ed.z,yaw:ed.yaw,dist:ed.dist,pitch:ed.pitch};ed.drawer=!edNarrow();ed.pane=ED_GROUPS[ed.group].pane?ed.group:'';
   edTool(ed.tool);edCard(null);edSelSet([]);edMapsDraw();edUndoBtns();toast('Map editor. The game is paused while you edit.','',2600)}
-function editorClose(){if(!edOn)return;$('#edHistList').hidden=true;edStrokeEnd();edScatterEnd();edRoadFinish();edOn=false;document.body.classList.remove('editing');$('#editor').hidden=true;
+function editorClose(){if(!edOn)return;$('#edHistList').hidden=true;$('#edAll').hidden=true;edStrokeEnd();edScatterEnd();edRoadFinish();edOn=false;document.body.classList.remove('editing');$('#editor').hidden=true;
   edBrushRing.visible=edSelRings.visible=edSelShade[0].visible=edSelShade[1].visible=edSoftRing.visible=edHRing.visible=edHKnob.visible=edMeasDots.visible=edMeasLine.visible=false;ed.sel=[];ed.box=null;ed.lp=null;$('#edBox').hidden=true;ed.road=null;ed.rpt=-1;edRoadsDraw();clearKeys();firstCam=true;last=performance.now();
   if(assets.some(a=>a.hd)){for(const a of assets)delete a.hd;assetsBuild();shpTreesRefresh();edHiddenSync()}
   if(ed.changed){edSave();mapReset();mapDirty=true;ed.changed=false}}
@@ -86,7 +86,9 @@ function edSubDraw(){const ts=ED_GROUPS[ed.group].tools,box=$('#edSub');box.hidd
   box.innerHTML=ts.map(t=>`<button class="sm" data-t="${t}" aria-pressed="${t===ed.tool}">${ED_TOOLS[t]}</button>`).join('');
   box.querySelectorAll('button').forEach(b=>b.onclick=()=>edTool(b.dataset.t))}
 // the things to add, by group: the trees and the boulder, then the catalogue (props.js)
-const edKindName=t=>PROPS[t]?PROPS[t].n:ED_KINDS[t]||t;
+const edKindName=t=>PROPS[t]?PROPS[t].n:typeof FX_KN!=='undefined'&&FX_KN[t]||ED_KINDS[t]||t;
+// a fixed thing of the game's own (fixed.js) behind an asset entry, if it is one
+const edFx=a=>typeof fxOf==='function'?fxOf(a):null;
 {const all=[...Object.keys(ED_KINDS).map(k=>[k,0]),...Object.keys(PROPS).map(k=>[k,PROPS[k].cat||3])];
   $('#edKinds').innerHTML=ED_KIND_CATS.map((c,ci)=>`<h4>${c}</h4><div class="row">${all.filter(q=>q[1]===ci).map(q=>`<button class="sm" data-k="${q[0]}">${edKindName(q[0])}</button>`).join('')}</div>`).join('');
   document.querySelectorAll('#edKinds button').forEach(b=>b.onclick=()=>{ed.kind=b.dataset.k;edTool('add');edPicked()})}
@@ -185,7 +187,7 @@ function edPick(cx,cy){const r=canvas.getBoundingClientRect();edNdc.set((cx-r.le
   return {x:o.x+d.x*t,z:o.z+d.z*t}}
 // the nearest tree, boulder, placed thing or machine to a ground point, if one is under it
 function edHit(x,z){let best=null,bd=1;
-  for(const a of assets){if(a.lk||a.hd)continue;const d=PROPS[a.t]?propHit(a,x,z):Math.hypot(a.x-x,a.z-z)/((a.t==='rock'?1.0:1.6)*a.s);if(d<bd){bd=d;best={a}}}
+  for(const a of assets){if(a.lk||a.hd)continue;const d=PROPS[a.t]?propHit(a,x,z):edFx(a)?fxHit(a,x,z):Math.hypot(a.x-x,a.z-z)/((a.t==='rock'?1.0:1.6)*a.s);if(d<bd){bd=d;best={a}}}
   for(const m of ED_MACH){if(!m.m().visible)continue;const o=m.o(),d=Math.hypot(o.x-x,o.z-z)/m.r;if(d<bd){bd=d;best={m}}}
   return best}
 
@@ -339,8 +341,8 @@ function edBottomSync(){$('#edInfo').hidden=!ed.sel.length||!$('#edCard').hidden
 
 // ---------- the selection: any number of trees, boulders, placed things and machines ({a} or {m}) ----------
 // edSelA: the picked things that can be changed (not locked); edSelL: every picked thing, for Lock and Hide
-const edKey=h=>h.a||h.m,edIn=h=>ed.sel.some(s=>edKey(s)===edKey(h)),edSelL=()=>ed.sel.filter(s=>s.a).map(s=>s.a),edSelA=()=>edSelL().filter(a=>!a.lk);
-const edRad=a=>PROPS[a.t]?propR(a):(a.t==='rock'?1.0:1.6)*a.s;
+const edSelC=()=>edSelA().filter(a=>!edFx(a)),edKey=h=>h.a||h.m,edIn=h=>ed.sel.some(s=>edKey(s)===edKey(h)),edSelL=()=>ed.sel.filter(s=>s.a).map(s=>s.a),edSelA=()=>edSelL().filter(a=>!a.lk);
+const edRad=a=>PROPS[a.t]?propR(a):edFx(a)?fxR(a):(a.t==='rock'?1.0:1.6)*a.s;
 // a ring round each picked one, all in one line set
 const edSelRings=(function(){const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(1200*48*3),3));g.setDrawRange(0,0);
   const l=new THREE.LineSegments(g,new THREE.LineBasicMaterial({color:0xf07a22,depthTest:false,transparent:true,opacity:0.95,fog:false,toneMapped:false}));l.renderOrder=20;l.frustumCulled=false;l.visible=false;scene.add(l);return l})();
@@ -355,7 +357,8 @@ function edShadeSel(){const n=[0,0],o=edShadeO;
     if(s.m){const g=s.m.m();if(!g.visible)continue;edShadeB.setFromObject(g);if(edShadeB.isEmpty())continue;
       o.position.set((edShadeB.min.x+edShadeB.max.x)/2,edShadeB.min.y,(edShadeB.min.z+edShadeB.max.z)/2);o.rotation.set(0,0,0);o.scale.set(edShadeB.max.x-edShadeB.min.x+0.2,edShadeB.max.y-edShadeB.min.y+0.2,edShadeB.max.z-edShadeB.min.z+0.2)}
     else{const a=s.a,P=PROPS[a.t],y=hAt(a.x,a.z);o.position.set(a.x,y-0.1,a.z);o.rotation.set(0,a.yaw||0,0);
-      if(P)o.scale.set(P.w*a.s+0.2,(P.cat===1?4.5:1.6)*a.s,P.d*a.s+0.2);
+      const F=!P&&edFx(a),D=F&&!F.tree&&fxDims(F);
+      if(P)o.scale.set(P.w*a.s+0.2,(P.cat===1?4.5:1.6)*a.s,P.d*a.s+0.2);else if(D)o.scale.set(D.w+0.2,D.h+0.2,D.d+0.2);
       else{k=1;const r=(a.t==='rock'?0.9:1.4)*a.s;o.scale.set(r,(edShadeH[a.t]||3)*a.s,r)}}
     if(n[k]>=1200)continue;o.updateMatrix();edSelShade[k].setMatrixAt(n[k]++,o.matrix)}
   edSelShade.forEach((m,i)=>{m.count=n[i];m.instanceMatrix.needsUpdate=true;m.visible=n[i]>0})}
@@ -380,7 +383,7 @@ function edBoxEnd(){const b=ed.box;ed.box=null;$('#edBox').hidden=true;const x0=
 
 // ---------- the selection's settings in the bottom bar ----------
 const edIsTree=a=>a.t==='pine'||a.t==='leafy';
-function edAssetName(a){if(PROPS[a.t])return propName(a);if(a.t==='rock')return `Boulder, ${edFmt(1.6*a.s,0)} ft across`;
+function edAssetName(a){if(PROPS[a.t])return propName(a);if(edFx(a))return fxName(a);if(a.t==='rock')return `Boulder, ${edFmt(1.6*a.s,0)} ft across`;
   if(!edIsTree(a))return `${ED_KINDS[a.t]||a.t}, ${edFmt(4.7*a.s,0)} ft tall`;
   const v=treeVitalsOf(a);return `${ED_KINDS[a.t]} (${TREE_SP[v.k].name}), ${edFmt(v.H,0)} ft tall, about ${sN(v.age)} yr old`}
 // the ages of the trees among several picked things
@@ -407,7 +410,7 @@ function edInspector(){const S=ed.sel,el=$('#edInfo');edBottomSync();if(!S.lengt
     h=`<div class="edihead"><h3>${one.a?edAssetName(one.a):one.m.name}</h3><small>${edWhere(o.x,o.z)} · ground ${g>=0?'+':'−'}${edFmt(Math.abs(g))} ft</small>${one.a&&edIsTree(one.a)?`<small>${edTreeLine(one.a)}</small>`:''}</div>`+
       `<span class="edopt"><label for="edSelPX">East</label><input id="edSelPX" type="number" step="0.5" value="${edFmt(o.x)}" title="Feet east of the trench (west is negative)"><output>ft</output></span>`+
       `<span class="edopt"><label for="edSelPZ">South</label><input id="edSelPZ" type="number" step="0.5" value="${edFmt(o.z-ED_ZM)}" title="Feet south of the trench (north is negative)"><output>ft</output></span>`+
-      edSlider('edSelTurn','Turn',0,359,ed.grid?15:1,deg(one.a?one.a.yaw:o.yaw||0),'°')+(one.a?edSlider('edSelSize','Size',30,300,5,Math.round(one.a.s*100),'%'):'')}
+      edSlider('edSelTurn','Turn',0,359,ed.grid?15:1,deg(one.a?one.a.yaw:o.yaw||0),'°')+(one.a&&!edFx(one.a)?edSlider('edSelSize','Size',30,300,5,Math.round(one.a.s*100),'%'):'')}
   else{const c={};for(const s of S){const n=s.a?edKindName(s.a.t):'Machine';c[n]=(c[n]||0)+1}
     h=`<div class="edihead"><h3>${S.length} selected</h3><small>${Object.entries(c).map(([n,k])=>`${n} ×${k}`).join(', ')}${edTreeAges(S)}${nl?` · ${nl} locked, left as they are`:''}</small></div>`+
       (as.length?edSlider('edSelTurn','Turn',-180,180,ed.grid?15:5,0,'°')+edSlider('edSelSize','Size',30,300,5,100,'%')+`<button id="edSelGrp" class="sm" aria-pressed="${ed.grp}">As a group</button>`:'')+
@@ -415,9 +418,10 @@ function edInspector(){const S=ed.sel,el=$('#edInfo');edBottomSync();if(!S.lengt
   const F=edFams(),fams={};for(const a of as){const f=edFam(a.t);if(f)(fams[f]=fams[f]||[]).push(a)}
   for(const f in fams){const T=F[f],cs=new Set(fams[f].map(a=>a.c%T.c.length));
     h+=`<span class="edopt"><label>${T.n}</label><span class="edsw">${T.c.map((q,i)=>`<button class="edswb" data-f="${f}" data-c="${i}" aria-pressed="${cs.size===1&&cs.has(i)}" aria-label="${T.n} colour ${i+1}" style="background:rgb(${q.map(v=>Math.round(Math.min(1,v)*255)).join(',')})"></button>`).join('')}</span></span>`}
-  h+=`<span class="row">${as.length?`<button id="edSelCopy" class="sm edico" data-ic="copy">Duplicate</button><button id="edSelClip" class="sm">Copy</button><button id="edRowBtn" class="sm" aria-pressed="${ed.rowOpen}">Row</button><button id="edSelDel" class="sm danger edico" data-ic="trash">Delete</button>`:'<span class="hint">Drag it to move it.</span>'}${S.some(s=>s.m)?'<button id="edMachHome" class="sm">Back to start</button>':''}<button id="edSelX" class="sm">Clear</button></span>`+(L.length?edHideLockRow(L):'');
+  const fxs=as.filter(edFx),cs=as.length-fxs.length;
+  h+=`<span class="row">${as.length?`${cs?`<button id="edSelCopy" class="sm edico" data-ic="copy">Duplicate</button><button id="edSelClip" class="sm">Copy</button><button id="edRowBtn" class="sm" aria-pressed="${ed.rowOpen}">Row</button>`:''}${fxs.length?'<button id="edFxHome" class="sm" title="Back where the game built it">Put back</button>':''}<button id="edSelDel" class="sm danger edico" data-ic="trash">Delete</button>`:'<span class="hint">Drag it to move it.</span>'}${S.some(s=>s.m)?'<button id="edMachHome" class="sm">Back to start</button>':''}<button id="edSelX" class="sm">Clear</button></span>`+(L.length?edHideLockRow(L):'');
   // Row: copies of the selection in a line, along the first one's width or across it, end to end or at a spacing
-  if(as.length&&ed.rowOpen)h+=edSlider('edRowN','Copies',1,30,1,ed.rowN,'')+edSlider('edRowGap','Spacing',0,60,1,ed.rowGap,'')+
+  if(cs&&ed.rowOpen)h+=edSlider('edRowN','Copies',1,30,1,ed.rowN,'')+edSlider('edRowGap','Spacing',0,60,1,ed.rowGap,'')+
     `<span class="row" role="group" aria-label="Row direction"><button class="sm" data-rd="along" aria-pressed="${ed.rowDir==='along'}">Along</button><button class="sm" data-rd="across" aria-pressed="${ed.rowDir==='across'}">Across</button></span><button id="edRowGo" class="sm go">Make row</button>`;
   el.innerHTML=h;edIcons(el);
   // turning and sizing start from where each one was when the slider was taken hold of (edXf); several turn and size each
@@ -443,7 +447,8 @@ function edInspector(){const S=ed.sel,el=$('#edInfo');edBottomSync();if(!S.lengt
     el.querySelectorAll('[data-rd]').forEach(b=>b.onclick=()=>{ed.rowDir=b.dataset.rd;edInspector()});$('#edRowGo').onclick=edRowMake}
   const gb=$('#edSelGrp');if(gb)gb.onclick=()=>{ed.grp=!ed.grp;edInspector()};
   el.querySelectorAll('.edswb').forEach(b=>b.onclick=()=>{const snap=edAssetsSnap();for(const a of fams[b.dataset.f])a.c=+b.dataset.c;edAssetsChanged(snap);edInspector()});
-  const cb=$('#edSelCopy');if(cb){cb.onclick=edCopy;$('#edSelDel').onclick=edDelete}
+  const cb=$('#edSelCopy');if(cb)cb.onclick=edCopy;const db=$('#edSelDel');if(db)db.onclick=edDelete;
+  const fh=$('#edFxHome');if(fh)fh.onclick=()=>{const b=edAssetsSnap();fxHome(fxs);edAssetsChanged(b);edRingSel();edInspector()};
   $('#edSelX').onclick=()=>edSelSet([]);if(L.length)edHideLockWire(el,L);
   const mh=$('#edMachHome');if(mh)mh.onclick=()=>{for(const s of ed.sel)if(s.m)edMachHome(s.m);edRingSel();edInspector()}}
 // Hide (H) leaves things out of the view while the editor is open, to get at what is behind them; it is not saved, and
@@ -459,7 +464,7 @@ function edHiddenSync(){const n=assets.filter(a=>a.hd).length,s=$('#edShowAll');
 $('#edShowAll').onclick=()=>edHide(assets.filter(a=>a.hd),false);
 // a copy of one thing goes alongside it, along its width, so fence sections line up; a copy of several goes beside them
 // all, to the right as seen from the camera
-function edCopy(){const as=edSelA();if(!as.length)return;const b=edAssetsSnap();let out;
+function edCopy(){const as=edSelC();if(!as.length)return;const b=edAssetsSnap();let out;
   if(as.length===1){const a0=as[0],P=PROPS[a0.t],w=P?(P.w+(P.d>0.5?0.6:0))*a0.s:0;
     out=[Object.assign({},a0,P?{x:a0.x+Math.cos(a0.yaw)*w,z:a0.z-Math.sin(a0.yaw)*w}:{x:a0.x+2.5*a0.s,z:a0.z+1.5*a0.s})]}
   else{const rx=Math.cos(ed.yaw),rz=-Math.sin(ed.yaw);let p0=1e9,p1=-1e9;for(const a of as){const p=a.x*rx+a.z*rz,r=edRad(a);p0=Math.min(p0,p-r);p1=Math.max(p1,p+r)}
@@ -511,6 +516,31 @@ $('#edList').onclick=e=>{const b=e.target.closest('button');if(!b)return;const e
   const h=b.dataset.k&&edRowHit(b.dataset.k);if(!h)return;if(h.a&&h.a.hd)edHide([h.a],false);
   if(b.classList.contains('edlck')){edSelSet(edIn(h)?ed.sel.filter(s=>edKey(s)!==edKey(h)):[...ed.sel,h]);return}
   const o=h.a||h.m.o();edSelSet([h]);edFlyTo(o.x,o.z);edPicked()};
+// ---------- Every item: one table of every thing on the map, every fixed thing of the game's own (fixed.js) and the
+// machines, searched by name or kind and sorted by any column; tapping a row goes there and picks it ----------
+ed.all={s:'away',dir:1,rows:[],shown:[]};
+function edAllOpen(){if(!edOn)editorOpen();if(!edOn)return;const R=ed.all.rows=[];
+  for(const a of assets)R.push({h:{a},name:edAssetName(a),kind:edKindName(a.t)});
+  for(const m of ED_MACH)if(m.m().visible)R.push({h:{m},name:m.name,kind:'Machine'});
+  const ks=[...new Set(R.map(r=>r.kind))].sort(),k=$('#edAllK'),was=k.value;
+  k.innerHTML='<option value="">Every kind</option>'+ks.map(t=>`<option${t===was?' selected':''}>${edEsc(t)}</option>`).join('');
+  $('#edAll').hidden=false;edAllDraw();if(!edNarrow())$('#edAllQ').focus()}
+function edAllDraw(){const A=ed.all,k=$('#edAllK').value,words=$('#edAllQ').value.trim().toLowerCase().split(/\s+/).filter(Boolean),N=300;
+  for(const r of A.rows){const o=r.h.a||r.h.m.o();r.x=o.x;r.z=o.z;r.away=Math.hypot(o.x-ed.x,o.z-ed.z)}
+  const L=A.rows.filter(r=>(!k||r.kind===k)&&words.every(w=>(r.name+' '+r.kind).toLowerCase().includes(w))),
+    f={name:r=>r.name.toLowerCase(),kind:r=>r.kind+' '+r.name.toLowerCase(),where:r=>Math.round(r.z/30)*1e6+r.x,away:r=>r.away}[A.s];
+  L.sort((p,q)=>{const a=f(p),b=f(q);return (a<b?-1:a>b?1:0)*A.dir});A.shown=L;
+  $('#edAllN').textContent=`${L.length.toLocaleString()} of ${A.rows.length.toLocaleString()}`;
+  $('#edAllT tbody').innerHTML=L.slice(0,N).map((r,i)=>`<tr tabindex="0" data-i="${i}"${edIn(r.h)?' class="picked"':''}><td>${edEsc(r.name)}${r.h.a&&r.h.a.lk?' 🔒':''}</td><td>${edEsc(r.kind)}</td><td>${edShortSpot(r.x,r.z)}</td><td>${edFmt(r.away,0)} ft</td></tr>`).join('');
+  $('#edAllMore').textContent=L.length>N?`Showing the first ${N}. Search or pick a kind to find the rest.`:L.length?'':'Nothing matches.';
+  document.querySelectorAll('#edAllT th').forEach(th=>{if(th.dataset.s===A.s)th.setAttribute('aria-sort',A.dir>0?'ascending':'descending');else th.removeAttribute('aria-sort')})}
+// go to one and pick it, close enough to see it whole
+function edAllGo(h){$('#edAll').hidden=true;if(ed.tool!=='select')edTool('select');if(h.a&&h.a.hd)edHide([h.a],false);
+  const o=h.a||h.m.o();edSelSet([h]);edFlyTo(o.x,o.z);ed.dist=clamp((h.a?edRad(h.a):h.m.r)*4+12,15,400);edPicked()}
+$('#edAllT').onclick=e=>{const th=e.target.closest('th');if(th){const A=ed.all;if(A.s===th.dataset.s)A.dir=-A.dir;else{A.s=th.dataset.s;A.dir=1}edAllDraw();return}
+  const tr=e.target.closest('tr[data-i]'),r=tr&&ed.all.shown[+tr.dataset.i];if(r)edAllGo(r.h)};
+$('#edAll').onkeydown=e=>{if(e.key==='Escape'){$('#edAll').hidden=true;e.stopPropagation()}else if(e.key==='Enter'&&e.target.matches('tr[data-i]'))e.target.click()};
+$('#edAllQ').oninput=$('#edAllK').onchange=edAllDraw;$('#edAllX').onclick=()=>{$('#edAll').hidden=true};$('#edAllBtn').onclick=edAllOpen;$('#allBtn').onclick=edAllOpen;
 // the roads, in the Roads drawer: tap one to pick it and go to it
 function edRoadList(){const el=$('#edRoadList');$('#edRoadN').textContent=ROADS.length?`${ROADS.length}`:'';if($('#edDrawer').hidden||ed.pane!=='roads')return;
   el.innerHTML=ROADS.map((r,i)=>{let L=0;for(let k=0;k<r.pts.length-1;k++)L+=Math.hypot(r.pts[k+1][0]-r.pts[k][0],r.pts[k+1][1]-r.pts[k][1]);
@@ -736,7 +766,7 @@ function edXfTurn(d,grp){const b=ed.xf,c=Math.cos(d),n=Math.sin(d);
   for(const q of b.q){q.a.yaw=q.yaw+d;if(grp){const ox=q.x-b.cx,oz=q.z-b.cz;q.a.x=clamp(b.cx+ox*c+oz*n,-555,MAIN_ZMAX);q.a.z=clamp(b.cz-ox*n+oz*c,-555,MAIN_ZMAX)}}
   assetsBuild();shpTreesRefresh();edRingSel()}
 function edXfSize(f,grp){const b=ed.xf;
-  for(const q of b.q){q.a.s=clamp(q.s*f,0.3,3);if(grp){q.a.x=clamp(b.cx+(q.x-b.cx)*f,-555,MAIN_ZMAX);q.a.z=clamp(b.cz+(q.z-b.cz)*f,-555,MAIN_ZMAX)}}
+  for(const q of b.q){if(edFx(q.a))continue;q.a.s=clamp(q.s*f,0.3,3);if(grp){q.a.x=clamp(b.cx+(q.x-b.cx)*f,-555,MAIN_ZMAX);q.a.z=clamp(b.cz+(q.z-b.cz)*f,-555,MAIN_ZMAX)}}
   assetsBuild();shpTreesRefresh();edRingSel()}
 function edXfEnd(){const b=ed.xf;ed.xf=null;if(b)edAssetsChanged(b.snap)}
 // the ring round the picked things (with Select): drag its knob, which sits on the side nearest the view, to turn them,
@@ -783,7 +813,7 @@ const edHalf=(a,ux,uz)=>{const P=PROPS[a.t];if(!P)return edRad(a);const c=Math.c
   return (Math.abs(ux*c-uz*n)*P.w+Math.abs(ux*n+uz*c)*P.d)/2*a.s};
 // Row: Copies more of the picked things in a line, along the first one's width (fence runs) or across it, end to end
 // or at a spacing (middle to middle), as one undo step; no kind goes past what the map holds of it
-function edRowMake(){const as=edSelA();if(!as.length)return;const a0=as[0],al=ed.rowDir==='along',ux=al?Math.cos(a0.yaw):Math.sin(a0.yaw),uz=al?-Math.sin(a0.yaw):Math.cos(a0.yaw);
+function edRowMake(){const as=edSelC();if(!as.length)return;const a0=as[0],al=ed.rowDir==='along',ux=al?Math.cos(a0.yaw):Math.sin(a0.yaw),uz=al?-Math.sin(a0.yaw):Math.cos(a0.yaw);
   let p0=1e9,p1=-1e9;for(const a of as){const p=a.x*ux+a.z*uz,h=edHalf(a,ux,uz);p0=Math.min(p0,p-h);p1=Math.max(p1,p+h)}
   const step=ed.rowGap?ed.rowGap*FT:p1-p0,k={};for(const a of as)k[a.t]=(k[a.t]||0)+1;
   let n=ed.rowN;for(const t in k)n=Math.min(n,Math.floor((edCap(t)-assets.filter(a=>a.t===t).length)/k[t]));
@@ -792,7 +822,7 @@ function edRowMake(){const as=edSelA();if(!as.length)return;const a0=as[0],al=ed
   assets.push(...out);ed.rowOpen=false;edAssetsChanged(b);edSelSet([...as,...out].map(a=>({a})))}
 // Copy (Ctrl+C) and Cut (Ctrl+X) keep the picked things' shape; Paste (Ctrl+V) puts them down with their middle at the
 // mouse pointer (on touch, the middle of the view), on the grid when Snap is on, and picks them
-function edClipCopy(cut){const as=edSelA();if(!as.length)return;let cx=0,cz=0;for(const a of as){cx+=a.x/as.length;cz+=a.z/as.length}
+function edClipCopy(cut){const as=edSelC();if(!as.length)return;let cx=0,cz=0;for(const a of as){cx+=a.x/as.length;cz+=a.z/as.length}
   ed.clip=as.map(a=>Object.assign({},a,{x:a.x-cx,z:a.z-cz}));$('#edClipPaste').hidden=false;
   toast(`${cut?'Cut':'Copied'} ${as.length===1?edKindName(as[0].t).toLowerCase():as.length+' things'}. Paste with ${navigator.maxTouchPoints?'Paste':'Ctrl+V'}.`,'',2000);if(cut)edDelete()}
 function edClipPaste(){const c=ed.clip;if(!c)return;const k={};for(const a of c)k[a.t]=(k[a.t]||0)+1;

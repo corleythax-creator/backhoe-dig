@@ -4,6 +4,10 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Friday, October 30, 2026
 
+- **v300** (11:12 PM) Everything the game builds (buildings with all inside them, the Town Hall, benches, posts, walls, signs, 3,600 town trees) can be picked, moved, turned, hidden and deleted in the map editor, with Put back; a new Every item table lists every thing, building, tree and machine, searchable and sortable, and tapping one goes to it and picks it
+- **v299** (11:00 PM) Glossy clear-coated gelcoat on every boat hull; Poly Haven scans for mud and its damp and baked-cracked looks; ambientCG scans for the machines' paint, steel and rubber detail, Yellow steel and Polished steel
+- **v298** (10:52 PM) Trees, pines, fallen logs, stumps and boulders are photo-scanned now: full autumn crowns of real leaves (red maples, bronze oaks, yellow birches), real pine and fir needles and bark, logs and stumps lying in the woods, and boulder clusters round town in tufts of grass.
+- **v297** (10:44 PM) The 3D clouds read smooth and soft: no grain or boxy patches in them, from blending each frame with the last and finer light through the cloud.
 - **v296** (10:29 PM) Machines on High: glossy clear-coated paint, chipped edges, polished and rusty bare steel, dust on top, and caked mud on the bucket and tracks that builds as you dig (Machines tunings)
 - **v295** (10:27 PM) Harbor Square's benches, park lamps, café tables, market stalls, bollards and shade trees are now map editor things you can select, move, copy and delete; townsfolk sit wherever the benches go
 - **v294** (10:24 PM) Real 3D clouds: rounded heaps with sunlit tops, grey undersides and glowing edges toward the sun, that roll in dark before a shower, and their shadows drifting across the island (Medium graphics and up).
