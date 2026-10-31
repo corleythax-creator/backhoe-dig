@@ -335,7 +335,7 @@ Close match: `textures/canvas.jpg` (Poly Haven rough_linen, made grey) gives eve
 
 **M15 Boat hulls and names** -> `town/boat_names.png` (transparent PNG, 2048x1024: a grid of 12)
 > [STYLE] Twelve boat transom names as clean vinyl lettering on transparent background, each centred in its own cell with a hailing port under it "LAKESIDE": Reel Time, Knot On Call, Seas the Day, Lake Effect, Miss Corley, Dock Holiday, Aqua Therapy, Sunset Serenade, Fishful Thinking, Wet Willie, Second Wind, Liquid Asset. Mix of script and block styles in navy, black, red and gold.
-Drawn by the game: the five runabouts carry their names (Miss Corley, Seas the Day, Reel Time, Dock Holiday, Lake Effect) in vinyl lettering along both sides aft (`btName`, boats.js); the marina's slip boats are still unnamed
+Drawn by the game: the five runabouts carry their names (Miss Corley, Seas the Day, Reel Time, Dock Holiday, Lake Effect) in vinyl lettering along both sides aft (`btName`, boats.js), and the marina's slip boats theirs over the hailing port LAKESIDE (`marName`, marina.js; the pontoons go without)
 
 **M16 Gelcoat hull** -> `materials/gelcoat.jpg` [TEXTURE]
 > [STYLE][TEXTURE] Glossy white fibreglass boat hull gelcoat, close, very slight orange-peel texture, faint grey scuffs, a thin yellowish waterline stain along the bottom fifth. Seamless left to right.

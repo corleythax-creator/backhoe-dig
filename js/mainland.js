@@ -202,7 +202,19 @@ function mainLot(K,x,z,w,d,h,col,face,awn,si,wl){wl=wl||col;const y=rmGroundMax(
   // the roof: a scanned bitumen membrane inside a parapet with a concrete coping, and on most a rooftop unit and a vent
   K.box(w-0.4,0.06,d-0.4,'roofFlat',x,y+h+0.03,z,face);for(const s of [-1,1]){const [a,b]=F(0,s*(w/2-0.12));K.box(0.24,0.7,d,wl,a,y+h+0.35,b,face);const [e,f]=F(s*(d/2-0.12),0);K.box(w,0.7,0.24,wl,e,y+h+0.35,f,face)}
   for(const s of [-1,1]){const [a,b]=F(0,s*(w/2-0.1));K.box(0.36,0.1,d+0.1,'concrete',a,y+h+0.75,b,face);const [e,f]=F(s*(d/2-0.1),0);K.box(w+0.1,0.1,0.36,'concrete',e,y+h+0.75,f,face)}
-  if(si%3){const [a,b]=F(-d*0.15,(si%2?1:-1)*w*0.2);K.box(1.6,1.0,1.2,0xa9adb0,a,y+h+0.53,b,face);K.box(1.4,0.06,1.0,0x55595c,a,y+h+1.06,b,face);const [e,f]=F(-d*0.3,-(si%2?1:-1)*w*0.25);K.cyl(0.15,0.15,0.9,8,0x8a8e91,e,y+h+0.48,f)}
+  // the rooftop unit: on its curb, a panelled casing (scanned seam steel, tinted), louvred coil faces on its long sides,
+  // the condenser fan in its guard on top; and a vent stack with flashing and a rain cap
+  if(si%3){const o0=-d*0.15,s0=(si%2?1:-1)*w*0.2,U=(o,s)=>F(o0+o,s0+s),yr=y+h+0.06,CAS=famTint('seam',0xcfccc3),GV=0x9aa0a4,DKC=0x232527;
+    {const [a,b]=U(0,0);K.box(1.95,0.16,1.35,0x5c5e60,a,yr+0.08,b,face);K.box(1.8,0.92,1.2,CAS,a,yr+0.62,b,face);K.box(1.84,0.05,1.24,0xb9b6ad,a,yr+1.1,b,face)}
+    for(const sd of [-1,1]){const [a,b]=U(sd*0.605,-0.2);K.box(1.1,0.62,0.02,DKC,a,yr+0.6,b,face);
+      for(let i=0;i<8;i++){const [e,f]=U(sd*0.625,-0.2);K.box(1.1,0.022,0.06,GV,e,yr+0.33+i*0.075,f,face,sd*0.6)}
+      const [e,f]=U(sd*0.61,0.62);K.box(0.42,0.7,0.012,0xbcb9b0,e,yr+0.6,f,face)}
+    {const [a,b]=U(0,-0.35),fy=yr+1.14;K.cyl(0.43,0.43,0.04,20,DKC,a,fy,b);K.geo(new THREE.TorusGeometry(0.42,0.014,4,24),GV,a,fy+0.05,b,0,Math.PI/2);
+      K.geo(new THREE.TorusGeometry(0.22,0.01,4,16),GV,a,fy+0.05,b,0,Math.PI/2);for(const r of [0,Math.PI/2])K.box(0.84,0.012,0.02,GV,a,fy+0.05,b,face+r);
+      for(let i=0;i<3;i++)K.box(0.34,0.012,0.11,0x55595c,a,fy+0.025,b,face+i*2.094+0.3,0.25)}
+    {const [a,b]=U(0,0.45);K.box(0.75,0.07,1.0,0xbfbcb3,a,yr+1.15,b,face)}
+    const [e,f]=F(-d*0.3,-(si%2?1:-1)*w*0.25);K.cyl(0.26,0.3,0.06,10,0x3b3d3f,e,y+h+0.06,f);K.cyl(0.13,0.13,0.95,10,GV,e,y+h+0.5,f);
+    K.cyl(0.07,0.07,0.08,8,GV,e,y+h+1.01,f);K.cyl(0.02,0.24,0.12,10,GV,e,y+h+1.1,f)}
   {const [a,b]=F(d/2+0.18,0);K.box(w+0.25,0.3,0.36,TR,a,y+h-0.25,b,face);const [e,f]=F(d/2+0.06,0);K.box(w,0.5,0.12,c,e,y+h-0.75,f,face)}
   // the storefront: pilasters at the ends, a kick plate and display window each side of the door, a transom
   for(const s of [-1,1]){const [a,b]=F(d/2+0.1,s*(w/2-0.25));K.box(0.5,4.2,0.2,TR,a,y+2.1,b,face)}
