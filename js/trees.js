@@ -1,6 +1,6 @@
-// Corley's Island: the trees. Five species built from bark tubes and photo foliage cards (the pines' textures
-// from OpenAI GPT Image, made by tools/trees_tex.py; the leaf trees' sprays and the bark from CC0 ambientCG scans, made
-// by tools/trees_scan.py): a spruce and a red pine (the map editor's "pine"), and an oak, a sugar maple and a
+// Corley's Island: the trees, and the fallen logs and stumps of the woods. Five species built from bark tubes
+// and photo foliage cards (the leaf sprays, pine sprigs, spruce branch and bark from CC0 ambientCG and Poly Haven
+// scans, made by tools/trees_scan.py): a spruce and a red pine (the map editor's "pine"), and an oak, a sugar maple and a
 // birch clump (its "leafy"). Which species a tree is comes from where it stands (treeSpecies), so saves and maps keep
 // their {t:'pine'|'leafy'} shape. Every island hands its trees in as a group (treeGroup) and they all share one set of
 // instance meshes: each species has a full-detail model (about 2,500 to 4,500 triangles) for the trees within the
@@ -28,7 +28,7 @@ const treeWindU={value:0},treeSwayU={value:1};
 const treeTex=(()=>{const L=new THREE.TextureLoader(),T=(n,wrap)=>{const t=L.load(`textures/${n}.jpg`);if(wrap)t.wrapS=t.wrapT=THREE.RepeatWrapping;
     t.anisotropy=Math.min(4,renderer.capabilities.getMaxAnisotropy());return t};
   // read as they are, like the game's other textures (no sRGB decode), so they sit with the rest of the scene
-  return{bark:T('tree_bark',1),birch:T('tree_birch',1),fol:T('tree_leaves'),folA:T('tree_leaves_a'),barkN:null,birchN:null}})();
+  return{bark:T('tree_bark',1),birch:T('tree_birch',1),pbark:T('tree_pbark',1),end:T('tree_end'),fol:T('tree_leaves'),folA:T('tree_leaves_a'),barkN:null,birchN:null,pbarkN:null}})();
 // the breeze: the whole plant leans downwind and the leaf cards flutter, more the higher above base (m) they are (the
 // wood leans with them). treeGustU (1 calm, up to 3 in a storm) and treeWDU, the wind's way (x, z), follow the
 // weather's wind (rain.js) in treesTick; lean scales the lean and fl the flutter
@@ -63,9 +63,9 @@ function treeFolMat(base,lean,fl){const m=new THREE.MeshLambertMaterial({map:tre
 const treeMats=(()=>{
   const wood=map=>{const m=new THREE.MeshPhongMaterial({map,shininess:4,specular:0x080808});treeSwayShader(m,false);return m};
   const fol=treeFolMat(1,1,0.03);
-  return{bark:wood(treeTex.bark),birch:wood(treeTex.birch),fol}})();
-// bark relief on High graphics (the pbr setting), its normal map fetched the first time
-function treePbr(on){for(const [k,n] of [['bark','tree_bark_n'],['birch','tree_birch_n']]){const m=treeMats[k];
+  return{bark:wood(treeTex.bark),birch:wood(treeTex.birch),pbark:wood(treeTex.pbark),fol}})();
+// bark relief on High graphics (the pbr setting), its normal map fetched the first time; the deadwood's shadows too
+function treePbr(on){dwShadows(on);for(const [k,n] of [['bark','tree_bark_n'],['birch','tree_birch_n'],['pbark','tree_pbark_n']]){const m=treeMats[k];
   if(on&&!treeTex[k+'N']){const t=new THREE.TextureLoader().load(`textures/${n}.jpg`);t.wrapS=t.wrapT=THREE.RepeatWrapping;treeTex[k+'N']=t}
   const want=on?treeTex[k+'N']:null;if(m.normalMap!==want){m.normalMap=want;m.normalScale.set(1.2,1.2);m.needsUpdate=true}}}
 
@@ -177,8 +177,8 @@ const TREE_BROAD={
 // the species: name, which editor kind it stands for, its wood, and its shadow hull (cone or ellipsoid, a little inside
 // the foliage so the sunny side of the crown stays lit)
 const TREE_SP=[
-  {id:'spruce',name:'spruce',t:'pine',wood:'bark',build:treeSpruce,hull:['cone',1.55,0.8,8.2],h:8.4},
-  {id:'redpine',name:'red pine',t:'pine',wood:'bark',build:treeRedPine,hull:['ball',1.6,1.6,7.6],h:10.2},
+  {id:'spruce',name:'spruce',t:'pine',wood:'pbark',build:treeSpruce,hull:['cone',1.55,0.8,8.2],h:8.4},
+  {id:'redpine',name:'red pine',t:'pine',wood:'pbark',build:treeRedPine,hull:['ball',1.6,1.6,7.6],h:10.2},
   {id:'oak',name:'oak',t:'leafy',wood:'bark',build:hi=>treeBroad(hi,TREE_BROAD.oak),hull:['ball',2.7,1.8,4.7],h:7.0},
   {id:'maple',name:'sugar maple',t:'leafy',wood:'bark',build:hi=>treeBroad(hi,TREE_BROAD.maple),hull:['ball',2.2,2.3,5.2],h:8.1},
   {id:'birch',name:'birch',t:'leafy',wood:'birch',build:hi=>treeBroad(hi,TREE_BROAD.birch),hull:['ball',1.4,2.1,5.9],h:8.5}];
@@ -262,7 +262,7 @@ function treeLayout(){const o=new THREE.Object3D(),n=TREE_SP.map(()=>0);
     sp.all.setMatrixAt(n[k],o.matrix);sp.col.set(a.c,n[k]*3);n[k]++}
   TREE_SP.forEach((sp,k)=>{sp.all.count=n[k];sp.all.instanceMatrix.needsUpdate=true});treeLodDirty=true;
   // the undergrowth round them (brush.js, loaded next)
-  if(typeof brushLayout==='function')brushLayout()}
+  if(typeof brushLayout==='function')brushLayout();dwLayout()}
 // lay the trees out again when the date has moved a month or more from what they were grown to (or back to today);
 // true if it did. dn (daynight.js) and shpTreesRefresh (shadowproxy.js) load later and are only read here
 function treeRegrow(){const y=Math.max(0,(dn.t-Date.now())/TREE_YR);if(Math.abs(y-treeAheadNow)<1/12&&!(y===0&&treeAheadNow>0))return false;
@@ -296,3 +296,72 @@ function treesTick(dt){const sw=TU.treeSway===undefined?1:TU.treeSway;
       for(const im of P[0])im.instanceMatrix.array.set(A.subarray(i*16,i*16+16),j*16);P[0][1].instanceColor.array.set(C.subarray(i*3,i*3+3),j*3)}
     for(const [ims,n] of parts)for(const im of ims){im.count=n;im.instanceMatrix.clearUpdateRanges();im.instanceMatrix.addUpdateRange(0,n*16);im.instanceMatrix.needsUpdate=true;
       if(im.instanceColor){im.instanceColor.clearUpdateRanges();im.instanceColor.addUpdateRange(0,n*3);im.instanceColor.needsUpdate=true}}}}
+
+// ---------- deadwood: fallen logs and stumps in the woods ----------
+// Where trees stand thick (five or more within 10 m) in the wild groups (DW_GROUPS: not the town, its square or the
+// islands' own yards), a few trees have a log lying or a stump standing near them, placed by a hash of the tree's spot
+// so every device has the same ones, and laid out with the trees (treeLayout), so the map editor's tree edits move them
+// too. Not on painted ground, roads, water, other solids or against a trunk. The bark is the nearby tree's kind (pine or
+// leaf tree), the cut ends a photo scan (tree_end). They are solids (SOLIDS, dw:1): you walk and drive round them. A
+// couple of hundred triangles each, drawn on every Graphics setting; their shadows only on High (treePbr)
+const DW_GROUPS=new Set(['foothills','suburbs','mainland']),DW_CAP=400;
+// a cut end: a disc at c facing along ax (a unit vector), radius r, into E
+function dwCap(E,c,ax,r,seg){const V=THREE.Vector3,b=E.p.length/3,u=new V().crossVectors(ax,Math.abs(ax.y)>0.9?new V(1,0,0):new V(0,1,0)).normalize(),v=new V().crossVectors(ax,u);
+  E.p.push(c.x,c.y,c.z);E.n.push(ax.x,ax.y,ax.z);E.u.push(0.5,0.5);
+  for(let j=0;j<=seg;j++){const a=j/seg*Math.PI*2,x=Math.cos(a),y=Math.sin(a);
+    E.p.push(c.x+(u.x*x+v.x*y)*r,c.y+(u.y*x+v.y*y)*r,c.z+(u.z*x+v.z*y)*r);E.n.push(ax.x,ax.y,ax.z);E.u.push(0.5+0.42*x,0.5+0.42*y)}
+  for(let j=0;j<seg;j++)E.i.push(b,b+1+j,b+2+j)}
+function dwGeo(E){const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(E.p,3));g.setAttribute('normal',new THREE.Float32BufferAttribute(E.n,3));
+  g.setAttribute('uv',new THREE.Float32BufferAttribute(E.u,2));g.setIndex(E.i);g.computeBoundingSphere();return g}
+// a fallen log along x, len long, radius r at its butt (it tapers), lying on the ground at y 0, with broken branch stubs
+function dwLog(seed,len,r,stubs){const K=treeKit(seed),V=K.V,E={p:[],n:[],u:[],i:[]},n=6,pts=[],rs=[];
+  for(let k=0;k<=n;k++){const t=k/n,m=k&&k<n?1:0;pts.push(new V(-len/2+len*t,0,Math.sin(t*Math.PI)*0.1+(K.rnd()-0.5)*0.08*m));rs.push(r*(1.06-0.24*t)*(0.95+0.1*K.rnd()))}
+  pts.forEach((p,k)=>p.y=rs[k]*0.88);K.tube(pts,rs,10);
+  for(let s=0;s<stubs;s++){const t=0.2+0.65*K.rnd(),a=0.3+K.rnd()*(Math.PI-0.6),k=Math.floor(t*n),p=pts[k].clone().lerp(pts[k+1],t*n-k),rr=0.045+0.03*K.rnd();
+    const d=new V(0.4*(K.rnd()-0.3),Math.sin(a),Math.cos(a)).normalize(),tip=p.clone().add(d.clone().multiplyScalar(rs[k]+0.2+0.35*K.rnd()));
+    K.tube([p,tip],[rr,rr*0.65],5,1);dwCap(E,tip,d,rr*0.65,6)}
+  dwCap(E,pts[n],pts[n].clone().sub(pts[n-1]).normalize(),rs[n],10);dwCap(E,pts[0],pts[0].clone().sub(pts[1]).normalize(),rs[0],10);
+  return{wood:K.done().wood,end:dwGeo(E),log:1,len,r}}
+// a stump h tall and r round, flaring into roots that run out and down into the ground, its top sawn flat
+function dwStump(seed,r,h){const K=treeKit(seed),V=K.V,E={p:[],n:[],u:[],i:[]},ys=[-0.15,0.05,0.18,h*0.55,h],rf=[1.7,1.32,1.1,1.02,1];
+  K.tube(ys.map(y=>new V(0,y,0)),rf.map(f=>f*r),12);
+  for(let k=0,nr=4+Math.floor(K.rnd()*2);k<nr;k++){const a=k/nr*6.283+K.rnd()*0.6,d=new V(Math.cos(a),0,Math.sin(a)),f=0.8+0.4*K.rnd();
+    K.tube([new V(d.x*r*0.75,0.22,d.z*r*0.75),new V(d.x*r*1.55*f,0.05,d.z*r*1.55*f),new V(d.x*r*2.3*f,-0.12,d.z*r*2.3*f)],[r*0.34,r*0.2,r*0.07],5,1)}
+  dwCap(E,new V(0,h,0),new V(0,1,0),r,12);
+  return{wood:K.done().wood,end:dwGeo(E),log:0,r}}
+// the shapes: two logs and two stumps; per shape a mesh for each bark (leaf-tree bark, pine bark) and one for the ends
+const dwShapes=[dwLog(601,6.4,0.24,3),dwLog(602,3.6,0.18,2),dwStump(603,0.27,0.55),dwStump(604,0.2,0.38)];
+const dwIMs=(function(){const endMat=new THREE.MeshLambertMaterial({map:treeTex.end}),mk=(g,m,col)=>{const im=new THREE.InstancedMesh(g,m,DW_CAP);im.count=0;
+    im.frustumCulled=false;im.receiveShadow=true;if(col)im.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(DW_CAP*3),3);scene.add(im);return im};
+  return dwShapes.map(sh=>({wood:[mk(sh.wood,treeMats.bark,1),mk(sh.wood,treeMats.pbark,1)],end:mk(sh.end,endMat,0)}))})();
+function dwShadows(on){for(const d of dwIMs)for(const im of [...d.wood,d.end])im.castShadow=!!on}
+function dwLayout(){for(let i=SOLIDS.length-1;i>=0;i--)if(SOLIDS[i].dw)SOLIDS.splice(i,1);
+  // the standing trees by 10 m square, to find where they grow thick and keep the deadwood off their trunks
+  const G=new Map(),key=(i,j)=>i*100003+j;
+  for(const g in treeGroups)for(const a of treeGroups[g]){if(treeFallen.size&&treeFallen.has(treeKey(a.x,a.z)))continue;
+    const k=key(Math.floor(a.x/10),Math.floor(a.z/10));if(!G.has(k))G.set(k,[]);G.get(k).push(a)}
+  // how many trees stand within R of x, z, and how far the nearest is
+  const near=(x,z,R)=>{let n=0,c=1e9;for(let i=Math.floor((x-R)/10);i<=Math.floor((x+R)/10);i++)for(let j=Math.floor((z-R)/10);j<=Math.floor((z+R)/10);j++){const L=G.get(key(i,j));
+    if(L)for(const b of L){const d=Math.hypot(b.x-x,b.z-z);if(d<R)n++;if(d<c)c=d}}return[n,c]};
+  // a spot the deadwood may take: natural ground, off the roads and out of the water
+  const free=(x,z)=>{if(paintAt(x,z))return false;roadAt(x,z);if(RD_o<1.5||RD_gd<RD_gw/2+1.5)return false;return typeof WATER==='undefined'||baseHeight(x,z)>WATER+0.4};
+  const o=new THREE.Object3D(),col=new THREE.Color(),nw=dwShapes.map(()=>[0,0]),ne=dwShapes.map(()=>0),others=SOLIDS.filter(s=>!s.foot);
+  for(const g in treeGroups){if(!DW_GROUPS.has(g))continue;for(const a of treeGroups[g]){if(treeFallen.size&&treeFallen.has(treeKey(a.x,a.z)))continue;
+    const h=hash(a.x*5.3+2.1,a.z*3.7-1.3);if(h>0.085)continue;const k=h<0.03?0:h<0.05?1:h<0.07?2:3,sh=dwShapes[k];
+    if(near(a.x,a.z,10)[0]<5)continue;
+    const h2=hash(a.z*2.9-0.7,a.x*4.3+1.9),h3=hash(a.x*1.1+7.7,a.z*0.7-3.1),an=h2*Math.PI*2,d=2.4+2.8*h3,x=a.x+Math.cos(an)*d,z=a.z+Math.sin(an)*d,s=0.8+0.45*h3;
+    if(!free(x,z))continue;
+    let y=baseHeight(x,z),yaw=h3*Math.PI*2,pitch=0,L=sh.r*s*1.7,sol;
+    if(sh.log){L=sh.len*s/2;const c=Math.cos(yaw),sn=Math.sin(yaw),x1=x+c*L,z1=z-sn*L,x2=x-c*L,z2=z+sn*L;
+      if(!free(x1,z1)||!free(x2,z2))continue;const y1=baseHeight(x1,z1),y2=baseHeight(x2,z2);if(Math.abs(y1-y2)>1.2)continue;
+      let hit=false;for(let t=0;t<=4&&!hit;t++)hit=near(x2+(x1-x2)*t/4,z2+(z1-z2)*t/4,1.2)[1]<0.9;if(hit)continue;
+      pitch=Math.atan2(y1-y2,2*L);y=(y1+y2)/2;const lz=sh.r*s+0.05;sol={x,z,lx:L,lz,cs:c,sn,hx:Math.abs(c)*L+Math.abs(sn)*lz,hz:Math.abs(sn)*L+Math.abs(c)*lz,dw:1}}
+    else{if(near(x,z,2)[1]<1.2)continue;yaw=h2*40;sol={x,z,hx:sh.r*s*1.2,hz:sh.r*s*1.2,dw:1}}
+    if(others.some(q=>solidOut(q,x,z,L+0.5)))continue;
+    const w=a.t==='pine'?1:0;if(nw[k][w]>=DW_CAP||ne[k]>=DW_CAP)continue;
+    o.position.set(x,y-0.06,z);o.rotation.set(0,yaw,pitch,'YZX');o.scale.set(s,s,s);o.updateMatrix();
+    // weathered: greyer and a little mossy on the old ones
+    const v=0.72+0.3*h2,m=h3<0.4?0.06:0;col.setRGB(v*(0.95-m),v,v*(0.9-m));
+    dwIMs[k].wood[w].setMatrixAt(nw[k][w],o.matrix);dwIMs[k].wood[w].setColorAt(nw[k][w],col);nw[k][w]++;dwIMs[k].end.setMatrixAt(ne[k]++,o.matrix);SOLIDS.push(sol)}}
+  dwIMs.forEach((d,k)=>{for(let w=0;w<2;w++){const im=d.wood[w];im.count=nw[k][w];im.instanceMatrix.needsUpdate=true;im.instanceColor.needsUpdate=true}
+    d.end.count=ne[k];d.end.instanceMatrix.needsUpdate=true})}
