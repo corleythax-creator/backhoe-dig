@@ -19,8 +19,9 @@ function rmKit(K,x,z,y,f){const sf=Math.sin(f),cf=Math.cos(f),P=(o,s)=>[x+sf*o+c
   // a line to walk round (local points), for a spot's path
   R.path=pts=>rmLine(pts.map(([o,s])=>P(o,s)));
   R.spot=(o,s,yl,k)=>{const [a,b]=P(o,s);const sp=Object.assign({x:a,z:b,y,yaw:f+yl},k||{});R.spots.push(sp);return sp};
-  // a solid w across by d deep at o, s (turned by yl, as R.box): the worker walks round it (rmSolid)
-  R.solid=(o,s,w,d,yl)=>{const c=Math.abs(Math.cos(yl||0)),n=Math.abs(Math.sin(yl||0)),[a,b]=P(o,s);rmSolid(a,b,f,(c*w+n*d)/2,(n*w+c*d)/2)};
+  // a solid w across by d deep at o, s (turned by yl, as R.box): the worker walks round it (rmSolid); h: how tall, for
+  // a shot over it (none: a wall)
+  R.solid=(o,s,w,d,yl,h)=>{const c=Math.abs(Math.cos(yl||0)),n=Math.abs(Math.sin(yl||0)),[a,b]=P(o,s);rmSolid(a,b,f,(c*w+n*d)/2,(n*w+c*d)/2,h?y+h:undefined)};
   return R}
 // the highest ground under a w by d rectangle at x, z (turned to f), so a floor over it never has grass through it
 function rmGroundMax(x,z,f,w,d){const sf=Math.sin(f),cf=Math.cos(f);let m=-1e9;
@@ -31,19 +32,19 @@ function rmChair(R,o,s,yl,col,sit){const p=R.at(o,s,yl);p(0.44,0.05,0.44,col,0,0
   for(const [a,b] of [[-0.19,-0.19],[-0.19,0.19],[0.19,-0.19],[0.19,0.19]])p(0.035,0.43,0.035,0x2a2c2f,a,b,0);
   if(sit)R.spot(o-Math.cos(yl)*0.05,s-Math.sin(yl)*0.05,yl,{sit:1})}
 // a café table (round when round) with chairs on two or four sides, the sitters facing it
-function rmTable(R,o,s,n,col,round){R.solid(o,s,1.5,n===4?1.5:0.8);if(round){R.cyl(0.38,0.38,0.04,16,col,o,s,0.72);R.cyl(0.04,0.04,0.72,8,0x2a2c2f,o,s,0);R.cyl(0.22,0.22,0.03,12,0x2a2c2f,o,s,0)}
+function rmTable(R,o,s,n,col,round){R.solid(o,s,1.5,n===4?1.5:0.8,0,0.76);if(round){R.cyl(0.38,0.38,0.04,16,col,o,s,0.72);R.cyl(0.04,0.04,0.72,8,0x2a2c2f,o,s,0);R.cyl(0.22,0.22,0.03,12,0x2a2c2f,o,s,0)}
   else{R.box(0.75,0.04,0.75,col,o,s,0.72);R.box(0.06,0.72,0.06,0x2a2c2f,o,s,0)}
   const sides=n===4?[0,Math.PI/2,Math.PI,-Math.PI/2]:[Math.PI/2,-Math.PI/2];
   for(const a of sides){const so=-Math.cos(a)*0.62,ss=-Math.sin(a)*0.62;rmChair(R,o+so,s+ss,a,0x5a3b26,1)}
   // a cup or two on it
   for(const k of [-1,1])R.cyl(0.04,0.035,0.09,8,0xf2efe6,o+k*0.15,s-k*0.12,0.74)}
 // a shelf unit w wide against the room's side (facing yl), four shelves of goods
-function rmShelf(R,o,s,yl,w,seed){seed=Math.abs(Math.round(seed));R.solid(o,s,w,0.5,yl);const p=R.at(o,s,yl);p(w,1.9,0.05,0xd8d2c4,-0.22,0,0);for(const x of [-w/2,w/2])p(0.04,1.9,0.45,0xd8d2c4,0,x,0);
+function rmShelf(R,o,s,yl,w,seed){seed=Math.abs(Math.round(seed));R.solid(o,s,w,0.5,yl,1.95);const p=R.at(o,s,yl);p(w,1.9,0.05,0xd8d2c4,-0.22,0,0);for(const x of [-w/2,w/2])p(0.04,1.9,0.45,0xd8d2c4,0,x,0);
   for(let k=0;k<4;k++){const y0=0.15+k*0.45;p(w,0.03,0.45,0xd8d2c4,0,0,y0);let x=-w/2+0.08;
     while(x<w/2-0.12){const q=Math.round((x+w)*10),g=0.1+((seed*7+k*3+q)%5)*0.03,h=0.12+((seed+k+q)%4)*0.05;
       p(g,h,0.3,rmC(seed+k*5+q),0,x+g/2,y0+0.03);x+=g+0.03}}}
 // the counter (w wide, the staff behind it facing out) with a till on it
-function rmCounter(R,o,s,w,col,top){R.solid(o,s,w+0.06,0.7);R.box(w,1.0,0.6,col,o,s,0);R.box(w+0.06,0.04,0.66,top||0x3a3330,o,s,1.0);
+function rmCounter(R,o,s,w,col,top){R.solid(o,s,w+0.06,0.7,0,1.05);R.box(w,1.0,0.6,col,o,s,0);R.box(w+0.06,0.04,0.66,top||0x3a3330,o,s,1.0);
   R.box(0.32,0.22,0.28,0x2a2c2f,o,s+w/2-0.35,1.04);R.box(0.26,0.18,0.02,0x9ad0e0,o+0.1,s+w/2-0.35,1.15)}
 // the shops' kinds by sign (MAIN_SHOPS): eat, shop, salon, office, wash, art, gun
 const RM_KIND={0:'eat',2:'eat',5:'eat',11:'eat',12:'eat',17:'eat',21:'eat',15:'eat',9:'salon',26:'salon',7:'office',8:'office',16:'office',23:'office',29:'office',31:'office',20:'wash',18:'art',13:'art',27:'gun'};
@@ -79,7 +80,7 @@ function rmFurnish(K,x,z,y,f,w,d,si,wall){const R=rmKit(K,x,z,y,f),kind=RM_KIND[
     R.spot(0.9,-1.2,-Math.PI/2);R.spot(-0.8,1.6,Math.PI/2);R.spot(back+1.0,1,0+Math.PI);R.spot(0,-0.5,Math.PI,{sit:1});rmCounter(R,d/2-1.0,W-0.8,1.0,wood)}
   else if(kind==='gun'){// a gun shop: a glass case across the room with handguns in it, long guns on a slatwall behind,
     // shelves of ammunition and gear down the sides, a target-shooting poster or two
-    R.solid(back+1.6,0,Math.min(2*W-1.2,5.2)+0.06,0.7);const cw=Math.min(2*W-1.2,5.2);R.box(cw,0.85,0.6,0x2a2622,back+1.6,0,0);
+    R.solid(back+1.6,0,Math.min(2*W-1.2,5.2)+0.06,0.7,0,1.1);const cw=Math.min(2*W-1.2,5.2);R.box(cw,0.85,0.6,0x2a2622,back+1.6,0,0);
     R.box(cw-0.1,0.22,0.52,'glass',back+1.6,0,0.85);R.box(cw+0.06,0.03,0.66,'glass',back+1.6,0,1.07);R.box(cw-0.2,0.02,0.48,0x5a1f1f,back+1.6,0,0.86);
     const cs=[];for(let k=0;k<6;k++){const [a,b]=R.P(back+1.55+(k%2?0.1:-0.1),-cw/2+0.5+k*(cw-1)/5);cs.push([a,y+0.89,b,f+(k%2?0.4:-0.3)])}
     R.box(2*W-0.2,1.6,0.04,0x3a3a36,back+0.04,0,0.8);for(let k=0;k<9;k++)R.box(2*W-0.2,0.012,0.05,0x2a2a27,back+0.06,0,0.85+k*0.18);
@@ -155,7 +156,7 @@ function rmInsideTick(dt){const r=mode==='walk'&&!wk.inside?rmRoomAt(wk.x,wk.z,w
   else if(rmLampBk){L.position.copy(rmLampBk.p);L.color.setHex(rmLampBk.c);L.distance=rmLampBk.d;L.decay=rmLampBk.y;rmLampBk=null}}
 function rmRoom(x,z,f,hw,hd,y,top){const r={x,z,f,sf:Math.sin(f),cf:Math.cos(f),hw,hd,y,top};IN_ROOMS.push(r);return r}
 // a solid hs across by ho deep (half sizes) at x, z in a frame turned to f (s across, o along f), as SOLIDS reads one
-function rmSolid(x,z,f,hs,ho){const sf=Math.sin(f),cf=Math.cos(f);SOLIDS.push({x,z,lx:hs,lz:ho,cs:cf,sn:sf,hx:Math.abs(cf)*hs+Math.abs(sf)*ho,hz:Math.abs(sf)*hs+Math.abs(cf)*ho})}
+function rmSolid(x,z,f,hs,ho,top){const sf=Math.sin(f),cf=Math.cos(f),o={x,z,lx:hs,lz:ho,cs:cf,sn:sf,hx:Math.abs(cf)*hs+Math.abs(sf)*ho,hz:Math.abs(sf)*hs+Math.abs(cf)*ho};if(top!==undefined)o.top=top;SOLIDS.push(o)}
 // a wall with holes in a room kit's frame: along s at o = c (ax 's') or along o at s = c (ax 'o'), from a to b, T thick
 // toward n (+1 or -1: the inside), H high; out its outside, inn its painted inside face; holes [{m (its middle along the
 // wall), w, y0, y1}]. What stands on the floor is solid; a hole down to the floor is a doorway
