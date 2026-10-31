@@ -184,7 +184,7 @@ const MAIN_SHOPS=[["Lakeside Bakery","Bread · Pies · Coffee","#2f4a3a","#e9d9a
   ["Village Deli","Sandwiches","#e9e1cc","#2f4a3a",0],["Gallery on Main","Local Art","#2b2d2f","#ffffff",1],["Toy Chest","Toys · Games","#2a5f9a","#f4d27a",0],
   ["Laundromat","Open 7 Days","#ffffff","#2a5f9a",0],["Copper Kettle","Pub & Grill","#2b2d2f","#d08a42",1],["Bike & Paddle","Rentals · Repairs","#d08a22","#ffffff",0],
   ["Lakeview Hotel","Rooms","#1f3a5f","#e0c27a",1],["Corner Market","Groceries","#2f6b4f","#ffffff",0],["Quilt Barn","Fabric · Yarn","#7e2f26","#f1ead8",1],
-  ["Hair Studio","Cuts · Color","#e9e1cc","#2b2d2f",1],["Thrift & Treasure","Second Hand","#5a3a6b","#f1ead8",0],["Town Library","Books · Story Time","#23402f","#f1ead8",1],
+  ["Hair Studio","Cuts · Color","#e9e1cc","#2b2d2f",1],["Lakeside Guns","Firearms · Ammo","#2b2d2f","#d8b25a",0],["Town Library","Books · Story Time","#23402f","#f1ead8",1],
   ["Town Hall","Lakeside","#e9e6dc","#1f3a5f",1],["Ice House","Ice · Firewood","#2a5f9a","#ffffff",0],["Lakeside Theater","Movies Fri · Sat","#5a2a22","#f4d27a",1]];
 const mainSignList=[],MAIN_GAPS=[];
 // a shop or house on a town lot: a block with its parapet and cornice; a storefront on the face toward the street (face:

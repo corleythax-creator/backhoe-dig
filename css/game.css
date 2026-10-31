@@ -134,6 +134,13 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 #gunCross{position:fixed;left:50%;top:50%;width:26px;height:26px;margin:-13px 0 0 -13px;pointer-events:none;z-index:5;border-radius:50%;border:2px solid rgba(255,255,255,.85);box-shadow:0 0 0 1px rgba(0,0,0,.45),inset 0 0 0 1px rgba(0,0,0,.45)}
 #gunCross::after{content:"";position:absolute;left:50%;top:50%;width:4px;height:4px;margin:-2px 0 0 -2px;border-radius:50%;background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.5)}
 #gunCross[hidden]{display:none}
+#reloadBtn{height:46px;min-width:78px;padding:0 14px;font-size:17px;border-radius:8px;box-shadow:var(--lift)}
+#gunHud{position:fixed;right:16px;top:50%;transform:translateY(-50%);z-index:6;display:flex;flex-direction:column;align-items:flex-end;gap:2px;padding:8px 12px;border-radius:10px;background:rgba(0,0,0,.38);color:#fff;font-weight:700;text-shadow:0 1px 2px rgba(0,0,0,.7);cursor:pointer;user-select:none}
+#gunHud b{font-size:15px;letter-spacing:.08em;opacity:.85}#gunHud span{font-size:28px;font-variant-numeric:tabular-nums}#gunHud.low span{color:#ff8a6a}#gunHud[hidden]{display:none}
+#gunShop{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:30;width:min(560px,calc(100vw - 32px));max-height:calc(100vh - 40px);overflow:auto;padding:16px;border-radius:12px;background:rgba(22,24,26,.94);color:#f1ead8;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+#gunShop[hidden]{display:none}#gunShop h3{margin:0 0 10px;font-size:22px;color:#d8b25a}
+.gsRow{display:flex;align-items:center;gap:8px;padding:10px 0;border-top:1px solid rgba(255,255,255,.12)}.gsTxt{flex:1;min-width:0}.gsTxt b{display:block;font-size:18px}.gsTxt small{font-size:14px;opacity:.8}
+.gsRow button,#gsClose{height:42px;min-width:74px;padding:0 12px;font-size:16px;border-radius:8px}#gsClose{margin-top:10px;width:100%}
 #jumpBtn:active{transform:translateY(1px)}
 /* bottom layer: each stick's caption under it, the frame rate between them; no bar, the words carry a shadow */
 .bbar{grid-area:3/1/4/4;position:relative;z-index:2;pointer-events:none;display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;min-height:40px;box-sizing:border-box;
@@ -547,7 +554,7 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
    Sprint, Jump) sit lower and smaller over the key captions */
 .nostk .stick{display:none}
 .nostk .sticks{padding-bottom:4px}
-.nostk #seatBtn,.nostk #jumpBtn,.nostk #sprintBtn,.nostk #plantBtn,.nostk #trimBtn,.nostk #bumpBtn,.nostk #bedBtn,.nostk #fireBtn,.nostk #gunBtn{height:36px;min-width:0;font-size:15px;box-shadow:none}
+.nostk #seatBtn,.nostk #jumpBtn,.nostk #sprintBtn,.nostk #plantBtn,.nostk #trimBtn,.nostk #bumpBtn,.nostk #bedBtn,.nostk #fireBtn,.nostk #reloadBtn,.nostk #gunBtn{height:36px;min-width:0;font-size:15px;box-shadow:none}
 .nostk .exswitch button{height:32px;min-width:60px;font-size:15px}
 .nostk .tbar button{height:38px}
 .nostk #menuBtn{width:38px}
