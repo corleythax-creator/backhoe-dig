@@ -33,7 +33,8 @@ GFX.low.extraLt=false;GFX.med.extraLt=GFX.high.extraLt=true;
 GFX.low.propLt=GFX.med.propLt=false;GFX.high.propLt=true;
 // the townsfolk from Human Forge (townfolk.js), at that level of detail: the phone keeps the old ones
 GFX.low.forge=GFX.med.forge='';GFX.high.forge='md';
-GFX.ultra=Object.assign({},GFX.high,{name:'Ultra',forge:'hi',wild:1,turfR:75,tuftQ:3,ao:true,bloom:true,grade:true,treeR:220,skyLight:true,shSoft:true,wetDrops:true,wetGround:true,cloudQ:3});
+// Ultra: the few townsfolk nearest the camera (at most fgUltra, within TU.tfUltraR) swap to their ultra mesh (townfolk.js tfUh)
+GFX.ultra=Object.assign({},GFX.high,{name:'Ultra',forge:'hi',fgUltra:3,wild:1,turfR:75,tuftQ:3,ao:true,bloom:true,grade:true,treeR:220,skyLight:true,shSoft:true,wetDrops:true,wetGround:true,cloudQ:3});
 // VR through a PC: the eye buffer drawn larger than the headset's own and scaled down (supersampling), for sharper edges
 // and fine detail; only the levels for strong graphics do it
 GFX.low.vrSS=GFX.med.vrSS=1;GFX.high.vrSS=1.25;GFX.ultra.vrSS=1.4;

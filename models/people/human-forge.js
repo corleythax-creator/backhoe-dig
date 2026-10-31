@@ -1,6 +1,7 @@
 /* Human Forge runtime: puts Forge people (rigged, animated GLBs from human-forge) into any three.js game, r128 to r186.
  * No GLTFLoader needed: it reads the Forge files itself. Two ways to draw people:
- *   hero  - one skinned person with an AnimationMixer: cross-fades, props in hand, three LODs. For the few near the camera.
+ *   hero  - one skinned person with an AnimationMixer: cross-fades, props in hand, three LODs (four with { ultra: true }
+ *           for people built with the ultra tier: the whole mesh smoothed, 100-150k triangles). For the few near the camera.
  *   crowd - any number of one character as a single InstancedMesh, skinned on the GPU from a baked bone texture; each
  *           instance has its own clip, phase and speed. One draw call per character (plus one for its shadow).
  * Classic script: sets window.HumanForge. ES module: import './human-forge.js' then use window.HumanForge (or
@@ -15,7 +16,7 @@
  */
 (function (root) {
   'use strict';
-  const VERSION = '1.1.0';
+  const VERSION = '1.2.0';
 
   // ------------------------------------------------------------------ GLB reading
   const CT = { 5126: Float32Array, 5121: Uint8Array, 5123: Uint16Array, 5125: Uint32Array, 5122: Int16Array, 5120: Int8Array };
@@ -87,36 +88,64 @@
       })));
     }
 
+    async function texOf(g, i, data) {
+      const img = g.json.images[i || 0];
+      const tex = new THREE.Texture(await loadImage(g.view(img.bufferView), img.mimeType));
+      tex.flipY = false;
+      if (data) { if (linear) tex.colorSpace = ''; }  // normal and roughness maps: numbers, not colours
+      else if (linear) tex.colorSpace = opts.linearTextures ? 'srgb-linear' : 'srgb';
+      else if (!opts.linearTextures && THREE.sRGBEncoding !== undefined) tex.encoding = THREE.sRGBEncoding;
+      tex.anisotropy = 4;
+      tex.needsUpdate = true;
+      return tex;
+    }
+
+    function meshesOf(g) {
+      const J = g.json, lods = {};
+      J.nodes.filter((n) => n.mesh !== undefined).forEach((n) => {
+        const pr = J.meshes[n.mesh].primitives[0], a = pr.attributes;
+        const geo = new THREE.BufferGeometry();
+        geo.setAttribute('position', new THREE.BufferAttribute(g.acc(a.POSITION), 3));
+        geo.setAttribute('normal', new THREE.BufferAttribute(g.acc(a.NORMAL), 3));
+        geo.setAttribute('uv', new THREE.BufferAttribute(g.acc(a.TEXCOORD_0), 2));
+        geo.setAttribute('skinIndex', new THREE.BufferAttribute(g.acc(a.JOINTS_0), 4));
+        geo.setAttribute('skinWeight', new THREE.BufferAttribute(g.acc(a.WEIGHTS_0), 4, true));
+        geo.setIndex(new THREE.BufferAttribute(g.acc(pr.indices), 1));
+        geo.computeBoundingSphere();
+        lods[n.name.replace('body_', '')] = geo;
+      });
+      return lods;
+    }
+
+    /* the ultra tier (built with forge.py build --ultra): its own file, the whole mesh smoothed, a 2048 texture */
+    function ultra(t) {
+      const u = t.meta.ultra;
+      if (!u) return Promise.resolve(null);
+      // ultra files live in R2 (library.json's ultraBase, forge.py publish), not beside the library; a game's own copy wins
+      const at = opts.ultraBase || (u.local ? base : lib.ultraBase || base);
+      if (!t.ultra) t.ultra = fetchBuf(at + u.file).then(async (buf) => {
+        const g = parseGLB(buf), M = g.json.materials[0], P = M.pbrMetallicRoughness || {};
+        const img = (ref) => ref && g.json.textures[ref.index].extensions.EXT_texture_webp.source;
+        const out = { geo: meshesOf(g).ultra, tex: await texOf(g, img(P.baseColorTexture)) };
+        if (M.normalTexture) out.normal = await texOf(g, img(M.normalTexture), true);
+        if (P.metallicRoughnessTexture) out.rough = await texOf(g, img(P.metallicRoughnessTexture), true);
+        return out;
+      });
+      return t.ultra;
+    }
+
     async function type(id) {
       if (types[id]) return types[id];
       const p = (async () => {
         const g = parseGLB(await fetchBuf(base + id + '.glb'));
         const J = g.json;
-        const img = J.images[0];
-        const tex = new THREE.Texture(await loadImage(g.view(img.bufferView), img.mimeType));
-        tex.flipY = false;
-        if (linear) tex.colorSpace = opts.linearTextures ? 'srgb-linear' : 'srgb';
-        else if (!opts.linearTextures && THREE.sRGBEncoding !== undefined) tex.encoding = THREE.sRGBEncoding;
-        tex.anisotropy = 4;
-        tex.needsUpdate = true;
+        const tex = await texOf(g);
         const skin = J.skins[0];
         const joints = skin.joints.map((n) => J.nodes[n]);
         const parent = {};
         J.nodes.forEach((n, i) => (n.children || []).forEach((c) => { parent[c] = i; }));
         const ibm = g.acc(skin.inverseBindMatrices);
-        const lods = {};
-        J.nodes.filter((n) => n.mesh !== undefined).forEach((n) => {
-          const pr = J.meshes[n.mesh].primitives[0], a = pr.attributes;
-          const geo = new THREE.BufferGeometry();
-          geo.setAttribute('position', new THREE.BufferAttribute(g.acc(a.POSITION), 3));
-          geo.setAttribute('normal', new THREE.BufferAttribute(g.acc(a.NORMAL), 3));
-          geo.setAttribute('uv', new THREE.BufferAttribute(g.acc(a.TEXCOORD_0), 2));
-          geo.setAttribute('skinIndex', new THREE.BufferAttribute(g.acc(a.JOINTS_0), 4));
-          geo.setAttribute('skinWeight', new THREE.BufferAttribute(g.acc(a.WEIGHTS_0), 4, true));
-          geo.setIndex(new THREE.BufferAttribute(g.acc(pr.indices), 1));
-          geo.computeBoundingSphere();
-          lods[n.name.replace('body_', '')] = geo;
-        });
+        const lods = meshesOf(g);
         const forge = (J.nodes.find((n) => n.extras && n.extras.forge) || {}).extras;
         const meta = lib.people.find((q) => q.id === id) || {};
         // the pelvis' rest height (world y of its head, from its inverse bind matrix): walk clips scale to it
@@ -156,8 +185,12 @@
       return new THREE.MeshStandardMaterial(Object.assign({ map: t.tex, alphaTest: 0.5, side: THREE.DoubleSide, roughness: 0.85, metalness: 0 }, extra || {}));
     }
     const OLD_SKINNING = 'skinning' in new THREE.MeshStandardMaterial(); // three before r129 wants skinning: true on the material
-    function heroMaterial(t) {
-      const m = material(t);
+    // the ultra normal maps point green up the image (MakeHuman's, OpenGL style) and the atlas runs v down it: three
+    // (r128 to r186 alike, tested) reads green along +v, so flip it
+    const NORMAL_Y = -1;
+    function heroMaterial(t, u) {
+      const m = material(t, u ? Object.assign({ map: u.tex }, u.normal ? { normalMap: u.normal, normalScale: new THREE.Vector2(1, NORMAL_Y) } : {},
+        u.rough ? { roughnessMap: u.rough, roughness: 1 } : {}) : null);
       if (OLD_SKINNING) m.skinning = true;
       return m;
     }
@@ -170,8 +203,10 @@
       const mat = o.material || heroMaterial(t);
       if (o.material && OLD_SKINNING) o.material.skinning = true;
       const meshes = {};
-      Object.keys(t.lods).forEach((k) => {
-        const m = new THREE.SkinnedMesh(t.lods[k], mat);
+      const u = o.ultra ? await ultra(t) : null;
+      const geos = Object.assign({}, t.lods, u ? { ultra: u.geo } : {});
+      Object.keys(geos).forEach((k) => {
+        const m = new THREE.SkinnedMesh(geos[k], k === 'ultra' && !o.material ? heroMaterial(t, u) : mat);
         m.name = 'body_' + k;
         m.castShadow = o.castShadow !== false;
         m.receiveShadow = !!o.receiveShadow;
@@ -216,9 +251,10 @@
         },
         update(dt) { mixer.update(dt); return h; },
         dispose() { heroes.delete(h); r.group.removeFromParent && r.group.removeFromParent(); mixer.stopAllAction(); },
-        auto: o.autoLod !== false
+        auto: o.autoLod !== false,
+        ultra: !!u
       };
-      h.lod(o.lod || 'hi');
+      h.lod(o.lod || (u ? 'ultra' : 'hi'));
       h.play(o.clip || 'idle', { fade: 0, phase: o.phase !== undefined ? o.phase : Math.random() });
       heroes.add(h);
       return h;
@@ -429,7 +465,7 @@
     }
 
     // the LOD for every hero, by distance from the camera (metres)
-    const lodAt = opts.lodAt || { hi: 12, md: 35 };
+    const lodAt = Object.assign({ ultra: 6, hi: 12, md: 35 }, opts.lodAt);
     const _w = new THREE.Vector3();
     function update(dt, camera) {
       heroes.forEach((h) => {
@@ -437,7 +473,7 @@
         if (camera && h.auto) {
           h.object.getWorldPosition(_w);
           const d = _w.distanceTo(camera.position);
-          h.lod(d < lodAt.hi ? 'hi' : d < lodAt.md ? 'md' : 'lo');
+          h.lod(h.ultra && d < lodAt.ultra ? 'ultra' : d < lodAt.hi ? 'hi' : d < lodAt.md ? 'md' : 'lo');
         }
       });
       crowds.forEach((c) => c.update(dt));
