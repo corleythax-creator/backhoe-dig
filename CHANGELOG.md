@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Friday, October 30, 2026
 
+- **v293** (10:23 PM) Photo-scanned leaf trees in autumn colours, pines from scanned needles, logs and stumps in the woods, split-granite boulders with grass round their feet, clustered on the town's lawns
 - **v292** (9:54 PM) The start map's close-up shows Main Street in brick with its crosswalks, as it is in town now.
 - **v291** (9:44 PM) Ultra: contact shadows toward the sun, light bouncing nearby colour onto things, sharpening, a far lens blur and a warm-light cool-shade grade (all tunable under Screen effects)
 - **v290** (9:32 PM) A Shopfolk count beside Townsfolk: the people in shops and houses start each game at shopPop (60) and those shot indoors are gone until the next start
