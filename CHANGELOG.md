@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Saturday, October 31, 2026
 
+- **v307** (1:09 AM) Shadows now reach far past you: hills, cliffs, buildings and trees out to a fifth of a mile (High) still cast them. The haze glows warm toward the sun and lies thicker low over the lake, and sunlight bounces up off the ground into the shade under machines and eaves.
 - **v306** (1:04 AM) Shots kick and shake the view, light up the street and throw out empty cases that tink on the ground; people shot dead go limp as they fall, sprawl on their back or face, bounce as they land and lie along the slope.
 - **v305** (12:42 AM) Names and hailing port on the marina's slip boats; detailed rooftop HVAC units (curb, panelled casing, louvred coils, fan and guard) and capped vent stacks on Main Street
 - **v304** (12:21 AM) The sky's colours now come from sunlight in the air (deep blue at noon, peach and mauve at dusk); thin high cloud, sunbeams between the clouds, rainbows after rain, and the clouds in the lake and on the paint.

@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-31T06:04:00Z",
+ "updated": "2026-10-31T06:09:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -96,9 +96,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-31",
-   "dh": 34,
+   "dh": 50,
    "act": 1.5,
-   "versions": 4
+   "versions": 5
   }
  ],
  "extra": [
@@ -2862,6 +2862,15 @@ window.EFFORT = {
    "tris": 6028549,
    "chars": 2050563,
    "what": "Shots kick and shake the view, light up the street and throw out empty cases that tink on the ground; people shot dead go limp as they fall, sprawl on their back or face, bounce as they land and lie along the slope."
+  },
+  {
+   "v": 307,
+   "asked": "2026-10-30T23:15:00-05:00",
+   "live": "2026-10-31T01:09:02-05:00",
+   "dh": 16,
+   "tris": 6029017,
+   "chars": 2064175,
+   "what": "Shadows now reach far past you: hills, cliffs, buildings and trees out to a fifth of a mile (High) still cast them. The haze glows warm toward the sun and lies thicker low over the lake, and sunlight bounces up off the ground into the shade under machines and eaves."
   }
  ]
 };
