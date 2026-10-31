@@ -36,27 +36,28 @@ clouds.frustumCulled=false;clouds.renderOrder=-0.9;scene.add(clouds);
 const CL_MAP=6000,CL_R=40000,CL_MAXD=14000,CL_Q=[null,{d:3,n:28,l:3,det:0},{d:2,n:40,l:4,det:1},{d:2,n:64,l:6,det:1}];
 const clV={on:false,q:0,mat:{},done:false,rt:null,frame:0,off3:new THREE.Vector3()};
 // the cover map: tiling noise, smooth and lumpy, ranked so its values are spread evenly over 0 to 1
-function clMakeMap(){const N=512,v=new Float32Array(N*N),hs=(x,y,s)=>{const h=Math.sin(x*127.1+y*311.7+s*74.7)*43758.5453;return h-Math.floor(h)};
+function* clMakeMap(){const N=512,v=new Float32Array(N*N),hs=(x,y,s)=>{const h=Math.sin(x*127.1+y*311.7+s*74.7)*43758.5453;return h-Math.floor(h)};
   const vn=(x,y,p,s)=>{const ix=Math.floor(x),iy=Math.floor(y),fx=x-ix,fy=y-iy,u=fx*fx*(3-2*fx),w=fy*fy*(3-2*fy),a=(ix%p+p)%p,b=(iy%p+p)%p,a1=(a+1)%p,b1=(b+1)%p;
     return (hs(a,b,s)*(1-u)+hs(a1,b,s)*u)*(1-w)+(hs(a,b1,s)*(1-u)+hs(a1,b1,s)*u)*w};
   const wo=(x,y,p,s)=>{const ix=Math.floor(x),iy=Math.floor(y);let m=9;for(let j=-1;j<=1;j++)for(let i=-1;i<=1;i++){const cx=ix+i,cy=iy+j,a=(cx%p+p)%p,b=(cy%p+p)%p;
     const dx=cx+hs(a,b,s+1)-x,dy=cy+hs(a,b,s+2)-y;m=Math.min(m,dx*dx+dy*dy)}return Math.sqrt(m)};
-  for(let y=0;y<N;y++)for(let x=0;x<N;x++){const u=x/N,w=y/N;let f=0,a=0.5;for(let o=0,p=4;o<5;o++,p*=2){f+=a*vn(u*p,w*p,p,o);a*=0.5}
-    v[y*N+x]=0.5*f+0.35*(1-wo(u*10,w*10,10,9))+0.15*(1-wo(u*24,w*24,24,19))}
-  const ix=Array.from(v.keys()).sort((a,b)=>v[a]-v[b]),d=new Uint8Array(N*N);ix.forEach((k,r)=>d[k]=r*255/(N*N-1));
+  for(let y=0;y<N;y++){if(!(y&7))yield;for(let x=0;x<N;x++){const u=x/N,w=y/N;let f=0,a=0.5;for(let o=0,p=4;o<5;o++,p*=2){f+=a*vn(u*p,w*p,p,o);a*=0.5}
+    v[y*N+x]=0.5*f+0.35*(1-wo(u*10,w*10,10,9))+0.15*(1-wo(u*24,w*24,24,19))}}
+  yield;const ix=Array.from(v.keys()).sort((a,b)=>v[a]-v[b]),d=new Uint8Array(N*N);ix.forEach((k,r)=>d[k]=r*255/(N*N-1));
   const t=new THREE.DataTexture(d,N,N,THREE.RedFormat,THREE.UnsignedByteType);
   t.wrapS=t.wrapT=THREE.RepeatWrapping;t.magFilter=t.minFilter=THREE.LinearFilter;t.needsUpdate=true;return t}
 // the billows: a tiling 64-cube of cloudy noise, r the big lumps (smooth noise carved by cells), g the fine detail
-function clMakeNoise(){const N=64,n=N*N*N,hs=(i,s)=>{const h=Math.sin(i*12.9898+s*78.233)*43758.5453;return h-Math.floor(h)};
-  const wor=g=>{const out=new Float32Array(n),c=N/g;for(let z=0;z<N;z++)for(let y=0;y<N;y++)for(let x=0;x<N;x++){const fx=(x+0.5)/c,fy=(y+0.5)/c,fz=(z+0.5)/c,
+function* clMakeNoise(){const N=64,n=N*N*N,hs=(i,s)=>{const h=Math.sin(i*12.9898+s*78.233)*43758.5453;return h-Math.floor(h)};
+  const wor=function*(g){const out=new Float32Array(n),c=N/g;for(let z=0;z<N;z++){yield;for(let y=0;y<N;y++)for(let x=0;x<N;x++){const fx=(x+0.5)/c,fy=(y+0.5)/c,fz=(z+0.5)/c,
       ix=Math.floor(fx),iy=Math.floor(fy),iz=Math.floor(fz);let m=9;
       for(let k=-1;k<=1;k++)for(let j=-1;j<=1;j++)for(let i=-1;i<=1;i++){const cx=ix+i,cy=iy+j,cz=iz+k,id=(((cz%g+g)%g)*g+((cy%g+g)%g))*g+((cx%g+g)%g);
         const dx=cx+hs(id,g)-fx,dy=cy+hs(id,g+1)-fy,dz=cz+hs(id,g+2)-fz,dd=dx*dx+dy*dy+dz*dz;if(dd<m)m=dd}
-      out[(z*N+y)*N+x]=Math.min(1,Math.sqrt(m))}return out};
-  const vn=p=>{const out=new Float32Array(n),c=N/p;for(let z=0;z<N;z++)for(let y=0;y<N;y++)for(let x=0;x<N;x++){const fx=x/c,fy=y/c,fz=z/c,ix=Math.floor(fx),iy=Math.floor(fy),iz=Math.floor(fz);
+      out[(z*N+y)*N+x]=Math.min(1,Math.sqrt(m))}}return out};
+  const vn=function*(p){const out=new Float32Array(n),c=N/p;for(let z=0;z<N;z++){yield;for(let y=0;y<N;y++)for(let x=0;x<N;x++){const fx=x/c,fy=y/c,fz=z/c,ix=Math.floor(fx),iy=Math.floor(fy),iz=Math.floor(fz);
       const u=fx-ix,v=fy-iy,w=fz-iz,su=u*u*(3-2*u),sv=v*v*(3-2*v),sw=w*w*(3-2*w),h=(a,b,cc)=>hs((((iz+cc)%p)*p+((iy+b)%p))*p+((ix+a)%p),p*7);
-      out[(z*N+y)*N+x]=((h(0,0,0)*(1-su)+h(1,0,0)*su)*(1-sv)+(h(0,1,0)*(1-su)+h(1,1,0)*su)*sv)*(1-sw)+((h(0,0,1)*(1-su)+h(1,0,1)*su)*(1-sv)+(h(0,1,1)*(1-su)+h(1,1,1)*su)*sv)*sw}return out};
-  const w4=wor(4),w8=wor(8),w16=wor(16),v4=vn(4),v8=vn(8),v16=vn(16),d=new Uint8Array(n*2);
+      out[(z*N+y)*N+x]=((h(0,0,0)*(1-su)+h(1,0,0)*su)*(1-sv)+(h(0,1,0)*(1-su)+h(1,1,0)*su)*sv)*(1-sw)+((h(0,0,1)*(1-su)+h(1,0,1)*su)*(1-sv)+(h(0,1,1)*(1-su)+h(1,1,1)*su)*sv)*sw}}return out};
+  const w4=yield* wor(4),w8=yield* wor(8),w16=yield* wor(16),v4=yield* vn(4),v8=yield* vn(8),v16=yield* vn(16),d=new Uint8Array(n*2);
+  yield;
   for(let i=0;i<n;i++){const wf=1-(0.625*w4[i]+0.25*w8[i]+0.125*w16[i]),pf=0.55*v4[i]+0.3*v8[i]+0.15*v16[i];
     // smooth noise carved by the cells: round heaps, not blobs
     const r=Math.min(1,Math.max(0,wf+(pf-0.5)*0.8));d[i*2]=r*255;d[i*2+1]=(1-(0.6*w8[i]+0.4*w16[i]))*255}
@@ -152,9 +153,11 @@ function clVolRender(){if(!clV.on){clHist.fresh=true;return}const Q=CL_Q[clV.q];
   // this frame's view, turned only, to find its pixels again next frame
   clHist.vr.copy(camera.matrixWorldInverse).setPosition(0,0,0);clHist.pvp.multiplyMatrices(camera.projectionMatrix,clHist.vr);
   renderer.setRenderTarget(t);renderer.xr.enabled=xr}
-const clSunC=new THREE.Color();
-function clVolTick(dt,cv,off){const q=gfxCur.cloudQ|0,on=q>0&&!renderer.xr.isPresenting&&!!CL_Q[q];
-  if(on&&!clU.uNz.value){CS_U.uCSMap.value=clMakeMap();clU.uNz.value=clMakeNoise()}
+const clSunC=new THREE.Color();let clGen=null;
+function clVolTick(dt,cv,off){const q=gfxCur.cloudQ|0;let on=q>0&&!renderer.xr.isPresenting&&!!CL_Q[q];
+  // built a few ms a frame (it is about 2.7 s of work, a long freeze on a phone); the flat clouds show until it is done
+  if(on&&!clU.uNz.value){if(!clGen)clGen=(function*(){CS_U.uCSMap.value=yield* clMakeMap();clU.uNz.value=yield* clMakeNoise()})();
+    const t0=performance.now();let r;do r=clGen.next();while(!r.done&&performance.now()-t0<5);if(!r.done)on=false}
   clV.on=on;clV.q=q;clLay.visible=on;clouds.visible=!on;
   if(!on){CS_U.uCSA.value.w=0;clEnv.visible=false;return}
   // the share of sky covered: a few fair-weather heaps on a dry day, a solid grey deck before a shower
