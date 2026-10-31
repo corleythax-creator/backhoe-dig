@@ -1,6 +1,9 @@
 // Corley's Island: shared helpers, renderer, scene, sky, camera, lights and the flat-shaded material maker M().
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 const $=s=>document.querySelector(s);
+// the start screen's loading cover (LOADP, start.js) counts every file a loading manager fetches, started and finished
+function loadCount(m){const c=[0,0],s=m.itemStart,e=m.itemEnd;LOADP.mgr.push(c);m.itemStart=function(u){c[1]++;return s.call(this,u)};m.itemEnd=function(u){c[0]++;return e.call(this,u)}}
+loadCount(THREE.DefaultLoadingManager);
 const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 // ---------- renderer / scene ----------

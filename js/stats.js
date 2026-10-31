@@ -14,7 +14,7 @@ const STAT_ZERO={mowCuts:0,mowTall:0,mowLawns:0,mowBest:0,mowDist:0,mowTime:0,mo
   showers:0,rainTime:0,rainTop:0,bolts:0,boltNear:0,wipes:0,runoff:0,runPool:0,pumped:0,seeped:0,washed:0,silt:0,
   // fuel, hour meters and pay (fuel.js): engine game-seconds and gallons used since the last fill per machine, dollars;
   // the day's log (d…) for the day dDay, and what yesterday paid
-  exHrs:0,trHrs:0,skHrs:0,mwHrs:0,exUse:0,trUse:0,skUse:0,mwUse:0,fuelGal:0,fuelCost:0,earned:0,
+  exHrs:0,trHrs:0,skHrs:0,mwHrs:0,exUse:0,trUse:0,skUse:0,mwUse:0,fuelGal:0,fuelCost:0,earned:0,spent:0,
   dDay:0,dDug:0,dHaul:0,dSkid:0,dMow:0,dGal:0,dHrs:0,dEarn:0,dFuelCost:0,yEarn:0};
 const stats=Object.assign({},STAT_ZERO);
 // how many times each tall grass cell has been cut (on the lawn's grid, made again with it: statLayout)

@@ -119,6 +119,10 @@
     </div>
   </aside>
   <!-- the two sticks in the thumb zones, between the bars; Get in, Sprint and Jump sit on top of them -->
+  <!-- shop counters and the wallet: above the bars and sticks -->
+  <div id="gunShop" hidden><h3 id="gsHead">Lakeside Guns</h3><div id="gsList"></div><button id="gsClose">Done</button></div>
+  <div id="townShop" hidden><h3 id="tsHead">Shop</h3><p id="tsWho"></p><div id="tsList"></div><button id="tsClose">Done</button></div>
+  <div id="cashChip" hidden><b>Wallet</b><span id="cashVal">$0</span></div>
   <div class="sticks">
     <div class="stickwrap">
       <button id="seatBtn" hidden>Get in</button>
@@ -129,7 +133,6 @@
       <div class="walkbtns" id="walkBtns" hidden><button id="sprintBtn" aria-pressed="false">Sprint</button><button id="jumpBtn">Jump</button><button id="plantBtn">Plant</button><button id="trimBtn" aria-pressed="false">Trimmer</button><button id="bumpBtn" hidden>Bump</button><button id="bedBtn" hidden>Load</button><button id="gunBtn" aria-pressed="true">Pistol</button><button id="reloadBtn" hidden>Reload</button><button id="fireBtn" hidden>Fire</button></div><div id="gunCross" hidden></div>
       <div id="gunVit" hidden><div id="gunWant">☆☆☆</div><div id="gunLife"><i id="gunLifeBar"></i></div></div><div id="gunHurtFx"></div>
       <div id="gunHud" hidden><b id="gunHudN">PISTOL</b><span id="gunHudA">15 / 45</span></div>
-      <div id="gunShop" hidden><h3 id="gsHead">Lakeside Guns</h3><div id="gsList"></div><button id="gsClose">Done</button></div>
       <div class="stick" id="stickR"><div class="knob"></div></div>
     </div>
   </div>
@@ -387,8 +390,9 @@
     <button id="vrStart" class="vrgo" hidden>🥽 Play in VR</button>
     <div id="startMap" role="button" aria-label="Map: tap where to start"><img id="startMapImg" src="shots/startmap.jpg" alt="" fetchpriority="high"><div id="startDet" hidden></div>
       <div id="startIsl" aria-hidden="true"><span data-isl="corley" id="islCorley">Corley's Island</span><span data-isl="family" id="islFamily">Family Island</span><span data-isl="dexter" id="islDexter">Dexter's Island</span><span data-isl="jessica" id="islJessica">Jessica's Island</span><span data-isl="town" id="islTown">Lakeside Town</span><span data-isl="harbor" id="islHarbor">Harbor Square</span><span data-isl="hills" id="islHills">Foothills</span></div>
-      <div id="startPin" hidden></div><button id="startOut" class="ghost" hidden>Whole map</button></div>
-    <div id="startBar"><button id="startResume" class="ghost">Carry on where I was</button>
+      <div id="startPin" hidden></div><button id="startOut" class="ghost" hidden>Whole map</button>
+      <div id="startLoad" role="progressbar" aria-label="Loading the island" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0"><div id="startLoadPct">0%</div><div id="startLoadBar"><i id="startLoadFill"></i></div><div id="startLoadWhat">Loading the game</div></div></div>
+    <div id="startBar"><button id="startResume" class="ghost" disabled>Carry on where I was</button>
     <button id="ctrlBtn" class="ghost" aria-expanded="false" aria-controls="ctrlBox">Controls</button></div>
     <div id="ctrlBox" hidden>
     <dl class="keys">
@@ -490,6 +494,7 @@
 <script defer src="js/plant.js"></script>
 <script defer src="js/trimmer.js"></script>
 <script defer src="js/pistol.js"></script>
+<script defer src="js/town.js"></script>
 <script defer src="js/lawns.js"></script>
 <script defer src="js/stats.js"></script>
 <script defer src="js/keys.js"></script>

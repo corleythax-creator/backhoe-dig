@@ -143,10 +143,13 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 #gunVit.low #gunLife i{background:#e8483a}
 #gunHurtFx{position:fixed;inset:0;z-index:4;pointer-events:none;opacity:0;background:radial-gradient(ellipse at center,rgba(150,0,0,0) 45%,rgba(150,0,0,.85) 100%);transition:background .6s}
 #gunHurtFx.down{background:#000;transition:background 1.2s}
-#gunShop{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:30;width:min(560px,calc(100vw - 32px));max-height:calc(100vh - 40px);overflow:auto;padding:16px;border-radius:12px;background:rgba(22,24,26,.94);color:#f1ead8;box-shadow:0 8px 30px rgba(0,0,0,.5)}
-#gunShop[hidden]{display:none}#gunShop h3{margin:0 0 10px;font-size:22px;color:#d8b25a}
+#gunShop,#townShop{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:30;width:min(560px,calc(100vw - 32px));max-height:calc(100vh - 40px);overflow:auto;padding:16px;border-radius:12px;background:rgba(22,24,26,.94);color:#f1ead8;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+#gunShop[hidden],#townShop[hidden]{display:none}#gunShop h3,#townShop h3{margin:0 0 10px;font-size:22px;color:#d8b25a}
+#tsWho{white-space:normal;margin:0 0 8px;font-size:16px;font-style:italic;opacity:.9}.gsCash{padding:10px 0 0;border-top:1px solid rgba(255,255,255,.12);font-size:16px}.gsCash b{font-size:20px;color:#9fe0a0}
 .gsRow{display:flex;align-items:center;gap:8px;padding:10px 0;border-top:1px solid rgba(255,255,255,.12)}.gsTxt{flex:1;min-width:0}.gsTxt b{display:block;font-size:18px}.gsTxt small{font-size:14px;opacity:.8}
-.gsRow button,#gsClose{height:42px;min-width:74px;padding:0 12px;font-size:16px;border-radius:8px}#gsClose{margin-top:10px;width:100%}
+.gsRow button,#gsClose,#tsClose{height:42px;min-width:74px;padding:0 12px;font-size:16px;border-radius:8px}#gsClose,#tsClose{margin-top:10px;width:100%}
+#cashChip{position:fixed;left:calc(env(safe-area-inset-left,0px) + 16px);top:calc(env(safe-area-inset-top,0px) + 64px);z-index:6;display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:8px 12px;border-radius:10px;background:rgba(0,0,0,.38);color:#fff;font-weight:700;text-shadow:0 1px 2px rgba(0,0,0,.7);pointer-events:none}
+#cashChip b{font-size:15px;letter-spacing:.08em;opacity:.85}#cashChip span{font-size:26px;font-variant-numeric:tabular-nums;color:#b8f0b0}#cashChip[hidden]{display:none}
 #jumpBtn:active{transform:translateY(1px)}
 /* bottom layer: each stick's caption under it, the frame rate between them; no bar, the words carry a shadow */
 .bbar{grid-area:3/1/4/4;position:relative;z-index:2;pointer-events:none;display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;min-height:40px;box-sizing:border-box;
@@ -295,6 +298,17 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 #startMapHint{font:700 24px/1.15 var(--f-display)!important;letter-spacing:.03em;color:var(--machine)}
 #startMap{position:relative;flex:1 1 auto;min-height:260px;border-radius:14px;overflow:hidden;border:1px solid var(--hud-line);background:#1a4769;cursor:progress}
 #startMap.ready{cursor:crosshair}
+/* the loading cover over the map (js/start.js, LOADP): a percent and a bar, until everything is in and its shaders are built */
+#startLoad{position:absolute;inset:0;z-index:3;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;background:rgba(8,11,14,.72);transition:opacity .4s}
+#startLoad.gone{opacity:0;pointer-events:none}#startLoad[hidden]{display:none}
+#startLoadPct{font:700 64px/1 var(--f-display);color:#f3f5ef;letter-spacing:.02em;font-variant-numeric:tabular-nums}
+#startLoadBar{position:relative;width:min(420px,76%);height:14px;border-radius:7px;background:rgba(255,255,255,.14);overflow:hidden}
+#startLoadFill{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--machine);border-radius:7px;transition:width .3s}
+#startLoadBar::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.22),transparent);animation:startLoadShine 1.6s linear infinite}
+#startLoadFill::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.45),transparent);animation:startLoadShine 1.2s linear infinite}
+@keyframes startLoadShine{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
+#startLoadWhat{font:600 20px/1.2 var(--f-body);color:#d5dbd2}
+#startBar button:disabled{opacity:.45}
 #startMapImg{position:absolute;max-width:none;display:block;pointer-events:none;user-select:none}
 #startDet{position:absolute;inset:0;pointer-events:none}#startDet[hidden],#startDet img[hidden]{display:none}
 #startDet img{position:absolute;max-width:none;display:block;user-select:none;opacity:0;transition:opacity .3s}#startDet img.on{opacity:1}
@@ -311,7 +325,7 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 #startTourOpt span{font:500 15px/1 var(--f-body);color:var(--muted);margin-right:4px}
 #startTourOpt button{height:36px;padding:0 12px;font-size:14px}
 #startTourOpt button[aria-pressed="true"]{background:var(--machine);color:#1c1309;border-color:var(--machine)}
-@media (max-width:520px){#startCard h1{font-size:24px}#startMapHint{font-size:19px!important}#startIsl span{font-size:12px;padding:3px 6px}#startBar button{height:50px;font-size:17px}}
+@media (max-width:520px){#startCard h1{font-size:24px}#startMapHint{font-size:19px!important}#startLoadPct{font-size:48px}#startIsl span{font-size:12px;padding:3px 6px}#startBar button{height:50px;font-size:17px}}
 #pickMore{display:none}
 /* short landscape screens (phones on their side): a wider card fits more icons to a row */
 @media (orientation:landscape) and (max-height:560px){#help #startCard{padding:10px 14px;gap:8px}#startCard h1{font-size:24px}#startMapHint{font-size:19px!important}#startBar button{height:44px}}

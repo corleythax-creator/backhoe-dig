@@ -130,6 +130,7 @@ function pbCtx(){if(mode!=='walk'||wk.inside)return null;const H=pbS.hold;let st
     return H==='mulch'&&pbPaintable(x,z)?{a:'spread',x,z}:{a:'down'}}
   if(st)return {a:pbS.stock[st]>0?'buy':'out',k:st};
   if(gunShopNear())return {a:'guns'};
+  {const t=townCtx();if(t)return t}
   if(bh&&bh.pb&&bh.pb.it.length)return {a:'unload',h:bh};
   let j=-1,ld=1.4;pbS.loose.forEach((o,q)=>{const d=Math.hypot(wk.x-o.x,wk.z-o.z);if(d<ld&&Math.abs(wk.y-o.m.position.y)<1.6){ld=d;j=q}});
   return j>=0?{a:'up',j}:null}
@@ -137,9 +138,10 @@ const PB_BTN={load:'Load',unload:'Unload',back:'Put back',spread:'Spread',down:'
 function pbAct(){const c=pbCtx(),H=pbS.hold,K=H&&PB_KINDS[H];pbS.btnT=0;
   if(!c){toast(say(mode!=='walk'||wk.inside?'pbWalk':'pbNothing'),'',2600);return}
   if(c.a==='guns'){gunShopOpen();return}
-  if(c.a==='buy'){pbS.stock[c.k]--;pbS.bought[c.k]++;pbStockDraw();pbHold(c.k);toast(say('shopTake',{item:PB_KINDS[c.k].n,n:pbS.bought[c.k]}),'',3200)}
+  if(c.a==='order'||c.a==='talk'){townAct(c);return}
+  if(c.a==='buy'){if(!townPay(TOWN_PB[c.k],PB_KINDS[c.k].n))return;pbS.stock[c.k]--;pbS.bought[c.k]++;pbStockDraw();pbHold(c.k);toast(say('shopTake',{item:PB_KINDS[c.k].n,n:pbS.bought[c.k]}),'',3200)}
   else if(c.a==='out')toast(say('shopOut',{items:PB_KINDS[c.k].s,min:+(TU.shopRestock/60).toFixed(1)}),'',2600);
-  else if(c.a==='back'){pbS.stock[H]=Math.min(K.max,pbS.stock[H]+1);pbS.bought[H]=Math.max(0,pbS.bought[H]-1);pbHold(null);pbStockDraw();toast(say('shopBack',{item:K.n}),'',2000)}
+  else if(c.a==='back'){if(pbS.bought[H]>0)townRefund(TOWN_PB[H]);pbS.stock[H]=Math.min(K.max,pbS.stock[H]+1);pbS.bought[H]=Math.max(0,pbS.bought[H]-1);pbHold(null);pbStockDraw();toast(say('shopBack',{item:K.n}),'',2000)}
   else if(c.a==='load'||c.a==='unload'){if(Math.abs(c.h.v)>0.5){toast(say('bedMoving'),'',2000);return}
     if(c.a==='load'){const m=pbS.holdM;if(!pbAdd(c.h,H,m)){toast(say('bedFull'),'',2400);return}pbS.holdM=null;pbHold(null);toast(say('bedLoad',{item:K.n,n:c.h.pb.it.length}),'',2200)}
     else{const b=c.h.pb,i=b.it.pop();pbHold(i.k,i.m);toast(say('bedUnload',{item:PB_KINDS[i.k].n,n:b.it.length}),'',2600)}}
@@ -155,7 +157,7 @@ function pbTick(dt){for(const h of hvs)if(h.pb)pbSlide(h,dt);
   if(!SHOP.loaded&&(Math.hypot(camera.position.x-SHOP.x,camera.position.z-SHOP.z)<320||Math.hypot(camera.position.x-95,camera.position.z-530)<320))shopLoad();
   if(pbS.hold&&mode==='walk'&&!wk.inside)for(let s=0;s<2;s++){wkArms[s].top.rotation.x=-0.75;wkArms[s].low.rotation.x=-0.85}
   if((pbS.looseT-=dt)<0){pbS.looseT=1;for(const o of pbS.loose)o.m.position.y=surfAt(o.x,o.z)}
-  if((pbS.btnT-=dt)>0)return;pbS.btnT=0.15;const c=pbCtx(),b=$('#bedBtn'),t=c?(c.a==='buy'?'Take '+PB_KINDS[c.k].s:PB_BTN[c.a]):'';
+  if((pbS.btnT-=dt)>0)return;pbS.btnT=0.15;const c=pbCtx(),b=$('#bedBtn'),t=c?(c.lbl||(c.a==='buy'?'Buy '+PB_KINDS[c.k].s+' '+usd(TOWN_PB[c.k]):PB_BTN[c.a])):'';
   if(b.hidden===!!c)b.hidden=!c;if(c&&b.textContent!==t)b.textContent=t;
   if(!pbS.hint&&mode==='walk'&&!wk.inside&&!pbS.hold&&pbNearBed()){pbS.hint=true;toast(say('pbHint'),'tip',6000)}}
 

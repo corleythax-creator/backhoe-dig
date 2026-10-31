@@ -283,9 +283,9 @@ statusEl.onclick=()=>{const m=statusEl.classList.toggle('min');try{localStorage.
 // foot (tpGo, maps.js: the nearest spot with room), or Carry on where I was. The machines stay where they were parked
 // (walk up to one and Get in). The tests are in ☰ Tools only, so a stray tap can't start one
 function startIn(m){setMode(m);help.hidden=true;try{localStorage.setItem('bhd_seen','1')}catch(e){}}
-// the map, its names and a tap on it are js/start.js's (SPICK), which counts a tap from the moment the page opens; once
-// the world is ready a tap starts you there at once, and one made while it loaded is acted on then
-const startReady=()=>typeof tpGo==='function'&&typeof warmIdle==='function';
+// the map, its names and a tap on it are js/start.js's (SPICK); its loading cover (LOADP) keeps taps off the map until
+// the world is loaded and its shaders built, then a tap starts you there at once
+const startReady=()=>LOADP.done&&typeof tpGo==='function'&&typeof warmIdle==='function';
 SPICK.go=()=>{const p=SPICK.pick;if(!p)return;if(!startReady()){$('#startMapHint').textContent='Starting there as soon as the island has loaded…';return}
   SPICK.pick=null;startLay();if(!landIn(p.x,p.z,0,0,true)&&!tpSpot('foot',p.x,p.z)){toast(say('tpLake'),'bad');return}
   tpPick={x:p.x,z:p.z};tpGo('foot',true);tpSet(null);startIn('walk');toast(say('startIsl',{island:mapPlace(p.x,p.z),how:'on foot'}),'good',2600)};

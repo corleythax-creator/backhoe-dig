@@ -513,7 +513,7 @@ const PIPE_Y=baseHeight(0,PIPE_Z)-1.3, PIPE_R=0.08;
 // Low, Medium and High graphics (or the size picked in the Graphics panel); this loads the one the saved setting (or a
 // phone) wants, and gfx.js swaps it (texTierSet) if the setting turns out otherwise. Grass and dirt are neutral albedo,
 // tinted by the vertex colours
-const texManager=new THREE.LoadingManager(),texLoader=new THREE.TextureLoader(texManager);
+const texManager=new THREE.LoadingManager(),texLoader=new THREE.TextureLoader(texManager);loadCount(texManager);
 let texTier=(()=>{let k=null,c=null;try{k=localStorage.getItem('bhd_gfx');c=JSON.parse(localStorage.getItem('bhd_gfxc')||'null')}catch(e){}
   if(c&&['low','med','high'].includes(c.tex))return c.tex;return k==='low'||k==='med'||k==='high'?k:PHONE?'low':'high'})();
 // the pack's grime is centred on mid grey; the machines multiply it straight onto their paint, so it is lifted to
