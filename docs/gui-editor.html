@@ -169,6 +169,13 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 #gunCross{position:fixed;left:50%;top:50%;width:26px;height:26px;margin:-13px 0 0 -13px;pointer-events:none;z-index:5;border-radius:50%;border:2px solid rgba(255,255,255,.85);box-shadow:0 0 0 1px rgba(0,0,0,.45),inset 0 0 0 1px rgba(0,0,0,.45)}
 #gunCross::after{content:"";position:absolute;left:50%;top:50%;width:4px;height:4px;margin:-2px 0 0 -2px;border-radius:50%;background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.5)}
 #gunCross[hidden]{display:none}
+#reloadBtn{height:46px;min-width:78px;padding:0 14px;font-size:17px;border-radius:8px;box-shadow:var(--lift)}
+#gunHud{position:fixed;right:16px;top:50%;transform:translateY(-50%);z-index:6;display:flex;flex-direction:column;align-items:flex-end;gap:2px;padding:8px 12px;border-radius:10px;background:rgba(0,0,0,.38);color:#fff;font-weight:700;text-shadow:0 1px 2px rgba(0,0,0,.7);cursor:pointer;user-select:none}
+#gunHud b{font-size:15px;letter-spacing:.08em;opacity:.85}#gunHud span{font-size:28px;font-variant-numeric:tabular-nums}#gunHud.low span{color:#ff8a6a}#gunHud[hidden]{display:none}
+#gunShop{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:30;width:min(560px,calc(100cqw - 32px));max-height:calc(100cqh - 40px);overflow:auto;padding:16px;border-radius:12px;background:rgba(22,24,26,.94);color:#f1ead8;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+#gunShop[hidden]{display:none}#gunShop h3{margin:0 0 10px;font-size:22px;color:#d8b25a}
+.gsRow{display:flex;align-items:center;gap:8px;padding:10px 0;border-top:1px solid rgba(255,255,255,.12)}.gsTxt{flex:1;min-width:0}.gsTxt b{display:block;font-size:18px}.gsTxt small{font-size:14px;opacity:.8}
+.gsRow button,#gsClose{height:42px;min-width:74px;padding:0 12px;font-size:16px;border-radius:8px}#gsClose{margin-top:10px;width:100%}
 #jumpBtn:active{transform:translateY(1px)}
 /* bottom layer: each stick's caption under it, the frame rate between them; no bar, the words carry a shadow */
 .bbar{grid-area:3/1/4/4;position:relative;z-index:2;pointer-events:none;display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;min-height:40px;box-sizing:border-box;
@@ -582,7 +589,7 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
    Sprint, Jump) sit lower and smaller over the key captions */
 .nostk .stick{display:none}
 .nostk .sticks{padding-bottom:4px}
-.nostk #seatBtn,.nostk #jumpBtn,.nostk #sprintBtn,.nostk #plantBtn,.nostk #trimBtn,.nostk #bumpBtn,.nostk #bedBtn,.nostk #fireBtn,.nostk #gunBtn{height:36px;min-width:0;font-size:15px;box-shadow:none}
+.nostk #seatBtn,.nostk #jumpBtn,.nostk #sprintBtn,.nostk #plantBtn,.nostk #trimBtn,.nostk #bumpBtn,.nostk #bedBtn,.nostk #fireBtn,.nostk #reloadBtn,.nostk #gunBtn{height:36px;min-width:0;font-size:15px;box-shadow:none}
 .nostk .exswitch button{height:32px;min-width:60px;font-size:15px}
 .nostk .tbar button{height:38px}
 .nostk #menuBtn{width:38px}
@@ -739,7 +746,9 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
     </div>
     <div class="stickwrap">
       <div class="exswitch" id="exSwitch" role="group" aria-label="Excavator: drive or dig"><button id="exDrive" aria-pressed="false">Drive</button><button id="exDig" aria-pressed="true">Dig</button></div>
-      <div class="walkbtns" id="walkBtns" hidden><button id="sprintBtn" aria-pressed="false">Sprint</button><button id="jumpBtn">Jump</button><button id="plantBtn">Plant</button><button id="trimBtn" aria-pressed="false">Trimmer</button><button id="bumpBtn" hidden>Bump</button><button id="bedBtn" hidden>Load</button><button id="gunBtn" aria-pressed="true">Pistol</button><button id="fireBtn" hidden>Fire</button></div><div id="gunCross" hidden></div>
+      <div class="walkbtns" id="walkBtns" hidden><button id="sprintBtn" aria-pressed="false">Sprint</button><button id="jumpBtn">Jump</button><button id="plantBtn">Plant</button><button id="trimBtn" aria-pressed="false">Trimmer</button><button id="bumpBtn" hidden>Bump</button><button id="bedBtn" hidden>Load</button><button id="gunBtn" aria-pressed="true">Pistol</button><button id="reloadBtn" hidden>Reload</button><button id="fireBtn" hidden>Fire</button></div><div id="gunCross" hidden></div>
+      <div id="gunHud" hidden><b id="gunHudN">PISTOL</b><span id="gunHudA">15 / 45</span></div>
+      <div id="gunShop" hidden><h3 id="gsHead">Lakeside Guns</h3><div id="gsList"></div><button id="gsClose">Done</button></div>
       <div class="stick" id="stickR"><div class="knob"></div></div>
     </div>
   </div>
@@ -1130,6 +1139,8 @@ const TUNE=[
   ['trimBump','String trimmer','Line one bump feeds out',0.04,'in',0.25,6,0.25],['trimWear','String trimmer','Line worn away per second of cutting',0.006,'in',0.02,2,0.02],
   ['gunRate','Pistol','Shortest time between shots',0.22,'s',0.05,2,0.01],['gunRange','Pistol','How far a shot carries',90,'ft',30,600,10],
   ['gunFlee','Pistol','How fast people run from shots',4.5,'mph',3,16,0.5],['townPop','Pistol','How many townsfolk live in town when the game starts (each one killed is gone until the next start)',150,'',0,1000,10],['shopPop','Pistol','How many shopfolk (people in the shops and houses) there are when the game starts',60,'',0,500,5],['runKill','Pistol','How fast a machine has to be going to run someone down (slower, they jump clear)',6,'mph',1,30,0.5],['gunWrist','Pistol','Wrist turn holding the pistol',1.4,'deg',-180,180,5],['gunBody','Pistol','How long someone shot stays down before they go (when out of sight)',40,'s',5,600,5],
+  ['gunHp','Pistol','How much a townsperson takes before they go down (each one give or take 15%)',100,'',10,1000,5],['gunHeadX','Pistol','A head shot counts this many times a body shot',4,'',1,20,0.5],
+  ['gunDmgP','Pistol','Pistol: damage a shot',45,'',1,500,1],['gunDmgS','Pistol','Shotgun: damage a pellet (nine a shell)',16,'',1,200,1],['gunDmgR','Pistol','Rifle: damage a shot',130,'',1,1000,5],['gunDmgC','Pistol','Carbine: damage a shot',32,'',1,500,1],
   ['trimSpool','String trimmer','Line on a full spool',25*0.3048,'ft',2,100,1],
   ['lawnCut','Grass','Mower cuts the grass to',0.09,'in',1,24,0.5],['lawnWait','Grass','Wait before cut grass grows',45,'s',0,1200,5],['lawnGrow','Grass','Time to grow back tall',240,'s',10,3600,10],
   ['rainGap','Weather','Dry spell between showers (average)',1800,'min',0.5,120,0.5],['rainLen','Weather','Shower length (average)',150,'min',0.5,60,0.5],
@@ -1290,7 +1301,7 @@ const WORDS=[
   ['walkTouch','On foot','On foot. Tap Jump to jump. Walk up to a machine and tap Get in.'],
   ['walkPad','On foot','On foot. A jumps, X sets a block, B gets into a machine.'],
   ['lockHint','Other','Esc frees the mouse'],
-  ['mouseLook','On foot','Mouse look. Move the mouse to look around, wheel or [zoom] zooms, [lookAhead] looks ahead. Esc frees the mouse.'],
+  ['mouseLook','On foot','Mouse look. Move the mouse to look around, wheel or [zoom] zooms. Esc frees the mouse.'],
   ['bikeTip','Dirt bike','On Dexter\'s dirt bike. [lUp] gas, [lDown] brake and back up, [lLeft] [lRight] steer. Hit the jump with some speed; gas in the air lifts the front. [enter] to climb off.',''],
   ['capL_bike','Captions','{lv} Gas / brake\n{lh} Steer','Left stick, Dirt bike'],['capR_bike','Captions','{rh} Look around','Right stick, Dirt bike'],
   ['dozerTip','Dozer','In Dexter\'s dozer. [lUp] [lDown] drive, [lLeft] [lRight] turn on the tracks; [rUp] [rDown] lower and raise the blade, [rLeft] [rRight] raise and lower the ripper. Blade down on the dig site, it shaves the ground and shoves the dirt ahead; lift it to leave the heap. Drag the ripper through hard clay or rock first and the blade cuts it easily. [enter] to climb out.',''],
@@ -1326,7 +1337,10 @@ const WORDS=[
   ['trimWorn','On foot','The trimmer line has worn too short to cut: [trimBump] to bump out more',''],
   ['trimEmpty','On foot','The trimmer spool is empty: put it away ([trim]) and take it out again for a fresh spool',''],
   ['trimBumped','On foot','Bumped the line out to {line} in ({spool} ft left on the spool)','{line}: inches out; {spool}: feet left'],
-  ['gunOut','On foot','Pistol out: click to fire',''],['gunAway','On foot','Pistol put away',''],
+  ['gunOut','On foot','{gun} out: click to fire','{gun}: which gun'],['gunAway','On foot','{gun} put away','{gun}: which gun'],
+  ['gunNoAmmo','On foot','Out of {gun} rounds: Lakeside Guns on Main Street has more','{gun}: which gun'],['gunFull','On foot','The {gun} is already loaded','{gun}: which gun'],
+  ['gunOne','On foot','Only the pistol so far: Lakeside Guns on Main Street has a shotgun, a rifle and a carbine',''],
+  ['gunGot','On foot','Took the {gun}. [gunNext] (or a tap on the round count) switches guns, [gunReload] reloads','{gun}: which gun'],['gunAmmoGot','On foot','{gun} rounds topped up (+{n})','{gun}: which gun; {n}: how many'],
   ['gunTip','On foot','Pistol out: a click on the view fires the way you face; [gun] puts it away',''],['gunTrim','On foot','Put the trimmer away ([trim]) to use the pistol',''],
   ['trimWalk','On foot','Get out and walk to use the string trimmer',''],
   ['swimming','On foot','Swimming. Head for a beach to wade out; [sprint] swims harder.',''],

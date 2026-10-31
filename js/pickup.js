@@ -129,12 +129,14 @@ function pbCtx(){if(mode!=='walk'||wk.inside)return null;const H=pbS.hold;let st
   if(H){if(bh)return {a:'load',h:bh};if(st===H)return {a:'back'};const x=wk.x+Math.sin(wk.yaw)*1.0,z=wk.z+Math.cos(wk.yaw)*1.0;
     return H==='mulch'&&pbPaintable(x,z)?{a:'spread',x,z}:{a:'down'}}
   if(st)return {a:pbS.stock[st]>0?'buy':'out',k:st};
+  if(gunShopNear())return {a:'guns'};
   if(bh&&bh.pb&&bh.pb.it.length)return {a:'unload',h:bh};
   let j=-1,ld=1.4;pbS.loose.forEach((o,q)=>{const d=Math.hypot(wk.x-o.x,wk.z-o.z);if(d<ld&&Math.abs(wk.y-o.m.position.y)<1.6){ld=d;j=q}});
   return j>=0?{a:'up',j}:null}
-const PB_BTN={load:'Load',unload:'Unload',back:'Put back',spread:'Spread',down:'Set down',up:'Pick up',out:'Sold out'};
+const PB_BTN={load:'Load',unload:'Unload',back:'Put back',spread:'Spread',down:'Set down',up:'Pick up',out:'Sold out',guns:'Gun counter'};
 function pbAct(){const c=pbCtx(),H=pbS.hold,K=H&&PB_KINDS[H];pbS.btnT=0;
   if(!c){toast(say(mode!=='walk'||wk.inside?'pbWalk':'pbNothing'),'',2600);return}
+  if(c.a==='guns'){gunShopOpen();return}
   if(c.a==='buy'){pbS.stock[c.k]--;pbS.bought[c.k]++;pbStockDraw();pbHold(c.k);toast(say('shopTake',{item:PB_KINDS[c.k].n,n:pbS.bought[c.k]}),'',3200)}
   else if(c.a==='out')toast(say('shopOut',{items:PB_KINDS[c.k].s,min:+(TU.shopRestock/60).toFixed(1)}),'',2600);
   else if(c.a==='back'){pbS.stock[H]=Math.min(K.max,pbS.stock[H]+1);pbS.bought[H]=Math.max(0,pbS.bought[H]-1);pbHold(null);pbStockDraw();toast(say('shopBack',{item:K.n}),'',2000)}
