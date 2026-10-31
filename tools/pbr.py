@@ -69,5 +69,6 @@ if __name__ == '__main__':
     if sys.argv[1:] == ['ground']:
         make_ground()
     else:
-        for mid in (sys.argv[1:] or PBR):
+        from cc0 import SCANS  # photo scans bring their own maps (tools/cc0.py): left alone unless named
+        for mid in (sys.argv[1:] or [m for m in PBR if m not in SCANS]):
             make(mid)
