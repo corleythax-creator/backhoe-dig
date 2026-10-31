@@ -100,12 +100,12 @@ function gunHit(p,hy,x,y,z,d){const head=hy>GUN_HEAD;dustPuff(x,y,z,head?2:1.2,[
   const fx=Math.sin(p.yaw),fz=Math.cos(p.yaw),lat=((x-p.x)*-fz+(z-p.z)*fx)/(0.28*p.sc),side=lat>=0?1:-1,fwd=d.x*fx+d.z*fz>0?1:-1,
     k=p.sit?'slump':head?'head':hy<0.48?'leg':Math.abs(lat)>0.62&&hy<0.84?'arm':hy<0.62?'gut':'chest';
   const was=p.hurt||p.hp===1;p.hp=1;
-  if(was&&p.hit&&p.hurt){p.hurt=0;Object.assign(p,{dead:1e-3});p.hit.jolt=0.25;gun.downs++;return}
+  if(was&&p.hit&&p.hurt){p.hurt=0;Object.assign(p,{dead:1e-3});p.hit.jolt=0.25;gun.downs++;if(p.room)tf.shopKills=(tf.shopKills||0)+1;return}
   if(k==='arm'&&!was){p.hit={k,t:0,side,fwd,ux:d.x,uz:d.z};gunRun(p,12);return}
   p.hit={k:was&&k==='arm'?'chest':k,t:0,side,fwd,ux:d.x,uz:d.z};
   Object.assign(p,{wait:0,spd:0,amp:0,flee:0});if(p.vt0){p.vt=p.vt0;p.vt0=0}
   if(k==='leg'&&!was){p.hurt=1e-3;return}
-  p.dead=1e-3;gun.downs++}
+  p.dead=1e-3;gun.downs++;if(p.room)tf.shopKills=(tf.shopKills||0)+1}
 // everyone within earshot near where it went (or near him) runs off for a while
 function gunScare(x,z,not){for(const p of tf.people){if(p===not||p.dead||p.hurt||p.inside||p.drv||p.room)continue;
   const d=Math.min(Math.hypot(p.x-x,p.z-z),Math.hypot(p.x-wk.x,p.z-wk.z)*1.6);if(d<30)gunRun(p,6+Math.random()*6)}}

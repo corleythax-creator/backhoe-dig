@@ -90,9 +90,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-30",
-   "dh": 85.75,
+   "dh": 86.75,
    "act": 3.5,
-   "versions": 20
+   "versions": 21
   }
  ],
  "extra": [
@@ -2703,6 +2703,15 @@ window.EFFORT = {
    "tris": 5813015,
    "chars": 1895678,
    "what": "Main Street in town is paved in red brick, its bricks standing up out of their joints with Material relief; the cross street stays asphalt."
+  },
+  {
+   "v": 290,
+   "asked": "2026-10-30T21:32:00-05:00",
+   "live": "2026-10-30T21:32:55-05:00",
+   "dh": 1,
+   "tris": 5806695,
+   "chars": 1896132,
+   "what": "A Shopfolk count beside Townsfolk: the people in shops and houses start each game at shopPop (60) and those shot indoors are gone until the next start"
   }
  ]
 };
