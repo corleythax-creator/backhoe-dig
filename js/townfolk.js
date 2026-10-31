@@ -359,7 +359,7 @@ function tfTick(dt){if(!tf.q){if(tf.on)tfShow(false);return}
   if(dd>TF_NEAR){if(tf.on)tfShow(false);return}
   if(!tf.load)tfLoad();if(tf.load!==2)return;if(gfxCur.forge&&!(tf.F&&tf.F.st))tfForge();
   dt=Math.min(dt,0.1);tf.t+=dt;camera.updateMatrixWorld();tf.fm.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse);tf.fr.setFromProjectionMatrix(tf.fm);
-  const night=typeof dn==='object'?Math.min(1,Math.max(0.3,(dn.el+8)/14)):1,[np,nc]=TF_N[tf.q],wantP=Math.round(np*night),wantC=Math.round(nc*night),walkers=tf.people.filter(p=>!p.car&&!p.room);
+  const night=typeof dn==='object'?Math.min(1,Math.max(0.3,(dn.el+8)/14)):1,[np,nc]=TF_N[tf.q],left=tfLeft(),wantP=Math.min(left,Math.round(np*night)),wantC=Math.min(Math.max(0,left-wantP),Math.round(nc*night)),walkers=tf.people.filter(p=>!p.car&&!p.room);
   if(!tf.on){tfShow(true);while(walkers.length<wantP){const p=tfSpawnWalker(true);if(!p)break;walkers.push(p)}}
   tf.spawnT-=dt;if(tf.spawnT<=0){tf.spawnT=1.5+Math.random()*2;
     if(walkers.length<wantP)tfSpawnWalker(false);
@@ -404,7 +404,10 @@ function tfFly(p,dt){const F=p.fly,g=baseHeight(p.x,p.z)+tfLift(p.x,p.z),nx=p.x+
   F.vy-=9.8*dt;p.y+=F.vy*dt;
   if(p.y<=g){p.y=g;F.vy=Math.abs(F.vy)>2?-F.vy*0.3:0;const s=Math.hypot(F.vx,F.vz),k=s>0?Math.max(0,s-7*dt)/s:0;F.vx*=k;F.vz*=k;
     if(!F.vy&&s<0.05)p.fly=null}}
-// the count in the corner (desktop, in town): who is about, and how many he has shot and run down
+// the town's people: TU.townPop of them each time the game starts, less everyone he has killed since (they do not come
+// back, so the crowd about town thins out as it falls)
+function tfLeft(){return Math.max(0,Math.round(TU.townPop)-(typeof gun==='object'?gun.downs:0)-(tf.runs||0))}
+// the count in the corner (desktop, in town): how many townsfolk are left, and how many he has shot and run down
 function tfChip(dt){if(PHONE)return;tf.chipT=(tf.chipT||0)-dt;if(tf.chipT>0)return;tf.chipT=0.25;
-  const alive=tf.people.reduce((n,p)=>n+!p.dead,0),shot=typeof gun==='object'?gun.downs:0,run=tf.runs||0;
-  $('#tfChipVal').textContent=alive;$('#tfChipShot').textContent=shot;$('#tfChipRun').textContent=run;$('#tfChipDead').textContent=shot+run}
+  const shot=typeof gun==='object'?gun.downs:0,run=tf.runs||0;
+  $('#tfChipVal').textContent=tfLeft();$('#tfChipShot').textContent=shot;$('#tfChipRun').textContent=run;$('#tfChipDead').textContent=shot+run}
