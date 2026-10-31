@@ -81,7 +81,7 @@ const TUNE=[
   ['trimLine','String trimmer','Line out after a bump (longest)',0.15,'in',2,12,0.25],['trimMin','String trimmer','Shortest line that still cuts',0.025,'in',0.25,6,0.25],
   ['trimBump','String trimmer','Line one bump feeds out',0.04,'in',0.25,6,0.25],['trimWear','String trimmer','Line worn away per second of cutting',0.006,'in',0.02,2,0.02],
   ['gunRate','Pistol','Shortest time between shots',0.22,'s',0.05,2,0.01],['gunRange','Pistol','How far a shot carries',90,'ft',30,600,10],
-  ['gunFlee','Pistol','How fast people run from shots',4.5,'mph',3,16,0.5],['gunBody','Pistol','How long someone shot stays down before they go (when out of sight)',40,'s',5,600,5],
+  ['gunFlee','Pistol','How fast people run from shots',4.5,'mph',3,16,0.5],['gunWrist','Pistol','Wrist turn holding the pistol',1.4,'deg',-180,180,5],['gunBody','Pistol','How long someone shot stays down before they go (when out of sight)',40,'s',5,600,5],
   ['trimSpool','String trimmer','Line on a full spool',25*0.3048,'ft',2,100,1],
   ['lawnCut','Grass','Mower cuts the grass to',0.09,'in',1,24,0.5],['lawnWait','Grass','Wait before cut grass grows',45,'s',0,1200,5],['lawnGrow','Grass','Time to grow back tall',240,'s',10,3600,10],
   ['rainGap','Weather','Dry spell between showers (average)',1800,'min',0.5,120,0.5],['rainLen','Weather','Shower length (average)',150,'min',0.5,60,0.5],
