@@ -693,7 +693,11 @@ function terBound(ja,jb){const p=geo.attributes.position.array;
 terBound(0,N);
 const pos=geo.attributes.position;
 let dI0=0,dI1=N,dJ0=0,dJ1=N,winOn=true;
-function touch(i0,i1,j0,j1){if(!winOn){dI0=i0;dI1=i1;dJ0=j0;dJ1=j1;winOn=true}else{dI0=Math.min(dI0,i0);dI1=Math.max(dI1,i1);dJ0=Math.min(dJ0,j0);dJ1=Math.max(dJ1,j1)}}
+// touch: the ground changed in this box this frame (the window updateTerrain redraws, cleared once drawn); it is also
+// where slump looks next (slB: only round what changed or slid last pass, so a long dig doesn't slow every frame)
+const slB=[N+1,-1,N+1,-1];
+function touch(i0,i1,j0,j1){if(!winOn){dI0=i0;dI1=i1;dJ0=j0;dJ1=j1;winOn=true}else{dI0=Math.min(dI0,i0);dI1=Math.max(dI1,i1);dJ0=Math.min(dJ0,j0);dJ1=Math.max(dJ1,j1)}
+  slB[0]=Math.min(slB[0],i0);slB[1]=Math.max(slB[1],i1);slB[2]=Math.min(slB[2],j0);slB[3]=Math.max(slB[3],j1)}
 function updateTerrain(){
   const p=pos.array,ja=Math.max(0,dJ0-1-AO_R),jb=Math.min(N,dJ1+1+AO_R);
   for(let k=ja*V;k<(jb+1)*V;k++){
@@ -883,16 +887,19 @@ function slopeTick(dt){
   slRow=jb+1;
   if(moved){touch(sI0,sI1,Math.max(0,ja-1),Math.min(N,jb+1));st.dirty=true;st.slumpT=Math.max(st.slumpT,0.6)}
 }
+// one settling pass over what changed or slid last pass (slB) and 2 points round it; what slides this pass is next
 function slump(){
-  let moved=false;
-  const ja=Math.max(0,dJ0-2),jb=Math.min(N,dJ1+2),ia=Math.max(0,dI0-2),ib=Math.min(N,dI1+2);
+  if(slB[1]<slB[0])return false;
+  const ja=Math.max(0,slB[2]-2),jb=Math.min(N,slB[3]+2),ia=Math.max(0,slB[0]-2),ib=Math.min(N,slB[1]+2);
+  let mi0=N+1,mi1=-1,mj0=N+1,mj1=-1;
   for(let j=ja;j<=jb;j++)for(let i=ia;i<=ib;i++){
     const k=j*V+i;
-    if(i<N&&slumpPair(k,k+1))moved=true;
-    if(j<N&&slumpPair(k,k+V))moved=true;
+    if(i<N&&slumpPair(k,k+1)){if(i<mi0)mi0=i;if(i+1>mi1)mi1=i+1;if(j<mj0)mj0=j;if(j>mj1)mj1=j}
+    if(j<N&&slumpPair(k,k+V)){if(i<mi0)mi0=i;if(i>mi1)mi1=i;if(j<mj0)mj0=j;if(j+1>mj1)mj1=j+1}
   }
-  if(moved){dI0=ia;dI1=ib;dJ0=ja;dJ1=jb}
-  return moved;
+  slB[0]=N+1;slB[1]=-1;slB[2]=N+1;slB[3]=-1;
+  if(mi1<0)return false;
+  touch(mi0,mi1,mj0,mj1);return true;
 }
 // cave-ins: a wall over a cut deeper than ~4 ft that is steeper than its soil holds for good builds risk, and so does
 // loose fill piled on the lip or up to 2 ft back (surcharge); returns the riskiest lip vertex

@@ -153,16 +153,20 @@ function lawnGrow(){if(!LAWN_ON)return;
     if(any){for(let jj=j;jj<=j+1;jj++)for(let i=0;i<=LAWN_NX;i++)lawnVert(i,jj);lawnShade(0,LAWN_NX-1,j-1,j+1);lawn.mDirty=lawn.cDirty=lawn.gDirty=lawn.mapDirty=true}}}
 // follow the terrain: grass goes where the ground was dug or dumped on, and the stripe ground sinks out of sight there
 // (all: whatever the dig zone did, for a new layout)
+// (only the cells under the ground's changed window, dI0..dJ1, unless all)
 function lawnTerrain(all){
   if(!all&&(dI1<LAWN_I0||dI0>LAWN_I1||dJ1<LAWN_J0||dJ0>LAWN_J1))return;
-  for(let c=0;c<LAWN_ON;c++){const n=lawnCells[c],x=lawn.x[n],z=lawn.z[n];if(Math.abs(hAt(x,z)-h0At(x,z))>0.04)lawn.dug[n]=1;lawnSet(n)}
-  lawnShade(0,LAWN_NX-1,0,LAWN_NZ-1);
+  let i0=0,i1=LAWN_NX-1,j0=0,j1=LAWN_NZ-1;
+  if(!all){i0=Math.max(0,Math.floor((gX(dI0)-LAWN_X0)/LAWN_GS)-1);i1=Math.min(LAWN_NX-1,Math.ceil((gX(dI1)-LAWN_X0)/LAWN_GS)+1);
+    j0=Math.max(0,Math.floor((gZ(dJ0)-LAWN_Z0)/LAWN_GS)-1);j1=Math.min(LAWN_NZ-1,Math.ceil((gZ(dJ1)-LAWN_Z0)/LAWN_GS)+1);if(i1<i0||j1<j0)return}
+  for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const n=j*LAWN_NX+i;if(lawn.sl[n]<0)continue;const x=lawn.x[n],z=lawn.z[n];if(Math.abs(hAt(x,z)-h0At(x,z))>0.04)lawn.dug[n]=1;lawnSet(n)}
+  lawnShade(i0-1,i1+1,j0-1,j1+1);
   const p=lawnGround.geometry.attributes.position.array;
-  for(let k=0;k<LAWN_VN;k++){const x=p[k*3],z=p[k*3+2],h=hAt(x,z);p[k*3+1]=Math.abs(h-h0At(x,z))>0.04?h-0.4:h+0.015}
+  for(let j=j0;j<=j1+1;j++)for(let i=i0;i<=i1+1;i++){const k=j*LAWN_VX+i,x=p[k*3],z=p[k*3+2],h=hAt(x,z);p[k*3+1]=Math.abs(h-h0At(x,z))>0.04?h-0.4:h+0.015}
   lawn.mDirty=lawn.cDirty=lawn.gDirty=lawn.mapDirty=true;lawnGround.geometry.attributes.position.needsUpdate=true}
 // Reset brings back fresh ground, so dug or buried cells come back as tall sod, but mowed grass stays mowed and keeps growing
 function lawnReset(){for(let c=0;c<LAWN_ON;c++){const n=lawnCells[c];if(lawn.dug[n]===1){lawn.ct[n]=-1e9;lawn.gd[n]=1;lawn.str[n]=0;lawn.dug[n]=0}}
-  const sv=[dI0,dI1,dJ0,dJ1];dI0=LAWN_I0;dI1=LAWN_I1;dJ0=LAWN_J0;dJ1=LAWN_J1;lawnTerrain();[dI0,dI1,dJ0,dJ1]=sv;
+  lawnTerrain(true);
   for(let j=0;j<=LAWN_NZ;j++)for(let i=0;i<=LAWN_NX;i++)lawnVert(i,j);
   for(const c of clips)c.t=c.life;lawnCount()}
 // the short mesa tufts give way to the tall grass (within a cell of it) and come back where it goes
