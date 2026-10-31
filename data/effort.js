@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-31T17:19:00Z",
+ "updated": "2026-10-31T21:11:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -96,9 +96,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-31",
-   "dh": 142.5,
-   "act": 5,
-   "versions": 16
+   "dh": 144.5,
+   "act": 5.5,
+   "versions": 17
   }
  ],
  "extra": [
@@ -2970,6 +2970,15 @@ window.EFFORT = {
    "tris": 6071112,
    "chars": 2156892,
    "what": "Cloud noise textures build a few milliseconds a frame instead of one multi-second freeze when the game loads"
+  },
+  {
+   "v": 319,
+   "asked": "2026-10-31T15:30:00-05:00",
+   "live": "2026-10-31T16:11:42-05:00",
+   "dh": 2,
+   "tris": 7863154,
+   "chars": 2158253,
+   "what": "Digging no longer gets slower the longer you dig: the ground only settles and redraws round what just changed (a long dig had it redoing the whole site every frame, 40+ ms), the grass only follows the ground where it changed, and the speed tests wait for the game to finish warming up"
   }
  ]
 };
