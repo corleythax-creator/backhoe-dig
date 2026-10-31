@@ -302,6 +302,7 @@ function frame(now){
   if(vrOn())vrFrame(dt);
   updateSound(dt);
   if(shake>0){shake-=dt;camera.position.x+=(Math.random()-0.5)*0.25;camera.position.y+=(Math.random()-0.5)*0.25}
+  gunCamFx(dt);
   sky.position.copy(camera.position);
   const fv=mode==='boat'?btCur():mode==='heavy'?hvCur():mode==='bike'?bk:mode==='truck'?tr:mode==='mow'?mw:mode==='skid'?sk:mode==='walk'?wk:st;sun.position.set(fv.x,fv.y,fv.z).addScaledVector(LIGHT_DIR,SUN_D); sun.target.position.set(fv.x,fv.y,fv.z);
   {const o=groundOcc.value;o[0].set(st.x,st.z,st.yaw,0);o[2].set(tr.x,tr.z,tr.yaw,0)}
