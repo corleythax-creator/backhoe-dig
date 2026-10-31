@@ -118,6 +118,7 @@ const TUNE=[
   ['pbrSheen','Ground look','Sheen: how strong the glints on wet and shiny ground are',1,'pct',0,300,5],
   ['pbrRain','Ground look','Extra sheen while it rains',1,'pct',0,400,5],['pbrGround','Ground look','Relief: how bumpy the natural dirt and grass look',0.9,'pct',0,300,5],
   ['pbrFace','Ground look','Relief: how deep the bucket-tooth grooves, cracks, pebbles and roots on dug faces look',1,'pct',0,300,5],
+  ['stRelief','Ground look','Relief: how far the bricks and cobbles of brick and cobblestone streets stand up',1,'pct',0,300,5],
   // the camera with a mouse: a click on the scene takes the mouse and moving it looks round (Esc lets it go); the chase
   // camera swings round behind a turning machine and drifts back behind it while it moves (main.js, controls.js)
   ['mouseLook','Camera','Mouse look speed',1,'pct',20,400,5],['camFollow','Camera','How quickly the chase camera swings round behind a turning machine',1,'pct',10,400,5],
