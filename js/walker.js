@@ -37,7 +37,11 @@ walker.traverse(o=>{if(o.isMesh){o.castShadow=true;o.receiveShadow=true}});
 const wkMdl={g:null,loading:false,j:null};
 function wkMdlLoad(){if(wkMdl.g||wkMdl.loading)return;wkMdl.loading=true;
   mdlLoaderReady(()=>new THREE.GLTFLoader().load('models/worker.glb',gl=>{wkMdl.loading=false;wkMdlSetup(gl.scene)},undefined,()=>{wkMdl.loading=false}))}
-function wkMdlSetup(g){wkMdl.j=wkRig(g,true);wkMdl.g=g;walker.add(g);wkBody.visible=false;for(const l of wkLegs)l.top.visible=false;wkMdlPose()}
+// the pelvis and feet, at rest, for the walk's extras (wkMdlGait)
+function wkGaitRig(g,J){const bones={};g.traverse(o=>{if(o.isBone)bones[o.name]=o});g.updateMatrixWorld(true);const inv=new THREE.Matrix4().copy(g.matrixWorld).invert(),p=new THREE.Vector3(),q=new THREE.Quaternion(),sc=new THREE.Vector3();
+  const j=n=>{const b=bones[n];if(!b)return null;inv.clone().multiply(b.parent.matrixWorld).decompose(p,q,sc);return {b,q0:b.quaternion.clone(),pq:q.clone()}};
+  const L=J.legs[0].top&&J.legs[0].top.b.name.endsWith('_l');J.gx={pel:j('pelvis'),feet:[j(L?'foot_l':'foot_r'),j(L?'foot_r':'foot_l')]}}
+function wkMdlSetup(g){wkMdl.j=wkRig(g,true);wkGaitRig(g,wkMdl.j);wkMdl.g=g;walker.add(g);wkBody.visible=false;for(const l of wkLegs)l.top.visible=false;wkMdlPose()}
 // the joints of a copy of the man (the worker's, or a townsperson's, townfolk.js), each turned about the body's own axes
 // (wkMdlTurn); mats: set up the worker's materials too (the townsfolk set their own)
 const WK_X=new THREE.Vector3(1,0,0);
@@ -72,12 +76,29 @@ function wkRig(g,mats){g.updateMatrixWorld(true);const bones={},inv=new THREE.Ma
 const wkMQ=new THREE.Quaternion(),wkMQ2=new THREE.Quaternion();
 function wkMdlTurn(J,a){if(!J)return;wkMQ.setFromAxisAngle(WK_X,a);if(J.droop)wkMQ.multiply(J.droop);if(J.pre)wkMQ.premultiply(J.pre);
   wkMQ2.copy(J.pq).invert().multiply(wkMQ).multiply(J.pq);J.b.quaternion.copy(wkMQ2).multiply(J.q0)}
+// the walk's extras that only the detailed man has joints for (updateWalker sets them while he is on foot): hip turn and
+// drop, shoulders turning against the hips, weight over the planted foot, the feet's heel-to-toe roll, the lean into a
+// turn and breathing while he stands
+const wkGait={on:false,amp:0,run:0,t:0,yaw0:0,turn:0,foot:[0,0],pelYaw:0,pelRoll:0,spYaw:0,sway:0,roll:0,breath:0},wkMQ3=new THREE.Quaternion(),wkMV=new THREE.Vector3();
+// turns joint J further by angle a about the body's axis ax, on top of the pose it has
+function wkMdlExtra(J,ax,a){if(!J||!a)return;wkMQ3.setFromAxisAngle(wkMV.copy(ax),a);wkMQ3.premultiply(wkMQ.copy(J.pq).invert()).multiply(J.pq);J.b.quaternion.premultiply(wkMQ3)}
+const WK_Y=new THREE.Vector3(0,1,0),WK_Z=new THREE.Vector3(0,0,1);
+function wkMdlGait(){const J=wkMdl.j,G=wkGait,g=wkMdl.g,on=G.on&&mode==='walk';G.on=false;
+  const X=J.gx;if(!X)return;if(X.pel)X.pel.b.quaternion.copy(X.pel.q0);for(const f of X.feet)if(f)f.b.quaternion.copy(f.q0);
+  if(!on){g.position.x=0;g.rotation.z=0;return}
+  // the pelvis turns and drops; the spine above takes the turn back out and then some, so the shoulders counter-rotate
+  wkMdlExtra(X.pel,WK_Y,G.pelYaw);wkMdlExtra(X.pel,WK_Z,G.pelRoll);
+  wkMdlExtra(J.sp[0],WK_Y,-G.pelYaw*0.6);wkMdlExtra(J.sp[0],WK_Z,-G.pelRoll*0.7);wkMdlExtra(J.sp[2],WK_Y,G.spYaw);
+  wkMdlExtra(J.sp[1],WK_X,-G.breath);wkMdlExtra(J.sp[2],WK_X,G.breath*1.4);wkMdlExtra(J.neck,WK_Y,-G.spYaw*0.6);
+  for(let s=0;s<2;s++)wkMdlExtra(X.feet[s],WK_X,G.foot[s]);
+  g.position.x=G.sway;g.rotation.z=G.roll}
 function wkMdlPose(){const J=wkMdl.j;if(!J||!walker.visible)return;
   const lean=wkBody.rotation.x;for(const s of J.sp)wkMdlTurn(s,lean/3);
   wkMdl.g.position.y=Math.max(0,wkBody.position.y)*0.5;
   wkMdlTurn(J.neck,wkHead.rotation.x*0.4);wkMdlTurn(J.head,wkHead.rotation.x*0.6);
   for(let s=0;s<2;s++){wkMdlTurn(J.legs[s].top,wkLegs[s].top.rotation.x);wkMdlTurn(J.legs[s].low,wkLegs[s].low.rotation.x);
-    wkMdlTurn(J.arms[s].top,wkArms[s].top.rotation.x);wkMdlTurn(J.arms[s].low,wkArms[s].low.rotation.x)}}
+    wkMdlTurn(J.arms[s].top,wkArms[s].top.rotation.x);wkMdlTurn(J.arms[s].low,wkArms[s].low.rotation.x)}
+  wkMdlGait()}
 wkMdlLoad();
 // a jump clears about 6 ft: onto a 3 ft block with room to spare, or two blocks up a stack
 // starts beside the excavator, facing the trench
@@ -181,12 +202,34 @@ function updateWalker(dt,mx,mz,lookX,lookY){
     wkBody.position.y=Math.sin(p*2)*0.02;wkBody.rotation.x=0.15+0.45*mv;wkHead.rotation.x=-0.2-0.4*mv;
     walker.position.set(wk.x,wk.y,wk.z);walker.rotation.y=wk.yaw;walker.visible=!(on&&camMode==='cab'&&!gunHas());return}
   const run=Math.min(1,wk.spd/TU.wkRun),fast=clamp((wk.spd-TU.wkRun)/(TU.wkSprint-TU.wkRun),0,1);if(wk.ground)wk.phase+=dt*(4+6*run+4*fast)*Math.min(1,wk.spd*2);
-  const sw=Math.sin(wk.phase)*(0.25+0.55*run+0.25*fast)*Math.min(1,wk.spd*1.5);
-  for(let s=0;s<2;s++){const a=s?sw:-sw,L=wkLegs[s],A=wkArms[s];
-    if(wk.ground){L.top.rotation.x=a;L.low.rotation.x=Math.max(0,-a)*1.3+0.05;A.top.rotation.x=-a*0.9;A.low.rotation.x=-0.25-run*0.6}
-    else{const t=Math.min(1,wk.airT*4);L.top.rotation.x=-0.7*t+(s?0.25:-0.1)*t;L.low.rotation.x=1.2*t;A.top.rotation.x=-2.2*t*(s?1:0.85);A.low.rotation.x=-0.3}}
-  const bob=wk.ground?Math.abs(Math.cos(wk.phase))*0.04*run-wk.landT*0.5:0;
-  wkBody.position.y=bob;wkBody.rotation.x=0.12*run+0.14*fast;wkHead.rotation.x=-0.1*run;
+  // the stride grows and dies away smoothly as he sets off and stops (G.amp), rather than freezing mid-step; G.run
+  // eases between the walk's and the run's way of moving
+  const G=wkGait,ek=Math.min(1,dt*6);G.amp+=(Math.min(1,wk.spd*1.5)-G.amp)*ek;G.run+=(run-G.run)*ek;G.t+=dt;
+  const amp=G.amp,R=G.run,A=(0.32+0.38*R+0.18*fast)*amp,p=wk.phase;
+  // turning: how fast his heading swings, for the lean into the turn (the detailed man only, wkMdlPose)
+  let dy=wk.yaw-G.yaw0;dy=Math.atan2(Math.sin(dy),Math.cos(dy));G.yaw0=wk.yaw;G.turn+=((dt>0?dy/dt:0)-G.turn)*Math.min(1,dt*5);
+  for(let s=0;s<2;s++){const L=wkLegs[s],Ar=wkArms[s],q=p+(s?Math.PI:0),sq=Math.sin(q),cq=Math.cos(q);
+    if(wk.ground){
+      // the hip swings the leg through (forward is negative); the knee folds in the swing, most just after toe-off, is
+      // nearly straight as the heel strikes, then gives a little as the weight comes onto it; the foot lands heel first
+      // (toes up), rolls flat and pushes off on the toes. Arms swing against the legs, a beat behind, elbows bending
+      // more on the forward swing and more as he runs
+      const swing=Math.pow(Math.max(0,Math.cos(q+0.35)),2),dl=Math.atan2(Math.sin(q-Math.PI/2-0.45),Math.cos(q-Math.PI/2-0.45)),load=Math.exp(-dl*dl/0.18);
+      L.top.rotation.x=-A*sq-0.04*amp*R;L.low.rotation.x=0.05+amp*((1.0+0.75*R+0.3*fast)*swing+(0.16+0.2*R)*load);
+      const dt2=Math.atan2(Math.sin(q+Math.PI/2+0.25),Math.cos(q+Math.PI/2+0.25));
+      G.foot[s]=amp*(-0.28*Math.exp(-Math.pow(Math.atan2(Math.sin(q-Math.PI/2),Math.cos(q-Math.PI/2)),2)/0.12)+0.5*Math.exp(-dt2*dt2/0.1)-0.12*swing);
+      const aq=Math.sin(q-0.25);Ar.top.rotation.x=A*(0.75+0.35*R)*aq;Ar.low.rotation.x=-0.22-0.75*R-amp*(0.18+0.25*R)*Math.max(0,-aq)}
+    else{const t=Math.min(1,wk.airT*4);L.top.rotation.x=-0.7*t+(s?0.25:-0.1)*t;L.low.rotation.x=1.2*t;Ar.top.rotation.x=-2.2*t*(s?1:0.85);Ar.low.rotation.x=-0.3;G.foot[s]=0.3*t}}
+  // up and down: a walk rides highest over the planted leg and dips as both feet are down; a run is the other way
+  // round (highest in the air). The head keeps level against it, so the eyes stay steady
+  const c2=Math.cos(2*p),bob=wk.ground?amp*(0.022*(1-R)*c2-0.035*R*c2+0.012*R)-wk.landT*0.5:0;
+  wkBody.position.y=bob;wkBody.rotation.x=0.12*run+0.14*fast+0.03*amp*R*Math.sin(2*p);wkHead.rotation.x=-0.1*run-0.03*amp*R*Math.sin(2*p);
+  // the hips turn with the leg that swings forward and drop on its side, the shoulders turn against them, and his weight
+  // rides over the planted foot; standing, he breathes and shifts his weight now and then
+  const idle=wk.ground?1-amp:0,br=Math.sin(G.t*1.7);
+  G.on=true;G.pelYaw=0.12*A*Math.sin(p)*(1-0.4*R);G.pelRoll=0.06*amp*(1-0.5*R)*Math.cos(2*p+0.3)*Math.sign(Math.sin(p))+idle*0.03*Math.sin(G.t*0.45);
+  G.spYaw=-0.2*A*Math.sin(p-0.15);G.sway=0.025*amp*(1-0.6*R)*Math.sin(p)+idle*0.02*Math.sin(G.t*0.45);
+  G.roll=wk.ground?clamp(-G.turn*wk.spd*0.035,-0.22,0.22):0;G.breath=idle*0.018*br;
   walker.position.set(wk.x,wk.y,wk.z);walker.rotation.y=wk.yaw;
   walker.visible=!(on&&camMode==='cab'&&!gunHas())}
 function walkJump(){if(mode!=='walk')return;wk.jumpQ=0.15;started()}

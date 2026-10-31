@@ -128,6 +128,7 @@ const TUNE=[
   ['mtnHaze','Mountains','How hazy the mountains look (Medium and up)',1,'pct',20,300,5],['mtnGlow','Mountains','How much the haze glows toward the sun',1,'pct',0,300,5],['mtnSnow','Mountains','Snow line on the mountains, above the lake',330,'ft',30,600,5],
   
   ['pbrFace','Ground look','Relief: how deep the bucket-tooth grooves, cracks, pebbles and roots on dug faces look',1,'pct',0,300,5],
+  ['pbrSpoil','Ground look','Dug dirt: how cloddy and stony spoil looks, and how plain the soil layers show on cut faces',1,'pct',0,300,5],
   ['stRelief','Ground look','Relief: how far the bricks and cobbles of brick and cobblestone streets stand up',1,'pct',0,300,5],
   // the camera with a mouse: a click on the scene takes the mouse and moving it looks round (Esc lets it go); the chase
   // camera swings round behind a turning machine and drifts back behind it while it moves (main.js, controls.js)
