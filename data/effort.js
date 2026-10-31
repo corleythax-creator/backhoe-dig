@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-31T02:21:00Z",
+ "updated": "2026-10-31T02:27:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -90,9 +90,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-30",
-   "dh": 67.25,
+   "dh": 70.25,
    "act": 3,
-   "versions": 15
+   "versions": 16
   }
  ],
  "extra": [
@@ -2658,6 +2658,15 @@ window.EFFORT = {
    "tris": 6051407,
    "chars": 1886165,
    "what": "The town starts each game with a set number of townsfolk (townPop, 150); each one killed is gone until the next start and the crowd thins out"
+  },
+  {
+   "v": 285,
+   "asked": "2026-10-30T20:00:00-05:00",
+   "live": "2026-10-30T21:27:00-05:00",
+   "dh": 3,
+   "tris": 5815154,
+   "chars": 1887412,
+   "what": "Zoom in on the start map and it sharpens: paved streets with their lines and crosswalks, sidewalks and walkways, roofs with shadows, leafy trees and bridge railings."
   }
  ]
 };
