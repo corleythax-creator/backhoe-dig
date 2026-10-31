@@ -428,7 +428,7 @@ Needs an upgrade: passable. Dexter's shed and trailer are simple boxes; since v2
 
 **R04 Placeable things A: construction** -> `concept/props_build.png`. Needs: S01, S02, B20
 > [STYLE] [concept sheet] A set of construction site props: water-filled barricade, concrete Jersey barrier, orange traffic drum, trailer arrow board, portable generator, steel job box, 20 ft shipping container, scaffold tower, stack of concrete culvert pipes, lumber stack, sandbag wall, silt fence, stack of old tyres, wheelbarrow, roll-off dumpster, porta-john.
-Needs an upgrade: poor. These are flat-shaded shapes in the map editor's Add list and the Blocks bar.
+Needs an upgrade: passable. With Machine models on Detailed, the Jersey barrier, generator, steel drum and tyre stack are photo-scanned models (Poly Haven, `models/scans.glb`); the rest are flat-shaded shapes.
 
 **R05 Placeable things B: home and garden** -> `concept/props_home.png`. Needs: H13, K06
 > [STYLE] [concept sheet] A set of backyard props: wooden picnic table, park bench, Adirondack chair, rope hammock on a stand, patio table with umbrella, kettle grill, small gazebo, garden arbor, stone bird bath, birdhouse on a post, stone wishing well, little free library box, chicken coop, two beehives, dog house, raised garden bed, flower planter.
@@ -436,7 +436,7 @@ Needs an upgrade: poor. These are flat-shaded shapes in the map editor's Add lis
 
 **R06 Placeable things C: lights and signs** -> `concept/props_lights.png`. Needs: S13, X06
 > [STYLE] [concept sheet] A set of outdoor lights and street furniture: cobra-head street light, black acorn lamp post, flood light on a pole, ground spotlight, garden path light, café string lights, lantern on a shepherd's hook, stop sign, speed limit sign, red fire hydrant, rural mailbox on a post, windsock on a mast, flag pole.
-Needs an upgrade: poor. These are flat-shaded shapes in the map editor's Add list and the Blocks bar.
+Needs an upgrade: passable. With Machine models on Detailed, the lamp post and fire hydrant (and the new trash can and utility box) are photo-scanned models (Poly Haven, `models/scans.glb`); the rest are flat-shaded shapes.
 
 **R07 Placeable things D: play and farm** -> `concept/props_play.png`. Needs: I08, K15
 > [STYLE] [concept sheet] A set of yard and farm props: wooden swing set, round trampoline, square sandbox, basketball hoop on a pole, soccer goal, pair of cornhole boards, dome camping tent, round hay bale, stacked square straw bales, scarecrow, garden gnome, firewood stack, steel fire pit, carved jack-o'-lantern.
