@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Friday, October 30, 2026
 
+- **v297** (10:44 PM) The 3D clouds read smooth and soft: no grain or boxy patches in them, from blending each frame with the last and finer light through the cloud.
 - **v296** (10:29 PM) Machines on High: glossy clear-coated paint, chipped edges, polished and rusty bare steel, dust on top, and caked mud on the bucket and tracks that builds as you dig (Machines tunings)
 - **v295** (10:27 PM) Harbor Square's benches, park lamps, café tables, market stalls, bollards and shade trees are now map editor things you can select, move, copy and delete; townsfolk sit wherever the benches go
 - **v294** (10:24 PM) Real 3D clouds: rounded heaps with sunlit tops, grey undersides and glowing edges toward the sun, that roll in dark before a shower, and their shadows drifting across the island (Medium graphics and up).
