@@ -54,6 +54,7 @@ Every sound is cut from CC0 (public domain) field recordings on Freesound by `to
 | The town's flat shop roofs (`textures/roof_flat`, with `_n` and `_r`, by `tools/cc0.py`) | [Poly Haven](https://polyhaven.com/a/bitumen): bitumen | CC0 |
 | Photo-scanned roof shingles (`textures/roof_grey`, with `_n` and `_r`) | [Poly Haven](https://polyhaven.com/a/grey_roof_01): grey_roof_01, by Rob Tuytel | CC0 |
 | Service pistol (`models/pistol/`) | [Poly Haven](https://polyhaven.com/a/service_pistol): service_pistol, by Mateusz Sadek | CC0 |
+| Screams, cries of pain and dying groans (`sounds/voice_f.mp3`, `sounds/voice_m.mp3`, cut and levelled from the originals) | [OpenGameArt](https://opengameart.org): Female High Pitched Scream SFX, Female Scream 1, High pitch scream sounds, 15 vocal male strain/hurt/pain/jump sounds, Grunts: male death and pain, Female hurt grunts & groans | CC0 |
 | Bolt-action rifle (`models/rifle/`) | [Poly Haven](https://polyhaven.com/a/bolt_action_rifle_7_62): bolt_action_rifle_7_62, by Mateusz Sadek | CC0 |
 | Your own textures (uploaded in the map editor) | Whoever uploads them | Theirs; only upload images you have the right to use |
 

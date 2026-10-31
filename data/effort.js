@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-31T06:38:00Z",
+ "updated": "2026-10-31T06:53:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -96,9 +96,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-31",
-   "dh": 56,
+   "dh": 80,
    "act": 2,
-   "versions": 6
+   "versions": 7
   }
  ],
  "extra": [
@@ -2880,6 +2880,15 @@ window.EFFORT = {
    "tris": 6031857,
    "chars": 2065088,
    "what": "Photo-scanned hydrant, Jersey barrier, steel drum, generator, tyre stack, fire pit and lamp post (Poly Haven, CC0) on Detailed; new trash can and utility box to place"
+  },
+  {
+   "v": 309,
+   "asked": "2026-10-31T01:10:00-05:00",
+   "live": "2026-10-31T01:53:04-05:00",
+   "dh": 24,
+   "tris": 6033405,
+   "chars": 2094595,
+   "what": "Bullets fly and drop with rifle tracers, go through thin walls, car doors and glass, and hit drivers; people scream and cower; shooting brings wanted stars and police who shoot back; you have health; guns are drawn and holstered and each reloads its own way."
   }
  ]
 };
