@@ -90,9 +90,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-30",
-   "dh": 70.25,
+   "dh": 75.25,
    "act": 3,
-   "versions": 16
+   "versions": 17
   }
  ],
  "extra": [
@@ -2667,6 +2667,15 @@ window.EFFORT = {
    "tris": 5815154,
    "chars": 1887412,
    "what": "Zoom in on the start map and it sharpens: paved streets with their lines and crosswalks, sidewalks and walkways, roofs with shadows, leafy trees and bridge railings."
+  },
+  {
+   "v": 286,
+   "asked": "2026-10-31T20:30:00-05:00",
+   "live": "2026-10-30T21:27:38-05:00",
+   "dh": 5,
+   "tris": 5706578,
+   "chars": 1889187,
+   "what": "On Ultra the puddles on the paving reflect the trees, lamps, people and buildings round them; rain splashes are smaller and fainter"
   }
  ]
 };
