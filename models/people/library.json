@@ -3,20 +3,20 @@
   {
    "id": "island_cal_f",
    "file": "island_cal_f.glb",
-   "bytes": 542104,
+   "bytes": 543812,
    "height": 1.64,
    "lods": {
     "hi": {
-     "tris": 9123,
-     "verts": 5466
+     "tris": 9125,
+     "verts": 5481
     },
     "md": {
-     "tris": 3875,
-     "verts": 2586
+     "tris": 3929,
+     "verts": 2629
     },
     "lo": {
-     "tris": 1647,
-     "verts": 1274
+     "tris": 1598,
+     "verts": 1254
     }
    },
    "gender": 0,
@@ -25,25 +25,31 @@
     "island",
     "town"
    ],
-   "name": "cal_f"
+   "name": "cal_f",
+   "ultra": {
+    "file": "people/island_cal_f.ultra.848069b14b.glb",
+    "bytes": 3340008,
+    "tris": 105020,
+    "verts": 55526
+   }
   },
   {
    "id": "island_cal_k",
    "file": "island_cal_k.glb",
-   "bytes": 561380,
+   "bytes": 562440,
    "height": 1.38,
    "lods": {
     "hi": {
-     "tris": 9242,
-     "verts": 5667
+     "tris": 9245,
+     "verts": 5689
     },
     "md": {
-     "tris": 4095,
-     "verts": 2873
+     "tris": 4135,
+     "verts": 2906
     },
     "lo": {
-     "tris": 1737,
-     "verts": 1383
+     "tris": 1682,
+     "verts": 1354
     }
    },
    "gender": 1,
@@ -52,25 +58,31 @@
     "island",
     "town"
    ],
-   "name": "cal_k"
+   "name": "cal_k",
+   "ultra": {
+    "file": "people/island_cal_k.ultra.c88cedd154.glb",
+    "bytes": 2981908,
+    "tris": 94914,
+    "verts": 50508
+   }
   },
   {
    "id": "island_cal_m",
    "file": "island_cal_m.glb",
-   "bytes": 543084,
+   "bytes": 544500,
    "height": 1.78,
    "lods": {
     "hi": {
-     "tris": 9130,
-     "verts": 5632
+     "tris": 9128,
+     "verts": 5644
     },
     "md": {
-     "tris": 3837,
-     "verts": 2670
+     "tris": 3897,
+     "verts": 2719
     },
     "lo": {
-     "tris": 1637,
-     "verts": 1337
+     "tris": 1586,
+     "verts": 1310
     }
    },
    "gender": 1,
@@ -79,25 +91,31 @@
     "island",
     "town"
    ],
-   "name": "cal_m"
+   "name": "cal_m",
+   "ultra": {
+    "file": "people/island_cal_m.ultra.56a698eef7.glb",
+    "bytes": 3488856,
+    "tris": 113192,
+    "verts": 60053
+   }
   },
   {
    "id": "island_f15_pack",
    "file": "island_f15_pack.glb",
-   "bytes": 591336,
+   "bytes": 593280,
    "height": 1.6,
    "lods": {
     "hi": {
-     "tris": 9129,
-     "verts": 5887
+     "tris": 9130,
+     "verts": 5898
     },
     "md": {
-     "tris": 3888,
-     "verts": 2765
+     "tris": 3947,
+     "verts": 2814
     },
     "lo": {
-     "tris": 1668,
-     "verts": 1366
+     "tris": 1626,
+     "verts": 1348
     }
    },
    "gender": 0,
@@ -106,25 +124,31 @@
     "island",
     "town"
    ],
-   "name": "f15_pack"
+   "name": "f15_pack",
+   "ultra": {
+    "file": "people/island_f15_pack.ultra.ec8d60e6a1.glb",
+    "bytes": 3418940,
+    "tris": 107512,
+    "verts": 57931
+   }
   },
   {
    "id": "island_f16_teen",
    "file": "island_f16_teen.glb",
-   "bytes": 589688,
+   "bytes": 590744,
    "height": 1.63,
    "lods": {
     "hi": {
-     "tris": 9135,
-     "verts": 6137
+     "tris": 9133,
+     "verts": 6127
     },
     "md": {
-     "tris": 4292,
-     "verts": 2986
+     "tris": 4350,
+     "verts": 3031
     },
     "lo": {
-     "tris": 2373,
-     "verts": 1849
+     "tris": 2341,
+     "verts": 1836
     }
    },
    "gender": 0,
@@ -133,25 +157,31 @@
     "island",
     "town"
    ],
-   "name": "f16_teen"
+   "name": "f16_teen",
+   "ultra": {
+    "file": "people/island_f16_teen.ultra.ef59bcc9e8.glb",
+    "bytes": 3453324,
+    "tris": 112026,
+    "verts": 62271
+   }
   },
   {
    "id": "island_f25_capri",
    "file": "island_f25_capri.glb",
-   "bytes": 605892,
+   "bytes": 611160,
    "height": 1.68,
    "lods": {
     "hi": {
-     "tris": 9213,
-     "verts": 5983
+     "tris": 9241,
+     "verts": 6012
     },
     "md": {
-     "tris": 4163,
-     "verts": 3028
+     "tris": 4288,
+     "verts": 3117
     },
     "lo": {
-     "tris": 1770,
-     "verts": 1492
+     "tris": 1746,
+     "verts": 1479
     }
    },
    "gender": 0,
@@ -160,25 +190,31 @@
     "island",
     "town"
    ],
-   "name": "f25_capri"
+   "name": "f25_capri",
+   "ultra": {
+    "file": "people/island_f25_capri.ultra.019d6a8db2.glb",
+    "bytes": 10809072,
+    "tris": 316738,
+    "verts": 161865
+   }
   },
   {
    "id": "island_f25_pink",
    "file": "island_f25_pink.glb",
-   "bytes": 775272,
+   "bytes": 782296,
    "height": 1.6,
    "lods": {
     "hi": {
-     "tris": 9291,
-     "verts": 7942
+     "tris": 9333,
+     "verts": 7986
     },
     "md": {
-     "tris": 4081,
-     "verts": 3722
+     "tris": 4220,
+     "verts": 3842
     },
     "lo": {
-     "tris": 1741,
-     "verts": 1815
+     "tris": 1720,
+     "verts": 1800
     }
    },
    "gender": 0,
@@ -187,25 +223,31 @@
     "island",
     "town"
    ],
-   "name": "f25_pink"
+   "name": "f25_pink",
+   "ultra": {
+    "file": "people/island_f25_pink.ultra.34ce98c6e0.glb",
+    "bytes": 11601340,
+    "tris": 329352,
+    "verts": 176359
+   }
   },
   {
    "id": "island_f28_maroon",
    "file": "island_f28_maroon.glb",
-   "bytes": 546856,
+   "bytes": 549196,
    "height": 1.66,
    "lods": {
     "hi": {
-     "tris": 9134,
-     "verts": 5961
+     "tris": 9135,
+     "verts": 5977
     },
     "md": {
-     "tris": 3811,
-     "verts": 2811
+     "tris": 3884,
+     "verts": 2866
     },
     "lo": {
-     "tris": 1627,
-     "verts": 1394
+     "tris": 1583,
+     "verts": 1373
     }
    },
    "gender": 0,
@@ -214,25 +256,31 @@
     "island",
     "town"
    ],
-   "name": "f28_maroon"
+   "name": "f28_maroon",
+   "ultra": {
+    "file": "people/island_f28_maroon.ultra.64768ec163.glb",
+    "bytes": 4650924,
+    "tris": 130020,
+    "verts": 69919
+   }
   },
   {
    "id": "island_f30_jog",
    "file": "island_f30_jog.glb",
-   "bytes": 589932,
+   "bytes": 591512,
    "height": 1.62,
    "lods": {
     "hi": {
-     "tris": 9129,
-     "verts": 5828
+     "tris": 9126,
+     "verts": 5839
     },
     "md": {
-     "tris": 3772,
-     "verts": 2654
+     "tris": 3828,
+     "verts": 2703
     },
     "lo": {
-     "tris": 1615,
-     "verts": 1270
+     "tris": 1569,
+     "verts": 1243
     }
    },
    "gender": 0,
@@ -241,25 +289,31 @@
     "island",
     "town"
    ],
-   "name": "f30_jog"
+   "name": "f30_jog",
+   "ultra": {
+    "file": "people/island_f30_jog.ultra.6cdea4a794.glb",
+    "bytes": 3377492,
+    "tris": 105320,
+    "verts": 56545
+   }
   },
   {
    "id": "island_f35_denim",
    "file": "island_f35_denim.glb",
-   "bytes": 603524,
+   "bytes": 604180,
    "height": 1.7,
    "lods": {
     "hi": {
-     "tris": 9124,
-     "verts": 5929
+     "tris": 9125,
+     "verts": 5930
     },
     "md": {
-     "tris": 3805,
-     "verts": 2679
+     "tris": 3850,
+     "verts": 2715
     },
     "lo": {
-     "tris": 1623,
-     "verts": 1243
+     "tris": 1570,
+     "verts": 1218
     }
    },
    "gender": 0,
@@ -268,25 +322,31 @@
     "island",
     "town"
    ],
-   "name": "f35_denim"
+   "name": "f35_denim",
+   "ultra": {
+    "file": "people/island_f35_denim.ultra.d85e3fcc5b.glb",
+    "bytes": 3311808,
+    "tris": 100832,
+    "verts": 54076
+   }
   },
   {
    "id": "island_f45_mom",
    "file": "island_f45_mom.glb",
-   "bytes": 618040,
+   "bytes": 622828,
    "height": 1.63,
    "lods": {
     "hi": {
-     "tris": 9168,
-     "verts": 6011
+     "tris": 9194,
+     "verts": 6037
     },
     "md": {
-     "tris": 3976,
-     "verts": 2982
+     "tris": 4100,
+     "verts": 3064
     },
     "lo": {
-     "tris": 1697,
-     "verts": 1478
+     "tris": 1674,
+     "verts": 1469
     }
    },
    "gender": 0,
@@ -295,25 +355,31 @@
     "island",
     "town"
    ],
-   "name": "f45_mom"
+   "name": "f45_mom",
+   "ultra": {
+    "file": "people/island_f45_mom.ultra.f5a180839c.glb",
+    "bytes": 10626440,
+    "tris": 312486,
+    "verts": 159927
+   }
   },
   {
    "id": "island_f50_scrubs",
    "file": "island_f50_scrubs.glb",
-   "bytes": 597480,
+   "bytes": 602476,
    "height": 1.65,
    "lods": {
     "hi": {
-     "tris": 9219,
-     "verts": 6077
+     "tris": 9250,
+     "verts": 6105
     },
     "md": {
-     "tris": 4116,
-     "verts": 3091
+     "tris": 4239,
+     "verts": 3180
     },
     "lo": {
-     "tris": 1752,
-     "verts": 1526
+     "tris": 1727,
+     "verts": 1512
     }
    },
    "gender": 0,
@@ -322,25 +388,31 @@
     "island",
     "town"
    ],
-   "name": "f50_scrubs"
+   "name": "f50_scrubs",
+   "ultra": {
+    "file": "people/island_f50_scrubs.ultra.664260abcf.glb",
+    "bytes": 10705832,
+    "tris": 318950,
+    "verts": 163321
+   }
   },
   {
    "id": "island_f55_teal",
    "file": "island_f55_teal.glb",
-   "bytes": 585920,
+   "bytes": 591264,
    "height": 1.6,
    "lods": {
     "hi": {
-     "tris": 9215,
-     "verts": 6076
+     "tris": 9243,
+     "verts": 6107
     },
     "md": {
-     "tris": 4165,
-     "verts": 3126
+     "tris": 4288,
+     "verts": 3213
     },
     "lo": {
-     "tris": 1771,
-     "verts": 1521
+     "tris": 1747,
+     "verts": 1512
     }
    },
    "gender": 0,
@@ -349,25 +421,31 @@
     "island",
     "town"
    ],
-   "name": "f55_teal"
+   "name": "f55_teal",
+   "ultra": {
+    "file": "people/island_f55_teal.ultra.3f9c8f0680.glb",
+    "bytes": 10683316,
+    "tris": 316916,
+    "verts": 162122
+   }
   },
   {
    "id": "island_f70_cardigan",
    "file": "island_f70_cardigan.glb",
-   "bytes": 646580,
+   "bytes": 651852,
    "height": 1.6,
    "lods": {
     "hi": {
-     "tris": 9200,
-     "verts": 6198
+     "tris": 9233,
+     "verts": 6226
     },
     "md": {
-     "tris": 4118,
-     "verts": 3095
+     "tris": 4238,
+     "verts": 3183
     },
     "lo": {
-     "tris": 1746,
-     "verts": 1516
+     "tris": 1725,
+     "verts": 1508
     }
    },
    "gender": 0,
@@ -376,25 +454,31 @@
     "island",
     "town"
    ],
-   "name": "f70_cardigan"
+   "name": "f70_cardigan",
+   "ultra": {
+    "file": "people/island_f70_cardigan.ultra.a30c4f660f.glb",
+    "bytes": 11877728,
+    "tris": 340683,
+    "verts": 175012
+   }
   },
   {
    "id": "island_f80_jacket",
    "file": "island_f80_jacket.glb",
-   "bytes": 668040,
+   "bytes": 673288,
    "height": 1.58,
    "lods": {
     "hi": {
-     "tris": 9309,
-     "verts": 6179
+     "tris": 9341,
+     "verts": 6207
     },
     "md": {
-     "tris": 4444,
-     "verts": 3270
+     "tris": 4564,
+     "verts": 3353
     },
     "lo": {
-     "tris": 2163,
-     "verts": 1751
+     "tris": 2140,
+     "verts": 1744
     }
    },
    "gender": 0,
@@ -403,25 +487,31 @@
     "island",
     "town"
    ],
-   "name": "f80_jacket"
+   "name": "f80_jacket",
+   "ultra": {
+    "file": "people/island_f80_jacket.ultra.b25f4dd292.glb",
+    "bytes": 11747396,
+    "tris": 333343,
+    "verts": 174113
+   }
   },
   {
    "id": "island_k7_boy",
    "file": "island_k7_boy.glb",
-   "bytes": 540544,
+   "bytes": 541480,
    "height": 1.22,
    "lods": {
     "hi": {
-     "tris": 9248,
-     "verts": 5490
+     "tris": 9249,
+     "verts": 5504
     },
     "md": {
-     "tris": 3987,
-     "verts": 2622
+     "tris": 4033,
+     "verts": 2660
     },
     "lo": {
-     "tris": 1696,
-     "verts": 1281
+     "tris": 1644,
+     "verts": 1250
     }
    },
    "gender": 1,
@@ -430,25 +520,31 @@
     "island",
     "town"
    ],
-   "name": "k7_boy"
+   "name": "k7_boy",
+   "ultra": {
+    "file": "people/island_k7_boy.ultra.b502f06d1d.glb",
+    "bytes": 3081844,
+    "tris": 96648,
+    "verts": 50971
+   }
   },
   {
    "id": "island_k8_girl",
    "file": "island_k8_girl.glb",
-   "bytes": 571148,
+   "bytes": 572288,
    "height": 1.28,
    "lods": {
     "hi": {
-     "tris": 9128,
-     "verts": 5660
+     "tris": 9126,
+     "verts": 5666
     },
     "md": {
-     "tris": 3888,
-     "verts": 2682
+     "tris": 3945,
+     "verts": 2725
     },
     "lo": {
-     "tris": 1651,
-     "verts": 1323
+     "tris": 1605,
+     "verts": 1299
     }
    },
    "gender": 0,
@@ -457,25 +553,31 @@
     "island",
     "town"
    ],
-   "name": "k8_girl"
+   "name": "k8_girl",
+   "ultra": {
+    "file": "people/island_k8_girl.ultra.b114e7176c.glb",
+    "bytes": 3464444,
+    "tris": 106480,
+    "verts": 56712
+   }
   },
   {
    "id": "island_k9_girl",
    "file": "island_k9_girl.glb",
-   "bytes": 572832,
+   "bytes": 573952,
    "height": 1.33,
    "lods": {
     "hi": {
-     "tris": 9127,
-     "verts": 5894
+     "tris": 9128,
+     "verts": 5895
     },
     "md": {
-     "tris": 3891,
-     "verts": 2765
+     "tris": 3948,
+     "verts": 2808
     },
     "lo": {
-     "tris": 1665,
-     "verts": 1331
+     "tris": 1622,
+     "verts": 1312
     }
    },
    "gender": 0,
@@ -484,25 +586,31 @@
     "island",
     "town"
    ],
-   "name": "k9_girl"
+   "name": "k9_girl",
+   "ultra": {
+    "file": "people/island_k9_girl.ultra.b4fc481aac.glb",
+    "bytes": 3337172,
+    "tris": 107112,
+    "verts": 57683
+   }
   },
   {
    "id": "island_m14_pack",
    "file": "island_m14_pack.glb",
-   "bytes": 559556,
+   "bytes": 560376,
    "height": 1.62,
    "lods": {
     "hi": {
-     "tris": 9111,
-     "verts": 5521
+     "tris": 9116,
+     "verts": 5543
     },
     "md": {
-     "tris": 3877,
-     "verts": 2670
+     "tris": 3905,
+     "verts": 2698
     },
     "lo": {
-     "tris": 1653,
-     "verts": 1266
+     "tris": 1590,
+     "verts": 1236
     }
    },
    "gender": 1,
@@ -511,25 +619,31 @@
     "island",
     "town"
    ],
-   "name": "m14_pack"
+   "name": "m14_pack",
+   "ultra": {
+    "file": "people/island_m14_pack.ultra.cf78dcc379.glb",
+    "bytes": 2968420,
+    "tris": 91714,
+    "verts": 48715
+   }
   },
   {
    "id": "island_m15_skate",
    "file": "island_m15_skate.glb",
-   "bytes": 596480,
+   "bytes": 598108,
    "height": 1.7,
    "lods": {
     "hi": {
-     "tris": 9241,
-     "verts": 5762
+     "tris": 9248,
+     "verts": 5784
     },
     "md": {
-     "tris": 4216,
-     "verts": 3006
+     "tris": 4255,
+     "verts": 3043
     },
     "lo": {
-     "tris": 1783,
-     "verts": 1495
+     "tris": 1732,
+     "verts": 1471
     }
    },
    "gender": 1,
@@ -538,25 +652,31 @@
     "island",
     "town"
    ],
-   "name": "m15_skate"
+   "name": "m15_skate",
+   "ultra": {
+    "file": "people/island_m15_skate.ultra.93172d4cc4.glb",
+    "bytes": 3135776,
+    "tris": 90940,
+    "verts": 48917
+   }
   },
   {
    "id": "island_m17_hoops",
    "file": "island_m17_hoops.glb",
-   "bytes": 602636,
+   "bytes": 602804,
    "height": 1.83,
    "lods": {
     "hi": {
-     "tris": 9250,
-     "verts": 6070
+     "tris": 9251,
+     "verts": 6056
     },
     "md": {
-     "tris": 4021,
-     "verts": 2904
+     "tris": 4062,
+     "verts": 2942
     },
     "lo": {
-     "tris": 1703,
-     "verts": 1354
+     "tris": 1653,
+     "verts": 1330
     }
    },
    "gender": 1,
@@ -565,25 +685,31 @@
     "island",
     "town"
    ],
-   "name": "m17_hoops"
+   "name": "m17_hoops",
+   "ultra": {
+    "file": "people/island_m17_hoops.ultra.a68ba054ba.glb",
+    "bytes": 3155708,
+    "tris": 96312,
+    "verts": 51873
+   }
   },
   {
    "id": "island_m25_hoodie",
    "file": "island_m25_hoodie.glb",
-   "bytes": 554912,
+   "bytes": 556104,
    "height": 1.8,
    "lods": {
     "hi": {
-     "tris": 9246,
-     "verts": 5672
+     "tris": 9245,
+     "verts": 5696
     },
     "md": {
-     "tris": 3992,
-     "verts": 2754
+     "tris": 4029,
+     "verts": 2789
     },
     "lo": {
-     "tris": 1697,
-     "verts": 1372
+     "tris": 1639,
+     "verts": 1342
     }
    },
    "gender": 1,
@@ -592,25 +718,31 @@
     "island",
     "town"
    ],
-   "name": "m25_hoodie"
+   "name": "m25_hoodie",
+   "ultra": {
+    "file": "people/island_m25_hoodie.ultra.6a782b427e.glb",
+    "bytes": 3170168,
+    "tris": 98290,
+    "verts": 52221
+   }
   },
   {
    "id": "island_m30_run",
    "file": "island_m30_run.glb",
-   "bytes": 608116,
+   "bytes": 609536,
    "height": 1.78,
    "lods": {
     "hi": {
      "tris": 9127,
-     "verts": 6061
+     "verts": 6066
     },
     "md": {
-     "tris": 3884,
-     "verts": 2854
+     "tris": 3942,
+     "verts": 2907
     },
     "lo": {
-     "tris": 1653,
-     "verts": 1363
+     "tris": 1604,
+     "verts": 1338
     }
    },
    "gender": 1,
@@ -619,25 +751,31 @@
     "island",
     "town"
    ],
-   "name": "m30_run"
+   "name": "m30_run",
+   "ultra": {
+    "file": "people/island_m30_run.ultra.20bb167245.glb",
+    "bytes": 3406592,
+    "tris": 106222,
+    "verts": 57203
+   }
   },
   {
    "id": "island_m30_tee",
    "file": "island_m30_tee.glb",
-   "bytes": 557972,
+   "bytes": 559396,
    "height": 1.85,
    "lods": {
     "hi": {
-     "tris": 9123,
-     "verts": 5617
+     "tris": 9128,
+     "verts": 5629
     },
     "md": {
-     "tris": 3894,
-     "verts": 2730
+     "tris": 3945,
+     "verts": 2773
     },
     "lo": {
-     "tris": 1662,
-     "verts": 1300
+     "tris": 1609,
+     "verts": 1275
     }
    },
    "gender": 1,
@@ -646,25 +784,31 @@
     "island",
     "town"
    ],
-   "name": "m30_tee"
+   "name": "m30_tee",
+   "ultra": {
+    "file": "people/island_m30_tee.ultra.9bc4d04d7a.glb",
+    "bytes": 3424360,
+    "tris": 111018,
+    "verts": 58764
+   }
   },
   {
    "id": "island_m35_office",
    "file": "island_m35_office.glb",
-   "bytes": 529632,
+   "bytes": 531204,
    "height": 1.74,
    "lods": {
     "hi": {
-     "tris": 9129,
-     "verts": 5626
+     "tris": 9130,
+     "verts": 5640
     },
     "md": {
-     "tris": 3837,
-     "verts": 2665
+     "tris": 3896,
+     "verts": 2714
     },
     "lo": {
-     "tris": 1636,
-     "verts": 1334
+     "tris": 1586,
+     "verts": 1304
     }
    },
    "gender": 1,
@@ -673,25 +817,31 @@
     "island",
     "town"
    ],
-   "name": "m35_office"
+   "name": "m35_office",
+   "ultra": {
+    "file": "people/island_m35_office.ultra.81966c47eb.glb",
+    "bytes": 3441916,
+    "tris": 113144,
+    "verts": 60017
+   }
   },
   {
    "id": "island_m35_vest",
    "file": "island_m35_vest.glb",
-   "bytes": 549704,
+   "bytes": 551060,
    "height": 1.75,
    "lods": {
     "hi": {
-     "tris": 9250,
-     "verts": 5634
+     "tris": 9251,
+     "verts": 5649
     },
     "md": {
-     "tris": 4047,
-     "verts": 2749
+     "tris": 4090,
+     "verts": 2788
     },
     "lo": {
-     "tris": 1713,
-     "verts": 1346
+     "tris": 1665,
+     "verts": 1324
     }
    },
    "gender": 1,
@@ -700,25 +850,31 @@
     "island",
     "town"
    ],
-   "name": "m35_vest"
+   "name": "m35_vest",
+   "ultra": {
+    "file": "people/island_m35_vest.ultra.e86d841c84.glb",
+    "bytes": 3167880,
+    "tris": 100234,
+    "verts": 53273
+   }
   },
   {
    "id": "island_m40_cargo",
    "file": "island_m40_cargo.glb",
-   "bytes": 547012,
+   "bytes": 550696,
    "height": 1.79,
    "lods": {
     "hi": {
      "tris": 9307,
-     "verts": 5561
+     "verts": 5578
     },
     "md": {
-     "tris": 4119,
-     "verts": 2804
+     "tris": 4218,
+     "verts": 2874
     },
     "lo": {
-     "tris": 1749,
-     "verts": 1460
+     "tris": 1718,
+     "verts": 1452
     }
    },
    "gender": 1,
@@ -727,25 +883,31 @@
     "island",
     "town"
    ],
-   "name": "m40_cargo"
+   "name": "m40_cargo",
+   "ultra": {
+    "file": "people/island_m40_cargo.ultra.bbe0011999.glb",
+    "bytes": 7191784,
+    "tris": 207960,
+    "verts": 106731
+   }
   },
   {
    "id": "island_m40_yard",
    "file": "island_m40_yard.glb",
-   "bytes": 542128,
+   "bytes": 545632,
    "height": 1.76,
    "lods": {
     "hi": {
-     "tris": 9154,
-     "verts": 5450
+     "tris": 9152,
+     "verts": 5464
     },
     "md": {
-     "tris": 3894,
-     "verts": 2636
+     "tris": 3999,
+     "verts": 2705
     },
     "lo": {
-     "tris": 1665,
-     "verts": 1390
+     "tris": 1638,
+     "verts": 1380
     }
    },
    "gender": 1,
@@ -754,25 +916,31 @@
     "island",
     "town"
    ],
-   "name": "m40_yard"
+   "name": "m40_yard",
+   "ultra": {
+    "file": "people/island_m40_yard.ultra.f673d9d835.glb",
+    "bytes": 7619340,
+    "tris": 221306,
+    "verts": 113754
+   }
   },
   {
    "id": "island_m50_tie",
    "file": "island_m50_tie.glb",
-   "bytes": 536528,
+   "bytes": 538940,
    "height": 1.8,
    "lods": {
     "hi": {
-     "tris": 9136,
-     "verts": 5569
+     "tris": 9138,
+     "verts": 5584
     },
     "md": {
-     "tris": 3865,
-     "verts": 2609
+     "tris": 3935,
+     "verts": 2666
     },
     "lo": {
-     "tris": 1649,
-     "verts": 1277
+     "tris": 1607,
+     "verts": 1257
     }
    },
    "gender": 1,
@@ -781,25 +949,31 @@
     "island",
     "town"
    ],
-   "name": "m50_tie"
+   "name": "m50_tie",
+   "ultra": {
+    "file": "people/island_m50_tie.ultra.ce26397d6d.glb",
+    "bytes": 5457740,
+    "tris": 153666,
+    "verts": 80678
+   }
   },
   {
    "id": "island_m60_cap",
    "file": "island_m60_cap.glb",
-   "bytes": 681700,
+   "bytes": 682556,
    "height": 1.77,
    "lods": {
     "hi": {
-     "tris": 9126,
-     "verts": 6195
+     "tris": 9132,
+     "verts": 6210
     },
     "md": {
-     "tris": 3893,
-     "verts": 2948
+     "tris": 3943,
+     "verts": 2992
     },
     "lo": {
-     "tris": 1661,
-     "verts": 1417
+     "tris": 1604,
+     "verts": 1378
     }
    },
    "gender": 1,
@@ -808,25 +982,31 @@
     "island",
     "town"
    ],
-   "name": "m60_cap"
+   "name": "m60_cap",
+   "ultra": {
+    "file": "people/island_m60_cap.ultra.b1b5461d0a.glb",
+    "bytes": 3797876,
+    "tris": 105582,
+    "verts": 57352
+   }
   },
   {
    "id": "island_m65_church",
    "file": "island_m65_church.glb",
-   "bytes": 608992,
+   "bytes": 610048,
    "height": 1.76,
    "lods": {
     "hi": {
-     "tris": 9135,
-     "verts": 6049
+     "tris": 9134,
+     "verts": 6052
     },
     "md": {
-     "tris": 3775,
-     "verts": 2750
+     "tris": 3845,
+     "verts": 2802
     },
     "lo": {
-     "tris": 1618,
-     "verts": 1327
+     "tris": 1569,
+     "verts": 1291
     }
    },
    "gender": 1,
@@ -835,25 +1015,31 @@
     "island",
     "town"
    ],
-   "name": "m65_church"
+   "name": "m65_church",
+   "ultra": {
+    "file": "people/island_m65_church.ultra.704c7b8eef.glb",
+    "bytes": 5165720,
+    "tris": 139014,
+    "verts": 74174
+   }
   },
   {
    "id": "island_m70_flannel",
    "file": "island_m70_flannel.glb",
-   "bytes": 640844,
+   "bytes": 644036,
    "height": 1.74,
    "lods": {
     "hi": {
-     "tris": 9129,
-     "verts": 6193
+     "tris": 9131,
+     "verts": 6194
     },
     "md": {
-     "tris": 3835,
-     "verts": 2917
+     "tris": 3899,
+     "verts": 2969
     },
     "lo": {
-     "tris": 1638,
-     "verts": 1429
+     "tris": 1587,
+     "verts": 1399
     }
    },
    "gender": 1,
@@ -862,7 +1048,13 @@
     "island",
     "town"
    ],
-   "name": "m70_flannel"
+   "name": "m70_flannel",
+   "ultra": {
+    "file": "people/island_m70_flannel.ultra.5a595ab64d.glb",
+    "bytes": 3839100,
+    "tris": 113806,
+    "verts": 61498
+   }
   }
  ],
  "anims": {
@@ -1024,5 +1216,6 @@
   ],
   "drive_seat": 0.36
  },
- "from": "human-forge"
+ "from": "human-forge",
+ "ultraBase": "https://tiles.cruisin.cc/"
 }

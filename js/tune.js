@@ -82,7 +82,7 @@ const TUNE=[
   ['trimBump','String trimmer','Line one bump feeds out',0.04,'in',0.25,6,0.25],['trimWear','String trimmer','Line worn away per second of cutting',0.006,'in',0.02,2,0.02],
   ['gunRate','Pistol','Shortest time between shots',0.22,'s',0.05,2,0.01],['gunRange','Pistol','How far a shot carries',90,'ft',30,600,10],
   ['gunFlee','Pistol','How fast people run from shots',4.5,'mph',3,16,0.5],['townPop','Pistol','How many townsfolk live in town when the game starts (each one killed is gone until the next start)',150,'',0,1000,10],['shopPop','Pistol','How many shopfolk (people in the shops and houses) there are when the game starts',60,'',0,500,5],['runKill','Pistol','How fast a machine has to be going to run someone down (slower, they jump clear)',6,'mph',1,30,0.5],['gunWrist','Pistol','Wrist turn holding the pistol',1.4,'deg',-180,180,5],['gunBody','Pistol','How long someone shot stays down before they go (when out of sight)',40,'s',5,600,5],
-  ['gunHp','Pistol','How much a townsperson takes before they go down (each one give or take 15%)',100,'',10,1000,5],['gunHeadX','Pistol','A head shot counts this many times a body shot',4,'',1,20,0.5],['gunKick','Pistol','How hard a shot kicks the view up',1,'pct',0,3,0.05],['gunShake','Pistol','How much a shot shakes the view',1,'pct',0,3,0.05],
+  ['gunHp','Pistol','How much a townsperson takes before they go down (each one give or take 15%)',100,'',10,1000,5],['gunHeadX','Pistol','A head shot counts this many times a body shot',4,'',1,20,0.5],['copDmg','Pistol','Police: damage a hit does to you (you have 100)',12,'',0,100,1],['copAim','Pistol','Police: how good a shot they are',1,'pct',0,3,0.05],['gunKick','Pistol','How hard a shot kicks the view up',1,'pct',0,3,0.05],['gunShake','Pistol','How much a shot shakes the view',1,'pct',0,3,0.05],
   ['gunDmgP','Pistol','Pistol: damage a shot',45,'',1,500,1],['gunDmgS','Pistol','Shotgun: damage a pellet (nine a shell)',16,'',1,200,1],['gunDmgR','Pistol','Rifle: damage a shot',130,'',1,1000,5],['gunDmgC','Pistol','Carbine: damage a shot',32,'',1,500,1],
   ['trimSpool','String trimmer','Line on a full spool',25*0.3048,'ft',2,100,1],
   ['lawnCut','Grass','Mower cuts the grass to',0.09,'in',1,24,0.5],['lawnWait','Grass','Wait before cut grass grows',45,'s',0,1200,5],['lawnGrow','Grass','Time to grow back tall',240,'s',10,3600,10],
@@ -108,7 +108,7 @@ const TUNE=[
   ['packShed','Excavator','How fast packed clay drops off',1,'pct',0,500,5],
   ['caveDepth','Cave-ins','Walls start to cave in deeper than',1.2,'ft',1,30,0.5],['caveSpoil','Cave-ins','Spoil this close to the edge loads the wall',0.64,'ft',0,10,0.5],
   // the townsfolk (townfolk.js): how fast the town's cars drive its streets and its people walk
-  ['tfCarV','Town','Town traffic speed',11.2,'mph',5,45,1],['tfWalk','Town','Townsfolk walking pace',1.3,'mph',1,5,0.1],
+  ['tfCarV','Town','Town traffic speed',11.2,'mph',5,45,1],['tfWalk','Town','Townsfolk walking pace',1.3,'mph',1,5,0.1],['tfUltraR','Town','Ultra graphics: townsfolk shown in full detail within',6,'ft',6,40,1],
   // which townsfolk characters stay home: one bit per character, in models/peds/peds.json order (bit 0 = cal_m); set on the Townsfolk page
   ['tfOut','Town','Townsfolk left out (a bit per character; set it on the Townsfolk page)',0,'n',0,4294967295,1],
   // indoors (interiors.js): how the eye adjusts in a shop or house, and its room light (Medium graphics and up)

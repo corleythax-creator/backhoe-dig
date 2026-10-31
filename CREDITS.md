@@ -28,6 +28,7 @@ Every sound is cut from CC0 (public domain) field recordings on Freesound by `to
 | `models/people/*` (the townsfolk on High and Ultra: the same 32 rigged and animated) | Human Forge (human-forge repo) from the MakeHuman base mesh and community assets built in Blender with MPFB2; animations Human Forge's own; full list in [models/people/CREDITS.md](models/people/CREDITS.md) | CC0 (see that file) |
 | The town's sedans, hatchbacks, wagons and SUVs in `models/cars.glb` (sources in `tools/models/cars_src/`, fitted by `tools/models/cars.js`) | "Kiri '10", "Ace '11", "Sigil '07" and "Urban '10 - Low poly model" by Daniel Zhabotinsky (https://sketchfab.com/DanielZhabotinsky), from Sketchfab via the Objaverse set | CC BY 4.0 |
 | The town's vans in `models/cars.glb` (source `tools/models/cars_src/van.glb`) | "2014 Fiat Ducato" by razor24 (https://sketchfab.com/3d-models/2014-fiat-ducato-8a651ad182414bb0a8b6c6d8d5bd7c01), from Sketchfab via the Objaverse set | CC BY 4.0 |
+| `models/scans.glb`: the fire hydrant, Jersey barrier, steel drum, generator, tyre stack, fire pit, lamp post, trash can and utility box (built by `tools/scans.js`) | [Poly Haven](https://polyhaven.com/models): fire_hydrant, concrete_road_barrier_02, barrel_03, portable_generator, old_tyre, stone_fire_pit, street_lamp_01, metal_trash_can, utility_box_01 | CC0 |
 | Every other `models/*.glb` (excavator, dump truck, dozer, loader, semi, pickup, four-wheeler, the town's minivans and pickups) | Built from code for this game by `tools/build_model.js` | The game's own |
 | The trees, props, islands and everything else drawn in `js/` | Built from code for this game | The game's own |
 
@@ -53,6 +54,7 @@ Every sound is cut from CC0 (public domain) field recordings on Freesound by `to
 | The town's flat shop roofs (`textures/roof_flat`, with `_n` and `_r`, by `tools/cc0.py`) | [Poly Haven](https://polyhaven.com/a/bitumen): bitumen | CC0 |
 | Photo-scanned roof shingles (`textures/roof_grey`, with `_n` and `_r`) | [Poly Haven](https://polyhaven.com/a/grey_roof_01): grey_roof_01, by Rob Tuytel | CC0 |
 | Service pistol (`models/pistol/`) | [Poly Haven](https://polyhaven.com/a/service_pistol): service_pistol, by Mateusz Sadek | CC0 |
+| Screams, cries of pain and dying groans (`sounds/voice_f.mp3`, `sounds/voice_m.mp3`, cut and levelled from the originals) | [OpenGameArt](https://opengameart.org): Female High Pitched Scream SFX, Female Scream 1, High pitch scream sounds, 15 vocal male strain/hurt/pain/jump sounds, Grunts: male death and pain, Female hurt grunts & groans | CC0 |
 | Bolt-action rifle (`models/rifle/`) | [Poly Haven](https://polyhaven.com/a/bolt_action_rifle_7_62): bolt_action_rifle_7_62, by Mateusz Sadek | CC0 |
 | Your own textures (uploaded in the map editor) | Whoever uploads them | Theirs; only upload images you have the right to use |
 

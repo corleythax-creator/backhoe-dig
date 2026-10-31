@@ -95,6 +95,7 @@ const WORDS=[
   ['trimEmpty','On foot','The trimmer spool is empty: put it away ([trim]) and take it out again for a fresh spool',''],
   ['trimBumped','On foot','Bumped the line out to {line} in ({spool} ft left on the spool)','{line}: inches out; {spool}: feet left'],
   ['gunOut','On foot','{gun} out: click to fire','{gun}: which gun'],['gunAway','On foot','{gun} put away','{gun}: which gun'],
+  ['gunWanted','On foot','Wanted: {n} star(s). The police are on their way','{n}: how many stars'],['gunDown','On foot','You were shot down',''],['gunBack','On foot','Back on Corley\'s island. The police have let it go',''],
   ['gunNoAmmo','On foot','Out of {gun} rounds: Lakeside Guns on Main Street has more','{gun}: which gun'],['gunFull','On foot','The {gun} is already loaded','{gun}: which gun'],
   ['gunOne','On foot','Only the pistol so far: Lakeside Guns on Main Street has a shotgun, a rifle and a carbine',''],
   ['gunGot','On foot','Took the {gun}. [gunNext] (or a tap on the round count) switches guns, [gunReload] reloads','{gun}: which gun'],['gunAmmoGot','On foot','{gun} rounds topped up (+{n})','{gun}: which gun; {n}: how many'],

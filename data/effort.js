@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-31T06:09:00Z",
+ "updated": "2026-10-31T07:05:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -96,9 +96,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-31",
-   "dh": 50,
-   "act": 1.5,
-   "versions": 5
+   "dh": 85,
+   "act": 2.5,
+   "versions": 8
   }
  ],
  "extra": [
@@ -2871,6 +2871,33 @@ window.EFFORT = {
    "tris": 6029017,
    "chars": 2064175,
    "what": "Shadows now reach far past you: hills, cliffs, buildings and trees out to a fifth of a mile (High) still cast them. The haze glows warm toward the sun and lies thicker low over the lake, and sunlight bounces up off the ground into the shade under machines and eaves."
+  },
+  {
+   "v": 308,
+   "asked": "2026-10-31T00:55:00-05:00",
+   "live": "2026-10-31T01:38:34-05:00",
+   "dh": 6,
+   "tris": 6031857,
+   "chars": 2065088,
+   "what": "Photo-scanned hydrant, Jersey barrier, steel drum, generator, tyre stack, fire pit and lamp post (Poly Haven, CC0) on Detailed; new trash can and utility box to place"
+  },
+  {
+   "v": 309,
+   "asked": "2026-10-31T01:10:00-05:00",
+   "live": "2026-10-31T01:53:04-05:00",
+   "dh": 24,
+   "tris": 6033405,
+   "chars": 2094595,
+   "what": "Bullets fly and drop with rifle tracers, go through thin walls, car doors and glass, and hit drivers; people scream and cower; shooting brings wanted stars and police who shoot back; you have health; guns are drawn and holstered and each reloads its own way."
+  },
+  {
+   "v": 310,
+   "asked": "2026-10-31T00:30:00-05:00",
+   "live": "2026-10-31T02:05:04-05:00",
+   "dh": 5,
+   "tris": 7602371,
+   "chars": 2099357,
+   "what": "On Ultra graphics, the three townsfolk nearest you (within about 20 ft, a Tuning setting) switch to their full-detail Human Forge body (about 100,000 triangles, skin pores, real eyes, sheen) right where they stand and in step, and switch back as you walk away. Phones and lower settings are unchanged."
   }
  ]
 };

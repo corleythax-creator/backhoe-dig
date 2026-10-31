@@ -47,6 +47,8 @@ const PROPS={
   speedsign:{n:'Speed limit sign',cat:6,w:0.65,d:0.1,cap:100,solid:[0.05,0.05]},
   hydrant:{n:'Fire hydrant',cat:6,w:0.4,d:0.4,cap:80,solid:[0.15,0.15]},
   mailbox:{n:'Mailbox',cat:6,w:0.3,d:0.5,cap:80,solid:[0.08,0.08]},
+  trashcan:{n:'Trash can',cat:6,w:0.6,d:0.6,cap:150,solid:[0.28,0.28]},
+  utilbox:{n:'Utility box',cat:6,w:0.55,d:0.45,cap:80,solid:[0.27,0.22]},
   windsock:{n:'Windsock',cat:6,w:0.3,d:0.3,cap:20,solid:[0.06,0.06]},
   // site gear
   pipes:{n:'Culvert pipes',cat:3,w:1.9,d:2.4,cap:60,solid:1,deep:1},
@@ -192,6 +194,8 @@ const PROP_MODELS={
     for(const y of [2.18,2.07])B.box(0.38,0.05,0.04,0x1a1a1a,0,y,0.05);for(const x of [-0.1,0.1])B.box(0.13,0.24,0.04,0x1a1a1a,x,1.8,0.05)},
   hydrant:B=>{B.cyl(0.18,0.18,0.06,10,0xb81c1c,0,0.03,0);B.cyl(0.12,0.13,0.55,10,0xc81e1e,0,0.33,0);B.cyl(0.06,0.13,0.13,10,0xc81e1e,0,0.66,0);
     B.cyl(0.05,0.05,0.34,8,0xc81e1e,0,0.44,0,0,0,Math.PI/2);B.cyl(0.065,0.065,0.12,8,0xc81e1e,0,0.42,0.12,Math.PI/2,0,0);B.cyl(0.02,0.02,0.05,6,0xd4af37,0,0.75,0)},
+  trashcan:B=>{B.cyl(0.26,0.24,0.86,14,0x8e9296,0,0.43,0);for(const y of [0.2,0.5,0.8])B.cyl(0.265,0.265,0.025,14,0x7a7e82,0,y,0);B.cyl(0.24,0.24,0.01,14,0x1e1f20,0,0.86,0)},
+  utilbox:B=>{B.box(0.52,1.1,0.42,0x9aa5ad,0,0.56,0);B.box(0.56,0.04,0.46,0x8a949b,0,1.12,0);B.box(0.3,0.16,0.01,0xf2c84b,0,0.85,0.215)},
   mailbox:B=>{B.box(0.1,1.0,0.1,0x7a5a3a,0,0.5,0);B.box(0.16,0.04,0.4,0x7a5a3a,0,0.98,0);B.box(0.24,0.12,0.48,0x2a2a2a,0,1.06,0);
     B.cyl(0.12,0.12,0.48,12,0x2a2a2a,0,1.12,0,Math.PI/2,0,0);B.box(0.02,0.2,0.05,0xc8202a,0.14,1.18,-0.1)},
   windsock:B=>{B.cyl(0.03,0.04,4.5,6,0xd8d8d8,0,2.25,0);B.tor(0.2,0.012,0x888888,0.08,4.35,0,0,0,Math.PI/2);

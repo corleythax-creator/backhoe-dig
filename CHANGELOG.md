@@ -4,6 +4,9 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Saturday, October 31, 2026
 
+- **v310** (2:05 AM) On Ultra graphics, the three townsfolk nearest you (within about 20 ft, a Tuning setting) switch to their full-detail Human Forge body (about 100,000 triangles, skin pores, real eyes, sheen) right where they stand and in step, and switch back as you walk away. Phones and lower settings are unchanged.
+- **v309** (1:53 AM) Bullets fly and drop with rifle tracers, go through thin walls, car doors and glass, and hit drivers; people scream and cower; shooting brings wanted stars and police who shoot back; you have health; guns are drawn and holstered and each reloads its own way.
+- **v308** (1:38 AM) Photo-scanned hydrant, Jersey barrier, steel drum, generator, tyre stack, fire pit and lamp post (Poly Haven, CC0) on Detailed; new trash can and utility box to place
 - **v307** (1:09 AM) Shadows now reach far past you: hills, cliffs, buildings and trees out to a fifth of a mile (High) still cast them. The haze glows warm toward the sun and lies thicker low over the lake, and sunlight bounces up off the ground into the shade under machines and eaves.
 - **v306** (1:04 AM) Shots kick and shake the view, light up the street and throw out empty cases that tink on the ground; people shot dead go limp as they fall, sprawl on their back or face, bounce as they land and lie along the slope.
 - **v305** (12:42 AM) Names and hailing port on the marina's slip boats; detailed rooftop HVAC units (curb, panelled casing, louvred coils, fan and guard) and capped vent stacks on Main Street
