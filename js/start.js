@@ -32,7 +32,7 @@ function startLay(){const V=startView(),I=SPICK.img,im=document.getElementById('
     e.style.left=Math.max(hw,Math.min(Math.max(hw,V.w-hw),px))+'px';e.style.top=py+'px';e.hidden=py<0||py>V.h}
   const p=SPICK.pick,pin=document.getElementById('startPin');pin.hidden=!p;if(p){const [px,py]=startPx(V,p.x,p.z);pin.style.left=px+'px';pin.style.top=py+'px'}}
 const startHint=t=>document.getElementById('startMapHint').textContent=t;
-document.getElementById('startMap').addEventListener('click',e=>{const r=e.currentTarget.getBoundingClientRect(),V=startView(),
+document.getElementById('startMap').addEventListener('click',e=>{if(!LOADP.done)return;const r=e.currentTarget.getBoundingClientRect(),V=startView(),
   p={x:V.cx+(e.clientX-r.left-V.w/2)*V.mpp,z:V.cz+(e.clientY-r.top-V.h/2)*V.mpp};
   if(!SPICK.zoom){SPICK.zoom=p;document.getElementById('startOut').hidden=false;startLay();startHint('Tap again where you want to start');return}
   SPICK.pick=p;startLay();if(SPICK.go)SPICK.go()});
@@ -40,3 +40,21 @@ document.getElementById('startMap').addEventListener('click',e=>{const r=e.curre
 function startUnzoom(){SPICK.zoom=null;SPICK.pick=null;document.getElementById('startOut').hidden=true;startLay()}
 document.getElementById('startOut').addEventListener('click',e=>{e.stopPropagation();startUnzoom();if(document.getElementById('startMap').classList.contains('ready'))startHint('Tap the map to zoom in')});
 addEventListener('resize',startLay);startLay();
+// the loading cover (#startLoad): a percent and a bar over the map, and the map and Carry on wait for it, so nothing is
+// tapped while the game is still busy loading and the first minutes in the world don't stutter. It counts three things:
+// the game's scripts as each one loads (up to 45%), every picture and model the loaders fetch (the loading managers,
+// counted from core.js and terrain.js with loadCount; up to 75%), then the shaders and texture uploads done behind the
+// cover (warmFrac, main.js; up to 100%). It is done when all three are, or after LOADP.cap seconds whatever is left
+const LOADP={js:0,mgr:[],warm:false,done:false,shown:0,cap:100};
+document.addEventListener('load',e=>{if(e.target.tagName==='SCRIPT'&&e.target.defer)LOADP.js++},true);
+document.addEventListener('error',e=>{if(e.target.tagName==='SCRIPT'&&e.target.defer)LOADP.js++},true);
+function loadTick(){if(LOADP.done)return;const jsN=document.querySelectorAll('script[defer]').length||1,js=Math.min(1,LOADP.js/jsN);
+  let al=0,at=0;for(const [l,t] of LOADP.mgr){al+=l;at+=t}const a=at?Math.min(1,al/at):0;
+  const w=typeof warmFrac==='function'?warmFrac():0,game=js>=1&&typeof tpGo==='function'&&typeof warmIdle==='function';
+  const done=game&&al>=at&&LOADP.warm&&warmIdle()||performance.now()>LOADP.cap*1000;
+  const p=done?100:Math.min(99,45*js+30*a*(game?1:.8)+25*w);LOADP.shown=Math.max(LOADP.shown,p);
+  const pct=Math.floor(LOADP.shown),L=document.getElementById('startLoad');
+  document.getElementById('startLoadPct').textContent=pct+'%';document.getElementById('startLoadFill').style.width=LOADP.shown+'%';L.setAttribute('aria-valuenow',pct);
+  document.getElementById('startLoadWhat').textContent=!game?'Loading the game':al<at?`Loading pictures and models: ${al} of ${at}`:'Getting the island ready';
+  if(!done)return;LOADP.done=true;L.classList.add('gone');setTimeout(()=>L.hidden=true,450);document.getElementById('startResume').disabled=false;clearInterval(LOADP.iv)}
+LOADP.iv=setInterval(loadTick,150);
