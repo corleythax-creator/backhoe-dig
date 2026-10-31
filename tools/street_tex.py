@@ -1,5 +1,5 @@
 """Makes the paved streets' brick and cobblestone surfaces from CC0 photo scans (ambientCG), with the height map the
-relief shader marches through (streets.js, ST_SURF).
+relief shader marches through (mainland.js, ST_SURF).
 
 Usage: python3 tools/street_tex.py [ID ...]     (no ids: every surface in SCANS below)
 For each surface it downloads the scan's 1K-JPG set (https://ambientcg.com/get?file=<scan>_1K-JPG.zip) into a scratch
