@@ -336,6 +336,7 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 #startLoadPct{font:700 64px/1 var(--f-display);color:#f3f5ef;letter-spacing:.02em;font-variant-numeric:tabular-nums}
 #startLoadBar{position:relative;width:min(420px,76%);height:14px;border-radius:7px;background:rgba(255,255,255,.14);overflow:hidden}
 #startLoadFill{position:absolute;left:0;top:0;bottom:0;width:0;background:var(--machine);border-radius:7px;transition:width .3s}
+#startLoadBar::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.22),transparent);animation:startLoadShine 1.6s linear infinite}
 #startLoadFill::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.45),transparent);animation:startLoadShine 1.2s linear infinite}
 @keyframes startLoadShine{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
 #startLoadWhat{font:600 20px/1.2 var(--f-body);color:#d5dbd2}
