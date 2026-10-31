@@ -484,7 +484,7 @@ const ASSET_CAP={pine:600,leafy:300,rock:400},assetIMs={},assets=mapAssets?mapAs
   rocks.castShadow=true;rocks.receiveShadow=true;rocks.frustumCulled=false;
   rocks.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(rocks.instanceMatrix.count*3),3);rocks.count=0;scene.add(rocks);
   assetIMs.rock=[rocks];treeIMs.push(rocks);
-  if(!assets.length)assets.push(...defaultAssets());
+  if(!assets.length)assets.push(...defaultAssets());else if(!mapSq)assets.push(...sqThings());
   assetsBuild();
 })();
 // the default trees and boulders, the same every time (a seeded shuffle): clustered in a band inside the rim, round West
@@ -502,6 +502,20 @@ function defaultAssets(){
     for(let i=0;i<n&&np+nb<285;i++){const x=cx+(rnd()-0.5)*10,z=cz+(rnd()-0.5)*10;if(!okSpot(x,z))continue;
       const pine=np<210&&(nb>=75||rnd()<0.74);out.push({t:pine?'pine':'leafy',x,z,yaw:rnd()*6.3,s:0.8+rnd()*0.7,c:Math.floor(rnd()*(pine?4:6))});if(pine)np++;else nb++}}
   for(let n=0,g=0;n<18&&g<4000;g++){const x=(rnd()-0.5)*100,z=-20+rnd()*100;if(!okSpot(x,z))continue;out.push({t:'rock',x,z,yaw:rnd()*6.3,s:0.5+rnd()*0.9,c:0});n++}
+  return out.concat(sqThings())}
+// Harbor Square's furniture (square.js), things like any other so the editor moves them: shade trees, benches, park
+// lamps, café tables, market stalls and the bollards along the beach road. Maps saved before it (no sq in them) get
+// them added once (mapSq, terrain.js). The square is laid out on x -61 (SQ.ax), the fountain at z 588 (SQ.fz)
+function sqThings(){const out=[],P=Math.PI,ax=-61,fz=588,add=(t,x,z,yaw,s,c)=>out.push({t,x,z,yaw:yaw||0,s:s||1,c:c||0});
+  [[-94,584],[-82,583.2],[-42,583.2],[-32,584.5],[-94.5,606.5],[-82,608.5],[-41,608.5],[-94,595],[-105,569.5],[-90,569.5],[-78,569.5],[-44,569.5]]
+    .forEach(([x,z],i)=>add('leafy',x,z,i*1.7,0.72+(i%4)*0.07,(i*5)%6));
+  for(const x of [-107,-97,-87,-77,-45,-35]){add('bench',x,560.2,P,0.9);add('lamp',x+5,559.2)}
+  for(const x of [-92,-86,-40,-34])add('bench',x,609.9,P,0.9);for(const z of [586,592,606])add('bench',-97.2,z,P/2,0.9);
+  for(const x of [-70,-52])add('bench',x,598,P,0.9);add('bench',ax-5.6,fz,P/2,0.9);add('bench',ax+5.6,fz,-P/2,0.9);
+  for(const [x,z] of [[-90,580.8],[-74,580.8],[-48,580.8],[-32,580.8],[-97.6,590],[-97.6,604],[-88,610.6],[-34,610.6],[ax-2,609.5],[ax+2,609.5]])add('lamp',x,z);
+  for(const [x,z] of [[-31,563.2],[-26,565.6],[-21,563.2],[-16,565.8],[-12,562.6]])add('cafe',x,z);
+  for(const z of [584.5,590.5,596.5,603.5,609.2])add('stall',-30.5,z,P/2);
+  for(let x=-104;x<=-8;x+=3.5){if(Math.abs(x-(ax+4))<2.5||Math.abs(x+25.5)<2.5)continue;const zc=x<-60?576-2*(x+170)/110:574;for(const s of [-1,1])add('bollard',x,zc+s*2.85)}
   return out}
 // fills the instance meshes from the asset list (after any change to it): the trees go to trees.js, the boulders here
 function assetsBuild(){const o=new THREE.Object3D(),c=new THREE.Color(),n={pine:0,leafy:0,rock:0},T=[];

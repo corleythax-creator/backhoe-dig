@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-31T03:24:00Z",
+ "updated": "2026-10-31T03:27:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -90,9 +90,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-30",
-   "dh": 121.25,
+   "dh": 125.25,
    "act": 4,
-   "versions": 25
+   "versions": 26
   }
  ],
  "extra": [
@@ -2748,6 +2748,15 @@ window.EFFORT = {
    "tris": 5900463,
    "chars": 1934011,
    "what": "Real 3D clouds: rounded heaps with sunlit tops, grey undersides and glowing edges toward the sun, that roll in dark before a shower, and their shadows drifting across the island (Medium graphics and up)."
+  },
+  {
+   "v": 295,
+   "asked": "2026-10-30T22:15:00-05:00",
+   "live": "2026-10-30T22:27:37-05:00",
+   "dh": 4,
+   "tris": 5901409,
+   "chars": 1935181,
+   "what": "Harbor Square's benches, park lamps, café tables, market stalls, bollards and shade trees are now map editor things you can select, move, copy and delete; townsfolk sit wherever the benches go"
   }
  ]
 };
