@@ -215,9 +215,9 @@ function mainLot(K,x,z,w,d,h,col,face,awn,si,wl){wl=wl||col;const y=rmGroundMax(
   // (the door itself swings in as the worker comes up to it: rmDoor, interiors.js)
   {const [a,b]=F(d/2+0.03,0);for(const s of [-1,1]){const [g,k]=F(d/2+0.05,s*0.7);K.box(0.22,2.95,0.16,TR,g,y+1.475,k,face)}
     K.box(1.2,0.6,0.02,'glass',a,y+2.6,b,face);const [e,f]=F(d/2+0.03,-0.6);rmDoor('shop',e,y,f,face,1.2)}
-  // the awning: stripes of its colour and white, sloping out over the walk, with a valance
-  {const n=Math.max(4,Math.round((w-1)/0.6)),sw=(w-1)/n;for(let i=0;i<n;i++){const s=-(w-1)/2+sw*(i+0.5),[a,b]=F(d/2+0.58,s);K.box(sw+0.005,0.06,1.15,i%2?0xf2efe6:awn,a,y+2.95,b,face,-0.32);
-    const [e,f]=F(d/2+1.13,s);K.box(sw+0.005,0.3,0.04,i%2?0xf2efe6:awn,e,y+2.62,f,face)}}
+  // the awning: stripes of its colour and white canvas (scanned weave, tinted), sloping out over the walk, with a valance
+  {const n=Math.max(4,Math.round((w-1)/0.6)),sw=(w-1)/n;for(let i=0;i<n;i++){const s=-(w-1)/2+sw*(i+0.5),[a,b]=F(d/2+0.58,s);K.box(sw+0.005,0.06,1.15,famTint('canvas',i%2?0xf2efe6:awn),a,y+2.95,b,face,-0.32);
+    const [e,f]=F(d/2+1.13,s);K.box(sw+0.005,0.3,0.04,famTint('canvas',i%2?0xf2efe6:awn),e,y+2.62,f,face)}}
   // the sign over the awning (MAIN_SHOPS[si]), on a dark board
   {const sw=Math.min(w-1.6,8.5),[a,b]=F(d/2+0.1,0);K.box(sw+0.24,1.14,0.08,DK,a,y+3.75,b,face);const [e,f]=F(d/2+0.15,0);mainSignList.push({x:e,y:y+3.75,z:f,ry:face,w:sw,h:0.95,i:si%MAIN_SHOPS.length})}
   // the upper floors: windows with a sill under and a lintel over each

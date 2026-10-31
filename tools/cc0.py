@@ -11,7 +11,10 @@ js/materials.js, and its 96 px swatch into textures/thumbs.jpg. Credit a new sca
   scan  the ambientCG asset id, or ph:<id> for a Poly Haven texture (its 1k diff, nor_dx and rough maps)
   ft    feet the tile covers in the game (None keeps the entry's own)
   then optional extras: 'T' to transpose it (corner to corner), so stripes across the scan run down it; a number to
-        scale its colour to that mean brightness (0-1), for a scan shot darker or lighter than the real thing
+        scale its colour to that mean brightness (0-1), for a scan shot darker or lighter than the real thing; 'G' to
+        make it neutral grey first, for a texture the game tints (a 'name@rrggbb' material in the bridge kit, bridges.js)
+An id that isn't in MAT_LIST is a texture for the building kits only (BR_DEF in bridges.js): written at 1024 px, its
+mean colour printed for BR_DEF's col, nothing else touched.
 A scan's maps replace tools/pbr.py's for that id: don't run pbr.py on these ids (it would remake them from the colour).
 """
 import io, os, re, sys, subprocess, zipfile
@@ -33,7 +36,10 @@ SCANS = {
     'planks': ('Planks029S', 7.9), 'diamond': ('DiamondPlate009', 3), 'corrugated': ('CorrugatedSteel009', None, 'T'),
     'concrete_broom': ('ph:brushed_concrete_04', 6.6, 0.64), 'plywood': ('ph:plywood', 1.64, 0.66), 'rustplate': ('ph:rust_coarse_01', 7.2),
     'cmu': ('ph:concrete_block_wall', 5.33, 0.5), 'shingles': ('ph:grey_roof_01', 26),
-    'grass2': ('Grass006', 4), 'grating': ('MetalWalkway004', 3), 'fabric': ('Fabric039', 2, 0.15)}
+    'grass2': ('Grass006', 4), 'grating': ('MetalWalkway004', 3), 'fabric': ('Fabric039', 2, 0.15),
+    # the building kits' own: breakwater boulders, standing-seam metal roofs, awning canvas
+    'rock_bw': ('Granite005B', None), 'roof_seam': ('ph:box_profile_metal_sheet', None, 'G', 0.72),
+    'canvas': ('ph:rough_linen', None, 'G', 0.86)}
 PH = {'Color': 'diff', 'NormalDX': 'nor_dx', 'Roughness': 'rough'}
 
 
@@ -69,9 +75,11 @@ def fetch(scan):
     return out
 
 
-def make(mid, js):
+def make(mid, js, size=SIZE):
     scan, ft, *extra = SCANS[mid]
     maps = fetch(scan)
+    if 'G' in extra:
+        maps['Color'] = maps['Color'].convert('L').convert('RGB')
     lift = next((e for e in extra if not isinstance(e, str)), None)
     if lift:
         a = np.asarray(maps['Color'], dtype=np.float64)
@@ -87,9 +95,12 @@ def make(mid, js):
         r, g, b = maps['NormalDX'].split()
         maps['NormalDX'] = Image.merge('RGB', (g, r, b))
     for key, suf in (('Color', ''), ('NormalDX', '_n'), ('Roughness', '_r')):
-        maps[key].resize((SIZE, SIZE), Image.LANCZOS).save(os.path.join(TEX, mid + suf + '.jpg'), quality=86, optimize=True)
+        maps[key].resize((size, size), Image.LANCZOS).save(os.path.join(TEX, mid + suf + '.jpg'), quality=86, optimize=True)
     im = Image.open(os.path.join(TEX, mid + '.jpg'))
     c = np.asarray(im, dtype=np.float64).mean(axis=(0, 1)) / 255
+    if size != SIZE:
+        print(f'{mid:14s} <- {scan:16s} col:[{c[0]:.2f},{c[1]:.2f},{c[2]:.2f}] (building kits only)')
+        return js, None
     def entry(m):
         s = re.sub(r'c:\[[^\]]*\]', 'c:[' + ','.join(f'{v:.3f}' for v in c) + ']', m.group(0))
         return re.sub(r'ft:[\d.]+', f'ft:{ft:g}', s) if ft else s
@@ -105,9 +116,13 @@ def main(ids):
     order = re.findall(r"\{id:'(\w+)'", js[js.index('const MAT_LIST'):js.index('];', js.index('const MAT_LIST'))])
     sheet = Image.open(os.path.join(TEX, 'thumbs.jpg')).convert('RGB')
     for mid in ids:
+        if mid not in order:
+            make(mid, js, 1024)
+            continue
         js, im = make(mid, js)
         sheet.paste(im.resize((THUMB, THUMB), Image.LANCZOS), (order.index(mid) * THUMB, 0))
-    sheet.save(os.path.join(TEX, 'thumbs.jpg'), quality=84, optimize=True)
+    if any(mid in order for mid in ids):
+        sheet.save(os.path.join(TEX, 'thumbs.jpg'), quality=84, optimize=True)
     open(JS, 'w').write(js)
 
 

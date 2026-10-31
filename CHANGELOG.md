@@ -4,6 +4,10 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Friday, October 30, 2026
 
+- **v288** (9:30 PM) Breakwater boulders in photo-scanned granite, standing-seam metal roofs on the Dockside Grill and bandstand, woven canvas on every awning stripe; tintable scanned kit materials (famTint)
+- **v287** (9:27 PM) Townsfolk react to where they are shot: head shots drop them, chest shots stagger them over, gut shots double them up, leg shots put them down crawling, arm shots spin them and they run
+- **v286** (9:27 PM) On Ultra the puddles on the paving reflect the trees, lamps, people and buildings round them; rain splashes are smaller and fainter
+- **v285** (9:27 PM) Zoom in on the start map and it sharpens: paved streets with their lines and crosswalks, sidewalks and walkways, roofs with shadows, leafy trees and bridge railings.
 - **v284** (9:21 PM) The town starts each game with a set number of townsfolk (townPop, 150); each one killed is gone until the next start and the crowd thins out
 - **v283** (9:14 PM) The town's lawns look real: photo-scanned deep green grass with blades up close, thicker along the paths, clover with white flowers, weeds and fallen autumn leaves; in the rain the town's lawns and ground get wet and dark.
 - **v282** (9:11 PM) Streets laid in the map editor can be brick, cobblestone, fan cobbles or old brick (Surface on the street's card): photo-scanned paving whose bricks and cobbles stand up out of their joints and cast little shadows in the sun with Material relief on.
