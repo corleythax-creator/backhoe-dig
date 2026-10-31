@@ -148,7 +148,7 @@ function tfTex(B){if(B.texing)return;B.texing=1;new THREE.TextureLoader().load(B
 // in use. The runtime loads with the townsfolk (near town only); until it and a character's crowd are ready, or if
 // either fails, that character draws on its old mesh. The crowds' clocks are never run (no forge.update): each person
 // keeps their own clip time (p.ct), handed over as the clip's offset, since tfDraw packs whoever is in view every frame
-const TF_FG_CLIPS=['walk','idle','talk','sit','drive'];
+const TF_FG_CLIPS=['walk','idle','talk','sit','drive','run'];
 function tfForge(){const F=tf.F||(tf.F={st:0});if(F.st||!gfxCur.forge)return;F.st=1;
   const go=()=>HumanForge.load(THREE,'models/people/').then(f=>{F.f=f;F.ref=f.library.anims.ref_pelvis||0.97;F.st=2}).catch(e=>{console.warn('townsfolk forge:',e);F.st=-1});
   if(window.HumanForge)return go();const s=document.createElement('script');s.src='models/people/human-forge.js';s.onload=go;s.onerror=()=>{F.st=-1};document.head.appendChild(s)}
@@ -156,16 +156,17 @@ function tfForge(){const F=tf.F||(tf.F={st:0});if(F.st||!gfxCur.forge)return;F.s
 // person's size (the clip's own speed is a 6 ft person's)
 function tfForgeCrowd(B,id){B.fg=1;const F=tf.F;
   F.f.crowd('island_'+id,{max:B.cap,clips:TF_FG_CLIPS,lod:gfxCur.forge,castShadow:true,receiveShadow:true}).then(c=>{const m=c.object,M=m.material;
-    M.roughness=0.86;M.envMap=skyEnv;M.envMapIntensity=0.5;m.castShadow=!!gfxCur.pbr;m.visible=false;c.stride=F.f.clips.walk.speed*c.type.hip/F.ref;scene.add(m);B.fg=c})
+    M.roughness=0.86;M.envMap=skyEnv;M.envMapIntensity=0.5;m.castShadow=!!gfxCur.pbr;m.visible=false;c.stride=F.f.clips.walk.speed*c.type.hip/F.ref;c.runS=(F.f.clips.run||F.f.clips.walk).speed*c.type.hip/F.ref;scene.add(m);B.fg=c})
     .catch(e=>console.warn('townsfolk forge:',id,e))}
 // person p as instance i of crowd c: walking (pace = their speed), sitting (the clip's origin is on the floor under the
 // seat's middle, its seat 18 in up like the rooms' chairs and benches), driving (its seat 14 in up: lifted to where the
 // old seated pose's seat was, 18 in over p.y), or standing easy or talking (staff and customers)
-function tfFgPose(p,c,i,dt){let k=p.drv?'drive':p.sit?'sit':p.spd>(p.fk==='walk'?0.15:0.3)?'walk':0;
+function tfFgPose(p,c,i,dt){let k=p.dead?'idle':p.drv?'drive':p.sit?'sit':p.spd>(p.fk==='walk'?0.15:0.3)?'walk':0;
   if(!k){if(p.fk!=='idle'&&p.fk!=='talk'||p.t>(p.tp??0)+1)p.tk=Math.random()<(p.room?p.spot.staff?0.5:0.35:0.06);p.tp=p.t;k=p.tk?'talk':'idle'}
-  const A=c.clips[k];if(k!==p.fk){p.fk=k;p.ct=k==='walk'?0.1:Math.random()*A.duration}
-  p.ct=(p.ct+dt*(k==='walk'?p.spd/(c.stride*p.sc):1))%A.duration;
-  const f=p.sit&&!p.drv?0.05:0;c.place(i,{x:p.x+Math.sin(p.yaw)*f,y:p.y+(p.drv?0.1:0),z:p.z+Math.cos(p.yaw)*f,heading:p.yaw,scale:p.sc});c.anim(i,k,{offset:p.ct})}
+  if(k==='walk'&&p.flee>0&&p.spd>2.2&&c.clips.run)k='run';
+  const A=c.clips[k];if(k!==p.fk){p.fk=k;p.ct=k==='walk'||k==='run'?0.1:Math.random()*A.duration}
+  if(!p.dead)p.ct=(p.ct+dt*(k==='walk'?p.spd/(c.stride*p.sc):k==='run'?p.spd/(c.runS*p.sc):1))%A.duration;
+  const f=p.sit&&!p.drv?0.05:0,fl=tfFall(p);c.place(i,{x:p.x+Math.sin(p.yaw)*f,y:p.y+(p.drv?0.1:0)+fl*0.08,z:p.z+Math.cos(p.yaw)*f,heading:p.yaw,tilt:-fl,scale:p.sc});c.anim(i,k,{offset:p.ct})}
 // a car model (a node of models/cars.glb, standing on y = 0, nose to +z) on the game's materials; its paint is set per
 // car (tfCarPaint), its own:<name> materials keep the model's textures, and its wheels (wheel_* nodes, their origins at the hubs) turn about x. Each car holds the detailed
 // model and its light one (<kind>_lo), and shows the light one past TF_CAR_HI (tfDraw)
@@ -187,6 +188,8 @@ function tfLook(adult){const C=tf.chars,all=C.every((c,i)=>tfOff(i));let best=0,
   const c=C[best];tf.use[best]++;return {ci:best,body:c.id,sc:0.97+Math.random()*0.06,g:0}}
 function tfPerson(o){const p=Object.assign(tfLook(o&&o.drv),{x:0,z:0,y:0,yaw:0,ph:Math.random()*6,amp:0,spd:0,vt:TU.tfWalk*(0.82+Math.random()*0.32),side:0.32,wait:0,inside:0,blk:0,look:0},o);
   p.y=baseHeight(p.x,p.z)+tfLift(p.x,p.z);tf.people.push(p);return p}
+// someone shot (pistol.js): p.dead counts the seconds since; they go over backwards, flat in about 0.7 s
+const tfFall=p=>p.dead?Math.min(1,(p.dead/0.7)**2)*Math.PI/2*0.97:0;
 function tfDrop(p){const i=tf.people.indexOf(p);if(i>=0){tf.people.splice(i,1);tf.use[p.ci]--;if(p.room){p.room.n--;if(p.spot&&p.spot.who===p)p.spot.who=null}}}
 // someone on the walks at a random spot (out of sight unless fill: the walks are empty, as when the town first comes near)
 function tfSpawnWalker(fill){for(let t=0;t<8;t++){const w=TF_WALK[(Math.random()*TF_WALK.length)|0];if(w.x)continue;const s=Math.random()*w.len,[x,z]=tfAt(w,s);
@@ -356,25 +359,55 @@ function tfTick(dt){if(!tf.q){if(tf.on)tfShow(false);return}
   if(dd>TF_NEAR){if(tf.on)tfShow(false);return}
   if(!tf.load)tfLoad();if(tf.load!==2)return;if(gfxCur.forge&&!(tf.F&&tf.F.st))tfForge();
   dt=Math.min(dt,0.1);tf.t+=dt;camera.updateMatrixWorld();tf.fm.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse);tf.fr.setFromProjectionMatrix(tf.fm);
-  const night=typeof dn==='object'?Math.min(1,Math.max(0.3,(dn.el+8)/14)):1,[np,nc]=TF_N[tf.q],wantP=Math.round(np*night),wantC=Math.round(nc*night),walkers=tf.people.filter(p=>!p.car&&!p.room);
+  const night=typeof dn==='object'?Math.min(1,Math.max(0.3,(dn.el+8)/14)):1,[np,nc]=TF_N[tf.q],left=tfLeft(),wantP=Math.min(left,Math.round(np*night)),wantC=Math.min(Math.max(0,left-wantP),Math.round(nc*night)),walkers=tf.people.filter(p=>!p.car&&!p.room);
   if(!tf.on){tfShow(true);while(walkers.length<wantP){const p=tfSpawnWalker(true);if(!p)break;walkers.push(p)}}
   tf.spawnT-=dt;if(tf.spawnT<=0){tf.spawnT=1.5+Math.random()*2;
     if(walkers.length<wantP)tfSpawnWalker(false);
     else if(walkers.length>wantP){const p=walkers.find(p=>p.inside||!tfSeen(p.x,p.z,1));if(p)tfDrop(p)}
     if(tf.drive.reduce((n,c)=>n+(c.st==='park'?0.5:1),0)<wantC&&Object.keys(tf.cars).length>=3&&Math.random()<0.5)tfSpawnCar()}
   for(const c of tf.drive.slice())tfCarStep(c,dt);
+  tfRunOver(dt);
   tfRoomsTick();if(!tf.parkedOn&&Object.keys(tf.cars).length===Object.keys(TF_CARS).length)tfParkedShow(true);
-  for(const p of tf.people.slice()){if(p.room){tfRoomStep(p,dt);continue}if(p.drv)continue;tfWalkStep(p,dt);p.y+=(baseHeight(p.x,p.z)+tfLift(p.x,p.z)-p.y)*Math.min(1,dt*8)}
-  if(mode==='walk'&&walker.visible){for(const c of tf.drive)wkPushRound(c,[-c.len*0.3,0,c.len*0.3],c.wid/2);for(const p of tf.people)if(!p.inside&&!p.drv)wkPushRound(p,[0],0.22)}
-  tfDraw(dt)}
-function tfShow(on){tf.on=on;for(const k in tf.M||{})tf.M[k].m.visible=on;for(const c of tf.drive)c.g.visible=on;tfParkedShow(on);
+  for(const p of tf.people.slice()){if(p.dead){p.dead+=dt;if(p.fly)tfFly(p,dt);if(p.dead>TU.gunBody&&(!tfSeen(p.x,p.z,1)||p.dead>TU.gunBody*3))tfDrop(p);continue}if(p.room){tfRoomStep(p,dt);continue}if(p.drv)continue;tfWalkStep(p,dt);p.y+=(baseHeight(p.x,p.z)+tfLift(p.x,p.z)-p.y)*Math.min(1,dt*8)}
+  if(mode==='walk'&&walker.visible){for(const c of tf.drive)wkPushRound(c,[-c.len*0.3,0,c.len*0.3],c.wid/2);for(const p of tf.people)if(!p.inside&&!p.drv&&!p.dead)wkPushRound(p,[0],0.22)}
+  tfDraw(dt);tfChip(dt)}
+function tfShow(on){tf.on=on;$('#tfChip').hidden=!on||PHONE;for(const k in tf.M||{})tf.M[k].m.visible=on;for(const c of tf.drive)c.g.visible=on;tfParkedShow(on);
   if(!on){for(const k in tf.M||{}){const c=tf.M[k].fg;if(c&&c.object)c.object.visible=false}for(const c of tf.drive.slice())tfCarDrop(c);for(const p of tf.people.slice())tfDrop(p)}}
 function tfDraw(dt){const M=tf.M,o3=tf.o,cx=camera.position.x,cz=camera.position.z,fo=tf.F&&tf.F.st===2&&!!gfxCur.forge;for(const k in M)M[k].n=M[k].fn=0;
   for(const p of tf.people){if(p.inside)continue;const B=M[p.body];if(!B||B.n>=B.cap)continue;
     if((p.x-cx)**2+(p.z-cz)**2>(p.room?TF_RFAR*TF_RFAR:p.drv?TF_CAR_HI*TF_CAR_HI:220*220)||!tfSeen(p.x,p.z,1.3))continue;
-    o3.position.set(p.x,p.y+(p.sit?-0.42*p.sc:Math.abs(Math.cos(p.ph))*0.025*p.amp*p.sc),p.z);o3.rotation.set(0,p.yaw,0);o3.scale.setScalar(p.sc);o3.updateMatrix();
+    o3.position.set(p.x,p.y+(p.sit?-0.42*p.sc:Math.abs(Math.cos(p.ph))*0.025*p.amp*p.sc),p.z);o3.rotation.set(-tfFall(p),p.yaw,0,'YXZ');if(p.dead)o3.position.y+=tfFall(p)*0.08;o3.scale.setScalar(p.sc);o3.updateMatrix();
     if(fo){if(!B.fg)tfForgeCrowd(B,p.body);if(B.fg!==1){tfFgPose(p,B.fg,B.fn++,dt);continue}}
-    if(!B.texing)tfTex(B);const i=B.n++,w=B.walk.array;B.m.setMatrixAt(i,o3.matrix);w[4*i]=p.ph;w[4*i+1]=p.sit?-1:p.amp;w[4*i+2]=0;w[4*i+3]=p.g}
+    if(!B.texing)tfTex(B);const i=B.n++,w=B.walk.array;B.m.setMatrixAt(i,o3.matrix);w[4*i]=p.ph;w[4*i+1]=p.dead?0:p.sit?-1:p.amp;w[4*i+2]=0;w[4*i+3]=p.g}
   for(const k in M){const B=M[k];B.m.count=B.n;B.m.visible=tf.on&&B.n>0;B.m.instanceMatrix.needsUpdate=true;B.walk.needsUpdate=true;
     const c=B.fg;if(c&&c.object){c.object.count=B.fn;c.object.visible=fo&&tf.on&&B.fn>0}}
   for(const c of [...tf.drive,...tf.parked]){const d2=(c.x-cx)**2+(c.z-cz)**2;c.g.visible=d2<400*400;const hi=d2<TF_CAR_HI*TF_CAR_HI;c.g.children[0].visible=hi;c.g.children[1].visible=!hi}}
+// ---------- run over ----------
+// whatever machine he is driving: going faster than TU.runKill it knocks anyone it touches flying (counted in tf.runs),
+// slower than that they jump out of its way; the people round about run off either way
+const tfRun={x:0,z:0,k:null};
+function tfRunOver(dt){const k=mode==='walk'?null:rideOf(mode),R=k&&WK_RIDES[k];if(!R){tfRun.k=null;return}
+  const o=R.o,dx=o.x-tfRun.x,dz=o.z-tfRun.z,same=tfRun.k===k;Object.assign(tfRun,{x:o.x,z:o.z,k});
+  const d=Math.hypot(dx,dz);if(!same||d>5||dt<=0)return;const v=d/dt,sy=Math.sin(o.yaw),cy=Math.cos(o.yaw);
+  for(const p of tf.people){if(p.dead||p.inside||p.drv||p.room)continue;
+    let hit=false;for(const lz of R.c)if(Math.hypot(p.x-o.x-sy*lz,p.z-o.z-cy*lz)<R.r+0.25){hit=true;break}
+    if(!hit)continue;
+    if(v<TU.runKill/2.237){if(typeof gunRun==='function')gunRun(p,4);continue}
+    // thrown along the way it was going and a little off to the side they were on, higher the faster it was
+    const ux=dx/d,uz=dz/d,sd=Math.sign((p.x-o.x)*uz-(p.z-o.z)*ux)||1,f=Math.min(v,25);
+    Object.assign(p,{dead:1e-3,sit:0,wait:0,spd:0,amp:0,flee:0,yaw:Math.atan2(o.x-p.x,o.z-p.z),
+      fly:{vx:ux*f*0.9+uz*sd*f*0.25,vz:uz*f*0.9-ux*sd*f*0.25,vy:Math.min(7,1.2+f*0.3)}});if(p.vt0){p.vt=p.vt0;p.vt0=0}
+    dustPuff(p.x,p.y+0.4,p.z,4,[-0.55,-1.05,-1]);tf.runs=(tf.runs||0)+1;if(typeof gunScare==='function')gunScare(p.x,p.z,p)}}
+// a body in the air: falls under gravity, then slides to a stop on the ground (walls stop it)
+function tfFly(p,dt){const F=p.fly,g=baseHeight(p.x,p.z)+tfLift(p.x,p.z),nx=p.x+F.vx*dt,nz=p.z+F.vz*dt;
+  if(SOLIDS.some(s=>!s.foot&&Math.abs(nx-s.x)<s.hx+0.2&&Math.abs(nz-s.z)<s.hz+0.2)){F.vx*=-0.25;F.vz*=-0.25}else{p.x=nx;p.z=nz}
+  F.vy-=9.8*dt;p.y+=F.vy*dt;
+  if(p.y<=g){p.y=g;F.vy=Math.abs(F.vy)>2?-F.vy*0.3:0;const s=Math.hypot(F.vx,F.vz),k=s>0?Math.max(0,s-7*dt)/s:0;F.vx*=k;F.vz*=k;
+    if(!F.vy&&s<0.05)p.fly=null}}
+// the town's people: TU.townPop of them each time the game starts, less everyone he has killed since (they do not come
+// back, so the crowd about town thins out as it falls)
+function tfLeft(){return Math.max(0,Math.round(TU.townPop)-(typeof gun==='object'?gun.downs:0)-(tf.runs||0))}
+// the count in the corner (desktop, in town): how many townsfolk are left, and how many he has shot and run down
+function tfChip(dt){if(PHONE)return;tf.chipT=(tf.chipT||0)-dt;if(tf.chipT>0)return;tf.chipT=0.25;
+  const shot=typeof gun==='object'?gun.downs:0,run=tf.runs||0;
+  $('#tfChipVal').textContent=tfLeft();$('#tfChipShot').textContent=shot;$('#tfChipRun').textContent=run;$('#tfChipDead').textContent=shot+run}

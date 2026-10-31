@@ -36,6 +36,8 @@ const KEY_ACTIONS=[
   {id:'sprint',g:'On foot',n:'Sprint',d:'Hold to run flat out, about 12 mph',k:['ShiftLeft','ShiftRight'],s:'walk'},
   {id:'plant',g:'On foot',n:'Plant a tree',d:'A sapling of the chosen kind in front of you (next to one of yours: dig it up). Slide ☰ Time, Date ahead to see it grow',k:['Digit7'],s:'walk'},
   {id:'trim',g:'On foot',n:'String trimmer',d:'Take out or put away the string trimmer: it cuts the grass and weeds it swings over (a fresh spool each time you put it away)',k:['Digit9'],s:'walk'},
+  {id:'gun',g:'On foot',n:'Pistol',d:'Take out or put away the pistol; while it is out, a click on the view fires it',k:['KeyG'],s:'walk'},
+  {id:'gunShoot',g:'On foot',n:'Fire the pistol',d:'Shoots the way you face (in first person, at the crosshair), like a click on the view while the pistol is out',k:[],s:'walk'},
   {id:'trimBump',g:'On foot',n:'Bump the trimmer line',d:'Taps the head on the ground to feed more line off the spool when it wears short',k:['Digit0'],s:'walk'},
   {id:'plantKind',g:'On foot',n:'Tree to plant',d:'Steps through spruce, red pine, oak, sugar maple and birch',k:['Digit8'],s:'walk'},
   {id:'carry',g:'On foot',n:'Carry: load and unload',d:'At the store, take what is stocked there (or put it back); at a pickup\'s tailgate, load what you carry or take out the top thing; anywhere else set it down, empty a bag of mulch on Corley\'s island, or pick a thing up',k:['KeyT'],s:'walk'},

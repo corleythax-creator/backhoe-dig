@@ -4,6 +4,17 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Friday, October 30, 2026
 
+- **v284** (9:21 PM) The town starts each game with a set number of townsfolk (townPop, 150); each one killed is gone until the next start and the crowd thins out
+- **v283** (9:14 PM) The town's lawns look real: photo-scanned deep green grass with blades up close, thicker along the paths, clover with white flowers, weeds and fallen autumn leaves; in the rain the town's lawns and ground get wet and dark.
+- **v282** (9:11 PM) Streets laid in the map editor can be brick, cobblestone, fan cobbles or old brick (Surface on the street's card): photo-scanned paving whose bricks and cobbles stand up out of their joints and cast little shadows in the sun with Material relief on.
+- **v281** (9:08 PM) The pistol is now Poly Haven's photo-scanned service pistol, gripped in the worker's own hand; in first person you see his real arm holding it
+- **v280** (9:01 PM) Desktop in town: a Townsfolk counter bottom right (alive, dead, shot and run over); driving a machine into someone above 6 mph (runKill) knocks them flying
+- **v279** (8:58 PM) Broom concrete, plywood, steel road plate, concrete block and shingles from Poly Haven scans; lawn sod, bar grating and landscape fabric from ambientCG, all CC0 with relief and sheen
+- **v278** (8:38 PM) Equip the pistol (G or the Pistol button), click to fire while it is out, and see it in your hand in first person
+- **v277** (8:26 PM) Town paving and roads gather puddles in the rain that spread the longer it rains and drain after, mirror the sky, ring with raindrops (Puddle water: Fine) and stay out from under roofs
+- **v276** (8:25 PM) 20 Paint library materials (gravel, sand, soils, rock, concrete, asphalt, pavers, cobble, brick, flagstone, planks, diamond plate, corrugated) swapped for CC0 ambientCG photo scans with their own relief and sheen maps; tools/cc0.py
+- **v275** (8:19 PM) A pistol in the worker's hand on foot: Fire (G, the Fire button or a click) shoots the townsfolk, who drop or run
+- **v274** (7:47 PM) Auto weather rains far less: showers every 15 to 35 minutes instead of 5 to 12, a bit shorter, and the first one waits 15 minutes
 - **v273** (7:43 PM) You can walk onto the foothills and Overlook Road now (on foot you were stopped at the back of town), and the start map shows them, with Harbor Square and the Foothills named.
 - **v272** (7:33 PM) The start map: tap once to zoom in twice as close round that spot, tap again to start there on foot; Whole map backs out.
 - **v271** (7:17 PM) Harbor Square, the town's new centre on the waterfront at the foot of Main Street: a seawall promenade with steps down to the beach, café tables and a flagpole, and a town green with a fountain, a bandstand with a band under festoon lights, market stalls, shade trees and the brick Town Hall, whose clock keeps the game's time. Behind the town the ground climbs into wooded foothills: Overlook Road switchbacks up and the Lookout Trail climbs the face to the Lakeside Overlook, 160 ft above town, looking back over the town and the islands. The map has no more straight edges: the town's shore runs on into the mountains, and the field and woods end in beaches.

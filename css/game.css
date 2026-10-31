@@ -127,9 +127,13 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 .exswitch[hidden]{display:none}
 .exswitch button{height:40px;min-width:76px;padding:0 14px;font-size:17px;border:0;border-radius:6px;background:transparent;color:var(--muted)}
 .exswitch button[aria-pressed="true"]{background:var(--machine);color:#1c1309}
-#jumpBtn,#sprintBtn,#plantBtn,#trimBtn,#bumpBtn,#bedBtn{height:46px;min-width:78px;padding:0 14px;font-size:17px;border-radius:8px;box-shadow:var(--lift)}
+#jumpBtn,#sprintBtn,#plantBtn,#trimBtn,#bumpBtn,#bedBtn,#fireBtn,#gunBtn{height:46px;min-width:78px;padding:0 14px;font-size:17px;border-radius:8px;box-shadow:var(--lift)}
 #jumpBtn{background:var(--machine);color:#1c1309;border:0}
-#sprintBtn[aria-pressed="true"],#trimBtn[aria-pressed="true"]{background:rgba(255,138,31,.2);color:var(--machine);border-color:var(--machine)}
+#sprintBtn[aria-pressed="true"],#trimBtn[aria-pressed="true"],#gunBtn[aria-pressed="true"]{background:rgba(255,138,31,.2);color:var(--machine);border-color:var(--machine)}
+#fireBtn{background:rgba(190,40,30,.22);border-color:#d8483a;color:#ffd9d4}
+#gunCross{position:fixed;left:50%;top:50%;width:26px;height:26px;margin:-13px 0 0 -13px;pointer-events:none;z-index:5;border-radius:50%;border:2px solid rgba(255,255,255,.85);box-shadow:0 0 0 1px rgba(0,0,0,.45),inset 0 0 0 1px rgba(0,0,0,.45)}
+#gunCross::after{content:"";position:absolute;left:50%;top:50%;width:4px;height:4px;margin:-2px 0 0 -2px;border-radius:50%;background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.5)}
+#gunCross[hidden]{display:none}
 #jumpBtn:active{transform:translateY(1px)}
 /* bottom layer: each stick's caption under it, the frame rate between them; no bar, the words carry a shadow */
 .bbar{grid-area:3/1/4/4;position:relative;z-index:2;pointer-events:none;display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;min-height:40px;box-sizing:border-box;
@@ -159,6 +163,13 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 #lawnChip[hidden]{display:none}
 /* the floating percentage gauges (bucket, lawn patch) are switched off for now (owner, Oct 30); delete this line to bring them back */
 #bucketChip,#lawnChip{display:none!important}
+#tfChip{position:absolute;right:calc(var(--pr) + 12px);bottom:calc(env(safe-area-inset-bottom,0px) + 84px);z-index:3;zoom:var(--ms);min-width:190px;box-sizing:border-box;
+  display:grid;grid-template-columns:1fr auto;align-items:baseline;gap:6px 14px;padding:10px 16px 11px;border-radius:14px;background:var(--glass);border:1px solid var(--hud-line);box-shadow:var(--lift);pointer-events:none}
+#tfChip[hidden]{display:none}
+#tfChipName,#tfChip .lbl{font:600 14px/1 var(--f-display);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+#tfChipVal,#tfChipDead{font:700 26px/1 var(--f-display);font-variant-numeric:tabular-nums}
+#tfChipDead{color:var(--danger)}
+#tfChipSub{grid-column:1/-1;font:600 14px/1.2 var(--f-display);color:var(--muted);white-space:nowrap}#tfChipSub b{color:var(--ink);font-variant-numeric:tabular-nums}
 #lawnChipName{font:600 13px/1 var(--f-display);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
 #lawnChipVal{font:700 22px/1 var(--f-display);font-variant-numeric:tabular-nums}
 #lawnChip .bar{grid-column:1/-1;display:block}#lawnChipBar{background:#9bd46a}
@@ -536,7 +547,7 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
    Sprint, Jump) sit lower and smaller over the key captions */
 .nostk .stick{display:none}
 .nostk .sticks{padding-bottom:4px}
-.nostk #seatBtn,.nostk #jumpBtn,.nostk #sprintBtn,.nostk #plantBtn,.nostk #trimBtn,.nostk #bumpBtn,.nostk #bedBtn{height:36px;min-width:0;font-size:15px;box-shadow:none}
+.nostk #seatBtn,.nostk #jumpBtn,.nostk #sprintBtn,.nostk #plantBtn,.nostk #trimBtn,.nostk #bumpBtn,.nostk #bedBtn,.nostk #fireBtn,.nostk #gunBtn{height:36px;min-width:0;font-size:15px;box-shadow:none}
 .nostk .exswitch button{height:32px;min-width:60px;font-size:15px}
 .nostk .tbar button{height:38px}
 .nostk #menuBtn{width:38px}

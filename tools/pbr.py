@@ -50,9 +50,10 @@ def make(mid):
     print(f"{mid:16s} relief {k:<4} roughness {lo:.2f}-{hi:.2f} (mean {r.mean():.2f})")
 
 
-# the natural ground's relief (High graphics): textures/ground/dirt_n.jpg and grass_n.jpg at 1024 px, from the High
-# ground pack's colour textures (no sheen map; the ground has its own wet look). Run: python3 tools/pbr.py ground
-GROUND = {'dirt': (1.2, 4, .80, .95), 'grass': (1.0, 3, .80, .95)}
+# the natural ground's relief (High graphics): textures/ground/dirt_n.jpg at 1024 px, from the High ground pack's colour
+# texture (no sheen map; the ground has its own wet look). Run: python3 tools/pbr.py ground. grass_n.jpg is the lawn
+# scan's own normal map (ambientCG Grass001 NormalGL, CREDITS.md), not made here
+GROUND = {'dirt': (1.2, 4, .80, .95)}
 
 
 def make_ground():
@@ -69,5 +70,6 @@ if __name__ == '__main__':
     if sys.argv[1:] == ['ground']:
         make_ground()
     else:
-        for mid in (sys.argv[1:] or PBR):
+        from cc0 import SCANS  # photo scans bring their own maps (tools/cc0.py): left alone unless named
+        for mid in (sys.argv[1:] or [m for m in PBR if m not in SCANS]):
             make(mid)

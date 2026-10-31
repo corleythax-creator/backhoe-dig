@@ -57,7 +57,7 @@ Drawn by the game: wet ground darkens and shines in the ground shader as it soak
 
 **G03 Grass, summer** -> `ground/grass.jpg`. Needs: K01, K10
 > [STYLE][TEXTURE] Mown lawn grass seen from above: tight short blades in many directions, mid-green with yellow-green and a few dry straw blades, tiny clover leaves scattered. Blade-level detail.
-In game: `textures/ground/*/grass.jpg`, and the Lawn sod material `textures/grass2.jpg`
+In game: `textures/ground/*/grass.jpg`, and the Lawn sod material `textures/grass2.jpg` (ambientCG Grass006 since v279)
 
 **G04 Grass, long and weedy** -> `ground/grass_long.jpg`. Needs: K08, S10
 > [STYLE][TEXTURE] Unmown field grass seen from above: long blades lying in swirls, golden-green with seed heads, dandelion leaves and a few white clover flowers.
@@ -69,15 +69,15 @@ Not in the game yet: still to make.
 
 **G06 Rock layer** -> `ground/rock.jpg`. Needs: D03, S03, X03
 > [STYLE][TEXTURE] Grey-tan sandstone bedrock from above: flat fractured slabs with crisp joint lines, layered strata, lichen specks, little chips and grit in the cracks.
-In game: `textures/granite.jpg` (Bedrock)
+In game: `textures/granite.jpg` (Bedrock), photo-scanned (ambientCG Rock023) since v276
 
 **G07 Gravel road** -> `ground/gravel_road.jpg`. Needs: rim road, M06
 > [STYLE][TEXTURE] Compacted crushed-limestone gravel road: grey-beige angular stones of mixed size, dust in the gaps, two faint darker tyre-track lines running vertically through the middle third only if they still tile.
-In game: `textures/gravel.jpg` (Crushed gravel)
+In game: `textures/gravel.jpg` (Crushed gravel), photo-scanned (ambientCG Gravel041) since v276
 
 **G08 Sand, beach** -> `ground/sand_beach.jpg`. Needs: S16, H19
 > [STYLE][TEXTURE] Pale warm beach sand from above: fine grains, soft ripple lines, a few shell fragments, tiny dark pebbles, a little driftwood splinter.
-In game: `textures/sand.jpg`
+In game: `textures/sand.jpg`, photo-scanned (ambientCG Ground080) since v276
 
 **G09 Wet sand at the waterline** -> `ground/sand_wet.jpg`. Needs: S16, W10
 > [STYLE][TEXTURE] Wet dark-tan sand as the tide leaves it: smooth glossy surface, fine ripples, tiny air-bubble holes, a few small pebbles.
@@ -115,15 +115,15 @@ In game: `textures/mach_rubber.jpg` (the tracks and tyres)
 
 **P03 Diamond plate** -> `materials/diamond_pbr.jpg`
 > [STYLE][TEXTURE] Raised diamond-pattern steel tread plate, bright scuffed steel with dark dirt in the grooves.
-In game: `textures/diamond.jpg`
+In game: `textures/diamond.jpg`, photo-scanned (ambientCG DiamondPlate009) since v276
 
 **P04 Rusty corrugated metal** -> `materials/corrugated_rust.jpg`. Needs: S01, H10
 > [STYLE][TEXTURE] Old corrugated roofing sheet, vertical ribs, faded blue-grey paint peeling to orange rust, bolt heads.
-In game: `textures/corrugated.jpg`
+In game: `textures/corrugated.jpg`, photo-scanned (ambientCG CorrugatedSteel009) since v276
 
 **P05 Weathered wood planks, porch** -> `materials/planks_porch.jpg`. Needs: H01, S05, S21
 > [STYLE][TEXTURE] Grey-brown weathered horizontal deck boards with tight gaps, nail heads, knots and sun-bleached grain.
-In game: `textures/planks.jpg` (Deck planks)
+In game: `textures/planks.jpg` (Deck planks), photo-scanned (ambientCG Planks029S) since v276
 
 **P06 Painted white clapboard** -> `materials/clapboard_white.jpg`. Needs: I02 farmhouse
 > [STYLE][TEXTURE] White-painted horizontal lap siding, slight dirt streaks, clean shadow-free lines.
@@ -132,7 +132,7 @@ Upgrade: passable. Since v254 the family house wears a photo-scanned cream clapb
 
 **P07 Cedar shingle roof** -> `materials/shingle_cedar.jpg`. Needs: H01, S22
 > [STYLE][TEXTURE] Weathered cedar shake roof shingles in staggered rows, silver-brown with moss in a few lower edges.
-Close match: `textures/shingles.jpg` is roof shingles; no cedar shakes yet
+Close match: `textures/shingles.jpg` is roof shingles (Poly Haven grey_roof_01 since v279); no cedar shakes yet
 Upgrade: passable. The covered bridge has cedar shakes drawn by the game; since v255 the farmhouse has photo-scanned grey shingles (`textures/roof_grey.jpg`, Poly Haven).
 
 **P08 Red barn board** -> `materials/barn_red.jpg`. Needs: H10, I10
@@ -142,11 +142,11 @@ Upgrade: passable. The covered bridge has barn-red boards drawn by the game; a p
 
 **P09 Concrete, poured and stained** -> `materials/concrete_pbr.jpg`. Needs: J07, J12
 > [STYLE][TEXTURE] Poured concrete slab, pale grey, small pinholes, trowel swirls, hairline cracks and faint stains.
-In game: `textures/concrete.jpg`, `textures/concrete_old.jpg`
+In game: `textures/concrete.jpg`, `textures/concrete_old.jpg`, photo-scanned (ambientCG Concrete034, Concrete036) since v276
 
 **P10 Asphalt, bridge road** -> `materials/asphalt_pbr.jpg`. Needs: B01
 > [STYLE][TEXTURE] Worn dark asphalt with aggregate showing, sealed crack lines and fine grit; no lane markings.
-In game: `textures/asphalt.jpg`
+In game: `textures/asphalt.jpg`, photo-scanned (ambientCG Asphalt033) since v276
 
 **P11 Bridge truss steel** -> `materials/truss_steel.jpg`. Needs: B01, B10
 > [STYLE][TEXTURE] Dull grey-green painted structural steel with bolt-head rows and light rust streaks.
