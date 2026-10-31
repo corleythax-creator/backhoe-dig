@@ -47,7 +47,11 @@ addEventListener('resize',startLay);startLay();
 // cover (warmFrac, main.js; up to 100%). It is done when all three are, or after LOADP.cap seconds whatever is left
 const LOADP={js:0,mgr:[],warm:false,done:false,shown:0,cap:60};
 document.addEventListener('load',e=>{if(e.target.tagName==='SCRIPT'&&e.target.defer)LOADP.js++},true);
-document.addEventListener('error',e=>{if(e.target.tagName==='SCRIPT'&&e.target.defer)LOADP.js++},true);
+// a script that didn't arrive (a phone's connection dropping a file) leaves the game half built and failing later
+// ("Can't find variable"), so the page loads again by itself, twice at most a session, before it gives up and carries on
+document.addEventListener('error',e=>{if(e.target.tagName!=='SCRIPT'||!e.target.defer)return;let n=0;try{n=+sessionStorage.getItem('bhd_jsRetry')||0}catch(x){}
+  if(n<2){try{sessionStorage.setItem('bhd_jsRetry',n+1)}catch(x){}LOADP.err='A file did not download, loading again…';setTimeout(()=>location.reload(),300);return}
+  LOADP.js++;if(!LOADP.err)LOADP.err='A game file did not download ('+(e.target.getAttribute('src')||'')+'): pull down to load again'},true);
 // a page error shows on the cover (so it can be reported) and lets you in a few seconds later, rather than hanging
 addEventListener('error',e=>{if(e.message&&!/ResizeObserver/.test(e.message)&&!LOADP.err){LOADP.err=e.message;LOADP.errT=performance.now()}});
 function loadTick(){try{loadStep()}catch(e){if(!LOADP.err){LOADP.err=String(e&&e.message||e);LOADP.errT=performance.now()}loadStep(true)}}
@@ -65,5 +69,5 @@ function loadStep(bad){if(LOADP.done)return;if(bad){loadEnd();return}const jsN=d
   const sec=now>8000?` · ${Math.round(now/1000)} s`:'';
   document.getElementById('startLoadWhat').textContent=LOADP.err?'Hit a problem: '+LOADP.err.slice(0,120):(!game?'Loading the game':al<at?`Loading pictures and models: ${al} of ${at}`:'Getting the island ready')+sec;
   if(done)loadEnd()}
-function loadEnd(){const L=document.getElementById('startLoad');LOADP.done=true;L.classList.add('gone');setTimeout(()=>L.hidden=true,450);document.getElementById('startResume').disabled=false;clearInterval(LOADP.iv)}
+function loadEnd(){const L=document.getElementById('startLoad');LOADP.done=true;try{sessionStorage.removeItem('bhd_jsRetry')}catch(x){}L.classList.add('gone');setTimeout(()=>L.hidden=true,450);document.getElementById('startResume').disabled=false;clearInterval(LOADP.iv)}
 LOADP.iv=setInterval(loadTick,150);
