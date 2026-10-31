@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Friday, October 30, 2026
 
+- **v287** (9:27 PM) Townsfolk react to where they are shot: head shots drop them, chest shots stagger them over, gut shots double them up, leg shots put them down crawling, arm shots spin them and they run
 - **v286** (9:27 PM) On Ultra the puddles on the paving reflect the trees, lamps, people and buildings round them; rain splashes are smaller and fainter
 - **v285** (9:27 PM) Zoom in on the start map and it sharpens: paved streets with their lines and crosswalks, sidewalks and walkways, roofs with shadows, leafy trees and bridge railings.
 - **v284** (9:21 PM) The town starts each game with a set number of townsfolk (townPop, 150); each one killed is gone until the next start and the crowd thins out
