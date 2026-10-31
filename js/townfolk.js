@@ -105,10 +105,18 @@ function tfPath(poses,park){const X=[],Z=[],R=[],stop=[];
   return {X,Z,R,S,H,F,V,stop,n,len:S[n-1],park}}
 // ---------- loading: the people and their textures, then the cars, once the town is near ----------
 // the limbs swing about each character's own joint heights (uJ: knee, hip, elbow, shoulder, from tools/peds)
-const TF_GLSL=`attribute vec3 aSk;attribute vec4 aWalk;uniform vec4 uJ;
+const TF_GLSL=`#define TF_LSX 1.
+attribute vec3 aSk;attribute vec4 aWalk;uniform vec4 uJ;
 mat3 pdRot(float a){float c=cos(a),s=sin(a);return mat3(1.,0.,0.,0.,c,s,0.,-s,c);}
 vec3 pdRx(vec3 q,float a,float y){q.y-=y;q=pdRot(a)*q;q.y+=y;return q;}
+mat3 pdRotZ(float a){float c=cos(a),s=sin(a);return mat3(c,s,0.,-s,c,0.,0.,0.,1.);}
+vec3 pdRz(vec3 q,float a,float y,float x){q.y-=y;q.x-=x;q=pdRotZ(a)*q;q.y+=y;q.x+=x;return q;}
 void pdPart(float pP,inout vec3 p,inout vec3 n){pP=floor(pP+0.5);if(pP<0.5)return;float leg=pP<2.5||(pP>4.5&&pP<6.5)?1.:0.,L=mod(pP,2.);
+  if(abs(aWalk.z)>0.001){float lp=abs(aWalk.z),fc=aWalk.z<0.?1.:0.,sx=L>0.5?TF_LSX:-TF_LSX,one=sx>0.?1.:0.;
+    if(pP>4.5){if(leg>0.5){float k=mix(0.12,mix(1.0,0.35,fc),one)*lp;p=pdRx(p,k,uJ.x);n=pdRot(k)*n;}else{float e=-mix(0.7,mix(0.45,1.1,fc),one)*lp;p=pdRx(p,e,uJ.z);n=pdRot(e)*n;}}
+    if(leg>0.5){float h=-0.55*one*(1.-fc)*lp,ab=sx*mix(0.28,0.14,one)*lp;p=pdRx(p,h,uJ.y);n=pdRot(h)*n;p=pdRz(p,ab,uJ.y,sx*0.1);n=pdRotZ(ab)*n;}
+    else{float fl=-0.3*(1.-fc)*lp,ab=sx*mix(mix(1.1,0.3,fc),mix(1.4,2.2,fc),one)*lp;p=pdRx(p,fl,uJ.w);n=pdRot(fl)*n;p=pdRz(p,ab,uJ.w,sx*0.17);n=pdRotZ(ab)*n;}
+    return;}
   if(aWalk.y<-0.5){if(pP>4.5){float k=leg>0.5?1.5:-1.1;p=pdRx(p,k,leg>0.5?uJ.x:uJ.z);n=pdRot(k)*n;}float s=leg>0.5?-1.5:-0.22;p=pdRx(p,s,leg>0.5?uJ.y:uJ.w);n=pdRot(s)*n;return;}
   float am=abs(aWalk.y),sg=leg>0.5?(L>0.5?1.:-1.):(L>0.5?-1.:1.),sw=sin(aWalk.x)*am*sg,cw=cos(aWalk.x)*sg;
   if(pP>4.5){if(leg>0.5){float k=am*1.5*max(0.,-cw)+am*0.25;p=pdRx(p,k,uJ.x);n=pdRot(k)*n;}
@@ -148,29 +156,30 @@ function tfTex(B){if(B.texing)return;B.texing=1;new THREE.TextureLoader().load(B
 // in use. The runtime loads with the townsfolk (near town only); until it and a character's crowd are ready, or if
 // either fails, that character draws on its old mesh. The crowds' clocks are never run (no forge.update): each person
 // keeps their own clip time (p.ct), handed over as the clip's offset, since tfDraw packs whoever is in view every frame
-const TF_FG_CLIPS=['walk','idle','talk','sit','drive','run'];
+const TF_FG_CLIPS=['walk','idle','talk','sit','drive','run','die_b','die_f'];
 function tfForge(){const F=tf.F||(tf.F={st:0});if(F.st||!gfxCur.forge)return;F.st=1;
   const go=()=>HumanForge.load(THREE,'models/people/').then(f=>{F.f=f;F.ref=f.library.anims.ref_pelvis||0.97;F.st=2}).catch(e=>{console.warn('townsfolk forge:',e);F.st=-1});
   if(window.HumanForge)return go();const s=document.createElement('script');s.src='models/people/human-forge.js';s.onload=go;s.onerror=()=>{F.st=-1};document.head.appendChild(s)}
 // a character's crowd, the first time someone in view wears that look; the walk's ground speed scales with the
 // person's size (the clip's own speed is a 6 ft person's)
 function tfForgeCrowd(B,id){B.fg=1;const F=tf.F;
-  F.f.crowd('island_'+id,{max:B.cap,clips:TF_FG_CLIPS,lod:gfxCur.forge,castShadow:true,receiveShadow:true}).then(c=>{const m=c.object,M=m.material;
-    M.roughness=0.86;M.envMap=skyEnv;M.envMapIntensity=0.5;m.castShadow=!!gfxCur.pbr;m.visible=false;c.stride=F.f.clips.walk.speed*c.type.hip/F.ref;c.runS=(F.f.clips.run||F.f.clips.walk).speed*c.type.hip/F.ref;scene.add(m);B.fg=c})
+  F.f.preload(['island_'+id]).then(([t])=>{tfDieClips(t);return F.f.crowd('island_'+id,{max:B.cap,clips:TF_FG_CLIPS,lod:gfxCur.forge,castShadow:true,receiveShadow:true}).then(c=>{const m=c.object,M=m.material;
+    M.roughness=0.86;M.envMap=skyEnv;M.envMapIntensity=0.5;m.castShadow=!!gfxCur.pbr;m.visible=false;c.stride=F.f.clips.walk.speed*c.type.hip/F.ref;c.runS=(F.f.clips.run||F.f.clips.walk).speed*c.type.hip/F.ref;scene.add(m);B.fg=c})})
     .catch(e=>console.warn('townsfolk forge:',id,e))}
 // person p as instance i of crowd c: walking (pace = their speed), sitting (the clip's origin is on the floor under the
 // seat's middle, its seat 18 in up like the rooms' chairs and benches), driving (its seat 14 in up: lifted to where the
 // old seated pose's seat was, 18 in over p.y), or standing easy or talking (staff and customers)
-function tfFgClip(p,c,dt,hp){let k=hp&&(p.dead||p.hurt)?(hp.kneel?'sit':'idle'):p.drv?'drive':p.sit?'sit':p.spd>(p.fk==='walk'?0.15:0.3)?'walk':0;
+function tfFgClip(p,c,dt,hp,die){let k=die?die.k:hp&&(p.dead||p.hurt)?(hp.kneel?'sit':'idle'):p.drv?'drive':p.sit?'sit':p.spd>(p.fk==='walk'?0.15:0.3)?'walk':0;
   if(!k){if(p.fk!=='idle'&&p.fk!=='talk'||p.t>(p.tp??0)+1)p.tk=Math.random()<(p.room?p.spot.staff?0.5:0.35:0.06);p.tp=p.t;k=p.tk?'talk':'idle'}
   if(k==='walk'&&p.flee>0&&p.spd>2.2&&c.clips.run)k='run';
   const A=c.clips[k];if(k!==p.fk){p.fk=k;p.ct=k==='walk'||k==='run'?0.1:Math.random()*A.duration}
-  if(!(p.dead||p.hurt))p.ct=(p.ct+dt*(k==='walk'?p.spd/(c.stride*p.sc):k==='run'?p.spd/(c.runS*p.sc):1))%A.duration;return k}
+  if(die)p.ct=Math.min(A.duration-0.02,die.t);else if(!(p.dead||p.hurt))p.ct=(p.ct+dt*(k==='walk'?p.spd/(c.stride*p.sc):k==='run'?p.spd/(c.runS*p.sc):1))%A.duration;return k}
 const TF_PL={x:0,y:0,z:0,heading:0,tilt:0,roll:0,scale:1};
-function tfFgAt(p,hp){const o=TF_PL,f=p.sit&&!p.drv?0.05:0;o.scale=p.sc;
-  if(hp){o.x=p.x;o.y=p.y+hp.dy-(hp.kneel&&!p.sit?0.32*p.sc:0);o.z=p.z;o.heading=hp.yaw;o.tilt=hp.tilt;o.roll=hp.roll}
+function tfFgAt(p,hp,die){const o=TF_PL,f=p.sit&&!p.drv?0.05:0;o.scale=p.sc;
+  if(hp){o.x=p.x;o.y=p.y+hp.dy-(hp.kneel&&!p.sit&&!die?0.32*p.sc:0);o.z=p.z;o.heading=hp.yaw;o.tilt=hp.tilt;o.roll=hp.roll}
   else{o.x=p.x+Math.sin(p.yaw)*f;o.y=p.y+(p.drv?0.1:0);o.z=p.z+Math.cos(p.yaw)*f;o.heading=p.yaw;o.tilt=o.roll=0}return o}
-function tfFgPose(p,c,i,dt){const hp=p.dead||p.hurt||p.hit?tfHitPose(p):null,k=tfFgClip(p,c,dt,hp);c.place(i,tfFgAt(p,hp));c.anim(i,k,{offset:p.ct})}
+const tfDieFor=(p,c)=>p.dead&&!p.sit&&c.clips.die_b?tfDieOf(p):null;
+function tfFgPose(p,c,i,dt){const hp=p.dead||p.hurt||p.hit?tfHitPose(p):null,die=tfDieFor(p,c),k=tfFgClip(p,c,dt,hp,die);c.place(i,tfFgAt(p,hp,die));c.anim(i,k,{offset:p.ct})}
 // ---------- Ultra graphics close up (gfxCur.fgUltra, not phones): the few townsfolk nearest the camera, within
 // TU.tfUltraR, swap from their crowd copy to a hero on their ultra mesh (Human Forge's ultra tier, ~100k triangles,
 // fetched from R2 the first time). The hero takes the crowd copy's place, clip and clip time (p.ct) every frame, its
@@ -201,11 +210,11 @@ function tfUhPool(h){const U=tf.F.uh;U.free.push(h);while(U.free.length>TF_UH_PO
 function tfUhType(id){const U=tf.F.uh;U.types=U.types||{};return U.types[id]}
 // every hero back to the pool (graphics lowered, the town out of reach)
 function tfUhOff(){for(const p of tf.people)if(p.uh)tfUhFree(p);for(const p of tf.F.uh.gone||[])if(p.uh)tfUhFree(p);tf.F.uh.gone=[]}
-// person p on their hero: the crowd copy's clip, clip time and place
-function tfUhPose(p,c,dt){const h=p.uh,hp=p.dead||p.hurt||p.hit?tfHitPose(p):null,k=tfFgClip(p,c,dt,hp),o=tfFgAt(p,hp),g=h.object;
+// person p on their hero: the crowd copy's clip, clip time and place (false, and back on the crowd, for a clip it lacks)
+function tfUhPose(p,c,dt){const h=p.uh,hp=p.dead||p.hurt||p.hit?tfHitPose(p):null,die=tfDieFor(p,c),k=tfFgClip(p,c,dt,hp,die),o=tfFgAt(p,hp,die),g=h.object;
   _tfQ.setFromAxisAngle(_tfUp,o.heading);if(o.tilt||o.roll)_tfQ.multiply(_tfQ2.setFromEuler(_tfE.set(o.tilt,0,o.roll,'XYZ')));
   g.position.set(o.x,o.y,o.z);g.quaternion.copy(_tfQ);g.scale.setScalar(o.scale);
-  if(h.clip!==k)h.play(k,{fade:0});const a=h.actions[k];a.time=p.ct;h.mixer.update(0);h.lod('ultra');g.visible=tf.on}
+  const a=h.actions[k];if(!a){tfUhFree(p);return false}if(h.clip!==k)h.play(k,{fade:0});a.time=p.ct;h.mixer.update(0);h.lod('ultra');g.visible=tf.on;return true}
 // a car model (a node of models/cars.glb, standing on y = 0, nose to +z) on the game's materials; its paint is set per
 // car (tfCarPaint), its own:<name> materials keep the model's textures, and its wheels (wheel_* nodes, their origins at the hubs) turn about x. Each car holds the detailed
 // model and its light one (<kind>_lo), and shows the light one past TF_CAR_HI (tfDraw)
@@ -234,7 +243,7 @@ const tfFall=p=>p.dead?Math.min(1,(p.dead/0.7)**2)*Math.PI/2*0.97:0;
 // the heading, the lift off the ground and whether their knees are bent (the seated pose); otherwise as tfFall
 const TF_HP={tilt:0,roll:0,yaw:0,dy:0,kneel:0};
 function tfHitPose(p){const o=TF_HP,H=p.hit;o.tilt=o.roll=o.dy=0;o.kneel=0;o.yaw=p.yaw;
-  if(!H){if(p.dead){const f=tfFall(p);o.tilt=-f;o.dy=f*0.08}return o}
+  if(!H){if(p.dead){const f=tfFall(p);o.tilt=-f;o.dy=f*0.08;tfSettle(p,o,p.dead,0.7)}return o}
   const t=H.t,s=H.side,b=H.fwd,c=x=>Math.min(1,Math.max(0,x)),e=x=>x*x,m=x=>x*x*(3-2*x),Q=Math.PI/2*0.96;
   if(H.k==='head'){const a=c(t/0.18),f=e(c((t-0.12)/0.5));o.kneel=t<0.3?1:0;o.tilt=0.35*a+(Q-0.35)*f;o.roll=s*0.45*f;o.yaw+=s*0.35*f;o.dy=f*0.1}
   else if(H.k==='chest'){const a=m(c(t/0.42)),f=e(c((t-0.36)/0.55));o.tilt=b*(0.22*a+(Q-0.22)*f);o.yaw+=s*0.7*a;o.roll=-s*0.2*f;o.dy=f*0.08}
@@ -243,7 +252,52 @@ function tfHitPose(p){const o=TF_HP,H=p.hit;o.tilt=o.roll=o.dy=0;o.kneel=0;o.yaw
   else if(H.k==='slump'){const a=m(c(t/0.4));o.kneel=1;o.tilt=0.55*a;o.roll=s*0.35*a}
   else if(H.k==='arm'){const a=Math.sin(Math.PI*c(t/0.5));o.yaw+=s*0.9*a;o.tilt=-0.15*a;o.roll=s*0.15*a}
   if(H.jolt>0){o.tilt+=H.jolt*0.3*Math.sin(t*40)}
+  if(p.dead)tfSettle(p,o,H.t,TF_LAND[H.k]);
   return o}
+// falling dead: how long each fall takes to reach the ground. tfSettle: as they land they bounce a little, then lie
+// along the ground's slope (the head end up or down hill, worked out once as they land; a room's floor is flat)
+const TF_LAND={head:0.62,chest:0.91,gut:1.65,leg:0.7};
+function tfSettle(p,o,t,tl){if(!tl||t<tl)return;const u=t-tl,ax=Math.abs(o.tilt)>=Math.abs(o.roll)?'tilt':'roll',s=Math.sign(o[ax])||1;
+  o[ax]-=s*0.1*Math.exp(-u*6)*Math.sin(u*16);
+  if(p.slA===undefined){p.slA=0;p.slY=0;if(!p.room){const fx=Math.sin(o.yaw),fz=Math.cos(o.yaw),hx=ax==='tilt'?fx*s:-fz*s,hz=ax==='tilt'?fz*s:fx*s,L=1.6*p.sc,g=(x,z)=>surfAt(x,z)+tfLift(x,z),g0=g(p.x,p.z);
+    p.slA=clamp(Math.atan2(g(p.x+hx*L,p.z+hz*L)-g0,L),-0.5,0.5);p.slY=Math.max(0,g(p.x+hx*L*0.5,p.z+hz*L*0.5)-g0-Math.sin(p.slA)*L*0.5);p.slX=ax}}
+  o[p.slX||ax]-=s*p.slA*Math.min(1,u*4);o.dy+=p.slY}
+// the dead on the old meshes: how limp (0 to 1, as they go down), negative when they lie on their face
+function tfLimp(p){const H=p.hit,tl=H?TF_LAND[H.k]:0.7,t=H?H.t:p.dead,u=tl?Math.min(1,t/tl):1;return (tfDieOf(p).k==='die_f'?-1:1)*Math.max(0.001,u*u)}
+// which fall (Human Forge): onto the back (die_b) or the face (die_f), and how far into it (s, the clip reaching the
+// ground at 0.9 s as the body does)
+function tfDieOf(p){const H=p.hit,o=tfDieOf.o||(tfDieOf.o={k:'',t:0});if(!H){o.k='die_b';o.t=p.dead*0.9/0.7;return o}
+  o.k=H.k==='head'||H.k==='gut'||H.k==='chest'&&H.fwd>0?'die_f':'die_b';o.t=H.k==='leg'?p.dead:H.t*0.9/(TF_LAND[H.k]||0.9);return o}
+// two clips made here for each character and baked with its others: the body goes limp as it falls (knees buckle, arms
+// fly up and out, the head lolls) and settles sprawled, on its back (die_b: arms flung wide, a knee up, the head
+// turned) or on its face (die_f: an arm up by the head, the other along the side, the face turned to one side). Each
+// is a turn of the bones (a right-side bone's mirrored: + turns out, as on the left) from the idle clip's stance, about the body's own axes (x its left, y up, z ahead) taken in
+// the bone's parent's frame, so a turned upper arm carries its forearm
+const TF_DIE={die_b:[[0,{}],[0.22,{thigh:[-0.3,0,0],calf:[0.55,0,0],upperarm:[-0.5,0,0.5],lowerarm:[-0.4,0,0],neck_01:[0.25,0,0],spine_02:[0.15,0,0]}],
+    [0.55,{thigh:[-0.25,0,0],calf:[0.4,0,0],upperarm:[-0.9,0,1.0],lowerarm:[-0.3,0,0],neck_01:[-0.35,0,0],spine_02:[-0.1,0,0]}],
+    [0.9,{thigh_l:[-0.05,0,0.25],calf_l:[0.1,0,0],thigh_r:[-0.6,0,0.1],calf_r:[1.05,0,0],foot_l:[0,0.4,0],foot_r:[0,0.3,0],upperarm_l:[-0.2,0,1.5],upperarm_r:[-0.1,0,1.2],lowerarm_l:[-0.45,0,0],lowerarm_r:[-0.85,0,0],neck_01:[-0.25,0.2,0],head:[-0.1,0.45,0]}],
+    [1.05,{thigh_l:[-0.08,0,0.22],calf_l:[0.15,0,0],thigh_r:[-0.68,0,0.1],calf_r:[1.15,0,0],foot_l:[0,0.4,0],foot_r:[0,0.3,0],upperarm_l:[-0.35,0,1.3],upperarm_r:[-0.25,0,1.05],lowerarm_l:[-0.6,0,0],lowerarm_r:[-1.0,0,0],neck_01:[-0.15,0.2,0],head:[-0.05,0.45,0]}],
+    [1.35,{thigh_l:[-0.05,0,0.25],calf_l:[0.1,0,0],thigh_r:[-0.62,0,0.1],calf_r:[1.08,0,0],foot_l:[0,0.45,0],foot_r:[0,0.35,0],upperarm_l:[-0.25,0,1.42],upperarm_r:[-0.15,0,1.15],lowerarm_l:[-0.5,0,0],lowerarm_r:[-0.9,0,0],neck_01:[-0.22,0.2,0],head:[-0.1,0.5,0]}]],
+  die_f:[[0,{}],[0.2,{thigh:[-0.5,0,0],calf:[1.0,0,0],upperarm:[-0.3,0,0.15],lowerarm:[-0.3,0,0],neck_01:[0.5,0,0],spine_02:[0.2,0,0]}],
+    [0.55,{thigh:[-0.3,0,0],calf:[0.7,0,0],upperarm:[-0.9,0,0.4],lowerarm:[-0.4,0,0],neck_01:[0.2,0,0],spine_02:[0.1,0,0]}],
+    [0.9,{thigh_l:[0,0,0.3],calf_l:[0.35,0,0],thigh_r:[0,0,0.08],calf_r:[0.05,0,0],foot_l:[0.4,0.3,0],foot_r:[0.5,0.2,0],upperarm_l:[-0.2,0,2.2],lowerarm_l:[-1.1,0,0],upperarm_r:[0.3,0,0.25],lowerarm_r:[-0.15,0,0],neck_01:[-0.1,-0.5,0],head:[0,-0.6,0]}],
+    [1.05,{thigh_l:[-0.05,0,0.28],calf_l:[0.45,0,0],thigh_r:[-0.05,0,0.08],calf_r:[0.12,0,0],foot_l:[0.4,0.3,0],foot_r:[0.5,0.2,0],upperarm_l:[-0.35,0,2.0],lowerarm_l:[-1.25,0,0],upperarm_r:[0.15,0,0.35],lowerarm_r:[-0.3,0,0],neck_01:[-0.05,-0.5,0],head:[0,-0.6,0]}],
+    [1.35,{thigh_l:[0,0,0.3],calf_l:[0.38,0,0],thigh_r:[0,0,0.08],calf_r:[0.06,0,0],foot_l:[0.4,0.3,0],foot_r:[0.5,0.2,0],upperarm_l:[-0.25,0,2.15],lowerarm_l:[-1.15,0,0],upperarm_r:[0.25,0,0.28],lowerarm_r:[-0.2,0,0],neck_01:[-0.1,-0.5,0],head:[0,-0.62,0]}]]};
+function tfDieClips(t){if(!t||t.clips.some(c=>c.name==='die_b'))return;const idle=t.clips.find(c=>c.name==='idle');if(!idle)return;
+  const by={},g=new THREE.Group(),bones=t.jointIdx.map(ni=>{const n=t.J.nodes[ni],b=new THREE.Bone();b.name=n.name;if(n.translation)b.position.fromArray(n.translation);if(n.rotation)b.quaternion.fromArray(n.rotation);by[ni]=b;return b});
+  t.jointIdx.forEach(ni=>{const q=t.parent[ni];(by[q]||g).add(by[ni])});
+  const mx=new THREE.AnimationMixer(g),a=mx.clipAction(idle);a.play();a.time=0.3;mx.update(0);g.updateMatrixWorld(true);
+  const base=bones.map(b=>({b,q0:b.quaternion.clone(),P:b.parent.getWorldQuaternion(new THREE.Quaternion()),p0:b.position.clone()})),X=new THREE.Vector3(1,0,0),Y=new THREE.Vector3(0,1,0),Z=new THREE.Vector3(0,0,1);
+  const q=new THREE.Quaternion(),D=new THREE.Quaternion(),Pi=new THREE.Quaternion();
+  for(const name of ['die_b','die_f']){const K=TF_DIE[name],times=K.map(k=>k[0]),tracks=[];
+    for(const B of base){const n=B.b.name,side=/_l$/.test(n)?1:/_r$/.test(n)?-1:0,root=n.replace(/_[lr]$/,''),vals=[];
+      for(const [,P] of K){const r=P[n]||P[root];q.copy(B.q0);
+        if(r){const s=side||1;D.setFromAxisAngle(X,r[0]).multiply(q.clone().setFromAxisAngle(Y,r[1]*s)).multiply(q.clone().setFromAxisAngle(Z,r[2]*s));
+          Pi.copy(B.P).invert();q.copy(Pi).multiply(D).multiply(B.P).multiply(B.q0)}
+        vals.push(q.x,q.y,q.z,q.w)}
+      tracks.push(new THREE.QuaternionKeyframeTrack(n+'.quaternion',times,vals));
+      if(n==='pelvis')tracks.push(new THREE.VectorKeyframeTrack('pelvis.position',times,times.flatMap(()=>B.p0.toArray())))}
+    t.clips.push(new THREE.AnimationClip(name,1.4,tracks))}}
 // a step of it: knocked back a pace by a chest shot (half one by the gut), the leg-shot dragging themselves away
 // from him on the ground, slowing to a stop; walls stop them
 function tfHitStep(p,dt){const H=p.hit;H.t+=dt;if(H.jolt>0)H.jolt-=dt;if(H.k==='arm'&&H.t>0.6&&!p.dead){p.hit=null;return}
@@ -442,8 +496,8 @@ function tfDraw(dt){const M=tf.M,o3=tf.o,cx=camera.position.x,cz=camera.position
     if((p.x-cx)**2+(p.z-cz)**2>(p.room?TF_RFAR*TF_RFAR:p.drv?TF_CAR_HI*TF_CAR_HI:220*220)||!tfSeen(p.x,p.z,1.3))continue;
     const hp=p.dead||p.hurt||p.hit?tfHitPose(p):null,kn=hp&&hp.kneel;o3.position.set(p.x,p.y+(p.sit||kn?-0.42*p.sc:Math.abs(Math.cos(p.ph))*0.025*p.amp*p.sc),p.z);
     if(hp){o3.rotation.set(hp.tilt,hp.yaw,hp.roll,'YXZ');o3.position.y+=hp.dy}else o3.rotation.set(0,p.yaw,0,'YXZ');o3.scale.setScalar(p.sc);o3.updateMatrix();
-    if(fo){if(!B.fg)tfForgeCrowd(B,p.body);if(B.fg!==1){if(p.uh)tfUhPose(p,B.fg,dt);else tfFgPose(p,B.fg,B.fn++,dt);continue}}
-    if(!B.texing)tfTex(B);const i=B.n++,w=B.walk.array;B.m.setMatrixAt(i,o3.matrix);w[4*i]=p.ph;w[4*i+1]=kn||p.sit&&!(p.dead||p.hurt)?-1:p.dead||p.hurt?0:p.amp;w[4*i+2]=0;w[4*i+3]=p.g}
+    if(fo){if(!B.fg)tfForgeCrowd(B,p.body);if(B.fg!==1){if(!p.uh)tfFgPose(p,B.fg,B.fn++,dt);else if(!tfUhPose(p,B.fg,dt))tfFgPose(p,B.fg,B.fn++,0);continue}}
+    if(!B.texing)tfTex(B);const i=B.n++,w=B.walk.array;B.m.setMatrixAt(i,o3.matrix);w[4*i]=p.ph;const lp=p.dead&&!p.sit?tfLimp(p):0;w[4*i+1]=(kn&&!lp)||p.sit&&!(p.dead||p.hurt)?-1:p.dead||p.hurt?0:p.amp;w[4*i+2]=lp;w[4*i+3]=p.g}
   for(const k in M){const B=M[k];B.m.count=B.n;B.m.visible=tf.on&&B.n>0;B.m.instanceMatrix.needsUpdate=true;B.walk.needsUpdate=true;
     const c=B.fg;if(c&&c.object){c.object.count=B.fn;c.object.visible=fo&&tf.on&&B.fn>0}}
   for(const c of [...tf.drive,...tf.parked]){const d2=(c.x-cx)**2+(c.z-cz)**2;c.g.visible=d2<400*400;const hi=d2<TF_CAR_HI*TF_CAR_HI;c.g.children[0].visible=hi;c.g.children[1].visible=!hi}}

@@ -265,11 +265,13 @@ function mdlMatOf(k){const m=mdlMatsMake();if(m[k])return m[k];if(mdlNamed[k])re
 function mdlLitTick(){for(const m of mdl.lit||[]){const L=m.userData.lit;if(L.t==='glow')m.color.copy(L.c).multiply(famGlowMat.color);else m.emissive.copy(famWinMat.emissive)}}
 const mdlLoad=(f,ok)=>mdlLoaderReady(()=>new THREE.GLTFLoader().load(`models/${f}.glb`,gl=>{gl.scene.updateMatrixWorld(true);ok(gl.scene)},undefined,()=>{}));
 // a node's own meshes as [geometry in the node's frame (with box-projected texture coordinates), material], made once
+// a photo-scanned model's own material (models/scans.glb, 'scan:…'): its textures as they are, the sky in it, wet in rain
+function mdlScanMat(mt){if(mt.userData.scanP)return mt;mt.userData.scanP=1;mt.envMap=skyEnv;mt.envMapIntensity=1;if(typeof wetPatch==='function')wetPatch(mt);return mt}
 // a boat's fibreglass: in these files, materials of these kinds are glossy gelcoat ('gel#…', the scanned gelcoat's scuffs)
 const MDL_GEL={boat:/^(plastic|paint)#/,lakeboats:/^plastic#/};
 function mdlNodeParts(node,gel){if(node.userData.mdlParts)return node.userData.mdlParts;const inv=new THREE.Matrix4().copy(node.matrixWorld).invert(),M4=new THREE.Matrix4(),out=[];
   for(const m of node.children){if(!m.isMesh)continue;const g=m.geometry.clone();g.applyMatrix4(M4.multiplyMatrices(inv,m.matrixWorld));
-    if(!g.attributes.uv)mdlBoxUV(g);g.computeBoundingSphere();const k=m.material.name;out.push([g,mdlMatOf(gel&&gel.test(k)?k.replace(/^\w+#/,'gel#'):k)])}
+    if(!g.attributes.uv)mdlBoxUV(g);g.computeBoundingSphere();const k=m.material.name;out.push([g,k.startsWith('scan:')?mdlScanMat(m.material):mdlMatOf(gel&&gel.test(k)?k.replace(/^\w+#/,'gel#'):k)])}
   return node.userData.mdlParts=out}
 const mdlShadeOk=mt=>!mt.transparent&&!(mt.userData.lit&&mt.userData.lit.t==='glow')&&!(mt.isMeshStandardMaterial&&mt.envMapIntensity>1.3);
 // ---- machines and kit-built things (MDL_KIT[file]): sets() gives each copy's part groups by the model's node names,
@@ -290,7 +292,8 @@ function mdlKitOn(on){mdl.kitOn=on;mdl.kitDirty=false;mdl.kitN++;
     if(K.after)K.after(on&&!!src)}}
 // ---- things standing in many places (MDL_SPOTS, family.js) and things placed from the map editor (props.js): a kind
 // whose node is in one of these files is drawn as one instanced mesh per material in place of its simple parts
-const MDL_SPOT_FILES=['site','town'];mdl.spotF={};mdl.spotIM={};mdl.propIM={};mdl.spotsOn=false;
+// scans (tools/scans.js) first: its photo-scanned kinds stand in for the code-built ones of the same name
+const MDL_SPOT_FILES=['scans','site','town'];mdl.spotF={};mdl.spotIM={};mdl.propIM={};mdl.spotsOn=false;
 function mdlFindNode(k){for(const f of MDL_SPOT_FILES){const sc=mdl.spotF[f],n=sc&&sc.getObjectByName(k);if(n&&mdlNodeParts(n).length)return n}return null}
 function mdlInst(node,cap){return mdlNodeParts(node).map(([g,mt])=>{const im=new THREE.InstancedMesh(g,mt,cap);im.castShadow=mdlShadeOk(mt);im.receiveShadow=true;
   im.layers.enable(RAIN_LAYER);if(mt.envMapIntensity>1.3)im.renderOrder=2;im.visible=false;scene.add(im);return im})}

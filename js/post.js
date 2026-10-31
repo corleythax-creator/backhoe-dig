@@ -20,7 +20,8 @@ const POST_HASH='float pHash(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)
 // ambient occlusion at half size: each pixel's place is rebuilt from the depth, its facing from the depths beside it
 // (the nearer side each way, so edges stay sharp), then 12 nearby points in a turning spiral each shade it by how
 // far they rise above its surface within the radius; it fades out with distance into the haze. The same points give
-// the bounced light: what each one shows, by how much it faces the pixel (rgb). Then a short march toward the sun
+// the bounced light: what each one shows, by how much it faces the pixel (rgb), with six more taps three times as far
+// out for the light thrown off a wall or a sunlit patch of ground a few feet away. Then a short march toward the sun
 // through the depth finds the small things the shadow map is too coarse for (a tyre on the ground, a blade of grass,
 // a pin in its boss) and darkens the sunlit pixel by the sun's share; shade and those shadows go together in alpha
 const postAOMat=postMat('#include <packing>\nuniform sampler2D tDepth,tScene;uniform vec2 uTexel,uTan;uniform vec3 uL;uniform float uNear,uFar,uR,uAo,uCon,uCL;varying vec2 vUv;\n'+POST_HASH+
@@ -34,6 +35,8 @@ const postAOMat=postMat('#include <packing>\nuniform sampler2D tDepth,tScene;uni
   ' vec2 rs=min(0.5*uR/-z,0.12)/uTan;float a=pHash(gl_FragCoord.xy)*6.2832,o=0.0;vec3 b=vec3(0.0);\n'+
   ' for(int i=0;i<12;i++){float t=(float(i)+pHash(gl_FragCoord.yx+float(i)))/12.0;a+=2.39996;vec2 su=vUv+vec2(cos(a),sin(a))*t*rs;\n'+
   '  vec3 v=pP(su,pZ(su))-p;float l=length(v);float k=max(dot(v/max(l,1e-4),n)-0.15,0.0)*(1.0-smoothstep(0.5*uR,uR,l));o+=k;b+=texture2D(tScene,su).rgb*k;}\n'+
+  '  float a2=a+1.1;for(int i=0;i<6;i++){float t=(float(i)+pHash(gl_FragCoord.xy+float(i)*3.1))/6.0;a2+=2.39996;vec2 su=vUv+vec2(cos(a2),sin(a2))*(0.35+0.65*t)*rs*3.0;\n'+
+  '  vec3 v=pP(su,pZ(su))-p;float l=length(v);b+=texture2D(tScene,su).rgb*max(dot(v/max(l,1e-4),n),0.0)*(1.0-smoothstep(1.5*uR,3.0*uR,l))*0.6;}\n'+
   ' float f=(1.0-smoothstep(70.0,180.0,-z))/12.0;o*=f;b*=f*2.6;\n'+
   ' float sh=0.0;if(uCon>0.0&&dot(n,uL)>0.05&&-z<90.0){float st=uCL*(1.0+0.012*-z)/8.0,j=pHash(gl_FragCoord.xy+7.0);vec3 q=p+n*0.003*-z;\n'+
   '  for(int i=1;i<=8;i++){vec3 r=q+uL*st*(float(i)-j);vec2 ru=r.xy/(-r.z*uTan)*0.5+0.5;if(ru.x<0.0||ru.y<0.0||ru.x>1.0||ru.y>1.0)break;\n'+
@@ -64,7 +67,8 @@ const postUp=postMat('uniform sampler2D tSrc;uniform vec2 uTexel;varying vec2 vU
 // onto the screen: the picture sharpened (a pixel pushed away from the mean of its four neighbours, held to their
 // range so edges don't ring), blurred where it lies well beyond what the camera looks at (the nearest of five depths
 // round the middle of the screen; the half and quarter size copies), shaded and given its bounced light (the colour
-// that falls on it times its own), its glow added, turned into screen colours, then the grade (a gentle S curve, warm
+// that falls on it times its own: its colour over a guess at how lit it already is, so the shade, where bounce shows, gets
+// the most), its glow added, turned into screen colours, then the grade (a gentle S curve, warm
 // light and cool shade, saturation, vignette) on the colours as shown, and a little dither against banding
 const postOut=postMat('#include <packing>\nuniform sampler2D tScene,tAO,tBloom,tDepth,tDf0,tDf1;uniform vec2 uTexel;uniform float uBloom,uGI,uCon,uSat,uVig,uGrade,uSharp,uDof,uWarm,uNear,uFar;varying vec2 vUv;\n'+POST_HASH+
   'float oZ(vec2 uv){return -perspectiveDepthToViewZ(texture2D(tDepth,uv).x,uNear,uFar);}\n'+
@@ -74,7 +78,7 @@ const postOut=postMat('#include <packing>\nuniform sampler2D tScene,tAO,tBloom,t
   ' if(uDof>0.0){float f=min(min(oZ(vec2(0.5,0.5)),oZ(vec2(0.45,0.45))),min(min(oZ(vec2(0.55,0.45)),oZ(vec2(0.45,0.55))),oZ(vec2(0.55,0.55))));\n'+
   '  float s=clamp((oZ(vUv)-(3.0*f+30.0))/(4.0*f+120.0),0.0,1.0)*uDof;\n'+
   '  c=mix(c,mix(texture2D(tDf0,vUv).rgb,texture2D(tDf1,vUv).rgb,smoothstep(0.4,1.0,s)),smoothstep(0.0,0.4,s));}\n'+
-  ' vec4 o=texture2D(tAO,vUv);c=c*o.a+o.rgb*uGI*(c+0.04);c+=texture2D(tBloom,vUv).rgb*uBloom;c=clamp(c,0.0,1.0);\n'+
+  ' vec4 o=texture2D(tAO,vUv);c=c*o.a+o.rgb*uGI*c/(0.35+1.6*dot(c,vec3(0.2126,0.7152,0.0722)));c+=texture2D(tBloom,vUv).rgb*uBloom;c=clamp(c,0.0,1.0);\n'+
   ' c=mix(c*12.92,1.055*pow(c,vec3(1.0/2.4))-0.055,step(vec3(0.0031308),c));\n'+
   ' if(uGrade>0.5){c=mix(c,c*c*(3.0-2.0*c),uCon);float l=dot(c,vec3(0.2126,0.7152,0.0722));\n'+
   '  c*=mix(vec3(1.0),mix(vec3(0.95,0.985,1.07),vec3(1.05,1.0,0.92),smoothstep(0.15,0.75,l)),uWarm);\n'+
@@ -113,7 +117,7 @@ function pudSsrTick(){const on=pudLvl>0.001&&gfxCur.wmFine;pudSsrU.uSsr.value.x=
   pudSsrU.uPrevVP.value.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse)}
 function postOn(){return (POST.ao||POST.bloom||POST.grade)&&!renderer.xr.isPresenting}
 // draws the frame: straight to the screen, or through the effects
-function postRender(){ultraTick();clVolRender();if(!postOn()){pudSsrU.uSsr.value.x=0;renderer.render(scene,camera);return}
+function postRender(){ultraTick();hazeTick();bounceTick();clVolRender();if(!postOn()){pudSsrU.uSsr.value.x=0;renderer.render(scene,camera);return}
   renderer.getDrawingBufferSize(postSz);postSize(postSz.x,postSz.y);
   // the puddles' reflections (rain.js) read the picture as it was last frame (they can't read the one being drawn)
   if(pudSsrRT)pudSsrU.tSsr.value=pudSsrRT.texture;
@@ -173,3 +177,35 @@ function ultraTick(){
     hemiL0.groundColor.multiply(ulG);skyEnvTint.copy(ulG)}
   groundWetU.value=ULTRA.wetG?TU.ultraWetGround:0;
   if(ULTRA.pcss){const c=sun.shadow.camera,q=TU.ultraShSoft*(c.far-c.near)/(2*c.right);sun.shadow.radius=1000+Math.min(q,0.5)*1e4}}
+
+// ---------- the haze's sun and the light thrown back up off the ground (every Graphics level) ----------
+// the haze (core.js HZ_U) takes the sun's light toward the sun, as the sky's glow does round it, fading out as the sun
+// goes down and under cloud (skySunVis)
+function hazeTick(){const u=HZ_U,d=Math.min(1,Math.max(0,(SUN_DIR.y+0.1)/0.15));
+  u.uHzSun.value.set(SUN_DIR.x,SUN_DIR.y,SUN_DIR.z,TU.hazeSun);u.uHzSunC.value.copy(skyU.uSunC.value).multiplyScalar(0.62*skySunVis.value*d);
+  u.uHzLow.value.set(WATER,1/60,TU.hazeLow)}
+// the ground round you lit by the sun throws some of that light back up onto whatever faces down or sideways (the
+// shady undersides of machines, eaves, the sides of a trench): added to the sky fill's ground colour (daynight.js sets
+// it fresh each frame). On High and Ultra (gfx.js bounce) what the ground sends up is measured: the ground within 50 ft
+// drawn from above every 1.5 s into a 4 by 4 picture, as it is lit (shadows, lamps, the lake), and read back without
+// waiting. Otherwise it is an earth colour lit by the sun. Only how things look
+const bnAlb=new THREE.Color(0.17,0.15,0.1),bnC=new THREE.Color(),bnT=new THREE.Color(),bnPr=new THREE.Color();
+const bnCam=new THREE.OrthographicCamera(-15,15,15,-15,1,140);bnCam.up.set(0,0,-1);
+let bnOn=false,bnHave=false,bnBusy=false,bnNext=0,bnRT=null,bnBuf=null;
+function bounceGfx(on){if(bnOn===!!on)return;bnOn=!!on;bnHave=false;if(!on&&bnRT){bnRT.dispose();bnRT=null}}
+function bnProbe(){const now=performance.now();if(bnBusy||now<bnNext||renderer.xr.isPresenting)return;bnNext=now+1500;
+  if(!bnRT){const f=renderer.extensions.has('EXT_color_buffer_float');bnRT=new THREE.WebGLRenderTarget(4,4,{type:f?THREE.FloatType:THREE.UnsignedByteType});bnBuf=f?new Float32Array(64):new Uint8Array(64)}
+  const c=sun.target.position;bnCam.position.set(c.x,c.y+70,c.z);bnCam.lookAt(c.x,c.y,c.z);bnCam.updateMatrixWorld();
+  const rt=renderer.getRenderTarget(),au=renderer.shadowMap.autoUpdate,bg=scene.background;
+  renderer.shadowMap.autoUpdate=false;scene.background=null;renderer.setRenderTarget(bnRT);
+  try{renderer.render(scene,bnCam)}finally{renderer.setRenderTarget(rt);renderer.shadowMap.autoUpdate=au;scene.background=bg}
+  bnBusy=true;const k=bnBuf instanceof Uint8Array?1/255:1;
+  renderer.readRenderTargetPixelsAsync(bnRT,0,0,4,4,bnBuf).then(()=>{let r=0,g=0,b=0;
+    for(let i=0;i<64;i+=4){r+=bnBuf[i];g+=bnBuf[i+1];b+=bnBuf[i+2]}
+    if(isFinite(r+g+b)){bnPr.setRGB(r*k/16,g*k/16,b*k/16);bnHave=true}bnBusy=false}).catch(()=>{bnBusy=false;bnOn=false})}
+function bounceTick(){if(!hemiL0||hemiL0.intensity<=1e-4)return;
+  if(bnOn&&!edOn)bnProbe();
+  // what the ground sends up, as irradiance on a face looking straight down: π × its brightness, or albedo × the sun on it
+  if(bnOn&&bnHave)bnT.copy(bnPr).multiplyScalar(Math.PI);
+  else bnT.copy(sun.color).multiply(bnAlb).multiplyScalar(sun.intensity*Math.max(0,LIGHT_DIR.y));
+  bnC.lerp(bnT,0.05);hemiL0.groundColor.add(bnT.copy(bnC).multiplyScalar(0.5*TU.bounce/hemiL0.intensity))}

@@ -82,7 +82,7 @@ const TUNE=[
   ['trimBump','String trimmer','Line one bump feeds out',0.04,'in',0.25,6,0.25],['trimWear','String trimmer','Line worn away per second of cutting',0.006,'in',0.02,2,0.02],
   ['gunRate','Pistol','Shortest time between shots',0.22,'s',0.05,2,0.01],['gunRange','Pistol','How far a shot carries',90,'ft',30,600,10],
   ['gunFlee','Pistol','How fast people run from shots',4.5,'mph',3,16,0.5],['townPop','Pistol','How many townsfolk live in town when the game starts (each one killed is gone until the next start)',150,'',0,1000,10],['shopPop','Pistol','How many shopfolk (people in the shops and houses) there are when the game starts',60,'',0,500,5],['runKill','Pistol','How fast a machine has to be going to run someone down (slower, they jump clear)',6,'mph',1,30,0.5],['gunWrist','Pistol','Wrist turn holding the pistol',1.4,'deg',-180,180,5],['gunBody','Pistol','How long someone shot stays down before they go (when out of sight)',40,'s',5,600,5],
-  ['gunHp','Pistol','How much a townsperson takes before they go down (each one give or take 15%)',100,'',10,1000,5],['gunHeadX','Pistol','A head shot counts this many times a body shot',4,'',1,20,0.5],
+  ['gunHp','Pistol','How much a townsperson takes before they go down (each one give or take 15%)',100,'',10,1000,5],['gunHeadX','Pistol','A head shot counts this many times a body shot',4,'',1,20,0.5],['gunKick','Pistol','How hard a shot kicks the view up',1,'pct',0,3,0.05],['gunShake','Pistol','How much a shot shakes the view',1,'pct',0,3,0.05],
   ['gunDmgP','Pistol','Pistol: damage a shot',45,'',1,500,1],['gunDmgS','Pistol','Shotgun: damage a pellet (nine a shell)',16,'',1,200,1],['gunDmgR','Pistol','Rifle: damage a shot',130,'',1,1000,5],['gunDmgC','Pistol','Carbine: damage a shot',32,'',1,500,1],
   ['trimSpool','String trimmer','Line on a full spool',25*0.3048,'ft',2,100,1],
   ['lawnCut','Grass','Mower cuts the grass to',0.09,'in',1,24,0.5],['lawnWait','Grass','Wait before cut grass grows',45,'s',0,1200,5],['lawnGrow','Grass','Time to grow back tall',240,'s',10,3600,10],
@@ -144,6 +144,11 @@ const TUNE=[
   ['ultraShSoft','Ultra','Soft sun shadows: blur per foot a shadow falls from what casts it',0.03,'pct',0,10,0.5],
   ['ultraDrops','Ultra','Rain on machines: how many beads and runs of water',1,'pct',0,300,5],
   ['ultraWetGround','Ultra','Wet ground shine: how strongly soaked dirt and mud mirror the sky',1,'pct',0,300,5],
+  // light and haze (core.js, post.js): the far shadows' redraw, the haze toward the sun and low down, the ground's bounce
+  ['csmEvery','Light and haze','Far shadows: drawn again every this many frames (more is faster, but they lag behind moving things)',3,'n',1,10,1],
+  ['hazeSun','Light and haze','How strongly the haze toward the sun takes its warm light',1,'pct',0,300,5],
+  ['hazeLow','Light and haze','How much thinner the haze is up high than low over the lake',0.6,'pct',0,100,5],
+  ['bounce','Light and haze','Sunlight thrown back up off the ground onto the shady undersides and sides of things',1,'pct',0,300,5],
   ['pbrFar','Ground look','Relief fades out by',180*0.3048,'ft',60,600,10],
   ['treeSway','Trees','How much the trees and undergrowth sway in the breeze',1,'pct',0,400,5],['treeGlow','Trees','How much sunlight shines through the leaves',1,'pct',0,300,5],
   // the freight line far across the lake (train.js)
