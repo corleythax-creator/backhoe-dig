@@ -3,6 +3,7 @@
 // the world has loaded. Past its edges the start screen carries on the lake's blue and, on the mainland, the woods
 // (shots/startwoods.jpg, cut from it). Run after changing the ground, roads or buildings:
 //   NODE_PATH=$(npm root -g) node tools/play.js --gfx low --steps tools/bake_startmap.js
+// and then tools/bake_startdetail.js for the close-up tiles shown once zoomed in
 const fs=require('fs'),path=require('path');
 module.exports=async p=>{const r=await p.evaluate(async()=>{let n=0;while(mapTilesDone()<MPT_NX*MPT_NZ&&n<5000){mapBuild(200,0,350);n++;await new Promise(r=>setTimeout(r,0))}
   const I=SPICK.img,k=2,W=(I[1]-I[0])*k,H=(I[3]-I[2])*k,cv=document.createElement('canvas');cv.style.cssText=`position:fixed;left:0;top:0;width:${W}px;height:${H}px`;document.body.appendChild(cv);
