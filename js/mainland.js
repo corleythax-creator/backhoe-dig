@@ -3,8 +3,18 @@
 // town: a boardwalk on the beach, a marina (marina.js), Main Street with a block of shops each side and a cross street. Both are
 // reached by temporary crossings, a timber trestle (BRIDGES with temp set) and a rock causeway (CAUSEWAYS); the crane
 // on its barge replaces the trestles with steel spans one at a time (mainTick).
-const mainGround=[groundPatch(-450,450,-572,-196,4,[MAIN_FINE[0]]),groundPatch(...MAIN_FINE[0],1,[]),
-  groundPatch(-450,450,480,780,4,[MAIN_FINE[1]]),groundPatch(...MAIN_FINE[1],1,[])];
+const mainGround=[groundPatch(-514,514,-640,-196,4,[MAIN_FINE[0]]),groundPatch(...MAIN_FINE[0],1,[]),
+  groundPatch(...MAIN_TOWN,4,[MAIN_FINE[1]]),groundPatch(...MAIN_FINE[1],1,[]),groundPatch(-702,702,480,1068,6,[MAIN_TOWN,MAIN_FOOT]),
+  groundPatch(...MAIN_FOOT,4,[MAIN_ROAD]),groundPatch(...MAIN_ROAD,2,[])];
+// where a finer mesh meets a coarser one, its edge takes the coarser one's straight runs (the side x0, x1, z0 or z1 of
+// patch P, from lo to hi along it, against cells of CO metres from o), so no crack opens between them
+function mainStitch(P,side,lo,hi,CO,o){const pa=P.g.attributes.position,ax=side[0]==='x',fix=side[1]==='0'?0:ax?P.NX:P.NZ;
+  for(let k=0;k<=(ax?P.NZ:P.NX);k++){const i=ax?fix:k,j=ax?k:fix,x=P.X0+i*P.CO,z=P.Z0+j*P.CO,t=ax?z:x;if(t<lo||t>hi)continue;
+    const c0=o+Math.floor((t-o)/CO+1e-6)*CO,f=(t-c0)/CO;if(f<1e-6)continue;const h0=ax?baseHeight(x,c0):baseHeight(c0,z),h1=ax?baseHeight(x,c0+CO):baseHeight(c0+CO,z);
+    pa.array[(j*P.VX+i)*3+1]=h0+(h1-h0)*f}pa.needsUpdate=true}
+{const [,,T,,,Fo,R]=mainGround;for(const sd of ['x0','x1'])mainStitch(R,sd,780,952,4,780);for(const sd of ['z0','z1'])mainStitch(R,sd,-110,110,4,-258);
+  for(const sd of ['x0','x1']){mainStitch(Fo,sd,780,1068,6,480);mainStitch(T,sd,480,780,6,480)}mainStitch(Fo,'z1',-258,258,6,-702);
+  for(const [a,b] of [[-450,-258],[258,450]])mainStitch(T,'z1',a,b,6,-702)}
 
 // a kit's meshes in a group that can be shown or hidden
 function mainGroup(K){const g=new THREE.Group();
@@ -131,7 +141,7 @@ function crnPose(keys,u){let i=0;while(i<keys.length-2&&u>keys[i+1][0])i++;const
 function crnShow(n,u){crnSpans.forEach((s,k)=>{const steel=k<n||(k===n&&u>=0.86);s.tr.visible=!steel;s.st.visible=steel});
   for(const b of [BRIDGES[4],BRIDGES[5]]){const left=crnSpans.some((s,k)=>s.b===b&&!(k<n||(k===n&&u>=0.86)));for(const g of b.signs)if(g)g.visible=left}}
 const crnV=[new THREE.Vector3(),new THREE.Vector3(),new THREE.Vector3(),new THREE.Vector3()];
-function mainTick(dt){rmWinTick();rmDoorsTick(dt);rmInsideTick(dt);
+function mainTick(dt){rmWinTick();sqTick();rmDoorsTick(dt);rmInsideTick(dt);
   const NS=crnSpans.length,T=Math.max(10,TU.craneSpan);
   if(CRN.n<NS){CRN.t+=dt;if(CRN.t>=T){CRN.t=0;CRN.n++;if(typeof site!=='undefined')site.dirty=true;
       const s=crnSpans[CRN.n-1],near=Math.hypot(camera.position.x-crnBarge.position.x,camera.position.z-crnBarge.position.z)<320;
@@ -249,7 +259,7 @@ function mainSignsAdd(){const cv=document.createElement('canvas');cv.width=1024;
   // the woods: pines and leaf trees west of the trail, thinning at the edge, clear of the trail itself
   const out=[];
   for(let g=0;g<12000&&out.length<440;g++){const x=-440+rnd()*420,z=-555+rnd()*250,w=mainWoods(x,z);
-    if(w<0.5||rnd()>0.35+0.65*ss(-20,-60,x)||Math.abs(roadOff(x,z))<ROAD_W/2+1.4)continue;
+    if(w<0.5||rnd()>0.35+0.65*ss(-20,-60,x)||Math.abs(roadOff(x,z))<ROAD_W/2+1.4||baseHeight(x,z)-WATER<3)continue;
     out.push({p:rnd()<0.9,x,z,yaw:rnd()*6.3,s:0.85+rnd()*0.7,c:(rnd()*6)|0})}
   // and a ragged tree line along the far side of the hayfield
   for(let x=30;x<400;x+=5+rnd()*6){const z=-548+rnd()*10;out.push({p:rnd()<0.75,x,z,yaw:rnd()*6.3,s:0.9+rnd()*0.6,c:(rnd()*6)|0})}
@@ -270,8 +280,8 @@ function mainSignsAdd(){const cv=document.createElement('canvas');cv.width=1024;
   // (the brewery stands in place of the cross street's second lot east, south side: mainBrewery)
   // a boardwalk along the top of the beach, and a few benches on it looking out at the islands
   // (a gap where the marina's boat ramp crosses it, marina.js)
-  // (and none where it would lie on the beach road west of Main Street)
-  for(let x=-160;x<160;x+=6){if(Math.abs(x)<7||Math.abs(x+3-107)<4)continue;if(x+3<0&&Math.abs(mainRimS(x+3)+3-(x+3<-60?576-2*(x+173)/110:574))<4.4)continue;const z0=mainRimS(x)+3,z1=mainRimS(x+6)+3,y=Math.max(baseHeight(x+3,(z0+z1)/2),WATER+1.8);
+  // (and none where it would lie on the beach road west of Main Street, nor along Harbor Square's promenade, square.js)
+  for(let x=-160;x<160;x+=6){if(Math.abs(x)<7||Math.abs(x+3-107)<4||x+3>-119&&x+3<-4)continue;if(x+3<0&&Math.abs(mainRimS(x+3)+3-(x+3<-60?576-2*(x+173)/110:574))<4.4)continue;const z0=mainRimS(x)+3,z1=mainRimS(x+6)+3,y=Math.max(baseHeight(x+3,(z0+z1)/2),WATER+1.8);
     T.box(6.1,0.16,3.6,0x8c6e4c,x+3,y+0.07,(z0+z1)/2,-Math.atan2(z1-z0,6));walkPad(x+3,(z0+z1)/2,3.05,1.8,-Math.atan2(z1-z0,6),y+0.15);
     if(((x+160)/6|0)%5===2){BK.box(1.6,0.45,0.5,0x5c4632,x+3,y+0.37,(z0+z1)/2+1.2);famSpot('bench',x+3,y+0.15,(z0+z1)/2+1.2,Math.PI,0.9)}}
   // street trees along Main Street in the gaps between the shops (clear of the awnings and walls), each in a square of
@@ -524,9 +534,10 @@ function mainStreets(){const K=shopKit(),F=famKit(),G=baseHeight,asph=shopLib('a
         const low=RAMPS.some(r=>r.ax===ax&&Math.abs(r.c-c)<0.01&&m>r.a0&&m<r.a1),top=low?0.05:MST.top;
         if(ax==='z')K.box(conc,MST.curb,top+0.1,q1-q0,cx,g+(top-0.1)/2,cz);else K.box(conc,q1-q0,top+0.1,MST.curb,cx,g+(top-0.1)/2,cz)}}
     if(ax==='z')sheet(conc,Math.min(c,c-o*0.42),Math.max(c,c-o*0.42),a,b,MST.lift+0.006,1.5);else sheet(conc,a,b,Math.min(c,c-o*0.42),Math.max(c,c-o*0.42),MST.lift+0.006,1.5)};
-  // the asphalt: Main Street, the cross street each side of it, the beach road west and east (into the marina's car park)
+  // the asphalt: Main Street, the cross street each side of it, the beach road west and east (into the marina's car park);
+  // across Harbor Square (square.js) the beach road is brick
   sheet(asph,-X,X,MST.z0,MST.z1,MST.lift,2);for(const s of [-1,1])sheet(asph,s<0?-XE:X,s<0?-X:XE,C0,C1,MST.lift,2);
-  ribbon(asph,[[-170,576],[-60,574],[-X,574]],5,MST.lift);ribbon(asph,[[X,574],[26,574],[36,582],[58.5,586.6]],5,MST.lift);
+  ribbon(asph,[[-170,576],[-106,574.84]],5,MST.lift);ribbon(shopLib('herringbone'),[[-106,574.84],[-60,574],[-X,574]],5,MST.lift);ribbon(asph,[[X,574],[26,574],[36,582],[58.5,586.6]],5,MST.lift);
   // curbs, gutters and sidewalks along Main Street (from the beach road to the store's lot, round the cross street) and the cross street
   for(const s of [-1,1]){for(const [z0,z1] of [[BZ,C0],[C1,MST.z1]]){curb('z',z0,z1,s*X,s);sheet(walk,Math.min(s*W,s*WE),Math.max(s*W,s*WE),z0,z1,rampAt,0.6);
       for(let z=z0+1.5;z<z1-0.5;z+=1.5)sheet(joint,Math.min(s*W,s*WE),Math.max(s*W,s*WE),z-0.012,z+0.012,(x,zz)=>rampAt(x,zz)+0.004,2)}

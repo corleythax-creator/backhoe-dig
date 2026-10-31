@@ -32,7 +32,12 @@ const TF_WALK=[[[-MSX,580],[-MSX,TF_XN]],[[-MSX,TF_XN],[-MSX,MCN]],[[MSX,580],[M
   {x:1,p:[[-MSX,TF_XN],[MSX,TF_XN]]},{x:1,p:[[-MSX,TF_XS],[MSX,TF_XS]]},{x:1,p:[[-TF_XX,MCN],[-TF_XX,MCS]]},{x:1,p:[[TF_XX,MCN],[TF_XX,MCS]]},
   {x:1,p:[[-MSX,MCN],[-5,645],[5,645],[MSX,MCN]]},{x:1,p:[[-MSX,MCS],[-5,659],[5,659],[MSX,MCS]]},
   {x:1,p:[[-MSX,MCN],[-7.8,648.3],[-7.8,655.7],[-MSX,MCS]]},{x:1,p:[[MSX,MCN],[7.8,648.3],[7.8,655.7],[MSX,MCS]]},
-  [[-MSX,723],[-5.9,727],[-5.9,741.6],TF_DOOR],[[MSX,723],[6,727],[6,741.6],TF_DOOR]].map(e=>{const p=e.p||e,L=[0];
+  [[-MSX,723],[-5.9,727],[-5.9,741.6],TF_DOOR],[[MSX,723],[6,727],[6,741.6],TF_DOOR],
+  // Harbor Square (square.js): from the foot of Main Street's west sidewalk along the beach road to the green, round
+  // it, and over the road to the promenade
+  [[-MSX,580],[-12,578.5],[SQ.gx1,SQ.gz0]],[[SQ.gx1,SQ.gz0],[-57,SQ.gz0]],[[-57,SQ.gz0],[SQ.gx0,SQ.gz0]],[[SQ.gx0,SQ.gz0],[SQ.gx0,SQ.gz1]],
+  [[SQ.gx0,SQ.gz1],[SQ.gx1,SQ.gz1]],[[SQ.gx1,SQ.gz1],[SQ.gx1,SQ.gz0]],{x:1,p:[[-57,SQ.gz0],[-57,568.6]]},{x:1,p:[[SQ.gx1,SQ.gz0],[SQ.gx1,568.6]]},
+  [[-110,568.6],[-57,568.6]],[[-57,568.6],[SQ.gx1,568.6]]].map(e=>{const p=e.p||e,L=[0];
     for(let i=1;i<p.length;i++)L.push(L[i-1]+Math.hypot(p[i][0]-p[i-1][0],p[i][1]-p[i-1][1]));return {p,L,len:L[L.length-1],x:!!e.x,a:null,b:null}});
 // the nodes where walks meet, each with its walks
 const TF_NODES=[];
@@ -43,7 +48,7 @@ function tfAt(w,s){const p=w.p,L=w.L;let i=1;while(i<p.length-1&&L[i]<s)i++;cons
   return [a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,(b[0]-a[0])/d,(b[1]-a[1])/d]}
 const tfLine=pts=>{const L=[0];for(let i=1;i<pts.length;i++)L.push(L[i-1]+Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]));return {p:pts,L,len:L[L.length-1]}};
 // how high the surface is above the ground where someone stands: the asphalt, the raised sidewalks and the store's walk
-function tfLift(x,z){if(Math.abs(x-TF_GATE[0])<1.4&&z>658.8&&z<TF_GATE[1]+0.5)return z<661?0.17-(z-658.8)/2.2*0.14:0.03;if(z>724.5)return z>740.2&&Math.abs(x)<15.5?0.12:0.04;if(x>56&&z<615)return 0.04;
+function tfLift(x,z){if(x<-6&&x>-114&&z<616){const p=padAt(x,z);return p>-1e8?Math.max(0,p-baseHeight(x,z)):0}if(Math.abs(x-TF_GATE[0])<1.4&&z>658.8&&z<TF_GATE[1]+0.5)return z<661?0.17-(z-658.8)/2.2*0.14:0.03;if(z>724.5)return z>740.2&&Math.abs(x)<15.5?0.12:0.04;if(x>56&&z<615)return 0.04;
   if(Math.abs(x)<MST.x+0.1&&z>556||Math.abs(z-MST.cz)<MST.cw+0.1&&Math.abs(x)>MST.x)return MST.lift;
   if(Math.abs(x)<MST.x+MST.curb+MST.walk+0.2&&z>576||Math.abs(z-MST.cz)<MST.cw+3.5&&Math.abs(x)<128)return mstRamp(x,z);return 0}
 // ---------- the drives: poses [x, z, heading of travel, flags] joined by smooth curves ----------
@@ -93,9 +98,9 @@ function tfPath(poses,park){const X=[],Z=[],R=[],stop=[];
   for(let i=0;i<n;i++){let a=Math.max(0,i-1),b=Math.min(n-1,i+1);if(R[a]!==R[i])a=i;if(R[b]!==R[i])b=i;if(a===b)b=Math.min(n-1,i+1);H[i]=Math.atan2(X[b]-X[a],Z[b]-Z[a])}
   const F=H.map((h,i)=>h+(R[i]?Math.PI:0));
   for(let i=1;i<n;i++)if(R[i]!==R[i-1])stop.push({i:i-1,cusp:true});stop.sort((p,q)=>p.i-q.i);
-  // the turns: no more than about 0.2 g round them; slow in the lots and backing up
+  // the turns: no more than about 0.2 g round them; slow in the lots, across Harbor Square and backing up
   for(let i=0;i<n;i++){const a=Math.max(0,i-3),b=Math.min(n-1,i+3);let dh=Math.abs(H[b]-H[a]);if(dh>Math.PI)dh=2*Math.PI-dh;
-    const k=dh/Math.max(0.5,S[b]-S[a]),lot=Z[i]>723||X[i]>56&&Z[i]<615;V[i]=Math.min(TU.tfCarV,Math.sqrt(2/Math.max(k,1e-4)),lot?3.5:1e9,R[i]?1.4:1e9)}
+    const k=dh/Math.max(0.5,S[b]-S[a]),lot=Z[i]>723||X[i]>56&&Z[i]<615||X[i]>-108&&X[i]<-8&&Z[i]<579;V[i]=Math.min(TU.tfCarV,Math.sqrt(2/Math.max(k,1e-4)),lot?3.5:1e9,R[i]?1.4:1e9)}
   for(let i=n-2;i>=0;i--)V[i]=Math.min(V[i],Math.sqrt(V[i+1]*V[i+1]+2*2.2*(S[i+1]-S[i])));
   return {X,Z,R,S,H,F,V,stop,n,len:S[n-1],park}}
 // ---------- loading: the people and their textures, then the cars, once the town is near ----------

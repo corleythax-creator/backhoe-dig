@@ -140,24 +140,94 @@ const BRIDGES=[{x0:0,z0:68,x1:0,z1:171,hw:4,y:FAM_Y},{x0:0,z0:316,x1:0,z1:418,hw
 const CAUSEWAYS=[{x0:0,z0:500,x1:0,z1:566,hw:4.6,y:-3.6,y1:-3.6},{x0:0,z0:-213,x1:0,z1:-296,hw:4.6,y:-3,y1:-3}];
 for(const b of BRIDGES.concat(CAUSEWAYS)){const dx=b.x1-b.x0,dz=b.z1-b.z0;b.len=Math.hypot(dx,dz);b.ux=dx/b.len;b.uz=dz/b.len;if(b.y1===undefined)b.y1=b.y}
 // the mainland across the lake: the field and woods to the north and the lakeside town to the south, each a low shore
-// (shore) rising gently inland to about 29 ft. The rim lines wander, but run straight where the causeways land
+// (shore) rising gently inland to about 29 ft. The rim lines wander, but run straight where the causeways land. The
+// field and woods are a broad point of land with beaches all round (mainSdN: its far shore and ends, corners rounded);
+// the town's shore runs on east and west under the mountains, and behind the town the ground climbs into the foothills
 const MAIN_N=-288,MAIN_S=558;
 function mainWob(x,a){return (9*Math.sin(x*0.013+a)+5*Math.sin(x*0.031+1+a))*ss(14,40,Math.abs(x))}
 function mainRimN(x){return MAIN_N+mainWob(x,0)}
-function mainRimS(x){return MAIN_S+mainWob(x,2.2)}
+// (west of Main Street the shore is the town square's seawall, square.js: straight along z 558 to 561 between its ends)
+function mainRimS(x){const r=MAIN_S+mainWob(x,2.2),k=ss(-124,-112,x)*(1-ss(-20,-12,x));return r+(561-r)*k}
+// metres outside the field and woods' land (negative inside): its town-side shore (mainRimN), far shore and two ends,
+// as a box with corners rounded 70 m
+function mainSdN(x,z){const a=Math.max(z-mainRimN(x),-588+6*Math.sin(x*0.017+0.7)+4*Math.sin(x*0.043+2)-z),
+    b=Math.abs(x)-452-6*Math.sin(z*0.021+1.1)-4*Math.sin(z*0.05),qa=a+70,qb=b+70;
+  return Math.hypot(Math.max(qa,0),Math.max(qb,0))+Math.min(Math.max(qa,qb),0)-70}
 function mainHeight(x,z){
-  if(z<0){const d=z-mainRimN(x);if(d>=0)return shore(d,x,z,-3);
+  if(z<0){const d=mainSdN(x,z);if(d>=0)return shore(d,x,z,-3);
     return -3+Math.min(4,-d*0.018)+0.5*Math.sin(x*0.021+0.6)*Math.cos(z*0.026)*ss(0,40,-d)}
   const d=mainRimS(x)-z;if(d>=0)return shore(d,x,z,-3.6);
-  return -3.6+Math.min(5,-d*0.022)+0.35*Math.sin(x*0.017+1.4)*Math.cos(z*0.023+0.4)*ss(0,40,-d)}
+  const h=-3.6+Math.min(5,-d*0.022)+0.35*Math.sin(x*0.017+1.4)*Math.cos(z*0.023+0.4)*ss(0,40,-d);
+  return z>FH_Z0?fhGround(x,z,h):h}
+// ---------- the foothills behind the town (hills.js draws the road, the trail and the overlook) ----------
+// from a foot line behind the town (fhZ, swinging north round its sides and never nearer the shore than 40 m) the ground
+// climbs about 150 ft over 560 ft to a shoulder of the mountain, steady up the face (about 20 degrees at the steepest),
+// with spurs and gullies across it, then on gently toward the peaks. A switchback road is graded into it (FH_RD: its
+// line; FH.pts its heights, set at load from the ground under it, smoothed and held to a 10% grade), and the overlook's
+// lot and terrace at its top are levelled (FH_OV)
+const FH={top:46,run:170,e:0.25,w:8,pts:[]},FH_Z0=590,
+  FH_RD=[[-63,778],[-60,786],[-48,792],[70,818],[82,823],[87,831],[82,839],[70,842],[-56,862],[-68,867],[-72,875],[-66,883],[-54,886],[58,906],[68,911],[70,919],[64,926],[52,929],[22,934]],
+  FH_OV={x:8,z:937,rx:30,rz:16,y:null};
+// the Lookout Trail's line (hills.js), from the east side street's sidewalk up to the overlook's terrace
+const FH_TRAIL=[[30,739],[30,770],[24,784],[32,797],[28,812],[18,824],[26,837],[14,850],[20,864],[8,876],[16,889],[6,898],[12,911],[4,921],[2,925.5]];
+function fhZ(x){return Math.max(mainRimS(x)+40,772-0.0016*Math.max(0,Math.abs(x)-170)**2)}
+// 0 to 1 up the face: easing in at the foot and onto the shoulder, steady between
+function fhRamp(p){const e=FH.e,k=1/(1-e);return p<=0?0:p<e?k*p*p/(2*e):p<1-e?k*(e/2+p-e):p<1?1-k*(1-p)*(1-p)/(2*e):1}
+// how far the foothills raise the ground at x, z
+function fhHill(x,z){const u=z-fhZ(x);if(u<=0)return 0;const p=u/FH.run,top=FH.top*(1+0.08*Math.sin(x*0.019+1.3)+0.05*Math.sin(x*0.053+0.4));
+  return top*fhRamp(p)+Math.max(0,u-FH.run)*0.07+3*Math.sin(x*0.043+z*0.011)*ss(0,0.4,p)*(1-0.7*ss(0.85,1.1,p))+Math.sin(x*0.13+0.7)*Math.sin(z*0.11+1.9)*ss(0,0.3,p)}
+// the road's segments (from FH.pts) bucketed on an 8 m grid over its box
+const FH_BB=[-100,112,768,950],FH_C=8,FH_NX=Math.ceil((FH_BB[1]-FH_BB[0])/FH_C),FH_G=[];
+// the ground with the foothills on it, the overlook levelled and the road graded in: each stretch of road within reach
+// in turn (in order up the road) takes the ground to its height across its width and down banks either side, their
+// width growing with the height to cut or fill (grassed, about 1 in 2), up to 10 m
+function fhGround(x,z,h){let n=h+fhHill(x,z);
+  const od=Math.hypot((x-FH_OV.x)/FH_OV.rx,(z-FH_OV.z)/FH_OV.rz);if(od<1.6&&FH_OV.y!==null)n=FH_OV.y+(n-FH_OV.y)*ss(1,1.6,od);
+  if(FH_G.length&&x>FH_BB[0]&&x<FH_BB[1]&&z>FH_BB[2]&&z<FH_BB[3]){const L=FH_G[Math.floor((z-FH_BB[2])/FH_C)*FH_NX+Math.floor((x-FH_BB[0])/FH_C)],w=FH.w/2;
+    let nd=99,nr=0;for(const q of L){let t=((x-q.ax)*q.dx+(z-q.az)*q.dz)*q.il;t=t<0?0:t>1?1:t;const d=Math.hypot(x-q.ax-q.dx*t,z-q.az-q.dz*t);if(d>w+10)continue;
+      const r=q.ha+(q.hb-q.ha)*t;n=r+(n-r)*ss(w,w+Math.min(10,1.5+2*Math.abs(n-r)),d);if(d<nd){nd=d;nr=r}}
+    // (and the roadway itself always at the road's height, wherever another leg's bank reaches it)
+    if(nd<w+1.5)n=nr+(n-nr)*ss(w,w+1.5,nd)}
+  return n}
+// the road's heights: sampled every 2 m from the ground under it, smoothed, held to a 10% grade; the overlook level with its end
+(function(){const S=[];for(let i=0;i<FH_RD.length-1;i++){const [ax,az]=FH_RD[i],[bx,bz]=FH_RD[i+1],n=Math.max(1,Math.ceil(Math.hypot(bx-ax,bz-az)/2));
+    for(let k=0;k<n;k++)S.push([ax+(bx-ax)*k/n,az+(bz-az)*k/n])}S.push(FH_RD[FH_RD.length-1].slice());
+  let h=S.map(([x,z])=>mainHeight(x,z));const s=[0];for(let i=1;i<S.length;i++)s.push(s[i-1]+Math.hypot(S[i][0]-S[i-1][0],S[i][1]-S[i-1][1]));
+  for(let it=0;it<40;it++){const g=h.slice();for(let i=1;i<h.length-1;i++)g[i]=(h[i-1]+2*h[i]+h[i+1])/4;h=g}
+  for(let i=1;i<h.length;i++)h[i]=Math.min(h[i],h[i-1]+0.1*(s[i]-s[i-1]));for(let i=h.length-2;i>=0;i--)h[i]=Math.min(h[i],h[i+1]+0.1*(s[i+1]-s[i]));
+  for(let i=1;i<h.length;i++)h[i]=Math.max(h[i],h[i-1]-0.1*(s[i]-s[i-1]));
+  FH.pts=S.map((p,i)=>[p[0],p[1],h[i],s[i]]);FH_OV.y=h[h.length-1];
+  const Q=[];for(let i=0;i<S.length-1;i++){const [ax,az,ha]=FH.pts[i],[bx,bz,hb]=FH.pts[i+1],dx=bx-ax,dz=bz-az;Q.push({ax,az,dx,dz,il:1/(dx*dx+dz*dz),ha,hb})}
+  for(let j=0;j<Math.ceil((FH_BB[3]-FH_BB[2])/FH_C);j++)for(let i=0;i<FH_NX;i++){const cx=FH_BB[0]+(i+0.5)*FH_C,cz=FH_BB[2]+(j+0.5)*FH_C;
+    FH_G.push(Q.filter(q=>{let t=((cx-q.ax)*q.dx+(cz-q.az)*q.dz)*q.il;t=Math.max(0,Math.min(1,t));return Math.hypot(cx-q.ax-q.dx*t,cz-q.az-q.dz*t)<FH_C*0.71+FH.w/2+10.5}))}})();
+// ---------- the mountains ----------
+// the front range (scenery.js draws it, train.js runs along its foot) rises from 790 m out from the middle of the lake,
+// pushed back to 1000 m behind the town for the foothills; where it meets the mainland it rises out of the ground,
+// under it at its foot and at least 20 m over it a little way up. mtnFrontY: its height r out at angle a (x = r cos a,
+// z = r sin a), and mtnF how far up its full height that is, 0 to 1 (for its colour)
+function mtnR0(a){const d=Math.abs(Math.atan2(Math.sin(a-Math.PI/2),Math.cos(a-Math.PI/2)));return 790+210*(1-ss(0.3,0.6,d))}
+let mtnF=0;
+function mtnFrontY(r,a){const R0=mtnR0(a),t=Math.pow(Math.max(0,(r-R0)/(1080-R0)),1/0.85),env=ss(0,0.3,t)*(1-0.5*ss(0.8,1,t)),side=0.5+0.5*Math.sin(a+2.4);
+  const n=(1-Math.abs(Math.sin(a*7+r*0.013)))*0.5+(1-Math.abs(Math.sin(a*17+r*0.031+1.3)))*0.3+(1-Math.abs(Math.sin(a*37-r*0.05+2.1)))*0.2;
+  let y=WATER-6+env*(0.45+0.55*side)*(30+240*n*n);
+  let up=0;if(Math.sin(a)>0.3){const L=mainHeight(Math.cos(a)*r,Math.sin(a)*r);if(L>WATER+0.5){const q=L-12+32*ss(0.02,0.18,t);if(q>y){up=1;y=q}}}
+  // (where it comes up out of the ground it is wooded, like the foothills)
+  mtnF=up?Math.min(0.2,(y-WATER+6)/270):(y-WATER+6)/270;return y}
+// the town side's walkable ground ends where the mountains come up out of it: for every 4 m of x, the furthest z south
+// that is still clear of them (MAIN_ZS), found at load
+const MAIN_ZMAX=1040,MAIN_ZS=new Float32Array(217);
+for(let i=0;i<217;i++){const x=-432+i*4;let z=mainRimS(x)+4;while(z<MAIN_ZMAX){const r=Math.hypot(x,z+4),a=Math.atan2(z+4,x);if(mainHeight(x,z+4)<mtnFrontY(r,a)+3)break;z+=4}MAIN_ZS[i]=z}
+function mainZS(x){const f=Math.max(0,Math.min(215.999,(x+432)/4)),i=f|0;return MAIN_ZS[i]+(MAIN_ZS[i+1]-MAIN_ZS[i])*(f-i)}
 function causewayH(x,z){let y=-1e9;for(const c of CAUSEWAYS){const [t,u]=deckLocal(c,x,z);if(t<-14||t>c.len+2)continue;
   const e=Math.max(Math.abs(u)-c.hw,-t,0),top=c.y+(c.y1-c.y)*Math.max(0,Math.min(1,t/c.len));
   const h=top-0.8*e-0.3*Math.sin(x*1.3+z*0.9)*ss(0,1.5,e);if(h>y)y=h}return y}
 // how much of the mainland ground is the hayfield (east of the north trail) or the woods floor (west of it); 0 to 1
 function mainField(x,z){return z>-300?0:ss(16,24,x)*ss(-300,-308,z)*(1-ss(390,420,x))}
 function mainWoods(x,z){return z>-300?0:ss(-16,-26,x)*ss(-300,-308,z)}
+// the forest floor round the town: up the foothills and out past the town's woods, but not on the overlook's clearing
+function mainForest(x,z){if(z<FH_Z0)return 0;return ss(0,24,Math.max(z-fhZ(x)+6,Math.abs(x)-300))*ss(1.3,2.2,Math.hypot((x-FH_OV.x)/FH_OV.rx,(z-FH_OV.z)/FH_OV.rz))}
 // on the mainland, at least lim in from its shore and inside the part that is drawn
-function mainIn(x,z,lim){return Math.abs(x)<=430-lim&&(z<0?z<=mainRimN(x)-lim&&z>=-555+lim:z>=mainRimS(x)+lim&&z<=765-lim)}
+function mainIn(x,z,lim){return Math.abs(x)<=430-lim&&(z<0?z<=mainRimN(x)-lim&&z>=-555+lim:z>=mainRimS(x)+lim&&z<=mainZS(x)-lim)}
 // metres along a deck and out from its centreline
 function deckLocal(b,x,z){const dx=x-b.x0,dz=z-b.z0;return [dx*b.ux+dz*b.uz,dz*b.ux-dx*b.uz]}
 // the deck height at x,z, or -1e9 off every deck
@@ -180,7 +250,7 @@ function landClamp(x,z,lim,side,walk){if(landIn(x,z,lim,side,walk))return [x,z];
     for(let n=0;n<160;n++){px-=ux*0.5;pz-=uz*0.5;if(mesaR(px,pz)<=EDGE-lim||shoreIn(px,pz,lim)){c.push([px,pz]);break}}}
   c.push([FAM_X+(x-FAM_X)*(FAM_R-lim)/f,FAM_Z+(z-FAM_Z)*(FAM_R-lim)/f]);
   c.push([JES_X+(x-JES_X)*(JES_R-lim)/j,JES_Z+(z-JES_Z)*(JES_R-lim)/j]);
-  {const mx=Math.max(lim-430,Math.min(430-lim,x));c.push(z<0?[mx,Math.max(-555+lim,Math.min(mainRimN(mx)-lim,z))]:[mx,Math.min(765-lim,Math.max(mainRimS(mx)+lim,z))])}
+  {const mx=Math.max(lim-430,Math.min(430-lim,x));c.push(z<0?[mx,Math.max(-555+lim,Math.min(mainRimN(mx)-lim,z))]:[mx,Math.min(mainZS(mx)-lim,Math.max(mainRimS(mx)+lim,z))])}
   for(const b of CAUSEWAYS){let [t,u]=deckLocal(b,x,z);t=Math.max(0,Math.min(b.len,t));u=Math.max(side+0.4-b.hw,Math.min(b.hw-side-0.4,u));c.push([b.x0+b.ux*t-b.uz*u,b.z0+b.uz*t+b.ux*u])}
   for(const b of BRIDGES){if((b.foot||b.dock)&&!walk)continue;let [t,u]=deckLocal(b,x,z);t=Math.max(0,Math.min(b.len,t));u=Math.max(side-b.hw,Math.min(b.hw-side,u));
     c.push([b.x0+b.ux*t-b.uz*u,b.z0+b.uz*t+b.ux*u])}
@@ -228,6 +298,8 @@ const ISLAND_ROADS=[
   {w:5,mid:0,pts:[[-170,576],[-60,574],[0,574]]},
   {w:5,mid:0,pts:[[0,574],[26,574],[36,582],[57.5,586.4]]},
   {w:6,mid:0,pts:[[-140,652],[0,652],[140,652]]},
+  // Overlook Road and the Lookout Trail up the foothills (graded in fhGround; paved and laid in hills.js)
+  {w:6.6,mid:0,pts:FH_RD},{w:1.5,mid:0,pts:FH_TRAIL},
   {w:4.8,mid:0,pts:[[0,63,FAM_Y],[0,72,FAM_Y]]},
   {w:4.8,mid:0,pts:[[0,165,FAM_Y],[0,234,FAM_Y]]},
   {w:4.8,mid:0,pts:Array.from({length:17},(_,i)=>[FAM_X+Math.sin(i/16*Math.PI*2)*11,FAM_Z-Math.cos(i/16*Math.PI*2)*11,FAM_Y])},
@@ -242,7 +314,7 @@ const ISLAND_ROADS=[
 ];
 // segments bucketed on a 4 m grid so a lookup only checks the few nearby; roadAt leaves its answer in RD_*.
 // Rebuilt whenever the editor changes a road
-const RG_X0=-452,RG_Z0=-600,RG_C=4,RG_NX=227,RG_NZ=352,RG=[],RSEG=[];
+const RG_X0=-452,RG_Z0=-600,RG_C=4,RG_NX=227,RG_NZ=412,RG=[],RSEG=[];
 function roadsBuild(){RSEG.length=0;RG.length=0;
   for(const r of ROADS.concat(ISLAND_ROADS))for(let i=0;i<r.pts.length-1;i++){const a=r.pts[i],b=r.pts[i+1],dx=b[0]-a[0],dz=b[1]-a[1];if(dx*dx+dz*dz<1e-6)continue;
     RSEG.push({ax:a[0],az:a[1],dx,dz,il:1/(dx*dx+dz*dz),ha:a[2],hb:b[2],w:r.w,mid:r.mid,g:a.length>2&&b.length>2})}
