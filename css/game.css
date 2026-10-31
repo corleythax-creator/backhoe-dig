@@ -163,6 +163,13 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 #lawnChip[hidden]{display:none}
 /* the floating percentage gauges (bucket, lawn patch) are switched off for now (owner, Oct 30); delete this line to bring them back */
 #bucketChip,#lawnChip{display:none!important}
+#tfChip{position:absolute;right:calc(var(--pr) + 12px);bottom:calc(env(safe-area-inset-bottom,0px) + 84px);z-index:3;zoom:var(--ms);min-width:190px;box-sizing:border-box;
+  display:grid;grid-template-columns:1fr auto;align-items:baseline;gap:6px 14px;padding:10px 16px 11px;border-radius:14px;background:var(--glass);border:1px solid var(--hud-line);box-shadow:var(--lift);pointer-events:none}
+#tfChip[hidden]{display:none}
+#tfChipName,#tfShopName,#tfChip .lbl{font:600 14px/1 var(--f-display);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
+#tfChipVal,#tfShopVal,#tfChipDead{font:700 26px/1 var(--f-display);font-variant-numeric:tabular-nums}
+#tfChipDead{color:var(--danger)}
+#tfChipSub{grid-column:1/-1;font:600 14px/1.2 var(--f-display);color:var(--muted);white-space:nowrap}#tfChipSub b{color:var(--ink);font-variant-numeric:tabular-nums}
 #lawnChipName{font:600 13px/1 var(--f-display);letter-spacing:.14em;text-transform:uppercase;color:var(--muted);white-space:nowrap}
 #lawnChipVal{font:700 22px/1 var(--f-display);font-variant-numeric:tabular-nums}
 #lawnChip .bar{grid-column:1/-1;display:block}#lawnChipBar{background:#9bd46a}
@@ -276,6 +283,8 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 #startMap{position:relative;flex:1 1 auto;min-height:260px;border-radius:14px;overflow:hidden;border:1px solid var(--hud-line);background:#1a4769;cursor:progress}
 #startMap.ready{cursor:crosshair}
 #startMapImg{position:absolute;max-width:none;display:block;pointer-events:none;user-select:none}
+#startDet{position:absolute;inset:0;pointer-events:none}#startDet[hidden],#startDet img[hidden]{display:none}
+#startDet img{position:absolute;max-width:none;display:block;user-select:none;opacity:0;transition:opacity .3s}#startDet img.on{opacity:1}
 #startMap{touch-action:manipulation}
 #startPin{position:absolute;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;background:var(--machine);border:3px solid #fff;box-shadow:0 0 0 6px rgba(240,122,34,.35),0 2px 6px rgba(0,0,0,.6);pointer-events:none}
 #startPin[hidden]{display:none}

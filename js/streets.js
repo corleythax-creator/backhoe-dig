@@ -3,7 +3,8 @@
 // gutter each side (cb) and a broom-finish sidewalk sw metres wide scored every 5 ft. Curbs and sidewalks are walk pads
 // (feet and wheels step up onto them, tag 'street'). Where a street runs into another, its curbs, gutters, sidewalks
 // and line stop at the other's edge, so crossings and T-junctions open up by themselves. Built on baseHeight, so it is
-// rebuilt after every road change (roadsBuild) and by edRefresh over a street (streetsEdRefresh)
+// rebuilt after every road change (roadsBuild) and by edRefresh over a street (streetsEdRefresh). A street's surface (sf)
+// can instead be brick or cobblestone with real relief (ST_SURF, mainland.js)
 const ST={grp:null,curb:0.15,top:0.17,lift:0.035,gut:0.4,joint:1.524,box:null};
 // the paved roads' centreline segments, each with whether its ends are the road's ends (cut flat there, not rounded)
 function stSegs(){const L=[];for(const r of ROADS){if(!r.pv||r.pts.length<2)continue;const n=r.pts.length,cl=stClosed(r);
@@ -27,26 +28,30 @@ function streetsBuild(){const G=baseHeight;
   if(ST.grp){scene.remove(ST.grp);ST.grp.traverse(o=>{if(o.geometry)o.geometry.dispose()});ST.grp=null}
   ST.dirty=0;walkPadsDrop('street');const L=stSegs();ST.box=null;if(!L.length)return;
   if(typeof shopLoad==='function')shopLoad();
-  const K=shopKit(),asph=shopLib('asphalt'),walk=shopLib('concrete_broom'),conc=shopLib('concrete'),
+  const K=shopKit(),SF=[],asph=shopLib('asphalt'),walk=shopLib('concrete_broom'),conc=shopLib('concrete'),
     joint=ST.jm||(ST.jm=shopStd(0x6a6862,0,0.95)),yel=ST.ym||(ST.ym=shopStd(0xd8b024,0,0.6));
   ROADS.forEach((r,ri)=>{if(!r.pv||r.pts.length<2)return;const F=stFrame(r);if(F.n<2)return;const hw=r.w/2,lift=ST.lift+0.002*(ri%5);
     for(const q of F.P){const e=stReach(r)+1;ST.box=edUnionBox(ST.box,[q[0]-e,q[0]+e,q[1]-e,q[1]+e])}
     const at=(i,t,s)=>{const a=F.P[i],b=F.P[i+1],ma=F.M[i],mb=F.M[i+1],x=a[0]+ma[0]*s+(b[0]+mb[0]*s-a[0]-ma[0]*s)*t,z=a[1]+ma[1]*s+(b[1]+mb[1]*s-a[1]-ma[1]*s)*t;return [x,z]};
     // a band from offset s0 to s1 (left of the centreline is +), lifted y0 at s0 and y1 at s1 over the ground (a wall when
     // s0 = s1), facing up or, for a wall, toward side f; cut: leave out the pieces on another street; pad: lay walk pads
-    const band=(mat,s0,y0,s1,y1,f,cut,pad)=>{const Pos=[],wall=Math.abs(s1-s0)<1e-4,na=wall?1:Math.max(1,Math.ceil(Math.abs(s1-s0)/1.0));
-      for(let i=0;i<F.n-1;i++){const [nx,nz,ux,uz,len]=F.N[i],nl=Math.max(1,Math.ceil(len/1.5));
+    // sf: a brick or cobble surface's collector instead, which takes the triangles with texture coordinates in each
+    // segment's own frame (u across, v along from the street's start), so the rows meet the next segment's at the mitre
+    const band=(mat,s0,y0,s1,y1,f,cut,pad,sf)=>{const Pos=[],wall=Math.abs(s1-s0)<1e-4,na=wall?1:Math.max(1,Math.ceil(Math.abs(s1-s0)/1.0));let v0=0;
+      for(let i=0;i<F.n-1;v0+=F.N[i][4],i++){const [nx,nz,ux,uz,len]=F.N[i],nl=Math.max(1,Math.ceil(len/1.5)),o0=F.P[i];
         for(let k=0;k<nl;k++){const t0=k/nl,t1=(k+1)/nl;
           if(cut){const [mx,mz]=at(i,(t0+t1)/2,(s0+s1)/2);if(stIn(L,r,mx,mz,0.05))continue}
           for(let a=0;a<na;a++){const sa=s0+(s1-s0)*a/na,sb=s0+(s1-s0)*(a+1)/na,ya=y0+(y1-y0)*a/na,yb=y0+(y1-y0)*(a+1)/na;
             const v=(t,s,y)=>{const [x,z]=at(i,t,s);return [x,(wall?G(x,z):G(x,z))+y,z]};
             const A=v(t0,sa,ya),B=v(t0,sb,yb),C=v(t1,sa,ya),D=v(t1,sb,yb);
             const tri=(p,q,o)=>{const e1=[q[0]-p[0],q[1]-p[1],q[2]-p[2]],e2=[o[0]-p[0],o[1]-p[1],o[2]-p[2]],cx=e1[1]*e2[2]-e1[2]*e2[1],cy=e1[2]*e2[0]-e1[0]*e2[2],cz=e1[0]*e2[1]-e1[1]*e2[0];
-              const d=wall?(cx*nx+cz*nz)*f:cy;if(d<0)[q,o]=[o,q];Pos.push(...p,...q,...o)};
+              const d=wall?(cx*nx+cz*nz)*f:cy;if(d<0)[q,o]=[o,q];Pos.push(...p,...q,...o);
+              if(sf)for(const w of [p,q,o])sf.U.push(((w[0]-o0[0])*nx+(w[2]-o0[1])*nz)*sf.t,(v0+(w[0]-o0[0])*ux+(w[2]-o0[1])*uz)*sf.t)};
             tri(A,C,B);tri(B,C,D)}
           if(pad){const [mx,mz]=at(i,(t0+t1)/2,(s0+s1)/2);walkPad(mx,mz,Math.abs(s1-s0)/2,len/nl/2+0.02,Math.atan2(ux,uz),0,{l:y0,tag:'street'})}}}
-      if(!Pos.length)return;const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(Pos,3));K.put(mat,g)};
-    band(asph,-hw,lift,hw,lift,0,false,false);
+      if(!Pos.length)return;if(sf){sf.P.push(...Pos);return}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(Pos,3));K.put(mat,g)};
+    const sd=ST_SURF[r.sf];if(sd){const c=SF[r.sf]||(SF[r.sf]={P:[],U:[],t:1/(sd.ft*0.3048)});band(null,-hw,lift,hw,lift,0,false,false,c)}
+    else band(asph,-hw,lift,hw,lift,0,false,false);
     if(r.cl&&r.w>=4.2)for(const o of [-0.12,0.12])band(yel,o-0.05,lift+0.006,o+0.05,lift+0.006,0,true,false);
     const sw=r.sw||0,top=r.cb?ST.top:lift+0.03,a=hw+(r.cb?ST.curb:0),b=a+sw;
     for(const s of [-1,1]){const S=(o)=>o*s,lo=(p,q)=>[Math.min(S(p),S(q)),Math.max(S(p),S(q))];
@@ -60,7 +65,11 @@ function streetsBuild(){const G=baseHeight;
             if(stIn(L,r,mx,mz,0.05))continue;const P=[],v=(tt,ss)=>{const [x,z]=at(i,tt,ss);return [x,G(x,z)+top+0.004,z]},A=v(t-dt,w0),B=v(t-dt,w1),C=v(t+dt,w0),D=v(t+dt,w1);
             for(const [p,q,o] of [[A,C,B],[B,C,D]]){const cy=(q[2]-p[2])*(o[0]-p[0])-(q[0]-p[0])*(o[2]-p[2]);if(cy<0)P.push(...p,...o,...q);else P.push(...p,...q,...o)}
             const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(P,3));K.put(joint,g)}d+=len}}}});
-  ST.grp=new THREE.Group();ST.grp.name='streets';K.add(ST.grp);scene.add(ST.grp)}
+  ST.grp=new THREE.Group();ST.grp.name='streets';K.add(ST.grp);
+  SF.forEach((c,f)=>{if(!c||!c.P.length)return;const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(c.P,3));
+    g.setAttribute('uv',new THREE.Float32BufferAttribute(c.U,2));g.computeVertexNormals();g.computeBoundingSphere();
+    const m=new THREE.Mesh(g,stSurfMat(f));m.receiveShadow=true;m.layers.enable(RAIN_LAYER);ST.grp.add(m)});
+  scene.add(ST.grp)}
 const edUnionBox=(a,b)=>!a?b:!b?a:[Math.min(a[0],b[0]),Math.max(a[1],b[1]),Math.min(a[2],b[2]),Math.max(a[3],b[3])];
 // edRefresh: the ground moved under x0..x1, z0..z1; rebuild the streets if one is there
 // (after a road change, ST.dirty; else at the end of a stroke or drag)

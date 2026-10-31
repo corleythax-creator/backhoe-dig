@@ -57,7 +57,7 @@ Drawn by the game: wet ground darkens and shines in the ground shader as it soak
 
 **G03 Grass, summer** -> `ground/grass.jpg`. Needs: K01, K10
 > [STYLE][TEXTURE] Mown lawn grass seen from above: tight short blades in many directions, mid-green with yellow-green and a few dry straw blades, tiny clover leaves scattered. Blade-level detail.
-In game: `textures/ground/*/grass.jpg`, and the Lawn sod material `textures/grass2.jpg`
+In game: `textures/ground/*/grass.jpg`, and the Lawn sod material `textures/grass2.jpg` (ambientCG Grass006 since v279)
 
 **G04 Grass, long and weedy** -> `ground/grass_long.jpg`. Needs: K08, S10
 > [STYLE][TEXTURE] Unmown field grass seen from above: long blades lying in swirls, golden-green with seed heads, dandelion leaves and a few white clover flowers.
@@ -132,7 +132,7 @@ Upgrade: passable. Since v254 the family house wears a photo-scanned cream clapb
 
 **P07 Cedar shingle roof** -> `materials/shingle_cedar.jpg`. Needs: H01, S22
 > [STYLE][TEXTURE] Weathered cedar shake roof shingles in staggered rows, silver-brown with moss in a few lower edges.
-Close match: `textures/shingles.jpg` is roof shingles; no cedar shakes yet
+Close match: `textures/shingles.jpg` is roof shingles (Poly Haven grey_roof_01 since v279); no cedar shakes yet
 Upgrade: passable. The covered bridge has cedar shakes drawn by the game; since v255 the farmhouse has photo-scanned grey shingles (`textures/roof_grey.jpg`, Poly Haven).
 
 **P08 Red barn board** -> `materials/barn_red.jpg`. Needs: H10, I10
@@ -323,18 +323,15 @@ In game: `textures/deck_grey.jpg` (photo-scanned, ambientCG Planks023A) on the m
 
 **M12 Breakwater stone** -> `materials/riprap.jpg`. Needs: the breakwater [TEXTURE]
 > [STYLE][TEXTURE] Close view of a rough grey granite boulder's surface for a lake breakwater: speckled grey and pink granite, lichen spots, a dark wet band, a few green algae streaks. Seamless; this goes on each boulder.
-Not in the game yet: still to make.
-Upgrade: poor. The breakwater is plain grey stone shapes.
+In game: `textures/rock_bw.jpg` (photo-scanned granite, ambientCG Granite005B) on every breakwater boulder, in six shades, since v280
 
 **M13 Standing-seam metal roof** -> `materials/roof_seam.jpg` [TEXTURE]
 > [STYLE][TEXTURE] Standing-seam steel roof seen straight on, charcoal grey, seams every 16 inches, faint weathering streaks and a little pollen in the seams.
-Not in the game yet: still to make.
-Upgrade: poor. The metal roofs are a plain colour.
+In game: `textures/roof_seam.jpg` (Poly Haven box_profile_metal_sheet, made grey and tinted) on the Dockside Grill (charcoal) and the bandstand (green) since v280
 
 **M14 Awning canvas** -> `materials/awning_stripes.jpg` [TEXTURE]
 > [STYLE][TEXTURE] Woven outdoor awning canvas with wide vertical stripes, alternating forest green and cream, the fabric weave visible up close, slightly sun-faded. Ask again in red and white, navy and white, and mustard and white.
-Not in the game yet: still to make.
-Upgrade: poor. The awnings are a plain colour.
+Close match: `textures/canvas.jpg` (Poly Haven rough_linen, made grey) gives every awning stripe a woven canvas in its own colour since v280; the stripes are still drawn by the game
 
 **M15 Boat hulls and names** -> `town/boat_names.png` (transparent PNG, 2048x1024: a grid of 12)
 > [STYLE] Twelve boat transom names as clean vinyl lettering on transparent background, each centred in its own cell with a hailing port under it "LAKESIDE": Reel Time, Knot On Call, Seas the Day, Lake Effect, Miss Corley, Dock Holiday, Aqua Therapy, Sunset Serenade, Fishful Thinking, Wet Willie, Second Wind, Liquid Asset. Mix of script and block styles in navy, black, red and gold.
