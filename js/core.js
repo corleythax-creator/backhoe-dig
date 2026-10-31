@@ -90,6 +90,29 @@ renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=0
 					for ( int i = 0; i < 8; i ++ ) s += texture( shadowMap, vec3( shadowCoord.xy + vogelDiskSample( i, 8, ph + 1.3 ) * rr, shadowCoord.z ) );
 					return mix( 1.0, s * 0.125, shadowIntensity );
 				}`);
+  // cascaded shadows: with the far sun on (sunFar, below), the sun's shadow is the near map's inside it and fades into
+  // the far map's over the last 6% of the near map toward its edges; the far map fades out the same way at its own.
+  // The far sun gives no light, so its own pass through the light loop skips its shadow
+  C.shadowmap_pars_fragment+=`
+#if defined( USE_SHADOWMAP ) && NUM_DIR_LIGHT_SHADOWS > 1
+	float csmFar( float s0 ) {
+		vec3 c0 = vDirectionalShadowCoord[ 0 ].xyz / vDirectionalShadowCoord[ 0 ].w;
+		vec2 e0 = min( c0.xy, 1.0 - c0.xy );
+		float w0 = c0.z > 1.0 ? 0.0 : smoothstep( 0.0, 0.06, min( e0.x, e0.y ) );
+		if ( w0 >= 1.0 ) return s0;
+		DirectionalLightShadow f = directionalLightShadows[ 1 ];
+		vec3 c1 = vDirectionalShadowCoord[ 1 ].xyz / vDirectionalShadowCoord[ 1 ].w;
+		vec2 e1 = min( c1.xy, 1.0 - c1.xy );
+		float s1 = mix( 1.0, getShadow( directionalShadowMap[ 1 ], f.shadowMapSize, f.shadowIntensity, f.shadowBias, f.shadowRadius, vDirectionalShadowCoord[ 1 ] ), smoothstep( 0.0, 0.06, min( e1.x, e1.y ) ) );
+		return mix( s1, s0, w0 );
+	}
+#else
+	#define csmFar( s ) ( s )
+#endif
+`;
+  const ds='directLight.color *= ( directLight.visible && receiveShadow ) ? getShadow( directionalShadowMap[ i ], directionalLightShadow.shadowMapSize, directionalLightShadow.shadowIntensity, directionalLightShadow.shadowBias, directionalLightShadow.shadowRadius, vDirectionalShadowCoord[ i ] ) : 1.0;';
+  if(C.lights_fragment_begin.includes(ds))C.lights_fragment_begin=C.lights_fragment_begin.replace(ds,
+    '#if UNROLLED_LOOP_INDEX == 0\n\t\t'+ds.replace('? getShadow(','? csmFar( getShadow(').replace(' : 1.0;',' ) : 1.0;')+'\n\t\t#endif');
 })();
 // cloud shadows (storm.js): the sun's light dims under the clouds on every lit material. Their numbers are shared by all
 // of them (CS_U): uCSMap the clouds' cover map, uCSA (its offset x and z in m, 1 / its size in m, the shadow's strength;
@@ -97,13 +120,40 @@ renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=0
 // uCSW how soft the edge of the cover is. Every material's own onBeforeCompile still runs; the shared numbers are added
 // after it to any shader with lights
 const CS_U={uCSMap:{value:null},uCSA:{value:new THREE.Vector4()},uCSB:{value:new THREE.Vector4()},uCSW:{value:0.1}};
+// the haze (every Graphics level): it thickens with the true distance from the camera (not the depth along the view, which
+// thinned it at the screen's sides and shifted it as the camera turned), lies thicker low over the lake than up high,
+// and toward the sun takes the sun's light, the same glow the sky has round the sun (so far ground meets the sky behind
+// it) and a broader warm sheen at the tuning's strength. HZ_U, shared by every material with haze (post.js hazeTick):
+// uHzSun the way to the sun and the sheen's strength, uHzSunC the sun's light in the haze (dark at night and under
+// cloud), uHzLow the lake's height, 1 / the height in m over which the haze thins, and how much it thins
+const HZ_U={uHzSun:{value:new THREE.Vector4(0,1,0,1)},uHzSunC:{value:new THREE.Color(0)},uHzLow:{value:new THREE.Vector3(-7.3,1/60,0.6)}};
+(function(){const C=THREE.ShaderChunk;
+  C.fog_pars_vertex+='\n#ifdef USE_FOG\n\tvarying vec3 vFogPos;\n#endif';
+  C.fog_vertex+='\n#ifdef USE_FOG\n\tvFogPos = mvPosition.xyz;\n#endif';
+  C.fog_pars_fragment+='\n#ifdef USE_FOG\n\tvarying vec3 vFogPos;\n\tuniform vec4 uHzSun;\n\tuniform vec3 uHzSunC, uHzLow;\n#endif';
+  C.fog_fragment=`#ifdef USE_FOG
+	vec3 hzW = transpose( mat3( viewMatrix ) ) * vFogPos;
+	float hzD = length( hzW );
+	#ifdef FOG_EXP2
+		float fogFactor = 1.0 - exp( - fogDensity * fogDensity * hzD * hzD );
+	#else
+		float hzT = max( hzD - fogNear, 0.0 ) / max( fogFar - fogNear, 1.0 );
+		float hzY = cameraPosition.y + 0.5 * hzW.y - uHzLow.x;
+		hzT *= mix( 1.0, exp( - max( hzY, 0.0 ) * uHzLow.y ), uHzLow.z );
+		float fogFactor = max( 1.0 - exp( - 2.8 * hzT * hzT ), smoothstep( 0.8 * fogFar, fogFar, hzD ) );
+	#endif
+	float hzS = max( dot( hzW / max( hzD, 1e-4 ), uHzSun.xyz ), 0.0 );
+	vec3 hzColor = fogColor + uHzSunC * ( 0.32 * pow( hzS, 10.0 ) + 0.22 * uHzSun.w * hzS * hzS * hzS );
+	gl_FragColor.rgb = mix( gl_FragColor.rgb, hzColor, fogFactor );
+#endif`;
+})();
 (function(){const C=THREE.ShaderChunk,P=THREE.Material.prototype,base=P.onBeforeCompile,K=Symbol('obc');
   C.lights_pars_begin+='\nuniform sampler2D uCSMap;uniform vec4 uCSA,uCSB;uniform float uCSW;\n'+
     'float csShade(vec3 gp){if(uCSA.w<=0.0)return 1.0;vec3 w=transpose(mat3(viewMatrix))*(gp-viewMatrix[3].xyz);\n'+
     '  float c=texture(uCSMap,(w.xz+uCSB.xy*(uCSB.z-w.y)+uCSA.xy)*uCSA.z).r;return 1.0-uCSA.w*smoothstep(uCSB.w,uCSB.w+uCSW,c);}\n';
   const dl='getDirectionalLightInfo( directionalLight, directLight );';
   if(C.lights_fragment_begin.includes(dl))C.lights_fragment_begin=C.lights_fragment_begin.replace(dl,dl+'\n\t\tdirectLight.color *= csShade( geometryPosition );');
-  const use=sh=>{if(sh.fragmentShader.includes('lights_pars_begin'))Object.assign(sh.uniforms,CS_U)};
+  const use=sh=>{if(sh.fragmentShader.includes('lights_pars_begin'))Object.assign(sh.uniforms,CS_U);if(sh.fragmentShader.includes('fog_pars_fragment'))Object.assign(sh.uniforms,HZ_U)};
   const def=function(sh){use(sh)};def.toString=()=>base.toString();
   Object.defineProperty(P,'onBeforeCompile',{configurable:true,get(){return this[K]||def},
     set(f){if(!f){this[K]=null;return}const w=function(sh,r){f.call(this,sh,r);use(sh)};w.toString=()=>String(f);this[K]=w}});
@@ -127,14 +177,14 @@ const skySunVis={value:1};
 const skyU={uSun:{value:SUN_DIR},uSunVis:skySunVis,uTop:{value:new THREE.Color(0x4f86bd)},uHor:{value:new THREE.Color(0xbfd2dd)},
   uGlow:{value:new THREE.Color(0)},uSunC:{value:new THREE.Color(1,0.86,0.62)},uMoon:{value:new THREE.Vector3(0,-1,0)},uMoonV:{value:0},
   uStars:{value:0},uCel:{value:new THREE.Matrix3()},uGNP:{value:new THREE.Vector3(0,0,1)},uSkyT:{value:0},
-  uMetA:{value:new THREE.Vector3(0,1,0)},uMetB:{value:new THREE.Vector3(0,1,0)},uMetT:{value:-1}};
+  uMetA:{value:new THREE.Vector3(0,1,0)},uMetB:{value:new THREE.Vector3(0,1,0)},uMetT:{value:-1},uHzSun:HZ_U.uHzSun};
 const sky=(function(){
   const g=new THREE.SphereGeometry(1300,64,32);
   const mat=new THREE.MeshBasicMaterial({side:THREE.BackSide,fog:false,depthWrite:false,toneMapped:false});
   // gradient, sun disc and glow, moon with its phase, stars and the Milky Way, drawn per pixel
   mat.onBeforeCompile=sh=>{Object.assign(sh.uniforms,skyU);
     sh.vertexShader='varying vec3 vDir;\n'+sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvDir=position;');
-    sh.fragmentShader='uniform vec3 uSun,uTop,uHor,uGlow,uSunC,uMoon,uGNP,uMetA,uMetB;uniform float uSunVis,uMoonV,uStars,uSkyT,uMetT;uniform mat3 uCel;\nvarying vec3 vDir;\n'+
+    sh.fragmentShader='uniform vec3 uSun,uTop,uHor,uGlow,uSunC,uMoon,uGNP,uMetA,uMetB;uniform float uSunVis,uMoonV,uStars,uSkyT,uMetT;uniform mat3 uCel;uniform vec4 uHzSun;\nvarying vec3 vDir;\n'+
       'float skH(vec3 p){return fract(sin(dot(p,vec3(127.1,311.7,74.7)))*43758.5453);}\n'+
       'float skN(vec3 p){vec3 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);return mix(mix(mix(skH(i),skH(i+vec3(1,0,0)),f.x),mix(skH(i+vec3(0,1,0)),skH(i+vec3(1,1,0)),f.x),f.y),mix(mix(skH(i+vec3(0,0,1)),skH(i+vec3(1,0,1)),f.x),mix(skH(i+vec3(0,1,1)),skH(i+1.0),f.x),f.y),f.z);}\n'+
       sh.fragmentShader.replace('#include <color_fragment>',
@@ -143,6 +193,8 @@ const sky=(function(){
       'diffuseColor.rgb*=mix(uHor,uTop,pow(gt,0.8))+uGlow*(0.25+0.75*az*az*az)*(1.0-smoothstep(0.0,0.5,sd.y));\n'+
       '#include <color_fragment>\n'+
       'float up=smoothstep(-0.03,0.02,sd.y);\n'+
+      // the haze's broad sheen toward the sun (HZ_U), low on the sky where the far haze meets it
+      'diffuseColor.rgb+=uSunVis*uSunC*uHzSun.w*0.22*cs*cs*cs*(1.0-smoothstep(0.0,0.3,sd.y))*smoothstep(-0.05,0.0,uSun.y)*up;\n'+
       'diffuseColor.rgb+=uSunVis*uSunC*(0.32*pow(cs,10.0)+0.5*pow(cs,180.0))*(0.6+0.4*smoothstep(0.0,0.3,sd.y))*up+uSunVis*uSunC*vec3(12.0,12.2,13.7)*smoothstep(0.99955,0.9997,cs)*up;\n'+
       // stars on the turning star sphere, more of them along the Milky Way, twinkling
       'if(uStars>0.001){vec3 cel=uCel*sd;float gb=dot(cel,uGNP),band=exp(-gb*gb*14.0);vec3 p=cel*130.0,id=floor(p),f=fract(p);float hh=skH(id);float s=0.0;\n'+
@@ -170,6 +222,35 @@ sun.castShadow=true; sun.shadow.mapSize.set(PHONE?1024:2048,PHONE?1024:2048);
 const SUN_D=80;Object.assign(sun.shadow.camera,{left:-14,right:14,top:14,bottom:-14,near:1,far:SUN_D+90});
 sun.shadow.bias=-0.0004; sun.shadow.normalBias=0.02;
 scene.add(sun); scene.add(sun.target);
+// far shadows (gfx.js csm, High and Ultra): a second sun that gives no light (intensity 0) and only casts, into a coarser
+// map spread wide round you and ahead of the camera, so hills, cliffs, buildings and trees past the near map still throw
+// shadows. Lit materials take the near map where it reaches and fade into this one past its edges (the cascade patch
+// above, csmFar); it must come after the sun in the scene, so it is the second directional light the shaders see.
+// sunFarTick moves it and draws its map again every few frames
+const sunFar=new THREE.DirectionalLight(0xffffff,0);sunFar.castShadow=false;sunFar.visible=false;
+Object.assign(sunFar.shadow.camera,{left:-160,right:160,top:160,bottom:-160,near:1,far:840});
+sunFar.shadow.bias=-0.0005;sunFar.shadow.normalBias=0.15;sunFar.shadow.autoUpdate=false;
+scene.add(sunFar);scene.add(sunFar.target);
+const sunFarC=new THREE.Vector3(),sunFarV=new THREE.Vector3(),sunFarX=new THREE.Vector3(),sunFarY=new THREE.Vector3(),sunFarL=new THREE.Vector3();let sunFarN=0,sunFarScanT=0;
+// small instanced things (grass, tufts, pebbles: under 6 ft across) cast into the near map only; in the far one they
+// would be a few texels and cost as much as the rest of it. Looked for every 3 s, as scattering adds more
+function sunFarSmall(o){if(o.userData.csmSm||!o.isInstancedMesh||!o.castShadow)return;const g=o.geometry;if(!g.boundingSphere)g.computeBoundingSphere();
+  o.userData.csmSm=1;if(g.boundingSphere.radius>=1)return;const b=o.onBeforeShadow,a=o.onAfterShadow;
+  o.onBeforeShadow=function(r,ob,c,sc,ge,dm,gr){if(sc===sunFar.shadow.camera){this.userData.csmN=this.count;this.count=0}else b.call(this,r,ob,c,sc,ge,dm,gr)};
+  o.onAfterShadow=function(r,ob,c,sc,ge,dm,gr){if(sc===sunFar.shadow.camera)this.count=this.userData.csmN;else a.call(this,r,ob,c,sc,ge,dm,gr)}}
+function sunFarTick(){if(!sunFar.visible)return;
+  const now=performance.now();if(now>sunFarScanT){sunFarScanT=now+3000;scene.traverse(sunFarSmall)}
+  const fc=sunFar.shadow.camera,R=fc.right,turn=sunFarL.distanceToSquared(LIGHT_DIR)>4e-6;
+  if(!turn&&++sunFarN<TU.csmEvery)return;sunFarN=0;sunFarL.copy(LIGHT_DIR);
+  // the middle: where the near map is, pushed ahead along the camera's view, where most of what you see lies
+  camera.getWorldDirection(sunFarV);sunFarV.y=0;if(sunFarV.lengthSq()>1e-6)sunFarV.normalize();
+  sunFarC.copy(sun.target.position).addScaledVector(sunFarV,R*0.45);
+  // held to the map's own texel grid (the shadow camera's sideways and up axes), so its edges don't crawl as you move
+  sunFarX.set(0,1,0).cross(LIGHT_DIR).normalize();sunFarY.copy(LIGHT_DIR).cross(sunFarX);
+  const t=2*R/sunFar.shadow.mapSize.x,ax=sunFarC.dot(sunFarX),ay=sunFarC.dot(sunFarY);
+  sunFarC.addScaledVector(sunFarX,Math.round(ax/t)*t-ax).addScaledVector(sunFarY,Math.round(ay/t)*t-ay);
+  sunFar.target.position.copy(sunFarC);sunFar.position.copy(sunFarC).addScaledVector(LIGHT_DIR,fc.far/2);
+  sunFar.updateMatrixWorld();sunFar.target.updateMatrixWorld();sunFar.shadow.needsUpdate=true}
 // sky reflections: the dome over a dull ground, caught into a small cube map for glass, paint, chrome and water; daynight.js
 // catches it again as the sky changes (skyEnvUpdate), from a scene of its own that holds only the dome and the ground
 const skyEnvRT=new THREE.WebGLCubeRenderTarget(64,{generateMipmaps:true,minFilter:THREE.LinearMipmapLinearFilter}),skyEnv=skyEnvRT.texture;

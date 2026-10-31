@@ -101,7 +101,7 @@ vec2 lkRain(vec2 p,float t){vec2 s=vec2(0.0);p*=1.6;vec2 c=floor(p);
     .replace('#include <opaque_fragment>',`vec3 lkDf=reflectedLight.directDiffuse+reflectedLight.indirectDiffuse,lkSp=reflectedLight.directSpecular+reflectedLight.indirectSpecular;
       float lkA=diffuseColor.a+(1.0-diffuseColor.a)*lkF*(1.0-lkFoam);
       gl_FragColor=vec4(lkDf*diffuseColor.a+lkSp*(1.0-0.7*lkFoam),lkA);`)
-    .replace('#include <fog_fragment>',THREE.ShaderChunk.fog_fragment.replace('fogColor, fogFactor','fogColor*gl_FragColor.a, fogFactor'))};
+    .replace('#include <fog_fragment>',THREE.ShaderChunk.fog_fragment.replace('hzColor, fogFactor','hzColor*gl_FragColor.a, fogFactor'))};
 const lake=new THREE.Mesh(new THREE.PlaneGeometry(3400,3400,150,150).rotateX(-Math.PI/2),lkMat);
 lake.position.y=WATER;lake.receiveShadow=true;lake.renderOrder=-1;scene.add(lake);
 // the Graphics setting (gfx.js)

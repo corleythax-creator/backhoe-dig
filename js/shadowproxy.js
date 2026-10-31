@@ -41,12 +41,15 @@ let shpScanT=0;
 function shpScan(){for(const r of [machine,truck,mower,tbox,skid,bike,cplG,thG,hmG,agG].concat(hvs.map(h=>h.g),TWINS.map(t=>t.g)))if(r)shpProxies(r)}
 // trees: a shadow-only copy holding the instances near the shadow camera
 for(const im of treeIMs){im.castShadow=false;const near=new THREE.InstancedMesh(im.geometry,shpMat(THREE.FrontSide),im.instanceMatrix.count);near.count=0;near.castShadow=true;near.visible=false;near.frustumCulled=false;near.userData.shProxy=true;
-  scene.add(near);shpTrees.push({im,M:[],near,x:1e9,z:1e9})}
+  // and one for the far shadows (core.js sunFar), holding the instances across its wider map; it draws into that map only
+  const far=new THREE.InstancedMesh(im.geometry,near.material,im.instanceMatrix.count);far.count=0;far.castShadow=true;far.visible=false;far.frustumCulled=false;far.userData.shProxy=true;
+  far.userData.n=0;far.onBeforeShadow=function(r,o,c,sc){this.count=sc===sunFar.shadow.camera?this.userData.n:0};
+  scene.add(near,far);shpTrees.push({im,M:[],near,far,x:1e9,z:1e9,fx:1e9,fz:1e9})}
 // the instances' matrices, read again after the map editor moves, adds or removes trees and boulders
-function shpTreesRefresh(){for(const T of shpTrees){const n=T.im.count;T.M.length=0;for(let i=0;i<n;i++){const m=new THREE.Matrix4();T.im.getMatrixAt(i,m);T.M.push(m)}T.x=1e9}}
+function shpTreesRefresh(){for(const T of shpTrees){const n=T.im.count;T.M.length=0;for(let i=0;i<n;i++){const m=new THREE.Matrix4();T.im.getMatrixAt(i,m);T.M.push(m)}T.x=T.fx=1e9}}
 shpTreesRefresh();
 // every frame: give back any part that has moved since it was merged, and refill the near trees when the shadow moves
-function shadowProxyTick(){
+function shadowProxyTick(){sunFarTick();
   for(const G of shpGroups){let ch=false;
     for(let i=G.src.length-1;i>=0;i--){const s=G.src[i];
       if(!shpSame(s.m,s.s)){s.m.castShadow=true;s.m.userData.shpOut=true;G.src.splice(i,1);ch=true}}
@@ -56,7 +59,11 @@ function shadowProxyTick(){
   for(const T of shpTrees){if(Math.abs(c.x-T.x)<3&&Math.abs(c.z-T.z)<3)continue;T.x=c.x;T.z=c.z;let k=0;
     for(const m of T.M){const e=m.elements;if(Math.abs(e[12]-c.x)<R&&Math.abs(e[14]-c.z)<R)T.near.setMatrixAt(k++,m)}
     T.near.count=k;T.near.instanceMatrix.needsUpdate=true}
+  if(sunFar.visible){const f=sunFar.target.position,F=sunFar.shadow.camera.right*1.45+10;
+    for(const T of shpTrees){if(Math.abs(f.x-T.fx)<8&&Math.abs(f.z-T.fz)<8)continue;T.fx=f.x;T.fz=f.z;let k=0;
+      for(const m of T.M){const e=m.elements;if(Math.abs(e[12]-f.x)<F&&Math.abs(e[14]-f.z)<F)T.far.setMatrixAt(k++,m)}
+      T.far.userData.n=k;T.far.instanceMatrix.needsUpdate=true}}
 }
 // the shadow-only meshes take part in the shadow pass and nothing else
-{const draw=renderer.shadowMap.render;const all=()=>shpGroups.map(G=>G.proxy).filter(Boolean).concat(shpTrees.map(T=>T.near));
+{const draw=renderer.shadowMap.render;const all=()=>shpGroups.map(G=>G.proxy).filter(Boolean).concat(shpTrees.map(T=>T.near),shpTrees.map(T=>T.far));
   renderer.shadowMap.render=function(){const P=all();for(const p of P)p.visible=true;try{draw.apply(this,arguments)}finally{for(const p of P)p.visible=false}}}
