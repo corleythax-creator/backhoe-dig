@@ -4,6 +4,18 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Friday, October 30, 2026
 
+- **v292** (9:54 PM) The start map's close-up shows Main Street in brick with its crosswalks, as it is in town now.
+- **v291** (9:44 PM) Ultra: contact shadows toward the sun, light bouncing nearby colour onto things, sharpening, a far lens blur and a warm-light cool-shade grade (all tunable under Screen effects)
+- **v290** (9:32 PM) A Shopfolk count beside Townsfolk: the people in shops and houses start each game at shopPop (60) and those shot indoors are gone until the next start
+- **v289** (9:32 PM) Main Street in town is paved in red brick, its bricks standing up out of their joints with Material relief; the cross street stays asphalt.
+- **v288** (9:30 PM) Breakwater boulders in photo-scanned granite, standing-seam metal roofs on the Dockside Grill and bandstand, woven canvas on every awning stripe; tintable scanned kit materials (famTint)
+- **v287** (9:27 PM) Townsfolk react to where they are shot: head shots drop them, chest shots stagger them over, gut shots double them up, leg shots put them down crawling, arm shots spin them and they run
+- **v286** (9:27 PM) On Ultra the puddles on the paving reflect the trees, lamps, people and buildings round them; rain splashes are smaller and fainter
+- **v285** (9:27 PM) Zoom in on the start map and it sharpens: paved streets with their lines and crosswalks, sidewalks and walkways, roofs with shadows, leafy trees and bridge railings.
+- **v284** (9:21 PM) The town starts each game with a set number of townsfolk (townPop, 150); each one killed is gone until the next start and the crowd thins out
+- **v283** (9:14 PM) The town's lawns look real: photo-scanned deep green grass with blades up close, thicker along the paths, clover with white flowers, weeds and fallen autumn leaves; in the rain the town's lawns and ground get wet and dark.
+- **v282** (9:11 PM) Streets laid in the map editor can be brick, cobblestone, fan cobbles or old brick (Surface on the street's card): photo-scanned paving whose bricks and cobbles stand up out of their joints and cast little shadows in the sun with Material relief on.
+- **v281** (9:08 PM) The pistol is now Poly Haven's photo-scanned service pistol, gripped in the worker's own hand; in first person you see his real arm holding it
 - **v280** (9:01 PM) Desktop in town: a Townsfolk counter bottom right (alive, dead, shot and run over); driving a machine into someone above 6 mph (runKill) knocks them flying
 - **v279** (8:58 PM) Broom concrete, plywood, steel road plate, concrete block and shingles from Poly Haven scans; lawn sod, bar grating and landscape fabric from ambientCG, all CC0 with relief and sheen
 - **v278** (8:38 PM) Equip the pistol (G or the Pistol button), click to fire while it is out, and see it in your hand in first person

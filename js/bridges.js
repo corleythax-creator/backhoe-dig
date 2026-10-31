@@ -127,17 +127,25 @@ const BR_DEF={
   sidingW:{lib:'siding_white',col:[0.79,0.76,0.62],tile:1.22,rough:0.8},sidingB:{lib:'siding_brown',col:[0.29,0.24,0.19],tile:1.22,rough:0.85},
   sidingR:{lib:'siding_red',col:[0.31,0.21,0.19],tile:1.22,rough:0.85},sidingG:{lib:'siding_grey',col:[0.39,0.35,0.30],tile:1.4,rough:0.85},
   plaster:{lib:'plaster',col:[0.75,0.75,0.72],tile:2.0,rough:0.9},roofG:{lib:'roof_grey',col:[0.34,0.34,0.32],tile:4.3,rough:0.85},deckG:{lib:'deck_grey',col:[0.35,0.31,0.27],tile:1.07,rough:0.85},concOld:{lib:'concrete_old'},planks:{lib:'planks'},rust:{lib:'rustplate'},
+  // scanned granite for the breakwater's boulders (ambientCG); standing-seam metal roofing and woven awning canvas (Poly
+  // Haven), both neutral grey, so they're used as 'seam@rrggbb' / 'canvas@rrggbb': that colour, the scan's detail (brMat)
+  rockBW:{lib:'rock_bw',col:[0.63,0.60,0.60],tile:1.1,rough:0.9},seam:{lib:'roof_seam',col:[0.72,0.72,0.72],tile:2.0,rough:0.5,metal:0.6},
+  canvas:{lib:'canvas',col:[0.86,0.86,0.86],tile:0.45,rough:0.9},
   iron:{col:[0.08,0.08,0.08],metal:0.5,rough:0.5},white:{col:[0.88,0.86,0.80],rough:0.75},
   lineW:{col:[0.86,0.85,0.80],rough:0.8},lineY:{col:[0.85,0.66,0.15],rough:0.8},
   stain:{col:[0.74,0.75,0.76],metal:1,rough:0.3,dry:1},galv:{col:[0.6,0.62,0.63],metal:0.8,rough:0.45},cable:{col:[0.93,0.93,0.91],rough:0.35},
   glass:{col:[0.80,0.89,0.92],rough:0.05,glass:1,dry:1}};
 const BR_MATS={},BR_DET=[],BR_WHITE=new THREE.Color(1,1,1);
 let brTexWant=false,brPbrOn=false,brDetOn=true,brWet=0,brWetSeen=0;const brQ=[];let brQT=0;
-function brMat(key){if(BR_MATS[key])return BR_MATS[key];const d=BR_DEF[key],lib=d.lib&&MAT_LIST.find(m=>m.id===d.lib),c=lib?lib.c:d.col;
+// a key 'name@rrggbb' is name's material tinted: that colour (as a hex colour in the kits) where its texture isn't drawn,
+// and the texture scaled by it over the texture's mean colour where it is (famTint, family.js, makes the keys)
+function brTintDef(key){const [b,h]=key.split('@'),B=BR_DEF[b],t=new THREE.Color('#'+h);
+  return BR_DEF[key]={...B,col:[t.r,t.g,t.b],tint:[t.r/B.col[0],t.g/B.col[1],t.b/B.col[2]]}}
+function brMat(key){if(BR_MATS[key])return BR_MATS[key];const d=BR_DEF[key]||brTintDef(key),lib=d.lib&&MAT_LIST.find(m=>m.id===d.lib),c=lib?lib.c:d.col;
   const m=new THREE.MeshStandardMaterial({color:0xffffff,roughness:d.rough??0.85,metalness:d.metal||0,envMap:skyEnv,envMapIntensity:0.7});
   if(d.alpha){m.alphaTest=0.5;m.side=THREE.DoubleSide;m.visible=false}
   if(d.glass){m.transparent=true;m.opacity=0.28;m.depthWrite=false;m.envMapIntensity=1}
-  m.userData={key,def:d,col:new THREE.Color().setRGB(c[0],c[1],c[2]),base:new THREE.Color(),rough:m.roughness,tile:lib?lib.ft*0.3048:d.tile||1,uv:d.uv||'world',tex:null};
+  m.userData={key,def:d,col:new THREE.Color().setRGB(c[0],c[1],c[2]),base:new THREE.Color(),rough:m.roughness,tile:lib?lib.ft*0.3048:d.tile||1,uv:d.uv||'world',tex:null,tint:d.tint?new THREE.Color().setRGB(...d.tint):null};
   BR_MATS[key]=m;brApply(m);if(d.alpha?brDetOn&&brTexReady:brTexWant)brTexQueue(key);return m}
 let brTexReady=false;   // set once the Graphics setting has been applied (pictures are drawn only after that)
 // pictures are made (or loaded) one material at a time, a frame or two apart, so loading never stalls on them
@@ -155,7 +163,7 @@ function brTexStep(){brQT=0;const key=brQ.shift();if(!key)return;const m=BR_MATS
 function brApply(m){const u=m.userData,T=u.tex,d=u.def,on=d.alpha?brDetOn:brTexWant,map=T&&on?T.map:null,pbr=!!(map&&brPbrOn&&T.n),n=pbr?T.n:null,r=pbr?T.r:null;
   if(m.map!==map||m.normalMap!==n||m.roughnessMap!==r){m.map=map;m.normalMap=n;m.roughnessMap=r;m.needsUpdate=true}
   if(d.alpha)m.visible=!!map;
-  u.base.copy(map?BR_WHITE:u.col);u.rough=pbr?1:(d.rough??0.85);brWetSet(m)}
+  u.base.copy(map?u.tint||BR_WHITE:u.col);u.rough=pbr?1:(d.rough??0.85);brWetSet(m)}
 function brWetSet(m){const u=m.userData,w=u.def.dry?0:brWet;m.color.copy(u.base).multiplyScalar(1-0.3*w);m.roughness=u.rough*(1-0.5*w)}
 // from gfxApply (gfx.js): the detail parts, the pictures, their relief and sheen
 function brGfx(g){brDetOn=g.brDet!==false;brTexWant=g.tex!=='low';brPbrOn=!!g.pbr;brTexReady=true;

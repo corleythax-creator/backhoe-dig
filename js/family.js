@@ -50,6 +50,8 @@ function ctlWheel(o,par,x,y,z,tilt,r,rot,col,keep){const t=new THREE.Group();if(
 // a kit's parts into the scene, as one mesh per kind; returns the meshes
 // material parts go through the bridge kit; kits built before bridges.js has loaded wait in FAM_LIBQ for it
 const FAM_LIBQ=[];
+// a tinted kit material's key: base (seam, canvas: BR_DEF in bridges.js) in colour col
+const famTint=(base,col)=>base+'@'+new THREE.Color(col).getHexString();
 function famLibAdd(lib){const B=brKit(null);for(const k in lib)for(const g of lib[k]){if(!g.attributes.normal)g.computeVertexNormals();B.geo(k.replace('~',''),g,{swap:k.endsWith('~')})}return B.add()}
 function famAdd(K){const out=[];
   if(K.lib&&Object.keys(K.lib).length){if(typeof brKit==='function')out.push(...famLibAdd(K.lib));else FAM_LIBQ.push(K.lib)}

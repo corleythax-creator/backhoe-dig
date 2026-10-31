@@ -371,6 +371,11 @@ function groundColor(x,z,h,c){const n=hash(x*3.55+0.3,z*2.65+0.7);
   // (and on the foothills' face, outcrops where it steepens)
   const rock=Math.max(ss(0.55,1.1,sl),z>FH_Z0?ss(0.4,0.55,sl)*ss(0.72,0.86,tuftNoise(x*0.06,z*0.06)):0),sand=1-ss(WATER+1.6,WATER+2.4,h),low=ss(-4,-20,h)*ss(EDGE-1,EDGE+2,mesaR(x,z));
   let r=0.30+0.08*n+0.05*low,g=0.50+0.09*n-0.02*low,b=0.24+0.04*n;
+  // the town's lawns (Harbor Square's green and the yards, turf.js): a deep natural green in soft drifts, lusher and
+  // darker in some, worn yellower in others, never the open field's bluish green
+  const tw=ss(190,175,Math.abs(x))*ss(540,552,z)*ss(790,775,z);
+  if(tw>0){const lu=tuftNoise(x*0.09+17,z*0.09+41),dr=ss(0.6,0.85,tuftNoise(x*0.05+60,z*0.05+9));
+    r+=(0.19+0.05*lu+0.08*dr+0.03*n-r)*tw;g+=(0.33+0.04*lu+0.02*dr+0.04*n-g)*tw;b+=(0.12+0.03*lu+0.01*n-b)*tw}
   // the mainland's hayfield, mown in rows, and the darker woods floor
   const hf=mainField(x,z),wf=Math.max(mainWoods(x,z),mainForest(x,z));
   if(hf>0){const st=0.5+0.5*Math.sin(z*0.9);r+=(0.58+0.08*st+0.04*n-r)*hf;g+=(0.55+0.05*st-g)*hf;b+=(0.28-b)*hf}
