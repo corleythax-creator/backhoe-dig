@@ -75,11 +75,11 @@ function gunFire(){if(!gunHas()){if(mode==='walk'&&trim.on)toast(say('gunTrim',{
   let hit=null,ht=tw,hy=0;
   if(tf.on)for(const p of tf.people){if(p.inside||p.drv||p.dead)continue;const ox=p.x-o.x,oz=p.z-o.z;if(ox*ox+oz*oz>(R+2)**2)continue;
     // a standing body as an upright cylinder, 11 in round (seated: 4 ft 3 in tall, from 17 in down)
-    const r=0.28*p.sc,a=d.x*d.x+d.z*d.z;if(a<1e-6)continue;const b=-(ox*d.x+oz*d.z),c=ox*ox+oz*oz-r*r,q=b*b-a*c;if(q<0)continue;
-    const t=(-b-Math.sqrt(q))/a,te=(-b+Math.sqrt(q))/a,lo=p.sit?p.y-0.42*p.sc:p.y,hi=lo+(p.sit?1.3:1.72)*p.sc;
+    const lie=p.hurt>0.6,r=lie?0.6:0.28*p.sc,a=d.x*d.x+d.z*d.z;if(a<1e-6)continue;const b=-(ox*d.x+oz*d.z),c=ox*ox+oz*oz-r*r,q=b*b-a*c;if(q<0)continue;
+    const t=(-b-Math.sqrt(q))/a,te=(-b+Math.sqrt(q))/a,lo=p.sit?p.y-0.42*p.sc:p.y,hi=lo+(lie?0.35:p.sit?1.3:1.72)*p.sc;
     for(const u of [t,(t+te)/2,te]){if(u<t0||u>=ht)continue;const y=o.y+d.y*u;if(y>=lo&&y<=hi){hit=p;ht=u;hy=(y-lo)/(hi-lo);break}}}
   const ix=o.x+d.x*ht,iy=o.y+d.y*ht,iz=o.z+d.z*ht;
-  if(hit){gunHit(hit,hy>GUN_HEAD,ix,iy,iz)}else if(ht<R)dustPuff(ix,iy,iz,3,null);
+  if(hit){gunHit(hit,hy,ix,iy,iz,d)}else if(ht<R)dustPuff(ix,iy,iz,3,null);
   gunScare(ix,iz,hit)}
 // the chase view's aim: whoever is nearest the way he faces (within 6°, or 12° up close) and in the clear, at the chest,
 // or the head when he is right on them; [x, y, z] to shoot at, or null
@@ -89,16 +89,28 @@ function gunAssist(o,y,R){let best=null,bs=1e9;const fx=Math.sin(y),fz=Math.cos(
     const L=Math.hypot(dx,dz);let clear=true;for(const s of SOLIDS)if(!s.foot&&gunSolidT(s,o.x,o.z,dx/L,dz/L)<L-0.4){clear=false;break}
     if(clear&&ang*f+f*0.01<bs){bs=ang*f+f*0.01;best={p,ang}}}
   if(!best)return null;const p=best.p,lo=p.sit?p.y-0.42*p.sc:p.y,h=(p.sit?1.3:1.72)*p.sc;
-  return [p.x,lo+h*(best.ang<0.025?0.93:0.7),p.z]}
+  return p.hurt>0.6?[p.x,p.y+0.15,p.z]:[p.x,lo+h*(best.ang<0.025?0.93:0.7),p.z]}
 // p shot: a head shot or a second hit and they are down, otherwise they run for it
-function gunHit(p,head,x,y,z){dustPuff(x,y,z,head?5:3,[-0.55,-1.05,-1]);p.hp=(p.hp??2)-(head?2:1);
-  if(p.hp>0){gunRun(p,9);return}
-  Object.assign(p,{dead:1e-3,sit:0,wait:0,spd:0,amp:0,flee:0,yaw:Math.atan2(wk.x-p.x,wk.z-p.z)});if(p.vt0){p.vt=p.vt0;p.vt0=0}gun.downs++}
+// p shot at height hy (0 their feet, 1 the top of their head), the shot going along d. Where it hits decides what
+// they do (tfHitPose, townfolk.js): the head drops them where they stand; the chest staggers them back and over; the
+// gut doubles them up, onto their knees and down on their face; a leg gives way under them and they crawl off,
+// hurt; an arm or shoulder spins them round and they run. Seated, they slump where they sit. A second hit on
+// anyone already hurt finishes them.
+function gunHit(p,hy,x,y,z,d){const head=hy>GUN_HEAD;dustPuff(x,y,z,head?2:1.2,[-0.55,-1.05,-1]);
+  const fx=Math.sin(p.yaw),fz=Math.cos(p.yaw),lat=((x-p.x)*-fz+(z-p.z)*fx)/(0.28*p.sc),side=lat>=0?1:-1,fwd=d.x*fx+d.z*fz>0?1:-1,
+    k=p.sit?'slump':head?'head':hy<0.48?'leg':Math.abs(lat)>0.62&&hy<0.84?'arm':hy<0.62?'gut':'chest';
+  const was=p.hurt||p.hp===1;p.hp=1;
+  if(was&&p.hit&&p.hurt){p.hurt=0;Object.assign(p,{dead:1e-3});p.hit.jolt=0.25;gun.downs++;return}
+  if(k==='arm'&&!was){p.hit={k,t:0,side,fwd,ux:d.x,uz:d.z};gunRun(p,12);return}
+  p.hit={k:was&&k==='arm'?'chest':k,t:0,side,fwd,ux:d.x,uz:d.z};
+  Object.assign(p,{wait:0,spd:0,amp:0,flee:0});if(p.vt0){p.vt=p.vt0;p.vt0=0}
+  if(k==='leg'&&!was){p.hurt=1e-3;return}
+  p.dead=1e-3;gun.downs++}
 // everyone within earshot near where it went (or near him) runs off for a while
-function gunScare(x,z,not){for(const p of tf.people){if(p===not||p.dead||p.inside||p.drv||p.room)continue;
+function gunScare(x,z,not){for(const p of tf.people){if(p===not||p.dead||p.hurt||p.inside||p.drv||p.room)continue;
   const d=Math.min(Math.hypot(p.x-x,p.z-z),Math.hypot(p.x-wk.x,p.z-wk.z)*1.6);if(d<30)gunRun(p,6+Math.random()*6)}}
 // p runs away from the worker: back along their walk if that is the way away, at TU.gunFlee
-function gunRun(p,s){if(p.room||p.drv)return;p.wait=0;if(!p.vt0)p.vt0=p.vt;p.vt=TU.gunFlee*(0.85+Math.random()*0.3);p.flee=Math.max(p.flee||0,s);
+function gunRun(p,s){if(p.room||p.drv||p.hurt||p.dead)return;p.wait=0;if(!p.vt0)p.vt0=p.vt;p.vt=TU.gunFlee*(0.85+Math.random()*0.3);p.flee=Math.max(p.flee||0,s);
   if(p.w&&!p.path){const [,,ex,ez]=tfAt(p.w,p.s);p.dir=ex*(p.x-wk.x)+ez*(p.z-wk.z)>=0?1:-1}}
 // the bang: a crack of noise, a low thump under it, and the space's echo
 function gunBang(){if(!snd||!snd.ready||!sndCfg.on||!actx||actx.state!=='running')return;const c=actx,t=c.currentTime;
