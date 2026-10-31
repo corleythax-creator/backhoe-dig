@@ -13,7 +13,9 @@
 // water, lakeQ the lake's ripples (0 two layers, 1 and rain rings, 2 and a fine close-up layer, lake.js), cloudQ the clouds (0 a flat layer without its fine billows; 1 to 3 heaps in 3D with their shadows, drawn finer each step, storm.js), treeR full-detail tree distance m, rainN raindrops, rainSp splashes where they land, splashN drops in a puddle splash, town the townsfolk (0 off to 3 busy, townfolk.js), wakeN boat wake marks drawn, dirt the Dirt detail it sets when picked,
 // ao bloom grade the screen effects (post.js), model the detailed machine models (models.js), brush the share of undergrowth
 // drawn (brush.js), wild the share of the wild growth drawn (tall grass and bushes, scenery.js), turf and turfR the share of the town's lawn grass, weeds and leaves drawn and how far out in m (turf.js), skyLight shade and reflections coloured by the sky as it is (and a sharper reflection map), shSoft
-// contact-hardening sun shadows, wetDrops beads and runs of rain on the machines and their cab glass, wetGround soaked ground mirroring the sky (all four Ultra, post.js)
+// contact-hardening sun shadows, wetDrops beads and runs of rain on the machines and their cab glass, wetGround soaked ground mirroring the sky (all four Ultra, post.js),
+// csm and csmSh how far either side the far shadows reach (m, 0 off) and their map's size (core.js sunFar), bounce the light
+// thrown up off the ground measured from the ground itself (post.js; an earth colour without it)
 const GFX={
   low:{name:'Low',trimClips:1,pr:1.5,auto:true,fps:0,fov:0,sh:1024,shR:22,soft:false,filmic:false,exp:1,tex:'low',detail:0,base:1,macro:false,pbr:false,aniso:4,dirt:1,lawnFar:0,fog:1,wmFine:false,cloudQ:0,rainN:600,rainSp:160,splashN:250,wakeN:140,brush:0.35,model:false,ao:false,bloom:false,grade:false,skyLight:false,shSoft:false,wetDrops:false,wetGround:false,lakeQ:0,treeR:45,tuftQ:0,tuft:[0.6,12,40,0.2]},
   med:{name:'Medium',trimClips:2,pr:1.5,auto:true,fps:0,fov:0,sh:2048,shR:32,soft:false,filmic:true,exp:1,tex:'med',detail:1,base:1,macro:false,pbr:false,aniso:8,dirt:2,lawnFar:15,fog:1,wmFine:true,cloudQ:1,rainN:1500,rainSp:400,splashN:600,wakeN:300,brush:0.7,model:true,ao:false,bloom:false,grade:false,skyLight:false,shSoft:false,wetDrops:false,wetGround:false,lakeQ:1,treeR:90,tuftQ:0,tuft:[0.85,18,60,0.3]},
@@ -33,7 +35,10 @@ GFX.low.extraLt=false;GFX.med.extraLt=GFX.high.extraLt=true;
 GFX.low.propLt=GFX.med.propLt=false;GFX.high.propLt=true;
 // the townsfolk from Human Forge (townfolk.js), at that level of detail: the phone keeps the old ones
 GFX.low.forge=GFX.med.forge='';GFX.high.forge='md';
-GFX.ultra=Object.assign({},GFX.high,{name:'Ultra',forge:'hi',wild:1,turfR:75,tuftQ:3,ao:true,bloom:true,grade:true,treeR:220,skyLight:true,shSoft:true,wetDrops:true,wetGround:true,cloudQ:3});
+// far shadows (core.js sunFar): how far either side they reach (m, 0 off) and their map's size
+GFX.low.csm=GFX.med.csm=0;GFX.high.csm=170;GFX.high.csmSh=2048;
+GFX.low.bounce=GFX.med.bounce=false;GFX.high.bounce=true;
+GFX.ultra=Object.assign({},GFX.high,{csm:240,csmSh:4096,name:'Ultra',forge:'hi',wild:1,turfR:75,tuftQ:3,ao:true,bloom:true,grade:true,treeR:220,skyLight:true,shSoft:true,wetDrops:true,wetGround:true,cloudQ:3});
 // VR through a PC: the eye buffer drawn larger than the headset's own and scaled down (supersampling), for sharper edges
 // and fine detail; only the levels for strong graphics do it
 GFX.low.vrSS=GFX.med.vrSS=1;GFX.high.vrSS=1.25;GFX.ultra.vrSS=1.4;
@@ -68,6 +73,12 @@ function gfxApply(){const g=gfxCur=Object.assign({},GFX[gfxKey],gfxOver);
   if(g.sh>0&&sun.shadow.mapSize.x!==g.sh){sun.shadow.mapSize.set(g.sh,g.sh);if(sun.shadow.map){sun.shadow.map.dispose();sun.shadow.map=null}}
   const sc=sun.shadow.camera;if(sc.right!==g.shR){sc.left=sc.bottom=-g.shR;sc.right=sc.top=g.shR;sc.updateProjectionMatrix()}
   const st=THREE.PCFShadowMap;sun.shadow.radius=g.soft?1.5:1;
+  // far shadows: a wider, coarser map past the near one, csm m either side (0 off; core.js sunFar), only with the near one
+  const fr=g.sh>0?g.csm||0:0,fn=g.csmSh||2048,fc=sunFar.shadow.camera;sunFar.visible=sunFar.castShadow=fr>0;
+  if(fr>0){if(sunFar.shadow.mapSize.x!==fn){sunFar.shadow.mapSize.set(fn,fn);if(sunFar.shadow.map){sunFar.shadow.map.dispose();sunFar.shadow.map=null}}
+    if(fc.right!==fr){fc.left=fc.bottom=-fr;fc.right=fc.top=fr;fc.far=3*fr+360;fc.updateProjectionMatrix()}
+    sunFar.shadow.radius=g.soft?1.5:1;sunFarL.set(0,0,0)}
+  else if(sunFar.shadow.map){sunFar.shadow.map.dispose();sunFar.shadow.map=null}
   // lighting: filmic, or a plain exposure that keeps about the same brightness for much less work per pixel
   const tm=g.filmic?THREE.ACESFilmicToneMapping:THREE.LinearToneMapping,te=(g.filmic?0.8:0.75)*g.exp;
   if(renderer.shadowMap.type!==st||renderer.toneMapping!==tm){renderer.shadowMap.type=st;renderer.toneMapping=tm;
@@ -90,6 +101,8 @@ function gfxApply(){const g=gfxCur=Object.assign({},GFX[gfxKey],gfxOver);
   jesLightGfx(g.extraLt);dnBoomGfx(g.extraLt);if(typeof propLampGfx==='function')propLampGfx(g.propLt);
   // sky lighting, soft sun shadows and rain on the machines (post.js)
   ultraGfx(g.skyLight,g.shSoft&&g.sh>0,g.wetDrops,g.wetGround);
+  // the light thrown up off the ground measured from the ground itself, or an earth colour (post.js)
+  bounceGfx(g.bounce);
   // machine models: the detailed one from its file, or the simple shapes (models.js)
   mdlGfx(g.model);
   // the mountains and the pebbles (scenery.js, pebbles.js)
@@ -143,6 +156,7 @@ const GFX_ROWS=[
   ['Light and shadows'],
   {id:'sh',label:'Shadows',hint:'Shadow sharpness. Off is the biggest saving after resolution.',opts:[[0,'Off'],[512,'512'],[1024,'1024'],[2048,'2048'],[4096,'4096']]},
   {id:'shR',label:'Shadow distance',hint:'How far around you things cast shadows. Farther spreads the same shadow map wider, so edges get softer.',min:14,max:80,step:2,fmt:v=>`${Math.round(v*FT_M)} ft`},
+  {id:'csm',label:'Far shadows',hint:'Hills, buildings and trees out past the near shadows still cast theirs, from a coarser second shadow map. Costs a good graphics card.',min:0,max:400,step:10,fmt:v=>v?`${(v*FT_M/5280).toFixed(2)} mi`:'Off'},
   {id:'soft',label:'Soft shadow edges',opts:onOff},
   {id:'shSoft',label:'Soft sun shadows',hint:'Shadows sharp where things touch the ground and softer the farther they fall, like real sunlight. Costs a strong graphics card. Adjust on the screen editor\'s Tuning tab (Ultra).',opts:onOff},
   {id:'skyLight',label:'Sky lighting',hint:'Shade and reflections take their colour from the sky as it is: warm at sunrise and sunset, blue at dusk, grey in the rain.',opts:onOff},
@@ -150,6 +164,7 @@ const GFX_ROWS=[
   {id:'exp',label:'Brightness',min:0.6,max:1.4,step:0.05,fmt:v=>`${Math.round(v*100)}%`},
   {id:'fog',label:'Haze distance',hint:'How far you see before the air turns hazy.',min:0.4,max:2,step:0.1,fmt:v=>`${(760*v*FT_M/5280).toFixed(1)} mi`},
   ['Screen effects'],
+  {id:'bounce',label:'Measured ground bounce',hint:'The light thrown up off the ground onto the undersides of things takes the colour and brightness of the ground round you (grass, dirt, the lake, shade), measured every second and a half.',opts:onOff},
   {id:'ao',label:'Contact shade',hint:'Soft shade where things meet the ground and in hollows (ambient occlusion), fine sun shadows where small things touch, and light bounced off nearby things in their colour. Costs a strong graphics card.',opts:onOff},
   {id:'bloom',label:'Glow',hint:'A soft glow round the sun, lamps and bright glints.',opts:onOff},
   {id:'grade',label:'Colour grade',hint:'Camera-like contrast and colour with warm light and cool shade, sharpening, a soft blur far off, and slightly darker corners. Adjust them on the screen editor\'s Tuning tab (Screen effects).',opts:onOff},

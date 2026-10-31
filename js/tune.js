@@ -144,6 +144,11 @@ const TUNE=[
   ['ultraShSoft','Ultra','Soft sun shadows: blur per foot a shadow falls from what casts it',0.03,'pct',0,10,0.5],
   ['ultraDrops','Ultra','Rain on machines: how many beads and runs of water',1,'pct',0,300,5],
   ['ultraWetGround','Ultra','Wet ground shine: how strongly soaked dirt and mud mirror the sky',1,'pct',0,300,5],
+  // light and haze (core.js, post.js): the far shadows' redraw, the haze toward the sun and low down, the ground's bounce
+  ['csmEvery','Light and haze','Far shadows: drawn again every this many frames (more is faster, but they lag behind moving things)',3,'n',1,10,1],
+  ['hazeSun','Light and haze','How strongly the haze toward the sun takes its warm light',1,'pct',0,300,5],
+  ['hazeLow','Light and haze','How much thinner the haze is up high than low over the lake',0.6,'pct',0,100,5],
+  ['bounce','Light and haze','Sunlight thrown back up off the ground onto the shady undersides and sides of things',1,'pct',0,300,5],
   ['pbrFar','Ground look','Relief fades out by',180*0.3048,'ft',60,600,10],
   ['treeSway','Trees','How much the trees and undergrowth sway in the breeze',1,'pct',0,400,5],['treeGlow','Trees','How much sunlight shines through the leaves',1,'pct',0,300,5],
   // the freight line far across the lake (train.js)
