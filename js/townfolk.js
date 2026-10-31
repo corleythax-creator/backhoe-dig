@@ -169,13 +169,52 @@ function tfForgeCrowd(B,id){B.fg=1;const F=tf.F;
 // person p as instance i of crowd c: walking (pace = their speed), sitting (the clip's origin is on the floor under the
 // seat's middle, its seat 18 in up like the rooms' chairs and benches), driving (its seat 14 in up: lifted to where the
 // old seated pose's seat was, 18 in over p.y), or standing easy or talking (staff and customers)
-function tfFgPose(p,c,i,dt){const hp=p.dead||p.hurt||p.hit?tfHitPose(p):null,die=p.dead&&!p.sit&&c.clips.die_b?tfDieOf(p):null;let k=die?die.k:p.cower>0&&!hp&&c.clips.cower?'cower':p.cop&&p.aim>0&&!hp&&c.clips.point?'point':hp&&(p.dead||p.hurt)?(hp.kneel?'sit':'idle'):p.drv?'drive':p.sit?'sit':p.spd>(p.fk==='walk'?0.15:0.3)?'walk':0;
+function tfFgClip(p,c,dt,hp,die){let k=die?die.k:p.cower>0&&!hp&&c.clips.cower?'cower':p.cop&&p.aim>0&&!hp&&c.clips.point?'point':hp&&(p.dead||p.hurt)?(hp.kneel?'sit':'idle'):p.drv?'drive':p.sit?'sit':p.spd>(p.fk==='walk'?0.15:0.3)?'walk':0;
   if(!k){if(p.fk!=='idle'&&p.fk!=='talk'||p.t>(p.tp??0)+1)p.tk=Math.random()<(p.room?p.spot.staff?0.5:0.35:0.06);p.tp=p.t;k=p.tk?'talk':'idle'}
   if(k==='walk'&&p.flee>0&&p.spd>2.2&&c.clips.run)k='run';
   const A=c.clips[k];if(k!==p.fk){p.fk=k;p.ct=k==='walk'||k==='run'?0.1:Math.random()*A.duration}
-  if(die)p.ct=Math.min(A.duration-0.02,die.t);else if(k==='cower'||k==='point')p.ct=Math.min(A.duration-0.02,k==='point'?0.5:(p.ct||0)+dt);else if(!(p.dead||p.hurt))p.ct=(p.ct+dt*(k==='walk'?p.spd/(c.stride*p.sc):k==='run'?p.spd/(c.runS*p.sc):1))%A.duration;
-  const f=p.sit&&!p.drv?0.05:0;if(hp){c.place(i,{x:p.x,y:p.y+hp.dy-(hp.kneel&&!p.sit&&!die?0.32*p.sc:0),z:p.z,heading:hp.yaw,tilt:hp.tilt,roll:hp.roll,scale:p.sc})}
-  else c.place(i,{x:p.x+Math.sin(p.yaw)*f,y:p.y+(p.drv?0.1:0),z:p.z+Math.cos(p.yaw)*f,heading:p.yaw,scale:p.sc});c.anim(i,k,{offset:p.ct})}
+  if(die)p.ct=Math.min(A.duration-0.02,die.t);else if(k==='cower'||k==='point')p.ct=Math.min(A.duration-0.02,k==='point'?0.5:(p.ct||0)+dt);else if(!(p.dead||p.hurt))p.ct=(p.ct+dt*(k==='walk'?p.spd/(c.stride*p.sc):k==='run'?p.spd/(c.runS*p.sc):1))%A.duration;return k}
+const TF_PL={x:0,y:0,z:0,heading:0,tilt:0,roll:0,scale:1};
+function tfFgAt(p,hp,die){const o=TF_PL,f=p.sit&&!p.drv?0.05:0;o.scale=p.sc;
+  if(hp){o.x=p.x;o.y=p.y+hp.dy-(hp.kneel&&!p.sit&&!die?0.32*p.sc:0);o.z=p.z;o.heading=hp.yaw;o.tilt=hp.tilt;o.roll=hp.roll}
+  else{o.x=p.x+Math.sin(p.yaw)*f;o.y=p.y+(p.drv?0.1:0);o.z=p.z+Math.cos(p.yaw)*f;o.heading=p.yaw;o.tilt=o.roll=0}return o}
+const tfDieFor=(p,c)=>p.dead&&!p.sit&&c.clips.die_b?tfDieOf(p):null;
+function tfFgPose(p,c,i,dt){const hp=p.dead||p.hurt||p.hit?tfHitPose(p):null,die=tfDieFor(p,c),k=tfFgClip(p,c,dt,hp,die);c.place(i,tfFgAt(p,hp,die));c.anim(i,k,{offset:p.ct})}
+// ---------- Ultra graphics close up (gfxCur.fgUltra, not phones): the few townsfolk nearest the camera, within
+// TU.tfUltraR, swap from their crowd copy to a hero on their ultra mesh (Human Forge's ultra tier, ~100k triangles,
+// fetched from R2 the first time). The hero takes the crowd copy's place, clip and clip time (p.ct) every frame, its
+// mixer stepped to that time (no forge.update: that would run the crowds' clocks), so the swap does not show; the crowd
+// copy is skipped while it shows. One hero loads at a time; idle ones wait in a pool (TF_UH_POOL), and the ultra meshes
+// and maps of characters not seen lately are freed (TF_UH_KEEP), since each is ~60 MB on the GPU
+const TF_UH_POOL=4,TF_UH_KEEP=4,_tfQ=new THREE.Quaternion(),_tfQ2=new THREE.Quaternion(),_tfE=new THREE.Euler(),_tfUp=new THREE.Vector3(0,1,0);
+function tfUhOn(){return !!(gfxCur.fgUltra&&!PHONE&&tf.F&&tf.F.st===2)}
+// who gets a hero this frame: the nearest few in view whose character's crowd is ready (a little farther for those who
+// already have one, so nobody flickers at the edge)
+function tfUhPick(cx,cz){const F=tf.F,U=F.uh||(F.uh={free:[],res:[],busy:0}),R=TU.tfUltraR||6,R2=(R+0.8)**2,n=gfxCur.fgUltra,c=[];
+  for(const p of tf.people){if(p.inside)continue;const d2=(p.x-cx)**2+(p.z-cz)**2;if(d2>(p.uh?R2:R*R))continue;const B=tf.M[p.body];if(!B||!B.fg||B.fg===1||!tfSeen(p.x,p.z,1.3))continue;c.push([d2,p])}
+  c.sort((a,b)=>a[0]-b[0]);const want=new Set(c.slice(0,n).map(a=>a[1]));
+  for(const p of tf.people)if(p.uh&&!want.has(p))tfUhFree(p);for(const p of U.gone||[])if(p.uh&&tf.people.indexOf(p)<0)tfUhFree(p);U.gone=[...want];
+  for(const p of want)if(!p.uh){const i=U.free.findIndex(h=>h.id==='island_'+p.body);if(i>=0){p.uh=U.free.splice(i,1)[0];tfUhUse(p.uh.id)}else if(!U.busy)tfUhLoad(p.body)}
+  return want}
+function tfUhUse(id){const U=tf.F.uh,i=U.res.indexOf(id);if(i>=0)U.res.splice(i,1);U.res.push(id)}
+function tfUhLoad(body){const F=tf.F,U=F.uh,id='island_'+body;U.busy=1;tfUhUse(id);
+  F.f.hero(id,{ultra:true,autoLod:false,castShadow:!!gfxCur.pbr,receiveShadow:true}).then(h=>{U.busy=0;if(!h.ultra){h.dispose();return}
+    h.object.traverse(o=>{if(o.isMesh){const M=o.material;M.envMap=skyEnv;M.envMapIntensity=0.5;o.castShadow=!!gfxCur.pbr}});h.object.visible=false;scene.add(h.object);(U.types||(U.types={}))[id]=h.type;tfUhPool(h)})
+    .catch(e=>{U.busy=0;console.warn('townsfolk ultra:',id,e)})}
+function tfUhFree(p){const h=p.uh;p.uh=null;h.object.visible=false;tfUhPool(h)}
+// into the pool, dropping the oldest idle hero past TF_UH_POOL; then free the GPU copies of characters past TF_UH_KEEP
+function tfUhPool(h){const U=tf.F.uh;U.free.push(h);while(U.free.length>TF_UH_POOL){const o=U.free.shift();o.dispose();o.object.traverse(m=>{if(m.isMesh)m.material.dispose()})}
+  const live=new Set([...U.free.map(h=>h.id),...tf.people.filter(p=>p.uh).map(p=>p.uh.id)]);
+  while(U.res.length>TF_UH_KEEP){const i=U.res.findIndex(id=>!live.has(id));if(i<0)break;const id=U.res.splice(i,1)[0],t=tf.F.f.library&&tfUhType(id);
+    if(t&&t.ultra){const q=t.ultra;t.ultra=null;q.then(u=>{if(!u)return;u.geo.dispose();for(const x of [u.tex,u.normal,u.rough])if(x)x.dispose()})}}}
+function tfUhType(id){const U=tf.F.uh;U.types=U.types||{};return U.types[id]}
+// every hero back to the pool (graphics lowered, the town out of reach)
+function tfUhOff(){for(const p of tf.people)if(p.uh)tfUhFree(p);for(const p of tf.F.uh.gone||[])if(p.uh)tfUhFree(p);tf.F.uh.gone=[]}
+// person p on their hero: the crowd copy's clip, clip time and place (false, and back on the crowd, for a clip it lacks)
+function tfUhPose(p,c,dt){const h=p.uh,hp=p.dead||p.hurt||p.hit?tfHitPose(p):null,die=tfDieFor(p,c),k=tfFgClip(p,c,dt,hp,die),o=tfFgAt(p,hp,die),g=h.object;
+  _tfQ.setFromAxisAngle(_tfUp,o.heading);if(o.tilt||o.roll)_tfQ.multiply(_tfQ2.setFromEuler(_tfE.set(o.tilt,0,o.roll,'XYZ')));
+  g.position.set(o.x,o.y,o.z);g.quaternion.copy(_tfQ);g.scale.setScalar(o.scale);
+  const a=h.actions[k];if(!a){tfUhFree(p);return false}if(h.clip!==k)h.play(k,{fade:0});a.time=p.ct;h.mixer.update(0);h.lod('ultra');g.visible=tf.on;return true}
 // a car model (a node of models/cars.glb, standing on y = 0, nose to +z) on the game's materials; its paint is set per
 // car (tfCarPaint), its own:<name> materials keep the model's textures, and its wheels (wheel_* nodes, their origins at the hubs) turn about x. Each car holds the detailed
 // model and its light one (<kind>_lo), and shows the light one past TF_CAR_HI (tfDraw)
@@ -456,13 +495,14 @@ function tfTick(dt){if(!tf.q){if(tf.on)tfShow(false);return}
   if(mode==='walk'&&walker.visible){for(const c of tf.drive)wkPushRound(c,[-c.len*0.3,0,c.len*0.3],c.wid/2);for(const p of tf.people)if(!p.inside&&!p.drv&&!p.dead&&!p.hurt)wkPushRound(p,[0],0.22)}
   tfDraw(dt);tfChip(dt)}
 function tfShow(on){tf.on=on;$('#tfChip').hidden=!on||PHONE;for(const k in tf.M||{})tf.M[k].m.visible=on;for(const c of tf.drive)c.g.visible=on;tfParkedShow(on);
-  if(!on){for(const k in tf.M||{}){const c=tf.M[k].fg;if(c&&c.object)c.object.visible=false}for(const c of tf.drive.slice())tfCarDrop(c);for(const p of tf.people.slice())tfDrop(p)}}
+  if(!on){if(tf.F&&tf.F.uh)tfUhOff();for(const k in tf.M||{}){const c=tf.M[k].fg;if(c&&c.object)c.object.visible=false}for(const c of tf.drive.slice())tfCarDrop(c);for(const p of tf.people.slice())tfDrop(p)}}
 function tfDraw(dt){const M=tf.M,o3=tf.o,cx=camera.position.x,cz=camera.position.z,fo=tf.F&&tf.F.st===2&&!!gfxCur.forge;for(const k in M)M[k].n=M[k].fn=0;
+  const uh=fo&&tfUhOn()?tfUhPick(cx,cz):null;if(!uh&&tf.F&&tf.F.uh)tfUhOff();
   for(const p of tf.people){if(p.inside)continue;const B=M[p.body];if(!B||B.n>=B.cap)continue;
     if((p.x-cx)**2+(p.z-cz)**2>(p.room?TF_RFAR*TF_RFAR:p.drv?TF_CAR_HI*TF_CAR_HI:220*220)||!tfSeen(p.x,p.z,1.3))continue;
     const hp=p.dead||p.hurt||p.hit?tfHitPose(p):null,kn=hp&&hp.kneel||!hp&&p.cower>0;o3.position.set(p.x,p.y+(p.sit||kn?-0.42*p.sc:Math.abs(Math.cos(p.ph))*0.025*p.amp*p.sc),p.z);
     if(hp){o3.rotation.set(hp.tilt,hp.yaw,hp.roll,'YXZ');o3.position.y+=hp.dy}else o3.rotation.set(0,p.yaw,0,'YXZ');o3.scale.setScalar(p.sc);o3.updateMatrix();
-    if(fo){if(!B.fg)tfForgeCrowd(B,p.body);if(B.fg!==1){tfFgPose(p,B.fg,B.fn++,dt);continue}}
+    if(fo){if(!B.fg)tfForgeCrowd(B,p.body);if(B.fg!==1){if(!p.uh)tfFgPose(p,B.fg,B.fn++,dt);else if(!tfUhPose(p,B.fg,dt))tfFgPose(p,B.fg,B.fn++,0);continue}}
     if(!B.texing)tfTex(B);const i=B.n++,w=B.walk.array;B.m.setMatrixAt(i,o3.matrix);w[4*i]=p.ph;const lp=p.dead&&!p.sit?tfLimp(p):0;w[4*i+1]=(kn&&!lp)||p.sit&&!(p.dead||p.hurt)?-1:p.dead||p.hurt?0:p.amp;w[4*i+2]=lp;w[4*i+3]=p.g}
   for(const k in M){const B=M[k];B.m.count=B.n;B.m.visible=tf.on&&B.n>0;B.m.instanceMatrix.needsUpdate=true;B.walk.needsUpdate=true;
     const c=B.fg;if(c&&c.object){c.object.count=B.fn;c.object.visible=fo&&tf.on&&B.fn>0}}
