@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-31T02:54:00Z",
+ "updated": "2026-10-31T03:23:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -90,9 +90,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-30",
-   "dh": 93.25,
-   "act": 3.5,
-   "versions": 23
+   "dh": 107.25,
+   "act": 4,
+   "versions": 24
   }
  ],
  "extra": [
@@ -2730,6 +2730,15 @@ window.EFFORT = {
    "tris": 5818779,
    "chars": 1901026,
    "what": "The start map's close-up shows Main Street in brick with its crosswalks, as it is in town now."
+  },
+  {
+   "v": 293,
+   "asked": "2026-10-31T19:46:00-05:00",
+   "live": "2026-10-30T22:23:33-05:00",
+   "dh": 14,
+   "tris": 5886948,
+   "chars": 1919552,
+   "what": "Photo-scanned leaf trees in autumn colours, pines from scanned needles, logs and stumps in the woods, split-granite boulders with grass round their feet, clustered on the town's lawns"
   }
  ]
 };
