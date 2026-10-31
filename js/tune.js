@@ -146,6 +146,9 @@ const TUNE=[
   // how the clock runs (☰ menu, Time) and how dark the night gets
   ['dayLen','Day and night','A whole day (24 hours) passes in',2880,'min',2,1440,1],
   ['nightLight','Day and night','Moonlight and starlight at night',1,'pct',0,400,5],
+  // the clouds in 3D (storm.js, Medium graphics and up)
+  ['clBase','Weather','Cloud base height',460,'ft',500,6000,50],['clDense','Weather','How thick the clouds are',1,'pct',20,400,5],
+  ['clShadow','Weather','How dark the cloud shadows on the ground are',0.8,'pct',0,100,5],
   ['lampLight','Day and night','Headlights, lamps and lit windows',1,'pct',0,300,5],
   // fuel and pay (fuel.js)
   ['fuelUse','Work and pay','Fuel use (100% burns what the real machine does in an hour of game time; does nothing while fuel burn is off, FUEL_BURN in fuel.js)',1,'pct',0,500,5],
