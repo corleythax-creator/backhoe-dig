@@ -93,7 +93,7 @@ function gunAssist(o,y,R){let best=null,bs=1e9;const fx=Math.sin(y),fz=Math.cos(
 // p shot: a head shot or a second hit and they are down, otherwise they run for it
 function gunHit(p,head,x,y,z){dustPuff(x,y,z,head?5:3,[-0.55,-1.05,-1]);p.hp=(p.hp??2)-(head?2:1);
   if(p.hp>0){gunRun(p,9);return}
-  Object.assign(p,{dead:1e-3,sit:0,wait:0,spd:0,amp:0,flee:0,yaw:Math.atan2(wk.x-p.x,wk.z-p.z)});if(p.vt0){p.vt=p.vt0;p.vt0=0}gun.downs++}
+  Object.assign(p,{dead:1e-3,sit:0,wait:0,spd:0,amp:0,flee:0,yaw:Math.atan2(wk.x-p.x,wk.z-p.z)});if(p.vt0){p.vt=p.vt0;p.vt0=0}gun.downs++;if(p.room)tf.shopKills=(tf.shopKills||0)+1}
 // everyone within earshot near where it went (or near him) runs off for a while
 function gunScare(x,z,not){for(const p of tf.people){if(p===not||p.dead||p.inside||p.drv||p.room)continue;
   const d=Math.min(Math.hypot(p.x-x,p.z-z),Math.hypot(p.x-wk.x,p.z-wk.z)*1.6);if(d<30)gunRun(p,6+Math.random()*6)}}

@@ -332,7 +332,7 @@ function tfRoomsTick(){const cx=camera.position.x,cz=camera.position.z;let n=tf.
   for(const R of TF_ROOMS){const d=Math.hypot(R.x-cx,R.z-cz)-R.r;
     if(d>TF_RFAR){if(R.n)for(const p of tf.people.slice())if(p.room===R)tfDrop(p);continue}
     if(d>TF_RNEAR&&!R.n)continue;const staff=R.spots.filter(sp=>sp.staff).length,want=Math.min(R.spots.length,staff+(R.big?R.big[tf.q]:TF_RN[tf.q]));
-    while(R.n<want&&n<TF_ROOM_CAP){const free=R.spots.filter(sp=>!sp.who),st=free.filter(sp=>sp.staff),sp=st.length?st[0]:free[(Math.random()*free.length)|0];if(!sp)break;
+    while(R.n<want&&n<Math.min(TF_ROOM_CAP,tfShopLeft())){const free=R.spots.filter(sp=>!sp.who),st=free.filter(sp=>sp.staff),sp=st.length?st[0]:free[(Math.random()*free.length)|0];if(!sp)break;
       const p=tfPerson({room:R,spot:sp,x:sp.x,z:sp.z,yaw:sp.yaw,sit:sp.sit?1:0,t:6+Math.random()*30,look:0,s:sp.at||0});p.y=sp.path&&R.ground?baseHeight(sp.x,sp.z):sp.y;sp.who=p;R.n++;n++}}}
 function tfRoomStep(p,dt){const sp=p.spot,R=p.room;
   if(sp.path){// walking the aisles, stopping at a table now and then
@@ -406,8 +406,10 @@ function tfFly(p,dt){const F=p.fly,g=baseHeight(p.x,p.z)+tfLift(p.x,p.z),nx=p.x+
     if(!F.vy&&s<0.05)p.fly=null}}
 // the town's people: TU.townPop of them each time the game starts, less everyone he has killed since (they do not come
 // back, so the crowd about town thins out as it falls)
-function tfLeft(){return Math.max(0,Math.round(TU.townPop)-(typeof gun==='object'?gun.downs:0)-(tf.runs||0))}
+function tfLeft(){return Math.max(0,Math.round(TU.townPop)-(typeof gun==='object'?gun.downs:0)+(tf.shopKills||0)-(tf.runs||0))}
+// the same for the people in the shops and houses (TU.shopPop, less those shot indoors, tf.shopKills from pistol.js)
+function tfShopLeft(){return Math.max(0,Math.round(TU.shopPop)-(tf.shopKills||0))}
 // the count in the corner (desktop, in town): how many townsfolk are left, and how many he has shot and run down
 function tfChip(dt){if(PHONE)return;tf.chipT=(tf.chipT||0)-dt;if(tf.chipT>0)return;tf.chipT=0.25;
   const shot=typeof gun==='object'?gun.downs:0,run=tf.runs||0;
-  $('#tfChipVal').textContent=tfLeft();$('#tfChipShot').textContent=shot;$('#tfChipRun').textContent=run;$('#tfChipDead').textContent=shot+run}
+  $('#tfChipVal').textContent=tfLeft();$('#tfShopVal').textContent=tfShopLeft();$('#tfChipShot').textContent=shot;$('#tfChipRun').textContent=run;$('#tfChipDead').textContent=shot+run}
