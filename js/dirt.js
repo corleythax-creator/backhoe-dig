@@ -218,21 +218,31 @@ function stampRut(x,z,yaw,hw,hl,dt){
     if(hit)kd.mesh.instanceMatrix.needsUpdate=true}}
   return any}
 
-// ---------- dust ----------
-// soft round puffs that rise, spread and drift downwind as they fade; one draw for all of them, capped at the 4x amount
+// ---------- dust and exhaust ----------
+// soft billowing puffs that rise, spread and drift downwind as they fade; one draw for all of them, capped at the 4x
+// amount. Each puff is a turning wisp of noise (its own seed), lit as the day is: bright on top and toward the sun,
+// shaded underneath, dim at night (uLit, set each frame from the sun and the sky). Diesel exhaust (smokePuff) shares
+// them: dark grey-blue, rising fast off the stack and spreading as it cools
 const DUST_BASE=300,WIND=[0.35,0,0.12];
-let dustN=0,dustPts=null,dP,dV,dA,dS,dC,dLife,dAge,dHead=0,dustAcc=0;
-const dustMat=new THREE.ShaderMaterial({transparent:true,depthWrite:false,uniforms:{uScale:{value:400}},
-  vertexShader:'attribute float aA;attribute float aS;attribute vec3 aC;varying float vA;varying vec3 vC;uniform float uScale;\nvoid main(){vA=aA;vC=aC;vec4 mv=modelViewMatrix*vec4(position,1.0);gl_PointSize=aS*uScale/max(0.1,-mv.z);gl_Position=projectionMatrix*mv;}',
-  fragmentShader:'varying float vA;varying vec3 vC;\nvoid main(){vec2 d=gl_PointCoord-0.5;float r=dot(d,d)*4.0;if(r>1.0)discard;gl_FragColor=vec4(vC,vA*(1.0-r)*(1.0-r));}'});
+let dustN=0,dustPts=null,dP,dV,dA,dS,dC,dLife,dAge,dK,dRi=null,dHead=0,dustAcc=0;
+const dustMat=new THREE.ShaderMaterial({transparent:true,depthWrite:false,uniforms:{uScale:{value:400},uLit:{value:new THREE.Color(1,1,1)},uSunS:{value:new THREE.Vector2()}},
+  vertexShader:'attribute float aA;attribute float aS;attribute vec3 aC;attribute float aR;varying float vA,vR;varying vec3 vC;uniform float uScale;\nvoid main(){vA=aA;vC=aC;vR=aR;vec4 mv=modelViewMatrix*vec4(position,1.0);gl_PointSize=aS*uScale/max(0.1,-mv.z);gl_Position=projectionMatrix*mv;}',
+  fragmentShader:'uniform vec3 uLit;uniform vec2 uSunS;varying float vA,vR;varying vec3 vC;\n'+
+    'float dH(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}\n'+
+    'float dN(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);return mix(mix(dH(i),dH(i+vec2(1.0,0.0)),f.x),mix(dH(i+vec2(0.0,1.0)),dH(i+1.0),f.x),f.y);}\n'+
+    'void main(){vec2 d=gl_PointCoord-0.5;float c=cos(vR*6.28),s=sin(vR*6.28);vec2 q=mat2(c,s,-s,c)*d;\n'+
+    ' float n=0.6*dN(q*4.0+vR*37.0)+0.4*dN(q*9.0+vR*71.0);float r=dot(d,d)*4.0+(n-0.5)*0.9;if(r>1.0)discard;\n'+
+    ' float sh=0.78+0.32*(-d.y*2.0)+0.18*dot(d*2.0,uSunS)+0.12*(n-0.5);\n'+
+    ' gl_FragColor=vec4(vC*uLit*sh,vA*(1.0-r)*(1.0-r)*(0.7+0.6*n));}'});
 function buildDust(){
   if(dustPts){scene.remove(dustPts);dustPts.geometry.dispose()}
   dustN=DUST_BASE*Math.min(DIRT,4);const g=new THREE.BufferGeometry();
   dP=new Float32Array(dustN*3);dA=new Float32Array(dustN);dS=new Float32Array(dustN);dC=new Float32Array(dustN*3);
-  dV=new Float32Array(dustN*3);dLife=new Float32Array(dustN);dAge=new Float32Array(dustN).fill(1e9);
+  dV=new Float32Array(dustN*3);dLife=new Float32Array(dustN);dAge=new Float32Array(dustN).fill(1e9);dK=new Uint8Array(dustN);
+  const R=new Float32Array(dustN);for(let i=0;i<dustN;i++)R[i]=Math.random();g.setAttribute('aR',new THREE.BufferAttribute(R,1));
   g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(dustN*3),3));g.setAttribute('aA',new THREE.BufferAttribute(new Float32Array(dustN),1));
   g.setAttribute('aS',new THREE.BufferAttribute(new Float32Array(dustN),1));g.setAttribute('aC',new THREE.BufferAttribute(new Float32Array(dustN*3),3));
-  g.setDrawRange(0,0);dustPts=new THREE.Points(g,dustMat);dustPts.frustumCulled=false;dustPts.renderOrder=2;scene.add(dustPts);dHead=0;
+  dRi=null;g.setDrawRange(0,0);dustPts=new THREE.Points(g,dustMat);dustPts.frustumCulled=false;dustPts.renderOrder=2;scene.add(dustPts);dHead=0;
 }
 function clearDust(){if(dAge)dAge.fill(1e9);dustAcc=0}
 // n puffs (fractions carry over) at x,y,z, tinted toward soil colour c
@@ -241,18 +251,40 @@ function dustPuff(x,y,z,n,c){
   while(dustAcc>=1){dustAcc--;const i=dHead;dHead=(dHead+1)%dustN;
     dP[i*3]=x+(Math.random()-0.5)*0.6;dP[i*3+1]=y+Math.random()*0.3;dP[i*3+2]=z+(Math.random()-0.5)*0.6;
     dV[i*3]=(Math.random()-0.5)*0.5;dV[i*3+1]=0.2+Math.random()*0.35;dV[i*3+2]=(Math.random()-0.5)*0.5;
-    dAge[i]=0;dLife[i]=2.2+Math.random()*2;const cc=c||SOIL[SPOIL].c;
+    dAge[i]=0;dLife[i]=2.2+Math.random()*2.5;dK[i]=0;const cc=c||SOIL[SPOIL].c;
     dC[i*3]=0.55+cc[0]*0.45;dC[i*3+1]=0.48+cc[1]*0.45;dC[i*3+2]=0.4+cc[2]*0.45}
 }
+// n puffs of diesel exhaust at x,y,z going up at speed up (m/s); not scaled by the Dirt detail, it is the engine's
+function smokePuff(x,y,z,n,up){if(!dustN)return;
+  for(let k=0;k<n;k++){const i=dHead;dHead=(dHead+1)%dustN;
+    dP[i*3]=x+(Math.random()-0.5)*0.05;dP[i*3+1]=y;dP[i*3+2]=z+(Math.random()-0.5)*0.05;
+    dV[i*3]=(Math.random()-0.5)*0.3;dV[i*3+1]=up*(0.8+0.4*Math.random());dV[i*3+2]=(Math.random()-0.5)*0.3;
+    dAge[i]=0;dLife[i]=1.6+Math.random()*1.4;dK[i]=1;const g=0.2+Math.random()*0.06;dC[i*3]=g;dC[i*3+1]=g*1.02;dC[i*3+2]=g*1.08}}
+// every frame: the excavator's and the dump truck's stacks smoke by how hard their engines work (the hydraulics and
+// digging, the throttle), with a dark puff as the load comes on (TU.exhaust, 0 none)
+const smk={x:0,t:0,xl:0,tl:0,xa:0,ta:0},smkV=new THREE.Vector3();
+function smokeTick(dt){if(!dustN||!(TU.exhaust>0))return;
+  const xl=Math.min(1,(sndIn.hyd||0)*0.8+(st.below?0.4:0)),tl=Math.min(1,Math.abs(tr.drive||0)+(tr.bedIn>0?0.5:0));
+  const go=(g,p,load,prev,acc,up)=>{const rise=Math.max(0,load-prev)/Math.max(dt,1e-3);acc+=dt*TU.exhaust*(3+22*load+60*Math.min(1,rise*0.5));
+    if(acc>=1){g.localToWorld(smkV.copy(p));const n=Math.floor(acc);smokePuff(smkV.x,smkV.y,smkV.z,n,up*(1+load));acc-=n}return acc};
+  smk.xa=go(house,smkV.set(0.95,1.86,-1.2),xl,smk.xl,smk.xa,1.4);smk.xl=xl;
+  smk.ta=go(tBody,smkV.set(-1.0,3.4,1.0),tl,smk.tl,smk.ta,1.6);smk.tl=tl}
 function dustTick(dt){
-  const g=dustPts.geometry,P=g.attributes.position.array,A=g.attributes.aA.array,Sz=g.attributes.aS.array,C=g.attributes.aC.array;let n=0;
+  smokeTick(dt);
+  const g=dustPts.geometry,P=g.attributes.position.array,A=g.attributes.aA.array,Sz=g.attributes.aS.array,C=g.attributes.aC.array,Rr=g.attributes.aR.array;let n=0;
+  if(!dRi){dRi=Float32Array.from(Rr)}const Ri=dRi;
   for(let i=0;i<dustN;i++){if(dAge[i]>=dLife[i])continue;dAge[i]+=dt;const t=dAge[i]/dLife[i];if(t>=1)continue;
     for(let a=0;a<3;a++){dV[i*3+a]+=(WIND[a]-dV[i*3+a])*Math.min(1,dt*0.8);dP[i*3+a]+=dV[i*3+a]*dt}
     P[n*3]=dP[i*3];P[n*3+1]=dP[i*3+1];P[n*3+2]=dP[i*3+2];C[n*3]=dC[i*3];C[n*3+1]=dC[i*3+1];C[n*3+2]=dC[i*3+2];
-    A[n]=0.22*Math.min(1,t*6)*(1-t);Sz[n]=0.3+1.2*Math.sqrt(t);n++}
+    if(dK[i]){A[n]=0.24*Math.min(1,t*10)*Math.pow(1-t,1.5);Sz[n]=0.15+0.85*Math.sqrt(t)}else{A[n]=0.26*Math.min(1,t*6)*(1-t);Sz[n]=0.35+2.0*Math.sqrt(t)}
+    Rr[n]=Ri[i];n++}
   g.setDrawRange(0,n);
-  if(n){g.attributes.position.needsUpdate=true;g.attributes.aA.needsUpdate=true;g.attributes.aS.needsUpdate=true;g.attributes.aC.needsUpdate=true}
+  if(n){g.attributes.position.needsUpdate=true;g.attributes.aA.needsUpdate=true;g.attributes.aS.needsUpdate=true;g.attributes.aC.needsUpdate=true;g.attributes.aR.needsUpdate=true}
   dustMat.uniforms.uScale.value=renderer.domElement.height/(2*Math.tan(camera.fov*Math.PI/360));
+  // lit as the day is: the sun (by its height) and the sky's fill, in the colours they have now; the sun's side on screen
+  const u=dustMat.uniforms,sk=Math.max(0,LIGHT_DIR.y),k=Math.min(1.15,(sun.intensity/(1.6*LI))*Math.min(1,sk*2.5)*0.75+(hemiL0?hemiL0.intensity/(0.5*LI):1)*0.3);
+  u.uLit.value.copy(sun.color).lerp(scene.fog.color,0.5).multiplyScalar(Math.max(0.04,k));
+  smkV.copy(LIGHT_DIR).transformDirection(camera.matrixWorldInverse);u.uSunS.value.set(smkV.x,-smkV.y).normalize();
 }
 
 // ---------- dirt that sticks ----------
