@@ -94,6 +94,7 @@ const WORDS=[
   ['trimWorn','On foot','The trimmer line has worn too short to cut: [trimBump] to bump out more',''],
   ['trimEmpty','On foot','The trimmer spool is empty: put it away ([trim]) and take it out again for a fresh spool',''],
   ['trimBumped','On foot','Bumped the line out to {line} in ({spool} ft left on the spool)','{line}: inches out; {spool}: feet left'],
+  ['gunTip','On foot','Pistol in hand: [gunFire] or a click on the view fires the way you face',''],['gunTrim','On foot','Put the trimmer away ([trim]) to use the pistol',''],
   ['trimWalk','On foot','Get out and walk to use the string trimmer',''],
   ['swimming','On foot','Swimming. Head for a beach to wade out; [sprint] swims harder.',''],
   ['fromTable','On foot','Back from {game} at the pavilion.','{game}: chess or checkers'],

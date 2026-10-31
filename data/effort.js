@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-31T00:47:00Z",
+ "updated": "2026-10-31T01:19:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -90,9 +90,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-30",
-   "dh": 20.25,
-   "act": 1.5,
-   "versions": 5
+   "dh": 26.25,
+   "act": 2,
+   "versions": 6
   }
  ],
  "extra": [
@@ -2568,6 +2568,15 @@ window.EFFORT = {
    "tris": 5821761,
    "chars": 1840368,
    "what": "Auto weather rains far less: showers every 15 to 35 minutes instead of 5 to 12, a bit shorter, and the first one waits 15 minutes"
+  },
+  {
+   "v": 275,
+   "asked": "2026-10-30T19:55:00-05:00",
+   "live": "2026-10-30T20:19:38-05:00",
+   "dh": 6,
+   "tris": 5803878,
+   "chars": 1853134,
+   "what": "A pistol in the worker's hand on foot: Fire (G, the Fire button or a click) shoots the townsfolk, who drop or run"
   }
  ]
 };
