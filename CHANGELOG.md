@@ -4,7 +4,6 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Friday, October 30, 2026
 
-- **v294** (10:24 PM) Real 3D clouds: rounded heaps with sunlit tops, grey undersides and glowing edges toward the sun, that roll in dark before a shower, and their shadows drifting across the island (Medium graphics and up).
 - **v293** (10:23 PM) Photo-scanned leaf trees in autumn colours, pines from scanned needles, logs and stumps in the woods, split-granite boulders with grass round their feet, clustered on the town's lawns
 - **v292** (9:54 PM) The start map's close-up shows Main Street in brick with its crosswalks, as it is in town now.
 - **v291** (9:44 PM) Ultra: contact shadows toward the sun, light bouncing nearby colour onto things, sharpening, a far lens blur and a warm-light cool-shade grade (all tunable under Screen effects)
