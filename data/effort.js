@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-31T16:20:00Z",
+ "updated": "2026-10-31T16:22:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -96,9 +96,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-31",
-   "dh": 138.5,
+   "dh": 141.5,
    "act": 4.5,
-   "versions": 14
+   "versions": 15
   }
  ],
  "extra": [
@@ -2952,6 +2952,15 @@ window.EFFORT = {
    "tris": 6159664,
    "chars": 2154152,
    "what": "Excavator gets a rounded counterweight, track pins, boom lines, real teeth, mirrors and steps; dug dirt shows clods, stones and soil layers and dries in patches; field, road and yard edges wander and blend with uncut grass along the hayfield; the worker walks heel to toe with hip sway and arm swing"
+  },
+  {
+   "v": 317,
+   "asked": "2026-10-31T10:40:00-05:00",
+   "live": "2026-10-31T11:22:05-05:00",
+   "dh": 3,
+   "tris": 6857193,
+   "chars": 2144243,
+   "what": "Cars and townsfolk have their shaders built and pictures uploaded in the background before they show, so town no longer stutters as they spawn; you start on foot in first person with mouse look"
   }
  ]
 };
