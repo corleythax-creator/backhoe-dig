@@ -35,9 +35,10 @@ Every sound is cut from CC0 (public domain) field recordings on Freesound by `to
 
 | What | Source | Licence |
 |---|---|---|
-| The material library (`textures/*.jpg`), the tree bark and leaves, the ground pack (`textures/ground/`) | Generated with OpenAI GPT Image / ChatGPT from the prompts in `docs/IMAGE_PROMPTS.md`, made seamless by `tools/textures.py` and `tools/trees_tex.py`; untouched originals in `art/source/` | The game's own (OpenAI's terms assign the output to the user) |
+| The material library (`textures/*.jpg`), the birch bark and the pines' needles, the ground pack (`textures/ground/`) | Generated with OpenAI GPT Image / ChatGPT from the prompts in `docs/IMAGE_PROMPTS.md`, made seamless by `tools/textures.py` and `tools/trees_tex.py`; untouched originals in `art/source/` | The game's own (OpenAI's terms assign the output to the user) |
 | Relief and sheen maps (`*_n.jpg`, `*_r.jpg`) | Made from those textures by `tools/pbr.py` | The game's own |
 | Photo-scanned siding, plaster and decking (`textures/siding_white`, `siding_brown`, `siding_red`, `siding_grey`, `plaster`, `deck_grey`, each with its own `_n` and `_r`) | [ambientCG](https://ambientcg.com): WoodSiding009, WoodSiding007, WoodSiding005, WoodSiding011, Plaster007, Planks023A | CC0 |
+| Photo-scanned leaf trees and bark (`textures/tree_leaves.jpg` and `tree_leaves_a.jpg`: the maple, oak and birch leaf sprays, laid out from single scanned leaves by `tools/trees_scan.py`; `textures/tree_bark.jpg` and `tree_bark_n.jpg`) | [ambientCG](https://ambientcg.com): LeafSet010, LeafSet012, LeafSet008, Bark012 | CC0 |
 | Photo-scanned roof shingles (`textures/roof_grey`, with `_n` and `_r`) | [Poly Haven](https://polyhaven.com/a/grey_roof_01): grey_roof_01, by Rob Tuytel | CC0 |
 | Your own textures (uploaded in the map editor) | Whoever uploads them | Theirs; only upload images you have the right to use |
 

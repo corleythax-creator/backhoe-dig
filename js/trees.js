@@ -1,15 +1,24 @@
-// Corley's Island: the trees. Five species built from bark tubes and photo foliage cards (textures from OpenAI GPT
-// Image, made by tools/trees_tex.py): a spruce and a red pine (the map editor's "pine"), and an oak, a sugar maple and a
+// Corley's Island: the trees. Five species built from bark tubes and photo foliage cards (the pines' textures
+// from OpenAI GPT Image, made by tools/trees_tex.py; the leaf trees' sprays and the bark from CC0 ambientCG scans, made
+// by tools/trees_scan.py): a spruce and a red pine (the map editor's "pine"), and an oak, a sugar maple and a
 // birch clump (its "leafy"). Which species a tree is comes from where it stands (treeSpecies), so saves and maps keep
 // their {t:'pine'|'leafy'} shape. Every island hands its trees in as a group (treeGroup) and they all share one set of
 // instance meshes: each species has a full-detail model (about 2,500 to 4,500 triangles) for the trees within the
 // Graphics setting's tree distance (treeNearR) and a light one (a few hundred) beyond, re-sorted as the camera moves.
 // Shadows come from a solid hull per species (the meshes in treeIMs, never drawn; shadowproxy.js casts the near ones),
-// which maps.js also reads for the minimap. The leaves are grey in the texture and take each tree's tint (ASSET_LT).
+// which maps.js also reads for the minimap. The leaves are grey in the texture and take each tree's tint (TREE_LT, by species).
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 const treeIMs=[];
 // the editor trees' tints: pines (near white, slight shifts) and leaf trees (autumn golds and oranges to greens), by c
 const ASSET_PT=[[1,1,1],[0.85,0.95,1.06],[1.08,1.04,0.82],[0.92,0.98,0.9]],ASSET_LT=[[0.98,0.78,0.26],[0.93,0.52,0.2],[0.56,0.64,0.3],[0.78,0.32,0.18],[0.46,0.6,0.28],[0.95,0.85,0.4]];
+// what each leaf tree's tint c (0 to 5, as ASSET_LT picks it in the editor) is in its own species' autumn: the greens
+// stay at 2 and 4 (a tree still in full summer leaf), the others turn as that species does: the oak bronze, orange-brown,
+// rust and tan, the sugar maple orange-red, scarlet, deep red and amber, the birch yellow, gold and yellow-green
+const TREE_LT={oak:[[0.86,0.56,0.24],[0.86,0.44,0.16],[0.4,0.52,0.2],[0.66,0.3,0.13],[0.33,0.5,0.19],[0.88,0.66,0.34]],
+  maple:[[1.0,0.42,0.13],[0.92,0.2,0.09],[0.38,0.55,0.18],[0.66,0.1,0.07],[0.31,0.5,0.18],[1.0,0.62,0.16]],
+  birch:[[1.02,0.86,0.26],[1.0,0.72,0.18],[0.72,0.78,0.28],[0.94,0.64,0.16],[0.46,0.62,0.22],[1.04,0.94,0.42]]};
+// a leaf tree's tint: species index k, tint c, brightness v
+function treeLeafTint(k,c,v){const p=TREE_LT[TREE_SP[k].id][(c|0)%6];return[p[0]*v,p[1]*v,p[2]*v]}
 // the atlas boxes of textures/tree_leaves.jpg as [u0, v0, u1, v1] (v up); tools/trees_tex.py BOX has them in pixels
 // (leaves is the maple spray, which the undergrowth uses too; a broadleaf's o.fol picks its spray)
 const FOL_UV={spruce:[0,0,0.15625,1],leaves:[0.15625,0.5,0.40625,1],needles:[0.15625,0,0.40625,0.5],oak:[0.5,0.5,0.75,1],birch:[0.5,0,0.75,0.5]};
@@ -145,15 +154,26 @@ function treeBroad(hi,o){const K=treeKit(hi?o.seed:o.seed+1),V=K.V,up=new V(0,1,
   const pts=ends.slice();
   for(let k=0,n=(hi?o.clumps:Math.round(o.clumps*0.22))-ends.length;k<n;k++){let x,y,z,r;do{x=K.rnd()*2-1;y=K.rnd()*2-1;z=K.rnd()*2-1;r=x*x+y*y+z*z}while(r>1||r<0.35);
     pts.push(new V(x*o.rx,o.cy+y*o.ry,z*o.rx))}
-  const step=hi?1:Math.max(1,Math.round(pts.length/(o.clumps*0.22)));
+  const step=hi?1:Math.max(1,Math.round(pts.length/(o.clumps*0.22))),bx=FOL_UV[o.fol||'leaves'];
+  // a shell clump mostly faces out of the crown (turned a little at random), so from outside the crown reads full; the
+  // shade (vertex colour) is darker deeper in and underneath, softly, so the crown shades itself without going black
+  const shade=(q,outer)=>(0.6+0.32*outer)*(0.84+0.2*Math.max(-1,Math.min(1,q.y/o.ry)));
   for(let k=0;k<pts.length;k+=step){const p=pts[k],q=p.clone().sub(C),nrm=new V(q.x/o.rx,q.y/o.ry*0.8+0.25,q.z/o.rx);const outer=Math.min(1,nrm.length());nrm.normalize();
-    const kk=(0.45+0.35*outer)*(0.8+0.25*Math.max(-1,Math.min(1,q.y/o.ry))),v=0.94+0.12*K.rnd(),tint=[v,v*(0.97+0.06*K.rnd()),v*(0.9+0.15*K.rnd())];
-    for(let j=0,n=hi?4:3;j<n;j++)K.clump(p.clone().add(new V((K.rnd()-0.5)*0.55,(K.rnd()-0.5)*0.4,(K.rnd()-0.5)*0.55)),o.size*(hi?1.1:1.8)*(0.8+0.4*K.rnd()),FOL_UV[o.fol||'leaves'],nrm,kk,tint)}
+    const kk=shade(q,outer),v=0.94+0.12*K.rnd(),tint=[v,v*(0.97+0.06*K.rnd()),v*(0.9+0.15*K.rnd())];
+    for(let j=0,n=hi?4:3;j<n;j++){const c=p.clone().add(new V((K.rnd()-0.5)*0.55,(K.rnd()-0.5)*0.4,(K.rnd()-0.5)*0.55)),sz=o.size*(hi?1.15:1.8)*(0.8+0.4*K.rnd());
+      if(j&1)K.clump(c,sz,bx,nrm,kk,tint);
+      else{const f=nrm.clone().add(new V(K.rnd()-0.5,K.rnd()-0.5,K.rnd()-0.5).multiplyScalar(0.9)).normalize(),r=new V(K.rnd()-0.5,K.rnd()-0.5,K.rnd()-0.5),
+        ax=new V().crossVectors(f,r).normalize(),ay=new V().crossVectors(ax,f).normalize();if(ay.y<0)ay.negate();
+        K.card(c.clone().sub(ay.clone().multiplyScalar(sz/2)),ax,ay,sz,sz,bx,nrm,kk*0.9,kk,1,0,tint)}}}
+  // the core (full model only): big darker clumps inside the crown, so no sky shows through its middle
+  for(let k=0,n=hi?Math.round(o.clumps*0.16):0;k<n;k++){let x,y,z,r;do{x=K.rnd()*2-1;y=K.rnd()*2-1;z=K.rnd()*2-1;r=x*x+y*y+z*z}while(r>1);
+    const q=new V(x*o.rx*0.6,y*o.ry*0.6,z*o.rx*0.6),nrm=new V(x,y*0.8+0.3,z).normalize();
+    for(let j=0;j<2;j++)K.clump(C.clone().add(q),o.size*1.7,bx,nrm,shade(q,0.3)*0.85)}
   return K.done()}
 const TREE_BROAD={
-  oak:{fol:'oak',seed:301,trunk:2.3,rad:0.33,limbs:4,limbLen:2.6,out:1.35,spread:0.9,lift:0.05,wob:0.9,cy:4.7,rx:3.5,ry:2.3,clumps:150,size:1.35,stems:1,leader:false},
-  maple:{seed:401,trunk:2.8,rad:0.27,limbs:4,limbLen:2.7,out:0.7,spread:0.6,lift:0.2,wob:0.5,cy:5.2,rx:2.8,ry:2.9,clumps:180,size:1.35,stems:1,leader:true},
-  birch:{fol:'birch',seed:501,trunk:4.2,rad:0.14,limbs:3,limbLen:2.0,out:0.55,spread:0.55,lift:0.12,wob:0.35,cy:5.9,rx:1.9,ry:2.7,clumps:160,size:1.1,stems:2,leader:true}};
+  oak:{fol:'oak',seed:301,trunk:2.3,rad:0.27,limbs:4,limbLen:2.6,out:1.35,spread:0.9,lift:0.05,wob:0.9,cy:4.7,rx:3.5,ry:2.3,clumps:150,size:1.35,stems:1,leader:false},
+  maple:{seed:401,trunk:2.8,rad:0.22,limbs:4,limbLen:2.7,out:0.7,spread:0.6,lift:0.2,wob:0.5,cy:5.2,rx:2.8,ry:2.9,clumps:180,size:1.35,stems:1,leader:true},
+  birch:{fol:'birch',seed:501,trunk:4.2,rad:0.12,limbs:3,limbLen:2.0,out:0.55,spread:0.55,lift:0.12,wob:0.35,cy:5.9,rx:1.9,ry:2.7,clumps:160,size:1.1,stems:2,leader:true}};
 // the species: name, which editor kind it stands for, its wood, and its shadow hull (cone or ellipsoid, a little inside
 // the foliage so the sunny side of the crown stays lit)
 const TREE_SP=[
@@ -250,7 +270,7 @@ function treeRegrow(){const y=Math.max(0,(dn.t-Date.now())/TREE_YR);if(Math.abs(
 // the tint and height of a tree from the old per-island colour schemes
 function treeEntry(t,x,z,yaw,s,c,sy){const w=hash(x*1.3+0.7,z*2.1+0.3),w2=hash(z*1.7,x*0.9),k=treeSpecies(t,x,z);let col;
   if(t==='pine'){const p=ASSET_PT[(c|0)%4],v=0.9+0.2*w2;col=[p[0]*v,p[1]*v,p[2]*v]}
-  else{const p=ASSET_LT[(c|0)%6],v=0.9+0.2*w2;col=k===4?[p[0]*v*1.05,(p[1]*0.8+0.2)*v,p[2]*v*0.85]:[p[0]*v,p[1]*v,p[2]*v]}
+  else col=treeLeafTint(k,c,0.9+0.2*w2);
   return{t,x,z,y:baseHeight(x,z),yaw,s,sy:sy||treeSy(t,x,z),c:col}}
 // trees out of view are left out of the drawn meshes: the camera's view widened by about 15 degrees all round (TREE_CULL)
 // so it can turn a little before the next sort, which comes when it has turned about 10 degrees. In a headset, which
