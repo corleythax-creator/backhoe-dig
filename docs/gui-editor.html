@@ -162,9 +162,9 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 .exswitch[hidden]{display:none}
 .exswitch button{height:40px;min-width:76px;padding:0 14px;font-size:17px;border:0;border-radius:6px;background:transparent;color:var(--muted)}
 .exswitch button[aria-pressed="true"]{background:var(--machine);color:#1c1309}
-#jumpBtn,#sprintBtn,#plantBtn,#trimBtn,#bumpBtn,#bedBtn,#fireBtn{height:46px;min-width:78px;padding:0 14px;font-size:17px;border-radius:8px;box-shadow:var(--lift)}
+#jumpBtn,#sprintBtn,#plantBtn,#trimBtn,#bumpBtn,#bedBtn,#fireBtn,#gunBtn{height:46px;min-width:78px;padding:0 14px;font-size:17px;border-radius:8px;box-shadow:var(--lift)}
 #jumpBtn{background:var(--machine);color:#1c1309;border:0}
-#sprintBtn[aria-pressed="true"],#trimBtn[aria-pressed="true"]{background:rgba(255,138,31,.2);color:var(--machine);border-color:var(--machine)}
+#sprintBtn[aria-pressed="true"],#trimBtn[aria-pressed="true"],#gunBtn[aria-pressed="true"]{background:rgba(255,138,31,.2);color:var(--machine);border-color:var(--machine)}
 #fireBtn{background:rgba(190,40,30,.22);border-color:#d8483a;color:#ffd9d4}
 #gunCross{position:fixed;left:50%;top:50%;width:26px;height:26px;margin:-13px 0 0 -13px;pointer-events:none;z-index:5;border-radius:50%;border:2px solid rgba(255,255,255,.85);box-shadow:0 0 0 1px rgba(0,0,0,.45),inset 0 0 0 1px rgba(0,0,0,.45)}
 #gunCross::after{content:"";position:absolute;left:50%;top:50%;width:4px;height:4px;margin:-2px 0 0 -2px;border-radius:50%;background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.5)}
@@ -573,7 +573,7 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
    Sprint, Jump) sit lower and smaller over the key captions */
 .nostk .stick{display:none}
 .nostk .sticks{padding-bottom:4px}
-.nostk #seatBtn,.nostk #jumpBtn,.nostk #sprintBtn,.nostk #plantBtn,.nostk #trimBtn,.nostk #bumpBtn,.nostk #bedBtn,.nostk #fireBtn{height:36px;min-width:0;font-size:15px;box-shadow:none}
+.nostk #seatBtn,.nostk #jumpBtn,.nostk #sprintBtn,.nostk #plantBtn,.nostk #trimBtn,.nostk #bumpBtn,.nostk #bedBtn,.nostk #fireBtn,.nostk #gunBtn{height:36px;min-width:0;font-size:15px;box-shadow:none}
 .nostk .exswitch button{height:32px;min-width:60px;font-size:15px}
 .nostk .tbar button{height:38px}
 .nostk #menuBtn{width:38px}
@@ -709,7 +709,7 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
     </div>
     <div class="stickwrap">
       <div class="exswitch" id="exSwitch" role="group" aria-label="Excavator: drive or dig"><button id="exDrive" aria-pressed="false">Drive</button><button id="exDig" aria-pressed="true">Dig</button></div>
-      <div class="walkbtns" id="walkBtns" hidden><button id="sprintBtn" aria-pressed="false">Sprint</button><button id="jumpBtn">Jump</button><button id="plantBtn">Plant</button><button id="trimBtn" aria-pressed="false">Trimmer</button><button id="bumpBtn" hidden>Bump</button><button id="bedBtn" hidden>Load</button><button id="fireBtn" hidden>Fire</button></div><div id="gunCross" hidden></div>
+      <div class="walkbtns" id="walkBtns" hidden><button id="sprintBtn" aria-pressed="false">Sprint</button><button id="jumpBtn">Jump</button><button id="plantBtn">Plant</button><button id="trimBtn" aria-pressed="false">Trimmer</button><button id="bumpBtn" hidden>Bump</button><button id="bedBtn" hidden>Load</button><button id="gunBtn" aria-pressed="true">Pistol</button><button id="fireBtn" hidden>Fire</button></div><div id="gunCross" hidden></div>
       <div class="stick" id="stickR"><div class="knob"></div></div>
     </div>
   </div>
@@ -1272,7 +1272,8 @@ const WORDS=[
   ['trimWorn','On foot','The trimmer line has worn too short to cut: [trimBump] to bump out more',''],
   ['trimEmpty','On foot','The trimmer spool is empty: put it away ([trim]) and take it out again for a fresh spool',''],
   ['trimBumped','On foot','Bumped the line out to {line} in ({spool} ft left on the spool)','{line}: inches out; {spool}: feet left'],
-  ['gunTip','On foot','Pistol in hand: [gunFire] or a click on the view fires the way you face',''],['gunTrim','On foot','Put the trimmer away ([trim]) to use the pistol',''],
+  ['gunOut','On foot','Pistol out: click to fire',''],['gunAway','On foot','Pistol put away',''],
+  ['gunTip','On foot','Pistol out: a click on the view fires the way you face; [gun] puts it away',''],['gunTrim','On foot','Put the trimmer away ([trim]) to use the pistol',''],
   ['trimWalk','On foot','Get out and walk to use the string trimmer',''],
   ['swimming','On foot','Swimming. Head for a beach to wade out; [sprint] swims harder.',''],
   ['fromTable','On foot','Back from {game} at the pavilion.','{game}: chess or checkers'],
