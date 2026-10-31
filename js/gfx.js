@@ -98,6 +98,8 @@ function gfxApply(){const g=gfxCur=Object.assign({},GFX[gfxKey],gfxOver);
   wearGfx(g.pbr&&g.model);
   // the bridges: their detail parts, pictures (not on Low) and relief (bridges.js)
   brGfx(g);
+  // the boats' gelcoat scuffs (family.js)
+  famGelGfx(g);
   // undergrowth round the trees (brush.js)
   brushGfx(g.brush);
   // how finely the grass and weeds are shaped (scenery.js)

@@ -51,7 +51,7 @@ function lbTugModel(){const K=famKit(),RED=0x9e2a22,WH=0xeeeeea,RUST=0x5d5f5c;
   {const g=new THREE.SphereGeometry(1,14,6,0,Math.PI*2,0,Math.PI/2);g.scale(2.3,1.7,5.4);K.geo(g,0x6b4a2e,0,0.85,bz)}
   for(const [x,z] of [[1.6,bz-4.5],[-1.7,bz+3.2],[1.4,bz+5.1]]){const g=new THREE.SphereGeometry(0.45,7,4);g.scale(1,0.6,1);K.geo(g,0x5e4129,x,1.0,z)}
   return lbGroup(K,1)}
-function lbGroup(K,sc){const g=new THREE.Group(),m=new THREE.Mesh(famMerge(K.solid),btMat);m.castShadow=true;m.receiveShadow=true;g.add(m);g.scale.setScalar(sc);scene.add(g);return g}
+function lbGroup(K,sc){const g=new THREE.Group(),m=famGelMesh(K.solid);m.castShadow=true;m.receiveShadow=true;g.add(m);g.scale.setScalar(sc);scene.add(g);return g}
 // kind, route, cruising speed m/s, turn rate rad/s, half length and half beam (what is in the way of others), how far
 // out a wave rocks it (hr) and how hard (mass), how big a wake it lays (wakeK); eng: its engine for sound.js
 const lakeBoats=[

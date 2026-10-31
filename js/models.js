@@ -18,8 +18,8 @@ let mdlMats=null;
 // physically based materials for the detailed models: paint, bare steel and rubber carry a seamless photo detail (the
 // wear, scratches and grime of textures/mach_*.jpg, tinted to the part's colour by dividing out the texture's mean, in linear light as the shader reads it), its
 // relief and roughness maps (tools/pbr.py), and the sky's reflection (skyEnv), so steel is metal and paint is paint
-const MDL_TEX={paint:[0.301,0.301,0.301],steel:[0.084,0.084,0.084],rubber:[0.049,0.049,0.049]},mdlTexC={};
-function mdlTex(id,kind){const k=id+kind;if(!mdlTexC[k]){const t=new THREE.TextureLoader().load(`textures/mach_${id}${kind}.jpg`);
+const MDL_TEX={paint:[0.293,0.293,0.293],steel:[0.082,0.082,0.082],rubber:[0.047,0.047,0.047],gel:[0.785,0.785,0.785]},mdlTexC={};
+function mdlTex(id,kind){const k=id+kind;if(!mdlTexC[k]){const t=new THREE.TextureLoader().load(id==='gel'?`textures/gelcoat${kind}.jpg`:`textures/mach_${id}${kind}.jpg`);
   t.wrapS=t.wrapT=THREE.RepeatWrapping;t.anisotropy=4;if(!kind)t.colorSpace=THREE.SRGBColorSpace;mdlTexC[k]=t}return mdlTexC[k]}
 // ---------- wear and dirt on the machines (High: the relief setting, gfx.js) ----------
 // One shader patch on the paint, bare steel and rubber of the detailed machines, worked out in each part's own frame (so
@@ -247,7 +247,7 @@ function mdlRamPose(h){h.g.updateMatrixWorld(true);
     r.ga.getWorldPosition(mdlRV);r.gb.lookAt(mdlRV);r.rod.scale.z=Math.max(1,(d-r.lb+0.04)/r.lr)}}
 // ---------- everything else with a detailed model of its own (tools/models/<file>.js, models/<file>.glb) ----------
 // A material in these files is named for one of mdlMats, or for a kind and a colour: 'paint#e8701d', 'steel#…' (bare
-// metal with the wear detail), 'rubber#…', 'plastic#…' (moulded, scuffed), 'matte#…' (fabric, foam, dull resin), 'metal#…'
+// metal with the wear detail), 'rubber#…', 'plastic#…' (moulded, scuffed), 'gel#…' (glossy boat gelcoat), 'matte#…' (fabric, foam, dull resin), 'metal#…'
 // (polished: chrome, stainless, galvanized), 'glass#…' (tinted), 'glow#…' (a lamp, lit as the kits' lamps are) and
 // 'win#…' (window glass that lights up at night like the kits' windows); or 'lib:<id>' for a library material
 // (textures/<id>.jpg, 'lib:planks:turn' turned a quarter). Each is made once and shared
@@ -257,7 +257,7 @@ function mdlMatOf(k){const m=mdlMatsMake();if(m[k])return m[k];if(mdlNamed[k])re
   if(lib)r=mdlLib(lib[1],{turn:lib[2]?Math.PI/2:0});
   else if(c){const h=parseInt(c[2],16),t=c[1];
     r=t==='paint'?mdlStd(h,{tex:'paint',coat:1}):t==='steel'?mdlStd(h,{tex:'steel',metal:0.65}):t==='rubber'?mdlStd(h,{tex:'rubber',relief:0.8}):
-      t==='plastic'?mdlStd(h,{tex:'paint',relief:0.25,rough:0.75,noWear:1}):t==='matte'?mdlStd(h,{tex:'rubber',relief:0.5,noWear:1}):t==='metal'?mdlStd(h,{metal:1,rough:0.25}):
+      t==='plastic'?mdlStd(h,{tex:'paint',relief:0.25,rough:0.75,noWear:1}):t==='gel'?mdlStd(h,{tex:'gel',relief:0.15,rough:0.55,env:1.1,coat:1,noWear:1}):t==='matte'?mdlStd(h,{tex:'rubber',relief:0.5,noWear:1}):t==='metal'?mdlStd(h,{metal:1,rough:0.25}):
       t==='glass'?mdlStd(h,{rough:0.04,env:1.6}):t==='win'?mdlStd(h,{rough:0.06,env:1.4}):t==='glow'?new THREE.MeshBasicMaterial({color:h}):null;
     if(r&&(t==='glow'||t==='win')){r.userData.lit={t,c:new THREE.Color(h)};(mdl.lit=mdl.lit||[]).push(r)}}
   return mdlNamed[k]=r||m.steel}
@@ -265,9 +265,11 @@ function mdlMatOf(k){const m=mdlMatsMake();if(m[k])return m[k];if(mdlNamed[k])re
 function mdlLitTick(){for(const m of mdl.lit||[]){const L=m.userData.lit;if(L.t==='glow')m.color.copy(L.c).multiply(famGlowMat.color);else m.emissive.copy(famWinMat.emissive)}}
 const mdlLoad=(f,ok)=>mdlLoaderReady(()=>new THREE.GLTFLoader().load(`models/${f}.glb`,gl=>{gl.scene.updateMatrixWorld(true);ok(gl.scene)},undefined,()=>{}));
 // a node's own meshes as [geometry in the node's frame (with box-projected texture coordinates), material], made once
-function mdlNodeParts(node){if(node.userData.mdlParts)return node.userData.mdlParts;const inv=new THREE.Matrix4().copy(node.matrixWorld).invert(),M4=new THREE.Matrix4(),out=[];
+// a boat's fibreglass: in these files, materials of these kinds are glossy gelcoat ('gel#…', the scanned gelcoat's scuffs)
+const MDL_GEL={boat:/^(plastic|paint)#/,lakeboats:/^plastic#/};
+function mdlNodeParts(node,gel){if(node.userData.mdlParts)return node.userData.mdlParts;const inv=new THREE.Matrix4().copy(node.matrixWorld).invert(),M4=new THREE.Matrix4(),out=[];
   for(const m of node.children){if(!m.isMesh)continue;const g=m.geometry.clone();g.applyMatrix4(M4.multiplyMatrices(inv,m.matrixWorld));
-    if(!g.attributes.uv)mdlBoxUV(g);g.computeBoundingSphere();out.push([g,mdlMatOf(m.material.name)])}
+    if(!g.attributes.uv)mdlBoxUV(g);g.computeBoundingSphere();const k=m.material.name;out.push([g,mdlMatOf(gel&&gel.test(k)?k.replace(/^\w+#/,'gel#'):k)])}
   return node.userData.mdlParts=out}
 const mdlShadeOk=mt=>!mt.transparent&&!(mt.userData.lit&&mt.userData.lit.t==='glow')&&!(mt.isMeshStandardMaterial&&mt.envMapIntensity>1.3);
 // ---- machines and kit-built things (MDL_KIT[file]): sets() gives each copy's part groups by the model's node names,
@@ -280,7 +282,7 @@ function mdlKitOn(on){mdl.kitOn=on;mdl.kitDirty=false;mdl.kitN++;
     if(on&&src===undefined){mdl.kit[f]=null;mdlLoad(f,sc=>{mdl.kit[f]=sc;mdl.kitDirty=true})}
     const keep=new Set(K.keep?K.keep():[]);
     for(const set of K.sets())for(const name in set){const par=set[name];if(!par)continue;const u=mdlSide(par);
-      if(on&&!u.kit&&src){const node=src.getObjectByName(name),parts=node&&mdlNodeParts(node);if(!parts||!parts.length)continue;
+      if(on&&!u.kit&&src){const node=src.getObjectByName(name),parts=node&&mdlNodeParts(node,MDL_GEL[f]);if(!parts||!parts.length)continue;
         u.kit=parts.map(([g,mt])=>{const ms=new THREE.Mesh(g,mt);ms.name='mdl_'+name;ms.castShadow=mdlShadeOk(mt);ms.receiveShadow=true;
           ms.layers.enable(RAIN_LAYER);if(mt.envMapIntensity>1.3)ms.renderOrder=2;par.add(ms);return ms})}
       if(!u.kit)continue;

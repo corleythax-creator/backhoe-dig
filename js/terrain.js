@@ -79,7 +79,7 @@ function mapEncode(){const doc={game:'backhoe-dig',v:1,g:[ED_X0,ED_Z0]},h=edBox(
   const m=edBox(ED_M,1,Uint8Array),fa=new Uint8Array(ED_A.length);for(let q=0;q<fa.length;q++)if(ED_M[q])fa[q]=255-ED_A[q];
   const a=edBox(fa,1,Uint8Array);if(h)doc.h=h;if(p)doc.p=p;if(m)doc.m=m;if(a)doc.a=a;doc.tg=edBox(ED_G,1,Uint8Array)||0;
   // sq: its things include Harbor Square's furniture (sqThings, scenery.js)
-  if(mapAssets){doc.sq=1;doc.assets=mapAssets.map(a=>[a.t,+a.x.toFixed(2),+a.z.toFixed(2),+a.yaw.toFixed(2),+a.s.toFixed(2),a.c,...(a.lk?[1]:[])])}
+  if(mapAssets){doc.sq=1;doc.assets=(typeof fxSaveList==='function'?fxSaveList(mapAssets):mapAssets).map(a=>[a.t,+a.x.toFixed(2),+a.z.toFixed(2),+a.yaw.toFixed(2),+a.s.toFixed(2),a.c,...(a.lk?[1]:[])])}
   if(mapRoads)doc.roads=mapRoads.map(r=>[+r.w.toFixed(2),r.mid,r.pts.map(q=>q.map(v=>+v.toFixed(2))),...(r.pv?[{c:r.cb?1:0,s:+(r.sw||0).toFixed(2),l:r.cl?1:0,...(r.sf?{f:r.sf}:{})}]:[])]);
   return JSON.stringify(doc)}
 // reads a map into new layers; throws on anything that is not one
@@ -261,6 +261,9 @@ function landClamp(x,z,lim,side,walk){if(landIn(x,z,lim,side,walk))return [x,z];
 // axes {x, z, hx, hz: half sizes}; family.js fills it. Things placed in the map editor (props.js) are turned boxes:
 // lx, lz their own half sizes, cs and sn the cosine and sine of their turn, hx and hz then the box along the axes round them
 const SOLIDS=[];
+// a fixed thing's box, declared by the code that builds it, for the map editor to pick and move as one with all that
+// stands in it (fixed.js): n its name, x, z its middle, hx, hz half its size
+const FX_DECL=[],fxDecl=(n,x,z,hx,hz)=>FX_DECL.push({n,x,z,hx,hz});
 // what a boat can't get past on the water (boats.js): bridge piers, pile bents and moored hulls, each a thick line from
 // ax,az to bx,bz, r out from it. family.js, jessica.js and boats.js fill it as they build them; a trestle's bents are kept
 // with its spans instead (crnSpans in mainland.js), as they change from timber to steel
