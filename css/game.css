@@ -137,6 +137,12 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 #reloadBtn{height:46px;min-width:78px;padding:0 14px;font-size:17px;border-radius:8px;box-shadow:var(--lift)}
 #gunHud{position:fixed;right:16px;top:50%;transform:translateY(-50%);z-index:6;display:flex;flex-direction:column;align-items:flex-end;gap:2px;padding:8px 12px;border-radius:10px;background:rgba(0,0,0,.38);color:#fff;font-weight:700;text-shadow:0 1px 2px rgba(0,0,0,.7);cursor:pointer;user-select:none}
 #gunHud b{font-size:15px;letter-spacing:.08em;opacity:.85}#gunHud span{font-size:28px;font-variant-numeric:tabular-nums}#gunHud.low span{color:#ff8a6a}#gunHud[hidden]{display:none}
+#gunVit{position:fixed;left:50%;top:70px;transform:translateX(-50%);z-index:6;display:flex;flex-direction:column;align-items:center;gap:4px;pointer-events:none}
+#gunVit[hidden]{display:none}#gunWant{font-size:30px;line-height:1;color:#f5c542;letter-spacing:4px;text-shadow:0 1px 3px rgba(0,0,0,.8)}
+#gunLife{width:180px;height:12px;border-radius:6px;background:rgba(0,0,0,.5);overflow:hidden;box-shadow:0 0 0 1px rgba(255,255,255,.25)}#gunLife i{display:block;height:100%;width:100%;background:#4cd06a;transition:width .2s}
+#gunVit.low #gunLife i{background:#e8483a}
+#gunHurtFx{position:fixed;inset:0;z-index:4;pointer-events:none;opacity:0;background:radial-gradient(ellipse at center,rgba(150,0,0,0) 45%,rgba(150,0,0,.85) 100%);transition:background .6s}
+#gunHurtFx.down{background:#000;transition:background 1.2s}
 #gunShop{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:30;width:min(560px,calc(100vw - 32px));max-height:calc(100vh - 40px);overflow:auto;padding:16px;border-radius:12px;background:rgba(22,24,26,.94);color:#f1ead8;box-shadow:0 8px 30px rgba(0,0,0,.5)}
 #gunShop[hidden]{display:none}#gunShop h3{margin:0 0 10px;font-size:22px;color:#d8b25a}
 .gsRow{display:flex;align-items:center;gap:8px;padding:10px 0;border-top:1px solid rgba(255,255,255,.12)}.gsTxt{flex:1;min-width:0}.gsTxt b{display:block;font-size:18px}.gsTxt small{font-size:14px;opacity:.8}
