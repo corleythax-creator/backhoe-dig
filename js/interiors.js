@@ -148,7 +148,7 @@ const IN_ROOMS=[];
 // borrowed while you are in town and put back after, so no light is added to the scene. Runs after jesTick
 let rmAdapt=1,rmExp0=0.8,rmLampI=0,rmLampBk=null;
 function rmInsideTick(dt){const r=mode==='walk'&&!wk.inside?rmRoomAt(wk.x,wk.z,wk.y):null,k=1-Math.exp(-dt*3),L=jesLight;
-  rmAdapt+=((r?1+TU.inAdapt:1)-rmAdapt)*k;if(Math.abs(rmAdapt-1)<1e-3)rmAdapt=1;renderer.toneMappingExposure=rmExp0*rmAdapt;
+  rmAdapt+=((r?1+TU.inAdapt:1)-rmAdapt)*k;if(Math.abs(rmAdapt-1)<1e-3)rmAdapt=1;renderer.toneMappingExposure=rmExp0*rmAdapt*exAdapt;
   rmLampI+=((r?TU.inLamp*LI:0)-rmLampI)*k;
   if(rmLampI>0.01){if(!rmLampBk)rmLampBk={p:L.position.clone(),c:L.color.getHex(),d:L.distance,y:L.decay};
     if(r){L.position.set(r.x,r.top-0.35,r.z);L.distance=Math.max(6,Math.hypot(r.hw,r.hd)*2.2)}L.color.setHex(0xffe6c4);L.decay=1.3;L.intensity=rmLampI}

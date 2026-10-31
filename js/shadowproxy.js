@@ -49,7 +49,7 @@ for(const im of treeIMs){im.castShadow=false;const near=new THREE.InstancedMesh(
 function shpTreesRefresh(){for(const T of shpTrees){const n=T.im.count;T.M.length=0;for(let i=0;i<n;i++){const m=new THREE.Matrix4();T.im.getMatrixAt(i,m);T.M.push(m)}T.x=T.fx=1e9}}
 shpTreesRefresh();
 // every frame: give back any part that has moved since it was merged, and refill the near trees when the shadow moves
-function shadowProxyTick(){sunFarTick();
+function shadowProxyTick(){sunNearTick();sunFarTick();
   for(const G of shpGroups){let ch=false;
     for(let i=G.src.length-1;i>=0;i--){const s=G.src[i];
       if(!shpSame(s.m,s.s)){s.m.castShadow=true;s.m.userData.shpOut=true;G.src.splice(i,1);ch=true}}

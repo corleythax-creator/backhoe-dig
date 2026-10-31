@@ -115,9 +115,10 @@ function pudSsrTick(){const on=pudLvl>0.001&&gfxCur.wmFine;pudSsrU.uSsr.value.x=
     pudSsrRT=new THREE.WebGLRenderTarget(w,h,{depthBuffer:false,type:renderer.extensions.has('EXT_color_buffer_float')?THREE.HalfFloatType:THREE.FloatType})}
   const u=pudSsrMat.uniforms;u.tSrc.value=postRT.texture;u.tDepth.value=postRT.depthTexture;u.uNear.value=camera.near;u.uFar.value=camera.far;postPass(pudSsrMat,pudSsrRT);
   pudSsrU.uPrevVP.value.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse)}
-function postOn(){return (POST.ao||POST.bloom||POST.grade)&&!renderer.xr.isPresenting}
+// the eye adjusting (aeOn) reads the picture off-screen too
+function postOn(){return (POST.ao||POST.bloom||POST.grade||aeOn)&&!renderer.xr.isPresenting}
 // draws the frame: straight to the screen, or through the effects
-function postRender(){ultraTick();hazeTick();bounceTick();clVolRender();if(!postOn()){pudSsrU.uSsr.value.x=0;renderer.render(scene,camera);return}
+function postRender(){ultraTick();hazeTick();bounceTick();clVolRender();if(!postOn()){pudSsrU.uSsr.value.x=0;renderer.render(scene,camera);aeTick();return}
   renderer.getDrawingBufferSize(postSz);postSize(postSz.x,postSz.y);
   // the puddles' reflections (rain.js) read the picture as it was last frame (they can't read the one being drawn)
   if(pudSsrRT)pudSsrU.tSsr.value=pudSsrRT.texture;
@@ -146,10 +147,10 @@ function postRender(){ultraTick();hazeTick();bounceTick();clVolRender();if(!post
   u.tDepth.value=postRT.depthTexture;u.tDf0.value=postDf[0].texture;u.tDf1.value=postDf[1].texture;u.uTexel.value.set(1/W,1/H);u.uNear.value=camera.near;u.uFar.value=camera.far;
   u.uGI.value=POST.ao?TU.fxBounce:0;u.uBloom.value=POST.bloom?TU.fxBloom:0;u.uGrade.value=POST.grade?1:0;u.uCon.value=TU.fxCon;u.uSat.value=TU.fxSat;u.uVig.value=TU.fxVig;
   u.uSharp.value=POST.grade?TU.fxSharp:0;u.uDof.value=dof;u.uWarm.value=TU.fxWarm;
-  postPass(postOut,null);renderer.info.autoReset=ar}
+  aeMeasure();postPass(postOut,null);renderer.info.autoReset=ar;aeTick()}
 // gfx.js: which effects the Graphics setting has on; with none, the off-screen pictures are let go
 function postGfx(ao,bloom,grade){POST.ao=!!ao;POST.bloom=!!bloom;POST.grade=!!grade;
-  if(!(ao||bloom||grade)&&postRT){for(const t of [postRT,postAO,postAOB,...postBl,...postDf])t.dispose();postRT.depthTexture.dispose();postRT=postAO=postAOB=null;postBl=[];postDf=[]}}
+  if(!(ao||bloom||grade||aeOn)&&postRT){for(const t of [postRT,postAO,postAOB,...postBl,...postDf])t.dispose();postRT.depthTexture.dispose();postRT=postAO=postAOB=null;postBl=[];postDf=[]}}
 
 // ---------- Ultra lighting (gfx.js skyLight, shSoft, wetDrops) ----------
 // Sky lighting: the sky fill (the hemisphere light daynight.js sets each frame) takes the colour of the sky as it is
@@ -180,10 +181,20 @@ function ultraTick(){
 
 // ---------- the haze's sun and the light thrown back up off the ground (every Graphics level) ----------
 // the haze (core.js HZ_U) takes the sun's light toward the sun, as the sky's glow does round it, fading out as the sun
-// goes down and under cloud (skySunVis)
+// goes down and under cloud (skySunVis). By day its colour round the horizon follows the sky's just above the horizon
+// (the bottom row of skyLut, core.js), as a multiplier on the haze colour daynight.js sets from the same table, so rain
+// greying it and the map editor's haze still work; read again whenever the table is
+const hzRingR=Array.from({length:9},()=>new THREE.Color(1,1,1));let hzRingEl=-999;
+function hzRingBuild(){hzRingEl=skyAtm.el;const d=skyLutD,h=skyAtm.hor,g=skyAtm.sunH,c=['r','g','b'];
+  for(let k=0;k<9;k++){const x=k/8*(SKY_LW-1),i0=Math.floor(x),i1=Math.min(SKY_LW-1,i0+1),f=x-i0;
+    for(let j=0;j<3;j++){const base=h[c[j]]+0.35*Math.max(0,g[c[j]]-h[c[j]]),v=(d[i0*4+j]*(1-f)+d[i1*4+j]*f)/255;
+      hzRingR[k][c[j]]=Math.min(3,Math.max(0.3,v/Math.max(base,0.01)))}}}
 function hazeTick(){const u=HZ_U,d=Math.min(1,Math.max(0,(SUN_DIR.y+0.1)/0.15));
-  u.uHzSun.value.set(SUN_DIR.x,SUN_DIR.y,SUN_DIR.z,TU.hazeSun);u.uHzSunC.value.copy(skyU.uSunC.value).multiplyScalar(0.62*skySunVis.value*d);
-  u.uHzLow.value.set(WATER,1/60,TU.hazeLow)}
+  u.uHzSun.value.set(SUN_DIR.x,SUN_DIR.y,SUN_DIR.z,1);u.uHzSunC.value.copy(skyU.uSunC.value).multiplyScalar(0.62*skySunVis.value*d);
+  u.uHzLow.value.set(WATER,1/60,TU.hazeLow);
+  if(skyAtm.el>-900&&skyAtm.el!==hzRingEl)hzRingBuild();
+  const k=skyU.uPhysK.value*TU.hazeSun*skySunVis.value;
+  for(let i=0;i<9;i++){const r=hzRingR[i];u.uHzRing.value[i].set(1+(r.r-1)*k,1+(r.g-1)*k,1+(r.b-1)*k)}}
 // the ground round you lit by the sun throws some of that light back up onto whatever faces down or sideways (the
 // shady undersides of machines, eaves, the sides of a trench): added to the sky fill's ground colour (daynight.js sets
 // it fresh each frame). On High and Ultra (gfx.js bounce) what the ground sends up is measured: the ground within 50 ft
@@ -209,3 +220,30 @@ function bounceTick(){if(!hemiL0||hemiL0.intensity<=1e-4)return;
   if(bnOn&&bnHave)bnT.copy(bnPr).multiplyScalar(Math.PI);
   else bnT.copy(sun.color).multiply(bnAlb).multiplyScalar(sun.intensity*Math.max(0,LIGHT_DIR.y));
   bnC.lerp(bnT,0.05);hemiL0.groundColor.add(bnT.copy(bnC).multiplyScalar(0.5*TU.bounce/hemiL0.intensity))}
+
+// ---------- the eye adjusting outdoors (gfx.js autoExp) ----------
+// Five times a second the picture (drawn off-screen, as the screen effects draw it; with the eye adjusting on, it always
+// is) is shrunk to 16 by 9 brightness readings and read back without waiting. Their mean on a log scale (so the sky
+// can't swamp the rest, the middle counting double) sets where the exposure (exAdapt, core.js) eases to, so the picture
+// comes toward TU.aeKey: up when you look into deep shade, under a bridge or into the woods, down over bright water or
+// open sky, by TU.autoExp of the way. It opens up less as night falls (the night keeps its own look), rests at 1 in a
+// room (rmAdapt has that), the map editor and the speed test, and never goes past TU.aeMax or TU.aeMin. Only how bright
+// the picture is, never what anything does
+let aeOn=false,aeBusy=false,aeNext=0,aeRT=null,aeT=1,aeLast=0,aeG=0;
+const aeBuf=new Uint8Array(16*9*4);
+const aeLumMat=postMat('uniform sampler2D tSrc;uniform vec2 uTexel;varying vec2 vUv;\n'+
+  'void main(){vec3 s=vec3(0.0);for(int i=0;i<4;i++)for(int j=0;j<4;j++)s+=texture2D(tSrc,vUv+(vec2(i,j)-1.5)*uTexel).rgb;\n'+
+  ' gl_FragColor=vec4(sqrt(dot(s/16.0,vec3(0.2126,0.7152,0.0722))),0.0,0.0,1.0);}',{tSrc:{value:null},uTexel:{value:new THREE.Vector2(1/64,1/36)}});
+function autoExpGfx(on){aeOn=!!on;if(!aeOn){aeT=1;if(aeRT){aeRT.dispose();aeRT=null}}}
+// every frame: ease toward the last reading's target
+function aeTick(){const now=performance.now(),dt=Math.min(0.25,(now-(aeLast||now))/1000);aeLast=now;
+  const tgt=aeOn&&postOn()&&!edOn&&!(typeof bench!=='undefined'&&bench.on)&&rmAdapt===1?aeT:1;
+  exAdapt+=(tgt-exAdapt)*(1-Math.exp(-dt/Math.max(0.05,TU.aeSpeed)));renderer.toneMappingExposure=rmExp0*rmAdapt*exAdapt}
+// with the picture drawn off-screen: take a reading now and then
+function aeMeasure(){const now=performance.now();if(!aeOn||aeBusy||now<aeNext)return;aeNext=now+200;
+  if(!aeRT)aeRT=new THREE.WebGLRenderTarget(16,9,{depthBuffer:false});
+  aeLumMat.uniforms.tSrc.value=postRT.texture;postPass(aeLumMat,aeRT);aeBusy=true;
+  renderer.readRenderTargetPixelsAsync(aeRT,0,0,16,9,aeBuf).then(()=>{let sum=0,wt=0;
+    for(let y=0;y<9;y++)for(let x=0;x<16;x++){const v=aeBuf[(y*16+x)*4]/255,w=x>=4&&x<12&&y>=2&&y<7?2:1;sum+=w*Math.log(0.002+v*v);wt+=w}
+    const G=aeG=Math.exp(sum/wt),up=1+(TU.aeMax-1)*Math.min(1,DAY.lum*1.2);
+    aeT=Math.min(up,Math.max(TU.aeMin,exAdapt*Math.pow(TU.aeKey/G,TU.autoExp*0.5)));aeBusy=false}).catch(()=>{aeBusy=false})}

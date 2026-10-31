@@ -146,8 +146,15 @@ const TUNE=[
   ['ultraWetGround','Ultra','Wet ground shine: how strongly soaked dirt and mud mirror the sky',1,'pct',0,300,5],
   // light and haze (core.js, post.js): the far shadows' redraw, the haze toward the sun and low down, the ground's bounce
   ['csmEvery','Light and haze','Far shadows: drawn again every this many frames (more is faster, but they lag behind moving things)',3,'n',1,10,1],
-  ['hazeSun','Light and haze','How strongly the haze toward the sun takes its warm light',1,'pct',0,300,5],
+  ['hazeSun','Light and haze','How strongly the haze takes the sky\'s colour round the horizon: warm toward the sun, bluer away from it',1,'pct',0,200,5],
   ['hazeLow','Light and haze','How much thinner the haze is up high than low over the lake',0.6,'pct',0,100,5],
+  ['shAhead','Light and haze','How far the sharp near shadows are pushed ahead of the camera, as a share of their reach',0.35,'pct',0,60,5],
+  // the eye adjusting outdoors (post.js aeRead)
+  ['autoExp','Light and haze','Eye adjusting: how much of the way the brightness follows what you look at (0% = off)',1,'pct',0,200,5],
+  ['aeKey','Light and haze','Eye adjusting: how bright it aims to keep the picture',0.21,'pct',5,60,1],
+  ['aeSpeed','Light and haze','Eye adjusting: how long it takes to adjust',1.5,'s',0.2,10,0.1],
+  ['aeMax','Light and haze','Eye adjusting: the most it brightens the picture',1.6,'pct',100,300,5],
+  ['aeMin','Light and haze','Eye adjusting: the most it darkens the picture',0.7,'pct',30,100,5],
   ['bounce','Light and haze','Sunlight thrown back up off the ground onto the shady undersides and sides of things',1,'pct',0,300,5],
   ['pbrFar','Ground look','Relief fades out by',180*0.3048,'ft',60,600,10],
   ['treeSway','Trees','How much the trees and undergrowth sway in the breeze',1,'pct',0,400,5],['treeGlow','Trees','How much sunlight shines through the leaves',1,'pct',0,300,5],

@@ -38,6 +38,7 @@ GFX.low.forge=GFX.med.forge='';GFX.high.forge='md';
 // far shadows (core.js sunFar): how far either side they reach (m, 0 off) and their map's size
 GFX.low.csm=GFX.med.csm=0;GFX.high.csm=170;GFX.high.csmSh=2048;
 GFX.low.bounce=GFX.med.bounce=false;GFX.high.bounce=true;
+GFX.low.autoExp=GFX.med.autoExp=false;GFX.high.autoExp=true;GFX.high.shR=36;
 GFX.ultra=Object.assign({},GFX.high,{csm:240,csmSh:4096,name:'Ultra',forge:'hi',wild:1,turfR:75,tuftQ:3,ao:true,bloom:true,grade:true,treeR:220,skyLight:true,shSoft:true,wetDrops:true,wetGround:true,cloudQ:3});
 // VR through a PC: the eye buffer drawn larger than the headset's own and scaled down (supersampling), for sharper edges
 // and fine detail; only the levels for strong graphics do it
@@ -83,7 +84,7 @@ function gfxApply(){const g=gfxCur=Object.assign({},GFX[gfxKey],gfxOver);
   const tm=g.filmic?THREE.ACESFilmicToneMapping:THREE.LinearToneMapping,te=(g.filmic?0.8:0.75)*g.exp;
   if(renderer.shadowMap.type!==st||renderer.toneMapping!==tm){renderer.shadowMap.type=st;renderer.toneMapping=tm;
     scene.traverse(o=>{if(o.material)for(const m of [].concat(o.material))m.needsUpdate=true})}
-  rmExp0=te;renderer.toneMappingExposure=te*rmAdapt;
+  rmExp0=te;renderer.toneMappingExposure=te*rmAdapt*exAdapt;
   // ground detail: the cut-face detail, material library and machine grime (detail), and the grass and dirt textures (base)
   gfxDetail=g.detail;gfxBase=g.base;matU.texPbr.value=g.pbr?1:0;treePbr(g.pbr);shopPbr(g.pbr);
   // trees drawn with the full model out to this distance, the light one beyond (trees.js)
@@ -96,6 +97,8 @@ function gfxApply(){const g=gfxCur=Object.assign({},GFX[gfxKey],gfxOver);
   // the lake: close-up ripples and rain rings (lake.js)
   lakeGfx(g.lakeQ);
   // the screen effects: shade where things meet, glow, colour grade (post.js)
+  // the eye adjusting to the light outdoors (post.js; before postGfx, which keeps the off-screen picture for it)
+  autoExpGfx(g.autoExp);
   postGfx(g.ao,g.bloom,g.grade);
   // the warm light in Jessica's library (jessica.js) and the boom's work light (daynight.js)
   jesLightGfx(g.extraLt);dnBoomGfx(g.extraLt);if(typeof propLampGfx==='function')propLampGfx(g.propLt);
@@ -164,6 +167,7 @@ const GFX_ROWS=[
   {id:'exp',label:'Brightness',min:0.6,max:1.4,step:0.05,fmt:v=>`${Math.round(v*100)}%`},
   {id:'fog',label:'Haze distance',hint:'How far you see before the air turns hazy.',min:0.4,max:2,step:0.1,fmt:v=>`${(760*v*FT_M/5280).toFixed(1)} mi`},
   ['Screen effects'],
+  {id:'autoExp',label:'Eye adjusts to light',hint:'The picture brightens as you look into shade, under a bridge or into the woods, and darkens over bright water or open sky, as your eyes would. Draws the picture off-screen first, which costs a little.',opts:onOff},
   {id:'bounce',label:'Measured ground bounce',hint:'The light thrown up off the ground onto the undersides of things takes the colour and brightness of the ground round you (grass, dirt, the lake, shade), measured every second and a half.',opts:onOff},
   {id:'ao',label:'Contact shade',hint:'Soft shade where things meet the ground and in hollows (ambient occlusion), fine sun shadows where small things touch, and light bounced off nearby things in their colour. Costs a strong graphics card.',opts:onOff},
   {id:'bloom',label:'Glow',hint:'A soft glow round the sun, lamps and bright glints.',opts:onOff},
