@@ -45,13 +45,17 @@ addEventListener('resize',startLay);startLay();
 // the game's scripts as each one loads (up to 45%), every picture and model the loaders fetch (the loading managers,
 // counted from core.js and terrain.js with loadCount; up to 75%), then the shaders and texture uploads done behind the
 // cover (warmFrac, main.js; up to 100%). It is done when all three are, or after LOADP.cap seconds whatever is left
-const LOADP={js:0,mgr:[],warm:false,done:false,shown:0,cap:100};
+const LOADP={js:0,mgr:[],warm:false,done:false,shown:0,cap:60};
 document.addEventListener('load',e=>{if(e.target.tagName==='SCRIPT'&&e.target.defer)LOADP.js++},true);
 document.addEventListener('error',e=>{if(e.target.tagName==='SCRIPT'&&e.target.defer)LOADP.js++},true);
 function loadTick(){if(LOADP.done)return;const jsN=document.querySelectorAll('script[defer]').length||1,js=Math.min(1,LOADP.js/jsN);
-  let al=0,at=0;for(const [l,t] of LOADP.mgr){al+=l;at+=t}const a=at?Math.min(1,al/at):0;
-  const w=typeof warmFrac==='function'?warmFrac():0,game=js>=1&&typeof tpGo==='function'&&typeof warmIdle==='function';
-  const done=game&&al>=at&&LOADP.warm&&warmIdle()||performance.now()>LOADP.cap*1000;
+  const game=js>=1&&typeof tpGo==='function'&&typeof warmIdle==='function',now=performance.now();
+  // the files to wait for: those asked for by 2 s after the scripts ran (things fetched later, as they come into use, load
+  // on in the background rather than holding the cover up)
+  if(game&&!LOADP.gameT)LOADP.gameT=now;let al=0,at=0;for(const [l,t] of LOADP.mgr){al+=l;at+=t}
+  if(LOADP.gameT&&now-LOADP.gameT>2000&&LOADP.goal===undefined)LOADP.goal=at;if(LOADP.goal!==undefined)at=LOADP.goal;al=Math.min(al,at);
+  const a=at?al/at:0,w=typeof warmFrac==='function'?warmFrac():0;
+  const done=LOADP.goal!==undefined&&al>=at&&LOADP.warm&&warmIdle()||now>LOADP.cap*1000;
   const p=done?100:Math.min(99,45*js+30*a*(game?1:.8)+25*w);LOADP.shown=Math.max(LOADP.shown,p);
   const pct=Math.floor(LOADP.shown),L=document.getElementById('startLoad');
   document.getElementById('startLoadPct').textContent=pct+'%';document.getElementById('startLoadFill').style.width=LOADP.shown+'%';L.setAttribute('aria-valuenow',pct);
