@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-31T04:12:00Z",
+ "updated": "2026-10-31T05:42:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -90,9 +90,15 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-30",
-   "dh": 170.25,
-   "act": 5,
-   "versions": 31
+   "dh": 200.25,
+   "act": 5.5,
+   "versions": 33
+  },
+  {
+   "d": "2026-10-31",
+   "dh": 20,
+   "act": 1,
+   "versions": 3
   }
  ],
  "extra": [
@@ -2802,6 +2808,51 @@ window.EFFORT = {
    "tris": 5794113,
    "chars": 1967943,
    "what": "Everything the game builds (buildings with all inside them, the Town Hall, benches, posts, walls, signs, 3,600 town trees) can be picked, moved, turned, hidden and deleted in the map editor, with Put back; a new Every item table lists every thing, building, tree and machine, searchable and sortable, and tapping one goes to it and picks it"
+  },
+  {
+   "v": 301,
+   "asked": "2026-10-30T22:45:00-05:00",
+   "live": "2026-10-30T23:50:32-05:00",
+   "dh": 8,
+   "tris": 5899834,
+   "chars": 1979617,
+   "what": "Mountains lit by the sun with forest, autumn colour, bare rock and snow, and haze that thickens in the valleys and glows toward the sun; pebbles, stones and sticks on the ground; bigger lumps and hollows in the ground out to a few hundred feet (Mountains and Ground look tunings)"
+  },
+  {
+   "v": 302,
+   "asked": "2026-10-30T22:45:00-05:00",
+   "live": "2026-10-30T23:51:16-05:00",
+   "dh": 22,
+   "tris": 5896795,
+   "chars": 2007224,
+   "what": "A gun shop on Main Street with a pump shotgun, a bolt-action rifle and a carbine; ammo and reloading; townsfolk take damage by where they're hit; blood, pools, bullet holes and impact sounds; both hands on the gun."
+  },
+  {
+   "v": 303,
+   "asked": "2026-10-30T23:10:00-05:00",
+   "live": "2026-10-31T00:12:46-05:00",
+   "dh": 5,
+   "tris": 6005559,
+   "chars": 2024622,
+   "what": "Every sign a painted wood board with carved, gilt or shadowed lettering; the runabouts' names in vinyl on their hulls; a waterline stain on every gelcoat hull; Main Street's flat roofs in scanned bitumen with concrete coping"
+  },
+  {
+   "v": 304,
+   "asked": "2026-10-31T00:10:00-05:00",
+   "live": "2026-10-31T00:21:39-05:00",
+   "dh": 12,
+   "tris": 6014897,
+   "chars": 2033995,
+   "what": "The sky's colours now come from sunlight in the air (deep blue at noon, peach and mauve at dusk); thin high cloud, sunbeams between the clouds, rainbows after rain, and the clouds in the lake and on the paint."
+  },
+  {
+   "v": 305,
+   "asked": "2026-10-31T00:25:00-05:00",
+   "live": "2026-10-31T00:42:45-05:00",
+   "dh": 3,
+   "tris": 6035301,
+   "chars": 2037563,
+   "what": "Names and hailing port on the marina's slip boats; detailed rooftop HVAC units (curb, panelled casing, louvred coils, fan and guard) and capped vent stacks on Main Street"
   }
  ]
 };

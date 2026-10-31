@@ -123,7 +123,8 @@ const CS_U={uCSMap:{value:null},uCSA:{value:new THREE.Vector4()},uCSB:{value:new
 // the haze (every Graphics level): it thickens with the true distance from the camera (not the depth along the view, which
 // thinned it at the screen's sides and shifted it as the camera turned), lies thicker low over the lake than up high,
 // and toward the sun takes the sun's light, the same glow the sky has round the sun (so far ground meets the sky behind
-// it) and a broader warm sheen at the tuning's strength. HZ_U, shared by every material with haze (post.js hazeTick):
+// it) and a broader warm sheen at the tuning's strength, as the sky's own haze round the sun (skyLut) has. HZ_U,
+// shared by every material with haze (post.js hazeTick):
 // uHzSun the way to the sun and the sheen's strength, uHzSunC the sun's light in the haze (dark at night and under
 // cloud), uHzLow the lake's height, 1 / the height in m over which the haze thins, and how much it thins
 const HZ_U={uHzSun:{value:new THREE.Vector4(0,1,0,1)},uHzSunC:{value:new THREE.Color(0)},uHzLow:{value:new THREE.Vector3(-7.3,1/60,0.6)}};
@@ -177,24 +178,61 @@ const skySunVis={value:1};
 const skyU={uSun:{value:SUN_DIR},uSunVis:skySunVis,uTop:{value:new THREE.Color(0x4f86bd)},uHor:{value:new THREE.Color(0xbfd2dd)},
   uGlow:{value:new THREE.Color(0)},uSunC:{value:new THREE.Color(1,0.86,0.62)},uMoon:{value:new THREE.Vector3(0,-1,0)},uMoonV:{value:0},
   uStars:{value:0},uCel:{value:new THREE.Matrix3()},uGNP:{value:new THREE.Vector3(0,0,1)},uSkyT:{value:0},
-  uMetA:{value:new THREE.Vector3(0,1,0)},uMetB:{value:new THREE.Vector3(0,1,0)},uMetT:{value:-1},uHzSun:HZ_U.uHzSun};
+  uMetA:{value:new THREE.Vector3(0,1,0)},uMetB:{value:new THREE.Vector3(0,1,0)},uMetT:{value:-1}};
+// the sky's colour worked out from sunlight scattered in the air: the blue overhead from the air itself (Rayleigh),
+// the white haze round the sun from dust and droplets (Mie), and the sun's own light reddened by the long way through
+// the air at dawn and dusk, with the earth's shadow at twilight and the ozone that keeps dusk blue rather than green. One sample of the light scattered once, with the view's
+// own dimming eased to stand in for the light scattered many times (vx), so the horizon stays a pale blue. Worked out
+// on the computer into skyLut (32 directions round from the sun by 16 heights, as the screen shows it) whenever the sun
+// has moved; the dome reads it, by day, over the old colours (skyU.uPhysK, daynight.js), on every graphics level
+const SKY_AT={R:6371e3,A:6471e3,HR:8e3,HM:1.2e3,bR:[5.8e-6,13.5e-6,33.1e-6],bM:5e-6,g:0.76,I:20,vx:0.45,oz:6,bO:[0.65e-6,1.881e-6,0.085e-6]};
+function skyScatter(dx,dy,dz,sx,sy,sz,out){const R=SKY_AT.R,A=SKY_AT.A,oy=R+2,b=oy*dy,c=oy*oy-A*A,t1=-b+Math.sqrt(b*b-c),N=12,M=4,ds=t1/N;
+  let odR=0,odM=0,sR0=0,sR1=0,sR2=0,sM0=0,sM1=0,sM2=0;
+  for(let i=0;i<N;i++){const t=(i+0.5)*ds,px=dx*t,py=oy+dy*t,pz=dz*t,pp=px*px+py*py+pz*pz,h=Math.sqrt(pp)-R;if(h<0)break;
+    const hr=Math.exp(-h/SKY_AT.HR)*ds,hm=Math.exp(-h/SKY_AT.HM)*ds;odR+=hr;odM+=hm;
+    const lb=px*sx+py*sy+pz*sz,sh=lb*lb-(pp-R*R);if(lb<0&&sh>0)continue;
+    const lt=-lb+Math.sqrt(lb*lb-(pp-A*A)),ls=lt/M;let lR=0,lM=0,ok=true;
+    for(let j=0;j<M;j++){const u=(j+0.5)*ls,qx=px+sx*u,qy=py+sy*u,qz=pz+sz*u,h2=Math.sqrt(qx*qx+qy*qy+qz*qz)-R;if(h2<0){ok=false;break}lR+=Math.exp(-h2/SKY_AT.HR)*ls;lM+=Math.exp(-h2/SKY_AT.HM)*ls}
+    if(!ok)continue;const m=SKY_AT.bM*1.1*(odM*SKY_AT.vx+lM),r=odR*SKY_AT.vx+lR;
+    const o=r*SKY_AT.oz,a0=Math.exp(-(SKY_AT.bR[0]*r+m+SKY_AT.bO[0]*o)),a1=Math.exp(-(SKY_AT.bR[1]*r+m+SKY_AT.bO[1]*o)),a2=Math.exp(-(SKY_AT.bR[2]*r+m+SKY_AT.bO[2]*o));
+    sR0+=a0*hr;sR1+=a1*hr;sR2+=a2*hr;sM0+=a0*hm;sM1+=a1*hm;sM2+=a2*hm}
+  const mu=dx*sx+dy*sy+dz*sz,g=SKY_AT.g,pR=3/(16*Math.PI)*(1+mu*mu),pM=3/(8*Math.PI)*((1-g*g)*(1+mu*mu))/((2+g*g)*Math.pow(1+g*g-2*g*mu,1.5));
+  out[0]=SKY_AT.I*(pR*SKY_AT.bR[0]*sR0+pM*SKY_AT.bM*sM0);out[1]=SKY_AT.I*(pR*SKY_AT.bR[1]*sR1+pM*SKY_AT.bM*sM1);out[2]=SKY_AT.I*(pR*SKY_AT.bR[2]*sR2+pM*SKY_AT.bM*sM2);return out}
+const SKY_LW=32,SKY_LH=16,skyLutD=new Uint8Array(SKY_LW*SKY_LH*4),skyLut=new THREE.DataTexture(skyLutD,SKY_LW,SKY_LH);
+skyLut.magFilter=skyLut.minFilter=THREE.LinearFilter;skyLut.needsUpdate=true;
+skyU.uLut={value:skyLut};skyU.uPhysK={value:0};
+// zen, hor (side on to the sun), sunH (on the horizon under the sun): the colours the haze and the clouds' light take
+const skyAtm={el:-999,zen:new THREE.Color(),hor:new THREE.Color(),sunH:new THREE.Color(),E:1.6};
+// rows j0 to j1 of the table for the sun el degrees up; the colours are read off once the last row is done
+function skyLutBuild(el,j0=0,j1=SKY_LH){const se=el*Math.PI/180,sx=Math.cos(se),sy=Math.sin(se),o=[0,0,0],E=skyAtm.E,d=skyLutD;
+  for(let j=j0;j<j1;j++){const v=j/(SKY_LH-1),e=Math.max(0.05,v*v*Math.PI/2),ce=Math.cos(e),ye=Math.sin(e);
+    for(let i=0;i<SKY_LW;i++){const az=i/(SKY_LW-1)*Math.PI;skyScatter(ce*Math.cos(az),ye,ce*Math.sin(az),sx,sy,0,o);const k=(j*SKY_LW+i)*4;
+      for(let c=0;c<3;c++)d[k+c]=Math.round(255*Math.pow(1-Math.exp(-o[c]*E),1/2.2));d[k+3]=255}}
+  if(j1<SKY_LH)return;skyAtm.el=el;
+  const at=(i,j,c)=>{const k=(j*SKY_LW+i)*4;return c.setRGB(d[k]/255,d[k+1]/255,d[k+2]/255)};
+  at(0,SKY_LH-1,skyAtm.zen);at(SKY_LW>>1,0,skyAtm.hor);at(0,0,skyAtm.sunH);skyLut.needsUpdate=true}
+// a few rows a frame once the sun has moved a sixth of a degree, so working it out never holds a frame up
+let skyLutJob=null;
+function skyLutTick(el){if(skyAtm.el<-900){skyLutBuild(el);return}
+  if(!skyLutJob){if(Math.abs(el-skyAtm.el)<0.15)return;skyLutJob={el,j:0}}
+  const j=skyLutJob.j;skyLutBuild(skyLutJob.el,j,Math.min(SKY_LH,j+2));skyLutJob.j+=2;if(skyLutJob.j>=SKY_LH)skyLutJob=null}
 const sky=(function(){
   const g=new THREE.SphereGeometry(1300,64,32);
   const mat=new THREE.MeshBasicMaterial({side:THREE.BackSide,fog:false,depthWrite:false,toneMapped:false});
   // gradient, sun disc and glow, moon with its phase, stars and the Milky Way, drawn per pixel
   mat.onBeforeCompile=sh=>{Object.assign(sh.uniforms,skyU);
     sh.vertexShader='varying vec3 vDir;\n'+sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvDir=position;');
-    sh.fragmentShader='uniform vec3 uSun,uTop,uHor,uGlow,uSunC,uMoon,uGNP,uMetA,uMetB;uniform float uSunVis,uMoonV,uStars,uSkyT,uMetT;uniform mat3 uCel;uniform vec4 uHzSun;\nvarying vec3 vDir;\n'+
+    sh.fragmentShader='uniform vec3 uSun,uTop,uHor,uGlow,uSunC,uMoon,uGNP,uMetA,uMetB;uniform float uSunVis,uMoonV,uStars,uSkyT,uMetT,uPhysK;uniform sampler2D uLut;uniform mat3 uCel;\nvarying vec3 vDir;\n'+
       'float skH(vec3 p){return fract(sin(dot(p,vec3(127.1,311.7,74.7)))*43758.5453);}\n'+
       'float skN(vec3 p){vec3 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);return mix(mix(mix(skH(i),skH(i+vec3(1,0,0)),f.x),mix(skH(i+vec3(0,1,0)),skH(i+vec3(1,1,0)),f.x),f.y),mix(mix(skH(i+vec3(0,0,1)),skH(i+vec3(1,0,1)),f.x),mix(skH(i+vec3(0,1,1)),skH(i+1.0),f.x),f.y),f.z);}\n'+
       sh.fragmentShader.replace('#include <color_fragment>',
       'vec3 sd=normalize(vDir);float cs=max(0.0,dot(sd,uSun));\n'+
       'float gt=clamp(sd.y*2.4,0.0,1.0);float az=0.5+0.5*dot(normalize(uSun.xz+1e-5),normalize(sd.xz+1e-5));\n'+
-      'diffuseColor.rgb*=mix(uHor,uTop,pow(gt,0.8))+uGlow*(0.25+0.75*az*az*az)*(1.0-smoothstep(0.0,0.5,sd.y));\n'+
+      'vec3 skc=mix(uHor,uTop,pow(gt,0.8))+uGlow*(0.25+0.75*az*az*az)*(1.0-smoothstep(0.0,0.5,sd.y));\n'+
+      'if(uPhysK>0.001){float la=acos(clamp(2.0*az-1.0,-1.0,1.0))/3.14159265,lv=sqrt(asin(clamp(sd.y,0.0,1.0))/1.5707963);skc=mix(skc,texture2D(uLut,vec2(la,lv)).rgb,uPhysK);}\n'+
+      'diffuseColor.rgb*=skc;\n'+
       '#include <color_fragment>\n'+
       'float up=smoothstep(-0.03,0.02,sd.y);\n'+
-      // the haze's broad sheen toward the sun (HZ_U), low on the sky where the far haze meets it
-      'diffuseColor.rgb+=uSunVis*uSunC*uHzSun.w*0.22*cs*cs*cs*(1.0-smoothstep(0.0,0.3,sd.y))*smoothstep(-0.05,0.0,uSun.y)*up;\n'+
       'diffuseColor.rgb+=uSunVis*uSunC*(0.32*pow(cs,10.0)+0.5*pow(cs,180.0))*(0.6+0.4*smoothstep(0.0,0.3,sd.y))*up+uSunVis*uSunC*vec3(12.0,12.2,13.7)*smoothstep(0.99955,0.9997,cs)*up;\n'+
       // stars on the turning star sphere, more of them along the Milky Way, twinkling
       'if(uStars>0.001){vec3 cel=uCel*sd;float gb=dot(cel,uGNP),band=exp(-gb*gb*14.0);vec3 p=cel*130.0,id=floor(p),f=fract(p);float hh=skH(id);float s=0.0;\n'+

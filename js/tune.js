@@ -82,6 +82,8 @@ const TUNE=[
   ['trimBump','String trimmer','Line one bump feeds out',0.04,'in',0.25,6,0.25],['trimWear','String trimmer','Line worn away per second of cutting',0.006,'in',0.02,2,0.02],
   ['gunRate','Pistol','Shortest time between shots',0.22,'s',0.05,2,0.01],['gunRange','Pistol','How far a shot carries',90,'ft',30,600,10],
   ['gunFlee','Pistol','How fast people run from shots',4.5,'mph',3,16,0.5],['townPop','Pistol','How many townsfolk live in town when the game starts (each one killed is gone until the next start)',150,'',0,1000,10],['shopPop','Pistol','How many shopfolk (people in the shops and houses) there are when the game starts',60,'',0,500,5],['runKill','Pistol','How fast a machine has to be going to run someone down (slower, they jump clear)',6,'mph',1,30,0.5],['gunWrist','Pistol','Wrist turn holding the pistol',1.4,'deg',-180,180,5],['gunBody','Pistol','How long someone shot stays down before they go (when out of sight)',40,'s',5,600,5],
+  ['gunHp','Pistol','How much a townsperson takes before they go down (each one give or take 15%)',100,'',10,1000,5],['gunHeadX','Pistol','A head shot counts this many times a body shot',4,'',1,20,0.5],
+  ['gunDmgP','Pistol','Pistol: damage a shot',45,'',1,500,1],['gunDmgS','Pistol','Shotgun: damage a pellet (nine a shell)',16,'',1,200,1],['gunDmgR','Pistol','Rifle: damage a shot',130,'',1,1000,5],['gunDmgC','Pistol','Carbine: damage a shot',32,'',1,500,1],
   ['trimSpool','String trimmer','Line on a full spool',25*0.3048,'ft',2,100,1],
   ['lawnCut','Grass','Mower cuts the grass to',0.09,'in',1,24,0.5],['lawnWait','Grass','Wait before cut grass grows',45,'s',0,1200,5],['lawnGrow','Grass','Time to grow back tall',240,'s',10,3600,10],
   ['rainGap','Weather','Dry spell between showers (average)',1800,'min',0.5,120,0.5],['rainLen','Weather','Shower length (average)',150,'min',0.5,60,0.5],
@@ -116,7 +118,10 @@ const TUNE=[
   // only drawn on High graphics (Graphics → Material relief); how the ground looks, not what it does, so every device may use the same numbers
   ['pbrRelief','Ground look','Relief: how deep the bumps in gravel, brick and concrete look',1,'pct',0,300,5],
   ['pbrSheen','Ground look','Sheen: how strong the glints on wet and shiny ground are',1,'pct',0,300,5],
-  ['pbrRain','Ground look','Extra sheen while it rains',1,'pct',0,400,5],['pbrGround','Ground look','Relief: how bumpy the natural dirt and grass look',0.9,'pct',0,300,5],
+  ['pbrRain','Ground look','Extra sheen while it rains',1,'pct',0,400,5],['pbrGround','Ground look','Relief: how bumpy the natural dirt and grass look',0.9,'pct',0,300,5],['pbrGroundFar','Ground look','Relief: the larger lumps and hollows, out to a few hundred feet',0.6,'pct',0,300,5],
+  ['pebN','Ground look','How many pebbles, stones and sticks lie about (Medium and up)',1,'pct',0,300,5],
+  ['mtnHaze','Mountains','How hazy the mountains look (Medium and up)',1,'pct',20,300,5],['mtnGlow','Mountains','How much the haze glows toward the sun',1,'pct',0,300,5],['mtnSnow','Mountains','Snow line on the mountains, above the lake',330,'ft',30,600,5],
+  
   ['pbrFace','Ground look','Relief: how deep the bucket-tooth grooves, cracks, pebbles and roots on dug faces look',1,'pct',0,300,5],
   ['stRelief','Ground look','Relief: how far the bricks and cobbles of brick and cobblestone streets stand up',1,'pct',0,300,5],
   // the camera with a mouse: a click on the scene takes the mouse and moving it looks round (Esc lets it go); the chase
@@ -154,6 +159,8 @@ const TUNE=[
   // the clouds in 3D (storm.js, Medium graphics and up)
   ['clBase','Weather','Cloud base height',460,'ft',500,6000,50],['clDense','Weather','How thick the clouds are',1,'pct',20,400,5],
   ['clShadow','Weather','How dark the cloud shadows on the ground are',0.8,'pct',0,100,5],
+  ['clCirrus','Weather','High thin cloud',1,'pct',0,200,5],['clBeams','Weather','Sunbeams between the clouds',1,'pct',0,300,5],
+  ['clRainbow','Weather','Rainbows after rain',1,'pct',0,200,5],
   ['lampLight','Day and night','Headlights, lamps and lit windows',1,'pct',0,300,5],
   // fuel and pay (fuel.js)
   ['fuelUse','Work and pay','Fuel use (100% burns what the real machine does in an hour of game time; does nothing while fuel burn is off, FUEL_BURN in fuel.js)',1,'pct',0,500,5],

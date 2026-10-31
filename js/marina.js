@@ -39,7 +39,7 @@ function marDeck(L,B,D,h,t0,t1){const NS=12,pts=[],ix=[];
   for(let i=0;i<NS;i++){const a=i*2;ix.push(a,a+2,a+1,a+1,a+2,a+3)}
   const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pts,3));g.setIndex(ix);return g}
 // a hull with its bottom paint, a rub rail along the sheer and a boot stripe at the waterline
-function marHullKit(K,L,B,D,dr,col,bot,rail){K.geo(marHull(L,B,D,dr,true),col,0,0,0);K.geo(marHull(L,B,D,dr,false),bot,0,0,0);
+function marHullKit(K,L,B,D,dr,col,bot,rail){K.hull={L,B,D,col};K.geo(marHull(L,B,D,dr,true),col,0,0,0);K.geo(marHull(L,B,D,dr,false),bot,0,0,0);
   for(let i=0;i<14;i++){const t0=i/14,t1=(i+1)/14,s0=marSec(t0,B,D,dr),s1=marSec(t1,B,D,dr),z0=-L/2+t0*L,z1=-L/2+t1*L,len=Math.hypot(s1.w-s0.w,z1-z0),a=Math.atan2(s1.w-s0.w,z1-z0);
     for(const sd of [-1,1]){K.box(0.07,0.08,len+0.03,rail,sd*(s0.w+s1.w)/2,(s0.top+s1.top)/2-0.02,(z0+z1)/2,sd*a);
       if(t1<0.8)K.box(0.03,0.1,len+0.03,rail,sd*(s0.w+s1.w)/2*0.99,0.12,(z0+z1)/2,sd*a)}}}
@@ -93,9 +93,27 @@ const MAR_KIND={
     for(const z of [-L*0.3,0,L*0.28])K.box(B*0.85,0.05,0.35,0x9aa2a7,0,D*0.55,z);K.box(0.38,0.5,0.45,0x2a2c2f,0,D*0.8,-L/2-0.25);K.box(0.12,0.7,0.18,0x2a2c2f,0,0.15,-L/2-0.3);
     K.cyl(0.02,0.02,0.7,4,0x8d9297,0.2,D+0.15,-L/2+0.2,0,Math.PI/2.4)}};
 // the material the moored boats share: gelcoat with a little sheen and the sky in it
+// the slip boats' names, each in vinyl along both sides aft over the hailing port, script or block capitals, in a colour
+// that reads on its hull (one picture per name, made once)
+const MAR_NAMES=[['Reel Time',1],['Knot On Call',0],['Seas the Day',1],['Dock Holiday',0],['Aqua Therapy',1],['Sunset Serenade',1],
+  ['Fishful Thinking',0],['Second Wind',1],['Liquid Asset',0],['Wet Willie',0],['Sea Esta',1],['Bay Watch',0],['Nauti Buoy',1],['Island Time',1]],marNameTex={};
+let marNameI=0;
+function marName(g,h){const [t,script]=MAR_NAMES[marNameI++%MAR_NAMES.length],dark=new THREE.Color(h.col).getHSL({}).l<0.45,
+    col=dark?'#f2efe6':['#1f3a5f','#7e2f26','#14385a','#2b2d2f'][marNameI%4],key=t+col;
+  if(!marNameTex[key]){const cv=document.createElement('canvas');cv.width=1024;cv.height=320;const c=cv.getContext('2d');c.textAlign='center';c.textBaseline='middle';
+    const big=k=>script?`italic 700 ${k}px Georgia,"Times New Roman",serif`:`700 ${k}px "Barlow Condensed","Arial Narrow",Arial,sans-serif`;
+    c.font=big(150);const k=Math.min(150,150*980/c.measureText(t).width);c.font=big(k);c.lineJoin='round';c.lineWidth=k*0.06;c.strokeStyle=famShade(col,dark?-0.8:0.8);
+    c.strokeText(t,512,120);c.fillStyle=col;c.fillText(t,512,120);c.font='600 64px "Barlow Condensed","Arial Narrow",Arial,sans-serif';c.fillText('L A K E S I D E',512,262);
+    const tx=new THREE.CanvasTexture(cv);tx.anisotropy=8;tx.colorSpace=THREE.SRGBColorSpace;
+    marNameTex[key]=new THREE.MeshStandardMaterial({map:tx,transparent:true,depthWrite:false,roughness:0.35,envMap:skyEnv,envMapIntensity:0.8,polygonOffset:true,polygonOffsetFactor:-2})}
+  // laid onto the topsides (marSec) from just forward of the transom, in the upper part of the side
+  const s0=marSec(0.1,h.B,h.D,0),H=(s0.top-s0.chine)*0.5,W=H*3.2,zc=-h.L/2+0.08*h.L+W/2,yc=s0.chine+(s0.top-s0.chine)*0.58;
+  for(const sd of [-1,1]){const p=new THREE.PlaneGeometry(W,H,16,2);p.rotateY(sd*Math.PI/2);p.translate(0,yc,zc);const P=p.attributes.position;
+    for(let i=0;i<P.count;i++){const y=P.getY(i),s=marSec((P.getZ(i)+h.L/2)/h.L,h.B,h.D,0);P.setX(i,sd*(s.w*(0.9+0.1*(y-s.chine)/(s.top-s.chine))+0.03))}
+    p.computeVertexNormals();const m=new THREE.Mesh(p,marNameTex[key]);m.renderOrder=1;g.add(m)}}
 // one boat at x, z, its bow toward yaw, moored to the deck at (cx, cz) pairs of cleats (the lines are drawn from them)
 function marBoat(kind,o,x,z,yaw){const K=famKit();MAR_KIND[kind](K,o);const g=new THREE.Group(),m=famGelMesh(K.solid);
-  m.castShadow=true;m.receiveShadow=true;g.add(m);g.position.set(x,WATER,z);g.rotation.order='YXZ';g.rotation.y=yaw;scene.add(g);
+  m.castShadow=true;m.receiveShadow=true;g.add(m);if(K.hull)marName(g,K.hull);g.position.set(x,WATER,z);g.rotation.order='YXZ';g.rotation.y=yaw;scene.add(g);
   const b={g,x,z,yaw,ph:hash(x,z)*6.3,hl:o.L/2,hb:o.B/2};MAR.boats.push(b);
   const sy=Math.sin(yaw)*o.L/2,cy=Math.cos(yaw)*o.L/2;BOAT_WALLS.push({ax:x-sy,az:z-cy,bx:x+sy,bz:z+cy,r:o.B/2+0.25});return b}
 
