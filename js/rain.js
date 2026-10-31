@@ -331,9 +331,9 @@ function wetGlassPatch(m){m.userData.wetP=m.userData.glassP=true;const old=m.onB
   m.customProgramCacheKey=()=>key+'|wetg'+(wetDropsOn?'|drops':'');m.needsUpdate=true}
 function wetPatch(m){if(m&&!m.userData.wetP&&WET_GLASS.includes(m)){wetGlassPatch(m);return}
   if(!m||m.userData.wetP||m.userData.noWet||m===groundMat||tuftMats.includes(m))return;
-  const t=m.type;if(t!=='MeshPhongMaterial'&&t!=='MeshStandardMaterial'&&t!=='MeshLambertMaterial')return;if(m.transparent&&m.opacity<0.7)return;
+  const t=m.type==='MeshPhysicalMaterial'?'MeshStandardMaterial':m.type;if(t!=='MeshPhongMaterial'&&t!=='MeshStandardMaterial'&&t!=='MeshLambertMaterial')return;if(m.transparent&&m.opacity<0.7)return;
   if(m.userData.lib&&t==='MeshStandardMaterial')pudPatch(m);
-  m.userData.wetP=true;const old=m.onBeforeCompile,key=m.customProgramCacheKey(),drops=()=>wetDropsOn&&t==='MeshStandardMaterial';
+  m.userData.wetP=true;const old=m.onBeforeCompile,keyF=m.userData.wearP?m.customProgramCacheKey:null,key=keyF?'':m.customProgramCacheKey(),drops=()=>wetDropsOn&&t==='MeshStandardMaterial';
   m.onBeforeCompile=function(sh,r){if(old)old.call(this,sh,r);sh.uniforms.uWetAll=wetAllU;let f='uniform float uWetAll;\n'+sh.fragmentShader;const dr=drops();
     if(dr){sh.uniforms.uDrops=wetDropU;sh.uniforms.uDropT=wetDropT;f=WET_DROP_GLSL+f;
       sh.vertexShader='varying vec3 vDropP,vDropN;\n'+sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvDropP=transformed*length(modelMatrix[0].xyz);vDropN=objectNormal;')}
@@ -341,10 +341,11 @@ function wetPatch(m){if(m&&!m.userData.wetP&&WET_GLASS.includes(m)){wetGlassPatc
       :f.replace('#include <color_fragment>','#include <color_fragment>\nfloat wW=uWetAll*0.6;diffuseColor.rgb*=1.0-0.32*wW;'+(dr?'float wD=0.0;':''));
     sh.fragmentShader=f.replace('#include <lights_phong_fragment>','#include <lights_phong_fragment>\nmaterial.specularColor=max(material.specularColor,vec3(0.25*wW));material.specularShininess=mix(material.specularShininess,max(material.specularShininess,80.0),wW);')
       .replace('#include <lights_physical_fragment>','#include <lights_physical_fragment>\nmaterial.roughness=mix(material.roughness,min(material.roughness,0.28),wW);'+(dr?'material.roughness=mix(material.roughness,0.04,wD);':''))};
-  m.customProgramCacheKey=()=>key+'|wet'+(drops()?'|drops':'');m.needsUpdate=true}
+  // the wear patch's key (models.js) is asked each time: it changes with the Graphics setting
+  m.customProgramCacheKey=()=>(keyF?keyF.call(m):key)+'|wet'+(drops()?'|drops':'');m.needsUpdate=true}
 // post.js turns the beads on or off; the materials that have them are built again
 function wetDropsSet(on){on=!!on;if(on===wetDropsOn)return;wetDropsOn=on;
-  scene.traverse(o=>{if(o.isMesh)for(const m of [].concat(o.material))if(m&&m.userData.wetP&&(m.type==='MeshStandardMaterial'||m.userData.glassP)){m.needsUpdate=true;if(m.userData.side2)m.side=on?THREE.DoubleSide:THREE.FrontSide}})}
+  scene.traverse(o=>{if(o.isMesh)for(const m of [].concat(o.material))if(m&&m.userData.wetP&&(m.isMeshStandardMaterial||m.userData.glassP)){m.needsUpdate=true;if(m.userData.side2)m.side=on?THREE.DoubleSide:THREE.FrontSide}})}
 // ---------- puddles on the paving ----------
 // the town's paving and roads (the library's asphalt, concrete, pavers and brick: shopLib, mainland.js) take puddles in
 // the rain: they gather in the low spots of a fixed pattern on level ground, spreading the longer it rains (pudLvl, a few

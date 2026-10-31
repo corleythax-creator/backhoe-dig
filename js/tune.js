@@ -128,6 +128,8 @@ const TUNE=[
   ['fxBloom','Screen effects','Glow round bright light (Ultra)',0.2,'pct',0,200,5],['fxBloomThr','Screen effects','How bright light must be to glow',0.88,'pct',40,99,1],
   ['fxCon','Screen effects','Contrast of the colour grade (Ultra)',0.3,'pct',0,100,5],['fxSat','Screen effects','Colour strength of the grade',0.97,'pct',50,150,1],
   ['fxVig','Screen effects','Darker corners (vignette)',0.22,'pct',0,80,2],
+  // the machines' wear and paint (High, models.js wearPatch)
+  ['machWear','Machines','How worn the machines look: chipped paint, polished and rusty steel, dust (High)',1,'pct',0,200,5],['machCoat','Machines','Gloss of the clear coat on machine paint (High)',0.6,'pct',0,100,5],
   ['fxBounce','Screen effects','Light bounced off nearby things onto others, taking their colour (Ultra, with Contact shade)',1,'pct',0,300,5],
   ['fxContact','Screen effects','Fine sun shadows where small things touch (Ultra, with Contact shade)',0.55,'pct',0,100,5],['fxContactL','Screen effects','How far those fine shadows reach',0.6,'ft',0.1,3,0.05],
   ['fxWarm','Screen effects','Warm light and cool shade in the colour grade',0.4,'pct',0,100,5],['fxSharp','Screen effects','Sharpening (with the colour grade)',0.35,'pct',0,100,5],
