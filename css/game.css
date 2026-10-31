@@ -283,6 +283,8 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 #startMap{position:relative;flex:1 1 auto;min-height:260px;border-radius:14px;overflow:hidden;border:1px solid var(--hud-line);background:#1a4769;cursor:progress}
 #startMap.ready{cursor:crosshair}
 #startMapImg{position:absolute;max-width:none;display:block;pointer-events:none;user-select:none}
+#startDet{position:absolute;inset:0;pointer-events:none}#startDet[hidden],#startDet img[hidden]{display:none}
+#startDet img{position:absolute;max-width:none;display:block;user-select:none;opacity:0;transition:opacity .3s}#startDet img.on{opacity:1}
 #startMap{touch-action:manipulation}
 #startPin{position:absolute;width:22px;height:22px;margin:-11px 0 0 -11px;border-radius:50%;background:var(--machine);border:3px solid #fff;box-shadow:0 0 0 6px rgba(240,122,34,.35),0 2px 6px rgba(0,0,0,.6);pointer-events:none}
 #startPin[hidden]{display:none}
