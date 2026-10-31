@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-31T21:11:00Z",
+ "updated": "2026-10-31T21:39:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -96,9 +96,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-31",
-   "dh": 144.5,
-   "act": 5.5,
-   "versions": 17
+   "dh": 145,
+   "act": 6,
+   "versions": 18
   }
  ],
  "extra": [
@@ -2979,6 +2979,15 @@ window.EFFORT = {
    "tris": 7863154,
    "chars": 2158253,
    "what": "Digging no longer gets slower the longer you dig: the ground only settles and redraws round what just changed (a long dig had it redoing the whole site every frame, 40+ ms), the grass only follows the ground where it changed, and the speed tests wait for the game to finish warming up"
+  },
+  {
+   "v": 320,
+   "asked": "2026-10-31T16:34:00-05:00",
+   "live": "2026-10-31T16:39:35-05:00",
+   "dh": 0.5,
+   "tris": 6010221,
+   "chars": 2158909,
+   "what": "If the phone's connection drops one of the game's files while loading, the page loads again by itself instead of stopping on an error like \"Can't find variable: snd\""
   }
  ]
 };
