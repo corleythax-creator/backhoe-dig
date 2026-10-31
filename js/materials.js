@@ -17,7 +17,7 @@ const MAT_LIST=[
   {id:'sand',n:'Sand',cat:0,ft:8,c:[0.709,0.620,0.443],pbr:1},
   {id:'dirt2',n:'Topsoil',cat:0,ft:4.6,c:[0.329,0.245,0.200],pbr:1},
   {id:'clay',n:'Dry clay',cat:0,ft:6,c:[0.580,0.424,0.264],pbr:1},
-  {id:'mud',n:'Mud',cat:0,ft:6,c:[0.265,0.181,0.121]},
+  {id:'mud',n:'Mud',cat:0,ft:7.4,c:[0.314,0.186,0.107]},
   {id:'mulch',n:'Wood mulch',cat:0,ft:4,c:[0.503,0.358,0.229],pbr:1},
   {id:'grass2',n:'Lawn sod',cat:0,ft:4,c:[0.367,0.499,0.152],pbr:1},
   {id:'granite',n:'Bedrock',cat:0,ft:8,c:[0.550,0.546,0.536],pbr:1},
@@ -33,7 +33,7 @@ const MAT_LIST=[
   {id:'corrugated',n:'Corrugated steel',cat:2,ft:1.8,c:[0.509,0.508,0.506],pbr:1},
   {id:'grating',n:'Bar grating',cat:2,ft:3,c:[0.175,0.165,0.167],pbr:1},
   {id:'rebar',n:'Rebar mat',cat:2,ft:4,c:[0.360,0.327,0.307],pbr:1},
-  {id:'yellowsteel',n:'Yellow steel',cat:2,ft:4,c:[0.911,0.701,0.067]},
+  {id:'yellowsteel',n:'Yellow steel',cat:2,ft:4,c:[0.937,0.701,0.241]},
   {id:'brick',n:'Red brick',cat:3,ft:7.9,c:[0.585,0.458,0.389],pbr:1},
   {id:'brick_old',n:'Old brick',cat:3,ft:6,c:[0.522,0.416,0.328],pbr:1},
   {id:'herringbone',n:'Brick pavers',cat:3,ft:5.7,c:[0.575,0.441,0.366],pbr:1},
@@ -43,7 +43,7 @@ const MAT_LIST=[
   {id:'planks',n:'Deck planks',cat:4,ft:7.9,c:[0.573,0.506,0.390],pbr:1},
   {id:'shingles',n:'Roof shingles',cat:4,ft:26,c:[0.341,0.336,0.321],pbr:1},
   {id:'fabric',n:'Landscape fabric',cat:4,ft:2,c:[0.148,0.148,0.148],pbr:1},
-  {id:'steel_polished',n:'Polished steel',cat:2,ft:4,c:[0.652,0.651,0.652],sh:1},
+  {id:'steel_polished',n:'Polished steel',cat:2,ft:4,c:[0.577,0.581,0.597],sh:1},
   {id:'gravel_wet',n:'Wet gravel',cat:0,ft:4,c:[0.349,0.327,0.303],sh:0.3,pbr:1}];
 // the owner's own textures (ownmat.js) come after the library: ids MAT_OWN0 (41) and up, the gap left for more built-in
 // ones, each kept for good once given. Known ones are cached on the device (bhd_mats), so a map that uses them draws
@@ -58,7 +58,7 @@ function matOwnTake(o){if(!o||!(o.i>=MAT_OWN0&&o.i<MAT_MAX)||typeof o.n!=='strin
     sh:Math.min(1,Math.max(0,+o.sh||0))||undefined,th:typeof o.th==='string'&&o.th.startsWith('data:image/')?o.th:'',t:+o.t||0,own:1};return true}
 try{const a=JSON.parse(localStorage.getItem(MAT_OWN_LS)||'[]');if(Array.isArray(a))a.forEach(matOwnTake)}catch(e){}
 // painted Mud dries out (rain.js) through two more looks: damp and matte, then pale and cracked; c as for MAT_LIST
-const MUD_STAGES=[{id:'mud_drying',c:[0.446,0.323,0.221]},{id:'mud_cracked',c:[0.658,0.539,0.408]}];
+const MUD_STAGES=[{id:'mud_drying',c:[0.452,0.355,0.242]},{id:'mud_cracked',c:[0.813,0.663,0.506]}];
 // ---------- textures on the ground ----------
 // WebGL2 (nearly every device): the ground shader draws the painted materials itself, per pixel, so a hard edge is a
 // sharp line wherever it falls between the mesh's vertices, with the texture on Medium and High graphics. Without
