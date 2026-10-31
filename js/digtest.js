@@ -150,4 +150,8 @@ $('#digTestBtn').onclick=()=>{showMenu(false);digTestStart()};
 try{const r=sessionStorage.getItem(DIGT_RES);if(r){sessionStorage.removeItem(DIGT_RES);digTestShow(JSON.parse(r))}}catch(e){}
 {const q=new URLSearchParams(location.search),k=q.has('digtest')?'digtest':q.has('speedtest')?'speedtest':null;
   if(k){const g=(q.get(k)||'').toLowerCase();q.delete(k);const qs=q.toString();history.replaceState(null,'',location.pathname+(qs?'?'+qs:'')+location.hash);
-    setTimeout(()=>{if(GFX[g])setGfx(g);if(k==='digtest')digTestStart();else startBench()},5000)}}
+    // it waits for the shaders and pictures to finish warming in the background first (warmIdle, main.js; up to 90 s),
+    // so the frame rates are of play and not of the game's first minute
+    const go=()=>{if(k==='digtest')digTestStart();else startBench()},t0=performance.now();
+    const wait=()=>{if(typeof warmIdle!=='function'||warmIdle()||performance.now()-t0>90000)setTimeout(go,1000);else setTimeout(wait,500)};
+    setTimeout(()=>{if(GFX[g])setGfx(g);wait()},5000)}}

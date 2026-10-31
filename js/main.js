@@ -195,7 +195,7 @@ function frame(now){
   if(st.dirty){
     updateTufts(dI0-1,dI1+1,dJ0-1,dJ1+1);lawnTerrain();
     updateTerrain();st.dirty=false;site.dirty=true;mapDirty=true;blkTerrainMoved();
-    if(st.slumpT<=0){winOn=false}
+    winOn=false;
     if(!st.exposed&&inDig(-12,PIPE_Z+CELL)&&inDig(12,PIPE_Z-CELL)){
       const jz=Math.round(gJ(PIPE_Z));
       outer:for(let j=jz-1;j<=jz+1;j++)for(let i=Math.round(gI(-12));i<=Math.round(gI(12));i++)

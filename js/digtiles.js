@@ -132,7 +132,7 @@ function digMoveTo(x0,z0,fresh){const t0=performance.now();
   farSync();if(typeof trenchKeys==='function')trenchKeys();lawnIdx();tuftIdx();
   for(let n=0;n<TUFTS;n++)if(tGone[n])tI[n]=-1;
   keepBuild();boxMask();dI0=0;dI1=N;dJ0=0;dJ1=N;winOn=true;st.dirty=true;if(typeof mapDirty!=='undefined')mapDirty=true;wetMapT=-1e9;if(typeof site!=='undefined')site.dirty=true;
-  if(typeof lawnTerrain==='function'){const sv=[dI0,dI1,dJ0,dJ1];if(LAWN_I0<=LAWN_I1){dI0=LAWN_I0;dI1=LAWN_I1;dJ0=LAWN_J0;dJ1=LAWN_J1;lawnTerrain()}[dI0,dI1,dJ0,dJ1]=sv}
+  if(typeof lawnTerrain==='function'&&LAWN_I0<=LAWN_I1)lawnTerrain(true)
   digMoveN++;digMoveMs=performance.now()-t0}
 // the grid follows the excavator or skid steer: once it is within DIG_FOLLOW m of the grid's edge, the grid recentres on the tile
 // corner nearest it (within where it may sit)
