@@ -4,6 +4,8 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Friday, October 30, 2026
 
+- **v302** (11:51 PM) A gun shop on Main Street with a pump shotgun, a bolt-action rifle and a carbine; ammo and reloading; townsfolk take damage by where they're hit; blood, pools, bullet holes and impact sounds; both hands on the gun.
+- **v301** (11:50 PM) Mountains lit by the sun with forest, autumn colour, bare rock and snow, and haze that thickens in the valleys and glows toward the sun; pebbles, stones and sticks on the ground; bigger lumps and hollows in the ground out to a few hundred feet (Mountains and Ground look tunings)
 - **v300** (11:12 PM) Everything the game builds (buildings with all inside them, the Town Hall, benches, posts, walls, signs, 3,600 town trees) can be picked, moved, turned, hidden and deleted in the map editor, with Put back; a new Every item table lists every thing, building, tree and machine, searchable and sortable, and tapping one goes to it and picks it
 - **v299** (11:00 PM) Glossy clear-coated gelcoat on every boat hull; Poly Haven scans for mud and its damp and baked-cracked looks; ambientCG scans for the machines' paint, steel and rubber detail, Yellow steel and Polished steel
 - **v298** (10:52 PM) Trees, pines, fallen logs, stumps and boulders are photo-scanned now: full autumn crowns of real leaves (red maples, bronze oaks, yellow birches), real pine and fir needles and bark, logs and stumps lying in the woods, and boulder clusters round town in tufts of grass.

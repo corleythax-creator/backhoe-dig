@@ -238,7 +238,7 @@ function frame(now){
     gv.style.color=st.strikes?'var(--danger)':st.exposed?'var(--ok)':'';
   }
   // flying dirt
-  particlesTick(dt);dustTick(dt);grimeTick();mdlTick(dt);wkMdlPose();gunPlace();
+  particlesTick(dt);dustTick(dt);grimeTick();pebTick(dt);mtnTick();mdlTick(dt);wkMdlPose();gunPlace();
   // groundwater, the tailgate stream and the dirt sounds
   digTilesTick(dt);if(!bench.on)waterTick(dt);mudTick(dt);rainTick(dt);lakeTick(dt);grassTick(dt);jesTick(dt);mainTick(dt);marinaTick(dt);tfTick(dt);brTick(dt);treesTick(dt);plantTick();
   pourStream(streams[1],tr.pourP,hAt(tr.pourP.x,tr.pourP.z),tr.pourRate,tr.loadC,now/1000);

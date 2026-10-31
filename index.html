@@ -126,7 +126,9 @@
     </div>
     <div class="stickwrap">
       <div class="exswitch" id="exSwitch" role="group" aria-label="Excavator: drive or dig"><button id="exDrive" aria-pressed="false">Drive</button><button id="exDig" aria-pressed="true">Dig</button></div>
-      <div class="walkbtns" id="walkBtns" hidden><button id="sprintBtn" aria-pressed="false">Sprint</button><button id="jumpBtn">Jump</button><button id="plantBtn">Plant</button><button id="trimBtn" aria-pressed="false">Trimmer</button><button id="bumpBtn" hidden>Bump</button><button id="bedBtn" hidden>Load</button><button id="gunBtn" aria-pressed="true">Pistol</button><button id="fireBtn" hidden>Fire</button></div><div id="gunCross" hidden></div>
+      <div class="walkbtns" id="walkBtns" hidden><button id="sprintBtn" aria-pressed="false">Sprint</button><button id="jumpBtn">Jump</button><button id="plantBtn">Plant</button><button id="trimBtn" aria-pressed="false">Trimmer</button><button id="bumpBtn" hidden>Bump</button><button id="bedBtn" hidden>Load</button><button id="gunBtn" aria-pressed="true">Pistol</button><button id="reloadBtn" hidden>Reload</button><button id="fireBtn" hidden>Fire</button></div><div id="gunCross" hidden></div>
+      <div id="gunHud" hidden><b id="gunHudN">PISTOL</b><span id="gunHudA">15 / 45</span></div>
+      <div id="gunShop" hidden><h3 id="gsHead">Lakeside Guns</h3><div id="gsList"></div><button id="gsClose">Done</button></div>
       <div class="stick" id="stickR"><div class="knob"></div></div>
     </div>
   </div>
@@ -469,6 +471,7 @@
 <script defer src="js/models.js"></script>
 <script defer src="js/gfx.js"></script>
 <script defer src="js/blocks.js"></script>
+<script defer src="js/pebbles.js"></script>
 <script defer src="js/props.js"></script>
 <script defer src="js/mower.js"></script>
 <script defer src="js/skid.js"></script>
