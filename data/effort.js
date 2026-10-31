@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-31T01:26:00Z",
+ "updated": "2026-10-31T01:38:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -90,9 +90,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-30",
-   "dh": 36.25,
-   "act": 2,
-   "versions": 8
+   "dh": 39.25,
+   "act": 2.5,
+   "versions": 9
   }
  ],
  "extra": [
@@ -2595,6 +2595,15 @@ window.EFFORT = {
    "tris": 5710458,
    "chars": 1856765,
    "what": "Town paving and roads gather puddles in the rain that spread the longer it rains and drain after, mirror the sky, ring with raindrops (Puddle water: Fine) and stay out from under roofs"
+  },
+  {
+   "v": 278,
+   "asked": "2026-10-30T20:18:00-05:00",
+   "live": "2026-10-30T20:38:57-05:00",
+   "dh": 3,
+   "tris": 5808921,
+   "chars": 1859853,
+   "what": "Equip the pistol (G or the Pistol button), click to fire while it is out, and see it in your hand in first person"
   }
  ]
 };
