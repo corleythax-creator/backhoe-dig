@@ -89,6 +89,8 @@ function gfxApply(){const g=gfxCur=Object.assign({},GFX[gfxKey],gfxOver);
   ultraGfx(g.skyLight,g.shSoft&&g.sh>0,g.wetDrops,g.wetGround);
   // machine models: the detailed one from its file, or the simple shapes (models.js)
   mdlGfx(g.model);
+  // wear, dust, caked mud and clear-coated paint on the detailed machines, with the relief setting (models.js)
+  wearGfx(g.pbr&&g.model);
   // the bridges: their detail parts, pictures (not on Low) and relief (bridges.js)
   brGfx(g);
   // undergrowth round the trees (brush.js)
