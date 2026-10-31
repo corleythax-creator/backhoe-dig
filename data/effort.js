@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-31T02:30:00Z",
+ "updated": "2026-10-31T02:32:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -90,9 +90,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-30",
-   "dh": 84.25,
+   "dh": 85.75,
    "act": 3.5,
-   "versions": 19
+   "versions": 20
   }
  ],
  "extra": [
@@ -2694,6 +2694,15 @@ window.EFFORT = {
    "tris": 5818519,
    "chars": 1895561,
    "what": "Breakwater boulders in photo-scanned granite, standing-seam metal roofs on the Dockside Grill and bandstand, woven canvas on every awning stripe; tintable scanned kit materials (famTint)"
+  },
+  {
+   "v": 289,
+   "asked": "2026-10-30T21:24:00-05:00",
+   "live": "2026-10-30T21:32:22-05:00",
+   "dh": 1.5,
+   "tris": 5813015,
+   "chars": 1895678,
+   "what": "Main Street in town is paved in red brick, its bricks standing up out of their joints with Material relief; the cross street stays asphalt."
   }
  ]
 };
