@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-31T04:51:00Z",
+ "updated": "2026-10-31T05:12:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -93,6 +93,12 @@ window.EFFORT = {
    "dh": 200.25,
    "act": 5.5,
    "versions": 33
+  },
+  {
+   "d": "2026-10-31",
+   "dh": 5,
+   "act": 0.5,
+   "versions": 1
   }
  ],
  "extra": [
@@ -2820,6 +2826,15 @@ window.EFFORT = {
    "tris": 5896795,
    "chars": 2007224,
    "what": "A gun shop on Main Street with a pump shotgun, a bolt-action rifle and a carbine; ammo and reloading; townsfolk take damage by where they're hit; blood, pools, bullet holes and impact sounds; both hands on the gun."
+  },
+  {
+   "v": 303,
+   "asked": "2026-10-30T23:10:00-05:00",
+   "live": "2026-10-31T00:12:46-05:00",
+   "dh": 5,
+   "tris": 6005559,
+   "chars": 2024622,
+   "what": "Every sign a painted wood board with carved, gilt or shadowed lettering; the runabouts' names in vinyl on their hulls; a waterline stain on every gelcoat hull; Main Street's flat roofs in scanned bitumen with concrete coping"
   }
  ]
 };

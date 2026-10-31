@@ -2,6 +2,10 @@
 
 Every version of Corley's Island, newest first, grouped by the day it went live (Central time). Made from `data/effort.js` by `tools/changelog.py`; don't edit it by hand. [Play any old version](https://corleys-island.vercel.app/versions/) · [Build log with charts](https://corleys-island.vercel.app/build.html)
 
+## Saturday, October 31, 2026
+
+- **v303** (12:12 AM) Every sign a painted wood board with carved, gilt or shadowed lettering; the runabouts' names in vinyl on their hulls; a waterline stain on every gelcoat hull; Main Street's flat roofs in scanned bitumen with concrete coping
+
 ## Friday, October 30, 2026
 
 - **v302** (11:51 PM) A gun shop on Main Street with a pump shotgun, a bolt-action rifle and a carbine; ammo and reloading; townsfolk take damage by where they're hit; blood, pools, bullet holes and impact sounds; both hands on the gun.
