@@ -41,7 +41,7 @@ const MODES=['dig','drive','truck','mow','skid','walk'];let kbUsed=false;
 const KEY_RUN={dig:()=>setMode('dig'),drive:()=>setMode('drive'),exSwap:()=>exSwap(),bhOut:()=>bhOut(),truck:()=>setMode('truck'),mow:()=>setMode('mow'),skid:()=>setMode('skid'),walk:()=>setMode('walk'),
   nextMode:e=>setMode(MODES[(MODES.indexOf(mode)+(e.shiftKey?MODES.length-1:1))%MODES.length]),
   stats:()=>showStats(statBox.hidden),heat:()=>{if(!heat.on)setHeat(true);else if(heat.mode!==HEAT_MODES[HEAT_MODES.length-1][0])heatNext();else setHeat(false)},
-  enter:()=>seatToggle(),jump:()=>walkJump(),plant:()=>plantHere(),trim:()=>trimSet(!trim.on),trimBump:()=>trimBump(),gunFire:()=>gunFire(),plantKind:()=>plantNext(),carry:()=>pbAct(),blocks:()=>setBlocks(!blkOn),place:()=>placeBlock(),lift:()=>removeBlock(),size:()=>blkCube(1),blkTurn:()=>blkTurn(),blkLock:()=>toast(say('blkSnap',{snap:blkLockNext()}),'',1400),blkFar:()=>blkReachBy(2),blkNear:()=>blkReachBy(-2),
+  enter:()=>seatToggle(),jump:()=>walkJump(),plant:()=>plantHere(),trim:()=>trimSet(!trim.on),trimBump:()=>trimBump(),gun:()=>gunEquip(!gun.eq),gunShoot:()=>gunFire(),plantKind:()=>plantNext(),carry:()=>pbAct(),blocks:()=>setBlocks(!blkOn),place:()=>placeBlock(),lift:()=>removeBlock(),size:()=>blkCube(1),blkTurn:()=>blkTurn(),blkLock:()=>toast(say('blkSnap',{snap:blkLockNext()}),'',1400),blkFar:()=>blkReachBy(2),blkNear:()=>blkReachBy(-2),
   blkWhat:()=>{if(!blkOn)setBlocks(true);const ks=['',...Object.keys(PROPS)];setBlkThing(ks[(ks.indexOf(blkThing)+1)%ks.length]);toast(say('blkWhat',{what:blkThing?PROPS[blkThing].n:'Block'}),'',1200)},
   blkMat:()=>{let m=blkMat;do m=(m+1)%MAT_MAX;while(m&&!MAT_LIST[m-1]);setBlkMat(m);toast(say('blkMat',{mat:blkMatName(blkMat)}),'',1400)},
   box:()=>hookBox(),coupler:()=>cplAct(),grip:()=>cplGrip(),lookAhead:()=>{if(camMode==='cab')fpl.home=true;fpl.zt=1},pump:()=>setPump(!pumpOn),wipers:()=>setWipers(!wipeOn),cam:()=>$('#camBtn').click(),map:()=>toggleMap(),sound:()=>setSound(!sndCfg.on),help:()=>{help.hidden=!help.hidden}};
@@ -139,6 +139,8 @@ const camPtrs=new Map();let pinch=0;
 canvas.addEventListener('pointerdown',e=>{if(edOn)return;camPtrs.set(e.pointerId,{x:e.clientX,y:e.clientY});try{canvas.setPointerCapture(e.pointerId)}catch(err){}
   if(camPtrs.size===2){const [a,b]=camPtrs.values();pinch=Math.hypot(a.x-b.x,a.y-b.y);drag=null;return}
   drag={id:e.pointerId,x:e.clientX,y:e.clientY,x0:e.clientX,y0:e.clientY,t0:performance.now(),btn:e.button,mouse:e.pointerType==='mouse',locked:document.pointerLockElement===canvas};
+  // with the pistol out on foot, a click with the mouse taken fires it (pistol.js)
+  if(document.pointerLockElement===canvas&&e.button===0&&gunReady()){gunFire();return}
   // with the mouse taken on foot and blocks on, a click sets a block where the dot is and a right click lifts one
   if(document.pointerLockElement===canvas&&blkOn&&blkFP()){if(e.button===0)placeBlock();else if(e.button===2)removeBlock();return}
   // with a mouse, a click on the scene takes it for mouse look in any view (Esc lets it go); with blocks on in chase
@@ -155,7 +157,7 @@ const dend=e=>{camPtrs.delete(e.pointerId);if(camPtrs.size<2)pinch=0;if(drag&&e.
 // with blocks on, a left click on the scene (not a drag) sets a block, in Dig or Walk mode and either view (the click
 // that takes the mouse in cab view sets one too; once it is taken, pointerdown above does it)
 canvas.addEventListener('pointerup',e=>{const d=drag;if(!d||e.pointerId!==d.id||!d.mouse||d.btn!==0||d.locked||edOn)return;
-  if(Math.hypot(e.clientX-d.x0,e.clientY-d.y0)<6&&performance.now()-d.t0<400){if(blkOn){if(mode==='dig'||mode==='walk')placeBlock()}else if(mode==='walk')gunFire()}});
+  if(Math.hypot(e.clientX-d.x0,e.clientY-d.y0)<6&&performance.now()-d.t0<400){if(gunReady())gunFire();else if(blkOn&&(mode==='dig'||mode==='walk'))placeBlock()}});
 canvas.addEventListener('pointerup',dend);canvas.addEventListener('pointercancel',dend);
 canvas.addEventListener('wheel',e=>{if(edOn)return;e.preventDefault();
   // in first person on foot with blocks on, the wheel pushes the block out and pulls it back instead of zooming

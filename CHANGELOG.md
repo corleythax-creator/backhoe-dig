@@ -4,6 +4,10 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Friday, October 30, 2026
 
+- **v281** (9:08 PM) The pistol is now Poly Haven's photo-scanned service pistol, gripped in the worker's own hand; in first person you see his real arm holding it
+- **v280** (9:01 PM) Desktop in town: a Townsfolk counter bottom right (alive, dead, shot and run over); driving a machine into someone above 6 mph (runKill) knocks them flying
+- **v279** (8:58 PM) Broom concrete, plywood, steel road plate, concrete block and shingles from Poly Haven scans; lawn sod, bar grating and landscape fabric from ambientCG, all CC0 with relief and sheen
+- **v278** (8:38 PM) Equip the pistol (G or the Pistol button), click to fire while it is out, and see it in your hand in first person
 - **v277** (8:26 PM) Town paving and roads gather puddles in the rain that spread the longer it rains and drain after, mirror the sky, ring with raindrops (Puddle water: Fine) and stay out from under roofs
 - **v276** (8:25 PM) 20 Paint library materials (gravel, sand, soils, rock, concrete, asphalt, pavers, cobble, brick, flagstone, planks, diamond plate, corrugated) swapped for CC0 ambientCG photo scans with their own relief and sheen maps; tools/cc0.py
 - **v275** (8:19 PM) A pistol in the worker's hand on foot: Fire (G, the Fire button or a click) shoots the townsfolk, who drop or run

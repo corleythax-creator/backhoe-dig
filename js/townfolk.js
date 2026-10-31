@@ -366,11 +366,12 @@ function tfTick(dt){if(!tf.q){if(tf.on)tfShow(false);return}
     else if(walkers.length>wantP){const p=walkers.find(p=>p.inside||!tfSeen(p.x,p.z,1));if(p)tfDrop(p)}
     if(tf.drive.reduce((n,c)=>n+(c.st==='park'?0.5:1),0)<wantC&&Object.keys(tf.cars).length>=3&&Math.random()<0.5)tfSpawnCar()}
   for(const c of tf.drive.slice())tfCarStep(c,dt);
+  tfRunOver(dt);
   tfRoomsTick();if(!tf.parkedOn&&Object.keys(tf.cars).length===Object.keys(TF_CARS).length)tfParkedShow(true);
-  for(const p of tf.people.slice()){if(p.dead){p.dead+=dt;if(p.dead>TU.gunBody&&(!tfSeen(p.x,p.z,1)||p.dead>TU.gunBody*3))tfDrop(p);continue}if(p.room){tfRoomStep(p,dt);continue}if(p.drv)continue;tfWalkStep(p,dt);p.y+=(baseHeight(p.x,p.z)+tfLift(p.x,p.z)-p.y)*Math.min(1,dt*8)}
+  for(const p of tf.people.slice()){if(p.dead){p.dead+=dt;if(p.fly)tfFly(p,dt);if(p.dead>TU.gunBody&&(!tfSeen(p.x,p.z,1)||p.dead>TU.gunBody*3))tfDrop(p);continue}if(p.room){tfRoomStep(p,dt);continue}if(p.drv)continue;tfWalkStep(p,dt);p.y+=(baseHeight(p.x,p.z)+tfLift(p.x,p.z)-p.y)*Math.min(1,dt*8)}
   if(mode==='walk'&&walker.visible){for(const c of tf.drive)wkPushRound(c,[-c.len*0.3,0,c.len*0.3],c.wid/2);for(const p of tf.people)if(!p.inside&&!p.drv&&!p.dead)wkPushRound(p,[0],0.22)}
-  tfDraw(dt)}
-function tfShow(on){tf.on=on;for(const k in tf.M||{})tf.M[k].m.visible=on;for(const c of tf.drive)c.g.visible=on;tfParkedShow(on);
+  tfDraw(dt);tfChip(dt)}
+function tfShow(on){tf.on=on;$('#tfChip').hidden=!on||PHONE;for(const k in tf.M||{})tf.M[k].m.visible=on;for(const c of tf.drive)c.g.visible=on;tfParkedShow(on);
   if(!on){for(const k in tf.M||{}){const c=tf.M[k].fg;if(c&&c.object)c.object.visible=false}for(const c of tf.drive.slice())tfCarDrop(c);for(const p of tf.people.slice())tfDrop(p)}}
 function tfDraw(dt){const M=tf.M,o3=tf.o,cx=camera.position.x,cz=camera.position.z,fo=tf.F&&tf.F.st===2&&!!gfxCur.forge;for(const k in M)M[k].n=M[k].fn=0;
   for(const p of tf.people){if(p.inside)continue;const B=M[p.body];if(!B||B.n>=B.cap)continue;
@@ -381,3 +382,29 @@ function tfDraw(dt){const M=tf.M,o3=tf.o,cx=camera.position.x,cz=camera.position
   for(const k in M){const B=M[k];B.m.count=B.n;B.m.visible=tf.on&&B.n>0;B.m.instanceMatrix.needsUpdate=true;B.walk.needsUpdate=true;
     const c=B.fg;if(c&&c.object){c.object.count=B.fn;c.object.visible=fo&&tf.on&&B.fn>0}}
   for(const c of [...tf.drive,...tf.parked]){const d2=(c.x-cx)**2+(c.z-cz)**2;c.g.visible=d2<400*400;const hi=d2<TF_CAR_HI*TF_CAR_HI;c.g.children[0].visible=hi;c.g.children[1].visible=!hi}}
+// ---------- run over ----------
+// whatever machine he is driving: going faster than TU.runKill it knocks anyone it touches flying (counted in tf.runs),
+// slower than that they jump out of its way; the people round about run off either way
+const tfRun={x:0,z:0,k:null};
+function tfRunOver(dt){const k=mode==='walk'?null:rideOf(mode),R=k&&WK_RIDES[k];if(!R){tfRun.k=null;return}
+  const o=R.o,dx=o.x-tfRun.x,dz=o.z-tfRun.z,same=tfRun.k===k;Object.assign(tfRun,{x:o.x,z:o.z,k});
+  const d=Math.hypot(dx,dz);if(!same||d>5||dt<=0)return;const v=d/dt,sy=Math.sin(o.yaw),cy=Math.cos(o.yaw);
+  for(const p of tf.people){if(p.dead||p.inside||p.drv||p.room)continue;
+    let hit=false;for(const lz of R.c)if(Math.hypot(p.x-o.x-sy*lz,p.z-o.z-cy*lz)<R.r+0.25){hit=true;break}
+    if(!hit)continue;
+    if(v<TU.runKill/2.237){if(typeof gunRun==='function')gunRun(p,4);continue}
+    // thrown along the way it was going and a little off to the side they were on, higher the faster it was
+    const ux=dx/d,uz=dz/d,sd=Math.sign((p.x-o.x)*uz-(p.z-o.z)*ux)||1,f=Math.min(v,25);
+    Object.assign(p,{dead:1e-3,sit:0,wait:0,spd:0,amp:0,flee:0,yaw:Math.atan2(o.x-p.x,o.z-p.z),
+      fly:{vx:ux*f*0.9+uz*sd*f*0.25,vz:uz*f*0.9-ux*sd*f*0.25,vy:Math.min(7,1.2+f*0.3)}});if(p.vt0){p.vt=p.vt0;p.vt0=0}
+    dustPuff(p.x,p.y+0.4,p.z,4,[-0.55,-1.05,-1]);tf.runs=(tf.runs||0)+1;if(typeof gunScare==='function')gunScare(p.x,p.z,p)}}
+// a body in the air: falls under gravity, then slides to a stop on the ground (walls stop it)
+function tfFly(p,dt){const F=p.fly,g=baseHeight(p.x,p.z)+tfLift(p.x,p.z),nx=p.x+F.vx*dt,nz=p.z+F.vz*dt;
+  if(SOLIDS.some(s=>!s.foot&&Math.abs(nx-s.x)<s.hx+0.2&&Math.abs(nz-s.z)<s.hz+0.2)){F.vx*=-0.25;F.vz*=-0.25}else{p.x=nx;p.z=nz}
+  F.vy-=9.8*dt;p.y+=F.vy*dt;
+  if(p.y<=g){p.y=g;F.vy=Math.abs(F.vy)>2?-F.vy*0.3:0;const s=Math.hypot(F.vx,F.vz),k=s>0?Math.max(0,s-7*dt)/s:0;F.vx*=k;F.vz*=k;
+    if(!F.vy&&s<0.05)p.fly=null}}
+// the count in the corner (desktop, in town): who is about, and how many he has shot and run down
+function tfChip(dt){if(PHONE)return;tf.chipT=(tf.chipT||0)-dt;if(tf.chipT>0)return;tf.chipT=0.25;
+  const alive=tf.people.reduce((n,p)=>n+!p.dead,0),shot=typeof gun==='object'?gun.downs:0,run=tf.runs||0;
+  $('#tfChipVal').textContent=alive;$('#tfChipShot').textContent=shot;$('#tfChipRun').textContent=run;$('#tfChipDead').textContent=shot+run}
