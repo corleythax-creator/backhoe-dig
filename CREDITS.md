@@ -41,6 +41,7 @@ Every sound is cut from CC0 (public domain) field recordings on Freesound by `to
 | Photo-scanned leaf trees and bark (`textures/tree_leaves.jpg` and `tree_leaves_a.jpg`: the maple, oak and birch leaf sprays, laid out from single scanned leaves by `tools/trees_scan.py`; `textures/tree_bark.jpg` and `tree_bark_n.jpg`) | [ambientCG](https://ambientcg.com): LeafSet010, LeafSet012, LeafSet008, Bark012 | CC0 |
 | Photo-scanned pine foliage and bark (`textures/tree_leaves.jpg`: the spruce branch and the pine needle tuft, laid out from scanned twigs by `tools/trees_scan.py`; `textures/tree_pbark.jpg` and `tree_pbark_n.jpg`) | [Poly Haven](https://polyhaven.com): the twig and bark maps of fir_tree_01 and pine_tree_01 | CC0 |
 | The cut ends of logs and stumps (`textures/tree_end.jpg`) | [ambientCG](https://ambientcg.com): TreeEnd003 | CC0 |
+| Photo-scanned stone of the boulders (`textures/rock_granite` and `rock_dark`, each with its `_n`) | [ambientCG](https://ambientcg.com): Rock046L, Rock028 | CC0 |
 | Photo-scanned roof shingles (`textures/roof_grey`, with `_n` and `_r`) | [Poly Haven](https://polyhaven.com/a/grey_roof_01): grey_roof_01, by Rob Tuytel | CC0 |
 | Your own textures (uploaded in the map editor) | Whoever uploads them | Theirs; only upload images you have the right to use |
 

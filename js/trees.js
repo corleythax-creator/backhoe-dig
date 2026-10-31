@@ -64,8 +64,9 @@ const treeMats=(()=>{
   const wood=map=>{const m=new THREE.MeshPhongMaterial({map,shininess:4,specular:0x080808});treeSwayShader(m,false);return m};
   const fol=treeFolMat(1,1,0.03);
   return{bark:wood(treeTex.bark),birch:wood(treeTex.birch),pbark:wood(treeTex.pbark),fol}})();
-// bark relief on High graphics (the pbr setting), its normal map fetched the first time; the deadwood's shadows too
-function treePbr(on){dwShadows(on);for(const [k,n] of [['bark','tree_bark_n'],['birch','tree_birch_n'],['pbark','tree_pbark_n']]){const m=treeMats[k];
+// bark relief on High graphics (the pbr setting), its normal map fetched the first time; the deadwood's shadows and
+// the boulders' relief (scenery.js) too
+function treePbr(on){dwShadows(on);if(typeof rockPbr==='function')rockPbr(on);for(const [k,n] of [['bark','tree_bark_n'],['birch','tree_birch_n'],['pbark','tree_pbark_n']]){const m=treeMats[k];
   if(on&&!treeTex[k+'N']){const t=new THREE.TextureLoader().load(`textures/${n}.jpg`);t.wrapS=t.wrapT=THREE.RepeatWrapping;treeTex[k+'N']=t}
   const want=on?treeTex[k+'N']:null;if(m.normalMap!==want){m.normalMap=want;m.normalScale.set(1.2,1.2);m.needsUpdate=true}}}
 

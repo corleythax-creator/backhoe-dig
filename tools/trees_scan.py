@@ -15,7 +15,8 @@ The conifers come from the scanned twigs of Poly Haven's fir_tree_01 and pine_tr
 twig sheet by its alpha, keeping only the green ones): the spruce branch is a stem with fir sprigs along both sides,
 bigger toward the trunk, and the pine needle tuft is pine sprigs radiating from a point, both keeping their own green
 (the pines' tints are near white). The pines' bark (textures/tree_pbark.jpg, tree_pbark_n.jpg) is pine_tree_01's bark,
-and the cut end of a log or stump (textures/tree_end.jpg) is ambientCG TreeEnd003, weathered grey.
+and the cut end of a log or stump (textures/tree_end.jpg) is ambientCG TreeEnd003, weathered grey. The boulders'
+stone (textures/rock_granite.jpg and rock_dark.jpg, each with its _n relief) is ambientCG Rock046L and Rock028.
 """
 import io
 import os
@@ -36,6 +37,8 @@ SPRAY = {'leaves': (120, 0.2, 5, 11), 'oak': (150, 0.17, 5, 12), 'birch': (190, 
 BARK_K = 0.62  # bark brightness
 PBARK_K = 1.1  # the pines' bark brightness
 END = 'TreeEnd003'
+# the boulders' stone: file name, ambientCG set, brightness
+ROCKS = (('rock_granite', 'Rock046L', 0.62), ('rock_dark', 'Rock028', 1.0))
 CELL = 1024  # laid out at twice the atlas size, then shrunk
 
 
@@ -305,6 +308,12 @@ def main(cache):
     e = np.asarray(fetch(cache, END)('Color').convert('RGB').resize((256, 256), Image.LANCZOS)).astype(np.float32)
     e = (e * 0.55 + e.mean(2, keepdims=True) * 0.45) * 0.72
     Image.fromarray(np.clip(e, 0, 255).astype(np.uint8)).save(os.path.join(OUT, 'tree_end.jpg'), quality=88)
+    # the boulders: lichen-spotted granite and a dark grey stone, colour and relief (scenery.js ROCK_TEX)
+    for name, aid, k in ROCKS:
+        g = fetch(cache, aid)
+        c = np.asarray(g('Color').convert('RGB').resize((512, 512), Image.LANCZOS)).astype(np.float32) * k
+        Image.fromarray(np.clip(c, 0, 255).astype(np.uint8)).save(os.path.join(OUT, name + '.jpg'), quality=88)
+        g('NormalGL').convert('RGB').resize((512, 512), Image.LANCZOS).save(os.path.join(OUT, name + '_n.jpg'), quality=90)
 
 
 if __name__ == '__main__':

@@ -255,6 +255,8 @@ function edRefresh(r,full){if(!r)return;const [X0,X1,Z0,Z1]=r;baseCacheClear();
   midUpdate(x0,x1,z0,z1);mudEdRefresh(x0,x1,z0,z1);tileEdRefresh(x0,x1,z0,z1);rainEdRefresh(x0,x1,z0,z1);lkBedEdit(x0,x1,z0,z1);wallBuild(x0,x1,z0,z1);tuftsRefresh(x0,x1,z0,z1);lawnsStale()}
   if(assets.some(a=>a.x>X0-6&&a.x<X1+6&&a.z>Z0-6&&a.z<Z1+6)){assetsBuild();shpTreesRefresh()}
   streetsEdRefresh(X0,X1,Z0,Z1,full);
+  // the town's boulders keep to its open grass (scenery.js)
+  if(full&&X1>RT_BOX[0]&&X0<RT_BOX[1]&&Z1>RT_BOX[2]&&Z0<RT_BOX[3])rocksTown();
   if(x0<x1&&z0<z1&&full&&(x0<GX0+1||x1>GX1-1||z0<GZ0+1||z1>GZ1-1||x0<MID[0]+1||x1>MID[1]-1||z0<MID[2]+1||z1>MID[3]-1||x0<OUTER_MID[0]+1||x1>OUTER_MID[1]-1||z0<OUTER_MID[2]+1||z1>OUTER_MID[3]-1))buildSkirts()}
 function edStrokeEnd(){const s=ed.stroke;if(!s)return;ed.stroke=null;edRefresh(ed.pend,true);ed.pend=null;
   if(!s.ij)return;const [i0,i1,j0,j1]=s.ij,w=i1-i0+1,h=new Float32Array(w*(j1-j0+1)),p=new Float32Array(h.length),m=new Uint8Array(h.length),c=new Uint8Array(h.length),tg=new Uint8Array(h.length);
