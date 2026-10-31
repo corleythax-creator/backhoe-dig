@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Saturday, October 31, 2026
 
+- **v318** (12:19 PM) Cloud noise textures build a few milliseconds a frame instead of one multi-second freeze when the game loads
 - **v317** (11:22 AM) Cars and townsfolk have their shaders built and pictures uploaded in the background before they show, so town no longer stutters as they spawn; you start on foot in first person with mouse look
 - **v316** (11:20 AM) Excavator gets a rounded counterweight, track pins, boom lines, real teeth, mirrors and steps; dug dirt shows clods, stones and soil layers and dries in patches; field, road and yard edges wander and blend with uncut grass along the hayfield; the worker walks heel to toe with hip sway and arm swing
 - **v315** (10:55 AM) The loading screen can no longer sit at 0%: the bar keeps sweeping while the page is busy, a seconds counter shows it is working, and any error shows on it and lets you in

@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-31T16:22:00Z",
+ "updated": "2026-10-31T17:19:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -96,9 +96,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-31",
-   "dh": 141.5,
-   "act": 4.5,
-   "versions": 15
+   "dh": 142.5,
+   "act": 5,
+   "versions": 16
   }
  ],
  "extra": [
@@ -2961,6 +2961,15 @@ window.EFFORT = {
    "tris": 6857193,
    "chars": 2144243,
    "what": "Cars and townsfolk have their shaders built and pictures uploaded in the background before they show, so town no longer stutters as they spawn; you start on foot in first person with mouse look"
+  },
+  {
+   "v": 318,
+   "asked": "2026-10-31T12:00:00-05:00",
+   "live": "2026-10-31T12:19:33-05:00",
+   "dh": 1,
+   "tris": 6071112,
+   "chars": 2156892,
+   "what": "Cloud noise textures build a few milliseconds a frame instead of one multi-second freeze when the game loads"
   }
  ]
 };
