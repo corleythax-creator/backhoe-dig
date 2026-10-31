@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Saturday, October 31, 2026
 
+- **v312** (9:20 AM) Dust billows and is lit by the sun (dim at night); the excavator and dump truck smoke from their stacks, darker as they work; rooms behind the town's windows now have real depth as you walk past (Machines tuning: exhaust)
 - **v311** (2:45 AM) Sharper close shadows that no longer crawl as you move; the haze takes the sky's colour round the horizon (warm toward the sun, bluer away), so far hills meet the sky; and the picture brightens as you look into shade or the woods and darkens over bright water, like your eyes adjusting (High and Ultra).
 - **v310** (2:05 AM) On Ultra graphics, the three townsfolk nearest you (within about 20 ft, a Tuning setting) switch to their full-detail Human Forge body (about 100,000 triangles, skin pores, real eyes, sheen) right where they stand and in step, and switch back as you walk away. Phones and lower settings are unchanged.
 - **v309** (1:53 AM) Bullets fly and drop with rifle tracers, go through thin walls, car doors and glass, and hit drivers; people scream and cower; shooting brings wanted stars and police who shoot back; you have health; guns are drawn and holstered and each reloads its own way.

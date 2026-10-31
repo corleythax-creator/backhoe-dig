@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-31T07:45:00Z",
+ "updated": "2026-10-31T14:20:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -96,9 +96,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-31",
-   "dh": 95,
-   "act": 3,
-   "versions": 9
+   "dh": 101,
+   "act": 3.5,
+   "versions": 10
   }
  ],
  "extra": [
@@ -2907,6 +2907,15 @@ window.EFFORT = {
    "tris": 6029691,
    "chars": 2105675,
    "what": "Sharper close shadows that no longer crawl as you move; the haze takes the sky's colour round the horizon (warm toward the sun, bluer away), so far hills meet the sky; and the picture brightens as you look into shade or the woods and darkens over bright water, like your eyes adjusting (High and Ultra)."
+  },
+  {
+   "v": 312,
+   "asked": "2026-10-31T00:35:00-05:00",
+   "live": "2026-10-31T09:20:50-05:00",
+   "dh": 6,
+   "tris": 6031798,
+   "chars": 2111315,
+   "what": "Dust billows and is lit by the sun (dim at night); the excavator and dump truck smoke from their stacks, darker as they work; rooms behind the town's windows now have real depth as you walk past (Machines tuning: exhaust)"
   }
  ]
 };
