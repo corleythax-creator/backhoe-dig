@@ -2,8 +2,8 @@
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 // ---------- scenery ----------
 const timeU={value:0};
-// the mountain ranges' materials, dimmed at night by daynight.js
-const MTN_MATS=[];
+// the mountain ranges' materials, dimmed at night by daynight.js (the simple ones, on Low), and the ranges themselves
+const MTN_MATS=[],MTN_MESH=[];
 (function(){
   // two mountain layers far across the lake: a lit front range, and pale hazy peaks behind it
   // (the front one is mtnFrontY's, terrain.js: stood back behind the town and rising out of the mainland where they meet)
@@ -13,7 +13,14 @@ const MTN_MATS=[];
       const t=ri/NR,a=ai/NA*Math.PI*2,R0a=front?mtnR0(a):R0,r=R0a+(R1-R0a)*Math.pow(t,0.85),x=Math.cos(a)*r,z=Math.sin(a)*r;
       const env=ss(0,0.3,t)*(1-0.5*ss(0.8,1,t)),side=0.5+0.5*Math.sin(a+2.4+phase);
       const n=(1-Math.abs(Math.sin(a*7+r*0.013+phase)))*0.5+(1-Math.abs(Math.sin(a*17+r*0.031+1.3+phase)))*0.3+(1-Math.abs(Math.sin(a*37-r*0.05+2.1)))*0.2;
-      const hh=front?mtnFrontY(r,a)-WATER+6:env*(0.45+0.55*side)*(lo+hi*n*n);
+      // the far range: finer ridges and gullies on top, for a sharper skyline (the front one meets the mainland, terrain.js, so keeps its shape)
+      const fine=(1-Math.abs(Math.sin(a*71+r*0.09+3.7+phase)))*0.1+(1-Math.abs(Math.sin(a*149-r*0.13+0.6)))*0.05;
+      // massifs: the peaks rise and fall in broad groups round the ring instead of standing like even teeth (the front
+      // range only raised, and only from a quarter of the way back, so where it meets the mainland and the train's
+      // tunnel it keeps mtnFrontY's height)
+      const mass=Math.max(0,Math.sin(a*3+1.1+phase)*0.6+Math.sin(a*5.3+2.7+phase*2)*0.4);
+      let hh=front?mtnFrontY(r,a)-WATER+6:env*(0.45+0.55*side)*(lo+hi*n*n)*(0.9+fine);
+      hh*=front?1+ss(0.25,0.55,t)*(0.55*mass+fine):0.75+0.6*mass;
       pp.push(x,WATER-6+hh,z);
       const f=front?mtnF*270/(lo+hi):hh/(lo+hi),j=hash(ri*3.3+phase,ai*1.7)*0.06;let c;
       if(f<0.08)c=[0.26,0.4,0.26];else if(f<0.3)c=[0.18+j,0.32+j,0.22];else if(f<0.56+j)c=[0.46+j,0.44+j,0.43+j];else c=[0.95,0.96,0.98];
@@ -21,14 +28,50 @@ const MTN_MATS=[];
     }
     for(let ri=0;ri<NR;ri++)for(let ai=0;ai<NA;ai++){const q=ri*(NA+1)+ai;ix.push(q,q+1,q+NA+1,q+1,q+NA+2,q+NA+1)}
     const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(pp,3));g.setAttribute('color',new THREE.Float32BufferAttribute(cc,3));
-    g.setAttribute('normal',new THREE.Float32BufferAttribute(new Float32Array(pp.length),3));g.setIndex(ix);
+    g.setIndex(ix);g.computeVertexNormals();
     const mat=unlit?new THREE.MeshBasicMaterial({vertexColors:true,fog:false,side:THREE.DoubleSide,toneMapped:false})
       :new THREE.MeshPhongMaterial({vertexColors:true,flatShading:true,fog:false,side:THREE.DoubleSide,shininess:2,specular:0x000000,emissive:0x6a7686});
-    const m=new THREE.Mesh(g,mat);m.renderOrder=-0.5;scene.add(m);MTN_MATS.push(mat);
+    const m=new THREE.Mesh(g,mat);m.renderOrder=-0.5;scene.add(m);MTN_MATS.push(mat);MTN_MESH.push(m);
   }
-  range(790,1080,40,220,30,240,0.42,0.66,0,false,true);
-  range(1080,1320,28,200,60,430,0.7,0.85,1.7,true);
+  range(790,1080,56,440,30,240,0.42,0.66,0,false,true);
+  range(1080,1320,40,400,60,430,0.7,0.85,1.7,true);
 })();
+// the ranges on Medium and up (gfx.js mtnQ): lit by the sun and sky like the island, their faces worked out per pixel
+// from where they are: ridges and gullies (a ridged noise bent into the light), forest on the gentler lower slopes with
+// autumn colour low down, alpine grass, bare rock with its strata on the steep, snow on the high ground, grass where
+// they meet the shore; then the air between: haze that thickens with distance and lies thicker in the valleys than on
+// the peaks, glowing toward the sun (aerial perspective), mixed in as the scene's own haze is so it meets the sky
+const MTN_U={uSun:{value:new THREE.Vector3()},uSunC:{value:new THREE.Color()},uHaze:{value:scene.fog.color},uHzD:{value:1500},uGlow:{value:1},uSnowH:{value:200}};
+const MTN_GLSL='uniform vec3 uSun,uSunC,uHaze;uniform float uHzD,uGlow,uSnowH;varying vec3 vMtnP,vMtnN;\n'+
+  'float mH(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}\n'+
+  'float mN(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);return mix(mix(mH(i),mH(i+vec2(1.0,0.0)),f.x),mix(mH(i+vec2(0.0,1.0)),mH(i+1.0),f.x),f.y);}\n'+
+  'float mR(vec2 p){float s=0.0,a=0.5;for(int i=0;i<4;i++){float n=1.0-abs(mN(p)*2.0-1.0);s+=a*n*n;p=p*2.03+vec2(1.7,9.2);a*=0.5;}return s;}\n';
+const mtnMat=new THREE.MeshStandardMaterial({roughness:0.95,metalness:0,fog:false,side:THREE.DoubleSide});
+mtnMat.onBeforeCompile=sh=>{Object.assign(sh.uniforms,MTN_U);
+  sh.vertexShader='varying vec3 vMtnP,vMtnN;\n'+sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvMtnP=(modelMatrix*vec4(transformed,1.0)).xyz;vMtnN=normalize(mat3(modelMatrix)*objectNormal);');
+  sh.fragmentShader=`#define MTN_W ${WATER.toFixed(2)}\n`+MTN_GLSL+sh.fragmentShader
+    // the ground's bumps: the ridged noise's slope (140 ft features down to 55), as if 40 m high per feature
+    .replace('#include <color_fragment>','#include <color_fragment>\nvec3 nG=normalize(vMtnN);if(nG.y<0.0)nG=-nG;vec2 mq=vMtnP.xz/140.0;float m0=mR(mq);\n'+
+      'vec3 nW=normalize(nG-vec3(mR(mq+vec2(0.03,0.0))-m0,0.0,mR(mq+vec2(0.0,0.03))-m0)*(40.0/(0.03*140.0)));\n'+
+      'float mh=vMtnP.y-MTN_W,ms=1.0-nW.y,mg=1.0-nG.y,n1=mN(vMtnP.xz/45.0),n2=mN(vMtnP.xz/11.0);\n'+
+      'vec3 rock=mix(vec3(0.07,0.065,0.06),vec3(0.15,0.13,0.11),n1)*(0.8+0.4*mN(vec2(vMtnP.y/6.0,n1*4.0)));\n'+
+      'vec3 forest=mix(vec3(0.03,0.055,0.03)*(0.7+0.6*n2),vec3(0.24,0.08,0.025)*(0.7+0.6*n1),smoothstep(0.6,0.78,n2)*0.85*(1.0-smoothstep(60.0,140.0,mh)));\n'+
+      'vec3 meadow=mix(vec3(0.14,0.12,0.07),vec3(0.08,0.11,0.045),n1);\n'+
+      'float tree=(1.0-smoothstep(0.55,0.85,mg+0.25*(n1-0.5)))*(1.0-smoothstep(uSnowH*0.6,uSnowH*0.85,mh+60.0*n1));\n'+
+      'vec3 mc=mix(mix(meadow,rock,smoothstep(0.35,0.6,ms+0.2*(n2-0.5))),forest,tree);\n'+
+      'mc=mix(mc,vec3(0.78,0.81,0.86)*(0.9+0.1*n2),smoothstep(uSnowH-15.0,uSnowH+25.0,mh+80.0*(n1-0.5))*(1.0-smoothstep(0.6,0.85,mg)));\n'+
+      'diffuseColor.rgb=mix(vec3(0.07,0.11,0.04),mc,smoothstep(4.0,40.0,mh));')
+    .replace('#include <normal_fragment_begin>','#include <normal_fragment_begin>\nnormal=normalize((viewMatrix*vec4(nW,0.0)).xyz);')
+    .replace('#include <fog_fragment>','{vec3 mv=vMtnP-cameraPosition;float md=length(mv),mz=max(vMtnP.y-MTN_W,0.0);\n'+
+      ' float hz=1.0-exp(-max(md-150.0,0.0)/uHzD*mix(1.25,0.45,smoothstep(0.0,350.0,mz)));float sg=max(dot(mv/md,uSun),0.0);\n'+
+      ' gl_FragColor.rgb=mix(gl_FragColor.rgb,uHaze+uSunC*(0.3*pow(sg,6.0)+0.45*pow(sg,40.0))*uGlow,clamp(hz,0.0,1.0));}')};
+mtnMat.customProgramCacheKey=()=>'mtn';
+let mtnOn=false;
+function mtnGfx(on){mtnOn=!!on;MTN_MESH.forEach((m,i)=>m.material=on?mtnMat:MTN_MATS[i])}
+// every frame (main.js): the sun as it is, the tunings
+function mtnTick(){if(!mtnOn)return;const u=MTN_U;u.uSun.value.copy(LIGHT_DIR);
+  u.uSunC.value.copy(sun.color).multiplyScalar(Math.min(1,sun.intensity/(1.6*LI))*Math.min(1,Math.max(0,LIGHT_DIR.y*4+0.3)));
+  u.uHzD.value=1500/Math.max(0.05,TU.mtnHaze);u.uGlow.value=TU.mtnGlow;u.uSnowH.value=TU.mtnSnow}
 // ---------- field grass ----------
 // clumps over the mesa that disappear wherever the ground gets dug, buried or painted. Four kinds on two shapes: meadow
 // grass (also the dry straw clumps) and seed-head grass, low broadleaf weeds and wildflowers. They grow in patches with bare-ish ground

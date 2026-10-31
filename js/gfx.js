@@ -22,6 +22,9 @@ const GFX={
 // picked by itself
 // the extra lamps: the warm light in Jessica's library and the boom's work light (Low keeps the glowing lamps only)
 GFX.low.town=1;GFX.med.town=2;GFX.high.town=3;
+// mtnQ the mountains lit and shaded per pixel with haze toward the sun (scenery.js; Low keeps the simple ones), peb the
+// share of pebbles, stones and sticks drawn round the camera (pebbles.js)
+GFX.low.mtnQ=0;GFX.med.mtnQ=GFX.high.mtnQ=1;GFX.low.peb=0;GFX.med.peb=0.5;GFX.high.peb=1;
 GFX.low.wild=0.35;GFX.med.wild=0.65;GFX.high.wild=0.85;
 // the town's lawn clumps, weeds and fallen leaves (turf.js): the share drawn and how far out (m)
 GFX.low.turf=0.35;GFX.med.turf=0.65;GFX.high.turf=1;GFX.low.turfR=22;GFX.med.turfR=40;GFX.high.turfR=60;
@@ -89,6 +92,8 @@ function gfxApply(){const g=gfxCur=Object.assign({},GFX[gfxKey],gfxOver);
   ultraGfx(g.skyLight,g.shSoft&&g.sh>0,g.wetDrops,g.wetGround);
   // machine models: the detailed one from its file, or the simple shapes (models.js)
   mdlGfx(g.model);
+  // the mountains and the pebbles (scenery.js, pebbles.js)
+  mtnGfx(g.mtnQ);if(typeof pebGfx==='function')pebGfx(g.peb);
   // wear, dust, caked mud and clear-coated paint on the detailed machines, with the relief setting (models.js)
   wearGfx(g.pbr&&g.model);
   // the bridges: their detail parts, pictures (not on Low) and relief (bridges.js)
