@@ -90,9 +90,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-30",
-   "dh": 75.25,
+   "dh": 80.25,
    "act": 3,
-   "versions": 17
+   "versions": 18
   }
  ],
  "extra": [
@@ -2676,6 +2676,15 @@ window.EFFORT = {
    "tris": 5706578,
    "chars": 1889187,
    "what": "On Ultra the puddles on the paving reflect the trees, lamps, people and buildings round them; rain splashes are smaller and fainter"
+  },
+  {
+   "v": 287,
+   "asked": "2026-10-30T20:57:00-05:00",
+   "live": "2026-10-30T21:27:57-05:00",
+   "dh": 5,
+   "tris": 5821294,
+   "chars": 1891248,
+   "what": "Townsfolk react to where they are shot: head shots drop them, chest shots stagger them over, gut shots double them up, leg shots put them down crawling, arm shots spin them and they run"
   }
  ]
 };
