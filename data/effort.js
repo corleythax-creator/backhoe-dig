@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-31T06:09:00Z",
+ "updated": "2026-10-31T06:38:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -96,9 +96,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-31",
-   "dh": 50,
-   "act": 1.5,
-   "versions": 5
+   "dh": 56,
+   "act": 2,
+   "versions": 6
   }
  ],
  "extra": [
@@ -2871,6 +2871,15 @@ window.EFFORT = {
    "tris": 6029017,
    "chars": 2064175,
    "what": "Shadows now reach far past you: hills, cliffs, buildings and trees out to a fifth of a mile (High) still cast them. The haze glows warm toward the sun and lies thicker low over the lake, and sunlight bounces up off the ground into the shade under machines and eaves."
+  },
+  {
+   "v": 308,
+   "asked": "2026-10-31T00:55:00-05:00",
+   "live": "2026-10-31T01:38:34-05:00",
+   "dh": 6,
+   "tris": 6031857,
+   "chars": 2065088,
+   "what": "Photo-scanned hydrant, Jersey barrier, steel drum, generator, tyre stack, fire pit and lamp post (Poly Haven, CC0) on Detailed; new trash can and utility box to place"
   }
  ]
 };
