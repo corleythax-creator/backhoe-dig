@@ -174,7 +174,7 @@ function marBoat(kind,o,x,z,yaw){const K=famKit();MAR_KIND[kind](K,o);const g=ne
     K.cyl(0.04,0.04,0.6,5,0x2a2c2f,0,1.65,0);K.box(0.12,0.12,0.12,0xf2e7a0,0,1.98,0)}
   const g=new THREE.Group();g.add(new THREE.Mesh(famMerge(K.solid),marBoatMat));g.position.set(b.x,WATER,b.z);scene.add(g);b.g=g;b.ph=hash(b.x,b.z)*6.3}})();
 
-// ---------- the breakwater: grey granite boulders heaped along its line, and the lighthouse on a concrete pad at its tip ----------
+// ---------- the breakwater: grey granite boulders (scanned granite in six shades) heaped along its line, and the lighthouse on a concrete pad at its tip ----------
 (function(){let sd=77;const rnd=()=>{sd=(sd+0x6D2B79F5)|0;let t=Math.imul(sd^(sd>>>15),1|sd);t=(t+Math.imul(t^(t>>>7),61|t))^t;return((t^(t>>>14))>>>0)/4294967296};
   const K=shopKit(),RK=famKit(),conc=shopLib('concrete_old'),crest=WATER+1.7,ROCK=[0xa39e94,0x958f86,0xb0aa9f,0x8a857d,0x9d9488,0xaaa59c];
   // a boulder: an icosahedron with its corners pushed in and out, flattened a little
@@ -183,7 +183,7 @@ function marBoat(kind,o,x,z,yaw){const K=famKit();MAR_KIND[kind](K,o);const g=ne
   for(let i=0;i<MAR_BW.length-1;i++){const [ax,az]=MAR_BW[i],[bx,bz]=MAR_BW[i+1],len=Math.hypot(bx-ax,bz-az),ux=(bx-ax)/len,uz=(bz-az)/len;
     for(let t=0;t<len;t+=1.7)for(const u of [-5.2,-3.6,-1.9,0,1.9,3.6,5.2]){const x=ax+ux*(t+rnd()*0.8)-uz*(u+(rnd()-0.5)*0.6),z=az+uz*(t+rnd()*0.8)+ux*(u+(rnd()-0.5)*0.6),g=baseHeight(x,z);
       const top=crest-Math.max(0,Math.abs(u)-1.5)*0.62;if(top<g-0.3||top<WATER-1.6)continue;const r=0.85+rnd()*0.65;
-      RK.geo(boulder(r),ROCK[(rnd()*6)|0],x,Math.max(top,g+r*0.4)-r*0.3,z,rnd()*6.3,(rnd()-0.5)*0.5)}}
+      RK.geo(boulder(r),famTint('rockBW',ROCK[(rnd()*6)|0]),x,Math.max(top,g+r*0.4)-r*0.3,z,rnd()*6.3,(rnd()-0.5)*0.5)}}
   // the lighthouse: a concrete pad, a white tapered tower with a red band, the gallery and its railing, the lantern
   // under a red dome; its lamp glows, and after dark its beam sweeps round (marinaTick)
   const [lx,lz]=MAR_BW[MAR_BW.length-1],F=famKit(),y0=crest+0.3;
@@ -268,7 +268,7 @@ function marBoat(kind,o,x,z,yaw){const K=famKit();MAR_KIND[kind](K,o);const g=ne
     for(const dx of [-4.2,0,4.2]){F.box(3.6,2.9,0.06,0x2c3a44,gx+dx,fl+1.5,gz-D/2-0.06,Math.PI);for(let i=1;i<4;i++)F.box(3.6,0.05,0.08,0x3a3d40,gx+dx,fl+i*0.72,gz-D/2-0.09,Math.PI);
       F.box(3.8,0.15,0.1,TR,gx+dx,fl+3.0,gz-D/2-0.08,Math.PI)}
     for(const dz of [-2.2,2.2])for(const sx of [-1,1])win(gx+sx*W/2,fl+1.9,gz+dz,1.3,1.2,sx*Math.PI/2,0);
-    const rp=0.32,rl=(D/2+0.6)/Math.cos(rp);for(const sz of [-1,1])K.box(corr,W+1,0.08,rl,gx,fl+H+Math.tan(rp)*(D/4+0.3)-0.05,gz+sz*(D/4+0.3),0,sz*rp);
+    const rp=0.32,rl=(D/2+0.6)/Math.cos(rp);for(const sz of [-1,1])F.box(W+1,0.08,rl,famTint('seam',0x3d4245),gx,fl+H+Math.tan(rp)*(D/4+0.3)-0.05,gz+sz*(D/4+0.3),0,sz*rp);
     for(const sx of [-1,1])F.geo(famGable(D+1.2,Math.tan(rp)*(D/2+0.6),0.1),RED,gx+sx*(W/2+0.02),fl+H-0.02,gz);
     F.box(W+1.05,0.14,0.2,0x3a3d40,gx,fl+H+Math.tan(rp)*(D/2+0.6)-0.02,gz);
     famSign(['DOCKSIDE GRILL','Burgers · Fish Tacos · Cold Drinks'],7.2,1.35,gx,fl+H-0.8,gz-D/2-0.12,Math.PI,'#f0e6cf','#7e2f26');
@@ -296,7 +296,7 @@ function marBoat(kind,o,x,z,yaw){const K=famKit();MAR_KIND[kind](K,o);const g=ne
   // the ice cream stand: a white booth with a pink-and-white striped awning over its window, and a cone on the roof
   {const ix=63,iz=566.5,g0=G(ix,iz)+0.1;F.box(3.2,0.2,2.6,0x9b9a94,ix,g0-0.05,iz);F.box(3,2.5,2.4,0xf6f3ec,ix,g0+1.25,iz);F.box(3.2,0.2,2.6,0xe78fb3,ix,g0+2.6,iz);
     F.box(1.8,0.9,0.05,0x2c3a44,ix,g0+1.55,iz-1.21);F.box(2.0,0.08,0.3,0xf6f3ec,ix,g0+1.05,iz-1.3);
-    for(let i=0;i<8;i++)F.box(0.33,0.05,1.0,i%2?0xf6f3ec:0xe78fb3,ix-1.16+i*0.33,g0+2.25,iz-1.62,0,0.35);
+    for(let i=0;i<8;i++)F.box(0.33,0.05,1.0,famTint('canvas',i%2?0xf6f3ec:0xe78fb3),ix-1.16+i*0.33,g0+2.25,iz-1.62,0,0.35);
     F.cyl(0.32,0.02,0.9,10,0xd2a15e,ix,g0+3.15,iz);F.geo(new THREE.SphereGeometry(0.36,10,8),0xf3d9e2,ix,g0+3.65,iz);F.geo(new THREE.SphereGeometry(0.06,6,4),0xb8322a,ix,g0+4.02,iz);
     famSign(['SCOOPS','Ice Cream · Shakes'],2.2,0.6,ix,g0+2.65,iz-1.32,Math.PI,'#f6f3ec','#c2477a');SOLIDS.push({x:ix,z:iz,hx:1.6,hz:1.3});
     for(const dx of [-2.6,2.6]){const x=ix+dx,z=iz-2.4,y=G(x,z);BK.box(1.6,0.06,0.45,0x2f4a3a,x,y+0.45,z);for(const s of [-1,1])BK.box(0.06,0.45,0.45,0x2a2c2f,x+s*0.7,y+0.22,z);famSpot('bench',x,y,z,Math.PI,0.9)}}

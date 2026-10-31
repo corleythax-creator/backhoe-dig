@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-31T02:27:00Z",
+ "updated": "2026-10-31T02:30:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -90,9 +90,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-30",
-   "dh": 80.25,
-   "act": 3,
-   "versions": 18
+   "dh": 84.25,
+   "act": 3.5,
+   "versions": 19
   }
  ],
  "extra": [
@@ -2685,6 +2685,15 @@ window.EFFORT = {
    "tris": 5821294,
    "chars": 1891248,
    "what": "Townsfolk react to where they are shot: head shots drop them, chest shots stagger them over, gut shots double them up, leg shots put them down crawling, arm shots spin them and they run"
+  },
+  {
+   "v": 288,
+   "asked": "2026-10-30T21:05:00-05:00",
+   "live": "2026-10-30T21:30:53-05:00",
+   "dh": 4,
+   "tris": 5818519,
+   "chars": 1895561,
+   "what": "Breakwater boulders in photo-scanned granite, standing-seam metal roofs on the Dockside Grill and bandstand, woven canvas on every awning stripe; tintable scanned kit materials (famTint)"
   }
  ]
 };
