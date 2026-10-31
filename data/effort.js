@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-31T05:12:00Z",
+ "updated": "2026-10-31T05:21:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -96,9 +96,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-31",
-   "dh": 5,
+   "dh": 17,
    "act": 0.5,
-   "versions": 1
+   "versions": 2
   }
  ],
  "extra": [
@@ -2835,6 +2835,15 @@ window.EFFORT = {
    "tris": 6005559,
    "chars": 2024622,
    "what": "Every sign a painted wood board with carved, gilt or shadowed lettering; the runabouts' names in vinyl on their hulls; a waterline stain on every gelcoat hull; Main Street's flat roofs in scanned bitumen with concrete coping"
+  },
+  {
+   "v": 304,
+   "asked": "2026-10-31T00:10:00-05:00",
+   "live": "2026-10-31T00:21:39-05:00",
+   "dh": 12,
+   "tris": 6014897,
+   "chars": 2033995,
+   "what": "The sky's colours now come from sunlight in the air (deep blue at noon, peach and mauve at dusk); thin high cloud, sunbeams between the clouds, rainbows after rain, and the clouds in the lake and on the paint."
   }
  ]
 };
