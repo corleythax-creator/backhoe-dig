@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-31T00:33:00Z",
+ "updated": "2026-10-31T00:43:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -90,9 +90,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-30",
-   "dh": 19.5,
+   "dh": 20,
    "act": 1.5,
-   "versions": 3
+   "versions": 4
   }
  ],
  "extra": [
@@ -2550,6 +2550,15 @@ window.EFFORT = {
    "tris": 5821684,
    "chars": 1840215,
    "what": "The start map: tap once to zoom in twice as close round that spot, tap again to start there on foot; Whole map backs out."
+  },
+  {
+   "v": 273,
+   "asked": "2026-10-30T19:45:00-05:00",
+   "live": "2026-10-30T19:43:29-05:00",
+   "dh": 0.5,
+   "tris": 5818587,
+   "chars": 1840367,
+   "what": "You can walk onto the foothills and Overlook Road now (on foot you were stopped at the back of town), and the start map shows them, with Harbor Square and the Foothills named."
   }
  ]
 };
