@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-31T01:19:00Z",
+ "updated": "2026-10-31T01:25:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -90,9 +90,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-30",
-   "dh": 26.25,
+   "dh": 32.25,
    "act": 2,
-   "versions": 6
+   "versions": 7
   }
  ],
  "extra": [
@@ -2577,6 +2577,15 @@ window.EFFORT = {
    "tris": 5803878,
    "chars": 1853134,
    "what": "A pistol in the worker's hand on foot: Fire (G, the Fire button or a click) shoots the townsfolk, who drop or run"
+  },
+  {
+   "v": 276,
+   "asked": "2026-10-30T19:50:00-05:00",
+   "live": "2026-10-30T20:25:42-05:00",
+   "dh": 6,
+   "tris": 5814500,
+   "chars": 1853144,
+   "what": "20 Paint library materials (gravel, sand, soils, rock, concrete, asphalt, pavers, cobble, brick, flagstone, planks, diamond plate, corrugated) swapped for CC0 ambientCG photo scans with their own relief and sheen maps; tools/cc0.py"
   }
  ]
 };
