@@ -1,0 +1,326 @@
+{
+ "chars": [
+  {
+   "id": "cal_m",
+   "body": "m",
+   "cell": 0,
+   "h": 1.78,
+   "wx": 1.071,
+   "wz": 1.064,
+   "sex": "m",
+   "age": "adult"
+  },
+  {
+   "id": "cal_f",
+   "body": "f",
+   "cell": 1,
+   "h": 1.64,
+   "wx": 1.038,
+   "wz": 1.045,
+   "sex": "f",
+   "age": "adult"
+  },
+  {
+   "id": "cal_k",
+   "body": "k",
+   "cell": 2,
+   "h": 1.38,
+   "wx": 1.011,
+   "wz": 1.078,
+   "sex": "m",
+   "age": "kid"
+  },
+  {
+   "id": "m60_cap",
+   "body": "m",
+   "cell": 3,
+   "h": 1.77,
+   "wx": 1.103,
+   "wz": 1.152,
+   "sex": "m",
+   "age": "old"
+  },
+  {
+   "id": "f50_scrubs",
+   "body": "f",
+   "cell": 4,
+   "h": 1.65,
+   "wx": 1.128,
+   "wz": 1.25,
+   "sex": "f",
+   "age": "adult"
+  },
+  {
+   "id": "m25_hoodie",
+   "body": "m",
+   "cell": 5,
+   "h": 1.8,
+   "wx": 0.989,
+   "wz": 0.944,
+   "sex": "m",
+   "age": "adult"
+  },
+  {
+   "id": "f30_jog",
+   "body": "f",
+   "cell": 6,
+   "h": 1.62,
+   "wx": 1.007,
+   "wz": 1.046,
+   "sex": "f",
+   "age": "adult"
+  },
+  {
+   "id": "m30_tee",
+   "body": "m",
+   "cell": 7,
+   "h": 1.85,
+   "wx": 0.985,
+   "wz": 0.982,
+   "sex": "m",
+   "age": "adult"
+  },
+  {
+   "id": "f70_cardigan",
+   "body": "f",
+   "cell": 8,
+   "h": 1.6,
+   "wx": 1.031,
+   "wz": 1.173,
+   "sex": "f",
+   "age": "old"
+  },
+  {
+   "id": "m40_cargo",
+   "body": "m",
+   "cell": 9,
+   "h": 1.79,
+   "wx": 1.208,
+   "wz": 1.25,
+   "sex": "m",
+   "age": "adult"
+  },
+  {
+   "id": "f16_teen",
+   "body": "f",
+   "cell": 10,
+   "h": 1.63,
+   "wx": 0.93,
+   "wz": 1.155,
+   "sex": "f",
+   "age": "adult"
+  },
+  {
+   "id": "m35_office",
+   "body": "m",
+   "cell": 11,
+   "h": 1.74,
+   "wx": 0.896,
+   "wz": 0.918,
+   "sex": "m",
+   "age": "adult"
+  },
+  {
+   "id": "k8_girl",
+   "body": "k",
+   "cell": 12,
+   "h": 1.28,
+   "wx": 0.999,
+   "wz": 0.989,
+   "sex": "f",
+   "age": "kid"
+  },
+  {
+   "id": "m65_church",
+   "body": "m",
+   "cell": 13,
+   "h": 1.76,
+   "wx": 1.034,
+   "wz": 1.137,
+   "sex": "m",
+   "age": "old"
+  },
+  {
+   "id": "f25_capri",
+   "body": "f",
+   "cell": 14,
+   "h": 1.68,
+   "wx": 0.946,
+   "wz": 1.02,
+   "sex": "f",
+   "age": "adult"
+  },
+  {
+   "id": "m35_vest",
+   "body": "m",
+   "cell": 15,
+   "h": 1.75,
+   "wx": 1.213,
+   "wz": 1.199,
+   "sex": "m",
+   "age": "adult"
+  },
+  {
+   "id": "m15_skate",
+   "body": "m",
+   "cell": 16,
+   "h": 1.7,
+   "wx": 0.893,
+   "wz": 0.953,
+   "sex": "m",
+   "age": "teen"
+  },
+  {
+   "id": "f28_maroon",
+   "body": "f",
+   "cell": 17,
+   "h": 1.66,
+   "wx": 1.235,
+   "wz": 1.25,
+   "sex": "f",
+   "age": "adult"
+  },
+  {
+   "id": "m50_tie",
+   "body": "m",
+   "cell": 18,
+   "h": 1.8,
+   "wx": 1.14,
+   "wz": 1.105,
+   "sex": "m",
+   "age": "adult"
+  },
+  {
+   "id": "f45_mom",
+   "body": "f",
+   "cell": 19,
+   "h": 1.63,
+   "wx": 1.141,
+   "wz": 1.25,
+   "sex": "f",
+   "age": "adult"
+  },
+  {
+   "id": "m17_hoops",
+   "body": "m",
+   "cell": 20,
+   "h": 1.83,
+   "wx": 0.995,
+   "wz": 1.22,
+   "sex": "m",
+   "age": "teen"
+  },
+  {
+   "id": "f55_teal",
+   "body": "f",
+   "cell": 21,
+   "h": 1.6,
+   "wx": 1.246,
+   "wz": 1.25,
+   "sex": "f",
+   "age": "adult"
+  },
+  {
+   "id": "m30_run",
+   "body": "m",
+   "cell": 22,
+   "h": 1.78,
+   "wx": 1.098,
+   "wz": 1.106,
+   "sex": "m",
+   "age": "adult"
+  },
+  {
+   "id": "k9_girl",
+   "body": "k",
+   "cell": 23,
+   "h": 1.33,
+   "wx": 1.13,
+   "wz": 1.151,
+   "sex": "f",
+   "age": "kid"
+  },
+  {
+   "id": "k7_boy",
+   "body": "k",
+   "cell": 24,
+   "h": 1.22,
+   "wx": 1.108,
+   "wz": 1.245,
+   "sex": "m",
+   "age": "kid"
+  },
+  {
+   "id": "f80_jacket",
+   "body": "f",
+   "cell": 25,
+   "h": 1.58,
+   "wx": 1.25,
+   "wz": 1.25,
+   "sex": "f",
+   "age": "old"
+  },
+  {
+   "id": "m40_yard",
+   "body": "m",
+   "cell": 26,
+   "h": 1.76,
+   "wx": 1.209,
+   "wz": 1.232,
+   "sex": "m",
+   "age": "adult"
+  },
+  {
+   "id": "f25_pink",
+   "body": "f",
+   "cell": 27,
+   "h": 1.6,
+   "wx": 1.121,
+   "wz": 1.25,
+   "sex": "f",
+   "age": "adult"
+  },
+  {
+   "id": "m70_flannel",
+   "body": "m",
+   "cell": 28,
+   "h": 1.74,
+   "wx": 1.147,
+   "wz": 1.213,
+   "sex": "m",
+   "age": "old"
+  },
+  {
+   "id": "f35_denim",
+   "body": "f",
+   "cell": 29,
+   "h": 1.7,
+   "wx": 1.25,
+   "wz": 1.25,
+   "sex": "f",
+   "age": "adult"
+  },
+  {
+   "id": "m14_pack",
+   "body": "m",
+   "cell": 30,
+   "h": 1.62,
+   "wx": 0.944,
+   "wz": 1.125,
+   "sex": "m",
+   "age": "teen"
+  },
+  {
+   "id": "f15_pack",
+   "body": "f",
+   "cell": 31,
+   "h": 1.6,
+   "wx": 1.143,
+   "wz": 0.93,
+   "sex": "f",
+   "age": "teen"
+  }
+ ],
+ "cols": 4,
+ "rows": 8
+}

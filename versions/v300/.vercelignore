@@ -1,0 +1,4 @@
+# the playable snapshots are hosted on GitHub Pages (.github/workflows/pages.yml), not here
+versions/
+# the car models' sources: tools/models/cars.js fits them into models/cars.glb
+tools/models/cars_src/
