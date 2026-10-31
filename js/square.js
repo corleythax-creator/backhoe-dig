@@ -122,6 +122,8 @@ function sqString(F,a,b,sag){const L=Math.hypot(b[0]-a[0],b[2]-a[2]),n=Math.ceil
     for(const sx of [-1,1])for(const sz of [-1,1])F.box(0.5,3.0,0.5,WH,x+sx*1.85,c0+0.35+1.5,tz+sz*1.85);for(const sx of [-1,1]){F.box(4.2,0.12,0.12,WH,x,c0+1.1,tz+sx*1.85);F.box(0.12,0.12,4.2,WH,x+sx*1.85,c0+1.1,tz)}
     F.box(4.3,0.45,4.3,WH,x,b0+0.2,tz);F.cyl(0,3.1,5.6,8,0x4f7a6a,x,b0+3.2,tz,Math.PI/8);F.cyl(0.12,0.12,0.25,10,0xc9a640,x,b0+6.1,tz);F.cyl(0.02,0.02,1.2,4,0x2a2c2f,x,b0+6.7,tz);F.box(0.05,0.05,1.0,0x2a2c2f,x,b0+7.0,tz,0.6);
     SOLIDS.push({x,z,hx:W/2+0.2,hz:D/2+0.2});for(const dx of [-4.2,-1.4,1.4,4.2])SOLIDS.push({x:x+dx,z:pz,hx:0.4,hz:0.4})}
+  // each of the square's own structures moves as one in the map editor (fixed.js)
+  fxDecl('Town Hall',SQ.hx,620.8,13.6,9.0);fxDecl('Bandstand',ax,600.3,5.6,5.8);fxDecl('Fountain',ax,SQ.fz,4,4);fxDecl('Flagpole',ax-7,566,1.6,0.8);fxDecl('Founding stone',ax+7,566,1.2,0.7);
   K.add();famAdd(F)})();
 // the people's spots at the square's benches, café tables and market stalls, from where they stand now (sit in PROPS):
 // propsBuild calls it after every change to the things; anyone on a spot that went (or moved) leaves

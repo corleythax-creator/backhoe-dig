@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-31T04:00:00Z",
+ "updated": "2026-10-31T04:12:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -90,9 +90,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-30",
-   "dh": 156.25,
+   "dh": 170.25,
    "act": 5,
-   "versions": 30
+   "versions": 31
   }
  ],
  "extra": [
@@ -2793,6 +2793,15 @@ window.EFFORT = {
    "tris": 7411825,
    "chars": 1945914,
    "what": "Glossy clear-coated gelcoat on every boat hull; Poly Haven scans for mud and its damp and baked-cracked looks; ambientCG scans for the machines' paint, steel and rubber detail, Yellow steel and Polished steel"
+  },
+  {
+   "v": 300,
+   "asked": "2026-10-30T22:35:00-05:00",
+   "live": "2026-10-30T23:12:28-05:00",
+   "dh": 14,
+   "tris": 5794113,
+   "chars": 1967943,
+   "what": "Everything the game builds (buildings with all inside them, the Town Hall, benches, posts, walls, signs, 3,600 town trees) can be picked, moved, turned, hidden and deleted in the map editor, with Put back; a new Every item table lists every thing, building, tree and machine, searchable and sortable, and tapping one goes to it and picks it"
   }
  ]
 };
