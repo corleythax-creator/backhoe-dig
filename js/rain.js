@@ -49,7 +49,12 @@ function setWeather(m,picked){weather.mode=m;
 document.querySelectorAll('.sizes button[data-w]').forEach(b=>b.onclick=()=>setWeather(b.dataset.w,true));
 setWeather(weather.mode,false);
 let rainT=0,rainTexDirty=true,rainWas=false,rainSaveT=0;
+// the soil water off the mesa's grid (the town's lawns and the rest of the mainland), one value for all of it, soaking
+// and drying like open grass; read through rainFarSoak (the lawns, turf.js) and drawn as the far ground's wet look (farWetU)
+let rainFarW=0;const farWetU={value:0};
+function rainFarSoak(){return ss(0.25,0.9,rainFarW)}
 function rainSim(sec){const r=weather.r;
+  rainFarW=Math.max(0,Math.min(1,rainFarW+(r>0.02?r*SOAK_RATE*TU.soak*(1-rainFarW):-DRY_RATE*1200/TU.mudDry)*sec));farWetU.value=rainFarSoak();
   for(let k=0;k<rainW.length;k++){if(!rainK[k]&&!rainW[k])continue;let w=rainW[k];
     if(r>0.02)w+=r*SOAK_RATE*TU.soak*rainLow[k]*(1-w)*sec;else w-=DRY_RATE*1200/TU.mudDry*rainDry[k]/rainLow[k]*sec;
     rainW[k]=Math.max(0,Math.min(1,w))}}
@@ -64,15 +69,16 @@ function rainTick(dt){
   if(raining){stats.rainTime+=dt;if(weather.r>stats.rainTop)stats.rainTop=weather.r}
   if(raining!==rainWas){rainWas=raining;if(raining){toast(say('rainIn'),'',3600);stats.showers++;statDirty=true}else if(!bench.on)toast(say('rainOut'),'',3600)}
   // once a second: soak or dry the soil, and show it
-  rainT-=dt;if(rainT<=0){rainT+=1;let any=weather.r>0.02;if(!any)for(let k=0;k<rainW.length;k+=7)if(rainW[k]>0){any=true;break}
+  rainT-=dt;if(rainT<=0){rainT+=1;let any=weather.r>0.02||rainFarW>0;if(!any)for(let k=0;k<rainW.length;k+=7)if(rainW[k]>0){any=true;break}
     if(any){rainSim(1);rainTexDirty=true;if((rainSaveT-=1)<=0){rainSaveT=20;site.dirty=true}}}
   if(rainTexDirty)rainTexUpdate();
   rainFxTick(dt)}
 // the save: soil water (bytes, base64) and the weather, with the time so drying carries on while the game is closed
 function rainSave(){const b=new Uint8Array(rainW.length);for(let k=0;k<b.length;k++)b[k]=Math.round(rainW[k]*255);
-  return {w:siteB64(b),pm:1,r:+weather.r.toFixed(3),c:+weather.c.toFixed(3),want:+weather.want.toFixed(3),next:Math.round(weather.next),t:Date.now()}}
+  return {w:siteB64(b),fw:+rainFarW.toFixed(3),pm:1,r:+weather.r.toFixed(3),c:+weather.c.toFixed(3),want:+weather.want.toFixed(3),next:Math.round(weather.next),t:Date.now()}}
 function rainLoad(d){if(!d||typeof d.w!=='string')return;let b;try{b=siteUnB64(d.w)}catch(e){return}if(b.length!==rainW.length)return;
   for(let k=0;k<b.length;k++)rainW[k]=b[k]/255;
+  rainFarW=isFinite(d.fw)?Math.max(0,Math.min(1,d.fw)):0;farWetU.value=rainFarSoak();
   // saved before painted Mud could dry (pm), when it was always soaked: it starts soaked
   if(!d.pm)for(let k=0;k<b.length;k++)if(rainMud[k])rainW[k]=1;
   if(isFinite(d.r))weather.r=d.r;weather.c=isFinite(d.c)?d.c:weather.r>0.05?1:0.18;if(isFinite(d.want)&&weather.mode==='auto')weather.want=d.want;if(isFinite(d.next))weather.next=d.next;
@@ -80,7 +86,7 @@ function rainLoad(d){if(!d||typeof d.w!=='string')return;let b;try{b=siteUnB64(d
   const gone=isFinite(d.t)?Math.min(3600,Math.max(0,(Date.now()-d.t)/1000)):0;
   if(gone>5&&weather.mode!=='rain'){const r=weather.r;weather.r=0;for(let s=0;s<gone;s+=10)rainSim(Math.min(10,gone-s));weather.r=weather.mode==='auto'&&weather.next>gone?r:0;rainDrain(gone)}
   rainTexDirty=true}
-function rainReset(){rainW.fill(0);rainTexDirty=true}
+function rainReset(){rainW.fill(0);rainFarW=0;farWetU.value=0;rainTexDirty=true}
 // standing rainwater above the water table drains: in the dig zone, and the mud tiles
 function rainDrain(sec){const d=RAIN_DRAIN*TU.puddleDrain*sec;
   for(let j=cJ0;j<=cJ1;j++)for(let i=cI0;i<=cI1;i++){const k=j*V+i;if(Wt[k]<-1e8)continue;const g=H0[k]-TU.wtDepth;if(Wt[k]>g){Wt[k]=Math.max(g,Wt[k]-d);if(Wt[k]<=H[k]+0.001)Wt[k]=-1e9}}
@@ -210,7 +216,7 @@ const rsMat=new THREE.ShaderMaterial({transparent:true,depthWrite:false,fog:fals
     'float life=kind>0.5?'+SP_LIFE[1].toFixed(2)+':'+SP_LIFE[0].toFixed(2)+';float t=(uT-aS.w)/life;vAge=t;vKind=kind;\n'+
     'vec3 w;if(t<0.0||t>1.0){gl_Position=vec4(0.0,0.0,-2.0,1.0);return;}\n'+
     'if(kind>0.5){w=b+vec3(corner.x,0.0,corner.y)*aK.y;}\n'+
-    'else{vec2 f=normalize(uCam.xz-b.xz);float sz=min(aK.y,0.18);w=b+vec3(-f.y,0.0,f.x)*corner.x*sz+vec3(0.0,(corner.y*0.5+0.5)*sz*1.1,0.0);}\n'+
+    'else{vec2 f=normalize(uCam.xz-b.xz);float sz=min(aK.y*0.5,0.08);w=b+vec3(-f.y,0.0,f.x)*corner.x*sz+vec3(0.0,(corner.y*0.5+0.5)*sz*1.1,0.0);}\n'+
     'vF=1.0-smoothstep(9.0,13.0,distance(uCam,b));gl_Position=projectionMatrix*viewMatrix*vec4(w,1.0);}',
   fragmentShader:'uniform float uSunI;varying vec2 vC;varying float vAge;varying float vKind;varying float vSeed;varying float vF;\n'+
     'void main(){float t=vAge,a=0.0;\n'+
@@ -224,7 +230,7 @@ const rsMat=new THREE.ShaderMaterial({transparent:true,depthWrite:false,fog:fals
     'float sp=0.5+0.5*s;vec2 dp=vec2(cos(ang)*sp*t*0.9,(1.6+0.8*s)*t-2.6*t*t);\n'+
     'a+=smoothstep(0.13,0.05,length(p-dp))*(1.0-t*0.6);}\n'+
     'a+=smoothstep(0.12,0.0,abs(p.x))*smoothstep(0.5*sin(3.1416*min(1.0,t*1.4)),0.0,p.y)*0.5;}\n'+
-    'gl_FragColor=vec4(vec3(0.9,0.93,0.96)*(0.85+0.3*uSunI),min(1.0,a)*vF*0.75);}'});
+    'gl_FragColor=vec4(vec3(0.9,0.93,0.96)*(0.85+0.3*uSunI),min(1.0,a)*vF*(vKind>0.5?0.75:0.45));}'});
 let rsMesh=null,rsN=0,rsHead=0,rsAcc=0,rsT=0,rsS=null,rsK=null;
 function rsGfx(n){if(rsMesh&&rsN===n)return;if(rsMesh){scene.remove(rsMesh);rsMesh.geometry.dispose();rsMesh=null}rsN=n;rsHead=0;if(!n)return;
   const g=new THREE.InstancedBufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute([-1,-1,0,1,-1,0,1,1,0,-1,1,0],3));g.setIndex([0,1,2,0,2,3]);
@@ -346,26 +352,38 @@ function wetDropsSet(on){on=!!on;if(on===wetDropsOn)return;wetDropsOn=on;
 // sky with a damp rim, and while it rains drops ring it (Puddle water: Fine). Nothing gathers under a roof (the shelter
 // map, within about 130 ft of you). Only how it looks: these puddles do not bog or splash anything
 let pudLvl=0;const pudU={value:new THREE.Vector4(0,0,0,0)};
+// reflections in the puddles (Ultra's screen effects, post.js): last frame's picture at half size with how far away each
+// pixel was (pudSsrU.tSsr: colour, distance in a), where it was seen from (uPrevVP), and on (uSsr.x) while there are puddles
+const pudSsrU={tSsr:{value:null},uPrevVP:{value:new THREE.Matrix4()},uSsr:{value:new THREE.Vector4(0,0,0,0)}};
 const PUD_GLSL='uniform vec4 uPud;varying vec3 vPudP,vPudN;\n'+RC_GLSL+
+  'uniform sampler2D tSsr;uniform mat4 uPrevVP;uniform vec4 uSsr;\n'+
+  // the reflected ray from world point p along d, stepped out through last frame's picture (longer steps further out,
+  // then halved back to the surface it passes behind): what it meets (rgb) and how sure (a; nothing near the screen's edge)
+  'vec4 pudTrace(vec3 p,vec3 d){float t=0.0,st=0.18,prev=0.0;for(int i=0;i<22;i++){prev=t;t+=st;st*=1.2;vec4 c=uPrevVP*vec4(p+d*t,1.0);if(c.w<=0.05)break;\n'+
+  '  vec2 uv=c.xy/c.w*0.5+0.5;if(uv.x<0.0||uv.y<0.0||uv.x>1.0||uv.y>1.0)break;float sd=texture2D(tSsr,uv).a,dz=c.w-sd;\n'+
+  '  if(dz>0.0&&dz<0.4+t*0.12){float a=prev,b=t;for(int j=0;j<4;j++){float m=0.5*(a+b);vec4 cm=uPrevVP*vec4(p+d*m,1.0);vec2 um=cm.xy/cm.w*0.5+0.5;if(cm.w>texture2D(tSsr,um).a)b=m;else a=m;}\n'+
+  '   vec4 cb=uPrevVP*vec4(p+d*b,1.0);uv=cb.xy/cb.w*0.5+0.5;vec2 e=smoothstep(0.0,0.08,uv)*smoothstep(0.0,0.08,1.0-uv);\n'+
+  '   return vec4(texture2D(tSsr,uv).rgb,e.x*e.y*(1.0-smoothstep(10.0,30.0,t)));}}return vec4(0.0);}\n'+
   'float pudH(vec2 c){return fract(sin(dot(c,vec2(127.1,311.7)))*43758.5453);}\n'+
   'float pudN(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);return mix(mix(pudH(i),pudH(i+vec2(1,0)),f.x),mix(pudH(i+vec2(0,1)),pudH(i+1.0),f.x),f.y);}\n'+
   // a drop's ring in each cell: its slope (x, z) where the ring passes
   'vec2 pudRing(vec2 p,float t){vec2 c=floor(p),f=fract(p)-0.5;float h=pudH(c),ph=fract(t*(0.9+0.5*h)+h*7.0);vec2 o=f-(vec2(h,fract(h*13.7))-0.5)*0.5;\n'+
   ' float d=length(o),r=ph*0.42,x=d-r,w=1.0-smoothstep(0.0,0.05,abs(x));if(w<=0.0||d<0.001)return vec2(0.0);return o/d*cos(x*70.0)*w*(1.0-ph)*(1.0-ph);}\n';
-const PUD_FS='float pudM=0.0;{float pl=uPud.x,up=smoothstep(0.985,0.998,vPudN.y);\n'+
+const PUD_FS='float pudM=0.0;vec4 pudR=vec4(0.0);{float pl=uPud.x,up=smoothstep(0.985,0.998,vPudN.y);\n'+
   ' if(pl>0.001&&up>0.0&&coverY(vPudP.xz)<vPudP.y+0.15){\n'+
   '  float n=0.6*pudN(vPudP.xz*0.22)+0.3*pudN(vPudP.xz*0.7+3.1)+0.1*pudN(vPudP.xz*2.6+7.7),th=1.0-0.42*pl;\n'+
   '  pudM=smoothstep(th,th+0.025,n)*up;float rim=smoothstep(th-0.09,th,n)*up*(1.0-pudM);\n'+
   '  vec3 pn=vec3(0.0,1.0,0.0);if(uPud.z>0.0&&pudM>0.0){float fd=uPud.z*(1.0-smoothstep(12.0,30.0,length(vViewPosition)));\n'+
   '   if(fd>0.0){vec2 g=pudRing(vPudP.xz*1.8,uPud.y)+pudRing(vPudP.xz*1.8+vec2(0.5,0.31),uPud.y+0.37);pn=normalize(vec3(-g.x*0.35*fd,1.0,-g.y*0.35*fd));}}\n'+
   '  normal=normalize(mix(normal,(viewMatrix*vec4(pn,0.0)).xyz,pudM));\n'+
+  '  if(uSsr.x>0.0&&pudM>0.01){vec3 vd=normalize(vPudP-cameraPosition);pudR=pudTrace(vPudP+vec3(0.0,0.02,0.0),reflect(vd,pn));pudR.a*=pudM;}\n'+
   '  material.diffuseColor*=1.0-0.25*rim-0.6*pudM;material.diffuseContribution*=1.0-0.25*rim-0.6*pudM;\n'+
   '  material.roughness=mix(material.roughness,min(material.roughness,0.2),rim);material.roughness=mix(material.roughness,0.05,pudM);}}\n';
 function pudPatch(m){if(m.userData.pudP)return;m.userData.pudP=true;const old=m.onBeforeCompile,key=m.customProgramCacheKey();
-  m.onBeforeCompile=function(sh,r){if(old)old.call(this,sh,r);sh.uniforms.uPud=pudU;Object.assign(sh.uniforms,rcU);
+  m.onBeforeCompile=function(sh,r){if(old)old.call(this,sh,r);sh.uniforms.uPud=pudU;Object.assign(sh.uniforms,rcU,pudSsrU);
     sh.vertexShader='varying vec3 vPudP,vPudN;\n'+sh.vertexShader.replace('#include <project_vertex>','#include <project_vertex>\nvPudP=(modelMatrix*vec4(transformed,1.0)).xyz;vPudN=normalize(mat3(modelMatrix)*objectNormal);');
     sh.fragmentShader=PUD_GLSL+sh.fragmentShader.replace('#include <lights_physical_fragment>','#include <lights_physical_fragment>\n'+PUD_FS)
-      .replace('#include <lights_fragment_maps>','#include <lights_fragment_maps>\n#if defined( RE_IndirectSpecular )\nradiance*=1.0+2.0*pudM;\n#endif\n')};
+      .replace('#include <lights_fragment_maps>','#include <lights_fragment_maps>\n#if defined( RE_IndirectSpecular )\nradiance*=1.0+2.0*pudM;radiance=mix(radiance,pudR.rgb*1.6,pudR.a);\n#endif\n')};
   m.customProgramCacheKey=()=>key+'|pud';m.needsUpdate=true}
 // every frame (from wetTick): the puddles fill while it rains and drain after; the rings follow how hard it rains
 function pudTick(dt,r){pudLvl=r>0.03?Math.min(1,pudLvl+dt*r/240):Math.max(0,pudLvl-dt*TU.puddleDrain/900);
