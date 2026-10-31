@@ -89,7 +89,7 @@ function subHouse(K,x,z,f,kind,u){const W=kind==='ranch'?13:kind==='cape'?9.6:10
     else rmWall(R,'o',W/2,-1,-D/2+T,D/2-T,T,Hs,wl,inn,holes[1]);
     const sa=-W/2+T,sb=S1-(S1<W/2?0.04:T),[px,pz]=R.P(0,(sa+sb)/2),cs=(u>0.3?1:-1)*(W/2-0.75);R.solid(-D*0.12,cs,0.85,0.75);
     walkPad(px,pz,(sb-sa)/2,D/2-T,f,yF+0.03);rmHome(R,{s0:sa,s1:sb,o0:-D/2+T,o1:D/2-T,H:Hs,cs,co:-D*0.12,stairs:n>1,u,inn});
-    {const c=Math.abs(cf),s=Math.abs(sf);SOLIDS.push({x,z,hx:(c*W+s*D)/2+0.05,hz:(s*W+c*D)/2+0.05,foot:1})}const [hx,hz]=R.P(D/2-0.06,ds-0.5);rmDoor('house'+door,hx,yF+0.03,hz,f,1.0);if(R.spots.length)rmAdd(R,Math.max(W,D)/2)}
+    {const c=Math.abs(cf),s=Math.abs(sf);SOLIDS.push({x,z,hx:(c*W+s*D)/2+0.05,hz:(s*W+c*D)/2+0.05,foot:1})}const [hx,hz]=R.P(D/2-0.06,ds-0.5);rmDoor('house'+door,hx,yF+0.03,hz,f,1.0);if(R.spots.length)rmAdd(R,Math.max(W,D)/2).home=1}
   {    for(const t of [-1,1]){const [cx,cz]=R.P(D/2+0.05,ds+t*0.6);K.box(0.12,2.25,0.08,WH,cx,yF+1.12,cz,f)}const [hx,hz]=R.P(D/2+0.05,ds);K.box(1.34,0.14,0.1,WH,hx,yF+2.2,hz,f);
     const [lx,lz]=R.P(D/2+0.1,ds+0.85);K.lit(new THREE.BoxGeometry(0.14,0.24,0.12),0xffe2a8,lx,yF+1.8,lz,f)}
   const pw=kind==='col'?W-1.6:2.2,pd=kind==='col'?2.2:1.4,po=D/2+pd/2;

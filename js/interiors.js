@@ -57,7 +57,7 @@ function rmFurnish(K,x,z,y,f,w,d,si,wall){const R=rmKit(K,x,z,y,f),kind=RM_KIND[
   R.box(w-0.5,0.03,d-0.05,'planks',0,0,0);R.box(w-0.5,0.03,d,0xf2efe6,0,0,2.9);
   for(const s of [-1,1])R.box(0.03,2.9,d,wall,0,s*(W+0.04),0);R.box(w-0.5,2.9,0.03,wall,back+0.02,0,0);
   for(let o=back+1.2;o<d/2-0.6;o+=2)for(const s of w>12?[-W/2,W/2]:[0]){const [a,b]=R.P(o,s);K.lit(new THREE.BoxGeometry(1.2,0.04,0.3),0xfff8ea,a,y+2.88,b,f)}
-  R.spot(back+0.8,0,0,{staff:1});
+  R.si=si;R.kind=kind;R.spot(back+0.8,0,0,{staff:1});
   if(kind==='eat'){// a counter across the back with a pastry case and a menu board, tables in front
     rmCounter(R,back+1.3,-W/4,W*1.2,wood);R.box(1.4,0.45,0.5,'glass',back+1.3,-W/4-0.5,1.04);R.box(1.5,0.55,0.03,0x23402f,back+0.04,-W/4,1.7);
     R.spots.pop();R.spot(back+0.65,-W/4,0,{staff:1});R.spot(back+0.65,-W/4+1.2,0,{staff:1});

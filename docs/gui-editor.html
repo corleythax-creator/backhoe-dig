@@ -178,10 +178,13 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 #gunVit.low #gunLife i{background:#e8483a}
 #gunHurtFx{position:fixed;inset:0;z-index:4;pointer-events:none;opacity:0;background:radial-gradient(ellipse at center,rgba(150,0,0,0) 45%,rgba(150,0,0,.85) 100%);transition:background .6s}
 #gunHurtFx.down{background:#000;transition:background 1.2s}
-#gunShop{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:30;width:min(560px,calc(100cqw - 32px));max-height:calc(100cqh - 40px);overflow:auto;padding:16px;border-radius:12px;background:rgba(22,24,26,.94);color:#f1ead8;box-shadow:0 8px 30px rgba(0,0,0,.5)}
-#gunShop[hidden]{display:none}#gunShop h3{margin:0 0 10px;font-size:22px;color:#d8b25a}
+#gunShop,#townShop{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);z-index:30;width:min(560px,calc(100cqw - 32px));max-height:calc(100cqh - 40px);overflow:auto;padding:16px;border-radius:12px;background:rgba(22,24,26,.94);color:#f1ead8;box-shadow:0 8px 30px rgba(0,0,0,.5)}
+#gunShop[hidden],#townShop[hidden]{display:none}#gunShop h3,#townShop h3{margin:0 0 10px;font-size:22px;color:#d8b25a}
+#tsWho{white-space:normal;margin:0 0 8px;font-size:16px;font-style:italic;opacity:.9}.gsCash{padding:10px 0 0;border-top:1px solid rgba(255,255,255,.12);font-size:16px}.gsCash b{font-size:20px;color:#9fe0a0}
 .gsRow{display:flex;align-items:center;gap:8px;padding:10px 0;border-top:1px solid rgba(255,255,255,.12)}.gsTxt{flex:1;min-width:0}.gsTxt b{display:block;font-size:18px}.gsTxt small{font-size:14px;opacity:.8}
-.gsRow button,#gsClose{height:42px;min-width:74px;padding:0 12px;font-size:16px;border-radius:8px}#gsClose{margin-top:10px;width:100%}
+.gsRow button,#gsClose,#tsClose{height:42px;min-width:74px;padding:0 12px;font-size:16px;border-radius:8px}#gsClose,#tsClose{margin-top:10px;width:100%}
+#cashChip{position:fixed;left:calc(env(safe-area-inset-left,0px) + 16px);top:calc(env(safe-area-inset-top,0px) + 64px);z-index:6;display:flex;flex-direction:column;align-items:flex-start;gap:2px;padding:8px 12px;border-radius:10px;background:rgba(0,0,0,.38);color:#fff;font-weight:700;text-shadow:0 1px 2px rgba(0,0,0,.7);pointer-events:none}
+#cashChip b{font-size:15px;letter-spacing:.08em;opacity:.85}#cashChip span{font-size:26px;font-variant-numeric:tabular-nums;color:#b8f0b0}#cashChip[hidden]{display:none}
 #jumpBtn:active{transform:translateY(1px)}
 /* bottom layer: each stick's caption under it, the frame rate between them; no bar, the words carry a shadow */
 .bbar{grid-area:3/1/4/4;position:relative;z-index:2;pointer-events:none;display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;min-height:40px;box-sizing:border-box;
@@ -755,6 +758,10 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
     </div>
   </aside>
   <!-- the two sticks in the thumb zones, between the bars; Get in, Sprint and Jump sit on top of them -->
+  <!-- shop counters and the wallet: above the bars and sticks -->
+  <div id="gunShop" hidden><h3 id="gsHead">Lakeside Guns</h3><div id="gsList"></div><button id="gsClose">Done</button></div>
+  <div id="townShop" hidden><h3 id="tsHead">Shop</h3><p id="tsWho"></p><div id="tsList"></div><button id="tsClose">Done</button></div>
+  <div id="cashChip" hidden><b>Wallet</b><span id="cashVal">$0</span></div>
   <div class="sticks">
     <div class="stickwrap">
       <button id="seatBtn" hidden>Get in</button>
@@ -765,7 +772,6 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
       <div class="walkbtns" id="walkBtns" hidden><button id="sprintBtn" aria-pressed="false">Sprint</button><button id="jumpBtn">Jump</button><button id="plantBtn">Plant</button><button id="trimBtn" aria-pressed="false">Trimmer</button><button id="bumpBtn" hidden>Bump</button><button id="bedBtn" hidden>Load</button><button id="gunBtn" aria-pressed="true">Pistol</button><button id="reloadBtn" hidden>Reload</button><button id="fireBtn" hidden>Fire</button></div><div id="gunCross" hidden></div>
       <div id="gunVit" hidden><div id="gunWant">☆☆☆</div><div id="gunLife"><i id="gunLifeBar"></i></div></div><div id="gunHurtFx"></div>
       <div id="gunHud" hidden><b id="gunHudN">PISTOL</b><span id="gunHudA">15 / 45</span></div>
-      <div id="gunShop" hidden><h3 id="gsHead">Lakeside Guns</h3><div id="gsList"></div><button id="gsClose">Done</button></div>
       <div class="stick" id="stickR"><div class="knob"></div></div>
     </div>
   </div>
@@ -1186,6 +1192,11 @@ const TUNE=[
   ['tfCarV','Town','Town traffic speed',11.2,'mph',5,45,1],['tfWalk','Town','Townsfolk walking pace',1.3,'mph',1,5,0.1],['tfUltraR','Town','Ultra graphics: townsfolk shown in full detail within',6,'ft',6,40,1],
   // which townsfolk characters stay home: one bit per character, in models/peds/peds.json order (bit 0 = cal_m); set on the Townsfolk page
   ['tfOut','Town','Townsfolk left out (a bit per character; set it on the Townsfolk page)',0,'n',0,4294967295,1],
+  // the town's life (town.js): money, shop hours, greetings and talk
+  ['cashStart','Town','Money in your wallet when you start (added to what the work has paid)',250,'usd',0,10000,10],
+  ['pepBoost','Town','A coffee or a meal from a shop: walking and running faster by',0.12,'pct',0,50,1],['pepTime','Town','A coffee or a meal lasts',180,'s',10,900,10],
+  ['tfQuiet','Town','People out at the quietest hour of the night, of the busiest',0.12,'pct',0,100,1],
+  ['greetChance','Town','Passersby who greet you as you walk by',0.45,'pct',0,100,5],['greetGap','Town','The least time between greetings',8,'s',0,60,1]
   // indoors (interiors.js): how the eye adjusts in a shop or house, and its room light (Medium graphics and up)
   ['inAdapt','Town','Indoors, the view brightens by',0.9,'pct',0,300,5],['inLamp','Town','Indoors, the room light',1.6,'n',0,6,0.1],
   ['craneSpan','Bridges','The crane builds a steel span in about',240,'min',1,60,1],
@@ -1450,7 +1461,49 @@ const WORDS=[
   ['mulchSpread','Pickup bed','Spread a bag of mulch, about {ft} ft across ({n} bags spread)','{ft}: feet across; {n}: bags spread in all'],
   ['mulchNoPaint','Pickup bed','Set the bag down: mulch spreads on Corley\'s island, off the bridges',''],
   ['itemDown','Pickup bed','Set the {item} down','{item}: what it is'],['itemUp','Pickup bed','Picked up the {item}','{item}: what it is'],
-  ['glReset','Other','The phone reset the graphics (low on memory). A lower Dirt detail helps.']];
+  ['glReset','Other','The phone reset the graphics (low on memory). A lower Dirt detail helps.'],
+  // the town (town.js): shops, money, greetings, talk and the regulars
+  ['shopWelcome','Town: shops','Welcome to {shop}!','{shop}: the shop'],['shopClosed','Town: shops','{shop} is closed. Open {open} to {close}','{shop}; {open}, {close}: its hours'],
+  ['shopBought','Town: shops','{item}, {price}. {cash} left in your wallet','{item}; {price}; {cash}: what is left'],
+  ['shopShort','Town: shops','{item} is {price} and you have {cash}. The work on the island pays (Stats shows the day\'s pay)','{item}; {price}; {cash}'],
+  ['shopPep','Town: shops','{item}: a spring in your step for a few minutes','{item}'],['shopRefund','Town: shops','Put back: {price} back in your wallet','{price}'],
+  ['shopSleep','Town: shops','You sleep the night at the Lakeview Hotel. It\'s 7 AM',''],
+  ['bankBal','Town: shops','"In your wallet: {cash}. The work has paid {earned} all told, and you\'ve spent {spent} in town."','{cash}; {earned}; {spent}'],
+  ['shopFree','Town: shops','{item}: no charge. Enjoy!','{item}'],
+  ['grMorning','Town: greetings','Morning!',''],['grDay','Town: greetings','Afternoon.',''],['grEvening','Town: greetings','Evening.',''],['grNight','Town: greetings','Late one, huh?',''],
+  ['grRain','Town: greetings','Wet enough for you?',''],['grHey','Town: greetings','Hey there.',''],['grGun','Town: greetings','Whoa. Put that thing away, would you?',''],
+  ['grKid','Town: greetings','Hi! Is that your digger?',''],
+  ['say','Town: talk','{who}: "{line}"','{who}: who is speaking; {line}: what they say'],
+  ['tkWeather','Town: talk','Nice enough day for it. Whatever it is you\'re digging.',''],['tkRain','Town: talk','This rain. Good for the lawns, bad for your dirt, I\'d guess.',''],
+  ['tkDug','Town: talk','Saw your excavator going out on the island. {yd} today? That\'s a day\'s work.','{yd}: dirt dug today'],
+  ['tkMow','Town: talk','Somebody\'s been mowing. {sqft} today? Looks sharp.','{sqft}: grass mowed today'],
+  ['tkTrain','Town: talk','Hear the freight come through? You can set your watch by it.',''],['tkBrew','Town: talk','The brewery patio fills up after five. Try the lager.',''],
+  ['tkBand','Town: talk','There\'s a band in the square most evenings. Bring a chair.',''],['tkRuth','Town: talk','Ruth at the bakery sells out of pie by noon. Go early.',''],
+  ['tkHank','Town: talk','Need anything for the job? Hank at the hardware store has it, or he\'ll get it.',''],
+  ['tkLake','Town: talk','Lake\'s calm today. My brother\'s out fishing off the breakwater.',''],['tkNight','Town: talk','Shops are all shut this time of night. The Copper Kettle\'s open till eleven.',''],
+  ['tkMorning','Town: talk','Coffee first. Mountain Coffee opens at six, the diner too.',''],['tkKid','Town: talk','When I grow up I\'m going to drive a dump truck.',''],
+  ['tkAgain','Town: talk','Like I said. Good to see you around.',''],['tkBusy','Town: talk','Sorry, can\'t talk, I\'m running late.',''],
+  ['tkStaff','Town: talk','Let me know if you need anything.',''],['tkHome','Town: talk','Oh! Hello. Can I help you? This is my house, you know.',''],
+  ['regHi','Town: regulars','{line} I\'m {name}, by the way.','{line}: their first words; {name}'],
+  ['reg_ruth_0','Town: regulars','New in town? You\'re the one with the big yellow machines.',''],['reg_ruth_1','Town: regulars','Pie\'s strawberry rhubarb today. Don\'t tell anyone I saved you a slice.',''],
+  ['reg_ruth_2','Town: regulars','I\'ve been baking on Main Street forty-one years. My mother before me.',''],['reg_ruth_3','Town: regulars','You look tired, hon. Have a roll.',''],
+  ['reg_marisol_0','Town: regulars','First time? We roast every bean right here.',''],['reg_marisol_1','Town: regulars','The usual? I can start it when I see you cross the street.',''],
+  ['reg_marisol_2','Town: regulars','Cold brew\'s strong today. Don\'t operate heavy machinery. Kidding!',''],['reg_marisol_3','Town: regulars','Walt\'s been in twice already. He\'s telling everyone about your dig.',''],
+  ['reg_dot_0','Town: regulars','Sit anywhere, sweetheart. Coffee\'s coming.',''],['reg_dot_1','Town: regulars','Breakfast all day, that\'s the rule. Eggs at midnight if you want them.',''],
+  ['reg_dot_2','Town: regulars','The road crew used to eat here every morning. Now it\'s you.',''],['reg_dot_3','Town: regulars','Pie\'s from Ruth\'s. Don\'t tell her I said hers is better than mine.',''],
+  ['reg_hank_0','Town: regulars','Welcome to Hometown Hardware. If we don\'t have it, you don\'t need it.',''],['reg_hank_1','Town: regulars','Digging out on the island? Mind the gas main. Call before you dig.',''],
+  ['reg_hank_2','Town: regulars','My granddad opened this place in 1948. Same floorboards.',''],['reg_hank_3','Town: regulars','Gloves are on sale. Your hands will thank you.',''],
+  ['reg_earl_0','Town: regulars','Lakeside Guns. Keep it safe, keep it legal, and we\'ll get along.',''],['reg_earl_1','Town: regulars','Range rules: muzzle down range, finger off the trigger.',''],
+  ['reg_earl_2','Town: regulars','Hunted these hills sixty years. Deer are smarter than people.',''],['reg_earl_3','Town: regulars','Need rounds? I\'ve got boxes in the back.',''],
+  ['reg_gus_0','Town: regulars','First Lake Bank, est. 1912. How can I help you today?',''],['reg_gus_1','Town: regulars','Steady work makes a steady balance. You\'re doing fine.',''],
+  ['reg_gus_2','Town: regulars','My father financed half the boats in that marina.',''],['reg_gus_3','Town: regulars','Lake Realty\'s got lots for sale up the hill. Just saying.',''],
+  ['reg_mick_0','Town: regulars','What\'ll it be? First pint for a new face is on the house. Not really.',''],['reg_mick_1','Town: regulars','Quiz night\'s Thursday. You look like a man who knows his dirt.',''],
+  ['reg_mick_2','Town: regulars','Fish and chips is the best thing on the menu. Don\'t tell the cook I said it\'s the only thing.',''],['reg_mick_3','Town: regulars','Last call\'s at eleven. I mean it this time.',''],
+  ['reg_walt_0','Town: regulars','I watched them build that causeway in \'62. You\'d never believe the trucks.',''],['reg_walt_1','Town: regulars','Back in my day we dug with a steam shovel and liked it.',''],
+  ['reg_walt_2','Town: regulars','I walk Main Street every day. Doctor\'s orders. Ten thousand steps.',''],['reg_walt_3','Town: regulars','You run that excavator smooth. Real smooth. I notice these things.',''],
+  ['reg_jenna_0','Town: regulars','Mail carrier. Nobody gets mail out on your island, you know.',''],['reg_jenna_1','Town: regulars','Rain or shine. Mostly rain this week.',''],
+  ['reg_jenna_2','Town: regulars','The dog on Maple Street hates me. Personal, I think.',''],['reg_jenna_3','Town: regulars','Package for the hardware store. Hank orders a lot of gloves.',''],
+  ['reg_back','Town: regulars','Good to see you again.','']];
 const WORDS_BY={};for(const w of WORDS)WORDS_BY[w[0]]=w;
 // the owner's words if the skin has them, else the game's own; html: escaped, with the filled-in parts in bold and the
 // lines broken (the captions)
