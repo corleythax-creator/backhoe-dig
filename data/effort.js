@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-31T02:14:00Z",
+ "updated": "2026-10-31T02:27:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -90,9 +90,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-30",
-   "dh": 66.25,
+   "dh": 70.25,
    "act": 3,
-   "versions": 14
+   "versions": 16
   }
  ],
  "extra": [
@@ -2649,6 +2649,24 @@ window.EFFORT = {
    "tris": 5809658,
    "chars": 1885702,
    "what": "The town's lawns look real: photo-scanned deep green grass with blades up close, thicker along the paths, clover with white flowers, weeds and fallen autumn leaves; in the rain the town's lawns and ground get wet and dark."
+  },
+  {
+   "v": 284,
+   "asked": "2026-10-30T21:20:00-05:00",
+   "live": "2026-10-30T21:21:36-05:00",
+   "dh": 1,
+   "tris": 6051407,
+   "chars": 1886165,
+   "what": "The town starts each game with a set number of townsfolk (townPop, 150); each one killed is gone until the next start and the crowd thins out"
+  },
+  {
+   "v": 285,
+   "asked": "2026-10-30T20:00:00-05:00",
+   "live": "2026-10-30T21:27:00-05:00",
+   "dh": 3,
+   "tris": 5815154,
+   "chars": 1887412,
+   "what": "Zoom in on the start map and it sharpens: paved streets with their lines and crosswalks, sidewalks and walkways, roofs with shadows, leafy trees and bridge railings."
   }
  ]
 };
