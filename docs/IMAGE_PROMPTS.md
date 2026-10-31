@@ -85,11 +85,11 @@ Close match: `textures/gravel_wet.jpg` is wet gravel; no wet sand yet
 
 **G10 Mud, rutted** -> `ground/mud_ruts.jpg`. Needs: D02, mud.js
 > [STYLE][TEXTURE] Churned brown mud with overlapping tyre and track ruts, glossy brown water pooled in the ruts, clods and smears, sticky texture.
-In game: `textures/mud.jpg`
+In game: `textures/mud.jpg`, photo-scanned (Poly Haven muddy_tracks)
 
 **G11 Cracked dry mud** -> `ground/mud_cracked.jpg`. Needs: soakMax, D12
 > [STYLE][TEXTURE] Sun-dried pale clay mud broken into curled polygon plates with deep cracks, light tan on top, darker in the cracks.
-In game: `textures/mud_cracked.jpg`, and `textures/mud_drying.jpg` on the way there
+In game: `textures/mud_cracked.jpg` (Poly Haven mud_cracked_dry_03), and `textures/mud_drying.jpg` (brown_mud_dry) on the way there, both photo-scanned
 
 **G12 Snow** -> `ground/snow.jpg`. Needs: W04, R07
 > [STYLE][TEXTURE] Fresh snow from above: soft sparkling blue-white surface, gentle wind ripples, tiny ice crystals, a few grass tips poking out.
@@ -107,11 +107,11 @@ In game: `textures/ground/macro.jpg`
 
 **P01 Painted yellow steel with wear** -> `materials/yellowsteel_pbr.jpg`. Needs: Q15 machine PBR
 > [STYLE][TEXTURE] Safety-yellow painted construction-machine steel, orange-peel paint grain, edge wear showing grey metal, light dust, tiny scratches, a few rivets.
-In game: `textures/yellowsteel.jpg`, and `textures/mach_paint.jpg` on the machines
+In game: `textures/yellowsteel.jpg`, and `textures/mach_paint.jpg` on the machines, both from the ambientCG scan PaintedMetal001
 
 **P02 Rubber track pad / rubber** -> `materials/rubber.jpg`
 > [STYLE][TEXTURE] Black rubber with a worn cross-hatch tread and fine dust, matte.
-In game: `textures/mach_rubber.jpg` (the tracks and tyres)
+In game: `textures/mach_rubber.jpg` (the tracks and tyres), from the ambientCG scan Rubber004
 
 **P03 Diamond plate** -> `materials/diamond_pbr.jpg`
 > [STYLE][TEXTURE] Raised diamond-pattern steel tread plate, bright scuffed steel with dark dirt in the grooves.
@@ -339,8 +339,7 @@ Not in the game yet: still to make.
 
 **M16 Gelcoat hull** -> `materials/gelcoat.jpg` [TEXTURE]
 > [STYLE][TEXTURE] Glossy white fibreglass boat hull gelcoat, close, very slight orange-peel texture, faint grey scuffs, a thin yellowish waterline stain along the bottom fifth. Seamless left to right.
-Not in the game yet: still to make.
-Upgrade: poor. The boat hulls are a plain flat colour.
+In game: `textures/gelcoat.jpg` (ambientCG Plastic013B, made neutral): every boat's hull is glossy gelcoat in its own colour with the scan's fine scuffs in its sheen; no waterline stain yet
 
 **M17 Flags** -> `town/flags.png` (transparent PNG, 1536x1024)
 > [STYLE] A sheet of flat flags on transparent background, each in its own cell, slightly rippled cloth: the US flag, a navy marina burgee with a gold anchor, a red-and-white "diver down" flag, and nautical signal flags A to F.

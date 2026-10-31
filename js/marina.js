@@ -93,9 +93,8 @@ const MAR_KIND={
     for(const z of [-L*0.3,0,L*0.28])K.box(B*0.85,0.05,0.35,0x9aa2a7,0,D*0.55,z);K.box(0.38,0.5,0.45,0x2a2c2f,0,D*0.8,-L/2-0.25);K.box(0.12,0.7,0.18,0x2a2c2f,0,0.15,-L/2-0.3);
     K.cyl(0.02,0.02,0.7,4,0x8d9297,0.2,D+0.15,-L/2+0.2,0,Math.PI/2.4)}};
 // the material the moored boats share: gelcoat with a little sheen and the sky in it
-const marBoatMat=M(0xffffff,{vertexColors:true,flatShading:false,shininess:70,specular:0x555555,envMap:skyEnv,combine:THREE.MixOperation,reflectivity:0.16,side:THREE.DoubleSide});
 // one boat at x, z, its bow toward yaw, moored to the deck at (cx, cz) pairs of cleats (the lines are drawn from them)
-function marBoat(kind,o,x,z,yaw){const K=famKit();MAR_KIND[kind](K,o);const g=new THREE.Group(),m=new THREE.Mesh(famMerge(K.solid),marBoatMat);
+function marBoat(kind,o,x,z,yaw){const K=famKit();MAR_KIND[kind](K,o);const g=new THREE.Group(),m=famGelMesh(K.solid);
   m.castShadow=true;m.receiveShadow=true;g.add(m);g.position.set(x,WATER,z);g.rotation.order='YXZ';g.rotation.y=yaw;scene.add(g);
   const b={g,x,z,yaw,ph:hash(x,z)*6.3,hl:o.L/2,hb:o.B/2};MAR.boats.push(b);
   const sy=Math.sin(yaw)*o.L/2,cy=Math.cos(yaw)*o.L/2;BOAT_WALLS.push({ax:x-sy,az:z-cy,bx:x+sy,bz:z+cy,r:o.B/2+0.25});return b}
@@ -172,7 +171,7 @@ function marBoat(kind,o,x,z,yaw){const K=famKit();MAR_KIND[kind](K,o);const g=ne
   if(b.k==='ball'){K.geo(new THREE.SphereGeometry(0.45,12,8),0xf2f1ec,0,0.1,0);K.cyl(0.46,0.46,0.12,12,0x2a5f9a,0,0.12,0)}
   else{const c=b.k==='red'?0xc0302a:0x2f7a3a;K.cyl(0.55,0.6,0.7,12,c,0,0.2,0);if(b.k==='red')K.cyl(0.0,0.55,0.9,12,c,0,1.0,0);else K.cyl(0.42,0.42,0.8,12,c,0,0.95,0);
     K.cyl(0.04,0.04,0.6,5,0x2a2c2f,0,1.65,0);K.box(0.12,0.12,0.12,0xf2e7a0,0,1.98,0)}
-  const g=new THREE.Group();g.add(new THREE.Mesh(famMerge(K.solid),marBoatMat));g.position.set(b.x,WATER,b.z);scene.add(g);b.g=g;b.ph=hash(b.x,b.z)*6.3}})();
+  const g=new THREE.Group();g.add(famGelMesh(K.solid));g.position.set(b.x,WATER,b.z);scene.add(g);b.g=g;b.ph=hash(b.x,b.z)*6.3}})();
 
 // ---------- the breakwater: grey granite boulders (scanned granite in six shades) heaped along its line, and the lighthouse on a concrete pad at its tip ----------
 (function(){let sd=77;const rnd=()=>{sd=(sd+0x6D2B79F5)|0;let t=Math.imul(sd^(sd>>>15),1|sd);t=(t+Math.imul(t^(t>>>7),61|t))^t;return((t^(t>>>14))>>>0)/4294967296};

@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-31T03:29:00Z",
+ "updated": "2026-10-31T04:00:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -90,9 +90,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-30",
-   "dh": 132.25,
-   "act": 4,
-   "versions": 27
+   "dh": 156.25,
+   "act": 5,
+   "versions": 30
   }
  ],
  "extra": [
@@ -2766,6 +2766,33 @@ window.EFFORT = {
    "tris": 5898100,
    "chars": 1942036,
    "what": "Machines on High: glossy clear-coated paint, chipped edges, polished and rusty bare steel, dust on top, and caked mud on the bucket and tracks that builds as you dig (Machines tunings)"
+  },
+  {
+   "v": 297,
+   "asked": "2026-10-30T21:45:00-05:00",
+   "live": "2026-10-30T22:44:20-05:00",
+   "dh": 3,
+   "tris": 7340486,
+   "chars": 1944098,
+   "what": "The 3D clouds read smooth and soft: no grain or boxy patches in them, from blending each frame with the last and finer light through the cloud."
+  },
+  {
+   "v": 298,
+   "asked": "2026-10-30T19:45:00-05:00",
+   "live": "2026-10-30T22:52:21-05:00",
+   "dh": 16,
+   "tris": 5896280,
+   "chars": 1944098,
+   "what": "Trees, pines, fallen logs, stumps and boulders are photo-scanned now: full autumn crowns of real leaves (red maples, bronze oaks, yellow birches), real pine and fir needles and bark, logs and stumps lying in the woods, and boulder clusters round town in tufts of grass."
+  },
+  {
+   "v": 299,
+   "asked": "2026-10-30T21:40:00-05:00",
+   "live": "2026-10-30T23:00:50-05:00",
+   "dh": 5,
+   "tris": 7411825,
+   "chars": 1945914,
+   "what": "Glossy clear-coated gelcoat on every boat hull; Poly Haven scans for mud and its damp and baked-cracked looks; ambientCG scans for the machines' paint, steel and rubber detail, Yellow steel and Polished steel"
   }
  ]
 };
