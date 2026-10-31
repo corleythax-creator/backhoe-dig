@@ -132,7 +132,7 @@ function tfLoad(){if(tf.load)return;tf.load=1;const B='models/peds/',lod=gfxCur.
   mdlLoad('cars',sc=>{const top=sc.getObjectByName('cars')||sc;for(const k in TF_CARS){const hi=top.getObjectByName(k),lo=top.getObjectByName(k+'_lo');if(hi&&lo)tfCarModel(k,hi,lo)}
     // no car drives in until every kind's shaders and pictures are ready (gpuWarm, main.js), so none stalls a frame
     const W=new THREE.Group();for(const k in tf.cars){const g=tf.cars[k].g.clone(true);g.traverse(o=>{if(o.userData.paint)o.material=tfCarPaint(0.5)});W.add(g)}
-    gpuWarm(W).then(()=>{tf.carsOk=1})})}
+    tf.carsW=1;gpuWarm(W).then(()=>{tf.carsOk=1})})}
 // one character's mesh from the packed file (layout in tools/peds/pack_folk.py)
 function tfGeo(buf,r){const g=new THREE.BufferGeometry(),nv=r.nv,n=new Int8Array(buf,r.n,nv*4),N=new Float32Array(nv*3),k=new Uint8Array(buf,r.sk,nv*4),K=new Float32Array(nv*3);
   for(let i=0;i<nv;i++){N[3*i]=n[4*i]/127;N[3*i+1]=n[4*i+1]/127;N[3*i+2]=n[4*i+2]/127;K[3*i]=k[4*i];K[3*i+1]=k[4*i+1];K[3*i+2]=k[4*i+2]/255}

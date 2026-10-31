@@ -381,7 +381,9 @@ function gpuWarm(o){const tx=new Set(),ok=im=>im&&(im.width||im.data||Array.isAr
   o.traverse(m=>{for(const M of [].concat(m.material||[]))for(const k in M){const t=M[k];if(t&&t.isTexture&&ok(t.image))tx.add(t)}});
   let p=null;try{p=renderer.compileAsync(o,camera,scene)}catch(e){}
   return Promise.all([p&&p.then?p.catch(()=>{}):null,gpuUp(tx)])}
-function gpuWarmTick(){const j=gpuQ[0];if(!j)return;const t=j.tx.pop();if(t)try{renderer.initTexture(t)}catch(e){}if(!j.tx.length){gpuQ.shift();j.done()}}
+// (a few milliseconds' worth a frame, at least one)
+function gpuWarmTick(){const t0=performance.now();while(gpuQ.length){const j=gpuQ[0],t=j.tx.pop();if(t)try{renderer.initTexture(t)}catch(e){}
+  if(!j.tx.length){gpuQ.shift();j.done()}if(performance.now()-t0>3)break}}
 if([texGrass,texDirt,texGrime].every(t=>t.image&&t.image.width))texReady();else texManager.onLoad=texReady;
 // every lit material gets its wet look before anything is drawn, so nothing compiles twice (rain.js)
 wetPatchAll();
