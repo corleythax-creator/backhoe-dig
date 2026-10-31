@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-31T07:05:00Z",
+ "updated": "2026-10-31T07:45:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -96,9 +96,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-31",
-   "dh": 85,
-   "act": 2.5,
-   "versions": 8
+   "dh": 95,
+   "act": 3,
+   "versions": 9
   }
  ],
  "extra": [
@@ -2898,6 +2898,15 @@ window.EFFORT = {
    "tris": 7602371,
    "chars": 2099357,
    "what": "On Ultra graphics, the three townsfolk nearest you (within about 20 ft, a Tuning setting) switch to their full-detail Human Forge body (about 100,000 triangles, skin pores, real eyes, sheen) right where they stand and in step, and switch back as you walk away. Phones and lower settings are unchanged."
+  },
+  {
+   "v": 311,
+   "asked": "2026-10-31T01:20:00-05:00",
+   "live": "2026-10-31T02:45:42-05:00",
+   "dh": 10,
+   "tris": 6029691,
+   "chars": 2105675,
+   "what": "Sharper close shadows that no longer crawl as you move; the haze takes the sky's colour round the horizon (warm toward the sun, bluer away), so far hills meet the sky; and the picture brightens as you look into shade or the woods and darkens over bright water, like your eyes adjusting (High and Ultra)."
   }
  ]
 };
