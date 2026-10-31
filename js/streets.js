@@ -4,61 +4,8 @@
 // (feet and wheels step up onto them, tag 'street'). Where a street runs into another, its curbs, gutters, sidewalks
 // and line stop at the other's edge, so crossings and T-junctions open up by themselves. Built on baseHeight, so it is
 // rebuilt after every road change (roadsBuild) and by edRefresh over a street (streetsEdRefresh). A street's surface (sf)
-// can instead be brick or cobblestone with real relief (ST_SURF)
-const ST={grp:null,curb:0.15,top:0.17,lift:0.035,gut:0.4,joint:1.524,box:null,pbr:false};
-// the street surfaces besides asphalt (sf on a street: 1 brick, 2 cobblestone, 3 fan cobbles, 4 old brick): CC0 photo-scanned paving
-// (tools/street_tex.py, CREDITS.md) laid in the street's own frame, its rows straight across the street; ft the tile's
-// size, dep how far the bricks stand up out of their joints at 100% (metres, the Street paving relief tuning), c the
-// mean colour until the picture is in. Low and Medium draw the colour only; with Material relief (High) a parallax march
-// through the height map raises every brick and sett, shades the joints on its far side from the sun, and reads the
-// scan's normals, roughness and ambient occlusion where the eye's ray meets the paving (ST_POM)
-const ST_SURF=[null,{id:'brick',n:'Brick',ft:5.09,dep:0.022,c:[0.604,0.534,0.523]},{id:'cobble',n:'Cobblestone',ft:3.77,dep:0.03,c:[0.479,0.470,0.409]},
-  {id:'fan',n:'Fan cobbles',ft:17.7,dep:0.016,c:[0.426,0.397,0.355]},{id:'oldbrick',n:'Old brick',ft:6.73,dep:0.022,c:[0.421,0.392,0.371]}];
-// the relief: from where the eye's ray enters the top of the paving it steps down through the height map (B of the _m
-// map, 1 on top of a brick) to where it meets a brick or a joint, and from there a few steps toward the sun (shaded if a
-// brick is in the way); dep in texture units, fading out by 130 ft so far paving stays calm and cheap
-const ST_POM=`uniform float uStRel;
-float stH(vec2 p,vec2 dx,vec2 dy){return textureGrad(roughnessMap,p,dx,dy).b;}
-vec2 stPom(vec2 uv,vec3 V,vec3 L,float dep,out float sh){sh=1.0;if(dep<1e-5||V.z<=0.0)return uv;
-  vec2 dx=dFdx(uv),dy=dFdy(uv),p=uv,pp=uv;float n=floor(mix(24.0,8.0,V.z)),st=1.0/n,l=0.0,h=1.0-stH(uv,dx,dy),hp=h;vec2 d=-V.xy/max(V.z,0.2)*dep*st;
-  for(int i=0;i<24;i++){if(l>=h||float(i)>=n)break;pp=p;hp=h;p+=d;l+=st;h=1.0-stH(p,dx,dy);}
-  float a=h-l,b=hp-l+st;p=mix(p,pp,clamp(a/min(a-b,-1e-5),0.0,1.0));
-  float hd=1.0-stH(p,dx,dy);if(L.z>0.02&&hd>0.02){vec2 e=L.xy/max(L.z,0.15)*dep*hd/6.0;float o=0.0;
-    for(int j=1;j<=6;j++){float f=float(j)/6.0;o=max(o,hd*(1.0-f)-1.0+stH(p+e*float(j),dx,dy));}
-    sh=1.0-0.8*smoothstep(0.0,0.3,o);}
-  return p;}
-`;
-const ST_POM_ON='defined(USE_NORMALMAP_TANGENTSPACE)&&defined(USE_ROUGHNESSMAP)';
-function stPomPatch(sh){sh.uniforms.uStRel=this.userData.relU;
-  sh.fragmentShader=sh.fragmentShader.replace('void main() {',`#if ${ST_POM_ON}\n${ST_POM}#endif\nvoid main() {`)
-    .replace('#include <map_fragment>',`#if ${ST_POM_ON}
-float stSh=1.0;vec2 stUv=vNormalMapUv;
-{mat3 sT=getTangentFrame(-vViewPosition,normalize(vNormal),vNormalMapUv);vec3 sL=vec3(0.0,0.0,-1.0);
-#if NUM_DIR_LIGHTS>0
-sL=directionalLights[0].direction*sT;
-#endif
-stUv=stPom(vNormalMapUv,normalize(vViewPosition)*sT,sL,uStRel*(1.0-smoothstep(25.0,40.0,length(vViewPosition))),stSh);}
-#define vMapUv stUv
-#define vRoughnessMapUv stUv
-#define vAoMapUv stUv
-#endif
-#include <map_fragment>`)
-    .replace('#include <normal_fragment_begin>',`#include <normal_fragment_begin>\n#if ${ST_POM_ON}\n#define vNormalMapUv stUv\n#endif`)
-    .replace('#include <lights_fragment_begin>',`#include <lights_fragment_begin>\n#if ${ST_POM_ON}\nreflectedLight.directDiffuse*=stSh;reflectedLight.directSpecular*=stSh;\n#endif`)}
-// a surface's material, made the first time a street uses it; its relief maps load the first time relief is on
-function stSurfMat(f){const d=ST_SURF[f];if(d.m)return d.m;
-  const m=d.m=new THREE.MeshStandardMaterial({color:0xffffff,roughness:0.8,envMap:skyEnv,envMapIntensity:0.5,aoMapIntensity:0.6});
-  m.color.setRGB(d.c[0],d.c[1],d.c[2]);m.userData.lib='street_'+d.id;m.userData.relU={value:0};m.onBeforeCompile=stPomPatch;
-  new THREE.TextureLoader().load(`textures/street_${d.id}.jpg`,t=>{stTex(t);t.colorSpace=THREE.SRGBColorSpace;m.map=t;m.color.setScalar(1);m.needsUpdate=true});
-  if(typeof wetPatch==='function')wetPatch(m);stSurfPbr(m);return m}
-function stTex(t){t.wrapS=t.wrapT=THREE.RepeatWrapping;t.anisotropy=8;return t}
-function stSurfPbr(m){const on=ST.pbr,u=m.userData;
-  if(on&&u.n===undefined){u.n=null;let k=0;const L=s=>stTex(new THREE.TextureLoader().load(`textures/${u.lib}${s}.jpg`,()=>{if(++k===2){u.n=n;u.r=r;stSurfPbr(m)}})),n=L('_n'),r=L('_m');return}
-  const p=on&&!!u.n;if(!!m.normalMap===p)return;m.normalMap=p?u.n:null;m.roughnessMap=m.aoMap=p?u.r:null;m.roughness=p?1:0.8;m.needsUpdate=true}
-// relief on (High graphics, Material relief) or off: gfx.js
-function stPbr(on){ST.pbr=!!on;for(const d of ST_SURF)if(d&&d.m)stSurfPbr(d.m)}
-// each frame a surface is drawn: its relief depth in texture units from the tuning
-function stRelSync(){for(const d of ST_SURF)if(d&&d.m)d.m.userData.relU.value=d.dep*TU.stRelief/(d.ft*0.3048)}
+// can instead be brick or cobblestone with real relief (ST_SURF, mainland.js)
+const ST={grp:null,curb:0.15,top:0.17,lift:0.035,gut:0.4,joint:1.524,box:null};
 // the paved roads' centreline segments, each with whether its ends are the road's ends (cut flat there, not rounded)
 function stSegs(){const L=[];for(const r of ROADS){if(!r.pv||r.pts.length<2)continue;const n=r.pts.length,cl=stClosed(r);
     for(let k=0;k<n-1;k++){const a=r.pts[k],b=r.pts[k+1],dx=b[0]-a[0],dz=b[1]-a[1],l2=dx*dx+dz*dz;if(l2<1e-6)continue;
@@ -121,7 +68,7 @@ function streetsBuild(){const G=baseHeight;
   ST.grp=new THREE.Group();ST.grp.name='streets';K.add(ST.grp);
   SF.forEach((c,f)=>{if(!c||!c.P.length)return;const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(c.P,3));
     g.setAttribute('uv',new THREE.Float32BufferAttribute(c.U,2));g.computeVertexNormals();g.computeBoundingSphere();
-    const m=new THREE.Mesh(g,stSurfMat(f));m.receiveShadow=true;m.layers.enable(RAIN_LAYER);m.onBeforeRender=stRelSync;ST.grp.add(m)});
+    const m=new THREE.Mesh(g,stSurfMat(f));m.receiveShadow=true;m.layers.enable(RAIN_LAYER);ST.grp.add(m)});
   scene.add(ST.grp)}
 const edUnionBox=(a,b)=>!a?b:!b?a:[Math.min(a[0],b[0]),Math.max(a[1],b[1]),Math.min(a[2],b[2]),Math.max(a[3],b[3])];
 // edRefresh: the ground moved under x0..x1, z0..z1; rebuild the streets if one is there
