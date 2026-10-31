@@ -42,6 +42,7 @@ Every sound is cut from CC0 (public domain) field recordings on Freesound by `to
 | More library materials (`textures/<id>.jpg` with `_n` and `_r`, by `tools/cc0.py`): grass2 (lawn sod), grating, fabric | [ambientCG](https://ambientcg.com): Grass006, MetalWalkway004, Fabric039 | CC0 |
 | Photo-scanned library materials from Poly Haven (by `tools/cc0.py`): concrete_broom, plywood, rustplate, cmu, shingles | [Poly Haven](https://polyhaven.com): brushed_concrete_04, plywood (Rob Tuytel), rust_coarse_01 (Dimitrios Savva, Rico Cilliers), concrete_block_wall (Charlotte Baglioni), grey_roof_01 (Rob Tuytel) | CC0 |
 | Photo-scanned roof shingles (`textures/roof_grey`, with `_n` and `_r`) | [Poly Haven](https://polyhaven.com/a/grey_roof_01): grey_roof_01, by Rob Tuytel | CC0 |
+| Service pistol (`models/pistol/`) | [Poly Haven](https://polyhaven.com/a/service_pistol): service_pistol, by Mateusz Sadek | CC0 |
 | Your own textures (uploaded in the map editor) | Whoever uploads them | Theirs; only upload images you have the right to use |
 
 ## Services

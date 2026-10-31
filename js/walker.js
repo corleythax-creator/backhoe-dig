@@ -179,7 +179,7 @@ function updateWalker(dt,mx,mz,lookX,lookY){
     for(let s=0;s<2;s++){const L=wkLegs[s],A=wkArms[s],k=s?Math.PI:0;L.top.rotation.x=-0.25+Math.sin(p*2+k)*(0.3+0.2*mv);L.low.rotation.x=0.45+Math.sin(p*2+k+1)*0.25;
       A.top.rotation.x=-1.1-mv*0.5+Math.sin(p)*0.6;A.low.rotation.x=-0.5+Math.cos(p)*0.4}
     wkBody.position.y=Math.sin(p*2)*0.02;wkBody.rotation.x=0.15+0.45*mv;wkHead.rotation.x=-0.2-0.4*mv;
-    walker.position.set(wk.x,wk.y,wk.z);walker.rotation.y=wk.yaw;walker.visible=!(on&&camMode==='cab');return}
+    walker.position.set(wk.x,wk.y,wk.z);walker.rotation.y=wk.yaw;walker.visible=!(on&&camMode==='cab'&&!gunHas());return}
   const run=Math.min(1,wk.spd/TU.wkRun),fast=clamp((wk.spd-TU.wkRun)/(TU.wkSprint-TU.wkRun),0,1);if(wk.ground)wk.phase+=dt*(4+6*run+4*fast)*Math.min(1,wk.spd*2);
   const sw=Math.sin(wk.phase)*(0.25+0.55*run+0.25*fast)*Math.min(1,wk.spd*1.5);
   for(let s=0;s<2;s++){const a=s?sw:-sw,L=wkLegs[s],A=wkArms[s];
@@ -188,7 +188,7 @@ function updateWalker(dt,mx,mz,lookX,lookY){
   const bob=wk.ground?Math.abs(Math.cos(wk.phase))*0.04*run-wk.landT*0.5:0;
   wkBody.position.y=bob;wkBody.rotation.x=0.12*run+0.14*fast;wkHead.rotation.x=-0.1*run;
   walker.position.set(wk.x,wk.y,wk.z);walker.rotation.y=wk.yaw;
-  walker.visible=!(on&&camMode==='cab')}
+  walker.visible=!(on&&camMode==='cab'&&!gunHas())}
 function walkJump(){if(mode!=='walk')return;wk.jumpQ=0.15;started()}
 $('#jumpBtn').addEventListener('pointerdown',e=>{e.preventDefault();walkJump()});
 function setSprint(on){wk.sprint=on;wk.stillT=0;$('#sprintBtn').setAttribute('aria-pressed',on)}

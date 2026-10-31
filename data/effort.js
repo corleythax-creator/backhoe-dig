@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-31T02:01:00Z",
+ "updated": "2026-10-31T02:08:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -90,9 +90,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-30",
-   "dh": 45.25,
+   "dh": 49.25,
    "act": 3,
-   "versions": 11
+   "versions": 12
   }
  ],
  "extra": [
@@ -2622,6 +2622,15 @@ window.EFFORT = {
    "tris": 5812316,
    "chars": 1863651,
    "what": "Desktop in town: a Townsfolk counter bottom right (alive, dead, shot and run over); driving a machine into someone above 6 mph (runKill) knocks them flying"
+  },
+  {
+   "v": 281,
+   "asked": "2026-10-30T20:27:00-05:00",
+   "live": "2026-10-30T21:08:28-05:00",
+   "dh": 4,
+   "tris": 5813184,
+   "chars": 1862310,
+   "what": "The pistol is now Poly Haven's photo-scanned service pistol, gripped in the worker's own hand; in first person you see his real arm holding it"
   }
  ]
 };

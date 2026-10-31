@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Friday, October 30, 2026
 
+- **v281** (9:08 PM) The pistol is now Poly Haven's photo-scanned service pistol, gripped in the worker's own hand; in first person you see his real arm holding it
 - **v280** (9:01 PM) Desktop in town: a Townsfolk counter bottom right (alive, dead, shot and run over); driving a machine into someone above 6 mph (runKill) knocks them flying
 - **v279** (8:58 PM) Broom concrete, plywood, steel road plate, concrete block and shingles from Poly Haven scans; lawn sod, bar grating and landscape fabric from ambientCG, all CC0 with relief and sheen
 - **v278** (8:38 PM) Equip the pistol (G or the Pistol button), click to fire while it is out, and see it in your hand in first person
