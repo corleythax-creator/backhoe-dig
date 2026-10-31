@@ -2,6 +2,10 @@
 
 Every version of Corley's Island, newest first, grouped by the day it went live (Central time). Made from `data/effort.js` by `tools/changelog.py`; don't edit it by hand. [Play any old version](https://corleys-island.vercel.app/versions/) · [Build log with charts](https://corleys-island.vercel.app/build.html)
 
+## Friday, October 30, 2026
+
+- **v270** (6:21 PM) Townsfolk (High and Ultra) run on Human Forge's newer people runtime (1.1): same people and animations, clearer load errors.
+
 ## Thursday, October 29, 2026
 
 - **v269** (11:04 PM) On High and Ultra graphics the townsfolk are the same 32 people rebuilt in Human Forge with a real skeleton and animation: they walk with a true stride at their own pace, stand easy or talk with their hands at counters, sit properly in chairs and benches and hold the wheel when driving; Low and Medium keep the light ones for phones.

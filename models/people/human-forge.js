@@ -15,7 +15,7 @@
  */
 (function (root) {
   'use strict';
-  const VERSION = '1.0.0';
+  const VERSION = '1.1.0';
 
   // ------------------------------------------------------------------ GLB reading
   const CT = { 5126: Float32Array, 5121: Uint8Array, 5123: Uint16Array, 5125: Uint32Array, 5122: Int16Array, 5120: Int8Array };
@@ -59,7 +59,9 @@
   async function load(THREE, base, opts) {
     opts = opts || {};
     base = base.endsWith('/') ? base : base + '/';
-    const lib = await (await fetch(base + 'library.json')).json();
+    const lr = await fetch(base + 'library.json');
+    if (!lr.ok) throw new Error('Human Forge: ' + base + 'library.json ' + lr.status);
+    const lib = await lr.json();
     const ag = parseGLB(await fetchBuf(base + (lib.anims && lib.anims.file || 'anims.glb')));
     const info = {};
     (lib.anims && lib.anims.clips || []).forEach((c) => { info[c.name] = c; });
@@ -209,7 +211,7 @@
         /* walking speed (m/s) to the clip's own playback rate, so feet do not slide */
         pace(speed) {
           const c = info[h.clip];
-          if (cur && c && c.speed) cur.setEffectiveTimeScale(speed / c.speed);
+          if (cur && c && c.speed) cur.setEffectiveTimeScale(speed / (c.speed * (t.hip / refHip) * h.object.scale.y));
           return h;
         },
         update(dt) { mixer.update(dt); return h; },
@@ -332,8 +334,17 @@
       mesh.receiveShadow = !!o.receiveShadow;
       if (mesh.castShadow) mesh.customDepthMaterial = patch(new THREE.MeshDepthMaterial({ depthPacking: THREE.RGBADepthPacking, map: t.tex, alphaTest: 0.5 }), U);
       mesh.count = 0;
+      // every instance starts white, so tint() works whenever it is first called
+      if (o.tint !== false) { mesh.instanceColor = new THREE.InstancedBufferAttribute(new Float32Array(max * 3).fill(1), 3); }
       const slots = [];
       const free = [];
+      const scales = new Float32Array(max).fill(1);
+      const _c = new THREE.Color();
+      // playback rate: speed as given (0 stands still), or pace (m/s) over the clip's ground speed for this person's size
+      const rateOf = (i, name, p) => {
+        if (p.pace !== undefined && info[name] && info[name].speed) return p.pace / (info[name].speed * (t.hip / refHip) * scales[i]);
+        return p.speed !== undefined ? p.speed : 1;
+      };
       const c = {
         id, object: mesh, type: t, max, clips: B.at,
         get count() { return mesh.count; },
@@ -352,23 +363,38 @@
           mesh.setMatrixAt(i, _m);
           mesh.instanceMatrix.needsUpdate = true;
           free.push(i);
+          // trailing free slots leave the draw altogether
+          while (mesh.count > 0 && !slots[mesh.count - 1]) { const k = free.indexOf(mesh.count - 1); if (k >= 0) free.splice(k, 1); mesh.count--; }
         },
+        /* everyone out at once (for games that repack who is in view every frame: clear(), then add() each) */
+        clear() { slots.length = 0; free.length = 0; mesh.count = 0; },
+        /* p: x, y, z, heading (about +y), scale; tilt (radians about the person's own left-right axis: -PI/2 lays them
+           on their back), roll (about their facing); or matrix (a Matrix4, used as is) */
         place(i, p) {
+          if (p.matrix) { mesh.setMatrixAt(i, p.matrix); scales[i] = p.scale || new THREE.Vector3().setFromMatrixScale(p.matrix).y; mesh.instanceMatrix.needsUpdate = true; return; }
           const sc = p.scale || 1;
+          scales[i] = sc;
           _q.setFromAxisAngle(_up, p.heading || 0);
+          if (p.tilt || p.roll) _q.multiply(new THREE.Quaternion().setFromEuler(new THREE.Euler(p.tilt || 0, 0, p.roll || 0, 'XYZ')));
           _p.set(p.x || 0, p.y || 0, p.z || 0);
           _s.set(sc, sc, sc);
           _m.compose(_p, _q, _s);
           mesh.setMatrixAt(i, _m);
           mesh.instanceMatrix.needsUpdate = true;
         },
+        /* a colour multiplied over person i (a THREE.Color, hex number or css string; white clears it) */
+        tint(i, col) {
+          if (!mesh.instanceColor) return;
+          _c.set(col);
+          mesh.setColorAt(i, _c);
+          mesh.instanceColor.needsUpdate = true;
+        },
         /* clip by name; p.phase 0..1 or p.offset seconds, p.speed playback rate (or p.pace in m/s for walk / run) */
         anim(i, name, p) {
           p = p || {};
           const A = B.at[name];
           if (!A) throw new Error('Human Forge: crowd ' + id + ' has no clip ' + name + ' (baked: ' + names.join(', ') + ')');
-          let sp = p.speed || 1;
-          if (p.pace && info[name] && info[name].speed) sp = p.pace / info[name].speed;
+          const sp = rateOf(i, name, p);
           // restart: the clip's first frame now; otherwise a phase (0..1) or an offset (s), random by default
           const off = p.restart ? -U.hfTime.value * sp : p.offset !== undefined ? p.offset : (p.phase !== undefined ? p.phase : Math.random()) * A.duration;
           anim.setXYZW(i, A.start, A.frames, A.fps, off);
@@ -378,8 +404,7 @@
         /* a new playback rate (or pace, m/s) for person i, keeping their place in the clip */
         rate(i, p) {
           const n = c.clipOf(i);
-          let sp = p.speed || 1;
-          if (p.pace && info[n] && info[n].speed) sp = p.pace / info[n].speed;
+          const sp = rateOf(i, n, p);
           const old = rate.getX(i);
           if (Math.abs(old - sp) < 1e-3) return;
           anim.setW(i, anim.getW(i) + U.hfTime.value * (old - sp));
@@ -422,9 +447,12 @@
       version: VERSION, library: lib, base, clips: info, people: lib.people,
       ids(tag) { return lib.people.filter((p) => !tag || (p.tags || []).indexOf(tag) >= 0).map((p) => p.id); },
       preload: (ids) => Promise.all(ids.map(type)),
+      /* a person's texture, for a game that builds its own material (pass it as { material } to hero or crowd) */
+      texture: async (id) => (await type(id)).tex,
       hero, crowd, update,
       /* where the drive clip's hands are: the steering wheel's middle, radius and tilt from a seated person's origin */
-      wheel: lib.anims && lib.anims.wheel, bars: lib.anims && lib.anims.bars, seat: lib.anims && lib.anims.seat
+      wheel: lib.anims && lib.anims.wheel, bars: lib.anims && lib.anims.bars, seat: lib.anims && lib.anims.seat,
+      driveSeat: (lib.anims && lib.anims.drive_seat) || 0.36
     };
   }
 
