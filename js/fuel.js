@@ -75,5 +75,5 @@ function fuelRows(){const S=stats,sqft=n=>Math.round(n).toLocaleString()+' sq ft
   return [['Today on the job',[['Day',new Date(dn.t).toLocaleDateString([],{weekday:'long',month:'short',day:'numeric'})],['Dirt dug',sYd(S.dDug)],['Hauled off',sYd(S.dHaul)],
       ['Moved by the skid steer',sYd(S.dSkid)],['Grass mowed',sqft(S.dMow)],['Engine hours',hrs(S.dHrs)],...(FUEL_BURN?[['Fuel burned',gal(S.dGal)]]:[]),
       ['Earned',usd(S.dEarn)],...(FUEL_BURN?[['Fuel bought',usd(S.dFuelCost)]]:[]),['The day paid',usd(S.dEarn-S.dFuelCost)],['Yesterday paid',S.yEarn?usd(S.yEarn):'—']]],
-    ['Pay',[['Earned, all time',usd(S.earned)],...(FUEL_BURN?[['Fuel bought',usd(S.fuelCost)]]:[]),['In the bank',usd(S.earned-S.fuelCost)],...(FUEL_BURN?[['Fuel burned, all time',gal(S.fuelGal)]]:[])]],
+    ['Pay',[['Earned, all time',usd(S.earned)],...(FUEL_BURN?[['Fuel bought',usd(S.fuelCost)]]:[]),['Spent in town',usd(S.spent||0)],['In your wallet',usd(townCash())],...(FUEL_BURN?[['Fuel burned, all time',gal(S.fuelGal)]]:[])]],
     [FUEL_BURN?'Hour meters and fuel':'Hour meters',Object.keys(FUEL).map(k=>[FUEL[k].n[0].toUpperCase()+FUEL[k].n.slice(1),`${fuelHrs(k).toFixed(1)} h`+(FUEL_BURN?` · ${gal(fuelLeft(k))} of ${FUEL[k].tank} (${Math.round(fuelLeft(k)/FUEL[k].tank*100)}%)`:'')])]]}

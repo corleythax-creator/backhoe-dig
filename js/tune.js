@@ -111,6 +111,11 @@ const TUNE=[
   ['tfCarV','Town','Town traffic speed',11.2,'mph',5,45,1],['tfWalk','Town','Townsfolk walking pace',1.3,'mph',1,5,0.1],['tfUltraR','Town','Ultra graphics: townsfolk shown in full detail within',6,'ft',6,40,1],
   // which townsfolk characters stay home: one bit per character, in models/peds/peds.json order (bit 0 = cal_m); set on the Townsfolk page
   ['tfOut','Town','Townsfolk left out (a bit per character; set it on the Townsfolk page)',0,'n',0,4294967295,1],
+  // the town's life (town.js): money, shop hours, greetings and talk
+  ['cashStart','Town','Money in your wallet when you start (added to what the work has paid)',250,'usd',0,10000,10],
+  ['pepBoost','Town','A coffee or a meal from a shop: walking and running faster by',0.12,'pct',0,50,1],['pepTime','Town','A coffee or a meal lasts',180,'s',10,900,10],
+  ['tfQuiet','Town','People out at the quietest hour of the night, of the busiest',0.12,'pct',0,100,1],
+  ['greetChance','Town','Passersby who greet you as you walk by',0.45,'pct',0,100,5],['greetGap','Town','The least time between greetings',8,'s',0,60,1]
   // indoors (interiors.js): how the eye adjusts in a shop or house, and its room light (Medium graphics and up)
   ['inAdapt','Town','Indoors, the view brightens by',0.9,'pct',0,300,5],['inLamp','Town','Indoors, the room light',1.6,'n',0,6,0.1],
   ['craneSpan','Bridges','The crane builds a steel span in about',240,'min',1,60,1],

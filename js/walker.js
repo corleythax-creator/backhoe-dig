@@ -128,7 +128,7 @@ function updateWalker(dt,mx,mz,lookX,lookY){
   // wading slows him the deeper it gets; swimming has its own speed (Sprint swims harder)
   const wade=wk.swim?0:clamp((WATER-wk.y)/WK_FLOAT,0,1);
   if(on){const cyaw=camMode==='cab'?wk.view:wk.view+orbitYaw,fx=Math.sin(cyaw),fz=Math.cos(cyaw),m=Math.min(1,Math.hypot(mx,mz));
-    const fast=held('sprint')||PA.sprint||wk.sprint,top=wk.swim?TU.wkSwim*(fast?1.6:1):(fast?TU.wkSprint:TU.wkRun)*(1-0.55*wade);
+    const fast=held('sprint')||PA.sprint||wk.sprint,top=(wk.swim?TU.wkSwim*(fast?1.6:1):(fast?TU.wkSprint:TU.wkRun)*(1-0.55*wade))*townPep();
     // the touch Sprint button stays on while you keep moving and switches itself off once you stop
     wk.stillT=m>0.02?0:wk.stillT+dt;if(wk.sprint&&wk.stillT>0.6)setSprint(false);
     if(m>0.02){vx=(fx*mz-fz*mx)*top;vz=(fz*mz+fx*mx)*top;
