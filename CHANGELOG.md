@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Saturday, October 31, 2026
 
+- **v315** (10:55 AM) The loading screen can no longer sit at 0%: the bar keeps sweeping while the page is busy, a seconds counter shows it is working, and any error shows on it and lets you in
 - **v314** (10:54 AM) The town comes alive: spend the island's pay at every shop counter (menus and prices, coffee puts a spring in your step, the bank and the hotel), shops keep real hours and the streets fill and empty with the time of day, passersby greet you and Carry talks to anyone, and nine named regulars who remember you
 - **v313** (10:40 AM) A loading screen over the start map: a big percent and bar while the game, its pictures and models load and its shaders warm up; the map and Carry on wait until it is done, so the first minutes in the world no longer stutter
 - **v312** (9:20 AM) Dust billows and is lit by the sun (dim at night); the excavator and dump truck smoke from their stacks, darker as they work; rooms behind the town's windows now have real depth as you walk past (Machines tuning: exhaust)
