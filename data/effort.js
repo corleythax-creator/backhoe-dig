@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-31T00:47:00Z",
+ "updated": "2026-10-31T02:01:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -90,9 +90,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-30",
-   "dh": 20.25,
-   "act": 1.5,
-   "versions": 5
+   "dh": 45.25,
+   "act": 3,
+   "versions": 11
   }
  ],
  "extra": [
@@ -2568,6 +2568,60 @@ window.EFFORT = {
    "tris": 5821761,
    "chars": 1840368,
    "what": "Auto weather rains far less: showers every 15 to 35 minutes instead of 5 to 12, a bit shorter, and the first one waits 15 minutes"
+  },
+  {
+   "v": 275,
+   "asked": "2026-10-30T19:55:00-05:00",
+   "live": "2026-10-30T20:19:38-05:00",
+   "dh": 6,
+   "tris": 5803878,
+   "chars": 1853134,
+   "what": "A pistol in the worker's hand on foot: Fire (G, the Fire button or a click) shoots the townsfolk, who drop or run"
+  },
+  {
+   "v": 276,
+   "asked": "2026-10-30T19:50:00-05:00",
+   "live": "2026-10-30T20:25:42-05:00",
+   "dh": 6,
+   "tris": 5814500,
+   "chars": 1853144,
+   "what": "20 Paint library materials (gravel, sand, soils, rock, concrete, asphalt, pavers, cobble, brick, flagstone, planks, diamond plate, corrugated) swapped for CC0 ambientCG photo scans with their own relief and sheen maps; tools/cc0.py"
+  },
+  {
+   "v": 277,
+   "asked": "2026-10-31T19:52:00-05:00",
+   "live": "2026-10-30T20:26:09-05:00",
+   "dh": 4,
+   "tris": 5710458,
+   "chars": 1856765,
+   "what": "Town paving and roads gather puddles in the rain that spread the longer it rains and drain after, mirror the sky, ring with raindrops (Puddle water: Fine) and stay out from under roofs"
+  },
+  {
+   "v": 278,
+   "asked": "2026-10-30T20:18:00-05:00",
+   "live": "2026-10-30T20:38:57-05:00",
+   "dh": 3,
+   "tris": 5808921,
+   "chars": 1859853,
+   "what": "Equip the pistol (G or the Pistol button), click to fire while it is out, and see it in your hand in first person"
+  },
+  {
+   "v": 279,
+   "asked": "2026-10-30T20:35:00-05:00",
+   "live": "2026-10-30T20:58:15-05:00",
+   "dh": 3,
+   "tris": 5810269,
+   "chars": 1859871,
+   "what": "Broom concrete, plywood, steel road plate, concrete block and shingles from Poly Haven scans; lawn sod, bar grating and landscape fabric from ambientCG, all CC0 with relief and sheen"
+  },
+  {
+   "v": 280,
+   "asked": "2026-10-30T20:30:00-05:00",
+   "live": "2026-10-30T21:01:54-05:00",
+   "dh": 3,
+   "tris": 5812316,
+   "chars": 1863651,
+   "what": "Desktop in town: a Townsfolk counter bottom right (alive, dead, shot and run over); driving a machine into someone above 6 mph (runKill) knocks them flying"
   }
  ]
 };

@@ -278,7 +278,7 @@ function rainCover(){if(!(rsMesh||rainLines&&!rainLines.userData.off))return;con
   // the cover map is redrawn every third frame (and when it is read): it is fixed to the ground, so it only has to keep
   // up with where you are
   if(weather.r>0.03&&!due&&++rcSkip%3)return;
-  if(weather.r>0.03||wetAll>0.08&&due){rcRender();if(due){rcNext=now+1000;rcRead()}}}
+  if(weather.r>0.03||(wetAll>0.08||pudLvl>0.02)&&due){rcRender();if(due){rcNext=now+1000;rcRead()}}}
 
 // ---------- everything gets wet ----------
 // wetAll: how wet the machines, the worker, buildings, trees and props are (0-1). It soaks in over half a minute of rain
@@ -326,6 +326,7 @@ function wetGlassPatch(m){m.userData.wetP=m.userData.glassP=true;const old=m.onB
 function wetPatch(m){if(m&&!m.userData.wetP&&WET_GLASS.includes(m)){wetGlassPatch(m);return}
   if(!m||m.userData.wetP||m.userData.noWet||m===groundMat||tuftMats.includes(m))return;
   const t=m.type;if(t!=='MeshPhongMaterial'&&t!=='MeshStandardMaterial'&&t!=='MeshLambertMaterial')return;if(m.transparent&&m.opacity<0.7)return;
+  if(m.userData.lib&&t==='MeshStandardMaterial')pudPatch(m);
   m.userData.wetP=true;const old=m.onBeforeCompile,key=m.customProgramCacheKey(),drops=()=>wetDropsOn&&t==='MeshStandardMaterial';
   m.onBeforeCompile=function(sh,r){if(old)old.call(this,sh,r);sh.uniforms.uWetAll=wetAllU;let f='uniform float uWetAll;\n'+sh.fragmentShader;const dr=drops();
     if(dr){sh.uniforms.uDrops=wetDropU;sh.uniforms.uDropT=wetDropT;f=WET_DROP_GLSL+f;
@@ -338,8 +339,39 @@ function wetPatch(m){if(m&&!m.userData.wetP&&WET_GLASS.includes(m)){wetGlassPatc
 // post.js turns the beads on or off; the materials that have them are built again
 function wetDropsSet(on){on=!!on;if(on===wetDropsOn)return;wetDropsOn=on;
   scene.traverse(o=>{if(o.isMesh)for(const m of [].concat(o.material))if(m&&m.userData.wetP&&(m.type==='MeshStandardMaterial'||m.userData.glassP)){m.needsUpdate=true;if(m.userData.side2)m.side=on?THREE.DoubleSide:THREE.FrontSide}})}
+// ---------- puddles on the paving ----------
+// the town's paving and roads (the library's asphalt, concrete, pavers and brick: shopLib, mainland.js) take puddles in
+// the rain: they gather in the low spots of a fixed pattern on level ground, spreading the longer it rains (pudLvl, a few
+// minutes to fill) and shrinking for a while after it stops (How fast puddles drain). Each is a dark, still mirror of the
+// sky with a damp rim, and while it rains drops ring it (Puddle water: Fine). Nothing gathers under a roof (the shelter
+// map, within about 130 ft of you). Only how it looks: these puddles do not bog or splash anything
+let pudLvl=0;const pudU={value:new THREE.Vector4(0,0,0,0)};
+const PUD_GLSL='uniform vec4 uPud;varying vec3 vPudP,vPudN;\n'+RC_GLSL+
+  'float pudH(vec2 c){return fract(sin(dot(c,vec2(127.1,311.7)))*43758.5453);}\n'+
+  'float pudN(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);return mix(mix(pudH(i),pudH(i+vec2(1,0)),f.x),mix(pudH(i+vec2(0,1)),pudH(i+1.0),f.x),f.y);}\n'+
+  // a drop's ring in each cell: its slope (x, z) where the ring passes
+  'vec2 pudRing(vec2 p,float t){vec2 c=floor(p),f=fract(p)-0.5;float h=pudH(c),ph=fract(t*(0.9+0.5*h)+h*7.0);vec2 o=f-(vec2(h,fract(h*13.7))-0.5)*0.5;\n'+
+  ' float d=length(o),r=ph*0.42,x=d-r,w=1.0-smoothstep(0.0,0.05,abs(x));if(w<=0.0||d<0.001)return vec2(0.0);return o/d*cos(x*70.0)*w*(1.0-ph)*(1.0-ph);}\n';
+const PUD_FS='float pudM=0.0;{float pl=uPud.x,up=smoothstep(0.985,0.998,vPudN.y);\n'+
+  ' if(pl>0.001&&up>0.0&&coverY(vPudP.xz)<vPudP.y+0.15){\n'+
+  '  float n=0.6*pudN(vPudP.xz*0.22)+0.3*pudN(vPudP.xz*0.7+3.1)+0.1*pudN(vPudP.xz*2.6+7.7),th=1.0-0.42*pl;\n'+
+  '  pudM=smoothstep(th,th+0.025,n)*up;float rim=smoothstep(th-0.09,th,n)*up*(1.0-pudM);\n'+
+  '  vec3 pn=vec3(0.0,1.0,0.0);if(uPud.z>0.0&&pudM>0.0){float fd=uPud.z*(1.0-smoothstep(12.0,30.0,length(vViewPosition)));\n'+
+  '   if(fd>0.0){vec2 g=pudRing(vPudP.xz*1.8,uPud.y)+pudRing(vPudP.xz*1.8+vec2(0.5,0.31),uPud.y+0.37);pn=normalize(vec3(-g.x*0.35*fd,1.0,-g.y*0.35*fd));}}\n'+
+  '  normal=normalize(mix(normal,(viewMatrix*vec4(pn,0.0)).xyz,pudM));\n'+
+  '  material.diffuseColor*=1.0-0.25*rim-0.6*pudM;material.diffuseContribution*=1.0-0.25*rim-0.6*pudM;\n'+
+  '  material.roughness=mix(material.roughness,min(material.roughness,0.2),rim);material.roughness=mix(material.roughness,0.05,pudM);}}\n';
+function pudPatch(m){if(m.userData.pudP)return;m.userData.pudP=true;const old=m.onBeforeCompile,key=m.customProgramCacheKey();
+  m.onBeforeCompile=function(sh,r){if(old)old.call(this,sh,r);sh.uniforms.uPud=pudU;Object.assign(sh.uniforms,rcU);
+    sh.vertexShader='varying vec3 vPudP,vPudN;\n'+sh.vertexShader.replace('#include <project_vertex>','#include <project_vertex>\nvPudP=(modelMatrix*vec4(transformed,1.0)).xyz;vPudN=normalize(mat3(modelMatrix)*objectNormal);');
+    sh.fragmentShader=PUD_GLSL+sh.fragmentShader.replace('#include <lights_physical_fragment>','#include <lights_physical_fragment>\n'+PUD_FS)
+      .replace('#include <lights_fragment_maps>','#include <lights_fragment_maps>\n#if defined( RE_IndirectSpecular )\nradiance*=1.0+2.0*pudM;\n#endif\n')};
+  m.customProgramCacheKey=()=>key+'|pud';m.needsUpdate=true}
+// every frame (from wetTick): the puddles fill while it rains and drain after; the rings follow how hard it rains
+function pudTick(dt,r){pudLvl=r>0.03?Math.min(1,pudLvl+dt*r/240):Math.max(0,pudLvl-dt*TU.puddleDrain/900);
+  const ring=gfxCur.wmFine?ss(0.03,0.4,r):0;pudU.value.set(pudLvl*pudLvl*(3-2*pudLvl),(pudU.value.y+dt*(ring>0?1:0))%1000,ring,0)}
 function wetPatchAll(){scene.traverse(o=>{if(o.isMesh)(Array.isArray(o.material)?o.material:[o.material]).forEach(wetPatch)})}
-function wetTick(dt,r){wetAll=r>0.03?Math.min(1,wetAll+dt*(0.01+0.05*r)):Math.max(0,wetAll-dt/300);wetAllU.value=wetAll;
+function wetTick(dt,r){wetAll=r>0.03?Math.min(1,wetAll+dt*(0.01+0.05*r)):Math.max(0,wetAll-dt/300);wetAllU.value=wetAll;pudTick(dt,r);
   if(wetDropsOn){wetDropU.value=TU.ultraDrops;if(r>0.03)wetDropT.value=(wetDropT.value+dt*(0.4+0.6*r))%1000}}
 // drips: once a second the shelter map comes back from the GPU and the edges of roofs within about 40 ft are found
 // (cover that drops away by more than 2 ft to the next spot); drops fall from them while it rains and for a while after
