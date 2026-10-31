@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-31T15:55:00Z",
+ "updated": "2026-10-31T16:20:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -96,9 +96,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-31",
-   "dh": 118.5,
-   "act": 4,
-   "versions": 13
+   "dh": 138.5,
+   "act": 4.5,
+   "versions": 14
   }
  ],
  "extra": [
@@ -2943,6 +2943,15 @@ window.EFFORT = {
    "tris": 6035038,
    "chars": 2117052,
    "what": "The loading screen can no longer sit at 0%: the bar keeps sweeping while the page is busy, a seconds counter shows it is working, and any error shows on it and lets you in"
+  },
+  {
+   "v": 316,
+   "asked": "2026-10-31T10:09:00-05:00",
+   "live": "2026-10-31T11:20:50-05:00",
+   "dh": 20,
+   "tris": 6159664,
+   "chars": 2154152,
+   "what": "Excavator gets a rounded counterweight, track pins, boom lines, real teeth, mirrors and steps; dug dirt shows clods, stones and soil layers and dries in patches; field, road and yard edges wander and blend with uncut grass along the hayfield; the worker walks heel to toe with hip sway and arm swing"
   }
  ]
 };
