@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Friday, October 30, 2026
 
+- **v276** (8:25 PM) 20 Paint library materials (gravel, sand, soils, rock, concrete, asphalt, pavers, cobble, brick, flagstone, planks, diamond plate, corrugated) swapped for CC0 ambientCG photo scans with their own relief and sheen maps; tools/cc0.py
 - **v275** (8:19 PM) A pistol in the worker's hand on foot: Fire (G, the Fire button or a click) shoots the townsfolk, who drop or run
 - **v274** (7:47 PM) Auto weather rains far less: showers every 15 to 35 minutes instead of 5 to 12, a bit shorter, and the first one waits 15 minutes
 - **v273** (7:43 PM) You can walk onto the foothills and Overlook Road now (on foot you were stopped at the back of town), and the start map shows them, with Harbor Square and the Foothills named.
