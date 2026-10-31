@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-31T03:44:00Z",
+ "updated": "2026-10-31T03:52:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -90,9 +90,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-30",
-   "dh": 135.25,
+   "dh": 151.25,
    "act": 4.5,
-   "versions": 28
+   "versions": 29
   }
  ],
  "extra": [
@@ -2775,6 +2775,15 @@ window.EFFORT = {
    "tris": 7340486,
    "chars": 1944098,
    "what": "The 3D clouds read smooth and soft: no grain or boxy patches in them, from blending each frame with the last and finer light through the cloud."
+  },
+  {
+   "v": 298,
+   "asked": "2026-10-30T19:45:00-05:00",
+   "live": "2026-10-30T22:52:21-05:00",
+   "dh": 16,
+   "tris": 5896280,
+   "chars": 1944098,
+   "what": "Trees, pines, fallen logs, stumps and boulders are photo-scanned now: full autumn crowns of real leaves (red maples, bronze oaks, yellow birches), real pine and fir needles and bark, logs and stumps lying in the woods, and boulder clusters round town in tufts of grass."
   }
  ]
 };
