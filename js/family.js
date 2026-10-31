@@ -25,6 +25,21 @@ function famMerge(list){let n=0;for(const g of list)n+=g.attributes.position.cou
   for(const g of list){P.set(g.attributes.position.array,o*3);C.set(g.attributes.color.array,o*3);o+=g.attributes.position.count;g.dispose()}
   const m=new THREE.BufferGeometry();m.setAttribute('position',new THREE.BufferAttribute(P,3));m.setAttribute('color',new THREE.BufferAttribute(C,3));
   m.computeVertexNormals();m.computeBoundingSphere();return m}
+// boat hulls (boats.js, lakeboats.js, marina.js): physically based gelcoat in each part's own colour, glossy and catching
+// the sky, with a scanned gelcoat's fine scuffs in its sheen and relief (textures/gelcoat*, Medium graphics and up;
+// famGelGfx). famGelMesh merges a kit's parts with box-projected texture coordinates, FAM_GEL_T metres to a tile
+const FAM_GEL_T=1.4,famGelMat=new THREE.MeshStandardMaterial({vertexColors:true,roughness:0.32,metalness:0,envMap:skyEnv,envMapIntensity:0.9,side:THREE.DoubleSide});
+let famGelTex=null;
+function famGelMesh(list){const g=famMerge(list),P=g.attributes.position.array,N=g.attributes.normal.array,uv=new Float32Array(P.length/3*2),t=1/FAM_GEL_T;
+  for(let i=0;i<P.length;i+=9){let ax=0,ay=0,az=0;for(let k=0;k<9;k+=3){ax+=Math.abs(N[i+k]);ay+=Math.abs(N[i+k+1]);az+=Math.abs(N[i+k+2])}
+    for(let k=0;k<3;k++){const q=i+k*3,o=(i/3+k)*2;if(ay>=ax&&ay>=az){uv[o]=P[q]*t;uv[o+1]=P[q+2]*t}else if(ax>=az){uv[o]=P[q+2]*t;uv[o+1]=P[q+1]*t}else{uv[o]=P[q]*t;uv[o+1]=P[q+1]*t}}}
+  g.setAttribute('uv',new THREE.BufferAttribute(uv,2));return new THREE.Mesh(g,famGelMat)}
+// from gfxApply: the gelcoat's scuffs on Medium and up (loaded the first time), its plain gloss on Low
+function famGelGfx(g){const on=g.tex!=='low';
+  if(on&&!famGelTex){const L=k=>{const t=new THREE.TextureLoader().load(`textures/gelcoat${k}.jpg`);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.anisotropy=4;return t};
+    famGelTex={map:L(''),n:L('_n'),r:L('_r')};famGelTex.map.colorSpace=THREE.SRGBColorSpace}
+  const m=famGelMat,map=on?famGelTex.map:null;if(m.map===map)return;
+  m.map=map;m.roughnessMap=on?famGelTex.r:null;m.normalMap=on&&g.pbr?famGelTex.n:null;m.normalScale.set(0.15,0.15);m.roughness=on?0.6:0.32;m.needsUpdate=true}
 const famMat=M(0xffffff,{vertexColors:true}),famGlowMat=new THREE.MeshBasicMaterial({vertexColors:true}),famWinMat=M(0xffffff,{vertexColors:true,shininess:60,specular:0x333333});
 // ---------- the controls you see from a machine's seat (cab view): dash, gauges, steering wheel, bars, levers ----------
 // Built for the simple shapes, in groups of their own flagged userData.simple: the detailed models (models.js) have
