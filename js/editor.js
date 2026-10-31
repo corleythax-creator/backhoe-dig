@@ -254,7 +254,7 @@ function edRefresh(r,full){if(!r)return;const [X0,X1,Z0,Z1]=r;baseCacheClear();
     touch(i0,i1,j0,j1);updateTufts(i0-1,i1+1,j0-1,j1+1);lawnTerrain();updateTerrain();winOn=false;blkTerrainMoved()}
   midUpdate(x0,x1,z0,z1);mudEdRefresh(x0,x1,z0,z1);tileEdRefresh(x0,x1,z0,z1);rainEdRefresh(x0,x1,z0,z1);lkBedEdit(x0,x1,z0,z1);wallBuild(x0,x1,z0,z1);tuftsRefresh(x0,x1,z0,z1);lawnsStale()}
   if(assets.some(a=>a.x>X0-6&&a.x<X1+6&&a.z>Z0-6&&a.z<Z1+6)){assetsBuild();shpTreesRefresh()}
-  streetsEdRefresh(X0,X1,Z0,Z1,full);
+  streetsEdRefresh(X0,X1,Z0,Z1,full);turfEdRefresh(X0,X1,Z0,Z1);
   if(x0<x1&&z0<z1&&full&&(x0<GX0+1||x1>GX1-1||z0<GZ0+1||z1>GZ1-1||x0<MID[0]+1||x1>MID[1]-1||z0<MID[2]+1||z1>MID[3]-1||x0<OUTER_MID[0]+1||x1>OUTER_MID[1]-1||z0<OUTER_MID[2]+1||z1>OUTER_MID[3]-1))buildSkirts()}
 function edStrokeEnd(){const s=ed.stroke;if(!s)return;ed.stroke=null;edRefresh(ed.pend,true);ed.pend=null;
   if(!s.ij)return;const [i0,i1,j0,j1]=s.ij,w=i1-i0+1,h=new Float32Array(w*(j1-j0+1)),p=new Float32Array(h.length),m=new Uint8Array(h.length),c=new Uint8Array(h.length),tg=new Uint8Array(h.length);
@@ -977,4 +977,4 @@ function editorFrame(dt,now){
   if(now-(ed.viewT||0)>200){ed.viewT=now;const t=viewText()+' · '+viewCode();if(t!==ed.viewS){ed.viewS=t;$('#edStatView').textContent=t}}
   sun.position.set(ed.x,fy,ed.z).addScaledVector(LIGHT_DIR,SUN_D);sun.target.position.set(ed.x,fy,ed.z);
   timeU.value=now/1000;updateSound(dt);
-  shadowProxyTick();lawnLod();tuftLod();postRender()}
+  shadowProxyTick();lawnLod();tuftLod();turfLod();postRender()}

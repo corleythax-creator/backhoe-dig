@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Friday, October 30, 2026
 
+- **v283** (9:14 PM) The town's lawns look real: photo-scanned deep green grass with blades up close, thicker along the paths, clover with white flowers, weeds and fallen autumn leaves; in the rain the town's lawns and ground get wet and dark.
 - **v282** (9:11 PM) Streets laid in the map editor can be brick, cobblestone, fan cobbles or old brick (Surface on the street's card): photo-scanned paving whose bricks and cobbles stand up out of their joints and cast little shadows in the sun with Material relief on.
 - **v281** (9:08 PM) The pistol is now Poly Haven's photo-scanned service pistol, gripped in the worker's own hand; in first person you see his real arm holding it
 - **v280** (9:01 PM) Desktop in town: a Townsfolk counter bottom right (alive, dead, shot and run over); driving a machine into someone above 6 mph (runKill) knocks them flying
