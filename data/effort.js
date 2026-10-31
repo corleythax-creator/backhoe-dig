@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-31T03:29:00Z",
+ "updated": "2026-10-31T03:44:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -90,9 +90,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-10-30",
-   "dh": 132.25,
-   "act": 4,
-   "versions": 27
+   "dh": 135.25,
+   "act": 4.5,
+   "versions": 28
   }
  ],
  "extra": [
@@ -2766,6 +2766,15 @@ window.EFFORT = {
    "tris": 5898100,
    "chars": 1942036,
    "what": "Machines on High: glossy clear-coated paint, chipped edges, polished and rusty bare steel, dust on top, and caked mud on the bucket and tracks that builds as you dig (Machines tunings)"
+  },
+  {
+   "v": 297,
+   "asked": "2026-10-30T21:45:00-05:00",
+   "live": "2026-10-30T22:44:20-05:00",
+   "dh": 3,
+   "tris": 7340486,
+   "chars": 1944098,
+   "what": "The 3D clouds read smooth and soft: no grain or boxy patches in them, from blending each frame with the last and finer light through the cloud."
   }
  ]
 };
