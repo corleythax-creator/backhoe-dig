@@ -70,7 +70,7 @@ function mdlStd(hex,o){o=o||{};const m=new (o.coat?THREE.MeshPhysicalMaterial:TH
   if(o.coat){m.userData.coat=o.coat;m.clearcoat=WEAR.on?o.coat:0;m.clearcoatRoughness=o.coatR||0.12}
   if(o.tex){const c=MDL_TEX[o.tex];m.map=mdlTex(o.tex,'');m.color.setRGB(m.color.r/c[0],m.color.g/c[1],m.color.b/c[2]);
     m.normalMap=mdlTex(o.tex,'_n');m.normalScale.set(o.relief||0.6,o.relief||0.6);m.roughnessMap=mdlTex(o.tex,'_r');m.roughness=o.rough==null?1:o.rough}
-  if(o.emissive)m.emissive.setHex(o.emissive);if(o.tex&&!o.noWear)wearPatch(m,o.tex);if(typeof wetPatch==='function')wetPatch(m);return m}
+  if(o.emissive)m.emissive.setHex(o.emissive);if(o.tex==='gel')famStain(m);if(o.tex&&!o.noWear)wearPatch(m,o.tex);if(typeof wetPatch==='function')wetPatch(m);return m}
 // a library material (textures/<id>.jpg with its relief and roughness, tools/pbr.py) on a machine: the lowboy's oak deck,
 // its boards turned to run along the trailer
 function mdlLib(id,o){const L=k=>{const t=new THREE.TextureLoader().load(`textures/${id}${k}.jpg`);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.anisotropy=4;
@@ -145,7 +145,7 @@ function mdlBoxUV(g){const P=g.attributes.position.array,Nm=g.attributes.normal.
 // a copy of a material for one mesh's own dirt (dirt.js), with the rain's wet look put on again
 // what a mesh's swaps keep (the materials and geometry it had): off userData, which every clone copies through JSON
 const MDL_SIDE=new WeakMap();function mdlSide(o){let u=MDL_SIDE.get(o);if(!u)MDL_SIDE.set(o,u={});return u}
-function mdlClone(m){const c=m.clone(),w=m.userData.wear,coat=m.userData.coat;c.userData={};if(coat)c.userData.coat=coat;if(w)wearPatch(c,w);if(typeof wetPatch==='function')wetPatch(c);return c}
+function mdlClone(m){const c=m.clone(),w=m.userData.wear,coat=m.userData.coat;c.userData={};if(coat)c.userData.coat=coat;if(m.userData.stain)famStain(c);if(w)wearPatch(c,w);if(typeof wetPatch==='function')wetPatch(c);return c}
 // the game's flat-shaded materials and the physically based ones that stand in for them on the detailed machines
 function mdlPbrMap(){if(mdl.pmap)return mdl.pmap;const m=mdlMatsMake();
   mdl.pmap=new Map([[ORANGE,m.paint],[ORANGE_D,m.paintD],[STEEL,m.steel],[STEEL_L,m.steelL],[CHROME,m.chrome],[RUBBER,m.tire],

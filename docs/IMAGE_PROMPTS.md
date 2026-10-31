@@ -269,12 +269,12 @@ wood, gold leaf, enamel, weathering), even light, no background, no perspective,
 **M01 Marina sign** -> `town/sign_marina.png` (4.9:1, about 1536x312)
 > [STYLE] A carved and painted wooden sign for a lake marina, navy blue board with a raised gold-leaf border and a small anchor at each end. Large serif capitals "LAKESIDE MARINA", and under it in smaller lettering "Harbor Master · Bait & Tackle · Ice". Lightly sun-faded paint, fine wood grain showing through.
 Drawn by the game: the marina sign is painted by the game
-Upgrade: passable. The sign is plain lettering painted by the game on a flat board.
+Upgrade: passable. Drawn by the game as a painted wood board (grain, bevelled moulding, shadowed lettering, `famSignPaint`); a painted picture would still read richer.
 
 **M02 Fuel dock sign** -> `town/sign_fuel.png` (3.4:1)
 > [STYLE] A weathered enamel marina fuel sign, red with white lettering: "FUEL DOCK" large, under it "Gas · Diesel · Ice · Pump-out". A thin white pinstripe border, a few rust freckles at the screw holes.
 Drawn by the game: the fuel dock sign is painted by the game
-Upgrade: passable. The sign is plain lettering painted by the game on a flat board.
+Upgrade: passable. Drawn by the game as a painted wood board (grain, bevelled moulding, shadowed lettering, `famSignPaint`); a painted picture would still read richer.
 
 **M03 Dockside Grill sign** -> `town/sign_grill.png` (5.3:1)
 > [STYLE] A cream-painted board-and-batten sign with dark red hand-lettered style capitals "DOCKSIDE GRILL", a small crossed fish-and-fork emblem, and under it "Burgers · Fish Tacos · Cold Drinks". Rustic lakeside restaurant, real paint on wood.
@@ -291,7 +291,7 @@ Not in the game yet: still to make.
 **M06 Shop signs, four sheets** -> `town/shop_signs_a.png` ... `_d.png` (each 1536x1024: 2 columns by 4 rows, every sign 8:1)
 > [STYLE] A sheet of eight separate small-town storefront signs laid out in a neat grid of 2 columns and 4 rows on plain black, each sign a long 8:1 board filling its cell, front-on: [the eight names below]. Mix of styles as on a real old main street: gold leaf on dark green or black glass, painted wood with a border, enamel, carved serif. Each sign shows its name large and its line under it smaller.
 Drawn by the game: the storefront signs are painted by the game
-Upgrade: passable. The shop signs are plain lettering painted by the game.
+Upgrade: passable. Drawn by the game as painted wood boards with gilt serif or shadowed block lettering (`famSignPaint`, 2048 px atlas); hand-lettered pictures would still read richer.
 
 Sheet a: Lakeside Bakery (Bread · Pies · Coffee), Harbor Books (New & Used), Pine & Anchor (Cafe), Ridge Outfitters (Camp · Fish · Hike), Hometown Hardware (Since 1948), Main St. Diner (Breakfast All Day), Lakeside Pharmacy (Rx · Gifts), Post Office (U.S. Mail).
 Sheet b: First Lake Bank (Est. 1912), Barber Shop (Walk-ins Welcome), Wildflower (Florist), Mountain Coffee (Roasted Here), Lakeside Pizza (Slices · Pies), Antiques (& Oddities), Tackle & Trail (Bait · Licenses), The Sweet Shop (Fudge · Candy).
@@ -335,7 +335,7 @@ Close match: `textures/canvas.jpg` (Poly Haven rough_linen, made grey) gives eve
 
 **M15 Boat hulls and names** -> `town/boat_names.png` (transparent PNG, 2048x1024: a grid of 12)
 > [STYLE] Twelve boat transom names as clean vinyl lettering on transparent background, each centred in its own cell with a hailing port under it "LAKESIDE": Reel Time, Knot On Call, Seas the Day, Lake Effect, Miss Corley, Dock Holiday, Aqua Therapy, Sunset Serenade, Fishful Thinking, Wet Willie, Second Wind, Liquid Asset. Mix of script and block styles in navy, black, red and gold.
-Not in the game yet: still to make.
+Drawn by the game: the five runabouts carry their names (Miss Corley, Seas the Day, Reel Time, Dock Holiday, Lake Effect) in vinyl lettering along both sides aft (`btName`, boats.js); the marina's slip boats are still unnamed
 
 **M16 Gelcoat hull** -> `materials/gelcoat.jpg` [TEXTURE]
 > [STYLE][TEXTURE] Glossy white fibreglass boat hull gelcoat, close, very slight orange-peel texture, faint grey scuffs, a thin yellowish waterline stain along the bottom fifth. Seamless left to right.

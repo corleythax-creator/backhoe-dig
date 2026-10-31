@@ -50,6 +50,7 @@ Every sound is cut from CC0 (public domain) field recordings on Freesound by `to
 | Photo-scanned lawn grass on the ground (`textures/ground/*/grass.jpg` at 512, 1024 and 2048 px, and its relief `textures/ground/grass_n.jpg`, from the set's own NormalGL) | [ambientCG](https://ambientcg.com/view?id=Grass001): Grass001 | CC0 |
 | Boat gelcoat, the machines' paint, bare steel and rubber detail, Yellow steel and Polished steel (`textures/gelcoat`, `mach_paint`, `mach_steel`, `mach_rubber`, `yellowsteel`, `steel_polished`, by `tools/cc0.py`) | [ambientCG](https://ambientcg.com): Plastic013B, PaintedMetal001, Metal038, Rubber004, Metal009 | CC0 |
 | Mud and its drier looks (`textures/mud`, `mud_drying`, `mud_cracked`, by `tools/cc0.py`) | [Poly Haven](https://polyhaven.com): muddy_tracks, brown_mud_dry, mud_cracked_dry_03 | CC0 |
+| The town's flat shop roofs (`textures/roof_flat`, with `_n` and `_r`, by `tools/cc0.py`) | [Poly Haven](https://polyhaven.com/a/bitumen): bitumen | CC0 |
 | Photo-scanned roof shingles (`textures/roof_grey`, with `_n` and `_r`) | [Poly Haven](https://polyhaven.com/a/grey_roof_01): grey_roof_01, by Rob Tuytel | CC0 |
 | Service pistol (`models/pistol/`) | [Poly Haven](https://polyhaven.com/a/service_pistol): service_pistol, by Mateusz Sadek | CC0 |
 | Your own textures (uploaded in the map editor) | Whoever uploads them | Theirs; only upload images you have the right to use |
