@@ -100,13 +100,27 @@ function postSize(w,h){if(postRT&&postRT.width===w&&postRT.height===h)return;
   const o={depthBuffer:false,type:ty};postAO=new THREE.WebGLRenderTarget(w>>1,h>>1,o);postAOB=new THREE.WebGLRenderTarget(w>>1,h>>1,o);
   postBl=[];for(let i=1;i<=5;i++)postBl.push(new THREE.WebGLRenderTarget(Math.max(1,w>>i),Math.max(1,h>>i),o));
   postDf=[new THREE.WebGLRenderTarget(Math.max(1,w>>1),Math.max(1,h>>1),o),new THREE.WebGLRenderTarget(Math.max(1,w>>2),Math.max(1,h>>2),o)]}
+// the puddles' reflection picture (half size: colour and distance), drawn after the scene while there are puddles
+let pudSsrRT=null;
+const pudSsrMat=postMat('#include <packing>\nuniform sampler2D tSrc,tDepth;uniform float uNear,uFar;varying vec2 vUv;\n'+
+  'void main(){float d=texture2D(tDepth,vUv).x;gl_FragColor=vec4(texture2D(tSrc,vUv).rgb,d>=1.0?60000.0:-perspectiveDepthToViewZ(d,uNear,uFar));}',
+  {tSrc:{value:null},tDepth:{value:null},uNear:{value:0.1},uFar:{value:1000}});
+function pudSsrTick(){const on=pudLvl>0.001&&gfxCur.wmFine;pudSsrU.uSsr.value.x=on&&pudSsrRT?1:0;
+  if(!on){if(pudSsrRT){pudSsrRT.dispose();pudSsrRT=null}return}
+  const w=postRT.width>>1,h=postRT.height>>1;if(!pudSsrRT||pudSsrRT.width!==w||pudSsrRT.height!==h){if(pudSsrRT)pudSsrRT.dispose();
+    pudSsrRT=new THREE.WebGLRenderTarget(w,h,{depthBuffer:false,type:renderer.extensions.has('EXT_color_buffer_float')?THREE.HalfFloatType:THREE.FloatType})}
+  const u=pudSsrMat.uniforms;u.tSrc.value=postRT.texture;u.tDepth.value=postRT.depthTexture;u.uNear.value=camera.near;u.uFar.value=camera.far;postPass(pudSsrMat,pudSsrRT);
+  pudSsrU.uPrevVP.value.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse)}
 function postOn(){return (POST.ao||POST.bloom||POST.grade)&&!renderer.xr.isPresenting}
 // draws the frame: straight to the screen, or through the effects
-function postRender(){ultraTick();if(!postOn()){renderer.render(scene,camera);return}
+function postRender(){ultraTick();if(!postOn()){pudSsrU.uSsr.value.x=0;renderer.render(scene,camera);return}
   renderer.getDrawingBufferSize(postSz);postSize(postSz.x,postSz.y);
+  // the puddles' reflections (rain.js) read the picture as it was last frame (they can't read the one being drawn)
+  if(pudSsrRT)pudSsrU.tSsr.value=pudSsrRT.texture;
   renderer.setRenderTarget(postRT);renderer.render(scene,camera);
   // the effects' own few draws don't count toward the frame's triangles and draws (fps counter, speed test)
   const ar=renderer.info.autoReset;renderer.info.autoReset=false;
+  pudSsrTick();
   const W=postRT.width,H=postRT.height,ty=Math.tan(camera.fov*Math.PI/360)/camera.zoom;
   if(POST.ao){const u=postAOMat.uniforms;u.tDepth.value=postRT.depthTexture;u.uTexel.value.set(1/W,1/H);u.uTan.value.set(ty*camera.aspect,ty);
     u.uNear.value=camera.near;u.uFar.value=camera.far;u.uR.value=TU.fxAoR;u.tScene.value=postRT.texture;u.uAo.value=TU.fxAo;

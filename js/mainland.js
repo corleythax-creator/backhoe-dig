@@ -215,9 +215,9 @@ function mainLot(K,x,z,w,d,h,col,face,awn,si,wl){wl=wl||col;const y=rmGroundMax(
   // (the door itself swings in as the worker comes up to it: rmDoor, interiors.js)
   {const [a,b]=F(d/2+0.03,0);for(const s of [-1,1]){const [g,k]=F(d/2+0.05,s*0.7);K.box(0.22,2.95,0.16,TR,g,y+1.475,k,face)}
     K.box(1.2,0.6,0.02,'glass',a,y+2.6,b,face);const [e,f]=F(d/2+0.03,-0.6);rmDoor('shop',e,y,f,face,1.2)}
-  // the awning: stripes of its colour and white, sloping out over the walk, with a valance
-  {const n=Math.max(4,Math.round((w-1)/0.6)),sw=(w-1)/n;for(let i=0;i<n;i++){const s=-(w-1)/2+sw*(i+0.5),[a,b]=F(d/2+0.58,s);K.box(sw+0.005,0.06,1.15,i%2?0xf2efe6:awn,a,y+2.95,b,face,-0.32);
-    const [e,f]=F(d/2+1.13,s);K.box(sw+0.005,0.3,0.04,i%2?0xf2efe6:awn,e,y+2.62,f,face)}}
+  // the awning: stripes of its colour and white canvas (scanned weave, tinted), sloping out over the walk, with a valance
+  {const n=Math.max(4,Math.round((w-1)/0.6)),sw=(w-1)/n;for(let i=0;i<n;i++){const s=-(w-1)/2+sw*(i+0.5),[a,b]=F(d/2+0.58,s);K.box(sw+0.005,0.06,1.15,famTint('canvas',i%2?0xf2efe6:awn),a,y+2.95,b,face,-0.32);
+    const [e,f]=F(d/2+1.13,s);K.box(sw+0.005,0.3,0.04,famTint('canvas',i%2?0xf2efe6:awn),e,y+2.62,f,face)}}
   // the sign over the awning (MAIN_SHOPS[si]), on a dark board
   {const sw=Math.min(w-1.6,8.5),[a,b]=F(d/2+0.1,0);K.box(sw+0.24,1.14,0.08,DK,a,y+3.75,b,face);const [e,f]=F(d/2+0.15,0);mainSignList.push({x:e,y:y+3.75,z:f,ry:face,w:sw,h:0.95,i:si%MAIN_SHOPS.length})}
   // the upper floors: windows with a sill under and a lintel over each
@@ -404,9 +404,62 @@ function shopStd(c,metal,rough,o){const m=new THREE.MeshStandardMaterial(Object.
 function shopLoad(){if(SHOP.loaded)return;SHOP.loaded=true;
   for(const m of SHOP.lib){const L=k=>{const t=new THREE.TextureLoader().load(`textures/${m.userData.lib}${k}.jpg`);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.anisotropy=4;if(!k)t.colorSpace=THREE.SRGBColorSpace;return t};
     m.map=L('');m.color.setScalar(1);m.roughness=1;m.userData.n=L('_n');m.userData.r=L('_r');m.needsUpdate=true}
-  shopPbr(SHOP.pbr)}
+  for(const d of ST_SURF)if(d&&d.m)stSurfLoad(d.m);shopPbr(SHOP.pbr)}
 // relief and sheen maps on (High graphics) or off
-function shopPbr(on){SHOP.pbr=!!on;if(!SHOP.loaded)return;for(const m of SHOP.lib){m.normalMap=on?m.userData.n:null;m.roughnessMap=on?m.userData.r:null;m.roughness=on?1:0.85;m.needsUpdate=true}}
+function shopPbr(on){SHOP.pbr=!!on;if(!SHOP.loaded)return;for(const m of SHOP.lib){m.normalMap=on?m.userData.n:null;m.roughnessMap=on?m.userData.r:null;m.roughness=on?1:0.85;m.needsUpdate=true}
+  for(const d of ST_SURF)if(d&&d.m)stSurfPbr(d.m)}
+// street paving besides asphalt (Main Street's brick, and sf on a map editor street: 1 brick, 2 cobblestone, 3 fan
+// cobbles, 4 old brick, streets.js): CC0 photo-scanned paving
+// (tools/street_tex.py, CREDITS.md) laid in the street's own frame, its rows straight across the street; ft the tile's
+// size, dep how far the bricks stand up out of their joints at 100% (metres, the Street paving relief tuning), c the
+// mean colour until the picture is in. Low and Medium draw the colour only; with Material relief (High) a parallax march
+// through the height map raises every brick and sett, shades the joints on its far side from the sun, and reads the
+// scan's normals, roughness and ambient occlusion where the eye's ray meets the paving (ST_POM)
+const ST_SURF=[null,{id:'brick',n:'Brick',ft:5.09,dep:0.022,c:[0.604,0.534,0.523]},{id:'cobble',n:'Cobblestone',ft:3.77,dep:0.03,c:[0.479,0.470,0.409]},
+  {id:'fan',n:'Fan cobbles',ft:17.7,dep:0.016,c:[0.426,0.397,0.355]},{id:'oldbrick',n:'Old brick',ft:6.73,dep:0.022,c:[0.421,0.392,0.371]}];
+// the relief: from where the eye's ray enters the top of the paving it steps down through the height map (B of the _m
+// map, 1 on top of a brick) to where it meets a brick or a joint, and from there a few steps toward the sun (shaded if a
+// brick is in the way); dep in texture units, fading out by 130 ft so far paving stays calm and cheap
+const ST_POM=`uniform float uStRel;
+float stH(vec2 p,vec2 dx,vec2 dy){return textureGrad(roughnessMap,p,dx,dy).b;}
+vec2 stPom(vec2 uv,vec3 V,vec3 L,float dep,out float sh){sh=1.0;if(dep<1e-5||V.z<=0.0)return uv;
+  vec2 dx=dFdx(uv),dy=dFdy(uv),p=uv,pp=uv;float n=floor(mix(24.0,8.0,V.z)),st=1.0/n,l=0.0,h=1.0-stH(uv,dx,dy),hp=h;vec2 d=-V.xy/max(V.z,0.2)*dep*st;
+  for(int i=0;i<24;i++){if(l>=h||float(i)>=n)break;pp=p;hp=h;p+=d;l+=st;h=1.0-stH(p,dx,dy);}
+  float a=h-l,b=hp-l+st;p=mix(p,pp,clamp(a/min(a-b,-1e-5),0.0,1.0));
+  float hd=1.0-stH(p,dx,dy);if(L.z>0.02&&hd>0.02){vec2 e=L.xy/max(L.z,0.15)*dep*hd/6.0;float o=0.0;
+    for(int j=1;j<=6;j++){float f=float(j)/6.0;o=max(o,hd*(1.0-f)-1.0+stH(p+e*float(j),dx,dy));}
+    sh=1.0-0.8*smoothstep(0.0,0.3,o);}
+  return p;}
+`;
+const ST_POM_ON='defined(USE_NORMALMAP_TANGENTSPACE)&&defined(USE_ROUGHNESSMAP)';
+function stPomPatch(sh){sh.uniforms.uStRel=this.userData.relU;
+  sh.fragmentShader=sh.fragmentShader.replace('void main() {',`#if ${ST_POM_ON}\n${ST_POM}#endif\nvoid main() {`)
+    .replace('#include <map_fragment>',`#if ${ST_POM_ON}
+float stSh=1.0;vec2 stUv=vNormalMapUv;
+{mat3 sT=getTangentFrame(-vViewPosition,normalize(vNormal),vNormalMapUv);vec3 sL=vec3(0.0,0.0,-1.0);
+#if NUM_DIR_LIGHTS>0
+sL=directionalLights[0].direction*sT;
+#endif
+stUv=stPom(vNormalMapUv,normalize(vViewPosition)*sT,sL,uStRel*(1.0-smoothstep(25.0,40.0,length(vViewPosition))),stSh);}
+#define vMapUv stUv
+#define vRoughnessMapUv stUv
+#define vAoMapUv stUv
+#endif
+#include <map_fragment>`)
+    .replace('#include <normal_fragment_begin>',`#include <normal_fragment_begin>\n#if ${ST_POM_ON}\n#define vNormalMapUv stUv\n#endif`)
+    .replace('#include <lights_fragment_begin>',`#include <lights_fragment_begin>\n#if ${ST_POM_ON}\nreflectedLight.directDiffuse*=stSh;reflectedLight.directSpecular*=stSh;\n#endif`)}
+// a surface's material, made the first time a street uses it, in its mean colour until the library's pictures load
+// (shopLoad); its relief maps load the first time relief is on (shopPbr)
+function stSurfMat(f){const d=ST_SURF[f];if(d.m)return d.m;
+  const m=d.m=new THREE.MeshStandardMaterial({color:0xffffff,roughness:0.8,envMap:skyEnv,envMapIntensity:0.5,aoMapIntensity:0.6});
+  m.color.setRGB(d.c[0],d.c[1],d.c[2]);m.userData.lib='street_'+d.id;m.userData.ft=d.ft;m.onBeforeCompile=stPomPatch;
+  m.userData.relU={get value(){return d.dep*TU.stRelief/(d.ft*0.3048)}};
+  if(typeof wetPatch==='function')wetPatch(m);if(SHOP.loaded)stSurfLoad(m);return m}
+function stTex(t){t.wrapS=t.wrapT=THREE.RepeatWrapping;t.anisotropy=8;return t}
+function stSurfLoad(m){new THREE.TextureLoader().load(`textures/${m.userData.lib}.jpg`,t=>{stTex(t);t.colorSpace=THREE.SRGBColorSpace;m.map=t;m.color.setScalar(1);m.needsUpdate=true});stSurfPbr(m)}
+function stSurfPbr(m){const on=SHOP.pbr&&SHOP.loaded,u=m.userData;
+  if(on&&u.n===undefined){u.n=null;let k=0;const L=s=>stTex(new THREE.TextureLoader().load(`textures/${u.lib}${s}.jpg`,()=>{if(++k===2){u.n=n;u.r=r;stSurfPbr(m)}})),n=L('_n'),r=L('_m');return}
+  const p=on&&!!u.n;if(!!m.normalMap===p)return;m.normalMap=p?u.n:null;m.roughnessMap=m.aoMap=p?u.r:null;m.roughness=p?1:0.8;m.needsUpdate=true}
 // parts merged per material, with texture coordinates in world metres (each material's tile size in feet), so brick
 // courses and concrete joints keep their real size on every part
 function shopKit(){const parts=new Map(),O=new THREE.Object3D(),n=new THREE.Vector3(),a=new THREE.Vector3(),b=new THREE.Vector3();O.rotation.order='YXZ';
@@ -492,8 +545,8 @@ function shopKit(){const parts=new Map(),O=new THREE.Object3D(),n=new THREE.Vect
   SHOP.y=fl})();
 
 // ---------- the town's streets (mainStreets) ----------
-// Main Street (x ±4, from the causeway to the store's lot) and the cross street (z 652) paved in asphalt over their
-// gravel (ISLAND_ROADS, terrain.js), with a concrete gutter, a 6 in curb and a raised broom-finish sidewalk scored every
+// Main Street (x ±4, from the causeway to the store's lot) paved in brick and the cross street (z 652) in asphalt over
+// their gravel (ISLAND_ROADS, terrain.js), with a concrete gutter, a 6 in curb and a raised broom-finish sidewalk scored every
 // 5 ft each side; a four-way stop where they meet (stop bars, stop signs, crosswalks landing on curb ramps with yellow
 // warning pads), a double yellow line, curb inlets to the storm drains and manhole covers. The beach road is paved
 // without curbs. Like the rest of the town it is laid on the ground as it is at load (baseHeight)
@@ -534,9 +587,10 @@ function mainStreets(){const K=shopKit(),F=famKit(),G=baseHeight,asph=shopLib('a
         const low=RAMPS.some(r=>r.ax===ax&&Math.abs(r.c-c)<0.01&&m>r.a0&&m<r.a1),top=low?0.05:MST.top;
         if(ax==='z')K.box(conc,MST.curb,top+0.1,q1-q0,cx,g+(top-0.1)/2,cz);else K.box(conc,q1-q0,top+0.1,MST.curb,cx,g+(top-0.1)/2,cz)}}
     if(ax==='z')sheet(conc,Math.min(c,c-o*0.42),Math.max(c,c-o*0.42),a,b,MST.lift+0.006,1.5);else sheet(conc,a,b,Math.min(c,c-o*0.42),Math.max(c,c-o*0.42),MST.lift+0.006,1.5)};
-  // the asphalt: Main Street, the cross street each side of it, the beach road west and east (into the marina's car park);
-  // across Harbor Square (square.js) the beach road is brick
-  sheet(asph,-X,X,MST.z0,MST.z1,MST.lift,2);for(const s of [-1,1])sheet(asph,s<0?-XE:X,s<0?-X:XE,C0,C1,MST.lift,2);
+  // the paving: Main Street in brick (its rows across the street, the bricks standing up with Material relief: ST_SURF),
+  // the cross street each side of it and the beach road west and east (into the marina's car park) in asphalt; across
+  // Harbor Square (square.js) the beach road is brick pavers
+  sheet(stSurfMat(1),-X,X,MST.z0,MST.z1,MST.lift,2);for(const s of [-1,1])sheet(asph,s<0?-XE:X,s<0?-X:XE,C0,C1,MST.lift,2);
   ribbon(asph,[[-170,576],[-106,574.84]],5,MST.lift);ribbon(shopLib('herringbone'),[[-106,574.84],[-60,574],[-X,574]],5,MST.lift);ribbon(asph,[[X,574],[26,574],[36,582],[58.5,586.6]],5,MST.lift);
   // curbs, gutters and sidewalks along Main Street (from the beach road to the store's lot, round the cross street) and the cross street
   for(const s of [-1,1]){for(const [z0,z1] of [[BZ,C0],[C1,MST.z1]]){curb('z',z0,z1,s*X,s);sheet(walk,Math.min(s*W,s*WE),Math.max(s*W,s*WE),z0,z1,rampAt,0.6);
