@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Friday, October 30, 2026
 
+- **v274** (7:47 PM) Auto weather rains far less: showers every 15 to 35 minutes instead of 5 to 12, a bit shorter, and the first one waits 15 minutes
 - **v273** (7:43 PM) You can walk onto the foothills and Overlook Road now (on foot you were stopped at the back of town), and the start map shows them, with Harbor Square and the Foothills named.
 - **v272** (7:33 PM) The start map: tap once to zoom in twice as close round that spot, tap again to start there on foot; Whole map backs out.
 - **v271** (7:17 PM) Harbor Square, the town's new centre on the waterfront at the foot of Main Street: a seawall promenade with steps down to the beach, café tables and a flagpole, and a town green with a fountain, a bandstand with a band under festoon lights, market stalls, shade trees and the brick Town Hall, whose clock keeps the game's time. Behind the town the ground climbs into wooded foothills: Overlook Road switchbacks up and the Lookout Trail climbs the face to the Lakeside Overlook, 160 ft above town, looking back over the town and the islands. The map has no more straight edges: the town's shore runs on into the mountains, and the field and woods end in beaches.
