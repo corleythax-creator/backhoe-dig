@@ -16,6 +16,10 @@
  *     url, budget, storage,              // optional: the API, most asks a visit (300), the on/off key ('hf-minds')
  *   });
  *   minds.on = true;                     // off until switched on (kept in this browser)
+ *   minds.key = '...';                   // the owner's key, once a device: the server answers nobody else
+ *   minds.model = 'haiku' | 'sonnet' | 'opus';   // who speaks (about 0.03, 0.5 and 1 cent a line)
+ *   minds.spend                          // the meter: { spent, cap, lines, day } (US$, today, Central), minds.cost the
+ *                                        //   last line's; minds.meter() reads it, minds.setCap(usd) sets the cap
  *   minds.tell(key, 'hello');            // you say something; they answer
  *   minds.event(key, { kind: 'touched', by: otherKey, where: 'shoulder' });   // they react to what happens to them
  *   minds.event(key, { kind: 'arrived', by: otherKey });        // someone came in (or was put in the scene)
@@ -63,12 +67,33 @@
 
   function create(o) {
     const KEY = o.storage || 'hf-minds', url = o.url || API, budget = o.budget || 300, changed = () => o.changed && o.changed();
+    // the owner's key (asked once a device; the server answers nobody else) and the model: 'haiku' (cheap) or 'opus'
+    const OWN = KEY + '-key', MOD = KEY + '-model';
+    const send = (body) => fetch(url, { method: 'POST', headers: Object.assign({ 'content-type': 'application/json' }, M.key ? { 'x-persona-key': M.key } : {}), body: JSON.stringify(body) });
+    const why = (a) => { if (a.spend) M.spend = a.spend; if (a.error === 'off') M.server = false; return a.why || 'They could not answer just now.'; };
     const cool = new Map();  // key -> { 'kind|by': time }
     const ids = new WeakMap(); let nid = 0;
     const idOf = (x) => (typeof x === 'object' ? (ids.has(x) ? ids.get(x) : (ids.set(x, ++nid), nid)) : x);
     let next = 0, turn = 0;
     const M = {
       lines: [], asked: 0, busy: new Set(), status: '', server: null, chatter: false, left: CHATTER,
+      spend: null, cost: 0,  // the meter: { spent, cap, lines, day } in US$ (today, Central time), and the last line's cost
+      get key() { return store(OWN) || ''; },
+      set key(v) { store(OWN, String(v || '').trim()); M.status = ''; M.meter(); },
+      // 'haiku', 'sonnet' or 'opus' (a full model name such as 'claude-sonnet-5-5' is taken as its short one)
+      get model() { const m = store(MOD) || ''; return LINE[m] ? m : 'haiku'; },
+      set model(v) { const m = String(v || '').replace(/^claude-/, '').split('-')[0]; store(MOD, LINE[m] ? m : 'haiku'); changed(); },
+      // today's spend and cap (owner only)
+      async meter() {
+        if (!M.key) { M.status = 'Enter the owner key to talk.'; changed(); return null; }
+        try { const r = await send({ op: 'status' }), a = await r.json().catch(() => ({})); if (!r.ok) M.status = why(a); else { M.spend = a.spend; if (M.status.startsWith('Enter the owner')) M.status = ''; } } catch (e) { M.status = 'The meter could not be read.'; }
+        changed(); return M.spend;
+      },
+      // the daily cap, US$ (0 to 50)
+      async setCap(usd) {
+        try { const r = await send({ op: 'cap', cap: +usd }), a = await r.json().catch(() => ({})); if (!r.ok) M.status = why(a); else { M.spend = a.spend; M.status = ''; } } catch (e) { M.status = 'The cap could not be set.'; }
+        changed(); return M.spend;
+      },
       get on() { return store(KEY) === '1'; },
       set on(v) { store(KEY, v ? '1' : '0'); if (!v) { M.chatter = false; M.hush(); } else M.check(); changed(); },
       card: (k) => o.card(k),
@@ -78,7 +103,8 @@
       async check() {
         if (M.server !== null) return M.server;
         try { const r = await fetch(url); M.server = r.ok && (await r.json()).on === true; } catch (e) { M.server = false; }
-        if (!M.server) M.status = 'Not set up yet: Human Forge\'s site needs ANTHROPIC_API_KEY in its environment.';
+        if (!M.server) M.status = 'Not set up yet: Human Forge\'s site needs ANTHROPIC_API_KEY, PERSONA_OWNER_KEY and PERSONA_DB_SECRET.';
+        else if (M.key) M.meter();
         changed();
         return M.server;
       },
@@ -87,14 +113,15 @@
         if (!M.can(k) || (to !== 'you' && to != null && !M.can(to)) || M.busy.has(k)) return null;
         if (M.asked >= budget) { M.status = `That's ${budget} lines this visit; reload the page for more.`; changed(); return null; }
         if (!(await M.check())) return null;
+        if (!M.key) { M.status = 'Enter the owner key to talk.'; changed(); return null; }
         const log = M.lines.filter((l) => l.p === k || l.to === k || (to !== 'you' && to != null && (l.p === to || l.to === to))).slice(-12).map((l) => ({ who: l.who, said: l.said }));
         const e = ev && { kind: ev.kind, who: ev.by != null ? M.nameOf(ev.by) : String(ev.who || '').slice(0, 40), what: String(ev.what || '').slice(0, 60), where: ev.where || '', danger: !!ev.danger, feet: ev.feet ? Math.round(ev.feet) : undefined };
         M.busy.add(k); M.asked++; M.status = ''; changed();
         try {
-          const r = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' },
-            body: JSON.stringify({ me: o.card(k), to: to === 'you' || to == null ? 'you' : o.card(to), scene: o.scene ? o.scene(k, to, ev) : '', log, event: e || undefined }) });
+          const r = await send({ me: o.card(k), to: to === 'you' || to == null ? 'you' : o.card(to), scene: o.scene ? o.scene(k, to, ev) : '', log, event: e || undefined, model: M.model });
           const a = await r.json().catch(() => ({}));
-          if (!r.ok) { M.status = a.why || 'They could not answer just now.'; if (a.error === 'off') M.server = false; return null; }
+          if (!r.ok) { M.status = why(a); if (a.error === 'cap') M.chatter = false; return null; }
+          if (a.spend) { M.spend = a.spend; M.cost = a.cost || 0; }
           if (!o.people().includes(k)) return null;
           M.lines.push({ p: k, to: ev ? (ev.by != null ? ev.by : null) : to, who: M.nameOf(k), said: a.say, ev: ev ? ev.kind : undefined });
           if (o.show) o.show(k, a, to, ev);
@@ -143,5 +170,38 @@
     return M;
   }
 
-  root.HumanForgeMind = { TRAITS, MOODS, PARTS, ADULT, API, COOL, roll, card, partOf, create };
+  // what a line costs, roughly (about 1,200 tokens in and 300 out, at each model's price): for the meter's estimates
+  const LINE = { haiku: 0.00027, sonnet: 0.0054, opus: 0.0108 }, NAME = { haiku: 'Haiku', sonnet: 'Sonnet', opus: 'Opus' };
+  const money = (v) => (v > 0 && v < 0.01 ? (v * 100).toFixed(2) + '\u00a2' : '$' + (v || 0).toFixed(2));
+  // the meter in words: today's spend of the cap, lines, and about how many more at the model picked
+  function meterText(M) {
+    const s = M.spend; if (!s) return M.key ? 'Reading the meter...' : 'Enter the owner key to talk.';
+    const left = Math.max(0, s.cap - s.spent), n = Math.floor(left / LINE[M.model]);
+    return `Today: ${money(s.spent)} of ${money(s.cap)} (${s.lines} line${s.lines === 1 ? '' : 's'})` + (M.cost ? `, last line ${money(M.cost)}` : '') +
+      `. About ${n.toLocaleString()} more at ${NAME[M.model]}.`;
+  }
+  // a small panel for any page: the owner key, which model speaks, the daily cap and the meter (o.button: a class for
+  // the buttons, o.on: the class a picked one gets); returns paint(), to call when M changes
+  function controls(el, M, o = {}) {
+    const B = o.button || '', ON = o.on || 'on', caps = [0.5, 1, 2, 5, 10];
+    el.innerHTML = `<div class="hfm-row"><span>Owner key</span><input type="password" autocomplete="off" placeholder="${M.key ? 'saved on this device' : 'the key from Vercel'}"><button class="${B}" data-a="key">Save</button></div>
+      <div class="hfm-row"><span>Who speaks</span>${Object.keys(LINE).map((m) => `<button class="${B}" data-m="${m}">${NAME[m]}, ~${money(LINE[m])} a line</button>`).join('')}</div>
+      <div class="hfm-row"><span>Daily cap</span>${caps.map((c) => `<button class="${B}" data-c="${c}">${money(c)}</button>`).join('')}</div>
+      <div class="hfm-meter"></div>`;
+    const inp = el.querySelector('input');
+    inp.onkeydown = (e) => { e.stopPropagation(); if (e.key === 'Enter') el.querySelector('[data-a=key]').click(); };
+    el.querySelector('[data-a=key]').onclick = () => { if (inp.value.trim()) { M.key = inp.value; inp.value = ''; inp.placeholder = 'saved on this device'; } };
+    el.querySelectorAll('[data-m]').forEach((b) => { b.onclick = () => { M.model = b.dataset.m; paint(); }; });
+    el.querySelectorAll('[data-c]').forEach((b) => { b.onclick = () => M.setCap(+b.dataset.c); });
+    function paint() {
+      if (!el.isConnected) return;
+      el.querySelectorAll('[data-m]').forEach((b) => { b.classList.toggle(ON, b.dataset.m === M.model); b.setAttribute('aria-pressed', String(b.dataset.m === M.model)); });
+      el.querySelectorAll('[data-c]').forEach((b) => { const on = !!M.spend && +b.dataset.c === M.spend.cap; b.classList.toggle(ON, on); b.setAttribute('aria-pressed', String(on)); });
+      el.querySelector('.hfm-meter').textContent = meterText(M) + (M.status ? ' ' + M.status : '');
+    }
+    paint(); if (M.key && !M.spend) M.meter();
+    return paint;
+  }
+
+  root.HumanForgeMind = { TRAITS, MOODS, PARTS, ADULT, API, COOL, LINE, NAME, roll, card, partOf, create, controls, meterText, money };
 })(typeof window !== 'undefined' ? window : globalThis);

@@ -3,6 +3,9 @@
 // what they say comes from Human Forge's /api/persona, a language model under that server's fixed rules (fictional
 // adults, PG-13, nothing sexual, no real people, no hate or help with harm, honest about being an AI if asked).
 // Off unless switched on (☰ → Townsfolk talk: Off, Text, Aloud; bhd_talk on this device); children never talk.
+// Only the owner can talk to them: the server answers nobody without the owner key (☰ → Talk model → Key, once a
+// device). ☰ also picks who speaks (Haiku, about 0.03¢ a line; Sonnet, 0.5¢; Opus, 1¢), sets the daily cap in dollars
+// (the server stops at it) and shows the meter: today's spend, lines, and about how many more at the model picked.
 // On foot: walk up to someone and they stop, turn to you and say hello; bump into them and they say something about it;
 // Talk (Enter, or the chip that shows near someone) opens a box to say something to the nearest one, who answers.
 // Lines show over their heads; Aloud reads them in the browser's own voices.
@@ -23,7 +26,8 @@ function talkInit(){if(TALK.M||!window.HumanForgeMind)return;
 // ☰ → Townsfolk talk
 function talkSet(m){TALK.mode=m;try{localStorage.setItem('bhd_talk',m)}catch(e){}
   for(const b of document.querySelectorAll('#talkRow button'))b.setAttribute('aria-pressed',String(b.dataset.talk===m));
-  if(m==='off'){talkClose();for(const b of TALK.bub.values())b.el.remove();TALK.bub.clear();if(TALK.M)TALK.M.hush()}else{talkLib();talkInit()}}
+  for(const r of document.querySelectorAll('.talkOpt'))r.hidden=m==='off';
+  if(m==='off'){talkClose();for(const b of TALK.bub.values())b.el.remove();TALK.bub.clear();if(TALK.M)TALK.M.hush()}else{talkLib();talkInit();TALK.M&&TALK.M.check();talkPaint()}}
 for(const b of document.querySelectorAll('#talkRow button'))b.onclick=()=>talkSet(b.dataset.talk);
 talkSet(TALK.mode);
 
@@ -40,8 +44,16 @@ function talkUI(){if(TALK.ui)return TALK.ui;const d=document.createElement('div'
 function talkOpen(){const p=TALK.near;if(!p||!TALK.M)return;TALK.with=p;const u=talkUI();u.d.querySelector('#talkForm').hidden=false;
   const i=u.d.querySelector('#talkIn');i.placeholder='Say something to '+talkName(p);i.focus();talkFace(p,6);talkPaint()}
 function talkClose(){TALK.with=null;if(!TALK.ui)return;TALK.ui.d.querySelector('#talkForm').hidden=true;const i=TALK.ui.d.querySelector('#talkIn');i.blur();talkPaint()}
-function talkPaint(){if(!TALK.ui||!TALK.M)return;const s=TALK.ui.d.querySelector('#talkStatus'),p=TALK.with;
-  s.textContent=p&&TALK.M.busy.has(p)?talkName(p)+' is thinking…':TALK.M.status||''}
+function talkPaint(){const M=TALK.M;if(!M)return;
+  // ☰: the model and cap picked, and the meter
+  for(const b of document.querySelectorAll('#talkModelRow [data-tm]'))b.setAttribute('aria-pressed',String(b.dataset.tm===M.model));
+  for(const b of document.querySelectorAll('#talkCapRow [data-tc]'))b.setAttribute('aria-pressed',String(!!M.spend&&+b.dataset.tc===M.spend.cap));
+  const mt=$('#talkMeter');if(mt)mt.textContent=HumanForgeMind.meterText(M)+(M.status&&!M.status.startsWith('Enter the owner')?' '+M.status:'');
+  if(!TALK.ui)return;const s=TALK.ui.d.querySelector('#talkStatus'),p=TALK.with,sp=M.spend;
+  s.textContent=p&&M.busy.has(p)?talkName(p)+' is thinking…':M.status||(sp?`${HumanForgeMind.NAME[M.model]} · ${HumanForgeMind.money(sp.spent)} of ${HumanForgeMind.money(sp.cap)} today`:'')}
+for(const b of document.querySelectorAll('#talkModelRow [data-tm]'))b.onclick=()=>{if(TALK.M){TALK.M.model=b.dataset.tm;talkPaint()}};
+for(const b of document.querySelectorAll('#talkCapRow [data-tc]'))b.onclick=()=>{if(TALK.M)TALK.M.setCap(+b.dataset.tc)};
+$('#talkKeyBtn').onclick=()=>{if(!TALK.M)return;const v=prompt('The owner key for townsfolk talk (from Human Forge\'s Vercel settings, PERSONA_OWNER_KEY). It stays on this device.',TALK.M.key?'':'');if(v&&v.trim())TALK.M.key=v.trim()};
 // stop and turn to the player a while (walkers only: someone in a shop or a car stays put)
 function talkFace(p,s){if(p.room||p.drv||p.cop||p.dead)return;p.wait=Math.max(p.wait||0,s);p.look=Math.atan2(wk.x-p.x,wk.z-p.z)}
 function talkShow(p,a){const u=talkUI();let b=TALK.bub.get(p);if(!b){b={el:document.createElement('div')};b.el.className='talkLine';u.L.appendChild(b.el);TALK.bub.set(p,b)}
