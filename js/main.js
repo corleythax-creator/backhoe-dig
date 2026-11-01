@@ -369,7 +369,7 @@ function warmAllTick(){const W=warmAll;if(!W||bench.on||vrOn())return;const now=
   if(now<W.next)return;W.next=now+4000;warmTexQ(W);
   const ms=new Set();scene.traverse(o=>{if(o.material)for(const m of [].concat(o.material))ms.add(m)});
   if(ms.size>W.mats){W.mats=ms.size;W.still=0;W.pend++;
-    try{const p=renderer.compileAsync?renderer.compileAsync(scene,camera):(renderer.compile(scene,camera),null);if(p&&p.then)p.then(()=>W.pend--,()=>W.pend--);else W.pend--}catch(e){W.pend--}}
+    try{const p=warmCompile(scene);if(p&&p.then)p.then(()=>W.pend--,()=>W.pend--);else W.pend--}catch(e){W.pend--}}
   else W.still++;
   if(now-W.t0>180000&&W.pend===0&&(!W.q.length||help.hidden)&&(!W.at.length||!warmQuiet()))warmAll=null}
 // warming one thing before it first shows (the town's cars, a townsperson's look or crowd, a close-up hero), at any
@@ -380,7 +380,7 @@ const gpuQ=[];
 function gpuUp(tx){return new Promise(r=>gpuQ.push({tx:[...tx],done:r}))}
 function gpuWarm(o){const tx=new Set(),ok=im=>im&&(im.width||im.data||Array.isArray(im));
   o.traverse(m=>{for(const M of [].concat(m.material||[]))for(const k in M){const t=M[k];if(t&&t.isTexture&&ok(t.image))tx.add(t)}});
-  let p=null;try{p=renderer.compileAsync(o,camera,scene)}catch(e){}
+  let p=null;try{p=warmCompile(o,scene)}catch(e){}
   return Promise.all([p&&p.then?p.catch(()=>{}):null,gpuUp(tx)])}
 // (a few milliseconds' worth a frame, at least one)
 function gpuWarmTick(){const t0=performance.now();while(gpuQ.length){const j=gpuQ[0],t=j.tx.pop();if(t)try{renderer.initTexture(t)}catch(e){}

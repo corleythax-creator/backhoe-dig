@@ -7,8 +7,8 @@
 //   NODE_PATH=$(npm root -g) node tools/play.js --eval "setMode('walk');return wk.x" --wait 2000 --shot /tmp/x.png
 // Options: --eval CODE (repeatable), --steps FILE (a module exporting async (page, help) => result, for real clicks:
 //   help.center(selector) gives a part's middle), --wait MS after each step (default 600), --size WxH (1100x620),
-//   --gfx low|medium|high, --view CODE (a view code from the map editor's Copy view, "view X,Z,FACE,TILT,BACK": the
-//   shot looks from there in the editor; --view-game pins it over the game instead), --shot FILE, --keep (keep this browser's saves), --boot MS before the first step (3000).
+//   --gfx low|medium|high (switched after boot), --gfx0 low|med|high (from the first frame), --view CODE (a view code from the map editor's Copy view, "view X,Z,FACE,TILT,BACK": the
+//   shot looks from there in the editor; --view-game pins it over the game instead), --shot FILE, --init FILE (run in the page before the game's scripts), --keep (keep this browser's saves), --boot MS before the first step (3000).
 const http=require('http'),fs=require('fs'),path=require('path');const {chromium}=require('playwright');
 const root=path.resolve(__dirname,'..'),A=process.argv.slice(2),opt={eval:[],wait:600,size:'1100x620',boot:3000};
 for(let i=0;i<A.length;i++){const k=A[i].replace(/^--/,'');if(k==='keep')opt.keep=true;else if(k==='eval')opt.eval.push(A[++i]);else opt[k]=A[++i]}
@@ -25,6 +25,10 @@ server.listen(0,async()=>{const port=server.address().port,errs=[],[w,h]=opt.siz
     // a fresh browser has no saves; clearing them before the page's own scripts run beats a reload, which can stall
     // while the page saves on its way out
     if(!opt.keep)await p.addInitScript(()=>{if(!sessionStorage.getItem('playCleared')){for(const k of Object.keys(localStorage))if(k.startsWith('bhd_'))localStorage.removeItem(k);sessionStorage.setItem('playCleared','1')}});
+    // --gfx0: that Graphics setting from the page's first frame, the way a phone starts on Low (--gfx switches after boot)
+    // --init FILE: a script run in the page before any of the game's (to hook three.js or the browser from the start)
+    if(opt.init)await p.addInitScript({path:opt.init});
+    if(opt.gfx0)await p.addInitScript(g=>{try{localStorage.setItem('bhd_gfx',g)}catch(e){}},opt.gfx0);
     await p.goto(`http://play.test:${port}/index.html`,{waitUntil:'load',timeout:120000});
     await p.waitForTimeout(+opt.boot);
     await p.evaluate(g=>{const h=document.getElementById('help');if(h)h.hidden=true;if(g&&typeof setGfx==='function')setGfx(g)},opt.gfx||'');
