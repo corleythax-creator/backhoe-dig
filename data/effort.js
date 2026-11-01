@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-01T19:42:00Z",
+ "updated": "2026-11-01T20:11:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -102,9 +102,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-01",
-   "dh": 10,
-   "act": 2.5,
-   "versions": 5
+   "dh": 11.5,
+   "act": 3,
+   "versions": 6
   }
  ],
  "extra": [
@@ -3039,6 +3039,15 @@ window.EFFORT = {
    "tris": 5857140,
    "chars": 2166314,
    "what": "The bridges' and other structures' pictures (62 materials, one every 40 ms after you were let in, each rebuilding its shader as it arrived) are now made back to back behind the loading cover, which waits for them, and their new shaders are built in the background; the rifle's 6 MB model loads only once you own one or come near a gun shop, instead of at the start"
+  },
+  {
+   "v": 326,
+   "asked": "2026-11-01T13:50:00-06:00",
+   "live": "2026-11-01T14:11:39-06:00",
+   "dh": 1.5,
+   "tris": 5856682,
+   "chars": 2167832,
+   "what": "Loading screen: no more 'snd is not defined' error, keeps loading while the tab is in the background, percent counts up smoothly"
   }
  ]
 };
