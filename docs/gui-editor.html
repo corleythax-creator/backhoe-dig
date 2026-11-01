@@ -636,6 +636,19 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
 #edAllMore{margin:10px 14px}
 @container stage (max-width:640px){.edall{inset:48px 4px 4px}#edAllT td:nth-child(3),#edAllT th:nth-child(3){display:none}}
 
+/* townsfolk who talk (talk.js): the chip near someone and the box to type in, over the drive bar; their lines over their heads */
+#talkBox{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 112px);z-index:4;display:flex;flex-direction:column;align-items:center;gap:6px;zoom:var(--s)}
+#talkBox[hidden]{display:none}
+#talkChip{font:600 14px/1.2 var(--f-display);background:rgba(12,15,18,.72);color:#fff;border:0;border-left:3px solid var(--machine);border-radius:6px;padding:7px 12px;cursor:pointer}
+#talkForm{display:flex;gap:6px}#talkForm[hidden]{display:none}
+#talkForm input{width:min(360px,70cqw);font:15px/1.3 system-ui,sans-serif;padding:7px 10px;border-radius:6px;border:1px solid rgba(255,255,255,.25);background:rgba(12,15,18,.85);color:#fff}
+#talkForm button{font:600 14px/1 var(--f-display);border-radius:6px;border:0;padding:7px 12px;background:var(--machine);color:#1c1309;cursor:pointer}
+#talkStatus{font:13px/1.2 system-ui,sans-serif;color:#fff;text-shadow:0 1px 2px #000}
+#talkLines{position:fixed;inset:0;pointer-events:none;z-index:3}
+.talkLine{position:fixed;transform:translate(-50%,-100%);max-width:min(280px,70cqw);background:rgba(12,15,18,.78);color:#fff;border-left:3px solid var(--machine);border-radius:6px;padding:6px 10px;font:14px/1.35 system-ui,sans-serif;opacity:0;transition:opacity .3s}
+.talkLine b{display:block;font:600 12px/1.2 var(--f-display);color:var(--machine);letter-spacing:.03em}
+.talkLine.on{opacity:1}
+
 </style>
 <div class="app">
   <div class="side">
@@ -720,6 +733,8 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
       <div class="sizes"><span>UI size</span><button data-s="1">1x</button><button data-s="1.5">1.5x</button><button data-s="2">2x</button></div>
       <div class="sizes" id="miniRow"><span>Minimap</span><button data-mm="0">Off</button><button data-mm="1">S</button><button data-mm="2">M</button><button data-mm="3">L</button><button data-mm="4">XL</button></div>
       <div class="sizes" id="stickRow"><span>Sticks</span><button data-stk="auto">Auto</button><button data-stk="on">On</button><button data-stk="off">Off</button></div>
+      <!-- townsfolk who talk, in the personality Human Forge gave them (talk.js): off, their lines as text, or aloud -->
+      <div class="sizes" id="talkRow"><span>Townsfolk talk</span><button data-talk="off">Off</button><button data-talk="text">Text</button><button data-talk="voice">Aloud</button></div>
       <div class="sizes" id="msgRow"><span>Messages</span><button data-msg="all">All</button><button data-msg="few">Few</button><button data-msg="off">Off</button></div>
       <div class="mhead">Tools</div>
       <button id="benchBtn">Speed test</button>
@@ -1210,6 +1225,7 @@ const TUNE=[
   ['mtnHaze','Mountains','How hazy the mountains look (Medium and up)',1,'pct',20,300,5],['mtnGlow','Mountains','How much the haze glows toward the sun',1,'pct',0,300,5],['mtnSnow','Mountains','Snow line on the mountains, above the lake',330,'ft',30,600,5],
   
   ['pbrFace','Ground look','Relief: how deep the bucket-tooth grooves, cracks, pebbles and roots on dug faces look',1,'pct',0,300,5],
+  ['pbrSpoil','Ground look','Dug dirt: how cloddy and stony spoil looks, and how plain the soil layers show on cut faces',1,'pct',0,300,5],
   ['stRelief','Ground look','Relief: how far the bricks and cobbles of brick and cobblestone streets stand up',1,'pct',0,300,5],
   // the camera with a mouse: a click on the scene takes the mouse and moving it looks round (Esc lets it go); the chase
   // camera swings round behind a turning machine and drifts back behind it while it moves (main.js, controls.js)
@@ -1439,6 +1455,7 @@ const WORDS=[
   ['fuelFilled','Work','Filled the {machine}: {gal} gal for {cost}. Tank {left}% full.','{machine}, {gal}, {cost}, {left}'],
   ['payDay','Work','A new day. Yesterday paid {pay}.','{pay}: what the day paid'],
   ['ultraSlow','Other','Ultra was too slow here ({fps} fps), so Graphics went to High. Pick Ultra again in Graphics to keep it.','{fps}: frames per second'],
+  ['gfxSlow','Other','{from} was too slow here ({fps} fps), so Graphics went to {name}. Pick {from} again in Graphics to keep it.','{fps}: frames per second; {from}, {name}: the Graphics levels'],
   ['todRun','Time of day','The clock runs: a day passes in {min} min','{min}: minutes (Tuning: Day and night)'],
   ['todStop','Time of day','The clock is stopped at {time}','{time}: like 6:40 PM'],
   ['todNow','Time of day','Back to the real time: {time}','{time}: like 6:40 PM'],
