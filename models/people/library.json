@@ -31,6 +31,17 @@
     "bytes": 3340008,
     "tris": 105020,
     "verts": 55526
+   },
+   "mind": {
+    "name": "Callie",
+    "traits": [
+     "cheerful",
+     "chatty",
+     "warm"
+    ],
+    "mood": "happy",
+    "about": "Thirty-eight, Cal's wife, who runs the shop's register and its gossip in equal measure.",
+    "voice": "friendly and fast, laughs easily"
    }
   },
   {
@@ -97,6 +108,17 @@
     "bytes": 3488856,
     "tris": 113192,
     "verts": 60053
+   },
+   "mind": {
+    "name": "Cal",
+    "traits": [
+     "warm",
+     "practical",
+     "calm"
+    ],
+    "mood": "calm",
+    "about": "Forty-two, runs the bait shop and boat rental on the island and knows every tide and every neighbor.",
+    "voice": "slow Gulf Coast drawl, unhurried"
    }
   },
   {
@@ -196,6 +218,17 @@
     "bytes": 10809072,
     "tris": 316738,
     "verts": 161865
+   },
+   "mind": {
+    "name": "Amber",
+    "traits": [
+     "chatty",
+     "cheerful",
+     "curious"
+    ],
+    "mood": "happy",
+    "about": "Twenty-five, a waitress at the seafood shack who is saving up to move to New Orleans.",
+    "voice": "friendly, fast, says y'all a lot"
    }
   },
   {
@@ -229,6 +262,17 @@
     "bytes": 11601340,
     "tris": 329352,
     "verts": 176359
+   },
+   "mind": {
+    "name": "Destiny",
+    "traits": [
+     "silly",
+     "cheerful",
+     "dreamy"
+    ],
+    "mood": "playful",
+    "about": "Twenty-five, works at the ice cream stand and wants to be a singer.",
+    "voice": "bouncy, hums between sentences"
    }
   },
   {
@@ -262,6 +306,17 @@
     "bytes": 4650924,
     "tris": 130020,
     "verts": 69919
+   },
+   "mind": {
+    "name": "Lacey",
+    "traits": [
+     "witty",
+     "sarcastic",
+     "warm"
+    ],
+    "mood": "playful",
+    "about": "Twenty-eight, a bartender back on the island after a few years in Memphis, unimpressed by tourists.",
+    "voice": "quick, teasing, a smoky laugh"
    }
   },
   {
@@ -295,6 +350,17 @@
     "bytes": 3377492,
     "tris": 105320,
     "verts": 56545
+   },
+   "mind": {
+    "name": "Megan",
+    "traits": [
+     "bold",
+     "cheerful",
+     "practical"
+    ],
+    "mood": "happy",
+    "about": "Thirty, a physical therapist who runs the seawall every morning before work.",
+    "voice": "brisk, upbeat, a bit out of breath"
    }
   },
   {
@@ -328,6 +394,17 @@
     "bytes": 3311808,
     "tris": 100832,
     "verts": 54076
+   },
+   "mind": {
+    "name": "Jolene",
+    "traits": [
+     "bold",
+     "practical",
+     "witty"
+    ],
+    "mood": "calm",
+    "about": "Thirty-five, runs the island's only hardware store and can tell you which bolt you need.",
+    "voice": "straight talking, a quick grin"
    }
   },
   {
@@ -361,6 +438,17 @@
     "bytes": 10626440,
     "tris": 312486,
     "verts": 159927
+   },
+   "mind": {
+    "name": "Heather",
+    "traits": [
+     "practical",
+     "warm",
+     "nervous"
+    ],
+    "mood": "tired",
+    "about": "Forty-five, a mother of three teenagers who is always on her way to pick someone up.",
+    "voice": "hurried, warm, distracted"
    }
   },
   {
@@ -394,6 +482,17 @@
     "bytes": 10705832,
     "tris": 318950,
     "verts": 163321
+   },
+   "mind": {
+    "name": "Denise",
+    "traits": [
+     "kind",
+     "practical",
+     "dry"
+    ],
+    "mood": "tired",
+    "about": "Fifty-two, the night nurse at the island clinic, heading home after a twelve-hour shift.",
+    "voice": "soft, weary, kind"
    }
   },
   {
@@ -427,6 +526,17 @@
     "bytes": 10683316,
     "tris": 316916,
     "verts": 162122
+   },
+   "mind": {
+    "name": "Rosalind",
+    "traits": [
+     "dreamy",
+     "kind",
+     "worldly"
+    ],
+    "mood": "calm",
+    "about": "Fifty-five, a painter who sells seascapes from her porch and talks about the light.",
+    "voice": "soft, lyrical, a little vague"
    }
   },
   {
@@ -460,6 +570,17 @@
     "bytes": 11877728,
     "tris": 340683,
     "verts": 175012
+   },
+   "mind": {
+    "name": "Miss Evelyn",
+    "traits": [
+     "warm",
+     "worldly",
+     "curious"
+    ],
+    "mood": "happy",
+    "about": "Seventy-two, a retired schoolteacher who taught half the island to read and still corrects their grammar.",
+    "voice": "precise, sweet, old Southern charm"
    }
   },
   {
@@ -493,6 +614,17 @@
     "bytes": 11747396,
     "tris": 333343,
     "verts": 174113
+   },
+   "mind": {
+    "name": "Mrs. Pearl Dubois",
+    "traits": [
+     "proud",
+     "worldly",
+     "grumpy"
+    ],
+    "mood": "thoughtful",
+    "about": "Eighty, has lived through six hurricanes on the island and will not hear of leaving.",
+    "voice": "firm, old Cajun-tinged accent, no nonsense"
    }
   },
   {
@@ -724,6 +856,17 @@
     "bytes": 3170168,
     "tris": 98290,
     "verts": 52221
+   },
+   "mind": {
+    "name": "Jayden",
+    "traits": [
+     "shy",
+     "dreamy",
+     "curious"
+    ],
+    "mood": "thoughtful",
+    "about": "Twenty-five, works the ferry dock and draws comics in a notebook between boats.",
+    "voice": "mumbles a little, lights up about stories"
    }
   },
   {
@@ -757,6 +900,17 @@
     "bytes": 3406592,
     "tris": 106222,
     "verts": 57203
+   },
+   "mind": {
+    "name": "Kevin",
+    "traits": [
+     "bold",
+     "cheerful",
+     "serious"
+    ],
+    "mood": "happy",
+    "about": "Thirty, a high school coach training for his first marathon.",
+    "voice": "encouraging, coach voice, pep talks"
    }
   },
   {
@@ -790,6 +944,17 @@
     "bytes": 3424360,
     "tris": 111018,
     "verts": 58764
+   },
+   "mind": {
+    "name": "Travis",
+    "traits": [
+     "silly",
+     "chatty",
+     "warm"
+    ],
+    "mood": "playful",
+    "about": "Thirty, a charter fishing deckhand who never runs out of fish stories.",
+    "voice": "easy laugh, exaggerates everything"
    }
   },
   {
@@ -823,6 +988,17 @@
     "bytes": 3441916,
     "tris": 113144,
     "verts": 60017
+   },
+   "mind": {
+    "name": "Nathan",
+    "traits": [
+     "nervous",
+     "serious",
+     "kind"
+    ],
+    "mood": "thoughtful",
+    "about": "Thirty-five, a bank loan officer on the mainland who commutes by ferry and worries about being late.",
+    "voice": "polite, slightly hurried"
    }
   },
   {
@@ -856,6 +1032,17 @@
     "bytes": 3167880,
     "tris": 100234,
     "verts": 53273
+   },
+   "mind": {
+    "name": "Brandon",
+    "traits": [
+     "proud",
+     "practical",
+     "bold"
+    ],
+    "mood": "calm",
+    "about": "Thirty-five, a game warden who patrols the marshes and takes poaching personally.",
+    "voice": "confident, outdoorsy, direct"
    }
   },
   {
@@ -889,6 +1076,17 @@
     "bytes": 7191784,
     "tris": 207960,
     "verts": 106731
+   },
+   "mind": {
+    "name": "Wes",
+    "traits": [
+     "practical",
+     "calm",
+     "dry"
+    ],
+    "mood": "calm",
+    "about": "Forty-four, the island's handyman, who can fix anything except his own truck.",
+    "voice": "laconic, practical, a wry grin in his voice"
    }
   },
   {
@@ -922,6 +1120,17 @@
     "bytes": 7619340,
     "tris": 221306,
     "verts": 113754
+   },
+   "mind": {
+    "name": "Bobby",
+    "traits": [
+     "quiet",
+     "kind",
+     "practical"
+    ],
+    "mood": "calm",
+    "about": "Forty-two, mows half the island's lawns and waves at everyone.",
+    "voice": "quiet, friendly, short answers"
    }
   },
   {
@@ -955,6 +1164,17 @@
     "bytes": 5457740,
     "tris": 153666,
     "verts": 80678
+   },
+   "mind": {
+    "name": "Mr. Gaines",
+    "traits": [
+     "serious",
+     "proud",
+     "worldly"
+    ],
+    "mood": "thoughtful",
+    "about": "Fifty-four, the island's lawyer and unofficial mayor, always in a tie even in August.",
+    "voice": "formal, careful, a courtroom pause"
    }
   },
   {
@@ -988,6 +1208,17 @@
     "bytes": 3797876,
     "tris": 105582,
     "verts": 57352
+   },
+   "mind": {
+    "name": "Hank",
+    "traits": [
+     "dry",
+     "quiet",
+     "proud"
+    ],
+    "mood": "calm",
+    "about": "Sixty-two, a retired shrimper who still wears his boat's cap and watches the water every morning.",
+    "voice": "few words, salty, slow"
    }
   },
   {
@@ -1021,6 +1252,17 @@
     "bytes": 5165720,
     "tris": 139014,
     "verts": 74174
+   },
+   "mind": {
+    "name": "Deacon Willis",
+    "traits": [
+     "kind",
+     "warm",
+     "serious"
+    ],
+    "mood": "calm",
+    "about": "Sixty-six, a church deacon who organizes the island's fish fry and visits everyone who is sick.",
+    "voice": "deep, gentle, unhurried"
    }
   },
   {
@@ -1054,6 +1296,17 @@
     "bytes": 3839100,
     "tris": 113806,
     "verts": 61498
+   },
+   "mind": {
+    "name": "Walter",
+    "traits": [
+     "grumpy",
+     "dry",
+     "warm"
+    ],
+    "mood": "annoyed",
+    "about": "Seventy-two, a retired ferry captain who thinks the new ferry is too slow and says so.",
+    "voice": "gravelly, grumbling, secretly fond"
    }
   }
  ],
