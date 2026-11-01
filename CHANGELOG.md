@@ -4,6 +4,8 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Sunday, November 1, 2026
 
+- **v333** (5:11 PM) Townsfolk you talk to now have an intelligence and more of a self: the sharp work sums out and give real advice, the simple fumble, and they will tell you their work, where they are from, what they want and what worries them.
+- **v332** (4:58 PM) Showers last half as long, so it rains half as much of the time; raindrop counts back to how they were
 - **v331** (4:41 PM) Rain drops and splashes halved; the stutter after dropping in fixed (first-person and rain shaders built while loading, the start card warms your spot); loading lifts sooner
 - **v330** (4:15 PM) The talk meter shows each line's cost in cents, so Opus (about 1.1¢) no longer looks cheaper than Haiku (0.03¢); the cap stays in dollars.
 - **v329** (4:01 PM) Townsfolk talk now answers only the owner (a key, once a device), picks Haiku, Sonnet or Opus in ☰, stops at a daily dollar cap, and shows a spend meter: today's spend and about how many more lines.

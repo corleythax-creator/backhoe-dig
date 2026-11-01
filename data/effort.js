@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-01T22:41:00Z",
+ "updated": "2026-11-01T23:11:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -102,9 +102,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-01",
-   "dh": 25.5,
-   "act": 5,
-   "versions": 11
+   "dh": 26.25,
+   "act": 5.5,
+   "versions": 13
   }
  ],
  "extra": [
@@ -3093,6 +3093,24 @@ window.EFFORT = {
    "tris": 6002666,
    "chars": 2185612,
    "what": "Rain drops and splashes halved; the stutter after dropping in fixed (first-person and rain shaders built while loading, the start card warms your spot); loading lifts sooner"
+  },
+  {
+   "v": 332,
+   "asked": "2026-11-01T16:50:00-06:00",
+   "live": "2026-11-01T16:58:21-06:00",
+   "dh": 0.25,
+   "tris": 5857703,
+   "chars": 2185623,
+   "what": "Showers last half as long, so it rains half as much of the time; raindrop counts back to how they were"
+  },
+  {
+   "v": 333,
+   "asked": "2026-11-01T17:00:00-06:00",
+   "live": "2026-11-01T17:11:12-06:00",
+   "dh": 0.5,
+   "tris": 5854793,
+   "chars": 2185623,
+   "what": "Townsfolk you talk to now have an intelligence and more of a self: the sharp work sums out and give real advice, the simple fumble, and they will tell you their work, where they are from, what they want and what worries them."
   }
  ]
 };
