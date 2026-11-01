@@ -366,16 +366,25 @@ function warmTexQ(W){if(!W.q){W.q=[];W.up=new Set();W.q0=0}const inQ=new Set(W.q
 // how far the warming is, 0 to 1, for the loading cover (start.js): texture uploads, the places visited, the shaders
 function warmFrac(){const W=warmAll;if(!W)return LOADP.warm?1:0;const q=W.q0?1-W.q.length/W.q0:0,a=W.at?1-W.at.length/WARM_AT.length:0,c=W.pend===0&&W.still>=1?1:W.mats?.5:0;return (q+a+c)/3}
 function warmAllTick(){const W=warmAll;if(!W||bench.on||vrOn())return;const now=performance.now();W.f=(W.f||0)+1;
-  if(!W.at)W.at=WARM_AT.slice();if(W.at.length&&W.f%8===0&&W.mats&&warmQuiet())warmAt(...W.at.pop());
+  if(!W.at){W.at=WARM_AT.slice();rcWarm()}if(W.at.length&&W.f%8===0&&W.mats&&warmQuiet())warmAt(...W.at.pop());
   if(!W.q)warmTexQ(W);
-  if(!help.hidden)for(let i=0;i<(LOADP.done?3:6)&&W.q.length;i++){const t=W.q.pop();W.up.add(t);try{renderer.initTexture(t)}catch(e){}}
-  if(now<W.next)return;W.next=now+4000;warmTexQ(W);
+  // behind the loading cover, as many as fit in about 12 ms (at least 6); behind the start card after it, three a frame
+  if(!help.hidden){const t0=performance.now();for(let i=0;W.q.length&&(LOADP.done?i<3:i<6||performance.now()-t0<12);i++){const t=W.q.pop();W.up.add(t);try{renderer.initTexture(t)}catch(e){}}}
+  // the check for new materials: each second while loading (so the cover lifts as soon as the shaders are done), then every 4 s
+  if(now<W.next)return;W.next=now+(LOADP.done?4000:1000);warmTexQ(W);
   // new materials, or the structures' ones whose pictures arrived (that swaps their shaders: brVer, bridges.js)
   const ms=new Set();scene.traverse(o=>{if(o.material)for(const m of [].concat(o.material))ms.add(m)});
   if(ms.size>W.mats||brVer!==W.ver){W.mats=Math.max(W.mats||0,ms.size);W.ver=brVer;W.still=0;W.pend++;
+    try{warmVm()}catch(e){}
     try{const p=warmCompile(scene);if(p&&p.then)p.then(()=>W.pend--,()=>W.pend--);else W.pend--}catch(e){W.pend--}}
   else W.still++;
   if(now-W.t0>180000&&W.pend===0&&(!W.q.length||help.hidden)&&(!W.at.length||!warmQuiet()))warmAll=null}
+// in first person the gun and the worker's own body are drawn last, as see-through (gunVm, gunVmBody, pistol.js), which
+// gives their materials other shaders than the opaque ones (three.js keys them on it): those are built here too, or the
+// first steps on foot built a dozen of them at once, the stutter after dropping in
+function warmVm(){if(typeof gunVm!=='function')return;gunMdl.traverse(gunVm);const g=wkMdl.g;if(!g)return;const flip=[];
+  g.traverse(o=>{if(o.isMesh)for(const m of [].concat(o.material))if(!m.transparent){m.transparent=true;flip.push(m)}});
+  try{warmCompile(g,scene)}finally{for(const m of flip)m.transparent=false}}
 // warming one thing before it first shows (the town's cars, a townsperson's look or crowd, a close-up hero), at any
 // time in the game: its shaders built in the background (compileAsync, hidden parts too) and its textures uploaded one
 // a frame (gpuWarmTick), then the promise resolves and the caller shows it. Without it the frame it first appears in
@@ -388,7 +397,7 @@ function gpuWarm(o){const tx=new Set(),ok=im=>im&&(im.width||im.data||Array.isAr
   return Promise.all([p&&p.then?p.catch(()=>{}):null,gpuUp(tx)])}
 // (a few milliseconds' worth a frame, at least one)
 function gpuWarmTick(){const t0=performance.now();while(gpuQ.length){const j=gpuQ[0],t=j.tx.pop();if(t)try{renderer.initTexture(t)}catch(e){}
-  if(!j.tx.length){gpuQ.shift();j.done()}if(performance.now()-t0>3)break}}
+  if(!j.tx.length){gpuQ.shift();j.done()}if(performance.now()-t0>(help.hidden?3:14))break}}// more a frame behind the start card
 if([texGrass,texDirt,texGrime].every(t=>t.image&&t.image.width))texReady();else texManager.onLoad=texReady;
 // every lit material gets its wet look before anything is drawn, so nothing compiles twice (rain.js)
 wetPatchAll();

@@ -280,6 +280,13 @@ function rainFxTick(dt){dnTick(dt);const r=weather.r,v=Math.max(ss(0,0.6,r),0.75
 // the shelter map is drawn just before each frame (main.js), so the cabs it holds are where the machines are now
 // while it rains, every frame; while things drip after it, once a second (for the eaves, below)
 let rcNext=0,rcSkip=0;
+// the cover pass's depth shaders, one for each kind of mesh it can meet (plain, instanced, instanced with colours),
+// built once behind the loading cover (warmAllTick, main.js): drawn at first sight they stalled the first frames of rain
+function rcWarm(){const g=new THREE.BoxGeometry(1,1,1),sc=new THREE.Scene(),m0=new THREE.MeshBasicMaterial(),a=new THREE.Mesh(g,m0),b=new THREE.InstancedMesh(g,m0,1),c=new THREE.InstancedMesh(g,m0,1);
+  c.setColorAt(0,new THREE.Color());for(const o of [a,b,c]){o.layers.set(RAIN_LAYER);o.frustumCulled=false;o.position.y=-RC_UP;sc.add(o)}
+  const rt=renderer.getRenderTarget(),xr=renderer.xr.enabled;rcCam.position.set(0,0,0);rcCam.updateMatrixWorld();
+  try{sc.overrideMaterial=rcDepth;renderer.xr.enabled=false;renderer.setRenderTarget(rcRT);renderer.render(sc,rcCam)}catch(e){}
+  finally{renderer.xr.enabled=xr;renderer.setRenderTarget(rt);g.dispose();m0.dispose();b.dispose();c.dispose()}}
 function rainCover(){if(!(rsMesh||rainLines&&!rainLines.userData.off))return;const now=performance.now(),due=rsMesh&&now>=rcNext;
   // the cover map is redrawn every third frame (and when it is read): it is fixed to the ground, so it only has to keep
   // up with where you are

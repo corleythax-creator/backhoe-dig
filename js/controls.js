@@ -283,7 +283,17 @@ statusEl.onclick=()=>{const m=statusEl.classList.toggle('min');try{localStorage.
 // foot (tpGo, maps.js: the nearest spot with room), or Carry on where I was. The machines stay where they were parked
 // (walk up to one and Get in). The tests are in ☰ Tools only, so a stray tap can't start one
 // on foot you start in first person, and on a PC with the mouse taken for mouse look (the tap that starts counts)
-function startIn(m){setMode(m);help.hidden=true;if(m==='walk'){if(camMode!=='cab')camSet('cab');if(!PHONE)fpMouseLock(true)}try{localStorage.setItem('bhd_seen','1')}catch(e){}}
+function startIn(m){setMode(m);if(m==='walk'){if(camMode!=='cab')camSet('cab');if(!PHONE)fpMouseLock(true)}try{localStorage.setItem('bhd_seen','1')}catch(e){}startReveal()}
+// the first time in, the start card stays up a moment longer while the world runs behind it at the spot you start (up
+// to 3 s): what is only made once you are near it (the boats, the props and lawns round you, your own body and gun in
+// first person) is made there, and its shaders built and pictures sent to the graphics card (gpuWarm, main.js), so the
+// first seconds of looking round don't stutter while that happens in view. Later visits to the card close at once
+let startWarmed=false;
+function startReveal(){if(help.hidden)return;if(startWarmed||typeof gpuWarm!=='function'){help.hidden=true;return}startWarmed=true;
+  const hint=$('#startMapHint'),f0=renderer.info.render.frame,t0=performance.now();let done=false;hint.textContent='Getting your spot ready…';
+  const end=()=>{if(done)return;done=true;help.hidden=true;hint.textContent='Tap the map to zoom in'};setTimeout(end,3000);
+  // a few frames there first, so the things made on arrival exist, then everything is warmed
+  const wait=()=>{if(done)return;if(renderer.info.render.frame-f0<6&&performance.now()-t0<1500){setTimeout(wait,50);return}gpuWarm(scene).then(end,end)};wait()}
 // the map, its names and a tap on it are js/start.js's (SPICK); its loading cover (LOADP) keeps taps off the map until
 // the world is loaded and its shaders built, then a tap starts you there at once
 const startReady=()=>LOADP.done&&typeof tpGo==='function'&&typeof warmIdle==='function';

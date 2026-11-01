@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-01T22:15:00Z",
+ "updated": "2026-11-01T22:41:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -102,9 +102,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-01",
-   "dh": 22.5,
-   "act": 4.5,
-   "versions": 10
+   "dh": 25.5,
+   "act": 5,
+   "versions": 11
   }
  ],
  "extra": [
@@ -3084,6 +3084,15 @@ window.EFFORT = {
    "tris": 6809063,
    "chars": 2182482,
    "what": "The talk meter shows each line's cost in cents, so Opus (about 1.1¢) no longer looks cheaper than Haiku (0.03¢); the cap stays in dollars."
+  },
+  {
+   "v": 331,
+   "asked": "2026-11-01T15:00:00-06:00",
+   "live": "2026-11-01T16:41:21-06:00",
+   "dh": 3,
+   "tris": 6002666,
+   "chars": 2185612,
+   "what": "Rain drops and splashes halved; the stutter after dropping in fixed (first-person and rain shaders built while loading, the start card warms your spot); loading lifts sooner"
   }
  ]
 };
