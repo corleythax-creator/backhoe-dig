@@ -118,7 +118,13 @@ function pudSsrTick(){const on=pudLvl>0.001&&gfxCur.wmFine;pudSsrU.uSsr.value.x=
 // the eye adjusting (aeOn) reads the picture off-screen too
 function postOn(){return (POST.ao||POST.bloom||POST.grade||aeOn)&&!renderer.xr.isPresenting}
 // draws the frame: straight to the screen, or through the effects
-function postRender(){ultraTick();hazeTick();bounceTick();clVolRender();if(!postOn()){pudSsrU.uSsr.value.x=0;renderer.render(scene,camera);aeTick();return}
+// shadows drawn every shEvery frames (the Graphics setting; Low's 2 halves the shadow pass, a phone's second biggest
+// cost after the scene itself); in between, the last shadow picture is used where it was drawn, so shadows stay put on
+// the ground and a moving machine's lags by a frame
+let shFrameN=0;
+function shadowCadence(){const n=renderer.xr.isPresenting?1:gfxCur.shEvery||1;renderer.shadowMap.autoUpdate=n<=1;
+  if(n>1&&++shFrameN>=n){shFrameN=0;renderer.shadowMap.needsUpdate=true}}
+function postRender(){shadowCadence();ultraTick();hazeTick();bounceTick();clVolRender();if(!postOn()){pudSsrU.uSsr.value.x=0;renderer.render(scene,camera);aeTick();return}
   renderer.getDrawingBufferSize(postSz);postSize(postSz.x,postSz.y);
   // the puddles' reflections (rain.js) read the picture as it was last frame (they can't read the one being drawn)
   if(pudSsrRT)pudSsrU.tSsr.value=pudSsrRT.texture;

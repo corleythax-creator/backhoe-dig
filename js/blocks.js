@@ -83,8 +83,12 @@ function blkHit(x,y,z){for(const b of blocks)if(Math.abs(x-b.x)<b.w/2&&Math.abs(
 function blkCircleD(o,lz,b){const cx=o.x+Math.sin(o.yaw)*lz,cz=o.z+Math.cos(o.yaw)*lz,hx=b.w/2,hz=b.d/2;
   return Math.hypot(cx-Math.max(b.x-hx,Math.min(b.x+hx,cx)),cz-Math.max(b.z-hz,Math.min(b.z+hz,cz)))}
 function blkPush(o,lzs,r){let hit=false;
-  // the islands' buildings and the things placed in the map editor
-  for(const s of SOLIDS)for(const lz of lzs){const p=solidOut(s,o.x+Math.sin(o.yaw)*lz,o.z+Math.cos(o.yaw)*lz,r);if(!p)continue;hit=true;o.x+=p[0];o.z+=p[1]}
+  // the islands' buildings and the things placed in the map editor; the ones nowhere near (beyond the machine's reach
+  // plus the solid's own) are skipped first: there are a few thousand and this runs for every machine every frame
+  let R=r;for(const lz of lzs)R=Math.max(R,Math.abs(lz)+r);
+  for(const s of SOLIDS){if(s.foot)continue;const e=R+(s.sn!==undefined?Math.hypot(s.lx,s.lz):Math.max(s.hx,s.hz)*1.42);
+    if(Math.abs(o.x-s.x)>e||Math.abs(o.z-s.z)>e)continue;
+    for(const lz of lzs){const p=solidOut(s,o.x+Math.sin(o.yaw)*lz,o.z+Math.cos(o.yaw)*lz,r);if(!p)continue;hit=true;o.x+=p[0];o.z+=p[1]}}
   for(const b of blocks){if(b.y+b.h<o.y+BLK_CLIMB||b.y>o.y+3)continue;const hx=b.w/2,hz=b.d/2;
     for(const lz of lzs){const cx=o.x+Math.sin(o.yaw)*lz,cz=o.z+Math.cos(o.yaw)*lz,dx=cx-b.x,dz=cz-b.z,px=hx+r-Math.abs(dx),pz=hz+r-Math.abs(dz);
       if(px<=0||pz<=0)continue;
