@@ -343,6 +343,47 @@
     museWorry: { any: ['I keep thinking about {worry}.', 'I can\'t stop worrying about {worry}.'] },
     introJob: { any: ['I\'m {a_job}.', '{A_job}, if you were wondering.'] },
   };
+  // past conversations with you: each chat (a gap of EP_GAP starts the next) is remembered by what came up, never by your
+  // words: the topics, what you asked them about, how you said you felt, what you told them (your name, a like). They
+  // bring one up when they next start talking to you, and answer 'what did we talk about'; how far back they remember
+  // goes with how sharp they are (HORIZON days)
+  const EP_GAP = 20 * 60, HORIZON = [0, 2, 5, 14, 45, 120];
+  const ASKED = { job: 'my work', from: 'where I\'m from', goal: 'what I want to do', worry: 'what worries me', values: 'what matters to me', sum: 'sums',
+    fact: 'odd facts', advice: 'what you should do', smart: 'how clever I am' };
+  const RECALL = {
+    topic: { warm: ['I was thinking about what we said about {topic} {when}.'], edge: ['We were on about {topic} {when}. My view hasn\'t changed.'], any: ['Last time we got talking about {topic}, {when}.', 'We were talking about {topic} {when}, weren\'t we?'] },
+    feel: { warm: ['You were having a rough time {when}. How are you now?'], any: ['You seemed low {when}. Any better?', 'I\'ve been wondering how you are. You seemed down {when}.'] },
+    up: { any: ['You were in a good mood {when}. Still?', 'You seemed happy {when}. Good to see you again.'] },
+    goal: { any: ['I told you {when} I want to {goal}. Still do.', 'Remember I said I want to {goal}? I\'ve been thinking about it.'] },
+    worry: { any: ['Remember I told you about {worry}? Still on my mind.', 'I\'m still thinking about {worry}, since we talked {when}.'] },
+    job: { any: ['You were asking about my work {when}. Still curious?'] },
+    sum: { any: ['You were testing me with sums {when}. Go on, try me again.'] },
+    fact: { any: ['I\'ve found another one for you, since you liked the last.'] },
+    name: { any: ['{User}! You told me your name {when}. See, I remember.', 'Good to see you again, {user}.'] },
+    summary: { any: ['We talked about {topics}, {when}.', '{When}? We talked about {topics}.'] },
+    now: { any: ['Just now? {Topics}.', 'We\'ve been on {topics}.'] },
+    none: { any: ['I don\'t think we\'ve talked before.', 'Have we talked? I don\'t think so.'] },
+    gone: { any: ['Sorry, it\'s gone. Remind me?', 'It was a while back. I\'ve forgotten, honestly.'] },
+  };
+  const whenOf = (t) => { const d = Date.now() / 1000 - t, now = new Date(Date.now()), then = new Date(t * 1000), day = (x) => new Date(x.getFullYear(), x.getMonth(), x.getDate()) / 864e5;
+    const days = Math.round(day(now) - day(then));
+    return d < 3600 ? 'a little while ago' : days === 0 ? 'earlier today' : days === 1 ? 'yesterday' : days < 7 ? 'a few days ago' : days < 14 ? 'last week' : 'a while back'; };
+  // what a line of yours was about, in kinds (never its words): for the chat's memory
+  function heard(t, raw) {
+    const asked = [], k = (re, x) => { if (re.test(t)) asked.push(x); };
+    k(/what do you do\b(?! for fun)|what('s| is) your job|what do you work|where do you work|for a living|line of work/, 'job');
+    k(/where are you from|where('d| did) you grow up|where('s| is) home|where do you live/, 'from');
+    k(/what do you want|your (dream|dreams|plans?|goals?)\b|what do you hope|bucket list/, 'goal');
+    k(/what (worries|scares|frightens|bothers) you|are you (afraid|scared|worried)|keeps you up/, 'worry');
+    k(/what (matters|is important) to you|what do you (care about|value|believe in)/, 'values');
+    k(/tell me something|teach me|fun fact|did you know|something interesting/, 'fact');
+    k(/\badvice\b|what should i do|help me decide|what would you do/, 'advice');
+    k(/are you (smart|clever|intelligent|bright|a genius)|what are you good at/, 'smart');
+    if (SUM.test(raw)) asked.push('sum');
+    const feel = /\bi('m| am| feel)( so| really| a bit| kind of| pretty)? (tired|exhausted|sad|down|stressed|worried|lonely|upset|awful|terrible|miserable|anxious|scared)\b|\b(bad|rough|long|awful) day\b/.test(t) ? 'low'
+      : /\bi('m| am| feel)( so| really| pretty)? (happy|great|excited|fantastic|wonderful|proud)\b|\b(great|good|best) day\b/.test(t) ? 'up' : '';
+    return { asked, feel };
+  }
   // simple sums said or asked: 'what's 7 times 8', '12 + 30', 'what is 100 divided by 4'
   const SUM = /(-?\d+(?:\.\d+)?)\s*(plus|\+|minus|-|times|x|\*|×|multiplied by|divided by|over|\/)\s*(-?\d+(?:\.\d+)?)/i;
   // the words a sharper mind reaches for (a few, now and then), and a plainer one
@@ -408,6 +449,56 @@
       if (v > 0.45) return a > 0.65 || P.d.humor > 0.6 ? 'playful' : 'happy';
       if (Math.abs(v - P.base[0]) < 0.15 && Math.abs(a - P.base[1]) < 0.15) return c.mood;
       return P.d.curious > 0.6 ? 'curious' : P.d.shy > 0.6 ? 'shy' : v > 0.15 ? 'calm' : 'thoughtful';
+    }
+    // the chat going on now (or a new one after EP_GAP), and the last one they still remember before it
+    function episode(m) {
+      const U = m.user, now = Date.now() / 1000, E = U.eps || (U.eps = []);
+      let e = E[E.length - 1];
+      if (!e || now - e.t1 > EP_GAP) { e = { t0: now, t1: now, n: 0, topics: [], asked: [] }; E.push(e); if (E.length > 12) E.shift(); }
+      e.t1 = now; return e;
+    }
+    function pastEp(m, P, also) {
+      const now = Date.now() / 1000, E = (m.user.eps || []).filter((e) => (also ? now - e.t0 > 120 : now - e.t1 > EP_GAP) && e.n > 0 && (e.topics.length || e.asked.length || e.feel || e.name));
+      const e = E[E.length - 1];
+      return !e ? null : now - e.t1 > HORIZON[P.smarts || 3] * 86400 ? 'gone' : e;
+    }
+    const addTo = (a, x, n = 6) => { if (x && !a.includes(x)) { a.push(x); if (a.length > n) a.shift(); } };
+    // what you said goes into the chat's memory as kinds; their own topic too
+    function note(m, text, meta) {
+      const e = episode(m); e.n++;
+      if (text != null) {
+        const t = String(text).toLowerCase(), h = heard(t, String(text));
+        for (const a of h.asked) addTo(e.asked, a);
+        if (h.feel) e.feel = h.feel;
+        addTo(e.topics, topicIn(t));
+        if (m.user.name) e.name = 1;
+      }
+      if (meta && meta.topic) addTo(e.topics, meta.topic);
+    }
+    // bringing a past chat up: the strongest thing in it (how you felt, then what they told you, then a topic)
+    function recall(k, P, c, m, e, slots) {
+      slots.when = whenOf(e.t1);
+      const opts = [];
+      if (e.feel === 'low') opts.push('feel', 'feel', 'feel'); if (e.feel === 'up') opts.push('up');
+      if (e.asked.includes('goal') && c.goal) opts.push('goal', 'goal'); if (e.asked.includes('worry') && c.worry) opts.push('worry', 'worry');
+      if (e.asked.includes('job') && c.job) opts.push('job'); if (e.asked.includes('sum')) opts.push('sum'); if (e.asked.includes('fact')) opts.push('fact');
+      if (e.topics.length) opts.push('topic', 'topic'); if (e.name && m.user.name) opts.push('name');
+      if (!opts.length) return '';
+      const w = opts[Math.floor(Math.random() * opts.length)];
+      Object.assign(slots, { goal: c.goal, worry: c.worry, topic: e.topics.length ? TOPICS[e.topics[e.topics.length - 1]].n : '' });
+      if (w === 'feel') m.user.feel = '';
+      const s = pick(k, P, RECALL[w], slots);
+      return w === 'fact' ? s + ' ' + knowLine(k, P) : s;
+    }
+    // 'what did we talk about': the last chat they remember, in a few words
+    function summary(k, P, m, slots) {
+      const e = pastEp(m, P, true);
+      if (e === 'gone') return pick(k, P, RECALL.gone, slots);
+      if (!e) return pick(k, P, RECALL.none, slots);
+      const bits = e.topics.map((t) => TOPICS[t].n).concat(e.asked.map((a) => ASKED[a])).concat(e.feel === 'low' ? ['how you were feeling'] : []).slice(0, 4);
+      if (!bits.length) bits.push('this and that');
+      slots.topics = bits.length > 1 ? bits.slice(0, -1).join(', ') + ' and ' + bits[bits.length - 1] : bits[0]; slots.when = whenOf(e.t1);
+      return pick(k, P, Date.now() / 1000 - e.t1 < EP_GAP ? RECALL.now : RECALL.summary, slots);
     }
     const relOf = (m, name) => m.rel[name] || (m.rel[name] = { met: 0, like: 0, talks: 0, touch: [], likes: [] });
     // a thing as the app gives it: words, or { what, danger, threat (0..1), feet, moving, toward, sound, new, ref }
@@ -638,14 +729,17 @@
       } else if (to === 'you' || to == null) {
         const U = m.user, last = lines.filter((l) => l.p === 'you' && (l.to === k || (l.group && l.group.includes(k)))).slice(-1)[0], mine = lines.filter((l) => l.p === k && l.to === 'you').slice(-1)[0];
         const fresh = last && (!mine || lines.indexOf(last) > lines.indexOf(mine));
+        let pe;
         if (!fresh) {
           // they start: hello the first time, then something about what they know you like, or what they like
           if (!U.said) { say = pick(k, P, L.hello, slots); if (c.job && d.talk > 0.5 && Math.random() < 0.35) say += ' ' + pick(k, P, SELF.introJob, jobSlots(c, slots)); }
+          else if ((pe = pastEp(m, P)) && pe !== 'gone' && U.rec !== pe.t0 && Math.random() < 0.4 + d.smart * 0.4 && (say = recall(k, P, c, m, pe, slots))) U.rec = pe.t0;
           else if (U.feel === 'low' && P.knack === 'people') { U.feel = ''; say = pick(k, P, IQ.better, slots); }
           else if (U.likes.length && Math.random() < 0.5) { slots.topic = TOPICS[U.likes[Math.floor(Math.random() * U.likes.length)]].n; say = pick(k, P, L.yourLike, slots); }
           else { const t = P.likes[Math.floor(Math.random() * P.likes.length)], q = Math.random() < 0.3 + d.curious * 0.4; say = pick(k, P, L.hiUser, slots) + ' ' + topicLine(k, P, t, q); meta = { topic: t, q }; }
         } else say = answer(k, c, P, m, last.said, mine, slots, (x) => { meta = x; }, last.group ? { group: last.group, said: lines.filter((l) => l.round === last.id && l.p !== k) } : null);
         U.said = (U.said || 0) + (fresh ? 1 : 0);
+        note(m, fresh ? last.said : null, meta);   // this chat's memory: what came up, never your words
       } else {
         // among themselves: answer what they just said to me, else start on something
         const who = o.nameOf(to), R = relOf(m, who), tc = o.card(to);
@@ -728,6 +822,8 @@
       // a sum, asked: worked out as sharply as they are
       const mt = raw.match(SUM);
       if (mt && (/\?|\bwhat|how much|work out|calculate|equals?|=/.test(t) || t.trim().length < 18)) return sum(k, P, mt);
+      // past chats: the last one they remember
+      if (/what did we (talk|chat) about|remember (what we|our (chat|talk|conversation)|last time|talking)|last time we (talked|spoke)|what were we talking about/.test(t)) return summary(k, P, m, slots);
       // names: the simple sometimes forget yours
       if (/what('s| is) my name|do you (remember|know) me|who am i/.test(t)) return U.name ? pick(k, P, P.smarts <= 1 && Math.random() < 0.4 ? IQ.forgotName : L.remember, slots) : pick(k, P, L.forgot, slots);
       if (/what('s| is) your name|who are you/.test(t)) return pick(k, P, L.me, slots);
@@ -806,6 +902,7 @@
       return null;
     }
     function reset() { mem = {}; store(SAVE, '{}'); recent.clear(); }
+    function flush() { if (saveAt) { clearTimeout(save.t); saveAt = 0; save(); } }
     // what they have learned, in a few words (for a panel)
     function knows(k) {
       const c = o.card(k); if (!c) return '';
@@ -822,13 +919,42 @@
       bits.push('feeling ' + moodName(c, m, P));
       return bits.join('; ') + '.';
     }
-    return { profile, observe, line, reset, knows, plan, aside, decide, sense: (k, g) => { const c = o.card(k); return c ? sense(profile(c), memOf(c), thing(g)) : null; }, moodOf: (k) => { const c = o.card(k); return c ? moodName(c, memOf(c), profile(c)) : ''; } };
+    return { profile, observe, line, reset, flush, knows, plan, aside, decide, sense: (k, g) => { const c = o.card(k); return c ? sense(profile(c), memOf(c), thing(g)) : null; }, moodOf: (k) => { const c = o.card(k); return c ? moodName(c, memOf(c), profile(c)) : ''; } };
   }
 
   function create(o) {
     const KEY = o.storage || 'hf-minds', url = o.url || API, budget = o.budget || 300, changed = () => o.changed && o.changed();
     // the owner's key (asked once a device; the server answers nobody else) and the model: 'haiku' (cheap) or 'opus'
     const OWN = KEY + '-key', MOD = KEY + '-model';
+    // past conversations with you, kept per person (by name, age and sex, as the built-in mind keeps them) in this
+    // browser (KEY + '-talk'): the last TALK_N lines each, for up to 80 people; with KEY + '-brain' they are what an app
+    // syncs between devices (M.memoryKeys). Read again whenever another tab or a sync writes them
+    const TALK = KEY + '-talk', TALK_N = 40;
+    let talk = {};
+    const loadTalk = () => { try { talk = JSON.parse(store(TALK) || '{}') || {}; } catch (e) { talk = {}; } };
+    loadTalk();
+    const cid = (k) => { const c = o.card(k); return c ? `${c.name}|${c.age}|${c.sex}` : null; };
+    const saveTalk = () => {
+      const ids = Object.keys(talk), last = (id) => { const a = talk[id]; return a.length ? a[a.length - 1].t : 0; };
+      if (ids.length > 80) ids.sort((a, b) => last(a) - last(b)).slice(0, ids.length - 80).forEach((id) => delete talk[id]);
+      store(TALK, JSON.stringify(talk));
+    };
+    // a line between you and k, kept: w 'y' you to them, 'g' you to a group they were in, 'm' them to you
+    const keep = (k, l) => {
+      const id = cid(k); if (!id || !l || !l.said) return;
+      const a = talk[id] || (talk[id] = []);
+      a.push({ w: l.p === 'you' ? (l.group ? 'g' : 'y') : 'm', s: String(l.said).slice(0, 300), t: Math.round(l.t * 10) / 10 });
+      if (a.length > TALK_N) a.splice(0, a.length - TALK_N);
+      saveTalk();
+    };
+    const history = (k) => (talk[cid(k)] || []).map((e) => ({ p: e.w === 'm' ? k : 'you', to: e.w === 'm' ? 'you' : k, who: e.w === 'm' ? M.nameOf(k) : e.w === 'g' ? 'you, to everyone' : 'you', said: e.s, t: e.t, kept: true }));
+    const toYou = (l, k) => l.p === 'you' || (l.p === k && l.to === 'you');
+    if (root.addEventListener) {
+      root.addEventListener('storage', (e) => { if (e.key === TALK) loadTalk(); });
+      const flush = () => brain.flush();
+      root.addEventListener('pagehide', flush);
+      if (typeof document !== 'undefined') document.addEventListener('visibilitychange', () => { if (document.hidden) flush(); });
+    }
     const brain = Brain({ storage: KEY, card: (k) => o.card(k), nameOf: (k) => M.nameOf(k), sights: o.sights, scene: o.scene });
     const send = (body) => fetch(url, { method: 'POST', headers: Object.assign({ 'content-type': 'application/json' }, M.key ? { 'x-persona-key': M.key } : {}), body: JSON.stringify(body) });
     const why = (a) => { if (a.spend) M.spend = a.spend; if (a.error === 'off') M.server = false; return a.why || 'They could not answer just now.'; };
@@ -888,7 +1014,7 @@
         if (M.local) return M.think(k, to, ev);
         if (ev && !SERVER.includes(ev.kind)) return null;
         if (M.asked >= budget) { M.status = `That's ${budget} lines this visit; reload the page for more.`; changed(); return null; }
-        const log = M.lines.filter((l) => l.p === k || mine(l, k) || (to !== 'you' && to != null && (l.p === to || l.to === to))).slice(-12).map((l) => ({ who: l.who, said: l.said }));
+        const log = (!ev && (to === 'you' || to == null) ? history(k) : M.lines.filter((l) => l.p === k || mine(l, k) || (to !== 'you' && to != null && (l.p === to || l.to === to)))).slice(-12).map((l) => ({ who: l.who, said: l.said }));
         const e = ev && { kind: ev.kind, who: ev.by != null ? M.nameOf(ev.by) : String(ev.who || '').slice(0, 40), what: String(ev.what || '').slice(0, 60), where: ev.where || '', danger: !!ev.danger, feet: ev.feet ? Math.round(ev.feet) : undefined };
         M.busy.add(k); M.asked++; M.status = ''; changed();
         try {
@@ -898,6 +1024,7 @@
           if (a.spend) { M.spend = a.spend; M.cost = a.cost || 0; }
           if (!o.people().includes(k)) return null;
           M.lines.push({ p: k, to: ev ? (ev.by != null ? ev.by : null) : to, who: M.nameOf(k), said: a.say, ev: ev ? ev.kind : undefined, t: Date.now() / 1000, round: to === 'you' ? roundOf(k) : undefined });
+          if (!ev && to === 'you') keep(k, M.lines[M.lines.length - 1]);
           if (o.show) o.show(k, a, to, ev);
           return a;
         } catch (err) { M.status = 'They could not answer just now.'; return null; } finally { M.busy.delete(k); changed(); }
@@ -911,6 +1038,7 @@
           if (!o.people().includes(k) || !M.on) return null;
           const a = brain.line(k, to == null && !ev ? 'you' : to, ev, M.lines); if (!a) return null;
           M.lines.push({ p: k, to: ev ? (ev.by != null ? ev.by : null) : to == null ? 'you' : to, who: M.nameOf(k), said: a.say, ev: ev ? ev.kind : undefined, t: Date.now() / 1000, meta: a.meta, round: !ev && (to == null || to === 'you') ? roundOf(k) : undefined });
+          if (!ev && (to == null || to === 'you')) keep(k, M.lines[M.lines.length - 1]);
           if (M.lines.length > 400) M.lines.splice(0, 100);
           if (o.show) o.show(k, a, ev && ev.kind === 'muse' ? null : to, ev && ev.kind === 'muse' ? null : ev);
           if (a.act && !(ev && ev.dec) && o.act) o.act(k, a.act, ev);   // something they noticed while musing
@@ -920,7 +1048,9 @@
       // what someone has learned, in a few words (the built-in mind's memory)
       knows: (k) => (o.card(k) ? brain.knows(k) : ''),
       // forget everything everyone has learned (in this browser)
-      unlearn() { brain.reset(); changed(); },
+      unlearn() { brain.reset(); talk = {}; store(TALK, '{}'); changed(); },
+      // the stores to sync between devices (an app's own save or sync copies these; never the owner key or model)
+      memoryKeys: [KEY + '-brain', KEY + '-talk'],
       // you say something to a group (keys): those it is for answer you in turn, each hearing the ones before; two who
       // find they like the same thing may say so to each other. Resolves to the lines said
       async tellAll(keys, text, label = 'you, to everyone') {
@@ -928,7 +1058,7 @@
         if (!text || !keys.length) return [];
         if (keys.length === 1) { const a = await M.tell(keys[0], text); return a ? [a] : []; }
         const id = ++rid, line = { p: 'you', to: 'group', group: keys, id, who: label, said: text, t: Date.now() / 1000 };
-        M.lines.push(line); M.left = CHATTER; changed();
+        M.lines.push(line); M.left = CHATTER; for (const k of keys) keep(k, line); changed();
         const who = M.local ? brain.plan(keys, text) : keys.slice(0, 4), out = [];
         for (const k of who) {
           if (!o.people().includes(k)) continue;
@@ -947,7 +1077,7 @@
       // you say something to key; they answer
       tell(k, text) {
         text = String(text || '').trim().slice(0, 400); if (!text || !M.can(k)) return null;
-        M.lines.push({ p: 'you', to: k, who: 'you', said: text, t: Date.now() / 1000 });
+        M.lines.push({ p: 'you', to: k, who: 'you', said: text, t: Date.now() / 1000 }); keep(k, M.lines[M.lines.length - 1]);
         M.left = CHATTER;
         return M.ask(k, 'you');
       },
@@ -994,11 +1124,13 @@
         }
         for (const k of snap.keys()) if (!o.people().includes(k)) snap.delete(k);
       },
-      forget(k) { M.lines = M.lines.filter((l) => l.p !== k && l.to !== k); cool.delete(k); changed(); },
-      // what k said and heard: lines to them, and the whole of any group round they were in
+      forget(k) { M.lines = M.lines.filter((l) => l.p !== k && l.to !== k); const id = cid(k); if (id && talk[id]) { delete talk[id]; saveTalk(); } cool.delete(k); changed(); },
+      // what k said and heard: your conversations with them (past visits too, kept), what was said to them by others
+      // and the whole of any group round they were in
       logOf(k) {
         const ids = new Set(M.lines.filter((l) => l.group && l.group.includes(k)).map((l) => l.id));
-        return M.lines.filter((l) => l.p === k || mine(l, k) || (l.round && ids.has(l.round)) || (l.ev === 'aside' && l.to === k)).slice(-30);
+        const here = M.lines.filter((l) => (l.p === k || mine(l, k) || (l.round && ids.has(l.round)) || (l.ev === 'aside' && l.to === k)) && !(toYou(l, k) && (l.p === k || l.to === k || (l.group && l.group.includes(k)))));
+        return history(k).concat(here).sort((a, b) => a.t - b.t).slice(-30);
       },
       hush() { try { root.speechSynthesis && root.speechSynthesis.cancel(); } catch (e) { /* none */ } },
       // read a line aloud: who is their card (or just 'man' / 'woman'); each person keeps one voice (VOICE)

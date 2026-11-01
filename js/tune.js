@@ -115,7 +115,14 @@ const TUNE=[
   ['cashStart','Town','Money in your wallet when you start (added to what the work has paid)',250,'usd',0,10000,10],
   ['pepBoost','Town','A coffee or a meal from a shop: walking and running faster by',0.12,'pct',0,50,1],['pepTime','Town','A coffee or a meal lasts',180,'s',10,900,10],
   ['tfQuiet','Town','People out at the quietest hour of the night, of the busiest',0.12,'pct',0,100,1],
-  ['greetChance','Town','Passersby who greet you as you walk by',0.45,'pct',0,100,5],['greetGap','Town','The least time between greetings',8,'s',0,60,1]
+  ['greetChance','Town','Passersby who greet you as you walk by',0.45,'pct',0,100,5],['greetGap','Town','The least time between greetings',8,'s',0,60,1],
+  // townsfolk talk (talk.js): who joins in, how far off it is heard, and what makes them remark on a machine
+  ['talkSeeR','Town','Townsfolk talk only within this far of you (or the machine you drive)',36.6,'ft',30,400,5],
+  ['talkChatR','Town','Two townsfolk talk to each other within',3.05,'ft',3,40,1],
+  ['talkRoadR','Town','A machine you drive this close to someone gets a word from them',4.6,'ft',3,60,1],
+  ['talkRoadV','Town','Going past them faster than this, it nearly had them',2.2,'mph',1,30,0.5],
+  ['talkSightR','Town','Townsfolk notice machines within',15.2,'ft',10,200,5],
+  ['talkStillR','Town','Townsfolk notice someone lying still within',7.6,'ft',5,100,5]
   // indoors (interiors.js): how the eye adjusts in a shop or house, and its room light (Medium graphics and up)
   ['inAdapt','Town','Indoors, the view brightens by',0.9,'pct',0,300,5],['inLamp','Town','Indoors, the room light',1.6,'n',0,6,0.1],
   ['craneSpan','Bridges','The crane builds a steel span in about',240,'min',1,60,1],
