@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-01T16:31:00Z",
+ "updated": "2026-11-01T18:49:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -102,9 +102,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-01",
-   "dh": 6.5,
-   "act": 1.5,
-   "versions": 3
+   "dh": 8,
+   "act": 2,
+   "versions": 4
   }
  ],
  "extra": [
@@ -3021,6 +3021,15 @@ window.EFFORT = {
    "tris": 5856613,
    "chars": 2163805,
    "what": "On High and Ultra the background warm-up built every shader for the screen while the game draws through its effects picture, which needs its own version, so about a hundred were built for nothing and the real ones still compiled (a stutter) the first time each thing showed; it now builds the right ones. The ground-light probe draws only the ground instead of the whole island every 1.5 s. High builds 167 shaders instead of 307"
+  },
+  {
+   "v": 324,
+   "asked": "2026-11-01T12:22:00-06:00",
+   "live": "2026-11-01T12:49:27-06:00",
+   "dh": 1.5,
+   "tris": 5857384,
+   "chars": 2164833,
+   "what": "In first person the gun is set in your hands after the camera moves each frame, not before, so it no longer trails a frame behind the view (the jitter, and swinging out of sight on a quick turn), and it is drawn on top of the world like a shooter's weapon, so it no longer vanishes into a wall you stand at, someone close by or your own chest when you look down"
   }
  ]
 };
