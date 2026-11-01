@@ -44,7 +44,7 @@ addEventListener('resize',startLay);startLay();
 // tapped while the game is still busy loading and the first minutes in the world don't stutter. It counts three things:
 // the game's scripts as each one loads (up to 45%), every picture and model the loaders fetch (the loading managers,
 // counted from core.js and terrain.js with loadCount; up to 75%), then the shaders and texture uploads done behind the
-// cover (warmFrac, main.js; up to 100%). It is done when all three are, or after LOADP.cap seconds whatever is left
+// cover (warmFrac, main.js; up to 100%), and the structures' pictures (brBusy, bridges.js). It is done when all three are, or after LOADP.cap seconds whatever is left
 const LOADP={js:0,mgr:[],warm:false,done:false,shown:0,cap:60};
 document.addEventListener('load',e=>{if(e.target.tagName==='SCRIPT'&&e.target.defer)LOADP.js++},true);
 // a script that didn't arrive (a phone's connection dropping a file) leaves the game half built and failing later
@@ -62,7 +62,7 @@ function loadStep(bad){if(LOADP.done)return;if(bad){loadEnd();return}const jsN=d
   if(game&&!LOADP.gameT)LOADP.gameT=now;let al=0,at=0;for(const [l,t] of LOADP.mgr){al+=l;at+=t}
   if(LOADP.gameT&&now-LOADP.gameT>2000&&LOADP.goal===undefined)LOADP.goal=at;if(LOADP.goal!==undefined)at=LOADP.goal;al=Math.min(al,at);
   const a=at?al/at:0,w=typeof warmFrac==='function'?warmFrac():0;
-  const done=LOADP.goal!==undefined&&al>=at&&LOADP.warm&&warmIdle()||now>LOADP.cap*1000||LOADP.err&&now-LOADP.errT>4000;
+  const done=LOADP.goal!==undefined&&al>=at&&LOADP.warm&&warmIdle()&&(typeof brBusy!=='function'||!brBusy())||now>LOADP.cap*1000||LOADP.err&&now-LOADP.errT>4000;
   const p=done?100:Math.min(99,45*js+30*a*(game?1:.8)+25*w);LOADP.shown=Math.max(LOADP.shown,p);
   const pct=Math.floor(LOADP.shown),L=document.getElementById('startLoad');
   document.getElementById('startLoadPct').textContent=pct+'%';document.getElementById('startLoadFill').style.width=LOADP.shown+'%';L.setAttribute('aria-valuenow',pct);

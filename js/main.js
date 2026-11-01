@@ -370,8 +370,9 @@ function warmAllTick(){const W=warmAll;if(!W||bench.on||vrOn())return;const now=
   if(!W.q)warmTexQ(W);
   if(!help.hidden)for(let i=0;i<(LOADP.done?3:6)&&W.q.length;i++){const t=W.q.pop();W.up.add(t);try{renderer.initTexture(t)}catch(e){}}
   if(now<W.next)return;W.next=now+4000;warmTexQ(W);
+  // new materials, or the structures' ones whose pictures arrived (that swaps their shaders: brVer, bridges.js)
   const ms=new Set();scene.traverse(o=>{if(o.material)for(const m of [].concat(o.material))ms.add(m)});
-  if(ms.size>W.mats){W.mats=ms.size;W.still=0;W.pend++;
+  if(ms.size>W.mats||brVer!==W.ver){W.mats=Math.max(W.mats||0,ms.size);W.ver=brVer;W.still=0;W.pend++;
     try{const p=warmCompile(scene);if(p&&p.then)p.then(()=>W.pend--,()=>W.pend--);else W.pend--}catch(e){W.pend--}}
   else W.still++;
   if(now-W.t0>180000&&W.pend===0&&(!W.q.length||help.hidden)&&(!W.at.length||!warmQuiet()))warmAll=null}
