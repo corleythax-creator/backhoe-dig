@@ -44,9 +44,17 @@ const gunMdl=new THREE.Group();gunMdl.visible=false;gunMdl.matrixAutoUpdate=fals
 const gunM={};for(const k of GUN_K){const g=new THREE.Group();g.visible=k===gun.k;gunMdl.add(g);gunM[k]=g}
 const gunEnvMat=m=>{m.envMap=skyEnv;m.envMapIntensity=0.8;m.side=THREE.FrontSide};
 function gunGltf(k,url,fit){mdlLoaderReady(()=>new THREE.GLTFLoader().load(url,gl=>{const g=gl.scene;fit(g);
-  g.traverse(o=>{if(!o.isMesh)return;if(/bullet/.test(o.name)){o.visible=false;return}o.castShadow=true;o.frustumCulled=false;gunEnvMat(o.material)});gunM[k].add(g);gunM[k].ready=1},undefined,e=>console.warn(k+':',e)))}
+  g.traverse(o=>{if(!o.isMesh)return;if(/bullet/.test(o.name)){o.visible=false;return}o.castShadow=true;o.frustumCulled=false;gunEnvMat(o.material)});
+  const add=()=>{gunM[k].add(g);gunM[k].ready=1};if(LOADP.done&&typeof gpuWarm==='function')gpuWarm(g).then(add,add);else add()},undefined,e=>console.warn(k+':',e)))}
 gunGltf('pistol','models/pistol/pistol.gltf',g=>{g.rotation.y=-Math.PI/2;g.position.set(0,GUN_GRIP,0.004)});
-gunGltf('rifle','models/rifle/rifle.gltf',g=>{g.rotation.y=-Math.PI/2;g.position.set(0,0.02,0.37);const B=[];g.traverse(o=>{if(/bolt_[ab]$/.test(o.name))B.push({o,x0:o.position.x})});gunM.rifle.bolts=B});
+// the rifle (6 MB of model and pictures) loads only once it is wanted: owned (a save), or within 80 m of a gun shop,
+// whose rack shows one; not at the start, where it held up the loading and then uploaded its pictures in the first
+// minute of play. Its shaders are built in the background before it shows (gpuWarm)
+let gunRifleAsked=false;
+function gunRifleTick(){if(gunRifleAsked)return;const c=camera.position;
+  if(!gun.own.rifle&&!GUN_SHOPS.some(S=>Math.hypot(c.x-S.x,c.z-S.z)<80))return;gunRifleAsked=true;
+  gunGltf('rifle','models/rifle/rifle.gltf',g=>{g.rotation.y=-Math.PI/2;g.position.set(0,0.02,0.37);const B=[];g.traverse(o=>{if(/bolt_[ab]$/.test(o.name))B.push({o,x0:o.position.x})});gunM.rifle.bolts=B});}
+setInterval(()=>{if(typeof LOADP!=='undefined'&&LOADP.done)gunRifleTick()},1000);
 // a part: a box (w, h, l) or a round bar along z (r, l, sides), at x, y, z, tipped about x by rx
 function gunPart(g,geo,m,x,y,z,rx){const o=new THREE.Mesh(geo,m);o.position.set(x,y,z);if(rx)o.rotation.x=rx;o.castShadow=true;o.frustumCulled=false;g.add(o);return o}
 const gunBx=(w,h,l)=>new THREE.BoxGeometry(w,h,l),gunBar=(r,l,n)=>new THREE.CylinderGeometry(r,r,l,n||16).rotateX(Math.PI/2);

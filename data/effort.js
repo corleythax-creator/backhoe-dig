@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-01T18:49:00Z",
+ "updated": "2026-11-01T19:42:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -102,9 +102,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-01",
-   "dh": 8,
-   "act": 2,
-   "versions": 4
+   "dh": 10,
+   "act": 2.5,
+   "versions": 5
   }
  ],
  "extra": [
@@ -3030,6 +3030,15 @@ window.EFFORT = {
    "tris": 5857384,
    "chars": 2164833,
    "what": "In first person the gun is set in your hands after the camera moves each frame, not before, so it no longer trails a frame behind the view (the jitter, and swinging out of sight on a quick turn), and it is drawn on top of the world like a shooter's weapon, so it no longer vanishes into a wall you stand at, someone close by or your own chest when you look down"
+  },
+  {
+   "v": 325,
+   "asked": "2026-11-01T12:30:00-06:00",
+   "live": "2026-11-01T13:42:11-06:00",
+   "dh": 2,
+   "tris": 5857140,
+   "chars": 2166314,
+   "what": "The bridges' and other structures' pictures (62 materials, one every 40 ms after you were let in, each rebuilding its shader as it arrived) are now made back to back behind the loading cover, which waits for them, and their new shaders are built in the background; the rifle's 6 MB model loads only once you own one or come near a gun shop, instead of at the start"
   }
  ]
 };

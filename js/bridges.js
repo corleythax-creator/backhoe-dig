@@ -137,6 +137,9 @@ const BR_DEF={
   glass:{col:[0.80,0.89,0.92],rough:0.05,glass:1,dry:1}};
 const BR_MATS={},BR_DET=[],BR_WHITE=new THREE.Color(1,1,1);
 let brTexWant=false,brPbrOn=false,brDetOn=true,brWet=0,brWetSeen=0;const brQ=[];let brQT=0;
+// photo pictures still downloading; the loading cover (start.js) waits for these and the queue, so the structures have
+// their pictures when you are let in instead of each one popping in (and rebuilding its shader) in the first minute
+let brPend=0,brVer=0;const brBusy=()=>brQ.length>0||brPend>0;
 // a key 'name@rrggbb' is name's material tinted: that colour (as a hex colour in the kits) where its texture isn't drawn,
 // and the texture scaled by it over the texture's mean colour where it is (famTint, family.js, makes the keys)
 function brTintDef(key){const [b,h]=key.split('@'),B=BR_DEF[b],t=new THREE.Color('#'+h);
@@ -150,18 +153,20 @@ function brMat(key){if(BR_MATS[key])return BR_MATS[key];const d=BR_DEF[key]||brT
 let brTexReady=false;   // set once the Graphics setting has been applied (pictures are drawn only after that)
 // pictures are made (or loaded) one material at a time, a frame or two apart, so loading never stalls on them
 function brTexQueue(key){const m=BR_MATS[key],u=m.userData;if(u.tex||u.q||!(u.def.gen||u.def.lib))return;u.q=1;brQ.push(key);if(!brQT)brQT=setTimeout(brTexStep,40)}
-function brTexStep(){brQT=0;const key=brQ.shift();if(!key)return;const m=BR_MATS[key],u=m.userData,d=u.def;
-  if(!(d.alpha?brDetOn:brTexWant)){u.q=0;if(brQ.length)brQT=setTimeout(brTexStep,0);return}   // no longer wanted (the setting changed)
+// behind the loading cover they are made back to back (about 12 ms of work a go) instead of one every 40 ms
+function brTexStep(){brQT=0;const t0=performance.now();do brTexOne();while(brQ.length&&!LOADP.done&&performance.now()-t0<12);
+  if(brQ.length&&!brQT)brQT=setTimeout(brTexStep,LOADP.done?40:0)}
+function brTexOne(){const key=brQ.shift();if(!key)return;const m=BR_MATS[key],u=m.userData,d=u.def;
+  if(!(d.alpha?brDetOn:brTexWant)){u.q=0;return}   // no longer wanted (the setting changed)
   const T=c=>{const t=new THREE.CanvasTexture(c);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.anisotropy=4;return t};
-  if(d.lib){let left=3;const done=()=>{if(--left===0){u.tex=tx;brApply(m)}},tx={},L=k=>{const t=new THREE.TextureLoader().load(`textures/${d.lib}${k}.jpg`,done,undefined,done);
+  if(d.lib){let left=3;brPend++;const done=()=>{if(--left===0){brPend--;u.tex=tx;brApply(m)}},tx={},L=k=>{const t=new THREE.TextureLoader().load(`textures/${d.lib}${k}.jpg`,done,undefined,done);
       t.wrapS=t.wrapT=THREE.RepeatWrapping;t.anisotropy=4;return t};
     tx.map=L('');tx.n=L('_n');tx.r=L('_r')}
   else if(d.alpha){u.tex={map:T(d.gen(d))};brApply(m)}
-  else{const o=brTexOut(d.gen(d,d.seed),d.k);u.tex={map:T(o.map),n:T(o.n),r:T(o.r)};brApply(m)}
-  if(brQ.length)brQT=setTimeout(brTexStep,40)}
+  else{const o=brTexOut(d.gen(d,d.seed),d.k);u.tex={map:T(o.map),n:T(o.n),r:T(o.r)};brApply(m)}}
 // a material's pictures on or off as the Graphics setting says, its colour and sheen as the rain has left it
 function brApply(m){const u=m.userData,T=u.tex,d=u.def,on=d.alpha?brDetOn:brTexWant,map=T&&on?T.map:null,pbr=!!(map&&brPbrOn&&T.n),n=pbr?T.n:null,r=pbr?T.r:null;
-  if(m.map!==map||m.normalMap!==n||m.roughnessMap!==r){m.map=map;m.normalMap=n;m.roughnessMap=r;m.needsUpdate=true}
+  if(m.map!==map||m.normalMap!==n||m.roughnessMap!==r){m.map=map;m.normalMap=n;m.roughnessMap=r;m.needsUpdate=true;brVer++}
   if(d.alpha)m.visible=!!map;
   u.base.copy(map?u.tint||BR_WHITE:u.col);u.rough=pbr?1:(d.rough??0.85);brWetSet(m)}
 function brWetSet(m){const u=m.userData,w=u.def.dry?0:brWet;m.color.copy(u.base).multiplyScalar(1-0.3*w);m.roughness=u.rough*(1-0.5*w)}
