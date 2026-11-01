@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-01T23:43:00Z",
+ "updated": "2026-11-01T23:47:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -102,9 +102,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-01",
-   "dh": 27.75,
+   "dh": 32.75,
    "act": 6,
-   "versions": 14
+   "versions": 15
   }
  ],
  "extra": [
@@ -3120,6 +3120,15 @@ window.EFFORT = {
    "tris": 5857244,
    "chars": 2185748,
    "what": "Townsfolk read aloud in the most natural voice your browser has (Edge's Natural voices, Chrome's Google ones, Safari's Enhanced), each person keeping one of their own at their own pace; Talk model in ☰ gains Built-in, the free default."
+  },
+  {
+   "v": 335,
+   "asked": "2026-11-01T17:45:00-06:00",
+   "live": "2026-11-01T17:47:41-06:00",
+   "dh": 5,
+   "tris": 7417106,
+   "chars": 2192313,
+   "what": "Townsfolk talk is on by default and free: each grown-up has their own personality, they chat with each other when two stand close, remark on the machines going by (and complain if you drive too close), notice someone lying still, and remember who they've met."
   }
  ]
 };
