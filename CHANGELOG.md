@@ -2,6 +2,10 @@
 
 Every version of Corley's Island, newest first, grouped by the day it went live (Central time). Made from `data/effort.js` by `tools/changelog.py`; don't edit it by hand. [Play any old version](https://corleys-island.vercel.app/versions/) · [Build log with charts](https://corleys-island.vercel.app/build.html)
 
+## Sunday, November 1, 2026
+
+- **v321** (8:23 AM) Trees far off draw a light model of about a third the leaves, and none are drawn past the haze where they can't be seen (about a tenth fewer triangles on Low); a device that stays slow at its lowest resolution now steps its Graphics down on its own (High to Medium, Medium to Low) and says so, as Ultra already did
+
 ## Saturday, October 31, 2026
 
 - **v320** (4:39 PM) If the phone's connection drops one of the game's files while loading, the page loads again by itself instead of stopping on an error like "Can't find variable: snd"

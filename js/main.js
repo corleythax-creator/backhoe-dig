@@ -314,8 +314,9 @@ function frame(now){
     // auto resolution: step down when slow; step back up only after a long steady run, and never within 30 s of a step down
     if(!bench.on&&!vrOn()&&gfxCur.auto&&f<48&&pr>1){if(++lowN>=3){pr=Math.max(1,pr-0.25);viewDirty=true;lowN=0;prHold=now+30000}}else lowN=0;
     if(!bench.on&&!vrOn()&&gfxCur.auto&&f>=58&&pr<maxPR&&now>prHold){if(++hiN>=8){pr=Math.min(maxPR,pr+0.25);viewDirty=true;hiN=0}}else hiN=0;
-    // Ultra guard: still under 40 fps at the lowest resolution for about 15 s, and Ultra steps down to High (gfx.js)
-    if(!bench.on&&!vrOn()&&gfxKey==='ultra'&&f<40&&pr<=1.01){if(++ultraLowN>=30)ultraGuard(f)}else ultraLowN=0;
+    // graphics guard: still slow at the lowest resolution for about 15 s (under 40 fps on Ultra, under 26 on High and
+    // Medium), and the setting steps down one level (gfx.js)
+    if(!bench.on&&!vrOn()&&!edOn&&!navigator.webdriver&&GFX_DOWN[gfxKey]&&f<(gfxKey==='ultra'?40:26)&&pr<=1.01){if(++ultraLowN>=30)ultraGuard(f)}else ultraLowN=0;
     $('#resVal').textContent=pr.toFixed(2).replace(/0$/,'')+'x';
     const t=renderer.info.render.triangles;$('#triVal').textContent=t>=1e6?(t/1e6).toFixed(2)+'M':t>=1e3?Math.round(t/1e3)+'k':t;fpsFrames=0;fpsTime=0}
 }
