@@ -735,8 +735,8 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
       <div class="sizes" id="stickRow"><span>Sticks</span><button data-stk="auto">Auto</button><button data-stk="on">On</button><button data-stk="off">Off</button></div>
       <!-- townsfolk who talk, in the personality Human Forge gave them (talk.js): off, their lines as text, or aloud -->
       <div class="sizes" id="talkRow"><span>Townsfolk talk</span><button data-talk="off">Off</button><button data-talk="text">Text</button><button data-talk="voice">Aloud</button></div>
-      <!-- who speaks (Haiku about 0.03¢ a line, Sonnet 0.5¢, Opus 1¢), the owner key that lets them, the day's cap and what has been spent -->
-      <div class="sizes talkOpt" id="talkModelRow"><span>Talk model</span><button data-tm="haiku">Haiku</button><button data-tm="sonnet">Sonnet</button><button data-tm="opus">Opus</button><button id="talkKeyBtn">Key</button></div>
+      <!-- who speaks (Built-in: free, made in the browser; Haiku about 0.03¢ a line, Sonnet 0.5¢, Opus 1¢), the owner key that lets them, the day's cap and what has been spent -->
+      <div class="sizes talkOpt" id="talkModelRow"><span>Talk model</span><button data-tm="local">Built-in</button><button data-tm="haiku">Haiku</button><button data-tm="sonnet">Sonnet</button><button data-tm="opus">Opus</button><button id="talkKeyBtn">Key</button></div>
       <div class="sizes talkOpt" id="talkCapRow"><span>Daily cap</span><button data-tc="1">$1</button><button data-tc="2">$2</button><button data-tc="5">$5</button><button data-tc="10">$10</button></div>
       <div class="todsub talkOpt" id="talkMeter"></div>
       <div class="sizes" id="msgRow"><span>Messages</span><button data-msg="all">All</button><button data-msg="few">Few</button><button data-msg="off">Off</button></div>
@@ -1187,7 +1187,7 @@ const TUNE=[
   ['gunDmgP','Pistol','Pistol: damage a shot',45,'',1,500,1],['gunDmgS','Pistol','Shotgun: damage a pellet (nine a shell)',16,'',1,200,1],['gunDmgR','Pistol','Rifle: damage a shot',130,'',1,1000,5],['gunDmgC','Pistol','Carbine: damage a shot',32,'',1,500,1],
   ['trimSpool','String trimmer','Line on a full spool',25*0.3048,'ft',2,100,1],
   ['lawnCut','Grass','Mower cuts the grass to',0.09,'in',1,24,0.5],['lawnWait','Grass','Wait before cut grass grows',45,'s',0,1200,5],['lawnGrow','Grass','Time to grow back tall',240,'s',10,3600,10],
-  ['rainGap','Weather','Dry spell between showers (average)',1800,'min',0.5,120,0.5],['rainLen','Weather','Shower length (average)',150,'min',0.5,60,0.5],
+  ['rainGap','Weather','Dry spell between showers (average)',1800,'min',0.5,120,0.5],['rainLen','Weather','Shower length (average)',75,'min',0.5,60,0.5],
   ['soak','Weather','How fast rain soaks the ground',1,'pct',10,500,5],
   ['rainHard','Weather','How hard it rains',1,'pct',10,300,5],['puddleDrain','Weather','How fast puddles drain',1,'pct',0,1000,10],
   ['rainWind','Weather','Wind in the rain (leans the drops)',2.2,'mph',0,40,0.5],

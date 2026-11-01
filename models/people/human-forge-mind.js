@@ -20,8 +20,14 @@
  *     scene: (key, to, ev) => 'a few plain words: where, when, who and what is about',
  *     show: (key, line, to, ev) => {},   // line: { say, mood, face, look }: put it over their head, turn them...
  *     changed: () => {},                 // something to redraw (the log, the status)
- *     sights: (key) => ['a black bear', { what: 'a wolf', danger: true, feet: 30 }, 'the window'],  // optional: things
- *                                        //   (not people) they can see, for the built-in mind to remark on
+ *     sights: (key) => ['a black bear', { what: 'a wolf', danger: true, feet: 30, ref: wolf }, 'the window'],  // optional:
+ *                                        //   anything they can see or hear (words, or { what, danger, threat 0..1, feet,
+ *                                        //   moving, toward, sound, ref: the app's own handle }); looked over once a
+ *                                        //   second: they notice what is new, what comes closer, what feared has gone
+ *     act: (key, act, ev) => {},         // optional: what they decided to do about something they noticed (act.do: flee,
+ *                                        //   back, freeze, warn, watch, investigate, help or call; act.at: its ref or
+ *                                        //   who; act.threat/felt/keen 0..1); the app moves them, or not
+ *     hears: (key, other) => true,       // optional: whether other hears key raise the alarm (default: everyone)
  *     url, budget, storage,              // optional: the API, most asks a visit (300), the on/off key ('hf-minds')
  *   });
  *   minds.on = false;                    // on unless switched off (kept in this browser)
@@ -39,6 +45,15 @@
  *   minds.event(key, { kind: 'animal', what: 'a black bear', danger: true, feet: 12 });
  *   minds.event(key, { kind: 'still', by: otherKey });          // someone lying still nearby (dead, in a game)
  *   minds.event(key, { kind: 'left', by: otherKey });           // someone went (built-in mind only)
+ *   minds.event(key, { kind: 'thing', what: 'a red pickup', how: 'car' });   // look | car | sit | pet | road (built-in mind only)
+ *   minds.event(key, { kind: 'notice', what: 'smoke', feet: 40, ref }); // anything at all (built-in mind's words; any
+ *                                        //   speaker's decision): fire, a scream, a strange box, a storm, footprints...
+ *   minds.decide(key, { what: 'a wolf', danger: true, feet: 20 }) // what they would do, said nowhere: { do, at, ... }
+ *   minds.nature(key)                    // { fear, curious, nerve, bold, warm, shy, talk, energy }, 0..1
+ * Everyone notices; what they make of it is their own. Each thing is felt through their nature: the easily frightened
+ * (nervous, timid, cautious, shy) feel more threat from less and back off, freeze or run; the inquisitive (curious,
+ * adventurous, worldly) go and look at what others only watch, and ask when someone raises the alarm; the bold and
+ * warm warn the others and go to help; a bad mood makes anyone jumpier, and fear of a thing they keep meeting grows.
  *   minds.chatter = true; every frame: minds.step(dt)           // they talk among themselves now and then (built-in:
  *                                                               //   and remark on what is round them, even alone)
  * Events are dropped while one is pending for that person and within COOL seconds of the same thing happening again,
@@ -47,11 +62,13 @@
  */
 (function (root) {
   const TRAITS = ['warm', 'witty', 'shy', 'bold', 'dry', 'cheerful', 'grumpy', 'curious', 'calm', 'nervous', 'romantic',
-    'sarcastic', 'kind', 'proud', 'dreamy', 'practical', 'chatty', 'quiet', 'flirty', 'serious', 'silly', 'worldly'];
+    'sarcastic', 'kind', 'proud', 'dreamy', 'practical', 'chatty', 'quiet', 'flirty', 'serious', 'silly', 'worldly',
+    'brave', 'cautious', 'adventurous', 'timid'];
+  const ROLLED = TRAITS.slice(0, 22);   // what a person without a designed personality is rolled from (kept, so nobody's roll changes)
   const MOODS = ['calm', 'happy', 'playful', 'curious', 'shy', 'tired', 'annoyed', 'sad', 'surprised', 'thoughtful'];
   const PARTS = ['head', 'face', 'hair', 'neck', 'shoulder', 'arm', 'hand', 'back', 'side', 'chest', 'waist', 'hip', 'leg', 'knee', 'foot'];
   const ADULT = 18, API = 'https://human-forge-beta.vercel.app/api/persona', CHATTER = 24, GAP = [9, 15];
-  const COOL = { touched: 25, arrived: 40, approached: 45, animal: 40, still: 90, left: 30 };
+  const COOL = { touched: 25, arrived: 40, approached: 45, animal: 40, still: 90, left: 30, notice: 30, alarm: 20, gone: 60, thing: 45 };
   const SERVER = ['touched', 'arrived', 'approached', 'animal', 'still'];   // the kinds the server's model takes; the rest are built-in only
   const SPEAKERS = ['local', 'haiku', 'sonnet', 'opus'];
   // intelligence: how sharp they are (1..5) and the way they are clever; what matters to them; the topics they are into
@@ -64,7 +81,7 @@
   function roll(seed) {
     let h = 2166136261; for (const c of String(seed)) h = Math.imul(h ^ c.charCodeAt(0), 16777619);
     const r = () => ((h = Math.imul(h ^ (h >>> 15), 2246822507) >>> 0) / 4294967296), traits = [];
-    while (traits.length < 3) { const t = TRAITS[Math.floor(r() * TRAITS.length)]; if (!traits.includes(t)) traits.push(t); }
+    while (traits.length < 3) { const t = ROLLED[Math.floor(r() * ROLLED.length)]; if (!traits.includes(t)) traits.push(t); }
     const mood = MOODS[Math.floor(r() * 4)];
     // how sharp (mostly average or sharp, a few simple, bright or brilliant), the way they are clever, two values
     const u = r(), smarts = u < 0.1 ? 1 : u < 0.45 ? 2 : u < 0.75 ? 3 : u < 0.93 ? 4 : 5, KK = Object.keys(KNACKS), knack = KK[Math.floor(r() * KK.length)], values = [];
@@ -127,7 +144,11 @@
     sarcastic: { edge: 0.35, humor: 0.15 }, grumpy: { edge: 0.4, warm: -0.2, energy: -0.1 }, calm: { plain: 0.3, nerve: 0.25, energy: -0.15 },
     practical: { plain: 0.35, dream: -0.15 }, serious: { plain: 0.3, humor: -0.2 }, curious: { curious: 0.4 }, dreamy: { dream: 0.4, plain: -0.1 },
     worldly: { curious: 0.15, plain: 0.1, bold: 0.1 }, chatty: { talk: 0.4, energy: 0.15, shy: -0.15 },
+    // how easily frightened (fear) and how inquisitive (curious): every trait leans one way or the other a little
+    brave: { fear: -0.4, nerve: 0.35, bold: 0.1 }, cautious: { fear: 0.25, curious: -0.1, plain: 0.1 },
+    adventurous: { curious: 0.35, fear: -0.25, bold: 0.1, energy: 0.1 }, timid: { fear: 0.4, shy: 0.25, nerve: -0.3, bold: -0.15 },
   };
+  const TRAIT_FEAR = { nervous: 0.35, shy: 0.12, quiet: 0.05, dreamy: 0.05, romantic: 0.05, kind: 0.05, bold: -0.2, calm: -0.15, proud: -0.1, grumpy: -0.05, practical: -0.08, worldly: -0.1, curious: -0.05 };
   const VALUE_DIMS = { kindness: { warm: 0.1 }, family: { warm: 0.05 }, ambition: { bold: 0.1, energy: 0.05 }, adventure: { bold: 0.05, energy: 0.1, curious: 0.05 }, knowledge: { curious: 0.15 },
     fun: { humor: 0.1, energy: 0.05 }, comfort: { energy: -0.05, plain: 0.05 }, tradition: { plain: 0.1 }, honesty: { plain: 0.05, edge: 0.05 }, fairness: { edge: 0.05 }, independence: { bold: 0.05, talk: -0.05 },
     freedom: { dream: 0.05, energy: 0.05 }, beauty: { dream: 0.15 }, faith: { warm: 0.05, nerve: 0.05 }, loyalty: { warm: 0.05 } };
@@ -172,6 +193,13 @@
     animalAgain: { warm: ['Our friend {the} is back.', 'I think {the} likes it here.'], edge: ['{the}, still hanging about.'], shy: ['{the} again. I think I\'m getting used to it.'], bold: ['{the}! Old friend.'], humor: ['{the} has basically moved in.'], plain: ['{the} is still around.'] },
     still: { warm: ['{name}? Are you alright? {name}!', 'Oh no. Someone check on {name}.'], edge: ['{name}? Hey. Get up.', 'This isn\'t funny, {name}.'], shy: ['Is... is {name} okay?', 'Oh no. {name}?'], bold: ['{name}! Talk to me!', 'Someone help me with {name}.'], humor: ['{name}? Okay, joke\'s over. {name}?'], plain: ['{name} isn\'t moving.', 'Check on {name}.'] },
     left: { warm: ['Bye, {name}! Come back soon.', 'Oh, {name}\'s going. Take care!'], edge: ['And there goes {name}.', 'Bye, then.'], shy: ['Oh, bye, {name}.'], bold: ['See you around, {name}!'], humor: ['{name} has left the building.'], plain: ['Bye, {name}.', 'See you, {name}.'] },
+    // a thing they went over to (ev.kind 'thing', built-in only): how 'look' at it, 'sit' on it, 'car' a vehicle up close,
+    // 'pet' an animal they are stroking, 'road' a vehicle driving past too close
+    look: { warm: ['Oh, {the} is lovely up close.', 'Come and look at {the}.'], edge: ['{the}. Seen better.', 'Hm. {the}. It\'ll do.'], shy: ['I just wanted a look at {the}...'], bold: ['Now this is {what}. Come see.', 'Look at the size of {the}.'], humor: ['If {the} talks back, I\'m leaving.', 'Me and {the}, getting acquainted.'], plain: ['Just having a look at {the}.', 'So this is {the}.'] },
+    car: { warm: ['Isn\'t {the} nice? I\'d love a go in it.', 'Whose is {the}? It\'s gorgeous.'], edge: ['Somebody parked {the} right here. Brilliant.', '{the}. Probably drinks fuel.'], shy: ['I\'ve always wanted to sit in {what}.'], bold: ['Keys. Who has the keys to {the}?', 'I could drive {the}. Easy.'], humor: ['{the}: zero to late in sixty seconds.', 'I\'m not saying I\'d steal {the}, but I\'m not not saying it.'], plain: ['That\'s {what}.', '{the}. Nice.'] },
+    sit: { warm: ['Ah, that\'s better. Sit with me.', 'Lovely to take the weight off.'], edge: ['Finally, somewhere to sit.', 'My feet were done.'], shy: ['I\'ll just sit here, if that\'s okay.'], bold: ['Best seat in the place. Mine.'], humor: ['{the} and I are in a relationship now.', 'I\'m never getting up.'], plain: ['I\'ll sit for a bit.', 'Good, {the}.'] },
+    pet: { warm: ['Who\'s a good one? You are!', 'Oh, you\'re so soft.'], edge: ['Fine. One pat.', 'Alright, alright. Good animal.'], shy: ['Hi... can I pet you? Oh, okay.'], bold: ['Come here, you. Good!'], humor: ['I\'m adopting {the}. It\'s decided.', '{the} likes me more than people do.'], plain: ['Good {bare}.', 'There you go.'] },
+    road: { warm: ['Careful! {the} nearly had me.', 'Slow down, please!'], edge: ['Watch where you\'re going!', 'Nice driving. Not.'], shy: ['Oh! That was close...'], bold: ['Hey! Eyes on the road!'], humor: ['{the} wants my spot that badly?', 'Was that {the} or a rocket?'], plain: ['Whoa. Close one.', 'Watch it!'] },
     see: { warm: ['Oh, {the}. That\'s nice.'], edge: ['Hm. {What}.'], shy: ['Oh, {the}...'], bold: ['Check out {the}.'], humor: ['Who put {the} there?'], plain: ['There\'s {what}.'], any: ['Huh, I hadn\'t noticed {the} before.', 'Have you seen {the}?'] },
     seeAgain: { warm: ['I do like {the}.'], edge: ['Still staring at {the}. Don\'t mind me.'], shy: ['I keep looking at {the}.'], bold: ['I\'m telling you, {the} is the best thing here.'], humor: ['Me and {the}? We\'re close now.'], plain: ['{the}. Still there.'] },
     agree: { warm: ['Oh, I know exactly what you mean.', 'That\'s lovely.', 'I like that.'], edge: ['If you say so.', 'Hm. Can\'t say I agree.', 'Riveting.', 'Sure.'], shy: ['Oh... yes, me too.', 'Mm. That\'s nice.'], bold: ['Absolutely. No question.', 'Ha! Exactly right.'], humor: ['Ha! Story of my life.', 'Now that\'s a plot twist.'], plain: ['Fair enough.', 'Makes sense.', 'True.'] },
@@ -215,7 +243,49 @@
     knowNone: { warm: ['Not yet, but I\'d like to.'], edge: ['Never met them.'], shy: ['Um, no, not really...'], any: ['Not really. We\'ve only just met.'] },
     aside: { warm: ['{name}, you like {topic} too? We should talk.'], edge: ['Fine, {name}. You and me, {topic}, later.'], shy: ['Oh, {name} likes {topic} too...'], bold: ['{name}! A fellow {topic} fan. Excellent.'], humor: ['{name}, {topic} club. First meeting\'s on me.'], plain: ['We should talk {topic} sometime, {name}.'] },
     theirTopic: { any: ['{name}, you\'re into {topic}, aren\'t you?', '{name}! Still into {topic}?', 'So, {name}, I remember you like {topic}.'] },
+    // what they decide to do about something they noticed (fear: the easily frightened, curious: the inquisitive)
+    flee: { fear: ['Nope. No. I\'m going!', 'Run! {The}!', 'I can\'t, I can\'t. I\'m getting away from {the}.'], shy: ['Oh no, oh no, oh no...'], bold: ['Everyone, move. Now!'], warm: ['Come on, everyone, away from {the}!'], humor: ['I\'m not paid enough for {what}. Bye!'], plain: ['Get clear of {the}. Now.'] },
+    back: { fear: ['I\'m just going to... back away from {the}.', 'I don\'t like {the}. I\'m keeping my distance.', 'Nobody make me go near {the}.'], curious: ['I want to see {the}, but not that close.'], warm: ['Let\'s give {the} some room.'], edge: ['Not getting any closer to {the}, thanks.'], humor: ['Me and {the} are going to be friends from a distance.'], plain: ['Keep back from {the}.'] },
+    freeze: { fear: ['Don\'t move. Don\'t move.', 'I can\'t move. Is {the} looking at me?'], shy: ['Oh no... I can\'t...'], any: ['Nobody move.', 'Shh. Stay still.'] },
+    warn: { bold: ['Heads up, everyone: {what}, {feet} feet off.', 'Watch out! {The}!', 'Stay behind me. I\'ve got eyes on {the}.'], warm: ['Careful, everyone. {The}.', 'Everyone, slowly, away from {the}.'], edge: ['Nobody do anything stupid. {The} is right there.'], humor: ['Small announcement: {what}. Carry on panicking.'], plain: ['{What}, about {feet} feet off. Keep clear.'] },
+    watch: { curious: ['Hang on. What\'s {the} doing?', 'Huh. Look at {the}.', 'Is that {what}? Interesting.', 'I can\'t stop looking at {the}.'], fear: ['I\'m keeping an eye on {the}.', 'Is {the} moving? I think it moved.', 'I don\'t like the look of {the}.'], warm: ['Oh, look, {the}.'], bold: ['I see {the}.'], humor: ['{The}. Of course. Why not.'], plain: ['There\'s {what}.'] },
+    investigate: { curious: ['Ooh, what\'s {the}? I\'m going to look.', 'Hang on, I want a closer look at {the}.', 'Has anyone looked at {the}? No? Right, then.', 'I have to know what {the} is about.'], bold: ['Let\'s see what {the} is about.', 'I\'ll go and have a look.'], fear: ['I shouldn\'t... but I want to see {the}.'], warm: ['Oh, {the}! Let me see.'], humor: ['If I don\'t come back, {the} got me.'], plain: ['I\'ll go and check {the}.'] },
+    ignore: { edge: ['Not interested in {the}.', '{The}. Whatever.'], plain: ['Just {what}.', 'Seen {the} before.'], any: ['Oh, {the}. Never mind.'] },
+    help: { warm: ['{name}! Hold on, I\'m coming!', 'I\'ve got you, {name}.'], bold: ['Out of the way, I\'ll see to {name}.', 'Stay with me, {name}!'], plain: ['I\'ll check on {name}.'], any: ['{name}? I\'m coming over.'] },
+    call: { fear: ['Help! Somebody, help!', 'Someone do something!'], shy: ['Can... can somebody help, please?'], any: ['Help! Over here!', 'We need help over here!'] },
+    gone: { fear: ['Is {the} gone? Is it really gone?', 'Oh, thank goodness. {The}\'s gone.'], curious: ['Where did {the} go?', 'Wait, where\'s {the} gone?'], bold: ['{The}\'s gone. Told you.'], humor: ['And {the} has left the building.'], any: ['{The}\'s gone.'] },
+    // hearing someone raise the alarm: the inquisitive want to know, the frightened don't wait to find out
+    alarmAsk: { curious: ['Where? What is it, {name}?', 'What did you see, {name}?', 'Show me, {name}. Where?'], bold: ['Where, {name}?'], any: ['What? Where?', 'What is it?'] },
+    alarmFear: { fear: ['{name}? What? Oh no.', 'I knew something was wrong.'], shy: ['Oh no... {name}, what is it?'], any: ['What? Where? Oh no.'] },
+    museWorry: { any: ['Does anyone else feel like we\'re being watched?', 'It\'s too quiet.', 'Did anyone hear that?', 'I keep thinking something\'s about to happen.', 'I don\'t like it out here.'] },
+    museWonder: { any: ['I wonder what\'s over there.', 'Has anyone actually looked round properly?', 'I bet there\'s something interesting just out of sight.', 'I want to know what\'s past all this.', 'What do you think that was, earlier?'] },
   };
+  const STEADY = Object.fromEntries(Object.entries(L.danger).filter(([f]) => f !== 'shy'));   // a danger, to the unafraid
+  // the first thing out of their mouth when they notice something of a kind (now and then)
+  const OPEN = { fire: ['Is that smoke?', 'Wait. Fire?'], loud: ['What was that?', 'Did you hear that?'], odd: ['Huh.', 'Wait a second.'], storm: ['Uh oh.'], stranger: ['Who\'s that?'], hurt: ['Oh god.'], beast: ['Wait.', 'Oh.'], weapon: ['Is that a weapon?'] };
+  // ---- noticing anything: what a thing is from its words (first match), how threatening (t) and interesting (i) it is
+  // to anyone, and how pleasant (p); each person then feels it through their own nature (sense(), below)
+  const NOTE = [
+    { c: 'fire', w: /\b(fire|flames?|burning|smoke|smoking|smoulder\w*|blaze|embers?)\b/, t: 0.8, i: 0.45 },
+    { c: 'weapon', w: /\b(guns?|rifles?|pistols?|shotguns?|knife|knives|blades?|swords?|axes?|machetes?|weapons?|bombs?|grenades?)\b/, t: 0.75, i: 0.35 },
+    { c: 'hurt', w: /\b(blood|bleeding|hurt|injured|wounded|lying still|dead|body|corpse|bones|skull|unconscious)\b/, t: 0.5, i: 0.5 },
+    { c: 'beast', w: /\b(bears?|wol(f|ves)|lions?|tigers?|cougars?|pumas?|panthers?|boars?|bulls?|sharks?|crocodiles?|alligators?|snakes?|vipers?|scorpions?|hornets?|wasps?|swarm)\b/, t: 0.6, i: 0.5 },
+    { c: 'loud', w: /\b(bang|crash|explosion|screams?|screaming|shouts?|shouting|gunshots?|sirens?|alarms?|roar\w*|growl\w*|howl\w*|thud|smash\w*|breaking)\b/, t: 0.5, i: 0.65 },
+    { c: 'storm', w: /\b(storm|lightning|thunder|tornado|hail|flood\w*|landslide|earthquake|blizzard)\b/, t: 0.55, i: 0.4 },
+    { c: 'stranger', w: /\b(stranger|figure|masked|hooded|intruder|footsteps|someone (hiding|watching))\b/, t: 0.45, i: 0.6 },
+    { c: 'creepy', w: /\b(spiders?|rats?|cockroach(es)?|bats?|leech(es)?|maggots?|slime|mou?ld)\b/, t: 0.3, i: 0.35 },
+    { c: 'running', w: /\b(running|fleeing|chasing|charging)\b/, t: 0.35, i: 0.55 },
+    { c: 'dark', w: /\b(dark(ness)?|shadows?|fog|mist|gloom)\b/, t: 0.2, i: 0.35 },
+    { c: 'odd', w: /\b(strange|odd|weird|unusual|mysterious|glow\w*|flicker\w*|whisper\w*|footprints?|tracks|holes?|caves?|tunnels?|hatch(es)?|ruins?|statues?|symbols?|markings?|notes?|letters?|maps?|keys?|chests?|box(es)?|crates?|packages?|bags?|doors?|gates?|ladders?|wells?|lights?|machines?|wrecks?|signs?)\b/, t: 0.08, i: 0.8 },
+    { c: 'animal', w: /\b(dogs?|pupp(y|ies)|cats?|kittens?|horses?|pon(y|ies)|cows?|calf|calves|sheep|lambs?|goats?|deer|rabbits?|hares?|birds?|ducks?|geese|chickens?|hens?|pigs?|piglets?|fox(es)?|squirrels?|herd|owls?|frogs?|butterfl(y|ies))\b/, t: 0.05, i: 0.55, p: 0.4 },
+    { c: 'food', w: /\b(food|cake|bread|coffee|tea|wine|beer|pizza|fruit|apples?|cooking|barbecue|picnic|smell of)\b/, t: 0, i: 0.45, p: 0.5 },
+    { c: 'lovely', w: /\b(flowers?|trees?|garden|view|stars|moon|sunset|sunrise|rainbow|paintings?|music|song|fountain|lake|river|sea|beach|waterfall)\b/, t: 0, i: 0.4, p: 0.55 },
+    { c: 'weather', w: /\b(rain\w*|wind\w*|snow\w*|clouds?|sun|sunny|cold|heat|hot|drizzle)\b/, t: 0.05, i: 0.25 },
+  ];
+  const THING = { c: 'thing', t: 0.03, i: 0.25 };
+  const noteOf = (what) => { const w = String(what || '').toLowerCase(); return NOTE.find((n) => n.w.test(w)) || THING; };
+  // what someone can do about it (the app may act on it: Forge Studio's Live walks them there, away, holds them still...)
+  const ACTS = ['flee', 'back', 'freeze', 'warn', 'watch', 'investigate', 'ignore', 'help', 'call'];
   // intelligence: what needs thinking about, answered by how sharp they are (lo: simple, mid: average or sharp, hi: bright
   // or brilliant) and the way they are clever (their knack); things they know or have learnt, by knack
   const tierOf = (P) => (P.smarts <= 1 ? 'lo' : P.smarts >= 4 ? 'hi' : 'mid');
@@ -296,8 +366,11 @@
       if (profiles.has(key)) return profiles.get(key);
       const r = rngOf(id), d = {};
       for (const k of ['warm', 'edge', 'shy', 'bold', 'humor', 'plain', 'curious', 'dream', 'talk', 'energy', 'nerve']) d[k] = 0.25 + r() * 0.3;
-      for (const t of c.traits) for (const [k, v] of Object.entries(TRAIT_DIMS[t] || {})) d[k] += v;
+      // how easily frightened: a roll of its own (so the rest of the roll, and their interests, stay as they were)
+      const rf = rngOf(id + '|fear'); d.fear = 0.22 + rf() * 0.32;
+      for (const t of c.traits) { for (const [k, v] of Object.entries(TRAIT_DIMS[t] || {})) d[k] += v; d.fear += TRAIT_FEAR[t] || 0; }
       for (const t of c.values || []) for (const [k, v] of Object.entries(VALUE_DIMS[t] || {})) d[k] += v;
+      d.fear += (0.4 - d.nerve) * 0.3;
       const [mv, ma] = MOOD_VA[c.mood] || MOOD_VA.calm; d.energy += (ma - 0.4) * 0.3;
       for (const k in d) d[k] = cl(d[k]);
       // how sharp they are (not rolled: designed, or the card's own roll): 0 simple .. 1 brilliant
@@ -337,6 +410,55 @@
       return P.d.curious > 0.6 ? 'curious' : P.d.shy > 0.6 ? 'shy' : v > 0.15 ? 'calm' : 'thoughtful';
     }
     const relOf = (m, name) => m.rel[name] || (m.rel[name] = { met: 0, like: 0, talks: 0, touch: [], likes: [] });
+    // a thing as the app gives it: words, or { what, danger, threat (0..1), feet, moving, toward, sound, new, ref }
+    const thing = (g) => (g && typeof g === 'object' ? g : { what: String(g || 'something') });
+    // how a thing feels to them: its threat (closer, coming at them, heard and not seen, feared before: more; met often
+    // and harmless: less) felt through how easily frightened they are; its interest (new, moving, a sound) through how
+    // inquisitive they are
+    function sense(P, m, g) {
+      const d = P.d, w = bare(g.what), N = noteOf(g.what), S = m.seen[w];
+      let t = N.t; if (g.danger) t = Math.max(t, 0.7); if (typeof g.threat === 'number') t = g.threat;
+      const feet = g.feet != null && isFinite(g.feet) ? +g.feet : 30, prox = cl(1 - feet / 80);
+      t *= 0.45 + prox * 0.85; if (g.toward) t += 0.15; if (g.moving && t > 0.2) t += 0.05; if (g.sound) t += 0.08 * d.fear;
+      if (S && S.fear > 0.3) t += S.fear * 0.3; else if (S && S.n > 4 && !g.danger) t *= 0.7;
+      const novel = S ? 1 / (1 + S.n * 0.45) : 1;
+      if (/odd|dark|stranger|loud|creepy/.test(N.c)) t += d.fear * 0.14 * novel;   // the unknown, to the easily frightened
+      const i = N.i * (0.4 + novel * 0.6) + (g.moving ? 0.1 : 0) + (g.sound ? 0.15 : 0) + (g.new ? 0.1 : 0);
+      return { c: N.c, t: cl(t), felt: cl(t * (0.7 + d.fear * 0.7)), keen: cl(i * (0.3 + d.curious * 1.3)), nice: N.p || 0, feet, novel };
+    }
+    // what they do about it: run, back off, freeze, warn the others, watch it, go and look, ignore it, help, call for help.
+    // The easily frightened back off and run from less, or freeze; the inquisitive go and look at what others only watch;
+    // the bold and warm warn others or help; a bad mood makes anyone jumpier. A little chance in it, so a crowd differs.
+    function choose(c, P, m, ev) {
+      const d = P.d, g = thing(ev), s = sense(P, m, g), mood = moodNow(c, m, P), jit = () => (Math.random() - 0.5) * 0.14;
+      const fear = cl(d.fear + (mood.v < -0.2 && mood.a > 0.5 ? 0.12 : 0) + jit()), cur = cl(d.curious + jit()), heart = (d.warm + d.bold) / 2 + jit();
+      let act;
+      const warns = d.bold > 0.5 || heart > 0.55;
+      // nobody goes up to a danger, a storm or something far off to look; the inquisitive watch those
+      const near = !g.danger && s.feet < 120 && !/storm|weather|dark/.test(s.c);
+      if ((ev.kind === 'still' || s.c === 'hurt') && !g.danger) act = heart > fear * 0.8 + 0.12 ? 'help' : fear > 0.62 && Math.random() < 0.5 ? 'freeze' : 'call';
+      else if (s.felt > 0.68) act = fear > 0.5 ? (d.shy > 0.55 && Math.random() < d.shy * 0.6 ? 'freeze' : 'flee') : warns ? 'warn' : 'back';
+      else if (s.felt > 0.42) act = fear > 0.6 ? (d.shy > 0.55 && Math.random() < 0.4 ? 'freeze' : 'back') : s.t > 0.55 && warns ? 'warn' : cur > fear + 0.15 && s.keen > 0.35 ? 'watch' : warns ? 'warn' : 'back';
+      else if (s.felt > 0.22) act = fear > 0.65 ? 'back' : near && s.t < 0.45 && cur > 0.55 + fear * 0.2 && s.keen > 0.4 ? 'investigate' : 'watch';
+      else act = near && s.t < 0.45 && s.keen > 0.5 && cur > 0.45 + fear * 0.3 ? 'investigate' : s.keen > 0.3 || s.nice > 0.3 ? 'watch' : 'ignore';
+      // told of it by someone else: go by what they say (nobody warns on a warning), and the inquisitive ask
+      if (ev.kind === 'alarm') act = act === 'warn' ? 'watch' : act === 'investigate' ? 'watch' : act === 'ignore' ? 'watch' : act;
+      // touched by someone, too often or by someone they don't like: the frightened step back
+      if (ev.kind === 'touched') act = fear > 0.45 && s.felt > 0.15 ? 'back' : 'ignore';
+      return { do: act, what: g.what, at: g.ref != null ? g.ref : ev.by, by: ev.kind === 'alarm' ? ev.by : undefined, kind: s.c, threat: +s.t.toFixed(2), felt: +s.felt.toFixed(2), keen: +s.keen.toFixed(2), feet: Math.round(s.feet) };
+    }
+    // a decision on something (an event or a thing seen), without saying anything or remembering it
+    function decide(k, ev) {
+      const c = o.card(k); if (!c || !ev) return null;
+      const P = profile(c), m = memOf(c);
+      if (ev.kind === 'touched') {
+        const R = ev.by != null ? relOf(m, o.nameOf(ev.by)) : null, many = R ? R.touch.length : 1;
+        return choose(c, P, m, Object.assign({}, ev, { threat: many > 3 || (R && R.like < -0.3) ? 0.6 : R && R.met + R.talks > 1 ? 0.05 : 0.3, feet: 1 }));
+      }
+      if (!/^(animal|see|notice|alarm|still|gone)$/.test(ev.kind)) return null;
+      if (ev.kind === 'gone') return { do: 'ignore', what: ev.what, at: ev.ref };
+      return choose(c, P, m, ev);
+    }
     // learning from what happens to them
     function observe(k, ev) {
       const c = o.card(k); if (!c || !ev) return;
@@ -349,11 +471,21 @@
         R.like = cl(R.like + dl, -1, 1); push(c, m, P, dl * 1.5, 0.25 + (1 - d.nerve) * 0.15);
       } else if ((ev.kind === 'arrived' || ev.kind === 'approached') && R) {
         R.met++; R.like = cl(R.like + 0.02 + d.warm * 0.04 - d.edge * 0.02, -1, 1); push(c, m, P, R.like * 0.1, 0.12);
-      } else if (ev.kind === 'animal' || ev.kind === 'see') {
-        const w = String(ev.what || 'something').replace(/^(a|an|the) /i, ''), S = m.seen[w] || (m.seen[w] = { n: 0, fear: 0 });
+      } else if (/^(animal|see|notice|alarm)$/.test(ev.kind)) {
+        // a thing seen (or heard of): fear of it grows when it threatens them, by how easily frightened they are, and
+        // fades when it doesn't; what is lovely lifts the mood, what is new wakes them up
+        const w = bare(ev.what), s = sense(P, m, thing(ev)), S = m.seen[w] || (m.seen[w] = { n: 0, fear: 0 });
         S.n++; S.t = now;
-        if (ev.danger) { S.fear = cl(S.fear + 0.15 + (1 - d.nerve) * 0.3); push(c, m, P, -0.25 * (1 - d.nerve), 0.5); }
-        else { S.fear *= 0.85 - d.smart * 0.2; if (ev.kind === 'animal') push(c, m, P, 0.08 * d.warm, 0.1); }
+        if (ev.danger || s.t > 0.45) { S.fear = cl(S.fear + 0.1 + s.felt * 0.25 + d.fear * 0.15); push(c, m, P, -0.3 * s.felt, 0.2 + s.felt * 0.4); }
+        else { S.fear *= 0.8 - (d.smart || 0) * 0.2; push(c, m, P, s.nice * 0.12 + (ev.kind === 'animal' ? 0.08 * d.warm : 0), 0.05 + s.keen * 0.15); }
+        if (ev.kind === 'alarm' && R) R.like = cl(R.like + 0.03, -1, 1);
+      } else if (ev.kind === 'gone') {
+        const S = m.seen[bare(ev.what)]; if (S && S.fear > 0.3) push(c, m, P, 0.15 + d.fear * 0.1, -0.15);
+      } else if (ev.kind === 'thing') {
+        const w = bare(ev.what), S = m.seen[w] || (m.seen[w] = { n: 0, fear: 0 });
+        S.n++; S.t = now;
+        if (ev.how === 'road') { S.fear = cl(S.fear + 0.1 + (1 - d.nerve) * 0.2); push(c, m, P, -0.2 * (1 - d.nerve), 0.45); }
+        else push(c, m, P, ev.how === 'pet' ? 0.12 * (0.4 + d.warm) : ev.how === 'sit' ? 0.05 : 0.03 * (0.5 + d.curious), ev.how === 'sit' ? -0.12 : 0.05);
       } else if (ev.kind === 'still' && R) push(c, m, P, -0.35, 0.3);
       else if (ev.kind === 'left' && R) push(c, m, P, -0.03 * cl(R.like + 0.5), -0.05);
       save();
@@ -429,7 +561,7 @@
     function line(k, to, ev, lines) {
       const c = o.card(k); if (!c) return null;
       const P = profile(c), m = memOf(c), d = P.d;
-      let say = '', look = 'you', meta = {}, ex = false;
+      let say = '', look = 'you', meta = {}, ex = false, act = ev && ev.dec ? ev.dec : null;
       const mood0 = moodName(c, m, P);
       const slots = { me: c.name, user: m.user.name || '' };
       if (ev) {
@@ -440,15 +572,35 @@
           const recentN = R ? R.touch.length : 1, known = R && R.met + R.talks > 1;
           const tab = recentN > 3 || (R && R.like < -0.35) ? L.touchCross : !known ? (d.shy + d.edge > d.warm + d.bold ? L.touchWary : L.touchNew) : R.like > 0.1 ? L.touchGood : L.touchWary;
           say = pick(k, P, tab, slots); ex = !known && d.energy > 0.5 && Math.random() < 0.4;
+          if (ev.dec && ev.dec.do === 'back') look = 'away';
         } else if (ev.kind === 'arrived' || ev.kind === 'approached') {
           if (!R || R.met + R.talks <= 1) say = pick(k, P, ev.kind === 'arrived' ? L.hello : L.over, slots);
           else say = pick(k, P, R.like < -0.25 ? L.cold : ev.kind === 'arrived' ? L.again : L.over, slots);
           if (R && R.like > 0.5 && Math.random() < 0.3) say += ' ' + pick(k, P, L.likeYou, slots);
         } else if (ev.kind === 'animal') {
-          const S = m.seen[w] || { n: 1, fear: 0 };
-          say = pick(k, P, ev.danger ? (S.n > 2 ? L.dangerAgain : L.danger) : S.fear > 0.3 ? L.dangerAgain : S.n > 2 ? L.animalAgain : L.animal, slots);
-          ex = ev.danger && S.n <= 2; look = ev.danger && d.shy > 0.5 ? 'away' : 'them';
-        } else if (ev.kind === 'still') say = pick(k, P, L.still, slots);
+          const S = m.seen[w] || { n: 1, fear: 0 }, a = ev.dec ? ev.dec.do : 'watch';
+          // what they decided says it (running, backing off, freezing, going to look); else the animal lines
+          if (/^(flee|back|freeze|investigate)$/.test(a)) say = pick(k, P, L[a], slots);
+          else say = pick(k, P, ev.danger ? (S.n > 2 ? L.dangerAgain : a === 'warn' ? L.warn : L.danger) : S.fear > 0.3 ? L.dangerAgain : S.n > 2 ? L.animalAgain : L.animal, slots);
+          ex = ev.danger && S.n <= 2; look = /flee|back/.test(a) || (ev.danger && d.shy > 0.5) ? 'away' : 'them';
+        } else if (ev.kind === 'thing') {
+          slots.bare = w;
+          const tab = { look: L.look, car: L.car, sit: L.sit, pet: L.pet, road: L.road }[ev.how] || L.look, S = m.seen[w];
+          say = pick(k, P, ev.how === 'look' && S && S.n > 2 ? L.seeAgain : tab, slots);
+          ex = ev.how === 'road' && d.energy > 0.4; look = ev.how === 'sit' ? 'away' : 'them';
+        } else if (ev.kind === 'notice' || ev.kind === 'alarm' || ev.kind === 'gone') {
+          // anything noticed: what they decided, in their words; an opener now and then for something new
+          const a = ev.dec ? ev.dec.do : 'watch', S = m.seen[w], kind = noteOf(ev.what).c;
+          if (ev.kind === 'gone') say = pick(k, P, L.gone, slots);
+          else if (ev.kind === 'alarm') say = /flee|back|freeze/.test(a) ? pick(k, P, d.fear > 0.5 ? L.alarmFear : L[a], slots) : pick(k, P, L.alarmAsk, slots);
+          else if (a === 'ignore') { if (Math.random() < 0.8) return null; say = pick(k, P, L.ignore, slots); }
+          else if (a === 'watch' && S && S.n > 2 && !(S.fear > 0.3)) say = pick(k, P, L.seeAgain, slots);
+          else if (a === 'watch' && ev.danger) say = pick(k, P, S && S.n > 2 ? L.dangerAgain : d.fear > 0.5 ? L.watch : STEADY, slots);
+          else say = pick(k, P, L[a] || L.watch, slots);
+          if (ev.kind === 'notice' && (ev.new || ev.sound) && OPEN[kind] && Math.random() < 0.5) say = OPEN[kind][Math.floor(Math.random() * OPEN[kind].length)] + ' ' + say;
+          ex = ev.kind === 'notice' && /flee|warn|call/.test(a) && Math.random() < 0.5;
+          look = /flee|back/.test(a) || (a === 'freeze' && d.shy > 0.5) ? 'away' : 'them';
+        } else if (ev.kind === 'still') { const a = ev.dec ? ev.dec.do : 'call'; say = pick(k, P, a === 'help' ? L.help : a === 'freeze' ? L.freeze : L.still, slots); if (a === 'call' && Math.random() < 0.5) say += ' ' + pick(k, P, L.call, slots); }
         else if (ev.kind === 'aside') { slots.topic = TOPICS[ev.topic] ? TOPICS[ev.topic].n : 'that'; say = pick(k, P, L.aside, slots); if (R) R.like = cl(R.like + 0.06, -1, 1); }
         else if (ev.kind === 'left') say = pick(k, P, L.left, slots);
         else if (ev.kind === 'muse') {
@@ -456,13 +608,21 @@
           const feared = Object.entries(m.seen).filter(([, s]) => s.fear > 0.4).sort((a, b) => b[1].fear - a[1].fear)[0];
           const sights = o.sights ? o.sights(k) : [];
           const r = Math.random();
-          if (feared && r < 0.25) { slots.the = 'the ' + feared[0]; say = pick(k, P, L.museFear, slots); }
-          else if (sights.length && r < 0.6) {
-            const g = sights[Math.floor(Math.random() * sights.length)], s = typeof g === 'object' ? g.what : g, bad = typeof g === 'object' && g.danger, S = m.seen[bare(s)];
-            Object.assign(slots, { what: s, the: 'the ' + bare(s), feet: typeof g === 'object' && g.feet ? Math.round(g.feet) : 'a few' });
-            say = pick(k, P, bad ? (S && S.n > 2 ? L.dangerAgain : L.danger) : S && S.fear > 0.3 ? L.museFear : S && S.n > 1 ? L.seeAgain : L.see, slots);
-            observe(k, { kind: 'see', what: s, danger: bad });
-          } else if (mood0 === 'tired') say = pick(k, P, L.museTired, slots);
+          if (feared && r < 0.1 + d.fear * 0.3) { slots.the = 'the ' + feared[0]; say = pick(k, P, L.museFear, slots); }
+          else if (sights.length && r < 0.65) {
+            // what catches their eye: the new, the threatening, the interesting (to them) first; and they decide on it
+            const gs = sights.map(thing), ws = gs.map((g) => { const x = sense(P, m, g); return 0.12 + x.keen + x.felt * 1.2; });
+            let rr = Math.random() * ws.reduce((a, b) => a + b, 0), g = gs[gs.length - 1];
+            for (let i = 0; i < gs.length; i++) if ((rr -= ws[i]) <= 0) { g = gs[i]; break; }
+            const s = g.what, bad = !!g.danger, S = m.seen[bare(s)], dec = choose(c, P, m, Object.assign({ kind: 'see' }, g));
+            Object.assign(slots, { what: s, the: 'the ' + bare(s), feet: g.feet ? Math.round(g.feet) : 'a few' });
+            if (/^(flee|back|freeze|warn|investigate|help|call)$/.test(dec.do)) { say = pick(k, P, L[dec.do], slots); look = /flee|back/.test(dec.do) ? 'away' : 'them'; }
+            else say = pick(k, P, bad ? (S && S.n > 2 ? L.dangerAgain : L.danger) : S && S.fear > 0.3 ? L.museFear : S && S.n > 1 ? L.seeAgain : dec.do === 'watch' && d.curious > 0.55 ? L.watch : L.see, slots);
+            if (dec.do !== 'ignore') act = dec;
+            observe(k, Object.assign({}, g, { kind: 'see' }));
+          } else if (d.fear > 0.6 && r < 0.78 && Math.random() < d.fear - 0.3) say = pick(k, P, L.museWorry, slots);
+          else if (d.curious > 0.6 && r < 0.78 && Math.random() < d.curious - 0.3) say = pick(k, P, L.museWonder, slots);
+          else if (mood0 === 'tired') say = pick(k, P, L.museTired, slots);
           else if ((mood0 === 'sad' || mood0 === 'annoyed') && c.worry && Math.random() < 0.45) { slots.worry = c.worry; say = pick(k, P, SELF.museWorry, slots); }
           else if (mood0 === 'sad' || mood0 === 'annoyed') say = pick(k, P, L.museLow, slots);
           else if (mood0 === 'happy' && Math.random() < 0.3) say = pick(k, P, L.museHappy, slots);
@@ -519,7 +679,7 @@
       save();
       const mood = moodName(c, m, P);
       say = voice(say || '...', P, mood, { ex });
-      return { say: say.slice(0, 300), mood, face: face(mood), look: d.shy > 0.7 && look === 'you' && Math.random() < 0.4 ? 'away' : look, meta };
+      return { say: say.slice(0, 300), mood, face: face(mood), look: d.shy > 0.7 && look === 'you' && Math.random() < 0.4 ? 'away' : look, meta, act: act || undefined };
     }
     // the user said something: answer from what was said (never repeating their words), and learn from it
     function answer(k, c, P, m, text, mine, slots, setMeta, grp) {
@@ -656,10 +816,13 @@
       if (fond.length) bits.push('fond of ' + fond.slice(0, 4).join(', ')); if (cool.length) bits.push('wary of ' + cool.slice(0, 4).join(', '));
       if (m.user.name) bits.push('knows you as ' + m.user.name); if (m.user.likes.length) bits.push('knows you like ' + m.user.likes.map((t) => TOPICS[t].n).join(', '));
       const fear = Object.entries(m.seen).filter(([, s]) => s.fear > 0.3).map(([w]) => 'the ' + w); if (fear.length) bits.push('afraid of ' + fear.slice(0, 3).join(', '));
+      const d = P.d;
+      bits.push(d.fear > 0.62 ? 'easily frightened' : d.fear < 0.3 ? 'hard to frighten' : 'steady enough');
+      bits.push(d.curious > 0.62 ? 'very inquisitive' : d.curious < 0.32 ? 'not one to go poking about' : 'curious now and then');
       bits.push('feeling ' + moodName(c, m, P));
       return bits.join('; ') + '.';
     }
-    return { profile, observe, line, reset, knows, plan, aside, moodOf: (k) => { const c = o.card(k); return c ? moodName(c, memOf(c), profile(c)) : ''; } };
+    return { profile, observe, line, reset, knows, plan, aside, decide, sense: (k, g) => { const c = o.card(k); return c ? sense(profile(c), memOf(c), thing(g)) : null; }, moodOf: (k) => { const c = o.card(k); return c ? moodName(c, memOf(c), profile(c)) : ''; } };
   }
 
   function create(o) {
@@ -672,7 +835,8 @@
     const cool = new Map();  // key -> { 'kind|by': time }
     const ids = new WeakMap(); let nid = 0;
     const idOf = (x) => (typeof x === 'object' ? (ids.has(x) ? ids.get(x) : (ids.set(x, ++nid), nid)) : x);
-    let next = 0, turn = 0, rid = 0;
+    let next = 0, turn = 0, rid = 0, scanAt = 0;
+    const snap = new Map();   // key -> what they could see a second ago (scan())
     const wait = (ms) => new Promise((r) => setTimeout(r, ms));
     // a line meant for k: to them, or to a group they are in; the round of yours k is answering (a group line not yet answered)
     const mine = (l, k) => l.to === k || (l.p === 'you' && !!l.group && l.group.includes(k));
@@ -749,6 +913,7 @@
           M.lines.push({ p: k, to: ev ? (ev.by != null ? ev.by : null) : to == null ? 'you' : to, who: M.nameOf(k), said: a.say, ev: ev ? ev.kind : undefined, t: Date.now() / 1000, meta: a.meta, round: !ev && (to == null || to === 'you') ? roundOf(k) : undefined });
           if (M.lines.length > 400) M.lines.splice(0, 100);
           if (o.show) o.show(k, a, ev && ev.kind === 'muse' ? null : to, ev && ev.kind === 'muse' ? null : ev);
+          if (a.act && !(ev && ev.dec) && o.act) o.act(k, a.act, ev);   // something they noticed while musing
           return a;
         } finally { M.busy.delete(k); changed(); }
       },
@@ -789,12 +954,45 @@
       // something happened to them; they react (at most once per COOL seconds for the same thing)
       event(k, ev) {
         if (!M.can(k) || !ev || !COOL[ev.kind] || M.busy.has(k)) return false;
-        const now = Date.now() / 1000, c = cool.get(k) || {}, id = ev.kind + '|' + (ev.by != null ? idOf(ev.by) : ev.who || ev.what || '');
-        if (now - (c[id] || -1e9) < COOL[ev.kind] || now - (c.any || -1e9) < 6) return false;
+        const now = Date.now() / 1000, c = cool.get(k) || {}, id = ev.kind + '|' + (ev.by != null ? idOf(ev.by) : ev.ref != null ? idOf(ev.ref) : ev.who || ev.what || '');
+        // something dangerous coming at them, or someone raising the alarm, gets through the 6 s between reactions
+        const urgent = (ev.danger || ev.kind === 'alarm') && now - (c.any || -1e9) > 2;
+        if (now - (c[id] || -1e9) < COOL[ev.kind] || (now - (c.any || -1e9) < 6 && !urgent)) return false;
         c[id] = c.any = now; cool.set(k, c);
+        // decide first (on what they knew before this), tell the app, then learn from it and say something
+        ev = Object.assign({}, ev); ev.dec = brain.decide(k, ev) || undefined;
+        if (ev.dec && ev.dec.do !== 'ignore' && o.act) o.act(k, ev.dec, ev);
         brain.observe(k, ev);
         M.ask(k, null, ev);
+        // a warning, someone running or a call for help is heard by those near enough (o.hears), who decide for themselves
+        if (ev.dec && /^(warn|flee|call)$/.test(ev.dec.do) && ev.kind !== 'alarm') {
+          const near = o.people().filter((q) => q !== k && M.can(q) && (o.hears ? o.hears(k, q) : true));
+          near.forEach((q, i) => setTimeout(() => M.event(q, { kind: 'alarm', by: k, what: ev.what || (ev.by != null ? M.nameOf(ev.by) : ev.who) || 'something', ref: ev.dec.at, danger: !!ev.danger || ev.dec.threat > 0.45, feet: ev.feet }), 500 + i * 250 + Math.random() * 700));
+        }
         return true;
+      },
+      // what someone would do about a thing ({ what, danger, threat, feet, moving, toward, sound, ref } or words), without
+      // a word or a memory of it: { do (one of ACTS), what, at, threat, felt, keen, feet }
+      decide: (k, g) => (M.can(k) ? brain.decide(k, Object.assign({ kind: 'notice' }, typeof g === 'object' ? g : { what: g })) : null),
+      // their nature, 0..1: how easily frightened, how inquisitive, how steady, bold, warm, shy, talkative, lively
+      nature(k) { const c = o.card(k); if (!c) return null; const d = brain.profile(c).d; return { fear: d.fear, curious: d.curious, nerve: d.nerve, bold: d.bold, warm: d.warm, shy: d.shy, talk: d.talk, energy: d.energy }; },
+      // what changed round each of them since a second ago (o.sights): something new, something coming closer, something
+      // feared gone. The first look at a scene only takes it in (nobody remarks on everything at once)
+      scan() {
+        for (const k of o.people()) {
+          if (!M.can(k)) continue;
+          const cur = new Map();
+          for (const g0 of o.sights(k) || []) { const g = typeof g0 === 'object' ? g0 : { what: g0 }; cur.set(g.ref != null ? idOf(g.ref) : g.what, g); }
+          const prev = snap.get(k); snap.set(k, cur);
+          if (!prev) continue;
+          for (const [id, g] of cur) {
+            const p = prev.get(id);
+            if (!p) { if (!(g.feet > 120)) M.event(k, Object.assign({ kind: 'notice', new: true }, g)); }
+            else if (g.feet != null && p.feet != null && g.feet < p.feet - 3 && g.feet < p.feet * 0.85 && g.feet < 60) M.event(k, Object.assign({ kind: 'notice', toward: true }, g));
+          }
+          for (const [id, g] of prev) if (!cur.has(id)) { const kn = brain.sense(k, g); if (kn && kn.t > 0.3) M.event(k, Object.assign({ kind: 'gone' }, g)); }
+        }
+        for (const k of snap.keys()) if (!o.people().includes(k)) snap.delete(k);
       },
       forget(k) { M.lines = M.lines.filter((l) => l.p !== k && l.to !== k); cool.delete(k); changed(); },
       // what k said and heard: lines to them, and the whole of any group round they were in
@@ -803,17 +1001,12 @@
         return M.lines.filter((l) => l.p === k || mine(l, k) || (l.round && ids.has(l.round)) || (l.ev === 'aside' && l.to === k)).slice(-30);
       },
       hush() { try { root.speechSynthesis && root.speechSynthesis.cancel(); } catch (e) { /* none */ } },
-      // read a line aloud in a voice for their sex (the browser's own voices)
-      speak(text, sex) {
-        const S = root.speechSynthesis; if (!S || typeof SpeechSynthesisUtterance === 'undefined') return;
-        const u = new SpeechSynthesisUtterance(text), man = sex === 'man', vs = S.getVoices().filter((v) => /^en/i.test(v.lang));
-        const pick = vs.find((v) => (man ? /\b(male|man|daniel|alex|fred|george|david|james)\b/i : /\b(female|woman|samantha|victoria|karen|zira|susan|moira|tessa)\b/i).test(v.name));
-        if (pick || vs[0]) u.voice = pick || vs[0];
-        u.pitch = man ? 0.85 : 1.12; S.speak(u);
-      },
+      // read a line aloud: who is their card (or just 'man' / 'woman'); each person keeps one voice (VOICE)
+      speak(text, who) { VOICE.say(text, typeof who === 'object' && who ? who : { sex: who }); },
       // among themselves: the next one in turn says something to whoever is nearest, now and then
       step() {
         const now = Date.now() / 1000;
+        if (M.on && o.sights && now > scanAt && !(typeof document !== 'undefined' && document.hidden)) { scanAt = now + 1; M.scan(); }
         if (!M.on || !M.chatter || (typeof document !== 'undefined' && document.hidden) || now < next || M.busy.size) return;
         const who = o.people().filter((k) => M.can(k)); if (who.length < (M.local ? 1 : 2)) return;
         if (M.left <= 0 && !M.local) { M.chatter = false; M.status = 'They have stopped talking among themselves; say something, or start them again.'; changed(); return; }
@@ -837,12 +1030,65 @@
   const dollars = (v) => '$' + (+v || 0).toFixed(2);
   // the meter in words: today's spend of the cap, lines, and about how many more at the model picked
   function meterText(M) {
-    if (M.model === 'local') return 'Built-in: free, made in this browser. They notice what happens round them, remember who they have met, what people like and what scared them, and their mood moves with it.';
+    if (M.model === 'local') return 'Built-in: free, made in this browser. They notice what happens round them and decide what to do about it by their nature (the easily frightened back off or run, the inquisitive go and look), remember who they have met, what people like and what scared them, and their mood moves with it.';
     const s = M.spend; if (!s) return M.key ? 'Reading the meter...' : 'Enter the owner key for ' + NAMES[M.model] + '; until then the built-in mind speaks.';
     const left = Math.max(0, s.cap - s.spent), n = Math.floor(left / LINE[M.model]);
     return `Today: ${money(s.spent)} of ${dollars(s.cap)} (${s.lines} line${s.lines === 1 ? '' : 's'})` + (M.cost ? `, last line ${money(M.cost)}` : '') +
       `. About ${n.toLocaleString()} more at ${NAMES[M.model]}.`;
   }
+  // ---- voices: the most natural the browser has (Edge's Microsoft "Natural" voices, Chrome's Google ones, Safari's
+  // Enhanced and Premium Siri voices), each person given one of their own (by their name, so it stays theirs) of their
+  // sex, at their own pace (older and calmer slower, chatty and nervous quicker); the pitch is left alone on a natural
+  // voice (shifting it is what makes them sound robotic), nudged a little on the plain ones; a backlog is cut short
+  const F_NAMES = /\b(female|woman|aria|jenny|michelle|ana|sonia|libby|emma|ava|ashley|cora|elizabeth|jane|nancy|sara|amber|natasha|clara|molly|samantha|allison|susan|victoria|karen|moira|tessa|fiona|serena|kate|zira|hazel|heather|catherine|joanna|kendra|kimberly|salli|ivy|ruth|olivia)\b/i;
+  const M_NAMES = /\b(male|man|guy|davis|tony|jason|christopher|eric|roger|steffan|brian|andrew|ryan|thomas|william|liam|connor|alex|daniel|fred|tom|aaron|nathan|evan|oliver|arthur|gordon|lee|rishi|david|mark|george|james|matthew|joey|justin|kevin|stephen|ralph|bruce)\b/i;
+  const VOICE = {
+    list: [], at: 0,
+    // how natural a voice sounds, as far as its name and kind tell
+    score(v) {
+      const n = v.name;
+      return (/natural|neural/i.test(n) ? 100 : 0) + (/online/i.test(n) ? 40 : 0) + (/premium/i.test(n) ? 90 : /enhanced|siri/i.test(n) ? 70 : 0) +
+        (/^google/i.test(n) ? 45 : 0) + (/en[-_]us/i.test(v.lang) ? 12 : /en[-_](gb|au|ie|ca)/i.test(v.lang) ? 6 : 0) + (v.localService === false ? 8 : 0) -
+        (/compact|espeak|novelty|whisper|zarvox|bells|bubbles|cellos|organ|trinoids|bad news|good news|albert|jester|superstar/i.test(n) ? 200 : 0);
+    },
+    sexOf: (v) => (F_NAMES.test(v.name) ? 'woman' : M_NAMES.test(v.name) ? 'man' : /^google us english$/i.test(v.name) ? 'woman' : ''),
+    voices() {
+      const S = root.speechSynthesis; if (!S) return [];
+      if (!this.list.length || Date.now() - this.at > 30000) { this.at = Date.now(); this.list = S.getVoices().filter((v) => /^en/i.test(v.lang)).map((v) => ({ v, s: this.score(v), sex: this.sexOf(v) })).sort((a, b) => b.s - a.s); }
+      return this.list;
+    },
+    // their voice: the best of their sex, spread over the voices nearly as good, by their name
+    pick(c) {
+      const all = this.voices(); if (!all.length) return null;
+      const mine = all.filter((x) => x.sex === (c.sex === 'man' ? 'man' : 'woman')), pool = mine.length ? mine : all;
+      const top = pool[0].s, near = pool.filter((x) => x.s >= top - 15);
+      let h = 0; for (const ch of String(c.name || c.sex || '')) h = (h * 31 + ch.charCodeAt(0)) >>> 0;
+      return { voice: near[h % near.length], fits: !!mine.length, h };
+    },
+    // a line, as they would say it
+    say(text, c) {
+      const S = root.speechSynthesis; if (!S || typeof SpeechSynthesisUtterance === 'undefined' || !text) return;
+      if (S.pending && S.speaking) S.cancel();  // never more than one waiting: the scene has moved on
+      const u = new SpeechSynthesisUtterance(String(text).replace(/\s+/g, ' ').trim()), p = this.pick(c || {}), T = (c && c.traits) || [], age = +(c && c.age) || 35;
+      const natural = p && p.voice.s >= 40;
+      if (p) u.voice = p.voice.v;
+      u.lang = (p && p.voice.v.lang) || 'en-US';
+      const rate = 1 - Math.max(0, age - 45) * 0.004 + (T.some((t) => /chatty|nervous|silly|cheerful/.test(t)) ? 0.06 : 0) - (T.some((t) => /calm|quiet|tired|serious|dreamy/.test(t)) ? 0.06 : 0) - (c && c.mood === 'tired' ? 0.05 : 0);
+      const wobble = p ? ((p.h % 7) - 3) * 0.01 : 0;  // a little of their own, so two on one voice differ
+      u.rate = Math.max(0.8, Math.min(1.15, rate + wobble));
+      // a natural voice keeps its own pitch; a plain one is nudged toward their sex and age (a voice of the other sex as the last resort)
+      u.pitch = natural ? 1 + wobble : (c && c.sex === 'man' ? 0.9 : 1.08) - Math.max(0, age - 50) * 0.003 + (p && !p.fits ? (c && c.sex === 'man' ? -0.15 : 0.15) : 0);
+      S.speak(u);
+    },
+    // what this browser has, in words, for the panels
+    about() {
+      const all = this.voices(); if (!all.length) return root.speechSynthesis ? 'Voices: still loading.' : 'Voices: this browser cannot speak.';
+      const good = all.filter((x) => x.s >= 40), f = good.filter((x) => x.sex === 'woman').length, m = good.filter((x) => x.sex === 'man').length;
+      return good.length ? `Voices: ${good.length} natural ones here (${f} wom${f === 1 ? 'a' : 'e'}n, ${m} m${m === 1 ? 'a' : 'e'}n), the best ${good[0].v.name}.` : 'Voices: only basic ones in this browser; Microsoft Edge (its Natural voices), Chrome (Google voices) or Safari with an Enhanced voice downloaded sound far more natural.';
+    },
+  };
+  try { if (root.speechSynthesis) root.speechSynthesis.addEventListener('voiceschanged', () => { VOICE.list = []; }); } catch (e) { /* none */ }
+
   // a small panel for any page: who speaks (the built-in mind or a model), the owner key, the daily cap and the meter, and
   // forgetting what the built-in minds have learned (o.button: a class for
   // the buttons, o.on: the class a picked one gets); returns paint(), to call when M changes
@@ -864,11 +1110,11 @@
       el.querySelectorAll('[data-m]').forEach((b) => { b.classList.toggle(ON, b.dataset.m === M.model); b.setAttribute('aria-pressed', String(b.dataset.m === M.model)); });
       el.querySelectorAll('[data-c]').forEach((b) => { const on = !!M.spend && +b.dataset.c === M.spend.cap; b.classList.toggle(ON, on); b.setAttribute('aria-pressed', String(on)); });
       el.querySelectorAll('[data-paid]').forEach((r) => { r.style.display = M.model === 'local' ? 'none' : ''; });
-      el.querySelector('.hfm-meter').textContent = meterText(M) + (M.status && M.model !== 'local' ? ' ' + M.status : '');
+      el.querySelector('.hfm-meter').textContent = meterText(M) + (M.status && M.model !== 'local' ? ' ' + M.status : '') + ' ' + VOICE.about();
     }
     paint(); if (M.key && !M.spend && M.model !== 'local') M.meter();
     return paint;
   }
 
-  root.HumanForgeMind = { TRAITS, MOODS, PARTS, SMARTS, KNACKS, VALUES, LIKES, describe, ADULT, API, COOL, LINE, NAME, TOPICS, roll, card, partOf, create, controls, meterText, money, Brain };
+  root.HumanForgeMind = { TRAITS, MOODS, PARTS, SMARTS, KNACKS, VALUES, LIKES, describe, ADULT, API, COOL, LINE, NAME, TOPICS, ACTS, roll, card, partOf, create, controls, meterText, money, Brain, VOICE };
 })(typeof window !== 'undefined' ? window : globalThis);
