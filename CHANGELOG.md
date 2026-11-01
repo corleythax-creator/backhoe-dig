@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Sunday, November 1, 2026
 
+- **v336** (5:50 PM) Townsfolk remember your past conversations, even after you close the game: they bring up what you talked about last time, sum it up when you ask, and the sharper ones remember further back. Sync devices now carries their memory too.
 - **v335** (5:47 PM) Townsfolk talk is on by default and free: each grown-up has their own personality, they chat with each other when two stand close, remark on the machines going by (and complain if you drive too close), notice someone lying still, and remember who they've met.
 - **v334** (5:43 PM) Townsfolk read aloud in the most natural voice your browser has (Edge's Natural voices, Chrome's Google ones, Safari's Enhanced), each person keeping one of their own at their own pace; Talk model in ☰ gains Built-in, the free default.
 - **v333** (5:11 PM) Townsfolk you talk to now have an intelligence and more of a self: the sharp work sums out and give real advice, the simple fumble, and they will tell you their work, where they are from, what they want and what worries them.
