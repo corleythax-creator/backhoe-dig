@@ -139,6 +139,14 @@ const gunL=(v,x,y,z)=>v.set(0,0,0).addScaledVector(gunX,x).addScaledVector(gunY,
 // forearm; aimed, reloading, or a long gun at any time, the gun is set where it should be (at the shoulder along the
 // shot, or across his body at the ready) and both arms reach for it
 const gunF=new THREE.Vector3(),gunN=new THREE.Vector3(),gunPole=new THREE.Vector3(),gunO=new THREE.Vector3();
+// in first person the gun in his hands is drawn last and on top of everything (the depth cleared just before it), the
+// way shooting games draw the weapon in view: otherwise it went into whatever was nearer than it, a wall or a doorway
+// you stood at, someone close by, his own chest when looking down, and vanished. Its parts are drawn after the see-through
+// things (transparent, fully opaque, last in order); in other views they are depth tested as usual
+let gunVmF=-1,gunVmOn=false;
+function gunVm(o){if(!o.isMesh||o.userData.vm)return;o.userData.vm=1;o.renderOrder=1e6;
+  for(const m of [].concat(o.material))m.transparent=true;
+  o.onBeforeRender=r=>{if(gunVmOn&&gunVmF!==r.info.render.frame){gunVmF=r.info.render.frame;r.clearDepth()}}}
 function gunPlace(){const show=(gunHas()||gun.hol>0&&mode==='walk'&&!wk.inside&&!wk.swim)&&walker.visible,J=wkMdl.j,fp=show&&camMode==='cab',W=gunW();gunMdl.visible=show;
   for(const k of GUN_K)gunM[k].visible=k===gun.k;
   // put away: the hands back to their easy curl (wkRig)
@@ -146,7 +154,7 @@ function gunPlace(){const show=(gunHas()||gun.hol>0&&mode==='walk'&&!wk.inside&&
     for(const f of J.fingers)if(f.b.name.endsWith(A.sf))f.b.quaternion.copy(f.q0).multiply(gunQF.setFromAxisAngle(WK_X,0.35))}gun.fist=null}
   // in first person he is drawn too (walker.js) and the camera is in his head: the head is shrunk away
   if(J&&J.head&&gun.headOff!==fp){gun.headOff=fp;J.head.b.scale.setScalar(fp?0.001:1)}
-  if(!show)return;walker.updateMatrixWorld(true);gunFlash.position.fromArray(W.muz);
+  gunVmOn=fp;if(!show)return;if(fp)gunMdl.traverse(gunVm);walker.updateMatrixWorld(true);gunFlash.position.fromArray(W.muz);
   gunFlash.visible=gun.flash>0;if(gunFlash.visible)gunFlash.rotation.z=Math.random()*6.28;
   const R=J&&gunArm(J,0),L=J&&gunArm(J,1),aim=gun.aim>0||fp,posed=R&&L,dv=gun.hol>0?gun.hol/0.35:gun.dr,one=!W.long&&!aim&&gun.rl<=0;gunAnim(W);
   if(!posed){// one hand: the grip in the palm, half way from the wrist to the middle finger's knuckle, the wrist turned so
