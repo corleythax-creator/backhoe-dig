@@ -4,7 +4,7 @@
 // adults, PG-13, nothing sexual, no real people, no hate or help with harm, honest about being an AI if asked).
 // Off unless switched on (☰ → Townsfolk talk: Off, Text, Aloud; bhd_talk on this device); children never talk.
 // Only the owner can talk to them: the server answers nobody without the owner key (☰ → Talk model → Key, once a
-// device). ☰ also picks who speaks (Haiku, about 0.03¢ a line; Sonnet, 0.5¢; Opus, 1¢), sets the daily cap in dollars
+// device). ☰ also picks who speaks (Built-in, free and made in this browser, the default; Haiku, about 0.03¢ a line; Sonnet, 0.5¢; Opus, 1¢), sets the daily cap in dollars
 // (the server stops at it) and shows the meter: today's spend, lines, and about how many more at the model picked.
 // On foot: walk up to someone and they stop, turn to you and say hello; bump into them and they say something about it;
 // Talk (Enter, or the chip that shows near someone) opens a box to say something to the nearest one, who answers.
@@ -59,7 +59,7 @@ function talkFace(p,s){if(p.room||p.drv||p.cop||p.dead)return;p.wait=Math.max(p.
 function talkShow(p,a){const u=talkUI();let b=TALK.bub.get(p);if(!b){b={el:document.createElement('div')};b.el.className='talkLine';u.L.appendChild(b.el);TALK.bub.set(p,b)}
   b.el.innerHTML='';const n=document.createElement('b');n.textContent=talkName(p);b.el.append(n,document.createTextNode(a.say));
   b.until=performance.now()/1000+3.5+a.say.split(/\s+/).length*0.38;talkFace(p,b.until-performance.now()/1000);
-  if(TALK.mode==='voice'){const c=talkCard(p);TALK.M.speak(a.say,c&&c.sex)}}
+  if(TALK.mode==='voice'){const c=talkCard(p);TALK.M.speak(a.say,c)}}
 
 // ---- each frame (from main.js): who is near, walking up, bumping, the lines' places
 function talkTick(dt){
