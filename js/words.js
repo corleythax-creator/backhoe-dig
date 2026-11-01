@@ -151,6 +151,7 @@ const WORDS=[
   ['fuelFilled','Work','Filled the {machine}: {gal} gal for {cost}. Tank {left}% full.','{machine}, {gal}, {cost}, {left}'],
   ['payDay','Work','A new day. Yesterday paid {pay}.','{pay}: what the day paid'],
   ['ultraSlow','Other','Ultra was too slow here ({fps} fps), so Graphics went to High. Pick Ultra again in Graphics to keep it.','{fps}: frames per second'],
+  ['gfxSlow','Other','{from} was too slow here ({fps} fps), so Graphics went to {name}. Pick {from} again in Graphics to keep it.','{fps}: frames per second; {from}, {name}: the Graphics levels'],
   ['todRun','Time of day','The clock runs: a day passes in {min} min','{min}: minutes (Tuning: Day and night)'],
   ['todStop','Time of day','The clock is stopped at {time}','{time}: like 6:40 PM'],
   ['todNow','Time of day','Back to the real time: {time}','{time}: like 6:40 PM'],

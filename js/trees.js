@@ -4,7 +4,8 @@
 // birch clump (its "leafy"). Which species a tree is comes from where it stands (treeSpecies), so saves and maps keep
 // their {t:'pine'|'leafy'} shape. Every island hands its trees in as a group (treeGroup) and they all share one set of
 // instance meshes: each species has a full-detail model (about 2,500 to 4,500 triangles) for the trees within the
-// Graphics setting's tree distance (treeNearR) and a light one (a few hundred) beyond, re-sorted as the camera moves.
+// Graphics setting's tree distance (treeNearR), a light one (a few hundred) beyond, and a far one (a few dozen) past
+// treeFarR; none past the haze. Re-sorted as the camera moves.
 // Shadows come from a solid hull per species (the meshes in treeIMs, never drawn; shadowproxy.js casts the near ones),
 // which maps.js also reads for the minimap. The leaves are grey in the texture and take each tree's tint (TREE_LT, by species).
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
@@ -243,12 +244,25 @@ function treeHull(h){const g=new THREE.BufferGeometry(),P=[],add=s=>{const n=s.i
   g.setAttribute('position',new THREE.Float32BufferAttribute(P,3));g.computeBoundingSphere();return g}
 // the instance meshes: per species, full and light wood and foliage (drawn) and the hull (all of that species' trees)
 const TREE_CAP=2400,treeGroups={},treeDraw=[];
+// the far model (past treeFarR): every third leaf card of the light model, each half again as big so the crown still
+// reads full, and no wood (a trunk that far off is under a pixel); about a third of the light model's triangles.
+// The light model's cards are all one segment: four corners and twelve indices each, in order
+function treeFarGeo(g){const P=g.attributes.position.array,N=g.attributes.normal.array,U=g.attributes.uv.array,C=g.attributes.color.array,nc=P.length/12;
+  const p=[],n=[],u=[],c=[],ix=[];let k=0;
+  for(let q=0;q<nc;q+=3){const cx=(P[q*12]+P[q*12+3]+P[q*12+6]+P[q*12+9])/4,cy=(P[q*12+1]+P[q*12+4]+P[q*12+7]+P[q*12+10])/4,cz=(P[q*12+2]+P[q*12+5]+P[q*12+8]+P[q*12+11])/4;
+    for(let v=0;v<4;v++){const i=q*4+v;p.push(cx+(P[i*3]-cx)*1.6,cy+(P[i*3+1]-cy)*1.6,cz+(P[i*3+2]-cz)*1.6);n.push(N[i*3],N[i*3+1],N[i*3+2]);u.push(U[i*2],U[i*2+1]);c.push(C[i*3],C[i*3+1],C[i*3+2])}
+    const b=k*4;ix.push(b,b+1,b+2,b+1,b+3,b+2, b,b+2,b+1,b+1,b+2,b+3);k++}
+  const f=new THREE.BufferGeometry();f.setAttribute('position',new THREE.Float32BufferAttribute(p,3));f.setAttribute('normal',new THREE.Float32BufferAttribute(n,3));
+  f.setAttribute('uv',new THREE.Float32BufferAttribute(u,2));f.setAttribute('color',new THREE.Float32BufferAttribute(c,3));f.setIndex(ix);f.computeBoundingSphere();return f}
+// where the far model starts: half again the full model's distance, and never nearer than 120 m
+const treeFarR=()=>Math.max(120,treeNearR*1.5);
 // trees knocked over by digging (digtiles.js), by treeKey: left out of the groups, drawn lying down
 const treeFallen=new Map(),treeKey=(x,z)=>Math.round(x*100)+','+Math.round(z*100);
 (function(){const hullMat=new THREE.MeshBasicMaterial();
   for(const sp of TREE_SP){const H=sp.build(true),L=sp.build(false),mk=(g,m,col)=>{const im=new THREE.InstancedMesh(g,m,TREE_CAP);im.count=0;im.frustumCulled=false;
       im.receiveShadow=true;im.castShadow=false;if(col)im.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(TREE_CAP*3),3);scene.add(im);treeDraw.push(im);return im};
     sp.hi=[mk(H.wood,treeMats[sp.wood],false),mk(H.fol,treeMats.fol,true)];sp.lo=[mk(L.wood,treeMats[sp.wood],false),mk(L.fol,treeMats.fol,true)];
+    sp.far=[mk(treeFarGeo(L.fol),treeMats.fol,true)];
     sp.all=new THREE.InstancedMesh(treeHull(sp.hull),hullMat,TREE_CAP);sp.all.count=0;sp.all.castShadow=true;sp.col=new Float32Array(TREE_CAP*3);treeIMs.push(sp.all);
     sp.tris=[H.wood,H.fol,L.wood,L.fol].map(g=>g.index.count/3)}})();
 // one island's trees: [{t:'pine'|'leafy', x, z, y (ground), yaw, s, sy (height scale), c:[r,g,b] foliage tint}]
@@ -277,7 +291,7 @@ function treeEntry(t,x,z,yaw,s,c,sy){const w=hash(x*1.3+0.7,z*2.1+0.3),w2=hash(z
 // so it can turn a little before the next sort, which comes when it has turned about 10 degrees. In a headset, which
 // looks every way, they all draw. The shadows come from the hulls (shadowproxy.js), so they stay
 const treeFr=new THREE.Frustum(),treeFrM=new THREE.Matrix4(),treeSph=new THREE.Sphere(),treeLodF=new THREE.Vector3(),treeCamF=new THREE.Vector3(),TREE_CULL=0.27;
-let treeLodV=0;
+let treeLodV=0,treeLodFog=0;
 // every frame: the breeze, and when the camera has moved a few metres or turned, which trees are drawn and which get the
 // full model
 function treesTick(dt){const sw=TU.treeSway===undefined?1:TU.treeSway;
@@ -286,15 +300,17 @@ function treesTick(dt){const sw=TU.treeSway===undefined?1:TU.treeSway;
   treeWindU.value+=dt*(0.6+0.4*Math.min(2,sw))*(0.8+0.2*treeGustU.value);treeSwayU.value=sw;treeGlowU.value=TU.treeGlow;
   treeSunV.value.copy(SUN_DIR).transformDirection(camera.matrixWorldInverse);
   const cx=camera.position.x,cz=camera.position.z,cull=!vrOn(),fv=cull?camera.fov*camera.aspect:0;camera.getWorldDirection(treeCamF);
-  if(!treeLodDirty&&Math.hypot(cx-treeLodX,cz-treeLodZ)<Math.max(4,treeNearR*0.06)&&(!cull||treeCamF.dot(treeLodF)>0.985)&&fv===treeLodV)return;
-  treeLodDirty=false;treeLodX=cx;treeLodZ=cz;treeLodF.copy(treeCamF);treeLodV=fv;const R2=treeNearR*treeNearR;
+  if(!treeLodDirty&&Math.hypot(cx-treeLodX,cz-treeLodZ)<Math.max(4,treeNearR*0.06)&&(!cull||treeCamF.dot(treeLodF)>0.985)&&fv===treeLodV&&scene.fog.far===treeLodFog)return;
+  treeLodDirty=false;treeLodX=cx;treeLodZ=cz;treeLodF.copy(treeCamF);treeLodV=fv;treeLodFog=scene.fog.far;const R2=treeNearR*treeNearR,FR=treeFarR(),F2=FR*FR;
+  // past the haze's far edge a tree is all haze colour: not drawn (its shadow hull stays)
+  const H2=(scene.fog.far+30)*(scene.fog.far+30);
   if(cull){camera.updateMatrixWorld();treeFrM.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse);treeFr.setFromProjectionMatrix(treeFrM)}
-  for(const sp of TREE_SP){const A=sp.all.instanceMatrix.array,C=sp.col,parts=[[sp.hi,0],[sp.lo,0]];
-    for(let i=0;i<sp.all.count;i++){const dx=A[i*16+12]-cx,dz=A[i*16+14]-cz,d2=dx*dx+dz*dz;
+  for(const sp of TREE_SP){const A=sp.all.instanceMatrix.array,C=sp.col,parts=[[sp.hi,0],[sp.lo,0],[sp.far,0]];
+    for(let i=0;i<sp.all.count;i++){const dx=A[i*16+12]-cx,dz=A[i*16+14]-cz,d2=dx*dx+dz*dz;if(d2>H2)continue;
       if(cull){const s=Math.hypot(A[i*16+4],A[i*16+5],A[i*16+6]);treeSph.center.set(A[i*16+12],A[i*16+13]+sp.h*0.5*s,A[i*16+14]);
         treeSph.radius=sp.h*0.6*s+Math.sqrt(d2)*TREE_CULL;if(!treeFr.intersectsSphere(treeSph))continue}
-      const P=parts[d2<R2?0:1],j=P[1]++;
-      for(const im of P[0])im.instanceMatrix.array.set(A.subarray(i*16,i*16+16),j*16);P[0][1].instanceColor.array.set(C.subarray(i*3,i*3+3),j*3)}
+      const P=parts[d2<R2?0:d2<F2?1:2],j=P[1]++;
+      for(const im of P[0])im.instanceMatrix.array.set(A.subarray(i*16,i*16+16),j*16);P[0][P[0].length-1].instanceColor.array.set(C.subarray(i*3,i*3+3),j*3)}
     for(const [ims,n] of parts)for(const im of ims){im.count=n;im.instanceMatrix.clearUpdateRanges();im.instanceMatrix.addUpdateRange(0,n*16);im.instanceMatrix.needsUpdate=true;
       if(im.instanceColor){im.instanceColor.clearUpdateRanges();im.instanceColor.addUpdateRange(0,n*3);im.instanceColor.needsUpdate=true}}}}
 

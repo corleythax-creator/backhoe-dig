@@ -132,11 +132,15 @@ function gfxApply(){const g=gfxCur=Object.assign({},GFX[gfxKey],gfxOver);
   // field of view and haze (effects.js, rain.js)
   gfxFov=g.fov;gfxFog=g.fog;scene.fog.far=760*g.fog;if(typeof resize==='function')resize();
   if(typeof gfxPanelSync==='function')gfxPanelSync()}
-// Ultra is for strong PCs: when a PC can't hold it (main.js counts the slow seconds), it goes to High once and says so;
-// picking Ultra again keeps it (the guard rests until the page reloads)
-let ultraLowN=0,ultraGuardOff=false;
-function ultraGuard(f){ultraLowN=0;if(ultraGuardOff)return;ultraGuardOff=true;setGfx('high',true);toast(say('ultraSlow',{fps:f}),'bad')}
-function setGfx(k,picked){gfxKey=GFX[k]?k:gfxGuess();if(picked&&gfxKey==='ultra'&&typeof ultraLowN!=='undefined')ultraLowN=0;
+// When a device can't hold its Graphics setting (main.js counts the slow seconds at the lowest resolution), it steps
+// down one level and says so: Ultra to High, High to Medium, Medium to Low. Picking a level yourself keeps it: the guard
+// then rests until the page reloads
+const GFX_DOWN={ultra:'high',high:'med',med:'low'};
+let ultraLowN=0,ultraGuardOff=false,gfxStepping=false;
+function ultraGuard(f){ultraLowN=0;if(ultraGuardOff)return;const from=gfxKey,to=GFX_DOWN[from];if(!to)return;
+  gfxStepping=true;setGfx(to,true);gfxStepping=false;
+  toast(say(from==='ultra'?'ultraSlow':'gfxSlow',{fps:f,from:GFX[from].name,name:GFX[to].name}),'bad')}
+function setGfx(k,picked){gfxKey=GFX[k]?k:gfxGuess();if(picked&&typeof ultraLowN!=='undefined'){ultraLowN=0;if(!gfxStepping)ultraGuardOff=true}
   if(picked){gfxOver={};try{localStorage.removeItem('bhd_gfxc')}catch(e){}}
   gfxApply();
   // dirt detail follows the setting when picked (or the first time), and stays its own setting after that
