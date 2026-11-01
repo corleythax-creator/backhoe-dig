@@ -117,6 +117,12 @@ function pudSsrTick(){const on=pudLvl>0.001&&gfxCur.wmFine;pudSsrU.uSsr.value.x=
   pudSsrU.uPrevVP.value.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse)}
 // the eye adjusting (aeOn) reads the picture off-screen too
 function postOn(){return (POST.ao||POST.bloom||POST.grade||aeOn)&&!renderer.xr.isPresenting}
+// shaders built ahead of time (main.js's warm-up) for the picture the frame is really drawn into: through the effects
+// that is postRT, whose colour space differs from the screen's, and three.js builds a separate shader for each. Built
+// for the screen instead, they were never used (a hundred or so on High) and the real ones still compiled the first
+// time each thing showed, the stutter the warm-up is there to stop
+function warmCompile(o,sc){const t=renderer.getRenderTarget(),pt=postOn()&&postRT;if(pt)renderer.setRenderTarget(postRT);
+  try{return renderer.compileAsync?renderer.compileAsync(o,camera,sc):(renderer.compile(o,camera,sc),null)}finally{if(pt)renderer.setRenderTarget(t)}}
 // draws the frame: straight to the screen, or through the effects
 // shadows drawn every shEvery frames (the Graphics setting; Low's 2 halves the shadow pass, a phone's second biggest
 // cost after the scene itself); in between, the last shadow picture is used where it was drawn, so shadows stay put on
@@ -209,10 +215,18 @@ function hazeTick(){const u=HZ_U,d=Math.min(1,Math.max(0,(SUN_DIR.y+0.1)/0.15));
 const bnAlb=new THREE.Color(0.17,0.15,0.1),bnC=new THREE.Color(),bnT=new THREE.Color(),bnPr=new THREE.Color();
 const bnCam=new THREE.OrthographicCamera(-15,15,15,-15,1,140);bnCam.up.set(0,0,-1);
 let bnOn=false,bnHave=false,bnBusy=false,bnNext=0,bnRT=null,bnBuf=null;
+// only the ground is drawn into it (layer BN_LAYER, which the main camera never looks at by itself): the ground meshes
+// (groundMat, or the far ground's dirt attribute), the lake and the lights. Drawing the whole scene there built a
+// second copy of nearly every shader (a picture off the screen has its own colour space) and drew every machine,
+// tree and house again every 1.5 s. Re-tagged every 20 probes, so ground the map editor rebuilds joins in
+const BN_LAYER=5;bnCam.layers.set(BN_LAYER);let bnTagN=0;
+function bnLayers(){if(bnTagN--%20)return;bnTagN=19;
+  scene.traverse(o=>{if(o.isLight){o.layers.enable(BN_LAYER);return}if(!o.isMesh||o.isInstancedMesh)return;const m=o.material,g=o.geometry;
+    if(m===groundMat||g&&g.attributes&&g.attributes.dirt||m&&m.defines&&m.defines.LK_TOP!==undefined)o.layers.enable(BN_LAYER)})}
 function bounceGfx(on){if(bnOn===!!on)return;bnOn=!!on;bnHave=false;if(!on&&bnRT){bnRT.dispose();bnRT=null}}
 function bnProbe(){const now=performance.now();if(bnBusy||now<bnNext||renderer.xr.isPresenting)return;bnNext=now+1500;
   if(!bnRT){const f=renderer.extensions.has('EXT_color_buffer_float');bnRT=new THREE.WebGLRenderTarget(4,4,{type:f?THREE.FloatType:THREE.UnsignedByteType});bnBuf=f?new Float32Array(64):new Uint8Array(64)}
-  const c=sun.target.position;bnCam.position.set(c.x,c.y+70,c.z);bnCam.lookAt(c.x,c.y,c.z);bnCam.updateMatrixWorld();
+  bnLayers();const c=sun.target.position;bnCam.position.set(c.x,c.y+70,c.z);bnCam.lookAt(c.x,c.y,c.z);bnCam.updateMatrixWorld();
   const rt=renderer.getRenderTarget(),au=renderer.shadowMap.autoUpdate,bg=scene.background;
   renderer.shadowMap.autoUpdate=false;scene.background=null;renderer.setRenderTarget(bnRT);
   try{renderer.render(scene,bnCam)}finally{renderer.setRenderTarget(rt);renderer.shadowMap.autoUpdate=au;scene.background=bg}
