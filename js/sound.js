@@ -12,7 +12,7 @@ const sndCfg=Object.assign({},SND_DEF);
 try{const s=JSON.parse(localStorage.getItem('bhd_sndcfg')||'null');if(s)Object.assign(sndCfg,s);else if(localStorage.getItem('bhd_snd')==='0')sndCfg.on=false}catch(e){}
 // what the frame loop tells the mixer each frame
 const sndIn={hyd:0,relief:false,track:0,pour:0,dump:0,skHyd:0,skDig:0,skPour:0};
-let actx=null,snd=null;
+// actx (the audio context) and snd (the mixer) are declared in core.js, so scripts before this one can check them
 const sndVol=v=>(v/100)*(v/100);// sliders are perceptual: half way is a quarter of the power
 
 // ---------- the recordings ----------

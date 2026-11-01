@@ -63,7 +63,7 @@ function loadStep(bad){if(LOADP.done)return;if(bad){loadEnd();return}const jsN=d
   if(LOADP.gameT&&now-LOADP.gameT>2000&&LOADP.goal===undefined)LOADP.goal=at;if(LOADP.goal!==undefined)at=LOADP.goal;al=Math.min(al,at);
   const a=at?al/at:0,w=typeof warmFrac==='function'?warmFrac():0;
   const done=LOADP.goal!==undefined&&al>=at&&LOADP.warm&&warmIdle()&&(typeof brBusy!=='function'||!brBusy())||now>LOADP.cap*1000||LOADP.err&&now-LOADP.errT>4000;
-  const p=done?100:Math.min(99,45*js+30*a*(game?1:.8)+25*w);LOADP.shown=Math.max(LOADP.shown,p);
+  const p=done?100:Math.min(99,45*js+30*a*(game?1:.8)+25*w);LOADP.shown=done?100:Math.max(LOADP.shown,LOADP.shown+(p-LOADP.shown)*.35);// counts up smoothly, never back
   const pct=Math.floor(LOADP.shown),L=document.getElementById('startLoad');
   document.getElementById('startLoadPct').textContent=pct+'%';document.getElementById('startLoadFill').style.width=LOADP.shown+'%';L.setAttribute('aria-valuenow',pct);
   const sec=now>8000?` · ${Math.round(now/1000)} s`:'';
@@ -71,3 +71,15 @@ function loadStep(bad){if(LOADP.done)return;if(bad){loadEnd();return}const jsN=d
   if(done)loadEnd()}
 function loadEnd(){const L=document.getElementById('startLoad');LOADP.done=true;try{sessionStorage.removeItem('bhd_jsRetry')}catch(x){}L.classList.add('gone');setTimeout(()=>L.hidden=true,450);document.getElementById('startResume').disabled=false;clearInterval(LOADP.iv)}
 LOADP.iv=setInterval(loadTick,150);
+// in a background tab the browser stops drawing frames (and the warming in the frame loop with them) and slows timers to
+// once a second, so loading sat still until you came back. While the tab is hidden the loading work is pumped here
+// instead, in slices of about 25 ms passed along with postMessage (not slowed in the background): the shaders and
+// texture uploads (warmAllTick, gpuWarmTick, main.js), the structures' pictures (brTexOne, bridges.js) and the cover
+const loadBg={ch:new MessageChannel(),on:false,t:0};
+loadBg.ch.port1.onmessage=()=>{if(LOADP.done||!document.hidden){loadBg.on=false;return}const t0=performance.now();
+  try{if(typeof warmAllTick==='function')warmAllTick();if(typeof gpuWarmTick==='function')gpuWarmTick();
+    if(typeof brQ!=='undefined')while(brQ.length&&performance.now()-t0<25)brTexOne()}catch(e){}
+  if(t0-loadBg.t>150){loadBg.t=t0;loadTick()}
+  loadBg.ch.port2.postMessage(0)};
+function loadBgGo(){if(document.hidden&&!LOADP.done&&!loadBg.on){loadBg.on=true;loadBg.ch.port2.postMessage(0)}}
+document.addEventListener('visibilitychange',loadBgGo);loadBgGo();
