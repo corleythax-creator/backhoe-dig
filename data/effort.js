@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-01T21:09:00Z",
+ "updated": "2026-11-01T21:39:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -102,9 +102,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-01",
-   "dh": 14,
-   "act": 3.5,
-   "versions": 7
+   "dh": 19,
+   "act": 4,
+   "versions": 8
   }
  ],
  "extra": [
@@ -3057,6 +3057,15 @@ window.EFFORT = {
    "tris": 7450484,
    "chars": 2170682,
    "what": "First person: both hands really hold the pistol (high grip, trigger finger on the trigger, thumbs forward, support hand wrapped), gun lower right and angled in like a shooter, hands no longer hidden behind the gun"
+  },
+  {
+   "v": 328,
+   "asked": "2026-11-01T15:05:00-06:00",
+   "live": "2026-11-01T15:39:53-06:00",
+   "dh": 5,
+   "tris": 5908491,
+   "chars": 2180266,
+   "what": "The island's grown-ups have personalities now: with Townsfolk talk on (☰), walk up to someone and they stop and say hello, bump them and they react, press Enter to talk to them; their lines show over their heads, or aloud."
   }
  ]
 };
