@@ -25,7 +25,7 @@ const GUN_GRIP=0.004,GUN_HEAD=0.84;
 // case (cs), and when (after the pump or the bolt: ejT); the bullet's speed (m/s), the range it is sighted in at (m)
 // and how much wall it goes through (m)
 const GUNS={
-  pistol:{n:'Service pistol',s:'Pistol',mag:15,max:150,dm:'gunDmgP',rt:0,spr:0.004,bl:0.012,pel:1,rng:1,rl:1.7,muz:[0,0.05,0.18],fore:[0.032,-0.03,0.004],mg:[0,-0.07,-0.012],
+  pistol:{n:'Service pistol',s:'Pistol',mag:15,max:150,dm:'gunDmgP',rt:0,spr:0.004,bl:0.012,pel:1,rng:1,rl:1.7,muz:[0,0.05,0.18],fore:[0.012,-0.022,-0.025],mg:[0,-0.07,-0.012],
     bang:{lp:7500,hp:180,r:1,th:120,v:1.6,e:0.9,dk:9},rc:0.04,rk:0.012,sh:0.35,v:360,zero:25,pen:0.15,ej:[-0.012,0.045,0.06],cs:'p',ejT:0,d:'15 rounds a magazine. Quick and handy'},
   shotgun:{n:'Pump shotgun',s:'Shotgun',mag:6,max:60,dm:'gunDmgS',rt:0.95,spr:0.05,bl:0,pel:9,rng:0.45,rl:0.55,shell:1,long:1,muz:[0,0.06,0.77],fore:[0,0.008,0.36],mg:[0,0.0,0.14],
     bang:{lp:4800,hp:90,r:0.72,th:75,v:2.1,e:1.2,dk:6},rc:0.1,rk:0.03,sh:1,v:400,zero:30,pen:0.04,ej:[-0.025,0.05,0.13],cs:'s',ejT:0.42,d:'6 shells of 9 pellets. Brutal up close'},
@@ -121,7 +121,14 @@ function gunArm(J,s){const a=J.arms[s];if(!a||!a.top||!a.low)return null;if(a.g)
   const ch=n=>hand.children.find(c=>new RegExp('^'+n).test(c.name)),mid=ch('middle_01'),ix=ch('index_01'),pk=ch('pinky_01');if(!mid||!ix||!pk)return null;
   const right=/_r$/.test(hand.name),F=mid.position.clone().normalize(),Ac=ix.position.clone().sub(pk.position),N=F.clone().cross(Ac).normalize().multiplyScalar(right?-1:1);
   N.sub(F.clone().multiplyScalar(N.dot(F))).normalize();
-  a.g={top:a.top.b,low,hand,right,F,N,U:F.clone().cross(N),palm:mid.position.clone().multiplyScalar(0.5),h0:hand.quaternion.clone(),sf:hand.name.slice(-2)};return a.g}
+  const th=['thumb_01','thumb_02','thumb_03'].map(n=>hand.getObjectByName(n+hand.name.slice(-2))).filter(b=>b&&b.children.length).map(b=>({b,q0:b.quaternion.clone()}));
+  a.g={top:a.top.b,low,hand,right,F,N,U:F.clone().cross(N),palm:mid.position.clone().multiplyScalar(0.5),h0:hand.quaternion.clone(),sf:hand.name.slice(-2),th};return a.g}
+// the thumb of hand A laid along world direction d (its knuckle part of the way there, by k), from its rest each frame
+const gunTd=new THREE.Vector3(),gunTw=new THREE.Vector3();
+function gunThumb(A,d,k){for(const t of A.th)t.b.quaternion.copy(t.q0);A.hand.updateMatrixWorld(true);
+  A.th.forEach((t,i)=>{t.b.getWorldPosition(gunTw);t.b.children[0].getWorldPosition(gunTd);gunTd.sub(gunTw).normalize();
+    gunTw.copy(gunTd).lerp(d,i?1:k).normalize();gunQ.setFromUnitVectors(gunTd,gunTw);gunTurnW(t.b,gunQ)})}
+function gunThumbRest(A){if(!A.thOn)return;A.thOn=0;for(const t of A.th)t.b.quaternion.copy(t.q0)}
 // turn bone b by the world turn q
 function gunTurnW(b,q){b.parent.getWorldQuaternion(gunQ2);b.getWorldQuaternion(gunQF);b.quaternion.copy(gunQ2.invert().multiply(q).multiply(gunQF));b.updateMatrixWorld(true)}
 // hand frame wanted in the world: fingers along f, palm facing n (both unit, n square to f)
@@ -138,9 +145,13 @@ function gunIK(A,p,f,n,pole,r){gunHandQ(A,f,n,gunHq);A.hand.getWorldScale(gunHsc
   A.low.getWorldPosition(gunEl);A.hand.getWorldPosition(gunWr);gunT.copy(gunS).addScaledVector(gunA,d);
   gunQ.setFromUnitVectors(gunI1.subVectors(gunWr,gunEl).normalize(),gunI2.subVectors(gunT,gunEl).normalize());gunTurnW(A.low,gunQ);
   A.hand.parent.getWorldQuaternion(gunQ2);A.hand.quaternion.copy(gunQ2.invert().multiply(gunHq));A.hand.updateMatrixWorld(true)}
-// fingers of hand A curled by c (the index finger by ci, along the trigger guard)
+// fingers of hand A curled by c (the index finger by ci, along the trigger guard), joint by joint the way a hand closes
+// round a grip: the knuckle and middle joints most, the tips less; the trigger finger runs straight from its knuckle
+// along the frame and hooks at its middle joint onto the trigger
+const GUN_CJ=[1,1.12,0.72],GUN_CI=[0.55,2.1,1.25];
 function gunCurl(J,A,c,ci){const key=A.sf+c+','+ci;if(A.curl===key)return;A.curl=key;
-  for(const f of J.fingers)if(f.b.name.endsWith(A.sf)){const ix=/^index/.test(f.b.name);f.b.quaternion.copy(f.q0).multiply(gunQF.setFromAxisAngle(WK_X,ix?ci:c))}}
+  for(const f of J.fingers)if(f.b.name.endsWith(A.sf)){const ix=/^index/.test(f.b.name),j=+f.b.name.match(/_0(\d)_/)[1]-1;
+    f.b.quaternion.copy(f.q0).multiply(gunQF.setFromAxisAngle(WK_X,Math.min(1.65,ix?ci*GUN_CI[j]:c*GUN_CJ[j])))}}
 // a vector in the gun's frame (x left, y up, z along it) into the world
 const gunL=(v,x,y,z)=>v.set(0,0,0).addScaledVector(gunX,x).addScaledVector(gunY,y).addScaledVector(gunZ,z);
 // after wkMdlPose (main.js): the gun into his hands. Down by his side the pistol rides in his right palm along the
@@ -152,17 +163,23 @@ const gunF=new THREE.Vector3(),gunN=new THREE.Vector3(),gunPole=new THREE.Vector
 // you stood at, someone close by, his own chest when looking down, and vanished. Its parts are drawn after the see-through
 // things (transparent, fully opaque, last in order); in other views they are depth tested as usual
 let gunVmF=-1,gunVmOn=false;
+const gunVmClr=r=>{if(gunVmOn&&gunVmF!==r.info.render.frame){gunVmF=r.info.render.frame;r.clearDepth()}};
 function gunVm(o){if(!o.isMesh||o.userData.vm)return;o.userData.vm=1;o.renderOrder=1e6;
-  for(const m of [].concat(o.material))m.transparent=true;
-  o.onBeforeRender=r=>{if(gunVmOn&&gunVmF!==r.info.render.frame){gunVmF=r.info.render.frame;r.clearDepth()}}}
+  for(const m of [].concat(o.material))m.transparent=true;o.onBeforeRender=gunVmClr}
+// his own body joins that last pass while the gun is up in first person: otherwise the gun was drawn over the hands
+// holding it, and the fingers round the grip and the thumbs along the frame vanished behind it
+function gunVmBody(on){const g=wkMdl.g;if(!g||gun.vmBody===on)return;gun.vmBody=on;
+  g.traverse(o=>{if(!o.isMesh)return;const u=o.userData,M=[].concat(o.material);
+    if(!u.vb)u.vb={ro:o.renderOrder,tr:M.map(m=>m.transparent),ob:o.onBeforeRender};
+    o.renderOrder=on?1e6:u.vb.ro;M.forEach((m,i)=>{m.transparent=on||u.vb.tr[i]});o.onBeforeRender=on?gunVmClr:u.vb.ob})}
 function gunPlace(){const show=(gunHas()||gun.hol>0&&mode==='walk'&&!wk.inside&&!wk.swim)&&walker.visible,J=wkMdl.j,fp=show&&camMode==='cab',W=gunW();gunMdl.visible=show;
   for(const k of GUN_K)gunM[k].visible=k===gun.k;
   // put away: the hands back to their easy curl (wkRig)
-  if(!show&&J&&gun.fist){for(const s of [0,1]){const A=gunArm(J,s);if(!A)continue;A.hand.quaternion.copy(A.h0);A.curl=null;
+  if(!show&&J&&gun.fist){for(const s of [0,1]){const A=gunArm(J,s);if(!A)continue;A.hand.quaternion.copy(A.h0);A.curl=null;gunThumbRest(A);
     for(const f of J.fingers)if(f.b.name.endsWith(A.sf))f.b.quaternion.copy(f.q0).multiply(gunQF.setFromAxisAngle(WK_X,0.35))}gun.fist=null}
   // in first person he is drawn too (walker.js) and the camera is in his head: the head is shrunk away
   if(J&&J.head&&gun.headOff!==fp){gun.headOff=fp;J.head.b.scale.setScalar(fp?0.001:1)}
-  gunVmOn=fp;if(!show)return;if(fp)gunMdl.traverse(gunVm);walker.updateMatrixWorld(true);gunFlash.position.fromArray(W.muz);
+  gunVmOn=fp;gunVmBody(fp);if(!show)return;if(fp)gunMdl.traverse(gunVm);walker.updateMatrixWorld(true);gunFlash.position.fromArray(W.muz);
   gunFlash.visible=gun.flash>0;if(gunFlash.visible)gunFlash.rotation.z=Math.random()*6.28;
   const R=J&&gunArm(J,0),L=J&&gunArm(J,1),aim=gun.aim>0||fp,posed=R&&L,dv=gun.hol>0?gun.hol/0.35:gun.dr,one=!W.long&&!aim&&gun.rl<=0;gunAnim(W);
   if(!posed){// one hand: the grip in the palm, half way from the wrist to the middle finger's knuckle, the wrist turned so
@@ -187,7 +204,9 @@ function gunPlace(){const show=(gunHas()||gun.hol>0&&mode==='walk'&&!wk.inside&&
   if(one){gunD.set(f.x*0.35,-0.94,f.z*0.35).normalize();gunR.crossVectors(gunD,GUN_UP).normalize();gunU.crossVectors(gunR,gunD);gunH.set(wk.x,wk.y+0.92,wk.z).addScaledVector(r,0.25).addScaledVector(f,0.14)}
   else if(!aim&&W.long){gunH.copy(gunO).addScaledVector(GUN_UP,-0.42).addScaledVector(gunR,0.1);gunH.x+=Math.sin(y)*0.22;gunH.z+=Math.cos(y)*0.22}
   else if(W.long)gunH.copy(gunO).addScaledVector(gunD,fp?0.23:0.13).addScaledVector(gunR,fp?0.1:0.1).addScaledVector(gunU,fp?-0.13:-0.16);
-  else gunH.copy(gunO).addScaledVector(gunD,fp?0.35:0.38).addScaledVector(gunR,fp?0.07:0.03).addScaledVector(gunU,fp?-0.13:-0.15);
+  else{gunH.copy(gunO).addScaledVector(gunD,fp?0.39:0.38).addScaledVector(gunR,fp?0.1:0.03).addScaledVector(gunU,fp?-0.105:-0.15);
+    // in first person it points in at the crosshair a few yards out, so the left of the slide shows, as in shooting games
+    if(fp){gunD.multiplyScalar(4).add(gunO).sub(gunH).normalize();gunR.crossVectors(gunD,GUN_UP).normalize();gunU.crossVectors(gunR,gunD)}}
   // drawn from (and put back to) the holster at his right hip, or a long gun up from slung low across him
   if(dv<1){const e=dv*dv*(3-2*dv);if(W.long){gunT.set(wk.x,wk.y+1.0,wk.z).addScaledVector(r,-0.05).addScaledVector(f,0.22);gunI1.set(f.x*0.3-r.x*0.4,-0.85,f.z*0.3-r.z*0.4).normalize()}
     else{gunT.set(wk.x,wk.y+0.97,wk.z).addScaledVector(r,0.26).addScaledVector(f,-0.02);gunI1.set(f.x*0.08,-1,f.z*0.08).normalize()}
@@ -201,19 +220,27 @@ function gunPlace(){const show=(gunHas()||gun.hol>0&&mode==='walk'&&!wk.inside&&
   // (the head turned back to the front)
   if(W.long&&aim&&J.sp[0]){gunQ.setFromAxisAngle(GUN_UP,-0.5/3);for(const s of J.sp)if(s)gunTurnW(s.b,gunQ);if(J.neck)gunTurnW(J.neck.b,gunQ.setFromAxisAngle(GUN_UP,0.5))}
   // the right hand on the grip, palm in, fingers round it; the elbow down and out
-  gun.fist=1;gunL(gunF,0.3,0.12,1).normalize();gunL(gunN,1,0,0);gunN.addScaledVector(gunF,-gunN.dot(gunF)).normalize();
+  gun.fist=1;if(W.long){gunL(gunF,0.3,0.12,1).normalize();gunL(gunN,1,0,0)}else{gunL(gunF,-0.35,0.1,1).normalize();gunL(gunN,1,0,0.35)}gunN.addScaledVector(gunF,-gunN.dot(gunF)).normalize();
   // (the rifle's bolt: the right hand leaves the grip to work it, after each shot and through a reload)
   gunPole.copy(gunR).multiplyScalar(W.long&&aim?0.9:0.6).addScaledVector(GUN_UP,W.long&&aim?-0.4:-1);gunP.copy(gunH);
+  // (the pistol: the palm back on the grip, so the web of the hand is high under the slide's tang and the trigger finger
+  // is level with the trigger)
+  if(!W.long)gunP.add(gunL(gunT,0,-0.003,-0.025));
   if(gun.bw>0){gunL(gunT,-0.06,0.055+0.02*gun.bo,0.07-0.08*gun.bo).add(gunH);gunP.lerp(gunT,gun.bw);gunL(gunI2,0,-1,0);gunN.lerp(gunI2,gun.bw).normalize();gunN.addScaledVector(gunF,-gunN.dot(gunF)).normalize()}
-  gunIK(R,gunP,gunF,gunN,gunPole,0.02);gunCurl(J,R,1.35,gun.bw>0.5?1.2:0.55);
-  if(one){if(L.curl){L.hand.quaternion.copy(L.h0);gunCurl(J,L,0.35,0.35);L.curl=null}return}
+  gunIK(R,gunP,gunF,gunN,gunPole,0.02);gunCurl(J,R,1.3,gun.bw>0.5?1.2:0.55);
+  // the pistol's thumbs forward: the right one high along the left of the frame, under the slide
+  const pt=!W.long&&!one&&gun.rl<=0;if(pt){gunL(gunI1,0.3,0.02,1).normalize();gunThumb(R,gunI1,0.5);R.thOn=1}else gunThumbRest(R);
+  if(one){if(L.curl){L.hand.quaternion.copy(L.h0);gunCurl(J,L,0.35,0.35);L.curl=null}gunThumbRest(L);return}
   // the left: under the fore-end (the pistol: round the right hand), down to the magazine while reloading
   const fo=W.fore,u=gun.rl>0?1-gun.rl/gun.rlT:0;let lx=fo[0],ly=fo[1],lz=fo[2]-(W.shell?0.09*gun.pm:0);
   if(gun.rl>0){const q=gunPath(GUN_RLP[gun.k],u,fo);lx=q[0];ly=q[1];lz=q[2]}
   gunL(gunT,lx,ly,lz).add(gunH);gunP.copy(gunT);
-  if(W.long){gunL(gunF,-0.5,0.15,1).normalize();gunL(gunN,-0.35,1,0)}else{gunL(gunF,-0.25,-0.15,1).normalize();gunL(gunN,-1,0.2,0)}
+  // (the pistol: thumbs forward, the support palm in the gap the right hand leaves on the left of the grip, its fingers
+  // angled down over the right hand's, wrist low and the forearm up to it)
+  if(W.long){gunL(gunF,-0.5,0.15,1).normalize();gunL(gunN,-0.35,1,0)}else{gunL(gunF,-0.3,-0.5,0.8).normalize();gunL(gunN,-1,0.1,0.1)}
   gunN.addScaledVector(gunF,-gunN.dot(gunF)).normalize();gunPole.copy(gunR).multiplyScalar(-0.7).addScaledVector(GUN_UP,-1);
-  gunIK(L,gunP,gunF,gunN,gunPole,W.long?0.024:0.03);gunCurl(J,L,W.long?1.0:1.2,W.long?0.85:1.1)}
+  gunIK(L,gunP,gunF,gunN,gunPole,W.long?0.024:0.035);gunCurl(J,L,W.long?1.0:1.15,W.long?0.85:1.0);
+  if(pt){gunL(gunI1,0.05,-0.08,1).normalize();gunThumb(L,gunI1,0.6);L.thOn=1}else gunThumbRest(L)}
 // the left hand's way through each gun's reload (u from 0 to 1; [u, left, up, along] in the gun's frame, 'f' its hold on
 // the fore-end): the pistol's and carbine's magazine out at the well, a fresh one from his belt, in, and the slide or
 // charging handle racked; the shotgun's shell from his belt up into the loading port; the rifle's rounds pressed down
