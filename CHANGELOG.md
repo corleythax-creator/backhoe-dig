@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Sunday, November 1, 2026
 
+- **v327** (3:09 PM) First person: both hands really hold the pistol (high grip, trigger finger on the trigger, thumbs forward, support hand wrapped), gun lower right and angled in like a shooter, hands no longer hidden behind the gun
 - **v326** (2:11 PM) Loading screen: no more 'snd is not defined' error, keeps loading while the tab is in the background, percent counts up smoothly
 - **v325** (1:42 PM) The bridges' and other structures' pictures (62 materials, one every 40 ms after you were let in, each rebuilding its shader as it arrived) are now made back to back behind the loading cover, which waits for them, and their new shaders are built in the background; the rifle's 6 MB model loads only once you own one or come near a gun shop, instead of at the start
 - **v324** (12:49 PM) In first person the gun is set in your hands after the camera moves each frame, not before, so it no longer trails a frame behind the view (the jitter, and swinging out of sight on a quick turn), and it is drawn on top of the world like a shooter's weapon, so it no longer vanishes into a wall you stand at, someone close by or your own chest when you look down

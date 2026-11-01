@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-01T20:11:00Z",
+ "updated": "2026-11-01T21:09:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -102,9 +102,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-01",
-   "dh": 11.5,
-   "act": 3,
-   "versions": 6
+   "dh": 14,
+   "act": 3.5,
+   "versions": 7
   }
  ],
  "extra": [
@@ -3048,6 +3048,15 @@ window.EFFORT = {
    "tris": 5856682,
    "chars": 2167832,
    "what": "Loading screen: no more 'snd is not defined' error, keeps loading while the tab is in the background, percent counts up smoothly"
+  },
+  {
+   "v": 327,
+   "asked": "2026-11-01T14:15:00-06:00",
+   "live": "2026-11-01T15:09:53-06:00",
+   "dh": 2.5,
+   "tris": 7450484,
+   "chars": 2170682,
+   "what": "First person: both hands really hold the pistol (high grip, trigger finger on the trigger, thumbs forward, support hand wrapped), gun lower right and angled in like a shooter, hands no longer hidden behind the gun"
   }
  ]
 };
