@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-10-31T21:39:00Z",
+ "updated": "2026-11-01T14:23:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -99,6 +99,12 @@ window.EFFORT = {
    "dh": 145,
    "act": 6,
    "versions": 18
+  },
+  {
+   "d": "2026-11-01",
+   "dh": 2,
+   "act": 0.5,
+   "versions": 1
   }
  ],
  "extra": [
@@ -2988,6 +2994,15 @@ window.EFFORT = {
    "tris": 6010221,
    "chars": 2158909,
    "what": "If the phone's connection drops one of the game's files while loading, the page loads again by itself instead of stopping on an error like \"Can't find variable: snd\""
+  },
+  {
+   "v": 321,
+   "asked": "2026-11-01T07:45:00-06:00",
+   "live": "2026-11-01T08:23:25-06:00",
+   "dh": 2,
+   "tris": 7625850,
+   "chars": 2161374,
+   "what": "Trees far off draw a light model of about a third the leaves, and none are drawn past the haze where they can't be seen (about a tenth fewer triangles on Low); a device that stays slow at its lowest resolution now steps its Graphics down on its own (High to Medium, Medium to Low) and says so, as Ultra already did"
   }
  ]
 };
