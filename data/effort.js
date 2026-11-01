@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-01T14:23:00Z",
+ "updated": "2026-11-01T14:54:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -102,9 +102,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-01",
-   "dh": 2,
-   "act": 0.5,
-   "versions": 1
+   "dh": 3.5,
+   "act": 1,
+   "versions": 2
   }
  ],
  "extra": [
@@ -3003,6 +3003,15 @@ window.EFFORT = {
    "tris": 7625850,
    "chars": 2161374,
    "what": "Trees far off draw a light model of about a third the leaves, and none are drawn past the haze where they can't be seen (about a tenth fewer triangles on Low); a device that stays slow at its lowest resolution now steps its Graphics down on its own (High to Medium, Medium to Low) and says so, as Ultra already did"
+  },
+  {
+   "v": 322,
+   "asked": "2026-11-01T08:27:00-06:00",
+   "live": "2026-11-01T08:54:36-06:00",
+   "dh": 1.5,
+   "tris": 7596986,
+   "chars": 2162355,
+   "what": "The phone speed test showed the CPU, not the graphics chip, holding the frame rate: each machine checked itself against all 2,500 solids on the island every frame (6.7 ms); now only the ones nearby (0.6 ms), so the game's own work per frame is down from 13.5 to 7.8 ms. On Low the shadows are drawn every other frame, halving the shadow pass"
   }
  ]
 };

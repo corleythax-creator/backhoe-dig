@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Sunday, November 1, 2026
 
+- **v322** (8:54 AM) The phone speed test showed the CPU, not the graphics chip, holding the frame rate: each machine checked itself against all 2,500 solids on the island every frame (6.7 ms); now only the ones nearby (0.6 ms), so the game's own work per frame is down from 13.5 to 7.8 ms. On Low the shadows are drawn every other frame, halving the shadow pass
 - **v321** (8:23 AM) Trees far off draw a light model of about a third the leaves, and none are drawn past the haze where they can't be seen (about a tenth fewer triangles on Low); a device that stays slow at its lowest resolution now steps its Graphics down on its own (High to Medium, Medium to Low) and says so, as Ultra already did
 
 ## Saturday, October 31, 2026
