@@ -38,6 +38,7 @@ const KEY_ACTIONS=[
   {id:'trim',g:'On foot',n:'String trimmer',d:'Take out or put away the string trimmer: it cuts the grass and weeds it swings over (a fresh spool each time you put it away)',k:['Digit9'],s:'walk'},
   {id:'gun',g:'On foot',n:'Gun',d:'Take out or put away your gun; while it is out, a click on the view fires it',k:['KeyG'],s:'walk'},
   {id:'gunShoot',g:'On foot',n:'Fire',d:'Shoots the way you face (in first person, at the crosshair), like a click on the view while a gun is out; the carbine fires while held',k:[],s:'walk'},
+  {id:'talk',g:'On foot',n:'Talk',d:'Says something to the townsperson nearest you, when Townsfolk talk is on (☰ menu): a box opens to type in',k:['Enter'],s:'walk'},
   {id:'gunReload',g:'On foot',n:'Reload',d:'Loads the gun in your hands from the rounds you carry (more at Lakeside Guns on Main Street)',k:['KeyR'],s:'walk'},
   {id:'gunNext',g:'On foot',n:'Next gun',d:'Switches to the next gun you own',k:['Backquote'],s:'walk'},
   {id:'trimBump',g:'On foot',n:'Bump the trimmer line',d:'Taps the head on the ground to feed more line off the spool when it wears short',k:['Digit0'],s:'walk'},

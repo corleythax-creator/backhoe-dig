@@ -600,3 +600,16 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
 #edAllT tr.picked td{color:var(--machine)}
 #edAllMore{margin:10px 14px}
 @media (max-width:640px){.edall{inset:48px 4px 4px}#edAllT td:nth-child(3),#edAllT th:nth-child(3){display:none}}
+
+/* townsfolk who talk (talk.js): the chip near someone and the box to type in, over the drive bar; their lines over their heads */
+#talkBox{position:absolute;left:50%;transform:translateX(-50%);bottom:calc(env(safe-area-inset-bottom,0px) + 112px);z-index:4;display:flex;flex-direction:column;align-items:center;gap:6px;zoom:var(--s)}
+#talkBox[hidden]{display:none}
+#talkChip{font:600 14px/1.2 var(--f-display);background:rgba(12,15,18,.72);color:#fff;border:0;border-left:3px solid var(--machine);border-radius:6px;padding:7px 12px;cursor:pointer}
+#talkForm{display:flex;gap:6px}#talkForm[hidden]{display:none}
+#talkForm input{width:min(360px,70vw);font:15px/1.3 system-ui,sans-serif;padding:7px 10px;border-radius:6px;border:1px solid rgba(255,255,255,.25);background:rgba(12,15,18,.85);color:#fff}
+#talkForm button{font:600 14px/1 var(--f-display);border-radius:6px;border:0;padding:7px 12px;background:var(--machine);color:#1c1309;cursor:pointer}
+#talkStatus{font:13px/1.2 system-ui,sans-serif;color:#fff;text-shadow:0 1px 2px #000}
+#talkLines{position:fixed;inset:0;pointer-events:none;z-index:3}
+.talkLine{position:fixed;transform:translate(-50%,-100%);max-width:min(280px,70vw);background:rgba(12,15,18,.78);color:#fff;border-left:3px solid var(--machine);border-radius:6px;padding:6px 10px;font:14px/1.35 system-ui,sans-serif;opacity:0;transition:opacity .3s}
+.talkLine b{display:block;font:600 12px/1.2 var(--f-display);color:var(--machine);letter-spacing:.03em}
+.talkLine.on{opacity:1}
