@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Sunday, November 1, 2026
 
+- **v329** (4:01 PM) Townsfolk talk now answers only the owner (a key, once a device), picks Haiku, Sonnet or Opus in ☰, stops at a daily dollar cap, and shows a spend meter: today's spend and about how many more lines.
 - **v328** (3:39 PM) The island's grown-ups have personalities now: with Townsfolk talk on (☰), walk up to someone and they stop and say hello, bump them and they react, press Enter to talk to them; their lines show over their heads, or aloud.
 - **v327** (3:09 PM) First person: both hands really hold the pistol (high grip, trigger finger on the trigger, thumbs forward, support hand wrapped), gun lower right and angled in like a shooter, hands no longer hidden behind the gun
 - **v326** (2:11 PM) Loading screen: no more 'snd is not defined' error, keeps loading while the tab is in the background, percent counts up smoothly
