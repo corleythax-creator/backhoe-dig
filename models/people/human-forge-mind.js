@@ -172,12 +172,14 @@
 
   // what a line costs, roughly (about 1,200 tokens in and 300 out, at each model's price): for the meter's estimates
   const LINE = { haiku: 0.00027, sonnet: 0.0054, opus: 0.0108 }, NAME = { haiku: 'Haiku', sonnet: 'Sonnet', opus: 'Opus' };
-  const money = (v) => (v > 0 && v < 0.01 ? (v * 100).toFixed(2) + '\u00a2' : '$' + (v || 0).toFixed(2));
+  // under a dollar in cents, so line costs compare at a glance (0.03¢, 0.54¢, 1.1¢); a dollar or more as dollars
+  const money = (v) => { v = +v || 0; if (v >= 1) return '$' + v.toFixed(2); const c = v * 100; return (c >= 10 ? c.toFixed(0) : c >= 1 ? c.toFixed(1) : c.toFixed(2)) + '\u00a2'; };
+  const dollars = (v) => '$' + (+v || 0).toFixed(2);
   // the meter in words: today's spend of the cap, lines, and about how many more at the model picked
   function meterText(M) {
     const s = M.spend; if (!s) return M.key ? 'Reading the meter...' : 'Enter the owner key to talk.';
     const left = Math.max(0, s.cap - s.spent), n = Math.floor(left / LINE[M.model]);
-    return `Today: ${money(s.spent)} of ${money(s.cap)} (${s.lines} line${s.lines === 1 ? '' : 's'})` + (M.cost ? `, last line ${money(M.cost)}` : '') +
+    return `Today: ${money(s.spent)} of ${dollars(s.cap)} (${s.lines} line${s.lines === 1 ? '' : 's'})` + (M.cost ? `, last line ${money(M.cost)}` : '') +
       `. About ${n.toLocaleString()} more at ${NAME[M.model]}.`;
   }
   // a small panel for any page: the owner key, which model speaks, the daily cap and the meter (o.button: a class for
@@ -186,7 +188,7 @@
     const B = o.button || '', ON = o.on || 'on', caps = [0.5, 1, 2, 5, 10];
     el.innerHTML = `<div class="hfm-row"><span>Owner key</span><input type="password" autocomplete="off" placeholder="${M.key ? 'saved on this device' : 'the key from Vercel'}"><button class="${B}" data-a="key">Save</button></div>
       <div class="hfm-row"><span>Who speaks</span>${Object.keys(LINE).map((m) => `<button class="${B}" data-m="${m}">${NAME[m]}, ~${money(LINE[m])} a line</button>`).join('')}</div>
-      <div class="hfm-row"><span>Daily cap</span>${caps.map((c) => `<button class="${B}" data-c="${c}">${money(c)}</button>`).join('')}</div>
+      <div class="hfm-row"><span>Daily cap</span>${caps.map((c) => `<button class="${B}" data-c="${c}">${dollars(c)}</button>`).join('')}</div>
       <div class="hfm-meter"></div>`;
     const inp = el.querySelector('input');
     inp.onkeydown = (e) => { e.stopPropagation(); if (e.key === 'Enter') el.querySelector('[data-a=key]').click(); };

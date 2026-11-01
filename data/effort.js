@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-01T22:01:00Z",
+ "updated": "2026-11-01T22:15:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -102,9 +102,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-01",
-   "dh": 22,
+   "dh": 22.5,
    "act": 4.5,
-   "versions": 9
+   "versions": 10
   }
  ],
  "extra": [
@@ -3075,6 +3075,15 @@ window.EFFORT = {
    "tris": 5852198,
    "chars": 2182482,
    "what": "Townsfolk talk now answers only the owner (a key, once a device), picks Haiku, Sonnet or Opus in ☰, stops at a daily dollar cap, and shows a spend meter: today's spend and about how many more lines."
+  },
+  {
+   "v": 330,
+   "asked": "2026-11-01T16:10:00-06:00",
+   "live": "2026-11-01T16:15:27-06:00",
+   "dh": 0.5,
+   "tris": 6809063,
+   "chars": 2182482,
+   "what": "The talk meter shows each line's cost in cents, so Opus (about 1.1¢) no longer looks cheaper than Haiku (0.03¢); the cap stays in dollars."
   }
  ]
 };
