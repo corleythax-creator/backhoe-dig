@@ -14,7 +14,7 @@
 // other now and then say something to each other (the runtime's chatter), both turning to face; alone, one may remark
 // on what is round them (machines, the marina's gulls: talkSights). Drive a machine within TU.talkRoadR of
 // someone and they remark on it: fast (over TU.talkRoadV), that it nearly had them; slow or stopped, on the machine.
-// Lines show over their heads; Aloud reads them in the browser's own voices.
+// Lines show over their heads; Aloud reads them in the most natural voice the browser has, each townsperson keeping their own.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 const TALK={mode:'text',lib:null,M:null,near:null,with:null,bub:new Map(),far:new Map(),bump:new Map(),v:new THREE.Vector3(),t:0,ui:null,
   here:[],at:new Map(),ride:null,v0:0};
@@ -97,7 +97,7 @@ function talkShow(p,a,to,ev){const u=talkUI();let b=TALK.bub.get(p);if(!b){b={el
   else if(ev&&ev.kind==='thing'){const w=TALK.at.get(p);if(w)talkFace(p,Math.min(s,3),w[0],w[1])}
   else if(ev&&ev.by&&typeof ev.by==='object')talkFace(p,Math.min(s,4),ev.by.x,ev.by.z);
   else if(to==='you'||ev&&ev.by==='player')talkFace(p,s);
-  if(TALK.mode==='voice'){const c=talkCard(p);TALK.M.speak(a.say,c&&c.sex)}}
+  if(TALK.mode==='voice'){const c=talkCard(p);TALK.M.speak(a.say,c)}}
 
 // ---- a few times a second: who is about (TALK.here, near you or the machine you drive), who is near you on foot,
 // walking up, bumping, a machine going by, someone lying still
