@@ -41,7 +41,23 @@
     ],
     "mood": "happy",
     "about": "Thirty-eight, Cal's wife, who runs the shop's register and its gossip in equal measure.",
-    "voice": "friendly and fast, laughs easily"
+    "voice": "friendly and fast, laughs easily",
+    "smarts": 3,
+    "knack": "people",
+    "values": [
+     "family",
+     "fun",
+     "loyalty"
+    ],
+    "likes": [
+     "food",
+     "sea",
+     "movies"
+    ],
+    "job": "shopkeeper",
+    "from": "Biloxi",
+    "goal": "take Cal on a real honeymoon, finally",
+    "worry": "tourist season drying up"
    }
   },
   {
@@ -118,7 +134,23 @@
     ],
     "mood": "calm",
     "about": "Forty-two, runs the bait shop and boat rental on the island and knows every tide and every neighbor.",
-    "voice": "slow Gulf Coast drawl, unhurried"
+    "voice": "slow Gulf Coast drawl, unhurried",
+    "smarts": 3,
+    "knack": "hands",
+    "values": [
+     "family",
+     "loyalty",
+     "tradition"
+    ],
+    "likes": [
+     "sea",
+     "weather",
+     "animals"
+    ],
+    "job": "bait shop and boat rental owner",
+    "from": "the island",
+    "goal": "pay off the boat loan",
+    "worry": "a hurricane season like the bad one"
    }
   },
   {
@@ -228,7 +260,23 @@
     ],
     "mood": "happy",
     "about": "Twenty-five, a waitress at the seafood shack who is saving up to move to New Orleans.",
-    "voice": "friendly, fast, says y'all a lot"
+    "voice": "friendly, fast, says y'all a lot",
+    "smarts": 2,
+    "knack": "people",
+    "values": [
+     "adventure",
+     "freedom",
+     "fun"
+    ],
+    "likes": [
+     "music",
+     "food",
+     "travel"
+    ],
+    "job": "waitress",
+    "from": "the island",
+    "goal": "move to New Orleans",
+    "worry": "never getting off the island"
    }
   },
   {
@@ -272,7 +320,23 @@
     ],
     "mood": "playful",
     "about": "Twenty-five, works at the ice cream stand and wants to be a singer.",
-    "voice": "bouncy, hums between sentences"
+    "voice": "bouncy, hums between sentences",
+    "smarts": 2,
+    "knack": "creative",
+    "values": [
+     "fun",
+     "freedom",
+     "adventure"
+    ],
+    "likes": [
+     "music",
+     "movies",
+     "art"
+    ],
+    "job": "ice cream server",
+    "from": "the island",
+    "goal": "sing on a real stage",
+    "worry": "being told she isn't good enough"
    }
   },
   {
@@ -316,7 +380,23 @@
     ],
     "mood": "playful",
     "about": "Twenty-eight, a bartender back on the island after a few years in Memphis, unimpressed by tourists.",
-    "voice": "quick, teasing, a smoky laugh"
+    "voice": "quick, teasing, a smoky laugh",
+    "smarts": 4,
+    "knack": "street",
+    "values": [
+     "independence",
+     "honesty",
+     "fun"
+    ],
+    "likes": [
+     "music",
+     "movies",
+     "food"
+    ],
+    "job": "bartender",
+    "from": "the island",
+    "goal": "open her own bar, with no tourists",
+    "worry": "ending up stuck here for good"
    }
   },
   {
@@ -360,7 +440,23 @@
     ],
     "mood": "happy",
     "about": "Thirty, a physical therapist who runs the seawall every morning before work.",
-    "voice": "brisk, upbeat, a bit out of breath"
+    "voice": "brisk, upbeat, a bit out of breath",
+    "smarts": 4,
+    "knack": "people",
+    "values": [
+     "ambition",
+     "fun",
+     "independence"
+    ],
+    "likes": [
+     "sport",
+     "food",
+     "travel"
+    ],
+    "job": "physical therapist",
+    "from": "Mobile",
+    "goal": "run the Boston Marathon",
+    "worry": "her patients giving up on their exercises"
    }
   },
   {
@@ -404,7 +500,23 @@
     ],
     "mood": "calm",
     "about": "Thirty-five, runs the island's only hardware store and can tell you which bolt you need.",
-    "voice": "straight talking, a quick grin"
+    "voice": "straight talking, a quick grin",
+    "smarts": 4,
+    "knack": "hands",
+    "values": [
+     "independence",
+     "honesty",
+     "fairness"
+    ],
+    "likes": [
+     "work",
+     "cars",
+     "garden"
+    ],
+    "job": "hardware store owner",
+    "from": "the island",
+    "goal": "keep the store open another twenty years",
+    "worry": "the big box store on the mainland"
    }
   },
   {
@@ -448,7 +560,23 @@
     ],
     "mood": "tired",
     "about": "Forty-five, a mother of three teenagers who is always on her way to pick someone up.",
-    "voice": "hurried, warm, distracted"
+    "voice": "hurried, warm, distracted",
+    "smarts": 3,
+    "knack": "people",
+    "values": [
+     "family",
+     "comfort",
+     "kindness"
+    ],
+    "likes": [
+     "food",
+     "movies",
+     "garden"
+    ],
+    "job": "stay-at-home mom",
+    "from": "Ocean Springs",
+    "goal": "get all three teenagers through school",
+    "worry": "one of them on the road at night"
    }
   },
   {
@@ -492,7 +620,23 @@
     ],
     "mood": "tired",
     "about": "Fifty-two, the night nurse at the island clinic, heading home after a twelve-hour shift.",
-    "voice": "soft, weary, kind"
+    "voice": "soft, weary, kind",
+    "smarts": 4,
+    "knack": "people",
+    "values": [
+     "kindness",
+     "honesty",
+     "comfort"
+    ],
+    "likes": [
+     "coffee",
+     "books",
+     "garden"
+    ],
+    "job": "night nurse",
+    "from": "Pascagoula",
+    "goal": "sleep through a whole night",
+    "worry": "a bad case coming in when she's alone"
    }
   },
   {
@@ -536,7 +680,23 @@
     ],
     "mood": "calm",
     "about": "Fifty-five, a painter who sells seascapes from her porch and talks about the light.",
-    "voice": "soft, lyrical, a little vague"
+    "voice": "soft, lyrical, a little vague",
+    "smarts": 4,
+    "knack": "creative",
+    "values": [
+     "beauty",
+     "freedom",
+     "kindness"
+    ],
+    "likes": [
+     "art",
+     "sea",
+     "stars"
+    ],
+    "job": "painter",
+    "from": "New Orleans",
+    "goal": "have a show in a real gallery",
+    "worry": "losing her eyesight"
    }
   },
   {
@@ -580,7 +740,23 @@
     ],
     "mood": "happy",
     "about": "Seventy-two, a retired schoolteacher who taught half the island to read and still corrects their grammar.",
-    "voice": "precise, sweet, old Southern charm"
+    "voice": "precise, sweet, old Southern charm",
+    "smarts": 5,
+    "knack": "book",
+    "values": [
+     "knowledge",
+     "kindness",
+     "tradition"
+    ],
+    "likes": [
+     "books",
+     "history",
+     "garden"
+    ],
+    "job": "retired schoolteacher",
+    "from": "the island",
+    "goal": "teach one more child to love reading",
+    "worry": "nobody reading proper books anymore"
    }
   },
   {
@@ -624,7 +800,23 @@
     ],
     "mood": "thoughtful",
     "about": "Eighty, has lived through six hurricanes on the island and will not hear of leaving.",
-    "voice": "firm, old Cajun-tinged accent, no nonsense"
+    "voice": "firm, old Cajun-tinged accent, no nonsense",
+    "smarts": 4,
+    "knack": "street",
+    "values": [
+     "tradition",
+     "independence",
+     "family"
+    ],
+    "likes": [
+     "history",
+     "weather",
+     "garden"
+    ],
+    "job": "retired",
+    "from": "the island",
+    "goal": "die in her own house on her own island",
+    "worry": "her children making her move"
    }
   },
   {
@@ -866,7 +1058,23 @@
     ],
     "mood": "thoughtful",
     "about": "Twenty-five, works the ferry dock and draws comics in a notebook between boats.",
-    "voice": "mumbles a little, lights up about stories"
+    "voice": "mumbles a little, lights up about stories",
+    "smarts": 4,
+    "knack": "creative",
+    "values": [
+     "freedom",
+     "beauty",
+     "independence"
+    ],
+    "likes": [
+     "art",
+     "books",
+     "stars"
+    ],
+    "job": "ferry dock hand",
+    "from": "the island",
+    "goal": "get his comic printed",
+    "worry": "showing anyone his drawings"
    }
   },
   {
@@ -910,7 +1118,23 @@
     ],
     "mood": "happy",
     "about": "Thirty, a high school coach training for his first marathon.",
-    "voice": "encouraging, coach voice, pep talks"
+    "voice": "encouraging, coach voice, pep talks",
+    "smarts": 3,
+    "knack": "people",
+    "values": [
+     "ambition",
+     "loyalty",
+     "fun"
+    ],
+    "likes": [
+     "sport",
+     "food",
+     "music"
+    ],
+    "job": "high school coach",
+    "from": "Gulfport",
+    "goal": "finish his first marathon",
+    "worry": "hitting the wall at mile twenty"
    }
   },
   {
@@ -954,7 +1178,23 @@
     ],
     "mood": "playful",
     "about": "Thirty, a charter fishing deckhand who never runs out of fish stories.",
-    "voice": "easy laugh, exaggerates everything"
+    "voice": "easy laugh, exaggerates everything",
+    "smarts": 2,
+    "knack": "hands",
+    "values": [
+     "fun",
+     "freedom",
+     "loyalty"
+    ],
+    "likes": [
+     "sea",
+     "animals",
+     "food"
+    ],
+    "job": "charter fishing deckhand",
+    "from": "the island",
+    "goal": "captain his own charter boat",
+    "worry": "a slow season"
    }
   },
   {
@@ -998,7 +1238,23 @@
     ],
     "mood": "thoughtful",
     "about": "Thirty-five, a bank loan officer on the mainland who commutes by ferry and worries about being late.",
-    "voice": "polite, slightly hurried"
+    "voice": "polite, slightly hurried",
+    "smarts": 4,
+    "knack": "numbers",
+    "values": [
+     "family",
+     "honesty",
+     "comfort"
+    ],
+    "likes": [
+     "work",
+     "coffee",
+     "books"
+    ],
+    "job": "bank loan officer",
+    "from": "Mobile",
+    "goal": "buy a house on the mainland",
+    "worry": "missing the ferry"
    }
   },
   {
@@ -1042,7 +1298,23 @@
     ],
     "mood": "calm",
     "about": "Thirty-five, a game warden who patrols the marshes and takes poaching personally.",
-    "voice": "confident, outdoorsy, direct"
+    "voice": "confident, outdoorsy, direct",
+    "smarts": 4,
+    "knack": "street",
+    "values": [
+     "fairness",
+     "tradition",
+     "independence"
+    ],
+    "likes": [
+     "animals",
+     "sea",
+     "weather"
+    ],
+    "job": "game warden",
+    "from": "Bay St. Louis",
+    "goal": "catch the poachers working the north marsh",
+    "worry": "the marsh shrinking every year"
    }
   },
   {
@@ -1086,7 +1358,23 @@
     ],
     "mood": "calm",
     "about": "Forty-four, the island's handyman, who can fix anything except his own truck.",
-    "voice": "laconic, practical, a wry grin in his voice"
+    "voice": "laconic, practical, a wry grin in his voice",
+    "smarts": 3,
+    "knack": "hands",
+    "values": [
+     "independence",
+     "honesty",
+     "comfort"
+    ],
+    "likes": [
+     "cars",
+     "work",
+     "weather"
+    ],
+    "job": "handyman",
+    "from": "Gulfport",
+    "goal": "get his truck running for good",
+    "worry": "his truck"
    }
   },
   {
@@ -1130,7 +1418,23 @@
     ],
     "mood": "calm",
     "about": "Forty-two, mows half the island's lawns and waves at everyone.",
-    "voice": "quiet, friendly, short answers"
+    "voice": "quiet, friendly, short answers",
+    "smarts": 2,
+    "knack": "hands",
+    "values": [
+     "kindness",
+     "comfort",
+     "loyalty"
+    ],
+    "likes": [
+     "garden",
+     "weather",
+     "cars"
+    ],
+    "job": "groundskeeper",
+    "from": "the island",
+    "goal": "buy a second mower",
+    "worry": "the rain ruining a week of work"
    }
   },
   {
@@ -1174,7 +1478,23 @@
     ],
     "mood": "thoughtful",
     "about": "Fifty-four, the island's lawyer and unofficial mayor, always in a tie even in August.",
-    "voice": "formal, careful, a courtroom pause"
+    "voice": "formal, careful, a courtroom pause",
+    "smarts": 5,
+    "knack": "book",
+    "values": [
+     "tradition",
+     "fairness",
+     "ambition"
+    ],
+    "likes": [
+     "history",
+     "books",
+     "work"
+    ],
+    "job": "lawyer",
+    "from": "the island",
+    "goal": "get the island its own bridge",
+    "worry": "the island losing its families to the mainland"
    }
   },
   {
@@ -1218,7 +1538,23 @@
     ],
     "mood": "calm",
     "about": "Sixty-two, a retired shrimper who still wears his boat's cap and watches the water every morning.",
-    "voice": "few words, salty, slow"
+    "voice": "few words, salty, slow",
+    "smarts": 3,
+    "knack": "street",
+    "values": [
+     "independence",
+     "tradition",
+     "loyalty"
+    ],
+    "likes": [
+     "sea",
+     "weather",
+     "history"
+    ],
+    "job": "retired shrimper",
+    "from": "the island",
+    "goal": "take his old boat out one more season",
+    "worry": "the shrimp not coming back"
    }
   },
   {
@@ -1262,7 +1598,23 @@
     ],
     "mood": "calm",
     "about": "Sixty-six, a church deacon who organizes the island's fish fry and visits everyone who is sick.",
-    "voice": "deep, gentle, unhurried"
+    "voice": "deep, gentle, unhurried",
+    "smarts": 3,
+    "knack": "people",
+    "values": [
+     "faith",
+     "kindness",
+     "family"
+    ],
+    "likes": [
+     "food",
+     "sea",
+     "history"
+    ],
+    "job": "church deacon",
+    "from": "the island",
+    "goal": "build a new hall for the church",
+    "worry": "the sick ones nobody visits"
    }
   },
   {
@@ -1306,7 +1658,23 @@
     ],
     "mood": "annoyed",
     "about": "Seventy-two, a retired ferry captain who thinks the new ferry is too slow and says so.",
-    "voice": "gravelly, grumbling, secretly fond"
+    "voice": "gravelly, grumbling, secretly fond",
+    "smarts": 3,
+    "knack": "hands",
+    "values": [
+     "tradition",
+     "honesty",
+     "loyalty"
+    ],
+    "likes": [
+     "sea",
+     "history",
+     "weather"
+    ],
+    "job": "retired ferry captain",
+    "from": "the island",
+    "goal": "get the old ferry back in service",
+    "worry": "the new captains not knowing the channel"
    }
   }
  ],
