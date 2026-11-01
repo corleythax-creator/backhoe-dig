@@ -5,7 +5,7 @@
 // Low is from the iPhone speed test (Oct 17): shadows, filmic lighting and ground detail each cost it 9-16 FPS.
 // Only how things are drawn changes here, never what the ground does (CLAUDE.md).
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
-// pr resolution cap, auto lower it when slow, fps frame cap (0 none), fov degrees added, sh shadow map (0 off), shR how far
+// shEvery draw the shadows every so many frames (post.js, 1 when left out), pr resolution cap, auto lower it when slow, fps frame cap (0 none), fov degrees added, sh shadow map (0 off), shR how far
 // shadows reach either side of you in m (the same map spread wider, so softer), soft
 // shadow edges, filmic lighting, exp brightness, tex texture size, base ground texture, detail cut faces, painted
 // materials and machine grime, macro large-scale variation, pbr relief and wet sheen on materials that have those maps, aniso, tuftQ how finely the grass and weeds are shaped (0 Simple to 3 Best, scenery.js), tuft grass blades [amount, full-detail distance m,
@@ -17,7 +17,7 @@
 // csm and csmSh how far either side the far shadows reach (m, 0 off) and their map's size (core.js sunFar), bounce the light
 // thrown up off the ground measured from the ground itself (post.js; an earth colour without it)
 const GFX={
-  low:{name:'Low',trimClips:1,pr:1.5,auto:true,fps:0,fov:0,sh:1024,shR:22,soft:false,filmic:false,exp:1,tex:'low',detail:0,base:1,macro:false,pbr:false,aniso:4,dirt:1,lawnFar:0,fog:1,wmFine:false,cloudQ:0,rainN:600,rainSp:160,splashN:250,wakeN:140,brush:0.35,model:false,ao:false,bloom:false,grade:false,skyLight:false,shSoft:false,wetDrops:false,wetGround:false,lakeQ:0,treeR:45,tuftQ:0,tuft:[0.6,12,40,0.2]},
+  low:{name:'Low',shEvery:2,trimClips:1,pr:1.5,auto:true,fps:0,fov:0,sh:1024,shR:22,soft:false,filmic:false,exp:1,tex:'low',detail:0,base:1,macro:false,pbr:false,aniso:4,dirt:1,lawnFar:0,fog:1,wmFine:false,cloudQ:0,rainN:600,rainSp:160,splashN:250,wakeN:140,brush:0.35,model:false,ao:false,bloom:false,grade:false,skyLight:false,shSoft:false,wetDrops:false,wetGround:false,lakeQ:0,treeR:45,tuftQ:0,tuft:[0.6,12,40,0.2]},
   med:{name:'Medium',trimClips:2,pr:1.5,auto:true,fps:0,fov:0,sh:2048,shR:32,soft:false,filmic:true,exp:1,tex:'med',detail:1,base:1,macro:false,pbr:false,aniso:8,dirt:2,lawnFar:15,fog:1,wmFine:true,cloudQ:1,rainN:1500,rainSp:400,splashN:600,wakeN:300,brush:0.7,model:true,ao:false,bloom:false,grade:false,skyLight:false,shSoft:false,wetDrops:false,wetGround:false,lakeQ:1,treeR:90,tuftQ:0,tuft:[0.85,18,60,0.3]},
   high:{name:'High',trimClips:4,pr:2,auto:true,fps:0,fov:0,sh:4096,shR:45,soft:true,filmic:true,exp:1,tex:'high',detail:1,base:1,macro:true,pbr:true,aniso:16,dirt:4,lawnFar:1e9,fog:1,wmFine:true,cloudQ:2,rainN:3000,rainSp:900,splashN:1200,wakeN:640,brush:1,model:true,ao:false,bloom:false,grade:false,skyLight:false,shSoft:false,wetDrops:false,wetGround:false,lakeQ:2,treeR:160,tuftQ:2,tuft:[1,25,80,0.35]}};
 // Ultra: High with the screen effects (post.js) and trees in full detail farther out; for strong PC graphics only, never
