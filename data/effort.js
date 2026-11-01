@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-01T14:54:00Z",
+ "updated": "2026-11-01T16:31:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -102,9 +102,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-01",
-   "dh": 3.5,
-   "act": 1,
-   "versions": 2
+   "dh": 6.5,
+   "act": 1.5,
+   "versions": 3
   }
  ],
  "extra": [
@@ -3012,6 +3012,15 @@ window.EFFORT = {
    "tris": 7596986,
    "chars": 2162355,
    "what": "The phone speed test showed the CPU, not the graphics chip, holding the frame rate: each machine checked itself against all 2,500 solids on the island every frame (6.7 ms); now only the ones nearby (0.6 ms), so the game's own work per frame is down from 13.5 to 7.8 ms. On Low the shadows are drawn every other frame, halving the shadow pass"
+  },
+  {
+   "v": 323,
+   "asked": "2026-11-01T08:00:00-06:00",
+   "live": "2026-11-01T10:31:16-06:00",
+   "dh": 3,
+   "tris": 5856613,
+   "chars": 2163805,
+   "what": "On High and Ultra the background warm-up built every shader for the screen while the game draws through its effects picture, which needs its own version, so about a hundred were built for nothing and the real ones still compiled (a stutter) the first time each thing showed; it now builds the right ones. The ground-light probe draws only the ground instead of the whole island every 1.5 s. High builds 167 shaders instead of 307"
   }
  ]
 };
