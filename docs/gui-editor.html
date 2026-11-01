@@ -735,8 +735,8 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
       <div class="sizes" id="stickRow"><span>Sticks</span><button data-stk="auto">Auto</button><button data-stk="on">On</button><button data-stk="off">Off</button></div>
       <!-- townsfolk who talk, in the personality Human Forge gave them (talk.js): off, their lines as text, or aloud -->
       <div class="sizes" id="talkRow"><span>Townsfolk talk</span><button data-talk="off">Off</button><button data-talk="text">Text</button><button data-talk="voice">Aloud</button></div>
-      <!-- who speaks (Haiku about 0.03¢ a line, Sonnet 0.5¢, Opus 1¢), the owner key that lets them, the day's cap and what has been spent -->
-      <div class="sizes talkOpt" id="talkModelRow"><span>Talk model</span><button data-tm="haiku">Haiku</button><button data-tm="sonnet">Sonnet</button><button data-tm="opus">Opus</button><button id="talkKeyBtn">Key</button></div>
+      <!-- who speaks (the built-in mind, free, the default; for the owner Haiku about 0.03¢ a line, Sonnet 0.5¢, Opus 1¢), the owner key that lets them, the day's cap and what has been spent -->
+      <div class="sizes talkOpt" id="talkModelRow"><span>Talk model</span><button data-tm="local">Built-in</button><button data-tm="haiku">Haiku</button><button data-tm="sonnet">Sonnet</button><button data-tm="opus">Opus</button><button id="talkKeyBtn">Key</button></div>
       <div class="sizes talkOpt" id="talkCapRow"><span>Daily cap</span><button data-tc="1">$1</button><button data-tc="2">$2</button><button data-tc="5">$5</button><button data-tc="10">$10</button></div>
       <div class="todsub talkOpt" id="talkMeter"></div>
       <div class="sizes" id="msgRow"><span>Messages</span><button data-msg="all">All</button><button data-msg="few">Few</button><button data-msg="off">Off</button></div>
@@ -1216,7 +1216,14 @@ const TUNE=[
   ['cashStart','Town','Money in your wallet when you start (added to what the work has paid)',250,'usd',0,10000,10],
   ['pepBoost','Town','A coffee or a meal from a shop: walking and running faster by',0.12,'pct',0,50,1],['pepTime','Town','A coffee or a meal lasts',180,'s',10,900,10],
   ['tfQuiet','Town','People out at the quietest hour of the night, of the busiest',0.12,'pct',0,100,1],
-  ['greetChance','Town','Passersby who greet you as you walk by',0.45,'pct',0,100,5],['greetGap','Town','The least time between greetings',8,'s',0,60,1]
+  ['greetChance','Town','Passersby who greet you as you walk by',0.45,'pct',0,100,5],['greetGap','Town','The least time between greetings',8,'s',0,60,1],
+  // townsfolk talk (talk.js): who joins in, how far off it is heard, and what makes them remark on a machine
+  ['talkSeeR','Town','Townsfolk talk only within this far of you (or the machine you drive)',36.6,'ft',30,400,5],
+  ['talkChatR','Town','Two townsfolk talk to each other within',3.05,'ft',3,40,1],
+  ['talkRoadR','Town','A machine you drive this close to someone gets a word from them',4.6,'ft',3,60,1],
+  ['talkRoadV','Town','Going past them faster than this, it nearly had them',2.2,'mph',1,30,0.5],
+  ['talkSightR','Town','Townsfolk notice machines within',15.2,'ft',10,200,5],
+  ['talkStillR','Town','Townsfolk notice someone lying still within',7.6,'ft',5,100,5]
   // indoors (interiors.js): how the eye adjusts in a shop or house, and its room light (Medium graphics and up)
   ['inAdapt','Town','Indoors, the view brightens by',0.9,'pct',0,300,5],['inLamp','Town','Indoors, the room light',1.6,'n',0,6,0.1],
   ['craneSpan','Bridges','The crane builds a steel span in about',240,'min',1,60,1],
@@ -1496,6 +1503,11 @@ const WORDS=[
   ['grRain','Town: greetings','Wet enough for you?',''],['grHey','Town: greetings','Hey there.',''],['grGun','Town: greetings','Whoa. Put that thing away, would you?',''],
   ['grKid','Town: greetings','Hi! Is that your digger?',''],
   ['say','Town: talk','{who}: "{line}"','{who}: who is speaking; {line}: what they say'],
+  // townsfolk talk (talk.js): the chip near someone, the box to type in, and what the townsfolk call you
+  ['tkChip','Town: talk','[talk]: talk to {name}','{name}: the townsperson nearest you'],['tkChipPhone','Town: talk','Talk to {name}','{name}: the townsperson nearest you (phones)'],
+  ['tkWith','Town: talk','Talking to {name}','{name}: who you are talking to'],['tkSayTo','Town: talk','Say something to {name}','{name}: who you are talking to (in the box)'],
+  ['tkSay','Town: talk','Say',''],['tkThinking','Town: talk','{name} is thinking…','{name}: who is answering'],
+  ['tkPlayer','Town: talk','Corley','What the townsfolk call you'],
   ['tkWeather','Town: talk','Nice enough day for it. Whatever it is you\'re digging.',''],['tkRain','Town: talk','This rain. Good for the lawns, bad for your dirt, I\'d guess.',''],
   ['tkDug','Town: talk','Saw your excavator going out on the island. {yd} today? That\'s a day\'s work.','{yd}: dirt dug today'],
   ['tkMow','Town: talk','Somebody\'s been mowing. {sqft} today? Looks sharp.','{sqft}: grass mowed today'],
