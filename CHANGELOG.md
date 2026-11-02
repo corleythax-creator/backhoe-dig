@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Sunday, November 1, 2026
 
+- **v338** (7:30 PM) With a model speaking (Haiku, Sonnet or Opus), townsfolk hold real conversations: fuller answers when it calls for one, more of what you said kept in mind, and what they remember of earlier talks. The Talk model meter shows this session's spend too.
 - **v337** (7:21 PM) Paint can stand up or sink in (Raise / inset, ±3 in, real sides, walkable); curbless brick and cobble streets get a raised edge and a border course of bricks; painted bricks and stones stand up out of their joints on High (parallax relief)
 - **v336** (5:50 PM) Townsfolk remember your past conversations, even after you close the game: they bring up what you talked about last time, sum it up when you ask, and the sharper ones remember further back. Sync devices now carries their memory too.
 - **v335** (5:47 PM) Townsfolk talk is on by default and free: each grown-up has their own personality, they chat with each other when two stand close, remark on the machines going by (and complain if you drive too close), notice someone lying still, and remember who they've met.
