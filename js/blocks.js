@@ -136,9 +136,10 @@ function blkAim(){const w=blkDim.w*IN,d=blkDim.d*IN,h=blkDim.h*IN,[ax,az]=blkTar
   else{p.ok=true;p.why=''}
   return p}
 const blkSizeTxt=(w,d,h)=>`${blkInTxt(w)} × ${blkInTxt(d)} × ${blkInTxt(h)}`;
-function placeBlock(){if(blkThing){if(!blkOn)setBlocks(true);thPlace();return}
+// only with Blocks on: a stray place key or button never turns them on or sets one (B, the block button, does)
+function placeBlock(){if(!blkOn){toast(say('blkIsOff'),'tip',1800);return}
+  if(blkThing){thPlace();return}
   if(mode!=='dig'&&mode!=='walk'){toast(say('blkWrongMode'));return}
-  if(!blkOn)setBlocks(true);
   const p=blkAim();if(!p.ok){toast(p.why);return}
   const v=0.88+Math.random()*0.12,y=mode==='walk'?p.y+0.05:Math.max(p.y,Math.min(tip.y-0.25-p.h,p.y+4)),m=blkMat;
   blocks.push({x:p.x,z:p.z,y,w:p.w,d:p.d,h:p.h,m,vy:0,c:m?[v,v,v]:[0.66*v,0.65*v,0.62*v]});
@@ -147,7 +148,8 @@ function placeBlock(){if(blkThing){if(!blkOn)setBlocks(true);thPlace();return}
 const blkFt=b=>blkSizeTxt(Math.round(b.w/IN),Math.round(b.d/IN),Math.round(b.h/IN));
 // the highest block the bucket is over or touching comes away; on foot, the highest one within reach just in front;
 // in first person, the first one the middle of the screen meets (out to the longest reach)
-function removeBlock(){if(blkThing){thLift();return}
+function removeBlock(){if(!blkOn){toast(say('blkIsOff'),'tip',1800);return}
+  if(blkThing){thLift();return}
   if(mode!=='dig'&&mode!=='walk'){toast(say('blkLiftMode'));return}
   let best=-1,top=-1e9;const walk=mode==='walk';
   if(blkFP()){const r=blkRay(TU.blkReach/FT);if(r.hit&&r.hit!=='ground')best=blocks.indexOf(r.hit)}
@@ -159,8 +161,9 @@ function removeBlock(){if(blkThing){thLift();return}
   const b=blocks.splice(best,1)[0];blkWake=1.5;
   toast(say('blkLifted',{size:blkFt(b),n:blocks.length}),'good',1600)}
 // ---------- the block bar ----------
-function setBlocks(on){if(on&&!$('#blkWhat').options.length)blkWhatOpts();blkOn=on;const btn=$('#blkBtn');btn.setAttribute('aria-pressed',on);$('#blkBar').hidden=!on;
-  if(on&&mode!=='dig'&&mode!=='walk')setMode('dig');blkUI()}
+// any change of mode or machine puts them away (setMode), so they are on only right after B or the block button
+function setBlocks(on){if(on&&!$('#blkWhat').options.length)blkWhatOpts();if(on&&mode!=='dig'&&mode!=='walk')setMode('dig');
+  blkOn=on;const btn=$('#blkBtn');btn.setAttribute('aria-pressed',on);$('#blkBar').hidden=!on;blkUI()}
 const blkReachEl=$('#blkReach');
 function blkUI(){for(const k of ['w','d','h'])$(`#blkBar .bstep[data-k="${k}"] b`).textContent=blkInTxt(blkDim[k]);
   $('#blkGridRow b').textContent=blkInTxt(blkGrid);$('#blkGridRow').hidden=blkLock!=='grid'&&blkLock!=='gridblocks';
@@ -185,10 +188,10 @@ function blkStepDim(k,dir){const i=BLK_IN.findIndex(v=>v>=blkDim[k]),j=dir>0?(BL
   blkDim[k]=BLK_IN[clamp(j,0,BLK_IN.length-1)];blkUI()}
 function blkLockNext(){blkLock=BLK_LOCKS[(BLK_LOCKS.findIndex(l=>l[0]===blkLock)+1)%BLK_LOCKS.length][0];blkSnapSave();blkUI();return BLK_LOCKS.find(l=>l[0]===blkLock)[1]}
 // the size key and the D-pad step through cubes, 1 to 10 ft
-function blkCube(dir){if(blkThing)return;const n=((Math.round(Math.max(blkDim.w,blkDim.d,blkDim.h)/12)-1+dir)%BLK_FT+BLK_FT)%BLK_FT+1;blkDim.w=blkDim.d=blkDim.h=n*12;blkUI();
+function blkCube(dir){if(blkThing||!blkOn)return;const n=((Math.round(Math.max(blkDim.w,blkDim.d,blkDim.h)/12)-1+dir)%BLK_FT+BLK_FT)%BLK_FT+1;blkDim.w=blkDim.d=blkDim.h=n*12;blkUI();
   toast(say('blkSize',{size:blkSizeTxt(n*12,n*12,n*12)}),'',1200)}
 // turn the block a quarter turn: width and length swap
-function blkTurn(){if(blkThing){thTurnBy();return}[blkDim.w,blkDim.d]=[blkDim.d,blkDim.w];blkUI()}
+function blkTurn(){if(!blkOn)return;if(blkThing){thTurnBy();return}[blkDim.w,blkDim.d]=[blkDim.d,blkDim.w];blkUI()}
 function blkReachBy(ft){blkReach=clamp(blkReach+ft,BLK_REACH[0],TU.blkReach/FT);blkUI()}
 function setBlkMat(m){m=m|0;blkMat=matIdOk(m)?m:0;blkUI()}
 function blkTerrainMoved(){if(blocks.length)blkWake=Math.max(blkWake,0.3)}

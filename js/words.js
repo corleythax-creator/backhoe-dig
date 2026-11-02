@@ -104,7 +104,7 @@ const WORDS=[
   ['swimming','On foot','Swimming. Head for a beach to wade out; [sprint] swims harder.',''],
   ['fromTable','On foot','Back from {game} at the pavilion.','{game}: chess or checkers'],
   ['famSit','On foot','Sitting down to {game}...','{game}: chess or checkers'],
-  ['blkWrongMode','Blocks','Switch to Dig or Walk to set blocks.'],['blkLiftMode','Blocks','Switch to Dig or Walk to pick up blocks.'],
+  ['blkIsOff','Blocks','Blocks are off. [blocks] turns them on.'],['blkWrongMode','Blocks','Switch to Dig or Walk to set blocks.'],['blkLiftMode','Blocks','Switch to Dig or Walk to pick up blocks.'],
   ['blkSet','Blocks','{size} {mat} block set · {n} on site','{size}: its size; {mat}: concrete…; {n}: blocks on site'],
   ['blkLifted','Blocks','{size} block picked up · {n} on site','{size}: its size; {n}: blocks on site'],
   ['blkNone','Blocks','No blocks set yet.'],['blkDot','Blocks','Put the dot on a block to pick it up.'],
