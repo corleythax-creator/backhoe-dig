@@ -40,6 +40,8 @@
  *   minds.tellAll([keys], 'how is everyone?')   // to a group: those it is for answer in turn (someone named: just them;
  *                                        //   a question or 'everyone': all, up to 6; else a few); minds.groupLog(keys)
  *   minds.event(key, { kind: 'touched', by: otherKey, where: 'shoulder' });   // they react to what happens to them
+ *   minds.event(key, { kind: 'touched', by: otherKey, where: 'arm', what: 'an ice cube', how: 'cold' });   // with something
+ *                                        //   held (how: cold | sticky | wet | slap); a slap with or without (built-in words)
  *   minds.event(key, { kind: 'arrived', by: otherKey });        // someone came in (or was put in the scene)
  *   minds.event(key, { kind: 'approached', by: otherKey });     // someone came over to them
  *   minds.event(key, { kind: 'animal', what: 'a black bear', danger: true, feet: 12 });
@@ -75,6 +77,8 @@
   const SMARTS = ['', 'simple', 'average', 'sharp', 'bright', 'brilliant'];
   const KNACKS = { book: 'book smart', street: 'street smart', people: 'good with people', hands: 'good with their hands', numbers: 'quick with numbers', creative: 'creative' };
   const VALUES = ['family', 'honesty', 'loyalty', 'freedom', 'ambition', 'adventure', 'comfort', 'faith', 'fairness', 'knowledge', 'fun', 'tradition', 'kindness', 'independence', 'beauty'];
+  // how they behave: what they keep quiet about (they still notice and learn from it), each a group of event kinds
+  const QUIET = { touched: ['touched'], comings: ['arrived', 'approached'], goings: ['left'], things: ['notice', 'see', 'thing', 'animal', 'gone', 'muse'] };
   const LIKES = ['weather', 'food', 'music', 'travel', 'books', 'work', 'animals', 'movies', 'garden', 'cars', 'history', 'stars', 'sport', 'coffee', 'sea', 'art', 'games'];
 
   // traits and a mood rolled from a seed (a person's id): the same each time
@@ -101,7 +105,11 @@
       traits, mood: MOODS.includes(m.mood) ? m.mood : r.mood,
       about: String(m.about || '').slice(0, 300), voice: String(m.voice || '').slice(0, 120),
       smarts, knack: KNACKS[m.knack] ? m.knack : r.knack, values: values.length ? values : r.values, likes: listOf(m.likes, LIKES, 3),
-      job: String(m.job || '').trim().slice(0, 40), from: String(m.from || '').trim().slice(0, 40), goal: String(m.goal || '').trim().slice(0, 120), worry: String(m.worry || '').trim().slice(0, 120) };
+      job: String(m.job || '').trim().slice(0, 40), from: String(m.from || '').trim().slice(0, 40), goal: String(m.goal || '').trim().slice(0, 120), worry: String(m.worry || '').trim().slice(0, 120),
+      // how they behave: how readily they start talking (0 only when spoken to .. 1 chatty), how they feel about the
+      // others round them to begin with (-1 cold .. 1 fond; what happens moves it from there), what they keep quiet about
+      chat: isFinite(+m.chat) && m.chat !== '' && m.chat != null ? Math.min(1, Math.max(0, +m.chat)) : 0.5,
+      fond: isFinite(+m.fond) && m.fond != null ? Math.min(1, Math.max(-1, +m.fond)) : 0, quiet: listOf(m.quiet, Object.keys(QUIET), 4) };
   }
   // who someone is, in a line: how sharp and how, what matters to them, work and home, what they want and fear
   const aOf = (s) => (/^(a|an|the|new in)\b/i.test(s) ? s : (/^[aeiou]/i.test(s) || /^[AEFHILMNORSX][A-Z]/.test(s) ? 'an ' : 'a ') + s);
@@ -182,6 +190,13 @@
     touchGood: { warm: ['Oh, hello, {name}.', 'Hey you. That\'s nice.', 'Hi {name}.'], edge: ['Oh. Hi, {name}.', 'Yes, {name}? I\'m here.'], shy: ['Oh! Hi... {name}.', 'Oh, um, hello.'], bold: ['Ha, hello to you too, {name}.', 'There you are, {name}.'], humor: ['Tag, I\'m it?', 'Ha! Hi, {name}.'], plain: ['Hi, {name}.', 'Hey.'] },
     touchNew: { warm: ['Oh! Hello there.', 'Oh, hi. I don\'t think we\'ve met.'], edge: ['Can I help you?', 'Um. Hello?'], shy: ['Oh! Sorry, you made me jump.', 'Oh... hi.'], bold: ['Whoa, hello. And you are?', 'Well, hello. Introduce yourself first, maybe.'], humor: ['Oh! Is this how we\'re meeting?', 'Hi! Do I know you?'], plain: ['Oh, hello.', 'Hi. Can I help?'] },
     touchWary: { warm: ['Oh, my {part}. That\'s okay, just a bit sudden.', 'Easy, {name}.'], edge: ['That\'s my {part}, {name}.', 'Personal space, {name}.'], shy: ['Oh, um... my {part}.', 'Sorry, I\'m a bit jumpy.'], bold: ['Steady on, {name}.', 'Ask first, {name}.'], humor: ['Careful, the {part} bruises easily.', 'Whoa, warn a person.'], plain: ['Mind my {part}, please.', 'Not the {part}, {name}.'] },
+    // touched with something held (what), by how it feels, and slapped
+    touchWith: { warm: ['Oh, {the}? On my {part}? You\'re sweet, {name}.', 'Mm, what\'s that? {the}?'], edge: ['Why is {the} on my {part}, {name}?', 'Is that {the}? Really, {name}?'], shy: ['Oh! Um... {the}?', 'What... is that {the}?'], bold: ['Ha, {the}. What are you up to, {name}?', 'Bring {the} here, then.'], humor: ['Is {the} the new way of saying hello?', 'Ah yes, {the}. Very normal.'], plain: ['That\'s {the}, {name}.', 'What\'s with {the}?'] },
+    touchWithWary: { warm: ['Um, {name}, why {the}?', 'Careful with {the}, please.'], edge: ['Get {the} off my {part}.', 'Not with {the}, {name}.'], shy: ['Please, not {the}...', 'Oh... I don\'t know about {the}.'], bold: ['Put {the} down, {name}.', 'Try that with {the} again and see.'], humor: ['I didn\'t order {the} on my {part}.', 'Is {the} on the room bill too?'], plain: ['Stop that with {the}.', 'No, {name}.'] },
+    chilly: { warm: ['Ah! That\'s cold!', 'Eek! Cold, cold, cold, {name}!'], edge: ['Cold! Seriously, {name}?', 'That\'s freezing. Stop.'], shy: ['Oh! So cold...', 'Ah... cold.'], bold: ['Ooh, cold. Do that again.', 'Ha! Ice on my {part}? Bold.'], humor: ['Brr! Is the minibar out of ideas?', 'Cold! I\'m filing a complaint with the front desk.'], plain: ['That\'s cold.', 'Cold! {name}!'] },
+    sticky: { warm: ['Mm, sticky. Is that {the}?', 'Now I\'m all sticky, {name}.'], edge: ['Great, now my {part} is sticky.', 'Sticky. Thanks, {name}.'], shy: ['Oh... sticky.', 'It\'s all sticky now.'], bold: ['Sticky. Are you licking that off, {name}?', 'Mm, sweet. Now what?'], humor: ['I\'m candied now. Thanks.', 'I\'m going to attract ants, {name}.'], plain: ['That\'s sticky.', 'Sticky, {name}.'] },
+    slapped: { warm: ['Ow! {name}!', 'Hey! That stung.'], edge: ['Did you just slap me?', 'Do that again. I dare you.'], shy: ['Ow... why?', 'Oh! That hurt a little.'], bold: ['Oh, rough today, {name}?', 'Ha! Is that all you\'ve got?'], humor: ['Ow! I felt that in my soul.', 'Was that a high five that missed?'], plain: ['Ow.', 'Hey! Don\'t.'] },
+    slappedWith: { warm: ['Ow! With {the}, {name}?', 'Hey! {the} stings!'], edge: ['You hit me with {the}?', 'Put {the} down. Now.'], shy: ['Ow! Not with {the}...', 'Oh! That was {the}...'], bold: ['Ha! {the}? Really?', 'Swatting me with {the}, {name}?'], humor: ['Ow! Death by {the}. What a way to go.', 'Assaulted with {the}. I\'ll tell the front desk.'], plain: ['Ow, {the}.', 'Don\'t hit me with {the}.'] },
     touchCross: { warm: ['{name}, that\'s enough now, please.', 'Okay, {name}, I need a bit of space.'], edge: ['Do you mind?', 'Hands to yourself, {name}.', 'Seriously, {name}. Stop.'], shy: ['Please stop, {name}.', 'Um, could you not?'], bold: ['Back off, {name}.', 'That\'s enough, {name}.'], humor: ['Okay, that\'s quite enough poking for one day.', 'I\'m starting a tab, {name}.'], plain: ['Please stop that.', 'Enough, {name}.'] },
     hello: { warm: ['Oh, hello! I\'m {me}. Lovely to meet you.', 'Hi there, I\'m {me}.'], edge: ['Hm. Someone new. I\'m {me}.', 'Hello. {me}.'], shy: ['Oh... hello. I\'m {me}.', 'Hi. Um, I\'m {me}.'], bold: ['Hey! I\'m {me}. And you are?', 'Hello, hello. {me}, nice to meet you.'], humor: ['A new face! I\'m {me}, the fun one.', 'Hi! I\'m {me}. Don\'t believe anything they\'ve told you.'], plain: ['Hi, I\'m {me}.', 'Hello. I\'m {me}.'] },
     again: { warm: ['{name}! So good to see you again.', 'There you are, {name}. I hoped you\'d come.'], edge: ['{name}. You again.', 'Oh, it\'s {name}.'], shy: ['Oh, hi {name}.', 'Hi again, {name}.'], bold: ['{name}! Get over here.', 'Look who it is. {name}!'], humor: ['{name}! I was just talking about you. Nothing bad. Mostly.', 'The famous {name} returns!'], plain: ['Hi again, {name}.', 'Good to see you, {name}.'] },
@@ -391,7 +406,7 @@
   const STOP = /^(the|and|but|you|your|are|was|for|with|that|this|have|what|just|like|about|there|they|them|then|from|really|very|some|been|were|will|would|could|should)$/;
 
   function Brain(o) {
-    const SAVE = o.storage + '-brain', profiles = new Map(), recent = new Map();
+    const SAVE = o.storage + '-brain', profiles = new Map(), recent = new Map(), ownRecent = new Map();
     let mem = {}; try { mem = JSON.parse(store(SAVE) || '{}') || {}; } catch (e) { mem = {}; }
     let saveAt = 0;
     const save = () => {
@@ -500,7 +515,13 @@
       slots.topics = bits.length > 1 ? bits.slice(0, -1).join(', ') + ' and ' + bits[bits.length - 1] : bits[0]; slots.when = whenOf(e.t1);
       return pick(k, P, Date.now() / 1000 - e.t1 < EP_GAP ? RECALL.now : RECALL.summary, slots);
     }
-    const relOf = (m, name) => m.rel[name] || (m.rel[name] = { met: 0, like: 0, talks: 0, touch: [], likes: [] });
+    // what they think of someone: learned, on top of how fond of the others they were made (a change to that shifts it)
+    const relOf = (m, name, c) => {
+      const R = m.rel[name] || (m.rel[name] = { met: 0, like: 0, talks: 0, touch: [], likes: [] }), f = c && c.fond ? c.fond : 0;
+      if ((R.fond || 0) !== f) { R.like = cl(R.like - (R.fond || 0) + f, -1, 1); R.fond = f; }
+      if (Math.abs(f) > 0.3 && R.met < 2) R.met = 2;   // made fond (or cold) of them: they know them already
+      return R;
+    };
     // a thing as the app gives it: words, or { what, danger, threat (0..1), feet, moving, toward, sound, new, ref }
     const thing = (g) => (g && typeof g === 'object' ? g : { what: String(g || 'something') });
     // how a thing feels to them: its threat (closer, coming at them, heard and not seen, feared before: more; met often
@@ -543,8 +564,8 @@
       const c = o.card(k); if (!c || !ev) return null;
       const P = profile(c), m = memOf(c);
       if (ev.kind === 'touched') {
-        const R = ev.by != null ? relOf(m, o.nameOf(ev.by)) : null, many = R ? R.touch.length : 1;
-        return choose(c, P, m, Object.assign({}, ev, { threat: many > 3 || (R && R.like < -0.3) ? 0.6 : R && R.met + R.talks > 1 ? 0.05 : 0.3, feet: 1 }));
+        const R = ev.by != null ? relOf(m, o.nameOf(ev.by), c) : null, many = R ? R.touch.length : 1;
+        return choose(c, P, m, Object.assign({}, ev, { threat: many > 3 || (R && R.like < -0.3) ? 0.6 : ev.how === 'slap' ? (R && R.like > 0.4 ? 0.25 : 0.5) : R && R.met + R.talks > 1 ? 0.05 : 0.3, feet: 1 }));
       }
       if (!/^(animal|see|notice|alarm|still|gone)$/.test(ev.kind)) return null;
       if (ev.kind === 'gone') return { do: 'ignore', what: ev.what, at: ev.ref };
@@ -554,11 +575,12 @@
     function observe(k, ev) {
       const c = o.card(k); if (!c || !ev) return;
       const P = profile(c), m = memOf(c), d = P.d, now = Date.now() / 1000;
-      const who = ev.by != null ? o.nameOf(ev.by) : '', R = who ? relOf(m, who) : null;
+      const who = ev.by != null ? o.nameOf(ev.by) : '', R = who ? relOf(m, who, c) : null;
       if (ev.kind === 'touched' && R) {
         R.touch = R.touch.filter((t) => now - t < 40); R.touch.push(now);
         const many = R.touch.length, known = R.met + R.talks > 1;
-        const dl = many > 3 ? -0.18 : (d.warm * 0.08 + d.bold * 0.04 - d.shy * (known ? 0.03 : 0.08) - d.edge * 0.07 + (R.like > 0.3 ? 0.05 : 0));
+        let dl = many > 3 ? -0.18 : (d.warm * 0.08 + d.bold * 0.04 - d.shy * (known ? 0.03 : 0.08) - d.edge * 0.07 + (R.like > 0.3 ? 0.05 : 0));
+        if (ev.how === 'slap') dl -= 0.06 + 0.1 * (1 - Math.max(0, R.like)) * (1 - d.bold * 0.5); else if (ev.how === 'cold') dl -= 0.02;
         R.like = cl(R.like + dl, -1, 1); push(c, m, P, dl * 1.5, 0.25 + (1 - d.nerve) * 0.15);
       } else if ((ev.kind === 'arrived' || ev.kind === 'approached') && R) {
         R.met++; R.like = cl(R.like + 0.02 + d.warm * 0.04 - d.edge * 0.02, -1, 1); push(c, m, P, R.like * 0.1, 0.12);
@@ -654,14 +676,22 @@
       const P = profile(c), m = memOf(c), d = P.d;
       let say = '', look = 'you', meta = {}, ex = false, act = ev && ev.dec ? ev.dec : null;
       const mood0 = moodName(c, m, P);
-      const slots = { me: c.name, user: m.user.name || '' };
+      const slots = { me: c.name, user: (o.youName && o.youName()) || m.user.name || '' };
       if (ev) {
-        const who = ev.by != null ? o.nameOf(ev.by) : ev.who || 'someone', R = ev.by != null ? relOf(m, who) : null, w = bare(ev.what);
+        const who = ev.by != null ? o.nameOf(ev.by) : ev.who || 'someone', R = ev.by != null ? relOf(m, who, c) : null, w = bare(ev.what);
         Object.assign(slots, { name: who, part: ev.where || 'arm', what: ev.what || 'something', the: 'the ' + w, feet: ev.feet ? Math.round(ev.feet) : 'a few' });
         look = 'them';
         if (ev.kind === 'touched') {
           const recentN = R ? R.touch.length : 1, known = R && R.met + R.talks > 1;
-          const tab = recentN > 3 || (R && R.like < -0.35) ? L.touchCross : !known ? (d.shy + d.edge > d.warm + d.bold ? L.touchWary : L.touchNew) : R.like > 0.1 ? L.touchGood : L.touchWary;
+          let tab = recentN > 3 || (R && R.like < -0.35) ? L.touchCross : !known ? (d.shy + d.edge > d.warm + d.bold ? L.touchWary : L.touchNew) : R.like > 0.1 ? L.touchGood : L.touchWary;
+          // with something, or a slap: said for what it was, unless it has already gone too far (touchCross)
+          if (tab !== L.touchCross || ev.how === 'slap') {
+            const liked = !!(R && R.like > 0.1) || (ev.who === 'you' && d.warm + d.bold > d.shy + d.edge);
+            if (ev.how === 'slap') tab = ev.what ? L.slappedWith : L.slapped;
+            else if (ev.how === 'cold') tab = L.chilly;
+            else if (ev.how === 'sticky' && liked) tab = L.sticky;
+            else if (ev.what) tab = liked ? L.touchWith : L.touchWithWary;
+          }
           say = pick(k, P, tab, slots); ex = !known && d.energy > 0.5 && Math.random() < 0.4;
           if (ev.dec && ev.dec.do === 'back') look = 'away';
         } else if (ev.kind === 'arrived' || ev.kind === 'approached') {
@@ -742,7 +772,7 @@
         note(m, fresh ? last.said : null, meta);   // this chat's memory: what came up, never your words
       } else {
         // among themselves: answer what they just said to me, else start on something
-        const who = o.nameOf(to), R = relOf(m, who), tc = o.card(to);
+        const who = o.nameOf(to), R = relOf(m, who, c), tc = o.card(to);
         slots.name = who; look = 'them';
         const last = lines.filter((l) => (l.p === to && l.to === k) || (l.p === k && l.to === to)).slice(-1)[0];
         const recentTalk = last && Date.now() / 1000 - (last.t || 0) < 90;
@@ -769,6 +799,20 @@
         }
         if (tc && R.like > 0.6 && Math.random() < 0.12) say += ' ' + pick(k, P, L.likeYou, slots);
         if (d.talk < 0.3 && say.split(/(?<=[.!?]) /).length > 2) say = say.split(/(?<=[.!?]) /).slice(0, 2).join(' ');
+      }
+      // the app's own lines between these two (o.lines(key, other, kind): kinds talk, touched, arrived, approached, muse,
+      // reply), taken most of the time when it has some ({name} is the other's, {me} their own); a reply keeps its answer
+      // and may add one
+      if (o.lines) {
+        const other = ev ? (ev.by != null ? ev.by : null) : to === 'you' ? (o.you ? o.you() : null) : to;
+        const kind = ev ? ev.kind : to === 'you' || to == null ? 'reply' : 'talk', own = other != null || kind === 'muse' ? o.lines(k, other, kind) : null;
+        if (own && own.length) {
+          const rc = ownRecent.get(k) || [], fresh = own.filter((x) => !rc.includes(x)), x = (fresh.length ? fresh : own)[Math.floor(Math.random() * (fresh.length || own.length))];
+          const t = String(x).replace(/\{name\}/g, other != null ? o.nameOf(other) : '').replace(/\{me\}/g, c.name);
+          if (kind === 'reply' ? Math.random() < 0.35 : Math.random() < 0.7) {
+            say = kind === 'reply' && say ? say + ' ' + t : t; rc.push(x); if (rc.length > Math.min(8, own.length - 1)) rc.shift(); ownRecent.set(k, rc);
+          }
+        }
       }
       save();
       const mood = moodName(c, m, P);
@@ -919,7 +963,16 @@
       bits.push('feeling ' + moodName(c, m, P));
       return bits.join('; ') + '.';
     }
-    return { profile, observe, line, reset, flush, knows, plan, aside, decide, sense: (k, g) => { const c = o.card(k); return c ? sense(profile(c), memOf(c), thing(g)) : null; }, moodOf: (k) => { const c = o.card(k); return c ? moodName(c, memOf(c), profile(c)) : ''; } };
+    // for a model speaking for them: what they know, and their past chats with you (by what came up, as far back as they
+    // remember), in a few plain words written here
+    function memoryNote(k) {
+      const c = o.card(k); if (!c) return '';
+      const P = profile(c), m = memOf(c), now = Date.now() / 1000, bits = [knows(k)];
+      const eps = (m.user.eps || []).filter((e) => e.n > 0 && now - e.t1 < HORIZON[P.smarts || 3] * 86400 && (e.topics.length || e.asked.length || e.feel)).slice(-4);
+      if (eps.length) bits.push('Earlier talks with the user: ' + eps.map((e) => whenOf(e.t1) + ', ' + e.topics.map((t) => TOPICS[t].n).concat(e.asked.map((a) => ASKED[a])).concat(e.feel === 'low' ? ['how the user was feeling (low)'] : e.feel === 'up' ? ['how the user was feeling (happy)'] : []).slice(0, 4).join(', ')).join('; ') + '.');
+      return bits.join(' ').slice(0, 600);
+    }
+    return { profile, observe, line, reset, flush, knows, memoryNote, plan, aside, decide, sense: (k, g) => { const c = o.card(k); return c ? sense(profile(c), memOf(c), thing(g)) : null; }, moodOf: (k) => { const c = o.card(k); return c ? moodName(c, memOf(c), profile(c)) : ''; } };
   }
 
   function create(o) {
@@ -955,7 +1008,7 @@
       root.addEventListener('pagehide', flush);
       if (typeof document !== 'undefined') document.addEventListener('visibilitychange', () => { if (document.hidden) flush(); });
     }
-    const brain = Brain({ storage: KEY, card: (k) => o.card(k), nameOf: (k) => M.nameOf(k), sights: o.sights, scene: o.scene });
+    const brain = Brain({ storage: KEY, card: (k) => o.card(k), nameOf: (k) => M.nameOf(k), sights: o.sights, scene: o.scene, youName: () => (M.as != null && o.card(M.as) ? o.card(M.as).name : ''), lines: o.lines, you: () => M.as });
     const send = (body) => fetch(url, { method: 'POST', headers: Object.assign({ 'content-type': 'application/json' }, M.key ? { 'x-persona-key': M.key } : {}), body: JSON.stringify(body) });
     const why = (a) => { if (a.spend) M.spend = a.spend; if (a.error === 'off') M.server = false; return a.why || 'They could not answer just now.'; };
     const cool = new Map();  // key -> { 'kind|by': time }
@@ -972,7 +1025,8 @@
     };
     const M = {
       lines: [], asked: 0, busy: new Set(), status: '', server: null, chatter: false, left: CHATTER,
-      spend: null, cost: 0,  // the meter: { spent, cap, lines, day } in US$ (today, Central time), and the last line's cost
+      as: null,   // the person you are playing (their key): they say only what you type, and the others talk to you as them
+      spend: null, cost: 0, session: 0, sessionLines: 0,  // the meter: { spent, cap, lines, day } in US$ (today, Central time), and the last line's cost
       get key() { return store(OWN) || ''; },
       set key(v) { store(OWN, String(v || '').trim()); M.status = ''; M.meter(); },
       // who speaks: 'local' (the built-in mind, free, the default) or a model on the server: 'haiku', 'sonnet', 'opus'
@@ -1009,19 +1063,24 @@
       },
       // key says something: to you, to another person (to: their key), or in reaction to ev
       async ask(k, to = 'you', ev = null) {
-        if (!M.can(k) || (to !== 'you' && to != null && !M.can(to)) || M.busy.has(k)) return null;
+        if (!M.can(k) || (to !== 'you' && to != null && !M.can(to)) || M.busy.has(k) || k === M.as) return null;
         if (M.model !== 'local' && M.server === null) await M.check();
         if (M.local) return M.think(k, to, ev);
         if (ev && !SERVER.includes(ev.kind)) return null;
         if (M.asked >= budget) { M.status = `That's ${budget} lines this visit; reload the page for more.`; changed(); return null; }
-        const log = (!ev && (to === 'you' || to == null) ? history(k) : M.lines.filter((l) => l.p === k || mine(l, k) || (to !== 'you' && to != null && (l.p === to || l.to === to)))).slice(-12).map((l) => ({ who: l.who, said: l.said }));
-        const e = ev && { kind: ev.kind, who: ev.by != null ? M.nameOf(ev.by) : String(ev.who || '').slice(0, 40), what: String(ev.what || '').slice(0, 60), where: ev.where || '', danger: !!ev.danger, feet: ev.feet ? Math.round(ev.feet) : undefined };
+        // talking with you (or anyone the app marks best, o.best): fuller answers, the last 30 lines and what they remember;
+        // a passing remark or reaction stays short. best: fuller answers among themselves too, and the model picked thinks harder
+        const best = !!(o.best && o.best(k, to === 'you' ? null : to)), direct = !ev && (to === 'you' || to == null);
+        const depth = direct || (best && !ev) ? 'talk' : 'chat';
+        const log = (direct ? history(k) : M.lines.filter((l) => l.p === k || mine(l, k) || (to !== 'you' && to != null && (l.p === to || l.to === to)))).slice(depth === 'talk' ? -30 : -12).map((l) => ({ who: l.who, said: l.said }));
+        const e = ev && { kind: ev.kind, who: ev.by != null ? M.nameOf(ev.by) : String(ev.who || '').slice(0, 40), what: ev.kind === 'touched' ? '' : String(ev.what || '').slice(0, 60), where: ev.where || '', danger: !!ev.danger, feet: ev.feet ? Math.round(ev.feet) : undefined };
         M.busy.add(k); M.asked++; M.status = ''; changed();
         try {
-          const r = await send({ me: o.card(k), to: to === 'you' || to == null ? 'you' : o.card(to), scene: o.scene ? o.scene(k, to, ev) : '', log, event: e || undefined, model: M.model });
+          const r = await send({ me: o.card(k), to: to === 'you' || to == null ? 'you' : o.card(to), scene: o.scene ? o.scene(k, to, ev) : '', log, event: e || undefined,
+            model: M.model, depth, best, past: direct || best ? brain.memoryNote(k) : undefined });
           const a = await r.json().catch(() => ({}));
           if (!r.ok) { M.status = why(a); if (a.error === 'cap') M.chatter = false; return null; }
-          if (a.spend) { M.spend = a.spend; M.cost = a.cost || 0; }
+          if (a.spend) { M.spend = a.spend; M.cost = a.cost || 0; M.session += a.cost || 0; M.sessionLines++; }
           if (!o.people().includes(k)) return null;
           M.lines.push({ p: k, to: ev ? (ev.by != null ? ev.by : null) : to, who: M.nameOf(k), said: a.say, ev: ev ? ev.kind : undefined, t: Date.now() / 1000, round: to === 'you' ? roundOf(k) : undefined });
           if (!ev && to === 'you') keep(k, M.lines[M.lines.length - 1]);
@@ -1077,23 +1136,24 @@
       // you say something to key; they answer
       tell(k, text) {
         text = String(text || '').trim().slice(0, 400); if (!text || !M.can(k)) return null;
-        M.lines.push({ p: 'you', to: k, who: 'you', said: text, t: Date.now() / 1000 }); keep(k, M.lines[M.lines.length - 1]);
+        M.lines.push({ p: 'you', to: k, who: M.as != null ? M.nameOf(M.as) : 'you', said: text, t: Date.now() / 1000 }); keep(k, M.lines[M.lines.length - 1]);
         M.left = CHATTER;
         return M.ask(k, 'you');
       },
       // something happened to them; they react (at most once per COOL seconds for the same thing)
       event(k, ev) {
         if (!M.can(k) || !ev || !COOL[ev.kind] || M.busy.has(k)) return false;
-        const now = Date.now() / 1000, c = cool.get(k) || {}, id = ev.kind + '|' + (ev.by != null ? idOf(ev.by) : ev.ref != null ? idOf(ev.ref) : ev.who || ev.what || '');
+        if (k === M.as) { brain.observe(k, ev); return false; }   // you: what happens to you is yours to answer
+        const now = Date.now() / 1000, c = cool.get(k) || {}, id = ev.kind + '|' + (ev.by != null ? idOf(ev.by) : ev.ref != null ? idOf(ev.ref) : ev.who || ev.what || '') + (ev.kind === 'touched' && (ev.what || ev.how) ? '|' + (ev.what || '') + '|' + (ev.how || '') : '');
         // something dangerous coming at them, or someone raising the alarm, gets through the 6 s between reactions
-        const urgent = (ev.danger || ev.kind === 'alarm') && now - (c.any || -1e9) > 2;
+        const urgent = (ev.danger || ev.kind === 'alarm' || ev.how === 'slap') && now - (c.any || -1e9) > 2;
         if (now - (c[id] || -1e9) < COOL[ev.kind] || (now - (c.any || -1e9) < 6 && !urgent)) return false;
         c[id] = c.any = now; cool.set(k, c);
         // decide first (on what they knew before this), tell the app, then learn from it and say something
         ev = Object.assign({}, ev); ev.dec = brain.decide(k, ev) || undefined;
         if (ev.dec && ev.dec.do !== 'ignore' && o.act) o.act(k, ev.dec, ev);
         brain.observe(k, ev);
-        M.ask(k, null, ev);
+        if (!M.quiet(k, ev.kind)) M.ask(k, null, ev);
         // a warning, someone running or a call for help is heard by those near enough (o.hears), who decide for themselves
         if (ev.dec && /^(warn|flee|call)$/.test(ev.dec.do) && ev.kind !== 'alarm') {
           const near = o.people().filter((q) => q !== k && M.can(q) && (o.hears ? o.hears(k, q) : true));
@@ -1124,6 +1184,8 @@
         }
         for (const k of snap.keys()) if (!o.people().includes(k)) snap.delete(k);
       },
+      // do they keep quiet about this kind of thing (the card's quiet)? They still notice it and learn from it
+      quiet(k, kind) { const c = o.card(k); return !!(c && c.quiet && c.quiet.some((g) => QUIET[g].includes(kind))); },
       forget(k) { M.lines = M.lines.filter((l) => l.p !== k && l.to !== k); const id = cid(k); if (id && talk[id]) { delete talk[id]; saveTalk(); } cool.delete(k); changed(); },
       // what k said and heard: your conversations with them (past visits too, kept), what was said to them by others
       // and the whole of any group round they were in
@@ -1140,12 +1202,18 @@
         const now = Date.now() / 1000;
         if (M.on && o.sights && now > scanAt && !(typeof document !== 'undefined' && document.hidden)) { scanAt = now + 1; M.scan(); }
         if (!M.on || !M.chatter || (typeof document !== 'undefined' && document.hidden) || now < next || M.busy.size) return;
-        const who = o.people().filter((k) => M.can(k)); if (who.length < (M.local ? 1 : 2)) return;
+        const who = o.people().filter((k) => M.can(k) && k !== M.as); if (who.length < (M.local || M.as != null ? 1 : 2)) return;
         if (M.left <= 0 && !M.local) { M.chatter = false; M.status = 'They have stopped talking among themselves; say something, or start them again.'; changed(); return; }
         next = now + GAP[0] + Math.random() * (GAP[1] - GAP[0]);
-        const k = who[turn++ % who.length], to = o.nearest ? o.nearest(k) : who.find((q) => q !== k);
+        // whose turn: in order, each taking it by how readily they start talking (the card's chat; 0.5 always does)
+        let k = null;
+        for (let i = 0; i < who.length && k == null; i++) { const q = who[turn++ % who.length], c = o.card(q); if (Math.random() < Math.min(1, 2 * (c ? c.chat : 0.5))) k = q; }
+        if (k == null) return;
+        const to = o.nearest ? o.nearest(k) : who.find((q) => q !== k);
         // the built-in mind: now and then, or with nobody to talk to, they remark on what is round them or on their mind
-        if (M.local && (to == null || !M.can(to) || Math.random() < 0.22)) { M.ask(k, null, { kind: 'muse' }); return; }
+        // you are one of them: whoever is nearest you turns to you (as the one you play: who they know), more often than not
+        if (M.as != null && (to === M.as || Math.random() < 0.6)) { M.ask(k, M.as); return; }
+        if (M.local && (to == null || !M.can(to) || Math.random() < 0.22)) { if (!M.quiet(k, 'muse')) M.ask(k, null, { kind: 'muse' }); return; }
         if (to == null || !M.can(to)) return;
         if (!M.local) M.left--;
         M.ask(k, to);
@@ -1166,7 +1234,14 @@
     const s = M.spend; if (!s) return M.key ? 'Reading the meter...' : 'Enter the owner key for ' + NAMES[M.model] + '; until then the built-in mind speaks.';
     const left = Math.max(0, s.cap - s.spent), n = Math.floor(left / LINE[M.model]);
     return `Today: ${money(s.spent)} of ${dollars(s.cap)} (${s.lines} line${s.lines === 1 ? '' : 's'})` + (M.cost ? `, last line ${money(M.cost)}` : '') +
-      `. About ${n.toLocaleString()} more at ${NAMES[M.model]}.`;
+      `. About ${n.toLocaleString()} more at ${NAMES[M.model]}.` + (M.session ? ` This session: ${money(M.session)} (${M.sessionLines} line${M.sessionLines === 1 ? '' : 's'}).` : '');
+  }
+  // the meter in a few words, for a strip over a view: who speaks, today's spend of the cap, this session's
+  function costText(M) {
+    if (M.model === 'local') return 'Built-in, free';
+    if (!M.key) return NAMES[M.model] + ': needs the owner key';
+    const s = M.spend;
+    return s ? `Today ${money(s.spent)} of ${dollars(s.cap)} · session ${money(M.session)}` : 'Reading the meter...';
   }
   // ---- voices: the most natural the browser has (Edge's Microsoft "Natural" voices, Chrome's Google ones, Safari's
   // Enhanced and Premium Siri voices), each person given one of their own (by their name, so it stays theirs) of their
@@ -1248,5 +1323,5 @@
     return paint;
   }
 
-  root.HumanForgeMind = { TRAITS, MOODS, PARTS, SMARTS, KNACKS, VALUES, LIKES, describe, ADULT, API, COOL, LINE, NAME, TOPICS, ACTS, roll, card, partOf, create, controls, meterText, money, Brain, VOICE };
+  root.HumanForgeMind = { costText, SPEAKERS, TRAITS, MOODS, QUIET, PARTS, SMARTS, KNACKS, VALUES, LIKES, describe, ADULT, API, COOL, LINE, NAME, TOPICS, ACTS, roll, card, partOf, create, controls, meterText, money, Brain, VOICE };
 })(typeof window !== 'undefined' ? window : globalThis);
