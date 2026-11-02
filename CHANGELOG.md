@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Sunday, November 1, 2026
 
+- **v340** (7:45 PM) In first person any game key takes the mouse back after Esc, a panel or switching windows; Field of view now goes to 98°
 - **v339** (7:33 PM) Road lines, crosswalks and stop bars look faded and worn through in patches, most on brick (Road paint wear tuning)
 - **v338** (7:30 PM) With a model speaking (Haiku, Sonnet or Opus), townsfolk hold real conversations: fuller answers when it calls for one, more of what you said kept in mind, and what they remember of earlier talks. The Talk model meter shows this session's spend too.
 - **v337** (7:21 PM) Paint can stand up or sink in (Raise / inset, ±3 in, real sides, walkable); curbless brick and cobble streets get a raised edge and a border course of bricks; painted bricks and stones stand up out of their joints on High (parallax relief)
