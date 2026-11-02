@@ -44,7 +44,7 @@ const KEY_ACTIONS=[
   {id:'trimBump',g:'On foot',n:'Bump the trimmer line',d:'Taps the head on the ground to feed more line off the spool when it wears short',k:['Digit0'],s:'walk'},
   {id:'plantKind',g:'On foot',n:'Tree to plant',d:'Steps through spruce, red pine, oak, sugar maple and birch',k:['Digit8'],s:'walk'},
   {id:'carry',g:'On foot',n:'Carry: load and unload',d:'At the store, take what is stocked there (or put it back); at a pickup\'s tailgate, load what you carry or take out the top thing; anywhere else set it down, empty a bag of mulch on Corley\'s island, or pick a thing up',k:['KeyT'],s:'walk'},
-  {id:'blocks',g:'Blocks',n:'Blocks on / off',d:'Show the block bar and the outline where one lands',k:['KeyB']},
+  {id:'blocks',g:'Blocks',n:'Blocks on / off',d:'Show the block bar and the outline where one lands (the other block keys work only while it is on; changing mode puts it away)',k:['KeyB']},
   {id:'place',g:'Blocks',n:'Place block',d:'Under the bucket, in front of you on foot, or at the dot in first person',k:['KeyE']},
   {id:'lift',g:'Blocks',n:'Lift block',d:'The top block under the bucket, the one in front of you, or the one at the dot',k:['KeyX']},
   {id:'size',g:'Blocks',n:'Block size',d:'Steps through cubes, 1 to 10 ft (the block bar sets wide, long and tall one by one, down to 1 in)',k:['KeyV']},

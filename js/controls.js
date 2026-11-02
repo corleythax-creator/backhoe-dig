@@ -41,8 +41,8 @@ const MODES=['dig','drive','truck','mow','skid','walk'];let kbUsed=false;
 const KEY_RUN={dig:()=>setMode('dig'),drive:()=>setMode('drive'),exSwap:()=>exSwap(),bhOut:()=>bhOut(),truck:()=>setMode('truck'),mow:()=>setMode('mow'),skid:()=>setMode('skid'),walk:()=>setMode('walk'),
   nextMode:e=>setMode(MODES[(MODES.indexOf(mode)+(e.shiftKey?MODES.length-1:1))%MODES.length]),
   stats:()=>showStats(statBox.hidden),heat:()=>{if(!heat.on)setHeat(true);else if(heat.mode!==HEAT_MODES[HEAT_MODES.length-1][0])heatNext();else setHeat(false)},
-  enter:()=>seatToggle(),jump:()=>walkJump(),plant:()=>plantHere(),trim:()=>trimSet(!trim.on),trimBump:()=>trimBump(),gun:()=>gunEquip(!gun.eq),gunShoot:()=>gunFire(),gunReload:()=>gunReload(),talk:()=>talkOpen(),gunNext:()=>gunNext(),plantKind:()=>plantNext(),carry:()=>pbAct(),blocks:()=>setBlocks(!blkOn),place:()=>placeBlock(),lift:()=>removeBlock(),size:()=>blkCube(1),blkTurn:()=>blkTurn(),blkLock:()=>toast(say('blkSnap',{snap:blkLockNext()}),'',1400),blkFar:()=>blkReachBy(2),blkNear:()=>blkReachBy(-2),
-  blkWhat:()=>{if(!blkOn)setBlocks(true);const ks=['',...Object.keys(PROPS)];setBlkThing(ks[(ks.indexOf(blkThing)+1)%ks.length]);toast(say('blkWhat',{what:blkThing?PROPS[blkThing].n:'Block'}),'',1200)},
+  enter:()=>seatToggle(),jump:()=>walkJump(),plant:()=>plantHere(),trim:()=>trimSet(!trim.on),trimBump:()=>trimBump(),gun:()=>gunEquip(!gun.eq),gunShoot:()=>gunFire(),gunReload:()=>gunReload(),talk:()=>talkOpen(),gunNext:()=>gunNext(),plantKind:()=>plantNext(),carry:()=>pbAct(),blocks:()=>setBlocks(!blkOn),place:()=>placeBlock(),lift:()=>removeBlock(),size:()=>blkCube(1),blkTurn:()=>blkTurn(),blkLock:()=>{if(blkOn)toast(say('blkSnap',{snap:blkLockNext()}),'',1400)},blkFar:()=>{if(blkOn)blkReachBy(2)},blkNear:()=>{if(blkOn)blkReachBy(-2)},
+  blkWhat:()=>{if(!blkOn){toast(say('blkIsOff'),'tip',1800);return}const ks=['',...Object.keys(PROPS)];setBlkThing(ks[(ks.indexOf(blkThing)+1)%ks.length]);toast(say('blkWhat',{what:blkThing?PROPS[blkThing].n:'Block'}),'',1200)},
   blkMat:()=>{let m=blkMat;do m=(m+1)%MAT_MAX;while(m&&!MAT_LIST[m-1]);setBlkMat(m);toast(say('blkMat',{mat:blkMatName(blkMat)}),'',1400)},
   box:()=>hookBox(),coupler:()=>cplAct(),grip:()=>cplGrip(),lookAhead:()=>{if(camMode==='cab')fpl.home=true;fpl.zt=1},pump:()=>setPump(!pumpOn),wipers:()=>setWipers(!wipeOn),cam:()=>$('#camBtn').click(),map:()=>toggleMap(),sound:()=>setSound(!sndCfg.on),help:()=>{help.hidden=!help.hidden}};
 addEventListener('keydown',e=>{const c=e.code;
@@ -215,7 +215,7 @@ function exSwap(){if(bhIn()){bhSwap();return}if(mode!=='dig'&&mode!=='drive')ret
 function setMode(m){if(m===mode)return;
   // no room to climb out: stay in the machine, as Get out does (seatToggle), rather than turn up where you got in
   if(m==='walk'&&wk.inside&&!wkPlaceOut(wk.inside)){toast(say('noRoomOut'));return}
-  mode=m;setTurnSens();const ex=m==='dig'||m==='drive';if(ex)exLast=m;$('#exSwitch').hidden=!ex&&!bhIn();
+  mode=m;setTurnSens();if(blkOn)setBlocks(false);const ex=m==='dig'||m==='drive';if(ex)exLast=m;$('#exSwitch').hidden=!ex&&!bhIn();
   $('#exDrive').setAttribute('aria-pressed',m==='drive');$('#exDig').setAttribute('aria-pressed',m==='dig');bhSwitch();$('#modeDig').setAttribute('aria-pressed',ex);
   for(const [id,k] of [['#modeDrive','drive'],['#modeTruck','truck'],['#modeMow','mow'],['#modeSkid','skid'],['#modeWalk','walk']])$(id).setAttribute('aria-pressed',m===k);
   $('#walkBtns').hidden=m!=='walk';if(m!=='walk'){setSprint(false);trimSet(false)}
