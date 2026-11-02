@@ -410,6 +410,26 @@ const SHOP={x:0,z:752,fz:744,lib:[],st:{mulch:[-20.6,746.2],tools:[-4.6,743.3],g
 // a library material: its mean colour until the pictures are in (one per id, shared with the marina)
 function shopLib(id){const m0=SHOP.lib.find(m=>m.userData.lib===id);if(m0)return m0;const d=MAT_LIST.find(m=>m.id===id),m=new THREE.MeshStandardMaterial({color:0xffffff,roughness:0.85,envMap:skyEnv,envMapIntensity:0.5});
   m.color.setRGB(d.c[0],d.c[1],d.c[2]);m.userData.ft=d.ft;m.userData.lib=id;SHOP.lib.push(m);return m}
+// road paint (centre lines, crosswalks, stop and yield bars, on every street): worn and weathered rather than fresh. In
+// world space it wears through in patches and along the tyre lines, speckles where the grit shows, goes dull and a
+// little dirty; wear 0 to 1 how far gone it is (brick wears the most, the paint sitting on the bricks' tops and lost
+// in the joints and chipped edges), scaled live by the Road paint wear tuning. Drawn over the paving, see-through where thin
+const PAINT_WORN=`varying vec3 vPw;uniform float uWear;
+float pwH(vec2 p){return fract(sin(dot(p,vec2(127.1,311.7)))*43758.5453);}
+float pwN(vec2 p){vec2 i=floor(p),f=fract(p);f=f*f*(3.0-2.0*f);return mix(mix(pwH(i),pwH(i+vec2(1,0)),f.x),mix(pwH(i+vec2(0,1)),pwH(i+1.0),f.x),f.y);}
+`;
+function wornPaint(c,wear){const m=new THREE.MeshStandardMaterial({color:c,roughness:0.8,envMap:skyEnv,envMapIntensity:0.4,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-2,polygonOffsetUnits:-2});
+  m.userData.ft=4;m.userData.noWet=1;const u={get value(){return Math.min(0.95,wear*(typeof TU!=='undefined'?TU.lineWear:1))}};
+  m.onBeforeCompile=sh=>{sh.uniforms.uWear=u;
+    sh.vertexShader='varying vec3 vPw;\n'+sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvPw=(modelMatrix*vec4(transformed,1.0)).xyz;');
+    sh.fragmentShader=PAINT_WORN+sh.fragmentShader.replace('#include <color_fragment>',`#include <color_fragment>
+{vec2 p=vPw.xz;float big=pwN(p*0.35)*0.55+pwN(p*1.7)*0.3+pwN(p*6.0)*0.15,fine=pwN(p*23.0)*0.6+pwN(p*71.0)*0.4,chip=pwN(p*vec2(9.0,3.5)+7.0);
+  float w=uWear,cov=smoothstep(w-0.12,w+0.18,big*0.75+fine*0.35-0.1*w*chip);
+  cov*=mix(1.0,smoothstep(0.15,0.55,fine),w);
+  vec3 dull=mix(vec3(dot(diffuseColor.rgb,vec3(0.33))),diffuseColor.rgb,0.72)*mix(0.72,0.97,big);
+  diffuseColor.rgb=mix(dull,dull*vec3(0.82,0.78,0.72),0.5*(1.0-fine)*w);
+  diffuseColor.a*=cov*mix(0.92,0.7,w);if(diffuseColor.a<0.02)discard;}`)};
+  m.customProgramCacheKey=()=>'wornPaint';return m}
 function shopStd(c,metal,rough,o){const m=new THREE.MeshStandardMaterial(Object.assign({color:c,metalness:metal,roughness:rough,envMap:skyEnv},o||{}));m.userData.ft=4;return m}
 function shopLoad(){if(SHOP.loaded)return;SHOP.loaded=true;
   for(const m of SHOP.lib){const L=k=>{const t=new THREE.TextureLoader().load(`textures/${m.userData.lib}${k}.jpg`);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.anisotropy=4;if(!k)t.colorSpace=THREE.SRGBColorSpace;return t};
@@ -577,7 +597,7 @@ function mstLift(x,z){if(z<MST.z0||z>MST.z1)return 0;const ax=Math.abs(x),C0=MST
   if(ax<MST.x)return MST.lift;if(ax>140)return 0;if(z>=C0&&z<=C1)return MST.lift;if(z<576.5||ax>128)return 0;
   return ax<=WE||z>=C0-3.3&&z<C0||z>C1&&z<=C1+3.3?mstRamp(x,z):0}
 function mainStreets(){const K=shopKit(),F=famKit(),G=baseHeight,asph=shopLib('asphalt'),walk=shopLib('concrete_broom'),conc=shopLib('concrete'),
-    joint=shopStd(0x6a6862,0,0.95),yel=shopStd(0xd8b024,0,0.6),wht=shopStd(0xe9e7e0,0,0.6),pad=shopStd(0xd9a91c,0,0.8),
+    joint=shopStd(0x6a6862,0,0.95),yel=wornPaint(0xd8b024,0.42),wht=wornPaint(0xe9e7e0,0.45),pad=shopStd(0xd9a91c,0,0.8),
     X=MST.x,W=X+MST.curb,WE=W+MST.walk,C0=MST.cz-MST.cw,C1=MST.cz+MST.cw,XE=140,WX=128,BZ=576.5;
   // a sheet over the ground, lifted lift(x, z) (or a number) above it, cut every step metres
   const sheet=(mat,x0,x1,z0,z1,lift,step)=>{const g=new THREE.PlaneGeometry(x1-x0,z1-z0,Math.max(1,Math.round((x1-x0)/step)),Math.max(1,Math.round((z1-z0)/step)));g.rotateX(-Math.PI/2);

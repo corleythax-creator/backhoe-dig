@@ -24,7 +24,7 @@ function fhDense(P,step){const out=[];for(let i=0;i<P.length-1;i++){const [ax,az
   for(let k=0;k<n;k++)out.push([ax+(bx-ax)*k/n,az+(bz-az)*k/n])}out.push(P[P.length-1].slice());return out}
 
 (function(){const K=shopKit(),F=famKit(),LK=famKit(),BK=famKit(),G=baseHeight,P=FH.pts,w=FH.w/2,n=P.length;
-  const asph=shopLib('asphalt'),grav=shopLib('gravel'),flag=shopLib('flagstone'),yel=shopStd(0xd8b024,0,0.6),wht=shopStd(0xe9e7e0,0,0.6),GALV=0x9aa0a4;
+  const asph=shopLib('asphalt'),grav=shopLib('gravel'),flag=shopLib('flagstone'),yel=wornPaint(0xd8b024,0.35),wht=wornPaint(0xe9e7e0,0.3),GALV=0x9aa0a4;
   // ---------- the road ----------
   fhStrip(K,grav,P,-w,w,0.03);fhStrip(K,asph,P,-3.3,3.3,0.045);
   for(const o of [-0.16,0.06])fhStrip(K,yel,P,o,o+0.1,0.052);for(const o of [-3.1,3.0])fhStrip(K,wht,P,o,o+0.1,0.052);
