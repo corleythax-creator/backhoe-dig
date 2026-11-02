@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-02T01:45:00Z",
+ "updated": "2026-11-02T02:15:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -102,9 +102,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-01",
-   "dh": 47.75,
-   "act": 7,
-   "versions": 20
+   "dh": 48.25,
+   "act": 7.5,
+   "versions": 21
   }
  ],
  "extra": [
@@ -3174,6 +3174,15 @@ window.EFFORT = {
    "tris": 7461131,
    "chars": 2208827,
    "what": "In first person any game key takes the mouse back after Esc, a panel or switching windows; Field of view now goes to 98°"
+  },
+  {
+   "v": 341,
+   "asked": "2026-11-01T20:05:00-06:00",
+   "live": "2026-11-01T20:15:57-06:00",
+   "dh": 0.5,
+   "tris": 5858857,
+   "chars": 2209357,
+   "what": "Block keys and pad buttons no longer turn Blocks on or set a block by accident; changing mode or machine puts Blocks away."
   }
  ]
 };
