@@ -167,7 +167,7 @@ canvas.addEventListener('wheel',e=>{if(edOn)return;e.preventDefault();
 // head; in a machine fpl.yaw and fpl.pitch turn the head in the seat. Drag the scene to look (on a PC, a click takes the
 // mouse for mouse look until Esc); the wheel, a pinch or a held Z zooms; R looks straight ahead again
 const FP_YAW=2.6,FP_UP=1.35,FP_DOWN=1.4,FP_ZOOM=4;
-const fpl={yaw:0,pitch:0,zoom:1,zt:1,home:false};
+const fpl={yaw:0,pitch:0,zoom:1,zt:1,home:false,want:false};
 function fpTurn(dx,dy){const k=1/fpl.zoom;fpl.home=false;
   if(mode==='walk')wk.view-=dx*k;else fpl.yaw=clamp(fpl.yaw-dx*k,-FP_YAW,FP_YAW);
   fpl.pitch=clamp(fpl.pitch-dy*k,-FP_DOWN,FP_UP)}
@@ -176,6 +176,14 @@ function fpMouseLock(on){
   if(on){if(document.pointerLockElement===canvas||!canvas.requestPointerLock)return;
     try{const r=canvas.requestPointerLock();if(r&&r.catch)r.catch(()=>{})}catch(e){}}
   else if(document.pointerLockElement===canvas)document.exitPointerLock()}
+// staying in first person: once the mouse has been taken for mouse look (fpl.want), losing it (Esc, a panel, the window
+// losing focus) doesn't leave you clicking back in: the next game key in cab view takes it again (a key press counts as
+// the gesture the browser wants; right after Esc it may refuse for a second, and the next key tries again). A click on
+// a button or panel never takes it, so the mouse stays free for the screen until you play on
+document.addEventListener('pointerlockchange',()=>{if(document.pointerLockElement===canvas)fpl.want=true});
+addEventListener('keydown',e=>{if(!fpl.want||PHONE||edOn||camMode!=='cab'||document.pointerLockElement===canvas||e.repeat)return;
+  if(e.code==='Escape'||/^(Shift|Control|Alt|Meta|Tab)/.test(e.code)||e.target&&/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName))return;
+  if(!help.hidden||!bigEl.hidden||!menuEl.hidden||blkOn&&!blkFP()||document.querySelector('#townShop:not([hidden]),#gunShop:not([hidden]),#keysBox:not([hidden]),#ctrlsBox:not([hidden])'))return;fpMouseLock(true)});
 // while the mouse is taken a small line under the top bar says how to let it go
 const lockHint=$('#lockHint');
 document.addEventListener('pointerlockchange',()=>{const on=document.pointerLockElement===canvas;if(on)lockHint.textContent=say('lockHint');lockHint.hidden=!on});
