@@ -129,6 +129,7 @@ const TUNE=[
   ['caveRate','Cave-ins','How fast a bad wall gives way (0% = never)',1,'pct',0,500,5],['caveWarn','Cave-ins','Dirt trickles off the lip for',2.2,'s',0,20,0.5],
   // only drawn on High graphics (Graphics → Material relief); how the ground looks, not what it does, so every device may use the same numbers
   ['pbrRelief','Ground look','Relief: how deep the bumps in gravel, brick and concrete look',1,'pct',0,300,5],
+  ['pbrDepth','Ground look','Relief: how far painted bricks, stones and gravel stand up out of their joints',0.012,'in',0,2,0.05],
   ['pbrSheen','Ground look','Sheen: how strong the glints on wet and shiny ground are',1,'pct',0,300,5],
   ['pbrRain','Ground look','Extra sheen while it rains',1,'pct',0,400,5],['pbrGround','Ground look','Relief: how bumpy the natural dirt and grass look',0.9,'pct',0,300,5],['pbrGroundFar','Ground look','Relief: the larger lumps and hollows, out to a few hundred feet',0.6,'pct',0,300,5],
   ['pebN','Ground look','How many pebbles, stones and sticks lie about (Medium and up)',1,'pct',0,300,5],

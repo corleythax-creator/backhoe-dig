@@ -67,7 +67,7 @@ const MAT_GL2=true; // three.js draws with WebGL 2 only (since r163)
 // the ground shader's material uniforms: the painted-id and cover maps (one texel per editor cell, ED_M and ED_A, set
 // up in terrain.js), the texture array holding just the materials the map uses, each id's mean colour and tiles per
 // metre, and its layer; for Mud, the layers of its drier looks and their colours over its own
-const matU={tMatId:{value:null},tMatCov:{value:null},tMatArr:{value:null},uMatInfo:{value:[]},uMatLS:{value:new Float32Array(MAT_MAX*2)},uMudL:{value:new THREE.Vector2(-1,-1)},
+const matU={tMatId:{value:null},tMatCov:{value:null},tMatR:{value:null},uPom:{value:0},tMatArr:{value:null},uMatInfo:{value:[]},uMatLS:{value:new Float32Array(MAT_MAX*2)},uMudL:{value:new THREE.Vector2(-1,-1)},
   uMatN:{value:new Float32Array(MAT_MAX).fill(-1)},texPbr:{value:0},uPbr:{value:new THREE.Vector4(1,1,1,55)},uMudC1:{value:new THREE.Vector3()},uMudC2:{value:new THREE.Vector3()},tSkyEnv:{value:skyEnv}};
 // uMatLS: each id's texture layer (-1 none loaded) and shine
 {const w=MAT_LIST.find(m=>m&&m.id==='mud').c,r=(c,i)=>c[i]/w[i];matU.uMudC1.value.set(r(MUD_STAGES[0].c,0),r(MUD_STAGES[0].c,1),r(MUD_STAGES[0].c,2));matU.uMudC2.value.set(r(MUD_STAGES[1].c,0),r(MUD_STAGES[1].c,1),r(MUD_STAGES[1].c,2))}
@@ -78,6 +78,8 @@ for(let m=0;m<MAT_MAX;m++){matU.uMatLS.value[m*2]=-1;matUSet(m)}
 const MAT_GLSL_HEAD=MAT_GL2?`precision highp sampler2DArray;
 uniform sampler2D tMatId;
 uniform sampler2D tMatCov;
+uniform sampler2D tMatR;
+uniform float uPom;
 uniform sampler2DArray tMatArr;
 uniform vec4 uMatInfo[${MAT_MAX}];
 uniform vec2 uMatLS[${MAT_MAX}];
@@ -99,8 +101,11 @@ uniform vec3 uMudC2;
 // colour for detail, as the ground's own textures are. Painted Mud blends to its drying and cracked looks as the soil
 // water (soilW, rain.js) drops. Read when the shader compiles, after terrain.js has loaded
 const matGlsl=()=>MAT_GL2?`float matP=0.0,matS=0.0,matT=1.0,matG=1.0,matNp=0.0;vec3 matC=vec3(1.0),matNt=vec3(0.0,0.0,1.0);
-vec2 mfF=(vWXZ-vec2(${ED_X0.toFixed(1)},${ED_Z0.toFixed(1)}))/${ED_C.toFixed(2)};vec2 mfW=fwidth(mfF);
-if(vMatA>0.001){
+vec2 mLk=vWXZ,mUv=vWXZ;float mA=vMatA;bool mWall=false;
+if(vMatA>1.5){mA=1.0;int mo=int(vMatA+0.5);if(mo>2){mWall=true;vec2 wn=mo==3?vec2(1.0,0.0):mo==4?vec2(-1.0,0.0):mo==5?vec2(0.0,1.0):vec2(0.0,-1.0);mLk-=wn*0.05;mUv=vec2(dot(vWXZ,vec2(-wn.y,wn.x)),vWP.y);}}
+vec2 mfF=(mLk-vec2(${ED_X0.toFixed(1)},${ED_Z0.toFixed(1)}))/${ED_C.toFixed(2)};vec2 mfW=fwidth(mfF);
+if(vMatA>0.5&&vMatA<1.5&&texelFetch(tMatR,ivec2(floor(mfF+0.5)),0).r>0.002)discard;
+if(mA>0.001){
   ivec2 b=ivec2(floor(mfF));vec2 u=fract(mfF);
   float a0=texelFetch(tMatCov,b,0).r,a1=texelFetch(tMatCov,b+ivec2(1,0),0).r,a2=texelFetch(tMatCov,b+ivec2(0,1),0).r,a3=texelFetch(tMatCov,b+ivec2(1,1),0).r;
   vec4 aa=vec4(a0,a1,a2,a3);vec4 pa=step(0.002,aa)*step(aa,vec4(252.5/255.0));bool soft=pa.x+pa.y+pa.z+pa.w>0.0;
@@ -113,12 +118,21 @@ if(vMatA>0.001){
   vec4 w=aa*vec4((1.0-u.x)*(1.0-u.y),u.x*(1.0-u.y),(1.0-u.x)*u.y,u.x*u.y);
   ivec2 bm=b;float wm=w.x;if(w.y>wm){wm=w.y;bm=b+ivec2(1,0);}if(w.z>wm){wm=w.z;bm=b+ivec2(0,1);}if(w.w>wm){wm=w.w;bm=b+ivec2(1,1);}
   int mi=int(texelFetch(tMatId,bm,0).r*255.0+0.5);
-  if(mi>0&&p>0.0){vec4 inf=uMatInfo[mi];matC=inf.rgb;matP=p*min(vMatA,1.0);vec2 ls=uMatLS[mi];float ly=ls.x;matS=ls.y*matP*(1.0-mudF);
+  if(mi>0&&p>0.0){vec4 inf=uMatInfo[mi];matC=inf.rgb;matP=p*min(mA,1.0);vec2 ls=uMatLS[mi];float ly=ls.x;matS=ls.y*matP*(1.0-mudF);
     // Mud: damp then cracked as the soil water drops (its colour alone where its textures aren't drawn)
     vec3 mk=vec3(1.0);float d1=0.0,d2=0.0;
     if(mi==${MUD_ID}){d1=1.0-smoothstep(0.3,0.55,soilW);d2=1.0-smoothstep(0.06,0.22,soilW);mk=mix(mix(vec3(1.0),uMudC1,d1),uMudC2,d2);matC*=mk;}
-    if(texMix>0.5&&ly>=0.0){vec2 uv=vWXZ*inf.a;vec4 tx4=texture(tMatArr,vec3(uv,ly));vec3 tx=tx4.rgb;
-      float nl=uMatN[mi];if(texPbr>0.5&&nl>=0.0){
+    if(texMix>0.5&&ly>=0.0){vec2 uv=mUv*inf.a;float nl=uMatN[mi],pomO=1.0;
+      // raised relief (High): a parallax march through the height map (the normal layer's alpha), so bricks, setts and
+      // stones stand up out of their joints; uPom the depth in metres (the Ground look tunings), fading out with distance
+      if(texPbr>0.5&&nl>=0.0&&!mWall&&uPom>0.0){vec3 pV=vWP-cameraPosition;float pF=1.0-smoothstep(0.25*uPbr.w,0.5*uPbr.w,length(pV)),dep=uPom*inf.a*pF;
+        if(dep>1e-5){pV=normalize(pV);vec2 pdx=dFdx(uv),pdy=dFdy(uv);float vz=max(-pV.y,0.2),pn=floor(mix(16.0,6.0,vz)),st=1.0/pn,l=0.0;vec2 pd=pV.xz/vz*dep*st,pp=uv,pq=uv;
+          float h=1.0-textureGrad(tMatArr,vec3(uv,nl),pdx,pdy).a,hp=h;
+          for(int i=0;i<16;i++){if(l>=h||float(i)>=pn)break;pq=pp;hp=h;pp+=pd;l+=st;h=1.0-textureGrad(tMatArr,vec3(pp,nl),pdx,pdy).a;}
+          float a=h-l,b=hp-l+st;uv=mix(pp,pq,clamp(a/min(a-b,-1e-5),0.0,1.0));
+          pomO=1.0-0.3*pF*(1.0-textureGrad(tMatArr,vec3(uv,nl),pdx,pdy).a);}}
+      vec4 tx4=texture(tMatArr,vec3(uv,ly));vec3 tx=tx4.rgb*pomO;
+      if(texPbr>0.5&&nl>=0.0&&!mWall){
         // relief and sheen (High): the normal map, faded out with distance (it only shimmers far off) and softened where rain films the
         // surface; the roughness map in the alpha scales the sheen, and rain adds to it (uPbr: relief, sheen, rain sheen, fade-out distance)
         float pd=length(vWP-cameraPosition);matG=clamp(tx4.a*2.0,0.0,2.0);matNt=texture(tMatArr,vec3(uv,nl)).rgb*2.0-1.0;
@@ -139,7 +153,7 @@ const matGlslPost=()=>MAT_GL2?'if(matP>0.0){vec3 mc=matC*(1.0-0.19*mudF)*(1.0-0.
 // south (the texture's u and v on the ground), so it tilts the world normal that way
 const matGlslNorm=()=>MAT_GL2?'if(matNp>0.0){vec3 mnW=inverseTransformDirection(normal,viewMatrix);mnW=normalize(mnW+vec3(matNt.x,0.0,matNt.y)*1.1*matNp);normal=transformDirection(mnW,viewMatrix);}\n':'';
 // the Ground look tunings (tune.js) into the shader, read live each frame (relief, sheen, rain sheen, fade-out distance in metres)
-function matPbrSync(){matU.uPbr.value.set(TU.pbrRelief,TU.pbrSheen,TU.pbrRain,TU.pbrFar);
+function matPbrSync(){matU.uPbr.value.set(TU.pbrRelief,TU.pbrSheen,TU.pbrRain,TU.pbrFar);matU.uPom.value=TU.pbrDepth;
   // the natural dirt and grass (terrain.js), with the same Material relief setting
   if(typeof groundRelU!=='undefined'){groundRelU.value=matU.texPbr.value*TU.pbrGround;groundRelFarU.value=matU.texPbr.value*TU.pbrGroundFar;faceRelU.value=matU.texPbr.value*TU.pbrFace;spoilU.value=TU.pbrSpoil;if(groundRelU.value>0)groundRelLoad()}}
 const matGlslSpec=()=>MAT_GL2?'specularStrength=mix(specularStrength,12.0,matS);\n':'';
@@ -149,6 +163,12 @@ const matGlslRefl=()=>MAT_GL2?`if(matS>0.0){vec3 mrN=inverseTransformDirection(n
   reflectedLight.directDiffuse*=1.0-0.7*matS;reflectedLight.indirectDiffuse*=1.0-0.7*matS;reflectedLight.indirectSpecular+=mrE*mrF*matT*matS;}
 `:'';
 const matImg={};let matLayers=[];
+// the height map of a colour image into the alpha of data from o: brightness, a 5 px box blur (wrapping, so it tiles), stretched to 0 to 255
+function matHeight(im,x2,T,data,o){x2.drawImage(im,0,0,T,T);const q=x2.getImageData(0,0,T,T).data,L=new Float32Array(T*T),B=new Float32Array(T*T);
+  for(let i=0;i<T*T;i++)L[i]=q[i*4]*0.299+q[i*4+1]*0.587+q[i*4+2]*0.114;
+  for(let y=0;y<T;y++)for(let x=0;x<T;x++){let s=0;for(let k=-2;k<=2;k++)s+=L[y*T+((x+k+T)&(T-1))];B[y*T+x]=s}
+  let lo=1e9,hi=-1e9;for(let y=0;y<T;y++)for(let x=0;x<T;x++){let s=0;for(let k=-2;k<=2;k++)s+=B[((y+k+T)&(T-1))*T+x];L[y*T+x]=s;if(s<lo)lo=s;if(s>hi)hi=s}
+  const k=255/Math.max(1,hi-lo);for(let i=0;i<T*T;i++)data[o+i*4+3]=(L[i]-lo)*k}
 // an own texture's picture comes from the server (ownmat.js sets this); until it does, its colour shows alone
 let matOwnImg=null;
 // the image of a library id (or a Mud stage's name), loading on first use; calls back once it is in
@@ -174,7 +194,10 @@ function matTexUpdate(){if(!MAT_GL2||!texOn||!gfxDetail)return;
   const T=512,L=Math.max(1,layers.length),data=new Uint8Array(T*T*4*L),cv=document.createElement('canvas');cv.width=cv.height=T;
   const x2=cv.getContext('2d');layers.forEach((m,l)=>{x2.drawImage(matImg[m],0,0,T,T);data.set(x2.getImageData(0,0,T,T).data,l*T*T*4);
     const d=typeof m==='number'?matDef(m):null,r=d&&d.pbr&&matImg[d.id+'_r'];
-    if(r&&r.complete){x2.drawImage(r,0,0,T,T);const q=x2.getImageData(0,0,T,T).data,o=l*T*T*4;for(let i=3;i<q.length;i+=4)data[o+i]=255-q[i-3]}});
+    if(r&&r.complete){x2.drawImage(r,0,0,T,T);const q=x2.getImageData(0,0,T,T).data,o=l*T*T*4;for(let i=3;i<q.length;i+=4)data[o+i]=255-q[i-3]}
+    // a normal layer's alpha: the height (the colour's brightness, blurred a little and stretched, as tools/pbr.py makes the
+    // normals), which the parallax march reads
+    if(typeof m==='string'&&m.endsWith('_n')){const c=matImg[MAT_LIST.findIndex(x=>x&&x.id===m.slice(0,-2))+1];if(c&&c.complete)matHeight(c,x2,T,data,l*T*T*4)}});
   const t=new THREE.DataArrayTexture(data,T,T,L);t.format=THREE.RGBAFormat;t.wrapS=t.wrapT=THREE.RepeatWrapping;
   t.magFilter=THREE.LinearFilter;t.minFilter=THREE.LinearMipmapLinearFilter;t.generateMipmaps=true;t.anisotropy=Math.min(8,renderer.capabilities.getMaxAnisotropy());t.needsUpdate=true;
   if(matU.tMatArr.value)matU.tMatArr.value.dispose();matU.tMatArr.value=t;
