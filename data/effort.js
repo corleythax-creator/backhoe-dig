@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-02T01:33:00Z",
+ "updated": "2026-11-02T01:45:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -102,9 +102,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-01",
-   "dh": 46.75,
+   "dh": 47.75,
    "act": 7,
-   "versions": 19
+   "versions": 20
   }
  ],
  "extra": [
@@ -3165,6 +3165,15 @@ window.EFFORT = {
    "tris": 5859941,
    "chars": 2207743,
    "what": "Road lines, crosswalks and stop bars look faded and worn through in patches, most on brick (Road paint wear tuning)"
+  },
+  {
+   "v": 340,
+   "asked": "2026-11-01T19:40:00-06:00",
+   "live": "2026-11-01T19:45:02-06:00",
+   "dh": 1,
+   "tris": 7461131,
+   "chars": 2208827,
+   "what": "In first person any game key takes the mouse back after Esc, a panel or switching windows; Field of view now goes to 98°"
   }
  ]
 };

@@ -160,7 +160,7 @@ const GFX_ROWS=[
   {id:'pr',label:'Resolution',hint:'Pixels drawn per screen dot. The biggest cost on phones.',opts:[[0.5,'0.5x'],[0.75,'0.75x'],[1,'1x'],[1.5,'1.5x'],[2,'2x'],[3,'3x']]},
   {id:'auto',label:'Auto resolution',hint:'Lowers the resolution by itself when the game slows down.',opts:onOff},
   {id:'fps',label:'Frame cap',hint:'30 saves battery and heat.',opts:[[30,'30'],[60,'60'],[0,'None']]},
-  {id:'fov',label:'Field of view',hint:'How wide the camera sees.',min:-15,max:25,step:1,fmt:v=>`${Math.round(camFovBase()+v)}°`},
+  {id:'fov',label:'Field of view',hint:'How wide the camera sees.',min:-15,max:40,step:1,fmt:v=>`${Math.round(camFovBase()+v)}°`},
   ['Light and shadows'],
   {id:'sh',label:'Shadows',hint:'Shadow sharpness. Off is the biggest saving after resolution.',opts:[[0,'Off'],[512,'512'],[1024,'1024'],[2048,'2048'],[4096,'4096']]},
   {id:'shR',label:'Shadow distance',hint:'How far around you things cast shadows. Farther spreads the same shadow map wider, so edges get softer.',min:14,max:80,step:2,fmt:v=>`${Math.round(v*FT_M)} ft`},
