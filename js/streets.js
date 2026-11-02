@@ -32,7 +32,7 @@ function streetsBuild(){const G=baseHeight;
   ST.dirty=0;walkPadsDrop('street');const L=stSegs();ST.box=null;if(!L.length)return;
   if(typeof shopLoad==='function')shopLoad();
   const K=shopKit(),SF=[],asph=shopLib('asphalt'),walk=shopLib('concrete_broom'),conc=shopLib('concrete'),
-    joint=ST.jm||(ST.jm=shopStd(0x6a6862,0,0.95)),yel=ST.ym||(ST.ym=shopStd(0xd8b024,0,0.6));
+    joint=ST.jm||(ST.jm=shopStd(0x6a6862,0,0.95)),yelA=ST.ym||(ST.ym=wornPaint(0xd8b024,0.35)),yelB=ST.yb||(ST.yb=wornPaint(0xd8b024,0.48));
   ROADS.forEach((r,ri)=>{if(!r.pv||r.pts.length<2)return;const F=stFrame(r);if(F.n<2)return;const hw=r.w/2,lift=ST.lift+0.002*(ri%5);
     for(const q of F.P){const e=stReach(r)+1;ST.box=edUnionBox(ST.box,[q[0]-e,q[0]+e,q[1]-e,q[1]+e])}
     const at=(i,t,s)=>{const a=F.P[i],b=F.P[i+1],ma=F.M[i],mb=F.M[i+1],x=a[0]+ma[0]*s+(b[0]+mb[0]*s-a[0]-ma[0]*s)*t,z=a[1]+ma[1]*s+(b[1]+mb[1]*s-a[1]-ma[1]*s)*t;return [x,z]};
@@ -55,7 +55,7 @@ function streetsBuild(){const G=baseHeight;
       if(!Pos.length)return;if(sf){sf.P.push(...Pos);return}const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(Pos,3));K.put(mat,g)};
     const sd=ST_SURF[r.sf];if(sd){const c=SF[r.sf]||(SF[r.sf]={P:[],U:[],t:1/(sd.ft*0.3048)});band(null,-hw,lift,hw,lift,0,false,false,c)}
     else band(asph,-hw,lift,hw,lift,0,false,false);
-    if(r.cl&&r.w>=4.2)for(const o of [-0.12,0.12])band(yel,o-0.05,lift+0.006,o+0.05,lift+0.006,0,true,false);
+    const yel=r.sf?yelB:yelA;if(r.cl&&r.w>=4.2)for(const o of [-0.12,0.12])band(yel,o-0.05,lift+0.006,o+0.05,lift+0.006,0,true,false);
     const sw=r.sw||0,top=r.cb?ST.top:lift+0.03,a=hw+(r.cb?ST.curb:0),b=a+sw;
     for(const s of [-1,1]){const S=(o)=>o*s,lo=(p,q)=>[Math.min(S(p),S(q)),Math.max(S(p),S(q))];
       if(r.cb){const [g0,g1]=lo(hw-ST.gut,hw);band(conc,g0,lift+0.004,g1,lift+0.004,0,true,false);

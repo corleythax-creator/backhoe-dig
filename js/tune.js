@@ -137,6 +137,7 @@ const TUNE=[
   
   ['pbrFace','Ground look','Relief: how deep the bucket-tooth grooves, cracks, pebbles and roots on dug faces look',1,'pct',0,300,5],
   ['pbrSpoil','Ground look','Dug dirt: how cloddy and stony spoil looks, and how plain the soil layers show on cut faces',1,'pct',0,300,5],
+  ['lineWear','Ground look','Road paint: how worn the lines, crosswalks and stop bars look (brick wears most)',1,'pct',0,180,5],
   ['stRelief','Ground look','Relief: how far the bricks and cobbles of brick and cobblestone streets stand up',1,'pct',0,300,5],
   // the camera with a mouse: a click on the scene takes the mouse and moving it looks round (Esc lets it go); the chase
   // camera swings round behind a turning machine and drifts back behind it while it moves (main.js, controls.js)

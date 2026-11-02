@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-02T01:30:00Z",
+ "updated": "2026-11-02T01:33:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -102,9 +102,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-01",
-   "dh": 44.75,
+   "dh": 46.75,
    "act": 7,
-   "versions": 18
+   "versions": 19
   }
  ],
  "extra": [
@@ -3156,6 +3156,15 @@ window.EFFORT = {
    "tris": 5862211,
    "chars": 2205533,
    "what": "With a model speaking (Haiku, Sonnet or Opus), townsfolk hold real conversations: fuller answers when it calls for one, more of what you said kept in mind, and what they remember of earlier talks. The Talk model meter shows this session's spend too."
+  },
+  {
+   "v": 339,
+   "asked": "2026-11-01T19:20:00-06:00",
+   "live": "2026-11-01T19:33:01-06:00",
+   "dh": 2,
+   "tris": 5859941,
+   "chars": 2207743,
+   "what": "Road lines, crosswalks and stop bars look faded and worn through in patches, most on brick (Road paint wear tuning)"
   }
  ]
 };
