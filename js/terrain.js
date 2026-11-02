@@ -32,6 +32,9 @@ const hash=(i,j)=>{const s=Math.sin(i*127.1+j*311.7)*43758.5453;return s-Math.fl
 // but laid by the square brush, drawn with sharp corners; the Soft edge brush lays 253 and less over its fade; 0 wherever ED_M is 0). The outer cells stay 0 so the edges meet the coarse ground. Saved on
 // this device as bhd_map, with the placed assets (trees and boulders) and the roads; see editor.js
 const ED_X0=-112,ED_Z0=-122,ED_C=0.5,ED_NX=449,ED_NZ=433,ED_H=new Float32Array(ED_NX*ED_NZ),ED_P=new Float32Array(ED_NX*ED_NZ),ED_M=new Uint8Array(ED_NX*ED_NZ),ED_A=new Uint8Array(ED_NX*ED_NZ);
+// ED_R: how far each painted cell is raised (+) or sunk (-) from the ground, in quarter inches (-12 to 12, the Paint
+// brush's Raise / inset; raised.js draws the slab and its sides, rsAt is the step for feet and wheels)
+const ED_R=new Int8Array(ED_NX*ED_NZ),RS_Q=0.00635;
 let mapAssets=null,mapRoads=null,mapSq=0;
 // ED_G: where tall grass grows (1), on the same grid (the editor's Tall grass brush; mower.js grows it). A map from
 // before it has the first patch, 52 x 39 ft north-east of the trench
@@ -77,7 +80,7 @@ function edUnbox(o,A,scale,Arr,oi=0,oj=0){if(!o)return;let [i0,j0,w,h]=o.r;i0+=o
   for(let j=0;j<h;j++)for(let i=0;i<w;i++)A[(j+j0)*ED_NX+i+i0]=q[j*w+i]/scale}
 function mapEncode(){const doc={game:'backhoe-dig',v:1,g:[ED_X0,ED_Z0]},h=edBox(ED_H,100,Int16Array),p=edBox(ED_P,100,Int8Array);
   const m=edBox(ED_M,1,Uint8Array),fa=new Uint8Array(ED_A.length);for(let q=0;q<fa.length;q++)if(ED_M[q])fa[q]=255-ED_A[q];
-  const a=edBox(fa,1,Uint8Array);if(h)doc.h=h;if(p)doc.p=p;if(m)doc.m=m;if(a)doc.a=a;doc.tg=edBox(ED_G,1,Uint8Array)||0;
+  const a=edBox(fa,1,Uint8Array),rz=edBox(ED_R,1,Int8Array);if(rz)doc.r=rz;if(h)doc.h=h;if(p)doc.p=p;if(m)doc.m=m;if(a)doc.a=a;doc.tg=edBox(ED_G,1,Uint8Array)||0;
   // sq: its things include Harbor Square's furniture (sqThings, scenery.js)
   if(mapAssets){doc.sq=1;doc.assets=(typeof fxSaveList==='function'?fxSaveList(mapAssets):mapAssets).map(a=>[a.t,+a.x.toFixed(2),+a.z.toFixed(2),+a.yaw.toFixed(2),+a.s.toFixed(2),a.c,...(a.lk?[1]:[])])}
   if(mapRoads)doc.roads=mapRoads.map(r=>[+r.w.toFixed(2),r.mid,r.pts.map(q=>q.map(v=>+v.toFixed(2))),...(r.pv?[{c:r.cb?1:0,s:+(r.sw||0).toFixed(2),l:r.cl?1:0,...(r.sf?{f:r.sf}:{})}]:[])]);
@@ -88,10 +91,12 @@ function mapDecode(text){const doc=JSON.parse(text);if(!doc||doc.game!=='backhoe
   const h=new Float32Array(ED_H.length),p=new Float32Array(ED_P.length),m=new Uint8Array(ED_M.length);edUnbox(doc.h,h,100,Int16Array,oi,oj);edUnbox(doc.p,p,100,Int8Array,oi,oj);edUnbox(doc.m,m,1,Uint8Array,oi,oj);
   // cover: maps from before soft edges have no "a" and are covered fully wherever painted
   const a=new Uint8Array(ED_A.length);edUnbox(doc.a,a,1,Uint8Array,oi,oj);
-  for(let q=0;q<m.length;q++){if(m[q]&&!matIdOk(m[q]))m[q]=0;a[q]=m[q]?255-a[q]:0;if(!a[q])m[q]=0}
+  // raise / inset (r): only on painted cells, at most 3 in either way
+  const r=new Int8Array(ED_R.length);edUnbox(doc.r,r,1,Int8Array,oi,oj);
+  for(let q=0;q<m.length;q++){if(m[q]&&!matIdOk(m[q]))m[q]=0;a[q]=m[q]?255-a[q]:0;if(!a[q])m[q]=0;r[q]=m[q]?Math.max(-12,Math.min(12,r[q])):0}
   // tall grass: none in a map that has the layer empty (0), the first patch in one from before it
   let tg=null;if(doc.tg!==undefined){tg=new Uint8Array(ED_G.length);if(doc.tg)edUnbox(doc.tg,tg,1,Uint8Array,oi,oj);for(let q=0;q<tg.length;q++)tg[q]=tg[q]?1:0}
-  for(let j=0;j<ED_NZ;j++)for(let i=0;i<ED_NX;i++)if(i<3||j<3||i>ED_NX-4||j>ED_NZ-4){h[j*ED_NX+i]=0;p[j*ED_NX+i]=0;m[j*ED_NX+i]=0;a[j*ED_NX+i]=0;if(tg)tg[j*ED_NX+i]=0}
+  for(let j=0;j<ED_NZ;j++)for(let i=0;i<ED_NX;i++)if(i<3||j<3||i>ED_NX-4||j>ED_NZ-4){h[j*ED_NX+i]=0;p[j*ED_NX+i]=0;m[j*ED_NX+i]=0;a[j*ED_NX+i]=0;r[j*ED_NX+i]=0;if(tg)tg[j*ED_NX+i]=0}
   const as=Array.isArray(doc.assets)?doc.assets.filter(a=>Array.isArray(a)&&typeof a[0]==='string'&&/^[a-z]{2,16}$/.test(a[0])&&isFinite(a[1])&&isFinite(a[2]))
     .map(a=>Object.assign({t:a[0],x:+a[1],z:+a[2],yaw:+a[3]||0,s:Math.max(0.3,Math.min(3,+a[4]||1)),c:(a[5]|0)>=0?a[5]|0:0},a[6]===1?{lk:1}:{})):null;
   // roads: 1.5 to 8 m wide (streets to 12), 2 to 200 points each; graded only when every point has a height; a fourth
@@ -100,13 +105,18 @@ function mapDecode(text){const doc=JSON.parse(text);if(!doc||doc.game!=='backhoe
   const rs=Array.isArray(doc.roads)?doc.roads.slice(0,60).filter(r=>Array.isArray(r)&&isFinite(r[0])&&Array.isArray(r[2])&&r[2].length>=2&&r[2].length<=200&&r[2].every(q=>Array.isArray(q)&&q.length>=2&&q.slice(0,3).every(isFinite)))
     .map(r=>{const g=r[2].every(q=>q.length>2),o=r[3]&&typeof r[3]==='object'?r[3]:null,pv=o?{pv:1,cb:o.c?1:0,sw:Math.max(0,Math.min(5,+o.s||0)),cl:o.l?1:0,...(o.f>=1&&o.f<=4?{sf:o.f|0}:{})}:{};
       return Object.assign({w:Math.max(1.5,Math.min(o?12:8,+r[0])),mid:o?0:r[1]?1:0,pts:r[2].map(q=>g?[+q[0],+q[1],+q[2]]:[+q[0],+q[1]])},pv)}):null;
-  return {h,p,m,a,tg,as,rs,sq:doc.sq===1}}
-try{const t=localStorage.getItem('bhd_map');if(t){const m=mapDecode(t);ED_H.set(m.h);ED_P.set(m.p);ED_M.set(m.m);ED_A.set(m.a);if(m.tg)ED_G.set(m.tg);mapAssets=m.as;mapRoads=m.rs;mapSq=m.sq}}catch(e){}
+  return {h,p,m,a,r,tg,as,rs,sq:doc.sq===1}}
+try{const t=localStorage.getItem('bhd_map');if(t){const m=mapDecode(t);ED_H.set(m.h);ED_P.set(m.p);ED_M.set(m.m);ED_A.set(m.a);ED_R.set(m.r);if(m.tg)ED_G.set(m.tg);mapAssets=m.as;mapRoads=m.rs;mapSq=m.sq}}catch(e){}
 // the painted ids for the ground shader, one texel per cell (materials.js); editor.js flags it when they change
 matU.tMatId.value=new THREE.DataTexture(ED_M,ED_NX,ED_NZ,THREE.RedFormat,THREE.UnsignedByteType);
 matU.tMatId.value.unpackAlignment=1;matU.tMatId.value.needsUpdate=true;
 matU.tMatCov.value=new THREE.DataTexture(ED_A,ED_NX,ED_NZ,THREE.RedFormat,THREE.UnsignedByteType);
 matU.tMatCov.value.unpackAlignment=1;matU.tMatCov.value.needsUpdate=true;
+// the raised and sunk cells (ED_R): the ground leaves them out and raised.js draws them at their height
+matU.tMatR.value=new THREE.DataTexture(new Uint8Array(ED_R.buffer),ED_NX,ED_NZ,THREE.RedFormat,THREE.UnsignedByteType);
+matU.tMatR.value.unpackAlignment=1;matU.tMatR.value.needsUpdate=true;
+// how far the painted cell at x, z is raised (or sunk, below 0) in metres: 0 off paint
+function rsAt(x,z){const i=Math.round((x-ED_X0)/ED_C),j=Math.round((z-ED_Z0)/ED_C);if(i<0||j<0||i>=ED_NX||j>=ED_NZ)return 0;const q=j*ED_NX+i,r=ED_R[q];return r&&ED_M[q]?r*RS_Q:0}
 // the site sits on a grassy island 24 ft above the lake: a rocky bank drops to a sand beach all round (shore). It is
 // about 525 ft across, centred north of the dig so its south rim (where the bridge starts) stays put, with wide lawns
 // and the spoil yard to the north. Round the dig is the high top with two low hills; across the south a grassy scarp
@@ -697,7 +707,8 @@ let dI0=0,dI1=N,dJ0=0,dJ1=N,winOn=true;
 // where slump looks next (slB: only round what changed or slid last pass, so a long dig doesn't slow every frame)
 const slB=[N+1,-1,N+1,-1];
 function touch(i0,i1,j0,j1){if(!winOn){dI0=i0;dI1=i1;dJ0=j0;dJ1=j1;winOn=true}else{dI0=Math.min(dI0,i0);dI1=Math.max(dI1,i1);dJ0=Math.min(dJ0,j0);dJ1=Math.max(dJ1,j1)}
-  slB[0]=Math.min(slB[0],i0);slB[1]=Math.max(slB[1],i1);slB[2]=Math.min(slB[2],j0);slB[3]=Math.max(slB[3],j1)}
+  slB[0]=Math.min(slB[0],i0);slB[1]=Math.max(slB[1],i1);slB[2]=Math.min(slB[2],j0);slB[3]=Math.max(slB[3],j1);
+  if(typeof rsDigTouch==='function')rsDigTouch(i0,i1,j0,j1)}
 function updateTerrain(){
   const p=pos.array,ja=Math.max(0,dJ0-1-AO_R),jb=Math.min(N,dJ1+1+AO_R);
   for(let k=ja*V;k<(jb+1)*V;k++){
@@ -752,12 +763,14 @@ function padAt(x,z){const L=WP_G.get(wpKey(Math.floor(x/WP_C),Math.floor(z/WP_C)
     const t=(p.l===null?p.t:baseHeight(x,z)+p.l)+(p.rise?p.rise*(v+p.hz)/(2*p.hz):0);if(t>y)y=t}
   return y}
 // how far the raised floors (groundLift, the walk pads) stand above the ground at x, z: a rise in it is a step, not a slope
-function raiseAt(x,z){const g=farGround?farGround(x,z):baseHeight(x,z),r=groundLift?groundLift(x,z):0,p=padAt(x,z);return p>g+r?p-g:r}
+function raiseAt(x,z){const g=farGround?farGround(x,z):baseHeight(x,z),r=(groundLift?groundLift(x,z):0)+Math.max(0,rsAt(x,z)),p=padAt(x,z);return p>g+r?p-g:r}
 function hAt(x,z){
-  if(!inDig(x,z)){let g=(farGround?farGround(x,z):baseHeight(x,z))+(groundLift?groundLift(x,z):0);const p=padAt(x,z),d=deckAt(x,z);if(p>g)g=p;return d>g?d:g}
+  if(!inDig(x,z)){let g=(farGround?farGround(x,z):baseHeight(x,z))+(groundLift?groundLift(x,z):0)+rsAt(x,z);const p=padAt(x,z),d=deckAt(x,z);if(p>g)g=p;return d>g?d:g}
   let fx=gI(x),fz=gJ(z);
   fx=Math.max(0,Math.min(N-0.001,fx)); fz=Math.max(0,Math.min(N-0.001,fz));
-  const i=fx|0,j=fz|0,u=fx-i,v=fz-j,k=j*V+i,h=H[k]*(1-u)*(1-v)+H[k+1]*u*(1-v)+H[k+V]*(1-u)*v+H[k+V+1]*u*v,p=padAt(x,z);
+  const i=fx|0,j=fz|0,u=fx-i,v=fz-j,k=j*V+i,p=padAt(x,z);let h=H[k]*(1-u)*(1-v)+H[k+1]*u*(1-v)+H[k+V]*(1-u)*v+H[k+V+1]*u*v;
+  // a raised or sunk cell counts where the ground there is undug (raised.js draws it only there)
+  const rs=rsAt(x,z);if(rs&&matAA[Math.round(fz)*V+Math.round(fx)]>0.5)h+=rs;
   return p>h?p:h;
 }
 function h0At(x,z){

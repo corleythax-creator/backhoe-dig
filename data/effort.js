@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-01T23:50:00Z",
+ "updated": "2026-11-02T01:21:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -102,9 +102,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-01",
-   "dh": 34.75,
-   "act": 6,
-   "versions": 16
+   "dh": 43.75,
+   "act": 6.5,
+   "versions": 17
   }
  ],
  "extra": [
@@ -3138,6 +3138,15 @@ window.EFFORT = {
    "tris": 5846176,
    "chars": 2192609,
    "what": "Townsfolk remember your past conversations, even after you close the game: they bring up what you talked about last time, sum it up when you ask, and the sharper ones remember further back. Sync devices now carries their memory too."
+  },
+  {
+   "v": 337,
+   "asked": "2026-11-01T18:40:00-06:00",
+   "live": "2026-11-01T19:21:34-06:00",
+   "dh": 9,
+   "tris": 5856217,
+   "chars": 2205533,
+   "what": "Paint can stand up or sink in (Raise / inset, ±3 in, real sides, walkable); curbless brick and cobble streets get a raised edge and a border course of bricks; painted bricks and stones stand up out of their joints on High (parallax relief)"
   }
  ]
 };

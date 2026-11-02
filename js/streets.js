@@ -5,7 +5,10 @@
 // and line stop at the other's edge, so crossings and T-junctions open up by themselves. Built on baseHeight, so it is
 // rebuilt after every road change (roadsBuild) and by edRefresh over a street (streetsEdRefresh). A street's surface (sf)
 // can instead be brick or cobblestone with real relief (ST_SURF, mainland.js)
-const ST={grp:null,curb:0.15,top:0.17,lift:0.035,gut:0.4,joint:1.524,box:null};
+const ST={grp:null,curb:0.15,top:0.17,lift:0.035,gut:0.4,joint:1.524,box:null,edge:0.2,brick:0.092,gap:0.01};
+// the border course's bricks (or setts) for surface f: a few shades round the paving's own colour, so the row isn't uniform
+function stEdgeMats(f){const d=ST_SURF[f];if(d.em)return d.em;const c=d.c,k=f===2||f===3?[0.92,1.0,1.08,0.85]:[0.82,0.95,1.05,0.75];
+  return d.em=k.map((v,i)=>{const m=shopStd(0xffffff,0,0.85);m.color.setRGB(Math.min(1,c[0]*v*(i%2?1.04:1)),Math.min(1,c[1]*v),Math.min(1,c[2]*v*(i%2?0.96:1)));return m})}
 // the paved roads' centreline segments, each with whether its ends are the road's ends (cut flat there, not rounded)
 function stSegs(){const L=[];for(const r of ROADS){if(!r.pv||r.pts.length<2)continue;const n=r.pts.length,cl=stClosed(r);
     for(let k=0;k<n-1;k++){const a=r.pts[k],b=r.pts[k+1],dx=b[0]-a[0],dz=b[1]-a[1],l2=dx*dx+dz*dz;if(l2<1e-6)continue;
@@ -58,6 +61,21 @@ function streetsBuild(){const G=baseHeight;
       if(r.cb){const [g0,g1]=lo(hw-ST.gut,hw);band(conc,g0,lift+0.004,g1,lift+0.004,0,true,false);
         const [c0,c1]=lo(hw,hw+ST.curb);band(conc,c0,top,c1,top,0,true,!sw);band(conc,S(hw),lift,S(hw),top,-s,true,false);
         if(!sw)band(conc,S(hw+ST.curb),top,S(hw+ST.curb),-0.05,s,true,false)}
+      // no curb and no sidewalk: the paving's own edge stands out of the soil, and a brick or cobble street ends in a
+      // border course of whole bricks (setts on cobblestone) laid across the edge, each its own shade, a joint between
+      if(!r.cb&&!sw){if(sd){const bt=lift+0.012,bw=ST.edge,[m0,m1]=lo(hw-bw,hw);band(joint,m0,lift+0.004,m1,lift+0.004,0,true,false);band(joint,S(hw-0.004),lift+0.004,S(hw-0.004),-0.05,s,true,false);
+          const bm=stEdgeMats(r.sf);
+          for(let i=0;i<F.n-1;i++){const len=F.N[i][4],on=[F.N[i][0]*s,0,F.N[i][1]*s],P=[];
+            // a quad p q o w (p q one edge, o w the other) facing n
+            const quad=(p,q,o,w,n)=>{const e1=[q[0]-p[0],q[1]-p[1],q[2]-p[2]],e2=[o[0]-p[0],o[1]-p[1],o[2]-p[2]],
+                c=[e1[1]*e2[2]-e1[2]*e2[1],e1[2]*e2[0]-e1[0]*e2[2],e1[0]*e2[1]-e1[1]*e2[0]];
+                if(c[0]*n[0]+c[1]*n[1]+c[2]*n[2]<0)P.push(...p,...o,...q,...o,...w,...q);else P.push(...p,...q,...o,...o,...q,...w)};
+            for(let u=ST.gap/2;u+ST.brick<=len;u+=ST.brick+ST.gap){const t0=u/len,t1=(u+ST.brick)/len,[mx,mz]=at(i,(t0+t1)/2,S(hw-bw/2));
+              if(stIn(L,r,mx,mz,0.05))continue;const v=(t,o,y)=>{const [x,z]=at(i,t,S(o));return [x,G(x,z)+y,z]};
+              const A=v(t0,hw-bw,bt),B=v(t0,hw,bt),C=v(t1,hw-bw,bt),D=v(t1,hw,bt),E=v(t0,hw,-0.05),Fq=v(t1,hw,-0.05);P.length=0;
+              quad(A,C,B,D,[0,1,0]);quad(B,D,E,Fq,on);
+              const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(P.slice(),3));K.put(bm[Math.floor(hash(Math.round(mx*13),Math.round(mz*13))*bm.length)],g)}}}
+        else band(asph,S(hw),lift,S(hw),-0.05,s,true,false)}
       if(sw>0){const [w0,w1]=lo(a,b);band(walk,w0,top,w1,top,0,true,top>0.08);band(conc,S(b),top,S(b),-0.05,s,true,false);
         if(!r.cb)band(conc,S(a),lift,S(a),top,-s,true,false);
         // the joints scored across the sidewalk every 5 ft

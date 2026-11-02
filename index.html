@@ -237,6 +237,7 @@
       <span class="edshape row" data-for="paint" role="group" aria-label="Brush shape"><button class="sm" data-s="round" aria-pressed="true">Round</button><button class="sm" data-s="sq" aria-pressed="false">Square</button></span>
       <span class="ededge row" data-for="paint" role="group" aria-label="Brush edge"><button class="sm" data-e="hard" aria-pressed="true">Hard edge</button><button class="sm" data-e="soft" aria-pressed="false">Soft edge</button></span>
       <span id="edSoftOpt" class="edopt" data-for="paint" hidden><label for="edSoft">Softness</label><input id="edSoft" type="range" min="10" max="100" step="5"><output id="edSoftV"></output></span>
+      <span id="edRiseOpt" class="edopt" data-for="paint"><label for="edRise">Raise / inset</label><input id="edRise" type="range" min="-6" max="6" step="1"><output id="edRiseV"></output></span>
       <span class="eddug row" data-for="paint" role="group" aria-label="Dug ground"><button class="sm" data-k="level" aria-pressed="true">Level dug ground</button><button class="sm" data-k="keep" aria-pressed="false">Keep dug shape</button></span>
       <span class="edpicked" data-for="paint dirt grass tall notall"><b id="edMatV"></b></span>
       <span class="edpicked" data-for="add">Adding <b id="edKindV"></b></span>
@@ -478,6 +479,7 @@
 <script defer src="js/rain.js"></script>
 <script defer src="js/storm.js"></script>
 <script defer src="js/digtiles.js"></script>
+<script defer src="js/raised.js"></script>
 <script defer src="js/post.js"></script>
 <script defer src="js/models.js"></script>
 <script defer src="js/gfx.js"></script>
