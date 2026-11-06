@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-06T22:46:00Z",
+ "updated": "2026-11-06T23:11:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -108,9 +108,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-06",
-   "dh": 30,
-   "act": 1.5,
-   "versions": 4
+   "dh": 32,
+   "act": 2,
+   "versions": 5
   }
  ],
  "extra": [
@@ -3225,6 +3225,15 @@ window.EFFORT = {
    "tris": 5860120,
    "chars": 2218782,
    "what": "Screen areas and job card (HUD step 4): your gauges are back as a job card on the left (bucket, trench, truck load, lawn), messages and notices stack in one place at the top, a chip by the menu says what you're in and the time, UI size scales everything evenly, and the frame rate is off unless Graphics turns it on"
+  },
+  {
+   "v": 346,
+   "asked": "2026-11-06T16:55:00-06:00",
+   "live": "2026-11-06T17:11:34-06:00",
+   "dh": 2,
+   "tris": 5853911,
+   "chars": 2219649,
+   "what": "Cleaner start screen: the map fills the screen with the title over it and the buttons on a strip below (no longer cut off on phones), no build-time link, and square corners on every button, card and panel"
   }
  ]
 };
