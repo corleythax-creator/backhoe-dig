@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-06T23:11:00Z",
+ "updated": "2026-11-06T23:26:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -108,9 +108,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-06",
-   "dh": 32,
+   "dh": 38,
    "act": 2,
-   "versions": 5
+   "versions": 6
   }
  ],
  "extra": [
@@ -3234,6 +3234,15 @@ window.EFFORT = {
    "tris": 5853911,
    "chars": 2219649,
    "what": "Cleaner start screen: the map fills the screen with the title over it and the buttons on a strip below (no longer cut off on phones), no build-time link, and square corners on every button, card and panel"
+  },
+  {
+   "v": 347,
+   "asked": "2026-11-06T17:05:00-06:00",
+   "live": "2026-11-06T17:26:56-06:00",
+   "dh": 6,
+   "tris": 7410882,
+   "chars": 2220444,
+   "what": "Machines list (HUD step 5): the top bar's Machines button lists every machine (dozer, loader, semi, backhoe, pickups, carts, bikes, boats and the rest) nearest first with its distance, and picking one puts you in its seat; Tab and LB/RB step through the machines nearby; the excavator switch reads Tracks / Arm (Wheel / Hoe in the backhoe)"
   }
  ]
 };

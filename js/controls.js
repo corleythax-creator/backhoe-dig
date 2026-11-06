@@ -37,9 +37,9 @@ const SL=makeStick($('#stickL')),SR=makeStick($('#stickR'));
 const keys={};
 // keyboard: every key runs the action it is bound to in keys.js (standard: WASD/arrows the left stick, IJKL the right stick);
 // the sticks' captions show the keys once one is pressed
-const MODES=['dig','drive','truck','mow','skid','walk'];let kbUsed=false;
-const KEY_RUN={dig:()=>setMode('dig'),drive:()=>setMode('drive'),exSwap:()=>exSwap(),bhOut:()=>bhOut(),truck:()=>setMode('truck'),mow:()=>setMode('mow'),skid:()=>setMode('skid'),walk:()=>setMode('walk'),
-  nextMode:e=>setMode(MODES[(MODES.indexOf(mode)+(e&&e.shiftKey?MODES.length-1:1))%MODES.length]),prevMode:()=>setMode(MODES[(MODES.indexOf(mode)+MODES.length-1)%MODES.length]),
+let kbUsed=false;
+const KEY_RUN={dig:()=>{rideIn('ex');setMode('dig')},drive:()=>{rideIn('ex');setMode('drive')},exSwap:()=>exSwap(),bhOut:()=>bhOut(),truck:()=>rideIn('truck'),mow:()=>rideIn('mow'),skid:()=>rideIn('skid'),walk:()=>rideIn('walk'),
+  nextMode:e=>machCycle(e&&e.shiftKey?-1:1),prevMode:()=>machCycle(-1),
   stats:()=>showStats(statBox.hidden),heat:()=>{if(!heat.on)setHeat(true);else if(heat.mode!==HEAT_MODES[HEAT_MODES.length-1][0])heatNext();else setHeat(false)},
   enter:()=>useAct(),jump:()=>walkJump(),plant:()=>plantHere(),trim:()=>trimSet(!trim.on),trimBump:()=>trimBump(),gun:()=>gunEquip(!gun.eq),gunShoot:()=>gunFire(),gunReload:()=>gunReload(),talk:()=>talkOpen(),gunNext:()=>gunNext(),plantKind:()=>plantNext(),carry:e=>{if(blkOn&&e&&keyBind.blkWhat.includes(e.code))return;pbAct()},blocks:()=>setBlocks(!blkOn),place:()=>placeBlock(),lift:()=>removeBlock(),size:()=>blkCube(1),blkTurn:()=>blkTurn(),blkLock:()=>toast(say('blkSnap',{snap:blkLockNext()}),'',1400),blkFar:()=>blkReachBy(2),blkNear:()=>blkReachBy(-2),sizeDown:()=>blkCube(-1),
   blkWhat:e=>{if(!blkOn){if(!(e&&keyBind.carry.includes(e.code)))toast(say('blkIsOff'),'tip',1800);return}const ks=['',...Object.keys(PROPS)];setBlkThing(ks[(ks.indexOf(blkThing)+1)%ks.length]);toast(say('blkWhat',{what:blkThing?PROPS[blkThing].n:'Block'}),'',1200)},
@@ -198,13 +198,12 @@ function fpTick(dt){if(fpl.home){const k=Math.min(1,dt*8);fpl.yaw-=fpl.yaw*k;fpl
 const aimEl=$('#aim'),bigEl=$('#bigmap'),menuEl=$('#menu');
 
 function setCaps(){const m=mode,two=(a,b)=>`${keyLabel(a)} ${keyLabel(b)}`,lh=kbUsed?two('lLeft','lRight'):'◀ ▶',lv=kbUsed?two('lUp','lDown'):'▲ ▼',rh=kbUsed?two('rLeft','rRight'):'◀ ▶',rv=kbUsed?two('rUp','rDown'):'▲ ▼';
-  for(const b of document.querySelectorAll('.seg button'))b.dataset.k=keyLabel(b.id.slice(4).toLowerCase());
   const sv={lh,lv,rh,rv},cap=id=>{const h=say(id,sv,true);return h.includes('<br>')?h:h+'<br>&nbsp;'},kb=m==='mow'&&kbUsed?'Kb':'';
   if(m==='heavy'){const k=hvCur().k+(hvCur().hoe?'Hoe':'');$('#capL').innerHTML=cap('capL_'+k);$('#capR').innerHTML=cap('capR_'+k);return}
   $('#capL').innerHTML=cap('capL_'+(m==='dig'||m==='drive'||m==='mow'||m==='walk'||m==='skid'||m==='boat'||m==='bike'?m+kb:'truck'));
   $('#capR').innerHTML=cap('capR_'+(m==='truck'||m==='mow'||m==='walk'||m==='skid'||m==='boat'||m==='bike'?m+kb:'dig'));}
 // the excavator's Drive / Dig switch (over the right stick while you are in it): flips between driving the tracks and
-// running the arm; exLast is the one you were last in, which Excavator in the Drive list goes back to
+// running the arm; exLast is the one you were last in, which the excavator's Tracks / Arm switch starts from
 let exLast='dig';
 // (in the backhoe it swivels the seat between the wheel and the hoe, backhoe.js)
 const bhIn=()=>mode==='heavy'&&!!hvCur().K.hoe;
@@ -213,8 +212,8 @@ function setMode(m){if(m===mode)return;
   // no room to climb out: stay in the machine, as Get out does (seatToggle), rather than turn up where you got in
   if(m==='walk'&&wk.inside&&!wkPlaceOut(wk.inside)){toast(say('noRoomOut'));return}
   mode=m;setTurnSens();if(blkOn)setBlocks(false);const ex=m==='dig'||m==='drive';if(ex)exLast=m;$('#exSwitch').hidden=!ex&&!bhIn();
-  $('#exDrive').setAttribute('aria-pressed',m==='drive');$('#exDig').setAttribute('aria-pressed',m==='dig');bhSwitch();$('#modeDig').setAttribute('aria-pressed',ex);
-  for(const [id,k] of [['#modeDrive','drive'],['#modeTruck','truck'],['#modeMow','mow'],['#modeSkid','skid'],['#modeWalk','walk']])$(id).setAttribute('aria-pressed',m===k);
+  $('#exDrive').setAttribute('aria-pressed',m==='drive');$('#exDig').setAttribute('aria-pressed',m==='dig');
+  {const bh=!ex&&bhIn();$('#exDrive').textContent=bh?'Wheel':'Tracks';$('#exDig').textContent=bh?'Hoe':'Arm'}bhSwitch();
   if(m!=='walk'){setSprint(false);trimSet(false)}
   // switching to Walk from a machine you climbed into sets you down beside it
   if(m==='walk'){wk.inside=null;wk.view=wk.yaw}
@@ -224,15 +223,33 @@ function setMode(m){if(m===mode)return;
   if(m==='bike')toast(say('bikeTip'),'tip',4200);
   if(m==='heavy')toast(say(hvCur().k+'Tip'),'tip',5200);
   if(m==='walk')toast(say(padUsed?'walkPad':kbUsed?'walkKb':'walkTouch'),'tip',3800)}
-$('#modeDig').onclick=()=>setMode(exLast);$('#exDrive').onclick=()=>{if(mode==='dig'||bhIn()&&hvCur().hoe)exSwap()};$('#exDig').onclick=()=>{if(mode==='drive'||bhIn()&&!hvCur().hoe)exSwap()}; $('#modeDrive').onclick=()=>setMode('drive'); $('#modeTruck').onclick=()=>setMode('truck'); $('#modeMow').onclick=()=>setMode('mow'); $('#modeSkid').onclick=()=>setMode('skid'); $('#modeWalk').onclick=()=>setMode('walk');
+$('#exDrive').onclick=()=>{if(mode==='dig'||bhIn()&&hvCur().hoe)exSwap()};$('#exDig').onclick=()=>{if(mode==='drive'||bhIn()&&!hvCur().hoe)exSwap()};
 // Chase, then Cab, then Orbit, then back to Chase
 function camSet(m,free){camMode=m;camFree=!!free&&m==='chase';camBase=null;fpReset();
   if(!camFree){camDist=clamp(camDist,5,22);orbitPitch=clamp(orbitPitch,0.08,1.3)}$('#camBtn').dataset.cam=camMode==='cab'?'cab':camFree?'orbit':'chase';
   if(camFree&&!camSet.told){camSet.told=true;toast(say('orbitTip'),'tip',4200)}}
-// Drive (top right) drops the machine list; picking one, or tapping the scene, closes it
-function showCtl(on){$('#ctlMenu').hidden=!on;$('#ctlBtn').setAttribute('aria-expanded',on)}
+// Machines (top right) drops the list of every machine you can climb into, nearest first, and On foot; picking one puts
+// you in its seat wherever it is, as walking up and tapping Use would. Picking one, or tapping the scene, closes it
+const MACH_KEY={ex:'dig',truck:'truck',mow:'mow',skid:'skid'};
+// where you are: the machine you sit in, or you on foot
+function machFrom(){const R=wk.inside&&WK_RIDES[wk.inside];return R?R.o:wk}
+function machFt(m){const f=m/FT;return f<1000?Math.round(f/10)*10+' ft':(f/5280).toFixed(1)+' mi'}
+// every machine, nearest first: [ride key, its name, metres away]
+function machList(){const o=machFrom();return Object.keys(WK_RIDES).map(k=>{const R=WK_RIDES[k];try{const p=R.o;return [k,R.n,Math.hypot(p.x-o.x,p.z-o.z)]}catch(e){return [k,R.n,NaN]}}).filter(r=>isFinite(r[2])).sort((a,b)=>a[2]-b[2])}
+function machDraw(){const cap=t=>t.charAt(0).toUpperCase()+t.slice(1),cur=wk.inside||(mode==='walk'?'walk':'');
+  let h=`<button data-r="walk" data-k="${keyLabel('walk')}" aria-pressed="${cur==='walk'}"><span>On foot</span></button>`;
+  for(const [k,n,d] of machList())h+=`<button data-r="${k}"${MACH_KEY[k]?` data-k="${keyLabel(MACH_KEY[k])}"`:''} aria-pressed="${cur===k}"><span>${cap(n)}</span><small>${cur===k?'You are in it':machFt(d)}</small></button>`;
+  $('#ctlMenu').innerHTML=h}
+// climb into machine k from wherever you are (out of the one you were in), or 'walk' to get out
+function rideIn(k){if(k==='walk'){if(wk.inside)seatToggle();else if(mode!=='walk')setMode('walk');return}
+  const R=WK_RIDES[k];if(!R||wk.inside===k)return;
+  wk.inside=k;walker.visible=false;if(R.pick)R.pick();setMode(R.m);toast(say('inMachine',{machine:R.n,key:kbUsed?keyLabel('enter'):padUsed?'B':say('useOut')}),'tip',2600)}
+// Tab, LB / RB: the next machine within 120 m (in the list's own order, so it steps round them), then On foot
+function machCycle(dir){const o=machFrom(),near=Object.keys(WK_RIDES).filter(k=>{try{const p=WK_RIDES[k].o;return k===wk.inside||Math.hypot(p.x-o.x,p.z-o.z)<120}catch(e){return false}}),list=['walk',...near],
+    i=Math.max(0,list.indexOf(wk.inside||'walk'));rideIn(list[(i+dir+list.length)%list.length])}
+function showCtl(on){if(on)machDraw();$('#ctlMenu').hidden=!on;$('#ctlBtn').setAttribute('aria-expanded',on)}
 $('#ctlBtn').onclick=()=>{showCtl($('#ctlMenu').hidden);showMenu(false)};
-$('#ctlMenu').addEventListener('click',e=>{if(e.target.closest('button'))showCtl(false)});
+$('#ctlMenu').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;showCtl(false);rideIn(b.dataset.r)});
 $('#ctrlsBtn').onclick=()=>{showCtrls(true);showCtl(false);showMenu(false)};
 let resetArm=0;
 $('#resetBtn').onclick=()=>{const b=$('#resetBtn');
