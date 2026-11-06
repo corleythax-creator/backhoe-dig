@@ -27,9 +27,9 @@ const GUI_FONTS=['"Barlow Condensed","Arial Narrow",system-ui,sans-serif','"Barl
   '"Arial Narrow",Arial,sans-serif','Verdana,sans-serif','"Trebuchet MS",sans-serif','Georgia,serif','Impact,"Arial Black",sans-serif','"Courier New",monospace'];
 // parts that are usually hidden until the game needs them, shown on request so they can be styled
 const GUI_PEEK=[['#menu','Menu'],['#help','Start card'],['#blkBar','Blocks bar'],['#actDock','Action buttons'],['#status','Job card'],['#seatBtn','Use'],['#pumpBtn','Pump'],['#wipeBtn','Wipers'],
-  ['#boxBtn','Hook box'],['#cplBtn','Coupler'],['#gripBtn','Thumb grip'],['#lawnRow','Lawn gauge'],['#lawnChip','Lawn patch gauge'],['#bucketChip','Bucket gauge'],['#heatKey','Heatmap key'],['#updBtn','Update button'],['#keysBox','Keys panel'],['#ctrlsBox','Controls panel'],['#ctlMenu','Drive list'],['#gfxBox','Graphics panel']];
+  ['#boxBtn','Hook box'],['#cplBtn','Coupler'],['#gripBtn','Thumb grip'],['#lawnRow','Lawn gauge'],['#lawnChip','Lawn patch gauge'],['#bucketChip','Bucket gauge'],['#heatKey','Heatmap key'],['#updBtn','Update button'],['#keysBox','Keys panel'],['#ctrlsBox','Controls panel'],['#ctlMenu','Machines list'],['#gfxBox','Graphics panel']];
 // ready-made groups (selector, name), picked from the Groups tab and then edited like any part
-const GUI_GROUPS=[['#hud button','Every button on the screen'],['.tbar button','Top bar buttons'],['#ctlMenu button','Machine buttons'],['.bbar button','Bottom bar buttons'],
+const GUI_GROUPS=[['#hud button','Every button on the screen'],['.tbar button','Top bar buttons'],['#ctlMenu button','Machines list'],['.bbar button','Bottom bar buttons'],
   ['#menu button','Menu buttons'],['#blkBar button','Blocks bar buttons'],['.tbar, .bbar','The two bars'],['.srow','Gauges'],['.lbl','Gauge names'],
   ['.val','Gauge numbers'],['.sub','Gauge detail lines'],['.bar','Gauge meters'],['.stick','Sticks'],['.knob','Stick knobs'],['.cap','Stick captions'],
   ['#mini','Minimap'],['.card','Cards and panels'],['#toast span','Messages'],['#hud','The whole screen layer']];
