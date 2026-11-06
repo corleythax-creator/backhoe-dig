@@ -2,6 +2,10 @@
 
 Every version of Corley's Island, newest first, grouped by the day it went live (Central time). Made from `data/effort.js` by `tools/changelog.py`; don't edit it by hand. [Play any old version](https://corleys-island.vercel.app/versions/) · [Build log with charts](https://corleys-island.vercel.app/build.html)
 
+## Friday, November 6, 2026
+
+- **v342** (3:55 PM) Screen fixes (HUD step 1): the pistol card takes taps and sits under the minimap, gun overlays draw over the bars, T carries or picks what to set down (not both), no more parts on top of each other, Esc and controller B close the menu, machine list and Sync
+
 ## Sunday, November 1, 2026
 
 - **v341** (8:15 PM) Block keys and pad buttons no longer turn Blocks on or set a block by accident; changing mode or machine puts Blocks away.

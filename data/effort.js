@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-02T02:15:00Z",
+ "updated": "2026-11-06T21:55:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -105,6 +105,12 @@ window.EFFORT = {
    "dh": 48.25,
    "act": 7.5,
    "versions": 21
+  },
+  {
+   "d": "2026-11-06",
+   "dh": 4,
+   "act": 0.5,
+   "versions": 1
   }
  ],
  "extra": [
@@ -3183,6 +3189,15 @@ window.EFFORT = {
    "tris": 5858857,
    "chars": 2209357,
    "what": "Block keys and pad buttons no longer turn Blocks on or set a block by accident; changing mode or machine puts Blocks away."
+  },
+  {
+   "v": 342,
+   "asked": "2026-11-06T15:40:00-06:00",
+   "live": "2026-11-06T15:55:02-06:00",
+   "dh": 4,
+   "tris": 5853690,
+   "chars": 2210684,
+   "what": "Screen fixes (HUD step 1): the pistol card takes taps and sits under the minimap, gun overlays draw over the bars, T carries or picks what to set down (not both), no more parts on top of each other, Esc and controller B close the menu, machine list and Sync"
   }
  ]
 };
