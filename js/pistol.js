@@ -103,7 +103,7 @@ function gunTick(dt){gun.cool=Math.max(0,gun.cool-dt);gun.flash=Math.max(0,gun.f
   gunFxTick(dt);gunCsTick(dt);gunLightTick(dt);gunBulTick(dt);gunTrTick(dt);gunPoliceTick(dt);
   gun.dr=Math.min(1,gun.dr+dt/(gunW().long?0.7:0.5));gun.hol=Math.max(0,gun.hol-dt);if(gun.pmp>0)gun.pmp=gun.pmp>0.7?0:gun.pmp+dt;if(gun.bolt>0)gun.bolt=gun.bolt>0.8?0:gun.bolt+dt;if(gun.racked<GUN_SHOPS.length)gunRackFill();
   if(gun.shop&&(mode!=='walk'||Math.hypot(wk.x-gun.shop.x,wk.z-gun.shop.z)>3))gunShopClose();
-  const on=gunHas(),fp=on&&camMode==='cab';if(gun.on!==on){gun.on=on;$('#fireBtn').hidden=!on;$('#reloadBtn').hidden=!on;$('#gunHud').hidden=!on;if(on)gunHudDraw()}if(gun.fp!==fp){gun.fp=fp;$('#gunCross').hidden=!fp}
+  const on=gunHas(),fp=on&&camMode==='cab';if(gun.on!==on){gun.on=on;$('#gunHud').hidden=!on;if(on)gunHudDraw()}if(gun.fp!==fp){gun.fp=fp;$('#gunCross').hidden=!fp}
   if(on&&!gun.told&&tf.on){gun.told=true;toast(say('gunTip',{}),'',4200)}
   if(!on){gun.aim=0;gun.rl=0;gun.trig=false;return}
   const W=gunW();if(W.auto&&(gun.trig||held('gunShoot'))&&gun.cool<=0)gunFire();

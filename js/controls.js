@@ -41,19 +41,19 @@ const MODES=['dig','drive','truck','mow','skid','walk'];let kbUsed=false;
 const KEY_RUN={dig:()=>setMode('dig'),drive:()=>setMode('drive'),exSwap:()=>exSwap(),bhOut:()=>bhOut(),truck:()=>setMode('truck'),mow:()=>setMode('mow'),skid:()=>setMode('skid'),walk:()=>setMode('walk'),
   nextMode:e=>setMode(MODES[(MODES.indexOf(mode)+(e&&e.shiftKey?MODES.length-1:1))%MODES.length]),prevMode:()=>setMode(MODES[(MODES.indexOf(mode)+MODES.length-1)%MODES.length]),
   stats:()=>showStats(statBox.hidden),heat:()=>{if(!heat.on)setHeat(true);else if(heat.mode!==HEAT_MODES[HEAT_MODES.length-1][0])heatNext();else setHeat(false)},
-  enter:()=>seatToggle(),jump:()=>walkJump(),plant:()=>plantHere(),trim:()=>trimSet(!trim.on),trimBump:()=>trimBump(),gun:()=>gunEquip(!gun.eq),gunShoot:()=>gunFire(),gunReload:()=>gunReload(),talk:()=>talkOpen(),gunNext:()=>gunNext(),plantKind:()=>plantNext(),carry:e=>{if(blkOn&&e&&keyBind.blkWhat.includes(e.code))return;pbAct()},blocks:()=>setBlocks(!blkOn),place:()=>placeBlock(),lift:()=>removeBlock(),size:()=>blkCube(1),blkTurn:()=>blkTurn(),blkLock:()=>toast(say('blkSnap',{snap:blkLockNext()}),'',1400),blkFar:()=>blkReachBy(2),blkNear:()=>blkReachBy(-2),sizeDown:()=>blkCube(-1),
+  enter:()=>useAct(),jump:()=>walkJump(),plant:()=>plantHere(),trim:()=>trimSet(!trim.on),trimBump:()=>trimBump(),gun:()=>gunEquip(!gun.eq),gunShoot:()=>gunFire(),gunReload:()=>gunReload(),talk:()=>talkOpen(),gunNext:()=>gunNext(),plantKind:()=>plantNext(),carry:e=>{if(blkOn&&e&&keyBind.blkWhat.includes(e.code))return;pbAct()},blocks:()=>setBlocks(!blkOn),place:()=>placeBlock(),lift:()=>removeBlock(),size:()=>blkCube(1),blkTurn:()=>blkTurn(),blkLock:()=>toast(say('blkSnap',{snap:blkLockNext()}),'',1400),blkFar:()=>blkReachBy(2),blkNear:()=>blkReachBy(-2),sizeDown:()=>blkCube(-1),
   blkWhat:e=>{if(!blkOn){if(!(e&&keyBind.carry.includes(e.code)))toast(say('blkIsOff'),'tip',1800);return}const ks=['',...Object.keys(PROPS)];setBlkThing(ks[(ks.indexOf(blkThing)+1)%ks.length]);toast(say('blkWhat',{what:blkThing?PROPS[blkThing].n:'Block'}),'',1200)},
   blkMat:()=>{let m=blkMat;do m=(m+1)%MAT_MAX;while(m&&!MAT_LIST[m-1]);setBlkMat(m);toast(say('blkMat',{mat:blkMatName(blkMat)}),'',1400)},
   box:()=>hookBox(),coupler:()=>cplAct(),grip:()=>cplGrip(),lookAhead:()=>{if(camMode==='cab')fpl.home=true;fpl.zt=1},pump:()=>setPump(!pumpOn),wipers:()=>setWipers(!wipeOn),cam:()=>{if(camMode==='cab')camSet('chase',true);else if(camFree)camSet('chase',false);else camSet('cab')},
   map:()=>toggleMap(),sound:()=>setSound(!sndCfg.on),help:()=>{help.hidden=!help.hidden},
-  back:()=>{if(!goBack()&&(mode==='walk'||wk.inside))seatToggle()}};
+  back:()=>{if(!goBack())useAct()}};
 // run an action: every key, on-screen button, controller button and VR button comes through here (keys.js KEY_ACTIONS)
 function act(id,e){const a=KEY_BY[id],f=KEY_RUN[id];if(!f||a&&a.can&&!a.can())return false;f(e);return true}
 // close whatever is open over the game (help, the map, the menu, the machine list, Sync); true if something was
 function goBack(){const open=!help.hidden||!$('#bigmap').hidden||!$('#menu').hidden||!$('#ctlMenu').hidden||!syncBox.hidden;
   help.hidden=true;toggleMap(false);showMenu(false);showCtl(false);if(!syncBox.hidden)showSync(false);return open}
 // each action's button (b in KEY_ACTIONS): the ones over the right stick and the gun card act on the press, the rest on a click
-for(const a of KEY_ACTIONS)if(a.b){const el=$(a.b);if(el.closest('#walkBtns,#gunHud'))el.addEventListener('pointerdown',e=>{e.preventDefault();act(a.id,e)});else el.addEventListener('click',e=>act(a.id,e))}
+for(const a of KEY_ACTIONS)if(a.b){const el=$(a.b);if(el.closest('#actDock,#gunHud'))el.addEventListener('pointerdown',e=>{e.preventDefault();act(a.id,e)});else el.addEventListener('click',e=>act(a.id,e))}
 addEventListener('keydown',e=>{const c=e.code;
   if((e.ctrlKey||e.metaKey||e.altKey)&&!/^(Control|Alt|Meta)/.test(c))return;
   if(c==='Escape'){goBack();return}
@@ -215,7 +215,7 @@ function setMode(m){if(m===mode)return;
   mode=m;setTurnSens();if(blkOn)setBlocks(false);const ex=m==='dig'||m==='drive';if(ex)exLast=m;$('#exSwitch').hidden=!ex&&!bhIn();
   $('#exDrive').setAttribute('aria-pressed',m==='drive');$('#exDig').setAttribute('aria-pressed',m==='dig');bhSwitch();$('#modeDig').setAttribute('aria-pressed',ex);
   for(const [id,k] of [['#modeDrive','drive'],['#modeTruck','truck'],['#modeMow','mow'],['#modeSkid','skid'],['#modeWalk','walk']])$(id).setAttribute('aria-pressed',m===k);
-  $('#walkBtns').hidden=m!=='walk';if(m!=='walk'){setSprint(false);trimSet(false)}
+  if(m!=='walk'){setSprint(false);trimSet(false)}
   // switching to Walk from a machine you climbed into sets you down beside it
   if(m==='walk'){wk.inside=null;wk.view=wk.yaw}
   setCaps();firstCam=true;fpReset();if(m==='mow'&&!lawn.startT&&!lawn.done)toast(say(kbUsed?'mowKb':'mowTouch'),'tip',3800);

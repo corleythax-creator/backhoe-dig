@@ -56,7 +56,7 @@ function trimSet(on){trim.pend=false;if(on&&(mode!=='walk'||wk.inside)){toast(sa
   // put away, it gets a full spool and fresh line
   if(!on){trim.spool=TU.trimSpool;trim.line=TU.trimLine;trim.worn=trim.empty=false}
   else{if(gun.eq)gunEquip(false,1);if(!(trim.spool>=0))trim.spool=TU.trimSpool;toast(say('trimOn',{line:trimIn(trim.line)}),'',3600);started()}
-  $('#trimBtn').setAttribute('aria-pressed',on);$('#bumpBtn').hidden=!on}
+  $('#trimBtn').setAttribute('aria-pressed',on)}
 // tap the head on the ground: line comes off the spool, the guard's blade trims it to length
 function trimBump(){if(!trim.on||mode!=='walk')return;
   if(trim.spool<=0.005){toast(say('trimEmpty',{}),'bad',2600);return}
@@ -84,7 +84,7 @@ function trimClips(n,x,y,z){for(let q=0;q<n;q++){const c=clips[clipHead];clipHea
   clipLive=true}
 // ---------- each frame (after updateWalker, before the worker's model takes his pose) ----------
 function trimTick(dt){
-  if(trim.pend&&mode==='walk'&&!wk.inside){trim.pend=false;trim.on=true;$('#trimBtn').setAttribute('aria-pressed',true);$('#bumpBtn').hidden=false}
+  if(trim.pend&&mode==='walk'&&!wk.inside){trim.pend=false;trim.on=true;$('#trimBtn').setAttribute('aria-pressed',true)}
   const show=trim.on&&mode==='walk'&&!wk.inside&&!wk.swim&&!bench.on;trimMdl.visible=show;
   trim.rev+=((show?1:0)-trim.rev)*Math.min(1,dt*(show?2.5:1.5));
   if(!show){trim.cutK=0;trimSnd(dt);return}

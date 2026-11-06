@@ -118,23 +118,25 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 .stick::after{top:50%;left:16%;right:16%;height:1.5px;margin-top:-.75px}
 .knob{position:absolute;left:50%;top:50%;width:40%;height:40%;margin:-20% 0 0 -20%;border-radius:50%;z-index:1;
   background:radial-gradient(circle at 50% 35%,#ffb066,var(--machine) 55%,#d96a0c);border:2px solid rgba(255,255,255,.55);box-shadow:0 4px 12px rgba(0,0,0,.4)}
-/* Get in over the left stick; Sprint and Jump over the right one in Walk mode (Sprint lights up while it is on) */
-#seatBtn,.walkbtns{position:absolute;bottom:100%;margin-bottom:12px;zoom:var(--cs)}
-#seatBtn{left:0;min-width:110px;height:46px;font-size:17px;border-radius:8px;background:var(--machine);color:#1c1309;border:0;box-shadow:var(--lift);white-space:nowrap}
-.walkbtns{right:0;display:flex;gap:8px}.walkbtns[hidden]{display:none}
+/* Use over the left stick; the action dock over the right one: the Drive / Dig switch, then what you can do now, wrapping
+   upward when More opens the rest (Sprint, the trimmer and the gun light up while they are on) */
+#seatBtn,.actdock{position:absolute;bottom:100%;margin-bottom:12px;zoom:var(--cs)}
+#seatBtn{left:0;min-width:120px;height:52px;font-size:19px;font-weight:700;border-radius:8px;background:var(--machine);color:#1c1309;border:0;box-shadow:var(--lift);white-space:nowrap}
+.actdock{right:0;display:flex;flex-wrap:wrap-reverse;justify-content:flex-end;align-items:center;gap:8px;width:max-content;max-width:min(560px,calc(50vw - 16px))}
+.actdock>button{height:46px;min-width:78px;padding:0 14px;font-size:17px;border-radius:8px;box-shadow:var(--lift);white-space:nowrap}
+.actdock .exswitch{position:static;margin:0}
+#moreBtn{background:var(--glass);color:var(--muted)}#moreBtn[aria-expanded="true"]{color:var(--ink)}
 /* the excavator's Drive / Dig switch over the right stick: the lit half is what the sticks run */
 .exswitch{position:absolute;bottom:100%;right:0;margin-bottom:12px;zoom:var(--cs);display:flex;border-radius:9px;padding:3px;background:var(--glass);border:1px solid var(--hud-line);box-shadow:var(--lift);pointer-events:auto}
 .exswitch[hidden]{display:none}
 .exswitch button{height:40px;min-width:76px;padding:0 14px;font-size:17px;border:0;border-radius:6px;background:transparent;color:var(--muted)}
 .exswitch button[aria-pressed="true"]{background:var(--machine);color:#1c1309}
-#jumpBtn,#sprintBtn,#plantBtn,#trimBtn,#bumpBtn,#bedBtn,#fireBtn,#gunBtn{height:46px;min-width:78px;padding:0 14px;font-size:17px;border-radius:8px;box-shadow:var(--lift)}
 #jumpBtn{background:var(--machine);color:#1c1309;border:0}
 #sprintBtn[aria-pressed="true"],#trimBtn[aria-pressed="true"],#gunBtn[aria-pressed="true"]{background:rgba(255,138,31,.2);color:var(--machine);border-color:var(--machine)}
 #fireBtn{background:rgba(190,40,30,.22);border-color:#d8483a;color:#ffd9d4}
 #gunCross{position:fixed;left:50%;top:50%;width:26px;height:26px;margin:-13px 0 0 -13px;pointer-events:none;z-index:5;border-radius:50%;border:2px solid rgba(255,255,255,.85);box-shadow:0 0 0 1px rgba(0,0,0,.45),inset 0 0 0 1px rgba(0,0,0,.45)}
 #gunCross::after{content:"";position:absolute;left:50%;top:50%;width:4px;height:4px;margin:-2px 0 0 -2px;border-radius:50%;background:#fff;box-shadow:0 0 0 1px rgba(0,0,0,.5)}
 #gunCross[hidden]{display:none}
-#reloadBtn{height:46px;min-width:78px;padding:0 14px;font-size:17px;border-radius:8px;box-shadow:var(--lift)}
 #gunHud{flex:none;pointer-events:auto;display:flex;flex-direction:column;align-items:flex-end;gap:2px;padding:8px 12px;border-radius:10px;background:rgba(0,0,0,.38);color:#fff;font-weight:700;text-shadow:0 1px 2px rgba(0,0,0,.7);cursor:pointer;user-select:none}
 #gunHud b{font-size:15px;letter-spacing:.08em;opacity:.85}#gunHud span{font-size:28px;font-variant-numeric:tabular-nums}#gunHud.low span{color:#ff8a6a}#gunHud[hidden]{display:none}
 #gunVit{position:fixed;left:50%;top:calc(env(safe-area-inset-top,0px) + 70px);transform:translateX(-50%);z-index:6;display:flex;flex-direction:column;align-items:center;gap:4px;pointer-events:none}
@@ -574,7 +576,7 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
    Sprint, Jump) sit lower and smaller over the key captions */
 .nostk .stick{display:none}
 .nostk .sticks{padding-bottom:4px}
-.nostk #seatBtn,.nostk #jumpBtn,.nostk #sprintBtn,.nostk #plantBtn,.nostk #trimBtn,.nostk #bumpBtn,.nostk #bedBtn,.nostk #fireBtn,.nostk #reloadBtn,.nostk #gunBtn{height:36px;min-width:0;font-size:15px;box-shadow:none}
+.nostk #seatBtn,.nostk .actdock>button{height:36px;min-width:0;font-size:15px;box-shadow:none}
 .nostk .exswitch button{height:32px;min-width:60px;font-size:15px}
 .nostk .tbar button{height:38px}
 .nostk #menuBtn{width:38px}

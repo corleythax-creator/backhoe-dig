@@ -136,8 +136,9 @@ function talkTick(dt){
   const u=talkUI(),now=performance.now()/1000,foot=mode==='walk'&&!wk.inside;
   if((TALK.t+=dt)>0.25){talkLook(TALK.t);TALK.t=0}
   if(TALK.with)talkFace(TALK.with,1);
-  const chip=u.d.querySelector('#talkChip'),p=foot&&(TALK.with||TALK.near);
-  u.d.hidden=!p;if(p)chip.textContent=TALK.with?say('tkWith',{name:talkName(p)}):say(PHONE?'tkChipPhone':'tkChip',{name:talkName(p)});
+  const chip=u.d.querySelector('#talkChip'),p=foot&&TALK.with;
+  // near someone, the Use button offers the talk (ctx.js); while talking, the chip says to whom
+  u.d.hidden=!p;if(p)chip.textContent=say('tkWith',{name:talkName(p)});
   // the lines over their heads
   const r=renderer.domElement.getBoundingClientRect();
   for(const [q,b] of TALK.bub){if(!tf.people.includes(q)||now>b.until+1){b.el.remove();TALK.bub.delete(q);continue}

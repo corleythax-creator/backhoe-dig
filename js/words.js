@@ -21,6 +21,8 @@ const WORDS=[
   ['exDriving','Machines','Driving: the left stick moves the tracks. Tap Dig or [exSwap] to run the arm.','The excavator switched to Drive'],
   ['exDigging','Machines','Digging: the sticks run the arm. Tap Drive or [exSwap] to move.','The excavator switched to Dig'],
   ['inMachine','Machines','In the {machine}. {key} to climb out.','{machine}: excavator, dump truck…; {key}: the get out key or button'],
+  ['useIn','Machines','Get in'],['useOut','Machines','Get out'],['useTalk','Town: talk','Talk to {name}','{name}: the townsperson nearest you'],
+  ['ctxMore','Other','More'],['ctxLess','Other','Less'],
   ['getInFar','Machines','Walk up to the excavator, the truck, the mower, a boat or one of Dexter\'s machines to get in.'],['noRoomOut','Machines','No room to climb out here. Move the machine a little.'],
   ['bedUp','Machines','Bed is up. Lower it to drive faster.'],['truckFirst','Machines','Dirt in the truck.'],
   ['truckFull','Machines','Truck full. Tap Truck, drive it to the spoil yard north of the dig and raise the bed.'],

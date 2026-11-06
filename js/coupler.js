@@ -150,10 +150,11 @@ function cplTick(dt){
     deposit(tip.x+Math.cos(cpl.spoilA)*R,tip.z+Math.sin(cpl.spoilA)*R,cpl.spoil,cpl.spoilC,cpl.spoilM,0.6,0);cpl.spoil=0}
   cplUI()}
 const cplBtn=$('#cplBtn'),gripBtn=$('#gripBtn');
+// cpl.ui and cpl.grip say whether its two buttons apply (ctx.js shows them); this keeps their words
 function cplUI(){const dig=mode==='dig'&&!bench.on,near=dig?cplNear():null,show=dig&&(!!near||cpl.fit!=='none'&&cplLow());
-  if(cplBtn.hidden===show)cplBtn.hidden=!show;
+  cpl.ui=show;
   if(show){const t=cpl.fit!=='none'?'Set down '+CPL_NAME[cpl.fit].toLowerCase():'Pick up '+CPL_NAME[near].toLowerCase();if(cplBtn.textContent!==t)cplBtn.textContent=t}
-  const g=dig&&cpl.fit==='thumb';if(gripBtn.hidden===g)gripBtn.hidden=!g;
+  const g=cpl.grip=dig&&cpl.fit==='thumb';
   if(g){const t=cpl.held?'Let go':'Grip';if(gripBtn.textContent!==t){gripBtn.textContent=t;gripBtn.setAttribute('aria-pressed',!!cpl.held)}}}
 // its button runs it through act (keys.js b, controls.js)
 // saved in bhd_rigs: which is on, and where each of the others lies
