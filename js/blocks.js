@@ -215,11 +215,9 @@ function blkTick(dt){
     blkGhost.position.set(p.x,p.y+p.h/2+0.005,p.z);blkGhost.scale.set(p.w+0.01,p.h+0.01,p.d+0.01);ghostFill.color.setHex(c);ghostLine.color.setHex(c)}
   if(blkOn&&blkReachEl.hidden===blkFP()){blkUI();
     if(blkFP()&&!blkFPTold){blkFPTold=true;toast(say('blkFP'),'tip',4200)}}}
-$('#blkBtn').onclick=()=>setBlocks(!blkOn);
-$('#blkPlace').onclick=placeBlock;$('#blkRemove').onclick=removeBlock;$('#blkTurn').onclick=blkTurn;
-document.querySelectorAll('#blkBar .bstep button').forEach(b=>b.onclick=()=>{const k=b.parentNode.dataset.k,s=+b.dataset.d;
+// its button runs it through act (keys.js b, controls.js)
+document.querySelectorAll('#blkBar .bstep button[data-d]').forEach(b=>b.onclick=()=>{const k=b.parentNode.dataset.k,s=+b.dataset.d;
   if(k==='reach')blkReachBy(s*2);else if(k==='grid'){blkGrid=BLK_GRIDS[clamp(BLK_GRIDS.indexOf(blkGrid)+s,0,BLK_GRIDS.length-1)];blkSnapSave();blkUI()}else blkStepDim(k,s)});
-$('#blkLock').onclick=blkLockNext;
 // the material list: plain concrete, then the library by group
 // (made again when the owner's own textures arrive, ownmat.js)
 function blkMatOpts(){const s=$('#blkMat');s.textContent='';s.add(new Option('Concrete (plain)',0));

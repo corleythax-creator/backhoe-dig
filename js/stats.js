@@ -221,7 +221,7 @@ let statFillT=0;
 function showStats(on){statBox.hidden=!on;clearInterval(statFillT);
   if(on){statFill();$('#treeGuide').innerHTML=treeGuideHtml();statPanelBtns();heatDirty=true;heat.t=0;heatTick(0);statFillT=setInterval(statFill,1000)}}
 $('#statsBtn').onclick=()=>{showStats(true);showMenu(false)};
-$('#statsTop').onclick=()=>showStats(statBox.hidden);
+// its button runs it through act (keys.js b, controls.js)
 $('#statDone').onclick=()=>showStats(false);
 $('#heatOn').onclick=()=>setHeat(!heat.on);
 document.querySelectorAll('#statHeat [data-h]').forEach(b=>b.onclick=()=>setHeat(heat.on,b.dataset.h));

@@ -39,22 +39,31 @@ const keys={};
 // the sticks' captions show the keys once one is pressed
 const MODES=['dig','drive','truck','mow','skid','walk'];let kbUsed=false;
 const KEY_RUN={dig:()=>setMode('dig'),drive:()=>setMode('drive'),exSwap:()=>exSwap(),bhOut:()=>bhOut(),truck:()=>setMode('truck'),mow:()=>setMode('mow'),skid:()=>setMode('skid'),walk:()=>setMode('walk'),
-  nextMode:e=>setMode(MODES[(MODES.indexOf(mode)+(e.shiftKey?MODES.length-1:1))%MODES.length]),
+  nextMode:e=>setMode(MODES[(MODES.indexOf(mode)+(e&&e.shiftKey?MODES.length-1:1))%MODES.length]),prevMode:()=>setMode(MODES[(MODES.indexOf(mode)+MODES.length-1)%MODES.length]),
   stats:()=>showStats(statBox.hidden),heat:()=>{if(!heat.on)setHeat(true);else if(heat.mode!==HEAT_MODES[HEAT_MODES.length-1][0])heatNext();else setHeat(false)},
-  enter:()=>seatToggle(),jump:()=>walkJump(),plant:()=>plantHere(),trim:()=>trimSet(!trim.on),trimBump:()=>trimBump(),gun:()=>gunEquip(!gun.eq),gunShoot:()=>gunFire(),gunReload:()=>gunReload(),talk:()=>talkOpen(),gunNext:()=>gunNext(),plantKind:()=>plantNext(),carry:e=>{if(blkOn&&e&&keyBind.blkWhat.includes(e.code))return;pbAct()},blocks:()=>setBlocks(!blkOn),place:()=>placeBlock(),lift:()=>removeBlock(),size:()=>blkCube(1),blkTurn:()=>blkTurn(),blkLock:()=>{if(blkOn)toast(say('blkSnap',{snap:blkLockNext()}),'',1400)},blkFar:()=>{if(blkOn)blkReachBy(2)},blkNear:()=>{if(blkOn)blkReachBy(-2)},
+  enter:()=>seatToggle(),jump:()=>walkJump(),plant:()=>plantHere(),trim:()=>trimSet(!trim.on),trimBump:()=>trimBump(),gun:()=>gunEquip(!gun.eq),gunShoot:()=>gunFire(),gunReload:()=>gunReload(),talk:()=>talkOpen(),gunNext:()=>gunNext(),plantKind:()=>plantNext(),carry:e=>{if(blkOn&&e&&keyBind.blkWhat.includes(e.code))return;pbAct()},blocks:()=>setBlocks(!blkOn),place:()=>placeBlock(),lift:()=>removeBlock(),size:()=>blkCube(1),blkTurn:()=>blkTurn(),blkLock:()=>toast(say('blkSnap',{snap:blkLockNext()}),'',1400),blkFar:()=>blkReachBy(2),blkNear:()=>blkReachBy(-2),sizeDown:()=>blkCube(-1),
   blkWhat:e=>{if(!blkOn){if(!(e&&keyBind.carry.includes(e.code)))toast(say('blkIsOff'),'tip',1800);return}const ks=['',...Object.keys(PROPS)];setBlkThing(ks[(ks.indexOf(blkThing)+1)%ks.length]);toast(say('blkWhat',{what:blkThing?PROPS[blkThing].n:'Block'}),'',1200)},
   blkMat:()=>{let m=blkMat;do m=(m+1)%MAT_MAX;while(m&&!MAT_LIST[m-1]);setBlkMat(m);toast(say('blkMat',{mat:blkMatName(blkMat)}),'',1400)},
-  box:()=>hookBox(),coupler:()=>cplAct(),grip:()=>cplGrip(),lookAhead:()=>{if(camMode==='cab')fpl.home=true;fpl.zt=1},pump:()=>setPump(!pumpOn),wipers:()=>setWipers(!wipeOn),cam:()=>$('#camBtn').click(),map:()=>toggleMap(),sound:()=>setSound(!sndCfg.on),help:()=>{help.hidden=!help.hidden}};
+  box:()=>hookBox(),coupler:()=>cplAct(),grip:()=>cplGrip(),lookAhead:()=>{if(camMode==='cab')fpl.home=true;fpl.zt=1},pump:()=>setPump(!pumpOn),wipers:()=>setWipers(!wipeOn),cam:()=>{if(camMode==='cab')camSet('chase',true);else if(camFree)camSet('chase',false);else camSet('cab')},
+  map:()=>toggleMap(),sound:()=>setSound(!sndCfg.on),help:()=>{help.hidden=!help.hidden},
+  back:()=>{if(!goBack()&&(mode==='walk'||wk.inside))seatToggle()}};
+// run an action: every key, on-screen button, controller button and VR button comes through here (keys.js KEY_ACTIONS)
+function act(id,e){const a=KEY_BY[id],f=KEY_RUN[id];if(!f||a&&a.can&&!a.can())return false;f(e);return true}
+// close whatever is open over the game (help, the map, the menu, the machine list, Sync); true if something was
+function goBack(){const open=!help.hidden||!$('#bigmap').hidden||!$('#menu').hidden||!$('#ctlMenu').hidden||!syncBox.hidden;
+  help.hidden=true;toggleMap(false);showMenu(false);showCtl(false);if(!syncBox.hidden)showSync(false);return open}
+// each action's button (b in KEY_ACTIONS): the ones over the right stick and the gun card act on the press, the rest on a click
+for(const a of KEY_ACTIONS)if(a.b){const el=$(a.b);if(el.closest('#walkBtns,#gunHud'))el.addEventListener('pointerdown',e=>{e.preventDefault();act(a.id,e)});else el.addEventListener('click',e=>act(a.id,e))}
 addEventListener('keydown',e=>{const c=e.code;
   if((e.ctrlKey||e.metaKey||e.altKey)&&!/^(Control|Alt|Meta)/.test(c))return;
-  if(c==='Escape'){help.hidden=true;showMenu(false);showCtl(false);if(!syncBox.hidden)showSync(false);return}
+  if(c==='Escape'){goBack();return}
   if(!keysBox.hidden)return;
   const acts=keyActs(c);keys[c]=true;
   if(acts.length||c.startsWith('Arrow')||c==='Space'||c==='Tab')e.preventDefault();
   if(edOn)return;
   if(!kbUsed){kbUsed=true;padUsed=false;document.body.classList.add('kb');setCaps()}
   // a key shared by an on-foot action and a machine one (s:'walk', s:'ride', keys.js) runs only the one for where you are
-  if(!e.repeat)for(const id of acts){const sc=KEY_BY[id].s;if(sc&&(sc==='walk')!==(mode==='walk'))continue;if(KEY_RUN[id])KEY_RUN[id](e)}
+  if(!e.repeat)for(const id of acts){const sc=KEY_BY[id].s;if(sc&&(sc==='walk')!==(mode==='walk'))continue;act(id,e)}
   started()});
 // macOS sends no keyup for keys let go while Cmd is down, so Cmd's own keyup lets go of everything
 addEventListener('keyup',e=>{keys[e.code]=false;if(e.key==='Meta')clearKeys()});
@@ -97,19 +106,7 @@ addEventListener('keydown',e=>{const i=PAD_ECHO[e.code];if(i===undefined||padIdx
 addEventListener('popstate',()=>{const gp=padIdx<0?null:getPad();if(gp&&gp.buttons[1].pressed||performance.now()-padBackT<800)history.pushState({pad:1},'')});
 function usePad(){if(!padUsed){padUsed=true;kbUsed=false;document.body.classList.remove('kb');setCaps();if(!(history.state&&history.state.pad))history.pushState({pad:1},'')}started()}
 function padButton(i){usePad();inT=performance.now();if(i===1)padBackT=performance.now();
-  if(i===4||i===5)setMode(MODES[(MODES.indexOf(mode)+(i===5?1:MODES.length-1))%MODES.length]);
-  else if(i===3)$('#camBtn').click();
-  else if(i===0&&mode==='walk')walkJump();
-  else if(i===2&&mode==='walk')placeBlock();
-  else if(i===2)hookBox();
-  else if(i===0)placeBlock();
-  else if(i===12)setBlocks(!blkOn);
-  else if(i===13)removeBlock();
-  else if(i===14||i===15)blkCube(i===15?1:-1);
-  else if(i===11){if(camMode==='cab')fpl.home=true;fpl.zt=1}
-  else if(i===8)toggleMap();
-  else if(i===9)help.hidden=!help.hidden;
-  else if(i===1){const open=!help.hidden||!$('#bigmap').hidden||!$('#menu').hidden||!$('#ctlMenu').hidden||!syncBox.hidden;help.hidden=true;toggleMap(false);showMenu(false);showCtl(false);if(!syncBox.hidden)showSync(false);if(!open&&(mode==='walk'||wk.inside))seatToggle()}}
+  const p=PAD_MAP.find(m=>m[0]===i);if(p)act(mode==='walk'?p[2]:p[3])}
 function pollPad(){for(const k in PA)PA[k]=0;PA.sprint=false;rumbleWatch();const gp=getPad();if(!gp)return;
   const dz=v=>Math.abs(v)<0.15?0:(v-Math.sign(v)*0.15)/0.85,ax=gp.axes,b=gp.buttons,bv=i=>b[i]?b[i].value:0;
   PA.lx=dz(ax[0]||0);PA.ly=-dz(ax[1]||0);PA.rx=dz(ax[2]||0);PA.ry=-dz(ax[3]||0);PA.thr=bv(7)-bv(6);PA.sprint=!!(b[10]&&b[10].pressed);
@@ -232,7 +229,6 @@ $('#modeDig').onclick=()=>setMode(exLast);$('#exDrive').onclick=()=>{if(mode==='
 function camSet(m,free){camMode=m;camFree=!!free&&m==='chase';camBase=null;fpReset();
   if(!camFree){camDist=clamp(camDist,5,22);orbitPitch=clamp(orbitPitch,0.08,1.3)}$('#camBtn').dataset.cam=camMode==='cab'?'cab':camFree?'orbit':'chase';
   if(camFree&&!camSet.told){camSet.told=true;toast(say('orbitTip'),'tip',4200)}}
-$('#camBtn').onclick=()=>{if(camMode==='cab')camSet('chase',true);else if(camFree)camSet('chase',false);else camSet('cab')};
 // Drive (top right) drops the machine list; picking one, or tapping the scene, closes it
 function showCtl(on){$('#ctlMenu').hidden=!on;$('#ctlBtn').setAttribute('aria-expanded',on)}
 $('#ctlBtn').onclick=()=>{showCtl($('#ctlMenu').hidden);showMenu(false)};

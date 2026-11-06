@@ -39,4 +39,4 @@ function updateBox(dt){
     chain.quaternion.setFromUnitVectors(UPY,rD.divideScalar(d));chain.position.copy(boxTop).addScaledVector(rD,d/2);chain.scale.y=d}
   else TB.y=Math.max(TB.ty,TB.y-4*dt);
   tbox.position.set(TB.x,TB.y,TB.z);tbox.rotation.y=TB.yaw}
-$('#boxBtn').onclick=hookBox;
+// its button runs it through act (keys.js b, controls.js)

@@ -59,12 +59,12 @@ function vrPoll(){const s=renderer.xr.getSession();if(!s)return;
     for(let i=1;i<6;i++){const k=h+i,p=on(i);if(p&&!vr.btn[k]){used=true;vrButton(h,i)}vr.btn[k]=p}}
   PA.thr=clamp(PA.thr+trig,-1,1);
   if(used)usePad()}
-function vrButton(h,i){
-  if(h==='right'&&i===5)seatToggle();
-  else if(h==='right'&&i===4){if(mode==='walk')walkJump();else exSwap()}
+// the hand controllers' buttons: game actions run through act (controls.js) like keys and the gamepad; the panel and
+// leaving VR are VR's own
+const VR_MAP={right5:['enter','enter'],right4:['jump','exSwap'],left4:['nextMode','nextMode'],left1:['box','box']};
+function vrButton(h,i){const m=VR_MAP[h+i];
+  if(m)act(mode==='walk'?m[0]:m[1]);
   else if(h==='right'&&i===3)vr.panel=!vr.panel;
-  else if(h==='left'&&i===4)setMode(MODES[(MODES.indexOf(mode)+1)%MODES.length]);
-  else if(h==='left'&&i===1)hookBox();
   else if(h==='left'&&i===5){const s=renderer.xr.getSession();if(s)s.end()}}
 function vrRumble(ms,mag){const s=renderer.xr.getSession();if(!s)return;
   // Quest Browser takes the older hapticActuators pulse; newer browsers the pad's vibrationActuator

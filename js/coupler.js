@@ -155,7 +155,7 @@ function cplUI(){const dig=mode==='dig'&&!bench.on,near=dig?cplNear():null,show=
   if(show){const t=cpl.fit!=='none'?'Set down '+CPL_NAME[cpl.fit].toLowerCase():'Pick up '+CPL_NAME[near].toLowerCase();if(cplBtn.textContent!==t)cplBtn.textContent=t}
   const g=dig&&cpl.fit==='thumb';if(gripBtn.hidden===g)gripBtn.hidden=!g;
   if(g){const t=cpl.held?'Let go':'Grip';if(gripBtn.textContent!==t){gripBtn.textContent=t;gripBtn.setAttribute('aria-pressed',!!cpl.held)}}}
-cplBtn.onclick=cplAct;gripBtn.onclick=cplGrip;
+// its button runs it through act (keys.js b, controls.js)
 // saved in bhd_rigs: which is on, and where each of the others lies
 function cplSave(){const p={};for(const k in cpl.park){const o=cpl.park[k];p[k]=[+o.x.toFixed(3),+o.z.toFixed(3),+o.yaw.toFixed(4)]}return {f:cpl.fit,p}}
 function cplLoad(d){if(!d||typeof d!=='object')return;

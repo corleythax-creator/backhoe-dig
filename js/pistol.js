@@ -701,8 +701,6 @@ function gunSave(){return {k:gun.k,e:gun.eq?1:0,o:GUN_K.filter(k=>gun.own[k]),a:
 function gunLoad(d){if(!d||typeof d!=='object')return;if(Array.isArray(d.o))for(const k of d.o)if(GUNS[k])gun.own[k]=1;gun.own.pistol=1;
   if(Array.isArray(d.a))GUN_K.forEach((k,i)=>{const a=d.a[i];if(Array.isArray(a)&&a.length===2&&a.every(isFinite))gun.am[k]=[clamp(a[0]|0,0,GUNS[k].mag),clamp(a[1]|0,0,GUNS[k].max)]});
   if(GUNS[d.k]&&gun.own[d.k])gun.k=d.k;if(d.e===0)gun.eq=false;$('#gunBtn').setAttribute('aria-pressed',gun.eq);gunHudDraw()}
-$('#gunBtn').addEventListener('pointerdown',e=>{e.preventDefault();gunEquip(!gun.eq)});
+// its button runs it through act (keys.js b, controls.js)
 $('#fireBtn').addEventListener('pointerdown',e=>{e.preventDefault();gun.trig=true;gunFire()});
 for(const ev of ['pointerup','pointercancel','pointerleave'])$('#fireBtn').addEventListener(ev,()=>{gun.trig=false});
-$('#reloadBtn').addEventListener('pointerdown',e=>{e.preventDefault();gunReload()});
-$('#gunHud').addEventListener('pointerdown',e=>{e.preventDefault();gunNext()});
