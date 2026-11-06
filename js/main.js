@@ -15,6 +15,11 @@ function bucketNow(){
     if(h.K.hoe)return h.hoe?{n:'Hoe bucket',l:h.hl.load,c:TU.bhCap,h:TU.bkHeap,s:(h.spillT||0)>0}:{n:'Loader bucket',l:h.load,c:TU.bhLdCap,h:0,s:false};
     if(h.k==='dozer')return {n:'Blade',l:h.load,c:TU.hvDzCap,h:0,s:false};if(h.k==='loader')return {n:'Loader bucket',l:h.load,c:TU.hvLdCap,h:0,s:false}}
   return null}
+// the top bar's chip: what you are in (the machine's name, the excavator's Dig or Drive), the clock and rain; once a second
+const NOW_MODE={dig:'Excavator · Dig',drive:'Excavator · Drive',truck:'Dump truck',mow:'Mower',skid:'Skid steer',walk:'On foot'};
+function nowChip(){const w=wk.inside&&WK_RIDES[wk.inside]?WK_RIDES[wk.inside].n+(wk.inside==='ex'?(mode==='drive'?' · Drive':' · Dig'):''):NOW_MODE[mode]||'',
+    t=dnTime(dn.t)+(weather.r>0.05?' · Rain':'');
+  const a=$('#nowWhat'),b=$('#nowTime');if(a.textContent!==w)a.textContent=w;if(b.textContent!==t)b.textContent=t}
 function bucketChip(){const b=bucketNow(),el=$('#bucketChip');if(el.hidden===!!b)el.hidden=!b;if(!b)return;
   const f=b.l/b.c,pct=Math.round(f*100),span=1+b.h,heaped=f>1.005;
   if($('#bucketChipName').textContent!==b.n)$('#bucketChipName').textContent=b.n;
@@ -207,7 +212,10 @@ function frame(now){
   if(hudT<=0)mapsTick(0.1);
   if(hudT<=0){hudT=0.1;
     // the job gauges (#status) are hidden by the stylesheet unless a skin shows them: checked once a second, written only when seen
-    if((stVisT-=0.1)<=0){stVisT=1;stVis=$('#status').offsetParent!==null}
+    // the job card shows the rows for what you are running (none: the card hides); the top bar's chip says what you are in
+    {const dg=mode==='dig'||mode==='drive',rows=[['bucketPanel',dg||mode==='skid'],['trenchRow',dg],['truckRow',dg||mode==='truck'],['lawnRow',mode==='mow'||mode==='walk'&&trim.on]];let any=false;
+      for(const [id,s] of rows){const el=$('#'+id);any=any||s;if(el.hidden===s){el.hidden=!s;stVisT=0}}const se=$('#status');if(se.hidden===any)se.hidden=!any}
+    if((stVisT-=0.1)<=0){stVisT=1;stVis=$('#status').offsetParent!==null;nowChip()}
     // the action dock and the Use button (ctx.js); the box button's words
     ctxTick();{const bb=$('#boxBtn'),t=TB.hooked?'Drop box':'Hook box';if(bb.textContent!==t)bb.textContent=t}
     // in the skid steer the bucket line is its bucket
@@ -230,8 +238,7 @@ function frame(now){
     $('#haulVal').textContent=(mode==='truck'?`${Math.round(Math.abs(tr.v)*2.237)} mph · ${tr.shiftT>0?'N':tr.gear>0?'D':'R'} · `:'')+`Hauled ${(tr.hauled*1.308).toFixed(1)} yd³`}
     // in Mow mode the lawn takes the bucket's place, so the card keeps its height
     lawnsTick(dt);
-    {const lr=$('#lawnRow'),show=mode==='mow'||mode==='walk'&&trim.on;if(lr.hidden===show){lr.hidden=!show;$('#bucketPanel').hidden=show}
-      if(show&&stVis){const lp=Math.floor(lawnPct()*100),ls=lawn.startT?Math.round(((lawn.done?lawn.doneT:now)-lawn.startT)/1000):0;
+    {if(!$('#lawnRow').hidden&&stVis){const lp=Math.floor(lawnPct()*100),ls=lawn.startT?Math.round(((lawn.done?lawn.doneT:now)-lawn.startT)/1000):0;
         $('#lawnVal').textContent=`${lp}% · ${Math.floor(ls/60)}:${String(ls%60).padStart(2,'0')}`;$('#lawnBar i').style.width=lp+'%';
         $('#mowVal').textContent=mode==='mow'?`${(Math.abs(mw.v)*2.237).toFixed(1)} mph · blades ${mw.load>0.2?'cutting':'on'}`:`Trimmer line ${trimIn(trim.line)} in · spool ${Math.round(trim.spool/0.3048)} ft${trim.line<TU.trimMin?' · bump it':''}`}}
     const gv=$('#gasVal');if(stVis){

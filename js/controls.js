@@ -250,10 +250,14 @@ addEventListener('resize',menuFit);
 $('#menuBtn').onclick=()=>{showMenu($('#menu').hidden);showCtl(false)};
 $('#view').addEventListener('pointerdown',()=>{showMenu(false);showCtl(false)});
 let uiScale=1;
-function setUiScale(v){uiScale=+v||1;const h=$('#hud');h.style.setProperty('--s',uiScale);h.style.setProperty('--ms',Math.min(uiScale,1.5));h.style.setProperty('--cs',Math.min(uiScale,1.3));h.classList.toggle('lg',uiScale>1.2);menuFit();
+function setUiScale(v){uiScale=+v||1;$('#hud').style.setProperty('--ui',uiScale);menuFit();
   document.querySelectorAll('.sizes button[data-s]').forEach(b=>b.setAttribute('aria-pressed',+b.dataset.s===uiScale));try{localStorage.setItem('bhd_ui',uiScale)}catch(e){}}
 document.querySelectorAll('.sizes button[data-s]').forEach(b=>b.onclick=()=>setUiScale(b.dataset.s));
 try{setUiScale(localStorage.getItem('bhd_ui')||1)}catch(e){setUiScale(1)}
+// Graphics: the frame rate line at the bottom of the screen, off unless asked for (saved on this device)
+function setFpsShow(on){document.body.classList.toggle('fps',!!on);const b=$('#fpsShow');b.setAttribute('aria-pressed',!!on);b.textContent='Frame rate on screen: '+(on?'on':'off');try{localStorage.setItem('bhd_fps',on?'1':'0')}catch(e){}}
+$('#fpsShow').onclick=()=>setFpsShow(!document.body.classList.contains('fps'));
+try{setFpsShow(localStorage.getItem('bhd_fps')==='1')}catch(e){setFpsShow(false)}
 // minimap size (☰ Minimap, saved on this device): off, or small to extra large; a bigger one also shows more ground (maps.js)
 const MINI_PX=[0,96,130,190,260];let miniSz=2;
 function setMiniSz(v){miniSz=clamp(Math.round(+v),0,4);if(!(miniSz>=0))miniSz=2;const m=$('#mini');m.hidden=!miniSz;if(miniSz)m.style.setProperty('--mm',MINI_PX[miniSz]+'px');

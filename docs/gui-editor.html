@@ -64,15 +64,18 @@ canvas#view{position:fixed;inset:0;width:100%;height:100%;display:block;touch-ac
 .brand b{display:block;margin-top:2px;font:700 19px/1 var(--f-display);letter-spacing:.08em;color:var(--ink)}
 @container stage (max-width:1000px){.brand{display:none}}
 /* the gauges: one glass cell per job; tap to hide the detail lines (hidden for now; the game keeps them up to date) */
-.status{flex:1 1 auto;min-width:0;display:flex;align-items:stretch;gap:6px;cursor:pointer;pointer-events:auto}
-.srow{flex:1 1 0;min-width:0;max-width:220px;display:flex;flex-direction:column;justify-content:center;gap:4px;padding:7px 12px;border-radius:8px;background:var(--glass);border:1px solid var(--hud-line)}
+/* left column under the menu: the wallet, the job card (the gauges for what you are running) and the town counts, stacked */
+.lpane{grid-area:2/1/3/4;align-self:start;justify-self:start;z-index:2;display:flex;flex-direction:column;align-items:flex-start;gap:8px;
+  padding:6px 0 0 var(--pl);zoom:var(--ms);pointer-events:none;min-height:0;max-height:100%;box-sizing:border-box;overflow:hidden}
+.status{width:220px;display:flex;flex-direction:column;gap:6px;cursor:pointer;pointer-events:auto}
+.status[hidden]{display:none}
+.srow{min-width:0;display:flex;flex-direction:column;justify-content:center;gap:4px;padding:7px 12px;border-radius:8px;background:var(--glass);border:1px solid var(--hud-line)}
 .srow[hidden]{display:none}
 .line{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:0 6px}
 .lbl{font:600 12px/1 var(--f-display);letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
 .val{font:700 18px/1 var(--f-display);font-variant-numeric:tabular-nums;white-space:nowrap}
 .sub{font:500 13px/1.1 var(--f-display);font-variant-numeric:tabular-nums;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .status.min .sub{display:none}
-#status{display:none}
 #truckBar{background:#7fb6d8}
 .bar{height:4px;border-radius:2px;background:rgba(255,255,255,.12);overflow:hidden}
 .bar>i{display:block;height:100%;width:0;background:var(--machine);transition:width .15s}
@@ -127,8 +130,9 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 /* right column: the minimap, the block bar under it */
 .rpane{grid-area:2/3/3/4;z-index:2;min-height:0;max-height:100%;box-sizing:border-box;display:flex;flex-direction:column;align-items:flex-end;gap:8px;padding:6px var(--pr) 8px 0}
 #mini{flex:none;display:block;width:calc(var(--mm,130px)*var(--ms));height:calc(var(--mm,130px)*var(--ms));border-radius:8px;border:1px solid rgba(255,255,255,.28);background:#1e2a30;pointer-events:auto;cursor:pointer;box-shadow:var(--lift)}
-/* UI size (menu): --s for the sticks, --ms for the top layer, the map and the block bar, --cs for the bottom layer */
-#hud{--s:1;--ms:1;--cs:1}
+/* UI size (☰ menu) is --ui; every part scales by it, a little less on a short phone screen so it all still fits */
+#hud{--ui:1;--s:var(--ui);--ms:var(--ui);--cs:var(--ui)}
+@container stage (max-height:520px){#hud{--s:min(var(--ui),1.3);--ms:min(var(--ui),1.3);--cs:min(var(--ui),1.3)}}
 #toast,#benchBar{zoom:var(--s)}
 /* Block bar under the map: one glass box of rows (material, size steppers, first-person reach), then turn / lift / place */
 #blkBar{display:flex;flex-direction:column;width:220px;min-height:0;overflow-y:auto;overscroll-behavior:contain;background:var(--hud);border:1px solid var(--hud-line);border-radius:14px;padding:4px 6px;pointer-events:auto;zoom:var(--ms);box-shadow:var(--lift)}
@@ -201,8 +205,8 @@ button.sq{width:34px;padding:0;font-size:17px;letter-spacing:0}
 .stats{margin-left:auto;padding:5px 10px;border-radius:6px;background:var(--glass);font:500 12px/1 var(--f-display);letter-spacing:.06em;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
 .stats b{color:var(--ink);font-weight:700}
 /* narrow screens (a phone upright): the gauges take a row of their own, the frame rate a line of its own */
-@container stage (max-width:640px){.tbar{flex-wrap:wrap}.status{order:3;flex-basis:100%}
-  .srow{max-width:none;padding:6px 10px}.line{flex-direction:column;align-items:flex-start;gap:3px}
+@container stage (max-width:640px){
+  .srow{padding:6px 10px}.line{flex-direction:column;align-items:flex-start;gap:3px}
   .bbar{display:grid;grid-template-columns:1fr 1fr;gap:4px 12px}.bbar .stats{order:-1;grid-column:1/-1;justify-self:center;margin:0}
   .tacts>button{padding:0 10px}.tacts .ib span{display:none}.tacts .ib{padding:0 11px}}
 /* short screens (a phone on its side): a slimmer top layer and minimap */
@@ -651,6 +655,23 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
 .talkLine b{display:block;font:600 12px/1.2 var(--f-display);color:var(--machine);letter-spacing:.03em}
 .talkLine.on{opacity:1}
 
+/* the top bar's chip: what you are in, the clock and the weather */
+#nowChip{flex:none;display:flex;flex-direction:column;justify-content:center;gap:3px;padding:5px 12px;border-radius:8px;background:var(--glass);border:1px solid var(--hud-line);pointer-events:none;min-width:0}
+#nowWhat{font:700 17px/1 var(--f-display);letter-spacing:.04em;text-transform:uppercase;white-space:nowrap}
+#nowTime{font:600 14px/1 var(--f-display);letter-spacing:.04em;color:var(--muted);font-variant-numeric:tabular-nums;white-space:nowrap}
+#nowTime:empty{display:none}
+/* notices: one stack under the top bar, in the middle; each part sits in it in turn instead of at its own offset */
+#notices{grid-area:2/1/3/4;align-self:start;justify-self:center;z-index:3;display:flex;flex-direction:column;align-items:center;gap:8px;
+  padding-top:8px;max-width:max(240px,min(560px,calc(100cqw - 500px)));pointer-events:none}
+#hud #notices>*{position:static;transform:none;left:auto;right:auto;top:auto;bottom:auto;margin:0}
+#hud #notices>#toast{width:100%}
+#hud #notices>#toast span{max-width:100%}
+/* the wallet and the town counts sit in the left column */
+#hud .lpane>#cashChip,#hud .lpane>#tfChip{position:static;margin:0;zoom:1}
+/* the frame rate line shows only when Graphics says so */
+#hud .bbar .stats{display:none}
+body.fps #hud .bbar .stats{display:block}
+
 </style>
 <div class="app">
   <div class="side">
@@ -674,28 +695,8 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
   <header class="tbar">
     <button id="menuBtn" class="sq" aria-label="Menu" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10"/></svg></button>
     <div class="brand">Corley's<b>Island</b></div>
-    <div class="status" id="status" title="Tap to show less or more">
-      <div class="srow" id="bucketPanel">
-        <div class="line"><span class="lbl">Bucket</span><span class="val" id="bucketVal">0.00 yd³ · 0%</span></div>
-        <div class="bar"><i id="bucketBar"></i></div>
-        <div class="sub" id="tipVal">Tip 2.0 ft above grade</div>
-      </div>
-      <div class="srow">
-        <div class="line"><span class="lbl">Trench</span><span class="val" id="trenchVal">0% · 0:00</span></div>
-        <div class="bar" id="trenchBar"><i></i></div>
-        <div class="sub" id="gasVal">Gas main: buried</div>
-      </div>
-      <div class="srow">
-        <div class="line"><span class="lbl">Truck</span><span class="val" id="truckVal">0.0 / 12 yd³</span></div>
-        <div class="bar"><i id="truckBar"></i></div>
-        <div class="sub" id="haulVal">Hauled 0.0 yd³</div>
-      </div>
-      <div class="srow" id="lawnRow" hidden>
-        <div class="line"><span class="lbl">Lawn</span><span class="val" id="lawnVal">0% · 0:00</span></div>
-        <div class="bar" id="lawnBar"><i></i></div>
-        <div class="sub" id="mowVal">0.0 mph · blades on</div>
-      </div>
-    </div>
+    <!-- what you are in, the clock and the weather (main.js) -->
+    <div id="nowChip" aria-live="off"><b id="nowWhat">On foot</b><span id="nowTime"></span></div>
     <div class="tacts">
       <button id="blkBtn" class="ib" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9zM12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg><span>Blocks</span></button>
       <button id="ctlBtn" class="ib" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="2"/><path d="M3.5 12H10M14 12h6.5M12 14v6.5"/></svg><span>Drive</span></button>
@@ -758,6 +759,34 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
       <button id="modeWalk" data-k="5" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="13" cy="4" r="2"/><path d="M8 11l4-4 3 3 3 1M12 7l-1 7 3 3v4M11 14l-3 7"/></svg><span>Walk</span></button>
     </nav>
   </header>
+  <!-- left column, under the menu: the wallet, the job card (the gauges for what you are running; tap for less) and, in town
+       on a desktop, the townsfolk counts -->
+  <aside class="lpane" id="lpane">
+    <div id="cashChip" hidden><b>Wallet</b><span id="cashVal">$0</span></div>
+  <div class="status" id="status" title="Tap to show less or more" hidden>
+    <div class="srow" id="bucketPanel">
+      <div class="line"><span class="lbl">Bucket</span><span class="val" id="bucketVal">0.00 yd³ · 0%</span></div>
+      <div class="bar"><i id="bucketBar"></i></div>
+      <div class="sub" id="tipVal">Tip 2.0 ft above grade</div>
+    </div>
+    <div class="srow" id="trenchRow">
+      <div class="line"><span class="lbl">Trench</span><span class="val" id="trenchVal">0% · 0:00</span></div>
+      <div class="bar" id="trenchBar"><i></i></div>
+      <div class="sub" id="gasVal">Gas main: buried</div>
+    </div>
+    <div class="srow" id="truckRow">
+      <div class="line"><span class="lbl">Truck</span><span class="val" id="truckVal">0.0 / 12 yd³</span></div>
+      <div class="bar"><i id="truckBar"></i></div>
+      <div class="sub" id="haulVal">Hauled 0.0 yd³</div>
+    </div>
+    <div class="srow" id="lawnRow" hidden>
+      <div class="line"><span class="lbl">Lawn</span><span class="val" id="lawnVal">0% · 0:00</span></div>
+      <div class="bar" id="lawnBar"><i></i></div>
+      <div class="sub" id="mowVal">0.0 mph · blades on</div>
+    </div>
+  </div>
+  <div id="tfChip" hidden><span id="tfChipName">Townsfolk</span><b id="tfChipVal">0</b><span id="tfShopName">Shopfolk</span><b id="tfShopVal">0</b><span class="lbl">Dead</span><b id="tfChipDead">0</b><span id="tfChipSub">Shot <b id="tfChipShot">0</b> · Run over <b id="tfChipRun">0</b></span></div>
+  </aside>
   <!-- right column: the minimap, and the block bar under it while Blocks is on -->
   <aside class="rpane">
     <canvas id="mini" title="Tap for the big map (M)"></canvas>
@@ -777,10 +806,9 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
     <div id="gunHud" hidden><b id="gunHudN">PISTOL</b><span id="gunHudA">15 / 45</span></div>
   </aside>
   <!-- the two sticks in the thumb zones, between the bars; Get in, Sprint and Jump sit on top of them -->
-  <!-- shop counters and the wallet: above the bars and sticks -->
+  <!-- shop counters: over everything -->
   <div id="gunShop" hidden><h3 id="gsHead">Lakeside Guns</h3><div id="gsList"></div><button id="gsClose">Done</button></div>
   <div id="townShop" hidden><h3 id="tsHead">Shop</h3><p id="tsWho"></p><div id="tsList"></div><button id="tsClose">Done</button></div>
-  <div id="cashChip" hidden><b>Wallet</b><span id="cashVal">$0</span></div>
   <div class="sticks">
     <div class="stickwrap">
       <!-- Use: the best thing to do where you stand (get in or out, load, buy, talk, play chess), ctx.js -->
@@ -805,18 +833,19 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
     <div class="cap" id="capR"><b>◀ ▶</b> Curl / dump<br><b>▲ ▼</b> Boom down / up</div>
   </footer>
   <div id="benchBar" hidden></div>
-  <button id="heatKey" hidden title="Tap to change what the heatmap shows"><b id="heatName"></b><i id="heatBar"></i><span><span id="heatLo"></span><span id="heatHi"></span></span></button>
-  <!-- the lawn patch you are on (on foot or mowing): its name, share mowed and a meter (lawns.js) -->
-  <div id="bucketChip" hidden><span id="bucketChipName">Bucket</span><b id="bucketChipVal">0%</b><i class="bar"><i id="bucketChipBar"></i><i id="bucketChipFull"></i></i><span id="bucketChipSub"></span></div>
-  <div id="lawnChip" hidden><span id="lawnChipName">Lawn</span><b id="lawnChipVal">0%</b><i class="bar"><i id="lawnChipBar"></i></i></div>
-  <!-- in town on a desktop: how many townsfolk are about and how many he has shot or run over (townfolk.js) -->
-  <div id="tfChip" hidden><span id="tfChipName">Townsfolk</span><b id="tfChipVal">0</b><span id="tfShopName">Shopfolk</span><b id="tfShopVal">0</b><span class="lbl">Dead</span><b id="tfChipDead">0</b><span id="tfChipSub">Shot <b id="tfChipShot">0</b> · Run over <b id="tfChipRun">0</b></span></div>
-  <!-- gun overlays: the crosshair in first person, wanted stars and life, the hurt glow (pistol.js); straight in #hud so they draw over the bars -->
-  <div id="gunCross" hidden></div><div id="gunVit" hidden><div id="gunWant">☆☆☆</div><div id="gunLife"><i id="gunLifeBar"></i></div></div><div id="gunHurtFx"></div>
-  <div id="toast"><span id="toastText"></span></div>
-  <!-- while the mouse is taken for mouse look: how to let it go (controls.js) -->
-  <div id="lockHint" hidden></div>
-  <button id="updBtn" hidden></button>
+  <!-- notices, top middle under the bar: one stack, so nothing lands on anything else: the lawn you are on, wanted stars,
+       the heatmap key, the update button, the mouse-look hint and the messages -->
+  <div id="notices">
+    <div id="lawnChip" hidden><span id="lawnChipName">Lawn</span><b id="lawnChipVal">0%</b><i class="bar"><i id="lawnChipBar"></i></i></div>
+    <div id="bucketChip" hidden><span id="bucketChipName">Bucket</span><b id="bucketChipVal">0%</b><i class="bar"><i id="bucketChipBar"></i><i id="bucketChipFull"></i></i><span id="bucketChipSub"></span></div>
+    <div id="gunVit" hidden><div id="gunWant">☆☆☆</div><div id="gunLife"><i id="gunLifeBar"></i></div></div>
+    <button id="heatKey" hidden title="Tap to change what the heatmap shows"><b id="heatName"></b><i id="heatBar"></i><span><span id="heatLo"></span><span id="heatHi"></span></span></button>
+    <button id="updBtn" hidden></button>
+    <div id="lockHint" hidden></div>
+    <div id="toast"><span id="toastText"></span></div>
+  </div>
+  <!-- gun overlays: the crosshair in first person and the hurt glow (pistol.js); straight in #hud so they draw over the bars -->
+  <div id="gunCross" hidden></div><div id="gunHurtFx"></div>
 </div>
 
 <div id="editor" hidden>
@@ -992,6 +1021,7 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
     <p id="gfxStats" class="gstats" aria-live="off"></p>
     <p id="gfxMem" class="gstats" aria-live="off" title="An estimate: what the game asks the GPU to hold. Browsers do not report the real figure."></p>
     <div class="ggraph"><canvas id="gfxGraph" aria-label="Frame rate over the last 10 seconds"></canvas><p id="gfxGraphCap" class="devline"></p></div>
+    <button id="fpsShow" class="ghost" aria-pressed="false">Frame rate on screen: off</button>
     <div id="gfxList"></div>
     <div class="row"><button id="gfxDone">Done</button><button id="gfxReset" class="ghost">Preset again</button></div>
   </div>
@@ -1592,7 +1622,7 @@ const GUI_VARS=[['--machine','Accent (machine orange)','c'],['--gas','Highlight 
 const GUI_FONTS=['"Barlow Condensed","Arial Narrow",system-ui,sans-serif','"Barlow",system-ui,sans-serif','system-ui,sans-serif','Arial,Helvetica,sans-serif',
   '"Arial Narrow",Arial,sans-serif','Verdana,sans-serif','"Trebuchet MS",sans-serif','Georgia,serif','Impact,"Arial Black",sans-serif','"Courier New",monospace'];
 // parts that are usually hidden until the game needs them, shown on request so they can be styled
-const GUI_PEEK=[['#menu','Menu'],['#help','Start card'],['#blkBar','Blocks bar'],['#actDock','Action buttons'],['#seatBtn','Use'],['#pumpBtn','Pump'],['#wipeBtn','Wipers'],
+const GUI_PEEK=[['#menu','Menu'],['#help','Start card'],['#blkBar','Blocks bar'],['#actDock','Action buttons'],['#status','Job card'],['#seatBtn','Use'],['#pumpBtn','Pump'],['#wipeBtn','Wipers'],
   ['#boxBtn','Hook box'],['#cplBtn','Coupler'],['#gripBtn','Thumb grip'],['#lawnRow','Lawn gauge'],['#lawnChip','Lawn patch gauge'],['#bucketChip','Bucket gauge'],['#heatKey','Heatmap key'],['#updBtn','Update button'],['#keysBox','Keys panel'],['#ctrlsBox','Controls panel'],['#ctlMenu','Drive list'],['#gfxBox','Graphics panel']];
 // ready-made groups (selector, name), picked from the Groups tab and then edited like any part
 const GUI_GROUPS=[['#hud button','Every button on the screen'],['.tbar button','Top bar buttons'],['#ctlMenu button','Machine buttons'],['.bbar button','Bottom bar buttons'],
@@ -1651,7 +1681,7 @@ function guiDockCss(d){const c=k=>d[k]||GUI_DOCK.find(g=>g[0]===k)[2][0][0];
   if(top==='bottom')r+='.tbar::after{top:auto;bottom:100%}\n#menu,#ctlMenu{top:auto;bottom:100%;margin:0 0 8px}\n#menu{max-height:calc(var(--mbot,300px) - 12px)}\n';
   if(bot==='top')r+='.bbar{border-top:0;border-bottom:1px solid var(--hud-line)}\n';
   r+=`.rpane{grid-area:4/${map==='left'?2:4}/5/${map==='left'?3:5}${map==='left'?';align-items:flex-start;padding:11px 0 8px var(--pl)':''}}\n`;
-  r+=`.sticks{grid-area:4/2/5/5${swap?';flex-direction:row-reverse;padding:0 14px 10px var(--pr)':''}}\n`;
+  r+=`.sticks{grid-area:4/2/5/5${swap?';flex-direction:row-reverse;padding:0 14px 10px var(--pr)':''}}\n.lpane,#notices{grid-area:4/3/5/4}\n`;
   if(swap)r+='#capL{order:5;margin-left:auto;text-align:right}#capR{order:-1;margin-left:0;text-align:left}\n';
   return r}
 function guiCss(s){let out='';
