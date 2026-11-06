@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Friday, November 6, 2026
 
+- **v343** (4:07 PM) One action pipeline (HUD step 2): every key, screen button, controller button and VR button runs the same action, so they always do the same thing; the Controls panel's controller list is written from the real button map; new Previous mode and Block size down actions
 - **v342** (3:55 PM) Screen fixes (HUD step 1): the pistol card takes taps and sits under the minimap, gun overlays draw over the bars, T carries or picks what to set down (not both), no more parts on top of each other, Esc and controller B close the menu, machine list and Sync
 
 ## Sunday, November 1, 2026
