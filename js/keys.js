@@ -85,8 +85,10 @@ function keyName(c){if(!c)return '—';
   if(n)return n;if(/^Key[A-Z]$/.test(c))return c.slice(3);if(/^Digit\d$/.test(c))return c.slice(5);if(/^Numpad/.test(c))return 'Num '+c.slice(6);return c}
 // the first key bound to an action, for captions and tips
 function keyLabel(id){const b=keyBind[id];return keyName(b[0]||b[1])}
-// two actions clash on a key unless one only works on foot and the other only in a machine
-function keyClash(a,b){const x=KEY_BY[a].s,y=KEY_BY[b].s;return !x||!y||x===y}
+// pairs that share a key on purpose: their handlers (controls.js) split it, Carry with Blocks off, Block or thing with it on
+const KEY_SHARE=[['carry','blkWhat']];
+// two actions clash on a key unless one only works on foot and the other only in a machine, or they are a KEY_SHARE pair
+function keyClash(a,b){if(KEY_SHARE.some(p=>p.includes(a)&&p.includes(b)))return false;const x=KEY_BY[a].s,y=KEY_BY[b].s;return !x||!y||x===y}
 // give a key to an action (taking it from any other it would clash with); returns the name of the action it came from, if any
 function keyAssign(id,slot,code){let from='';
   if(code)for(const o in keyBind){const i=keyBind[o].indexOf(code);if(i>=0&&!(o===id&&i===slot)&&keyClash(o,id)){keyBind[o][i]='';from=KEY_BY[o].n}}

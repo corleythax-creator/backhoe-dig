@@ -3,7 +3,7 @@
 // ---------- loop ----------
 const tip=new THREE.Vector3(),mid=new THREE.Vector3(),q=new THREE.Quaternion(),tmp=new THREE.Vector3(),camT=new THREE.Vector3(),look=new THREE.Vector3();
 let camFov=60,fpsFrames=0,fpsTime=0;
-let last=performance.now(),hudT=0,shake=0,firstCam=true,fullWarned=false;
+let last=performance.now(),hudT=0,stVis=false,stVisT=0,shake=0,firstCam=true,fullWarned=false;
 // the chase camera's smoothed state (main.js): the machine's own heading eased (camBS), the eased look point and the one
 // before it, orbitYaw as last frame left it and when you last turned it yourself
 let camBS=0,camOY=0,camUserT=0;const camLk=new THREE.Vector3(),camLkP=new THREE.Vector3();
