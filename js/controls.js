@@ -319,7 +319,7 @@ function started(){if(!st.startT)st.startT=performance.now()}
 // the version in the menu and on the help card is the last entry in data/effort.js (the build log), so it is never stale
 {const E=window.EFFORT,v=E&&E.versions&&E.versions[E.versions.length-1];
   if(v){const d=new Date(v.live).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit',timeZone:'America/Chicago'});
-    $('#verMenu').textContent=`Version ${v.v}`;$('#verHelp').textContent=`Version ${v.v} · went live ${d} Central`}}
+    $('#verMenu').textContent=`Version ${v.v}`;$('#verHelp').textContent=`Version ${v.v}`}}
 // updates: a Home Screen app can stay open for days without reloading, so the game re-reads the build log when it comes
 // back to the front, when it is restored from the back-forward cache, and every 10 minutes while it is open. The site and
 // lawn are saved on the way out (save.js, mower.js), so a newer version reloads at once when the game comes back from the
