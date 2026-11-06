@@ -1,0 +1,270 @@
+// Corley's Island: the Family Island south across the water (its ground, the family house, the picnic pavilion, the fire
+// pit, the flagpole, trees, road ends and signs). The bridges are on the bridge kit (bridges.js).
+// Game scripts share one global scope and load in index.html order; see CLAUDE.md.
+const famGround=groundPatch(FAM_PATCH[0],FAM_PATCH[1],FAM_PATCH[2],FAM_PATCH[3],1.5,[]);
+// low-poly parts gathered by colour into a few merged meshes: solid (lit, flat shaded), glow (lamps, embers) and win
+// (window glass, which lights up at night). Lamps (by colour: 1 street and bridge lamps, 2 light towers, 3 lanterns) also
+// go in FAM_LAMPS ([x, y, z, kind]) for their halos and the light they throw on the ground after dark (daynight.js)
+const FAM_LAMPS=[],FAM_LAMP_K={0xfff1c8:1,0xfff6d8:2,0xffd27a:3},FAM_WIN={0x6f8fa4:1,0x2c3a44:1};
+// A part given a material key instead of a colour ('shingles', 'planks', 'ashlar'... BR_DEF in bridges.js) is drawn
+// in that material's picture, sized in real metres, with the bridges' Graphics tiers and rain wetness (famLibAdd);
+// a key ending in ~ turns the picture a quarter (wood grain running along a wall instead of up it).
+function famKit(){const solid=[],glow=[],win=[],lib={},O=new THREE.Object3D();O.rotation.order='YXZ';
+  function add(L,g,col,x,y,z,ry,rx,rz){O.position.set(x,y,z);O.rotation.set(rx||0,ry||0,rz||0);O.updateMatrix();
+    if(g.index)g=g.toNonIndexed();g.deleteAttribute('uv');g.applyMatrix4(O.matrix);
+    if(typeof col==='string'){(lib[col]=lib[col]||[]).push(g);return}
+    const c=new THREE.Color(col),n=g.attributes.position.count,a=new Float32Array(n*3);
+    for(let i=0;i<n;i++){a[i*3]=c.r;a[i*3+1]=c.g;a[i*3+2]=c.b}g.setAttribute('color',new THREE.BufferAttribute(a,3));L.push(g)}
+  return {solid,glow,win,lib,
+    box:(w,h,d,col,x,y,z,ry,rx,rz)=>add(FAM_WIN[col]?win:solid,new THREE.BoxGeometry(w,h,d),col,x,y,z,ry,rx,rz),
+    cyl:(r0,r1,h,seg,col,x,y,z,ry,rx,rz)=>add(solid,new THREE.CylinderGeometry(r0,r1,h,seg),col,x,y,z,ry,rx,rz),
+    geo:(g,col,x,y,z,ry,rx,rz)=>add(solid,g,col,x,y,z,ry,rx,rz),
+    lit:(g,col,x,y,z,ry)=>{if(FAM_LAMP_K[col]&&g.type==='BoxGeometry')FAM_LAMPS.push([x,y,z,FAM_LAMP_K[col]]);add(glow,g,col,x,y,z,ry)}}}
+function famMerge(list){let n=0;for(const g of list)n+=g.attributes.position.count;
+  const P=new Float32Array(n*3),C=new Float32Array(n*3);let o=0;
+  for(const g of list){P.set(g.attributes.position.array,o*3);C.set(g.attributes.color.array,o*3);o+=g.attributes.position.count;g.dispose()}
+  const m=new THREE.BufferGeometry();m.setAttribute('position',new THREE.BufferAttribute(P,3));m.setAttribute('color',new THREE.BufferAttribute(C,3));
+  m.computeVertexNormals();m.computeBoundingSphere();return m}
+// boat hulls (boats.js, lakeboats.js, marina.js): physically based gelcoat in each part's own colour, glossy and catching
+// the sky, with a scanned gelcoat's fine scuffs in its sheen and relief (textures/gelcoat*, Medium graphics and up;
+// famGelGfx). famGelMesh merges a kit's parts with box-projected texture coordinates, FAM_GEL_T metres to a tile
+const FAM_GEL_T=1.4,famGelMat=new THREE.MeshStandardMaterial({vertexColors:true,roughness:0.32,metalness:0,envMap:skyEnv,envMapIntensity:0.9,side:THREE.DoubleSide});
+let famGelTex=null;
+// the waterline stain on a hull's gelcoat: a tea-brown band from just under the waterline (y 0 in the boat's own frame)
+// to a hand's width above it, streaky along the hull, as a lake leaves on boats that sit in it
+function famStain(m){m.userData.stain=1;const old=m.onBeforeCompile,k=m.customProgramCacheKey();
+  m.onBeforeCompile=function(sh,r){if(old)old.call(this,sh,r);
+    sh.vertexShader='varying vec3 vGelP;\n'+sh.vertexShader.replace('#include <begin_vertex>','#include <begin_vertex>\nvGelP=position;');
+    sh.fragmentShader='varying vec3 vGelP;\n'+sh.fragmentShader.replace('#include <color_fragment>','#include <color_fragment>\n'+
+      '{float s=smoothstep(0.2,0.03,vGelP.y)*smoothstep(-0.3,-0.06,vGelP.y);s*=0.55+0.25*sin(vGelP.z*9.0+sin(vGelP.z*2.3)*3.0)+0.2*sin(vGelP.z*31.0);'+
+      'diffuseColor.rgb*=mix(vec3(1.0),vec3(0.78,0.69,0.5),clamp(s,0.0,1.0)*0.6);}')};
+  m.customProgramCacheKey=()=>k+'gelStain'}
+famStain(famGelMat);
+function famGelMesh(list){const g=famMerge(list),P=g.attributes.position.array,N=g.attributes.normal.array,uv=new Float32Array(P.length/3*2),t=1/FAM_GEL_T;
+  for(let i=0;i<P.length;i+=9){let ax=0,ay=0,az=0;for(let k=0;k<9;k+=3){ax+=Math.abs(N[i+k]);ay+=Math.abs(N[i+k+1]);az+=Math.abs(N[i+k+2])}
+    for(let k=0;k<3;k++){const q=i+k*3,o=(i/3+k)*2;if(ay>=ax&&ay>=az){uv[o]=P[q]*t;uv[o+1]=P[q+2]*t}else if(ax>=az){uv[o]=P[q+2]*t;uv[o+1]=P[q+1]*t}else{uv[o]=P[q]*t;uv[o+1]=P[q+1]*t}}}
+  g.setAttribute('uv',new THREE.BufferAttribute(uv,2));return new THREE.Mesh(g,famGelMat)}
+// from gfxApply: the gelcoat's scuffs on Medium and up (loaded the first time), its plain gloss on Low
+function famGelGfx(g){const on=g.tex!=='low';
+  if(on&&!famGelTex){const L=k=>{const t=new THREE.TextureLoader().load(`textures/gelcoat${k}.jpg`);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.anisotropy=4;return t};
+    famGelTex={map:L(''),n:L('_n'),r:L('_r')};famGelTex.map.colorSpace=THREE.SRGBColorSpace}
+  const m=famGelMat,map=on?famGelTex.map:null;if(m.map===map)return;
+  m.map=map;m.roughnessMap=on?famGelTex.r:null;m.normalMap=on&&g.pbr?famGelTex.n:null;m.normalScale.set(0.15,0.15);m.roughness=on?0.6:0.32;m.needsUpdate=true}
+const famMat=M(0xffffff,{vertexColors:true}),famGlowMat=new THREE.MeshBasicMaterial({vertexColors:true}),famWinMat=M(0xffffff,{vertexColors:true,shininess:60,specular:0x333333});
+// ---------- the controls you see from a machine's seat (cab view): dash, gauges, steering wheel, bars, levers ----------
+// Built for the simple shapes, in groups of their own flagged userData.simple: the detailed models (models.js) have
+// their own insides, so mdlHvOn / mdlKitOn hide these groups with the simple meshes when they show. Machines with no
+// detailed model (golf cart, go-karts) keep them always. Small parts, so they cast no shadow. ctlKit is hvKit's
+// box and cylinder (x, y, z then the tilt about x and z) for files that load before heavy.js.
+const CTL_RUB=0x161718,CTL_DARK=0x2a2c2f,CTL_PAN=0x24262a,CTL_SCR=0x18323f,CTL_DIAL=0xe6e2d6,CTL_NEEDLE=0xd8381e;
+function ctlKit(){const K=famKit();return {K,box:(w,h,d,col,x,y,z,rx,rz)=>K.box(w,h,d,col,x,y,z,0,rx||0,rz||0),
+  cyl:(r0,r1,h,seg,col,x,y,z,rx,rz)=>K.cyl(r0,r1,h,seg,col,x,y,z,0,rx||0,rz||0)}}
+function ctlGroup(par,build,keep){const g=new THREE.Group();if(!keep)g.userData.simple=true;par.add(g);const b=ctlKit();build(b,g);
+  const m=new THREE.Mesh(famMerge(b.K.solid),famMat);m.receiveShadow=true;g.add(m);return g}
+// a round gauge facing back toward the seat, its face tipped back by tilt: bezel, dial, needle at angle ang
+function ctlGauge(b,r,x,y,z,tilt,ang){const t=tilt||0,a=ang===undefined?0.6:ang,ny=Math.sin(t),nz=-Math.cos(t),uy=Math.cos(t),uz=Math.sin(t);
+  b.cyl(r*1.2,r*1.2,0.02,10,CTL_RUB,x,y,z,Math.PI/2+t);b.cyl(r,r,0.02,10,CTL_DIAL,x,y+ny*0.006,z+nz*0.006,Math.PI/2+t);
+  b.K.box(r*0.07+0.004,r*0.8,0.004,CTL_NEEDLE,x-Math.sin(a)*r*0.32,y+ny*0.018+Math.cos(a)*r*0.32*uy,z+nz*0.018+Math.cos(a)*r*0.32*uz,0,t,a)}
+// a steering wheel at x, y, z, its face tipped back by tilt (0 upright, π/2 flat): rim, three spokes, hub and the
+// column running forward and down into the dash. It turns with the steering: o.swG, o.swK times the road wheels' angle
+function ctlWheel(o,par,x,y,z,tilt,r,rot,col,keep){const t=new THREE.Group();if(!keep)t.userData.simple=true;t.position.set(x,y,z);t.rotation.x=tilt;par.add(t);
+  const s=ctlGroup(t,b=>{b.K.geo(new THREE.TorusGeometry(r,r*0.085,5,18),CTL_RUB,0,0,0);b.cyl(r*0.24,r*0.26,0.06,10,col||CTL_DARK,0,0,0.02,Math.PI/2);
+    for(const a of [0,Math.PI,-Math.PI/2])b.K.box(r*0.78,0.022,0.016,CTL_DARK,Math.cos(a)*r*0.5,Math.sin(a)*r*0.5,0.01,0,0,a);
+    b.cyl(0.032,0.04,0.34,8,CTL_DARK,0,0,0.2,Math.PI/2)},true);
+  o.swG=s;o.swK=rot||4;return s}
+// a kit's parts into the scene, as one mesh per kind; returns the meshes
+// material parts go through the bridge kit; kits built before bridges.js has loaded wait in FAM_LIBQ for it
+const FAM_LIBQ=[];
+// a tinted kit material's key: base (seam, canvas: BR_DEF in bridges.js) in colour col
+const famTint=(base,col)=>base+'@'+new THREE.Color(col).getHexString();
+function famLibAdd(lib){const B=brKit(null);for(const k in lib)for(const g of lib[k]){if(!g.attributes.normal)g.computeVertexNormals();B.geo(k.replace('~',''),g,{swap:k.endsWith('~')})}return B.add()}
+function famAdd(K){const out=[];
+  if(K.lib&&Object.keys(K.lib).length){if(typeof brKit==='function')out.push(...famLibAdd(K.lib));else FAM_LIBQ.push(K.lib)}
+  if(K.solid.length){const m=new THREE.Mesh(famMerge(K.solid),famMat);m.castShadow=true;m.receiveShadow=true;m.layers.enable(RAIN_LAYER);scene.add(m);out.push(m)}
+  if(K.glow.length){const m=new THREE.Mesh(famMerge(K.glow),famGlowMat);scene.add(m);out.push(m)}
+  if(K.win.length){const m=new THREE.Mesh(famMerge(K.win),famWinMat);m.receiveShadow=true;scene.add(m);out.push(m)}
+  return out}
+// things that stand in many places and have a detailed model (models.js, with Machine models on Detailed: cones, light
+// towers, barriers, lamps, benches...): MDL_SPOTS[kind] lists where each stands, [x, y, z, yaw, scale] (the model's
+// origin on the ground under its middle, its front +z turned by yaw), and MDL_SPOT_SIMPLE[kind] the kit meshes drawn
+// for them otherwise. A kind's simple parts go in a kit of their own, added with famAddSpot
+const MDL_SPOTS={},MDL_SPOT_SIMPLE={};
+function famSpot(k,x,y,z,yaw,s){(MDL_SPOTS[k]=MDL_SPOTS[k]||[]).push([x,y,z,yaw||0,s||1])}
+function famAddSpot(k,K){const ms=famAdd(K);(MDL_SPOT_SIMPLE[k]=MDL_SPOT_SIMPLE[k]||[]).push(...ms);return ms}
+// a gable: a triangular prism along x, width d across z, height h, length L, its base at y=0
+function famGable(d,h,L){const a=-L/2,b=L/2,p=-d/2,q=d/2,v=[
+  a,0,p, a,h,0, a,0,q,  b,0,q, b,h,0, b,0,p,
+  a,0,p, b,0,p, b,h,0,  a,0,p, b,h,0, a,h,0,
+  a,0,q, a,h,0, b,h,0,  a,0,q, b,h,0, b,0,q];
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(v,3));return g}
+// a sign board with lettering, large and plain so it reads from a machine's cab
+// a painted sign board into a canvas at x0, y0, W by H: the board colour over faint wood grain, weathered toward its
+// edges, a bevelled moulding round it (lit from above), a pinstripe in the lettering colour, and the rows of lettering
+// with a soft shadow under them as if carved and painted; serif lettering is gilded (a sheen down each letter).
+// rows: [text, size and height down the board (fractions of H), weight, italic]
+const famShade=(c,k)=>{const o=new THREE.Color(c);return '#'+(k<0?o.lerp(new THREE.Color(0),-k):o.lerp(new THREE.Color(0xffffff),k)).getHexString()};
+function famSignPaint(g,x0,y0,W,H,bg,fg,serif,rows,seed){let sd=seed|0||7;const rnd=()=>{sd=(sd*16807)%2147483647;return sd/2147483647};
+  g.save();g.beginPath();g.rect(x0,y0,W,H);g.clip();g.fillStyle=bg;g.fillRect(x0,y0,W,H);
+  // the grain: long faint streaks along the board, lighter and darker, and a fine speckle
+  for(let i=0,n=Math.round(H/2.5);i<n;i++){const y=y0+rnd()*H,a=0.025+rnd()*0.05;g.strokeStyle=rnd()<0.5?`rgba(0,0,0,${a})`:`rgba(255,255,255,${a*0.7})`;
+    g.lineWidth=0.6+rnd()*H*0.025;g.beginPath();g.moveTo(x0,y);for(let x=0;x<=W;x+=W/8)g.lineTo(x0+x,y+Math.sin(x*0.013+i)*H*0.012);g.stroke()}
+  for(let i=0;i<W*H/90;i++){g.fillStyle=`rgba(${rnd()<0.5?'0,0,0':'255,255,255'},${0.03+rnd()*0.04})`;g.fillRect(x0+rnd()*W,y0+rnd()*H,1+rnd()*1.5,1)}
+  // weathering: darker toward the edges, a few hairline scratches
+  const vg=g.createRadialGradient(x0+W/2,y0+H/2,Math.min(W,H)*0.3,x0+W/2,y0+H/2,Math.max(W,H)*0.62);vg.addColorStop(0,'rgba(0,0,0,0)');vg.addColorStop(1,'rgba(0,0,0,0.22)');g.fillStyle=vg;g.fillRect(x0,y0,W,H);
+  g.strokeStyle='rgba(255,255,255,0.08)';g.lineWidth=0.7;for(let i=0;i<6;i++){const x=x0+rnd()*W,y=y0+rnd()*H;g.beginPath();g.moveTo(x,y);g.lineTo(x+(rnd()-0.5)*W*0.08,y+(rnd()-0.5)*H*0.2);g.stroke()}
+  // the moulding: a light top and left, a dark bottom and right, a shadow inside it, then the pinstripe
+  const b=Math.max(3,H*0.07);g.fillStyle=famShade(bg,0.28);g.fillRect(x0,y0,W,b);g.fillRect(x0,y0,b,H);g.fillStyle=famShade(bg,-0.45);g.fillRect(x0,y0+H-b,W,b);g.fillRect(x0+W-b,y0,b,H);
+  g.strokeStyle='rgba(0,0,0,0.3)';g.lineWidth=b*0.4;g.strokeRect(x0+b*1.2,y0+b*1.2,W-b*2.4,H-b*2.4);
+  g.strokeStyle=fg;g.lineWidth=Math.max(1.5,H*0.018);g.strokeRect(x0+b*1.9,y0+b*1.9,W-b*3.8,H-b*3.8);
+  const ff=serif?'Georgia,"Times New Roman",serif':'"Barlow Condensed","Arial Narrow",Arial,sans-serif';g.textAlign='center';g.textBaseline='middle';
+  for(const [t,sz,yf,wt,it] of rows){let fs=H*sz;g.font=`${it?'italic ':''}${wt||700} ${Math.round(fs)}px ${ff}`;const m=g.measureText(t).width,room=W-b*6;
+    if(m>room){fs*=room/m;g.font=`${it?'italic ':''}${wt||700} ${Math.round(fs)}px ${ff}`}const ty=y0+H*yf;
+    g.shadowColor='rgba(0,0,0,0.5)';g.shadowBlur=fs*0.08;g.shadowOffsetX=fs*0.03;g.shadowOffsetY=fs*0.045;
+    if(serif){const gr=g.createLinearGradient(0,ty-fs/2,0,ty+fs/2);gr.addColorStop(0,famShade(fg,0.35));gr.addColorStop(0.5,fg);gr.addColorStop(0.55,famShade(fg,-0.25));gr.addColorStop(1,famShade(fg,0.1));g.fillStyle=gr}
+    else g.fillStyle=fg;g.fillText(t,x0+W/2,ty);
+    g.shadowColor='transparent';g.lineWidth=Math.max(0.6,fs*0.02);g.strokeStyle=famShade(fg,-0.35);g.strokeText(t,x0+W/2,ty)}
+  g.restore()}
+// a sign's material: painted wood, a little sheen, the sky in it
+const famSignMat=(tex,o)=>new THREE.MeshStandardMaterial(Object.assign({map:tex,roughness:0.62,metalness:0,envMap:skyEnv,envMapIntensity:0.45},o||{}));
+function famSign(lines,w,h,x,y,z,ry,bg,fg){
+  const cv=document.createElement('canvas'),R=Math.round(512*w/h);cv.width=Math.min(2048,R);cv.height=Math.round(cv.width*h/w);
+  const g=cv.getContext('2d'),n=lines.length,fs=0.7/n;
+  famSignPaint(g,0,0,cv.width,cv.height,bg,fg,false,lines.map((t,i)=>[t,fs*(i?0.72:0.9),0.5+(i-(n-1)/2)*0.78/n,i?600:700]),lines[0].length*31+n);
+  const tex=new THREE.CanvasTexture(cv);tex.anisotropy=8;tex.colorSpace=THREE.SRGBColorSpace;
+  const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),famSignMat(tex,{side:THREE.DoubleSide}));
+  m.position.set(x,y,z);m.rotation.y=ry;scene.add(m);return m}
+
+(function(){
+  // the spoil yard on Corley's north lawn, where the truck dumps now the cliff is gone
+  {const x=6,z=-41,y=baseHeight(x,z),K=famKit();for(const s of [-1,1])K.box(0.12,2.6,0.12,0x8a8a86,x+s*1.9,y+1.3,z);famAdd(K);
+    famSign(['SPOIL YARD','Dump loads here'],4.2,1.4,x,y+2.1,z+0.07,0,'#c9601c','#ffffff')}
+})();
+
+// ---------- games at the pavilion ----------
+// a chess board on the west picnic table and a checkers board on the east one, both set up to start. Sitting down at
+// one (Get in) saves the island and opens that Mesa game at full quality; its back link brings you here again.
+const MESA_URL='https://mesa-games-ochre.vercel.app/';
+const FAM_GAMES=[{k:'chess',n:'chess',b:'Play chess',x:23.5,z:264},{k:'checkers',n:'checkers',b:'Play checkers',x:28.5,z:264}];
+// the board's ranks run across the table (x), toward each bench, its files along it (z); a1 is dark
+function famBoard(K,g,y){const S=0.06,X=g.x,Z=g.z,chess=g.k==='chess';
+  K.box(8*S+0.06,0.03,8*S+0.06,chess?0x5a3b26:0x3a2a1e,X,y+0.015,Z);
+  for(let r=0;r<8;r++)for(let f=0;f<8;f++){const dark=(r+f)%2===0;
+    K.box(S,0.008,S,chess?(dark?0x6e4a2c:0xe6d6b0):(dark?0x262422:0xb2382c),X+(r-3.5)*S,y+0.034,Z+(f-3.5)*S)}
+  const top=y+0.038,at=(r,f)=>[X+(r-3.5)*S,Z+(f-3.5)*S];
+  if(chess){const BACK='rnbqkbnr';
+    for(const [r,col] of [[0,0xf1ead8],[1,0xf1ead8],[6,0x2b2622],[7,0x2b2622]])for(let f=0;f<8;f++){const [x,z]=at(r,f),t=r===1||r===6?'p':BACK[f];
+      const h={p:0.026,r:0.036,n:0.038,b:0.044,q:0.05,k:0.054}[t];K.cyl(0.016,0.021,h,6,col,x,top+h/2,z);
+      if(t==='p')K.geo(new THREE.IcosahedronGeometry(0.012,0),col,x,top+h+0.008,z);
+      else if(t==='r')K.cyl(0.02,0.018,0.012,6,col,x,top+h+0.006,z);
+      else if(t==='n')K.box(0.03,0.022,0.014,col,x+(r<4?0.006:-0.006),top+h+0.008,z,0,0,r<4?0.5:-0.5);
+      else if(t==='b')K.cyl(0,0.014,0.024,6,col,x,top+h+0.012,z);
+      else if(t==='q')K.geo(new THREE.IcosahedronGeometry(0.015,0),col,x,top+h+0.01,z);
+      else{K.box(0.008,0.026,0.008,col,x,top+h+0.013,z);K.box(0.008,0.008,0.022,col,x,top+h+0.017,z)}}}
+  else for(let r=0;r<8;r++){if(r===3||r===4)continue;for(let f=0;f<8;f++){if((r+f)%2)continue;const [x,z]=at(r,f);
+    K.cyl(0.024,0.024,0.012,10,r<3?0xb3302a:0xeee3c8,x,top+0.006,z)}}}
+// the game table the worker is standing at, if any (a stride from the table's edge)
+let famPrefetched=false;
+function famGameNear(){if(mode!=='walk'||wk.inside)return null;
+  if(!famPrefetched&&Math.hypot(wk.x-26,wk.z-264)<25){famPrefetched=true;
+    for(const g of FAM_GAMES){const l=document.createElement('link');l.rel='prefetch';l.href=MESA_URL+g.k+'/';document.head.appendChild(l)}}
+  for(const g of FAM_GAMES){const dx=Math.max(0,Math.abs(wk.x-g.x)-0.9),dz=Math.max(0,Math.abs(wk.z-g.z)-1.2);
+    if(Math.hypot(dx,dz)<1.1&&Math.abs(wk.y-baseHeight(g.x,g.z))<1)return g}
+  // the cat in Jessica's library (jessica.js)
+  return jesCatNear()}
+// sit down: save everything, then go to the game. On the website the page itself goes (and Mesa's back link returns
+// here); in the claude.ai version, or an old version, the game opens in a new tab instead
+function famPlay(g){try{siteSaveAll()}catch(e){}try{lawnSave()}catch(e){}
+  const url=MESA_URL+g.k+'/?from=island&back='+encodeURIComponent(location.origin+location.pathname);
+  if(/(^|\.)vercel\.app$|^localhost$|^127\./.test(location.hostname)&&!/\/versions\//.test(location.pathname)){
+    try{sessionStorage.setItem('bhd_table',g.k)}catch(e){}toast(say('famSit',{game:g.n}),'',3000);setTimeout(()=>{location.href=url},400);return}
+  let w=null;try{w=window.open(url,'_blank')}catch(e){}
+  if(!w)toast(`Play ${g.n} at mesa-games-ochre.vercel.app/${g.k}/`,'',5000)}
+
+// ---------- the Family Island ----------
+(function(){
+  const K=famKit(),G=(x,z)=>baseHeight(x,z);
+  // the family house: a big timber house with a stone base, a steep roof, a stone chimney and a porch along the front
+  // and the east side
+  {const X=-34,Z=212,y=G(X,Z+6.5)+0.05,WALL='sidingW',TRIM=0x5a3b26,ROOF='roofG',STONE='ashlar',GLASS=0x6f8fa4,WHITE=0xeeeae0;
+    K.box(14.4,0.7,10.4,STONE,X,y+0.2,Z);
+    K.box(14,5,10,WALL,X,y+3.05,Z);
+    K.geo(famGable(10,3.6,14),WALL,X,y+5.55,Z);
+    const sl=Math.atan2(3.6,5),rl=Math.hypot(5,3.6)+0.9;
+    for(const s of [-1,1])K.box(15.2,0.25,rl,ROOF,X,y+5.55+1.8+0.1,Z+s*2.55,0,s*sl);
+    K.box(15.2,0.3,0.4,TRIM,X,y+9.2,Z);
+    K.box(1.4,8.6,1.4,STONE,X-5.2,y+5.0,Z-2.2);K.box(1.6,0.3,1.6,'concOld',X-5.2,y+9.4,Z-2.2);
+    for(const s of [-1,1]){K.box(0.3,5.1,0.3,TRIM,X+s*7,y+3.05,Z+5);K.box(0.3,5.1,0.3,TRIM,X+s*7,y+3.05,Z-5)}
+    // windows (frame, glass, sill) round the ground floor, two up in each gable, and the front door
+    const win=(x,yy,z,ry,w,h)=>{K.box(w+0.3,h+0.3,0.12,WHITE,x,yy,z,ry);K.box(w,h,0.16,GLASS,x,yy,z,ry);K.box(w+0.5,0.12,0.3,WHITE,x,yy-h/2-0.15,z,ry);K.box(0.08,h,0.18,WHITE,x,yy,z,ry)};
+    for(const dx of [-5,-2.4,4.1,5.9])win(X+dx,y+2.3,Z+5.02,0,1.3,1.6);
+    for(const dx of [-4.5,0,4.5])win(X+dx,y+2.3,Z-5.02,0,1.3,1.6);
+    for(const s of [-1,1]){for(const dz of [-2.5,2.5])win(X+s*7.02,y+2.3,Z+dz,Math.PI/2,1.3,1.6);for(const dz of [-1.3,1.3])win(X+s*7.02,y+6.6,Z+dz,Math.PI/2,0.9,1.2)}
+    const DX=X+1.3;K.box(1.5,2.6,0.12,WHITE,DX,y+1.85,Z+5.02);K.box(1.2,2.3,0.18,0xa3402e,DX,y+1.7,Z+5.04);K.box(0.12,0.12,0.24,0xd8b04a,DX+0.4,y+1.7,Z+5.1);
+    // porch: deck, posts, rails, a roof sloping off the wall, steps down to the drive, two rocking chairs
+    const PW=2.6,py=y+0.5;
+    K.box(14+PW,0.2,PW,'planks',X+PW/2,py,Z+5+PW/2);K.box(PW,0.2,10,'planks',X+7+PW/2,py,Z);
+    const posts=[];for(let i=0;i<=7;i++)posts.push([X-7+0.2+i*(14+PW-0.4)/7,Z+5+PW-0.2]);for(let i=1;i<=4;i++)posts.push([X+7+PW-0.2,Z+5+PW-0.2-i*(10+PW-0.4)/4]);
+    for(const [px,pz] of posts)K.box(0.22,2.9,0.22,WHITE,px,py+1.55,pz);
+    for(let i=0;i<posts.length-1;i++){const [ax,az]=posts[i],[bx,bz]=posts[i+1];if(i===3)continue;
+      K.box(Math.abs(bx-ax)+0.1,0.1,Math.abs(bz-az)+0.1,WHITE,(ax+bx)/2,py+1.0,(az+bz)/2)}
+    const ps=Math.atan2(0.5,PW);K.box(14+PW+0.4,0.18,PW+0.5,ROOF,X+PW/2,py+3.2,Z+5+PW/2,0,ps);K.box(PW+0.5,0.18,10.2,ROOF,X+7+PW/2,py+3.2,Z,0,0,-ps);
+    for(let i=0;i<3;i++)K.box(2.0,0.2,0.4,'flagstone',DX,py-0.15-i*0.2,Z+5+PW+0.2+i*0.4);
+    for(const dx of [2.5,4.2]){const cx=X+dx,cz=Z+6.2;K.box(0.7,0.08,0.7,0x6b4428,cx,py+0.55,cz);K.box(0.7,0.8,0.08,0x6b4428,cx,py+0.95,cz-0.33);K.box(0.06,0.06,0.9,0x6b4428,cx-0.3,py+0.12,cz,0,0.3);K.box(0.06,0.06,0.9,0x6b4428,cx+0.3,py+0.12,cz,0,0.3)}
+    // the house is solid, the porch walks: its deck, the steps down to the drive, the railings and rocking chairs solid
+    SOLIDS.push({x:X,z:Z,hx:7.3,hz:5.3});walkPad(X+PW/2,Z+5+PW/2,7+PW/2,PW/2,0,py+0.1);walkPad(X+7+PW/2,Z,PW/2,5,0,py+0.1);
+    walkPad(DX,Z+5+PW+0.7,1.0,0.7,Math.PI,y-0.05,{rise:0.65});
+    for(let i=0;i<posts.length-1;i++){if(i===3)continue;const [ax,az]=posts[i],[bx,bz]=posts[i+1];SOLIDS.push({x:(ax+bx)/2,z:(az+bz)/2,hx:Math.abs(bx-ax)/2+0.1,hz:Math.abs(bz-az)/2+0.1})}
+    for(const dx of [2.5,4.2])SOLIDS.push({x:X+dx,z:Z+6.2,hx:0.36,hz:0.4})}
+  // picnic pavilion: a slab, six timber posts, a gable roof and two tables, with room to walk in under it
+  {const X=26,Z=264,y=G(X,Z)+0.02,TIM='beam';
+    K.box(11,0.2,7.5,'concBroom',X,y+0.05,Z);walkPad(X,Z,5.5,3.75,0,y+0.15);
+    for(const dx of [-4.8,0,4.8])for(const dz of [-3.2,3.2]){K.box(0.35,3.2,0.35,TIM,X+dx,y+1.75,Z+dz);SOLIDS.push({x:X+dx,z:Z+dz,hx:0.2,hz:0.2})}
+    K.box(10.2,0.35,0.3,'beam~',X,y+3.3,Z-3.2);K.box(10.2,0.35,0.3,'beam~',X,y+3.3,Z+3.2);
+    K.geo(famGable(6.4,1.8,10.2),'beam~',X,y+3.45,Z);const sl=Math.atan2(1.8,3.2),rl=Math.hypot(3.2,1.8)+0.8;
+    for(const s of [-1,1])K.box(11.2,0.2,rl,'shakes',X,y+3.45+0.9-0.05,Z+s*1.75,0,s*sl);
+    // the tables (picnic8, models.js on Detailed: its top 0.76 m up, level with the boards)
+    const PK=famKit();
+    for(const dx of [-2.5,2.5]){const tx=X+dx;PK.box(1.0,0.08,2.4,0x9a6b42,tx,y+0.82,Z);
+      for(const s of [-1,1]){PK.box(0.32,0.06,2.4,0x9a6b42,tx+s*0.75,y+0.48,Z);PK.box(0.08,0.85,0.08,0x6b4428,tx+s*0.4,y+0.42,Z-1);PK.box(0.08,0.85,0.08,0x6b4428,tx+s*0.4,y+0.42,Z+1)}
+      famSpot('picnic8',tx,y+0.1,Z,Math.PI/2);SOLIDS.push({x:tx,z:Z,hx:0.9,hz:1.2})}
+    famAddSpot('picnic8',PK);
+    for(const g of FAM_GAMES)famBoard(K,g,y+0.86)}
+  // fire pit: a ring of stones round glowing embers and crossed logs, with log benches round it
+  {const X=40,Z=280,y=G(X,Z);
+    for(let i=0;i<10;i++){const a=i/10*Math.PI*2;K.geo(new THREE.IcosahedronGeometry(0.34,0),0x87827c,X+Math.cos(a)*1.1,y+0.12,Z+Math.sin(a)*1.1,a)}
+    K.lit(new THREE.CylinderGeometry(0.85,0.9,0.12,10),0xff7a2a,X,y+0.06,Z);
+    for(let i=0;i<3;i++)K.cyl(0.11,0.11,1.5,6,0x4a3020,X,y+0.24,Z,i*1.05,0,Math.PI/2-0.25);
+    for(let i=0;i<4;i++){const a=i/4*Math.PI*2+0.4,bx=X+Math.cos(a)*3.4,bz=Z+Math.sin(a)*3.4;K.cyl(0.24,0.24,2.2,8,0x6b4a30,bx,y+0.24,bz,Math.PI/2-a,0,Math.PI/2)}
+    SOLIDS.push({x:X,z:Z,hx:1.4,hz:1.4})}
+  // flagpole at the north rim where the bridge comes in, and a bench looking back across the water at Corley's
+  {const X=9,Z=176,y=G(X,Z);K.box(1.2,0.3,1.2,'concrete',X,y+0.15,Z);K.cyl(0.06,0.09,10,8,0xd9dcdf,X,y+5,Z);K.geo(new THREE.IcosahedronGeometry(0.16,0),0xd8b04a,X,y+10.1,Z);
+    const FW=2.4,FH=1.3,fx=X+FW/2+0.08,fy=y+9.2;
+    for(let i=0;i<7;i++)K.box(FW,FH/7,0.03,i%2?0xf4f2ee:0xb3263a,fx,fy+FH/2-FH/14-i*FH/7,Z);
+    K.box(FW*0.42,FH*4/7,0.04,0x2b3d78,X+0.08+FW*0.21,fy+FH/2-FH*2/7,Z);
+    SOLIDS.push({x:X,z:Z,hx:0.6,hz:0.6});
+    const BX=-9,BZ=172,by=G(BX,BZ),BK=famKit();BK.box(2.2,0.08,0.5,0x8a5c38,BX,by+0.48,BZ);BK.box(2.2,0.5,0.08,0x8a5c38,BX,by+0.85,BZ+0.25);
+    for(const s of [-1,1])BK.box(0.1,0.48,0.5,0x55595c,BX+s*0.95,by+0.24,BZ);
+    famSpot('bench',BX,by,BZ,Math.PI,1.1);famAddSpot('bench',BK)}
+  // a stone curb round the roundabout's middle, a step high
+  for(let i=0;i<24;i++){const a=i/24*Math.PI*2,x=FAM_X+Math.sin(a)*8.3,z=FAM_Z-Math.cos(a)*8.3;K.box(2.3,0.25,0.35,0x9b9890,x,FAM_Y+0.025,z,-a);walkPad(x,z,1.15,0.175,-a,FAM_Y+0.15)}
+  {const y=G(-2.7,170);famSign(['FAMILY ISLAND'],4.6,1.1,-6.4,y+2.0,169,Math.PI,'#6b3a22','#f6e7c8');K.box(0.15,2.6,0.15,0x5a3b26,-8.5,y+1.3,169);K.box(0.15,2.6,0.15,0x5a3b26,-4.3,y+1.3,169)}
+  famAdd(K);
+})();
+
+// trees on the Family Island: the map editor's pines and leafy trees (trees.js, its 'fam' group; not saved with
+// the map), a band inside the rim, groves behind the house and to the east and south, and a big tree in the roundabout
+const famTrees=(function(){
+  let sd=11;const rnd=()=>{sd=(sd+0x6D2B79F5)|0;let t=Math.imul(sd^(sd>>>15),1|sd);t=(t+Math.imul(t^(t>>>7),61|t))^t;return((t^(t>>>14))>>>0)/4294967296};
+  const clear=(x,z,m)=>{const d=famR(x,z)-FAM_R;if(d>-2.5)return false;if(roadOff(x,z)<ROAD_W/2+m)return false;
+    if(SOLIDS.some(s=>Math.abs(x-s.x)<s.hx+m+1&&Math.abs(z-s.z)<s.hz+m+1))return false;
+    if(Math.hypot(x-FAM_X,z-FAM_Z)<16||Math.hypot(x-26,z-264)<10||Math.hypot(x-40,z-280)<7||Math.hypot(x-9,z-176)<6||Math.hypot(x+9,z-172)<5||Math.hypot(x+6.4,z-169)<4)return false;
+    if(Math.abs(x)>66&&Math.abs(z-245)<8)return false;return true};
+  const out=[];
+  const grove=(cx,cz,r,n,pf)=>{for(let i=0,g=0;i<n&&g<n*30;g++){const a=rnd()*6.283,d=Math.sqrt(rnd())*r,x=cx+Math.cos(a)*d,z=cz+Math.sin(a)*d;
+    if(!clear(x,z,1.4)||out.some(o=>Math.hypot(o.x-x,o.z-z)<2.6))continue;out.push({t:rnd()<pf?'pine':'leafy',x,z,yaw:rnd()*6.3,s:0.85+rnd()*0.6,c:Math.floor(rnd()*6)});i++}};
+  grove(-38,198,14,15,0.7);grove(40,205,13,11,0.5);grove(-45,288,15,12,0.6);grove(48,300,12,8,0.6);grove(-60,232,9,5,0.8);grove(60,262,9,5,0.8);
+  for(let i=0,g=0;i<38&&g<4000;g++){const a=rnd()*6.283,x=FAM_X+Math.cos(a)*90,z=FAM_Z+Math.sin(a)*90,f=famR(x,z),k=(FAM_R-3-rnd()*10)/f,px=FAM_X+(x-FAM_X)*k,pz=FAM_Z+(z-FAM_Z)*k;
+    if(!clear(px,pz,1.6)||out.some(o=>Math.hypot(o.x-px,o.z-pz)<3))continue;out.push({t:rnd()<0.7?'pine':'leafy',x:px,z:pz,yaw:rnd()*6.3,s:0.8+rnd()*0.7,c:Math.floor(rnd()*6)});i++}
+  out.push({t:'leafy',x:FAM_X,z:FAM_Z,yaw:0.6,s:1.7,c:4});SOLIDS.push({x:FAM_X,z:FAM_Z,hx:0.35,hz:0.35});
+  treeGroup('fam',out.map(a=>treeEntry(a.t,a.x,a.z,a.yaw,a.s,a.c)));
+  return out})();
