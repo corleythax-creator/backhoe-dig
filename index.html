@@ -19,28 +19,8 @@
   <header class="tbar">
     <button id="menuBtn" class="sq" aria-label="Menu" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 7h16M4 12h16M4 17h10"/></svg></button>
     <div class="brand">Corley's<b>Island</b></div>
-    <div class="status" id="status" title="Tap to show less or more">
-      <div class="srow" id="bucketPanel">
-        <div class="line"><span class="lbl">Bucket</span><span class="val" id="bucketVal">0.00 yd³ · 0%</span></div>
-        <div class="bar"><i id="bucketBar"></i></div>
-        <div class="sub" id="tipVal">Tip 2.0 ft above grade</div>
-      </div>
-      <div class="srow">
-        <div class="line"><span class="lbl">Trench</span><span class="val" id="trenchVal">0% · 0:00</span></div>
-        <div class="bar" id="trenchBar"><i></i></div>
-        <div class="sub" id="gasVal">Gas main: buried</div>
-      </div>
-      <div class="srow">
-        <div class="line"><span class="lbl">Truck</span><span class="val" id="truckVal">0.0 / 12 yd³</span></div>
-        <div class="bar"><i id="truckBar"></i></div>
-        <div class="sub" id="haulVal">Hauled 0.0 yd³</div>
-      </div>
-      <div class="srow" id="lawnRow" hidden>
-        <div class="line"><span class="lbl">Lawn</span><span class="val" id="lawnVal">0% · 0:00</span></div>
-        <div class="bar" id="lawnBar"><i></i></div>
-        <div class="sub" id="mowVal">0.0 mph · blades on</div>
-      </div>
-    </div>
+    <!-- what you are in, the clock and the weather (main.js) -->
+    <div id="nowChip" aria-live="off"><b id="nowWhat">On foot</b><span id="nowTime"></span></div>
     <div class="tacts">
       <button id="blkBtn" class="ib" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3l8 4.5v9L12 21l-8-4.5v-9zM12 12l8-4.5M12 12v9M12 12L4 7.5"/></svg><span>Blocks</span></button>
       <button id="ctlBtn" class="ib" aria-expanded="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="2"/><path d="M3.5 12H10M14 12h6.5M12 14v6.5"/></svg><span>Drive</span></button>
@@ -103,6 +83,34 @@
       <button id="modeWalk" data-k="5" aria-pressed="false"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="13" cy="4" r="2"/><path d="M8 11l4-4 3 3 3 1M12 7l-1 7 3 3v4M11 14l-3 7"/></svg><span>Walk</span></button>
     </nav>
   </header>
+  <!-- left column, under the menu: the wallet, the job card (the gauges for what you are running; tap for less) and, in town
+       on a desktop, the townsfolk counts -->
+  <aside class="lpane" id="lpane">
+    <div id="cashChip" hidden><b>Wallet</b><span id="cashVal">$0</span></div>
+  <div class="status" id="status" title="Tap to show less or more" hidden>
+    <div class="srow" id="bucketPanel">
+      <div class="line"><span class="lbl">Bucket</span><span class="val" id="bucketVal">0.00 yd³ · 0%</span></div>
+      <div class="bar"><i id="bucketBar"></i></div>
+      <div class="sub" id="tipVal">Tip 2.0 ft above grade</div>
+    </div>
+    <div class="srow" id="trenchRow">
+      <div class="line"><span class="lbl">Trench</span><span class="val" id="trenchVal">0% · 0:00</span></div>
+      <div class="bar" id="trenchBar"><i></i></div>
+      <div class="sub" id="gasVal">Gas main: buried</div>
+    </div>
+    <div class="srow" id="truckRow">
+      <div class="line"><span class="lbl">Truck</span><span class="val" id="truckVal">0.0 / 12 yd³</span></div>
+      <div class="bar"><i id="truckBar"></i></div>
+      <div class="sub" id="haulVal">Hauled 0.0 yd³</div>
+    </div>
+    <div class="srow" id="lawnRow" hidden>
+      <div class="line"><span class="lbl">Lawn</span><span class="val" id="lawnVal">0% · 0:00</span></div>
+      <div class="bar" id="lawnBar"><i></i></div>
+      <div class="sub" id="mowVal">0.0 mph · blades on</div>
+    </div>
+  </div>
+  <div id="tfChip" hidden><span id="tfChipName">Townsfolk</span><b id="tfChipVal">0</b><span id="tfShopName">Shopfolk</span><b id="tfShopVal">0</b><span class="lbl">Dead</span><b id="tfChipDead">0</b><span id="tfChipSub">Shot <b id="tfChipShot">0</b> · Run over <b id="tfChipRun">0</b></span></div>
+  </aside>
   <!-- right column: the minimap, and the block bar under it while Blocks is on -->
   <aside class="rpane">
     <canvas id="mini" title="Tap for the big map (M)"></canvas>
@@ -122,10 +130,9 @@
     <div id="gunHud" hidden><b id="gunHudN">PISTOL</b><span id="gunHudA">15 / 45</span></div>
   </aside>
   <!-- the two sticks in the thumb zones, between the bars; Get in, Sprint and Jump sit on top of them -->
-  <!-- shop counters and the wallet: above the bars and sticks -->
+  <!-- shop counters: over everything -->
   <div id="gunShop" hidden><h3 id="gsHead">Lakeside Guns</h3><div id="gsList"></div><button id="gsClose">Done</button></div>
   <div id="townShop" hidden><h3 id="tsHead">Shop</h3><p id="tsWho"></p><div id="tsList"></div><button id="tsClose">Done</button></div>
-  <div id="cashChip" hidden><b>Wallet</b><span id="cashVal">$0</span></div>
   <div class="sticks">
     <div class="stickwrap">
       <!-- Use: the best thing to do where you stand (get in or out, load, buy, talk, play chess), ctx.js -->
@@ -150,18 +157,19 @@
     <div class="cap" id="capR"><b>◀ ▶</b> Curl / dump<br><b>▲ ▼</b> Boom down / up</div>
   </footer>
   <div id="benchBar" hidden></div>
-  <button id="heatKey" hidden title="Tap to change what the heatmap shows"><b id="heatName"></b><i id="heatBar"></i><span><span id="heatLo"></span><span id="heatHi"></span></span></button>
-  <!-- the lawn patch you are on (on foot or mowing): its name, share mowed and a meter (lawns.js) -->
-  <div id="bucketChip" hidden><span id="bucketChipName">Bucket</span><b id="bucketChipVal">0%</b><i class="bar"><i id="bucketChipBar"></i><i id="bucketChipFull"></i></i><span id="bucketChipSub"></span></div>
-  <div id="lawnChip" hidden><span id="lawnChipName">Lawn</span><b id="lawnChipVal">0%</b><i class="bar"><i id="lawnChipBar"></i></i></div>
-  <!-- in town on a desktop: how many townsfolk are about and how many he has shot or run over (townfolk.js) -->
-  <div id="tfChip" hidden><span id="tfChipName">Townsfolk</span><b id="tfChipVal">0</b><span id="tfShopName">Shopfolk</span><b id="tfShopVal">0</b><span class="lbl">Dead</span><b id="tfChipDead">0</b><span id="tfChipSub">Shot <b id="tfChipShot">0</b> · Run over <b id="tfChipRun">0</b></span></div>
-  <!-- gun overlays: the crosshair in first person, wanted stars and life, the hurt glow (pistol.js); straight in #hud so they draw over the bars -->
-  <div id="gunCross" hidden></div><div id="gunVit" hidden><div id="gunWant">☆☆☆</div><div id="gunLife"><i id="gunLifeBar"></i></div></div><div id="gunHurtFx"></div>
-  <div id="toast"><span id="toastText"></span></div>
-  <!-- while the mouse is taken for mouse look: how to let it go (controls.js) -->
-  <div id="lockHint" hidden></div>
-  <button id="updBtn" hidden></button>
+  <!-- notices, top middle under the bar: one stack, so nothing lands on anything else: the lawn you are on, wanted stars,
+       the heatmap key, the update button, the mouse-look hint and the messages -->
+  <div id="notices">
+    <div id="lawnChip" hidden><span id="lawnChipName">Lawn</span><b id="lawnChipVal">0%</b><i class="bar"><i id="lawnChipBar"></i></i></div>
+    <div id="bucketChip" hidden><span id="bucketChipName">Bucket</span><b id="bucketChipVal">0%</b><i class="bar"><i id="bucketChipBar"></i><i id="bucketChipFull"></i></i><span id="bucketChipSub"></span></div>
+    <div id="gunVit" hidden><div id="gunWant">☆☆☆</div><div id="gunLife"><i id="gunLifeBar"></i></div></div>
+    <button id="heatKey" hidden title="Tap to change what the heatmap shows"><b id="heatName"></b><i id="heatBar"></i><span><span id="heatLo"></span><span id="heatHi"></span></span></button>
+    <button id="updBtn" hidden></button>
+    <div id="lockHint" hidden></div>
+    <div id="toast"><span id="toastText"></span></div>
+  </div>
+  <!-- gun overlays: the crosshair in first person and the hurt glow (pistol.js); straight in #hud so they draw over the bars -->
+  <div id="gunCross" hidden></div><div id="gunHurtFx"></div>
 </div>
 
 <div id="editor" hidden>
@@ -337,6 +345,7 @@
     <p id="gfxStats" class="gstats" aria-live="off"></p>
     <p id="gfxMem" class="gstats" aria-live="off" title="An estimate: what the game asks the GPU to hold. Browsers do not report the real figure."></p>
     <div class="ggraph"><canvas id="gfxGraph" aria-label="Frame rate over the last 10 seconds"></canvas><p id="gfxGraphCap" class="devline"></p></div>
+    <button id="fpsShow" class="ghost" aria-pressed="false">Frame rate on screen: off</button>
     <div id="gfxList"></div>
     <div class="row"><button id="gfxDone">Done</button><button id="gfxReset" class="ghost">Preset again</button></div>
   </div>

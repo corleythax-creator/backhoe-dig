@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-06T22:25:00Z",
+ "updated": "2026-11-06T22:46:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -108,9 +108,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-06",
-   "dh": 20,
-   "act": 1,
-   "versions": 3
+   "dh": 30,
+   "act": 1.5,
+   "versions": 4
   }
  ],
  "extra": [
@@ -3216,6 +3216,15 @@ window.EFFORT = {
    "tris": 5857965,
    "chars": 2215258,
    "what": "Use button and action dock (HUD step 3): one Use button over the left stick (F, controller B) gets in or out, loads, buys, orders, talks or sits down to chess; the buttons over the right stick show the four that matter now, with More for the rest; Pump, Wipers, Hook box, Coupler and Grip move down from the top bar to your thumb"
+  },
+  {
+   "v": 345,
+   "asked": "2026-11-06T16:30:00-06:00",
+   "live": "2026-11-06T16:46:01-06:00",
+   "dh": 10,
+   "tris": 5860120,
+   "chars": 2218782,
+   "what": "Screen areas and job card (HUD step 4): your gauges are back as a job card on the left (bucket, trench, truck load, lawn), messages and notices stack in one place at the top, a chip by the menu says what you're in and the time, UI size scales everything evenly, and the frame rate is off unless Graphics turns it on"
   }
  ]
 };
