@@ -151,15 +151,13 @@ function pbAct(){const c=pbCtx(),H=pbS.hold,K=H&&PB_KINDS[H];pbS.btnT=0;
 // its button runs it through act (keys.js b, controls.js)
 
 // every frame, after the machines have moved: the loads ride and slide, the store restocks, the worker carries, and the
-// Carry button says what it will do (a few times a second)
+// first-time hint (a few times a second; the Use button says what it will do, ctx.js)
 function pbTick(dt){for(const h of hvs)if(h.pb)pbSlide(h,dt);
   pbS.rt+=dt;if(pbS.rt>=TU.shopRestock){pbS.rt=0;let ch=false;for(const k of PB_K)if(pbS.stock[k]<PB_KINDS[k].max){pbS.stock[k]++;ch=true}if(ch)pbStockDraw()}
   if(!SHOP.loaded&&(Math.hypot(camera.position.x-SHOP.x,camera.position.z-SHOP.z)<320||Math.hypot(camera.position.x-95,camera.position.z-530)<320))shopLoad();
   if(pbS.hold&&mode==='walk'&&!wk.inside)for(let s=0;s<2;s++){wkArms[s].top.rotation.x=-0.75;wkArms[s].low.rotation.x=-0.85}
   if((pbS.looseT-=dt)<0){pbS.looseT=1;for(const o of pbS.loose)o.m.position.y=surfAt(o.x,o.z)}
-  if((pbS.btnT-=dt)>0)return;pbS.btnT=0.15;const c=pbCtx(),b=$('#bedBtn'),t=c?(c.lbl||(c.a==='buy'?'Buy '+PB_KINDS[c.k].s+' '+usd(TOWN_PB[c.k]):PB_BTN[c.a])):'';
-  if(b.hidden===!!c)b.hidden=!c;if(c&&b.textContent!==t)b.textContent=t;
-  if(!pbS.hint&&mode==='walk'&&!wk.inside&&!pbS.hold&&pbNearBed()){pbS.hint=true;toast(say('pbHint'),'tip',6000)}}
+  if((pbS.btnT-=dt)>0)return;pbS.btnT=0.15;  if(!pbS.hint&&mode==='walk'&&!wk.inside&&!pbS.hold&&pbNearBed()){pbS.hint=true;toast(say('pbHint'),'tip',6000)}}
 
 // ---------- saved with the rigs (save.js) ----------
 function pbSave(){return {b:hvs.map(h=>h.pb?h.pb.it.map(i=>PB_KINDS[i.k].c).join(''):''),l:pbS.loose.map(o=>[PB_KINDS[o.k].c,+o.x.toFixed(2),+o.z.toFixed(2),+o.yaw.toFixed(2)]),

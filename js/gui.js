@@ -26,7 +26,7 @@ const GUI_VARS=[['--machine','Accent (machine orange)','c'],['--gas','Highlight 
 const GUI_FONTS=['"Barlow Condensed","Arial Narrow",system-ui,sans-serif','"Barlow",system-ui,sans-serif','system-ui,sans-serif','Arial,Helvetica,sans-serif',
   '"Arial Narrow",Arial,sans-serif','Verdana,sans-serif','"Trebuchet MS",sans-serif','Georgia,serif','Impact,"Arial Black",sans-serif','"Courier New",monospace'];
 // parts that are usually hidden until the game needs them, shown on request so they can be styled
-const GUI_PEEK=[['#menu','Menu'],['#help','Start card'],['#blkBar','Blocks bar'],['#walkBtns','Sprint and Jump'],['#seatBtn','Get in'],['#pumpBtn','Pump'],['#wipeBtn','Wipers'],
+const GUI_PEEK=[['#menu','Menu'],['#help','Start card'],['#blkBar','Blocks bar'],['#actDock','Action buttons'],['#seatBtn','Use'],['#pumpBtn','Pump'],['#wipeBtn','Wipers'],
   ['#boxBtn','Hook box'],['#cplBtn','Coupler'],['#gripBtn','Thumb grip'],['#lawnRow','Lawn gauge'],['#lawnChip','Lawn patch gauge'],['#bucketChip','Bucket gauge'],['#heatKey','Heatmap key'],['#updBtn','Update button'],['#keysBox','Keys panel'],['#ctrlsBox','Controls panel'],['#ctlMenu','Drive list'],['#gfxBox','Graphics panel']];
 // ready-made groups (selector, name), picked from the Groups tab and then edited like any part
 const GUI_GROUPS=[['#hud button','Every button on the screen'],['.tbar button','Top bar buttons'],['#ctlMenu button','Machine buttons'],['.bbar button','Bottom bar buttons'],

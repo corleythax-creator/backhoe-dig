@@ -474,6 +474,8 @@ function wsMake(ws){
   ws.mesh.visible=false;ws.mesh.userData.noCover=true;ws.par.add(ws.mesh)}
 for(const ws of WS)wsMake(ws);
 let wipeOn=false,wipeTipped=false;
+// wipeWant: whether the Wipers button applies (rain, wet glass or wipers on; ctx.js shows it)
+let wipeWant=false;
 function setWipers(on){wipeOn=!!on;const b=$('#wipeBtn');b.textContent=wipeOn?'Wipers: on':'Wipers';b.setAttribute('aria-pressed',wipeOn)}
 // its button runs it through act (keys.js b, controls.js)
 // blade angle at a point in its cycle (0-1: out and back)
@@ -490,5 +492,5 @@ function wsTick(dt,r){let wetMax=0;
     ws.mesh.visible=m>0.01;if(ws.mesh.visible){ws.mat.uniforms.uT.value=(ws.mat.uniforms.uT.value+dt)%1000;ws.mat.uniforms.uRun.value=gfxCur.tex==='low'?0:1}
     if(mode===ws.mode)wetMax=m}
   // the button shows in the excavator and the truck while it rains, or while the glass is wet or the wipers run
-  const show=WS.some(ws=>ws.mode===mode)&&(r>0.03||wetMax>0.1||wipeOn),bt=$('#wipeBtn');if(bt.hidden===show)bt.hidden=!show;
+  wipeWant=WS.some(ws=>ws.mode===mode)&&(r>0.03||wetMax>0.1||wipeOn);
   if(!wipeTipped&&!wipeOn&&camMode==='cab'&&wetMax>0.4){wipeTipped=true;toast(say('wipeTip'),'tip',4000)}}

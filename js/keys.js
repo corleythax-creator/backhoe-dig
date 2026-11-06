@@ -34,7 +34,7 @@ const KEY_ACTIONS=[
   {id:'walk',g:'Modes',n:'Walk',d:'Get out and walk',k:['Digit5']},
   {id:'nextMode',g:'Modes',n:'Next mode',d:'With Shift held, the one before',k:['Tab']},
   {id:'prevMode',g:'Modes',n:'Previous mode',d:'The mode before this one (Shift and Next mode does it too)',k:[]},
-  {id:'enter',b:'#seatBtn',g:'On foot',n:'Get in / get out',d:'Climb into the machine you are standing next to (or sit down at a game table on the pavilion); press again to climb out',k:['KeyF']},
+  {id:'enter',b:'#seatBtn',g:'On foot',n:'Use',d:'Does what the Use button over the left stick says: climbs into the machine you are next to or out of the one you are in, loads or unloads a pickup, buys, orders, talks, sits down at a game table',k:['KeyF']},
   {id:'jump',b:'#jumpBtn',g:'On foot',n:'Jump',d:'About 6 ft: onto blocks and up stacks',k:['Space'],s:'walk'},
   {id:'sprint',g:'On foot',n:'Sprint',d:'Hold to run flat out, about 12 mph',k:['ShiftLeft','ShiftRight'],s:'walk'},
   {id:'plant',b:'#plantBtn',g:'On foot',n:'Plant a tree',d:'A sapling of the chosen kind in front of you (next to one of yours: dig it up). Slide ☰ Time, Date ahead to see it grow',k:['Digit7'],s:'walk'},
@@ -46,7 +46,7 @@ const KEY_ACTIONS=[
   {id:'gunNext',b:'#gunHud',g:'On foot',n:'Next gun',d:'Switches to the next gun you own',k:['Backquote'],s:'walk'},
   {id:'trimBump',b:'#bumpBtn',g:'On foot',n:'Bump the trimmer line',d:'Taps the head on the ground to feed more line off the spool when it wears short',k:['Digit0'],s:'walk'},
   {id:'plantKind',b:'#plantKindBtn',g:'On foot',n:'Tree to plant',d:'Steps through spruce, red pine, oak, sugar maple and birch',k:['Digit8'],s:'walk'},
-  {id:'carry',b:'#bedBtn',g:'On foot',n:'Carry: load and unload',d:'At the store, take what is stocked there (or put it back); at a pickup\'s tailgate, load what you carry or take out the top thing; anywhere else set it down, empty a bag of mulch on Corley\'s island, or pick a thing up',k:['KeyT'],s:'walk'},
+  {id:'carry',g:'On foot',n:'Carry: load and unload',d:'At the store, take what is stocked there (or put it back); at a pickup\'s tailgate, load what you carry or take out the top thing; anywhere else set it down, empty a bag of mulch on Corley\'s island, or pick a thing up',k:['KeyT'],s:'walk'},
   {id:'blocks',b:'#blkBtn',g:'Blocks',n:'Blocks on / off',d:'Show the block bar and the outline where one lands (the other block keys work only while it is on; changing mode puts it away)',k:['KeyB']},
   {id:'place',b:'#blkPlace',g:'Blocks',n:'Place block',d:'Under the bucket, in front of you on foot, or at the dot in first person',k:['KeyE']},
   {id:'lift',b:'#blkRemove',g:'Blocks',n:'Lift block',d:'The top block under the bucket, the one in front of you, or the one at the dot',k:['KeyX']},
@@ -135,7 +135,7 @@ const PAD_MAP=[[0,'A','jump','place'],[1,'B','back','back'],[2,'X','place','box'
   [8,'View (Back)','map','map'],[9,'Menu (Start)','help','help'],[11,'Right stick click','lookAhead','lookAhead'],
   [12,'D-pad up','blocks','blocks'],[13,'D-pad down','lift','lift'],[14,'D-pad left','sizeDown','sizeDown'],[15,'D-pad right','size','size']];
 // names for what only the controller does
-const PAD_ONLY={back:'Back: closes the map, help or menu; otherwise gets in or out'};
+const PAD_ONLY={back:'Back: closes the map, help or menu; otherwise Use (gets in or out, loads, buys, talks)'};
 function padActName(id){return PAD_ONLY[id]||KEY_BY[id].n}
 function ctrlPad(){return [['Sticks and triggers',[['Left stick','Drives, or walks on foot'],['Right stick','Works the boom, bed or blade; on foot, turns and looks'],
     ['Right trigger / left trigger','Gas / reverse (Drive, Truck, Skid)'],['Left stick click','Sprint on foot']]],

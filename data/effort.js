@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-06T22:07:00Z",
+ "updated": "2026-11-06T22:25:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -108,9 +108,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-06",
-   "dh": 12,
+   "dh": 20,
    "act": 1,
-   "versions": 2
+   "versions": 3
   }
  ],
  "extra": [
@@ -3207,6 +3207,15 @@ window.EFFORT = {
    "tris": 5858526,
    "chars": 2211883,
    "what": "One action pipeline (HUD step 2): every key, screen button, controller button and VR button runs the same action, so they always do the same thing; the Controls panel's controller list is written from the real button map; new Previous mode and Block size down actions"
+  },
+  {
+   "v": 344,
+   "asked": "2026-11-06T16:09:00-06:00",
+   "live": "2026-11-06T16:25:36-06:00",
+   "dh": 8,
+   "tris": 5857965,
+   "chars": 2215258,
+   "what": "Use button and action dock (HUD step 3): one Use button over the left stick (F, controller B) gets in or out, loads, buys, orders, talks or sits down to chess; the buttons over the right stick show the four that matter now, with More for the rest; Pump, Wipers, Hook box, Coupler and Grip move down from the top bar to your thumb"
   }
  ]
 };

@@ -208,9 +208,8 @@ function frame(now){
   if(hudT<=0){hudT=0.1;
     // the job gauges (#status) are hidden by the stylesheet unless a skin shows them: checked once a second, written only when seen
     if((stVisT-=0.1)<=0){stVisT=1;stVis=$('#status').offsetParent!==null}
-    {const pb=$('#pumpBtn');if(pb.hidden===waterAny)pb.hidden=!waterAny}
-    {const sb=$('#seatBtn'),walk=mode==='walk',mc=walk&&wkNear(),gm=walk&&!mc?famGameNear():null,show=walk?!!(mc||gm):!!wk.inside;if(sb.hidden===show)sb.hidden=!show;const t=walk?(gm?gm.b:'Get in'):'Get out';if(sb.textContent!==t)sb.textContent=t}
-    {const bb=$('#boxBtn'),show=TB.hooked||boxNear();if(bb.hidden===show)bb.hidden=!show;const t=TB.hooked?'Drop box':'Hook box';if(bb.textContent!==t)bb.textContent=t}
+    // the action dock and the Use button (ctx.js); the box button's words
+    ctxTick();{const bb=$('#boxBtn'),t=TB.hooked?'Drop box':'Hook box';if(bb.textContent!==t)bb.textContent=t}
     // in the skid steer the bucket line is its bucket
     const skm=mode==='skid',bl=skm?sk.load:st.load,pct=Math.round(bl/(skm?TU.skCap:TU.exCap)*100);
     if(stVis){$('#bucketVal').textContent=`${(bl*1.308).toFixed(2)} yd³ · ${pct}%`;
