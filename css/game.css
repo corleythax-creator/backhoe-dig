@@ -647,3 +647,10 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
 /* the frame rate line shows only when Graphics says so */
 #hud .bbar .stats{display:none}
 body.fps #hud .bbar .stats{display:block}
+
+/* the menu's tabs: a row along its top; the picked one is lit */
+#menu .mtabs{display:flex;gap:2px;margin:0 0 4px;padding-bottom:4px;border-bottom:1px solid var(--hud-line);position:sticky;top:0;z-index:1;background:inherit}
+#menu .mtabs button{flex:1 1 0;height:38px;padding:0 6px;font:700 13px/1 var(--f-display);letter-spacing:.08em;text-transform:uppercase;text-align:center;color:var(--muted);border-radius:3px}
+#menu .mtabs button[aria-selected="true"]{background:var(--machine);color:#1c1309}
+#menu .mtab{display:flex;flex-direction:column;gap:1px}#menu .mtab[hidden]{display:none}
+#menu{min-width:340px}

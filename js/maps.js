@@ -241,4 +241,3 @@ $('#tpCancel').onclick=()=>tpSet(null);
 // its button runs it through act (keys.js b, controls.js)
 $('#mapClose').onclick=()=>toggleMap(false);
 $('#bigmap').addEventListener('click',e=>{if(e.target.id==='bigmap')toggleMap(false)});
-addEventListener('keydown',e=>{if(e.code==='Escape')toggleMap(false)});
