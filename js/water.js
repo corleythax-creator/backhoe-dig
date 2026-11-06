@@ -132,4 +132,4 @@ function mudAt(x,z){const i=Math.round(gI(x)),j=Math.round(gJ(z));if(i<0||i>N||j
 function underWater(p){const i=Math.round(gI(p.x)),j=Math.round(gJ(p.z));if(i<0||i>N||j<0||j>N)return false;return Wt[j*V+i]>p.y}
 function setPump(on){pumpOn=!!on&&waterAny;const b=$('#pumpBtn');b.textContent=pumpOn?'Pump: on':'Pump';b.setAttribute('aria-pressed',pumpOn);
   if(pumpOn)toast(say('pumpOn'),'good')}
-$('#pumpBtn').onclick=()=>setPump(!pumpOn);
+// its button runs it through act (keys.js b, controls.js)

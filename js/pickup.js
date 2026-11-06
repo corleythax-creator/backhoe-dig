@@ -148,7 +148,7 @@ function pbAct(){const c=pbCtx(),H=pbS.hold,K=H&&PB_KINDS[H];pbS.btnT=0;
   else if(c.a==='spread'){pbSpread(c.x,c.z);pbHold(null);pbS.spread++;toast(say('mulchSpread',{ft:Math.round(TU.mulchW/FT),n:pbS.spread}),'',2600)}
   else if(c.a==='down'){const m=pbS.holdM;pbS.holdM=null;pbHold(null);pbDrop(H,wk.x+Math.sin(wk.yaw)*0.75,wk.z+Math.cos(wk.yaw)*0.75,wk.yaw,m);toast(say(H==='mulch'?'mulchNoPaint':'itemDown',{item:K.n}),'',2600)}
   else if(c.a==='up'){const o=pbS.loose.splice(c.j,1)[0];pbHold(o.k,o.m);toast(say('itemUp',{item:PB_KINDS[o.k].n}),'',1800)}}
-$('#bedBtn').addEventListener('pointerdown',e=>{e.preventDefault();pbAct()});
+// its button runs it through act (keys.js b, controls.js)
 
 // every frame, after the machines have moved: the loads ride and slide, the store restocks, the worker carries, and the
 // Carry button says what it will do (a few times a second)

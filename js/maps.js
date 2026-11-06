@@ -238,7 +238,7 @@ function startOn(isl,k){const S=START_ISL[isl];if(!S)return;let kk=k;
     tpPick={x:S[0],z:S[1]};kk=k!=='foot'&&!tpSpot(k,S[0],S[1])?'foot':k;tpGo(kk,true);tpSet(null)}
   toast(say('startIsl',{island:START_ISL_N[isl],how:kk==='foot'?'on foot':'in the '+WK_RIDES[kk].n}),'good',3200)}
 $('#tpCancel').onclick=()=>tpSet(null);
-$('#mini').addEventListener('click',()=>toggleMap(true));
+// its button runs it through act (keys.js b, controls.js)
 $('#mapClose').onclick=()=>toggleMap(false);
 $('#bigmap').addEventListener('click',e=>{if(e.target.id==='bigmap')toggleMap(false)});
 addEventListener('keydown',e=>{if(e.code==='Escape')toggleMap(false)});

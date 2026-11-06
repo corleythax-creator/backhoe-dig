@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-06T21:55:00Z",
+ "updated": "2026-11-06T22:07:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -108,9 +108,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-06",
-   "dh": 4,
-   "act": 0.5,
-   "versions": 1
+   "dh": 12,
+   "act": 1,
+   "versions": 2
   }
  ],
  "extra": [
@@ -3198,6 +3198,15 @@ window.EFFORT = {
    "tris": 5853690,
    "chars": 2210684,
    "what": "Screen fixes (HUD step 1): the pistol card takes taps and sits under the minimap, gun overlays draw over the bars, T carries or picks what to set down (not both), no more parts on top of each other, Esc and controller B close the menu, machine list and Sync"
+  },
+  {
+   "v": 343,
+   "asked": "2026-11-06T15:58:00-06:00",
+   "live": "2026-11-06T16:07:02-06:00",
+   "dh": 8,
+   "tris": 5858526,
+   "chars": 2211883,
+   "what": "One action pipeline (HUD step 2): every key, screen button, controller button and VR button runs the same action, so they always do the same thing; the Controls panel's controller list is written from the real button map; new Previous mode and Block size down actions"
   }
  ]
 };

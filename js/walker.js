@@ -233,7 +233,7 @@ function updateWalker(dt,mx,mz,lookX,lookY){
   walker.position.set(wk.x,wk.y,wk.z);walker.rotation.y=wk.yaw;
   walker.visible=!(on&&camMode==='cab'&&!gunHas())}
 function walkJump(){if(mode!=='walk')return;wk.jumpQ=0.15;started()}
-$('#jumpBtn').addEventListener('pointerdown',e=>{e.preventDefault();walkJump()});
+// its button runs it through act (keys.js b, controls.js)
 function setSprint(on){wk.sprint=on;wk.stillT=0;$('#sprintBtn').setAttribute('aria-pressed',on)}
 $('#sprintBtn').addEventListener('pointerdown',e=>{e.preventDefault();setSprint(!wk.sprint);started()});
 // ---------- getting in and out ----------
@@ -267,4 +267,4 @@ function seatToggle(){
   const k=rideOf(mode);if(!k)return;
   if(!wkPlaceOut(k)){toast(say('noRoomOut'));return}
   wk.inside=null;setMode('walk')}
-$('#seatBtn').onclick=seatToggle;
+// its button runs it through act (keys.js b, controls.js)

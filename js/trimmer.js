@@ -125,5 +125,4 @@ function trimSnd(dt){if(!snd||!snd.ready||actx.state!=='running')return;
   const rpm=650+r*(1950-260*trim.cutK);sndEngineTo(S.e,rpm,0.3+0.5*r,lvl,t);
   S.wg.gain.setTargetAtTime(0.18*r*r*(trim.line>0.01?1:0.4),t,0.08);S.wf.frequency.setTargetAtTime(500+1100*r-150*trim.cutK,t,0.08);
   S.cg.gain.setTargetAtTime(0.42*trim.cutK,t,0.04)}
-$('#trimBtn').addEventListener('pointerdown',e=>{e.preventDefault();trimSet(!trim.on)});
-$('#bumpBtn').addEventListener('pointerdown',e=>{e.preventDefault();trimBump()});
+// its button runs it through act (keys.js b, controls.js)

@@ -3,7 +3,9 @@
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 // ---------- actions ----------
 // g: group in the panel, n: name, d: what it does in each mode, k: default keys (up to two), s: where it works ('walk' on
-// foot, 'ride' in a machine, otherwise everywhere). One key can do one job on foot and another in a machine
+// foot, 'ride' in a machine, otherwise everywhere). One key can do one job on foot and another in a machine.
+// b: the on-screen button that does it, can: whether it can be done now. Keys, buttons, the controller (PAD_MAP) and VR all
+// run an action the same way, through act(id) in controls.js; a new action is one row here and one handler in KEY_RUN
 const KEY_ACTIONS=[
   {id:'lUp',g:'Sticks',n:'Left stick up',d:'Stick out · drive forward · gas · mower straight ahead · walk forward',k:['KeyW','ArrowUp']},
   {id:'lDown',g:'Sticks',n:'Left stick down',d:'Stick in · drive back · brake and reverse · mower straight back · walk back',k:['KeyS','ArrowDown']},
@@ -31,41 +33,43 @@ const KEY_ACTIONS=[
   {id:'skid',g:'Modes',n:'Skid steer',d:'Drive Dexter\'s skid steer',k:['Digit6']},
   {id:'walk',g:'Modes',n:'Walk',d:'Get out and walk',k:['Digit5']},
   {id:'nextMode',g:'Modes',n:'Next mode',d:'With Shift held, the one before',k:['Tab']},
-  {id:'enter',g:'On foot',n:'Get in / get out',d:'Climb into the machine you are standing next to (or sit down at a game table on the pavilion); press again to climb out',k:['KeyF']},
-  {id:'jump',g:'On foot',n:'Jump',d:'About 6 ft: onto blocks and up stacks',k:['Space'],s:'walk'},
+  {id:'prevMode',g:'Modes',n:'Previous mode',d:'The mode before this one (Shift and Next mode does it too)',k:[]},
+  {id:'enter',b:'#seatBtn',g:'On foot',n:'Get in / get out',d:'Climb into the machine you are standing next to (or sit down at a game table on the pavilion); press again to climb out',k:['KeyF']},
+  {id:'jump',b:'#jumpBtn',g:'On foot',n:'Jump',d:'About 6 ft: onto blocks and up stacks',k:['Space'],s:'walk'},
   {id:'sprint',g:'On foot',n:'Sprint',d:'Hold to run flat out, about 12 mph',k:['ShiftLeft','ShiftRight'],s:'walk'},
-  {id:'plant',g:'On foot',n:'Plant a tree',d:'A sapling of the chosen kind in front of you (next to one of yours: dig it up). Slide ☰ Time, Date ahead to see it grow',k:['Digit7'],s:'walk'},
-  {id:'trim',g:'On foot',n:'String trimmer',d:'Take out or put away the string trimmer: it cuts the grass and weeds it swings over (a fresh spool each time you put it away)',k:['Digit9'],s:'walk'},
-  {id:'gun',g:'On foot',n:'Gun',d:'Take out or put away your gun; while it is out, a click on the view fires it',k:['KeyG'],s:'walk'},
+  {id:'plant',b:'#plantBtn',g:'On foot',n:'Plant a tree',d:'A sapling of the chosen kind in front of you (next to one of yours: dig it up). Slide ☰ Time, Date ahead to see it grow',k:['Digit7'],s:'walk'},
+  {id:'trim',b:'#trimBtn',g:'On foot',n:'String trimmer',d:'Take out or put away the string trimmer: it cuts the grass and weeds it swings over (a fresh spool each time you put it away)',k:['Digit9'],s:'walk'},
+  {id:'gun',b:'#gunBtn',g:'On foot',n:'Gun',d:'Take out or put away your gun; while it is out, a click on the view fires it',k:['KeyG'],s:'walk'},
   {id:'gunShoot',g:'On foot',n:'Fire',d:'Shoots the way you face (in first person, at the crosshair), like a click on the view while a gun is out; the carbine fires while held',k:[],s:'walk'},
   {id:'talk',g:'On foot',n:'Talk',d:'Says something to the townsperson nearest you, when Townsfolk talk is on (☰ menu): a box opens to type in',k:['Enter'],s:'walk'},
-  {id:'gunReload',g:'On foot',n:'Reload',d:'Loads the gun in your hands from the rounds you carry (more at Lakeside Guns on Main Street)',k:['KeyR'],s:'walk'},
-  {id:'gunNext',g:'On foot',n:'Next gun',d:'Switches to the next gun you own',k:['Backquote'],s:'walk'},
-  {id:'trimBump',g:'On foot',n:'Bump the trimmer line',d:'Taps the head on the ground to feed more line off the spool when it wears short',k:['Digit0'],s:'walk'},
-  {id:'plantKind',g:'On foot',n:'Tree to plant',d:'Steps through spruce, red pine, oak, sugar maple and birch',k:['Digit8'],s:'walk'},
-  {id:'carry',g:'On foot',n:'Carry: load and unload',d:'At the store, take what is stocked there (or put it back); at a pickup\'s tailgate, load what you carry or take out the top thing; anywhere else set it down, empty a bag of mulch on Corley\'s island, or pick a thing up',k:['KeyT'],s:'walk'},
-  {id:'blocks',g:'Blocks',n:'Blocks on / off',d:'Show the block bar and the outline where one lands (the other block keys work only while it is on; changing mode puts it away)',k:['KeyB']},
-  {id:'place',g:'Blocks',n:'Place block',d:'Under the bucket, in front of you on foot, or at the dot in first person',k:['KeyE']},
-  {id:'lift',g:'Blocks',n:'Lift block',d:'The top block under the bucket, the one in front of you, or the one at the dot',k:['KeyX']},
+  {id:'gunReload',b:'#reloadBtn',g:'On foot',n:'Reload',d:'Loads the gun in your hands from the rounds you carry (more at Lakeside Guns on Main Street)',k:['KeyR'],s:'walk'},
+  {id:'gunNext',b:'#gunHud',g:'On foot',n:'Next gun',d:'Switches to the next gun you own',k:['Backquote'],s:'walk'},
+  {id:'trimBump',b:'#bumpBtn',g:'On foot',n:'Bump the trimmer line',d:'Taps the head on the ground to feed more line off the spool when it wears short',k:['Digit0'],s:'walk'},
+  {id:'plantKind',b:'#plantKindBtn',g:'On foot',n:'Tree to plant',d:'Steps through spruce, red pine, oak, sugar maple and birch',k:['Digit8'],s:'walk'},
+  {id:'carry',b:'#bedBtn',g:'On foot',n:'Carry: load and unload',d:'At the store, take what is stocked there (or put it back); at a pickup\'s tailgate, load what you carry or take out the top thing; anywhere else set it down, empty a bag of mulch on Corley\'s island, or pick a thing up',k:['KeyT'],s:'walk'},
+  {id:'blocks',b:'#blkBtn',g:'Blocks',n:'Blocks on / off',d:'Show the block bar and the outline where one lands (the other block keys work only while it is on; changing mode puts it away)',k:['KeyB']},
+  {id:'place',b:'#blkPlace',g:'Blocks',n:'Place block',d:'Under the bucket, in front of you on foot, or at the dot in first person',k:['KeyE']},
+  {id:'lift',b:'#blkRemove',g:'Blocks',n:'Lift block',d:'The top block under the bucket, the one in front of you, or the one at the dot',k:['KeyX']},
   {id:'size',g:'Blocks',n:'Block size',d:'Steps through cubes, 1 to 10 ft (the block bar sets wide, long and tall one by one, down to 1 in)',k:['KeyV']},
-  {id:'blkTurn',g:'Blocks',n:'Turn block',d:'A quarter turn: wide and long swap',k:['KeyQ']},
-  {id:'blkLock',g:'Blocks',n:'Block snap',d:'Grid, grid plus flush against nearby blocks, nearby blocks only, or free (exactly where you aim)',k:['Backslash']},
+  {id:'sizeDown',g:'Blocks',n:'Block size down',d:'Steps back through the cubes, 10 ft down to 1 ft',k:[]},
+  {id:'blkTurn',b:'#blkTurn',g:'Blocks',n:'Turn block',d:'A quarter turn: wide and long swap',k:['KeyQ']},
+  {id:'blkLock',b:'#blkLock',g:'Blocks',n:'Block snap',d:'Grid, grid plus flush against nearby blocks, nearby blocks only, or free (exactly where you aim)',k:['Backslash'],can:()=>blkOn},
   {id:'blkWhat',g:'Blocks',n:'Block or thing',d:'On foot, the next in the What list: a block, then the things to set down (lights, signs, garden and yard things…)',k:['KeyT'],s:'walk'},
   {id:'blkMat',g:'Blocks',n:'Block material',d:'Next material: plain concrete, then the library',k:['KeyY']},
-  {id:'blkFar',g:'Blocks',n:'Reach farther',d:'In first person on foot, push the block out from you (the mouse wheel does too)',k:['BracketRight']},
-  {id:'blkNear',g:'Blocks',n:'Reach nearer',d:'In first person on foot, pull the block back toward you',k:['BracketLeft']},
-  {id:'box',g:'Site',n:'Trench box',d:'Hook it to the bucket, or set it down',k:['KeyT'],s:'ride'},
-  {id:'coupler',g:'Site',n:'Quick coupler',d:'In Dig: set the attachment down, or pick up the one the coupler is lowered onto (bucket, thumb, hammer, auger)',k:['Period'],s:'ride'},
-  {id:'grip',g:'Site',n:'Thumb grip',d:'With the thumb on: grip the block between its jaws, or let it go',k:['Comma'],s:'ride'},
-  {id:'pump',g:'Site',n:'Pump',d:'Dewater a flooded hole',k:['KeyP']},
-  {id:'wipers',g:'Site',n:'Wipers',d:'Turn the windscreen wipers on or off in the excavator and the truck',k:['Space'],s:'ride'},
-  {id:'cam',g:'View',n:'Camera',d:'Switch the camera: chase, then the cab (or your own eyes), then the free orbit camera',k:['KeyC']},
+  {id:'blkFar',g:'Blocks',n:'Reach farther',d:'In first person on foot, push the block out from you (the mouse wheel does too)',k:['BracketRight'],can:()=>blkOn},
+  {id:'blkNear',g:'Blocks',n:'Reach nearer',d:'In first person on foot, pull the block back toward you',k:['BracketLeft'],can:()=>blkOn},
+  {id:'box',b:'#boxBtn',g:'Site',n:'Trench box',d:'Hook it to the bucket, or set it down',k:['KeyT'],s:'ride'},
+  {id:'coupler',b:'#cplBtn',g:'Site',n:'Quick coupler',d:'In Dig: set the attachment down, or pick up the one the coupler is lowered onto (bucket, thumb, hammer, auger)',k:['Period'],s:'ride'},
+  {id:'grip',b:'#gripBtn',g:'Site',n:'Thumb grip',d:'With the thumb on: grip the block between its jaws, or let it go',k:['Comma'],s:'ride'},
+  {id:'pump',b:'#pumpBtn',g:'Site',n:'Pump',d:'Dewater a flooded hole',k:['KeyP']},
+  {id:'wipers',b:'#wipeBtn',g:'Site',n:'Wipers',d:'Turn the windscreen wipers on or off in the excavator and the truck',k:['Space'],s:'ride'},
+  {id:'cam',b:'#camBtn',g:'View',n:'Camera',d:'Switch the camera: chase, then the cab (or your own eyes), then the free orbit camera',k:['KeyC']},
   {id:'lookAhead',g:'View',n:'Look ahead',d:'In cab view, turn your head back to straight ahead and zoom out',k:['KeyR'],s:'ride'},
   {id:'zoom',g:'View',n:'Zoom',d:'Hold to zoom in, in cab view (the mouse wheel or a pinch zooms too, but on foot with blocks on the wheel sets their reach)',k:['KeyZ']},
-  {id:'map',g:'View',n:'Big map',d:'Open or close the site map',k:['KeyM']},
+  {id:'map',b:'#mini',g:'View',n:'Big map',d:'Open or close the site map',k:['KeyM']},
   {id:'sound',g:'View',n:'Sound',d:'Sound on or off',k:['KeyN']},
   {id:'help',g:'View',n:'How to play',d:'Open or close the help card',k:['KeyH']},
-  {id:'stats',g:'View',n:'Stats',d:'Open or close your stats: grass mowed, distance walked and driven, dirt moved',k:['KeyO']},
+  {id:'stats',b:'#statsTop',g:'View',n:'Stats',d:'Open or close your stats: grass mowed, distance walked and driven, dirt moved',k:['KeyO']},
   {id:'heat',g:'View',n:'Lawn heatmap',d:'Show the lawn heatmap; press again to change what it shows, then to hide it',k:['KeyU']}];
 const KEY_BY={};for(const a of KEY_ACTIONS)KEY_BY[a.id]=a;
 // the player's keys: action id -> [key code or '', key code or '']
@@ -123,20 +127,25 @@ const CTRL_MOUSE=[['Mouse',[['Drag the scene','Turns the camera round the machin
     ['Wheel','Camera nearer or farther; in cab view, zooms; on foot in first person with blocks on, pushes the block out or pulls it back'],
     ['Left click (blocks on)','Places a block (Dig or Walk mode)'],['Right click (mouse taken, blocks on)','Lifts the block the dot is on']]],
   ['Touch',[['Left stick','Drives, or walks on foot'],['Right stick','Works the boom, bed or blade; on foot, turns and looks'],
-    ['Drag the scene','Turns the camera; in cab view, looks around'],['Pinch (cab view)','Zooms'],
-    ['Buttons','Blocks, Drive, Controls, Chase / Cab, Get in or out, Sprint, Jump']]]];
-const CTRL_PAD=[['Sticks and triggers',[['Left stick','Drives, or walks on foot'],['Right stick','Works the boom, bed or blade; on foot, turns and looks'],
-    ['Right trigger / left trigger','Gas / reverse (Drive, Truck, Skid)'],['Left stick click','Sprint on foot'],['Right stick click','Look straight ahead and reset the zoom']]],
-  ['Buttons',[['A','Jump on foot; places a block in a machine'],['B','Gets in or out; closes the map or help'],['X','Places a block on foot; hooks the box in a machine'],
-    ['Y','Chase / cab view'],['LB / RB','Previous / next machine']]],
-  ['D-pad and menu',[['D-pad up','Blocks on or off'],['D-pad down','Lifts a block'],['D-pad left / right','Block size smaller / bigger'],
-    ['View (Back)','Map'],['Menu (Start)','How to play']]]];
+    ['Drag the scene','Turns the camera; in cab view, looks around'],['Pinch','Camera nearer or farther; in cab view, zooms'],
+    ['Buttons','Every button on the screen does the same as its key: Blocks, Drive, Chase / Cab, Get in or out, Sprint, Jump and the rest']]]];
+// the controller's buttons (standard mapping index -> action, on foot / in a machine); padButton (controls.js) runs them
+// through act, and the Controls panel lists them from here, so the two can't drift apart
+const PAD_MAP=[[0,'A','jump','place'],[1,'B','back','back'],[2,'X','place','box'],[3,'Y','cam','cam'],[4,'LB','prevMode','prevMode'],[5,'RB','nextMode','nextMode'],
+  [8,'View (Back)','map','map'],[9,'Menu (Start)','help','help'],[11,'Right stick click','lookAhead','lookAhead'],
+  [12,'D-pad up','blocks','blocks'],[13,'D-pad down','lift','lift'],[14,'D-pad left','sizeDown','sizeDown'],[15,'D-pad right','size','size']];
+// names for what only the controller does
+const PAD_ONLY={back:'Back: closes the map, help or menu; otherwise gets in or out'};
+function padActName(id){return PAD_ONLY[id]||KEY_BY[id].n}
+function ctrlPad(){return [['Sticks and triggers',[['Left stick','Drives, or walks on foot'],['Right stick','Works the boom, bed or blade; on foot, turns and looks'],
+    ['Right trigger / left trigger','Gas / reverse (Drive, Truck, Skid)'],['Left stick click','Sprint on foot']]],
+  ['Buttons',PAD_MAP.map(([,n,w,r])=>[n,w===r?padActName(w):`${padActName(w)} on foot; ${padActName(r)} in a machine`])]]}
 let ctrlsTab='kb';
 function ctrlsDraw(){let h='';
   const rows=(g,list)=>`<h2>${g}</h2>`+list.map(([k,d])=>`<div class="krow"><div class="kname">${k}<small>${d}</small></div></div>`).join('');
   if(ctrlsTab==='kb'){let g='';for(const a of KEY_ACTIONS){if(a.g!==g){g=a.g;h+=`<h2>${g}</h2>`}
       const k=keyBind[a.id].filter(Boolean).map(keyName).join(' or ')||'—';h+=`<div class="krow"><div class="kname">${a.n}<small>${a.d}</small></div><div class="kkey">${k}</div></div>`}}
-  else for(const [g,list] of ctrlsTab==='pad'?CTRL_PAD:CTRL_MOUSE)h+=rows(g,list);
+  else for(const [g,list] of ctrlsTab==='pad'?ctrlPad():CTRL_MOUSE)h+=rows(g,list);
   $('#ctrlsList').innerHTML=h;document.querySelectorAll('#ctrlsTabs button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.t===ctrlsTab))}
 function showCtrls(on){$('#ctrlsBox').hidden=!on;if(on)ctrlsDraw()}
 $('#ctrlsTabs').onclick=e=>{const b=e.target.closest('button');if(b){ctrlsTab=b.dataset.t;ctrlsDraw()}};

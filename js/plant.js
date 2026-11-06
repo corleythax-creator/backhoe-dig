@@ -76,8 +76,7 @@ function plantNext(){plant.sp=(plant.sp+1)%TREE_SP.length;plantSave();plantKindU
 // the Plant button on foot, and the Date row's button naming (and stepping) the tree Plant sets
 function plantKindUI(){const b=$('#plantKindBtn');if(b)b.textContent=TREE_SP[plant.sp].name.replace(/^./,c=>c.toUpperCase())}
 plantKindUI();
-$('#plantBtn').addEventListener('pointerdown',e=>{e.preventDefault();plantHere()});
-$('#plantKindBtn').onclick=()=>plantNext();
+// its button runs it through act (keys.js b, controls.js)
 // dry ground above the lake, not standing water
 function plantSpotOk(x,z){const w=waterAt(x,z);return surfAt(x,z)>=WATER+0.05&&!(w&&w.d>0.15)}
 // a new planted tree of species k at x, z, put in at game time t

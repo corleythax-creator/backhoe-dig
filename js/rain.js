@@ -475,7 +475,7 @@ function wsMake(ws){
 for(const ws of WS)wsMake(ws);
 let wipeOn=false,wipeTipped=false;
 function setWipers(on){wipeOn=!!on;const b=$('#wipeBtn');b.textContent=wipeOn?'Wipers: on':'Wipers';b.setAttribute('aria-pressed',wipeOn)}
-$('#wipeBtn').onclick=()=>setWipers(!wipeOn);
+// its button runs it through act (keys.js b, controls.js)
 // blade angle at a point in its cycle (0-1: out and back)
 const wsAng=(b,ph)=>b.a0+(b.a1-b.a0)*(0.5-0.5*Math.cos(ph*Math.PI*2));
 function wsTick(dt,r){let wetMax=0;
