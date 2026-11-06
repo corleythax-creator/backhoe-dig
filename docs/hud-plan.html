@@ -1,0 +1,209 @@
+<title>Island HUD Cleanup Plan</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Barlow+Condensed:wght@600;700&family=Barlow:wght@400;500;600&display=swap">
+<style>
+/* Layout: one reading column, a jobsite "plan sheet"; findings as tagged rows, phases as a sequence, zones drawn as a phone screen. */
+:root{
+  --bg:#f3f1ec; --sheet:#fbfaf7; --ink:#1d1c19; --muted:#5f5b52; --line:#d9d4c8;
+  --machine:#d86a12; --machine-ink:#fff; --bug:#b3261e; --tidy:#2f6f8f; --ok:#2e7d4a; --zone:#e9e4d8;
+  --f-display:'Barlow Condensed','Arial Narrow',sans-serif; --f-body:'Barlow',system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#16150f; --sheet:#1f1d17; --ink:#efebe2; --muted:#a9a395; --line:#3a372e;
+  --machine:#f08a2c; --machine-ink:#1c1309; --bug:#ef6b60; --tidy:#6fb3d6; --ok:#6cc58a; --zone:#2a271f; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#16150f; --sheet:#1f1d17; --ink:#efebe2; --muted:#a9a395; --line:#3a372e;
+  --machine:#f08a2c; --machine-ink:#1c1309; --bug:#ef6b60; --tidy:#6fb3d6; --ok:#6cc58a; --zone:#2a271f; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font:17px/1.55 var(--f-body);padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+main{max-width:760px;margin:0 auto;padding-block:28px 64px}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;line-height:1.1;margin:0}
+h1{font-size:40px;letter-spacing:.01em}
+h2{font-size:28px;margin-top:44px;padding-top:14px;border-top:3px solid var(--ink)}
+h3{font-size:21px;margin-top:22px}
+p{margin:10px 0}
+.eyebrow{font:700 13px var(--f-display);letter-spacing:.14em;text-transform:uppercase;color:var(--machine)}
+.lede{font-size:19px;color:var(--muted)}
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:18px 0}
+.facts div{background:var(--sheet);border:1px solid var(--line);border-radius:6px;padding:10px 12px}
+.facts b{display:block;font:700 30px var(--f-display);font-variant-numeric:tabular-nums}
+.facts span{font-size:14px;color:var(--muted)}
+ul.find{list-style:none;padding:0;margin:12px 0;display:grid;gap:8px}
+ul.find li{background:var(--sheet);border:1px solid var(--line);border-radius:6px;padding:10px 12px;display:grid;grid-template-columns:auto 1fr;gap:4px 10px;align-items:start}
+ul.find li>div{min-width:0}
+.tag{font:700 12px var(--f-display);letter-spacing:.1em;text-transform:uppercase;padding:2px 7px;border-radius:4px;white-space:nowrap;margin-top:3px}
+.tag.bug{background:var(--bug);color:#fff}
+.tag.mess{background:var(--tidy);color:#fff}
+.tag.ux{background:var(--machine);color:var(--machine-ink)}
+code{font:14px ui-monospace,Menlo,monospace;background:var(--zone);padding:1px 4px;border-radius:3px;overflow-wrap:anywhere}
+.screen{position:relative;aspect-ratio:844/390;max-width:100%;background:var(--zone);border:2px solid var(--ink);border-radius:14px;margin:14px 0;display:grid;
+  grid-template-columns:28% 1fr 28%;grid-template-rows:auto 1fr auto;gap:6px;padding:8px;font:600 12px/1.25 var(--f-display);letter-spacing:.03em}
+.screen>div{border:1.5px dashed var(--muted);border-radius:8px;padding:5px 7px;background:var(--sheet);min-width:0;overflow:hidden}
+.screen b{display:block;color:var(--machine);text-transform:uppercase;font-size:11px;letter-spacing:.1em}
+.z-tl{grid-area:1/1}.z-tc{grid-area:1/2}.z-tr{grid-area:1/3/3/4}.z-ml{grid-area:2/1}.z-c{grid-area:2/2;border:none!important;background:transparent!important;display:grid;place-items:center;color:var(--muted)}
+.z-bl{grid-area:3/1}.z-bc{grid-area:3/2}.z-br{grid-area:3/3}
+.cap{font-size:14px;color:var(--muted);margin-top:-6px}
+ol.phases{list-style:none;padding:0;margin:14px 0;counter-reset:ph;display:grid;gap:12px}
+ol.phases>li{counter-increment:ph;background:var(--sheet);border:1px solid var(--line);border-left:6px solid var(--machine);border-radius:6px;padding:12px 14px}
+ol.phases>li h3{margin:0;display:flex;gap:10px;align-items:baseline;flex-wrap:wrap}
+ol.phases>li h3::before{content:"Phase " counter(ph);font-size:14px;letter-spacing:.1em;text-transform:uppercase;color:var(--machine)}
+ol.phases .hrs{margin-left:auto;font-size:15px;color:var(--muted);font-variant-numeric:tabular-nums}
+ol.phases ul{margin:8px 0 0;padding-left:20px}
+ol.phases li li{margin:4px 0}
+.win{font-size:15px;color:var(--ok);font-weight:600;margin-top:8px}
+.tw{overflow-x:auto;margin:12px 0}
+table{border-collapse:collapse;font-size:15px;min-width:520px;width:100%}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font:700 13px var(--f-display);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.note{border:1px solid var(--line);background:var(--sheet);border-radius:6px;padding:10px 14px;font-size:16px}
+@media (max-width:520px){h1{font-size:32px}.screen{font-size:10px}.screen b{font-size:9px}}
+</style>
+
+<main>
+<p class="eyebrow">Corley's Island · Screen and controls</p>
+<h1>HUD cleanup plan</h1>
+<p class="lede">What the screen is made of today, what's wrong with it, and an eight-step plan to make it cleaner and easier to understand. Each step ships on its own.</p>
+
+<div class="facts">
+  <div><b>62</b><span>key actions, run through 3 separate input paths (4 with VR)</span></div>
+  <div><b>~25</b><span>HUD parts, each shown or hidden by its own file</span></div>
+  <div><b>11</b><span>panels, each with its own open, close and Esc code</span></div>
+  <div><b>189</b><span>toast calls, one message slot, no queue</span></div>
+  <div><b>15</b><span>font sizes and 13 corner radii in the HUD CSS</span></div>
+  <div><b>0</b><span>styled parts in the live skin, so ids are free to change</span></div>
+</div>
+
+<h2>How it works today</h2>
+<h3>Layout</h3>
+<p><code>#hud</code> is a 3×3 grid (<code>css/game.css</code>:20). Only four parts sit in the grid: the top bar, the right column (minimap and block bar), the sticks and the bottom bar. Everything else floats, placed by hand-picked offsets: <code>top:22%</code>, <code>+64px</code>, <code>+72px</code>, <code>+84px</code>, <code>+124px</code>, <code>top:70px</code>. Three size variables (<code>--s</code>, <code>--ms</code>, <code>--cs</code>) plus CSS <code>zoom</code> make UI size scale each part by a different amount.</p>
+<div class="screen" aria-label="Today's screen on a phone in landscape">
+  <div class="z-tl"><b>Top left</b>☰ Menu (a long scroll: play, build, world, settings, 7 tests)</div>
+  <div class="z-tc"><b>Floating</b>Lawn chip, bucket chip, wallet, lock hint, gun stars, heat key, update button: separate offsets, some overlap</div>
+  <div class="z-tr"><b>Top right</b>Pump · Wipers · Hook box · Coupler · Grip · Blocks · Drive · Chase/Cab/Orbit, then the minimap with the pistol card behind it</div>
+  <div class="z-ml"><b>Hidden</b>Job gauges (bucket, trench, truck, lawn): still updated every 0.1 s but never shown</div>
+  <div class="z-c">3D view</div>
+  <div class="z-bl"><b>Bottom left</b>Get in · left stick · caption</div>
+  <div class="z-bc"><b>Bottom middle</b>fps · triangles · resolution</div>
+  <div class="z-br"><b>Bottom right</b>Drive/Dig switch, or 7–9 walking buttons in one row · right stick · caption</div>
+</div>
+<p class="cap">Today's screen, drawn from the phone screenshot at 844×390.</p>
+
+<h3>How things happen</h3>
+<p>Keys go through <code>KEY_ACTIONS</code> → <code>KEY_RUN</code> (good). On-screen buttons each have their own click handler that calls the game function directly, the gamepad has a hard-coded button list (<code>padButton</code>), and VR has a fourth. Each contextual button (Get in, Hook box, Coupler, Grip, Pump, Wipers, Load, Bump, Reload) decides for itself when to appear, in seven different files. <code>setMode</code> handles only a few parts. Everything else checks the mode on its own every frame or every 0.1 s.</p>
+
+<h2>What's wrong</h2>
+<h3>Broken now</h3>
+<ul class="find">
+  <li><span class="tag bug">Bug</span><div>Tapping the pistol card to switch guns does nothing: <code>#gunHud</code> never turns pointer events back on (<code>game.css</code>:138).</div></li>
+  <li><span class="tag bug">Bug</span><div>On foot, <b>T</b> fires both Carry and Block-or-thing: two walking actions share the key, and the clash check only runs when you rebind a key, never on the default keys.</div></li>
+  <li><span class="tag bug">Bug</span><div>The gun stars, crosshair and pistol card sit inside <code>.sticks</code>, so they draw under the top bar and minimap. On the phone the pistol card is half behind the minimap.</div></li>
+  <li><span class="tag bug">Bug</span><div>The heatmap key and the update button sit in the same place (<code>top:22%</code>). The lock hint and the wallet both sit at +64 px, and on phones the lawn chip moves there too. The wallet draws over an open menu.</div></li>
+  <li><span class="tag bug">Bug</span><div>Esc doesn't close the menu, the Drive list or Sync. Ten other panels each listen for Esc on their own.</div></li>
+  <li><span class="tag bug">Bug</span><div>If the top bar is docked at the bottom in the screen editor, the menu still drops downward, off the screen.</div></li>
+</ul>
+<h3>Confusing for the player</h3>
+<ul class="find">
+  <li><span class="tag ux">Words</span><div><b>Drive</b> means four things: the machine list button, a hidden mode button, the excavator's Drive/Dig switch, and the <code>drive</code> mode. <b>Controls</b> means two (the menu panel and the start card's box).</div></li>
+  <li><span class="tag ux">Machines</span><div>The Drive list offers only 5 machines and hands you their sticks without seating you. The dozer, loader, semi, backhoe, pickup, carts, bike and boats are only reachable by walking up and tapping Get in. Tab and LB/RB cycle the same 6 modes, including the hidden one.</div></li>
+  <li><span class="tag ux">Reach</span><div>Contextual buttons (Pump, Hook box, Coupler, Grip, Wipers) appear top right, far from your thumbs, among buttons that never change. Get in is bottom left, Load is in the walking row, Talk is a separate chip. There are four different places to look for "what can I do here".</div></li>
+  <li><span class="tag ux">Info</span><div>The job gauges (bucket load, trench progress, truck load, lawn) are hidden. The bucket and lawn chips that replaced them are switched off with <code>!important</code>. You get no feedback on your work, yet the code still writes them all every 0.1 s.</div></li>
+  <li><span class="tag ux">Clutter</span><div>The fps and triangle counter is always on screen. The menu mixes playing, the time and weather sliders, the AI talk model with its per-line costs, and seven developer tests in one long scroll.</div></li>
+  <li><span class="tag ux">Touch</span><div>On a phone you can't reach the outriggers, Talk, Look ahead or Next machine. The touch walking row grows to 9 buttons in one line.</div></li>
+  <li><span class="tag ux">Messages</span><div>One toast slot: a new message wipes the last one. About 20 messages bypass <code>WORDS</code> as raw strings, so the screen editor can't reword them.</div></li>
+  <li><span class="tag ux">Help</span><div>How to play is a single wall of about 30 long entries. The Controls panel repeats much of it, and the gamepad text is typed by hand, so it has drifted from the code (LB/RB "previous/next machine").</div></li>
+</ul>
+<h3>Messy under the hood</h3>
+<ul class="find">
+  <li><span class="tag mess">CSS</span><div>About 55 hard-coded colours (the gun, shop and wallet block hardly uses the tokens), 15 font sizes and 13 radii. 34 <code>[hidden]</code> rules duplicate the global one. <code>--bar</code>, <code>--pb</code> and <code>#hud.lg</code> are defined but nothing uses them.</div></li>
+  <li><span class="tag mess">Breakpoints</span><div>The CSS splits at 640, 440 and 1000 px, the screen editor at 900/520, and the touch check is done in JS. A phone can be "phone" to one and "big" to the other.</div></li>
+  <li><span class="tag mess">Inputs</span><div>Buttons repeat key logic instead of sharing it (Stats, Pump, Wipers, Blocks, Help). The <b>C</b> key works by clicking the camera button. Sprint is held on a keyboard but latched on touch. The heatmap has two different cycles.</div></li>
+  <li><span class="tag mess">Panels</span><div>No shared panel manager: no back stack, gamepad B only closes help and the map, and each panel has its own backdrop and Esc code.</div></li>
+</ul>
+
+<h2>The target layout</h2>
+<p>Six fixed zones, each a stack that grows away from its corner, so things queue up instead of colliding. Each zone is a named <code>grid-template-area</code>, the same names the screen editor docks by. A part goes into a zone, never at an offset.</p>
+<div class="screen" aria-label="Target screen on a phone in landscape">
+  <div class="z-tl"><b>Status</b>☰ · what you're in (Excavator, Dig) · wallet · clock and weather icon</div>
+  <div class="z-tc"><b>Notices</b>One stack, newest on top, at most 2: tips, warnings, lock hint, update, lawn progress</div>
+  <div class="z-tr"><b>Map</b>Minimap · compass · camera (Chase/Cab/Orbit) · Machines</div>
+  <div class="z-ml"><b>Job card</b>Per machine: bucket, load, trench %, speed, ammo. Tap to fold</div>
+  <div class="z-c">3D view, nothing else on it but the aim dot</div>
+  <div class="z-bl"><b>Left thumb</b>Big <i>Use</i> button (Get in / Talk / Buy / Play chess / Load) · left stick · caption</div>
+  <div class="z-bc"><b>Panel tray</b>Block bar or shop slides up here when open</div>
+  <div class="z-br"><b>Right thumb</b>Up to 4 action buttons for this mode (Dig/Drive, Pump, Hook box, Jump…) and More · right stick</div>
+</div>
+<p class="cap">Both thumbs get everything they need; the top is for reading, the bottom for doing.</p>
+
+<h2>The plan</h2>
+<ol class="phases">
+  <li><h3>Fix what's broken <span class="hrs">~4 h</span></h3>
+    <ul>
+      <li>Let the pistol card take taps; give Carry its own default key and check the default keys for clashes in <code>keys.js</code> at load.</li>
+      <li>Move the gun overlays out of <code>.sticks</code>; separate the heat key from the update button and the wallet from the lock hint.</li>
+      <li>Esc and gamepad B close the menu, the Drive list and Sync.</li>
+      <li>Stop writing gauges nobody can see, until Phase 4 shows them again.</li>
+    </ul><p class="win">Every button you can see works, and nothing covers anything else.</p></li>
+
+  <li><h3>One action pipeline <span class="hrs">~8 h</span></h3>
+    <ul>
+      <li>Add <code>act(id)</code>: keys, buttons, gamepad and VR all call it, and the button handlers that copy key logic go away.</li>
+      <li>Give each <code>KEY_ACTIONS</code> entry an optional <code>btn</code> (its button id), <code>pad</code> (its controller button) and <code>can()</code> (whether it can be done now).</li>
+      <li>The gamepad map becomes data, so the Controls panel is generated from it and can't drift (rebinding it can come later).</li>
+    </ul><p class="win">A new action is one table row, and it works on every input.</p></li>
+
+  <li><h3>One context system <span class="hrs">~8 h</span></h3>
+    <ul>
+      <li>Add a <code>CTX</code> list: id, label (a <code>WORDS</code> id), mode, priority, <code>when()</code>. One 0.1 s tick picks what's shown, replacing the separate show/hide checks in main.js, coupler.js, rain.js, trenchbox.js, pickup.js, trimmer.js, pistol.js and family.js.</li>
+      <li>Fold Get in, Talk, Buy, Play chess, Load and Pick up into one <b>Use</b> button (F, gamepad B), labelled with the best thing to do right now. <code>pbCtx</code> already works this way for the pickup.</li>
+      <li>The right thumb shows the top 4 actions for the mode. The rest go under More, which ends the 9-button walking row.</li>
+    </ul><p class="win">There is one place to look for what you can do here, right under your thumbs.</p></li>
+
+  <li><h3>Zones and the job card <span class="hrs">~10 h</span></h3>
+    <ul>
+      <li>Rebuild <code>#hud</code> with the six named zones above. Each floating part moves into its zone's stack: wallet to Status; lawn, bucket and townsfolk chips to the job card or Notices; gun stars to Notices; pistol card to the job card.</li>
+      <li>Bring back the gauges as one job card per machine (bucket, truck load, trench, mowing, skid load, ammo), with large readable numbers in feet, yd³ and mph. It folds with a tap.</li>
+      <li>One <code>--ui</code> scale variable for every part instead of three plus <code>zoom</code>.</li>
+      <li>Move fps and triangles into Graphics, with a "Show frame rate" switch (default off).</li>
+    </ul><p class="win">Nothing overlaps at any size, and UI size scales the whole screen evenly.</p></li>
+
+  <li><h3>Machines, named once <span class="hrs">~6 h</span></h3>
+    <ul>
+      <li>Rename the top button to <b>Machines</b>. It lists every machine, including the dozer, loader, semi, backhoe, pickup, carts, bike and boats, with how far away each is. Picking one seats you in it, the same as walking up and tapping Use.</li>
+      <li>The excavator and backhoe switch becomes <b>Tracks / Arm</b> (backhoe: <b>Wheel / Hoe</b>), so "Drive" means only driving. Delete the hidden <code>#modeDrive</code>.</li>
+      <li>Tab and LB/RB cycle the nearest machines, not a fixed list of 6.</li>
+    </ul><p class="win">Every machine is one tap away, under one name.</p></li>
+
+  <li><h3>Menu and panels <span class="hrs">~8 h</span></h3>
+    <ul>
+      <li>One panel manager (<code>panel.open(id)</code>) with a back stack. Esc and gamepad B close the top panel, and every card shares one backdrop.</li>
+      <li>The menu gets tabs: <b>Play</b> (map, stats, how to play), <b>Build</b> (map editor, every item, edit the screen), <b>World</b> (time, date, weather), <b>Settings</b> (graphics, sound, controls and keys merged, screen size, minimap, sticks, messages, townsfolk talk), <b>Developer</b> (the seven tests, speed test, reset, frame rate).</li>
+    </ul><p class="win">The menu fits on a phone screen without scrolling, and the developer tests are out of the player's way.</p></li>
+
+  <li><h3>Messages and help <span class="hrs">~6 h</span></h3>
+    <ul>
+      <li>The toast becomes a queue in the Notices zone: priority, merging of repeats, at most 2 shown. Convert the raw-string toasts to <code>say()</code> ids so the screen editor can reword them.</li>
+      <li>Replace How to play's wall of text: a short card the first time you get into each machine (from <code>WORDS</code>), and a searchable list of topics in Play.</li>
+    </ul><p class="win">Help shows up when you need it, and you can turn it off.</p></li>
+
+  <li><h3>Tokens, CSS cleanup, screen editor <span class="hrs">~6 h</span></h3>
+    <ul>
+      <li>A type scale of 4 HUD sizes (14 / 17 / 22 / 30 px), 3 radii and colour tokens for gun, shop and wallet. Drop the duplicate <code>[hidden]</code> rules and the unused variables.</li>
+      <li>One breakpoint pair shared by the CSS and the screen editor (phone ≤ 900 wide or ≤ 520 tall).</li>
+      <li>The screen editor docks by zone names. Update <code>GUI_PEEK</code>, <code>GUI_GROUPS</code> and <code>guiDockCss</code>, run <code>tools/gui_editor.py</code> and republish the screen editor.</li>
+    </ul><p class="win">The owner can move any zone in the screen editor, with no code.</p></li>
+</ol>
+<p>Total: about <b>56 developer hours</b>, released as 8 versions in order. Phases 1 and 2 can go out right away. Phases 3 and 4 are the big visible change.</p>
+
+<h2>Things it must keep working</h2>
+<div class="tw"><table>
+<thead><tr><th>Area</th><th>What to keep</th></tr></thead>
+<tbody>
+<tr><td>Screen skins</td><td>The live skin in <code>island_gui</code> is empty (checked Nov 6), so ids can change now. Keep ids on every new part, and update gui.js's hard-coded selector lists in the same change.</td></tr>
+<tr><td>Keys</td><td>Action ids in <code>KEY_ACTIONS</code> stay as they are (players' saved bindings point at them). New fields are added, never renamed.</td></tr>
+<tr><td>Words and tunings</td><td>Keep <code>WORDS</code> and <code>TUNE</code> ids stable. New labels go in as new ids.</td></tr>
+<tr><td>Phone</td><td>Above 30 fps on Low. The context tick stays at 0.1 s and writes to the page only when something changes.</td></tr>
+<tr><td>Tests</td><td>The tour test drives the touch stick and Get in. Its Get in step moves to the Use button in Phase 3.</td></tr>
+<tr><td>Map editor</td><td>Its own screen (<code>#editor</code>) is out of scope here, apart from sharing the tokens in Phase 8.</td></tr>
+</tbody></table></div>
+
+<p class="note">You can already do some of this without code: the screen editor (☰ → Edit the screen) can hide the fps counter, restyle any part, and move the top bar, bottom bar, minimap and sticks. The plan above fixes the parts it can't reach.</p>
+</main>

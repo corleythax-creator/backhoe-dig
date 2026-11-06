@@ -41,13 +41,13 @@ const MODES=['dig','drive','truck','mow','skid','walk'];let kbUsed=false;
 const KEY_RUN={dig:()=>setMode('dig'),drive:()=>setMode('drive'),exSwap:()=>exSwap(),bhOut:()=>bhOut(),truck:()=>setMode('truck'),mow:()=>setMode('mow'),skid:()=>setMode('skid'),walk:()=>setMode('walk'),
   nextMode:e=>setMode(MODES[(MODES.indexOf(mode)+(e.shiftKey?MODES.length-1:1))%MODES.length]),
   stats:()=>showStats(statBox.hidden),heat:()=>{if(!heat.on)setHeat(true);else if(heat.mode!==HEAT_MODES[HEAT_MODES.length-1][0])heatNext();else setHeat(false)},
-  enter:()=>seatToggle(),jump:()=>walkJump(),plant:()=>plantHere(),trim:()=>trimSet(!trim.on),trimBump:()=>trimBump(),gun:()=>gunEquip(!gun.eq),gunShoot:()=>gunFire(),gunReload:()=>gunReload(),talk:()=>talkOpen(),gunNext:()=>gunNext(),plantKind:()=>plantNext(),carry:()=>pbAct(),blocks:()=>setBlocks(!blkOn),place:()=>placeBlock(),lift:()=>removeBlock(),size:()=>blkCube(1),blkTurn:()=>blkTurn(),blkLock:()=>{if(blkOn)toast(say('blkSnap',{snap:blkLockNext()}),'',1400)},blkFar:()=>{if(blkOn)blkReachBy(2)},blkNear:()=>{if(blkOn)blkReachBy(-2)},
-  blkWhat:()=>{if(!blkOn){toast(say('blkIsOff'),'tip',1800);return}const ks=['',...Object.keys(PROPS)];setBlkThing(ks[(ks.indexOf(blkThing)+1)%ks.length]);toast(say('blkWhat',{what:blkThing?PROPS[blkThing].n:'Block'}),'',1200)},
+  enter:()=>seatToggle(),jump:()=>walkJump(),plant:()=>plantHere(),trim:()=>trimSet(!trim.on),trimBump:()=>trimBump(),gun:()=>gunEquip(!gun.eq),gunShoot:()=>gunFire(),gunReload:()=>gunReload(),talk:()=>talkOpen(),gunNext:()=>gunNext(),plantKind:()=>plantNext(),carry:e=>{if(blkOn&&e&&keyBind.blkWhat.includes(e.code))return;pbAct()},blocks:()=>setBlocks(!blkOn),place:()=>placeBlock(),lift:()=>removeBlock(),size:()=>blkCube(1),blkTurn:()=>blkTurn(),blkLock:()=>{if(blkOn)toast(say('blkSnap',{snap:blkLockNext()}),'',1400)},blkFar:()=>{if(blkOn)blkReachBy(2)},blkNear:()=>{if(blkOn)blkReachBy(-2)},
+  blkWhat:e=>{if(!blkOn){if(!(e&&keyBind.carry.includes(e.code)))toast(say('blkIsOff'),'tip',1800);return}const ks=['',...Object.keys(PROPS)];setBlkThing(ks[(ks.indexOf(blkThing)+1)%ks.length]);toast(say('blkWhat',{what:blkThing?PROPS[blkThing].n:'Block'}),'',1200)},
   blkMat:()=>{let m=blkMat;do m=(m+1)%MAT_MAX;while(m&&!MAT_LIST[m-1]);setBlkMat(m);toast(say('blkMat',{mat:blkMatName(blkMat)}),'',1400)},
   box:()=>hookBox(),coupler:()=>cplAct(),grip:()=>cplGrip(),lookAhead:()=>{if(camMode==='cab')fpl.home=true;fpl.zt=1},pump:()=>setPump(!pumpOn),wipers:()=>setWipers(!wipeOn),cam:()=>$('#camBtn').click(),map:()=>toggleMap(),sound:()=>setSound(!sndCfg.on),help:()=>{help.hidden=!help.hidden}};
 addEventListener('keydown',e=>{const c=e.code;
   if((e.ctrlKey||e.metaKey||e.altKey)&&!/^(Control|Alt|Meta)/.test(c))return;
-  if(c==='Escape'){help.hidden=true;return}
+  if(c==='Escape'){help.hidden=true;showMenu(false);showCtl(false);if(!syncBox.hidden)showSync(false);return}
   if(!keysBox.hidden)return;
   const acts=keyActs(c);keys[c]=true;
   if(acts.length||c.startsWith('Arrow')||c==='Space'||c==='Tab')e.preventDefault();
@@ -109,7 +109,7 @@ function padButton(i){usePad();inT=performance.now();if(i===1)padBackT=performan
   else if(i===11){if(camMode==='cab')fpl.home=true;fpl.zt=1}
   else if(i===8)toggleMap();
   else if(i===9)help.hidden=!help.hidden;
-  else if(i===1){const open=!help.hidden||!$('#bigmap').hidden;help.hidden=true;toggleMap(false);if(!open&&(mode==='walk'||wk.inside))seatToggle()}}
+  else if(i===1){const open=!help.hidden||!$('#bigmap').hidden||!$('#menu').hidden||!$('#ctlMenu').hidden||!syncBox.hidden;help.hidden=true;toggleMap(false);showMenu(false);showCtl(false);if(!syncBox.hidden)showSync(false);if(!open&&(mode==='walk'||wk.inside))seatToggle()}}
 function pollPad(){for(const k in PA)PA[k]=0;PA.sprint=false;rumbleWatch();const gp=getPad();if(!gp)return;
   const dz=v=>Math.abs(v)<0.15?0:(v-Math.sign(v)*0.15)/0.85,ax=gp.axes,b=gp.buttons,bv=i=>b[i]?b[i].value:0;
   PA.lx=dz(ax[0]||0);PA.ly=-dz(ax[1]||0);PA.rx=dz(ax[2]||0);PA.ry=-dz(ax[3]||0);PA.thr=bv(7)-bv(6);PA.sprint=!!(b[10]&&b[10].pressed);
@@ -249,7 +249,7 @@ $('#soundBtn').onclick=()=>{showSound(true);showMenu(false)};
 $('#keysBtn').onclick=()=>{showKeys(true);showMenu(false)};
 function showMenu(on){const m=$('#menu');m.hidden=!on;$('#menuBtn').setAttribute('aria-expanded',on);if(on)menuFit()}
 // the menu's top in its own (zoomed) pixels, so its height limit (game.css) keeps it inside the window at any UI size
-function menuFit(){const m=$('#menu');if(m.hidden)return;const r=m.getBoundingClientRect(),z=r.height/(m.offsetHeight||1)||1;m.style.setProperty('--mtop',Math.ceil(r.top/z)+'px')}
+function menuFit(){const m=$('#menu');if(m.hidden)return;const r=m.getBoundingClientRect(),z=r.height/(m.offsetHeight||1)||1;m.style.setProperty('--mtop',Math.ceil(r.top/z)+'px');m.style.setProperty('--mbot',Math.floor(m.parentNode.getBoundingClientRect().top/z)+'px')}
 addEventListener('resize',menuFit);
 $('#menuBtn').onclick=()=>{showMenu($('#menu').hidden);showCtl(false)};
 $('#view').addEventListener('pointerdown',()=>{showMenu(false);showCtl(false)});

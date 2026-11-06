@@ -206,36 +206,38 @@ function frame(now){
   hudT-=dt;
   if(hudT<=0)mapsTick(0.1);
   if(hudT<=0){hudT=0.1;
+    // the job gauges (#status) are hidden by the stylesheet unless a skin shows them: checked once a second, written only when seen
+    if((stVisT-=0.1)<=0){stVisT=1;stVis=$('#status').offsetParent!==null}
     {const pb=$('#pumpBtn');if(pb.hidden===waterAny)pb.hidden=!waterAny}
     {const sb=$('#seatBtn'),walk=mode==='walk',mc=walk&&wkNear(),gm=walk&&!mc?famGameNear():null,show=walk?!!(mc||gm):!!wk.inside;if(sb.hidden===show)sb.hidden=!show;const t=walk?(gm?gm.b:'Get in'):'Get out';if(sb.textContent!==t)sb.textContent=t}
     {const bb=$('#boxBtn'),show=TB.hooked||boxNear();if(bb.hidden===show)bb.hidden=!show;const t=TB.hooked?'Drop box':'Hook box';if(bb.textContent!==t)bb.textContent=t}
     // in the skid steer the bucket line is its bucket
     const skm=mode==='skid',bl=skm?sk.load:st.load,pct=Math.round(bl/(skm?TU.skCap:TU.exCap)*100);
-    $('#bucketVal').textContent=`${(bl*1.308).toFixed(2)} yd³ · ${pct}%`;
+    if(stVis){$('#bucketVal').textContent=`${(bl*1.308).toFixed(2)} yd³ · ${pct}%`;
     $('#bucketBar').style.width=pct+'%';
-    $('#bucketPanel').classList.toggle('full',pct>=99);bucketChip();
+    $('#bucketPanel').classList.toggle('full',pct>=99)}bucketChip();
     const dep=h0At(tip.x,tip.z)-tip.y;
-    if(skm){const sd=h0At(skTip.x,skTip.z)-skTip.y;$('#tipVal').textContent=`${(Math.abs(sk.v)*2.237).toFixed(1)} mph · edge ${(Math.abs(sd)*3.281).toFixed(1)} ft ${sd>0?'below':'above'} grade`}else
+    if(!stVis);else if(skm){const sd=h0At(skTip.x,skTip.z)-skTip.y;$('#tipVal').textContent=`${(Math.abs(sk.v)*2.237).toFixed(1)} mph · edge ${(Math.abs(sd)*3.281).toFixed(1)} ft ${sd>0?'below':'above'} grade`}else
     $('#tipVal').textContent=(dep>0?`Tip ${(dep*3.281).toFixed(1)} ft below grade`:`Tip ${(-dep*3.281).toFixed(1)} ft above grade`)+(st.soil>=0?` · ${SOIL[st.soil].n}`:'');
     let c=0;for(const kk of trenchK)if(H0[kk]-H[kk]>=0.85)c++;
     const tp=trenchK.length?(st.tpLast=Math.round(c/trenchK.length*100)):(st.tpLast||0);
     if(tp>=100&&!st.done){st.done=true;st.doneT=now;const s=Math.round((now-(st.startT||now))/1000);
       toast(say('trenchDone',{time:`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`,strikes:st.strikes?` · ${st.strikes} strike${st.strikes>1?'s':''}`:' · no strikes',caves:st.caves?` · ${st.caves} cave-in${st.caves>1?'s':''}`:''}),'good',6000)}
     const secs=st.startT?Math.round(((st.done?st.doneT:now)-st.startT)/1000):0;
-    $('#trenchVal').textContent=`${tp}% · ${Math.floor(secs/60)}:${String(secs%60).padStart(2,'0')}`;
+    if(stVis){$('#trenchVal').textContent=`${tp}% · ${Math.floor(secs/60)}:${String(secs%60).padStart(2,'0')}`;
     $('#trenchBar i').style.width=tp+'%';
     $('#truckVal').textContent=`${(tr.load*1.308).toFixed(1)} / 12 yd³`;
     $('#truckBar').style.width=Math.round(tr.load/TU.trCap*100)+'%';
-    $('#haulVal').textContent=(mode==='truck'?`${Math.round(Math.abs(tr.v)*2.237)} mph · ${tr.shiftT>0?'N':tr.gear>0?'D':'R'} · `:'')+`Hauled ${(tr.hauled*1.308).toFixed(1)} yd³`;
+    $('#haulVal').textContent=(mode==='truck'?`${Math.round(Math.abs(tr.v)*2.237)} mph · ${tr.shiftT>0?'N':tr.gear>0?'D':'R'} · `:'')+`Hauled ${(tr.hauled*1.308).toFixed(1)} yd³`}
     // in Mow mode the lawn takes the bucket's place, so the card keeps its height
     lawnsTick(dt);
     {const lr=$('#lawnRow'),show=mode==='mow'||mode==='walk'&&trim.on;if(lr.hidden===show){lr.hidden=!show;$('#bucketPanel').hidden=show}
-      if(show){const lp=Math.floor(lawnPct()*100),ls=lawn.startT?Math.round(((lawn.done?lawn.doneT:now)-lawn.startT)/1000):0;
+      if(show&&stVis){const lp=Math.floor(lawnPct()*100),ls=lawn.startT?Math.round(((lawn.done?lawn.doneT:now)-lawn.startT)/1000):0;
         $('#lawnVal').textContent=`${lp}% · ${Math.floor(ls/60)}:${String(ls%60).padStart(2,'0')}`;$('#lawnBar i').style.width=lp+'%';
         $('#mowVal').textContent=mode==='mow'?`${(Math.abs(mw.v)*2.237).toFixed(1)} mph · blades ${mw.load>0.2?'cutting':'on'}`:`Trimmer line ${trimIn(trim.line)} in · spool ${Math.round(trim.spool/0.3048)} ft${trim.line<TU.trimMin?' · bump it':''}`}}
-    const gv=$('#gasVal');
+    const gv=$('#gasVal');if(stVis){
     gv.textContent=st.strikes?`Gas main: ${st.strikes} strike${st.strikes>1?'s':''}`:st.exposed?'Gas main: exposed ✓':'Gas main: buried';
-    gv.style.color=st.strikes?'var(--danger)':st.exposed?'var(--ok)':'';
+    gv.style.color=st.strikes?'var(--danger)':st.exposed?'var(--ok)':''}
   }
   // flying dirt
   particlesTick(dt);dustTick(dt);grimeTick();pebTick(dt);mtnTick();mdlTick(dt);wkMdlPose();

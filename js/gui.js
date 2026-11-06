@@ -82,7 +82,7 @@ function guiDockCss(d){const c=k=>d[k]||GUI_DOCK.find(g=>g[0]===k)[2][0][0];
   const top=c('top'),bot=c('bottom'),map=c('map'),swap=c('sticks')==='swap';
   let r='#hud{grid-template-columns:auto auto minmax(0,1fr) auto auto;grid-template-rows:auto auto auto minmax(0,1fr) auto auto auto}\n';
   r+=`.tbar{grid-area:${top==='top'?1:6}/1/${top==='top'?2:7}/6}\n.bbar{grid-area:${bot==='bottom'?7:2}/1/${bot==='bottom'?8:3}/6}\n`;
-  if(top==='bottom')r+='.tbar::after{top:auto;bottom:100%}\n';
+  if(top==='bottom')r+='.tbar::after{top:auto;bottom:100%}\n#menu,#ctlMenu{top:auto;bottom:100%;margin:0 0 8px}\n#menu{max-height:calc(var(--mbot,300px) - 12px)}\n';
   if(bot==='top')r+='.bbar{border-top:0;border-bottom:1px solid var(--hud-line)}\n';
   r+=`.rpane{grid-area:4/${map==='left'?2:4}/5/${map==='left'?3:5}${map==='left'?';align-items:flex-start;padding:11px 0 8px var(--pl)':''}}\n`;
   r+=`.sticks{grid-area:4/2/5/5${swap?';flex-direction:row-reverse;padding:0 14px 10px var(--pr)':''}}\n`;
