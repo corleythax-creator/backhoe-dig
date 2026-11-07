@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-07T02:19:00Z",
+ "updated": "2026-11-07T02:38:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -108,9 +108,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-06",
-   "dh": 118,
-   "act": 4.5,
-   "versions": 15
+   "dh": 118.25,
+   "act": 5,
+   "versions": 16
   }
  ],
  "extra": [
@@ -3324,6 +3324,15 @@ window.EFFORT = {
    "tris": 7628846,
    "chars": 2380167,
    "what": "Town realism: Main Street opens onto the lake with plazas, a fountain and one continuous waterfront promenade to the marina (benches, overlooks, beach steps), six waterfront shops (fish shack, gift shop, the Rusty Anchor bar, kayak and bike rentals, the bakery and pharmacy moved down), a waterfront park and a fishing pier; people walk in and out of every shop by the hour, staff open and close them, some leave with a cup or a bag, and folks stand chatting outside; varied buildings (gables, false fronts, set-back top floors, cut corners, blade signs, water tanks, fire escapes), alleys with dumpsters, power poles and wires, and weathering; a town bus with a stop, a delivery van, sidewalk clutter, flower baskets, shop light and neon at night, and street and marina sounds"
+  },
+  {
+   "v": 357,
+   "asked": "2026-11-06T20:31:00-06:00",
+   "live": "2026-11-06T20:38:31-06:00",
+   "dh": 0.25,
+   "tris": 5918659,
+   "chars": 2380669,
+   "what": "Speak in the talk box now tells you when there is no microphone (or the browser blocks it) and puts the button away, so you just type."
   }
  ]
 };
