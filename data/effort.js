@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-06T23:26:00Z",
+ "updated": "2026-11-07T00:00:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -108,9 +108,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-06",
-   "dh": 38,
-   "act": 2,
-   "versions": 6
+   "dh": 44,
+   "act": 2.5,
+   "versions": 7
   }
  ],
  "extra": [
@@ -3243,6 +3243,15 @@ window.EFFORT = {
    "tris": 7410882,
    "chars": 2220444,
    "what": "Machines list (HUD step 5): the top bar's Machines button lists every machine (dozer, loader, semi, backhoe, pickups, carts, bikes, boats and the rest) nearest first with its distance, and picking one puts you in its seat; Tab and LB/RB step through the machines nearby; the excavator switch reads Tracks / Arm (Wheel / Hoe in the backhoe)"
+  },
+  {
+   "v": 348,
+   "asked": "2026-11-06T17:39:00-06:00",
+   "live": "2026-11-06T18:00:31-06:00",
+   "dh": 6,
+   "tris": 5848032,
+   "chars": 2223830,
+   "what": "Menu tabs (HUD step 6): the ☰ menu is five tabs (Play, Build, World, Settings, Developer) with the tests out of the way under Developer; Controls and Keys are one entry; Esc and controller B close the top panel and step back to the menu or panel it came from"
   }
  ]
 };
