@@ -6,7 +6,8 @@
 // device reloads into it. Only on the Vercel site: the claude.ai artifact cannot reach the sync server.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 const SYNC_URL='https://wcrsomethkjlfhhuurmh.supabase.co',SYNC_KEY='sb_publishable_CmmhyRA-D2HdL37h445BIQ_0O3GEpMP';
-const TALK_MEM=['bhd_talk_on-brain','bhd_talk_on-talk'];  // HumanForgeMind's memoryKeys for talk.js's storage 'bhd_talk_on'
+const TALK_MEM=['bhd_talk_on-brain','bhd_talk_on-talk','bhd_rep'];  // + what the town knows of you (lives.js)
+  // HumanForgeMind's memoryKeys for talk.js's storage 'bhd_talk_on'
 const SYNC_KEYS=['bhd_site','bhd_rigs','bhd_lawn','bhd_map','bhd_stats','bhd_plant',...TALK_MEM],SYNC_ABC='23456789ABCDEFGHJKMNPQRSTUVWXYZ';
 const sync={code:'',base:0,last:null,busy:false,state:'',okT:0,
   on:!!SYNC_URL&&/(^|\.)vercel\.app$|^localhost$|^127\./.test(location.hostname)&&!/\/versions\//.test(location.pathname)};

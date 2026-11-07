@@ -101,17 +101,19 @@ function townTalk(p){townLook(p);const G=p.reg,C=tf.chars[p.ci]||{},h=townHour()
     line=say(k,{yd:sYd(stats.dDug),sqft:Math.round(stats.dMow).toLocaleString()+' sq ft'})}
   p.talked=1;toast(say('say',{who,line}),'',5600)}
 // ---------- the counter: a shop's menu ----------
-function townOff(R){const G=TOWN_REGS.find(G=>G.si!=null&&G.si===R.si);return G&&G.p&&(town.met[G.id]||0)>=5?0.1:0}
+// 10% off at a regular's after five talks; and what the one at the counter thinks of him (repPrice, lives.js)
+function townOff(R){const G=TOWN_REGS.find(G=>G.si!=null&&G.si===R.si);return (G&&G.p&&(town.met[G.id]||0)>=5?0.1:0)+(typeof repPrice==='function'&&town.shop?repPrice(town.shop.p):0)}
 function townOpen(R,p){town.shop={R,p};if(document.pointerLockElement)document.exitPointerLock();const G=p.reg;
   $('#tsHead').textContent=townShopName(R);$('#tsWho').textContent=G?say('say',{who:town.met[G.id]?townFirst(G):'Clerk',line:townRegLine(G)}):say('shopWelcome',{shop:townShopName(R)});townDraw();$('#townShop').hidden=false}
 function townClose(){town.shop=null;$('#townShop').hidden=true}
 function townDraw(){const S=town.shop;if(!S)return;const M=townMenu(S.R)||[],off=townOff(S.R);
-  $('#tsList').innerHTML=M.map((m,i)=>{const pr=m[1]*(1-off);return `<div class="gsRow"><div class="gsTxt"><b>${m[0]}</b><small>${m[2]==='p'?'A spring in your step':m[2]==='s'?'Sleep till 7 AM':m[2]==='b'?'What you have to spend':''}${off&&m[1]?(m[2]?' · ':'')+'10% off, a regular':''}</small></div>`+
+  $('#tsList').innerHTML=M.map((m,i)=>{const pr=m[1]*(1-off);return `<div class="gsRow"><div class="gsTxt"><b>${m[0]}</b><small>${m[2]==='p'?'A spring in your step':m[2]==='s'?'Sleep till 7 AM':m[2]==='b'?'What you have to spend':''}${off&&m[1]?(m[2]?' · ':'')+(off>0?Math.round(off*100)+'% off, a friend':Math.round(-off*100)+'% more: they don\'t trust you'):''}</small></div>`+
     `<button data-i="${i}">${m[1]?'Buy '+usd(pr):m[2]==='b'?'Ask':'Take'}</button></div>`}).join('')+`<div class="gsCash">In your wallet: <b>${usd(townCash())}</b></div>`}
 $('#tsList').addEventListener('click',e=>{const b=e.target.closest('button'),S=town.shop;if(!b||!S)return;const m=(townMenu(S.R)||[])[+b.dataset.i];if(!m)return;
   const pr=Math.round(m[1]*(1-townOff(S.R))*100)/100;
   if(m[2]==='b'){toast(say('bankBal',{cash:usd(townCash()),earned:usd(stats.earned),spent:usd(stats.spent||0)}),'',6000);return}
   if(!townPay(pr,m[0]))return;
+  if(pr&&typeof repDeed==='function')repDeed('buy',[S.p.body]);
   if(m[2]==='p'){town.pep=TU.pepTime||180;toast(say('shopPep',{item:m[0]}),'good',3600)}
   else if(m[2]==='s'){townClose();dn.t+=((420-dnMin(dn.t))%1440+1440)%1440*60000;dnSave();toast(say('shopSleep'),'good',4200);return}
   else if(!pr)toast(say('shopFree',{item:m[0]}),'',2600);
