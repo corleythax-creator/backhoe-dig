@@ -660,6 +660,7 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
 #talkForm{display:flex;gap:6px}#talkForm[hidden]{display:none}
 #talkForm input{width:min(360px,70cqw);font:15px/1.3 system-ui,sans-serif;padding:7px 10px;border-radius:3px;border:1px solid rgba(255,255,255,.25);background:rgba(12,15,18,.85);color:#fff}
 #talkForm button{font:600 14px/1 var(--f-display);border-radius:3px;border:0;padding:7px 12px;background:var(--machine);color:#1c1309;cursor:pointer}
+#talkAll[hidden]{display:none}#talkForm #talkAll[aria-pressed=false]{background:rgba(12,15,18,.85);color:#fff;box-shadow:inset 0 0 0 1px rgba(255,255,255,.3)}
 #talkStatus{font:13px/1.2 system-ui,sans-serif;color:#fff;text-shadow:0 1px 2px #000}
 #talkLines{position:fixed;inset:0;pointer-events:none;z-index:3}
 .talkLine{position:fixed;transform:translate(-50%,-100%);max-width:min(280px,70cqw);background:rgba(12,15,18,.78);color:#fff;border-left:3px solid var(--machine);border-radius:3px;padding:6px 10px;font:14px/1.35 system-ui,sans-serif;opacity:0;transition:opacity .3s}
@@ -1274,7 +1275,9 @@ const TUNE=[
   ['talkRoadR','Town','A machine you drive this close to someone gets a word from them',4.6,'ft',3,60,1],
   ['talkRoadV','Town','Going past them faster than this, it nearly had them',2.2,'mph',1,30,0.5],
   ['talkSightR','Town','Townsfolk notice machines within',15.2,'ft',10,200,5],
-  ['talkStillR','Town','Townsfolk notice someone lying still within',7.6,'ft',5,100,5]
+  ['talkStillR','Town','Townsfolk notice someone lying still within',7.6,'ft',5,100,5],
+  ['talkGroupR','Town','Talking to everyone reaches the townsfolk within',6.1,'ft',5,60,1],
+  ['talkGoT','Town','Townsfolk walk over to look at something for up to',12,'s',2,60,1]
   // indoors (interiors.js): how the eye adjusts in a shop or house, and its room light (Medium graphics and up)
   ['inAdapt','Town','Indoors, the view brightens by',0.9,'pct',0,300,5],['inLamp','Town','Indoors, the room light',1.6,'n',0,6,0.1],
   ['craneSpan','Bridges','The crane builds a steel span in about',240,'min',1,60,1],
@@ -1562,6 +1565,7 @@ const WORDS=[
   ['tkChip','Town: talk','[talk]: talk to {name}','{name}: the townsperson nearest you'],['tkChipPhone','Town: talk','Talk to {name}','{name}: the townsperson nearest you (phones)'],
   ['tkWith','Town: talk','Talking to {name}','{name}: who you are talking to'],['tkSayTo','Town: talk','Say something to {name}','{name}: who you are talking to (in the box)'],
   ['tkSay','Town: talk','Say',''],['tkThinking','Town: talk','{name} is thinking…','{name}: who is answering'],
+  ['tkAll','Town: talk','Everyone',''],['tkWithAll','Town: talk','Talking to everyone here ({n})','{n}: how many are listening'],['tkSayAll','Town: talk','Say something to everyone',''],
   ['tkPlayer','Town: talk','Corley','What the townsfolk call you'],
   ['tkWeather','Town: talk','Nice enough day for it. Whatever it is you\'re digging.',''],['tkRain','Town: talk','This rain. Good for the lawns, bad for your dirt, I\'d guess.',''],
   ['tkDug','Town: talk','Saw your excavator going out on the island. {yd} today? That\'s a day\'s work.','{yd}: dirt dug today'],

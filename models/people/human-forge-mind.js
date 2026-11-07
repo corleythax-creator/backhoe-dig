@@ -48,9 +48,21 @@
  *   minds.event(key, { kind: 'still', by: otherKey });          // someone lying still nearby (dead, in a game)
  *   minds.event(key, { kind: 'left', by: otherKey });           // someone went (built-in mind only)
  *   minds.event(key, { kind: 'thing', what: 'a red pickup', how: 'car' });   // look | car | sit | pet | road (built-in mind only)
+ *   minds.event(key, { kind: 'lost', how: 'wake', what, by, dir, goal, story });   // a story they are in (built-in words;
+ *                                        //   with a model speaking the built-in mind says these too): not where they
+ *                                        //   should be, finding the way out together. how: wake (coming to, looking
+ *                                        //   round), around (what: what they see), ask (by: someone else lost), plan
+ *                                        //   (goal: a verb first, 'get back home'), search (dir: 'toward the barn'),
+ *                                        //   nothing (came back empty), found (what: 'a way out'), come (by: who found
+ *                                        //   it), out (leaving), wonder (a thought while it goes on), done (goal reached)
+ *                                        //   story: which (STORY: storm, pet, child, stranded, fire, treasure; else lost)
  *   minds.event(key, { kind: 'notice', what: 'smoke', feet: 40, ref }); // anything at all (built-in mind's words; any
  *                                        //   speaker's decision): fire, a scream, a strange box, a storm, footprints...
  *   minds.decide(key, { what: 'a wolf', danger: true, feet: 20 }) // what they would do, said nowhere: { do, at, ... }
+ *   await minds.plan(key, ['eat', 'tv', 'company'], needs, 'Daniel') // a model's pick of what they do next: { pick, why, say, mood } or null
+ *   // plans made together (a model speaking): o.joint(key, other) -> keys both could do together now (eat, drink, tv, pool,
+ *   // sleep); a line between them may suggest one (o.proposed(key, other, what)), the other answers, and
+ *   // o.agreed(by, key, what, yes) says how it went: the app sets them both off
  *   minds.nature(key)                    // { fear, curious, nerve, bold, warm, shy, talk, energy }, 0..1
  * Everyone notices; what they make of it is their own. Each thing is felt through their nature: the easily frightened
  * (nervous, timid, cautious, shy) feel more threat from less and back off, freeze or run; the inquisitive (curious,
@@ -70,8 +82,10 @@
   const MOODS = ['calm', 'happy', 'playful', 'curious', 'shy', 'tired', 'annoyed', 'sad', 'surprised', 'thoughtful'];
   const PARTS = ['head', 'face', 'hair', 'neck', 'shoulder', 'arm', 'hand', 'back', 'side', 'chest', 'waist', 'hip', 'leg', 'knee', 'foot'];
   const ADULT = 18, API = 'https://human-forge-beta.vercel.app/api/persona', CHATTER = 24, GAP = [9, 15];
-  const COOL = { touched: 25, arrived: 40, approached: 45, animal: 40, still: 90, left: 30, notice: 30, alarm: 20, gone: 60, thing: 45 };
+  const COOL = { touched: 25, arrived: 40, approached: 45, animal: 40, still: 90, left: 30, notice: 30, alarm: 20, gone: 60, thing: 45, lost: 5 };
   const SERVER = ['touched', 'arrived', 'approached', 'animal', 'still'];   // the kinds the server's model takes; the rest are built-in only
+  const MILD = ['ignore', 'watch', 'investigate', 'help'];   // what a model may decide in place of the built-in mind's pick (api/persona.js has the same list); fleeing, backing off, freezing, warning and calling stay instinct
+  const DECIDE_WAIT = 2500;   // ms a model has to decide before the built-in mind's pick is acted on
   const SPEAKERS = ['local', 'haiku', 'sonnet', 'opus'];
   // intelligence: how sharp they are (1..5) and the way they are clever; what matters to them; the topics they are into
   const SMARTS = ['', 'simple', 'average', 'sharp', 'bright', 'brilliant'];
@@ -186,6 +200,8 @@
   const TKEYS = Object.keys(TOPICS);
   const LEANS = { dream: ['stars', 'books', 'music', 'sea', 'art'], plain: ['work', 'cars', 'food', 'garden', 'sport'], curious: ['history', 'travel', 'stars', 'books'], humor: ['games', 'movies', 'food'], warm: ['animals', 'food', 'garden', 'coffee'], bold: ['sport', 'travel', 'cars'] };
   // lines for what happens, by flavour (one is picked by the person's own mix of them; any: whoever)
+  // how a touch felt (the app's ev.how) -> its lines
+  const HOW = { tickle: 'tickled', cream: 'creamed', oil: 'oiled', pour: 'doused', brush: 'brushed' };
   const L = {
     touchGood: { warm: ['Oh, hello, {name}.', 'Hey you. That\'s nice.', 'Hi {name}.'], edge: ['Oh. Hi, {name}.', 'Yes, {name}? I\'m here.'], shy: ['Oh! Hi... {name}.', 'Oh, um, hello.'], bold: ['Ha, hello to you too, {name}.', 'There you are, {name}.'], humor: ['Tag, I\'m it?', 'Ha! Hi, {name}.'], plain: ['Hi, {name}.', 'Hey.'] },
     touchNew: { warm: ['Oh! Hello there.', 'Oh, hi. I don\'t think we\'ve met.'], edge: ['Can I help you?', 'Um. Hello?'], shy: ['Oh! Sorry, you made me jump.', 'Oh... hi.'], bold: ['Whoa, hello. And you are?', 'Well, hello. Introduce yourself first, maybe.'], humor: ['Oh! Is this how we\'re meeting?', 'Hi! Do I know you?'], plain: ['Oh, hello.', 'Hi. Can I help?'] },
@@ -194,9 +210,14 @@
     touchWith: { warm: ['Oh, {the}? On my {part}? You\'re sweet, {name}.', 'Mm, what\'s that? {the}?'], edge: ['Why is {the} on my {part}, {name}?', 'Is that {the}? Really, {name}?'], shy: ['Oh! Um... {the}?', 'What... is that {the}?'], bold: ['Ha, {the}. What are you up to, {name}?', 'Bring {the} here, then.'], humor: ['Is {the} the new way of saying hello?', 'Ah yes, {the}. Very normal.'], plain: ['That\'s {the}, {name}.', 'What\'s with {the}?'] },
     touchWithWary: { warm: ['Um, {name}, why {the}?', 'Careful with {the}, please.'], edge: ['Get {the} off my {part}.', 'Not with {the}, {name}.'], shy: ['Please, not {the}...', 'Oh... I don\'t know about {the}.'], bold: ['Put {the} down, {name}.', 'Try that with {the} again and see.'], humor: ['I didn\'t order {the} on my {part}.', 'Is {the} on the room bill too?'], plain: ['Stop that with {the}.', 'No, {name}.'] },
     chilly: { warm: ['Ah! That\'s cold!', 'Eek! Cold, cold, cold, {name}!'], edge: ['Cold! Seriously, {name}?', 'That\'s freezing. Stop.'], shy: ['Oh! So cold...', 'Ah... cold.'], bold: ['Ooh, cold. Do that again.', 'Ha! Ice on my {part}? Bold.'], humor: ['Brr! Is the minibar out of ideas?', 'Cold! I\'m filing a complaint with the front desk.'], plain: ['That\'s cold.', 'Cold! {name}!'] },
-    sticky: { warm: ['Mm, sticky. Is that {the}?', 'Now I\'m all sticky, {name}.'], edge: ['Great, now my {part} is sticky.', 'Sticky. Thanks, {name}.'], shy: ['Oh... sticky.', 'It\'s all sticky now.'], bold: ['Sticky. Are you licking that off, {name}?', 'Mm, sweet. Now what?'], humor: ['I\'m candied now. Thanks.', 'I\'m going to attract ants, {name}.'], plain: ['That\'s sticky.', 'Sticky, {name}.'] },
+    sticky: { warm: ['Mm, sticky. Is that {the}?', 'Now I\'m all sticky, {name}.'], edge: ['Great, now my {part} is sticky.', 'Sticky. Thanks, {name}.'], shy: ['Oh... sticky.', 'It\'s all sticky now.'], bold: ['Sticky. Got a napkin, {name}?', 'Mm, sweet. Now what?'], humor: ['I\'m candied now. Thanks.', 'I\'m going to attract ants, {name}.'], plain: ['That\'s sticky.', 'Sticky, {name}.'] },
     slapped: { warm: ['Ow! {name}!', 'Hey! That stung.'], edge: ['Did you just slap me?', 'Do that again. I dare you.'], shy: ['Ow... why?', 'Oh! That hurt a little.'], bold: ['Oh, rough today, {name}?', 'Ha! Is that all you\'ve got?'], humor: ['Ow! I felt that in my soul.', 'Was that a high five that missed?'], plain: ['Ow.', 'Hey! Don\'t.'] },
     slappedWith: { warm: ['Ow! With {the}, {name}?', 'Hey! {the} stings!'], edge: ['You hit me with {the}?', 'Put {the} down. Now.'], shy: ['Ow! Not with {the}...', 'Oh! That was {the}...'], bold: ['Ha! {the}? Really?', 'Swatting me with {the}, {name}?'], humor: ['Ow! Death by {the}. What a way to go.', 'Assaulted with {the}. I\'ll tell the front desk.'], plain: ['Ow, {the}.', 'Don\'t hit me with {the}.'] },
+    tickled: { warm: ['Ha! No! Not there, {name}!', 'Stop, stop, ha, I\'m ticklish!'], edge: ['Don\'t. Tickle. Me. Ha! {name}!', 'Ha... stop that.'], shy: ['Hee! Oh no, I\'m so ticklish...', 'Ha, please, no!'], bold: ['Ha! You\'ll pay for that, {name}!', 'Oh, you want a tickle war?'], humor: ['Ha! I surrender! I surrender!', 'This is a war crime, {name}! Ha!'], plain: ['Ha! That tickles.', 'Ha, stop!'] },
+    creamed: { warm: ['Whipped cream? On my {part}? Now you have to clean it up.', 'Mm, cold and sweet, {name}.'], edge: ['Really? Cream on my {part}?', 'You\'re cleaning that up, {name}.'], shy: ['Oh! It\'s cold... and everywhere.', 'Um, whipped cream?'], bold: ['Go on then, hand me a napkin.', 'Ha. Dessert is served, {name}.'], humor: ['Am I a sundae now?', 'I\'d like a cherry on top, please.'], plain: ['That\'s whipped cream.', 'Cream, {name}? Really?'] },
+    oiled: { warm: ['Mm, warm oil. Keep going.', 'Oh, that smells lovely, {name}.'], edge: ['Easy, that\'s a lot of oil.', 'Don\'t get it on the sheets.'], shy: ['Oh... that feels nice.', 'Mm, it\'s warm.'], bold: ['Now rub it in, {name}.', 'Mm, my shoulders too.'], humor: ['Am I being basted?', 'I\'m going to slide right off the bed.'], plain: ['Mm, oil.', 'That\'s nice, {name}.'] },
+    doused: { warm: ['Hey! That\'s {what}, {name}!', 'Oh! It\'s cold!'], edge: ['Did you just pour {what} on me?', 'That\'s a waste of {what}, {name}.'], shy: ['Oh! I\'m all wet...', 'Oh no... {what}?'], bold: ['Ha! Now you owe me a drink.', 'Bold, {name}. Very bold.'], humor: ['I\'ll have mine in a glass next time.', 'Is this how they serve it here?'], plain: ['Hey, I\'m soaked.', 'That\'s {what}!'] },
+    brushed: { warm: ['Mm, that\'s lovely. Keep brushing.', 'Oh, nobody\'s brushed my hair in years.'], edge: ['Gently. There are knots.', 'Fine. Just be careful.'], shy: ['Oh... that\'s nice.', 'Mm, thank you, {name}.'], bold: ['Harder, it\'s fine.', 'Mm, I could get used to this.'], humor: ['Do I get a braid too?', 'Is this the deluxe service?'], plain: ['That\'s nice.', 'Thanks, {name}.'] },
     touchCross: { warm: ['{name}, that\'s enough now, please.', 'Okay, {name}, I need a bit of space.'], edge: ['Do you mind?', 'Hands to yourself, {name}.', 'Seriously, {name}. Stop.'], shy: ['Please stop, {name}.', 'Um, could you not?'], bold: ['Back off, {name}.', 'That\'s enough, {name}.'], humor: ['Okay, that\'s quite enough poking for one day.', 'I\'m starting a tab, {name}.'], plain: ['Please stop that.', 'Enough, {name}.'] },
     hello: { warm: ['Oh, hello! I\'m {me}. Lovely to meet you.', 'Hi there, I\'m {me}.'], edge: ['Hm. Someone new. I\'m {me}.', 'Hello. {me}.'], shy: ['Oh... hello. I\'m {me}.', 'Hi. Um, I\'m {me}.'], bold: ['Hey! I\'m {me}. And you are?', 'Hello, hello. {me}, nice to meet you.'], humor: ['A new face! I\'m {me}, the fun one.', 'Hi! I\'m {me}. Don\'t believe anything they\'ve told you.'], plain: ['Hi, I\'m {me}.', 'Hello. I\'m {me}.'] },
     again: { warm: ['{name}! So good to see you again.', 'There you are, {name}. I hoped you\'d come.'], edge: ['{name}. You again.', 'Oh, it\'s {name}.'], shy: ['Oh, hi {name}.', 'Hi again, {name}.'], bold: ['{name}! Get over here.', 'Look who it is. {name}!'], humor: ['{name}! I was just talking about you. Nothing bad. Mostly.', 'The famous {name} returns!'], plain: ['Hi again, {name}.', 'Good to see you, {name}.'] },
@@ -215,6 +236,19 @@
     sit: { warm: ['Ah, that\'s better. Sit with me.', 'Lovely to take the weight off.'], edge: ['Finally, somewhere to sit.', 'My feet were done.'], shy: ['I\'ll just sit here, if that\'s okay.'], bold: ['Best seat in the place. Mine.'], humor: ['{the} and I are in a relationship now.', 'I\'m never getting up.'], plain: ['I\'ll sit for a bit.', 'Good, {the}.'] },
     pet: { warm: ['Who\'s a good one? You are!', 'Oh, you\'re so soft.'], edge: ['Fine. One pat.', 'Alright, alright. Good animal.'], shy: ['Hi... can I pet you? Oh, okay.'], bold: ['Come here, you. Good!'], humor: ['I\'m adopting {the}. It\'s decided.', '{the} likes me more than people do.'], plain: ['Good {bare}.', 'There you go.'] },
     road: { warm: ['Careful! {the} nearly had me.', 'Slow down, please!'], edge: ['Watch where you\'re going!', 'Nice driving. Not.'], shy: ['Oh! That was close...'], bold: ['Hey! Eyes on the road!'], humor: ['{the} wants my spot that badly?', 'Was that {the} or a rocket?'], plain: ['Whoa. Close one.', 'Watch it!'] },
+    // a story they are in (ev.kind 'lost', built-in only): they come to somewhere they don't know, with people they don't
+    // know, and find the way out together; how: wake, around, ask, plan, search, nothing, found, come, out, wonder, done
+    lostWake: { warm: ['Wait... where am I? This isn\'t home.', 'Hello? How did I get here?', 'This isn\'t right. I was just at home.'], edge: ['Okay. Where the hell am I?', 'This is not where I was. Somebody explain.', 'No. I did not walk here.'], shy: ['Um... where... where is this?', 'I don\'t... I don\'t know this place.'], bold: ['Right. Where is this, and who brought me here?', 'I don\'t remember coming here. Not one bit.'], humor: ['Either I sleepwalked a very long way, or something is going on.', 'Last thing I remember, I was at home. This is not home.'], plain: ['Where am I?', 'How did I get here?', 'This isn\'t where I was.'] },
+    lostAround: { warm: ['There\'s {what}... I\'ve never seen this place.', '{What}? None of this is familiar.'], edge: ['{What}. Great. Still no idea where this is.', 'And {what}. Wonderful.'], shy: ['There\'s {what}... I don\'t like this.', 'I can see {what}... but where is this?'], bold: ['{What}. Okay. Let\'s work out where we are.', 'I see {what}. Nothing I know.'], humor: ['{What}. Nobody mentioned {what} on the way here. Because there was no way here.', 'Well, there\'s {what}. That narrows it down. Not.'], plain: ['There\'s {what}.', 'I can see {what}. Nothing I know.'] },
+    lostAsk: { warm: ['{name}, are you alright? Do you know how we got here?', 'Oh, thank goodness, someone. {name}, where are we?'], edge: ['{name}. Tell me you know where this is.', 'You too, {name}? Fantastic.'], shy: ['{name}? Do you... know where we are?', 'Sorry, {name}, do you know this place?'], bold: ['{name}! You woke up here too? We stick together.', '{name}, what do you remember?'], humor: ['{name}, please tell me you drove.', 'So, {name}, come here often? Me neither.'], plain: ['{name}, do you know where we are?', 'You don\'t know either, {name}?'] },
+    lostPlan: { warm: ['Let\'s stay together and {goal}. We can do this.', 'Everyone, let\'s each look a different way, and meet back here.'], edge: ['Fine. We split up and look. Shout if you find anything.', 'Nobody\'s coming for us. We {goal} ourselves.'], shy: ['Maybe if we each look a different way...?', 'Could we... look round together? We have to {goal}.'], bold: ['Listen up. We split up, each take a side, and whoever finds something shouts.', 'Right, we {goal}. You that way, me this way.'], humor: ['Plan: walk in all directions at once. Then {goal}.', 'Let\'s split up. That always goes well in films.'], plain: ['Let\'s split up and look.', 'We need to {goal}. Let\'s look round.'] },
+    lostSearch: { warm: ['I\'ll look {dir}.', 'I\'ll try {dir}. Be careful, everyone.'], edge: ['{Dir}, then. Whatever.', 'I\'ll head {dir}.'], shy: ['I\'ll... I\'ll look {dir}.', 'I can try {dir}, I suppose.'], bold: ['I\'ll go {dir}. Leave it to me.', 'I\'ll head {dir}. Shout if you need me.'], humor: ['{Dir} it is. If I\'m not back, I found snacks.', 'I\'ll go {dir}. Don\'t have fun without me.'], plain: ['I\'ll check {dir}.', 'Going {dir}.'] },
+    lostNothing: { warm: ['Nothing that way, I\'m sorry.', 'No way out over there. Anyone else?'], edge: ['Dead end. Of course.', 'Nothing. Next idea?'], shy: ['I didn\'t find anything... sorry.', 'Nothing my way...'], bold: ['Nothing my way. Where next?', 'Not that way. We try again.'], humor: ['Good news: I found more nothing.', 'That way is fully stocked with nothing.'], plain: ['Nothing that way.', 'No luck.'] },
+    lostFound: { warm: ['Everyone! Over here! I think this is the way!', 'Here! {What}! Come on, everyone!'], edge: ['Here. {What}. This is it. Come on.', 'Over here. Found {what}. Hurry up.'], shy: ['Um, everyone? I think... I found {what}!', 'Over here... I think this is it!'], bold: ['Over here! {What}! Everyone, to me!', 'Found it! {What}! This way!'], humor: ['Found {what}! I accept applause and snacks.', 'Ladies and gentlemen: {what}!'], plain: ['Over here! I found {what}!', 'This way! {What}!'] },
+    lostCome: { warm: ['Coming, {name}! Well done!', 'Oh, {name}, you clever thing! Coming!'], edge: ['About time. Coming.', 'Coming, {name}.'], shy: ['Oh! Coming...', 'Wait for me, {name}!'], bold: ['On my way, {name}!', 'Good work, {name}. Coming!'], humor: ['{name} for president. Coming!', 'Coming! Nobody leave without me.'], plain: ['Coming!', 'On my way.'] },
+    lostOut: { warm: ['Let\'s go home, everyone.', 'Stay together. Home\'s this way, I\'m sure of it.'], edge: ['I\'m not waiting to find out who brought us here. Go.', 'Out. Now. Before anything else happens.'], shy: ['Can we go home now? Please?', 'I\'ll stay close to you, if that\'s okay.'], bold: ['Everyone through. I\'ll go last.', 'Out we go. Stay together.'], humor: ['Nobody look back. That\'s how films end badly.', 'Home. And I\'m never sleeping again.'], plain: ['Let\'s go.', 'Come on, home.'] },
+    lostWonder: { warm: ['Someone must be missing us by now.', 'We\'ll be alright. We\'ve got each other.', 'I hope my family isn\'t worried sick.', 'Is everyone okay? Nobody hurt?'], edge: ['When I find out who did this...', 'This makes no sense at all.', 'Nobody just wakes up somewhere. Somebody did this.', 'My phone\'s gone. Of course it is.'], shy: ['I just want to go home.', 'What if there\'s no way out?', 'I don\'t like it here...', 'Please let this be a dream.'], bold: ['There\'s always a way out. Always.', 'We\'ll find it. Keep looking.', 'Stay sharp. Look for tracks, a fence, a road, anything.', 'Whoever brought us here, we\'re leaving without asking.'], humor: ['If this is a surprise party, it\'s a terrible one.', 'I\'d like to speak to whoever is in charge of this.', 'Note to self: never sleep again.', 'Five stars for the scenery. One for the directions.'], plain: ['How did we get here?', 'There has to be a way out.', 'Does anything look familiar to anyone?', 'Which way did the sun come up?'] },
+    lostDone: { warm: ['We did it, all of us!', 'Oh, well done, everyone!'], edge: ['There. Done. Can we go now?', 'Finally.'], shy: ['We... we did it?', 'Oh, thank goodness.'], bold: ['Told you we would.', 'Good work, everyone.'], humor: ['Nailed it. Mostly.', 'Put that on my headstone: we did it.'], plain: ['Done.', 'That\'s it, then.'] },
     see: { warm: ['Oh, {the}. That\'s nice.'], edge: ['Hm. {What}.'], shy: ['Oh, {the}...'], bold: ['Check out {the}.'], humor: ['Who put {the} there?'], plain: ['There\'s {what}.'], any: ['Huh, I hadn\'t noticed {the} before.', 'Have you seen {the}?'] },
     seeAgain: { warm: ['I do like {the}.'], edge: ['Still staring at {the}. Don\'t mind me.'], shy: ['I keep looking at {the}.'], bold: ['I\'m telling you, {the} is the best thing here.'], humor: ['Me and {the}? We\'re close now.'], plain: ['{the}. Still there.'] },
     agree: { warm: ['Oh, I know exactly what you mean.', 'That\'s lovely.', 'I like that.'], edge: ['If you say so.', 'Hm. Can\'t say I agree.', 'Riveting.', 'Sure.'], shy: ['Oh... yes, me too.', 'Mm. That\'s nice.'], bold: ['Absolutely. No question.', 'Ha! Exactly right.'], humor: ['Ha! Story of my life.', 'Now that\'s a plot twist.'], plain: ['Fair enough.', 'Makes sense.', 'True.'] },
@@ -304,6 +338,58 @@
   // intelligence: what needs thinking about, answered by how sharp they are (lo: simple, mid: average or sharp, hi: bright
   // or brilliant) and the way they are clever (their knack); things they know or have learnt, by knack
   const tierOf = (P) => (P.smarts <= 1 ? 'lo' : P.smarts >= 4 ? 'hi' : 'mid');
+  // the Scenario's other stories (ev.story): their own words for the turns that differ from being lost; the rest are
+  // the lost lines above. Each turn by flavour, as L. storm, pet, child, stranded, fire, treasure
+  const STORY = {
+    storm: {
+      wake: { warm: ["Oh, look at that sky. That's coming our way.", "Is that thunder? Everyone alright?"], edge: ["Great. Look at those clouds.", "That's not rain. That's a storm."], shy: ["That sky's gone so dark...", "Was that thunder?"], bold: ["Storm's coming in fast. We need to move.", "Feel that wind? We've got minutes."], humor: ["The forecast said sunny. The forecast lied.", "I left my umbrella at home. And my house."], plain: ["Storm's coming.", "Look at that sky."] },
+      around: { warm: ["There's {what}, but nowhere to get out of the rain.", "{What}... none of it's any shelter."], edge: ["{What}. Not going to keep the rain off, is it.", "And {what}. Useless in a storm."], shy: ["There's {what}... where do we go?"], bold: ["{What}. No cover there. Keep looking.", "I see {what}. Not good enough."], humor: ["{What}. Not exactly storm-proof.", "Could we hide under {what}? No? No."], plain: ["There's {what}.", "Nothing to shelter under."] },
+      ask: { warm: ["{name}, are you alright? We need to get out of this.", "Stay with me, {name}. Have you seen anywhere dry?"], edge: ["{name}, you seen any cover?", "Don't just stand there, {name}."], shy: ["{name}? Do you know anywhere to go?"], bold: ["{name}, with me. We find cover, now.", "{name}! Stick together."], humor: ["{name}, you don't happen to have a spare roof?", "Nice day for it, {name}."], plain: ["{name}, seen anywhere to shelter?", "You alright, {name}?"] },
+      plan: { warm: ["Let's spread out and {goal}. Shout when you find something.", "We'll be fine if we're quick. Everyone take a side."], edge: ["Split up. First one to find cover yells.", "We've got minutes. Move."], shy: ["Should we... each look somewhere?"], bold: ["Everyone take a direction. We {goal}, fast.", "Go, go! Find cover and shout."], humor: ["Plan: find a roof before the sky falls on us.", "Run in every direction. Very scientific."], plain: ["Spread out and look for shelter.", "We need to {goal}."] },
+      found: { warm: ["Over here! {What}! Quick, before it pours!", "Here, everyone! {What}!"], edge: ["Here. {What}. Hurry up.", "{What}. Over here. Now."], shy: ["I think... I found {what}! Over here!"], bold: ["{What}! Everyone, to me! Run!", "Found it! {What}! This way!"], humor: ["{What}! I'll take my medal later.", "Ladies and gentlemen, {what}! Dry-ish!"], plain: ["Over here! {What}!", "This way! I found {what}!"] },
+      wonder: { warm: ["Hurry, everyone, it's getting closer.", "I hope everyone's family is inside."], edge: ["Any second now it's going to open up.", "Brilliant. Wind's picking up."], shy: ["I don't like thunder...", "It's getting so dark..."], bold: ["Keep moving. Don't stop for anything.", "It's close. Faster."], humor: ["I just had my hair done. For this.", "If I get struck by lightning, tell my mother it was heroic."], plain: ["It's getting closer.", "Feel that wind."] },
+      done: { warm: ["Oh, thank goodness. Everyone in? Everyone dry?", "We made it. Come here, all of you."], edge: ["Made it. Just about.", "Finally. Let it rain."], shy: ["We're... we're safe?", "Oh, that was close."], bold: ["Everyone in. Good work.", "Told you we'd make it."], humor: ["Now we wait. Anyone know a song?", "Dry. Mostly. I'll take it."], plain: ["We made it.", "Everyone's in."] } },
+    pet: {
+      wake: { warm: ["Oh no, where's the dog gone?", "Has anyone seen the dog? It was right here."], edge: ["Brilliant. The dog's run off.", "Who left the gate open?"], shy: ["Oh no... the dog's gone..."], bold: ["The dog's gone. Right, we find it.", "Nobody panic. We'll find the dog."], humor: ["The dog has made a run for it. Can't blame it.", "Somebody's dog has gone on an adventure."], plain: ["Where's the dog?", "The dog's gone."] },
+      around: { warm: ["There's {what}, but no sign of the dog.", "I can see {what}... where would it go?"], edge: ["{What}. No dog.", "And {what}. Still no dog."], shy: ["There's {what}... no dog though."], bold: ["{What}. Not there. Keep looking.", "I see {what}. No dog."], humor: ["{What}. The dog is clearly not hiding under {what}.", "No dog. Just {what}."], plain: ["There's {what}.", "No sign of it."] },
+      ask: { warm: ["{name}, have you seen a dog run past?", "{name}, will you help us look?"], edge: ["{name}, you seen it?", "Don't suppose you saw where it went, {name}?"], shy: ["{name}? Did you see the dog?"], bold: ["{name}, you're with us. We find that dog.", "{name}, which way did it go?"], humor: ["{name}, have you seen a dog with somewhere better to be?", "{name}, you look like a dog finder."], plain: ["{name}, seen a dog?", "Help us look, {name}?"] },
+      plan: { warm: ["Let's each look a different way. Call it gently, it might be scared.", "Spread out, everyone. We'll {goal}."], edge: ["Split up. Whoever finds it, shout.", "Everyone take a side. It can't have gone far."], shy: ["Maybe we each look somewhere?"], bold: ["Fan out. We {goal}. Shout if you see it.", "You that way, me this way. Go."], humor: ["Plan: everyone shout its name. Whatever it is.", "Split up and think like a dog."], plain: ["Let's split up and look.", "We need to {goal}."] },
+      found: { warm: ["Here! It's {what}! Come here, sweetheart!", "Everyone! I found {what}!"], edge: ["Got it. {What}. Over here.", "Here. Found {what}."], shy: ["Um... I think I found {what}!"], bold: ["Found {what}! Over here!", "Here! {What}, safe and sound!"], humor: ["Found {what}! It was having a lovely time.", "{What}, located. Mission accomplished."], plain: ["Over here! Found {what}!", "Here it is!"] },
+      wonder: { warm: ["I hope it's not frightened.", "It'll be alright. Dogs always turn up."], edge: ["It's probably found something to eat.", "Stupid dog."], shy: ["What if it's hurt?", "Please be okay..."], bold: ["Keep calling. It'll hear us.", "It can't have gone far."], humor: ["It's probably laughing at us somewhere.", "Somewhere a dog is having the best day of its life."], plain: ["Where could it be?", "Keep looking."] },
+      done: { warm: ["Oh, there you are! Who's a good dog?", "Thank goodness. Good work, everyone."], edge: ["Found it. Now somebody hold on to it.", "There. Don't do that again."], shy: ["Oh, I'm so glad it's okay.", "Hello, you..."], bold: ["Good work, everyone.", "Told you we'd find it."], humor: ["The prodigal dog returns.", "Somebody get it a lead. And me a coffee."], plain: ["Found it.", "Good."] } },
+    child: {
+      wake: { warm: ["Where's {what}? Has anyone seen {what}?", "Oh no. {What} was just here."], edge: ["Where's the kid? Where's {what}?", "Nobody was watching {what}?"], shy: ["{What}? Where did {what} go?"], bold: ["{What}'s missing. Everyone, now.", "Nobody panic. We find {what}."], humor: ["{What} has vanished. Kids are faster than they look.", "Right. Who had {what}?"], plain: ["Where's {what}?", "{What}'s gone."] },
+      around: { warm: ["There's {what}... no sign of the little one.", "I can see {what}. Where would a kid go?"], edge: ["{What}. No kid.", "And {what}. Nothing."], shy: ["There's {what}... I can't see them..."], bold: ["{What}. Not there. Keep moving.", "I see {what}. Nothing yet."], humor: ["{What}. Kids love {what}. Not there though.", "No kid. Just {what}."], plain: ["There's {what}.", "No sign."] },
+      ask: { warm: ["{name}, have you seen a child? Please help us look.", "{name}, did you see which way they went?"], edge: ["{name}, you seen a kid?", "{name}, eyes open. We're missing a kid."], shy: ["{name}? Have you seen them?"], bold: ["{name}, you're with us. We've got a missing child.", "{name}, which way did they go?"], humor: ["{name}, have you seen a small, fast person?", "{name}, help. We've misplaced a child."], plain: ["{name}, seen a child?", "Help us look, {name}?"] },
+      plan: { warm: ["Everyone take a direction. Call their name, calmly.", "Spread out and {goal}. Shout the moment you see them."], edge: ["Split up. Nobody stops till we find them.", "Each take a side. Go."], shy: ["Should we each look a different way?"], bold: ["Search party. Fan out, call out, shout when you've got them.", "We {goal}. You that way, me this way."], humor: ["Fan out. Kids hide in the strangest places.", "Everyone think small. Very small."], plain: ["Let's split up and look.", "We need to {goal}."] },
+      found: { warm: ["Here! {What}'s here! It's alright, sweetheart!", "Everyone! I've got {what}!"], edge: ["Got {what}. Over here.", "Here. {What}. Safe."], shy: ["I found {what}! Over here!"], bold: ["Found {what}! Everyone, here!", "Here! {What}'s safe!"], humor: ["Found {what}! Hiding champion of the year.", "{What}, located. Everybody breathe."], plain: ["Over here! Found {what}!", "Here! {What}'s here!"] },
+      wonder: { warm: ["They'll be alright. They'll be scared, that's all.", "Keep calling. They'll hear us."], edge: ["Kids. Never where you left them.", "Keep looking. Don't stop."], shy: ["Please be okay...", "What if we don't find them?"], bold: ["We'll find them. Keep moving.", "Check everywhere. Under things too."], humor: ["When we find them, nobody's grounded. Probably.", "I aged ten years in ten minutes."], plain: ["Keep calling.", "Where could they be?"] },
+      done: { warm: ["Oh, come here. You gave us such a fright.", "Everyone, they're safe. Thank you, all of you."], edge: ["Found. Nobody let go of their hand.", "Never again, alright?"], shy: ["Oh, thank goodness...", "They're okay."], bold: ["Good work, everyone. They're safe.", "That's everyone accounted for."], humor: ["I need a sit down. And a coffee. And a nap.", "Hide and seek: we win."], plain: ["They're safe.", "Found them."] } },
+    stranded: {
+      wake: { warm: ["Well. The bus isn't coming back, is it?", "Is everyone alright? We're stuck out here."], edge: ["Broken down. In the middle of nowhere. Perfect.", "No signal. Of course."], shy: ["Are we... stuck here?", "How far is town?"], bold: ["Right. Nobody's coming. We walk.", "We're not waiting here all night."], humor: ["Next stop: nowhere.", "I'd like a refund."], plain: ["We're stuck.", "No bus, then."] },
+      around: { warm: ["There's {what}... but which way is town?", "{What}. No road signs, though."], edge: ["{What}. Fat lot of good.", "And {what}. Still no town."], shy: ["There's {what}... which way do we go?"], bold: ["{What}. Doesn't matter. We find the road.", "I see {what}. Town's out there somewhere."], humor: ["{What}. Lovely. Not a taxi though.", "Scenic. Not helpful."], plain: ["There's {what}.", "No sign of town."] },
+      ask: { warm: ["{name}, are you alright? Do you know the way to town?", "Stick with us, {name}."], edge: ["{name}, you know where we are?", "You stranded too, {name}?"], shy: ["{name}? Do you know which way town is?"], bold: ["{name}, walk with us. Safer together.", "{name}, any idea which way?"], humor: ["{name}, please tell me you know a shortcut.", "{name}, fancy a long walk?"], plain: ["{name}, which way's town?", "You coming, {name}?"] },
+      plan: { warm: ["Let's look round for the road and go together.", "Each of us check a way, then we all {goal}."], edge: ["Split up and find the road. Then we walk.", "We need the road. Look."], shy: ["Maybe we each look for the road?"], bold: ["Find the road and we {goal}. Each take a side.", "Spread out. Whoever finds the road, shout."], humor: ["Plan: find a road. Follow road. Complain.", "Let's split up and find civilisation."], plain: ["Let's find the road.", "We need to {goal}."] },
+      found: { warm: ["Here! {What}! We can follow it!", "Everyone! I found {what}!"], edge: ["Here. {What}. Let's go.", "{What}. Finally."], shy: ["I think this is {what}!"], bold: ["{What}! This way, everyone!", "Found {what}! Let's move!"], humor: ["{What}! Civilisation, here we come.", "Found {what}. Walking shoes on."], plain: ["Over here! {What}!", "This way!"] },
+      wonder: { warm: ["It'll be dark soon. Best keep together.", "Someone will be wondering where we are."], edge: ["That bus company's getting a letter.", "My feet already hurt."], shy: ["I don't like it out here at night...", "Is it much further?"], bold: ["Keep going. We'll get there.", "Stay together, it's getting late."], humor: ["I've been on shorter holidays.", "Nobody mention the word bus."], plain: ["How far is it?", "Keep together."] },
+      out: { warm: ["Come on, everyone, together. Town's this way.", "Let's go home."], edge: ["Walk. Don't stop.", "Let's get this over with."], shy: ["Can I walk with you?"], bold: ["This way. I'll lead.", "Everyone stay together. Let's go."], humor: ["Onwards. Somebody start a song.", "Last one to town buys dinner."], plain: ["Let's go.", "This way."] } },
+    fire: {
+      wake: { warm: ["Do you smell smoke? Everyone, look at that!", "Fire! There's a fire coming!"], edge: ["Smoke. That's a fire. We need to go.", "Fire. Right there. Move."], shy: ["Is that... smoke? Oh no..."], bold: ["Fire! Everyone, listen to me, we're getting out.", "That's a wildfire. Nobody panic. We move."], humor: ["That's not a barbecue.", "Who left the oven on? The whole oven?"], plain: ["Fire!", "Smoke. We need to go."] },
+      around: { warm: ["There's {what}... we have to get away from the smoke.", "{What}... no way out there."], edge: ["{What}. No good. Find a way out.", "And {what}. Smoke everywhere."], shy: ["There's {what}... I can't see for the smoke..."], bold: ["{What}. Not that way. Keep looking.", "I see {what}. Keep moving."], humor: ["{What}. On fire soon, probably.", "No time for sightseeing."], plain: ["There's {what}.", "Smoke everywhere."] },
+      ask: { warm: ["{name}, stay with me. Do you know a way out?", "{name}, are you hurt? Come on."], edge: ["{name}, move. Which way's clear?", "{name}! Don't stand there."], shy: ["{name}? Which way do we go?"], bold: ["{name}, with me. We're getting out.", "{name}, keep low and stay close."], humor: ["{name}, I'd love to chat but there's a fire.", "{name}, run now, small talk later."], plain: ["{name}, come on!", "Which way, {name}?"] },
+      plan: { warm: ["Everyone, look for a clear way out and shout. Quickly!", "Stay low, spread out, and find a way through."], edge: ["Split up. Find a way out. Fast.", "No time. Everyone take a side and look."], shy: ["Should we... each look? Quickly?"], bold: ["Fan out and find a way out of here. Shout when you see one. Go!", "We {goal}. Each take a direction. Move!"], humor: ["Plan: not be here. Spread out!", "Find an exit. Any exit."], plain: ["Find a way out!", "Spread out and look!"] },
+      found: { warm: ["Here! {What}! Everyone, this way, quickly!", "Over here! It's clear here!"], edge: ["Here. {What}. Run.", "This way. Now."], shy: ["Here! I think it's clear here!"], bold: ["{What}! Everyone, to me! Run!", "This way! Go, go, go!"], humor: ["{What}! Follow me, I'm suddenly very brave.", "Exit, found. Running, commencing."], plain: ["Over here! {What}!", "This way!"] },
+      wonder: { warm: ["Keep your mouths covered, everyone.", "Hurry, it's getting closer."], edge: ["It's spreading. Faster.", "I can feel the heat."], shy: ["It's so hot...", "I can't breathe..."], bold: ["Don't stop. Keep moving.", "Stay low. Keep going."], humor: ["I didn't want eyebrows anyway.", "Note to self: no more camping."], plain: ["Hurry!", "It's getting closer."] },
+      out: { warm: ["Go! Everyone through, quickly!", "Keep going, don't look back!"], edge: ["Run. Don't stop.", "Go. Now."], shy: ["Wait for me!"], bold: ["Everyone out! I'm last!", "Go, go! Keep running!"], humor: ["Don't look back. Run now, scream later.", "Run!"], plain: ["Go!", "Run!"] } },
+    treasure: {
+      wake: { warm: ["Ooh, a treasure hunt! Who wants to look?", "There's treasure buried round here somewhere!"], edge: ["Treasure. Sure. Fine, I'll look.", "Somebody's hidden something. Let's find it."], shy: ["Treasure? Really?", "Can I help look?"], bold: ["There's treasure out here and I'm finding it.", "Right, treasure. Let's go."], humor: ["X marks the spot. Nobody brought the X.", "I've always wanted to say 'arr'."], plain: ["There's treasure out here.", "Let's find it."] },
+      around: { warm: ["Could it be by {what}?", "{What}... that looks like a clue!"], edge: ["{What}. Not hidden there.", "And {what}. No treasure."], shy: ["Maybe near {what}?"], bold: ["{What}. Not there. Keep digging.", "I see {what}. Nothing."], humor: ["{What}. Suspicious. Very suspicious.", "If I were treasure, I'd hide under {what}."], plain: ["There's {what}.", "Not there."] },
+      ask: { warm: ["{name}, want to hunt together?", "{name}, did you see any clues?"], edge: ["{name}, you looking too?", "{name}, don't take my treasure."], shy: ["{name}? Can I look with you?"], bold: ["{name}, team up? Split it?", "{name}, which way are you looking?"], humor: ["{name}, we split it fifty-fifty. Sixty-forty.", "{name}, have you got a shovel?"], plain: ["{name}, looking too?", "Any clues, {name}?"] },
+      plan: { warm: ["Let's each search a different way and share it!", "Spread out! Whoever finds it, shout!"], edge: ["Split up. Finders shout.", "Each take a side."], shy: ["Should we each look somewhere?"], bold: ["Fan out. We {goal}. Shout when you hit it.", "Each take a side. Go!"], humor: ["Spread out. Look for an X. Or a pirate.", "Plan: dig everywhere."], plain: ["Let's split up and look.", "We need to {goal}."] },
+      found: { warm: ["Here! I found {what}!", "Everyone! It's {what}!"], edge: ["Here. {What}. Told you.", "Found {what}."], shy: ["Um! I found {what}!"], bold: ["Found {what}! Over here!", "{What}! Mine! Well, ours."], humor: ["{What}! I'm rich! We're rich!", "X marks the spot. Right here."], plain: ["Over here! {What}!", "Found it!"] },
+      wonder: { warm: ["This is fun, isn't it?", "I wonder what it is?"], edge: ["It'd better be worth it.", "Probably a bag of sweets."], shy: ["What if it's not real?"], bold: ["It's here somewhere. Keep looking.", "Look under things."], humor: ["If it's gold, I'm retiring.", "Arr."], plain: ["Keep looking.", "Where could it be?"] },
+      done: { warm: ["We found it, all of us!", "What a lovely surprise."], edge: ["There. Found. Can we open it?", "Worth it. Just about."], shy: ["Can we see what's inside?", "We found it!"], bold: ["Good work, everyone.", "Told you I'd find it."], humor: ["Nobody tell the pirates.", "Drinks are on the treasure."], plain: ["Found it.", "That's it."] } },
+  };
   const IQ = {
     mathRight: { hi: { any: ['{ans}.', 'That\'s {ans}.', '{ans}. Easy.', '{ans}. Next?', '{ans}. Try me with a hard one.'] }, mid: { any: ['Um, {ans}?', 'Let me think... {ans}.', '{ans}, I think.', '{ans}. I had to count.'] }, lo: { any: ['Uh... {ans}? I think that\'s right.', 'Hang on, counting... {ans}!', '{ans}? Did I get it?'] } },
     mathWrong: { hi: { any: ['{ans}. No, wait, I rushed that.'] }, mid: { any: ['{ans}? No, maybe not.', 'About {ans}?', '{ans}, give or take.'] }, lo: { any: ['Uh... {ans}? Maths was never my thing.', '{ans}? Don\'t quote me.', 'Is it {ans}? I always get these wrong.'] } },
@@ -565,7 +651,7 @@
       const P = profile(c), m = memOf(c);
       if (ev.kind === 'touched') {
         const R = ev.by != null ? relOf(m, o.nameOf(ev.by), c) : null, many = R ? R.touch.length : 1;
-        return choose(c, P, m, Object.assign({}, ev, { threat: many > 3 || (R && R.like < -0.3) ? 0.6 : ev.how === 'slap' ? (R && R.like > 0.4 ? 0.25 : 0.5) : R && R.met + R.talks > 1 ? 0.05 : 0.3, feet: 1 }));
+        return choose(c, P, m, Object.assign({}, ev, { threat: many > 3 || (R && R.like < -0.3) ? 0.6 : ev.how === 'slap' ? (R && R.like > 0.4 ? 0.25 : 0.5) : ev.how === 'brush' || ev.how === 'oil' || ev.how === 'tickle' ? 0.02 : R && R.met + R.talks > 1 ? 0.05 : 0.3, feet: 1 }));
       }
       if (!/^(animal|see|notice|alarm|still|gone)$/.test(ev.kind)) return null;
       if (ev.kind === 'gone') return { do: 'ignore', what: ev.what, at: ev.ref };
@@ -581,6 +667,7 @@
         const many = R.touch.length, known = R.met + R.talks > 1;
         let dl = many > 3 ? -0.18 : (d.warm * 0.08 + d.bold * 0.04 - d.shy * (known ? 0.03 : 0.08) - d.edge * 0.07 + (R.like > 0.3 ? 0.05 : 0));
         if (ev.how === 'slap') dl -= 0.06 + 0.1 * (1 - Math.max(0, R.like)) * (1 - d.bold * 0.5); else if (ev.how === 'cold') dl -= 0.02;
+        else if (ev.how === 'brush' || ev.how === 'oil') dl += 0.04; else if (ev.how === 'tickle') dl += d.warm * 0.04 - d.edge * 0.03; else if (ev.how === 'pour') dl -= 0.05 * (1 - d.bold);
         R.like = cl(R.like + dl, -1, 1); push(c, m, P, dl * 1.5, 0.25 + (1 - d.nerve) * 0.15);
       } else if ((ev.kind === 'arrived' || ev.kind === 'approached') && R) {
         R.met++; R.like = cl(R.like + 0.02 + d.warm * 0.04 - d.edge * 0.02, -1, 1); push(c, m, P, R.like * 0.1, 0.12);
@@ -599,6 +686,11 @@
         S.n++; S.t = now;
         if (ev.how === 'road') { S.fear = cl(S.fear + 0.1 + (1 - d.nerve) * 0.2); push(c, m, P, -0.2 * (1 - d.nerve), 0.45); }
         else push(c, m, P, ev.how === 'pet' ? 0.12 * (0.4 + d.warm) : ev.how === 'sit' ? 0.05 : 0.03 * (0.5 + d.curious), ev.how === 'sit' ? -0.12 : 0.05);
+      } else if (ev.kind === 'lost') {
+        // somewhere they don't know: unsettled, more so the easily frightened; finding the way lifts them
+        const f = { wake: [-0.12 - d.fear * 0.15, 0.35], around: [-0.04, 0.1], ask: [0.04, 0.05], plan: [0.06, 0.05], nothing: [-0.06, 0], found: [0.3, 0.3], come: [0.25, 0.2], out: [0.35, -0.05], done: [0.35, 0.1] }[ev.how];
+        if (f) push(c, m, P, f[0], f[1]);
+        if (R && /^(ask|come)$/.test(ev.how)) R.like = cl(R.like + 0.04, -1, 1);
       } else if (ev.kind === 'still' && R) push(c, m, P, -0.35, 0.3);
       else if (ev.kind === 'left' && R) push(c, m, P, -0.03 * cl(R.like + 0.5), -0.05);
       save();
@@ -688,6 +780,7 @@
           if (tab !== L.touchCross || ev.how === 'slap') {
             const liked = !!(R && R.like > 0.1) || (ev.who === 'you' && d.warm + d.bold > d.shy + d.edge);
             if (ev.how === 'slap') tab = ev.what ? L.slappedWith : L.slapped;
+            else if (L[HOW[ev.how]]) tab = L[HOW[ev.how]];
             else if (ev.how === 'cold') tab = L.chilly;
             else if (ev.how === 'sticky' && liked) tab = L.sticky;
             else if (ev.what) tab = liked ? L.touchWith : L.touchWithWary;
@@ -709,6 +802,14 @@
           const tab = { look: L.look, car: L.car, sit: L.sit, pet: L.pet, road: L.road }[ev.how] || L.look, S = m.seen[w];
           say = pick(k, P, ev.how === 'look' && S && S.n > 2 ? L.seeAgain : tab, slots);
           ex = ev.how === 'road' && d.energy > 0.4; look = ev.how === 'sit' ? 'away' : 'them';
+        } else if (ev.kind === 'lost') {
+          // the story: in their own words, by how it goes (lostWake ... lostDone)
+          Object.assign(slots, { dir: ev.dir || 'over there', goal: ev.goal || 'find a way home', what: ev.what || 'a way out' });
+          // a story's own words for this turn (STORY, ev.story), else being lost's (lostWake ... lostDone)
+          const how = String(ev.how || 'wonder'), own = STORY[ev.story] && (STORY[ev.story][how] || (how === 'out' && STORY[ev.story].done) || (how === 'done' && STORY[ev.story].out));
+          const tab = own || L['lost' + how.charAt(0).toUpperCase() + how.slice(1)] || L.lostWonder;
+          say = pick(k, P, tab, slots);
+          ex = /^(found|wake)$/.test(how) && d.energy > 0.35; look = /^(ask|come|plan|found)$/.test(how) ? 'them' : 'away';
         } else if (ev.kind === 'notice' || ev.kind === 'alarm' || ev.kind === 'gone') {
           // anything noticed: what they decided, in their words; an opener now and then for something new
           const a = ev.dec ? ev.dec.do : 'watch', S = m.seen[w], kind = noteOf(ev.what).c;
@@ -1012,6 +1113,8 @@
     const send = (body) => fetch(url, { method: 'POST', headers: Object.assign({ 'content-type': 'application/json' }, M.key ? { 'x-persona-key': M.key } : {}), body: JSON.stringify(body) });
     const why = (a) => { if (a.spend) M.spend = a.spend; if (a.error === 'off') M.server = false; return a.why || 'They could not answer just now.'; };
     const cool = new Map();  // key -> { 'kind|by': time }
+    const offers = new Map();  // key -> { by, key, t }: something to do together that by has just suggested to them
+    const OFFER_FOR = 120;     // s an unanswered suggestion stands
     const ids = new WeakMap(); let nid = 0;
     const idOf = (x) => (typeof x === 'object' ? (ids.has(x) ? ids.get(x) : (ids.set(x, ++nid), nid)) : x);
     let next = 0, turn = 0, rid = 0, scanAt = 0;
@@ -1066,7 +1169,8 @@
         if (!M.can(k) || (to !== 'you' && to != null && !M.can(to)) || M.busy.has(k) || k === M.as) return null;
         if (M.model !== 'local' && M.server === null) await M.check();
         if (M.local) return M.think(k, to, ev);
-        if (ev && !SERVER.includes(ev.kind)) return null;
+        if (ev && ev.kind === 'lost') return M.think(k, to, ev);   // the story's turns are the built-in mind's, whoever speaks
+        if (ev && !SERVER.includes(ev.kind) && !(ev.kind === 'notice' && ev.decide)) return null;   // a notice goes to the server only to be decided
         if (M.asked >= budget) { M.status = `That's ${budget} lines this visit; reload the page for more.`; changed(); return null; }
         // talking with you (or anyone the app marks best, o.best): fuller answers, the last 30 lines and what they remember;
         // a passing remark or reaction stays short. best: fuller answers among themselves too, and the model picked thinks harder
@@ -1074,10 +1178,17 @@
         const depth = direct || (best && !ev) ? 'talk' : 'chat';
         const log = (direct ? history(k) : M.lines.filter((l) => l.p === k || mine(l, k) || (to !== 'you' && to != null && (l.p === to || l.to === to)))).slice(depth === 'talk' ? -30 : -12).map((l) => ({ who: l.who, said: l.said }));
         const e = ev && { kind: ev.kind, who: ev.by != null ? M.nameOf(ev.by) : String(ev.who || '').slice(0, 40), what: ev.kind === 'touched' ? '' : String(ev.what || '').slice(0, 60), where: ev.where || '', danger: !!ev.danger, feet: ev.feet ? Math.round(ev.feet) : undefined };
+        // to be decided: the built-in mind's pick goes along as their instinct, and the server answers with a `do` (MILD only)
+        if (e && ev.decide && ev.dec) Object.assign(e, { decide: true, toward: !!ev.toward, moving: !!ev.moving, inst: { do: ev.dec.do, threat: ev.dec.threat, felt: ev.dec.felt, keen: ev.dec.keen } });
+        // plans made together, between two of them neither of whom you play: the answer to the other's suggestion, or what
+        // they could suggest doing together now (the app's o.joint(k, to): keys the server knows)
+        const peer = !ev && to !== 'you' && to != null && to !== M.as;
+        const off = peer ? offers.get(k) : null, proposal = off && off.by === to && Date.now() / 1000 - off.t < OFFER_FOR ? { key: off.key } : undefined;
+        const joint = peer && !proposal && o.joint ? (o.joint(k, to) || []).slice(0, 5) : [];
         M.busy.add(k); M.asked++; M.status = ''; changed();
         try {
           const r = await send({ me: o.card(k), to: to === 'you' || to == null ? 'you' : o.card(to), scene: o.scene ? o.scene(k, to, ev) : '', log, event: e || undefined,
-            model: M.model, depth, best, past: direct || best ? brain.memoryNote(k) : undefined });
+            model: M.model, decide: !!(e && e.decide), depth, best, past: direct || best ? brain.memoryNote(k) : undefined, joint: joint.length ? joint : undefined, proposal });
           const a = await r.json().catch(() => ({}));
           if (!r.ok) { M.status = why(a); if (a.error === 'cap') M.chatter = false; return null; }
           if (a.spend) { M.spend = a.spend; M.cost = a.cost || 0; M.session += a.cost || 0; M.sessionLines++; }
@@ -1085,8 +1196,40 @@
           M.lines.push({ p: k, to: ev ? (ev.by != null ? ev.by : null) : to, who: M.nameOf(k), said: a.say, ev: ev ? ev.kind : undefined, t: Date.now() / 1000, round: to === 'you' ? roundOf(k) : undefined });
           if (!ev && to === 'you') keep(k, M.lines[M.lines.length - 1]);
           if (o.show) o.show(k, a, to, ev);
+          if (proposal) { offers.delete(k); if (o.agreed) o.agreed(to, k, proposal.key, a.agree === true); }
+          else if (a.propose && joint.includes(a.propose)) { offers.set(to, { by: k, key: a.propose, t: Date.now() / 1000 }); if (o.proposed) o.proposed(k, to, a.propose); M.answer(to, k); }
           return a;
         } catch (err) { M.status = 'They could not answer just now.'; return null; } finally { M.busy.delete(k); changed(); }
+      },
+      // k answers by's suggestion (once k is free to speak; given up after a few tries)
+      async answer(k, by) {
+        await wait(1200 + Math.random() * 1200);
+        for (let i = 0; i < 12; i++) {
+          const off = offers.get(k); if (!off || off.by !== by || !o.people().includes(k)) return;
+          if (!M.busy.has(k) && !M.busy.has(by)) { await M.ask(k, by); return; }
+          await wait(1000);
+        }
+        offers.delete(k);
+      },
+      // what by has suggested to k and not yet had an answer to (null when nothing stands)
+      offer: (k) => { const f = offers.get(k); return f && Date.now() / 1000 - f.t < OFFER_FOR ? f : null; },
+      // what key does next, chosen by a model from the few things the app would have them do (keys the server knows:
+      // eat, drink, wash, sleep, tv, chair, pool, company; to: the name of whoever company goes to) and how pressing
+      // their needs are ({ hunger, thirst, energy, clean, fun, company } 0..1). Resolves to { pick, why, say, mood } or
+      // null (the built-in mind speaking, no server, the cap, a miss): the app then goes with its own pick
+      async plan(k, options, needs, to) {
+        if (!M.can(k) || k === M.as || !Array.isArray(options) || options.length < 2) return null;
+        if (M.model !== 'local' && M.server === null) await M.check();
+        if (M.local || M.asked >= budget) return null;
+        M.asked++;
+        try {
+          const log = M.lines.filter((l) => l.p === k || mine(l, k) || l.to === k).slice(-8).map((l) => ({ who: l.who, said: l.said }));
+          const r = await send({ op: 'plan', me: o.card(k), scene: o.scene ? o.scene(k, null, null) : '', options, needs, to: to || undefined, log, model: M.model });
+          const a = await r.json().catch(() => ({}));
+          if (a.spend) { M.spend = a.spend; M.cost = a.cost || 0; M.session += a.cost || 0; M.sessionLines++; changed(); }
+          if (!r.ok) { if (a.why && a.error !== 'bad') { M.status = why(a); changed(); } return null; }
+          return a.pick && options.includes(a.pick) ? a : null;
+        } catch (err) { return null; }
       },
       // the built-in mind's line, after a moment's thought (longer for the slow and the shy)
       async think(k, to, ev) {
@@ -1142,15 +1285,27 @@
       },
       // something happened to them; they react (at most once per COOL seconds for the same thing)
       event(k, ev) {
-        if (!M.can(k) || !ev || !COOL[ev.kind] || M.busy.has(k)) return false;
+        if (!M.can(k) || !ev || !COOL[ev.kind]) return false;
         if (k === M.as) { brain.observe(k, ev); return false; }   // you: what happens to you is yours to answer
-        const now = Date.now() / 1000, c = cool.get(k) || {}, id = ev.kind + '|' + (ev.by != null ? idOf(ev.by) : ev.ref != null ? idOf(ev.ref) : ev.who || ev.what || '') + (ev.kind === 'touched' && (ev.what || ev.how) ? '|' + (ev.what || '') + '|' + (ev.how || '') : '');
+        const now = Date.now() / 1000, c = cool.get(k) || {}, id = ev.kind + '|' + (ev.by != null ? idOf(ev.by) : ev.ref != null ? idOf(ev.ref) : ev.who || ev.what || '') + (ev.kind === 'touched' && (ev.what || ev.how) ? '|' + (ev.what || '') + '|' + (ev.how || '') : '') + (ev.kind === 'lost' ? '|' + (ev.how || '') : '');
         // something dangerous coming at them, or someone raising the alarm, gets through the 6 s between reactions
-        const urgent = (ev.danger || ev.kind === 'alarm' || ev.how === 'slap') && now - (c.any || -1e9) > 2;
+        const urgent = ((ev.danger || ev.kind === 'alarm' || ev.how === 'slap') && now - (c.any || -1e9) > 2) || (ev.kind === 'lost' && now - (c.any || -1e9) > 2.5);
+        // busy (speaking, or a model deciding): only the urgent gets through, acted on at once (the line is skipped)
+        if (M.busy.has(k) && !urgent) return false;
         if (now - (c[id] || -1e9) < COOL[ev.kind] || (now - (c.any || -1e9) < 6 && !urgent)) return false;
         c[id] = c.any = now; cool.set(k, c);
         // decide first (on what they knew before this), tell the app, then learn from it and say something
         ev = Object.assign({}, ev); ev.dec = brain.decide(k, ev) || undefined;
+        // a model decides a mild pick (never fleeing, backing off, freezing, warning or calling, nor anything urgent) when one is speaking:
+        // the act waits for its answer (DECIDE_WAIT), else the built-in pick is acted on as ever
+        if (ev.dec && MILD.includes(ev.dec.do) && !urgent && !M.local && o.act && !M.quiet(k, ev.kind) && /^(notice|animal|approached|arrived)$/.test(ev.kind)) {
+          const dec = ev.dec; ev.decide = true;
+          // a reply that comes after something newer (an urgent event got through meanwhile) is let go: that one stands
+          const fin = (a) => { if (!o.people().includes(k)) return; const d = a && MILD.includes(a.do) ? Object.assign({}, dec, { do: a.do }) : dec; ev.dec = d; if (d.do !== 'ignore' && (cool.get(k) || {}).any === now) o.act(k, d, ev); brain.observe(k, ev); };
+          const asked = M.ask(k, null, ev);
+          Promise.race([asked, wait(DECIDE_WAIT).then(() => null)]).then(fin);
+          return true;
+        }
         if (ev.dec && ev.dec.do !== 'ignore' && o.act) o.act(k, ev.dec, ev);
         brain.observe(k, ev);
         if (!M.quiet(k, ev.kind)) M.ask(k, null, ev);

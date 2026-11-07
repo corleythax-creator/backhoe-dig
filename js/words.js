@@ -194,6 +194,7 @@ const WORDS=[
   ['tkChip','Town: talk','[talk]: talk to {name}','{name}: the townsperson nearest you'],['tkChipPhone','Town: talk','Talk to {name}','{name}: the townsperson nearest you (phones)'],
   ['tkWith','Town: talk','Talking to {name}','{name}: who you are talking to'],['tkSayTo','Town: talk','Say something to {name}','{name}: who you are talking to (in the box)'],
   ['tkSay','Town: talk','Say',''],['tkThinking','Town: talk','{name} is thinking…','{name}: who is answering'],
+  ['tkAll','Town: talk','Everyone',''],['tkWithAll','Town: talk','Talking to everyone here ({n})','{n}: how many are listening'],['tkSayAll','Town: talk','Say something to everyone',''],
   ['tkPlayer','Town: talk','Corley','What the townsfolk call you'],
   ['tkWeather','Town: talk','Nice enough day for it. Whatever it is you\'re digging.',''],['tkRain','Town: talk','This rain. Good for the lawns, bad for your dirt, I\'d guess.',''],
   ['tkDug','Town: talk','Saw your excavator going out on the island. {yd} today? That\'s a day\'s work.','{yd}: dirt dug today'],
