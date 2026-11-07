@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Friday, November 6, 2026
 
+- **v352** (7:00 PM) The townsfolk's fingers bend like real ones: each joint in a hand's own proportions, fingers drawing together toward the thumb, the thumb wrapping round, a closing hand rolling shut.
 - **v351** (6:42 PM) The screen uses four text sizes and one set of corners and colours, phones get one consistent layout, and the screen editor's Layout tab can now move the job card as well as the top bar, captions, map and sticks.
 - **v350** (6:36 PM) Townsfolk act on what they notice: they run from danger, step back, stop and watch, or walk over to look or help. Gunshots reach everyone nearby. Talk to everyone at once with the Everyone button. With Haiku, Sonnet or Opus speaking, they know the day, the weather, the shop, what you're doing, your day's work, the police and what just happened, and the model picks their calm reactions.
 - **v349** (6:21 PM) Messages queue up two at a time (warnings first, repeats count up instead of piling on), every message can be reworded in the screen editor, How to play is a searchable list of topics, and each machine shows a tip card the first time you get in (turn them off or show them again in How to play).
