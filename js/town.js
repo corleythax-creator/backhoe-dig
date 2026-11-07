@@ -41,7 +41,8 @@ const TOWN_HRS={0:[6,15],2:[7,17],5:[6,21],11:[6,16],12:[11,22],15:[10,20],17:[8
 const TOWN_KHRS={eat:[7,20],shop:[9,18],salon:[9,18],office:[9,17],wash:[6,22],art:[10,18],gun:[9,19]};
 const townHour=()=>dnMin(dn.t)/60,townDow=()=>((fuelDayNo()+4)%7+7)%7,townWeekend=()=>{const d=townDow();return d===0||d===6};
 function townHrs(R){return R.si!=null?TOWN_HRS[R.si]||TOWN_KHRS[R.kind]||[9,18]:R.hrs||null}
-function townRoomOpen(R){const h=townHour();
+// (at: another hour of today to ask about, as townfolk.js does for staff coming in early and leaving late)
+function townRoomOpen(R,at){const h=at??townHour();
   if(R.home)return townWeekend()?h>=7.5&&h<23.5:h>=6&&h<8.5||h>=17&&h<23.5;
   const H=townHrs(R);if(!H)return true;if(R.kind==='office'&&R.si!==7&&R.si!==23&&townWeekend())return false;return h>=H[0]&&h<H[1]}
 const townAmPm=h=>h%24===0?'midnight':h===12?'noon':(h%12||12)+(h<12?' AM':' PM');

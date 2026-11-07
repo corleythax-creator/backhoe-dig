@@ -115,6 +115,11 @@ const TUNE=[
   ['cashStart','Town','Money in your wallet when you start (added to what the work has paid)',250,'usd',0,10000,10],
   ['pepBoost','Town','A coffee or a meal from a shop: walking and running faster by',0.12,'pct',0,50,1],['pepTime','Town','A coffee or a meal lasts',180,'s',10,900,10],
   ['tfQuiet','Town','People out at the quietest hour of the night, of the busiest',0.12,'pct',0,100,1],
+  // the shops' comings and goings (townfolk.js, tfEnt): passersby turning in, how long they stay, how many on their way
+  // in or out at once, what they come out holding, and the staff's hours either side of the shop's
+  ['tfShopGo','Town','Passersby who turn into an open shop at its busiest hour',0.35,'pct',0,100,5],['tfShopStay','Town','Customers stay in a shop about',45,'s',5,600,5],
+  ['tfShopTransit','Town','Most townsfolk walking into or out of shops at once',8,'n',0,30,1],['tfCarry','Town','Customers who come out carrying a bag or a cup',0.6,'pct',0,100,5],
+  ['tfStaffGap','Town','Shop staff come in before opening and go home after closing by',1200,'min',0,120,5],
   ['greetChance','Town','Passersby who greet you as you walk by',0.45,'pct',0,100,5],['greetGap','Town','The least time between greetings',8,'s',0,60,1],
   // townsfolk talk (talk.js): who joins in, how far off it is heard, and what makes them remark on a machine
   ['talkSeeR','Town','Townsfolk talk only within this far of you (or the machine you drive)',36.6,'ft',30,400,5],

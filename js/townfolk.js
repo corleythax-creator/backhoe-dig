@@ -177,7 +177,7 @@ function tfForgeCrowd(B,id){B.fg=1;const F=tf.F;
 // seat's middle, its seat 18 in up like the rooms' chairs and benches), driving (its seat 14 in up: lifted to where the
 // old seated pose's seat was, 18 in over p.y), or standing easy or talking (staff and customers)
 function tfFgClip(p,c,dt,hp,die){let k=die?die.k:p.cower>0&&!hp&&c.clips.cower?'cower':p.cop&&p.aim>0&&!hp&&c.clips.point?'point':hp&&(p.dead||p.hurt)?(hp.kneel?'sit':'idle'):p.drv?'drive':p.sit?'sit':p.spd>(p.fk==='walk'?0.15:0.3)?'walk':0;
-  if(!k){if(p.fk!=='idle'&&p.fk!=='talk'||p.t>(p.tp??0)+1)p.tk=Math.random()<(p.room?p.spot.staff?0.5:0.35:0.06);p.tp=p.t;k=p.tk?'talk':'idle'}
+  if(!k){if(p.fk!=='idle'&&p.fk!=='talk'||p.t>(p.tp??0)+1)p.tk=Math.random()<(p.room?p.spot.staff?0.5:p.spot.chat?0.85:0.35:0.06);p.tp=p.t;k=p.tk?'talk':'idle'}
   if(k==='walk'&&p.flee>0&&p.spd>2.2&&c.clips.run)k='run';
   const A=c.clips[k];if(k!==p.fk){p.fk=k;p.ct=k==='walk'||k==='run'?0.1:Math.random()*A.duration}
   if(die)p.ct=Math.min(A.duration-0.02,die.t);else if(k==='cower'||k==='point')p.ct=Math.min(A.duration-0.02,k==='point'?0.5:(p.ct||0)+dt);else if(!(p.dead||p.hurt))p.ct=(p.ct+dt*(k==='walk'?p.spd/(c.stride*p.sc):k==='run'?p.spd/(c.runS*p.sc):1))%A.duration;return k}
@@ -319,11 +319,11 @@ function tfHitStep(p,dt){const H=p.hit;H.t+=dt;if(H.jolt>0)H.jolt-=dt;if(H.k==='
   else if(H.k==='leg'&&p.hurt&&H.t>1.4&&H.t<14){p.crawl=1;v=0.22*(1-(H.t-1.4)/12.6);const dx=p.x-wk.x,dz=p.z-wk.z,d=Math.hypot(dx,dz)||1;ux=dx/d;uz=dz/d}else p.crawl=0;
   if(!v)return;const nx=p.x+ux*v*dt,nz=p.z+uz*v*dt;if(SOLIDS.some(s=>!s.foot&&solidOut(s,nx,nz,0.3)))return;
   p.x=nx;p.z=nz;p.y=baseHeight(nx,nz)+tfLift(nx,nz)}
-function tfDrop(p){const i=tf.people.indexOf(p);if(i>=0){tf.people.splice(i,1);tf.use[p.ci]--;if(p.room){p.room.n--;if(p.spot&&p.spot.who===p)p.spot.who=null}}}
+function tfDrop(p){if(p.go||p.goTo)tfGoEnd(p);const i=tf.people.indexOf(p);if(i>=0){tf.people.splice(i,1);tf.use[p.ci]--;if(p.room){p.room.n--;if(p.spot&&p.spot.who===p)p.spot.who=null}}}
 // someone on the walks at a random spot (out of sight unless fill: the walks are empty, as when the town first comes near)
 function tfSpawnWalker(fill){for(let t=0;t<8;t++){const w=TF_WALK[(Math.random()*TF_WALK.length)|0];if(w.x)continue;const s=Math.random()*w.len,[x,z]=tfAt(w,s);
     if(!fill&&tfSeen(x,z,1)&&Math.hypot(x-camera.position.x,z-camera.position.z)<90)continue;
-    const p=tfPerson({w,s,dir:Math.random()<0.5?1:-1,x,z});p.side=0.32*(Math.random()<0.8?1:-1);return p}}
+    const p=tfPerson({w,s,dir:Math.random()<0.5?1:-1,x,z});p.side=0.32*(Math.random()<0.8?1:-1);if(Math.random()<0.08)p.carry=Math.random()<0.5?'cup':'bag';return p}}
 // in view of the camera (within r of a point seen) and not too far off
 function tfSeen(x,z,r){tf.v.set(x,baseHeight(x,z)+1,z);return tf.fr.intersectsSphere(new THREE.Sphere(tf.v,r||2))}
 // what someone walking at (x, z) toward (dx, dz) would bump into within reach: another person, the worker, a car
@@ -355,7 +355,7 @@ function tfWalkStep(p,dt){
   // held up a while by someone in the way: step to the other side, and if that does not do it, edge round them
   if(p.ghost>0)p.ghost-=dt;const bl=tfBlocked(p,dx,dz,0.9);p.blk=bl?p.blk+dt:0;if(p.blk>2){if(!p.path&&!p.flip){p.side=-p.side;p.flip=1}else{p.ghost=2.5;p.flip=0}p.blk=0}
   p.spd+=((bl?0:p.vt)-p.spd)*Math.min(1,dt*(bl?8:2));const ds=p.spd*dt;
-  if(p.path)p.s+=ds;else p.s=Math.min(p.w.len,Math.max(0,p.s+ds*p.dir));
+  if(p.path)p.s+=ds;else{const s0=p.s;p.s=Math.min(p.w.len,Math.max(0,p.s+ds*p.dir));if(p.w.ents&&p.w.ents.length)tfEntCross(p,s0)}
   p.x+=(x-p.x)*Math.min(1,dt*8);p.z+=(z-p.z)*Math.min(1,dt*8);
   let d=Math.atan2(dx,dz)-p.yaw;d=Math.atan2(Math.sin(d),Math.cos(d));p.yaw+=d*Math.min(1,dt*7);
   p.amp+=(Math.min(1,p.spd/1.2)*0.42-p.amp)*Math.min(1,dt*6);p.ph+=p.spd*dt*Math.PI*2/(1.5*p.sc)}
@@ -458,13 +458,24 @@ function tfCarStep(c,dt){const P=c.path;
 // each on a spot of their own; past TF_RFAR it empties. Now and then a customer goes (when nobody is looking) and
 // someone else comes to another spot; a spot with a path (a waiter, a bartender, a shopper) is walked round and round,
 // along lines clear of the furniture
-function tfRoomsTick(){const cx=camera.position.x,cz=camera.position.z;let n=tf.people.reduce((k,p)=>k+(p.room?1:0),0);
+// every quarter second: each room near the camera has the people it wants. A room first coming near fills at once;
+// after that a shop with a door (tfEnt) gets its people through it: staff walk in before opening and out after closing
+// (tfStaffOn), customers turn in from the walk (tfEntCross) or are called along it when the hour wants more (tfCall),
+// and walk out when done (tfExit). Other rooms fill and empty as before (out of sight)
+function tfRoomsTick(dt){tf.rmT=(tf.rmT||0)-dt;if(tf.rmT>0)return;tf.rmT=0.25;if(!tf.shopsOk)tfShopsInit();
+  const cx=camera.position.x,cz=camera.position.z,cap=Math.min(TF_ROOM_CAP,tfShopLeft());let n=tf.people.reduce((k,p)=>k+(p.room||p.goTo||p.go&&!p.go.out?1:0),0);
   for(const R of TF_ROOMS){const d=Math.hypot(R.x-cx,R.z-cz)-R.r;
-    if(d>TF_RFAR){if(R.n)for(const p of tf.people.slice())if(p.room===R)tfDrop(p);continue}
-    if(d>TF_RNEAR&&!R.n)continue;const staff=R.spots.filter(sp=>sp.staff).length,want=townRoomOpen(R)?Math.min(R.spots.length,staff+Math.round((R.big?R.big[tf.q]:TF_RN[tf.q])*townBusy(R))):0;
-    if(R.n>want)townRoomEmpty(R,want);
-    while(R.n<want&&n<Math.min(TF_ROOM_CAP,tfShopLeft())){const free=R.spots.filter(sp=>!sp.who),st=free.filter(sp=>sp.staff),sp=st.length?st[0]:free[(Math.random()*free.length)|0];if(!sp)break;
-      const p=tfPerson({room:R,spot:sp,x:sp.x,z:sp.z,yaw:sp.yaw,sit:sp.sit?1:0,t:6+Math.random()*30,look:0,s:sp.at||0});p.y=sp.path&&R.ground?baseHeight(sp.x,sp.z):sp.y;sp.who=p;R.n++;n++}}}
+    if(d>TF_RFAR){if(R.n||R.cInc)for(const p of tf.people.slice())if(p.room===R||(p.go||p.goTo)&&(p.go||p.goTo).R===R)tfDrop(p);R.live=0;continue}
+    if(d>TF_RNEAR&&!R.n&&!(R.live&&R.ent))continue;const E=R.live?tfEnt(R):null;
+    const open=townRoomOpen(R),staff=R.spots.filter(sp=>sp.staff).length,cust=R.grp?(open&&townBusy()>0.35?R.spots.length:0):Math.round((R.big?R.big[tf.q]:TF_RN[tf.q])*townBusy(R)),
+      want=open?Math.min(R.spots.length,staff+cust):0;
+    if(E){n+=tfDoorRoom(R,E,open?Math.min(cust,R.spots.length-staff):0,n<cap);continue}
+    R.live=1;if(R.n>want)townRoomEmpty(R,want);
+    while(R.n<want&&n<cap){const free=R.spots.filter(sp=>!sp.who),st=free.filter(sp=>sp.staff),sp=st.length?st[0]:free[(Math.random()*free.length)|0];if(!sp)break;
+      tfRoomPut(R,sp);n++}}}
+// someone put straight at a spot in a room (a seated one outdoors now and then with a drink in hand)
+function tfRoomPut(R,sp){const p=tfPerson({room:R,spot:sp,x:sp.x,z:sp.z,yaw:sp.yaw,sit:sp.sit?1:0,t:6+Math.random()*30,look:0,s:sp.at||0});p.y=sp.path&&R.ground?baseHeight(sp.x,sp.z):sp.y;sp.who=p;R.n++;
+  if(sp.sit&&R.ground&&Math.random()<0.4)p.carry='cup';return p}
 function tfRoomStep(p,dt){const sp=p.spot,R=p.room;
   if(sp.path){// walking the aisles, stopping at a table now and then
     if(p.wait>0){p.wait-=dt;p.spd=0}else{p.spd+=(p.vt*0.8-p.spd)*Math.min(1,dt*2);p.s=(p.s+p.spd*dt)%sp.path.len;if(Math.random()<dt*0.05)p.wait=2+Math.random()*5}
@@ -473,8 +484,120 @@ function tfRoomStep(p,dt){const sp=p.spot,R=p.room;
   p.spd=0;p.amp+=(0-p.amp)*Math.min(1,dt*6);let a=sp.yaw+p.look-p.yaw;a=Math.atan2(Math.sin(a),Math.cos(a));p.yaw+=a*Math.min(1,dt*2.5);
   p.t-=dt;if(p.t>0)return;p.t=6+Math.random()*25;
   if(sp.staff||Math.random()<0.45){p.look=sp.sit?0:(Math.random()-0.5)*1.4;return}
-  // done: a customer goes (when nobody is looking) and someone else comes in to another spot
+  // done: a customer walks out (tfExit), or where there is no door goes when nobody is looking, and someone else comes
+  // in to another spot
+  if(R.ent&&tfEnt(R)){if(!tfExit(p))p.t=2+Math.random()*4;return}
   if(!tfSeen(p.x,p.z,1.5))tfDrop(p)}
+// ---------- in and out of the shops' doors ----------
+// A shop room (rmFurnish: R.dO) is linked to its door (RM_DOORS, the one in the middle of its glass) and the nearest
+// sidewalk (TF_WALK): R.ent {R, d (the door), mx, mz (its middle), ux, uz (out through it), w, s (where on the walk), wx,
+// wz}, kept on the walk too (w.ents), and worked out again if the map editor moves the door. Walkers going by an open
+// shop turn in now and then (tfEntCross, tfVisit: Tuning tfShopGo, by the hour and what it sells, tfShopW), walk up to
+// the door (it opens: d.hold, interiors.js), in by a clear path to a free spot (tfInPath, round the room's furniture,
+// R.sol) and stay a while (tfShopStay); then they walk back out to the walk and carry on (tfExit), some with a bag or a
+// cup in hand (tfCarry, TF_CARRY). Staff come along the walk and in before opening and go home after closing
+// (tfStaffOn, tfStaffGap). Groups of two or three chat at the mouths of a few gaps between the shops (R.grp, joined and
+// left from the walk the same way, without a door). p.goTo {R, E, sp}: on the walk, headed for E; p.go {R, E, sp, out,
+// path, s}: walking in or out. tf.trans counts both (at most tfShopTransit); a spot is held (sp.who) from the start
+const TF_SHOP_HR={am:[[8,1.5,1],[14.5,1.5,0.35]],meal:[[12.5,1.2,1],[18.5,1.4,0.8],[8.5,1.5,0.3]],pm:[[19.5,2.5,1],[13,1.5,0.35]],treat:[[15,3,1]],day:[[13,3.2,1]]};
+// how much a shop draws people in at this hour, 0.15 to 1: cafés and bakeries in the morning, places to eat at noon and
+// supper, pubs and the theater in the evening, treats in the afternoon, stores and offices through the day (R.vk)
+function tfShopW(R){if(!R.vk){const S=R.si!=null&&MAIN_SHOPS[R.si],n=(S?S[0]+' '+S[1]:R.nm||'').toLowerCase();
+    R.vk=R.grp?'day':/pub|tavern|bar\b|brew|grill|theat|wine/.test(n)?'pm':/coffee|caf|bak|donut|bagel|breakfast/.test(n)?'am':/sweet|fudge|candy|ice cream|gelato/.test(n)?'treat':R.kind==='eat'?'meal':'day'}
+  const h=townHour();let v=0.15;for(const [c,w,a] of TF_SHOP_HR[R.vk])v+=a*Math.exp(-(((h-c)/w)**2)/2);return Math.min(1,v)}
+// what a customer comes out of R holding, if anything
+function tfCarryOf(R){tfShopW(R);const k=R.vk;return R.grp?null:k==='am'||k==='treat'?'cup':k==='meal'?(Math.random()<0.4?'cup':null):k==='day'&&/shop|gun|art/.test(R.kind)?'bag':null}
+// the staff are in: from tfStaffGap before opening to as long after closing
+function tfStaffOn(R){const h=townHour(),e=(TU.tfStaffGap??1200)/3600;return townRoomOpen(R)||townRoomOpen(R,(h+e)%24)||townRoomOpen(R,(h+24-e)%24)}
+// once, when the town is first near: the walks' entrance lists, the chatting groups, each shop's entrance
+function tfShopsInit(){tf.shopsOk=1;tf.trans=0;for(const w of TF_WALK)w.ents=[];
+  const G=MAIN_GAPS,st=Math.max(2,Math.floor(G.length/3));
+  for(let i=1;i<G.length;i+=st){const [sx,gz]=G[i],cx=sx*6.55,R={x:cx,z:gz,r:3,ground:1,grp:1,hrs:[8,21],spots:[],n:0,big:null};
+    for(const [x,z] of [[sx*6.35,gz-0.5],[sx*6.35,gz+0.5],[sx*6.95,gz]])R.spots.push({x,z,y:baseHeight(x,z)+tfLift(x,z),yaw:Math.atan2(cx-x,gz-z),chat:1});
+    TF_ROOMS.push(R)}
+  for(const R of TF_ROOMS)tfEnt(R)}
+// R's entrance (above), or null for a room without one
+function tfEnt(R){const E=R.ent;if(E===null)return null;if(E&&(!E.d||E.d.x===E.dx&&E.d.z===E.dz))return E;
+  let d=E?E.d:null,mx=R.x,mz=R.z,ux=0,uz=0;
+  if(R.dO!=null){if(!d){const [a,b]=R.P(R.dO+0.03,0);let bd=0.5;for(const q of RM_DOORS){if(q.k!=='shop')continue;const e=Math.hypot(q.x+Math.cos(q.f)*q.w/2-a,q.z-Math.sin(q.f)*q.w/2-b);if(e<bd){bd=e;d=q}}}
+    if(!d)return R.ent=null;mx=d.x+Math.cos(d.f)*d.w/2;mz=d.z-Math.sin(d.f)*d.w/2;ux=Math.sin(d.f);uz=Math.cos(d.f)}
+  else if(!R.grp)return R.ent=null;
+  if(E&&E.w){const i=E.w.ents.indexOf(E);if(i>=0)E.w.ents.splice(i,1)}
+  const ox=mx+ux*0.8,oz=mz+uz*0.8;let best=null,bd=R.grp?2.2:3.5;
+  for(const w of TF_WALK){if(w.x)continue;for(let i=1;i<w.p.length;i++){const a=w.p[i-1],b=w.p[i],ex=b[0]-a[0],ez=b[1]-a[1],L=Math.hypot(ex,ez)||1,
+      t=Math.max(0,Math.min(L,((ox-a[0])*ex+(oz-a[1])*ez)/L)),px=a[0]+ex/L*t,pz=a[1]+ez/L*t,e=Math.hypot(ox-px,oz-pz);if(e<bd){bd=e;best={w,s:w.L[i-1]+t,wx:px,wz:pz}}}}
+  if(!best)return R.ent=null;const N=Object.assign({R,d,dx:d?d.x:0,dz:d?d.z:0,mx,mz,ux,uz},best);best.w.ents.push(N);return R.ent=N}
+// the way in from just inside the door to spot sp, round the room's furniture (world points), or null if there is none;
+// kept on the spot until it or the door moves
+function tfInPath(R,E,sp){const k=sp.x*7+sp.z*13+E.mx*3+E.mz;if(sp.inK===k)return sp.inP;sp.inK=k;if(!E.d)return sp.inP=[[sp.x,sp.z]];
+  const D=R.dO+0.03,vx=E.uz,vz=-E.ux,lo=(x,z)=>[D+(x-E.mx)*E.ux+(z-E.mz)*E.uz,(x-E.mx)*vx+(z-E.mz)*vz],[so,ss]=lo(sp.x,sp.z),f=R.dO-0.45,lim=R.W-0.2,m0=R.W-0.45;
+  const clear=c=>{for(let i=1;i<c.length;i++){const [a0,b0]=c[i-1],[a1,b1]=c[i],n=Math.max(1,Math.ceil(Math.hypot(a1-a0,b1-b0)/0.15));
+      for(let j=0;j<=n;j++){const o=a0+(a1-a0)*j/n,s=b0+(b1-b0)*j/n;if((o-so)**2+(s-ss)**2<0.36)continue;if(Math.abs(s)>lim||o<0.3-R.dO)return false;
+        for(const [bo,bs,hs,ho] of R.sol)if(Math.abs(o-bo)<ho+0.22&&Math.abs(s-bs)<hs+0.22)return false}}return true};
+  const C=[[[f,0],[so,0],[so,ss]],[[f,0],[f,ss],[so,ss]]];for(let m=-m0;m<=m0+1e-6;m+=0.5)C.push([[f,0],[f,m],[so,m],[so,ss]]);
+  let best=null,bl=1e9;for(const c of C){let L=0;for(let i=1;i<c.length;i++)L+=Math.abs(c[i][0]-c[i-1][0])+Math.abs(c[i][1]-c[i-1][1]);if(L<bl&&clear(c)){bl=L;best=c}}
+  return sp.inP=best&&best.map(([o,s])=>[E.mx+(o-D)*E.ux+s*vx,E.mz+(o-D)*E.uz+s*vz])}
+// the whole way from the walk to spot sp (world points), or null
+function tfRoute(R,E,sp){const P=tfInPath(R,E,sp);if(!P)return null;const L=[[E.wx,E.wz]];if(E.d)L.push([E.mx+E.ux*0.7,E.mz+E.uz*0.7],[E.mx,E.mz]);return L.concat(P)}
+// a free customer's spot in R someone can walk to
+function tfFreeSpot(R,E){const L=R.spots.filter(sp=>!sp.staff&&!sp.who&&!sp.path);for(let k=L.length;k>0;k--){const i=(Math.random()*k)|0,sp=L[i];if(tfInPath(R,E,sp))return sp;L[i]=L[k-1]}return null}
+// p takes spot sp of R, on the way to it
+function tfHold(p,R,E,sp){sp.who=p;if(!sp.staff)R.cInc=(R.cInc||0)+1;tf.trans=(tf.trans||0)+1;p.goTo={R,E,sp}}
+function tfGoEnd(p){const G=p.go||p.goTo;p.go=p.goTo=null;if(!G)return;tf.trans=Math.max(0,(tf.trans||0)-1);
+  if(!G.out){if(!G.sp.staff)G.R.cInc=Math.max(0,(G.R.cInc||0)-1);if(G.sp.who===p)G.sp.who=null}}
+// a door room's comings and goings (tfRoomsTick); wantC: the customers the hour wants; room: the rooms have room for
+// one more. Returns 1 when someone was sent for
+function tfDoorRoom(R,E,wantC,room){let sIn=0,sCome=0,cIn=0;const ps=[],cap=TU.tfShopTransit??8,ok=p=>!p.dead&&!p.hurt&&!p.hit&&!(p.cower>0)&&!(p.flee>0);
+  for(const sp of R.spots){const q=sp.who;if(!q)continue;if(q.room===R){ps.push(q);if(sp.staff)sIn++;else cIn++}else if(sp.staff)sCome++}
+  const wantS=tfStaffOn(R)?R.spots.filter(sp=>sp.staff).length:0;R.wantC=wantC;R.cIn=cIn;
+  // going, one at a time: the customers the hour no longer wants, then (once they are out) the staff after hours
+  if((R.exT=(R.exT||0)-0.25)<=0){R.exT=1.2+Math.random()*2;let p=null;
+    if(cIn>wantC)p=ps.find(p=>!p.spot.staff&&ok(p));else if(sIn>wantS&&!cIn&&!R.cInc)p=ps.filter(p=>p.spot.staff&&ok(p)).sort((a,b)=>(a.reg?1:0)-(b.reg?1:0))[0];
+    if(p&&!tfExit(p)&&!tfSeen(p.x,p.z,1.5))tfDrop(p)}
+  if(!room||(tf.trans||0)>=cap)return 0;
+  // coming: the staff to their posts first, then the customers the hour wants (walkers going by turn in too)
+  if(sIn+sCome<wantS){const sp=R.spots.find(sp=>sp.staff&&!sp.who);if(!sp)return 0;if(tfRoute(R,E,sp))return tfCall(R,E,sp)?1:0;
+    if(!tfSeen(sp.x,sp.z,1.5)){tfRoomPut(R,sp);return 1}return 0}
+  if(cIn+(R.cInc||0)<wantC&&(R.callT=(R.callT||0)-0.25)<=0){R.callT=3+Math.random()*6;const sp=tfFreeSpot(R,E);if(sp&&tfCall(R,E,sp))return 1}
+  return 0}
+// someone sent for: a walker on E's walk headed its way, or someone new along it out of sight (or well off)
+function tfCall(R,E,sp){const w=E.w;
+  for(const q of tf.people)if(q.w===w&&!q.room&&!q.go&&!q.goTo&&!q.car&&!q.drv&&!q.cop&&!q.inside&&!q.path&&!q.dead&&!q.hurt&&!(q.flee>0)&&(E.s-q.s)*q.dir>3&&(E.s-q.s)*q.dir<40){tfHold(q,R,E,sp);return true}
+  const cx=camera.position.x,cz=camera.position.z;
+  for(const k of [35,-35,22,-22]){const s=Math.min(w.len,Math.max(0,E.s+k));if(Math.abs(s-E.s)<6)continue;const [x,z]=tfAt(w,s);if(tfSeen(x,z,1)&&Math.hypot(x-cx,z-cz)<55)continue;
+    const p=tfPerson({w,s,dir:s<E.s?1:-1,x,z});p.side=0.32;tfHold(p,R,E,sp);return true}
+  return false}
+// a walker on a walk going from s0 to p.s: past an entrance, the one headed for it turns in, anyone else may
+function tfEntCross(p,s0){if(p.s===s0||p.car||p.drv||p.cop||p.go||p.flee>0)return;for(const E of p.w.ents){if((s0-E.s)*(p.s-E.s)>0)continue;
+    if(p.goTo){if(p.goTo.E===E)tfGoIn(p);return}tfVisit(p,E);if(p.goTo)return}}
+function tfVisit(p,E){const R=E.R;if(!R.live||(tf.trans||0)>=(TU.tfShopTransit??8)||!townRoomOpen(R)||(R.cIn||0)+(R.cInc||0)>=(R.wantC||0)+1)return;
+  if(Math.random()>(TU.tfShopGo??0.3)*tfShopW(R)*(p.carry?0.4:1))return;const sp=tfFreeSpot(R,E);if(!sp)return;tfHold(p,R,E,sp);tfGoIn(p)}
+// off the walk and in
+function tfGoIn(p){const G=p.goTo,P=tfRoute(G.R,G.E,G.sp);if(!P){tfGoEnd(p);return}P[0]=[p.x,p.z];p.goTo=null;p.go={R:G.R,E:G.E,sp:G.sp,out:0,path:tfLine(P),s:0};p.wait=0}
+// done in R: out the door to the walk (false: not now)
+function tfExit(p){const R=p.room,sp=p.spot,E=tfEnt(R);if(!E||(tf.trans||0)>=(TU.tfShopTransit??8))return false;const P=tfRoute(R,E,sp);if(!P)return false;
+  P[P.length-1]=[p.x,p.z];P.reverse();R.n--;if(sp.who===p)sp.who=null;p.room=null;p.spot=null;p.sit=0;tf.trans=(tf.trans||0)+1;
+  if(!sp.staff&&!p.carry&&Math.random()<(TU.tfCarry??0.6))p.carry=tfCarryOf(R);p.go={R,E,sp,out:1,path:tfLine(P),s:0};tf.outs=(tf.outs||0)+1;return true}
+// a step along the way in or out: the door opens as they come to it, the floor inside, the walk outside
+function tfGoStep(p,dt){const G=p.go,P=G.path,E=G.E;
+  if(G.s>=P.len){if(G.out){tfGoEnd(p);Object.assign(p,{w:E.w,s:E.s,dir:Math.random()<0.5?1:-1,side:0.32*(Math.random()<0.8?1:-1),xok:false,wait:0,blk:0});return}
+    const R=G.R,sp=G.sp;p.go=null;tf.trans=Math.max(0,(tf.trans||0)-1);if(!sp.staff)R.cInc=Math.max(0,(R.cInc||0)-1);if(sp.who!==p){tfDrop(p);return}
+    Object.assign(p,{room:R,spot:sp,sit:sp.sit?1:0,t:sp.staff?6+Math.random()*25:(TU.tfShopStay??45)*(0.5+Math.random()),look:0,spd:0,x:sp.x,z:sp.z,y:sp.y});R.n++;tf.ins=(tf.ins||0)+1;return}
+  const [x,z,dx,dz]=tfAt(P,G.s);if(p.ghost>0)p.ghost-=dt;const bl=tfBlocked(p,dx,dz,0.7);p.blk=bl?p.blk+dt:0;if(p.blk>1.2){p.ghost=2;p.blk=0}
+  p.spd+=((bl?0:p.vt)-p.spd)*Math.min(1,dt*(bl?8:3));G.s+=p.spd*dt;p.x+=(x-p.x)*Math.min(1,dt*10);p.z+=(z-p.z)*Math.min(1,dt*10);
+  let a=Math.atan2(dx,dz)-p.yaw;a=Math.atan2(Math.sin(a),Math.cos(a));p.yaw+=a*Math.min(1,dt*7);
+  p.amp+=(Math.min(1,p.spd/1.2)*0.42-p.amp)*Math.min(1,dt*6);p.ph+=p.spd*dt*Math.PI*2/(1.5*p.sc);
+  let gy=baseHeight(p.x,p.z)+tfLift(p.x,p.z);if(E.d){const ox=p.x-E.mx,oz=p.z-E.mz;if(ox*ox+oz*oz<6.8)E.d.hold=Math.max(E.d.hold,0.5);if(ox*E.ux+oz*E.uz<0)gy=E.d.y}
+  p.y+=(gy-p.y)*Math.min(1,dt*8)}
+// what people carry: a paper coffee cup or a shopping bag at the right hand (as it swings walking, in the lap seated),
+// one instanced mesh each, for those drawn this frame (tfDraw)
+const TF_CARRY={cup:{g:()=>new THREE.CylinderGeometry(0.042,0.034,0.14,10),c:0xf1ece2,y:0.02},bag:{g:()=>new THREE.BoxGeometry(0.3,0.34,0.13),c:0xb08a5a,y:-0.2}};
+function tfCarryDraw(L){const C=tf.carM||(tf.carM={}),o3=tf.o;
+  for(const k in TF_CARRY){let I=C[k];if(!I){if(!L.length)continue;const T=TF_CARRY[k];I=C[k]=new THREE.InstancedMesh(T.g(),new THREE.MeshStandardMaterial({color:T.c,roughness:0.75}),48);I.frustumCulled=false;scene.add(I)}I.count=0}
+  for(const p of L){const I=C[p.carry],T=TF_CARRY[p.carry];if(!I||I.count>=48)continue;const sc=p.sc,c=Math.cos(p.yaw),n=Math.sin(p.yaw),hx=-0.2;let hy,hz;
+    if(p.sit){hy=0.64;hz=0.33}else{const a=Math.sin(p.ph)*p.amp*0.85;hy=1.4-0.64*Math.cos(a);hz=-0.64*Math.sin(a)}
+    o3.position.set(p.x+(hx*c+hz*n)*sc,p.y+(hy+T.y)*sc,p.z+(hz*c-hx*n)*sc);o3.rotation.set(0,p.yaw,0);o3.scale.setScalar(1);o3.updateMatrix();I.setMatrixAt(I.count++,o3.matrix)}
+  for(const k in C){C[k].visible=tf.on&&C[k].count>0;C[k].castShadow=!!gfxCur.pbr;C[k].instanceMatrix.needsUpdate=true}}
 // ---------- the cars parked in the neighbourhoods' driveways and at their curbs (TF_PARKED, suburbs.js) ----------
 // each always the same kind and colour; solid while shown (they come and go with the townsfolk)
 const TF_CAR_HI=45;
@@ -494,25 +617,28 @@ function tfTick(dt){if(!tf.q){if(tf.on)tfShow(false);return}
   if(!tf.on){tfShow(true);while(walkers.length<wantP){const p=tfSpawnWalker(true);if(!p)break;walkers.push(p)}}
   tf.spawnT-=dt;if(tf.spawnT<=0){tf.spawnT=1.5+Math.random()*2;
     if(walkers.length<wantP)tfSpawnWalker(false);
-    else if(walkers.length>wantP){const p=walkers.find(p=>p.inside||!tfSeen(p.x,p.z,1));if(p)tfDrop(p)}
+    else if(walkers.length>wantP){const p=walkers.find(p=>!p.go&&!p.goTo&&(p.inside||!tfSeen(p.x,p.z,1)));if(p)tfDrop(p)}
     if(tf.carsOk&&tf.drive.reduce((n,c)=>n+(c.st==='park'?0.5:1),0)<wantC&&Object.keys(tf.cars).length>=3&&Math.random()<0.5)tfSpawnCar()}
   for(const c of tf.drive.slice())tfCarStep(c,dt);
   tfRunOver(dt);
-  tfRoomsTick();if(!tf.parkedOn&&tf.carsOk&&Object.keys(tf.cars).length===Object.keys(TF_CARS).length)tfParkedShow(true);
+  tfRoomsTick(dt);if(!tf.parkedOn&&tf.carsOk&&Object.keys(tf.cars).length===Object.keys(TF_CARS).length)tfParkedShow(true);
   for(const p of tf.people.slice()){if(p.hit)tfHitStep(p,dt);if(p.hurt&&!p.dead)p.hurt+=dt;
-    if(p.dead||p.hurt){const t=p.dead||p.hurt;if(p.dead)p.dead+=dt;if(p.fly)tfFly(p,dt);if(t>TU.gunBody&&(!tfSeen(p.x,p.z,1)||t>TU.gunBody*3))tfDrop(p);continue}if(p.cower>0){p.cower=Math.max(0,p.cower-dt);continue}if(p.room){tfRoomStep(p,dt);continue}if(p.drv||p.cop)continue;tfWalkStep(p,dt);p.y+=(baseHeight(p.x,p.z)+tfLift(p.x,p.z)-p.y)*Math.min(1,dt*8)}
+    if(p.dead||p.hurt){const t=p.dead||p.hurt;if(p.dead)p.dead+=dt;if(p.fly)tfFly(p,dt);if(t>TU.gunBody&&(!tfSeen(p.x,p.z,1)||t>TU.gunBody*3))tfDrop(p);continue}if(p.cower>0){p.cower=Math.max(0,p.cower-dt);continue}if(p.room){tfRoomStep(p,dt);continue}if(p.go){tfGoStep(p,dt);continue}if(p.drv||p.cop)continue;tfWalkStep(p,dt);p.y+=(baseHeight(p.x,p.z)+tfLift(p.x,p.z)-p.y)*Math.min(1,dt*8)}
   if(mode==='walk'&&walker.visible){for(const c of tf.drive)wkPushRound(c,[-c.len*0.3,0,c.len*0.3],c.wid/2);for(const p of tf.people)if(!p.inside&&!p.drv&&!p.dead&&!p.hurt)wkPushRound(p,[0],0.22)}
   tfDraw(dt);tfChip(dt)}
-function tfShow(on){tf.on=on;$('#tfChip').hidden=!on||PHONE;for(const k in tf.M||{})tf.M[k].m.visible=on;for(const c of tf.drive)c.g.visible=on;tfParkedShow(on);
+function tfShow(on){tf.on=on;for(const k in tf.carM||{})tf.carM[k].visible=false;$('#tfChip').hidden=!on||PHONE;for(const k in tf.M||{})tf.M[k].m.visible=on;for(const c of tf.drive)c.g.visible=on;tfParkedShow(on);
   if(!on){if(tf.F&&tf.F.uh)tfUhOff();for(const k in tf.M||{}){const c=tf.M[k].fg;if(c&&c.object)c.object.visible=false}for(const c of tf.drive.slice())tfCarDrop(c);for(const p of tf.people.slice())tfDrop(p)}}
 function tfDraw(dt){const M=tf.M,o3=tf.o,cx=camera.position.x,cz=camera.position.z,fo=tf.F&&tf.F.st===2&&!!gfxCur.forge;for(const k in M)M[k].n=M[k].fn=0;
   const uh=fo&&tfUhOn()?tfUhPick(cx,cz):null;if(!uh&&tf.F&&tf.F.uh)tfUhOff();
+  const CL=tf.carL||(tf.carL=[]);CL.length=0;
   for(const p of tf.people){if(p.inside)continue;const B=M[p.body];if(!B||B.n>=B.cap)continue;
     if((p.x-cx)**2+(p.z-cz)**2>(p.room?TF_RFAR*TF_RFAR:p.drv?TF_CAR_HI*TF_CAR_HI:220*220)||!tfSeen(p.x,p.z,1.3))continue;
+    if(p.carry){if(p.dead||p.hurt||p.hit||p.drv)p.carry=null;else if((p.x-cx)**2+(p.z-cz)**2<3600)CL.push(p)}
     const hp=p.dead||p.hurt||p.hit?tfHitPose(p):null,kn=hp&&hp.kneel||!hp&&p.cower>0;o3.position.set(p.x,p.y+(p.sit||kn?-0.42*p.sc:Math.abs(Math.cos(p.ph))*0.025*p.amp*p.sc),p.z);
     if(hp){o3.rotation.set(hp.tilt,hp.yaw,hp.roll,'YXZ');o3.position.y+=hp.dy}else o3.rotation.set(0,p.yaw,0,'YXZ');o3.scale.setScalar(p.sc);o3.updateMatrix();
     if(fo){if(!B.fg)tfForgeCrowd(B,p.body);if(B.fg!==1){if(!p.uh)tfFgPose(p,B.fg,B.fn++,dt);else if(!tfUhPose(p,B.fg,dt))tfFgPose(p,B.fg,B.fn++,0);continue}}
     if(!B.texing)tfTex(B);const i=B.n++,w=B.walk.array;B.m.setMatrixAt(i,o3.matrix);w[4*i]=p.ph;const lp=p.dead&&!p.sit?tfLimp(p):0;w[4*i+1]=(kn&&!lp)||p.sit&&!(p.dead||p.hurt)?-1:p.dead||p.hurt?0:p.amp;w[4*i+2]=lp;w[4*i+3]=p.g}
+  tfCarryDraw(CL);
   for(const k in M){const B=M[k];B.m.count=B.n;B.m.visible=tf.on&&B.n>0;B.m.instanceMatrix.needsUpdate=true;B.walk.needsUpdate=true;
     const c=B.fg;if(c&&c.object){c.object.count=B.fn;c.object.visible=fo&&tf.on&&B.fn>0}}
   for(const c of [...tf.drive,...tf.parked]){const d2=(c.x-cx)**2+(c.z-cz)**2;c.g.visible=d2<400*400;const hi=d2<TF_CAR_HI*TF_CAR_HI;c.g.children[0].visible=hi;c.g.children[1].visible=!hi}}
