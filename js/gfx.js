@@ -24,6 +24,8 @@ const GFX={
 // picked by itself
 // the extra lamps: the warm light in Jessica's library and the boom's work light (Low keeps the glowing lamps only)
 GFX.low.town=1;GFX.med.town=2;GFX.high.town=3;
+// the town's weathering: rain streaks, damp wall feet, oil stains, cracks and patches (mainland.js, mainGrimeGfx)
+GFX.low.grime=false;GFX.med.grime=GFX.high.grime=true;
 // mtnQ the mountains lit and shaded per pixel with haze toward the sun (scenery.js; Low keeps the simple ones), peb the
 // share of pebbles, stones and sticks drawn round the camera (pebbles.js)
 GFX.low.mtnQ=0;GFX.med.mtnQ=GFX.high.mtnQ=1;GFX.low.peb=0;GFX.med.peb=0.5;GFX.high.peb=1;
@@ -117,6 +119,8 @@ function gfxApply(){const g=gfxCur=Object.assign({},GFX[gfxKey],gfxOver);
   brGfx(g);
   // the boats' gelcoat scuffs (family.js)
   famGelGfx(g);
+  // the town's weathering decals (mainland.js)
+  mainGrimeGfx(g.grime);
   // undergrowth round the trees (brush.js)
   brushGfx(g.brush);
   // how finely the grass and weeds are shaped (scenery.js)

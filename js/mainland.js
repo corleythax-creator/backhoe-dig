@@ -186,69 +186,218 @@ const MAIN_SHOPS=[["Lakeside Bakery","Bread · Pies · Coffee","#2f4a3a","#e9d9a
   ["Lakeview Hotel","Rooms","#1f3a5f","#e0c27a",1],["Corner Market","Groceries","#2f6b4f","#ffffff",0],["Quilt Barn","Fabric · Yarn","#7e2f26","#f1ead8",1],
   ["Hair Studio","Cuts · Color","#e9e1cc","#2b2d2f",1],["Lakeside Guns","Firearms · Ammo","#2b2d2f","#d8b25a",0],["Town Library","Books · Story Time","#23402f","#f1ead8",1],
   ["Town Hall","Lakeside","#e9e6dc","#1f3a5f",1],["Ice House","Ice · Firewood","#2a5f9a","#ffffff",0],["Lakeside Theater","Movies Fri · Sat","#5a2a22","#f4d27a",1]];
-const mainSignList=[],MAIN_GAPS=[];
-// a shop or house on a town lot: a block with its parapet and cornice; a storefront on the face toward the street (face:
-// the yaw it looks along) with pilasters, display windows over kick plates, a door, flower boxes, a striped awning in its
-// colour and the shop's sign above; two floors of windows with sills and lintels over it. Its walls are a photo-scanned
-// library material (wl: brick, old brick, plaster or siding); col is its trim. Solid to the machines and the worker
-function mainLot(K,x,z,w,d,h,col,face,awn,si,wl){wl=wl||col;const y=rmGroundMax(x,z,face,w,d)+0.03;
-  const fx=Math.sin(face),fz=Math.cos(face),F=(o,s)=>[x+fx*o+fz*s,z+fz*o-fx*s],TR=0xe9e4d6,DK=0x2a2c2f,c=new THREE.Color(col).multiplyScalar(0.72).getHex();
-  // the walls: the back of the building, the floors over the shop, and the shop's own room behind its glass, furnished
-  // and with its people's spots (interiors.js)
-  const RD=Math.min(5.4,d-3),RH=2.95,F0=F(d/2-RD/2,0);{const [a,b]=F(-RD/2,0);K.box(w,h+1,d-RD,wl,a,y+(h-1)/2,b,face)}
-  K.box(w,h-RH,RD,wl,F0[0],y+(RH+h)/2,F0[1],face);K.box(w,1,RD,wl,F0[0],y-0.5,F0[1],face);
-  for(const s of [-1,1]){const [a,b]=F(d/2-RD/2,s*(w/2-0.125));K.box(0.25,RH,RD,wl,a,y+RH/2,b,face)}
+const mainSignList=[],MAIN_GAPS=[],MAIN_BACKS=[],MAIN_GRIME=[];
+// weathering decals, drawn as one see-through mesh over the walls and paving (mainGrimeAdd; not on Low graphics): a quad
+// from its corners [x, y, z] (bottom left, bottom right, top right, top left) and its cell of the grime picture: 0 rain
+// streaks, 1 a damp base, 2 an oil stain, 3 cracks, 4 a patch of newer asphalt, 5 grime washed down from a cornice, 6 a
+// dirty smear
+function mainGrime(a,b,c,d,k){MAIN_GRIME.push([a,b,c,d,k])}
+// ...on a wall whose face is at x, z, looking along f: W wide, from y0 to y1
+function mainGrimeWall(x,z,f,W,y0,y1,k){const tx=Math.cos(f)*W/2,tz=-Math.sin(f)*W/2;x+=Math.sin(f)*0.025;z+=Math.cos(f)*0.025;
+  mainGrime([x-tx,y0,z-tz],[x+tx,y0,z+tz],[x+tx,y1,z+tz],[x-tx,y1,z-tz],k)}
+// ...on the ground (lift over it) at x, z, sx by sz turned by r
+function mainGrimeFloor(x,z,sx,sz,r,k,lift){const c=Math.cos(r),s=Math.sin(r),p=(a,b)=>{const X=x+a*c+b*s,Z=z-a*s+b*c;return [X,baseHeight(X,Z)+lift,Z]};
+  mainGrime(p(-sx/2,-sz/2),p(sx/2,-sz/2),p(sx/2,sz/2),p(-sx/2,sz/2),k)}
+// an upright prism over a footprint (world [x, z] points, either way round) from y0 to y1, its top capped, into kit K
+function mainPrism(K,mat,pts,y0,y1){let A=0;for(let i=0;i<pts.length;i++){const p=pts[i],q=pts[(i+1)%pts.length];A+=p[0]*q[1]-q[0]*p[1]}
+  if(A>0)pts=pts.slice().reverse();const P=[];
+  for(let i=0;i<pts.length;i++){const [ax,az]=pts[i],[bx,bz]=pts[(i+1)%pts.length];P.push(ax,y0,az,bx,y0,bz,bx,y1,bz,ax,y0,az,bx,y1,bz,ax,y1,az)}
+  for(const [i,j,k] of THREE.ShapeUtils.triangulateShape(pts.map(p=>new THREE.Vector2(p[0],p[1])),[])){const a=pts[i],b=pts[j],c=pts[k],
+    [u,v]=(b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0])>0?[c,b]:[b,c];P.push(a[0],y1,a[1],u[0],y1,u[1],v[0],y1,v[1])}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(P,3));K.geo(g,mat,0,0,0)}
+// a box t thick along the line from a to b (world [x, z]; e longer at each end), from y0 to y1, moved by nx, nz
+function mainSeg(K,mat,a,b,t,y0,y1,nx,nz,e){const dx=b[0]-a[0],dz=b[1]-a[1],L=Math.hypot(dx,dz);
+  K.box(L+2*(e||0),y1-y0,t,mat,(a[0]+b[0])/2+(nx||0),(y0+y1)/2,(a[1]+b[1])/2+(nz||0),Math.atan2(-dz,dx))}
+// an upper window on a wall whose face is at x, z, looking along f, its middle at height y: the glass with a lit room
+// behind it (rmWinAdd, interiors.js), frame and muntins, a sill under it and a lintel over it, and the rain's streaks
+// down the wall under the sill; ac: an air conditioner sitting in its lower sash
+function mainWin(K,x,z,f,y,TR,ac){const sf=Math.sin(f),cf=Math.cos(f),n=(o,s)=>[x+sf*o+cf*s,z+cf*o-sf*s],[p,q]=n(0.012,0),[g,k]=n(0.04,0),[e,h]=n(0.1,0);
+  rmWinAdd(p,y,q,f,1.1,1.6);K.box(1.1,1.6,0.02,'glass',g,y,k,f);
+  for(const t of [-1,1]){const [m,o]=n(0.05,t*0.57);K.box(0.06,1.66,0.08,TR,m,y,o,f);K.box(1.2,0.06,0.08,TR,g,y+t*0.81,k,f)}
+  K.box(0.04,1.6,0.06,TR,g,y,k,f);K.box(1.1,0.04,0.06,TR,g,y+0.15,k,f);K.box(1.4,0.1,0.18,TR,e,y-0.86,h,f);K.box(1.35,0.16,0.1,TR,e,y+0.88,h,f);
+  mainGrimeWall(x,z,f,1.3,y-2.5,y-0.91,0);
+  if(ac){const [a,b]=n(0.24,0.05),[c,d]=n(0.515,0.05);K.box(0.66,0.42,0.55,0xd2cfc4,a,y-0.56,b,f);K.box(0.56,0.3,0.02,0x55585b,c,y-0.56,d,f);
+    const [l,m]=n(0.12,0.05);K.box(0.7,0.04,0.3,0x8a8d8f,l,y-0.79,m,f);mainGrimeWall(x,z,f,0.8,y-2.6,y-0.8,0)}}
+// a shop or house on a town lot. On the face toward the street (face: the yaw it looks along) a storefront with
+// pilasters, display windows over kick plates, a door, flower boxes, a striped awning in its colour and the shop's sign
+// above; over it the upper floors' windows with sills and lintels, a blade sign out over the walk on some. Its walls
+// are a photo-scanned library material (wl: brick, old brick, plaster or siding); col is its trim. Solid to the machines
+// and the worker. Each lot is built its own way, picked from its number si and its walls unless o says (all optional):
+// roof 'flat' (a parapet with a concrete coping and a cornice, a rooftop unit, vents, a hatch, now and then a water
+// tank), 'gable' (gable end to the street, shingles on the wood ones and standing-seam steel on the brick, gutters and
+// downspouts, a chimney) or 'false' (a Western false front hiding a corrugated gable roof); dd metres shallower (the
+// front stays put); sb the top floor set back that far behind a railed terrace; c the side (±1) whose front corner is
+// cut off on a street corner, with a glazed corner window and the upper floors' windows round it. Out back: a door on
+// a stoop, the upper windows, downspouts, and a fire escape on some three-storey brick ones; rain streaks and damp at
+// the foot of the walls (mainGrime). MAIN_BACKS keeps each lot for the alleys and the wires (mainAlleys)
+function mainLot(K,x,z,w,d,h,col,face,awn,si,wl,o){wl=wl||col;o=o||{};const fx=Math.sin(face),fz=Math.cos(face),wood=String(wl).startsWith('siding'),brickW=String(wl).startsWith('brick');
+  const C=o.c||0,roof=o.roof||(C?'flat':wood?(si%2?'false':'gable'):(si%5===2?'gable':'flat')),dd=o.dd!==undefined?o.dd:[0,1,2,0.5,1.5][si%5];
+  if(dd&&d-dd>=9){d-=dd;x+=fx*dd/2;z+=fz*dd/2}
+  const y=rmGroundMax(x,z,face,w,d)+0.03,G=baseHeight;
+  const F=(o,s)=>[x+fx*o+fz*s,z+fz*o-fx*s],TR=0xe9e4d6,DK=0x2a2c2f,IRON=0x26282a,GALV=0x8f9396,c=new THREE.Color(col).multiplyScalar(0.72).getHex();
+  const rows=[];for(let wy=5.7;wy+1.1<h;wy+=2.8)rows.push(wy);
+  const ch=C?1.6:0,sg=C||1,sb=o.sb!==undefined?o.sb:(roof==='flat'&&!C&&rows.length&&si%3===0?2.4:0),hf=sb?Math.max(4.75,rows[rows.length-1]-1.45):h;
+  // the footprint from o0 to o1 (from the back to the front), inset by i, its street corner cut off on a corner lot
+  const fp=(o0,o1,i)=>{i=i||0;const W=w/2-i,a=o0+i,b=o1-i,P=[[a,-W],[b,-W]];
+      if(C&&o1>=d/2-1e-3)P.push([b,w/2-ch-0.414*i],[d/2-ch-0.414*i,W]);else P.push([b,W]);P.push([a,W]);return P.map(([p,q])=>F(p,sg*q))},
+    mass=(mat,o0,o1,y0,y1)=>{if(y1-y0<0.01)return;if(C&&o1>=d/2-1e-3)mainPrism(K,mat,fp(o0,o1),y0,y1);else{const [a,b]=F((o0+o1)/2,0);K.box(w,y1-y0,o1-o0,mat,a,(y0+y1)/2,b,face)}};
+  // the corner's cut: from the front (P1) to the side (P2), and the way it looks
+  const P1=F(d/2,sg*(w/2-ch)),P2=F(d/2-ch,sg*w/2),fc=face+C*Math.PI/4,ncx=Math.sin(fc),ncz=Math.cos(fc);
+  // the walls: the back of the building, the floors over the shop (to the front wall's top hf; above it the set-back
+  // top floor), and the shop's own room behind its glass, furnished and with its people's spots (interiors.js)
+  const RD=Math.min(5.4,d-3),RH=2.95,F0=F(d/2-RD/2,0);mass(wl,-d/2,d/2-RD,y-1,y+h);
+  mass(wl,d/2-RD,d/2,y+RH,y+hf);if(sb)mass(wl,d/2-RD,d/2-sb,y+hf,y+h);mass(wl,d/2-RD,d/2,y-1,y);
+  for(const s of [-1,1]){const L=s===C?RD-ch:RD,[a,b]=F(d/2-RD+L/2,s*(w/2-0.125));K.box(0.25,RH,L,wl,a,y+RH/2,b,face)}
   rmAdd(rmFurnish(K,F0[0],F0[1],y,face,w-0.5,RD,si%MAIN_SHOPS.length,[0xf0e6d2,0xe3ecea,0xf3e3d8,0xe6e8f0,0xefe9d0][si%5]),Math.max(w,RD)/2);
-  // the roof: a scanned bitumen membrane inside a parapet with a concrete coping, and on most a rooftop unit and a vent
-  K.box(w-0.4,0.06,d-0.4,'roofFlat',x,y+h+0.03,z,face);for(const s of [-1,1]){const [a,b]=F(0,s*(w/2-0.12));K.box(0.24,0.7,d,wl,a,y+h+0.35,b,face);const [e,f]=F(s*(d/2-0.12),0);K.box(w,0.7,0.24,wl,e,y+h+0.35,f,face)}
-  for(const s of [-1,1]){const [a,b]=F(0,s*(w/2-0.1));K.box(0.36,0.1,d+0.1,'concrete',a,y+h+0.75,b,face);const [e,f]=F(s*(d/2-0.1),0);K.box(w+0.1,0.1,0.36,'concrete',e,y+h+0.75,f,face)}
-  // the rooftop unit: on its curb, a panelled casing (scanned seam steel, tinted), louvred coil faces on its long sides,
-  // the condenser fan in its guard on top; and a vent stack with flashing and a rain cap
-  if(si%3){const o0=-d*0.15,s0=(si%2?1:-1)*w*0.2,U=(o,s)=>F(o0+o,s0+s),yr=y+h+0.06,CAS=famTint('seam',0xcfccc3),GV=0x9aa0a4,DKC=0x232527;
-    {const [a,b]=U(0,0);K.box(1.95,0.16,1.35,0x5c5e60,a,yr+0.08,b,face);K.box(1.8,0.92,1.2,CAS,a,yr+0.62,b,face);K.box(1.84,0.05,1.24,0xb9b6ad,a,yr+1.1,b,face)}
-    for(const sd of [-1,1]){const [a,b]=U(sd*0.605,-0.2);K.box(1.1,0.62,0.02,DKC,a,yr+0.6,b,face);
-      for(let i=0;i<8;i++){const [e,f]=U(sd*0.625,-0.2);K.box(1.1,0.022,0.06,GV,e,yr+0.33+i*0.075,f,face,sd*0.6)}
-      const [e,f]=U(sd*0.61,0.62);K.box(0.42,0.7,0.012,0xbcb9b0,e,yr+0.6,f,face)}
-    {const [a,b]=U(0,-0.35),fy=yr+1.14;K.cyl(0.43,0.43,0.04,20,DKC,a,fy,b);K.geo(new THREE.TorusGeometry(0.42,0.014,4,24),GV,a,fy+0.05,b,0,Math.PI/2);
-      K.geo(new THREE.TorusGeometry(0.22,0.01,4,16),GV,a,fy+0.05,b,0,Math.PI/2);for(const r of [0,Math.PI/2])K.box(0.84,0.012,0.02,GV,a,fy+0.05,b,face+r);
-      for(let i=0;i<3;i++)K.box(0.34,0.012,0.11,0x55595c,a,fy+0.025,b,face+i*2.094+0.3,0.25)}
-    {const [a,b]=U(0,0.45);K.box(0.75,0.07,1.0,0xbfbcb3,a,yr+1.15,b,face)}
-    const [e,f]=F(-d*0.3,-(si%2?1:-1)*w*0.25);K.cyl(0.26,0.3,0.06,10,0x3b3d3f,e,y+h+0.06,f);K.cyl(0.13,0.13,0.95,10,GV,e,y+h+0.5,f);
-    K.cyl(0.07,0.07,0.08,8,GV,e,y+h+1.01,f);K.cyl(0.02,0.24,0.12,10,GV,e,y+h+1.1,f)}
-  {const [a,b]=F(d/2+0.18,0);K.box(w+0.25,0.3,0.36,TR,a,y+h-0.25,b,face);const [e,f]=F(d/2+0.06,0);K.box(w,0.5,0.12,c,e,y+h-0.75,f,face)}
+  // the roof
+  const ot=sb?d/2-sb:d/2,GV=0x9aa0a4,DKC=0x232527,s0=(si%2?1:-1)*w*0.2;
+  // a rim round a footprint: a parapet t thick from y0 h tall (inside the edge) with a coping over it
+  const rim=(pts,y0,ht,mat)=>{let cx=0,cz=0;for(const p of pts){cx+=p[0]/pts.length;cz+=p[1]/pts.length}
+    for(let i=0;i<pts.length;i++){const a=pts[i],b=pts[(i+1)%pts.length],L=Math.hypot(b[0]-a[0],b[1]-a[1]);let nx=(b[1]-a[1])/L,nz=-(b[0]-a[0])/L;
+      if(nx*(cx-(a[0]+b[0])/2)+nz*(cz-(a[1]+b[1])/2)<0){nx=-nx;nz=-nz}
+      mainSeg(K,mat,a,b,0.24,y0,y0+ht,nx*0.12,nz*0.12,-0.0);mainSeg(K,'concrete',a,b,0.36,y0+ht,y0+ht+0.1,nx*0.1,nz*0.1,0.05)}};
+  if(roof==='flat'){
+    // a scanned bitumen membrane inside a parapet with a concrete coping; a set-back top floor's terrace railed in iron
+    if(C)mainPrism(K,'roofFlat',fp(-d/2,d/2,0.2),y+h,y+h+0.06);else{const [a,b]=F((ot-d/2)/2,0);K.box(w-0.4,0.06,ot+d/2-0.4,'roofFlat',a,y+h+0.03,b,face)}
+    rim(fp(-d/2,ot),y+h,0.7,wl);
+    if(sb){{const [a,b]=F(d/2-sb/2,0);K.box(w-0.3,0.06,sb-0.1,'roofFlat',a,y+hf+0.03,b,face)}
+      const [a,b]=F(d/2-0.1,0);K.box(w,0.3,0.24,wl,a,y+hf+0.15,b,face);const [e,f]=F(d/2-0.08,0);K.box(w+0.05,0.06,0.06,IRON,e,y+hf+1.1,f,face);
+      for(let s=-w/2+0.15;s<=w/2-0.1;s+=0.5){const [p,q]=F(d/2-0.08,s);K.box(0.03,0.8,0.03,IRON,p,y+hf+0.7,q,face)}
+      for(const s of [-1,1])for(let t=0.4;t<sb-0.2;t+=0.5){const [p,q]=F(d/2-t,s*(w/2-0.08));K.box(0.03,0.8,0.03,IRON,p,y+hf+0.7,q,face)}
+      for(const s of [-1,1]){const [p,q]=F(d/2-sb/2,s*(w/2-0.08));K.box(0.06,0.06,sb,IRON,p,y+hf+1.1,q,face)}
+      // the terrace: a couple of chairs and a table
+      for(const t of [-1,1]){const [p,q]=F(d/2-sb/2,s0*0.5+t*0.7);K.box(0.45,0.45,0.45,0x3d5a4a,p,y+hf+0.29,q,face)}{const [p,q]=F(d/2-sb/2,s0*0.5);K.cyl(0.35,0.35,0.04,12,0xe9e4d6,p,y+hf+0.75,q);K.cyl(0.04,0.04,0.7,6,IRON,p,y+hf+0.4,q)}}
+    // a water tank on legs on some of the tall brick ones; else a hatch and a pair of mushroom vents
+    if(brickW&&rows.length>1&&si%4===3&&!sb){const to=-d*0.05,[a,b]=F(to,-s0),yt=y+h+0.06;for(const [p,q] of [[-0.9,-0.9],[-0.9,0.9],[0.9,-0.9],[0.9,0.9]]){const [e,f]=F(to+p,-s0+q);K.box(0.14,3,0.14,IRON,e,yt+1.5,f,face)}
+      for(const t of [-1,1]){const [e,f]=F(to+t*0.9,-s0);K.box(0.05,0.05,3.1,IRON,e,yt+1.5,f,face,Math.atan2(2.6,1.8));const [g,k]=F(to,-s0+t*0.9);K.box(3.1,0.05,0.05,IRON,g,yt+1.5,k,face,0,Math.atan2(2.6,1.8))}
+      K.box(2.3,0.15,2.3,0x4a3a2c,a,yt+3.05,b,face);K.cyl(1.25,1.3,2.5,16,0x6e5640,a,yt+4.35,b);for(const t of [0.5,1.2,1.9])K.cyl(1.32,1.32,0.06,16,IRON,a,yt+3.1+t,b);K.cyl(0.06,1.42,0.9,16,0x4f4134,a,yt+6.05,b)}
+    else{const [a,b]=F(-d*0.38,s0);K.box(0.95,0.35,0.95,0x8a8d8f,a,y+h+0.2,b,face);K.box(1.0,0.06,1.0,0x6e7174,a,y+h+0.4,b,face);
+      for(const t of [0.12,0.3]){const [e,f]=F(d*t-(sb?sb:0),-s0*1.4);K.cyl(0.12,0.14,0.45,8,GV,e,y+h+0.25,f);K.cyl(0.25,0.25,0.14,10,GV,e,y+h+0.55,f)}}
+    // the rooftop unit: on its curb, a panelled casing (scanned seam steel, tinted), louvred coil faces on its long sides,
+    // the condenser fan in its guard on top; and a vent stack with flashing and a rain cap
+    if(si%3){const o0=-d*0.15,U=(o,s)=>F(o0+o,s0+s),yr=y+h+0.06,CAS=famTint('seam',0xcfccc3);
+      {const [a,b]=U(0,0);K.box(1.95,0.16,1.35,0x5c5e60,a,yr+0.08,b,face);K.box(1.8,0.92,1.2,CAS,a,yr+0.62,b,face);K.box(1.84,0.05,1.24,0xb9b6ad,a,yr+1.1,b,face)}
+      for(const sd of [-1,1]){const [a,b]=U(sd*0.605,-0.2);K.box(1.1,0.62,0.02,DKC,a,yr+0.6,b,face);
+        for(let i=0;i<8;i++){const [e,f]=U(sd*0.625,-0.2);K.box(1.1,0.022,0.06,GV,e,yr+0.33+i*0.075,f,face,sd*0.6)}
+        const [e,f]=U(sd*0.61,0.62);K.box(0.42,0.7,0.012,0xbcb9b0,e,yr+0.6,f,face)}
+      {const [a,b]=U(0,-0.35),fy=yr+1.14;K.cyl(0.43,0.43,0.04,20,DKC,a,fy,b);K.geo(new THREE.TorusGeometry(0.42,0.014,4,24),GV,a,fy+0.05,b,0,Math.PI/2);
+        K.geo(new THREE.TorusGeometry(0.22,0.01,4,16),GV,a,fy+0.05,b,0,Math.PI/2);for(const r of [0,Math.PI/2])K.box(0.84,0.012,0.02,GV,a,fy+0.05,b,face+r);
+        for(let i=0;i<3;i++)K.box(0.34,0.012,0.11,0x55595c,a,fy+0.025,b,face+i*2.094+0.3,0.25)}
+      {const [a,b]=U(0,0.45);K.box(0.75,0.07,1.0,0xbfbcb3,a,yr+1.15,b,face)}
+      const [e,f]=F(-d*0.3,-s0*1.25);K.cyl(0.26,0.3,0.06,10,0x3b3d3f,e,y+h+0.06,f);K.cyl(0.13,0.13,0.95,10,GV,e,y+h+0.5,f);
+      K.cyl(0.07,0.07,0.08,8,GV,e,y+h+1.01,f);K.cyl(0.02,0.24,0.12,10,GV,e,y+h+1.1,f)}
+    // downspouts from scuppers at the back corners
+    for(const s of [-1,1]){const [a,b]=F(-d/2-0.07,s*(w/2-0.35)),g=G(a,b);K.box(0.1,y+h-g,0.1,GALV,a,(y+h+g)/2,b,face);K.box(0.22,0.14,0.14,GALV,a,y+h-0.05,b,face);
+      const [e,f]=F(-d/2-0.25,s*(w/2-0.35));K.box(0.12,0.08,0.35,GALV,e,g+0.06,f,face)}
+  }else{
+    // a pitched roof, its gable to the street: on a false front, a shallow one behind the tall square front
+    const ff=roof==='false',pt=ff?0.36:(wood?0.5:0.42),rise=w/2*pt,th=Math.atan(pt),ov=0.4,eo=0.3,sl=Math.hypot(w/2,rise)+ov;
+    const mat=ff?'corrugated':wood?(si%4<2?'shingles':'roofG'):famTint('seam',[0x3f5446,0x7a3428,0x3a3d40][si%3]);
+    {const [a,b]=F(0,0);K.geo(famGable(w,rise,d),wl,a,y+h,b,face-Math.PI/2)}
+    for(const t of [-1,1]){const cs=t*(w/4+Math.cos(th)*ov/2),cy=h+rise/2-Math.sin(th)*ov/2,[a,b]=F(ff?-eo/2:0,cs+t*Math.sin(th)*0.06);
+      K.box(sl,0.1,d+(ff?eo:2*eo),mat,a,y+cy+Math.cos(th)*0.06,b,face,0,-t*th);
+      // the gutter along the eave and downspouts at its ends
+      const ge=t*(w/2+Math.cos(th)*ov),gy=y+h-Math.sin(th)*ov-0.04,[p,q]=F(ff?-eo/2:0,ge);K.box(0.14,0.13,d+(ff?eo:2*eo),GALV,p,gy,q,face);
+      for(const e of ff?[-1]:[-1,1]){const oe=e*(d/2-0.2),[m,n]=F(oe,t*(w/2+0.08)),g=G(m,n);K.box(0.1,gy-g,0.1,GALV,m,(gy+g)/2,n,face);
+        const [u,v]=F(oe,t*(w/2+0.08+ov*0.5));K.box(0.1,0.08,ov,GALV,u,gy-0.02,v,face+Math.PI/2);const [k2,l2]=F(oe,t*(w/2+0.3));K.box(0.35,0.08,0.12,GALV,k2,g+0.06,l2,face)}}
+    {const [a,b]=F(ff?-eo/2:0,0);K.box(0.3,0.12,d+(ff?eo:2*eo),ff?GALV:mat,a,y+h+rise+0.1,b,face)}
+    if(ff){
+      // the false front: a square front wall standing well above the ridge, with a bracketed cornice; stepped
+      // shoulders on some
+      const top=h+rise+0.7,st=si%4===1;{const [a,b]=F(d/2-0.15,0);K.box(w,top-h+0.01,0.3,wl,a,y+(h+top)/2,b,face)}
+      if(st)for(const s of [-1,1]){const [a,b]=F(d/2-0.15,s*w/2*0.72);K.box(w*0.28,0.01,0.3,wl,a,y+top,b,face)}
+      const ctop=st?top+0.7:top,cw=st?w*0.44:w;{const [a,b]=F(d/2-0.15,0);if(st)K.box(cw,0.7,0.3,wl,a,y+top+0.35,b,face);
+        const [e,f]=F(d/2+0.1,0);K.box(cw+0.4,0.3,0.6,TR,e,y+ctop-0.15,f,face);const [g,k]=F(d/2+0.03,0);K.box(cw,0.3,0.12,c,g,y+ctop-0.5,k,face);
+        for(let s=-cw/2+0.3;s<=cw/2-0.29;s+=(cw-0.6)/Math.max(1,Math.round((cw-0.6)/1.2))){const [p,q]=F(d/2+0.12,s);K.box(0.14,0.4,0.24,TR,p,y+ctop-0.5,q,face)}
+        if(st)for(const s of [-1,1]){const [p,q]=F(d/2+0.05,s*w*0.36);K.box(w*0.28+0.2,0.16,0.4,TR,p,y+top+0.03,q,face)}}
+      mainGrimeWall(...F(d/2,0),face,cw,y+ctop-2.0,y+ctop-0.65,5);
+      // a vent stack through the roof
+      const [e,f]=F(-d*0.25,-s0);K.cyl(0.07,0.07,rise*0.8+0.6,8,GV,e,y+h+rise*0.6,f)}
+    else{
+      // the gable end: rake boards along its edges, a louvred vent; a brick chimney from the ridge's back half
+      for(const t of [-1,1]){const [a,b]=F(d/2+eo+0.03,t*(w/4+Math.cos(th)*ov/2));K.box(sl,0.24,0.05,TR,a,y+h+rise/2-Math.sin(th)*ov/2+0.02,b,face,0,-t*th);
+        const [e,f]=F(-d/2-eo-0.03,t*(w/4+Math.cos(th)*ov/2));K.box(sl,0.24,0.05,TR,e,y+h+rise/2-Math.sin(th)*ov/2+0.02,f,face,0,-t*th)}
+      {const [a,b]=F(d/2+0.03,0);K.box(0.9,1.0,0.06,TR,a,y+h+rise*0.42,b,face);const [e,f]=F(d/2+0.06,0);for(let i=0;i<5;i++)K.box(0.74,0.04,0.05,DK,e,y+h+rise*0.42-0.36+i*0.18,f,face,-0.6)}
+      const cs=-s0*0.9,ry=rise*(1-Math.abs(cs)/(w/2)),[a,b]=F(-d*0.25,cs);K.box(0.75,ry+1.1,0.75,'brick',a,y+h+(ry+1.1)/2,b,face);K.box(0.85,0.1,0.85,'concrete',a,y+h+ry+1.15,b,face)}
+  }
+  // the cornice and frieze across the front at the front wall's top (round the corner on a corner lot), and the grime
+  // washed down under it
+  if(C){const nx=fx,nz=fz,sx=sg*fz,sz=-sg*fx,A0=F(d/2,-sg*(w/2+0.125)),B0=F(-d/2-0.125,sg*w/2);
+    mainSeg(K,TR,A0,P1,0.36,y+hf-0.4,y+hf-0.1,nx*0.18,nz*0.18,0.1);mainSeg(K,TR,P1,P2,0.36,y+hf-0.4,y+hf-0.1,ncx*0.18,ncz*0.18,0.1);mainSeg(K,TR,P2,B0,0.36,y+hf-0.4,y+hf-0.1,sx*0.18,sz*0.18,0.1);
+    mainSeg(K,c,A0,P1,0.12,y+hf-1.0,y+hf-0.5,nx*0.06,nz*0.06);mainSeg(K,c,P1,P2,0.12,y+hf-1.0,y+hf-0.5,ncx*0.06,ncz*0.06);mainSeg(K,c,P2,B0,0.12,y+hf-1.0,y+hf-0.5,sx*0.06,sz*0.06);
+    mainGrimeWall((P1[0]+P2[0])/2,(P1[1]+P2[1])/2,fc,ch*1.41,y+hf-2.4,y+hf-1.0,5);mainGrimeWall(...F(-ch/2,sg*w/2),face+C*Math.PI/2,d-ch,y+hf-2.4,y+hf-1.0,5)}
+  else{const [a,b]=F(d/2+0.18,0);K.box(w+0.25,0.3,0.36,TR,a,y+hf-0.25,b,face);const [e,f]=F(d/2+0.06,0);K.box(w,0.5,0.12,c,e,y+hf-0.75,f,face)}
+  mainGrimeWall(...F(d/2,C?-sg*ch/2:0),face,w-ch,y+hf-2.4,y+hf-1.0,5);
   // the storefront: pilasters at the ends, a kick plate and display window each side of the door, a transom
-  for(const s of [-1,1]){const [a,b]=F(d/2+0.1,s*(w/2-0.25));K.box(0.5,4.2,0.2,TR,a,y+2.1,b,face)}
-  {const [a,b]=F(d/2+0.08,0);K.box(w-0.6,0.25,0.16,TR,a,y+3.05,b,face)}
-  const pw=(w-0.9)/2-0.8;for(const s of [-1,1]){const so=s*(0.8+pw/2),[a,b]=F(d/2+0.05,so),[e,f]=F(d/2+0.1,so),[g,k]=F(d/2+0.35,so);
-    const [gx,gz]=F(d/2-0.02,so);K.box(pw,0.6,0.1,c,a,y+0.3,b,face);K.box(pw,2.3,0.02,'glass',gx,y+1.8,gz,face);K.box(pw+0.1,0.08,0.14,TR,e,y+0.62,f,face);K.box(0.08,2.2,0.12,TR,e,y+1.75,f,face);
-    K.box(pw-0.4,0.3,0.4,0x6b4a30,g,y+0.75,k,face);K.box(pw-0.5,0.16,0.36,0x3d6b2f,g,y+0.96,k,face);
-    const fc=[0xc94c6a,0xe8b923,0xf2efe6,0x8a4fa8][(si+s+4)%4];for(let q=-(pw-0.7)/2;q<=(pw-0.7)/2;q+=0.22){const [m,n]=F(d/2+0.35+((q*7)%2?0.08:-0.08),so+q);K.box(0.11,0.1,0.11,fc,m,y+1.07,n,face+q)}}
+  for(const s of [-1,1]){const cn=s===C,[a,b]=F(d/2+0.1,s*(cn?w/2-ch-0.2:w/2-0.25));K.box(cn?0.4:0.5,4.2,0.2,TR,a,y+2.1,b,face)}
+  {const [a,b]=F(d/2+0.08,C?sg*(0.3-ch)/2:0);K.box(w-0.6-(C?ch-0.3:0),0.25,0.16,TR,a,y+3.05,b,face)}
+  const pw=(w-0.9)/2-0.8;for(const s of [-1,1]){const pq=s===C?pw-ch:pw,so=s*(0.8+pq/2),[a,b]=F(d/2+0.05,so),[e,f]=F(d/2+0.1,so),[g,k]=F(d/2+0.35,so);
+    const [gx,gz]=F(d/2-0.02,so);K.box(pq,0.6,0.1,c,a,y+0.3,b,face);K.box(pq,2.3,0.02,'glass',gx,y+1.8,gz,face);K.box(pq+0.1,0.08,0.14,TR,e,y+0.62,f,face);K.box(0.08,2.2,0.12,TR,e,y+1.75,f,face);
+    K.box(pq-0.4,0.3,0.4,0x6b4a30,g,y+0.75,k,face);K.box(pq-0.5,0.16,0.36,0x3d6b2f,g,y+0.96,k,face);
+    const fc2=[0xc94c6a,0xe8b923,0xf2efe6,0x8a4fa8][(si+s+4)%4];for(let q=-(pq-0.7)/2;q<=(pq-0.7)/2;q+=0.22){const [m,n]=F(d/2+0.35+((q*7)%2?0.08:-0.08),so+q);K.box(0.11,0.1,0.11,fc2,m,y+1.07,n,face+q)}}
+  // the corner: a glazed display window across the cut over a kick plate, a pier at its far end
+  if(C){mainSeg(K,c,P1,P2,0.1,y,y+0.6,ncx*0.05,ncz*0.05);mainSeg(K,'glass',P1,P2,0.02,y+0.65,y+2.95,-ncx*0.02,-ncz*0.02);mainSeg(K,TR,P1,P2,0.14,y+0.58,y+0.66,ncx*0.1,ncz*0.1);
+    mainSeg(K,TR,P1,P2,0.16,y+2.93,y+3.18,ncx*0.08,ncz*0.08);{const [a,b]=F(d/2-ch-0.1,sg*(w/2+0.02));K.box(0.25,4.2,0.4,TR,a,y+2.1,b,face)}
+    const [a,b]=[(P1[0]+P2[0])/2+ncx*0.35,(P1[1]+P2[1])/2+ncz*0.35];K.box(ch*1.41-0.6,0.3,0.4,0x6b4a30,a,y+0.75,b,fc);K.box(ch*1.41-0.7,0.16,0.36,0x3d6b2f,a,y+0.96,b,fc)}
   // the door: a glazed timber door under a glass transom, the posts each side of it
   // (the door itself swings in as the worker comes up to it: rmDoor, interiors.js)
   {const [a,b]=F(d/2+0.03,0);for(const s of [-1,1]){const [g,k]=F(d/2+0.05,s*0.7);K.box(0.22,2.95,0.16,TR,g,y+1.475,k,face)}
     K.box(1.2,0.6,0.02,'glass',a,y+2.6,b,face);const [e,f]=F(d/2+0.03,-0.6);rmDoor('shop',e,y,f,face,1.2)}
   // the awning: stripes of its colour and white canvas (scanned weave, tinted), sloping out over the walk, with a valance
-  {const n=Math.max(4,Math.round((w-1)/0.6)),sw=(w-1)/n;for(let i=0;i<n;i++){const s=-(w-1)/2+sw*(i+0.5),[a,b]=F(d/2+0.58,s);K.box(sw+0.005,0.06,1.15,famTint('canvas',i%2?0xf2efe6:awn),a,y+2.95,b,face,-0.32);
+  {const sA=-(w-1)/2,sB=C?w/2-ch-0.1:(w-1)/2,n=Math.max(4,Math.round((sB-sA)/0.6)),sw=(sB-sA)/n;for(let i=0;i<n;i++){const s=sg*(sA+sw*(i+0.5)),[a,b]=F(d/2+0.58,s);K.box(sw+0.005,0.06,1.15,famTint('canvas',i%2?0xf2efe6:awn),a,y+2.95,b,face,-0.32);
     const [e,f]=F(d/2+1.13,s);K.box(sw+0.005,0.3,0.04,famTint('canvas',i%2?0xf2efe6:awn),e,y+2.62,f,face)}}
   // the sign over the awning (MAIN_SHOPS[si]), on a dark board
-  {const sw=Math.min(w-1.6,8.5),[a,b]=F(d/2+0.1,0);K.box(sw+0.24,1.14,0.08,DK,a,y+3.75,b,face);const [e,f]=F(d/2+0.15,0);mainSignList.push({x:e,y:y+3.75,z:f,ry:face,w:sw,h:0.95,i:si%MAIN_SHOPS.length})}
-  // the upper floors: windows with a sill under and a lintel over each
-  for(let wy=5.7;wy+1.1<h;wy+=2.8)for(let s=-w/2+1.5;s<=w/2-1.4;s+=2.3){const [a,b]=F(d/2+0.03,s),[e,f]=F(d/2+0.1,s);
-    const [p,q]=F(d/2+0.012,s),[g,k]=F(d/2+0.04,s);rmWinAdd(p,y+wy,q,face,1.1,1.6);K.box(1.1,1.6,0.02,'glass',g,y+wy,k,face);
-    for(const t of [-1,1]){const [m,n]=F(d/2+0.05,s+t*0.57);K.box(0.06,1.66,0.08,TR,m,y+wy,n,face);K.box(1.2,0.06,0.08,TR,g,y+wy+t*0.81,k,face)}
-    K.box(0.04,1.6,0.06,TR,g,y+wy,k,face);K.box(1.1,0.04,0.06,TR,g,y+wy+0.15,k,face);
-    K.box(1.4,0.1,0.18,TR,e,y+wy-0.86,f,face);K.box(1.35,0.16,0.1,TR,e,y+wy+0.88,f,face)}
+  {const sw=Math.min(w-1.6-(C?2*ch:0),8.5),[a,b]=F(d/2+0.1,0);K.box(sw+0.24,1.14,0.08,DK,a,y+3.75,b,face);const [e,f]=F(d/2+0.15,0);mainSignList.push({x:e,y:y+3.75,z:f,ry:face,w:sw,h:0.95,i:si%MAIN_SHOPS.length})}
+  // a blade sign out over the walk at one end of the front: a tall one with the shop's name down it on the taller
+  // buildings, a small painted board hung from an iron bracket on the low ones
+  if(si%3===1){const bs=(C?-C:(si%2?1:-1))*(w/2-0.45),[a,b]=F(d/2+0.55,bs);
+    if(hf>=7.9){const yb=y+4.45+1.3;K.box(0.08,2.6,0.62,DK,a,yb,b,face);K.box(0.1,2.7,0.05,TR,...F(d/2+0.88,bs),yb,face);
+      for(const t of [-1,1]){const [p,q]=F(d/2+0.4,bs);K.box(0.05,0.05,0.8,IRON,p,yb+t*1.15,q,face)}
+      for(const t of [-1,1]){const [p,q]=F(d/2+0.56,bs+t*0.045);mainSignList.push({x:p,y:yb,z:q,ry:face+t*Math.PI/2,w:2.4,h:0.3,i:si%MAIN_SHOPS.length,v:1})}}
+    else{const [p,q]=F(d/2+0.55,bs);K.box(0.05,0.05,1.05,IRON,p,y+4.0,q,face);K.box(0.05,0.3,0.05,IRON,...F(d/2+0.05,bs),y+3.85,face);
+      K.box(0.07,0.56,0.76,awn,a,y+3.55,b,face);K.box(0.05,0.66,0.86,TR,a,y+3.55,b,face);for(const t of [-1,1])K.box(0.02,0.16,0.02,IRON,...F(d/2+0.55+t*0.32,bs),y+3.92,face)}}
+  // the upper floors: windows with a sill under and a lintel over each (on a set-back top floor, on its face); round
+  // the corner on a corner lot, and the odd air conditioner
+  rows.forEach((wy,ri)=>{const fr=wy+0.9<hf,of=fr?d/2:d/2-sb;let k=0;
+    for(let s=-w/2+1.5;s<=w/2-1.4;s+=2.3){if(C&&s*C>w/2-ch-0.8)continue;mainWin(K,...F(of,s),face,y+wy,TR,si%3===2&&ri===0&&k===1);k++}
+    if(C&&fr){mainWin(K,(P1[0]+P2[0])/2,(P1[1]+P2[1])/2,fc,y+wy,TR);for(let t=d/2-ch-1.4;t>=-d/2+1.2;t-=2.3)mainWin(K,...F(t,sg*w/2),face+C*Math.PI/2,y+wy,TR,ri===0&&t<0&&t>-2.4)}});
+  // out back: a steel door on a concrete stoop (a step up), the upper windows, and on some of the tall brick ones a
+  // fire escape: a landing at each upper floor, railed, stairs between them and a drop ladder from the lowest
+  const bf=face+Math.PI,B=(t,s)=>F(-d/2-t,s),ds=-w/4*(si%2?1:-1);
+  {const [a,b]=B(0.5,ds),gs=Math.max(G(...B(0.9,ds)),G(...B(0.1,ds)),G(...B(0.5,ds-0.8)),G(...B(0.5,ds+0.8)))+0.15;
+    K.box(1.7,gs-G(a,b)+0.3,1.0,'concrete',a,(gs+G(a,b)-0.3)/2,b,face);walkPad(a,b,0.85,0.5,face,gs);
+    const [e,f]=B(0.03,ds);K.box(1.0,2.1,0.06,[0x5c6b5e,0x7a3428,0x3b4a5a,0x8a8d8f][si%4],e,gs+1.05,f,face);const [g,k]=B(0.05,ds);K.box(1.2,0.08,0.1,DK,g,gs+2.16,k,face);
+    for(const t of [-1,1])K.box(0.08,2.15,0.1,DK,...B(0.05,ds+t*0.56),gs+1.07,face);K.box(0.22,0.18,0.18,DK,...B(0.1,ds),gs+2.45,face)}
+  const fe=brickW&&rows.length>1&&!sb&&(si%4===0||si%4===3),fs=w/4*(si%2?1:-1);
+  rows.forEach((wy,ri)=>{for(const s of fe?[fs]:[-w/4,w/4])mainWin(K,...B(0,s),bf,y+wy,TR,!fe&&ri===0&&s===-ds&&si%2===0)});
+  if(fe){const L=(t,s)=>B(t,fs+s);rows.forEach((wy,ri)=>{const ly=y+wy-0.95;{const [a,b]=L(0.55,0);K.box(3.4,0.05,1.0,IRON,a,ly,b,face)}
+      {const [a,b]=L(1.03,0);K.box(3.4,0.04,0.04,IRON,a,ly+1.0,b,face);K.box(3.4,0.03,0.03,IRON,a,ly+0.5,b,face)}
+      for(let s=-1.7;s<=1.71;s+=0.425){const [a,b]=L(1.03,s);K.box(0.025,1.0,0.025,IRON,a,ly+0.5,b,face)}
+      for(const t of [-1,1]){const [a,b]=L(0.55,t*1.7);K.box(0.04,0.04,1.0,IRON,a,ly+1.0,b,face)}
+      if(ri<rows.length-1){const ny=ly+2.8,a=L(0.55,-1.5),b=L(0.55,1.2),run=Math.atan2(2.8,2.7);for(const t of [-0.32,0.32]){const p=L(0.55+t,-0.15);K.box(3.9,0.12,0.03,IRON,p[0],(ly+ny)/2,p[1],face,0,-run)}
+        for(let i=1;i<9;i++){const p=L(0.55,1.2-2.7*i/9);K.box(0.22,0.03,0.62,IRON,p[0],ly+2.8*i/9,p[1],face)}}
+      if(ri===0){const [a,b]=L(0.9,-1.35),gl=G(a,b)+2.4;for(const t of [-0.2,0.2]){const [p,q]=L(0.9,-1.35+t);K.box(0.04,ly-gl,0.04,IRON,p,(ly+gl)/2,q,face)}
+        for(let yy=gl+0.15;yy<ly;yy+=0.3)K.box(0.4,0.025,0.025,IRON,a,yy,b,face)}})}
+  // rain streaks under the coping and damp at the foot of the back and side walls
+  {const gl=Math.min(G(...B(0,-w/2)),G(...B(0,w/2)),G(...B(0,0)))-0.05;mainGrimeWall(...B(0,0),bf,w,gl,y+0.75,1);mainGrimeWall(...B(0,0),bf,w,y+h-1.6,y+h-0.1,5)}
+  for(const s of [-1,1]){if(s===C)continue;const gl=Math.min(G(...F(-d/2,s*w/2)),G(...F(d/2,s*w/2)),G(...F(0,s*w/2)))-0.05;
+    mainGrimeWall(...F(0,s*w/2),face+s*Math.PI/2,d-0.1,gl,y+0.7,1)}
   // solid: the building behind the shop, its side walls and the storefront either side of the door; the shop's floor to
   // walk on, and its room (the camera stays in it)
   SOLIDS.push({x,z,hx:(Math.abs(fz)*w+Math.abs(fx)*d)/2+0.1,hz:(Math.abs(fx)*w+Math.abs(fz)*d)/2+0.1,foot:1});{const [a,b]=F(-RD/2,0);rmSolid(a,b,face,w/2+0.1,(d-RD)/2+0.1)}
-  for(const t of [-1,1]){const [a,b]=F(d/2-RD/2,t*(w/2-0.2));rmSolid(a,b,face,0.3,RD/2+0.1);const [e,f]=F(d/2,t*(w/4+0.35));rmSolid(e,f,face,w/4-0.25,0.14)}
-  walkPad(F0[0],F0[1],w/2-0.1,RD/2,face,y+0.03);rmRoom(F0[0],F0[1],face,w/2-0.55,RD/2,y,y+2.9)}
+  for(const t of [-1,1]){if(t===C){const hs=(RD-ch+0.1)/2,[a,b]=F(d/2-RD-0.1+hs,t*(w/2-0.2));rmSolid(a,b,face,0.3,hs);const hw=(w/2-ch-0.6)/2,[e,f]=F(d/2,t*(0.6+hw));rmSolid(e,f,face,hw,0.14);
+      rmSolid((P1[0]+P2[0])/2,(P1[1]+P2[1])/2,Math.atan2(-(P2[1]-P1[1]),P2[0]-P1[0]),ch*0.7071,0.14);continue}
+    const [a,b]=F(d/2-RD/2,t*(w/2-0.2));rmSolid(a,b,face,0.3,RD/2+0.1);const [e,f]=F(d/2,t*(w/4+0.35));rmSolid(e,f,face,w/4-0.25,0.14)}
+  walkPad(F0[0],F0[1],w/2-0.1,RD/2,face,y+0.03);rmRoom(F0[0],F0[1],face,w/2-0.55,RD/2,y,y+2.9);
+  MAIN_BACKS.push({x,z,w,d,y,h,face,F,C,ds,si})}
 // the shop signs: painted boards (famSignPaint, family.js) drawn into one picture, and every sign a quad of it, as one mesh
 function mainSignsAdd(){const cv=document.createElement('canvas');cv.width=2048;cv.height=2048;const g=cv.getContext('2d'),SW=1024,SH=128;
   MAIN_SHOPS.forEach(([n,sub,bg,fg,serif],i)=>famSignPaint(g,(i%2)*SW,((i/2)|0)*SH,SW,SH,bg,fg,serif,
     [[serif?n:n.toUpperCase(),serif?0.44:0.5,0.4,700],[serif?sub:sub.toUpperCase(),0.2,0.77,600,serif]],i*97+5));
   const tex=new THREE.CanvasTexture(cv);tex.anisotropy=8;tex.colorSpace=THREE.SRGBColorSpace;const P=[],U=[],v=new THREE.Vector3();
   for(const s of mainSignList){const u0=(s.i%2)/2,v1=1-((s.i/2)|0)/16,v0=v1-1/16,cs=Math.cos(s.ry),sn=Math.sin(s.ry),pt=(a,b)=>{v.set(a*cs,b,-a*sn);return [s.x+v.x,s.y+v.y,s.z+v.z]};
+    // (a blade sign's name runs down it: v)
+    if(s.v){const A=pt(-s.h/2,-s.w/2),B=pt(s.h/2,-s.w/2),C=pt(s.h/2,s.w/2),D=pt(-s.h/2,s.w/2);P.push(...A,...B,...C,...A,...C,...D);U.push(u0+0.5,v0,u0+0.5,v1,u0,v1,u0+0.5,v0,u0,v1,u0,v0);continue}
     const A=pt(-s.w/2,-s.h/2),B=pt(s.w/2,-s.h/2),C=pt(s.w/2,s.h/2),D=pt(-s.w/2,s.h/2);P.push(...A,...B,...C,...A,...C,...D);U.push(u0,v0,u0+0.5,v0,u0+0.5,v1,u0,v0,u0+0.5,v1,u0,v1)}
   const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(P,3));geo.setAttribute('uv',new THREE.Float32BufferAttribute(U,2));geo.computeVertexNormals();
   const m=new THREE.Mesh(geo,famSignMat(tex));m.receiveShadow=true;scene.add(m);return m}
@@ -278,7 +427,10 @@ function mainSignsAdd(){const cv=document.createElement('canvas');cv.width=2048;
   // ---------- south: the lakeside town ----------
   const T=famKit(),COLS=[0xb5654a,0xd9cdb0,0x7d9aa8,0xc9b27a,0x9c4f3f,0xe4e0d4,0x8f9a7a,0xb98b5e],AWN=[0x2f6b4f,0xb8322a,0x2a4f7a,0xd08a22];
   const WALLS=['brick','plaster','sidingW','brickOld','sidingG','brick','sidingR','plaster','brickOld','sidingB','sidingW'];
-  const LK=famKit(),BK=famKit();let li=0;const lot=(x,z,w,d,h,face)=>{mainLot(T,x,z,w,d,h,COLS[li%COLS.length],face,AWN[(li*3)%AWN.length],li,WALLS[li%WALLS.length]);li++};
+  const LK=famKit(),BK=famKit();let li=0;const lot=(x,z,w,d,h,face,o)=>{
+    // (a Main Street lot by the cross street turns the corner: its corner toward the crossing cut off)
+    if(!o&&Math.abs(Math.sin(face))>0.9&&Math.abs(z-652)-w/2<21)o={c:Math.sign((652-z)*-Math.sin(face))};
+    mainLot(T,x,z,w,d,h,COLS[li%COLS.length],face,AWN[(li*3)%AWN.length],li,WALLS[li%WALLS.length],o);li++};
   // Main Street: a block of shops each side, facing the street, at least 2 m apart, with lamps at the curb (the paving:
   // mainStreets) and a street tree in each gap (MAIN_GAPS)
   for(const s of [-1,1]){let e0=null;for(let i=0;i<7;i++){const z=588+i*19+(i>2?8:0),w=14+((i*7+(s>0?3:0))%4),h=5.5+((i*5+(s>0?2:0))%5)*1.3;if(Math.abs(z-652)<10){e0=null;continue}
@@ -662,6 +814,97 @@ function mainStreets(){const K=shopKit(),F=famKit(),G=baseHeight,asph=shopLib('a
     const m=new THREE.Mesh(sgeo,smat);m.position.set(x+Math.sin(ry)*0.06,g+2.25,z+Math.cos(ry)*0.06);m.rotation.y=ry;scene.add(m);SOLIDS.push({x,z,hx:0.1,hz:0.1})}
   K.add();famAdd(F)}
 mainStreets();groundLift=mstLift;
+
+// ---------- behind the shops: the alleys, the wires and the weathering ----------
+// A service lane behind each block of Main Street (old asphalt, out to the cross street's sidewalk past the corner
+// lot), with dumpsters, pallets and crates by the back doors (some behind the cross street's shops too, all solid);
+// wooden utility poles along its far side with three power lines on a crossarm and a phone cable under them, sagging
+// between the poles, a service drop to each building and a transformer on every other pole (the wires: one mesh of
+// lines). Placed clear of everything solid, so a lot built elsewhere (or none) leaves its alley out
+const MAIN_POLES=[];
+function mainAlleys(){const K=shopKit(),T=famKit(),asph=shopLib('asphalt'),G=baseHeight,WP=[];let sd=17;const rnd=()=>{sd=(sd*16807)%2147483647;return sd/2147483647};
+  const clear=(x,z,r)=>!SOLIDS.some(s=>Math.abs(x-s.x)<s.hx+(s.foot?0.1:r)&&Math.abs(z-s.z)<s.hz+(s.foot?0.1:r));
+  const wire=(a,b,sag)=>{const L=Math.hypot(b[0]-a[0],b[2]-a[2]),n=Math.max(4,Math.round(L/3)),sg=sag+0.0025*L*L/10;let p=a;
+    for(let i=1;i<=n;i++){const t=i/n,q=[a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t-sg*4*t*(1-t),a[2]+(b[2]-a[2])*t];WP.push(...p,...q);p=q}};
+  // a dumpster (its long side along the wall, yaw r), a stack of pallets, a few crates
+  const dump=(x,z,r,col)=>{const y=G(x,z),fx=Math.sin(r),fz=Math.cos(r),P=(o,s)=>[x+fx*o+fz*s,z+fz*o-fx*s];T.box(1.85,1.05,1.05,col,x,y+0.68,z,r);
+    T.box(1.95,0.08,1.15,col,x,y+1.22,z,r);for(const s of [-1,1]){const [a,b]=P(0.02,s*0.47);T.box(0.9,0.05,1.1,0x1e2022,a,y+1.3,b,r,0.08)}
+    for(const s of [-1,1]){const [a,b]=P(0,s*0.98);T.box(0.08,0.12,0.9,col,a,y+0.9,b,r)}for(const [o,s] of [[-0.4,-0.75],[-0.4,0.75],[0.4,-0.75],[0.4,0.75]]){const [a,b]=P(o,s);T.cyl(0.08,0.08,0.06,8,0x1a1a1a,a,y+0.09,b,r,0,Math.PI/2)}
+    rmSolid(x,z,r,1.0,0.6);mainGrimeFloor(x,z,2.6,1.8,r+0.3,6,0.035)};
+  const pallets=(x,z,r,n)=>{const y=G(x,z);for(let i=0;i<n;i++){const yy=y+0.07+i*0.145,a=r+(rnd()-0.5)*0.15;for(const t of [-0.5,0,0.5]){T.box(1.2,0.1,0.1,0x7a6a52,x+Math.sin(a)*t,yy,z+Math.cos(a)*t,a)}
+      for(let k=-2;k<=2;k++)T.box(0.12,0.025,1.0,0xa08a64,x+Math.cos(a)*k*0.27,yy+0.065,z-Math.sin(a)*k*0.27,a)}rmSolid(x,z,r,0.62,0.52)};
+  const crates=(x,z,r)=>{const y=G(x,z);T.box(0.55,0.42,0.4,0x2a5f9a,x,y+0.21,z,r);T.box(0.55,0.42,0.4,0x2a5f9a,x+0.05,y+0.63,z+0.02,r+0.1);T.box(0.6,0.5,0.5,0x9a7a52,x+Math.cos(r)*0.65,y+0.25,z-Math.sin(r)*0.65,r-0.2);
+    rmSolid(x+Math.cos(r)*0.32,z-Math.sin(r)*0.32,r,0.7,0.32)};
+  const DUMP=[0x2f5a3a,0x2a4f7a,0x3a4a3f,0x5a3a2a];let nd=0;
+  // the lanes behind Main Street's blocks
+  const st0=MST.cz-MST.cw-3.3,st1=MST.cz+MST.cw+3.3;
+  for(const sx of [-1,1])for(const nb of [-1,1]){const L=MAIN_BACKS.filter(b=>Math.abs(Math.sin(b.face))>0.9&&Math.sign(b.x)===sx&&Math.sign(b.z-MST.cz)===nb);if(!L.length)continue;
+    const xi=Math.min(...L.map(b=>Math.abs(b.x)+b.d/2))-0.1,xo=Math.max(...L.map(b=>Math.abs(b.x)+b.d/2))+4.4,za=Math.min(...L.map(b=>b.z-b.w/2))-1,zb=Math.max(...L.map(b=>b.z+b.w/2))+1;
+    // the mouth onto the cross street, between the corner lot's back and the cross street's first shop
+    const z0=nb<0?za:st1,z1=nb<0?st0:zb,zm0=nb<0?zb:st1,zm1=nb<0?st0:za;let xm=xo;
+    for(const s of SOLIDS)if(s.foot&&Math.abs(s.x)-s.hx>xi&&Math.sign(s.x)===sx&&s.z+s.hz>zm0&&s.z-s.hz<zm1)xm=Math.min(xm,Math.abs(s.x)-s.hx-0.3);
+    const pave=(a,b,c,d)=>{if(b-a<1||d-c<1)return;const x0=sx<0?-b:a,x1=sx<0?-a:b;K.sheet(asph,x0,x1,c,d,0.03);walkPad((x0+x1)/2,(c+d)/2,(x1-x0)/2,(d-c)/2,0,0,{l:0.03})};
+    pave(xi,xo,za,zb);pave(xi,xm,zm0,zm1);
+    // patches, cracks and oil in it
+    for(let z=za+2;z<zb-2;z+=3+rnd()*4){const x=sx*(xi+0.8+rnd()*(xo-xi-1.6)),k=rnd();mainGrimeFloor(x,z,1.2+rnd()*2.4,1+rnd()*1.8,rnd()*6.3,k<0.35?3:k<0.6?4:k<0.85?2:6,0.035)}
+    // dumpsters and the rest by every other back door
+    L.forEach((b,i)=>{const r=b.face,[x,z]=b.F(-b.d/2-0.75,-b.ds);if(i%2===0&&clear(x,z,0.3)){dump(x,z,r,DUMP[nd++%DUMP.length])}
+      const [px,pz]=b.F(-b.d/2-0.75,b.ds+Math.sign(b.ds||1)*(1.9+rnd()));if(i%3===1&&clear(px,pz,0.3))pallets(px,pz,r+0.1,1+(i%3));
+      const [cx,cz]=b.F(-b.d/2-0.5,b.ds-Math.sign(b.ds||1)*2.2);if(i%2===1&&clear(cx,cz,0.3))crates(cx,cz,r+Math.PI/2)});
+    // the poles along the far side (not in the mouth), every 25 to 30 m, and the wires between them
+    const px=sx*(xo+0.5),n=Math.max(1,Math.round((zb-za)/28)),poles=[];
+    for(let i=0;i<=n;i++){let z=za+1.5+(zb-za-3)*i/n;for(const dz of [0,2,-2,4,-4])if(clear(px,z+dz,0.6)){z+=dz;poles.push(z);break}}
+    const P=poles.map((z,i)=>{const g=G(px,z),top=g+9.6;T.cyl(0.12,0.17,10.4,8,0x5e4b39,px,g+4.8,z);T.box(2.4,0.12,0.12,0x6a5844,px,top-0.45,z);
+      for(const t of [-1,1])T.box(0.9,0.06,0.06,0x5a4a3a,px+t*0.32,top-0.75,z,0,0,t*Math.PI/4);
+      for(const t of [-1.05,0,1.05])T.cyl(0.05,0.07,0.18,6,0x6f8f7a,px+t,(t?top-0.3:top+0.5),z);
+      if(i%2===1){T.cyl(0.3,0.3,0.95,12,0x8f9396,px+sx*0.42,top-2.0,z);T.cyl(0.32,0.32,0.06,12,0x6e7174,px+sx*0.42,top-1.5,z);T.box(0.3,0.08,0.08,0x5a4a3a,px+sx*0.2,top-1.7,z)}
+      SOLIDS.push({x:px,z,hx:0.2,hz:0.2});MAIN_POLES.push([px,z]);return {z,g,top}});
+    for(let i=0;i<P.length-1;i++){const a=P[i],b=P[i+1];for(const t of [-1.05,0,1.05])wire([px+t,(t?a.top-0.2:a.top+0.6),a.z],[px+t,(t?b.top-0.2:b.top+0.6),b.z],0.35);
+      wire([px-sx*0.17,a.top-3.4,a.z],[px-sx*0.17,b.top-3.4,b.z],0.5)}
+    // guy wires off the end poles
+    for(const [e,dz] of [[P[0],-1],[P[P.length-1],1]])if(e&&P.length>1)WP.push(px,e.top-0.4,e.z,px,G(px,e.z+dz*4)+0.1,e.z+dz*4);
+    // a service drop from the nearest pole to each building, to a mast bracket on its back wall
+    if(P.length)for(const b of L){const near=P.reduce((m,p)=>Math.abs(p.z-b.z)<Math.abs(m.z-b.z)?p:m),[hx,hz]=b.F(-b.d/2-0.15,b.ds*0.3),hy=b.y+Math.min(b.h,6.5)-0.4;
+      T.box(0.06,0.9,0.06,0x2a2c2f,hx,hy+0.2,hz);T.box(0.18,0.25,0.14,0x8f9396,...b.F(-b.d/2-0.08,b.ds*0.3+0.4),hy-1.1,b.face);wire([px,near.top-2.6,near.z],[hx,hy+0.6,hz],0.3)}}
+  // dumpsters behind some of the cross street's shops
+  MAIN_BACKS.forEach((b,i)=>{if(Math.abs(Math.sin(b.face))>0.9||i%3)return;const [x,z]=b.F(-b.d/2-0.8,-b.ds);if(clear(x,z,0.4))dump(x,z,b.face,DUMP[nd++%DUMP.length])});
+  // oil stains in the parking stalls, patches and cracks in the lots and across the cross street (some through the
+  // crosswalks' paint, where the asphalt has been cut and patched)
+  for(let x=-25.4;x<16;x+=3.2)if(Math.abs(x)>4.2&&rnd()<0.7)mainGrimeFloor(x+1.6,SHOP.fz-7.2+rnd()*1.5,0.9+rnd()*0.8,0.8+rnd()*0.9,rnd()*6.3,2,0.048);
+  for(let i=0;i<9;i++)mainGrimeFloor(-26+rnd()*42,725.5+rnd()*13,1.5+rnd()*3,1+rnd()*2.5,rnd()*6.3,rnd()<0.5?3:4,0.046);
+  for(let x=60.5;x<128;x+=3)for(const z of [585.8,608.2])if(rnd()<0.55)mainGrimeFloor(x+1.5,z+(rnd()-0.5),0.9+rnd()*0.8,0.8+rnd()*0.9,rnd()*6.3,2,0.048);
+  for(let i=0;i<14;i++)mainGrimeFloor(59+rnd()*70,583+rnd()*28,1.5+rnd()*3.5,1+rnd()*2.5,rnd()*6.3,rnd()<0.55?3:4,0.046);
+  for(let i=0;i<12;i++){const x=(rnd()<0.5?-1:1)*(12+rnd()*110),z=MST.cz+(rnd()-0.5)*(2*MST.cw-1);mainGrimeFloor(x,z,1.5+rnd()*3,0.8+rnd()*1.8,(rnd()-0.5)*0.4,rnd()<0.6?3:4,0.046)}
+  for(const x of MST_XW.x)mainGrimeFloor(x+(rnd()-0.5),MST.cz+(x<0?1.6:-1.6),2.2,1.5,0.1,4,0.052);
+  K.add();famAdd(T);
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(WP,3));scene.add(new THREE.LineSegments(g,new THREE.LineBasicMaterial({color:0x161616})))}
+// the grime picture (cells of 256 px: MAIN_GRIME's kinds), drawn at load, and every decal a quad of it, as one mesh
+let mainGrimeM=null,mainGrimeOn=true;
+function mainGrimeAdd(){const cv=document.createElement('canvas');cv.width=cv.height=1024;const g=cv.getContext('2d');let sd=29;const rnd=()=>{sd=(sd*16807)%2147483647;return sd/2147483647};
+  const cell=(k,f)=>{g.save();g.beginPath();g.rect((k%4)*256,(k/4|0)*256,256,256);g.clip();g.translate((k%4)*256,(k/4|0)*256);f();g.restore()};
+  const streaks=(n,l0,l1,col,top)=>{const tg=g.createLinearGradient(0,0,0,top);tg.addColorStop(0,`rgba(${col},0.3)`);tg.addColorStop(1,`rgba(${col},0)`);g.fillStyle=tg;g.fillRect(0,0,256,top);
+    for(let i=0;i<n;i++){const x=rnd()*256,w=1+rnd()*5,l=l0+rnd()*(l1-l0),a=0.06+rnd()*0.22,gr=g.createLinearGradient(0,0,0,l);gr.addColorStop(0,`rgba(${col},${a})`);gr.addColorStop(1,`rgba(${col},0)`);g.fillStyle=gr;g.fillRect(x,0,w,l)}};
+  const blob=(x,y,r,col,a)=>{const gr=g.createRadialGradient(x,y,0,x,y,r);gr.addColorStop(0,`rgba(${col},${a})`);gr.addColorStop(1,`rgba(${col},0)`);g.fillStyle=gr;g.fillRect(x-r,y-r,2*r,2*r)};
+  cell(0,()=>streaks(70,40,256,'40,36,32',50));
+  cell(1,()=>{for(let x=0;x<256;x+=4){const h=70+50*Math.sin(x*0.05+1)+30*rnd(),gr=g.createLinearGradient(0,256,0,256-h);gr.addColorStop(0,'rgba(34,32,28,0.5)');gr.addColorStop(1,'rgba(34,32,28,0)');g.fillStyle=gr;g.fillRect(x,256-h,4,h)}
+    for(let i=0;i<12;i++)blob(rnd()*256,200+rnd()*56,20+rnd()*30,'30,28,24',0.15)});
+  cell(2,()=>{for(let i=0;i<7;i++)blob(128+(rnd()-0.5)*70,128+(rnd()-0.5)*70,30+rnd()*80,'12,12,12',0.22+rnd()*0.15)});
+  cell(3,()=>{for(let j=0;j<3;j++){let x=0,y=40+rnd()*176;const P=[[x,y]];while(x<256){x+=6+rnd()*14;y+=(rnd()-0.5)*22;P.push([x,y])}
+      for(const [w,c] of [[7,'rgba(14,14,14,0.3)'],[1.8,'rgba(8,8,8,0.85)']]){g.lineWidth=w;g.strokeStyle=c;g.beginPath();P.forEach(([a,b],i)=>i?g.lineTo(a,b):g.moveTo(a,b));g.stroke()}
+      for(let b=0;b<3;b++){const [a,c]=P[(rnd()*P.length)|0];g.lineWidth=1.2;g.beginPath();g.moveTo(a,c);let u=a,v=c;for(let s=0;s<5;s++){u+=(rnd()-0.5)*20;v+=(rnd()<0.5?-1:1)*(6+rnd()*10);g.lineTo(u,v)}g.stroke()}}});
+  cell(4,()=>{g.beginPath();const pts=[[14,16],[242,12],[246,240],[12,244]];pts.forEach(([a,b],i)=>{const x=a+(rnd()-0.5)*8,y=b+(rnd()-0.5)*8;i?g.lineTo(x,y):g.moveTo(x,y)});g.closePath();
+    g.fillStyle='rgba(22,22,24,0.5)';g.fill();g.lineWidth=4;g.strokeStyle='rgba(10,10,10,0.55)';g.stroke();
+    for(let i=0;i<900;i++){g.fillStyle=rnd()<0.5?'rgba(255,255,255,0.06)':'rgba(0,0,0,0.12)';g.fillRect(16+rnd()*224,16+rnd()*224,2,2)}});
+  cell(5,()=>streaks(110,30,200,'36,33,30',90));
+  cell(6,()=>{for(let i=0;i<10;i++)blob(128+(rnd()-0.5)*120,128+(rnd()-0.5)*120,40+rnd()*70,'30,28,24',0.14)});
+  const tex=new THREE.CanvasTexture(cv);tex.colorSpace=THREE.SRGBColorSpace;tex.anisotropy=4;const P=[],U=[],e=2/1024;
+  for(const [a,b,c,d,k] of MAIN_GRIME){const u0=(k%4)/4+e,u1=u0+0.25-2*e,v1=1-(k/4|0)/4-e,v0=v1-0.25+2*e;P.push(...a,...b,...c,...a,...c,...d);U.push(u0,v0,u1,v0,u1,v1,u0,v0,u1,v1,u0,v1)}
+  const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(P,3));geo.setAttribute('uv',new THREE.Float32BufferAttribute(U,2));geo.computeVertexNormals();
+  mainGrimeM=new THREE.Mesh(geo,new THREE.MeshStandardMaterial({map:tex,transparent:true,depthWrite:false,polygonOffset:true,polygonOffsetFactor:-1,polygonOffsetUnits:-4,roughness:0.95,side:THREE.DoubleSide}));
+  mainGrimeM.receiveShadow=true;mainGrimeM.renderOrder=1;mainGrimeM.visible=mainGrimeOn;scene.add(mainGrimeM)}
+// from gfxApply: the weathering drawn on Medium graphics and up (it's only looks)
+function mainGrimeGfx(on){mainGrimeOn=!!on;if(mainGrimeM)mainGrimeM.visible=mainGrimeOn}
+mainAlleys();mainGrimeAdd();
 // ---------- the hayfield's margins: uncut grass ----------
 // Where the hayfield meets the lawn, the trail and the woods (mainField's wandering edge, terrain.js) a band of tall uncut
 // grass, thick in the margin and thinning out both ways, green on the lawn's side and going to straw on the field's, so
