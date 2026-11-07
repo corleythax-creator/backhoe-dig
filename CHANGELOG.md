@@ -2,6 +2,10 @@
 
 Every version of Corley's Island, newest first, grouped by the day it went live (Central time). Made from `data/effort.js` by `tools/changelog.py`; don't edit it by hand. [Play any old version](https://corleys-island.vercel.app/versions/) · [Build log with charts](https://corleys-island.vercel.app/build.html)
 
+## Saturday, November 7, 2026
+
+- **v359** (2:53 PM) The townsfolk can now play 127 more animations (styled walks, everyday actions, action), loaded only when the game asks; nothing on screen changes yet.
+
 ## Friday, November 6, 2026
 
 - **v358** (10:31 PM) Shop memory and names: anyone in a shop with you (staff or customers) remembers it, and what you bought, and brings it up when you meet again ("Saw you at Lakeside Bakery this morning, get the pie?"); after a few visits together you're a familiar face; it fades over a week and syncs between devices. The nine kids and teens now have names and their own kid talk, everyone you've met is shown by name instead of Passerby or Clerk, and shops' indoor brightness works again
