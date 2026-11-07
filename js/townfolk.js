@@ -37,7 +37,9 @@ const TF_WALK=[[[-MSX,580],[-MSX,TF_XN]],[[-MSX,TF_XN],[-MSX,MCN]],[[MSX,580],[M
   // it, and over the road to the promenade
   [[-MSX,580],[-12,578.5],[SQ.gx1,SQ.gz0]],[[SQ.gx1,SQ.gz0],[-57,SQ.gz0]],[[-57,SQ.gz0],[SQ.gx0,SQ.gz0]],[[SQ.gx0,SQ.gz0],[SQ.gx0,SQ.gz1]],
   [[SQ.gx0,SQ.gz1],[SQ.gx1,SQ.gz1]],[[SQ.gx1,SQ.gz1],[SQ.gx1,SQ.gz0]],{x:1,p:[[-57,SQ.gz0],[-57,568.6]]},{x:1,p:[[SQ.gx1,SQ.gz0],[SQ.gx1,568.6]]},
-  [[-110,568.6],[-57,568.6]],[[-57,568.6],[SQ.gx1,568.6]]].map(e=>{const p=e.p||e,L=[0];
+  [[-110,568.6],[-57,568.6]],[[-57,568.6],[SQ.gx1,568.6]],
+  // the waterfront (waterfront.js): the promenade, the pier, the Landing, the shops along the beach road and the park
+  ...WF_WALK].map(e=>{const p=e.p||e,L=[0];
     for(let i=1;i<p.length;i++)L.push(L[i-1]+Math.hypot(p[i][0]-p[i-1][0],p[i][1]-p[i-1][1]));return {p,L,len:L[L.length-1],x:!!e.x,a:null,b:null}});
 // the nodes where walks meet, each with its walks
 const TF_NODES=[];
@@ -48,7 +50,7 @@ function tfAt(w,s){const p=w.p,L=w.L;let i=1;while(i<p.length-1&&L[i]<s)i++;cons
   return [a[0]+(b[0]-a[0])*t,a[1]+(b[1]-a[1])*t,(b[0]-a[0])/d,(b[1]-a[1])/d]}
 const tfLine=pts=>{const L=[0];for(let i=1;i<pts.length;i++)L.push(L[i-1]+Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]));return {p:pts,L,len:L[L.length-1]}};
 // how high the surface is above the ground where someone stands: the asphalt, the raised sidewalks and the store's walk
-function tfLift(x,z){if(x<-6&&x>-114&&z<616){const p=padAt(x,z);return p>-1e8?Math.max(0,p-baseHeight(x,z)):0}if(Math.abs(x-TF_GATE[0])<1.4&&z>658.8&&z<TF_GATE[1]+0.5)return z<661?0.17-(z-658.8)/2.2*0.14:0.03;if(z>724.5)return z>740.2&&Math.abs(x)<15.5?0.12:0.04;if(x>56&&z<615)return 0.04;
+function tfLift(x,z){if(x<-6&&x>-114&&z<616){const p=padAt(x,z);return p>-1e8?Math.max(0,p-baseHeight(x,z)):0}{const l=wfLift(x,z);if(l!==null)return l}if(Math.abs(x-TF_GATE[0])<1.4&&z>658.8&&z<TF_GATE[1]+0.5)return z<661?0.17-(z-658.8)/2.2*0.14:0.03;if(z>724.5)return z>740.2&&Math.abs(x)<15.5?0.12:0.04;if(x>56&&z<615)return 0.04;
   if(Math.abs(x)<MST.x+0.1&&z>556||Math.abs(z-MST.cz)<MST.cw+0.1&&Math.abs(x)>MST.x)return MST.lift;
   if(Math.abs(x)<MST.x+MST.curb+MST.walk+0.2&&z>576||Math.abs(z-MST.cz)<MST.cw+3.5&&Math.abs(x)<128)return mstRamp(x,z);return 0}
 // ---------- the drives: poses [x, z, heading of travel, flags] joined by smooth curves ----------
