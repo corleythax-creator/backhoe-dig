@@ -14,10 +14,15 @@
 // other now and then say something to each other (the runtime's chatter), both turning to face; alone, one may remark
 // on what is round them (machines, the marina's gulls: talkSights). Drive a machine within TU.talkRoadR of
 // someone and they remark on it: fast (over TU.talkRoadV), that it nearly had them; slow or stopped, on the machine.
+// What they notice they act on (talkAct): run or step back from it, stop and watch it, freeze, or walk over to look or
+// to help (TU.talkGoT); with a model speaking, the calm choices are the model's (Human Forge's runtime). Gunshots reach
+// everyone about. Talk to everyone (the Everyone button, or starting with "everyone", "y'all"...) when two or more are
+// within TU.talkGroupR: those it is for answer in turn. A model hears the moment (talkScene): the day and hour, the
+// weather, the shop, what you are doing and driving, the day's work, the police, and what happened lately (talkNews).
 // Lines show over their heads; Aloud reads them in the most natural voice the browser has, each townsperson keeping their own.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 const TALK={mode:'text',lib:null,M:null,near:null,with:null,bub:new Map(),far:new Map(),bump:new Map(),v:new THREE.Vector3(),t:0,ui:null,
-  here:[],at:new Map(),ride:null,v0:0};
+  here:[],at:new Map(),ride:null,v0:0,group:[],grp:false,log:[],news:null};
 const TALK_NEAR=3,TALK_HI=2.2,TALK_FAR=5,TALK_URL='https://human-forge-beta.vercel.app/api/persona',TALK_ME='a man in a hard hat and a hi-vis vest';
 // the menu's choice; an 'off' only counts if talk was ever on on this device (bhd_talk_on), since older versions wrote
 // 'off' for everyone at load, when Off was the default
@@ -29,16 +34,45 @@ function talkName(p){if(p==='player')return say('tkPlayer');const c=talkCard(p);
 // a machine's name with its article ('an excavator', 'a dozer')
 function talkA(n){return (/^[aeiou]/i.test(n)?'an ':'a ')+n}
 // where they are and when, in a few plain words (the built-in mind answers "where are we?" from its first part)
+const TALK_DOW=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
 function talkScene(p,to){const h=typeof townHour==='function'?townHour():12,when=h>=4&&h<12?'morning':h<17?'afternoon':h<21?'evening':'night';
-  const where=p.room&&typeof townShopName==='function'?'inside '+townShopName(p.room):'out on the street in town';
-  return `Corley's Island, a small town on an island off the Mississippi Gulf Coast, in the ${when}. ${talkName(p)} is ${where}`+
-    (to==='you'||to==null?`; the one talking to them is ${TALK_ME}.`:`, talking with ${talkName(to)}.`)}
+  const hh=Math.floor(h),clock=`${hh%12||12}${h%1>=0.5?':30':''} ${hh<12?'AM':'PM'}`,day=typeof townDow==='function'?TALK_DOW[townDow()]+' ':'';
+  const R=p.room,open=R&&typeof townRoomOpen==='function'?townRoomOpen(R):true;
+  const where=R&&typeof townShopName==='function'?'inside '+townShopName(R)+(open?'':' (closed now)'):'out on the street in town';
+  const r=typeof weather==='object'?weather.r:0,wx=r>0.5?'raining hard':r>0.12?'raining':typeof weather==='object'&&weather.c>0.6?'overcast':'fair';
+  let t=`Corley's Island, a small town on an island off the Mississippi Gulf Coast, ${day}${when} (about ${clock}), ${wx}. ${talkName(p)} is ${where}`+
+    (to==='you'||to==null?`; the one talking to them is ${TALK_ME}`:`, talking with ${talkName(to)}`)+'. ';
+  // him: what he is doing, the day's work, the police
+  const rk=mode==='walk'&&!wk.inside?null:wk.inside||rideOf(mode),R2=rk&&WK_RIDES[rk];
+  t+=`He runs the island's earthwork crew${R2?` and is in ${talkA(R2.n)} nearby`:', on foot'}`;
+  if(typeof gunHas==='function'&&gunHas())t+=', with a gun out';
+  const w=typeof stats==='object'?stats:{},yd=(w.dDug||0)*1.308;
+  if(yd>1||w.dEarn>1)t+=`; today he has dug about ${Math.round(yd)} cubic yards and earned $${Math.round(w.dEarn||0)}`;
+  t+='.';
+  if(typeof gunStars==='function'&&gunStars())t+=' The police are after him.';else if(typeof gun==='object'&&gun.cops&&gun.cops.length)t+=' Police are about.';
+  const ln=talkLately();if(ln)t+=' Lately: '+ln+'.';
+  return t.slice(0,880)}
+// what happened lately, for the scene: the last few things, newest last, with how long ago
+function talkLately(){const now=performance.now()/1000;return TALK.log.filter(e=>now-e.t<600).slice(-4).map(e=>{const m=Math.round((now-e.t)/60);
+  return e.s+(m<1?' just now':m===1?' a minute ago':` ${m} minutes ago`)}).join('; ')}
+// what happens about town, as it happens (four times a second): shots (and everyone about hears them), someone shot,
+// the police coming, rain starting or stopping, lightning
+function talkNews(){const G=typeof gun==='object'?gun:{},dn2=(G.downs||0)+(G.copDowns||0),cops=G.cops?G.cops.length:0,wet=typeof weather==='object'&&weather.r>0.12,
+    bolts=typeof stats==='object'?stats.bolts||0:0,now=performance.now()/1000;
+  const n=TALK.news;TALK.news={shots:G.shots||0,downs:dn2,cops,wet,bolts};if(!n)return;
+  const add=s=>{const l=TALK.log[TALK.log.length-1];if(l&&l.s===s&&now-l.t<60){l.t=now;return}TALK.log.push({t:now,s});if(TALK.log.length>8)TALK.log.shift()};
+  if((G.shots||0)>n.shots){add('gunshots in town');
+    for(const p of TALK.here){const d=Math.hypot(p.x-wk.x,p.z-wk.z);if(d<60)TALK.M.event(p,{kind:'notice',what:'gunshots',danger:true,threat:0.9,sound:true,feet:Math.round(d/FT),ref:{x:wk.x,z:wk.z}})}}
+  if(dn2>n.downs)add('someone was shot');
+  if(cops&&!n.cops)add('police cars came into town');
+  if(wet!==n.wet)add(wet?'it started to rain':'the rain stopped');
+  if(bolts>n.bolts)add('lightning struck close by')}
 // what they can see that is not a person (the runtime looks these over once a second and remarks on what is new or
 // coming closer): the machines (driven or parked) and the gulls on the marina's pilings. The town's own cars are left
 // out: they come and go all day, and a remark on each would drown the talk.
 function talkSights(p){const out=[],R2=TU.talkSightR;
   for(const k in WK_RIDES){const o=WK_RIDES[k].o;if(!o||!isFinite(o.x))continue;const d=Math.hypot(o.x-p.x,o.z-p.z);
-    if(d<R2)out.push({what:talkA(WK_RIDES[k].n),feet:d/FT,ref:'ride:'+k,moving:k===TALK.ride&&TALK.v0>0.5})}
+    if(d<R2){const mv=k===TALK.ride&&TALK.v0>0.5;out.push({what:talkA(WK_RIDES[k].n),feet:d/FT,ref:'ride:'+k,moving:mv,threat:mv&&d<10?Math.min(0.8,TALK.v0/6):0})}}
   if(typeof MAR==='object'&&Math.abs(p.x-MAR.x)<R2&&p.z>MAR.z0-R2&&p.z<MAR.z0+MAR.len+R2)out.push({what:'the gulls on the pier',ref:'gulls'});
   out.sort((a,b)=>(a.feet??1e9)-(b.feet??1e9));return out.slice(0,4)}
 // someone who can join in among themselves: on foot or seated, not driving, fleeing or cowering
@@ -49,7 +83,7 @@ function talkNearest(p){let best=null,bd=TU.talkChatR;for(const q of TALK.here){
 function talkInit(){if(TALK.M||!window.HumanForgeMind)return;
   TALK.M=HumanForgeMind.create({url:TALK_URL,storage:'bhd_talk_on',budget:200,card:p=>p==='player'?null:talkCard(p),people:()=>TALK.here,label:p=>talkName(p),
     nearest:p=>talkFree(p)?talkNearest(p):null,sights:p=>p==='player'?[]:talkSights(p),scene:(p,to)=>talkScene(p,to),
-    show:(p,a,to,ev)=>talkShow(p,a,to,ev),changed:()=>talkPaint()});
+    show:(p,a,to,ev)=>talkShow(p,a,to,ev),act:(p,a,ev)=>talkAct(p,a,ev),changed:()=>talkPaint()});
   TALK.M.chatter=true;
   try{localStorage.setItem('bhd_talk_on','1')}catch(e){}  // the runtime's own switch, on; also marks that talk was on here
 }
@@ -64,17 +98,25 @@ talkSet(TALK.mode);
 
 // ---- what shows: a chip near someone, the box to type in, the lines over heads
 function talkUI(){if(TALK.ui)return TALK.ui;const d=document.createElement('div');d.id='talkBox';d.hidden=true;
-  d.innerHTML='<button id="talkChip"></button><form id="talkForm" hidden><input id="talkIn" maxlength="300" autocomplete="off"><button></button><button type="button" id="talkX">×</button></form><div id="talkStatus"></div>';
-  d.querySelector('#talkForm button').textContent=say('tkSay');
+  d.innerHTML='<button id="talkChip"></button><form id="talkForm" hidden><input id="talkIn" maxlength="300" autocomplete="off"><button></button><button type="button" id="talkAll" hidden aria-pressed="false"></button><button type="button" id="talkX">×</button></form><div id="talkStatus"></div>';
+  d.querySelector('#talkForm button').textContent=say('tkSay');d.querySelector('#talkAll').textContent=say('tkAll');
+  d.querySelector('#talkAll').onclick=()=>{TALK.grp=!TALK.grp;talkHint();d.querySelector('#talkIn').focus()};
   document.body.appendChild(d);
   const L=document.createElement('div');L.id='talkLines';document.body.appendChild(L);
   d.querySelector('#talkChip').onclick=()=>talkOpen();d.querySelector('#talkX').onclick=()=>talkClose();
-  d.querySelector('#talkForm').onsubmit=e=>{e.preventDefault();const i=d.querySelector('#talkIn'),v=i.value.trim();i.value='';if(v&&TALK.with&&TALK.M)TALK.M.tell(TALK.with,v)};
+  d.querySelector('#talkForm').onsubmit=e=>{e.preventDefault();const i=d.querySelector('#talkIn'),v=i.value.trim();i.value='';if(!v||!TALK.with||!TALK.M)return;
+    const g=TALK.group;if(g.length>1&&(TALK.grp||TALK_ALL.test(v))){for(const q of g)talkFace(q,8);TALK.M.tellAll(g,v)}else TALK.M.tell(TALK.with,v)};
   // typing goes to the box, not the game's keys
   for(const ev of ['keydown','keyup'])d.querySelector('#talkIn').addEventListener(ev,e=>{e.stopPropagation();if(ev==='keydown'&&e.key==='Escape')talkClose()});
   TALK.ui={d,L};return TALK.ui}
-function talkOpen(){const p=TALK.near;if(!p||!TALK.M)return;TALK.with=p;const u=talkUI();u.d.querySelector('#talkForm').hidden=false;
-  const i=u.d.querySelector('#talkIn');i.placeholder=say('tkSayTo',{name:talkName(p)});i.focus();talkFace(p,6);talkPaint()}
+// said to everyone: starting with everyone, everybody, all of you, y'all, folks...
+const TALK_ALL=/^(hey|hi|hello|ok|okay|so|well)?[ ,]*(everyone|everybody|all of you|y'?all|you all|folks|guys|people)\b/i;
+function talkOpen(){const p=TALK.near;if(!p||!TALK.M)return;TALK.with=p;p.tkGo=null;const u=talkUI();u.d.querySelector('#talkForm').hidden=false;
+  const i=u.d.querySelector('#talkIn');talkHint();i.focus();talkFace(p,6);talkPaint()}
+// the box's prompt and the Everyone button: to the one, or to everyone within TU.talkGroupR
+function talkHint(){if(!TALK.ui||!TALK.with)return;const d=TALK.ui.d,b=d.querySelector('#talkAll'),many=TALK.group.length>1,all=many&&TALK.grp;
+  b.hidden=!many;b.setAttribute('aria-pressed',String(all));
+  d.querySelector('#talkIn').placeholder=all?say('tkSayAll'):say('tkSayTo',{name:talkName(TALK.with)})}
 function talkClose(){TALK.with=null;if(!TALK.ui)return;TALK.ui.d.querySelector('#talkForm').hidden=true;const i=TALK.ui.d.querySelector('#talkIn');i.blur();talkPaint()}
 function talkPaint(){const M=TALK.M;if(!M)return;
   // ☰: who speaks, the cap (models only) and the meter
@@ -88,16 +130,42 @@ for(const b of document.querySelectorAll('#talkModelRow [data-tm]'))b.onclick=()
 for(const b of document.querySelectorAll('#talkCapRow [data-tc]'))b.onclick=()=>{if(TALK.M)TALK.M.setCap(+b.dataset.tc)};
 $('#talkKeyBtn').onclick=()=>{if(!TALK.M)return;const v=prompt('The owner key for townsfolk talk (from Human Forge\'s Vercel settings, PERSONA_OWNER_KEY). It stays on this device.',TALK.M.key?'':'');if(v&&v.trim())TALK.M.key=v.trim()};
 // stop and turn toward a spot a while (the player, unless given): walkers only, someone in a shop or a car stays put
-function talkFace(p,s,x=wk.x,z=wk.z){if(!p||typeof p!=='object'||p.room||p.drv||p.cop||p.dead)return;p.wait=Math.max(p.wait||0,s);p.look=Math.atan2(x-p.x,z-p.z)}
+function talkFace(p,s,x=wk.x,z=wk.z){if(!p||typeof p!=='object'||p.room||p.drv||p.cop||p.dead||p.flee>0)return;p.wait=Math.max(p.wait||0,s);p.look=Math.atan2(x-p.x,z-p.z)}
 function talkShow(p,a,to,ev){const u=talkUI();let b=TALK.bub.get(p);if(!b){b={el:document.createElement('div')};b.el.className='talkLine';u.L.appendChild(b.el);TALK.bub.set(p,b)}
   b.el.innerHTML='';const n=document.createElement('b');n.textContent=talkName(p);b.el.append(n,document.createTextNode(a.say));
   b.until=performance.now()/1000+3.5+a.say.split(/\s+/).length*0.38;const s=b.until-performance.now()/1000;
   // who they turn to: the one they talk to (and that one back), what happened to them, or you
-  if(to&&typeof to==='object'){talkFace(p,s,to.x,to.z);talkFace(to,s,p.x,p.z);if(!p.spd)p.tk=1}
+  if(p.tkGo&&to!=='you'){}
+  else if(to&&typeof to==='object'){talkFace(p,s,to.x,to.z);talkFace(to,s,p.x,p.z);if(!p.spd)p.tk=1}
   else if(ev&&ev.kind==='thing'){const w=TALK.at.get(p);if(w)talkFace(p,Math.min(s,3),w[0],w[1])}
   else if(ev&&ev.by&&typeof ev.by==='object')talkFace(p,Math.min(s,4),ev.by.x,ev.by.z);
   else if(to==='you'||ev&&ev.by==='player')talkFace(p,s);
   if(TALK.mode==='voice'){const c=talkCard(p);TALK.M.speak(a.say,c)}}
+
+// ---- what they decided to do about something they noticed (the runtime's act: flee, back, freeze, warn, watch,
+// investigate, help or call): run from it, step back, stop and face it, or walk over to it along their walk
+function talkWhere(r){if(r==='player'||r==='you')return [wk.x,wk.z];
+  if(typeof r==='string'&&r.startsWith('ride:')){const R=WK_RIDES[r.slice(5)],o=R&&R.o;return o&&isFinite(o.x)?[o.x,o.z]:null}
+  if(r==='gulls'&&typeof MAR==='object')return [MAR.x,MAR.z0+MAR.len/2];
+  return r&&typeof r==='object'&&isFinite(r.x)?[r.x,r.z]:null}
+function talkAct(p,a,ev){if(!p||typeof p!=='object'||!a||p.dead||p.hurt||p.drv||p.cop||p.inside)return;
+  const at=talkWhere(a.at!=null?a.at:ev&&ev.by),d=a.do;if(!at||d==='ignore')return;const [x,z]=at;
+  if(d==='flee')return talkRun(p,x,z,5+Math.random()*4,TU.gunFlee);
+  if(d==='back')return talkRun(p,x,z,1.5+Math.random()*1.5,Math.max(p.vt||1.3,1.3)*1.5);
+  const walker=p.w&&!p.path&&!p.room&&!p.sit;
+  if((d==='investigate'||d==='help')&&walker&&Math.hypot(x-p.x,z-p.z)>3){
+    p.wait=0;p.dir=talkDir(p,x,z);p.tkGo={x,z,t:TU.talkGoT,stop:d==='help'?1.4:2.6,d:Math.hypot(x-p.x,z-p.z)};return}
+  talkFace(p,d==='freeze'?3+Math.random()*2:d==='call'?6:d==='watch'?3+Math.random()*4:2.5,x,z)}
+// which way along their walk heads toward x,z
+function talkDir(p,x,z){const [,,ex,ez]=tfAt(p.w,p.s);return ex*(x-p.x)+ez*(z-p.z)>=0?1:-1}
+// away from x,z for s seconds at speed v (the same running off as from gunfire, pistol.js gunRun and gunTick)
+function talkRun(p,x,z,s,v){if(p.room||p.sit||p.path||!p.w){talkFace(p,s,x,z);return}
+  p.wait=0;p.tkGo=null;if(!p.vt0)p.vt0=p.vt;p.vt=v*(0.85+Math.random()*0.3);p.flee=Math.max(p.flee||0,s);p.dir=-talkDir(p,x,z)}
+// walking over: stop and look once close, if it got no nearer (the walk turned away) or after TU.talkGoT
+function talkGoTick(dt){for(const p of tf.people){const g=p.tkGo;if(!g)continue;
+  if(p.dead||p.hurt||p.flee>0||p.inside){p.tkGo=null;continue}
+  const d=Math.hypot(g.x-p.x,g.z-p.z);g.t-=dt;
+  if(d<g.stop||g.t<=0||d>g.d+0.5){p.tkGo=null;talkFace(p,4+Math.random()*4,g.x,g.z)}else{g.d=Math.min(g.d,d);p.wait=0}}}
 
 // ---- a few times a second: who is about (TALK.here, near you or the machine you drive), who is near you on foot,
 // walking up, bumping, a machine going by, someone lying still
@@ -121,12 +189,16 @@ function talkLook(dt){const M=TALK.M,now=performance.now()/1000,foot=mode==='wal
     else if(o){
       // the machine he drives, close by: too fast and it nearly had them; slow or stopped, they remark on it
       let d=1e9;for(const lz of R.c||[0])d=Math.min(d,Math.hypot(p.x-o.x-Math.sin(o.yaw||0)*lz,p.z-o.z-Math.cos(o.yaw||0)*lz)-(R.r||1));
-      if(d<TU.talkRoadR){TALK.at.set(p,[o.x,o.z]);if(M.event(p,{kind:'thing',what:talkA(R.n),how:v>TU.talkRoadV?'road':'car'}))talkFace(p,2.5,o.x,o.z)}}
+      if(d<TU.talkRoadR){TALK.at.set(p,[o.x,o.z]);if(M.event(p,{kind:'thing',what:talkA(R.n),how:v>TU.talkRoadV?'road':'car'})&&!p.tkGo)talkFace(p,2.5,o.x,o.z)}}
     // someone lying still nearby
     for(const q of dead)if(Math.hypot(q.x-p.x,q.z-p.z)<TU.talkStillR){M.event(p,{kind:'still',by:q});break}}
   for(const p of [...TALK.far.keys()])if(!tf.people.includes(p))TALK.far.delete(p);
   for(const p of [...TALK.at.keys()])if(!tf.people.includes(p))TALK.at.delete(p);
   TALK.near=best;
+  // who hears it when he talks to everyone: those about within TU.talkGroupR, nearest first, up to six
+  const g=foot?here.filter(p=>Math.hypot(p.x-wk.x,p.z-wk.z)<TU.talkGroupR).sort((a,b)=>Math.hypot(a.x-wk.x,a.z-wk.z)-Math.hypot(b.x-wk.x,b.z-wk.z)).slice(0,6):[];
+  if(g.length!==TALK.group.length||g.some((q,i)=>q!==TALK.group[i])){TALK.group=g;if(g.length<2)TALK.grp=false;talkHint()}
+  talkNews();talkGoTick(dt);
   if(TALK.with&&(!foot||!tf.people.includes(TALK.with)||Math.hypot(TALK.with.x-wk.x,TALK.with.z-wk.z)>8))talkClose()}
 
 // ---- each frame (from main.js)
@@ -138,7 +210,7 @@ function talkTick(dt){
   if(TALK.with)talkFace(TALK.with,1);
   const chip=u.d.querySelector('#talkChip'),p=foot&&TALK.with;
   // near someone, the Use button offers the talk (ctx.js); while talking, the chip says to whom
-  u.d.hidden=!p;if(p)chip.textContent=say('tkWith',{name:talkName(p)});
+  u.d.hidden=!p;if(p)chip.textContent=TALK.grp&&TALK.group.length>1?say('tkWithAll',{n:TALK.group.length}):say('tkWith',{name:talkName(p)});
   // the lines over their heads
   const r=renderer.domElement.getBoundingClientRect();
   for(const [q,b] of TALK.bub){if(!tf.people.includes(q)||now>b.until+1){b.el.remove();TALK.bub.delete(q);continue}

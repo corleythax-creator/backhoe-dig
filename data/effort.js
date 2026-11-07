@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-07T00:21:00Z",
+ "updated": "2026-11-07T00:36:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -108,9 +108,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-06",
-   "dh": 50,
-   "act": 2.5,
-   "versions": 8
+   "dh": 57,
+   "act": 3,
+   "versions": 9
   }
  ],
  "extra": [
@@ -3261,6 +3261,15 @@ window.EFFORT = {
    "tris": 7588892,
    "chars": 2235478,
    "what": "Messages queue up two at a time (warnings first, repeats count up instead of piling on), every message can be reworded in the screen editor, How to play is a searchable list of topics, and each machine shows a tip card the first time you get in (turn them off or show them again in How to play)."
+  },
+  {
+   "v": 350,
+   "asked": "2026-11-06T18:20:00-06:00",
+   "live": "2026-11-06T18:36:45-06:00",
+   "dh": 7,
+   "tris": 7480385,
+   "chars": 2243053,
+   "what": "Townsfolk act on what they notice: they run from danger, step back, stop and watch, or walk over to look or help. Gunshots reach everyone nearby. Talk to everyone at once with the Everyone button. With Haiku, Sonnet or Opus speaking, they know the day, the weather, the shop, what you're doing, your day's work, the police and what just happened, and the model picks their calm reactions."
   }
  ]
 };
