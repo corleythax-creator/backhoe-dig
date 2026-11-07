@@ -240,11 +240,12 @@ function tfCarPaint(u){const W=TF_PAINT.reduce((n,p)=>n+p[2],0);let r=(u??Math.r
   return tf.paint[k]=gfxCur.pbr?new THREE.MeshPhysicalMaterial(Object.assign(o,{clearcoat:1,clearcoatRoughness:0.08})):new THREE.MeshStandardMaterial(o)}
 // ---------- people ----------
 // a person's look: the character least seen in town just now (children a third as often), a little taller or shorter;
-// never one the owner left out (TU.tfOut, a bit per character), unless every one is; a driver is never a child
+// never one the owner left out (TU.tfOut, a bit per character), unless every one is; a driver is never a child; leaning
+// to whoever their day has there (lifeScore, lives.js: staff in their hours, residents at home, the rest out)
 function tfOff(i){const m=TU.tfOut||0;return i<32&&Math.floor(m/2**i)%2===1}
-function tfLook(adult){const C=tf.chars,all=C.every((c,i)=>tfOff(i));let best=0,bs=1e9;for(let i=0;i<C.length;i++){if(!all&&tfOff(i)||adult&&C[i].body==='k'&&C.some(c=>c.body!=='k'))continue;const sc=tf.use[i]*(C[i].body==='k'?3:1)+Math.random()*0.9;if(sc<bs){bs=sc;best=i}}
+function tfLook(adult,o){const C=tf.chars,all=C.every((c,i)=>tfOff(i));let best=0,bs=1e9;for(let i=0;i<C.length;i++){if(!all&&tfOff(i)||adult&&C[i].body==='k'&&C.some(c=>c.body!=='k'))continue;const sc=tf.use[i]*(C[i].body==='k'?3:1)+Math.random()*0.9+(typeof lifeScore==='function'?lifeScore(C[i].id,o):0);if(sc<bs){bs=sc;best=i}}
   const c=C[best];tf.use[best]++;return {ci:best,body:c.id,sc:0.97+Math.random()*0.06,g:0}}
-function tfPerson(o){const p=Object.assign(tfLook(o&&o.drv),{x:0,z:0,y:0,yaw:0,ph:Math.random()*6,amp:0,spd:0,vt:TU.tfWalk*(0.82+Math.random()*0.32),side:0.32,wait:0,inside:0,blk:0,look:0},o);
+function tfPerson(o){const p=Object.assign(tfLook(o&&o.drv,o),{x:0,z:0,y:0,yaw:0,ph:Math.random()*6,amp:0,spd:0,vt:TU.tfWalk*(0.82+Math.random()*0.32),side:0.32,wait:0,inside:0,blk:0,look:0},o);
   p.y=baseHeight(p.x,p.z)+tfLift(p.x,p.z);tf.people.push(p);return p}
 // someone run down (tfRunOver): p.dead counts the seconds since; they go over backwards, flat in about 0.7 s
 const tfFall=p=>p.dead?Math.min(1,(p.dead/0.7)**2)*Math.PI/2*0.97:0;
@@ -362,8 +363,22 @@ function tfWalkStep(p,dt){
   let d=Math.atan2(dx,dz)-p.yaw;d=Math.atan2(Math.sin(d),Math.cos(d));p.yaw+=d*Math.min(1,dt*7);
   p.amp+=(Math.min(1,p.spd/1.2)*0.42-p.amp)*Math.min(1,dt*6);p.ph+=p.spd*dt*Math.PI*2/(1.5*p.sc)}
 // at node n (come by walk w): the next walk, not straight back unless it is a dead end (where they may stop a moment)
-function tfPick(p,n,w){let opts=n.e.filter(e=>e!==w);if(!opts.length){opts=[w];if(Math.random()<0.4){p.wait=2+Math.random()*4;p.look=p.yaw+Math.PI}}
-  const e=opts[(Math.random()*opts.length)|0];p.w=e;p.xok=false;p.dir=e.a===n?1:-1;p.s=p.dir>0?0:e.len}
+// On an errand (p.goal, talk.js talkErrand) they take the walk that leads to its node soonest, and mark it reached there.
+function tfPick(p,n,w){if(p.goal&&n===p.goal.n)p.goal.here=1;let opts=n.e.filter(e=>e!==w);if(!opts.length){opts=[w];if(Math.random()<0.4){p.wait=2+Math.random()*4;p.look=p.yaw+Math.PI}}
+  const e=p.goal&&!p.goal.here&&tfGoalPick(n,opts,p.goal.n)||opts[(Math.random()*opts.length)|0];p.w=e;p.xok=false;p.dir=e.a===n?1:-1;p.s=p.dir>0?0:e.len}
+// ---------- errands: the shortest way along the walks to a node ----------
+// each node's distance to node g along the walks (Dijkstra, kept per goal; the walks never change while the game runs)
+const TF_DIST=new Map();
+function tfDistTo(g){let D=TF_DIST.get(g);if(D)return D;D=new Map([[g,0]]);const q=[g];
+  while(q.length){q.sort((a,b)=>D.get(a)-D.get(b));const n=q.shift(),d=D.get(n);
+    for(const e of n.e){const m=e.a===n?e.b:e.a,nd=d+e.len;if(!D.has(m)||nd<D.get(m)){if(!D.has(m))q.push(m);D.set(m,nd)}}}
+  TF_DIST.set(g,D);return D}
+// the node nearest a spot
+function tfNodeNear(x,z){let b=null,bd=1e9;for(const n of TF_NODES){const d=Math.hypot(n.x-x,n.z-z);if(d<bd){bd=d;b=n}}return b}
+// at node n, of the walks opts, the one that leads to g soonest
+function tfGoalPick(n,opts,g){const D=tfDistTo(g);let b=null,bd=1e9;for(const e of opts){const m=e.a===n?e.b:e.a,d=e.len+(D.has(m)?D.get(m):1e9);if(d<bd){bd=d;b=e}}return b}
+// on a walk, turn the way that leads to g soonest
+function tfGoalDir(p,g){const w=p.w,D=tfDistTo(g),da=p.s+(D.has(w.a)?D.get(w.a):1e9),db=w.len-p.s+(D.has(w.b)?D.get(w.b):1e9);p.dir=db<da?1:-1}
 // ---------- cars ----------
 // the driver's seat of each kind (tools/models/cars.js; the wheel on the left, +x): how far forward of the car's middle,
 // and the seated driver's height above the ground (low in the seat, the head clear of the roof)

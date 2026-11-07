@@ -50,13 +50,16 @@ const KEY_RUN={dig:()=>{rideIn('ex');setMode('dig')},drive:()=>{rideIn('ex');set
 // run an action: every key, on-screen button, controller button and VR button comes through here (keys.js KEY_ACTIONS)
 function act(id,e){const a=KEY_BY[id],f=KEY_RUN[id];if(!f||a&&a.can&&!a.can())return false;f(e);return true}
 // close whatever is open over the game (help, the map, the menu, the machine list, Sync); true if something was
-function goBack(){const open=!help.hidden||!$('#bigmap').hidden||!$('#menu').hidden||!$('#ctlMenu').hidden||!syncBox.hidden;
-  help.hidden=true;toggleMap(false);showMenu(false);showCtl(false);if(!syncBox.hidden)showSync(false);return open}
+// (the panels go first, top one only: panels.js)
+function goBack(){if(panelBack())return true;const open=!help.hidden||!$('#menu').hidden||!$('#ctlMenu').hidden;
+  help.hidden=true;showMenu(false);showCtl(false);return open}
 // each action's button (b in KEY_ACTIONS): the ones over the right stick and the gun card act on the press, the rest on a click
 for(const a of KEY_ACTIONS)if(a.b){const el=$(a.b);if(el.closest('#actDock,#gunHud'))el.addEventListener('pointerdown',e=>{e.preventDefault();act(a.id,e)});else el.addEventListener('click',e=>act(a.id,e))}
 addEventListener('keydown',e=>{const c=e.code;
   if((e.ctrlKey||e.metaKey||e.altKey)&&!/^(Control|Alt|Meta)/.test(c))return;
   if(c==='Escape'){goBack();return}
+  // typing in a search or text box (How to play's search) drives nothing
+  if(e.target&&e.target.tagName==='INPUT'&&/^(search|text)$/.test(e.target.type))return;
   if(!keysBox.hidden)return;
   const acts=keyActs(c);keys[c]=true;
   if(acts.length||c.startsWith('Arrow')||c==='Space'||c==='Tab')e.preventDefault();
@@ -180,7 +183,7 @@ function fpMouseLock(on){
 document.addEventListener('pointerlockchange',()=>{if(document.pointerLockElement===canvas)fpl.want=true});
 addEventListener('keydown',e=>{if(!fpl.want||PHONE||edOn||camMode!=='cab'||document.pointerLockElement===canvas||e.repeat)return;
   if(e.code==='Escape'||/^(Shift|Control|Alt|Meta|Tab)/.test(e.code)||e.target&&/^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName))return;
-  if(!help.hidden||!bigEl.hidden||!menuEl.hidden||blkOn&&!blkFP()||document.querySelector('#townShop:not([hidden]),#gunShop:not([hidden]),#keysBox:not([hidden]),#ctrlsBox:not([hidden])'))return;fpMouseLock(true)});
+  if(!help.hidden||!bigEl.hidden||!menuEl.hidden||blkOn&&!blkFP()||document.querySelector('#townShop:not([hidden]),#gunShop:not([hidden]),#keysBox:not([hidden]),#ctrlsBox:not([hidden]),#howBox:not([hidden])'))return;fpMouseLock(true)});
 // while the mouse is taken a small line under the top bar says how to let it go
 const lockHint=$('#lockHint');
 document.addEventListener('pointerlockchange',()=>{const on=document.pointerLockElement===canvas;if(on)lockHint.textContent=say('lockHint');lockHint.hidden=!on});
@@ -217,12 +220,17 @@ function setMode(m){if(m===mode)return;
   if(m!=='walk'){setSprint(false);trimSet(false)}
   // switching to Walk from a machine you climbed into sets you down beside it
   if(m==='walk'){wk.inside=null;wk.view=wk.yaw}
-  setCaps();firstCam=true;fpReset();if(m==='mow'&&!lawn.startT&&!lawn.done)toast(say(kbUsed?'mowKb':'mowTouch'),'tip',3800);
-  if(m==='skid')toast(say(kbUsed?'skidKb':'skidTouch'),'tip',4200);
-  if(m==='boat')toast(say('boatTip'),'tip',4200);
-  if(m==='bike')toast(say('bikeTip'),'tip',4200);
-  if(m==='heavy')toast(say(hvCur().k+'Tip'),'tip',5200);
-  if(m==='walk')toast(say(padUsed?'walkPad':kbUsed?'walkKb':'walkTouch'),'tip',3800)}
+  setCaps();firstCam=true;fpReset();tipCardHide();
+  // the machine's tip: as a card the first time (tipCard), after that as a tip message (Messages: All)
+  const tip=(k,name,id,ms)=>{const t=say(id);if(!tipCard(k,name,t))toast(t,'tip',ms)};
+  if(m==='dig'||m==='drive')tip('ex','Excavator',padUsed?'exCardPad':kbUsed?'exCardKb':'exCardTouch',4200);
+  if(m==='truck')tip('truck','Dump truck',padUsed?'truckCardPad':kbUsed?'truckCardKb':'truckCardTouch',4200);
+  if(m==='mow'&&!lawn.startT&&!lawn.done)tip('mow','Mower',kbUsed?'mowKb':'mowTouch',3800);
+  if(m==='skid')tip('skid','Skid steer',kbUsed?'skidKb':'skidTouch',4200);
+  if(m==='boat')tip('boat','Boat','boatTip',4200);
+  if(m==='bike')tip('bike','Dirt bike','bikeTip',4200);
+  if(m==='heavy'){const h=hvCur(),n=h.K&&h.K.n||h.k;tip(h.k,n.charAt(0).toUpperCase()+n.slice(1),h.k+'Tip',5200)}
+  if(m==='walk')tip('walk','On foot',padUsed?'walkPad':kbUsed?'walkKb':'walkTouch',3800)}
 $('#exDrive').onclick=()=>{if(mode==='dig'||bhIn()&&hvCur().hoe)exSwap()};$('#exDig').onclick=()=>{if(mode==='drive'||bhIn()&&!hvCur().hoe)exSwap()};
 // Chase, then Cab, then Orbit, then back to Chase
 function camSet(m,free){camMode=m;camFree=!!free&&m==='chase';camBase=null;fpReset();
@@ -259,8 +267,15 @@ $('#resetBtn').onclick=()=>{const b=$('#resetBtn');
 const help=$('#help');
 $('#helpBtn').onclick=()=>{help.hidden=false;showMenu(false)};
 $('#soundBtn').onclick=()=>{showSound(true);showMenu(false)};
-$('#keysBtn').onclick=()=>{showKeys(true);showMenu(false)};
-function showMenu(on){const m=$('#menu');m.hidden=!on;$('#menuBtn').setAttribute('aria-expanded',on);if(on)menuFit()}
+
+function showMenu(on){const m=$('#menu');if(!on&&!m.hidden)menuShutT=performance.now();m.hidden=!on;$('#menuBtn').setAttribute('aria-expanded',on);if(on)menuFit()}
+let menuShutT=-1e9;
+// the menu's tabs: one tab's buttons at a time, the last one picked remembered on this device
+function setMenuTab(t){if(!document.querySelector(`#menu .mtab[data-mt="${t}"]`))t='play';
+  document.querySelectorAll('#menu .mtab').forEach(d=>d.hidden=d.dataset.mt!==t);document.querySelectorAll('#menu .mtabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.mt===t));
+  try{localStorage.setItem('bhd_mtab',t)}catch(e){}menuFit()}
+$('#menu .mtabs').onclick=e=>{const b=e.target.closest('button');if(b)setMenuTab(b.dataset.mt)};
+try{setMenuTab(localStorage.getItem('bhd_mtab')||'play')}catch(e){setMenuTab('play')}
 // the menu's top in its own (zoomed) pixels, so its height limit (game.css) keeps it inside the window at any UI size
 function menuFit(){const m=$('#menu');if(m.hidden)return;const r=m.getBoundingClientRect(),z=r.height/(m.offsetHeight||1)||1;m.style.setProperty('--mtop',Math.ceil(r.top/z)+'px');m.style.setProperty('--mbot',Math.floor(m.parentNode.getBoundingClientRect().top/z)+'px')}
 addEventListener('resize',menuFit);
@@ -331,7 +346,34 @@ startWait();
 $('#startResume').onclick=()=>startIn(mode);
 $('#helpBtn').addEventListener('click',()=>requestAnimationFrame(()=>{startUnzoom();$('#startMapHint').textContent='Tap the map to zoom in'}));
 help.addEventListener('click',e=>{if(e.target===help)startIn(mode)});
-$('#ctrlBtn').onclick=()=>{const b=$('#ctrlBtn'),box=$('#ctrlBox'),on=box.hidden;box.hidden=!on;b.setAttribute('aria-expanded',on);b.textContent=on?'Hide controls':'Controls';if(on)box.scrollIntoView({block:'start',behavior:'smooth'})};
+// How to play (☰ Play, or the start card's How to play): a list of topics, each a line that opens; words typed in the
+// search show only the topics holding all of them, opened. Done, Esc or controller B close it (a panel, panels.js)
+const howTopics=[...document.querySelectorAll('#howList dt')].map(dt=>{const dd=dt.nextElementSibling;dt.tabIndex=0;dt.setAttribute('role','button');
+  const flip=()=>{dt.classList.toggle('open');howFilter()};dt.onclick=flip;dt.onkeydown=e=>{if(e.code==='Enter'||e.code==='Space'){e.preventDefault();flip()}};return {dt,dd}});
+function howFilter(){const ws=$('#howFind').value.trim().toLowerCase().split(/\s+/).filter(Boolean),has=el=>{const t=el.textContent.toLowerCase();return ws.every(w=>t.includes(w))};let n=0;
+  for(const {dt,dd} of howTopics){const hit=!ws.length||has(dt)||has(dd)||ws.every(w=>(dt.textContent+' '+dd.textContent).toLowerCase().includes(w)),open=hit&&(ws.length>0||dt.classList.contains('open'));
+    dt.hidden=!hit;dd.hidden=!open;dt.setAttribute('aria-expanded',open);if(hit)n++}
+  const sc=$('#hScoop');sc.hidden=ws.length>0&&!has(sc);$('#howNone').hidden=n>0||!sc.hidden}
+function showHow(on){$('#howBox').hidden=!on;if(!on)return;$('#howFind').value='';for(const t of howTopics)t.dt.classList.remove('open');howFilter();howCardsDraw();
+  if(!PHONE&&!padUsed)requestAnimationFrame(()=>$('#howFind').focus({preventScroll:true}))}
+$('#howFind').oninput=howFilter;$('#howDone').onclick=()=>showHow(false);
+$('#helpBtn').onclick=()=>{showMenu(false);showHow(true)};
+$('#ctrlBtn').onclick=()=>showHow(true);
+// machine tips: the first time you get into each machine (or first set off on foot) a card says what it is and its main
+// keys, until you tap Got it (or it has been up 14 s). Seen ones are remembered on this device; No more tips (or How
+// to play's switch) turns them off. While a card is up, the same words don't also come as a message
+var tipCards={off:false,seen:{}};try{const v=JSON.parse(localStorage.getItem('bhd_tipcards')||'null');if(v)tipCards={off:!!v.off,seen:v.seen||{}}}catch(e){}
+let tipCardT=0;
+function tipCardsSave(){try{localStorage.setItem('bhd_tipcards',JSON.stringify(tipCards))}catch(e){}}
+function howCardsDraw(){const b=$('#howCards');b.setAttribute('aria-pressed',!tipCards.off);b.textContent='Machine tips: '+(tipCards.off?'Off':'On');$('#howAgain').disabled=!Object.keys(tipCards.seen).length}
+function tipCardHide(){$('#tipCard').hidden=true;clearTimeout(tipCardT)}
+// k: the machine (its tip and name); true if the card came up
+function tipCard(k,name,text){if(tipCards.off||tipCards.seen[k]||edOn||!help.hidden)return false;tipCards.seen[k]=1;tipCardsSave();
+  $('#tipCardName').textContent=name;$('#tipCardText').textContent=text;$('#tipCard').hidden=false;clearTimeout(tipCardT);tipCardT=setTimeout(tipCardHide,14000);return true}
+$('#tipCardOk').onclick=tipCardHide;
+$('#tipCardOff').onclick=()=>{tipCards.off=true;tipCardsSave();tipCardHide();toast(say('tipCardsOff'),'good',3600)};
+$('#howCards').onclick=()=>{tipCards.off=!tipCards.off;tipCardsSave();howCardsDraw();if(tipCards.off)tipCardHide()};
+$('#howAgain').onclick=()=>{tipCards.seen={};tipCards.off=false;tipCardsSave();howCardsDraw();toast(say('tipCardsAgain'),'good',3000)};
 function started(){if(!st.startT)st.startT=performance.now()}
 // the version in the menu and on the help card is the last entry in data/effort.js (the build log), so it is never stale
 {const E=window.EFFORT,v=E&&E.versions&&E.versions[E.versions.length-1];
@@ -362,6 +404,22 @@ var toastTimer=0,msgLvl='few',inT=0;try{const v=localStorage.getItem('bhd_msg');
 addEventListener('pointerdown',()=>{inT=performance.now()},true);addEventListener('keydown',()=>{inT=performance.now()},true);
 function setMsgLvl(v){msgLvl=v;for(const b of document.querySelectorAll('[data-msg]'))b.setAttribute('aria-pressed',b.dataset.msg===v);try{localStorage.setItem('bhd_msg',v)}catch(e){}}
 document.querySelectorAll('[data-msg]').forEach(b=>b.onclick=()=>setMsgLvl(b.dataset.msg));setMsgLvl(msgLvl);
+// the messages queue up in the Notices zone: at most 2 at once, newest on top; a warning ('bad') outranks a message,
+// which outranks a tip, and a third pushes out the lowest (the oldest of those). The same message again, or a new one
+// from the same say() id (a block size, a count), takes over its line instead of adding one; the very same words count up (×2)
+var toastQ=[];
 function toast(t,kind,ms){kind=kind||'';
   if(msgLvl==='off'||kind==='tip'&&msgLvl!=='all'||msgLvl==='few'&&kind!=='bad'&&performance.now()-inT>1000)return;
-  if(kind==='tip')kind='';const el=$('#toastText');el.textContent=t;el.className='show '+(kind||'');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.className=kind||'',ms||2200)}
+  const pri=kind==='bad'?2:kind==='tip'?0:1;if(kind==='tip')kind='';t=String(t);
+  const key=typeof sayLast!=='undefined'&&sayLast.t===t?sayLast.id:t,now=performance.now(),until=now+(ms||2200);
+  const q=toastQ.find(q=>q.key===key||q.t===t);
+  if(q){q.n=q.t===t&&q.show?q.n+1:1;Object.assign(q,{t,kind,pri,until,key,show:true});toastQ.splice(toastQ.indexOf(q),1);toastQ.unshift(q)}
+  else{toastQ.unshift({t,kind,pri,until,key,n:1,show:true});
+    while(toastQ.length>2){let o=-1;for(let i=toastQ.length-1;i>0;i--)if(o<0||toastQ[i].pri<toastQ[o].pri)o=i;toastQ.splice(o,1)}}
+  toastDraw()}
+function toastDraw(){const els=[$('#toastText'),$('#toastText2')],now=performance.now();clearTimeout(toastTimer);
+  els.forEach((el,i)=>{const q=toastQ[i];if(!q){el.textContent='';el.className='';return}
+    el.textContent=q.t+(q.n>1?' ×'+q.n:'');el.className=(q.show?'show ':'')+q.kind});
+  let next=Infinity;for(const q of toastQ)next=Math.min(next,q.show?q.until:q.until+260);
+  if(next<Infinity)toastTimer=setTimeout(()=>{const n=performance.now();
+    toastQ=toastQ.filter(q=>q.show||n<q.until+250);for(const q of toastQ)if(q.show&&n>=q.until-5)q.show=false;toastDraw()},Math.max(16,next-now))}

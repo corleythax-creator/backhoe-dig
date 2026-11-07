@@ -125,7 +125,6 @@ $('#sndDone').onclick=()=>showSound(false);
 $('#sndReset').onclick=()=>{Object.assign(sndCfg,SND_DEF);sndSave();sndApply();if(actx&&sndCfg.on)actx.resume()};
 for(const k of SND_SLIDERS)$('#snd_'+k).addEventListener('input',e=>{sndCfg[k]=+e.target.value;sndSave();sndApply()});
 sndBox.addEventListener('pointerdown',e=>{if(e.target===sndBox)showSound(false)});
-addEventListener('keydown',e=>{if(e.code==='Escape')showSound(false)});
 sndApply();
 
 // ---------- per frame ----------

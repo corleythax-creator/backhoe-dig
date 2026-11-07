@@ -165,26 +165,26 @@ th{font:700 13px var(--f-display);letter-spacing:.08em;text-transform:uppercase;
       <li>Move fps and triangles into Graphics, with a "Show frame rate" switch (default off).</li>
     </ul><p class="win">Nothing overlaps at any size, and UI size scales the whole screen evenly.</p></li>
 
-  <li><h3>Machines, named once <span class="hrs">~6 h</span></h3>
+  <li><h3>Machines, named once <span class="hrs">Done · v347</span></h3>
     <ul>
       <li>Rename the top button to <b>Machines</b>. It lists every machine, including the dozer, loader, semi, backhoe, pickup, carts, bike and boats, with how far away each is. Picking one seats you in it, the same as walking up and tapping Use.</li>
       <li>The excavator and backhoe switch becomes <b>Tracks / Arm</b> (backhoe: <b>Wheel / Hoe</b>), so "Drive" means only driving. Delete the hidden <code>#modeDrive</code>.</li>
       <li>Tab and LB/RB cycle the nearest machines, not a fixed list of 6.</li>
     </ul><p class="win">Every machine is one tap away, under one name.</p></li>
 
-  <li><h3>Menu and panels <span class="hrs">~8 h</span></h3>
+  <li><h3>Menu and panels <span class="hrs">Done · v348</span></h3>
     <ul>
       <li>One panel manager (<code>panel.open(id)</code>) with a back stack. Esc and gamepad B close the top panel, and every card shares one backdrop.</li>
       <li>The menu gets tabs: <b>Play</b> (map, stats, how to play), <b>Build</b> (map editor, every item, edit the screen), <b>World</b> (time, date, weather), <b>Settings</b> (graphics, sound, controls and keys merged, screen size, minimap, sticks, messages, townsfolk talk), <b>Developer</b> (the seven tests, speed test, reset, frame rate).</li>
     </ul><p class="win">The menu fits on a phone screen without scrolling, and the developer tests are out of the player's way.</p></li>
 
-  <li><h3>Messages and help <span class="hrs">~6 h</span></h3>
+  <li><h3>Messages and help <span class="hrs">Done · v349</span></h3>
     <ul>
       <li>The toast becomes a queue in the Notices zone: priority, merging of repeats, at most 2 shown. Convert the raw-string toasts to <code>say()</code> ids so the screen editor can reword them.</li>
       <li>Replace How to play's wall of text: a short card the first time you get into each machine (from <code>WORDS</code>), and a searchable list of topics in Play.</li>
     </ul><p class="win">Help shows up when you need it, and you can turn it off.</p></li>
 
-  <li><h3>Tokens, CSS cleanup, screen editor <span class="hrs">~6 h</span></h3>
+  <li><h3>Tokens, CSS cleanup, screen editor <span class="hrs">Done · v351</span></h3>
     <ul>
       <li>A type scale of 4 HUD sizes (14 / 17 / 22 / 30 px), 3 radii and colour tokens for gun, shop and wallet. Drop the duplicate <code>[hidden]</code> rules and the unused variables.</li>
       <li>One breakpoint pair shared by the CSS and the screen editor (phone ≤ 900 wide or ≤ 520 tall).</li>

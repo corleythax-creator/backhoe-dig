@@ -178,7 +178,7 @@ function famPlay(g){try{siteSaveAll()}catch(e){}try{lawnSave()}catch(e){}
   if(/(^|\.)vercel\.app$|^localhost$|^127\./.test(location.hostname)&&!/\/versions\//.test(location.pathname)){
     try{sessionStorage.setItem('bhd_table',g.k)}catch(e){}toast(say('famSit',{game:g.n}),'',3000);setTimeout(()=>{location.href=url},400);return}
   let w=null;try{w=window.open(url,'_blank')}catch(e){}
-  if(!w)toast(`Play ${g.n} at mesa-games-ochre.vercel.app/${g.k}/`,'',5000)}
+  if(!w)toast(say('famPlayAt',{game:g.n,url:'mesa-games-ochre.vercel.app/'+g.k+'/'}),'',5000)}
 
 // ---------- the Family Island ----------
 (function(){

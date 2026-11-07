@@ -274,11 +274,10 @@ function gfxDraw(){const cv=gfxGraph,dpr=devicePixelRatio||1,w=cv.clientWidth,h=
 function gfxTick(){gfxStats();gfxDraw()}
 function showGfx(on){gfxBox.hidden=!on;if(on){gfxPanelSync();gfxTick();clearInterval(gfxStatT);gfxStatT=setInterval(gfxTick,250)}else clearInterval(gfxStatT)}
 document.querySelectorAll('[data-g]').forEach(b=>b.onclick=()=>setGfx(b.dataset.g,true));
-$('#gfxMenuBtn').onclick=()=>{showGfx(true);$('#menu').hidden=true;$('#menuBtn').setAttribute('aria-expanded',false)};
+$('#gfxMenuBtn').onclick=()=>{showGfx(true);showMenu(false)};
 $('#gfxDone').onclick=()=>showGfx(false);
 $('#gfxReset').onclick=()=>setGfx(gfxKey,true);
 gfxBox.addEventListener('pointerdown',e=>{if(e.target===gfxBox)showGfx(false)});
-addEventListener('keydown',e=>{if(e.code==='Escape'&&!gfxBox.hidden)showGfx(false)});
 // the saved setting (or the device's guess) and any changes made to it
 {let k=null;try{k=localStorage.getItem('bhd_gfx');gfxOver=JSON.parse(localStorage.getItem('bhd_gfxc')||'{}')||{}}catch(e){gfxOver={}}
   setGfx(k||gfxGuess(),false)}

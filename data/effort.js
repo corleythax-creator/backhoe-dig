@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-06T23:26:00Z",
+ "updated": "2026-11-07T02:16:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -108,9 +108,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-06",
-   "dh": 38,
-   "act": 2,
-   "versions": 6
+   "dh": 82,
+   "act": 4.5,
+   "versions": 14
   }
  ],
  "extra": [
@@ -3243,6 +3243,78 @@ window.EFFORT = {
    "tris": 7410882,
    "chars": 2220444,
    "what": "Machines list (HUD step 5): the top bar's Machines button lists every machine (dozer, loader, semi, backhoe, pickups, carts, bikes, boats and the rest) nearest first with its distance, and picking one puts you in its seat; Tab and LB/RB step through the machines nearby; the excavator switch reads Tracks / Arm (Wheel / Hoe in the backhoe)"
+  },
+  {
+   "v": 348,
+   "asked": "2026-11-06T17:39:00-06:00",
+   "live": "2026-11-06T18:00:31-06:00",
+   "dh": 6,
+   "tris": 5848032,
+   "chars": 2223830,
+   "what": "Menu tabs (HUD step 6): the ☰ menu is five tabs (Play, Build, World, Settings, Developer) with the tests out of the way under Developer; Controls and Keys are one entry; Esc and controller B close the top panel and step back to the menu or panel it came from"
+  },
+  {
+   "v": 349,
+   "asked": "2026-11-06T17:58:00-06:00",
+   "live": "2026-11-06T18:21:12-06:00",
+   "dh": 6,
+   "tris": 7588892,
+   "chars": 2235478,
+   "what": "Messages queue up two at a time (warnings first, repeats count up instead of piling on), every message can be reworded in the screen editor, How to play is a searchable list of topics, and each machine shows a tip card the first time you get in (turn them off or show them again in How to play)."
+  },
+  {
+   "v": 350,
+   "asked": "2026-11-06T18:20:00-06:00",
+   "live": "2026-11-06T18:36:45-06:00",
+   "dh": 7,
+   "tris": 7480385,
+   "chars": 2243053,
+   "what": "Townsfolk act on what they notice: they run from danger, step back, stop and watch, or walk over to look or help. Gunshots reach everyone nearby. Talk to everyone at once with the Everyone button. With Haiku, Sonnet or Opus speaking, they know the day, the weather, the shop, what you're doing, your day's work, the police and what just happened, and the model picks their calm reactions."
+  },
+  {
+   "v": 351,
+   "asked": "2026-11-06T18:32:00-06:00",
+   "live": "2026-11-06T18:42:51-06:00",
+   "dh": 6,
+   "tris": 7628909,
+   "chars": 2245253,
+   "what": "The screen uses four text sizes and one set of corners and colours, phones get one consistent layout, and the screen editor's Layout tab can now move the job card as well as the top bar, captions, map and sticks."
+  },
+  {
+   "v": 352,
+   "asked": "2026-11-06T18:44:00-06:00",
+   "live": "2026-11-06T19:00:18-06:00",
+   "dh": 0.5,
+   "tris": 5849442,
+   "chars": 2245253,
+   "what": "The townsfolk's fingers bend like real ones: each joint in a hand's own proportions, fingers drawing together toward the thumb, the thumb wrapping round, a closing hand rolling shut."
+  },
+  {
+   "v": 353,
+   "asked": "2026-11-06T19:05:00-06:00",
+   "live": "2026-11-06T19:19:23-06:00",
+   "dh": 6,
+   "tris": 5854811,
+   "chars": 2253438,
+   "what": "Townsfolk now go about their day: every minute or two each one sets off for the General Store, the beer garden, Harbor Square, the shop windows, a stroll, or over to a friend, taking the shortest way. By habit, the hour and their nature decide; with Haiku, Sonnet or Opus speaking, the model chooses for those near you and they say why as they go, and two chatting can agree to go somewhere together."
+  },
+  {
+   "v": 354,
+   "asked": "2026-11-06T19:30:00-06:00",
+   "live": "2026-11-06T19:52:50-06:00",
+   "dh": 12,
+   "tris": 5863534,
+   "chars": 2270819,
+   "what": "The townsfolk have lives: each has a home on a named street and a real job on a schedule, so you find Destiny behind The Sweet Shop's counter in her hours, people home mornings and evenings, and whoever is off work out on the street; they know where they live and work when you ask. The town remembers what you do (shooting, near misses, friendly talk, buying in town, a day's work) and gossips about it: people you've scared step back or run, friends greet you and give 5% off, and a model hears what they've heard of you. And the talk box has Speak: say it out loud instead of typing."
+  },
+  {
+   "v": 355,
+   "asked": "2026-11-06T20:00:00-06:00",
+   "live": "2026-11-06T20:16:16-06:00",
+   "dh": 0.5,
+   "tris": 5848410,
+   "chars": 2271428,
+   "what": "Pressing Enter (Talk) with nobody close enough now tells you why: talk is off, nobody is within about 13 ft, or people are keeping away from you because of what you did. Talk reaches a little further, and people who are wary of you only step back a little, so you can still talk to them."
   }
  ]
 };

@@ -118,7 +118,6 @@ addEventListener('keydown',e=>{if(!keyCap||keysBox.hidden)return;e.preventDefaul
 $('#keysDone').onclick=()=>showKeys(false);
 $('#keysReset').onclick=()=>{keyDefaults();keySave();keyCap=null;$('#keysNote').textContent='Back to the standard keys.';keysDraw()};
 keysBox.addEventListener('pointerdown',e=>{if(e.target===keysBox)showKeys(false)});
-addEventListener('keydown',e=>{if(e.code==='Escape'&&!keysBox.hidden)showKeys(false)});
 // ---------- Controls panel ----------
 // every input at a glance: the keyboard tab lists the player's own keys (changed in the Keys panel), the others the
 // mouse, touch and controller inputs, which are fixed (controls.js: the pointer handlers and padButton)
@@ -152,4 +151,3 @@ $('#ctrlsTabs').onclick=e=>{const b=e.target.closest('button');if(b){ctrlsTab=b.
 $('#ctrlsDone').onclick=()=>showCtrls(false);
 $('#ctrlsKeys').onclick=()=>{showCtrls(false);showKeys(true)};
 $('#ctrlsBox').addEventListener('pointerdown',e=>{if(e.target===e.currentTarget)showCtrls(false)});
-addEventListener('keydown',e=>{if(e.code==='Escape'&&!$('#ctrlsBox').hidden)showCtrls(false)});

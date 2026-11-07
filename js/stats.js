@@ -228,7 +228,6 @@ document.querySelectorAll('#statHeat [data-h]').forEach(b=>b.onclick=()=>setHeat
 $('#statClear').onclick=()=>{if(!confirm('Clear all your stats, the lawn heatmap and your trails? This can\'t be undone.'))return;
   Object.assign(stats,STAT_ZERO,{since:Date.now()});statCuts.fill(0);for(const k of TRAIL_KINDS)trail[k].fill(0);trailDirty=true;statSave();heatDirty=true;statFill();heat.t=0;heatTick(0)};
 statBox.addEventListener('pointerdown',e=>{if(e.target===statBox)showStats(false)});
-addEventListener('keydown',e=>{if(e.code==='Escape'&&!statBox.hidden)showStats(false)});
 
 // ---------- trails on the big map ----------
 // which layer shows (off, all, or one way of getting round), kept on this device with the heatmap's choice

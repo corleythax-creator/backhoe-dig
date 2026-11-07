@@ -21,25 +21,27 @@ const GUI_SCOPES=[{k:'all',n:'Every screen',q:[]},{k:'phone',n:'Phones and small
   {k:'big',n:'Big screens only',q:['(min-width:901px) and (min-height:521px)']}];
 // the shared colours and fonts (css/game.css): name, label, c colour or f font
 const GUI_VARS=[['--machine','Accent (machine orange)','c'],['--gas','Highlight (hazard yellow)','c'],['--ink','Text','c'],['--muted','Labels and dim text','c'],
-  ['--ok','Good (green)','c'],['--danger','Warning (red)','c'],['--bar','Bars background','c'],['--hud','Panels background','c'],['--hud-line','Divider lines','c'],
+  ['--ok','Good (green)','c'],['--danger','Warning (red)','c'],['--hud','Panels background','c'],['--hud-line','Divider lines','c'],
+  ['--money','Money (wallet, shop prices)','c'],['--star','Wanted stars','c'],['--life','Health bar','c'],['--shop','Shop card background','c'],['--shop-head','Shop headings','c'],
   ['--f-display','Headings and numbers font','f'],['--f-body','Body text font','f']];
 const GUI_FONTS=['"Barlow Condensed","Arial Narrow",system-ui,sans-serif','"Barlow",system-ui,sans-serif','system-ui,sans-serif','Arial,Helvetica,sans-serif',
   '"Arial Narrow",Arial,sans-serif','Verdana,sans-serif','"Trebuchet MS",sans-serif','Georgia,serif','Impact,"Arial Black",sans-serif','"Courier New",monospace'];
 // parts that are usually hidden until the game needs them, shown on request so they can be styled
 const GUI_PEEK=[['#menu','Menu'],['#help','Start card'],['#blkBar','Blocks bar'],['#actDock','Action buttons'],['#status','Job card'],['#seatBtn','Use'],['#pumpBtn','Pump'],['#wipeBtn','Wipers'],
-  ['#boxBtn','Hook box'],['#cplBtn','Coupler'],['#gripBtn','Thumb grip'],['#lawnRow','Lawn gauge'],['#lawnChip','Lawn patch gauge'],['#bucketChip','Bucket gauge'],['#heatKey','Heatmap key'],['#updBtn','Update button'],['#keysBox','Keys panel'],['#ctrlsBox','Controls panel'],['#ctlMenu','Machines list'],['#gfxBox','Graphics panel']];
+  ['#boxBtn','Hook box'],['#cplBtn','Coupler'],['#gripBtn','Thumb grip'],['#lawnRow','Lawn gauge'],['#lawnChip','Lawn patch gauge'],['#bucketChip','Bucket gauge'],['#heatKey','Heatmap key'],['#updBtn','Update button'],['#keysBox','Keys panel'],['#ctrlsBox','Controls panel'],['#ctlMenu','Machines list'],['#gfxBox','Graphics panel'],['#howBox','How to play'],['#tipCard','Machine tip card']];
 // ready-made groups (selector, name), picked from the Groups tab and then edited like any part
 const GUI_GROUPS=[['#hud button','Every button on the screen'],['.tbar button','Top bar buttons'],['#ctlMenu button','Machines list'],['.bbar button','Bottom bar buttons'],
   ['#menu button','Menu buttons'],['#blkBar button','Blocks bar buttons'],['.tbar, .bbar','The two bars'],['.srow','Gauges'],['.lbl','Gauge names'],
   ['.val','Gauge numbers'],['.sub','Gauge detail lines'],['.bar','Gauge meters'],['.stick','Sticks'],['.knob','Stick knobs'],['.cap','Stick captions'],
-  ['#mini','Minimap'],['.card','Cards and panels'],['#toast span','Messages'],['#hud','The whole screen layer']];
+  ['#mini','Minimap'],['.card','Cards and panels'],['#toast span','Messages'],['#hud','The whole screen layer'],
+  ['.tbar','Zone: top bar'],['.lpane','Zone: job card'],['#notices','Zone: notices'],['.rpane','Zone: map'],['.sticks','Zone: thumbs'],['.bbar','Zone: stick captions']];
 // one-move settings at the top of the Groups tab: name, selector, field, slider top
 const GUI_QUICK=[['Button corners','#hud button','rad',30],['Button text size','#hud button','fs',40],['Gauge name size','.lbl','fs',40],['Gauge number size','.val','fs',48],
   ['Panel corners','.card','rad',40]];
 // where the big pieces can sit (Layout tab): key, name, choices (first is the game's own)
-const GUI_DOCK=[['top','Top bar',[['top','Top'],['bottom','Bottom']]],['bottom','Bottom bar',[['bottom','Bottom'],['top','Top']]],
-  ['map','Minimap',[['right','Right'],['left','Left']]],
-  ['sticks','Sticks',[['normal','As they are'],['swap','Swapped']]]];
+const GUI_DOCK=[['top','Top bar (status)',[['top','Top'],['bottom','Bottom']]],['bottom','Stick captions',[['bottom','Bottom'],['top','Top']]],
+  ['map','Map (minimap column)',[['right','Right'],['left','Left']]],['job','Job card',[['left','Left'],['right','Right']]],
+  ['sticks','Thumbs (sticks and buttons)',[['normal','As they are'],['swap','Swapped']]]];
 const GUI_TAGS={button:'button',span:'text',b:'text',div:'box',canvas:'drawing',select:'dropdown',input:'control',label:'label',p:'text',h1:'heading',h2:'heading',h3:'heading',h4:'heading',nav:'bar',header:'bar',footer:'bar',aside:'column'};
 // doc and root: the page holding the screen (the claude.ai editor puts it in a stage box), media: how the phone and big
 // screen layers are written (that editor sizes its stage with container queries), scale: the stage's zoom, host: the
@@ -79,14 +81,22 @@ function guiDecl(p){const d=[];
 // machine buttons right), and each piece takes its slot. The phone and big screen layers write the whole layout from
 // their own choices over the every-screen ones, so a layer can put a piece back where the game has it
 function guiDockCss(d){const c=k=>d[k]||GUI_DOCK.find(g=>g[0]===k)[2][0][0];
-  const top=c('top'),bot=c('bottom'),map=c('map'),swap=c('sticks')==='swap';
-  let r='#hud{grid-template-columns:auto auto minmax(0,1fr) auto auto;grid-template-rows:auto auto auto minmax(0,1fr) auto auto auto}\n';
-  r+=`.tbar{grid-area:${top==='top'?1:6}/1/${top==='top'?2:7}/6}\n.bbar{grid-area:${bot==='bottom'?7:2}/1/${bot==='bottom'?8:3}/6}\n`;
+  const top=c('top'),bot=c('bottom'),map=c('map'),job=d.job||(map==='left'?'right':'left'),swap=c('sticks')==='swap';
+  // the rows, top to bottom: the bars docked at the top, the view (where job, notices, map and thumbs sit), the bars at the bottom
+  const V='job-start notices-start map-start thumbs-start',VE='job-end notices-end map-end thumbs-end',B={top:'bar',bottom:'foot'};
+  const up=[top==='top'&&'bar',bot==='top'&&'foot'].filter(Boolean),dn=[top==='bottom'&&'bar',bot==='bottom'&&'foot'].filter(Boolean);
+  const bands=[...up.map(b=>[b,'auto']),['view','minmax(0,1fr)'],...dn.map(b=>[b,'auto'])];let rows='',open=[];
+  for(const [b,size] of bands){const st=b==='view'?V:b+'-start';rows+=`[${[...open,st].join(' ')}] ${size} `;open=[b==='view'?VE:b+'-end']}
+  rows+=`[${open.join(' ')}]`;
+  // the columns: a spare one left, the view, the minimap's; the minimap moves by taking the left one
+  const cols=map==='left'?'[bar-start job-start notices-start foot-start map-start thumbs-start] auto [map-end] minmax(0,1fr) auto [bar-end job-end notices-end foot-end thumbs-end]'
+    :'[bar-start job-start notices-start foot-start] auto [thumbs-start] minmax(0,1fr) [map-start] auto [bar-end job-end notices-end foot-end thumbs-end map-end]';
+  let r=`#hud{grid-template-rows:${rows};grid-template-columns:${cols}}\n`;
   if(top==='bottom')r+='.tbar::after{top:auto;bottom:100%}\n#menu,#ctlMenu{top:auto;bottom:100%;margin:0 0 8px}\n#menu{max-height:calc(var(--mbot,300px) - 12px)}\n';
   if(bot==='top')r+='.bbar{border-top:0;border-bottom:1px solid var(--hud-line)}\n';
-  r+=`.rpane{grid-area:4/${map==='left'?2:4}/5/${map==='left'?3:5}${map==='left'?';align-items:flex-start;padding:11px 0 8px var(--pl)':''}}\n`;
-  r+=`.sticks{grid-area:4/2/5/5${swap?';flex-direction:row-reverse;padding:0 14px 10px var(--pr)':''}}\n.lpane,#notices{grid-area:4/3/5/4}\n`;
-  if(swap)r+='#capL{order:5;margin-left:auto;text-align:right}#capR{order:-1;margin-left:0;text-align:left}\n';
+  if(map==='left')r+='.rpane{align-items:flex-start;padding:6px 0 8px var(--pl)}\n';
+  if(job==='right')r+='.lpane{justify-self:end;align-items:flex-end;padding:6px var(--pr) 0 0}\n';
+  if(swap)r+='.sticks{flex-direction:row-reverse}\n#capL{order:5;margin-left:auto;text-align:right}#capR{order:-1;margin-left:0;text-align:left}\n';
   return r}
 function guiCss(s){let out='';
   for(const sc of GUI_SCOPES){const L=s.L[sc.k],v=Object.entries(L.vars);let r='';
@@ -400,7 +410,7 @@ function guiTuneHtml(){const set=(tune.draft||tune.live||{set:{}}).set;let g='',
 <h3>Publish</h3>${gui.host?'':guiRow('Owner key',`<input type="password" data-f="key" value="${guiEsc(guiLs(GUI_KEY_LS)||'')}" autocomplete="off" style="grid-column:2/4">`,'')}
 <div class="gbtns"><button class="go" data-a="tunepub">Publish the tuning to every device</button>${gui.host?'<button data-a="tuneload">Load the live tuning</button>':''}</div>`}
 // the start card's words (renamed like any part, skin.text) and the tips and captions (skin.words)
-const guiCardEls=()=>[...gui.doc.querySelectorAll('#help *')].filter(e=>!e.firstElementChild&&e.id!=='verHelp'&&e.tagName!=='IMG'&&(gui.orig.has(e)?gui.orig.get(e):e.textContent).trim());
+const guiCardEls=()=>[...gui.doc.querySelectorAll('#help *,#howList *')].filter(e=>!e.firstElementChild&&e.id!=='verHelp'&&e.tagName!=='IMG'&&(gui.orig.has(e)?gui.orig.get(e):e.textContent).trim());
 function guiWordsHtml(){const T=gui.skin.text,Wd=gui.skin.words;let h=`<p class="gnote">Rewrite the start card, the tips that pop up and the stick captions. In a tip, a name in [brackets] is the key for that action and follows the player's own keys; {names} are filled in by the game. A caption's second line goes after a line break.</p>
 <div class="gpeek"><label><input type="checkbox" data-peek="#help" ${gui.peek.has('#help')?'checked':''}>Show the start card</label></div><h3>Start card</h3>`;
   let last='';
