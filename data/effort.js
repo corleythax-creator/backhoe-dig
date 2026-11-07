@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-07T01:00:00Z",
+ "updated": "2026-11-07T01:19:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -108,9 +108,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-06",
-   "dh": 63.5,
+   "dh": 69.5,
    "act": 3.5,
-   "versions": 11
+   "versions": 12
   }
  ],
  "extra": [
@@ -3288,6 +3288,15 @@ window.EFFORT = {
    "tris": 5849442,
    "chars": 2245253,
    "what": "The townsfolk's fingers bend like real ones: each joint in a hand's own proportions, fingers drawing together toward the thumb, the thumb wrapping round, a closing hand rolling shut."
+  },
+  {
+   "v": 353,
+   "asked": "2026-11-06T19:05:00-06:00",
+   "live": "2026-11-06T19:19:23-06:00",
+   "dh": 6,
+   "tris": 5854811,
+   "chars": 2253438,
+   "what": "Townsfolk now go about their day: every minute or two each one sets off for the General Store, the beer garden, Harbor Square, the shop windows, a stroll, or over to a friend, taking the shortest way. By habit, the hour and their nature decide; with Haiku, Sonnet or Opus speaking, the model chooses for those near you and they say why as they go, and two chatting can agree to go somewhere together."
   }
  ]
 };

@@ -19,10 +19,14 @@
 // everyone about. Talk to everyone (the Everyone button, or starting with "everyone", "y'all"...) when two or more are
 // within TU.talkGroupR: those it is for answer in turn. A model hears the moment (talkScene): the day and hour, the
 // weather, the shop, what you are doing and driving, the day's work, the police, and what happened lately (talkNews).
+// Errands (talkErrands): every so often a walker picks one (the General Store, the beer garden, Harbor Square, the shop
+// windows, a stroll, or going over to someone about) by habit (the hour and their nature); with a model speaking, those
+// near you have it choose (Human Forge's minds.plan, its town_* keys, at most one ask every TU.talkPlanGap), and two
+// chatting may suggest one and go off on it together (joint, agreed). They walk there the shortest way (tfGoalPick).
 // Lines show over their heads; Aloud reads them in the most natural voice the browser has, each townsperson keeping their own.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 const TALK={mode:'text',lib:null,M:null,near:null,with:null,bub:new Map(),far:new Map(),bump:new Map(),v:new THREE.Vector3(),t:0,ui:null,
-  here:[],at:new Map(),ride:null,v0:0,group:[],grp:false,log:[],news:null};
+  here:[],at:new Map(),ride:null,v0:0,group:[],grp:false,log:[],news:null,planT:-1e9,planning:false,errT:0};
 const TALK_NEAR=3,TALK_HI=2.2,TALK_FAR=5,TALK_URL='https://human-forge-beta.vercel.app/api/persona',TALK_ME='a man in a hard hat and a hi-vis vest';
 // the menu's choice; an 'off' only counts if talk was ever on on this device (bhd_talk_on), since older versions wrote
 // 'off' for everyone at load, when Off was the default
@@ -83,7 +87,7 @@ function talkNearest(p){let best=null,bd=TU.talkChatR;for(const q of TALK.here){
 function talkInit(){if(TALK.M||!window.HumanForgeMind)return;
   TALK.M=HumanForgeMind.create({url:TALK_URL,storage:'bhd_talk_on',budget:200,card:p=>p==='player'?null:talkCard(p),people:()=>TALK.here,label:p=>talkName(p),
     nearest:p=>talkFree(p)?talkNearest(p):null,sights:p=>p==='player'?[]:talkSights(p),scene:(p,to)=>talkScene(p,to),
-    show:(p,a,to,ev)=>talkShow(p,a,to,ev),act:(p,a,ev)=>talkAct(p,a,ev),changed:()=>talkPaint()});
+    show:(p,a,to,ev)=>talkShow(p,a,to,ev),act:(p,a,ev)=>talkAct(p,a,ev),joint:(p,q)=>talkJoint(p,q),agreed:(by,p,k,yes)=>talkAgreed(by,p,k,yes),changed:()=>talkPaint()});
   TALK.M.chatter=true;
   try{localStorage.setItem('bhd_talk_on','1')}catch(e){}  // the runtime's own switch, on; also marks that talk was on here
 }
@@ -154,18 +158,76 @@ function talkAct(p,a,ev){if(!p||typeof p!=='object'||!a||p.dead||p.hurt||p.drv||
   if(d==='back')return talkRun(p,x,z,1.5+Math.random()*1.5,Math.max(p.vt||1.3,1.3)*1.5);
   const walker=p.w&&!p.path&&!p.room&&!p.sit;
   if((d==='investigate'||d==='help')&&walker&&Math.hypot(x-p.x,z-p.z)>3){
-    p.wait=0;p.dir=talkDir(p,x,z);p.tkGo={x,z,t:TU.talkGoT,stop:d==='help'?1.4:2.6,d:Math.hypot(x-p.x,z-p.z)};return}
+    p.wait=0;p.goal=null;p.dir=talkDir(p,x,z);p.tkGo={x,z,t:TU.talkGoT,stop:d==='help'?1.4:2.6,d:Math.hypot(x-p.x,z-p.z)};return}
   talkFace(p,d==='freeze'?3+Math.random()*2:d==='call'?6:d==='watch'?3+Math.random()*4:2.5,x,z)}
 // which way along their walk heads toward x,z
 function talkDir(p,x,z){const [,,ex,ez]=tfAt(p.w,p.s);return ex*(x-p.x)+ez*(z-p.z)>=0?1:-1}
 // away from x,z for s seconds at speed v (the same running off as from gunfire, pistol.js gunRun and gunTick)
 function talkRun(p,x,z,s,v){if(p.room||p.sit||p.path||!p.w){talkFace(p,s,x,z);return}
-  p.wait=0;p.tkGo=null;if(!p.vt0)p.vt0=p.vt;p.vt=v*(0.85+Math.random()*0.3);p.flee=Math.max(p.flee||0,s);p.dir=-talkDir(p,x,z)}
+  p.wait=0;p.tkGo=null;p.goal=null;if(!p.vt0)p.vt0=p.vt;p.vt=v*(0.85+Math.random()*0.3);p.flee=Math.max(p.flee||0,s);p.dir=-talkDir(p,x,z)}
 // walking over: stop and look once close, if it got no nearer (the walk turned away) or after TU.talkGoT
 function talkGoTick(dt){for(const p of tf.people){const g=p.tkGo;if(!g)continue;
   if(p.dead||p.hurt||p.flee>0||p.inside){p.tkGo=null;continue}
   const d=Math.hypot(g.x-p.x,g.z-p.z);g.t-=dt;
   if(d<g.stop||g.t<=0||d>g.d+0.5){p.tkGo=null;talkFace(p,4+Math.random()*4,g.x,g.z)}else{g.d=Math.min(g.d,d);p.wait=0}}}
+
+// ---- errands: where a walker goes next, by habit or a model's pick, alone or with someone
+// the errands (Human Forge's persona server words each key the same): where each ends, and what is said of it
+const TALK_ERR={town_store:{n:'the General Store',at:()=>TF_DOOR},town_beer:{n:'the beer garden',at:()=>TF_GATE},
+  town_square:{n:'Harbor Square',at:()=>[[SQ.gx0,SQ.gz0],[SQ.gx1,SQ.gz0],[SQ.gx0,SQ.gz1],[SQ.gx1,SQ.gz1]]},
+  town_shop:{n:'the shop windows',at:()=>[[-MSX,TF_XN],[MSX,TF_XN],[-MSX,TF_XS],[MSX,TF_XS]]},town_stroll:{n:'a stroll',at:null},company:{n:'company',at:null}};
+// someone free to set off on an errand: walking the town's walks, not stopped, talking, scared, hurt, a driver or a cop
+function talkErrFree(p){return p.w&&!p.path&&!p.car&&!p.room&&!p.sit&&!p.drv&&!p.cop&&!p.dead&&!p.hurt&&!(p.inside>0)&&!(p.flee>0)&&!(p.cower>0)&&!p.tkGo&&!(p.wait>0)&&TALK.with!==p}
+// what they could do now, each with how much habit leans to it (the hour, the shops' hours, their nature)
+function talkErrOpts(p,q){const h=typeof townHour==='function'?townHour():12,M=TALK.M,N=M&&talkCard(p)?M.nature(p):{},v=k=>N[k]==null?0.5:N[k],o={};
+  o.town_stroll=0.6+v('energy')*0.6;o.town_shop=h>=8&&h<20?0.5+v('curious'):0.1;
+  if(h>=7&&h<21)o.town_store=0.6;if(h>=11&&h<23.5&&(!TALK.lib||talkCard(p)))o.town_beer=(h>=16?0.9:0.25)+v('talk')*0.5;if(h>=6&&h<21)o.town_square=0.4+(1-v('energy'))*0.6+v('warm')*0.2;
+  if(q)o.company=0.4+v('warm')*0.6+v('talk')*0.4;return o}
+// a pick, weighted by habit
+function talkErrHabit(o){let t=0;for(const k in o)t+=o[k];let r=Math.random()*t;for(const k in o)if((r-=o[k])<=0)return k;return 'town_stroll'}
+// someone nearby they might go over to: a grown-up who talks, free, within 25 m, not one of their own look
+function talkErrMate(p){let b=null,bd=25;for(const q of TALK.here){if(q===p||q.body===p.body||!talkErrFree(q))continue;const d=Math.hypot(q.x-p.x,q.z-p.z);if(d<bd&&d>4){bd=d;b=q}}return b}
+// set p off on errand k (with: who they go with, or go over to)
+const talkWalker=p=>p&&typeof p==='object'&&p.w&&!p.path&&!p.car&&!p.room&&!p.drv&&!p.cop&&!p.dead&&!p.hurt;
+function talkErrand(p,k,q){const E=TALK_ERR[k];if(!E||!talkWalker(p))return;let n;
+  if(k==='company'){if(!q)return;n=tfNodeNear(q.x,q.z)}
+  else if(k==='town_stroll'){const far=TF_NODES.filter(m=>Math.hypot(m.x-p.x,m.z-p.z)>40&&m.e.length);n=far[(Math.random()*far.length)|0]}
+  else{const at=E.at(),pts=typeof at[0]==='number'?[at]:at;const ns=pts.map(a=>tfNodeNear(a[0],a[1])).sort((a,b)=>Math.hypot(a.x-p.x,a.z-p.z)-Math.hypot(b.x-p.x,b.z-p.z));n=ns[Math.random()<0.7?0:(Math.random()*ns.length)|0]}
+  if(!n)return;const D=tfDistTo(n),far=Math.min(D.has(p.w.a)?D.get(p.w.a):1e9,D.has(p.w.b)?D.get(p.w.b):1e9)+p.w.len;
+  p.goal={k,n,t:60+Math.min(far,600)/0.6,with:q||null,here:0};p.wait=0;tfGoalDir(p,n)}
+// once there: a look in the windows, a while on the green, into the store or the garden (the door does that), beside them
+function talkErrArrive(p){const g=p.goal,k=g.k;p.goal=null;p.errT=40+Math.random()*100;
+  if(k==='town_shop'){p.wait=6+Math.random()*10;p.look=p.x<0?W_:E_}
+  else if(k==='town_square'){p.wait=25+Math.random()*35;p.look=Math.atan2((SQ.gx0+SQ.gx1)/2-p.x,(SQ.gz0+SQ.gz1)/2-p.z)}}
+// a model chooses for someone near you (one ask at a time, TU.talkPlanGap apart); else, and meanwhile, habit
+async function talkErrPlan(p,o,q){const M=TALK.M,keys=Object.keys(o).sort((a,b)=>o[b]-o[a]),hab=talkErrHabit(o),opts=[hab,...keys.filter(k=>k!==hab)].slice(0,4);
+  TALK.planning=true;TALK.planT=performance.now()/1000;let a=null;
+  try{a=await M.plan(p,opts,undefined,q?talkName(q):undefined)}catch(e){}TALK.planning=false;
+  if(!tf.people.includes(p)||!talkErrFree(p))return;const k=a&&a.pick||hab;
+  if(k==='company'&&!(q&&tf.people.includes(q)))return talkErrand(p,'town_stroll');
+  talkErrand(p,k,q);if(a&&a.say)talkShow(p,{say:a.say,mood:a.mood},null,null)}
+// plans made together (a model speaking): what two chatting could go and do now; and when one says yes, both go
+function talkJoint(p,q){if(!talkWalker(p)||!talkWalker(q)||p.goal||q.goal)return [];const o=talkErrOpts(p,null);delete o.company;
+  return Object.keys(o).filter(k=>o[k]>0.2)}
+function talkAgreed(by,p,k,yes){if(!yes||!TALK_ERR[k]||k==='company'||!talkWalker(by)||!talkWalker(p))return;
+  for(const r of [by,p]){r.wait=0;r.goal=null}talkErrand(by,k,p);if(by.goal){p.goal=Object.assign({},by.goal,{with:by});p.wait=0;if(p.w&&!p.path)tfGoalDir(p,by.goal.n)}
+  const now=performance.now()/1000;TALK.log.push({t:now,s:`${talkName(by)} and ${talkName(p)} went off to ${TALK_ERR[k].n} together`});if(TALK.log.length>8)TALK.log.shift()}
+// each frame, a few times a second: errands under way (there yet? given up? going over to someone: beside them yet?)
+// and new ones for whoever is free and due (not while the town is out of sight)
+function talkErrands(dt){if(!tf.on)return;if((TALK.errT+=dt)<0.25)return;const t=TALK.errT;TALK.errT=0;
+  const M=TALK.M,model=M&&TALK.mode!=='off'&&M.model!=='local'&&TALK.lib,now=performance.now()/1000;
+  for(const p of tf.people){const g=p.goal;
+    if(g){if(p.dead||p.hurt||p.flee>0||p.cower>0||p.drv){p.goal=null;continue}
+      if(p.inside>0){p.goal=null;p.errT=60+Math.random()*120;continue}
+      g.t-=t;if(g.t<=0){p.goal=null;continue}
+      if(g.k==='company'){const q=g.with;if(!q||!tf.people.includes(q)||q.dead){p.goal=null;continue}
+        if(Math.hypot(q.x-p.x,q.z-p.z)<2.2){p.goal=null;p.errT=60+Math.random()*90;talkFace(p,10,q.x,q.z);talkFace(q,10,p.x,p.z);continue}
+        if(g.here||Math.hypot(g.n.x-q.x,g.n.z-q.z)>8){g.n=tfNodeNear(q.x,q.z);g.here=0;if(p.w&&!p.path)tfGoalDir(p,g.n)}continue}
+      if(g.here||!g.n.door&&Math.hypot(g.n.x-p.x,g.n.z-p.z)<1.4)talkErrArrive(p);continue}
+    if(p.errT==null)p.errT=10+Math.random()*80;if((p.errT-=t)>0||!talkErrFree(p))continue;p.errT=50+Math.random()*90;
+    const q=talkErrMate(p),o=talkErrOpts(p,q);
+    if(model&&!TALK.planning&&now-TALK.planT>TU.talkPlanGap&&TALK.here.includes(p)&&talkCard(p))talkErrPlan(p,o,q);
+    else{const k=talkErrHabit(o);talkErrand(p,k,k==='company'?q:null)}}}
 
 // ---- a few times a second: who is about (TALK.here, near you or the machine you drive), who is near you on foot,
 // walking up, bumping, a machine going by, someone lying still
@@ -203,6 +265,7 @@ function talkLook(dt){const M=TALK.M,now=performance.now()/1000,foot=mode==='wal
 
 // ---- each frame (from main.js)
 function talkTick(dt){
+  talkErrands(dt);
   const on=TALK.mode!=='off'&&TALK.M&&TALK.lib&&tf.on;
   if(!on){if(TALK.ui)TALK.ui.d.hidden=true;if(TALK.with)talkClose();for(const b of TALK.bub.values())b.el.classList.remove('on');return}
   const u=talkUI(),now=performance.now()/1000,foot=mode==='walk'&&!wk.inside;
