@@ -27,7 +27,7 @@
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 const TALK={mode:'text',lib:null,M:null,near:null,with:null,bub:new Map(),far:new Map(),bump:new Map(),v:new THREE.Vector3(),t:0,ui:null,
   here:[],at:new Map(),ride:null,v0:0,group:[],grp:false,log:[],news:null,planT:-1e9,planning:false,errT:0};
-const TALK_NEAR=3,TALK_HI=2.2,TALK_FAR=5,TALK_URL='https://human-forge-beta.vercel.app/api/persona',TALK_ME='a man in a hard hat and a hi-vis vest';
+const TALK_NEAR=4,TALK_HI=2.2,TALK_FAR=5,TALK_URL='https://human-forge-beta.vercel.app/api/persona',TALK_ME='a man in a hard hat and a hi-vis vest';
 // the menu's choice; an 'off' only counts if talk was ever on on this device (bhd_talk_on), since older versions wrote
 // 'off' for everyone at load, when Off was the default
 try{const m=localStorage.getItem('bhd_talk');TALK.mode=m&&(m!=='off'||localStorage.getItem('bhd_talk_on'))?m:'text'}catch(e){}
@@ -130,7 +130,9 @@ function talkMicStart(){if(!TALK_SR||TALK.rec||!TALK.ui)return;const d=TALK.ui.d
 function talkMicStop(){if(TALK.rec)try{TALK.rec.stop()}catch(e){}}
 // said to everyone: starting with everyone, everybody, all of you, y'all, folks...
 const TALK_ALL=/^(hey|hi|hello|ok|okay|so|well)?[ ,]*(everyone|everybody|all of you|y'?all|you all|folks|guys|people)\b/i;
-function talkOpen(){const p=TALK.near;if(!p||!TALK.M)return;TALK.with=p;p.tkGo=null;const u=talkUI();u.d.querySelector('#talkForm').hidden=false;
+// Talk with nobody to talk to says why: talk is off, they are keeping away from him, or nobody is close enough
+function talkOpen(){const p=TALK.near;if(TALK.mode==='off'){toast(say('tkOff'),'',4000);return}
+  if(!p||!TALK.M){if(mode==='walk')toast(say(performance.now()/1000-(TALK.shunT||-99)<20?'tkShun':'tkNobody'),'',4000);return}TALK.with=p;p.tkGo=null;const u=talkUI();u.d.querySelector('#talkForm').hidden=false;
   const i=u.d.querySelector('#talkIn');talkHint();i.focus();talkFace(p,6);talkPaint()}
 // the box's prompt and the Everyone button: to the one, or to everyone within TU.talkGroupR
 function talkHint(){if(!TALK.ui||!TALK.with)return;const d=TALK.ui.d,b=d.querySelector('#talkAll'),many=TALK.group.length>1,all=many&&TALK.grp;

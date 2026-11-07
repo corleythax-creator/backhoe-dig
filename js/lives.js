@@ -119,8 +119,9 @@ const REP_N={rpGossipBad:3,rpGossipGood:2,rpScared:2,rpWary:3,rpGlad:3};
 function repSay(id,v){return say(id+(1+Math.floor(Math.random()*REP_N[id])),v)}
 // walking up to someone: glad to see him, wary (a step back), or scared off (gun out and a bad name); false: as usual
 function repMeet(p){const v=repOpinion(p.body);
+  if(v<-15)TALK.shunT=performance.now()/1000;
   if(v<-45&&gunHas()){talkRun(p,wk.x,wk.z,5,TU.gunFlee);talkShow(p,{say:repSay('rpScared')},'you',null);return true}
-  if(v<-15){talkRun(p,wk.x,wk.z,1.6,1.8);talkShow(p,{say:repSay('rpWary')},'you',null);return true}
+  if(v<-25){talkRun(p,wk.x,wk.z,0.7,1.6);talkShow(p,{say:repSay('rpWary')},'you',null);return true}
   if(v>25&&Math.random()<0.5){talkFace(p,4);talkShow(p,{say:repSay('rpGlad')},'you',null);return true}
   return false}
 // a counter's price: a friend's 5% off, 15% more from someone who fears or distrusts him (townOff, town.js)
