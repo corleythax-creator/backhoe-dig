@@ -101,6 +101,6 @@ $('#edOwnGo').onclick=async()=>{if(own.busy)return;const n=$('#edOwnName').value
     try{localStorage.setItem('bhd_gui_key',k)}catch(e){}
     if(t)ownPics[id]=t.url;matOwnTake(Object.assign({i:id,t:Date.now()},data));ownCacheSave();ownChanged([id]);
     ed.mat=id;edMatPanel();edMatLabel();$('#edOwnCard').hidden=true;
-    toast(`${n} is in the library${old?'':' under '+MAT_CATS[data.cat]}. Every device gets it the next time the game opens.`,'',4200);ownFetch()}
+    toast(say(old?'ownMatSaved':'ownMatAdded',{name:n,cat:MAT_CATS[data.cat]}),'',4200);ownFetch()}
   catch(e){ownMsg('Could not reach the server. Nothing was published.')}
   finally{own.busy=false}};

@@ -1,9 +1,9 @@
-// Corley's Island: the panels over the game (Controls, Keys, Graphics, Stats, Sound, Sync and the site map) as one stack.
+// Corley's Island: the panels over the game (How to play, Controls, Keys, Graphics, Stats, Sound, Sync and the site map) as one stack.
 // Opening one puts it on top; Esc and controller B (goBack, controls.js) close the top one only, and go back to where it
 // was opened from: the ☰ menu (on the tab it was on), or the panel it replaced (Controls, for Keys). Each panel keeps its
 // own show function; it is wrapped here, so every way of opening or closing it counts.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
-const PANELS=[['ctrlsBox','showCtrls'],['keysBox','showKeys'],['gfxBox','showGfx'],['statBox','showStats'],['sndBox','showSound'],['syncBox','showSync'],['bigmap','toggleMap']];
+const PANELS=[['howBox','showHow'],['ctrlsBox','showCtrls'],['keysBox','showKeys'],['gfxBox','showGfx'],['statBox','showStats'],['sndBox','showSound'],['syncBox','showSync'],['bigmap','toggleMap']];
 const panelStack=[],panelFrom={};let panelShut=null;
 const panelFn=id=>PANELS.find(p=>p[0]===id)[1];
 // after a show function ran: put the panel on the stack or take it off, noting what it was opened from

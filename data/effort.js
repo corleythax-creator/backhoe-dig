@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-07T00:00:00Z",
+ "updated": "2026-11-07T00:21:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -108,9 +108,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-06",
-   "dh": 44,
+   "dh": 50,
    "act": 2.5,
-   "versions": 7
+   "versions": 8
   }
  ],
  "extra": [
@@ -3252,6 +3252,15 @@ window.EFFORT = {
    "tris": 5848032,
    "chars": 2223830,
    "what": "Menu tabs (HUD step 6): the ☰ menu is five tabs (Play, Build, World, Settings, Developer) with the tests out of the way under Developer; Controls and Keys are one entry; Esc and controller B close the top panel and step back to the menu or panel it came from"
+  },
+  {
+   "v": 349,
+   "asked": "2026-11-06T17:58:00-06:00",
+   "live": "2026-11-06T18:21:12-06:00",
+   "dh": 6,
+   "tris": 7588892,
+   "chars": 2235478,
+   "what": "Messages queue up two at a time (warnings first, repeats count up instead of piling on), every message can be reworded in the screen editor, How to play is a searchable list of topics, and each machine shows a tip card the first time you get in (turn them off or show them again in How to play)."
   }
  ]
 };
