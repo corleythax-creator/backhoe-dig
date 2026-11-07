@@ -35,7 +35,7 @@ const ED_X0=-112,ED_Z0=-122,ED_C=0.5,ED_NX=449,ED_NZ=433,ED_H=new Float32Array(E
 // ED_R: how far each painted cell is raised (+) or sunk (-) from the ground, in quarter inches (-12 to 12, the Paint
 // brush's Raise / inset; raised.js draws the slab and its sides, rsAt is the step for feet and wheels)
 const ED_R=new Int8Array(ED_NX*ED_NZ),RS_Q=0.00635;
-let mapAssets=null,mapRoads=null,mapSq=0;
+let mapAssets=null,mapRoads=null,mapSq=0,mapSt=0;
 // ED_G: where tall grass grows (1), on the same grid (the editor's Tall grass brush; mower.js grows it). A map from
 // before it has the first patch, 52 x 39 ft north-east of the trench
 const ED_G=new Uint8Array(ED_NX*ED_NZ);
@@ -81,8 +81,8 @@ function edUnbox(o,A,scale,Arr,oi=0,oj=0){if(!o)return;let [i0,j0,w,h]=o.r;i0+=o
 function mapEncode(){const doc={game:'backhoe-dig',v:1,g:[ED_X0,ED_Z0]},h=edBox(ED_H,100,Int16Array),p=edBox(ED_P,100,Int8Array);
   const m=edBox(ED_M,1,Uint8Array),fa=new Uint8Array(ED_A.length);for(let q=0;q<fa.length;q++)if(ED_M[q])fa[q]=255-ED_A[q];
   const a=edBox(fa,1,Uint8Array),rz=edBox(ED_R,1,Int8Array);if(rz)doc.r=rz;if(h)doc.h=h;if(p)doc.p=p;if(m)doc.m=m;if(a)doc.a=a;doc.tg=edBox(ED_G,1,Uint8Array)||0;
-  // sq: its things include Harbor Square's furniture (sqThings, scenery.js)
-  if(mapAssets){doc.sq=1;doc.assets=(typeof fxSaveList==='function'?fxSaveList(mapAssets):mapAssets).map(a=>[a.t,+a.x.toFixed(2),+a.z.toFixed(2),+a.yaw.toFixed(2),+a.s.toFixed(2),a.c,...(a.lk?[1]:[])])}
+  // sq: its things include Harbor Square's furniture (sqThings, scenery.js); st: the town's street furniture (stlThings)
+  if(mapAssets){doc.sq=1;doc.st=1;doc.assets=(typeof fxSaveList==='function'?fxSaveList(mapAssets):mapAssets).map(a=>[a.t,+a.x.toFixed(2),+a.z.toFixed(2),+a.yaw.toFixed(2),+a.s.toFixed(2),a.c,...(a.lk?[1]:[])])}
   if(mapRoads)doc.roads=mapRoads.map(r=>[+r.w.toFixed(2),r.mid,r.pts.map(q=>q.map(v=>+v.toFixed(2))),...(r.pv?[{c:r.cb?1:0,s:+(r.sw||0).toFixed(2),l:r.cl?1:0,...(r.sf?{f:r.sf}:{})}]:[])]);
   return JSON.stringify(doc)}
 // reads a map into new layers; throws on anything that is not one
@@ -105,8 +105,8 @@ function mapDecode(text){const doc=JSON.parse(text);if(!doc||doc.game!=='backhoe
   const rs=Array.isArray(doc.roads)?doc.roads.slice(0,60).filter(r=>Array.isArray(r)&&isFinite(r[0])&&Array.isArray(r[2])&&r[2].length>=2&&r[2].length<=200&&r[2].every(q=>Array.isArray(q)&&q.length>=2&&q.slice(0,3).every(isFinite)))
     .map(r=>{const g=r[2].every(q=>q.length>2),o=r[3]&&typeof r[3]==='object'?r[3]:null,pv=o?{pv:1,cb:o.c?1:0,sw:Math.max(0,Math.min(5,+o.s||0)),cl:o.l?1:0,...(o.f>=1&&o.f<=4?{sf:o.f|0}:{})}:{};
       return Object.assign({w:Math.max(1.5,Math.min(o?12:8,+r[0])),mid:o?0:r[1]?1:0,pts:r[2].map(q=>g?[+q[0],+q[1],+q[2]]:[+q[0],+q[1]])},pv)}):null;
-  return {h,p,m,a,r,tg,as,rs,sq:doc.sq===1}}
-try{const t=localStorage.getItem('bhd_map');if(t){const m=mapDecode(t);ED_H.set(m.h);ED_P.set(m.p);ED_M.set(m.m);ED_A.set(m.a);ED_R.set(m.r);if(m.tg)ED_G.set(m.tg);mapAssets=m.as;mapRoads=m.rs;mapSq=m.sq}}catch(e){}
+  return {h,p,m,a,r,tg,as,rs,sq:doc.sq===1,st:doc.st===1}}
+try{const t=localStorage.getItem('bhd_map');if(t){const m=mapDecode(t);ED_H.set(m.h);ED_P.set(m.p);ED_M.set(m.m);ED_A.set(m.a);ED_R.set(m.r);if(m.tg)ED_G.set(m.tg);mapAssets=m.as;mapRoads=m.rs;mapSq=m.sq;mapSt=m.st}}catch(e){}
 // the painted ids for the ground shader, one texel per cell (materials.js); editor.js flags it when they change
 matU.tMatId.value=new THREE.DataTexture(ED_M,ED_NX,ED_NZ,THREE.RedFormat,THREE.UnsignedByteType);
 matU.tMatId.value.unpackAlignment=1;matU.tMatId.value.needsUpdate=true;

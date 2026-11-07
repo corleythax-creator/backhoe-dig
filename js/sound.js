@@ -237,5 +237,5 @@ function updateSound(dt){
     sndEngineTo(ge,ge.rpm,0.5,quiet*(tg?0.9:0),t);
     // a horn carries across the water: it fades with distance far more gently than the engines
     if(tg&&tg.hornQ){tg.hornQ=false;const d=Math.hypot(tg.x-camera.position.x,tg.z-camera.position.z);sndShot('horn',snd.dry,t+0.05+d/343,0.85,quiet*sndVol(sndCfg.fx)*1.4*Math.min(1,50/(d+10)))}}
-  ambTick(dt,t,quiet);
+  ambTick(dt,t,quiet);stlSnd(dt,t,quiet);
 }
