@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-07T02:38:00Z",
+ "updated": "2026-11-07T04:31:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -108,9 +108,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-06",
-   "dh": 118.25,
-   "act": 5,
-   "versions": 16
+   "dh": 126.25,
+   "act": 5.5,
+   "versions": 17
   }
  ],
  "extra": [
@@ -3333,6 +3333,15 @@ window.EFFORT = {
    "tris": 5918659,
    "chars": 2380669,
    "what": "Speak in the talk box now tells you when there is no microphone (or the browser blocks it) and puts the button away, so you just type."
+  },
+  {
+   "v": 358,
+   "asked": "2026-11-06T21:00:00-06:00",
+   "live": "2026-11-06T22:31:45-06:00",
+   "dh": 8,
+   "tris": 6734925,
+   "chars": 2399157,
+   "what": "Shop memory and names: anyone in a shop with you (staff or customers) remembers it, and what you bought, and brings it up when you meet again (\"Saw you at Lakeside Bakery this morning, get the pie?\"); after a few visits together you're a familiar face; it fades over a week and syncs between devices. The nine kids and teens now have names and their own kid talk, everyone you've met is shown by name instead of Passerby or Clerk, and shops' indoor brightness works again"
   }
  ]
 };
