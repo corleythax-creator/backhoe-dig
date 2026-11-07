@@ -48,6 +48,10 @@ const PROPS={
   hydrant:{n:'Fire hydrant',cat:6,w:0.4,d:0.4,cap:80,solid:[0.15,0.15]},
   mailbox:{n:'Mailbox',cat:6,w:0.3,d:0.5,cap:80,solid:[0.08,0.08]},
   trashcan:{n:'Trash can',cat:6,w:0.6,d:0.6,cap:150,solid:[0.28,0.28]},
+  recycle:{n:'Recycling bin',cat:6,w:0.6,d:0.6,cap:150,solid:[0.28,0.28]},
+  newsbox:{n:'Newspaper boxes',cat:6,w:1.05,d:0.5,cap:60,solid:[0.52,0.24]},
+  aframe:{n:'Chalkboard sign',cat:6,w:0.62,d:0.56,cap:80,solid:[0.3,0.27]},
+  bikerack:{n:'Bike rack with bikes',cat:6,w:2.4,d:1.8,cap:40,solid:[1.2,0.85]},
   utilbox:{n:'Utility box',cat:6,w:0.55,d:0.45,cap:80,solid:[0.27,0.22]},
   windsock:{n:'Windsock',cat:6,w:0.3,d:0.3,cap:20,solid:[0.06,0.06]},
   // site gear
@@ -195,6 +199,22 @@ const PROP_MODELS={
   hydrant:B=>{B.cyl(0.18,0.18,0.06,10,0xb81c1c,0,0.03,0);B.cyl(0.12,0.13,0.55,10,0xc81e1e,0,0.33,0);B.cyl(0.06,0.13,0.13,10,0xc81e1e,0,0.66,0);
     B.cyl(0.05,0.05,0.34,8,0xc81e1e,0,0.44,0,0,0,Math.PI/2);B.cyl(0.065,0.065,0.12,8,0xc81e1e,0,0.42,0.12,Math.PI/2,0,0);B.cyl(0.02,0.02,0.05,6,0xd4af37,0,0.75,0)},
   trashcan:B=>{B.cyl(0.26,0.24,0.86,14,0x8e9296,0,0.43,0);for(const y of [0.2,0.5,0.8])B.cyl(0.265,0.265,0.025,14,0x7a7e82,0,y,0);B.cyl(0.24,0.24,0.01,14,0x1e1f20,0,0.86,0)},
+  recycle:B=>{B.cyl(0.26,0.24,0.86,14,0x1f5aa8,0,0.43,0);for(const y of [0.2,0.5])B.cyl(0.265,0.265,0.025,14,0x1a4c8e,0,y,0);B.cyl(0.27,0.27,0.05,14,0x1a4c8e,0,0.87,0);
+    B.box(0.2,0.02,0.06,0x0d0d0d,0,0.9,0);B.box(0.2,0.2,0.01,0xf2f2f2,0,0.62,0.255)},
+  // two coin-op newspaper boxes on a shared foot: red and blue, a window over the paper, the coin slot
+  newsbox:B=>{B.box(1.04,0.06,0.46,0x3a3c3e,0,0.03,0);for(const [x,c] of [[-0.26,0xb0262a],[0.26,0x1f4f8f]]){B.box(0.46,0.42,0.42,c,x,0.33,0);B.box(0.48,0.5,0.44,c,x,0.8,0);
+      B.box(0.36,0.26,0.01,0x9eb8c4,x,0.86,0.225);B.box(0.3,0.16,0.005,0xe8e2d0,x,0.82,0.226);B.box(0.08,0.03,0.02,0xc8c8c8,x+0.12,1.0,0.225);B.box(0.5,0.04,0.46,0x2a2a2a,x,1.07,0)}},
+  // a sidewalk chalkboard: two framed boards leaning together, the menu chalked on both faces
+  aframe:B=>{for(const s of [-1,1]){B.box(0.6,0.9,0.04,0x6a4a2c,0,0.46,s*0.13,s*-0.27);B.box(0.5,0.72,0.01,0x1c2420,0,0.48,s*(0.152-0.267*0.02),s*-0.27);
+      for(let k=0;k<5;k++){const y=0.7-k*0.1;B.box(0.28+((k*37)%3)*0.06,0.025,0.004,k===0?0xf2d27a:0xe8e8e2,0,y,s*(0.164-0.267*(y-0.46)),s*-0.27)}}},
+  // a row of three galvanized hoops in the paving with two bikes locked to them, front wheels to the rack
+  bikerack:B=>{for(const x of [-0.8,0,0.8]){for(const z of [-0.3,0.3])B.cyl(0.024,0.024,0.8,6,0x9aa0a4,x,0.4,z);B.cyl(0.024,0.024,0.64,6,0x9aa0a4,x,0.8,0,Math.PI/2,0,0)}
+    B.box(1.7,0.03,0.08,0x9aa0a4,0,0.015,-0.3);B.box(1.7,0.03,0.08,0x9aa0a4,0,0.015,0.3);
+    // (each bike along z beside a hoop: wheels with hubs, the frame's tubes, saddle and bars; s which way it faces)
+    for(const [x,s,c] of [[-0.4,1,0x2a5f9a],[0.4,-1,0x8e2a26]]){for(const z of [-0.52,0.52]){B.tor(0.33,0.02,0x161616,x,0.34,z,0,Math.PI/2,0);B.tor(0.04,0.014,0x8a8a8a,x,0.34,z,0,Math.PI/2,0)}
+      B.box(0.03,0.03,0.6,c,x,0.66,s*0.03);B.box(0.03,0.03,0.66,c,x,0.5,s*0.1,s*-0.6);B.box(0.03,0.48,0.03,c,x,0.52,s*-0.2,s*0.3);
+      B.box(0.03,0.03,0.36,c,x,0.36,s*-0.36);B.box(0.03,0.4,0.03,c,x,0.5,s*0.48,s*-0.3);B.box(0.03,0.36,0.03,c,x,0.5,s*-0.42,s*0.6);
+      B.box(0.1,0.04,0.22,0x111111,x,0.8,s*-0.26);B.box(0.46,0.025,0.025,0x222222,x,0.86,s*0.42)}},
   utilbox:B=>{B.box(0.52,1.1,0.42,0x9aa5ad,0,0.56,0);B.box(0.56,0.04,0.46,0x8a949b,0,1.12,0);B.box(0.3,0.16,0.01,0xf2c84b,0,0.85,0.215)},
   mailbox:B=>{B.box(0.1,1.0,0.1,0x7a5a3a,0,0.5,0);B.box(0.16,0.04,0.4,0x7a5a3a,0,0.98,0);B.box(0.24,0.12,0.48,0x2a2a2a,0,1.06,0);
     B.cyl(0.12,0.12,0.48,12,0x2a2a2a,0,1.12,0,Math.PI/2,0,0);B.box(0.02,0.2,0.05,0xc8202a,0.14,1.18,-0.1)},

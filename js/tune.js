@@ -114,6 +114,12 @@ const TUNE=[
   // the town's life (town.js): money, shop hours, greetings and talk
   ['cashStart','Town','Money in your wallet when you start (added to what the work has paid)',250,'usd',0,10000,10],
   ['pepBoost','Town','A coffee or a meal from a shop: walking and running faster by',0.12,'pct',0,50,1],['pepTime','Town','A coffee or a meal lasts',180,'s',10,900,10],
+  // street life (street.js): the town bus and the delivery van, and the town's sounds and night light
+  ['stlBusGap','Town','The town bus comes by every',240,'s',60,1800,10],['stlBusWait','Town','Most townsfolk waiting at the bus stop',4,'n',0,8,1],
+  ['stlVanGap','Town','A delivery van pulls up at a shop every',300,'s',60,1800,10],
+  ['stlChat','Town','Sound: the chatter along Main Street',0.5,'pct',0,200,5],['stlBell','Town','Sound: shop door bells',0.5,'pct',0,200,5],
+  ['stlHiss','Town','Sound: the bus\'s air brakes',0.7,'pct',0,200,5],['stlMarina','Town','Sound: the marina (gulls, rigging, water on the hulls)',0.6,'pct',0,200,5],
+  ['stlSpill','Town','Shop light on the sidewalk at night',1,'pct',0,200,5],
   ['tfQuiet','Town','People out at the quietest hour of the night, of the busiest',0.12,'pct',0,100,1],
   // the shops' comings and goings (townfolk.js, tfEnt): passersby turning in, how long they stay, how many on their way
   // in or out at once, what they come out holding, and the staff's hours either side of the shop's
