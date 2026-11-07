@@ -33,7 +33,7 @@ const TALK_NEAR=3,TALK_HI=2.2,TALK_FAR=5,TALK_URL='https://human-forge-beta.verc
 try{const m=localStorage.getItem('bhd_talk');TALK.mode=m&&(m!=='off'||localStorage.getItem('bhd_talk_on'))?m:'text'}catch(e){}
 // the library's people, by id, for their personalities (once)
 function talkLib(){if(TALK.lib!==null)return;TALK.lib=0;fetch('models/people/library.json').then(r=>r.json()).then(j=>{TALK.lib={};for(const p of j.people||[])TALK.lib[p.id]=p}).catch(()=>{TALK.lib=null})}
-function talkCard(p){if(!TALK.lib||!p||p.dead||p.hurt||p.drv||p.cop)return null;const it=TALK.lib['island_'+p.body];return it&&window.HumanForgeMind?HumanForgeMind.card(it):null}
+function talkCard(p){if(!TALK.lib||!p||p.dead||p.hurt||p.drv||p.cop)return null;const it=TALK.lib['island_'+p.body];return it&&window.HumanForgeMind?HumanForgeMind.card(typeof lifeItem==='function'?lifeItem(it,p.body):it):null}
 function talkName(p){if(p==='player')return say('tkPlayer');const c=talkCard(p);return c?c.name:'someone'}
 // a machine's name with its article ('an excavator', 'a dozer')
 function talkA(n){return (/^[aeiou]/i.test(n)?'an ':'a ')+n}
@@ -54,8 +54,10 @@ function talkScene(p,to){const h=typeof townHour==='function'?townHour():12,when
   if(yd>1||w.dEarn>1)t+=`; today he has dug about ${Math.round(yd)} cubic yards and earned $${Math.round(w.dEarn||0)}`;
   t+='.';
   if(typeof gunStars==='function'&&gunStars())t+=' The police are after him.';else if(typeof gun==='object'&&gun.cops&&gun.cops.length)t+=' Police are about.';
+  // their day, and what they have heard of him (lives.js)
+  if(typeof lifeScene==='function'&&p&&typeof p==='object'){const n=talkName(p),l=lifeScene(p,n),r=repScene(p,n);if(l)t+=' '+l;if(r)t+=' '+r}
   const ln=talkLately();if(ln)t+=' Lately: '+ln+'.';
-  return t.slice(0,880)}
+  return t.slice(0,895)}
 // what happened lately, for the scene: the last few things, newest last, with how long ago
 function talkLately(){const now=performance.now()/1000;return TALK.log.filter(e=>now-e.t<600).slice(-4).map(e=>{const m=Math.round((now-e.t)/60);
   return e.s+(m<1?' just now':m===1?' a minute ago':` ${m} minutes ago`)}).join('; ')}
@@ -65,10 +67,12 @@ function talkNews(){const G=typeof gun==='object'?gun:{},dn2=(G.downs||0)+(G.cop
     bolts=typeof stats==='object'?stats.bolts||0:0,now=performance.now()/1000;
   const n=TALK.news;TALK.news={shots:G.shots||0,downs:dn2,cops,wet,bolts};if(!n)return;
   const add=s=>{const l=TALK.log[TALK.log.length-1];if(l&&l.s===s&&now-l.t<60){l.t=now;return}TALK.log.push({t:now,s});if(TALK.log.length>8)TALK.log.shift()};
-  if((G.shots||0)>n.shots){add('gunshots in town');
+  const near=TALK.here.some(p=>Math.hypot(p.x-wk.x,p.z-wk.z)<40);
+  if((G.shots||0)>n.shots){add('gunshots in town');if(near)repDeed('shots');
     for(const p of TALK.here){const d=Math.hypot(p.x-wk.x,p.z-wk.z);if(d<60)TALK.M.event(p,{kind:'notice',what:'gunshots',danger:true,threat:0.9,sound:true,feet:Math.round(d/FT),ref:{x:wk.x,z:wk.z}})}}
-  if(dn2>n.downs)add('someone was shot');
-  if(cops&&!n.cops)add('police cars came into town');
+  if(dn2>n.downs){add('someone was shot');repDeed((G.copDowns||0)>(n.cdowns||0)?'cop':'shot')}
+  TALK.news.cdowns=G.copDowns||0;
+  if(cops&&!n.cops){add('police cars came into town');repDeed('cops')}
   if(wet!==n.wet)add(wet?'it started to rain':'the rain stopped');
   if(bolts>n.bolts)add('lightning struck close by')}
 // what they can see that is not a person (the runtime looks these over once a second and remarks on what is new or
@@ -102,17 +106,28 @@ talkSet(TALK.mode);
 
 // ---- what shows: a chip near someone, the box to type in, the lines over heads
 function talkUI(){if(TALK.ui)return TALK.ui;const d=document.createElement('div');d.id='talkBox';d.hidden=true;
-  d.innerHTML='<button id="talkChip"></button><form id="talkForm" hidden><input id="talkIn" maxlength="300" autocomplete="off"><button></button><button type="button" id="talkAll" hidden aria-pressed="false"></button><button type="button" id="talkX">×</button></form><div id="talkStatus"></div>';
+  d.innerHTML='<button id="talkChip"></button><form id="talkForm" hidden><input id="talkIn" maxlength="300" autocomplete="off"><button></button><button type="button" id="talkMic" hidden aria-pressed="false"></button><button type="button" id="talkAll" hidden aria-pressed="false"></button><button type="button" id="talkX">×</button></form><div id="talkStatus"></div>';
   d.querySelector('#talkForm button').textContent=say('tkSay');d.querySelector('#talkAll').textContent=say('tkAll');
-  d.querySelector('#talkAll').onclick=()=>{TALK.grp=!TALK.grp;talkHint();d.querySelector('#talkIn').focus()};
+  talkMicInit(d);d.querySelector('#talkAll').onclick=()=>{TALK.grp=!TALK.grp;talkHint();d.querySelector('#talkIn').focus()};
   document.body.appendChild(d);
   const L=document.createElement('div');L.id='talkLines';document.body.appendChild(L);
   d.querySelector('#talkChip').onclick=()=>talkOpen();d.querySelector('#talkX').onclick=()=>talkClose();
   d.querySelector('#talkForm').onsubmit=e=>{e.preventDefault();const i=d.querySelector('#talkIn'),v=i.value.trim();i.value='';if(!v||!TALK.with||!TALK.M)return;
-    const g=TALK.group;if(g.length>1&&(TALK.grp||TALK_ALL.test(v))){for(const q of g)talkFace(q,8);TALK.M.tellAll(g,v)}else TALK.M.tell(TALK.with,v)};
+    const g=TALK.group;if(g.length>1&&(TALK.grp||TALK_ALL.test(v))){for(const q of g)talkFace(q,8);TALK.M.tellAll(g,v);repDeed('kind',g.map(q=>q.body))}else{TALK.M.tell(TALK.with,v);repDeed('kind',[TALK.with.body])}};
   // typing goes to the box, not the game's keys
   for(const ev of ['keydown','keyup'])d.querySelector('#talkIn').addEventListener(ev,e=>{e.stopPropagation();if(ev==='keydown'&&e.key==='Escape')talkClose()});
   TALK.ui={d,L};return TALK.ui}
+// speaking instead of typing (the browser's speech recognition, where it has one: Chrome, Edge, Safari): Speak
+// listens once; what is heard fills the box as it comes and is said when they stop
+const TALK_SR=window.SpeechRecognition||window.webkitSpeechRecognition||null;
+function talkMicInit(d){const b=d.querySelector('#talkMic');if(!TALK_SR)return;b.hidden=false;b.textContent=say('tkMic');
+  b.onclick=()=>{if(TALK.rec)talkMicStop();else talkMicStart()}}
+function talkMicStart(){if(!TALK_SR||TALK.rec||!TALK.ui)return;const d=TALK.ui.d,i=d.querySelector('#talkIn'),b=d.querySelector('#talkMic');let r;
+  try{r=new TALK_SR()}catch(e){return}r.lang='en-US';r.interimResults=true;r.continuous=false;r.maxAlternatives=1;TALK.rec=r;let fin='';
+  r.onresult=e=>{let t='';for(const x of e.results){t+=x[0].transcript;if(x.isFinal)fin=t}i.value=t};
+  r.onend=()=>{TALK.rec=null;b.setAttribute('aria-pressed','false');b.textContent=say('tkMic');const v=(fin||i.value).trim();if(v&&TALK.with)d.querySelector('#talkForm').requestSubmit()};
+  r.onerror=()=>{};b.setAttribute('aria-pressed','true');b.textContent=say('tkListening');i.value='';try{r.start()}catch(e){TALK.rec=null}}
+function talkMicStop(){if(TALK.rec)try{TALK.rec.stop()}catch(e){}}
 // said to everyone: starting with everyone, everybody, all of you, y'all, folks...
 const TALK_ALL=/^(hey|hi|hello|ok|okay|so|well)?[ ,]*(everyone|everybody|all of you|y'?all|you all|folks|guys|people)\b/i;
 function talkOpen(){const p=TALK.near;if(!p||!TALK.M)return;TALK.with=p;p.tkGo=null;const u=talkUI();u.d.querySelector('#talkForm').hidden=false;
@@ -121,7 +136,7 @@ function talkOpen(){const p=TALK.near;if(!p||!TALK.M)return;TALK.with=p;p.tkGo=n
 function talkHint(){if(!TALK.ui||!TALK.with)return;const d=TALK.ui.d,b=d.querySelector('#talkAll'),many=TALK.group.length>1,all=many&&TALK.grp;
   b.hidden=!many;b.setAttribute('aria-pressed',String(all));
   d.querySelector('#talkIn').placeholder=all?say('tkSayAll'):say('tkSayTo',{name:talkName(TALK.with)})}
-function talkClose(){TALK.with=null;if(!TALK.ui)return;TALK.ui.d.querySelector('#talkForm').hidden=true;const i=TALK.ui.d.querySelector('#talkIn');i.blur();talkPaint()}
+function talkClose(){talkMicStop();TALK.with=null;if(!TALK.ui)return;TALK.ui.d.querySelector('#talkForm').hidden=true;const i=TALK.ui.d.querySelector('#talkIn');i.blur();talkPaint()}
 function talkPaint(){const M=TALK.M;if(!M)return;
   // ☰: who speaks, the cap (models only) and the meter
   for(const b of document.querySelectorAll('#talkModelRow [data-tm]'))b.setAttribute('aria-pressed',String(b.dataset.tm===M.model));
@@ -139,6 +154,7 @@ function talkShow(p,a,to,ev){const u=talkUI();let b=TALK.bub.get(p);if(!b){b={el
   b.el.innerHTML='';const n=document.createElement('b');n.textContent=talkName(p);b.el.append(n,document.createTextNode(a.say));
   b.until=performance.now()/1000+3.5+a.say.split(/\s+/).length*0.38;const s=b.until-performance.now()/1000;
   // who they turn to: the one they talk to (and that one back), what happened to them, or you
+  if(to&&typeof to==='object'&&talkCard(to)&&Math.random()<0.3)repGossip(p,to);
   if(p.tkGo&&to!=='you'){}
   else if(to&&typeof to==='object'){talkFace(p,s,to.x,to.z);talkFace(to,s,p.x,p.z);if(!p.spd)p.tk=1}
   else if(ev&&ev.kind==='thing'){const w=TALK.at.get(p);if(w)talkFace(p,Math.min(s,3),w[0],w[1])}
@@ -245,13 +261,13 @@ function talkLook(dt){const M=TALK.M,now=performance.now()/1000,foot=mode==='wal
     if(foot){const d=Math.hypot(p.x-wk.x,p.z-wk.z);
       if(d<bd){bd=d;best=p}
       // walking up to them: from beyond TALK_FAR to within TALK_HI, they turn and say hello (once in a while)
-      if(d>TALK_FAR)TALK.far.set(p,1);else if(d<TALK_HI&&TALK.far.get(p)){TALK.far.set(p,0);talkFace(p,4);M.event(p,{kind:'approached',by:'player'})}
+      if(d>TALK_FAR)TALK.far.set(p,1);else if(d<TALK_HI&&TALK.far.get(p)){TALK.far.set(p,0);if(!repMeet(p)){talkFace(p,4);M.event(p,{kind:'approached',by:'player'})}}
       // bumping into them on the way past
       if(d<0.6&&(wk.spd||0)>1){const t=TALK.bump.get(p)||0;if(now-t>3){TALK.bump.set(p,now);talkFace(p,3);M.event(p,{kind:'touched',by:'player',where:'shoulder'})}}}
     else if(o){
       // the machine he drives, close by: too fast and it nearly had them; slow or stopped, they remark on it
       let d=1e9;for(const lz of R.c||[0])d=Math.min(d,Math.hypot(p.x-o.x-Math.sin(o.yaw||0)*lz,p.z-o.z-Math.cos(o.yaw||0)*lz)-(R.r||1));
-      if(d<TU.talkRoadR){TALK.at.set(p,[o.x,o.z]);if(M.event(p,{kind:'thing',what:talkA(R.n),how:v>TU.talkRoadV?'road':'car'})&&!p.tkGo)talkFace(p,2.5,o.x,o.z)}}
+      if(d<TU.talkRoadR){TALK.at.set(p,[o.x,o.z]);if(v>TU.talkRoadV)repDeed('near',[p.body]);if(M.event(p,{kind:'thing',what:talkA(R.n),how:v>TU.talkRoadV?'road':'car'})&&!p.tkGo)talkFace(p,2.5,o.x,o.z)}}
     // someone lying still nearby
     for(const q of dead)if(Math.hypot(q.x-p.x,q.z-p.z)<TU.talkStillR){M.event(p,{kind:'still',by:q});break}}
   for(const p of [...TALK.far.keys()])if(!tf.people.includes(p))TALK.far.delete(p);
@@ -265,7 +281,7 @@ function talkLook(dt){const M=TALK.M,now=performance.now()/1000,foot=mode==='wal
 
 // ---- each frame (from main.js)
 function talkTick(dt){
-  talkErrands(dt);
+  talkErrands(dt);repTick(dt);
   const on=TALK.mode!=='off'&&TALK.M&&TALK.lib&&tf.on;
   if(!on){if(TALK.ui)TALK.ui.d.hidden=true;if(TALK.with)talkClose();for(const b of TALK.bub.values())b.el.classList.remove('on');return}
   const u=talkUI(),now=performance.now()/1000,foot=mode==='walk'&&!wk.inside;
