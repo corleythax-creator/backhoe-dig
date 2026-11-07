@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-07T00:36:00Z",
+ "updated": "2026-11-07T00:42:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -108,9 +108,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-06",
-   "dh": 57,
+   "dh": 63,
    "act": 3,
-   "versions": 9
+   "versions": 10
   }
  ],
  "extra": [
@@ -3270,6 +3270,15 @@ window.EFFORT = {
    "tris": 7480385,
    "chars": 2243053,
    "what": "Townsfolk act on what they notice: they run from danger, step back, stop and watch, or walk over to look or help. Gunshots reach everyone nearby. Talk to everyone at once with the Everyone button. With Haiku, Sonnet or Opus speaking, they know the day, the weather, the shop, what you're doing, your day's work, the police and what just happened, and the model picks their calm reactions."
+  },
+  {
+   "v": 351,
+   "asked": "2026-11-06T18:32:00-06:00",
+   "live": "2026-11-06T18:42:51-06:00",
+   "dh": 6,
+   "tris": 7628909,
+   "chars": 2245253,
+   "what": "The screen uses four text sizes and one set of corners and colours, phones get one consistent layout, and the screen editor's Layout tab can now move the job card as well as the top bar, captions, map and sticks."
   }
  ]
 };
