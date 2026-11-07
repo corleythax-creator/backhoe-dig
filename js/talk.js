@@ -126,7 +126,8 @@ function talkMicStart(){if(!TALK_SR||TALK.rec||!TALK.ui)return;const d=TALK.ui.d
   try{r=new TALK_SR()}catch(e){return}r.lang='en-US';r.interimResults=true;r.continuous=false;r.maxAlternatives=1;TALK.rec=r;let fin='';
   r.onresult=e=>{let t='';for(const x of e.results){t+=x[0].transcript;if(x.isFinal)fin=t}i.value=t};
   r.onend=()=>{TALK.rec=null;b.setAttribute('aria-pressed','false');b.textContent=say('tkMic');const v=(fin||i.value).trim();if(v&&TALK.with)d.querySelector('#talkForm').requestSubmit()};
-  r.onerror=()=>{};b.setAttribute('aria-pressed','true');b.textContent=say('tkListening');i.value='';try{r.start()}catch(e){TALK.rec=null}}
+  // no microphone, or the browser was told no: say so, put Speak away for this visit, and back to typing
+  r.onerror=e=>{if(/audio-capture|not-allowed|service-not-allowed/.test(e.error)){toast(say(e.error==='audio-capture'?'tkNoMic':'tkMicNo'),'',5000);b.hidden=true;fin='';i.value='';i.focus()}};b.setAttribute('aria-pressed','true');b.textContent=say('tkListening');i.value='';try{r.start()}catch(e){TALK.rec=null}}
 function talkMicStop(){if(TALK.rec)try{TALK.rec.stop()}catch(e){}}
 // said to everyone: starting with everyone, everybody, all of you, y'all, folks...
 const TALK_ALL=/^(hey|hi|hello|ok|okay|so|well)?[ ,]*(everyone|everybody|all of you|y'?all|you all|folks|guys|people)\b/i;
