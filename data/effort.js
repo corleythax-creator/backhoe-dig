@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-07T00:42:00Z",
+ "updated": "2026-11-07T01:00:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -108,9 +108,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-06",
-   "dh": 63,
-   "act": 3,
-   "versions": 10
+   "dh": 63.5,
+   "act": 3.5,
+   "versions": 11
   }
  ],
  "extra": [
@@ -3279,6 +3279,15 @@ window.EFFORT = {
    "tris": 7628909,
    "chars": 2245253,
    "what": "The screen uses four text sizes and one set of corners and colours, phones get one consistent layout, and the screen editor's Layout tab can now move the job card as well as the top bar, captions, map and sticks."
+  },
+  {
+   "v": 352,
+   "asked": "2026-11-06T18:44:00-06:00",
+   "live": "2026-11-06T19:00:18-06:00",
+   "dh": 0.5,
+   "tris": 5849442,
+   "chars": 2245253,
+   "what": "The townsfolk's fingers bend like real ones: each joint in a hand's own proportions, fingers drawing together toward the thumb, the thumb wrapping round, a closing hand rolling shut."
   }
  ]
 };
