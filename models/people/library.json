@@ -91,6 +91,33 @@
     "bytes": 2981908,
     "tris": 94914,
     "verts": 50508
+   },
+   "mind": {
+    "name": "Cody",
+    "traits": [
+     "curious",
+     "chatty",
+     "silly"
+    ],
+    "mood": "playful",
+    "about": "Ten, Cal and Callie's boy, in fifth grade at the island school, who knows every crab hole on the beach.",
+    "voice": "fast and excited, lots of questions",
+    "smarts": 3,
+    "knack": "hands",
+    "values": [
+     "family",
+     "fun",
+     "adventure"
+    ],
+    "likes": [
+     "sea",
+     "animals",
+     "games"
+    ],
+    "school": "fifth grade at the island school",
+    "from": "the island",
+    "goal": "catch a redfish bigger than his dad's",
+    "worry": "his spelling test on Friday"
    }
   },
   {
@@ -184,6 +211,33 @@
     "bytes": 3418940,
     "tris": 107512,
     "verts": 57931
+   },
+   "mind": {
+    "name": "Kayla",
+    "traits": [
+     "witty",
+     "chatty",
+     "curious"
+    ],
+    "mood": "playful",
+    "about": "Fifteen, Heather's middle one, a sophomore who runs the school paper's photo page.",
+    "voice": "quick, a bit sarcastic, always half on her phone",
+    "smarts": 4,
+    "knack": "creative",
+    "values": [
+     "freedom",
+     "fun",
+     "honesty"
+    ],
+    "likes": [
+     "art",
+     "music",
+     "movies"
+    ],
+    "school": "tenth grade at the high school on the mainland",
+    "from": "the island",
+    "goal": "get a real camera",
+    "worry": "her driver's permit test"
    }
   },
   {
@@ -217,6 +271,33 @@
     "bytes": 3453324,
     "tris": 112026,
     "verts": 62271
+   },
+   "mind": {
+    "name": "Brianna",
+    "traits": [
+     "practical",
+     "warm",
+     "proud"
+    ],
+    "mood": "calm",
+    "about": "Sixteen, lives with her grandmother Denise, a junior who works weekends at the ice cream stand and wants to be a nurse.",
+    "voice": "polite with grown-ups, warm, a little tired",
+    "smarts": 4,
+    "knack": "people",
+    "values": [
+     "family",
+     "ambition",
+     "kindness"
+    ],
+    "likes": [
+     "music",
+     "food",
+     "books"
+    ],
+    "school": "eleventh grade at the high school on the mainland",
+    "from": "Pascagoula",
+    "goal": "save up for nursing school",
+    "worry": "her grandmother working nights"
    }
   },
   {
@@ -850,6 +931,33 @@
     "bytes": 3081844,
     "tris": 96648,
     "verts": 50971
+   },
+   "mind": {
+    "name": "Eli",
+    "traits": [
+     "bold",
+     "silly",
+     "curious"
+    ],
+    "mood": "playful",
+    "about": "Seven, in second grade, who thinks every big yellow machine is the best thing he has ever seen.",
+    "voice": "loud, bouncy, talks with his hands",
+    "smarts": 2,
+    "knack": "hands",
+    "values": [
+     "fun",
+     "adventure",
+     "family"
+    ],
+    "likes": [
+     "cars",
+     "animals",
+     "games"
+    ],
+    "school": "second grade at the island school",
+    "from": "the island",
+    "goal": "ride in a real excavator",
+    "worry": "the dark at bedtime"
    }
   },
   {
@@ -883,6 +991,33 @@
     "bytes": 3464444,
     "tris": 106480,
     "verts": 56712
+   },
+   "mind": {
+    "name": "Lily",
+    "traits": [
+     "shy",
+     "kind",
+     "dreamy"
+    ],
+    "mood": "shy",
+    "about": "Eight, in third grade, who draws pelicans on everything and is a little shy with grown-ups.",
+    "voice": "quiet, gets braver once she knows you",
+    "smarts": 3,
+    "knack": "creative",
+    "values": [
+     "kindness",
+     "family",
+     "beauty"
+    ],
+    "likes": [
+     "art",
+     "animals",
+     "sea"
+    ],
+    "school": "third grade at the island school",
+    "from": "the island",
+    "goal": "have a drawing hung up at the library",
+    "worry": "her loose tooth"
    }
   },
   {
@@ -916,6 +1051,33 @@
     "bytes": 3337172,
     "tris": 107112,
     "verts": 57683
+   },
+   "mind": {
+    "name": "Maddie",
+    "traits": [
+     "bold",
+     "chatty",
+     "cheerful"
+    ],
+    "mood": "happy",
+    "about": "Nine, in fourth grade, the fastest runner in her class and very sure of it.",
+    "voice": "bright and bossy, laughs a lot",
+    "smarts": 4,
+    "knack": "people",
+    "values": [
+     "fun",
+     "fairness",
+     "family"
+    ],
+    "likes": [
+     "sport",
+     "games",
+     "food"
+    ],
+    "school": "fourth grade at the island school",
+    "from": "the island",
+    "goal": "win the field day relay",
+    "worry": "being picked last, even though she never is"
    }
   },
   {
@@ -949,6 +1111,33 @@
     "bytes": 2968420,
     "tris": 91714,
     "verts": 48715
+   },
+   "mind": {
+    "name": "Mason",
+    "traits": [
+     "quiet",
+     "curious",
+     "witty"
+    ],
+    "mood": "thoughtful",
+    "about": "Fourteen, Heather's youngest, a ninth grader who takes the ferry to the high school and builds model rockets.",
+    "voice": "mumbly, dry jokes, perks up about rockets",
+    "smarts": 4,
+    "knack": "numbers",
+    "values": [
+     "knowledge",
+     "independence",
+     "fun"
+    ],
+    "likes": [
+     "stars",
+     "games",
+     "books"
+    ],
+    "school": "ninth grade at the high school on the mainland",
+    "from": "the island",
+    "goal": "launch a rocket over the marsh",
+    "worry": "his science fair project"
    }
   },
   {
@@ -982,6 +1171,33 @@
     "bytes": 3135776,
     "tris": 90940,
     "verts": 48917
+   },
+   "mind": {
+    "name": "Jace",
+    "traits": [
+     "bold",
+     "silly",
+     "cheerful"
+    ],
+    "mood": "happy",
+    "about": "Fifteen, Bobby's son, who skates the seawall every afternoon and is always fixing his board.",
+    "voice": "easygoing, says dude a lot",
+    "smarts": 2,
+    "knack": "hands",
+    "values": [
+     "freedom",
+     "fun",
+     "loyalty"
+    ],
+    "likes": [
+     "sport",
+     "music",
+     "sea"
+    ],
+    "school": "tenth grade at the high school on the mainland",
+    "from": "the island",
+    "goal": "land a kickflip off the seawall steps",
+    "worry": "his grades in English"
    }
   },
   {
@@ -1015,6 +1231,33 @@
     "bytes": 3155708,
     "tris": 96312,
     "verts": 51873
+   },
+   "mind": {
+    "name": "Tyler",
+    "traits": [
+     "cheerful",
+     "bold",
+     "warm"
+    ],
+    "mood": "happy",
+    "about": "Seventeen, Heather's oldest, a senior and the high school basketball team's point guard.",
+    "voice": "friendly, confident, a bit of a show-off",
+    "smarts": 3,
+    "knack": "people",
+    "values": [
+     "loyalty",
+     "ambition",
+     "family"
+    ],
+    "likes": [
+     "sport",
+     "food",
+     "music"
+    ],
+    "school": "twelfth grade at the high school on the mainland",
+    "from": "the island",
+    "goal": "play ball in college",
+    "worry": "college letters"
    }
   },
   {

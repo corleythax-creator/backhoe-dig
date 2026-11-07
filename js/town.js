@@ -9,7 +9,9 @@
 // Carry next to anyone talks to them (a line fit for the time, the weather and your day's work, WORDS 'Town: talk').
 // The regulars (TOWN_REGS) are named people with their own looks and lines: shopkeepers at their counters while their
 // shop is open, and two who walk the town; they remember how often you've talked (town.met, saved with the rigs) and
-// give a regular 10% off at their shop. One shot dead is gone for the rest of the game day.
+// give a regular 10% off at their shop. One shot dead is gone for the rest of the game day. Anyone else is Passerby,
+// Kid or Clerk until they tell you their name on a first talk, and brings up seeing you in the shops now and then
+// (fmWho, fmLine, lives.js; what you buy is seen through townPay).
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 const town={met:{},pep:0,gT:0,chipT:0,sig:0,regT:0,wel:null,shut:null,shop:null};
 // ---------- money ----------
@@ -17,7 +19,7 @@ const townCash=()=>(TU.cashStart||0)+stats.earned-stats.fuelCost-(stats.spent||0
 const townCap=s=>s.charAt(0).toUpperCase()+s.slice(1);
 function townPay(v,item){v=Math.round(v*100)/100;if(!(v>0))return true;const c=townCash();
   if(c<v-1e-6){toast(say('shopShort',{item:townCap(item),price:usd(v),cash:usd(Math.max(0,c))}),'bad',4600);return false}
-  stats.spent=(stats.spent||0)+v;statDirty=true;town.sig++;town.chipT=5;return true}
+  stats.spent=(stats.spent||0)+v;statDirty=true;town.sig++;town.chipT=5;if(typeof fmBuy==='function'&&item)fmBuy(item);return true}
 function townRefund(v){if(!(v>0))return;stats.spent=Math.max(0,(stats.spent||0)-v);statDirty=true;town.sig++;town.chipT=4;toast(say('shopRefund',{price:usd(v)}),'',2000)}
 // the General Store's goods (PB_KINDS, pickup.js) and the gun shop's [gun, a round] (GUNS, pistol.js), boxes of TOWN_BOX
 const TOWN_PB={mulch:5.49,tools:39.99,groc:24.5},TOWN_GUN={pistol:[0,0.35],shotgun:[449,1.1],rifle:[799,1.6],carbine:[899,0.6]},TOWN_BOX=50;
@@ -92,23 +94,31 @@ function townAct(c){if(c.a==='order'){townLook(c.p);townOpen(c.R,c.p);return}tow
 function townLook(p){const yw=Math.atan2(wk.x-p.x,wk.z-p.z);if(p.room){if(!p.spot.path){p.look=yw-p.spot.yaw;p.t=Math.max(p.t||0,6)}else p.wait=5}else{p.wait=Math.max(p.wait||0,5);p.look=yw}}
 // what a regular says now: the first time who they are, then their lines in turn
 function townRegLine(G){const n=town.met[G.id]||0;town.met[G.id]=n+1;town.sig++;return n?say('reg_'+G.id+'_'+(1+(n-1)%3)):say('regHi',{line:say('reg_'+G.id+'_0'),name:G.n})}
-function townTalk(p){townLook(p);const G=p.reg,C=tf.chars[p.ci]||{},h=townHour();let who=G&&town.met[G.id]?townFirst(G):p.room&&p.spot.staff?'Clerk':C.age==='kid'?'Kid':'Passerby',line;
+function townTalk(p){townLook(p);const G=p.reg,C=tf.chars[p.ci]||{},h=townHour(),K=typeof talkKid==='function'&&talkKid(p),staff=p.room&&p.spot.staff;
+  // a stranger is Passerby, Kid or Clerk until they have told you their name (fmWho, lives.js)
+  const known=G?!!town.met[G.id]:fmKnown(p),name=fmName(p);let who=fmWho(p,staff?'Clerk':C.age==='kid'||K&&!K.teen?'Kid':'Passerby'),line,intro=false;
+  const mem=typeof gun==='object'&&(gun.eq||gun.stars>0)?null:fmLine(p,p.room);
   if(typeof gun==='object'&&gun.eq)line=say('grGun');
   else if(typeof gun==='object'&&gun.stars>0)line=say('tkBusy');
-  else if(G)line=townRegLine(G);
-  else if(p.room&&p.room.home){who='Resident';line=say('tkHome')}
-  else if(p.room&&p.spot.staff)line=say('tkStaff');
+  else if(G&&(!town.met[G.id]||!mem))line=townRegLine(G);
+  else if(mem){line=mem;if(G)town.met[G.id]++}
+  else if(p.room&&p.room.home){if(!known)who='Resident';line=say('tkHome')}
+  else if(staff)line=say('tkStaff');
+  else if(K)line=talkKidSay(p,'');
   else if(C.age==='kid')line=say('tkKid');
-  else if(p.talked)line=say('tkAgain');
+  else if(p.talked&&known)line=say('tkAgain');
   else{const L=['tkWeather','tkTrain','tkBrew','tkBand','tkRuth','tkHank','tkLake'];if(weather.r>0.15)L.push('tkRain','tkRain');if(h<9)L.push('tkMorning');if(h>=21||h<5)L.push('tkNight','tkNight');
     if(stats.dDug>0.8)L.push('tkDug','tkDug');if(stats.dMow>500)L.push('tkMow');const k=L[(Math.random()*L.length)|0];
     line=say(k,{yd:sYd(stats.dDug),sqft:Math.round(stats.dMow).toLocaleString()+' sq ft'})}
-  p.talked=1;toast(say('say',{who,line}),'',5600)}
+  // a first talk: they say who they are (a regular does it in their own first line)
+  if(!G&&!known&&name&&!(typeof gun==='object'&&(gun.eq||gun.stars>0))){line=say(K?(K.teen?'tnIntro':'kdIntro'):'tkIntro',{line,name});fmIntro(p.body);intro=true}
+  p.talked=1;toast(say('say',{who,line}),'',intro?6400:5600)}
 // ---------- the counter: a shop's menu ----------
 // 10% off at a regular's after five talks; and what the one at the counter thinks of him (repPrice, lives.js)
 function townOff(R){const G=TOWN_REGS.find(G=>G.si!=null&&G.si===R.si);return (G&&G.p&&(town.met[G.id]||0)>=5?0.1:0)+(typeof repPrice==='function'&&town.shop?repPrice(town.shop.p):0)}
 function townOpen(R,p){town.shop={R,p};if(document.pointerLockElement)document.exitPointerLock();const G=p.reg;
-  $('#tsHead').textContent=townShopName(R);$('#tsWho').textContent=G?say('say',{who:town.met[G.id]?townFirst(G):'Clerk',line:townRegLine(G)}):say('shopWelcome',{shop:townShopName(R)});townDraw();$('#townShop').hidden=false}
+  const mem=G?null:fmLine(p,R),wel=mem||say('shopWelcome',{shop:townShopName(R)});
+  $('#tsHead').textContent=townShopName(R);$('#tsWho').textContent=G?say('say',{who:town.met[G.id]?townFirst(G):'Clerk',line:townRegLine(G)}):fmKnown(p)||mem?say('say',{who:fmWho(p,'Clerk'),line:wel}):wel;townDraw();$('#townShop').hidden=false}
 function townClose(){town.shop=null;$('#townShop').hidden=true}
 function townDraw(){const S=town.shop;if(!S)return;const M=townMenu(S.R)||[],off=townOff(S.R);
   $('#tsList').innerHTML=M.map((m,i)=>{const pr=m[1]*(1-off);return `<div class="gsRow"><div class="gsTxt"><b>${m[0]}</b><small>${m[2]==='p'?'A spring in your step':m[2]==='s'?'Sleep till 7 AM':m[2]==='b'?'What you have to spend':''}${off&&m[1]?(m[2]?' · ':'')+(off>0?Math.round(off*100)+'% off, a friend':Math.round(-off*100)+'% more: they don\'t trust you'):''}</small></div>`+
@@ -139,13 +149,16 @@ function townTick(dt){if(town.pep>0)town.pep=Math.max(0,town.pep-dt);
     p.gr=1;if(gun&&gun.stars>0||Math.random()>=(TU.greetChance??0.45))continue;
     const h=townHour(),C=tf.chars[p.ci]||{},G=p.reg,k=armed?'grGun':C.age==='kid'?'grKid':G&&town.met[G.id]?'reg_back':weather.r>0.2?'grRain':h>=4&&h<12?'grMorning':h<17?'grDay':h<21?'grEvening':'grNight';
     p.wait=Math.max(p.wait||0,1.4);p.look=Math.atan2(wk.x-p.x,wk.z-p.z);
-    toast(say('say',{who:G&&town.met[G.id]?townFirst(G):C.age==='kid'?'Kid':'Passerby',line:say(Math.random()<0.25&&!armed&&k!=='reg_back'?'grHey':k)}),'',2800);town.gT=TU.greetGap??8;break}}
+    // now and then, what they remember of seeing him in the shops (fmLine, lives.js)
+    const mem=!armed&&Math.random()<(TU.memSay??0.4)?fmLine(p,null):null;
+    toast(say('say',{who:fmWho(p,C.age==='kid'?'Kid':'Passerby'),line:mem||say(Math.random()<0.25&&!armed&&k!=='reg_back'?'grHey':k)}),'',mem?4200:2800);town.gT=TU.greetGap??8;break}}
 // coming in at a shop's door: a welcome from whoever is behind the counter, or a word that it is shut and when it opens
 function townDoors(){let R=null;for(const Q of TF_ROOMS){if(Q.si==null&&!Q.nm)continue;if(Math.hypot(wk.x-Q.x,wk.z-Q.z)<Q.r*0.7&&Math.abs(wk.y-(Q.y??wk.y))<1.6){R=Q;break}}
   if(R===town.wel)return;town.wel=R;if(!R)return;const open=townRoomOpen(R),H=townHrs(R);
   if(!open&&H){toast(say('shopClosed',{shop:townShopName(R),open:townAmPm(H[0]),close:townAmPm(H[1])}),'',3600);return}
   const s=tf.people.find(p=>p.room===R&&p.spot.staff&&!p.dead&&!p.hurt);if(!s||!townMenu(R))return;
-  const G=s.reg;toast(say('say',{who:G&&town.met[G.id]?townFirst(G):'Clerk',line:G&&town.met[G.id]?say('reg_back'):say('shopWelcome',{shop:townShopName(R)})}),'',3000)}
+  const G=s.reg,mem=Math.random()<(TU.memSay??0.4)?fmLine(s,R):null;
+  toast(say('say',{who:fmWho(s,'Clerk'),line:mem||(G&&town.met[G.id]?say('reg_back'):say('shopWelcome',{shop:townShopName(R)}))}),'',mem?4200:3000)}
 // ---------- saved with the rigs (save.js) ----------
 function townSave(){return {m:town.met}}
 function townLoad(d){if(!d||typeof d!=='object'||!d.m||typeof d.m!=='object')return;for(const G of TOWN_REGS){const n=d.m[G.id];if(isFinite(n)&&n>0)town.met[G.id]=Math.min(1e6,n|0)}}
