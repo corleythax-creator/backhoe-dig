@@ -122,7 +122,9 @@ const TUNE=[
   ['talkRoadR','Town','A machine you drive this close to someone gets a word from them',4.6,'ft',3,60,1],
   ['talkRoadV','Town','Going past them faster than this, it nearly had them',2.2,'mph',1,30,0.5],
   ['talkSightR','Town','Townsfolk notice machines within',15.2,'ft',10,200,5],
-  ['talkStillR','Town','Townsfolk notice someone lying still within',7.6,'ft',5,100,5]
+  ['talkStillR','Town','Townsfolk notice someone lying still within',7.6,'ft',5,100,5],
+  ['talkGroupR','Town','Talking to everyone reaches the townsfolk within',6.1,'ft',5,60,1],
+  ['talkGoT','Town','Townsfolk walk over to look at something for up to',12,'s',2,60,1]
   // indoors (interiors.js): how the eye adjusts in a shop or house, and its room light (Medium graphics and up)
   ['inAdapt','Town','Indoors, the view brightens by',0.9,'pct',0,300,5],['inLamp','Town','Indoors, the room light',1.6,'n',0,6,0.1],
   ['craneSpan','Bridges','The crane builds a steel span in about',240,'min',1,60,1],
