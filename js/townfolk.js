@@ -360,8 +360,22 @@ function tfWalkStep(p,dt){
   let d=Math.atan2(dx,dz)-p.yaw;d=Math.atan2(Math.sin(d),Math.cos(d));p.yaw+=d*Math.min(1,dt*7);
   p.amp+=(Math.min(1,p.spd/1.2)*0.42-p.amp)*Math.min(1,dt*6);p.ph+=p.spd*dt*Math.PI*2/(1.5*p.sc)}
 // at node n (come by walk w): the next walk, not straight back unless it is a dead end (where they may stop a moment)
-function tfPick(p,n,w){let opts=n.e.filter(e=>e!==w);if(!opts.length){opts=[w];if(Math.random()<0.4){p.wait=2+Math.random()*4;p.look=p.yaw+Math.PI}}
-  const e=opts[(Math.random()*opts.length)|0];p.w=e;p.xok=false;p.dir=e.a===n?1:-1;p.s=p.dir>0?0:e.len}
+// On an errand (p.goal, talk.js talkErrand) they take the walk that leads to its node soonest, and mark it reached there.
+function tfPick(p,n,w){if(p.goal&&n===p.goal.n)p.goal.here=1;let opts=n.e.filter(e=>e!==w);if(!opts.length){opts=[w];if(Math.random()<0.4){p.wait=2+Math.random()*4;p.look=p.yaw+Math.PI}}
+  const e=p.goal&&!p.goal.here&&tfGoalPick(n,opts,p.goal.n)||opts[(Math.random()*opts.length)|0];p.w=e;p.xok=false;p.dir=e.a===n?1:-1;p.s=p.dir>0?0:e.len}
+// ---------- errands: the shortest way along the walks to a node ----------
+// each node's distance to node g along the walks (Dijkstra, kept per goal; the walks never change while the game runs)
+const TF_DIST=new Map();
+function tfDistTo(g){let D=TF_DIST.get(g);if(D)return D;D=new Map([[g,0]]);const q=[g];
+  while(q.length){q.sort((a,b)=>D.get(a)-D.get(b));const n=q.shift(),d=D.get(n);
+    for(const e of n.e){const m=e.a===n?e.b:e.a,nd=d+e.len;if(!D.has(m)||nd<D.get(m)){if(!D.has(m))q.push(m);D.set(m,nd)}}}
+  TF_DIST.set(g,D);return D}
+// the node nearest a spot
+function tfNodeNear(x,z){let b=null,bd=1e9;for(const n of TF_NODES){const d=Math.hypot(n.x-x,n.z-z);if(d<bd){bd=d;b=n}}return b}
+// at node n, of the walks opts, the one that leads to g soonest
+function tfGoalPick(n,opts,g){const D=tfDistTo(g);let b=null,bd=1e9;for(const e of opts){const m=e.a===n?e.b:e.a,d=e.len+(D.has(m)?D.get(m):1e9);if(d<bd){bd=d;b=e}}return b}
+// on a walk, turn the way that leads to g soonest
+function tfGoalDir(p,g){const w=p.w,D=tfDistTo(g),da=p.s+(D.has(w.a)?D.get(w.a):1e9),db=w.len-p.s+(D.has(w.b)?D.get(w.b):1e9);p.dir=db<da?1:-1}
 // ---------- cars ----------
 // the driver's seat of each kind (tools/models/cars.js; the wheel on the left, +x): how far forward of the car's middle,
 // and the seated driver's height above the ground (low in the seat, the head clear of the roof)
