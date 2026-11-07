@@ -400,7 +400,7 @@ function guiTuneHtml(){const set=(tune.draft||tune.live||{set:{}}).set;let g='',
 <h3>Publish</h3>${gui.host?'':guiRow('Owner key',`<input type="password" data-f="key" value="${guiEsc(guiLs(GUI_KEY_LS)||'')}" autocomplete="off" style="grid-column:2/4">`,'')}
 <div class="gbtns"><button class="go" data-a="tunepub">Publish the tuning to every device</button>${gui.host?'<button data-a="tuneload">Load the live tuning</button>':''}</div>`}
 // the start card's words (renamed like any part, skin.text) and the tips and captions (skin.words)
-const guiCardEls=()=>[...gui.doc.querySelectorAll('#help *')].filter(e=>!e.firstElementChild&&e.id!=='verHelp'&&e.tagName!=='IMG'&&(gui.orig.has(e)?gui.orig.get(e):e.textContent).trim());
+const guiCardEls=()=>[...gui.doc.querySelectorAll('#help *,#howList *')].filter(e=>!e.firstElementChild&&e.id!=='verHelp'&&e.tagName!=='IMG'&&(gui.orig.has(e)?gui.orig.get(e):e.textContent).trim());
 function guiWordsHtml(){const T=gui.skin.text,Wd=gui.skin.words;let h=`<p class="gnote">Rewrite the start card, the tips that pop up and the stick captions. In a tip, a name in [brackets] is the key for that action and follows the player's own keys; {names} are filled in by the game. A caption's second line goes after a line break.</p>
 <div class="gpeek"><label><input type="checkbox" data-peek="#help" ${gui.peek.has('#help')?'checked':''}>Show the start card</label></div><h3>Start card</h3>`;
   let last='';

@@ -59,6 +59,15 @@ const WORDS=[
   ['walkKb','On foot','On foot. [jump] jumps, [place] sets a block, [enter] gets into a machine.'],
   ['walkTouch','On foot','On foot. Tap Jump to jump. Walk up to a machine and tap Get in.'],
   ['walkPad','On foot','On foot. A jumps, X sets a block, B gets into a machine.'],
+  ['exCardKb','Machines','Digging. [lLeft] [lRight] swing, [lUp] [lDown] reach the stick out and in; [rUp] [rDown] lower and raise the boom, [rLeft] curls the bucket in, [rRight] dumps. [exSwap] flips to Tracks to drive.'],
+  ['exCardTouch','Machines','Digging. Left stick swings and reaches the stick out and in; right stick lowers and raises the boom, left curls the bucket in, right dumps. Tracks over the right stick drives.'],
+  ['exCardPad','Machines','Digging. Left stick swings and reaches the stick out and in; right stick lowers and raises the boom, left curls the bucket in, right dumps. The Tracks / Arm switch drives.'],
+  ['truckCardKb','Machines','Dump truck. [lUp] gas, [lDown] brake and reverse, [lLeft] [lRight] steer; [rUp] [rDown] raise and lower the bed. Park under the bucket to be loaded.'],
+  ['truckCardTouch','Machines','Dump truck. Left stick steers and gives gas, pull back to brake and reverse; right stick raises and lowers the bed. Park under the bucket to be loaded.'],
+  ['truckCardPad','Machines','Dump truck. Triggers are gas and reverse, the left stick steers; the right stick raises and lowers the bed. Park under the bucket to be loaded.'],
+  ['miniTip','Machines','Mini excavator. The sticks run the arm as in the big one; [enter] to climb out.'],
+  ['tipCardsOff','Other','Machine tips are off. Turn them back on in How to play.'],['tipCardsAgain','Other','Each machine shows its tip again the next time you get in.'],
+  ['famPlayAt','Other','Play {game} at {url}','{game}: chess or checkers; {url}: where'],
   ['lockHint','Other','Esc frees the mouse · any key takes it back'],
   ['mouseLook','On foot','Mouse look. Move the mouse to look around, wheel or [zoom] zooms. Esc frees the mouse.'],
   ['bikeTip','Dirt bike','On Dexter\'s dirt bike. [lUp] gas, [lDown] brake and back up, [lLeft] [lRight] steer. Hit the jump with some speed; gas in the air lifts the front. [enter] to climb off.',''],
@@ -117,6 +126,9 @@ const WORDS=[
   ['thNone','Blocks','Face a thing within reach to pick it up.'],['thLocked','Blocks','That one is locked in the map editor.'],
   ['thCap','Blocks','That\'s all {n} of {what}. Pick some up first.','{n}: how many; {what}: the thing'],
   ['thWater','Blocks','Things go on dry ground.'],['thStand','Blocks','You are standing there. Step back.'],
+  ['blkFull','Blocks','That\'s all {n} blocks. Pick some up first.','{n}: the most'],['blkRaise','Blocks','Raise the bucket above the stack to set a block on it.'],
+  ['blkTooHigh','Blocks','Too high to reach. Climb up first.'],['blkStandingThere','Blocks','You are standing there. Step back.'],
+  ['blkTooCloseEx','Blocks','Too close to the excavator. Reach out farther.'],['blkUnderTruck','Blocks','That spot is under the truck.'],
   ['blkFP','Blocks','Blocks go where the dot is. The mouse wheel (or [blkNear] [blkFar]) pulls them in and pushes them out.'],
   ['rainIn','Weather and water','Rain coming in. Dirt, clay and low ground will turn to mud.'],
   ['wipeTip','Weather and water','Rain on the glass. [wipers] runs the wipers.'],
@@ -138,6 +150,20 @@ const WORDS=[
   ['edTip_query','Map editor','Tap or drag over the ground to read its height, slope and surface.'],
   ['edTip_measure','Map editor','Tap the ground to lay points: the length shows, and with three or more the area. Drag a point to move it; tap the first one to close the shape.'],
   ['edViewCopied','Map editor','View copied: {code}. Paste it to Claude to show where you are looking ({where}).','the view code, where it looks'],
+  ['edOpen','Map editor','Map editor. The game is paused while you edit.'],['edNoPlanted','Map editor','None of your planted trees stands here.'],
+  ['edCapHit','Map editor','The map holds at most {n} of these ({what}).','{n}: the most; {what}: the kind'],['edMachinesBack','Map editor','The machines are back where they start.'],
+  ['edLayRoad','Map editor','Tap the ground to lay the road, point by point. Tap Finish when it is done.'],['edLayStreet','Map editor','Tap the ground to lay the street, point by point. Tap Finish when it is done.'],
+  ['edStreetShort','Map editor','The street is too short for that spacing.'],['edLineFull','Map editor','That is as many {what} as the map holds ({n}).','{what}: lamps, trees…; {n}: the most'],
+  ['edLinePlaced','Map editor','{n} placed. They are picked: move, turn or delete them like any thing.','{n}: how many'],
+  ['edLinePlacedCap','Map editor','{n} placed (the map holds {cap}). They are picked: move, turn or delete them like any thing.','{n}: how many; {cap}: the most'],
+  ['edRoomFor','Map editor','Only room for {n} more on the map.','{n}: how many'],['edNoRoom','Map editor','The map holds no more of these.'],
+  ['edCut','Map editor','Cut {what}. Paste with {paste}.','{what}: the thing or how many; {paste}: Paste or Ctrl+V'],['edCopied','Map editor','Copied {what}. Paste with {paste}.','{what}: the thing or how many; {paste}: Paste or Ctrl+V'],
+  ['edSaveFull','Map editor','Could not save the map on this device (storage is full or blocked).'],['edSaveFail','Map editor','Could not save the map on this device.'],
+  ['edCopyByHand','Map editor','Select all of the text and copy it.'],['edMapCopied','Map editor','Map copied ({kb} KB of text). Paste it anywhere to keep it.','{kb}: its size'],
+  ['edNotMapText','Map editor','That is not a Corley\'s Island map. Copy one with Copy map first.'],['edNotMapFile','Map editor','That file is not a Corley\'s Island map.'],
+  ['edNoMapRoom','Map editor','Not enough room on this device for another map. Delete one or download it as a file.'],['edMapNameTaken','Map editor','There is already a map with that name.'],
+  ['ownMatAdded','Map editor','{name} is in the library under {cat}. Every device gets it the next time the game opens.','{name}: the material; {cat}: its group'],
+  ['ownMatSaved','Map editor','{name} is in the library. Every device gets it the next time the game opens.','{name}: the material'],
   ['edTip_roads','Map editor','Tap a road or street to pick it, drag its dots, tap it between dots to add one. New street lays a paved one with curbs and sidewalks; its card can make it brick or cobblestone.'],
   ['vrIn','VR','In VR: sticks as on a controller, triggers gas / reverse. B gets in and out, X next machine, Y leaves VR.'],['vrFail','VR','Could not start VR on this device.'],
   ['vrHintWalk','VR','B get in · A jump · X next machine · Y leave VR'],['vrHintEx','VR','B get out · A drive / dig · X next machine · Y leave VR'],['vrHintRide','VR','B get out · X next machine · Y leave VR'],
@@ -228,13 +254,15 @@ const WORDS=[
 const WORDS_BY={};for(const w of WORDS)WORDS_BY[w[0]]=w;
 // the owner's words if the skin has them, else the game's own; html: escaped, with the filled-in parts in bold and the
 // lines broken (the captions)
+// the last message say() made, so a toast of it knows its id (toast merges by id)
+var sayLast={id:'',t:''};
 function say(id,vars,html){const own=typeof gui!=='undefined'&&gui.skin&&gui.skin.words?gui.skin.words[id]:undefined,w=WORDS_BY[id];
   const t=typeof own==='string'?own:w?w[2]:id,esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'})[c]);
   const part=s=>html?'<b>'+esc(s)+'</b>':s;let out='',i=0;
   for(const m of t.matchAll(/\[(\w+)\]|\{(\w+)\}/g)){out+=html?esc(t.slice(i,m.index)):t.slice(i,m.index);i=m.index+m[0].length;
     if(m[1])out+=typeof keyBind!=='undefined'&&keyBind[m[1]]?part(keyLabel(m[1])):m[0];
     else out+=vars&&vars[m[2]]!==undefined?part(vars[m[2]]):m[0]}
-  out+=html?esc(t.slice(i)):t.slice(i);
+  out+=html?esc(t.slice(i)):t.slice(i);if(!html)sayLast={id,t:out};
   return html?out.replace(/<\/b> <b>/g,' ').replace(/\n/g,'<br>'):out}
 // new words from the skin: redraw what is on screen now (the captions)
 function wordsRefresh(){if(typeof setCaps==='function'&&typeof mode!=='undefined'){try{setCaps()}catch(e){}}}

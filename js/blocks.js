@@ -127,12 +127,12 @@ function blkAim(){const w=blkDim.w*IN,d=blkDim.d*IN,h=blkDim.h*IN,[ax,az]=blkTar
   for(const b of blocks)if(blkOver(b,x,z,w,d))y=Math.max(y,b.y+b.h);
   const p=blkP;p.x=x;p.z=z;p.y=y;p.w=w;p.d=d;p.h=h;p.ok=false;
   const t={x,z,w,d},walk=mode==='walk';
-  if(blocks.length>=BLK_MAX)p.why=`That's all ${BLK_MAX} blocks. Pick some up first.`;
-  else if(!walk&&y>tip.y+0.6)p.why='Raise the bucket above the stack to set a block on it.';
-  else if(walk&&!blkFP()&&y+Math.min(h,FT*3)>wk.y+TU.wkReachUp)p.why='Too high to reach. Climb up first.';
-  else if(walk&&Math.abs(wk.x-x)<w/2+WK_R&&Math.abs(wk.z-z)<d/2+WK_R&&y<wk.y+WK_H&&y+h>wk.y+0.02)p.why='You are standing there. Step back.';
-  else if(EX_C.some(lz=>blkCircleD(st,lz,t)<EX_R+0.05))p.why='Too close to the excavator. Reach out farther.';
-  else if(TR_C.some(lz=>blkCircleD(tr,lz,t)<TR_R+0.05))p.why='That spot is under the truck.';
+  if(blocks.length>=BLK_MAX)p.why=say('blkFull',{n:BLK_MAX});
+  else if(!walk&&y>tip.y+0.6)p.why=say('blkRaise');
+  else if(walk&&!blkFP()&&y+Math.min(h,FT*3)>wk.y+TU.wkReachUp)p.why=say('blkTooHigh');
+  else if(walk&&Math.abs(wk.x-x)<w/2+WK_R&&Math.abs(wk.z-z)<d/2+WK_R&&y<wk.y+WK_H&&y+h>wk.y+0.02)p.why=say('blkStandingThere');
+  else if(EX_C.some(lz=>blkCircleD(st,lz,t)<EX_R+0.05))p.why=say('blkTooCloseEx');
+  else if(TR_C.some(lz=>blkCircleD(tr,lz,t)<TR_R+0.05))p.why=say('blkUnderTruck');
   else{p.ok=true;p.why=''}
   return p}
 const blkSizeTxt=(w,d,h)=>`${blkInTxt(w)} × ${blkInTxt(d)} × ${blkInTxt(h)}`;
