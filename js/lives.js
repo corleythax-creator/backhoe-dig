@@ -14,14 +14,16 @@
 // aloud when it happens near you, repSpread now and then anywhere in town). Each person's opinion of you is the deeds
 // they know, fading by half every few game days (REP_HALF). It changes how they meet you (repMeet: glad, wary, or
 // scared off), prices at their counter (townOff, town.js) and what a model hears (repScene).
+// Who has seen you in the shops (FMEM, below, saved with REP): those in a shop with you remember it and what you bought.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 
 // ---------- daily lives ----------
 // the neighbourhood streets' names, by SUB_STREETS index (suburbs.js)
 const LIFE_ST=['Magnolia Lane','Magnolia Lane','Cypress Street','Cypress Street','Live Oak Drive','Gull Street','Pelican Avenue','Heron Street','Pine Court',
   'Bayou Lane','Shrimp Boat Road','Marsh Drive','Egret Court'];
-// who lives together (by look); everyone else grown has a house of their own; children are not placed
-const LIFE_HOMES=[['cal_f','cal_m'],['f80_jacket','m60_cap'],['f45_mom']];
+// who lives together (by look; the teens with their families, library.json's minds); everyone else grown has a house
+// of their own; children are not placed
+const LIFE_HOMES=[['cal_f','cal_m'],['f80_jacket','m60_cap'],['f45_mom','m17_hoops','f15_pack','m14_pack'],['m40_yard','m15_skate'],['f50_scrubs','f16_teen']];
 // where each one works, by look: a counter (si: the shop's sign, MAIN_SHOPS), away from the streets (away), or about the
 // town (out); h: their hours [from, to] (past 24 runs into the next morning; a counter's own hours when left out);
 // wk: weekdays only. The regulars' come from TOWN_REGS. Anyone not here has no job to go to.
@@ -79,11 +81,17 @@ function lifeScene(p,name){const L=lifeOf(p.body);if(!L)return '';const N=lifeNo
 // the deeds: how much each counts (w, -100..100 for an opinion) and how it is told (s, of him)
 const REP_K={shot:{w:-30,s:'he shot somebody in town'},cop:{w:-50,s:'he shot a police officer'},shots:{w:-6,s:'he was firing a gun in town'},
   cops:{w:-10,s:'the police were after him'},near:{w:-4,s:'he nearly ran somebody down in one of his machines'},
-  kind:{w:1.5,s:'he stops to talk and he is friendly'},buy:{w:1,s:'he spends his money in town'},work:{w:3,s:'he works hard on the island'}};
+  kind:{w:1.5,s:'he stops to talk and he is friendly'},buy:{w:1,s:'he spends his money in town'},seen:{w:0.5,s:'he is often about the shops in town'},work:{w:3,s:'he works hard on the island'}};
 const REP_HALF=4;   // game days for a deed to count half as much
 const REP={d:[],kn:{},n:0,dirty:false,saveT:0,spreadT:0,day:-1};
+// who has seen you in the shops (below): by look, { n: times in a shop together (fading), t: the last time, s: [[game day,
+// the shop, what you bought or '', said yet 0/1], ... the last FMEM_N], k: 1 once they have told you their name }
+const FMEM={w:{},R:null,cur:new Set(),T:0,famT:{},talkT:0,talkK:null},FMEM_N=3,FMEM_EP=0.1;
 try{const o=JSON.parse(localStorage.getItem('bhd_rep')||'null');if(o&&Array.isArray(o.d)){REP.d=o.d.filter(d=>d&&REP_K[d.k]).slice(-40);REP.n=+o.n||REP.d.length;
-  if(o.kn&&typeof o.kn==='object')for(const b in o.kn)if(Array.isArray(o.kn[b]))REP.kn[b]=o.kn[b].filter(i=>REP.d.some(d=>d.i===i))}}catch(e){}
+  if(o.kn&&typeof o.kn==='object')for(const b in o.kn)if(Array.isArray(o.kn[b]))REP.kn[b]=o.kn[b].filter(i=>REP.d.some(d=>d.i===i))}
+  if(o&&o.fm&&typeof o.fm==='object')for(const b in o.fm){const w=o.fm[b];if(!w||typeof w!=='object'||!/^\w{1,24}$/.test(b))continue;
+    FMEM.w[b]={n:Math.min(99,Math.max(0,+w.n||0)),t:isFinite(w.t)?+w.t:0,k:w.k?1:0,
+      s:(Array.isArray(w.s)?w.s:[]).filter(e=>Array.isArray(e)&&isFinite(e[0])&&typeof e[1]==='string').slice(-FMEM_N).map(e=>[+e[0],e[1].slice(0,40),String(e[2]||'').slice(0,40),e[3]?1:0])}}}catch(e){}
 const repNow=()=>fuelDayNo()+townHour()/24;
 function repKnows(b,i){return (REP.kn[b]||[]).includes(i)}
 function repLearn(b,i){if(!b)return;const k=REP.kn[b]||(REP.kn[b]=[]);if(!k.includes(i)){k.push(i);REP.dirty=true}}
@@ -132,4 +140,74 @@ function repTick(dt){const day=fuelDayNo();
   if(!REP.workDone&&typeof stats==='object'&&((stats.dDug||0)>4||(stats.dHaul||0)>4||(stats.dMow||0)>200)){REP.workDone=true;
     const ids=tf.chars?tf.chars.filter(c=>c.body!=='k').map(c=>c.id):[];repDeed('work',ids.filter(()=>Math.random()<0.25))}
   if((REP.spreadT+=dt)>45){REP.spreadT=0;if(REP.d.length)repSpread()}
-  if(REP.dirty&&(REP.saveT+=dt)>5){REP.saveT=0;REP.dirty=false;try{localStorage.setItem('bhd_rep',JSON.stringify({d:REP.d,kn:REP.kn,n:REP.n}))}catch(e){}}}
+  if((FMEM.T+=dt)>0.3){fmTick();FMEM.T=0}
+  if(REP.dirty&&(REP.saveT+=dt)>5){REP.saveT=0;REP.dirty=false;fmPrune();try{localStorage.setItem('bhd_rep',JSON.stringify({d:REP.d,kn:REP.kn,n:REP.n,fm:FMEM.w}))}catch(e){}}}
+
+
+// ---------- who has seen you in the shops ----------
+// Whoever is in a shop's room while the worker is in it (staff and customers, those walking in or out too) remembers it:
+// which shop, when, and what he bought there if he did (townPay, town.js). Kept per look in FMEM (saved in bhd_rep, so it
+// syncs with the town's memory), the last FMEM_N times each, a visit within FMEM_EP game days of the last at the same shop
+// being the same one; forgotten after TU.memDays game days. It comes up when they meet him again (fmLine: now and then,
+// by how long ago and what he bought; a clerk back at their own counter; a familiar face once they have been in the
+// shops together TU.memFamiliar times, fading like REP), a model hears it (fmScene), and it is a small friendly deed
+// (REP_K.seen). Their name: strangers stay Passerby, Kid or Clerk until they have told it on a first talk (fmKnown).
+function fmTick(){const R=mode==='walk'&&typeof walker==='object'&&walker.visible&&typeof town==='object'?town.wel:null;
+  if(R!==FMEM.R){FMEM.R=R;FMEM.cur.clear()}if(!R||!tf.on||Math.hypot(wk.x-R.x,wk.z-R.z)>R.r)return;const seen=[];
+  for(const p of tf.people){if(p.dead||p.drv||p.cop||FMEM.cur.has(p)||!(p.room===R||p.go&&p.go.R===R&&Math.hypot(p.x-R.x,p.z-R.z)<R.r))continue;
+    FMEM.cur.add(p);if(fmSee(p.body,townShopName(R),''))seen.push(p.body)}
+  if(seen.length)repDeed('seen',seen)}
+// b saw him at this shop now (item: what he bought); true when it is a new time together
+function fmSee(b,shop,item){if(!b)return false;const now=repNow(),w=FMEM.w[b]||(FMEM.w[b]={n:0,t:now,s:[],k:0});
+  let e=w.s.find(e=>e[1]===shop&&now-e[0]<FMEM_EP),fresh=!e;
+  if(fresh){w.n=w.n*Math.pow(0.5,Math.max(0,now-w.t)/(REP_HALF*2))+1;e=[0,shop,'',0];w.s.push(e);if(w.s.length>FMEM_N)w.s.shift()}
+  e[0]=Math.round(now*1000)/1000;if(item){e[2]=String(item).slice(0,40);e[3]=0}w.t=e[0];REP.dirty=true;return fresh}
+// he paid for something (townPay): everyone in the room with him sees it, and the one who served him
+function fmBuy(item){const S=typeof town==='object'?town.shop:null;let R=town.wel||S&&S.R;
+  if(!R)for(const Q of TF_ROOMS)if(!Q.home&&Math.hypot(wk.x-Q.x,wk.z-Q.z)<Q.r&&Math.abs(wk.y-(Q.y??wk.y))<1.6){R=Q;break}
+  if(!R)return;const shop=townShopName(R),who=new Set();if(S&&S.p&&!S.p.dead)who.add(S.p.body);
+  for(const p of tf.people)if(!p.dead&&!p.drv&&!p.cop&&p.room===R)who.add(p.body);
+  for(const b of who)fmSee(b,shop,item)}
+// forget what is past TU.memDays, and anyone with nothing left to remember
+function fmPrune(){const now=repNow(),D=TU.memDays??7;
+  for(const b in FMEM.w){const w=FMEM.w[b];w.s=w.s.filter(e=>now-e[0]<D);w.n=Math.round(w.n*Math.pow(0.5,Math.max(0,now-w.t)/(REP_HALF*2))*100)/100;w.t=Math.round(now*1000)/1000;
+    if(!w.s.length&&w.n<0.3&&!w.k)delete FMEM.w[b]}}
+// a line's ways of putting it: id1, id2, ... as many as WORDS has
+function fmSay(id,v){let n=0;while(WORDS_BY[id+(n+1)])n++;return say(id+(1+Math.floor(Math.random()*Math.max(1,n))),v)}
+// what he bought was something to eat or drink (a menu's pick-me-up)
+function fmEat(item){for(const k in TOWN_MENU)for(const m of TOWN_MENU[k])if(m[0]===item)return m[2]==='p';return TOWN_BREW.some(m=>m[0]===item&&m[2]==='p')||/coffee|latte|beer|lager|soda|pie|roll|sandwich|burger|water/i.test(item)}
+// what he bought, as said in a line ('the {item}'): 'Kayak, an hour' a kayak, 'Mail a letter' the letter
+function fmItem(t){t=String(t||'').replace(/,.*$/,'').replace(/^(mail|ship|wash|dry|borrow) an? /i,'').replace(/^a night's stay$/i,'room');return t.charAt(0).toLowerCase()+t.slice(1)}
+// when it was, in words
+function fmWhen(t){const now=repNow(),d0=Math.floor(now),d=Math.floor(t),h=(t-d)*24;
+  return d===d0?(now-t<0.08?'just now':h<12?'this morning':h<17?'this afternoon':'this evening'):d===d0-1?(h<17?'yesterday':'last night'):'the other day'}
+// what p says about it when they meet him (null: nothing to say). R: the room they are in now (a clerk at their own
+// counter says it as a welcome back). Each time is brought up once; a familiar face now and then after that.
+function fmLine(p,R){const b=p&&p.body,w=b&&FMEM.w[b];if(!w)return null;const now=repNow(),kid=typeof talkKid==='function'&&talkKid(p);
+  const e=w.s.filter(e=>!e[3]&&now-e[0]<(TU.memDays??7)&&now-e[0]>0.02).pop();
+  if(e){e[3]=1;REP.dirty=true;const when=fmWhen(e[0]),old=Math.floor(e[0])<Math.floor(now),item=fmItem(e[2]),v={shop:e[1],when,item};
+    if(kid)return fmSay(item?'fmKidBuy':'fmKid',v);
+    if(R&&e[1]===townShopName(R)&&p.spot&&p.spot.staff)return fmSay(item?'fmBackBuy':'fmBack',v);
+    return fmSay((item?fmEat(e[2])?'fmEat':'fmGot':'fmSaw')+(old?'Old':'Now'),v)}
+  const t=performance.now()/1000;
+  if(w.n*Math.pow(0.5,Math.max(0,now-w.t)/(REP_HALF*2))>=(TU.memFamiliar??3)&&t-(FMEM.famT[b]||-1e9)>120){FMEM.famT[b]=t;return fmSay(kid?'fmKidFam':'fmFamiliar',{})}
+  return null}
+// they have told him their name: a first talk (townTalk, the talk box), a regular he has met, or a past conversation
+// kept by the talk runtime (bhd_talk_on-talk: name|age|sex)
+function fmKnown(p){if(!p||typeof p!=='object')return false;if(p.reg)return !!town.met[p.reg.id];const w=FMEM.w[p.body];if(w&&w.k)return true;
+  const n=fmName(p);if(!n)return false;const t=performance.now()/1000;
+  if(!FMEM.talkK||t-FMEM.talkT>10){FMEM.talkT=t;try{FMEM.talkK=Object.keys(JSON.parse(localStorage.getItem('bhd_talk_on-talk')||'{}')||{})}catch(e){FMEM.talkK=[]}}
+  return FMEM.talkK.some(k=>k.startsWith(n+'|'))}
+function fmIntro(b){const w=FMEM.w[b]||(FMEM.w[b]={n:0,t:repNow(),s:[],k:0});if(!w.k){w.k=1;REP.dirty=true}}
+// their own name (the library's mind, a regular's own), '' if the library is not in yet
+function fmName(p){if(p.reg)return townFirst(p.reg);if(typeof talkLib==='function')talkLib();const k=typeof talkKid==='function'&&talkKid(p);if(k)return k.name;
+  const it=TALK.lib&&TALK.lib['island_'+p.body];return it&&it.mind?(typeof lifeItem==='function'?lifeItem(it,p.body):it).mind.name||'':''}
+// what to call them on screen: their name once they have told it, else the stranger's word (Passerby, Kid, Clerk)
+function fmWho(p,other){return fmKnown(p)&&fmName(p)||other}
+// for a model: where they have seen him lately and what he bought, and whether they know his face
+function fmScene(p,name){const w=p&&FMEM.w[p.body];if(!w)return '';const now=repNow(),D=TU.memDays??7;
+  const S=w.s.filter(e=>now-e[0]<D&&now-e[0]>0.01).slice(-2).map(e=>`at ${e[1]} ${fmWhen(e[0])}`+(e[2]?` (he got the ${fmItem(e[2])} there)`:''));
+  const n=w.n*Math.pow(0.5,Math.max(0,now-w.t)/(REP_HALF*2)),fam=n>=(TU.memFamiliar??3);
+  if(!S.length&&!fam)return '';return `${name} ${S.length?'saw him '+S.join(' and '):''}${S.length&&fam?'; ':''}${fam?'has been in the shops with him often enough to know his face':''}.`}
+// walking up to someone who has seen him in the shops: now and then (TU.memSay) they bring it up; true if they did
+function fmGreet(p){if(Math.random()>=(TU.memSay??0.4))return false;const l=fmLine(p,p.room);if(!l)return false;talkFace(p,4);talkShow(p,{say:l},'you',null);return true}

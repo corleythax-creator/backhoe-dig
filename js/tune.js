@@ -136,7 +136,12 @@ const TUNE=[
   ['talkStillR','Town','Townsfolk notice someone lying still within',7.6,'ft',5,100,5],
   ['talkGroupR','Town','Talking to everyone reaches the townsfolk within',6.1,'ft',5,60,1],
   ['talkGoT','Town','Townsfolk walk over to look at something for up to',12,'s',2,60,1],
-  ['talkPlanGap','Town','With a model speaking, it picks a townsperson\'s errand at most every',15,'s',5,300,5]
+  ['talkPlanGap','Town','With a model speaking, it picks a townsperson\'s errand at most every',15,'s',5,300,5],
+  // what townsfolk remember of seeing you in the shops (lives.js, FM): how often they bring it up, for how long, and
+  // how many times in a shop together before you are a familiar face
+  ['memSay','Town','Townsfolk who bring up seeing you in a shop when they meet you',0.4,'pct',0,100,5],
+  ['memDays','Town','Townsfolk remember seeing you in a shop for (game days)',7,'n',1,30,1],
+  ['memFamiliar','Town','Times in the shops together before they greet you as a familiar face',3,'n',1,20,1],
   // indoors (interiors.js): how the eye adjusts in a shop or house, and its room light (Medium graphics and up)
   ['inAdapt','Town','Indoors, the view brightens by',0.9,'pct',0,300,5],['inLamp','Town','Indoors, the room light',1.6,'n',0,6,0.1],
   ['craneSpan','Bridges','The crane builds a steel span in about',240,'min',1,60,1],
