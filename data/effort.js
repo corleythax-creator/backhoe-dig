@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-07T04:31:00Z",
+ "updated": "2026-11-07T20:53:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -111,6 +111,12 @@ window.EFFORT = {
    "dh": 126.25,
    "act": 5.5,
    "versions": 17
+  },
+  {
+   "d": "2026-11-07",
+   "dh": 0.5,
+   "act": 0.5,
+   "versions": 1
   }
  ],
  "extra": [
@@ -3342,6 +3348,15 @@ window.EFFORT = {
    "tris": 6734925,
    "chars": 2399157,
    "what": "Shop memory and names: anyone in a shop with you (staff or customers) remembers it, and what you bought, and brings it up when you meet again (\"Saw you at Lakeside Bakery this morning, get the pie?\"); after a few visits together you're a familiar face; it fades over a week and syncs between devices. The nine kids and teens now have names and their own kid talk, everyone you've met is shown by name instead of Passerby or Clerk, and shops' indoor brightness works again"
+  },
+  {
+   "v": 359,
+   "asked": "2026-11-07T14:30:00-06:00",
+   "live": "2026-11-07T14:53:29-06:00",
+   "dh": 0.5,
+   "tris": 6062011,
+   "chars": 2399157,
+   "what": "The townsfolk can now play 127 more animations (styled walks, everyday actions, action), loaded only when the game asks; nothing on screen changes yet."
   }
  ]
 };
