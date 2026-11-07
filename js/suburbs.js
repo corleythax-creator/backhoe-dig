@@ -16,7 +16,7 @@ const SUB_APRONS=[[-63,655.5,658.8,1],[-107,645.2,648.5,-1],[-107,655.5,658.8,1]
 // TF_PARKED: {x, y, z, yaw} the parked cars (townfolk.js)
 const TF_PARKED=[];
 // ---------- what a lot must keep clear of ----------
-const SUB_KEEP=[[-104,-18,556,634],[24,36,736,790],[-28,18,722,763],[34,94,676,715],[41,67,672,680],[56,134,579,615],[-140,140,644,660],[-8,8,550,726],[100,132,560,580]];
+const SUB_KEEP=[[-104,-18,556,634],[24,36,736,790],[-28,18,722,763],[34,94,676,715],[41,67,672,680],[56,134,579,615],[-140,140,644,660],[-8,8,550,726],[100,132,560,580],[-25,60,556,604]];
 function subClear(x,z){if(Math.abs(x)>178||z>766||z<588)return false;if(baseHeight(x,z)-WATER<2)return false;
   for(const [a,b,c,d] of SUB_KEEP)if(x>a&&x<b&&z>c&&z<d)return false;
   if(Math.abs(roadOff(x,z))<ROAD_W/2+2)return false;

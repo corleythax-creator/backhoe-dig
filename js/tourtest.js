@@ -21,7 +21,7 @@ const TOUR_STUT=0.05;
 const TOUR_ATV=[[-196,228],[-200,203]],TOUR_DOCK=[[-200,193],[-200,186],[-200,178]];
 // the town stop: the boat ties up beside the marina pier (clear of the town's own boat), and he walks ashore, along the
 // boardwalk, up Main Street and back, along the cross street and down to the pier again
-const TOUR_MOOR=[[60,500],[64,526],[69.3,540]],TOUR_TOWN=[[72,550],[72,561],[40,563],[6,566],[0,580],[0,700],[0,652],[63,652],[63,600],[66,566],[72,556],[72,545]];
+const TOUR_MOOR=[[60,500],[64,526],[69.3,540]],TOUR_TOWN=[[72,550],[72,561],[40,563],[6,566],[0,580],[0,700],[0,652],[63,652],[63,600],[59,586],[58.5,561],[72,560],[72,556],[72,545]];
 // the boat's legs round the lake (x, z in m); the bridges are passed between their piers, never through a trestle
 const TOUR_LEGS=[
   {n:"Out from Dexter's dock",p:[[-200,145],[-130,122]]},
@@ -210,12 +210,12 @@ function tourStep(dt){if(!tour.on)return;tour.t+=dt;tour.pt+=dt;tour.dt=dt;SL.x=
   else if(ph==='town'){const b=boats[3];
     if(tour.wi<TOUR_TOWN.length){const [x,z]=TOUR_TOWN[tour.wi];if(tourWalkOn(x,z,1.2))tour.wi++}else tourWalkTo(b.x,b.z);
     if(tour.wi>=TOUR_TOWN.length&&wkNear()==='boat3'){seatToggle();const sk=tour.walkSkip||0;
-      tourCheck('Walked through town (boardwalk, Main Street, the cross street) and back into the boat',mode==='boat'&&!sk,`${tour.pt.toFixed(0)} s on foot${sk?`, ${sk} point${sk>1?'s':''} out of reach`:''}`);
+      tourCheck('Walked through town (promenade, Main Street, the cross street) and back into the boat',mode==='boat'&&!sk,`${tour.pt.toFixed(0)} s on foot${sk?`, ${sk} point${sk>1?'s':''} out of reach`:''}`);
       if(mode!=='boat'){tourGo('done');return}
       if(++tour.li>=tour.route.length){tourGo('moor','Mooring');return}
       // out the way it came in, clear of the pier and the town's boat, before the next leg
       const nx=tour.route[tour.li];tour.route[tour.li]=Object.assign({},nx,{p:[[64,528],[58,495],...nx.p]});tourGo('boat',nx.n);tour.rec=3.5}
-    else if(tour.pt>240){tourCheck('Walked through town (boardwalk, Main Street, the cross street) and back into the boat',false,`still at ${Math.round(wk.x)}, ${Math.round(wk.z)} after 4 min`);tourGo('done')}}
+    else if(tour.pt>240){tourCheck('Walked through town (promenade, Main Street, the cross street) and back into the boat',false,`still at ${Math.round(wk.x)}, ${Math.round(wk.z)} after 4 min`);tourGo('done')}}
   else if(ph==='moor'){const b=boats[3];if(b.v>0.3)SL.y=-0.6;
     if(Math.abs(b.v)<0.3||tour.pt>6){if(tour.fp){const L=tour.look;tourCheck('Looked round in first person',L.n>=6&&L.names.size>=4&&(L.vmax||0)<=1.01,`${L.n} glances at ${L.names.size} different things (${[...L.names].slice(0,8).join(', ')}), the head turned up to ${Math.round(L.max*180/Math.PI)}° from the seat, never faster than ${Math.round((L.vmax||0)*180/Math.PI)}°/s`)}
       const C=tour.cnt;

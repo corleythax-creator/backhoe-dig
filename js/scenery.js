@@ -531,7 +531,7 @@ const ASSET_CAP={pine:600,leafy:300,rock:400},assetIMs={},assets=mapAssets?mapAs
   rocks.castShadow=true;rocks.receiveShadow=true;rocks.frustumCulled=false;
   rocks.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(rocks.instanceMatrix.count*3),3);rocks.count=0;scene.add(rocks);
   assetIMs.rock=[rocks];treeIMs.push(rocks);
-  if(!assets.length)assets.push(...defaultAssets());else if(!mapSq)assets.push(...sqThings());
+  if(!assets.length)assets.push(...defaultAssets());else{if(!mapSq)assets.push(...sqThings());if(!mapSt)assets.push(...stlThings())}
   assetsBuild();
 })();
 // the default trees and boulders, the same every time (a seeded shuffle): clustered in a band inside the rim, round West
@@ -549,7 +549,7 @@ function defaultAssets(){
     for(let i=0;i<n&&np+nb<285;i++){const x=cx+(rnd()-0.5)*10,z=cz+(rnd()-0.5)*10;if(!okSpot(x,z))continue;
       const pine=np<210&&(nb>=75||rnd()<0.74);out.push({t:pine?'pine':'leafy',x,z,yaw:rnd()*6.3,s:0.8+rnd()*0.7,c:Math.floor(rnd()*(pine?4:6))});if(pine)np++;else nb++}}
   for(let n=0,g=0;n<18&&g<4000;g++){const x=(rnd()-0.5)*100,z=-20+rnd()*100;if(!okSpot(x,z))continue;out.push({t:'rock',x,z,yaw:rnd()*6.3,s:0.5+rnd()*0.9,c:0});n++}
-  return out.concat(sqThings())}
+  return out.concat(sqThings(),stlThings())}
 // Harbor Square's furniture (square.js), things like any other so the editor moves them: shade trees, benches, park
 // lamps, café tables, market stalls and the bollards along the beach road. Maps saved before it (no sq in them) get
 // them added once (mapSq, terrain.js). The square is laid out on x -61 (SQ.ax), the fountain at z 588 (SQ.fz)
@@ -563,6 +563,24 @@ function sqThings(){const out=[],P=Math.PI,ax=-61,fz=588,add=(t,x,z,yaw,s,c)=>ou
   for(const [x,z] of [[-31,563.2],[-26,565.6],[-21,563.2],[-16,565.8],[-12,562.6]])add('cafe',x,z);
   for(const z of [584.5,590.5,596.5,603.5,609.2])add('stall',-30.5,z,P/2);
   for(let x=-104;x<=-8;x+=3.5){if(Math.abs(x-(ax+4))<2.5||Math.abs(x+25.5)<2.5)continue;const zc=x<-60?576-2*(x+170)/110:574;for(const s of [-1,1])add('bollard',x,zc+s*2.85)}
+  return out}
+// the town's street furniture (street.js), things like any other so the editor moves them: trash and recycling cans,
+// newspaper boxes and chalkboard signs at the curb edge of the walks (outside the walkers' lanes, TF_WALK, clear of the
+// doors, crosswalks, lamps and street trees), a bike rack and planters by the bus stop, and the café end west of Main
+// Street at the cross street: tables under string lights. Maps saved before them (no st in them) get them added once
+// (mapSt, terrain.js)
+function stlThings(){const out=[],P=Math.PI,add=(t,x,z,yaw,s,c)=>out.push({t,x,z,yaw:yaw||0,s:s||1,c:c||0});
+  for(const s of [-1,1]){const x=s*4.55,f=s*P/2;add('trashcan',x,603.4,0,0.9);add('recycle',x,602.6,0,0.9);add('trashcan',x,688.6,0,0.9);add('recycle',x,687.8,0,0.9);
+    add('newsbox',x,637.6,f);add('trashcan',x,666.5,0,0.9)}
+  // chalkboards outside the cafés and places to eat: the bakery, Pine & Anchor, the diner, Mountain Coffee, the pizza
+  // place and the deli
+  add('aframe',-4.5,590.4);add('aframe',-4.5,623.6);add('aframe',-4.5,712.4);add('aframe',4.5,707.6);add('aframe',-27.6,648.0,P/2);add('aframe',-71.6,656.05,P/2);
+  add('trashcan',-36.5,648.0,0,0.9);add('trashcan',36.5,656.05,0,0.9);add('newsbox',-12.4,656.05,0);
+  // by the bus stop: a bike rack, a planter and a can
+  add('bikerack',10.8,643.4);add('planter',13.6,645.6,0,1,2);add('trashcan',16.6,645.4,0,0.9);
+  // the café end: three tables under two runs of string lights, planters round it
+  for(const x of [-10.2,-15.6])add('stringlts',x,639.6,P/2);for(const z of [637.2,641.6])add('cafe',-12.9,z,0.3);add('cafe',-17.8,639.4,1.1);
+  add('planter',-9.0,644.8,0,1,1);add('planter',-16.8,644.8,0,1,4);add('planter',-8.2,635.6,P/2,1,3);
   return out}
 // fills the instance meshes from the asset list (after any change to it): the trees go to trees.js, the boulders here
 function assetsBuild(){const o=new THREE.Object3D(),c=new THREE.Color(),n={pine:0,leafy:0,rock:0},T=[];

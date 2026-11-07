@@ -6,10 +6,12 @@
 // them when the camera comes near; the brewery and its beer garden (mainland.js) and the General Store do the same.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 // TF_ROOMS: {x, z, r (how far it reaches), y (its floor; ground: stand on the ground), spots: [{x, z, y, yaw, sit,
-// staff, path}], big: [people for each Townsfolk setting] or extra customers by the setting}
+// staff, path}], big: [people for each Townsfolk setting] or extra customers by the setting}; a shop room (rmFurnish) also
+// has dO (its glass, the door in the middle of it, at o = dO) and W (half its width inside), and people walk in and out
+// through its door (tfEnt in townfolk.js)
 const TF_ROOMS=[];
 // a room's own frame: o outward through its glass (the yaw f looks along), s across; boxes in it, and its spots
-function rmKit(K,x,z,y,f){const sf=Math.sin(f),cf=Math.cos(f),P=(o,s)=>[x+sf*o+cf*s,z+cf*o-sf*s],R={K,x,z,y,f,P,spots:[]};
+function rmKit(K,x,z,y,f){const sf=Math.sin(f),cf=Math.cos(f),P=(o,s)=>[x+sf*o+cf*s,z+cf*o-sf*s],R={K,x,z,y,f,P,spots:[],sol:[]};
   R.box=(w,h,d,col,o,s,y0,ry)=>{const [a,b]=P(o,s);K.box(w,h,d,col,a,y+y0+h/2,b,f+(ry||0))};
   R.cyl=(r0,r1,h,n,col,o,s,y0)=>{const [a,b]=P(o,s);K.cyl(r0,r1,h,n,col,a,y+y0+h/2,b)};
   R.lit=(w,d,o,s,y0)=>{const [a,b]=P(o,s);K.lit(new THREE.BoxGeometry(w,0.04,d),0xfff6d8,a,y+y0,b,f)};
@@ -20,8 +22,9 @@ function rmKit(K,x,z,y,f){const sf=Math.sin(f),cf=Math.cos(f),P=(o,s)=>[x+sf*o+c
   R.path=pts=>rmLine(pts.map(([o,s])=>P(o,s)));
   R.spot=(o,s,yl,k)=>{const [a,b]=P(o,s);const sp=Object.assign({x:a,z:b,y,yaw:f+yl},k||{});R.spots.push(sp);return sp};
   // a solid w across by d deep at o, s (turned by yl, as R.box): the worker walks round it (rmSolid); h: how tall, for
-  // a shot over it (none: a wall)
-  R.solid=(o,s,w,d,yl,h)=>{const c=Math.abs(Math.cos(yl||0)),n=Math.abs(Math.sin(yl||0)),[a,b]=P(o,s);rmSolid(a,b,f,(c*w+n*d)/2,(n*w+c*d)/2,h?y+h:undefined)};
+  // a shot over it (none: a wall); kept in the room's frame too (R.sol: o, s, half sizes), for the paths people walk in
+  // from the door (tfInPath, townfolk.js)
+  R.solid=(o,s,w,d,yl,h)=>{const c=Math.abs(Math.cos(yl||0)),n=Math.abs(Math.sin(yl||0)),[a,b]=P(o,s),hs=(c*w+n*d)/2,ho=(n*w+c*d)/2;rmSolid(a,b,f,hs,ho,h?y+h:undefined);R.sol.push([o,s,hs,ho])};
   return R}
 // the highest ground under a w by d rectangle at x, z (turned to f), so a floor over it never has grass through it
 function rmGroundMax(x,z,f,w,d){const sf=Math.sin(f),cf=Math.cos(f);let m=-1e9;
@@ -47,7 +50,7 @@ function rmShelf(R,o,s,yl,w,seed){seed=Math.abs(Math.round(seed));R.solid(o,s,w,
 function rmCounter(R,o,s,w,col,top){R.solid(o,s,w+0.06,0.7,0,1.05);R.box(w,1.0,0.6,col,o,s,0);R.box(w+0.06,0.04,0.66,top||0x3a3330,o,s,1.0);
   R.box(0.32,0.22,0.28,0x2a2c2f,o,s+w/2-0.35,1.04);R.box(0.26,0.18,0.02,0x9ad0e0,o+0.1,s+w/2-0.35,1.15)}
 // the shops' kinds by sign (MAIN_SHOPS): eat, shop, salon, office, wash, art, gun
-const RM_KIND={0:'eat',2:'eat',5:'eat',11:'eat',12:'eat',17:'eat',21:'eat',15:'eat',9:'salon',26:'salon',7:'office',8:'office',16:'office',23:'office',29:'office',31:'office',20:'wash',18:'art',13:'art',27:'gun'};
+const RM_KIND={32:'eat',34:'eat',0:'eat',2:'eat',5:'eat',11:'eat',12:'eat',17:'eat',21:'eat',15:'eat',9:'salon',26:'salon',7:'office',8:'office',16:'office',23:'office',29:'office',31:'office',20:'wash',18:'art',13:'art',27:'gun'};
 // the gun shops' counters and wall racks (pistol.js stocks them and sells from them): {x, z, y, yaw at the counter, rack:
 // [[x, y, z, yaw] where a long gun hangs], case: the same for the pistols lying in the glass case}
 const GUN_SHOPS=[];
@@ -57,7 +60,7 @@ function rmFurnish(K,x,z,y,f,w,d,si,wall){const R=rmKit(K,x,z,y,f),kind=RM_KIND[
   R.box(w-0.5,0.03,d-0.05,'planks',0,0,0);R.box(w-0.5,0.03,d,0xf2efe6,0,0,2.9);
   for(const s of [-1,1])R.box(0.03,2.9,d,wall,0,s*(W+0.04),0);R.box(w-0.5,2.9,0.03,wall,back+0.02,0,0);
   for(let o=back+1.2;o<d/2-0.6;o+=2)for(const s of w>12?[-W/2,W/2]:[0]){const [a,b]=R.P(o,s);K.lit(new THREE.BoxGeometry(1.2,0.04,0.3),0xfff8ea,a,y+2.88,b,f)}
-  R.si=si;R.kind=kind;R.spot(back+0.8,0,0,{staff:1});
+  R.si=si;R.kind=kind;R.dO=d/2;R.W=W;R.spot(back+0.8,0,0,{staff:1});
   if(kind==='eat'){// a counter across the back with a pastry case and a menu board, tables in front
     rmCounter(R,back+1.3,-W/4,W*1.2,wood);R.box(1.4,0.45,0.5,'glass',back+1.3,-W/4-0.5,1.04);R.box(1.5,0.55,0.03,0x23402f,back+0.04,-W/4,1.7);
     R.spots.pop();R.spot(back+0.65,-W/4,0,{staff:1});R.spot(back+0.65,-W/4+1.2,0,{staff:1});
@@ -204,7 +207,7 @@ function rmCamClip(a,c){if(mode!=='walk'||wk.inside)return false;const r=rmRoomA
 // open, 0 to 1)}. Each kind is drawn as instanced meshes, one per material, and only a moving door's matrix changes
 const RM_DOORS=[],RM_DK={},RM_DM=new THREE.Matrix4(),RM_DQ=new THREE.Quaternion(),RM_DV=new THREE.Vector3(),RM_DS=new THREE.Vector3(1,1,1),RM_DY=new THREE.Vector3(0,1,0);
 let rmDoorsMade=false;
-function rmDoor(k,x,y,z,f,w,sl){const d={k,x,y,z,f,w,sl:sl||0,a:0,i:-1};RM_DOORS.push(d);return d}
+function rmDoor(k,x,y,z,f,w,sl){const d={k,x,y,z,f,w,sl:sl||0,a:0,i:-1,hold:0};RM_DOORS.push(d);return d}
 // a kind's leaf in its own frame: the hinge (or near edge) at x = 0 on the floor, the leaf along +x, its outside +z
 const RM_DOOR_KIND={
   shop:K=>{const DW=0x4a3424;for(const x of [0.05,1.15])K.box(0.1,2.3,0.07,DW,x,1.15,0);K.box(1.2,0.22,0.07,DW,0.6,0.11,0);K.box(1.2,0.12,0.07,DW,0.6,2.24,0);
@@ -219,10 +222,11 @@ function rmDoorsMake(){rmDoorsMade=true;const by={};for(const d of RM_DOORS)(by[
     for(const d of L)rmDoorPut(d)}}
 function rmDoorPut(d){const sl=d.sl*d.a;RM_DV.set(d.x+Math.cos(d.f)*sl,d.y,d.z-Math.sin(d.f)*sl);RM_DQ.setFromAxisAngle(RM_DY,d.f+(d.sl?0:d.a*Math.PI*0.48));RM_DM.compose(RM_DV,RM_DQ,RM_DS);
   for(const I of RM_DK[d.k]){I.setMatrixAt(d.i,RM_DM);I.instanceMatrix.needsUpdate=true}}
-// every frame: a door opens when the worker on foot comes within reach of its middle and shuts again once he has gone
+// every frame: a door opens when the worker on foot comes within reach of its middle, or while a townsperson goes
+// through it (d.hold, set by tfGoStep in townfolk.js), and shuts again once they have gone
 function rmDoorsTick(dt){if(!rmDoorsMade){if(!RM_DOORS.length)return;rmDoorsMake()}const foot=mode==='walk'&&!wk.inside;
   for(const d of RM_DOORS){const h=d.w/2,mx=d.x+Math.cos(d.f)*h,mz=d.z-Math.sin(d.f)*h,dx=wk.x-mx,dz=wk.z-mz,reach=d.sl?2.6:1.7;
-    const t=foot&&dx*dx+dz*dz<reach*reach&&Math.abs(wk.y-d.y)<2?1:0;if(t===d.a)continue;d.a=t>d.a?Math.min(1,d.a+dt*2.2):Math.max(0,d.a-dt*1.4);rmDoorPut(d)}}
+    const t=d.hold>0||foot&&dx*dx+dz*dz<reach*reach&&Math.abs(wk.y-d.y)<2?1:0;if(d.hold>0)d.hold-=dt;if(t===d.a)continue;d.a=t>d.a?Math.min(1,d.a+dt*2.2):Math.max(0,d.a-dt*1.4);rmDoorPut(d)}}
 
 // ---------- a house's ground floor ----------
 // in its kit's frame (rmKit: o out through the front, s across) inside walls T thick round s0..s1 by o0..o1: a living

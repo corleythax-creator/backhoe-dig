@@ -24,12 +24,17 @@ const GFX={
 // picked by itself
 // the extra lamps: the warm light in Jessica's library and the boom's work light (Low keeps the glowing lamps only)
 GFX.low.town=1;GFX.med.town=2;GFX.high.town=3;
+// the town's weathering: rain streaks, damp wall feet, oil stains, cracks and patches (mainland.js, mainGrimeGfx)
+GFX.low.grime=false;GFX.med.grime=GFX.high.grime=true;
 // mtnQ the mountains lit and shaded per pixel with haze toward the sun (scenery.js; Low keeps the simple ones), peb the
 // share of pebbles, stones and sticks drawn round the camera (pebbles.js)
 GFX.low.mtnQ=0;GFX.med.mtnQ=GFX.high.mtnQ=1;GFX.low.peb=0;GFX.med.peb=0.5;GFX.high.peb=1;
 GFX.low.wild=0.35;GFX.med.wild=0.65;GFX.high.wild=0.85;
 // the town's lawn clumps, weeds and fallen leaves (turf.js): the share drawn and how far out (m)
 GFX.low.turf=0.35;GFX.med.turf=0.65;GFX.high.turf=1;GFX.low.turfR=22;GFX.med.turfR=40;GFX.high.turfR=60;
+// street life at night (street.js): the coloured glow of the neon signs on the walk and the van's hazard halos (the
+// shop light on the walk and the signs themselves are on every level)
+GFX.low.stlGlow=false;GFX.med.stlGlow=GFX.high.stlGlow=true;
 GFX.low.extraLt=false;GFX.med.extraLt=GFX.high.extraLt=true;
 // two real spotlights from the placed lights nearest the camera (props.js); the glow and the pools of light are on every level
 GFX.low.propLt=GFX.med.propLt=false;GFX.high.propLt=true;
@@ -117,6 +122,10 @@ function gfxApply(){const g=gfxCur=Object.assign({},GFX[gfxKey],gfxOver);
   brGfx(g);
   // the boats' gelcoat scuffs (family.js)
   famGelGfx(g);
+  // the town's weathering decals (mainland.js)
+  mainGrimeGfx(g.grime);
+  // the neon's glow on the walk (street.js)
+  if(typeof stlGfx==='function')stlGfx(g);
   // undergrowth round the trees (brush.js)
   brushGfx(g.brush);
   // how finely the grass and weeds are shaped (scenery.js)
