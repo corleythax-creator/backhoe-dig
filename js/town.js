@@ -34,10 +34,13 @@ const TOWN_MENU={0:[['Coffee',2.5,'p'],['Cinnamon roll',3.75,'p'],['Slice of pie
   18:[['Postcard',2],['Print',40]],19:[['Kite',15],['Toy excavator',24.99]],20:[['Wash a load',3.5],['Dry a load',2.25]],
   21:[['Soda',2.5,'p'],['Pint',6.5],['Burger',13.5,'p'],['Fish and chips',15,'p']],22:[['Bike tune-up',45],['Kayak, an hour',25]],23:[['A night\'s stay',129,'s']],
   24:[['Bottled water',1.5,'p'],['Bag of ice',3.49],['Sandwich',6.99,'p']],25:[['Skein of yarn',7.99],['Quilt',180]],26:[['Cut',38],['Color',85]],
-  28:[['Borrow a book',0],['Library card',0]],29:[['Dog license',15],['Building permit',75]],30:[['Bag of ice',3],['Bundle of firewood',7]],31:[['Movie ticket',11],['Popcorn',6,'p']]};
+  28:[['Borrow a book',0],['Library card',0]],29:[['Dog license',15],['Building permit',75]],30:[['Bag of ice',3],['Bundle of firewood',7]],31:[['Movie ticket',11],['Popcorn',6,'p']],
+  // the waterfront (waterfront.js)
+  32:[['Clam chowder',6.5,'p'],['Fish and chips',14,'p'],['Walleye sandwich',12.5,'p'],['Lemonade',3,'p']],33:[['Postcard',1.5],['Lakeside T-shirt',19.99],['Snow globe',12]],
+  34:[['Draft beer',6],['Lemonade',3,'p'],['Wings',11,'p'],['Burger',14,'p']],35:[['Kayak, an hour',25],['Bike, a day',35],['Paddleboard, an hour',30]]};
 const TOWN_BREW=[['Lager',7],['Flight of four',12],['Soft pretzel',9,'p'],['Root beer',3,'p']];
 // ---------- hours (24 h clock; a close of 24 is midnight) by sign, else by kind (RM_KIND, interiors.js) ----------
-const TOWN_HRS={0:[6,15],2:[7,17],5:[6,21],11:[6,16],12:[11,22],15:[10,20],17:[8,17],21:[11,23],23:[0,24],24:[7,22],28:[10,19],29:[8,17],31:[12,23]};
+const TOWN_HRS={0:[6,15],2:[7,17],5:[6,21],11:[6,16],12:[11,22],15:[10,20],17:[8,17],21:[11,23],23:[0,24],24:[7,22],28:[10,19],29:[8,17],31:[12,23],32:[11,21],33:[9,20],34:[11,24],35:[8,19]};
 const TOWN_KHRS={eat:[7,20],shop:[9,18],salon:[9,18],office:[9,17],wash:[6,22],art:[10,18],gun:[9,19]};
 const townHour=()=>dnMin(dn.t)/60,townDow=()=>((fuelDayNo()+4)%7+7)%7,townWeekend=()=>{const d=townDow();return d===0||d===6};
 function townHrs(R){return R.si!=null?TOWN_HRS[R.si]||TOWN_KHRS[R.kind]||[9,18]:R.hrs||null}

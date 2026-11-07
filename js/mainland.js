@@ -173,7 +173,7 @@ function mainTick(dt){rmWinTick();sqTick();rmDoorsTick(dt);rmInsideTick(dt);
 function craneSave(){return {n:CRN.n,t:Math.round(CRN.t)}}
 function craneLoad(d){if(d&&isFinite(d.n)){CRN.n=Math.max(0,Math.min(crnSpans.length,d.n|0));CRN.t=Math.max(0,+d.t||0)}crnShow(CRN.n,CRN.t/Math.max(10,TU.craneSpan))}
 
-// the town's shop signs: one picture holds them all (MAIN_SHOPS, two columns of 16), drawn as one mesh once the lots are
+// the town's shop signs: one picture holds the first 32 (MAIN_SHOPS, two columns of 16; the waterfront's draw in their own), drawn as one mesh once the lots are
 // built (mainSignsAdd). Each: its name, a line under it, the board colour and the lettering colour, serif or not
 const MAIN_SHOPS=[["Lakeside Bakery","Bread · Pies · Coffee","#2f4a3a","#e9d9a6",1],["Harbor Books","New & Used","#1f3a5f","#f1ead8",1],
   ["Pine & Anchor","Cafe","#e9e1cc","#23402f",0],["Ridge Outfitters","Camp · Fish · Hike","#3a2a20","#e0b45a",0],["Hometown Hardware","Since 1948","#b8322a","#ffffff",0],
@@ -185,7 +185,10 @@ const MAIN_SHOPS=[["Lakeside Bakery","Bread · Pies · Coffee","#2f4a3a","#e9d9a
   ["Laundromat","Open 7 Days","#ffffff","#2a5f9a",0],["Copper Kettle","Pub & Grill","#2b2d2f","#d08a42",1],["Bike & Paddle","Rentals · Repairs","#d08a22","#ffffff",0],
   ["Lakeview Hotel","Rooms","#1f3a5f","#e0c27a",1],["Corner Market","Groceries","#2f6b4f","#ffffff",0],["Quilt Barn","Fabric · Yarn","#7e2f26","#f1ead8",1],
   ["Hair Studio","Cuts · Color","#e9e1cc","#2b2d2f",1],["Lakeside Guns","Firearms · Ammo","#2b2d2f","#d8b25a",0],["Town Library","Books · Story Time","#23402f","#f1ead8",1],
-  ["Town Hall","Lakeside","#e9e6dc","#1f3a5f",1],["Ice House","Ice · Firewood","#2a5f9a","#ffffff",0],["Lakeside Theater","Movies Fri · Sat","#5a2a22","#f4d27a",1]];
+  ["Town Hall","Lakeside","#e9e6dc","#1f3a5f",1],["Ice House","Ice · Firewood","#2a5f9a","#ffffff",0],["Lakeside Theater","Movies Fri · Sat","#5a2a22","#f4d27a",1],
+  // the waterfront's own (waterfront.js): drawn in its own picture
+  ["Salt & Line","Fish Shack · Chowder","#f1ead8","#1f3a5f",0],["Shoreline Gifts","Gifts · Tees · Postcards","#2a6f76","#f6f1e4",1],
+  ["The Rusty Anchor","Bar · Patio","#2b2d2f","#c9783a",1],["Paddle & Pedal","Kayak · Bike Rentals","#f4d27a","#1f3a5f",0]];
 const mainSignList=[],MAIN_GAPS=[],MAIN_BACKS=[],MAIN_GRIME=[];
 // weathering decals, drawn as one see-through mesh over the walls and paving (mainGrimeAdd; not on Low graphics): a quad
 // from its corners [x, y, z] (bottom left, bottom right, top right, top left) and its cell of the grime picture: 0 rain
@@ -390,12 +393,15 @@ function mainLot(K,x,z,w,d,h,col,face,awn,si,wl,o){wl=wl||col;o=o||{};const fx=M
     const [a,b]=F(d/2-RD/2,t*(w/2-0.2));rmSolid(a,b,face,0.3,RD/2+0.1);const [e,f]=F(d/2,t*(w/4+0.35));rmSolid(e,f,face,w/4-0.25,0.14)}
   walkPad(F0[0],F0[1],w/2-0.1,RD/2,face,y+0.03);rmRoom(F0[0],F0[1],face,w/2-0.55,RD/2,y,y+2.9);
   MAIN_BACKS.push({x,z,w,d,y,h,face,F,C,ds,si})}
-// the shop signs: painted boards (famSignPaint, family.js) drawn into one picture, and every sign a quad of it, as one mesh
-function mainSignsAdd(){const cv=document.createElement('canvas');cv.width=2048;cv.height=2048;const g=cv.getContext('2d'),SW=1024,SH=128;
-  MAIN_SHOPS.forEach(([n,sub,bg,fg,serif],i)=>famSignPaint(g,(i%2)*SW,((i/2)|0)*SH,SW,SH,bg,fg,serif,
-    [[serif?n:n.toUpperCase(),serif?0.44:0.5,0.4,700],[serif?sub:sub.toUpperCase(),0.2,0.77,600,serif]],i*97+5));
+// the shop signs: painted boards (famSignPaint, family.js) drawn into one picture, and every sign a quad of it, as one mesh.
+// from: the first of mainSignList to draw (a later part of town, waterfront.js, draws its own: a smaller picture of just
+// its shops' boards); the town's first picture holds the first 32 of MAIN_SHOPS, two columns of 16
+function mainSignsAdd(from){from=from||0;const L=mainSignList.slice(from),ids=from?[...new Set(L.map(s=>s.i))]:MAIN_SHOPS.slice(0,32).map((_,i)=>i),
+    R=from?2**Math.ceil(Math.log2(Math.max(1,Math.ceil(ids.length/2)))):16,cv=document.createElement('canvas');cv.width=2048;cv.height=R*128;const g=cv.getContext('2d'),SW=1024,SH=128;
+  ids.forEach((si,i)=>{const [n,sub,bg,fg,serif]=MAIN_SHOPS[si];famSignPaint(g,(i%2)*SW,((i/2)|0)*SH,SW,SH,bg,fg,serif,
+    [[serif?n:n.toUpperCase(),serif?0.44:0.5,0.4,700],[serif?sub:sub.toUpperCase(),0.2,0.77,600,serif]],si*97+5)});
   const tex=new THREE.CanvasTexture(cv);tex.anisotropy=8;tex.colorSpace=THREE.SRGBColorSpace;const P=[],U=[],v=new THREE.Vector3();
-  for(const s of mainSignList){const u0=(s.i%2)/2,v1=1-((s.i/2)|0)/16,v0=v1-1/16,cs=Math.cos(s.ry),sn=Math.sin(s.ry),pt=(a,b)=>{v.set(a*cs,b,-a*sn);return [s.x+v.x,s.y+v.y,s.z+v.z]};
+  for(const s of L){const k=ids.indexOf(s.i),u0=(k%2)/2,v1=1-((k/2)|0)/R,v0=v1-1/R,cs=Math.cos(s.ry),sn=Math.sin(s.ry),pt=(a,b)=>{v.set(a*cs,b,-a*sn);return [s.x+v.x,s.y+v.y,s.z+v.z]};
     // (a blade sign's name runs down it: v)
     if(s.v){const A=pt(-s.h/2,-s.w/2),B=pt(s.h/2,-s.w/2),C=pt(s.h/2,s.w/2),D=pt(-s.h/2,s.w/2);P.push(...A,...B,...C,...A,...C,...D);U.push(u0+0.5,v0,u0+0.5,v1,u0,v1,u0+0.5,v0,u0,v1,u0,v0);continue}
     const A=pt(-s.w/2,-s.h/2),B=pt(s.w/2,-s.h/2),C=pt(s.w/2,s.h/2),D=pt(-s.w/2,s.h/2);P.push(...A,...B,...C,...A,...C,...D);U.push(u0,v0,u0+0.5,v0,u0+0.5,v1,u0,v0,u0+0.5,v1,u0,v1)}
@@ -433,7 +439,9 @@ function mainSignsAdd(){const cv=document.createElement('canvas');cv.width=2048;
     mainLot(T,x,z,w,d,h,COLS[li%COLS.length],face,AWN[(li*3)%AWN.length],li,WALLS[li%WALLS.length],o);li++};
   // Main Street: a block of shops each side, facing the street, at least 2 m apart, with lamps at the curb (the paving:
   // mainStreets) and a street tree in each gap (MAIN_GAPS)
-  for(const s of [-1,1]){let e0=null;for(let i=0;i<7;i++){const z=588+i*19+(i>2?8:0),w=14+((i*7+(s>0?3:0))%4),h=5.5+((i*5+(s>0?2:0))%5)*1.3;if(Math.abs(z-652)<10){e0=null;continue}
+  // (none nearest the water: the street opens there onto the plaza at its foot, waterfront.js, and those two shops
+  // moved to the waterfront; li still counts them, so every other shop keeps its sign and look)
+  for(const s of [-1,1]){let e0=null;for(let i=0;i<7;i++){const z=588+i*19+(i>2?8:0),w=14+((i*7+(s>0?3:0))%4),h=5.5+((i*5+(s>0?2:0))%5)*1.3;if(Math.abs(z-652)<10){e0=null;continue}if(!i){li++;continue}
       lot(s*(4+2+6.5),z,w,13,h,s>0?-Math.PI/2:Math.PI/2);if(e0!==null&&z-w/2-e0>=1.8)MAIN_GAPS.push([s,(e0+z-w/2)/2]);e0=z+w/2}
     for(const z of [584,606,628,672,694,716]){const x=s*4.42,y=baseHeight(x,z);LK.cyl(0.07,0.1,5,8,0x2f3236,x,y+2.5,z);LK.box(0.5,0.2,0.5,0x2f3236,x,y+5.05,z);LK.lit(new THREE.BoxGeometry(0.4,0.05,0.4),0xfff1c8,x,y+4.93,z);
       famSpot('lamp',x,y+0.17,z,0)}}
@@ -442,8 +450,9 @@ function mainSignsAdd(){const cv=document.createElement('canvas');cv.width=2048;
   // (the brewery stands in place of the cross street's second lot east, south side: mainBrewery)
   // a boardwalk along the top of the beach, and a few benches on it looking out at the islands
   // (a gap where the marina's boat ramp crosses it, marina.js)
-  // (and none where it would lie on the beach road west of Main Street, nor along Harbor Square's promenade, square.js)
-  for(let x=-160;x<160;x+=6){if(Math.abs(x)<7||Math.abs(x+3-107)<4||x+3>-119&&x+3<-4)continue;if(x+3<0&&Math.abs(mainRimS(x+3)+3-(x+3<-60?576-2*(x+173)/110:574))<4.4)continue;const z0=mainRimS(x)+3,z1=mainRimS(x+6)+3,y=Math.max(baseHeight(x+3,(z0+z1)/2),WATER+1.8);
+  // (and none where it would lie on the beach road west of Main Street, nor along Harbor Square's promenade, square.js,
+  // nor from there east to the boat ramp, where the waterfront promenade runs: waterfront.js)
+  for(let x=-160;x<160;x+=6){if(Math.abs(x)<7||Math.abs(x+3-107)<4||x+3>-119&&x+3<102)continue;if(x+3<0&&Math.abs(mainRimS(x+3)+3-(x+3<-60?576-2*(x+173)/110:574))<4.4)continue;const z0=mainRimS(x)+3,z1=mainRimS(x+6)+3,y=Math.max(baseHeight(x+3,(z0+z1)/2),WATER+1.8);
     T.box(6.1,0.16,3.6,0x8c6e4c,x+3,y+0.07,(z0+z1)/2,-Math.atan2(z1-z0,6));walkPad(x+3,(z0+z1)/2,3.05,1.8,-Math.atan2(z1-z0,6),y+0.15);
     if(((x+160)/6|0)%5===2){BK.box(1.6,0.45,0.5,0x5c4632,x+3,y+0.37,(z0+z1)/2+1.2);famSpot('bench',x+3,y+0.15,(z0+z1)/2+1.2,Math.PI,0.9)}}
   // street trees along Main Street in the gaps between the shops (clear of the awnings and walls), each in a square of

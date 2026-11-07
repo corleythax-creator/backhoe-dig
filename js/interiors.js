@@ -50,7 +50,7 @@ function rmShelf(R,o,s,yl,w,seed){seed=Math.abs(Math.round(seed));R.solid(o,s,w,
 function rmCounter(R,o,s,w,col,top){R.solid(o,s,w+0.06,0.7,0,1.05);R.box(w,1.0,0.6,col,o,s,0);R.box(w+0.06,0.04,0.66,top||0x3a3330,o,s,1.0);
   R.box(0.32,0.22,0.28,0x2a2c2f,o,s+w/2-0.35,1.04);R.box(0.26,0.18,0.02,0x9ad0e0,o+0.1,s+w/2-0.35,1.15)}
 // the shops' kinds by sign (MAIN_SHOPS): eat, shop, salon, office, wash, art, gun
-const RM_KIND={0:'eat',2:'eat',5:'eat',11:'eat',12:'eat',17:'eat',21:'eat',15:'eat',9:'salon',26:'salon',7:'office',8:'office',16:'office',23:'office',29:'office',31:'office',20:'wash',18:'art',13:'art',27:'gun'};
+const RM_KIND={32:'eat',34:'eat',0:'eat',2:'eat',5:'eat',11:'eat',12:'eat',17:'eat',21:'eat',15:'eat',9:'salon',26:'salon',7:'office',8:'office',16:'office',23:'office',29:'office',31:'office',20:'wash',18:'art',13:'art',27:'gun'};
 // the gun shops' counters and wall racks (pistol.js stocks them and sells from them): {x, z, y, yaw at the counter, rack:
 // [[x, y, z, yaw] where a long gun hangs], case: the same for the pistols lying in the glass case}
 const GUN_SHOPS=[];
