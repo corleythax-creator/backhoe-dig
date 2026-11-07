@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-07T01:52:00Z",
+ "updated": "2026-11-07T02:16:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -108,9 +108,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-06",
-   "dh": 81.5,
-   "act": 4,
-   "versions": 13
+   "dh": 82,
+   "act": 4.5,
+   "versions": 14
   }
  ],
  "extra": [
@@ -3306,6 +3306,15 @@ window.EFFORT = {
    "tris": 5863534,
    "chars": 2270819,
    "what": "The townsfolk have lives: each has a home on a named street and a real job on a schedule, so you find Destiny behind The Sweet Shop's counter in her hours, people home mornings and evenings, and whoever is off work out on the street; they know where they live and work when you ask. The town remembers what you do (shooting, near misses, friendly talk, buying in town, a day's work) and gossips about it: people you've scared step back or run, friends greet you and give 5% off, and a model hears what they've heard of you. And the talk box has Speak: say it out loud instead of typing."
+  },
+  {
+   "v": 355,
+   "asked": "2026-11-06T20:00:00-06:00",
+   "live": "2026-11-06T20:16:16-06:00",
+   "dh": 0.5,
+   "tris": 5848410,
+   "chars": 2271428,
+   "what": "Pressing Enter (Talk) with nobody close enough now tells you why: talk is off, nobody is within about 13 ft, or people are keeping away from you because of what you did. Talk reaches a little further, and people who are wary of you only step back a little, so you can still talk to them."
   }
  ]
 };
