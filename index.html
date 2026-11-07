@@ -28,49 +28,56 @@
       <button id="statsTop" hidden>Stats</button>
       <button id="vrTop" class="vrgo" hidden aria-label="Play in VR">🥽 VR</button>
     </div>
-    <!-- the menu, in groups: play, build, the world (time, date, weather), settings, tools -->
+    <!-- the menu: a row of tabs (play, build, the world, settings, developer tools), one tab's buttons at a time; the tab
+         picked last is remembered (controls.js) -->
     <div id="menu" hidden>
-      <div class="mhead">Play</div>
-      <button id="vrBtn" hidden>🥽 Play in VR</button>
-      <button id="helpBtn">How to play</button>
-      <button id="ctrlsBtn">Controls</button>
-      <button id="statsBtn">Stats</button>
-      <div class="mhead">Build</div>
-      <button id="editBtn">Map editor</button>
-      <button id="allBtn">Every item</button>
-      <button id="guiBtn">Edit the screen</button>
-      <div class="mhead">World</div>
-      <!-- time of day: the clock, a slider through the day, run or stop it, back to the real time (daynight.js) -->
-      <div class="tod" id="todRow"><div class="sizes"><span>Time</span><b id="todVal">--</b><button id="todRun">Stop</button><button id="todNow">Now</button></div>
-        <input id="todSlider" type="range" min="0" max="1439" step="5" aria-label="Time of day">
-        <div class="sizes" id="dateHead"><span>Date</span><b id="dateVal">--</b><button id="plantKindBtn">Spruce</button></div>
-        <input id="dateSlider" type="range" min="0" max="1000" step="1" aria-label="Date, up to 100 years ahead">
-        <div class="todsub" id="todSub"></div></div>
-      <div class="sizes"><span>Weather</span><button data-w="auto">Auto</button><button data-w="rain">Rain</button><button data-w="dry">Dry</button></div>
-      <div class="mhead">Settings</div>
-      <button id="gfxMenuBtn">Graphics</button>
-      <button id="soundBtn">Sound</button>
-      <button id="keysBtn">Keys</button>
-      <button id="syncBtn" hidden>Sync devices</button>
-      <div class="sizes"><span>UI size</span><button data-s="1">1x</button><button data-s="1.5">1.5x</button><button data-s="2">2x</button></div>
-      <div class="sizes" id="miniRow"><span>Minimap</span><button data-mm="0">Off</button><button data-mm="1">S</button><button data-mm="2">M</button><button data-mm="3">L</button><button data-mm="4">XL</button></div>
-      <div class="sizes" id="stickRow"><span>Sticks</span><button data-stk="auto">Auto</button><button data-stk="on">On</button><button data-stk="off">Off</button></div>
-      <!-- townsfolk who talk, in the personality Human Forge gave them (talk.js): off, their lines as text, or aloud -->
-      <div class="sizes" id="talkRow"><span>Townsfolk talk</span><button data-talk="off">Off</button><button data-talk="text">Text</button><button data-talk="voice">Aloud</button></div>
-      <!-- who speaks (Built-in: free, made in the browser; Haiku about 0.03¢ a line, Sonnet 0.5¢, Opus 1¢), the owner key that lets them, the day's cap and what has been spent -->
-      <div class="sizes talkOpt" id="talkModelRow"><span>Talk model</span><button data-tm="local">Built-in</button><button data-tm="haiku">Haiku</button><button data-tm="sonnet">Sonnet</button><button data-tm="opus">Opus</button><button id="talkKeyBtn">Key</button></div>
-      <div class="sizes talkOpt" id="talkCapRow"><span>Daily cap</span><button data-tc="1">$1</button><button data-tc="2">$2</button><button data-tc="5">$5</button><button data-tc="10">$10</button></div>
-      <div class="todsub talkOpt" id="talkMeter"></div>
-      <div class="sizes" id="msgRow"><span>Messages</span><button data-msg="all">All</button><button data-msg="few">Few</button><button data-msg="off">Off</button></div>
-      <div class="mhead">Tools</div>
-      <button id="benchBtn">Speed test</button>
-      <button id="digTestBtn">Dig site test</button>
-      <button id="bhTestBtn">Backhoe load test</button>
-      <button id="exTestBtn">Excavator load test</button>
-      <button id="tourTestBtn">Island tour test</button>
-      <button id="tourFpBtn">Island tour test, first person</button>
-      <div id="startTourOpt" role="group" aria-label="Island tour conditions"><span>Tour</span><button data-to="rain" aria-pressed="false">Rain</button><button data-to="night" aria-pressed="false">Night</button><button data-to="laps" aria-pressed="false">2 laps</button><button id="tourSweepBtn">Every graphics level</button></div>
-      <button id="resetBtn">Reset</button>
+      <div class="mtabs" role="tablist" aria-label="Menu"><button data-mt="play" role="tab">Play</button><button data-mt="build" role="tab">Build</button><button data-mt="world" role="tab">World</button><button data-mt="set" role="tab">Settings</button><button data-mt="dev" role="tab">Developer</button></div>
+      <div class="mtab" data-mt="play" role="tabpanel">
+        <button id="vrBtn" hidden>🥽 Play in VR</button>
+        <button id="mapBtn">Site map</button>
+        <button id="helpBtn">How to play</button>
+        <button id="statsBtn">Stats</button>
+      </div>
+      <div class="mtab" data-mt="build" role="tabpanel" hidden>
+        <button id="editBtn">Map editor</button>
+        <button id="allBtn">Every item</button>
+        <button id="guiBtn">Edit the screen</button>
+      </div>
+      <div class="mtab" data-mt="world" role="tabpanel" hidden>
+        <!-- time of day: the clock, a slider through the day, run or stop it, back to the real time (daynight.js) -->
+        <div class="tod" id="todRow"><div class="sizes"><span>Time</span><b id="todVal">--</b><button id="todRun">Stop</button><button id="todNow">Now</button></div>
+          <input id="todSlider" type="range" min="0" max="1439" step="5" aria-label="Time of day">
+          <div class="sizes" id="dateHead"><span>Date</span><b id="dateVal">--</b><button id="plantKindBtn">Spruce</button></div>
+          <input id="dateSlider" type="range" min="0" max="1000" step="1" aria-label="Date, up to 100 years ahead">
+          <div class="todsub" id="todSub"></div></div>
+        <div class="sizes"><span>Weather</span><button data-w="auto">Auto</button><button data-w="rain">Rain</button><button data-w="dry">Dry</button></div>
+      </div>
+      <div class="mtab" data-mt="set" role="tabpanel" hidden>
+        <button id="gfxMenuBtn">Graphics</button>
+        <button id="soundBtn">Sound</button>
+        <button id="ctrlsBtn">Controls and keys</button>
+        <button id="syncBtn" hidden>Sync devices</button>
+        <div class="sizes"><span>UI size</span><button data-s="1">1x</button><button data-s="1.5">1.5x</button><button data-s="2">2x</button></div>
+        <div class="sizes" id="miniRow"><span>Minimap</span><button data-mm="0">Off</button><button data-mm="1">S</button><button data-mm="2">M</button><button data-mm="3">L</button><button data-mm="4">XL</button></div>
+        <div class="sizes" id="stickRow"><span>Sticks</span><button data-stk="auto">Auto</button><button data-stk="on">On</button><button data-stk="off">Off</button></div>
+        <div class="sizes" id="msgRow"><span>Messages</span><button data-msg="all">All</button><button data-msg="few">Few</button><button data-msg="off">Off</button></div>
+        <!-- townsfolk who talk, in the personality Human Forge gave them (talk.js): off, their lines as text, or aloud -->
+        <div class="sizes" id="talkRow"><span>Townsfolk talk</span><button data-talk="off">Off</button><button data-talk="text">Text</button><button data-talk="voice">Aloud</button></div>
+        <!-- who speaks (Built-in: free, made in the browser; Haiku about 0.03¢ a line, Sonnet 0.5¢, Opus 1¢), the owner key that lets them, the day's cap and what has been spent -->
+        <div class="sizes talkOpt" id="talkModelRow"><span>Talk model</span><button data-tm="local">Built-in</button><button data-tm="haiku">Haiku</button><button data-tm="sonnet">Sonnet</button><button data-tm="opus">Opus</button><button id="talkKeyBtn">Key</button></div>
+        <div class="sizes talkOpt" id="talkCapRow"><span>Daily cap</span><button data-tc="1">$1</button><button data-tc="2">$2</button><button data-tc="5">$5</button><button data-tc="10">$10</button></div>
+        <div class="todsub talkOpt" id="talkMeter"></div>
+      </div>
+      <div class="mtab" data-mt="dev" role="tabpanel" hidden>
+        <button id="benchBtn">Speed test</button>
+        <button id="digTestBtn">Dig site test</button>
+        <button id="bhTestBtn">Backhoe load test</button>
+        <button id="exTestBtn">Excavator load test</button>
+        <button id="tourTestBtn">Island tour test</button>
+        <button id="tourFpBtn">Island tour test, first person</button>
+        <div id="startTourOpt" role="group" aria-label="Island tour conditions"><span>Tour</span><button data-to="rain" aria-pressed="false">Rain</button><button data-to="night" aria-pressed="false">Night</button><button data-to="laps" aria-pressed="false">2 laps</button><button id="tourSweepBtn">Every graphics level</button></div>
+        <button id="resetBtn">Reset</button>
+      </div>
       <div class="ver" id="verMenu"></div>
     </div>
     <!-- Machines: every machine you can climb into, nearest first, and On foot; picking one puts you in its seat (controls.js) -->
@@ -435,7 +442,7 @@
       <dt id="hkScreen">Screen</dt><dd id="hdScreen">Controls (☰ menu) lists every key, mouse, touch and controller input, and its Turn slider sets how fast left and right turn in the mode you are in, from 25% to 200%; each mode keeps its own (the mower starts at 60%, the rest at 100%): the excavator swing and tracks, the truck steering, the mower spin and looking round on foot. Each device remembers its own. Speed test, Reset, Sound (on/off and volume sliders), Graphics and UI size (1x, 1.5x, 2x) are in the ☰ menu. Graphics has Low for phones, Medium for laptops and High for desktop PCs, and under them every setting on its own to play with: resolution, frame cap, field of view, shadows, lighting, brightness, haze, texture size and sharpness, ground detail, grass blades, Dirt detail (16x is for screenshots and fast computers), puddle water and raindrops, with the frame rate and triangle count shown live, an estimate of the GPU memory in use (textures, geometry and the screen) and a graph of the frame rate over the last 10 seconds (average, 1% low and slowest frame). Each device remembers its own. The site is saved in this browser: the dig, the dumped dirt, the excavator, the truck and its load, the trench box, blocks and the mowing are all still there when you come back. Reset starts fresh ground. To play the same site on your phone and computer, open ☰ then Sync devices: get a code on one and type it on the other.</dd>
       <dt id="hkLookingAround">Looking around</dt><dd id="hdLookingAround">In cab view (C) drag the scene to turn your head, in any machine or on foot: look out the side windows, behind you, up at the boom or down at the bucket. On a PC, click the scene to take the mouse for mouse look; Esc gives it back. Zoom with the mouse wheel, a two-finger pinch, or hold Z for a quick look. R turns your head back to straight ahead.</dd>
       <dt id="hkController">Controller</dt><dd id="hdController">Sticks work like the two on-screen sticks. Triggers are gas and reverse when driving. LB / RB switch machine · Y cab view · right stick click looks ahead · A place block (in Walk mode A jumps, X places and a left stick click sprints) · D-pad up blocks on/off, left/right block size (cubes, 1 to 10 ft), down pick up · View map · Menu this help · B closes, or gets you in and out of machines.</dd>
-      <dt id="hkKeys">Keys</dt><dd id="hdKeys">Every key can be changed under Keys in the ☰ menu, which also lists what each one does. The standard keys: WASD (or arrows) is the left stick and IJKL the right stick, in every mode but Mow. Mow: W S drive straight, A D turn, and the number pad works the lap bars (8 2 both, 4 6 spin in place, 7 1 left bar, 9 3 right bar). 1 Dig · 2 Drive · 3 Truck · 4 Mow · 5 Walk · 6 Skid steer (Tab cycles). Hold Shift for slow, fine moves in a machine (on foot it sprints). C cab view (R look ahead · Z zoom) · M map · P pump · N sound on/off · H this help. Blocks: B on/off · E place · V size · X pick up. Walk: Space jump · Shift sprint · E place block · F get in and out.</dd>
+      <dt id="hkKeys">Keys</dt><dd id="hdKeys">Every key can be changed in ☰ Settings, Controls and keys, then Change keys, which also lists what each one does. The standard keys: WASD (or arrows) is the left stick and IJKL the right stick, in every mode but Mow. Mow: W S drive straight, A D turn, and the number pad works the lap bars (8 2 both, 4 6 spin in place, 7 1 left bar, 9 3 right bar). 1 Dig · 2 Drive · 3 Truck · 4 Mow · 5 Walk · 6 Skid steer (Tab cycles). Hold Shift for slow, fine moves in a machine (on foot it sprints). C cab view (R look ahead · Z zoom) · M map · P pump · N sound on/off · H this help. Blocks: B on/off · E place · V size · X pick up. Walk: Space jump · Shift sprint · E place block · F get in and out.</dd>
     </dl>
     <p id="hScoop">To scoop: boom down until the teeth bite, curl in while pulling the stick toward you, boom up, swing, then dump.</p>
     </div>
@@ -521,6 +528,7 @@
 <script defer src="js/dirtsound.js"></script>
 <script defer src="js/ambience.js"></script>
 <script defer src="js/maps.js"></script>
+<script defer src="js/panels.js"></script>
 <script defer src="js/shadowproxy.js"></script>
 <script defer src="js/editor.js"></script>
 <script defer src="js/ownmat.js"></script>

@@ -50,8 +50,9 @@ const KEY_RUN={dig:()=>{rideIn('ex');setMode('dig')},drive:()=>{rideIn('ex');set
 // run an action: every key, on-screen button, controller button and VR button comes through here (keys.js KEY_ACTIONS)
 function act(id,e){const a=KEY_BY[id],f=KEY_RUN[id];if(!f||a&&a.can&&!a.can())return false;f(e);return true}
 // close whatever is open over the game (help, the map, the menu, the machine list, Sync); true if something was
-function goBack(){const open=!help.hidden||!$('#bigmap').hidden||!$('#menu').hidden||!$('#ctlMenu').hidden||!syncBox.hidden;
-  help.hidden=true;toggleMap(false);showMenu(false);showCtl(false);if(!syncBox.hidden)showSync(false);return open}
+// (the panels go first, top one only: panels.js)
+function goBack(){if(panelBack())return true;const open=!help.hidden||!$('#menu').hidden||!$('#ctlMenu').hidden;
+  help.hidden=true;showMenu(false);showCtl(false);return open}
 // each action's button (b in KEY_ACTIONS): the ones over the right stick and the gun card act on the press, the rest on a click
 for(const a of KEY_ACTIONS)if(a.b){const el=$(a.b);if(el.closest('#actDock,#gunHud'))el.addEventListener('pointerdown',e=>{e.preventDefault();act(a.id,e)});else el.addEventListener('click',e=>act(a.id,e))}
 addEventListener('keydown',e=>{const c=e.code;
@@ -259,8 +260,15 @@ $('#resetBtn').onclick=()=>{const b=$('#resetBtn');
 const help=$('#help');
 $('#helpBtn').onclick=()=>{help.hidden=false;showMenu(false)};
 $('#soundBtn').onclick=()=>{showSound(true);showMenu(false)};
-$('#keysBtn').onclick=()=>{showKeys(true);showMenu(false)};
-function showMenu(on){const m=$('#menu');m.hidden=!on;$('#menuBtn').setAttribute('aria-expanded',on);if(on)menuFit()}
+
+function showMenu(on){const m=$('#menu');if(!on&&!m.hidden)menuShutT=performance.now();m.hidden=!on;$('#menuBtn').setAttribute('aria-expanded',on);if(on)menuFit()}
+let menuShutT=-1e9;
+// the menu's tabs: one tab's buttons at a time, the last one picked remembered on this device
+function setMenuTab(t){if(!document.querySelector(`#menu .mtab[data-mt="${t}"]`))t='play';
+  document.querySelectorAll('#menu .mtab').forEach(d=>d.hidden=d.dataset.mt!==t);document.querySelectorAll('#menu .mtabs button').forEach(b=>b.setAttribute('aria-selected',b.dataset.mt===t));
+  try{localStorage.setItem('bhd_mtab',t)}catch(e){}menuFit()}
+$('#menu .mtabs').onclick=e=>{const b=e.target.closest('button');if(b)setMenuTab(b.dataset.mt)};
+try{setMenuTab(localStorage.getItem('bhd_mtab')||'play')}catch(e){setMenuTab('play')}
 // the menu's top in its own (zoomed) pixels, so its height limit (game.css) keeps it inside the window at any UI size
 function menuFit(){const m=$('#menu');if(m.hidden)return;const r=m.getBoundingClientRect(),z=r.height/(m.offsetHeight||1)||1;m.style.setProperty('--mtop',Math.ceil(r.top/z)+'px');m.style.setProperty('--mbot',Math.floor(m.parentNode.getBoundingClientRect().top/z)+'px')}
 addEventListener('resize',menuFit);
