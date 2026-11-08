@@ -87,7 +87,9 @@ function fxApply(it,a){const g=fxGather(it),gone=!a||!!a.hd,r=gone?0:a.yaw,c=Mat
   for(const {l,o} of g.lamps){l[0]=X(o[0],o[2]);l[1]=o[1]+dy;l[2]=Z(o[0],o[2])}if(g.lamps.length)fxApply.lamps=1;
   for(const {k,i,q,o} of g.mdl){q[0]=X(o[0],o[2]);q[1]=o[1]+dy;q[2]=Z(o[0],o[2]);q[3]=o[3]+r;const ims=mdl.spotIM[k];
     if(ims){const O=new THREE.Object3D();O.position.set(q[0],q[1],q[2]);O.rotation.set(0,q[3],0);O.scale.setScalar(q[4]);O.updateMatrix();for(const im of ims){im.setMatrixAt(i,O.matrix);im.instanceMatrix.needsUpdate=true}}}
-  for(const {O,o} of g.objs){const ob=O.o;ob.visible=o.v&&!gone;ob.position.set(X(o.p.x,o.p.z),o.p.y+dy,Z(o.p.x,o.p.z));ob.quaternion.copy(fxQ.setFromAxisAngle(fxY,r)).multiply(o.q)}}
+  for(const {O,o} of g.objs){const ob=O.o;ob.visible=o.v&&!gone;ob.position.set(X(o.p.x,o.p.z),o.p.y+dy,Z(o.p.x,o.p.z));ob.quaternion.copy(fxQ.setFromAxisAngle(fxY,r)).multiply(o.q)}
+  // (a Main Street shop drawn from Building Forge: forgetown.js lays its building with it)
+  if(it.bf&&typeof bfAfter==='function')bfAfter(it,a)}
 // the lamps' halos and the light they throw on the ground (daynight.js), laid again from FAM_LAMPS
 function fxLampsSync(){let hi=0;const PP=dnPools.geometry.attributes.position,PA=PP.array;let q=0;
   for(const k of [1,2,3]){const L=FAM_LAMPS.filter(l=>l[3]===k);if(!L.length)continue;const m=dnHalos[hi++],H=m.geometry.attributes.position,d=DN_LAMP[k];

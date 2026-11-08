@@ -141,7 +141,7 @@ function crnPose(keys,u){let i=0;while(i<keys.length-2&&u>keys[i+1][0])i++;const
 function crnShow(n,u){crnSpans.forEach((s,k)=>{const steel=k<n||(k===n&&u>=0.86);s.tr.visible=!steel;s.st.visible=steel});
   for(const b of [BRIDGES[4],BRIDGES[5]]){const left=crnSpans.some((s,k)=>s.b===b&&!(k<n||(k===n&&u>=0.86)));for(const g of b.signs)if(g)g.visible=left}}
 const crnV=[new THREE.Vector3(),new THREE.Vector3(),new THREE.Vector3(),new THREE.Vector3()];
-function mainTick(dt){rmWinTick();sqTick();rmDoorsTick(dt);rmInsideTick(dt);
+function mainTick(dt){rmWinTick();sqTick();rmDoorsTick(dt);if(typeof bfTick==='function')bfTick(dt);rmInsideTick(dt);
   const NS=crnSpans.length,T=Math.max(10,TU.craneSpan);
   if(CRN.n<NS){CRN.t+=dt;if(CRN.t>=T){CRN.t=0;CRN.n++;if(typeof site!=='undefined')site.dirty=true;
       const s=crnSpans[CRN.n-1],near=Math.hypot(camera.position.x-crnBarge.position.x,camera.position.z-crnBarge.position.z)<320;
@@ -190,6 +190,8 @@ const MAIN_SHOPS=[["Lakeside Bakery","Bread · Pies · Coffee","#2f4a3a","#e9d9a
   ["Salt & Line","Fish Shack · Chowder","#f1ead8","#1f3a5f",0],["Shoreline Gifts","Gifts · Tees · Postcards","#2a6f76","#f6f1e4",1],
   ["The Rusty Anchor","Bar · Patio","#2b2d2f","#c9783a",1],["Paddle & Pedal","Kayak · Bike Rentals","#f4d27a","#1f3a5f",0]];
 const mainSignList=[],MAIN_GAPS=[],MAIN_BACKS=[],MAIN_GRIME=[];
+// MAIN_ST_LOTS: Main Street's shops as their lots were laid out ({x, z, w, d, face, si}), for Building Forge's (forgetown.js)
+const MAIN_ST_LOTS=[];
 // weathering decals, drawn as one see-through mesh over the walls and paving (mainGrimeAdd; not on Low graphics): a quad
 // from its corners [x, y, z] (bottom left, bottom right, top right, top left) and its cell of the grime picture: 0 rain
 // streaks, 1 a damp base, 2 an oil stain, 3 cracks, 4 a patch of newer asphalt, 5 grime washed down from a cornice, 6 a
@@ -406,7 +408,7 @@ function mainSignsAdd(from){from=from||0;const L=mainSignList.slice(from),ids=fr
     if(s.v){const A=pt(-s.h/2,-s.w/2),B=pt(s.h/2,-s.w/2),C=pt(s.h/2,s.w/2),D=pt(-s.h/2,s.w/2);P.push(...A,...B,...C,...A,...C,...D);U.push(u0+0.5,v0,u0+0.5,v1,u0,v1,u0+0.5,v0,u0,v1,u0,v0);continue}
     const A=pt(-s.w/2,-s.h/2),B=pt(s.w/2,-s.h/2),C=pt(s.w/2,s.h/2),D=pt(-s.w/2,s.h/2);P.push(...A,...B,...C,...A,...C,...D);U.push(u0,v0,u0+0.5,v0,u0+0.5,v1,u0,v0,u0+0.5,v1,u0,v1)}
   const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(P,3));geo.setAttribute('uv',new THREE.Float32BufferAttribute(U,2));geo.computeVertexNormals();
-  const m=new THREE.Mesh(geo,famSignMat(tex));m.receiveShadow=true;scene.add(m);return m}
+  const m=new THREE.Mesh(geo,famSignMat(tex));m.receiveShadow=true;m.userData.sign=1;scene.add(m);return m}
 
 (function(){let sd=31;const rnd=()=>{sd=(sd+0x6D2B79F5)|0;let t=Math.imul(sd^(sd>>>15),1|sd);t=(t+Math.imul(t^(t>>>7),61|t))^t;return((t^(t>>>14))>>>0)/4294967296};
   // ---------- north: the field and woods ----------
@@ -442,7 +444,7 @@ function mainSignsAdd(from){from=from||0;const L=mainSignList.slice(from),ids=fr
   // (none nearest the water: the street opens there onto the plaza at its foot, waterfront.js, and those two shops
   // moved to the waterfront; li still counts them, so every other shop keeps its sign and look)
   for(const s of [-1,1]){let e0=null;for(let i=0;i<7;i++){const z=588+i*19+(i>2?8:0),w=14+((i*7+(s>0?3:0))%4),h=5.5+((i*5+(s>0?2:0))%5)*1.3;if(Math.abs(z-652)<10){e0=null;continue}if(!i){li++;continue}
-      lot(s*(4+2+6.5),z,w,13,h,s>0?-Math.PI/2:Math.PI/2);if(e0!==null&&z-w/2-e0>=1.8)MAIN_GAPS.push([s,(e0+z-w/2)/2]);e0=z+w/2}
+      MAIN_ST_LOTS.push({x:s*(4+2+6.5),z,w,d:13,face:s>0?-Math.PI/2:Math.PI/2,si:li});lot(s*(4+2+6.5),z,w,13,h,s>0?-Math.PI/2:Math.PI/2);if(e0!==null&&z-w/2-e0>=1.8)MAIN_GAPS.push([s,(e0+z-w/2)/2]);e0=z+w/2}
     for(const z of [584,606,628,672,694,716]){const x=s*4.42,y=baseHeight(x,z);LK.cyl(0.07,0.1,5,8,0x2f3236,x,y+2.5,z);LK.box(0.5,0.2,0.5,0x2f3236,x,y+5.05,z);LK.lit(new THREE.BoxGeometry(0.4,0.05,0.4),0xfff1c8,x,y+4.93,z);
       famSpot('lamp',x,y+0.17,z,0)}}
   // along the cross street, both sides

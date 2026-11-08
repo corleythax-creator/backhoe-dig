@@ -2,6 +2,10 @@
 
 Every version of Corley's Island, newest first, grouped by the day it went live (Central time). Made from `data/effort.js` by `tools/changelog.py`; don't edit it by hand. [Play any old version](https://corleys-island.vercel.app/versions/) · [Build log with charts](https://corleys-island.vercel.app/build.html)
 
+## Sunday, November 8, 2026
+
+- **v360** (3:51 PM) On High and Ultra graphics, Main Street's shops are your own Building Forge designs from Daylight House Studio: walk in through doors that swing open, with their rooms and furniture. Change one in Daylight and send it to the games.
+
 ## Saturday, November 7, 2026
 
 - **v359** (2:53 PM) The townsfolk can now play 127 more animations (styled walks, everyday actions, action), loaded only when the game asks; nothing on screen changes yet.

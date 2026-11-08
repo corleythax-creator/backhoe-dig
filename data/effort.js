@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-07T20:53:00Z",
+ "updated": "2026-11-08T21:51:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -115,6 +115,12 @@ window.EFFORT = {
   {
    "d": "2026-11-07",
    "dh": 0.5,
+   "act": 0.5,
+   "versions": 1
+  },
+  {
+   "d": "2026-11-08",
+   "dh": 6,
    "act": 0.5,
    "versions": 1
   }
@@ -3357,6 +3363,15 @@ window.EFFORT = {
    "tris": 6062011,
    "chars": 2399157,
    "what": "The townsfolk can now play 127 more animations (styled walks, everyday actions, action), loaded only when the game asks; nothing on screen changes yet."
+  },
+  {
+   "v": 360,
+   "asked": "2026-11-08T14:45:00-06:00",
+   "live": "2026-11-08T15:51:46-06:00",
+   "dh": 6,
+   "tris": 7866548,
+   "chars": 2412961,
+   "what": "On High and Ultra graphics, Main Street's shops are your own Building Forge designs from Daylight House Studio: walk in through doors that swing open, with their rooms and furniture. Change one in Daylight and send it to the games."
   }
  ]
 };
