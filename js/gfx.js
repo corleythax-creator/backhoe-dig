@@ -24,6 +24,9 @@ const GFX={
 // picked by itself
 // the extra lamps: the warm light in Jessica's library and the boom's work light (Low keeps the glowing lamps only)
 GFX.low.town=1;GFX.med.town=2;GFX.high.town=3;
+// Main Street's shops from Building Forge (forgetown.js): the owner's own designs from Daylight House Studio, in place of
+// the ones the game draws; High and Ultra (about 8 MB to load once)
+GFX.low.bfMain=GFX.med.bfMain=false;GFX.high.bfMain=true;
 // the town's weathering: rain streaks, damp wall feet, oil stains, cracks and patches (mainland.js, mainGrimeGfx)
 GFX.low.grime=false;GFX.med.grime=GFX.high.grime=true;
 // mtnQ the mountains lit and shaded per pixel with haze toward the sun (scenery.js; Low keeps the simple ones), peb the
@@ -140,6 +143,7 @@ function gfxApply(){const g=gfxCur=Object.assign({},GFX[gfxKey],gfxOver);
   if(typeof tfGfx==='function')tfGfx(g.town);
   // field of view and haze (effects.js, rain.js)
   gfxFov=g.fov;gfxFog=g.fog;scene.fog.far=760*g.fog;if(typeof resize==='function')resize();
+  if(typeof bfSync==='function')bfSync();
   if(typeof gfxPanelSync==='function')gfxPanelSync()}
 // When a device can't hold its Graphics setting (main.js counts the slow seconds at the lowest resolution), it steps
 // down one level and says so: Ultra to High, High to Medium, Medium to Low. Picking a level yourself keeps it: the guard
@@ -196,6 +200,7 @@ const GFX_ROWS=[
   ['Grass and scenery'],
   {id:'brush',label:'Undergrowth',hint:'Leafy shrubs round the trees.',opts:[[0,'Off'],[0.35,'Few'],[0.7,'Some'],[1,'Full']]},
   {id:'wild',label:'Wild growth',hint:'Tall grass gone to seed and bushes in the rough ground. Thicker costs triangles.',opts:[[0,'Off'],[0.35,'Sparse'],[0.65,'Some'],[0.85,'Thick'],[1,'Full']]},
+  {id:'bfMain',label:'Main Street from Building Forge',hint:'Main Street\'s shops as designed in Daylight House Studio, with their rooms and furniture, in place of the game\'s own. About 8 MB to load once.',opts:onOff},
   {id:'turf',label:'Town lawns',hint:'Grass blades, clover, weeds and fallen leaves on the town\'s lawns. Thicker costs triangles.',opts:[[0,'Off'],[0.35,'Sparse'],[0.65,'Some'],[1,'Full']]},
   {id:'turfR',label:'Town lawn distance',hint:'How far out the town\'s lawn grass and leaves are drawn.',min:10,max:120,step:5,fmt:v=>`${Math.round(v*FT_M)} ft`},
   {id:'model',label:'Machine models',hint:'Detailed models (every machine and boat, the excavator with a full cab inside, the trench box and attachments, and the yards\' and towns\' cones, light towers, barriers, lamps, benches and tables) or the simple ones. Detailed downloads about 17 MB once.',opts:[[true,'Detailed'],[false,'Simple']]},
