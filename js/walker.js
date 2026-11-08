@@ -106,7 +106,7 @@ const WK_START={x:2.7,z:1.6,yaw:Math.PI};
 const wk={x:0,z:0,y:0,vy:0,yaw:0,view:0,ground:true,phase:0,spd:0,airT:0,jumpQ:0,landT:0,inside:null,sprint:false,stillT:0,swim:false};
 function walkReset(){Object.assign(wk,WK_START,{vy:0,ground:true,swim:false,phase:0,spd:0,airT:0,jumpQ:0,landT:0,view:WK_START.yaw,inside:null});wk.y=wkFloor(wk.x,wk.z,0,1e9)}
 // the ground at x,z, or the ground under a bridge deck that is more than lim up (swimming under it, or falling past its edge)
-function wkGround(x,z,lim){const h=hAt(x,z);if(h<=lim)return h;const d=deckAt(x,z);return d>=h-1e-4?(farGround?farGround(x,z):baseHeight(x,z)):h}
+function wkGround(x,z,lim){const h=hAt(x,z,lim);if(h<=lim)return h;const d=deckAt(x,z);return d>=h-1e-4?(farGround?farGround(x,z):baseHeight(x,z)):h}
 // the highest ground or block top under the feet that is no higher than a step above y: a 5 point foot
 function wkFloor(x,z,y,lim){let f=-1e9;const r=WK_R*0.7;
   for(const [dx,dz] of [[0,0],[r,0],[-r,0],[0,r],[0,-r]]){const px=x+dx,pz=z+dz;let h=wkGround(px,pz,lim);
@@ -115,7 +115,8 @@ function wkFloor(x,z,y,lim){let f=-1e9;const r=WK_R*0.7;
   return f}
 // blocks are walls from a step above the feet to the top of the head; push the body out of them
 function wkPushBlocks(){let bump=false;
-  for(const s of SOLIDS){const p=solidOut(s,wk.x,wk.z,WK_R);if(p){wk.x+=p[0];wk.z+=p[1]}}
+  // (a solid with a height range, y0 to y1, only round the body when it stands in it: one floor's walls in a building)
+  for(const s of SOLIDS){if(s.y1!==undefined&&(wk.y>=s.y1-0.05||wk.y+WK_H<=s.y0))continue;const p=solidOut(s,wk.x,wk.z,WK_R);if(p){wk.x+=p[0];wk.z+=p[1]}}
   for(const b of blocks){if(b.y+b.h<=wk.y+WK_STEP||b.y>=wk.y+WK_H)continue;const hx=b.w/2,hz=b.d/2,dx=wk.x-b.x,dz=wk.z-b.z;
     const nx=dx-clamp(dx,-hx,hx),nz=dz-clamp(dz,-hz,hz),d=Math.hypot(nx,nz);
     if(d>=WK_R)continue;bump=true;

@@ -66,7 +66,7 @@ function blkOver(a,x,z,w,d){return Math.abs(a.x-x)<(a.w+w)/2-0.01&&Math.abs(a.z-
 function blkGround(x,z,w,d){const mx=Math.max(1,Math.ceil(w/CELL)),mz=Math.max(1,Math.ceil(d/CELL));let y=-1e9;
   for(let a=0;a<=mx;a++)for(let b=0;b<=mz;b++)y=Math.max(y,hAt(x-w/2+w*a/mx,z-d/2+d*b/mz));return y}
 // ground or block top at a point: what tracks, tires and flying dirt land on
-function surfAt(x,z){let y=hAt(x,z);
+function surfAt(x,z,lim){let y=hAt(x,z,lim);
   for(const b of blocks)if(Math.abs(x-b.x)<=b.w/2&&Math.abs(z-b.z)<=b.d/2&&b.y+b.h>y)y=b.y+b.h;return MOVE_DECKS.length?moveDeckAt(x,z,y):y}
 // moving decks that are ground to drive on: the equipment trailer's (trailer.js). Each: its origin x, y, z, heading (s, c:
 // sin and cos) and pitch (sp, cp), the deck from u0 back to u1 (along it) within hw across, top high; and its two ramps

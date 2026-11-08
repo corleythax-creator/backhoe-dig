@@ -494,7 +494,7 @@ function tfCarStep(c,dt){const P=c.path;
 // and walk out when done (tfExit). Other rooms fill and empty as before (out of sight)
 function tfRoomsTick(dt){tf.rmT=(tf.rmT||0)-dt;if(tf.rmT>0)return;tf.rmT=0.25;if(!tf.shopsOk)tfShopsInit();
   const cx=camera.position.x,cz=camera.position.z,cap=Math.min(TF_ROOM_CAP,tfShopLeft());let n=tf.people.reduce((k,p)=>k+(p.room||p.goTo||p.go&&!p.go.out?1:0),0);
-  for(const R of TF_ROOMS){const d=Math.hypot(R.x-cx,R.z-cz)-R.r;
+  for(const R of TF_ROOMS){const d=R.off?1e9:Math.hypot(R.x-cx,R.z-cz)-R.r;
     if(d>TF_RFAR){if(R.n||R.cInc)for(const p of tf.people.slice())if(p.room===R||(p.go||p.goTo)&&(p.go||p.goTo).R===R)tfDrop(p);R.live=0;continue}
     if(d>TF_RNEAR&&!R.n&&!(R.live&&R.ent))continue;const E=R.live?tfEnt(R):null;
     const open=townRoomOpen(R),staff=R.spots.filter(sp=>sp.staff).length,cust=R.grp?(open&&townBusy()>0.35?R.spots.length:0):Math.round((R.big?R.big[tf.q]:TF_RN[tf.q])*townBusy(R)),
@@ -549,7 +549,7 @@ function tfShopsInit(){tf.shopsOk=1;tf.trans=0;for(const w of TF_WALK)w.ents=[];
 // R's entrance (above), or null for a room without one
 function tfEnt(R){const E=R.ent;if(E===null)return null;if(E&&(!E.d||E.d.x===E.dx&&E.d.z===E.dz))return E;
   let d=E?E.d:null,mx=R.x,mz=R.z,ux=0,uz=0;
-  if(R.dO!=null){if(!d){const [a,b]=R.P(R.dO+0.03,0);let bd=0.5;for(const q of RM_DOORS){if(q.k!=='shop')continue;const e=Math.hypot(q.x+Math.cos(q.f)*q.w/2-a,q.z-Math.sin(q.f)*q.w/2-b);if(e<bd){bd=e;d=q}}}
+  if(R.dO!=null){if(!d){const [a,b]=R.P(R.dO+0.03,0);let bd=0.5;for(const q of RM_DOORS){if(q.k!=='shop'&&q.k!=='bf')continue;const e=Math.hypot(q.x+Math.cos(q.f)*q.w/2-a,q.z-Math.sin(q.f)*q.w/2-b);if(e<bd){bd=e;d=q}}}
     if(!d)return R.ent=null;mx=d.x+Math.cos(d.f)*d.w/2;mz=d.z-Math.sin(d.f)*d.w/2;ux=Math.sin(d.f);uz=Math.cos(d.f)}
   else if(!R.grp)return R.ent=null;
   if(E&&E.w){const i=E.w.ents.indexOf(E);if(i>=0)E.w.ents.splice(i,1)}
