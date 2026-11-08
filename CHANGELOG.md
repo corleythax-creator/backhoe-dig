@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Sunday, November 8, 2026
 
+- **v361** (4:54 PM) On High and Ultra, the Building Forge shops on Main Street have their staff behind the counters and customers at the tables and shelves, coming and going through the front door, and you can walk up the stairs to the flat above each shop.
 - **v360** (3:51 PM) On High and Ultra graphics, Main Street's shops are your own Building Forge designs from Daylight House Studio: walk in through doors that swing open, with their rooms and furniture. Change one in Daylight and send it to the games.
 
 ## Saturday, November 7, 2026

@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-08T21:51:00Z",
+ "updated": "2026-11-08T22:54:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -120,9 +120,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-08",
-   "dh": 6,
-   "act": 0.5,
-   "versions": 1
+   "dh": 11,
+   "act": 1,
+   "versions": 2
   }
  ],
  "extra": [
@@ -3372,6 +3372,15 @@ window.EFFORT = {
    "tris": 7866548,
    "chars": 2412961,
    "what": "On High and Ultra graphics, Main Street's shops are your own Building Forge designs from Daylight House Studio: walk in through doors that swing open, with their rooms and furniture. Change one in Daylight and send it to the games."
+  },
+  {
+   "v": 361,
+   "asked": "2026-11-08T16:00:00-06:00",
+   "live": "2026-11-08T16:54:40-06:00",
+   "dh": 5,
+   "tris": 5923586,
+   "chars": 2420379,
+   "what": "On High and Ultra, the Building Forge shops on Main Street have their staff behind the counters and customers at the tables and shelves, coming and going through the front door, and you can walk up the stairs to the flat above each shop."
   }
  ]
 };
