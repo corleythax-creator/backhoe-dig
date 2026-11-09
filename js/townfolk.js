@@ -17,10 +17,10 @@ const TF_NEAR=360,TF_BOX=[-200,200,540,780],TF_CARS={sedan:4,hatch:3,wagon:1,suv
 // the paints, as often as they are seen on the road: whites, blacks, silvers and greys most, then a few colours (metallic: m)
 const TF_PAINT=[[0xe9e9e6,0,4],[0xf2f0ea,0,2],[0x101113,0,3],[0xa9adb0,1,3],[0x5a5e62,1,3],[0x2b2e33,1,2],[0x7e1416,1,2],[0x1c335c,1,2],[0x23382d,1,1],[0xb3a284,1,1],[0x6e869b,1,1],[0x8a4a1c,1,1]];
 // [people, cars] for the Townsfolk setting: Off, Few, Some, Busy
-const TF_N=[[0,0],[24,9],[42,15],[72,21]];
+const TF_N=[[0,0],[24,9],[42,15],[120,21]];
 // in the rooms (TF_ROOMS, interiors.js): customers in each shop besides its staff, for the setting; how near the camera
 // must come for a room to fill (it empties again past TF_RFAR); the most drawn in the rooms at once
-const TF_RN=[0,1,2,3],TF_RNEAR=70,TF_RFAR=95,TF_ROOM_CAP=110;
+const TF_RN=[0,1,2,3],TF_RNEAR=70,TF_RFAR=95,TF_ROOM_CAP=130;
 const tf={q:2,on:false,parked:[],parkedOn:false,load:0,bodies:null,chars:null,tex:null,M:null,cars:{},people:[],drive:[],t:0,spawnT:0,o:new THREE.Object3D(),fr:new THREE.Frustum(),fm:new THREE.Matrix4(),v:new THREE.Vector3()};
 function tfGfx(q){tf.q=q??2;if(tf.M)for(const k in tf.M){const B=tf.M[k];B.m.castShadow=!!gfxCur.pbr;if(B.fg&&B.fg.object)B.fg.object.castShadow=!!gfxCur.pbr}}
 // ---------- the walks: sidewalk centre lines, crosswalks (x) and the ways to the store's door ----------
@@ -497,7 +497,7 @@ function tfRoomsTick(dt){tf.rmT=(tf.rmT||0)-dt;if(tf.rmT>0)return;tf.rmT=0.25;if
   for(const R of TF_ROOMS){const d=R.off?1e9:Math.hypot(R.x-cx,R.z-cz)-R.r;
     if(d>TF_RFAR){if(R.n||R.cInc)for(const p of tf.people.slice())if(p.room===R||(p.go||p.goTo)&&(p.go||p.goTo).R===R)tfDrop(p);R.live=0;continue}
     if(d>TF_RNEAR&&!R.n&&!(R.live&&R.ent))continue;const E=R.live?tfEnt(R):null;
-    const open=townRoomOpen(R),staff=R.spots.filter(sp=>sp.staff).length,cust=R.grp?(open&&townBusy()>0.35?R.spots.length:0):Math.round((R.big?R.big[tf.q]:TF_RN[tf.q])*townBusy(R)),
+    const open=townRoomOpen(R),staff=R.spots.filter(sp=>sp.staff).length,cust=R.grp?(open&&townBusy()>0.35?R.spots.length:0):Math.max(tf.q&&R.minC&&!R.bfOn?R.minC:0,Math.round((R.big?R.big[tf.q]:TF_RN[tf.q])*townBusy(R))),
       want=open?Math.min(R.spots.length,staff+cust):0;
     if(E){n+=tfDoorRoom(R,E,open?Math.min(cust,R.spots.length-staff):0,n<cap);continue}
     R.live=1;if(R.n>want)townRoomEmpty(R,want);
@@ -547,19 +547,33 @@ function tfShopsInit(){tf.shopsOk=1;tf.trans=0;for(const w of TF_WALK)w.ents=[];
     TF_ROOMS.push(R)}
   for(const R of TF_ROOMS)tfEnt(R)}
 // R's entrance (above), or null for a room without one
-function tfEnt(R){const E=R.ent;if(E===null)return null;if(E&&(!E.d||E.d.x===E.dx&&E.d.z===E.dz))return E;
+function tfEnt(R){if(R.via&&!R.bfOn)return tfEntVia(R);const E=R.ent;if(E===null)return null;if(E&&(!E.d||E.d.x===E.dx&&E.d.z===E.dz))return E;
   let d=E?E.d:null,mx=R.x,mz=R.z,ux=0,uz=0;
   if(R.dO!=null){if(!d){const [a,b]=R.P(R.dO+0.03,0);let bd=0.5;for(const q of RM_DOORS){if(q.k!=='shop'&&q.k!=='bf')continue;const e=Math.hypot(q.x+Math.cos(q.f)*q.w/2-a,q.z-Math.sin(q.f)*q.w/2-b);if(e<bd){bd=e;d=q}}}
     if(!d)return R.ent=null;mx=d.x+Math.cos(d.f)*d.w/2;mz=d.z-Math.sin(d.f)*d.w/2;ux=Math.sin(d.f);uz=Math.cos(d.f)}
   else if(!R.grp)return R.ent=null;
   if(E&&E.w){const i=E.w.ents.indexOf(E);if(i>=0)E.w.ents.splice(i,1)}
-  const ox=mx+ux*0.8,oz=mz+uz*0.8;let best=null,bd=R.grp?2.2:3.5;
+  const best=tfNearWalk(mx+ux*0.8,mz+uz*0.8,R.grp?2.2:3.5);
+  if(!best)return R.ent=null;const N=Object.assign({R,d,dx:d?d.x:0,dz:d?d.z:0,mx,mz,ux,uz},best);best.w.ents.push(N);return R.ent=N}
+// the nearest point of a sidewalk (not a crosswalk) to ox, oz within bd: {w, s, wx, wz}, or null
+function tfNearWalk(ox,oz,bd){let best=null;
   for(const w of TF_WALK){if(w.x)continue;for(let i=1;i<w.p.length;i++){const a=w.p[i-1],b=w.p[i],ex=b[0]-a[0],ez=b[1]-a[1],L=Math.hypot(ex,ez)||1,
       t=Math.max(0,Math.min(L,((ox-a[0])*ex+(oz-a[1])*ez)/L)),px=a[0]+ex/L*t,pz=a[1]+ez/L*t,e=Math.hypot(ox-px,oz-pz);if(e<bd){bd=e;best={w,s:w.L[i-1]+t,wx:px,wz:pz}}}}
-  if(!best)return R.ent=null;const N=Object.assign({R,d,dx:d?d.x:0,dz:d?d.z:0,mx,mz,ux,uz},best);best.w.ents.push(N);return R.ent=N}
+  return best}
+// a room with its own way in (R.via, the brewery's taproom in mainland.js: points relative to the room's middle as it
+// was built, from just inside its door out to where it meets a sidewalk, and the way from just inside to each spot):
+// its entrance, worked out again when the map editor moves or turns the room; no door to open, the floor's pads walked
+function tfViaW(R,a,b){const V=R.via,d=(R.f||0)-V.f,c=Math.cos(d),n=Math.sin(d);return [R.x+a*c+b*n,R.z-a*n+b*c]}
+function tfEntVia(R){const E=R.ent,k=R.x+','+R.z+','+R.f;if(E!==undefined&&R.viaK===k)return E;R.viaK=k;
+  if(E&&E.w){const i=E.w.ents.indexOf(E);if(i>=0)E.w.ents.splice(i,1)}
+  const O=R.via.out,[ox,oz]=tfViaW(R,...O[O.length-1]),best=tfNearWalk(ox,oz,4);if(!best)return R.ent=null;
+  const [mx,mz]=tfViaW(R,...O[1]);const N=Object.assign({R,d:null,via:1,mx,mz,ux:0,uz:0},best);best.w.ents.push(N);return R.ent=N}
+// the way from the sidewalk's edge of R's own way in to spot sp (world points)
+function tfViaPath(R,sp){const V=R.via,d=(R.f||0)-V.f,c=Math.cos(d),n=Math.sin(d),dx=sp.x-R.x,dz=sp.z-R.z,a=dx*c-dz*n,b=dx*n+dz*c;
+  return V.out.slice().reverse().concat(V.in(a,b).slice(1)).map(q=>tfViaW(R,q[0],q[1]))}
 // the way in from just inside the door to spot sp, round the room's furniture (world points), or null if there is none;
 // kept on the spot until it or the door moves
-function tfInPath(R,E,sp){const k=sp.x*7+sp.z*13+E.mx*3+E.mz;if(sp.inK===k)return sp.inP;sp.inK=k;if(!E.d)return sp.inP=[[sp.x,sp.z]];
+function tfInPath(R,E,sp){const k=sp.x*7+sp.z*13+E.mx*3+E.mz;if(sp.inK===k)return sp.inP;sp.inK=k;if(!E.d)return sp.inP=E.via?tfViaPath(R,sp):[[sp.x,sp.z]];
   const D=R.dO+0.03,vx=E.uz,vz=-E.ux,lo=(x,z)=>[D+(x-E.mx)*E.ux+(z-E.mz)*E.uz,(x-E.mx)*vx+(z-E.mz)*vz],[so,ss]=lo(sp.x,sp.z),f=R.dO-0.45,lim=R.W-0.2,m0=R.W-0.45;
   const clear=c=>{for(let i=1;i<c.length;i++){const [a0,b0]=c[i-1],[a1,b1]=c[i],n=Math.max(1,Math.ceil(Math.hypot(a1-a0,b1-b0)/0.15));
       for(let j=0;j<=n;j++){const o=a0+(a1-a0)*j/n,s=b0+(b1-b0)*j/n;if((o-so)**2+(s-ss)**2<0.36)continue;if(Math.abs(s)>lim||o<0.3-R.dO)return false;
@@ -617,7 +631,7 @@ function tfGoStep(p,dt){const G=p.go,P=G.path,E=G.E;
   p.spd+=((bl?0:p.vt)-p.spd)*Math.min(1,dt*(bl?8:3));G.s+=p.spd*dt;p.x+=(x-p.x)*Math.min(1,dt*10);p.z+=(z-p.z)*Math.min(1,dt*10);
   let a=Math.atan2(dx,dz)-p.yaw;a=Math.atan2(Math.sin(a),Math.cos(a));p.yaw+=a*Math.min(1,dt*7);
   p.amp+=(Math.min(1,p.spd/1.2)*0.42-p.amp)*Math.min(1,dt*6);p.ph+=p.spd*dt*Math.PI*2/(1.5*p.sc);
-  let gy=baseHeight(p.x,p.z)+tfLift(p.x,p.z);if(E.d){const ox=p.x-E.mx,oz=p.z-E.mz;if(ox*ox+oz*oz<6.8)E.d.hold=Math.max(E.d.hold,0.5);if(ox*E.ux+oz*E.uz<0)gy=E.d.y}
+  let gy=baseHeight(p.x,p.z)+tfLift(p.x,p.z);if(E.via){const q=padAt(p.x,p.z);if(q>gy)gy=q}if(E.d){const ox=p.x-E.mx,oz=p.z-E.mz;if(ox*ox+oz*oz<6.8)E.d.hold=Math.max(E.d.hold,0.5);if(ox*E.ux+oz*E.uz<0)gy=E.d.y}
   p.y+=(gy-p.y)*Math.min(1,dt*8)}
 // what people carry: a paper coffee cup or a shopping bag at the right hand (as it swings walking, in the lap seated),
 // one instanced mesh each, for those drawn this frame (tfDraw)
