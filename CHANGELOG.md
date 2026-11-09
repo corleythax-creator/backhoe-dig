@@ -2,6 +2,10 @@
 
 Every version of Corley's Island, newest first, grouped by the day it went live (Central time). Made from `data/effort.js` by `tools/changelog.py`; don't edit it by hand. [Play any old version](https://corleys-island.vercel.app/versions/) · [Build log with charts](https://corleys-island.vercel.app/build.html)
 
+## Monday, November 9, 2026
+
+- **v374** (10:13 AM) The still world's sun shadow is kept from frame to frame and only moving things are redrawn: about 70% fewer shadow draws in town, same look
+
 ## Sunday, November 8, 2026
 
 - **v373** (10:56 PM) Ask a townsperson out for a beer or a walk and, if they say yes, they actually go; they understand slang and loose wording (and, on devices that can, a small on-device model reads what you mean), know where the others are and what they think of them, pass on what others told them about you, and follow the thread of a conversation. A new Talk model, Built-in + Haiku, answers free and asks Haiku only when stuck.
