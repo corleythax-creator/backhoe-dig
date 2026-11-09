@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Monday, November 9, 2026
 
+- **v382** (5:45 PM) The Building Forge buildings' own lamps and ceiling lights come on from dusk to dawn: fixtures glow, outdoor ones have halos, and the nearest few cast real light (2/4/6 on Medium/High/Ultra, none on Low; Graphics: Building lights, and Tuning for brightness, reach and budget)
 - **v381** (5:03 PM) Daylight House Studio's See it in game opens the map editor right at that building, picked and in view.
 - **v380** (5:01 PM) With more people in town than there are looks, each repeat of a look is now their own person, with a name, nature, memory and opinion of you of their own, instead of several bodies sharing one mind. The townsfolk's mind also stops mishearing words (great is not food), answers in a group having heard the others, falls back to its own words when a model can't answer, and reads lines aloud in the mood they were said in.
 - **v379** (4:55 PM) Inside a shop or house the game skips only what no window, door or storefront can show, so the view outside is drawn in full and nothing outside stops; the old 150 ft indoor cut is gone.
