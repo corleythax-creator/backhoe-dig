@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Sunday, November 8, 2026
 
+- **v367** (9:12 PM) Tiny far detail: parts too small to see (or lost in the haze) are no longer drawn, nearly halving the draws in town; Graphics slider to tune it
 - **v366** (9:11 PM) The site map shows every shop, the brewery and the General Store as a brass dot, named once you zoom in; tapping one names it
 - **v365** (8:42 PM) Townsfolk talking aloud are heard only within 80 ft of you, quieter the further off they are
 - **v364** (8:29 PM) Busy townsfolk walks 120 people; the Lakeside Brewing taproom always has 10 or more drinking while open, walking in and out by the patio door
