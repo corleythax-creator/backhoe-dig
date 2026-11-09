@@ -46,7 +46,10 @@ function ebAfter(){const c=ebCur;if(!c||!c.v)return;const v=c.v,s=c.st;
 // The engine's pull on the machine this frame (m/s², along +v when dir is 1): v its speed (m/s, + forward), pedal 0..1,
 // dir +1 forward or -1 reverse (the gear it is in), k the ground's drag factor (mud), free: its driven wheel off the
 // ground (the bike in the air: nothing holds the engine back). Engine braking comes out of it below 0.
-function ebPull(c,dt,pedal,dir,v,k,free){
+// o.load: torque the engine also turns at the crank (N m: a backhoe's or loader's hydraulic pump, more as the teeth
+// meet hard ground), so it lugs and its governor fuels up (and smokes); o.neutral: the transmission out (standing to
+// dig, the seat swivelled to the hoe), so a throttled-up engine doesn't creep it along.
+function ebPull(c,dt,pedal,dir,v,k,free,o){const Tld=o&&o.load||0,neut=!!(o&&o.neutral);
   const rig=c.rig,s=c.st,V=c.v,def=ebDef(rig),Ie=V.inertia||0.5;
   const idle=(def&&def.idle||800)*Math.PI/30,red=(def&&(def.fuel==='diesel'?def.limiter:def.redline)||6000)*Math.PI/30;
   if(!s.on){s.on=true;s.we=V.rpm*Math.PI/30;s.locked=false;s.cr=1;s.gear=1}
@@ -61,15 +64,15 @@ function ebPull(c,dt,pedal,dir,v,k,free){
     else if(s.gear>1&&wsOf(s.gear)<red*(0.16+0.2*pedal)&&wsOf(s.gear-1)<red*0.8){s.gear--;s.shiftT=0.2;s.locked=false}}
   const OV=ov(s.gear),M=rig.m;
   // the governor at the machine's top speed (Tuning), and through mud a little less
-  const gov=clamp(1-(Math.abs(v)-top)/Math.max(0.5,top*0.08),0,1);
+  const gov=clamp(1-(Math.abs(v)-top)/Math.max(0.5,top*0.03),0,1);
   s.thr=pedal*(s.shiftT>0?0.15:1);
   const n=Math.max(1,Math.ceil(dt/0.004)),h=dt/n;let vv=v;
   for(let i=0;i<n;i++){
     const ws=free?s.we:Math.max(0,vv*dir*OV/rig.r);
     s.cr=s.shiftT>0?0:Math.min(1,s.cr+h*4);
     const w0=idle*1.1,w1=Math.max(idle*1.4,idle+(0.5*red-idle)*pedal);
-    const cl=free?0:s.cr*Math.max(clamp((s.we-w0)/(w1-w0),0,1),ws>idle*1.25?1:0);
-    let Tn=V.engineTorque*pull;if(Tn>0)Tn*=gov;
+    const cl=free||neut?0:s.cr*Math.max(clamp((s.we-w0)/(w1-w0),0,1),ws>idle*1.25?1:0);
+    let Tn=V.engineTorque*pull;if(Tn>0)Tn*=gov;Tn-=Tld;
     const cap=(V.clutchCap||400)*cl;
     if(s.locked&&(cl<=0||Math.abs(Tn)>cap))s.locked=false;
     if(!s.locked){const Tsl=Math.min(cap,Math.abs(Tn)+Math.min(Math.max(0.5*Math.abs(Tn),0.05*cap),Ie*Math.abs(s.we-ws)/0.45)),band=Math.max(2,2*Tsl*h/Ie),Tc=Tsl*clamp((s.we-ws)/band,-1,1);
@@ -88,3 +91,10 @@ function ebKeyOf(){const R=WK_RIDES[wk.inside];
 function ebFrame(){const [k,out]=ebKeyOf();ebUse(out?k:null,out);ebAfter()}
 // what the tach and the HUD read while the engine drives
 const ebRpm=(c)=>c.st.we*30/Math.PI;
+// how fast the hydraulics run on the engine's speed (the pump turns with it): full from about 80% of its rated speed,
+// slower as it lugs; 1 without a live engine
+function ebHyd(key){const c=ebLive(key);if(!c)return 1;const d=ebDef(c.rig),red=(d&&(d.fuel==='diesel'?d.limiter:d.redline)||2400)*Math.PI/30;
+  return clamp(c.st.we/(0.8*red),0.35,1)}
+// a machine's hydraulic load on its engine (N m): the pump's own drag, the rams worked (dem 0..1) and the teeth in
+// hard ground (hard 0..1), as shares of the engine's peak torque
+function ebHydLoad(c,dem,hard){const d=ebDef(c.rig),pk=d&&d.peak?d.peak.nm:400;return pk*(0.05+0.3*dem+0.7*hard)}

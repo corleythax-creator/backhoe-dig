@@ -206,8 +206,13 @@ function hvDrive(h,dt,drive,turn,arm,curl,on){const K=h.K;
     // a real engine running it (enginebay.js): it pulls through its powershift; the pedal against the way it rolls,
     // or none, brakes it as before (a loader's service brakes, its converter dragging)
     const E=on&&!K.trail?ebLive(K.hoe?'backhoe':h.k==='loader'?'loader':''):null;
-    if(E){const v0=h.v,brk=drive*v0<0&&Math.abs(v0)>0.2,dir=v0>0.2?1:v0<-0.2?-1:drive<0?-1:1,ped=!brk&&drive*dir>0?Math.abs(drive):0;
-      h.v+=ebPull(E,dt,ped,dir,v0,k,false)*dt;
+    if(E){const v0=h.v,brk=drive*v0<0&&Math.abs(v0)>0.2,dir=v0>0.2?1:v0<-0.2?-1:drive<0?-1:1;let ped=!brk&&drive*dir>0?Math.abs(drive):0;
+      // the hydraulics load the engine (the pump, the rams worked, the teeth in hard ground: h.hyd and h.digR from the
+      // last frame's work); working them throttles it up as a hand throttle would, and standing still to work (or
+      // swivelled to the hoe) the transmission is out
+      const dem=Math.min(1,Math.max(h.hyd||0,K.hoe?h.hydW||0:0)),hard=h.digR||0,work=dem>0.05||hard>0;if(work)ped=Math.max(ped,0.8);
+      const neutral=!!h.hoe||!drive&&Math.abs(v0)<0.3;
+      h.v+=(ebPull(E,dt,ped,dir,v0,k,false,{load:ebHydLoad(E,dem,hard),neutral})+(neutral?0:9.8*Math.sin(h.pitch)))*dt;
       if(brk||!drive){const b=(brk?acc*3*h.top*Math.abs(drive):0.5)*dt;h.v=Math.abs(h.v)<=b?0:h.v-Math.sign(h.v)*b}}
     else h.v+=(tgt-h.v)*Math.min(1,dt*(up?acc:acc*3));
     const lock=(K.trail?TU.hvSmLock:K.hoe?TU.bhLock:TU.hvLdLock)/(1+Math.abs(h.v)*0.06);h.steer+=(turn*lock-h.steer)*Math.min(1,dt*4);
@@ -243,7 +248,8 @@ function hvCar(h,dt,drive,turn,k,on){const K=h.K,P=K.car,top=TU[P+'Spd']*k,rev=T
   // a real engine running it (enginebay.js): it pulls through its gears; the brakes and the steering stay as below
   const E=on?ebLive(P):null;
   if(E){const brk=drive*v<0&&Math.abs(v)>0.2,dir=v>0.2?1:v<-0.2?-1:drive<0?-1:1,ped=!brk&&drive*dir>0?Math.abs(drive):0;
-    h.v+=ebPull(E,dt,ped,dir,v,k,false)*dt;
+    // the hill (along the way it points) and the air: what the engine climbs and pushes through
+    h.v+=(ebPull(E,dt,ped,dir,v,k,false)+9.8*Math.sin(h.pitch)-(P==='pk'?0.00025:0.0012)*v*Math.abs(v))*dt;
     if(brk){const b=K.brake*TU[P+'Brake']*Math.abs(drive)*dt;h.v=Math.abs(h.v)<=b?0:h.v-Math.sign(h.v)*b}
     else if(!drive){const c=(0.12+0.004*h.v*h.v)*dt;h.v=Math.abs(h.v)<=c?0:h.v-Math.sign(h.v)*c}}
   else if(drive*v<0&&Math.abs(v)>0.2){const b=K.brake*TU[P+'Brake']*Math.abs(drive)*dt;h.v=Math.abs(v)<=b?0:v-Math.sign(v)*b}
@@ -295,13 +301,13 @@ function hvRipper(h,dt){h.g.localToWorld(hvV.set(0,HV_RIP0-h.rip*(HV_RIP0+TU.hvR
   return 0.45+0.55*res}
 // the loader's arms and bucket: it scoops with the cutting edge under the ground on the dig site and the bucket near
 // level, and pours off the lip once it is tipped past about 20 degrees, into the truck bed, onto the ground or over the cliff
-function hvBucket(h,dt,arm,curl,on){const cap=TU.hvLdCap,full=1-0.15*h.load/cap;
-  h.a=clamp(h.a+arm*TU.hvLdArm*dt*full,...HV_ALIM);h.c=clamp(h.c+curl*TU.hvLdCurl*dt,...HV_CLIM);hvPose(h);
+function hvBucket(h,dt,arm,curl,on){const cap=TU.hvLdCap,full=1-0.15*h.load/cap,hk=ebHyd('loader');h.digR=0;
+  h.a=clamp(h.a+arm*TU.hvLdArm*dt*full*hk,...HV_ALIM);h.c=clamp(h.c+curl*TU.hvLdCurl*dt*hk,...HV_CLIM);hvPose(h);
   const B=h.bkt;B.localToWorld(hvTip.set(0,-0.92,1.02));B.localToWorld(hvTipL.set(-0.9,-0.92,0.9));B.localToWorld(hvTipR.set(0.9,-0.92,0.9));B.localToWorld(hvLip.set(0,-0.75,1.1));
   hvLip.x+=Math.sin(h.yaw)*0.5;hvLip.z+=Math.cos(h.yaw)*0.5;
   if(on&&h.c>-0.3&&h.load<cap-0.002&&hvTip.y<hAt(hvTip.x,hvTip.z)-0.03&&inDig(hvTip.x,hvTip.z,1)){
     let got=dig(hvTipL,(cap-h.load)/2);got+=dig(hvTipR,cap-h.load-got);
-    if(got>0){hvTake(h,got,hvTip);if(h.load>=cap-0.003)toast(say('loaderFull'),'',2400)}}
+    if(got>0){h.digR=0.6;hvTake(h,got,hvTip);if(h.load>=cap-0.003)toast(say('loaderFull'),'',2400)}}   // (scooping loads its engine)
   const f=clamp((-0.35-h.c)/0.45,0,1);
   if(f>0&&h.load>0.0005){const out=Math.min(h.load,f*(0.4+h.load*1.5)*dt);h.load-=out;
     if(inBed(hvLip)&&tr.load<TU.trCap){const take=Math.min(out,TU.trCap-tr.load),ff=take/(tr.load+take||1);

@@ -103,17 +103,17 @@ function bhTick(h,dt,drive,turn,arm,curl){
   h.hin=null;if(drive&&(h.out>0.02||h.seat>0.02)){const t=performance.now();if(h.out>0.02&&t-(h.told||0)>4000){h.told=t;toast(say('bhOutDown'),'',3000)}drive=0}
   hvDrive(h,dt,drive,turn,arm,curl,true)}
 // the work (hvDrive calls it once the machine sits on its wheels): seat, outriggers, loader, hoe, digging and dumping
-function bhWork(h,dt,arm,curl,on){const P=h.parts,mv=(v,t,s)=>v<t?Math.min(t,v+s):Math.max(t,v-s);
+function bhWork(h,dt,arm,curl,on){const P=h.parts,mv=(v,t,s)=>v<t?Math.min(t,v+s):Math.max(t,v-s);h.digR=0;
   h.seat=mv(h.seat,h.hoe?1:0,dt/TU.bhSeatT);const o0=h.out;h.out=mv(h.out,h.outT,dt/TU.bhOutT);h.spin+=h.v*dt;
-  const la=h.hoe?0:arm,lc=h.hoe?0:curl,cap=TU.bhLdCap,full=1-0.15*h.load/cap;
-  h.a=clamp(h.a+la*TU.bhLdArm*dt*full,...BH_ALIM);h.c=clamp(h.c+lc*TU.bhLdCurl*dt,...BH_CLIM);
+  const la=h.hoe?0:arm,lc=h.hoe?0:curl,cap=TU.bhLdCap,full=1-0.15*h.load/cap,hk=ebHyd('backhoe');   // (the pump slows as a real engine lugs, enginebay.js)
+  h.a=clamp(h.a+la*TU.bhLdArm*dt*full*hk,...BH_ALIM);h.c=clamp(h.c+lc*TU.bhLdCurl*dt*hk,...BH_CLIM);
   // the hoe's hydraulics: one pump feeds every ram, so working several at once shares its flow (TU.bhFlow: how many
   // run at full speed together); the boom lifts a loaded bucket slower (TU.bhLoadSlow) and lowers a little quicker
-  const I=h.hin&&h.seat>0.97?h.hin:[0,0,0,0],dem=Math.abs(I[0])+Math.abs(I[1])+Math.abs(I[2])+Math.abs(I[3]),r=h.hres*(dem>TU.bhFlow?TU.bhFlow/dem:1);
+  const I=h.hin&&h.seat>0.97?h.hin:[0,0,0,0],dem=Math.abs(I[0])+Math.abs(I[1])+Math.abs(I[2])+Math.abs(I[3]),r=h.hres*(dem>TU.bhFlow?TU.bhFlow/dem:1)*hk;
   const bl=I[2]>0?1-TU.bhLoadSlow*h.hl.load/TU.bhCap:1.08;
   h.sw=clamp(h.sw-I[0]*TU.bhSwing*dt*r,...BH_LIM.sw);h.hs=clamp(h.hs+I[1]*TU.bhStick*dt*r,...BH_LIM.hs);
   h.hb=clamp(h.hb+I[2]*TU.bhBoom*dt*r*bl,...BH_LIM.hb);h.hk=clamp(h.hk+I[3]*TU.bhBucket*dt*r,...BH_LIM.hk);
-  h.hyd=Math.min(1,Math.abs(la)+Math.abs(lc)+Math.abs(I[0])+Math.abs(I[1])+Math.abs(I[2])+Math.abs(I[3])+(h.out!==o0?0.5:0));
+  h.hyd=h.hydW=Math.min(1,Math.abs(la)+Math.abs(lc)+Math.abs(I[0])+Math.abs(I[1])+Math.abs(I[2])+Math.abs(I[3])+(h.out!==o0?0.5:0));   // (hydW: kept for the engine, hvDrive resets hyd)
   // the views: at the hoe the chase camera comes round to the front and looks back over the cab, and in the cab you
   // look back and down at the bucket
   h.camO=Math.PI*h.seat;h.camF=1-4*h.seat;{const a=Math.PI*h.seat,E=h.K.eye;
@@ -125,7 +125,7 @@ function bhWork(h,dt,arm,curl,on){const P=h.parts,mv=(v,t,s)=>v<t?Math.min(t,v+s
   bhM.x+=Math.sin(h.yaw)*0.4;bhM.z+=Math.cos(h.yaw)*0.4;
   if(on&&!h.hoe&&h.c>-0.3&&h.load<cap-0.002&&bhT.y<hAt(bhT.x,bhT.z)-0.03&&inDig(bhT.x,bhT.z,1)){
     let got=dig(bhL,(cap-h.load)/2);got+=dig(bhR,cap-h.load-got);
-    if(got>0){bhTake(h,got,bhT);if(h.load>=cap-0.003)toast(say('loaderFull'),'',2400)}}
+    if(got>0){h.digR=Math.max(h.digR||0,0.6);bhTake(h,got,bhT);if(h.load>=cap-0.003)toast(say('loaderFull'),'',2400)}}
   {const f=clamp((-0.35-h.c)/0.45,0,1);if(f>0&&h.load>0.0005){const out=Math.min(h.load,f*(0.4+h.load*1.5)*dt);h.load-=out;bhDrop(h,bhM,out);for(let n=0;n<Math.ceil(out*50);n++)spawn(bhM,0.8)}}
   h.heap.visible=h.load>0.01;if(h.heap.visible){const s=0.35+0.65*Math.sqrt(h.load/cap);h.heap.scale.set(2.0*s,0.6*s,0.8+0.25*s);tintLoad(h.heap.material,h.loadC)}
   // the hoe: its teeth under the ground on the dig site bite as the excavator's do (hard ground slows the hydraulics).
@@ -139,6 +139,8 @@ function bhWork(h,dt,arm,curl,on){const P=h.parts,mv=(v,t,s)=>v<t?Math.min(t,v+s
     // slower than about 2 in a second the teeth are only resting; the last angle holds
     if(tv>0.05){bhE.copy(BH_EDGE).applyQuaternion(bhQ);h.atk+=(ss(-0.1,0.6,bhV.dot(bhE)/(tv*dt))-h.atk)*Math.min(1,dt*10)}}
   (h.tp||(h.tp=new THREE.Vector3())).copy(bhT);h.fillR=0;
+  // how hard the teeth are working the ground, for the engine (enginebay.js): pushing through it, harder the harder it is
+  if(below&&h.hoe&&dem>0.05)h.digR=Math.max(h.digR,clamp(0.3+0.7*(1-soilRes(Math.round(gJ(bhT.z))*V+Math.round(gI(bhT.x)),bhT.y)),0,1)*Math.min(1,0.4+dem));
   if(below){const k=Math.round(gJ(bhT.z))*V+Math.round(gI(bhT.x));h.hres=soilRes(k,bhT.y)*(L.load>=hc-0.002?0.5:1);
     // it heaps over its rim to TU.bkHeap past full; what it cuts beyond that spills back over the sides
     if(on&&h.hoe&&up>-0.3){

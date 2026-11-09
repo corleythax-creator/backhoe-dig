@@ -56,7 +56,7 @@ const TUNE=[
   ['bhFlow','Backhoe','Pump flow: hoe functions that run at full speed together',2,'pct',100,400,10],
   ['bhLoadSlow','Backhoe','How much a full hoe bucket slows the boom lifting',0.25,'pct',0,80,5],
   ['hvSmSpd','Semi','Top speed',15.6,'mph',5,70,1],['hvSmLock','Semi','Steering lock',0.6,'deg',10,45,1],
-  ['pkSpd','Pickup','Top speed',35*0.44704,'mph',5,120,1],['pkRev','Pickup','Top speed in reverse',10*0.44704,'mph',2,30,1],
+  ['pkSpd','Pickup','Top speed',80*0.44704,'mph',5,120,1],['pkRev','Pickup','Top speed in reverse',10*0.44704,'mph',2,30,1],
   ['pkAcc','Pickup','Acceleration (engine pull)',1,'pct',20,400,5],['pkBrake','Pickup','Braking',1,'pct',20,400,5],
   ['pkLock','Pickup','Steering lock',0.6,'deg',10,50,1],['pkGrip','Pickup','Grip in turns (lower slides sooner)',1,'pct',20,400,5],
   // the pickups' beds and the store in town (pickup.js)
