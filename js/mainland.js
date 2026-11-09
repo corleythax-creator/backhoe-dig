@@ -489,7 +489,7 @@ function mainBrewery(){const K=famKit(),PK=famKit(),{x,z,w,d,h}=BREW,y=rmGroundM
   B.box(3.1,0.42,0.42,ST,-o0+0.3,0,2.8);for(const s of doors){if(!s)continue;B.box(3,3.2,0.02,'glass',-o0+0.2,s,0);for(let k=0;k<=5;k++)B.box(3,0.06,0.08,ST,-o0+0.2,s,k*0.64-0.03+(k?0:0.03));for(const t of [-1,0,1])B.box(0.06,3.2,0.08,ST,-o0+0.2,s+t*1.47,0)}
   // the roof, its parapet and coping; the sign across the front; a grain silo by the east wall
   B.box(w,0.25,d,0x4a4c4e,0,0,h);for(const s of [-1,1]){B.box(0.3,0.7,d,W,0,s*(w/2-0.15),h);B.box(w,0.7,0.3,W,s*(o0-0.15),0,h);B.box(w+0.1,0.08,0.4,0xd8d2c4,s*(o0-0.15),0,h+0.7)}
-  famSign(['LAKESIDE BREWING CO.','Taproom · Beer Garden · Est. 2019'],10,1.7,x,y+5.75,z-o0-0.04,Math.PI,'#1f2a24','#e8c27a');
+  famSign(['LAKESIDE BREWING CO.','Taproom · Beer Garden · Est. 2019'],10,1.7,x,y+5.75,z-o0-0.04,Math.PI,'#1f2a24','#e8c27a').userData.sign=1;   // (kept when the town from Building Forge stands in)
   {const sx=40,sz=670,sy=G(sx,sz);K.cyl(1.3,1.3,6,20,SS,sx,sy+3.8,sz);K.cyl(0.1,1.3,1.2,20,SS,sx,sy+7.4,sz);K.cyl(1.3,0.2,1.0,20,SS,sx,sy+0.3+0.5,sz);
     for(const a of [0.8,2.4,4,5.6])K.box(0.1,0.8,0.1,ST,sx+Math.cos(a)*1.1,sy+0.4,sz+Math.sin(a)*1.1);SOLIDS.push({x:sx,z:sz,hx:1.35,hz:1.35})}
   // inside: four fermenting tanks on their legs and two copper kettles down the east side, the bar and back bar down the

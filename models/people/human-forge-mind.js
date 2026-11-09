@@ -86,7 +86,7 @@
   const SERVER = ['touched', 'arrived', 'approached', 'animal', 'still'];   // the kinds the server's model takes; the rest are built-in only
   const MILD = ['ignore', 'watch', 'investigate', 'help'];   // what a model may decide in place of the built-in mind's pick (api/persona.js has the same list); fleeing, backing off, freezing, warning and calling stay instinct
   const DECIDE_WAIT = 2500;   // ms a model has to decide before the built-in mind's pick is acted on
-  const SPEAKERS = ['local', 'haiku', 'sonnet', 'opus'];
+  const SPEAKERS = ['local', 'mix', 'haiku', 'sonnet', 'opus'];   // mix: the built-in mind, and Haiku for the lines it cannot understand
   // intelligence: how sharp they are (1..5) and the way they are clever; what matters to them; the topics they are into
   const SMARTS = ['', 'simple', 'average', 'sharp', 'bright', 'brilliant'];
   const KNACKS = { book: 'book smart', street: 'street smart', people: 'good with people', hands: 'good with their hands', numbers: 'quick with numbers', creative: 'creative' };
@@ -488,7 +488,7 @@
   // simple sums said or asked: 'what's 7 times 8', '12 + 30', 'what is 100 divided by 4'
   const SUM = /(-?\d+(?:\.\d+)?)\s*(plus|\+|minus|-|times|x|\*|×|multiplied by|divided by|over|\/)\s*(-?\d+(?:\.\d+)?)/i;
   // the words a sharper mind reaches for (a few, now and then), and a plainer one
-  const BIG = [[/\breally good\b/, 'excellent'], [/\ba lot\b/, 'a great deal'], [/\bI think\b/, 'I suspect'], [/\bvery\b/, 'remarkably'], [/\bpretty sure\b/, 'fairly certain'], [/\bweird\b/, 'curious'], [/\bbig\b/, 'enormous'], [/\bmaybe\b/, 'perhaps'], [/\bhelp\b/, 'be of use']];
+  const BIG = [[/\breally good\b/, 'excellent'], [/\ba lot\b/, 'a great deal'], [/\bI think\b/, 'I suspect'], [/\bvery\b/, 'remarkably'], [/\bpretty sure\b/, 'fairly certain'], [/\bweird\b/, 'curious'], [/\bbig\b/, 'enormous'], [/\bmaybe\b/, 'perhaps'], [/\b(can|could) help\b/, '$1 be of use']];
   const STOP = /^(the|and|but|you|your|are|was|for|with|that|this|have|what|just|like|about|there|they|them|then|from|really|very|some|been|were|will|would|could|should)$/;
 
 
@@ -594,7 +594,7 @@
     partnerYes: { warm: ['I am. {Years} years now, and still happy.', 'Yes, I\'m spoken for. {Years} years.'], edge: ['Yes. {Years} years.', 'Married, yes.'], shy: ['Um, yes. I am.'],
       bold: ['I am, and proud of it.'], humor: ['Yes. {Years} years and counting, poor soul.'], any: ['Yes, I am.'] },
     partnerNo: { warm: ['No, not at the moment.', 'Single, for now.'], edge: ['No. Next question.', 'Single.'], shy: ['Oh... no, I\'m not.'], bold: ['Single, and happy that way.'], humor: ['No. My standards are too high. Or theirs are.'], any: ['No.'] },
-    kidsYes: { warm: ['I do. {Kids}, and they\'re my whole world.', 'Yes, {kids}. Want to see a photo?'], edge: ['{Kids}. They keep me busy.'], humor: ['{Kids}. Send help.'], any: ['Yes, {kids}.'] },
+    kidsYes: { warm: ['I do. {Kids}, and they\'re my whole world.', 'Yes, {kids}. Want to see a photo?'], edge: ['{Kids}. They keep me busy.'], humor: ['{Kids}. Send reinforcements.'], any: ['Yes, {kids}.'] },
     kidsNo: { warm: ['No, not yet. Maybe one day.'], edge: ['No.', 'No kids.'], humor: ['No. I can barely look after myself.'], any: ['No, no kids.'] },
     petYes: { warm: ['A {pet}. I miss them when I\'m out.', 'Yes, a {pet}. Best friend I\'ve got.'], humor: ['A {pet}. Technically it owns me.'], any: ['A {pet}, yes.'] },
     petNo: { any: ['No pets. I\'m out too much.', 'No, no pets. Maybe one day.'] },
@@ -624,6 +624,122 @@
     meh: { warm: ['{Topic}? I don\'t mind it. Not really my thing, but I can see why people love it.'], edge: ['{Topic}. Overrated.', 'Never really got the point of {topic}.'], shy: ['I don\'t know much about {topic}, honestly.'],
       bold: ['{Topic}? Not for me.'], humor: ['{Topic}? I\'m told it exists.'], any: ['{Topic}? It\'s fine.'] },
   };
+
+  // ---- plain words: the slang, shorthand and common slips people type, put the way the rest of the mind reads them
+  const PLAIN_W = [[/\bwhatcha\b|\bwhat ?cha\b|\bwotcha\b/g, 'what are you'], [/\bwhat'?s up\b|\bsup\b|\bwassup\b/g, 'how are you'], [/\bhow ya doin'?g?\b|\bhow you doin'?g?\b|\bhow r u\b/g, 'how are you'],
+    [/\bu\b/g, 'you'], [/\bur\b/g, 'your'], [/\br\b/g, 'are'], [/\bya\b|\by'?all\b|\byou guys\b/g, 'you'], [/\bwanna\b/g, 'want to'], [/\bgonna\b/g, 'going to'], [/\bgotta\b/g, 'got to'],
+    [/\bkinda\b/g, 'kind of'], [/\bdunno\b/g, "don't know"], [/\b(thx|thanx|ty|thank u)\b/g, 'thanks'], [/\b(pls|plz)\b/g, 'please'], [/\bim\b/g, "i'm"], [/\bdont\b/g, "don't"], [/\bwhats\b/g, "what's"],
+    [/\bwheres\b/g, "where's"], [/\bhows\b/g, "how's"], [/\byoure\b/g, "you're"], [/\bcant\b/g, "can't"],
+    [/\b(fella|feller|beau|sweetheart|significant other|other half|hubby|wifey|missus|man in your life|woman in your life)\b/g, 'partner'], [/\b(little ones|kiddos|kiddies|young'?uns|youngsters|rugrats)\b/g, 'kids'],
+    [/\b(grub|chow|a bite|bite to eat|nosh|eats)\b/g, 'food'], [/\b(cold one|brewski|brews?|pint|cocktail|beverage|bevvy)\b/g, 'drink'], [/\b(doggo|pup|pooch|doggy)\b/g, 'dog'], [/\b(kitty|kitties)\b/g, 'cat'],
+    [/\b(hungy|hungery|hungrey)\b/g, 'hungry'], [/\b(tierd|tird|tirde)\b/g, 'tired'], [/\b(thristy|thirstey)\b/g, 'thirsty'], [/\b(marryed|maried)\b/g, 'married'], [/\b(whta|waht)\b/g, 'what'],
+    [/\b(teh)\b/g, 'the'], [/\b(yuo|yoo)\b/g, 'you'], [/\b(snooze|kip|shut ?eye)\b/g, 'sleep'], [/\b(telly)\b/g, 'tv'], [/\b(dip)\b/g, 'swim']];
+  const plainWords = (t) => { let s = ' ' + String(t).toLowerCase().replace(/[‘’]/g, "'") + ' '; for (const [w, b] of PLAIN_W) s = s.replace(w, b); return s.replace(/\s+/g, ' ').trim(); };
+  // ---- what the on-device model (SENSE) matches a line to when the mind's own words miss it: the line each answers to
+  // (its first), and other ways people say it
+  const BANK = [
+    ['are you married', 'do you have a partner', 'are you seeing someone', 'is there someone special in your life', 'do you have a boyfriend', 'do you have a girlfriend', 'are you single'],
+    ['do you have kids', 'do you have children', 'are you a parent', 'any kids at home'],
+    ['do you have any pets', 'do you have a dog', 'do you have a cat', 'any animals at home'],
+    ['do you have any brothers or sisters', 'do you have siblings', 'are you an only child'],
+    ['do you live alone', 'who do you live with', 'is there anyone at home with you'],
+    ['do you like your job', 'how is work going', 'do you enjoy your work'],
+    ['what are you doing', 'what are you up to', 'what are you busy with', 'what is going on with you right now'],
+    ['what time is it', 'do you know the time', 'what is the time now', 'how late is it'],
+    ['are you hungry', 'are you starving', 'could you eat something', 'have you eaten'],
+    ['are you thirsty', 'do you need a drink'],
+    ['are you tired', 'are you sleepy', 'are you worn out', 'do you need a rest'],
+    ['are you bored', 'are you having fun'],
+    ['do you want to get something to eat', 'shall we get some food', 'do you want to grab dinner', 'let us eat'],
+    ['do you want to get a drink', 'do you want to grab a beer', 'shall we have a drink', 'fancy a drink'],
+    ['do you want to go to bed', 'shall we get some sleep', 'do you want to lie down'],
+    ['do you want to go for a swim', 'shall we go to the pool'],
+    ['do you want to watch tv', 'shall we watch a movie'],
+    ['do you want to go for a walk', 'shall we take a stroll'],
+    ['what do you do for a living', 'what is your job', 'what line of work are you in', 'what kind of work do you do'],
+    ['where are you from', 'where did you grow up', 'where is home for you'],
+    ['what do you want', 'what are your dreams', 'what are you hoping for in life'],
+    ['what worries you', 'what are you afraid of', 'what keeps you up at night'],
+    ['what matters to you', 'what do you care about most'],
+    ['what do you like to do for fun', 'what are your hobbies', 'what are you into'],
+    ['how are you', 'how are you feeling', 'how is it going', 'how have you been'],
+    ['what is your name', 'who are you', 'what should i call you'],
+    ['what is my name', 'do you remember me', 'do you know who i am'],
+    ['what do i do', 'do you remember my job'],
+    ['where am i from', 'do you remember where i am from'],
+    ['tell me something interesting', 'tell me a fact', 'teach me something'],
+    ['tell me a joke', 'make me laugh', 'say something funny'],
+    ['what should i do', 'can you give me some advice', 'what would you do in my place'],
+    ['are you smart', 'how clever are you', 'what are you good at'],
+    ['what did we talk about', 'what were we talking about last time'],
+    ['where are we', 'what is this place'],
+    ['what can you see', 'what is around here'],
+    ['tell me more', 'go on', 'and then what'],
+    ['what about you', 'and you', 'how about yourself'],
+    ['goodbye', 'see you later', 'i have to go'],
+    ['thanks', 'thank you so much', 'i appreciate it'],
+  ];
+  const SENSE = {
+    // the small model that reads a line for its meaning (all-MiniLM-L6-v2, 8-bit, about 23 MB once, then kept by the
+    // browser), loaded when someone first talks to them and only where data is not being saved; its library from the CDN
+    lib: 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.5.2', model: 'Xenova/all-MiniLM-L6-v2',
+    st: '', pipe: null, vecs: [], why: '',
+    ok() { try { return typeof window !== 'undefined' && typeof document !== 'undefined' && !(navigator.connection && navigator.connection.saveData); } catch (e) { return false; } },
+    load() {
+      if (this.st || !this.ok()) return; this.st = 'loading';
+      import(/* @vite-ignore */ this.lib).then(async (T) => {
+        T.env.allowLocalModels = false;
+        this.pipe = await T.pipeline('feature-extraction', this.model, { dtype: 'q8' });
+        this.st = 'ready'; this.fill();
+      }).catch((e) => { this.st = 'off'; this.why = String(e && e.message || e).slice(0, 120); });
+    },
+    async emb(t) { const r = await this.pipe(t, { pooling: 'mean', normalize: true }); return r.data; },
+    // the bank's lines, a few at a time while the page is idle, so nothing stutters (a phone too)
+    fill() {
+      const all = BANK.flatMap((g, i) => g.map((s) => [i, s])), idle = (f) => (typeof requestIdleCallback === 'function' ? requestIdleCallback(f, { timeout: 1500 }) : setTimeout(f, 60));
+      const step = async () => { const n = this.vecs.length; if (n >= all.length) { this.st = 'full'; return; } const [i, s] = all[n]; try { this.vecs.push([i, await this.emb(s)]); } catch (e) { this.st = 'off'; return; } idle(step); };
+      idle(step);
+    },
+    // the bank's line a line means, when it is clearly one of them (close, and clearly closer than any other), else null
+    async match(t) {
+      if (this.st !== 'full') return null;
+      const v = await this.emb(t), best = new Map();
+      for (const [i, w] of this.vecs) { let s = 0; for (let j = 0; j < w.length; j++) s += w[j] * v[j]; if (!(best.get(i) >= s)) best.set(i, s); }
+      const r = [...best].sort((a, b) => b[1] - a[1]);
+      return r.length && r[0][1] >= SENSE_MIN && r[0][1] - (r[1] ? r[1][1] : 0) >= SENSE_GAP ? { text: BANK[r[0][0]][0], sim: r[0][1] } : null;
+    },
+  };
+  const SENSE_MIN = 0.5, SENSE_GAP = 0.07;   // how close a line must be to one of the bank's, and how much closer than the next
+  // ---- knowing about each other: where someone is, what they are doing, what they think of them, whether they know them
+  const ABOUT = {
+    where: { any: ['{Name}? {Doing}, last I saw.', '{Name}\'s {doing}.', 'Over there. {Doing}, I think.'] },
+    whereNot: { any: ['No idea, honestly.', 'Haven\'t seen {name} in a while.'] },
+    me: { any: ['Right here!', 'I\'m right in front of you.'] },
+    fond: { warm: ['{Name}? I adore {them}.', 'Oh, {name}\'s lovely. One of the good ones.'], edge: ['{Name}\'s alright. Don\'t tell {them} I said so.'], shy: ['I like {name}. {They_are} kind to me.'], bold: ['{Name}? Love {them}.'], humor: ['{Name}? Best person here. After me.'], any: ['I like {name}.'] },
+    okay: { warm: ['{Name} seems nice. I\'d like to know {them} better.'], edge: ['{Name}? Fine, I suppose.', 'No complaints about {name}.'], shy: ['{Name} seems nice...'], humor: ['{Name}? Jury\'s still out.'], any: ['{Name}\'s okay.'] },
+    cool: { warm: ['{Name} and I don\'t quite click, but I\'m trying.'], edge: ['{Name}? Not my favourite.', 'Let\'s not talk about {name}.'], shy: ['I... don\'t really get on with {name}.'], bold: ['{Name}? Not a fan.'], humor: ['{Name}? We\'re working on it. Slowly.'], any: ['Not really my sort, {name}.'] },
+    stranger: { any: ['I don\'t really know {name}.', 'Haven\'t really met {name} yet.', 'Who, {name}? Never spoken to {them}.'] },
+    knows: { any: ['Yes, I know {name}.', 'Sure, {name} and I have talked.'] },
+    tell: { any: ['{Name}? {They_are} {a_job}.', '{Name}\'s {a_job}, I think.'] },
+    tellNo: { any: ['{Name}? I don\'t know much, honestly.', 'Not much to tell. Ask {them} yourself.'] },
+    // something another of them told them about you
+    gossip: { warm: ['{Name} tells me you\'re {a_job}. That\'s lovely.'], edge: ['{Name} says you\'re {a_job}. That right?'], humor: ['I hear from {name} you\'re {a_job}. Word gets around.'], any: ['{Name} said you\'re {a_job}.'] },
+    gossipFrom: { any: ['{Name} says you\'re from {from}.', 'I hear you\'re from {from}.'] },
+    gossipPet: { any: ['{Name} says you\'ve got a {pet}.', 'I hear you have a {pet}.'] },
+  };
+  // ---- following the talk: their own question answered with something they did not catch, and coming back to a thing
+  const TRACK = {
+    good: { warm: ['Oh, good! I\'m glad.', 'That\'s good to hear.'], edge: ['Good.', 'Glad to hear it.'], humor: ['Excellent. That\'s the right answer.'], any: ['Good, good.'] },
+    bad: { warm: ['Oh no. I\'m sorry.', 'That\'s a shame. Anything I can do?'], edge: ['That\'s rough.', 'Ah. Sorry.'], humor: ['Oof. Well, it can only get better.'], any: ['Sorry to hear that.'] },
+    heard: { warm: ['Oh, really? Tell me more about that.', 'Huh. I didn\'t know that about you.'], edge: ['Huh. Okay.', 'Fair enough.'], shy: ['Oh... I see.'], bold: ['Ha! Didn\'t see that coming.'], humor: ['Well, I did ask.'], any: ['I see.'] },
+    back: { any: ['Anyway, about {topic}...', 'Going back to {topic} for a second...', 'Where were we? Oh, {topic}.'] },
+    cant: { warm: ['I\'d love to, but I can\'t right now.'], edge: ['Can\'t right now.'], any: ['Not right now, I can\'t.'] },
+  };
+  // a suggestion, by what it is about: the need it answers (yes or no by it) and what the page is asked to do (o.go)
+  const WANT_GO = [[/\b(eat|food|dinner|lunch|breakfast|snack|pizza|burger|meal)\b/, 'hunger', 'eat'], [/\b(coffee|tea)\b/, 'thirst', 'coffee'], [/\b(drink|beer|wine|water|thirsty)\b/, 'thirst', 'drink'],
+    [/\b(sleep|bed|nap|turn in)\b/, 'energy', 'sleep'], [/\b(lie down|rest|sit( down)?|take a seat)\b/, 'energy', 'sit'], [/\b(shower|bath|wash|freshen up)\b/, 'clean', 'wash'],
+    [/\b(tv|television|movie|film|show)\b/, 'fun', 'tv'], [/\b(swim|pool)\b/, 'fun', 'pool'], [/\b(walk|stroll|go out|explore)\b/, 'fun', 'walk'], [/\b(shop|shopping|look round the shops)\b/, 'fun', 'shop'],
+    [/\b(talk|chat|hang out|sit (with|together)|keep me company)\b/, 'company', ''], [/\b(dance|play|game|music)\b/, 'fun', '']];
   function Brain(o) {
     const SAVE = o.storage + '-brain', profiles = new Map(), recent = new Map(), ownRecent = new Map();
     let mem = {}; try { mem = JSON.parse(store(SAVE) || '{}') || {}; } catch (e) { mem = {}; }
@@ -896,7 +1012,7 @@
     }
 
     // a line: for the user (to 'you'), to someone (to: their key), on something that happened (ev), or to themself (ev.kind 'muse')
-    function line(k, to, ev, lines) {
+    function line(k, to, ev, lines, opt) {
       const c = o.card(k); if (!c) return null;
       const P = profile(c), m = memOf(c), d = P.d;
       let say = '', look = 'you', meta = {}, ex = false, act = ev && ev.dec ? ev.dec : null;
@@ -1004,10 +1120,13 @@
             const F = U.facts, ks = Object.keys(F).filter((x) => x !== 'job' || F.job !== 'retired'), f = ks[Math.floor(Math.random() * ks.length)];
             Object.assign(slots, { job: F.job, a_job: F.job ? aOf(F.job) : '', from: F.from, pet: F.pet, partner: F.partner });
             say = f ? pick(k, P, YOURS[{ job: 'askJob', from: 'askFrom', pet: 'askPet', kids: 'askKids', partner: 'askPartner' }[f]], slots) : pick(k, P, L.hiUser, slots);
+            if (f) meta = { asked: f };
           }
+          // something one of the others here knows about you that they do not: heard from them, said, and kept
+          else if (Math.random() < 0.3 && (say = gossip(k, P, m, slots))) { /* said */ }
           else if (U.likes.length && Math.random() < 0.5) { slots.topic = TOPICS[U.likes[Math.floor(Math.random() * U.likes.length)]].n; say = pick(k, P, L.yourLike, slots); }
           else { const t = P.likes[Math.floor(Math.random() * P.likes.length)], q = Math.random() < 0.3 + d.curious * 0.4; say = pick(k, P, L.hiUser, slots) + ' ' + topicLine(k, P, t, q); meta = { topic: t, q }; }
-        } else say = answer(k, c, P, m, last.said, mine, slots, (x) => { meta = x; }, last.group ? { group: last.group, said: lines.filter((l) => l.round === last.id && l.p !== k) } : null);
+        } else say = answer(k, c, P, m, (opt && opt.text) || last.said, mine, slots, (x) => { meta = x; }, last.group ? { group: last.group, said: lines.filter((l) => l.round === last.id && l.p !== k) } : null);
         U.said = (U.said || 0) + (fresh ? 1 : 0);
         note(m, fresh ? last.said : null, meta);   // this chat's memory: what came up, never your words
       } else {
@@ -1060,6 +1179,17 @@
       return { say: say.slice(0, 300), mood, face: face(mood), look: d.shy > 0.7 && look === 'you' && Math.random() < 0.4 ? 'away' : look, meta, act: act || undefined };
     }
     // the user said something: answer from what was said (never repeating their words), and learn from it
+    // what another of them here knows of you and k does not (only the kept, listed words), said as heard from them
+    function gossip(k, P, m, slots) {
+      const U = m.user, F = U.facts || (U.facts = {});
+      for (const q of (o.people ? o.people() : []).filter((x) => x !== k && o.card(x)).sort(() => Math.random() - 0.5)) {
+        const om = mem[idOf(o.card(q))], G = om && om.user && om.user.facts; if (!G) continue;
+        const f = ['job', 'from', 'pet'].find((x) => G[x] && !F[x] && (x !== 'job' || G.job !== 'retired')); if (!f) continue;
+        F[f] = G[f]; Object.assign(slots, { name: o.nameOf(q), a_job: f === 'job' ? aOf(G.job) : '', from: G.from, pet: G.pet });
+        return pick(k, P, f === 'job' ? ABOUT.gossip : f === 'from' ? ABOUT.gossipFrom : ABOUT.gossipPet, slots);
+      }
+      return '';
+    }
     // asked the same kind of thing as last time: the sharp say so (kinds only are kept, never your words)
     function answer(k, c, P, m, text, mine, slots, setMeta, grp) {
       const t = String(text).toLowerCase(), U = m.user, kind = (ASK_KIND.find(([, w]) => w.test(t)) || [])[0] || '';
@@ -1069,7 +1199,12 @@
       return s;
     }
     function answer0(k, c, P, m, text, mine, slots, setMeta, grp) {
-      const t = String(text).toLowerCase(), raw = String(text), U = m.user, d = P.d;
+      let t = plainWords(text); const raw = String(text), U = m.user, d = P.d;
+      // who else is here, by name (theirs as the scene has them): someone named, or he/she for the last one talked of
+      const others = (o.people ? o.people() : []).filter((q) => q !== k && o.card(q)), named0 = others.find((q) => new RegExp('\\b' + String(o.nameOf(q)).toLowerCase().replace(/[^a-z' -]/g, '') + '\\b').test(t));
+      let who = named0 || null;
+      if (!who && U.lastWho && /\b(he|she|him|her|they|them)\b/.test(t) && !/\b(you|your)\b.*\b(he|she)\b/.test(t)) who = others.find((q) => o.nameOf(q) === U.lastWho) || null;
+      if (who) U.lastWho = o.nameOf(who);
       // asked as a group: who likes something, whether they know each other, names all round, and what the others said
       if (grp) {
         const others = grp.group.filter((q) => q !== k && o.card(q)).map((q) => o.nameOf(q));
@@ -1099,7 +1234,10 @@
           return pick(k, P, L.likeWhat, slots);
         }
       }
-      const prevQ = mine && mine.meta && mine.meta.q, prevT = mine && mine.meta && mine.meta.topic;
+      const prevQ = mine && mine.meta && mine.meta.q, prevT = mine && mine.meta && mine.meta.topic, prevAsk = mine && mine.meta && mine.meta.asked;
+      // it, that, them: what they last talked of (so do you like it? reads as the thing itself)
+      if (prevT && !topicIn(t) && /\b(it|that|those|them)\b/.test(t) && !who) t += ' (' + TOPICS[prevT].n + ')';
+      if (prevT || (U.topics && U.topics.length)) { const ts = U.topics || (U.topics = []); if (prevT && ts[ts.length - 1] !== prevT) { ts.push(prevT); if (ts.length > 6) ts.shift(); } }
       const named = raw.match(/\b(?:my name is|my name's|call me|i'm|i am|it's)\s+([a-z]{2,16})\b/i), cased = named && (/name|call/i.test(named[0]) || /^[A-Z]/.test(named[1]));
       const topic = topicIn(t);
       if (named && cased && !/^(Tired|Fine|Good|Okay|Ok|Sorry|Here|Back|Not|So|Just|Sure)$/.test(named[1])) { U.name = cap(named[1].toLowerCase()); slots.user = U.name; push(c, m, P, 0.08, 0.05); return pick(k, P, L.userName, slots); }
@@ -1127,7 +1265,7 @@
       const Lf = lifeOf(c);
       Object.assign(slots, { years: COUNT[Lf.years] || String(Lf.years), kids: KIDW[Lf.kids], pet: Lf.pet, sibs: SIBW[Lf.sibs], who: Lf.partner ? 'my other half' : 'the kids' });
       if (/are you (married|single|engaged|seeing anyone|taken|with someone|in a relationship)|do you have a (wife|husband|partner|girlfriend|boyfriend|spouse)|got a (girlfriend|boyfriend|partner)/.test(t)) return pick(k, P, Lf.partner ? FAM.partnerYes : FAM.partnerNo, slots);
-      if (/do you have (any )?(kids|children|a son|a daughter)|got (any )?kids|are you a (mom|mum|dad|mother|father|parent)/.test(t)) return pick(k, P, Lf.kids ? FAM.kidsYes : FAM.kidsNo, slots);
+      if (/do you have (any )?(kids|children|a son|a daughter)|got (any )?kids|^(any|you have|have you got) (kids|children)\b|are you a (mom|mum|dad|mother|father|parent)/.test(t)) return pick(k, P, Lf.kids ? FAM.kidsYes : FAM.kidsNo, slots);
       if (/do you have (a |any )?(pets?|dog|cat|animals)|got (a |any )?(pets?|dog|cat)/.test(t)) return pick(k, P, Lf.pet ? FAM.petYes : FAM.petNo, slots);
       if (/(brothers?|sisters?|siblings)\b.*\?|do you have (any )?(brothers|sisters|siblings)|only child/.test(t)) return pick(k, P, Lf.sibs ? FAM.sibsYes : FAM.sibsNo, slots);
       if (/do you live (alone|on your own|by yourself)|who do you live with/.test(t)) return pick(k, P, !Lf.partner && !Lf.kids ? FAM.alone : FAM.notAlone, slots);
@@ -1144,9 +1282,23 @@
       // a sum, asked: worked out as sharply as they are
       const mt = raw.match(SUM);
       if (mt && (/\?|\bwhat|how much|work out|calculate|equals?|=/.test(t) || t.trim().length < 18)) return sum(k, P, mt);
+      // ---- someone else here: where they are, what they are doing, what they think of them, whether they know them
+      if (who || /\bwhere('s| is| are)\b/.test(t) && /\b(he|she)\b/.test(t)) {
+        const q = who, nm = q ? o.nameOf(q) : '', qc = q ? o.card(q) : null, R = m.rel[nm], she = qc && qc.sex === 'woman';
+        Object.assign(slots, { name: nm, them: she ? 'her' : qc ? 'him' : 'them', they: she ? 'she' : qc ? 'he' : 'they', they_are: she ? 'she\'s' : qc ? 'he\'s' : 'they\'re', a_job: qc && qc.job ? aOf(qc.job) : '' });
+        if (q && /where('s| is)|where did .* go|seen\b/.test(t)) { const Nq = (o.now && o.now(q)) || {}; slots.doing = [Nq.doing, Nq.where].filter(Boolean).join(', '); return pick(k, P, slots.doing ? ABOUT.where : ABOUT.whereNot, slots); }
+        if (q && /what('s| is) .* (doing|up to)|what('re| are) (they|he|she) doing|is .* busy/.test(t)) { const Nq = (o.now && o.now(q)) || {}; slots.doing = Nq.doing || ''; return pick(k, P, slots.doing ? ABOUT.where : ABOUT.whereNot, slots); }
+        if (q && /what do you (think|make) of|how do you feel about|do you (like|love|hate|trust) |is .* (nice|okay|alright|good)|opinion of|get on with/.test(t)) {
+          if (!R || R.met + R.talks === 0) return pick(k, P, ABOUT.stranger, slots);
+          const f = (R.like || 0) + (c.fond || 0) * 0.5; push(c, m, P, f * 0.05, 0.02);
+          return pick(k, P, f > 0.25 ? ABOUT.fond : f < -0.15 ? ABOUT.cool : ABOUT.okay, slots);
+        }
+        if (q && /do you know|have you met|you (two|guys) friends|friends with/.test(t)) return pick(k, P, R && R.met + R.talks > 0 ? ABOUT.knows : ABOUT.stranger, slots);
+        if (q && /tell me about|who is|who's|what('s| is) .* like|what does .* do/.test(t)) return pick(k, P, qc && qc.job ? ABOUT.tell : ABOUT.tellNo, slots);
+      }
       // ---- the present: what they are doing, the time, how they feel in body, a suggestion (o.now(k), the page's)
       const N = (o.now && o.now(k)) || {}, needs = N.needs || null;
-      if (/what are you (doing|up to)|what('re| are) you doing|(busy|doing anything)\??$/.test(t)) { slots.doing = N.doing || ''; return pick(k, P, N.doing && N.doing !== 'asleep' ? NOWL.doing : NOWL.idle, slots); }
+      if (/what are you (doing|up to)|what('re| are) you doing|(busy|doing anything)\??$|where are you (going|headed|heading|off to)|where you (going|headed|off to)/.test(t)) { slots.doing = N.doing || ''; return pick(k, P, N.doing && N.doing !== 'asleep' ? NOWL.doing : NOWL.idle, slots); }
       if (/what time is it|what('s| is) the time|got the time|is it (late|early)|what time do you (make|have) it/.test(t)) {
         if (N.hour == null || !isFinite(N.hour)) return pick(k, P, NOWL.timeNone, slots);
         Object.assign(slots, timeWords(N.hour));
@@ -1154,7 +1306,7 @@
         if (N.hour >= 23 || N.hour < 4) s += ' ' + pick(k, P, NOWL.late, slots); else if (N.hour >= 4 && N.hour < 7) s += ' ' + pick(k, P, NOWL.early, slots);
         return s;
       }
-      const asked = t.match(/\b(?:are|r) (?:you|u) (?:\w+ )?(hungry|starving|peckish|thirsty|tired|sleepy|exhausted|bored|lonely|dirty|sweaty)\b/);
+      const asked = t.match(/\b(?:(?:are|r) )?(?:you|u) (?:\w+ )?(hungry|starving|peckish|thirsty|tired|sleepy|exhausted|bored|lonely|dirty|sweaty)\b/);
       if (asked) {
         const need = { hungry: 'hunger', starving: 'hunger', peckish: 'hunger', thirsty: 'thirst', tired: 'energy', sleepy: 'energy', exhausted: 'energy', bored: 'fun', lonely: 'company', dirty: 'clean', sweaty: 'clean' }[asked[1]];
         const v = needs && isFinite(needs[need]) ? needs[need] : null;
@@ -1162,13 +1314,15 @@
         return pick(k, P, { any: NOWL.need[need][v > 0.7 ? 'yes' : v > 0.45 ? 'some' : 'no'] }, slots);
       }
       if (/\b(do you want to|want to|wanna|shall we|should we|let'?s|how about we|fancy|would you like to|you up for|care to)\b/.test(t)) {
-        const nd = (WANT_NEED.find(([w]) => w.test(t)) || [])[1];
+        const wg = WANT_GO.find(([w]) => w.test(t)), nd = wg && wg[1], act = wg && wg[2];
         if (nd) {
+          // the page cannot have them do it now (at work, the place shut): they say so
+          if (act && o.canGo && !o.canGo(k, act)) return pick(k, P, TRACK.cant, slots);
           // yes or no by how much they need it, how they feel about you, their mood and how game they are
           const v = needs && isFinite(needs[nd]) ? needs[nd] : 0.4, mood = moodName(c, m, P);
           const go = v + 0.25 * (U.like || 0) + (/happy|playful/.test(mood) ? 0.12 : /annoyed|sad/.test(mood) ? -0.15 : 0) + (d.bold || 0) * 0.1 + (mood === 'tired' && nd === 'energy' ? 0.2 : 0);
           push(c, m, P, go > 0.55 ? 0.06 : 0, 0.04);
-          if (go > 0.55) return pick(k, P, NOWL.yes, slots) + (v > 0.65 && Math.random() < 0.6 ? ' ' + cap(NOWL.yesWhy[nd]) + '.' : '');
+          if (go > 0.55) { if (act) setMeta({ go: act }); return pick(k, P, NOWL.yes, slots) + (v > 0.65 && Math.random() < 0.6 ? ' ' + cap(NOWL.yesWhy[nd]) + '.' : ''); }
           if (go > 0.38) return pick(k, P, NOWL.maybe, slots);
           return pick(k, P, NOWL.no, slots) + (v < 0.3 && Math.random() < 0.7 ? ' ' + cap(NOWL.noWhy[nd]) + '.' : '');
         }
@@ -1231,10 +1385,20 @@
       }
       if (prevQ && /^(yes|yeah|yep|sure|of course|definitely|absolutely)\b/.test(t)) { if (prevT && !U.likes.includes(prevT)) U.likes.push(prevT); return pick(k, P, L.yes, slots); }
       if (prevQ && /^(no|nope|nah|not really)\b/.test(t)) return pick(k, P, L.no, slots);
-      if (/\?\s*$/.test(t)) return pick(k, P, tierOf(P) === 'hi' && Math.random() < 0.7 ? IQ.unsure.hi : L.unknownQ, slots);
-      // something else: a word back, and now and then on to one of their own things
+      // their own question (asking after you), answered: good or bad, by the words
+      if (prevAsk && !/\?\s*$/.test(t)) {
+        if (/\b(bad|awful|terrible|rough|hard|not (great|good|well)|sick|broke|tough|horrible|stress\w*|sad|died|lost)\b/.test(t)) { push(c, m, P, -0.03, 0.03); return pick(k, P, TRACK.bad, slots); }
+        if (/\b(good|great|fine|well|busy|okay|ok|alright|lovely|fantastic|amazing|better|not bad)\b/.test(t)) return pick(k, P, TRACK.good, slots);
+      }
+      if (/\?\s*$/.test(t)) { setMeta({ stuck: true }); return pick(k, P, tierOf(P) === 'hi' && Math.random() < 0.7 ? IQ.unsure.hi : L.unknownQ, slots); }
+      // they asked you about a thing and did not catch your answer: taken as an answer about that thing
+      if (prevQ && prevT) { slots.topic = TOPICS[prevT].n; setMeta({ topic: prevT, q: false, stuck: true }); return pick(k, P, TRACK.heard, slots); }
+      // something else: a word back, and now and then back to an earlier thing, or on to one of their own
       let s = pick(k, P, L.told, slots);
-      if (d.talk > 0.5 && Math.random() < 0.5) { const tp = P.likes[Math.floor(Math.random() * P.likes.length)], q = Math.random() < d.curious; s += ' ' + topicLine(k, P, tp, q); setMeta({ topic: tp, q }); }
+      const back = (U.topics || []).filter((x) => x !== prevT);
+      if (back.length && P.smarts >= 3 && Math.random() < 0.3) { const tp = back[back.length - 1]; slots.topic = TOPICS[tp].n; setMeta({ topic: tp, q: false, stuck: true }); return s + ' ' + pick(k, P, TRACK.back, slots) + ' ' + topicLine(k, P, tp, false); }
+      setMeta({ stuck: true });
+      if (d.talk > 0.5 && Math.random() < 0.5) { const tp = P.likes[Math.floor(Math.random() * P.likes.length)], q = Math.random() < d.curious; s += ' ' + topicLine(k, P, tp, q); setMeta({ topic: tp, q, stuck: true }); }
       return s;
     }
     // a group is spoken to: who answers, in order. Someone named answers alone (several named, those); a question to
@@ -1325,7 +1489,7 @@
       root.addEventListener('pagehide', flush);
       if (typeof document !== 'undefined') document.addEventListener('visibilitychange', () => { if (document.hidden) flush(); });
     }
-    const brain = Brain({ storage: KEY, now: o.now, card: (k) => o.card(k), nameOf: (k) => M.nameOf(k), sights: o.sights, scene: o.scene, youName: () => (M.as != null && o.card(M.as) ? o.card(M.as).name : ''), lines: o.lines, you: () => M.as });
+    const brain = Brain({ storage: KEY, now: o.now, people: o.people, canGo: o.canGo, card: (k) => o.card(k), nameOf: (k) => M.nameOf(k), sights: o.sights, scene: o.scene, youName: () => (M.as != null && o.card(M.as) ? o.card(M.as).name : ''), lines: o.lines, you: () => M.as });
     const send = (body) => fetch(url, { method: 'POST', headers: Object.assign({ 'content-type': 'application/json' }, M.key ? { 'x-persona-key': M.key } : {}), body: JSON.stringify(body) });
     const why = (a) => { if (a.spend) M.spend = a.spend; if (a.error === 'off') M.server = false; return a.why || 'They could not answer just now.'; };
     // the real voices' server beside this one (o.voiceUrl, else /api/voice next to /api/persona), on this M's key and meter
@@ -1356,7 +1520,9 @@
       get model() { const v = store(MOD); return SPEAKERS.includes(v) ? v : 'local'; },
       set model(v) { v = String(v || '').replace(/^claude-/, '').split('-')[0]; store(MOD, SPEAKERS.includes(v) ? v : 'local'); M.status = ''; if (M.model !== 'local' && M.on) M.check(); changed(); },
       // the built-in mind answers: chosen, or the server is not set up, or no owner key on this device
-      get local() { return M.model === 'local' || M.server === false || !M.key; },
+      get local() { return M.model === 'local' || M.model === 'mix' || M.server === false || !M.key; },
+      // mix, ready: a line the built-in mind cannot understand goes to Haiku
+      get mixing() { return M.model === 'mix' && !!M.key && M.server !== false; },
       brain,
       // today's spend and cap (owner only)
       async meter() {
@@ -1385,10 +1551,10 @@
         return M.server;
       },
       // key says something: to you, to another person (to: their key), or in reaction to ev
-      async ask(k, to = 'you', ev = null) {
+      async ask(k, to = 'you', ev = null, force = null) {   // force: a model asked whoever speaks (mix's Haiku)
         if (!M.can(k) || (to !== 'you' && to != null && !M.can(to)) || M.busy.has(k) || k === M.as) return null;
         if (M.model !== 'local' && M.server === null) await M.check();
-        if (M.local) return M.think(k, to, ev);
+        if (M.local && !force) return M.think(k, to, ev);
         if (ev && ev.kind === 'lost') return M.think(k, to, ev);   // the story's turns are the built-in mind's, whoever speaks
         if (ev && !SERVER.includes(ev.kind) && !(ev.kind === 'notice' && ev.decide)) return null;   // a notice goes to the server only to be decided
         if (M.asked >= budget) { M.status = `That's ${budget} lines this visit; reload the page for more.`; changed(); return null; }
@@ -1408,7 +1574,7 @@
         M.busy.add(k); M.asked++; M.status = ''; changed();
         try {
           const r = await send({ me: o.card(k), to: to === 'you' || to == null ? 'you' : o.card(to), scene: o.scene ? o.scene(k, to, ev) : '', log, event: e || undefined,
-            model: M.model, decide: !!(e && e.decide), depth, best, past: direct || best ? brain.memoryNote(k) : undefined, joint: joint.length ? joint : undefined, proposal });
+            model: force || M.model, decide: !!(e && e.decide), depth, best, past: direct || best ? brain.memoryNote(k) : undefined, joint: joint.length ? joint : undefined, proposal });
           const a = await r.json().catch(() => ({}));
           if (!r.ok) { M.status = why(a); if (a.error === 'cap') M.chatter = false; return null; }
           if (a.spend) { M.spend = a.spend; M.cost = a.cost || 0; M.session += a.cost || 0; M.sessionLines++; } if (a.model) M.served = a.model;
@@ -1458,12 +1624,22 @@
           const P = brain.profile(o.card(k));
           await new Promise((r) => setTimeout(r, Math.max(250, 350 + Math.random() * 600 + (1 - P.d.energy) * 500 + P.d.shy * 400 - P.d.smart * 200)));
           if (!o.people().includes(k) || !M.on) return null;
-          const a = brain.line(k, to == null && !ev ? 'you' : to, ev, M.lines); if (!a) return null;
+          const toYou = !ev && (to == null || to === 'you');
+          if (toYou) SENSE.load();   // the model that reads for meaning: from the first time you talk to them
+          let a = brain.line(k, to == null && !ev ? 'you' : to, ev, M.lines); if (!a) return null;
+          if (toYou && a.meta && a.meta.stuck) {
+            // not understood: what the on-device model makes of it, else (mix) Haiku, else their own word back
+            const last = M.lines.filter((l) => l.p === 'you' && (l.to === k || (l.group && l.group.includes(k)))).slice(-1)[0];
+            const hit = last ? await SENSE.match(plainWords(last.said)).catch(() => null) : null;
+            if (hit) { const b = brain.line(k, 'you', null, M.lines, { text: hit.text }); if (b && !(b.meta && b.meta.stuck)) { a = b; a.meant = hit.text; } }
+            if (a.meta && a.meta.stuck && M.mixing) { M.busy.delete(k); const r = await M.ask(k, 'you', null, 'haiku'); if (r) return r; M.busy.add(k); }
+          }
           M.lines.push({ p: k, to: ev ? (ev.by != null ? ev.by : null) : to == null ? 'you' : to, who: M.nameOf(k), said: a.say, ev: ev ? ev.kind : undefined, t: Date.now() / 1000, meta: a.meta, round: !ev && (to == null || to === 'you') ? roundOf(k) : undefined });
           if (!ev && (to == null || to === 'you')) keep(k, M.lines[M.lines.length - 1]);
           if (M.lines.length > 400) M.lines.splice(0, 100);
           if (o.show) o.show(k, a, ev && ev.kind === 'muse' ? null : to, ev && ev.kind === 'muse' ? null : ev);
           if (a.act && !(ev && ev.dec) && o.act) o.act(k, a.act, ev);   // something they noticed while musing
+          if (a.meta && a.meta.go && o.go) o.go(k, a.meta.go);   // agreed to do something: the page has them do it
           return a;
         } finally { M.busy.delete(k); changed(); }
       },
@@ -1606,13 +1782,14 @@
   }
 
   // what a line costs, roughly (about 1,200 tokens in and 300 out, at each model's price): for the meter's estimates
-  const LINE = { haiku: 0.00027, sonnet: 0.0054, opus: 0.0108 };
-  const NAMES = { local: 'Built-in', haiku: 'Haiku', sonnet: 'Sonnet', opus: 'Opus' }, NAME = NAMES;
+  const LINE = { haiku: 0.00027, mix: 0.00027, sonnet: 0.0054, opus: 0.0108 };
+  const NAMES = { local: 'Built-in', mix: 'Built-in + Haiku', haiku: 'Haiku', sonnet: 'Sonnet', opus: 'Opus' }, NAME = NAMES;
   // under a dollar in cents, so line costs compare at a glance (0.03¢, 0.54¢, 1.1¢); a dollar or more as dollars
   const money = (v) => { v = +v || 0; if (v >= 1) return '$' + v.toFixed(2); const c = v * 100; return (c >= 10 ? c.toFixed(0) : c >= 1 ? c.toFixed(1) : c.toFixed(2)) + '\u00a2'; };
   const dollars = (v) => '$' + (+v || 0).toFixed(2);
   // the meter in words: today's spend of the cap, lines, and about how many more at the model picked
   function meterText(M) {
+    if (M.model === 'mix' && !M.spend) return 'Built-in + Haiku: the built-in mind answers everything it understands, free; only a line it cannot understand goes to Haiku (about ' + money(LINE.haiku) + ' each). ' + (M.key ? 'Reading the meter...' : 'Enter the owner key; until then the built-in mind alone speaks.');
     if (M.model === 'local') return 'Built-in: free, made in this browser. They notice what happens round them and decide what to do about it by their nature (the easily frightened back off or run, the inquisitive go and look), remember who they have met, what people like and what scared them, and their mood moves with it.';
     const s = M.spend; if (!s) return M.key ? 'Reading the meter...' : 'Enter the owner key for ' + NAMES[M.model] + '; until then the built-in mind speaks.';
     const left = Math.max(0, s.cap - s.spent), n = Math.floor(left / LINE[M.model]);
@@ -1773,7 +1950,7 @@
   // the buttons, o.on: the class a picked one gets); returns paint(), to call when M changes
   function controls(el, M, o = {}) {
     const B = o.button || '', ON = o.on || 'on', caps = [0.5, 1, 2, 5, 10];
-    el.innerHTML = `<div class="hfm-row"><span>Who speaks</span><button class="${B}" data-m="local">Built-in, free</button><button class="${B}" data-m="haiku">Haiku, ~${money(LINE.haiku)} a line</button><button class="${B}" data-m="sonnet">Sonnet, ~${money(LINE.sonnet)} a line</button><button class="${B}" data-m="opus">Opus, ~${money(LINE.opus)} a line</button></div>
+    el.innerHTML = `<div class="hfm-row"><span>Who speaks</span><button class="${B}" data-m="local">Built-in, free</button><button class="${B}" data-m="mix">Built-in + Haiku when stuck, ~${money(LINE.haiku)} a miss</button><button class="${B}" data-m="haiku">Haiku, ~${money(LINE.haiku)} a line</button><button class="${B}" data-m="sonnet">Sonnet, ~${money(LINE.sonnet)} a line</button><button class="${B}" data-m="opus">Opus, ~${money(LINE.opus)} a line</button></div>
       <div class="hfm-row" data-paid><span>Owner key</span><input type="password" autocomplete="off" placeholder="${M.key ? 'saved on this device' : 'the key from Vercel'}"><button class="${B}" data-a="key">Save</button></div>
       <div class="hfm-row"><span>Voices</span><button class="${B}" data-v="0">Browser, free</button><button class="${B}" data-v="1">Real, ~1.5\u00a2 a minute</button></div>
       <div class="hfm-row" data-paid><span>Daily cap</span>${caps.map((c) => `<button class="${B}" data-c="${c}">${dollars(c)}</button>`).join('')}</div>
@@ -1798,5 +1975,5 @@
     return paint;
   }
 
-  root.HumanForgeMind = { costText, spendText, SPEAKERS, TRAITS, MOODS, QUIET, PARTS, SMARTS, KNACKS, VALUES, LIKES, describe, ADULT, API, COOL, LINE, NAME, TOPICS, ACTS, roll, card, partOf, create, controls, meterText, money, Brain, VOICE };
+  root.HumanForgeMind = { costText, spendText, SENSE, plainWords, SPEAKERS, TRAITS, MOODS, QUIET, PARTS, SMARTS, KNACKS, VALUES, LIKES, describe, ADULT, API, COOL, LINE, NAME, TOPICS, ACTS, roll, card, partOf, create, controls, meterText, money, Brain, VOICE };
 })(typeof window !== 'undefined' ? window : globalThis);
