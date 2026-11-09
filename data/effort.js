@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-09T02:29:00Z",
+ "updated": "2026-11-09T02:42:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -120,9 +120,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-08",
-   "dh": 31.5,
-   "act": 2.5,
-   "versions": 5
+   "dh": 33,
+   "act": 3,
+   "versions": 6
   }
  ],
  "extra": [
@@ -3408,6 +3408,15 @@ window.EFFORT = {
    "tris": 7623132,
    "chars": 2427967,
    "what": "Busy townsfolk walks 120 people; the Lakeside Brewing taproom always has 10 or more drinking while open, walking in and out by the patio door"
+  },
+  {
+   "v": 365,
+   "asked": "2026-11-08T20:25:00-06:00",
+   "live": "2026-11-08T20:42:59-06:00",
+   "dh": 1.5,
+   "tris": 5926872,
+   "chars": 2429016,
+   "what": "Townsfolk talking aloud are heard only within 80 ft of you, quieter the further off they are"
   }
  ]
 };
