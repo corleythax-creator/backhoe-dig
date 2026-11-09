@@ -72,23 +72,25 @@ GFX.low.brDet=false;GFX.med.brDet=GFX.high.brDet=GFX.ultra.brDet=GFX.quest.brDet
 // islands, a hundred parts each, most a pixel or two across: about 1,000 of the 1,400 draws a frame. The camera's own
 // check (Frustum.intersectsObject) also skips a mesh whose width on screen is under gfxCur.cull CSS pixels, or that is
 // wholly past the haze (fogged materials). Only while the game's own camera draws (not the editor, VR or other views);
-// a mesh with userData.keep always draws. Indoors (on foot in a room: interiors.js rmRoomAt, as rmInsideTick tells it; in the pub, say) the walls
-// hide the rest of the island, so anything under 40 m across farther off than TU.inFar is skipped too (the machines on
-// the islands, the yards, far houses); the land, the lake, the sky and the mountains still show through the windows.
-const gfxCull={on:false,x:0,y:0,z:0,k:0,fog:0,far:0},gfxSph=new THREE.Sphere();
+// a mesh with userData.keep always draws. Indoors (the camera in a shop's or house's room that knows its openings:
+// interiors.js rmSeeFrom) a part outside the building that no window, door or storefront lets the camera see is skipped
+// too (rmSeen); whatever an opening shows, however small or far, draws in full. Only the camera's own pass (mainF, the
+// first frustum asked each frame, as three.js culls the view before the shadows): the shadows are drawn as ever.
+const gfxCull={on:false,x:0,y:0,z:0,k:0,fog:0,see:null,mainF:null},gfxSph=new THREE.Sphere();
 (function(){const P=THREE.Frustum.prototype;
   P.intersectsObject=function(o){const b=o.boundingSphere!==undefined?(o.boundingSphere||(o.computeBoundingSphere(),o.boundingSphere)):(o.geometry.boundingSphere||(o.geometry.computeBoundingSphere(),o.geometry.boundingSphere));
+    if(gfxCull.on&&!gfxCull.mainF)gfxCull.mainF=this;
     const s=gfxSph.copy(b).applyMatrix4(o.matrixWorld);if(!this.intersectsSphere(s))return false;
     if(!gfxCull.on||o.userData.keep)return true;
+    if(gfxCull.see&&this===gfxCull.mainF&&!rmSeen(gfxCull.see,s))return false;
     const c=s.center,d=Math.hypot(c.x-gfxCull.x,c.y-gfxCull.y,c.z-gfxCull.z);if(d<=s.radius)return true;
     if(s.radius*gfxCull.k<d)return false;
-    if(gfxCull.far&&d-s.radius>gfxCull.far&&s.radius<40)return false;
     const m=o.material;return !(gfxCull.fog&&d-s.radius>gfxCull.fog&&m&&m.fog&&!Array.isArray(m))}})();
 function gfxCullOn(cam){const px=gfxCur.cull||0;gfxCull.on=px>0&&cam===camera&&!edOn&&!renderer.xr.isPresenting;if(!gfxCull.on)return;
   const h=renderer.domElement.clientHeight||innerHeight;gfxCull.x=cam.position.x;gfxCull.y=cam.position.y;gfxCull.z=cam.position.z;
   // radius r at distance d is r/d/tan(fov/2)*zoom*(h/2) pixels from its middle; under px/2 is culled
   gfxCull.k=h*cam.zoom/(Math.tan(cam.fov*Math.PI/360)*px);gfxCull.fog=scene.fog?scene.fog.far:0;
-  gfxCull.far=mode==='walk'&&!wk.inside&&rmRoomAt(wk.x,wk.z,wk.y)?TU.inFar:0}
+  gfxCull.mainF=null;gfxCull.see=rmSeeFrom(cam.position)}
 // The machines on the islands from town: with the camera on the mainland (south of TU.townZ and on none of the
 // islands), every machine standing on one of the islands (Corley's, the Family Island, Jessica's, Dexter's) is left out
 // of the frame, its parts and shadows: the excavator, dump truck, mower, skid steer, bike, trench box, the attachments
