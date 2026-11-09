@@ -198,6 +198,50 @@
     games: { n: 'games', w: /video game|games|cards|chess|puzzle|board game/, say: ['I\'m a menace at board games.', 'I\'ve been doing a crossword every morning.', 'Chess is the only game I lose gracefully.'], ask: ['Up for a game of cards sometime?', 'Are you competitive?'] },
   };
   const TKEYS = Object.keys(TOPICS);
+  // ---- more to say: further lines for each topic (joined to TOPICS when the file loads), and openers and endings that
+  // go round a topic line now and then, so a long talk repeats far less
+  const MORE = {
+    weather: { say: ['The sky did something gorgeous at sunset yesterday.', 'I always think the air smells different before a storm.', 'Give me a cool, grey morning over a hot one any day.', 'My knee always knows when rain is coming.', 'The wind\'s been something else lately.', 'I keep dressing for the wrong weather.'], ask: ['Hot or cold, if you had to pick?', 'Seen the forecast?'] },
+    food: { say: ['I could live on toast, honestly.', 'My grandmother\'s pie is still the best thing I\'ve ever eaten.', 'I\'m trying to eat better. It\'s going badly.', 'Spicy food and I have an understanding.', 'There\'s a little place I go to that does the best fries.', 'I always order the same thing. Every time.'], ask: ['Sweet or savoury?', 'What would your last meal be?'] },
+    music: { say: ['I sing in the car. Loudly. Badly.', 'There\'s a song that makes me cry every single time.', 'I like music you can feel in your chest.', 'I still have a box of old records somewhere.', 'Some days only one album will do.', 'I wish I\'d kept up piano lessons.'], ask: ['What did you listen to growing up?', 'Concerts or headphones?'] },
+    travel: { say: ['I want to see the northern lights one day.', 'The best trips are the ones that go a bit wrong.', 'I love an airport at five in the morning. Is that strange?', 'I collect little things from every place I go.', 'Road trips are the only way to see a place properly.', 'I got lost in a city once and found the best café.'], ask: ['Where would you go tomorrow if you could?', 'Window seat or aisle?'] },
+    books: { say: ['I read the last page first sometimes. Don\'t tell anyone.', 'A good mystery keeps me up far too late.', 'I keep buying books faster than I read them.', 'There\'s a book I\'ve read five times.', 'I like a story that stays with you for days.', 'I read in the bath. Lost a few that way.'], ask: ['Read anything good lately?', 'Paper or screen?'] },
+    work: { say: ['Mondays are a state of mind.', 'I had a boss once who only spoke in sports metaphors.', 'The best part of any job is the people, really.', 'I\'m good at my job. I just don\'t love the hours.', 'Someday I\'ll do something I\'d do for free.', 'Lunch breaks are sacred.'], ask: ['Do you like what you do?', 'What did you want to be when you were little?'] },
+    animals: { say: ['Dogs know who the good people are.', 'I stop to say hello to every cat I see.', 'Birds are just tiny dinosaurs, you know.', 'I\'d love a dog, but I\'m never home.', 'Horses are bigger up close than you expect.', 'I rescued a baby bird once. It bit me.'], ask: ['Cats or dogs?', 'Ever had a pet you really loved?'] },
+    movies: { say: ['I\'ve seen the same film a dozen times and still jump at the same bit.', 'Popcorn tastes better at the cinema. Science.', 'I cry at films. Always.', 'I like a film that doesn\'t explain everything.', 'Old black and white films have a charm to them.', 'I start shows and never finish them.'], ask: ['What\'s your comfort film?', 'Scary films: yes or no?'] },
+    garden: { say: ['There\'s nothing like a tomato you grew yourself.', 'I talk to my plants. They\'re good listeners.', 'Weeding is oddly calming.', 'I\'ve killed every houseplant I\'ve ever owned.', 'Fresh herbs make everything better.', 'I\'d love a little vegetable patch.'], ask: ['Green fingers or not?', 'Flowers or vegetables?'] },
+    cars: { say: ['I learned to drive in an old pickup with no power steering.', 'You can tell a lot about someone by their car.', 'I love the smell of a garage.', 'I\'d drive across the country if I had the time.', 'Some engines just sound right.', 'Parallel parking still scares me a little.'], ask: ['What was your first car?', 'Fast or comfortable?'] },
+    history: { say: ['People back then were just like us, really.', 'I could spend a whole day in a museum.', 'Old houses have stories in their walls.', 'I like hearing how my grandparents lived.', 'Every town has a strange bit of history if you dig.', 'I\'d love to see what this place looked like a hundred years ago.'], ask: ['If you could visit any time, when?', 'Do you know much about your family\'s past?'] },
+    stars: { say: ['I can find the Big Dipper and that\'s about it.', 'A clear night makes me feel very small. In a good way.', 'I saw a shooting star once and forgot to wish.', 'The moon was huge the other night.', 'Space is the most beautiful thing nobody can visit.', 'I\'d go to the moon if they asked. No question.'], ask: ['Ever seen a meteor shower?', 'Would you go to space?'] },
+    sport: { say: ['I\'m a terrible loser. I\'m working on it.', 'Nothing like watching a close game with friends.', 'I played on a team as a kid. We lost every game.', 'Running is the only thing that clears my head.', 'I shout at the TV during big games.', 'I\'m better at watching than playing.'], ask: ['Play anything yourself?', 'Got a team you follow?'] },
+    coffee: { say: ['Don\'t talk to me before my first cup.', 'I like my coffee strong enough to stand a spoon in.', 'A good café is worth the walk.', 'I\'ve tried to quit coffee twice. Lasted a day.', 'Tea is for when I\'m sad. Coffee is for everything else.', 'The smell of fresh coffee fixes most things.'], ask: ['How do you take it?', 'Coffee or tea?'] },
+    sea: { say: ['The sea sounds different at night.', 'I could watch waves for hours.', 'Salt air makes me sleep like a baby.', 'I found a perfect shell once and still have it.', 'There\'s something about being near water.', 'I\'m a strong swimmer. It\'s my one sport.'], ask: ['Beach or mountains?', 'Ever been out on a boat?'] },
+    art: { say: ['I doodle on everything. Napkins, receipts, my hand.', 'Some paintings make me stop dead.', 'I took a pottery class once. Made one lopsided bowl.', 'Good photos are about waiting for the right moment.', 'I like art that makes you feel something, even if it\'s odd.', 'I\'d love to paint, but I\'m impatient.'], ask: ['Do you make anything yourself?', 'Got a favourite painting?'] },
+    games: { say: ['I\'m very competitive at board games. Too competitive.', 'I could do crosswords all day.', 'A deck of cards fixes a rainy afternoon.', 'I was unbeatable at checkers as a kid.', 'Puzzles are my way of switching off.', 'I always lose at chess and always want a rematch.'], ask: ['Up for a game sometime?', 'Cards or board games?'] },
+  };
+  for (const k in MORE) if (TOPICS[k]) { TOPICS[k].say.push(...MORE[k].say); TOPICS[k].ask.push(...MORE[k].ask); }
+  const T_OPEN = { warm: ['You know what I was thinking about? ', 'Can I tell you something? '], edge: ['Random thought. ', 'Here\'s one. '], shy: ['Um, so... ', 'This is silly, but '], bold: ['Okay, listen. ', 'Right, so. '], humor: ['Fun fact about me: ', 'Breaking news: '], plain: ['So. ', 'Anyway, '] };
+  const T_TAIL = { warm: [' Isn\'t that nice?', ' I don\'t know, it just makes me happy.'], edge: [' Make of that what you will.', ' There. I said it.'], shy: [' Is that weird?', ' Sorry, I\'m rambling.'], bold: [' True story.', ' No regrets.'], humor: [' Don\'t laugh.', ' This is the most interesting thing about me.'], plain: [' Anyway.', ' That\'s all.'] };
+  // ---- back and forth between two of them, and feelings that last
+  const BACK = {
+    disagree: { edge: ['Really? I can\'t stand {topic}.', '{Topic}? Overrated, if you ask me.'], bold: ['Ha, no. {Topic} is not my thing.', 'Hard disagree on {topic}.'], any: ['Hm. Not sure I agree.'] },
+    defend: { warm: ['Oh, you just haven\'t found the right {topic} yet.', 'Fair enough. More for me.'], edge: ['Your loss.', 'Then we\'ll agree to disagree.'], bold: ['You\'re wrong, but I like you.'], humor: ['I\'ll pretend I didn\'t hear that.'], any: ['Each to their own.'] },
+    tease: { humor: ['You and your {topic}.', 'Here we go, {topic} again.', 'Is this going to be another {topic} story?'], any: ['You really love {topic}, don\'t you?'] },
+    why: { warm: ['What do you love about {topic}?', 'How did you get into {topic}?'], any: ['What\'s the appeal of {topic}?', 'Why {topic}, though?'] },
+    close: { warm: ['I like talking with you, {name}.', 'This was nice.'], edge: ['Anyway.', 'Right. Good chat.'], shy: ['Um, anyway...'], bold: ['Good talk, {name}.'], humor: ['Well, that\'s solved everything.'], any: ['Anyway.'] },
+    makeUp: { warm: ['{Name}, I\'m sorry about earlier.', 'Can we start again, {name}?'], edge: ['Fine. Truce, {name}?'], shy: ['Um... sorry, {name}. About before.'], bold: ['Let\'s forget it, {name}. Friends?'], any: ['Sorry about before, {name}.'] },
+    madeUp: { warm: ['Of course. Come here.', 'Already forgotten.'], edge: ['...Fine. Truce.'], any: ['It\'s okay.'] },
+  };
+  const FEEL = {
+    cold: { warm: ['Oh. Hello.', 'Hi.'], edge: ['Oh. It\'s you.', 'What.'], shy: ['...Hi.'], bold: ['Back for more?'], humor: ['Oh good. You.'], any: ['Hm.'] },
+    curt: { any: ['Hm. ', 'If you must know, ', 'Fine. '] },
+    forgive: { warm: ['Thank you. That means a lot. Let\'s forget it.', 'Okay. Apology accepted.'], edge: ['...Fine. Apology accepted.', 'Okay. We\'re good.'], shy: ['Oh... thank you. It\'s okay.'], bold: ['Accepted. Don\'t do it again.'], humor: ['Apology accepted. You owe me a coffee.'], any: ['Okay. Thank you.'] },
+    notYet: { edge: ['I\'ll think about it.', 'Words are cheap.'], bold: ['We\'ll see.'], any: ['I\'m still a bit upset, honestly.'] },
+    whatFor: { any: ['What for? We\'re fine.', 'Sorry? For what?'] },
+    // a word before a line, by how they feel (now and then)
+    moodPre: { annoyed: ['Ugh. ', 'Hmph. '], sad: ['Mm. ', 'Oh, well. '], tired: ['Mm. ', 'Sorry, I\'m half asleep. '] },
+  };
+
   const LEANS = { dream: ['stars', 'books', 'music', 'sea', 'art'], plain: ['work', 'cars', 'food', 'garden', 'sport'], curious: ['history', 'travel', 'stars', 'books'], humor: ['games', 'movies', 'food'], warm: ['animals', 'food', 'garden', 'coffee'], bold: ['sport', 'travel', 'cars'] };
   // lines for what happens, by flavour (one is picked by the person's own mix of them; any: whoever)
   // how a touch felt (the app's ev.how) -> its lines
@@ -488,7 +532,7 @@
   // simple sums said or asked: 'what's 7 times 8', '12 + 30', 'what is 100 divided by 4'
   const SUM = /(-?\d+(?:\.\d+)?)\s*(plus|\+|minus|-|times|x|\*|×|multiplied by|divided by|over|\/)\s*(-?\d+(?:\.\d+)?)/i;
   // the words a sharper mind reaches for (a few, now and then), and a plainer one
-  const BIG = [[/\breally good\b/, 'excellent'], [/\ba lot\b/, 'a great deal'], [/\bI think\b/, 'I suspect'], [/\bvery\b/, 'remarkably'], [/\bpretty sure\b/, 'fairly certain'], [/\bweird\b/, 'curious'], [/\bbig\b/, 'enormous'], [/\bmaybe\b/, 'perhaps'], [/\b(can|could) help\b/, '$1 be of use']];
+  const BIG = [[/\breally good\b/, 'excellent'], [/\ba lot\b/, 'a great deal'], [/\bI think\b/, 'I suspect'], [/(?<!n't )\bvery\b/, 'remarkably'], [/\bpretty sure\b/, 'fairly certain'], [/\bweird\b/, 'curious'], [/\bbig\b/, 'enormous'], [/\bmaybe\b/, 'perhaps'], [/\b(can|could) help\b/, '$1 be of use']];
   const STOP = /^(the|and|but|you|your|are|was|for|with|that|this|have|what|just|like|about|there|they|them|then|from|really|very|some|been|were|will|would|could|should)$/;
 
 
@@ -978,6 +1022,8 @@
       // the sharp reach for a bigger word now and then; the simple hesitate and keep it short
       if (P.smarts >= 4) { const n = P.smarts === 5 ? 2 : 1; let done = 0; for (const [w, b] of BIG) if (done < n && w.test(s) && Math.random() < (P.smarts === 5 ? 0.55 : 0.3)) { s = s.replace(w, b); done++; } }
       else if (P.smarts <= 1 && !o2.exact) { if (Math.random() < 0.2 && !/^(Uh|Um|Oh)/.test(s)) s = 'Uh, ' + s.replace(/^(.)/, (c) => (keepCap(s) ? c : c.toLowerCase())); const sn = s.split(/(?<=[.!?]) /); if (sn.length > 2 && Math.random() < 0.6) s = sn.slice(0, 2).join(' '); }
+      const mp = FEEL.moodPre[mood]; if (mp && Math.random() < 0.22 && !/^(Ugh|Hmph|Mm|Oh, well|Sorry)/.test(s)) s = mp[Math.floor(Math.random() * mp.length)] + s.replace(/^(.)/, (c) => (keepCap(s) ? c : c.toLowerCase()));
+      if (mood === 'annoyed') s = s.replace(/!/g, '.');
       if (d.edge > 0.65) s = s.replace(/!/g, '.');
       else if ((mood === 'happy' || mood === 'playful') && d.energy > 0.6 && Math.random() < 0.5) s = s.replace(/([^.])\.$/, '$1!');
       return s;
@@ -985,7 +1031,12 @@
     const face = (mood) => (mood === 'happy' || mood === 'playful' ? 'smiling' : mood === 'tired' ? 'closed' : /annoyed|sad|surprised/.test(mood) ? 'none' : 'calm');
     const topicIn = (t) => TKEYS.find((k) => TOPICS[k].w.test(t));
     const bare = (w) => String(w || 'something').replace(/^(a|an|the) /i, '');
-    function topicLine(k, P, t, ask) { const T = TOPICS[t]; return pick(k, P, { any: ask ? T.ask : T.say }, {}); }
+    function topicLine(k, P, t, ask) {
+      const T = TOPICS[t]; let s = pick(k, P, { any: ask ? T.ask : T.say }, {});
+      if (!ask && Math.random() < 0.12 + P.d.talk * 0.12) { const op = pick(k, P, T_OPEN, {}); s = op + (/[^.][.?!]\s*$/.test(op) ? s : s.replace(/^(.)/, (x) => (keepCap(s) ? x : x.toLowerCase()))); }
+      else if (!ask && Math.random() < 0.1 + P.d.talk * 0.1) s = s + pick(k, P, T_TAIL, {});
+      return s;
+    }
     const jobSlots = (c, slots) => Object.assign(slots, { job: c.job, a_job: aOf(c.job) });
     // something they know: a fact (the book smart, the quick with numbers) or a thing they have learnt (the rest), said
     // as sharply as they are; the sharpest now and then know things past their own knack
@@ -1112,7 +1163,8 @@
         let pe;
         if (!fresh) {
           // they start: hello the first time, then something about what they know you like, or what they like
-          if (!U.said) { say = pick(k, P, L.hello, slots); if (c.job && d.talk > 0.5 && Math.random() < 0.35) say += ' ' + pick(k, P, SELF.introJob, jobSlots(c, slots)); }
+          if (U.said && (U.like || 0) < -0.3) say = pick(k, P, FEEL.cold, slots);
+          else if (!U.said) { say = pick(k, P, L.hello, slots); if (c.job && d.talk > 0.5 && Math.random() < 0.35) say += ' ' + pick(k, P, SELF.introJob, jobSlots(c, slots)); }
           else if ((pe = pastEp(m, P)) && pe !== 'gone' && U.rec !== pe.t0 && Math.random() < 0.4 + d.smart * 0.4 && (say = recall(k, P, c, m, pe, slots))) U.rec = pe.t0;
           else if (U.feel === 'low' && P.knack === 'people') { U.feel = ''; say = pick(k, P, IQ.better, slots); }
           // something you told them about yourself, asked after (the warmer and sharper more often)
@@ -1137,15 +1189,31 @@
         const recentTalk = last && Date.now() / 1000 - (last.t || 0) < 90;
         R.talks++; R.like = cl(R.like + 0.03 + d.warm * 0.02 - d.edge * 0.01, -1, 1);
         if (recentTalk && last.p === to && last.meta && last.meta.topic) {
-          const t = last.meta.topic, mineToo = P.likes.includes(t); slots.topic = TOPICS[t].n;
+          const t = last.meta.topic, mineToo = P.likes.includes(t), turn = (last.meta.turn || 0) + 1; slots.topic = TOPICS[t].n;
           if (!R.likes.includes(t)) R.likes.push(t);   // learnt: they are into it
           if (mineToo) R.like = cl(R.like + 0.05, -1, 1);
-          if (last.meta.q) say = mineToo ? topicLine(k, P, t) : pick(k, P, L.dodge, slots);
-          else say = mineToo ? pick(k, P, L.share, slots) : pick(k, P, L.agree, slots);
-          if (d.talk > 0.45 && Math.random() < d.talk * 0.7) {
-            const q = Math.random() < 0.35 + d.curious * 0.4, t2 = mineToo || Math.random() < 0.5 ? t : P.likes[Math.floor(Math.random() * P.likes.length)];
-            say += ' ' + topicLine(k, P, t2, q); meta = { topic: t2, q };
+          meta = { topic: t, q: false, turn };
+          if (turn >= 4) { say = pick(k, P, last.meta.dis ? BACK.defend : BACK.close, slots); meta = { turn }; }   // a talk winds down after a few turns
+          else if (last.meta.q) say = mineToo ? topicLine(k, P, t) : d.edge > 0.55 && Math.random() < 0.5 ? (R.like = cl(R.like - 0.03, -1, 1), meta.dis = true, pick(k, P, BACK.disagree, slots)) : pick(k, P, L.dodge, slots);
+          else if (last.meta.dis && mineToo) { say = pick(k, P, BACK.defend, slots); meta = { topic: t, q: false, turn: turn + 1 }; }
+          else if (mineToo) say = pick(k, P, L.share, slots);
+          else {
+            // not theirs: the blunt disagree, the funny tease, the curious ask why, the rest go along with it
+            const r = Math.random();
+            if (d.edge > 0.5 && r < 0.4) { say = pick(k, P, BACK.disagree, slots); R.like = cl(R.like - 0.03, -1, 1); meta.dis = true; }
+            else if (d.humor > 0.5 && r < 0.6) { say = pick(k, P, BACK.tease, slots); R.like = cl(R.like + (R.like > 0 ? 0.02 : -0.02), -1, 1); }
+            else if (d.curious > 0.5 && r < 0.75) { say = pick(k, P, BACK.why, slots); meta = { topic: t, q: true, turn }; }
+            else say = pick(k, P, L.agree, slots);
           }
+          if (turn < 4 && !meta.q && d.talk > 0.45 && Math.random() < d.talk * 0.7) {
+            const q = Math.random() < 0.35 + d.curious * 0.4, t2 = mineToo || Math.random() < 0.5 ? t : P.likes[Math.floor(Math.random() * P.likes.length)];
+            say += ' ' + topicLine(k, P, t2, q); meta = { topic: t2, q, turn };
+          }
+        } else if (recentTalk && last.p === to && last.meta && last.meta.makeUp) {
+          R.like = cl(R.like + 0.2, -1, 1); say = pick(k, P, BACK.madeUp, slots); meta = { turn: 9 };
+        } else if (R.like < -0.2 && R.talks > 2 && Math.random() < 0.25 + d.warm * 0.3) {
+          // fallen out: now and then one says sorry, and they make it up
+          R.like = cl(R.like + 0.15, -1, 1); say = pick(k, P, BACK.makeUp, slots); meta = { makeUp: true, turn: 3 };
         } else if (!R.met && !R.talks0) { R.talks0 = 1; R.met = 1; say = pick(k, P, L.hello, slots); }
         else if (R.likes.length && Math.random() < 0.35) {
           const t = R.likes[Math.floor(Math.random() * R.likes.length)]; slots.topic = TOPICS[t].n; say = pick(k, P, L.theirTopic, slots); meta = { topic: t, q: true };
@@ -1193,7 +1261,16 @@
     // asked the same kind of thing as last time: the sharp say so (kinds only are kept, never your words)
     function answer(k, c, P, m, text, mine, slots, setMeta, grp) {
       const t = String(text).toLowerCase(), U = m.user, kind = (ASK_KIND.find(([, w]) => w.test(t)) || [])[0] || '';
+      // a grudge (you were rude: U.like low): sorry is weighed; otherwise they are short with you; it fades a little each line
+      const hurt = (U.like || 0) < -0.15;
+      if (/\b(sorry|apologi[sz]e|my bad|didn'?t mean (it|that)|forgive me)\b/.test(t) && !/\bsorry to hear\b/.test(t)) {
+        if (!hurt) return pick(k, P, FEEL.whatFor, slots);
+        if (Math.random() < 0.45 + P.d.warm * 0.45 - P.d.edge * 0.25) { U.like = Math.max(0, (U.like || 0) + 0.45); push(c, m, P, 0.2, 0.05); return pick(k, P, FEEL.forgive, slots); }
+        U.like = (U.like || 0) + 0.12; return pick(k, P, FEEL.notYet, slots);
+      }
       let s = answer0(k, c, P, m, text, mine, slots, setMeta, grp);
+      if ((U.like || 0) < -0.3 && s && Math.random() < 0.5 && /\?\s*$|^(what|where|who|how|why|do|does|are|is|can|could|would|will)\b/.test(t) && !/^(Hm|Fine|If you)/.test(s)) { const cp = pick(k, P, FEEL.curt, slots); s = cp + (/[.?!]\s*$/.test(cp) ? s : s.replace(/^(.)/, (x) => (keepCap(s) ? x : x.toLowerCase()))); }
+      if ((U.like || 0) < 0) U.like = Math.min(0, U.like + 0.015);
       if (kind && kind === U.lastAsk && P.smarts >= 3 && s && Math.random() < 0.8) { const pre = pick(k, P, NOWL.again, slots); s = pre + (/[.!?]\s*$/.test(pre) ? s : s.replace(/^(.)/, (x) => (/^I\b/.test(s) ? x : x.toLowerCase()))); }
       U.lastAsk = kind;
       return s;
@@ -1640,6 +1717,10 @@
           if (o.show) o.show(k, a, ev && ev.kind === 'muse' ? null : to, ev && ev.kind === 'muse' ? null : ev);
           if (a.act && !(ev && ev.dec) && o.act) o.act(k, a.act, ev);   // something they noticed while musing
           if (a.meta && a.meta.go && o.go) o.go(k, a.meta.go);   // agreed to do something: the page has them do it
+          // between two of them: the other answers soon, for a few turns (a topic, a question, or a sorry to answer)
+          if (!ev && to != null && to !== 'you' && to !== M.as && a.meta && (a.meta.topic || a.meta.makeUp) && (a.meta.turn || 0) < 4 && M.chatter && M.can(to)) {
+            setTimeout(() => { if (M.on && M.chatter && M.can(to) && M.can(k) && !M.busy.has(to) && !M.busy.has(k) && !(typeof document !== 'undefined' && document.hidden)) M.ask(to, k); }, 2200 + Math.random() * 2600);
+          }
           return a;
         } finally { M.busy.delete(k); changed(); }
       },

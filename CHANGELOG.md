@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Monday, November 9, 2026
 
+- **v375** (11:50 AM) Townsfolk now chat back and forth for a few turns, disagree, tease and ask each other why, fall out and make up; hold a grudge if you're rude (cold hellos, short answers) until you apologise; and have far more to say, with their mood colouring their words.
 - **v374** (10:13 AM) The still world's sun shadow is kept from frame to frame and only moving things are redrawn: about 70% fewer shadow draws in town, same look
 
 ## Sunday, November 8, 2026
