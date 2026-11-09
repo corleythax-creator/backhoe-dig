@@ -203,7 +203,7 @@ function bfAfter(it,a){const L=it.bf;if(!L||!L.b)return;const B=L.b,gone=!a||!!a
   for(const T of G.tris){if(T.F.m.userData.sign)continue;const PA=T.F.m.geometry.attributes.position.array;
     for(const i of T.list)for(let v=0;v<9;v+=3){PA[i+v]+=1e5;PA[i+v+1]-=500}T.F.m.geometry.attributes.position.needsUpdate=true;T.F.bfDirty=1}
   for(const {l} of G.lamps)l[1]=-600;if(G.lamps.length){bf.lamps=1;fxApply.lamps=1}
-  for(const {O} of G.objs)O.o.visible=false}
+  for(const {O} of G.objs)if(!O.o.userData.sign)O.o.visible=false}
 function bfFlush(){for(const F of FX_MESH)if(F.bfDirty){F.bfDirty=0;F.m.geometry.computeBoundingSphere();F.m.geometry.computeBoundingBox()}if(bf.lamps){bf.lamps=0;fxLampsSync()}}
 // on or off by area (gfxApply, and once at load): the library and the places the first time, each kind when first
 // wanted, then every building laid again whose setting changed
