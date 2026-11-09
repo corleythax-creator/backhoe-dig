@@ -203,7 +203,13 @@ function hvDrive(h,dt,drive,turn,arm,curl,on){const K=h.K;
   else if(K.track){h.top=K.mini?TU.mnSpd:TU.hvDzSpd;h.v+=(drive*h.top*k*h.drag-h.v)*Math.min(1,dt*(drive?2:4));h.w+=(-turn*(K.mini?TU.mnTurn:TU.hvDzTurn)*k-h.w)*Math.min(1,dt*5);h.yaw+=h.w*dt}
   else{// the gas pulls it up to speed (the semi slowly), the brakes stop it harder; the wheel locks less the faster it goes
     h.top=K.trail?TU.hvSmSpd:K.hoe?TU.bhSpd:TU.hvLdSpd;const tgt=drive*h.top*k,acc=K.trail?0.35:1.2,up=Math.abs(tgt)>Math.abs(h.v)&&tgt*h.v>=0;
-    h.v+=(tgt-h.v)*Math.min(1,dt*(up?acc:acc*3));
+    // a real engine running it (enginebay.js): it pulls through its powershift; the pedal against the way it rolls,
+    // or none, brakes it as before (a loader's service brakes, its converter dragging)
+    const E=on&&!K.trail?ebLive(K.hoe?'backhoe':h.k==='loader'?'loader':''):null;
+    if(E){const v0=h.v,brk=drive*v0<0&&Math.abs(v0)>0.2,dir=v0>0.2?1:v0<-0.2?-1:drive<0?-1:1,ped=!brk&&drive*dir>0?Math.abs(drive):0;
+      h.v+=ebPull(E,dt,ped,dir,v0,k,false)*dt;
+      if(brk||!drive){const b=(brk?acc*3*h.top*Math.abs(drive):0.5)*dt;h.v=Math.abs(h.v)<=b?0:h.v-Math.sign(h.v)*b}}
+    else h.v+=(tgt-h.v)*Math.min(1,dt*(up?acc:acc*3));
     const lock=(K.trail?TU.hvSmLock:K.hoe?TU.bhLock:TU.hvLdLock)/(1+Math.abs(h.v)*0.06);h.steer+=(turn*lock-h.steer)*Math.min(1,dt*4);
     h.w=-h.v*Math.tan(h.steer)/K.wb;h.yaw+=h.w*dt}
   if(!on){if(Math.abs(h.v)<0.05)h.v=0;if(Math.abs(h.w)<0.01)h.w=0}
@@ -234,7 +240,13 @@ function hvDrive(h,dt,drive,turn,arm,curl,on){const K=h.K;
 // follows the way it points only as fast as the tyres can hold (about 0.8 g at 100% grip), so a hard turn at speed
 // slides, and a sliding tyre scrubs speed off
 function hvCar(h,dt,drive,turn,k,on){const K=h.K,P=K.car,top=TU[P+'Spd']*k,rev=TU[P+'Rev']*k,v=h.v;h.top=TU[P+'Spd'];if(h.mv===undefined)h.mv=h.yaw;
-  if(drive*v<0&&Math.abs(v)>0.2){const b=K.brake*TU[P+'Brake']*Math.abs(drive)*dt;h.v=Math.abs(v)<=b?0:v-Math.sign(v)*b}
+  // a real engine running it (enginebay.js): it pulls through its gears; the brakes and the steering stay as below
+  const E=on?ebLive(P):null;
+  if(E){const brk=drive*v<0&&Math.abs(v)>0.2,dir=v>0.2?1:v<-0.2?-1:drive<0?-1:1,ped=!brk&&drive*dir>0?Math.abs(drive):0;
+    h.v+=ebPull(E,dt,ped,dir,v,k,false)*dt;
+    if(brk){const b=K.brake*TU[P+'Brake']*Math.abs(drive)*dt;h.v=Math.abs(h.v)<=b?0:h.v-Math.sign(h.v)*b}
+    else if(!drive){const c=(0.12+0.004*h.v*h.v)*dt;h.v=Math.abs(h.v)<=c?0:h.v-Math.sign(h.v)*c}}
+  else if(drive*v<0&&Math.abs(v)>0.2){const b=K.brake*TU[P+'Brake']*Math.abs(drive)*dt;h.v=Math.abs(v)<=b?0:v-Math.sign(v)*b}
   else if(drive){const lim=drive>0?top:rev,f=Math.max(0,1-Math.abs(v)/Math.max(0.1,lim*Math.abs(drive)));h.v+=Math.sign(drive)*K.acc*TU[P+'Acc']*f*dt;
     if(Math.abs(h.v)>lim)h.v+=(Math.sign(h.v)*lim-h.v)*Math.min(1,dt*2)}
   else{const c=(0.35+0.004*v*v)*dt;h.v=Math.abs(v)<=c?0:v-Math.sign(v)*c}

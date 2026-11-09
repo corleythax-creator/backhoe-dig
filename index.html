@@ -467,6 +467,7 @@
 <!-- three.js ships as an ES module only; this puts it in the shared global THREE for the game scripts, which are
      deferred so they run after it, in order -->
 <script type="module">import * as T from 'three';window.THREE=Object.assign({},T);</script>
+<script async src="https://engine-bay-zeta.vercel.app/runtime/engine-bay.js"></script>
 <script defer src="data/effort.js"></script>
 <script defer src="js/core.js"></script>
 <script defer src="js/tune.js"></script>
@@ -520,6 +521,7 @@
 <script defer src="js/trailer.js"></script>
 <script defer src="js/pickup.js"></script>
 <script defer src="js/carts.js"></script>
+<script defer src="js/enginebay.js"></script>
 <script defer src="js/townfolk.js"></script>
 <script defer src="js/plant.js"></script>
 <script defer src="js/trimmer.js"></script>

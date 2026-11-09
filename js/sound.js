@@ -147,6 +147,7 @@ function sndEngineTo(e,rpm,load,lvl,t,w){
     e.lg.gain.setTargetAtTime(Math.cos(w*Math.PI/2)*lvl,t,0.06);e.hg.gain.setTargetAtTime(Math.sin(w*Math.PI/2)*lvl,t,0.06)}
   e.load.frequency.setTargetAtTime(3200+9000*load+rpm*1.2,t,0.06)}
 function updateSound(dt){
+  if(typeof ebFrame==='function')ebFrame();   // Engine Bay: the real engine of the machine you are in (enginebay.js)
   if(!snd||!snd.ready||actx.state!=='running')return;
   const t=actx.currentTime,quiet=bench.on?0:1,cab=camMode==='cab'?mode:'';
   sndPlace(snd.T,tr.x,tr.y+1.6,tr.z,t,cab==='truck');sndPlace(snd.X,st.x,st.y+1.4,st.z,t,cab==='dig'||cab==='drive');sndPlace(snd.M,mw.x,mw.y+0.6,mw.z,t);
@@ -206,17 +207,18 @@ function updateSound(dt){
   snd.skPourG.gain.setTargetAtTime(quiet*Math.min(1,sndIn.skPour*1.6)*0.8,t,0.05);sndIn.skDig=Math.max(0,sndIn.skDig-dt*3);
   // dirt bike: idles while you sit on it; the gas (and the back wheel spinning free in the air) sends the revs up
   const be=snd.engB,bT=1000+1000*Math.min(1,Math.max(0,bk.thr)*(bk.air?1:0.45)+Math.abs(bk.v)/TU.bkSpd*0.6);be.rpm+=(bT-be.rpm)*Math.min(1,dt*(bT>be.rpm?6:3));
-  sndEngineTo(be,be.rpm,Math.max(0,bk.thr),quiet*0.65*bk.run,t);
+  sndEngineTo(be,be.rpm,Math.max(0,bk.thr),quiet*0.65*bk.run*(ebLive('bike')?0:1),t);   // (silent while its real engine plays)
   // Dexter's machine you are in (heavy.js): idles while you sit in it; driving and the hydraulics pull the revs up. The
   // pickup shifts through four gears as it gathers speed; the four-wheeler's belt drive holds the revs up with the gas
   {const R=WK_RIDES[wk.inside],h=R&&R.m==='heavy'?R.o:null,car=h&&(h.K.snd??h.K.car);if(h)sndPlace(snd.H,h.x,h.y+1.2,h.z,t,cab==='heavy'&&!h.K.rider);
     const he=snd.engH,hT=750+900*(h&&!car?Math.min(1,Math.abs(h.v)/h.top*0.7+h.hyd*0.5+Math.abs(h.thr)*0.2):0);he.rpm+=(hT-he.rpm)*Math.min(1,dt*3);
-    sndEngineTo(he,he.rpm,h&&!car?Math.min(1,Math.abs(h.thr)*0.7+h.hyd*0.6):0,quiet*0.8*(h&&!car?h.run:0),t);
+    const ebH=!!(ebCur&&ebCur.v&&(ebCur.key==='backhoe'||ebCur.key==='loader'||ebCur.key==='pk'||ebCur.key==='at'));   // a real engine plays instead
+    sndEngineTo(he,he.rpm,h&&!car?Math.min(1,Math.abs(h.thr)*0.7+h.hyd*0.6):0,quiet*0.8*(h&&!car&&!ebH?h.run:0),t);
     const sp=h?Math.abs(h.v):0,th=h?Math.max(0,h.thr*Math.sign(h.v||h.thr)):0;
     const pe=snd.engP,pg=Math.min(3,Math.floor(sp/7)),pT=car==='pk'?(sp<0.3?700+th*500:1100+1300*Math.min(1,(sp-pg*7)/7)*(0.6+0.4*th)+th*300):700;pe.rpm+=(pT-pe.rpm)*Math.min(1,dt*(pT>pe.rpm?4:6));
-    sndEngineTo(pe,pe.rpm,th,quiet*0.8*(car==='pk'?h.run:0),t);
+    sndEngineTo(pe,pe.rpm,th,quiet*0.8*(car==='pk'&&!ebH?h.run:0),t);
     const ae=snd.engA,aT=car==='at'?1300+3200*Math.min(1,th*0.55+sp/Math.max(1,h.top)*0.6):1300;ae.rpm+=(aT-ae.rpm)*Math.min(1,dt*(aT>ae.rpm?6:4));
-    sndEngineTo(ae,ae.rpm,th,quiet*0.7*(car==='at'?h.run:0),t);
+    sndEngineTo(ae,ae.rpm,th,quiet*0.7*(car==='at'&&!ebH?h.run:0),t);
     // tyres on dirt and gravel, and the scrub of a slide
     snd.hvTire.playbackRate.setTargetAtTime(0.6+sp*0.06,t,0.1);snd.hvTireG.gain.setTargetAtTime(quiet*(car?Math.min(1,sp/6)*0.6+Math.min(1,(h.slide||0)*3)*Math.min(1,sp/4)*0.6:0),t,0.1)}
   // the boat you are in: idles while you are aboard, the throttle and speed send the revs up; water along the hull and
