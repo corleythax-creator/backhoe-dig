@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-09T01:57:00Z",
+ "updated": "2026-11-09T04:20:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -120,9 +120,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-08",
-   "dh": 29,
-   "act": 2,
-   "versions": 4
+   "dh": 43,
+   "act": 4.5,
+   "versions": 12
   }
  ],
  "extra": [
@@ -3399,6 +3399,78 @@ window.EFFORT = {
    "tris": 5915971,
    "chars": 2425827,
    "what": "On High and Ultra, the town's shops, cafés, pubs, salons, offices, the brewery, the General Store, the hotel and the library are furnished with real commercial pieces (checkouts, shelving, coolers, bars and booths, café tables, salon stations, reception desks, pews), with staff behind the counters and customers at the tables, booths, chairs and shelves."
+  },
+  {
+   "v": 364,
+   "asked": "2026-11-08T20:15:00-06:00",
+   "live": "2026-11-08T20:29:58-06:00",
+   "dh": 2.5,
+   "tris": 7623132,
+   "chars": 2427967,
+   "what": "Busy townsfolk walks 120 people; the Lakeside Brewing taproom always has 10 or more drinking while open, walking in and out by the patio door"
+  },
+  {
+   "v": 365,
+   "asked": "2026-11-08T20:25:00-06:00",
+   "live": "2026-11-08T20:42:59-06:00",
+   "dh": 1.5,
+   "tris": 5926872,
+   "chars": 2429016,
+   "what": "Townsfolk talking aloud are heard only within 80 ft of you, quieter the further off they are"
+  },
+  {
+   "v": 366,
+   "asked": "2026-11-08T20:35:00-06:00",
+   "live": "2026-11-08T21:11:04-06:00",
+   "dh": 1.5,
+   "tris": 5924798,
+   "chars": 2431268,
+   "what": "The site map shows every shop, the brewery and the General Store as a brass dot, named once you zoom in; tapping one names it"
+  },
+  {
+   "v": 367,
+   "asked": "2026-11-08T20:40:00-06:00",
+   "live": "2026-11-08T21:12:40-06:00",
+   "dh": 1.5,
+   "tris": 7839348,
+   "chars": 2433640,
+   "what": "Tiny far detail: parts too small to see (or lost in the haze) are no longer drawn, nearly halving the draws in town; Graphics slider to tune it"
+  },
+  {
+   "v": 368,
+   "asked": "2026-11-08T21:05:00-06:00",
+   "live": "2026-11-08T21:38:25-06:00",
+   "dh": 4,
+   "tris": 5921717,
+   "chars": 2438906,
+   "what": "Townsfolk inside a building or outside your cab sound muffled through its walls by what they are made of, and clear through an open door"
+  },
+  {
+   "v": 369,
+   "asked": "2026-11-08T21:25:00-06:00",
+   "live": "2026-11-08T21:55:01-06:00",
+   "dh": 1.5,
+   "tris": 7630087,
+   "chars": 2440127,
+   "what": "Townsfolk answer what they're doing, the time and whether they're hungry or tired, say yes or no to plans, remember what you tell them about yourself (your work, where you're from, your pets and family) and ask after it later, and have families and opinions of their own; their lines can play in real voices for the owner."
+  },
+  {
+   "v": 370,
+   "asked": "2026-11-08T21:35:00-06:00",
+   "live": "2026-11-08T22:15:39-06:00",
+   "dh": 0.5,
+   "tris": 5921110,
+   "chars": 2440864,
+   "what": "The map editor has Edit in Daylight on a town building: it opens the building in Daylight House Studio at that spot, with the street, sidewalks, lights, trees and buildings around it, to see whether a bigger design fits."
+  },
+  {
+   "v": 371,
+   "asked": "2026-11-08T21:35:00-06:00",
+   "live": "2026-11-08T22:20:07-06:00",
+   "dh": 1,
+   "tris": 5924113,
+   "chars": 2442869,
+   "what": "In town the machines on the islands aren't drawn, and indoors (the pub) far small things are skipped: about 20% fewer draws in town, half in the pub"
   }
  ]
 };

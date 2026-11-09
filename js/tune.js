@@ -82,7 +82,7 @@ const TUNE=[
   ['trimLine','String trimmer','Line out after a bump (longest)',0.15,'in',2,12,0.25],['trimMin','String trimmer','Shortest line that still cuts',0.025,'in',0.25,6,0.25],
   ['trimBump','String trimmer','Line one bump feeds out',0.04,'in',0.25,6,0.25],['trimWear','String trimmer','Line worn away per second of cutting',0.006,'in',0.02,2,0.02],
   ['gunRate','Pistol','Shortest time between shots',0.22,'s',0.05,2,0.01],['gunRange','Pistol','How far a shot carries',90,'ft',30,600,10],
-  ['gunFlee','Pistol','How fast people run from shots',4.5,'mph',3,16,0.5],['townPop','Pistol','How many townsfolk live in town when the game starts (each one killed is gone until the next start)',150,'',0,1000,10],['shopPop','Pistol','How many shopfolk (people in the shops and houses) there are when the game starts',60,'',0,500,5],['runKill','Pistol','How fast a machine has to be going to run someone down (slower, they jump clear)',6,'mph',1,30,0.5],['gunWrist','Pistol','Wrist turn holding the pistol',1.4,'deg',-180,180,5],['gunBody','Pistol','How long someone shot stays down before they go (when out of sight)',40,'s',5,600,5],
+  ['gunFlee','Pistol','How fast people run from shots',4.5,'mph',3,16,0.5],['townPop','Pistol','How many townsfolk live in town when the game starts (each one killed is gone until the next start)',200,'',0,1000,10],['shopPop','Pistol','How many shopfolk (people in the shops and houses) there are when the game starts',100,'',0,500,5],['runKill','Pistol','How fast a machine has to be going to run someone down (slower, they jump clear)',6,'mph',1,30,0.5],['gunWrist','Pistol','Wrist turn holding the pistol',1.4,'deg',-180,180,5],['gunBody','Pistol','How long someone shot stays down before they go (when out of sight)',40,'s',5,600,5],
   ['gunHp','Pistol','How much a townsperson takes before they go down (each one give or take 15%)',100,'',10,1000,5],['gunHeadX','Pistol','A head shot counts this many times a body shot',4,'',1,20,0.5],['copDmg','Pistol','Police: damage a hit does to you (you have 100)',12,'',0,100,1],['copAim','Pistol','Police: how good a shot they are',1,'pct',0,3,0.05],['gunKick','Pistol','How hard a shot kicks the view up',1,'pct',0,3,0.05],['gunShake','Pistol','How much a shot shakes the view',1,'pct',0,3,0.05],
   ['gunDmgP','Pistol','Pistol: damage a shot',45,'',1,500,1],['gunDmgS','Pistol','Shotgun: damage a pellet (nine a shell)',16,'',1,200,1],['gunDmgR','Pistol','Rifle: damage a shot',130,'',1,1000,5],['gunDmgC','Pistol','Carbine: damage a shot',32,'',1,500,1],
   ['trimSpool','String trimmer','Line on a full spool',25*0.3048,'ft',2,100,1],
@@ -109,7 +109,7 @@ const TUNE=[
   ['packShed','Excavator','How fast packed clay drops off',1,'pct',0,500,5],
   ['caveDepth','Cave-ins','Walls start to cave in deeper than',1.2,'ft',1,30,0.5],['caveSpoil','Cave-ins','Spoil this close to the edge loads the wall',0.64,'ft',0,10,0.5],
   // the townsfolk (townfolk.js): how fast the town's cars drive its streets and its people walk
-  ['tfCarV','Town','Town traffic speed',11.2,'mph',5,45,1],['tfWalk','Town','Townsfolk walking pace',1.3,'mph',1,5,0.1],['tfUltraR','Town','Ultra graphics: townsfolk shown in full detail within',6,'ft',6,40,1],
+  ['tfCarV','Town','Town traffic speed',11.2,'mph',5,45,1],['tfWalk','Town','Townsfolk walking pace',1.3,'mph',1,5,0.1],['tfUltraR','Town','Ultra graphics: townsfolk shown in full detail within',6,'ft',6,40,1],['inFar','Town','Indoors: smaller things outside drawn within',150,'ft',30,800,5],['townZ','Town','Machines on the islands hidden once you are this far south (town)',420,'ft',300,700,5],
   // which townsfolk characters stay home: one bit per character, in models/peds/peds.json order (bit 0 = cal_m); set on the Townsfolk page
   ['tfOut','Town','Townsfolk left out (a bit per character; set it on the Townsfolk page)',0,'n',0,4294967295,1],
   // the town's life (town.js): money, shop hours, greetings and talk
@@ -125,11 +125,14 @@ const TUNE=[
   // the shops' comings and goings (townfolk.js, tfEnt): passersby turning in, how long they stay, how many on their way
   // in or out at once, what they come out holding, and the staff's hours either side of the shop's
   ['tfShopGo','Town','Passersby who turn into an open shop at its busiest hour',0.35,'pct',0,100,5],['tfShopStay','Town','Customers stay in a shop about',45,'s',5,600,5],
-  ['tfShopTransit','Town','Most townsfolk walking into or out of shops at once',8,'n',0,30,1],['tfCarry','Town','Customers who come out carrying a bag or a cup',0.6,'pct',0,100,5],
+  ['tfShopTransit','Town','Most townsfolk walking into or out of shops at once',12,'n',0,30,1],['tfCarry','Town','Customers who come out carrying a bag or a cup',0.6,'pct',0,100,5],
   ['tfStaffGap','Town','Shop staff come in before opening and go home after closing by',1200,'min',0,120,5],
   ['greetChance','Town','Passersby who greet you as you walk by',0.45,'pct',0,100,5],['greetGap','Town','The least time between greetings',8,'s',0,60,1],
   // townsfolk talk (talk.js): who joins in, how far off it is heard, and what makes them remark on a machine
   ['talkSeeR','Town','Townsfolk talk only within this far of you (or the machine you drive)',36.6,'ft',30,400,5],
+  ['talkHearR','Town','Townsfolk talking aloud are heard within this far of the camera, fading with distance',24.4,'ft',10,300,5],
+  ['talkWallK','Town','How much of a voice in a room you are not in (or outside your cab) gets through its walls and doors',1,'',0,3,0.1],
+  ['talkMurmur','Town','How loud the murmur of a voice through a wall is',1,'',0,3,0.1],
   ['talkChatR','Town','Two townsfolk talk to each other within',3.05,'ft',3,40,1],
   ['talkRoadR','Town','A machine you drive this close to someone gets a word from them',4.6,'ft',3,60,1],
   ['talkRoadV','Town','Going past them faster than this, it nearly had them',2.2,'mph',1,30,0.5],

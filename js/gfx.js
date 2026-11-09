@@ -10,7 +10,7 @@
 // shadow edges, filmic lighting, exp brightness, tex texture size, base ground texture, detail cut faces, painted
 // materials and machine grime, macro large-scale variation, pbr relief and wet sheen on materials that have those maps, aniso, tuftQ how finely the grass and weeds are shaped (0 Simple to 3 Best, scenery.js), tuft grass blades [amount, full-detail distance m,
 // fade-out distance m, share kept far off], lawnFar lawn full detail within m, fog haze distance, wmFine fine puddle
-// water, lakeQ the lake's ripples (0 two layers, 1 and rain rings, 2 and a fine close-up layer, lake.js), cloudQ the clouds (0 a flat layer without its fine billows; 1 to 3 heaps in 3D with their shadows, drawn finer each step, storm.js), treeR full-detail tree distance m, rainN raindrops, rainSp splashes where they land, splashN drops in a puddle splash, town the townsfolk (0 off to 3 busy, townfolk.js), wakeN boat wake marks drawn, dirt the Dirt detail it sets when picked,
+// water, lakeQ the lake's ripples (0 two layers, 1 and rain rings, 2 and a fine close-up layer, lake.js), cloudQ the clouds (0 a flat layer without its fine billows; 1 to 3 heaps in 3D with their shadows, drawn finer each step, storm.js), treeR full-detail tree distance m, cull the tiny far detail left undrawn (CSS pixels across, 0 off; gfxCullOn), rainN raindrops, rainSp splashes where they land, splashN drops in a puddle splash, town the townsfolk (0 off to 3 busy, townfolk.js), wakeN boat wake marks drawn, dirt the Dirt detail it sets when picked,
 // ao bloom grade the screen effects (post.js), model the detailed machine models (models.js), brush the share of undergrowth
 // drawn (brush.js), wild the share of the wild growth drawn (tall grass and bushes, scenery.js), turf and turfR the share of the town's lawn grass, weeds and leaves drawn and how far out in m (turf.js), skyLight shade and reflections coloured by the sky as it is (and a sharper reflection map), shSoft
 // contact-hardening sun shadows, wetDrops beads and runs of rain on the machines and their cab glass, wetGround soaked ground mirroring the sky (all four Ultra, post.js),
@@ -24,6 +24,8 @@ const GFX={
 // picked by itself
 // the extra lamps: the warm light in Jessica's library and the boom's work light (Low keeps the glowing lamps only)
 GFX.low.town=1;GFX.med.town=2;GFX.high.town=3;
+// tiny far detail (gfxCullOn below): a part smaller than this many screen pixels across its middle is not drawn
+GFX.low.cull=5;GFX.med.cull=4;GFX.high.cull=3;
 // the town from Building Forge (forgetown.js): the owner's own designs from Daylight House Studio in place of the ones
 // the game draws, the shops and the rest (bfMain) and the houses (bfHomes); High and Ultra
 GFX.low.bfMain=GFX.med.bfMain=false;GFX.high.bfMain=true;GFX.low.bfHomes=GFX.med.bfHomes=false;GFX.high.bfHomes=true;
@@ -49,6 +51,7 @@ GFX.low.bounce=GFX.med.bounce=false;GFX.high.bounce=true;
 GFX.low.autoExp=GFX.med.autoExp=false;GFX.high.autoExp=true;GFX.high.shR=36;
 // Ultra: the few townsfolk nearest the camera (at most fgUltra, within TU.tfUltraR) swap to their ultra mesh (townfolk.js tfUh)
 GFX.ultra=Object.assign({},GFX.high,{csm:240,csmSh:4096,name:'Ultra',forge:'hi',fgUltra:3,wild:1,turfR:75,tuftQ:3,ao:true,bloom:true,grade:true,treeR:220,skyLight:true,shSoft:true,wetDrops:true,wetGround:true,cloudQ:3});
+GFX.ultra.cull=2;
 // VR through a PC: the eye buffer drawn larger than the headset's own and scaled down (supersampling), for sharper edges
 // and fine detail; only the levels for strong graphics do it
 GFX.low.vrSS=GFX.med.vrSS=1;GFX.high.vrSS=1.25;GFX.ultra.vrSS=1.4;
@@ -63,6 +66,42 @@ GFX.quest.extraLt=false;
 // the bridges' detail parts: gusset and cover plates, lacing and lattice, braces, lamp trim, the covered bridge's
 // lattice and rafters, batter piles (bridges.js); Low leaves them out
 GFX.low.brDet=false;GFX.med.brDet=GFX.high.brDet=GFX.ultra.brDet=GFX.quest.brDet=true;
+// Tiny far detail: three.js draws everything in view, however far, and from town that is the machines and yards on the
+// islands, a hundred parts each, most a pixel or two across: about 1,000 of the 1,400 draws a frame. The camera's own
+// check (Frustum.intersectsObject) also skips a mesh whose width on screen is under gfxCur.cull CSS pixels, or that is
+// wholly past the haze (fogged materials). Only while the game's own camera draws (not the editor, VR or other views);
+// a mesh with userData.keep always draws. Indoors (on foot in a room: interiors.js rmRoomAt, as rmInsideTick tells it; in the pub, say) the walls
+// hide the rest of the island, so anything under 40 m across farther off than TU.inFar is skipped too (the machines on
+// the islands, the yards, far houses); the land, the lake, the sky and the mountains still show through the windows.
+const gfxCull={on:false,x:0,y:0,z:0,k:0,fog:0,far:0},gfxSph=new THREE.Sphere();
+(function(){const P=THREE.Frustum.prototype;
+  P.intersectsObject=function(o){const b=o.boundingSphere!==undefined?(o.boundingSphere||(o.computeBoundingSphere(),o.boundingSphere)):(o.geometry.boundingSphere||(o.geometry.computeBoundingSphere(),o.geometry.boundingSphere));
+    const s=gfxSph.copy(b).applyMatrix4(o.matrixWorld);if(!this.intersectsSphere(s))return false;
+    if(!gfxCull.on||o.userData.keep)return true;
+    const c=s.center,d=Math.hypot(c.x-gfxCull.x,c.y-gfxCull.y,c.z-gfxCull.z);if(d<=s.radius)return true;
+    if(s.radius*gfxCull.k<d)return false;
+    if(gfxCull.far&&d-s.radius>gfxCull.far&&s.radius<40)return false;
+    const m=o.material;return !(gfxCull.fog&&d-s.radius>gfxCull.fog&&m&&m.fog&&!Array.isArray(m))}})();
+function gfxCullOn(cam){const px=gfxCur.cull||0;gfxCull.on=px>0&&cam===camera&&!edOn&&!renderer.xr.isPresenting;if(!gfxCull.on)return;
+  const h=renderer.domElement.clientHeight||innerHeight;gfxCull.x=cam.position.x;gfxCull.y=cam.position.y;gfxCull.z=cam.position.z;
+  // radius r at distance d is r/d/tan(fov/2)*zoom*(h/2) pixels from its middle; under px/2 is culled
+  gfxCull.k=h*cam.zoom/(Math.tan(cam.fov*Math.PI/360)*px);gfxCull.fog=scene.fog?scene.fog.far:0;
+  gfxCull.far=mode==='walk'&&!wk.inside&&rmRoomAt(wk.x,wk.z,wk.y)?TU.inFar:0}
+// The machines on the islands from town: with the camera on the mainland (south of TU.townZ and on none of the
+// islands), every machine standing on one of the islands (Corley's, the Family Island, Jessica's, Dexter's) is left out
+// of the frame, its parts and shadows: the excavator, dump truck, mower, skid steer, bike, trench box, the attachments
+// parked on the ground and Dexter's heavy machines and trailers. Boats on the lake, and a machine brought into town,
+// still draw. Only how it is drawn: the machines go on working and are back the moment you leave town.
+const gfxIsl=(x,z,m)=>mesaR(x,z)<EDGE+m||famR(x,z)<FAM_R+m||jesR(x,z)<JES_R+m||dexR(x,z)<DEX_R+m;
+// (read when a frame is drawn, after every script has loaded)
+function gfxMachines(){const L=[machine,truck,mower,skid,bike,tbox];
+  if(typeof cpl!=='undefined'&&cpl.g)for(const k in cpl.g)if(cpl.g[k].parent===scene)L.push(cpl.g[k]);
+  if(typeof hvs!=='undefined')for(const h of hvs)if(h.g)L.push(h.g);return L}
+const gfxHid=[];
+function gfxAway(cam){if(cam!==camera||edOn||renderer.xr.isPresenting)return;const c=cam.position;
+  if(c.z<TU.townZ||gfxIsl(c.x,c.z,30))return;
+  for(const g of gfxMachines())if(g.visible&&gfxIsl(g.position.x,g.position.z,15)){g.visible=false;gfxHid.push(g)}}
+{const r=renderer.render.bind(renderer);renderer.render=function(sc,cam){gfxCullOn(cam);gfxAway(cam);try{r(sc,cam)}finally{gfxCull.on=false;while(gfxHid.length)gfxHid.pop().visible=true}}}
 let gfxKey='high',gfxOver={},gfxCur=Object.assign({},GFX.high);
 function gfxName(){return GFX[gfxKey].name+(Object.keys(gfxOver).length?' (custom)':'')}
 function gfxGuess(){if(PHONE||IS_QUEST)return 'low';
@@ -205,6 +244,7 @@ const GFX_ROWS=[
   {id:'turf',label:'Town lawns',hint:'Grass blades, clover, weeds and fallen leaves on the town\'s lawns. Thicker costs triangles.',opts:[[0,'Off'],[0.35,'Sparse'],[0.65,'Some'],[1,'Full']]},
   {id:'turfR',label:'Town lawn distance',hint:'How far out the town\'s lawn grass and leaves are drawn.',min:10,max:120,step:5,fmt:v=>`${Math.round(v*FT_M)} ft`},
   {id:'model',label:'Machine models',hint:'Detailed models (every machine and boat, the excavator with a full cab inside, the trench box and attachments, and the yards\' and towns\' cones, light towers, barriers, lamps, benches and tables) or the simple ones. Detailed downloads about 17 MB once.',opts:[[true,'Detailed'],[false,'Simple']]},
+  {id:'cull',label:'Tiny far detail',hint:'Skips drawing parts too small to see: far machines\' bolts, hoses and handles, signs and lamps a few pixels across. Lower keeps more; Off draws everything.',min:0,max:8,step:0.5,fmt:v=>v?`Under ${v} px`:'Off'},
   {id:'treeR',label:'Tree detail distance',hint:'How far trees keep their full model of branches and leaves.',min:20,max:400,step:5,fmt:v=>`${Math.round(v*FT_M)} ft`},
   {id:'tuftQ',label:'Grass quality',hint:'How finely the grass and weeds are shaped: more blades, bent in more steps, finer leaves, petals and seed heads. Costs triangles.',opts:[[0,'Simple'],[1,'Good'],[2,'Fine'],[3,'Best']]},
   {id:'tuftA',label:'Grass blades',hint:'How many blades are drawn. The main triangle cost.',min:0,max:1,step:0.05,fmt:v=>`${Math.round(v*100)}%`},

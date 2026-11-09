@@ -4,6 +4,14 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Sunday, November 8, 2026
 
+- **v371** (10:20 PM) In town the machines on the islands aren't drawn, and indoors (the pub) far small things are skipped: about 20% fewer draws in town, half in the pub
+- **v370** (10:15 PM) The map editor has Edit in Daylight on a town building: it opens the building in Daylight House Studio at that spot, with the street, sidewalks, lights, trees and buildings around it, to see whether a bigger design fits.
+- **v369** (9:55 PM) Townsfolk answer what they're doing, the time and whether they're hungry or tired, say yes or no to plans, remember what you tell them about yourself (your work, where you're from, your pets and family) and ask after it later, and have families and opinions of their own; their lines can play in real voices for the owner.
+- **v368** (9:38 PM) Townsfolk inside a building or outside your cab sound muffled through its walls by what they are made of, and clear through an open door
+- **v367** (9:12 PM) Tiny far detail: parts too small to see (or lost in the haze) are no longer drawn, nearly halving the draws in town; Graphics slider to tune it
+- **v366** (9:11 PM) The site map shows every shop, the brewery and the General Store as a brass dot, named once you zoom in; tapping one names it
+- **v365** (8:42 PM) Townsfolk talking aloud are heard only within 80 ft of you, quieter the further off they are
+- **v364** (8:29 PM) Busy townsfolk walks 120 people; the Lakeside Brewing taproom always has 10 or more drinking while open, walking in and out by the patio door
 - **v363** (7:57 PM) On High and Ultra, the town's shops, cafés, pubs, salons, offices, the brewery, the General Store, the hotel and the library are furnished with real commercial pieces (checkouts, shelving, coolers, bars and booths, café tables, salon stations, reception desks, pews), with staff behind the counters and customers at the tables, booths, chairs and shelves.
 - **v362** (7:02 PM) On High and Ultra, the whole town (shops, Town Hall, hotel, library, brewery, General Store, marina, waterfront and the neighbourhoods' houses) and the island's own buildings (Jessica's cottage, the Family house, Dexter's shed and office trailer) are your Daylight designs, walk-in on both floors, with their staff, customers and residents inside. Two Graphics settings: the town, and its houses.
 - **v361** (4:54 PM) On High and Ultra, the Building Forge shops on Main Street have their staff behind the counters and customers at the tables and shelves, coming and going through the front door, and you can walk up the stairs to the flat above each shop.
