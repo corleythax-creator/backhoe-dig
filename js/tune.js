@@ -76,6 +76,7 @@ const TUNE=[
   ['wkRun','On foot','Jog (stick all the way)',2.8,'mph',1,20,0.1],['wkSwim','On foot','Swim',1.1,'mph',0.5,10,0.1],['wkSprint','On foot','Sprint',5.6,'mph',1,40,0.1],
   ['wkJump','On foot','Jump height',6.2*6.2/(2*9.8),'ft',0.5,30,0.1],['wkGrav','On foot','Gravity (how floaty a jump is)',1,'pct',10,300,5],
   ['stepMud','On foot','Footsteps squelch where the ground is wetter than',0.45,'pct',5,100,5],['wkLook','On foot','Camera turn speed with the stick',1,'pct',20,400,5],['wkReachUp','On foot','How high the worker reaches for blocks',2.3,'ft',2,20,0.5],['blkReach','On foot','Farthest block reach (cab view)',80*0.3048,'ft',10,300,5],
+  ['ebOn','Engines','Real engines (Engine Bay) drive the pickup, four-wheeler, dirt bike, backhoe and wheel loader: 0% = their own numbers',1,'pct',0,100,100],
   ['bkSpd','Dirt bike','Top speed',13.4,'mph',5,60,0.5],['bkPull','Dirt bike','Engine pull',1,'pct',20,300,5],['bkLock','Dirt bike','Steering lock at a crawl',0.55,'deg',5,60,1],
   ['btSpeed','Boats','Top speed',11,'mph',2,60,0.5],['btTurn','Boats','Turn rate at speed',0.9,'deg',10,180,1],
   ['trimLine','String trimmer','Line out after a bump (longest)',0.15,'in',2,12,0.25],['trimMin','String trimmer','Shortest line that still cuts',0.025,'in',0.25,6,0.25],

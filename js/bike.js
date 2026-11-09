@@ -80,8 +80,11 @@ function bikeTick(dt,thr,steer){
   let [gm,gp]=ground();
   const mudN=mudAt(b.x,b.z),grip=1-0.45*mudN*TU.mudDrag;
   // the engine, the brakes, the hill and the drag of the dirt, with both wheels down
+  const E=on?ebLive('bike'):null;   // a real engine running it (enginebay.js): the 450 through its five gears
+  if(E&&b.air)ebPull(E,dt,Math.max(0,thr),1,b.v,grip,true);   // in the air the back wheel spins free: the revs fly up
   if(!b.air){let a=0;
-    if(thr>0)a=thr*TU.bkPull*7*Math.max(0,1-Math.max(0,b.v)/TU.bkSpd)*grip;
+    if(E){a=ebPull(E,dt,Math.max(0,thr),1,Math.max(0,b.v),grip,false);if(thr<0)a+=b.v>0.2?thr*9:b.v>-1.2?thr*1.5:0}
+    else if(thr>0)a=thr*TU.bkPull*7*Math.max(0,1-Math.max(0,b.v)/TU.bkSpd)*grip;
     else if(thr<0)a=b.v>0.2?thr*9:b.v>-1.2?thr*1.5:0;
     a-=9.8*Math.sin(gp)*(on?1:0)+(Math.abs(b.v)>0.05?Math.sign(b.v)*(0.3+0.8*mudN):0)+0.01*b.v*Math.abs(b.v);
     b.v+=a*dt;if(!on||!thr&&Math.abs(b.v)<0.1){if(!on)b.v*=Math.exp(-dt*3);if(Math.abs(b.v)<0.1)b.v=0}}
