@@ -45,6 +45,10 @@ GFX.low.rmNear=25;GFX.med.rmNear=35;GFX.high.rmNear=45;
 GFX.low.extraLt=false;GFX.med.extraLt=GFX.high.extraLt=true;
 // two real spotlights from the placed lights nearest the camera (props.js); the glow and the pools of light are on every level
 GFX.low.propLt=GFX.med.propLt=false;GFX.high.propLt=true;
+// real light from the lamps and ceiling lights of the Building Forge buildings nearest the camera (forgetown.js
+// bfLightTick): how many is the Tuning for the level (TU.bfLtMed, bfLtHigh, bfLtUltra); Low draws none, and the
+// fixtures glow on every level (set again after Ultra and Quest are made, below)
+GFX.low.bfLt=false;GFX.med.bfLt=GFX.high.bfLt=true;
 // the townsfolk from Human Forge (townfolk.js), at that level of detail: the phone keeps the old ones
 GFX.low.forge=GFX.med.forge='';GFX.high.forge='md';
 // far shadows (core.js sunFar): how far either side they reach (m, 0 off) and their map's size
@@ -64,7 +68,7 @@ GFX.low.vrSS=GFX.med.vrSS=1;GFX.high.vrSS=1.25;GFX.ultra.vrSS=1.4;
 GFX.quest=Object.assign({},GFX.med,{name:'Quest',pr:1,auto:false,sh:2048,shR:16,tex:'med',aniso:4,dirt:2,lawnFar:8,fog:0.7,wmFine:false,lakeQ:0,cloudQ:0,
   rainN:700,rainSp:180,splashN:260,wakeN:160,brush:0.3,wild:0.35,turf:0.35,turfR:22,model:true,treeR:50,tuft:[0.5,10,30,0.15],vrSS:0.9});
 GFX.quest.town=1;
-GFX.quest.extraLt=false;
+GFX.quest.extraLt=false;GFX.quest.bfLt=false;
 // the bridges' detail parts: gusset and cover plates, lacing and lattice, braces, lamp trim, the covered bridge's
 // lattice and rafters, batter piles (bridges.js); Low leaves them out
 GFX.low.brDet=false;GFX.med.brDet=GFX.high.brDet=GFX.ultra.brDet=GFX.quest.brDet=true;
@@ -243,6 +247,7 @@ const GFX_ROWS=[
   {id:'wild',label:'Wild growth',hint:'Tall grass gone to seed and bushes in the rough ground. Thicker costs triangles.',opts:[[0,'Off'],[0.35,'Sparse'],[0.65,'Some'],[0.85,'Thick'],[1,'Full']]},
   {id:'bfMain',label:'Town from Building Forge',hint:'The town\'s shops, Town Hall, hotel, library, brewery, store and waterfront as designed in Daylight House Studio, with their rooms, furniture and stairs, in place of the game\'s own.',opts:onOff},
   {id:'bfHomes',label:'Town houses from Building Forge',hint:'The neighbourhoods\' houses as designed in Daylight House Studio, in place of the game\'s own. The heaviest part of the town.',opts:onOff},
+  {id:'bfLt',label:'Building lights',hint:'After dark, real light from the lamps and ceiling lights of the Building Forge buildings nearest you (2 on Medium, 4 on High, 6 on Ultra unless the Tuning says otherwise; each costs every pixel a little). Off leaves the fixtures glowing only.',opts:onOff},
   {id:'turf',label:'Town lawns',hint:'Grass blades, clover, weeds and fallen leaves on the town\'s lawns. Thicker costs triangles.',opts:[[0,'Off'],[0.35,'Sparse'],[0.65,'Some'],[1,'Full']]},
   {id:'turfR',label:'Town lawn distance',hint:'How far out the town\'s lawn grass and leaves are drawn.',min:10,max:120,step:5,fmt:v=>`${Math.round(v*FT_M)} ft`},
   {id:'model',label:'Machine models',hint:'Detailed models (every machine and boat, the excavator with a full cab inside, the trench box and attachments, and the yards\' and towns\' cones, light towers, barriers, lamps, benches and tables) or the simple ones. Detailed downloads about 17 MB once.',opts:[[true,'Detailed'],[false,'Simple']]},

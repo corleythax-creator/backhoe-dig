@@ -193,6 +193,8 @@ function dnTick(dt){
   dnPools.visible=lamp>0.01;dnPoolMat.color.setHex(0xffd9a0).multiplyScalar(0.45*lamp*ll);
   // the lights placed from the editor or on foot (props.js)
   propLampTick(lamp,ll,dt);
+  // the lights of the town's buildings from Building Forge (forgetown.js)
+  if(typeof bfLightTick==='function')bfLightTick(lamp,ll,dt);
   const head=1-ss(-4,4,h);dnHead.intensity=2.2*head*ll*LI;if(head>0.01)dnHeadPlace();
   dnLightsTick(head);
   // the machines' lamp lenses (LENS, excavator.js) shine with them
