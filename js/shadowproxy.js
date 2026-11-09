@@ -77,7 +77,7 @@ function shadowProxyTick(){sunNearTick();sunFarTick();
 // moved map or a turned sun draws the kept picture again. People (skinned) always draw. The shadows look the same: at
 // most one frame shows a moved thing's shadow both where it was and where it is.
 const shc={on:false,ok:false,in:false,build:false,broken:false,gen:0,f:0,n:0,cn:0,mat:new Float32Array(16),fb:null,rb:null,w:0,h:0,defer:[],cull:false,builds:0,kept:0,drawn:0,st:new WeakMap()};
-const SHC_STILL=180;
+let SHC_STILL=180;
 function shcFbo(w,h){const gl=renderer.getContext();if(shc.fb&&shc.w===w&&shc.h===h)return;
   if(shc.fb){gl.deleteFramebuffer(shc.fb);gl.deleteRenderbuffer(shc.rb)}
   shc.fb=gl.createFramebuffer();shc.rb=gl.createRenderbuffer();gl.bindRenderbuffer(gl.RENDERBUFFER,shc.rb);
