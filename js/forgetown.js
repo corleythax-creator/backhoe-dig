@@ -61,13 +61,29 @@ function bfChairs(c){const inv=new THREE.Matrix4().copy(c.matrixWorld).invert(),
   for(let i=0;i<n;i++){const x=cx-w/2+(i+0.5)*w/n;S.push([x,cz-(d/2+0.45)],[x,cz+(d/2+0.45)])}if(w>=6)S.push([cx-(w/2+0.45),cz],[cx+w/2+0.45,cz]);
   const v=new THREE.Vector3(),C=new THREE.Vector3(cx,0,cz).applyMatrix4(c.matrixWorld);
   return S.map(([x,z])=>{v.set(x,0,z).applyMatrix4(c.matrixWorld);return [v.x,v.z,Math.atan2(C.x-v.x,C.z-v.z)]})}
+// the building's materials as the game's own (Phong, core.js M): the GLB comes with PBR ones, which the game's sun and sky
+// light far darker (no environment light), so a Forge building stood darker than the game's; its textures, colours and
+// glass kept, shine from the roughness, metal from the metalness. Its ceiling lights (Daylight's 'light' pieces) glow
+// as the game's lamps do (K.lit's colour)
+const BF_GLOW=new THREE.MeshBasicMaterial({color:0xffe2a8}),bfMats=new Map();
+function bfPhong(m){if(!m||!m.isMeshStandardMaterial)return m;if(bfMats.has(m))return bfMats.get(m);
+  const r=m.roughness??1,mt=m.metalness||0,P=new THREE.MeshPhongMaterial({color:m.color.clone(),map:m.map,normalMap:m.normalMap,emissive:m.emissive.clone(),emissiveMap:m.emissiveMap,
+    transparent:m.transparent,opacity:m.opacity,alphaTest:m.alphaTest,side:m.side,depthWrite:m.depthWrite,vertexColors:m.vertexColors,
+    shininess:4+Math.pow(1-r,2)*90,specular:mt>0.3?m.color.clone().multiplyScalar(0.5*mt):new THREE.Color(0x111111).lerp(new THREE.Color(0x555555),Math.max(0,0.6-r))});
+  if(m.normalMap)P.normalScale.copy(m.normalScale);P.name=m.name;bfMats.set(m,P);return P}
 function bfPack(root,merge){const col=root.getObjectByName('Collision');if(col)col.removeFromParent();root.updateMatrixWorld(true);
+  root.traverse(o=>{if(!o.isMesh)return;let lit=false;for(let q=o;q&&q!==root;q=q.parent)if(q.userData&&q.userData.kind==='light')lit=true;
+    o.material=lit?BF_GLOW:Array.isArray(o.material)?o.material.map(bfPhong):bfPhong(o.material)});
   const plain=g=>{const h=new THREE.BufferGeometry();for(const [n,at] of Object.entries(g.attributes)){const f=new Float32Array(at.count*at.itemSize);
       for(let i=0;i<at.count;i++)for(let k=0;k<at.itemSize;k++)f[i*at.itemSize+k]=at.getComponent(i,k);h.setAttribute(n,new THREE.BufferAttribute(f,at.itemSize))}
     if(g.index)h.setIndex(new THREE.BufferAttribute(Uint32Array.from(g.index.array),1));return h};
   const group=(list,inv)=>{const G=new Map();for(const o of list){const g=o.geometry,k=o.material.uuid+Object.keys(g.attributes).sort().join(',')+(g.index?'+i':'');
       if(!G.has(k))G.set(k,{mat:o.material,list:[]});G.get(k).list.push(plain(g).applyMatrix4(new THREE.Matrix4().multiplyMatrices(inv,o.matrixWorld)))}
-    return [...G.values()].map(x=>({mat:x.mat,geo:x.list.length>1?merge(x.list):x.list[0]})).filter(x=>x.geo)};
+    return [...G.values()].map(x=>({mat:x.mat,geo:x.list.length>1?merge(x.list):x.list[0]})).filter(x=>x.geo).map(x=>Object.assign(x,{inside:inside(x.geo)}))};
+  // what is all inside the walls and under the roof (floors, inside paint, furniture) takes no shadows: the game's own
+  // buildings' rooms stand lit, where the building's own walls and roof would leave a Forge building dark inside
+  const BB=new THREE.Box3().setFromObject(root),inside=g=>{const P=g.attributes.position;if(!P)return false;
+    for(let i=0;i<P.count;i++){const x=P.getX(i),y=P.getY(i),z=P.getZ(i);if(x<BB.min.x+0.12||x>BB.max.x-0.12||z<BB.min.z+0.12||z>BB.max.z-0.12||y>BB.max.y-0.3)return false}return true};
   const I=new THREE.Matrix4(),stat=[],furn=[],leaves=[],items=[];let F=null;
   root.traverse(o=>{if(o.name==='Furniture'&&!F)F=o;if(o.userData&&o.userData.type==='doorLeaf')leaves.push(o)});
   root.traverse(o=>{if(!o.isMesh)return;let leaf=false,fu=false;for(let q=o;q&&q!==root;q=q.parent){if(q.userData&&q.userData.type==='doorLeaf')leaf=true;if(q===F)fu=true}if(!leaf)(fu?furn:stat).push(o)});
@@ -129,8 +145,8 @@ function bfBuild(L,K,item){const it=bf.lib[L.id],face=L.turn*Math.PI/180,c=Math.
   let pt=-1e9;for(const {p} of G.pads){const dx=ox-p.x,dz=oz-p.z,u=dx*p.c-dz*p.s,v=dx*p.s+dz*p.c;if(Math.abs(u)<=p.hx&&Math.abs(v)<=p.hz)pt=Math.max(pt,p.t)}
   const y0=Math.max(rmGroundMax(ox,oz,face,it.width,it.length-1.4)+0.03,pt-f0),fy=i=>y0+(it.levels[i]||it.levels[0]).floorY,nl=it.levels.length;
   const g=new THREE.Group();g.position.set(ox,y0,oz);g.rotation.y=face;const furn=new THREE.Group();g.add(furn);
-  for(const x of K.stat){const m=new THREE.Mesh(x.geo,x.mat);m.castShadow=m.receiveShadow=true;g.add(m)}
-  for(const x of K.furn){const m=new THREE.Mesh(x.geo,x.mat);m.castShadow=m.receiveShadow=true;furn.add(m)}
+  for(const x of K.stat){const m=new THREE.Mesh(x.geo,x.mat);m.castShadow=true;m.receiveShadow=!x.inside;g.add(m)}
+  for(const x of K.furn){const m=new THREE.Mesh(x.geo,x.mat);m.castShadow=true;m.receiveShadow=!x.inside;furn.add(m)}
   const leaves=new Map();for(const l of K.leaves){const o=new THREE.Object3D();o.position.copy(l.p);o.quaternion.copy(l.q);o.scale.copy(l.s);
     for(const x of l.parts){const m=new THREE.Mesh(x.geo,x.mat);m.castShadow=m.receiveShadow=true;o.add(m)}g.add(o);
     if(!leaves.has(l.door))leaves.set(l.door,[]);leaves.get(l.door).push({o,q:l.q.clone(),swing:l.swing})}
