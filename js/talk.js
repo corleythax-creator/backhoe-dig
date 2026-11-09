@@ -25,7 +25,7 @@
 // near you have it choose (Human Forge's minds.plan, its town_* keys, at most one ask every TU.talkPlanGap), and two
 // chatting may suggest one and go off on it together (joint, agreed). They walk there the shortest way (tfGoalPick).
 // Lines show over their heads; Aloud reads them in the most natural voice the browser has, each townsperson keeping their own,
-// heard only within TU.talkHearR of the camera and fainter with distance (talkVoice).
+// heard only within TU.talkHearR of the camera and fainter with distance, muffled through walls and cabs (talkVoice).
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 const TALK={mode:'text',lib:null,M:null,near:null,with:null,bub:new Map(),far:new Map(),bump:new Map(),v:new THREE.Vector3(),t:0,ui:null,
   here:[],at:new Map(),ride:null,v0:0,group:[],grp:false,log:[],news:null,planT:-1e9,planning:false,errT:0};
@@ -182,12 +182,55 @@ function talkShow(p,a,to,ev){const u=talkUI();let b=TALK.bub.get(p);if(!b){b={el
   else if(to==='you'||ev&&ev.by==='player')talkFace(p,s);
   if(TALK.mode==='voice')talkVoice(p,a.say)}
 // Aloud: heard only near the camera (where every game sound is heard from), as loud as the distance makes it, like a
-// voice in the open (full at arm's length, a quarter at 33 ft, gone at TU.talkHearR), under the sound settings' master;
-// the browser's voice has no position, so loudness is all it gets. A line still going when you get out of earshot stops.
+// voice in the open (full at arm's length, a quarter at 33 ft, gone at TU.talkHearR), under the sound settings' master.
+// Walls between (talkThru): someone in a room you are not in (or you in a closed cab, as the engine sound goes by) is
+// heard through what the room is clad in (TALK_WALL) and through its doors as far as each stands open (the shop's,
+// the house's and the Building Forge doors in RM_DOORS, a doorway always open: the room's ajar), best straight out of
+// one. The browser's voice can't be filtered, so a line that mostly comes through the walls is the dull murmur of it
+// (talkMurmur: their voice's pitch through vowel formants, low-passed by the wall); through an open door the words.
+// A line still going when you get out of earshot stops.
 function talkEar(p){return Math.hypot(p.x-camera.position.x,(p.y||0)+1.6-camera.position.y,p.z-camera.position.z)}
+// how much of a voice gets through a wall (amplitude) and the highest it lets by (Hz): a pane of glass, a timber
+// frame wall in siding, stucco on block, brick, a steel shed, a machine's cab
+const TALK_WALL={glass:[0.2,1100],siding:[0.12,550],wood:[0.12,550],stucco:[0.09,450],brick:[0.05,320],stone:[0.04,300],steel:[0.1,650],cab:[0.22,800]};
+// the closed cab you hear from (the cab view in the dump truck, excavator, skid steer or a heavy machine with a cab)
+function talkCab(){if(camMode!=='cab'||mode==='walk')return false;if(['truck','dig','drive','skid'].includes(mode))return true;
+  const R=mode==='heavy'&&WK_RIDES[wk.inside],h=R&&R.o;return !!(h&&h.K&&!h.K.rider)}
+// one enclosure between them: r a room (or 'cab'), x, z where the other one is; {t: amplitude through, c: how much of it
+// came by an open way (0 walls only, 1 a doorway), cut}
+function talkEncl(r,x,z){if(r==='cab'){const W=TALK_WALL.cab;return {t:W[0],c:0,cut:W[1]}}
+  const W=TALK_WALL[r.clad]||TALK_WALL.siding;let leak=(r.ajar||0)*0.5;
+  for(const d of RM_DOORS){if(!(d.a>0.02))continue;const h=d.w/2,mx=d.x+Math.cos(d.f)*h,mz=d.z-Math.sin(d.f)*h,dx=mx-r.x,dz=mz-r.z;
+    if(Math.abs(dx*r.cf-dz*r.sf)>r.hw+0.8||Math.abs(dx*r.sf+dz*r.cf)>r.hd+0.8||Math.abs(d.y-r.y)>1.2)continue;
+    // straight out of the doorway best, round the side of it less
+    const lx=x-mx,lz=z-mz,l=Math.hypot(lx,lz)||1,aim=0.3+0.7*Math.abs((lx*Math.sin(d.f)+lz*Math.cos(d.f))/l);leak=Math.max(leak,d.a*0.75*aim)}
+  const t=Math.hypot(W[0],leak),c=leak*leak/(t*t);return {t,c,cut:W[1]+(4500-W[1])*c}}
+// everything between the one speaking and the camera: {t, c, cut}; nothing between: t 1
+function talkThru(p){const C=camera.position,ra=rmRoomAt(p.x,p.z,p.y||0),rb=rmRoomAt(C.x,C.z,C.y),out={t:1,c:1,cut:20000};
+  const add=e=>{out.t*=e.t;out.c=Math.min(out.c,e.c);out.cut=Math.min(out.cut,e.cut)};
+  if(ra!==rb){if(ra)add(talkEncl(ra,C.x,C.z));if(rb)add(talkEncl(rb,p.x,p.z))}
+  if(talkCab())add(talkEncl('cab'));return out}
 function talkVoice(p,text){if(!sndCfg.on||!p||typeof p!=='object')return;const d=talkEar(p),R=TU.talkHearR;if(d>R)return;
-  const v=1/(1+(d/6)*(d/6))*Math.min(1,(R-d)/(R*0.3))*sndCfg.master/100;if(v<0.02)return;
-  const c=talkCard(p)||talkKid(p);TALK.M.speak(text,c,v);TALK.spk=p}
+  const T=talkThru(p),v=1/(1+(d/6)*(d/6))*Math.min(1,(R-d)/(R*0.3))*T.t*(T.t<1?TU.talkWallK:1);if(v*sndCfg.master/100<0.006)return;
+  const c=talkCard(p)||talkKid(p);
+  if(T.c<0.55){talkMurmur(p,text,c,v,T.cut);return}
+  if(v*sndCfg.master/100<0.02)return;TALK.M.speak(text,c,v*sndCfg.master/100);TALK.spk=p}
+// a line heard through a wall: their voice (a man's, a woman's, a child's pitch) as syllables of vowel formants, as
+// long as the line, low-passed at cut and placed where they are (late with distance, to one side)
+function talkMurmur(p,text,c,v,cut){if(!snd||!snd.ready||!actx)return;const a=actx,t0=a.currentTime+0.05,y=(p.y||0)+1.6;
+  const kid=c&&+c.age<14,man=!kid&&(c&&c.sex==='man'||c&&c.sex==='m'),f0=kid?260:man?118:205,dx=p.x-camera.position.x,dz=p.z-camera.position.z,d=Math.hypot(dx,dz)||1;
+  const g=sndGain(0,snd.dry),lp=sndFilter('lowpass',cut,0.7,g),env=sndGain(0),f1=sndFilter('bandpass',600,5,env),f2=sndFilter('bandpass',1500,7,env),o=a.createOscillator(),lf=a.createOscillator(),lg=sndGain(5);
+  if(a.createStereoPanner){sndR.setFromMatrixColumn(camera.matrixWorld,0);const pn=a.createStereoPanner();pn.pan.value=clamp((dx*sndR.x+dz*sndR.z)/d*0.7,-0.7,0.7);env.connect(pn);pn.connect(lp)}else env.connect(lp);
+  o.type='sawtooth';o.frequency.value=f0;lf.frequency.value=5;lf.connect(lg);lg.connect(o.frequency);o.connect(f1);o.connect(f2);
+  g.gain.value=v*2.2*(TU.talkMurmur??1);
+  // a syllable every 0.12-0.24 s, a little rest between words, the pitch wandering and falling at the end
+  const W=String(text).split(/\s+/).filter(Boolean);let t=t0+d/343;
+  for(let i=0;i<W.length;i++){const n=Math.max(1,Math.round(W[i].replace(/[^a-z]/gi,'').length/3));
+    for(let k=0;k<n;k++){const w=STL_VOW[(Math.random()*STL_VOW.length)|0],sc=kid?1.25:man?1:1.15,L=0.12+Math.random()*0.12;
+      f1.frequency.setValueAtTime(w[0]*sc,t);f2.frequency.setValueAtTime(w[1]*sc,t);o.frequency.setTargetAtTime(f0*(0.9+Math.random()*0.22)*(i===W.length-1?0.92:1),t,0.05);
+      env.gain.setTargetAtTime(0.5+Math.random()*0.5,t,0.02);env.gain.setTargetAtTime(0.08,t+L*0.75,0.02);t+=L}
+    env.gain.setTargetAtTime(0,t,0.02);t+=/[,.!?]$/.test(W[i])?0.3:0.06}
+  o.start(t0);lf.start(t0);o.stop(t+0.3);lf.stop(t+0.3);o.onended=()=>{for(const x of [g,lp,env,f1,f2,lg])x.disconnect()}}
 
 // ---- what they decided to do about something they noticed (the runtime's act: flee, back, freeze, warn, watch,
 // investigate, help or call): run from it, step back, stop and face it, or walk over to it along their walk
