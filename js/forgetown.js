@@ -28,6 +28,26 @@ RM_DOOR_KIND.bf=K=>{};RM_DK.bf=RM_DK.bf||[];
 function bfImport(){if(bf.mods)return bf.mods;
   return bf.mods=Promise.all([import('three/addons/loaders/GLTFLoader.js'),import('three/addons/libs/meshopt_decoder.module.js'),import('three/addons/utils/BufferGeometryUtils.js')])
     .then(([G,M,U])=>({loader:new G.GLTFLoader().setMeshoptDecoder(M.MeshoptDecoder),merge:U.mergeGeometries}))}
+// where people stand or sit at a piece of furniture, by its kind (Daylight's Commercial pieces: a counter's staff
+// behind it, at its back, its customers before it): [x, z (the piece's own feet, its front +z), the way they face (0: to
+// its front), 's' sit / 'f' staff / ''], for a piece w by d feet
+const BF_KSPOT={
+  checkout:(w,d)=>[[0,-d/2-1.4,0,'f'],[0,d/2+1.4,Math.PI,'']],
+  svcounter:(w,d)=>(w>=9?[-w/4,w/4]:[0]).flatMap(x=>[[x,-d/2-1.4,0,'f'],[x,d/2+1.4,Math.PI,'']]),
+  reception:(w,d)=>[[0,-d/2-1.3,0,'f'],[0,d/2+1.4,Math.PI,'']],
+  bar:(w,d)=>[...(w>=9?[-w/4,w/4]:[0]).map(x=>[x,-d/2-1.3,0,'f']),...Array.from({length:Math.max(1,Math.floor((w-1)/2.6))},(_,i)=>[-w/2+1.5+i*2.6,d/2+1.4,Math.PI,''])],
+  dispcase:(w,d)=>[[0,d/2+1.4,Math.PI,'']],shelving:(w,d)=>[[0,d/2+1.4,Math.PI,'']],cooler:(w,d)=>[[0,d/2+1.4,Math.PI,'']],rack:(w,d)=>[[0,d/2+1.4,Math.PI,''],[0,-d/2-1.4,0,'']],
+  gondola:(w,d)=>[[-w/4,d/2+1.3,Math.PI,''],[w/4,-d/2-1.3,0,'']],
+  booth:(w,d)=>[-w/4,w/4].flatMap(x=>[[x,-(d/2-0.85),0,'s'],[x,d/2-0.85,Math.PI,'s']]),
+  cafetable:(w,d)=>[[0,-1.75,0,'s'],[0,1.75,Math.PI,'s']],
+  salonst:(w,d)=>[[0,d/2-1.5,Math.PI,'s'],[0,d/2+0.8,Math.PI,'f']],
+  wchairs:(w,d)=>{const n=Math.max(1,Math.round(w/2));return Array.from({length:n},(_,i)=>[-w/2+(i+.5)*w/n,0.1,0,'s'])},
+  pew:(w,d)=>Array.from({length:Math.max(1,Math.floor(w/2.2))},(_,i)=>[-w/2+1.1+i*2.2,0.15,0,'s'])};
+// a piece's spots in the building's space: [x, z, the way they face, flags]
+function bfKSpots(c,kind){const f=BF_KSPOT[kind];if(!f)return null;const inv=new THREE.Matrix4().copy(c.matrixWorld).invert(),m=new THREE.Matrix4(),b=new THREE.Box3();
+  c.traverse(o=>{if(o.isMesh){o.geometry.computeBoundingBox();b.union(o.geometry.boundingBox.clone().applyMatrix4(m.multiplyMatrices(inv,o.matrixWorld)))}});if(b.isEmpty())return null;
+  const v=new THREE.Vector3(),u=new THREE.Vector3();
+  return f(b.max.x-b.min.x,b.max.z-b.min.z).map(([x,z,yl,fl])=>{v.set(x,0,z).applyMatrix4(c.matrixWorld);u.set(Math.sin(yl),0,Math.cos(yl)).transformDirection(c.matrixWorld);return [v.x,v.z,Math.atan2(u.x,u.z),fl]})}
 // a building kind, loaded and packed once: meshes merged by material (furniture apart), each door leaf's parts merged
 // in its own frame, the furniture's pieces, all in the building's space
 function bfKind(id){if(bf.kinds[id])return bf.kinds[id];
@@ -54,7 +74,7 @@ function bfPack(root,merge){const col=root.getObjectByName('Collision');if(col)c
   // each piece of furniture: its kind, floor, box ([x, z, half x, half z, bottom, top], building space) and a dining
   // table's chairs
   if(F)for(const c of F.children){const u=c.userData||{},b=new THREE.Box3().setFromObject(c);if(b.isEmpty())continue;
-    items.push({kind:u.kind||'',lvl:u.level||0,box:[(b.min.x+b.max.x)/2,(b.min.z+b.max.z)/2,(b.max.x-b.min.x)/2,(b.max.z-b.min.z)/2,b.min.y,b.max.y],chairs:u.kind==='dining'?bfChairs(c):null})}
+    items.push({kind:u.kind||'',lvl:u.level||0,box:[(b.min.x+b.max.x)/2,(b.min.z+b.max.z)/2,(b.max.x-b.min.x)/2,(b.max.z-b.min.z)/2,b.min.y,b.max.y],chairs:u.kind==='dining'?bfChairs(c):null,spots:bfKSpots(c,u.kind)})}
   return {stat:group(stat,I),furn:group(furn,I),items,
     leaves:leaves.map(L=>{const m=L.matrixWorld.clone(),p=new THREE.Vector3(),q=new THREE.Quaternion(),s=new THREE.Vector3();m.decompose(p,q,s);
       const li=m.clone().invert(),parts=[];L.traverse(o=>{if(o.isMesh)parts.push(o)});return {p,q,s,door:L.userData.door,swing:L.userData.swing||1,parts:group(parts,li)}})}}
@@ -78,8 +98,19 @@ function bfClear(it,K,lvl,x,z,skip){
 // game's room had (nStaff of them staff): staff at the counters and desks (on their open side farthest from the door),
 // people on the dining chairs and before the shelves, machines and kitchen (nearest the door first), then anywhere clear
 function bfSpots(it,K,door,nStaff,nAll){const out=[],used=new Set(),dd=(x,z)=>Math.hypot(x-door[0],z-door[1]),G=K.items.filter(P=>!P.lvl);
+  // the pieces that say where people go (Daylight's Commercial ones: counters, the bar, booths, salon stations...):
+  // staff first (nearest the front door first), then seats, then places to stand, each clear of the walls and furniture
+  // (a seat in its own piece)
+  const inRm=(x,z)=>it.rooms.some(r=>!r.level&&bfIn(r,x,z,0.2)),KS=[];
+  for(const P of G)if(P.spots)for(const q of P.spots)if(inRm(q[0],q[1])&&(q[3]==='s'||bfClear(it,K,0,q[0],q[1],P)))KS.push(q);
+  const near=(a,b)=>dd(a[0],a[1])-dd(b[0],b[1]),fs=KS.filter(q=>q[3]==='f').sort(near);
+  let staff=0;for(const q of fs){if(staff>=nStaff)break;out.push({p:q.slice(0,3),staff:1});staff++}
+  for(const q of KS.filter(q=>q[3]==='s').concat(KS.filter(q=>!q[3]).sort(near))){if(out.length>=nAll)break;out.push(q[3]==='s'?{p:q.slice(0,3),sit:1}:{p:q.slice(0,3)})}
+  if(staff>=nStaff&&out.length>=nAll)return out;
+  if(staff)for(const P of G)if(P.spots)used.add(P);
   const sides=P=>{const [cx,cz,hx,hz]=P.box,g=0.45;return [[cx,cz+hz+g,Math.PI],[cx,cz-hz-g,0],[cx+hx+g,cz,-Math.PI/2],[cx-hx-g,cz,Math.PI/2]].filter(([x,z])=>bfClear(it,K,0,x,z,P))};
-  let staff=0;for(const P of G.filter(P=>BF_STAFF.has(P.kind)).sort((a,b)=>dd(a.box[0],a.box[1])-dd(b.box[0],b.box[1]))){if(staff>=nStaff)break;
+  // then (a building with no such pieces, or not enough) the counters and desks, chairs and the rest
+  for(const P of G.filter(P=>BF_STAFF.has(P.kind)).sort((a,b)=>dd(a.box[0],a.box[1])-dd(b.box[0],b.box[1]))){if(staff>=nStaff)break;
     const S=sides(P).sort((a,b)=>dd(b[0],b[1])-dd(a[0],a[1]));if(!S.length)continue;out.push({p:S[0],staff:1});staff++;used.add(P);
     if(S.length>1)out.push({p:S[S.length-1]})}
   for(const P of G)if(P.chairs)for(const c of P.chairs)if(it.rooms.some(r=>!r.level&&bfIn(r,c[0],c[1],0)))out.push({p:c,sit:1});
