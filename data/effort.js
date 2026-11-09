@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-09T04:15:00Z",
+ "updated": "2026-11-09T04:20:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -120,9 +120,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-08",
-   "dh": 42,
+   "dh": 43,
    "act": 4.5,
-   "versions": 11
+   "versions": 12
   }
  ],
  "extra": [
@@ -3462,6 +3462,15 @@ window.EFFORT = {
    "tris": 5921110,
    "chars": 2440864,
    "what": "The map editor has Edit in Daylight on a town building: it opens the building in Daylight House Studio at that spot, with the street, sidewalks, lights, trees and buildings around it, to see whether a bigger design fits."
+  },
+  {
+   "v": 371,
+   "asked": "2026-11-08T21:35:00-06:00",
+   "live": "2026-11-08T22:20:07-06:00",
+   "dh": 1,
+   "tris": 5924113,
+   "chars": 2442869,
+   "what": "In town the machines on the islands aren't drawn, and indoors (the pub) far small things are skipped: about 20% fewer draws in town, half in the pub"
   }
  ]
 };
