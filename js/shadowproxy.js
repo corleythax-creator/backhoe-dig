@@ -76,7 +76,7 @@ function shadowProxyTick(){sunNearTick();sunFarTick();
 // picture again once it has been still 3 s; a caster new to the map is drawn as moving until then; one gone from it, a
 // moved map or a turned sun draws the kept picture again. People (skinned) always draw. The shadows look the same: at
 // most one frame shows a moved thing's shadow both where it was and where it is.
-const shc={on:false,ok:false,in:false,build:false,broken:false,gen:0,f:0,n:0,cn:0,mat:new Float32Array(16),fb:null,rb:null,w:0,h:0,defer:[],cull:false,builds:0,kept:0,drawn:0,st:new WeakMap()};
+const shc={on:false,ok:false,in:false,build:false,broken:false,gen:0,f:0,n:0,cn:0,mat:new Float64Array(16),fb:null,rb:null,w:0,h:0,defer:[],cull:false,builds:0,kept:0,drawn:0,st:new WeakMap()};
 let SHC_STILL=180;
 function shcFbo(w,h){const gl=renderer.getContext();if(shc.fb&&shc.w===w&&shc.h===h)return;
   if(shc.fb){gl.deleteFramebuffer(shc.fb);gl.deleteRenderbuffer(shc.rb)}
@@ -88,7 +88,7 @@ function shcFbo(w,h){const gl=renderer.getContext();if(shc.fb&&shc.w===w&&shc.h=
   shc.w=w;shc.h=h;shc.ok=false;if(!ok)shc.broken=true}
 // depth from the map into the kept buffer (keep) or back (!keep); the map stays bound as three.js expects
 function shcCopy(keep){const gl=renderer.getContext(),m=sun.shadow.map,f=renderer.properties.get(m).__webglFramebuffer;
-  renderer.state.buffers.depth.setMask(true);
+  renderer.state.buffers.depth.setMask(true);for(let i=0;i<8&&gl.getError()!==gl.NO_ERROR;i++);
   gl.bindFramebuffer(gl.READ_FRAMEBUFFER,keep?f:shc.fb);gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER,keep?shc.fb:f);
   gl.blitFramebuffer(0,0,shc.w,shc.h,0,0,shc.w,shc.h,gl.DEPTH_BUFFER_BIT,gl.NEAREST);gl.bindFramebuffer(gl.FRAMEBUFFER,f);
   if(gl.getError()!==gl.NO_ERROR){shc.broken=true;shc.ok=false}}
@@ -98,7 +98,7 @@ function shcSame(s,o,g){const e=o.matrixWorld.elements,m=s.m;let same=true;for(l
     iv=o.isInstancedMesh?o.instanceMatrix.version*1e5+o.count:0,dr=g.drawRange.start*1e7+Math.min(g.drawRange.count,1e7);
   if(same&&(s.v!==v||s.iv!==iv||s.dr!==dr))same=false;
   if(!same){m.set(e);s.v=v;s.iv=iv;s.dr=dr}return same}
-function shcState(o,g){let s=shc.st.get(o);if(!s){s={m:new Float32Array(16),v:-1,iv:-1,dr:-1,dyn:true,still:0,f:-1,pass:-1,always:!!(o.isSkinnedMesh||o.morphTargetInfluences)};shcSame(s,o,g);shc.st.set(o,s)}
+function shcState(o,g){let s=shc.st.get(o);if(!s){s={m:new Float64Array(16),v:-1,iv:-1,dr:-1,dyn:true,still:0,f:-1,pass:-1,always:!!(o.isSkinnedMesh||o.morphTargetInfluences)};shcSame(s,o,g);shc.st.set(o,s)}
   // once a frame: still or moving since last frame; a moving one waits SHC_STILL frames before it is kept again
   if(s.f!==shc.f){s.f=shc.f;const same=shcSame(s,o,g);
     if(s.always)s.dyn=true;
