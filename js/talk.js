@@ -109,13 +109,20 @@ function talkNearest(p){let best=null,bd=TU.talkChatR;for(const q of TALK.here){
 // needs of its own), a little different for each look (their body)
 function talkNow(p){if(!p||typeof p!=='object')return null;const h=typeof townHour==='function'?townHour():12,R=p.room;
   const shop=R&&!R.home&&typeof townShopName==='function'?townShopName(R):'',staff=R&&p.spot&&p.spot.staff&&!R.home;
-  const doing=p.drv?'driving':staff?'working'+(shop?' at '+shop:''):R&&R.home?'at home':R?(shop?'in '+shop:'inside'):p.flee>0?'running':p.sit?'sitting down for a bit':'out for a walk';
+  const G=p.goal&&TALK_ERR[p.goal.k],doing=G?(p.goal.k==='town_stroll'?'out for a stroll':'on my way to '+G.n):p.drv?'driving':staff?'working'+(shop?' at '+shop:''):R&&R.home?'at home':R?(shop?'in '+shop:'inside'):p.flee>0?'running':p.sit?'sitting down for a bit':'out for a walk';
   let s=7;for(const ch of String(p.body||''))s=(s*31+ch.charCodeAt(0))>>>0;const j=(s%100)/500-0.1,cl=v=>Math.max(0,Math.min(1,v+j));
   const meal=Math.max(...[7.5,12.5,18.5].map(a=>Math.max(0,1-Math.abs(h-a)/1.5))),hot=typeof weather==='object'&&weather.r<0.1&&h>11&&h<17;
-  return {doing,hour:h,needs:{hunger:cl(0.25+0.6*meal),thirst:cl(hot?0.5:0.3),energy:cl(h>=22||h<5?0.85:h>=20?0.6:h<7?0.55:0.3),fun:cl(staff?0.55:0.35),company:cl(0.35),clean:cl(0.25)}}}
+  const where=R?(R.home?'at home':shop?'at '+shop:''):p.goal&&TALK_ERR[p.goal.k]&&p.goal.k!=='town_stroll'?'on the way to '+TALK_ERR[p.goal.k].n:'';
+  return {doing,where,hour:h,needs:{hunger:cl(0.25+0.6*meal),thirst:cl(hot?0.5:0.3),energy:cl(h>=22||h<5?0.85:h>=20?0.6:h<7?0.55:0.3),fun:cl(staff?0.55:0.35),company:cl(0.35),clean:cl(0.25)}}}
+// asked in the talk box to do something and agreed (the mind's wishes): the errand that does it, when they are out
+// walking and it is open at this hour; they set off for it (you can follow)
+const TALK_WISH={drink:'town_beer',eat:'town_store',coffee:'town_store',shop:'town_shop',sit:'town_square',walk:'town_stroll'};
+function talkCanGo(p,w){const k=TALK_WISH[w];return !!k&&talkWalker(p)&&!p.goal&&(talkErrOpts(p,null)[k]||0)>0.2}
+function talkGoWish(p,w){if(!talkCanGo(p,w))return false;const k=TALK_WISH[w];p.wait=0;p.goal=null;talkErrand(p,k,null);
+  if(!p.goal)return false;const now=performance.now()/1000;TALK.log.push({t:now,s:`${talkName(p)} went off to ${TALK_ERR[k].n} because you asked`});if(TALK.log.length>8)TALK.log.shift();return true}
 function talkInit(){if(TALK.M||!window.HumanForgeMind)return;
   TALK.M=HumanForgeMind.create({url:TALK_URL,storage:'bhd_talk_on',budget:200,card:p=>p==='player'?null:talkCard(p),people:()=>TALK.here,label:p=>talkName(p),
-    nearest:p=>talkFree(p)?talkNearest(p):null,sights:p=>p==='player'?[]:talkSights(p),scene:(p,to)=>talkScene(p,to),now:p=>p==='player'?null:talkNow(p),
+    nearest:p=>talkFree(p)?talkNearest(p):null,sights:p=>p==='player'?[]:talkSights(p),scene:(p,to)=>talkScene(p,to),now:p=>p==='player'?null:talkNow(p),go:(p,w)=>talkGoWish(p,w),canGo:(p,w)=>talkCanGo(p,w),
     show:(p,a,to,ev)=>talkShow(p,a,to,ev),act:(p,a,ev)=>talkAct(p,a,ev),joint:(p,q)=>talkJoint(p,q),agreed:(by,p,k,yes)=>talkAgreed(by,p,k,yes),changed:()=>talkPaint()});
   TALK.M.chatter=true;
   try{localStorage.setItem('bhd_talk_on','1')}catch(e){}  // the runtime's own switch, on; also marks that talk was on here
@@ -174,6 +181,7 @@ function talkPaint(){const M=TALK.M;if(!M)return;
   const mt=$('#talkMeter');if(mt)mt.textContent=HumanForgeMind.meterText(M)+(M.model!=='local'&&M.status&&!M.status.startsWith('Enter the owner')?' '+M.status:'');
   if(!TALK.ui)return;const s=TALK.ui.d.querySelector('#talkStatus'),p=TALK.with,sp=M.spend;
   s.textContent=p&&M.busy.has(p)?say('tkThinking',{name:talkName(p)}):M.model==='local'?'':M.status||(sp?`${HumanForgeMind.NAME[M.model]} · ${HumanForgeMind.money(sp.spent)} of ${HumanForgeMind.money(sp.cap)} today`:'')}
+{const r=$('#talkModelRow'),l=r&&r.querySelector('[data-tm=local]');if(l&&!r.querySelector('[data-tm=mix]')){const b=document.createElement('button');b.dataset.tm='mix';b.textContent='Built-in + Haiku';b.title='The built-in mind answers what it understands, free; only what it cannot goes to Haiku';l.after(b)}}
 for(const b of document.querySelectorAll('#talkModelRow [data-tm]'))b.onclick=()=>{if(TALK.M){TALK.M.model=b.dataset.tm;if(b.dataset.tm!=='local'&&TALK.M.key)TALK.M.meter();talkPaint()}};
 for(const b of document.querySelectorAll('#talkCapRow [data-tc]'))b.onclick=()=>{if(TALK.M)TALK.M.setCap(+b.dataset.tc)};
 $('#talkKeyBtn').onclick=()=>{if(!TALK.M)return;const v=prompt('The owner key for townsfolk talk (from Human Forge\'s Vercel settings, PERSONA_OWNER_KEY). It stays on this device.',TALK.M.key?'':'');if(v&&v.trim())TALK.M.key=v.trim()};
