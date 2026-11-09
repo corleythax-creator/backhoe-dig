@@ -494,7 +494,7 @@ function gunCopSpawn(){for(let i=0;i<30;i++){const a=Math.random()*6.283,r=40+Ma
     const yw=Math.atan2(wk.x-x,wk.z-z)+Math.PI/2*(Math.random()<0.5?1:-1);gunPoliceCar(x,z,yw);
     for(const sd of [-1,1]){const ox=x+Math.cos(yw)*1.6*sd,oz=z-Math.sin(yw)*1.6*sd;if(gun.cops.filter(p=>!p.dead).length<gunStars()*2)gunCopMake(ox,oz)}return}}
 function gunCopMake(x,z){const p=tfPerson({x,z,cop:1}),id=GUN_COPC[(Math.random()*GUN_COPC.length)|0],ci=tf.chars.findIndex(c=>c.id===id);
-  if(ci>=0){tf.use[p.ci]--;p.ci=ci;p.body=id;tf.use[ci]++}
+  if(ci>=0){tf.use[p.ci]--;p.ci=ci;p.body=id;tf.use[ci]++;tfTwin(p)}
   Object.assign(p,{w:null,path:null,vt:0,spd:0,amp:0,flee:0,cd:0.8+Math.random(),aim:0,los:false,losT:0,hpMax:TU.gunHp*1.4,hp:TU.gunHp*1.4});p.y=surfAt(x,z)+tfLift(x,z);
   if(gunM.pistol.ready){const g=gunM.pistol.clone(true);g.visible=true;g.matrixAutoUpdate=false;scene.add(g);p.gun=g}gun.cops.push(p)}
 // the patrol car: a town sedan in police black with a light bar (red and blue, flashing), parked where it pulled up;
