@@ -40,6 +40,8 @@ GFX.low.turf=0.35;GFX.med.turf=0.65;GFX.high.turf=1;GFX.low.turfR=22;GFX.med.tur
 // street life at night (street.js): the coloured glow of the neon signs on the walk and the van's hazard halos (the
 // shop light on the walk and the signs themselves are on every level)
 GFX.low.stlGlow=false;GFX.med.stlGlow=GFX.high.stlGlow=true;
+// how far from a shop's or house's room its furniture is drawn (m; interiors.js rmPartsTick)
+GFX.low.rmNear=25;GFX.med.rmNear=35;GFX.high.rmNear=45;
 GFX.low.extraLt=false;GFX.med.extraLt=GFX.high.extraLt=true;
 // two real spotlights from the placed lights nearest the camera (props.js); the glow and the pools of light are on every level
 GFX.low.propLt=GFX.med.propLt=false;GFX.high.propLt=true;
