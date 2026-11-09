@@ -70,7 +70,7 @@ const TOWN_REGS=[{id:'ruth',n:'Ruth Halvorsen',look:'f70_cardigan',si:0},{id:'ma
 const townFirst=G=>G.n.split(' ')[0];
 // turn p into regular G: G's own look (the character count moves with it)
 function townMake(p,G){const i=tf.chars.findIndex(c=>c.id===G.look);if(i<0)return false;if(p.reg)p.reg.p=null;
-  tf.use[p.ci]--;p.ci=i;p.body=tf.chars[i].id;tf.use[i]++;p.reg=G;p.sc=1;G.p=p;return true}
+  tf.use[p.ci]--;p.ci=i;p.body=tf.chars[i].id;tf.use[i]++;p.reg=G;p.sc=1;G.p=p;tfTwin(p,1);return true}
 // once a second: each regular at their post (behind their shop's counter while it is open; the walkers on the streets in
 // their hours), swapped in for a staff member or a walker out of sight; one shot dead is gone till the next game day
 function townRegsTick(){const day=fuelDayNo(),h=townHour();
@@ -111,7 +111,7 @@ function townTalk(p){townLook(p);const G=p.reg,C=tf.chars[p.ci]||{},h=townHour()
     if(stats.dDug>0.8)L.push('tkDug','tkDug');if(stats.dMow>500)L.push('tkMow');const k=L[(Math.random()*L.length)|0];
     line=say(k,{yd:sYd(stats.dDug),sqft:Math.round(stats.dMow).toLocaleString()+' sq ft'})}
   // a first talk: they say who they are (a regular does it in their own first line)
-  if(!G&&!known&&name&&!(typeof gun==='object'&&(gun.eq||gun.stars>0))){line=say(K?(K.teen?'tnIntro':'kdIntro'):'tkIntro',{line,name});fmIntro(p.body);intro=true}
+  if(!G&&!known&&name&&!(typeof gun==='object'&&(gun.eq||gun.stars>0))){line=say(K?(K.teen?'tnIntro':'kdIntro'):'tkIntro',{line,name});fmIntro(tfWho(p));intro=true}
   p.talked=1;toast(say('say',{who,line}),'',intro?6400:5600)}
 // ---------- the counter: a shop's menu ----------
 // 10% off at a regular's after five talks; and what the one at the counter thinks of him (repPrice, lives.js)
@@ -127,7 +127,7 @@ $('#tsList').addEventListener('click',e=>{const b=e.target.closest('button'),S=t
   const pr=Math.round(m[1]*(1-townOff(S.R))*100)/100;
   if(m[2]==='b'){toast(say('bankBal',{cash:usd(townCash()),earned:usd(stats.earned),spent:usd(stats.spent||0)}),'',6000);return}
   if(!townPay(pr,m[0]))return;
-  if(pr&&typeof repDeed==='function')repDeed('buy',[S.p.body]);
+  if(pr&&typeof repDeed==='function')repDeed('buy',[tfWho(S.p)]);
   if(m[2]==='p'){town.pep=TU.pepTime||180;toast(say('shopPep',{item:m[0]}),'good',3600)}
   else if(m[2]==='s'){townClose();dn.t+=((420-dnMin(dn.t))%1440+1440)%1440*60000;dnSave();toast(say('shopSleep'),'good',4200);return}
   else if(!pr)toast(say('shopFree',{item:m[0]}),'',2600);
