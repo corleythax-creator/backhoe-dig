@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-09T03:38:00Z",
+ "updated": "2026-11-09T04:20:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -120,9 +120,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-08",
-   "dh": 40,
-   "act": 4,
-   "versions": 9
+   "dh": 43,
+   "act": 4.5,
+   "versions": 12
   }
  ],
  "extra": [
@@ -3444,6 +3444,33 @@ window.EFFORT = {
    "tris": 5921717,
    "chars": 2438906,
    "what": "Townsfolk inside a building or outside your cab sound muffled through its walls by what they are made of, and clear through an open door"
+  },
+  {
+   "v": 369,
+   "asked": "2026-11-08T21:25:00-06:00",
+   "live": "2026-11-08T21:55:01-06:00",
+   "dh": 1.5,
+   "tris": 7630087,
+   "chars": 2440127,
+   "what": "Townsfolk answer what they're doing, the time and whether they're hungry or tired, say yes or no to plans, remember what you tell them about yourself (your work, where you're from, your pets and family) and ask after it later, and have families and opinions of their own; their lines can play in real voices for the owner."
+  },
+  {
+   "v": 370,
+   "asked": "2026-11-08T21:35:00-06:00",
+   "live": "2026-11-08T22:15:39-06:00",
+   "dh": 0.5,
+   "tris": 5921110,
+   "chars": 2440864,
+   "what": "The map editor has Edit in Daylight on a town building: it opens the building in Daylight House Studio at that spot, with the street, sidewalks, lights, trees and buildings around it, to see whether a bigger design fits."
+  },
+  {
+   "v": 371,
+   "asked": "2026-11-08T21:35:00-06:00",
+   "live": "2026-11-08T22:20:07-06:00",
+   "dh": 1,
+   "tris": 5924113,
+   "chars": 2442869,
+   "what": "In town the machines on the islands aren't drawn, and indoors (the pub) far small things are skipped: about 20% fewer draws in town, half in the pub"
   }
  ]
 };

@@ -4,6 +4,9 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Sunday, November 8, 2026
 
+- **v371** (10:20 PM) In town the machines on the islands aren't drawn, and indoors (the pub) far small things are skipped: about 20% fewer draws in town, half in the pub
+- **v370** (10:15 PM) The map editor has Edit in Daylight on a town building: it opens the building in Daylight House Studio at that spot, with the street, sidewalks, lights, trees and buildings around it, to see whether a bigger design fits.
+- **v369** (9:55 PM) Townsfolk answer what they're doing, the time and whether they're hungry or tired, say yes or no to plans, remember what you tell them about yourself (your work, where you're from, your pets and family) and ask after it later, and have families and opinions of their own; their lines can play in real voices for the owner.
 - **v368** (9:38 PM) Townsfolk inside a building or outside your cab sound muffled through its walls by what they are made of, and clear through an open door
 - **v367** (9:12 PM) Tiny far detail: parts too small to see (or lost in the haze) are no longer drawn, nearly halving the draws in town; Graphics slider to tune it
 - **v366** (9:11 PM) The site map shows every shop, the brewery and the General Store as a brass dot, named once you zoom in; tapping one names it
