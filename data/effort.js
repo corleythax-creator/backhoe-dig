@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-09T04:20:00Z",
+ "updated": "2026-11-09T18:42:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -120,9 +120,15 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-08",
-   "dh": 43,
-   "act": 4.5,
-   "versions": 12
+   "dh": 47.5,
+   "act": 5,
+   "versions": 14
+  },
+  {
+   "d": "2026-11-09",
+   "dh": 10,
+   "act": 1.5,
+   "versions": 3
   }
  ],
  "extra": [
@@ -3471,6 +3477,51 @@ window.EFFORT = {
    "tris": 5924113,
    "chars": 2442869,
    "what": "In town the machines on the islands aren't drawn, and indoors (the pub) far small things are skipped: about 20% fewer draws in town, half in the pub"
+  },
+  {
+   "v": 372,
+   "asked": "2026-11-08T21:30:00-06:00",
+   "live": "2026-11-08T22:55:41-06:00",
+   "dh": 1.5,
+   "tris": 5923095,
+   "chars": 2444963,
+   "what": "The town from Building Forge is lit like the game's own buildings (bright rooms, glowing ceiling lights), the brewery's sign stays up, and the Forge brewery now looks like the game's own"
+  },
+  {
+   "v": 373,
+   "asked": "2026-11-08T22:10:00-06:00",
+   "live": "2026-11-08T22:56:52-06:00",
+   "dh": 3,
+   "tris": 7651913,
+   "chars": 2444242,
+   "what": "Ask a townsperson out for a beer or a walk and, if they say yes, they actually go; they understand slang and loose wording (and, on devices that can, a small on-device model reads what you mean), know where the others are and what they think of them, pass on what others told them about you, and follow the thread of a conversation. A new Talk model, Built-in + Haiku, answers free and asks Haiku only when stuck."
+  },
+  {
+   "v": 374,
+   "asked": "2026-11-09T09:20:00-06:00",
+   "live": "2026-11-09T10:13:36-06:00",
+   "dh": 3,
+   "tris": 5921725,
+   "chars": 2452698,
+   "what": "The still world's sun shadow is kept from frame to frame and only moving things are redrawn: about 70% fewer shadow draws in town, same look"
+  },
+  {
+   "v": 375,
+   "asked": "2026-11-09T11:30:00-06:00",
+   "live": "2026-11-09T11:50:11-06:00",
+   "dh": 3,
+   "tris": 5926408,
+   "chars": 2452698,
+   "what": "Townsfolk now chat back and forth for a few turns, disagree, tease and ask each other why, fall out and make up; hold a grudge if you're rude (cold hellos, short answers) until you apologise; and have far more to say, with their mood colouring their words."
+  },
+  {
+   "v": 376,
+   "asked": "2026-11-09T11:45:00-06:00",
+   "live": "2026-11-09T12:42:16-06:00",
+   "dh": 4,
+   "tris": 5928085,
+   "chars": 2455512,
+   "what": "Townsfolk remember what happened between them (arguments, favours, near misses), bring it up, pass it on and say why they like someone; whoever is spoken to stands and listens, and close up they nod along."
   }
  ]
 };

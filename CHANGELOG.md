@@ -2,8 +2,16 @@
 
 Every version of Corley's Island, newest first, grouped by the day it went live (Central time). Made from `data/effort.js` by `tools/changelog.py`; don't edit it by hand. [Play any old version](https://corleys-island.vercel.app/versions/) · [Build log with charts](https://corleys-island.vercel.app/build.html)
 
+## Monday, November 9, 2026
+
+- **v376** (12:42 PM) Townsfolk remember what happened between them (arguments, favours, near misses), bring it up, pass it on and say why they like someone; whoever is spoken to stands and listens, and close up they nod along.
+- **v375** (11:50 AM) Townsfolk now chat back and forth for a few turns, disagree, tease and ask each other why, fall out and make up; hold a grudge if you're rude (cold hellos, short answers) until you apologise; and have far more to say, with their mood colouring their words.
+- **v374** (10:13 AM) The still world's sun shadow is kept from frame to frame and only moving things are redrawn: about 70% fewer shadow draws in town, same look
+
 ## Sunday, November 8, 2026
 
+- **v373** (10:56 PM) Ask a townsperson out for a beer or a walk and, if they say yes, they actually go; they understand slang and loose wording (and, on devices that can, a small on-device model reads what you mean), know where the others are and what they think of them, pass on what others told them about you, and follow the thread of a conversation. A new Talk model, Built-in + Haiku, answers free and asks Haiku only when stuck.
+- **v372** (10:55 PM) The town from Building Forge is lit like the game's own buildings (bright rooms, glowing ceiling lights), the brewery's sign stays up, and the Forge brewery now looks like the game's own
 - **v371** (10:20 PM) In town the machines on the islands aren't drawn, and indoors (the pub) far small things are skipped: about 20% fewer draws in town, half in the pub
 - **v370** (10:15 PM) The map editor has Edit in Daylight on a town building: it opens the building in Daylight House Studio at that spot, with the street, sidewalks, lights, trees and buildings around it, to see whether a bigger design fits.
 - **v369** (9:55 PM) Townsfolk answer what they're doing, the time and whether they're hungry or tired, say yes or no to plans, remember what you tell them about yourself (your work, where you're from, your pets and family) and ask after it later, and have families and opinions of their own; their lines can play in real voices for the owner.

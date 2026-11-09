@@ -109,13 +109,20 @@ function talkNearest(p){let best=null,bd=TU.talkChatR;for(const q of TALK.here){
 // needs of its own), a little different for each look (their body)
 function talkNow(p){if(!p||typeof p!=='object')return null;const h=typeof townHour==='function'?townHour():12,R=p.room;
   const shop=R&&!R.home&&typeof townShopName==='function'?townShopName(R):'',staff=R&&p.spot&&p.spot.staff&&!R.home;
-  const doing=p.drv?'driving':staff?'working'+(shop?' at '+shop:''):R&&R.home?'at home':R?(shop?'in '+shop:'inside'):p.flee>0?'running':p.sit?'sitting down for a bit':'out for a walk';
+  const G=p.goal&&TALK_ERR[p.goal.k],doing=G?(p.goal.k==='town_stroll'?'out for a stroll':'on my way to '+G.n):p.drv?'driving':staff?'working'+(shop?' at '+shop:''):R&&R.home?'at home':R?(shop?'in '+shop:'inside'):p.flee>0?'running':p.sit?'sitting down for a bit':'out for a walk';
   let s=7;for(const ch of String(p.body||''))s=(s*31+ch.charCodeAt(0))>>>0;const j=(s%100)/500-0.1,cl=v=>Math.max(0,Math.min(1,v+j));
   const meal=Math.max(...[7.5,12.5,18.5].map(a=>Math.max(0,1-Math.abs(h-a)/1.5))),hot=typeof weather==='object'&&weather.r<0.1&&h>11&&h<17;
-  return {doing,hour:h,needs:{hunger:cl(0.25+0.6*meal),thirst:cl(hot?0.5:0.3),energy:cl(h>=22||h<5?0.85:h>=20?0.6:h<7?0.55:0.3),fun:cl(staff?0.55:0.35),company:cl(0.35),clean:cl(0.25)}}}
+  const where=R?(R.home?'at home':shop?'at '+shop:''):p.goal&&TALK_ERR[p.goal.k]&&p.goal.k!=='town_stroll'?'on the way to '+TALK_ERR[p.goal.k].n:'';
+  return {doing,where,hour:h,needs:{hunger:cl(0.25+0.6*meal),thirst:cl(hot?0.5:0.3),energy:cl(h>=22||h<5?0.85:h>=20?0.6:h<7?0.55:0.3),fun:cl(staff?0.55:0.35),company:cl(0.35),clean:cl(0.25)}}}
+// asked in the talk box to do something and agreed (the mind's wishes): the errand that does it, when they are out
+// walking and it is open at this hour; they set off for it (you can follow)
+const TALK_WISH={drink:'town_beer',eat:'town_store',coffee:'town_store',shop:'town_shop',sit:'town_square',walk:'town_stroll'};
+function talkCanGo(p,w){const k=TALK_WISH[w];return !!k&&talkWalker(p)&&!p.goal&&(talkErrOpts(p,null)[k]||0)>0.2}
+function talkGoWish(p,w){if(!talkCanGo(p,w))return false;const k=TALK_WISH[w];p.wait=0;p.goal=null;talkErrand(p,k,null);
+  if(!p.goal)return false;const now=performance.now()/1000;TALK.log.push({t:now,s:`${talkName(p)} went off to ${TALK_ERR[k].n} because you asked`});if(TALK.log.length>8)TALK.log.shift();return true}
 function talkInit(){if(TALK.M||!window.HumanForgeMind)return;
   TALK.M=HumanForgeMind.create({url:TALK_URL,storage:'bhd_talk_on',budget:200,card:p=>p==='player'?null:talkCard(p),people:()=>TALK.here,label:p=>talkName(p),
-    nearest:p=>talkFree(p)?talkNearest(p):null,sights:p=>p==='player'?[]:talkSights(p),scene:(p,to)=>talkScene(p,to),now:p=>p==='player'?null:talkNow(p),
+    nearest:p=>talkFree(p)?talkNearest(p):null,sights:p=>p==='player'?[]:talkSights(p),scene:(p,to)=>talkScene(p,to),now:p=>p==='player'?null:talkNow(p),go:(p,w)=>talkGoWish(p,w),canGo:(p,w)=>talkCanGo(p,w),
     show:(p,a,to,ev)=>talkShow(p,a,to,ev),act:(p,a,ev)=>talkAct(p,a,ev),joint:(p,q)=>talkJoint(p,q),agreed:(by,p,k,yes)=>talkAgreed(by,p,k,yes),changed:()=>talkPaint()});
   TALK.M.chatter=true;
   try{localStorage.setItem('bhd_talk_on','1')}catch(e){}  // the runtime's own switch, on; also marks that talk was on here
@@ -174,16 +181,36 @@ function talkPaint(){const M=TALK.M;if(!M)return;
   const mt=$('#talkMeter');if(mt)mt.textContent=HumanForgeMind.meterText(M)+(M.model!=='local'&&M.status&&!M.status.startsWith('Enter the owner')?' '+M.status:'');
   if(!TALK.ui)return;const s=TALK.ui.d.querySelector('#talkStatus'),p=TALK.with,sp=M.spend;
   s.textContent=p&&M.busy.has(p)?say('tkThinking',{name:talkName(p)}):M.model==='local'?'':M.status||(sp?`${HumanForgeMind.NAME[M.model]} · ${HumanForgeMind.money(sp.spent)} of ${HumanForgeMind.money(sp.cap)} today`:'')}
+{const r=$('#talkModelRow'),l=r&&r.querySelector('[data-tm=local]');if(l&&!r.querySelector('[data-tm=mix]')){const b=document.createElement('button');b.dataset.tm='mix';b.textContent='Built-in + Haiku';b.title='The built-in mind answers what it understands, free; only what it cannot goes to Haiku';l.after(b)}}
 for(const b of document.querySelectorAll('#talkModelRow [data-tm]'))b.onclick=()=>{if(TALK.M){TALK.M.model=b.dataset.tm;if(b.dataset.tm!=='local'&&TALK.M.key)TALK.M.meter();talkPaint()}};
 for(const b of document.querySelectorAll('#talkCapRow [data-tc]'))b.onclick=()=>{if(TALK.M)TALK.M.setCap(+b.dataset.tc)};
 $('#talkKeyBtn').onclick=()=>{if(!TALK.M)return;const v=prompt('The owner key for townsfolk talk (from Human Forge\'s Vercel settings, PERSONA_OWNER_KEY). It stays on this device.',TALK.M.key?'':'');if(v&&v.trim())TALK.M.key=v.trim()};
 // stop and turn toward a spot a while (the player, unless given): walkers only, someone in a shop or a car stays put
+// body language on a close-up townsperson (Ultra graphics, townfolk.js tfUhPose, after its clip has set the bones):
+// the one talking moves their head with the words; the one told nods now and then and tilts their head a little. Turns
+// about the body's own axes, on top of the clip; put back first if the clip left the bone alone
+const _tbQ=[new THREE.Quaternion(),new THREE.Quaternion(),new THREE.Quaternion(),new THREE.Quaternion()],_tbX=[new THREE.Vector3(1,0,0),new THREE.Vector3(0,1,0),new THREE.Vector3(0,0,1)];
+function talkBend(p,h){const g=h.object,B=h._tb||(h._tb={neck:g.getObjectByName('neck_01'),head:g.getObjectByName('head'),done:[]});
+  for(const d of B.done)if(d[0].quaternion.equals(d[1]))d[0].quaternion.copy(d[2]);B.done.length=0;
+  if(!B.head||!B.neck)return;const t=performance.now()/1000,say=p.tkSay>t,hear=!say&&p.tkHear>t&&p.tkBy&&!p.tkBy.dead,S=p.tkB||(p.tkB={sw:0,lw:0,ph:Math.random()*9,nodAt:0,nod:null,tilt:(Math.random()<0.5?-1:1)*(0.04+Math.random()*0.05),t:t});
+  const dt=Math.min(0.1,t-S.t);S.t=t;S.sw+=((say?1:0)-S.sw)*Math.min(1,dt*4);S.lw+=((hear?1:0)-S.lw)*Math.min(1,dt*3);if(S.sw<0.01&&S.lw<0.01){S.nod=null;return}
+  let pt=S.sw*(0.05*Math.abs(Math.sin(t*5.3+S.ph))+0.03*Math.sin(t*2.3+S.ph)),yw=S.sw*0.07*Math.sin(t*0.7+S.ph),rl=S.sw*0.025*Math.sin(t*1.1+S.ph);
+  if(S.lw>0.01){if(!S.nod&&t>S.nodAt)S.nod={t0:t,n:Math.random()<0.3?2:1,a:0.08+Math.random()*0.07};
+    if(S.nod){const u=(t-S.nod.t0)/0.5;if(u>=S.nod.n){S.nod=null;S.nodAt=t+1.3+Math.random()*2.6}else pt+=S.lw*S.nod.a*(u>=1?0.6:1)*Math.sin(Math.PI*(u%1))}
+    rl+=S.lw*S.tilt;pt+=S.lw*0.03}
+  g.updateMatrixWorld(true);const oq=g.getWorldQuaternion(_tbQ[0]);
+  const turn=(bo,ax,an)=>{if(!an)return;if(!B.done.some(d=>d[0]===bo))B.done.push([bo,null,bo.quaternion.clone()]);const rw=_tbQ[1].setFromAxisAngle(ax,an).premultiply(oq).multiply(_tbQ[2].copy(oq).invert());
+    const wq=bo.getWorldQuaternion(_tbQ[2]),pq=bo.parent.getWorldQuaternion(_tbQ[3]).invert();bo.quaternion.copy(pq.multiply(rw.multiply(wq)));bo.updateMatrixWorld(true)};
+  turn(B.neck,_tbX[0],pt*0.4);turn(B.neck,_tbX[1],yw*0.4);turn(B.head,_tbX[0],pt*0.6);turn(B.head,_tbX[1],yw*0.6);turn(B.head,_tbX[2],rl);
+  for(const d of B.done)d[1]=d[0].quaternion.clone()}
 function talkFace(p,s,x=wk.x,z=wk.z){if(!p||typeof p!=='object'||p.room||p.drv||p.cop||p.dead||p.flee>0)return;p.wait=Math.max(p.wait||0,s);p.look=Math.atan2(x-p.x,z-p.z)}
 function talkShow(p,a,to,ev){const u=talkUI();let b=TALK.bub.get(p);if(!b){b={el:document.createElement('div')};b.el.className='talkLine';u.L.appendChild(b.el);TALK.bub.set(p,b)}
   b.el.innerHTML='';const n=document.createElement('b');n.textContent=talkName(p);b.el.append(n,document.createTextNode(a.say));
   b.until=performance.now()/1000+3.5+a.say.split(/\s+/).length*0.38;const s=b.until-performance.now()/1000;
   // who they turn to: the one they talk to (and that one back), what happened to them, or you
   if(to&&typeof to==='object'&&talkCard(to)&&Math.random()<0.3)repGossip(p,to);
+  // talking and listening (tfFgClip, talkBend): the one talking gestures (the talk clip), the one told stands and listens
+  {const t=performance.now()/1000,L=to&&typeof to==='object'?to:ev&&ev.by&&typeof ev.by==='object'?ev.by:null;p.tkSay=t+Math.min(s-1,0.9+a.say.length*0.065);if(L&&L!==p){L.tkHear=t+s;L.tkBy=p}}
   if(p.tkGo&&to!=='you'){}
   else if(to&&typeof to==='object'){talkFace(p,s,to.x,to.z);talkFace(to,s,p.x,p.z);if(!p.spd)p.tk=1}
   else if(ev&&ev.kind==='thing'){const w=TALK.at.get(p);if(w)talkFace(p,Math.min(s,3),w[0],w[1])}

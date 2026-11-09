@@ -67,3 +67,61 @@ function shadowProxyTick(){sunNearTick();sunFarTick();
 // the shadow-only meshes take part in the shadow pass and nothing else
 {const draw=renderer.shadowMap.render;const all=()=>shpGroups.map(G=>G.proxy).filter(Boolean).concat(shpTrees.map(T=>T.near),shpTrees.map(T=>T.far));
   renderer.shadowMap.render=function(){const P=all();for(const p of P)p.visible=true;try{draw.apply(this,arguments)}finally{for(const p of P)p.visible=false}}}
+// ---------- the still world's shadow, kept (shc) ----------
+// The sun's near map drew every caster every frame: in town about 540 draws, most of them buildings, lamps, benches and
+// trees that never move. While the map holds still (sunNearTick, core.js: TU.shHold), its depth with only the still
+// casters in it is kept in a depth buffer of its own; each frame that is copied back in place of clearing the map and
+// only what moves is drawn over it. What moves is found, not listed: a caster whose place, shape (its vertices, say the
+// dug ground), instance list or count changes since it was kept is drawn every frame from then on, and joins the kept
+// picture again once it has been still 3 s; a caster new to the map is drawn as moving until then; one gone from it, a
+// moved map or a turned sun draws the kept picture again. People (skinned) always draw. The shadows look the same: at
+// most one frame shows a moved thing's shadow both where it was and where it is.
+const shc={on:false,ok:false,in:false,build:false,broken:false,gen:0,f:0,n:0,cn:0,mat:new Float64Array(16),fb:null,rb:null,w:0,h:0,defer:[],cull:false,builds:0,kept:0,drawn:0,st:new WeakMap()};
+let SHC_STILL=180;
+function shcFbo(w,h){const gl=renderer.getContext();if(shc.fb&&shc.w===w&&shc.h===h)return;
+  if(shc.fb){gl.deleteFramebuffer(shc.fb);gl.deleteRenderbuffer(shc.rb)}
+  shc.fb=gl.createFramebuffer();shc.rb=gl.createRenderbuffer();gl.bindRenderbuffer(gl.RENDERBUFFER,shc.rb);
+  gl.renderbufferStorage(gl.RENDERBUFFER,gl.DEPTH_COMPONENT24,w,h);gl.bindRenderbuffer(gl.RENDERBUFFER,null);
+  gl.bindFramebuffer(gl.FRAMEBUFFER,shc.fb);gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_ATTACHMENT,gl.RENDERBUFFER,shc.rb);
+  const ok=gl.checkFramebufferStatus(gl.FRAMEBUFFER)===gl.FRAMEBUFFER_COMPLETE;
+  gl.bindFramebuffer(gl.FRAMEBUFFER,renderer.properties.get(sun.shadow.map).__webglFramebuffer||null);
+  shc.w=w;shc.h=h;shc.ok=false;if(!ok)shc.broken=true}
+// depth from the map into the kept buffer (keep) or back (!keep); the map stays bound as three.js expects
+function shcCopy(keep){const gl=renderer.getContext(),m=sun.shadow.map,f=renderer.properties.get(m).__webglFramebuffer;
+  renderer.state.buffers.depth.setMask(true);for(let i=0;i<8&&gl.getError()!==gl.NO_ERROR;i++);
+  gl.bindFramebuffer(gl.READ_FRAMEBUFFER,keep?f:shc.fb);gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER,keep?shc.fb:f);
+  gl.blitFramebuffer(0,0,shc.w,shc.h,0,0,shc.w,shc.h,gl.DEPTH_BUFFER_BIT,gl.NEAREST);gl.bindFramebuffer(gl.FRAMEBUFFER,f);
+  if(gl.getError()!==gl.NO_ERROR){shc.broken=true;shc.ok=false}}
+// a caster as the map last saw it: its world matrix, its vertices' and indices' versions, its instances and draw range
+function shcSame(s,o,g){const e=o.matrixWorld.elements,m=s.m;let same=true;for(let i=0;i<16;i++)if(m[i]!==e[i]){same=false;break}
+  const v=g.id*1e6+(g.attributes.position?g.attributes.position.version:0)*1e3+(g.index?g.index.version:0),
+    iv=o.isInstancedMesh?o.instanceMatrix.version*1e5+o.count:0,dr=g.drawRange.start*1e7+Math.min(g.drawRange.count,1e7);
+  if(same&&(s.v!==v||s.iv!==iv||s.dr!==dr))same=false;
+  if(!same){m.set(e);s.v=v;s.iv=iv;s.dr=dr}return same}
+function shcState(o,g){let s=shc.st.get(o);if(!s){s={m:new Float64Array(16),v:-1,iv:-1,dr:-1,dyn:true,still:0,f:-1,pass:-1,always:!!(o.isSkinnedMesh||o.morphTargetInfluences)};shcSame(s,o,g);shc.st.set(o,s)}
+  // once a frame: still or moving since last frame; a moving one waits SHC_STILL frames before it is kept again
+  if(s.f!==shc.f){s.f=shc.f;const same=shcSame(s,o,g);
+    if(s.always)s.dyn=true;
+    else if(!same){if(!s.dyn&&s.pass===shc.gen)shc.ok=false;s.dyn=true;s.still=0}
+    else if(s.dyn&&++s.still>=SHC_STILL){s.dyn=false;shc.ok=false}}
+  return s}
+function shcBegin(){shc.in=true;shc.f++;shc.n=0;shc.cull=gfxCull.on;gfxCull.on=false;const m=sun.shadow.map;shcFbo(m.width,m.height);
+  const e=sun.shadow.matrix.elements;let same=true;for(let i=0;i<16;i++)if(shc.mat[i]!==e[i]){same=false;break}
+  if(!same)shc.ok=false;
+  shc.build=!shc.ok;if(shc.build){shc.mat.set(e);shc.gen++}}
+function shcEnd(){shc.in=false;gfxCull.on=shc.cull;
+  if(shc.build){shc.build=false;shcCopy(true);shc.ok=!shc.broken;shc.cn=shc.n;shc.builds++;
+    for(const a of shc.defer)shcDraw(a[0],a[1],a[2],a[3],a[4],a[5]);shc.defer.length=0}
+  else if(shc.n!==shc.cn)shc.ok=false}
+let shcDraw=null;
+{const rbd=renderer.renderBufferDirect.bind(renderer),clr=renderer.clear.bind(renderer),srt=renderer.setRenderTarget.bind(renderer);shcDraw=rbd;
+  renderer.setRenderTarget=function(t,f,l){if(shc.in&&t!==sun.shadow.map)shcEnd();return srt(t,f,l)};
+  renderer.clear=function(c,d,s){if(shc.in)shcEnd();
+    shc.on=(TU.shHold||0)>0&&!shc.broken&&!renderer.xr.isPresenting&&sun.castShadow&&!!sun.shadow.map;
+    if(shc.on&&renderer.getRenderTarget()===sun.shadow.map){shcBegin();if(!shc.build){shcCopy(false);if(!shc.broken)return}}
+    return clr(c,d,s)};
+  renderer.renderBufferDirect=function(cam,sc,g,mt,o,gr){if(!shc.in)return rbd(cam,sc,g,mt,o,gr);
+    const s=shcState(o,g);
+    if(s.dyn||(!shc.build&&s.pass!==shc.gen)){shc.drawn++;if(shc.build){shc.defer.push([cam,sc,g,mt,o,gr]);return}return rbd(cam,sc,g,mt,o,gr)}
+    shc.n++;if(shc.build){s.pass=shc.gen;shc.drawn++;return rbd(cam,sc,g,mt,o,gr)}
+    shc.kept++}}

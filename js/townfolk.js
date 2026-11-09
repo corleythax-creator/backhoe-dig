@@ -179,7 +179,9 @@ function tfForgeCrowd(B,id){B.fg=1;const F=tf.F;
 // seat's middle, its seat 18 in up like the rooms' chairs and benches), driving (its seat 14 in up: lifted to where the
 // old seated pose's seat was, 18 in over p.y), or standing easy or talking (staff and customers)
 function tfFgClip(p,c,dt,hp,die){let k=die?die.k:p.cower>0&&!hp&&c.clips.cower?'cower':p.cop&&p.aim>0&&!hp&&c.clips.point?'point':hp&&(p.dead||p.hurt)?(hp.kneel?'sit':'idle'):p.drv?'drive':p.sit?'sit':p.spd>(p.fk==='walk'?0.15:0.3)?'walk':0;
-  if(!k){if(p.fk!=='idle'&&p.fk!=='talk'||p.t>(p.tp??0)+1)p.tk=Math.random()<(p.room?p.spot.staff?0.5:p.spot.chat?0.85:0.35:0.06);p.tp=p.t;k=p.tk?'talk':'idle'}
+  if(!k){if(p.fk!=='idle'&&p.fk!=='talk'||p.t>(p.tp??0)+1)p.tk=Math.random()<(p.room?p.spot.staff?0.5:p.spot.chat?0.85:0.35:0.06);p.tp=p.t;k=p.tk?'talk':'idle';
+    // saying a line (talk.js talkShow): the talk clip, gesturing; told one: standing still to listen, not gesturing too
+    const n=performance.now()/1000;if(p.tkSay>n)k='talk';else if(p.tkHear>n)k='idle'}
   if(k==='walk'&&p.flee>0&&p.spd>2.2&&c.clips.run)k='run';
   const A=c.clips[k];if(k!==p.fk){p.fk=k;p.ct=k==='walk'||k==='run'?0.1:Math.random()*A.duration}
   if(die)p.ct=Math.min(A.duration-0.02,die.t);else if(k==='cower'||k==='point')p.ct=Math.min(A.duration-0.02,k==='point'?0.5:(p.ct||0)+dt);else if(!(p.dead||p.hurt))p.ct=(p.ct+dt*(k==='walk'?p.spd/(c.stride*p.sc):k==='run'?p.spd/(c.runS*p.sc):1))%A.duration;return k}
@@ -224,7 +226,7 @@ function tfUhOff(){for(const p of tf.people)if(p.uh)tfUhFree(p);for(const p of t
 function tfUhPose(p,c,dt){const h=p.uh,hp=p.dead||p.hurt||p.hit?tfHitPose(p):null,die=tfDieFor(p,c),k=tfFgClip(p,c,dt,hp,die),o=tfFgAt(p,hp,die),g=h.object;
   _tfQ.setFromAxisAngle(_tfUp,o.heading);if(o.tilt||o.roll)_tfQ.multiply(_tfQ2.setFromEuler(_tfE.set(o.tilt,0,o.roll,'XYZ')));
   g.position.set(o.x,o.y,o.z);g.quaternion.copy(_tfQ);g.scale.setScalar(o.scale);
-  const a=h.actions[k];if(!a){tfUhFree(p);return false}if(h.clip!==k)h.play(k,{fade:0});a.time=p.ct;h.mixer.update(0);h.lod('ultra');g.visible=tf.on;return true}
+  const a=h.actions[k];if(!a){tfUhFree(p);return false}if(h.clip!==k)h.play(k,{fade:0});a.time=p.ct;h.mixer.update(0);if(typeof talkBend==='function')talkBend(p,h);h.lod('ultra');g.visible=tf.on;return true}
 // a car model (a node of models/cars.glb, standing on y = 0, nose to +z) on the game's materials; its paint is set per
 // car (tfCarPaint), its own:<name> materials keep the model's textures, and its wheels (wheel_* nodes, their origins at the hubs) turn about x. Each car holds the detailed
 // model and its light one (<kind>_lo), and shows the light one past TF_CAR_HI (tfDraw)
