@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-09T03:12:00Z",
+ "updated": "2026-11-09T03:38:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -120,9 +120,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-08",
-   "dh": 36,
-   "act": 3.5,
-   "versions": 8
+   "dh": 40,
+   "act": 4,
+   "versions": 9
   }
  ],
  "extra": [
@@ -3435,6 +3435,15 @@ window.EFFORT = {
    "tris": 7839348,
    "chars": 2433640,
    "what": "Tiny far detail: parts too small to see (or lost in the haze) are no longer drawn, nearly halving the draws in town; Graphics slider to tune it"
+  },
+  {
+   "v": 368,
+   "asked": "2026-11-08T21:05:00-06:00",
+   "live": "2026-11-08T21:38:25-06:00",
+   "dh": 4,
+   "tris": 5921717,
+   "chars": 2438906,
+   "what": "Townsfolk inside a building or outside your cab sound muffled through its walls by what they are made of, and clear through an open door"
   }
  ]
 };
