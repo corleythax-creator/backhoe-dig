@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-09T03:38:00Z",
+ "updated": "2026-11-09T03:55:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -120,9 +120,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-08",
-   "dh": 40,
+   "dh": 41.5,
    "act": 4,
-   "versions": 9
+   "versions": 10
   }
  ],
  "extra": [
@@ -3444,6 +3444,15 @@ window.EFFORT = {
    "tris": 5921717,
    "chars": 2438906,
    "what": "Townsfolk inside a building or outside your cab sound muffled through its walls by what they are made of, and clear through an open door"
+  },
+  {
+   "v": 369,
+   "asked": "2026-11-08T21:25:00-06:00",
+   "live": "2026-11-08T21:55:01-06:00",
+   "dh": 1.5,
+   "tris": 7630087,
+   "chars": 2440127,
+   "what": "Townsfolk answer what they're doing, the time and whether they're hungry or tired, say yes or no to plans, remember what you tell them about yourself (your work, where you're from, your pets and family) and ask after it later, and have families and opinions of their own; their lines can play in real voices for the owner."
   }
  ]
 };
