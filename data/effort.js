@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-09T01:02:00Z",
+ "updated": "2026-11-09T01:57:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -120,9 +120,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-08",
-   "dh": 21,
-   "act": 1.5,
-   "versions": 3
+   "dh": 29,
+   "act": 2,
+   "versions": 4
   }
  ],
  "extra": [
@@ -3390,6 +3390,15 @@ window.EFFORT = {
    "tris": 5926687,
    "chars": 2422690,
    "what": "On High and Ultra, the whole town (shops, Town Hall, hotel, library, brewery, General Store, marina, waterfront and the neighbourhoods' houses) and the island's own buildings (Jessica's cottage, the Family house, Dexter's shed and office trailer) are your Daylight designs, walk-in on both floors, with their staff, customers and residents inside. Two Graphics settings: the town, and its houses."
+  },
+  {
+   "v": 363,
+   "asked": "2026-11-08T19:20:00-06:00",
+   "live": "2026-11-08T19:57:03-06:00",
+   "dh": 8,
+   "tris": 5915971,
+   "chars": 2425827,
+   "what": "On High and Ultra, the town's shops, cafés, pubs, salons, offices, the brewery, the General Store, the hotel and the library are furnished with real commercial pieces (checkouts, shelving, coolers, bars and booths, café tables, salon stations, reception desks, pews), with staff behind the counters and customers at the tables, booths, chairs and shelves."
   }
  ]
 };
