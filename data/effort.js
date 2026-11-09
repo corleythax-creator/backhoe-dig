@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-09T18:42:00Z",
+ "updated": "2026-11-09T19:25:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -126,9 +126,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-09",
-   "dh": 10,
-   "act": 1.5,
-   "versions": 3
+   "dh": 17,
+   "act": 2,
+   "versions": 4
   }
  ],
  "extra": [
@@ -3522,6 +3522,15 @@ window.EFFORT = {
    "tris": 5928085,
    "chars": 2455512,
    "what": "Townsfolk remember what happened between them (arguments, favours, near misses), bring it up, pass it on and say why they like someone; whoever is spoken to stands and listens, and close up they nod along."
+  },
+  {
+   "v": 377,
+   "asked": "2026-11-08T21:00:00-06:00",
+   "live": "2026-11-09T13:25:14-06:00",
+   "dh": 7,
+   "tris": 5915776,
+   "chars": 2465183,
+   "what": "The pickup, four-wheeler, dirt bike, backhoe and wheel loader now run real simulated engines from Engine Bay: what the engine makes pulls them through their gears, and you hear the engine itself."
   }
  ]
 };
