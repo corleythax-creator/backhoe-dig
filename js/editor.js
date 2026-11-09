@@ -89,6 +89,8 @@ function edSubDraw(){const ts=ED_GROUPS[ed.group].tools,box=$('#edSub');box.hidd
 const edKindName=t=>PROPS[t]?PROPS[t].n:typeof FX_KN!=='undefined'&&FX_KN[t]||ED_KINDS[t]||t;
 // a fixed thing of the game's own (fixed.js) behind an asset entry, if it is one
 const edFx=a=>typeof fxOf==='function'?fxOf(a):null;
+// Daylight House Studio, where Building Forge's buildings are designed (the Edit in Daylight button)
+const DHS_URL='https://daylight-house-studio.vercel.app/';
 {const all=[...Object.keys(ED_KINDS).map(k=>[k,0]),...Object.keys(PROPS).map(k=>[k,PROPS[k].cat||3])];
   $('#edKinds').innerHTML=ED_KIND_CATS.map((c,ci)=>`<h4>${c}</h4><div class="row">${all.filter(q=>q[1]===ci).map(q=>`<button class="sm" data-k="${q[0]}">${edKindName(q[0])}</button>`).join('')}</div>`).join('');
   document.querySelectorAll('#edKinds button').forEach(b=>b.onclick=()=>{ed.kind=b.dataset.k;edTool('add');edPicked()})}
@@ -432,7 +434,12 @@ function edInspector(){const S=ed.sel,el=$('#edInfo');edBottomSync();if(!S.lengt
   // Row: copies of the selection in a line, along the first one's width or across it, end to end or at a spacing
   if(cs&&ed.rowOpen)h+=edSlider('edRowN','Copies',1,30,1,ed.rowN,'')+edSlider('edRowGap','Spacing',0,60,1,ed.rowGap,'')+
     `<span class="row" role="group" aria-label="Row direction"><button class="sm" data-rd="along" aria-pressed="${ed.rowDir==='along'}">Along</button><button class="sm" data-rd="across" aria-pressed="${ed.rowDir==='across'}">Across</button></span><button id="edRowGo" class="sm go">Make row</button>`;
+  // a building from Building Forge (forgetown.js): open its design in Daylight House Studio, at this copy in the town
+  const bfL=one&&one.a&&edFx(one.a)&&edFx(one.a).bf;
+  if(bfL)h+=`<span class="row"><button id="edSelDhs" class="sm" title="Open this building's design in Daylight House Studio, with what stands round it here">Edit in Daylight</button></span>`;
   el.innerHTML=h;edIcons(el);
+  const dh=$('#edSelDhs');if(dh)dh.onclick=()=>{const G=bfL.b&&bfL.b.g,x=G?G.position.x:bfL.x,z=G?G.position.z:bfL.z;
+    window.open(`${DHS_URL}#forge=${bfL.id}&at=${x.toFixed(2)},${z.toFixed(2)}`,'daylight')};
   // turning and sizing start from where each one was when the slider was taken hold of (edXf); several turn and size each
   // about its own middle, or as a group about the middle of them all
   const tv=$('#edSelTurn'),sv=$('#edSelSize');
