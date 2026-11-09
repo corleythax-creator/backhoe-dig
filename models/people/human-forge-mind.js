@@ -242,6 +242,67 @@
     moodPre: { annoyed: ['Ugh. ', 'Hmph. '], sad: ['Mm. ', 'Oh, well. '], tired: ['Mm. ', 'Sorry, I\'m half asleep. '] },
   };
 
+  // ---- what happened between two of them, remembered (the why behind what they think of each other). Kinds only,
+  // written here, never anyone's words: { w: kind, t, v: how it felt (-1..1), x: a topic's or thing's own words, of/by:
+  // a third's name for something heard }. Brought up with the one it was with, passed on to others, the reason given
+  // when asked what they think of someone, and in a model's notes; fading by how sharp they are (HORIZON).
+  const TIES = {
+    met: { v: 0.05 }, hit: { v: -0.5 }, crowded: { v: -0.3 }, warned: { v: 0.2 }, argued: { v: -0.25 }, madeUp: { v: 0.2 },
+    shared: { v: 0.15 }, teased: { v: 0.04 }, plan: { v: 0.25 }, refused: { v: -0.1 }, helped: { v: 0.25 }, cold: { v: -0.15 },
+    nearMiss: { v: -0.4 }, rude: { v: -0.3 }, kind: { v: 0.25 }, gift: { v: 0.3 }, heard: { v: 0 },
+  };
+  // a joint plan's key in a few words (sleep is left out: nothing to remember aloud)
+  const PLAN_W = { eat: 'a bite to eat', drink: 'a drink', tv: 'the TV', pool: 'the pool', town_store: 'the store', town_beer: 'the beer garden',
+    town_square: 'the square', town_shop: 'the shop windows', town_stroll: 'a walk', company: 'some company' };
+  // what it was, in a few words (for a model's notes and for passing it on): {name} the one it was with, {x} the topic/thing
+  const TIE_NOTE = { met: '{me} met {name}', hit: '{name} slapped {meo}', crowded: '{name} kept crowding {meo}', warned: '{name} warned {meo} about {x}',
+    argued: '{me} argued with {name} about {x}', madeUp: '{me} made up with {name}', shared: '{me} had a good talk with {name} about {x}', teased: '{name} teased {meo} about {x}',
+    plan: '{me} went for {x} with {name}', refused: '{name} turned {meo} down', helped: '{name} helped {meo}', cold: '{name} was cold to {meo}',
+    nearMiss: '{name} nearly ran {meo} down', rude: '{name} was rude to {meo}', kind: '{name} was kind to {meo}', gift: '{name} gave {meo} {x}' };
+  // with the one it was with: brought up ({x} its words, {when})
+  const TIE_UP = {
+    hit: { warm: ['{Name}, about earlier. That really hurt.'], edge: ['Still not over that slap, {name}.'], shy: ['Um, {name}... that slap earlier wasn\'t nice.'], bold: ['Don\'t ever slap me again, {name}.'], any: ['That slap earlier, {name}. Not okay.'] },
+    crowded: { edge: ['Give me a bit more room today, {name}.'], shy: ['Um, could you give me some space, {name}?'], any: ['Bit of space today, {name}, okay?'] },
+    warned: { warm: ['Thanks again for the warning about {x}, {name}.'], humor: ['{Name}, my early warning system. Thanks for the heads-up on {x}.'], any: ['Good call about {x} earlier, {name}.'] },
+    argued: { warm: ['{Name}, I didn\'t mean to snap about {x} {when}.'], edge: ['Still think you\'re wrong about {x}, {name}.'], bold: ['I stand by what I said about {x}, {name}.'], humor: ['Are we still fighting about {x}, {name}?'], any: ['About {x} {when}, {name}. No hard feelings?'] },
+    madeUp: { warm: ['Glad we sorted things out, {name}.'], any: ['We\'re good now, right, {name}?'] },
+    shared: { warm: ['I keep thinking about what you said about {x}, {name}.'], curious: ['{Name}, tell me more about {x}. I liked that talk.'], any: ['That was a good talk about {x} {when}, {name}.'] },
+    teased: { humor: ['Go on then, {name}. Tease me about {x} again.'], any: ['Still teasing me about {x}, {name}?'] },
+    plan: { warm: ['That was fun, {x} with you {when}, {name}. Again soon?'], edge: ['{X} with you wasn\'t bad, {name}.'], any: ['We should do {x} again, {name}.'] },
+    refused: { edge: ['You turned me down {when}, {name}. Noted.'], shy: ['It\'s okay you didn\'t want to {when}, {name}.'], any: ['Maybe {x} another time, {name}?'] },
+    helped: { warm: ['I never thanked you properly, {name}. For helping me.'], any: ['Thanks for {when}, {name}. Really.'] },
+    cold: { warm: ['{Name}, did I do something wrong?'], edge: ['What was that about {when}, {name}?'], any: ['You seemed off with me {when}, {name}.'] },
+    nearMiss: { edge: ['You nearly ran me down {when}, {name}.'], bold: ['Watch where you\'re driving, {name}.'], any: ['You nearly hit me {when}, {name}!'] },
+    rude: { warm: ['That hurt, what you said {when}, {name}.'], edge: ['I haven\'t forgotten {when}, {name}.'], any: ['That was rude {when}, {name}.'] },
+    kind: { warm: ['That was so kind of you {when}, {name}.'], any: ['Thanks for {when}, {name}.'] },
+    gift: { warm: ['I love {x}, {name}. Thank you.'], any: ['Thanks again for {x}, {name}.'] },
+  };
+  // answering one brought up, by how it felt (good, bad) and whether they like the one bringing it up
+  const TIE_BACK = {
+    welcome: { warm: ['Any time. I mean it.', 'Of course. That\'s what friends are for.'], edge: ['Don\'t mention it.'], shy: ['Oh... it was nothing.'], humor: ['I know. I\'m great.'], any: ['Any time.'] },
+    good: { warm: ['Me too. Really.', 'I\'d like that.'], edge: ['Yeah. It wasn\'t bad.'], shy: ['Oh... me too.'], humor: ['Same time next week?'], any: ['Yeah, it was good.'] },
+    sorry: { warm: ['You\'re right. I\'m sorry.', 'I know. I was out of line.'], shy: ['Sorry... I didn\'t mean it.'], any: ['Fair. Sorry about that.'] },
+    stand: { edge: ['You had it coming.', 'I\'d do it again.'], bold: ['I\'m not sorry.'], humor: ['Agree to disagree, then.'], any: ['Let\'s not go over it again.'] },
+  };
+  // passing on one about someone else (the third, {other}), by how it felt; and hearing one
+  const TIE_TELL = {
+    bad: { edge: ['Between us, {other} {note} {when}.', 'Did you hear? {Other} {note}.'], humor: ['So, {other} {note}. As you do.'], shy: ['Um, don\'t say I said, but {other} {note}.'], any: ['You know {other} {note} {when}?'] },
+    good: { warm: ['{Other} {note} {when}. Isn\'t that lovely?'], any: ['{Other} {note} {when}, you know.'] },
+  };
+  // the third's side of it as told: '{other} slapped me' (told), and as passed on again (heard)
+  const TIE_TOLD = { hit: 'slapped me', crowded: 'kept crowding me', warned: 'warned me about {x}', argued: 'and I argued about {x}', madeUp: 'and I made up',
+    shared: 'and I had a lovely talk about {x}', plan: 'and I went for {x}', refused: 'turned me down', helped: 'helped me out', cold: 'was cold to me',
+    nearMiss: 'nearly ran me down', rude: 'was rude to me', kind: 'was really kind to me', gift: 'gave me {x}' };
+  const TIE_HEARD = {
+    bad: { warm: ['Oh no. That doesn\'t sound like {other}.', 'Poor you.'], edge: ['Typical {other}.', 'Huh. Good to know.'], shy: ['Oh... really?'], humor: ['{Other}? Of course.'], any: ['Really? {Other}?'] },
+    defend: { warm: ['I\'m sure {other} didn\'t mean it.'], bold: ['That\'s not the {other} I know.'], any: ['Hm. {Other}\'s always been fine with me.'] },
+    good: { warm: ['That\'s so nice.', '{Other}\'s lovely like that.'], edge: ['Huh. Didn\'t know {other} had it in {them}.'], any: ['Good for {other}.'] },
+  };
+  // the reason, after what they think of someone (asked by you)
+  const TIE_WHY = { hit: 'Not after that slap.', crowded: '{Name} crowds me, though.', warned: '{Name} looked out for me {when}.', argued: 'We argued about {x} {when}.', madeUp: 'We had a falling out, but we made up.',
+    shared: 'We had a good talk about {x} {when}.', teased: '{Name} teases me about {x}.', plan: 'We went for {x} {when}.', refused: '{Name} turned me down {when}.', helped: '{Name} helped me {when}.',
+    cold: '{Name} was cold to me {when}.', nearMiss: '{Name} nearly ran me down {when}.', rude: '{Name} was rude to me {when}.', kind: '{Name} was kind to me {when}.', gift: '{Name} gave me {x}.',
+    heard: 'Mind you, I heard {note}.' };
   const LEANS = { dream: ['stars', 'books', 'music', 'sea', 'art'], plain: ['work', 'cars', 'food', 'garden', 'sport'], curious: ['history', 'travel', 'stars', 'books'], humor: ['games', 'movies', 'food'], warm: ['animals', 'food', 'garden', 'coffee'], bold: ['sport', 'travel', 'cars'] };
   // lines for what happens, by flavour (one is picked by the person's own mix of them; any: whoever)
   // how a touch felt (the app's ev.how) -> its lines
@@ -649,7 +710,9 @@
   };
   // a line's first word kept capitalised when a filler word goes before it: I, and the names of places (YOU_FROM)
   const PLACE1 = new Set(YOU_FROM.map((w) => w.split(' ')[0]));
-  const keepCap = (s) => /^I\b/.test(s) || PLACE1.has(String(s).split(/[^A-Za-z]/)[0].toLowerCase());
+  // (and the names of people they know: a line that starts with one keeps it capitalised)
+  const NAMES1 = new Set();
+  const keepCap = (s) => { const w = String(s).split(/[^A-Za-z]/)[0].toLowerCase(); return /^I\b/.test(s) || PLACE1.has(w) || NAMES1.has(w); };
   const COUNT = ['none', 'one', 'two', 'three', 'four'];
   const KIDW = ['', 'one kid', 'two kids', 'three kids', 'four kids'], SIBW = ['', 'a brother', 'a brother and a sister', 'two sisters and a brother'];
   function lifeOf(c) {
@@ -799,6 +862,7 @@
     function profile(c) {
       const id = idOf(c) + '|' + c.traits.join(','), key = id + '|' + [c.smarts, c.knack, (c.values || []).join(','), (c.likes || []).join(','), c.job, c.about].join('|');
       if (profiles.has(key)) return profiles.get(key);
+      if (c.name) NAMES1.add(String(c.name).toLowerCase());
       const r = rngOf(id), d = {};
       for (const k of ['warm', 'edge', 'shy', 'bold', 'humor', 'plain', 'curious', 'dream', 'talk', 'energy', 'nerve']) d[k] = 0.25 + r() * 0.3;
       // how easily frightened: a roll of its own (so the rest of the roll, and their interests, stay as they were)
@@ -901,6 +965,51 @@
       if (Math.abs(f) > 0.3 && R.met < 2) R.met = 2;   // made fond (or cold) of them: they know them already
       return R;
     };
+    // ---- what happened between them (TIES): kept per relation, newest last, six at most; the same again within ten
+    // minutes only freshens it; liking moves by it when the app reports it (feel), else the caller has moved it already
+    function tieAdd(m, name, w, x, c, extra, feel) {
+      if (!TIES[w] || !name) return null;
+      NAMES1.add(String(name).toLowerCase());
+      const R = relOf(m, name, c), E = R.mem || (R.mem = []), now = Date.now() / 1000, xs = x ? String(x).slice(0, 40) : '';
+      let e = E.find((y) => y.w === w && (y.x || '') === xs && (extra && extra.of ? y.of === extra.of && y.by === extra.by : true) && now - y.t < 600);
+      if (e) { e.t = now; return e; }
+      e = Object.assign({ w, t: now, v: TIES[w].v }, xs ? { x: xs } : {}, extra || {});
+      E.push(e); if (E.length > 6) { const i = E.reduce((b, y, j) => (Math.abs(y.v) * (1 + j * 0.2) < Math.abs(E[b].v) * (1 + b * 0.2) ? j : b), 0); E.splice(i, 1); }
+      if (feel) R.like = cl(R.like + e.v * 0.5, -1, 1);
+      return e;
+    }
+    // for both of them (k's side and the other's), by key
+    function tieBoth(k, q, w, x) {
+      const c = o.card(k), qc = q != null && q !== 'you' ? o.card(q) : null; if (!c || !qc) return;
+      tieAdd(memOf(c), o.nameOf(q), w, x, c); tieAdd(memOf(qc), o.nameOf(k), w, x, qc); save();
+    }
+    // how strongly it is still with them: fading over what they remember (HORIZON), gone past it
+    function tieW(P, e) {
+      const age = Date.now() / 1000 - e.t, H = HORIZON[P.smarts || 3] * 86400;
+      return age > H ? 0 : (Math.abs(e.v) + 0.05) * Math.exp(-age / (H / 3));
+    }
+    function tieTop(P, R, ok) {
+      let best = null, bw = 0.04;
+      for (const e of (R && R.mem) || []) { const wt = tieW(P, e); if (wt > bw && (!ok || ok(e))) { bw = wt; best = e; } }
+      return best;
+    }
+    // one in a few words: {me}/{meo} they/them for their own (or the teller's name for one heard)
+    function tieNote(e, name, me) {
+      if (e.w === 'heard') return tieNote({ w: e.of, x: e.x }, name, e.by);
+      const t = TIE_NOTE[e.w]; if (!t) return '';
+      return t.replace(/\{name\}/g, name).replace(/\{me\}/g, me || 'they').replace(/\{meo\}/g, me || 'them').replace(/\{x\}/g, e.x || 'something');
+    }
+    // the one they could bring up with someone (theirs together, not yet brought up, a minute old at least)
+    const tieUp = (P, R) => tieTop(P, R, (e) => TIE_UP[e.w] && !e.up && Date.now() / 1000 - e.t > 60);
+    // something about a third they could pass on to `to`: theirs (not heard), felt, not yet told to them
+    function tieTell(P, m, to, k) {
+      let best = null, bw = 0.12, of = '';
+      for (const [n, R] of Object.entries(m.rel)) {
+        if (n === to || n === o.nameOf(k)) continue;
+        for (const e of R.mem || []) { if (!TIE_TOLD[e.w] || e.w === 'met' || (e.told || []).includes(to)) continue; const wt = tieW(P, e) * (Math.abs(e.v) >= 0.2 ? 1 : 0); if (wt > bw) { bw = wt; best = e; of = n; } }
+      }
+      return best ? { e: best, of } : null;
+    }
     // a thing as the app gives it: words, or { what, danger, threat (0..1), feet, moving, toward, sound, new, ref }
     const thing = (g) => (g && typeof g === 'object' ? g : { what: String(g || 'something') });
     // how a thing feels to them: its threat (closer, coming at them, heard and not seen, feared before: more; met often
@@ -962,8 +1071,10 @@
         if (ev.how === 'slap') dl -= 0.06 + 0.1 * (1 - Math.max(0, R.like)) * (1 - d.bold * 0.5); else if (ev.how === 'cold') dl -= 0.02;
         else if (ev.how === 'brush' || ev.how === 'oil') dl += 0.04; else if (ev.how === 'tickle') dl += d.warm * 0.04 - d.edge * 0.03; else if (ev.how === 'pour') dl -= 0.05 * (1 - d.bold);
         R.like = cl(R.like + dl, -1, 1); push(c, m, P, dl * 1.5, 0.25 + (1 - d.nerve) * 0.15);
+        if (ev.how === 'slap') tieAdd(m, who, 'hit', '', c); else if (many > 3) tieAdd(m, who, 'crowded', '', c);
       } else if ((ev.kind === 'arrived' || ev.kind === 'approached') && R) {
         R.met++; R.like = cl(R.like + 0.02 + d.warm * 0.04 - d.edge * 0.02, -1, 1); push(c, m, P, R.like * 0.1, 0.12);
+        if (R.met === 1) tieAdd(m, who, 'met', '', c);
       } else if (/^(animal|see|notice|alarm)$/.test(ev.kind)) {
         // a thing seen (or heard of): fear of it grows when it threatens them, by how easily frightened they are, and
         // fades when it doesn't; what is lovely lifts the mood, what is new wakes them up
@@ -971,7 +1082,7 @@
         S.n++; S.t = now;
         if (ev.danger || s.t > 0.45) { S.fear = cl(S.fear + 0.1 + s.felt * 0.25 + d.fear * 0.15); push(c, m, P, -0.3 * s.felt, 0.2 + s.felt * 0.4); }
         else { S.fear *= 0.8 - (d.smart || 0) * 0.2; push(c, m, P, s.nice * 0.12 + (ev.kind === 'animal' ? 0.08 * d.warm : 0), 0.05 + s.keen * 0.15); }
-        if (ev.kind === 'alarm' && R) R.like = cl(R.like + 0.03, -1, 1);
+        if (ev.kind === 'alarm' && R) { R.like = cl(R.like + 0.03, -1, 1); tieAdd(m, who, 'warned', ev.what || w, c); }
       } else if (ev.kind === 'gone') {
         const S = m.seen[bare(ev.what)]; if (S && S.fear > 0.3) push(c, m, P, 0.15 + d.fear * 0.1, -0.15);
       } else if (ev.kind === 'thing') {
@@ -983,7 +1094,7 @@
         // somewhere they don't know: unsettled, more so the easily frightened; finding the way lifts them
         const f = { wake: [-0.12 - d.fear * 0.15, 0.35], around: [-0.04, 0.1], ask: [0.04, 0.05], plan: [0.06, 0.05], nothing: [-0.06, 0], found: [0.3, 0.3], come: [0.25, 0.2], out: [0.35, -0.05], done: [0.35, 0.1] }[ev.how];
         if (f) push(c, m, P, f[0], f[1]);
-        if (R && /^(ask|come)$/.test(ev.how)) R.like = cl(R.like + 0.04, -1, 1);
+        if (R && /^(ask|come)$/.test(ev.how)) { R.like = cl(R.like + 0.04, -1, 1); if (ev.how === 'come') tieAdd(m, who, 'helped', '', c); }
       } else if (ev.kind === 'still' && R) push(c, m, P, -0.35, 0.3);
       else if (ev.kind === 'left' && R) push(c, m, P, -0.03 * cl(R.like + 0.5), -0.05);
       save();
@@ -1090,6 +1201,9 @@
         } else if (ev.kind === 'arrived' || ev.kind === 'approached') {
           if (!R || R.met + R.talks <= 1) say = pick(k, P, ev.kind === 'arrived' ? L.hello : L.over, slots);
           else say = pick(k, P, R.like < -0.25 ? L.cold : ev.kind === 'arrived' ? L.again : L.over, slots);
+          if (R && R.like < -0.25 && R.met + R.talks > 1 && o.card(ev.by)) { const bc = o.card(ev.by); tieAdd(memOf(bc), c.name, 'cold', '', bc); }
+          const te = R && R.met + R.talks > 1 ? tieUp(P, R) : null;
+          if (te && Date.now() / 1000 - te.t < 7200 && Math.abs(te.v) >= 0.2 && Math.random() < 0.4) { te.up = 1; Object.assign(slots, { x: te.x || '', when: whenOf(te.t) }); say += ' ' + pick(k, P, TIE_UP[te.w], slots); }
           if (R && R.like > 0.5 && Math.random() < 0.3) say += ' ' + pick(k, P, L.likeYou, slots);
         } else if (ev.kind === 'animal') {
           const S = m.seen[w] || { n: 1, fear: 0 }, a = ev.dec ? ev.dec.do : 'watch';
@@ -1187,21 +1301,22 @@
         slots.name = who; look = 'them';
         const last = lines.filter((l) => (l.p === to && l.to === k) || (l.p === k && l.to === to)).slice(-1)[0];
         const recentTalk = last && Date.now() / 1000 - (last.t || 0) < 90;
+        let te = null, tt = null;
         R.talks++; R.like = cl(R.like + 0.03 + d.warm * 0.02 - d.edge * 0.01, -1, 1);
         if (recentTalk && last.p === to && last.meta && last.meta.topic) {
           const t = last.meta.topic, mineToo = P.likes.includes(t), turn = (last.meta.turn || 0) + 1; slots.topic = TOPICS[t].n;
           if (!R.likes.includes(t)) R.likes.push(t);   // learnt: they are into it
-          if (mineToo) R.like = cl(R.like + 0.05, -1, 1);
+          if (mineToo) { R.like = cl(R.like + 0.05, -1, 1); if (turn >= 2) tieBoth(k, to, 'shared', TOPICS[t].n); }
           meta = { topic: t, q: false, turn };
           if (turn >= 4) { say = pick(k, P, last.meta.dis ? BACK.defend : BACK.close, slots); meta = { turn }; }   // a talk winds down after a few turns
-          else if (last.meta.q) say = mineToo ? topicLine(k, P, t) : d.edge > 0.55 && Math.random() < 0.5 ? (R.like = cl(R.like - 0.03, -1, 1), meta.dis = true, pick(k, P, BACK.disagree, slots)) : pick(k, P, L.dodge, slots);
+          else if (last.meta.q) say = mineToo ? topicLine(k, P, t) : d.edge > 0.55 && Math.random() < 0.5 ? (R.like = cl(R.like - 0.03, -1, 1), meta.dis = true, tieBoth(k, to, 'argued', TOPICS[t].n), pick(k, P, BACK.disagree, slots)) : pick(k, P, L.dodge, slots);
           else if (last.meta.dis && mineToo) { say = pick(k, P, BACK.defend, slots); meta = { topic: t, q: false, turn: turn + 1 }; }
           else if (mineToo) say = pick(k, P, L.share, slots);
           else {
             // not theirs: the blunt disagree, the funny tease, the curious ask why, the rest go along with it
             const r = Math.random();
-            if (d.edge > 0.5 && r < 0.4) { say = pick(k, P, BACK.disagree, slots); R.like = cl(R.like - 0.03, -1, 1); meta.dis = true; }
-            else if (d.humor > 0.5 && r < 0.6) { say = pick(k, P, BACK.tease, slots); R.like = cl(R.like + (R.like > 0 ? 0.02 : -0.02), -1, 1); }
+            if (d.edge > 0.5 && r < 0.4) { say = pick(k, P, BACK.disagree, slots); R.like = cl(R.like - 0.03, -1, 1); meta.dis = true; tieBoth(k, to, 'argued', TOPICS[t].n); }
+            else if (d.humor > 0.5 && r < 0.6) { say = pick(k, P, BACK.tease, slots); R.like = cl(R.like + (R.like > 0 ? 0.02 : -0.02), -1, 1); if (tc) tieAdd(memOf(tc), c.name, 'teased', TOPICS[t].n, tc); }
             else if (d.curious > 0.5 && r < 0.75) { say = pick(k, P, BACK.why, slots); meta = { topic: t, q: true, turn }; }
             else say = pick(k, P, L.agree, slots);
           }
@@ -1209,12 +1324,36 @@
             const q = Math.random() < 0.35 + d.curious * 0.4, t2 = mineToo || Math.random() < 0.5 ? t : P.likes[Math.floor(Math.random() * P.likes.length)];
             say += ' ' + topicLine(k, P, t2, q); meta = { topic: t2, q, turn };
           }
+        } else if (recentTalk && last.p === to && last.meta && last.meta.tie) {
+          // one of theirs brought up: glad of a good one; a bad one (theirs to answer for) owned or stood by
+          const v = last.meta.v || 0;
+          if (v > 0) { R.like = cl(R.like + 0.04, -1, 1); say = pick(k, P, /^(warned|helped|kind|gift)$/.test(last.meta.tie) ? TIE_BACK.welcome : TIE_BACK.good, slots); }
+          else if (R.like > 0 || d.warm + d.shy > d.edge + d.bold) { R.like = cl(R.like + 0.12, -1, 1); say = pick(k, P, TIE_BACK.sorry, slots); tieBoth(k, to, 'madeUp'); }
+          else { R.like = cl(R.like - 0.05, -1, 1); say = pick(k, P, TIE_BACK.stand, slots); }
+          meta = { turn: 4 };
+        } else if (recentTalk && last.p === to && last.meta && last.meta.gossip) {
+          // told something about a third: it colours what they think of them, by how far they trust the teller
+          const g = last.meta.gossip, Rt = relOf(m, g.of, c), trust = cl(R.like + 0.5), she = (o.people ? o.people() : []).map((q) => o.card(q)).find((x) => x && x.name === g.of);
+          Object.assign(slots, { other: g.of, them: she ? (she.sex === 'woman' ? 'her' : 'him') : 'them' });
+          let dl = g.v * 0.3 * trust;
+          if (g.v < 0 && Rt.like > 0.3) { dl *= 0.3; say = pick(k, P, TIE_HEARD.defend, slots); } else say = pick(k, P, g.v < 0 ? TIE_HEARD.bad : TIE_HEARD.good, slots);
+          Rt.like = cl(Rt.like + dl, -1, 1); tieAdd(m, g.of, 'heard', g.x, c, { of: g.w, by: who });
+          meta = { turn: 4 };
         } else if (recentTalk && last.p === to && last.meta && last.meta.makeUp) {
-          R.like = cl(R.like + 0.2, -1, 1); say = pick(k, P, BACK.madeUp, slots); meta = { turn: 9 };
+          R.like = cl(R.like + 0.2, -1, 1); say = pick(k, P, BACK.madeUp, slots); meta = { turn: 9 }; tieBoth(k, to, 'madeUp');
         } else if (R.like < -0.2 && R.talks > 2 && Math.random() < 0.25 + d.warm * 0.3) {
           // fallen out: now and then one says sorry, and they make it up
           R.like = cl(R.like + 0.15, -1, 1); say = pick(k, P, BACK.makeUp, slots); meta = { makeUp: true, turn: 3 };
         } else if (!R.met && !R.talks0) { R.talks0 = 1; R.met = 1; say = pick(k, P, L.hello, slots); }
+        else if ((te = tieUp(P, R)) && Math.random() < 0.3 + d.smart * 0.15 + d.talk * 0.1) {
+          // something between them, brought up
+          te.up = 1; Object.assign(slots, { x: te.x || '', when: whenOf(te.t) }); say = pick(k, P, TIE_UP[te.w], slots); meta = { tie: te.w, v: te.v, turn: 2 };
+        } else if (Math.random() < 0.1 + d.talk * 0.12 + (d.edge > 0.55 ? 0.05 : 0) && (tt = tieTell(P, m, who, k))) {
+          // something about someone else, passed on (only their own, never what they heard)
+          const e = tt.e; (e.told || (e.told = [])).push(who); if (e.told.length > 6) e.told.shift();
+          Object.assign(slots, { other: tt.of, when: whenOf(e.t), note: TIE_TOLD[e.w].replace('{x}', e.x || 'something') });
+          say = pick(k, P, e.v < 0 ? TIE_TELL.bad : TIE_TELL.good, slots); meta = { gossip: { of: tt.of, w: e.w, v: e.v, x: e.x || '' }, turn: 2 };
+        }
         else if (R.likes.length && Math.random() < 0.35) {
           const t = R.likes[Math.floor(Math.random() * R.likes.length)]; slots.topic = TOPICS[t].n; say = pick(k, P, L.theirTopic, slots); meta = { topic: t, q: true };
         } else {
@@ -1368,7 +1507,11 @@
         if (q && /what do you (think|make) of|how do you feel about|do you (like|love|hate|trust) |is .* (nice|okay|alright|good)|opinion of|get on with/.test(t)) {
           if (!R || R.met + R.talks === 0) return pick(k, P, ABOUT.stranger, slots);
           const f = (R.like || 0) + (c.fond || 0) * 0.5; push(c, m, P, f * 0.05, 0.02);
-          return pick(k, P, f > 0.25 ? ABOUT.fond : f < -0.15 ? ABOUT.cool : ABOUT.okay, slots);
+          let s0 = pick(k, P, f > 0.25 ? ABOUT.fond : f < -0.15 ? ABOUT.cool : ABOUT.okay, slots);
+          // and why: the strongest thing between them they still remember (the sharp more often)
+          const v0 = f > 0.25 ? 1 : f < -0.15 ? -1 : 0, te = tieTop(P, R, (e) => TIE_WHY[e.w] && e.w !== 'met' && (!v0 || Math.sign(e.w === 'heard' ? (TIES[e.of] || {}).v || 0 : e.v) === v0));
+          if (te && Math.random() < 0.55 + d.smart * 0.3) s0 += ' ' + fill(TIE_WHY[te.w], Object.assign({}, slots, { x: te.x || 'something', when: whenOf(te.t), note: te.w === 'heard' ? tieNote(te, nm) : '' }));
+          return s0;
         }
         if (q && /do you know|have you met|you (two|guys) friends|friends with/.test(t)) return pick(k, P, R && R.met + R.talks > 0 ? ABOUT.knows : ABOUT.stranger, slots);
         if (q && /tell me about|who is|who's|what('s| is) .* like|what does .* do/.test(t)) return pick(k, P, qc && qc.job ? ABOUT.tell : ABOUT.tellNo, slots);
@@ -1528,9 +1671,20 @@
       const P = profile(c), m = memOf(c), now = Date.now() / 1000, bits = [knows(k)];
       const eps = (m.user.eps || []).filter((e) => e.n > 0 && now - e.t1 < HORIZON[P.smarts || 3] * 86400 && (e.topics.length || e.asked.length || e.feel)).slice(-4);
       if (eps.length) bits.push('Earlier talks with the user: ' + eps.map((e) => whenOf(e.t1) + ', ' + e.topics.map((t) => TOPICS[t].n).concat(e.asked.map((a) => ASKED[a])).concat(e.feel === 'low' ? ['how the user was feeling (low)'] : e.feel === 'up' ? ['how the user was feeling (happy)'] : []).slice(0, 4).join(', ')).join('; ') + '.');
-      return bits.join(' ').slice(0, 600);
+      const ties = [];
+      for (const [n, R] of Object.entries(m.rel)) for (const e of R.mem || []) { const wt = tieW(P, e); if (wt > 0.06 && e.w !== 'met') ties.push([wt, tieNote(e, n) + ' (' + whenOf(e.t) + ')']); }
+      if (ties.length) bits.push('Lately with the others: ' + ties.sort((a, b) => b[0] - a[0]).slice(0, 5).map((x) => x[1]).join('; ') + '.');
+      return bits.join(' ').slice(0, 800);
     }
-    return { profile, observe, line, reset, flush, knows, memoryNote, plan, aside, decide, sense: (k, g) => { const c = o.card(k); return c ? sense(profile(c), memOf(c), thing(g)) : null; }, moodOf: (k) => { const c = o.card(k); return c ? moodName(c, memOf(c), profile(c)) : ''; } };
+    // the app's own (TIES kinds only; x: the thing's words, the app's, never the user's)
+    function tie(k, q, w, x) {
+      const c = o.card(k); if (!c || !TIES[w] || w === 'heard' || q == null) return false;
+      const name = typeof q === 'string' && !o.card(q) ? q : o.nameOf(q); if (!name || name === c.name) return false;
+      tieAdd(memOf(c), name, w, x, c, null, true); save(); return true;
+    }
+    // what they remember of someone, newest first: [{ w, x, t, v, of, by }] (for a page that shows it)
+    function ties(k, q) { const c = o.card(k); if (!c) return []; const R = memOf(c).rel[typeof q === 'string' ? q : o.nameOf(q)]; return R && R.mem ? R.mem.slice().reverse() : []; }
+    return { profile, observe, line, reset, flush, knows, memoryNote, tie, ties, tieBoth, plan, aside, decide, sense: (k, g) => { const c = o.card(k); return c ? sense(profile(c), memOf(c), thing(g)) : null; }, moodOf: (k) => { const c = o.card(k); return c ? moodName(c, memOf(c), profile(c)) : ''; } };
   }
 
   function create(o) {
@@ -1659,7 +1813,7 @@
           M.lines.push({ p: k, to: ev ? (ev.by != null ? ev.by : null) : to, who: M.nameOf(k), said: a.say, ev: ev ? ev.kind : undefined, t: Date.now() / 1000, round: to === 'you' ? roundOf(k) : undefined });
           if (!ev && to === 'you') keep(k, M.lines[M.lines.length - 1]);
           if (o.show) o.show(k, a, to, ev);
-          if (proposal) { offers.delete(k); if (o.agreed) o.agreed(to, k, proposal.key, a.agree === true); }
+          if (proposal) { offers.delete(k); if (PLAN_W[proposal.key]) { if (a.agree === true) brain.tieBoth(k, to, 'plan', PLAN_W[proposal.key]); else brain.tie(to, k, 'refused', PLAN_W[proposal.key]); } if (o.agreed) o.agreed(to, k, proposal.key, a.agree === true); }
           else if (a.propose && joint.includes(a.propose)) { offers.set(to, { by: k, key: a.propose, t: Date.now() / 1000 }); if (o.proposed) o.proposed(k, to, a.propose); M.answer(to, k); }
           return a;
         } catch (err) { M.status = 'They could not answer just now.'; return null; } finally { M.busy.delete(k); changed(); }
@@ -1718,7 +1872,7 @@
           if (a.act && !(ev && ev.dec) && o.act) o.act(k, a.act, ev);   // something they noticed while musing
           if (a.meta && a.meta.go && o.go) o.go(k, a.meta.go);   // agreed to do something: the page has them do it
           // between two of them: the other answers soon, for a few turns (a topic, a question, or a sorry to answer)
-          if (!ev && to != null && to !== 'you' && to !== M.as && a.meta && (a.meta.topic || a.meta.makeUp) && (a.meta.turn || 0) < 4 && M.chatter && M.can(to)) {
+          if (!ev && to != null && to !== 'you' && to !== M.as && a.meta && (a.meta.topic || a.meta.makeUp || a.meta.tie || a.meta.gossip) && (a.meta.turn || 0) < 4 && M.chatter && M.can(to)) {
             setTimeout(() => { if (M.on && M.chatter && M.can(to) && M.can(k) && !M.busy.has(to) && !M.busy.has(k) && !(typeof document !== 'undefined' && document.hidden)) M.ask(to, k); }, 2200 + Math.random() * 2600);
           }
           return a;
@@ -1726,6 +1880,12 @@
       },
       // what someone has learned, in a few words (the built-in mind's memory)
       knows: (k) => (o.card(k) ? brain.knows(k) : ''),
+      // something that happened between k and someone (a key, or a name for someone not here): a kind of TIES (nearMiss,
+      // rude, kind, gift, helped, plan, refused, warned, cold, hit...), what: a thing's own words (the app's, never the
+      // user's: 'a coffee', 'the store'). Remembered, felt, brought up, passed on (see TIES)
+      remember: (k, q, kind, what) => brain.tie(k, q, kind, what),
+      // what k remembers of someone, newest first: [{ w, x, t, v, of, by }]
+      ties: (k, q) => brain.ties(k, q),
       // forget everything everyone has learned (in this browser)
       unlearn() { brain.reset(); talk = {}; store(TALK, '{}'); changed(); },
       // the stores to sync between devices (an app's own save or sync copies these; never the owner key or model)

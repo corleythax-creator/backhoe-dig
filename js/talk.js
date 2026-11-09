@@ -186,12 +186,31 @@ for(const b of document.querySelectorAll('#talkModelRow [data-tm]'))b.onclick=()
 for(const b of document.querySelectorAll('#talkCapRow [data-tc]'))b.onclick=()=>{if(TALK.M)TALK.M.setCap(+b.dataset.tc)};
 $('#talkKeyBtn').onclick=()=>{if(!TALK.M)return;const v=prompt('The owner key for townsfolk talk (from Human Forge\'s Vercel settings, PERSONA_OWNER_KEY). It stays on this device.',TALK.M.key?'':'');if(v&&v.trim())TALK.M.key=v.trim()};
 // stop and turn toward a spot a while (the player, unless given): walkers only, someone in a shop or a car stays put
+// body language on a close-up townsperson (Ultra graphics, townfolk.js tfUhPose, after its clip has set the bones):
+// the one talking moves their head with the words; the one told nods now and then and tilts their head a little. Turns
+// about the body's own axes, on top of the clip; put back first if the clip left the bone alone
+const _tbQ=[new THREE.Quaternion(),new THREE.Quaternion(),new THREE.Quaternion(),new THREE.Quaternion()],_tbX=[new THREE.Vector3(1,0,0),new THREE.Vector3(0,1,0),new THREE.Vector3(0,0,1)];
+function talkBend(p,h){const g=h.object,B=h._tb||(h._tb={neck:g.getObjectByName('neck_01'),head:g.getObjectByName('head'),done:[]});
+  for(const d of B.done)if(d[0].quaternion.equals(d[1]))d[0].quaternion.copy(d[2]);B.done.length=0;
+  if(!B.head||!B.neck)return;const t=performance.now()/1000,say=p.tkSay>t,hear=!say&&p.tkHear>t&&p.tkBy&&!p.tkBy.dead,S=p.tkB||(p.tkB={sw:0,lw:0,ph:Math.random()*9,nodAt:0,nod:null,tilt:(Math.random()<0.5?-1:1)*(0.04+Math.random()*0.05),t:t});
+  const dt=Math.min(0.1,t-S.t);S.t=t;S.sw+=((say?1:0)-S.sw)*Math.min(1,dt*4);S.lw+=((hear?1:0)-S.lw)*Math.min(1,dt*3);if(S.sw<0.01&&S.lw<0.01){S.nod=null;return}
+  let pt=S.sw*(0.05*Math.abs(Math.sin(t*5.3+S.ph))+0.03*Math.sin(t*2.3+S.ph)),yw=S.sw*0.07*Math.sin(t*0.7+S.ph),rl=S.sw*0.025*Math.sin(t*1.1+S.ph);
+  if(S.lw>0.01){if(!S.nod&&t>S.nodAt)S.nod={t0:t,n:Math.random()<0.3?2:1,a:0.08+Math.random()*0.07};
+    if(S.nod){const u=(t-S.nod.t0)/0.5;if(u>=S.nod.n){S.nod=null;S.nodAt=t+1.3+Math.random()*2.6}else pt+=S.lw*S.nod.a*(u>=1?0.6:1)*Math.sin(Math.PI*(u%1))}
+    rl+=S.lw*S.tilt;pt+=S.lw*0.03}
+  g.updateMatrixWorld(true);const oq=g.getWorldQuaternion(_tbQ[0]);
+  const turn=(bo,ax,an)=>{if(!an)return;if(!B.done.some(d=>d[0]===bo))B.done.push([bo,null,bo.quaternion.clone()]);const rw=_tbQ[1].setFromAxisAngle(ax,an).premultiply(oq).multiply(_tbQ[2].copy(oq).invert());
+    const wq=bo.getWorldQuaternion(_tbQ[2]),pq=bo.parent.getWorldQuaternion(_tbQ[3]).invert();bo.quaternion.copy(pq.multiply(rw.multiply(wq)));bo.updateMatrixWorld(true)};
+  turn(B.neck,_tbX[0],pt*0.4);turn(B.neck,_tbX[1],yw*0.4);turn(B.head,_tbX[0],pt*0.6);turn(B.head,_tbX[1],yw*0.6);turn(B.head,_tbX[2],rl);
+  for(const d of B.done)d[1]=d[0].quaternion.clone()}
 function talkFace(p,s,x=wk.x,z=wk.z){if(!p||typeof p!=='object'||p.room||p.drv||p.cop||p.dead||p.flee>0)return;p.wait=Math.max(p.wait||0,s);p.look=Math.atan2(x-p.x,z-p.z)}
 function talkShow(p,a,to,ev){const u=talkUI();let b=TALK.bub.get(p);if(!b){b={el:document.createElement('div')};b.el.className='talkLine';u.L.appendChild(b.el);TALK.bub.set(p,b)}
   b.el.innerHTML='';const n=document.createElement('b');n.textContent=talkName(p);b.el.append(n,document.createTextNode(a.say));
   b.until=performance.now()/1000+3.5+a.say.split(/\s+/).length*0.38;const s=b.until-performance.now()/1000;
   // who they turn to: the one they talk to (and that one back), what happened to them, or you
   if(to&&typeof to==='object'&&talkCard(to)&&Math.random()<0.3)repGossip(p,to);
+  // talking and listening (tfFgClip, talkBend): the one talking gestures (the talk clip), the one told stands and listens
+  {const t=performance.now()/1000,L=to&&typeof to==='object'?to:ev&&ev.by&&typeof ev.by==='object'?ev.by:null;p.tkSay=t+Math.min(s-1,0.9+a.say.length*0.065);if(L&&L!==p){L.tkHear=t+s;L.tkBy=p}}
   if(p.tkGo&&to!=='you'){}
   else if(to&&typeof to==='object'){talkFace(p,s,to.x,to.z);talkFace(to,s,p.x,p.z);if(!p.spd)p.tk=1}
   else if(ev&&ev.kind==='thing'){const w=TALK.at.get(p);if(w)talkFace(p,Math.min(s,3),w[0],w[1])}

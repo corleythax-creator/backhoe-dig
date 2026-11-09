@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-09T17:50:00Z",
+ "updated": "2026-11-09T18:42:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -126,9 +126,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-09",
-   "dh": 6,
-   "act": 1,
-   "versions": 2
+   "dh": 10,
+   "act": 1.5,
+   "versions": 3
   }
  ],
  "extra": [
@@ -3513,6 +3513,15 @@ window.EFFORT = {
    "tris": 5926408,
    "chars": 2452698,
    "what": "Townsfolk now chat back and forth for a few turns, disagree, tease and ask each other why, fall out and make up; hold a grudge if you're rude (cold hellos, short answers) until you apologise; and have far more to say, with their mood colouring their words."
+  },
+  {
+   "v": 376,
+   "asked": "2026-11-09T11:45:00-06:00",
+   "live": "2026-11-09T12:42:16-06:00",
+   "dh": 4,
+   "tris": 5928085,
+   "chars": 2455512,
+   "what": "Townsfolk remember what happened between them (arguments, favours, near misses), bring it up, pass it on and say why they like someone; whoever is spoken to stands and listens, and close up they nod along."
   }
  ]
 };
