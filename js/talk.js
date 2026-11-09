@@ -24,7 +24,8 @@
 // windows, a stroll, or going over to someone about) by habit (the hour and their nature); with a model speaking, those
 // near you have it choose (Human Forge's minds.plan, its town_* keys, at most one ask every TU.talkPlanGap), and two
 // chatting may suggest one and go off on it together (joint, agreed). They walk there the shortest way (tfGoalPick).
-// Lines show over their heads; Aloud reads them in the most natural voice the browser has, each townsperson keeping their own.
+// Lines show over their heads; Aloud reads them in the most natural voice the browser has, each townsperson keeping their own,
+// heard only within TU.talkHearR of the camera and fainter with distance (talkVoice).
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 const TALK={mode:'text',lib:null,M:null,near:null,with:null,bub:new Map(),far:new Map(),bump:new Map(),v:new THREE.Vector3(),t:0,ui:null,
   here:[],at:new Map(),ride:null,v0:0,group:[],grp:false,log:[],news:null,planT:-1e9,planning:false,errT:0};
@@ -179,7 +180,14 @@ function talkShow(p,a,to,ev){const u=talkUI();let b=TALK.bub.get(p);if(!b){b={el
   else if(ev&&ev.kind==='thing'){const w=TALK.at.get(p);if(w)talkFace(p,Math.min(s,3),w[0],w[1])}
   else if(ev&&ev.by&&typeof ev.by==='object')talkFace(p,Math.min(s,4),ev.by.x,ev.by.z);
   else if(to==='you'||ev&&ev.by==='player')talkFace(p,s);
-  if(TALK.mode==='voice'){const c=talkCard(p)||talkKid(p);TALK.M.speak(a.say,c)}}
+  if(TALK.mode==='voice')talkVoice(p,a.say)}
+// Aloud: heard only near the camera (where every game sound is heard from), as loud as the distance makes it, like a
+// voice in the open (full at arm's length, a quarter at 33 ft, gone at TU.talkHearR), under the sound settings' master;
+// the browser's voice has no position, so loudness is all it gets. A line still going when you get out of earshot stops.
+function talkEar(p){return Math.hypot(p.x-camera.position.x,(p.y||0)+1.6-camera.position.y,p.z-camera.position.z)}
+function talkVoice(p,text){if(!sndCfg.on||!p||typeof p!=='object')return;const d=talkEar(p),R=TU.talkHearR;if(d>R)return;
+  const v=1/(1+(d/6)*(d/6))*Math.min(1,(R-d)/(R*0.3))*sndCfg.master/100;if(v<0.02)return;
+  const c=talkCard(p)||talkKid(p);TALK.M.speak(text,c,v);TALK.spk=p}
 
 // ---- what they decided to do about something they noticed (the runtime's act: flee, back, freeze, warn, watch,
 // investigate, help or call): run from it, step back, stop and face it, or walk over to it along their walk
@@ -320,4 +328,5 @@ function talkTick(dt){
     if(!up||v.z>1||Math.abs(v.x)>1.1||Math.abs(v.y)>1.1){b.el.classList.remove('on');continue}
     b.el.classList.add('on');const half=b.el.offsetWidth/2+6;
     b.el.style.left=Math.round(r.left+Math.max(half,Math.min(r.width-half,(v.x+1)/2*r.width)))+'px';b.el.style.top=Math.round(r.top+(1-v.y)/2*r.height)+'px'}
+  if(TALK.spk&&(!tf.people.includes(TALK.spk)||talkEar(TALK.spk)>TU.talkHearR+3)){TALK.spk=null;TALK.M.hush()}
   TALK.M.step(dt)}
