@@ -129,6 +129,7 @@ const TUNE=[
   ['greetChance','Town','Passersby who greet you as you walk by',0.45,'pct',0,100,5],['greetGap','Town','The least time between greetings',8,'s',0,60,1],
   // townsfolk talk (talk.js): who joins in, how far off it is heard, and what makes them remark on a machine
   ['talkSeeR','Town','Townsfolk talk only within this far of you (or the machine you drive)',36.6,'ft',30,400,5],
+  ['talkHearR','Town','Townsfolk talking aloud are heard within this far of the camera, fading with distance',24.4,'ft',10,300,5],
   ['talkChatR','Town','Two townsfolk talk to each other within',3.05,'ft',3,40,1],
   ['talkRoadR','Town','A machine you drive this close to someone gets a word from them',4.6,'ft',3,60,1],
   ['talkRoadV','Town','Going past them faster than this, it nearly had them',2.2,'mph',1,30,0.5],

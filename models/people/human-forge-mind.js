@@ -1351,7 +1351,7 @@
       },
       hush() { try { root.speechSynthesis && root.speechSynthesis.cancel(); } catch (e) { /* none */ } },
       // read a line aloud: who is their card (or just 'man' / 'woman'); each person keeps one voice (VOICE)
-      speak(text, who) { VOICE.say(text, typeof who === 'object' && who ? who : { sex: who }); },
+      speak(text, who, vol) { VOICE.say(text, typeof who === 'object' && who ? who : { sex: who }, vol); },  // vol 0..1: how loud where you are (the app's distance)
       // among themselves: the next one in turn says something to whoever is nearest, now and then
       step() {
         const now = Date.now() / 1000;
@@ -1428,7 +1428,7 @@
       return { voice: near[h % near.length], fits: !!mine.length, h };
     },
     // a line, as they would say it
-    say(text, c) {
+    say(text, c, vol) {
       const S = root.speechSynthesis; if (!S || typeof SpeechSynthesisUtterance === 'undefined' || !text) return;
       if (S.pending && S.speaking) S.cancel();  // never more than one waiting: the scene has moved on
       const u = new SpeechSynthesisUtterance(String(text).replace(/\s+/g, ' ').trim()), p = this.pick(c || {}), T = (c && c.traits) || [], age = +(c && c.age) || 35;
@@ -1440,6 +1440,7 @@
       u.rate = Math.max(0.8, Math.min(1.15, rate + wobble));
       // a natural voice keeps its own pitch; a plain one is nudged toward their sex and age (a voice of the other sex as the last resort)
       u.pitch = natural ? 1 + wobble : (c && c.sex === 'man' ? 0.9 : 1.08) - Math.max(0, age - 50) * 0.003 + (p && !p.fits ? (c && c.sex === 'man' ? -0.15 : 0.15) : 0);
+      if (vol != null) u.volume = Math.max(0, Math.min(1, +vol || 0));
       S.speak(u);
     },
     // what this browser has, in words, for the panels
