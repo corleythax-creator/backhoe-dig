@@ -130,6 +130,8 @@ const TUNE=[
   // townsfolk talk (talk.js): who joins in, how far off it is heard, and what makes them remark on a machine
   ['talkSeeR','Town','Townsfolk talk only within this far of you (or the machine you drive)',36.6,'ft',30,400,5],
   ['talkHearR','Town','Townsfolk talking aloud are heard within this far of the camera, fading with distance',24.4,'ft',10,300,5],
+  ['talkWallK','Town','How much of a voice in a room you are not in (or outside your cab) gets through its walls and doors',1,'',0,3,0.1],
+  ['talkMurmur','Town','How loud the murmur of a voice through a wall is',1,'',0,3,0.1],
   ['talkChatR','Town','Two townsfolk talk to each other within',3.05,'ft',3,40,1],
   ['talkRoadR','Town','A machine you drive this close to someone gets a word from them',4.6,'ft',3,60,1],
   ['talkRoadV','Town','Going past them faster than this, it nearly had them',2.2,'mph',1,30,0.5],

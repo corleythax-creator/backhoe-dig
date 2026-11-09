@@ -391,7 +391,7 @@ function mainLot(K,x,z,w,d,h,col,face,awn,si,wl,o){wl=wl||col;o=o||{};const fx=M
   for(const t of [-1,1]){if(t===C){const hs=(RD-ch+0.1)/2,[a,b]=F(d/2-RD-0.1+hs,t*(w/2-0.2));rmSolid(a,b,face,0.3,hs);const hw=(w/2-ch-0.6)/2,[e,f]=F(d/2,t*(0.6+hw));rmSolid(e,f,face,hw,0.14);
       rmSolid((P1[0]+P2[0])/2,(P1[1]+P2[1])/2,Math.atan2(-(P2[1]-P1[1]),P2[0]-P1[0]),ch*0.7071,0.14);continue}
     const [a,b]=F(d/2-RD/2,t*(w/2-0.2));rmSolid(a,b,face,0.3,RD/2+0.1);const [e,f]=F(d/2,t*(w/4+0.35));rmSolid(e,f,face,w/4-0.25,0.14)}
-  walkPad(F0[0],F0[1],w/2-0.1,RD/2,face,y+0.03);rmRoom(F0[0],F0[1],face,w/2-0.55,RD/2,y,y+2.9);
+  walkPad(F0[0],F0[1],w/2-0.1,RD/2,face,y+0.03);rmRoom(F0[0],F0[1],face,w/2-0.55,RD/2,y,y+2.9).clad='glass';
   MAIN_BACKS.push({x,z,w,d,y,h,face,F,C,ds,si})}
 // the shop signs: painted boards (famSignPaint, family.js) drawn into one picture, and every sign a quad of it, as one mesh.
 // from: the first of mainSignList to draw (a later part of town, waterfront.js, draws its own: a smaller picture of just
@@ -516,7 +516,7 @@ function mainBrewery(){const K=famKit(),PK=famKit(),{x,z,w,d,h}=BREW,y=rmGroundM
   // solid: the walls (but the open door), the tanks, kettles, bar and back bar; the floor to walk on, and the room
   SOLIDS.push({x,z,hx:w/2+0.1,hz:d/2+0.1,foot:1});for(const t of [-1,1]){B.solid(0,t*(w/2-0.2),0.45,d+0.2);B.solid(-o0+0.2,t*(w/4+0.75),w/2-1.5,0.45)}B.solid(o0-0.2,0,w+0.2,0.45);
   B.solid(-0.3,7.4,1.8,9.6);B.solid(-5.6,4.6,3.9,1.8);B.solid(-0.6,-7.3,0.8,8.5);B.solid(-0.6,-9.45,0.5,8.5);
-  walkPad(x,z,w/2-0.3,d/2-0.3,Math.PI,y+0.03);rmRoom(x,z,Math.PI,w/2-0.35,d/2-0.35,y,y+h-0.2);
+  walkPad(x,z,w/2-0.3,d/2-0.3,Math.PI,y+0.03);Object.assign(rmRoom(x,z,Math.PI,w/2-0.35,d/2-0.35,y,y+h-0.2),{clad:'brick',ajar:0.7});
   // the patio behind, its high-top tables, and the path from the sidewalk down the side to the garden's gate
   const pz=z+o0,G0=G(x,pz+2.5);K.box(w,0.25,5,'concBroom',x,G0+0.0,pz+2.5);walkPad(x,pz+2.5,w/2,2.5,0,G0+0.125);
   const GD={x:64,z:695.5,r:32,spots:[],ground:1},spot=(sx,sz,yaw,k)=>{const sp=Object.assign({x:sx,z:sz,y:padAt(sx,sz)>-1e8?padAt(sx,sz):G(sx,sz),yaw},k||{});GD.spots.push(sp);return sp};
@@ -723,7 +723,7 @@ function shopKit(){const parts=new Map(),O=new THREE.Object3D(),n=new THREE.Vect
   SOLIDS.push({x:0,z:fz+8,hx:15.1,hz:8.1,foot:1},{x:0,z:fz+15.85,hx:15.1,hz:0.25});for(const s of [-1,1])SOLIDS.push({x:s*14.85,z:fz+8,hx:0.25,hz:8.1},{x:s*8.2,z:fz+0.18,hx:6.95,hz:0.2});
   // inside, through the glass: a polished floor, rows of gondola shelves full of goods, shelves along the back wall,
   // produce tables, three checkouts by the doors, rows of lights; cashiers and shoppers (TF_ROOMS)
-  {const fi=Math.max(fl,rmGroundMax(0,fz+8,0,29.2,15.2)+0.03),R=rmKit(F,0,fz+8,fi,Math.PI);R.box(29.2,fi-yb,15.2,0xb9b6ad,0,0,yb-fi);walkPad(0,fz+8,14.6,7.6,0,fi);rmRoom(0,fz+8,Math.PI,14.6,7.6,fi,fl+6);
+  {const fi=Math.max(fl,rmGroundMax(0,fz+8,0,29.2,15.2)+0.03),R=rmKit(F,0,fz+8,fi,Math.PI);R.box(29.2,fi-yb,15.2,0xb9b6ad,0,0,yb-fi);walkPad(0,fz+8,14.6,7.6,0,fi);rmRoom(0,fz+8,Math.PI,14.6,7.6,fi,fl+6).clad='glass';
     // the entrance: the floor stands over the sloping walk, so a gentle concrete ramp runs up to it through the doors
     {const z0=fz-1.8,z1=fz+0.45,t0=baseHeight(0,z0)+0.12,L=z1-z0,ri=Math.max(0,fi-t0);if(ri>0.05){K.box(conc,2.7,0.12,Math.hypot(L,ri),0,t0+ri/2-0.06,(z0+z1)/2,0,-Math.atan2(ri,L));walkPad(0,(z0+z1)/2,1.35,L/2,0,t0,{rise:ri})}}
     for(const s of [-12,-8,-4,4,8,12])for(let o=-5.6;o<=1.4;o+=1.25){rmShelf(R,o,s-0.25,-Math.PI/2,1.2,s*3+o*5+60);rmShelf(R,o,s+0.25,Math.PI/2,1.2,s*7+o*3+90)}
