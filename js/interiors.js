@@ -179,6 +179,8 @@ function rmInsideTick(dt){const r=mode==='walk'&&!wk.inside?rmRoomAt(wk.x,wk.z,w
   if(rmLampI>0.01){if(!rmLampBk)rmLampBk={p:L.position.clone(),c:L.color.getHex(),d:L.distance,y:L.decay};
     if(r){L.position.set(r.x,r.top-0.35,r.z);L.distance=Math.max(6,Math.hypot(r.hw,r.hd)*2.2)}L.color.setHex(0xffe6c4);L.decay=1.3;L.intensity=rmLampI}
   else if(rmLampBk){L.position.copy(rmLampBk.p);L.color.setHex(rmLampBk.c);L.distance=rmLampBk.d;L.decay=rmLampBk.y;rmLampBk=null}}
+// clad: what its outside walls are (glass, siding, stucco, brick, steel; talk.js muffles voices through them by it),
+// ajar: a doorway always open (0 to 1)
 function rmRoom(x,z,f,hw,hd,y,top){const r={x,z,f,sf:Math.sin(f),cf:Math.cos(f),hw,hd,y,top};IN_ROOMS.push(r);return r}
 // a solid hs across by ho deep (half sizes) at x, z in a frame turned to f (s across, o along f), as SOLIDS reads one
 function rmSolid(x,z,f,hs,ho,top){const sf=Math.sin(f),cf=Math.cos(f),o={x,z,lx:hs,lz:ho,cs:cf,sn:sf,hx:Math.abs(cf)*hs+Math.abs(sf)*ho,hz:Math.abs(sf)*hs+Math.abs(cf)*ho};if(top!==undefined)o.top=top;SOLIDS.push(o)}
@@ -269,4 +271,4 @@ function rmHome(R,h){const {s0,s1,o0,o1,H,u,inn}=h,pb=o0+2.75,sm=(s0+s1)/2,kd=(s
     R.box(1.53,0.07,1.3,rug,o0+1.42,bs,0.53);for(const t of [-0.38,0.38])R.box(0.6,0.12,0.38,0xf6f4ee,o0+0.3,bs+t,0.56);R.solid(o0+1.06,bs,1.6,2.1);
     for(const t of [-1,1]){const ns=bs+t*1.05;if(ns-0.24<sm+0.05||ns+0.24>s1)continue;R.box(0.45,0.55,0.4,wood,o0+0.22,ns,0);R.cyl(0.1,0.13,0.25,10,0xe9e1cc,o0+0.22,ns,0.55);R.solid(o0+0.22,ns,0.5,0.45)}}
   const [lx,lz]=R.P((pb+o1)/2,(s0+s1)/2),[kx,kz]=R.P((o0+pb)/2,(s0+sm)/2),[bx,bz]=R.P((o0+pb)/2,(sm+s1)/2);
-  rmRoom(lx,lz,R.f,(s1-s0)/2,(o1-pb)/2,R.y,R.y+H);rmRoom(kx,kz,R.f,(sm-s0)/2,(pb-o0)/2,R.y,R.y+H);rmRoom(bx,bz,R.f,(s1-sm)/2,(pb-o0)/2,R.y,R.y+H)}
+  for(const r of [rmRoom(lx,lz,R.f,(s1-s0)/2,(o1-pb)/2,R.y,R.y+H),rmRoom(kx,kz,R.f,(sm-s0)/2,(pb-o0)/2,R.y,R.y+H),rmRoom(bx,bz,R.f,(s1-sm)/2,(pb-o0)/2,R.y,R.y+H)])r.clad='siding'}
