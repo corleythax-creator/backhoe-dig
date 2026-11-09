@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-09T16:13:00Z",
+ "updated": "2026-11-09T17:50:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -126,9 +126,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-09",
-   "dh": 3,
-   "act": 0.5,
-   "versions": 1
+   "dh": 6,
+   "act": 1,
+   "versions": 2
   }
  ],
  "extra": [
@@ -3504,6 +3504,15 @@ window.EFFORT = {
    "tris": 5921725,
    "chars": 2452698,
    "what": "The still world's sun shadow is kept from frame to frame and only moving things are redrawn: about 70% fewer shadow draws in town, same look"
+  },
+  {
+   "v": 375,
+   "asked": "2026-11-09T11:30:00-06:00",
+   "live": "2026-11-09T11:50:11-06:00",
+   "dh": 3,
+   "tris": 5926408,
+   "chars": 2452698,
+   "what": "Townsfolk now chat back and forth for a few turns, disagree, tease and ask each other why, fall out and make up; hold a grudge if you're rude (cold hellos, short answers) until you apologise; and have far more to say, with their mood colouring their words."
   }
  ]
 };
