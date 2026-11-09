@@ -73,7 +73,7 @@ function lifeItem(it,id){if(LIFE.items[id])return LIFE.items[id];const L=lifeOf(
   m.about=((m.about||'')+` Lives on ${L.st||'the island'}.`+(J?(J.out?` Works ${J.out.replace(/^(out )?/,'')}${hr}.`:` Works at ${J.away||J.at}${hr}${J.wk?', weekdays':''}.`):'')).trim().slice(0,300);
   return LIFE.items[id]=Object.assign({},it,{mind:m})}
 // for a model: where they are in their day, as it really is (behind their counter, at home, or out)
-function lifeScene(p,name){const L=lifeOf(p.body);if(!L)return '';const N=lifeNow(p.body);
+function lifeScene(p,name){if(p.tw)return '';const L=lifeOf(p.body);if(!L)return '';const N=lifeNow(p.body);
   const w=p.room&&p.room===L.room?'at work':p.room&&p.room===L.home?'at home':p.room?'in a shop as a customer':N.s==='out'?N.w:'out on an errand';
   return `${name} lives on ${L.st} and is ${w} right now.`}
 
@@ -100,7 +100,7 @@ function repDeed(k,seen){if(!REP_K[k])return;const now=repNow(),day=Math.floor(n
   let d=REP.d.find(d=>d.k===k&&(daily?Math.floor(d.t)===day:now-d.t<0.08));
   if(!d){d={i:++REP.n,k,t:now};REP.d.push(d);if(REP.d.length>40){const o=REP.d.shift();for(const b in REP.kn)REP.kn[b]=REP.kn[b].filter(i=>i!==o.i)}}
   else d.t=now;
-  const who=new Set(seen||[]);if(typeof TALK==='object')for(const p of TALK.here)if(Math.hypot(p.x-wk.x,p.z-wk.z)<40)who.add(p.body);
+  const who=new Set(seen||[]);if(typeof TALK==='object')for(const p of TALK.here)if(Math.hypot(p.x-wk.x,p.z-wk.z)<40)who.add(tfWho(p));
   for(const b of who)repLearn(b,d.i);REP.dirty=true;return d}
 // how much a deed counts now, fading
 function repW(d){return REP_K[d.k].w*Math.pow(0.5,Math.max(0,repNow()-d.t)/REP_HALF)}
@@ -110,12 +110,12 @@ function repOpinion(b){let v=0;for(const d of REP.d)if(repKnows(b,d.i))v+=repW(d
 function repHeard(b){const now=repNow();return REP.d.filter(d=>repKnows(b,d.i)&&Math.abs(repW(d))>=1).sort((a,c)=>Math.abs(repW(c))-Math.abs(repW(a))).slice(0,3)
   .map(d=>{const a=now-d.t;return REP_K[d.k].s+(a<0.04?' (just now)':a<1?' (today)':a<2?' (yesterday)':` (${Math.round(a)} days ago)`)})}
 // for a model: what they have heard of him and how they feel
-function repScene(p,name){const b=p.body,H=repHeard(b);if(!H.length)return '';const v=repOpinion(b);
+function repScene(p,name){const b=tfWho(p),H=repHeard(b);if(!H.length)return '';const v=repOpinion(b);
   return `What ${name} has heard of him: ${H.join('; ')}. ${name} ${v<-45?'is afraid of him':v<-15?'is wary of him':v>25?'thinks well of him':v>8?'likes him':'has no strong feeling about him'}.`}
 // someone tells someone else a deed the other has not heard (said aloud when near him: two talking among themselves)
 function repGossip(p,q){if(!p||!q||typeof q!=='object'||REP.tell)return;
-  const d=REP.d.filter(d=>repKnows(p.body,d.i)&&!repKnows(q.body,d.i)&&Math.abs(repW(d))>=2).sort((a,c)=>Math.abs(repW(c))-Math.abs(repW(a)))[0];if(!d)return;
-  repLearn(q.body,d.i);const s=REP_K[d.k].s;REP.tell=true;
+  const d=REP.d.filter(d=>repKnows(tfWho(p),d.i)&&!repKnows(tfWho(q),d.i)&&Math.abs(repW(d))>=2).sort((a,c)=>Math.abs(repW(c))-Math.abs(repW(a)))[0];if(!d)return;
+  repLearn(tfWho(q),d.i);const s=REP_K[d.k].s;REP.tell=true;
   setTimeout(()=>{REP.tell=false;if(!tf.people.includes(p)||p.dead||TALK.mode==='off')return;
     REP.tell=true;try{talkShow(p,{say:repSay(repW(d)<0?'rpGossipBad':'rpGossipGood',{deed:s})},q,null)}finally{REP.tell=false}},2600+Math.random()*1500)}
 // now and then anywhere in town, out of earshot: one who knows tells one who does not (the bigger the deed, the faster)
@@ -126,14 +126,14 @@ function repSpread(){const ids=tf.chars?tf.chars.filter(c=>c.body!=='k').map(c=>
 const REP_N={rpGossipBad:3,rpGossipGood:2,rpScared:2,rpWary:3,rpGlad:3};
 function repSay(id,v){return say(id+(1+Math.floor(Math.random()*REP_N[id])),v)}
 // walking up to someone: glad to see him, wary (a step back), or scared off (gun out and a bad name); false: as usual
-function repMeet(p){const v=repOpinion(p.body);
+function repMeet(p){const v=repOpinion(tfWho(p));
   if(v<-15)TALK.shunT=performance.now()/1000;
   if(v<-45&&gunHas()){talkRun(p,wk.x,wk.z,5,TU.gunFlee);talkShow(p,{say:repSay('rpScared')},'you',null);return true}
   if(v<-25){talkRun(p,wk.x,wk.z,0.7,1.6);talkShow(p,{say:repSay('rpWary')},'you',null);return true}
   if(v>25&&Math.random()<0.5){talkFace(p,4);talkShow(p,{say:repSay('rpGlad')},'you',null);return true}
   return false}
 // a counter's price: a friend's 5% off, 15% more from someone who fears or distrusts him (townOff, town.js)
-function repPrice(p){if(!p)return 0;const v=repOpinion(p.body);return v>40?0.05:v<-40?-0.15:0}
+function repPrice(p){if(!p)return 0;const v=repOpinion(tfWho(p));return v>40?0.05:v<-40?-0.15:0}
 // each frame: the day's work counts once a day, gossip spreads, the memory is saved now and then
 function repTick(dt){const day=fuelDayNo();
   if(REP.day!==day){REP.day=day;REP.workDone=false}
@@ -155,7 +155,7 @@ function repTick(dt){const day=fuelDayNo();
 function fmTick(){const R=mode==='walk'&&typeof walker==='object'&&walker.visible&&typeof town==='object'?town.wel:null;
   if(R!==FMEM.R){FMEM.R=R;FMEM.cur.clear()}if(!R||!tf.on||Math.hypot(wk.x-R.x,wk.z-R.z)>R.r)return;const seen=[];
   for(const p of tf.people){if(p.dead||p.drv||p.cop||FMEM.cur.has(p)||!(p.room===R||p.go&&p.go.R===R&&Math.hypot(p.x-R.x,p.z-R.z)<R.r))continue;
-    FMEM.cur.add(p);if(fmSee(p.body,townShopName(R),''))seen.push(p.body)}
+    FMEM.cur.add(p);if(fmSee(tfWho(p),townShopName(R),''))seen.push(tfWho(p))}
   if(seen.length)repDeed('seen',seen)}
 // b saw him at this shop now (item: what he bought); true when it is a new time together
 function fmSee(b,shop,item){if(!b)return false;const now=repNow(),w=FMEM.w[b]||(FMEM.w[b]={n:0,t:now,s:[],k:0});
@@ -165,8 +165,8 @@ function fmSee(b,shop,item){if(!b)return false;const now=repNow(),w=FMEM.w[b]||(
 // he paid for something (townPay): everyone in the room with him sees it, and the one who served him
 function fmBuy(item){const S=typeof town==='object'?town.shop:null;let R=town.wel||S&&S.R;
   if(!R)for(const Q of TF_ROOMS)if(!Q.home&&Math.hypot(wk.x-Q.x,wk.z-Q.z)<Q.r&&Math.abs(wk.y-(Q.y??wk.y))<1.6){R=Q;break}
-  if(!R)return;const shop=townShopName(R),who=new Set();if(S&&S.p&&!S.p.dead)who.add(S.p.body);
-  for(const p of tf.people)if(!p.dead&&!p.drv&&!p.cop&&p.room===R)who.add(p.body);
+  if(!R)return;const shop=townShopName(R),who=new Set();if(S&&S.p&&!S.p.dead)who.add(tfWho(S.p));
+  for(const p of tf.people)if(!p.dead&&!p.drv&&!p.cop&&p.room===R)who.add(tfWho(p));
   for(const b of who)fmSee(b,shop,item)}
 // forget what is past TU.memDays, and anyone with nothing left to remember
 function fmPrune(){const now=repNow(),D=TU.memDays??7;
@@ -183,7 +183,7 @@ function fmWhen(t){const now=repNow(),d0=Math.floor(now),d=Math.floor(t),h=(t-d)
   return d===d0?(now-t<0.08?'just now':h<12?'this morning':h<17?'this afternoon':'this evening'):d===d0-1?(h<17?'yesterday':'last night'):'the other day'}
 // what p says about it when they meet him (null: nothing to say). R: the room they are in now (a clerk at their own
 // counter says it as a welcome back). Each time is brought up once; a familiar face now and then after that.
-function fmLine(p,R){const b=p&&p.body,w=b&&FMEM.w[b];if(!w)return null;const now=repNow(),kid=typeof talkKid==='function'&&talkKid(p);
+function fmLine(p,R){const b=p&&tfWho(p),w=b&&FMEM.w[b];if(!w)return null;const now=repNow(),kid=typeof talkKid==='function'&&talkKid(p);
   const e=w.s.filter(e=>!e[3]&&now-e[0]<(TU.memDays??7)&&now-e[0]>0.02).pop();
   if(e){e[3]=1;REP.dirty=true;const when=fmWhen(e[0]),old=Math.floor(e[0])<Math.floor(now),item=fmItem(e[2]),v={shop:e[1],when,item};
     if(kid)return fmSay(item?'fmKidBuy':'fmKid',v);
@@ -194,18 +194,18 @@ function fmLine(p,R){const b=p&&p.body,w=b&&FMEM.w[b];if(!w)return null;const no
   return null}
 // they have told him their name: a first talk (townTalk, the talk box), a regular he has met, or a past conversation
 // kept by the talk runtime (bhd_talk_on-talk: name|age|sex)
-function fmKnown(p){if(!p||typeof p!=='object')return false;if(p.reg)return !!town.met[p.reg.id];const w=FMEM.w[p.body];if(w&&w.k)return true;
+function fmKnown(p){if(!p||typeof p!=='object')return false;if(p.reg)return !!town.met[p.reg.id];const w=FMEM.w[tfWho(p)];if(w&&w.k)return true;
   const n=fmName(p);if(!n)return false;const t=performance.now()/1000;
   if(!FMEM.talkK||t-FMEM.talkT>10){FMEM.talkT=t;try{FMEM.talkK=Object.keys(JSON.parse(localStorage.getItem('bhd_talk_on-talk')||'{}')||{})}catch(e){FMEM.talkK=[]}}
   return FMEM.talkK.some(k=>k.startsWith(n+'|'))}
 function fmIntro(b){const w=FMEM.w[b]||(FMEM.w[b]={n:0,t:repNow(),s:[],k:0});if(!w.k){w.k=1;REP.dirty=true}}
 // their own name (the library's mind, a regular's own), '' if the library is not in yet
 function fmName(p){if(p.reg)return townFirst(p.reg);if(typeof talkLib==='function')talkLib();const k=typeof talkKid==='function'&&talkKid(p);if(k)return k.name;
-  const it=TALK.lib&&TALK.lib['island_'+p.body];return it&&it.mind?(typeof lifeItem==='function'?lifeItem(it,p.body):it).mind.name||'':''}
+  const it=TALK.lib&&TALK.lib['island_'+p.body];return it&&it.mind?(p.tw?talkTwin(it,p):typeof lifeItem==='function'?lifeItem(it,p.body):it).mind.name||'':''}
 // what to call them on screen: their name once they have told it, else the stranger's word (Passerby, Kid, Clerk)
 function fmWho(p,other){return fmKnown(p)&&fmName(p)||other}
 // for a model: where they have seen him lately and what he bought, and whether they know his face
-function fmScene(p,name){const w=p&&FMEM.w[p.body];if(!w)return '';const now=repNow(),D=TU.memDays??7;
+function fmScene(p,name){const w=p&&FMEM.w[tfWho(p)];if(!w)return '';const now=repNow(),D=TU.memDays??7;
   const S=w.s.filter(e=>now-e[0]<D&&now-e[0]>0.01).slice(-2).map(e=>`at ${e[1]} ${fmWhen(e[0])}`+(e[2]?` (he got the ${fmItem(e[2])} there)`:''));
   const n=w.n*Math.pow(0.5,Math.max(0,now-w.t)/(REP_HALF*2)),fam=n>=(TU.memFamiliar??3);
   if(!S.length&&!fam)return '';return `${name} ${S.length?'saw him '+S.join(' and '):''}${S.length&&fam?'; ':''}${fam?'has been in the shops with him often enough to know his face':''}.`}

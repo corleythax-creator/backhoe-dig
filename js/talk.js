@@ -35,17 +35,26 @@ const TALK_NEAR=4,TALK_HI=2.2,TALK_FAR=5,TALK_URL='https://human-forge-beta.verc
 try{const m=localStorage.getItem('bhd_talk');TALK.mode=m&&(m!=='off'||localStorage.getItem('bhd_talk_on'))?m:'text'}catch(e){}
 // the library's people, by id, for their personalities (once)
 function talkLib(){if(TALK.lib!==null)return;TALK.lib=0;fetch('models/people/library.json').then(r=>r.json()).then(j=>{TALK.lib={};for(const p of j.people||[])TALK.lib[p.id]=p}).catch(()=>{TALK.lib=null})}
-function talkCard(p){if(!TALK.lib||!p||p.dead||p.hurt||p.drv||p.cop)return null;const it=TALK.lib['island_'+p.body];return it&&window.HumanForgeMind?HumanForgeMind.card(typeof lifeItem==='function'?lifeItem(it,p.body):it):null}
+function talkCard(p){if(!TALK.lib||!p||p.dead||p.hurt||p.drv||p.cop)return null;const it=TALK.lib['island_'+p.body];return it&&window.HumanForgeMind?HumanForgeMind.card(p.tw?talkTwin(it,p):typeof lifeItem==='function'?lifeItem(it,p.body):it):null}
+// more people than looks: someone else wearing a look already in town (townfolk.js tfTwin, p.tw) is their own person:
+// the look's age and sex, a name, nature and interests of their own (seeded by look and number, so they stay who they are)
+const TALK_TW={m:['Dale','Curtis','Roy','Leon','Marcus','Glenn','Otis','Vernon','Clay','Dwight','Russell','Floyd','Andre','Luther','Boyd','Garrett','Silas','Emmett','Reggie','Wade','Harlan','Jesse','Clint','Darnell','Lyle','Monroe','Abel','Rufus'],
+  f:['Loretta','Tammy','Bonnie','Nadine','Gloria','Shelby','Opal','Renee','Carla','Faye','Darlene','Ivy','Josie','Mabel','Tessa','Wanda','Noreen','Celia','Hattie','June','Marla','Peggy','Rhonda','Sadie','Thea','Viola','Yvette','Della']};
+function talkTwin(it,p){const k=p.body+'~'+p.tw,C=TALK.tw||(TALK.tw={});if(C[k])return C[k];let s=7;for(const ch of k)s=(s*31+ch.charCodeAt(0))>>>0;const r=()=>(s=(s*1664525+1013904223)>>>0)/4294967296;
+  const taken=new Set(Object.values(TALK.lib||{}).map(q=>q.mind&&q.mind.name)),N=TALK_TW[+it.gender?'m':'f'].filter(n=>!taken.has(n)),H=window.HumanForgeMind||{};
+  const some=(A,n)=>{const o=[];A=(A||[]).slice();while(A.length&&o.length<n)o.push(A.splice((r()*A.length)|0,1)[0]);return o},m0=it.mind||{};
+  const m={name:N[(r()*N.length)|0],traits:some((H.TRAITS||[]).slice(0,22),3),mood:['calm','happy','curious','thoughtful','playful','tired'][(r()*6)|0],smarts:2+((r()*3)|0),likes:some(H.LIKES||m0.likes,3)};
+  if(m0.school)m.school=m0.school;if(m0.on!=null)m.on=m0.on;return C[k]=Object.assign({},it,{mind:m})}
 function talkName(p){if(p==='player')return say('tkPlayer');const c=talkCard(p);if(c)return c.name;const k=talkKid(p);return k?k.name:'someone'}
 // the young ones (under 18): their name and light mind from the library (school, what they like), for the talk box and
 // greetings. Never Human Forge's runtime, which is for grown-ups only (here and on its server): what they say is the
 // game's own kid and teen lines (WORDS 'Town: kids'), talkKidSay
-function talkKid(p){if(!TALK.lib||!p||typeof p!=='object'||p.dead||p.hurt||p.drv||p.cop)return null;const it=TALK.lib['island_'+p.body];
+function talkKid(p){if(!TALK.lib||!p||typeof p!=='object'||p.dead||p.hurt||p.drv||p.cop)return null;const i0=TALK.lib['island_'+p.body],it=i0&&p.tw?talkTwin(i0,p):i0;
   if(!it||!it.mind||!(+it.age<18))return null;const m=it.mind;
   return {name:m.name||'',age:Math.round(+it.age),sex:+it.gender?'man':'woman',teen:+it.age>=13,likes:m.likes||[],school:m.school||'school',traits:m.traits||[],mood:m.mood||'happy'}}
 // a young one's answer to what he says: their name and age, school, hello, or something they like
 function talkKidSay(p,v){const k=talkKid(p);if(!k)return '';const t=k.teen?'tn':'kd',like=k.likes[(Math.random()*k.likes.length)|0];v=String(v||'').toLowerCase();
-  if(typeof fmIntro==='function')fmIntro(p.body);
+  if(typeof fmIntro==='function')fmIntro(tfWho(p));
   if(/name|who are you|how old|age/.test(v))return say(t+'Name',{name:k.name,age:k.age});
   if(/school|grade|class|teacher|homework/.test(v))return say(t+'School',{school:k.school});
   if(/\b(hi|hello|hey|howdy|morning|afternoon|evening)\b/.test(v))return fmSay(t+'Hi',{name:k.name});
@@ -145,8 +154,8 @@ function talkUI(){if(TALK.ui)return TALK.ui;const d=document.createElement('div'
   const L=document.createElement('div');L.id='talkLines';document.body.appendChild(L);
   d.querySelector('#talkChip').onclick=()=>talkOpen();d.querySelector('#talkX').onclick=()=>talkClose();
   d.querySelector('#talkForm').onsubmit=e=>{e.preventDefault();const i=d.querySelector('#talkIn'),v=i.value.trim();i.value='';if(!v||!TALK.with||!TALK.M)return;
-    const g=TALK.group,w=TALK.with;if(talkKid(w)){talkShow(w,{say:talkKidSay(w,v)},'you',null);repDeed('kind',[w.body]);return}
-    if(g.length>1&&(TALK.grp||TALK_ALL.test(v))){for(const q of g)talkFace(q,8);TALK.M.tellAll(g,v);repDeed('kind',g.map(q=>q.body));for(const q of g)fmIntro(q.body)}else{TALK.M.tell(w,v);repDeed('kind',[w.body]);fmIntro(w.body)}};
+    const g=TALK.group,w=TALK.with;if(talkKid(w)){talkShow(w,{say:talkKidSay(w,v)},'you',null);repDeed('kind',[tfWho(w)]);return}
+    if(g.length>1&&(TALK.grp||TALK_ALL.test(v))){for(const q of g)talkFace(q,8);TALK.M.tellAll(g,v);repDeed('kind',g.map(q=>tfWho(q)));for(const q of g)fmIntro(tfWho(q))}else{TALK.M.tell(w,v);repDeed('kind',[tfWho(w)]);fmIntro(tfWho(w))}};
   // typing goes to the box, not the game's keys
   for(const ev of ['keydown','keyup'])d.querySelector('#talkIn').addEventListener(ev,e=>{e.stopPropagation();if(ev==='keydown'&&e.key==='Escape')talkClose()});
   TALK.ui={d,L};return TALK.ui}
@@ -373,7 +382,7 @@ function talkLook(dt){const M=TALK.M,now=performance.now()/1000,foot=mode==='wal
     else if(o){
       // the machine he drives, close by: too fast and it nearly had them; slow or stopped, they remark on it
       let d=1e9;for(const lz of R.c||[0])d=Math.min(d,Math.hypot(p.x-o.x-Math.sin(o.yaw||0)*lz,p.z-o.z-Math.cos(o.yaw||0)*lz)-(R.r||1));
-      if(d<TU.talkRoadR){TALK.at.set(p,[o.x,o.z]);if(v>TU.talkRoadV)repDeed('near',[p.body]);if(M.event(p,{kind:'thing',what:talkA(R.n),how:v>TU.talkRoadV?'road':'car'})&&!p.tkGo)talkFace(p,2.5,o.x,o.z)}}
+      if(d<TU.talkRoadR){TALK.at.set(p,[o.x,o.z]);if(v>TU.talkRoadV)repDeed('near',[tfWho(p)]);if(M.event(p,{kind:'thing',what:talkA(R.n),how:v>TU.talkRoadV?'road':'car'})&&!p.tkGo)talkFace(p,2.5,o.x,o.z)}}
     // someone lying still nearby
     for(const q of dead)if(Math.hypot(q.x-p.x,q.z-p.z)<TU.talkStillR){M.event(p,{kind:'still',by:q});break}}
   // the young ones near you on foot: you can talk to them too (the game's own lines), and walking up they may say hi
