@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-09T23:01:00Z",
+ "updated": "2026-11-09T23:03:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -126,9 +126,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-09",
-   "dh": 28,
+   "dh": 29.5,
    "act": 3.5,
-   "versions": 7
+   "versions": 8
   }
  ],
  "extra": [
@@ -3558,6 +3558,15 @@ window.EFFORT = {
    "tris": 7605622,
    "chars": 2473414,
    "what": "With more people in town than there are looks, each repeat of a look is now their own person, with a name, nature, memory and opinion of you of their own, instead of several bodies sharing one mind. The townsfolk's mind also stops mishearing words (great is not food), answers in a group having heard the others, falls back to its own words when a model can't answer, and reads lines aloud in the mood they were said in."
+  },
+  {
+   "v": 381,
+   "asked": "2026-11-09T16:30:00-06:00",
+   "live": "2026-11-09T17:03:05-06:00",
+   "dh": 1.5,
+   "tris": 5792605,
+   "chars": 2475989,
+   "what": "Daylight House Studio's See it in game opens the map editor right at that building, picked and in view."
   }
  ]
 };

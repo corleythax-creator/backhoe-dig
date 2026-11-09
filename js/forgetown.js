@@ -235,3 +235,26 @@ async function bfSync(){if(typeof FX==='undefined'||!FX.length)return;const gen=
   for(const L of bf.lots){const item=FX.find(x=>x.bf===L),on=bfWant(L.area);if(!item||L.on===on)continue;L.on=on;fxApply(item,as.get(item.id)||null)}
   for(const F of FX_MESH)if(F.dirty){F.dirty=0;F.bfDirty=1}bfFlush()}
 bfSync();
+// Daylight House Studio's See it in game (#daylight=ID&at=X,Z, the game's metres; Daylight's js/forge.js): the map
+// editor opened at that spot once the island has loaded, the game's own building there picked, then, on High and Ultra
+// once the town from Building Forge is built (up to 2 minutes, while nothing else has been picked), the Building Forge
+// building standing nearest X, Z. The other way is the editor's Edit in Daylight (editor.js, #forge=ID&at=X,Z).
+function bfFromDaylight(){const m=location.hash.match(/^#daylight=([a-z0-9_]+)&at=(-?[\d.]+),(-?[\d.]+)/);if(!m)return;
+  history.replaceState(null,'',location.pathname+location.search);const id=m[1],x=+m[2],z=+m[3],t0=performance.now(),gen=bfFromDaylight.gen=(bfFromDaylight.gen||0)+1;
+  const near=f=>{let best=null,bd=1e9;for(const a of assets){const it=fxOf(a);if(!it||a.hd||!f(it))continue;const d=Math.hypot(a.x-x,a.z-z);if(d<bd){bd=d;best=a}}return best&&{a:best,d:bd}};
+  const forge=()=>near(it=>it.bf&&it.bf.id===id),name=L=>L.name||bf.lib&&bf.lib[id]&&bf.lib[id].name||id;
+  const pick=a=>{edAllGo({a});return a};
+  const go=()=>{if(gen!==bfFromDaylight.gen)return;if(!LOADP.done||bench.on){if(performance.now()-t0<120000)setTimeout(go,400);return}
+    if(edOn)edSelSet([]);else editorOpen();if(!edOn)return;
+    const hit=forge();if(hit){pick(hit.a);toast(say('edFromDaylight',{name:name(fxOf(hit.a).bf)}),'',4000);return}
+    const own=near(it=>BF_FX.has(it.t)),mine=own&&own.d<15?pick(own.a):null;if(!mine){edFlyTo(x,z);ed.dist=60}
+    if(!bfWant('town')&&!bfWant('homes')){toast(say('edFromDaylightNear'),'',4000);return}
+    // the town from Building Forge still being built: its building picked when it is, unless something else was
+    const later=()=>{if(gen!==bfFromDaylight.gen||!edOn)return;const s=ed.sel;if(s.length>1||s.length===1&&s[0].a!==mine)return;
+      const h=forge();if(h){pick(h.a);toast(say('edFromDaylight',{name:name(fxOf(h.a).bf)}),'',4000);return}
+      if(performance.now()-t0<120000)setTimeout(later,500)};
+    later()};
+  go()}
+bfFromDaylight();
+// Daylight opens its See it in game in the same tab each time (named corleys-island): a new #daylight= goes there too
+window.addEventListener('hashchange',()=>{if(/^#daylight=/.test(location.hash))bfFromDaylight()});
