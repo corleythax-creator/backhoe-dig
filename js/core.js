@@ -285,12 +285,20 @@ scene.add(sunFar);scene.add(sunFar.target);
 // so its texels go where you look) and held to its own texel grid, so shadow edges stand still as you move instead of
 // crawling. sun.target is where the near map is meant to be (main.js, editor.js put it at you); this moves it each frame
 const sunNearV=new THREE.Vector3(),sunNearX=new THREE.Vector3(),sunNearY=new THREE.Vector3();
-function sunSnap(p,R,n,X,Y){X.set(0,1,0).cross(LIGHT_DIR).normalize();Y.copy(LIGHT_DIR).cross(X);
+function sunSnap(p,R,n,X,Y,D){D=D||LIGHT_DIR;X.set(0,1,0).cross(D).normalize();Y.copy(D).cross(X);
   const t=2*R/n,ax=p.dot(X),ay=p.dot(Y);p.addScaledVector(X,Math.round(ax/t)*t-ax).addScaledVector(Y,Math.round(ay/t)*t-ay)}
-function sunNearTick(){if(!sun.castShadow)return;const R=sun.shadow.camera.right,p=sun.target.position;
+// held still for the kept shadow of the still world (shc, shadowproxy.js): the map stays where it was until where it is
+// wanted has moved TU.shHold m (or the sun turned TU.shTurn degrees), and reaches that much wider so you never run out
+// of it ahead; its picture of the buildings, trees and ground can then be kept from frame to frame. 0 follows every frame
+const sunHold={p:new THREE.Vector3(),d:new THREE.Vector3(),on:false};
+function sunNearTick(){if(!sun.castShadow)return;const p=sun.target.position,H=renderer.xr.isPresenting?0:TU.shHold||0,sc=sun.shadow.camera,R=gfxCur.shR+H;
+  if(sc.right!==R){sc.left=sc.bottom=-R;sc.right=sc.top=R;sc.updateProjectionMatrix()}
   camera.getWorldDirection(sunNearV);sunNearV.y=0;if(sunNearV.lengthSq()>1e-6)sunNearV.normalize();
-  p.addScaledVector(sunNearV,R*TU.shAhead);sunSnap(p,R,sun.shadow.mapSize.x,sunNearX,sunNearY);
-  sun.position.copy(p).addScaledVector(LIGHT_DIR,SUN_D);sun.updateMatrixWorld();sun.target.updateMatrixWorld()}
+  p.addScaledVector(sunNearV,gfxCur.shR*TU.shAhead);let D=LIGHT_DIR;
+  if(H>0){if(!sunHold.on||sunHold.p.distanceTo(p)>H||sunHold.d.angleTo(LIGHT_DIR)>TU.shTurn*Math.PI/180){sunHold.p.copy(p);sunHold.d.copy(LIGHT_DIR);sunHold.on=true}
+    p.copy(sunHold.p);D=sunHold.d}else sunHold.on=false;
+  sunSnap(p,R,sun.shadow.mapSize.x,sunNearX,sunNearY,D);
+  sun.position.copy(p).addScaledVector(D,SUN_D);sun.updateMatrixWorld();sun.target.updateMatrixWorld()}
 const sunFarC=new THREE.Vector3(),sunFarV=new THREE.Vector3(),sunFarX=new THREE.Vector3(),sunFarY=new THREE.Vector3(),sunFarL=new THREE.Vector3();let sunFarN=0,sunFarScanT=0;
 // small instanced things (grass, tufts, pebbles: under 6 ft across) cast into the near map only; in the far one they
 // would be a few texels and cost as much as the rest of it. Looked for every 3 s, as scattering adds more

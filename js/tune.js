@@ -108,7 +108,7 @@ const TUNE=[
   ['packShed','Excavator','How fast packed clay drops off',1,'pct',0,500,5],
   ['caveDepth','Cave-ins','Walls start to cave in deeper than',1.2,'ft',1,30,0.5],['caveSpoil','Cave-ins','Spoil this close to the edge loads the wall',0.64,'ft',0,10,0.5],
   // the townsfolk (townfolk.js): how fast the town's cars drive its streets and its people walk
-  ['tfCarV','Town','Town traffic speed',11.2,'mph',5,45,1],['tfWalk','Town','Townsfolk walking pace',1.3,'mph',1,5,0.1],['tfUltraR','Town','Ultra graphics: townsfolk shown in full detail within',6,'ft',6,40,1],['inFar','Town','Indoors: smaller things outside drawn within',150,'ft',30,800,5],['townZ','Town','Machines on the islands hidden once you are this far south (town)',420,'ft',300,700,5],
+  ['tfCarV','Town','Town traffic speed',11.2,'mph',5,45,1],['tfWalk','Town','Townsfolk walking pace',1.3,'mph',1,5,0.1],['tfUltraR','Town','Ultra graphics: townsfolk shown in full detail within',6,'ft',6,40,1],['inFar','Town','Indoors: smaller things outside drawn within',150,'ft',100,2600,10],['townZ','Town','Machines on the islands hidden once you are this far south (town)',420,'ft',1000,2300,10],
   // which townsfolk characters stay home: one bit per character, in models/peds/peds.json order (bit 0 = cal_m); set on the Townsfolk page
   ['tfOut','Town','Townsfolk left out (a bit per character; set it on the Townsfolk page)',0,'n',0,4294967295,1],
   // the town's life (town.js): money, shop hours, greetings and talk
@@ -186,6 +186,7 @@ const TUNE=[
   ['csmEvery','Light and haze','Far shadows: drawn again every this many frames (more is faster, but they lag behind moving things)',3,'n',1,10,1],
   ['hazeSun','Light and haze','How strongly the haze takes the sky\'s colour round the horizon: warm toward the sun, bluer away from it',1,'pct',0,200,5],
   ['hazeLow','Light and haze','How much thinner the haze is up high than low over the lake',0.6,'pct',0,100,5],
+  ['shHold','Light and haze','The near shadows stay put until you move this far, so the still world\'s shadow is kept, not drawn again each frame (0 off)',3,'ft',0,30,1],['shTurn','Light and haze','…or until the sun has turned this many degrees',0.25,'n',0.05,2,0.05],
   ['shAhead','Light and haze','How far the sharp near shadows are pushed ahead of the camera, as a share of their reach',0.35,'pct',0,60,5],
   // the eye adjusting outdoors (post.js aeRead)
   ['autoExp','Light and haze','Eye adjusting: how much of the way the brightness follows what you look at (0% = off)',1,'pct',0,200,5],

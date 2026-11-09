@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-09T04:56:00Z",
+ "updated": "2026-11-09T16:13:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -123,6 +123,12 @@ window.EFFORT = {
    "dh": 47.5,
    "act": 5,
    "versions": 14
+  },
+  {
+   "d": "2026-11-09",
+   "dh": 3,
+   "act": 0.5,
+   "versions": 1
   }
  ],
  "extra": [
@@ -3489,6 +3495,15 @@ window.EFFORT = {
    "tris": 7651913,
    "chars": 2444242,
    "what": "Ask a townsperson out for a beer or a walk and, if they say yes, they actually go; they understand slang and loose wording (and, on devices that can, a small on-device model reads what you mean), know where the others are and what they think of them, pass on what others told them about you, and follow the thread of a conversation. A new Talk model, Built-in + Haiku, answers free and asks Haiku only when stuck."
+  },
+  {
+   "v": 374,
+   "asked": "2026-11-09T09:20:00-06:00",
+   "live": "2026-11-09T10:13:36-06:00",
+   "dh": 3,
+   "tris": 5921725,
+   "chars": 2452698,
+   "what": "The still world's sun shadow is kept from frame to frame and only moving things are redrawn: about 70% fewer shadow draws in town, same look"
   }
  ]
 };
