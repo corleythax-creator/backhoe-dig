@@ -67,6 +67,25 @@ function updateLawnMap(){
 // place names on the big map: [name, x, z, size], drawn at every zoom
 const MAP_LABELS=[['DIG SITE',GX0+S/2,GZ0-4,1],["CORLEY'S ISLAND",0,-EDGE-8,1.2],['FAMILY ISLAND',FAM_X,FAM_Z-FAM_R-6,1.2],["JESSICA'S ISLAND",JES_X,JES_Z-JES_R-8,1.1],
   ["DEXTER'S ISLAND",DEX_X,DEX_Z-DEX_R-8,1.1],['THE LAKE',-130,120,1.3],['THE LAKE',170,390,1.3],['THE WOODS',-220,-450,1.3],['HAYFIELD',210,-440,1.3],['LAKESIDE TOWN',0,690,1.4],['MARINA BEACH',-120,545,1],['GENERAL STORE',0,770,0.9],['HARBOR SQUARE',-60,592,0.8],['OVERLOOK',8,915,0.9],['FOOTHILLS',-150,880,1.1],['MARINA',100,505,0.9]];
+// the businesses (every shop, the brewery, the General Store: their TF_ROOMS) as brass dots, named once zoomed in;
+// each name takes the first free side of its dot, and one that would cover another label waits for more zoom
+// (the town-wide names give way to them; the brewery and the General Store take their spots first)
+const MAP_BIZ_HIDE=['LAKESIDE TOWN','GENERAL STORE'];
+function mapBiz(){return TF_ROOMS.filter(R=>!R.grp&&(R.si!=null||R.nm)).sort((a,b)=>(b.nm?1:0)-(a.nm?1:0))}
+function mapBizNear(x,z){let b=null,d=9;for(const R of mapBiz()){const e=Math.hypot(R.x-x,R.z-z);if(e<d){d=e;b=R}}return b}
+function mapBizDraw(g,X,Y,sc,dpr,taken){const px=sc/dpr;if(px<0.7)return;
+  const L=mapBiz(),r=Math.max(3,Math.min(6,px*1.2))*dpr,fz=Math.round(Math.max(13,Math.min(17,9+px*2))*dpr),gap=r+3*dpr,W=g.canvas.width,H=g.canvas.height;
+  g.lineWidth=1.5*dpr;g.strokeStyle='rgba(12,16,12,.8)';g.fillStyle='#e8c27a';
+  for(const R of L){const x=X(R.x),y=Y(R.z);if(x<-50||y<-50||x>W+50||y>H+50)continue;g.beginPath();g.arc(x,y,r,0,7);g.fill();g.stroke()}
+  if(px<1.3)return;
+  const hit=b=>taken.some(a=>a[0]<b[2]&&b[0]<a[2]&&a[1]<b[3]&&b[1]<a[3]);
+  g.font=`600 ${fz}px "Barlow Condensed", sans-serif`;g.textBaseline='middle';g.lineJoin='round';
+  for(const R of L){const x=X(R.x),y=Y(R.z);if(x<-200||y<-50||x>W+200||y>H+50)continue;taken.push([x-r,y-r,x+r,y+r])}
+  for(const R of L){const x=X(R.x),y=Y(R.z);if(x<-200||y<-50||x>W+200||y>H+50)continue;const t=townShopName(R),w=g.measureText(t).width,h=fz*0.62;
+    // right, left, above, below the dot
+    const tries=[[x+gap,y,'left',[x+gap,y-h,x+gap+w,y+h]],[x-gap,y,'right',[x-gap-w,y-h,x-gap,y+h]],[x,y-gap-h,'center',[x-w/2,y-gap-2*h,x+w/2,y-gap]],[x,y+gap+h,'center',[x-w/2,y+gap,x+w/2,y+gap+2*h]]];
+    const at=tries.find(q=>!hit(q[3]));
+    if(!at)continue;taken.push(at[3]);g.textAlign=at[2];g.lineWidth=3.5*dpr;g.strokeStyle='rgba(12,16,12,.8)';g.strokeText(t,at[0],at[1]);g.fillStyle='#f3e2b8';g.fillText(t,at[0],at[1])}}
 // the map at canvas cv, centred on cx, cz at mpp metres a CSS pixel (big: the site map, with its layers and labels)
 function drawMap(cv,cx,cz,mpp,big,bare){
   const dpr=Math.min(2,devicePixelRatio||1),W=Math.round(cv.clientWidth*dpr),H=Math.round(cv.clientHeight*dpr);if(!W||!H)return;
@@ -103,8 +122,11 @@ function drawMap(cv,cx,cz,mpp,big,bare){
   g.fillStyle='#b9b6ae';for(const b of blocks)g.fillRect(X(b.x-b.w/2),Y(b.z-b.d/2),Math.max(2,b.w*sc),Math.max(2,b.d*sc));
   if(big&&S*sc>40){g.strokeStyle='rgba(255,255,255,.4)';g.lineWidth=1.5*dpr;g.setLineDash([4*dpr,4*dpr]);g.strokeRect(X(GX0),Y(GZ0),S*sc,S*sc);g.setLineDash([]);}
   if(big){g.textAlign='center';g.textBaseline='middle';g.lineJoin='round';const fs=Math.max(12,Math.min(22,10+sc/dpr*4));
-    for(const [t,x,z,k] of MAP_LABELS){if(t==='DIG SITE'&&S*sc<40)continue;if(t==="CORLEY'S ISLAND"&&S*sc>=40)continue;
-      g.font=`700 ${Math.round(fs*k*dpr)}px "Barlow Condensed", sans-serif`;g.lineWidth=4*dpr;g.strokeStyle='rgba(12,16,12,.75)';g.strokeText(t,X(x),Y(z));g.fillStyle='#f6f3e8';g.fillText(t,X(x),Y(z))}}
+    const taken=[];
+    for(const [t,x,z,k] of MAP_LABELS){if(t==='DIG SITE'&&S*sc<40)continue;if(t==="CORLEY'S ISLAND"&&S*sc>=40)continue;if(MAP_BIZ_HIDE.includes(t)&&sc/dpr>=1.3)continue;
+      g.font=`700 ${Math.round(fs*k*dpr)}px "Barlow Condensed", sans-serif`;g.lineWidth=4*dpr;g.strokeStyle='rgba(12,16,12,.75)';g.strokeText(t,X(x),Y(z));g.fillStyle='#f6f3e8';g.fillText(t,X(x),Y(z));
+      const hw=g.measureText(t).width/2,hh=fs*k*dpr*0.6;taken.push([X(x)-hw,Y(z)-hh,X(x)+hw,Y(z)+hh])}
+    mapBizDraw(g,X,Y,sc,dpr,taken)}
   // (bare: the ground, roads, bridges and buildings only, for the start screen's picture, tools/bake_startmap.js)
   if(bare)return;
   const icon=(x,z,ang,fill,len,wid,active)=>{g.save();g.translate(X(x),Y(z));g.rotate(ang);
@@ -156,6 +178,7 @@ function mapAt(px,py){const [w,h]=mapBox();return {x:mapV.cx+(px-w/2)*mapV.mpp,z
 function mapFocus(){return wk.inside?WK_RIDES[wk.inside].o:mode==='boat'?btCur():mode==='heavy'?hvCur():mode==='bike'?bk:mode==='walk'?wk:mode==='truck'?tr:mode==='mow'?mw:mode==='skid'?sk:st}
 // what a spot on the map is called
 function mapPlace(x,z){
+  {const R=mapBizNear(x,z);if(R)return townShopName(R)}
   for(const b of BRIDGES){const [t,u]=deckLocal(b,x,z);if(t>0&&t<b.len&&Math.abs(u)<b.hw+1)return b.dock?'Dock':b.temp?'Temporary bridge':b.foot?'Covered footbridge':'Bridge'}
   if(jesR(x,z)<JES_R+4)return "Jessica's Island";if(dexR(x,z)<DEX_R+4)return "Dexter's Island";if(famR(x,z)<FAM_R+4)return 'Family Island';
   if(inDig(x,z))return 'Dig site';if(mesaR(x,z)<EDGE+4)return "Corley's Island";
