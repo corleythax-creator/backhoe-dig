@@ -28,6 +28,11 @@
  *                                        //   back, freeze, warn, watch, investigate, help or call; act.at: its ref or
  *                                        //   who; act.threat/felt/keen 0..1); the app moves them, or not
  *     hears: (key, other) => true,       // optional: whether other hears key raise the alarm (default: everyone)
+ *     now: (key) => ({ doing: 'sitting on the bench', did: 'looked at the truck and petted the cat' }),   // optional: the
+ *                                        //   present, in the app's words (also hour, needs, where): asked what they are
+ *                                        //   doing, or have been doing, they say it
+ *     find: (key, 'cat') => ({ what: 'the tabby cat', feet: 30, dir: 'behind me', by: 'the bench' }),   // optional: where
+ *                                        //   a thing is (null: none here), for "where is the cat?"
  *     url, budget, storage,              // optional: the API, most asks a visit (300), the on/off key ('hf-minds')
  *   });
  *   minds.on = false;                    // on unless switched off (kept in this browser)
@@ -179,22 +184,22 @@
   const EXCL = { warm: ['Oh!', 'Oh my.', 'Goodness!'], edge: ['Huh.', 'Hm.', 'Well.'], shy: ['Oh...', 'Oh, um.'], bold: ['Ha!', 'Whoa!'], humor: ['Ha!', 'Well, well.', 'Oh ho!'], plain: ['Oh.', 'Right.', 'Huh.'] };
   // what they talk about: a few things they would say, and ask, about each; words that mean the user is on it
   const TOPICS = {
-    weather: { n: 'the weather', w: /weather|rain|sun|snow|wind|storm|cold|hot|warm out/, say: ['Feels like rain later.', 'Lovely light today, isn\'t it?', 'I could do with a bit more sun.', 'There\'s a chill in the air tonight.', 'I love a proper thunderstorm.'], ask: ['Warm enough for you?', 'Do you like it when it rains?'] },
-    food: { n: 'food', w: /food|eat|hungry|dinner|lunch|breakfast|pizza|cook|snack|bread|soup|dessert|cake/, say: ['I could really go for a proper breakfast right now.', 'I tried baking bread last week. It came out a brick.', 'Nothing beats a good bowl of soup.', 'I\'ve been craving noodles all day.', 'I make a decent curry, if I say so myself.'], ask: ['What\'s the best thing you\'ve eaten lately?', 'Do you cook?'] },
+    weather: { n: 'the weather', w: /weather|rain|rainy|sunny|windy|snowy|stormy|chilly|freezing|sun|snow|wind|storm|cold|hot|warm out/, say: ['Feels like rain later.', 'Lovely light today, isn\'t it?', 'I could do with a bit more sun.', 'There\'s a chill in the air tonight.', 'I love a proper thunderstorm.'], ask: ['Warm enough for you?', 'Do you like it when it rains?'] },
+    food: { n: 'food', w: /food|eat|ate|meal|supper|bake|baking|hungry|dinner|lunch|breakfast|pizza|cook|snack|bread|soup|dessert|cake/, say: ['I could really go for a proper breakfast right now.', 'I tried baking bread last week. It came out a brick.', 'Nothing beats a good bowl of soup.', 'I\'ve been craving noodles all day.', 'I make a decent curry, if I say so myself.'], ask: ['What\'s the best thing you\'ve eaten lately?', 'Do you cook?'] },
     music: { n: 'music', w: /music|song|band|sing|guitar|piano|concert|jazz|rock|album/, say: ['I\'ve had the same song stuck in my head all day.', 'I used to play guitar. Badly.', 'Live music is the best thing there is.', 'I\'ve been listening to a lot of old jazz lately.'], ask: ['What are you listening to these days?', 'Do you play anything?'] },
-    travel: { n: 'travel', w: /travel|trip|holiday|vacation|abroad|flight|beach|city|country|road trip/, say: ['I\'d love to see the mountains again.', 'Best trip I ever took was a week by the sea.', 'I always pack too much.', 'One day I\'m going to just get on a train and see where it goes.'], ask: ['Where would you go, if you could go anywhere?', 'Been anywhere good lately?'] },
-    books: { n: 'books', w: /book|read|novel|story|library|author|poem/, say: ['I\'m halfway through a mystery and I can\'t put it down.', 'I fall asleep reading every single night.', 'Give me a rainy day and a good book.', 'I always read the last page first. Don\'t judge me.'], ask: ['Read anything good lately?', 'Are you a reader?'] },
+    travel: { n: 'travel', w: /travel|travelling|cities|countries|trip|holiday|vacation|abroad|flight|beach|city|country|road trip/, say: ['I\'d love to see the mountains again.', 'Best trip I ever took was a week by the sea.', 'I always pack too much.', 'One day I\'m going to just get on a train and see where it goes.'], ask: ['Where would you go, if you could go anywhere?', 'Been anywhere good lately?'] },
+    books: { n: 'books', w: /book|read|stories|libraries|novel|story|library|author|poem/, say: ['I\'m halfway through a mystery and I can\'t put it down.', 'I fall asleep reading every single night.', 'Give me a rainy day and a good book.', 'I always read the last page first. Don\'t judge me.'], ask: ['Read anything good lately?', 'Are you a reader?'] },
     work: { n: 'work', w: /work|job|boss|office|shift|career|meeting|busy/, say: ['Work has been a lot this week.', 'I\'m trying not to think about work.', 'I like being busy, honestly.', 'I keep meaning to ask for a raise.'], ask: ['What do you do for work?', 'Busy week?'] },
-    animals: { n: 'animals', w: /animal|dog|cat|horse|bird|pet|puppy|kitten/, say: ['I miss having a dog around.', 'Cats are smarter than they let on.', 'I could watch birds all day.', 'I always want to pet every dog I see.'], ask: ['Dogs or cats?', 'Do you have any pets?'] },
+    animals: { n: 'animals', w: /animal|dog|puppies|kitties|pony|ponies|cat|horse|bird|pet|puppy|kitten/, say: ['I miss having a dog around.', 'Cats are smarter than they let on.', 'I could watch birds all day.', 'I always want to pet every dog I see.'], ask: ['Dogs or cats?', 'Do you have any pets?'] },
     movies: { n: 'movies', w: /movie|film|cinema|tv|show|series|watch/, say: ['I watched an old film last night, the kind with real stunts.', 'I\'ve seen that one comedy a dozen times.', 'I always cry at the end of films. Every time.', 'I can never pick what to watch.'], ask: ['Seen anything good lately?', 'What\'s your favourite film?'] },
     garden: { n: 'gardening', w: /garden|plant|flower|tomato|grow|seed|tree/, say: ['My tomatoes finally came up this year.', 'I talk to my plants. They seem to like it.', 'Nothing smells like a garden after rain.'], ask: ['Do you grow anything?', 'Got a garden?'] },
-    cars: { n: 'cars', w: /car|drive|truck|engine|road|motor/, say: ['I\'d love an old convertible one day.', 'There\'s nothing like a long drive at night.', 'My car makes a noise I\'ve decided not to worry about.'], ask: ['What do you drive?', 'Do you like driving?'] },
+    cars: { n: 'cars', w: /car|drive|driving|drove|truck|engine|road|motor/, say: ['I\'d love an old convertible one day.', 'There\'s nothing like a long drive at night.', 'My car makes a noise I\'ve decided not to worry about.'], ask: ['What do you drive?', 'Do you like driving?'] },
     history: { n: 'history', w: /history|old|ancient|war|castle|museum/, say: ['I could spend a whole day in a museum.', 'Imagine living two hundred years ago. No coffee. Well, some coffee.', 'Old buildings have so many stories.'], ask: ['If you could visit any time in history, when?', 'Do you like museums?'] },
-    stars: { n: 'the stars', w: /star|space|moon|planet|sky|night sky|astronom/, say: ['On a clear night you can see so many stars out here.', 'The moon was huge the other night.', 'I always wanted to be an astronaut.'], ask: ['Do you ever just look up at the stars?', 'Would you go to space, if you could?'] },
-    sport: { n: 'sport', w: /sport|game|football|soccer|baseball|basketball|tennis|run|gym|team|match/, say: ['I go for a run most mornings. Most.', 'Did you catch the game?', 'I\'m terrible at sport but I love watching it.'], ask: ['Do you play anything?', 'Who do you follow?'] },
+    stars: { n: 'the stars', w: /star|space|moon|planet|sky|night sky|astronom\w*/, say: ['On a clear night you can see so many stars out here.', 'The moon was huge the other night.', 'I always wanted to be an astronaut.'], ask: ['Do you ever just look up at the stars?', 'Would you go to space, if you could?'] },
+    sport: { n: 'sport', w: /sport|game|running|runner|jog|jogging|football|soccer|baseball|basketball|tennis|run|gym|team|match/, say: ['I go for a run most mornings. Most.', 'Did you catch the game?', 'I\'m terrible at sport but I love watching it.'], ask: ['Do you play anything?', 'Who do you follow?'] },
     coffee: { n: 'coffee', w: /coffee|tea|caf[eé]|espresso|latte/, say: ['I need coffee before I\'m a real person.', 'I\'ve gone over to tea. Mostly.', 'There\'s a little cafe I love near me.'], ask: ['Coffee or tea?', 'How do you take your coffee?'] },
-    sea: { n: 'the sea', w: /sea|ocean|beach|boat|sail|swim|fish|lake|river/, say: ['I grew up near the water. I miss it.', 'I\'d live on a boat if I could.', 'Fishing is just sitting quietly with an excuse.'], ask: ['Do you like swimming?', 'Beach or mountains?'] },
-    art: { n: 'art', w: /art|paint|draw|sketch|gallery|photo/, say: ['I\'ve started sketching again.', 'I took a pottery class once. One bowl survived.', 'I love a good gallery on a quiet day.'], ask: ['Do you make anything?', 'Painting or photography?'] },
+    sea: { n: 'the sea', w: /sea|ocean|swimming|beach|boat|sail|swim|fish|lake|river/, say: ['I grew up near the water. I miss it.', 'I\'d live on a boat if I could.', 'Fishing is just sitting quietly with an excuse.'], ask: ['Do you like swimming?', 'Beach or mountains?'] },
+    art: { n: 'art', w: /art|paint|photograph\w*|draw|sketch|gallery|photo/, say: ['I\'ve started sketching again.', 'I took a pottery class once. One bowl survived.', 'I love a good gallery on a quiet day.'], ask: ['Do you make anything?', 'Painting or photography?'] },
     games: { n: 'games', w: /video game|games|cards|chess|puzzle|board game/, say: ['I\'m a menace at board games.', 'I\'ve been doing a crossword every morning.', 'Chess is the only game I lose gracefully.'], ask: ['Up for a game of cards sometime?', 'Are you competitive?'] },
   };
   const TKEYS = Object.keys(TOPICS);
@@ -220,6 +225,9 @@
     games: { say: ['I\'m very competitive at board games. Too competitive.', 'I could do crosswords all day.', 'A deck of cards fixes a rainy afternoon.', 'I was unbeatable at checkers as a kid.', 'Puzzles are my way of switching off.', 'I always lose at chess and always want a rematch.'], ask: ['Up for a game sometime?', 'Cards or board games?'] },
   };
   for (const k in MORE) if (TOPICS[k]) { TOPICS[k].say.push(...MORE[k].say); TOPICS[k].ask.push(...MORE[k].ask); }
+  // a topic's words are whole words (with a plain ending: eats, eating), never a part of another: "great" is not food
+  const wordy = (re) => new RegExp('(?:^|[^a-z])(?:' + re.source + ')(?:s|es|ed|ing|er|ers)?(?![a-z])', 'i');
+  for (const k of TKEYS) TOPICS[k].w = wordy(TOPICS[k].w);
   const T_OPEN = { warm: ['You know what I was thinking about? ', 'Can I tell you something? '], edge: ['Random thought. ', 'Here\'s one. '], shy: ['Um, so... ', 'This is silly, but '], bold: ['Okay, listen. ', 'Right, so. '], humor: ['Fun fact about me: ', 'Breaking news: '], plain: ['So. ', 'Anyway, '] };
   const T_TAIL = { warm: [' Isn\'t that nice?', ' I don\'t know, it just makes me happy.'], edge: [' Make of that what you will.', ' There. I said it.'], shy: [' Is that weird?', ' Sorry, I\'m rambling.'], bold: [' True story.', ' No regrets.'], humor: [' Don\'t laugh.', ' This is the most interesting thing about me.'], plain: [' Anyway.', ' That\'s all.'] };
   // ---- back and forth between two of them, and feelings that last
@@ -599,6 +607,34 @@
 
   // ---- the present (o.now(k): { doing, hour, needs }, the page's): what they are doing, the time, how they feel in
   // body, and yes or no to doing something with you; and following a conversation: why, more, and you?
+  // ---- told to do something (the page reads what you said for something to do: willing(), ordered()): yes in their own
+  // way, no when they would rather not (who they are, how they feel about you), why it can't be done; and where a
+  // thing is (o.find) and what they have been doing (o.now(k).did)
+  const ORDERL = {
+    yes: { warm: ['Of course.', 'Sure, happy to.', 'For you? Of course.'], edge: ['Fine.', 'If I must.', 'Alright, alright.'], shy: ['Oh, okay.', 'Um, sure.'], bold: ['You got it.', 'On it.', 'Say no more.'],
+      humor: ['Your wish, my command.', 'Since you asked so nicely.', 'Yes, boss.'], plain: ['Okay.', 'Sure.', 'Alright.'] },
+    come: { any: ['Coming.', 'On my way.', 'Be right there.', 'Coming over.'] }, follow: { any: ['Right behind you.', 'Lead the way.', 'I\'ll keep up.', 'After you.'] },
+    stay: { any: ['I\'ll wait here.', 'Staying put.', 'Not going anywhere.', 'I\'ll be right here.'] }, home: { any: ['Back I go.', 'Heading back.', 'I\'ll go back to my spot.'] },
+    sit: { any: ['Don\'t mind if I do.', 'My feet could use it.', 'I\'ll take a seat.'] }, stand: { any: ['Up I get.', 'On my feet.', 'Getting up.'] },
+    small: { any: ['Like this?', 'There.', 'Sure.'] }, run: { any: ['Going!', 'I\'m off!', 'Running!'] },
+    goto: { any: ['Heading over to {the}.', 'Over to {the}. Got it.', 'I\'ll go over to {the}.'] }, board: { any: ['Getting in {the}.', 'I\'ll hop in {the}.', 'Into {the}, then.'] },
+    pet: { any: ['Oh, gladly.', 'I\'ll go say hello to {the}.', 'Come here, you.'] }, lookat: { any: ['Let\'s have a look at {the}.', 'I\'ll take a look.'] },
+    inside: { any: ['Going in.', 'Inside. Got it.', 'I\'ll head in.'] }, outside: { any: ['Heading out.', 'Out I go.', 'I\'ll step out.'] },
+    then: { any: ['Then {next}. Got it.', 'And then {next}. Okay.'] },
+    no: { warm: ['I\'d rather not, if that\'s alright.', 'Not just now, sorry.'], edge: ['No.', 'I don\'t take orders.', 'Do it yourself.', 'Why would I?'], shy: ['I... I\'d rather not.', 'Um, no, sorry.'],
+      bold: ['Nope. Not feeling it.', 'I\'ll pass.'], humor: ['Ask me again in a year.', 'Tempting. No.'], plain: ['No, I don\'t think so.', 'I\'d rather not.'] },
+    giveIn: { warm: ['Oh, alright then.', 'Okay, okay. Since it matters to you.'], edge: ['Fine. Happy now?', 'Ugh. Alright.'], shy: ['Okay... if you want.'], bold: ['Alright, you win.'], humor: ['You wore me down.', 'Twice? Fine.'], plain: ['Alright then.', 'Okay, fine.'] },
+    cant: { any: ['I would, but I can\'t: {why}.', 'Can\'t do that: {why}.', 'Hm, no good: {why}.'] },
+  };
+  const THINGL = {
+    here: { any: ['{The}? Right here.', '{The} is right beside us.', 'Right there. {Feet} feet, if that.'] },
+    at: { hi: { any: ['{The} is about {feet} feet {dir}{by}.', '{The}? {Dir}, roughly {feet} feet{by}.'] }, mid: { any: ['{The}? Over there, {dir}{by}.', 'About {feet} feet {dir}{by}.', '{Dir}{by}. Not far.'] },
+      lo: { any: ['Um... over there somewhere.', '{The}? That way, I think.'] } },
+    far: { any: ['{The} is a good way off, {dir}.', 'Way over there, {dir}. A fair walk.'] },
+    none: { warm: ['I don\'t see any {x} around here, sorry.', 'No {x} that I can see.'], edge: ['Do you see any {x}? Me neither.', 'No {x} here.'], shy: ['I... don\'t see one.'], bold: ['No {x} here. Want to go find one?'],
+      humor: ['If there\'s {a_x} here, it\'s hiding well.'], plain: ['I don\'t see any {x}.', 'No {x} around here.'] },
+  };
+  const DIDL = { did: { any: ['I {did}.', 'Let\'s see. I {did}.', 'Not a lot: I {did}.', 'Well, I {did}.'] }, now: { any: ['Right now? {Doing}.', 'And now, {doing}.'] } };
   const NOWL = {
     doing: { warm: ['Just {doing}. Nice and easy.', 'Oh, {doing}. Come keep me company.'], edge: ['{Doing}. What does it look like?', '{Doing}. Riveting, I know.'], shy: ['Oh, just... {doing}.', 'Um, {doing}.'],
       bold: ['{Doing}, and enjoying it.', '{Doing}. And you?'], humor: ['{Doing}. Very important work, as you can see.', 'Officially? {Doing}. Unofficially, also {doing}.'], plain: ['{Doing}.', 'Just {doing}.'] },
@@ -1577,6 +1613,19 @@
       if (/\b(bye|goodbye|see you|good ?night|later)\b/.test(t)) return pick(k, P, L.bye, slots);
       if (/\b(thanks|thank you|cheers)\b/.test(t)) return pick(k, P, L.thanks, slots);
       if (/\b(joke|make me laugh|something funny)\b/.test(t)) { push(c, m, P, 0.1, 0.1); return pick(k, P, L.joke, slots); }
+      // where a thing is (o.find, the page's: { what, feet, dir, by } or null): said as sharply as they are
+      const wm = o.find && (t.match(/\bwhere(?:'s| is| are| did| has| have) (?:the |my |that |those |our |a |an )?([a-z][a-z' -]{1,40}?)(?: go| gone| got to| at)?\s*\??$/) || t.match(/\b(?:have you seen|did you see|do you see|can you see) (?:the |my |that |a |an |any )?([a-z][a-z' -]{1,40}?)\s*\??$/));
+      if (wm && !/^(we|this|i|you|he|she|they|it|everyone|everybody|home|here|there|anything|something|that)\b/.test(wm[1])) {
+        const f = o.find(k, wm[1]), x = bare(wm[1]).replace(/s$/, '');
+        if (!f) { Object.assign(slots, { x, a_x: aOf(x) }); return pick(k, P, THINGL.none, slots); }
+        Object.assign(slots, { the: /^[A-Z]/.test(f.what) ? f.what : 'the ' + bare(f.what), feet: Math.max(5, Math.round((f.feet || 0) / 5) * 5), dir: f.dir || 'that way', by: f.by ? ', by ' + (/^[A-Z]/.test(f.by) ? f.by : 'the ' + bare(f.by)) : '' });
+        return pick(k, P, (f.feet || 0) < 12 ? THINGL.here : f.feet > 200 ? THINGL.far : THINGL.at[tierOf(P)], slots);
+      }
+      // what they have been doing (o.now(k).did, the page's words: 'looked at the truck and sat on the bench')
+      if (/what (did|have) you (do|done|been (doing|up to))|what('ve| have) you been (doing|up to)|been up to|what happened( to you| here)?\??$|what were you doing/.test(t)) {
+        const Nw = (o.now && o.now(k)) || {};
+        if (Nw.did) { slots.did = Nw.did; slots.doing = Nw.doing || ''; return pick(k, P, DIDL.did, slots) + (Nw.doing ? ' ' + pick(k, P, DIDL.now, slots) : ''); }
+      }
       if (/where (are we|is this|am i)/.test(t)) { slots.where = String(o.scene ? o.scene(k, 'you', null) : '').split(/[.,]/)[0].replace(/^an? /i, (x) => x.toLowerCase()) || 'here'; return pick(k, P, L.where, slots); }
       if (/what (do|can) you see|what('s| is) (around|here|going on)|look around/.test(t)) {
         const s = (o.sights ? o.sights(k) : []).map((g) => (typeof g === 'object' ? g.what : g)); slots.sights = s.length > 1 ? s.slice(0, -1).join(', ') + ' and ' + s[s.length - 1] : s[0];
@@ -1666,6 +1715,34 @@
     }
     // for a model speaking for them: what they know, and their past chats with you (by what came up, as far back as they
     // remember), in a few plain words written here
+    // told to do something (O: { how, please }): whether they will. Mostly yes; less for the prickly and the proud, for
+    // someone cross with you or out of sorts; a small thing is done more readily, and asked again soon they give in
+    const asks = new Map();
+    function willing(k, O) {
+      const c = o.card(k); if (!c) return true;
+      const P = profile(c), m = memOf(c), d = P.d, U = m.user, mood = moodName(c, m, P), now = Date.now() / 1000, id = idOf(c), last = asks.get(id);
+      const again = !!(last && !last.ok && now - last.t < 45), easy = /^(stay|stand|wave|look|lookat|run|home|sit|outside)$/.test(O.how);
+      const w = 0.98 + (U.like || 0) * 0.45 + d.warm * 0.1 - d.edge * 0.28 - (c.traits || []).filter((t) => /^(proud|grumpy|sarcastic)$/.test(t)).length * 0.08
+        + (easy ? 0.08 : 0) + (O.please ? 0.12 : 0) - (mood === 'annoyed' ? 0.22 : /tired|sad/.test(mood) ? 0.07 : 0) + (again ? 0.4 : 0);
+      const ok = Math.random() < cl(w, 0.2, 0.99);
+      asks.set(id, { ok, t: now, again }); return ok;
+    }
+    // ...and their word on it: O { how, what (the thing's own words), ok (they will), can (false: it can't be done), why
+    // (the page's words for why not), next (what comes after, said plainly: 'get in') }
+    function orderLine(k, O) {
+      const c = o.card(k); if (!c) return null;
+      const P = profile(c), m = memOf(c), mood = moodName(c, m, P), a = asks.get(idOf(c));
+      const slots = { me: c.name, user: (o.youName && o.youName()) || m.user.name || '', what: O.what || 'it', the: O.what ? (/^(the|a|an|my|your) /i.test(O.what) || /^[A-Z]/.test(O.what) ? O.what : 'the ' + O.what).replace(/^an? /i, 'the ') : 'it', why: O.why || 'not now', next: O.next || '' };
+      const grp = { wave: 'small', look: 'small', upstairs: 'inside', downstairs: 'inside' }[O.how] || O.how;
+      let say;
+      if (O.ok === false) { say = pick(k, P, ORDERL.no, slots); push(c, m, P, -0.03, 0.05); }
+      else if (O.can === false) say = pick(k, P, ORDERL.cant, slots);
+      else {
+        say = a && a.again ? pick(k, P, ORDERL.giveIn, slots) : ORDERL[grp] && Math.random() < 0.6 ? pick(k, P, ORDERL[grp], slots) : pick(k, P, ORDERL.yes, slots);
+        if (O.next) say += ' ' + pick(k, P, ORDERL.then, slots);
+      }
+      return { say: voice(say, P, mood, {}).slice(0, 300), mood, face: face(mood), look: 'you', meta: { order: O.how, ok: O.ok !== false && O.can !== false } };
+    }
     function memoryNote(k) {
       const c = o.card(k); if (!c) return '';
       const P = profile(c), m = memOf(c), now = Date.now() / 1000, bits = [knows(k)];
@@ -1684,7 +1761,7 @@
     }
     // what they remember of someone, newest first: [{ w, x, t, v, of, by }] (for a page that shows it)
     function ties(k, q) { const c = o.card(k); if (!c) return []; const R = memOf(c).rel[typeof q === 'string' ? q : o.nameOf(q)]; return R && R.mem ? R.mem.slice().reverse() : []; }
-    return { profile, observe, line, reset, flush, knows, memoryNote, tie, ties, tieBoth, plan, aside, decide, sense: (k, g) => { const c = o.card(k); return c ? sense(profile(c), memOf(c), thing(g)) : null; }, moodOf: (k) => { const c = o.card(k); return c ? moodName(c, memOf(c), profile(c)) : ''; } };
+    return { profile, observe, line, reset, flush, knows, memoryNote, willing, orderLine, tie, ties, tieBoth, plan, aside, decide, sense: (k, g) => { const c = o.card(k); return c ? sense(profile(c), memOf(c), thing(g)) : null; }, moodOf: (k) => { const c = o.card(k); return c ? moodName(c, memOf(c), profile(c)) : ''; } };
   }
 
   function create(o) {
@@ -1720,7 +1797,7 @@
       root.addEventListener('pagehide', flush);
       if (typeof document !== 'undefined') document.addEventListener('visibilitychange', () => { if (document.hidden) flush(); });
     }
-    const brain = Brain({ storage: KEY, now: o.now, people: o.people, canGo: o.canGo, card: (k) => o.card(k), nameOf: (k) => M.nameOf(k), sights: o.sights, scene: o.scene, youName: () => (M.as != null && o.card(M.as) ? o.card(M.as).name : ''), lines: o.lines, you: () => M.as });
+    const brain = Brain({ storage: KEY, now: o.now, people: o.people, canGo: o.canGo, find: o.find, card: (k) => o.card(k), nameOf: (k) => M.nameOf(k), sights: o.sights, scene: o.scene, youName: () => (M.as != null && o.card(M.as) ? o.card(M.as).name : ''), lines: o.lines, you: () => M.as });
     const send = (body) => fetch(url, { method: 'POST', headers: Object.assign({ 'content-type': 'application/json' }, M.key ? { 'x-persona-key': M.key } : {}), body: JSON.stringify(body) });
     const why = (a) => { if (a.spend) M.spend = a.spend; if (a.error === 'off') M.server = false; return a.why || 'They could not answer just now.'; };
     // the real voices' server beside this one (o.voiceUrl, else /api/voice next to /api/persona), on this M's key and meter
@@ -1741,6 +1818,8 @@
       for (let i = M.lines.length - 1; i >= 0; i--) { const l = M.lines[i]; if (l.p === k && l.to === 'you') return undefined; if (l.p === 'you' && mine(l, k)) return l.group ? l.id : undefined; }
       return undefined;
     };
+    // the mood each of the last lines was said in, for reading it aloud
+    const moods = new Map(), felt = (a) => { if (!a || !a.say || !a.mood) return; moods.delete(a.say); moods.set(a.say, a.mood); if (moods.size > 40) moods.delete(moods.keys().next().value); };
     const M = {
       lines: [], asked: 0, busy: new Set(), status: '', server: null, chatter: false, left: CHATTER,
       as: null,   // the person you are playing (their key): they say only what you type, and the others talk to you as them
@@ -1787,13 +1866,17 @@
         if (M.model !== 'local' && M.server === null) await M.check();
         if (M.local && !force) return M.think(k, to, ev);
         if (ev && ev.kind === 'lost') return M.think(k, to, ev);   // the story's turns are the built-in mind's, whoever speaks
-        if (ev && !SERVER.includes(ev.kind) && !(ev.kind === 'notice' && ev.decide)) return null;   // a notice goes to the server only to be decided
-        if (M.asked >= budget) { M.status = `That's ${budget} lines this visit; reload the page for more.`; changed(); return null; }
+        // what the server's model does not take (something noticed, an alarm, someone leaving...) is still said: the built-in
+        // mind's line, free; a notice goes to the server only to be decided
+        if (ev && !SERVER.includes(ev.kind) && !(ev.kind === 'notice' && ev.decide)) return M.think(k, to, ev);
+        if (M.asked >= budget) { M.status = `That's ${budget} model lines this visit (reload for more); the built-in mind is speaking.`; changed(); return force ? null : M.think(k, to, ev); }
         // talking with you (or anyone the app marks best, o.best): fuller answers, the last 30 lines and what they remember;
         // a passing remark or reaction stays short. best: fuller answers among themselves too, and the model picked thinks harder
         const best = !!(o.best && o.best(k, to === 'you' ? null : to)), direct = !ev && (to === 'you' || to == null);
         const depth = direct || (best && !ev) ? 'talk' : 'chat';
-        const log = (direct ? history(k) : M.lines.filter((l) => l.p === k || mine(l, k) || (to !== 'you' && to != null && (l.p === to || l.to === to)))).slice(depth === 'talk' ? -30 : -12).map((l) => ({ who: l.who, said: l.said }));
+        // answering a line of yours to a group: they have heard what the others answered before them
+        const rd = direct ? roundOf(k) : undefined, heard = rd ? M.lines.filter((l) => l.round === rd && l.p !== k) : [];
+        const log = (direct ? (heard.length ? history(k).concat(heard).sort((a, b) => a.t - b.t) : history(k)) : M.lines.filter((l) => l.p === k || mine(l, k) || (to !== 'you' && to != null && (l.p === to || l.to === to)))).slice(depth === 'talk' ? -30 : -12).map((l) => ({ who: l.who, said: l.said }));
         const e = ev && { kind: ev.kind, who: ev.by != null ? M.nameOf(ev.by) : String(ev.who || '').slice(0, 40), what: ev.kind === 'touched' ? '' : String(ev.what || '').slice(0, 60), where: ev.where || '', danger: !!ev.danger, feet: ev.feet ? Math.round(ev.feet) : undefined };
         // to be decided: the built-in mind's pick goes along as their instinct, and the server answers with a `do` (MILD only)
         if (e && ev.decide && ev.dec) Object.assign(e, { decide: true, toward: !!ev.toward, moving: !!ev.moving, inst: { do: ev.dec.do, threat: ev.dec.threat, felt: ev.dec.felt, keen: ev.dec.keen } });
@@ -1807,16 +1890,19 @@
           const r = await send({ me: o.card(k), to: to === 'you' || to == null ? 'you' : o.card(to), scene: o.scene ? o.scene(k, to, ev) : '', log, event: e || undefined,
             model: force || M.model, decide: !!(e && e.decide), depth, best, past: direct || best ? brain.memoryNote(k) : undefined, joint: joint.length ? joint : undefined, proposal });
           const a = await r.json().catch(() => ({}));
-          if (!r.ok) { M.status = why(a); if (a.error === 'cap') M.chatter = false; return null; }
+          // the model could not answer (busy, the cap, the network): the built-in mind says the line instead, so nobody
+          // just stands there; a description or line the rules stop stays unanswered
+          if (!r.ok) { M.status = why(a); if (a.error === 'cap') M.chatter = false; if (force || a.error === 'about' || a.error === 'adult') return null; M.busy.delete(k); return await M.think(k, to, ev); }
           if (a.spend) { M.spend = a.spend; M.cost = a.cost || 0; M.session += a.cost || 0; M.sessionLines++; } if (a.model) M.served = a.model;
           if (!o.people().includes(k)) return null;
           M.lines.push({ p: k, to: ev ? (ev.by != null ? ev.by : null) : to, who: M.nameOf(k), said: a.say, ev: ev ? ev.kind : undefined, t: Date.now() / 1000, round: to === 'you' ? roundOf(k) : undefined });
+          felt(a);
           if (!ev && to === 'you') keep(k, M.lines[M.lines.length - 1]);
           if (o.show) o.show(k, a, to, ev);
           if (proposal) { offers.delete(k); if (PLAN_W[proposal.key]) { if (a.agree === true) brain.tieBoth(k, to, 'plan', PLAN_W[proposal.key]); else brain.tie(to, k, 'refused', PLAN_W[proposal.key]); } if (o.agreed) o.agreed(to, k, proposal.key, a.agree === true); }
           else if (a.propose && joint.includes(a.propose)) { offers.set(to, { by: k, key: a.propose, t: Date.now() / 1000 }); if (o.proposed) o.proposed(k, to, a.propose); M.answer(to, k); }
           return a;
-        } catch (err) { M.status = 'They could not answer just now.'; return null; } finally { M.busy.delete(k); changed(); }
+        } catch (err) { M.status = 'The model could not be reached; the built-in mind is speaking.'; if (force) return null; M.busy.delete(k); return await M.think(k, to, ev).catch(() => null); } finally { M.busy.delete(k); changed(); }
       },
       // k answers by's suggestion (once k is free to speak; given up after a few tries)
       async answer(k, by) {
@@ -1868,6 +1954,7 @@
           M.lines.push({ p: k, to: ev ? (ev.by != null ? ev.by : null) : to == null ? 'you' : to, who: M.nameOf(k), said: a.say, ev: ev ? ev.kind : undefined, t: Date.now() / 1000, meta: a.meta, round: !ev && (to == null || to === 'you') ? roundOf(k) : undefined });
           if (!ev && (to == null || to === 'you')) keep(k, M.lines[M.lines.length - 1]);
           if (M.lines.length > 400) M.lines.splice(0, 100);
+          felt(a);
           if (o.show) o.show(k, a, ev && ev.kind === 'muse' ? null : to, ev && ev.kind === 'muse' ? null : ev);
           if (a.act && !(ev && ev.dec) && o.act) o.act(k, a.act, ev);   // something they noticed while musing
           if (a.meta && a.meta.go && o.go) o.go(k, a.meta.go);   // agreed to do something: the page has them do it
@@ -1898,7 +1985,8 @@
         if (keys.length === 1) { const a = await M.tell(keys[0], text); return a ? [a] : []; }
         const id = ++rid, line = { p: 'you', to: 'group', group: keys, id, who: label, said: text, t: Date.now() / 1000 };
         M.lines.push(line); M.left = CHATTER; for (const k of keys) keep(k, line); changed();
-        const who = M.local ? brain.plan(keys, text) : keys.slice(0, 4), out = [];
+        // who answers: those named, else the readiest to (a model: four at most), never just the first four of the list
+        const who = M.local ? brain.plan(keys, text) : brain.plan(keys, text).slice(0, 4), out = [];
         for (const k of who) {
           if (!o.people().includes(k)) continue;
           for (let i = 0; i < 40 && M.busy.has(k); i++) await wait(150);   // finishing another line first
@@ -1912,6 +2000,29 @@
       groupLog(keys) {
         const ids = new Set(M.lines.filter((l) => l.group && l.group.some((k) => keys.includes(k))).map((l) => l.id));
         return M.lines.filter((l) => (l.group && ids.has(l.id)) || (l.round && ids.has(l.round)) || (l.ev === 'aside' && keys.includes(l.p))).slice(-40);
+      },
+      // you told key to do something (the app read it from what you said: O { how: come, follow, stay, home, sit, stand,
+      // wave, look, run, goto, board, pet, lookat, inside, outside, upstairs, downstairs; please }): whether they will
+      willing(k, O) { return !M.can(k) || k === M.as ? true : brain.willing(k, O || {}); },
+      // ...and their word on it, said for them (always the built-in mind's: at once, free): O { how, what (the thing, in
+      // the app's own words), text (what you said, kept in the conversation), ok (false: they won't), can (false: it
+      // can't be done) and why (the app's words), next (what they do after), quiet (kept, nothing said) }. Use it in
+      // place of tell() for a line that was an order, so their answer and what they do agree
+      async ordered(k, O) {
+        O = O || {}; if (!M.can(k) || k === M.as) return null;
+        const text = String(O.text || '').trim().slice(0, 400);
+        if (text) { M.lines.push({ p: 'you', to: k, who: M.as != null ? M.nameOf(M.as) : 'you', said: text, t: Date.now() / 1000 }); keep(k, M.lines[M.lines.length - 1]); M.left = CHATTER; }
+        if (O.quiet) { changed(); return null; }
+        for (let i = 0; i < 20 && M.busy.has(k); i++) await wait(150);
+        M.busy.add(k); changed();
+        try {
+          await wait(250 + Math.random() * 500 + (O.after || 0));
+          if (!o.people().includes(k) || !M.on) return null;
+          const a = brain.orderLine(k, O); if (!a) return null;
+          M.lines.push({ p: k, to: 'you', who: M.nameOf(k), said: a.say, t: Date.now() / 1000, meta: a.meta }); keep(k, M.lines[M.lines.length - 1]);
+          felt(a); if (o.show) o.show(k, a, 'you', null);
+          return a;
+        } finally { M.busy.delete(k); changed(); }
       },
       // you say something to key; they answer
       tell(k, text) {
@@ -1990,7 +2101,8 @@
       // read a line aloud: who is their card (or just 'man' / 'woman'); each person keeps one voice (VOICE); on: { start(s),
       // end() } as the voice starts (with about how long it runs, in seconds) and stops, for a mouth to move with it
       // (on may be a number instead: vol 0..1, how loud where you are, the app's distance; or { vol, start, end })
-      speak(text, who, on) { VOICE.say(text, typeof who === 'object' && who ? who : { sex: who }, typeof on === 'number' ? { vol: on } : on); },
+      // read aloud in the mood the line was said in (not the mood they were designed with)
+      speak(text, who, on) { const m = moods.get(text); VOICE.say(text, typeof who === 'object' && who ? (m ? Object.assign({}, who, { mood: m }) : who) : { sex: who }, typeof on === 'number' ? { vol: on } : on); },
       speaking: () => VOICE.speaking(),
       // real voices (api/voice.js, the owner's, on the daily cap) unless switched off on this device; the browser's own
       // voices whenever they are off, there is no owner key, or the server is not set up for them

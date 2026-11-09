@@ -109,7 +109,7 @@ const TUNE=[
   ['packShed','Excavator','How fast packed clay drops off',1,'pct',0,500,5],
   ['caveDepth','Cave-ins','Walls start to cave in deeper than',1.2,'ft',1,30,0.5],['caveSpoil','Cave-ins','Spoil this close to the edge loads the wall',0.64,'ft',0,10,0.5],
   // the townsfolk (townfolk.js): how fast the town's cars drive its streets and its people walk
-  ['tfCarV','Town','Town traffic speed',11.2,'mph',5,45,1],['tfWalk','Town','Townsfolk walking pace',1.3,'mph',1,5,0.1],['tfUltraR','Town','Ultra graphics: townsfolk shown in full detail within',6,'ft',6,40,1],['inFar','Town','Indoors: smaller things outside drawn within',150,'ft',100,2600,10],['townZ','Town','Machines on the islands hidden once you are this far south (town)',420,'ft',1000,2300,10],
+  ['tfCarV','Town','Town traffic speed',11.2,'mph',5,45,1],['tfWalk','Town','Townsfolk walking pace',1.3,'mph',1,5,0.1],['tfUltraR','Town','Ultra graphics: townsfolk shown in full detail within',6,'ft',6,40,1],['townZ','Town','Machines on the islands hidden once you are this far south (town)',420,'ft',1000,2300,10],
   // which townsfolk characters stay home: one bit per character, in models/peds/peds.json order (bit 0 = cal_m); set on the Townsfolk page
   ['tfOut','Town','Townsfolk left out (a bit per character; set it on the Townsfolk page)',0,'n',0,4294967295,1],
   // the town's life (town.js): money, shop hours, greetings and talk
@@ -209,6 +209,13 @@ const TUNE=[
   ['clCirrus','Weather','High thin cloud',1,'pct',0,200,5],['clBeams','Weather','Sunbeams between the clouds',1,'pct',0,300,5],
   ['clRainbow','Weather','Rainbows after rain',1,'pct',0,200,5],
   ['lampLight','Day and night','Headlights, lamps and lit windows',1,'pct',0,300,5],
+  // the lights of the town's buildings from Building Forge (forgetown.js bfLightTick): how bright the real ones are, how
+  // near the camera a light must be to hold one, and how many real lights at once on each Graphics level (Low has none)
+  ['bfLight','Day and night','Building lights: how bright the lamps and ceiling lights in the town\'s buildings shine',1,'pct',0,400,5],
+  ['bfLtFar','Day and night','Building lights: real light only from the ones within',30,'ft',30,300,5],
+  ['bfLtMed','Day and night','Building lights: real lights at once on Medium graphics (each costs every pixel a little)',2,'n',0,8,1],
+  ['bfLtHigh','Day and night','Building lights: real lights at once on High graphics',4,'n',0,8,1],
+  ['bfLtUltra','Day and night','Building lights: real lights at once on Ultra graphics',6,'n',0,8,1],
   // fuel and pay (fuel.js)
   ['fuelUse','Work and pay','Fuel use (100% burns what the real machine does in an hour of game time; does nothing while fuel burn is off, FUEL_BURN in fuel.js)',1,'pct',0,500,5],
   ['fuelPrice','Work and pay','Fuel price, a gallon (does nothing while fuel burn is off)',3.85,'usd',0,20,0.05],

@@ -40,9 +40,15 @@ GFX.low.turf=0.35;GFX.med.turf=0.65;GFX.high.turf=1;GFX.low.turfR=22;GFX.med.tur
 // street life at night (street.js): the coloured glow of the neon signs on the walk and the van's hazard halos (the
 // shop light on the walk and the signs themselves are on every level)
 GFX.low.stlGlow=false;GFX.med.stlGlow=GFX.high.stlGlow=true;
+// how far from a shop's or house's room its furniture is drawn (m; interiors.js rmPartsTick)
+GFX.low.rmNear=25;GFX.med.rmNear=35;GFX.high.rmNear=45;
 GFX.low.extraLt=false;GFX.med.extraLt=GFX.high.extraLt=true;
 // two real spotlights from the placed lights nearest the camera (props.js); the glow and the pools of light are on every level
 GFX.low.propLt=GFX.med.propLt=false;GFX.high.propLt=true;
+// real light from the lamps and ceiling lights of the Building Forge buildings nearest the camera (forgetown.js
+// bfLightTick): how many is the Tuning for the level (TU.bfLtMed, bfLtHigh, bfLtUltra); Low draws none, and the
+// fixtures glow on every level (set again after Ultra and Quest are made, below)
+GFX.low.bfLt=false;GFX.med.bfLt=GFX.high.bfLt=true;
 // the townsfolk from Human Forge (townfolk.js), at that level of detail: the phone keeps the old ones
 GFX.low.forge=GFX.med.forge='';GFX.high.forge='md';
 // far shadows (core.js sunFar): how far either side they reach (m, 0 off) and their map's size
@@ -62,7 +68,7 @@ GFX.low.vrSS=GFX.med.vrSS=1;GFX.high.vrSS=1.25;GFX.ultra.vrSS=1.4;
 GFX.quest=Object.assign({},GFX.med,{name:'Quest',pr:1,auto:false,sh:2048,shR:16,tex:'med',aniso:4,dirt:2,lawnFar:8,fog:0.7,wmFine:false,lakeQ:0,cloudQ:0,
   rainN:700,rainSp:180,splashN:260,wakeN:160,brush:0.3,wild:0.35,turf:0.35,turfR:22,model:true,treeR:50,tuft:[0.5,10,30,0.15],vrSS:0.9});
 GFX.quest.town=1;
-GFX.quest.extraLt=false;
+GFX.quest.extraLt=false;GFX.quest.bfLt=false;
 // the bridges' detail parts: gusset and cover plates, lacing and lattice, braces, lamp trim, the covered bridge's
 // lattice and rafters, batter piles (bridges.js); Low leaves them out
 GFX.low.brDet=false;GFX.med.brDet=GFX.high.brDet=GFX.ultra.brDet=GFX.quest.brDet=true;
@@ -70,23 +76,25 @@ GFX.low.brDet=false;GFX.med.brDet=GFX.high.brDet=GFX.ultra.brDet=GFX.quest.brDet
 // islands, a hundred parts each, most a pixel or two across: about 1,000 of the 1,400 draws a frame. The camera's own
 // check (Frustum.intersectsObject) also skips a mesh whose width on screen is under gfxCur.cull CSS pixels, or that is
 // wholly past the haze (fogged materials). Only while the game's own camera draws (not the editor, VR or other views);
-// a mesh with userData.keep always draws. Indoors (on foot in a room: interiors.js rmRoomAt, as rmInsideTick tells it; in the pub, say) the walls
-// hide the rest of the island, so anything under 40 m across farther off than TU.inFar is skipped too (the machines on
-// the islands, the yards, far houses); the land, the lake, the sky and the mountains still show through the windows.
-const gfxCull={on:false,x:0,y:0,z:0,k:0,fog:0,far:0},gfxSph=new THREE.Sphere();
+// a mesh with userData.keep always draws. Indoors (the camera in a shop's or house's room that knows its openings:
+// interiors.js rmSeeFrom) a part outside the building that no window, door or storefront lets the camera see is skipped
+// too (rmSeen); whatever an opening shows, however small or far, draws in full. Only the camera's own pass (mainF, the
+// first frustum asked each frame, as three.js culls the view before the shadows): the shadows are drawn as ever.
+const gfxCull={on:false,x:0,y:0,z:0,k:0,fog:0,see:null,mainF:null},gfxSph=new THREE.Sphere();
 (function(){const P=THREE.Frustum.prototype;
   P.intersectsObject=function(o){const b=o.boundingSphere!==undefined?(o.boundingSphere||(o.computeBoundingSphere(),o.boundingSphere)):(o.geometry.boundingSphere||(o.geometry.computeBoundingSphere(),o.geometry.boundingSphere));
+    if(gfxCull.on&&!gfxCull.mainF)gfxCull.mainF=this;
     const s=gfxSph.copy(b).applyMatrix4(o.matrixWorld);if(!this.intersectsSphere(s))return false;
     if(!gfxCull.on||o.userData.keep)return true;
+    if(gfxCull.see&&this===gfxCull.mainF&&!rmSeen(gfxCull.see,s))return false;
     const c=s.center,d=Math.hypot(c.x-gfxCull.x,c.y-gfxCull.y,c.z-gfxCull.z);if(d<=s.radius)return true;
     if(s.radius*gfxCull.k<d)return false;
-    if(gfxCull.far&&d-s.radius>gfxCull.far&&s.radius<40)return false;
     const m=o.material;return !(gfxCull.fog&&d-s.radius>gfxCull.fog&&m&&m.fog&&!Array.isArray(m))}})();
 function gfxCullOn(cam){const px=gfxCur.cull||0;gfxCull.on=px>0&&cam===camera&&!edOn&&!renderer.xr.isPresenting;if(!gfxCull.on)return;
   const h=renderer.domElement.clientHeight||innerHeight;gfxCull.x=cam.position.x;gfxCull.y=cam.position.y;gfxCull.z=cam.position.z;
   // radius r at distance d is r/d/tan(fov/2)*zoom*(h/2) pixels from its middle; under px/2 is culled
   gfxCull.k=h*cam.zoom/(Math.tan(cam.fov*Math.PI/360)*px);gfxCull.fog=scene.fog?scene.fog.far:0;
-  gfxCull.far=mode==='walk'&&!wk.inside&&rmRoomAt(wk.x,wk.z,wk.y)?TU.inFar:0}
+  gfxCull.mainF=null;gfxCull.see=rmSeeFrom(cam.position)}
 // The machines on the islands from town: with the camera on the mainland (south of TU.townZ and on none of the
 // islands), every machine standing on one of the islands (Corley's, the Family Island, Jessica's, Dexter's) is left out
 // of the frame, its parts and shadows: the excavator, dump truck, mower, skid steer, bike, trench box, the attachments
@@ -241,6 +249,7 @@ const GFX_ROWS=[
   {id:'wild',label:'Wild growth',hint:'Tall grass gone to seed and bushes in the rough ground. Thicker costs triangles.',opts:[[0,'Off'],[0.35,'Sparse'],[0.65,'Some'],[0.85,'Thick'],[1,'Full']]},
   {id:'bfMain',label:'Town from Building Forge',hint:'The town\'s shops, Town Hall, hotel, library, brewery, store and waterfront as designed in Daylight House Studio, with their rooms, furniture and stairs, in place of the game\'s own.',opts:onOff},
   {id:'bfHomes',label:'Town houses from Building Forge',hint:'The neighbourhoods\' houses as designed in Daylight House Studio, in place of the game\'s own. The heaviest part of the town.',opts:onOff},
+  {id:'bfLt',label:'Building lights',hint:'After dark, real light from the lamps and ceiling lights of the Building Forge buildings nearest you (2 on Medium, 4 on High, 6 on Ultra unless the Tuning says otherwise; each costs every pixel a little). Off leaves the fixtures glowing only.',opts:onOff},
   {id:'turf',label:'Town lawns',hint:'Grass blades, clover, weeds and fallen leaves on the town\'s lawns. Thicker costs triangles.',opts:[[0,'Off'],[0.35,'Sparse'],[0.65,'Some'],[1,'Full']]},
   {id:'turfR',label:'Town lawn distance',hint:'How far out the town\'s lawn grass and leaves are drawn.',min:10,max:120,step:5,fmt:v=>`${Math.round(v*FT_M)} ft`},
   {id:'model',label:'Machine models',hint:'Detailed models (every machine and boat, the excavator with a full cab inside, the trench box and attachments, and the yards\' and towns\' cones, light towers, barriers, lamps, benches and tables) or the simple ones. Detailed downloads about 17 MB once.',opts:[[true,'Detailed'],[false,'Simple']]},

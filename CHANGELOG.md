@@ -4,6 +4,11 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Monday, November 9, 2026
 
+- **v382** (5:45 PM) The Building Forge buildings' own lamps and ceiling lights come on from dusk to dawn: fixtures glow, outdoor ones have halos, and the nearest few cast real light (2/4/6 on Medium/High/Ultra, none on Low; Graphics: Building lights, and Tuning for brightness, reach and budget)
+- **v381** (5:03 PM) Daylight House Studio's See it in game opens the map editor right at that building, picked and in view.
+- **v380** (5:01 PM) With more people in town than there are looks, each repeat of a look is now their own person, with a name, nature, memory and opinion of you of their own, instead of several bodies sharing one mind. The townsfolk's mind also stops mishearing words (great is not food), answers in a group having heard the others, falls back to its own words when a model can't answer, and reads lines aloud in the mood they were said in.
+- **v379** (4:55 PM) Inside a shop or house the game skips only what no window, door or storefront can show, so the view outside is drawn in full and nothing outside stops; the old 150 ft indoor cut is gone.
+- **v378** (4:26 PM) Shop and house furniture is now drawn only near the camera and casts no shadows, so rooms can get more detail without slowing the rest of the island.
 - **v377** (1:25 PM) The pickup, four-wheeler, dirt bike, backhoe and wheel loader now run real simulated engines from Engine Bay: what the engine makes pulls them through their gears, and you hear the engine itself.
 - **v376** (12:42 PM) Townsfolk remember what happened between them (arguments, favours, near misses), bring it up, pass it on and say why they like someone; whoever is spoken to stands and listens, and close up they nod along.
 - **v375** (11:50 AM) Townsfolk now chat back and forth for a few turns, disagree, tease and ask each other why, fall out and make up; hold a grudge if you're rude (cold hellos, short answers) until you apologise; and have far more to say, with their mood colouring their words.

@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-09T19:25:00Z",
+ "updated": "2026-11-09T23:45:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -126,9 +126,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-09",
-   "dh": 17,
-   "act": 2,
-   "versions": 4
+   "dh": 36.5,
+   "act": 4,
+   "versions": 9
   }
  ],
  "extra": [
@@ -3531,6 +3531,51 @@ window.EFFORT = {
    "tris": 5915776,
    "chars": 2465183,
    "what": "The pickup, four-wheeler, dirt bike, backhoe and wheel loader now run real simulated engines from Engine Bay: what the engine makes pulls them through their gears, and you hear the engine itself."
+  },
+  {
+   "v": 378,
+   "asked": "2026-11-09T16:05:00-06:00",
+   "live": "2026-11-09T16:26:28-06:00",
+   "dh": 3,
+   "tris": 5790108,
+   "chars": 2466593,
+   "what": "Shop and house furniture is now drawn only near the camera and casts no shadows, so rooms can get more detail without slowing the rest of the island."
+  },
+  {
+   "v": 379,
+   "asked": "2026-11-09T16:35:00-06:00",
+   "live": "2026-11-09T16:55:42-06:00",
+   "dh": 5,
+   "tris": 5785507,
+   "chars": 2471058,
+   "what": "Inside a shop or house the game skips only what no window, door or storefront can show, so the view outside is drawn in full and nothing outside stops; the old 150 ft indoor cut is gone."
+  },
+  {
+   "v": 380,
+   "asked": "2026-11-09T15:00:00-06:00",
+   "live": "2026-11-09T17:01:27-06:00",
+   "dh": 3,
+   "tris": 7605622,
+   "chars": 2473414,
+   "what": "With more people in town than there are looks, each repeat of a look is now their own person, with a name, nature, memory and opinion of you of their own, instead of several bodies sharing one mind. The townsfolk's mind also stops mishearing words (great is not food), answers in a group having heard the others, falls back to its own words when a model can't answer, and reads lines aloud in the mood they were said in."
+  },
+  {
+   "v": 381,
+   "asked": "2026-11-09T16:30:00-06:00",
+   "live": "2026-11-09T17:03:05-06:00",
+   "dh": 1.5,
+   "tris": 5792605,
+   "chars": 2475989,
+   "what": "Daylight House Studio's See it in game opens the map editor right at that building, picked and in view."
+  },
+  {
+   "v": 382,
+   "asked": "2026-11-09T16:25:00-06:00",
+   "live": "2026-11-09T17:45:51-06:00",
+   "dh": 7,
+   "tris": 5793345,
+   "chars": 2486816,
+   "what": "The Building Forge buildings' own lamps and ceiling lights come on from dusk to dawn: fixtures glow, outdoor ones have halos, and the nearest few cast real light (2/4/6 on Medium/High/Ultra, none on Low; Graphics: Building lights, and Tuning for brightness, reach and budget)"
   }
  ]
 };
