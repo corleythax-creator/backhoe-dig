@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-09T23:03:00Z",
+ "updated": "2026-11-09T23:45:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -126,9 +126,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-09",
-   "dh": 29.5,
-   "act": 3.5,
-   "versions": 8
+   "dh": 36.5,
+   "act": 4,
+   "versions": 9
   }
  ],
  "extra": [
@@ -3567,6 +3567,15 @@ window.EFFORT = {
    "tris": 5792605,
    "chars": 2475989,
    "what": "Daylight House Studio's See it in game opens the map editor right at that building, picked and in view."
+  },
+  {
+   "v": 382,
+   "asked": "2026-11-09T16:25:00-06:00",
+   "live": "2026-11-09T17:45:51-06:00",
+   "dh": 7,
+   "tris": 5793345,
+   "chars": 2486816,
+   "what": "The Building Forge buildings' own lamps and ceiling lights come on from dusk to dawn: fixtures glow, outdoor ones have halos, and the nearest few cast real light (2/4/6 on Medium/High/Ultra, none on Low; Graphics: Building lights, and Tuning for brightness, reach and budget)"
   }
  ]
 };

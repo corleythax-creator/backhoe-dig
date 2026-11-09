@@ -51,7 +51,7 @@ function bfKSpots(c,kind){const f=BF_KSPOT[kind];if(!f)return null;const inv=new
 // a building kind, loaded and packed once: meshes merged by material (furniture apart), each door leaf's parts merged
 // in its own frame, the furniture's pieces, all in the building's space
 function bfKind(id){if(bf.kinds[id])return bf.kinds[id];
-  return bf.kinds[id]=bfImport().then(({loader,merge})=>new Promise((ok,no)=>loader.load(BF_SITE+id+'.glb',g=>ok(bfPack(g.scene,merge)),undefined,no)))}
+  return bf.kinds[id]=bfImport().then(({loader,merge})=>new Promise((ok,no)=>loader.load(BF_SITE+id+'.glb',g=>ok(bfPack(g.scene,merge,bf.lib[id])),undefined,no)))}
 // a Daylight dining table's chairs (its 'dining' piece: n a side, one per 2.3 ft of table, 0.45 ft out from its edge,
 // one at each end of a table 6 ft or longer), found from the table top (the piece's thinnest mesh), in the item's own feet:
 // [x, z, the way the sitter faces] in the building's space
@@ -66,14 +66,95 @@ function bfChairs(c){const inv=new THREE.Matrix4().copy(c.matrixWorld).invert(),
 // glass kept, shine from the roughness, metal from the metalness. Its ceiling lights (Daylight's 'light' pieces) glow
 // as the game's lamps do (K.lit's colour)
 const BF_GLOW=new THREE.MeshBasicMaterial({color:0xffe2a8}),bfMats=new Map();
+// ---------- the buildings' own lights ----------
+// Each building's lamps and fixtures that give light come with it from Daylight House Studio (its GAMES.md, "lights" and
+// "lighting"): the library entry's `lights` ({id, kind, type 'point'|'spot', position (the bulb), color, lumens, dim,
+// range, switch 'auto'|'on'|'off', outdoor, direction and beam for a spot}, in the building's own space, metres) and
+// `lighting` ({mode 'auto'|'on'|'off', dim}). A light's switch, or the building's when its own is 'auto': on, off, or
+// auto, lit from dusk to dawn by the game's clock with the street lamps (daynight.js `lamp`). A building with no list
+// has none. What is lit:
+// - its fixture glows in the light's colour (bfLtGlow: a material of its own, dimmer by day when auto), on every level;
+// - an outdoor one has a halo after dark, as the placed lamps do (props.js propHaloMat), on every level;
+// - the few nearest the camera (within TU.bfLtFar) each hold a real light from a small pool: how many is the Tuning
+//   for the Graphics level (TU.bfLtMed, bfLtHigh, bfLtUltra; none on Low or with Graphics, Building lights off), a
+//   third of them spotlights (up to 2). A spot with no spotlight left shines as a point light; a point light in a
+//   spare spotlight shines down in a wide cone. No shadows from them (`shadows` is not read), so one shines through a
+//   wall as far as its range. The pool is in the scene only while a building with lights is shown: adding or taking a
+//   light makes three.js build its shaders again, so its size changes only with the setting.
+// Only what is drawn: nothing here is saved or touches the ground. The map editor carries them: each is placed from
+// its building's own place every third of a second (and bfAfter asks for it at once).
+const BF_LT_KEY={low:'bfLtMed',med:'bfLtMed',high:'bfLtHigh',ultra:'bfLtUltra',quest:'bfLtMed'},BF_LT_I=1.2,BF_LT_DECAY=1.3;
+const bfLt={pts:[],spots:[],all:[],n:0,t:0,dirty:1,on:0,real:0,glow:new Map(),cam:new THREE.Vector3(),v:new THREE.Vector3(),halos:null};
+const bfLtBudget=()=>gfxCur&&gfxCur.bfLt?Math.max(0,Math.min(8,Math.round(TU[BF_LT_KEY[gfxKey]||'bfLtMed']||0))):0;
+const bfLtState=(l,G)=>{const s=l.switch==='on'||l.switch==='off'?l.switch:G&&G.mode;return s==='on'||s==='off'?s:'auto'};
+// a fixture's glowing material, by colour and whether it follows the dusk (shared by every building)
+function bfLtMat(col,auto){const c=new THREE.Color(col||'#ffe2a8'),k=c.getHex()+(auto?'a':'o');let e=bfLt.glow.get(k);
+  if(!e){e={m:new THREE.MeshBasicMaterial({color:c.clone()}),c,auto};e.m.name='bfGlow';bfLt.glow.set(k,e)}return e.m}
+// which meshes of a model glow: the fixture's node carries its light's id; a ceiling light glows whole, any other the
+// part round its bulb (the mesh nearest the light's position, if it is no bigger than a shade: under 3 ft)
+function bfLtGlow(root,LS,LG){const by=new Map(LS.map(l=>[l.id,l])),out=new Map(),bx=new THREE.Box3(),v=new THREE.Vector3(),sz=new THREE.Vector3();
+  root.traverse(q=>{const u=q.userData,l=u&&u.id!=null&&u.type==='item'?by.get(u.id):null;if(!l)return;const st=bfLtState(l,LG);if(st==='off')return;
+    const ms=[];q.traverse(o=>{if(o.isMesh)ms.push(o)});if(!ms.length)return;const mat=bfLtMat(l.color,st==='auto');
+    if(u.kind==='light'){for(const o of ms)out.set(o,mat);return}
+    if(!Array.isArray(l.position))return;v.fromArray(l.position);let best=null,bd=1e9;
+    for(const o of ms){bx.setFromObject(o);bx.getSize(sz);if(Math.max(sz.x,sz.y,sz.z)>0.9)continue;const d=bx.distanceToPoint(v)+sz.length()*0.01;if(d<bd){bd=d;best=o}}
+    if(best&&bd<0.6)out.set(best,mat)});
+  return out}
+// a building kind's lights that are not switched off, ready for the pool: place and aim in its own space, colour,
+// strength (the root of its lumens over an 800 lumen bulb's, as Daylight draws it, times its dimmer and the building's;
+// an 800 lumen bulb shines BF_LT_I, falling off with distance as the game's room light does, BF_LT_DECAY)
+function bfLtPack(LS,LG){const out=[],gd=LG&&LG.dim!=null?Math.max(0,Math.min(2,+LG.dim)):1;
+  for(const l of LS||[]){const st=bfLtState(l,LG),p=l.position,k=Math.sqrt((+l.lumens>0?+l.lumens:800)/800)*(l.dim!=null?Math.max(0,Math.min(1,+l.dim)):1)*gd;
+    if(st==='off'||!Array.isArray(p)||p.length<3||!(k>0))continue;const dir=l.type==='spot'&&Array.isArray(l.direction)?new THREE.Vector3().fromArray(l.direction):null;
+    out.push({id:l.id,p:new THREE.Vector3(+p[0],+p[1],+p[2]),d:dir&&dir.lengthSq()>1e-6?dir.normalize():null,col:new THREE.Color(l.color||'#ffe2a8'),k,
+      r:+l.range>0?+l.range:6,ang:Math.min(1.45,Math.max(0.1,(+l.beam||90)*Math.PI/360)),auto:st==='auto',out:!!l.outdoor})}
+  return out}
+// the pool: n real lights in the scene (dark until held), a third of them spotlights
+function bfLtPool(n){if(n===bfLt.n)return;bfLt.n=n;const ns=Math.min(2,Math.floor(n/3)),fit=(A,m,make)=>{
+    while(A.length<m){const o=make();o.castShadow=false;scene.add(o);if(o.target)scene.add(o.target);A.push({o,l:null,B:null,k:0,e:0})}
+    while(A.length>m){const s=A.pop();scene.remove(s.o);if(s.o.target)scene.remove(s.o.target);s.o.dispose()}};
+  fit(bfLt.pts,n-ns,()=>new THREE.PointLight(0xffffff,0,10,BF_LT_DECAY));fit(bfLt.spots,ns,()=>new THREE.SpotLight(0xffffff,0,10,0.6,0.5,BF_LT_DECAY));bfLt.all=bfLt.pts.concat(bfLt.spots)}
+// the halos of the outdoor lights of the buildings shown (after one is laid, moved or hidden)
+function bfLtHalos(){const P=[],C=[],S=[],F=[],v=bfLt.v;
+  for(const L of bf.lots){const B=L.b;if(!B||!B.g.visible)continue;B.g.updateMatrixWorld();
+    for(const l of B.K.lights)if(l.out){v.copy(l.p).applyMatrix4(B.g.matrixWorld);P.push(v.x,v.y,v.z);C.push(l.col.r,l.col.g,l.col.b);S.push(Math.max(0.5,Math.min(1.6,0.9*l.k)));F.push(0)}}
+  if(!bfLt.halos){if(!P.length)return;bfLt.halos=new THREE.Points(new THREE.BufferGeometry(),propHaloMat);bfLt.halos.frustumCulled=false;bfLt.halos.visible=false;scene.add(bfLt.halos)}
+  const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(P,3));g.setAttribute('col',new THREE.Float32BufferAttribute(C,3));
+  g.setAttribute('sz',new THREE.Float32BufferAttribute(S,1));g.setAttribute('fx',new THREE.Float32BufferAttribute(F,1));bfLt.halos.geometry.dispose();bfLt.halos.geometry=g}
+// each frame from daynight.js: lamp is how dark it is (0 by day, 1 at night), ll the Lamp light tuning
+function bfLightTick(lamp,ll,dt){
+  for(const e of bfLt.glow.values())e.m.color.copy(e.c).multiplyScalar(e.auto?0.45+0.55*lamp:1);
+  if(bfLt.dirty&&bf.lots.length){bfLt.dirty=0;bfLtHalos()}
+  if(bfLt.halos)bfLt.halos.visible=lamp>0.01&&bfLt.halos.geometry.attributes.position.count>0;
+  // every third of a second: the lit lights nearest the camera take the pool's lights (one that had a light keeps it)
+  if((bfLt.t-=dt)<=0){bfLt.t=0.33;const far=TU.bfLtFar,cam=camera.getWorldPosition(bfLt.cam),C=[],v=bfLt.v;let any=false;
+    for(const L of bf.lots){const B=L.b;if(!B||!B.g.visible||!B.K.lights.length)continue;any=true;
+      if(Math.hypot(cam.x-B.g.position.x,cam.z-B.g.position.z)>far+B.rad)continue;B.g.updateMatrixWorld();
+      for(const l of B.K.lights){if(l.auto&&lamp<=0.01)continue;v.copy(l.p).applyMatrix4(B.g.matrixWorld);const d=v.distanceTo(cam);if(d<far)C.push({l,B,d,x:v.x,y:v.y,z:v.z})}}
+    C.sort((a,b)=>a.d-b.d);bfLt.on=C.length;bfLtPool(any?bfLtBudget():0);
+    const A=bfLt.all,pick=C.slice(0,A.length),free=[];
+    for(const s of A){const i=pick.findIndex(c=>c&&c.l===s.l&&c.B===s.B);if(i<0){s.l=null;free.push(s)}else{s.c=pick[i];pick[i]=null}}
+    for(const c of pick){if(!c)continue;const want=!!c.l.d,i=Math.max(0,free.findIndex(s=>!!s.o.isSpotLight===want)),s=free.splice(i,1)[0];s.l=c.l;s.B=c.B;s.c=c;s.k=0}
+    bfLt.real=0;
+    for(const s of A){const l=s.l,c=s.c,o=s.o;if(!l){o.intensity=0;continue}bfLt.real++;
+      o.position.set(c.x,c.y,c.z);o.color.copy(l.col);s.e=Math.max(0,Math.min(1,(far-c.d)/5));o.distance=l.r;
+      if(o.isSpotLight){if(l.d){v.copy(l.d).transformDirection(s.B.g.matrixWorld);o.angle=l.ang;o.penumbra=0.5;o.distance=l.r*1.35}else{v.set(0,-1,0);o.angle=1.45;o.penumbra=1}
+        o.target.position.set(c.x+v.x*5,c.y+v.y*5,c.z+v.z*5)}}}
+  // a light comes up over a quarter of a second when it takes one of the pool's, and fades toward the edge of the range
+  const g=ll*TU.bfLight*BF_LT_I*LI,f=Math.min(1,dt*4);
+  for(const s of bfLt.all){const l=s.l;if(!l)continue;s.k=Math.min(1,s.k+f);s.o.intensity=g*l.k*(l.auto?lamp:1)*s.k*s.e*(s.o.isSpotLight&&l.d?1.5:1)}}
 function bfPhong(m){if(!m||!m.isMeshStandardMaterial)return m;if(bfMats.has(m))return bfMats.get(m);
   const r=m.roughness??1,mt=m.metalness||0,P=new THREE.MeshPhongMaterial({color:m.color.clone(),map:m.map,normalMap:m.normalMap,emissive:m.emissive.clone(),emissiveMap:m.emissiveMap,
     transparent:m.transparent,opacity:m.opacity,alphaTest:m.alphaTest,side:m.side,depthWrite:m.depthWrite,vertexColors:m.vertexColors,
     shininess:4+Math.pow(1-r,2)*90,specular:mt>0.3?m.color.clone().multiplyScalar(0.5*mt):new THREE.Color(0x111111).lerp(new THREE.Color(0x555555),Math.max(0,0.6-r))});
   if(m.normalMap)P.normalScale.copy(m.normalScale);P.name=m.name;bfMats.set(m,P);return P}
-function bfPack(root,merge){const col=root.getObjectByName('Collision');if(col)col.removeFromParent();root.updateMatrixWorld(true);
-  root.traverse(o=>{if(!o.isMesh)return;let lit=false;for(let q=o;q&&q!==root;q=q.parent)if(q.userData&&q.userData.kind==='light')lit=true;
-    o.material=lit?BF_GLOW:Array.isArray(o.material)?o.material.map(bfPhong):bfPhong(o.material)});
+function bfPack(root,merge,it){const col=root.getObjectByName('Collision');if(col)col.removeFromParent();root.updateMatrixWorld(true);
+  // its lights (the library entry's, or the same list in the model's own extras.forge.game): with a list, each fixture
+  // that is not switched off glows in its light's colour (bfLtGlow); with none, every ceiling light glows as before
+  let gm=null;root.traverse(o=>{if(!gm&&o.userData&&o.userData.forge&&o.userData.forge.game)gm=o.userData.forge.game});
+  const LS=it&&Array.isArray(it.lights)?it.lights:gm&&Array.isArray(gm.lights)?gm.lights:null,LG=it&&it.lighting||gm&&gm.lighting||null,glow=LS?bfLtGlow(root,LS,LG):null;
+  root.traverse(o=>{if(!o.isMesh)return;let lit=false;if(!LS)for(let q=o;q&&q!==root;q=q.parent)if(q.userData&&q.userData.kind==='light')lit=true;
+    o.material=glow&&glow.has(o)?glow.get(o):lit?BF_GLOW:Array.isArray(o.material)?o.material.map(bfPhong):bfPhong(o.material)});
   const plain=g=>{const h=new THREE.BufferGeometry();for(const [n,at] of Object.entries(g.attributes)){const f=new Float32Array(at.count*at.itemSize);
       for(let i=0;i<at.count;i++)for(let k=0;k<at.itemSize;k++)f[i*at.itemSize+k]=at.getComponent(i,k);h.setAttribute(n,new THREE.BufferAttribute(f,at.itemSize))}
     if(g.index)h.setIndex(new THREE.BufferAttribute(Uint32Array.from(g.index.array),1));return h};
@@ -91,7 +172,7 @@ function bfPack(root,merge){const col=root.getObjectByName('Collision');if(col)c
   // table's chairs
   if(F)for(const c of F.children){const u=c.userData||{},b=new THREE.Box3().setFromObject(c);if(b.isEmpty())continue;
     items.push({kind:u.kind||'',lvl:u.level||0,box:[(b.min.x+b.max.x)/2,(b.min.z+b.max.z)/2,(b.max.x-b.min.x)/2,(b.max.z-b.min.z)/2,b.min.y,b.max.y],chairs:u.kind==='dining'?bfChairs(c):null,spots:bfKSpots(c,u.kind)})}
-  return {stat:group(stat,I),furn:group(furn,I),items,
+  return {stat:group(stat,I),furn:group(furn,I),items,lights:bfLtPack(LS,LG),
     leaves:leaves.map(L=>{const m=L.matrixWorld.clone(),p=new THREE.Vector3(),q=new THREE.Quaternion(),s=new THREE.Vector3();m.decompose(p,q,s);
       const li=m.clone().invert(),parts=[];L.traverse(o=>{if(o.isMesh)parts.push(o)});return {p,q,s,door:L.userData.door,swing:L.userData.swing||1,parts:group(parts,li)}})}}
 // every frame (mainTick): each door's leaves follow its door (opened by rmDoorsTick), and furniture shows only near
@@ -190,7 +271,7 @@ function bfBuild(L,K,item){const it=bf.lib[L.id],face=L.turn*Math.PI/180,c=Math.
       for(const st of it.stairs||[])if(!st.level){const [fx,fz]=st.foot,[hx,hz]=st.head;box((fx+hx)/2,(fz+hz)/2,Math.abs(hx-fx)/2+st.width/2,Math.abs(hz-fz)/2+st.width/2)}
       for(const P of K.items)if(!P.lvl&&P.kind!=='rug'&&P.kind!=='porch'&&P.kind!=='stairs')box(P.box[0],P.box[1],P.box[2],P.box[3]);
       Object.assign(rs,{x:K0.x,z:K0.z,f:face,P:K0.P,dO,W:it.width/2+Math.abs(dx0),sol,at0:{x:K0.x,z:K0.z}})}}
-  L.b={g,furn,doors,gameR,rs,o:{x:ox,z:oz,y:y0,f:face},mine};item.bf=L}
+  L.b={g,furn,doors,gameR,rs,o:{x:ox,z:oz,y:y0,f:face},mine,K,rad:Math.hypot(it.width,it.length)/2};item.bf=L;bfLt.dirty=1}
 // a game room given the building's spots and door frame while it is swapped (on), its own put back after; whoever was
 // in it or on the way leaves first
 const BF_RKEYS=['spots','dO','W','sol','P','x','z','f','y'];
@@ -204,7 +285,7 @@ function bfRoomSet(B,on){const R=B.gameR;if(!R||!B.rs||!!R.bfOn===on)return;
 function bfAfter(it,a){const L=it.bf;if(!L||!L.b)return;const B=L.b,gone=!a||!!a.hd,on=bfWant(L.area),show=on&&!gone,G=fxGather(it),away=e=>e.bf;
   const r=gone?0:a.yaw,c=Math.cos(r),s=Math.sin(r),dx=gone?0:a.x-it.cx,dz=gone?0:a.z-it.cz,dy=gone?0:baseHeight(a.x,a.z)-baseHeight(it.cx,it.cz),
     at=(x,z)=>[it.cx+(x-it.cx)*c+(z-it.cz)*s+dx,it.cz-(x-it.cx)*s+(z-it.cz)*c+dz];
-  B.g.visible=show;bfRoomSet(B,show);
+  B.g.visible=show;bfRoomSet(B,show);bfLt.dirty=1;bfLt.t=0;
   if(show){const [x,z]=at(B.o.x,B.o.z);B.g.position.set(x,B.o.y+dy,z);B.g.rotation.y=B.o.f+r;for(const S of B.mine.solids){S.y0=S.by0+dy;S.y1=S.by1+dy}
     if(B.rs&&B.rs.at0){const [rx,rz]=at(B.rs.at0.x,B.rs.at0.z),R=B.gameR,f=B.o.f+r,sf=Math.sin(f),cf=Math.cos(f);R.x=rx;R.z=rz;R.f=f;R.y=B.rs.y+dy;R.P=(o,q)=>[rx+sf*o+cf*q,rz+cf*o-sf*q]}}
   if(gone)return;
