@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-09T19:25:00Z",
+ "updated": "2026-11-09T22:55:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -126,9 +126,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-09",
-   "dh": 17,
-   "act": 2,
-   "versions": 4
+   "dh": 25,
+   "act": 3,
+   "versions": 6
   }
  ],
  "extra": [
@@ -3531,6 +3531,24 @@ window.EFFORT = {
    "tris": 5915776,
    "chars": 2465183,
    "what": "The pickup, four-wheeler, dirt bike, backhoe and wheel loader now run real simulated engines from Engine Bay: what the engine makes pulls them through their gears, and you hear the engine itself."
+  },
+  {
+   "v": 378,
+   "asked": "2026-11-09T16:05:00-06:00",
+   "live": "2026-11-09T16:26:28-06:00",
+   "dh": 3,
+   "tris": 5790108,
+   "chars": 2466593,
+   "what": "Shop and house furniture is now drawn only near the camera and casts no shadows, so rooms can get more detail without slowing the rest of the island."
+  },
+  {
+   "v": 379,
+   "asked": "2026-11-09T16:35:00-06:00",
+   "live": "2026-11-09T16:55:42-06:00",
+   "dh": 5,
+   "tris": 5785507,
+   "chars": 2471058,
+   "what": "Inside a shop or house the game skips only what no window, door or storefront can show, so the view outside is drawn in full and nothing outside stops; the old 150 ft indoor cut is gone."
   }
  ]
 };

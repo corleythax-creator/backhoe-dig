@@ -4,6 +4,8 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Monday, November 9, 2026
 
+- **v379** (4:55 PM) Inside a shop or house the game skips only what no window, door or storefront can show, so the view outside is drawn in full and nothing outside stops; the old 150 ft indoor cut is gone.
+- **v378** (4:26 PM) Shop and house furniture is now drawn only near the camera and casts no shadows, so rooms can get more detail without slowing the rest of the island.
 - **v377** (1:25 PM) The pickup, four-wheeler, dirt bike, backhoe and wheel loader now run real simulated engines from Engine Bay: what the engine makes pulls them through their gears, and you hear the engine itself.
 - **v376** (12:42 PM) Townsfolk remember what happened between them (arguments, favours, near misses), bring it up, pass it on and say why they like someone; whoever is spoken to stands and listens, and close up they nod along.
 - **v375** (11:50 AM) Townsfolk now chat back and forth for a few turns, disagree, tease and ask each other why, fall out and make up; hold a grudge if you're rude (cold hellos, short answers) until you apologise; and have far more to say, with their mood colouring their words.

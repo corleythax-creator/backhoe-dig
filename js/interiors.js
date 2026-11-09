@@ -12,9 +12,9 @@
 const TF_ROOMS=[];
 // a room's own frame: o outward through its glass (the yaw f looks along), s across; boxes in it, and its spots
 function rmKit(K,x,z,y,f){const sf=Math.sin(f),cf=Math.cos(f),P=(o,s)=>[x+sf*o+cf*s,z+cf*o-sf*s],R={K,x,z,y,f,P,spots:[],sol:[]};
-  R.box=(w,h,d,col,o,s,y0,ry)=>{const [a,b]=P(o,s);K.box(w,h,d,col,a,y+y0+h/2,b,f+(ry||0))};
-  R.cyl=(r0,r1,h,n,col,o,s,y0)=>{const [a,b]=P(o,s);K.cyl(r0,r1,h,n,col,a,y+y0+h/2,b)};
-  R.lit=(w,d,o,s,y0)=>{const [a,b]=P(o,s);K.lit(new THREE.BoxGeometry(w,0.04,d),0xfff6d8,a,y+y0,b,f)};
+  R.box=(w,h,d,col,o,s,y0,ry)=>{const [a,b]=P(o,s);R.K.box(w,h,d,col,a,y+y0+h/2,b,f+(ry||0))};
+  R.cyl=(r0,r1,h,n,col,o,s,y0)=>{const [a,b]=P(o,s);R.K.cyl(r0,r1,h,n,col,a,y+y0+h/2,b)};
+  R.lit=(w,d,o,s,y0)=>{const [a,b]=P(o,s);(R.S||R.K).lit(new THREE.BoxGeometry(w,0.04,d),0xfff6d8,a,y+y0,b,f)};
   // a frame turned by yl (0 faces out through the glass) at o, s: put(w, h, d, col, forward, across, y0)
   R.at=(o,s,yl)=>{const c=Math.cos(yl),n=Math.sin(yl);return (w,h,d,col,lo,ls,y0)=>R.box(w,h,d,col,o+lo*c-ls*n,s+lo*n+ls*c,y0,yl)};
   // a spot: where someone stands (or sits) facing yl
@@ -58,7 +58,7 @@ const GUN_SHOPS=[];
 function rmFurnish(K,x,z,y,f,w,d,si,wall){const R=rmKit(K,x,z,y,f),kind=RM_KIND[si]||'shop',back=-d/2,W=w/2-0.3,wood=[0x8a6440,0x5a3b26,0xb08a5a][si%3];
   // the room: a timber floor, painted walls and ceiling, its lights
   R.box(w-0.5,0.03,d-0.05,'planks',0,0,0);R.box(w-0.5,0.03,d,0xf2efe6,0,0,2.9);
-  for(const s of [-1,1])R.box(0.03,2.9,d,wall,0,s*(W+0.04),0);R.box(w-0.5,2.9,0.03,wall,back+0.02,0,0);
+  for(const s of [-1,1])R.box(0.03,2.9,d,wall,0,s*(W+0.04),0);R.box(w-0.5,2.9,0.03,wall,back+0.02,0,0);rmPartStart(R);
   for(let o=back+1.2;o<d/2-0.6;o+=2)for(const s of w>12?[-W/2,W/2]:[0]){const [a,b]=R.P(o,s);K.lit(new THREE.BoxGeometry(1.2,0.04,0.3),0xfff8ea,a,y+2.88,b,f)}
   R.si=si;R.kind=kind;R.dO=d/2;R.W=W;R.spot(back+0.8,0,0,{staff:1});
   if(kind==='eat'){// a counter across the back with a pastry case and a menu board, tables in front
@@ -98,8 +98,21 @@ function rmFurnish(K,x,z,y,f,w,d,si,wall){const R=rmKit(K,x,z,y,f),kind=RM_KIND[
     if(w>12){const p=R.at(-0.2,0,0);p(0.9,1.2,2.2,wood,0,0,0);R.solid(-0.2,0,1.0,2.3);for(let k=0;k<5;k++)p(0.3,0.25,0.3,rmC(si+k),-0.2+(k%2)*0.4,-0.9+k*0.45,1.2)}
     rmCounter(R,d/2-1.3,W-0.7,1.4,wood);R.spots.pop();R.spot(d/2-1.95,W-0.7,0,{staff:1});
     R.spot(d/2-0.6,W-0.7,Math.PI);R.spot(-0.6,-W+1.0,-Math.PI/2);R.spot(0.6,W-1.1,Math.PI/2);R.spot(back+1.1,-1.0,Math.PI);R.spot(back+1.2,1.4,Math.PI);if(w>12)R.spot(-0.2,-1.3,Math.PI/2)}
-  return R}
+  rmPartEnd(R);return R}
 // a walking line through points, as townfolk.js reads one (tfAt): its points and their distances along
+// A room's furniture apart from the building it stands in: between rmPartStart and rmPartEnd a kit's R.box and R.cyl
+// go into a kit of the room's own (its lights still go to the building's, R.S, so lit windows glow from afar). Its
+// meshes cast no shadow (the building's walls and roof shade the room already) and are drawn only while the camera is
+// within the Graphics setting's rmNear (gfx.js) of them, measured from each part's own bounds, which the map editor
+// keeps up when it moves the building (fixed.js); far off the room still shows its walls, floor and lights
+const RM_PARTS=[];
+function rmPartStart(R){R.S=R.K;R.K=famKit()}
+function rmPartEnd(R){const P=R.K;R.K=R.S;R.S=null;const ms=famAdd(P);if(!ms.length)return;
+  for(const m of ms){m.castShadow=false;m.geometry.computeBoundingSphere()}RM_PARTS.push(ms)}
+// every frame (mainTick): show the rooms near the camera
+function rmPartsTick(){const n=gfxCur.rmNear||35,c=camera.position;
+  for(const ms of RM_PARTS){const b=ms[0].geometry.boundingSphere,dx=c.x-b.center.x,dy=c.y-b.center.y,dz=c.z-b.center.z,r=n+b.radius,v=dx*dx+dy*dy+dz*dz<r*r;
+    if(ms[0].visible!==v)for(const m of ms)m.visible=v}}
 function rmLine(pts){const L=[0];for(let i=1;i<pts.length;i++)L.push(L[i-1]+Math.hypot(pts[i][0]-pts[i-1][0],pts[i][1]-pts[i-1][1]));return {p:pts,L,len:L[L.length-1]}}
 // a room ready for people: how far it reaches, its extra customers for each Townsfolk setting
 function rmAdd(R,r,big){R.r=r;R.big=big||null;R.n=0;TF_ROOMS.push(R);return R}
@@ -191,8 +204,42 @@ function rmWall(R,ax,c,n,a,b,T,H,out,inn,holes){
   const piece=(m0,m1,y0,y1)=>{if(m1-m0<0.01||y1-y0<0.01)return;const mm=(m0+m1)/2,L=m1-m0;
     for(const [t0,t1,col] of [[0,T-0.02,out],[T-0.02,T,inn]]){const q=c+n*(t0+t1)/2;if(ax==='s')R.box(L,y1-y0,t1-t0,col,q,mm,y0);else R.box(t1-t0,y1-y0,L,col,mm,q,y0)}
     if(y0<0.3){const q=c+n*T/2;if(ax==='s')R.solid(q,mm,L,T);else R.solid(mm,q,T,L)}};
+  if(R.ports)for(const h of holes||[]){const i=c+n*T,m0=h.m-h.w/2-0.05,m1=h.m+h.w/2+0.05;
+    R.ports.push(ax==='s'?{a:[i,m0],b:[i,m1],y0:h.y0-0.05,y1:h.y1+0.05}:{a:[m0,i],b:[m1,i],y0:h.y0-0.05,y1:h.y1+0.05})}
   let at=a;for(const h of (holes||[]).slice().sort((p,q)=>p.m-q.m)){const h0=h.m-h.w/2,h1=h.m+h.w/2;piece(at,h0,0,H);piece(h0,h1,0,h.y0);piece(h0,h1,h.y1,H);at=h1}
   piece(at,b,0,H)}
+// ---------- seeing out of a room (gfx.js) ----------
+// A room can know how it is closed in (rmEnc): a box round its building's floor (anything touching it is drawn) and the
+// openings in its walls (windows, doors, storefronts), each a quad on the inside face of the opening, through which
+// alone the outside can be seen. With the camera in such a room, a part outside the box that no opening lets the camera
+// see is left out of the frame (gfxCull, gfx.js): only how it is drawn, for that frame, and never its shadow, so the
+// town outside goes on as ever, and anything any opening shows, however small or far, is drawn in full. A room with no
+// openings listed (the Building Forge town's, the brewery's, the General Store's) leaves everything drawn. All of it is
+// kept in the room's own frame (o out along its f, s across, y up from its floor, from its middle), so it follows the
+// room when the map editor moves the building (fixed.js); oc, sc: the room's middle in the frame the box and quads are in
+function rmEnc(r,oc,sc,b,ports){const L=(o,s)=>[o-oc,s-sc],bo=(b.o0+b.o1)/2-oc,bs=(b.s0+b.s1)/2-sc;
+  r.enc={box:{o0:b.o0-oc,o1:b.o1-oc,s0:b.s0-sc,s1:b.s1-sc,y0:b.y0,y1:b.y1},ports:ports.map(p=>{const a=L(...p.a),c=L(...p.b),mo=(a[0]+c[0])/2,ms=(a[1]+c[1])/2;
+    let no=c[1]-a[1],ns=-(c[0]-a[0]);const l=Math.hypot(no,ns)||1;no/=l;ns/=l;if(no*(mo-bo)+ns*(ms-bs)<0){no=-no;ns=-ns}
+    return {a,b:c,y0:p.y0,y1:p.y1,n:[no,ns]}})};return r.enc}
+// from gfxCullOn: what the camera at c can see out of the room it is in, or null (not in one that knows its openings,
+// or standing in an opening's own plane: then everything draws). {r, planes: for each opening, five planes a part must
+// lie at least partly inside of: its quad's own (beyond it) and one through the camera and each edge}
+const RM_SEE={P:[],V:[0,1,2,3].map(()=>new THREE.Vector3()),Q:new THREE.Vector3(),U:new THREE.Vector3(),W:new THREE.Vector3()};
+function rmSeeFrom(c){const r=rmRoomAt(c.x,c.z,c.y);if(!r||!r.enc)return null;const E=r.enc,V=RM_SEE.V,P=RM_SEE.P,out=[];let k=0;
+  const W=(o,s,y,v)=>v.set(r.x+r.sf*o+r.cf*s,r.y+y,r.z+r.cf*o-r.sf*s);
+  for(const p of E.ports){const nx=r.sf*p.n[0]+r.cf*p.n[1],nz=r.cf*p.n[0]-r.sf*p.n[1];W(p.a[0],p.a[1],p.y0,V[0]);W(p.b[0],p.b[1],p.y0,V[1]);W(p.b[0],p.b[1],p.y1,V[2]);W(p.a[0],p.a[1],p.y1,V[3]);
+    if((c.x-V[0].x)*nx+(c.z-V[0].z)*nz>-0.05)return null;
+    const Q=RM_SEE.Q.copy(V[0]).add(V[1]).add(V[2]).add(V[3]).multiplyScalar(0.25),pl=[];
+    const qp=P[k]||(P[k]=new THREE.Plane());k++;qp.normal.set(nx,0,nz);qp.constant=-(nx*V[0].x+nz*V[0].z);pl.push(qp);
+    for(let i=0;i<4;i++){const A=V[i],B=V[(i+1)%4],sp=P[k]||(P[k]=new THREE.Plane());k++;
+      sp.normal.crossVectors(RM_SEE.U.subVectors(A,c),RM_SEE.W.subVectors(B,c));if(sp.normal.lengthSq()<1e-10)return null;sp.normal.normalize();sp.constant=-sp.normal.dot(c);
+      if(sp.distanceToPoint(Q)<0)sp.negate();pl.push(sp)}
+    out.push(pl)}
+  return {r,planes:out}}
+// a part's bounding sphere s (world): touching the room's box, or seen through one of its openings
+function rmSeen(S,s){const r=S.r,b=r.enc.box,c=s.center,R=s.radius,dx=c.x-r.x,dz=c.z-r.z,o=r.sf*dx+r.cf*dz,t=r.cf*dx-r.sf*dz,y=c.y-r.y;
+  const q=(v,lo,hi)=>v<lo?lo-v:v>hi?v-hi:0,eo=q(o,b.o0,b.o1),es=q(t,b.s0,b.s1),ey=q(y,b.y0,b.y1);if(eo*eo+es*es+ey*ey<=R*R)return true;
+  for(const pl of S.planes){let ok=true;for(const p of pl)if(p.distanceToPoint(c)<-R){ok=false;break}if(ok)return true}return false}
 // the room the worker stands in, or null
 function rmRoomAt(x,z,y){for(const r of IN_ROOMS){const dx=x-r.x,dz=z-r.z;if(Math.abs(dx*r.cf-dz*r.sf)<r.hw&&Math.abs(dx*r.sf+dz*r.cf)<r.hd&&y>r.y-0.6&&y<r.top)return r}return null}
 // on foot in a room, the chase camera's boom from a (the look point) to c is cut where it would leave the room, and kept
@@ -238,13 +285,13 @@ function rmDoorsTick(dt){if(!rmDoorsMade){if(!RM_DOORS.length)return;rmDoorsMake
 // (the ceiling), cs, co (the chimney), stairs, u (its random number), inn (the walls' paint)}. Its rooms go in IN_ROOMS,
 // a resident on the sofa in most (TF_ROOMS)
 // an indoor light fitting, w by d, its glow seen through the windows but no halo like the street lamps' (FAM_LAMP_K)
-function rmLit(R,w,d,o,s,y0){const [a,b]=R.P(o,s);R.K.lit(new THREE.BoxGeometry(w,0.04,d),0xfff2dc,a,R.y+y0,b,R.f)}
+function rmLit(R,w,d,o,s,y0){const [a,b]=R.P(o,s);(R.S||R.K).lit(new THREE.BoxGeometry(w,0.04,d),0xfff2dc,a,R.y+y0,b,R.f)}
 function rmHome(R,h){const {s0,s1,o0,o1,H,u,inn}=h,pb=o0+2.75,sm=(s0+s1)/2,kd=(s0+sm)/2,bd=(sm+s1)/2,
     wood=[0x8a6440,0x5a3b26,0xb08a5a,0x6e4a2e][Math.floor(u*17)%4],cab=[0xf2efe6,0x2f4a3a,0xd8d2c4,0x3a4a5a][Math.floor(u*23)%4],sofa=[0x5a6670,0x7a5a3a,0x3d5a4a,0xb8a88a,0x6a2f2f][Math.floor(u*29)%5],
     rug=[0x8a3a2a,0x2f4a6a,0xc8b89a,0x4a5a3a][Math.floor(u*37)%4];
   // the floor, the ceiling and its lights; the partition and the wall between kitchen and bedroom
-  R.box(s1-s0,0.03,o1-o0,'planks',(o0+o1)/2,(s0+s1)/2,0);R.box(s1-s0,0.04,o1-o0,0xf4f2ec,(o0+o1)/2,(s0+s1)/2,H-0.04);
-  rmWall(R,'s',pb,1,s0,s1,0.1,H,inn,inn,[{m:kd,w:1.4,y0:0,y1:2.05},{m:bd,w:0.9,y0:0,y1:2.05}]);rmWall(R,'o',sm,1,o0,pb,0.1,H,inn,inn,[]);
+  R.box(s1-s0,0.03,o1-o0,'planks',(o0+o1)/2,(s0+s1)/2,0);R.box(s1-s0,0.04,o1-o0,0xf4f2ec,(o0+o1)/2,(s0+s1)/2,H-0.04);rmPartStart(R);
+  const pp=R.ports;R.ports=null;rmWall(R,'s',pb,1,s0,s1,0.1,H,inn,inn,[{m:kd,w:1.4,y0:0,y1:2.05},{m:bd,w:0.9,y0:0,y1:2.05}]);rmWall(R,'o',sm,1,o0,pb,0.1,H,inn,inn,[]);R.ports=pp;
   for(const [o,s] of [[(pb+o1)/2,(s0+s1)/2],[(o0+pb)/2,kd],[(o0+pb)/2,bd]])rmLit(R,0.45,0.45,o,s,H-0.07);
   // the living room: the TV against the partition between its doorways, the sofa facing it, a rug and coffee table
   const so=Math.min(pb+3.0,o1-1.4);R.box(1.4,0.5,0.4,0x2a2c2f,pb+0.3,sm,0);R.box(1.2,0.7,0.05,0x111214,pb+0.22,sm,0.62);R.solid(pb+0.3,sm,1.45,0.45);
@@ -271,4 +318,8 @@ function rmHome(R,h){const {s0,s1,o0,o1,H,u,inn}=h,pb=o0+2.75,sm=(s0+s1)/2,kd=(s
     R.box(1.53,0.07,1.3,rug,o0+1.42,bs,0.53);for(const t of [-0.38,0.38])R.box(0.6,0.12,0.38,0xf6f4ee,o0+0.3,bs+t,0.56);R.solid(o0+1.06,bs,1.6,2.1);
     for(const t of [-1,1]){const ns=bs+t*1.05;if(ns-0.24<sm+0.05||ns+0.24>s1)continue;R.box(0.45,0.55,0.4,wood,o0+0.22,ns,0);R.cyl(0.1,0.13,0.25,10,0xe9e1cc,o0+0.22,ns,0.55);R.solid(o0+0.22,ns,0.5,0.45)}}
   const [lx,lz]=R.P((pb+o1)/2,(s0+s1)/2),[kx,kz]=R.P((o0+pb)/2,(s0+sm)/2),[bx,bz]=R.P((o0+pb)/2,(sm+s1)/2);
-  for(const r of [rmRoom(lx,lz,R.f,(s1-s0)/2,(o1-pb)/2,R.y,R.y+H),rmRoom(kx,kz,R.f,(sm-s0)/2,(pb-o0)/2,R.y,R.y+H),rmRoom(bx,bz,R.f,(s1-sm)/2,(pb-o0)/2,R.y,R.y+H)])r.clad='siding'}
+  // each room knows the house's floor and its windows and front door (R.ports, gathered by rmWall: subHouse)
+  for(const [r,oc,sc] of [[rmRoom(lx,lz,R.f,(s1-s0)/2,(o1-pb)/2,R.y,R.y+H),(pb+o1)/2,(s0+s1)/2],[rmRoom(kx,kz,R.f,(sm-s0)/2,(pb-o0)/2,R.y,R.y+H),(o0+pb)/2,(s0+sm)/2],
+      [rmRoom(bx,bz,R.f,(s1-sm)/2,(pb-o0)/2,R.y,R.y+H),(o0+pb)/2,(sm+s1)/2]]){r.clad='siding';
+    if(R.ports)rmEnc(r,oc,sc,{o0:o0-0.3,o1:o1+0.3,s0:s0-0.3,s1:s1+0.3,y0:-0.3,y1:H+0.3},R.ports)}
+  rmPartEnd(R)}

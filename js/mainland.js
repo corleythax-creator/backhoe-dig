@@ -141,7 +141,7 @@ function crnPose(keys,u){let i=0;while(i<keys.length-2&&u>keys[i+1][0])i++;const
 function crnShow(n,u){crnSpans.forEach((s,k)=>{const steel=k<n||(k===n&&u>=0.86);s.tr.visible=!steel;s.st.visible=steel});
   for(const b of [BRIDGES[4],BRIDGES[5]]){const left=crnSpans.some((s,k)=>s.b===b&&!(k<n||(k===n&&u>=0.86)));for(const g of b.signs)if(g)g.visible=left}}
 const crnV=[new THREE.Vector3(),new THREE.Vector3(),new THREE.Vector3(),new THREE.Vector3()];
-function mainTick(dt){rmWinTick();sqTick();rmDoorsTick(dt);if(typeof bfTick==='function')bfTick(dt);rmInsideTick(dt);
+function mainTick(dt){rmWinTick();rmPartsTick();sqTick();rmDoorsTick(dt);if(typeof bfTick==='function')bfTick(dt);rmInsideTick(dt);
   const NS=crnSpans.length,T=Math.max(10,TU.craneSpan);
   if(CRN.n<NS){CRN.t+=dt;if(CRN.t>=T){CRN.t=0;CRN.n++;if(typeof site!=='undefined')site.dirty=true;
       const s=crnSpans[CRN.n-1],near=Math.hypot(camera.position.x-crnBarge.position.x,camera.position.z-crnBarge.position.z)<320;
@@ -391,7 +391,10 @@ function mainLot(K,x,z,w,d,h,col,face,awn,si,wl,o){wl=wl||col;o=o||{};const fx=M
   for(const t of [-1,1]){if(t===C){const hs=(RD-ch+0.1)/2,[a,b]=F(d/2-RD-0.1+hs,t*(w/2-0.2));rmSolid(a,b,face,0.3,hs);const hw=(w/2-ch-0.6)/2,[e,f]=F(d/2,t*(0.6+hw));rmSolid(e,f,face,hw,0.14);
       rmSolid((P1[0]+P2[0])/2,(P1[1]+P2[1])/2,Math.atan2(-(P2[1]-P1[1]),P2[0]-P1[0]),ch*0.7071,0.14);continue}
     const [a,b]=F(d/2-RD/2,t*(w/2-0.2));rmSolid(a,b,face,0.3,RD/2+0.1);const [e,f]=F(d/2,t*(w/4+0.35));rmSolid(e,f,face,w/4-0.25,0.14)}
-  walkPad(F0[0],F0[1],w/2-0.1,RD/2,face,y+0.03);rmRoom(F0[0],F0[1],face,w/2-0.55,RD/2,y,y+2.9).clad='glass';
+  walkPad(F0[0],F0[1],w/2-0.1,RD/2,face,y+0.03);{const r=rmRoom(F0[0],F0[1],face,w/2-0.55,RD/2,y,y+2.9);r.clad='glass';
+    // seen out of (rmEnc, interiors.js): through its storefront, and on a corner its cut corner's glass
+    const P=[{a:[d/2-0.02,-w/2-0.2],b:[d/2-0.02,w/2+0.2],y0:-0.3,y1:RH+0.3}];if(C)P.push({a:[d/2+0.1,C*(w/2-ch-0.2)],b:[d/2-ch-0.2,C*(w/2+0.1)],y0:-0.3,y1:RH+0.3});
+    rmEnc(r,d/2-RD/2,0,{o0:d/2-RD-0.3,o1:d/2+0.05,s0:-w/2-0.1,s1:w/2+0.1,y0:-0.3,y1:RH+0.3},P)}
   MAIN_BACKS.push({x,z,w,d,y,h,face,F,C,ds,si})}
 // the shop signs: painted boards (famSignPaint, family.js) drawn into one picture, and every sign a quad of it, as one mesh.
 // from: the first of mainSignList to draw (a later part of town, waterfront.js, draws its own: a smaller picture of just

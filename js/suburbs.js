@@ -83,12 +83,12 @@ function subHouse(K,x,z,f,kind,u){const W=kind==='ranch'?13:kind==='cape'?9.6:10
   // the walls: siding outside, paint inside, holes for the windows and the front door (it swings in as the worker comes
   // up: rmDoor, interiors.js); a ranch's garage stays a solid block at its end. Inside, its rooms (rmHome)
   {const T=0.18,inn=[0xeee7da,0xe3e8e4,0xefe4d6,0xe6e4ee,0xf2efe6][Math.floor(u*41)%5];
-    rmWall(R,'s',D/2,-1,-W/2,S1,T,Hs,wl,inn,[...holes.f,{m:ds,w:1.04,y0:0,y1:2.12}]);rmWall(R,'s',-D/2,1,-W/2,S1,T,Hs,wl,inn,[]);
+    R.ports=[];rmWall(R,'s',D/2,-1,-W/2,S1,T,Hs,wl,inn,[...holes.f,{m:ds,w:1.04,y0:0,y1:2.12}]);rmWall(R,'s',-D/2,1,-W/2,S1,T,Hs,wl,inn,[]);
     rmWall(R,'o',-W/2,1,-D/2+T,D/2-T,T,Hs,wl,inn,holes[-1]);
     if(S1<W/2){R.box(W/2-S1,HT,D,wl,0,(S1+W/2)/2,0);R.solid(0,(S1+W/2)/2,W/2-S1,D);rmWall(R,'o',S1,-1,-D/2+T,D/2-T,0.04,Hs,inn,inn,[])}
     else rmWall(R,'o',W/2,-1,-D/2+T,D/2-T,T,Hs,wl,inn,holes[1]);
     const sa=-W/2+T,sb=S1-(S1<W/2?0.04:T),[px,pz]=R.P(0,(sa+sb)/2),cs=(u>0.3?1:-1)*(W/2-0.75);R.solid(-D*0.12,cs,0.85,0.75);
-    walkPad(px,pz,(sb-sa)/2,D/2-T,f,yF+0.03);rmHome(R,{s0:sa,s1:sb,o0:-D/2+T,o1:D/2-T,H:Hs,cs,co:-D*0.12,stairs:n>1,u,inn});
+    walkPad(px,pz,(sb-sa)/2,D/2-T,f,yF+0.03);rmHome(R,{s0:sa,s1:sb,o0:-D/2+T,o1:D/2-T,H:Hs,cs,co:-D*0.12,stairs:n>1,u,inn});R.ports=null;
     {const c=Math.abs(cf),s=Math.abs(sf);SOLIDS.push({x,z,hx:(c*W+s*D)/2+0.05,hz:(s*W+c*D)/2+0.05,foot:1})}const [hx,hz]=R.P(D/2-0.06,ds-0.5);rmDoor('house'+door,hx,yF+0.03,hz,f,1.0);if(R.spots.length)rmAdd(R,Math.max(W,D)/2).home=1}
   {    for(const t of [-1,1]){const [cx,cz]=R.P(D/2+0.05,ds+t*0.6);K.box(0.12,2.25,0.08,WH,cx,yF+1.12,cz,f)}const [hx,hz]=R.P(D/2+0.05,ds);K.box(1.34,0.14,0.1,WH,hx,yF+2.2,hz,f);
     const [lx,lz]=R.P(D/2+0.1,ds+0.85);K.lit(new THREE.BoxGeometry(0.14,0.24,0.12),0xffe2a8,lx,yF+1.8,lz,f)}
