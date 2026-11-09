@@ -70,20 +70,38 @@ GFX.low.brDet=false;GFX.med.brDet=GFX.high.brDet=GFX.ultra.brDet=GFX.quest.brDet
 // islands, a hundred parts each, most a pixel or two across: about 1,000 of the 1,400 draws a frame. The camera's own
 // check (Frustum.intersectsObject) also skips a mesh whose width on screen is under gfxCur.cull CSS pixels, or that is
 // wholly past the haze (fogged materials). Only while the game's own camera draws (not the editor, VR or other views);
-// a mesh with userData.keep always draws.
-const gfxCull={on:false,x:0,y:0,z:0,k:0,fog:0},gfxSph=new THREE.Sphere();
+// a mesh with userData.keep always draws. Indoors (on foot in a room: interiors.js rmRoomAt, as rmInsideTick tells it; in the pub, say) the walls
+// hide the rest of the island, so anything under 40 m across farther off than TU.inFar is skipped too (the machines on
+// the islands, the yards, far houses); the land, the lake, the sky and the mountains still show through the windows.
+const gfxCull={on:false,x:0,y:0,z:0,k:0,fog:0,far:0},gfxSph=new THREE.Sphere();
 (function(){const P=THREE.Frustum.prototype;
   P.intersectsObject=function(o){const b=o.boundingSphere!==undefined?(o.boundingSphere||(o.computeBoundingSphere(),o.boundingSphere)):(o.geometry.boundingSphere||(o.geometry.computeBoundingSphere(),o.geometry.boundingSphere));
     const s=gfxSph.copy(b).applyMatrix4(o.matrixWorld);if(!this.intersectsSphere(s))return false;
     if(!gfxCull.on||o.userData.keep)return true;
     const c=s.center,d=Math.hypot(c.x-gfxCull.x,c.y-gfxCull.y,c.z-gfxCull.z);if(d<=s.radius)return true;
     if(s.radius*gfxCull.k<d)return false;
+    if(gfxCull.far&&d-s.radius>gfxCull.far&&s.radius<40)return false;
     const m=o.material;return !(gfxCull.fog&&d-s.radius>gfxCull.fog&&m&&m.fog&&!Array.isArray(m))}})();
 function gfxCullOn(cam){const px=gfxCur.cull||0;gfxCull.on=px>0&&cam===camera&&!edOn&&!renderer.xr.isPresenting;if(!gfxCull.on)return;
   const h=renderer.domElement.clientHeight||innerHeight;gfxCull.x=cam.position.x;gfxCull.y=cam.position.y;gfxCull.z=cam.position.z;
   // radius r at distance d is r/d/tan(fov/2)*zoom*(h/2) pixels from its middle; under px/2 is culled
-  gfxCull.k=h*cam.zoom/(Math.tan(cam.fov*Math.PI/360)*px);gfxCull.fog=scene.fog?scene.fog.far:0}
-{const r=renderer.render.bind(renderer);renderer.render=function(sc,cam){gfxCullOn(cam);try{r(sc,cam)}finally{gfxCull.on=false}}}
+  gfxCull.k=h*cam.zoom/(Math.tan(cam.fov*Math.PI/360)*px);gfxCull.fog=scene.fog?scene.fog.far:0;
+  gfxCull.far=mode==='walk'&&!wk.inside&&rmRoomAt(wk.x,wk.z,wk.y)?TU.inFar:0}
+// The machines on the islands from town: with the camera on the mainland (south of TU.townZ and on none of the
+// islands), every machine standing on one of the islands (Corley's, the Family Island, Jessica's, Dexter's) is left out
+// of the frame, its parts and shadows: the excavator, dump truck, mower, skid steer, bike, trench box, the attachments
+// parked on the ground and Dexter's heavy machines and trailers. Boats on the lake, and a machine brought into town,
+// still draw. Only how it is drawn: the machines go on working and are back the moment you leave town.
+const gfxIsl=(x,z,m)=>mesaR(x,z)<EDGE+m||famR(x,z)<FAM_R+m||jesR(x,z)<JES_R+m||dexR(x,z)<DEX_R+m;
+// (read when a frame is drawn, after every script has loaded)
+function gfxMachines(){const L=[machine,truck,mower,skid,bike,tbox];
+  if(typeof cpl!=='undefined'&&cpl.g)for(const k in cpl.g)if(cpl.g[k].parent===scene)L.push(cpl.g[k]);
+  if(typeof hvs!=='undefined')for(const h of hvs)if(h.g)L.push(h.g);return L}
+const gfxHid=[];
+function gfxAway(cam){if(cam!==camera||edOn||renderer.xr.isPresenting)return;const c=cam.position;
+  if(c.z<TU.townZ||gfxIsl(c.x,c.z,30))return;
+  for(const g of gfxMachines())if(g.visible&&gfxIsl(g.position.x,g.position.z,15)){g.visible=false;gfxHid.push(g)}}
+{const r=renderer.render.bind(renderer);renderer.render=function(sc,cam){gfxCullOn(cam);gfxAway(cam);try{r(sc,cam)}finally{gfxCull.on=false;while(gfxHid.length)gfxHid.pop().visible=true}}}
 let gfxKey='high',gfxOver={},gfxCur=Object.assign({},GFX.high);
 function gfxName(){return GFX[gfxKey].name+(Object.keys(gfxOver).length?' (custom)':'')}
 function gfxGuess(){if(PHONE||IS_QUEST)return 'low';
