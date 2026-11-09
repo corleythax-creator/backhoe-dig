@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-09T01:57:00Z",
+ "updated": "2026-11-09T03:11:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -120,9 +120,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-08",
-   "dh": 29,
-   "act": 2,
-   "versions": 4
+   "dh": 34.5,
+   "act": 3.5,
+   "versions": 7
   }
  ],
  "extra": [
@@ -3399,6 +3399,33 @@ window.EFFORT = {
    "tris": 5915971,
    "chars": 2425827,
    "what": "On High and Ultra, the town's shops, cafés, pubs, salons, offices, the brewery, the General Store, the hotel and the library are furnished with real commercial pieces (checkouts, shelving, coolers, bars and booths, café tables, salon stations, reception desks, pews), with staff behind the counters and customers at the tables, booths, chairs and shelves."
+  },
+  {
+   "v": 364,
+   "asked": "2026-11-08T20:15:00-06:00",
+   "live": "2026-11-08T20:29:58-06:00",
+   "dh": 2.5,
+   "tris": 7623132,
+   "chars": 2427967,
+   "what": "Busy townsfolk walks 120 people; the Lakeside Brewing taproom always has 10 or more drinking while open, walking in and out by the patio door"
+  },
+  {
+   "v": 365,
+   "asked": "2026-11-08T20:25:00-06:00",
+   "live": "2026-11-08T20:42:59-06:00",
+   "dh": 1.5,
+   "tris": 5926872,
+   "chars": 2429016,
+   "what": "Townsfolk talking aloud are heard only within 80 ft of you, quieter the further off they are"
+  },
+  {
+   "v": 366,
+   "asked": "2026-11-08T20:35:00-06:00",
+   "live": "2026-11-08T21:11:04-06:00",
+   "dh": 1.5,
+   "tris": 5924798,
+   "chars": 2431268,
+   "what": "The site map shows every shop, the brewery and the General Store as a brass dot, named once you zoom in; tapping one names it"
   }
  ]
 };
