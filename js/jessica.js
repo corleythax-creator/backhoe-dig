@@ -87,6 +87,8 @@ function jesMesh(list,mat,shadow){if(!list.length)return null;const m=new THREE.
     const fx=alongX?m:c+out*(T/2+0.2),fz=alongX?c+out*(T/2+0.2):m;
     if(alongX)K.box(w+0.2,0.25,0.35,0x6b4428,fx,y0+q0-0.2,fz);else K.box(0.35,0.25,w+0.2,0x6b4428,fx,y0+q0-0.2,fz);
     for(let i=0;i<6;i++){const f=(i+0.5)/6-0.5,px=alongX?fx+f*w:fx,pz=alongX?fz:fz+f*w;K.geo(new THREE.IcosahedronGeometry(0.11,0),[0xd8434e,0xf08aa8,0xf2c94c,0x4f8a3e][i%4],px,y0+q0-0.02,pz,i)}}
+  // the cottage moves as one in the map editor (fixed.js), and is what Building Forge's stands in for (forgetown.js)
+  fxDecl("Jessica's cottage",CX,CZ,W/2+T+0.6,D/2+T+0.6);
   wall(true,zn,CX-W/2-T,CX+W/2+T,[]);
   wall(true,zs,CX-W/2-T,CX+W/2+T,[{a0:CX-1.3,a1:CX+1.3,y0:0.95,y1:2.35}]);
   wall(false,xe,CZ-D/2,CZ+D/2,[{a0:CZ-2.65,a1:CZ-1.75,y0:1.1,y1:2.3},{a0:CZ+1.75,a1:CZ+2.65,y0:1.1,y1:2.3}]);

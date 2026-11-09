@@ -202,6 +202,8 @@ function famPlay(g){try{siteSaveAll()}catch(e){}try{lawnSave()}catch(e){}
     const DX=X+1.3;K.box(1.5,2.6,0.12,WHITE,DX,y+1.85,Z+5.02);K.box(1.2,2.3,0.18,0xa3402e,DX,y+1.7,Z+5.04);K.box(0.12,0.12,0.24,0xd8b04a,DX+0.4,y+1.7,Z+5.1);
     // porch: deck, posts, rails, a roof sloping off the wall, steps down to the drive, two rocking chairs
     const PW=2.6,py=y+0.5;
+    // the house and its porch move as one in the map editor (fixed.js), and are what Building Forge's stands in for (forgetown.js)
+    fxDecl('Family house',X+PW/2,Z+PW/2+0.4,7.3+PW/2,5.3+PW/2+0.8);
     K.box(14+PW,0.2,PW,'planks',X+PW/2,py,Z+5+PW/2);K.box(PW,0.2,10,'planks',X+7+PW/2,py,Z);
     const posts=[];for(let i=0;i<=7;i++)posts.push([X-7+0.2+i*(14+PW-0.4)/7,Z+5+PW-0.2]);for(let i=1;i<=4;i++)posts.push([X+7+PW-0.2,Z+5+PW-0.2-i*(10+PW-0.4)/4]);
     for(const [px,pz] of posts)K.box(0.22,2.9,0.22,WHITE,px,py+1.55,pz);
