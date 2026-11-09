@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Sunday, November 8, 2026
 
+- **v364** (8:29 PM) Busy townsfolk walks 120 people; the Lakeside Brewing taproom always has 10 or more drinking while open, walking in and out by the patio door
 - **v363** (7:57 PM) On High and Ultra, the town's shops, cafés, pubs, salons, offices, the brewery, the General Store, the hotel and the library are furnished with real commercial pieces (checkouts, shelving, coolers, bars and booths, café tables, salon stations, reception desks, pews), with staff behind the counters and customers at the tables, booths, chairs and shelves.
 - **v362** (7:02 PM) On High and Ultra, the whole town (shops, Town Hall, hotel, library, brewery, General Store, marina, waterfront and the neighbourhoods' houses) and the island's own buildings (Jessica's cottage, the Family house, Dexter's shed and office trailer) are your Daylight designs, walk-in on both floors, with their staff, customers and residents inside. Two Graphics settings: the town, and its houses.
 - **v361** (4:54 PM) On High and Ultra, the Building Forge shops on Main Street have their staff behind the counters and customers at the tables and shelves, coming and going through the front door, and you can walk up the stairs to the flat above each shop.

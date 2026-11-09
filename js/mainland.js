@@ -505,7 +505,14 @@ function mainBrewery(){const K=famKit(),PK=famKit(),{x,z,w,d,h}=BREW,y=rmGroundM
   for(let o=-4;o<=3;o+=1.75){const [a,b]=B.P(o,-7.3);K.lit(new THREE.CylinderGeometry(0.1,0.18,0.2,10),0xffe2a8,a,y+3.1,b)}
   B.spot(-3.6,-8.55,Math.PI/2,{staff:1});B.spot(0.6,-8.55,Math.PI/2,{staff:1,path:B.path([[3.2,-8.55],[-4.4,-8.55],[3.2,-8.55]]),at:3});B.spot(-0.3,5.6,Math.PI/2,{staff:1});
   for(const o of [-4.0,-2.6,-1.2,0.2,1.6,3.0])B.spot(o,-6.55,-Math.PI/2);B.spot(-5.0,1.0,Math.PI/2);B.spot(4.6,0.5,-Math.PI*0.75);B.spot(5.2,1.1,Math.PI);
-  rmAdd(B,9,[0,4,7,11]).hrs=[11,23];B.nm='Lakeside Brewing Co.';
+  rmAdd(B,9,[0,10,14,20]).hrs=[11,23];B.nm='Lakeside Brewing Co.';
+  // the pub is never quiet while it is open: at least minC drinking (townfolk.js tfRoomsTick), coming and going by its
+  // own way in (tfEntVia): from the side path along the patio, in at the rolled-up door, then round the tables and the
+  // bar to a seat (points across, along from the room's middle as built: east, south)
+  B.minC=10;B.via={f:B.f||0,out:[[0,5.6],[0,7.0],[0,8.3],[10,8.3]],in:(a,b)=>{const L=[[0,5.6]];
+    if(a>7)L.push([4.2,5.6],[8.5,5.6],[8.5,b]);else if(a>5.5)L.push([4.2,5.6],[4.2,b]);
+    else{const band=b>=3.15?4.4:b>=-1.45?1.0:-3.4;if(band<4.4)L.push([4.2,5.6],[4.2,band]);L.push([a,band])}
+    L.push([a,b]);return L}};
   // solid: the walls (but the open door), the tanks, kettles, bar and back bar; the floor to walk on, and the room
   SOLIDS.push({x,z,hx:w/2+0.1,hz:d/2+0.1,foot:1});for(const t of [-1,1]){B.solid(0,t*(w/2-0.2),0.45,d+0.2);B.solid(-o0+0.2,t*(w/4+0.75),w/2-1.5,0.45)}B.solid(o0-0.2,0,w+0.2,0.45);
   B.solid(-0.3,7.4,1.8,9.6);B.solid(-5.6,4.6,3.9,1.8);B.solid(-0.6,-7.3,0.8,8.5);B.solid(-0.6,-9.45,0.5,8.5);
