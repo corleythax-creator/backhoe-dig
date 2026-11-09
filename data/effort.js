@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-09T23:45:00Z",
+ "updated": "2026-11-09T23:51:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -126,9 +126,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-09",
-   "dh": 36.5,
+   "dh": 40.5,
    "act": 4,
-   "versions": 9
+   "versions": 10
   }
  ],
  "extra": [
@@ -3576,6 +3576,15 @@ window.EFFORT = {
    "tris": 5793345,
    "chars": 2486816,
    "what": "The Building Forge buildings' own lamps and ceiling lights come on from dusk to dawn: fixtures glow, outdoor ones have halos, and the nearest few cast real light (2/4/6 on Medium/High/Ultra, none on Low; Graphics: Building lights, and Tuning for brightness, reach and budget)"
+  },
+  {
+   "v": 383,
+   "asked": "2026-11-09T13:40:00-06:00",
+   "live": "2026-11-09T17:51:49-06:00",
+   "dh": 4,
+   "tris": 5786409,
+   "chars": 2489108,
+   "what": "The backhoe's and wheel loader's digging now loads their diesel (it throttles up, lugs in hard ground and the hoe slows with it), and the pickup goes up to 80 mph and climbs Overlook Road on its engine."
   }
  ]
 };
