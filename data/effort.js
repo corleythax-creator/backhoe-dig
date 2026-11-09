@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-08T22:54:00Z",
+ "updated": "2026-11-09T01:02:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -120,9 +120,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-08",
-   "dh": 11,
-   "act": 1,
-   "versions": 2
+   "dh": 21,
+   "act": 1.5,
+   "versions": 3
   }
  ],
  "extra": [
@@ -3381,6 +3381,15 @@ window.EFFORT = {
    "tris": 5923586,
    "chars": 2420379,
    "what": "On High and Ultra, the Building Forge shops on Main Street have their staff behind the counters and customers at the tables and shelves, coming and going through the front door, and you can walk up the stairs to the flat above each shop."
+  },
+  {
+   "v": 362,
+   "asked": "2026-11-08T17:15:00-06:00",
+   "live": "2026-11-08T19:02:49-06:00",
+   "dh": 10,
+   "tris": 5926687,
+   "chars": 2422690,
+   "what": "On High and Ultra, the whole town (shops, Town Hall, hotel, library, brewery, General Store, marina, waterfront and the neighbourhoods' houses) and the island's own buildings (Jessica's cottage, the Family house, Dexter's shed and office trailer) are your Daylight designs, walk-in on both floors, with their staff, customers and residents inside. Two Graphics settings: the town, and its houses."
   }
  ]
 };
