@@ -248,7 +248,13 @@ function tfOff(i){const m=TU.tfOut||0;return i<32&&Math.floor(m/2**i)%2===1}
 function tfLook(adult,o){const C=tf.chars,all=C.every((c,i)=>tfOff(i));let best=0,bs=1e9;for(let i=0;i<C.length;i++){if(!all&&tfOff(i)||adult&&C[i].body==='k'&&C.some(c=>c.body!=='k'))continue;const sc=tf.use[i]*(C[i].body==='k'?3:1)+Math.random()*0.9+(typeof lifeScore==='function'?lifeScore(C[i].id,o):0);if(sc<bs){bs=sc;best=i}}
   const c=C[best];tf.use[best]++;return {ci:best,body:c.id,sc:0.97+Math.random()*0.06,g:0}}
 function tfPerson(o){const p=Object.assign(tfLook(o&&o.drv,o),{x:0,z:0,y:0,yaw:0,ph:Math.random()*6,amp:0,spd:0,vt:TU.tfWalk*(0.82+Math.random()*0.32),side:0.32,wait:0,inside:0,blk:0,look:0},o);
-  p.y=baseHeight(p.x,p.z)+tfLift(p.x,p.z);tf.people.push(p);return p}
+  p.y=baseHeight(p.x,p.z)+tfLift(p.x,p.z);tfTwin(p);tf.people.push(p);return p}
+// more people than looks (32): the first of a look in town is the person the library made, with their name, life,
+// memory and what they think of him; anyone else in that look is someone else (p.tw 1, 2...: talk.js talkTwin), known
+// to memory and reputation as tfWho(p). first: p is that person whoever else has the look (a regular taking it)
+function tfTwin(p,first){const u=new Set();for(const q of tf.people)if(q!==p&&q.body===p.body)u.add(q.tw||0);let n=0;if(!first)while(u.has(n))n++;p.tw=n;
+  if(first)for(const q of tf.people)if(q!==p&&q.body===p.body&&!q.tw)tfTwin(q)}
+function tfWho(p){return p&&p.tw?p.body+'~'+p.tw:p&&p.body}
 // someone run down (tfRunOver): p.dead counts the seconds since; they go over backwards, flat in about 0.7 s
 const tfFall=p=>p.dead?Math.min(1,(p.dead/0.7)**2)*Math.PI/2*0.97:0;
 // how someone shot moves (pistol.js, gunHit; p.hit: k where, t seconds since, side +1 their right, fwd +1 shot from
