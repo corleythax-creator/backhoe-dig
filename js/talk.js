@@ -104,9 +104,18 @@ function talkFree(p){return !p.inside&&!p.drv&&!p.cop&&!p.dead&&!p.hurt&&!(p.fle
 // who they would talk to: the nearest other grown-up within TU.talkChatR, not one of their own look (the same name)
 function talkNearest(p){let best=null,bd=TU.talkChatR;for(const q of TALK.here){if(q===p||q.body===p.body||!talkFree(q))continue;
   const d=Math.hypot(q.x-p.x,q.z-p.z);if(d<bd&&Math.abs((q.y||0)-(p.y||0))<1.5){bd=d;best=q}}return best}
+// the present, for the built-in mind's answers (Human Forge's o.now): what they are doing, the hour, and how hungry,
+// thirsty, tired and so on they are, worked out from the hour and where they are in their day (the island keeps no
+// needs of its own), a little different for each look (their body)
+function talkNow(p){if(!p||typeof p!=='object')return null;const h=typeof townHour==='function'?townHour():12,R=p.room;
+  const shop=R&&!R.home&&typeof townShopName==='function'?townShopName(R):'',staff=R&&p.spot&&p.spot.staff&&!R.home;
+  const doing=p.drv?'driving':staff?'working'+(shop?' at '+shop:''):R&&R.home?'at home':R?(shop?'in '+shop:'inside'):p.flee>0?'running':p.sit?'sitting down for a bit':'out for a walk';
+  let s=7;for(const ch of String(p.body||''))s=(s*31+ch.charCodeAt(0))>>>0;const j=(s%100)/500-0.1,cl=v=>Math.max(0,Math.min(1,v+j));
+  const meal=Math.max(...[7.5,12.5,18.5].map(a=>Math.max(0,1-Math.abs(h-a)/1.5))),hot=typeof weather==='object'&&weather.r<0.1&&h>11&&h<17;
+  return {doing,hour:h,needs:{hunger:cl(0.25+0.6*meal),thirst:cl(hot?0.5:0.3),energy:cl(h>=22||h<5?0.85:h>=20?0.6:h<7?0.55:0.3),fun:cl(staff?0.55:0.35),company:cl(0.35),clean:cl(0.25)}}}
 function talkInit(){if(TALK.M||!window.HumanForgeMind)return;
   TALK.M=HumanForgeMind.create({url:TALK_URL,storage:'bhd_talk_on',budget:200,card:p=>p==='player'?null:talkCard(p),people:()=>TALK.here,label:p=>talkName(p),
-    nearest:p=>talkFree(p)?talkNearest(p):null,sights:p=>p==='player'?[]:talkSights(p),scene:(p,to)=>talkScene(p,to),
+    nearest:p=>talkFree(p)?talkNearest(p):null,sights:p=>p==='player'?[]:talkSights(p),scene:(p,to)=>talkScene(p,to),now:p=>p==='player'?null:talkNow(p),
     show:(p,a,to,ev)=>talkShow(p,a,to,ev),act:(p,a,ev)=>talkAct(p,a,ev),joint:(p,q)=>talkJoint(p,q),agreed:(by,p,k,yes)=>talkAgreed(by,p,k,yes),changed:()=>talkPaint()});
   TALK.M.chatter=true;
   try{localStorage.setItem('bhd_talk_on','1')}catch(e){}  // the runtime's own switch, on; also marks that talk was on here
