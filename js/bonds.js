@@ -9,19 +9,19 @@
 // friends greeting each other in passing and rivals snubbing each other (bdTick), and a model hears it (bdScene).
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 
-const BD={l:{},t:0,dirty:false,met:new Map(),day:null};
+const BD={l:{},t:0,dirty:false,met:new Map(),day:null,base:new Map()};
 try{const v=JSON.parse(localStorage.getItem('bhd_bonds')||'null');if(v&&v.l){BD.l=v.l;BD.day=v.day}}catch(e){}
 function bdSave(){if(!BD.dirty)return;BD.dirty=false;try{localStorage.setItem('bhd_bonds',JSON.stringify({v:1,l:BD.l,day:BD.day}))}catch(e){}}
 const bdKey=(a,b)=>a<b?a+'|'+b:b+'|'+a;
 const BD_EDGE=['grumpy','sarcastic','proud'],BD_SOFT=['warm','kind','cheerful'];
-// where a pair starts, by who they are
-function bdBase(p,q){const a=tfWho(p),b=tfWho(q),k=bdKey(a,b),ca=talkCard(p),cb=talkCard(q);let v=(puH(k+'bond')-0.5)*0.55;
+// where a pair starts, by who they are (worked out once a pair)
+function bdBase(p,q){const a=tfWho(p),b=tfWho(q),k=bdKey(a,b);if(BD.base.has(k))return BD.base.get(k);const ca=talkCard(p),cb=talkCard(q);if(!ca||!cb)return 0;let v=(puH(k+'bond')-0.5)*0.55;
   if(typeof LIFE_HOMES!=='undefined'&&!p.tw&&!q.tw&&LIFE_HOMES.some(g=>g.includes(p.body)&&g.includes(q.body)))v+=0.6;
   const la=typeof lifeOf==='function'&&lifeOf(p.body),lb=typeof lifeOf==='function'&&lifeOf(q.body);if(la&&lb&&la.room&&la.room===lb.room)v+=0.25;
   if(ca&&cb){v+=(ca.likes||[]).filter(l=>(cb.likes||[]).includes(l)).length*0.08;
     const ea=(ca.traits||[]).some(t=>BD_EDGE.includes(t)),eb=(cb.traits||[]).some(t=>BD_EDGE.includes(t)),sa=(ca.traits||[]).some(t=>BD_SOFT.includes(t)),sb=(cb.traits||[]).some(t=>BD_SOFT.includes(t));
     v+=ea&&eb?-0.15:ea||eb?-0.05:0;if(sa&&sb)v+=0.08}
-  return v}
+  BD.base.set(k,v);return v}
 // how p and q get on now
 function bdOf(p,q){if(!p||!q||p===q||typeof q!=='object')return 0;const L=BD.l[bdKey(tfWho(p),tfWho(q))];return Math.max(-1,Math.min(1,bdBase(p,q)+(L?L[0]:0)))}
 const bdAdd=(p,q,d)=>{const k=bdKey(tfWho(p),tfWho(q)),L=BD.l[k]||(BD.l[k]=[0,0]);L[0]=Math.max(-1,Math.min(1,L[0]+d));L[1]++;BD.dirty=true};
