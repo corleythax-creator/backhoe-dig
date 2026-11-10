@@ -20,7 +20,8 @@ const roKey=(i,j)=>(i+5000)*10000+(j+5000);
 
 // ---------- the ground: who can stand where ----------
 // SOLIDS by RO_SG squares (walls and things, footprints left out), remade when one is added, removed or moved
-function roSolids(){let sig=SOLIDS.length;for(const s of SOLIDS)sig+=s.x*0.37+s.z*0.71+(s.hx||0)*0.13;
+// (whether they moved is checked every 2 s, roTick with check set; otherwise the grid as it is)
+function roSolids(check){if(RO.sg&&!check)return RO.sg;let sig=SOLIDS.length;for(const s of SOLIDS)sig+=s.x*0.37+s.z*0.71+(s.hx||0)*0.13;
   if(RO.sg&&sig===RO.sig)return RO.sg;RO.sig=sig;RO.pass.clear();const G=new Map();
   for(const s of SOLIDS){if(s.foot)continue;const hx=(s.hx||0)+RO_R,hz=(s.hz||0)+RO_R;
     for(let i=Math.floor((s.x-hx)/RO_SG);i<=Math.floor((s.x+hx)/RO_SG);i++)for(let j=Math.floor((s.z-hz)/RO_SG);j<=Math.floor((s.z+hz)/RO_SG);j++){const k=roKey(i,j);let L=G.get(k);if(!L)G.set(k,L=[]);L.push(s)}}
@@ -112,4 +113,4 @@ function roTick(dt){const t0=performance.now(),J=RO.jobs;
   while(J.length&&performance.now()-t0<TU.roMs){const j=J[0];if(j.p.off!==j.off||!tf.people.includes(j.p)){J.shift();continue}
     const r=j.it.next();if(!r.done)continue;J.shift();const o=j.off;o.pending=0;o.at=performance.now()/1000;
     if(r.value)o.pts=r.value;else{o.pts=[];o.then=null;if(o.fail)o.fail(j.p);else if(!j.p.ord&&!j.p.pu)roJoin(j.p)}}
-  if((RO.t+=dt)<2)return;RO.t=0;roSolids()}
+  if((RO.t+=dt)<2)return;RO.t=0;roSolids(true)}
