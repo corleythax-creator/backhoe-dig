@@ -170,11 +170,18 @@ function tfForge(){const F=tf.F||(tf.F={st:0});if(F.st||!gfxCur.forge)return;F.s
   if(window.HumanForge)return go();const s=document.createElement('script');s.src='models/people/human-forge.js';s.onload=go;s.onerror=()=>{F.st=-1};document.head.appendChild(s)}
 // a character's crowd, the first time someone in view wears that look; the walk's ground speed scales with the
 // person's size (the clip's own speed is a 6 ft person's)
-function tfForgeCrowd(B,id){B.fg=1;const F=tf.F;
+function tfForgeCrowd(B,id){B.fg=1;const F=tf.F;tf.fgBusy=(tf.fgBusy||0)+1;
   F.f.preload(['island_'+id]).then(([t])=>{tfDieClips(t);return F.f.crowd('island_'+id,{max:B.cap,clips:TF_FG_CLIPS,lod:gfxCur.forge,castShadow:true,receiveShadow:true}).then(c=>{const m=c.object,M=m.material;
     M.roughness=0.86;M.envMap=skyEnv;M.envMapIntensity=0.5;m.castShadow=!!gfxCur.pbr;m.visible=false;c.stride=F.f.clips.walk.speed*c.type.hip/F.ref;c.runS=(F.f.clips.run||F.f.clips.walk).speed*c.type.hip/F.ref;scene.add(m);
       return gpuWarm(m).then(()=>{B.fg=c})})})
-    .catch(e=>console.warn('townsfolk forge:',id,e))}
+    .catch(e=>console.warn('townsfolk forge:',id,e)).finally(()=>{tf.fgBusy--})}
+// built ahead, wherever the camera is (from the first frames, behind the start card): every character's look and, on
+// High and Ultra, their crowd, one at a time a quarter second apart, so none is built on the frame someone first walks
+// into view (each crowd bakes its clips in one go, the stutter coming into town and round the brewery's many faces)
+function tfPrep(dt){if(!tf.load)tfLoad();if(tf.load!==2)return;if(gfxCur.forge&&!(tf.F&&tf.F.st))tfForge();
+  if((tf.prepT=(tf.prepT||0)-dt)>0)return;tf.prepT=0.25;const M=tf.M;
+  for(const k in M)if(!M[k].texing){tfTex(M[k]);break}
+  if(tf.F&&tf.F.st===2&&gfxCur.forge&&!tf.fgBusy)for(const k in M)if(!M[k].fg){tfForgeCrowd(M[k],k);break}}
 // person p as instance i of crowd c: walking (pace = their speed), sitting (the clip's origin is on the floor under the
 // seat's middle, its seat 18 in up like the rooms' chairs and benches), driving (its seat 14 in up: lifted to where the
 // old seated pose's seat was, 18 in over p.y), or standing easy or talking (staff and customers)
@@ -336,7 +343,8 @@ function tfSpawnWalker(fill){for(let t=0;t<8;t++){const w=TF_WALK[(Math.random()
     if(!fill&&tfSeen(x,z,1)&&Math.hypot(x-camera.position.x,z-camera.position.z)<90)continue;
     const p=tfPerson({w,s,dir:Math.random()<0.5?1:-1,x,z});p.side=0.32*(Math.random()<0.8?1:-1);if(Math.random()<0.08)p.carry=Math.random()<0.5?'cup':'bag';return p}}
 // in view of the camera (within r of a point seen) and not too far off
-function tfSeen(x,z,r){tf.v.set(x,baseHeight(x,z)+1,z);return tf.fr.intersectsSphere(new THREE.Sphere(tf.v,r||2))}
+const _tfSph=new THREE.Sphere();
+function tfSeen(x,z,r){_tfSph.center.set(x,baseHeight(x,z)+1,z);_tfSph.radius=r||2;return tf.fr.intersectsSphere(_tfSph)}
 // what someone walking at (x, z) toward (dx, dz) would bump into within reach: another person, the worker, a car
 function tfBlocked(p,dx,dz,reach){const rx=-dz,rz=dx;
   const hit=(x,z,r)=>{const ox=x-p.x,oz=z-p.z,f=ox*dx+oz*dz;return f>0&&f<reach+r&&Math.abs(ox*rx+oz*rz)<0.32+r};
@@ -683,7 +691,7 @@ function tfParkedShow(on){if(on===tf.parkedOn)return;tf.parkedOn=on;const ks=Obj
   if(on&&!tf.parked.length){tf.parkedOn=false;return}
   for(const c of tf.parked){c.g.visible=on;const i=SOLIDS.indexOf(c.sol);if(on&&i<0)SOLIDS.push(c.sol);else if(!on&&i>=0)SOLIDS.splice(i,1)}}
 // ---------- each frame ----------
-function tfTick(dt){if(!tf.q){if(tf.on)tfShow(false);return}
+function tfTick(dt){if(!tf.q){if(tf.on)tfShow(false);return}tfPrep(dt);
   const cx=camera.position.x,cz=camera.position.z,B=TF_BOX,dd=Math.hypot(Math.max(B[0]-cx,0,cx-B[1]),Math.max(B[2]-cz,0,cz-B[3]));
   if(dd>TF_NEAR){if(tf.on)tfShow(false);return}
   if(!tf.load)tfLoad();if(tf.load!==2)return;if(gfxCur.forge&&!(tf.F&&tf.F.st))tfForge();

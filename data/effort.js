@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-09T23:51:00Z",
+ "updated": "2026-11-10T02:15:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -126,9 +126,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-09",
-   "dh": 40.5,
-   "act": 4,
-   "versions": 10
+   "dh": 43,
+   "act": 5,
+   "versions": 12
   }
  ],
  "extra": [
@@ -3585,6 +3585,24 @@ window.EFFORT = {
    "tris": 5786409,
    "chars": 2489108,
    "what": "The backhoe's and wheel loader's digging now loads their diesel (it throttles up, lugs in hard ground and the hoe slows with it), and the pickup goes up to 80 mph and climbs Overlook Road on its engine."
+  },
+  {
+   "v": 384,
+   "asked": "2026-11-09T19:20:00-06:00",
+   "live": "2026-11-09T19:40:34-06:00",
+   "dh": 1.5,
+   "tris": 5795796,
+   "chars": 2490008,
+   "what": "Less stutter near townsfolk who talk (the brewery): their speech bubbles no longer make the browser re-lay out the page every frame"
+  },
+  {
+   "v": 385,
+   "asked": "2026-11-09T20:13:00-06:00",
+   "live": "2026-11-09T20:15:41-06:00",
+   "dh": 1,
+   "tris": 5796547,
+   "chars": 2490769,
+   "what": "Townsfolk crowds are built in the background from the start, so coming into town no longer stutters as each new face appears"
   }
  ]
 };

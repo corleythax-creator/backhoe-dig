@@ -213,8 +213,8 @@ function talkBend(p,h){const g=h.object,B=h._tb||(h._tb={neck:g.getObjectByName(
   turn(B.neck,_tbX[0],pt*0.4);turn(B.neck,_tbX[1],yw*0.4);turn(B.head,_tbX[0],pt*0.6);turn(B.head,_tbX[1],yw*0.6);turn(B.head,_tbX[2],rl);
   for(const d of B.done)d[1]=d[0].quaternion.clone()}
 function talkFace(p,s,x=wk.x,z=wk.z){if(!p||typeof p!=='object'||p.room||p.drv||p.cop||p.dead||p.flee>0)return;p.wait=Math.max(p.wait||0,s);p.look=Math.atan2(x-p.x,z-p.z)}
-function talkShow(p,a,to,ev){const u=talkUI();let b=TALK.bub.get(p);if(!b){b={el:document.createElement('div')};b.el.className='talkLine';u.L.appendChild(b.el);TALK.bub.set(p,b)}
-  b.el.innerHTML='';const n=document.createElement('b');n.textContent=talkName(p);b.el.append(n,document.createTextNode(a.say));
+function talkShow(p,a,to,ev){const u=talkUI();let b=TALK.bub.get(p);if(!b){b={el:document.createElement('div')};b.el.className='talkLine';b.el.style.left=b.el.style.top='0';u.L.appendChild(b.el);TALK.bub.set(p,b)}
+  b.el.innerHTML='';b.w=undefined;const n=document.createElement('b');n.textContent=talkName(p);b.el.append(n,document.createTextNode(a.say));
   b.until=performance.now()/1000+3.5+a.say.split(/\s+/).length*0.38;const s=b.until-performance.now()/1000;
   // who they turn to: the one they talk to (and that one back), what happened to them, or you
   if(to&&typeof to==='object'&&talkCard(to)&&Math.random()<0.3)repGossip(p,to);
@@ -398,6 +398,9 @@ function talkLook(dt){const M=TALK.M,now=performance.now()/1000,foot=mode==='wal
   talkNews();talkGoTick(dt);
   if(TALK.with&&(!foot||!tf.people.includes(TALK.with)||Math.hypot(TALK.with.x-wk.x,TALK.with.z-wk.z)>8))talkClose()}
 
+// where the canvas is on the page, read once a second (and on a resize), not every frame
+function talkRect(){const n=performance.now();if(!TALK.rect||n-TALK.rectT>1000){TALK.rect=renderer.domElement.getBoundingClientRect();TALK.rectT=n}return TALK.rect}
+addEventListener('resize',()=>{TALK.rectT=-1e9});
 // ---- each frame (from main.js)
 function talkTick(dt){
   talkErrands(dt);repTick(dt);
@@ -408,13 +411,15 @@ function talkTick(dt){
   if(TALK.with)talkFace(TALK.with,1);
   const chip=u.d.querySelector('#talkChip'),p=foot&&TALK.with;
   // near someone, the Use button offers the talk (ctx.js); while talking, the chip says to whom
-  u.d.hidden=!p;if(p)chip.textContent=TALK.grp&&TALK.group.length>1?say('tkWithAll',{n:TALK.group.length}):say('tkWith',{name:talkName(p)});
-  // the lines over their heads
-  const r=renderer.domElement.getBoundingClientRect();
-  for(const [q,b] of TALK.bub){if(!tf.people.includes(q)||now>b.until+1){b.el.remove();TALK.bub.delete(q);continue}
-    const up=now<b.until,v=TALK.v.set(q.x,q.y+1.95*(q.sc||1),q.z).project(camera);
-    if(!up||v.z>1||Math.abs(v.x)>1.1||Math.abs(v.y)>1.1){b.el.classList.remove('on');continue}
-    b.el.classList.add('on');const half=b.el.offsetWidth/2+6;
-    b.el.style.left=Math.round(r.left+Math.max(half,Math.min(r.width-half,(v.x+1)/2*r.width)))+'px';b.el.style.top=Math.round(r.top+(1-v.y)/2*r.height)+'px'}
+  if(u.d.hidden!==!p)u.d.hidden=!p;if(p){const t=TALK.grp&&TALK.group.length>1?say('tkWithAll',{n:TALK.group.length}):say('tkWith',{name:talkName(p)});if(chip.textContent!==t)chip.textContent=t}
+  // the lines over their heads. Nothing here makes the browser lay the page out again each frame (which, once per
+  // line, was the stutter near a crowd of talkers, as at the brewery): the canvas's place is read once a second, a line's
+  // width once when its words change (all read before anything is written), and the lines move by transform only
+  const r=talkRect();
+  for(const [q,b] of TALK.bub){if(!tf.people.includes(q)||now>b.until+1){b.el.remove();TALK.bub.delete(q);continue}if(b.w===undefined)b.w=b.el.offsetWidth}
+  for(const [q,b] of TALK.bub){const up=now<b.until,v=TALK.v.set(q.x,q.y+1.95*(q.sc||1),q.z).project(camera);
+    if(!up||v.z>1||Math.abs(v.x)>1.1||Math.abs(v.y)>1.1){if(b.on){b.on=false;b.el.classList.remove('on')}continue}
+    if(!b.on){b.on=true;b.el.classList.add('on')}const half=b.w/2+6,x=Math.round(r.left+Math.max(half,Math.min(r.width-half,(v.x+1)/2*r.width))),y=Math.round(r.top+(1-v.y)/2*r.height);
+    if(x!==b.x||y!==b.y){b.x=x;b.y=y;b.el.style.transform=`translate3d(${x}px,${y}px,0) translate(-50%,-100%)`}}
   if(TALK.spk&&(!tf.people.includes(TALK.spk)||talkEar(TALK.spk)>TU.talkHearR+3)){TALK.spk=null;TALK.M.hush()}
   TALK.M.step(dt)}
