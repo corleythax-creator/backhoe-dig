@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-10T15:35:00Z",
+ "updated": "2026-11-10T16:36:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -132,9 +132,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-10",
-   "dh": 2,
-   "act": 0.5,
-   "versions": 1
+   "dh": 3.5,
+   "act": 1,
+   "versions": 2
   }
  ],
  "extra": [
@@ -3699,6 +3699,15 @@ window.EFFORT = {
    "tris": 5788840,
    "chars": 2529745,
    "what": "A Work graphics level: the High look (detailed machines, material relief, filmic light, the same town and buildings) at a fraction of Medium's cost, for office PCs; picked for you on Intel graphics"
+  },
+  {
+   "v": 396,
+   "asked": "2026-11-10T10:05:00-06:00",
+   "live": "2026-11-10T10:36:12-06:00",
+   "dh": 1.5,
+   "tris": 5788800,
+   "chars": 2530029,
+   "what": "Shadows no longer make every frame wait on the graphics card (an error check each frame), which held slow office PCs back at any resolution"
   }
  ]
 };

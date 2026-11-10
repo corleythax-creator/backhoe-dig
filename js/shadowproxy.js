@@ -76,7 +76,7 @@ function shadowProxyTick(){sunNearTick();sunFarTick();
 // picture again once it has been still 3 s; a caster new to the map is drawn as moving until then; one gone from it, a
 // moved map or a turned sun draws the kept picture again. People (skinned) always draw. The shadows look the same: at
 // most one frame shows a moved thing's shadow both where it was and where it is.
-const shc={on:false,ok:false,in:false,build:false,broken:false,gen:0,f:0,n:0,cn:0,mat:new Float64Array(16),fb:null,rb:null,w:0,h:0,defer:[],cull:false,builds:0,kept:0,drawn:0,st:new WeakMap()};
+const shc={chk:0,on:false,ok:false,in:false,build:false,broken:false,gen:0,f:0,n:0,cn:0,mat:new Float64Array(16),fb:null,rb:null,w:0,h:0,defer:[],cull:false,builds:0,kept:0,drawn:0,st:new WeakMap()};
 let SHC_STILL=180;
 function shcFbo(w,h){const gl=renderer.getContext();if(shc.fb&&shc.w===w&&shc.h===h)return;
   if(shc.fb){gl.deleteFramebuffer(shc.fb);gl.deleteRenderbuffer(shc.rb)}
@@ -85,13 +85,15 @@ function shcFbo(w,h){const gl=renderer.getContext();if(shc.fb&&shc.w===w&&shc.h=
   gl.bindFramebuffer(gl.FRAMEBUFFER,shc.fb);gl.framebufferRenderbuffer(gl.FRAMEBUFFER,gl.DEPTH_ATTACHMENT,gl.RENDERBUFFER,shc.rb);
   const ok=gl.checkFramebufferStatus(gl.FRAMEBUFFER)===gl.FRAMEBUFFER_COMPLETE;
   gl.bindFramebuffer(gl.FRAMEBUFFER,renderer.properties.get(sun.shadow.map).__webglFramebuffer||null);
-  shc.w=w;shc.h=h;shc.ok=false;if(!ok)shc.broken=true}
-// depth from the map into the kept buffer (keep) or back (!keep); the map stays bound as three.js expects
+  shc.w=w;shc.h=h;shc.ok=false;shc.chk=0;if(!ok)shc.broken=true}
+// depth from the map into the kept buffer (keep) or back (!keep); the map stays bound as three.js expects. Only the
+// first few copies ask the driver for errors (gl.getError): each ask makes the page wait for the GPU process to catch up
+// on everything queued, and asked every frame it was most of a frame's time on a slow PC
 function shcCopy(keep){const gl=renderer.getContext(),m=sun.shadow.map,f=renderer.properties.get(m).__webglFramebuffer;
-  renderer.state.buffers.depth.setMask(true);for(let i=0;i<8&&gl.getError()!==gl.NO_ERROR;i++);
+  renderer.state.buffers.depth.setMask(true);const chk=shc.chk<6;if(chk)for(let i=0;i<8&&gl.getError()!==gl.NO_ERROR;i++);
   gl.bindFramebuffer(gl.READ_FRAMEBUFFER,keep?f:shc.fb);gl.bindFramebuffer(gl.DRAW_FRAMEBUFFER,keep?shc.fb:f);
   gl.blitFramebuffer(0,0,shc.w,shc.h,0,0,shc.w,shc.h,gl.DEPTH_BUFFER_BIT,gl.NEAREST);gl.bindFramebuffer(gl.FRAMEBUFFER,f);
-  if(gl.getError()!==gl.NO_ERROR){shc.broken=true;shc.ok=false}}
+  if(chk){shc.chk++;if(gl.getError()!==gl.NO_ERROR){shc.broken=true;shc.ok=false}}}
 // a caster as the map last saw it: its world matrix, its vertices' and indices' versions, its instances and draw range
 function shcSame(s,o,g){const e=o.matrixWorld.elements,m=s.m;let same=true;for(let i=0;i<16;i++)if(m[i]!==e[i]){same=false;break}
   const v=g.id*1e6+(g.attributes.position?g.attributes.position.version:0)*1e3+(g.index?g.index.version:0),
