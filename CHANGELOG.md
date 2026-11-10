@@ -2,6 +2,10 @@
 
 Every version of Corley's Island, newest first, grouped by the day it went live (Central time). Made from `data/effort.js` by `tools/changelog.py`; don't edit it by hand. [Play any old version](https://corleys-island.vercel.app/versions/) · [Build log with charts](https://corleys-island.vercel.app/build.html)
 
+## Tuesday, November 10, 2026
+
+- **v395** (9:35 AM) A Work graphics level: the High look (detailed machines, material relief, filmic light, the same town and buildings) at a fraction of Medium's cost, for office PCs; picked for you on Intel graphics
+
 ## Monday, November 9, 2026
 
 - **v394** (10:15 PM) From inside the brewery and every Building Forge building, the town draws only through their windows and doors: far fewer draws indoors

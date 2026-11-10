@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-10T04:15:00Z",
+ "updated": "2026-11-10T15:35:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -129,6 +129,12 @@ window.EFFORT = {
    "dh": 74,
    "act": 7,
    "versions": 21
+  },
+  {
+   "d": "2026-11-10",
+   "dh": 2,
+   "act": 0.5,
+   "versions": 1
   }
  ],
  "extra": [
@@ -3684,6 +3690,15 @@ window.EFFORT = {
    "tris": 5791164,
    "chars": 2528410,
    "what": "From inside the brewery and every Building Forge building, the town draws only through their windows and doors: far fewer draws indoors"
+  },
+  {
+   "v": 395,
+   "asked": "2026-11-10T09:05:00-06:00",
+   "live": "2026-11-10T09:35:39-06:00",
+   "dh": 2,
+   "tris": 5788840,
+   "chars": 2529745,
+   "what": "A Work graphics level: the High look (detailed machines, material relief, filmic light, the same town and buildings) at a fraction of Medium's cost, for office PCs; picked for you on Intel graphics"
   }
  ]
 };
