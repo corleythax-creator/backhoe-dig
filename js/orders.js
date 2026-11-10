@@ -184,6 +184,6 @@ function ordTick(dt){if((TALK.ordT=(TALK.ordT||0)+dt)<0.1)return;const t=TALK.or
     const d=Math.hypot(at[0]-p.x,at[1]-p.z),you=o.at==='me';
     // you drove off or went far from the walks: following stops; coming stops
     if(you&&(mode!=='walk'||wk.inside)&&d>TU.ordLostR||you&&d>TU.ordLostR*2){ordDone(p);continue}
-    if(p.ordV!=null)p.vt=p.ordV*(o.k==='follow'&&d>10?1.6:1);
+    if(p.ordV!=null)p.vt=p.ordV*(o.k==='follow'&&d>6?1.6:1);
     const there=ordChase(p,at[0],at[1],o.k==='follow'?2.6:you?2.2:typeof o.at==='string'?5:3.5);
     if(there&&o.k!=='follow'){ordDone(p);talkFace(p,you?6+Math.random()*4:8+Math.random()*6,at[0],at[1])}}}
