@@ -26,9 +26,12 @@ const GFX={
 GFX.low.town=1;GFX.med.town=2;GFX.high.town=3;
 // tiny far detail (gfxCullOn below): a part smaller than this many screen pixels across its middle is not drawn
 GFX.low.cull=5;GFX.med.cull=4;GFX.high.cull=3;
-// the town from Building Forge (forgetown.js): the owner's own designs from Daylight House Studio in place of the ones
-// the game draws, the shops and the rest (bfMain) and the houses (bfHomes); High and Ultra
-GFX.low.bfMain=GFX.med.bfMain=false;GFX.high.bfMain=true;GFX.low.bfHomes=GFX.med.bfHomes=false;GFX.high.bfHomes=true;
+// the town from Building Forge (forgetown.js): the town's buildings are the designs in Daylight House Studio, on every
+// level: the shops and the rest (bfMain) and the houses (bfHomes); the game's older stand-ins only with them switched off
+GFX.low.bfMain=GFX.med.bfMain=GFX.high.bfMain=true;GFX.low.bfHomes=GFX.med.bfHomes=GFX.high.bfHomes=true;
+// a room's own light (forgetown.js inRoomTick): bounced light and reflections measured in the room you are in, its inside
+// taking the sun's shadows; Ultra also has the building lamps cast shadows (inSh)
+GFX.low.inLight=GFX.med.inLight=false;GFX.high.inLight=true;GFX.low.inSh=GFX.med.inSh=GFX.high.inSh=false;
 // the town's weathering: rain streaks, damp wall feet, oil stains, cracks and patches (mainland.js, mainGrimeGfx)
 GFX.low.grime=false;GFX.med.grime=GFX.high.grime=true;
 // mtnQ the mountains lit and shaded per pixel with haze toward the sun (scenery.js; Low keeps the simple ones), peb the
@@ -56,7 +59,7 @@ GFX.low.csm=GFX.med.csm=0;GFX.high.csm=170;GFX.high.csmSh=2048;
 GFX.low.bounce=GFX.med.bounce=false;GFX.high.bounce=true;
 GFX.low.autoExp=GFX.med.autoExp=false;GFX.high.autoExp=true;GFX.high.shR=36;
 // Ultra: the few townsfolk nearest the camera (at most fgUltra, within TU.tfUltraR) swap to their ultra mesh (townfolk.js tfUh)
-GFX.ultra=Object.assign({},GFX.high,{csm:240,csmSh:4096,name:'Ultra',forge:'hi',fgUltra:3,wild:1,turfR:75,tuftQ:3,ao:true,bloom:true,grade:true,treeR:220,skyLight:true,shSoft:true,wetDrops:true,wetGround:true,cloudQ:3});
+GFX.ultra=Object.assign({},GFX.high,{csm:240,csmSh:4096,name:'Ultra',forge:'hi',fgUltra:3,wild:1,turfR:75,tuftQ:3,ao:true,bloom:true,grade:true,treeR:220,skyLight:true,shSoft:true,wetDrops:true,wetGround:true,cloudQ:3,inSh:true});
 GFX.ultra.cull=2;
 // VR through a PC: the eye buffer drawn larger than the headset's own and scaled down (supersampling), for sharper edges
 // and fine detail; only the levels for strong graphics do it
@@ -164,6 +167,8 @@ function gfxApply(){const g=gfxCur=Object.assign({},GFX[gfxKey],gfxOver);
   ultraGfx(g.skyLight,g.shSoft&&g.sh>0,g.wetDrops,g.wetGround);
   // the light thrown up off the ground measured from the ground itself, or an earth colour (post.js)
   bounceGfx(g.bounce);
+  // a room's own bounced light, reflections and shadows (forgetown.js)
+  if(typeof inLightGfx==='function')inLightGfx(g.inLight,g.inSh&&g.sh>0);
   // machine models: the detailed one from its file, or the simple shapes (models.js)
   mdlGfx(g.model);
   // the mountains and the pebbles (scenery.js, pebbles.js)
@@ -249,8 +254,10 @@ const GFX_ROWS=[
   ['Grass and scenery'],
   {id:'brush',label:'Undergrowth',hint:'Leafy shrubs round the trees.',opts:[[0,'Off'],[0.35,'Few'],[0.7,'Some'],[1,'Full']]},
   {id:'wild',label:'Wild growth',hint:'Tall grass gone to seed and bushes in the rough ground. Thicker costs triangles.',opts:[[0,'Off'],[0.35,'Sparse'],[0.65,'Some'],[0.85,'Thick'],[1,'Full']]},
-  {id:'bfMain',label:'Town from Building Forge',hint:'The town\'s shops, Town Hall, hotel, library, brewery, store and waterfront as designed in Daylight House Studio, with their rooms, furniture and stairs, in place of the game\'s own.',opts:onOff},
-  {id:'bfHomes',label:'Town houses from Building Forge',hint:'The neighbourhoods\' houses as designed in Daylight House Studio, in place of the game\'s own. The heaviest part of the town.',opts:onOff},
+  {id:'bfMain',label:'Town from Building Forge',hint:'The town\'s shops, Town Hall, hotel, library, brewery, store and waterfront as designed in Daylight House Studio, with their rooms, furniture and stairs. Off shows the game\'s older stand-ins (lighter for a slow phone).',opts:onOff},
+  {id:'bfHomes',label:'Town houses from Building Forge',hint:'The neighbourhoods\' houses as designed in Daylight House Studio. The heaviest part of the town; off shows the game\'s older stand-ins.',opts:onOff},
+  {id:'inLight',label:'Room lighting',hint:'Inside a building, light bounces round the room off its walls, floor and ceiling, its steel, glass and polished tops reflect it, and daylight comes in only through its windows and doors. For strong graphics cards.',opts:onOff},
+  {id:'inSh',label:'Lamp shadows',hint:'The lamps and ceiling lights nearest you cast shadows, so walls and furniture block their light. For strong graphics cards.',opts:onOff},
   {id:'bfLt',label:'Building lights',hint:'After dark, real light from the lamps and ceiling lights of the Building Forge buildings nearest you (2 on Medium, 4 on High, 6 on Ultra unless the Tuning says otherwise; each costs every pixel a little). Off leaves the fixtures glowing only.',opts:onOff},
   {id:'turf',label:'Town lawns',hint:'Grass blades, clover, weeds and fallen leaves on the town\'s lawns. Thicker costs triangles.',opts:[[0,'Off'],[0.35,'Sparse'],[0.65,'Some'],[1,'Full']]},
   {id:'turfR',label:'Town lawn distance',hint:'How far out the town\'s lawn grass and leaves are drawn.',min:10,max:120,step:5,fmt:v=>`${Math.round(v*FT_M)} ft`},

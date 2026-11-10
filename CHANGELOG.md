@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Monday, November 9, 2026
 
+- **v393** (10:12 PM) Inside the town's buildings the room lights itself: its own bounced light and reflections replace the sky's, and daylight comes in only through the windows and doors (High and Ultra); on Ultra the lamps cast shadows. The town is the Daylight House Studio designs on every Graphics level.
 - **v392** (9:51 PM) The town's Building Forge buildings keep Daylight House Studio's own materials (colour, roughness, metal, bumps), lit by the sky so they look as they do in Daylight (Tuning: Building Forge sky light).
 - **v391** (9:34 PM) In town each kind of Building Forge building is drawn once for all its copies (18 Cape Cods in one go), and their insides and doors only near: far fewer draws in town and at the marina; Tune: Town to set the distances
 - **v390** (9:22 PM) Smoother in town: the islands' parked machines no longer draw from town, the corner map redraws less often, and townsfolk pictures decode off the main thread

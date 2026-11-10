@@ -147,7 +147,7 @@ function bfLtPack(LS,LG){const out=[],gd=LG&&LG.dim!=null?Math.max(0,Math.min(2,
 function bfLtPool(n){if(n===bfLt.n)return;bfLt.n=n;const ns=Math.min(2,Math.floor(n/3)),fit=(A,m,make)=>{
     while(A.length<m){const o=make();o.castShadow=false;scene.add(o);if(o.target)scene.add(o.target);A.push({o,l:null,B:null,k:0,e:0})}
     while(A.length>m){const s=A.pop();scene.remove(s.o);if(s.o.target)scene.remove(s.o.target);s.o.dispose()}};
-  fit(bfLt.pts,n-ns,()=>new THREE.PointLight(0xffffff,0,10,BF_LT_DECAY));fit(bfLt.spots,ns,()=>new THREE.SpotLight(0xffffff,0,10,0.6,0.5,BF_LT_DECAY));bfLt.all=bfLt.pts.concat(bfLt.spots)}
+  fit(bfLt.pts,n-ns,()=>new THREE.PointLight(0xffffff,0,10,BF_LT_DECAY));fit(bfLt.spots,ns,()=>new THREE.SpotLight(0xffffff,0,10,0.6,0.5,BF_LT_DECAY));bfLt.all=bfLt.pts.concat(bfLt.spots);inLtShSet()}
 // the halos of the outdoor lights of the buildings shown (after one is laid, moved or hidden)
 function bfLtHalos(){const P=[],C=[],S=[],F=[],v=bfLt.v;
   for(const L of bf.lots){const B=L.b;if(!B||!B.g.visible)continue;B.g.updateMatrixWorld();
@@ -172,20 +172,61 @@ function bfLightTick(lamp,ll,dt){bfEnvTick();
     for(const s of A){const i=pick.findIndex(c=>c&&c.l===s.l&&c.B===s.B);if(i<0){s.l=null;free.push(s)}else{s.c=pick[i];pick[i]=null}}
     for(const c of pick){if(!c)continue;const want=!!c.l.d,i=Math.max(0,free.findIndex(s=>!!s.o.isSpotLight===want)),s=free.splice(i,1)[0];s.l=c.l;s.B=c.B;s.c=c;s.k=0}
     bfLt.real=0;
-    for(const s of A){const l=s.l,c=s.c,o=s.o;if(!l){o.intensity=0;continue}bfLt.real++;
+    for(const s of A){const l=s.l,c=s.c,o=s.o;if(!l){o.intensity=0;if(o.castShadow)o.position.set(0,-2000,0);continue}bfLt.real++;
       o.position.set(c.x,c.y,c.z);o.color.copy(l.col);s.e=Math.max(0,Math.min(1,(far-c.d)/5));o.distance=l.r;
       if(o.isSpotLight){if(l.d){v.copy(l.d).transformDirection(s.B.g.matrixWorld);o.angle=l.ang;o.penumbra=0.5;o.distance=l.r*1.35}else{v.set(0,-1,0);o.angle=1.45;o.penumbra=1}
         o.target.position.set(c.x+v.x*5,c.y+v.y*5,c.z+v.z*5)}}}
   // a light comes up over a quarter of a second when it takes one of the pool's, and fades toward the edge of the range
-  bfLt.fillK+=(bfLt.fill-bfLt.fillK)*Math.min(1,dt*3);BF_FILL.intensity=bfLt.fillK*(TU.bfLtFill??1)*BF_FILL_I*LI;
+  bfLt.fillK+=(bfLt.fill-bfLt.fillK)*Math.min(1,dt*3);BF_FILL.intensity=bfLt.fillK*(TU.bfLtFill??1)*BF_FILL_I*LI*(1-0.7*inRL.k);
   const g=ll*TU.bfLight*BF_LT_I*LI,f=Math.min(1,dt*4);
-  for(const s of bfLt.all){const l=s.l;if(!l)continue;s.k=Math.min(1,s.k+f);s.o.intensity=g*l.k*(l.auto?lamp:1)*s.k*s.e*(s.o.isSpotLight&&l.d?1.5:1)}}
+  for(const s of bfLt.all){const l=s.l;if(!l)continue;s.k=Math.min(1,s.k+f);s.o.intensity=g*l.k*(l.auto?lamp:1)*s.k*s.e*(s.o.isSpotLight&&l.d?1.5:1)}
+  inRoomTick(dt)}
+// ---------- the room's own light (High and Ultra: GFX inLight; Ultra adds inSh) ----------
+// Inside one of the buildings the room lights itself the way a real one does. A 360° picture is taken from the middle
+// of the room the camera is in (a cube camera that sees only that building, its kind's shells, the lights and the sky
+// through its windows: layer IN_LAYER), made into an environment (PMREM) and given to the building's inside and
+// furniture materials in place of the sky (skyEnv): they are lit by the light bounced round that room (warm under the
+// lamps at night, bright from the windows by day) and show it in their steel, glass and polished tops, each as Daylight
+// made it (its roughness and metalness), as strongly as TU.bfEnv times TU.inBounce; the flat warm fill (BF_FILL) eases
+// back. While you are in it the building's inside also takes shadows, so daylight comes in only through its windows and
+// doors and lies on the floor in patches, and on Ultra the pool's spotlights and its first lamp cast shadows (walls stop
+// them; an idle one is parked far below the world so its shadow pass draws nothing). Taken twice on the way in (the
+// second sees the first's bounce) and every TU.inEvery s, into two environments in turn (one is drawn with while the
+// other is made). Out of the room the materials take the sky again. Only how it looks: nothing is saved.
+const IN_LAYER=6,inRL={on:false,sh:false,B:null,R:null,rt:null,pm:null,pms:[null,null],i:0,cam:null,k:0,t:0,n:0,mats:new Set()};
+function inLightGfx(on,sh){inRL.on=!!on;if(!on)inRoomOut();if(inRL.sh!==!!sh){inRL.sh=!!sh;inLtShSet()}}
+function inLtShSet(){const set=(o,v)=>{o.castShadow=v;if(v){o.shadow.mapSize.set(512,512);o.shadow.bias=-0.002;o.shadow.normalBias=0.03;o.shadow.camera.near=0.1}};
+  bfLt.spots.forEach(s=>set(s.o,inRL.sh));bfLt.pts.forEach((s,i)=>set(s.o,inRL.sh&&i===0))}
+// the building's inside takes shadows (sun, lamps) while you are in it, and stands lit as before when you are not
+function inRecv(B,on){B.g.traverse(o=>{if(o.isMesh&&o.userData.inside)o.receiveShadow=on})}
+// its inside and furniture materials take the room (tex) or the sky again (null)
+function inMats(B,tex){if(!tex){for(const m of inRL.mats){m.envMap=m.userData.env0||skyEnv;m.envMapIntensity=m.userData.envI0??TU.bfEnv}inRL.mats.clear();return}
+  B.g.traverse(o=>{if(!o.isMesh||!(o.userData.inside||o.userData.furn))return;
+    for(const m of [].concat(o.material)){if(!m||!m.isMeshStandardMaterial)continue;
+      if(!inRL.mats.has(m)){m.userData.env0=m.envMap;m.userData.envI0=m.envMapIntensity;inRL.mats.add(m)}
+      m.envMap=tex;m.envMapIntensity=(m.userData.envI0??TU.bfEnv)*(TU.inBounce??1)}})}
+function inRoomOut(){if(inRL.B)inRecv(inRL.B,false);inMats(null);inRL.B=inRL.R=null;inRL.n=0;inRL.k=0}
+function inRoomTick(dt){let R=null,B=null;
+  if(inRL.on&&!renderer.xr.isPresenting){const c=camera.position,r=rmRoomAt(c.x,c.z,c.y);if(r&&r.bf&&r.bfL&&r.bfL.b&&r.bfL.b.g.visible){R=r;B=r.bfL.b}}
+  if(B!==inRL.B){if(inRL.B)inRecv(inRL.B,false);inMats(null);inRL.B=B;inRL.n=0;inRL.t=0;if(B)inRecv(B,true)}
+  if(R!==inRL.R){inRL.R=R;inRL.t=0}
+  inRL.k+=((B&&inRL.n?1:0)-inRL.k)*Math.min(1,dt*3);if(inRL.k<0.002)inRL.k=0;
+  if(R&&(inRL.t-=dt)<=0){inRL.t=inRL.n<2?0.15:Math.max(1,TU.inEvery||4);try{inCapture(R,B)}catch(e){console.warn('room light',e);inRL.t=5}}}
+function inCapture(R,B){
+  if(!inRL.rt){inRL.rt=new THREE.WebGLCubeRenderTarget(128,{type:THREE.HalfFloatType,generateMipmaps:false});
+    inRL.cam=new THREE.CubeCamera(0.05,80,inRL.rt);inRL.cam.layers.set(IN_LAYER);inRL.pm=new THREE.PMREMGenerator(renderer)}
+  B.g.traverse(o=>o.layers.enable(IN_LAYER));const L=inRL.R&&inRL.R.bfL,I=L&&bf.inst[L.id];if(I)for(const m of I.ms)m.layers.enable(IN_LAYER);
+  scene.traverse(o=>{if(o.isLight)o.layers.enable(IN_LAYER)});
+  inRL.cam.position.set(R.x,Math.min(R.y+1.6,R.top-0.3),R.z);inRL.cam.updateMatrixWorld();
+  const au=renderer.shadowMap.autoUpdate,fi=BF_FILL.intensity;renderer.shadowMap.autoUpdate=false;BF_FILL.intensity=0;
+  try{inRL.cam.update(renderer,scene)}finally{renderer.shadowMap.autoUpdate=au;BF_FILL.intensity=fi}
+  const i=inRL.i;inRL.pms[i]=inRL.pm.fromCubemap(inRL.rt.texture,inRL.pms[i]);inMats(B,inRL.pms[i].texture);inRL.i^=1;inRL.n++}
 // the building's materials kept as Daylight House Studio made them (PBR: colour, roughness, metalness, normal and AO maps),
 // lit by the game's sky (skyEnv) as well as its sun, so they read as they do in Daylight; without the sky they stood far
 // darker than the game's own buildings. How much sky they take is the Tuning bfEnv (read live: bfEnvTick)
 function bfPhong(m){if(!m||!m.isMeshStandardMaterial)return m;if(bfMats.has(m))return bfMats.get(m);
   m.envMap=skyEnv;m.envMapIntensity=TU.bfEnv;m.needsUpdate=true;bfMats.set(m,m);return m}
-let bfEnvK=-1;function bfEnvTick(){if(TU.bfEnv===bfEnvK)return;bfEnvK=TU.bfEnv;for(const m of bfMats.values())m.envMapIntensity=bfEnvK}
+let bfEnvK=-1;function bfEnvTick(){if(TU.bfEnv===bfEnvK)return;bfEnvK=TU.bfEnv;for(const m of bfMats.values()){m.envMapIntensity=bfEnvK;m.userData.envI0=bfEnvK}}
 function bfPack(root,merge,it){const col=root.getObjectByName('Collision');if(col)col.removeFromParent();root.updateMatrixWorld(true);
   // its lights (the library entry's, or the same list in the model's own extras.forge.game): with a list, each fixture
   // that is not switched off glows in its light's colour (bfLtGlow); with none, every ceiling light glows as before
@@ -277,8 +318,8 @@ function bfBuild(L,K,item){const it=bf.lib[L.id],face=L.turn*Math.PI/180,c=Math.
   // its shell (walls, roof, windows) is drawn with every other building of its kind (bfInstSync); its insides, door
   // leaves and furniture are its own, each shown only near (bfTick)
   const g=new THREE.Group();g.position.set(ox,y0,oz);g.rotation.y=face;const furn=new THREE.Group(),ins=new THREE.Group(),lvs=new THREE.Group();g.add(furn,ins,lvs);
-  for(const x of K.stat)if(x.inside){const m=new THREE.Mesh(x.geo,x.mat);m.castShadow=true;m.receiveShadow=false;ins.add(m)}
-  for(const x of K.furn){const m=new THREE.Mesh(x.geo,x.mat);m.castShadow=true;m.receiveShadow=!x.inside;furn.add(m)}
+  for(const x of K.stat)if(x.inside){const m=new THREE.Mesh(x.geo,x.mat);m.castShadow=true;m.receiveShadow=false;m.userData.inside=1;ins.add(m)}
+  for(const x of K.furn){const m=new THREE.Mesh(x.geo,x.mat);m.castShadow=true;m.receiveShadow=!x.inside;m.userData.inside=x.inside;m.userData.furn=1;furn.add(m)}
   const leaves=new Map();for(const l of K.leaves){const o=new THREE.Object3D();o.position.copy(l.p);o.quaternion.copy(l.q);o.scale.copy(l.s);
     for(const x of l.parts){const m=new THREE.Mesh(x.geo,x.mat);m.castShadow=m.receiveShadow=true;o.add(m)}lvs.add(o);
     if(!leaves.has(l.door))leaves.set(l.door,[]);leaves.get(l.door).push({o,q:l.q.clone(),swing:l.swing})}
@@ -295,7 +336,7 @@ function bfBuild(L,K,item){const it=bf.lib[L.id],face=L.turn*Math.PI/180,c=Math.
     const xs=W.flatMap(w=>[w[0],w[2]]),zs=W.flatMap(w=>[w[1],w[3]]),ax=(Math.min(...xs)+Math.max(...xs))/2,az=(Math.min(...zs)+Math.max(...zs))/2;
     pad(ax,az,(Math.max(...xs)-Math.min(...xs))/2,(Math.max(...zs)-Math.min(...zs))/2,face,fy(lv),lv?{up:1}:null);
     for(const r of it.rooms)if(r.level===lv){const a=r.outline.map(q=>q[0]),b=r.outline.map(q=>q[1]),cx=(Math.min(...a)+Math.max(...a))/2,cz=(Math.min(...b)+Math.max(...b))/2;
-      const R=rmRoom(X(cx,cz),Z(cx,cz),face,(Math.max(...a)-Math.min(...a))/2,(Math.max(...b)-Math.min(...b))/2,y0+r.floorY,y0+r.ceilingY);R.bf=1;R.clad=it.clad||((it.tags||[]).includes('brick')?'brick':(it.tags||[]).includes('steel')?'steel':'siding');G.rooms.push({r:R,o:{x:R.x,z:R.z,f:R.f,y:R.y,top:R.top}})}
+      const R=rmRoom(X(cx,cz),Z(cx,cz),face,(Math.max(...a)-Math.min(...a))/2,(Math.max(...b)-Math.min(...b))/2,y0+r.floorY,y0+r.ceilingY);R.bf=1;R.bfL=L;R.clad=it.clad||((it.tags||[]).includes('brick')?'brick':(it.tags||[]).includes('steel')?'steel':'siding');G.rooms.push({r:R,o:{x:R.x,z:R.z,f:R.f,y:R.y,top:R.top}})}
     // its furniture (a porch a floor to stand on; rugs and stairs left to the floor)
     for(const P of K.items){if(P.lvl!==lv)continue;const [x,z,hx,hz,b0,b1]=P.box;
       if(P.kind==='porch'||P.kind==='deck'){if(!lv)pad(x,z,hx,hz,face,fy(0));continue}
