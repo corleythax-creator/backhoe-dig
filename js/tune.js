@@ -217,6 +217,10 @@ const TUNE=[
   ['bfLtMed','Day and night','Building lights: real lights at once on Medium graphics (each costs every pixel a little)',2,'n',0,8,1],
   ['bfLtHigh','Day and night','Building lights: real lights at once on High graphics',4,'n',0,8,1],
   ['bfLtUltra','Day and night','Building lights: real lights at once on Ultra graphics',6,'n',0,8,1],
+  // a room's own light (forgetown.js inRoomTick; High and Ultra graphics)
+  ['inBounce','Day and night','Inside: light bounced round the room you are in',1,'pct',0,300,5],
+  ['inRefl','Day and night','Inside: how strongly the room shows in its steel, glass and polished tops',1,'pct',0,300,5],
+  ['inEvery','Day and night','Inside: how often the room\'s light is measured again',4,'s',1,30,1],
   // fuel and pay (fuel.js)
   ['fuelUse','Work and pay','Fuel use (100% burns what the real machine does in an hour of game time; does nothing while fuel burn is off, FUEL_BURN in fuel.js)',1,'pct',0,500,5],
   ['fuelPrice','Work and pay','Fuel price, a gallon (does nothing while fuel burn is off)',3.85,'usd',0,20,0.05],
