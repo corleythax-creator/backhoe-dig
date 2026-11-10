@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-10T03:51:00Z",
+ "updated": "2026-11-10T04:12:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -126,9 +126,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-09",
-   "dh": 64,
-   "act": 6.5,
-   "versions": 19
+   "dh": 71,
+   "act": 7,
+   "versions": 20
   }
  ],
  "extra": [
@@ -3666,6 +3666,15 @@ window.EFFORT = {
    "tris": 5801380,
    "chars": 2520317,
    "what": "The town's Building Forge buildings keep Daylight House Studio's own materials (colour, roughness, metal, bumps), lit by the sky so they look as they do in Daylight (Tuning: Building Forge sky light)."
+  },
+  {
+   "v": 393,
+   "asked": "2026-11-09T20:40:00-06:00",
+   "live": "2026-11-09T22:12:53-06:00",
+   "dh": 7,
+   "tris": 5794287,
+   "chars": 2526091,
+   "what": "Inside the town's buildings the room lights itself: its own bounced light and reflections replace the sky's, and daylight comes in only through the windows and doors (High and Ultra); on Ultra the lamps cast shadows. The town is the Daylight House Studio designs on every Graphics level."
   }
  ]
 };
