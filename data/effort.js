@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-10T03:07:00Z",
+ "updated": "2026-11-10T03:18:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -126,9 +126,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-09",
-   "dh": 53.5,
+   "dh": 57.5,
    "act": 6,
-   "versions": 15
+   "versions": 16
   }
  ],
  "extra": [
@@ -3630,6 +3630,15 @@ window.EFFORT = {
    "tris": 5793782,
    "chars": 2517076,
    "what": "Townsfolk talk gets Voice only: lines spoken aloud with no text boxes over their heads"
+  },
+  {
+   "v": 389,
+   "asked": "2026-11-09T20:40:00-06:00",
+   "live": "2026-11-09T21:18:17-06:00",
+   "dh": 4,
+   "tris": 5789020,
+   "chars": 2517817,
+   "what": "The game's files are kept on the device, so opening it again skips the downloads (and works offline); a new version downloads only the files it changed"
   }
  ]
 };

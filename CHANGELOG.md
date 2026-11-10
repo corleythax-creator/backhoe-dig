@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Monday, November 9, 2026
 
+- **v389** (9:18 PM) The game's files are kept on the device, so opening it again skips the downloads (and works offline); a new version downloads only the files it changed
 - **v388** (9:07 PM) Townsfolk talk gets Voice only: lines spoken aloud with no text boxes over their heads
 - **v387** (8:55 PM) A Profiler in ☰ → Dev: what took longest to load, and what eats the frames in each place you record
 - **v386** (8:32 PM) The brewery's taproom fills like a real one: customers sit on the bar stools and round the tables facing each other with pints and plates of food before them, the floor is real worn pine planks, and a warm glow fills the room when its lights are on.
