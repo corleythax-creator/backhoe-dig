@@ -69,6 +69,7 @@
         <div class="todsub talkOpt" id="talkMeter"></div>
       </div>
       <div class="mtab" data-mt="dev" role="tabpanel" hidden>
+        <button id="profBtn">Profiler: what loads slowest, what eats the frames</button>
         <button id="benchBtn">Speed test</button>
         <button id="digTestBtn">Dig site test</button>
         <button id="bhTestBtn">Backhoe load test</button>
@@ -317,6 +318,16 @@
     <textarea id="benchText" readonly hidden></textarea>
   </div>
 </div>
+<!-- the Profiler (js/prof.js): what took longest to load, and what each recorded scene spends its frames on -->
+<div id="prof" hidden>
+  <div class="card">
+    <h1 id="profTitle">Profiler</h1>
+    <div id="profTabs" class="sizes" role="group" aria-label="Profiler report"><button data-pt="load" aria-pressed="true">Loading</button><button data-pt="frames" aria-pressed="false">Frames</button></div>
+    <div id="profBody"></div>
+    <div class="row"><button id="profRec">Record 10 s here</button><button id="profCopy">Copy results</button><button id="profClose" class="ghost">Close</button></div>
+    <textarea id="profText" readonly hidden></textarea>
+  </div>
+</div>
 <!-- Controls: every input at a glance, keyboard (the player's own keys), mouse and touch, controller -->
 <!-- How to play: every topic as a line to open, with a search; and the machine tips (a card the first time you get
      into each machine, js/controls.js) on or off -->
@@ -553,6 +564,7 @@
 <script defer src="js/digtest.js"></script>
 <script defer src="js/bhtest.js"></script>
 <script defer src="js/tourtest.js"></script>
+<script defer src="js/prof.js"></script>
 <script defer src="js/vr.js"></script>
 <script defer src="js/fuel.js"></script>
 <script defer src="js/fixed.js"></script>

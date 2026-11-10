@@ -300,10 +300,14 @@ button.sq{width:34px;padding:0;font-size:var(--t2);letter-spacing:0}
 .legend i{display:inline-block;width:18px;height:12px;border-radius:var(--r)}
 #benchBar{position:absolute;left:0;right:0;top:calc(var(--pt) + 130px);z-index:2;margin:0 auto;width:max-content;max-width:100%;box-sizing:border-box;font:700 var(--t2)/1.25 var(--f-display);letter-spacing:.04em;text-align:center;background:var(--hud);border:2px solid var(--gas);border-radius:var(--r);padding:8px 14px;font-variant-numeric:tabular-nums}
 #benchBar small{display:block;font:600 var(--t1)/1.2 var(--f-display);color:var(--muted);letter-spacing:.03em}
-#bench{position:fixed;inset:0;background:rgba(6,8,11,.8);display:flex;align-items:center;justify-content:center;pointer-events:auto;box-sizing:border-box;z-index:5;
+#bench,#prof{position:fixed;inset:0;background:rgba(6,8,11,.8);display:flex;align-items:center;justify-content:center;pointer-events:auto;box-sizing:border-box;z-index:5;
   padding-block:calc(env(safe-area-inset-top,0px) + 16px) calc(env(safe-area-inset-bottom,0px) + 16px);
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 .tablewrap{overflow-x:auto}
+#prof .card{max-height:100%;overflow-y:auto;width:min(860px,100%);box-sizing:border-box}
+#prof h2{font:700 var(--t2)/1.2 var(--f-display);margin:14px 0 6px}#prof h2 small{color:var(--muted);font-weight:600}#prof h3{font:700 var(--t1)/1.2 var(--f-display);color:var(--muted);margin:8px 0 4px;letter-spacing:.06em;text-transform:uppercase}
+#prof .btab td{word-break:break-word}#prof .btab td:first-child{max-width:420px}
+#profText{width:100%;height:120px}
 .btab{margin-bottom:10px;border-collapse:collapse;width:100%;font:600 var(--t2)/1.3 var(--f-display);font-variant-numeric:tabular-nums}
 .btab th{font:700 var(--t1)/1.2 var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);text-align:right;padding:6px 8px;border-bottom:1px solid var(--hud-line)}
 .btab td{text-align:right;padding:7px 8px;border-bottom:1px solid rgba(255,255,255,.07)}
@@ -771,6 +775,7 @@ body.fps #hud .bbar .stats{display:block}
         <div class="todsub talkOpt" id="talkMeter"></div>
       </div>
       <div class="mtab" data-mt="dev" role="tabpanel" hidden>
+        <button id="profBtn">Profiler: what loads slowest, what eats the frames</button>
         <button id="benchBtn">Speed test</button>
         <button id="digTestBtn">Dig site test</button>
         <button id="bhTestBtn">Backhoe load test</button>
@@ -1019,6 +1024,16 @@ body.fps #hud .bbar .stats{display:block}
     <textarea id="benchText" readonly hidden></textarea>
   </div>
 </div>
+<!-- the Profiler (js/prof.js): what took longest to load, and what each recorded scene spends its frames on -->
+<div id="prof" hidden>
+  <div class="card">
+    <h1 id="profTitle">Profiler</h1>
+    <div id="profTabs" class="sizes" role="group" aria-label="Profiler report"><button data-pt="load" aria-pressed="true">Loading</button><button data-pt="frames" aria-pressed="false">Frames</button></div>
+    <div id="profBody"></div>
+    <div class="row"><button id="profRec">Record 10 s here</button><button id="profCopy">Copy results</button><button id="profClose" class="ghost">Close</button></div>
+    <textarea id="profText" readonly hidden></textarea>
+  </div>
+</div>
 <!-- Controls: every input at a glance, keyboard (the player's own keys), mouse and touch, controller -->
 <!-- How to play: every topic as a line to open, with a search; and the machine tips (a card the first time you get
      into each machine, js/controls.js) on or off -->
@@ -1228,7 +1243,7 @@ const TUNE=[
   ['bhFlow','Backhoe','Pump flow: hoe functions that run at full speed together',2,'pct',100,400,10],
   ['bhLoadSlow','Backhoe','How much a full hoe bucket slows the boom lifting',0.25,'pct',0,80,5],
   ['hvSmSpd','Semi','Top speed',15.6,'mph',5,70,1],['hvSmLock','Semi','Steering lock',0.6,'deg',10,45,1],
-  ['pkSpd','Pickup','Top speed',35*0.44704,'mph',5,120,1],['pkRev','Pickup','Top speed in reverse',10*0.44704,'mph',2,30,1],
+  ['pkSpd','Pickup','Top speed',80*0.44704,'mph',5,120,1],['pkRev','Pickup','Top speed in reverse',10*0.44704,'mph',2,30,1],
   ['pkAcc','Pickup','Acceleration (engine pull)',1,'pct',20,400,5],['pkBrake','Pickup','Braking',1,'pct',20,400,5],
   ['pkLock','Pickup','Steering lock',0.6,'deg',10,50,1],['pkGrip','Pickup','Grip in turns (lower slides sooner)',1,'pct',20,400,5],
   // the pickups' beds and the store in town (pickup.js)
@@ -1281,7 +1296,7 @@ const TUNE=[
   ['packShed','Excavator','How fast packed clay drops off',1,'pct',0,500,5],
   ['caveDepth','Cave-ins','Walls start to cave in deeper than',1.2,'ft',1,30,0.5],['caveSpoil','Cave-ins','Spoil this close to the edge loads the wall',0.64,'ft',0,10,0.5],
   // the townsfolk (townfolk.js): how fast the town's cars drive its streets and its people walk
-  ['tfCarV','Town','Town traffic speed',11.2,'mph',5,45,1],['tfWalk','Town','Townsfolk walking pace',1.3,'mph',1,5,0.1],['tfUltraR','Town','Ultra graphics: townsfolk shown in full detail within',6,'ft',6,40,1],['inFar','Town','Indoors: smaller things outside drawn within',150,'ft',100,2600,10],['townZ','Town','Machines on the islands hidden once you are this far south (town)',420,'ft',1000,2300,10],
+  ['tfCarV','Town','Town traffic speed',11.2,'mph',5,45,1],['tfWalk','Town','Townsfolk walking pace',1.3,'mph',1,5,0.1],['tfUltraR','Town','Ultra graphics: townsfolk shown in full detail within',6,'ft',6,40,1],['townZ','Town','Machines on the islands hidden once you are this far south (town)',420,'ft',1000,2300,10],
   // which townsfolk characters stay home: one bit per character, in models/peds/peds.json order (bit 0 = cal_m); set on the Townsfolk page
   ['tfOut','Town','Townsfolk left out (a bit per character; set it on the Townsfolk page)',0,'n',0,4294967295,1],
   // the town's life (town.js): money, shop hours, greetings and talk
@@ -1381,6 +1396,14 @@ const TUNE=[
   ['clCirrus','Weather','High thin cloud',1,'pct',0,200,5],['clBeams','Weather','Sunbeams between the clouds',1,'pct',0,300,5],
   ['clRainbow','Weather','Rainbows after rain',1,'pct',0,200,5],
   ['lampLight','Day and night','Headlights, lamps and lit windows',1,'pct',0,300,5],
+  // the lights of the town's buildings from Building Forge (forgetown.js bfLightTick): how bright the real ones are, how
+  // near the camera a light must be to hold one, and how many real lights at once on each Graphics level (Low has none)
+  ['bfLight','Day and night','Building lights: how bright the lamps and ceiling lights in the town\'s buildings shine',1,'pct',0,400,5],
+  ['bfLtFar','Day and night','Building lights: real light only from the ones within',30,'ft',30,300,5],
+  ['bfLtFill','Day and night','Building lights: the warm light that fills a lit room you are in',1,'pct',0,400,5],
+  ['bfLtMed','Day and night','Building lights: real lights at once on Medium graphics (each costs every pixel a little)',2,'n',0,8,1],
+  ['bfLtHigh','Day and night','Building lights: real lights at once on High graphics',4,'n',0,8,1],
+  ['bfLtUltra','Day and night','Building lights: real lights at once on Ultra graphics',6,'n',0,8,1],
   // fuel and pay (fuel.js)
   ['fuelUse','Work and pay','Fuel use (100% burns what the real machine does in an hour of game time; does nothing while fuel burn is off, FUEL_BURN in fuel.js)',1,'pct',0,500,5],
   ['fuelPrice','Work and pay','Fuel price, a gallon (does nothing while fuel burn is off)',3.85,'usd',0,20,0.05],
@@ -1562,7 +1585,8 @@ const WORDS=[
   ['edTip_query','Map editor','Tap or drag over the ground to read its height, slope and surface.'],
   ['edTip_measure','Map editor','Tap the ground to lay points: the length shows, and with three or more the area. Drag a point to move it; tap the first one to close the shape.'],
   ['edViewCopied','Map editor','View copied: {code}. Paste it to Claude to show where you are looking ({where}).','the view code, where it looks'],
-  ['edOpen','Map editor','Map editor. The game is paused while you edit.'],['edNoPlanted','Map editor','None of your planted trees stands here.'],
+  ['edOpen','Map editor','Map editor. The game is paused while you edit.'],
+  ['edFromDaylight','Map editor','{name}, as the game has it now. Changes made in Daylight show here once sent to games and rebuilt.','{name}: the building'],['edFromDaylightNear','Map editor','The building from Daylight stands here. The town from Building Forge shows on High or Ultra graphics.'],['edNoPlanted','Map editor','None of your planted trees stands here.'],
   ['edCapHit','Map editor','The map holds at most {n} of these ({what}).','{n}: the most; {what}: the kind'],['edMachinesBack','Map editor','The machines are back where they start.'],
   ['edLayRoad','Map editor','Tap the ground to lay the road, point by point. Tap Finish when it is done.'],['edLayStreet','Map editor','Tap the ground to lay the street, point by point. Tap Finish when it is done.'],
   ['edStreetShort','Map editor','The street is too short for that spacing.'],['edLineFull','Map editor','That is as many {what} as the map holds ({n}).','{what}: lamps, trees…; {n}: the most'],
