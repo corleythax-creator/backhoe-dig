@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-10T03:22:00Z",
+ "updated": "2026-11-10T03:34:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -126,9 +126,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-09",
-   "dh": 60,
-   "act": 6,
-   "versions": 17
+   "dh": 63,
+   "act": 6.5,
+   "versions": 18
   }
  ],
  "extra": [
@@ -3648,6 +3648,15 @@ window.EFFORT = {
    "tris": 5796685,
    "chars": 2518428,
    "what": "Smoother in town: the islands' parked machines no longer draw from town, the corner map redraws less often, and townsfolk pictures decode off the main thread"
+  },
+  {
+   "v": 391,
+   "asked": "2026-11-09T20:50:00-06:00",
+   "live": "2026-11-09T21:34:51-06:00",
+   "dh": 3,
+   "tris": 5793095,
+   "chars": 2520126,
+   "what": "In town each kind of Building Forge building is drawn once for all its copies (18 Cape Cods in one go), and their insides and doors only near: far fewer draws in town and at the marina; Tune: Town to set the distances"
   }
  ]
 };
