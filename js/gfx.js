@@ -72,9 +72,18 @@ GFX.quest=Object.assign({},GFX.med,{name:'Quest',pr:1,auto:false,sh:2048,shR:16,
   rainN:700,rainSp:180,splashN:260,wakeN:160,brush:0.3,wild:0.35,turf:0.35,turfR:22,model:true,treeR:50,tuft:[0.5,10,30,0.15],vrSS:0.9});
 GFX.quest.town=1;
 GFX.quest.extraLt=false;GFX.quest.bfLt=false;
+// Work: for a weaker PC (an office laptop or desktop with built-in graphics), the High look where it is cheap: the
+// detailed machines, the material relief and sheen, filmic light, the weathering, the bridges' detail, and the same
+// town, buildings, roads and trees as every level (the layout never changes with the Graphics setting). What costs the
+// most is cut back: 1x resolution, one smaller shadow map drawn every other frame, no far shadows, bounced light or
+// lamps that cast light, grass blades and undergrowth like Low, full-detail trees only near you, the medium texture
+// pack, a slightly shorter haze and fewer, simpler townsfolk. Picked for you on Intel graphics
+GFX.work=Object.assign({},GFX.high,{name:'Work',shEvery:2,pr:1,sh:2048,shR:28,soft:false,csm:0,bounce:false,autoExp:false,inLight:false,
+  tex:'med',aniso:4,dirt:2,lawnFar:10,fog:0.85,cloudQ:1,lakeQ:1,rainN:900,rainSp:240,splashN:350,wakeN:200,brush:0.35,wild:0.35,
+  turf:0.35,turfR:22,peb:0,treeR:60,tuftQ:0,tuft:[0.6,12,40,0.2],town:1,forge:'',cull:6,rmNear:25,extraLt:false,propLt:false,bfLt:false,vrSS:1});
 // the bridges' detail parts: gusset and cover plates, lacing and lattice, braces, lamp trim, the covered bridge's
 // lattice and rafters, batter piles (bridges.js); Low leaves them out
-GFX.low.brDet=false;GFX.med.brDet=GFX.high.brDet=GFX.ultra.brDet=GFX.quest.brDet=true;
+GFX.low.brDet=false;GFX.med.brDet=GFX.high.brDet=GFX.ultra.brDet=GFX.quest.brDet=GFX.work.brDet=true;
 // Tiny far detail: three.js draws everything in view, however far, and from town that is the machines and yards on the
 // islands, a hundred parts each, most a pixel or two across: about 1,000 of the 1,400 draws a frame. The camera's own
 // check (Frustum.intersectsObject) also skips a mesh whose width on screen is under gfxCur.cull CSS pixels, or that is
@@ -118,7 +127,7 @@ function gfxAway(cam){if(cam!==camera||edOn||renderer.xr.isPresenting)return;con
 let gfxKey='high',gfxOver={},gfxCur=Object.assign({},GFX.high);
 function gfxName(){return GFX[gfxKey].name+(Object.keys(gfxOver).length?' (custom)':'')}
 function gfxGuess(){if(PHONE||IS_QUEST)return 'low';
-  try{const gl=renderer.getContext(),ext=gl.getExtension('WEBGL_debug_renderer_info'),r=ext?gl.getParameter(ext.UNMASKED_RENDERER_WEBGL):'';if(/intel/i.test(r))return 'med'}catch(e){}
+  try{const gl=renderer.getContext(),ext=gl.getExtension('WEBGL_debug_renderer_info'),r=ext?gl.getParameter(ext.UNMASKED_RENDERER_WEBGL):'';if(/intel/i.test(r))return 'work'}catch(e){}
   return 'high'}
 // the Meta Quest's own browser draws VR on the headset's chip: it has its own level (bhd_vrq, Quest unless picked) that
 // replaces the setting while in the headset; through a PC the player's setting stays
@@ -200,9 +209,9 @@ function gfxApply(){const g=gfxCur=Object.assign({},GFX[gfxKey],gfxOver);
   if(typeof bfSync==='function')bfSync();
   if(typeof gfxPanelSync==='function')gfxPanelSync()}
 // When a device can't hold its Graphics setting (main.js counts the slow seconds at the lowest resolution), it steps
-// down one level and says so: Ultra to High, High to Medium, Medium to Low. Picking a level yourself keeps it: the guard
+// down one level and says so: Ultra to High, High to Medium, Medium to Work, Work to Low. Picking a level yourself keeps it: the guard
 // then rests until the page reloads
-const GFX_DOWN={ultra:'high',high:'med',med:'low'};
+const GFX_DOWN={ultra:'high',high:'med',med:'work',work:'low'};
 let ultraLowN=0,ultraGuardOff=false,gfxStepping=false;
 function ultraGuard(f){ultraLowN=0;if(ultraGuardOff)return;const from=gfxKey,to=GFX_DOWN[from];if(!to)return;
   gfxStepping=true;setGfx(to,true);gfxStepping=false;
