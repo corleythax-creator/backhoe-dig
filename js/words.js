@@ -236,6 +236,10 @@ const WORDS=[
   ['rpGlad1','Town: what they say of you','Hey! Good to see you again.',''],['rpGlad2','Town: what they say of you','There he is! Everybody\'s talking about the work you\'re doing.',''],
   ['rpGlad3','Town: what they say of you','Well, if it isn\'t my favorite construction man!',''],
   ['tkThinking','Town: talk','{name} is thinking…','{name}: who is answering'],
+  // told to do something they can't (orders.js ordCan): said after "I would, but I can't:"
+  ['odWork','Town: orders',"I'm working",''],['odIn','Town: orders',"I'm busy in here",''],['odSeat','Town: orders',"I've only just sat down",''],
+  ['odBusy','Town: orders',"I'm in the middle of something",''],['odSelf','Town: orders',"that's me",''],['odGone','Town: orders',"they're not around",''],
+  ['odNoHome','Town: orders',"I can't get home from here",''],
   ['tkAll','Town: talk','Everyone',''],['tkWithAll','Town: talk','Talking to everyone here ({n})','{n}: how many are listening'],['tkSayAll','Town: talk','Say something to everyone',''],
   ['tkPlayer','Town: talk','Corley','What the townsfolk call you'],
   ['tkWeather','Town: talk','Nice enough day for it. Whatever it is you\'re digging.',''],['tkRain','Town: talk','This rain. Good for the lawns, bad for your dirt, I\'d guess.',''],

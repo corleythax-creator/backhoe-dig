@@ -381,7 +381,7 @@ function tfWalkStep(p,dt){
 // at node n (come by walk w): the next walk, not straight back unless it is a dead end (where they may stop a moment)
 // On an errand (p.goal, talk.js talkErrand) they take the walk that leads to its node soonest, and mark it reached there.
 function tfPick(p,n,w){if(p.goal&&n===p.goal.n)p.goal.here=1;let opts=n.e.filter(e=>e!==w);if(!opts.length){opts=[w];if(Math.random()<0.4){p.wait=2+Math.random()*4;p.look=p.yaw+Math.PI}}
-  const e=p.goal&&!p.goal.here&&tfGoalPick(n,opts,p.goal.n)||opts[(Math.random()*opts.length)|0];p.w=e;p.xok=false;p.dir=e.a===n?1:-1;p.s=p.dir>0?0:e.len}
+  const gw=p.goal&&p.goal.w,e=gw&&gw!==w&&(gw.a===n||gw.b===n)?gw:p.goal&&!p.goal.here&&tfGoalPick(n,opts,p.goal.n)||opts[(Math.random()*opts.length)|0];p.w=e;p.xok=false;p.dir=e.a===n?1:-1;p.s=p.dir>0?0:e.len}
 // ---------- errands: the shortest way along the walks to a node ----------
 // each node's distance to node g along the walks (Dijkstra, kept per goal; the walks never change while the game runs)
 const TF_DIST=new Map();
@@ -622,13 +622,13 @@ function tfDoorRoom(R,E,wantC,room){let sIn=0,sCome=0,cIn=0;const ps=[],cap=TU.t
   return 0}
 // someone sent for: a walker on E's walk headed its way, or someone new along it out of sight (or well off)
 function tfCall(R,E,sp){const w=E.w;
-  for(const q of tf.people)if(q.w===w&&!q.room&&!q.go&&!q.goTo&&!q.car&&!q.drv&&!q.cop&&!q.inside&&!q.path&&!q.dead&&!q.hurt&&!(q.flee>0)&&(E.s-q.s)*q.dir>3&&(E.s-q.s)*q.dir<40){tfHold(q,R,E,sp);return true}
+  for(const q of tf.people)if(q.w===w&&!q.room&&!q.go&&!q.goTo&&!q.car&&!q.drv&&!q.cop&&!q.inside&&!q.path&&!q.dead&&!q.hurt&&!q.ord&&!(q.flee>0)&&(E.s-q.s)*q.dir>3&&(E.s-q.s)*q.dir<40){tfHold(q,R,E,sp);return true}
   const cx=camera.position.x,cz=camera.position.z;
   for(const k of [35,-35,22,-22]){const s=Math.min(w.len,Math.max(0,E.s+k));if(Math.abs(s-E.s)<6)continue;const [x,z]=tfAt(w,s);if(tfSeen(x,z,1)&&Math.hypot(x-cx,z-cz)<55)continue;
     const p=tfPerson({w,s,dir:s<E.s?1:-1,x,z});p.side=0.32;tfHold(p,R,E,sp);return true}
   return false}
 // a walker on a walk going from s0 to p.s: past an entrance, the one headed for it turns in, anyone else may
-function tfEntCross(p,s0){if(p.s===s0||p.car||p.drv||p.cop||p.go||p.flee>0)return;for(const E of p.w.ents){if((s0-E.s)*(p.s-E.s)>0)continue;
+function tfEntCross(p,s0){if(p.s===s0||p.car||p.drv||p.cop||p.go||p.flee>0)return;for(const E of p.w.ents){if((s0-E.s)*(p.s-E.s)>0)continue;if(p.ord){if(ordShopIn(p,E))return;continue}
     if(p.goTo){if(p.goTo.E===E)tfGoIn(p);return}tfVisit(p,E);if(p.goTo)return}}
 function tfVisit(p,E){const R=E.R;if(!R.live||(tf.trans||0)>=(TU.tfShopTransit??8)||!townRoomOpen(R)||(R.cIn||0)+(R.cInc||0)>=(R.wantC||0)+1)return;
   if(Math.random()>(TU.tfShopGo??0.3)*tfShopW(R)*(p.carry?0.4:1))return;const sp=tfFreeSpot(R,E);if(!sp)return;tfHold(p,R,E,sp);tfGoIn(p)}
