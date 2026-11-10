@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-10T02:15:00Z",
+ "updated": "2026-11-10T03:22:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -126,9 +126,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-09",
-   "dh": 43,
-   "act": 5,
-   "versions": 12
+   "dh": 60,
+   "act": 6,
+   "versions": 17
   }
  ],
  "extra": [
@@ -3603,6 +3603,51 @@ window.EFFORT = {
    "tris": 5796547,
    "chars": 2490769,
    "what": "Townsfolk crowds are built in the background from the start, so coming into town no longer stutters as each new face appears"
+  },
+  {
+   "v": 386,
+   "asked": "2026-11-09T19:45:00-06:00",
+   "live": "2026-11-09T20:32:53-06:00",
+   "dh": 5,
+   "tris": 5782173,
+   "chars": 2497855,
+   "what": "The brewery's taproom fills like a real one: customers sit on the bar stools and round the tables facing each other with pints and plates of food before them, the floor is real worn pine planks, and a warm glow fills the room when its lights are on."
+  },
+  {
+   "v": 387,
+   "asked": "2026-11-09T20:13:00-06:00",
+   "live": "2026-11-09T20:55:24-06:00",
+   "dh": 5,
+   "tris": 5796958,
+   "chars": 2516786,
+   "what": "A Profiler in ☰ → Dev: what took longest to load, and what eats the frames in each place you record"
+  },
+  {
+   "v": 388,
+   "asked": "2026-11-09T20:55:00-06:00",
+   "live": "2026-11-09T21:07:54-06:00",
+   "dh": 0.5,
+   "tris": 5793782,
+   "chars": 2517076,
+   "what": "Townsfolk talk gets Voice only: lines spoken aloud with no text boxes over their heads"
+  },
+  {
+   "v": 389,
+   "asked": "2026-11-09T20:40:00-06:00",
+   "live": "2026-11-09T21:18:17-06:00",
+   "dh": 4,
+   "tris": 5789020,
+   "chars": 2517817,
+   "what": "The game's files are kept on the device, so opening it again skips the downloads (and works offline); a new version downloads only the files it changed"
+  },
+  {
+   "v": 390,
+   "asked": "2026-11-09T20:30:00-06:00",
+   "live": "2026-11-09T21:22:04-06:00",
+   "dh": 2.5,
+   "tris": 5796685,
+   "chars": 2518428,
+   "what": "Smoother in town: the islands' parked machines no longer draw from town, the corner map redraws less often, and townsfolk pictures decode off the main thread"
   }
  ]
 };

@@ -172,6 +172,10 @@ const HZ_U={uHzSun:{value:new THREE.Vector4(0,1,0,1)},uHzSunC:{value:new THREE.C
     set(f){if(!f){this[K]=null;return}const w=function(sh,r){f.call(this,sh,r);use(sh)};w.toString=()=>String(f);this[K]=w}});
 })();
 const scene=new THREE.Scene();
+// which game file put each top-level thing in the scene (for the Profiler's heaviest things, js/prof.js): read off the
+// call stack, the first js/ file that isn't this one
+{const add=scene.add;scene.add=function(...o){let f='';try{const m=String(new Error().stack).match(/js\/(?!core\.js)([\w-]+)\.js/);f=m?m[1]:''}catch(e){}
+  for(const c of o)if(c&&c.userData&&!c.userData.pfSrc)c.userData.pfSrc=f||'core';return add.apply(this,o)}}
 scene.background=new THREE.Color(0xbfd2dd);
 scene.fog=new THREE.Fog(0xbfd2dd,90,760);
 // gradient sky dome and a hazy mountain ring past the fog

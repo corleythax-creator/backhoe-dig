@@ -6,7 +6,7 @@
 // rules (fictional adults, PG-13, nothing sexual, no real people, no hate or help with harm, honest about being an AI
 // if asked), answering nobody without the owner key (Key, once a device), stopping at the daily cap; until then, and for
 // what only the built-in mind knows (machines going by, someone going), the built-in mind speaks.
-// On as Text unless switched off (☰ → Townsfolk talk: Off, Text, Aloud; bhd_talk on this device); nobody dead, hurt,
+// On as Text unless switched off (☰ → Townsfolk talk: Off, Text, Aloud, Voice only: aloud with no lines shown; bhd_talk on this device); nobody dead, hurt,
 // driving or a cop talks. The young ones (under 18) never go to the runtime or a model (grown-ups only): they say hi and
 // answer in the talk box with the game's own kid and teen lines (talkKid, talkKidSay).
 // On foot: walk up to someone and they stop, turn to you and say hello; bump into them and they say something about it;
@@ -140,6 +140,7 @@ function talkInit(){if(TALK.M||!window.HumanForgeMind)return;
 function talkSet(m,keep){TALK.mode=m;if(keep)try{localStorage.setItem('bhd_talk',m)}catch(e){}
   for(const b of document.querySelectorAll('#talkRow button'))b.setAttribute('aria-pressed',String(b.dataset.talk===m));
   for(const r of document.querySelectorAll('.talkOpt'))r.hidden=m==='off';
+  for(const b of TALK.bub.values())b.el.hidden=m==='say';
   if(m==='off'){talkClose();for(const b of TALK.bub.values())b.el.remove();TALK.bub.clear();if(TALK.M){TALK.M.chatter=false;TALK.M.hush()}}
   else{talkLib();talkInit();if(TALK.M){TALK.M.chatter=true;if(TALK.M.model!=='local')TALK.M.check()}talkPaint()}}
 for(const b of document.querySelectorAll('#talkRow button'))b.onclick=()=>talkSet(b.dataset.talk,1);
@@ -214,7 +215,7 @@ function talkBend(p,h){const g=h.object,B=h._tb||(h._tb={neck:g.getObjectByName(
   for(const d of B.done)d[1]=d[0].quaternion.clone()}
 function talkFace(p,s,x=wk.x,z=wk.z){if(!p||typeof p!=='object'||p.room||p.drv||p.cop||p.dead||p.flee>0)return;p.wait=Math.max(p.wait||0,s);p.look=Math.atan2(x-p.x,z-p.z)}
 function talkShow(p,a,to,ev){const u=talkUI();let b=TALK.bub.get(p);if(!b){b={el:document.createElement('div')};b.el.className='talkLine';b.el.style.left=b.el.style.top='0';u.L.appendChild(b.el);TALK.bub.set(p,b)}
-  b.el.innerHTML='';b.w=undefined;const n=document.createElement('b');n.textContent=talkName(p);b.el.append(n,document.createTextNode(a.say));
+  b.el.innerHTML='';b.w=undefined;b.el.hidden=TALK.mode==='say';const n=document.createElement('b');n.textContent=talkName(p);b.el.append(n,document.createTextNode(a.say));
   b.until=performance.now()/1000+3.5+a.say.split(/\s+/).length*0.38;const s=b.until-performance.now()/1000;
   // who they turn to: the one they talk to (and that one back), what happened to them, or you
   if(to&&typeof to==='object'&&talkCard(to)&&Math.random()<0.3)repGossip(p,to);
@@ -225,7 +226,7 @@ function talkShow(p,a,to,ev){const u=talkUI();let b=TALK.bub.get(p);if(!b){b={el
   else if(ev&&ev.kind==='thing'){const w=TALK.at.get(p);if(w)talkFace(p,Math.min(s,3),w[0],w[1])}
   else if(ev&&ev.by&&typeof ev.by==='object')talkFace(p,Math.min(s,4),ev.by.x,ev.by.z);
   else if(to==='you'||ev&&ev.by==='player')talkFace(p,s);
-  if(TALK.mode==='voice')talkVoice(p,a.say)}
+  if(TALK.mode==='voice'||TALK.mode==='say')talkVoice(p,a.say)}
 // Aloud: heard only near the camera (where every game sound is heard from), as loud as the distance makes it, like a
 // voice in the open (full at arm's length, a quarter at 33 ft, gone at TU.talkHearR), under the sound settings' master.
 // Walls between (talkThru): someone in a room you are not in (or you in a closed cab, as the engine sound goes by) is
