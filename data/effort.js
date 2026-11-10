@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-10T02:15:00Z",
+ "updated": "2026-11-10T02:32:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -126,9 +126,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-09",
-   "dh": 43,
-   "act": 5,
-   "versions": 12
+   "dh": 48,
+   "act": 5.5,
+   "versions": 13
   }
  ],
  "extra": [
@@ -3603,6 +3603,15 @@ window.EFFORT = {
    "tris": 5796547,
    "chars": 2490769,
    "what": "Townsfolk crowds are built in the background from the start, so coming into town no longer stutters as each new face appears"
+  },
+  {
+   "v": 386,
+   "asked": "2026-11-09T19:45:00-06:00",
+   "live": "2026-11-09T20:32:53-06:00",
+   "dh": 5,
+   "tris": 5782173,
+   "chars": 2497855,
+   "what": "The brewery's taproom fills like a real one: customers sit on the bar stools and round the tables facing each other with pints and plates of food before them, the floor is real worn pine planks, and a warm glow fills the room when its lights are on."
   }
  ]
 };

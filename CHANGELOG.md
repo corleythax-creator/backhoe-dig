@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Monday, November 9, 2026
 
+- **v386** (8:32 PM) The brewery's taproom fills like a real one: customers sit on the bar stools and round the tables facing each other with pints and plates of food before them, the floor is real worn pine planks, and a warm glow fills the room when its lights are on.
 - **v385** (8:15 PM) Townsfolk crowds are built in the background from the start, so coming into town no longer stutters as each new face appears
 - **v384** (7:40 PM) Less stutter near townsfolk who talk (the brewery): their speech bubbles no longer make the browser re-lay out the page every frame
 - **v383** (5:51 PM) The backhoe's and wheel loader's digging now loads their diesel (it throttles up, lugs in hard ground and the hoe slows with it), and the pickup goes up to 80 mph and climbs Overlook Road on its engine.

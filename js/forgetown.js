@@ -43,6 +43,36 @@ const BF_KSPOT={
   salonst:(w,d)=>[[0,d/2-1.5,Math.PI,'s'],[0,d/2+0.8,Math.PI,'f']],
   wchairs:(w,d)=>{const n=Math.max(1,Math.round(w/2));return Array.from({length:n},(_,i)=>[-w/2+(i+.5)*w/n,0.1,0,'s'])},
   pew:(w,d)=>Array.from({length:Math.max(1,Math.floor(w/2.2))},(_,i)=>[-w/2+1.1+i*2.2,0.15,0,'s'])};
+// a lone chair or stool (Daylight's dchair and stool, round a table or along a bar): one seat on it, turned to face the
+// table or bar it stands at (bfSeatAim)
+BF_KSPOT.dchair=BF_KSPOT.stool=(w,d)=>[[0,0,0,'s']];
+const BF_SEATS=new Set(['dchair','stool']),BF_ROUND=new Set(['round','cafetable']);
+// each lone seat turned to the table or bar beside it (a piece with a top 2 to 4 ft up, within 3 ft): facing the middle
+// of a round table, else the nearest point of its edge. The seat spot gets [x, z, facing, 's', dy (a bar stool's seat
+// above the 18 in a chair's is, lifting the sitter), [f, h] (where their glass and plate go: f ahead of the seat, h
+// over the floor; townfolk.js tfTableDraw)]
+function bfSeatAim(items){for(const P of items){if(!BF_SEATS.has(P.kind)||!P.spots||!P.spots[0])continue;const q=P.spots[0],x=q[0],z=q[1];let best=null,bd=0.95;
+    for(const T of items){if(T===P||T.lvl!==P.lvl||BF_SEATS.has(T.kind))continue;const [cx,cz,hx,hz,y0,y1]=T.box,h=y1-y0;if(h<0.6||h>1.25)continue;
+      const nx=Math.max(cx-hx,Math.min(cx+hx,x)),nz=Math.max(cz-hz,Math.min(cz+hz,z)),d=Math.hypot(nx-x,nz-z);if(d<bd){bd=d;best={T,nx,nz}}}
+    const sh=P.box[5]-P.box[4],dy=P.kind==='stool'&&sh>0.55?Math.min(0.5,sh-0.46):0;if(!best){q[4]=dy;continue}
+    const [cx,cz,hx,hz,y0,y1]=best.T.box,rd=BF_ROUND.has(best.T.kind);let tx,tz;
+    if(rd){const r=Math.min(hx,hz),ux=x-cx,uz=z-cz,L=Math.hypot(ux,uz)||1,k=Math.max(0.1,r-0.2);tx=cx+ux/L*k;tz=cz+uz/L*k}
+    else{const ux=best.nx-x,uz=best.nz-z,L=Math.hypot(ux,uz)||1;tx=best.nx+ux/L*0.2;tz=best.nz+uz/L*0.2}
+    q[2]=Math.atan2(tx-x,tz-z);q[4]=dy;q[5]=[Math.hypot(tx-x,tz-z),y1-y0]}}
+// a floor of the building's drawn in one of the game's own photo-scanned materials in place of Daylight's, by building
+// (lib: textures/<lib>.jpg with _n and _r from tools/cc0.py, ft the feet one tile covers): the brewery's taproom in worn
+// pine planks. Its relief and sheen show with Material relief (gfxCur.pbr: bfFloorPbr)
+const BF_FLOOR={lakeside_brewery:{lib:'wood_floor',ft:3.7}},bfFloorMats=new Map();
+function bfFloorMat(d,upm){const key=d.lib+'@'+upm.toFixed(3);let m=bfFloorMats.get(key);if(m)return m;
+  const rep=1/(d.ft*0.3048*upm),L=k=>{const t=new THREE.TextureLoader().load(`textures/${d.lib}${k}.jpg`);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rep,rep);t.anisotropy=8;return t};
+  m=new THREE.MeshStandardMaterial({map:L(''),roughness:1,metalness:0,envMap:skyEnv,envMapIntensity:0.25});m.name='bfFloor';m.userData={n:L('_n'),r:L('_r')};bfFloorPbr1(m);bfFloorMats.set(key,m);return m}
+function bfFloorPbr1(m){const on=!!(gfxCur&&gfxCur.pbr);m.normalMap=on?m.userData.n:null;m.roughnessMap=on?m.userData.r:null;m.roughness=on?1:0.6;m.needsUpdate=true}
+function bfFloorPbr(){for(const m of bfFloorMats.values())bfFloorPbr1(m)}
+// a floor mesh's UVs per metre (Daylight lays them in feet)
+function bfUvPerM(o){const P=o.geometry.attributes.position,U=o.geometry.attributes.uv;if(!P||!U||P.count<3)return 3.2808;let best=0;
+  const v0=new THREE.Vector3().fromBufferAttribute(P,0).applyMatrix4(o.matrixWorld),v=new THREE.Vector3();
+  for(let i=1;i<Math.min(P.count,64);i++){v.fromBufferAttribute(P,i).applyMatrix4(o.matrixWorld);const d=Math.hypot(v.x-v0.x,v.z-v0.z);if(d>0.5){const u=Math.hypot(U.getX(i)-U.getX(0),U.getY(i)-U.getY(0));best=u/d;break}}
+  return best>0.01?best:3.2808}
 // a piece's spots in the building's space: [x, z, the way they face, flags]
 function bfKSpots(c,kind){const f=BF_KSPOT[kind];if(!f)return null;const inv=new THREE.Matrix4().copy(c.matrixWorld).invert(),m=new THREE.Matrix4(),b=new THREE.Box3();
   c.traverse(o=>{if(o.isMesh){o.geometry.computeBoundingBox();b.union(o.geometry.boundingBox.clone().applyMatrix4(m.multiplyMatrices(inv,o.matrixWorld)))}});if(b.isEmpty())return null;
@@ -84,7 +114,11 @@ const BF_GLOW=new THREE.MeshBasicMaterial({color:0xffe2a8}),bfMats=new Map();
 // Only what is drawn: nothing here is saved or touches the ground. The map editor carries them: each is placed from
 // its building's own place every third of a second (and bfAfter asks for it at once).
 const BF_LT_KEY={low:'bfLtMed',med:'bfLtMed',high:'bfLtHigh',ultra:'bfLtUltra',quest:'bfLtMed'},BF_LT_I=1.2,BF_LT_DECAY=1.3;
-const bfLt={pts:[],spots:[],all:[],n:0,t:0,dirty:1,on:0,real:0,glow:new Map(),cam:new THREE.Vector3(),v:new THREE.Vector3(),halos:null};
+const bfLt={pts:[],spots:[],all:[],n:0,t:0,dirty:1,on:0,real:0,glow:new Map(),cam:new THREE.Vector3(),v:new THREE.Vector3(),halos:null,fill:0,fillK:0};
+// inside a building whose lights are on, a warm fill (TU.bfLtFill) lights the room as its many fixtures would, beyond
+// the few the pool can hold: an ambient light always in the scene (ambient light adds no shader work), up while the
+// camera is within a lit building's walls and under its roof, down again outside
+const BF_FILL=new THREE.AmbientLight(0xffd6a8,0),BF_FILL_I=0.55;scene.add(BF_FILL);
 const bfLtBudget=()=>gfxCur&&gfxCur.bfLt?Math.max(0,Math.min(8,Math.round(TU[BF_LT_KEY[gfxKey]||'bfLtMed']||0))):0;
 const bfLtState=(l,G)=>{const s=l.switch==='on'||l.switch==='off'?l.switch:G&&G.mode;return s==='on'||s==='off'?s:'auto'};
 // a fixture's glowing material, by colour and whether it follows the dusk (shared by every building)
@@ -127,11 +161,13 @@ function bfLightTick(lamp,ll,dt){
   if(bfLt.dirty&&bf.lots.length){bfLt.dirty=0;bfLtHalos()}
   if(bfLt.halos)bfLt.halos.visible=lamp>0.01&&bfLt.halos.geometry.attributes.position.count>0;
   // every third of a second: the lit lights nearest the camera take the pool's lights (one that had a light keeps it)
-  if((bfLt.t-=dt)<=0){bfLt.t=0.33;const far=TU.bfLtFar,cam=camera.getWorldPosition(bfLt.cam),C=[],v=bfLt.v;let any=false;
+  if((bfLt.t-=dt)<=0){bfLt.t=0.33;const far=TU.bfLtFar,cam=camera.getWorldPosition(bfLt.cam),C=[],v=bfLt.v;let any=false,fill=0;
     for(const L of bf.lots){const B=L.b;if(!B||!B.g.visible||!B.K.lights.length)continue;any=true;
       if(Math.hypot(cam.x-B.g.position.x,cam.z-B.g.position.z)>far+B.rad)continue;B.g.updateMatrixWorld();
+      const it=bf.lib[L.id];if(it&&it.width){v.copy(cam);B.g.worldToLocal(v);if(Math.abs(v.x)<it.width/2&&Math.abs(v.z)<it.length/2&&v.y>-0.5&&v.y<8)
+        for(const l of B.K.lights){const k=l.auto?lamp:1;if(k>fill)fill=k}}
       for(const l of B.K.lights){if(l.auto&&lamp<=0.01)continue;v.copy(l.p).applyMatrix4(B.g.matrixWorld);const d=v.distanceTo(cam);if(d<far)C.push({l,B,d,x:v.x,y:v.y,z:v.z})}}
-    C.sort((a,b)=>a.d-b.d);bfLt.on=C.length;bfLtPool(any?bfLtBudget():0);
+    bfLt.fill=fill;C.sort((a,b)=>a.d-b.d);bfLt.on=C.length;bfLtPool(any?bfLtBudget():0);
     const A=bfLt.all,pick=C.slice(0,A.length),free=[];
     for(const s of A){const i=pick.findIndex(c=>c&&c.l===s.l&&c.B===s.B);if(i<0){s.l=null;free.push(s)}else{s.c=pick[i];pick[i]=null}}
     for(const c of pick){if(!c)continue;const want=!!c.l.d,i=Math.max(0,free.findIndex(s=>!!s.o.isSpotLight===want)),s=free.splice(i,1)[0];s.l=c.l;s.B=c.B;s.c=c;s.k=0}
@@ -141,6 +177,7 @@ function bfLightTick(lamp,ll,dt){
       if(o.isSpotLight){if(l.d){v.copy(l.d).transformDirection(s.B.g.matrixWorld);o.angle=l.ang;o.penumbra=0.5;o.distance=l.r*1.35}else{v.set(0,-1,0);o.angle=1.45;o.penumbra=1}
         o.target.position.set(c.x+v.x*5,c.y+v.y*5,c.z+v.z*5)}}}
   // a light comes up over a quarter of a second when it takes one of the pool's, and fades toward the edge of the range
+  bfLt.fillK+=(bfLt.fill-bfLt.fillK)*Math.min(1,dt*3);BF_FILL.intensity=bfLt.fillK*(TU.bfLtFill??1)*BF_FILL_I*LI;
   const g=ll*TU.bfLight*BF_LT_I*LI,f=Math.min(1,dt*4);
   for(const s of bfLt.all){const l=s.l;if(!l)continue;s.k=Math.min(1,s.k+f);s.o.intensity=g*l.k*(l.auto?lamp:1)*s.k*s.e*(s.o.isSpotLight&&l.d?1.5:1)}}
 function bfPhong(m){if(!m||!m.isMeshStandardMaterial)return m;if(bfMats.has(m))return bfMats.get(m);
@@ -154,7 +191,8 @@ function bfPack(root,merge,it){const col=root.getObjectByName('Collision');if(co
   let gm=null;root.traverse(o=>{if(!gm&&o.userData&&o.userData.forge&&o.userData.forge.game)gm=o.userData.forge.game});
   const LS=it&&Array.isArray(it.lights)?it.lights:gm&&Array.isArray(gm.lights)?gm.lights:null,LG=it&&it.lighting||gm&&gm.lighting||null,glow=LS?bfLtGlow(root,LS,LG):null;
   root.traverse(o=>{if(!o.isMesh)return;let lit=false;if(!LS)for(let q=o;q&&q!==root;q=q.parent)if(q.userData&&q.userData.kind==='light')lit=true;
-    o.material=glow&&glow.has(o)?glow.get(o):lit?BF_GLOW:Array.isArray(o.material)?o.material.map(bfPhong):bfPhong(o.material)});
+    const fl=it&&BF_FLOOR[it.id]&&/_floor$/i.test(o.name)&&!Array.isArray(o.material)?BF_FLOOR[it.id]:null;
+    o.material=fl?bfFloorMat(fl,bfUvPerM(o)):glow&&glow.has(o)?glow.get(o):lit?BF_GLOW:Array.isArray(o.material)?o.material.map(bfPhong):bfPhong(o.material)});
   const plain=g=>{const h=new THREE.BufferGeometry();for(const [n,at] of Object.entries(g.attributes)){const f=new Float32Array(at.count*at.itemSize);
       for(let i=0;i<at.count;i++)for(let k=0;k<at.itemSize;k++)f[i*at.itemSize+k]=at.getComponent(i,k);h.setAttribute(n,new THREE.BufferAttribute(f,at.itemSize))}
     if(g.index)h.setIndex(new THREE.BufferAttribute(Uint32Array.from(g.index.array),1));return h};
@@ -172,6 +210,7 @@ function bfPack(root,merge,it){const col=root.getObjectByName('Collision');if(co
   // table's chairs
   if(F)for(const c of F.children){const u=c.userData||{},b=new THREE.Box3().setFromObject(c);if(b.isEmpty())continue;
     items.push({kind:u.kind||'',lvl:u.level||0,box:[(b.min.x+b.max.x)/2,(b.min.z+b.max.z)/2,(b.max.x-b.min.x)/2,(b.max.z-b.min.z)/2,b.min.y,b.max.y],chairs:u.kind==='dining'?bfChairs(c):null,spots:bfKSpots(c,u.kind)})}
+  bfSeatAim(items);
   return {stat:group(stat,I),furn:group(furn,I),items,lights:bfLtPack(LS,LG),
     leaves:leaves.map(L=>{const m=L.matrixWorld.clone(),p=new THREE.Vector3(),q=new THREE.Quaternion(),s=new THREE.Vector3();m.decompose(p,q,s);
       const li=m.clone().invert(),parts=[];L.traverse(o=>{if(o.isMesh)parts.push(o)});return {p,q,s,door:L.userData.door,swing:L.userData.swing||1,parts:group(parts,li)}})}}
@@ -202,7 +241,7 @@ function bfSpots(it,K,door,nStaff,nAll){const out=[],used=new Set(),dd=(x,z)=>Ma
   for(const P of G)if(P.spots)for(const q of P.spots)if(inRm(q[0],q[1])&&(q[3]==='s'||bfClear(it,K,0,q[0],q[1],P)))KS.push(q);
   const near=(a,b)=>dd(a[0],a[1])-dd(b[0],b[1]),fs=KS.filter(q=>q[3]==='f').sort(near);
   let staff=0;for(const q of fs){if(staff>=nStaff)break;out.push({p:q.slice(0,3),staff:1});staff++}
-  for(const q of KS.filter(q=>q[3]==='s').concat(KS.filter(q=>!q[3]).sort(near))){if(out.length>=nAll)break;out.push(q[3]==='s'?{p:q.slice(0,3),sit:1}:{p:q.slice(0,3)})}
+  for(const q of KS.filter(q=>q[3]==='s').concat(KS.filter(q=>!q[3]).sort(near))){if(out.length>=nAll)break;out.push(q[3]==='s'?{p:q.slice(0,3),sit:1,dy:q[4]||0,tb:q[5]||null}:{p:q.slice(0,3)})}
   if(staff>=nStaff&&out.length>=nAll)return out;
   if(staff)for(const P of G)if(P.spots)used.add(P);
   const sides=P=>{const [cx,cz,hx,hz]=P.box,g=0.45;return [[cx,cz+hz+g,Math.PI],[cx,cz-hz-g,0],[cx+hx+g,cz,-Math.PI/2],[cx-hx-g,cz,Math.PI/2]].filter(([x,z])=>bfClear(it,K,0,x,z,P))};
@@ -262,7 +301,7 @@ function bfBuild(L,K,item){const it=bf.lib[L.id],face=L.turn*Math.PI/180,c=Math.
   let rs=null;if(gameR){const fdoors=it.doors.filter(d=>!d.level&&d.exterior&&leaves.has(d.id)),fd=fdoors.find(d=>d.normal[2]>0.7)||fdoors[0];
     const door=fd?[fd.center[0],fd.center[2]]:[0,0],nStaff=gameR.spots.filter(q=>q.staff).length,nAll=gameR.spots.length;
     rs={spots:[],y:fy(0)};
-    for(const q of bfSpots(it,K,door,nStaff,nAll)){const [x,z,yl]=q.p,sp={x:X(x,z),z:Z(x,z),y:fy(0),yaw:face+yl};if(q.sit)sp.sit=1;if(q.staff)sp.staff=1;sp.bf=1;rs.spots.push(sp);G.spots.push({sp,o:{x:sp.x,z:sp.z,y:sp.y,yaw:sp.yaw}})}
+    for(const q of bfSpots(it,K,door,nStaff,nAll)){const [x,z,yl]=q.p,sp={x:X(x,z),z:Z(x,z),y:fy(0)+(q.dy||0),yaw:face+yl};if(q.sit)sp.sit=1;if(q.dy)sp.dy=q.dy;if(q.tb){sp.tf=q.tb[0];sp.th=q.tb[1]}if(q.staff)sp.staff=1;sp.bf=1;rs.spots.push(sp);G.spots.push({sp,o:{x:sp.x,z:sp.z,y:sp.y,yaw:sp.yaw}})}
     // a shop's: its frame looks out through the front door (rmKit: o out, s across) with its middle dO behind it, deep
     // enough to reach the back wall; R.sol the walls, stairs and furniture in that frame
     if(gameR.dO!=null&&fd&&fd.normal[2]>0.7){const dx0=fd.center[0],dz0=fd.center[2],back=Math.min(...W0.flatMap(w=>[w[1],w[3]])),dO=(dz0-back)/2+0.3,K0=rmKit(null,X(dx0,dz0-dO),Z(dx0,dz0-dO),fy(0),face),sol=[];
