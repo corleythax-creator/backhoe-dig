@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-10T22:52:00Z",
+ "updated": "2026-11-10T23:52:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -132,9 +132,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-10",
-   "dh": 11.5,
-   "act": 2,
-   "versions": 4
+   "dh": 25.5,
+   "act": 2.5,
+   "versions": 5
   }
  ],
  "extra": [
@@ -3726,6 +3726,15 @@ window.EFFORT = {
    "tris": 5795651,
    "chars": 2550440,
    "what": "Tell townsfolk what to do in the talk box or out loud: come here, follow me, wait, carry on, go home, go to a shop or place, look at something, run; to one, a named person or everyone. Each decides in their own way whether they will."
+  },
+  {
+   "v": 399,
+   "asked": "2026-11-10T17:25:00-06:00",
+   "live": "2026-11-10T17:52:20-06:00",
+   "dh": 14,
+   "tris": 5794596,
+   "chars": 2589664,
+   "what": "Townsfolk walk anywhere in town (lawns, the beach, the pier, up to you), get hungry, thirsty, tired, bored and lonely and do something about it (eat out, go home to bed, find a friend), have pursuits (fishing, painting, fitness walks, stargazing, saying hello) with progress kept, and friendships and rivalries that grow as they talk."
   }
  ]
 };
