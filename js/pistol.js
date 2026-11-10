@@ -79,11 +79,14 @@ const gunFlash=new THREE.Group();gunFlash.visible=false;gunMdl.add(gunFlash);
 {const m=new THREE.MeshBasicMaterial({color:0xffc870,transparent:true,opacity:0.95,blending:THREE.AdditiveBlending,depthWrite:false,side:THREE.DoubleSide});
   for(const r of [0,Math.PI/2]){const c=new THREE.Mesh(new THREE.PlaneGeometry(0.07,0.2),m);c.rotation.set(Math.PI/2,r,0);c.position.z=0.09;gunFlash.add(c)}
   const s=new THREE.Mesh(new THREE.CircleGeometry(0.06,7),m);gunFlash.add(s)}
-// the guns for sale: clones of the models on each gun shop's wall and in its glass case, once they have loaded
+// the guns for sale: clones of the models on each gun shop's wall and in its glass case, once they have loaded. The
+// gun in hand draws always (frustumCulled off, it is at the camera); the clones are culled like anything else and cast
+// no sun shadow (they are indoors): they drew in every frame anywhere on the island, about 120 draws
+const gunShow=o=>{o.traverse(m=>{if(m.isMesh){m.frustumCulled=true;m.castShadow=false}});return o};
 function gunRackFill(){if(gun.racked>=GUN_SHOPS.length||!GUN_K.every(k=>gunM[k].ready))return;
   for(;gun.racked<GUN_SHOPS.length;gun.racked++){const S=GUN_SHOPS[gun.racked];
-    S.rack.forEach(([x,y,z,yw],i)=>{const o=gunM[['rifle','shotgun','carbine'][i%3]].clone(true);o.visible=true;o.position.set(x,y,z);o.rotation.set(0,yw,0);scene.add(o)});
-    S.case.forEach(([x,y,z,yw])=>{const o=gunM.pistol.clone(true);o.visible=true;o.position.set(x,y,z);o.rotation.set(0,yw,Math.PI/2,'YXZ');scene.add(o)})}}
+    S.rack.forEach(([x,y,z,yw],i)=>{const o=gunShow(gunM[['rifle','shotgun','carbine'][i%3]].clone(true));o.visible=true;o.position.set(x,y,z);o.rotation.set(0,yw,0);scene.add(o)});
+    S.case.forEach(([x,y,z,yw])=>{const o=gunShow(gunM.pistol.clone(true));o.visible=true;o.position.set(x,y,z);o.rotation.set(0,yw,Math.PI/2,'YXZ');scene.add(o)})}}
 // ---------- in hand ----------
 function gunEquip(on,quiet){if(on&&trim.on)trimSet(false);if(!on&&gun.eq&&gunHas())gun.hol=0.35;if(on&&!gun.eq)gun.dr=0;gunClick('draw');gun.eq=!!on;gun.rl=0;$('#gunBtn').setAttribute('aria-pressed',gun.eq);gunHudDraw();if(!quiet)toast(say(on?'gunOut':'gunAway',{gun:gunW().s}),'',1800)}
 const gunReady=()=>gunHas();
