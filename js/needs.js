@@ -52,8 +52,8 @@ function ndAct(p){const n=ndOf(p),h=townHour(),late=h>=21.5||h<5.5;
     if(k==='f'){const E=ndPlace(p,h<10.5?['am','meal']:h>=16?['meal','pm']:['meal','am','treat']);if(E){ndGo(p,E,'eat');return true}
       if(h>=7&&h<21){talkErrand(p,'town_store',null);if(p.goal){p.nd={k:'eat',t:240};return true}}}
     else if(k==='d'){const E=ndPlace(p,h>=16?['pm','am']:['am','pm']);if(E){ndGo(p,E,'drink');return true}}
-    else if(k==='e'){if(late||n.e>0.85){const L=lifeOf(p.body),R=L&&L.home;
-        if(R&&roGo(p,R.x,R.z,{near:1.2,tag:'nd',max:600,then:q=>{q.nd=null;tfDrop(q)},fail:q=>{q.nd=null;roJoin(q)}})){p.nd={k:'bed',t:700};return true}}
+    else if(k==='e'){if(late||n.e>0.85){const R=ordHomeFront(p);
+        if(R&&roGo(p,R[0],R[1],{near:1.2,tag:'nd',max:600,then:q=>{q.nd=null;tfDrop(q)},fail:q=>{q.nd=null;roJoin(q)}})){p.nd={k:'bed',t:700};return true}}
       else{talkErrand(p,'town_square',null);if(p.goal){p.nd={k:'rest',t:240};return true}}}
     else if(k==='c'){const q=typeof bdFriend==='function'?bdFriend(p,90):null;if(q){talkErrand(p,'company',q);if(p.goal){p.nd={k:'friend',q,t:240};return true}}
       talkErrand(p,h>=16&&h<23.5?'town_beer':'town_square',null);if(p.goal){p.nd={k:'people',t:240};return true}}
