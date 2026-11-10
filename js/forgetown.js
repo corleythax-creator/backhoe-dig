@@ -20,7 +20,7 @@
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 const BF_SITE='https://corley-forge-studio.vercel.app/building/library/',BF_PLACES='corleys_island.json';
 const BF_NEAR=30,BF_OPEN=1.35,BF_STAFF=new Set(['counter','desk','island']),BF_SHOP=new Set(['counter','washer','dryer','desk','island','fridge','range','vanity']);
-const bf={lib:null,places:null,kinds:{},lots:[],gen:0,qa:new THREE.Quaternion(),ay:new THREE.Vector3(0,1,0)};
+const bf={lib:null,places:null,kinds:{},inst:{},lots:[],gen:0,qa:new THREE.Quaternion(),ay:new THREE.Vector3(0,1,0)};
 // which setting draws an area's buildings
 const bfWant=area=>!!(gfxCur&&(area==='homes'?gfxCur.bfHomes:gfxCur.bfMain));
 // the doors drawn by the building's model (nothing of their own here)
@@ -81,7 +81,7 @@ function bfKSpots(c,kind){const f=BF_KSPOT[kind];if(!f)return null;const inv=new
 // a building kind, loaded and packed once: meshes merged by material (furniture apart), each door leaf's parts merged
 // in its own frame, the furniture's pieces, all in the building's space
 function bfKind(id){if(bf.kinds[id])return bf.kinds[id];
-  return bf.kinds[id]=bfImport().then(({loader,merge})=>new Promise((ok,no)=>loader.load(BF_SITE+id+'.glb',g=>ok(bfPack(g.scene,merge,bf.lib[id])),undefined,no)))}
+  return bf.kinds[id]=bfImport().then(({loader,merge})=>new Promise((ok,no)=>loader.load(BF_SITE+id+'.glb',g=>ok(bfPack(g.scene,merge,bf.lib[id])),undefined,no))).then(K=>(bf.kinds[id].K=K))}
 // a Daylight dining table's chairs (its 'dining' piece: n a side, one per 2.3 ft of table, 0.45 ft out from its edge,
 // one at each end of a table 6 ft or longer), found from the table top (the piece's thinnest mesh), in the item's own feet:
 // [x, z, the way the sitter faces] in the building's space
@@ -156,7 +156,7 @@ function bfLtHalos(){const P=[],C=[],S=[],F=[],v=bfLt.v;
   const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(P,3));g.setAttribute('col',new THREE.Float32BufferAttribute(C,3));
   g.setAttribute('sz',new THREE.Float32BufferAttribute(S,1));g.setAttribute('fx',new THREE.Float32BufferAttribute(F,1));bfLt.halos.geometry.dispose();bfLt.halos.geometry=g}
 // each frame from daynight.js: lamp is how dark it is (0 by day, 1 at night), ll the Lamp light tuning
-function bfLightTick(lamp,ll,dt){
+function bfLightTick(lamp,ll,dt){bfEnvTick();
   for(const e of bfLt.glow.values())e.m.color.copy(e.c).multiplyScalar(e.auto?0.45+0.55*lamp:1);
   if(bfLt.dirty&&bf.lots.length){bfLt.dirty=0;bfLtHalos()}
   if(bfLt.halos)bfLt.halos.visible=lamp>0.01&&bfLt.halos.geometry.attributes.position.count>0;
@@ -180,11 +180,12 @@ function bfLightTick(lamp,ll,dt){
   bfLt.fillK+=(bfLt.fill-bfLt.fillK)*Math.min(1,dt*3);BF_FILL.intensity=bfLt.fillK*(TU.bfLtFill??1)*BF_FILL_I*LI;
   const g=ll*TU.bfLight*BF_LT_I*LI,f=Math.min(1,dt*4);
   for(const s of bfLt.all){const l=s.l;if(!l)continue;s.k=Math.min(1,s.k+f);s.o.intensity=g*l.k*(l.auto?lamp:1)*s.k*s.e*(s.o.isSpotLight&&l.d?1.5:1)}}
+// the building's materials kept as Daylight House Studio made them (PBR: colour, roughness, metalness, normal and AO maps),
+// lit by the game's sky (skyEnv) as well as its sun, so they read as they do in Daylight; without the sky they stood far
+// darker than the game's own buildings. How much sky they take is the Tuning bfEnv (read live: bfEnvTick)
 function bfPhong(m){if(!m||!m.isMeshStandardMaterial)return m;if(bfMats.has(m))return bfMats.get(m);
-  const r=m.roughness??1,mt=m.metalness||0,P=new THREE.MeshPhongMaterial({color:m.color.clone(),map:m.map,normalMap:m.normalMap,emissive:m.emissive.clone(),emissiveMap:m.emissiveMap,
-    transparent:m.transparent,opacity:m.opacity,alphaTest:m.alphaTest,side:m.side,depthWrite:m.depthWrite,vertexColors:m.vertexColors,
-    shininess:4+Math.pow(1-r,2)*90,specular:mt>0.3?m.color.clone().multiplyScalar(0.5*mt):new THREE.Color(0x111111).lerp(new THREE.Color(0x555555),Math.max(0,0.6-r))});
-  if(m.normalMap)P.normalScale.copy(m.normalScale);P.name=m.name;bfMats.set(m,P);return P}
+  m.envMap=skyEnv;m.envMapIntensity=TU.bfEnv;m.needsUpdate=true;bfMats.set(m,m);return m}
+let bfEnvK=-1;function bfEnvTick(){if(TU.bfEnv===bfEnvK)return;bfEnvK=TU.bfEnv;for(const m of bfMats.values())m.envMapIntensity=bfEnvK}
 function bfPack(root,merge,it){const col=root.getObjectByName('Collision');if(col)col.removeFromParent();root.updateMatrixWorld(true);
   // its lights (the library entry's, or the same list in the model's own extras.forge.game): with a list, each fixture
   // that is not switched off glows in its light's colour (bfLtGlow); with none, every ceiling light glows as before
@@ -219,8 +220,17 @@ function bfPack(root,merge,it){const col=root.getObjectByName('Collision');if(co
     leaves:leaves.map(L=>{const m=L.matrixWorld.clone(),p=new THREE.Vector3(),q=new THREE.Quaternion(),s=new THREE.Vector3();m.decompose(p,q,s);
       const li=m.clone().invert(),parts=[];L.traverse(o=>{if(o.isMesh)parts.push(o)});return {p,q,s,door:L.userData.door,swing:L.userData.swing||1,parts:group(parts,li)}})}}
 // every frame (mainTick): each door's leaves follow its door (opened by rmDoorsTick), and furniture shows only near
-function bfTick(dt){for(const L of bf.lots){const B=L.b;if(!B||!B.g.visible)continue;const dx=camera.position.x-B.g.position.x,dz=camera.position.z-B.g.position.z;B.furn.visible=dx*dx+dz*dz<BF_NEAR*BF_NEAR;
+// (and its insides within TU.bfIn, its door leaves within TU.bfDoor)
+function bfTick(dt){const ri=TU.bfIn||0,rd=TU.bfDoor||0;for(const L of bf.lots){const B=L.b;if(!B||!B.g.visible)continue;const dx=camera.position.x-B.g.position.x,dz=camera.position.z-B.g.position.z,d2=dx*dx+dz*dz;
+    B.furn.visible=d2<BF_NEAR*BF_NEAR;B.ins.visible=!ri||d2<(ri+B.rad)*(ri+B.rad);B.lvs.visible=!rd||d2<(rd+B.rad)*(rd+B.rad);
     for(const D of B.doors){const a=D.d.a;if(a===D.a)continue;D.a=a;for(const l of D.leaves)l.o.quaternion.copy(l.q).multiply(bf.qa.setFromAxisAngle(bf.ay,l.swing*BF_OPEN*a))}}}
+// Each kind's shell, one draw per material for every building of that kind standing (not hidden in the map editor):
+// an instanced mesh per material, its instances the buildings' places, laid again when one is built, moved or hidden
+function bfInstSync(id){const K=bf.kinds[id]&&bf.kinds[id].K;if(!K)return;let I=bf.inst[id];
+  const on=bf.lots.filter(L=>L.id===id&&L.b&&L.b.g.visible),cap=Math.max(on.length,bf.lots.filter(L=>L.id===id).length,1);
+  if(I&&I.cap<cap){for(const m of I.ms){scene.remove(m);m.dispose()}I=null}
+  if(!I){I=bf.inst[id]={cap,ms:K.stat.filter(x=>!x.inside).map(x=>{const m=new THREE.InstancedMesh(x.geo,x.mat,cap);m.castShadow=m.receiveShadow=true;m.name='bf:'+id;m.count=0;scene.add(m);return m})}}
+  for(const m of I.ms){on.forEach((L,i)=>{L.b.g.updateMatrixWorld();m.setMatrixAt(i,L.b.g.matrixWorld)});m.count=on.length;m.visible=on.length>0;m.instanceMatrix.needsUpdate=true;if(on.length)m.computeBoundingSphere()}}
 // the fixed thing (fixed.js) a place's building is: the smallest building, structure, large thing or site office round its middle
 const BF_FX=new Set(['fxbuilding','fxstruct','fxbig','fxoffice']);
 function bfItem(L){let best=null;for(const it of FX)if(BF_FX.has(it.t)&&L.x>=it.x0&&L.x<=it.x1&&L.z>=it.z0&&L.z<=it.z1&&(!best||(it.x1-it.x0)*(it.z1-it.z0)<(best.x1-best.x0)*(best.z1-best.z0)))best=it;return best}
@@ -279,11 +289,13 @@ function bfBuild(L,K,item){const it=bf.lib[L.id],face=L.turn*Math.PI/180,c=Math.
   // its height: on the ground, or on the floor the game's own building stood on (a deck, a raised lot)
   let pt=-1e9;for(const {p} of G.pads){const dx=ox-p.x,dz=oz-p.z,u=dx*p.c-dz*p.s,v=dx*p.s+dz*p.c;if(Math.abs(u)<=p.hx&&Math.abs(v)<=p.hz)pt=Math.max(pt,p.t)}
   const y0=Math.max(rmGroundMax(ox,oz,face,it.width,it.length-1.4)+0.03,pt-f0),fy=i=>y0+(it.levels[i]||it.levels[0]).floorY,nl=it.levels.length;
-  const g=new THREE.Group();g.position.set(ox,y0,oz);g.rotation.y=face;const furn=new THREE.Group();g.add(furn);
-  for(const x of K.stat){const m=new THREE.Mesh(x.geo,x.mat);m.castShadow=true;m.receiveShadow=!x.inside;g.add(m)}
+  // its shell (walls, roof, windows) is drawn with every other building of its kind (bfInstSync); its insides, door
+  // leaves and furniture are its own, each shown only near (bfTick)
+  const g=new THREE.Group();g.position.set(ox,y0,oz);g.rotation.y=face;const furn=new THREE.Group(),ins=new THREE.Group(),lvs=new THREE.Group();g.add(furn,ins,lvs);
+  for(const x of K.stat)if(x.inside){const m=new THREE.Mesh(x.geo,x.mat);m.castShadow=true;m.receiveShadow=false;ins.add(m)}
   for(const x of K.furn){const m=new THREE.Mesh(x.geo,x.mat);m.castShadow=true;m.receiveShadow=!x.inside;furn.add(m)}
   const leaves=new Map();for(const l of K.leaves){const o=new THREE.Object3D();o.position.copy(l.p);o.quaternion.copy(l.q);o.scale.copy(l.s);
-    for(const x of l.parts){const m=new THREE.Mesh(x.geo,x.mat);m.castShadow=m.receiveShadow=true;o.add(m)}g.add(o);
+    for(const x of l.parts){const m=new THREE.Mesh(x.geo,x.mat);m.castShadow=m.receiveShadow=true;o.add(m)}lvs.add(o);
     if(!leaves.has(l.door))leaves.set(l.door,[]);leaves.get(l.door).push({o,q:l.q.clone(),swing:l.swing})}
   g.visible=false;scene.add(g);
   const mine={solids:[]},yr=(S,a,b)=>{S.by0=a;S.by1=b;S.y0=a;S.y1=b};
@@ -325,7 +337,7 @@ function bfBuild(L,K,item){const it=bf.lib[L.id],face=L.turn*Math.PI/180,c=Math.
       for(const st of it.stairs||[])if(!st.level){const [fx,fz]=st.foot,[hx,hz]=st.head;box((fx+hx)/2,(fz+hz)/2,Math.abs(hx-fx)/2+st.width/2,Math.abs(hz-fz)/2+st.width/2)}
       for(const P of K.items)if(!P.lvl&&P.kind!=='rug'&&P.kind!=='porch'&&P.kind!=='stairs')box(P.box[0],P.box[1],P.box[2],P.box[3]);
       Object.assign(rs,{x:K0.x,z:K0.z,f:face,P:K0.P,dO,W:it.width/2+Math.abs(dx0),sol,at0:{x:K0.x,z:K0.z}})}}
-  L.b={g,furn,doors,gameR,rs,o:{x:ox,z:oz,y:y0,f:face},mine,K,rad:Math.hypot(it.width,it.length)/2};item.bf=L;bfLt.dirty=1}
+  L.b={g,furn,ins,lvs,doors,gameR,rs,o:{x:ox,z:oz,y:y0,f:face},mine,K,rad:Math.hypot(it.width,it.length)/2};item.bf=L;bfLt.dirty=1}
 // a game room given the building's spots and door frame while it is swapped (on), its own put back after; whoever was
 // in it or on the way leaves first
 const BF_RKEYS=['spots','dO','W','sol','P','x','z','f','y'];
@@ -340,7 +352,9 @@ function bfAfter(it,a){const L=it.bf;if(!L||!L.b)return;const B=L.b,gone=!a||!!a
   const r=gone?0:a.yaw,c=Math.cos(r),s=Math.sin(r),dx=gone?0:a.x-it.cx,dz=gone?0:a.z-it.cz,dy=gone?0:baseHeight(a.x,a.z)-baseHeight(it.cx,it.cz),
     at=(x,z)=>[it.cx+(x-it.cx)*c+(z-it.cz)*s+dx,it.cz-(x-it.cx)*s+(z-it.cz)*c+dz];
   B.g.visible=show;bfRoomSet(B,show);bfLt.dirty=1;bfLt.t=0;
-  if(show){const [x,z]=at(B.o.x,B.o.z);B.g.position.set(x,B.o.y+dy,z);B.g.rotation.y=B.o.f+r;for(const S of B.mine.solids){S.y0=S.by0+dy;S.y1=S.by1+dy}
+  if(show){const [x,z]=at(B.o.x,B.o.z);B.g.position.set(x,B.o.y+dy,z);B.g.rotation.y=B.o.f+r;for(const S of B.mine.solids){S.y0=S.by0+dy;S.y1=S.by1+dy}}
+  bfInstSync(L.id);
+  if(show){
     if(B.rs&&B.rs.at0){const [rx,rz]=at(B.rs.at0.x,B.rs.at0.z),R=B.gameR,f=B.o.f+r,sf=Math.sin(f),cf=Math.cos(f);R.x=rx;R.z=rz;R.f=f;R.y=B.rs.y+dy;R.P=(o,q)=>[rx+sf*o+cf*q,rz+cf*o-sf*q]}}
   if(gone)return;
   // which side is out of the world: the game's (swapped) or the building's (not)
