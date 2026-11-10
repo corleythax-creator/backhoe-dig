@@ -147,6 +147,10 @@ const TUNE=[
   ['ordLostR','Town','Someone following or coming to you gives up once you are this far off in a machine or indoors',61,'ft',30,600,10],
   ['ordHearR','Town','Told by name, a townsperson hears you within',12.2,'ft',10,120,5],
   ['ordSpite','Town','Townsfolk who think less of you than this (-100 to 100) won\'t do what you ask',-30,'',-100,100,5],
+  // pursuits (pursuits.js)
+  ['puShare','Town','Share of the townsfolk who fit a pursuit that have one',0.6,'pct',0,100,5],
+  ['puGap','Town','A townsperson goes off on their pursuit again after about',240,'s',30,3600,30],
+  ['puMax','Town','At most this many townsfolk off on their pursuits at once',5,'n',0,20,1],
   // what townsfolk remember of seeing you in the shops (lives.js, FM): how often they bring it up, for how long, and
   // how many times in a shop together before you are a familiar face
   ['memSay','Town','Townsfolk who bring up seeing you in a shop when they meet you',0.4,'pct',0,100,5],

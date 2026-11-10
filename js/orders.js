@@ -120,20 +120,22 @@ function ordSaid(text){const M=TALK.M;if(!M||!TALK.with)return false;
 function ordLog(s){TALK.log.push({t:performance.now()/1000,s});if(TALK.log.length>8)TALK.log.shift()}
 
 // ---------- doing it ----------
-function ordStart(p,o){p.tkGo=null;if(p.ordV==null)p.ordV=p.vt;const T=TU;
+function ordStart(p,o){p.tkGo=null;if(p.pu)puEnd(p);if(p.ordV==null)p.ordV=p.vt;const T=TU;
   switch(o.do){
     case 'carry':ordStop(p);p.wait=0;return;
     case 'stay':p.goal=null;p.ord={k:'stay'};if(!p.room&&!p.sit)talkFace(p,T.ordStayT);return;
     case 'look':p.ord={k:'look',t:2.5};talkFace(p,4,wk.x,wk.z);return;
     case 'lookat':{const at=ordPos(o.at);p.ord={k:'lookat',t:3};if(at)talkFace(p,5,at[0],at[1]);return}
     case 'run':p.goal=null;p.ord={k:'run'};talkRun(p,wk.x,wk.z,5+Math.random()*3,Math.max(p.vt||1.3,1.3)*2);return;
-    case 'home':{const H=ordHomeWay(p);if(!H)return;p.goal={k:'order',n:H.n,t:1e9,here:0};p.wait=0;tfGoalDir(p,H.n);p.ord={k:'home',H};return}
-    case 'goto':if(o.at&&o.at.pl&&TALK_ERR[o.at.pl]){p.goal=null;p.wait=0;talkErrand(p,o.at.pl,null);if(p.goal)p.ord={k:'goto',at:o.at,err:p.goal};return}
-      if(o.at&&typeof o.at==='object'&&!o.at.pl){p.goal=null;p.wait=0;talkErrand(p,'company',o.at);if(p.goal)p.ord={k:'goto',at:o.at,err:p.goal};return}
+    case 'home':{const L=typeof lifeOf==='function'&&lifeOf(p.body),R=L&&L.home;
+      if(R&&roGo(p,R.x,R.z,{near:1.2,tag:'ord',max:600,then:q=>{q.ord=null;q.ordQ=null;tfDrop(q)}})){p.ord={k:'home'};return}
+      const H=ordHomeWay(p);if(!H)return;p.goal={k:'order',n:H.n,t:1e9,here:0};p.wait=0;tfGoalDir(p,H.n);p.ord={k:'home',H};return}
+    case 'goto':if(!p.off&&o.at&&o.at.pl&&TALK_ERR[o.at.pl]){p.goal=null;p.wait=0;talkErrand(p,o.at.pl,null);if(p.goal)p.ord={k:'goto',at:o.at,err:p.goal};return}
+      if(!p.off&&o.at&&typeof o.at==='object'&&!o.at.pl){p.goal=null;p.wait=0;talkErrand(p,'company',o.at);if(p.goal)p.ord={k:'goto',at:o.at,err:p.goal};return}
       // fall through: a machine, the marina or a shop, by the walks
     default:p.goal=null;p.wait=0;p.ord={k:o.do,at:o.at,t:o.do==='follow'?T.ordFollowT:o.do==='come'?120:240}}}
 // done, or given up: walking pace back, the goal cleared, the next in line (if they still can)
-function ordStop(p){p.ord=null;p.ordQ=null;if(p.goal&&p.goal.k==='order')p.goal=null;if(p.ordV!=null){p.vt=p.ordV;p.ordV=null}}
+function ordStop(p){p.ord=null;p.ordQ=null;if(p.goal&&p.goal.k==='order')p.goal=null;if(p.ordV!=null){p.vt=p.ordV;p.ordV=null}if(p.off&&!p.pu&&p.off.tag==='ord')roBack(p)}
 function ordDone(p){const Q=p.ordQ;p.ordQ=null;ordStop(p);const o=Q&&Q.shift();if(o&&!ordCan(p,o)){ordStart(p,o);if(p.ord)p.ordQ=Q}}
 // what they are about, in their own words (talk.js talkNow)
 function ordDoing(p){const o=p.ord;if(!o)return '';const w=ordWhat(o.at);
@@ -146,8 +148,14 @@ function ordProj(w,x,z){let bs=0,bd=1e9;const P=w.p,L=w.L;
 // the sidewalk nearest x,z (not a crosswalk) and where along it
 function ordWalkOf(x,z){let b=null,bp=null;for(const w of TF_WALK){if(w.x)continue;const q=ordProj(w,x,z);if(!bp||q.d<bp.d){b=w;bp=q}}return b&&{w:b,s:bp.s,d:bp.d}}
 // walk toward x,z along the walks, to the sidewalk spot nearest it; true once there (within near, or as close as the walks go)
-function ordChase(p,x,z,near){const d=Math.hypot(x-p.x,z-p.z);if(d<near){p.goal=null;talkFace(p,0.6,x,z);return true}
-  if(p.path||!p.w)return false;const W=ordWalkOf(x,z);if(!W)return false;
+function ordChase(p,x,z,near){const d=Math.hypot(x-p.x,z-p.z);if(d<near){p.goal=null;if(p.off){p.off.pts.length=0;p.off.i=0}talkFace(p,0.6,x,z);return true}
+  if(p.path)return false;const o=p.off,now=performance.now()/1000;
+  // anywhere: straight there off the walks (roam.js), a new way once it has moved on (at most once a second)
+  if(o&&o.tag==='ord'&&Math.hypot(o.x-x,o.z-z)<1.5){if(o.i>=o.pts.length){talkFace(p,0.6,x,z);return true}return false}
+  if(o&&o.tag==='ord'&&now-o.at<1)return false;
+  if(roGo(p,x,z,{near:near*0.8,tag:'ord'}))return false;
+  // no way across: along the walks
+  if(p.off||!p.w)return false;const W=ordWalkOf(x,z);if(!W)return false;
   if(p.w===W.w){if(p.goal&&p.goal.k==='order')p.goal=null;const ds=W.s-p.s;if(Math.abs(ds)<0.8){talkFace(p,0.6,x,z);return true}p.wait=0;p.dir=ds>0?1:-1;return false}
   // onto that walk by whichever end is the shorter way round
   const Da=tfDistTo(W.w.a),Db=tfDistTo(W.w.b),from=D=>Math.min((D.get(p.w.a)??1e9)+p.s,(D.get(p.w.b)??1e9)+p.w.len-p.s),n=from(Da)+W.s<=from(Db)+W.w.len-W.s?W.w.a:W.w.b;
@@ -176,7 +184,7 @@ function ordTick(dt){if((TALK.ordT=(TALK.ordT||0)+dt)<0.1)return;const t=TALK.or
     if(o.k==='stay'){if(p.room||p.sit||!(p.wait>0))ordDone(p);continue}
     if(o.k==='look'||o.k==='lookat')continue
     if(o.k==='run'){if(!(p.flee>0))ordDone(p);continue}
-    if(o.k==='home'){if(p.path){if(p.s>=p.path.len-0.05){ordStop(p);tfDrop(p)}continue}
+    if(o.k==='home'){if(p.off)continue;if(p.path){if(p.s>=p.path.len-0.05){ordStop(p);tfDrop(p)}continue}
       const g=p.goal;if(!g||g.k!=='order'){ordStop(p);continue}
       if(g.here||Math.hypot(g.n.x-p.x,g.n.z-p.z)<1.2){p.goal=null;p.wait=0;p.path=tfLine([[p.x,p.z],...o.H.pts]);p.s=0}continue}
     if(o.err){if(p.goal!==o.err){const at=ordPos(o.at);ordDone(p);if(at)talkFace(p,6+Math.random()*6,at[0],at[1])}continue}
