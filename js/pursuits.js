@@ -88,7 +88,7 @@ meet:`came over to say hello to you ${when}`,stars:`was out looking at the stars
 function puScene(p,n){const k=puOf(p);if(!k)return '';const K=PU_KINDS[k],r=PU.rec[tfWho(p)]||{};
   return `${n}'s pursuit: ${K.doing.replace(/^out /,'')}, working toward this: ${K.goal(r)}.${p.pu?` Right now ${n} is ${puDoing(p)}.`:''}`}
 // once a second: who is due to set off, and who is done or has to stop
-function puTick(dt){if(!tf.on||!TALK.lib)return;puSpots();if((PU.t+=dt)<1)return;PU.t=0;const now=performance.now()/1000;let on=0;
+function puTick(dt){if(!tf.on||!TALK.lib)return;if(!RO.jobs.length)puSpots();if((PU.t+=dt)<1)return;PU.t=0;const now=performance.now()/1000;let on=0;
   for(const p of tf.people){const u=p.pu;if(!u)continue;
     if(p.dead||p.hurt||p.cower>0||p.room||p.drv||p.ord||p.flee>0||!p.off&&u.ph==='go'){puEnd(p);continue}on++;
     if(u.ph==='do'&&!(p.wait>0))puFinish(p);
