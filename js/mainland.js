@@ -519,7 +519,9 @@ function mainBrewery(){const K=famKit(),PK=famKit(),{x,z,w,d,h}=BREW,y=rmGroundM
   // solid: the walls (but the open door), the tanks, kettles, bar and back bar; the floor to walk on, and the room
   SOLIDS.push({x,z,hx:w/2+0.1,hz:d/2+0.1,foot:1});for(const t of [-1,1]){B.solid(0,t*(w/2-0.2),0.45,d+0.2);B.solid(-o0+0.2,t*(w/4+0.75),w/2-1.5,0.45)}B.solid(o0-0.2,0,w+0.2,0.45);
   B.solid(-0.3,7.4,1.8,9.6);B.solid(-5.6,4.6,3.9,1.8);B.solid(-0.6,-7.3,0.8,8.5);B.solid(-0.6,-9.45,0.5,8.5);
-  walkPad(x,z,w/2-0.3,d/2-0.3,Math.PI,y+0.03);Object.assign(rmRoom(x,z,Math.PI,w/2-0.35,d/2-0.35,y,y+h-0.2),{clad:'brick',ajar:0.7});
+  walkPad(x,z,w/2-0.3,d/2-0.3,Math.PI,y+0.03);{const r=Object.assign(rmRoom(x,z,Math.PI,w/2-0.35,d/2-0.35,y,y+h-0.2),{clad:'brick',ajar:0.7});
+    // seen out of (rmEnc): the glass front and the three roll-up doors at the back; the brick sides have none
+    rmEnc(r,0,0,{o0:-o0-0.3,o1:o0+0.3,s0:-w/2-0.3,s1:w/2+0.3,y0:-0.3,y1:h+1},[{a:[o0-0.36,-w/2+0.3],b:[o0-0.36,w/2-0.3],y0:0.3,y1:4.7},...doors.map(s=>({a:[-o0+0.36,s-1.6],b:[-o0+0.36,s+1.6],y0:-0.1,y1:3.3}))])}
   // the patio behind, its high-top tables, and the path from the sidewalk down the side to the garden's gate
   const pz=z+o0,G0=G(x,pz+2.5);K.box(w,0.25,5,'concBroom',x,G0+0.0,pz+2.5);walkPad(x,pz+2.5,w/2,2.5,0,G0+0.125);
   const GD={x:64,z:695.5,r:32,spots:[],ground:1},spot=(sx,sz,yaw,k)=>{const sp=Object.assign({x:sx,z:sz,y:padAt(sx,sz)>-1e8?padAt(sx,sz):G(sx,sz),yaw},k||{});GD.spots.push(sp);return sp};
