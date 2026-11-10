@@ -336,7 +336,8 @@ function tfSpawnWalker(fill){for(let t=0;t<8;t++){const w=TF_WALK[(Math.random()
     if(!fill&&tfSeen(x,z,1)&&Math.hypot(x-camera.position.x,z-camera.position.z)<90)continue;
     const p=tfPerson({w,s,dir:Math.random()<0.5?1:-1,x,z});p.side=0.32*(Math.random()<0.8?1:-1);if(Math.random()<0.08)p.carry=Math.random()<0.5?'cup':'bag';return p}}
 // in view of the camera (within r of a point seen) and not too far off
-function tfSeen(x,z,r){tf.v.set(x,baseHeight(x,z)+1,z);return tf.fr.intersectsSphere(new THREE.Sphere(tf.v,r||2))}
+const _tfSph=new THREE.Sphere();
+function tfSeen(x,z,r){_tfSph.center.set(x,baseHeight(x,z)+1,z);_tfSph.radius=r||2;return tf.fr.intersectsSphere(_tfSph)}
 // what someone walking at (x, z) toward (dx, dz) would bump into within reach: another person, the worker, a car
 function tfBlocked(p,dx,dz,reach){const rx=-dz,rz=dx;
   const hit=(x,z,r)=>{const ox=x-p.x,oz=z-p.z,f=ox*dx+oz*dz;return f>0&&f<reach+r&&Math.abs(ox*rx+oz*rz)<0.32+r};
