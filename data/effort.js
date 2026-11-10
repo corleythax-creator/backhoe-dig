@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-10T04:12:00Z",
+ "updated": "2026-11-10T04:15:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -126,9 +126,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-09",
-   "dh": 71,
+   "dh": 74,
    "act": 7,
-   "versions": 20
+   "versions": 21
   }
  ],
  "extra": [
@@ -3675,6 +3675,15 @@ window.EFFORT = {
    "tris": 5794287,
    "chars": 2526091,
    "what": "Inside the town's buildings the room lights itself: its own bounced light and reflections replace the sky's, and daylight comes in only through the windows and doors (High and Ultra); on Ultra the lamps cast shadows. The town is the Daylight House Studio designs on every Graphics level."
+  },
+  {
+   "v": 394,
+   "asked": "2026-11-09T20:48:00-06:00",
+   "live": "2026-11-09T22:15:10-06:00",
+   "dh": 3,
+   "tris": 5791164,
+   "chars": 2528410,
+   "what": "From inside the brewery and every Building Forge building, the town draws only through their windows and doors: far fewer draws indoors"
   }
  ]
 };
