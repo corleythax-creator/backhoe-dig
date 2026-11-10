@@ -128,12 +128,14 @@ function ordStart(p,o){p.tkGo=null;if(p.pu)puEnd(p);if(p.ordV==null)p.ordV=p.vt;
     case 'lookat':{const at=ordPos(o.at);p.ord={k:'lookat',t:3};if(at)talkFace(p,5,at[0],at[1]);return}
     case 'run':p.goal=null;p.ord={k:'run'};talkRun(p,wk.x,wk.z,5+Math.random()*3,Math.max(p.vt||1.3,1.3)*2);return;
     case 'home':{const L=typeof lifeOf==='function'&&lifeOf(p.body),R=L&&L.home;
-      if(R&&roGo(p,R.x,R.z,{near:1.2,tag:'ord',max:600,then:q=>{q.ord=null;q.ordQ=null;tfDrop(q)}})){p.ord={k:'home'};return}
-      const H=ordHomeWay(p);if(!H)return;p.goal={k:'order',n:H.n,t:1e9,here:0};p.wait=0;tfGoalDir(p,H.n);p.ord={k:'home',H};return}
+      if(R&&roGo(p,R.x,R.z,{near:1.2,tag:'ord',max:600,then:q=>{q.ord=null;q.ordQ=null;tfDrop(q)},fail:q=>{roJoin(q);ordHomeWalk(q)}})){p.ord={k:'home'};return}
+      ordHomeWalk(p);return}
     case 'goto':if(!p.off&&o.at&&o.at.pl&&TALK_ERR[o.at.pl]){p.goal=null;p.wait=0;talkErrand(p,o.at.pl,null);if(p.goal)p.ord={k:'goto',at:o.at,err:p.goal};return}
       if(!p.off&&o.at&&typeof o.at==='object'&&!o.at.pl){p.goal=null;p.wait=0;talkErrand(p,'company',o.at);if(p.goal)p.ord={k:'goto',at:o.at,err:p.goal};return}
       // fall through: a machine, the marina or a shop, by the walks
     default:p.goal=null;p.wait=0;p.ord={k:o.do,at:o.at,t:o.do==='follow'?T.ordFollowT:o.do==='come'?120:240}}}
+// home along the walks and down their street (when there is no way straight there)
+function ordHomeWalk(p){const H=ordHomeWay(p);if(!H||!p.w)return;p.goal={k:'order',n:H.n,t:1e9,here:0};p.wait=0;tfGoalDir(p,H.n);p.ord={k:'home',H}}
 // done, or given up: walking pace back, the goal cleared, the next in line (if they still can)
 function ordStop(p){p.ord=null;p.ordQ=null;if(p.goal&&p.goal.k==='order')p.goal=null;if(p.ordV!=null){p.vt=p.ordV;p.ordV=null}if(p.off&&!p.pu&&p.off.tag==='ord')roBack(p)}
 function ordDone(p){const Q=p.ordQ;p.ordQ=null;ordStop(p);const o=Q&&Q.shift();if(o&&!ordCan(p,o)){ordStart(p,o);if(p.ord)p.ordQ=Q}}
@@ -153,7 +155,7 @@ function ordChase(p,x,z,near){const d=Math.hypot(x-p.x,z-p.z);if(d<near){p.goal=
   // anywhere: straight there off the walks (roam.js), a new way once it has moved on (at most once a second)
   if(o&&o.tag==='ord'&&Math.hypot(o.x-x,o.z-z)<1.5){if(o.i>=o.pts.length){talkFace(p,0.6,x,z);return true}return false}
   if(o&&o.tag==='ord'&&now-o.at<1)return false;
-  if(roGo(p,x,z,{near:near*0.8,tag:'ord'}))return false;
+  if(!(p.roFail>now-6)&&roGo(p,x,z,{near:near*0.8,tag:'ord',fail:q=>{q.roFail=performance.now()/1000;roJoin(q)}}))return false;
   // no way across: along the walks
   if(p.off||!p.w)return false;const W=ordWalkOf(x,z);if(!W)return false;
   if(p.w===W.w){if(p.goal&&p.goal.k==='order')p.goal=null;const ds=W.s-p.s;if(Math.abs(ds)<0.8){talkFace(p,0.6,x,z);return true}p.wait=0;p.dir=ds>0?1:-1;return false}

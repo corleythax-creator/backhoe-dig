@@ -146,8 +146,10 @@ const TUNE=[
   ['ordStayT','Town','Told to wait, a townsperson waits for',60,'s',5,600,5],
   ['ordLostR','Town','Someone following or coming to you gives up once you are this far off in a machine or indoors',61,'ft',30,600,10],
   ['ordHearR','Town','Told by name, a townsperson hears you within',12.2,'ft',10,120,5],
-  ['ordSpite','Town','Townsfolk who think less of you than this (-100 to 100) won\'t do what you ask',-30,'',-100,100,5],
+  ['ordSpite','Town','Townsfolk who think less of you than this (-100 to 100) won\'t do what you ask',-30,'n',-100,100,5],
   // pursuits (pursuits.js)
+  ['roMs','Town','Townsfolk finding their way across town may take this long each frame',2.5,'ms',0.5,10,0.5],
+  ['ndPress','Town','A townsperson goes to do something about a need (hungry, thirsty, tired, bored, lonely: 0 to 1) once it passes about',0.62,'n',0.3,1,0.02],
   ['puShare','Town','Share of the townsfolk who fit a pursuit that have one',0.6,'pct',0,100,5],
   ['puGap','Town','A townsperson goes off on their pursuit again after about',240,'s',30,3600,30],
   ['puMax','Town','At most this many townsfolk off on their pursuits at once',5,'n',0,20,1],
@@ -241,7 +243,7 @@ const TUNE=[
   ['vrTurn','VR','Turn speed on foot with the right stick (0 = 30° snap steps)',120*Math.PI/180,'deg',0,360,5],
   ['vrComfort','VR','Comfort vignette: how far the view darkens at its edges while you drive fast or turn (0 = off)',0.5,'pct',0,100,5]];
 // unit: [shown = code value × factor, label]
-const TUNE_U={mph:[1/0.44704,'mph'],ft:[1/0.3048,'ft'],fts:[1/0.3048,'ft/s'],deg:[180/Math.PI,'°/s'],yd3:[1.307951,'yd³'],pct:[100,'%'],s:[1,'s'],min:[1/60,'min'],in:[1/0.0254,'in'],n:[1,''],usd:[1,'$']};
+const TUNE_U={mph:[1/0.44704,'mph'],ft:[1/0.3048,'ft'],fts:[1/0.3048,'ft/s'],deg:[180/Math.PI,'°/s'],yd3:[1.307951,'yd³'],pct:[100,'%'],s:[1,'s'],min:[1/60,'min'],in:[1/0.0254,'in'],n:[1,''],usd:[1,'$'],ms:[1,'ms']};
 const tuneShow=(e,v)=>v*TUNE_U[e[4]][0];
 const tuneCode=(e,d)=>d/TUNE_U[e[4]][0];
 // the values the game runs on

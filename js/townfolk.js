@@ -628,7 +628,7 @@ function tfCall(R,E,sp){const w=E.w;
     const p=tfPerson({w,s,dir:s<E.s?1:-1,x,z});p.side=0.32;tfHold(p,R,E,sp);return true}
   return false}
 // a walker on a walk going from s0 to p.s: past an entrance, the one headed for it turns in, anyone else may
-function tfEntCross(p,s0){if(p.s===s0||p.car||p.drv||p.cop||p.go||p.flee>0)return;for(const E of p.w.ents){if((s0-E.s)*(p.s-E.s)>0)continue;if(p.ord){if(ordShopIn(p,E))return;continue}
+function tfEntCross(p,s0){if(p.s===s0||p.car||p.drv||p.cop||p.go||p.flee>0)return;for(const E of p.w.ents){if((s0-E.s)*(p.s-E.s)>0)continue;if(p.nd&&p.nd.R){if(p.nd.R===E.R&&ndIn(p,E))return;continue}if(p.ord){if(ordShopIn(p,E))return;continue}
     if(p.goTo){if(p.goTo.E===E)tfGoIn(p);return}tfVisit(p,E);if(p.goTo)return}}
 function tfVisit(p,E){const R=E.R;if(!R.live||(tf.trans||0)>=(TU.tfShopTransit??8)||!townRoomOpen(R)||(R.cIn||0)+(R.cInc||0)>=(R.wantC||0)+1)return;
   if(Math.random()>(TU.tfShopGo??0.3)*tfShopW(R)*(p.carry?0.4:1))return;const sp=tfFreeSpot(R,E);if(!sp)return;tfHold(p,R,E,sp);tfGoIn(p)}

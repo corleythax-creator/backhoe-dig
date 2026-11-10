@@ -15,7 +15,7 @@
 
 const RO_C=0.9,RO_R=0.3,RO_STEP=0.5,RO_SG=6,RO_MAXN=70000;
 const RO_BOX=[TF_BOX[0]-90,TF_BOX[1]+90,TF_BOX[2]-80,TF_BOX[3]+70];
-const RO={sg:null,sig:NaN,pass:new Map(),t:0};
+const RO={sg:null,sig:NaN,pass:new Map(),t:0,jobs:[]};
 const roKey=(i,j)=>(i+5000)*10000+(j+5000);
 
 // ---------- the ground: who can stand where ----------
@@ -40,11 +40,11 @@ function roLos(x0,z0,x1,z1){const d=Math.hypot(x1-x0,z1-z0),n=Math.max(1,Math.ce
 
 // ---------- a way there ----------
 // [[x, z]...] from x0,z0 to x1,z1 (or the nearest standable spot to it), or null
-function roRoute(x0,z0,x1,z1){roSolids();const C=RO_C;let gi=Math.floor(x1/C),gj=Math.floor(z1/C);
+function* roRouteG(x0,z0,x1,z1){roSolids();const C=RO_C;let gi=Math.floor(x1/C),gj=Math.floor(z1/C);
   // where it ends: the spot itself, or the nearest one to it someone can stand on
   if(!(roCell(gi,gj)===roCell(gi,gj))){let b=null,bd=1e9;for(let r=1;r<=8&&!b;r++)for(let a=-r;a<=r;a++)for(const [i,j] of [[gi+a,gj-r],[gi+a,gj+r],[gi-r,gj+a],[gi+r,gj+a]]){const h=roCell(i,j);if(h===h){const d=Math.hypot(i-gi,j-gj);if(d<bd){bd=d;b=[i,j]}}}
     if(!b)return null;[gi,gj]=b;x1=(gi+0.5)*C;z1=(gj+0.5)*C}
-  if(roLos(x0,z0,x1,z1))return [[x1,z1]];
+  yield;if(roLos(x0,z0,x1,z1))return [[x1,z1]];yield;
   const si=Math.floor(x0/C),sj=Math.floor(z0/C),m=Math.round(40/C),i0=Math.max(Math.floor(RO_BOX[0]/C),Math.min(si,gi)-m),j0=Math.max(Math.floor(RO_BOX[2]/C),Math.min(sj,gj)-m),
     i1=Math.min(Math.ceil(RO_BOX[1]/C),Math.max(si,gi)+m),j1=Math.min(Math.ceil(RO_BOX[3]/C),Math.max(sj,gj)+m),W=i1-i0+1,H=j1-j0+1,N=W*H;
   if(si<i0||si>i1||sj<j0||sj>j1)return null;
@@ -54,7 +54,7 @@ function roRoute(x0,z0,x1,z1){roSolids();const C=RO_C;let gi=Math.floor(x1/C),gj
   const hu=(i,j)=>{const dx=Math.abs(i-gi),dz=Math.abs(j-gj);return Math.max(dx,dz)+0.414*Math.min(dx,dz)};
   const s0=(sj-j0)*W+(si-i0),goal=(gj-j0)*W+(gi-i0);g[s0]=0;push(hu(si,sj),s0);let n=0,found=false;
   const D=[[1,0,1],[-1,0,1],[0,1,1],[0,-1,1],[1,1,1.414],[1,-1,1.414],[-1,1,1.414],[-1,-1,1.414]];
-  while(hf.length&&n<RO_MAXN){const c=pop();if(shut[c])continue;shut[c]=1;n++;if(c===goal){found=true;break}
+  while(hf.length&&n<RO_MAXN){const c=pop();if(shut[c])continue;shut[c]=1;n++;if(c===goal){found=true;break}if(n%150===0)yield;
     const ci=c%W+i0,cj=(c/W|0)+j0,ch=c===s0?roAt(x0,z0):roCell(ci,cj);
     for(const [a,b,w] of D){const ni=ci+a,nj=cj+b;if(ni<i0||ni>i1||nj<j0||nj>j1)continue;const k=(nj-j0)*W+(ni-i0);if(shut[k])continue;
       const h=roCell(ni,nj);if(!(h===h)||ch===ch&&Math.abs(h-ch)>RO_STEP)continue;
@@ -64,23 +64,31 @@ function roRoute(x0,z0,x1,z1){roSolids();const C=RO_C;let gi=Math.floor(x1/C),gj
   const cells=[];for(let c=goal;c!==-1&&c!==s0;c=from[c])cells.push([(c%W+i0+0.5)*C,((c/W|0)+j0+0.5)*C]);cells.reverse();cells[cells.length-1]=[x1,z1];
   // pulled straight: from each point on to the furthest it can see
   const out=[];let cx=x0,cz=z0,k=0;
-  while(k<cells.length){let f=k;for(let t=cells.length-1;t>k;t--)if(roLos(cx,cz,cells[t][0],cells[t][1])){f=t;break}out.push(cells[f]);[cx,cz]=cells[f];k=f+1}
+  while(k<cells.length){yield;let f=k;for(let t=cells.length-1;t>k;t--)if(roLos(cx,cz,cells[t][0],cells[t][1])){f=t;break}out.push(cells[f]);[cx,cz]=cells[f];k=f+1}
   return out}
 
+// the whole way at once (for a check; the game asks roGo, which works it out a slice a frame)
+function roRoute(x0,z0,x1,z1){const it=roRouteG(x0,z0,x1,z1);for(;;){const r=it.next();if(r.done)return r.value}}
+
 // ---------- walking it ----------
-// set p off to x,z (o: near (stop that far short), v (pace), then(p), flee, max seconds); false when there is no way
-function roGo(p,x,z,o={}){if(p.room||p.drv||p.cop||p.dead||p.hurt||p.path||p.go||p.goTo)return false;const pts=roRoute(p.x,p.z,x,z);if(!pts)return false;
-  const t=p.off;p.off={pts,i:0,x,z,near:o.near||0.4,v:o.v||0,then:o.then||null,flee:o.flee||0,t:0,max:o.max||240,stuck:0,at:performance.now()/1000,tag:o.tag||(t&&t.tag)||''};
-  p.goal=null;p.tkGo=null;p.wait=0;return true}
+// set p off to x,z (o: near (stop that far short), v (pace), then(p) once there, fail(p) if there is no way, flee, max
+// seconds, tag). A short straight way goes at once; any other is worked out a slice a frame (roTick) while they stand
+function roGo(p,x,z,o={}){if(p.room||p.drv||p.cop||p.dead||p.hurt||p.path||p.go||p.goTo)return false;
+  const t=p.off,off=p.off={pts:[],i:0,x,z,near:o.near||0.4,v:o.v||0,then:o.then||null,fail:o.fail||null,flee:o.flee||0,t:0,max:o.max||240,stuck:0,at:performance.now()/1000,tag:o.tag||(t&&t.tag)||'',pending:1};
+  p.goal=null;p.tkGo=null;p.wait=0;
+  const h=roAt(x,z);if(h===h&&Math.hypot(x-p.x,z-p.z)<40&&roLos(p.x,p.z,x,z)){off.pts=[[x,z]];off.pending=0;return true}
+  RO.jobs.push({p,off,it:roRouteG(p.x,p.z,x,z)});return true}
 // once done off the walks: the way to the nearest walk, and onto it
 function roBack(p){if(!p.off)return;const W=ordWalkOf(p.x,p.z);if(!W){p.off=null;return}const [ax,az,ex,ez]=tfAt(W.w,W.s),x=ax-ez*0.32,z=az+ex*0.32;
-  if(Math.hypot(x-p.x,z-p.z)<0.8||!roGo(p,x,z,{near:0.3,tag:'back',then:q=>roJoin(q)}))roJoin(p)}
+  if(Math.hypot(x-p.x,z-p.z)<0.8||!roGo(p,x,z,{near:0.3,tag:'back',then:q=>roJoin(q),fail:q=>roJoin(q)}))roJoin(p)}
 function roJoin(p){const W=ordWalkOf(p.x,p.z);p.off=null;if(!W)return;p.w=W.w;p.s=W.s;p.dir=Math.random()<0.5?1:-1;p.xok=false;p.side=0.32;p.goal=null;p.wait=Math.max(p.wait||0,0.3)}
 // away from x,z (a shot, a machine, being told to run)
-function roFlee(p,x,z,s,v){const a=Math.atan2(p.x-x,p.z-z);for(const da of [0,0.5,-0.5,1,-1,1.6,-1.6]){const d=18+Math.random()*10,tx=p.x+Math.sin(a+da)*d,tz=p.z+Math.cos(a+da)*d;
-    if(roGo(p,tx,tz,{v,flee:1,tag:'flee',then:q=>{q.off.flee=0}})){p.flee=Math.max(p.flee||0,s);return true}}return false}
+function roFlee(p,x,z,s,v){const a=Math.atan2(p.x-x,p.z-z);for(const da of [0,0.5,-0.5,1,-1,1.6,-1.6,2.3,-2.3]){const d=14+Math.random()*8,tx=p.x+Math.sin(a+da)*d,tz=p.z+Math.cos(a+da)*d;
+    if(roAt(tx,tz)===roAt(tx,tz)&&roLos(p.x,p.z,tx,tz)){p.off={pts:[[tx,tz]],i:0,x:tx,z:tz,near:0.5,v,then:q=>{q.off.flee=0},fail:null,flee:1,t:0,max:60,stuck:0,at:performance.now()/1000,tag:'flee',pending:0};
+      p.goal=null;p.tkGo=null;p.wait=0;p.flee=Math.max(p.flee||0,s);return true}}return false}
 // a step along it (tfTick, for whoever has p.off)
 function roStep(p,dt){const o=p.off;if(p.inside>0){p.inside-=dt;return}
+  if(o.pending){p.spd=0;p.amp+=(0-p.amp)*Math.min(1,dt*6);return}
   if(p.flee>0&&!o.flee)roFlee(p,wk.x,wk.z,p.flee,Math.max(p.vt,TU.gunFlee||3));
   const turn=(yw,k)=>{let d=yw-p.yaw;d=Math.atan2(Math.sin(d),Math.cos(d));p.yaw+=d*Math.min(1,dt*k)};
   const still=()=>{p.spd=0;p.amp+=(0-p.amp)*Math.min(1,dt*6);const h=hAt(p.x,p.z,p.y+0.45);p.y+=(h-p.y)*Math.min(1,dt*8)};
@@ -99,4 +107,9 @@ function roStep(p,dt){const o=p.off;if(p.inside>0){p.inside-=dt;return}
   if(ds>0)o.stuck=Math.max(0,o.stuck-dt);p.x=nx;p.z=nz;p.y+=(ny-p.y)*Math.min(1,dt*10);
   turn(Math.atan2(ux,uz),7);p.amp+=(Math.min(1,p.spd/1.2)*0.42-p.amp)*Math.min(1,dt*6);p.ph+=p.spd*dt*Math.PI*2/(1.5*p.sc)}
 // now and then: the grid kept in step with SOLIDS
-function roTick(dt){if((RO.t+=dt)<2)return;RO.t=0;roSolids()}
+// each frame: ways being worked out, a few milliseconds' worth (TU.roMs); and the grid kept in step with SOLIDS
+function roTick(dt){const t0=performance.now(),J=RO.jobs;
+  while(J.length&&performance.now()-t0<TU.roMs){const j=J[0];if(j.p.off!==j.off||!tf.people.includes(j.p)){J.shift();continue}
+    const r=j.it.next();if(!r.done)continue;J.shift();const o=j.off;o.pending=0;o.at=performance.now()/1000;
+    if(r.value)o.pts=r.value;else{o.pts=[];o.then=null;if(o.fail)o.fail(j.p);else if(!j.p.ord&&!j.p.pu)roJoin(j.p)}}
+  if((RO.t+=dt)<2)return;RO.t=0;roSolids()}
