@@ -253,7 +253,11 @@ function bfPack(root,merge,it){const col=root.getObjectByName('Collision');if(co
   if(F)for(const c of F.children){const u=c.userData||{},b=new THREE.Box3().setFromObject(c);if(b.isEmpty())continue;
     items.push({kind:u.kind||'',lvl:u.level||0,box:[(b.min.x+b.max.x)/2,(b.min.z+b.max.z)/2,(b.max.x-b.min.x)/2,(b.max.z-b.min.z)/2,b.min.y,b.max.y],chairs:u.kind==='dining'?bfChairs(c):null,spots:bfKSpots(c,u.kind)})}
   bfSeatAim(items);
-  return {stat:group(stat,I),furn:group(furn,I),items,lights:bfLtPack(LS,LG),
+  // its windows and outside doors (the model's nodes tagged window or door; a door the library calls exterior), each as
+  // its box in building space: the openings the town outside is seen through from inside (bfEnc)
+  const ext=new Set((it&&it.doors||[]).filter(d=>d.exterior).map(d=>d.id)),ports=[];
+  root.traverse(o=>{const u=o.userData||{};if(u.type!=='window'&&!(u.type==='door'&&ext.has(u.id)))return;const b=new THREE.Box3().setFromObject(o);if(!b.isEmpty())ports.push([b.min.x,b.min.y,b.min.z,b.max.x,b.max.y,b.max.z])});
+  return {stat:group(stat,I),furn:group(furn,I),items,ports,lights:bfLtPack(LS,LG),
     leaves:leaves.map(L=>{const m=L.matrixWorld.clone(),p=new THREE.Vector3(),q=new THREE.Quaternion(),s=new THREE.Vector3();m.decompose(p,q,s);
       const li=m.clone().invert(),parts=[];L.traverse(o=>{if(o.isMesh)parts.push(o)});return {p,q,s,door:L.userData.door,swing:L.userData.swing||1,parts:group(parts,li)}})}}
 // every frame (mainTick): each door's leaves follow its door (opened by rmDoorsTick), and furniture shows only near
@@ -310,6 +314,17 @@ function bfSpots(it,K,door,nStaff,nAll){const out=[],used=new Set(),dd=(x,z)=>Ma
 // a place's building: drawn, and its walls, floors, stairs, rooms, furniture and doors made in the world, laid where the
 // place says, each handed to the fixed thing (its pieces lists, flagged bf) so the map editor carries it; and the spots,
 // door frame and furniture its room for townsfolk takes while it is swapped (B.rs)
+// how a Building Forge room is closed in (rmEnc, interiors.js): the whole building's box (anything touching it draws)
+// and its windows and outside doors as openings, each the inside face of its box. From inside, the town outside draws
+// only where an opening lets it be seen (gfxCull), as in the game's own shops: the brewery's 3,500 draws a frame were
+// mostly the town behind its walls. The room's frame is the building's with o along z and s along x (rmRoom with
+// face); a building whose openings aren't flat to its walls, or that has none, draws everything as before
+function bfEnc(R,it,K,cx,cz,fy){const P=K.ports;if(!P||!P.length)return;const W=it.walls,xs=W.flatMap(w=>[w[0],w[2]]),zs=W.flatMap(w=>[w[1],w[3]]);
+  const x0=Math.min(...xs)-0.3,x1=Math.max(...xs)+0.3,z0=Math.min(...zs)-0.3,z1=Math.max(...zs)+0.3,mx=(x0+x1)/2,mz=(z0+z1)/2,ports=[];
+  for(const [ax,ay,az,bx,by,bz] of P){const dx=bx-ax,dz=bz-az;if(Math.min(dx,dz)>0.8)return;
+    if(dx<dz){const x=Math.abs(ax-mx)<Math.abs(bx-mx)?ax:bx;ports.push({a:[az-0.05,x],b:[bz+0.05,x],y0:ay-fy-0.05,y1:by-fy+0.05})}
+    else{const z=Math.abs(az-mz)<Math.abs(bz-mz)?az:bz;ports.push({a:[z,ax-0.05],b:[z,bx+0.05],y0:ay-fy-0.05,y1:by-fy+0.05})}}
+  rmEnc(R,cz,cx,{o0:z0,o1:z1,s0:x0,s1:x1,y0:-fy-0.5,y1:(it.height||10)-fy+0.5},ports)}
 function bfBuild(L,K,item){const it=bf.lib[L.id],face=L.turn*Math.PI/180,c=Math.cos(face),s=Math.sin(face),ox=L.x,oz=L.z;
   const X=(x,z)=>ox+x*c+z*s,Z=(x,z)=>oz-x*s+z*c,G=fxGather(item),f0=it.levels[0].floorY;
   // its height: on the ground, or on the floor the game's own building stood on (a deck, a raised lot)
@@ -336,7 +351,7 @@ function bfBuild(L,K,item){const it=bf.lib[L.id],face=L.turn*Math.PI/180,c=Math.
     const xs=W.flatMap(w=>[w[0],w[2]]),zs=W.flatMap(w=>[w[1],w[3]]),ax=(Math.min(...xs)+Math.max(...xs))/2,az=(Math.min(...zs)+Math.max(...zs))/2;
     pad(ax,az,(Math.max(...xs)-Math.min(...xs))/2,(Math.max(...zs)-Math.min(...zs))/2,face,fy(lv),lv?{up:1}:null);
     for(const r of it.rooms)if(r.level===lv){const a=r.outline.map(q=>q[0]),b=r.outline.map(q=>q[1]),cx=(Math.min(...a)+Math.max(...a))/2,cz=(Math.min(...b)+Math.max(...b))/2;
-      const R=rmRoom(X(cx,cz),Z(cx,cz),face,(Math.max(...a)-Math.min(...a))/2,(Math.max(...b)-Math.min(...b))/2,y0+r.floorY,y0+r.ceilingY);R.bf=1;R.bfL=L;R.clad=it.clad||((it.tags||[]).includes('brick')?'brick':(it.tags||[]).includes('steel')?'steel':'siding');G.rooms.push({r:R,o:{x:R.x,z:R.z,f:R.f,y:R.y,top:R.top}})}
+      const R=rmRoom(X(cx,cz),Z(cx,cz),face,(Math.max(...a)-Math.min(...a))/2,(Math.max(...b)-Math.min(...b))/2,y0+r.floorY,y0+r.ceilingY);R.bf=1;R.bfL=L;bfEnc(R,it,K,cx,cz,r.floorY);R.clad=it.clad||((it.tags||[]).includes('brick')?'brick':(it.tags||[]).includes('steel')?'steel':'siding');G.rooms.push({r:R,o:{x:R.x,z:R.z,f:R.f,y:R.y,top:R.top}})}
     // its furniture (a porch a floor to stand on; rugs and stairs left to the floor)
     for(const P of K.items){if(P.lvl!==lv)continue;const [x,z,hx,hz,b0,b1]=P.box;
       if(P.kind==='porch'||P.kind==='deck'){if(!lv)pad(x,z,hx,hz,face,fy(0));continue}

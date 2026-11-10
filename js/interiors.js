@@ -213,8 +213,9 @@ function rmWall(R,ax,c,n,a,b,T,H,out,inn,holes){
 // openings in its walls (windows, doors, storefronts), each a quad on the inside face of the opening, through which
 // alone the outside can be seen. With the camera in such a room, a part outside the box that no opening lets the camera
 // see is left out of the frame (gfxCull, gfx.js): only how it is drawn, for that frame, and never its shadow, so the
-// town outside goes on as ever, and anything any opening shows, however small or far, is drawn in full. A room with no
-// openings listed (the Building Forge town's, the brewery's, the General Store's) leaves everything drawn. All of it is
+// town outside goes on as ever, and anything any opening shows, however small or far, is drawn in full. The brewery lists its
+// glass front and roll-up doors (mainland.js), the Building Forge buildings their models' windows and outside doors
+// (forgetown.js bfEnc); a room with no openings listed (the General Store's) leaves everything drawn. All of it is
 // kept in the room's own frame (o out along its f, s across, y up from its floor, from its middle), so it follows the
 // room when the map editor moves the building (fixed.js); oc, sc: the room's middle in the frame the box and quads are in
 function rmEnc(r,oc,sc,b,ports){const L=(o,s)=>[o-oc,s-sc],bo=(b.o0+b.o1)/2-oc,bs=(b.s0+b.s1)/2-sc;
