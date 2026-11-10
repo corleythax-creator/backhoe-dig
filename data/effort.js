@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-10T03:18:00Z",
+ "updated": "2026-11-10T03:22:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -126,9 +126,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-09",
-   "dh": 57.5,
+   "dh": 60,
    "act": 6,
-   "versions": 16
+   "versions": 17
   }
  ],
  "extra": [
@@ -3639,6 +3639,15 @@ window.EFFORT = {
    "tris": 5789020,
    "chars": 2517817,
    "what": "The game's files are kept on the device, so opening it again skips the downloads (and works offline); a new version downloads only the files it changed"
+  },
+  {
+   "v": 390,
+   "asked": "2026-11-09T20:30:00-06:00",
+   "live": "2026-11-09T21:22:04-06:00",
+   "dh": 2.5,
+   "tris": 5796685,
+   "chars": 2518428,
+   "what": "Smoother in town: the islands' parked machines no longer draw from town, the corner map redraws less often, and townsfolk pictures decode off the main thread"
   }
  ]
 };

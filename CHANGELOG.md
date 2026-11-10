@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Monday, November 9, 2026
 
+- **v390** (9:22 PM) Smoother in town: the islands' parked machines no longer draw from town, the corner map redraws less often, and townsfolk pictures decode off the main thread
 - **v389** (9:18 PM) The game's files are kept on the device, so opening it again skips the downloads (and works offline); a new version downloads only the files it changed
 - **v388** (9:07 PM) Townsfolk talk gets Voice only: lines spoken aloud with no text boxes over their heads
 - **v387** (8:55 PM) A Profiler in ☰ → Dev: what took longest to load, and what eats the frames in each place you record
