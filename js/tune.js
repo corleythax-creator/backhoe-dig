@@ -141,6 +141,12 @@ const TUNE=[
   ['talkGroupR','Town','Talking to everyone reaches the townsfolk within',6.1,'ft',5,60,1],
   ['talkGoT','Town','Townsfolk walk over to look at something for up to',12,'s',2,60,1],
   ['talkPlanGap','Town','With a model speaking, it picks a townsperson\'s errand at most every',15,'s',5,300,5],
+  // telling them what to do (orders.js)
+  ['ordFollowT','Town','Told to follow you, a townsperson keeps with you for up to',600,'s',30,3600,30],
+  ['ordStayT','Town','Told to wait, a townsperson waits for',60,'s',5,600,5],
+  ['ordLostR','Town','Someone following or coming to you gives up once you are this far off in a machine or indoors',61,'ft',30,600,10],
+  ['ordHearR','Town','Told by name, a townsperson hears you within',12.2,'ft',10,120,5],
+  ['ordSpite','Town','Townsfolk who think less of you than this (-100 to 100) won\'t do what you ask',-30,'',-100,100,5],
   // what townsfolk remember of seeing you in the shops (lives.js, FM): how often they bring it up, for how long, and
   // how many times in a shop together before you are a familiar face
   ['memSay','Town','Townsfolk who bring up seeing you in a shop when they meet you',0.4,'pct',0,100,5],
