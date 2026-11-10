@@ -73,14 +73,15 @@ function talkScene(p,to){const h=typeof townHour==='function'?townHour():12,when
     (to==='you'||to==null?`; the one talking to them is ${TALK_ME}`:`, talking with ${talkName(to)}`)+'. ';
   // him: what he is doing, the day's work, the police
   const rk=mode==='walk'&&!wk.inside?null:wk.inside||rideOf(mode),R2=rk&&WK_RIDES[rk];
-  t+=`He runs the island's earthwork crew${R2?` and is in ${talkA(R2.n)} nearby`:', on foot'}`;
+  // (his work is in the background: who he is, not what everyone talks about; the day's digging only while he is in a machine)
+  t+=R2?`He does earthwork out on the island and is in ${talkA(R2.n)} nearby`:`He lives out on the island and is just spending time in town, on foot`;
   if(typeof gunHas==='function'&&gunHas())t+=', with a gun out';
   const w=typeof stats==='object'?stats:{},yd=(w.dDug||0)*1.308;
-  if(yd>1||w.dEarn>1)t+=`; today he has dug about ${Math.round(yd)} cubic yards and earned $${Math.round(w.dEarn||0)}`;
+  if(R2&&(yd>1||w.dEarn>1))t+=`; today he has dug about ${Math.round(yd)} cubic yards and earned $${Math.round(w.dEarn||0)}`;
   t+='.';
   if(typeof gunStars==='function'&&gunStars())t+=' The police are after him.';else if(typeof gun==='object'&&gun.cops&&gun.cops.length)t+=' Police are about.';
   // their day, and what they have heard of him (lives.js)
-  if(typeof lifeScene==='function'&&p&&typeof p==='object'){const n=talkName(p),l=lifeScene(p,n),r=repScene(p,n),f=fmScene(p,n);if(l)t+=' '+l;if(r)t+=' '+r;if(f)t+=' '+f}
+  if(typeof lifeScene==='function'&&p&&typeof p==='object'){const n=talkName(p),l=lifeScene(p,n),r=repScene(p,n),f=fmScene(p,n);if(l)t+=' '+l;if(r)t+=' '+r;if(f)t+=' '+f;const u=typeof puScene==='function'?puScene(p,n):'',b=typeof bdScene==='function'?bdScene(p,n):'';if(u)t+=' '+u;if(b)t+=' '+b}
   const ln=talkLately();if(ln)t+=' Lately: '+ln+'.';
   return t.slice(0,895)}
 // what happened lately, for the scene: the last few things, newest last, with how long ago
@@ -111,18 +112,19 @@ function talkSights(p){const out=[],R2=TU.talkSightR;
 // someone who can join in among themselves: on foot or seated, not driving, fleeing or cowering
 function talkFree(p){return !p.inside&&!p.drv&&!p.cop&&!p.dead&&!p.hurt&&!(p.flee>0)&&!(p.cower>0)}
 // who they would talk to: the nearest other grown-up within TU.talkChatR, not one of their own look (the same name)
-function talkNearest(p){let best=null,bd=TU.talkChatR;for(const q of TALK.here){if(q===p||q.body===p.body||!talkFree(q))continue;
-  const d=Math.hypot(q.x-p.x,q.z-p.z);if(d<bd&&Math.abs((q.y||0)-(p.y||0))<1.5){bd=d;best=q}}return best}
+// (friends first, never someone they can't stand: bonds.js)
+function talkNearest(p){let best=null,bd=1e9;for(const q of TALK.here){if(q===p||q.body===p.body||!talkFree(q))continue;
+  const d=Math.hypot(q.x-p.x,q.z-p.z),b=typeof bdOf==='function'?bdOf(p,q):0;if(d>TU.talkChatR||b<-0.35||Math.abs((q.y||0)-(p.y||0))>=1.5)continue;const s=d-b*2;if(s<bd){bd=s;best=q}}return best}
 // the present, for the built-in mind's answers (Human Forge's o.now): what they are doing, the hour, and how hungry,
 // thirsty, tired and so on they are, worked out from the hour and where they are in their day (the island keeps no
 // needs of its own), a little different for each look (their body)
 function talkNow(p){if(!p||typeof p!=='object')return null;const h=typeof townHour==='function'?townHour():12,R=p.room;
   const shop=R&&!R.home&&typeof townShopName==='function'?townShopName(R):'',staff=R&&p.spot&&p.spot.staff&&!R.home;
-  const O=typeof ordDoing==='function'?ordDoing(p):'',G=p.goal&&TALK_ERR[p.goal.k],doing=O?O:G?(p.goal.k==='town_stroll'?'out for a stroll':'on my way to '+G.n):p.drv?'driving':staff?'working'+(shop?' at '+shop:''):R&&R.home?'at home':R?(shop?'in '+shop:'inside'):p.flee>0?'running':p.sit?'sitting down for a bit':'out for a walk';
+  const O=(typeof ordDoing==='function'?ordDoing(p):'')||(typeof puDoing==='function'?puDoing(p):'')||(typeof ndDoing==='function'?ndDoing(p):''),G=p.goal&&TALK_ERR[p.goal.k],doing=O?O:G?(p.goal.k==='town_stroll'?'out for a stroll':'on my way to '+G.n):p.drv?'driving':staff?'working'+(shop?' at '+shop:''):R&&R.home?'at home':R?(shop?'in '+shop:'inside'):p.flee>0?'running':p.sit?'sitting down for a bit':'out for a walk';
   let s=7;for(const ch of String(p.body||''))s=(s*31+ch.charCodeAt(0))>>>0;const j=(s%100)/500-0.1,cl=v=>Math.max(0,Math.min(1,v+j));
   const meal=Math.max(...[7.5,12.5,18.5].map(a=>Math.max(0,1-Math.abs(h-a)/1.5))),hot=typeof weather==='object'&&weather.r<0.1&&h>11&&h<17;
   const where=O?'':R?(R.home?'at home':shop?'at '+shop:''):p.goal&&TALK_ERR[p.goal.k]&&p.goal.k!=='town_stroll'?'on the way to '+TALK_ERR[p.goal.k].n:'';
-  return {doing,where,hour:h,needs:{hunger:cl(0.25+0.6*meal),thirst:cl(hot?0.5:0.3),energy:cl(h>=22||h<5?0.85:h>=20?0.6:h<7?0.55:0.3),fun:cl(staff?0.55:0.35),company:cl(0.35),clean:cl(0.25)}}}
+  return {doing,where,did:typeof puDid==='function'?puDid(p):'',hour:h,needs:typeof ndNeeds==='function'&&talkCard(p)?ndNeeds(p):{hunger:cl(0.25+0.6*meal),thirst:cl(hot?0.5:0.3),energy:cl(h>=22||h<5?0.85:h>=20?0.6:h<7?0.55:0.3),fun:cl(staff?0.55:0.35),company:cl(0.35),clean:cl(0.25)}}}
 // asked in the talk box to do something and agreed (the mind's wishes): the errand that does it, when they are out
 // walking and it is open at this hour; they set off for it (you can follow)
 const TALK_WISH={drink:'town_beer',eat:'town_store',coffee:'town_store',shop:'town_shop',sit:'town_square',walk:'town_stroll'};
@@ -215,7 +217,7 @@ function talkBend(p,h){const g=h.object,B=h._tb||(h._tb={neck:g.getObjectByName(
   turn(B.neck,_tbX[0],pt*0.4);turn(B.neck,_tbX[1],yw*0.4);turn(B.head,_tbX[0],pt*0.6);turn(B.head,_tbX[1],yw*0.6);turn(B.head,_tbX[2],rl);
   for(const d of B.done)d[1]=d[0].quaternion.clone()}
 function talkFace(p,s,x=wk.x,z=wk.z){if(!p||typeof p!=='object'||p.room||p.drv||p.cop||p.dead||p.flee>0)return;p.wait=Math.max(p.wait||0,s);p.look=Math.atan2(x-p.x,z-p.z)}
-function talkShow(p,a,to,ev){const u=talkUI();let b=TALK.bub.get(p);if(!b){b={el:document.createElement('div')};b.el.className='talkLine';b.el.style.left=b.el.style.top='0';u.L.appendChild(b.el);TALK.bub.set(p,b)}
+function talkShow(p,a,to,ev){if(to&&typeof to==='object'&&typeof bdChat==='function')bdChat(p,to,a);const u=talkUI();let b=TALK.bub.get(p);if(!b){b={el:document.createElement('div')};b.el.className='talkLine';b.el.style.left=b.el.style.top='0';u.L.appendChild(b.el);TALK.bub.set(p,b)}
   b.el.innerHTML='';b.w=undefined;b.el.hidden=TALK.mode==='say';const n=document.createElement('b');n.textContent=talkName(p);b.el.append(n,document.createTextNode(a.say));
   b.until=performance.now()/1000+3.5+a.say.split(/\s+/).length*0.38;const s=b.until-performance.now()/1000;
   // who they turn to: the one they talk to (and that one back), what happened to them, or you
@@ -289,14 +291,15 @@ function talkAct(p,a,ev){if(!p||typeof p!=='object'||!a||p.dead||p.hurt||p.drv||
   const at=talkWhere(a.at!=null?a.at:ev&&ev.by),d=a.do;if(!at||d==='ignore')return;const [x,z]=at;
   if(d==='flee')return talkRun(p,x,z,5+Math.random()*4,TU.gunFlee);
   if(d==='back')return talkRun(p,x,z,1.5+Math.random()*1.5,Math.max(p.vt||1.3,1.3)*1.5);
-  const walker=p.w&&!p.path&&!p.room&&!p.sit;
+  const walker=p.w&&!p.off&&!p.path&&!p.room&&!p.sit;
   if((d==='investigate'||d==='help')&&walker&&Math.hypot(x-p.x,z-p.z)>3){
     p.wait=0;p.goal=null;p.dir=talkDir(p,x,z);p.tkGo={x,z,t:TU.talkGoT,stop:d==='help'?1.4:2.6,d:Math.hypot(x-p.x,z-p.z)};return}
   talkFace(p,d==='freeze'?3+Math.random()*2:d==='call'?6:d==='watch'?3+Math.random()*4:2.5,x,z)}
 // which way along their walk heads toward x,z
 function talkDir(p,x,z){const [,,ex,ez]=tfAt(p.w,p.s);return ex*(x-p.x)+ez*(z-p.z)>=0?1:-1}
 // away from x,z for s seconds at speed v (the same running off as from gunfire, pistol.js gunRun and gunTick)
-function talkRun(p,x,z,s,v){if(p.room||p.sit||p.path||!p.w){talkFace(p,s,x,z);return}
+function talkRun(p,x,z,s,v){if(p.off&&!p.room){if(!roFlee(p,x,z,s,v*(0.85+Math.random()*0.3)))talkFace(p,s,x,z);return}
+  if(p.room||p.sit||p.path||!p.w){talkFace(p,s,x,z);return}
   p.wait=0;p.tkGo=null;p.goal=null;if(!p.vt0)p.vt0=p.vt;p.vt=v*(0.85+Math.random()*0.3);p.flee=Math.max(p.flee||0,s);p.dir=-talkDir(p,x,z)}
 // walking over: stop and look once close, if it got no nearer (the walk turned away) or after TU.talkGoT
 function talkGoTick(dt){for(const p of tf.people){const g=p.tkGo;if(!g)continue;
@@ -310,7 +313,7 @@ const TALK_ERR={town_store:{n:'the General Store',at:()=>TF_DOOR},town_beer:{n:'
   town_square:{n:'Harbor Square',at:()=>[[SQ.gx0,SQ.gz0],[SQ.gx1,SQ.gz0],[SQ.gx0,SQ.gz1],[SQ.gx1,SQ.gz1]]},
   town_shop:{n:'the shop windows',at:()=>[[-MSX,TF_XN],[MSX,TF_XN],[-MSX,TF_XS],[MSX,TF_XS]]},town_stroll:{n:'a stroll',at:null},company:{n:'company',at:null}};
 // someone free to set off on an errand: walking the town's walks, not stopped, talking, scared, hurt, a driver or a cop
-function talkErrFree(p){return p.w&&!p.path&&!p.car&&!p.room&&!p.sit&&!p.drv&&!p.cop&&!p.dead&&!p.hurt&&!(p.inside>0)&&!(p.flee>0)&&!(p.cower>0)&&!p.tkGo&&!(p.wait>0)&&TALK.with!==p&&!p.ord}
+function talkErrFree(p){return p.w&&!p.path&&!p.car&&!p.room&&!p.sit&&!p.drv&&!p.cop&&!p.dead&&!p.hurt&&!(p.inside>0)&&!(p.flee>0)&&!(p.cower>0)&&!p.tkGo&&!(p.wait>0)&&TALK.with!==p&&!p.ord&&!p.off&&!p.pu&&!p.nd}
 // what they could do now, each with how much habit leans to it (the hour, the shops' hours, their nature)
 function talkErrOpts(p,q){const h=typeof townHour==='function'?townHour():12,M=TALK.M,N=M&&talkCard(p)?M.nature(p):{},v=k=>N[k]==null?0.5:N[k],o={};
   o.town_stroll=0.6+v('energy')*0.6;o.town_shop=h>=8&&h<20?0.5+v('curious'):0.1;
@@ -319,9 +322,9 @@ function talkErrOpts(p,q){const h=typeof townHour==='function'?townHour():12,M=T
 // a pick, weighted by habit
 function talkErrHabit(o){let t=0;for(const k in o)t+=o[k];let r=Math.random()*t;for(const k in o)if((r-=o[k])<=0)return k;return 'town_stroll'}
 // someone nearby they might go over to: a grown-up who talks, free, within 25 m, not one of their own look
-function talkErrMate(p){let b=null,bd=25;for(const q of TALK.here){if(q===p||q.body===p.body||!talkErrFree(q))continue;const d=Math.hypot(q.x-p.x,q.z-p.z);if(d<bd&&d>4){bd=d;b=q}}return b}
+function talkErrMate(p){let b=null,bd=25;for(const q of TALK.here){if(q===p||q.body===p.body||!talkErrFree(q))continue;const d=Math.hypot(q.x-p.x,q.z-p.z),v=typeof bdOf==='function'?bdOf(p,q):0;if(d<4||v<-0.2||d>25+v*40)continue;const s=d-v*40;if(s<bd){bd=s;b=q}}return b}
 // set p off on errand k (with: who they go with, or go over to)
-const talkWalker=p=>p&&typeof p==='object'&&p.w&&!p.path&&!p.car&&!p.room&&!p.drv&&!p.cop&&!p.dead&&!p.hurt;
+const talkWalker=p=>p&&typeof p==='object'&&p.w&&!p.off&&!p.path&&!p.car&&!p.room&&!p.drv&&!p.cop&&!p.dead&&!p.hurt;
 function talkErrand(p,k,q){const E=TALK_ERR[k];if(!E||!talkWalker(p))return;let n;
   if(k==='company'){if(!q)return;n=tfNodeNear(q.x,q.z)}
   else if(k==='town_stroll'){const far=TF_NODES.filter(m=>Math.hypot(m.x-p.x,m.z-p.z)>40&&m.e.length);n=far[(Math.random()*far.length)|0]}
@@ -329,7 +332,7 @@ function talkErrand(p,k,q){const E=TALK_ERR[k];if(!E||!talkWalker(p))return;let 
   if(!n)return;const D=tfDistTo(n),far=Math.min(D.has(p.w.a)?D.get(p.w.a):1e9,D.has(p.w.b)?D.get(p.w.b):1e9)+p.w.len;
   p.goal={k,n,t:60+Math.min(far,600)/0.6,with:q||null,here:0};p.wait=0;tfGoalDir(p,n)}
 // once there: a look in the windows, a while on the green, into the store or the garden (the door does that), beside them
-function talkErrArrive(p){const g=p.goal,k=g.k;p.goal=null;p.errT=40+Math.random()*100;
+function talkErrArrive(p){const g=p.goal,k=g.k;p.goal=null;p.errT=40+Math.random()*100;if(typeof ndErr==='function')ndErr(p,k);
   if(k==='town_shop'){p.wait=6+Math.random()*10;p.look=p.x<0?W_:E_}
   else if(k==='town_square'){p.wait=25+Math.random()*35;p.look=Math.atan2((SQ.gx0+SQ.gx1)/2-p.x,(SQ.gz0+SQ.gz1)/2-p.z)}}
 // a model chooses for someone near you (one ask at a time, TU.talkPlanGap apart); else, and meanwhile, habit
@@ -405,7 +408,7 @@ function talkRect(){const n=performance.now();if(!TALK.rect||n-TALK.rectT>1000){
 addEventListener('resize',()=>{TALK.rectT=-1e9});
 // ---- each frame (from main.js)
 function talkTick(dt){
-  talkErrands(dt);ordTick(dt);repTick(dt);
+  talkErrands(dt);ordTick(dt);roTick(dt);puTick(dt);ndTick(dt);bdTick(dt);repTick(dt);
   const on=TALK.mode!=='off'&&TALK.M&&TALK.lib&&tf.on;
   if(!on){if(TALK.ui)TALK.ui.d.hidden=true;if(TALK.with)talkClose();for(const b of TALK.bub.values())b.el.classList.remove('on');return}
   const u=talkUI(),now=performance.now()/1000,foot=mode==='walk'&&!wk.inside;

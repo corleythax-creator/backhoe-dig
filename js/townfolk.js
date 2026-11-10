@@ -622,13 +622,13 @@ function tfDoorRoom(R,E,wantC,room){let sIn=0,sCome=0,cIn=0;const ps=[],cap=TU.t
   return 0}
 // someone sent for: a walker on E's walk headed its way, or someone new along it out of sight (or well off)
 function tfCall(R,E,sp){const w=E.w;
-  for(const q of tf.people)if(q.w===w&&!q.room&&!q.go&&!q.goTo&&!q.car&&!q.drv&&!q.cop&&!q.inside&&!q.path&&!q.dead&&!q.hurt&&!q.ord&&!(q.flee>0)&&(E.s-q.s)*q.dir>3&&(E.s-q.s)*q.dir<40){tfHold(q,R,E,sp);return true}
+  for(const q of tf.people)if(q.w===w&&!q.room&&!q.go&&!q.goTo&&!q.car&&!q.drv&&!q.cop&&!q.inside&&!q.path&&!q.dead&&!q.hurt&&!q.ord&&!q.off&&!(q.flee>0)&&(E.s-q.s)*q.dir>3&&(E.s-q.s)*q.dir<40){tfHold(q,R,E,sp);return true}
   const cx=camera.position.x,cz=camera.position.z;
   for(const k of [35,-35,22,-22]){const s=Math.min(w.len,Math.max(0,E.s+k));if(Math.abs(s-E.s)<6)continue;const [x,z]=tfAt(w,s);if(tfSeen(x,z,1)&&Math.hypot(x-cx,z-cz)<55)continue;
     const p=tfPerson({w,s,dir:s<E.s?1:-1,x,z});p.side=0.32;tfHold(p,R,E,sp);return true}
   return false}
 // a walker on a walk going from s0 to p.s: past an entrance, the one headed for it turns in, anyone else may
-function tfEntCross(p,s0){if(p.s===s0||p.car||p.drv||p.cop||p.go||p.flee>0)return;for(const E of p.w.ents){if((s0-E.s)*(p.s-E.s)>0)continue;if(p.ord){if(ordShopIn(p,E))return;continue}
+function tfEntCross(p,s0){if(p.s===s0||p.car||p.drv||p.cop||p.go||p.flee>0)return;for(const E of p.w.ents){if((s0-E.s)*(p.s-E.s)>0)continue;if(p.nd&&p.nd.R){if(p.nd.R===E.R&&ndIn(p,E))return;continue}if(p.ord){if(ordShopIn(p,E))return;continue}
     if(p.goTo){if(p.goTo.E===E)tfGoIn(p);return}tfVisit(p,E);if(p.goTo)return}}
 function tfVisit(p,E){const R=E.R;if(!R.live||(tf.trans||0)>=(TU.tfShopTransit??8)||!townRoomOpen(R)||(R.cIn||0)+(R.cInc||0)>=(R.wantC||0)+1)return;
   if(Math.random()>(TU.tfShopGo??0.3)*tfShopW(R)*(p.carry?0.4:1))return;const sp=tfFreeSpot(R,E);if(!sp)return;tfHold(p,R,E,sp);tfGoIn(p)}
@@ -700,13 +700,13 @@ function tfTick(dt){if(!tf.q){if(tf.on)tfShow(false);return}tfPrep(dt);
   if(!tf.on){tfShow(true);while(walkers.length<wantP){const p=tfSpawnWalker(true);if(!p)break;walkers.push(p)}}
   tf.spawnT-=dt;if(tf.spawnT<=0){tf.spawnT=1.5+Math.random()*2;
     if(walkers.length<wantP)tfSpawnWalker(false);
-    else if(walkers.length>wantP){const p=walkers.find(p=>!p.go&&!p.goTo&&!(p.ord&&p.ord.k!=='home')&&(p.inside||!tfSeen(p.x,p.z,1)));if(p)tfDrop(p)}
+    else if(walkers.length>wantP){const p=walkers.find(p=>!p.go&&!p.goTo&&!(p.ord&&p.ord.k!=='home')&&!p.pu&&!(p.off&&p.off.tag!=='back')&&(p.inside||!tfSeen(p.x,p.z,1)));if(p)tfDrop(p)}
     if(tf.carsOk&&tf.drive.reduce((n,c)=>n+(c.st==='park'?0.5:1),0)<wantC&&Object.keys(tf.cars).length>=3&&Math.random()<0.5)tfSpawnCar()}
   for(const c of tf.drive.slice())tfCarStep(c,dt);
   tfRunOver(dt);
   tfRoomsTick(dt);if(!tf.parkedOn&&tf.carsOk&&Object.keys(tf.cars).length===Object.keys(TF_CARS).length)tfParkedShow(true);
   for(const p of tf.people.slice()){if(p.hit)tfHitStep(p,dt);if(p.hurt&&!p.dead)p.hurt+=dt;
-    if(p.dead||p.hurt){const t=p.dead||p.hurt;if(p.dead)p.dead+=dt;if(p.fly)tfFly(p,dt);if(t>TU.gunBody&&(!tfSeen(p.x,p.z,1)||t>TU.gunBody*3))tfDrop(p);continue}if(p.cower>0){p.cower=Math.max(0,p.cower-dt);continue}if(p.room){tfRoomStep(p,dt);continue}if(p.go){tfGoStep(p,dt);continue}if(p.bus){stlPedStep(p,dt);continue}if(p.drv||p.cop)continue;tfWalkStep(p,dt);p.y+=(baseHeight(p.x,p.z)+tfLift(p.x,p.z)-p.y)*Math.min(1,dt*8)}
+    if(p.dead||p.hurt){const t=p.dead||p.hurt;if(p.dead)p.dead+=dt;if(p.fly)tfFly(p,dt);if(t>TU.gunBody&&(!tfSeen(p.x,p.z,1)||t>TU.gunBody*3))tfDrop(p);continue}if(p.cower>0){p.cower=Math.max(0,p.cower-dt);continue}if(p.room){tfRoomStep(p,dt);continue}if(p.go){tfGoStep(p,dt);continue}if(p.bus){stlPedStep(p,dt);continue}if(p.drv||p.cop)continue;if(p.off){roStep(p,dt);continue}tfWalkStep(p,dt);p.y+=(baseHeight(p.x,p.z)+tfLift(p.x,p.z)-p.y)*Math.min(1,dt*8)}
   if(mode==='walk'&&walker.visible){for(const c of tf.drive)wkPushRound(c,[-c.len*0.3,0,c.len*0.3],c.wid/2);for(const p of tf.people)if(!p.inside&&!p.drv&&!p.dead&&!p.hurt)wkPushRound(p,[0],0.22)}
   tfDraw(dt);tfChip(dt)}
 function tfShow(on){tf.on=on;for(const k in tf.carM||{})tf.carM[k].visible=false;$('#tfChip').hidden=!on||PHONE;for(const k in tf.M||{})tf.M[k].m.visible=on;for(const c of tf.drive)c.g.visible=on;tfParkedShow(on);

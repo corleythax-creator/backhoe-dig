@@ -240,6 +240,18 @@ const WORDS=[
   ['odWork','Town: orders',"I'm working",''],['odIn','Town: orders',"I'm busy in here",''],['odSeat','Town: orders',"I've only just sat down",''],
   ['odBusy','Town: orders',"I'm in the middle of something",''],['odSelf','Town: orders',"that's me",''],['odGone','Town: orders',"they're not around",''],
   ['odNoHome','Town: orders',"I can't get home from here",''],
+  // pursuits (pursuits.js): said over their heads near you as they set off and when they are done
+  ['pu_fishGo','Town: pursuits',"Fish ought to be biting about now.",''],['pu_fishGot','Town: pursuits',"{n} today, the biggest {lb} lb. Not bad.",'{n}: how many; {lb}: the biggest'],
+  ['pu_fishRecord','Town: pursuits',"Look at this one! {lb} pounds!",'{lb}: its weight'],['pu_fishNone','Town: pursuits',"Nothing biting today.",''],
+  ['pu_paintGo','Town: pursuits',"The light's just right for painting.",''],['pu_paintDone','Town: pursuits',"That's number {n}.",'{n}: how many paintings'],
+  ['pu_paintShow','Town: pursuits',"That's {n}! Enough for the show at Harbor Books.",'{n}: how many paintings'],
+  ['pu_fitGo','Town: pursuits',"Time to get my miles in.",''],['pu_fitDone','Town: pursuits',"{mi} miles. Every bit counts.",'{mi}: miles this time'],
+  ['pu_starsGo','Town: pursuits',"Clear night. Perfect for the stars.",''],['pu_starsSaw','Town: pursuits',"A shooting star! Did you see it?",''],['pu_starsDone','Town: pursuits',"No shooting stars tonight. Maybe next time.",''],
+  ['pu_meetGo','Town: pursuits',"Oh, I should go say hi.",''],['pu_meetHi','Town: pursuits',"Hi there! I don't think we've met. Thought I'd come say hello.",''],
+  ['pu_meetAgain','Town: pursuits',"Hey, good to see you again!",''],
+  // how they get on (bonds.js): friends passing, a falling-out, a snub ({name}: the other one)
+  ['bd_hi','Town: bonds',"{name}! Good to see you.",'{name}: their friend'],['bd_spat','Town: bonds',"You know what, {name}? Forget it.",'{name}: who they fell out with'],
+  ['bd_snub','Town: bonds',"Hmph. {name}.",'{name}: who they can\'t stand'],
   ['tkAll','Town: talk','Everyone',''],['tkWithAll','Town: talk','Talking to everyone here ({n})','{n}: how many are listening'],['tkSayAll','Town: talk','Say something to everyone',''],
   ['tkPlayer','Town: talk','Corley','What the townsfolk call you'],
   ['tkWeather','Town: talk','Nice enough day for it. Whatever it is you\'re digging.',''],['tkRain','Town: talk','This rain. Good for the lawns, bad for your dirt, I\'d guess.',''],
