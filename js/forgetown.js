@@ -20,7 +20,7 @@
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 const BF_SITE='https://corley-forge-studio.vercel.app/building/library/',BF_PLACES='corleys_island.json';
 const BF_NEAR=30,BF_OPEN=1.35,BF_STAFF=new Set(['counter','desk','island']),BF_SHOP=new Set(['counter','washer','dryer','desk','island','fridge','range','vanity']);
-const bf={lib:null,places:null,kinds:{},lots:[],gen:0,qa:new THREE.Quaternion(),ay:new THREE.Vector3(0,1,0)};
+const bf={lib:null,places:null,kinds:{},inst:{},lots:[],gen:0,qa:new THREE.Quaternion(),ay:new THREE.Vector3(0,1,0)};
 // which setting draws an area's buildings
 const bfWant=area=>!!(gfxCur&&(area==='homes'?gfxCur.bfHomes:gfxCur.bfMain));
 // the doors drawn by the building's model (nothing of their own here)
@@ -43,6 +43,36 @@ const BF_KSPOT={
   salonst:(w,d)=>[[0,d/2-1.5,Math.PI,'s'],[0,d/2+0.8,Math.PI,'f']],
   wchairs:(w,d)=>{const n=Math.max(1,Math.round(w/2));return Array.from({length:n},(_,i)=>[-w/2+(i+.5)*w/n,0.1,0,'s'])},
   pew:(w,d)=>Array.from({length:Math.max(1,Math.floor(w/2.2))},(_,i)=>[-w/2+1.1+i*2.2,0.15,0,'s'])};
+// a lone chair or stool (Daylight's dchair and stool, round a table or along a bar): one seat on it, turned to face the
+// table or bar it stands at (bfSeatAim)
+BF_KSPOT.dchair=BF_KSPOT.stool=(w,d)=>[[0,0,0,'s']];
+const BF_SEATS=new Set(['dchair','stool']),BF_ROUND=new Set(['round','cafetable']);
+// each lone seat turned to the table or bar beside it (a piece with a top 2 to 4 ft up, within 3 ft): facing the middle
+// of a round table, else the nearest point of its edge. The seat spot gets [x, z, facing, 's', dy (a bar stool's seat
+// above the 18 in a chair's is, lifting the sitter), [f, h] (where their glass and plate go: f ahead of the seat, h
+// over the floor; townfolk.js tfTableDraw)]
+function bfSeatAim(items){for(const P of items){if(!BF_SEATS.has(P.kind)||!P.spots||!P.spots[0])continue;const q=P.spots[0],x=q[0],z=q[1];let best=null,bd=0.95;
+    for(const T of items){if(T===P||T.lvl!==P.lvl||BF_SEATS.has(T.kind))continue;const [cx,cz,hx,hz,y0,y1]=T.box,h=y1-y0;if(h<0.6||h>1.25)continue;
+      const nx=Math.max(cx-hx,Math.min(cx+hx,x)),nz=Math.max(cz-hz,Math.min(cz+hz,z)),d=Math.hypot(nx-x,nz-z);if(d<bd){bd=d;best={T,nx,nz}}}
+    const sh=P.box[5]-P.box[4],dy=P.kind==='stool'&&sh>0.55?Math.min(0.5,sh-0.46):0;if(!best){q[4]=dy;continue}
+    const [cx,cz,hx,hz,y0,y1]=best.T.box,rd=BF_ROUND.has(best.T.kind);let tx,tz;
+    if(rd){const r=Math.min(hx,hz),ux=x-cx,uz=z-cz,L=Math.hypot(ux,uz)||1,k=Math.max(0.1,r-0.2);tx=cx+ux/L*k;tz=cz+uz/L*k}
+    else{const ux=best.nx-x,uz=best.nz-z,L=Math.hypot(ux,uz)||1;tx=best.nx+ux/L*0.2;tz=best.nz+uz/L*0.2}
+    q[2]=Math.atan2(tx-x,tz-z);q[4]=dy;q[5]=[Math.hypot(tx-x,tz-z),y1-y0]}}
+// a floor of the building's drawn in one of the game's own photo-scanned materials in place of Daylight's, by building
+// (lib: textures/<lib>.jpg with _n and _r from tools/cc0.py, ft the feet one tile covers): the brewery's taproom in worn
+// pine planks. Its relief and sheen show with Material relief (gfxCur.pbr: bfFloorPbr)
+const BF_FLOOR={lakeside_brewery:{lib:'wood_floor',ft:3.7}},bfFloorMats=new Map();
+function bfFloorMat(d,upm){const key=d.lib+'@'+upm.toFixed(3);let m=bfFloorMats.get(key);if(m)return m;
+  const rep=1/(d.ft*0.3048*upm),L=k=>{const t=new THREE.TextureLoader().load(`textures/${d.lib}${k}.jpg`);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rep,rep);t.anisotropy=8;return t};
+  m=new THREE.MeshStandardMaterial({map:L(''),roughness:1,metalness:0,envMap:skyEnv,envMapIntensity:0.25});m.name='bfFloor';m.userData={n:L('_n'),r:L('_r')};bfFloorPbr1(m);bfFloorMats.set(key,m);return m}
+function bfFloorPbr1(m){const on=!!(gfxCur&&gfxCur.pbr);m.normalMap=on?m.userData.n:null;m.roughnessMap=on?m.userData.r:null;m.roughness=on?1:0.6;m.needsUpdate=true}
+function bfFloorPbr(){for(const m of bfFloorMats.values())bfFloorPbr1(m)}
+// a floor mesh's UVs per metre (Daylight lays them in feet)
+function bfUvPerM(o){const P=o.geometry.attributes.position,U=o.geometry.attributes.uv;if(!P||!U||P.count<3)return 3.2808;let best=0;
+  const v0=new THREE.Vector3().fromBufferAttribute(P,0).applyMatrix4(o.matrixWorld),v=new THREE.Vector3();
+  for(let i=1;i<Math.min(P.count,64);i++){v.fromBufferAttribute(P,i).applyMatrix4(o.matrixWorld);const d=Math.hypot(v.x-v0.x,v.z-v0.z);if(d>0.5){const u=Math.hypot(U.getX(i)-U.getX(0),U.getY(i)-U.getY(0));best=u/d;break}}
+  return best>0.01?best:3.2808}
 // a piece's spots in the building's space: [x, z, the way they face, flags]
 function bfKSpots(c,kind){const f=BF_KSPOT[kind];if(!f)return null;const inv=new THREE.Matrix4().copy(c.matrixWorld).invert(),m=new THREE.Matrix4(),b=new THREE.Box3();
   c.traverse(o=>{if(o.isMesh){o.geometry.computeBoundingBox();b.union(o.geometry.boundingBox.clone().applyMatrix4(m.multiplyMatrices(inv,o.matrixWorld)))}});if(b.isEmpty())return null;
@@ -51,7 +81,7 @@ function bfKSpots(c,kind){const f=BF_KSPOT[kind];if(!f)return null;const inv=new
 // a building kind, loaded and packed once: meshes merged by material (furniture apart), each door leaf's parts merged
 // in its own frame, the furniture's pieces, all in the building's space
 function bfKind(id){if(bf.kinds[id])return bf.kinds[id];
-  return bf.kinds[id]=bfImport().then(({loader,merge})=>new Promise((ok,no)=>loader.load(BF_SITE+id+'.glb',g=>ok(bfPack(g.scene,merge,bf.lib[id])),undefined,no)))}
+  return bf.kinds[id]=bfImport().then(({loader,merge})=>new Promise((ok,no)=>loader.load(BF_SITE+id+'.glb',g=>ok(bfPack(g.scene,merge,bf.lib[id])),undefined,no))).then(K=>(bf.kinds[id].K=K))}
 // a Daylight dining table's chairs (its 'dining' piece: n a side, one per 2.3 ft of table, 0.45 ft out from its edge,
 // one at each end of a table 6 ft or longer), found from the table top (the piece's thinnest mesh), in the item's own feet:
 // [x, z, the way the sitter faces] in the building's space
@@ -84,7 +114,11 @@ const BF_GLOW=new THREE.MeshBasicMaterial({color:0xffe2a8}),bfMats=new Map();
 // Only what is drawn: nothing here is saved or touches the ground. The map editor carries them: each is placed from
 // its building's own place every third of a second (and bfAfter asks for it at once).
 const BF_LT_KEY={low:'bfLtMed',med:'bfLtMed',high:'bfLtHigh',ultra:'bfLtUltra',quest:'bfLtMed'},BF_LT_I=1.2,BF_LT_DECAY=1.3;
-const bfLt={pts:[],spots:[],all:[],n:0,t:0,dirty:1,on:0,real:0,glow:new Map(),cam:new THREE.Vector3(),v:new THREE.Vector3(),halos:null};
+const bfLt={pts:[],spots:[],all:[],n:0,t:0,dirty:1,on:0,real:0,glow:new Map(),cam:new THREE.Vector3(),v:new THREE.Vector3(),halos:null,fill:0,fillK:0};
+// inside a building whose lights are on, a warm fill (TU.bfLtFill) lights the room as its many fixtures would, beyond
+// the few the pool can hold: an ambient light always in the scene (ambient light adds no shader work), up while the
+// camera is within a lit building's walls and under its roof, down again outside
+const BF_FILL=new THREE.AmbientLight(0xffd6a8,0),BF_FILL_I=0.55;scene.add(BF_FILL);
 const bfLtBudget=()=>gfxCur&&gfxCur.bfLt?Math.max(0,Math.min(8,Math.round(TU[BF_LT_KEY[gfxKey]||'bfLtMed']||0))):0;
 const bfLtState=(l,G)=>{const s=l.switch==='on'||l.switch==='off'?l.switch:G&&G.mode;return s==='on'||s==='off'?s:'auto'};
 // a fixture's glowing material, by colour and whether it follows the dusk (shared by every building)
@@ -127,11 +161,13 @@ function bfLightTick(lamp,ll,dt){bfEnvTick();
   if(bfLt.dirty&&bf.lots.length){bfLt.dirty=0;bfLtHalos()}
   if(bfLt.halos)bfLt.halos.visible=lamp>0.01&&bfLt.halos.geometry.attributes.position.count>0;
   // every third of a second: the lit lights nearest the camera take the pool's lights (one that had a light keeps it)
-  if((bfLt.t-=dt)<=0){bfLt.t=0.33;const far=TU.bfLtFar,cam=camera.getWorldPosition(bfLt.cam),C=[],v=bfLt.v;let any=false;
+  if((bfLt.t-=dt)<=0){bfLt.t=0.33;const far=TU.bfLtFar,cam=camera.getWorldPosition(bfLt.cam),C=[],v=bfLt.v;let any=false,fill=0;
     for(const L of bf.lots){const B=L.b;if(!B||!B.g.visible||!B.K.lights.length)continue;any=true;
       if(Math.hypot(cam.x-B.g.position.x,cam.z-B.g.position.z)>far+B.rad)continue;B.g.updateMatrixWorld();
+      const it=bf.lib[L.id];if(it&&it.width){v.copy(cam);B.g.worldToLocal(v);if(Math.abs(v.x)<it.width/2&&Math.abs(v.z)<it.length/2&&v.y>-0.5&&v.y<8)
+        for(const l of B.K.lights){const k=l.auto?lamp:1;if(k>fill)fill=k}}
       for(const l of B.K.lights){if(l.auto&&lamp<=0.01)continue;v.copy(l.p).applyMatrix4(B.g.matrixWorld);const d=v.distanceTo(cam);if(d<far)C.push({l,B,d,x:v.x,y:v.y,z:v.z})}}
-    C.sort((a,b)=>a.d-b.d);bfLt.on=C.length;bfLtPool(any?bfLtBudget():0);
+    bfLt.fill=fill;C.sort((a,b)=>a.d-b.d);bfLt.on=C.length;bfLtPool(any?bfLtBudget():0);
     const A=bfLt.all,pick=C.slice(0,A.length),free=[];
     for(const s of A){const i=pick.findIndex(c=>c&&c.l===s.l&&c.B===s.B);if(i<0){s.l=null;free.push(s)}else{s.c=pick[i];pick[i]=null}}
     for(const c of pick){if(!c)continue;const want=!!c.l.d,i=Math.max(0,free.findIndex(s=>!!s.o.isSpotLight===want)),s=free.splice(i,1)[0];s.l=c.l;s.B=c.B;s.c=c;s.k=0}
@@ -141,6 +177,7 @@ function bfLightTick(lamp,ll,dt){bfEnvTick();
       if(o.isSpotLight){if(l.d){v.copy(l.d).transformDirection(s.B.g.matrixWorld);o.angle=l.ang;o.penumbra=0.5;o.distance=l.r*1.35}else{v.set(0,-1,0);o.angle=1.45;o.penumbra=1}
         o.target.position.set(c.x+v.x*5,c.y+v.y*5,c.z+v.z*5)}}}
   // a light comes up over a quarter of a second when it takes one of the pool's, and fades toward the edge of the range
+  bfLt.fillK+=(bfLt.fill-bfLt.fillK)*Math.min(1,dt*3);BF_FILL.intensity=bfLt.fillK*(TU.bfLtFill??1)*BF_FILL_I*LI;
   const g=ll*TU.bfLight*BF_LT_I*LI,f=Math.min(1,dt*4);
   for(const s of bfLt.all){const l=s.l;if(!l)continue;s.k=Math.min(1,s.k+f);s.o.intensity=g*l.k*(l.auto?lamp:1)*s.k*s.e*(s.o.isSpotLight&&l.d?1.5:1)}}
 // the building's materials kept as Daylight House Studio made them (PBR: colour, roughness, metalness, normal and AO maps),
@@ -155,7 +192,8 @@ function bfPack(root,merge,it){const col=root.getObjectByName('Collision');if(co
   let gm=null;root.traverse(o=>{if(!gm&&o.userData&&o.userData.forge&&o.userData.forge.game)gm=o.userData.forge.game});
   const LS=it&&Array.isArray(it.lights)?it.lights:gm&&Array.isArray(gm.lights)?gm.lights:null,LG=it&&it.lighting||gm&&gm.lighting||null,glow=LS?bfLtGlow(root,LS,LG):null;
   root.traverse(o=>{if(!o.isMesh)return;let lit=false;if(!LS)for(let q=o;q&&q!==root;q=q.parent)if(q.userData&&q.userData.kind==='light')lit=true;
-    o.material=glow&&glow.has(o)?glow.get(o):lit?BF_GLOW:Array.isArray(o.material)?o.material.map(bfPhong):bfPhong(o.material)});
+    const fl=it&&BF_FLOOR[it.id]&&/_floor$/i.test(o.name)&&!Array.isArray(o.material)?BF_FLOOR[it.id]:null;
+    o.material=fl?bfFloorMat(fl,bfUvPerM(o)):glow&&glow.has(o)?glow.get(o):lit?BF_GLOW:Array.isArray(o.material)?o.material.map(bfPhong):bfPhong(o.material)});
   const plain=g=>{const h=new THREE.BufferGeometry();for(const [n,at] of Object.entries(g.attributes)){const f=new Float32Array(at.count*at.itemSize);
       for(let i=0;i<at.count;i++)for(let k=0;k<at.itemSize;k++)f[i*at.itemSize+k]=at.getComponent(i,k);h.setAttribute(n,new THREE.BufferAttribute(f,at.itemSize))}
     if(g.index)h.setIndex(new THREE.BufferAttribute(Uint32Array.from(g.index.array),1));return h};
@@ -173,12 +211,22 @@ function bfPack(root,merge,it){const col=root.getObjectByName('Collision');if(co
   // table's chairs
   if(F)for(const c of F.children){const u=c.userData||{},b=new THREE.Box3().setFromObject(c);if(b.isEmpty())continue;
     items.push({kind:u.kind||'',lvl:u.level||0,box:[(b.min.x+b.max.x)/2,(b.min.z+b.max.z)/2,(b.max.x-b.min.x)/2,(b.max.z-b.min.z)/2,b.min.y,b.max.y],chairs:u.kind==='dining'?bfChairs(c):null,spots:bfKSpots(c,u.kind)})}
+  bfSeatAim(items);
   return {stat:group(stat,I),furn:group(furn,I),items,lights:bfLtPack(LS,LG),
     leaves:leaves.map(L=>{const m=L.matrixWorld.clone(),p=new THREE.Vector3(),q=new THREE.Quaternion(),s=new THREE.Vector3();m.decompose(p,q,s);
       const li=m.clone().invert(),parts=[];L.traverse(o=>{if(o.isMesh)parts.push(o)});return {p,q,s,door:L.userData.door,swing:L.userData.swing||1,parts:group(parts,li)}})}}
 // every frame (mainTick): each door's leaves follow its door (opened by rmDoorsTick), and furniture shows only near
-function bfTick(dt){for(const L of bf.lots){const B=L.b;if(!B||!B.g.visible)continue;const dx=camera.position.x-B.g.position.x,dz=camera.position.z-B.g.position.z;B.furn.visible=dx*dx+dz*dz<BF_NEAR*BF_NEAR;
+// (and its insides within TU.bfIn, its door leaves within TU.bfDoor)
+function bfTick(dt){const ri=TU.bfIn||0,rd=TU.bfDoor||0;for(const L of bf.lots){const B=L.b;if(!B||!B.g.visible)continue;const dx=camera.position.x-B.g.position.x,dz=camera.position.z-B.g.position.z,d2=dx*dx+dz*dz;
+    B.furn.visible=d2<BF_NEAR*BF_NEAR;B.ins.visible=!ri||d2<(ri+B.rad)*(ri+B.rad);B.lvs.visible=!rd||d2<(rd+B.rad)*(rd+B.rad);
     for(const D of B.doors){const a=D.d.a;if(a===D.a)continue;D.a=a;for(const l of D.leaves)l.o.quaternion.copy(l.q).multiply(bf.qa.setFromAxisAngle(bf.ay,l.swing*BF_OPEN*a))}}}
+// Each kind's shell, one draw per material for every building of that kind standing (not hidden in the map editor):
+// an instanced mesh per material, its instances the buildings' places, laid again when one is built, moved or hidden
+function bfInstSync(id){const K=bf.kinds[id]&&bf.kinds[id].K;if(!K)return;let I=bf.inst[id];
+  const on=bf.lots.filter(L=>L.id===id&&L.b&&L.b.g.visible),cap=Math.max(on.length,bf.lots.filter(L=>L.id===id).length,1);
+  if(I&&I.cap<cap){for(const m of I.ms){scene.remove(m);m.dispose()}I=null}
+  if(!I){I=bf.inst[id]={cap,ms:K.stat.filter(x=>!x.inside).map(x=>{const m=new THREE.InstancedMesh(x.geo,x.mat,cap);m.castShadow=m.receiveShadow=true;m.name='bf:'+id;m.count=0;scene.add(m);return m})}}
+  for(const m of I.ms){on.forEach((L,i)=>{L.b.g.updateMatrixWorld();m.setMatrixAt(i,L.b.g.matrixWorld)});m.count=on.length;m.visible=on.length>0;m.instanceMatrix.needsUpdate=true;if(on.length)m.computeBoundingSphere()}}
 // the fixed thing (fixed.js) a place's building is: the smallest building, structure, large thing or site office round its middle
 const BF_FX=new Set(['fxbuilding','fxstruct','fxbig','fxoffice']);
 function bfItem(L){let best=null;for(const it of FX)if(BF_FX.has(it.t)&&L.x>=it.x0&&L.x<=it.x1&&L.z>=it.z0&&L.z<=it.z1&&(!best||(it.x1-it.x0)*(it.z1-it.z0)<(best.x1-best.x0)*(best.z1-best.z0)))best=it;return best}
@@ -203,7 +251,7 @@ function bfSpots(it,K,door,nStaff,nAll){const out=[],used=new Set(),dd=(x,z)=>Ma
   for(const P of G)if(P.spots)for(const q of P.spots)if(inRm(q[0],q[1])&&(q[3]==='s'||bfClear(it,K,0,q[0],q[1],P)))KS.push(q);
   const near=(a,b)=>dd(a[0],a[1])-dd(b[0],b[1]),fs=KS.filter(q=>q[3]==='f').sort(near);
   let staff=0;for(const q of fs){if(staff>=nStaff)break;out.push({p:q.slice(0,3),staff:1});staff++}
-  for(const q of KS.filter(q=>q[3]==='s').concat(KS.filter(q=>!q[3]).sort(near))){if(out.length>=nAll)break;out.push(q[3]==='s'?{p:q.slice(0,3),sit:1}:{p:q.slice(0,3)})}
+  for(const q of KS.filter(q=>q[3]==='s').concat(KS.filter(q=>!q[3]).sort(near))){if(out.length>=nAll)break;out.push(q[3]==='s'?{p:q.slice(0,3),sit:1,dy:q[4]||0,tb:q[5]||null}:{p:q.slice(0,3)})}
   if(staff>=nStaff&&out.length>=nAll)return out;
   if(staff)for(const P of G)if(P.spots)used.add(P);
   const sides=P=>{const [cx,cz,hx,hz]=P.box,g=0.45;return [[cx,cz+hz+g,Math.PI],[cx,cz-hz-g,0],[cx+hx+g,cz,-Math.PI/2],[cx-hx-g,cz,Math.PI/2]].filter(([x,z])=>bfClear(it,K,0,x,z,P))};
@@ -226,11 +274,13 @@ function bfBuild(L,K,item){const it=bf.lib[L.id],face=L.turn*Math.PI/180,c=Math.
   // its height: on the ground, or on the floor the game's own building stood on (a deck, a raised lot)
   let pt=-1e9;for(const {p} of G.pads){const dx=ox-p.x,dz=oz-p.z,u=dx*p.c-dz*p.s,v=dx*p.s+dz*p.c;if(Math.abs(u)<=p.hx&&Math.abs(v)<=p.hz)pt=Math.max(pt,p.t)}
   const y0=Math.max(rmGroundMax(ox,oz,face,it.width,it.length-1.4)+0.03,pt-f0),fy=i=>y0+(it.levels[i]||it.levels[0]).floorY,nl=it.levels.length;
-  const g=new THREE.Group();g.position.set(ox,y0,oz);g.rotation.y=face;const furn=new THREE.Group();g.add(furn);
-  for(const x of K.stat){const m=new THREE.Mesh(x.geo,x.mat);m.castShadow=true;m.receiveShadow=!x.inside;g.add(m)}
+  // its shell (walls, roof, windows) is drawn with every other building of its kind (bfInstSync); its insides, door
+  // leaves and furniture are its own, each shown only near (bfTick)
+  const g=new THREE.Group();g.position.set(ox,y0,oz);g.rotation.y=face;const furn=new THREE.Group(),ins=new THREE.Group(),lvs=new THREE.Group();g.add(furn,ins,lvs);
+  for(const x of K.stat)if(x.inside){const m=new THREE.Mesh(x.geo,x.mat);m.castShadow=true;m.receiveShadow=false;ins.add(m)}
   for(const x of K.furn){const m=new THREE.Mesh(x.geo,x.mat);m.castShadow=true;m.receiveShadow=!x.inside;furn.add(m)}
   const leaves=new Map();for(const l of K.leaves){const o=new THREE.Object3D();o.position.copy(l.p);o.quaternion.copy(l.q);o.scale.copy(l.s);
-    for(const x of l.parts){const m=new THREE.Mesh(x.geo,x.mat);m.castShadow=m.receiveShadow=true;o.add(m)}g.add(o);
+    for(const x of l.parts){const m=new THREE.Mesh(x.geo,x.mat);m.castShadow=m.receiveShadow=true;o.add(m)}lvs.add(o);
     if(!leaves.has(l.door))leaves.set(l.door,[]);leaves.get(l.door).push({o,q:l.q.clone(),swing:l.swing})}
   g.visible=false;scene.add(g);
   const mine={solids:[]},yr=(S,a,b)=>{S.by0=a;S.by1=b;S.y0=a;S.y1=b};
@@ -263,7 +313,7 @@ function bfBuild(L,K,item){const it=bf.lib[L.id],face=L.turn*Math.PI/180,c=Math.
   let rs=null;if(gameR){const fdoors=it.doors.filter(d=>!d.level&&d.exterior&&leaves.has(d.id)),fd=fdoors.find(d=>d.normal[2]>0.7)||fdoors[0];
     const door=fd?[fd.center[0],fd.center[2]]:[0,0],nStaff=gameR.spots.filter(q=>q.staff).length,nAll=gameR.spots.length;
     rs={spots:[],y:fy(0)};
-    for(const q of bfSpots(it,K,door,nStaff,nAll)){const [x,z,yl]=q.p,sp={x:X(x,z),z:Z(x,z),y:fy(0),yaw:face+yl};if(q.sit)sp.sit=1;if(q.staff)sp.staff=1;sp.bf=1;rs.spots.push(sp);G.spots.push({sp,o:{x:sp.x,z:sp.z,y:sp.y,yaw:sp.yaw}})}
+    for(const q of bfSpots(it,K,door,nStaff,nAll)){const [x,z,yl]=q.p,sp={x:X(x,z),z:Z(x,z),y:fy(0)+(q.dy||0),yaw:face+yl};if(q.sit)sp.sit=1;if(q.dy)sp.dy=q.dy;if(q.tb){sp.tf=q.tb[0];sp.th=q.tb[1]}if(q.staff)sp.staff=1;sp.bf=1;rs.spots.push(sp);G.spots.push({sp,o:{x:sp.x,z:sp.z,y:sp.y,yaw:sp.yaw}})}
     // a shop's: its frame looks out through the front door (rmKit: o out, s across) with its middle dO behind it, deep
     // enough to reach the back wall; R.sol the walls, stairs and furniture in that frame
     if(gameR.dO!=null&&fd&&fd.normal[2]>0.7){const dx0=fd.center[0],dz0=fd.center[2],back=Math.min(...W0.flatMap(w=>[w[1],w[3]])),dO=(dz0-back)/2+0.3,K0=rmKit(null,X(dx0,dz0-dO),Z(dx0,dz0-dO),fy(0),face),sol=[];
@@ -272,7 +322,7 @@ function bfBuild(L,K,item){const it=bf.lib[L.id],face=L.turn*Math.PI/180,c=Math.
       for(const st of it.stairs||[])if(!st.level){const [fx,fz]=st.foot,[hx,hz]=st.head;box((fx+hx)/2,(fz+hz)/2,Math.abs(hx-fx)/2+st.width/2,Math.abs(hz-fz)/2+st.width/2)}
       for(const P of K.items)if(!P.lvl&&P.kind!=='rug'&&P.kind!=='porch'&&P.kind!=='stairs')box(P.box[0],P.box[1],P.box[2],P.box[3]);
       Object.assign(rs,{x:K0.x,z:K0.z,f:face,P:K0.P,dO,W:it.width/2+Math.abs(dx0),sol,at0:{x:K0.x,z:K0.z}})}}
-  L.b={g,furn,doors,gameR,rs,o:{x:ox,z:oz,y:y0,f:face},mine,K,rad:Math.hypot(it.width,it.length)/2};item.bf=L;bfLt.dirty=1}
+  L.b={g,furn,ins,lvs,doors,gameR,rs,o:{x:ox,z:oz,y:y0,f:face},mine,K,rad:Math.hypot(it.width,it.length)/2};item.bf=L;bfLt.dirty=1}
 // a game room given the building's spots and door frame while it is swapped (on), its own put back after; whoever was
 // in it or on the way leaves first
 const BF_RKEYS=['spots','dO','W','sol','P','x','z','f','y'];
@@ -287,7 +337,9 @@ function bfAfter(it,a){const L=it.bf;if(!L||!L.b)return;const B=L.b,gone=!a||!!a
   const r=gone?0:a.yaw,c=Math.cos(r),s=Math.sin(r),dx=gone?0:a.x-it.cx,dz=gone?0:a.z-it.cz,dy=gone?0:baseHeight(a.x,a.z)-baseHeight(it.cx,it.cz),
     at=(x,z)=>[it.cx+(x-it.cx)*c+(z-it.cz)*s+dx,it.cz-(x-it.cx)*s+(z-it.cz)*c+dz];
   B.g.visible=show;bfRoomSet(B,show);bfLt.dirty=1;bfLt.t=0;
-  if(show){const [x,z]=at(B.o.x,B.o.z);B.g.position.set(x,B.o.y+dy,z);B.g.rotation.y=B.o.f+r;for(const S of B.mine.solids){S.y0=S.by0+dy;S.y1=S.by1+dy}
+  if(show){const [x,z]=at(B.o.x,B.o.z);B.g.position.set(x,B.o.y+dy,z);B.g.rotation.y=B.o.f+r;for(const S of B.mine.solids){S.y0=S.by0+dy;S.y1=S.by1+dy}}
+  bfInstSync(L.id);
+  if(show){
     if(B.rs&&B.rs.at0){const [rx,rz]=at(B.rs.at0.x,B.rs.at0.z),R=B.gameR,f=B.o.f+r,sf=Math.sin(f),cf=Math.cos(f);R.x=rx;R.z=rz;R.f=f;R.y=B.rs.y+dy;R.P=(o,q)=>[rx+sf*o+cf*q,rz+cf*o-sf*q]}}
   if(gone)return;
   // which side is out of the world: the game's (swapped) or the building's (not)

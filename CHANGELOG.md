@@ -4,6 +4,12 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Monday, November 9, 2026
 
+- **v391** (9:34 PM) In town each kind of Building Forge building is drawn once for all its copies (18 Cape Cods in one go), and their insides and doors only near: far fewer draws in town and at the marina; Tune: Town to set the distances
+- **v390** (9:22 PM) Smoother in town: the islands' parked machines no longer draw from town, the corner map redraws less often, and townsfolk pictures decode off the main thread
+- **v389** (9:18 PM) The game's files are kept on the device, so opening it again skips the downloads (and works offline); a new version downloads only the files it changed
+- **v388** (9:07 PM) Townsfolk talk gets Voice only: lines spoken aloud with no text boxes over their heads
+- **v387** (8:55 PM) A Profiler in ☰ → Dev: what took longest to load, and what eats the frames in each place you record
+- **v386** (8:32 PM) The brewery's taproom fills like a real one: customers sit on the bar stools and round the tables facing each other with pints and plates of food before them, the floor is real worn pine planks, and a warm glow fills the room when its lights are on.
 - **v385** (8:15 PM) Townsfolk crowds are built in the background from the start, so coming into town no longer stutters as each new face appears
 - **v384** (7:40 PM) Less stutter near townsfolk who talk (the brewery): their speech bubbles no longer make the browser re-lay out the page every frame
 - **v383** (5:51 PM) The backhoe's and wheel loader's digging now loads their diesel (it throttles up, lugs in hard ground and the hoe slows with it), and the pickup goes up to 80 mph and climbs Overlook Road on its engine.

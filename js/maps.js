@@ -189,12 +189,14 @@ function drawBig(){if($('#bigmap').hidden)return;const a=mapV.anim;
   if(a){a.t=Math.min(1,a.t+1/14);const e=a.t*a.t*(3-2*a.t),lm=Math.log(a.a.mpp)+(Math.log(a.b.mpp)-Math.log(a.a.mpp))*e;
     mapV.cx=a.a.cx+(a.b.cx-a.a.cx)*e;mapV.cz=a.a.cz+(a.b.cz-a.a.cz)*e;mapV.mpp=Math.exp(lm);if(a.t>=1)mapV.anim=null}
   mapClamp();drawMap($('#big'),mapV.cx,mapV.cz,mapV.mpp,true);mapWhere()}
+let mapMiniT=0;
 function mapsTick(dt){
   mapT-=dt;if(mapDirty&&mapT<=0){updateDigLayer();mapDirty=false;mapT=0.5}
   const fv=mapFocus(),open=!$('#bigmap').hidden;
   // the ground tiles fill in behind play (a little each frame), faster while the site map is open
   if(mapTilesDone()<MPT_NX*MPT_NZ){const c=open?mapAt(...mapBox().map(v=>v/2)):fv;mapBuild(open?14:gfxKey==='low'?1.5:3,c.x,c.z)}
-  const mini=$('#mini'),mpx=mini.clientWidth;if(mpx)drawMap(mini,fv.x,fv.z,84*Math.pow(mpx/118,0.6)/mpx,false);
+  // the corner map is redrawn 15 times a second, not every frame (its size read then too: a layout read each frame)
+  mapMiniT-=dt;if(mapMiniT<=0){mapMiniT=1/15;const mini=$('#mini'),mpx=mini.clientWidth;if(mpx)drawMap(mini,fv.x,fv.z,84*Math.pow(mpx/118,0.6)/mpx,false)}
   // the trails layer catches up with new travel once a second while the map is open
   if(open){mapBigT-=dt;if(mapBigT<=0&&trailDirty&&trailShow!=='off'){mapBigT=1;trailSync()}else drawBig()}
 }
