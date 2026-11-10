@@ -525,7 +525,7 @@ const PIPE_Y=baseHeight(0,PIPE_Z)-1.3, PIPE_R=0.08;
 // tinted by the vertex colours
 const texManager=new THREE.LoadingManager(),texLoader=new THREE.TextureLoader(texManager);loadCount(texManager);
 let texTier=(()=>{let k=null,c=null;try{k=localStorage.getItem('bhd_gfx');c=JSON.parse(localStorage.getItem('bhd_gfxc')||'null')}catch(e){}
-  if(c&&['low','med','high'].includes(c.tex))return c.tex;return k==='low'||k==='med'||k==='high'?k:PHONE?'low':'high'})();
+  if(c&&['low','med','high'].includes(c.tex))return c.tex;return k==='low'||k==='med'||k==='high'?k:k==='work'?'med':PHONE?'low':'high'})();
 // the pack's grime is centred on mid grey; the machines multiply it straight onto their paint, so it is lifted to
 // near white (mean 0.9) keeping a gentle spread of stains: baked into grime_lift.jpg (tools/bake_tex.py), as doing it
 // here held up the start by seconds
