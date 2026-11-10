@@ -58,7 +58,14 @@
     return r.arrayBuffer();
   }
 
+  // (Corley's Island's copy: decoded off the main thread as an ImageBitmap where the browser can, so uploading a close-up
+  // person's 2048 maps doesn't also decode them in the frame; every texture made from one keeps flipY false, which is
+  // how glTF pictures are laid out, and the tiling micro and weave maps don't care)
   function loadImage(bytes, mime) {
+    if (typeof createImageBitmap === 'function') return createImageBitmap(new Blob([bytes], { type: mime }), { premultiplyAlpha: 'none', colorSpaceConversion: 'none' }).catch(() => loadImg(bytes, mime));
+    return loadImg(bytes, mime);
+  }
+  function loadImg(bytes, mime) {
     const url = URL.createObjectURL(new Blob([bytes], { type: mime }));
     return new Promise((res, rej) => {
       const im = new Image();
@@ -729,7 +736,7 @@ vec3 hfFbSheen(vec3 L, vec3 n, vec3 base) {
     let micro = null;
     function microOf() {
       if (!micro) micro = fetchBuf(base + lib.skin.micro).then((b) => loadImage(new Uint8Array(b), 'image/webp')).then((im) => {
-        const t = new THREE.Texture(im);
+        const t = new THREE.Texture(im); t.flipY = false;
         t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 8; t.needsUpdate = true;
         return t;
       });
@@ -743,7 +750,7 @@ vec3 hfFbSheen(vec3 L, vec3 n, vec3 base) {
       if (!fabMaps) {
         const f = lib.fabric || { a: 'fabric_a.webp', b: 'fabric_b.webp' };
         const one = (file) => fetchBuf(base + file).then((b) => loadImage(new Uint8Array(b), 'image/webp')).then((im) => {
-          const t = new THREE.Texture(im);
+          const t = new THREE.Texture(im); t.flipY = false;
           t.wrapS = t.wrapT = THREE.RepeatWrapping; t.anisotropy = 8; t.needsUpdate = true;
           return t;
         });

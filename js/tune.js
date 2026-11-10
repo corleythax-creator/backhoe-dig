@@ -211,6 +211,8 @@ const TUNE=[
   ['lampLight','Day and night','Headlights, lamps and lit windows',1,'pct',0,300,5],
   // the lights of the town's buildings from Building Forge (forgetown.js bfLightTick): how bright the real ones are, how
   // near the camera a light must be to hold one, and how many real lights at once on each Graphics level (Low has none)
+  ['bfEnv','Day and night','Building Forge buildings: how much sky light their materials take (more reads lighter and shinier, as in Daylight House Studio)',0.8,'pct',0,300,5],
+  ['bfIn','Town','Town buildings from Building Forge: their insides (floors, inside walls) drawn within (0 always)',60,'ft',0,800,10],['bfDoor','Town','…and their doors drawn within (0 always)',150,'ft',0,1500,25],
   ['bfLight','Day and night','Building lights: how bright the lamps and ceiling lights in the town\'s buildings shine',1,'pct',0,400,5],
   ['bfLtFar','Day and night','Building lights: real light only from the ones within',30,'ft',30,300,5],
   ['bfLtFill','Day and night','Building lights: the warm light that fills a lit room you are in',1,'pct',0,400,5],
@@ -218,8 +220,7 @@ const TUNE=[
   ['bfLtHigh','Day and night','Building lights: real lights at once on High graphics',4,'n',0,8,1],
   ['bfLtUltra','Day and night','Building lights: real lights at once on Ultra graphics',6,'n',0,8,1],
   // a room's own light (forgetown.js inRoomTick; High and Ultra graphics)
-  ['inBounce','Day and night','Inside: light bounced round the room you are in',1,'pct',0,300,5],
-  ['inRefl','Day and night','Inside: how strongly the room shows in its steel, glass and polished tops',1,'pct',0,300,5],
+  ['inBounce','Day and night','Inside: how strongly the room you are in lights itself (light bounced off its walls, floor and ceiling, and its reflections)',1,'pct',0,300,5],
   ['inEvery','Day and night','Inside: how often the room\'s light is measured again',4,'s',1,30,1],
   // fuel and pay (fuel.js)
   ['fuelUse','Work and pay','Fuel use (100% burns what the real machine does in an hour of game time; does nothing while fuel burn is off, FUEL_BURN in fuel.js)',1,'pct',0,500,5],
