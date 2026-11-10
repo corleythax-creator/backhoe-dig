@@ -170,11 +170,18 @@ function tfForge(){const F=tf.F||(tf.F={st:0});if(F.st||!gfxCur.forge)return;F.s
   if(window.HumanForge)return go();const s=document.createElement('script');s.src='models/people/human-forge.js';s.onload=go;s.onerror=()=>{F.st=-1};document.head.appendChild(s)}
 // a character's crowd, the first time someone in view wears that look; the walk's ground speed scales with the
 // person's size (the clip's own speed is a 6 ft person's)
-function tfForgeCrowd(B,id){B.fg=1;const F=tf.F;
+function tfForgeCrowd(B,id){B.fg=1;const F=tf.F;tf.fgBusy=(tf.fgBusy||0)+1;
   F.f.preload(['island_'+id]).then(([t])=>{tfDieClips(t);return F.f.crowd('island_'+id,{max:B.cap,clips:TF_FG_CLIPS,lod:gfxCur.forge,castShadow:true,receiveShadow:true}).then(c=>{const m=c.object,M=m.material;
     M.roughness=0.86;M.envMap=skyEnv;M.envMapIntensity=0.5;m.castShadow=!!gfxCur.pbr;m.visible=false;c.stride=F.f.clips.walk.speed*c.type.hip/F.ref;c.runS=(F.f.clips.run||F.f.clips.walk).speed*c.type.hip/F.ref;scene.add(m);
       return gpuWarm(m).then(()=>{B.fg=c})})})
-    .catch(e=>console.warn('townsfolk forge:',id,e))}
+    .catch(e=>console.warn('townsfolk forge:',id,e)).finally(()=>{tf.fgBusy--})}
+// built ahead, wherever the camera is (from the first frames, behind the start card): every character's look and, on
+// High and Ultra, their crowd, one at a time a quarter second apart, so none is built on the frame someone first walks
+// into view (each crowd bakes its clips in one go, the stutter coming into town and round the brewery's many faces)
+function tfPrep(dt){if(!tf.load)tfLoad();if(tf.load!==2)return;if(gfxCur.forge&&!(tf.F&&tf.F.st))tfForge();
+  if((tf.prepT=(tf.prepT||0)-dt)>0)return;tf.prepT=0.25;const M=tf.M;
+  for(const k in M)if(!M[k].texing){tfTex(M[k]);break}
+  if(tf.F&&tf.F.st===2&&gfxCur.forge&&!tf.fgBusy)for(const k in M)if(!M[k].fg){tfForgeCrowd(M[k],k);break}}
 // person p as instance i of crowd c: walking (pace = their speed), sitting (the clip's origin is on the floor under the
 // seat's middle, its seat 18 in up like the rooms' chairs and benches), driving (its seat 14 in up: lifted to where the
 // old seated pose's seat was, 18 in over p.y), or standing easy or talking (staff and customers)
@@ -653,6 +660,27 @@ function tfCarryDraw(L){const C=tf.carM||(tf.carM={}),o3=tf.o;
     if(T.f){hx=0;hy=1.02;hz=0.36}else if(p.sit){hy=0.64;hz=0.33}else{const a=Math.sin(p.ph)*p.amp*0.85;hy=1.4-0.64*Math.cos(a);hz=-0.64*Math.sin(a)}
     o3.position.set(p.x+(hx*c+hz*n)*sc,p.y+(hy+T.y)*sc,p.z+(hz*c-hx*n)*sc);o3.rotation.set(0,p.yaw,0);o3.scale.setScalar(1);o3.updateMatrix();I.setMatrixAt(I.count++,o3.matrix)}
   for(const k in C){C[k].visible=tf.on&&C[k].count>0;C[k].castShadow=!!gfxCur.pbr;C[k].instanceMatrix.needsUpdate=true}}
+// what is on the table before someone seated at one (a Building Forge seat by a table or the bar: sp.tf, how far ahead
+// of the seat, sp.th, how high over the floor; forgetown.js bfSeatAim): a pint of beer at a pub or brewery, with a plate
+// of food now and then; a plate and a drink where people eat; a coffee mug at a café. The same for that person each time
+// (p.tbl), set out once they sit (not while walking in), one instanced mesh per part for those drawn this frame (tfDraw)
+const TF_TABLE={beer:{g:()=>new THREE.CylinderGeometry(0.04,0.032,0.15,12).translate(0,0.075,0),c:0xc8861c,r:0.12},
+  foam:{g:()=>new THREE.CylinderGeometry(0.041,0.04,0.022,12).translate(0,0.161,0),c:0xf2e8cf,r:0.85},
+  plate:{g:()=>new THREE.CylinderGeometry(0.13,0.1,0.016,20).translate(0,0.008,0),c:0xf3f1ea,r:0.3},
+  food:{g:()=>new THREE.SphereGeometry(0.075,12,8).scale(1,0.5,0.85).translate(0,0.03,0),c:0x9b5b2c,r:0.7},
+  mug:{g:()=>new THREE.CylinderGeometry(0.045,0.042,0.1,12).translate(0,0.05,0),c:0xece6da,r:0.35}};
+// the parts before p: [part, across (to their right is minus), ahead (from the glass's spot)]
+function tfTableOf(p){const R=p.room;tfShopW(R);const r=p.tbl??(p.tbl=Math.random()),k=R.vk,bar=p.spot.dy>0,out=[];
+  if(k==='pm'){if(r<0.9)out.push(['beer',-0.12,0],['foam',-0.12,0]);if(!bar&&r>0.55||bar&&r>0.85)out.push(['plate',0.06,0],['food',0.06,0])}
+  else if(k==='meal'){if(r<0.85)out.push(['plate',0,0],['food',0,0]);if(r>0.3)out.push(['beer',-0.17,0.06])}
+  else if(k==='am'||k==='treat'){if(r<0.8)out.push(['mug',-0.1,0])}
+  return out}
+function tfTableDraw(L){const C=tf.tblM||(tf.tblM={}),o3=tf.o;
+  for(const k in TF_TABLE){let I=C[k];if(!I){if(!L.length)continue;const T=TF_TABLE[k];I=C[k]=new THREE.InstancedMesh(T.g(),new THREE.MeshStandardMaterial({color:T.c,roughness:T.r,envMap:skyEnv,envMapIntensity:0.6}),64);I.frustumCulled=false;scene.add(I)}I.count=0}
+  for(const p of L){const sp=p.spot,y=sp.y-(sp.dy||0)+sp.th,c=Math.cos(sp.yaw),n=Math.sin(sp.yaw),bx=sp.x+n*sp.tf,bz=sp.z+c*sp.tf;
+    for(const [k,a,f] of p.tbI||(p.tbI=tfTableOf(p))){const I=C[k];if(!I||I.count>=64)continue;
+      o3.position.set(bx+n*f+c*a,y,bz+c*f-n*a);o3.rotation.set(0,sp.yaw,0);o3.scale.setScalar(1);o3.updateMatrix();I.setMatrixAt(I.count++,o3.matrix)}}
+  for(const k in C){C[k].visible=tf.on&&C[k].count>0;C[k].castShadow=!!gfxCur.pbr;C[k].instanceMatrix.needsUpdate=true}}
 // ---------- the cars parked in the neighbourhoods' driveways and at their curbs (TF_PARKED, suburbs.js) ----------
 // each always the same kind and colour; solid while shown (they come and go with the townsfolk)
 const TF_CAR_HI=45;
@@ -663,7 +691,7 @@ function tfParkedShow(on){if(on===tf.parkedOn)return;tf.parkedOn=on;const ks=Obj
   if(on&&!tf.parked.length){tf.parkedOn=false;return}
   for(const c of tf.parked){c.g.visible=on;const i=SOLIDS.indexOf(c.sol);if(on&&i<0)SOLIDS.push(c.sol);else if(!on&&i>=0)SOLIDS.splice(i,1)}}
 // ---------- each frame ----------
-function tfTick(dt){if(!tf.q){if(tf.on)tfShow(false);return}
+function tfTick(dt){if(!tf.q){if(tf.on)tfShow(false);return}tfPrep(dt);
   const cx=camera.position.x,cz=camera.position.z,B=TF_BOX,dd=Math.hypot(Math.max(B[0]-cx,0,cx-B[1]),Math.max(B[2]-cz,0,cz-B[3]));
   if(dd>TF_NEAR){if(tf.on)tfShow(false);return}
   if(!tf.load)tfLoad();if(tf.load!==2)return;if(gfxCur.forge&&!(tf.F&&tf.F.st))tfForge();
@@ -685,15 +713,16 @@ function tfShow(on){tf.on=on;for(const k in tf.carM||{})tf.carM[k].visible=false
   if(!on){if(tf.F&&tf.F.uh)tfUhOff();for(const k in tf.M||{}){const c=tf.M[k].fg;if(c&&c.object)c.object.visible=false}for(const c of tf.drive.slice())tfCarDrop(c);for(const p of tf.people.slice())tfDrop(p)}}
 function tfDraw(dt){const M=tf.M,o3=tf.o,cx=camera.position.x,cz=camera.position.z,fo=tf.F&&tf.F.st===2&&!!gfxCur.forge;for(const k in M)M[k].n=M[k].fn=0;
   const uh=fo&&tfUhOn()?tfUhPick(cx,cz):null;if(!uh&&tf.F&&tf.F.uh)tfUhOff();
-  const CL=tf.carL||(tf.carL=[]);CL.length=0;
+  const CL=tf.carL||(tf.carL=[]),TL=tf.tblL||(tf.tblL=[]);CL.length=TL.length=0;
   for(const p of tf.people){if(p.inside)continue;const B=M[p.body];if(!B||B.n>=B.cap)continue;
     if((p.x-cx)**2+(p.z-cz)**2>(p.room?TF_RFAR*TF_RFAR:p.drv?TF_CAR_HI*TF_CAR_HI:220*220)||!tfSeen(p.x,p.z,1.3))continue;
     if(p.carry){if(p.dead||p.hurt||p.hit||p.drv)p.carry=null;else if((p.x-cx)**2+(p.z-cz)**2<3600)CL.push(p)}
+    if(p.room&&p.sit&&p.spot.tf&&!(p.dead||p.hurt||p.hit)&&(p.x-cx)**2+(p.z-cz)**2<1600)TL.push(p);
     const hp=p.dead||p.hurt||p.hit?tfHitPose(p):null,kn=hp&&hp.kneel||!hp&&p.cower>0;o3.position.set(p.x,p.y+(p.sit||kn?-0.42*p.sc:Math.abs(Math.cos(p.ph))*0.025*p.amp*p.sc),p.z);
     if(hp){o3.rotation.set(hp.tilt,hp.yaw,hp.roll,'YXZ');o3.position.y+=hp.dy}else o3.rotation.set(0,p.yaw,0,'YXZ');o3.scale.setScalar(p.sc);o3.updateMatrix();
     if(fo){if(!B.fg)tfForgeCrowd(B,p.body);if(B.fg!==1){if(!p.uh)tfFgPose(p,B.fg,B.fn++,dt);else if(!tfUhPose(p,B.fg,dt))tfFgPose(p,B.fg,B.fn++,0);continue}}
     if(!B.texing)tfTex(B);const i=B.n++,w=B.walk.array;B.m.setMatrixAt(i,o3.matrix);w[4*i]=p.ph;const lp=p.dead&&!p.sit?tfLimp(p):0;w[4*i+1]=(kn&&!lp)||p.sit&&!(p.dead||p.hurt)?-1:p.dead||p.hurt?0:p.amp;w[4*i+2]=lp;w[4*i+3]=p.g}
-  tfCarryDraw(CL);
+  tfCarryDraw(CL);tfTableDraw(TL);
   for(const k in M){const B=M[k];B.m.count=B.n;B.m.visible=tf.on&&B.n>0;B.m.instanceMatrix.needsUpdate=true;B.walk.needsUpdate=true;
     const c=B.fg;if(c&&c.object){c.object.count=B.fn;c.object.visible=fo&&tf.on&&B.fn>0}}
   for(const c of [...tf.drive,...tf.parked]){const d2=(c.x-cx)**2+(c.z-cz)**2;c.g.visible=d2<400*400;const hi=d2<TF_CAR_HI*TF_CAR_HI;c.g.children[0].visible=hi;c.g.children[1].visible=!hi}}

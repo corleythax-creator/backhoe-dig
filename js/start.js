@@ -46,7 +46,11 @@ addEventListener('resize',startLay);startLay();
 // counted from core.js and terrain.js with loadCount; up to 75%), then the shaders and texture uploads done behind the
 // cover (warmFrac, main.js; up to 100%), and the structures' pictures (brBusy, bridges.js). It is done when all three are, or after LOADP.cap seconds whatever is left
 const LOADP={js:0,mgr:[],warm:false,done:false,shown:0,cap:60};
-document.addEventListener('load',e=>{if(e.target.tagName==='SCRIPT'&&e.target.defer)LOADP.js++},true);
+document.addEventListener('load',e=>{if(e.target.tagName==='SCRIPT'&&e.target.defer){LOADP.js++;PF_BOOT.js.push([e.target.getAttribute('src'),performance.now()])}},true);
+// for the Profiler (☰ → Dev, js/prof.js): when each game script finished running, and every stretch the page's main
+// thread was held up 50 ms or more (the browser's long tasks), from the start
+const PF_BOOT={js:[],long:[],done:0};
+try{new PerformanceObserver(l=>{for(const e of l.getEntries())if(PF_BOOT.long.length<4000)PF_BOOT.long.push([e.startTime,e.duration])}).observe({type:'longtask',buffered:true})}catch(e){}
 // a script that didn't arrive (a phone's connection dropping a file) leaves the game half built and failing later
 // ("Can't find variable"), so the page loads again by itself, twice at most a session, before it gives up and carries on
 document.addEventListener('error',e=>{if(e.target.tagName!=='SCRIPT'||!e.target.defer)return;let n=0;try{n=+sessionStorage.getItem('bhd_jsRetry')||0}catch(x){}
@@ -69,7 +73,7 @@ function loadStep(bad){if(LOADP.done)return;if(bad){loadEnd();return}const jsN=d
   const sec=now>8000?` · ${Math.round(now/1000)} s`:'';
   document.getElementById('startLoadWhat').textContent=LOADP.err?'Hit a problem: '+LOADP.err.slice(0,120):(!game?'Loading the game':al<at?`Loading pictures and models: ${al} of ${at}`:'Getting the island ready')+sec;
   if(done)loadEnd()}
-function loadEnd(){const L=document.getElementById('startLoad');LOADP.done=true;try{sessionStorage.removeItem('bhd_jsRetry')}catch(x){}L.classList.add('gone');setTimeout(()=>L.hidden=true,450);document.getElementById('startResume').disabled=false;clearInterval(LOADP.iv)}
+function loadEnd(){const L=document.getElementById('startLoad');LOADP.done=true;PF_BOOT.done=performance.now();try{sessionStorage.removeItem('bhd_jsRetry')}catch(x){}L.classList.add('gone');setTimeout(()=>L.hidden=true,450);document.getElementById('startResume').disabled=false;clearInterval(LOADP.iv)}
 LOADP.iv=setInterval(loadTick,150);
 // in a background tab the browser stops drawing frames (and the warming in the frame loop with them) and slows timers to
 // once a second, so loading sat still until you came back. While the tab is hidden the loading work is pumped here

@@ -4,6 +4,10 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Monday, November 9, 2026
 
+- **v388** (9:07 PM) Townsfolk talk gets Voice only: lines spoken aloud with no text boxes over their heads
+- **v387** (8:55 PM) A Profiler in ☰ → Dev: what took longest to load, and what eats the frames in each place you record
+- **v386** (8:32 PM) The brewery's taproom fills like a real one: customers sit on the bar stools and round the tables facing each other with pints and plates of food before them, the floor is real worn pine planks, and a warm glow fills the room when its lights are on.
+- **v385** (8:15 PM) Townsfolk crowds are built in the background from the start, so coming into town no longer stutters as each new face appears
 - **v384** (7:40 PM) Less stutter near townsfolk who talk (the brewery): their speech bubbles no longer make the browser re-lay out the page every frame
 - **v383** (5:51 PM) The backhoe's and wheel loader's digging now loads their diesel (it throttles up, lugs in hard ground and the hoe slows with it), and the pickup goes up to 80 mph and climbs Overlook Road on its engine.
 - **v382** (5:45 PM) The Building Forge buildings' own lamps and ceiling lights come on from dusk to dawn: fixtures glow, outdoor ones have halos, and the nearest few cast real light (2/4/6 on Medium/High/Ultra, none on Low; Graphics: Building lights, and Tuning for brightness, reach and budget)
