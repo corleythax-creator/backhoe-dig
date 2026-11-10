@@ -153,7 +153,8 @@ def main():
         s = add_entry(open(path, encoding='utf-8').read(), v, asked, now, o.dh, chk['tris'], chk['chars'], o.what)
         open(path, 'w', encoding='utf-8').write(s)
         open(os.path.join(ROOT, 'CHANGELOG.md'), 'w', encoding='utf-8').write(changelog(effort(s)))
-        git('add', 'CHANGELOG.md')
+        sh('python3', 'tools/swfiles.py')  # the device copies' fingerprints (sw.js), for the files as merged
+        git('add', 'CHANGELOG.md', 'data/files.json')
         git('commit', '-qam', f'v{v}: effort entry for {o.title}' + TRAILER)
         git('checkout', '-q', '-B', 'main', base)
         git('merge', '--no-ff', '-q', branch, '-m', f'v{v}: {o.title} (merge {branch})' + TRAILER)

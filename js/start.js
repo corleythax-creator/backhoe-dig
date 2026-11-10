@@ -87,3 +87,11 @@ loadBg.ch.port1.onmessage=()=>{if(LOADP.done||!document.hidden){loadBg.on=false;
   loadBg.ch.port2.postMessage(0)};
 function loadBgGo(){if(document.hidden&&!LOADP.done&&!loadBg.on){loadBg.on=true;loadBg.ch.port2.postMessage(0)}}
 document.addEventListener('visibilitychange',loadBgGo);loadBgGo();
+// keep the game's files on the device (sw.js), so the next visit opens without downloading them again. Not for old
+// versions (versions/) or local test servers (?sw=1 turns it on there); ?sw=0 switches it off on this device and
+// empties what it kept
+function swGo(){try{const sw=navigator.serviceWorker,q=new URLSearchParams(location.search).get('sw');if(!sw)return;
+  if(q==='0'){sw.getRegistrations().then(rs=>rs.forEach(r=>r.unregister()));if(self.caches)caches.keys().then(ks=>ks.forEach(k=>/^bhd-/.test(k)&&caches.delete(k)));return}
+  if(/\/versions\//.test(location.pathname)||q!=='1'&&/^(localhost|127\.|play\.test)/.test(location.hostname))return;
+  sw.register('sw.js').catch(()=>{})}catch(e){}}
+addEventListener('load',swGo);
