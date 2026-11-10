@@ -46,14 +46,18 @@ function pfWhere(){const c=camera.position;let best='',bd=1e9;const N={corley:"C
   const inR=typeof rmRoomAt==='function'&&rmRoomAt(c.x,c.z,c.y),what=($('#nowWhat')||{}).textContent||mode;
   return `${best}${inR?', inside':''} · ${what} · at ${Math.round(c.x/FT)}, ${Math.round(c.z/FT)} ft`}
 // the scene's top-level groups in view, by triangles (an instanced mesh counts every copy drawn)
-function pfHeavy(){camera.updateMatrixWorld();const fr=new THREE.Frustum().setFromProjectionMatrix(new THREE.Matrix4().multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse)),sp=new THREE.Sphere(),out=[];
+// counted as the game's own camera pass sees them: with the Graphics setting's tiny far detail, the indoor check and the
+// islands' machines left out from town (gfxCullOn, gfxAway), and a draw call per material
+function pfHeavy(){camera.updateMatrixWorld();const fr=new THREE.Frustum().setFromProjectionMatrix(new THREE.Matrix4().multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse)),out=[];
+  gfxCullOn(camera);gfxAway(camera);gfxCull.mainF=fr;try{
   const nameOf=o=>{let n=o.name;if(!n)o.traverse(q=>{if(!n&&q.name)n=q.name});return n||(o.isInstancedMesh?'(instanced '+(o.material&&o.material.type||'')+')':'('+o.type+' '+(o.material&&o.material.type||'')+')')};
   for(const g of scene.children){if(!g.visible)continue;let tris=0,meshes=0;
     g.traverseVisible(o=>{if(!(o.isMesh||o.isPoints||o.isLine)||!o.geometry)return;const G=o.geometry;
-      if(o.frustumCulled!==false){if(!G.boundingSphere)G.computeBoundingSphere();if(G.boundingSphere&&!o.isInstancedMesh){sp.copy(G.boundingSphere).applyMatrix4(o.matrixWorld);if(!fr.intersectsSphere(sp))return}}
-      const n=G.index?G.index.count:G.attributes.position?G.attributes.position.count:0,inst=o.isInstancedMesh?o.count:G.isInstancedBufferGeometry?G.instanceCount:1;tris+=(o.isMesh?n/3:n)*Math.min(inst,1e6);meshes++});
+      if(o.frustumCulled!==false&&!fr.intersectsObject(o))return;if(o.isInstancedMesh&&!o.count)return;
+      const n=G.index?G.index.count:G.attributes.position?G.attributes.position.count:0,inst=o.isInstancedMesh?o.count:G.isInstancedBufferGeometry?G.instanceCount:1;tris+=(o.isMesh?n/3:n)*Math.min(inst,1e6);meshes+=Array.isArray(o.material)?Math.max(1,G.groups.length):1});
     if(meshes)out.push({n:nameOf(g)+(g.userData.pfSrc?' · '+g.userData.pfSrc+'.js':''),f:g.userData.pfSrc||'?',tris,meshes})}
   // and the same summed by the game file that added them
+  }finally{gfxCull.on=false;while(gfxHid.length)gfxHid.pop().visible=true}
   const F={};for(const g of out){const e=F[g.f]||(F[g.f]={n:g.f+'.js (all)',tris:0,meshes:0});e.tris+=g.tris;e.meshes+=g.meshes}
   pfHeavyBy.length=0;pfHeavyBy.push(...Object.values(F).sort((a,b)=>b.tris-a.tris).slice(0,10));
   return out.sort((a,b)=>b.tris-a.tris).slice(0,12)}
@@ -102,8 +106,8 @@ function pfRunHtml(r,i){let h=`<h2>${i+1}. ${pfEsc(r.where)} <small>(${pfEsc(r.g
   h+=pfTable(['Part of the frame','Average','Worst'],r.parts.map(p=>[p.n,p.avg.toFixed(2)+' ms',pfMs(p.max)]));
   h+='<h3>Slowest frames</h3>'+pfTable(['Frame','Slow parts'],r.slow.map(s=>[pfMs(s.ft),s.top.join(', ')||'outside the game\'s code']));
   if(r.loafs.length)h+='<h3>Freezes (what the browser says held them)</h3>'+pfTable(['Froze','Script'],r.loafs.map(l=>[pfMs(l.ms),l.sc.join(' · ')||'(the browser or graphics card)']));
-  h+='<h3>In view, by the game file that adds it</h3>'+pfTable(['File','Triangles','Meshes'],(r.heavyBy||[]).map(g=>[g.n,g.tris>=1e6?(g.tris/1e6).toFixed(2)+' M':Math.round(g.tris/1000)+' k',g.meshes]));
-  h+='<h3>Heaviest things in view</h3>'+pfTable(['Group','Triangles','Meshes'],r.heavy.map(g=>[g.n,g.tris>=1e6?(g.tris/1e6).toFixed(2)+' M':Math.round(g.tris/1000)+' k',g.meshes]));
+  h+='<h3>In view, by the game file that adds it</h3>'+pfTable(['File','Triangles','Draws'],(r.heavyBy||[]).map(g=>[g.n,g.tris>=1e6?(g.tris/1e6).toFixed(2)+' M':Math.round(g.tris/1000)+' k',g.meshes]));
+  h+='<h3>Heaviest things in view</h3>'+pfTable(['Group','Triangles','Draws'],r.heavy.map(g=>[g.n,g.tris>=1e6?(g.tris/1e6).toFixed(2)+' M':Math.round(g.tris/1000)+' k',g.meshes]));
   return h}
 function pfText(){const L=pfLoadReport(),T=[`Corley's Island profiler · ${window.EFFORT&&EFFORT.versions?'v'+EFFORT.versions[EFFORT.versions.length-1].v:''} · ${navigator.userAgent}`,
     `LOADING: page ${L.nav?pfMs(L.nav.dom):'?'}, scripts ${pfMs(L.jsEnd)}, cover done ${L.done?pfMs(L.done):'no'}; ${L.nFiles} files ${pfKB(L.tot)}; frozen ${pfMs(L.blocked)} in ${L.nLong}`,

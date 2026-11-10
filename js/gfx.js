@@ -104,7 +104,9 @@ const gfxIsl=(x,z,m)=>mesaR(x,z)<EDGE+m||famR(x,z)<FAM_R+m||jesR(x,z)<JES_R+m||d
 // (read when a frame is drawn, after every script has loaded)
 function gfxMachines(){const L=[machine,truck,mower,skid,bike,tbox];
   if(typeof cpl!=='undefined'&&cpl.g)for(const k in cpl.g)if(cpl.g[k].parent===scene)L.push(cpl.g[k]);
-  if(typeof hvs!=='undefined')for(const h of hvs)if(h.g)L.push(h.g);return L}
+  if(typeof hvs!=='undefined')for(const h of hvs)if(h.g)L.push(h.g);
+  // and the parked twins of the machines (twins.js): about 350 parts that drew from town too
+  if(typeof TWINS!=='undefined')for(const t of TWINS)if(t.g)L.push(t.g);return L}
 const gfxHid=[];
 function gfxAway(cam){if(cam!==camera||edOn||renderer.xr.isPresenting)return;const c=cam.position;
   if(c.z<TU.townZ||gfxIsl(c.x,c.z,30))return;
