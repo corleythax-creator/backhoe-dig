@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-10T16:36:00Z",
+ "updated": "2026-11-10T19:41:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -132,9 +132,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-10",
-   "dh": 3.5,
-   "act": 1,
-   "versions": 2
+   "dh": 5.5,
+   "act": 1.5,
+   "versions": 3
   }
  ],
  "extra": [
@@ -3708,6 +3708,15 @@ window.EFFORT = {
    "tris": 5788800,
    "chars": 2530029,
    "what": "Shadows no longer make every frame wait on the graphics card (an error check each frame), which held slow office PCs back at any resolution"
+  },
+  {
+   "v": 397,
+   "asked": "2026-11-10T13:10:00-06:00",
+   "live": "2026-11-10T13:41:20-06:00",
+   "dh": 2,
+   "tris": 5790493,
+   "chars": 2530388,
+   "what": "Work graphics lighter after an office PC's profile: the gun shop's display guns no longer draw from everywhere, no bridge detail parts, less undergrowth, a shorter haze (about a fifth fewer draws and 30% fewer triangles in town)"
   }
  ]
 };

@@ -79,11 +79,11 @@ GFX.quest.extraLt=false;GFX.quest.bfLt=false;
 // lamps that cast light, grass blades and undergrowth like Low, full-detail trees only near you, the medium texture
 // pack, a slightly shorter haze and fewer, simpler townsfolk. Picked for you on Intel graphics
 GFX.work=Object.assign({},GFX.high,{name:'Work',shEvery:2,pr:1,sh:2048,shR:28,soft:false,csm:0,bounce:false,autoExp:false,inLight:false,
-  tex:'med',aniso:4,dirt:2,lawnFar:10,fog:0.85,cloudQ:1,lakeQ:1,rainN:900,rainSp:240,splashN:350,wakeN:200,brush:0.35,wild:0.35,
-  turf:0.35,turfR:22,peb:0,treeR:60,tuftQ:0,tuft:[0.6,12,40,0.2],town:1,forge:'',cull:6,rmNear:25,extraLt:false,propLt:false,bfLt:false,vrSS:1});
+  tex:'med',aniso:4,dirt:2,lawnFar:10,fog:0.75,cloudQ:1,lakeQ:1,rainN:900,rainSp:240,splashN:350,wakeN:200,brush:0.15,wild:0.35,
+  turf:0.35,turfR:22,peb:0,treeR:45,tuftQ:0,tuft:[0.6,12,40,0.2],town:1,forge:'',cull:6,rmNear:25,extraLt:false,propLt:false,bfLt:false,vrSS:1});
 // the bridges' detail parts: gusset and cover plates, lacing and lattice, braces, lamp trim, the covered bridge's
-// lattice and rafters, batter piles (bridges.js); Low leaves them out
-GFX.low.brDet=false;GFX.med.brDet=GFX.high.brDet=GFX.ultra.brDet=GFX.quest.brDet=GFX.work.brDet=true;
+// lattice and rafters, batter piles (bridges.js); Low and Work leave them out
+GFX.low.brDet=false;GFX.med.brDet=GFX.high.brDet=GFX.ultra.brDet=GFX.quest.brDet=true;GFX.work.brDet=false;
 // Tiny far detail: three.js draws everything in view, however far, and from town that is the machines and yards on the
 // islands, a hundred parts each, most a pixel or two across: about 1,000 of the 1,400 draws a frame. The camera's own
 // check (Frustum.intersectsObject) also skips a mesh whose width on screen is under gfxCur.cull CSS pixels, or that is

@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Tuesday, November 10, 2026
 
+- **v397** (1:41 PM) Work graphics lighter after an office PC's profile: the gun shop's display guns no longer draw from everywhere, no bridge detail parts, less undergrowth, a shorter haze (about a fifth fewer draws and 30% fewer triangles in town)
 - **v396** (10:36 AM) Shadows no longer make every frame wait on the graphics card (an error check each frame), which held slow office PCs back at any resolution
 - **v395** (9:35 AM) A Work graphics level: the High look (detailed machines, material relief, filmic light, the same town and buildings) at a fraction of Medium's cost, for office PCs; picked for you on Intel graphics
 
