@@ -194,7 +194,7 @@ function bfLightTick(lamp,ll,dt){
 // stop them; an idle one is parked far below the world so its shadow pass draws nothing). The picture is taken twice
 // on the way in (the second sees the first's bounce) and again every TU.inEvery s, into two pictures in turn (one is
 // read while the other is drawn). Only how it looks: nothing here is saved or changes what anything does.
-const IN_LAYER=6,inRL={on:false,sh:false,B:null,R:null,rts:null,i:0,cam:null,probe:null,gen:null,k:0,t:0,n:0,busy:false,mats:new Set()};
+const IN_LAYER=6,inRL={on:false,sh:false,B:null,R:null,rts:null,i:0,cam:null,probe:null,buf:null,k:0,t:0,n:0,busy:false,mats:new Set()};
 function inLightGfx(on,sh){inRL.on=!!on;if(!on)inRoomOut();if(inRL.sh!==!!sh){inRL.sh=!!sh;inLtShSet()}}
 function inLtShSet(){const set=(o,v)=>{o.castShadow=v;if(v){o.shadow.mapSize.set(512,512);o.shadow.bias=-0.002;o.shadow.normalBias=0.03;o.shadow.camera.near=0.1}};
   bfLt.spots.forEach(s=>set(s.o,inRL.sh));bfLt.pts.forEach((s,i)=>set(s.o,inRL.sh&&i===0))}
@@ -219,16 +219,25 @@ function inRoomTick(dt){let R=null,B=null;
 function inCapture(R,B){
   if(!inRL.rts){const o={type:THREE.HalfFloatType,generateMipmaps:false};inRL.rts=[new THREE.WebGLCubeRenderTarget(128,o),new THREE.WebGLCubeRenderTarget(128,o)];
     inRL.cam=new THREE.CubeCamera(0.05,80,inRL.rts[0]);inRL.cam.layers.set(IN_LAYER);inRL.probe=new THREE.LightProbe();inRL.probe.intensity=0;scene.add(inRL.probe);
-    inRL.gen=import('three/addons/lights/LightProbeGenerator.js').then(M=>M.LightProbeGenerator)}
+  }
   const rt=inRL.rts[inRL.i];inRL.cam.renderTarget=rt;
   B.g.traverse(o=>o.layers.enable(IN_LAYER));scene.traverse(o=>{if(o.isLight)o.layers.enable(IN_LAYER)});
   inRL.cam.position.set(R.x,Math.min(R.y+1.6,R.top-0.3),R.z);inRL.cam.updateMatrixWorld();
   const au=renderer.shadowMap.autoUpdate,fi=BF_FILL.intensity,pi=inRL.probe.intensity;
   renderer.shadowMap.autoUpdate=false;BF_FILL.intensity=0;inRL.probe.intensity=inRL.n?(TU.inBounce??1):0;
   try{inRL.cam.update(renderer,scene)}finally{renderer.shadowMap.autoUpdate=au;BF_FILL.intensity=fi;inRL.probe.intensity=pi}
-  inRL.busy=true;const want=B;
-  inRL.gen.then(G=>G.fromCubeRenderTarget(renderer,rt)).then(p=>{inRL.busy=false;if(inRL.B!==want)return;
-    inRL.probe.sh.copy(p.sh);inMats(B,rt.texture);inRL.i^=1;inRL.n++}).catch(e=>{inRL.busy=false;console.warn('room light',e)})}
+  try{inSH(rt,inRL.probe.sh)}catch(e){console.warn('room light',e);return}
+  inMats(B,rt.texture);inRL.i^=1;inRL.n++}
+// the picture's light from every side as spherical harmonics (as three.js's LightProbeGenerator works it out, read
+// back at once: its waiting read of a cube's face never finishes), every other pixel of each face
+function inSH(rt,sh){const W=rt.width,flip=renderer.coordinateSystem===THREE.WebGLCoordinateSystem?-1:1,B=[0,0,0,0,0,0,0,0,0],C=sh.coefficients,v=new THREE.Vector3(),H=THREE.DataUtils.fromHalfFloat;
+  if(!inRL.buf||inRL.buf.length!==W*W*4)inRL.buf=new Uint16Array(W*W*4);const D=inRL.buf;for(const c of C)c.set(0,0,0);let tw=0;const ps=2/W;
+  for(let f=0;f<6;f++){renderer.readRenderTargetPixels(rt,0,0,W,W,D,f);
+    for(let y=0;y<W;y+=2)for(let x=0;x<W;x+=2){const i=(y*W+x)*4,col=(1-(x+0.5)*ps)*flip,row=1-(y+0.5)*ps;
+      switch(f){case 0:v.set(-flip,row,col*flip);break;case 1:v.set(flip,row,-col*flip);break;case 2:v.set(col,1,-row);break;case 3:v.set(col,-1,row);break;case 4:v.set(col,row,1);break;default:v.set(-col,row,-1)}
+      const l2=v.lengthSq(),w=4/(Math.sqrt(l2)*l2);tw+=w;v.normalize();THREE.SphericalHarmonics3.getBasisAt(v,B);const r=H(D[i])*w,g=H(D[i+1])*w,b=H(D[i+2])*w;
+      for(let j=0;j<9;j++){C[j].x+=B[j]*r;C[j].y+=B[j]*g;C[j].z+=B[j]*b}}}
+  const n=4*Math.PI/tw;for(const c of C)c.multiplyScalar(n)}
 function bfPhong(m){if(!m||!m.isMeshStandardMaterial)return m;if(bfMats.has(m))return bfMats.get(m);
   const r=m.roughness??1,mt=m.metalness||0,P=new THREE.MeshPhongMaterial({color:m.color.clone(),map:m.map,normalMap:m.normalMap,emissive:m.emissive.clone(),emissiveMap:m.emissiveMap,
     transparent:m.transparent,opacity:m.opacity,alphaTest:m.alphaTest,side:m.side,depthWrite:m.depthWrite,vertexColors:m.vertexColors,
