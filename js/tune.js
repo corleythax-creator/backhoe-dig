@@ -211,6 +211,7 @@ const TUNE=[
   ['lampLight','Day and night','Headlights, lamps and lit windows',1,'pct',0,300,5],
   // the lights of the town's buildings from Building Forge (forgetown.js bfLightTick): how bright the real ones are, how
   // near the camera a light must be to hold one, and how many real lights at once on each Graphics level (Low has none)
+  ['bfIn','Town','Town buildings from Building Forge: their insides (floors, inside walls) drawn within (0 always)',60,'ft',0,800,10],['bfDoor','Town','…and their doors drawn within (0 always)',150,'ft',0,1500,25],
   ['bfLight','Day and night','Building lights: how bright the lamps and ceiling lights in the town\'s buildings shine',1,'pct',0,400,5],
   ['bfLtFar','Day and night','Building lights: real light only from the ones within',30,'ft',30,300,5],
   ['bfLtMed','Day and night','Building lights: real lights at once on Medium graphics (each costs every pixel a little)',2,'n',0,8,1],
