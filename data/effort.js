@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-10T03:34:00Z",
+ "updated": "2026-11-10T03:51:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -126,9 +126,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-09",
-   "dh": 63,
+   "dh": 64,
    "act": 6.5,
-   "versions": 18
+   "versions": 19
   }
  ],
  "extra": [
@@ -3657,6 +3657,15 @@ window.EFFORT = {
    "tris": 5793095,
    "chars": 2520126,
    "what": "In town each kind of Building Forge building is drawn once for all its copies (18 Cape Cods in one go), and their insides and doors only near: far fewer draws in town and at the marina; Tune: Town to set the distances"
+  },
+  {
+   "v": 392,
+   "asked": "2026-11-09T20:52:00-06:00",
+   "live": "2026-11-09T21:51:41-06:00",
+   "dh": 1,
+   "tris": 5801380,
+   "chars": 2520317,
+   "what": "The town's Building Forge buildings keep Daylight House Studio's own materials (colour, roughness, metal, bumps), lit by the sky so they look as they do in Daylight (Tuning: Building Forge sky light)."
   }
  ]
 };

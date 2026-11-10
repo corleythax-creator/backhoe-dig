@@ -156,7 +156,7 @@ function bfLtHalos(){const P=[],C=[],S=[],F=[],v=bfLt.v;
   const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(P,3));g.setAttribute('col',new THREE.Float32BufferAttribute(C,3));
   g.setAttribute('sz',new THREE.Float32BufferAttribute(S,1));g.setAttribute('fx',new THREE.Float32BufferAttribute(F,1));bfLt.halos.geometry.dispose();bfLt.halos.geometry=g}
 // each frame from daynight.js: lamp is how dark it is (0 by day, 1 at night), ll the Lamp light tuning
-function bfLightTick(lamp,ll,dt){
+function bfLightTick(lamp,ll,dt){bfEnvTick();
   for(const e of bfLt.glow.values())e.m.color.copy(e.c).multiplyScalar(e.auto?0.45+0.55*lamp:1);
   if(bfLt.dirty&&bf.lots.length){bfLt.dirty=0;bfLtHalos()}
   if(bfLt.halos)bfLt.halos.visible=lamp>0.01&&bfLt.halos.geometry.attributes.position.count>0;
@@ -180,11 +180,12 @@ function bfLightTick(lamp,ll,dt){
   bfLt.fillK+=(bfLt.fill-bfLt.fillK)*Math.min(1,dt*3);BF_FILL.intensity=bfLt.fillK*(TU.bfLtFill??1)*BF_FILL_I*LI;
   const g=ll*TU.bfLight*BF_LT_I*LI,f=Math.min(1,dt*4);
   for(const s of bfLt.all){const l=s.l;if(!l)continue;s.k=Math.min(1,s.k+f);s.o.intensity=g*l.k*(l.auto?lamp:1)*s.k*s.e*(s.o.isSpotLight&&l.d?1.5:1)}}
+// the building's materials kept as Daylight House Studio made them (PBR: colour, roughness, metalness, normal and AO maps),
+// lit by the game's sky (skyEnv) as well as its sun, so they read as they do in Daylight; without the sky they stood far
+// darker than the game's own buildings. How much sky they take is the Tuning bfEnv (read live: bfEnvTick)
 function bfPhong(m){if(!m||!m.isMeshStandardMaterial)return m;if(bfMats.has(m))return bfMats.get(m);
-  const r=m.roughness??1,mt=m.metalness||0,P=new THREE.MeshPhongMaterial({color:m.color.clone(),map:m.map,normalMap:m.normalMap,emissive:m.emissive.clone(),emissiveMap:m.emissiveMap,
-    transparent:m.transparent,opacity:m.opacity,alphaTest:m.alphaTest,side:m.side,depthWrite:m.depthWrite,vertexColors:m.vertexColors,
-    shininess:4+Math.pow(1-r,2)*90,specular:mt>0.3?m.color.clone().multiplyScalar(0.5*mt):new THREE.Color(0x111111).lerp(new THREE.Color(0x555555),Math.max(0,0.6-r))});
-  if(m.normalMap)P.normalScale.copy(m.normalScale);P.name=m.name;bfMats.set(m,P);return P}
+  m.envMap=skyEnv;m.envMapIntensity=TU.bfEnv;m.needsUpdate=true;bfMats.set(m,m);return m}
+let bfEnvK=-1;function bfEnvTick(){if(TU.bfEnv===bfEnvK)return;bfEnvK=TU.bfEnv;for(const m of bfMats.values())m.envMapIntensity=bfEnvK}
 function bfPack(root,merge,it){const col=root.getObjectByName('Collision');if(col)col.removeFromParent();root.updateMatrixWorld(true);
   // its lights (the library entry's, or the same list in the model's own extras.forge.game): with a list, each fixture
   // that is not switched off glows in its light's colour (bfLtGlow); with none, every ceiling light glows as before

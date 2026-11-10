@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Monday, November 9, 2026
 
+- **v392** (9:51 PM) The town's Building Forge buildings keep Daylight House Studio's own materials (colour, roughness, metal, bumps), lit by the sky so they look as they do in Daylight (Tuning: Building Forge sky light).
 - **v391** (9:34 PM) In town each kind of Building Forge building is drawn once for all its copies (18 Cape Cods in one go), and their insides and doors only near: far fewer draws in town and at the marina; Tune: Town to set the distances
 - **v390** (9:22 PM) Smoother in town: the islands' parked machines no longer draw from town, the corner map redraws less often, and townsfolk pictures decode off the main thread
 - **v389** (9:18 PM) The game's files are kept on the device, so opening it again skips the downloads (and works offline); a new version downloads only the files it changed
