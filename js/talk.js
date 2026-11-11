@@ -149,13 +149,30 @@ function talkInit(){if(TALK.M||!window.HumanForgeMind)return;
 function talkSet(m,keep){TALK.mode=m;if(keep)try{localStorage.setItem('bhd_talk',m)}catch(e){}
   for(const b of document.querySelectorAll('#talkRow button'))b.setAttribute('aria-pressed',String(b.dataset.talk===m));
   for(const r of document.querySelectorAll('.talkOpt'))r.hidden=m==='off';
-  for(const b of TALK.bub.values())b.el.hidden=m==='say';
+  for(const b of TALK.bub.values())b.el.hidden=m==='say';if(TALK.log2&&(m==='say'||m==='off')){TALK.log2.replaceChildren();TALK.log2.hidden=true}
   if(m==='off'){talkClose();for(const b of TALK.bub.values())b.el.remove();TALK.bub.clear();if(TALK.M){TALK.M.chatter=false;TALK.M.hush()}}
   else{talkLib();talkInit();if(TALK.M){TALK.M.chatter=true;if(TALK.M.model!=='local')TALK.M.check()}talkPaint()}}
 for(const b of document.querySelectorAll('#talkRow button'))b.onclick=()=>talkSet(b.dataset.talk,1);
 talkSet(TALK.mode);
 
-// ---- what shows: a chip near someone, the box to type in, the lines over heads
+// ---- the conversation box (#talkLog): what is said near you, one line under the next with who said it (and to whom),
+// the newest at the bottom, the oldest fading out (TALK_LOG_N lines, gone after TALK_LOG_S seconds); lines to you stand
+// out. Only what you could hear: said within TU.talkLogR of you (or of the machine you are in), or to you. Text and
+// Aloud show it; Voice only does not. Nothing floats over their heads
+const TALK_LOG_N=6,TALK_LOG_S=18;
+function talkLog(p,text,to){if(TALK.mode==='say'||TALK.mode==='off'||!p||typeof p!=='object')return;
+  const toYou=to==='you',F=mode==='walk'&&!wk.inside?wk:(()=>{const k=wk.inside||rideOf(mode),o=k&&WK_RIDES[k]&&WK_RIDES[k].o;return o&&isFinite(o.x)?o:wk})();
+  if(!toYou&&Math.hypot(p.x-F.x,p.z-F.z)>TU.talkLogR)return;
+  let box=TALK.log2;if(!box){box=TALK.log2=document.createElement('div');box.id='talkLog';box.setAttribute('aria-live','polite');document.body.appendChild(box)}
+  const row=document.createElement('div');row.className='tlLine'+(toYou?' you':'');const n=document.createElement('b');n.textContent=talkName(p);row.append(n);
+  if(to&&typeof to==='object'&&to!==p){const w=document.createElement('i');w.textContent=' to '+talkName(to).split(' ')[0];row.append(w)}
+  const t=document.createElement('span');t.textContent=text;row.append(t);row.dataset.t=performance.now()/1000;box.append(row);
+  while(box.children.length>TALK_LOG_N)box.firstChild.remove();box.hidden=false}
+// each frame: old lines fade and go
+function talkLogTick(){const box=TALK.log2;if(!box||box.hidden)return;const now=performance.now()/1000;
+  for(const r of [...box.children]){const age=now-r.dataset.t;if(age>TALK_LOG_S)r.remove();else if(age>TALK_LOG_S-4&&!r.classList.contains('old'))r.classList.add('old')}
+  if(!box.children.length)box.hidden=true}
+// ---- what shows: a chip near someone, the box to type in
 function talkUI(){if(TALK.ui)return TALK.ui;const d=document.createElement('div');d.id='talkBox';d.hidden=true;
   d.innerHTML='<button id="talkChip"></button><form id="talkForm" hidden><input id="talkIn" maxlength="300" autocomplete="off"><button></button><button type="button" id="talkMic" hidden aria-pressed="false"></button><button type="button" id="talkAll" hidden aria-pressed="false"></button><button type="button" id="talkX">×</button></form><div id="talkStatus"></div>';
   d.querySelector('#talkForm button').textContent=say('tkSay');d.querySelector('#talkAll').textContent=say('tkAll');
@@ -224,9 +241,8 @@ function talkBend(p,h){const g=h.object,B=h._tb||(h._tb={neck:g.getObjectByName(
   turn(B.neck,_tbX[0],pt*0.4);turn(B.neck,_tbX[1],yw*0.4);turn(B.head,_tbX[0],pt*0.6);turn(B.head,_tbX[1],yw*0.6);turn(B.head,_tbX[2],rl);
   for(const d of B.done)d[1]=d[0].quaternion.clone()}
 function talkFace(p,s,x=wk.x,z=wk.z){if(!p||typeof p!=='object'||p.room||p.drv||p.cop||p.dead||p.flee>0)return;p.wait=Math.max(p.wait||0,s);p.look=Math.atan2(x-p.x,z-p.z)}
-function talkShow(p,a,to,ev){if(to&&typeof to==='object'&&typeof bdChat==='function')bdChat(p,to,a);const u=talkUI();let b=TALK.bub.get(p);if(!b){b={el:document.createElement('div')};b.el.className='talkLine';b.el.style.left=b.el.style.top='0';u.L.appendChild(b.el);TALK.bub.set(p,b)}
-  b.el.innerHTML='';b.w=undefined;b.el.hidden=TALK.mode==='say';const n=document.createElement('b');n.textContent=talkName(p);b.el.append(n,document.createTextNode(a.say));
-  b.until=performance.now()/1000+3.5+a.say.split(/\s+/).length*0.38;const s=b.until-performance.now()/1000;
+function talkShow(p,a,to,ev){if(to&&typeof to==='object'&&typeof bdChat==='function')bdChat(p,to,a);talkUI();
+  const s=3.5+a.say.split(/\s+/).length*0.38;talkLog(p,a.say,to);
   // who they turn to: the one they talk to (and that one back), what happened to them, or you
   if(to&&typeof to==='object'&&talkCard(to)&&Math.random()<0.3)repGossip(p,to);
   // talking and listening (tfFgClip, talkBend): the one talking gestures (the talk clip), the one told stands and listens
@@ -271,9 +287,8 @@ function talkVoice(p,text){if(!sndCfg.on||!p||typeof p!=='object')return;const d
   const c=talkCard(p)||talkKid(p);
   if(T.c<0.55){talkMurmur(p,text,c,v,T.cut);return}
   if(v*sndCfg.master/100<0.02)return;
-  // the browser speaks one line at a time: while one is being said, others at the same moment come as a murmur (a busy
-  // room's hubbub), unless this one is nearer than who is speaking
-  if(TALK.M.speaking()&&TALK.spk&&TALK.spk!==p&&talkEar(TALK.spk)<=d){talkMurmur(p,text,c,v*0.8,2600);return}
+  // one voice at a time, in words: while someone is being heard, other lines show over their heads and are not spoken
+  if(TALK.M.speaking()&&TALK.spk&&TALK.spk!==p)return;
   TALK.M.speak(text,c,v*sndCfg.master/100);TALK.spk=p}
 // a line heard through a wall: their voice (a man's, a woman's, a child's pitch) as syllables of vowel formants, as
 // long as the line, low-passed at cut and placed where they are (late with distance, to one side)
@@ -419,7 +434,7 @@ function talkRect(){const n=performance.now();if(!TALK.rect||n-TALK.rectT>1000){
 addEventListener('resize',()=>{TALK.rectT=-1e9});
 // ---- each frame (from main.js)
 function talkTick(dt){
-  talkErrands(dt);ordTick(dt);roTick(dt);puTick(dt);ndTick(dt);bdTick(dt);dyTick(dt);soTick(dt);soChat(dt);cpTick(dt);repTick(dt);
+  talkErrands(dt);talkLogTick();ordTick(dt);roTick(dt);puTick(dt);ndTick(dt);bdTick(dt);dyTick(dt);soTick(dt);soChat(dt);cpTick(dt);repTick(dt);
   const on=TALK.mode!=='off'&&TALK.M&&TALK.lib&&tf.on;
   if(!on){if(TALK.ui)TALK.ui.d.hidden=true;if(TALK.with)talkClose();for(const b of TALK.bub.values())b.el.classList.remove('on');return}
   const u=talkUI(),now=performance.now()/1000,foot=mode==='walk'&&!wk.inside;
