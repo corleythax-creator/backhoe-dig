@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-11T14:40:00Z",
+ "updated": "2026-11-11T16:50:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -138,9 +138,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-11",
-   "dh": 2.5,
-   "act": 0.5,
-   "versions": 1
+   "dh": 7.5,
+   "act": 1,
+   "versions": 2
   }
  ],
  "extra": [
@@ -3849,6 +3849,15 @@ window.EFFORT = {
    "tris": 7597249,
    "chars": 2649982,
    "what": "Corner map draws only what is in view (4 ms to 0.9 ms, 15 times a second); Work graphics drops the paint's clear coat; profiler skips capped refreshes and marks shader-building frames"
+  },
+  {
+   "v": 412,
+   "asked": "2026-11-11T09:55:00-06:00",
+   "live": "2026-11-11T10:50:42-06:00",
+   "dh": 5,
+   "tris": 7208605,
+   "chars": 2658167,
+   "what": "Townsfolk use their light model past 25 m (Work) or 40 m; parked cars merged per material, far ones batched by kind with their paint per car; street furniture and far car parts drawn only where the game camera would see them (in view, big enough, inside the haze, seen from your room); people outside a room you are in are left out too"
   }
  ]
 };
