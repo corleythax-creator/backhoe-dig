@@ -331,9 +331,15 @@ function startIn(m){setMode(m);if(m==='walk'){if(camMode!=='cab')camSet('cab');i
 let startWarmed=false;
 function startReveal(){if(help.hidden)return;if(startWarmed||typeof gpuWarm!=='function'){help.hidden=true;return}startWarmed=true;
   const hint=$('#startMapHint'),f0=renderer.info.render.frame,t0=performance.now();let done=false;hint.textContent='Getting your spot ready…';
-  const end=()=>{if(done)return;done=true;help.hidden=true;hint.textContent='Tap the map to zoom in'};setTimeout(end,3000);
-  // a few frames there first, so the things made on arrival exist, then everything is warmed
-  const wait=()=>{if(done)return;if(renderer.info.render.frame-f0<6&&performance.now()-t0<1500){setTimeout(wait,50);return}gpuWarm(typeof warmRoot==='function'?warmRoot():scene).then(end,end)};wait()}
+  const v0=wk.view,end=()=>{if(done)return;done=true;wk.view=v0;fpl.yaw=fpl.pitch=0;firstCam=true;help.hidden=true;hint.textContent='Tap the map to zoom in'};setTimeout(end,8000);
+  // a few frames there first, so the things made on arrival exist; then, still behind the card, a look all the way round
+  // (eight ways level, four looking down), each drawn for real: the first time a way is faced its meshes and pictures go
+  // to the graphics card, which on Windows was the stutter of the first look round and first steps; then everything warmed
+  const LOOK=[...[1,2,3,4,5,6,7,0].map(i=>[i*Math.PI/4,0]),...[0,1,2,3].map(i=>[i*Math.PI/2,-0.5])];let li=0;
+  const raf=n=>new Promise(r=>{const f=()=>--n<=0?r():requestAnimationFrame(f);requestAnimationFrame(f)});
+  const look=async()=>{while(li<LOOK.length&&!done&&performance.now()-t0<6500){const [a,p]=LOOK[li++];wk.view=v0+a;fpl.pitch=p;firstCam=true;await raf(2)}
+    if(done)return;wk.view=v0;fpl.yaw=fpl.pitch=0;firstCam=true;await raf(1);gpuWarm(typeof warmRoot==='function'?warmRoot():scene).then(end,end)};
+  const wait=()=>{if(done)return;if(renderer.info.render.frame-f0<6&&performance.now()-t0<1500){setTimeout(wait,50);return}look()};wait()}
 // the map, its names and a tap on it are js/start.js's (SPICK); its loading cover (LOADP) keeps taps off the map until
 // the world is loaded and its shaders built, then a tap starts you there at once
 const startReady=()=>LOADP.done&&typeof tpGo==='function'&&typeof warmIdle==='function';
