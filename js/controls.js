@@ -345,7 +345,7 @@ SPICK.go=()=>{const p=SPICK.pick;if(!p)return;if(!startReady()){$('#startMapHint
 // the address (?digtest, ?speedtest…) or the headless checks (play.test). START_AT: metres, about 15 ft out from the
 // front door (Building Forge's lakeside_brewery, door on its -z side), yaw 0 facing +z, at the door
 const START_AT={x:52,z:653.6,yaw:0};
-const startAuto=()=>!/test/.test(location.search)&&location.hostname!=='play.test'&&!SPICK.pick;
+const startAuto=()=>!/test/.test(location.search)&&!/^(localhost|127\.|play\.test)/.test(location.hostname)&&!SPICK.pick;
 function startAt(){tpPick={x:START_AT.x,z:START_AT.z};wk.yaw=START_AT.yaw;tpGo('foot',true);tpSet(null);wk.yaw=START_AT.yaw;startIn('walk');toast(say('startBrew'),'good',2600)}
 function startWait(){if(!startReady()){setTimeout(startWait,200);return}$('#startMap').classList.add('ready');
   if(startAuto()){startAt();return}
