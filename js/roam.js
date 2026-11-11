@@ -96,7 +96,7 @@ function roStep(p,dt){const o=p.off;if(p.inside>0){p.inside-=dt;return}
   if(p.wait>0){p.wait-=dt;still();turn(p.look,3);return}
   if(o.i>=o.pts.length){still();if(o.then){const f=o.then;o.then=null;f(p);return}
     // nothing more to do out here: back to the walks
-    if(!p.ord&&!p.pu&&!(p.flee>0)&&(o.idle=(o.idle||0)+dt)>2)roBack(p);return}
+    if(!p.ord&&!p.pu&&!p.dy&&!(p.flee>0)&&(o.idle=(o.idle||0)+dt)>2)roBack(p);return}
   o.t+=dt;if(o.t>o.max){o.pts.length=0;o.i=0;return}
   const P=o.pts[o.i],last=o.i===o.pts.length-1,dx=P[0]-p.x,dz=P[1]-p.z,d=Math.hypot(dx,dz);
   if(d<(last?o.near:0.35)){o.i++;return}

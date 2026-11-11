@@ -81,7 +81,7 @@ function talkScene(p,to){const h=typeof townHour==='function'?townHour():12,when
   t+='.';
   if(typeof gunStars==='function'&&gunStars())t+=' The police are after him.';else if(typeof gun==='object'&&gun.cops&&gun.cops.length)t+=' Police are about.';
   // their day, and what they have heard of him (lives.js)
-  if(typeof lifeScene==='function'&&p&&typeof p==='object'){const n=talkName(p),l=lifeScene(p,n),r=repScene(p,n),f=fmScene(p,n);if(l)t+=' '+l;if(r)t+=' '+r;if(f)t+=' '+f;const u=typeof puScene==='function'?puScene(p,n):'',b=typeof bdScene==='function'?bdScene(p,n):'';if(u)t+=' '+u;if(b)t+=' '+b}
+  if(typeof lifeScene==='function'&&p&&typeof p==='object'){const n=talkName(p),l=lifeScene(p,n),r=repScene(p,n),f=fmScene(p,n);if(l)t+=' '+l;if(r)t+=' '+r;if(f)t+=' '+f;const u=typeof puScene==='function'?puScene(p,n):'',b=typeof bdScene==='function'?bdScene(p,n):'',y=typeof dyScene==='function'?dyScene(p,n):'';if(u)t+=' '+u;if(b)t+=' '+b;if(y)t+=' '+y}
   const ln=talkLately();if(ln)t+=' Lately: '+ln+'.';
   return t.slice(0,895)}
 // what happened lately, for the scene: the last few things, newest last, with how long ago
@@ -120,11 +120,11 @@ function talkNearest(p){let best=null,bd=1e9;for(const q of TALK.here){if(q===p|
 // needs of its own), a little different for each look (their body)
 function talkNow(p){if(!p||typeof p!=='object')return null;const h=typeof townHour==='function'?townHour():12,R=p.room;
   const shop=R&&!R.home&&typeof townShopName==='function'?townShopName(R):'',staff=R&&p.spot&&p.spot.staff&&!R.home;
-  const O=(typeof ordDoing==='function'?ordDoing(p):'')||(typeof puDoing==='function'?puDoing(p):'')||(typeof ndDoing==='function'?ndDoing(p):''),G=p.goal&&TALK_ERR[p.goal.k],doing=O?O:G?(p.goal.k==='town_stroll'?'out for a stroll':'on my way to '+G.n):p.drv?'driving':staff?'working'+(shop?' at '+shop:''):R&&R.home?'at home':R?(shop?'in '+shop:'inside'):p.flee>0?'running':p.sit?'sitting down for a bit':'out for a walk';
+  const O=(typeof ordDoing==='function'?ordDoing(p):'')||(typeof dyDoing==='function'?dyDoing(p):'')||(typeof puDoing==='function'?puDoing(p):'')||(typeof ndDoing==='function'?ndDoing(p):''),G=p.goal&&TALK_ERR[p.goal.k],doing=O?O:G?(p.goal.k==='town_stroll'?'out for a stroll':'on my way to '+G.n):p.drv?'driving':staff?'working'+(shop?' at '+shop:''):R&&R.home?'at home':R?(shop?'in '+shop:'inside'):p.flee>0?'running':p.sit?'sitting down for a bit':'out for a walk';
   let s=7;for(const ch of String(p.body||''))s=(s*31+ch.charCodeAt(0))>>>0;const j=(s%100)/500-0.1,cl=v=>Math.max(0,Math.min(1,v+j));
   const meal=Math.max(...[7.5,12.5,18.5].map(a=>Math.max(0,1-Math.abs(h-a)/1.5))),hot=typeof weather==='object'&&weather.r<0.1&&h>11&&h<17;
   const where=O?'':R?(R.home?'at home':shop?'at '+shop:''):p.goal&&TALK_ERR[p.goal.k]&&p.goal.k!=='town_stroll'?'on the way to '+TALK_ERR[p.goal.k].n:'';
-  return {doing,where,did:typeof puDid==='function'?puDid(p):'',hour:h,needs:typeof ndNeeds==='function'&&talkCard(p)?ndNeeds(p):{hunger:cl(0.25+0.6*meal),thirst:cl(hot?0.5:0.3),energy:cl(h>=22||h<5?0.85:h>=20?0.6:h<7?0.55:0.3),fun:cl(staff?0.55:0.35),company:cl(0.35),clean:cl(0.25)}}}
+  return {doing,where,did:(typeof dyDid==='function'?dyDid(p):'')||(typeof puDid==='function'?puDid(p):''),hour:h,needs:typeof ndNeeds==='function'&&talkCard(p)?ndNeeds(p):{hunger:cl(0.25+0.6*meal),thirst:cl(hot?0.5:0.3),energy:cl(h>=22||h<5?0.85:h>=20?0.6:h<7?0.55:0.3),fun:cl(staff?0.55:0.35),company:cl(0.35),clean:cl(0.25)}}}
 // asked in the talk box to do something and agreed (the mind's wishes): the errand that does it, when they are out
 // walking and it is open at this hour; they set off for it (you can follow)
 const TALK_WISH={drink:'town_beer',eat:'town_store',coffee:'town_store',shop:'town_shop',sit:'town_square',walk:'town_stroll'};
@@ -313,7 +313,7 @@ const TALK_ERR={town_store:{n:'the General Store',at:()=>TF_DOOR},town_beer:{n:'
   town_square:{n:'Harbor Square',at:()=>[[SQ.gx0,SQ.gz0],[SQ.gx1,SQ.gz0],[SQ.gx0,SQ.gz1],[SQ.gx1,SQ.gz1]]},
   town_shop:{n:'the shop windows',at:()=>[[-MSX,TF_XN],[MSX,TF_XN],[-MSX,TF_XS],[MSX,TF_XS]]},town_stroll:{n:'a stroll',at:null},company:{n:'company',at:null}};
 // someone free to set off on an errand: walking the town's walks, not stopped, talking, scared, hurt, a driver or a cop
-function talkErrFree(p){return p.w&&!p.path&&!p.car&&!p.room&&!p.sit&&!p.drv&&!p.cop&&!p.dead&&!p.hurt&&!(p.inside>0)&&!(p.flee>0)&&!(p.cower>0)&&!p.tkGo&&!(p.wait>0)&&TALK.with!==p&&!p.ord&&!p.off&&!p.pu&&!p.nd}
+function talkErrFree(p){return p.w&&!p.path&&!p.car&&!p.room&&!p.sit&&!p.drv&&!p.cop&&!p.dead&&!p.hurt&&!(p.inside>0)&&!(p.flee>0)&&!(p.cower>0)&&!p.tkGo&&!(p.wait>0)&&TALK.with!==p&&!p.ord&&!p.off&&!p.pu&&!p.nd&&!p.dy}
 // what they could do now, each with how much habit leans to it (the hour, the shops' hours, their nature)
 function talkErrOpts(p,q){const h=typeof townHour==='function'?townHour():12,M=TALK.M,N=M&&talkCard(p)?M.nature(p):{},v=k=>N[k]==null?0.5:N[k],o={};
   o.town_stroll=0.6+v('energy')*0.6;o.town_shop=h>=8&&h<20?0.5+v('curious'):0.1;
@@ -408,7 +408,7 @@ function talkRect(){const n=performance.now();if(!TALK.rect||n-TALK.rectT>1000){
 addEventListener('resize',()=>{TALK.rectT=-1e9});
 // ---- each frame (from main.js)
 function talkTick(dt){
-  talkErrands(dt);ordTick(dt);roTick(dt);puTick(dt);ndTick(dt);bdTick(dt);repTick(dt);
+  talkErrands(dt);ordTick(dt);roTick(dt);puTick(dt);ndTick(dt);bdTick(dt);dyTick(dt);repTick(dt);
   const on=TALK.mode!=='off'&&TALK.M&&TALK.lib&&tf.on;
   if(!on){if(TALK.ui)TALK.ui.d.hidden=true;if(TALK.with)talkClose();for(const b of TALK.bub.values())b.el.classList.remove('on');return}
   const u=talkUI(),now=performance.now()/1000,foot=mode==='walk'&&!wk.inside;

@@ -150,6 +150,7 @@ const TUNE=[
   // pursuits (pursuits.js)
   ['roMs','Town','Townsfolk finding their way across town may take this long each frame',2.5,'ms',0.5,10,0.5],
   ['ndPress','Town','A townsperson goes to do something about a need (hungry, thirsty, tired, bored, lonely: 0 to 1) once it passes about',0.62,'n',0.3,1,0.02],
+  ['dyPlan','Town','Two friends chatting by day make a plan to meet later this often',0.2,'pct',0,100,5],
   ['puShare','Town','Share of the townsfolk who fit a pursuit that have one',0.6,'pct',0,100,5],
   ['puGap','Town','A townsperson goes off on their pursuit again after about',240,'s',30,3600,30],
   ['puMax','Town','At most this many townsfolk off on their pursuits at once',5,'n',0,20,1],
