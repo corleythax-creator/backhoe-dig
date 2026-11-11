@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-11T03:20:00Z",
+ "updated": "2026-11-11T03:50:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -132,9 +132,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-10",
-   "dh": 78.5,
-   "act": 6,
-   "versions": 14
+   "dh": 80.5,
+   "act": 6.5,
+   "versions": 15
   }
  ],
  "extra": [
@@ -3816,6 +3816,15 @@ window.EFFORT = {
    "tris": 7501397,
    "chars": 2644804,
    "what": "The loading cover waits for the town's buildings (they landed in view after it lifted and built their shaders there: the first 45 s of lag); for a speed test only the brewery comes from Building Forge, the rest show the game's own buildings"
+  },
+  {
+   "v": 409,
+   "asked": "2026-11-10T21:45:00-06:00",
+   "live": "2026-11-10T21:50:37-06:00",
+   "dh": 2,
+   "tris": 7560574,
+   "chars": 2647245,
+   "what": "The sun's shadow pass's shaders are built in the background behind the loading cover like the rest (they were built one by one at the first frame: the 9 s freeze at the end of loading); the first frame now builds 5 shaders instead of 18"
   }
  ]
 };

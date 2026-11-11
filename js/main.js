@@ -395,6 +395,7 @@ function warmAllTick(){const W=warmAll;if(!W||bench.on||vrOn())return;const now=
   if(ms.size>W.mats||brVer!==W.ver){W.mats=Math.max(W.mats||0,ms.size);W.ver=brVer;W.still=0;W.pend++;
     try{warmVm()}catch(e){}
     const c1=()=>{W.pend--;if(!W.c1)W.c1=performance.now()};
+    if(!LOADP.done){W.pend++;try{const q=warmShadows(warmRoot());if(q&&q.then)q.then(()=>W.pend--,()=>W.pend--);else W.pend--}catch(e){W.pend--}}
     try{const p=warmCompile(warmRoot(),scene);if(p&&p.then)p.then(c1,c1);else c1()}catch(e){c1()}}
   else W.still++;
   if(now-W.t0>180000&&W.pend===0&&(!W.q.length||help.hidden)&&(!W.at.length||!warmQuiet()))warmAll=null}
@@ -403,6 +404,25 @@ function warmAllTick(){const W=warmAll;if(!W||bench.on||vrOn())return;const now=
 // s at a time, the most of a minute's load), whereas left alone the browser builds them side by side. Each pass (and the
 // passes for materials that turn up later) is waited out the same way until the cover lifts
 function loadHold(){if(LOADP.done||bench.on||vrOn())return false;const W=warmAll;return !W||!W.mats||W.pend>0}
+// the sun's shadow pass draws every caster with a depth material of three.js's own (WebGLShadowMap getDepthMaterial),
+// whose shaders were only built at the first real frame, one after another (about 15 of them: most of the 9 s freeze
+// at the end of loading on Windows). The same materials are made here, set as three.js would set them (picture, cut-out,
+// side as the shadow side), swapped onto each caster just long enough to be built in the background into a plain
+// target (no tone mapping, linear colours: as the shadow map) with the scene's lights. Points-light (distance) shadows
+// are left: none cast while loading
+const warmShRT=new THREE.WebGLRenderTarget(1,1),warmShSide={[THREE.FrontSide]:THREE.BackSide,[THREE.BackSide]:THREE.FrontSide,[THREE.DoubleSide]:THREE.DoubleSide};
+function warmShadows(root){if(!renderer.shadowMap.enabled)return null;const swap=[],made=new Map(),dm=m=>{let d=made.get(m);if(d)return d;
+    d=new THREE.MeshDepthMaterial();d.visible=m.visible;d.wireframe=m.wireframe;d.side=m.shadowSide!==null&&m.shadowSide!==undefined?m.shadowSide:warmShSide[m.side];
+    d.alphaMap=m.alphaMap||null;d.alphaTest=m.alphaToCoverage===true?0.5:m.alphaTest||0;d.map=m.map||null;d.displacementMap=m.displacementMap||null;d.displacementScale=m.displacementScale??1;
+    made.set(m,d);return d};
+  const L=[];root.traverse(o=>{if(!(o.isMesh||o.isLine||o.isPoints)||!o.castShadow||!o.material)return;
+    const m=o.customDepthMaterial||(Array.isArray(o.material)?o.material.map(dm):dm(o.material));swap.push([o,o.material]);o.material=m;L.push(o)});
+  // (the shadow pass draws with no scene behind it, so no fog: part of the shader's key even for a depth material)
+  if(!L.length)return null;const t=renderer.getRenderTarget(),fog=scene.fog;let p=null;
+  try{renderer.setRenderTarget(warmShRT);scene.fog=null;p=renderer.compileAsync({isObject3D:true,traverseVisible(){},traverse(cb){for(const o of L)cb(o)}},camera,scene)}
+  finally{scene.fog=fog;renderer.setRenderTarget(t);for(const [o,m] of swap)o.material=m}
+  // (kept a while: disposing them now would drop the very shaders built, before the shadow pass takes them up)
+  const drop=()=>{if(!LOADP.done){setTimeout(drop,2000);return}setTimeout(()=>{for(const d of made.values())d.dispose()},15000)};drop();return p}
 // the islands' machines (gfxMachines standing on an island: about a third of the game's shaders) are not drawn from town,
 // where every visit starts (controls.js START_AT, gfxAway): the warming passes leave them out (warmRoot, a stand-in root
 // that walks the scene without them) and, once you are in, they are built one machine at a time in the background
