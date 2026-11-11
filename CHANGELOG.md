@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Tuesday, November 10, 2026
 
+- **v408** (9:20 PM) The loading cover waits for the town's buildings (they landed in view after it lifted and built their shaders there: the first 45 s of lag); for a speed test only the brewery comes from Building Forge, the rest show the game's own buildings
 - **v407** (9:03 PM) Shaders are built once: for the effects' target the frame is drawn into (they were built for the screen first and again at the first frame) and only once the pictures are in; the islands' machines are warmed in the background after you are in (334 shader builds at loading down to 187); Townsfolk talk defaults to Voice only; about a third fewer people (street crowds, town 130, shopfolk 65)
 - **v406** (8:37 PM) Nothing is drawn behind the loading cover while shaders build, so the browser builds them side by side instead of freezing; the building light pool is made once by the Graphics setting (a change in the number of lights rebuilt every shader a second time); each visit starts on foot at the brewery's front door
 - **v405** (8:28 PM) Townsfolk lines show in a conversation box at the lower left (who said it, to whom, lines to you marked) in place of the text over their heads; spoken aloud one voice at a time in words, at a calmer pace.
