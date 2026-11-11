@@ -247,14 +247,17 @@ const WORDS=[
   ['pu_paintShow','Town: pursuits',"That's {n}! Enough for the show at Harbor Books.",'{n}: how many paintings'],
   ['pu_fitGo','Town: pursuits',"Time to get my miles in.",''],['pu_fitDone','Town: pursuits',"{mi} miles. Every bit counts.",'{mi}: miles this time'],
   ['pu_starsGo','Town: pursuits',"Clear night. Perfect for the stars.",''],['pu_starsSaw','Town: pursuits',"A shooting star! Did you see it?",''],['pu_starsDone','Town: pursuits',"No shooting stars tonight. Maybe next time.",''],
-  ['pu_meetGo','Town: pursuits',"Oh, I should go say hi.",''],['pu_meetHi','Town: pursuits',"Hi there! I don't think we've met. Thought I'd come say hello.",''],
-  ['pu_meetAgain','Town: pursuits',"Hey, good to see you again!",''],
   // how they get on (bonds.js): friends passing, a falling-out, a snub ({name}: the other one)
   ['bd_hi','Town: bonds',"{name}! Good to see you.",'{name}: their friend'],['bd_spat','Town: bonds',"You know what, {name}? Forget it.",'{name}: who they fell out with'],
   ['bd_snub','Town: bonds',"Hmph. {name}.",'{name}: who they can\'t stand'],
   // plans between friends (days.js): making one, meeting, a friend who never came
   ['dy_plan','Town: plans',"Want to meet at {place} around {time}?",'{place}, {time}: where and when'],['dy_planYes','Town: plans',"It's a date, {name}.",'{name}: who asked'],
   ['dy_meet','Town: plans',"There you are, {name}!",'{name}: who they meet'],['dy_stood','Town: plans',"Guess {name} isn't coming.",'{name}: who never came'],
+  ['dy_planGroup','Town: plans',"Let's all meet at {place} around {time}. I'll ask {who} too.",'{place}, {time}: where and when; {who}: friends asked along'],
+  ['dy_invite','Town: plans',"We're meeting at {place} around {time}, me and {who}. Come along if you like.",'{place}, {time}: where and when; {who}: the friends'],
+  ['dy_youCame','Town: plans',"Hey, you made it! Glad you came.",''],
+  // gossip (days.js): news passed on between two townsfolk ({name}: whom it is about; {what}: what happened)
+  ['gs_own','Town: gossip',"Guess what? I {what}.",'{what}: what happened'],['gs_tell','Town: gossip',"Did you hear? {name} {what}.",'{name}: whom it is about; {what}: what happened'],
   ['tkAll','Town: talk','Everyone',''],['tkWithAll','Town: talk','Talking to everyone here ({n})','{n}: how many are listening'],['tkSayAll','Town: talk','Say something to everyone',''],
   ['tkPlayer','Town: talk','Corley','What the townsfolk call you'],
   ['tkWeather','Town: talk','Nice enough day for it. Whatever it is you\'re digging.',''],['tkRain','Town: talk','This rain. Good for the lawns, bad for your dirt, I\'d guess.',''],

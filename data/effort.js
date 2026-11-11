@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-11T00:13:00Z",
+ "updated": "2026-11-11T00:40:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -132,9 +132,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-10",
-   "dh": 33.5,
-   "act": 3,
-   "versions": 6
+   "dh": 43.5,
+   "act": 3.5,
+   "versions": 7
   }
  ],
  "extra": [
@@ -3744,6 +3744,15 @@ window.EFFORT = {
    "tris": 5798699,
    "chars": 2600532,
    "what": "Friends make plans to meet (lunch somewhere, an evening at a pub or grill) and turn up; no-shows are remembered. Townsfolk keep a diary of their days (where they ate and if they liked it, meetings, fallings-out, pursuits) and tell you about it, and go back to places they like. Needs, diaries, plans, friendships and pursuits are saved and synced."
+  },
+  {
+   "v": 401,
+   "asked": "2026-11-11T08:00:00-06:00",
+   "live": "2026-11-10T18:40:07-06:00",
+   "dh": 10,
+   "tris": 5779904,
+   "chars": 2609845,
+   "what": "Townsfolk mostly ignore you unless you talk to them; couples and close friends walk places together, people join friends chatting in groups, friends plan group evenings (friends of friends join, a ring at the pub), gossip passes news around town, and someone with plans may ask you along when you talk to them."
   }
  ]
 };
