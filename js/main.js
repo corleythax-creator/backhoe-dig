@@ -318,7 +318,7 @@ function frame(now){
   const fv=mode==='boat'?btCur():mode==='heavy'?hvCur():mode==='bike'?bk:mode==='truck'?tr:mode==='mow'?mw:mode==='skid'?sk:mode==='walk'?wk:st;sun.position.set(fv.x,fv.y,fv.z).addScaledVector(LIGHT_DIR,SUN_D); sun.target.position.set(fv.x,fv.y,fv.z);
   {const o=groundOcc.value;o[0].set(st.x,st.z,st.yaw,0);o[2].set(tr.x,tr.z,tr.yaw,0)}
   timeU.value=now/1000;
-  shadowProxyTick();lawnLod();tuftLod();turfLod();rainCover();if(vr.fake)vrFakeHead();warmAllTick();gpuWarmTick();const wm=warmPre();postRender();warmPost(wm);if(vrOn())vrAfter();
+  shadowProxyTick();lawnLod();tuftLod();turfLod();rainCover();if(vr.fake)vrFakeHead();warmAllTick();gpuWarmTick();if(!loadHold()){const wm=warmPre();postRender();warmPost(wm)}if(vrOn())vrAfter();
   if(bench.on)benchSample(dt);
   fpsFrames++;fpsTime+=dt;
   if(fpsTime>=0.5){const f=Math.round(fpsFrames/fpsTime);const fe=$('#fpsVal');fe.textContent=f;fe.style.color=f>=50?'var(--ok)':f>=30?'var(--gas)':'var(--danger)';
@@ -380,7 +380,7 @@ function warmTexQ(W){if(!W.q){W.q=[];W.up=new Set();W.q0=0}const inQ=new Set(W.q
 // how far the warming is, 0 to 1, for the loading cover (start.js): texture uploads, the places visited, the shaders
 function warmFrac(){const W=warmAll;if(!W)return LOADP.warm?1:0;const q=W.q0?1-W.q.length/W.q0:0,a=W.at?1-W.at.length/WARM_AT.length:0,c=W.pend===0&&W.still>=1?1:W.mats?.5:0;return (q+a+c)/3}
 function warmAllTick(){const W=warmAll;if(!W||bench.on||vrOn())return;const now=performance.now();W.f=(W.f||0)+1;
-  if(!W.at){W.at=WARM_AT.slice();rcWarm()}if(W.at.length&&W.f%8===0&&W.mats&&warmQuiet())warmAt(...W.at.pop());
+  if(!W.at){W.at=WARM_AT.slice();rcWarm()}if(W.at.length&&W.f%8===0&&W.mats&&W.pend===0&&warmQuiet())warmAt(...W.at.pop());
   if(!W.q)warmTexQ(W);
   // behind the loading cover, as many as fit in about 12 ms (at least 6); behind the start card after it, three a frame
   if(!help.hidden){const t0=performance.now();for(let i=0;W.q.length&&(LOADP.done?i<3:i<6||performance.now()-t0<12);i++){const t=W.q.pop();W.up.add(t);try{renderer.initTexture(t)}catch(e){}}}
@@ -394,6 +394,11 @@ function warmAllTick(){const W=warmAll;if(!W||bench.on||vrOn())return;const now=
     try{const p=warmCompile(scene);if(p&&p.then)p.then(c1,c1);else c1()}catch(e){c1()}}
   else W.still++;
   if(now-W.t0>180000&&W.pend===0&&(!W.q.length||help.hidden)&&(!W.at.length||!warmQuiet()))warmAll=null}
+// behind the loading cover nothing is drawn while shaders are being built in the background: a frame drawn then has to
+// wait for every shader in view to finish there and then, one after another (on Windows that froze the page for 10 to 25
+// s at a time, the most of a minute's load), whereas left alone the browser builds them side by side. Each pass (and the
+// passes for materials that turn up later) is waited out the same way until the cover lifts
+function loadHold(){if(LOADP.done||bench.on||vrOn())return false;const W=warmAll;return !W||!W.mats||W.pend>0}
 // in first person the gun and the worker's own body are drawn last, as see-through (gunVm, gunVmBody, pistol.js), which
 // gives their materials other shaders than the opaque ones (three.js keys them on it): those are built here too, or the
 // first steps on foot built a dozen of them at once, the stutter after dropping in

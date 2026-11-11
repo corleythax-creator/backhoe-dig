@@ -340,7 +340,15 @@ const startReady=()=>LOADP.done&&typeof tpGo==='function'&&typeof warmIdle==='fu
 SPICK.go=()=>{const p=SPICK.pick;if(!p)return;if(!startReady()){$('#startMapHint').textContent='Starting there as soon as the island has loaded…';return}
   SPICK.pick=null;startLay();if(!landIn(p.x,p.z,0,0,true)&&!tpSpot('foot',p.x,p.z)){toast(say('tpLake'),'bad');return}
   tpPick={x:p.x,z:p.z};tpGo('foot',true);tpSet(null);startIn('walk');toast(say('startIsl',{island:mapPlace(p.x,p.z),how:'on foot'}),'good',2600)};
+// each time the game opens it starts you on foot at the brewery's front door, looking at it (owner, Nov 10: no spot to
+// pick every time); the map comes back with ☰ → the start card for going somewhere else. Not for the tests opened from
+// the address (?digtest, ?speedtest…) or the headless checks (play.test). START_AT: metres, about 15 ft out from the
+// front door (Building Forge's lakeside_brewery, door on its -z side), yaw 0 facing +z, at the door
+const START_AT={x:52,z:653.6,yaw:0};
+const startAuto=()=>!/test/.test(location.search)&&location.hostname!=='play.test'&&!SPICK.pick;
+function startAt(){tpPick={x:START_AT.x,z:START_AT.z};wk.yaw=START_AT.yaw;tpGo('foot',true);tpSet(null);wk.yaw=START_AT.yaw;startIn('walk');toast(say('startBrew'),'good',2600)}
 function startWait(){if(!startReady()){setTimeout(startWait,200);return}$('#startMap').classList.add('ready');
+  if(startAuto()){startAt();return}
   if(SPICK.pick)SPICK.go();else $('#startMapHint').textContent=SPICK.zoom?'Tap again where you want to start':'Tap the map to zoom in'}
 startWait();
 $('#startResume').onclick=()=>startIn(mode);
