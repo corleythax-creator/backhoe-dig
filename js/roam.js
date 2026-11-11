@@ -77,7 +77,7 @@ function roRoute(x0,z0,x1,z1){const it=roRouteG(x0,z0,x1,z1);for(;;){const r=it.
 function roGo(p,x,z,o={}){if(p.room||p.drv||p.cop||p.dead||p.hurt||p.path||p.go||p.goTo)return false;
   const t=p.off,off=p.off={pts:[],i:0,x,z,near:o.near||0.4,v:o.v||0,then:o.then||null,fail:o.fail||null,flee:o.flee||0,t:0,max:o.max||240,stuck:0,at:performance.now()/1000,tag:o.tag||(t&&t.tag)||'',pending:1};
   p.goal=null;p.tkGo=null;p.wait=0;
-  const h=roAt(x,z);if(h===h&&Math.hypot(x-p.x,z-p.z)<40&&roLos(p.x,p.z,x,z)){off.pts=[[x,z]];off.pending=0;return true}
+  const h=roAt(x,z);if(h===h&&Math.hypot(x-p.x,z-p.z)<25&&roLos(p.x,p.z,x,z)){off.pts=[[x,z]];off.pending=0;return true}
   RO.jobs.push({p,off,it:roRouteG(p.x,p.z,x,z)});return true}
 // once done off the walks: the way to the nearest walk, and onto it
 function roBack(p){if(!p.off)return;const W=ordWalkOf(p.x,p.z);if(!W){p.off=null;return}const [ax,az,ex,ez]=tfAt(W.w,W.s),x=ax-ez*0.32,z=az+ex*0.32;

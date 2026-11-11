@@ -348,7 +348,7 @@ function tfSeen(x,z,r){_tfSph.center.set(x,baseHeight(x,z)+1,z);_tfSph.radius=r|
 // what someone walking at (x, z) toward (dx, dz) would bump into within reach: another person, the worker, a car
 function tfBlocked(p,dx,dz,reach){const rx=-dz,rz=dx;
   const hit=(x,z,r)=>{const ox=x-p.x,oz=z-p.z,f=ox*dx+oz*dz;return f>0&&f<reach+r&&Math.abs(ox*rx+oz*rz)<0.32+r};
-  if(!(p.ghost>0))for(const q of tf.people)if(q!==p&&!q.inside&&!q.drv&&hit(q.x,q.z,0.25))return true;
+  if(!(p.ghost>0))for(const q of tf.people)if(q!==p&&!q.inside&&!q.drv&&!(q.tg&&q.tg.lead===p)&&!(p.tg&&p.tg.lead===q)&&hit(q.x,q.z,0.25))return true;
   if(walker.visible&&mode==='walk'&&hit(wk.x,wk.z,0.3))return true;
   if(!(p.ghost>0))for(const c of tf.drive)if(c.v>0.3||c.st!=='park')for(const lz of [-1.4,0,1.4])if(hit(c.x+Math.sin(c.yaw)*lz,c.z+Math.cos(c.yaw)*lz,1.0))return true;
   return false}
