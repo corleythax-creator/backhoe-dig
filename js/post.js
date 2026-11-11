@@ -121,7 +121,11 @@ function postOn(){return (POST.ao||POST.bloom||POST.grade||aeOn)&&!renderer.xr.i
 // that is postRT, whose colour space differs from the screen's, and three.js builds a separate shader for each. Built
 // for the screen instead, they were never used (a hundred or so on High) and the real ones still compiled the first
 // time each thing showed, the stutter the warm-up is there to stop
-function warmCompile(o,sc){const t=renderer.getRenderTarget(),pt=postOn()&&postRT;if(pt)renderer.setRenderTarget(postRT);
+// (the frame is drawn into postRT when the effects are on, so the shaders are built for it: made here if no frame has
+// made it yet. Built for the screen instead, every material was built a second time at its first real frame, the
+// output's colour space being part of the shader: about half of all the shader building at loading)
+function warmCompile(o,sc){if(postOn()&&!postRT){const v=new THREE.Vector2();renderer.getDrawingBufferSize(v);postSize(Math.max(1,v.x),Math.max(1,v.y))}
+  const t=renderer.getRenderTarget(),pt=postOn()&&postRT;if(pt)renderer.setRenderTarget(postRT);
   try{return renderer.compileAsync?renderer.compileAsync(o,camera,sc):(renderer.compile(o,camera,sc),null)}finally{if(pt)renderer.setRenderTarget(t)}}
 // draws the frame: straight to the screen, or through the effects
 // shadows drawn every shEvery frames (the Graphics setting; Low's 2 halves the shadow pass, a phone's second biggest

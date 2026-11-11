@@ -318,7 +318,7 @@ function frame(now){
   const fv=mode==='boat'?btCur():mode==='heavy'?hvCur():mode==='bike'?bk:mode==='truck'?tr:mode==='mow'?mw:mode==='skid'?sk:mode==='walk'?wk:st;sun.position.set(fv.x,fv.y,fv.z).addScaledVector(LIGHT_DIR,SUN_D); sun.target.position.set(fv.x,fv.y,fv.z);
   {const o=groundOcc.value;o[0].set(st.x,st.z,st.yaw,0);o[2].set(tr.x,tr.z,tr.yaw,0)}
   timeU.value=now/1000;
-  shadowProxyTick();lawnLod();tuftLod();turfLod();rainCover();if(vr.fake)vrFakeHead();warmAllTick();gpuWarmTick();if(!loadHold()){const wm=warmPre();postRender();warmPost(wm)}if(vrOn())vrAfter();
+  shadowProxyTick();lawnLod();tuftLod();turfLod();rainCover();if(vr.fake)vrFakeHead();warmAllTick();warmLaterTick();gpuWarmTick();if(!loadHold()){const wm=warmPre();postRender();warmPost(wm)}if(vrOn())vrAfter();
   if(bench.on)benchSample(dt);
   fpsFrames++;fpsTime+=dt;
   if(fpsTime>=0.5){const f=Math.round(fpsFrames/fpsTime);const fe=$('#fpsVal');fe.textContent=f;fe.style.color=f>=50?'var(--ok)':f>=30?'var(--gas)':'var(--danger)';
@@ -386,12 +386,16 @@ function warmAllTick(){const W=warmAll;if(!W||bench.on||vrOn())return;const now=
   if(!help.hidden){const t0=performance.now();for(let i=0;W.q.length&&(LOADP.done?i<3:i<6||performance.now()-t0<12);i++){const t=W.q.pop();W.up.add(t);try{renderer.initTexture(t)}catch(e){}}}
   // the check for new materials: each second while loading (so the cover lifts as soon as the shaders are done), then every 4 s
   if(now<W.next)return;W.next=now+(LOADP.done?4000:1000);warmTexQ(W);
+  // while loading, the shaders wait for the pictures (start.js loadPicsIn): a material built before its picture arrives is
+  // built again with it (a shader with a picture is another shader), which was nearly half of all the building. Nothing
+  // is drawn behind the cover meanwhile (loadHold), so nothing needs them sooner
+  if(!LOADP.done&&typeof loadPicsIn==='function'&&!loadPicsIn()&&now-W.t0<20000)return;
   // new materials, or the structures' ones whose pictures arrived (that swaps their shaders: brVer, bridges.js)
   const ms=new Set();scene.traverse(o=>{if(o.material)for(const m of [].concat(o.material))ms.add(m)});
   if(ms.size>W.mats||brVer!==W.ver){W.mats=Math.max(W.mats||0,ms.size);W.ver=brVer;W.still=0;W.pend++;
     try{warmVm()}catch(e){}
     const c1=()=>{W.pend--;if(!W.c1)W.c1=performance.now()};
-    try{const p=warmCompile(scene);if(p&&p.then)p.then(c1,c1);else c1()}catch(e){c1()}}
+    try{const p=warmCompile(warmRoot(),scene);if(p&&p.then)p.then(c1,c1);else c1()}catch(e){c1()}}
   else W.still++;
   if(now-W.t0>180000&&W.pend===0&&(!W.q.length||help.hidden)&&(!W.at.length||!warmQuiet()))warmAll=null}
 // behind the loading cover nothing is drawn while shaders are being built in the background: a frame drawn then has to
@@ -399,6 +403,17 @@ function warmAllTick(){const W=warmAll;if(!W||bench.on||vrOn())return;const now=
 // s at a time, the most of a minute's load), whereas left alone the browser builds them side by side. Each pass (and the
 // passes for materials that turn up later) is waited out the same way until the cover lifts
 function loadHold(){if(LOADP.done||bench.on||vrOn())return false;const W=warmAll;return !W||!W.mats||W.pend>0}
+// the islands' machines (gfxMachines standing on an island: about a third of the game's shaders) are not drawn from town,
+// where every visit starts (controls.js START_AT, gfxAway): the warming passes leave them out (warmRoot, a stand-in root
+// that walks the scene without them) and, once you are in, they are built one machine at a time in the background
+// (warmLaterTick, gpuWarm), long before you can get to an island. Starting anywhere else warms the whole scene as before
+const warmLater={list:null,i:0,t:0,busy:false,done:false};
+function warmRoot(){const L=warmLater;if(L.done||typeof startAuto!=='function'||!startAuto())return scene;
+  if(!L.list)L.list=gfxMachines().filter(g=>gfxIsl(g.position.x,g.position.z,15));
+  const skip=new Set(L.list);
+  return {isObject3D:true,traverseVisible(){},traverse(cb){const t=o=>{if(skip.has(o))return;cb(o);for(const c of o.children)t(c)};t(scene)}}}
+function warmLaterTick(){const L=warmLater;if(L.done||!L.list||!LOADP.done||L.busy||performance.now()<L.t)return;
+  const g=L.list[L.i++];if(!g){L.done=true;return}L.busy=true;const end=()=>{L.busy=false;L.t=performance.now()+400};gpuWarm(g).then(end,end)}
 // in first person the gun and the worker's own body are drawn last, as see-through (gunVm, gunVmBody, pistol.js), which
 // gives their materials other shaders than the opaque ones (three.js keys them on it): those are built here too, or the
 // first steps on foot built a dozen of them at once, the stutter after dropping in
