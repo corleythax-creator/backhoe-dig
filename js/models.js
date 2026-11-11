@@ -107,9 +107,11 @@ function mdlScreenDraw(){const g=mdlScr.getContext('2d'),W=320,H=224;g.fillStyle
   g.textAlign='right';g.fillText((typeof fuelHrs==='function'?fuelHrs('ex').toFixed(1):'1022')+' h',W-16,190);
   g.fillStyle='#f07a22';g.fillRect(16,152,64,16);g.fillStyle='#0b1418';g.font='700 13px sans-serif';g.textAlign='center';g.fillText('P MODE',48,165);
   if(mdlScrTex)mdlScrTex.needsUpdate=true}
-// the glTF loader (an ES module, mapped in index.html's import map), fetched the first time a detailed model is wanted
+// the glTF loader (an ES module, mapped in index.html's import map), fetched the first time a detailed model is wanted;
+// the model files are meshopt-compressed (tools/squeeze.mjs), so every loader made from it gets the meshopt decoder
 function mdlLoaderReady(cb){if(THREE.GLTFLoader){cb();return}
-  import(MDL_LOADER).then(m=>{THREE.GLTFLoader=m.GLTFLoader;cb()},()=>{mdl.loading=mdl.trLoading=false})}
+  Promise.all([import(MDL_LOADER),import('three/addons/libs/meshopt_decoder.module.js')]).then(([m,d])=>{
+    THREE.GLTFLoader=class extends m.GLTFLoader{constructor(a){super(a);this.setMeshoptDecoder(d.MeshoptDecoder)}};cb()},()=>{mdl.loading=mdl.trLoading=false})}
 function mdlLoadEx(){if(mdl.ex||mdl.loading)return;mdl.loading=true;
   mdlLoaderReady(()=>new THREE.GLTFLoader().load('models/excavator.glb',gl=>{mdl.loading=false;mdl.ex=gl.scene;if(mdl.want)mdlExOn(true)},undefined,()=>{mdl.loading=false}))}
 // the excavator's part groups, by the model's node names

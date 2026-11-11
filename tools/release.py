@@ -131,6 +131,11 @@ def main():
         if git('status', '--porcelain') and not o.dry_run:
             git('commit', '-qam', 'Rebuild the screen editor page' + TRAILER)
 
+    # model files new or rebuilt since the last release are made smaller (tools/squeeze.mjs; done ones are skipped)
+    print(sh('node', 'tools/squeeze.mjs').strip().splitlines()[-1])
+    if git('status', '--porcelain', '--', 'models') and not o.dry_run:
+        git('commit', '-qam', 'Squeeze the new model files' + TRAILER)
+
     env = dict(os.environ, NODE_PATH=sh('npm', 'root', '-g'))
     out = sh('node', 'tools/scene-check.js', check=False, env=env)
     chk = json.loads(out[out.index('{'):])
