@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-10T23:52:00Z",
+ "updated": "2026-11-11T00:13:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -132,9 +132,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-10",
-   "dh": 25.5,
-   "act": 2.5,
-   "versions": 5
+   "dh": 33.5,
+   "act": 3,
+   "versions": 6
   }
  ],
  "extra": [
@@ -3735,6 +3735,15 @@ window.EFFORT = {
    "tris": 5794596,
    "chars": 2589664,
    "what": "Townsfolk walk anywhere in town (lawns, the beach, the pier, up to you), get hungry, thirsty, tired, bored and lonely and do something about it (eat out, go home to bed, find a friend), have pursuits (fishing, painting, fitness walks, stargazing, saying hello) with progress kept, and friendships and rivalries that grow as they talk."
+  },
+  {
+   "v": 400,
+   "asked": "2026-11-10T18:05:00-06:00",
+   "live": "2026-11-10T18:13:35-06:00",
+   "dh": 8,
+   "tris": 5798699,
+   "chars": 2600532,
+   "what": "Friends make plans to meet (lunch somewhere, an evening at a pub or grill) and turn up; no-shows are remembered. Townsfolk keep a diary of their days (where they ate and if they liked it, meetings, fallings-out, pursuits) and tell you about it, and go back to places they like. Needs, diaries, plans, friendships and pursuits are saved and synced."
   }
  ]
 };
