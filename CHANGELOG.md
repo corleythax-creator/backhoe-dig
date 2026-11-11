@@ -2,6 +2,10 @@
 
 Every version of Corley's Island, newest first, grouped by the day it went live (Central time). Made from `data/effort.js` by `tools/changelog.py`; don't edit it by hand. [Play any old version](https://corleys-island.vercel.app/versions/) · [Build log with charts](https://corleys-island.vercel.app/build.html)
 
+## Wednesday, November 11, 2026
+
+- **v411** (8:40 AM) Corner map draws only what is in view (4 ms to 0.9 ms, 15 times a second); Work graphics drops the paint's clear coat; profiler skips capped refreshes and marks shader-building frames
+
 ## Tuesday, November 10, 2026
 
 - **v410** (10:16 PM) Behind the start card the camera looks all the way round at the brewery (eight ways level, four looking down), each drawn for real, so the meshes and pictures around you are on the graphics card before your own first look round and first steps

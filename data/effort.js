@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-11T04:16:00Z",
+ "updated": "2026-11-11T14:40:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -135,6 +135,12 @@ window.EFFORT = {
    "dh": 82,
    "act": 7,
    "versions": 16
+  },
+  {
+   "d": "2026-11-11",
+   "dh": 2.5,
+   "act": 0.5,
+   "versions": 1
   }
  ],
  "extra": [
@@ -3834,6 +3840,15 @@ window.EFFORT = {
    "tris": 7522612,
    "chars": 2648033,
    "what": "Behind the start card the camera looks all the way round at the brewery (eight ways level, four looking down), each drawn for real, so the meshes and pictures around you are on the graphics card before your own first look round and first steps"
+  },
+  {
+   "v": 411,
+   "asked": "2026-11-11T08:20:00-06:00",
+   "live": "2026-11-11T08:40:34-06:00",
+   "dh": 2.5,
+   "tris": 7597249,
+   "chars": 2649982,
+   "what": "Corner map draws only what is in view (4 ms to 0.9 ms, 15 times a second); Work graphics drops the paint's clear coat; profiler skips capped refreshes and marks shader-building frames"
   }
  ]
 };
