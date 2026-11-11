@@ -621,6 +621,13 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
 .talkLine{position:fixed;transform:translate(-50%,-100%);max-width:min(280px,70vw);background:rgba(12,15,18,.78);color:#fff;border-left:3px solid var(--machine);border-radius:var(--r);padding:6px 10px;font:var(--t1)/1.35 system-ui,sans-serif;opacity:0;transition:opacity .3s}
 .talkLine b{display:block;font:600 var(--t1)/1.2 var(--f-display);color:var(--machine);letter-spacing:.03em}
 .talkLine.on{opacity:1}
+/* the conversation box (talk.js talkLog): what is said near you, newest at the bottom, old lines fading */
+#talkLog{position:fixed;left:calc(env(safe-area-inset-left,0px) + 16px);bottom:calc(env(safe-area-inset-bottom,0px) + 150px);z-index:3;width:min(420px,46vw);display:flex;flex-direction:column;gap:2px;pointer-events:none;zoom:var(--s)}
+.tlLine{background:rgba(12,15,18,.72);border-left:3px solid transparent;border-radius:var(--r);padding:4px 10px;color:#f3f5ef;font:var(--t1)/1.35 system-ui,sans-serif;transition:opacity 4s}
+.tlLine b{font:600 var(--t1)/1.2 var(--f-display);color:var(--machine);letter-spacing:.03em;margin-right:6px}
+.tlLine i{font-style:normal;color:#b9c2b0;margin-right:6px}
+.tlLine.you{border-left-color:var(--machine);background:rgba(12,15,18,.85)}
+.tlLine.old{opacity:0}
 
 /* the top bar's chip: what you are in, the clock and the weather */
 #nowChip{flex:none;display:flex;flex-direction:column;justify-content:center;gap:3px;padding:5px 12px;border-radius:var(--r);background:var(--glass);border:1px solid var(--hud-line);pointer-events:none;min-width:0}
