@@ -56,6 +56,6 @@ function soChat(dt){const M=TALK.M;if(!M||TALK.mode==='off'||!M.on||!M.chatter||
   const walking=p=>p.spd>0.3&&!p.tg&&!tf.people.some(q=>q.tg&&q.tg.lead===p);
   const H=TALK.here.filter(p=>free(p)&&!walking(p)&&now>(p.amb||0));let n=0;
   for(let i=H.length-1;i>0;i--){const j=(Math.random()*(i+1))|0;[H[i],H[j]]=[H[j],H[i]]}
-  for(const p of H){let q=null,bd=SO_CHAT_R;for(const r of TALK.here){if(r===p||!free(r)||Math.abs((r.y||0)-(p.y||0))>1.2)continue;const d=Math.hypot(r.x-p.x,r.z-p.z);if(d<bd&&bdOf(p,r)>-0.35){bd=d;q=r}}
+  for(const p of H){let q=null,bd=SO_CHAT_R;for(const r of TALK.here){if(r===p||r.body===p.body||!free(r)||Math.abs((r.y||0)-(p.y||0))>1.2)continue;const d=Math.hypot(r.x-p.x,r.z-p.z);if(d<bd&&bdOf(p,r)>-0.35){bd=d;q=r}}
     if(!q){p.amb=now+3;continue}
     p.amb=now+TU.soChatGap*(0.7+Math.random()*0.6);q.amb=Math.max(q.amb||0,now+2.5);M.think(p,q);if(paid){SO.paidT=now;break}if(++n>=1)break}}
