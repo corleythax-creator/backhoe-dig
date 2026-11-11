@@ -74,16 +74,23 @@ function pfRecord(sec){if(PF.on)return Promise.resolve(null);sec=sec||10;PF.on=t
     if(!dis)G.ms.push(gl.getQueryParameter(q,gl.QUERY_RESULT)/1e6);G.free.push(q)}};
   const S={};let lastNow=0,t0=performance.now(),calls=0,tris=0,nf=0;const loaf0=PF.loaf.length;
   return new Promise(done=>{
-    const step=now=>{for(const k in acc)delete acc[k];const c0=performance.now();frame(now);const cpu=performance.now()-c0;gpuPoll();
-      const ft=lastNow?now-lastNow:0;lastNow=now;const ri=renderer.info.render;calls+=ri.calls;tris+=ri.triangles;nf++;
-      let js=0;for(const k in acc){const s=S[k]||(S[k]={sum:0,max:0});s.sum+=acc[k];if(acc[k]>s.max)s.max=acc[k];js+=acc[k]}
-      if(ft)run.frames.push({ft,cpu,top:Object.entries(acc).filter(e=>e[1]>=2).sort((a,b)=>b[1]-a[1]).slice(0,4).map(([k,v])=>pfName(k)+' '+Math.round(v)+' ms')});
-      const el=performance.now()-t0;if(typeof toast==='function'&&nf%15===0)toast(`Profiler: recording ${Math.max(0,Math.ceil(sec-el/1000))} s…`,'',800);
+    // a display refresh the frame cap skipped (frame() left at once, last unchanged) is not a frame: not counted, and the
+    // next frame's time runs from the last one drawn. A frame that built a shader (the programs on the card went up) is
+    // marked, so the warm-up of new sights is told apart from the steady frames
+    const step=now=>{for(const k in acc)delete acc[k];const l0=last,pg0=(renderer.info.programs||[]).length,c0=performance.now();frame(now);const cpu=performance.now()-c0;gpuPoll();
+      const el=performance.now()-t0,ran=last!==l0;
+      if(ran){const ft=lastNow?now-lastNow:0;lastNow=now;const ri=renderer.info.render;calls+=ri.calls;tris+=ri.triangles;nf++;
+      for(const k in acc){const s=S[k]||(S[k]={sum:0,max:0});s.sum+=acc[k];if(acc[k]>s.max)s.max=acc[k]}
+      const sh=(renderer.info.programs||[]).length>pg0;
+      if(ft)run.frames.push({ft,cpu,sh,top:(sh?['building shaders']:[]).concat(Object.entries(acc).filter(e=>e[1]>=2).sort((a,b)=>b[1]-a[1]).slice(0,4).map(([k,v])=>pfName(k)+' '+Math.round(v)+' ms'))})}if(ran&&typeof toast==='function'&&nf%15===0)toast(`Profiler: recording ${Math.max(0,Math.ceil(sec-el/1000))} s…`,'',800);
       if(el<sec*1000)return false;
       // put everything back
       for(const n of parts)if(window[n]&&window[n].pfW)window[n]=orig[n];if(G)window.postRender=orig.postRender;
       const F=run.frames.map(f=>f.ft).sort((a,b)=>a-b),n=F.length||1,avg=F.reduce((a,b)=>a+b,0)/n,low=F[Math.floor(n*0.99)]||0,cpuAvg=run.frames.reduce((a,f)=>a+f.cpu,0)/n;
-      run.fps=1000/avg;run.low=1000/(low||1);run.worst=F[n-1]||0;run.cpu=cpuAvg;run.outside=Math.max(0,avg-cpuAvg);run.gpu=G&&G.ms.length?G.ms.reduce((a,b)=>a+b,0)/G.ms.length:null;
+      run.fps=1000/avg;run.low=1000/(low||1);run.worst=F[n-1]||0;
+      // the same without the frames that built shaders: what this place plays like once it has been seen
+      {const W=run.frames.filter(f=>f.sh);run.shN=W.length;run.shMs=W.reduce((a,f)=>a+f.ft,0);const Q=run.frames.filter(f=>!f.sh).map(f=>f.ft).sort((a,b)=>a-b),m=Q.length||1;
+        run.lowSteady=1000/((Q[Math.floor(m*0.99)])||1);run.worstSteady=Q[m-1]||0}run.cpu=cpuAvg;run.outside=Math.max(0,avg-cpuAvg);run.gpu=G&&G.ms.length?G.ms.reduce((a,b)=>a+b,0)/G.ms.length:null;
       run.calls=calls/nf;run.tris=tris/nf;run.parts=Object.entries(S).map(([k,v])=>({n:pfName(k),avg:v.sum/nf,max:v.max})).sort((a,b)=>b.avg-a.avg).slice(0,16);
       run.slow=run.frames.slice().sort((a,b)=>b.ft-a.ft).slice(0,6).map(f=>({ft:f.ft,top:f.top}));run.frames=null;
       run.loafs=PF.loaf.slice(loaf0).sort((a,b)=>b.ms-a.ms).slice(0,5);run.heavy=pfHeavy();run.heavyBy=pfHeavyBy.slice();run.mem=Object.assign({},renderer.info.memory,{programs:(renderer.info.programs||[]).length});
@@ -102,7 +109,8 @@ function pfLoadHtml(L){let h=`<div class="ticket"><div><span class="lbl">Page up
   if(L.loafs.length)h+='<h2>Longest freezes while loading</h2>'+pfTable(['At','Froze','What held it'],L.loafs.map(l=>[pfMs(l.t),pfMs(l.ms),l.sc.join(' · ')||'(the browser or graphics card)']));
   else if(L.longs.length)h+='<h2>Longest freezes while loading</h2>'+pfTable(['At','Froze'],L.longs.map(l=>[pfMs(l[0]),pfMs(l[1])]));
   return h}
-function pfRunHtml(r,i){let h=`<h2>${i+1}. ${pfEsc(r.where)} <small>(${pfEsc(r.gfx)}, ${r.at})</small></h2><div class="ticket"><div><span class="lbl">${r.fps.toFixed(0)} FPS</span> average · ${r.low.toFixed(0)} FPS 1% low · slowest frame ${pfMs(r.worst)}</div>
+function pfRunHtml(r,i){let h=`<h2>${i+1}. ${pfEsc(r.where)} <small>(${pfEsc(r.gfx)}, ${r.at})</small></h2><div class="ticket"><div><span class="lbl">${r.fps.toFixed(0)} FPS</span> average · ${r.low.toFixed(0)} FPS 1% low · slowest frame ${pfMs(r.worst)}</div>${r.shN?`
+    <div><span class="lbl">Building shaders</span> ${r.shN} frame${r.shN>1?'s':''}, ${pfMs(r.shMs)} (new sights, once each) · without them ${r.lowSteady.toFixed(0)} FPS 1% low, slowest ${pfMs(r.worstSteady)}</div>`:''}
     <div><span class="lbl">Frame</span> ${r.cpu.toFixed(1)} ms in the game's code, ${r.outside.toFixed(1)} ms outside it (browser, waiting on the graphics card)${r.gpu!=null?` · <span class="lbl">graphics card</span> ${r.gpu.toFixed(1)} ms drawing`:''}</div>
     <div><span class="lbl">Drawn</span> ${Math.round(r.calls)} draw calls, ${(r.tris/1e6).toFixed(2)} M triangles a frame · ${r.mem.programs} shaders, ${r.mem.textures} textures, ${r.mem.geometries} meshes on the card</div></div>`;
   h+=pfTable(['Part of the frame','Average','Worst'],r.parts.map(p=>[p.n,p.avg.toFixed(2)+' ms',pfMs(p.max)]));
@@ -115,7 +123,7 @@ function pfText(){const L=pfLoadReport(),T=[`Corley's Island profiler · ${windo
     `LOADING: page ${L.nav?pfMs(L.nav.dom):'?'}, scripts ${pfMs(L.jsEnd)}, cover done ${L.done?pfMs(L.done):'no'}; ${L.nFiles} files ${pfKB(L.tot)}; frozen ${pfMs(L.blocked)} in ${L.nLong}`,
     'Steps done at: '+pfStepsTxt(L),'Slowest downloads: '+L.files.slice(0,10).map(f=>`${f.f} ${pfKB(f.b)} ${pfMs(f.ms)}`).join('; '),'Scripts: '+L.scripts.slice(0,8).map(s=>`${pfFile(s[0])} ${pfMs(s[1])}`).join('; '),
     'Freezes: '+L.loafs.map(l=>`${pfMs(l.ms)} at ${pfMs(l.t)} [${l.sc.join(' · ')}]`).join('; ')];
-  for(const r of PF.runs)T.push('',`SCENE ${r.where} (${r.gfx}): ${r.fps.toFixed(0)} fps, 1% low ${r.low.toFixed(0)}, worst ${pfMs(r.worst)}; game code ${r.cpu.toFixed(1)} ms, outside ${r.outside.toFixed(1)} ms${r.gpu!=null?', GPU '+r.gpu.toFixed(1)+' ms':''}; ${Math.round(r.calls)} calls ${(r.tris/1e6).toFixed(2)}M tris`,
+  for(const r of PF.runs)T.push('',`SCENE ${r.where} (${r.gfx}): ${r.fps.toFixed(0)} fps, 1% low ${r.low.toFixed(0)}, worst ${pfMs(r.worst)}${r.shN?` (shaders built in ${r.shN} frames, ${pfMs(r.shMs)}; without them 1% low ${r.lowSteady.toFixed(0)}, worst ${pfMs(r.worstSteady)})`:''}; game code ${r.cpu.toFixed(1)} ms, outside ${r.outside.toFixed(1)} ms${r.gpu!=null?', GPU '+r.gpu.toFixed(1)+' ms':''}; ${Math.round(r.calls)} calls ${(r.tris/1e6).toFixed(2)}M tris`,
     'Parts: '+r.parts.map(p=>`${p.n} ${p.avg.toFixed(2)}/${Math.round(p.max)}`).join('; '),'Slow frames: '+r.slow.map(s=>`${pfMs(s.ft)} [${s.top.join(', ')}]`).join('; '),
     'Freezes: '+r.loafs.map(l=>`${pfMs(l.ms)} [${l.sc.join(' · ')}]`).join('; '),'By file: '+(r.heavyBy||[]).map(g=>`${g.n} ${Math.round(g.tris/1000)}k/${g.meshes}`).join('; '),'Heaviest: '+r.heavy.map(g=>`${g.n} ${Math.round(g.tris/1000)}k/${g.meshes}`).join('; '));
   return T.join('\n')}
