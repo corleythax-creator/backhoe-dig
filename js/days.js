@@ -50,6 +50,8 @@ const dyBond=(a,b)=>bdOf({body:a,tw:0},{body:b,tw:0});
 function dyWhere(ids,h){if(h>=19&&Math.random()<0.25&&typeof PU!=='undefined'&&PU.spots&&PU.spots.shore.length){const S=PU.spots.shore[(Math.random()*PU.spots.shore.length)|0];return {x:S[0],z:S[1],n:'the beach',beach:1}}
   const kinds=h<15?['meal','am']:['pm','meal'];let b=null,bs=-1e9;
   for(const R of TF_ROOMS){if(R.home||R.grp||R.si==null)continue;tfShopW(R);if(!kinds.includes(R.vk)||!townRoomOpen(R,h))continue;const E=R.ent||tfEnt(R);if(!E||!E.w)continue;
+    // somewhere they can go in and sit together (the room's paths reach only some of its seats: at least two)
+    if(R.spots.filter(sp=>!sp.staff&&!sp.path&&tfInPath(R,E,sp)).length<2)continue;
     const s=ids.reduce((t,id)=>t+dyRate({body:id,tw:0},R),0)+Math.random()*0.3;if(s>bs){bs=s;b={x:E.wx+E.ux*1.8,z:E.wz+E.uz*1.8,n:townShopName(R)}}}
   if(b)return b;const S=SQ;return {x:(S.gx0+S.gx1)/2,z:(S.gz0+S.gz1)/2,n:'Harbor Square'}}
 const dyBusy=id=>DY.plans.some(x=>x.st==='set'&&x.m.includes(id));
