@@ -82,7 +82,9 @@ function dyTick(dt){if(!TALK.lib)return;if((DY.t+=dt)<1)return;DY.t=0;const n=dy
     if(due&&!late)for(const p of ps)if(p&&!p.dy&&!p.ord&&!p.room&&!p.go&&!p.goTo&&!(p.flee>0)&&!p.path&&!(P.st==='kept'&&p.dyDone===P))dyGo(p,P);
     const here=ps.filter(p=>p&&p.dy&&p.dy.P===P&&p.dy.here);
     // met: the first two there, then each who comes after
-    if(here.length>=2)for(const p of here){if(p.dy.met)continue;p.dy.met=1;p.look=Math.atan2(P.x-p.x,P.z-p.z);p.wait=P.beach?120+Math.random()*120:16+Math.random()*10;
+    // (one clock for them all outside, so they go in together; the beach: a long while there)
+    if(here.length>=2&&!P.outT)P.outT=performance.now()/1000+(P.beach?120+Math.random()*120:20+Math.random()*8);
+    if(here.length>=2)for(const p of here){if(p.dy.met)continue;p.dy.met=1;p.look=Math.atan2(P.x-p.x,P.z-p.z);p.wait=Math.max(3,P.outT-performance.now()/1000);
       const with_=here.filter(q=>q!==p);for(const q of with_)bdAdd(p,q,0.03);dyNote(p,'met',`met ${dyNames(with_.map(q=>tfWho(q)))} at ${P.n}`,0.6);
       if(P.st==='set'){P.st='kept';DY.dirty=true;bdSay(p,'dy_meet',{name:talkName(with_[0]).split(' ')[0]})}
       // you came along
