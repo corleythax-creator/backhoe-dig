@@ -65,7 +65,7 @@ function bfSeatAim(items){for(const P of items){if(!BF_SEATS.has(P.kind)||!P.spo
 const BF_FLOOR={lakeside_brewery:{lib:'wood_floor',ft:3.7}},bfFloorMats=new Map();
 function bfFloorMat(d,upm){const key=d.lib+'@'+upm.toFixed(3);let m=bfFloorMats.get(key);if(m)return m;
   const rep=1/(d.ft*0.3048*upm),L=k=>{const t=new THREE.TextureLoader().load(`textures/${d.lib}${k}.jpg`);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.repeat.set(rep,rep);t.anisotropy=8;return t};
-  m=new THREE.MeshStandardMaterial({map:L(''),roughness:1,metalness:0,envMap:skyEnv,envMapIntensity:0.25});m.name='bfFloor';m.userData={n:L('_n'),r:L('_r')};bfFloorPbr1(m);bfFloorMats.set(key,m);return m}
+  m=new THREE.MeshStandardMaterial({map:L(''),roughness:1,metalness:0,envMap:skyEnv,envMapIntensity:0.25});m.name='bfFloor';m.userData={n:L('_n'),r:L('_r')};lmOn(m);bfFloorPbr1(m);bfFloorMats.set(key,m);return m}
 function bfFloorPbr1(m){const on=!!(gfxCur&&gfxCur.pbr);m.normalMap=on?m.userData.n:null;m.roughnessMap=on?m.userData.r:null;m.roughness=on?1:0.6;m.needsUpdate=true}
 function bfFloorPbr(){for(const m of bfFloorMats.values())bfFloorPbr1(m)}
 // a floor mesh's UVs per metre (Daylight lays them in feet)
@@ -108,9 +108,9 @@ const BF_GLOW=new THREE.MeshBasicMaterial({color:0xffe2a8}),bfMats=new Map();
 // - the few nearest the camera (within TU.bfLtFar) each hold a real light from a small pool: how many is the Tuning
 //   for the Graphics level (TU.bfLtMed, bfLtHigh, bfLtUltra; none on Low or with Graphics, Building lights off), a
 //   third of them spotlights (up to 2). A spot with no spotlight left shines as a point light; a point light in a
-//   spare spotlight shines down in a wide cone. No shadows from them (`shadows` is not read), so one shines through a
-//   wall as far as its range. The pool is in the scene only while a building with lights is shown: adding or taking a
-//   light makes three.js build its shaders again, so its size changes only with the setting.
+//   spare spotlight shines down in a wide cone. No shadow maps from them (`shadows` is not read); the walls of its
+//   floor stop each one all the same (bfLmTick, below), and an indoor one stops at its floor and, with a floor above,
+//   its ceiling. The pool is in the scene only while a building with lights is shown: adding or taking a light makes three.js build its shaders again, so its size changes only with the setting.
 // Only what is drawn: nothing here is saved or touches the ground. The map editor carries them: each is placed from
 // its building's own place every third of a second (and bfAfter asks for it at once).
 const BF_LT_KEY={low:'bfLtMed',med:'bfLtMed',high:'bfLtHigh',ultra:'bfLtUltra',quest:'bfLtMed'},BF_LT_I=1.2,BF_LT_DECAY=1.3;
@@ -141,7 +141,7 @@ function bfLtPack(LS,LG){const out=[],gd=LG&&LG.dim!=null?Math.max(0,Math.min(2,
   for(const l of LS||[]){const st=bfLtState(l,LG),p=l.position,k=Math.sqrt((+l.lumens>0?+l.lumens:800)/800)*(l.dim!=null?Math.max(0,Math.min(1,+l.dim)):1)*gd;
     if(st==='off'||!Array.isArray(p)||p.length<3||!(k>0))continue;const dir=l.type==='spot'&&Array.isArray(l.direction)?new THREE.Vector3().fromArray(l.direction):null;
     out.push({id:l.id,p:new THREE.Vector3(+p[0],+p[1],+p[2]),d:dir&&dir.lengthSq()>1e-6?dir.normalize():null,col:new THREE.Color(l.color||'#ffe2a8'),k,
-      r:+l.range>0?+l.range:6,ang:Math.min(1.45,Math.max(0.1,(+l.beam||90)*Math.PI/360)),auto:st==='auto',out:!!l.outdoor})}
+      lvl:+l.level||0,r:+l.range>0?+l.range:6,ang:Math.min(1.45,Math.max(0.1,(+l.beam||90)*Math.PI/360)),auto:st==='auto',out:!!l.outdoor})}
   return out}
 // the pool: n real lights in the scene (dark until held), a third of them spotlights
 function bfLtPool(n){if(n===bfLt.n)return;bfLt.n=n;const ns=Math.min(2,Math.floor(n/3)),fit=(A,m,make)=>{
@@ -166,7 +166,7 @@ function bfLightTick(lamp,ll,dt){bfEnvTick();
       if(Math.hypot(cam.x-B.g.position.x,cam.z-B.g.position.z)>far+B.rad)continue;B.g.updateMatrixWorld();
       const it=bf.lib[L.id];if(it&&it.width){v.copy(cam);B.g.worldToLocal(v);if(Math.abs(v.x)<it.width/2&&Math.abs(v.z)<it.length/2&&v.y>-0.5&&v.y<8)
         for(const l of B.K.lights){const k=l.auto?lamp:1;if(k>fill)fill=k}}
-      for(const l of B.K.lights){if(l.auto&&lamp<=0.01)continue;v.copy(l.p).applyMatrix4(B.g.matrixWorld);const d=v.distanceTo(cam);if(d<far)C.push({l,B,d,x:v.x,y:v.y,z:v.z})}}
+      for(const l of B.K.lights){if(l.auto&&lamp<=0.01)continue;v.copy(l.p).applyMatrix4(B.g.matrixWorld);const d=v.distanceTo(cam);if(d<far)C.push({l,B,L,d,x:v.x,y:v.y,z:v.z})}}
     bfLt.fill=fill;C.sort((a,b)=>a.d-b.d);bfLt.on=C.length;bfLtPool(any?bfLtBudget():0);
     const A=bfLt.all,pick=C.slice(0,A.length),free=[];
     for(const s of A){const i=pick.findIndex(c=>c&&c.l===s.l&&c.B===s.B);if(i<0){s.l=null;free.push(s)}else{s.c=pick[i];pick[i]=null}}
@@ -175,12 +175,41 @@ function bfLightTick(lamp,ll,dt){bfEnvTick();
     for(const s of A){const l=s.l,c=s.c,o=s.o;if(!l){o.intensity=0;if(o.castShadow)o.position.set(0,-2000,0);continue}bfLt.real++;
       o.position.set(c.x,c.y,c.z);o.color.copy(l.col);s.e=Math.max(0,Math.min(1,(far-c.d)/5));o.distance=l.r;
       if(o.isSpotLight){if(l.d){v.copy(l.d).transformDirection(s.B.g.matrixWorld);o.angle=l.ang;o.penumbra=0.5;o.distance=l.r*1.35}else{v.set(0,-1,0);o.angle=1.45;o.penumbra=1}
-        o.target.position.set(c.x+v.x*5,c.y+v.y*5,c.z+v.z*5)}}}
+        o.target.position.set(c.x+v.x*5,c.y+v.y*5,c.z+v.z*5)}}
+    bfLmTick(A)}
   // a light comes up over a quarter of a second when it takes one of the pool's, and fades toward the edge of the range
   bfLt.fillK+=(bfLt.fill-bfLt.fillK)*Math.min(1,dt*3);BF_FILL.intensity=bfLt.fillK*(TU.bfLtFill??1)*BF_FILL_I*LI*(1-0.7*inRL.k);
   const g=ll*TU.bfLight*BF_LT_I*LI,f=Math.min(1,dt*4);
   for(const s of bfLt.all){const l=s.l;if(!l)continue;s.k=Math.min(1,s.k+f);s.o.intensity=g*l.k*(l.auto?lamp:1)*s.k*s.e*(s.o.isSpotLight&&l.d?1.5:1)}
   inRoomTick(dt)}
+// walls stop the lights (core.js LM_U): each light the pool holds gets a mask in its cell of the shared map, a square
+// round it as far as it reaches, white where it can see and black in the shadow of every wall of its floor (the
+// library's walls, whose doorways are gaps; drawn on the plan, through the building's own turn). Drawn again only when
+// the cell's light or its place changes. An indoor light also stops at its room's floor and, with a floor above, its
+// ceiling; one outside (on no room's floor) only at the walls
+const BF_LM_PX=256,bfLm={cv:null,g:null,key:[]};
+// a building material takes the masks (core.js lmShade, under BF_LM), its own onBeforeCompile kept
+function lmOn(m){if(!m||m.userData.lm)return m;m.userData.lm=1;m.defines=Object.assign({},m.defines,{BF_LM:''});const old=m.onBeforeCompile;
+  m.onBeforeCompile=function(sh,r){if(old)old.call(this,sh,r);Object.assign(sh.uniforms,LM_U)};m.needsUpdate=true;return m}
+function bfLmTick(A){const U=LM_U;let n=0;
+  if(!bfLm.cv){const cv=document.createElement('canvas');cv.width=4*BF_LM_PX;cv.height=2*BF_LM_PX;bfLm.cv=cv;bfLm.g=cv.getContext('2d');
+    const t=new THREE.CanvasTexture(cv);t.flipY=false;t.generateMipmaps=false;t.minFilter=t.magFilter=THREE.LinearFilter;U.uLmMap.value=t}
+  A.forEach((s,slot)=>{const l=s.l,c=s.c;if(!l||!c||slot>7)return;const it=c.L&&bf.lib[c.L.id];if(!it||!Array.isArray(it.walls))return;
+    const M=c.B.g.matrixWorld,h=Math.min(30,Math.max(1,s.o.isSpotLight&&l.d?l.r*1.35:l.r)),lv=l.lvl||0,lvs=it.levels||[];
+    const room=(it.rooms||[]).find(r=>(r.level||0)===lv&&bfInPoly(l.p.x,l.p.z,r.outline)),top=lv>=lvs.length-1;
+    const wy=y=>new THREE.Vector3(0,y,0).applyMatrix4(M).y,y0=room?wy(room.floorY)-0.1:-1e5,y1=room&&!top?wy(room.ceilingY)+0.2:1e5;
+    U.uLmC.value[n].set(c.x,c.y,c.z,h);U.uLmD.value[n].set(slot,y0,y1,0);n++;
+    const key=[c.L.id,l.id,c.x.toFixed(2),c.z.toFixed(2),h.toFixed(2)].join('|');if(bfLm.key[slot]===key)return;bfLm.key[slot]=key;
+    const g=bfLm.g,ox=(slot%4)*BF_LM_PX,oy=Math.floor(slot/4)*BF_LM_PX,sc=BF_LM_PX/(2*h),v=new THREE.Vector3(),P=(x,z)=>{v.set(x,0,z).applyMatrix4(M);return [v.x,v.z]};
+    const tp=q=>[ox+(q[0]-c.x+h)*sc,oy+(q[1]-c.z+h)*sc];
+    g.save();g.beginPath();g.rect(ox,oy,BF_LM_PX,BF_LM_PX);g.clip();g.fillStyle='#fff';g.fillRect(ox,oy,BF_LM_PX,BF_LM_PX);g.fillStyle='#000';g.beginPath();
+    for(const w of it.walls){if((w[5]||0)!==lv)continue;const a=P(w[0],w[1]),b=P(w[2],w[3]),ux=b[0]-a[0],uz=b[1]-a[1],L2=ux*ux+uz*uz;if(L2<1e-4)continue;
+      const k=Math.max(0,Math.min(1,((c.x-a[0])*ux+(c.z-a[1])*uz)/L2)),d=Math.hypot(c.x-a[0]-ux*k,c.z-a[1]-uz*k);if(d<0.03||d>h*1.5)continue;
+      const far=q=>{const dx=q[0]-c.x,dz=q[1]-c.z,m=Math.hypot(dx,dz)||1;return [q[0]+dx/m*h*4,q[1]+dz/m*h*4]},Q=[a,b,far(b),far(a)].map(tp);
+      g.moveTo(Q[0][0],Q[0][1]);for(let i=1;i<4;i++)g.lineTo(Q[i][0],Q[i][1]);g.closePath()}
+    g.fill();g.restore();U.uLmMap.value.needsUpdate=true});
+  U.uLmN.value=n}
+const bfInPoly=(x,z,P)=>{let r=false;for(let i=0,j=P.length-1;i<P.length;j=i++){const a=P[i],b=P[j];if((a[1]>z)!==(b[1]>z)&&x<(b[0]-a[0])*(z-a[1])/(b[1]-a[1])+a[0])r=!r}return r};
 // ---------- the room's own light (High and Ultra: GFX inLight; Ultra adds inSh) ----------
 // Inside one of the buildings the room lights itself the way a real one does. A 360° picture is taken from the middle
 // of the room the camera is in (a cube camera that sees only that building, its kind's shells, the lights and the sky
@@ -224,7 +253,7 @@ function inCapture(R,B){
 // the building's materials kept as Daylight House Studio made them (PBR: colour, roughness, metalness, normal and AO maps),
 // lit by the game's sky (skyEnv) as well as its sun, so they read as they do in Daylight; without the sky they stood far
 // darker than the game's own buildings. How much sky they take is the Tuning bfEnv (read live: bfEnvTick)
-function bfPhong(m){if(!m||!m.isMeshStandardMaterial)return m;if(bfMats.has(m))return bfMats.get(m);
+function bfPhong(m){if(!m||!m.isMeshStandardMaterial)return m;if(bfMats.has(m))return bfMats.get(m);lmOn(m);
   m.envMap=skyEnv;m.envMapIntensity=TU.bfEnv;m.needsUpdate=true;bfMats.set(m,m);return m}
 let bfEnvK=-1;function bfEnvTick(){if(TU.bfEnv===bfEnvK)return;bfEnvK=TU.bfEnv;for(const m of bfMats.values()){m.envMapIntensity=bfEnvK;m.userData.envI0=bfEnvK}}
 function bfPack(root,merge,it){const col=root.getObjectByName('Collision');if(col)col.removeFromParent();root.updateMatrixWorld(true);
