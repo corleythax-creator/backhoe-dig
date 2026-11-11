@@ -348,7 +348,7 @@ function tfSeen(x,z,r){_tfSph.center.set(x,baseHeight(x,z)+1,z);_tfSph.radius=r|
 // what someone walking at (x, z) toward (dx, dz) would bump into within reach: another person, the worker, a car
 function tfBlocked(p,dx,dz,reach){const rx=-dz,rz=dx;
   const hit=(x,z,r)=>{const ox=x-p.x,oz=z-p.z,f=ox*dx+oz*dz;return f>0&&f<reach+r&&Math.abs(ox*rx+oz*rz)<0.32+r};
-  if(!(p.ghost>0))for(const q of tf.people)if(q!==p&&!q.inside&&!q.drv&&hit(q.x,q.z,0.25))return true;
+  if(!(p.ghost>0))for(const q of tf.people)if(q!==p&&!q.inside&&!q.drv&&!(q.tg&&q.tg.lead===p)&&!(p.tg&&p.tg.lead===q)&&hit(q.x,q.z,0.25))return true;
   if(walker.visible&&mode==='walk'&&hit(wk.x,wk.z,0.3))return true;
   if(!(p.ghost>0))for(const c of tf.drive)if(c.v>0.3||c.st!=='park')for(const lz of [-1.4,0,1.4])if(hit(c.x+Math.sin(c.yaw)*lz,c.z+Math.cos(c.yaw)*lz,1.0))return true;
   return false}
@@ -700,7 +700,7 @@ function tfTick(dt){if(!tf.q){if(tf.on)tfShow(false);return}tfPrep(dt);
   if(!tf.on){tfShow(true);while(walkers.length<wantP){const p=tfSpawnWalker(true);if(!p)break;walkers.push(p)}}
   tf.spawnT-=dt;if(tf.spawnT<=0){tf.spawnT=1.5+Math.random()*2;
     if(walkers.length<wantP)tfSpawnWalker(false);
-    else if(walkers.length>wantP){const p=walkers.find(p=>!p.go&&!p.goTo&&!(p.ord&&p.ord.k!=='home')&&!p.pu&&!p.dy&&!(p.off&&p.off.tag!=='back')&&(p.inside||!tfSeen(p.x,p.z,1)));if(p)tfDrop(p)}
+    else if(walkers.length>wantP){const p=walkers.find(p=>!p.go&&!p.goTo&&!(p.ord&&p.ord.k!=='home')&&!p.pu&&!p.dy&&!p.tg&&!(p.off&&p.off.tag!=='back')&&(p.inside||!tfSeen(p.x,p.z,1)));if(p)tfDrop(p)}
     if(tf.carsOk&&tf.drive.reduce((n,c)=>n+(c.st==='park'?0.5:1),0)<wantC&&Object.keys(tf.cars).length>=3&&Math.random()<0.5)tfSpawnCar()}
   for(const c of tf.drive.slice())tfCarStep(c,dt);
   tfRunOver(dt);

@@ -145,7 +145,7 @@ function townTick(dt){if(town.pep>0)town.pep=Math.max(0,town.pep-dt);
   townDoors();
   // passersby: each gets one chance to greet as he goes by
   if((town.gT-=dt)>0)return;const armed=typeof gun==='object'&&(gun.eq||gun.stars>0);
-  for(const p of tf.people){if(p.gr||p.room||p.drv||p.cop||p.dead||p.hurt||p.inside||p.flee>0||p.cower>0)continue;const d=Math.hypot(p.x-wk.x,p.z-wk.z);if(d>3.2||Math.abs(p.y-wk.y)>1.5)continue;
+  for(const p of tf.people){if(p.gr||p.room||p.drv||p.cop||p.dead||p.hurt||p.inside||p.flee>0||p.cower>0||typeof talkBusy==='function'&&talkBusy(p))continue;const d=Math.hypot(p.x-wk.x,p.z-wk.z);if(d>3.2||Math.abs(p.y-wk.y)>1.5)continue;
     p.gr=1;if(gun&&gun.stars>0||Math.random()>=(TU.greetChance??0.45))continue;
     const h=townHour(),C=tf.chars[p.ci]||{},G=p.reg,k=armed?'grGun':C.age==='kid'?'grKid':G&&town.met[G.id]?'reg_back':weather.r>0.2?'grRain':h>=4&&h<12?'grMorning':h<17?'grDay':h<21?'grEvening':'grNight';
     p.wait=Math.max(p.wait||0,1.4);p.look=Math.atan2(wk.x-p.x,wk.z-p.z);
