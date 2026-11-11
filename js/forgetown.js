@@ -19,6 +19,9 @@
 // Moving, turning or hiding a building in the map editor carries it (bfAfter, called at the end of fxApply).
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 const BF_SITE='https://corley-forge-studio.vercel.app/building/library/',BF_PLACES='corleys_island.json';
+// a loading-speed test (owner, Nov 10): only these Building Forge buildings are brought in, the rest keep the game's own
+// stand-ins; null brings in all of them again
+const BF_ONLY=new Set(['lakeside_brewery']);
 const BF_NEAR=30,BF_OPEN=1.35,BF_STAFF=new Set(['counter','desk','island']),BF_SHOP=new Set(['counter','washer','dryer','desk','island','fridge','range','vanity']);
 const bf={lib:null,places:null,kinds:{},inst:{},lots:[],gen:0,qa:new THREE.Quaternion(),ay:new THREE.Vector3(0,1,0)};
 // which setting draws an area's buildings
@@ -443,13 +446,17 @@ function bfAfter(it,a){const L=it.bf;if(!L||!L.b)return;const B=L.b,gone=!a||!!a
   for(const {l} of G.lamps)l[1]=-600;if(G.lamps.length){bf.lamps=1;fxApply.lamps=1}
   for(const {O} of G.objs)if(!O.o.userData.sign)O.o.visible=false}
 function bfFlush(){for(const F of FX_MESH)if(F.bfDirty){F.bfDirty=0;F.m.geometry.computeBoundingSphere();F.m.geometry.computeBoundingBox()}if(bf.lamps){bf.lamps=0;fxLampsSync()}}
+// bf.ready: the first of these done (built, not wanted, or failed); the loading cover (start.js) waits for it, so the
+// town's buildings are in, and their shaders built, before you are let in rather than landing in view 10 s later and
+// building them there frame by frame (the lag of the first 45 s)
 // on or off by area (gfxApply, and once at load): the library and the places the first time, each kind when first
 // wanted, then every building laid again whose setting changed
-async function bfSync(){if(typeof FX==='undefined'||!FX.length)return;const gen=++bf.gen;
+async function bfSync(){try{await bfSync1()}finally{bf.ready=true}}
+async function bfSync1(){if(typeof FX==='undefined'||!FX.length)return;const gen=++bf.gen;
   if(!bfWant('town')&&!bfWant('homes')&&!bf.lots.length)return;
   try{if(!bf.lib){const get=async u=>{const r=await fetch(BF_SITE+u);if(!r.ok)throw new Error(u+' '+r.status);return r.json()};
       const [lib,pl]=await Promise.all([get('library.json'),get(BF_PLACES)]);bf.lib=Object.fromEntries(lib.buildings.map(b=>[b.id,b]));bf.places=pl.places.filter(p=>bf.lib[p.id])}
-    const todo=bf.places.filter(p=>bfWant(p.area)&&!p.built),K={};
+    const todo=bf.places.filter(p=>bfWant(p.area)&&!p.built&&(!BF_ONLY||BF_ONLY.has(p.id))),K={};
     for(const id of new Set(todo.map(p=>p.id)))K[id]=await bfKind(id);if(gen!==bf.gen)return;
     for(const p of todo){p.built=1;const L=Object.assign({},p),item=bfItem(L);if(!item||item.bf)continue;bfBuild(L,K[L.id],item);bf.lots.push(L)}}
   catch(e){console.warn('Building Forge: the town not loaded',e);return}

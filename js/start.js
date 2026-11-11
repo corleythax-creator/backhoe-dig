@@ -66,7 +66,7 @@ function loadStep(bad){if(LOADP.done)return;if(bad){loadEnd();return}const jsN=d
   if(game&&!LOADP.gameT)LOADP.gameT=now;let al=0,at=0;for(const [l,t] of LOADP.mgr){al+=l;at+=t}
   if(LOADP.gameT&&now-LOADP.gameT>2000&&LOADP.goal===undefined)LOADP.goal=at;if(LOADP.goal!==undefined)at=LOADP.goal;al=Math.min(al,at);
   const a=at?al/at:0,w=typeof warmFrac==='function'?warmFrac():0;
-  const done=LOADP.goal!==undefined&&al>=at&&LOADP.warm&&(typeof warmCover==='function'?warmCover():warmIdle())&&(typeof brBusy!=='function'||!brBusy())||now>LOADP.cap*1000||LOADP.err&&now-LOADP.errT>4000;
+  const done=LOADP.goal!==undefined&&al>=at&&LOADP.warm&&(typeof warmCover==='function'?warmCover():warmIdle())&&loadTownIn()&&(typeof brBusy!=='function'||!brBusy())||now>LOADP.cap*1000||LOADP.err&&now-LOADP.errT>4000;
   const p=done?100:Math.min(99,45*js+30*a*(game?1:.8)+25*w);LOADP.shown=done?100:Math.max(LOADP.shown,LOADP.shown+(p-LOADP.shown)*.35);// counts up smoothly, never back
   const pct=Math.floor(LOADP.shown),L=document.getElementById('startLoad');
   document.getElementById('startLoadPct').textContent=pct+'%';document.getElementById('startLoadFill').style.width=LOADP.shown+'%';L.setAttribute('aria-valuenow',pct);
@@ -83,7 +83,8 @@ function loadFiles(){let dev=0,net=0,b=0;try{for(const e of performance.getEntri
 // the pictures and models asked for at the start are in, and the bridges' and docks' pictures made (main.js warmAllTick
 // builds the shaders only then)
 function loadPicsIn(){let al=0,at=0;for(const [l,t] of LOADP.mgr){al+=l;at+=t}if(LOADP.goal!==undefined)at=Math.min(at,LOADP.goal);
-  return LOADP.goal!==undefined&&al>=at&&(typeof brBusy!=='function'||!brBusy())}
+  return LOADP.goal!==undefined&&al>=at&&(typeof brBusy!=='function'||!brBusy())&&loadTownIn()}
+const loadTownIn=()=>typeof bf!=='undefined'?!!bf.ready:LOADP.js>=document.querySelectorAll('script[defer]').length;
 function loadSteps(js,jsN,al,at,done){const W=typeof warmAll!=='undefined'?warmAll:null,F=loadFiles(),now=performance.now(),S=PF_BOOT.steps,rows=[];
   const row=(id,name,ok,txt)=>{if(ok&&S[id]===undefined)S[id]=Math.round(now);rows.push([name,ok,txt])};
   row('code','Game code',js>=1,`${Math.min(LOADP.js,jsN)} of ${jsN}`);
@@ -93,6 +94,7 @@ function loadSteps(js,jsN,al,at,done){const W=typeof warmAll!=='undefined'?warmA
   row('shaders','Shaders',!!(W&&(W.pend===0&&W.still>=1||W.c1&&now-W.c1>WARM_SETTLE)),W&&W.mats?`${W.mats} materials${W.pend?', building':''}`:'…');
   const n=typeof WARM_AT!=='undefined'?WARM_AT.length:0,a=W&&W.at?n-W.at.length:0;
   row('places','Places looked over',!!(W&&W.at&&!W.at.length),n?`${a} of ${n}`:'…');
+  row('town',"Town's buildings",loadTownIn(),typeof bf!=='undefined'&&bf.lots.length?`${bf.lots.length}`:'');
   const bq=typeof brQ!=='undefined'?brQ.length:0;row('bridges',"Bridges' and docks' pictures",typeof brBusy==='function'&&!brBusy()&&LOADP.warm,bq?`${bq} left`:'');
   let cur=done?-1:rows.findIndex(r=>!r[1]);
   const ul=document.getElementById('startLoadSteps'),h=rows.map(([nm,ok,t],i)=>`<li class="${ok?'ok':i===cur?'now':''}"><b>${nm}</b><span>${t}</span></li>`).join('');
