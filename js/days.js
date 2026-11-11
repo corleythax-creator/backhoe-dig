@@ -99,8 +99,8 @@ function dyTick(dt){if(!TALK.lib)return;if((DY.t+=dt)<1)return;DY.t=0;const n=dy
   // done together: back to their evening
   // together outside a while: then in at the door to sit at a table together, if there is one
   for(const P of DY.plans){if(P.in||P.beach||P.st==='missed'||P.st==='set')continue;const G=tf.people.filter(p=>p.dy&&p.dy.P===P&&p.dy.met);
-    if(G.length>=2&&G.every(p=>!(p.wait>0))&&dyInside(P,G))P.in=1}
-  for(const p of tf.people)if(p.dy&&(p.dy.met&&!(p.wait>0)||p.dead||p.hurt||p.ord||p.flee>0)){const was=p.dy;p.dy=null;p.dyDone=was.P;if(p.off&&!p.ord)roBack(p);if(was.met&&!p.ord)p.ndNext=0}
+    if(G.length>=2&&performance.now()/1000>=(P.outT||1e12)&&dyInside(P,G))P.in=1}
+  for(const p of tf.people)if(p.dy&&(p.dy.met&&!(p.wait>0)&&(p.dy.P.in||p.dy.P.beach||performance.now()/1000>(p.dy.P.outT||0)+1.5)||p.dead||p.hurt||p.ord||p.flee>0)){const was=p.dy;p.dy=null;p.dyDone=was.P;if(p.off&&!p.ord)roBack(p);if(was.met&&!p.ord)p.ndNext=0}
   DY.plans=DY.plans.filter(P=>P.st==='set'||P.st==='kept'||n.day-P.day<2);
   if((DY.saveT+=1)>=10){DY.saveT=0;dySave();if(typeof ndSave==='function')ndSave()}}
 
