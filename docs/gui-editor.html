@@ -1337,6 +1337,7 @@ const TUNE=[
   // pursuits (pursuits.js)
   ['roMs','Town','Townsfolk finding their way across town may take this long each frame',2.5,'ms',0.5,10,0.5],
   ['ndPress','Town','A townsperson goes to do something about a need (hungry, thirsty, tired, bored, lonely: 0 to 1) once it passes about',0.62,'n',0.3,1,0.02],
+  ['dyPlan','Town','Two friends chatting by day make a plan to meet later this often',0.2,'pct',0,100,5],
   ['puShare','Town','Share of the townsfolk who fit a pursuit that have one',0.6,'pct',0,100,5],
   ['puGap','Town','A townsperson goes off on their pursuit again after about',240,'s',30,3600,30],
   ['puMax','Town','At most this many townsfolk off on their pursuits at once',5,'n',0,20,1],
@@ -1704,6 +1705,9 @@ const WORDS=[
   // how they get on (bonds.js): friends passing, a falling-out, a snub ({name}: the other one)
   ['bd_hi','Town: bonds',"{name}! Good to see you.",'{name}: their friend'],['bd_spat','Town: bonds',"You know what, {name}? Forget it.",'{name}: who they fell out with'],
   ['bd_snub','Town: bonds',"Hmph. {name}.",'{name}: who they can\'t stand'],
+  // plans between friends (days.js): making one, meeting, a friend who never came
+  ['dy_plan','Town: plans',"Want to meet at {place} around {time}?",'{place}, {time}: where and when'],['dy_planYes','Town: plans',"It's a date, {name}.",'{name}: who asked'],
+  ['dy_meet','Town: plans',"There you are, {name}!",'{name}: who they meet'],['dy_stood','Town: plans',"Guess {name} isn't coming.",'{name}: who never came'],
   ['tkAll','Town: talk','Everyone',''],['tkWithAll','Town: talk','Talking to everyone here ({n})','{n}: how many are listening'],['tkSayAll','Town: talk','Say something to everyone',''],
   ['tkPlayer','Town: talk','Corley','What the townsfolk call you'],
   ['tkWeather','Town: talk','Nice enough day for it. Whatever it is you\'re digging.',''],['tkRain','Town: talk','This rain. Good for the lawns, bad for your dirt, I\'d guess.',''],
