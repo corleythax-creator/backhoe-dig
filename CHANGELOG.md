@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Tuesday, November 10, 2026
 
+- **v406** (8:37 PM) Nothing is drawn behind the loading cover while shaders build, so the browser builds them side by side instead of freezing; the building light pool is made once by the Graphics setting (a change in the number of lights rebuilt every shader a second time); each visit starts on foot at the brewery's front door
 - **v405** (8:28 PM) Townsfolk lines show in a conversation box at the lower left (who said it, to whom, lines to you marked) in place of the text over their heads; spoken aloud one voice at a time in words, at a calmer pace.
 - **v404** (8:09 PM) The loading cover lists each step under the bar (game code, files from this device vs downloaded, pictures to the graphics card, shaders, places, bridges' pictures) and no longer waits out its 60 s cap when new shaders keep turning up
 - **v403** (7:58 PM) Townsfolk now hold many conversations at once (everyone with someone beside them talks back and forth), not one line every 20 seconds; Aloud speaks the nearest and murmurs the rest like a busy room.
