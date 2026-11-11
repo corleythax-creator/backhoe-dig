@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-11T01:58:00Z",
+ "updated": "2026-11-11T02:09:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -132,9 +132,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-10",
-   "dh": 62.5,
-   "act": 4.5,
-   "versions": 9
+   "dh": 64.5,
+   "act": 5,
+   "versions": 10
   }
  ],
  "extra": [
@@ -3771,6 +3771,15 @@ window.EFFORT = {
    "tris": 5825292,
    "chars": 2633159,
    "what": "Townsfolk now hold many conversations at once (everyone with someone beside them talks back and forth), not one line every 20 seconds; Aloud speaks the nearest and murmurs the rest like a busy room."
+  },
+  {
+   "v": 404,
+   "asked": "2026-11-10T19:50:00-06:00",
+   "live": "2026-11-10T20:09:45-06:00",
+   "dh": 2,
+   "tris": 5796205,
+   "chars": 2636937,
+   "what": "The loading cover lists each step under the bar (game code, files from this device vs downloaded, pictures to the graphics card, shaders, places, bridges' pictures) and no longer waits out its 60 s cap when new shaders keep turning up"
   }
  ]
 };

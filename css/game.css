@@ -326,6 +326,13 @@ button.sq{width:34px;padding:0;font-size:var(--t2);letter-spacing:0}
 #startLoadFill::after{content:"";position:absolute;inset:0;background:linear-gradient(90deg,transparent,rgba(255,255,255,.45),transparent);animation:startLoadShine 1.2s linear infinite}
 @keyframes startLoadShine{from{transform:translateX(-100%)}to{transform:translateX(100%)}}
 #startLoadWhat{font:600 var(--t3)/1.2 var(--f-body);color:#d5dbd2}
+#startLoadSteps{list-style:none;margin:0;padding:8px 12px;width:min(420px,76%);display:grid;gap:4px;border:1px solid rgba(255,255,255,.14);border-radius:var(--r);background:rgba(0,0,0,.25)}
+#startLoadSteps li{display:flex;gap:10px;font:500 var(--t1)/1.25 var(--f-body);color:#aeb6ab}
+#startLoadSteps li b{flex:1;font-weight:600;color:#d5dbd2}
+#startLoadSteps li span{font-variant-numeric:tabular-nums;text-align:right}
+#startLoadSteps li.ok b::before{content:"\2713  ";color:var(--machine)}
+#startLoadSteps li.now b{color:#f3f5ef}
+#startLoadSteps li.now b::before{content:"\25B8  ";color:var(--machine)}
 #startBar button:disabled{opacity:.45}
 #startMapImg{position:absolute;max-width:none;display:block;pointer-events:none;user-select:none}
 #startDet{position:absolute;inset:0;pointer-events:none}

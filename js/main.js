@@ -366,6 +366,12 @@ function warmAt(x,z){const c=camera.position.clone(),sp=sun.position.clone(),stp
   finally{camera.position.copy(c);camera.updateMatrixWorld();sun.position.copy(sp);sun.target.position.copy(stp);sun.updateMatrixWorld();sun.target.updateMatrixWorld();renderer.shadowMap.needsUpdate=true}}
 const warmQuiet=()=>!help.hidden||typeof tour!=='undefined'&&tour.on&&tour.ph==='ready';
 function warmIdle(){const W=warmAll;return !W||W.pend===0&&W.still>=1&&(!W.q||!W.q.length||help.hidden)&&(!W.at||!W.at.length||!warmQuiet())}
+// for the loading cover (start.js): the same, but the shaders count as done once a pass has finished and WARM_SETTLE ms
+// have gone by since, even if new materials keep turning up (the townsfolk and the town's buildings arrive for a while
+// and each restarted the wait, so the cover sat till its 60 s cap); what turns up after is still warmed behind the start card
+const WARM_SETTLE=6000;
+function warmCover(){const W=warmAll;if(!W)return true;const sh=W.pend===0&&W.still>=1||W.c1&&performance.now()-W.c1>WARM_SETTLE;
+  return sh&&(!W.q||!W.q.length||help.hidden)&&(!W.at||!W.at.length||!warmQuiet())}
 // the textures still to upload: every one in the scene whose picture is in and that isn't uploaded or queued yet (the
 // queue is topped up with the ones that arrive later at each 4 s check)
 function warmTexQ(W){if(!W.q){W.q=[];W.up=new Set();W.q0=0}const inQ=new Set(W.q),ok=im=>im&&(im.width||im.data||Array.isArray(im));
@@ -384,7 +390,8 @@ function warmAllTick(){const W=warmAll;if(!W||bench.on||vrOn())return;const now=
   const ms=new Set();scene.traverse(o=>{if(o.material)for(const m of [].concat(o.material))ms.add(m)});
   if(ms.size>W.mats||brVer!==W.ver){W.mats=Math.max(W.mats||0,ms.size);W.ver=brVer;W.still=0;W.pend++;
     try{warmVm()}catch(e){}
-    try{const p=warmCompile(scene);if(p&&p.then)p.then(()=>W.pend--,()=>W.pend--);else W.pend--}catch(e){W.pend--}}
+    const c1=()=>{W.pend--;if(!W.c1)W.c1=performance.now()};
+    try{const p=warmCompile(scene);if(p&&p.then)p.then(c1,c1);else c1()}catch(e){c1()}}
   else W.still++;
   if(now-W.t0>180000&&W.pend===0&&(!W.q.length||help.hidden)&&(!W.at.length||!warmQuiet()))warmAll=null}
 // in first person the gun and the worker's own body are drawn last, as see-through (gunVm, gunVmBody, pistol.js), which

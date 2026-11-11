@@ -49,7 +49,7 @@ const LOADP={js:0,mgr:[],warm:false,done:false,shown:0,cap:60};
 document.addEventListener('load',e=>{if(e.target.tagName==='SCRIPT'&&e.target.defer){LOADP.js++;PF_BOOT.js.push([e.target.getAttribute('src'),performance.now()])}},true);
 // for the Profiler (☰ → Dev, js/prof.js): when each game script finished running, and every stretch the page's main
 // thread was held up 50 ms or more (the browser's long tasks), from the start
-const PF_BOOT={js:[],long:[],done:0};
+const PF_BOOT={js:[],long:[],done:0,steps:{}};
 try{new PerformanceObserver(l=>{for(const e of l.getEntries())if(PF_BOOT.long.length<4000)PF_BOOT.long.push([e.startTime,e.duration])}).observe({type:'longtask',buffered:true})}catch(e){}
 // a script that didn't arrive (a phone's connection dropping a file) leaves the game half built and failing later
 // ("Can't find variable"), so the page loads again by itself, twice at most a session, before it gives up and carries on
@@ -66,13 +66,33 @@ function loadStep(bad){if(LOADP.done)return;if(bad){loadEnd();return}const jsN=d
   if(game&&!LOADP.gameT)LOADP.gameT=now;let al=0,at=0;for(const [l,t] of LOADP.mgr){al+=l;at+=t}
   if(LOADP.gameT&&now-LOADP.gameT>2000&&LOADP.goal===undefined)LOADP.goal=at;if(LOADP.goal!==undefined)at=LOADP.goal;al=Math.min(al,at);
   const a=at?al/at:0,w=typeof warmFrac==='function'?warmFrac():0;
-  const done=LOADP.goal!==undefined&&al>=at&&LOADP.warm&&warmIdle()&&(typeof brBusy!=='function'||!brBusy())||now>LOADP.cap*1000||LOADP.err&&now-LOADP.errT>4000;
+  const done=LOADP.goal!==undefined&&al>=at&&LOADP.warm&&(typeof warmCover==='function'?warmCover():warmIdle())&&(typeof brBusy!=='function'||!brBusy())||now>LOADP.cap*1000||LOADP.err&&now-LOADP.errT>4000;
   const p=done?100:Math.min(99,45*js+30*a*(game?1:.8)+25*w);LOADP.shown=done?100:Math.max(LOADP.shown,LOADP.shown+(p-LOADP.shown)*.35);// counts up smoothly, never back
   const pct=Math.floor(LOADP.shown),L=document.getElementById('startLoad');
   document.getElementById('startLoadPct').textContent=pct+'%';document.getElementById('startLoadFill').style.width=LOADP.shown+'%';L.setAttribute('aria-valuenow',pct);
   const sec=now>8000?` · ${Math.round(now/1000)} s`:'';
   document.getElementById('startLoadWhat').textContent=LOADP.err?'Hit a problem: '+LOADP.err.slice(0,120):(!game?'Loading the game':al<at?`Loading pictures and models: ${al} of ${at}`:'Getting the island ready')+sec;
+  try{loadSteps(js,jsN,al,at,done)}catch(e){}
   if(done)loadEnd()}
+// the steps under the bar (#startLoadSteps), so you can see what the wait is: the game's code, its files (how many came
+// from this device, kept by sw.js, and how much was downloaded), then the getting ready done on this computer: pictures
+// sent to the graphics card, shaders built, the places looked over, the bridges' and docks' pictures. Each step's time
+// to finish goes in PF_BOOT.steps for the Profiler's Loading report
+function loadFiles(){let dev=0,net=0,b=0;try{for(const e of performance.getEntriesByType('resource')){if(!e.decodedBodySize)continue;
+  if(e.transferSize===0||e.deliveryType==='cache'){dev++}else{net++;b+=e.transferSize}}}catch(x){}return {dev,net,b}}
+function loadSteps(js,jsN,al,at,done){const W=typeof warmAll!=='undefined'?warmAll:null,F=loadFiles(),now=performance.now(),S=PF_BOOT.steps,rows=[];
+  const row=(id,name,ok,txt)=>{if(ok&&S[id]===undefined)S[id]=Math.round(now);rows.push([name,ok,txt])};
+  row('code','Game code',js>=1,`${Math.min(LOADP.js,jsN)} of ${jsN}`);
+  row('files','Files',LOADP.goal!==undefined&&al>=at,(F.dev?`${F.dev} from this device`:'')+(F.dev&&F.net?' · ':'')+(F.net?`${F.net} downloaded, ${(F.b/1048576).toFixed(1)} MB`:'')||'…');
+  const q=W&&W.q?W.up.size:0,q0=W&&W.q0||0;
+  row('tex','Pictures to the graphics card',!!(W&&W.q&&!W.q.length),q0?`${Math.min(q,q0)} of ${q0}`:'…');
+  row('shaders','Shaders',!!(W&&(W.pend===0&&W.still>=1||W.c1&&now-W.c1>WARM_SETTLE)),W&&W.mats?`${W.mats} materials${W.pend?', building':''}`:'…');
+  const n=typeof WARM_AT!=='undefined'?WARM_AT.length:0,a=W&&W.at?n-W.at.length:0;
+  row('places','Places looked over',!!(W&&W.at&&!W.at.length),n?`${a} of ${n}`:'…');
+  const bq=typeof brQ!=='undefined'?brQ.length:0;row('bridges',"Bridges' and docks' pictures",typeof brBusy==='function'&&!brBusy()&&LOADP.warm,bq?`${bq} left`:'');
+  let cur=done?-1:rows.findIndex(r=>!r[1]);
+  const ul=document.getElementById('startLoadSteps'),h=rows.map(([nm,ok,t],i)=>`<li class="${ok?'ok':i===cur?'now':''}"><b>${nm}</b><span>${t}</span></li>`).join('');
+  if(ul.dataset.h!==h){ul.dataset.h=h;ul.innerHTML=h}}
 function loadEnd(){const L=document.getElementById('startLoad');LOADP.done=true;PF_BOOT.done=performance.now();try{sessionStorage.removeItem('bhd_jsRetry')}catch(x){}L.classList.add('gone');setTimeout(()=>L.hidden=true,450);document.getElementById('startResume').disabled=false;clearInterval(LOADP.iv)}
 LOADP.iv=setInterval(loadTick,150);
 // in a background tab the browser stops drawing frames (and the warming in the frame loop with them) and slows timers to
