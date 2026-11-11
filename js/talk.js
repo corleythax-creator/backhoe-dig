@@ -270,7 +270,11 @@ function talkVoice(p,text){if(!sndCfg.on||!p||typeof p!=='object')return;const d
   const T=talkThru(p),v=1/(1+(d/6)*(d/6))*Math.min(1,(R-d)/(R*0.3))*T.t*(T.t<1?TU.talkWallK:1);if(v*sndCfg.master/100<0.006)return;
   const c=talkCard(p)||talkKid(p);
   if(T.c<0.55){talkMurmur(p,text,c,v,T.cut);return}
-  if(v*sndCfg.master/100<0.02)return;TALK.M.speak(text,c,v*sndCfg.master/100);TALK.spk=p}
+  if(v*sndCfg.master/100<0.02)return;
+  // the browser speaks one line at a time: while one is being said, others at the same moment come as a murmur (a busy
+  // room's hubbub), unless this one is nearer than who is speaking
+  if(TALK.M.speaking()&&TALK.spk&&TALK.spk!==p&&talkEar(TALK.spk)<=d){talkMurmur(p,text,c,v*0.8,2600);return}
+  TALK.M.speak(text,c,v*sndCfg.master/100);TALK.spk=p}
 // a line heard through a wall: their voice (a man's, a woman's, a child's pitch) as syllables of vowel formants, as
 // long as the line, low-passed at cut and placed where they are (late with distance, to one side)
 function talkMurmur(p,text,c,v,cut){if(!snd||!snd.ready||!actx)return;const a=actx,t0=a.currentTime+0.05,y=(p.y||0)+1.6;
@@ -415,7 +419,7 @@ function talkRect(){const n=performance.now();if(!TALK.rect||n-TALK.rectT>1000){
 addEventListener('resize',()=>{TALK.rectT=-1e9});
 // ---- each frame (from main.js)
 function talkTick(dt){
-  talkErrands(dt);ordTick(dt);roTick(dt);puTick(dt);ndTick(dt);bdTick(dt);dyTick(dt);soTick(dt);cpTick(dt);repTick(dt);
+  talkErrands(dt);ordTick(dt);roTick(dt);puTick(dt);ndTick(dt);bdTick(dt);dyTick(dt);soTick(dt);soChat(dt);cpTick(dt);repTick(dt);
   const on=TALK.mode!=='off'&&TALK.M&&TALK.lib&&tf.on;
   if(!on){if(TALK.ui)TALK.ui.d.hidden=true;if(TALK.with)talkClose();for(const b of TALK.bub.values())b.el.classList.remove('on');return}
   const u=talkUI(),now=performance.now()/1000,foot=mode==='walk'&&!wk.inside;
