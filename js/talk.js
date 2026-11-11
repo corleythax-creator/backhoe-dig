@@ -88,7 +88,7 @@ function talkScene(p,to){const h=typeof townHour==='function'?townHour():12,when
   t+='.';
   if(typeof gunStars==='function'&&gunStars())t+=' The police are after him.';else if(typeof gun==='object'&&gun.cops&&gun.cops.length)t+=' Police are about.';
   // their day, and what they have heard of him (lives.js)
-  if(typeof lifeScene==='function'&&p&&typeof p==='object'){const n=talkName(p),l=lifeScene(p,n),r=repScene(p,n),f=fmScene(p,n);if(l)t+=' '+l;if(r)t+=' '+r;if(f)t+=' '+f;const u=typeof puScene==='function'?puScene(p,n):'',b=typeof bdScene==='function'?bdScene(p,n):'',y=typeof dyScene==='function'?dyScene(p,n):'';if(u)t+=' '+u;if(b)t+=' '+b;if(y)t+=' '+y}
+  if(typeof lifeScene==='function'&&p&&typeof p==='object'){const n=talkName(p),l=lifeScene(p,n),r=repScene(p,n),f=fmScene(p,n);if(l)t+=' '+l;if(r)t+=' '+r;if(f)t+=' '+f;const u=typeof puScene==='function'?puScene(p,n):'',b=typeof bdScene==='function'?bdScene(p,n):'',y=typeof dyScene==='function'?dyScene(p,n):'',c=typeof cpScene==='function'?cpScene(p,n):'';if(u)t+=' '+u;if(b)t+=' '+b;if(c)t+=' '+c;if(y)t+=' '+y}
   const ln=talkLately();if(ln)t+=' Lately: '+ln+'.';
   return t.slice(0,895)}
 // what happened lately, for the scene: the last few things, newest last, with how long ago
@@ -415,7 +415,7 @@ function talkRect(){const n=performance.now();if(!TALK.rect||n-TALK.rectT>1000){
 addEventListener('resize',()=>{TALK.rectT=-1e9});
 // ---- each frame (from main.js)
 function talkTick(dt){
-  talkErrands(dt);ordTick(dt);roTick(dt);puTick(dt);ndTick(dt);bdTick(dt);dyTick(dt);soTick(dt);repTick(dt);
+  talkErrands(dt);ordTick(dt);roTick(dt);puTick(dt);ndTick(dt);bdTick(dt);dyTick(dt);soTick(dt);cpTick(dt);repTick(dt);
   const on=TALK.mode!=='off'&&TALK.M&&TALK.lib&&tf.on;
   if(!on){if(TALK.ui)TALK.ui.d.hidden=true;if(TALK.with)talkClose();for(const b of TALK.bub.values())b.el.classList.remove('on');return}
   const u=talkUI(),now=performance.now()/1000,foot=mode==='walk'&&!wk.inside;
