@@ -305,11 +305,31 @@ function mdlSpotsOn(on){mdl.spotsOn=on;mdl.spotsDirty=false;
     if(on&&!ims){const node=mdlFindNode(k);if(node){ims=mdl.spotIM[k]=mdlInst(node,L.length);
       L.forEach(([x,y,z,yaw,s],i)=>{o.position.set(x,y,z);o.rotation.set(0,yaw,0);o.scale.setScalar(s);o.updateMatrix();for(const im of ims)im.setMatrixAt(i,o.matrix)});
       for(const im of ims){im.instanceMatrix.needsUpdate=true;im.computeBoundingSphere()}}}
-    const show=on&&!!ims;for(const im of ims||[])im.visible=show;for(const m of MDL_SPOT_SIMPLE[k]||[])m.visible=!show}
+    const show=on&&!!ims;if(ims)ims.show=show;for(const im of ims||[])im.visible=show;for(const m of MDL_SPOT_SIMPLE[k]||[])m.visible=!show}
   if(typeof propIMs!=='undefined')for(const k in propIMs){const im=propIMs[k];let ims=mdl.propIM[k];
     if(on&&!ims){const node=mdlFindNode(k);if(node){ims=mdl.propIM[k]=mdlInst(node,PROPS[k].cap);
       for(const m of ims){m.instanceMatrix=im.instanceMatrix;m.instanceColor=im.instanceColor;m.frustumCulled=false}}}}
   mdlPropsSync()}
+// each render (gfx.js renderer.render): of every kind's copies (MDL_SPOTS, read live, so the map editor's moves show),
+// only those in view (a few metres of slack, for the shadows they throw in) and that the game camera's own test would
+// draw (gfxSees: big enough on screen, inside the haze, seen from the room you are in; else at least 2 pixels) are
+// packed in and drawn. Before, every copy on
+// the map drew in every frame, across the whole island
+const MDL_FR=new THREE.Frustum(),MDL_PV=new THREE.Matrix4(),MDL_SP=new THREE.Sphere();
+function mdlSpotCull(cam){if(!mdl.spotsOn||!cam||!cam.isPerspectiveCamera)return;const all=renderer.xr.isPresenting;
+  if(!all){cam.updateMatrixWorld();MDL_FR.setFromProjectionMatrix(MDL_PV.multiplyMatrices(cam.projectionMatrix,cam.matrixWorldInverse))}
+  const cx=cam.position.x,cy=cam.position.y,cz=cam.position.z,h=renderer.domElement.clientHeight||innerHeight,
+    k=h*cam.zoom/Math.tan(cam.fov*Math.PI/360)/Math.max(2,gfxCur.cull||0);
+  for(const key in mdl.spotIM){const ims=mdl.spotIM[key],L=MDL_SPOTS[key];if(!ims||!ims.show)continue;
+    let R=ims.r;if(R===undefined){R=0;for(const im of ims){const b=im.geometry.boundingSphere;im.r=b.center.length()+b.radius;R=Math.max(R,im.r)}ims.r=R}
+    for(const im of ims)im.n=0;
+    for(const q of L){const [x,y,z,yaw,sc]=q,s=sc||1;
+      if(!all){MDL_SP.center.set(x,y,z);MDL_SP.radius=R*s+4;if(!MDL_FR.intersectsSphere(MDL_SP))continue}
+      const c=Math.cos(yaw)*s,sn=Math.sin(yaw)*s;
+      // each part on its own, as the game camera's test takes each mesh (a small part far off is left out)
+      for(const im of ims){const r=im.r*s;if(!all&&(gfxCull.on?!gfxSees(x,y,z,r):Math.hypot(x-cx,y-cy,z-cz)>r*k))continue;
+        const e=im.instanceMatrix.array,o=16*im.n++;e[o]=c;e[o+1]=0;e[o+2]=-sn;e[o+3]=0;e[o+4]=0;e[o+5]=s;e[o+6]=0;e[o+7]=0;e[o+8]=sn;e[o+9]=0;e[o+10]=c;e[o+11]=0;e[o+12]=x;e[o+13]=y;e[o+14]=z;e[o+15]=1}}
+    for(const im of ims){if(im.count!==im.n||im.n){im.count=im.n;im.instanceMatrix.needsUpdate=true}im.frustumCulled=false;im.visible=im.n>0}}}
 // every frame: the placed things' detailed copies keep the count the editor's list gives (propsBuild)
 function mdlPropsSync(){for(const k in mdl.propIM){const im=propIMs[k],det=mdl.spotsOn;
   for(const m of mdl.propIM[k]){m.count=im.count;m.visible=det&&im.count>0}im.visible=!det&&im.count>0}}
