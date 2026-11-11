@@ -49,7 +49,7 @@ function soTick(dt){if(!tf.on||!TALK.lib)return;if((SO.t+=dt)<0.25)return;SO.t=0
   if(Math.random()<TU.soJoin)soJoin(p)}
 
 // conversations of their own (above): a few times a second, a new one or two among those near you
-const SO_CHAT_R=2.8;
+const SO_CHAT_R=3.6;
 function soChat(dt){const M=TALK.M;if(!M||TALK.mode==='off'||!M.on||!M.chatter||!TALK.lib)return;if((SO.ct+=dt)<0.5)return;SO.ct=0;
   const now=performance.now()/1000,paid=!M.local;if(paid&&now-(SO.paidT||0)<TU.soChatPaid)return;if(M.busy.size>=TU.soChatMax)return;
   const free=p=>!talkKid(p)&&talkCard(p)&&!M.busy.has(p)&&!p.inside&&!p.dead&&!p.hurt&&!(p.flee>0)&&p!==TALK.with;
