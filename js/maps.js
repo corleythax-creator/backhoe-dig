@@ -99,7 +99,8 @@ function drawMap(cv,cx,cz,mpp,big,bare){
       if(t&&t.cv&&!t.hs){const x=Math.floor(X(MAPW_X0+i*MPT_M)),y=Math.floor(Y(MAPW_Z0+j*MPT_M));g.drawImage(t.cv,x,y,Math.ceil(MPT_M*sc)+1,Math.ceil(MPT_M*sc)+1)}}
   // roads drawn sharp once zoomed in past the ground's own pixels
   if(sc>1.4/MPT_MPP){g.lineCap=g.lineJoin='round';g.strokeStyle='rgba(176,148,104,.9)';
-    for(const r of ROADS.concat(ISLAND_ROADS)){g.lineWidth=r.w*sc;g.beginPath();r.pts.forEach((p,n)=>n?g.lineTo(X(p[0]),Y(p[1])):g.moveTo(X(p[0]),Y(p[1])));g.stroke()}}
+    for(const r of ROADS.concat(ISLAND_ROADS)){let ax=1e9,bx=-1e9,az=1e9,bz=-1e9;for(const p of r.pts){if(p[0]<ax)ax=p[0];if(p[0]>bx)bx=p[0];if(p[1]<az)az=p[1];if(p[1]>bz)bz=p[1]}
+      if(bx+r.w<wx0||ax-r.w>wx1||bz+r.w<wz0||az-r.w>wz1)continue;g.lineWidth=r.w*sc;g.beginPath();r.pts.forEach((p,n)=>n?g.lineTo(X(p[0]),Y(p[1])):g.moveTo(X(p[0]),Y(p[1])));g.stroke()}}
   // causeways, bridge decks (the temporary trestles in timber), buildings with a shadow
   for(const b of CAUSEWAYS){g.save();g.translate(X(b.x0),Y(b.z0));g.rotate(Math.atan2(b.uz,b.ux));g.fillStyle='#7d7a72';g.fillRect(0,-(b.hw+1.5)*sc,b.len*sc,(2*b.hw+3)*sc);
     g.fillStyle='#a49a86';g.fillRect(0,-b.hw*sc,b.len*sc,2*b.hw*sc);g.restore()}
@@ -107,7 +108,9 @@ function drawMap(cv,cx,cz,mpp,big,bare){
     g.fillStyle=b.temp||b.dock?'#5e4630':b.foot?'#8a2f24':'#55595c';g.fillRect(0,-(b.hw+0.4)*sc,b.len*sc,(2*b.hw+0.8)*sc);
     g.fillStyle=b.temp||b.dock?'#9c7c56':b.foot?'#b9563f':'#a2a4a6';g.fillRect(0,-b.hw*sc,b.len*sc,2*b.hw*sc);g.restore()}
   const sh=Math.max(1,0.9*sc);
+  // only what is in view (the corner map is redrawn 15 times a second; drawing every solid on the map took about 4 ms)
   for(const s of SOLIDS){const rot=s.sn!==undefined,hx=rot?s.lx:s.hx,hz=rot?s.lz:s.hz;if(hx<1.4&&hz<1.4)continue;
+    {const r=rot?Math.hypot(hx,hz):Math.max(hx,hz)+1;if(s.x+r<wx0||s.x-r>wx1||s.z+r<wz0||s.z-r>wz1)continue}
     g.save();g.translate(X(s.x),Y(s.z));if(rot)g.rotate(Math.atan2(s.sn,s.cs));g.fillStyle='rgba(0,0,0,.35)';g.fillRect(-hx*sc+sh,-hz*sc+sh,2*hx*sc,2*hz*sc);
     g.fillStyle='#8d6a52';g.fillRect(-hx*sc,-hz*sc,2*hx*sc,2*hz*sc);if(hx*sc>3){g.strokeStyle='rgba(255,236,210,.35)';g.lineWidth=Math.max(1,dpr);g.strokeRect(-hx*sc+0.5,-hz*sc+0.5,2*hx*sc-1,2*hz*sc-1)}g.restore()}
   if(big)trailDrawOn(g,X,Y,sc);
@@ -129,7 +132,7 @@ function drawMap(cv,cx,cz,mpp,big,bare){
     mapBizDraw(g,X,Y,sc,dpr,taken)}
   // (bare: the ground, roads, bridges and buildings only, for the start screen's picture, tools/bake_startmap.js)
   if(bare)return;
-  const icon=(x,z,ang,fill,len,wid,active)=>{g.save();g.translate(X(x),Y(z));g.rotate(ang);
+  const icon=(x,z,ang,fill,len,wid,active)=>{{const r=len+30/sc;if(x+r<wx0||x-r>wx1||z+r<wz0||z-r>wz1)return}g.save();g.translate(X(x),Y(z));g.rotate(ang);
     const L=Math.max(len*sc,big?18*dpr:10*dpr),Wd=Math.max(wid*sc,big?12*dpr:7*dpr);
     if(active){g.beginPath();g.arc(0,0,L*0.95,0,Math.PI*2);g.fillStyle='rgba(255,255,255,.28)';g.fill();g.strokeStyle='rgba(255,255,255,.85)';g.lineWidth=1.5*dpr;g.stroke()}
     g.shadowColor='rgba(0,0,0,.55)';g.shadowBlur=4*dpr;g.shadowOffsetY=1.5*dpr;

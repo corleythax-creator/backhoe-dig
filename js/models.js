@@ -63,8 +63,9 @@ function wearPatch(m,kind){if(!m||m.userData.wearP)return;m.userData.wearP=true;
       .replace('#include <lights_physical_fragment>','#include <lights_physical_fragment>\n#ifdef USE_CLEARCOAT\nmaterial.clearcoat*=(1.0-min(wChip,1.0))*(1.0-wDust)*(1.0-wMud);\n#endif\n')};
   m.customProgramCacheKey=function(){return key+(WEAR.on?'|wear'+kind:'')}}
 // gfx.js: on with the relief setting; the paint's clear coat with it
-function wearGfx(on){on=!!on;if(on===WEAR.on)return;WEAR.on=on;for(const m of WEAR.mats){if(m.isMeshPhysicalMaterial)m.clearcoat=on?m.userData.coat:0;m.needsUpdate=true}}
-function wearTick(){WEAR_U.value=TU.machWear;if(!WEAR.on)return;for(const m of WEAR.mats)if(m.isMeshPhysicalMaterial&&m.userData.coat){const c=Math.max(0.001,TU.machCoat*m.userData.coat);if(m.clearcoat!==c)m.clearcoat=c}}
+// coat false (Work): the paint without its clear coat, the costliest layer per pixel (parked cars filled the town with it)
+function wearGfx(on,coat){on=!!on;coat=on&&coat!==false;if(on===WEAR.on&&coat===WEAR.coat)return;WEAR.on=on;WEAR.coat=coat;for(const m of WEAR.mats){if(m.isMeshPhysicalMaterial)m.clearcoat=coat?m.userData.coat:0;m.needsUpdate=true}}
+function wearTick(){WEAR_U.value=TU.machWear;if(!WEAR.on||!WEAR.coat)return;for(const m of WEAR.mats)if(m.isMeshPhysicalMaterial&&m.userData.coat){const c=Math.max(0.001,TU.machCoat*m.userData.coat);if(m.clearcoat!==c)m.clearcoat=c}}
 function mdlStd(hex,o){o=o||{};const m=new (o.coat?THREE.MeshPhysicalMaterial:THREE.MeshStandardMaterial)({color:hex,metalness:o.metal||0,roughness:o.rough==null?0.5:o.rough,envMap:skyEnv,envMapIntensity:o.env||1});
   // paint under a clear coat: the photo detail's roughness below, a gloss layer over it (with the wear: chips and dust take it off)
   if(o.coat){m.userData.coat=o.coat;m.clearcoat=WEAR.on?o.coat:0;m.clearcoatRoughness=o.coatR||0.12}

@@ -77,10 +77,10 @@ GFX.quest.extraLt=false;GFX.quest.bfLt=false;
 // town, buildings, roads and trees as every level (the layout never changes with the Graphics setting). What costs the
 // most is cut back: 1x resolution, one smaller shadow map drawn every other frame, no far shadows, bounced light or
 // lamps that cast light, grass blades and undergrowth like Low, full-detail trees only near you, the medium texture
-// pack, a slightly shorter haze and fewer, simpler townsfolk. Picked for you on Intel graphics
+// pack, a slightly shorter haze, fewer, simpler townsfolk and paint without its clear coat. Picked for you on Intel graphics
 GFX.work=Object.assign({},GFX.high,{name:'Work',shEvery:2,pr:1,sh:2048,shR:28,soft:false,csm:0,bounce:false,autoExp:false,inLight:false,
   tex:'med',aniso:4,dirt:2,lawnFar:10,fog:0.75,cloudQ:1,lakeQ:1,rainN:900,rainSp:240,splashN:350,wakeN:200,brush:0.15,wild:0.35,
-  turf:0.35,turfR:22,peb:0,treeR:45,tuftQ:0,tuft:[0.6,12,40,0.2],town:1,forge:'',cull:6,rmNear:25,extraLt:false,propLt:false,bfLt:false,vrSS:1});
+  turf:0.35,turfR:22,peb:0,treeR:45,tuftQ:0,tuft:[0.6,12,40,0.2],town:1,forge:'',cull:6,rmNear:25,extraLt:false,propLt:false,bfLt:false,vrSS:1,coat:false});
 // the bridges' detail parts: gusset and cover plates, lacing and lattice, braces, lamp trim, the covered bridge's
 // lattice and rafters, batter piles (bridges.js); Low and Work leave them out
 GFX.low.brDet=false;GFX.med.brDet=GFX.high.brDet=GFX.ultra.brDet=GFX.quest.brDet=true;GFX.work.brDet=false;
@@ -183,7 +183,7 @@ function gfxApply(){const g=gfxCur=Object.assign({},GFX[gfxKey],gfxOver);
   // the mountains and the pebbles (scenery.js, pebbles.js)
   mtnGfx(g.mtnQ);if(typeof pebGfx==='function')pebGfx(g.peb);
   // wear, dust, caked mud and clear-coated paint on the detailed machines, with the relief setting (models.js)
-  wearGfx(g.pbr&&g.model);
+  wearGfx(g.pbr&&g.model,g.coat);
   // the bridges: their detail parts, pictures (not on Low) and relief (bridges.js)
   brGfx(g);
   // the boats' gelcoat scuffs (family.js)
