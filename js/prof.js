@@ -32,7 +32,7 @@ function pfLoadReport(){const B=typeof PF_BOOT==='object'?PF_BOOT:{js:[],long:[]
   const done=B.done||0,long=B.long.filter(l=>!done||l[0]<done),blocked=long.reduce((a,l)=>a+l[1],0);
   const loafs=PF.loaf.filter(l=>!done||l.t<done).sort((a,b)=>b.ms-a.ms).slice(0,10);
   return {nav:nav?{html:nav.responseEnd,dom:nav.domInteractive}:null,jsEnd,done,scripts:sc.slice(0,12),files:files.sort((a,b)=>b.ms-a.ms).slice(0,15),nFiles:files.length,tot,kinds:K,
-    blocked,nLong:long.length,longs:long.slice().sort((a,b)=>b[1]-a[1]).slice(0,8),loafs}}
+    steps:B.steps||{},blocked,nLong:long.length,longs:long.slice().sort((a,b)=>b[1]-a[1]).slice(0,8),loafs}}
 // ---------- Frames ----------
 // the parts of the frame: every function frame() (main.js) calls by name
 function pfParts(){const src=String(frame),seen=new Set();for(const m of src.matchAll(/(?<![\w$.])([a-zA-Z_$][\w$]*)\s*\(/g)){const n=m[1];
@@ -92,8 +92,10 @@ function pfRecord(sec){if(PF.on)return Promise.resolve(null);sec=sec||10;PF.on=t
     renderer.setAnimationLoop(now=>{if(step(now))renderer.setAnimationLoop(frame)})})}
 // ---------- the panel ----------
 function pfTable(head,rows){return `<div class="tablewrap"><table class="btab"><tr>${head.map(h=>`<th>${h}</th>`).join('')}</tr>${rows.map(r=>`<tr>${r.map(c=>`<td>${pfEsc(c)}</td>`).join('')}</tr>`).join('')}</table></div>`}
+// when each of the loading cover's steps finished (start.js loadSteps)
+const pfStepsTxt=L=>Object.entries(L.steps||{}).map(([k,t])=>`${k} ${pfMs(t)}`).join(' · ');
 function pfLoadHtml(L){let h=`<div class="ticket"><div><span class="lbl">Page up</span> ${L.nav?pfMs(L.nav.dom):'?'} · <span class="lbl">scripts run</span> ${pfMs(L.jsEnd)} · <span class="lbl">loading cover done</span> ${L.done?pfMs(L.done):'not yet'}</div>
-    <div><span class="lbl">Downloaded</span> ${L.nFiles} files, ${pfKB(L.tot)} · <span class="lbl">frozen while loading</span> ${pfMs(L.blocked)} in ${L.nLong} stretches over 50 ms</div></div>`;
+    <div><span class="lbl">Downloaded</span> ${L.nFiles} files, ${pfKB(L.tot)} · <span class="lbl">frozen while loading</span> ${pfMs(L.blocked)} in ${L.nLong} stretches over 50 ms</div>${pfStepsTxt(L)?`<div><span class="lbl">Steps done at</span> ${pfStepsTxt(L)}</div>`:''}</div>`;
   h+='<h2>By kind</h2>'+pfTable(['Kind','Files','Size','All in by'],Object.entries(L.kinds).sort((a,b)=>b[1].b-a[1].b).map(([k,v])=>[k,v.n,pfKB(v.b),pfMs(v.ms)]));
   h+='<h2>Slowest downloads</h2>'+pfTable(['File','Size','Took','Started'],L.files.map(f=>[f.f,pfKB(f.b),pfMs(f.ms),pfMs(f.at)]));
   h+='<h2>Scripts: own running time at the start</h2>'+pfTable(['Script','Ran for'],L.scripts.map(s=>[pfFile(s[0]),pfMs(s[1])]));
@@ -111,7 +113,7 @@ function pfRunHtml(r,i){let h=`<h2>${i+1}. ${pfEsc(r.where)} <small>(${pfEsc(r.g
   return h}
 function pfText(){const L=pfLoadReport(),T=[`Corley's Island profiler · ${window.EFFORT&&EFFORT.versions?'v'+EFFORT.versions[EFFORT.versions.length-1].v:''} · ${navigator.userAgent}`,
     `LOADING: page ${L.nav?pfMs(L.nav.dom):'?'}, scripts ${pfMs(L.jsEnd)}, cover done ${L.done?pfMs(L.done):'no'}; ${L.nFiles} files ${pfKB(L.tot)}; frozen ${pfMs(L.blocked)} in ${L.nLong}`,
-    'Slowest downloads: '+L.files.slice(0,10).map(f=>`${f.f} ${pfKB(f.b)} ${pfMs(f.ms)}`).join('; '),'Scripts: '+L.scripts.slice(0,8).map(s=>`${pfFile(s[0])} ${pfMs(s[1])}`).join('; '),
+    'Steps done at: '+pfStepsTxt(L),'Slowest downloads: '+L.files.slice(0,10).map(f=>`${f.f} ${pfKB(f.b)} ${pfMs(f.ms)}`).join('; '),'Scripts: '+L.scripts.slice(0,8).map(s=>`${pfFile(s[0])} ${pfMs(s[1])}`).join('; '),
     'Freezes: '+L.loafs.map(l=>`${pfMs(l.ms)} at ${pfMs(l.t)} [${l.sc.join(' · ')}]`).join('; ')];
   for(const r of PF.runs)T.push('',`SCENE ${r.where} (${r.gfx}): ${r.fps.toFixed(0)} fps, 1% low ${r.low.toFixed(0)}, worst ${pfMs(r.worst)}; game code ${r.cpu.toFixed(1)} ms, outside ${r.outside.toFixed(1)} ms${r.gpu!=null?', GPU '+r.gpu.toFixed(1)+' ms':''}; ${Math.round(r.calls)} calls ${(r.tris/1e6).toFixed(2)}M tris`,
     'Parts: '+r.parts.map(p=>`${p.n} ${p.avg.toFixed(2)}/${Math.round(p.max)}`).join('; '),'Slow frames: '+r.slow.map(s=>`${pfMs(s.ft)} [${s.top.join(', ')}]`).join('; '),
