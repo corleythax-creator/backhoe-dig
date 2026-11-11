@@ -24,6 +24,7 @@ function bdBase(p,q){const a=tfWho(p),b=tfWho(q),k=bdKey(a,b);if(BD.base.has(k))
   BD.base.set(k,v);return v}
 // how p and q get on now
 function bdOf(p,q){if(!p||!q||p===q||typeof q!=='object')return 0;const L=BD.l[bdKey(tfWho(p),tfWho(q))];return Math.max(-1,Math.min(1,bdBase(p,q)+(L?L[0]:0)))}
+const bdAddId=(a,b,d)=>{if(a===b)return;const k=bdKey(a,b),L=BD.l[k]||(BD.l[k]=[0,0]);L[0]=Math.max(-1,Math.min(1,L[0]+d));L[1]++;BD.dirty=true};
 const bdAdd=(p,q,d)=>{const k=bdKey(tfWho(p),tfWho(q)),L=BD.l[k]||(BD.l[k]=[0,0]);L[0]=Math.max(-1,Math.min(1,L[0]+d));L[1]++;BD.dirty=true};
 // near you, talk on: a line over their head
 function bdSay(p,id,v){if(TALK.mode==='off'||!TALK.here.includes(p)||Math.hypot(p.x-wk.x,p.z-wk.z)>TU.talkSeeR)return;talkShow(p,{say:say(id,v)},null,null)}
@@ -33,7 +34,7 @@ function bdChat(p,q,a){if(!q||typeof q!=='object'||q===p||!tf.people.includes(q)
   bdAdd(p,q,0.02+same*0.01-(cross?0.05:0));if(typeof ndChat==='function'){ndChat(p);ndChat(q)}
   const b=bdOf(p,q),k=bdKey(tfWho(p),tfWho(q)),now=performance.now()/1000;
   if(b<-0.25&&Math.random()<0.12&&now-(BD.met.get(k+'spat')||-1e9)>300){BD.met.set(k+'spat',now);bdAdd(p,q,-0.12);
-    if(TALK.M)TALK.M.remember(p,q,'rude');bdSay(p,'bd_spat',{name:talkName(q)});if(typeof dyNote==='function'){dyNote(p,'spat',`fell out with ${talkName(q)}`,-0.6);dyNote(q,'spat',`had words with ${talkName(p)}`,-0.6)}
+    if(TALK.M)TALK.M.remember(p,q,'rude');bdSay(p,'bd_spat',{name:talkName(q)});if(typeof dyNote==='function'){dyNote(p,'spat',`fell out with ${talkName(q)}`,-0.6,tfWho(q));dyNote(q,'spat',`had words with ${talkName(p)}`,-0.6,tfWho(p))}
     for(const [r,s] of [[p,q],[q,p]])if(!r.room){r.wait=Math.max(r.wait||0,1.5);r.look=Math.atan2(r.x-s.x,r.z-s.z)}}
   else{if(b>0.5&&Math.random()<0.04&&TALK.M)TALK.M.remember(p,q,'kind');
     if(b>-0.1&&typeof dyGossip==='function')dyGossip(p,q);

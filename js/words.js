@@ -258,6 +258,8 @@ const WORDS=[
   ['dy_youCame','Town: plans',"Hey, you made it! Glad you came.",''],
   // gossip (days.js): news passed on between two townsfolk ({name}: whom it is about; {what}: what happened)
   ['gs_own','Town: gossip',"Guess what? I {what}.",'{what}: what happened'],['gs_tell','Town: gossip',"Did you hear? {name} {what}.",'{name}: whom it is about; {what}: what happened'],
+  // relationships (couples.js): starting to see someone, a breakup
+  ['cp_start','Town: relationships',"I asked {name} out. They said yes!",'{name}: who they are seeing'],['cp_split','Town: relationships',"It's over with {name}. I don't want to talk about it.",'{name}: their ex'],
   ['tkAll','Town: talk','Everyone',''],['tkWithAll','Town: talk','Talking to everyone here ({n})','{n}: how many are listening'],['tkSayAll','Town: talk','Say something to everyone',''],
   ['tkPlayer','Town: talk','Corley','What the townsfolk call you'],
   ['tkWeather','Town: talk','Nice enough day for it. Whatever it is you\'re digging.',''],['tkRain','Town: talk','This rain. Good for the lawns, bad for your dirt, I\'d guess.',''],

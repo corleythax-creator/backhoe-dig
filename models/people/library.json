@@ -1936,6 +1936,15 @@
    "radius": 0.19,
    "tilt": 25
   },
+  "wheel_low": {
+   "center": [
+    0,
+    0.6,
+    0.36
+   ],
+   "radius": 0.18,
+   "tilt": 35
+  },
   "bars": {
    "grips": 0.33,
    "height": 1.08,
@@ -1948,6 +1957,41 @@
    ]
   },
   "seat": 0.46,
+  "drive_seat": 0.36,
+  "drive_low_seat": 0.2,
+  "table": {
+   "top": 0.75,
+   "edge": 0.38,
+   "plate": [
+    0.0,
+    0.52
+   ],
+   "glass": [
+    -0.2,
+    0.5
+   ]
+  },
+  "counter": {
+   "top": 0.91,
+   "front": 0.28
+  },
+  "vanity": {
+   "top": 0.86,
+   "front": 0.28
+  },
+  "desk": {
+   "top": 0.75,
+   "edge": 0.3,
+   "keys": [
+    0.0,
+    0.42
+   ],
+   "mouse": [
+    -0.3,
+    0.42
+   ]
+  },
+  "bed_top": 0.6,
   "clips": [
    {
     "name": "idle",
@@ -2076,9 +2120,352 @@
     "loop": true,
     "prop": false,
     "about": "riding a motorbike or ATV: seat 32 in up, hands on the bars, feet on the pegs (BARS)"
+   },
+   {
+    "name": "drive_low",
+    "length": 6.0,
+    "speed": 0,
+    "loop": true,
+    "prop": false,
+    "about": "driving a low car: seated 8 in up, legs out, leaning back, hands on the wheel (WHEEL_LOW)"
+   },
+   {
+    "name": "sit_down",
+    "length": 1.3,
+    "speed": 0,
+    "loop": false,
+    "prop": false,
+    "about": "sitting down onto a seat 18 in up, the feet planted (one-shot; origin as sit; ends as sit starts)"
+   },
+   {
+    "name": "stand_up",
+    "length": 1.3,
+    "speed": 0,
+    "loop": false,
+    "prop": false,
+    "about": "standing up from a seat 18 in up, the feet planted (one-shot; origin as sit; ends standing over the feet)"
+   },
+   {
+    "name": "stir",
+    "length": 2.0,
+    "speed": 0,
+    "loop": true,
+    "prop": false,
+    "about": "stirring a pot on the stove, the left hand on the counter"
+   },
+   {
+    "name": "wipe",
+    "length": 2.4,
+    "speed": 0,
+    "loop": true,
+    "prop": false,
+    "about": "wiping a counter top round with the right hand"
+   },
+   {
+    "name": "scrub",
+    "length": 1.2,
+    "speed": 0,
+    "loop": true,
+    "prop": false,
+    "about": "washing up at the sink: a plate in the left hand, scrubbed with the right"
+   },
+   {
+    "name": "load",
+    "length": 3.0,
+    "speed": 0,
+    "loop": true,
+    "prop": false,
+    "about": "squatting at a front-loading washer, pushing clothes into it"
+   },
+   {
+    "name": "fold",
+    "length": 3.2,
+    "speed": 0,
+    "loop": true,
+    "prop": false,
+    "about": "folding a shirt on a counter: shaken out, folded, laid down and smoothed"
+   },
+   {
+    "name": "make_bed",
+    "length": 3.6,
+    "speed": 0,
+    "loop": true,
+    "prop": false,
+    "about": "making a bed from its side (top 24 in up, its edge 10 in ahead): smoothing the cover, then tugging it straight"
+   },
+   {
+    "name": "sweep_floor",
+    "length": 2.0,
+    "speed": 0,
+    "loop": true,
+    "prop": true,
+    "about": "sweeping with a broom (prop: the broom, from the top hand to its head)"
+   },
+   {
+    "name": "sit_eat",
+    "length": 4.0,
+    "speed": 0,
+    "loop": true,
+    "prop": true,
+    "about": "seated at a table (TABLE), eating with a fork from the plate (origin as sit; prop: the fork)"
+   },
+   {
+    "name": "sit_drink",
+    "length": 5.0,
+    "speed": 0,
+    "loop": true,
+    "prop": true,
+    "about": "seated at a table (TABLE), a glass taken up from the right, sipped and set down (origin as sit; prop: the glass)"
+   },
+   {
+    "name": "turn_l",
+    "length": 1.1,
+    "speed": 0,
+    "loop": false,
+    "prop": false,
+    "about": "a quarter turn to the left on the spot, stepping round (one-shot; ends facing +x: turn the person 90 degrees left as it ends)"
+   },
+   {
+    "name": "turn_r",
+    "length": 1.1,
+    "speed": 0,
+    "loop": false,
+    "prop": false,
+    "about": "a quarter turn to the right on the spot, stepping round (one-shot; ends facing -x: turn the person 90 degrees right as it ends)"
+   },
+   {
+    "name": "pick_up_low",
+    "length": 1.8,
+    "speed": 0,
+    "loop": false,
+    "prop": true,
+    "about": "crouching to pick something up from the floor a foot ahead (held 7 in up), standing with it held as carry holds it (one-shot; prop: the thing)"
+   },
+   {
+    "name": "put_down_low",
+    "length": 1.8,
+    "speed": 0,
+    "loop": false,
+    "prop": true,
+    "about": "crouching to set down what is held as carry holds it on the floor a foot ahead, standing again (one-shot; prop: the thing)"
+   },
+   {
+    "name": "reach_high",
+    "length": 2.2,
+    "speed": 0,
+    "loop": false,
+    "prop": true,
+    "about": "reaching up into a cupboard 5' 7\" up over a counter and bringing something down to the chest (one-shot; prop: the thing)"
+   },
+   {
+    "name": "tie_trash",
+    "length": 3.2,
+    "speed": 0,
+    "loop": false,
+    "prop": true,
+    "about": "tying the bag in a kitchen can 26 in high, lifting it out and holding it by the knot at the side (one-shot; prop: the bag)"
+   },
+   {
+    "name": "unload",
+    "length": 3.0,
+    "speed": 0,
+    "loop": true,
+    "prop": false,
+    "about": "squatting at a front-loading washer, pulling clothes out into a basket on the floor to the left"
+   },
+   {
+    "name": "open_door",
+    "length": 1.6,
+    "speed": 0,
+    "loop": false,
+    "prop": false,
+    "about": "pulling open a door hinged on the left (handle 3 ft up, 18 in ahead) a third of the way, stepping back, letting go (one-shot)"
+   },
+   {
+    "name": "fridge",
+    "length": 4.0,
+    "speed": 0,
+    "loop": true,
+    "prop": false,
+    "about": "at an open fridge: the door held out to the left, the right hand reaching in to the shelves, looking it over"
+   },
+   {
+    "name": "wash_hands",
+    "length": 2.0,
+    "speed": 0,
+    "loop": true,
+    "prop": false,
+    "about": "washing the hands under the tap at a basin (VANITY: top 34 in up)"
+   },
+   {
+    "name": "brush_teeth_sink",
+    "length": 2.0,
+    "speed": 0,
+    "loop": true,
+    "prop": true,
+    "about": "brushing the teeth at a basin, the left hand on the vanity (prop: the toothbrush)"
+   },
+   {
+    "name": "sit_tv",
+    "length": 12.0,
+    "speed": 0,
+    "loop": true,
+    "prop": false,
+    "about": "settled back on a sofa watching TV, the hands in the lap, now and then a hand to the chin (origin as sit)"
+   },
+   {
+    "name": "read",
+    "length": 8.0,
+    "speed": 0,
+    "loop": true,
+    "prop": true,
+    "about": "seated, reading a book held open in the lap, a page turned (origin as sit; prop: the book)"
+   },
+   {
+    "name": "phone",
+    "length": 6.0,
+    "speed": 0,
+    "loop": true,
+    "prop": true,
+    "about": "seated, looking at a phone in the right hand, the thumb tapping (origin as sit; prop: the phone)"
+   },
+   {
+    "name": "sit_chat",
+    "length": 4.0,
+    "speed": 0,
+    "loop": true,
+    "prop": false,
+    "about": "seated, talking with the hands (origin as sit)"
+   },
+   {
+    "name": "lie_idle",
+    "length": 10.0,
+    "speed": 0,
+    "loop": true,
+    "prop": false,
+    "about": "lying awake on the back, the head toward -z on a pillow (origin on the surface under the hips)"
+   },
+   {
+    "name": "sleep",
+    "length": 12.0,
+    "speed": 0,
+    "loop": true,
+    "prop": false,
+    "about": "asleep on the right side, curled a little, the head toward -x, facing +z (origin on the surface under the hips)"
+   },
+   {
+    "name": "type",
+    "length": 6.0,
+    "speed": 0,
+    "loop": true,
+    "prop": false,
+    "about": "seated at a desk (DESK) typing, the right hand to the mouse now and then (origin as sit)"
+   },
+   {
+    "name": "write",
+    "length": 6.0,
+    "speed": 0,
+    "loop": true,
+    "prop": true,
+    "about": "seated at a desk or table, writing with a pen, the left hand on the sheet (origin as sit; prop: the pen)"
+   },
+   {
+    "name": "chop",
+    "length": 2.0,
+    "speed": 0,
+    "loop": true,
+    "prop": true,
+    "about": "chopping on a board at the counter, the left hand holding what is cut (prop: the knife)"
+   },
+   {
+    "name": "pour",
+    "length": 4.0,
+    "speed": 0,
+    "loop": true,
+    "prop": true,
+    "about": "pouring from a kettle or pot into a cup held on the counter (prop: the pot)"
+   },
+   {
+    "name": "oven",
+    "length": 5.0,
+    "speed": 0,
+    "loop": true,
+    "prop": false,
+    "about": "bending to open the oven a third of the way, looking in, lifting it shut"
+   },
+   {
+    "name": "carry_plate",
+    "length": 1.06,
+    "speed": 1.358,
+    "loop": true,
+    "prop": true,
+    "about": "walking with a plate held level in both hands (prop: the plate)"
+   },
+   {
+    "name": "lie_down",
+    "length": 2.6,
+    "speed": 0,
+    "loop": false,
+    "prop": false,
+    "about": "from sitting on a bed's right-hand edge (top 2 ft up) to lying on the back along it (one-shot; origin as lie_idle; ends as lie_idle starts)"
+   },
+   {
+    "name": "get_up_bed",
+    "length": 2.6,
+    "speed": 0,
+    "loop": false,
+    "prop": false,
+    "about": "from lying on the back to sitting on the bed's right-hand edge, the feet on the floor (one-shot; origin as lie_idle)"
+   },
+   {
+    "name": "sit_up_read",
+    "length": 8.0,
+    "speed": 0,
+    "loop": true,
+    "prop": true,
+    "about": "sitting up in bed against the pillows, legs out, reading a book (origin as lie_idle; prop: the book)"
+   },
+   {
+    "name": "turn_over",
+    "length": 2.4,
+    "speed": 0,
+    "loop": false,
+    "prop": false,
+    "about": "rolling from the back onto the right side in bed, the head staying toward -z (one-shot; from lie_idle's start to sleep's, turned a quarter)"
+   },
+   {
+    "name": "sit_listen",
+    "length": 6.0,
+    "speed": 0,
+    "loop": true,
+    "prop": false,
+    "about": "seated, listening, a nod now and then (origin as sit)"
+   },
+   {
+    "name": "stand_listen",
+    "length": 6.0,
+    "speed": 0,
+    "loop": true,
+    "prop": false,
+    "about": "standing, listening, a nod now and then"
+   },
+   {
+    "name": "water_plants",
+    "length": 4.0,
+    "speed": 0,
+    "loop": true,
+    "prop": true,
+    "about": "watering a potted plant 2 ft ahead from a can in the right hand (prop: the can)"
+   },
+   {
+    "name": "weed",
+    "length": 3.2,
+    "speed": 0,
+    "loop": true,
+    "prop": false,
+    "about": "kneeling at a garden bed, pulling weeds with the right hand and tossing them aside"
    }
-  ],
-  "drive_seat": 0.36
+  ]
  },
  "from": "human-forge",
  "ultraBase": "https://tiles.cruisin.cc/",

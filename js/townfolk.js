@@ -164,7 +164,7 @@ function tfTex(B){if(B.texing)return;B.texing=1;new THREE.TextureLoader().load(B
 // in use. The runtime loads with the townsfolk (near town only); until it and a character's crowd are ready, or if
 // either fails, that character draws on its old mesh. The crowds' clocks are never run (no forge.update): each person
 // keeps their own clip time (p.ct), handed over as the clip's offset, since tfDraw packs whoever is in view every frame
-const TF_FG_CLIPS=['walk','idle','talk','sit','drive','run','point','die_b','die_f','cower'];
+const TF_FG_CLIPS=['walk','idle','talk','sit','drive','run','point','die_b','die_f','cower',...AC_CLIPS],TF_ONCE=new Set(['reach_high','pick_up_low','sit_down','stand_up']);
 function tfForge(){const F=tf.F||(tf.F={st:0});if(F.st||!gfxCur.forge)return;F.st=1;
   const go=()=>HumanForge.load(THREE,'models/people/').then(f=>{F.f=f;F.ref=f.library.anims.ref_pelvis||0.97;F.st=2}).catch(e=>{console.warn('townsfolk forge:',e);F.st=-1});
   if(window.HumanForge)return go();const s=document.createElement('script');s.src='models/people/human-forge.js';s.onload=go;s.onerror=()=>{F.st=-1};document.head.appendChild(s)}
@@ -190,8 +190,10 @@ function tfFgClip(p,c,dt,hp,die){let k=die?die.k:p.cower>0&&!hp&&c.clips.cower?'
     // saying a line (talk.js talkShow): the talk clip, gesturing; told one: standing still to listen, not gesturing too
     const n=performance.now()/1000;if(p.tkSay>n)k='talk';else if(p.tkHear>n)k='idle'}
   if(k==='walk'&&p.flee>0&&p.spd>2.2&&c.clips.run)k='run';
-  const A=c.clips[k];if(k!==p.fk){p.fk=k;p.ct=k==='walk'||k==='run'?0.1:Math.random()*A.duration}
-  if(die)p.ct=Math.min(A.duration-0.02,die.t);else if(k==='cower'||k==='point')p.ct=Math.min(A.duration-0.02,k==='point'?0.5:(p.ct||0)+dt);else if(!(p.dead||p.hurt))p.ct=(p.ct+dt*(k==='walk'?p.spd/(c.stride*p.sc):k==='run'?p.spd/(c.runS*p.sc):1))%A.duration;return k}
+  // what they are doing with their hands (acts.js): eating, pouring, on the phone, listening...
+  if(!die&&!hp&&!p.drv&&!(p.cower>0)&&typeof acClip==='function')k=acClip(p,k,c);
+  const A=c.clips[k];if(k!==p.fk){p.fk=k;p.ct=k==='walk'||k==='run'||k==='carry_plate'||TF_ONCE.has(k)?0.01:Math.random()*A.duration}
+  if(die)p.ct=Math.min(A.duration-0.02,die.t);else if(TF_ONCE.has(k))p.ct=Math.min(A.duration-0.02,p.ct+dt);else if(k==='carry_plate')p.ct=(p.ct+dt*p.spd/(c.stride*p.sc))%A.duration;else if(k==='cower'||k==='point')p.ct=Math.min(A.duration-0.02,k==='point'?0.5:(p.ct||0)+dt);else if(!(p.dead||p.hurt))p.ct=(p.ct+dt*(k==='walk'?p.spd/(c.stride*p.sc):k==='run'?p.spd/(c.runS*p.sc):1))%A.duration;return k}
 const TF_PL={x:0,y:0,z:0,heading:0,tilt:0,roll:0,scale:1};
 function tfFgAt(p,hp,die){const o=TF_PL,f=p.sit&&!p.drv?0.05:0;o.scale=p.sc;
   if(hp){o.x=p.x;o.y=p.y+hp.dy-(hp.kneel&&!p.sit&&!die?0.32*p.sc:0);o.z=p.z;o.heading=hp.yaw;o.tilt=hp.tilt;o.roll=hp.roll}
@@ -522,14 +524,14 @@ function tfRoomsTick(dt){tf.rmT=(tf.rmT||0)-dt;if(tf.rmT>0)return;tf.rmT=0.25;if
 // someone put straight at a spot in a room (a seated one outdoors now and then with a drink in hand)
 function tfRoomPut(R,sp){const p=tfPerson({room:R,spot:sp,x:sp.x,z:sp.z,yaw:sp.yaw,sit:sp.sit?1:0,t:6+Math.random()*30,look:0,s:sp.at||0});p.y=sp.path&&R.ground?baseHeight(sp.x,sp.z):sp.y;sp.who=p;R.n++;
   if(sp.sit&&R.ground&&Math.random()<0.4)p.carry='cup';return p}
-function tfRoomStep(p,dt){const sp=p.spot,R=p.room;
+function tfRoomStep(p,dt){const sp=p.spot,R=p.room;if(typeof acRoom==='function'&&acRoom(p,dt))return;
   if(sp.path){// walking the aisles, stopping at a table now and then
-    if(p.wait>0){p.wait-=dt;p.spd=0}else{p.spd+=(p.vt*0.8-p.spd)*Math.min(1,dt*2);p.s=(p.s+p.spd*dt)%sp.path.len;if(Math.random()<dt*0.05)p.wait=2+Math.random()*5}
+    if(p.wait>0){p.wait-=dt;p.spd=0}else{p.spd+=(p.vt*0.8-p.spd)*Math.min(1,dt*2);p.s=(p.s+p.spd*dt)%sp.path.len;if(Math.random()<dt*0.05){p.wait=2+Math.random()*5;p.plate=Math.random()<0.6}}
     const [x,z,dx,dz]=tfAt(sp.path,p.s);p.x=x;p.z=z;p.y=R.ground?baseHeight(x,z):sp.y;let d=Math.atan2(dx,dz)-p.yaw;d=Math.atan2(Math.sin(d),Math.cos(d));p.yaw+=d*Math.min(1,dt*5);
     p.amp+=(Math.min(1,p.spd/1.2)*0.42-p.amp)*Math.min(1,dt*6);p.ph+=p.spd*dt*Math.PI*2/(1.5*p.sc);return}
   p.spd=0;p.amp+=(0-p.amp)*Math.min(1,dt*6);let a=sp.yaw+p.look-p.yaw;a=Math.atan2(Math.sin(a),Math.cos(a));p.yaw+=a*Math.min(1,dt*2.5);
   p.t-=dt;if(p.t>0)return;p.t=6+Math.random()*25;
-  if(sp.staff||Math.random()<0.45){p.look=sp.sit?0:(Math.random()-0.5)*1.4;return}
+  if(sp.staff||Math.random()<(p.stay?0.85:0.45)){p.look=sp.sit?0:(Math.random()-0.5)*1.4;return}
   // done: a customer walks out (tfExit), or where there is no door goes when nobody is looking, and someone else comes
   // in to another spot
   if(R.ent&&tfEnt(R)){if(!tfExit(p))p.t=2+Math.random()*4;return}

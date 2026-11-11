@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Tuesday, November 10, 2026
 
+- **v402** (7:28 PM) People in the shops, cafes, bars and homes eat, drink, pour, wipe, cook, read, use their phones and go to the restroom (Human Forge's everyday clips, High and Ultra); groups who meet go in and sit together; some evenings on the beach; gossip changes how people see each other; townsfolk start dating, break up and have best friends.
 - **v401** (6:40 PM) Townsfolk mostly ignore you unless you talk to them; couples and close friends walk places together, people join friends chatting in groups, friends plan group evenings (friends of friends join, a ring at the pub), gossip passes news around town, and someone with plans may ask you along when you talk to them.
 - **v400** (6:13 PM) Friends make plans to meet (lunch somewhere, an evening at a pub or grill) and turn up; no-shows are remembered. Townsfolk keep a diary of their days (where they ate and if they liked it, meetings, fallings-out, pursuits) and tell you about it, and go back to places they like. Needs, diaries, plans, friendships and pursuits are saved and synced.
 - **v399** (5:52 PM) Townsfolk walk anywhere in town (lawns, the beach, the pier, up to you), get hungry, thirsty, tired, bored and lonely and do something about it (eat out, go home to bed, find a friend), have pursuits (fishing, painting, fitness walks, stargazing, saying hello) with progress kept, and friendships and rivalries that grow as they talk.

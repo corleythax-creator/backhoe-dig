@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-11T00:40:00Z",
+ "updated": "2026-11-11T01:28:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -132,9 +132,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-10",
-   "dh": 43.5,
-   "act": 3.5,
-   "versions": 7
+   "dh": 59.5,
+   "act": 4,
+   "versions": 8
   }
  ],
  "extra": [
@@ -3753,6 +3753,15 @@ window.EFFORT = {
    "tris": 5779904,
    "chars": 2609845,
    "what": "Townsfolk mostly ignore you unless you talk to them; couples and close friends walk places together, people join friends chatting in groups, friends plan group evenings (friends of friends join, a ring at the pub), gossip passes news around town, and someone with plans may ask you along when you talk to them."
+  },
+  {
+   "v": 402,
+   "asked": "2026-11-11T09:00:00-06:00",
+   "live": "2026-11-10T19:28:30-06:00",
+   "dh": 16,
+   "tris": 5796445,
+   "chars": 2625093,
+   "what": "People in the shops, cafes, bars and homes eat, drink, pour, wipe, cook, read, use their phones and go to the restroom (Human Forge's everyday clips, High and Ultra); groups who meet go in and sit together; some evenings on the beach; gossip changes how people see each other; townsfolk start dating, break up and have best friends."
   }
  ]
 };

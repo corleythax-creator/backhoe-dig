@@ -1343,6 +1343,9 @@ const TUNE=[
   ['dyGossip','Town','Two townsfolk talking pass on news of someone else this often',0.15,'pct',0,100,5],
   ['soClose','Town','Two townsfolk this close (bond 0 to 1) go places together',0.5,'n',0,1,0.05],['soAlong','Town','Someone close comes along when a townsperson sets off on an errand this often',0.5,'pct',0,100,5],
   ['soJoin','Town','Someone at a loose end walks over to join friends chatting this often (a try every 3 s)',0.5,'pct',0,100,5],
+  ['acRest','Town','Someone seated in a place gets up to go to the restroom this often when they change what they are doing',0.06,'pct',0,100,1],
+  ['cpClose','Town','Two single townsfolk this close (bond 0 to 1) may start seeing each other',0.62,'n',0,1,0.02],['cpSplit','Town','A couple breaks up when their bond falls below',0.3,'n',-1,1,0.05],
+  ['cpStart','Town','How likely a new couple is, checked every 5 s (at most one a game day)',0.05,'pct',0,100,1],
   ['puShare','Town','Share of the townsfolk who fit a pursuit that have one',0.6,'pct',0,100,5],
   ['puGap','Town','A townsperson goes off on their pursuit again after about',240,'s',30,3600,30],
   ['puMax','Town','At most this many townsfolk off on their pursuits at once',5,'n',0,20,1],
@@ -1716,6 +1719,8 @@ const WORDS=[
   ['dy_youCame','Town: plans',"Hey, you made it! Glad you came.",''],
   // gossip (days.js): news passed on between two townsfolk ({name}: whom it is about; {what}: what happened)
   ['gs_own','Town: gossip',"Guess what? I {what}.",'{what}: what happened'],['gs_tell','Town: gossip',"Did you hear? {name} {what}.",'{name}: whom it is about; {what}: what happened'],
+  // relationships (couples.js): starting to see someone, a breakup
+  ['cp_start','Town: relationships',"I asked {name} out. They said yes!",'{name}: who they are seeing'],['cp_split','Town: relationships',"It's over with {name}. I don't want to talk about it.",'{name}: their ex'],
   ['tkAll','Town: talk','Everyone',''],['tkWithAll','Town: talk','Talking to everyone here ({n})','{n}: how many are listening'],['tkSayAll','Town: talk','Say something to everyone',''],
   ['tkPlayer','Town: talk','Corley','What the townsfolk call you'],
   ['tkWeather','Town: talk','Nice enough day for it. Whatever it is you\'re digging.',''],['tkRain','Town: talk','This rain. Good for the lawns, bad for your dirt, I\'d guess.',''],
