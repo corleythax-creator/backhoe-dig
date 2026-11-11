@@ -128,6 +128,16 @@ let exAdapt=1;
 // uCSW how soft the edge of the cover is. Every material's own onBeforeCompile still runs; the shared numbers are added
 // after it to any shader with lights
 const CS_U={uCSMap:{value:null},uCSA:{value:new THREE.Vector4()},uCSB:{value:new THREE.Vector4()},uCSW:{value:0.1}};
+// walls stop the buildings' lights (forgetown.js bfLmTick): three.js lights everything within a light's range, walls
+// or not, so a lamp lit the room next door, the floor above and the yard. Each of the building lights' pool that is
+// lit carries a mask: a square round it (uLmC: the light's place in the world, half the square's side in m) in which
+// the walls of its floor throw black shadows from it (doorways let it through), drawn into one shared map uLmMap, four
+// across and two down (uLmD: its cell, and the heights its light stops at, its floor and, with a floor above, its
+// ceiling). Each point or spot light finds its mask by where it is (within 3 cm), so the order three.js keeps its
+// lights in, the room's 360° picture and VR don't matter; a light with none (a headlight, a street lamp) lights as
+// before, and with no masks (uLmN 0) nothing changes. Only the buildings' own materials take it (lmOn, forgetown.js:
+// defined BF_LM): a sampler more on every material ran the ground's shader past the 16 texture units a GPU may have
+const LM_U={uLmMap:{value:(()=>{const t=new THREE.DataTexture(new Uint8Array([255,255,255,255]),1,1);t.needsUpdate=true;return t})()},uLmC:{value:Array.from({length:8},()=>new THREE.Vector4())},uLmD:{value:Array.from({length:8},()=>new THREE.Vector4())},uLmN:{value:0}};
 // the haze (every Graphics level): it thickens with the true distance from the camera (not the depth along the view, which
 // thinned it at the screen's sides and shifted it as the camera turned), lies thicker low over the lake than up high,
 // and toward the sun takes the sun's light, the same glow the sky has round the sun (so far ground meets the sky behind
@@ -164,6 +174,13 @@ const HZ_U={uHzSun:{value:new THREE.Vector4(0,1,0,1)},uHzSunC:{value:new THREE.C
   C.lights_pars_begin+='\nuniform sampler2D uCSMap;uniform vec4 uCSA,uCSB;uniform float uCSW;\n'+
     'float csShade(vec3 gp){if(uCSA.w<=0.0)return 1.0;vec3 w=transpose(mat3(viewMatrix))*(gp-viewMatrix[3].xyz);\n'+
     '  float c=texture(uCSMap,(w.xz+uCSB.xy*(uCSB.z-w.y)+uCSA.xy)*uCSA.z).r;return 1.0-uCSA.w*smoothstep(uCSB.w,uCSB.w+uCSW,c);}\n';
+  C.lights_pars_begin+='#ifdef BF_LM\nuniform sampler2D uLmMap;uniform vec4 uLmC[8],uLmD[8];uniform int uLmN;\n'+
+    'float lmShade(vec3 lp,vec3 gp){if(uLmN==0)return 1.0;mat3 iv=transpose(mat3(viewMatrix));vec3 lw=iv*(lp-viewMatrix[3].xyz);\n'+
+    '  for(int k=0;k<8;k++){if(k>=uLmN)break;vec4 c=uLmC[k];if(distance(lw,c.xyz)>0.03)continue;vec4 d=uLmD[k];vec3 w=iv*(gp-viewMatrix[3].xyz);\n'+
+    '    if(w.y<d.y||w.y>d.z)return 0.0;vec2 l=(w.xz-c.xz)/(2.0*c.w)+0.5;if(l.x<0.0||l.x>1.0||l.y<0.0||l.y>1.0)return 1.0;\n'+
+    '    return texture(uLmMap,(vec2(mod(d.x,4.0),floor(d.x/4.0))+clamp(l,0.003,0.997))/vec2(4.0,2.0)).r;}\n  return 1.0;}\n#endif\n';
+  for(const [a,b] of [['getPointLightInfo( pointLight, geometryPosition, directLight );','pointLight'],['getSpotLightInfo( spotLight, geometryPosition, directLight );','spotLight']])
+    if(C.lights_fragment_begin.includes(a))C.lights_fragment_begin=C.lights_fragment_begin.replace(a,a+'\n\t\t#ifdef BF_LM\n\t\tdirectLight.color *= lmShade( '+b+'.position, geometryPosition );\n\t\t#endif');
   const dl='getDirectionalLightInfo( directionalLight, directLight );';
   if(C.lights_fragment_begin.includes(dl))C.lights_fragment_begin=C.lights_fragment_begin.replace(dl,dl+'\n\t\tdirectLight.color *= csShade( geometryPosition );');
   const use=sh=>{if(sh.fragmentShader.includes('lights_pars_begin'))Object.assign(sh.uniforms,CS_U);if(sh.fragmentShader.includes('fog_pars_fragment'))Object.assign(sh.uniforms,HZ_U)};
