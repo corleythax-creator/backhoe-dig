@@ -271,9 +271,8 @@ function talkVoice(p,text){if(!sndCfg.on||!p||typeof p!=='object')return;const d
   const c=talkCard(p)||talkKid(p);
   if(T.c<0.55){talkMurmur(p,text,c,v,T.cut);return}
   if(v*sndCfg.master/100<0.02)return;
-  // the browser speaks one line at a time: while one is being said, others at the same moment come as a murmur (a busy
-  // room's hubbub), unless this one is nearer than who is speaking
-  if(TALK.M.speaking()&&TALK.spk&&TALK.spk!==p&&talkEar(TALK.spk)<=d){talkMurmur(p,text,c,v*0.8,2600);return}
+  // one voice at a time, in words: while someone is being heard, other lines show over their heads and are not spoken
+  if(TALK.M.speaking()&&TALK.spk&&TALK.spk!==p)return;
   TALK.M.speak(text,c,v*sndCfg.master/100);TALK.spk=p}
 // a line heard through a wall: their voice (a man's, a woman's, a child's pitch) as syllables of vowel formants, as
 // long as the line, low-passed at cut and placed where they are (late with distance, to one side)

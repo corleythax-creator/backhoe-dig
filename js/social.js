@@ -7,7 +7,7 @@
 // form and grow by themselves. And they talk: Human Forge's runtime starts one conversation in town every 9 to 15 s and
 // none while anyone is speaking, so a full room was near silent; soChat starts more, several at once, everyone with
 // someone beside them (within SO_CHAT_R, the same floor: a table, the bar, a group, two walking together) saying
-// something every TU.soChatGap or so, at most TU.soChatMax thinking at once, through the runtime's built-in mind (free,
+// something every TU.soChatGap or so, one new conversation at a time, at most TU.soChatMax thinking at once, through the runtime's built-in mind (free,
 // whoever is picked to speak; the runtime has the other answer back for a few turns). With a model picked, the answers
 // go to it, so then at most one new conversation every TU.soChatPaid. Nothing here is about you: they talk to you when
 // you talk to them.
@@ -50,7 +50,7 @@ function soTick(dt){if(!tf.on||!TALK.lib)return;if((SO.t+=dt)<0.25)return;SO.t=0
 
 // conversations of their own (above): a few times a second, a new one or two among those near you
 const SO_CHAT_R=3.6;
-function soChat(dt){const M=TALK.M;if(!M||TALK.mode==='off'||!M.on||!M.chatter||!TALK.lib)return;if((SO.ct+=dt)<0.5)return;SO.ct=0;
+function soChat(dt){const M=TALK.M;if(!M||TALK.mode==='off'||!M.on||!M.chatter||!TALK.lib)return;if((SO.ct+=dt)<1.2)return;SO.ct=0;
   const now=performance.now()/1000,paid=!M.local;if(paid&&now-(SO.paidT||0)<TU.soChatPaid)return;if(M.busy.size>=TU.soChatMax)return;
   const free=p=>!talkKid(p)&&talkCard(p)&&!M.busy.has(p)&&!p.inside&&!p.dead&&!p.hurt&&!(p.flee>0)&&p!==TALK.with;
   const walking=p=>p.spd>0.3&&!p.tg&&!tf.people.some(q=>q.tg&&q.tg.lead===p);
@@ -58,4 +58,4 @@ function soChat(dt){const M=TALK.M;if(!M||TALK.mode==='off'||!M.on||!M.chatter||
   for(let i=H.length-1;i>0;i--){const j=(Math.random()*(i+1))|0;[H[i],H[j]]=[H[j],H[i]]}
   for(const p of H){let q=null,bd=SO_CHAT_R;for(const r of TALK.here){if(r===p||!free(r)||Math.abs((r.y||0)-(p.y||0))>1.2)continue;const d=Math.hypot(r.x-p.x,r.z-p.z);if(d<bd&&bdOf(p,r)>-0.35){bd=d;q=r}}
     if(!q){p.amb=now+3;continue}
-    p.amb=now+TU.soChatGap*(0.7+Math.random()*0.6);q.amb=Math.max(q.amb||0,now+2.5);M.think(p,q);if(paid){SO.paidT=now;break}if(++n>=2)break}}
+    p.amb=now+TU.soChatGap*(0.7+Math.random()*0.6);q.amb=Math.max(q.amb||0,now+2.5);M.think(p,q);if(paid){SO.paidT=now;break}if(++n>=1)break}}
