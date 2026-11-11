@@ -77,10 +77,10 @@ GFX.quest.extraLt=false;GFX.quest.bfLt=false;
 // town, buildings, roads and trees as every level (the layout never changes with the Graphics setting). What costs the
 // most is cut back: 1x resolution, one smaller shadow map drawn every other frame, no far shadows, bounced light or
 // lamps that cast light, grass blades and undergrowth like Low, full-detail trees only near you, the medium texture
-// pack, a slightly shorter haze, fewer, simpler townsfolk and paint without its clear coat. Picked for you on Intel graphics
+// pack, a slightly shorter haze, fewer, simpler townsfolk (the light one past 25 m, not 40) and paint without its clear coat. Picked for you on Intel graphics
 GFX.work=Object.assign({},GFX.high,{name:'Work',shEvery:2,pr:1,sh:2048,shR:28,soft:false,csm:0,bounce:false,autoExp:false,inLight:false,
   tex:'med',aniso:4,dirt:2,lawnFar:10,fog:0.75,cloudQ:1,lakeQ:1,rainN:900,rainSp:240,splashN:350,wakeN:200,brush:0.15,wild:0.35,
-  turf:0.35,turfR:22,peb:0,treeR:45,tuftQ:0,tuft:[0.6,12,40,0.2],town:1,forge:'',cull:6,rmNear:25,extraLt:false,propLt:false,bfLt:false,vrSS:1,coat:false});
+  turf:0.35,turfR:22,peb:0,treeR:45,tuftQ:0,tuft:[0.6,12,40,0.2],town:1,forge:'',cull:6,rmNear:25,extraLt:false,propLt:false,bfLt:false,vrSS:1,coat:false,folkHi:25});
 // the bridges' detail parts: gusset and cover plates, lacing and lattice, braces, lamp trim, the covered bridge's
 // lattice and rafters, batter piles (bridges.js); Low and Work leave them out
 GFX.low.brDet=false;GFX.med.brDet=GFX.high.brDet=GFX.ultra.brDet=GFX.quest.brDet=true;GFX.work.brDet=false;
@@ -102,6 +102,10 @@ const gfxCull={on:false,x:0,y:0,z:0,k:0,fog:0,see:null,mainF:null},gfxSph=new TH
     const c=s.center,d=Math.hypot(c.x-gfxCull.x,c.y-gfxCull.y,c.z-gfxCull.z);if(d<=s.radius)return true;
     if(s.radius*gfxCull.k<d)return false;
     const m=o.material;return !(gfxCull.fog&&d-s.radius>gfxCull.fog&&m&&m.fog&&!Array.isArray(m))}})();
+// the same test for things the game packs into its own instanced meshes (townsfolk, parked cars, MDL_SPOTS): a sphere
+// at x, y, z of radius r against the last game-camera frame's tiny far detail, haze and rooms (true: draw it)
+function gfxSees(x,y,z,r){if(!(gfxCur.cull>0)||edOn||renderer.xr.isPresenting||!gfxCull.k)return true;const d=Math.hypot(x-gfxCull.x,y-gfxCull.y,z-gfxCull.z);if(d<=r)return true;
+  if(r*gfxCull.k<d||gfxCull.fog&&d-r>gfxCull.fog)return false;if(gfxCull.see){gfxSph.center.set(x,y,z);gfxSph.radius=r;if(!rmSeen(gfxCull.see,gfxSph))return false}return true}
 function gfxCullOn(cam){const px=gfxCur.cull||0;gfxCull.on=px>0&&cam===camera&&!edOn&&!renderer.xr.isPresenting;if(!gfxCull.on)return;
   const h=renderer.domElement.clientHeight||innerHeight;gfxCull.x=cam.position.x;gfxCull.y=cam.position.y;gfxCull.z=cam.position.z;
   // radius r at distance d is r/d/tan(fov/2)*zoom*(h/2) pixels from its middle; under px/2 is culled
@@ -123,7 +127,7 @@ const gfxHid=[];
 function gfxAway(cam){if(cam!==camera||edOn||renderer.xr.isPresenting)return;const c=cam.position;
   if(c.z<TU.townZ||gfxIsl(c.x,c.z,30))return;
   for(const g of gfxMachines())if(g.visible&&gfxIsl(g.position.x,g.position.z,15)){g.visible=false;gfxHid.push(g)}}
-{const r=renderer.render.bind(renderer);renderer.render=function(sc,cam){gfxCullOn(cam);gfxAway(cam);try{r(sc,cam)}finally{gfxCull.on=false;while(gfxHid.length)gfxHid.pop().visible=true}}}
+{const r=renderer.render.bind(renderer);renderer.render=function(sc,cam){gfxCullOn(cam);gfxAway(cam);if(sc===scene&&typeof mdlSpotCull==='function')mdlSpotCull(cam);try{r(sc,cam)}finally{gfxCull.on=false;while(gfxHid.length)gfxHid.pop().visible=true}}}
 let gfxKey='high',gfxOver={},gfxCur=Object.assign({},GFX.high);
 function gfxName(){return GFX[gfxKey].name+(Object.keys(gfxOver).length?' (custom)':'')}
 function gfxGuess(){if(PHONE||IS_QUEST)return 'low';
