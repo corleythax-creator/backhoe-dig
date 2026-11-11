@@ -50,7 +50,7 @@ function dyPlan(p,q){if(p.tw||q.tw||Math.random()>TU.dyPlan)return;const a=tfWho
   const w=dyWhere(p,q,at);DY.plans.push({a,b,day:fuelDayNo(),h:at,x:+w.x.toFixed(1),z:+w.z.toFixed(1),n:w.n,st:'set',in:[]});DY.dirty=true;
   bdSay(p,'dy_plan',{place:w.n,time:dyClock(at)});setTimeout(()=>{if(tf.people.includes(q))bdSay(q,'dy_planYes',{name:talkName(p).split(' ')[0]})},1600)}
 // tfLook's lean (townfolk.js): lower draws them. Someone with a plan coming up, or under way, is likely to be in town
-function dyScore(id){const n=dyNow();for(const P of DY.plans)if(P.st==='set'&&(P.a===id||P.b===id)&&P.day===n.day&&n.h>P.h-0.75&&n.h<P.h+0.75)return -2.5;return 0}
+function dyScore(id){const n=dyNow();for(const P of DY.plans)if(P.st==='set'&&(P.a===id||P.b===id)&&P.day===n.day&&n.h>P.h-1&&n.h<P.h+1.5)return -2.5;return 0}
 // going: off the walks to the spot, a step apart; once there they wait facing it
 function dyGo(p,P){const k=P.a===tfWho(p)?1:-1;if(p.pu)puEnd(p);p.nd=null;
   if(roGo(p,P.x+k*0.7,P.z,{near:0.5,tag:'dy',max:500,then:q=>{q.dy.here=1;q.look=Math.atan2(P.x-q.x,P.z-q.z);q.wait=2},fail:q=>{q.dy=null;roJoin(q)}}))p.dy={P,here:0}}
@@ -59,7 +59,7 @@ function dyDoing(p){const o=p.dy;if(!o)return '';const id=tfWho(p),other=dyName(
   return o.met?`out with ${other} at ${o.P.n}`:o.here?`waiting for ${other} at ${o.P.n}`:`on my way to meet ${other} at ${o.P.n}`}
 // once a second: plans coming due, people heading off, meeting, a friend who never came
 function dyTick(dt){if(!TALK.lib)return;if((DY.t+=dt)<1)return;DY.t=0;const n=dyNow();
-  for(const P of DY.plans){if(P.st!=='set')continue;const late=n.day>P.day||n.h>P.h+0.9,due=n.day===P.day&&n.h>=P.h-0.3;
+  for(const P of DY.plans){if(P.st!=='set')continue;const late=n.day>P.day||n.h>P.h+1.5,due=n.day===P.day&&n.h>=P.h-0.5;
     const ps=tf.on?[P.a,P.b].map(id=>tf.people.find(q=>tfWho(q)===id&&!q.dead&&!q.hurt&&!q.drv&&!q.cop)||null):[null,null];
     if(due&&!late)for(const p of ps)if(p&&!p.dy&&!p.ord&&!p.room&&!p.go&&!p.goTo&&!(p.flee>0)&&!p.path)dyGo(p,P);
     const [pa,pb]=ps,ha=pa&&pa.dy&&pa.dy.P===P&&pa.dy.here,hb=pb&&pb.dy&&pb.dy.P===P&&pb.dy.here;
