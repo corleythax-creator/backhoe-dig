@@ -108,11 +108,12 @@ function dyTick(dt){DY.clk=(DY.clk||0)+dt;if(!TALK.lib)return;if((DY.t+=dt)<1)re
 // a place not drawn now (far from you) they go into out of sight
 function dyInside(P,G){const R=TF_ROOMS.find(r=>r.si!=null&&!r.home&&townShopName(r)===P.n),E=R&&tfEnt(R);if(!R||!E||!townRoomOpen(R))return false;
   if(!R.live){for(const p of G){p.dy=null;p.dyDone=P;roJoin(p);p.inside=90+Math.random()*90;ndRoom(p,R)}return true}
-  const free=R.spots.filter(sp=>sp.sit&&!sp.who&&!sp.staff&&!sp.path&&tfInPath(R,E,sp));if(free.length<G.length)return false;
-  const by=new Map();for(const sp of free){const k=sp.tf!=null?'t'+sp.tf+'/'+Math.round(sp.x)+Math.round(sp.z/4):'x';if(!by.has(k))by.set(k,[]);by.get(k).push(sp)}
-  let seats=[...by.entries()].filter(([k,L])=>k!=='x'&&L.length>=G.length).map(e=>e[1])[0];
-  if(!seats){const s0=free[0];seats=free.slice().sort((a,b)=>Math.hypot(a.x-s0.x,a.z-s0.z)-Math.hypot(b.x-s0.x,b.z-s0.z))}
-  G.forEach((p,i)=>{p.dy=null;p.dyDone=P;p.off=null;p.stay=1;tfHold(p,R,E,seats[i]);tfGoIn(p);if(!p.go){p.stay=0;roJoin(p)}});
+  // the spots they can walk to (seats first): one table that has room for them all, else as near together as there are
+  const free=R.spots.filter(sp=>!sp.who&&!sp.staff&&!sp.path&&tfInPath(R,E,sp)).sort((a,b)=>(b.sit?1:0)-(a.sit?1:0));if(free.length<2)return false;
+  const by=new Map();for(const sp of free){if(!sp.sit||sp.tf==null)continue;const k='t'+sp.tf+'/'+Math.round(sp.x)+Math.round(sp.z/4);if(!by.has(k))by.set(k,[]);by.get(k).push(sp)}
+  let seats=[...by.values()].find(L=>L.length>=G.length);
+  if(!seats){const s0=free[0];seats=free.slice().sort((a,b)=>(b.sit?1:0)-(a.sit?1:0)||Math.hypot(a.x-s0.x,a.z-s0.z)-Math.hypot(b.x-s0.x,b.z-s0.z))}
+  G.forEach((p,i)=>{p.dy=null;p.dyDone=P;p.off=null;const sp=seats[i];if(!sp){roJoin(p);return}p.stay=1;tfHold(p,R,E,sp);tfGoIn(p);if(!p.go){p.stay=0;roJoin(p)}});
   if(G.some(p=>TALK.here.includes(p)))ordLog(`${dyNames(G.map(tfWho))} went into ${P.n} together`);return true}
 
 // ---------- gossip ----------
