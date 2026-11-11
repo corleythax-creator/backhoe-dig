@@ -80,6 +80,10 @@ function loadStep(bad){if(LOADP.done)return;if(bad){loadEnd();return}const jsN=d
 // to finish goes in PF_BOOT.steps for the Profiler's Loading report
 function loadFiles(){let dev=0,net=0,b=0;try{for(const e of performance.getEntriesByType('resource')){if(!e.decodedBodySize)continue;
   if(e.transferSize===0||e.deliveryType==='cache'){dev++}else{net++;b+=e.transferSize}}}catch(x){}return {dev,net,b}}
+// the pictures and models asked for at the start are in, and the bridges' and docks' pictures made (main.js warmAllTick
+// builds the shaders only then)
+function loadPicsIn(){let al=0,at=0;for(const [l,t] of LOADP.mgr){al+=l;at+=t}if(LOADP.goal!==undefined)at=Math.min(at,LOADP.goal);
+  return LOADP.goal!==undefined&&al>=at&&(typeof brBusy!=='function'||!brBusy())}
 function loadSteps(js,jsN,al,at,done){const W=typeof warmAll!=='undefined'?warmAll:null,F=loadFiles(),now=performance.now(),S=PF_BOOT.steps,rows=[];
   const row=(id,name,ok,txt)=>{if(ok&&S[id]===undefined)S[id]=Math.round(now);rows.push([name,ok,txt])};
   row('code','Game code',js>=1,`${Math.min(LOADP.js,jsN)} of ${jsN}`);

@@ -333,7 +333,7 @@ function startReveal(){if(help.hidden)return;if(startWarmed||typeof gpuWarm!=='f
   const hint=$('#startMapHint'),f0=renderer.info.render.frame,t0=performance.now();let done=false;hint.textContent='Getting your spot ready…';
   const end=()=>{if(done)return;done=true;help.hidden=true;hint.textContent='Tap the map to zoom in'};setTimeout(end,3000);
   // a few frames there first, so the things made on arrival exist, then everything is warmed
-  const wait=()=>{if(done)return;if(renderer.info.render.frame-f0<6&&performance.now()-t0<1500){setTimeout(wait,50);return}gpuWarm(scene).then(end,end)};wait()}
+  const wait=()=>{if(done)return;if(renderer.info.render.frame-f0<6&&performance.now()-t0<1500){setTimeout(wait,50);return}gpuWarm(typeof warmRoot==='function'?warmRoot():scene).then(end,end)};wait()}
 // the map, its names and a tap on it are js/start.js's (SPICK); its loading cover (LOADP) keeps taps off the map until
 // the world is loaded and its shaders built, then a tap starts you there at once
 const startReady=()=>LOADP.done&&typeof tpGo==='function'&&typeof warmIdle==='function';

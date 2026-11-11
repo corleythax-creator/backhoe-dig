@@ -6,7 +6,7 @@
 // rules (fictional adults, PG-13, nothing sexual, no real people, no hate or help with harm, honest about being an AI
 // if asked), answering nobody without the owner key (Key, once a device), stopping at the daily cap; until then, and for
 // what only the built-in mind knows (machines going by, someone going), the built-in mind speaks.
-// On as Text unless switched off (☰ → Townsfolk talk: Off, Text, Aloud, Voice only: aloud with no lines shown; bhd_talk on this device); nobody dead, hurt,
+// On as Voice only unless switched off (☰ → Townsfolk talk: Off, Text, Aloud, Voice only: aloud with no lines shown; bhd_talk on this device); nobody dead, hurt,
 // driving or a cop talks. The young ones (under 18) never go to the runtime or a model (grown-ups only): they say hi and
 // answer in the talk box with the game's own kid and teen lines (talkKid, talkKidSay).
 // On foot: they mostly carry on with their lives as you walk up (talkNotice: someone afraid or wary of you shows it; someone
@@ -28,12 +28,15 @@
 // Lines show over their heads; Aloud reads them in the most natural voice the browser has, each townsperson keeping their own,
 // heard only within TU.talkHearR of the camera and fainter with distance, muffled through walls and cabs (talkVoice).
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
-const TALK={mode:'text',lib:null,M:null,near:null,with:null,bub:new Map(),far:new Map(),bump:new Map(),v:new THREE.Vector3(),t:0,ui:null,
+const TALK={mode:'say',lib:null,M:null,near:null,with:null,bub:new Map(),far:new Map(),bump:new Map(),v:new THREE.Vector3(),t:0,ui:null,
   here:[],at:new Map(),ride:null,v0:0,group:[],grp:false,log:[],news:null,planT:-1e9,planning:false,errT:0};
 const TALK_NEAR=4,TALK_HI=2.2,TALK_FAR=5,TALK_URL='https://human-forge-beta.vercel.app/api/persona',TALK_ME='a man in a hard hat and a hi-vis vest';
 // the menu's choice; an 'off' only counts if talk was ever on on this device (bhd_talk_on), since older versions wrote
 // 'off' for everyone at load, when Off was the default
-try{const m=localStorage.getItem('bhd_talk');TALK.mode=m&&(m!=='off'||localStorage.getItem('bhd_talk_on'))?m:'text'}catch(e){}
+// Voice only is the default (owner, Nov 10): a device that never chose gets it, and every device is switched to it once
+// (bhd_talk_v), after which its own choice is kept
+try{const m=localStorage.getItem('bhd_talk');TALK.mode=m&&(m!=='off'||localStorage.getItem('bhd_talk_on'))?m:'say';
+  if(localStorage.getItem('bhd_talk_v')!=='say'){TALK.mode='say';localStorage.setItem('bhd_talk','say');localStorage.setItem('bhd_talk_v','say')}}catch(e){TALK.mode='say'}
 // the library's people, by id, for their personalities (once)
 function talkLib(){if(TALK.lib!==null)return;TALK.lib=0;fetch('models/people/library.json').then(r=>r.json()).then(j=>{TALK.lib={};for(const p of j.people||[])TALK.lib[p.id]=p}).catch(()=>{TALK.lib=null})}
 function talkCard(p){if(!TALK.lib||!p||p.dead||p.hurt||p.drv||p.cop)return null;const it=TALK.lib['island_'+p.body];return it&&window.HumanForgeMind?HumanForgeMind.card(p.tw?talkTwin(it,p):typeof lifeItem==='function'?lifeItem(it,p.body):it):null}

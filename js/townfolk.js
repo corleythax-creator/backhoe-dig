@@ -17,7 +17,8 @@ const TF_NEAR=360,TF_BOX=[-200,200,540,780],TF_CARS={sedan:4,hatch:3,wagon:1,suv
 // the paints, as often as they are seen on the road: whites, blacks, silvers and greys most, then a few colours (metallic: m)
 const TF_PAINT=[[0xe9e9e6,0,4],[0xf2f0ea,0,2],[0x101113,0,3],[0xa9adb0,1,3],[0x5a5e62,1,3],[0x2b2e33,1,2],[0x7e1416,1,2],[0x1c335c,1,2],[0x23382d,1,1],[0xb3a284,1,1],[0x6e869b,1,1],[0x8a4a1c,1,1]];
 // [people, cars] for the Townsfolk setting: Off, Few, Some, Busy
-const TF_N=[[0,0],[24,9],[42,15],[120,21]];
+// (people trimmed about a third, Nov 10, for speed: were 24, 42, 120)
+const TF_N=[[0,0],[16,9],[27,15],[78,21]];
 // in the rooms (TF_ROOMS, interiors.js): customers in each shop besides its staff, for the setting; how near the camera
 // must come for a room to fill (it empties again past TF_RFAR); the most drawn in the rooms at once
 const TF_RN=[0,1,2,3],TF_RNEAR=70,TF_RFAR=95,TF_ROOM_CAP=130;
