@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Tuesday, November 10, 2026
 
+- **v404** (8:09 PM) The loading cover lists each step under the bar (game code, files from this device vs downloaded, pictures to the graphics card, shaders, places, bridges' pictures) and no longer waits out its 60 s cap when new shaders keep turning up
 - **v403** (7:58 PM) Townsfolk now hold many conversations at once (everyone with someone beside them talks back and forth), not one line every 20 seconds; Aloud speaks the nearest and murmurs the rest like a busy room.
 - **v402** (7:28 PM) People in the shops, cafes, bars and homes eat, drink, pour, wipe, cook, read, use their phones and go to the restroom (Human Forge's everyday clips, High and Ultra); groups who meet go in and sit together; some evenings on the beach; gossip changes how people see each other; townsfolk start dating, break up and have best friends.
 - **v401** (6:40 PM) Townsfolk mostly ignore you unless you talk to them; couples and close friends walk places together, people join friends chatting in groups, friends plan group evenings (friends of friends join, a ring at the pub), gossip passes news around town, and someone with plans may ask you along when you talk to them.
