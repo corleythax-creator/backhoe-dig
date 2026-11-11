@@ -13,7 +13,7 @@
 
 const DY_KEEP=8;
 const DY={d:{},op:{},plans:[],n:{},t:0,dirty:false,saveT:0,inGossip:false};
-try{const v=JSON.parse(localStorage.getItem('bhd_days')||'null');if(v){DY.d=v.d||{};DY.op=v.op||{};DY.n=v.n||{};DY.plans=(v.plans||[]).map(P=>P.m?P:Object.assign(P,{m:[P.a,P.b]}))}}catch(e){}
+try{const v=JSON.parse(localStorage.getItem('bhd_days')||'null');if(v){DY.d=v.d||{};DY.op=v.op||{};DY.n=v.n||{};DY.plans=(v.plans||[]).map(P=>{delete P.outT;return P.m?P:Object.assign(P,{m:[P.a,P.b]})})}}catch(e){}
 function dySave(){if(!DY.dirty||window.syncHold)return;DY.dirty=false;try{localStorage.setItem('bhd_days',JSON.stringify({v:1,d:DY.d,op:DY.op,n:DY.n,plans:DY.plans}))}catch(e){}}
 // a look's name (someone not in town now too): the card Human Forge's runtime would make for them
 function dyName(id){const p=tf.people.find(q=>tfWho(q)===id);if(p)return talkName(p);const it=TALK.lib&&TALK.lib['island_'+id];
@@ -76,15 +76,15 @@ function dyInvite(p){const id=tfWho(p),P=DY.plans.find(x=>x.st==='set'&&x.m.incl
   P.asked=1;DY.dirty=true;if(repOpinion(id)<5&&!(typeof fmKnown==='function'&&fmKnown(p))||Math.random()>TU.dyInvite)return;P.you=1;
   setTimeout(()=>{if(tf.people.includes(p))talkShow(p,{say:say('dy_invite',{place:P.n,time:dyClock(P.h),who:dyNames(P.m.filter(x=>x!==id))})},'you',null)},1800)}
 // once a second: plans coming due, people heading off, meeting, late ones joining, those who never came
-function dyTick(dt){if(!TALK.lib)return;if((DY.t+=dt)<1)return;DY.t=0;const n=dyNow();
+function dyTick(dt){DY.clk=(DY.clk||0)+dt;if(!TALK.lib)return;if((DY.t+=dt)<1)return;DY.t=0;const n=dyNow();
   for(const P of DY.plans){if(P.st==='missed'||P.st==='done')continue;const late=n.day>P.day||n.h>P.h+1.5,due=n.day===P.day&&n.h>=P.h-0.5;
     const ps=tf.on?P.m.map(id=>tf.people.find(q=>tfWho(q)===id&&!q.dead&&!q.hurt&&!q.drv&&!q.cop)||null):P.m.map(()=>null);
     if(due&&!late)for(const p of ps)if(p&&!p.dy&&!p.ord&&!p.room&&!p.go&&!p.goTo&&!(p.flee>0)&&!p.path&&!(P.st==='kept'&&p.dyDone===P))dyGo(p,P);
     const here=ps.filter(p=>p&&p.dy&&p.dy.P===P&&p.dy.here);
     // met: the first two there, then each who comes after
-    // (one clock for them all outside, so they go in together; the beach: a long while there)
-    if(here.length>=2&&!P.outT)P.outT=performance.now()/1000+(P.beach?120+Math.random()*120:20+Math.random()*8);
-    if(here.length>=2)for(const p of here){if(p.dy.met)continue;p.dy.met=1;p.look=Math.atan2(P.x-p.x,P.z-p.z);p.wait=Math.max(3,P.outT-performance.now()/1000);
+    // (one clock for them all outside, the game's own (DY.clk), so they go in together; the beach: a long while there)
+    if(here.length>=2&&!P.outT)P.outT=DY.clk+(P.beach?120+Math.random()*120:20+Math.random()*8);
+    if(here.length>=2)for(const p of here){if(p.dy.met)continue;p.dy.met=1;p.look=Math.atan2(P.x-p.x,P.z-p.z);p.wait=Math.max(3,P.outT-DY.clk);
       const with_=here.filter(q=>q!==p);for(const q of with_)bdAdd(p,q,0.03);dyNote(p,'met',`met ${dyNames(with_.map(q=>tfWho(q)))} at ${P.n}`,0.6);
       if(P.st==='set'){P.st='kept';DY.dirty=true;bdSay(p,'dy_meet',{name:talkName(with_[0]).split(' ')[0]})}
       // you came along
@@ -99,8 +99,8 @@ function dyTick(dt){if(!TALK.lib)return;if((DY.t+=dt)<1)return;DY.t=0;const n=dy
   // done together: back to their evening
   // together outside a while: then in at the door to sit at a table together, if there is one
   for(const P of DY.plans){if(P.in||P.beach||P.st==='missed'||P.st==='set')continue;const G=tf.people.filter(p=>p.dy&&p.dy.P===P&&p.dy.met);
-    if(G.length>=2&&performance.now()/1000>=(P.outT||1e12)&&dyInside(P,G))P.in=1}
-  for(const p of tf.people)if(p.dy&&(p.dy.met&&!(p.wait>0)&&(p.dy.P.in||p.dy.P.beach||performance.now()/1000>(p.dy.P.outT||0)+1.5)||p.dead||p.hurt||p.ord||p.flee>0)){const was=p.dy;p.dy=null;p.dyDone=was.P;if(p.off&&!p.ord)roBack(p);if(was.met&&!p.ord)p.ndNext=0}
+    if(G.length>=2&&DY.clk>=(P.outT||1e12)&&dyInside(P,G))P.in=1}
+  for(const p of tf.people)if(p.dy&&(p.dy.met&&!(p.wait>0)&&(p.dy.P.in||p.dy.P.beach||DY.clk>(p.dy.P.outT||0)+1.5)||p.dead||p.hurt||p.ord||p.flee>0)){const was=p.dy;p.dy=null;p.dyDone=was.P;if(p.off&&!p.ord)roBack(p);if(was.met&&!p.ord)p.ndNext=0}
   DY.plans=DY.plans.filter(P=>P.st==='set'||P.st==='kept'||n.day-P.day<2);
   if((DY.saveT+=1)>=10){DY.saveT=0;dySave();if(typeof ndSave==='function')ndSave()}}
 
