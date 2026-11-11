@@ -143,7 +143,10 @@ function bfLtPack(LS,LG){const out=[],gd=LG&&LG.dim!=null?Math.max(0,Math.min(2,
     out.push({id:l.id,p:new THREE.Vector3(+p[0],+p[1],+p[2]),d:dir&&dir.lengthSq()>1e-6?dir.normalize():null,col:new THREE.Color(l.color||'#ffe2a8'),k,
       lvl:+l.level||0,r:+l.range>0?+l.range:6,ang:Math.min(1.45,Math.max(0.1,(+l.beam||90)*Math.PI/360)),auto:st==='auto',out:!!l.outdoor})}
   return out}
-// the pool: n real lights in the scene (dark until held), a third of them spotlights
+// the pool: n real lights in the scene (dark until held), a third of them spotlights. Its size goes by the Graphics
+// setting only, made on the first frame whether the town has come in yet or not: three.js rebuilds every shader when
+// the number of lights changes, which, made only once the town arrived, built all of them twice (the long freezes at
+// loading and just after)
 function bfLtPool(n){if(n===bfLt.n)return;bfLt.n=n;const ns=Math.min(2,Math.floor(n/3)),fit=(A,m,make)=>{
     while(A.length<m){const o=make();o.castShadow=false;scene.add(o);if(o.target)scene.add(o.target);A.push({o,l:null,B:null,k:0,e:0})}
     while(A.length>m){const s=A.pop();scene.remove(s.o);if(s.o.target)scene.remove(s.o.target);s.o.dispose()}};
@@ -167,7 +170,7 @@ function bfLightTick(lamp,ll,dt){bfEnvTick();
       const it=bf.lib[L.id];if(it&&it.width){v.copy(cam);B.g.worldToLocal(v);if(Math.abs(v.x)<it.width/2&&Math.abs(v.z)<it.length/2&&v.y>-0.5&&v.y<8)
         for(const l of B.K.lights){const k=l.auto?lamp:1;if(k>fill)fill=k}}
       for(const l of B.K.lights){if(l.auto&&lamp<=0.01)continue;v.copy(l.p).applyMatrix4(B.g.matrixWorld);const d=v.distanceTo(cam);if(d<far)C.push({l,B,L,d,x:v.x,y:v.y,z:v.z})}}
-    bfLt.fill=fill;C.sort((a,b)=>a.d-b.d);bfLt.on=C.length;bfLtPool(any?bfLtBudget():0);
+    bfLt.fill=fill;C.sort((a,b)=>a.d-b.d);bfLt.on=C.length;bfLtPool(bfLtBudget());
     const A=bfLt.all,pick=C.slice(0,A.length),free=[];
     for(const s of A){const i=pick.findIndex(c=>c&&c.l===s.l&&c.B===s.B);if(i<0){s.l=null;free.push(s)}else{s.c=pick[i];pick[i]=null}}
     for(const c of pick){if(!c)continue;const want=!!c.l.d,i=Math.max(0,free.findIndex(s=>!!s.o.isSpotLight===want)),s=free.splice(i,1)[0];s.l=c.l;s.B=c.B;s.c=c;s.k=0}
