@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-11T02:37:00Z",
+ "updated": "2026-11-11T03:03:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -132,9 +132,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-10",
-   "dh": 71.5,
-   "act": 5.5,
-   "versions": 12
+   "dh": 76.5,
+   "act": 6,
+   "versions": 13
   }
  ],
  "extra": [
@@ -3798,6 +3798,15 @@ window.EFFORT = {
    "tris": 5789345,
    "chars": 2641026,
    "what": "Nothing is drawn behind the loading cover while shaders build, so the browser builds them side by side instead of freezing; the building light pool is made once by the Graphics setting (a change in the number of lights rebuilt every shader a second time); each visit starts on foot at the brewery's front door"
+  },
+  {
+   "v": 407,
+   "asked": "2026-11-10T21:00:00-06:00",
+   "live": "2026-11-10T21:03:59-06:00",
+   "dh": 5,
+   "tris": 7504813,
+   "chars": 2643907,
+   "what": "Shaders are built once: for the effects' target the frame is drawn into (they were built for the screen first and again at the first frame) and only once the pictures are in; the islands' machines are warmed in the background after you are in (334 shader builds at loading down to 187); Townsfolk talk defaults to Voice only; about a third fewer people (street crowds, town 130, shopfolk 65)"
   }
  ]
 };
