@@ -36,6 +36,7 @@ function bdChat(p,q,a){if(!q||typeof q!=='object'||q===p||!tf.people.includes(q)
     if(TALK.M)TALK.M.remember(p,q,'rude');bdSay(p,'bd_spat',{name:talkName(q)});if(typeof dyNote==='function'){dyNote(p,'spat',`fell out with ${talkName(q)}`,-0.6);dyNote(q,'spat',`had words with ${talkName(p)}`,-0.6)}
     for(const [r,s] of [[p,q],[q,p]])if(!r.room){r.wait=Math.max(r.wait||0,1.5);r.look=Math.atan2(r.x-s.x,r.z-s.z)}}
   else{if(b>0.5&&Math.random()<0.04&&TALK.M)TALK.M.remember(p,q,'kind');
+    if(b>-0.1&&typeof dyGossip==='function')dyGossip(p,q);
     if(b>0.4&&typeof dyPlan==='function'){const day=fuelDayNo(),gk=k+'talk';if(BD.met.get(gk)!==day){BD.met.set(gk,day);dyNote(p,'talk',`had a good talk with ${talkName(q)}`,0.4)}dyPlan(p,q)}}}
 // the best friend about within r of p (someone free to be found), or null
 function bdFriend(p,r){let b=null,bv=0.3;for(const q of tf.people){if(q===p||talkKid(q)||!talkCard(q)||q.drv||q.inside||q.dead||q.hurt)continue;

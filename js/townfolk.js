@@ -700,7 +700,7 @@ function tfTick(dt){if(!tf.q){if(tf.on)tfShow(false);return}tfPrep(dt);
   if(!tf.on){tfShow(true);while(walkers.length<wantP){const p=tfSpawnWalker(true);if(!p)break;walkers.push(p)}}
   tf.spawnT-=dt;if(tf.spawnT<=0){tf.spawnT=1.5+Math.random()*2;
     if(walkers.length<wantP)tfSpawnWalker(false);
-    else if(walkers.length>wantP){const p=walkers.find(p=>!p.go&&!p.goTo&&!(p.ord&&p.ord.k!=='home')&&!p.pu&&!p.dy&&!(p.off&&p.off.tag!=='back')&&(p.inside||!tfSeen(p.x,p.z,1)));if(p)tfDrop(p)}
+    else if(walkers.length>wantP){const p=walkers.find(p=>!p.go&&!p.goTo&&!(p.ord&&p.ord.k!=='home')&&!p.pu&&!p.dy&&!p.tg&&!(p.off&&p.off.tag!=='back')&&(p.inside||!tfSeen(p.x,p.z,1)));if(p)tfDrop(p)}
     if(tf.carsOk&&tf.drive.reduce((n,c)=>n+(c.st==='park'?0.5:1),0)<wantC&&Object.keys(tf.cars).length>=3&&Math.random()<0.5)tfSpawnCar()}
   for(const c of tf.drive.slice())tfCarStep(c,dt);
   tfRunOver(dt);

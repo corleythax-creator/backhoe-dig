@@ -12,9 +12,9 @@
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 
 const DY_KEEP=8;
-const DY={d:{},op:{},plans:[],t:0,dirty:false,saveT:0};
-try{const v=JSON.parse(localStorage.getItem('bhd_days')||'null');if(v){DY.d=v.d||{};DY.op=v.op||{};DY.plans=v.plans||[]}}catch(e){}
-function dySave(){if(!DY.dirty||window.syncHold)return;DY.dirty=false;try{localStorage.setItem('bhd_days',JSON.stringify({v:1,d:DY.d,op:DY.op,plans:DY.plans}))}catch(e){}}
+const DY={d:{},op:{},plans:[],n:{},t:0,dirty:false,saveT:0,inGossip:false};
+try{const v=JSON.parse(localStorage.getItem('bhd_days')||'null');if(v){DY.d=v.d||{};DY.op=v.op||{};DY.n=v.n||{};DY.plans=(v.plans||[]).map(P=>P.m?P:Object.assign(P,{m:[P.a,P.b]}))}}catch(e){}
+function dySave(){if(!DY.dirty||window.syncHold)return;DY.dirty=false;try{localStorage.setItem('bhd_days',JSON.stringify({v:1,d:DY.d,op:DY.op,n:DY.n,plans:DY.plans}))}catch(e){}}
 // a look's name (someone not in town now too): the card Human Forge's runtime would make for them
 function dyName(id){const p=tf.people.find(q=>tfWho(q)===id);if(p)return talkName(p);const it=TALK.lib&&TALK.lib['island_'+id];
   if(!it||!window.HumanForgeMind)return 'a friend';const c=HumanForgeMind.card(typeof lifeItem==='function'?lifeItem(it,id):it);return c&&c.name||'a friend'}
@@ -32,48 +32,79 @@ function dyDid(p){const L=DY.d[tfWho(p)];if(!L||!L.length)return '';const n=dyNo
   const when=(d,h)=>{const a=n.day-d;return a<=0?(h<12?'this morning':h<17?'this afternoon':'this evening'):a===1?(h<17?'yesterday':'last night'):'the other day'};
   return L.slice(-3).reverse().map(e=>when(e[0],e[1])+' '+e[3]).join('; ')}
 // for a model (talk.js talkScene)
-function dyScene(p,n){const did=dyDid(p),id=tfWho(p),P=DY.plans.find(x=>x.st==='set'&&(x.a===id||x.b===id));let t='';
-  if(did)t+=`Lately ${n} ${did}.`;if(P){const o=P.a===id?P.b:P.a;t+=`${t?' ':''}${n} has plans to meet ${dyName(o)} at ${P.n} around ${dyClock(P.h)}.`}return t}
+function dyScene(p,n){const did=dyDid(p),id=tfWho(p),P=DY.plans.find(x=>x.st==='set'&&x.m.includes(id)),N=(DY.n[id]||[]).slice(-2);let t='';
+  if(did)t+=`Lately ${n} ${did}.`;
+  if(P)t+=`${t?' ':''}${n} has plans to meet ${dyNames(P.m.filter(x=>x!==id))} at ${P.n} around ${dyClock(P.h)}${P.you?', and invited the user along':''}.`;
+  if(N.length)t+=`${t?' ':''}${n} has heard that ${N.map(e=>dyName(e[0])+' '+e[1]).join(', and that ')}.`;return t}
 const dyClock=h=>{const hh=Math.floor(h);return `${hh%12||12}${h%1>=0.5?':30':''} ${hh<12||hh===24?'AM':'PM'}`};
 
 // ---------- plans ----------
+// names in a line: 'Cal', 'Cal and Amber', 'Cal, Amber and Walt' (first names)
+const dyNames=ids=>{const f=ids.map(i=>dyName(i).split(' ')[0]);return f.length<2?f[0]||'':f.slice(0,-1).join(', ')+' and '+f[f.length-1]};
+// how two looks get on, whether or not they are in town (bonds.js)
+const dyBond=(a,b)=>bdOf({body:a,tw:0},{body:b,tw:0});
 // where to meet at hour h: the front of a place open then for it (a pub or grill in the evening, somewhere to eat at
 // lunch), the one they like best, else the green
-function dyWhere(p,q,h){const kinds=h<15?['meal','am']:['pm','meal'];let b=null,bs=-1e9;
+function dyWhere(ids,h){const kinds=h<15?['meal','am']:['pm','meal'];let b=null,bs=-1e9;
   for(const R of TF_ROOMS){if(R.home||R.grp||R.si==null)continue;tfShopW(R);if(!kinds.includes(R.vk)||!townRoomOpen(R,h))continue;const E=R.ent||tfEnt(R);if(!E||!E.w)continue;
-    const s=dyRate(p,R)+dyRate(q,R)+Math.random()*0.3;if(s>bs){bs=s;b={x:E.wx+E.ux*1.5,z:E.wz+E.uz*1.5,n:townShopName(R)}}}
+    const s=ids.reduce((t,id)=>t+dyRate({body:id,tw:0},R),0)+Math.random()*0.3;if(s>bs){bs=s;b={x:E.wx+E.ux*1.8,z:E.wz+E.uz*1.8,n:townShopName(R)}}}
   if(b)return b;const S=SQ;return {x:(S.gx0+S.gx1)/2,z:(S.gz0+S.gz1)/2,n:'Harbor Square'}}
-// two friends talking by day may make a plan (bonds.js bdChat)
-function dyPlan(p,q){if(p.tw||q.tw||Math.random()>TU.dyPlan)return;const a=tfWho(p),b=tfWho(q),h=townHour();
-  if(DY.plans.some(x=>x.st==='set'&&[x.a,x.b].some(i=>i===a||i===b)))return;
-  const at=h<10.5?12.5:h>=8&&h<17?18.5+Math.floor(Math.random()*5)/2:null;if(at==null)return;
-  const w=dyWhere(p,q,at);DY.plans.push({a,b,day:fuelDayNo(),h:at,x:+w.x.toFixed(1),z:+w.z.toFixed(1),n:w.n,st:'set',in:[]});DY.dirty=true;
-  bdSay(p,'dy_plan',{place:w.n,time:dyClock(at)});setTimeout(()=>{if(tf.people.includes(q))bdSay(q,'dy_planYes',{name:talkName(p).split(' ')[0]})},1600)}
+const dyBusy=id=>DY.plans.some(x=>x.st==='set'&&x.m.includes(id));
+// two friends talking by day may make a plan (bonds.js bdChat), and bring in friends of theirs (TU.dyGroup more at most)
+function dyPlan(p,q){if(p.tw||q.tw||Math.random()>TU.dyPlan)return;const a=tfWho(p),b=tfWho(q),h=townHour();if(dyBusy(a)||dyBusy(b))return;
+  const at=h<10.5?12.5:h>=8&&h<17?18.5+Math.floor(Math.random()*5)/2:null;if(at==null)return;const m=[a,b];
+  const looks=(tf.chars||[]).filter(c=>c.body!=='k'&&TALK.lib['island_'+c.id]&&!m.includes(c.id)&&!dyBusy(c.id)).map(c=>c.id).sort(()=>Math.random()-0.5);
+  for(const id of looks){if(m.length>=2+TU.dyGroup)break;const bs=m.map(x=>dyBond(x,id));if(Math.max(...bs)>0.4&&Math.min(...bs)>-0.2&&Math.random()<0.6)m.push(id)}
+  const w=dyWhere(m,at);DY.plans.push({m,day:fuelDayNo(),h:at,x:+w.x.toFixed(1),z:+w.z.toFixed(1),n:w.n,st:'set'});DY.dirty=true;
+  bdSay(p,m.length>2?'dy_planGroup':'dy_plan',{place:w.n,time:dyClock(at),who:dyNames(m.slice(2))});setTimeout(()=>{if(tf.people.includes(q))bdSay(q,'dy_planYes',{name:talkName(p).split(' ')[0]})},1600)}
 // tfLook's lean (townfolk.js): lower draws them. Someone with a plan coming up, or under way, is likely to be in town
-function dyScore(id){const n=dyNow();for(const P of DY.plans)if(P.st==='set'&&(P.a===id||P.b===id)&&P.day===n.day&&n.h>P.h-1&&n.h<P.h+1.5)return -2.5;return 0}
-// going: off the walks to the spot, a step apart; once there they wait facing it
-function dyGo(p,P){const k=P.a===tfWho(p)?1:-1;if(p.pu)puEnd(p);p.nd=null;
-  if(roGo(p,P.x+k*0.7,P.z,{near:0.5,tag:'dy',max:500,then:q=>{q.dy.here=1;q.look=Math.atan2(P.x-q.x,P.z-q.z);q.wait=2},fail:q=>{q.dy=null;roJoin(q)}}))p.dy={P,here:0}}
+function dyScore(id){const n=dyNow();for(const P of DY.plans)if(P.st!=='missed'&&P.m.includes(id)&&P.day===n.day&&n.h>P.h-1&&n.h<P.h+1.5)return -2.5;return 0}
+// a member's place in the ring round the spot
+function dySpot(P,id){const i=P.m.indexOf(id),n=P.m.length,a=i/n*Math.PI*2,r=0.7+0.18*n;return [P.x+Math.sin(a)*r,P.z+Math.cos(a)*r]}
+// going: off the walks to their place in the ring; once there they wait facing the middle
+function dyGo(p,P){const [x,z]=dySpot(P,tfWho(p));if(p.pu)puEnd(p);p.nd=null;p.tg=null;
+  if(roGo(p,x,z,{near:0.4,tag:'dy',max:500,then:q=>{q.dy.here=1;q.look=Math.atan2(P.x-q.x,P.z-q.z);q.wait=2},fail:q=>{q.dy=null;roJoin(q)}}))p.dy={P,here:0}}
 // what they are doing about it (talk.js talkNow)
-function dyDoing(p){const o=p.dy;if(!o)return '';const id=tfWho(p),other=dyName(o.P.a===id?o.P.b:o.P.a);
-  return o.met?`out with ${other} at ${o.P.n}`:o.here?`waiting for ${other} at ${o.P.n}`:`on my way to meet ${other} at ${o.P.n}`}
-// once a second: plans coming due, people heading off, meeting, a friend who never came
+function dyDoing(p){const o=p.dy;if(!o)return '';const w=dyNames(o.P.m.filter(x=>x!==tfWho(p)));
+  return o.met?`out with ${w} at ${o.P.n}`:o.here?`waiting for ${w} at ${o.P.n}`:`on my way to meet ${w} at ${o.P.n}`}
+// you talk to someone with a plan today who likes you (talk.js talkOpen): they may ask you along
+function dyInvite(p){const id=tfWho(p),P=DY.plans.find(x=>x.st==='set'&&x.m.includes(id)&&!x.asked),n=dyNow();if(!P||P.day!==n.day||n.h>P.h)return;
+  P.asked=1;DY.dirty=true;if(repOpinion(id)<5&&!(typeof fmKnown==='function'&&fmKnown(p))||Math.random()>TU.dyInvite)return;P.you=1;
+  setTimeout(()=>{if(tf.people.includes(p))talkShow(p,{say:say('dy_invite',{place:P.n,time:dyClock(P.h),who:dyNames(P.m.filter(x=>x!==id))})},'you',null)},1800)}
+// once a second: plans coming due, people heading off, meeting, late ones joining, those who never came
 function dyTick(dt){if(!TALK.lib)return;if((DY.t+=dt)<1)return;DY.t=0;const n=dyNow();
-  for(const P of DY.plans){if(P.st!=='set')continue;const late=n.day>P.day||n.h>P.h+1.5,due=n.day===P.day&&n.h>=P.h-0.5;
-    const ps=tf.on?[P.a,P.b].map(id=>tf.people.find(q=>tfWho(q)===id&&!q.dead&&!q.hurt&&!q.drv&&!q.cop)||null):[null,null];
-    if(due&&!late)for(const p of ps)if(p&&!p.dy&&!p.ord&&!p.room&&!p.go&&!p.goTo&&!(p.flee>0)&&!p.path)dyGo(p,P);
-    const [pa,pb]=ps,ha=pa&&pa.dy&&pa.dy.P===P&&pa.dy.here,hb=pb&&pb.dy&&pb.dy.P===P&&pb.dy.here;
-    if(ha&&hb&&!pa.dy.met){P.st='kept';DY.dirty=true;for(const [p,q] of [[pa,pb],[pb,pa]]){p.dy.met=1;p.look=Math.atan2(q.x-p.x,q.z-p.z);p.wait=50+Math.random()*40;bdAdd(p,q,0.04);dyNote(p,'met',`met ${talkName(q)} at ${P.n}`,0.6)}
-      bdSay(pb,'dy_meet',{name:talkName(pa).split(' ')[0]})}
-    else if(late){const one=ha?pa:hb?pb:null;
-      if(one){P.st='missed';const other=one===pa?P.b:P.a;dyNote(one,'stood',`waited for ${dyName(other)} at ${P.n}, but they never came`,-0.5);
-        const L=BD.l[bdKey(P.a,P.b)]||(BD.l[bdKey(P.a,P.b)]=[0,0]);L[0]=Math.max(-1,L[0]-0.08);BD.dirty=true;bdSay(one,'dy_stood',{name:dyName(other).split(' ')[0]});one.dy=null;roBack(one)}
-      else{// both elsewhere: they met (or didn't) where nobody saw
-        P.st=Math.random()<0.7?'kept':'missed';if(P.st==='kept'){dyNote(P.a,'met',`met ${dyName(P.b)} at ${P.n}`,0.6);dyNote(P.b,'met',`met ${dyName(P.a)} at ${P.n}`,0.6)}
-        for(const p of ps)if(p&&p.dy&&p.dy.P===P){p.dy=null;roBack(p)}}
-      DY.dirty=true}}
+  for(const P of DY.plans){if(P.st==='missed'||P.st==='done')continue;const late=n.day>P.day||n.h>P.h+1.5,due=n.day===P.day&&n.h>=P.h-0.5;
+    const ps=tf.on?P.m.map(id=>tf.people.find(q=>tfWho(q)===id&&!q.dead&&!q.hurt&&!q.drv&&!q.cop)||null):P.m.map(()=>null);
+    if(due&&!late)for(const p of ps)if(p&&!p.dy&&!p.ord&&!p.room&&!p.go&&!p.goTo&&!(p.flee>0)&&!p.path&&!(P.st==='kept'&&p.dyDone===P))dyGo(p,P);
+    const here=ps.filter(p=>p&&p.dy&&p.dy.P===P&&p.dy.here);
+    // met: the first two there, then each who comes after
+    if(here.length>=2)for(const p of here){if(p.dy.met)continue;p.dy.met=1;p.look=Math.atan2(P.x-p.x,P.z-p.z);p.wait=60+Math.random()*60;
+      const with_=here.filter(q=>q!==p);for(const q of with_)bdAdd(p,q,0.03);dyNote(p,'met',`met ${dyNames(with_.map(q=>tfWho(q)))} at ${P.n}`,0.6);
+      if(P.st==='set'){P.st='kept';DY.dirty=true;bdSay(p,'dy_meet',{name:talkName(with_[0]).split(' ')[0]})}
+      // you came along
+      if(P.you&&!P.youHi&&mode==='walk'&&Math.hypot(wk.x-P.x,wk.z-P.z)<15){P.youHi=1;talkFace(p,3);talkShow(p,{say:say('dy_youCame')},'you',null);repDeed('kind',P.m);for(const q of here)dyNote(q,'you','the newcomer from the island came along',0.5)}}
+    if(late){if(P.st==='set'){const one=here[0];
+        if(one){P.st='missed';const others=P.m.filter(x=>x!==tfWho(one));dyNote(one,'stood',P.m.length>2?`waited at ${P.n}, but nobody else turned up`:`waited for ${dyName(others[0])} at ${P.n}, but they never came`,-0.5);
+          if(P.m.length===2){const L=BD.l[bdKey(P.m[0],P.m[1])]||(BD.l[bdKey(P.m[0],P.m[1])]=[0,0]);L[0]=Math.max(-1,L[0]-0.08);BD.dirty=true}
+          bdSay(one,'dy_stood',{name:dyNames(others)});one.dy=null;roBack(one)}
+        else{// all elsewhere: they met (or didn't) where nobody saw
+          P.st=Math.random()<0.7?'kept':'missed';if(P.st==='kept')for(const id of P.m)dyNote(id,'met',`met ${dyNames(P.m.filter(x=>x!==id))} at ${P.n}`,0.6)}}
+      if(P.st==='kept')P.st='done';for(const p of ps)if(p&&p.dy&&p.dy.P===P&&!p.dy.met){p.dy=null;roBack(p)}DY.dirty=true}}
   // done together: back to their evening
-  for(const p of tf.people)if(p.dy&&(p.dy.met&&!(p.wait>0)||p.dead||p.hurt||p.ord||p.flee>0)){const was=p.dy;p.dy=null;if(p.off&&!p.ord)roBack(p);if(was.met&&!p.ord)p.ndNext=0}
-  DY.plans=DY.plans.filter(P=>P.st==='set'||n.day-P.day<2);
+  for(const p of tf.people)if(p.dy&&(p.dy.met&&!(p.wait>0)||p.dead||p.hurt||p.ord||p.flee>0)){const was=p.dy;p.dy=null;p.dyDone=was.P;if(p.off&&!p.ord)roBack(p);if(was.met&&!p.ord)p.ndNext=0}
+  DY.plans=DY.plans.filter(P=>P.st==='set'||P.st==='kept'||n.day-P.day<2);
   if((DY.saveT+=1)>=10){DY.saveT=0;dySave();if(typeof ndSave==='function')ndSave()}}
+
+// ---------- gossip ----------
+// what is worth passing on: who stood whom up, who fell out, who met, a catch or a painting show
+const DY_NEWS=['stood','spat','met','pu','you'];
+// two talking (bonds.js bdChat): now and then one passes on news, their own or what they heard, about anyone but the
+// other; the other knows it now (DY.n, the last 10 each) and can pass it on. Said aloud near you (WORDS 'Town: gossip')
+function dyGossip(p,q){if(DY.inGossip||Math.random()>TU.dyGossip)return;const a=tfWho(p),b=tfWho(q),n=dyNow(),heard=DY.n[b]||(DY.n[b]=[]);
+  const knows=(about,txt)=>about===b||heard.some(e=>e[0]===about&&e[1]===txt);
+  const own=(DY.d[a]||[]).filter(e=>DY_NEWS.includes(e[2])&&n.day-e[0]<=2&&!knows(a,e[3])&&!e[3].includes(talkName(q))).map(e=>[a,e[3]]);
+  const told=(DY.n[a]||[]).filter(e=>n.day-e[2]<=3&&!knows(e[0],e[1])).map(e=>[e[0],e[1]]);
+  const L=[...own,...told];if(!L.length)return;const [about,txt]=L[(Math.random()*L.length)|0];
+  heard.push([about,txt,n.day]);if(heard.length>10)heard.shift();DY.dirty=true;
+  DY.inGossip=true;try{bdSay(p,about===a?'gs_own':'gs_tell',{name:dyName(about).split(' ')[0],what:txt})}finally{DY.inGossip=false}}
 addEventListener('pagehide',()=>{dySave();if(typeof ndSave==='function')ndSave()});
