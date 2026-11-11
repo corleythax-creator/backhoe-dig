@@ -24,7 +24,7 @@ const PU_KINDS={
     doing:'out looking at the stars',go:'going out to see the stars',goal:r=>`see a shooting star${r.s?` (seen ${r.s})`:' this year'}`}};
 const PU={rec:{},who:new Map(),t:0,lastStart:0,spots:null,sig:NaN,dirty:false,saveT:0};
 try{const v=JSON.parse(localStorage.getItem('bhd_pursuits')||'null');if(v&&v.rec)PU.rec=v.rec}catch(e){}
-function puSave(){if(!PU.dirty)return;PU.dirty=false;try{localStorage.setItem('bhd_pursuits',JSON.stringify({v:1,rec:PU.rec}))}catch(e){}}
+function puSave(){if(!PU.dirty||window.syncHold)return;PU.dirty=false;try{localStorage.setItem('bhd_pursuits',JSON.stringify({v:1,rec:PU.rec}))}catch(e){}}
 const puH=s=>{let h=2166136261;for(const c of String(s))h=Math.imul(h^c.charCodeAt(0),16777619)>>>0;return h/4294967296};
 
 // whose pursuit is which (null: none), by their personality; the same every time
@@ -72,11 +72,14 @@ function puArrive(p){const u=p.pu;if(!u)return;const K=PU_KINDS[u.k];u.m+=Math.h
 // done: what came of it, kept, and said
 function puFinish(p){const u=p.pu;if(!u)return;if(typeof ndOf==='function'){const n=ndOf(p);n.u=0.05;if(u.k==='fit')n.e=Math.min(1,n.e+0.1)}const r=puRec(p),day=fuelDayNo();r.n=(r.n||0)+1;r.t=day;r.k=u.k;PU.dirty=true;
   if(u.k==='fish'){const c=Math.random()<0.35?0:1+Math.floor(Math.random()*3);let big=0;for(let i=0;i<c;i++)big=Math.max(big,+(1+Math.random()**2*(Math.random()<0.08?13:8)).toFixed(1));
-    r.c=(r.c||0)+c;r.last=c;const rec=big>(r.b||0);if(big)r.b=Math.max(r.b||0,big);puSay(p,c?rec&&big>=10?'pu_fishRecord':'pu_fishGot':'pu_fishNone',{n:c,lb:big})}
+    r.c=(r.c||0)+c;r.last=c;r.lastB=big;const rec=big>(r.b||0);if(big)r.b=Math.max(r.b||0,big);puSay(p,c?rec&&big>=10?'pu_fishRecord':'pu_fishGot':'pu_fishNone',{n:c,lb:big})}
   else if(u.k==='paint'){r.c=(r.c||0)+1;puSay(p,r.c===12||r.c===24?'pu_paintShow':'pu_paintDone',{n:r.c})}
   else if(u.k==='fit'){r.m=(r.m||0)+u.m;puSay(p,'pu_fitDone',{mi:(u.m/1609).toFixed(1)})}
-  else if(u.k==='stars'){const s=Math.random()<0.18;if(s)r.s=(r.s||0)+1;puSay(p,s?'pu_starsSaw':'pu_starsDone')}
+  else if(u.k==='stars'){const s=Math.random()<0.18;if(s){r.s=(r.s||0)+1;u.saw=1}puSay(p,s?'pu_starsSaw':'pu_starsDone')}
   else if(u.k==='meet'){r.c=(r.c||0)+1;talkFace(p,6);puSay(p,r.c>1?'pu_meetAgain':'pu_meetHi');if(typeof fmIntro==='function')fmIntro(tfWho(p))}
+  if(typeof dyNote==='function'){const r2=PU.rec[tfWho(p)]||{};dyNote(p,'pu',{fish:`went fishing and caught ${r2.last?`${r2.last} (the biggest ${r2.lastB} lb)`:'nothing'}`,
+    paint:`painted the lake (that's ${r2.c} paintings now)`,fit:`went on a ${u.run?'run':'fitness walk'}, ${(u.m/1609).toFixed(1)} miles`,stars:r2.s&&u.saw?'saw a shooting star':'went out to look at the stars',
+    meet:'went over and said hello to the newcomer from the island'}[u.k]||'',0.4)}
   p.pu=null;p.puNext=performance.now()/1000+TU.puGap*(0.7+Math.random()*0.8);if(p.off&&u.k!=='meet')roBack(p)}
 // dropped (told something else, scared off)
 function puEnd(p){if(!p.pu)return;p.pu=null;p.puNext=performance.now()/1000+TU.puGap}

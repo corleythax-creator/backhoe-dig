@@ -14,6 +14,10 @@
 // per game hour: f hungry, d thirsty, e tired, u bored, c lonely
 const ND_RATE={f:0.15,d:0.17,e:0.05,u:0.13,c:0.09};
 const ND={who:new Map(),t:0};
+// saved (bhd_needs, synced with the rest of the town's memory): each one's needs and the game hour they were at
+try{const v=JSON.parse(localStorage.getItem('bhd_needs')||'null');if(v&&v.w)for(const k in v.w)ND.who.set(k,v.w[k])}catch(e){}
+function ndSave(){if(window.syncHold)return;const w={};for(const [k,n] of ND.who)w[k]={f:+n.f.toFixed(3),d:+n.d.toFixed(3),e:+n.e.toFixed(3),u:+n.u.toFixed(3),c:+n.c.toFixed(3),gh:+n.gh.toFixed(3),j:+(n.j||0).toFixed(3)};
+  try{localStorage.setItem('bhd_needs',JSON.stringify({v:1,w}))}catch(e){}}
 const ndCl=v=>Math.max(0,Math.min(1,v)),ndGH=()=>dn.t/3.6e6;
 function ndOf(p){const id=tfWho(p),gh=ndGH(),h=townHour();let n=ND.who.get(id);
   if(!n){const j=k=>(puH(id+k)-0.5)*0.3,meal=Math.max(...[7.5,12.5,18.5].map(a=>Math.max(0,1-Math.abs(h-a)/1.5)));
@@ -26,7 +30,7 @@ function ndOf(p){const id=tfWho(p),gh=ndGH(),h=townHour();let n=ND.who.get(id);
 // eased: by a place they are in (its kind), talking, an errand
 function ndRoom(p,R){const n=ndOf(p),k=R.home?'home':R.grp?'grp':(tfShopW(R),R.vk);
   const E={meal:{f:-0.75,d:-0.4,u:-0.2},am:{d:-0.6,f:-0.25,e:-0.1},treat:{f:-0.3,u:-0.25},pm:{d:-0.6,f:-0.2,c:-0.35,u:-0.3},day:{u:-0.35},grp:{c:-0.4,u:-0.2},home:{e:-0.4,f:-0.3,d:-0.3}}[k]||{u:-0.2};
-  for(const x in E)n[x]=ndCl(n[x]+E[x])}
+  for(const x in E)n[x]=ndCl(n[x]+E[x]);if(typeof dyVisit==='function')dyVisit(p,R,k)}
 function ndChat(p){const n=ndOf(p);n.c=ndCl(n.c-0.15);n.u=ndCl(n.u-0.08)}
 function ndErr(p,k){const n=ndOf(p);if(k==='town_square'){n.u=ndCl(n.u-0.25);n.c=ndCl(n.c-0.1);n.e=ndCl(n.e-0.2)}else if(k==='town_shop'||k==='town_stroll')n.u=ndCl(n.u-0.3)}
 // for Human Forge's runtime (talk.js talkNow): its needs' names
@@ -35,7 +39,7 @@ function ndNeeds(p){const n=ndOf(p);return {hunger:n.f,thirst:n.d,energy:n.e,fun
 // ---------- acting on it ----------
 // the nearest place open now of these kinds, with a way in: its entrance on the walks (townfolk.js tfEnt)
 function ndPlace(p,kinds){let b=null,bd=260;for(const R of TF_ROOMS){if(R.home||R.grp||R.si==null)continue;tfShopW(R);if(!kinds.includes(R.vk)||!townRoomOpen(R))continue;
-    const E=R.ent||tfEnt(R);if(!E||!E.w)continue;const d=Math.hypot(E.wx-p.x,E.wz-p.z);if(d<bd){bd=d;b=E}}return b}
+    const E=R.ent||tfEnt(R);if(!E||!E.w)continue;const r=typeof dyRate==='function'?dyRate(p,R):0;if(r<-0.4)continue;const d=Math.hypot(E.wx-p.x,E.wz-p.z)-r*80;if(d<bd){bd=d;b=E}}return b}
 // off to a place's entrance along the walks
 function ndGo(p,E,k){p.nd={k,R:E.R,t:240};p.wait=0;p.goal=null;
   if(p.w===E.w){p.dir=E.s>=p.s?1:-1;return}
@@ -53,7 +57,7 @@ function ndAct(p){const n=ndOf(p),h=townHour(),late=h>=21.5||h<5.5;
       if(h>=7&&h<21){talkErrand(p,'town_store',null);if(p.goal){p.nd={k:'eat',t:240};return true}}}
     else if(k==='d'){const E=ndPlace(p,h>=16?['pm','am']:['am','pm']);if(E){ndGo(p,E,'drink');return true}}
     else if(k==='e'){if(late||n.e>0.85){const R=ordHomeFront(p);
-        if(R&&roGo(p,R[0],R[1],{near:1.2,tag:'nd',max:600,then:q=>{q.nd=null;tfDrop(q)},fail:q=>{q.nd=null;roJoin(q)}})){p.nd={k:'bed',t:700};return true}}
+        if(R&&roGo(p,R[0],R[1],{near:1.2,tag:'nd',max:600,then:q=>{q.nd=null;if(typeof dyNote==='function')dyNote(q,'bed','went home early, worn out',-0.1);tfDrop(q)},fail:q=>{q.nd=null;roJoin(q)}})){p.nd={k:'bed',t:700};return true}}
       else{talkErrand(p,'town_square',null);if(p.goal){p.nd={k:'rest',t:240};return true}}}
     else if(k==='c'){const q=typeof bdFriend==='function'?bdFriend(p,90):null;if(q){talkErrand(p,'company',q);if(p.goal){p.nd={k:'friend',q,t:240};return true}}
       talkErrand(p,h>=16&&h<23.5?'town_beer':'town_square',null);if(p.goal){p.nd={k:'people',t:240};return true}}
@@ -69,5 +73,5 @@ function ndTick(dt){if(!tf.on||!TALK.lib)return;if((ND.t+=dt)<1)return;const t=N
   for(const p of tf.people){if(talkKid(p)||!talkCard(p))continue;
     if(p.room&&p.ndR!==p.room){p.ndR=p.room;ndRoom(p,p.room)}else if(!p.room)p.ndR=null;
     if(p.nd){p.nd.t-=t;if(p.nd.t<=0||p.dead||p.hurt||p.ord||p.flee>0||p.nd.k!=='bed'&&!p.goal&&!p.off&&!p.nd.R)p.nd=null;continue}
-    if(acts>=2||p.pu||p.ord||!talkErrFree(p)||now<(p.ndNext||0))continue;
+    if(acts>=2||p.pu||p.ord||p.dy||!talkErrFree(p)||now<(p.ndNext||0))continue;
     p.ndNext=now+8+Math.random()*12;if(ndAct(p))acts++}}

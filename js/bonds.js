@@ -11,7 +11,7 @@
 
 const BD={l:{},t:0,dirty:false,met:new Map(),day:null,base:new Map()};
 try{const v=JSON.parse(localStorage.getItem('bhd_bonds')||'null');if(v&&v.l){BD.l=v.l;BD.day=v.day}}catch(e){}
-function bdSave(){if(!BD.dirty)return;BD.dirty=false;try{localStorage.setItem('bhd_bonds',JSON.stringify({v:1,l:BD.l,day:BD.day}))}catch(e){}}
+function bdSave(){if(!BD.dirty||window.syncHold)return;BD.dirty=false;try{localStorage.setItem('bhd_bonds',JSON.stringify({v:1,l:BD.l,day:BD.day}))}catch(e){}}
 const bdKey=(a,b)=>a<b?a+'|'+b:b+'|'+a;
 const BD_EDGE=['grumpy','sarcastic','proud'],BD_SOFT=['warm','kind','cheerful'];
 // where a pair starts, by who they are (worked out once a pair)
@@ -33,9 +33,10 @@ function bdChat(p,q,a){if(!q||typeof q!=='object'||q===p||!tf.people.includes(q)
   bdAdd(p,q,0.02+same*0.01-(cross?0.05:0));if(typeof ndChat==='function'){ndChat(p);ndChat(q)}
   const b=bdOf(p,q),k=bdKey(tfWho(p),tfWho(q)),now=performance.now()/1000;
   if(b<-0.25&&Math.random()<0.12&&now-(BD.met.get(k+'spat')||-1e9)>300){BD.met.set(k+'spat',now);bdAdd(p,q,-0.12);
-    if(TALK.M)TALK.M.remember(p,q,'rude');bdSay(p,'bd_spat',{name:talkName(q)});
+    if(TALK.M)TALK.M.remember(p,q,'rude');bdSay(p,'bd_spat',{name:talkName(q)});if(typeof dyNote==='function'){dyNote(p,'spat',`fell out with ${talkName(q)}`,-0.6);dyNote(q,'spat',`had words with ${talkName(p)}`,-0.6)}
     for(const [r,s] of [[p,q],[q,p]])if(!r.room){r.wait=Math.max(r.wait||0,1.5);r.look=Math.atan2(r.x-s.x,r.z-s.z)}}
-  else if(b>0.5&&Math.random()<0.04&&TALK.M)TALK.M.remember(p,q,'kind')}
+  else{if(b>0.5&&Math.random()<0.04&&TALK.M)TALK.M.remember(p,q,'kind');
+    if(b>0.4&&typeof dyPlan==='function'){const day=fuelDayNo(),gk=k+'talk';if(BD.met.get(gk)!==day){BD.met.set(gk,day);dyNote(p,'talk',`had a good talk with ${talkName(q)}`,0.4)}dyPlan(p,q)}}}
 // the best friend about within r of p (someone free to be found), or null
 function bdFriend(p,r){let b=null,bv=0.3;for(const q of tf.people){if(q===p||talkKid(q)||!talkCard(q)||q.drv||q.inside||q.dead||q.hurt)continue;
     const d=Math.hypot(q.x-p.x,q.z-p.z);if(d>r)continue;const v=bdOf(p,q)-d/400;if(v>bv){bv=v;b=q}}return b}

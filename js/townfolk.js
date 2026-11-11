@@ -252,7 +252,7 @@ function tfCarPaint(u){const W=TF_PAINT.reduce((n,p)=>n+p[2],0);let r=(u??Math.r
 // never one the owner left out (TU.tfOut, a bit per character), unless every one is; a driver is never a child; leaning
 // to whoever their day has there (lifeScore, lives.js: staff in their hours, residents at home, the rest out)
 function tfOff(i){const m=TU.tfOut||0;return i<32&&Math.floor(m/2**i)%2===1}
-function tfLook(adult,o){const C=tf.chars,all=C.every((c,i)=>tfOff(i));let best=0,bs=1e9;for(let i=0;i<C.length;i++){if(!all&&tfOff(i)||adult&&C[i].body==='k'&&C.some(c=>c.body!=='k'))continue;const sc=tf.use[i]*(C[i].body==='k'?3:1)+Math.random()*0.9+(typeof lifeScore==='function'?lifeScore(C[i].id,o):0);if(sc<bs){bs=sc;best=i}}
+function tfLook(adult,o){const C=tf.chars,all=C.every((c,i)=>tfOff(i));let best=0,bs=1e9;for(let i=0;i<C.length;i++){if(!all&&tfOff(i)||adult&&C[i].body==='k'&&C.some(c=>c.body!=='k'))continue;const sc=tf.use[i]*(C[i].body==='k'?3:1)+Math.random()*0.9+(typeof lifeScore==='function'?lifeScore(C[i].id,o):0)+(typeof dyScore==='function'?dyScore(C[i].id):0);if(sc<bs){bs=sc;best=i}}
   const c=C[best];tf.use[best]++;return {ci:best,body:c.id,sc:0.97+Math.random()*0.06,g:0}}
 function tfPerson(o){const p=Object.assign(tfLook(o&&o.drv,o),{x:0,z:0,y:0,yaw:0,ph:Math.random()*6,amp:0,spd:0,vt:TU.tfWalk*(0.82+Math.random()*0.32),side:0.32,wait:0,inside:0,blk:0,look:0},o);
   p.y=baseHeight(p.x,p.z)+tfLift(p.x,p.z);tfTwin(p);tf.people.push(p);return p}
@@ -700,7 +700,7 @@ function tfTick(dt){if(!tf.q){if(tf.on)tfShow(false);return}tfPrep(dt);
   if(!tf.on){tfShow(true);while(walkers.length<wantP){const p=tfSpawnWalker(true);if(!p)break;walkers.push(p)}}
   tf.spawnT-=dt;if(tf.spawnT<=0){tf.spawnT=1.5+Math.random()*2;
     if(walkers.length<wantP)tfSpawnWalker(false);
-    else if(walkers.length>wantP){const p=walkers.find(p=>!p.go&&!p.goTo&&!(p.ord&&p.ord.k!=='home')&&!p.pu&&!(p.off&&p.off.tag!=='back')&&(p.inside||!tfSeen(p.x,p.z,1)));if(p)tfDrop(p)}
+    else if(walkers.length>wantP){const p=walkers.find(p=>!p.go&&!p.goTo&&!(p.ord&&p.ord.k!=='home')&&!p.pu&&!p.dy&&!(p.off&&p.off.tag!=='back')&&(p.inside||!tfSeen(p.x,p.z,1)));if(p)tfDrop(p)}
     if(tf.carsOk&&tf.drive.reduce((n,c)=>n+(c.st==='park'?0.5:1),0)<wantC&&Object.keys(tf.cars).length>=3&&Math.random()<0.5)tfSpawnCar()}
   for(const c of tf.drive.slice())tfCarStep(c,dt);
   tfRunOver(dt);

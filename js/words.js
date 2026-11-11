@@ -252,6 +252,9 @@ const WORDS=[
   // how they get on (bonds.js): friends passing, a falling-out, a snub ({name}: the other one)
   ['bd_hi','Town: bonds',"{name}! Good to see you.",'{name}: their friend'],['bd_spat','Town: bonds',"You know what, {name}? Forget it.",'{name}: who they fell out with'],
   ['bd_snub','Town: bonds',"Hmph. {name}.",'{name}: who they can\'t stand'],
+  // plans between friends (days.js): making one, meeting, a friend who never came
+  ['dy_plan','Town: plans',"Want to meet at {place} around {time}?",'{place}, {time}: where and when'],['dy_planYes','Town: plans',"It's a date, {name}.",'{name}: who asked'],
+  ['dy_meet','Town: plans',"There you are, {name}!",'{name}: who they meet'],['dy_stood','Town: plans',"Guess {name} isn't coming.",'{name}: who never came'],
   ['tkAll','Town: talk','Everyone',''],['tkWithAll','Town: talk','Talking to everyone here ({n})','{n}: how many are listening'],['tkSayAll','Town: talk','Say something to everyone',''],
   ['tkPlayer','Town: talk','Corley','What the townsfolk call you'],
   ['tkWeather','Town: talk','Nice enough day for it. Whatever it is you\'re digging.',''],['tkRain','Town: talk','This rain. Good for the lawns, bad for your dirt, I\'d guess.',''],

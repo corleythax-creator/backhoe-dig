@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Tuesday, November 10, 2026
 
+- **v400** (6:13 PM) Friends make plans to meet (lunch somewhere, an evening at a pub or grill) and turn up; no-shows are remembered. Townsfolk keep a diary of their days (where they ate and if they liked it, meetings, fallings-out, pursuits) and tell you about it, and go back to places they like. Needs, diaries, plans, friendships and pursuits are saved and synced.
 - **v399** (5:52 PM) Townsfolk walk anywhere in town (lawns, the beach, the pier, up to you), get hungry, thirsty, tired, bored and lonely and do something about it (eat out, go home to bed, find a friend), have pursuits (fishing, painting, fitness walks, stargazing, saying hello) with progress kept, and friendships and rivalries that grow as they talk.
 - **v398** (4:52 PM) Tell townsfolk what to do in the talk box or out loud: come here, follow me, wait, carry on, go home, go to a shop or place, look at something, run; to one, a named person or everyone. Each decides in their own way whether they will.
 - **v397** (1:41 PM) Work graphics lighter after an office PC's profile: the gun shop's display guns no longer draw from everywhere, no bridge detail parts, less undergrowth, a shorter haze (about a fifth fewer draws and 30% fewer triangles in town)
