@@ -107,9 +107,11 @@ function mdlScreenDraw(){const g=mdlScr.getContext('2d'),W=320,H=224;g.fillStyle
   g.textAlign='right';g.fillText((typeof fuelHrs==='function'?fuelHrs('ex').toFixed(1):'1022')+' h',W-16,190);
   g.fillStyle='#f07a22';g.fillRect(16,152,64,16);g.fillStyle='#0b1418';g.font='700 13px sans-serif';g.textAlign='center';g.fillText('P MODE',48,165);
   if(mdlScrTex)mdlScrTex.needsUpdate=true}
-// the glTF loader (an ES module, mapped in index.html's import map), fetched the first time a detailed model is wanted
+// the glTF loader (an ES module, mapped in index.html's import map), fetched the first time a detailed model is wanted;
+// the model files are meshopt-compressed (tools/squeeze.mjs), so every loader made from it gets the meshopt decoder
 function mdlLoaderReady(cb){if(THREE.GLTFLoader){cb();return}
-  import(MDL_LOADER).then(m=>{THREE.GLTFLoader=m.GLTFLoader;cb()},()=>{mdl.loading=mdl.trLoading=false})}
+  Promise.all([import(MDL_LOADER),import('three/addons/libs/meshopt_decoder.module.js')]).then(([m,d])=>{
+    THREE.GLTFLoader=class extends m.GLTFLoader{constructor(a){super(a);this.setMeshoptDecoder(d.MeshoptDecoder)}};cb()},()=>{mdl.loading=mdl.trLoading=false})}
 function mdlLoadEx(){if(mdl.ex||mdl.loading)return;mdl.loading=true;
   mdlLoaderReady(()=>new THREE.GLTFLoader().load('models/excavator.glb',gl=>{mdl.loading=false;mdl.ex=gl.scene;if(mdl.want)mdlExOn(true)},undefined,()=>{mdl.loading=false}))}
 // the excavator's part groups, by the model's node names
@@ -221,7 +223,7 @@ const mdlHvParts=h=>Object.assign({body:h.g,blade:h.blade,ripper:h.ripG,arm:h.ar
 // the setting goes), and a hydraulic ram between each pair of the model's ram pins
 function mdlHvOn(on){mdl.hvOn=on;const mats=mdlMatsMake();
   for(const h of hvs){if(!MDL_HV.includes(h.k))continue;const src=mdl.hv[h.k],P=mdlHvParts(h);
-    if(on&&!src){mdlLoadHv(h.k);continue}
+    if(on&&!src){if(mdlNear(h.g))mdlLoadHv(h.k);continue}
     if(on&&!h.mdl){h.mdl=[];const pins={};
       for(const [name,par] of Object.entries(P)){const node=par&&src.getObjectByName(name);if(!node)continue;
         node.traverse(m=>{const pin=/^ram_(.+)_([ab])$/.exec(m.name);if(pin){(pins[pin[1]]=pins[pin[1]]||{})[pin[2]]={par,p:m.position.clone(),o:m.userData};return}
@@ -280,9 +282,16 @@ const mdlShadeOk=mt=>!mt.transparent&&!(mt.userData.lit&&mt.userData.lit.t==='gl
 // lights). On Detailed each node's meshes go into its group and the group's own meshes hide (only once the file is in,
 // and only in groups that got a node); after(on) for anything else. Registered by each machine's file, or below
 const MDL_KIT={};mdl.kit={};mdl.kitOn=false;mdl.kitN=0;mdl.kitDirty=false;
-function mdlKitOn(on){mdl.kitOn=on;mdl.kitDirty=false;mdl.kitN++;
+// A file is fetched only once one of its copies is within MDL_NEAR of the camera (checked each second, mdlTick), so the
+// machines parked across the island and the lake's boats load only as you come near; their simple shapes draw till then
+const MDL_NEAR=300,_mdlV=new THREE.Vector3();
+const mdlNear=g=>g.getWorldPosition(_mdlV).distanceTo(camera.position)<MDL_NEAR;
+function mdlKitNear(K){for(const set of K.sets())for(const name in set){const g=set[name];if(!g)continue;if(mdlNear(g))return true;break}return false}
+// (the dozers, loaders, semis, pickups and four-wheelers the same way, mdlHvOn)
+function mdlKitLoad(){for(const h of hvs)if(MDL_HV.includes(h.k)&&mdl.hv[h.k]===undefined&&mdlNear(h.g))mdlLoadHv(h.k);
+  for(const f in MDL_KIT)if(mdl.kit[f]===undefined&&mdlKitNear(MDL_KIT[f])){mdl.kit[f]=null;mdlLoad(f,sc=>{mdl.kit[f]=sc;mdl.kitDirty=true})}}
+function mdlKitOn(on){mdl.kitOn=on;mdl.kitDirty=false;mdl.kitN++;if(on)mdlKitLoad();
   for(const f in MDL_KIT){const K=MDL_KIT[f],src=mdl.kit[f];
-    if(on&&src===undefined){mdl.kit[f]=null;mdlLoad(f,sc=>{mdl.kit[f]=sc;mdl.kitDirty=true})}
     const keep=new Set(K.keep?K.keep():[]);
     for(const set of K.sets())for(const name in set){const par=set[name];if(!par)continue;const u=mdlSide(par);
       if(on&&!u.kit&&src){const node=src.getObjectByName(name),parts=node&&mdlNodeParts(node,MDL_GEL[f]);if(!parts||!parts.length)continue;
@@ -336,7 +345,7 @@ function mdlPropsSync(){for(const k in mdl.propIM){const im=propIMs[k],det=mdl.s
 // gfx.js: Detailed or Simple machine models (the other machines change on the next frame, once they all exist)
 function mdlGfx(detail){mdl.want=!!detail;mdlExOn(mdl.want);mdlTrOn(mdl.want)}
 // once a few seconds, the cab display's clock (only while the detailed model shows)
-function mdlTick(dt){if(!!mdl.othersOn!==mdl.want)mdlOthersOn(mdl.want);if(mdl.kitOn!==mdl.want||mdl.kitDirty)mdlKitOn(mdl.want);
+function mdlTick(dt){if(mdl.want&&(mdl.kitT=(mdl.kitT||0)-dt)<=0){mdl.kitT=1;mdlKitLoad()}if(!!mdl.othersOn!==mdl.want)mdlOthersOn(mdl.want);if(mdl.kitOn!==mdl.want||mdl.kitDirty)mdlKitOn(mdl.want);
   if(mdl.spotsOn!==mdl.want||mdl.spotsDirty)mdlSpotsOn(mdl.want);else if(mdl.want)mdlPropsSync();if(mdl.lit)mdlLitTick();if(mdl.hvOn!==mdl.want||mdl.want&&hvs.some(h=>MDL_HV.includes(h.k)&&!h.mdl&&mdl.hv[h.k]))mdlHvOn(mdl.want);if(!mdl.on)return;mdlScrT+=dt;if(mdlScrT>5){mdlScrT=0;mdlScreenDraw()}}
 // ---------- the trench box, and the quick coupler with its thumb, hammer and auger (tools/models/tbox.js and
 // attach.js). trenchbox.js and coupler.js load before this file, so they are registered here; the crane chain stays

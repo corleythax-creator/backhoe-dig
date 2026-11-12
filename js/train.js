@@ -99,6 +99,7 @@ function trnMeshes(){if(trn.inst)return trn.inst;trn.inst={};trn.boxMat=trnHaze(
   lm.count=0;lm.visible=false;lm.frustumCulled=false;scene.add(lm);trn.lamp=lm;return trn.inst}
 // the textured models (Detailed machine models): fetched the first time they are wanted; freight cars are light grey so
 // each car's tint colours them
+const trnNear=()=>Math.abs(Math.hypot(camera.position.x,camera.position.z)-TRN_R)<500;
 function trnModels(){if(trn.glb)return;trn.glb={};
   for(const t of TRN_TYPES)mdlLoaderReady(()=>new THREE.GLTFLoader().load(`models/tr_${t}.glb`,gl=>{const root=gl.scene,L=TRN_LEN[t];
     const b=new THREE.Box3().setFromObject(root),sz=b.getSize(new THREE.Vector3());root.scale.setScalar(L/Math.max(sz.x,sz.z));
@@ -125,7 +126,8 @@ function trnLay(cars,vk){let len=0;for(const c of cars){c.o=len+TRN_LEN[c.t]/2;l
 const _tro=new THREE.Object3D(),_trc=new THREE.Color(),_trv=new THREE.Vector3(),_trl=new THREE.Object3D();
 function trainTick(dt){const M=trnMeshes(),cnt={};for(const k of TRN_TYPES)cnt[k]=0;
   // the models follow the Machine models setting
-  if(mdl.want)trnModels();const want=!!(mdl.want&&trn.glb);
+  // fetched once the camera is within 500 m of the line (trnNear): from the mesa it is 800 m off, the boxes in the haze
+  if(mdl.want&&trnNear())trnModels();const want=!!(mdl.want&&trn.glb);
   if(trn.glbOn!==want){trn.glbOn=want;for(const t of TRN_TYPES){const im=M[t],G=want&&trn.glb[t];[im.geometry,im.material]=G||im.userData.box}}
   trnHazeU.value=clamp(0.42+0.7*(1-scene.fog.far/(760*gfxFog)),0.2,0.97);
   const v=TU.trSpeed,P=Math.max(TU.trEvery,(trn.L+TRN_LMAX)/v+20),t=Date.now()/1000,K=Math.floor(t/P),night=1-dayKU.value;let nl=0;trn.live=[];
