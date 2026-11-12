@@ -210,15 +210,19 @@ function tfFgPose(p,c,i,dt){const hp=p.dead||p.hurt||p.hit?tfHitPose(p):null,die
 // mixer stepped to that time (no forge.update: that would run the crowds' clocks), so the swap does not show; the crowd
 // copy is skipped while it shows. One hero loads at a time; idle ones wait in a pool (TF_UH_POOL), and the ultra meshes
 // and maps of characters not seen lately are freed (TF_UH_KEEP), since each is ~60 MB on the GPU
-const TF_UH_POOL=4,TF_UH_KEEP=4,_tfQ=new THREE.Quaternion(),_tfQ2=new THREE.Quaternion(),_tfE=new THREE.Euler(),_tfUp=new THREE.Vector3(0,1,0);
+const TF_UH_POOL=4,TF_UH_KEEP=4,TF_UH_STICK=1.5,TF_UH_HOLD=3,_tfQ=new THREE.Quaternion(),_tfQ2=new THREE.Quaternion(),_tfE=new THREE.Euler(),_tfUp=new THREE.Vector3(0,1,0);
 function tfUhOn(){return !!(gfxCur.fgUltra&&!PHONE&&tf.F&&tf.F.st===2)}
 // who gets a hero this frame: the nearest few in view whose character's crowd is ready (a little farther for those who
 // already have one, so nobody flickers at the edge)
 function tfUhPick(cx,cz){const F=tf.F,U=F.uh||(F.uh={free:[],res:[],busy:0}),R=TU.tfUltraR||6,R2=(R+0.8)**2,n=gfxCur.fgUltra,c=[];
   for(const p of tf.people){if(p.inside)continue;const d2=(p.x-cx)**2+(p.z-cz)**2;if(d2>(p.uh?R2:R*R))continue;const B=tf.M[p.body];if(!B||!B.fg||B.fg===1||!tfSeen(p.x,p.z,1.3))continue;c.push([d2,p])}
-  c.sort((a,b)=>a[0]-b[0]);const want=new Set(c.slice(0,n).map(a=>a[1]));
+  // sticky: one who has a hero keeps it unless another is nearer by TF_UH_STICK or they have had it under TF_UH_HOLD s,
+  // so people sat at much the same distance (a full taproom) do not swap between their crowd copy and their hero, and
+  // load heroes, every few frames as the camera sways
+  const now=performance.now()/1000,key=([d2,p])=>Math.sqrt(d2)-(p.uh?(now-(p.uhT||0)<TF_UH_HOLD?1e3:TF_UH_STICK):0);
+  c.sort((a,b)=>key(a)-key(b));const want=new Set(c.slice(0,n).map(a=>a[1]));
   for(const p of tf.people)if(p.uh&&!want.has(p))tfUhFree(p);for(const p of U.gone||[])if(p.uh&&tf.people.indexOf(p)<0)tfUhFree(p);U.gone=[...want];
-  for(const p of want)if(!p.uh){const i=U.free.findIndex(h=>h.id==='island_'+p.body);if(i>=0){p.uh=U.free.splice(i,1)[0];tfUhUse(p.uh.id)}else if(!U.busy)tfUhLoad(p.body)}
+  for(const p of want)if(!p.uh){const i=U.free.findIndex(h=>h.id==='island_'+p.body);if(i>=0){p.uh=U.free.splice(i,1)[0];p.uhT=now;tfUhUse(p.uh.id)}else if(!U.busy)tfUhLoad(p.body)}
   return want}
 function tfUhUse(id){const U=tf.F.uh,i=U.res.indexOf(id);if(i>=0)U.res.splice(i,1);U.res.push(id)}
 function tfUhLoad(body){const F=tf.F,U=F.uh,id='island_'+body;U.busy=1;tfUhUse(id);
