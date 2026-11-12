@@ -20,7 +20,7 @@ const DEPS=path.join(os.homedir(),'.cache/island-squeeze'),PKGS=['@gltf-transfor
 if(!fs.existsSync(path.join(DEPS,'node_modules/@gltf-transform/functions'))){fs.mkdirSync(DEPS,{recursive:true});
   execSync(`npm install --silent --no-audit --no-fund --prefix "${DEPS}" ${PKGS.join(' ')}`,{stdio:'inherit'})}
 const req=createRequire(path.join(DEPS,'x.js'));
-const {NodeIO}=req('@gltf-transform/core'),{ALL_EXTENSIONS,EXTMeshoptCompression}=req('@gltf-transform/extensions'),
+const {NodeIO,VertexLayout}=req('@gltf-transform/core'),{ALL_EXTENSIONS,EXTMeshoptCompression}=req('@gltf-transform/extensions'),
   {reorder}=req('@gltf-transform/functions'),{MeshoptEncoder,MeshoptDecoder}=req('meshoptimizer');
 await MeshoptEncoder.ready;await MeshoptDecoder.ready;
 const io=new NodeIO().registerExtensions(ALL_EXTENSIONS).registerDependencies({'meshopt.encoder':MeshoptEncoder,'meshopt.decoder':MeshoptDecoder});
@@ -47,6 +47,8 @@ for(const f of files){const j=glbJson(f);if(String(j.asset&&j.asset.generator||'
   if(!people){await doc.transform(reorder({encoder:MeshoptEncoder,target:'size'}));
     doc.createExtension(EXTMeshoptCompression).setRequired(true).setEncoderOptions({method:EXTMeshoptCompression.EncoderMethod.QUANTIZE})}
   const a=doc.getRoot().getAsset();a.generator=(a.generator||'glTF')+TAG;
+  // people: Human Forge's parser reads packed (non-interleaved) arrays
+  if(people)io.setVertexLayout(VertexLayout.SEPARATE);else io.setVertexLayout(VertexLayout.INTERLEAVED);
   fs.writeFileSync(f,await io.writeBinary(doc));const now=fs.statSync(f).size;before+=was;after+=now;n++;
   console.log(`${path.relative(root,f)}: ${(was/1024).toFixed(0)} KB -> ${(now/1024).toFixed(0)} KB${people?' (snapped)':''}`)}
 console.log(n?`squeezed ${n} model file(s): ${(before/1048576).toFixed(1)} MB -> ${(after/1048576).toFixed(1)} MB`:'models: all squeezed already')

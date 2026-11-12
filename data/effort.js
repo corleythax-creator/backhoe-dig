@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-12T00:58:00Z",
+ "updated": "2026-11-12T01:20:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -138,9 +138,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-11",
-   "dh": 28.5,
-   "act": 2,
-   "versions": 5
+   "dh": 29.25,
+   "act": 2.5,
+   "versions": 6
   }
  ],
  "extra": [
@@ -3885,6 +3885,15 @@ window.EFFORT = {
    "tris": 7327315,
    "chars": 2668224,
    "what": "On Ultra, people seated close by (a full brewery) no longer flicker between their crowd look and their full-detail look, and stop loading new detailed models every few seconds."
+  },
+  {
+   "v": 416,
+   "asked": "2026-11-11T19:15:00-06:00",
+   "live": "2026-11-11T19:20:38-06:00",
+   "dh": 0.75,
+   "tris": 7318024,
+   "chars": 2668224,
+   "what": "Fixed townsfolk drawn as spiky shards on High/Ultra: the squeezed people files store vertex data interleaved, and Human Forge's reader now reads it that way."
   }
  ]
 };
