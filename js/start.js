@@ -66,7 +66,7 @@ function loadStep(bad){if(LOADP.done)return;if(bad){loadEnd();return}const jsN=d
   if(game&&!LOADP.gameT)LOADP.gameT=now;let al=0,at=0;for(const [l,t] of LOADP.mgr){al+=l;at+=t}
   if(LOADP.gameT&&now-LOADP.gameT>2000&&LOADP.goal===undefined)LOADP.goal=at;if(LOADP.goal!==undefined)at=LOADP.goal;al=Math.min(al,at);
   const a=at?al/at:0,w=typeof warmFrac==='function'?warmFrac():0;
-  const done=LOADP.goal!==undefined&&al>=at&&LOADP.warm&&(typeof warmCover==='function'?warmCover():warmIdle())&&loadTownIn()&&(typeof brBusy!=='function'||!brBusy())||now>LOADP.cap*1000||LOADP.err&&now-LOADP.errT>4000;
+  const done=LOADP.goal!==undefined&&al>=at&&LOADP.warm&&(typeof warmCover==='function'?warmCover():warmIdle())&&loadTownIn()&&loadFolkIn()&&(typeof brBusy!=='function'||!brBusy())||now>LOADP.cap*1000||LOADP.err&&now-LOADP.errT>4000;
   const p=done?100:Math.min(99,45*js+30*a*(game?1:.8)+25*w);LOADP.shown=done?100:Math.max(LOADP.shown,LOADP.shown+(p-LOADP.shown)*.35);// counts up smoothly, never back
   const pct=Math.floor(LOADP.shown),L=document.getElementById('startLoad');
   document.getElementById('startLoadPct').textContent=pct+'%';document.getElementById('startLoadFill').style.width=LOADP.shown+'%';L.setAttribute('aria-valuenow',pct);
@@ -84,6 +84,7 @@ function loadFiles(){let dev=0,net=0,b=0;try{for(const e of performance.getEntri
 // builds the shaders only then)
 function loadPicsIn(){let al=0,at=0;for(const [l,t] of LOADP.mgr){al+=l;at+=t}if(LOADP.goal!==undefined)at=Math.min(at,LOADP.goal);
   return LOADP.goal!==undefined&&al>=at&&(typeof brBusy!=='function'||!brBusy())&&loadTownIn()}
+const loadFolkIn=()=>{if(typeof tfReady!=='function')return true;const [n,t]=tfReady();return n>=t};
 const loadTownIn=()=>typeof bf!=='undefined'?!!bf.ready:LOADP.js>=document.querySelectorAll('script[defer]').length;
 function loadSteps(js,jsN,al,at,done){const W=typeof warmAll!=='undefined'?warmAll:null,F=loadFiles(),now=performance.now(),S=PF_BOOT.steps,rows=[];
   const row=(id,name,ok,txt)=>{if(ok&&S[id]===undefined)S[id]=Math.round(now);rows.push([name,ok,txt])};
@@ -94,6 +95,7 @@ function loadSteps(js,jsN,al,at,done){const W=typeof warmAll!=='undefined'?warmA
   row('shaders','Shaders',!!(W&&(W.pend===0&&W.still>=1||W.c1&&now-W.c1>WARM_SETTLE)),W&&W.mats?`${W.mats} materials${W.pend?', building':''}`:'…');
   const n=typeof WARM_AT!=='undefined'?WARM_AT.length:0,a=W&&W.at?n-W.at.length:0;
   row('places','Places looked over',!!(W&&W.at&&!W.at.length),n?`${a} of ${n}`:'…');
+  {const [n,t]=typeof tfReady==='function'?tfReady():[0,1];row('folk','Townsfolk',n>=t,t>1?`${n} of ${t}`:'')}
   row('town',"Town's buildings",loadTownIn(),typeof bf!=='undefined'&&bf.lots.length?`${bf.lots.length}`:'');
   const bq=typeof brQ!=='undefined'?brQ.length:0;row('bridges',"Bridges' and docks' pictures",typeof brBusy==='function'&&!brBusy()&&LOADP.warm,bq?`${bq} left`:'');
   let cur=done?-1:rows.findIndex(r=>!r[1]);

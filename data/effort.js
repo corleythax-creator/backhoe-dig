@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-12T00:11:00Z",
+ "updated": "2026-11-12T01:57:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -138,9 +138,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-11",
-   "dh": 12.5,
-   "act": 1.5,
-   "versions": 3
+   "dh": 30.75,
+   "act": 3,
+   "versions": 7
   }
  ],
  "extra": [
@@ -3867,6 +3867,42 @@ window.EFFORT = {
    "tris": 7365388,
    "chars": 2662876,
    "what": "At night every building with its lights on glows warm inside, so shops, the brewery and houses read lit from the street, not just when you stand next to a lamp (Tuning: Lit buildings glow and range; Medium graphics and up)."
+  },
+  {
+   "v": 414,
+   "asked": "2026-11-11T17:20:00-06:00",
+   "live": "2026-11-11T18:57:03-06:00",
+   "dh": 14,
+   "tris": 7320486,
+   "chars": 2667769,
+   "what": "Model files snapped and meshopt-packed (about half the download), every texture kept compressed on the graphics card (KTX2, about half the texture memory), machine, boat and train models load only when you come near, and the townsfolk's heavy stand-in mesh is skipped where Human Forge draws them"
+  },
+  {
+   "v": 415,
+   "asked": "2026-11-11T18:35:00-06:00",
+   "live": "2026-11-11T18:58:33-06:00",
+   "dh": 2,
+   "tris": 7327315,
+   "chars": 2668224,
+   "what": "On Ultra, people seated close by (a full brewery) no longer flicker between their crowd look and their full-detail look, and stop loading new detailed models every few seconds."
+  },
+  {
+   "v": 416,
+   "asked": "2026-11-11T19:15:00-06:00",
+   "live": "2026-11-11T19:20:38-06:00",
+   "dh": 0.75,
+   "tris": 7318024,
+   "chars": 2668224,
+   "what": "Fixed townsfolk drawn as spiky shards on High/Ultra: the squeezed people files store vertex data interleaved, and Human Forge's reader now reads it that way."
+  },
+  {
+   "v": 417,
+   "asked": "2026-11-11T19:40:00-06:00",
+   "live": "2026-11-11T19:57:09-06:00",
+   "dh": 1.5,
+   "tris": 7316632,
+   "chars": 2669039,
+   "what": "The loading screen now builds every townsperson's crowd before you play (a Townsfolk row shows the count), so people no longer stall the game the first time they walk into view."
   }
  ]
 };

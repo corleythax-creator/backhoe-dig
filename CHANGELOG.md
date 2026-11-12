@@ -4,6 +4,10 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Wednesday, November 11, 2026
 
+- **v417** (7:57 PM) The loading screen now builds every townsperson's crowd before you play (a Townsfolk row shows the count), so people no longer stall the game the first time they walk into view.
+- **v416** (7:20 PM) Fixed townsfolk drawn as spiky shards on High/Ultra: the squeezed people files store vertex data interleaved, and Human Forge's reader now reads it that way.
+- **v415** (6:58 PM) On Ultra, people seated close by (a full brewery) no longer flicker between their crowd look and their full-detail look, and stop loading new detailed models every few seconds.
+- **v414** (6:57 PM) Model files snapped and meshopt-packed (about half the download), every texture kept compressed on the graphics card (KTX2, about half the texture memory), machine, boat and train models load only when you come near, and the townsfolk's heavy stand-in mesh is skipped where Human Forge draws them
 - **v413** (6:11 PM) At night every building with its lights on glows warm inside, so shops, the brewery and houses read lit from the street, not just when you stand next to a lamp (Tuning: Lit buildings glow and range; Medium graphics and up).
 - **v412** (10:50 AM) Townsfolk use their light model past 25 m (Work) or 40 m; parked cars merged per material, far ones batched by kind with their paint per car; street furniture and far car parts drawn only where the game camera would see them (in view, big enough, inside the haze, seen from your room); people outside a room you are in are left out too
 - **v411** (8:40 AM) Corner map draws only what is in view (4 ms to 0.9 ms, 15 times a second); Work graphics drops the paint's clear coat; profiler skips capped refreshes and marks shader-building frames

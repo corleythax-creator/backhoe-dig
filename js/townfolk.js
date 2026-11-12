@@ -127,8 +127,9 @@ void pdPart(float pP,inout vec3 p,inout vec3 n){pP=floor(pP+0.5);if(pP<0.5)retur
   float a=leg>0.5?sw:sw*0.85;p=pdRx(p,a,leg>0.5?uJ.y:uJ.w);n=pdRot(a)*n;}
 void pdSkin(inout vec3 p,inout vec3 n){vec3 p1=p,n1=n,p2=p,n2=n;pdPart(aSk.x,p1,n1);pdPart(aSk.y,p2,n2);p=mix(p1,p2,aSk.z);n=normalize(mix(n1,n2,aSk.z));}`;
 // each character's mesh (folk_hi.bin on High graphics, folk_lo.bin below) and texture (folk/<id>.webp, folk_lo/), loaded
-// when someone first wears that look
-function tfLoad(){if(tf.load)return;tf.load=1;const B='models/peds/',lod=gfxCur.pbr?'hi':'lo',j=u=>fetch(B+u).then(r=>{if(!r.ok)throw new Error(u);return r});
+// when someone first wears that look. Where Human Forge draws the people (gfxCur.forge), these meshes only stand in
+// until a character's crowd is built (or if it fails), so the light ones do: 4 MB less to fetch at the start
+function tfLoad(){if(tf.load)return;tf.load=1;const B='models/peds/',lod=gfxCur.pbr&&!gfxCur.forge?'hi':'lo',j=u=>fetch(B+u).then(r=>{if(!r.ok)throw new Error(u);return r});
   Promise.all([j('peds.json').then(r=>r.json()),j('folk.json').then(r=>r.json()),j('folk_'+lod+'.bin').then(r=>r.arrayBuffer())]).then(([ch,fk,buf])=>{
     const by={};for(const f of fk.chars)by[f.id]=f;tf.chars=ch.chars.filter(c=>by[c.id]);for(const c of tf.chars)c.folk=by[c.id];
     tf.use=new Array(tf.chars.length).fill(0);tfMeshes(buf,lod,B+(lod==='hi'?'folk/':'folk_lo/'));tf.load=2;
@@ -178,14 +179,18 @@ function tfForgeCrowd(B,id){B.fg=1;const F=tf.F;tf.fgBusy=(tf.fgBusy||0)+1;
   F.f.preload(['island_'+id]).then(([t])=>{tfDieClips(t);return F.f.crowd('island_'+id,{max:B.cap,clips:TF_FG_CLIPS,lod:gfxCur.forge,castShadow:true,receiveShadow:true}).then(c=>{const m=c.object,M=m.material;
     M.roughness=0.86;M.envMap=skyEnv;M.envMapIntensity=0.5;m.castShadow=!!gfxCur.pbr;m.visible=false;c.stride=F.f.clips.walk.speed*c.type.hip/F.ref;c.runS=(F.f.clips.run||F.f.clips.walk).speed*c.type.hip/F.ref;scene.add(m);
       return gpuWarm(m).then(()=>{B.fg=c})})})
-    .catch(e=>console.warn('townsfolk forge:',id,e)).finally(()=>{tf.fgBusy--})}
+    .catch(e=>{B.fgErr=1;console.warn('townsfolk forge:',id,e)}).finally(()=>{tf.fgBusy--})}
 // built ahead, wherever the camera is (from the first frames, behind the start card): every character's look and, on
 // High and Ultra, their crowd, one at a time a quarter second apart, so none is built on the frame someone first walks
 // into view (each crowd bakes its clips in one go, the stutter coming into town and round the brewery's many faces)
 function tfPrep(dt){if(!tf.load)tfLoad();if(tf.load!==2)return;if(gfxCur.forge&&!(tf.F&&tf.F.st))tfForge();
-  if((tf.prepT=(tf.prepT||0)-dt)>0)return;tf.prepT=0.25;const M=tf.M;
+  if((tf.prepT=(tf.prepT||0)-dt)>0)return;tf.prepT=LOADP.done?0.25:0;const M=tf.M;
   for(const k in M)if(!M[k].texing){tfTex(M[k]);break}
   if(tf.F&&tf.F.st===2&&gfxCur.forge&&!tf.fgBusy)for(const k in M)if(!M[k].fg){tfForgeCrowd(M[k],k);break}}
+// how many characters are ready to draw (their crowd built on High and Ultra, else their look's picture), of how many:
+// the loading cover waits for all of them (start.js), so nobody is built mid-game when they first walk into view
+function tfReady(){if(tf.q===undefined)return [0,1];if(!tf.q)return [1,1];if(tf.load===-1)return [1,1];if(tf.load!==2||!tf.M)return [0,1];const fg=gfxCur.forge&&!(tf.F&&tf.F.st===-1);let n=0,t=0;
+  for(const k in tf.M){const B=tf.M[k];t++;if(fg?(B.fg&&B.fg!==1)||B.fgErr:B.texing)n++}if(fg&&!(tf.F&&tf.F.st===2))n=0;return [n,t]}
 // person p as instance i of crowd c: walking (pace = their speed), sitting (the clip's origin is on the floor under the
 // seat's middle, its seat 18 in up like the rooms' chairs and benches), driving (its seat 14 in up: lifted to where the
 // old seated pose's seat was, 18 in over p.y), or standing easy or talking (staff and customers)
@@ -210,15 +215,19 @@ function tfFgPose(p,c,i,dt){const hp=p.dead||p.hurt||p.hit?tfHitPose(p):null,die
 // mixer stepped to that time (no forge.update: that would run the crowds' clocks), so the swap does not show; the crowd
 // copy is skipped while it shows. One hero loads at a time; idle ones wait in a pool (TF_UH_POOL), and the ultra meshes
 // and maps of characters not seen lately are freed (TF_UH_KEEP), since each is ~60 MB on the GPU
-const TF_UH_POOL=4,TF_UH_KEEP=4,_tfQ=new THREE.Quaternion(),_tfQ2=new THREE.Quaternion(),_tfE=new THREE.Euler(),_tfUp=new THREE.Vector3(0,1,0);
+const TF_UH_POOL=4,TF_UH_KEEP=4,TF_UH_STICK=1.5,TF_UH_HOLD=3,_tfQ=new THREE.Quaternion(),_tfQ2=new THREE.Quaternion(),_tfE=new THREE.Euler(),_tfUp=new THREE.Vector3(0,1,0);
 function tfUhOn(){return !!(gfxCur.fgUltra&&!PHONE&&tf.F&&tf.F.st===2)}
 // who gets a hero this frame: the nearest few in view whose character's crowd is ready (a little farther for those who
 // already have one, so nobody flickers at the edge)
 function tfUhPick(cx,cz){const F=tf.F,U=F.uh||(F.uh={free:[],res:[],busy:0}),R=TU.tfUltraR||6,R2=(R+0.8)**2,n=gfxCur.fgUltra,c=[];
   for(const p of tf.people){if(p.inside)continue;const d2=(p.x-cx)**2+(p.z-cz)**2;if(d2>(p.uh?R2:R*R))continue;const B=tf.M[p.body];if(!B||!B.fg||B.fg===1||!tfSeen(p.x,p.z,1.3))continue;c.push([d2,p])}
-  c.sort((a,b)=>a[0]-b[0]);const want=new Set(c.slice(0,n).map(a=>a[1]));
+  // sticky: one who has a hero keeps it unless another is nearer by TF_UH_STICK or they have had it under TF_UH_HOLD s,
+  // so people sat at much the same distance (a full taproom) do not swap between their crowd copy and their hero, and
+  // load heroes, every few frames as the camera sways
+  const now=performance.now()/1000,key=([d2,p])=>Math.sqrt(d2)-(p.uh?(now-(p.uhT||0)<TF_UH_HOLD?1e3:TF_UH_STICK):0);
+  c.sort((a,b)=>key(a)-key(b));const want=new Set(c.slice(0,n).map(a=>a[1]));
   for(const p of tf.people)if(p.uh&&!want.has(p))tfUhFree(p);for(const p of U.gone||[])if(p.uh&&tf.people.indexOf(p)<0)tfUhFree(p);U.gone=[...want];
-  for(const p of want)if(!p.uh){const i=U.free.findIndex(h=>h.id==='island_'+p.body);if(i>=0){p.uh=U.free.splice(i,1)[0];tfUhUse(p.uh.id)}else if(!U.busy)tfUhLoad(p.body)}
+  for(const p of want)if(!p.uh){const i=U.free.findIndex(h=>h.id==='island_'+p.body);if(i>=0){p.uh=U.free.splice(i,1)[0];p.uhT=now;tfUhUse(p.uh.id)}else if(!U.busy)tfUhLoad(p.body)}
   return want}
 function tfUhUse(id){const U=tf.F.uh,i=U.res.indexOf(id);if(i>=0)U.res.splice(i,1);U.res.push(id)}
 function tfUhLoad(body){const F=tf.F,U=F.uh,id='island_'+body;U.busy=1;tfUhUse(id);

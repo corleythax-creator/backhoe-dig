@@ -12,7 +12,7 @@ const [name,out,...nodes]=pos;if(!name||!out){console.error('usage: model-shot.j
 const types={'.html':'text/html','.js':'text/javascript','.jpg':'image/jpeg','.png':'image/png','.glb':'model/gltf-binary'};
 const PAGE=`<!doctype html><html><body style="margin:0;background:#9fb8cc"><script type="importmap">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.186.1/build/three.module.min.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.186.1/examples/jsm/"}}</script>
 <script type="module">
-import * as THREE from 'three';import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
+import * as THREE from 'three';import {GLTFLoader} from 'three/addons/loaders/GLTFLoader.js';import {MeshoptDecoder} from 'three/addons/libs/meshopt_decoder.module.js';import {RoomEnvironment} from 'three/addons/environments/RoomEnvironment.js';
 const P=new URLSearchParams(location.search),[W,H]=P.get('size').split('x').map(Number),want=P.get('nodes')?P.get('nodes').split(','):null,dist=+P.get('dist');
 const R=new THREE.WebGLRenderer({antialias:true,preserveDrawingBuffer:true});R.setSize(W,H);R.shadowMap.enabled=true;R.shadowMap.type=THREE.PCFShadowMap;
 R.toneMapping=THREE.ACESFilmicToneMapping;R.toneMappingExposure=1.05;document.body.appendChild(R.domElement);R.setScissorTest(true);
@@ -45,7 +45,7 @@ function matOf(k){if(NAMED[k])return NAMED[k];if(cache[k])return cache[k];let r=
 function boxUV(g){const p=g.attributes.position.array,n=g.attributes.normal.array,c=p.length/3,uv=new Float32Array(c*2);
   for(let v=0;v<c;v++){const o=v*3,ax=Math.abs(n[o]),ay=Math.abs(n[o+1]),az=Math.abs(n[o+2]);let u,w;
     if(ax>=ay&&ax>=az){u=p[o+2];w=p[o+1]}else if(ay>=az){u=p[o];w=p[o+2]}else{u=p[o];w=p[o+1]}uv[v*2]=u*0.9;uv[v*2+1]=w*0.9}g.setAttribute('uv',new THREE.BufferAttribute(uv,2))}
-new GLTFLoader().load('models/'+P.get('name')+'.glb',gl=>{const top=gl.scene.children[0].children.length?gl.scene.children[0]:gl.scene;
+new GLTFLoader().setMeshoptDecoder(MeshoptDecoder).load('models/'+P.get('name')+'.glb',gl=>{const top=gl.scene.children[0].children.length?gl.scene.children[0]:gl.scene;
   let list=top.children.filter(n=>!want||want.includes(n.name));const G=new THREE.Group();let x=0,tri=0;
   const groups=[];for(const n of list){const g=new THREE.Group();n.traverse(m=>{if(!m.isMesh)return;const geo=m.geometry;if(!geo.attributes.uv)boxUV(geo);
       const ms=new THREE.Mesh(geo,/^own:/.test(m.material.name)?m.material:matOf(m.material.name));ms.castShadow=ms.receiveShadow=true;m.updateWorldMatrix(true,false);ms.applyMatrix4(m.matrixWorld);g.add(ms);

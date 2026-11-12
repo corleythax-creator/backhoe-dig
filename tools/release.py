@@ -10,7 +10,7 @@ Steps: fetch main and merge it into the branch; take the next version after main
 the same time just pushes this one to the number after); run tools/scene-check.js
 (stops on any error); add the entry and the day's hours to data/effort.js and CHANGELOG.md (live time is now, Central; the day's act
 gains 0.5 when no release that day sits in the same half hour); commit and push the branch; merge it into main with
---no-ff (a first-parent release commit, as tools/versions.py needs) and push; make the snapshot with tools/versions.py
+--no-ff (a first-parent release commit, as tools/versions.py needs) and push; no versions/ snapshot (owner, Nov 12: skipped)
 (unshallowing first, and stopping if it would delete anything outside the new snapshot), commit and push; bring the
 branch up to main; then wait for the Vercel site to serve the new version (up to 10 minutes) and say whether it is
 live. If the screen's markup, CSS or js/gui.js changed, it rebuilds docs/gui-editor.html and says to
@@ -131,6 +131,14 @@ def main():
         if git('status', '--porcelain') and not o.dry_run:
             git('commit', '-qam', 'Rebuild the screen editor page' + TRAILER)
 
+    # model files new or rebuilt since the last release are made smaller (tools/squeeze.mjs), and new or changed
+    # textures get their GPU-compressed .ktx2 twins (tools/ktx.mjs); both skip what they have done before
+    print(sh('node', 'tools/squeeze.mjs').strip().splitlines()[-1])
+    print(sh('node', 'tools/ktx.mjs').strip().splitlines()[-1])
+    if git('status', '--porcelain', '--', 'models', 'textures') and not o.dry_run:
+        git('add', 'models', 'textures')
+        git('commit', '-qm', 'Squeeze the new model files and encode the new textures' + TRAILER)
+
     env = dict(os.environ, NODE_PATH=sh('npm', 'root', '-g'))
     out = sh('node', 'tools/scene-check.js', check=False, env=env)
     chk = json.loads(out[out.index('{'):])
@@ -167,26 +175,6 @@ def main():
         sys.exit('main kept moving; nothing was released. Try again in a few minutes.')
     push('-q', '-u', 'origin', branch)
 
-    # the playable snapshot, made again on top of main if another release lands first
-    if git('rev-parse', '--is-shallow-repository') == 'true':
-        git('fetch', '-q', '--unshallow', 'origin')
-    for attempt in range(4):
-        base = git('rev-parse', 'HEAD')
-        sh('python3', 'tools/versions.py')
-        if not git('status', '--porcelain'):
-            break  # another release's snapshot commit already holds this one
-        # split each line rather than slicing it: sh() strips the output, and with it the first line's leading space
-        rows = [l.split(maxsplit=1) for l in git('status', '--porcelain').splitlines()]
-        bad = [' '.join(r) for r in rows if 'D' in r[0] or not (r[1].startswith('versions/v') or r[1] == 'versions/list.js')]
-        if bad:
-            sys.exit('versions.py changed more than the snapshots; nothing committed:\n' + '\n'.join(bad[:20]))
-        git('add', 'versions')
-        git('commit', '-qm', f'Versions: add the v{v} snapshot' + TRAILER)
-        if push_main(base):
-            break
-        git('reset', '-q', '--hard', 'origin/main')
-    else:
-        sys.exit(f'v{v} is released but its snapshot could not be pushed (main kept moving): run python3 tools/versions.py on main and push.')
     git('checkout', '-q', branch)
     git('merge', '-q', '--ff-only', 'main')
     push('-q', 'origin', branch)
