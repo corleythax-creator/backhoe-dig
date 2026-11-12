@@ -186,11 +186,13 @@ function tfForgeCrowd(B,id){B.fg=1;const F=tf.F;tf.fgBusy=(tf.fgBusy||0)+1;
 function tfPrep(dt){if(!tf.load)tfLoad();if(tf.load!==2)return;if(gfxCur.forge&&!(tf.F&&tf.F.st))tfForge();
   if((tf.prepT=(tf.prepT||0)-dt)>0)return;tf.prepT=LOADP.done?0.25:0;const M=tf.M;
   for(const k in M)if(!M[k].texing){tfTex(M[k]);break}
-  if(tf.F&&tf.F.st===2&&gfxCur.forge&&!tf.fgBusy)for(const k in M)if(!M[k].fg){tfForgeCrowd(M[k],k);break}}
+  if(tf.F&&tf.F.st===2&&gfxCur.forge&&!tf.fgBusy)for(const k in M)if(!M[k].fg){tfForgeCrowd(M[k],k);break}
+  if(!LOADP.done&&tf.F&&tf.F.st===2)tfUhBoot()}
 // how many characters are ready to draw (their crowd built on High and Ultra, else their look's picture), of how many:
 // the loading cover waits for all of them (start.js), so nobody is built mid-game when they first walk into view
 function tfReady(){if(tf.q===undefined)return [0,1];if(!tf.q)return [1,1];if(tf.load===-1)return [1,1];if(tf.load!==2||!tf.M)return [0,1];const fg=gfxCur.forge&&!(tf.F&&tf.F.st===-1);let n=0,t=0;
-  for(const k in tf.M){const B=tf.M[k];t++;if(fg?(B.fg&&B.fg!==1)||B.fgErr:B.texing)n++}if(fg&&!(tf.F&&tf.F.st===2))n=0;return [n,t]}
+  for(const k in tf.M){const B=tf.M[k];t++;if(fg?(B.fg&&B.fg!==1)||B.fgErr:B.texing)n++}if(fg&&!(tf.F&&tf.F.st===2))n=0;
+  if(fg&&gfxCur.fgUltra&&!PHONE){t++;if(tf.F&&tf.F.uhBoot===2)n++}return [n,t]}
 // person p as instance i of crowd c: walking (pace = their speed), sitting (the clip's origin is on the floor under the
 // seat's middle, its seat 18 in up like the rooms' chairs and benches), driving (its seat 14 in up: lifted to where the
 // old seated pose's seat was, 18 in over p.y), or standing easy or talking (staff and customers)
@@ -213,9 +215,12 @@ function tfFgPose(p,c,i,dt){const hp=p.dead||p.hurt||p.hit?tfHitPose(p):null,die
 // TU.tfUltraR, swap from their crowd copy to a hero on their ultra mesh (Human Forge's ultra tier, ~100k triangles,
 // fetched from R2 the first time). The hero takes the crowd copy's place, clip and clip time (p.ct) every frame, its
 // mixer stepped to that time (no forge.update: that would run the crowds' clocks), so the swap does not show; the crowd
-// copy is skipped while it shows. One hero loads at a time; idle ones wait in a pool (TF_UH_POOL), and the ultra meshes
-// and maps of characters not seen lately are freed (TF_UH_KEEP), since each is ~60 MB on the GPU
-const TF_UH_POOL=4,TF_UH_KEEP=4,TF_UH_STICK=1.5,TF_UH_HOLD=3,_tfQ=new THREE.Quaternion(),_tfQ2=new THREE.Quaternion(),_tfE=new THREE.Euler(),_tfUp=new THREE.Vector3(0,1,0);
+// copy is skipped while it shows. One hero loads at a time; idle ones wait in a pool (tfUhPoolN), and the ultra meshes
+// and maps of characters not seen lately are freed past TU.tfUltraKeep, since each is ~60 MB on the GPU. Heroes are
+// loaded ahead (tfUhPre) for the characters of the nearest people within TU.tfUltraPre (a room's staff as you walk up
+// to its door), and one behind the loading cover (tfUhBoot) so the skin's shader is compiled before play
+const tfUhKeep=()=>Math.max(2,Math.round(TU.tfUltraKeep??8)),tfUhPoolN=()=>tfUhKeep()+(gfxCur.fgUltra||0);
+const TF_UH_STICK=1.5,TF_UH_HOLD=3,_tfQ=new THREE.Quaternion(),_tfQ2=new THREE.Quaternion(),_tfE=new THREE.Euler(),_tfUp=new THREE.Vector3(0,1,0);
 function tfUhOn(){return !!(gfxCur.fgUltra&&!PHONE&&tf.F&&tf.F.st===2)}
 // who gets a hero this frame: the nearest few in view whose character's crowd is ready (a little farther for those who
 // already have one, so nobody flickers at the edge)
@@ -228,18 +233,29 @@ function tfUhPick(cx,cz){const F=tf.F,U=F.uh||(F.uh={free:[],res:[],busy:0}),R=T
   c.sort((a,b)=>key(a)-key(b));const want=new Set(c.slice(0,n).map(a=>a[1]));
   for(const p of tf.people)if(p.uh&&!want.has(p))tfUhFree(p);for(const p of U.gone||[])if(p.uh&&tf.people.indexOf(p)<0)tfUhFree(p);U.gone=[...want];
   for(const p of want)if(!p.uh){const i=U.free.findIndex(h=>h.id==='island_'+p.body);if(i>=0){p.uh=U.free.splice(i,1)[0];p.uhT=now;tfUhUse(p.uh.id)}else if(!U.busy)tfUhLoad(p.body)}
-  return want}
+  tfUhPre(cx,cz);return want}
+// load ahead: the characters of the nearest people within TU.tfUltraPre whose crowd is ready, up to TU.tfUltraKeep of
+// them (U.want, which the pool keeps over others), one hero at a time, checked every half second
+function tfUhPre(cx,cz){const U=tf.F.uh,now=performance.now();if(U.busy||now<(U.preT||0))return;U.preT=now+500;
+  const R=TU.tfUltraPre??25,c=[];for(const p of tf.people){if(p.inside||p.dead)continue;const d2=(p.x-cx)**2+(p.z-cz)**2;if(d2>R*R)continue;const B=tf.M[p.body];if(B&&B.fg&&B.fg!==1)c.push([d2,p.body])}
+  c.sort((a,b)=>a[0]-b[0]);const ids=[];for(const [,b] of c){const id='island_'+b;if(!ids.includes(id))ids.push(id);if(ids.length>=tfUhKeep())break}
+  U.want=new Set(ids);const have=new Set([...U.free.map(h=>h.id),...tf.people.filter(p=>p.uh).map(p=>p.uh.id)]);
+  const id=ids.find(i=>!have.has(i));if(id)tfUhLoad(id.slice(7))}
+// behind the loading cover on Ultra: one hero loaded and warmed, so the ultra skin's shader is compiled before play
+// (start.js waits for it through tfReady)
+function tfUhBoot(){const F=tf.F;if(!tfUhOn()||F.uhBoot||!tf.chars||!tf.chars.length)return;const B=tf.M[tf.chars[0].id];if(!B||!B.fg||B.fg===1)return;
+  const U=F.uh||(F.uh={free:[],res:[],busy:0});if(U.busy)return;F.uhBoot=1;tfUhLoad(tf.chars[0].id,()=>{F.uhBoot=2})}
 function tfUhUse(id){const U=tf.F.uh,i=U.res.indexOf(id);if(i>=0)U.res.splice(i,1);U.res.push(id)}
-function tfUhLoad(body){const F=tf.F,U=F.uh,id='island_'+body;U.busy=1;tfUhUse(id);
-  F.f.hero(id,{ultra:true,autoLod:false,castShadow:!!gfxCur.pbr,receiveShadow:true}).then(h=>{U.busy=0;if(!h.ultra){h.dispose();return}
+function tfUhLoad(body,done){const F=tf.F,U=F.uh,id='island_'+body,fin=()=>{if(done)done()};U.busy=1;tfUhUse(id);
+  F.f.hero(id,{ultra:true,autoLod:false,castShadow:!!gfxCur.pbr,receiveShadow:true}).then(h=>{U.busy=0;if(!h.ultra){h.dispose();fin();return}
     h.object.traverse(o=>{if(o.isMesh){const M=o.material;M.envMap=skyEnv;M.envMapIntensity=0.5;o.castShadow=!!gfxCur.pbr}});h.object.visible=false;scene.add(h.object);(U.types||(U.types={}))[id]=h.type;
-    U.busy=1;return gpuWarm(h.object).then(()=>{U.busy=0;tfUhPool(h)})})
-    .catch(e=>{U.busy=0;console.warn('townsfolk ultra:',id,e)})}
+    U.busy=1;return gpuWarm(h.object).then(()=>{U.busy=0;tfUhPool(h);fin()})})
+    .catch(e=>{U.busy=0;fin();console.warn('townsfolk ultra:',id,e)})}
 function tfUhFree(p){const h=p.uh;p.uh=null;h.object.visible=false;tfUhPool(h)}
-// into the pool, dropping the oldest idle hero past TF_UH_POOL; then free the GPU copies of characters past TF_UH_KEEP
-function tfUhPool(h){const U=tf.F.uh;U.free.push(h);while(U.free.length>TF_UH_POOL){const o=U.free.shift();o.dispose();o.object.traverse(m=>{if(m.isMesh)m.material.dispose()})}
+// into the pool, dropping the oldest idle hero past tfUhPoolN() (keeping those wanted ahead); then free the GPU copies of characters past TU.tfUltraKeep
+function tfUhPool(h){const U=tf.F.uh,W=U.want||new Set();U.free.push(h);while(U.free.length>tfUhPoolN()){let i=U.free.findIndex(x=>!W.has(x.id));if(i<0)i=0;const o=U.free.splice(i,1)[0];o.dispose();o.object.traverse(m=>{if(m.isMesh)m.material.dispose()})}
   const live=new Set([...U.free.map(h=>h.id),...tf.people.filter(p=>p.uh).map(p=>p.uh.id)]);
-  while(U.res.length>TF_UH_KEEP){const i=U.res.findIndex(id=>!live.has(id));if(i<0)break;const id=U.res.splice(i,1)[0],t=tf.F.f.library&&tfUhType(id);
+  while(U.res.length>tfUhKeep()){const i=U.res.findIndex(id=>!live.has(id));if(i<0)break;const id=U.res.splice(i,1)[0],t=tf.F.f.library&&tfUhType(id);
     if(t&&t.ultra){const q=t.ultra;t.ultra=null;q.then(u=>{if(!u)return;u.geo.dispose();for(const x of [u.tex,u.normal,u.rough])if(x)x.dispose()})}}}
 function tfUhType(id){const U=tf.F.uh;U.types=U.types||{};return U.types[id]}
 // every hero back to the pool (graphics lowered, the town out of reach)
