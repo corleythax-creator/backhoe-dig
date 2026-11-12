@@ -19,9 +19,11 @@
 // Moving, turning or hiding a building in the map editor carries it (bfAfter, called at the end of fxApply).
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 const BF_SITE='https://corley-forge-studio.vercel.app/building/library/',BF_PLACES='corleys_island.json';
-// a loading-speed test (owner, Nov 10): only these Building Forge buildings are brought in, the rest keep the game's own
-// stand-ins; null brings in all of them again
-const BF_ONLY=new Set(['lakeside_brewery']);
+// every Building Forge building is brought in (owner, Nov 12), nearest the player first: those within BF_FIRST metres
+// before the loading cover lifts, the rest one at a time behind the game with BF_GAP ms between them for frames to be
+// drawn (bfSync1). BF_ONLY, a set of building ids, brings in only those (the loading-speed test of Nov 10 had the
+// brewery alone); the rest then keep the game's own stand-ins
+const BF_ONLY=null,BF_FIRST=70,BF_GAP=250;
 const BF_NEAR=30,BF_OPEN=1.35,BF_STAFF=new Set(['counter','desk','island']),BF_SHOP=new Set(['counter','washer','dryer','desk','island','fridge','range','vanity']);
 const bf={lib:null,places:null,kinds:{},inst:{},lots:[],gen:0,qa:new THREE.Quaternion(),ay:new THREE.Vector3(0,1,0)};
 // which setting draws an area's buildings
@@ -481,17 +483,26 @@ function bfFlush(){for(const F of FX_MESH)if(F.bfDirty){F.bfDirty=0;F.m.geometry
 // town's buildings are in, and their shaders built, before you are let in rather than landing in view 10 s later and
 // building them there frame by frame (the lag of the first 45 s)
 // on or off by area (gfxApply, and once at load): the library and the places the first time, each kind when first
-// wanted, then every building laid again whose setting changed
+// wanted, then every building laid again whose setting changed. bf.done: every wanted building is in
 async function bfSync(){try{await bfSync1()}finally{bf.ready=true}}
 async function bfSync1(){if(typeof FX==='undefined'||!FX.length)return;const gen=++bf.gen;
   if(!bfWant('town')&&!bfWant('homes')&&!bf.lots.length)return;
   try{if(!bf.lib){const get=async u=>{const r=await fetch(BF_SITE+u);if(!r.ok)throw new Error(u+' '+r.status);return r.json()};
       const [lib,pl]=await Promise.all([get('library.json'),get(BF_PLACES)]);bf.lib=Object.fromEntries(lib.buildings.map(b=>[b.id,b]));bf.places=pl.places.filter(p=>bf.lib[p.id])}
-    const todo=bf.places.filter(p=>bfWant(p.area)&&!p.built&&(!BF_ONLY||BF_ONLY.has(p.id))),K={};
-    for(const id of new Set(todo.map(p=>p.id)))K[id]=await bfKind(id);if(gen!==bf.gen)return;
-    for(const p of todo){p.built=1;const L=Object.assign({},p),item=bfItem(L);if(!item||item.bf)continue;bfBuild(L,K[L.id],item);bf.lots.push(L)}}
-  catch(e){console.warn('Building Forge: the town not loaded',e);return}
-  const as=new Map();for(const a of assets)if(FX_KN[a.t])as.set(a.c,a);
+    // nearest the player first (as the game opens, nearest where it will put him: controls.js START_AT); the buildings round him (the nearest at least) all at once, then the cover can lift
+    const me=!bf.ready&&typeof startAuto==='function'&&startAuto()?START_AT:typeof wk!=='undefined'&&isFinite(wk.x)?wk:camera.position,d2=p=>(p.x-me.x)**2+(p.z-me.z)**2,
+      todo=bf.places.filter(p=>bfWant(p.area)&&!p.built&&(!BF_ONLY||BF_ONLY.has(p.id))).sort((a,b)=>d2(a)-d2(b));
+    const put=async ps=>{const K=await Promise.all(ps.map(p=>bfKind(p.id)));if(gen!==bf.gen)return false;
+      ps.forEach((p,i)=>{if(p.built)return;p.built=1;const L=Object.assign({},p),item=bfItem(L);if(!item||item.bf)return;bfBuild(L,K[i],item);bf.lots.push(L)});bfLay();return true};
+    bf.done=false;const first=todo.filter((p,i)=>!i||d2(p)<BF_FIRST*BF_FIRST);
+    if(first.length&&!await put(first))return;
+    bfLay();bf.ready=true;
+    for(const p of todo.slice(first.length)){await new Promise(r=>setTimeout(r,BF_GAP));if(gen!==bf.gen)return;
+      try{if(!await put([p]))return}catch(e){console.warn('Building Forge: '+p.id+' not loaded',e)}}
+    bf.done=true}
+  catch(e){console.warn('Building Forge: the town not loaded',e);bfLay();return}}
+// each building laid whose setting changed (and the game's own taken out or put back under it)
+function bfLay(){const as=new Map();for(const a of assets)if(FX_KN[a.t])as.set(a.c,a);
   for(const L of bf.lots){const item=FX.find(x=>x.bf===L),on=bfWant(L.area);if(!item||L.on===on)continue;L.on=on;fxApply(item,as.get(item.id)||null)}
   for(const F of FX_MESH)if(F.dirty){F.dirty=0;F.bfDirty=1}bfFlush()}
 bfSync();

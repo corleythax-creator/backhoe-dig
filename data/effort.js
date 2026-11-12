@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-12T01:57:00Z",
+ "updated": "2026-11-12T02:57:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -138,9 +138,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-11",
-   "dh": 30.75,
-   "act": 3,
-   "versions": 7
+   "dh": 40.75,
+   "act": 3.5,
+   "versions": 8
   }
  ],
  "extra": [
@@ -3903,6 +3903,15 @@ window.EFFORT = {
    "tris": 7316632,
    "chars": 2669039,
    "what": "The loading screen now builds every townsperson's crowd before you play (a Townsfolk row shows the count), so people no longer stall the game the first time they walk into view."
+  },
+  {
+   "v": 418,
+   "asked": "2026-11-11T18:20:00-06:00",
+   "live": "2026-11-11T20:57:17-06:00",
+   "dh": 10,
+   "tris": 7859143,
+   "chars": 2688636,
+   "what": "Path lights and bollards are separate again; 78 street, site, dock and yard things now use Forge Studio's detailed models, plus a site office trailer and 8 ft picnic table; every Building Forge building in town is drawn again, nearest first."
   }
  ]
 };
