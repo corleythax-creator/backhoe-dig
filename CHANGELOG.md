@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Wednesday, November 11, 2026
 
+- **v417** (7:57 PM) The loading screen now builds every townsperson's crowd before you play (a Townsfolk row shows the count), so people no longer stall the game the first time they walk into view.
 - **v416** (7:20 PM) Fixed townsfolk drawn as spiky shards on High/Ultra: the squeezed people files store vertex data interleaved, and Human Forge's reader now reads it that way.
 - **v415** (6:58 PM) On Ultra, people seated close by (a full brewery) no longer flicker between their crowd look and their full-detail look, and stop loading new detailed models every few seconds.
 - **v414** (6:57 PM) Model files snapped and meshopt-packed (about half the download), every texture kept compressed on the graphics card (KTX2, about half the texture memory), machine, boat and train models load only when you come near, and the townsfolk's heavy stand-in mesh is skipped where Human Forge draws them

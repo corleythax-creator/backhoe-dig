@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-12T01:20:00Z",
+ "updated": "2026-11-12T01:57:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -138,9 +138,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-11",
-   "dh": 29.25,
-   "act": 2.5,
-   "versions": 6
+   "dh": 30.75,
+   "act": 3,
+   "versions": 7
   }
  ],
  "extra": [
@@ -3894,6 +3894,15 @@ window.EFFORT = {
    "tris": 7318024,
    "chars": 2668224,
    "what": "Fixed townsfolk drawn as spiky shards on High/Ultra: the squeezed people files store vertex data interleaved, and Human Forge's reader now reads it that way."
+  },
+  {
+   "v": 417,
+   "asked": "2026-11-11T19:40:00-06:00",
+   "live": "2026-11-11T19:57:09-06:00",
+   "dh": 1.5,
+   "tris": 7316632,
+   "chars": 2669039,
+   "what": "The loading screen now builds every townsperson's crowd before you play (a Townsfolk row shows the count), so people no longer stall the game the first time they walk into view."
   }
  ]
 };
