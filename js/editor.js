@@ -714,8 +714,8 @@ function edRoadCard(){const ob=$('#edRoadNew'),sb=$('#edStreetNew'),fb=$('#edRoa
 // Line the street: a row of street lights, lamp posts, trees, benches or hydrants along a paved street, set back by the
 // curb (lights and hydrants) or in the sidewalk's outer half (trees, benches), facing the street. They are ordinary
 // placed things: picked once placed, to move, turn, size, colour or delete like any other; one undo step
-const ED_LINE_KINDS=[['streetlt','Street lights'],['lamppost','Lamp posts'],['leafy','Street trees'],['bench','Benches'],['hydrant','Fire hydrants'],['bollard','Path lights'],['planter','Flower planters']];
-function edLineStreet(r){const k=ed.lineK,sw=r.sw||0,c=r.w/2+(r.cb?ST.curb:0),near=k==='streetlt'||k==='lamppost'||k==='hydrant'||k==='bollard',
+const ED_LINE_KINDS=[['streetlt','Street lights'],['lamppost','Lamp posts'],['leafy','Street trees'],['bench','Benches'],['hydrant','Fire hydrants'],['pathlight','Path lights'],['planter','Flower planters']];
+function edLineStreet(r){const k=ed.lineK,sw=r.sw||0,c=r.w/2+(r.cb?ST.curb:0),near=k==='streetlt'||k==='lamppost'||k==='hydrant'||k==='pathlight',
     off=sw?(near?c+Math.min(0.5,sw/2):c+sw*(k==='bench'?0.7:0.6)):c+(k==='leafy'?2.2:0.7),spots=stAlong(r,ed.lineG*FT,ed.lineS,off);
   const have=assets.filter(a=>a.t===k).length,room=Math.max(0,edCap(k)-have);if(!spots.length){toast(say('edStreetShort'),'',2400);return}
   if(!room){toast(say('edLineFull',{what:ED_LINE_KINDS.find(q=>q[0]===k)[1].toLowerCase(),n:edCap(k)}),'',2800);return}

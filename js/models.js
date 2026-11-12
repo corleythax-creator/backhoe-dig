@@ -305,8 +305,20 @@ function mdlKitOn(on){mdl.kitOn=on;mdl.kitDirty=false;mdl.kitN++;if(on)mdlKitLoa
 // scans (tools/scans.js) first: its photo-scanned kinds stand in for the code-built ones of the same name
 const MDL_SPOT_FILES=['scans','site','town'];mdl.spotF={};mdl.spotIM={};mdl.propIM={};mdl.spotsOn=false;
 function mdlFindNode(k){for(const f of MDL_SPOT_FILES){const sc=mdl.spotF[f],n=sc&&sc.getObjectByName(k);if(n&&mdlNodeParts(n).length)return n}return null}
-function mdlInst(node,cap){return mdlNodeParts(node).map(([g,mt])=>{const im=new THREE.InstancedMesh(g,mt,cap);im.castShadow=mdlShadeOk(mt);im.receiveShadow=true;
+function mdlInst(node,cap,parts){return (parts||mdlNodeParts(node)).map(([g,mt])=>{const im=new THREE.InstancedMesh(g,mt,cap);im.castShadow=mdlShadeOk(mt);im.receiveShadow=true;
   im.layers.enable(RAIN_LAYER);if(mt.envMapIntensity>1.3)im.renderOrder=2;im.visible=false;scene.add(im);return im})}
+// a placed kind's detailed parts: the node of its own name, or the one PROP_MDL (props.js) names for it, as one or more
+// copies laid on the kind's own model (moved, turned about y and sized), merged per material so they still draw as one
+function mdlCopies(g,L){const M4=new THREE.Matrix4(),q=new THREE.Quaternion(),up=new THREE.Vector3(0,1,0),
+    gs=L.map(([x,y,z,yaw,s])=>g.clone().applyMatrix4(M4.compose(new THREE.Vector3(x,y,z),q.setFromAxisAngle(up,yaw||0),new THREE.Vector3(s||1,s||1,s||1))));
+  if(gs.length===1){gs[0].computeBoundingSphere();return gs[0]}
+  const out=new THREE.BufferGeometry(),n=g.attributes.position.count;
+  for(const k in g.attributes){const a=g.attributes[k],A=new a.array.constructor(a.array.length*gs.length);gs.forEach((c,i)=>A.set(c.attributes[k].array,i*a.array.length));
+    out.setAttribute(k,new THREE.BufferAttribute(A,a.itemSize,a.normalized))}
+  if(g.index){const I=[];gs.forEach((c,i)=>{for(const v of c.index.array)I.push(v+i*n)});out.setIndex(I)}
+  out.computeBoundingSphere();return out}
+function mdlPropParts(k){if(PROP_FF[k])return null;const A=PROP_MDL[k],node=mdlFindNode(A?A[0]:k);if(!node)return null;const parts=mdlNodeParts(node);
+  return A&&A[1]?parts.map(([g,mt])=>[mdlCopies(g,A[1]),mt]):parts}
 function mdlSpotsOn(on){mdl.spotsOn=on;mdl.spotsDirty=false;
   if(on)for(const f of MDL_SPOT_FILES)if(mdl.spotF[f]===undefined){mdl.spotF[f]=null;mdlLoad(f,sc=>{mdl.spotF[f]=sc;mdl.spotsDirty=true})}
   const o=new THREE.Object3D();
@@ -316,9 +328,9 @@ function mdlSpotsOn(on){mdl.spotsOn=on;mdl.spotsDirty=false;
       for(const im of ims){im.instanceMatrix.needsUpdate=true;im.computeBoundingSphere()}}}
     const show=on&&!!ims;if(ims)ims.show=show;for(const im of ims||[])im.visible=show;for(const m of MDL_SPOT_SIMPLE[k]||[])m.visible=!show}
   if(typeof propIMs!=='undefined')for(const k in propIMs){const im=propIMs[k];let ims=mdl.propIM[k];
-    if(on&&!ims){const node=mdlFindNode(k);if(node){ims=mdl.propIM[k]=mdlInst(node,PROPS[k].cap);
+    if(on&&!ims){const parts=mdlPropParts(k);if(parts){ims=mdl.propIM[k]=mdlInst(null,PROPS[k].cap,parts);
       for(const m of ims){m.instanceMatrix=im.instanceMatrix;m.instanceColor=im.instanceColor;m.frustumCulled=false}}}}
-  mdlPropsSync()}
+  if(on&&typeof ffNeed==='function')ffNeed();mdlPropsSync()}
 // each render (gfx.js renderer.render): of every kind's copies (MDL_SPOTS, read live, so the map editor's moves show),
 // only those in view (a few metres of slack, for the shadows they throw in) and that the game camera's own test would
 // draw (gfxSees: big enough on screen, inside the haze, seen from the room you are in; else at least 2 pixels) are
