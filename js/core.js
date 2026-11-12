@@ -137,7 +137,12 @@ const CS_U={uCSMap:{value:null},uCSA:{value:new THREE.Vector4()},uCSB:{value:new
 // lights in, the room's 360° picture and VR don't matter; a light with none (a headlight, a street lamp) lights as
 // before, and with no masks (uLmN 0) nothing changes. Only the buildings' own materials take it (lmOn, forgetown.js:
 // defined BF_LM): a sampler more on every material ran the ground's shader past the 16 texture units a GPU may have
-const LM_U={uLmMap:{value:(()=>{const t=new THREE.DataTexture(new Uint8Array([255,255,255,255]),1,1);t.needsUpdate=true;return t})()},uLmC:{value:Array.from({length:8},()=>new THREE.Vector4())},uLmD:{value:Array.from({length:8},()=>new THREE.Vector4())},uLmN:{value:0}};
+const LM_U={uLmMap:{value:(()=>{const t=new THREE.DataTexture(new Uint8Array([255,255,255,255]),1,1);t.needsUpdate=true;return t})()},uLmC:{value:Array.from({length:8},()=>new THREE.Vector4())},uLmD:{value:Array.from({length:8},()=>new THREE.Vector4())},uLmN:{value:0},
+  uGlA:{value:Array.from({length:16},()=>new THREE.Vector4())},uGlB:{value:Array.from({length:16},()=>new THREE.Vector4())},uGlC:{value:Array.from({length:16},()=>new THREE.Vector4())},uGlN:{value:0}};
+// lit buildings glow (forgetown.js bfGlTick): up to 16 boxes (uGlA: middle x, z and the cos, sin of its turn; uGlB: half
+// width, half length, bottom, top; uGlC: the light), each the inside of a building whose lights are on, its walls'
+// middle lines inward. A building material (BF_LM) inside one takes its light as it takes an ambient light's: the warm
+// light of a lit room, from the street as well as inside
 // the haze (every Graphics level): it thickens with the true distance from the camera (not the depth along the view, which
 // thinned it at the screen's sides and shifted it as the camera turned), lies thicker low over the lake than up high,
 // and toward the sun takes the sun's light, the same glow the sky has round the sun (so far ground meets the sky behind
@@ -178,7 +183,12 @@ const HZ_U={uHzSun:{value:new THREE.Vector4(0,1,0,1)},uHzSunC:{value:new THREE.C
     'float lmShade(vec3 lp,vec3 gp){if(uLmN==0)return 1.0;mat3 iv=transpose(mat3(viewMatrix));vec3 lw=iv*(lp-viewMatrix[3].xyz);\n'+
     '  for(int k=0;k<8;k++){if(k>=uLmN)break;vec4 c=uLmC[k];if(distance(lw,c.xyz)>0.03)continue;vec4 d=uLmD[k];vec3 w=iv*(gp-viewMatrix[3].xyz);\n'+
     '    if(w.y<d.y||w.y>d.z)return 0.0;vec2 l=(w.xz-c.xz)/(2.0*c.w)+0.5;if(l.x<0.0||l.x>1.0||l.y<0.0||l.y>1.0)return 1.0;\n'+
-    '    return texture(uLmMap,(vec2(mod(d.x,4.0),floor(d.x/4.0))+clamp(l,0.003,0.997))/vec2(4.0,2.0)).r;}\n  return 1.0;}\n#endif\n';
+    '    return texture(uLmMap,(vec2(mod(d.x,4.0),floor(d.x/4.0))+clamp(l,0.003,0.997))/vec2(4.0,2.0)).r;}\n  return 1.0;}\n'+
+    'uniform vec4 uGlA[16],uGlB[16],uGlC[16];uniform int uGlN;\n'+
+    'vec3 glShade(vec3 gp){vec3 s=vec3(0.0);if(uGlN==0)return s;vec3 w=transpose(mat3(viewMatrix))*(gp-viewMatrix[3].xyz);\n'+
+    '  for(int k=0;k<16;k++){if(k>=uGlN)break;vec4 a=uGlA[k],b=uGlB[k];vec2 d=w.xz-a.xy;vec2 l=vec2(d.x*a.z-d.y*a.w,d.x*a.w+d.y*a.z);\n'+
+    '    if(abs(l.x)<b.x&&abs(l.y)<b.y&&w.y>b.z&&w.y<b.w)s+=uGlC[k].rgb;}\n  return s;}\n#endif\n';
+  C.lights_fragment_end='#if defined( RE_IndirectDiffuse ) && defined( BF_LM )\n\tirradiance += glShade( geometryPosition );\n#endif\n'+C.lights_fragment_end;
   for(const [a,b] of [['getPointLightInfo( pointLight, geometryPosition, directLight );','pointLight'],['getSpotLightInfo( spotLight, geometryPosition, directLight );','spotLight']])
     if(C.lights_fragment_begin.includes(a))C.lights_fragment_begin=C.lights_fragment_begin.replace(a,a+'\n\t\t#ifdef BF_LM\n\t\tdirectLight.color *= lmShade( '+b+'.position, geometryPosition );\n\t\t#endif');
   const dl='getDirectionalLightInfo( directionalLight, directLight );';

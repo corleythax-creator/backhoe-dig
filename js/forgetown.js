@@ -117,7 +117,7 @@ const BF_GLOW=new THREE.MeshBasicMaterial({color:0xffe2a8}),bfMats=new Map();
 // Only what is drawn: nothing here is saved or touches the ground. The map editor carries them: each is placed from
 // its building's own place every third of a second (and bfAfter asks for it at once).
 const BF_LT_KEY={low:'bfLtMed',med:'bfLtMed',high:'bfLtHigh',ultra:'bfLtUltra',quest:'bfLtMed'},BF_LT_I=1.2,BF_LT_DECAY=1.3;
-const bfLt={pts:[],spots:[],all:[],n:0,t:0,dirty:1,on:0,real:0,glow:new Map(),cam:new THREE.Vector3(),v:new THREE.Vector3(),halos:null,fill:0,fillK:0};
+const bfLt={gl:[],inB:null,pts:[],spots:[],all:[],n:0,t:0,dirty:1,on:0,real:0,glow:new Map(),cam:new THREE.Vector3(),v:new THREE.Vector3(),halos:null,fill:0,fillK:0};
 // inside a building whose lights are on, a warm fill (TU.bfLtFill) lights the room as its many fixtures would, beyond
 // the few the pool can hold: an ambient light always in the scene (ambient light adds no shader work), up while the
 // camera is within a lit building's walls and under its roof, down again outside
@@ -171,9 +171,9 @@ function bfLightTick(lamp,ll,dt){bfEnvTick();
     for(const L of bf.lots){const B=L.b;if(!B||!B.g.visible||!B.K.lights.length)continue;any=true;
       if(Math.hypot(cam.x-B.g.position.x,cam.z-B.g.position.z)>far+B.rad)continue;B.g.updateMatrixWorld();
       const it=bf.lib[L.id];if(it&&it.width){v.copy(cam);B.g.worldToLocal(v);if(Math.abs(v.x)<it.width/2&&Math.abs(v.z)<it.length/2&&v.y>-0.5&&v.y<8)
-        for(const l of B.K.lights){const k=l.auto?lamp:1;if(k>fill)fill=k}}
+        for(const l of B.K.lights){const k=l.auto?lamp:1;if(k>fill){fill=k;bfLt.inB=B}}}
       for(const l of B.K.lights){if(l.auto&&lamp<=0.01)continue;v.copy(l.p).applyMatrix4(B.g.matrixWorld);const d=v.distanceTo(cam);if(d<far)C.push({l,B,L,d,x:v.x,y:v.y,z:v.z})}}
-    bfLt.fill=fill;C.sort((a,b)=>a.d-b.d);bfLt.on=C.length;bfLtPool(bfLtBudget());
+    if(!fill)bfLt.inB=null;bfGlPick(cam);bfLt.fill=fill;C.sort((a,b)=>a.d-b.d);bfLt.on=C.length;bfLtPool(bfLtBudget());
     const A=bfLt.all,pick=C.slice(0,A.length),free=[];
     for(const s of A){const i=pick.findIndex(c=>c&&c.l===s.l&&c.B===s.B);if(i<0){s.l=null;free.push(s)}else{s.c=pick[i];pick[i]=null}}
     for(const c of pick){if(!c)continue;const want=!!c.l.d,i=Math.max(0,free.findIndex(s=>!!s.o.isSpotLight===want)),s=free.splice(i,1)[0];s.l=c.l;s.B=c.B;s.c=c;s.k=0}
@@ -187,7 +187,38 @@ function bfLightTick(lamp,ll,dt){bfEnvTick();
   bfLt.fillK+=(bfLt.fill-bfLt.fillK)*Math.min(1,dt*3);BF_FILL.intensity=bfLt.fillK*(TU.bfLtFill??1)*BF_FILL_I*LI*(1-0.7*inRL.k);
   const g=ll*TU.bfLight*BF_LT_I*LI,f=Math.min(1,dt*4);
   for(const s of bfLt.all){const l=s.l;if(!l)continue;s.k=Math.min(1,s.k+f);s.o.intensity=g*l.k*(l.auto?lamp:1)*s.k*s.e*(s.o.isSpotLight&&l.d?1.5:1)}
-  inRoomTick(dt)}
+  bfGlTick(lamp);inRoomTick(dt)}
+// ---------- lit buildings glow (Medium graphics and up: GFX bfLt) ----------
+// The pool's few real lights go to the fixtures nearest the camera, so from the street a shop's room stood dark however
+// many lamps it has. Each building whose lights are on now glows inside (core.js glShade): its floors, inside walls and
+// furniture take a warm light as from an ambient light, as strong as its lumens over its floor area (BF_GL_LUX lumens a
+// square metre is a shop's full glow) times the Tuning bfGlow, in its lights' colour; auto lights only after dusk.
+// The box is its walls' middle lines inward, so the outside faces of the walls, the windows and the roof stay as they
+// were. Up to 16 buildings within TU.bfGlowFar, nearest first; in the one you are in, the room's own fill takes over.
+// Only how it looks: nothing is saved. Daylight's materials are untouched (it adds light, as a lamp does)
+const BF_GL_N=16,BF_GL_LUX=40;
+// a building kind's glow box and light (building space), kept on the kind; null with no walls or no indoor lights
+function bfGlK(L,B){const K=B.K;if(K.gl!==undefined)return K.gl;K.gl=null;const it=bf.lib[L.id];if(!it||!Array.isArray(it.walls)||!it.walls.length)return null;
+  let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9;for(const w of it.walls){x0=Math.min(x0,w[0],w[2]);x1=Math.max(x1,w[0],w[2]);z0=Math.min(z0,w[1],w[3]);z1=Math.max(z1,w[1],w[3])}
+  const hx=(x1-x0)/2-0.02,hz=(z1-z0)/2-0.02,lv=it.levels||[];if(!(hx>0.5&&hz>0.5))return null;
+  const f0=lv.length?+lv[0].floorY||0:0;let top=-1e9;for(const r of it.rooms||[])if(r.ceilingY!=null)top=Math.max(top,+r.ceilingY);
+  if(!(top>f0)){const l=lv[lv.length-1];top=l?(+l.floorY||0)+(+l.height||3):(+it.height||3)}
+  let a=0,o=0;const col=new THREE.Color(0,0,0);
+  for(const l of K.lights){if(l.out)continue;const lm=l.k*l.k*800;if(l.auto)a+=lm;else o+=lm;col.r+=l.col.r*lm;col.g+=l.col.g*lm;col.b+=l.col.b*lm}
+  if(!(a+o>0))return null;col.multiplyScalar(1/(a+o));const ar=4*hx*hz*Math.max(1,lv.length)*BF_GL_LUX;
+  return K.gl={mx:(x0+x1)/2,mz:(z0+z1)/2,hx,hz,y0:f0-0.1,y1:top+0.05,a:a/ar,o:o/ar,col}}
+// every third of a second: the lit buildings nearest the camera
+function bfGlPick(cam){const G=[],far=TU.bfGlowFar??55;bfLt.gl=G;if(!(gfxCur&&gfxCur.bfLt)||!((TU.bfGlow??1)>0))return;
+  for(const L of bf.lots){const B=L.b;if(!B||!B.g.visible||!B.K.lights.length)continue;const d=Math.hypot(cam.x-B.g.position.x,cam.z-B.g.position.z)-B.rad;
+    if(d>far)continue;const q=bfGlK(L,B);if(q)G.push({B,q,d})}
+  G.sort((a,b)=>a.d-b.d);G.length=Math.min(G.length,BF_GL_N)}
+// each frame: their boxes and light, fading out toward the edge of the range
+function bfGlTick(lamp){const U=LM_U,far=TU.bfGlowFar??55,gk=(TU.bfGlow??1)*BF_FILL_I*LI;let n=0;
+  for(const e of bfLt.gl){const q=e.q,B=e.B,p=B.g.position;
+    const s=Math.min(2,q.a*lamp+q.o)*gk*(B===bfLt.inB?1-bfLt.fillK:1)*Math.max(0,Math.min(1,(far-e.d)/10));if(!(s>1e-3))continue;
+    const f=B.g.rotation.y,c=Math.cos(f),sn=Math.sin(f);U.uGlA.value[n].set(p.x+q.mx*c+q.mz*sn,p.z-q.mx*sn+q.mz*c,c,sn);
+    U.uGlB.value[n].set(q.hx,q.hz,p.y+q.y0,p.y+q.y1);U.uGlC.value[n].set(q.col.r*s,q.col.g*s,q.col.b*s,0);n++}
+  U.uGlN.value=n}
 // walls stop the lights (core.js LM_U): each light the pool holds gets a mask in its cell of the shared map, a square
 // round it as far as it reaches, white where it can see and black in the shadow of every wall of its floor (the
 // library's walls, whose doorways are gaps; drawn on the plan, through the building's own turn). Drawn again only when
