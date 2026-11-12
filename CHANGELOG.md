@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Wednesday, November 11, 2026
 
+- **v418** (8:57 PM) Path lights and bollards are separate again; 78 street, site, dock and yard things now use Forge Studio's detailed models, plus a site office trailer and 8 ft picnic table; every Building Forge building in town is drawn again, nearest first.
 - **v417** (7:57 PM) The loading screen now builds every townsperson's crowd before you play (a Townsfolk row shows the count), so people no longer stall the game the first time they walk into view.
 - **v416** (7:20 PM) Fixed townsfolk drawn as spiky shards on High/Ultra: the squeezed people files store vertex data interleaved, and Human Forge's reader now reads it that way.
 - **v415** (6:58 PM) On Ultra, people seated close by (a full brewery) no longer flicker between their crowd look and their full-detail look, and stop loading new detailed models every few seconds.
