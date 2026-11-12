@@ -45,8 +45,13 @@
       off += 8 + len;
     }
     const acc = (i) => {
-      const a = json.accessors[i], v = json.bufferViews[a.bufferView], T = CT[a.componentType];
-      return new T(bin, (v.byteOffset || 0) + (a.byteOffset || 0), a.count * NC[a.type]);
+      const a = json.accessors[i], v = json.bufferViews[a.bufferView], T = CT[a.componentType], nc = NC[a.type];
+      const base = (v.byteOffset || 0) + (a.byteOffset || 0), st = v.byteStride || 0;
+      if (!st || st === nc * T.BYTES_PER_ELEMENT) return new T(bin, base, a.count * nc);
+      // interleaved vertex data (byteStride): copy each element out into a packed array
+      const out = new T(a.count * nc);
+      for (let k = 0; k < a.count; k++) out.set(new T(bin, base + k * st, nc), k * nc);
+      return out;
     };
     const view = (i) => { const v = json.bufferViews[i]; return new Uint8Array(bin, v.byteOffset || 0, v.byteLength); };
     return { json, acc, view };
