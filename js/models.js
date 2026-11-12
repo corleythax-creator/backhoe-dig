@@ -308,7 +308,7 @@ function mdlCopies(g,L){const M4=new THREE.Matrix4(),q=new THREE.Quaternion(),up
     out.setAttribute(k,new THREE.BufferAttribute(A,a.itemSize,a.normalized))}
   if(g.index){const I=[];gs.forEach((c,i)=>{for(const v of c.index.array)I.push(v+i*n)});out.setIndex(I)}
   out.computeBoundingSphere();return out}
-function mdlPropParts(k){const A=PROP_MDL[k],node=mdlFindNode(A?A[0]:k);if(!node)return null;const parts=mdlNodeParts(node);
+function mdlPropParts(k){if(PROP_FF[k])return null;const A=PROP_MDL[k],node=mdlFindNode(A?A[0]:k);if(!node)return null;const parts=mdlNodeParts(node);
   return A&&A[1]?parts.map(([g,mt])=>[mdlCopies(g,A[1]),mt]):parts}
 function mdlSpotsOn(on){mdl.spotsOn=on;mdl.spotsDirty=false;
   if(on)for(const f of MDL_SPOT_FILES)if(mdl.spotF[f]===undefined){mdl.spotF[f]=null;mdlLoad(f,sc=>{mdl.spotF[f]=sc;mdl.spotsDirty=true})}
@@ -321,7 +321,7 @@ function mdlSpotsOn(on){mdl.spotsOn=on;mdl.spotsDirty=false;
   if(typeof propIMs!=='undefined')for(const k in propIMs){const im=propIMs[k];let ims=mdl.propIM[k];
     if(on&&!ims){const parts=mdlPropParts(k);if(parts){ims=mdl.propIM[k]=mdlInst(null,PROPS[k].cap,parts);
       for(const m of ims){m.instanceMatrix=im.instanceMatrix;m.instanceColor=im.instanceColor;m.frustumCulled=false}}}}
-  mdlPropsSync()}
+  if(on&&typeof ffNeed==='function')ffNeed();mdlPropsSync()}
 // each render (gfx.js renderer.render): of every kind's copies (MDL_SPOTS, read live, so the map editor's moves show),
 // only those in view (a few metres of slack, for the shadows they throw in) and that the game camera's own test would
 // draw (gfxSees: big enough on screen, inside the haze, seen from the room you are in; else at least 2 pixels) are

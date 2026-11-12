@@ -32,7 +32,7 @@ const PROPS={
   dumpster:{n:'Dumpster',cat:3,w:2.0,d:1.8,cap:60,solid:1,deep:1},
   // lights (lamp: its kind in LAMP_K and where its lamps are on the model)
   streetlt:{n:'Street light',cat:5,w:0.6,d:0.6,cap:120,solid:[0.15,0.15],lamp:['street',[[0,7.66,1.76]]]},
-  lamp:{n:'Park lamp',cat:5,w:0.5,d:0.5,cap:150,solid:[0.12,0.12],lamp:['post',[[0,4.13,0]]]},
+  lamp:{n:'Park lamp',cat:5,w:0.5,d:0.5,cap:150,solid:[0.12,0.12],lamp:['post',[[0,4.77,0]]]},
   lamppost:{n:'Lamp post',cat:5,w:0.5,d:0.5,cap:150,solid:[0.12,0.12],lamp:['post',[[0,3.82,0]]]},
   flood:{n:'Floodlight',cat:5,w:0.9,d:0.6,cap:80,solid:[0.12,0.12],lamp:['flood',[[-0.25,4.31,0.2],[0.25,4.31,0.2]]]},
   uplight:{n:'Ground spotlight',cat:5,w:0.3,d:0.3,cap:200,lamp:['up',[[0,0.32,0.06]]]},
@@ -106,7 +106,7 @@ const PROPS={
   goal:{n:'Soccer goal',cat:8,w:3.8,d:1.3,cap:10},
   cornhole:{n:'Cornhole board',cat:8,w:0.61,d:1.22,cap:40}};
 // the Things library's groups (the editor's drawer and the block bar's What list)
-const ED_KIND_CATS=['Trees and rocks','Buildings','Fencing','Site gear','Yard','Lights','Road and traffic','Farm and garden','Play'];
+const ED_KIND_CATS=['Trees and rocks','Buildings','Fencing','Site gear','Yard','Lights','Road and traffic','Farm and garden','Play','Dock and water'];
 // the string lights' bulbs, hung on a sagging wire between the two poles
 const STR_PTS=[...Array(11)].map((_,k)=>{const x=-2.7+k*0.54;return [x,2.82-0.55*(1-(x/2.95)**2),0]});
 PROPS.stringlts.lamp[1]=STR_PTS;
@@ -170,7 +170,7 @@ const PROP_MODELS={
   streetlt:B=>{B.cyl(0.22,0.26,0.5,10,0x9a978f,0,0.25,0);B.cyl(0.07,0.11,7.3,10,0x8c9094,0,4.1,0);B.box(0.08,0.08,1.6,0x8c9094,0,7.82,0.75,-0.06,0,0);
     B.box(0.38,0.16,0.75,0x7d8186,0,7.78,1.76);B.box(0.3,0.03,0.56,0xfff4d8,0,7.68,1.76)},
   // Harbor Square's: the park lamp, the café table under its umbrella, the market stall (its counter at the front), the bollard
-  lamp:B=>{B.cyl(0.07,0.1,4.2,8,0x2f3236,0,2.1,0);B.box(0.45,0.18,0.45,0x2f3236,0,4.25,0);B.box(0.36,0.05,0.36,0xfff1c8,0,4.13,0)},
+  lamp:B=>{B.cyl(0.07,0.1,4.85,8,0x2f3236,0,2.42,0);B.box(0.45,0.18,0.45,0x2f3236,0,4.9,0);B.box(0.36,0.05,0.36,0xfff1c8,0,4.77,0)},
   cafe:B=>{const D=0x2b2d2f;B.cyl(0.4,0.4,0.04,16,D,0,0.74,0);B.cyl(0.04,0.04,0.74,8,D,0,0.37,0);B.cyl(0.03,0.03,2.4,6,0xe9e4d6,0,1.2,0);B.cyl(0.04,1.35,0.45,12,0x2f6b4f,0,2.3,0);
     for(const [x,z,yl] of PROPS.cafe.sit){B.box(0.42,0.05,0.42,D,x,0.45,z,0,yl,0);B.box(0.42,0.45,0.04,D,x-Math.sin(yl)*0.2,0.68,z-Math.cos(yl)*0.2,0,yl,0);B.cyl(0.02,0.02,0.45,6,D,x,0.22,z)}},
   stall:B=>{for(const x of [-1.3,1.3])for(const z of [-1.3,1.3])B.box(0.07,2.4,0.07,0xe9e4d6,x,1.2,z);B.cyl(0,2.05,0.8,4,0xf2efe6,0,2.8,0,0,Math.PI/4,0);
@@ -332,8 +332,111 @@ const PROP_MODELS={
     for(let k=1;k<9;k++)B.box(0.01,1.95,0.01,0xe8e8e8,-1.83+k*0.407,0.95,0,-0.55,0,0);for(let k=1;k<5;k++)B.box(3.66,0.01,0.01,0xe8e8e8,0,k*0.366,0.6-k*0.24)},
   cornhole:B=>{B.box(0.61,0.04,1.22,0xd8b27a,0,0.2,0,-0.25,0,0);B.box(0.12,0.045,1.22,0x2f5fa8,-0.2,0.21,0,-0.25,0,0);B.cyl(0.076,0.076,0.05,12,0x111111,0,0.33,-0.4,-0.25,0,0);
     for(const x of [-0.27,0.27])B.box(0.04,0.33,0.04,0x9a7a4a,x,0.17,-0.52);for(const [x,c] of [[-0.12,0xc8202a],[0.1,0x2f5fa8],[0.02,0xc8202a]])B.box(0.15,0.03,0.15,c,x,0.08+(x>0?0.05:0),0.9+x)}};
+// ---------- things from Forge Studio's prop library ----------
+// PROP_FF[kind]: f the model's id there (drawn from <FF_SITE><f>.glb with Machine models on Detailed, fetched the first
+// time one of that kind stands on the map: ffNeed below); w, d, h its size in metres and solid its collide boxes' reach
+// (library.json's width, length, height and collide; r: the model is turned a quarter, so w and d are too); the rest
+// are PROPS fields. A kind already in PROPS above keeps its other fields and its box-built model, fitted to the new
+// size; a new kind gets a stand-in from its shape (sh) and colour (col), which is what Low graphics shows, and
+// Medium and High too until the model is in or when the site can't be reached. float: it floats, its underside that
+// far under the water (or on the bed where that is shallower; a piling stands 2 m down). Ids are 2 to 16 lower-case
+// letters (mapDecode). Made from library.json by hand-picked ids; sizes are the library's own
+const FF_SITE='https://corley-forge-studio.vercel.app/prop/library/';
+const PROP_FF={
+  potty:{f:'ff_portable_toilet',w:1.15,d:1.28,h:2.31,solid:[0.56,0.64]},
+  dumpster:{f:'ff_dumpster_rolloff',n:'Roll-off dumpster (20 yd)',w:7.18,d:2.64,h:1.52,solid:[3.59,1.32],cap:30},
+  container:{f:'ff_container_20ft_red',n:'Shipping container (red)',w:2.44,d:6.12,h:2.59,r:1,solid:[1.22,3.06]},
+  scaffold:{f:'ff_scaffold_bay',w:2.47,d:1.67,h:3.23,solid:1},
+  lumber:{f:'ff_lumber_stack',w:1.26,d:3.66,h:0.76,r:1,solid:[0.59,1.83]},
+  jobbox:{f:'ff_job_box',w:1.34,d:0.8,h:0.87,solid:[0.65,0.4]},
+  barrow:{f:'ff_wheelbarrow',w:0.68,d:1.84,h:0.63,r:1,solid:0},
+  pipes:{f:'ff_pipe_rack',n:'Pipe rack',w:1.64,d:6.18,h:1.21,r:1,solid:[0.52,3.09]},
+  bikerack:{f:'ff_bike_rack',n:'Bike rack',w:2.58,d:0.59,h:0.94,solid:[1.16,0.27]},
+  newsbox:{f:'ff_newspaper_box',n:'Newspaper box',w:0.51,d:0.46,h:1.31,solid:[0.26,0.23]},
+  speedsign:{f:'ff_sign_speed_limit',w:0.61,d:0.07,h:2.96,solid:[0.05,0.05]},
+  doghouse:{f:'ff_doghouse',w:1.06,d:1.4,h:1.05,solid:[0.53,0.7]},
+  coop:{f:'ff_chicken_coop',w:1.48,d:4.1,h:1.92,r:1,solid:[0.74,2.05]},
+  grill:{f:'ff_gas_grill_black',n:'Gas grill (black)',w:1.37,d:0.58,h:1.16,solid:[0.68,0.29]},
+  bollard:{f:'ff_bollard_steel',n:'Bollard (steel pipe)',w:0.4,d:0.4,h:1.07,solid:[0.09,0.09]},
+  pathlight:{f:'ff_bollard_light',w:0.22,d:0.22,h:1.07,solid:0,lamp:['path',[[0,0.88,0]]]},
+  birdbath:{f:'ff_birdbath_stone',w:0.61,d:0.61,h:0.92,solid:[0.3,0.3]},
+  raisedbed:{f:'ff_raised_bed_cedar',n:'Raised garden bed (cedar)',w:2.44,d:1.23,h:0.45,solid:0,pad:[0.45,1.22,0.61]},
+  signal:{f:'ff_traffic_signal',n:'Traffic signal',cat:6,sh:'post',col:0x2a2c2e,w:0.88,d:0.67,h:4.37,solid:[0.12,0.12],cap:60},
+  streetsign:{f:'ff_street_name_sign',n:'Street-name sign',cat:6,sh:'post',col:0x1f6a3a,w:0.91,d:0.91,h:3.59,solid:[0.05,0.05],cap:150},
+  pedsign:{f:'ff_sign_ped_crossing',n:'Pedestrian crossing sign',cat:6,sh:'post',col:0xf2c12e,w:1.08,d:0.07,h:3.55,solid:[0.05,0.05],cap:150},
+  bussign:{f:'ff_sign_bus_stop',n:'Bus stop sign',cat:6,sh:'post',col:0x2f5fa8,w:0.46,d:0.09,h:2.91,solid:[0.05,0.05],cap:150},
+  parkmeter:{f:'ff_parking_meter',n:'Parking meter',cat:6,sh:'cyl',col:0x4a4d50,w:0.17,d:0.15,h:1.45,solid:[0.09,0.06],cap:150},
+  guardrail:{f:'ff_guardrail',n:'Guardrail (12 ft 6 in)',cat:6,sh:'fence',col:0x9a9ea1,w:3.81,d:0.45,h:0.81,solid:[1.9,0.22],run:1,cap:400},
+  chainlink:{f:'ff_fence_chainlink',n:'Chain-link fence (10 ft)',cat:2,sh:'fence',col:0x9a9ea1,w:3.12,d:0.07,h:1.91,solid:[1.56,0.04],run:1,cap:400},
+  tempfence:{f:'ff_fence_temporary',n:'Temporary fence panel',cat:2,sh:'fence',col:0xb0b4b8,w:3.87,d:0.79,h:1.99,solid:[1.94,0.39],run:1,cap:400},
+  manhole:{f:'ff_manhole_cover',n:'Manhole cover',cat:6,sh:'cyl',col:0x3a3a3a,w:1.07,d:1.07,h:0.03,solid:0,cap:150},
+  storminlet:{f:'ff_storm_inlet',n:'Storm drain inlet',cat:6,sh:'box',col:0x8a8a86,w:1.52,d:1.26,h:0.16,solid:0,cap:150},
+  trashslat:{f:'ff_trash_receptacle',n:'Trash receptacle (steel slat)',cat:6,sh:'cyl',col:0x2f3a34,w:0.72,d:0.72,h:1.09,solid:[0.33,0.33],cap:150},
+  drinkfount:{f:'ff_drinking_fountain',n:'Drinking fountain',cat:6,sh:'cyl',col:0x5a6268,w:0.59,d:0.78,h:1,solid:[0.28,0.36],cap:150},
+  workzone:{f:'ff_sign_work_zone',n:'Work-zone sign',cat:6,sh:'post',col:0xf07a1a,w:1.77,d:1.05,h:2.6,solid:[0.79,0.39],cap:150},
+  palletcmu:{f:'ff_pallet_cmu',n:'Pallet of concrete block',cat:3,sh:'box',col:0x9a978f,w:1.22,d:1.02,h:1.09,solid:[0.61,0.51],cap:150},
+  palletcement:{f:'ff_pallet_cement',n:'Pallet of bagged cement',cat:3,sh:'box',col:0xb9b4a6,w:1.22,d:1.02,h:0.88,solid:[0.61,0.51],cap:150},
+  rebar:{f:'ff_rebar_bundle',n:'Rebar bundles',cat:3,sh:'box',col:0x6a4a3a,w:6.15,d:0.8,h:0.19,solid:[3.08,0.27],cap:150},
+  trenchplate:{f:'ff_trench_plate',n:'Steel road plate (8 × 10 ft)',cat:3,sh:'box',col:0x4a4642,w:3.05,d:2.44,h:0.04,solid:0,pad:[0.043,1.52,1.22],cap:150},
+  compressor:{f:'ff_air_compressor',n:'Air compressor (tow-behind)',cat:3,sh:'box',col:0xe8b020,w:3.35,d:1.76,h:1.77,solid:[1.64,0.88],cap:150},
+  sawhorses:{f:'ff_sawhorses_plank',n:'Sawhorses with a plank',cat:3,sh:'frame',col:0xc9a56a,w:2.54,d:0.95,h:0.81,solid:[1.24,0.47],cap:150},
+  containerblue:{f:'ff_container_20ft_blue',n:'Shipping container (blue)',cat:3,sh:'box',col:0x2f5fa8,w:2.44,d:6.12,h:2.59,r:1,solid:[1.22,3.06],deep:1,cap:30},
+  containergreen:{f:'ff_container_20ft_green',n:'Shipping container (green)',cat:3,sh:'box',col:0x2f6a3a,w:2.44,d:6.12,h:2.59,r:1,solid:[1.22,3.06],deep:1,cap:30},
+  dockfloat:{f:'ff_dock_floating',n:'Floating dock (6 × 20 ft)',cat:9,sh:'box',col:0x8a6f4a,w:6.23,d:1.93,h:0.7,solid:0,run:1,pad:[0.704,3.05,0.96],float:0.2,cap:120},
+  piling:{f:'ff_piling_timber',n:'Dock piling',cat:9,sh:'cyl',col:0x5a4632,w:0.41,d:0.34,h:3.23,solid:[0.2,0.17],float:2,cap:200},
+  cleat:{f:'ff_dock_cleat',n:'Dock cleat',cat:9,sh:'box',col:0x9a9ea1,w:0.3,d:0.08,h:0.1,solid:0,cap:200},
+  moorbuoy:{f:'ff_mooring_buoy',n:'Mooring buoy',cat:9,sh:'cyl',col:0xf0f0ec,w:0.6,d:0.6,h:0.99,solid:[0.27,0.27],float:0.3,cap:150},
+  nunbuoy:{f:'ff_buoy_nun_red',n:'Channel buoy (red nun)',cat:9,sh:'cyl',col:0xc8202a,w:0.92,d:0.91,h:1.69,solid:[0.44,0.46],float:0.5,cap:150},
+  canbuoy:{f:'ff_buoy_can_green',n:'Channel buoy (green can)',cat:9,sh:'cyl',col:0x1f7a3a,w:0.92,d:0.91,h:1.59,solid:[0.44,0.46],float:0.5,cap:150},
+  lifering:{f:'ff_life_ring_station',n:'Life ring station',cat:9,sh:'post',col:0xf07a1a,w:0.86,d:0.35,h:1.94,solid:[0.08,0.08],cap:150},
+  dockbox:{f:'ff_dock_box',n:'Dock box',cat:9,sh:'box',col:0xecebe6,w:1.2,d:0.61,h:0.61,solid:[0.6,0.31],cap:150},
+  kayakrack:{f:'ff_kayak_rack',n:'Kayak rack',cat:9,sh:'frame',col:0xe85a1a,w:3.15,d:1.1,h:1.67,solid:[1.51,0.52],cap:150},
+  fuelpump:{f:'ff_fuel_dock_pump',n:'Fuel dock pump',cat:9,sh:'box',col:0xc0392b,w:1.31,d:0.6,h:1.97,solid:[0.51,0.3],cap:150},
+  fishtable:{f:'ff_fish_cleaning_table',n:'Fish-cleaning table',cat:9,sh:'frame',col:0xb0b4b8,w:2.18,d:0.61,h:1.2,solid:[1.01,0.31],cap:150},
+  propane:{f:'ff_propane_tank_500',n:'Propane tank (500 gal)',cat:4,sh:'tank',col:0xe8e8e4,w:3.02,d:1,h:1.33,solid:[1.45,0.5],cap:40},
+  clothesline:{f:'ff_clothesline',n:'Clothesline',cat:4,sh:'frame',col:0xe8e8e4,w:6.5,d:1.22,h:1.98,solid:0,cap:40},
+  satdish:{f:'ff_satellite_dish',n:'Satellite dish',cat:4,sh:'post',col:0x9a9ea1,w:0.62,d:0.93,h:1.83,solid:[0.06,0.06],cap:150},
+  heater:{f:'ff_patio_heater',n:'Patio heater',cat:4,sh:'post',col:0x8a8f94,w:0.85,d:0.85,h:2.25,solid:[0.2,0.2],lamp:['heater',[[0,1.95,0]]],cap:150},
+  parasolsand:{f:'ff_patio_umbrella_sand',n:'Patio umbrella (sand)',cat:4,sh:'umb',col:0xd8c8a0,w:2.43,d:2.43,h:2.29,solid:[0.1,0.1],cap:40},
+  parasolnavy:{f:'ff_patio_umbrella_navy',n:'Patio umbrella (navy)',cat:4,sh:'umb',col:0x23355a,w:2.43,d:2.43,h:2.29,solid:[0.1,0.1],cap:40},
+  parasolred:{f:'ff_patio_umbrella_red',n:'Patio umbrella (terracotta)',cat:4,sh:'umb',col:0xb5553a,w:2.43,d:2.43,h:2.29,solid:[0.1,0.1],cap:40},
+  parasolgreen:{f:'ff_patio_umbrella_green',n:'Patio umbrella (green)',cat:4,sh:'umb',col:0x2f6a3a,w:2.43,d:2.43,h:2.29,solid:[0.1,0.1],cap:40},
+  pergolacedar:{f:'ff_pergola_cedar',n:'Pergola (cedar)',cat:4,sh:'frame',col:0xb5733c,w:3.66,d:3.66,h:2.74,solid:0,cap:20},
+  pergolawhite:{f:'ff_pergola_white',n:'Pergola (white)',cat:4,sh:'frame',col:0xf0f0ec,w:3.66,d:3.66,h:2.74,solid:0,cap:20},
+  pergolabrown:{f:'ff_pergola_brown',n:'Pergola (brown)',cat:4,sh:'frame',col:0x5a3a22,w:3.66,d:3.66,h:2.74,solid:0,cap:20},
+  gardenshedgreige:{f:'ff_garden_shed_greige',n:'Garden shed (greige)',cat:1,sh:'box',col:0xb9b0a0,w:3.05,d:2.45,h:2.75,solid:[1.52,1.22],deep:1,cap:30},
+  gardenshedred:{f:'ff_garden_shed_red',n:'Garden shed (barn red)',cat:1,sh:'box',col:0x8a2a22,w:3.05,d:2.45,h:2.75,solid:[1.52,1.22],deep:1,cap:30},
+  gardenshedsage:{f:'ff_garden_shed_sage',n:'Garden shed (sage)',cat:1,sh:'box',col:0x8a9a7a,w:3.05,d:2.45,h:2.75,solid:[1.52,1.22],deep:1,cap:30},
+  privacycedar:{f:'ff_fence_privacy_cedar',n:'Privacy fence, cedar (16 ft)',cat:2,sh:'fence',col:0xb5733c,w:4.91,d:0.13,h:1.83,solid:[2.45,0.06],run:1,deep:1,cap:400},
+  privacygrey:{f:'ff_fence_privacy_grey',n:'Privacy fence, weathered (16 ft)',cat:2,sh:'fence',col:0x8a8880,w:4.91,d:0.13,h:1.83,solid:[2.45,0.06],run:1,deep:1,cap:400},
+  picketfence:{f:'ff_fence_picket_white',n:'Picket fence (16 ft)',cat:2,sh:'fence',col:0xf0f0ec,w:4.89,d:0.13,h:1.22,solid:[2.44,0.07],run:1,deep:1,cap:400},
+  splitrail:{f:'ff_fence_split_rail',n:'Split-rail fence (16 ft)',cat:2,sh:'fence',col:0x8a6f4a,w:4.87,d:0.19,h:1.22,solid:[2.43,0.09],run:1,deep:1,cap:400},
+  raisedpine:{f:'ff_raised_bed_pine',n:'Raised garden bed (pine)',cat:7,sh:'box',col:0xd8b27a,w:2.44,d:1.23,h:0.45,solid:0,pad:[0.45,1.22,0.61],cap:80},
+  yardlamp:{f:'ff_lamp_post_black',n:'Yard lamp post (black)',cat:5,sh:'post',col:0x2a2c2e,w:0.32,d:0.28,h:2.13,solid:[0.1,0.1],lamp:['lantern',[[0,1.77,0]]],cap:150},
+  yardlampgreen:{f:'ff_lamp_post_verdigris',n:'Yard lamp post (verdigris)',cat:5,sh:'post',col:0x4f8a7a,w:0.32,d:0.28,h:2.13,solid:[0.1,0.1],lamp:['lantern',[[0,1.77,0]]],cap:150},
+  firering:{f:'ff_fire_pit_stone',n:'Fire pit (stone ring)',cat:4,sh:'cyl',col:0x8a8880,w:1.22,d:1.2,h:0.43,solid:[0.53,0.54],cap:40,lamp:['fire',[[0,0.4,0]]]},
+  gardenbenchteak:{f:'ff_garden_bench_teak',n:'Garden bench (teak)',cat:4,sh:'box',col:0xb5733c,w:1.54,d:0.64,h:0.91,solid:[0.75,0.3],sit:[[-0.4,0,0],[0.4,0,0]],cap:80},
+  gardenbenchwhite:{f:'ff_garden_bench_white',n:'Garden bench (white)',cat:4,sh:'box',col:0xf0f0ec,w:1.54,d:0.64,h:0.91,solid:[0.75,0.3],sit:[[-0.4,0,0],[0.4,0,0]],cap:80},
+  gardenbenchgreen:{f:'ff_garden_bench_green',n:'Garden bench (oak and green)',cat:4,sh:'box',col:0x2f6a3a,w:1.54,d:0.64,h:0.91,solid:[0.75,0.3],sit:[[-0.4,0,0],[0.4,0,0]],cap:80},
+  grillred:{f:'ff_gas_grill_red',n:'Gas grill (red)',cat:4,sh:'box',col:0xb5332a,w:1.37,d:0.58,h:1.16,solid:[0.68,0.29],cap:40},
+  granite:{f:'ff_boulder_granite',n:'Boulder, granite (3 ft)',cat:7,sh:'box',col:0x9a9a98,w:0.91,d:0.73,h:0.61,solid:[0.43,0.35],cap:300},
+  fieldstone:{f:'ff_boulder_fieldstone',n:'Boulder, fieldstone (3 ft)',cat:7,sh:'box',col:0x8a8272,w:0.91,d:0.73,h:0.61,solid:[0.46,0.34],cap:300}};
+// a stand-in by shape, w by d by h: a box, an upright cylinder, a tank lying along x, a sign or lamp on a post, an
+// umbrella, a fence panel between two posts, or a frame of four posts with a top
+const FF_KIT={
+  box:(B,F)=>B.box(F.w,F.h,F.d,F.col,0,F.h/2,0),
+  cyl:(B,F)=>B.cyl(F.w/2,F.w/2,F.h,12,F.col,0,F.h/2,0),
+  tank:(B,F)=>{const r=Math.min(F.h,F.d)/2;B.cyl(r,r,F.w,12,F.col,0,F.h-r,0,0,0,Math.PI/2);for(const x of [-F.w/3,F.w/3])B.box(0.12,F.h-r,F.d*0.6,0x6a6a6a,x,(F.h-r)/2,0)},
+  post:(B,F)=>{const t=Math.min(0.8,F.h*0.25);B.cyl(0.04,0.05,F.h-t,6,0x8c9094,0,(F.h-t)/2,0);B.box(F.w,t,Math.min(F.d,0.3),F.col,0,F.h-t/2,0)},
+  umb:(B,F)=>{B.cyl(0.03,0.03,F.h,6,0x8c9094,0,F.h/2,0);B.cyl(0.05,F.w/2,0.45,10,F.col,0,F.h-0.22,0);B.cyl(0.25,0.25,0.08,10,0x3a3a3a,0,0.04,0)},
+  fence:(B,F)=>{for(const x of [-1,1])B.box(0.08,F.h,Math.max(0.08,F.d),0x8c9094,x*(F.w/2-0.04),F.h/2,0);B.box(F.w-0.16,F.h*0.8,0.04,F.col,0,F.h*0.55,0)},
+  frame:(B,F)=>{for(const x of [-1,1])for(const z of [-1,1])B.box(0.1,F.h,0.1,F.col,x*(F.w/2-0.05),F.h/2,z*(F.d/2-0.05));B.box(F.w,0.1,F.d,F.col,0,F.h-0.05,0)}};
+for(const k in PROP_FF){const F=PROP_FF[k];if(!PROPS[k])PROP_MODELS[k]=B=>FF_KIT[F.sh](B,F);PROPS[k]=Object.assign(PROPS[k]||{},F)}
+// a kind's box-built model; a Forge kind's is fitted to the Forge model's size, standing on the ground about its middle
+function propGeo(k){const g=propModel(PROP_MODELS[k]),F=PROP_FF[k];if(!F)return g;g.computeBoundingBox();const b=g.boundingBox,c=b.getCenter(new THREE.Vector3());
+  g.translate(-c.x,-b.min.y,-c.z);g.scale(F.w/Math.max(0.01,b.max.x-b.min.x),F.h/Math.max(0.01,b.max.y-b.min.y),F.d/Math.max(0.01,b.max.z-b.min.z));g.computeVertexNormals();return g}
 {const mt=M(0xffffff,{vertexColors:true});
-  for(const k in PROPS){const im=new THREE.InstancedMesh(propModel(PROP_MODELS[k]),mt,PROPS[k].cap);
+  for(const k in PROPS){const im=new THREE.InstancedMesh(propGeo(k),mt,PROPS[k].cap);
     im.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(PROPS[k].cap*3),3);
     im.castShadow=im.receiveShadow=true;im.frustumCulled=false;im.count=0;im.visible=false;im.layers.enable(RAIN_LAYER);scene.add(im);propIMs[k]=im}}
 // how tall each model is (the outline when placing on foot)
@@ -354,7 +457,7 @@ const PROP_MDL={
 function propPts(a){const p=PROPS[a.t],hw=p.w/2*a.s,hd=p.d/2*a.s,c=Math.cos(a.yaw),s=Math.sin(a.yaw),out=[[a.x,a.z]];
   for(const [u,v] of [[-hw,-hd],[hw,-hd],[-hw,hd],[hw,hd]])out.push([a.x+u*c+v*s,a.z-u*s+v*c]);return out}
 // the ground it stands on: the highest under its footprint for ones with a footing, else under its middle
-function propY(a){const P=PROPS[a.t];if(!P.deep)return surfAt(a.x,a.z);let y=-1e9;for(const [x,z] of propPts(a))y=Math.max(y,surfAt(x,z));return y}
+function propY(a){const P=PROPS[a.t];if(P.float)return Math.max(surfAt(a.x,a.z),WATER-P.float*a.s);if(!P.deep)return surfAt(a.x,a.z);let y=-1e9;for(const [x,z] of propPts(a))y=Math.max(y,surfAt(x,z));return y}
 // the instances and the solid boxes from the asset list; assetsBuild (scenery.js) calls it after every change
 function propsBuild(){const o=new THREE.Object3D(),col=new THREE.Color(),n={};
   for(let i=SOLIDS.length-1;i>=0;i--)if(SOLIDS[i].prop)SOLIDS.splice(i,1);walkPadsDrop('prop');
@@ -367,7 +470,23 @@ function propsBuild(){const o=new THREE.Object3D(),col=new THREE.Color(),n={};
     if(P.solid){const [lx,lz]=Array.isArray(P.solid)?P.solid:[P.w/2,P.d/2],c=Math.cos(a.yaw),s=Math.sin(a.yaw),L=lx*a.s,Z=lz*a.s;
       SOLIDS.push({x:a.x,z:a.z,lx:L,lz:Z,cs:c,sn:s,hx:Math.abs(c)*L+Math.abs(s)*Z,hz:Math.abs(s)*L+Math.abs(c)*Z,prop:1})}}
   for(const k in PROPS){const im=propIMs[k];im.count=n[k];im.visible=n[k]>0;im.instanceMatrix.needsUpdate=true;im.instanceColor.needsUpdate=true}
-  propLampsBuild();if(typeof sqSpots==='function')sqSpots()}
+  propLampsBuild();if(typeof sqSpots==='function')sqSpots();ffNeed()}
+// the Forge models of the kinds standing on the map, each fetched once (forgetown.js's loader: meshopt glTF), with
+// Machine models on Detailed: one mesh and one material of its own (colour, normal and roughness pictures, kept as
+// they are) under the game's sky (mdlScanMat), drawn in place of the box-built one through the same instance list
+// (mdl.propIM: mdlPropsSync shows one or the other). A fetch that fails is tried again after half a minute
+const ff={req:{},n:0};
+function ffNeed(){if(typeof mdl==='undefined'||!mdl.want||typeof bfImport!=='function')return;
+  for(const k in PROP_FF){const im=propIMs[k];if(!im.count||mdl.propIM[k]||ff.req[k]>performance.now())continue;ff.req[k]=Infinity;
+    bfImport().then(({loader})=>new Promise((ok,no)=>loader.load(FF_SITE+PROP_FF[k].f+'.glb',ok,undefined,no))).then(g=>{
+      g.scene.updateMatrixWorld(true);const parts=[];
+      g.scene.traverse(o=>{if(!o.isMesh)return;const q=o.geometry.clone();
+        // the library's models are packed (whole-number positions and normals, scaled by the mesh's own matrix): as plain numbers first
+        for(const n of ['position','normal']){const A=q.attributes[n];if(!A)continue;const F=new Float32Array(A.count*3);for(let i=0;i<A.count;i++){F[i*3]=A.getX(i);F[i*3+1]=A.getY(i);F[i*3+2]=A.getZ(i)}q.setAttribute(n,new THREE.BufferAttribute(F,3))}
+        q.applyMatrix4(o.matrixWorld);q.normalizeNormals();if(PROP_FF[k].r)q.rotateY(Math.PI/2);q.computeBoundingSphere();parts.push([q,mdlScanMat(o.material)])});
+      if(!parts.length)throw new Error('no mesh');const ims=mdl.propIM[k]=mdlInst(null,PROPS[k].cap,parts);
+      for(const m of ims){m.instanceMatrix=im.instanceMatrix;m.instanceColor=im.instanceColor;m.frustumCulled=false}ff.n++;mdlPropsSync()})
+      .catch(e=>{ff.req[k]=performance.now()+30000;console.warn('Forge thing not loaded: '+k,e&&e.message||e)})}}
 // for the editor: how near a ground point is to a thing (under 1 is on it), its ring's radius and its name
 function propHit(a,x,z){const P=PROPS[a.t],c=Math.cos(a.yaw),s=Math.sin(a.yaw),dx=x-a.x,dz=z-a.z,u=dx*c-dz*s,v=dx*s+dz*c;
   return Math.max(Math.abs(u)/(P.w/2*a.s+0.4),Math.abs(v)/(P.d/2*a.s+0.4))}
@@ -392,6 +511,7 @@ const LAMP_K={
   path:{h:0.7,r:1.5,f:0,a:1,ang:1.3,aim:[0,-1,0],dist:5,i:0.35,pb:0.6},
   bulb:{h:0.5,r:0},
   lantern:{h:1.0,r:2.2,f:0,a:1,ang:1.3,aim:[0,-1,0],dist:7,i:0.45,pb:0.7},
+  heater:{h:0.9,r:1.8,f:0,a:1,col:0xffb070,pb:0.6},
   tower:{h:1.6,r:9,f:8,a:1.5,col:0xfff2d8,ang:0.75,aim:[0,-0.5,1],dist:40,i:1.6},
   fire:{h:1.5,r:3.2,f:0,a:1,col:0xff8a2a,fx:1,ang:1.5,aim:[0,-1,0],dist:9,i:0.9,pb:0.8},
   jack:{h:0.6,r:1.0,f:0.3,a:1,col:0xff9a30,fx:1,pb:0.5},
