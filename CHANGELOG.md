@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Wednesday, November 11, 2026
 
+- **v416** (7:20 PM) Fixed townsfolk drawn as spiky shards on High/Ultra: the squeezed people files store vertex data interleaved, and Human Forge's reader now reads it that way.
 - **v415** (6:58 PM) On Ultra, people seated close by (a full brewery) no longer flicker between their crowd look and their full-detail look, and stop loading new detailed models every few seconds.
 - **v414** (6:57 PM) Model files snapped and meshopt-packed (about half the download), every texture kept compressed on the graphics card (KTX2, about half the texture memory), machine, boat and train models load only when you come near, and the townsfolk's heavy stand-in mesh is skipped where Human Forge draws them
 - **v413** (6:11 PM) At night every building with its lights on glows warm inside, so shops, the brewery and houses read lit from the street, not just when you stand next to a lamp (Tuning: Lit buildings glow and range; Medium graphics and up).
