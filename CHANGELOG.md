@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Wednesday, November 11, 2026
 
+- **v413** (6:11 PM) At night every building with its lights on glows warm inside, so shops, the brewery and houses read lit from the street, not just when you stand next to a lamp (Tuning: Lit buildings glow and range; Medium graphics and up).
 - **v412** (10:50 AM) Townsfolk use their light model past 25 m (Work) or 40 m; parked cars merged per material, far ones batched by kind with their paint per car; street furniture and far car parts drawn only where the game camera would see them (in view, big enough, inside the haze, seen from your room); people outside a room you are in are left out too
 - **v411** (8:40 AM) Corner map draws only what is in view (4 ms to 0.9 ms, 15 times a second); Work graphics drops the paint's clear coat; profiler skips capped refreshes and marks shader-building frames
 
