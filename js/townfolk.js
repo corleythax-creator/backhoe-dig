@@ -127,8 +127,9 @@ void pdPart(float pP,inout vec3 p,inout vec3 n){pP=floor(pP+0.5);if(pP<0.5)retur
   float a=leg>0.5?sw:sw*0.85;p=pdRx(p,a,leg>0.5?uJ.y:uJ.w);n=pdRot(a)*n;}
 void pdSkin(inout vec3 p,inout vec3 n){vec3 p1=p,n1=n,p2=p,n2=n;pdPart(aSk.x,p1,n1);pdPart(aSk.y,p2,n2);p=mix(p1,p2,aSk.z);n=normalize(mix(n1,n2,aSk.z));}`;
 // each character's mesh (folk_hi.bin on High graphics, folk_lo.bin below) and texture (folk/<id>.webp, folk_lo/), loaded
-// when someone first wears that look
-function tfLoad(){if(tf.load)return;tf.load=1;const B='models/peds/',lod=gfxCur.pbr?'hi':'lo',j=u=>fetch(B+u).then(r=>{if(!r.ok)throw new Error(u);return r});
+// when someone first wears that look. Where Human Forge draws the people (gfxCur.forge), these meshes only stand in
+// until a character's crowd is built (or if it fails), so the light ones do: 4 MB less to fetch at the start
+function tfLoad(){if(tf.load)return;tf.load=1;const B='models/peds/',lod=gfxCur.pbr&&!gfxCur.forge?'hi':'lo',j=u=>fetch(B+u).then(r=>{if(!r.ok)throw new Error(u);return r});
   Promise.all([j('peds.json').then(r=>r.json()),j('folk.json').then(r=>r.json()),j('folk_'+lod+'.bin').then(r=>r.arrayBuffer())]).then(([ch,fk,buf])=>{
     const by={};for(const f of fk.chars)by[f.id]=f;tf.chars=ch.chars.filter(c=>by[c.id]);for(const c of tf.chars)c.folk=by[c.id];
     tf.use=new Array(tf.chars.length).fill(0);tfMeshes(buf,lod,B+(lod==='hi'?'folk/':'folk_lo/'));tf.load=2;
