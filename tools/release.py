@@ -131,10 +131,13 @@ def main():
         if git('status', '--porcelain') and not o.dry_run:
             git('commit', '-qam', 'Rebuild the screen editor page' + TRAILER)
 
-    # model files new or rebuilt since the last release are made smaller (tools/squeeze.mjs; done ones are skipped)
+    # model files new or rebuilt since the last release are made smaller (tools/squeeze.mjs), and new or changed
+    # textures get their GPU-compressed .ktx2 twins (tools/ktx.mjs); both skip what they have done before
     print(sh('node', 'tools/squeeze.mjs').strip().splitlines()[-1])
-    if git('status', '--porcelain', '--', 'models') and not o.dry_run:
-        git('commit', '-qam', 'Squeeze the new model files' + TRAILER)
+    print(sh('node', 'tools/ktx.mjs').strip().splitlines()[-1])
+    if git('status', '--porcelain', '--', 'models', 'textures') and not o.dry_run:
+        git('add', 'models', 'textures')
+        git('commit', '-qm', 'Squeeze the new model files and encode the new textures' + TRAILER)
 
     env = dict(os.environ, NODE_PATH=sh('npm', 'root', '-g'))
     out = sh('node', 'tools/scene-check.js', check=False, env=env)
