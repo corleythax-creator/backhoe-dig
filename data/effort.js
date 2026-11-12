@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-11T16:50:00Z",
+ "updated": "2026-11-12T00:11:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -138,9 +138,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-11",
-   "dh": 7.5,
-   "act": 1,
-   "versions": 2
+   "dh": 12.5,
+   "act": 1.5,
+   "versions": 3
   }
  ],
  "extra": [
@@ -3858,6 +3858,15 @@ window.EFFORT = {
    "tris": 7208605,
    "chars": 2658167,
    "what": "Townsfolk use their light model past 25 m (Work) or 40 m; parked cars merged per material, far ones batched by kind with their paint per car; street furniture and far car parts drawn only where the game camera would see them (in view, big enough, inside the haze, seen from your room); people outside a room you are in are left out too"
+  },
+  {
+   "v": 413,
+   "asked": "2026-11-11T17:20:00-06:00",
+   "live": "2026-11-11T18:11:26-06:00",
+   "dh": 5,
+   "tris": 7365388,
+   "chars": 2662876,
+   "what": "At night every building with its lights on glows warm inside, so shops, the brewery and houses read lit from the street, not just when you stand next to a lamp (Tuning: Lit buildings glow and range; Medium graphics and up)."
   }
  ]
 };
