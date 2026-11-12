@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-12T00:57:00Z",
+ "updated": "2026-11-12T00:58:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -138,9 +138,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-11",
-   "dh": 26.5,
+   "dh": 28.5,
    "act": 2,
-   "versions": 4
+   "versions": 5
   }
  ],
  "extra": [
@@ -3876,6 +3876,15 @@ window.EFFORT = {
    "tris": 7320486,
    "chars": 2667769,
    "what": "Model files snapped and meshopt-packed (about half the download), every texture kept compressed on the graphics card (KTX2, about half the texture memory), machine, boat and train models load only when you come near, and the townsfolk's heavy stand-in mesh is skipped where Human Forge draws them"
+  },
+  {
+   "v": 415,
+   "asked": "2026-11-11T18:35:00-06:00",
+   "live": "2026-11-11T18:58:33-06:00",
+   "dh": 2,
+   "tris": 7327315,
+   "chars": 2668224,
+   "what": "On Ultra, people seated close by (a full brewery) no longer flicker between their crowd look and their full-detail look, and stop loading new detailed models every few seconds."
   }
  ]
 };
