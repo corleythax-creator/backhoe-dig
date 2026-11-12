@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-12T02:57:00Z",
+ "updated": "2026-11-12T03:48:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -138,9 +138,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-11",
-   "dh": 40.75,
-   "act": 3.5,
-   "versions": 8
+   "dh": 42.75,
+   "act": 4,
+   "versions": 9
   }
  ],
  "extra": [
@@ -3912,6 +3912,15 @@ window.EFFORT = {
    "tris": 7859143,
    "chars": 2688636,
    "what": "Path lights and bollards are separate again; 78 street, site, dock and yard things now use Forge Studio's detailed models, plus a site office trailer and 8 ft picnic table; every Building Forge building in town is drawn again, nearest first."
+  },
+  {
+   "v": 419,
+   "asked": "2026-11-11T20:05:00-06:00",
+   "live": "2026-11-11T21:48:35-06:00",
+   "dh": 2,
+   "tris": 9998953,
+   "chars": 2690771,
+   "what": "On Ultra, the full-detail townsfolk are loaded before you reach them (anyone within 82 ft, a room's staff as you walk to its door), 8 looks kept loaded instead of 4, and the skin shader compiled behind the loading screen; both are tunable in Tuning, Town."
   }
  ]
 };
