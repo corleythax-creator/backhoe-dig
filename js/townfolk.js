@@ -179,14 +179,18 @@ function tfForgeCrowd(B,id){B.fg=1;const F=tf.F;tf.fgBusy=(tf.fgBusy||0)+1;
   F.f.preload(['island_'+id]).then(([t])=>{tfDieClips(t);return F.f.crowd('island_'+id,{max:B.cap,clips:TF_FG_CLIPS,lod:gfxCur.forge,castShadow:true,receiveShadow:true}).then(c=>{const m=c.object,M=m.material;
     M.roughness=0.86;M.envMap=skyEnv;M.envMapIntensity=0.5;m.castShadow=!!gfxCur.pbr;m.visible=false;c.stride=F.f.clips.walk.speed*c.type.hip/F.ref;c.runS=(F.f.clips.run||F.f.clips.walk).speed*c.type.hip/F.ref;scene.add(m);
       return gpuWarm(m).then(()=>{B.fg=c})})})
-    .catch(e=>console.warn('townsfolk forge:',id,e)).finally(()=>{tf.fgBusy--})}
+    .catch(e=>{B.fgErr=1;console.warn('townsfolk forge:',id,e)}).finally(()=>{tf.fgBusy--})}
 // built ahead, wherever the camera is (from the first frames, behind the start card): every character's look and, on
 // High and Ultra, their crowd, one at a time a quarter second apart, so none is built on the frame someone first walks
 // into view (each crowd bakes its clips in one go, the stutter coming into town and round the brewery's many faces)
 function tfPrep(dt){if(!tf.load)tfLoad();if(tf.load!==2)return;if(gfxCur.forge&&!(tf.F&&tf.F.st))tfForge();
-  if((tf.prepT=(tf.prepT||0)-dt)>0)return;tf.prepT=0.25;const M=tf.M;
+  if((tf.prepT=(tf.prepT||0)-dt)>0)return;tf.prepT=LOADP.done?0.25:0;const M=tf.M;
   for(const k in M)if(!M[k].texing){tfTex(M[k]);break}
   if(tf.F&&tf.F.st===2&&gfxCur.forge&&!tf.fgBusy)for(const k in M)if(!M[k].fg){tfForgeCrowd(M[k],k);break}}
+// how many characters are ready to draw (their crowd built on High and Ultra, else their look's picture), of how many:
+// the loading cover waits for all of them (start.js), so nobody is built mid-game when they first walk into view
+function tfReady(){if(tf.q===undefined)return [0,1];if(!tf.q)return [1,1];if(tf.load===-1)return [1,1];if(tf.load!==2||!tf.M)return [0,1];const fg=gfxCur.forge&&!(tf.F&&tf.F.st===-1);let n=0,t=0;
+  for(const k in tf.M){const B=tf.M[k];t++;if(fg?(B.fg&&B.fg!==1)||B.fgErr:B.texing)n++}if(fg&&!(tf.F&&tf.F.st===2))n=0;return [n,t]}
 // person p as instance i of crowd c: walking (pace = their speed), sitting (the clip's origin is on the floor under the
 // seat's middle, its seat 18 in up like the rooms' chairs and benches), driving (its seat 14 in up: lifted to where the
 // old seated pose's seat was, 18 in over p.y), or standing easy or talking (staff and customers)
