@@ -540,19 +540,19 @@ const texGrass=loadTex('grass'),texDirt=loadTex('dirt'),texGrime=loadTex('grime'
 // same for the cut-face detail on dug and dumped dirt (no map: its own pattern is the height, FACE_GLSL)
 const texGrassN=new THREE.Texture(),texDirtN=new THREE.Texture(),groundRelU={value:0},groundRelFarU={value:0},faceRelU={value:0},spoilU={value:1};
 for(const t of [texGrassN,texDirtN]){t.wrapS=t.wrapT=THREE.RepeatWrapping;t.generateMipmaps=true;t.minFilter=THREE.LinearMipmapLinearFilter}
-function groundRelLoad(){if(texDirtN.image)return;for(const [t,n] of [[texGrassN,'grass_n'],[texDirtN,'dirt_n']])new THREE.ImageLoader().load(`textures/ground/${n}.jpg`,im=>{t.image=im;t.anisotropy=texAnisoN;t.needsUpdate=true})}
+function groundRelLoad(){if(texDirtN.image)return;for(const [t,n] of [[texGrassN,'grass_n'],[texDirtN,'dirt_n']]){t.image={width:0};texInto(t,`textures/ground/${n}.jpg`,null,()=>{t.anisotropy=texAnisoN})}}
 function texAnisoSet(n){n=Math.max(1,Math.min(n,renderer.capabilities.getMaxAnisotropy()));if(n===texAnisoN)return;texAnisoN=n;
   for(const t of [texGrass,texDirt,texGrime]){t.anisotropy=n;if(t.image)t.needsUpdate=true}}
 // the macro map (High by default): when it is off the file is never fetched and the ground shader skips it (macroU is 0)
 const texMacro=new THREE.Texture();texMacro.wrapS=texMacro.wrapT=THREE.RepeatWrapping;texMacro.generateMipmaps=true;texMacro.minFilter=THREE.LinearMipmapLinearFilter;
 const macroU={value:0};
 function macroSet(on){macroU.value=on?TEX_K.macro:0;
-  if(on&&!texMacro.image)new THREE.ImageLoader().load('textures/ground/macro.jpg',im=>{texMacro.image=im;texMacro.needsUpdate=true})}
-// swaps the three maps to another size's images (the textures stay the same objects, so every material keeps them). The
+  if(on&&!texMacro.image){texMacro.image={width:0};texInto(texMacro,'textures/ground/macro.jpg')}}
+// swaps the three maps to another size's pictures (texInto, ktx.js; the textures stay the same objects, so every material keeps them). The
 // old image stays on screen until the new one has loaded, then the old GPU copy is freed. A quick second change wins
 function texTierSet(k){if(!['low','med','high'].includes(k)||k===texTier)return;texTier=k;
-  for(const [t,n] of [[texGrass,'grass'],[texDirt,'dirt'],[texGrime,'grime']])new THREE.ImageLoader().load(`textures/ground/${k}/${texFile(n)}.jpg`,im=>{
-    if(k!==texTier)return;t.dispose();t.image=im;t.needsUpdate=true})}
+  for(const [t,n] of [[texGrass,'grass'],[texDirt,'dirt'],[texGrime,'grime']])texInto(t,`textures/ground/${k}/${texFile(n)}.jpg`,null,null,null,()=>{
+    if(k!==texTier)return false;t.dispose()})}
 // texture repeats per metre (grass, dirt) and how strongly the macro map (one tile per 40 m) lightens and darkens
 const TEX_K={grass:0.4,dirt:0.45,macro:1.5};
 // texMixU gates the extras (cut-face detail, material library, machine grime); texBaseU is the plain grass and dirt
