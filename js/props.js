@@ -27,15 +27,17 @@ const PROPS={
   bench:{n:'Bench',cat:4,w:1.8,d:0.6,cap:120,solid:1,sit:[[-0.45,0,0],[0.45,0,0]]},
   cafe:{n:'Café table',cat:4,w:2.0,d:2.0,cap:80,solid:[0.45,0.45],sit:[0,1,2].map(i=>{const a=i*2.09+0.4,x=Math.cos(a)*0.75,z=Math.sin(a)*0.75;return [x,z,Math.atan2(-x,-z)]})},
   stall:{n:'Market stall',cat:4,w:2.8,d:2.8,cap:40,solid:[1.4,1.3],sit:[[0,-0.3,0,1],[0.5,2.2,Math.PI,2],[-0.6,2.3,Math.PI,2]]},
-  picnic:{n:'Picnic table',cat:4,w:1.8,d:1.6,cap:80,solid:1},
+  picnic:{n:'Picnic table (6 ft)',cat:4,w:1.8,d:1.6,cap:80,solid:1},
+  picniclong:{n:'Picnic table (8 ft)',cat:4,w:2.44,d:1.6,cap:80,solid:1},
   dumpster:{n:'Dumpster',cat:3,w:2.0,d:1.8,cap:60,solid:1,deep:1},
   // lights (lamp: its kind in LAMP_K and where its lamps are on the model)
-  streetlt:{n:'Street light',cat:5,w:0.6,d:0.6,cap:120,solid:[0.15,0.15],lamp:['street',[[0,7.66,2.1]]]},
+  streetlt:{n:'Street light',cat:5,w:0.6,d:0.6,cap:120,solid:[0.15,0.15],lamp:['street',[[0,7.66,1.76]]]},
   lamp:{n:'Park lamp',cat:5,w:0.5,d:0.5,cap:150,solid:[0.12,0.12],lamp:['post',[[0,4.13,0]]]},
   lamppost:{n:'Lamp post',cat:5,w:0.5,d:0.5,cap:150,solid:[0.12,0.12],lamp:['post',[[0,3.82,0]]]},
   flood:{n:'Floodlight',cat:5,w:0.9,d:0.6,cap:80,solid:[0.12,0.12],lamp:['flood',[[-0.25,4.31,0.2],[0.25,4.31,0.2]]]},
   uplight:{n:'Ground spotlight',cat:5,w:0.3,d:0.3,cap:200,lamp:['up',[[0,0.32,0.06]]]},
-  bollard:{n:'Path light',cat:5,w:0.3,d:0.3,cap:300,lamp:['path',[[0,0.8,0]]]},
+  // (its id was 'bollard' at first, the same as Harbor Square's bollard below, which as the later key replaced it)
+  pathlight:{n:'Path light',cat:5,w:0.3,d:0.3,cap:300,lamp:['path',[[0,0.8,0]]]},
   stringlts:{n:'String lights (20 ft)',cat:5,run:1,w:6.1,d:0.2,cap:120,lamp:['bulb',null]},
   lantern:{n:'Lantern hook',cat:5,w:0.6,d:0.3,cap:150,lamp:['lantern',[[0.35,1.55,0]]]},
   // road and traffic
@@ -65,10 +67,11 @@ const PROPS={
   silt:{n:'Silt fence (10 ft)',cat:3,run:1,w:3.05,d:0.1,cap:400},
   tires:{n:'Tire stack',cat:3,w:1.0,d:1.0,cap:100,solid:[0.5,0.5]},
   barrow:{n:'Wheelbarrow',cat:3,w:0.7,d:1.5,cap:60},
-  fuelstand:{n:'Fuel tank',cat:3,w:2.2,d:1.2,cap:20,solid:1,deep:1},
+  fuelstand:{n:'Fuel tank',cat:3,w:5.9,d:2.7,cap:20,solid:1,deep:1},
+  office:{n:'Site office trailer',cat:3,w:12,d:3.4,cap:10,solid:1,deep:1},
   // farm and garden
-  haybale:{n:'Round hay bale',cat:7,w:1.2,d:1.5,cap:120,solid:1},
-  straw:{n:'Straw bales',cat:7,w:0.9,d:0.95,cap:200,solid:1},
+  haybale:{n:'Round hay bale',cat:7,w:1.55,d:1.87,cap:120,solid:1},
+  straw:{n:'Straw bales',cat:7,w:1.1,d:1.06,cap:200,solid:1},
   planter:{n:'Flower planter',cat:7,w:1.2,d:0.45,cap:200,solid:1},
   raisedbed:{n:'Raised garden bed',cat:7,w:2.4,d:1.2,cap:80,pad:[0.3,1.2,0.6]},
   birdbath:{n:'Bird bath',cat:7,w:0.65,d:0.65,cap:60,solid:[0.2,0.2]},
@@ -159,11 +162,13 @@ const PROP_MODELS={
     for(const x of [-0.75,0.75]){B.box(0.06,0.45,0.4,0x3a3a3a,x,0.22,0.05);B.box(0.06,0.5,0.05,0x3a3a3a,x,0.65,-0.17)}},
   picnic:B=>{B.box(1.8,0.05,0.75,0xa6743e,0,0.76,0);for(const z of [-0.6,0.6])B.box(1.8,0.05,0.28,0xa6743e,0,0.45,z);
     for(const x of [-0.7,0.7]){for(const s of [-1,1])B.box(0.07,0.95,0.09,0x8a5e30,x,0.38,s*0.28,s*0.62,0,0);B.box(0.07,0.07,1.5,0x8a5e30,x,0.42,0)}},
+  picniclong:B=>{B.box(2.44,0.05,0.75,0xa6743e,0,0.76,0);for(const z of [-0.6,0.6])B.box(2.44,0.05,0.28,0xa6743e,0,0.45,z);
+    for(const x of [-1.0,1.0]){for(const s of [-1,1])B.box(0.07,0.95,0.09,0x8a5e30,x,0.38,s*0.28,s*0.62,0,0);B.box(0.07,0.07,1.5,0x8a5e30,x,0.42,0)}},
   dumpster:B=>{B.box(2.0,1.25,1.6,0x2f6a3a,0,0.78,0);B.box(2.06,0.1,1.66,0x285a32,0,1.4,0);B.box(2.0,0.06,0.9,0x1e1e1e,0,1.5,-0.38,-0.12,0,0);B.box(2.0,0.06,0.9,0x1e1e1e,0,1.47,0.42,0.12,0,0);
     for(const x of [-0.7,0.7])B.box(0.3,0.18,1.7,0x285a32,x,0.5,0);for(const x of [-0.85,0.85])for(const z of [-0.65,0.65])B.cyl(0.06,0.06,0.15,6,0x222222,x,0.08,z)},
   // ---------- lights ----------
-  streetlt:B=>{B.cyl(0.22,0.26,0.5,10,0x9a978f,0,0.25,0);B.cyl(0.07,0.11,7.3,10,0x8c9094,0,4.1,0);B.box(0.08,0.08,2.1,0x8c9094,0,7.72,1.0,-0.06,0,0);
-    B.box(0.38,0.16,0.75,0x7d8186,0,7.8,2.1);B.box(0.3,0.03,0.56,0xfff4d8,0,7.7,2.1)},
+  streetlt:B=>{B.cyl(0.22,0.26,0.5,10,0x9a978f,0,0.25,0);B.cyl(0.07,0.11,7.3,10,0x8c9094,0,4.1,0);B.box(0.08,0.08,1.6,0x8c9094,0,7.82,0.75,-0.06,0,0);
+    B.box(0.38,0.16,0.75,0x7d8186,0,7.78,1.76);B.box(0.3,0.03,0.56,0xfff4d8,0,7.68,1.76)},
   // Harbor Square's: the park lamp, the café table under its umbrella, the market stall (its counter at the front), the bollard
   lamp:B=>{B.cyl(0.07,0.1,4.2,8,0x2f3236,0,2.1,0);B.box(0.45,0.18,0.45,0x2f3236,0,4.25,0);B.box(0.36,0.05,0.36,0xfff1c8,0,4.13,0)},
   cafe:B=>{const D=0x2b2d2f;B.cyl(0.4,0.4,0.04,16,D,0,0.74,0);B.cyl(0.04,0.04,0.74,8,D,0,0.37,0);B.cyl(0.03,0.03,2.4,6,0xe9e4d6,0,1.2,0);B.cyl(0.04,1.35,0.45,12,0x2f6b4f,0,2.3,0);
@@ -176,7 +181,7 @@ const PROP_MODELS={
   flood:B=>{B.box(0.5,0.1,0.5,0x8d8a84,0,0.05,0);B.cyl(0.06,0.08,4.2,8,0x9a9ea2,0,2.2,0);B.box(0.72,0.06,0.06,0x5a5a5a,0,4.25,0);
     for(const x of [-0.25,0.25]){B.box(0.42,0.32,0.16,0x2b2d30,x,4.35,0.1,0.45,0,0);B.box(0.36,0.26,0.02,0xfffbe8,x,4.31,0.18,0.45,0,0)}},
   uplight:B=>{B.box(0.04,0.2,0.04,0x2d3a2a,0,0.1,0);B.cyl(0.07,0.07,0.16,10,0x2d3a2a,0,0.24,0,0.35,0,0);B.cyl(0.06,0.06,0.01,10,0xfff6dc,0,0.32,0.03,0.35,0,0)},
-  bollard:B=>{B.cyl(0.09,0.1,0.75,10,0x2a2c2e,0,0.375,0);B.cyl(0.085,0.085,0.1,10,0xfff2cc,0,0.8,0);B.cyl(0.13,0.13,0.04,10,0x2a2c2e,0,0.87,0)},
+  pathlight:B=>{B.cyl(0.09,0.1,0.75,10,0x2a2c2e,0,0.375,0);B.cyl(0.085,0.085,0.1,10,0xfff2cc,0,0.8,0);B.cyl(0.13,0.13,0.04,10,0x2a2c2e,0,0.87,0)},
   stringlts:B=>{for(const x of [-2.95,2.95])B.cyl(0.05,0.06,3.0,6,0x7a5a3a,x,1.5,0);
     const P=[[-2.95,2.95],...STR_PTS.map(p=>[p[0],p[1]+0.07]),[2.95,2.95]];
     for(let k=1;k<P.length;k++){const [x0,y0]=P[k-1],[x1,y1]=P[k];B.box(Math.hypot(x1-x0,y1-y0),0.012,0.012,0x222222,(x0+x1)/2,(y0+y1)/2,0,0,0,Math.atan2(y1-y0,x1-x0))}
@@ -239,12 +244,19 @@ const PROP_MODELS={
   tires:B=>{for(let k=0;k<4;k++){B.tor(0.36,0.13,0x1c1c1c,(k%2)*0.04,0.14+k*0.27,0);B.cyl(0.25,0.25,0.12,12,0x2a2a2a,(k%2)*0.04,0.14+k*0.27,0)}},
   barrow:B=>{B.box(0.62,0.26,0.85,0x2d6a3a,0,0.58,0.1,0.08,0,0);B.box(0.5,0.04,0.6,0x245a30,0,0.45,0.12);B.cyl(0.18,0.18,0.08,12,0x1c1c1c,0,0.18,0.62,0,0,Math.PI/2);
     for(const x of [-0.24,0.24]){B.box(0.04,0.04,1.3,0x7a5a3a,x,0.5,-0.15,-0.12,0,0);B.box(0.04,0.38,0.04,0x3a3a3a,x,0.19,-0.3)}},
-  fuelstand:B=>{for(const x of [-0.8,0.8])for(const z of [-0.4,0.4])B.box(0.08,1.1,0.08,0x4a4a4a,x,0.55,z);B.box(1.9,0.08,1.0,0x4a4a4a,0,1.1,0);
-    B.cyl(0.55,0.55,2.1,14,0xc8a218,0,1.68,0,0,0,Math.PI/2);B.cyl(0.08,0.08,0.12,8,0x3a3a3a,0.5,2.28,0);B.box(0.2,0.3,0.1,0x2a2a2a,-0.6,1.25,0.55);B.box(0.5,0.2,0.02,0xf4f4f4,0,1.7,0.555)},
+  // the yard's diesel tank (the detailed one is site.glb's fueltank, PROP_MDL below): 14 ft long and 7 ft round on two
+  // saddles, its pump at the front right; the middle of the whole thing, pump and all, is the model's middle
+  fuelstand:B=>{const X=-0.37,Z=-0.28;for(const dx of [-1.4,1.4])B.box(0.4,0.9,2.0,0x9a978f,X+dx,0.45,Z);
+    B.cyl(1.05,1.05,4.2,14,0xd8d8d4,X,1.9,Z,0,0,Math.PI/2);B.cyl(1.07,1.07,0.4,14,0xc8a218,X,1.9,Z,0,0,Math.PI/2);B.cyl(0.1,0.1,0.14,8,0x3a3a3a,X+0.9,3.0,Z);
+    B.box(0.6,1.4,0.4,0xc0392b,X+2.8,0.7,Z+1.0);B.box(0.4,0.3,0.02,0x1e1e1e,X+2.8,1.1,Z+1.21);B.box(0.05,0.6,0.05,0x2a2a2a,X+3.05,0.9,Z+1.22)},
+  // the site office trailer (site.glb's office): 40 by 11 ft on block piers, its door at the front with steps and a
+  // landing, which stand in front of its footprint
+  office:B=>{for(const x of [-5,-1.7,1.7,5])B.box(0.4,0.6,3,0x9a978f,x,0.3,0);B.box(12,2.8,3.4,0xecebe6,0,2,0);B.box(12.1,0.15,3.5,0xb9b9b4,0,3.45,0);
+    for(const x of [-4.2,-1.6,3.6])B.box(1.4,0.9,0.06,0x3c4a52,x,2.3,1.72);B.box(0.95,2.0,0.06,0x8a9198,1.2,1.65,1.72);
+    for(let i=0;i<3;i++)B.box(1.2,0.18,0.35,0x8f9396,1.2,0.3+i*0.3,2.6-i*0.3);B.box(1.6,0.08,1.0,0x8f9396,1.2,0.92,2.2)},
   // ---------- farm and garden ----------
-  haybale:B=>{B.cyl(0.75,0.75,1.2,16,0xc9a85a,0,0.75,0,0,0,Math.PI/2);for(const x of [-0.61,0.61])B.cyl(0.7,0.7,0.02,16,0xb8964a,x,0.75,0,0,0,Math.PI/2)},
-  straw:B=>{for(const [x,y,z] of [[0,0.2,-0.23],[0,0.2,0.23],[0,0.6,0]])B.box(0.9,0.4,0.45,0xd9c27a,x,y,z);
-    for(const [y,z] of [[0.2,-0.23],[0.2,0.23],[0.6,0]])for(const x of [-0.25,0.25])B.box(0.02,0.41,0.46,0x8a7a4a,x,y,z)},
+  haybale:B=>{B.cyl(0.92,0.92,1.52,16,0xc9a85a,0,0.9,0,0,0,Math.PI/2);for(const x of [-0.77,0.77])B.cyl(0.86,0.86,0.02,16,0xb8964a,x,0.9,0,0,0,Math.PI/2)},
+  straw:B=>{for(const [y,z] of [[0.21,-0.27],[0.21,0.27],[0.63,0]]){B.box(1.1,0.42,0.52,0xd9c27a,0,y,z);for(const x of [-0.3,0.3])B.box(0.02,0.43,0.53,0x8a7a4a,x,y,z)}},
   planter:B=>{B.box(1.2,0.45,0.45,0x8a5a3a,0,0.225,0);B.box(1.12,0.04,0.38,0x3d2b1f,0,0.44,0);
     for(let k=0;k<10;k++){const x=-0.48+k*0.107,z=(k%2?0.08:-0.08);B.ball(0.08,0x3f7a35,x,0.5,z);B.ball(0.05,FLW[k%FLW.length],x,0.6,z)}},
   raisedbed:B=>{for(const z of [-0.58,0.58])B.box(2.4,0.3,0.05,0x9a6a42,0,0.15,z);for(const x of [-1.18,1.18])B.box(0.05,0.3,1.2,0x9a6a42,x,0.15,0);
@@ -326,6 +338,17 @@ const PROP_MODELS={
     im.castShadow=im.receiveShadow=true;im.frustumCulled=false;im.count=0;im.visible=false;im.layers.enable(RAIN_LAYER);scene.add(im);propIMs[k]=im}}
 // how tall each model is (the outline when placing on foot)
 const PROP_H={};for(const k in PROPS){const g=propIMs[k].geometry;g.computeBoundingBox();PROP_H[k]=g.boundingBox.max.y}
+// (a kind's id is 2 to 16 lower-case letters, or the map leaves it out on loading: mapDecode, terrain.js)
+// kinds whose detailed model (models.js, mdlPropParts) is a node of another name: [node, copies], each copy
+// [x, y, z, yaw, scale] on this kind's own model (none: the node as it is). The simple model above is what Low shows
+// and what the footprint, solid and lamps are set by, so the copies are laid to match it
+const PROP_MDL={
+  fuelstand:['fueltank',[[-0.37,0,-0.28,0,1]]],
+  haybale:['roundbale'],
+  picniclong:['picnic8'],
+  straw:['bale',[[0,0,-0.27,Math.PI/2,1],[0,0,0.27,Math.PI/2,1],[0,0.42,0,Math.PI/2,1]]],
+  // the bridges' 19 ft davit lamp, scaled up to this kind's 25 ft: its lens lands on the lamp above (5.93 m and 1.36 m out, x 1.292)
+  streetlt:['lampArm',[[0,0,0,0,7.66/5.93]]]};
 // ---------- placing ----------
 // a thing's footprint corners and middle, turned and sized, as [x, z] points
 function propPts(a){const p=PROPS[a.t],hw=p.w/2*a.s,hd=p.d/2*a.s,c=Math.cos(a.yaw),s=Math.sin(a.yaw),out=[[a.x,a.z]];
