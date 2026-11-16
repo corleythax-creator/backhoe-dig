@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Sunday, November 15, 2026
 
+- **v421** (10:39 PM) Loading no longer freezes twice at the end while the shadow shaders are built a second time: they are built once, in the background (two freezes of 4 and 9 seconds on the owner's PC). The Profiler's timeline also lists any slow frame drawn while loading.
 - **v420** (9:43 PM) The Profiler's Loading report now lists the getting ready step by step (each shader pass with its counts, each place looked over, each townsperson loaded, built and warmed), and each slow frame says what it was: time in the game's frame, and what was new on the graphics card.
 
 ## Wednesday, November 11, 2026
