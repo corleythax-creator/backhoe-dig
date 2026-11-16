@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-16T03:43:00Z",
+ "updated": "2026-11-16T04:39:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -144,9 +144,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-15",
-   "dh": 1.5,
-   "act": 0.5,
-   "versions": 1
+   "dh": 4.5,
+   "act": 1,
+   "versions": 2
   }
  ],
  "extra": [
@@ -3936,6 +3936,15 @@ window.EFFORT = {
    "tris": 9178072,
    "chars": 2693037,
    "what": "The Profiler's Loading report now lists the getting ready step by step (each shader pass with its counts, each place looked over, each townsperson loaded, built and warmed), and each slow frame says what it was: time in the game's frame, and what was new on the graphics card."
+  },
+  {
+   "v": 421,
+   "asked": "2026-11-15T22:00:00-06:00",
+   "live": "2026-11-15T22:39:22-06:00",
+   "dh": 3,
+   "tris": 11377136,
+   "chars": 2695978,
+   "what": "Loading no longer freezes twice at the end while the shadow shaders are built a second time: they are built once, in the background (two freezes of 4 and 9 seconds on the owner's PC). The Profiler's timeline also lists any slow frame drawn while loading."
   }
  ]
 };
