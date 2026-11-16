@@ -49,7 +49,11 @@ const LOADP={js:0,mgr:[],warm:false,done:false,shown:0,cap:60};
 document.addEventListener('load',e=>{if(e.target.tagName==='SCRIPT'&&e.target.defer){LOADP.js++;PF_BOOT.js.push([e.target.getAttribute('src'),performance.now()])}},true);
 // for the Profiler (☰ → Dev, js/prof.js): when each game script finished running, and every stretch the page's main
 // thread was held up 50 ms or more (the browser's long tasks), from the start
-const PF_BOOT={js:[],long:[],done:0,steps:{}};
+const PF_BOOT={js:[],long:[],done:0,steps:{},tl:[]};
+// the timeline of the getting ready (the Profiler's Loading report): what was done, when it started, how long it took and
+// a note (a shader pass and its counts, a place looked over, a townsperson's crowd built and warmed). The first 300 are
+// kept (the loading), the later ones roll over
+function pfMark(n,t0,x){const T=PF_BOOT.tl;if(T.length>=900)T.splice(300,100);T.push([n,Math.round(t0),Math.round(performance.now()-t0),x||''])}
 try{new PerformanceObserver(l=>{for(const e of l.getEntries())if(PF_BOOT.long.length<4000)PF_BOOT.long.push([e.startTime,e.duration])}).observe({type:'longtask',buffered:true})}catch(e){}
 // a script that didn't arrive (a phone's connection dropping a file) leaves the game half built and failing later
 // ("Can't find variable"), so the page loads again by itself, twice at most a session, before it gives up and carries on

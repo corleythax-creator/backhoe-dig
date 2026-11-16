@@ -358,12 +358,12 @@ let warmAll=null;
 // once, inside one call with nothing drawn on screen, so its depth shaders for what is only found there are built
 // before you arrive. Only behind the start card or while the tour test gets ready
 const WARM_AT=[[-190,248],[-200,205],[FAM_X,FAM_Z],[JES_X,JES_Z],[72,540],[0,600],[0,652],[0,-5],[40,-330]];
-function warmAt(x,z){const c=camera.position.clone(),sp=sun.position.clone(),stp=sun.target.position.clone(),y=Math.max(WATER,baseHeight(x,z))+2;
+function warmAt(x,z){const pm0=performance.now(),c=camera.position.clone(),sp=sun.position.clone(),stp=sun.target.position.clone(),y=Math.max(WATER,baseHeight(x,z))+2;
   try{camera.position.set(x,y,z);camera.updateMatrixWorld();if(typeof rcRender==='function'&&typeof rcRT!=='undefined')rcRender();
     // (the sun's shadow pass was drawn here too, but called outside a frame it left WebGL failing every draw after it,
     // GL_INVALID_OPERATION, and the screen froze on its last picture; v240)
     }catch(e){}
-  finally{camera.position.copy(c);camera.updateMatrixWorld();sun.position.copy(sp);sun.target.position.copy(stp);sun.updateMatrixWorld();sun.target.updateMatrixWorld();renderer.shadowMap.needsUpdate=true}}
+  finally{camera.position.copy(c);camera.updateMatrixWorld();sun.position.copy(sp);sun.target.position.copy(stp);sun.updateMatrixWorld();sun.target.updateMatrixWorld();renderer.shadowMap.needsUpdate=true;pfMark('Place',pm0,Math.round(x*FT)+', '+Math.round(z*FT)+' ft')}}
 const warmQuiet=()=>!help.hidden||typeof tour!=='undefined'&&tour.on&&tour.ph==='ready';
 function warmIdle(){const W=warmAll;return !W||W.pend===0&&W.still>=1&&(!W.q||!W.q.length||help.hidden)&&(!W.at||!W.at.length||!warmQuiet())}
 // for the loading cover (start.js): the same, but the shaders count as done once a pass has finished and WARM_SETTLE ms
@@ -393,10 +393,12 @@ function warmAllTick(){const W=warmAll;if(!W||bench.on||vrOn())return;const now=
   // new materials, or the structures' ones whose pictures arrived (that swaps their shaders: brVer, bridges.js)
   const ms=new Set();scene.traverse(o=>{if(o.material)for(const m of [].concat(o.material))ms.add(m)});
   if(ms.size>W.mats||brVer!==W.ver){W.mats=Math.max(W.mats||0,ms.size);W.ver=brVer;W.still=0;W.pend++;
+    const pm0=performance.now(),pg0=renderer.info.programs.length,pmN=()=>`${ms.size} materials, shaders ${pg0} to ${renderer.info.programs.length}`;
     try{warmVm()}catch(e){}
-    const c1=()=>{W.pend--;if(!W.c1)W.c1=performance.now()};
-    if(!LOADP.done){W.pend++;try{const q=warmShadows(warmRoot());if(q&&q.then)q.then(()=>W.pend--,()=>W.pend--);else W.pend--}catch(e){W.pend--}}
-    try{const p=warmCompile(warmRoot(),scene);if(p&&p.then)p.then(c1,c1);else c1()}catch(e){c1()}}
+    const c1=()=>{W.pend--;if(!W.c1)W.c1=performance.now();pfMark('Shader pass',pm0,pmN())};
+    if(!LOADP.done){W.pend++;const s1=()=>{W.pend--;pfMark('Shadow shaders',pm0)};try{const q=warmShadows(warmRoot());if(q&&q.then)q.then(s1,s1);else W.pend--}catch(e){W.pend--}}
+    try{const p=warmCompile(warmRoot(),scene);if(p&&p.then)p.then(c1,c1);else c1()}catch(e){c1()}
+    pfMark('Shader pass set-up',pm0,pmN())}
   else W.still++;
   if(now-W.t0>180000&&W.pend===0&&(!W.q.length||help.hidden)&&(!W.at.length||!warmQuiet()))warmAll=null}
 // behind the loading cover nothing is drawn while shaders are being built in the background: a frame drawn then has to
@@ -448,8 +450,8 @@ const gpuQ=[];
 function gpuUp(tx){return new Promise(r=>gpuQ.push({tx:[...tx],done:r}))}
 function gpuWarm(o){const tx=new Set(),ok=im=>im&&(im.width||im.data||Array.isArray(im));
   o.traverse(m=>{for(const M of [].concat(m.material||[]))for(const k in M){const t=M[k];if(t&&t.isTexture&&ok(t.image))tx.add(t)}});
-  let p=null;try{p=warmCompile(o,scene)}catch(e){}
-  return Promise.all([p&&p.then?p.catch(()=>{}):null,gpuUp(tx)])}
+  const pm0=performance.now(),pg0=renderer.info.programs.length;let p=null;try{p=warmCompile(o,scene)}catch(e){}
+  return Promise.all([p&&p.then?p.catch(()=>{}):null,gpuUp(tx)]).then(r=>{pfMark('Warmed '+(o.name||o.type||'scene'),pm0,`${tx.size} pictures, shaders ${pg0} to ${renderer.info.programs.length}`);return r})}
 // (a few milliseconds' worth a frame, at least one)
 function gpuWarmTick(){const t0=performance.now();while(gpuQ.length){const j=gpuQ[0],t=j.tx.pop();if(t)try{renderer.initTexture(t)}catch(e){}
   if(!j.tx.length){gpuQ.shift();j.done()}if(performance.now()-t0>(help.hidden?3:14))break}}// more a frame behind the start card

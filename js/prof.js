@@ -32,7 +32,7 @@ function pfLoadReport(){const B=typeof PF_BOOT==='object'?PF_BOOT:{js:[],long:[]
   const done=B.done||0,long=B.long.filter(l=>!done||l[0]<done),blocked=long.reduce((a,l)=>a+l[1],0);
   const loafs=PF.loaf.filter(l=>!done||l.t<done).sort((a,b)=>b.ms-a.ms).slice(0,10);
   return {nav:nav?{html:nav.responseEnd,dom:nav.domInteractive}:null,jsEnd,done,scripts:sc.slice(0,12),files:files.sort((a,b)=>b.ms-a.ms).slice(0,15),nFiles:files.length,tot,kinds:K,
-    steps:B.steps||{},blocked,nLong:long.length,longs:long.slice().sort((a,b)=>b[1]-a[1]).slice(0,8),loafs}}
+    steps:B.steps||{},tl:(B.tl||[]).filter(m=>!done||m[1]<done+3000),blocked,nLong:long.length,longs:long.slice().sort((a,b)=>b[1]-a[1]).slice(0,8),loafs}}
 // ---------- Frames ----------
 // the parts of the frame: every function frame() (main.js) calls by name
 function pfParts(){const src=String(frame),seen=new Set();for(const m of src.matchAll(/(?<![\w$.])([a-zA-Z_$][\w$]*)\s*\(/g)){const n=m[1];
@@ -77,12 +77,13 @@ function pfRecord(sec){if(PF.on)return Promise.resolve(null);sec=sec||10;PF.on=t
     // a display refresh the frame cap skipped (frame() left at once, last unchanged) is not a frame: not counted, and the
     // next frame's time runs from the last one drawn. A frame that built a shader (the programs on the card went up) is
     // marked, so the warm-up of new sights is told apart from the steady frames
-    const step=now=>{for(const k in acc)delete acc[k];const l0=last,pg0=(renderer.info.programs||[]).length,c0=performance.now();frame(now);const cpu=performance.now()-c0;gpuPoll();
+    const step=now=>{for(const k in acc)delete acc[k];const l0=last,pg0=(renderer.info.programs||[]).length,mg0=renderer.info.memory.geometries,mt0=renderer.info.memory.textures,c0=performance.now();frame(now);const cpu=performance.now()-c0;gpuPoll();const poll=performance.now()-c0-cpu;
       const el=performance.now()-t0,ran=last!==l0;
       if(ran){const ft=lastNow?now-lastNow:0;lastNow=now;const ri=renderer.info.render;calls+=ri.calls;tris+=ri.triangles;nf++;
       for(const k in acc){const s=S[k]||(S[k]={sum:0,max:0});s.sum+=acc[k];if(acc[k]>s.max)s.max=acc[k]}
       const sh=(renderer.info.programs||[]).length>pg0;
-      if(ft)run.frames.push({ft,cpu,sh,top:(sh?['building shaders']:[]).concat(Object.entries(acc).filter(e=>e[1]>=2).sort((a,b)=>b[1]-a[1]).slice(0,4).map(([k,v])=>pfName(k)+' '+Math.round(v)+' ms'))})}if(ran&&typeof toast==='function'&&nf%15===0)toast(`Profiler: recording ${Math.max(0,Math.ceil(sec-el/1000))} s…`,'',800);
+      const up=[renderer.info.memory.geometries-mg0,renderer.info.memory.textures-mt0,(renderer.info.programs||[]).length-pg0];
+      if(ft)run.frames.push({ft,cpu,sh,top:[`${Math.round(cpu)} ms in the game's frame`].concat(poll>=5?[`${Math.round(poll)} ms reading the graphics card's timer`]:[],up.some(v=>v>0)?[`new on the card: ${up[0]} meshes, ${up[1]} pictures, ${up[2]} shaders`]:[],sh?['building shaders']:[]).concat(Object.entries(acc).filter(e=>e[1]>=2).sort((a,b)=>b[1]-a[1]).slice(0,4).map(([k,v])=>pfName(k)+' '+Math.round(v)+' ms'))})}if(ran&&typeof toast==='function'&&nf%15===0)toast(`Profiler: recording ${Math.max(0,Math.ceil(sec-el/1000))} s…`,'',800);
       if(el<sec*1000)return false;
       // put everything back
       for(const n of parts)if(window[n]&&window[n].pfW)window[n]=orig[n];if(G)window.postRender=orig.postRender;
@@ -93,18 +94,21 @@ function pfRecord(sec){if(PF.on)return Promise.resolve(null);sec=sec||10;PF.on=t
         run.lowSteady=1000/((Q[Math.floor(m*0.99)])||1);run.worstSteady=Q[m-1]||0}run.cpu=cpuAvg;run.outside=Math.max(0,avg-cpuAvg);run.gpu=G&&G.ms.length?G.ms.reduce((a,b)=>a+b,0)/G.ms.length:null;
       run.calls=calls/nf;run.tris=tris/nf;run.parts=Object.entries(S).map(([k,v])=>({n:pfName(k),avg:v.sum/nf,max:v.max})).sort((a,b)=>b.avg-a.avg).slice(0,16);
       run.slow=run.frames.slice().sort((a,b)=>b.ft-a.ft).slice(0,6).map(f=>({ft:f.ft,top:f.top}));run.frames=null;
-      run.loafs=PF.loaf.slice(loaf0).sort((a,b)=>b.ms-a.ms).slice(0,5);run.heavy=pfHeavy();run.heavyBy=pfHeavyBy.slice();run.mem=Object.assign({},renderer.info.memory,{programs:(renderer.info.programs||[]).length});
+      run.tl=(PF_BOOT.tl||[]).filter(m=>m[1]+m[2]>=t0);run.loafs=PF.loaf.slice(loaf0).sort((a,b)=>b.ms-a.ms).slice(0,5);run.heavy=pfHeavy();run.heavyBy=pfHeavyBy.slice();run.mem=Object.assign({},renderer.info.memory,{programs:(renderer.info.programs||[]).length});
       PF.runs.push(run);PF.on=false;done(run);return true};
     if(typeof PF_HEADLESS!=='undefined'||navigator.webdriver){renderer.setAnimationLoop(null);const draw=()=>{if(!step(performance.now()))setTimeout(draw,0);else renderer.setAnimationLoop(frame)};draw();return}
     renderer.setAnimationLoop(now=>{if(step(now))renderer.setAnimationLoop(frame)})})}
 // ---------- the panel ----------
 function pfTable(head,rows){return `<div class="tablewrap"><table class="btab"><tr>${head.map(h=>`<th>${h}</th>`).join('')}</tr>${rows.map(r=>`<tr>${r.map(c=>`<td>${pfEsc(c)}</td>`).join('')}</tr>`).join('')}</table></div>`}
 // when each of the loading cover's steps finished (start.js loadSteps)
+// the getting-ready timeline (start.js pfMark): what, started at, took, note
+const pfTlTxt=T=>(T||[]).map(m=>`${m[0]} at ${pfMs(m[1])} took ${pfMs(m[2])}${m[3]?' ('+m[3]+')':''}`).join('; ');
 const pfStepsTxt=L=>Object.entries(L.steps||{}).map(([k,t])=>`${k} ${pfMs(t)}`).join(' · ');
 function pfLoadHtml(L){let h=`<div class="ticket"><div><span class="lbl">Page up</span> ${L.nav?pfMs(L.nav.dom):'?'} · <span class="lbl">scripts run</span> ${pfMs(L.jsEnd)} · <span class="lbl">loading cover done</span> ${L.done?pfMs(L.done):'not yet'}</div>
     <div><span class="lbl">Downloaded</span> ${L.nFiles} files, ${pfKB(L.tot)} · <span class="lbl">frozen while loading</span> ${pfMs(L.blocked)} in ${L.nLong} stretches over 50 ms</div>${pfStepsTxt(L)?`<div><span class="lbl">Steps done at</span> ${pfStepsTxt(L)}</div>`:''}</div>`;
   h+='<h2>By kind</h2>'+pfTable(['Kind','Files','Size','All in by'],Object.entries(L.kinds).sort((a,b)=>b[1].b-a[1].b).map(([k,v])=>[k,v.n,pfKB(v.b),pfMs(v.ms)]));
   h+='<h2>Slowest downloads</h2>'+pfTable(['File','Size','Took','Started'],L.files.map(f=>[f.f,pfKB(f.b),pfMs(f.ms),pfMs(f.at)]));
+  if(L.tl.length)h+='<h2>Getting ready, step by step</h2>'+pfTable(['What','Started','Took','Note'],L.tl.map(m=>[pfEsc(m[0]),pfMs(m[1]),pfMs(m[2]),pfEsc(m[3])]));
   h+='<h2>Scripts: own running time at the start</h2>'+pfTable(['Script','Ran for'],L.scripts.map(s=>[pfFile(s[0]),pfMs(s[1])]));
   if(L.loafs.length)h+='<h2>Longest freezes while loading</h2>'+pfTable(['At','Froze','What held it'],L.loafs.map(l=>[pfMs(l.t),pfMs(l.ms),l.sc.join(' · ')||'(the browser or graphics card)']));
   else if(L.longs.length)h+='<h2>Longest freezes while loading</h2>'+pfTable(['At','Froze'],L.longs.map(l=>[pfMs(l[0]),pfMs(l[1])]));
@@ -116,16 +120,17 @@ function pfRunHtml(r,i){let h=`<h2>${i+1}. ${pfEsc(r.where)} <small>(${pfEsc(r.g
   h+=pfTable(['Part of the frame','Average','Worst'],r.parts.map(p=>[p.n,p.avg.toFixed(2)+' ms',pfMs(p.max)]));
   h+='<h3>Slowest frames</h3>'+pfTable(['Frame','Slow parts'],r.slow.map(s=>[pfMs(s.ft),s.top.join(', ')||'outside the game\'s code']));
   if(r.loafs.length)h+='<h3>Freezes (what the browser says held them)</h3>'+pfTable(['Froze','Script'],r.loafs.map(l=>[pfMs(l.ms),l.sc.join(' · ')||'(the browser or graphics card)']));
+  if(r.tl&&r.tl.length)h+='<h3>Loaded and warmed meanwhile</h3>'+pfTable(['What','Started','Took','Note'],r.tl.map(m=>[pfEsc(m[0]),pfMs(m[1]),pfMs(m[2]),pfEsc(m[3])]));
   h+='<h3>In view, by the game file that adds it</h3>'+pfTable(['File','Triangles','Draws'],(r.heavyBy||[]).map(g=>[g.n,g.tris>=1e6?(g.tris/1e6).toFixed(2)+' M':Math.round(g.tris/1000)+' k',g.meshes]));
   h+='<h3>Heaviest things in view</h3>'+pfTable(['Group','Triangles','Draws'],r.heavy.map(g=>[g.n,g.tris>=1e6?(g.tris/1e6).toFixed(2)+' M':Math.round(g.tris/1000)+' k',g.meshes]));
   return h}
 function pfText(){const L=pfLoadReport(),T=[`Corley's Island profiler · ${window.EFFORT&&EFFORT.versions?'v'+EFFORT.versions[EFFORT.versions.length-1].v:''} · ${navigator.userAgent}`,
     `LOADING: page ${L.nav?pfMs(L.nav.dom):'?'}, scripts ${pfMs(L.jsEnd)}, cover done ${L.done?pfMs(L.done):'no'}; ${L.nFiles} files ${pfKB(L.tot)}; frozen ${pfMs(L.blocked)} in ${L.nLong}`,
     'Steps done at: '+pfStepsTxt(L),'Slowest downloads: '+L.files.slice(0,10).map(f=>`${f.f} ${pfKB(f.b)} ${pfMs(f.ms)}`).join('; '),'Scripts: '+L.scripts.slice(0,8).map(s=>`${pfFile(s[0])} ${pfMs(s[1])}`).join('; '),
-    'Freezes: '+L.loafs.map(l=>`${pfMs(l.ms)} at ${pfMs(l.t)} [${l.sc.join(' · ')}]`).join('; ')];
+    'Freezes: '+L.loafs.map(l=>`${pfMs(l.ms)} at ${pfMs(l.t)} [${l.sc.join(' · ')}]`).join('; '),'Getting ready: '+pfTlTxt(L.tl)];
   for(const r of PF.runs)T.push('',`SCENE ${r.where} (${r.gfx}): ${r.fps.toFixed(0)} fps, 1% low ${r.low.toFixed(0)}, worst ${pfMs(r.worst)}${r.shN?` (shaders built in ${r.shN} frames, ${pfMs(r.shMs)}; without them 1% low ${r.lowSteady.toFixed(0)}, worst ${pfMs(r.worstSteady)})`:''}; game code ${r.cpu.toFixed(1)} ms, outside ${r.outside.toFixed(1)} ms${r.gpu!=null?', GPU '+r.gpu.toFixed(1)+' ms':''}; ${Math.round(r.calls)} calls ${(r.tris/1e6).toFixed(2)}M tris`,
     'Parts: '+r.parts.map(p=>`${p.n} ${p.avg.toFixed(2)}/${Math.round(p.max)}`).join('; '),'Slow frames: '+r.slow.map(s=>`${pfMs(s.ft)} [${s.top.join(', ')}]`).join('; '),
-    'Freezes: '+r.loafs.map(l=>`${pfMs(l.ms)} [${l.sc.join(' · ')}]`).join('; '),'By file: '+(r.heavyBy||[]).map(g=>`${g.n} ${Math.round(g.tris/1000)}k/${g.meshes}`).join('; '),'Heaviest: '+r.heavy.map(g=>`${g.n} ${Math.round(g.tris/1000)}k/${g.meshes}`).join('; '));
+    'Freezes: '+r.loafs.map(l=>`${pfMs(l.ms)} [${l.sc.join(' · ')}]`).join('; '),'Warmed meanwhile: '+pfTlTxt(r.tl),'By file: '+(r.heavyBy||[]).map(g=>`${g.n} ${Math.round(g.tris/1000)}k/${g.meshes}`).join('; '),'Heaviest: '+r.heavy.map(g=>`${g.n} ${Math.round(g.tris/1000)}k/${g.meshes}`).join('; '));
   return T.join('\n')}
 function pfPaint(){const b=$('#profBody');if(!b)return;for(const t of document.querySelectorAll('#profTabs [data-pt]'))t.setAttribute('aria-pressed',String(t.dataset.pt===PF.tab));
   $('#profRec').hidden=PF.tab!=='frames';

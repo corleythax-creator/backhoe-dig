@@ -175,9 +175,9 @@ function tfForge(){const F=tf.F||(tf.F={st:0});if(F.st||!gfxCur.forge)return;F.s
   if(window.HumanForge)return go();const s=document.createElement('script');s.src='models/people/human-forge.js';s.onload=go;s.onerror=()=>{F.st=-1};document.head.appendChild(s)}
 // a character's crowd, the first time someone in view wears that look; the walk's ground speed scales with the
 // person's size (the clip's own speed is a 6 ft person's)
-function tfForgeCrowd(B,id){B.fg=1;const F=tf.F;tf.fgBusy=(tf.fgBusy||0)+1;
-  F.f.preload(['island_'+id]).then(([t])=>{tfDieClips(t);return F.f.crowd('island_'+id,{max:B.cap,clips:TF_FG_CLIPS,lod:gfxCur.forge,castShadow:true,receiveShadow:true}).then(c=>{const m=c.object,M=m.material;
-    M.roughness=0.86;M.envMap=skyEnv;M.envMapIntensity=0.5;m.castShadow=!!gfxCur.pbr;m.visible=false;c.stride=F.f.clips.walk.speed*c.type.hip/F.ref;c.runS=(F.f.clips.run||F.f.clips.walk).speed*c.type.hip/F.ref;scene.add(m);
+function tfForgeCrowd(B,id){B.fg=1;const F=tf.F,pm0=performance.now();tf.fgBusy=(tf.fgBusy||0)+1;
+  F.f.preload(['island_'+id]).then(([t])=>{pfMark('Townsperson '+id+' loaded',pm0);const pm1=performance.now();tfDieClips(t);return F.f.crowd('island_'+id,{max:B.cap,clips:TF_FG_CLIPS,lod:gfxCur.forge,castShadow:true,receiveShadow:true}).then(c=>{const m=c.object,M=m.material;
+    M.roughness=0.86;M.envMap=skyEnv;M.envMapIntensity=0.5;m.castShadow=!!gfxCur.pbr;m.visible=false;c.stride=F.f.clips.walk.speed*c.type.hip/F.ref;c.runS=(F.f.clips.run||F.f.clips.walk).speed*c.type.hip/F.ref;scene.add(m);pfMark('Townsperson '+id+' crowd built',pm1);
       return gpuWarm(m).then(()=>{B.fg=c})})})
     .catch(e=>{B.fgErr=1;console.warn('townsfolk forge:',id,e)}).finally(()=>{tf.fgBusy--})}
 // built ahead, wherever the camera is (from the first frames, behind the start card): every character's look and, on
