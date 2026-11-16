@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-12T03:48:00Z",
+ "updated": "2026-11-16T03:43:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -141,6 +141,12 @@ window.EFFORT = {
    "dh": 42.75,
    "act": 4,
    "versions": 9
+  },
+  {
+   "d": "2026-11-15",
+   "dh": 1.5,
+   "act": 0.5,
+   "versions": 1
   }
  ],
  "extra": [
@@ -3921,6 +3927,15 @@ window.EFFORT = {
    "tris": 9998953,
    "chars": 2690771,
    "what": "On Ultra, the full-detail townsfolk are loaded before you reach them (anyone within 82 ft, a room's staff as you walk to its door), 8 looks kept loaded instead of 4, and the skin shader compiled behind the loading screen; both are tunable in Tuning, Town."
+  },
+  {
+   "v": 420,
+   "asked": "2026-11-15T20:35:00-06:00",
+   "live": "2026-11-15T21:43:31-06:00",
+   "dh": 1.5,
+   "tris": 9178072,
+   "chars": 2693037,
+   "what": "The Profiler's Loading report now lists the getting ready step by step (each shader pass with its counts, each place looked over, each townsperson loaded, built and warmed), and each slow frame says what it was: time in the game's frame, and what was new on the graphics card."
   }
  ]
 };
