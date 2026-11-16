@@ -151,16 +151,24 @@ const RC_GLSL='uniform sampler2D tCover;uniform vec4 uRC;uniform float uRCR;\n#i
   'float coverY(vec2 xz){vec2 uv=vec2((xz.x-uRC.x)*uRC.w+0.5,(uRC.y-xz.y)*uRC.w+0.5);if(uv.x<0.0||uv.y<0.0||uv.x>1.0||uv.y>1.0)return -1e5;\n'+
   'float d=unpackRGBAToDepth(texture2D(tCover,uv));return d>0.999?-1e5:uRC.z-d*uRCR;}\n';
 let rcTagged=false;const rcCol=new THREE.Color();
-function rcRender(){
+// the lights are in the cover pass too (they light nothing there: it is all depth). three.js keys every shader on how
+// many lights the last pass drawn had, the sun's shadow pass included, which runs before its own frame counts them: with
+// no lights here, the frame after each cover pass built every shadow shader a second time (no lights), one after
+// another in a drawn frame (two freezes of 4 and 9 s at the end of loading on Windows, v420's Profiler). Lights made
+// later are found by a look through the scene every 5 s
+let rcLtT=0;
+function rcLights(){const n=performance.now();if(n<rcLtT)return;rcLtT=n+5000;scene.traverse(o=>{if(o.isLight)o.layers.enable(RAIN_LAYER)})}
+function rcRender(){rcLights();
   if(!rcTagged){rcTagged=true;for(const g of [machine,truck,skid,mower])g.traverse(o=>{if(o.isMesh&&!o.userData.noCover)o.layers.enable(RAIN_LAYER)})}
   const c=camera.position,px=RC_S/RC_N,cx=Math.round(c.x/px)*px,cz=Math.round(c.z/px)*px;
   rcCam.position.set(cx,c.y+RC_UP,cz);rcCam.updateMatrixWorld();
   // Jessica's roofs lift off while you are under them, but they still keep the rain out
   const lift=[jesRoof,jesBridgeRoof].filter(m=>m&&!m.visible);for(const m of lift)m.visible=true;
-  const bg=scene.background,au=renderer.shadowMap.autoUpdate,ca=renderer.getClearAlpha(),rt=renderer.getRenderTarget();renderer.getClearColor(rcCol);
-  scene.background=null;scene.overrideMaterial=rcDepth;renderer.shadowMap.autoUpdate=false;renderer.setClearColor(0xffffff,1);
+  const bg=scene.background,au=renderer.shadowMap.autoUpdate,nu=renderer.shadowMap.needsUpdate,ca=renderer.getClearAlpha(),rt=renderer.getRenderTarget();renderer.getClearColor(rcCol);
+  // (no shadow pass from in here, now that the lights are counted: a shadow update that is due waits for the frame)
+  scene.background=null;scene.overrideMaterial=rcDepth;renderer.shadowMap.autoUpdate=false;renderer.shadowMap.needsUpdate=false;renderer.setClearColor(0xffffff,1);
   const xr=renderer.xr.enabled;renderer.xr.enabled=false;renderer.setRenderTarget(rcRT);renderer.render(scene,rcCam);renderer.xr.enabled=xr;
-  renderer.setRenderTarget(rt);renderer.setClearColor(rcCol,ca);scene.background=bg;scene.overrideMaterial=null;renderer.shadowMap.autoUpdate=au;
+  renderer.setRenderTarget(rt);renderer.setClearColor(rcCol,ca);scene.background=bg;scene.overrideMaterial=null;renderer.shadowMap.autoUpdate=au;if(nu)renderer.shadowMap.needsUpdate=true;
   for(const m of lift)m.visible=false;
   rcU.uRC.value.set(cx,cz,c.y+RC_UP,1/RC_S)}
 // raindrops: camera-facing streaks in a box that follows the camera, moved by the GPU. Each drop has its own length,
@@ -282,11 +290,11 @@ function rainFxTick(dt){dnTick(dt);const r=weather.r,v=Math.max(ss(0,0.6,r),0.75
 let rcNext=0,rcSkip=0;
 // the cover pass's depth shaders, one for each kind of mesh it can meet (plain, instanced, instanced with colours),
 // built once behind the loading cover (warmAllTick, main.js): drawn at first sight they stalled the first frames of rain
-function rcWarm(){const g=new THREE.BoxGeometry(1,1,1),sc=new THREE.Scene(),m0=new THREE.MeshBasicMaterial(),a=new THREE.Mesh(g,m0),b=new THREE.InstancedMesh(g,m0,1),c=new THREE.InstancedMesh(g,m0,1);
-  c.setColorAt(0,new THREE.Color());for(const o of [a,b,c]){o.layers.set(RAIN_LAYER);o.frustumCulled=false;o.position.y=-RC_UP;sc.add(o)}
-  const rt=renderer.getRenderTarget(),xr=renderer.xr.enabled;rcCam.position.set(0,0,0);rcCam.updateMatrixWorld();
-  try{sc.overrideMaterial=rcDepth;renderer.xr.enabled=false;renderer.setRenderTarget(rcRT);renderer.render(sc,rcCam)}catch(e){}
-  finally{renderer.xr.enabled=xr;renderer.setRenderTarget(rt);g.dispose();m0.dispose();b.dispose();c.dispose()}}
+function rcWarm(){rcLights();const g=new THREE.BoxGeometry(1,1,1),a=new THREE.Mesh(g,rcDepth),b=new THREE.InstancedMesh(g,rcDepth,1),c=new THREE.InstancedMesh(g,rcDepth,1),h=new THREE.Group();
+  c.setColorAt(0,new THREE.Color());h.add(a,b,c);const rt=renderer.getRenderTarget();
+  // built against the real scene (its fog and lights are part of the shader's key), not drawn: the browser builds them in the background
+  try{renderer.setRenderTarget(rcRT);renderer.compile(h,rcCam,scene)}catch(e){}
+  finally{renderer.setRenderTarget(rt);g.dispose();b.dispose();c.dispose()}}
 function rainCover(){if(!(rsMesh||rainLines&&!rainLines.userData.off))return;const now=performance.now(),due=rsMesh&&now>=rcNext;
   // the cover map is redrawn every third frame (and when it is read): it is fixed to the ground, so it only has to keep
   // up with where you are

@@ -318,7 +318,7 @@ function frame(now){
   const fv=mode==='boat'?btCur():mode==='heavy'?hvCur():mode==='bike'?bk:mode==='truck'?tr:mode==='mow'?mw:mode==='skid'?sk:mode==='walk'?wk:st;sun.position.set(fv.x,fv.y,fv.z).addScaledVector(LIGHT_DIR,SUN_D); sun.target.position.set(fv.x,fv.y,fv.z);
   {const o=groundOcc.value;o[0].set(st.x,st.z,st.yaw,0);o[2].set(tr.x,tr.z,tr.yaw,0)}
   timeU.value=now/1000;
-  shadowProxyTick();lawnLod();tuftLod();turfLod();rainCover();if(vr.fake)vrFakeHead();warmAllTick();warmLaterTick();gpuWarmTick();if(!loadHold()){const wm=warmPre();postRender();warmPost(wm)}if(vrOn())vrAfter();
+  shadowProxyTick();lawnLod();tuftLod();turfLod();rainCover();if(vr.fake)vrFakeHead();warmAllTick();warmLaterTick();gpuWarmTick();if(!loadHold()){const wm=warmPre(),d0=performance.now(),di=drawInfo();postRender();warmPost(wm);if(performance.now()-d0>150)drawSlow(d0,di)}if(vrOn())vrAfter();
   if(bench.on)benchSample(dt);
   fpsFrames++;fpsTime+=dt;
   if(fpsTime>=0.5){const f=Math.round(fpsFrames/fpsTime);const fe=$('#fpsVal');fe.textContent=f;fe.style.color=f>=50?'var(--ok)':f>=30?'var(--gas)':'var(--danger)';
@@ -354,6 +354,9 @@ const texReady=()=>{applyTextures();warmN=Math.max(warmN,3);warmAll={t0:performa
 // frame while the start card is up, where a hitch can't be felt. (The island tour test, tourtest.js, waits for this and
 // times it; warmIdle says when nothing is left to do)
 let warmAll=null;
+// a drawn frame that took over 150 ms goes in the Profiler's timeline with what was new on the graphics card in it
+const drawInfo=()=>[renderer.info.programs.length,renderer.info.memory.geometries,renderer.info.memory.textures];
+function drawSlow(t0,a){const b=drawInfo();pfMark('Slow frame drawn',t0,`new on the card: ${b[0]-a[0]} shaders, ${b[1]-a[1]} meshes, ${b[2]-a[2]} pictures`)}
 // the places a player gets to (where the island tour test goes): the rain cover's top-down pass draws what is there
 // once, inside one call with nothing drawn on screen, so its depth shaders for what is only found there are built
 // before you arrive. Only behind the start card or while the tour test gets ready
@@ -417,8 +420,22 @@ function warmShadows(root){if(!renderer.shadowMap.enabled)return null;const swap
     d=new THREE.MeshDepthMaterial();d.visible=m.visible;d.wireframe=m.wireframe;d.side=m.shadowSide!==null&&m.shadowSide!==undefined?m.shadowSide:warmShSide[m.side];
     d.alphaMap=m.alphaMap||null;d.alphaTest=m.alphaToCoverage===true?0.5:m.alphaTest||0;d.map=m.map||null;d.displacementMap=m.displacementMap||null;d.displacementScale=m.displacementScale??1;
     made.set(m,d);return d};
-  const L=[];root.traverse(o=>{if(!(o.isMesh||o.isLine||o.isPoints)||!o.castShadow||!o.material)return;
-    const m=o.customDepthMaterial||(Array.isArray(o.material)?o.material.map(dm):dm(o.material));swap.push([o,o.material]);o.material=m;L.push(o)});
+  // three.js gives a material a depth material of its own only for a cut-out or displacement (own: made exactly, above).
+  // Everything else shares ONE, whose side and picture it sets for each caster without picking the shader again, so
+  // which side and picture a kind of object (plain, instanced, skinned, by its vertex data) gets built with is whatever
+  // was drawn before it. So for each kind, one of its objects is built with every side and with and without a picture
+  // that the sharers have (these are small shaders): whichever the shadow pass lands on is ready
+  const own=m=>m.displacementMap&&m.displacementScale!==0||m.alphaMap&&m.alphaTest>0||m.map&&m.alphaTest>0||m.alphaToCoverage===true;
+  const kindOf=o=>(o.isInstancedMesh?'i':'')+(o.instanceColor?'c':'')+(o.morphTexture?'M':'')+(o.isSkinnedMesh?'s':'')+(o.isBatchedMesh?'b':'')+(o.isPoints?'p':o.isLine?'l':'')+
+    Object.keys(o.geometry.attributes).sort().join()+'|'+Object.keys(o.geometry.morphAttributes||{}).join();
+  const L=[],kinds=new Map(),sides=new Set(),pics=new Set();let pic=null;
+  root.traverse(o=>{if(!(o.isMesh||o.isLine||o.isPoints)||!o.castShadow||!o.material||!o.geometry)return;
+    if(o.customDepthMaterial){swap.push([o,o.material]);o.material=o.customDepthMaterial;L.push(o);return}
+    const ex=[];let sh=false;for(const m of [].concat(o.material)){if(!m)continue;if(own(m))ex.push(dm(m));else{sh=true;sides.add(m.shadowSide!==null&&m.shadowSide!==undefined?m.shadowSide:warmShSide[m.side]);pics.add(!!m.map);if(m.map)pic=m.map}}
+    let rep=false;if(sh){const k=kindOf(o);if(!kinds.has(k)){kinds.set(k,o);rep=true}}
+    if(ex.length||rep){swap.push([o,o.material]);o.material=ex;L.push(o)}});
+  const shared=[];for(const sd of sides)for(const p of pics){const d=new THREE.MeshDepthMaterial();d.side=sd;d.map=p?pic:null;shared.push(d);made.set(d,d)}
+  for(const o of kinds.values())o.material=o.material.concat(shared);
   // (the shadow pass draws with no scene behind it, so no fog: part of the shader's key even for a depth material)
   if(!L.length)return null;const t=renderer.getRenderTarget(),fog=scene.fog;let p=null;
   try{renderer.setRenderTarget(warmShRT);scene.fog=null;p=renderer.compileAsync({isObject3D:true,traverseVisible(){},traverse(cb){for(const o of L)cb(o)}},camera,scene)}
