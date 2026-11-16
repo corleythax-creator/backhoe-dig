@@ -81,13 +81,24 @@ const dnPools=(function(){const P=[],U=[],I=[];
   const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.Float32BufferAttribute(P,3));g.setAttribute('uv',new THREE.Float32BufferAttribute(U,2));g.setIndex(I);
   const m=new THREE.Mesh(g,dnPoolMat);m.visible=false;m.renderOrder=1;scene.add(m);return m})();
 
-// ---------- headlights: one spot on the machine you are in, or the worker's headlamp ----------
-// it is always in the scene (dark by day), so nothing has to compile again when it comes on
+// ---------- headlights: a pair of beams on the machine you are in, or the worker's one headlamp ----------
+// they are always in the scene (dark by day), so nothing has to compile again when they come on. The second beam is
+// Medium graphics and up (Low keeps one down the middle); on High the first throws shadows (dnHeadGfx: its shadow map
+// is only drawn while the lamps are lit), so the things in the beam stand on the ground the way they do in real light
 const dnHead=new THREE.SpotLight(0xfff1dc,0,46,0.6,0.55,0);dnHead.castShadow=false;scene.add(dnHead,dnHead.target);
+const dnHead2=new THREE.SpotLight(0xfff1dc,0,46,0.6,0.55,0);dnHead2.castShadow=false;dnHead2.visible=false;scene.add(dnHead2,dnHead2.target);
+dnHead.shadow.camera.near=2.2;dnHead.shadow.bias=-0.0012;dnHead.shadow.normalBias=0.03;dnHead.shadow.autoUpdate=false;
+let dnHeadW=0;
+function dnHeadGfx(pair,sh){dnHead2.visible=!!pair;const on=sh>0;if(on)dnHead.shadow.mapSize.set(sh,sh);
+  if(dnHead.castShadow!==on){dnHead.castShadow=on;if(dnHead.shadow.map){dnHead.shadow.map.dispose();dnHead.shadow.map=null}}}
 const dnHP=new THREE.Vector3(),dnHT=new THREE.Vector3();
 function dnHeadPlace(){
   // [part, lamp x y z, aim x y z] in the part's own frame, forward along +z
   const p=mode==='boat'?[btCur().g,0,0.75,2.3,0,-1,18]:mode==='heavy'?[hvCur().g,...hvCur().K.lamp]:mode==='bike'?[bike,0,1.05,0.8,0,-1,10]:mode==='truck'?[sprung,0,0.2,3.0,0,-1.6,16]:mode==='skid'?[skid,0,1.3,0.9,0,-1.2,10]:mode==='mow'?[mower,0,0.8,0.9,0,-0.9,8]:mode==='walk'?null:[house,0,1.75,0.7,0,-0.8,14];
+  // half the way between the two lamps (m; none for a boat's, a bike's or the worker's one lamp)
+  const w=dnHeadW=!p||!dnHead2.visible?0:mode==='boat'||mode==='bike'?0:mode==='heavy'?Math.min(0.8,hvCur().K.wid*0.3):mode==='truck'?0.75:mode==='skid'?0.5:mode==='mow'?0.28:0.55;
+  if(p&&w){p[0].localToWorld(dnHead.position.set(p[1]-w,p[2],p[3]));p[0].localToWorld(dnHead.target.position.set(p[4]-w*1.6,p[5],p[6]));
+    p[0].localToWorld(dnHead2.position.set(p[1]+w,p[2],p[3]));p[0].localToWorld(dnHead2.target.position.set(p[4]+w*1.6,p[5],p[6]));return}
   if(p){p[0].localToWorld(dnHP.set(p[1],p[2],p[3]));p[0].localToWorld(dnHT.set(p[4],p[5],p[6]))}
   else{const fx=Math.sin(wk.view),fz=Math.cos(wk.view);dnHP.set(wk.x+fx*0.2,wk.y+1.75,wk.z+fz*0.2);dnHT.set(wk.x+fx*9,wk.y,wk.z+fz*9)}
   dnHead.position.copy(dnHP);dnHead.target.position.copy(dnHT)}
@@ -176,8 +187,8 @@ function dnTick(dt){
   const sunI=1.6*ss(-1.5,6,h)*(0.6+0.4*ss(6,30,h)),moonI=0.32*moonK*nl;
   if(h>-3){sun.color.copy(dnSunC);sun.intensity=sunI*LI;LIGHT_DIR.copy(SUN_DIR)}else{sun.color.copy(dnMoonC);sun.intensity=moonI*LI;LIGHT_DIR.copy(dnMoonDir)}
   if(LIGHT_DIR.y<0.07){LIGHT_DIR.y=0.07;LIGHT_DIR.normalize()}
-  DAY.hemiI=0.5*(0.12*nl*(1+0.6*moonK)+0.88*ss(-10,8,h));const hk=ss(-8,6,h);
-  if(hemiL0){hemiL0.color.copy(dnHemiSky.setHex(0x5d74a8).lerp(dnCa.setHex(0xb8d0ea),hk));hemiL0.groundColor.copy(dnHemiGnd.setHex(0x15171c).lerp(dnCa.setHex(0x5b5a3c),hk))}
+  DAY.hemiI=0.5*(0.21*nl*(1+0.6*moonK)+0.88*ss(-10,8,h));const hk=ss(-8,6,h);
+  if(hemiL0){hemiL0.color.copy(dnHemiSky.setHex(0x5d74a8).lerp(dnCa.setHex(0xb8d0ea),hk));hemiL0.groundColor.copy(dnHemiGnd.setHex(0x1e2636).lerp(dnCa.setHex(0x5b5a3c),hk))}
   dayKU.value=ss(-2,10,h);
   // the base the rain works from (rain.js); the map editor shows it as it is
   scene.background.copy(DAY.bg);scene.fog.color.copy(DAY.bg);if(hemiL0)hemiL0.intensity=DAY.hemiI*LI;
@@ -195,7 +206,9 @@ function dnTick(dt){
   propLampTick(lamp,ll,dt);
   // the lights of the town's buildings from Building Forge (forgetown.js)
   if(typeof bfLightTick==='function')bfLightTick(lamp,ll,dt);
-  const head=1-ss(-4,4,h);dnHead.intensity=2.2*head*ll*LI;if(head>0.01)dnHeadPlace();
+  const head=1-ss(-4,4,h);if(head>0.01)dnHeadPlace();
+  {const hi=2.2*head*ll*LI;dnHead.intensity=dnHeadW?hi*0.62:hi;dnHead2.intensity=dnHeadW?hi*0.62:0;dnHead.shadow.autoUpdate=dnHead.castShadow&&head>0.01}
+  dnMini(lamp);
   dnLightsTick(head);
   // the machines' lamp lenses (LENS, excavator.js) shine with them
   LENS.emissive.setHex(0x554a30).lerp(dnCa.copy(dnWarm).multiplyScalar(1.3*Math.min(1.5,ll)),head);
@@ -209,6 +222,9 @@ function dnTick(dt){
   if(Math.abs(dn.t-dn.saved)>600000||(dn.run&&performance.now()-dn.saveT>20000)){dn.saveT=performance.now();dnSave()}
   if((dn.uiT-=dt)<=0){dn.uiT=0.5;dnUI()}}
 const hemiL0=scene.children.find(o=>o.isHemisphereLight);
+// the minimap dims after dark, so it doesn't glare beside the night
+const dnMiniEl=$('#mini');let dnMiniK=-1;
+function dnMini(lamp){const k=Math.round((edOn?0:lamp)*10);if(k===dnMiniK||!dnMiniEl)return;dnMiniK=k;dnMiniEl.style.filter=k?'brightness('+(1-0.042*k).toFixed(2)+') saturate('+(1-0.03*k).toFixed(2)+')':''}
 
 // ---------- the Time row in the ☰ menu: a slider through the day, run or stop the clock, back to the real time ----------
 const dnSl=$('#todSlider');
