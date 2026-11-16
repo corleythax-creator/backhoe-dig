@@ -2,6 +2,10 @@
 
 Every version of Corley's Island, newest first, grouped by the day it went live (Central time). Made from `data/effort.js` by `tools/changelog.py`; don't edit it by hand. [Play any old version](https://corleys-island.vercel.app/versions/) · [Build log with charts](https://corleys-island.vercel.app/build.html)
 
+## Sunday, November 15, 2026
+
+- **v420** (9:43 PM) The Profiler's Loading report now lists the getting ready step by step (each shader pass with its counts, each place looked over, each townsperson loaded, built and warmed), and each slow frame says what it was: time in the game's frame, and what was new on the graphics card.
+
 ## Wednesday, November 11, 2026
 
 - **v419** (9:48 PM) On Ultra, the full-detail townsfolk are loaded before you reach them (anyone within 82 ft, a room's staff as you walk to its door), 8 looks kept loaded instead of 4, and the skin shader compiled behind the loading screen; both are tunable in Tuning, Town.
