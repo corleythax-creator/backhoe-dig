@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Sunday, November 15, 2026
 
+- **v422** (10:57 PM) Nights look better: a brighter, bluer night so the dark keeps its detail, a pair of headlight beams on the machines (Medium and up) that throw shadows on High and Ultra, real light from the four nearest street lamps, light towers and lanterns onto people, trees and walls (High and Ultra), and the minimap dims after dark.
 - **v421** (10:39 PM) Loading no longer freezes twice at the end while the shadow shaders are built a second time: they are built once, in the background (two freezes of 4 and 9 seconds on the owner's PC). The Profiler's timeline also lists any slow frame drawn while loading.
 - **v420** (9:43 PM) The Profiler's Loading report now lists the getting ready step by step (each shader pass with its counts, each place looked over, each townsperson loaded, built and warmed), and each slow frame says what it was: time in the game's frame, and what was new on the graphics card.
 

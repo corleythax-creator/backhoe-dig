@@ -46,8 +46,10 @@ GFX.low.stlGlow=false;GFX.med.stlGlow=GFX.high.stlGlow=true;
 // how far from a shop's or house's room its furniture is drawn (m; interiors.js rmPartsTick)
 GFX.low.rmNear=25;GFX.med.rmNear=35;GFX.high.rmNear=45;
 GFX.low.extraLt=false;GFX.med.extraLt=GFX.high.extraLt=true;
-// two real spotlights from the placed lights nearest the camera (props.js); the glow and the pools of light are on every level
+// four real spotlights from the lit lamps nearest the camera, placed ones and the street lamps alike (props.js); the glow and the pools of light are on every level
 GFX.low.propLt=GFX.med.propLt=false;GFX.high.propLt=true;
+// the headlights' shadows (daynight.js dnHeadGfx): the side of their shadow map in pixels, 0 for none
+GFX.low.headSh=GFX.med.headSh=0;GFX.high.headSh=1024;
 // real light from the lamps and ceiling lights of the Building Forge buildings nearest the camera (forgetown.js
 // bfLightTick): how many is the Tuning for the level (TU.bfLtMed, bfLtHigh, bfLtUltra); Low draws none, and the
 // fixtures glow on every level (set again after Ultra and Quest are made, below)
@@ -80,7 +82,7 @@ GFX.quest.extraLt=false;GFX.quest.bfLt=false;
 // pack, a slightly shorter haze, fewer, simpler townsfolk (the light one past 25 m, not 40) and paint without its clear coat. Picked for you on Intel graphics
 GFX.work=Object.assign({},GFX.high,{name:'Work',shEvery:2,pr:1,sh:2048,shR:28,soft:false,csm:0,bounce:false,autoExp:false,inLight:false,
   tex:'med',aniso:4,dirt:2,lawnFar:10,fog:0.75,cloudQ:1,lakeQ:1,rainN:900,rainSp:240,splashN:350,wakeN:200,brush:0.15,wild:0.35,
-  turf:0.35,turfR:22,peb:0,treeR:45,tuftQ:0,tuft:[0.6,12,40,0.2],town:1,forge:'',cull:6,rmNear:25,extraLt:false,propLt:false,bfLt:false,vrSS:1,coat:false,folkHi:25});
+  turf:0.35,turfR:22,peb:0,treeR:45,tuftQ:0,tuft:[0.6,12,40,0.2],town:1,forge:'',cull:6,rmNear:25,extraLt:false,headSh:0,propLt:false,bfLt:false,vrSS:1,coat:false,folkHi:25});
 // the bridges' detail parts: gusset and cover plates, lacing and lattice, braces, lamp trim, the covered bridge's
 // lattice and rafters, batter piles (bridges.js); Low and Work leave them out
 GFX.low.brDet=false;GFX.med.brDet=GFX.high.brDet=GFX.ultra.brDet=GFX.quest.brDet=true;GFX.work.brDet=false;
@@ -175,7 +177,7 @@ function gfxApply(){const g=gfxCur=Object.assign({},GFX[gfxKey],gfxOver);
   autoExpGfx(g.autoExp);
   postGfx(g.ao,g.bloom,g.grade);
   // the warm light in Jessica's library (jessica.js) and the boom's work light (daynight.js)
-  jesLightGfx(g.extraLt);dnBoomGfx(g.extraLt);if(typeof propLampGfx==='function')propLampGfx(g.propLt);
+  jesLightGfx(g.extraLt);dnBoomGfx(g.extraLt);dnHeadGfx(g.extraLt,g.headSh);if(typeof propLampGfx==='function')propLampGfx(g.propLt);
   // sky lighting, soft sun shadows and rain on the machines (post.js)
   ultraGfx(g.skyLight,g.shSoft&&g.sh>0,g.wetDrops,g.wetGround);
   // the light thrown up off the ground measured from the ground itself, or an earth colour (post.js)

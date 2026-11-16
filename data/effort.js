@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-16T04:39:00Z",
+ "updated": "2026-11-16T04:57:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -144,9 +144,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-15",
-   "dh": 4.5,
+   "dh": 7.5,
    "act": 1,
-   "versions": 2
+   "versions": 3
   }
  ],
  "extra": [
@@ -3945,6 +3945,15 @@ window.EFFORT = {
    "tris": 11377136,
    "chars": 2695978,
    "what": "Loading no longer freezes twice at the end while the shadow shaders are built a second time: they are built once, in the background (two freezes of 4 and 9 seconds on the owner's PC). The Profiler's timeline also lists any slow frame drawn while loading."
+  },
+  {
+   "v": 422,
+   "asked": "2026-11-15T22:05:00-06:00",
+   "live": "2026-11-15T22:57:01-06:00",
+   "dh": 3,
+   "tris": 13396931,
+   "chars": 2698804,
+   "what": "Nights look better: a brighter, bluer night so the dark keeps its detail, a pair of headlight beams on the machines (Medium and up) that throw shadows on High and Ultra, real light from the four nearest street lamps, light towers and lanterns onto people, trees and walls (High and Ultra), and the minimap dims after dark."
   }
  ]
 };

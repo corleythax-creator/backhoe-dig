@@ -495,7 +495,7 @@ const propName=a=>{const P=PROPS[a.t];return `${P.n}, ${(P.w*a.s/FT).toFixed(0)}
 
 // ---------- lamps: the lights among the things glow after dark ----------
 // Every lamp head gets a halo and, for the ones that light the ground, a pool of light laid over the ground under it
-// (both one draw for every lamp, so the phone can have hundreds). On High graphics the two lit lamps nearest the camera
+// (both one draw for every lamp, so the phone can have hundreds). On High graphics the four lit lamps nearest the camera (placed ones and the game's own street lamps, light towers and lanterns)
 // also get a real spotlight that lights the machines, the worker and the things round them.
 // A light's colour (c on its asset) is one of LAMP_COLS, picked in the editor's swatches; fire and the arrow board keep their own.
 const LAMP_COLS=[0xffd9a0,0xf2f4ff,0xffb347,0xff4a3a,0x5cff7a,0x5a8cff,0xc070ff];
@@ -536,7 +536,7 @@ propHalos.frustumCulled=propPools.frustumCulled=false;propHalos.visible=propPool
 // the lit lamps, one a thing: middle of its heads, aim, colour and kind (for the real spotlights)
 const propLamps=[];
 // the real spotlights; always in the scene on High (dark by day), so nothing compiles again when one comes on
-const propSpots=[0,1].map(()=>{const l=new THREE.SpotLight(0xffffff,0,20,1,0.5,0);l.castShadow=false;l.visible=false;scene.add(l,l.target);return l});
+const propSpots=[0,1,2,3].map(()=>{const l=new THREE.SpotLight(0xffffff,0,20,1,0.5,0);l.castShadow=false;l.visible=false;scene.add(l,l.target);return l});
 function propLampGfx(on){for(const l of propSpots)l.visible=!!on}
 propLampGfx(gfxCur.propLt);
 function propLampsBuild(){const H={p:[],c:[],s:[],f:[]},Q={p:[],c:[],f:[],u:[],i:[]},col=new THREE.Color(),v=new THREE.Vector3(),o=new THREE.Object3D();propLamps.length=0;
@@ -559,14 +559,20 @@ function propLampsBuild(){const H={p:[],c:[],s:[],f:[]},Q={p:[],c:[],f:[],u:[],i
   propSpotT=0}
 // each frame from daynight.js: lamp is how dark it is (0 by day, 1 at night), ll the Lamp light tuning
 let propSpotT=0;const propCamP=new THREE.Vector3();
-function propLampTick(lamp,ll,dt){const on=lamp>0.01&&propHalos.geometry.attributes.position&&propHalos.geometry.attributes.position.count>0;
+// the game's own lamps (FAM_LAMPS: street lamps, light towers, lanterns) as the spotlights see them
+const FAM_SPOT_K={1:{ang:1.2,dist:17,i:1.0,col:0xffe2a8,aim:[0,-1,0]},2:{ang:0.75,dist:40,i:1.6,col:0xfff2d8,aim:[0,-0.5,1]},3:{ang:1.3,dist:7,i:0.45,col:0xffc866,aim:[0,-1,0]}};
+for(const k in FAM_SPOT_K){const K=FAM_SPOT_K[k],a=K.aim,n=Math.hypot(a[0],a[1],a[2]);K.d=[a[0]/n,a[1]/n,a[2]/n]}
+function propLampTick(lamp,ll,dt){const dark=lamp>0.01,on=dark&&propHalos.geometry.attributes.position&&propHalos.geometry.attributes.position.count>0;
   propHalos.visible=!!on;propPools.visible=!!on&&propPools.geometry.index&&propPools.geometry.index.count>0;
   propLampU.uK.value=lamp*Math.min(1.5,ll);propLampU.uT.value=timeU.value%1000;propLampU.uH.value=renderer.domElement.height*0.5;
   if(!propSpots[0].visible)return;
-  if(!on){for(const l of propSpots)l.intensity=0;return}
-  // every third of a second, the two nearest lit lamps get the spotlights
+  if(!dark){for(const l of propSpots)l.intensity=0;return}
+  // every third of a second, the four nearest lit lamps get the spotlights: the placed ones and the game's own
   propSpotT-=dt;camera.getWorldPosition(propCamP);
-  if(propSpotT<=0){propSpotT=0.33;const near=propLamps.map(L=>[(L.x-propCamP.x)**2+(L.z-propCamP.z)**2,L]).filter(q=>q[0]<6400).sort((a,b)=>a[0]-b[0]);
+  if(propSpotT<=0){propSpotT=0.33;const near=[];
+    for(const L of propLamps){const d=(L.x-propCamP.x)**2+(L.z-propCamP.z)**2;if(d<6400)near.push([d,L])}
+    for(const l of FAM_LAMPS){const d=(l[0]-propCamP.x)**2+(l[2]-propCamP.z)**2,K=FAM_SPOT_K[l[3]];if(d<6400&&K)near.push([d,l.sp&&l.sp.x===l[0]&&l.sp.z===l[2]?l.sp:(l.sp={x:l[0],y:l[1]-0.15,z:l[2],dx:K.d[0],dy:K.d[1],dz:K.d[2],col:K.col,K})])}
+    near.sort((a,b)=>a[0]-b[0]);
     propSpots.forEach((l,i)=>{const L=near[i]&&near[i][1];l.userData.L=L;if(!L)return;
       l.position.set(L.x,L.y,L.z);l.target.position.set(L.x+L.dx*5,L.y+L.dy*5,L.z+L.dz*5);l.color.setHex(L.col);l.angle=L.K.ang;l.distance=L.K.dist})}
   const t=timeU.value;
