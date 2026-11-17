@@ -124,9 +124,11 @@ function postOn(){return (POST.ao||POST.bloom||POST.grade||aeOn)&&!renderer.xr.i
 // (the frame is drawn into postRT when the effects are on, so the shaders are built for it: made here if no frame has
 // made it yet. Built for the screen instead, every material was built a second time at its first real frame, the
 // output's colour space being part of the shader: about half of all the shader building at loading)
-function warmCompile(o,sc){if(postOn()&&!postRT){const v=new THREE.Vector2();renderer.getDrawingBufferSize(v);postSize(Math.max(1,v.x),Math.max(1,v.y))}
+// (other: the lamps' other set of shaders, gfx.js ltSl: the night's by day, the day's by night)
+function warmCompile(o,sc,other){if(postOn()&&!postRT){const v=new THREE.Vector2();renderer.getDrawingBufferSize(v);postSize(Math.max(1,v.x),Math.max(1,v.y))}
   const t=renderer.getRenderTarget(),pt=postOn()&&postRT;if(pt)renderer.setRenderTarget(postRT);
-  try{return renderer.compileAsync?renderer.compileAsync(o,camera,sc):(renderer.compile(o,camera,sc),null)}finally{if(pt)renderer.setRenderTarget(t)}}
+  ltHide(!!other===ltSl.night);
+  try{return renderer.compileAsync?renderer.compileAsync(o,camera,sc):(renderer.compile(o,camera,sc),null)}finally{ltShow();if(pt)renderer.setRenderTarget(t)}}
 // draws the frame: straight to the screen, or through the effects
 // shadows drawn every shEvery frames (the Graphics setting; Low's 2 halves the shadow pass, a phone's second biggest
 // cost after the scene itself); in between, the last shadow picture is used where it was drawn, so shadows stay put on

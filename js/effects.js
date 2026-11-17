@@ -2,7 +2,9 @@
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 // ---------- loop ----------
 const tip=new THREE.Vector3(),mid=new THREE.Vector3(),q=new THREE.Quaternion(),tmp=new THREE.Vector3(),camT=new THREE.Vector3(),look=new THREE.Vector3();
-let camFov=60,fpsFrames=0,fpsTime=0;
+let camFov=60,fpsFrames=0,fpsTime=0,fpsT0=0;
+// auto resolution's floor (main.js): below 1x only while the game can't hold 30 fps
+const PR_MIN=0.75;
 let last=performance.now(),hudT=0,stVis=false,stVisT=0,shake=0,firstCam=true,fullWarned=false;
 // the chase camera's smoothed state (main.js): the machine's own heading eased (camBS), the eased look point and the one
 // before it, orbitYaw as last frame left it and when you last turned it yourself
