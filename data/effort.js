@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-16T04:57:00Z",
+ "updated": "2026-11-17T03:37:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -147,6 +147,12 @@ window.EFFORT = {
    "dh": 7.5,
    "act": 1,
    "versions": 3
+  },
+  {
+   "d": "2026-11-16",
+   "dh": 0.25,
+   "act": 0.5,
+   "versions": 1
   }
  ],
  "extra": [
@@ -3954,6 +3960,15 @@ window.EFFORT = {
    "tris": 13396931,
    "chars": 2698804,
    "what": "Nights look better: a brighter, bluer night so the dark keeps its detail, a pair of headlight beams on the machines (Medium and up) that throw shadows on High and Ultra, real light from the four nearest street lamps, light towers and lanterns onto people, trees and walls (High and Ultra), and the minimap dims after dark."
+  },
+  {
+   "v": 423,
+   "asked": "2026-11-16T21:28:00-06:00",
+   "live": "2026-11-16T21:37:09-06:00",
+   "dh": 0.25,
+   "tris": 9313843,
+   "chars": 2699067,
+   "what": "The Graphics panel's Done and Preset again buttons stay pinned at the foot of the panel instead of sitting at the bottom of a ten-screen list of settings."
   }
  ]
 };
