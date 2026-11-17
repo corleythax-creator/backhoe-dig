@@ -515,6 +515,8 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
   padding-block:calc(env(safe-area-inset-top,0px) + 16px) calc(env(safe-area-inset-bottom,0px) + 16px);
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
 #gfxBox .card{max-width:620px;overscroll-behavior:contain;touch-action:pan-y}
+/* Done stays in sight at the foot of the panel however long the list of settings is */
+#gfxBox .card>.row{position:sticky;bottom:-24px;z-index:1;flex:none;margin:0 -24px -24px;padding:12px 24px 24px;background:var(--panel2);border-top:1px solid var(--hud-line)}
 #gfxList{display:flex;flex-direction:column;gap:12px}
 #gfxList h2{margin:10px 0 0;font:700 var(--t3)/1 var(--f-display);letter-spacing:.06em;text-transform:uppercase;color:var(--machine);border-bottom:1px solid var(--hud-line);padding-bottom:6px}
 .grow{display:flex;flex-direction:column;gap:6px;padding-left:10px;border-left:3px solid transparent}
