@@ -265,8 +265,11 @@ const IN_LAYER=6,inRL={on:false,sh:false,B:null,R:null,rt:null,pm:null,pms:[null
 function inLightGfx(on,sh){inRL.on=!!on;if(!on)inRoomOut();if(inRL.sh!==!!sh){inRL.sh=!!sh;inLtShSet()}}
 function inLtShSet(){const set=(o,v)=>{o.castShadow=v;if(v){o.shadow.mapSize.set(512,512);o.shadow.bias=-0.002;o.shadow.normalBias=0.03;o.shadow.camera.near=0.1}};
   bfLt.spots.forEach(s=>set(s.o,inRL.sh));bfLt.pts.forEach((s,i)=>set(s.o,inRL.sh&&i===0))}
-// the building's inside takes shadows (sun, lamps) while you are in it, and stands lit as before when you are not
-function inRecv(B,on){B.g.traverse(o=>{if(o.isMesh&&o.userData.inside)o.receiveShadow=on})}
+// the building's inside takes shadows (sun, lamps) while you are in it, and stands lit as before when you are not.
+// Its insides and furniture cast them only then too: under a roof and onto floors that take none, their shadows were
+// never seen from outside, yet every building within 100 ft was drawn again into the sun's shadow map each frame
+// (about 650,000 triangles in 845 draws on Main Street)
+function inRecv(B,on){B.g.traverse(o=>{if(o.isMesh&&o.userData.inside){o.receiveShadow=on;o.castShadow=on}})}
 // its inside and furniture materials take the room (tex) or the sky again (null)
 function inMats(B,tex){if(!tex){for(const m of inRL.mats){m.envMap=m.userData.env0||skyEnv;m.envMapIntensity=m.userData.envI0??TU.bfEnv}inRL.mats.clear();return}
   B.g.traverse(o=>{if(!o.isMesh||!(o.userData.inside||o.userData.furn))return;
@@ -401,8 +404,8 @@ function bfBuild(L,K,item){const it=bf.lib[L.id],face=L.turn*Math.PI/180,c=Math.
   // its shell (walls, roof, windows) is drawn with every other building of its kind (bfInstSync); its insides, door
   // leaves and furniture are its own, each shown only near (bfTick)
   const g=new THREE.Group();g.position.set(ox,y0,oz);g.rotation.y=face;const furn=new THREE.Group(),ins=new THREE.Group(),lvs=new THREE.Group();g.add(furn,ins,lvs);
-  for(const x of K.stat)if(x.inside){const m=new THREE.Mesh(x.geo,x.mat);m.castShadow=true;m.receiveShadow=false;m.userData.inside=1;ins.add(m)}
-  for(const x of K.furn){const m=new THREE.Mesh(x.geo,x.mat);m.castShadow=true;m.receiveShadow=!x.inside;m.userData.inside=x.inside;m.userData.furn=1;furn.add(m)}
+  for(const x of K.stat)if(x.inside){const m=new THREE.Mesh(x.geo,x.mat);m.castShadow=false;m.receiveShadow=false;m.userData.inside=1;ins.add(m)}
+  for(const x of K.furn){const m=new THREE.Mesh(x.geo,x.mat);m.castShadow=!x.inside;m.receiveShadow=!x.inside;m.userData.inside=x.inside;m.userData.furn=1;furn.add(m)}
   const leaves=new Map();for(const l of K.leaves){const o=new THREE.Object3D();o.position.copy(l.p);o.quaternion.copy(l.q);o.scale.copy(l.s);
     for(const x of l.parts){const m=new THREE.Mesh(x.geo,x.mat);m.castShadow=m.receiveShadow=true;o.add(m)}lvs.add(o);
     if(!leaves.has(l.door))leaves.set(l.door,[]);leaves.get(l.door).push({o,q:l.q.clone(),swing:l.swing})}

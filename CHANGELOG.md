@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Monday, November 16, 2026
 
+- **v424** (10:03 PM) The town buildings' insides and furniture are no longer drawn again into the sun's shadow map from outside (their shadows were never seen there): about a million fewer triangles and 500 fewer draws a frame on Main Street. They cast shadows as before in the building you are in.
 - **v423** (9:37 PM) The Graphics panel's Done and Preset again buttons stay pinned at the foot of the panel instead of sitting at the bottom of a ten-screen list of settings.
 
 ## Sunday, November 15, 2026
