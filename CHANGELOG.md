@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Monday, November 16, 2026
 
+- **v425** (10:19 PM) Much faster by day: the night's lamps (headlights, street lamp light, room lights) no longer cost anything while they are dark, about 28% of every daytime frame, and dusk still comes on without a hitch. If the game runs slowly it now fixes itself in seconds, not minutes: the resolution drops further and the Graphics level steps down after about 4 seconds under 15 FPS. The FPS number now tells the truth (it could not read below 20). Headlight shadows are Ultra only.
 - **v424** (10:03 PM) The town buildings' insides and furniture are no longer drawn again into the sun's shadow map from outside (their shadows were never seen there): about a million fewer triangles and 500 fewer draws a frame on Main Street. They cast shadows as before in the building you are in.
 - **v423** (9:37 PM) The Graphics panel's Done and Preset again buttons stay pinned at the foot of the panel instead of sitting at the bottom of a ten-screen list of settings.
 
