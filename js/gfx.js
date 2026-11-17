@@ -49,7 +49,7 @@ GFX.low.extraLt=false;GFX.med.extraLt=GFX.high.extraLt=true;
 // four real spotlights from the lit lamps nearest the camera, placed ones and the street lamps alike (props.js); the glow and the pools of light are on every level
 GFX.low.propLt=GFX.med.propLt=false;GFX.high.propLt=true;
 // the headlights' shadows (daynight.js dnHeadGfx): the side of their shadow map in pixels, 0 for none
-GFX.low.headSh=GFX.med.headSh=0;GFX.high.headSh=1024;
+GFX.low.headSh=GFX.med.headSh=GFX.high.headSh=0;
 // real light from the lamps and ceiling lights of the Building Forge buildings nearest the camera (forgetown.js
 // bfLightTick): how many is the Tuning for the level (TU.bfLtMed, bfLtHigh, bfLtUltra); Low draws none, and the
 // fixtures glow on every level (set again after Ultra and Quest are made, below)
@@ -62,7 +62,7 @@ GFX.low.bounce=GFX.med.bounce=false;GFX.high.bounce=true;
 GFX.low.autoExp=GFX.med.autoExp=false;GFX.high.autoExp=true;GFX.high.shR=36;
 // Ultra: the few townsfolk nearest the camera (at most fgUltra, within TU.tfUltraR) swap to their ultra mesh (townfolk.js tfUh)
 GFX.ultra=Object.assign({},GFX.high,{csm:240,csmSh:4096,name:'Ultra',forge:'hi',fgUltra:3,wild:1,turfR:75,tuftQ:3,ao:true,bloom:true,grade:true,treeR:220,skyLight:true,shSoft:true,wetDrops:true,wetGround:true,cloudQ:3,inSh:true});
-GFX.ultra.cull=2;
+GFX.ultra.cull=2;GFX.ultra.headSh=1024;
 // VR through a PC: the eye buffer drawn larger than the headset's own and scaled down (supersampling), for sharper edges
 // and fine detail; only the levels for strong graphics do it
 GFX.low.vrSS=GFX.med.vrSS=1;GFX.high.vrSS=1.25;GFX.ultra.vrSS=1.4;
@@ -129,7 +129,21 @@ const gfxHid=[];
 function gfxAway(cam){if(cam!==camera||edOn||renderer.xr.isPresenting)return;const c=cam.position;
   if(c.z<TU.townZ||gfxIsl(c.x,c.z,30))return;
   for(const g of gfxMachines())if(g.visible&&gfxIsl(g.position.x,g.position.z,15)){g.visible=false;gfxHid.push(g)}}
-{const r=renderer.render.bind(renderer);renderer.render=function(sc,cam){gfxCullOn(cam);gfxAway(cam);if(sc===scene&&typeof mdlSpotCull==='function')mdlSpotCull(cam);try{r(sc,cam)}finally{gfxCull.on=false;while(gfxHid.length)gfxHid.pop().visible=true}}}
+// Dark lamps: every spot and point light in the scene is worked out at every pixel of every lit thing, lit or not, and
+// the night's lamps (headlights, the boom light, street lamp spots, room lights, the muzzle flash) were kept in the
+// scene by day at no brightness, so no shader was rebuilt when they came on: about a third of a day frame's drawing.
+// While none of them is lit they are now left out of the frame (hidden for the draw, ltHide, and put back), which is
+// a second set of shaders: the set for the hour it is is built at loading and the other one after it in the
+// background (main.js warmAllTick), so dusk, a room's lights or a shot by day swap sets without building anything.
+// ltSl.night holds for 20 s after the last lamp goes dark, so it doesn't flicker between the sets
+const ltSl={L:[],t:0,night:false,hold:0,hid:[]};
+function ltTick(now){if(now>=ltSl.t){ltSl.t=now+1000;ltSl.L.length=0;scene.traverse(o=>{if(o.isSpotLight||o.isPointLight)ltSl.L.push(o)})}
+  let lit=false;for(const l of ltSl.L)if(l.visible&&l.intensity>0){lit=true;break}
+  if(lit){ltSl.night=true;ltSl.hold=now+20000}else if(now>ltSl.hold)ltSl.night=false}
+// hide the lamps for a draw or a shader pass (dark: true for the day set, false for none hidden); ltShow puts them back
+function ltHide(dark){if(dark)for(const l of ltSl.L)if(l.visible){l.visible=false;ltSl.hid.push(l)}}
+function ltShow(){while(ltSl.hid.length)ltSl.hid.pop().visible=true}
+{const r=renderer.render.bind(renderer);renderer.render=function(sc,cam){gfxCullOn(cam);gfxAway(cam);if(sc===scene&&typeof mdlSpotCull==='function')mdlSpotCull(cam);const lt=!ltSl.hid.length&&!ltSl.night;if(lt)ltHide(true);try{r(sc,cam)}finally{if(lt)ltShow();gfxCull.on=false;while(gfxHid.length)gfxHid.pop().visible=true}}}
 let gfxKey='high',gfxOver={},gfxCur=Object.assign({},GFX.high);
 function gfxName(){return GFX[gfxKey].name+(Object.keys(gfxOver).length?' (custom)':'')}
 function gfxGuess(){if(PHONE||IS_QUEST)return 'low';
@@ -332,7 +346,7 @@ function fmtNum(t){return t>=1e6?(t/1e6).toFixed(2)+'M':t>=1e3?Math.round(t/1e3)
 // frame rate graph: every frame's time goes in a ring (main.js), and while the panel is open the last 10 s are drawn as
 // frames per second over time, with lines at 30 and 60, coloured green, yellow or red like the fps counter
 const GFX_FT=new Float32Array(1200);let gfxFTi=0,gfxFTn=0;
-function gfxFrame(ms){GFX_FT[gfxFTi]=ms;gfxFTi=(gfxFTi+1)%GFX_FT.length;if(gfxFTn<GFX_FT.length)gfxFTn++}
+function gfxFrame(ms){ltTick(performance.now());GFX_FT[gfxFTi]=ms;gfxFTi=(gfxFTi+1)%GFX_FT.length;if(gfxFTn<GFX_FT.length)gfxFTn++}
 const gfxGraph=$('#gfxGraph'),GRAPH_S=10,GRAPH_MAX=120;
 function gfxDraw(){const cv=gfxGraph,dpr=devicePixelRatio||1,w=cv.clientWidth,h=cv.clientHeight;if(!w)return;
   if(cv.width!==Math.round(w*dpr)||cv.height!==Math.round(h*dpr)){cv.width=Math.round(w*dpr);cv.height=Math.round(h*dpr)}

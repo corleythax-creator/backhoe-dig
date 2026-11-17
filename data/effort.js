@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-17T04:03:00Z",
+ "updated": "2026-11-17T04:19:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -150,9 +150,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-16",
-   "dh": 1.25,
+   "dh": 6.25,
    "act": 1,
-   "versions": 2
+   "versions": 3
   }
  ],
  "extra": [
@@ -3978,6 +3978,15 @@ window.EFFORT = {
    "tris": 9022895,
    "chars": 2699381,
    "what": "The town buildings' insides and furniture are no longer drawn again into the sun's shadow map from outside (their shadows were never seen there): about a million fewer triangles and 500 fewer draws a frame on Main Street. They cast shadows as before in the building you are in."
+  },
+  {
+   "v": 425,
+   "asked": "2026-11-16T21:05:00-06:00",
+   "live": "2026-11-16T22:19:37-06:00",
+   "dh": 5,
+   "tris": 9160643,
+   "chars": 2703180,
+   "what": "Much faster by day: the night's lamps (headlights, street lamp light, room lights) no longer cost anything while they are dark, about 28% of every daytime frame, and dusk still comes on without a hitch. If the game runs slowly it now fixes itself in seconds, not minutes: the resolution drops further and the Graphics level steps down after about 4 seconds under 15 FPS. The FPS number now tells the truth (it could not read below 20). Headlight shadows are Ultra only."
   }
  ]
 };

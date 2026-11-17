@@ -321,13 +321,20 @@ function frame(now){
   shadowProxyTick();lawnLod();tuftLod();turfLod();rainCover();if(vr.fake)vrFakeHead();warmAllTick();warmLaterTick();gpuWarmTick();if(!loadHold()){const wm=warmPre(),d0=performance.now(),di=drawInfo();postRender();warmPost(wm);if(performance.now()-d0>150)drawSlow(d0,di)}if(vrOn())vrAfter();
   if(bench.on)benchSample(dt);
   fpsFrames++;fpsTime+=dt;
-  if(fpsTime>=0.5){const f=Math.round(fpsFrames/fpsTime);const fe=$('#fpsVal');fe.textContent=f;fe.style.color=f>=50?'var(--ok)':f>=30?'var(--gas)':'var(--danger)';
-    // auto resolution: step down when slow; step back up only after a long steady run, and never within 30 s of a step down
-    if(!bench.on&&!vrOn()&&gfxCur.auto&&f<48&&pr>1){if(++lowN>=3){pr=Math.max(1,pr-0.25);viewDirty=true;lowN=0;prHold=now+30000}}else lowN=0;
+  if(fpsTime>=0.5){
+    // the frame rate as the clock has it (dt is capped at 0.05 s, so counted in game time it never read under 20)
+    const f=Math.round(fpsFrames/Math.max(fpsTime,(now-fpsT0)/1000));fpsT0=now;
+    const fe=$('#fpsVal');fe.textContent=f;fe.style.color=f>=50?'var(--ok)':f>=30?'var(--gas)':'var(--danger)';
+    // auto resolution: step down when slow (under 48 fps above 1x; under 30 it goes on below 1x, to PR_MIN, a soft
+    // picture being better than a slow one; twice as fast under 20); step back up only after a long steady run, and
+    // never within 30 s of a step down. Only in play: the start card's warm-up frames don't count
+    const play=!bench.on&&!vrOn()&&help.hidden&&!loadHold();
+    if(play&&gfxCur.auto&&pr>Math.min(PR_MIN,maxPR)&&f<(pr>1?48:30)){if(++lowN>=(f<20?2:3)){pr=Math.max(Math.min(PR_MIN,maxPR),f>=30?1:0,pr-(f<20?0.5:0.25));viewDirty=true;lowN=0;prHold=now+30000}}else lowN=0;
     if(!bench.on&&!vrOn()&&gfxCur.auto&&f>=58&&pr<maxPR&&now>prHold){if(++hiN>=8){pr=Math.min(maxPR,pr+0.25);viewDirty=true;hiN=0}}else hiN=0;
-    // graphics guard: still slow at the lowest resolution for about 15 s (under 40 fps on Ultra, under 26 on High and
-    // Medium), and the setting steps down one level (gfx.js)
-    if(!bench.on&&!vrOn()&&!edOn&&!navigator.webdriver&&GFX_DOWN[gfxKey]&&f<(gfxKey==='ultra'?40:26)&&pr<=1.01){if(++ultraLowN>=30)ultraGuard(f)}else ultraLowN=0;
+    // graphics guard: still slow at the lowest resolution (under 40 fps on Ultra, under 26 on the others), or under 15
+    // at any resolution, and the setting steps down one level (gfx.js): after about 15 s, about 8 s under 20 fps and
+    // about 4 s under 15, so an unplayable picture never lasts
+    if(play&&!edOn&&!navigator.webdriver&&GFX_DOWN[gfxKey]&&f<(gfxKey==='ultra'?40:26)&&(pr<=PR_MIN+0.01||f<15)){ultraLowN+=f<15?4:f<20?2:1;if(ultraLowN>=30)ultraGuard(f)}else ultraLowN=0;
     $('#resVal').textContent=pr.toFixed(2).replace(/0$/,'')+'x';
     const t=renderer.info.render.triangles;$('#triVal').textContent=t>=1e6?(t/1e6).toFixed(2)+'M':t>=1e3?Math.round(t/1e3)+'k':t;fpsFrames=0;fpsTime=0}
 }
@@ -400,7 +407,9 @@ function warmAllTick(){const W=warmAll;if(!W||bench.on||vrOn())return;const now=
     try{warmVm()}catch(e){}
     const c1=()=>{W.pend--;if(!W.c1)W.c1=performance.now();pfMark('Shader pass',pm0,pmN())};
     if(!LOADP.done){W.pend++;const s1=()=>{W.pend--;pfMark('Shadow shaders',pm0)};try{const q=warmShadows(warmRoot());if(q&&q.then)q.then(s1,s1);else W.pend--}catch(e){W.pend--}}
-    try{const p=warmCompile(warmRoot(),scene);if(p&&p.then)p.then(c1,c1);else c1()}catch(e){c1()}
+    // (and once that set is built, the lamps' other set behind it, gfx.js ltSl: nothing waits for it)
+    const c2=()=>{c1();try{const pm1=performance.now(),q=warmCompile(warmRoot(),scene,true);if(q&&q.then)q.then(()=>pfMark('Shader pass, other lamp set',pm1,pmN()))}catch(e){}};
+    try{const p=warmCompile(warmRoot(),scene);if(p&&p.then)p.then(c2,c2);else c2()}catch(e){c1()}
     pfMark('Shader pass set-up',pm0,pmN())}
   else W.still++;
   if(now-W.t0>180000&&W.pend===0&&(!W.q.length||help.hidden)&&(!W.at.length||!warmQuiet()))warmAll=null}

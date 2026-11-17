@@ -153,6 +153,14 @@ const LM_U={uLmMap:{value:(()=>{const t=new THREE.DataTexture(new Uint8Array([25
 // haze colour's multiplier at every 22.5° round from the sun's side (0) to the side away from it (8)
 const HZ_U={uHzSun:{value:new THREE.Vector4(0,1,0,1)},uHzSunC:{value:new THREE.Color(0)},uHzLow:{value:new THREE.Vector3(-7.3,1/60,0.6)},
   uHzRing:{value:Array.from({length:9},()=>new THREE.Vector3(1,1,1))}};
+// Lamps that are dark cost nothing: three.js works every spot and point light out at every pixel, lit or not, and the
+// game keeps its night lamps in the scene by day (dark, so no shader is rebuilt when they come on). Each one's work is
+// skipped while its colour is black (one test of a uniform, the same answer for every pixel), and the shading itself
+// where the light doesn't reach the pixel (out of its range or its cone). The picture is the same
+(function(){const C=THREE.ShaderChunk,re='RE_Direct( directLight, geometryPosition, geometryNormal, geometryViewDir, geometryClearcoatNormal, material, reflectedLight );';let s=C.lights_fragment_begin;
+  for(const [k,nm] of [['pointLight = pointLights[ i ];','pointLight'],['spotLight = spotLights[ i ];','spotLight']]){const a=s.indexOf(k),b=a<0?-1:s.indexOf(re,a);if(b<0)continue;
+    s=s.slice(0,a+k.length)+`\n\t\tif ( ${nm}.color.r + ${nm}.color.g + ${nm}.color.b > 0.0 ) {`+s.slice(a+k.length,b)+'if ( directLight.visible ) '+re+'\n\t\t}'+s.slice(b+re.length)}
+  C.lights_fragment_begin=s})();
 (function(){const C=THREE.ShaderChunk;
   C.fog_pars_vertex+='\n#ifdef USE_FOG\n\tvarying vec3 vFogPos;\n#endif';
   C.fog_vertex+='\n#ifdef USE_FOG\n\tvFogPos = mvPosition.xyz;\n#endif';
