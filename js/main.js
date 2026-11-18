@@ -318,7 +318,7 @@ function frame(now){
   const fv=mode==='boat'?btCur():mode==='heavy'?hvCur():mode==='bike'?bk:mode==='truck'?tr:mode==='mow'?mw:mode==='skid'?sk:mode==='walk'?wk:st;sun.position.set(fv.x,fv.y,fv.z).addScaledVector(LIGHT_DIR,SUN_D); sun.target.position.set(fv.x,fv.y,fv.z);
   {const o=groundOcc.value;o[0].set(st.x,st.z,st.yaw,0);o[2].set(tr.x,tr.z,tr.yaw,0)}
   timeU.value=now/1000;
-  shadowProxyTick();lawnLod();tuftLod();turfLod();rainCover();if(vr.fake)vrFakeHead();warmAllTick();warmLaterTick();warmFarTick();loadReportTick();gpuWarmTick();if(!loadHold()){const wm=warmPre(),d0=performance.now(),di=drawInfo();postRender();warmPost(wm);if(performance.now()-d0>150)drawSlow(d0,di)}if(vrOn())vrAfter();
+  shadowProxyTick();lawnLod();tuftLod();turfLod();rainCover();if(vr.fake)vrFakeHead();warmAllTick();warmLaterTick();warmFarTick();loadReportTick();shBenchTick();gpuWarmTick();if(!loadHold()){const wm=warmPre(),d0=performance.now(),di=drawInfo();postRender();warmPost(wm);if(performance.now()-d0>150)drawSlow(d0,di)}if(vrOn())vrAfter();
   if(bench.on)benchSample(dt);
   fpsFrames++;fpsTime+=dt;
   if(fpsTime>=0.5){
@@ -506,6 +506,30 @@ function loadReportTick(){if(loadRep||!LOADP.done||!(warmFar.done||performance.n
       tl:PF_BOOT.tl.filter(r=>r[2]>=200||/Far world|Shader pass/.test(r[0])).slice(0,120)};
     const dev=`${typeof gpuName==='function'?gpuName():''} · ${renderer.domElement.width}×${renderer.domElement.height} px · Graphics ${typeof gfxName==='function'?gfxName():''} · ${navigator.platform||''}`;
     syncRpc('island_tour_put',{p_v:v,p_device:dev,p_gfx:typeof gfxKey!=='undefined'?gfxKey:'',p_kind:'load',p_fps:null,p_data:d},true).catch(()=>{})}catch(e){}}
+// the shader timing test (open the site with ?shaderbench): once you are in, a few sample shaders are built here one at a
+// time, each with a mark of its own so nothing is reused from before, and how long each took to build goes to the
+// shared board (kind 'shaderbench'): plain, with the wet look, with all the lamps or just the sun, a heavy one with
+// pictures. It shows what makes this computer's shaders slow to build (a second or more each on the owner's Windows PC)
+let shBenchOn=/[?&]shaderbench\b/.test(location.search),shBenchT=0;
+function shBenchTick(){if(!shBenchOn||!LOADP.done||!help.hidden)return;const now=performance.now();if(!shBenchT){shBenchT=now+5000;return}if(now<shBenchT)return;shBenchOn=false;
+  const gl=renderer.getContext(),sun0=new THREE.Scene(),out=[];sun0.add(new THREE.HemisphereLight(0xffffff,0x444444,1));
+  {const d=new THREE.DirectionalLight(0xffffff,1);d.castShadow=true;sun0.add(d,d.target)}
+  const pic=(()=>{let t=null;scene.traverse(o=>{if(!t&&o.material&&!Array.isArray(o.material)&&o.material.map&&o.material.normalMap)t=o.material});return t})();
+  const kinds=[['standard, sun only',()=>new THREE.MeshStandardMaterial(),sun0],['standard, all lamps',()=>new THREE.MeshStandardMaterial(),scene],
+    ['standard + wet, sun only',()=>{const m=new THREE.MeshStandardMaterial();wetPatch(m);return m},sun0],['standard + wet, all lamps',()=>{const m=new THREE.MeshStandardMaterial();wetPatch(m);return m},scene],
+    ['physical + wet + pictures, all lamps',()=>{const m=new THREE.MeshPhysicalMaterial({clearcoat:0.2});if(pic){m.map=pic.map;m.normalMap=pic.normalMap;m.roughnessMap=pic.roughnessMap||null}wetPatch(m);return m},scene],
+    ['physical + wet + pictures, sun only',()=>{const m=new THREE.MeshPhysicalMaterial({clearcoat:0.2});if(pic){m.map=pic.map;m.normalMap=pic.normalMap;m.roughnessMap=pic.roughnessMap||null}wetPatch(m);return m},sun0]];
+  const geo=new THREE.BoxGeometry(1,1,1);
+  for(let rep=0;rep<2;rep++)for(const [n,make,tg] of kinds){const m=make(),nonce='shb'+Math.random().toString(36).slice(2),ob=m.onBeforeCompile,ok=m.customProgramCacheKey;
+    m.onBeforeCompile=function(sh,r){if(ob)ob.call(this,sh,r);sh.fragmentShader+='\n// '+nonce};m.customProgramCacheKey=function(){return (ok?ok.call(this):'')+nonce};
+    const mesh=new THREE.Mesh(geo,m),t0=performance.now();let src=0;
+    try{renderer.compile(mesh,camera,tg);const P=renderer.properties.get(m).currentProgram;if(P){gl.getProgramParameter(P.program,gl.LINK_STATUS);for(const x of gl.getAttachedShaders(P.program))src+=gl.getShaderSource(x).length}}catch(e){}
+    out.push([n,Math.round(performance.now()-t0),src]);m.dispose()}
+  pfMark('Shader timing test',now,out.map(r=>r[0]+' '+r[1]+' ms').join('; '));
+  toast('Shader timing test done: '+out.slice(0,6).map(r=>r[1]+' ms').join(', '),'good',6000);
+  if(typeof sync!=='undefined'&&sync.on)try{const E=window.EFFORT,v=E&&E.versions?+E.versions[E.versions.length-1].v||0:0;
+    syncRpc('island_tour_put',{p_v:v,p_device:`${typeof gpuName==='function'?gpuName():''} · Graphics ${gfxName()} · ${navigator.platform||''}`,p_gfx:gfxKey,p_kind:'shaderbench',p_fps:null,
+      p_data:{res:out,parallel:!!gl.getExtension('KHR_parallel_shader_compile'),programs:renderer.info.programs.length}},true).catch(()=>{})}catch(e){}}
 function warmLaterTick(){const L=warmLater;if(L.done||!L.list||!LOADP.done||L.busy||performance.now()<L.t)return;
   const g=L.list[L.i++];if(!g){L.done=true;return}L.busy=true;const end=()=>{L.busy=false;L.t=performance.now()+400};gpuWarm(g).then(end,end)}
 // in first person the gun and the worker's own body are drawn last, as see-through (gunVm, gunVmBody, pistol.js), which
