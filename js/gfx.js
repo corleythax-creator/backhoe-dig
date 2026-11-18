@@ -17,8 +17,8 @@
 // csm and csmSh how far either side the far shadows reach (m, 0 off) and their map's size (core.js sunFar), bounce the light
 // thrown up off the ground measured from the ground itself (post.js; an earth colour without it)
 const GFX={
-  low:{name:'Low',shEvery:2,trimClips:1,pr:1.5,auto:true,fps:0,fov:0,sh:1024,shR:22,soft:false,filmic:false,exp:1,tex:'low',detail:0,base:1,macro:false,pbr:false,aniso:4,dirt:1,lawnFar:0,fog:1,wmFine:false,cloudQ:0,rainN:600,rainSp:160,splashN:250,wakeN:140,brush:0.35,model:false,ao:false,bloom:false,grade:false,skyLight:false,shSoft:false,wetDrops:false,wetGround:false,lakeQ:0,treeR:45,tuftQ:0,tuft:[0.6,12,40,0.2]},
-  med:{name:'Medium',trimClips:2,pr:1.5,auto:true,fps:0,fov:0,sh:2048,shR:32,soft:false,filmic:true,exp:1,tex:'med',detail:1,base:1,macro:false,pbr:false,aniso:8,dirt:2,lawnFar:15,fog:1,wmFine:true,cloudQ:1,rainN:1500,rainSp:400,splashN:600,wakeN:300,brush:0.7,model:true,ao:false,bloom:false,grade:false,skyLight:false,shSoft:false,wetDrops:false,wetGround:false,lakeQ:1,treeR:90,tuftQ:0,tuft:[0.85,18,60,0.3]},
+  low:{name:'Low',lt2:true,shEvery:2,trimClips:1,pr:1.5,auto:true,fps:0,fov:0,sh:1024,shR:22,soft:false,filmic:false,exp:1,tex:'low',detail:0,base:1,macro:false,pbr:false,aniso:4,dirt:1,lawnFar:0,fog:1,wmFine:false,cloudQ:0,rainN:600,rainSp:160,splashN:250,wakeN:140,brush:0.35,model:false,ao:false,bloom:false,grade:false,skyLight:false,shSoft:false,wetDrops:false,wetGround:false,lakeQ:0,treeR:45,tuftQ:0,tuft:[0.6,12,40,0.2]},
+  med:{name:'Medium',lt2:true,trimClips:2,pr:1.5,auto:true,fps:0,fov:0,sh:2048,shR:32,soft:false,filmic:true,exp:1,tex:'med',detail:1,base:1,macro:false,pbr:false,aniso:8,dirt:2,lawnFar:15,fog:1,wmFine:true,cloudQ:1,rainN:1500,rainSp:400,splashN:600,wakeN:300,brush:0.7,model:true,ao:false,bloom:false,grade:false,skyLight:false,shSoft:false,wetDrops:false,wetGround:false,lakeQ:1,treeR:90,tuftQ:0,tuft:[0.85,18,60,0.3]},
   high:{name:'High',trimClips:4,pr:2,auto:true,fps:0,fov:0,sh:4096,shR:45,soft:true,filmic:true,exp:1,tex:'high',detail:1,base:1,macro:true,pbr:true,aniso:16,dirt:4,lawnFar:1e9,fog:1,wmFine:true,cloudQ:2,rainN:3000,rainSp:900,splashN:1200,wakeN:640,brush:1,model:true,ao:false,bloom:false,grade:false,skyLight:false,shSoft:false,wetDrops:false,wetGround:false,lakeQ:2,treeR:160,tuftQ:2,tuft:[1,25,80,0.35]}};
 // Ultra: High with the screen effects (post.js) and trees in full detail farther out; for strong PC graphics only, never
 // picked by itself
@@ -135,7 +135,10 @@ function gfxAway(cam){if(cam!==camera||edOn||renderer.xr.isPresenting)return;con
 // While none of them is lit they are now left out of the frame (hidden for the draw, ltHide, and put back), which is
 // a second set of shaders: the set for the hour it is is built at loading and the other one after it in the
 // background (main.js warmAllTick), so dusk, a room's lights or a shot by day swap sets without building anything.
-// ltSl.night holds for 20 s after the last lamp goes dark, so it doesn't flicker between the sets
+// ltSl.night holds for 20 s after the last lamp goes dark, so it doesn't flicker between the sets.
+// Only on Low and Medium (lt2 in GFX): the second set doubled the shaders to build (about 165 more of 376 on High),
+// most of a minute's loading on a Windows PC, so High and up keep the dark lamps in every frame (one set; a PC's
+// graphics card hardly notices them) and the phone keeps the cheaper day frame
 const ltSl={L:[],t:0,night:false,hold:0,hid:[]};
 function ltTick(now){if(now>=ltSl.t){ltSl.t=now+1000;ltSl.L.length=0;scene.traverse(o=>{if(o.isSpotLight||o.isPointLight)ltSl.L.push(o)})}
   let lit=false;for(const l of ltSl.L)if(l.visible&&l.intensity>0){lit=true;break}
@@ -143,7 +146,7 @@ function ltTick(now){if(now>=ltSl.t){ltSl.t=now+1000;ltSl.L.length=0;scene.trave
 // hide the lamps for a draw or a shader pass (dark: true for the day set, false for none hidden); ltShow puts them back
 function ltHide(dark){if(dark)for(const l of ltSl.L)if(l.visible){l.visible=false;ltSl.hid.push(l)}}
 function ltShow(){while(ltSl.hid.length)ltSl.hid.pop().visible=true}
-{const r=renderer.render.bind(renderer);renderer.render=function(sc,cam){gfxCullOn(cam);gfxAway(cam);if(sc===scene&&typeof mdlSpotCull==='function')mdlSpotCull(cam);const lt=!ltSl.hid.length&&!ltSl.night;if(lt)ltHide(true);try{r(sc,cam)}finally{if(lt)ltShow();gfxCull.on=false;while(gfxHid.length)gfxHid.pop().visible=true}}}
+{const r=renderer.render.bind(renderer);renderer.render=function(sc,cam){gfxCullOn(cam);gfxAway(cam);if(sc===scene&&typeof mdlSpotCull==='function')mdlSpotCull(cam);const lt=gfxCur.lt2&&!ltSl.hid.length&&!ltSl.night;if(lt)ltHide(true);try{r(sc,cam)}finally{if(lt)ltShow();gfxCull.on=false;while(gfxHid.length)gfxHid.pop().visible=true}}}
 let gfxKey='high',gfxOver={},gfxCur=Object.assign({},GFX.high);
 function gfxName(){return GFX[gfxKey].name+(Object.keys(gfxOver).length?' (custom)':'')}
 function gfxGuess(){if(PHONE||IS_QUEST)return 'low';

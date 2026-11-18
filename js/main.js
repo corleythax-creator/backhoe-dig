@@ -408,7 +408,7 @@ function warmAllTick(){const W=warmAll;if(!W||bench.on||vrOn())return;const now=
     const c1=()=>{W.pend--;if(!W.c1)W.c1=performance.now();pfMark('Shader pass',pm0,pmN())};
     if(!LOADP.done){W.pend++;const s1=()=>{W.pend--;pfMark('Shadow shaders',pm0)};try{const q=warmShadows(warmRoot());if(q&&q.then)q.then(s1,s1);else W.pend--}catch(e){W.pend--}}
     // (and once that set is built, the lamps' other set behind it, gfx.js ltSl: nothing waits for it)
-    const c2=()=>{c1();try{const pm1=performance.now(),q=warmCompile(warmRoot(),scene,true);if(q&&q.then)q.then(()=>pfMark('Shader pass, other lamp set',pm1,pmN()))}catch(e){}};
+    const c2=()=>{c1();if(!gfxCur.lt2)return;try{const pm1=performance.now(),q=warmCompile(warmRoot(),scene,true);if(q&&q.then)q.then(()=>pfMark('Shader pass, other lamp set',pm1,pmN()))}catch(e){}};
     try{const p=warmCompile(warmRoot(),scene);if(p&&p.then)p.then(c2,c2);else c2()}catch(e){c1()}
     pfMark('Shader pass set-up',pm0,pmN())}
   else W.still++;
