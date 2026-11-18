@@ -213,7 +213,7 @@ const HZ_U={uHzSun:{value:new THREE.Vector4(0,1,0,1)},uHzSunC:{value:new THREE.C
 // lighting is written 13 times over, and on the owner's Windows PC each shader took six times as long to build
 // (?shaderbench). Only where no lamp of that kind casts a shadow or carries a picture (those need the written-out form,
 // kept beside it). s: lights_fragment_begin as the game has it; returns it with both forms
-function lightsLooped(s){
+function lightsLooped(s){if(s.includes('NUM_SPOT_LIGHT_MAPS == 0'))return s;
   const cut=(t,a,b)=>{const i=t.indexOf(a);if(i<0)return t;const j=t.indexOf(b,i);return j<0?t:t.slice(0,i)+t.slice(j+b.length)};
   for(const [n,cond,strip] of [['POINT','!( defined( USE_SHADOWMAP ) && NUM_POINT_LIGHT_SHADOWS > 0 )',[['#if defined( USE_SHADOWMAP ) && ( UNROLLED_LOOP_INDEX < NUM_POINT_LIGHT_SHADOWS )','#endif']]],
       ['SPOT','!( defined( USE_SHADOWMAP ) && NUM_SPOT_LIGHT_SHADOWS > 0 ) && NUM_SPOT_LIGHT_MAPS == 0',[['#if ( UNROLLED_LOOP_INDEX < NUM_SPOT_LIGHT_SHADOWS_WITH_MAPS )','#undef SPOT_LIGHT_MAP_INDEX'],['#if defined( USE_SHADOWMAP ) && ( UNROLLED_LOOP_INDEX < NUM_SPOT_LIGHT_SHADOWS )','#endif']]]]){
@@ -222,6 +222,9 @@ function lightsLooped(s){
     const orig=s.slice(a,b+en.length);let loop=s.slice(a+'#pragma unroll_loop_start\n'.length,b);for(const [x,y] of strip)loop=cut(loop,x,y);
     s=s.slice(0,a)+'#if '+cond+'\n'+loop+'\n\t#else\n\t'+orig+'\n\t#endif'+s.slice(b+en.length)}
   return s}
+// (in use from v433: on the owner's PC a shader with the lamps then built in 176 ms against 339 written out; LFB_OUT
+// keeps the written-out form for the shader timing test)
+const LFB_OUT=THREE.ShaderChunk.lights_fragment_begin;THREE.ShaderChunk.lights_fragment_begin=lightsLooped(LFB_OUT);
 const scene=new THREE.Scene();
 // which game file put each top-level thing in the scene (for the Profiler's heaviest things, js/prof.js): read off the
 // call stack, the first js/ file that isn't this one

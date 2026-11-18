@@ -535,7 +535,7 @@ function shBenchTick(){if(!shBenchOn||++shBenchN<5||typeof wetPatch!=='function'
   const groups={fog:changed.filter(k=>/^fog_/.test(k)),'lamp skip and light shading':changed.filter(k=>/^lights_fragment/.test(k)),'cloud shadows and building lights':changed.filter(k=>k==='lights_pars_begin'),
     'colour fix':changed.filter(k=>/^(color_fragment|emissivemap_fragment)$/.test(k))};
   const other=changed.filter(k=>!Object.values(groups).some(g=>g.includes(k)));if(other.length)groups['other ('+other.join(' ')+')']=other;
-  {const L0=C.lights_fragment_begin;C.lights_fragment_begin=lightsLooped(L0);try{add('standard + wet, all lamps, lamps as a loop',time(std(true),scene));add('standard + wet, sun only, lamps as a loop',time(std(true),sun0))}finally{C.lights_fragment_begin=L0}}
+  {const L0=C.lights_fragment_begin;C.lights_fragment_begin=LFB_OUT;try{add('standard + wet, all lamps, lamps written out',time(std(true),scene))}finally{C.lights_fragment_begin=L0}}
   for(const [n,keys] of Object.entries(groups))if(keys.length)add('standard + wet, all lamps, without '+n,swap(keys,()=>time(std(true),scene)));
   pfMark('Shader timing test',T0,out.map(r=>r[0]+' '+r[1]+' ms').join('; '));
   toast('Shader timing test done ('+Math.round((performance.now()-T0)/1000)+' s)','good',6000);
