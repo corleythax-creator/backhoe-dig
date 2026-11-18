@@ -407,8 +407,10 @@ function warmAllTick(){const W=warmAll;if(!W||bench.on||vrOn())return;const now=
     try{warmVm()}catch(e){}try{if(!W.postW){W.postW=1;postWarm()}}catch(e){}
     const c1=()=>{W.pend--;if(!W.c1)W.c1=performance.now();pfMark('Shader pass',pm0,pmN())};
     if(!LOADP.done){W.pend++;const s1=()=>{W.pend--;pfMark('Shadow shaders',pm0)};try{const q=warmShadows(warmRoot());if(q&&q.then)q.then(s1,s1);else W.pend--}catch(e){W.pend--}}
-    // (and once that set is built, the lamps' other set behind it, gfx.js ltSl: nothing waits for it)
-    const c2=()=>{c1();if(!gfxCur.lt2)return;try{const pm1=performance.now(),q=warmCompile(warmRoot(),scene,true);if(q&&q.then)q.then(()=>pfMark('Shader pass, other lamp set',pm1,pmN()))}catch(e){}};
+    // (and the lamps' other set, gfx.js ltSl, once you have been in 10 s: built during the loading it held up the shaders
+    // the loading needed, on Windows a third of a second each with the lamps in; nothing waits for it)
+    const c2=()=>{c1();const go=()=>{if(!LOADP.done||!help.hidden||performance.now()-PF_BOOT.done<10000){setTimeout(go,2000);return}
+      try{const pm1=performance.now(),q=warmCompile(warmRoot(),scene,true);if(q&&q.then)q.then(()=>pfMark('Shader pass, other lamp set',pm1,pmN()))}catch(e){}};go()};
     try{const p=warmCompile(warmRoot(),scene);if(p&&p.then)p.then(c2,c2);else c2()}catch(e){c1()}
     pfMark('Shader pass set-up',pm0,pmN())}
   else W.still++;
@@ -522,8 +524,8 @@ function shBenchTick(){if(!shBenchOn||++shBenchN<5||typeof wetPatch!=='function'
   const time=(make,tg)=>{let best=1e9,src=0;for(let rep=0;rep<2;rep++){const m=make(),nonce='shb'+Math.random().toString(36).slice(2),ob=m.onBeforeCompile,ok=m.customProgramCacheKey;
       m.onBeforeCompile=function(sh,r){if(ob)ob.call(this,sh,r);sh.fragmentShader+='\n// '+nonce;sh.vertexShader+='\n// '+nonce};m.customProgramCacheKey=function(){return (ok?ok.call(this):'')+nonce};
       const t0=performance.now();try{renderer.compile(new THREE.Mesh(geo,m),camera,tg);const P=renderer.properties.get(m).currentProgram;
-        if(P){gl.getProgramParameter(P.program,gl.LINK_STATUS);src=0;for(const x of gl.getAttachedShaders(P.program))src+=gl.getShaderSource(x).length}}catch(e){}
-      best=Math.min(best,performance.now()-t0);m.dispose()}return [Math.round(best),src]};
+        if(P){if(!gl.getProgramParameter(P.program,gl.LINK_STATUS))src=-1;else src=0;if(src>=0)for(const x of gl.getAttachedShaders(P.program))src+=gl.getShaderSource(x).length}}catch(e){src=-2}
+      best=Math.min(best,performance.now()-t0);m.dispose()}return [Math.round(best),src]};// (src -1: it failed to build)
   const swap=(keys,f)=>{const keep=keys.map(k=>C[k]);keys.forEach(k=>C[k]=SC0[k]);try{return f()}finally{keys.forEach((k,i)=>C[k]=keep[i])}};
   time(std(false),sun0);// (the first one built pays for setting things up)
   const add=(n,r)=>out.push([n,...r]);
@@ -533,6 +535,7 @@ function shBenchTick(){if(!shBenchOn||++shBenchN<5||typeof wetPatch!=='function'
   const groups={fog:changed.filter(k=>/^fog_/.test(k)),'lamp skip and light shading':changed.filter(k=>/^lights_fragment/.test(k)),'cloud shadows and building lights':changed.filter(k=>k==='lights_pars_begin'),
     'colour fix':changed.filter(k=>/^(color_fragment|emissivemap_fragment)$/.test(k))};
   const other=changed.filter(k=>!Object.values(groups).some(g=>g.includes(k)));if(other.length)groups['other ('+other.join(' ')+')']=other;
+  {const L0=C.lights_fragment_begin;C.lights_fragment_begin=lightsLooped(L0);try{add('standard + wet, all lamps, lamps as a loop',time(std(true),scene));add('standard + wet, sun only, lamps as a loop',time(std(true),sun0))}finally{C.lights_fragment_begin=L0}}
   for(const [n,keys] of Object.entries(groups))if(keys.length)add('standard + wet, all lamps, without '+n,swap(keys,()=>time(std(true),scene)));
   pfMark('Shader timing test',T0,out.map(r=>r[0]+' '+r[1]+' ms').join('; '));
   toast('Shader timing test done ('+Math.round((performance.now()-T0)/1000)+' s)','good',6000);
