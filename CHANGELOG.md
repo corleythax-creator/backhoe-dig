@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Tuesday, November 17, 2026
 
+- **v429** (9:08 PM) You are put at the brewery door behind the loading cover, so what loads near you is built while loading, not in the first frame; the far world's batches wait till you are in
 - **v428** (8:43 PM) The loading's shader warm-up now covers what is really drawn behind the cover (the dig site and its machines) and the screen effects, the 21 s freeze in the PC's loading
 - **v427** (8:09 PM) The loading cover lifts once what is round your start spot is built; things over 650 ft away stay hidden until their shaders are ready, built in batches as you play; each load sends its timings to the shared board
 - **v426** (7:33 PM) High and Ultra build one set of shaders instead of two (376 to about 205), cutting the loading wait and the hitch when lamps come on

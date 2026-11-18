@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-18T02:43:00Z",
+ "updated": "2026-11-18T03:08:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -156,9 +156,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-17",
-   "dh": 10,
-   "act": 1.5,
-   "versions": 3
+   "dh": 12,
+   "act": 2,
+   "versions": 4
   }
  ],
  "extra": [
@@ -4020,6 +4020,15 @@ window.EFFORT = {
    "tris": 7029183,
    "chars": 2709787,
    "what": "The loading's shader warm-up now covers what is really drawn behind the cover (the dig site and its machines) and the screen effects, the 21 s freeze in the PC's loading"
+  },
+  {
+   "v": 429,
+   "asked": "2026-11-17T20:55:00-06:00",
+   "live": "2026-11-17T21:08:08-06:00",
+   "dh": 2,
+   "tris": 7020056,
+   "chars": 2710803,
+   "what": "You are put at the brewery door behind the loading cover, so what loads near you is built while loading, not in the first frame; the far world's batches wait till you are in"
   }
  ]
 };
