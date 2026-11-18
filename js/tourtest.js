@@ -400,7 +400,7 @@ tourOptShow();
 $('#tourSweepBtn').onclick=()=>{help.hidden=true;showMenu(false);tourSweep(false)};
 // after the reload: other devices' latest runs from the shared board under this run's results
 if((()=>{try{const v=sessionStorage.getItem('bhd_tourShow');sessionStorage.removeItem('bhd_tourShow');return v}catch(e){return null}})()&&sync.on)
-  syncRpc('island_tour_list',{p_n:50}).then(L=>{if(!Array.isArray(L))return;L=L.filter(x=>x.kind!=='load').slice(0,12);if(!L.length)return;// (not the loading reports, main.js loadReportTick)
+  syncRpc('island_tour_list',{p_n:50}).then(L=>{if(!Array.isArray(L))return;L=L.filter(x=>x.kind!=='load'&&x.kind!=='shaderbench').slice(0,12);if(!L.length)return;// (not the loading reports, main.js loadReportTick)
     let h='<tr><th colspan="8">Latest runs on every device (the shared board)</th></tr>';
     for(const x of L)h+=`<tr><td colspan="8">${new Date(x.t).toLocaleString('en-US',{month:'short',day:'numeric',hour:'numeric',minute:'2-digit'})} · v${x.v} · ${x.kind} · ${GFX[x.gfx]?GFX[x.gfx].name:x.gfx} · <b>${x.fps!==null?(+x.fps).toFixed(1):'–'} FPS</b> · <small>${String(x.device).replace(/</g,'&lt;')}</small></td></tr>`;
     $('#benchTable').insertAdjacentHTML('beforeend',h)}).catch(()=>{});
