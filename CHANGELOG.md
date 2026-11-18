@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Tuesday, November 17, 2026
 
+- **v433** (10:33 PM) Every shader works the lamps out in a loop instead of written out once a lamp: half the build time on the PC (176 ms against 339 a shader), so evening loading is quicker
 - **v432** (10:13 PM) Every Graphics level builds the lamp-free shaders by day again (six times quicker to build on Windows), the lamps' set once you are in; the shader test now times the lamps written as a loop
 - **v431** (9:44 PM) The ?shaderbench test runs first thing while loading and times each of the game's shader changes taken out in turn
 - **v430** (9:26 PM) Opening the site with ?shaderbench builds sample shaders one at a time on that computer and sends how long each took to the shared board
