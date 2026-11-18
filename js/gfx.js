@@ -146,7 +146,7 @@ function ltTick(now){if(now>=ltSl.t){ltSl.t=now+1000;ltSl.L.length=0;scene.trave
 // hide the lamps for a draw or a shader pass (dark: true for the day set, false for none hidden); ltShow puts them back
 function ltHide(dark){if(dark)for(const l of ltSl.L)if(l.visible){l.visible=false;ltSl.hid.push(l)}}
 function ltShow(){while(ltSl.hid.length)ltSl.hid.pop().visible=true}
-{const r=renderer.render.bind(renderer);renderer.render=function(sc,cam){gfxCullOn(cam);gfxAway(cam);if(sc===scene&&typeof mdlSpotCull==='function')mdlSpotCull(cam);const lt=gfxCur.lt2&&!ltSl.hid.length&&!ltSl.night;if(lt)ltHide(true);try{r(sc,cam)}finally{if(lt)ltShow();gfxCull.on=false;while(gfxHid.length)gfxHid.pop().visible=true}}}
+{const r=renderer.render.bind(renderer);renderer.render=function(sc,cam){gfxCullOn(cam);gfxAway(cam);if(typeof warmFarHide==='function')warmFarHide(cam);if(sc===scene&&typeof mdlSpotCull==='function')mdlSpotCull(cam);const lt=gfxCur.lt2&&!ltSl.hid.length&&!ltSl.night;if(lt)ltHide(true);try{r(sc,cam)}finally{if(lt)ltShow();gfxCull.on=false;while(gfxHid.length)gfxHid.pop().visible=true}}}
 let gfxKey='high',gfxOver={},gfxCur=Object.assign({},GFX.high);
 function gfxName(){return GFX[gfxKey].name+(Object.keys(gfxOver).length?' (custom)':'')}
 function gfxGuess(){if(PHONE||IS_QUEST)return 'low';

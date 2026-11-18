@@ -318,7 +318,7 @@ function frame(now){
   const fv=mode==='boat'?btCur():mode==='heavy'?hvCur():mode==='bike'?bk:mode==='truck'?tr:mode==='mow'?mw:mode==='skid'?sk:mode==='walk'?wk:st;sun.position.set(fv.x,fv.y,fv.z).addScaledVector(LIGHT_DIR,SUN_D); sun.target.position.set(fv.x,fv.y,fv.z);
   {const o=groundOcc.value;o[0].set(st.x,st.z,st.yaw,0);o[2].set(tr.x,tr.z,tr.yaw,0)}
   timeU.value=now/1000;
-  shadowProxyTick();lawnLod();tuftLod();turfLod();rainCover();if(vr.fake)vrFakeHead();warmAllTick();warmLaterTick();gpuWarmTick();if(!loadHold()){const wm=warmPre(),d0=performance.now(),di=drawInfo();postRender();warmPost(wm);if(performance.now()-d0>150)drawSlow(d0,di)}if(vrOn())vrAfter();
+  shadowProxyTick();lawnLod();tuftLod();turfLod();rainCover();if(vr.fake)vrFakeHead();warmAllTick();warmLaterTick();warmFarTick();loadReportTick();gpuWarmTick();if(!loadHold()){const wm=warmPre(),d0=performance.now(),di=drawInfo();postRender();warmPost(wm);if(performance.now()-d0>150)drawSlow(d0,di)}if(vrOn())vrAfter();
   if(bench.on)benchSample(dt);
   fpsFrames++;fpsTime+=dt;
   if(fpsTime>=0.5){
@@ -456,10 +456,48 @@ function warmShadows(root){if(!renderer.shadowMap.enabled)return null;const swap
 // that walks the scene without them) and, once you are in, they are built one machine at a time in the background
 // (warmLaterTick, gpuWarm), long before you can get to an island. Starting anywhere else warms the whole scene as before
 const warmLater={list:null,i:0,t:0,busy:false,done:false};
-function warmRoot(){const L=warmLater;if(L.done||typeof startAuto!=='function'||!startAuto())return scene;
-  if(!L.list)L.list=gfxMachines().filter(g=>gfxIsl(g.position.x,g.position.z,15));
-  const skip=new Set(L.list);
+function warmRoot(){const L=warmLater;if(L.done||typeof startAuto!=='function'||!startAuto()){if(warmFar.done)return scene;if(!L.list)L.list=[]}
+  else if(!L.list)L.list=gfxMachines().filter(g=>gfxIsl(g.position.x,g.position.z,15));
+  const skip=new Set(L.list);warmFarList();for(const e of warmFar.L||[])skip.add(e[0]);
   return {isObject3D:true,traverseVisible(){},traverse(cb){const t=o=>{if(skip.has(o))return;cb(o);for(const c of o.children)t(c)};t(scene)}}}
+// the far world: what stands more than WARM_NEAR m from where the visit starts (START_AT, or the camera on a test page)
+// is left out of the loading cover's shader pass (warmRoot), so the cover lifts once what is round you is ready (most
+// of the island's materials are only out there: the minute's wait on Windows). Those things stay out of the picture
+// (warmFarHide, from the frame's draw in gfx.js; never in the map editor, never within WARM_SHOW m of the camera)
+// until their shaders are built in the background behind the start card and as you play, a batch at a time nearest
+// you first (warmFarTick, gpuWarm). Without hiding, a far thing in view would build its shaders there and then, a frame
+// frozen for every one. warmFar.L: [thing, its middle from its position (x, z), radius]
+const WARM_NEAR=200,WARM_SHOW=150,WARM_BATCH=40;
+const warmFar={L:null,busy:false,done:false,t:0};
+function warmFarList(){const F=warmFar;if(F.L||F.done)return;F.L=[];const from=typeof startAuto==='function'&&startAuto()?START_AT:camera.position,
+    skip=new Set(warmLater.list||[]),b=new THREE.Box3(),s=new THREE.Sphere();
+  for(const o of scene.children){if(skip.has(o)||o.isLight||o.isCamera)continue;b.setFromObject(o);if(b.isEmpty())continue;b.getBoundingSphere(s);
+    if(s.radius>400||Math.hypot(s.center.x-from.x,s.center.z-from.z)-s.radius<WARM_NEAR)continue;
+    F.L.push([o,s.center.x-o.position.x,s.center.z-o.position.z,s.radius])}
+  pfMark('Far world held back',performance.now(),F.L.length+' things')}
+const warmFarD=(e,c)=>Math.hypot(e[0].position.x+e[1]-c.x,e[0].position.z+e[2]-c.z)-e[3];
+function warmFarHide(cam){const F=warmFar;if(!F.L||!F.L.length||cam!==camera||edOn||renderer.xr.isPresenting)return;const c=cam.position;
+  for(const e of F.L)if(e[0].visible&&warmFarD(e,c)>WARM_SHOW){e[0].visible=false;gfxHid.push(e[0])}}
+function warmFarTick(){const F=warmFar;if(F.done||!F.L||F.busy&&performance.now()-F.b0<20000||!LOADP.done||performance.now()<F.t)return;
+  // (a batch whose building never reports back is let go after 20 s, and everything is shown 2 minutes after you are in)
+  if(performance.now()-PF_BOOT.done>120000){pfMark('Far world shown (time up)',performance.now(),F.L.length+' things');F.done=true;F.L=null;return}
+  F.L=F.L.filter(e=>e[0].parent);if(!F.L.length){F.done=true;F.L=null;pfMark('Far world all built',performance.now());return}
+  const c=camera.position;F.L.sort((a,b)=>warmFarD(a,c)-warmFarD(b,c));const B=F.L.slice(0,WARM_BATCH);F.busy=true;F.b0=performance.now();
+  const root={isObject3D:true,name:'far world, '+B.length+' things',traverseVisible(){},traverse(cb){for(const e of B)e[0].traverse(cb)}};
+  const end=()=>{F.busy=false;F.t=performance.now()+200;if(!F.L)return;const done=new Set(B);F.L=F.L.filter(e=>!done.has(e))};gpuWarm(root).then(end,end)}
+// the loading report: once a visit, when the far world is built (or 2 minutes after the cover lifted), how the getting
+// ready went on this device goes to the shared board (island_tour_put, kind 'load'; the Vercel site only, as sync is):
+// the graphics card, the steps' times, the long stalls, the shaders built and the slowest parts of the timeline. Only
+// timings, nothing of the save. It shows how the loading really goes on the owner's PC, which the test machine can't
+let loadRep=false;
+function loadReportTick(){if(loadRep||!LOADP.done||!(warmFar.done||performance.now()-PF_BOOT.done>120000))return;loadRep=true;
+  if(typeof sync==='undefined'||!sync.on||typeof syncRpc!=='function')return;
+  try{const E=window.EFFORT,v=E&&E.versions?+E.versions[E.versions.length-1].v||0:0,gl=renderer.getContext();
+    const d={cover:Math.round(PF_BOOT.done),steps:PF_BOOT.steps,programs:renderer.info.programs.length,
+      parallel:!!gl.getExtension('KHR_parallel_shader_compile'),long:PF_BOOT.long.filter(l=>l[1]>=200).slice(0,80).map(l=>[Math.round(l[0]),Math.round(l[1])]),
+      tl:PF_BOOT.tl.filter(r=>r[2]>=200||/Far world|Shader pass/.test(r[0])).slice(0,120)};
+    const dev=`${typeof gpuName==='function'?gpuName():''} · ${renderer.domElement.width}×${renderer.domElement.height} px · Graphics ${typeof gfxName==='function'?gfxName():''} · ${navigator.platform||''}`;
+    syncRpc('island_tour_put',{p_v:v,p_device:dev,p_gfx:typeof gfxKey!=='undefined'?gfxKey:'',p_kind:'load',p_fps:null,p_data:d},true).catch(()=>{})}catch(e){}}
 function warmLaterTick(){const L=warmLater;if(L.done||!L.list||!LOADP.done||L.busy||performance.now()<L.t)return;
   const g=L.list[L.i++];if(!g){L.done=true;return}L.busy=true;const end=()=>{L.busy=false;L.t=performance.now()+400};gpuWarm(g).then(end,end)}
 // in first person the gun and the worker's own body are drawn last, as see-through (gunVm, gunVmBody, pistol.js), which
