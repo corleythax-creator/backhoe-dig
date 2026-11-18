@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-17T04:19:00Z",
+ "updated": "2026-11-18T01:33:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -153,6 +153,12 @@ window.EFFORT = {
    "dh": 6.25,
    "act": 1,
    "versions": 3
+  },
+  {
+   "d": "2026-11-17",
+   "dh": 3,
+   "act": 0.5,
+   "versions": 1
   }
  ],
  "extra": [
@@ -3987,6 +3993,15 @@ window.EFFORT = {
    "tris": 9160643,
    "chars": 2703180,
    "what": "Much faster by day: the night's lamps (headlights, street lamp light, room lights) no longer cost anything while they are dark, about 28% of every daytime frame, and dusk still comes on without a hitch. If the game runs slowly it now fixes itself in seconds, not minutes: the resolution drops further and the Graphics level steps down after about 4 seconds under 15 FPS. The FPS number now tells the truth (it could not read below 20). Headlight shadows are Ultra only."
+  },
+  {
+   "v": 426,
+   "asked": "2026-11-17T18:05:00-06:00",
+   "live": "2026-11-17T19:33:57-06:00",
+   "dh": 3,
+   "tris": 7016129,
+   "chars": 2703556,
+   "what": "High and Ultra build one set of shaders instead of two (376 to about 205), cutting the loading wait and the hitch when lamps come on"
   }
  ]
 };

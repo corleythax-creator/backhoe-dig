@@ -2,6 +2,10 @@
 
 Every version of Corley's Island, newest first, grouped by the day it went live (Central time). Made from `data/effort.js` by `tools/changelog.py`; don't edit it by hand. [Play any old version](https://corleys-island.vercel.app/versions/) · [Build log with charts](https://corleys-island.vercel.app/build.html)
 
+## Tuesday, November 17, 2026
+
+- **v426** (7:33 PM) High and Ultra build one set of shaders instead of two (376 to about 205), cutting the loading wait and the hitch when lamps come on
+
 ## Monday, November 16, 2026
 
 - **v425** (10:19 PM) Much faster by day: the night's lamps (headlights, street lamp light, room lights) no longer cost anything while they are dark, about 28% of every daytime frame, and dusk still comes on without a hitch. If the game runs slowly it now fixes itself in seconds, not minutes: the resolution drops further and the Graphics level steps down after about 4 seconds under 15 FPS. The FPS number now tells the truth (it could not read below 20). Headlight shadows are Ultra only.
