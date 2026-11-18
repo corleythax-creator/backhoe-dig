@@ -404,7 +404,7 @@ function warmAllTick(){const W=warmAll;if(!W||bench.on||vrOn())return;const now=
   const ms=new Set();scene.traverse(o=>{if(o.material)for(const m of [].concat(o.material))ms.add(m)});
   if(ms.size>W.mats||brVer!==W.ver){W.mats=Math.max(W.mats||0,ms.size);W.ver=brVer;W.still=0;W.pend++;
     const pm0=performance.now(),pg0=renderer.info.programs.length,pmN=()=>`${ms.size} materials, shaders ${pg0} to ${renderer.info.programs.length}`;
-    try{warmVm()}catch(e){}
+    try{warmVm()}catch(e){}try{if(!W.postW){W.postW=1;postWarm()}}catch(e){}
     const c1=()=>{W.pend--;if(!W.c1)W.c1=performance.now();pfMark('Shader pass',pm0,pmN())};
     if(!LOADP.done){W.pend++;const s1=()=>{W.pend--;pfMark('Shadow shaders',pm0)};try{const q=warmShadows(warmRoot());if(q&&q.then)q.then(s1,s1);else W.pend--}catch(e){W.pend--}}
     // (and once that set is built, the lamps' other set behind it, gfx.js ltSl: nothing waits for it)
@@ -458,7 +458,12 @@ function warmShadows(root){if(!renderer.shadowMap.enabled)return null;const swap
 const warmLater={list:null,i:0,t:0,busy:false,done:false};
 function warmRoot(){const L=warmLater;if(L.done||typeof startAuto!=='function'||!startAuto()){if(warmFar.done)return scene;if(!L.list)L.list=[]}
   else if(!L.list)L.list=gfxMachines().filter(g=>gfxIsl(g.position.x,g.position.z,15));
-  const skip=new Set(L.list);warmFarList();for(const e of warmFar.L||[])skip.add(e[0]);
+  // (left out only while they really are kept out of the picture: the island machines while the camera is in town, as
+  // gfxAway hides them, and the far world while it is over WARM_SHOW m from the camera. Behind the loading cover the
+  // camera stands at the dig site, not in town where you start, and what was left out there was drawn all the same,
+  // its shaders built there and then: a 21 s freeze in the owner's Windows loading, v427)
+  const c=camera.position,away=c.z>=TU.townZ&&!gfxIsl(c.x,c.z,30),skip=new Set(away?L.list:[]);
+  warmFarList();for(const e of warmFar.L||[])if(warmFarD(e,c)>WARM_SHOW)skip.add(e[0]);
   return {isObject3D:true,traverseVisible(){},traverse(cb){const t=o=>{if(skip.has(o))return;cb(o);for(const c of o.children)t(c)};t(scene)}}}
 // the far world: what stands more than WARM_NEAR m from where the visit starts (START_AT, or the camera on a test page)
 // is left out of the loading cover's shader pass (warmRoot), so the cover lifts once what is round you is ready (most
