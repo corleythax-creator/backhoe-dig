@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-18T03:44:00Z",
+ "updated": "2026-11-18T04:13:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -156,9 +156,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-17",
-   "dh": 14.5,
-   "act": 2.5,
-   "versions": 6
+   "dh": 16.5,
+   "act": 3,
+   "versions": 7
   }
  ],
  "extra": [
@@ -4047,6 +4047,15 @@ window.EFFORT = {
    "tris": 7029049,
    "chars": 2715036,
    "what": "The ?shaderbench test runs first thing while loading and times each of the game's shader changes taken out in turn"
+  },
+  {
+   "v": 432,
+   "asked": "2026-11-17T22:00:00-06:00",
+   "live": "2026-11-17T22:13:58-06:00",
+   "dh": 2,
+   "tris": 7025969,
+   "chars": 2717128,
+   "what": "Every Graphics level builds the lamp-free shaders by day again (six times quicker to build on Windows), the lamps' set once you are in; the shader test now times the lamps written as a loop"
   }
  ]
 };
