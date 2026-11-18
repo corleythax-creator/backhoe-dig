@@ -14,8 +14,9 @@ const postTri=(function(){const g=new THREE.BufferGeometry();
   g.setAttribute('position',new THREE.Float32BufferAttribute([-1,-1,0,3,-1,0,-1,3,0],3));g.setAttribute('uv',new THREE.Float32BufferAttribute([0,0,2,0,0,2],2));
   const m=new THREE.Mesh(g);m.frustumCulled=false;postScene.add(m);return m})();
 const POST_VS='varying vec2 vUv;void main(){vUv=uv;gl_Position=vec4(position.xy,0.0,1.0);}';
-const postMat=(fs,u,add)=>new THREE.ShaderMaterial({uniforms:u,vertexShader:POST_VS,fragmentShader:fs,depthTest:false,depthWrite:false,
-  blending:add?THREE.AdditiveBlending:THREE.NoBlending,transparent:!!add});
+const POST_MATS=[];// (every effect pass's material, for postWarm)
+const postMat=(fs,u,add)=>{const m=new THREE.ShaderMaterial({uniforms:u,vertexShader:POST_VS,fragmentShader:fs,depthTest:false,depthWrite:false,
+  blending:add?THREE.AdditiveBlending:THREE.NoBlending,transparent:!!add});POST_MATS.push(m);return m};
 const POST_HASH='float pHash(vec2 p){return fract(sin(dot(p,vec2(12.9898,78.233)))*43758.5453);}\n';
 // ambient occlusion at half size: each pixel's place is rebuilt from the depth, its facing from the depths beside it
 // (the nearer side each way, so edges stay sharp), then 12 nearby points in a turning spiral each shade it by how
@@ -125,6 +126,14 @@ function postOn(){return (POST.ao||POST.bloom||POST.grade||aeOn)&&!renderer.xr.i
 // made it yet. Built for the screen instead, every material was built a second time at its first real frame, the
 // output's colour space being part of the shader: about half of all the shader building at loading)
 // (other: the lamps' other set of shaders, gfx.js ltSl: the night's by day, the day's by night)
+// the effect passes' shaders, built with the loading's shader pass (main.js warmAllTick): left to the first frame drawn
+// through the effects, all seven were built there and then, one after another (a freeze in the owner's Windows loading).
+// Each is built for where it draws: the screen for the last one (postOut), a picture of its own for the rest (no tone
+// mapping there, as when drawn: toneMapped off, or the warmed shader was another one)
+function postWarm(){if(!postOn())return;if(!postRT){const v=new THREE.Vector2();renderer.getDrawingBufferSize(v);postSize(Math.max(1,v.x),Math.max(1,v.y))}
+  const t=renderer.getRenderTarget(),m0=postTri.material;
+  try{for(const m of POST_MATS){m.toneMapped=m===postOut;postTri.material=m;renderer.setRenderTarget(m===postOut?null:postRT);renderer.compileAsync(postScene,postCam)}}
+  finally{postTri.material=m0;renderer.setRenderTarget(t)}}
 function warmCompile(o,sc,other){if(postOn()&&!postRT){const v=new THREE.Vector2();renderer.getDrawingBufferSize(v);postSize(Math.max(1,v.x),Math.max(1,v.y))}
   const t=renderer.getRenderTarget(),pt=postOn()&&postRT;if(pt)renderer.setRenderTarget(postRT);
   ltHide(gfxCur.lt2&&!!other===ltSl.night);
