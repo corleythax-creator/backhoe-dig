@@ -136,7 +136,7 @@ function postWarm(){if(!postOn())return;if(!postRT){const v=new THREE.Vector2();
   finally{postTri.material=m0;renderer.setRenderTarget(t)}}
 function warmCompile(o,sc,other){if(postOn()&&!postRT){const v=new THREE.Vector2();renderer.getDrawingBufferSize(v);postSize(Math.max(1,v.x),Math.max(1,v.y))}
   const t=renderer.getRenderTarget(),pt=postOn()&&postRT;if(pt)renderer.setRenderTarget(postRT);
-  ltHide(gfxCur.lt2&&!!other===ltSl.night);
+  ltHide(!!other===ltSl.night);
   try{return renderer.compileAsync?renderer.compileAsync(o,camera,sc):(renderer.compile(o,camera,sc),null)}finally{ltShow();if(pt)renderer.setRenderTarget(t)}}
 // draws the frame: straight to the screen, or through the effects
 // shadows drawn every shEvery frames (the Graphics setting; Low's 2 halves the shadow pass, a phone's second biggest
