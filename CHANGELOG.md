@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Tuesday, November 17, 2026
 
+- **v427** (8:09 PM) The loading cover lifts once what is round your start spot is built; things over 650 ft away stay hidden until their shaders are ready, built in batches as you play; each load sends its timings to the shared board
 - **v426** (7:33 PM) High and Ultra build one set of shaders instead of two (376 to about 205), cutting the loading wait and the hitch when lamps come on
 
 ## Monday, November 16, 2026
