@@ -484,8 +484,11 @@ const warmFarD=(e,c)=>Math.hypot(e[0].position.x+e[1]-c.x,e[0].position.z+e[2]-c
 function warmFarHide(cam){const F=warmFar;if(!F.L||!F.L.length||cam!==camera||edOn||renderer.xr.isPresenting)return;const c=cam.position;
   for(const e of F.L)if(e[0].visible&&warmFarD(e,c)>WARM_SHOW){e[0].visible=false;gfxHid.push(e[0])}}
 function warmFarTick(){const F=warmFar;if(F.done||!F.L||F.busy&&performance.now()-F.b0<20000||!LOADP.done||performance.now()<F.t)return;
-  // (a batch whose building never reports back is let go after 20 s, and everything is shown 2 minutes after you are in)
-  if(performance.now()-PF_BOOT.done>120000){pfMark('Far world shown (time up)',performance.now(),F.L.length+' things');F.done=true;F.L=null;return}
+  // (not while the start card is still up and getting your spot ready, startReveal: a batch built then held up the shaders
+  // the first frames at your spot needed, the freeze just after the cover lifted; 3 s after it goes)
+  if(!help.hidden){F.t=performance.now()+3000;return}
+  // (a batch whose building never reports back is let go after 20 s, and everything is shown 3 minutes after you are in)
+  if(performance.now()-PF_BOOT.done>180000){pfMark('Far world shown (time up)',performance.now(),F.L.length+' things');F.done=true;F.L=null;return}
   F.L=F.L.filter(e=>e[0].parent);if(!F.L.length){F.done=true;F.L=null;pfMark('Far world all built',performance.now());return}
   const c=camera.position;F.L.sort((a,b)=>warmFarD(a,c)-warmFarD(b,c));const B=F.L.slice(0,WARM_BATCH);F.busy=true;F.b0=performance.now();
   const root={isObject3D:true,name:'far world, '+B.length+' things',traverseVisible(){},traverse(cb){for(const e of B)e[0].traverse(cb)}};

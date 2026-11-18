@@ -353,7 +353,14 @@ SPICK.go=()=>{const p=SPICK.pick;if(!p)return;if(!startReady()){$('#startMapHint
 const START_AT={x:52,z:653.6,yaw:0};
 const startAuto=()=>!/test/.test(location.search)&&!/^(localhost|127\.|play\.test)/.test(location.hostname)&&!SPICK.pick;
 function startAt(){tpPick={x:START_AT.x,z:START_AT.z};wk.yaw=START_AT.yaw;tpGo('foot',true);tpSet(null);wk.yaw=START_AT.yaw;startIn('walk');toast(say('startBrew'),'good',2600)}
-function startWait(){if(!startReady()){setTimeout(startWait,200);return}$('#startMap').classList.add('ready');
+// (on the site, you are put at the start spot as soon as the game can move you, behind the loading cover: what is made
+// only near the camera (models, props, puddles, townsfolk; mdlTick, MDL_NEAR) is then made there while loading, and its
+// shaders built with the rest. Left at the dig site till the cover lifted, all of it arrived in the first frame there:
+// a 15 s freeze in the owner's Windows loading, v428. startAt below then only finishes the job)
+let startEarly=false;
+function startWait(){if(!startEarly&&startAuto()&&typeof tpGo==='function'&&typeof tpSet==='function'&&typeof warmIdle==='function'){startEarly=true;
+    try{tpPick={x:START_AT.x,z:START_AT.z};wk.yaw=START_AT.yaw;tpGo('foot',true);tpSet(null);wk.yaw=START_AT.yaw}catch(e){}}
+  if(!startReady()){setTimeout(startWait,200);return}$('#startMap').classList.add('ready');
   if(startAuto()){startAt();return}
   if(SPICK.pick)SPICK.go();else $('#startMapHint').textContent=SPICK.zoom?'Tap again where you want to start':'Tap the map to zoom in'}
 startWait();
