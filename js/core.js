@@ -66,6 +66,9 @@ Object.defineProperty(THREE.InstancedMesh.prototype,'boundingSphere',{configurab
 renderer.toneMapping=THREE.ACESFilmicToneMapping; renderer.toneMappingExposure=0.8;
 // exAdapt: the eye adjusting outdoors (post.js aeRead), on top of the Graphics setting's exposure and the rooms' rmAdapt
 let exAdapt=1;
+// three.js's own shader pieces, before the game changes them below: the shader timing test (main.js shBenchTick) puts
+// them back one at a time to see what each change costs to build
+const SC0=Object.assign({},THREE.ShaderChunk);
 (function(){
   const lin=c=>`${c}=mix(${c}/12.92,pow((${c}+0.055)/1.055,vec3(2.4)),step(vec3(0.04045),${c}));`;
   const C=THREE.ShaderChunk;

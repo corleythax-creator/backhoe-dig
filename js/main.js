@@ -506,30 +506,39 @@ function loadReportTick(){if(loadRep||!LOADP.done||!(warmFar.done||performance.n
       tl:PF_BOOT.tl.filter(r=>r[2]>=200||/Far world|Shader pass/.test(r[0])).slice(0,120)};
     const dev=`${typeof gpuName==='function'?gpuName():''} · ${renderer.domElement.width}×${renderer.domElement.height} px · Graphics ${typeof gfxName==='function'?gfxName():''} · ${navigator.platform||''}`;
     syncRpc('island_tour_put',{p_v:v,p_device:dev,p_gfx:typeof gfxKey!=='undefined'?gfxKey:'',p_kind:'load',p_fps:null,p_data:d},true).catch(()=>{})}catch(e){}}
-// the shader timing test (open the site with ?shaderbench): once you are in, a few sample shaders are built here one at a
+// the shader timing test (open the site with ?shaderbench): while loading, a few sample shaders are built here one at a
 // time, each with a mark of its own so nothing is reused from before, and how long each took to build goes to the
 // shared board (kind 'shaderbench'): plain, with the wet look, with all the lamps or just the sun, a heavy one with
 // pictures. It shows what makes this computer's shaders slow to build (a second or more each on the owner's Windows PC)
-let shBenchOn=/[?&]shaderbench\b/.test(location.search),shBenchT=0;
-function shBenchTick(){if(!shBenchOn||!LOADP.done||!help.hidden)return;const now=performance.now();if(!shBenchT){shBenchT=now+5000;return}if(now<shBenchT)return;shBenchOn=false;
-  const gl=renderer.getContext(),sun0=new THREE.Scene(),out=[];sun0.add(new THREE.HemisphereLight(0xffffff,0x444444,1));
+let shBenchOn=/[?&]shaderbench\b/.test(location.search),shBenchN=0;
+// (run first thing, before the loading's own shaders are built, so nothing else is building beside it: each sample is
+// built twice with marks of its own and the faster time kept; then each of the game's changes to three.js's shader
+// pieces (core.js, SC0) is taken out in turn, to find the one that is slow to build)
+function shBenchTick(){if(!shBenchOn||++shBenchN<5||typeof wetPatch!=='function')return;shBenchOn=false;const T0=performance.now();
+  const gl=renderer.getContext(),C=THREE.ShaderChunk,sun0=new THREE.Scene(),out=[];sun0.add(new THREE.HemisphereLight(0xffffff,0x444444,1));
   {const d=new THREE.DirectionalLight(0xffffff,1);d.castShadow=true;sun0.add(d,d.target)}
-  const pic=(()=>{let t=null;scene.traverse(o=>{if(!t&&o.material&&!Array.isArray(o.material)&&o.material.map&&o.material.normalMap)t=o.material});return t})();
-  const kinds=[['standard, sun only',()=>new THREE.MeshStandardMaterial(),sun0],['standard, all lamps',()=>new THREE.MeshStandardMaterial(),scene],
-    ['standard + wet, sun only',()=>{const m=new THREE.MeshStandardMaterial();wetPatch(m);return m},sun0],['standard + wet, all lamps',()=>{const m=new THREE.MeshStandardMaterial();wetPatch(m);return m},scene],
-    ['physical + wet + pictures, all lamps',()=>{const m=new THREE.MeshPhysicalMaterial({clearcoat:0.2});if(pic){m.map=pic.map;m.normalMap=pic.normalMap;m.roughnessMap=pic.roughnessMap||null}wetPatch(m);return m},scene],
-    ['physical + wet + pictures, sun only',()=>{const m=new THREE.MeshPhysicalMaterial({clearcoat:0.2});if(pic){m.map=pic.map;m.normalMap=pic.normalMap;m.roughnessMap=pic.roughnessMap||null}wetPatch(m);return m},sun0]];
-  const geo=new THREE.BoxGeometry(1,1,1);
-  for(let rep=0;rep<2;rep++)for(const [n,make,tg] of kinds){const m=make(),nonce='shb'+Math.random().toString(36).slice(2),ob=m.onBeforeCompile,ok=m.customProgramCacheKey;
-    m.onBeforeCompile=function(sh,r){if(ob)ob.call(this,sh,r);sh.fragmentShader+='\n// '+nonce};m.customProgramCacheKey=function(){return (ok?ok.call(this):'')+nonce};
-    const mesh=new THREE.Mesh(geo,m),t0=performance.now();let src=0;
-    try{renderer.compile(mesh,camera,tg);const P=renderer.properties.get(m).currentProgram;if(P){gl.getProgramParameter(P.program,gl.LINK_STATUS);for(const x of gl.getAttachedShaders(P.program))src+=gl.getShaderSource(x).length}}catch(e){}
-    out.push([n,Math.round(performance.now()-t0),src]);m.dispose()}
-  pfMark('Shader timing test',now,out.map(r=>r[0]+' '+r[1]+' ms').join('; '));
-  toast('Shader timing test done: '+out.slice(0,6).map(r=>r[1]+' ms').join(', '),'good',6000);
+  const geo=new THREE.BoxGeometry(1,1,1),changed=Object.keys(SC0).filter(k=>C[k]!==SC0[k]);
+  const std=wet=>()=>{const m=new THREE.MeshStandardMaterial();if(wet)wetPatch(m);return m};
+  const time=(make,tg)=>{let best=1e9,src=0;for(let rep=0;rep<2;rep++){const m=make(),nonce='shb'+Math.random().toString(36).slice(2),ob=m.onBeforeCompile,ok=m.customProgramCacheKey;
+      m.onBeforeCompile=function(sh,r){if(ob)ob.call(this,sh,r);sh.fragmentShader+='\n// '+nonce;sh.vertexShader+='\n// '+nonce};m.customProgramCacheKey=function(){return (ok?ok.call(this):'')+nonce};
+      const t0=performance.now();try{renderer.compile(new THREE.Mesh(geo,m),camera,tg);const P=renderer.properties.get(m).currentProgram;
+        if(P){gl.getProgramParameter(P.program,gl.LINK_STATUS);src=0;for(const x of gl.getAttachedShaders(P.program))src+=gl.getShaderSource(x).length}}catch(e){}
+      best=Math.min(best,performance.now()-t0);m.dispose()}return [Math.round(best),src]};
+  const swap=(keys,f)=>{const keep=keys.map(k=>C[k]);keys.forEach(k=>C[k]=SC0[k]);try{return f()}finally{keys.forEach((k,i)=>C[k]=keep[i])}};
+  time(std(false),sun0);// (the first one built pays for setting things up)
+  const add=(n,r)=>out.push([n,...r]);
+  add('standard, sun only',time(std(false),sun0));add('standard, all lamps',time(std(false),scene));
+  add('standard + wet, sun only',time(std(true),sun0));add('standard + wet, all lamps',time(std(true),scene));
+  add('standard + wet, all lamps, none of the game changes',swap(changed,()=>time(std(true),scene)));
+  const groups={fog:changed.filter(k=>/^fog_/.test(k)),'lamp skip and light shading':changed.filter(k=>/^lights_fragment/.test(k)),'cloud shadows and building lights':changed.filter(k=>k==='lights_pars_begin'),
+    'colour fix':changed.filter(k=>/^(color_fragment|emissivemap_fragment)$/.test(k))};
+  const other=changed.filter(k=>!Object.values(groups).some(g=>g.includes(k)));if(other.length)groups['other ('+other.join(' ')+')']=other;
+  for(const [n,keys] of Object.entries(groups))if(keys.length)add('standard + wet, all lamps, without '+n,swap(keys,()=>time(std(true),scene)));
+  pfMark('Shader timing test',T0,out.map(r=>r[0]+' '+r[1]+' ms').join('; '));
+  toast('Shader timing test done ('+Math.round((performance.now()-T0)/1000)+' s)','good',6000);
   if(typeof sync!=='undefined'&&sync.on)try{const E=window.EFFORT,v=E&&E.versions?+E.versions[E.versions.length-1].v||0:0;
     syncRpc('island_tour_put',{p_v:v,p_device:`${typeof gpuName==='function'?gpuName():''} · Graphics ${gfxName()} · ${navigator.platform||''}`,p_gfx:gfxKey,p_kind:'shaderbench',p_fps:null,
-      p_data:{res:out,parallel:!!gl.getExtension('KHR_parallel_shader_compile'),programs:renderer.info.programs.length}},true).catch(()=>{})}catch(e){}}
+      p_data:{res:out,changed,boot:true,parallel:!!gl.getExtension('KHR_parallel_shader_compile')}},true).catch(()=>{})}catch(e){}}
 function warmLaterTick(){const L=warmLater;if(L.done||!L.list||!LOADP.done||L.busy||performance.now()<L.t)return;
   const g=L.list[L.i++];if(!g){L.done=true;return}L.busy=true;const end=()=>{L.busy=false;L.t=performance.now()+400};gpuWarm(g).then(end,end)}
 // in first person the gun and the worker's own body are drawn last, as see-through (gunVm, gunVmBody, pistol.js), which
