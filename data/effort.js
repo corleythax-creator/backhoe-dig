@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-20T02:24:00Z",
+ "updated": "2026-11-20T02:57:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -162,9 +162,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-19",
-   "dh": 3.5,
-   "act": 1,
-   "versions": 2
+   "dh": 5,
+   "act": 1.5,
+   "versions": 3
   }
  ],
  "extra": [
@@ -4089,6 +4089,15 @@ window.EFFORT = {
    "tris": 7033863,
    "chars": 2720887,
    "what": "Each newly loaded far thing is drawn once off the screen, one a frame, before it appears (the 1-2 s freezes walking round town on Windows); the loading report says what held each freeze"
+  },
+  {
+   "v": 436,
+   "asked": "2026-11-19T20:12:00-06:00",
+   "live": "2026-11-19T20:57:28-06:00",
+   "dh": 1.5,
+   "tris": 7021617,
+   "chars": 2721181,
+   "what": "The loading cover waits until the whole island is built and drawn once (owner's pick: a longer load, then no stutter walking round town); the loading report now covers the first 2 minutes of play"
   }
  ]
 };
