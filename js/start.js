@@ -45,7 +45,7 @@ addEventListener('resize',startLay);startLay();
 // the game's scripts as each one loads (up to 45%), every picture and model the loaders fetch (the loading managers,
 // counted from core.js and terrain.js with loadCount; up to 75%), then the shaders and texture uploads done behind the
 // cover (warmFrac, main.js; up to 100%), and the structures' pictures (brBusy, bridges.js). It is done when all three are, or after LOADP.cap seconds whatever is left
-const LOADP={js:0,mgr:[],warm:false,done:false,shown:0,cap:60};
+const LOADP={js:0,mgr:[],warm:false,done:false,shown:0,cap:150};
 document.addEventListener('load',e=>{if(e.target.tagName==='SCRIPT'&&e.target.defer){LOADP.js++;PF_BOOT.js.push([e.target.getAttribute('src'),performance.now()])}},true);
 // for the Profiler (☰ → Dev, js/prof.js): when each game script finished running, and every stretch the page's main
 // thread was held up 50 ms or more (the browser's long tasks), from the start
@@ -70,7 +70,7 @@ function loadStep(bad){if(LOADP.done)return;if(bad){loadEnd();return}const jsN=d
   if(game&&!LOADP.gameT)LOADP.gameT=now;let al=0,at=0;for(const [l,t] of LOADP.mgr){al+=l;at+=t}
   if(LOADP.gameT&&now-LOADP.gameT>2000&&LOADP.goal===undefined)LOADP.goal=at;if(LOADP.goal!==undefined)at=LOADP.goal;al=Math.min(al,at);
   const a=at?al/at:0,w=typeof warmFrac==='function'?warmFrac():0;
-  const done=LOADP.goal!==undefined&&al>=at&&LOADP.warm&&(typeof warmCover==='function'?warmCover():warmIdle())&&loadTownIn()&&loadFolkIn()&&(typeof brBusy!=='function'||!brBusy())||now>LOADP.cap*1000||LOADP.err&&now-LOADP.errT>4000;
+  const done=LOADP.goal!==undefined&&al>=at&&LOADP.warm&&(typeof warmCover==='function'?warmCover():warmIdle())&&loadTownIn()&&loadFolkIn()&&(typeof warmFar!=='object'||warmFar.done)&&(typeof brBusy!=='function'||!brBusy())||now>LOADP.cap*1000||LOADP.err&&now-LOADP.errT>4000;
   const p=done?100:Math.min(99,45*js+30*a*(game?1:.8)+25*w);LOADP.shown=done?100:Math.max(LOADP.shown,LOADP.shown+(p-LOADP.shown)*.35);// counts up smoothly, never back
   const pct=Math.floor(LOADP.shown),L=document.getElementById('startLoad');
   document.getElementById('startLoadPct').textContent=pct+'%';document.getElementById('startLoadFill').style.width=LOADP.shown+'%';L.setAttribute('aria-valuenow',pct);
