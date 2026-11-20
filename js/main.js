@@ -318,7 +318,7 @@ function frame(now){
   const fv=mode==='boat'?btCur():mode==='heavy'?hvCur():mode==='bike'?bk:mode==='truck'?tr:mode==='mow'?mw:mode==='skid'?sk:mode==='walk'?wk:st;sun.position.set(fv.x,fv.y,fv.z).addScaledVector(LIGHT_DIR,SUN_D); sun.target.position.set(fv.x,fv.y,fv.z);
   {const o=groundOcc.value;o[0].set(st.x,st.z,st.yaw,0);o[2].set(tr.x,tr.z,tr.yaw,0)}
   timeU.value=now/1000;
-  shadowProxyTick();lawnLod();tuftLod();turfLod();rainCover();if(vr.fake)vrFakeHead();warmAllTick();warmLaterTick();warmDrawTick();warmFarTick();ltOtherTick();loadReportTick();repHudTick();shBenchTick();gpuWarmTick();if(!loadHold()){const wm=warmPre(),d0=performance.now(),di=drawInfo();postRender();drawNew.on=false;warmPost(wm);if(performance.now()-d0>150)drawSlow(d0,di)}if(vrOn())vrAfter();
+  shadowProxyTick();lawnLod();tuftLod();turfLod();rainCover();if(vr.fake)vrFakeHead();warmAllTick();warmLaterTick();warmDrawTick();warmFarTick();ltOtherTick();loadReportTick();repHudTick();shBenchTick();gpuWarmTick();shGateTick();if(!loadHold()){const wm=warmPre(),d0=performance.now(),di=drawInfo();postRender();drawNew.on=false;warmPost(wm);if(performance.now()-d0>150)drawSlow(d0,di)}if(vrOn())vrAfter();
   if(bench.on)benchSample(dt);
   fpsFrames++;fpsTime+=dt;
   if(fpsTime>=0.5){
@@ -379,9 +379,32 @@ function drawSlow(t0,a){drawNew.slow=performance.now();const P=new Set(drawNew.L
     // (the rest belong to no material in the scene: three.js's own, the shadows' depth or the effects passes)
     for(const pr of P)if(!hit.has(pr))L.push('('+(pr.type||'')+(pr.name?' '+pr.name:'')+')');
     if(L.length)who=' · '+L.join(', ')}
-  const bg=[];if(ltOther.busy)bg.push('lamp set');if(warmLater.busy)bg.push('island machine');if(warmAll&&warmAll.pend)bg.push('shader pass');if(gpuQ.length)bg.push('warming '+gpuQ.length);
+  const bg=[];if(ltOther.busy)bg.push('lamp set');if(warmLater.busy)bg.push('island machine');if(warmAll&&warmAll.pend)bg.push('shader pass');if(gpuQ.length)bg.push('warming '+gpuQ.length);if(shGate.busy)bg.push('held back '+shGate.wait.size);
   if(bg.length)who=' · building then: '+bg.join(', ')+who}catch(e){}
   pfMark('Slow frame drawn',t0,`new on the card: ${n} shaders, ${b[1]-a[1]} meshes, ${b[2]-a[2]} pictures${ltSl.night?' · lamps lit':''}${who}`.slice(0,600))}
+// NEVER WAIT FOR A SHADER (owner, Nov 20: days of freezes, each a frame waiting for a shader the warm-ups missed; on
+// Windows each takes 1 to 3 s to build). Every frame in play, anything about to be drawn whose material (with that kind
+// of object: instanced, skinned, vertex colours...) has not been built yet is kept out of the picture (its layers off,
+// for every camera and the shadows), its shaders built in the background (warmCompile, warmShadows), and shown when
+// they are ready: a thing turns up a moment late instead of the whole game stopping. The lamps' other set is still
+// built ahead (ltOtherTick); the effects passes are built with the shader pass
+const shGate={ok:new WeakMap(),wait:new Map(),busy:0,seeded:false,n:0,ms:0};
+function shKind(o,m){const a=o.geometry&&o.geometry.attributes||{};return (o.isInstancedMesh?'i':'')+(o.instanceColor?'c':'')+(o.isSkinnedMesh?'s':'')+(o.isBatchedMesh?'b':'')+
+  (o.isPoints?'p':o.isLine?'l':o.isSprite?'S':'')+(a.color?'v':'')+(a.tangent?'t':'')+(o.morphTargetInfluences?'m':'')+(o.receiveShadow?'r':'')+'|'+m.version}
+function shOk(o,m,add){let s=shGate.ok.get(m);if(!s){if(!add)return false;shGate.ok.set(m,s=new Set())}const k=shKind(o,m);if(add){s.add(k);return true}return s.has(k)}
+function shGateTick(){const G=shGate;if(!LOADP.done||bench.on||vrOn()||TU.shGate===0)return;const t0=performance.now();
+  // (what was built before play is trusted: the loading's passes built it)
+  if(!G.seeded){G.seeded=true;scene.traverse(o=>{if(!o.material)return;for(const m of [].concat(o.material)){if(!m)continue;const pr=renderer.properties.get(m);if(pr&&pr.programs&&pr.programs.size)shOk(o,m,true)}});return}
+  const L=[];scene.traverseVisible(o=>{if(!o.material||G.wait.has(o)||!(o.isMesh||o.isPoints||o.isLine||o.isSprite)||!o.layers.mask)return;
+    for(const m of [].concat(o.material))if(m&&m.visible!==false&&!shOk(o,m)){L.push(o);break}});
+  if(L.length){G.n+=L.length;for(const o of L)G.wait.set(o,o.layers.mask),o.layers.mask=0;
+    const root={isObject3D:true,traverseVisible(){},traverse(cb){for(const o of L)cb(o)}},end=()=>{G.busy--;
+      for(const o of L){for(const m of [].concat(o.material))if(m)shOk(o,m,true);o.layers.mask|=G.wait.get(o);G.wait.delete(o)}};
+    G.busy++;let p=null,q=null;
+    // (three.js builds them whatever their layers: compile goes by the list it is given)
+    try{p=warmCompile(root,scene)}catch(e){}try{q=warmShadows(root)}catch(e){}
+    Promise.all([p&&p.then?p.catch(()=>{}):null,q&&q.then?q.catch(()=>{}):null]).then(end,end)}
+  G.ms=performance.now()-t0}
 // the places a player gets to (where the island tour test goes): the rain cover's top-down pass draws what is there
 // once, inside one call with nothing drawn on screen, so its depth shaders for what is only found there are built
 // before you arrive. Only behind the start card or while the tour test gets ready
