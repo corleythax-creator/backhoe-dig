@@ -485,7 +485,9 @@ function warmRoot(){const L=warmLater;if(L.done||typeof startAuto!=='function'||
 // until their shaders are built in the background behind the start card and as you play, a batch at a time nearest
 // you first (warmFarTick, gpuWarm). Without hiding, a far thing in view would build its shaders there and then, a frame
 // frozen for every one. warmFar.L: [thing, its middle from its position (x, z), radius]
-const WARM_NEAR=200,WARM_SHOW=150,WARM_BATCH=40;
+// (WARM_BATCH: 40 things a batch built up to 14 shaders at once, and a frame that needed one waited behind them: 2 to 3 s
+// freezes in the owner's Windows play, v433; 10 keeps that wait under a second)
+const WARM_NEAR=200,WARM_SHOW=150,WARM_BATCH=10;
 const warmFar={L:null,busy:false,done:false,t:0};
 function warmFarList(){const F=warmFar;if(F.L||F.done)return;F.L=[];const from=typeof startAuto==='function'&&startAuto()?START_AT:camera.position,
     skip=new Set(warmLater.list||[]),b=new THREE.Box3(),s=new THREE.Sphere();
