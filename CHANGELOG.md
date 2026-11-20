@@ -2,6 +2,10 @@
 
 Every version of Corley's Island, newest first, grouped by the day it went live (Central time). Made from `data/effort.js` by `tools/changelog.py`; don't edit it by hand. [Play any old version](https://corleys-island.vercel.app/versions/) · [Build log with charts](https://corleys-island.vercel.app/build.html)
 
+## Friday, November 20, 2026
+
+- **v440** (3:16 PM) Loading no longer draws while the second lamp set of shaders builds (the 8.5 s freeze); in play that set builds 2 at a time; the load report names the things in slow frames and what was building
+
 ## Thursday, November 19, 2026
 
 - **v439** (10:06 PM) A readout across the top for 5 minutes after loading: time since, freezes so far and the longest, and the report counting down to sent or failed
