@@ -489,7 +489,8 @@ function warmRoot(){const L=warmLater;if(L.done||typeof startAuto!=='function'||
 // freezes in the owner's Windows play, v433; 10 keeps that wait under a second)
 const WARM_NEAR=200,WARM_SHOW=150,WARM_BATCH=10;
 const warmFar={L:null,busy:false,done:false,t:0};
-function warmFarList(){const F=warmFar;if(F.L||F.done)return;F.L=[];const from=typeof startAuto==='function'&&startAuto()?START_AT:camera.position,
+function warmFarList(){const F=warmFar;if(F.L||F.done||typeof bfWant==='function'&&(bfWant('town')||bfWant('homes'))&&!(bf.ready&&bf.done)&&performance.now()<90000)return;// (once the town is all in, so it is listed too)
+  F.L=[];const from=typeof startAuto==='function'&&startAuto()?START_AT:camera.position,
     skip=new Set(warmLater.list||[]),b=new THREE.Box3(),s=new THREE.Sphere();
   for(const o of scene.children){if(skip.has(o)||o.isLight||o.isCamera)continue;b.setFromObject(o);if(b.isEmpty())continue;b.getBoundingSphere(s);
     if(s.radius>400||Math.hypot(s.center.x-from.x,s.center.z-from.z)-s.radius<WARM_NEAR)continue;
@@ -500,7 +501,7 @@ function warmFarHide(cam){const F=warmFar;if(!F.L||!F.L.length||cam!==camera||ed
   for(const e of F.L)if(e[0].visible&&warmFarD(e,c)>WARM_SHOW){e[0].visible=false;gfxHid.push(e[0])}}
 // (owner, Nov 19: the loading cover waits for it, start.js; its batches start once the cover's own shader passes are done,
 // loadHold. Built while you walked round town, every batch coming into view froze the game a second or two on Windows)
-function warmFarTick(){const F=warmFar;if(F.done||!F.L||F.pre||F.busy&&performance.now()-F.b0<20000||!LOADP.done&&loadHold()||performance.now()<F.t)return;
+function warmFarTick(){const F=warmFar;if(!F.L&&!F.done&&warmAll)warmFarList();if(F.done||!F.L||F.pre||F.busy&&performance.now()-F.b0<20000||!LOADP.done&&loadHold()||performance.now()<F.t)return;
   // (a batch whose building never reports back is let go after 20 s, and everything is shown 3 minutes after you are in)
   if(LOADP.done&&performance.now()-PF_BOOT.done>180000){pfMark('Far world shown (time up)',performance.now(),F.L.length+' things');F.done=true;F.L=null;return}
   F.L=F.L.filter(e=>e[0].parent);if(!F.L.length){F.done=true;F.L=null;pfMark('Far world all built',performance.now());return}
@@ -526,12 +527,12 @@ function warmDrawTick(){const F=warmFar;if(!F.pre)return;const T=performance.now
   while(F.pre.length&&!LOADP.done&&performance.now()-T<30);
   if(F.pre.length)return;const done=new Set(F.preB);F.pre=F.preB=null;F.busy=false;F.t=performance.now()+200;if(F.L)F.L=F.L.filter(x=>!done.has(x))}
 
-// the loading report: once a visit, 2 minutes after the cover lifted (the loading and the first two minutes of play), how the getting
+// the loading report: once a visit, a minute after the cover lifted (the loading and the first minute of play), how the getting
 // ready went on this device goes to the shared board (island_tour_put, kind 'load'; the Vercel site only, as sync is):
 // the graphics card, the steps' times, the long stalls, the shaders built and the slowest parts of the timeline. Only
 // timings, nothing of the save. It shows how the loading really goes on the owner's PC, which the test machine can't
 let loadRep=false;
-function loadReportTick(){if(loadRep||!LOADP.done||performance.now()-PF_BOOT.done<120000)return;loadRep=true;
+function loadReportTick(){if(loadRep||!LOADP.done||performance.now()-PF_BOOT.done<60000)return;loadRep=true;
   if(typeof sync==='undefined'||!sync.on||typeof syncRpc!=='function')return;
   try{const E=window.EFFORT,v=E&&E.versions?+E.versions[E.versions.length-1].v||0:0,gl=renderer.getContext();
     const d={cover:Math.round(PF_BOOT.done),steps:PF_BOOT.steps,programs:renderer.info.programs.length,
