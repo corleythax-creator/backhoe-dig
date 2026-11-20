@@ -318,7 +318,7 @@ function frame(now){
   const fv=mode==='boat'?btCur():mode==='heavy'?hvCur():mode==='bike'?bk:mode==='truck'?tr:mode==='mow'?mw:mode==='skid'?sk:mode==='walk'?wk:st;sun.position.set(fv.x,fv.y,fv.z).addScaledVector(LIGHT_DIR,SUN_D); sun.target.position.set(fv.x,fv.y,fv.z);
   {const o=groundOcc.value;o[0].set(st.x,st.z,st.yaw,0);o[2].set(tr.x,tr.z,tr.yaw,0)}
   timeU.value=now/1000;
-  shadowProxyTick();lawnLod();tuftLod();turfLod();rainCover();if(vr.fake)vrFakeHead();warmAllTick();warmLaterTick();warmDrawTick();warmFarTick();ltOtherTick();loadReportTick();shBenchTick();gpuWarmTick();if(!loadHold()){const wm=warmPre(),d0=performance.now(),di=drawInfo();postRender();warmPost(wm);if(performance.now()-d0>150)drawSlow(d0,di)}if(vrOn())vrAfter();
+  shadowProxyTick();lawnLod();tuftLod();turfLod();rainCover();if(vr.fake)vrFakeHead();warmAllTick();warmLaterTick();warmDrawTick();warmFarTick();ltOtherTick();loadReportTick();repHudTick();shBenchTick();gpuWarmTick();if(!loadHold()){const wm=warmPre(),d0=performance.now(),di=drawInfo();postRender();warmPost(wm);if(performance.now()-d0>150)drawSlow(d0,di)}if(vrOn())vrAfter();
   if(bench.on)benchSample(dt);
   fpsFrames++;fpsTime+=dt;
   if(fpsTime>=0.5){
@@ -536,7 +536,7 @@ function warmDrawTick(){const F=warmFar;if(!F.pre)return;const T=performance.now
 // timings, nothing of the save. It shows how the loading really goes on the owner's PC, which the test machine can't
 let loadRep=false;
 function loadReportTick(){if(loadRep||!LOADP.done||performance.now()-PF_BOOT.done<60000)return;loadRep=true;
-  if(typeof sync==='undefined'||!sync.on||typeof syncRpc!=='function')return;
+  if(typeof sync==='undefined'||!sync.on||typeof syncRpc!=='function'){repHud.st='off';return}
   try{const E=window.EFFORT,v=E&&E.versions?+E.versions[E.versions.length-1].v||0:0,gl=renderer.getContext();
     const d={cover:Math.round(PF_BOOT.done),steps:PF_BOOT.steps,programs:renderer.info.programs.length,
       parallel:!!gl.getExtension('KHR_parallel_shader_compile'),long:PF_BOOT.long.filter(l=>l[1]>=200).slice(0,80).map(l=>[Math.round(l[0]),Math.round(l[1])]),
@@ -544,7 +544,17 @@ function loadReportTick(){if(loadRep||!LOADP.done||performance.now()-PF_BOOT.don
       // (what the browser says held each freeze over 0.3 s: prof.js's long animation frames, script and function)
       loaf:typeof PF==='object'?PF.loaf.filter(l=>l.ms>=300).slice(0,60).map(l=>[Math.round(l.t),Math.round(l.ms),l.sc.join(' · ').slice(0,240)]):[]};
     const dev=`${typeof gpuName==='function'?gpuName():''} · ${renderer.domElement.width}×${renderer.domElement.height} px · Graphics ${typeof gfxName==='function'?gfxName():''} · ${navigator.platform||''}`;
-    syncRpc('island_tour_put',{p_v:v,p_device:dev,p_gfx:typeof gfxKey!=='undefined'?gfxKey:'',p_kind:'load',p_fps:null,p_data:d},true).catch(()=>{})}catch(e){}}
+    syncRpc('island_tour_put',{p_v:v,p_device:dev,p_gfx:typeof gfxKey!=='undefined'?gfxKey:'',p_kind:'load',p_fps:null,p_data:d}).then(()=>{repHud.st='sent'},()=>{repHud.st='fail'})}catch(e){repHud.st='fail'}}
+// the report's readout (owner, Nov 19: he wants to see it go): across the top for 5 minutes after the cover lifts, the
+// time since, the freezes over 0.3 s so far and the longest, and the report counting down, then sent or failed
+const repHud={el:null,st:'wait',t:0};
+function repHudTick(){const H=repHud;if(!LOADP.done||H.st==='gone')return;const now=performance.now();if(now<H.t)return;H.t=now+500;
+  let e=H.el;if(!e){e=H.el=document.createElement('div');e.id='repHud';e.style.cssText='position:fixed;left:50%;top:8px;transform:translateX(-50%);z-index:60;background:rgba(0,0,0,.75);color:#fff;font:600 20px system-ui,sans-serif;padding:6px 16px;border-radius:8px;pointer-events:none;white-space:nowrap';document.body.appendChild(e)}
+  const s=Math.round((now-PF_BOOT.done)/1000),F=PF_BOOT.long.filter(l=>l[0]>PF_BOOT.done&&l[1]>=300),mx=F.reduce((a,l)=>Math.max(a,l[1]),0);
+  const st=H.st==='sent'?'✓ report sent':H.st==='fail'?'✗ report failed':H.st==='off'?'no report on this site':'report in '+Math.max(0,60-s)+' s';
+  e.style.color=H.st==='sent'?'#8f8':H.st==='fail'?'#f88':'#fff';
+  e.textContent=`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')} since loading · freezes ${F.length}${F.length?' (longest '+(mx/1000).toFixed(1)+' s)':''} · ${st}`;
+  if(s>300){e.remove();H.st='gone'}}
 // the shader timing test (open the site with ?shaderbench): while loading, a few sample shaders are built here one at a
 // time, each with a mark of its own so nothing is reused from before, and how long each took to build goes to the
 // shared board (kind 'shaderbench'): plain, with the wet look, with all the lamps or just the sun, a heavy one with

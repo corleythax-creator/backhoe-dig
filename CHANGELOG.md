@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Thursday, November 19, 2026
 
+- **v439** (10:06 PM) A readout across the top for 5 minutes after loading: time since, freezes so far and the longest, and the report counting down to sent or failed
 - **v438** (9:46 PM) Townsfolk and cars are readied with their shadow shaders, and the lamps' second shader set is built behind the loading cover (the 4-5 s freezes as people and cars came into town)
 - **v437** (9:21 PM) The loading cover waits for every town building, not just those round your start, and they are drawn once off the screen first (they had been arriving a building at a time as you walked round town); the loading report sends a minute into play
 - **v436** (8:57 PM) The loading cover waits until the whole island is built and drawn once (owner's pick: a longer load, then no stutter walking round town); the loading report now covers the first 2 minutes of play
