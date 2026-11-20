@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-20T03:46:00Z",
+ "updated": "2026-11-20T04:06:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -162,9 +162,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-19",
-   "dh": 7,
-   "act": 2.5,
-   "versions": 5
+   "dh": 7.5,
+   "act": 3,
+   "versions": 6
   }
  ],
  "extra": [
@@ -4116,6 +4116,15 @@ window.EFFORT = {
    "tris": 7434819,
    "chars": 2722216,
    "what": "Townsfolk and cars are readied with their shadow shaders, and the lamps' second shader set is built behind the loading cover (the 4-5 s freezes as people and cars came into town)"
+  },
+  {
+   "v": 439,
+   "asked": "2026-11-19T21:41:00-06:00",
+   "live": "2026-11-19T22:06:59-06:00",
+   "dh": 0.5,
+   "tris": 7289123,
+   "chars": 2723600,
+   "what": "A readout across the top for 5 minutes after loading: time since, freezes so far and the longest, and the report counting down to sent or failed"
   }
  ]
 };
