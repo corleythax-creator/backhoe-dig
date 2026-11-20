@@ -500,7 +500,7 @@ function warmFarHide(cam){const F=warmFar;if(!F.L||!F.L.length||cam!==camera||ed
   for(const e of F.L)if(e[0].visible&&warmFarD(e,c)>WARM_SHOW){e[0].visible=false;gfxHid.push(e[0])}}
 // (owner, Nov 19: the loading cover waits for it, start.js; its batches start once the cover's own shader passes are done,
 // loadHold. Built while you walked round town, every batch coming into view froze the game a second or two on Windows)
-function warmFarTick(){const F=warmFar;if(F.done||!F.L||F.busy&&performance.now()-F.b0<20000||!LOADP.done&&loadHold()||performance.now()<F.t)return;
+function warmFarTick(){const F=warmFar;if(F.done||!F.L||F.pre||F.busy&&performance.now()-F.b0<20000||!LOADP.done&&loadHold()||performance.now()<F.t)return;
   // (a batch whose building never reports back is let go after 20 s, and everything is shown 3 minutes after you are in)
   if(LOADP.done&&performance.now()-PF_BOOT.done>180000){pfMark('Far world shown (time up)',performance.now(),F.L.length+' things');F.done=true;F.L=null;return}
   F.L=F.L.filter(e=>e[0].parent);if(!F.L.length){F.done=true;F.L=null;pfMark('Far world all built',performance.now());return}
@@ -520,8 +520,10 @@ function warmDraw(o){const fc=[],ls=[];o.traverse(m=>{m.layers.enable(WARM_LAYER
   try{renderer.shadowMap.autoUpdate=false;if(postOn()&&postRT)renderer.setRenderTarget(postRT);renderer.render(scene,warmDrawCam)}
   finally{renderer.setRenderTarget(t);renderer.shadowMap.autoUpdate=au;renderer.shadowMap.needsUpdate=nu;
     o.traverse(m=>m.layers.disable(WARM_LAYER));for(const m of fc)m.frustumCulled=true;for(const l of ls)l.layers.disable(WARM_LAYER)}}
-function warmDrawTick(){const F=warmFar;if(!F.pre)return;const e=F.pre.pop();
-  if(e&&e[0].parent&&!vrOn()&&!edOn)try{const t0=performance.now();warmDraw(e[0]);const ms=performance.now()-t0;if(ms>100)pfMark('Far thing first drawn',t0,e[0].name||e[0].type)}catch(x){}
+// (one a frame in play; behind the loading cover as many as fit in 30 ms)
+function warmDrawTick(){const F=warmFar;if(!F.pre)return;const T=performance.now();
+  do{const e=F.pre.pop();if(e&&e[0].parent&&!vrOn()&&!edOn)try{const t0=performance.now();warmDraw(e[0]);const ms=performance.now()-t0;if(ms>100)pfMark('Far thing first drawn',t0,e[0].name||e[0].type)}catch(x){}}
+  while(F.pre.length&&!LOADP.done&&performance.now()-T<30);
   if(F.pre.length)return;const done=new Set(F.preB);F.pre=F.preB=null;F.busy=false;F.t=performance.now()+200;if(F.L)F.L=F.L.filter(x=>!done.has(x))}
 
 // the loading report: once a visit, 2 minutes after the cover lifted (the loading and the first two minutes of play), how the getting
