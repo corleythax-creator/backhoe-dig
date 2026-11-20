@@ -89,7 +89,9 @@ function loadFiles(){let dev=0,net=0,b=0;try{for(const e of performance.getEntri
 function loadPicsIn(){let al=0,at=0;for(const [l,t] of LOADP.mgr){al+=l;at+=t}if(LOADP.goal!==undefined)at=Math.min(at,LOADP.goal);
   return LOADP.goal!==undefined&&al>=at&&(typeof brBusy!=='function'||!brBusy())&&loadTownIn()}
 const loadFolkIn=()=>{if(typeof tfReady!=='function')return true;const [n,t]=tfReady();return n>=t};
-const loadTownIn=()=>typeof bf!=='undefined'?!!bf.ready:LOADP.js>=document.querySelectorAll('script[defer]').length;
+// (the whole town, bf.done, not just what is round your start: the rest came in a building at a time as you walked,
+// each drawn for the first time there and then; owner, Nov 19: a longer load, no stutter)
+const loadTownIn=()=>typeof bf!=='undefined'?!!bf.ready&&bf.done!==false:LOADP.js>=document.querySelectorAll('script[defer]').length;
 function loadSteps(js,jsN,al,at,done){const W=typeof warmAll!=='undefined'?warmAll:null,F=loadFiles(),now=performance.now(),S=PF_BOOT.steps,rows=[];
   const row=(id,name,ok,txt)=>{if(ok&&S[id]===undefined)S[id]=Math.round(now);rows.push([name,ok,txt])};
   row('code','Game code',js>=1,`${Math.min(LOADP.js,jsN)} of ${jsN}`);
