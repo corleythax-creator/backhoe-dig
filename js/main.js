@@ -318,7 +318,7 @@ function frame(now){
   const fv=mode==='boat'?btCur():mode==='heavy'?hvCur():mode==='bike'?bk:mode==='truck'?tr:mode==='mow'?mw:mode==='skid'?sk:mode==='walk'?wk:st;sun.position.set(fv.x,fv.y,fv.z).addScaledVector(LIGHT_DIR,SUN_D); sun.target.position.set(fv.x,fv.y,fv.z);
   {const o=groundOcc.value;o[0].set(st.x,st.z,st.yaw,0);o[2].set(tr.x,tr.z,tr.yaw,0)}
   timeU.value=now/1000;
-  shadowProxyTick();lawnLod();tuftLod();turfLod();rainCover();if(vr.fake)vrFakeHead();warmAllTick();warmLaterTick();warmDrawTick();warmFarTick();ltOtherTick();loadReportTick();repHudTick();shBenchTick();gpuWarmTick();if(!loadHold()){const wm=warmPre(),d0=performance.now(),di=drawInfo();postRender();warmPost(wm);if(performance.now()-d0>150)drawSlow(d0,di)}if(vrOn())vrAfter();
+  shadowProxyTick();lawnLod();tuftLod();turfLod();rainCover();if(vr.fake)vrFakeHead();warmAllTick();warmLaterTick();warmDrawTick();warmFarTick();ltOtherTick();loadReportTick();repHudTick();shBenchTick();gpuWarmTick();if(!loadHold()){const wm=warmPre(),d0=performance.now(),di=drawInfo();postRender();drawNew.on=false;warmPost(wm);if(performance.now()-d0>150)drawSlow(d0,di)}if(vrOn())vrAfter();
   if(bench.on)benchSample(dt);
   fpsFrames++;fpsTime+=dt;
   if(fpsTime>=0.5){
@@ -362,19 +362,26 @@ const texReady=()=>{applyTextures();warmN=Math.max(warmN,3);warmAll={t0:performa
 // times it; warmIdle says when nothing is left to do)
 let warmAll=null;
 // a drawn frame that took over 150 ms goes in the Profiler's timeline with what was new on the graphics card in it
-const drawInfo=()=>[renderer.info.programs.length,renderer.info.memory.geometries,renderer.info.memory.textures];
+// the shaders made while the frame is drawn, exactly (three.js adds each new one to renderer.info.programs): counting
+// the last ones made named the lamp set's, built in the background at the same moment (v440 report)
+const drawNew={on:false,L:[],slow:-1e9,hooked:false};
+const drawInfo=()=>{const P=renderer.info.programs;if(!drawNew.hooked){drawNew.hooked=true;const push=P.push;
+    P.push=function(...a){if(drawNew.on)drawNew.L.push(...a);return push.apply(this,a)}}
+  drawNew.L.length=0;drawNew.on=true;return [P.length,renderer.info.memory.geometries,renderer.info.memory.textures]};
 // (owner's v439 report: two freezes of 3.3 and 1.6 s in play, each "1 shader", and no saying which: now the slow frame
 // names the things whose shaders were new in it, and what was being built in the background then)
-function drawSlow(t0,a){const b=drawInfo(),n=b[0]-a[0];let who='';
-  try{if(n>0){const P=new Set(renderer.info.programs.slice(-n)),seen=new Set(),L=[];
-    scene.traverse(o=>{if(L.length>=6||!o.material)return;for(const m of [].concat(o.material)){if(!m||seen.has(m))continue;seen.add(m);
-      const pr=renderer.properties.get(m);if(pr&&P.has(pr.currentProgram)){let q=o,nm='';while(q&&!nm){nm=q.name;q=q.parent}
+function drawSlow(t0,a){drawNew.slow=performance.now();const P=new Set(drawNew.L),b=[renderer.info.programs.length,renderer.info.memory.geometries,renderer.info.memory.textures],n=P.size;let who='';
+  try{if(n>0){const seen=new Set(),L=[],hit=new Set();
+    scene.traverse(o=>{if(L.length>=8||!o.material)return;for(const m of [].concat(o.material)){if(!m||seen.has(m))continue;seen.add(m);
+      const pr=renderer.properties.get(m);let np=null;if(pr&&pr.programs)for(const x of pr.programs.values())if(P.has(x)){np=x;break}if(np){hit.add(np);let q=o,nm='';while(q&&!nm){nm=q.name;q=q.parent}
         const im=m.map&&m.map.image,tx=im&&(im.src||im.currentSrc||'').split('/').pop().slice(0,30),vc=o.geometry&&o.geometry.attributes.position?o.geometry.attributes.position.count:0,p=o.getWorldPosition(new THREE.Vector3());
         L.push(`${nm||o.type}/${m.name||m.type}${tx?' '+tx:''} ${vc}v @${Math.round(p.x)},${Math.round(p.z)}${o.isInstancedMesh?' inst':''}${o.isSkinnedMesh?' skin':''}${m.transparent?' see-through':''}`)}}});
+    // (the rest belong to no material in the scene: three.js's own, the shadows' depth or the effects passes)
+    for(const pr of P)if(!hit.has(pr))L.push('('+(pr.type||'')+(pr.name?' '+pr.name:'')+')');
     if(L.length)who=' · '+L.join(', ')}
   const bg=[];if(ltOther.busy)bg.push('lamp set');if(warmLater.busy)bg.push('island machine');if(warmAll&&warmAll.pend)bg.push('shader pass');if(gpuQ.length)bg.push('warming '+gpuQ.length);
   if(bg.length)who=' · building then: '+bg.join(', ')+who}catch(e){}
-  pfMark('Slow frame drawn',t0,`new on the card: ${n} shaders, ${b[1]-a[1]} meshes, ${b[2]-a[2]} pictures${ltSl.night?' · lamps lit':''}${who}`.slice(0,400))}
+  pfMark('Slow frame drawn',t0,`new on the card: ${n} shaders, ${b[1]-a[1]} meshes, ${b[2]-a[2]} pictures${ltSl.night?' · lamps lit':''}${who}`.slice(0,600))}
 // the places a player gets to (where the island tour test goes): the rain cover's top-down pass draws what is there
 // once, inside one call with nothing drawn on screen, so its depth shaders for what is only found there are built
 // before you arrive. Only behind the start card or while the tour test gets ready
@@ -433,6 +440,9 @@ const LT_SLICE=2,ltOther={busy:false,done:false,t:0,seen:new Set(),n:0,t0:0};
 const LT_SLICE_LOAD=250;
 function ltOtherTick(){const O=ltOther;if(O.busy||bench.on||vrOn()||!warmAll&&!LOADP.done)return;const now=performance.now();
   if(now<O.t||!warmFar.done||!LOADP.done&&loadHold())return;
+  // (in play only while nothing else is being built and no frame has been slow for 10 s: four of the freezes in the
+  // owner's v440 play were frames waiting while a slice of it was building)
+  if(LOADP.done&&(warmAll&&warmAll.pend||gpuQ.length||warmLater.busy||now-drawNew.slow<10000)){O.t=now+1000;return}
   const by=new Map();warmRoot().traverse(o=>{if(!o.material)return;for(const m of [].concat(o.material)){if(O.seen.has(m))continue;
     let l=by.get(m);if(!l)by.set(m,l=[]);l.push(o)}});
   if(!by.size){if(O.n){pfMark('Shader pass, other lamp set',O.t0,O.n+' materials, shaders to '+renderer.info.programs.length);O.n=0}O.done=true;O.t=now+5000;return}

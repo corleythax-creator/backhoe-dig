@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-20T21:16:00Z",
+ "updated": "2026-11-20T22:42:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -168,9 +168,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-20",
-   "dh": 1.5,
-   "act": 0.5,
-   "versions": 1
+   "dh": 2.5,
+   "act": 1,
+   "versions": 2
   }
  ],
  "extra": [
@@ -4140,6 +4140,15 @@ window.EFFORT = {
    "tris": 7280789,
    "chars": 2725155,
    "what": "Loading no longer draws while the second lamp set of shaders builds (the 8.5 s freeze); in play that set builds 2 at a time; the load report names the things in slow frames and what was building"
+  },
+  {
+   "v": 441,
+   "asked": "2026-11-20T16:15:00-06:00",
+   "live": "2026-11-20T16:42:31-06:00",
+   "dh": 1,
+   "tris": 7353112,
+   "chars": 2726344,
+   "what": "The load report names exactly which shaders each slow frame built; the second lamp set waits in play while anything else is building"
   }
  ]
 };
