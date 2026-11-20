@@ -363,7 +363,18 @@ const texReady=()=>{applyTextures();warmN=Math.max(warmN,3);warmAll={t0:performa
 let warmAll=null;
 // a drawn frame that took over 150 ms goes in the Profiler's timeline with what was new on the graphics card in it
 const drawInfo=()=>[renderer.info.programs.length,renderer.info.memory.geometries,renderer.info.memory.textures];
-function drawSlow(t0,a){const b=drawInfo();pfMark('Slow frame drawn',t0,`new on the card: ${b[0]-a[0]} shaders, ${b[1]-a[1]} meshes, ${b[2]-a[2]} pictures`)}
+// (owner's v439 report: two freezes of 3.3 and 1.6 s in play, each "1 shader", and no saying which: now the slow frame
+// names the things whose shaders were new in it, and what was being built in the background then)
+function drawSlow(t0,a){const b=drawInfo(),n=b[0]-a[0];let who='';
+  try{if(n>0){const P=new Set(renderer.info.programs.slice(-n)),seen=new Set(),L=[];
+    scene.traverse(o=>{if(L.length>=6||!o.material)return;for(const m of [].concat(o.material)){if(!m||seen.has(m))continue;seen.add(m);
+      const pr=renderer.properties.get(m);if(pr&&P.has(pr.currentProgram)){let q=o,nm='';while(q&&!nm){nm=q.name;q=q.parent}
+        const im=m.map&&m.map.image,tx=im&&(im.src||im.currentSrc||'').split('/').pop().slice(0,30),vc=o.geometry&&o.geometry.attributes.position?o.geometry.attributes.position.count:0,p=o.getWorldPosition(new THREE.Vector3());
+        L.push(`${nm||o.type}/${m.name||m.type}${tx?' '+tx:''} ${vc}v @${Math.round(p.x)},${Math.round(p.z)}${o.isInstancedMesh?' inst':''}${o.isSkinnedMesh?' skin':''}${m.transparent?' see-through':''}`)}}});
+    if(L.length)who=' · '+L.join(', ')}
+  const bg=[];if(ltOther.busy)bg.push('lamp set');if(warmLater.busy)bg.push('island machine');if(warmAll&&warmAll.pend)bg.push('shader pass');if(gpuQ.length)bg.push('warming '+gpuQ.length);
+  if(bg.length)who=' · building then: '+bg.join(', ')+who}catch(e){}
+  pfMark('Slow frame drawn',t0,`new on the card: ${n} shaders, ${b[1]-a[1]} meshes, ${b[2]-a[2]} pictures${ltSl.night?' · lamps lit':''}${who}`.slice(0,400))}
 // the places a player gets to (where the island tour test goes): the rain cover's top-down pass draws what is there
 // once, inside one call with nothing drawn on screen, so its depth shaders for what is only found there are built
 // before you arrive. Only behind the start card or while the tour test gets ready
@@ -416,7 +427,7 @@ function warmAllTick(){const W=warmAll;if(!W||bench.on||vrOn())return;const now=
 // the far world is built (warmFar, or 3 minutes in), LT_SLICE materials at a time, each slice waited out before the
 // next. Queued all at once (once per shader pass, over the whole scene: about 150 shaders) a frame that needed a new
 // shader of its own waited behind every one of them: freezes of 5, 6 and 19 s in the owner's Windows play (v433)
-const LT_SLICE=8,ltOther={busy:false,done:false,t:0,seen:new Set(),n:0,t0:0};
+const LT_SLICE=2,ltOther={busy:false,done:false,t:0,seen:new Set(),n:0,t0:0};
 // (owner, Nov 19: behind the loading cover, which waits for it, once the far world is built: built in play it held up
 // whatever else needed a shader then. There a slice is LT_SLICE_LOAD materials, in play LT_SLICE)
 const LT_SLICE_LOAD=250;
@@ -433,7 +444,9 @@ function ltOtherTick(){const O=ltOther;if(O.busy||bench.on||vrOn()||!warmAll&&!L
 // wait for every shader in view to finish there and then, one after another (on Windows that froze the page for 10 to 25
 // s at a time, the most of a minute's load), whereas left alone the browser builds them side by side. Each pass (and the
 // passes for materials that turn up later) is waited out the same way until the cover lifts
-function loadHold(){if(LOADP.done||bench.on||vrOn())return false;const W=warmAll;return !W||!W.mats||W.pend>0}
+// (and the lamps' other set: its pass behind the cover was left drawing, and a frame then waited for the whole slice, an
+// 8.5 s freeze in the owner's v439 loading)
+function loadHold(){if(LOADP.done||bench.on||vrOn())return false;const W=warmAll;return !W||!W.mats||W.pend>0||ltOther.busy}
 // the sun's shadow pass draws every caster with a depth material of three.js's own (WebGLShadowMap getDepthMaterial),
 // whose shaders were only built at the first real frame, one after another (about 15 of them: most of the 9 s freeze
 // at the end of loading on Windows). The same materials are made here, set as three.js would set them (picture, cut-out,
