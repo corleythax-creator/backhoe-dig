@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Friday, November 20, 2026
 
+- **v442** (5:15 PM) Anything whose shader isn't built yet is kept out of the picture until it is, instead of the whole game freezing while it builds
 - **v441** (4:42 PM) The load report names exactly which shaders each slow frame built; the second lamp set waits in play while anything else is building
 - **v440** (3:16 PM) Loading no longer draws while the second lamp set of shaders builds (the 8.5 s freeze); in play that set builds 2 at a time; the load report names the things in slow frames and what was building
 
