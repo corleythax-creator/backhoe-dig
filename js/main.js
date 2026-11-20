@@ -388,7 +388,7 @@ function warmTexQ(W){if(!W.q){W.q=[];W.up=new Set();W.q0=0}const inQ=new Set(W.q
   scene.traverse(o=>{for(const m of [].concat(o.material||[]))for(const k in m){const t=m[k];if(t&&t.isTexture&&!W.up.has(t)&&!inQ.has(t)&&ok(t.image)){inQ.add(t);W.q.push(t)}}});
   W.q0=Math.max(W.q0,W.up.size+W.q.length)}
 // how far the warming is, 0 to 1, for the loading cover (start.js): texture uploads, the places visited, the shaders
-function warmFrac(){const W=warmAll;if(!W)return LOADP.warm?1:0;const q=W.q0?1-W.q.length/W.q0:0,a=W.at?1-W.at.length/WARM_AT.length:0,c=W.pend===0&&W.still>=1?1:W.mats?.5:0;return (q+a+c)/3}
+function warmFrac(){const W=warmAll;if(!W)return LOADP.warm?1:0;const q=W.q0?1-W.q.length/W.q0:0,a=W.at?1-W.at.length/WARM_AT.length:0,c=W.pend===0&&W.still>=1?1:W.mats?.5:0,F=warmFar.done?1:warmFar.n0?1-(warmFar.L?warmFar.L.length:0)/warmFar.n0:0;return (q+a+c+F)/4}
 function warmAllTick(){const W=warmAll;if(!W||bench.on||vrOn())return;const now=performance.now();W.f=(W.f||0)+1;
   if(!W.at){W.at=WARM_AT.slice();rcWarm()}if(W.at.length&&W.f%8===0&&W.mats&&W.pend===0&&warmQuiet())warmAt(...W.at.pop());
   if(!W.q)warmTexQ(W);
@@ -494,16 +494,15 @@ function warmFarList(){const F=warmFar;if(F.L||F.done)return;F.L=[];const from=t
   for(const o of scene.children){if(skip.has(o)||o.isLight||o.isCamera)continue;b.setFromObject(o);if(b.isEmpty())continue;b.getBoundingSphere(s);
     if(s.radius>400||Math.hypot(s.center.x-from.x,s.center.z-from.z)-s.radius<WARM_NEAR)continue;
     F.L.push([o,s.center.x-o.position.x,s.center.z-o.position.z,s.radius])}
-  pfMark('Far world held back',performance.now(),F.L.length+' things')}
+  F.n0=F.L.length;pfMark('Far world held back',performance.now(),F.L.length+' things')}
 const warmFarD=(e,c)=>Math.hypot(e[0].position.x+e[1]-c.x,e[0].position.z+e[2]-c.z)-e[3];
 function warmFarHide(cam){const F=warmFar;if(!F.L||!F.L.length||cam!==camera||edOn||renderer.xr.isPresenting)return;const c=cam.position;
   for(const e of F.L)if(e[0].visible&&warmFarD(e,c)>WARM_SHOW){e[0].visible=false;gfxHid.push(e[0])}}
-function warmFarTick(){const F=warmFar;if(F.done||!F.L||F.busy&&performance.now()-F.b0<20000||!LOADP.done||performance.now()<F.t)return;
-  // (not while the start card is still up and getting your spot ready, startReveal: a batch built then held up the shaders
-  // the first frames at your spot needed, the freeze just after the cover lifted; 3 s after it goes)
-  if(!help.hidden){F.t=performance.now()+3000;return}
+// (owner, Nov 19: the loading cover waits for it, start.js; its batches start once the cover's own shader passes are done,
+// loadHold. Built while you walked round town, every batch coming into view froze the game a second or two on Windows)
+function warmFarTick(){const F=warmFar;if(F.done||!F.L||F.pre||F.busy&&performance.now()-F.b0<20000||!LOADP.done&&loadHold()||performance.now()<F.t)return;
   // (a batch whose building never reports back is let go after 20 s, and everything is shown 3 minutes after you are in)
-  if(performance.now()-PF_BOOT.done>180000){pfMark('Far world shown (time up)',performance.now(),F.L.length+' things');F.done=true;F.L=null;return}
+  if(LOADP.done&&performance.now()-PF_BOOT.done>180000){pfMark('Far world shown (time up)',performance.now(),F.L.length+' things');F.done=true;F.L=null;return}
   F.L=F.L.filter(e=>e[0].parent);if(!F.L.length){F.done=true;F.L=null;pfMark('Far world all built',performance.now());return}
   const c=camera.position;F.L.sort((a,b)=>warmFarD(a,c)-warmFarD(b,c));const B=F.L.slice(0,WARM_BATCH);F.busy=true;F.b0=performance.now();
   const root={isObject3D:true,name:'far world, '+B.length+' things',traverseVisible(){},traverse(cb){for(const e of B)e[0].traverse(cb)}};
@@ -521,16 +520,18 @@ function warmDraw(o){const fc=[],ls=[];o.traverse(m=>{m.layers.enable(WARM_LAYER
   try{renderer.shadowMap.autoUpdate=false;if(postOn()&&postRT)renderer.setRenderTarget(postRT);renderer.render(scene,warmDrawCam)}
   finally{renderer.setRenderTarget(t);renderer.shadowMap.autoUpdate=au;renderer.shadowMap.needsUpdate=nu;
     o.traverse(m=>m.layers.disable(WARM_LAYER));for(const m of fc)m.frustumCulled=true;for(const l of ls)l.layers.disable(WARM_LAYER)}}
-function warmDrawTick(){const F=warmFar;if(!F.pre)return;const e=F.pre.pop();
-  if(e&&e[0].parent&&!vrOn()&&!edOn)try{const t0=performance.now();warmDraw(e[0]);const ms=performance.now()-t0;if(ms>100)pfMark('Far thing first drawn',t0,e[0].name||e[0].type)}catch(x){}
+// (one a frame in play; behind the loading cover as many as fit in 30 ms)
+function warmDrawTick(){const F=warmFar;if(!F.pre)return;const T=performance.now();
+  do{const e=F.pre.pop();if(e&&e[0].parent&&!vrOn()&&!edOn)try{const t0=performance.now();warmDraw(e[0]);const ms=performance.now()-t0;if(ms>100)pfMark('Far thing first drawn',t0,e[0].name||e[0].type)}catch(x){}}
+  while(F.pre.length&&!LOADP.done&&performance.now()-T<30);
   if(F.pre.length)return;const done=new Set(F.preB);F.pre=F.preB=null;F.busy=false;F.t=performance.now()+200;if(F.L)F.L=F.L.filter(x=>!done.has(x))}
 
-// the loading report: once a visit, when the far world is built (or 2 minutes after the cover lifted), how the getting
+// the loading report: once a visit, 2 minutes after the cover lifted (the loading and the first two minutes of play), how the getting
 // ready went on this device goes to the shared board (island_tour_put, kind 'load'; the Vercel site only, as sync is):
 // the graphics card, the steps' times, the long stalls, the shaders built and the slowest parts of the timeline. Only
 // timings, nothing of the save. It shows how the loading really goes on the owner's PC, which the test machine can't
 let loadRep=false;
-function loadReportTick(){if(loadRep||!LOADP.done||!(warmFar.done||performance.now()-PF_BOOT.done>120000))return;loadRep=true;
+function loadReportTick(){if(loadRep||!LOADP.done||performance.now()-PF_BOOT.done<120000)return;loadRep=true;
   if(typeof sync==='undefined'||!sync.on||typeof syncRpc!=='function')return;
   try{const E=window.EFFORT,v=E&&E.versions?+E.versions[E.versions.length-1].v||0:0,gl=renderer.getContext();
     const d={cover:Math.round(PF_BOOT.done),steps:PF_BOOT.steps,programs:renderer.info.programs.length,
