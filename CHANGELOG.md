@@ -2,6 +2,10 @@
 
 Every version of Corley's Island, newest first, grouped by the day it went live (Central time). Made from `data/effort.js` by `tools/changelog.py`; don't edit it by hand. [Play any old version](https://corleys-island.vercel.app/versions/) · [Build log with charts](https://corleys-island.vercel.app/build.html)
 
+## Thursday, November 19, 2026
+
+- **v434** (7:50 PM) The lamps' second shader set builds a few materials at a time once the far world is in, instead of 150 shaders at once, and the far world comes in 10 things a batch (the 2-19 s freezes after loading on Windows)
+
 ## Tuesday, November 17, 2026
 
 - **v433** (10:33 PM) Every shader works the lamps out in a loop instead of written out once a lamp: half the build time on the PC (176 ms against 339 a shader), so evening loading is quicker

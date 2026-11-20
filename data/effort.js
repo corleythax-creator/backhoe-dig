@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-18T04:33:00Z",
+ "updated": "2026-11-20T01:50:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -159,6 +159,12 @@ window.EFFORT = {
    "dh": 18,
    "act": 3.5,
    "versions": 8
+  },
+  {
+   "d": "2026-11-19",
+   "dh": 2,
+   "act": 0.5,
+   "versions": 1
   }
  ],
  "extra": [
@@ -4065,6 +4071,15 @@ window.EFFORT = {
    "tris": 7022491,
    "chars": 2717395,
    "what": "Every shader works the lamps out in a loop instead of written out once a lamp: half the build time on the PC (176 ms against 339 a shader), so evening loading is quicker"
+  },
+  {
+   "v": 434,
+   "asked": "2026-11-19T18:40:00-06:00",
+   "live": "2026-11-19T19:50:25-06:00",
+   "dh": 2,
+   "tris": 7025647,
+   "chars": 2718666,
+   "what": "The lamps' second shader set builds a few materials at a time once the far world is in, instead of 150 shaders at once, and the far world comes in 10 things a batch (the 2-19 s freezes after loading on Windows)"
   }
  ]
 };
