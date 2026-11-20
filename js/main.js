@@ -518,7 +518,9 @@ function loadReportTick(){if(loadRep||!LOADP.done||!(warmFar.done||performance.n
   try{const E=window.EFFORT,v=E&&E.versions?+E.versions[E.versions.length-1].v||0:0,gl=renderer.getContext();
     const d={cover:Math.round(PF_BOOT.done),steps:PF_BOOT.steps,programs:renderer.info.programs.length,
       parallel:!!gl.getExtension('KHR_parallel_shader_compile'),long:PF_BOOT.long.filter(l=>l[1]>=200).slice(0,80).map(l=>[Math.round(l[0]),Math.round(l[1])]),
-      tl:PF_BOOT.tl.filter(r=>r[2]>=200||/Far world|Shader pass/.test(r[0])).slice(0,120)};
+      tl:PF_BOOT.tl.filter(r=>r[2]>=200||/Far world|Shader pass/.test(r[0])).slice(0,120),
+      // (what the browser says held each freeze over 0.3 s: prof.js's long animation frames, script and function)
+      loaf:typeof PF==='object'?PF.loaf.filter(l=>l.ms>=300).slice(0,60).map(l=>[Math.round(l.t),Math.round(l.ms),l.sc.join(' · ').slice(0,240)]):[]};
     const dev=`${typeof gpuName==='function'?gpuName():''} · ${renderer.domElement.width}×${renderer.domElement.height} px · Graphics ${typeof gfxName==='function'?gfxName():''} · ${navigator.platform||''}`;
     syncRpc('island_tour_put',{p_v:v,p_device:dev,p_gfx:typeof gfxKey!=='undefined'?gfxKey:'',p_kind:'load',p_fps:null,p_data:d},true).catch(()=>{})}catch(e){}}
 // the shader timing test (open the site with ?shaderbench): while loading, a few sample shaders are built here one at a
