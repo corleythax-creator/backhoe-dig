@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-20T03:21:00Z",
+ "updated": "2026-11-20T03:46:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -162,9 +162,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-19",
-   "dh": 6,
-   "act": 2,
-   "versions": 4
+   "dh": 7,
+   "act": 2.5,
+   "versions": 5
   }
  ],
  "extra": [
@@ -4107,6 +4107,15 @@ window.EFFORT = {
    "tris": 7397785,
    "chars": 2721601,
    "what": "The loading cover waits for every town building, not just those round your start, and they are drawn once off the screen first (they had been arriving a building at a time as you walked round town); the loading report sends a minute into play"
+  },
+  {
+   "v": 438,
+   "asked": "2026-11-19T21:05:00-06:00",
+   "live": "2026-11-19T21:46:21-06:00",
+   "dh": 1,
+   "tris": 7434819,
+   "chars": 2722216,
+   "what": "Townsfolk and cars are readied with their shadow shaders, and the lamps' second shader set is built behind the loading cover (the 4-5 s freezes as people and cars came into town)"
   }
  ]
 };

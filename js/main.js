@@ -416,15 +416,18 @@ function warmAllTick(){const W=warmAll;if(!W||bench.on||vrOn())return;const now=
 // the far world is built (warmFar, or 3 minutes in), LT_SLICE materials at a time, each slice waited out before the
 // next. Queued all at once (once per shader pass, over the whole scene: about 150 shaders) a frame that needed a new
 // shader of its own waited behind every one of them: freezes of 5, 6 and 19 s in the owner's Windows play (v433)
-const LT_SLICE=8,ltOther={busy:false,t:0,seen:new Set(),n:0,t0:0};
-function ltOtherTick(){const O=ltOther;if(O.busy||!LOADP.done||!help.hidden||bench.on||vrOn())return;const now=performance.now();
-  if(now<O.t||now-PF_BOOT.done<10000||!warmFar.done&&now-PF_BOOT.done<180000)return;
+const LT_SLICE=8,ltOther={busy:false,done:false,t:0,seen:new Set(),n:0,t0:0};
+// (owner, Nov 19: behind the loading cover, which waits for it, once the far world is built: built in play it held up
+// whatever else needed a shader then. There a slice is LT_SLICE_LOAD materials, in play LT_SLICE)
+const LT_SLICE_LOAD=250;
+function ltOtherTick(){const O=ltOther;if(O.busy||bench.on||vrOn()||!warmAll&&!LOADP.done)return;const now=performance.now();
+  if(now<O.t||!warmFar.done||!LOADP.done&&loadHold())return;
   const by=new Map();warmRoot().traverse(o=>{if(!o.material)return;for(const m of [].concat(o.material)){if(O.seen.has(m))continue;
     let l=by.get(m);if(!l)by.set(m,l=[]);l.push(o)}});
-  if(!by.size){if(O.n){pfMark('Shader pass, other lamp set',O.t0,O.n+' materials, shaders to '+renderer.info.programs.length);O.n=0}O.t=now+5000;return}
-  if(!O.n)O.t0=now;const objs=[];for(const m of [...by.keys()].slice(0,LT_SLICE)){O.seen.add(m);O.n++;for(const o of by.get(m))objs.push(o)}
+  if(!by.size){if(O.n){pfMark('Shader pass, other lamp set',O.t0,O.n+' materials, shaders to '+renderer.info.programs.length);O.n=0}O.done=true;O.t=now+5000;return}
+  if(!O.n)O.t0=now;const objs=[];for(const m of [...by.keys()].slice(0,LOADP.done?LT_SLICE:LT_SLICE_LOAD)){O.seen.add(m);O.n++;for(const o of by.get(m))objs.push(o)}
   const root={isObject3D:true,traverseVisible(){},traverse(cb){for(const o of objs)cb(o)}};
-  O.busy=true;const end=()=>{O.busy=false;O.t=performance.now()+150};
+  O.busy=true;const end=()=>{O.busy=false;O.t=performance.now()+(LOADP.done?150:0)};
   try{const q=warmCompile(root,scene,true);if(q&&q.then)q.then(end,end);else end()}catch(e){end()}}
 // behind the loading cover nothing is drawn while shaders are being built in the background: a frame drawn then has to
 // wait for every shader in view to finish there and then, one after another (on Windows that froze the page for 10 to 25
@@ -592,8 +595,10 @@ const gpuQ=[];
 function gpuUp(tx){return new Promise(r=>gpuQ.push({tx:[...tx],done:r}))}
 function gpuWarm(o){const tx=new Set(),ok=im=>im&&(im.width||im.data||Array.isArray(im));
   o.traverse(m=>{for(const M of [].concat(m.material||[]))for(const k in M){const t=M[k];if(t&&t.isTexture&&ok(t.image))tx.add(t)}});
-  const pm0=performance.now(),pg0=renderer.info.programs.length;let p=null;try{p=warmCompile(o,scene)}catch(e){}
-  return Promise.all([p&&p.then?p.catch(()=>{}):null,gpuUp(tx)]).then(r=>{pfMark('Warmed '+(o.name||o.type||'scene'),pm0,`${tx.size} pictures, shaders ${pg0} to ${renderer.info.programs.length}`);return r})}
+  // (and its shadow shaders, warmShadows: left out, a person or car coming into town had them built in the frame it
+  // first cast a shadow, waiting behind every shader still being built: 4 to 5 s freezes on Windows, v436)
+  const pm0=performance.now(),pg0=renderer.info.programs.length;let p=null,q=null;try{p=warmCompile(o,scene)}catch(e){}try{q=warmShadows(o)}catch(e){}
+  return Promise.all([p&&p.then?p.catch(()=>{}):null,q&&q.then?q.catch(()=>{}):null,gpuUp(tx)]).then(r=>{pfMark('Warmed '+(o.name||o.type||'scene'),pm0,`${tx.size} pictures, shaders ${pg0} to ${renderer.info.programs.length}`);return r})}
 // (a few milliseconds' worth a frame, at least one)
 function gpuWarmTick(){const t0=performance.now();while(gpuQ.length){const j=gpuQ[0],t=j.tx.pop();if(t)try{renderer.initTexture(t)}catch(e){}
   if(!j.tx.length){gpuQ.shift();j.done()}if(performance.now()-t0>(help.hidden?3:14))break}}// more a frame behind the start card
