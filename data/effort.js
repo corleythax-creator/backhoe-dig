@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-20T01:50:00Z",
+ "updated": "2026-11-20T02:24:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -162,9 +162,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-19",
-   "dh": 2,
-   "act": 0.5,
-   "versions": 1
+   "dh": 3.5,
+   "act": 1,
+   "versions": 2
   }
  ],
  "extra": [
@@ -4080,6 +4080,15 @@ window.EFFORT = {
    "tris": 7025647,
    "chars": 2718666,
    "what": "The lamps' second shader set builds a few materials at a time once the far world is in, instead of 150 shaders at once, and the far world comes in 10 things a batch (the 2-19 s freezes after loading on Windows)"
+  },
+  {
+   "v": 435,
+   "asked": "2026-11-19T19:33:00-06:00",
+   "live": "2026-11-19T20:24:09-06:00",
+   "dh": 1.5,
+   "tris": 7033863,
+   "chars": 2720887,
+   "what": "Each newly loaded far thing is drawn once off the screen, one a frame, before it appears (the 1-2 s freezes walking round town on Windows); the loading report says what held each freeze"
   }
  ]
 };

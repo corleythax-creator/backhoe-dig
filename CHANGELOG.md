@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Thursday, November 19, 2026
 
+- **v435** (8:24 PM) Each newly loaded far thing is drawn once off the screen, one a frame, before it appears (the 1-2 s freezes walking round town on Windows); the loading report says what held each freeze
 - **v434** (7:50 PM) The lamps' second shader set builds a few materials at a time once the far world is in, instead of 150 shaders at once, and the far world comes in 10 things a batch (the 2-19 s freezes after loading on Windows)
 
 ## Tuesday, November 17, 2026
