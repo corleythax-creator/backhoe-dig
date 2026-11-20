@@ -318,7 +318,7 @@ function frame(now){
   const fv=mode==='boat'?btCur():mode==='heavy'?hvCur():mode==='bike'?bk:mode==='truck'?tr:mode==='mow'?mw:mode==='skid'?sk:mode==='walk'?wk:st;sun.position.set(fv.x,fv.y,fv.z).addScaledVector(LIGHT_DIR,SUN_D); sun.target.position.set(fv.x,fv.y,fv.z);
   {const o=groundOcc.value;o[0].set(st.x,st.z,st.yaw,0);o[2].set(tr.x,tr.z,tr.yaw,0)}
   timeU.value=now/1000;
-  shadowProxyTick();lawnLod();tuftLod();turfLod();rainCover();if(vr.fake)vrFakeHead();warmAllTick();warmLaterTick();warmFarTick();loadReportTick();shBenchTick();gpuWarmTick();if(!loadHold()){const wm=warmPre(),d0=performance.now(),di=drawInfo();postRender();warmPost(wm);if(performance.now()-d0>150)drawSlow(d0,di)}if(vrOn())vrAfter();
+  shadowProxyTick();lawnLod();tuftLod();turfLod();rainCover();if(vr.fake)vrFakeHead();warmAllTick();warmLaterTick();warmFarTick();ltOtherTick();loadReportTick();shBenchTick();gpuWarmTick();if(!loadHold()){const wm=warmPre(),d0=performance.now(),di=drawInfo();postRender();warmPost(wm);if(performance.now()-d0>150)drawSlow(d0,di)}if(vrOn())vrAfter();
   if(bench.on)benchSample(dt);
   fpsFrames++;fpsTime+=dt;
   if(fpsTime>=0.5){
@@ -407,14 +407,25 @@ function warmAllTick(){const W=warmAll;if(!W||bench.on||vrOn())return;const now=
     try{warmVm()}catch(e){}try{if(!W.postW){W.postW=1;postWarm()}}catch(e){}
     const c1=()=>{W.pend--;if(!W.c1)W.c1=performance.now();pfMark('Shader pass',pm0,pmN())};
     if(!LOADP.done){W.pend++;const s1=()=>{W.pend--;pfMark('Shadow shaders',pm0)};try{const q=warmShadows(warmRoot());if(q&&q.then)q.then(s1,s1);else W.pend--}catch(e){W.pend--}}
-    // (and the lamps' other set, gfx.js ltSl, once you have been in 10 s: built during the loading it held up the shaders
-    // the loading needed, on Windows a third of a second each with the lamps in; nothing waits for it)
-    const c2=()=>{c1();const go=()=>{if(!LOADP.done||!help.hidden||performance.now()-PF_BOOT.done<10000){setTimeout(go,2000);return}
-      try{const pm1=performance.now(),q=warmCompile(warmRoot(),scene,true);if(q&&q.then)q.then(()=>pfMark('Shader pass, other lamp set',pm1,pmN()))}catch(e){}};go()};
-    try{const p=warmCompile(warmRoot(),scene);if(p&&p.then)p.then(c2,c2);else c2()}catch(e){c1()}
+    // (the lamps' other set is built later, a few materials at a time: ltOtherTick)
+    try{const p=warmCompile(warmRoot(),scene);if(p&&p.then)p.then(c1,c1);else c1()}catch(e){c1()}
     pfMark('Shader pass set-up',pm0,pmN())}
   else W.still++;
   if(now-W.t0>180000&&W.pend===0&&(!W.q.length||help.hidden)&&(!W.at.length||!warmQuiet()))warmAll=null}
+// the lamps' other set (gfx.js ltSl: lamps lit, or dark by day), so dusk builds nothing: once you have been in 10 s and
+// the far world is built (warmFar, or 3 minutes in), LT_SLICE materials at a time, each slice waited out before the
+// next. Queued all at once (once per shader pass, over the whole scene: about 150 shaders) a frame that needed a new
+// shader of its own waited behind every one of them: freezes of 5, 6 and 19 s in the owner's Windows play (v433)
+const LT_SLICE=8,ltOther={busy:false,t:0,seen:new Set(),n:0,t0:0};
+function ltOtherTick(){const O=ltOther;if(O.busy||!LOADP.done||!help.hidden||bench.on||vrOn())return;const now=performance.now();
+  if(now<O.t||now-PF_BOOT.done<10000||!warmFar.done&&now-PF_BOOT.done<180000)return;
+  const by=new Map();warmRoot().traverse(o=>{if(!o.material)return;for(const m of [].concat(o.material)){if(O.seen.has(m))continue;
+    let l=by.get(m);if(!l)by.set(m,l=[]);l.push(o)}});
+  if(!by.size){if(O.n){pfMark('Shader pass, other lamp set',O.t0,O.n+' materials, shaders to '+renderer.info.programs.length);O.n=0}O.t=now+5000;return}
+  if(!O.n)O.t0=now;const objs=[];for(const m of [...by.keys()].slice(0,LT_SLICE)){O.seen.add(m);O.n++;for(const o of by.get(m))objs.push(o)}
+  const root={isObject3D:true,traverseVisible(){},traverse(cb){for(const o of objs)cb(o)}};
+  O.busy=true;const end=()=>{O.busy=false;O.t=performance.now()+150};
+  try{const q=warmCompile(root,scene,true);if(q&&q.then)q.then(end,end);else end()}catch(e){end()}}
 // behind the loading cover nothing is drawn while shaders are being built in the background: a frame drawn then has to
 // wait for every shader in view to finish there and then, one after another (on Windows that froze the page for 10 to 25
 // s at a time, the most of a minute's load), whereas left alone the browser builds them side by side. Each pass (and the
