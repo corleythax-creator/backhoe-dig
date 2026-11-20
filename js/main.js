@@ -318,7 +318,7 @@ function frame(now){
   const fv=mode==='boat'?btCur():mode==='heavy'?hvCur():mode==='bike'?bk:mode==='truck'?tr:mode==='mow'?mw:mode==='skid'?sk:mode==='walk'?wk:st;sun.position.set(fv.x,fv.y,fv.z).addScaledVector(LIGHT_DIR,SUN_D); sun.target.position.set(fv.x,fv.y,fv.z);
   {const o=groundOcc.value;o[0].set(st.x,st.z,st.yaw,0);o[2].set(tr.x,tr.z,tr.yaw,0)}
   timeU.value=now/1000;
-  shadowProxyTick();lawnLod();tuftLod();turfLod();rainCover();if(vr.fake)vrFakeHead();warmAllTick();warmLaterTick();warmFarTick();ltOtherTick();loadReportTick();shBenchTick();gpuWarmTick();if(!loadHold()){const wm=warmPre(),d0=performance.now(),di=drawInfo();postRender();warmPost(wm);if(performance.now()-d0>150)drawSlow(d0,di)}if(vrOn())vrAfter();
+  shadowProxyTick();lawnLod();tuftLod();turfLod();rainCover();if(vr.fake)vrFakeHead();warmAllTick();warmLaterTick();warmDrawTick();warmFarTick();ltOtherTick();loadReportTick();shBenchTick();gpuWarmTick();if(!loadHold()){const wm=warmPre(),d0=performance.now(),di=drawInfo();postRender();warmPost(wm);if(performance.now()-d0>150)drawSlow(d0,di)}if(vrOn())vrAfter();
   if(bench.on)benchSample(dt);
   fpsFrames++;fpsTime+=dt;
   if(fpsTime>=0.5){
@@ -507,7 +507,24 @@ function warmFarTick(){const F=warmFar;if(F.done||!F.L||F.busy&&performance.now(
   F.L=F.L.filter(e=>e[0].parent);if(!F.L.length){F.done=true;F.L=null;pfMark('Far world all built',performance.now());return}
   const c=camera.position;F.L.sort((a,b)=>warmFarD(a,c)-warmFarD(b,c));const B=F.L.slice(0,WARM_BATCH);F.busy=true;F.b0=performance.now();
   const root={isObject3D:true,name:'far world, '+B.length+' things',traverseVisible(){},traverse(cb){for(const e of B)e[0].traverse(cb)}};
-  const end=()=>{F.busy=false;F.t=performance.now()+200;if(!F.L)return;const done=new Set(B);F.L=F.L.filter(e=>!done.has(e))};gpuWarm(root).then(end,end)}
+  // (once built, each thing of the batch is drawn once off the screen, one a frame, before the batch is shown: warmDrawTick)
+  const end=()=>{if(!F.L){F.busy=false;return}F.pre=B.slice();F.preB=B};gpuWarm(root).then(end,end)}
+// a thing drawn for the first time on Windows (ANGLE over Direct3D 11) still has its graphics-card set-up done there and
+// then, its shaders built and pictures sent already or not: the 1 to 2 s freezes as a far batch came into view while
+// walking round town (v434, the owner's play: 0 new shaders, meshes or pictures in those frames). Each thing of a built
+// far batch is drawn once, alone, into the picture about to be drawn over (layer WARM_LAYER, with every light, nothing
+// culled, the shadow map left as it is), one a frame, so that set-up comes a thing at a time; then the batch is shown
+const WARM_LAYER=30,warmDrawCam=new THREE.PerspectiveCamera();
+function warmDraw(o){const fc=[],ls=[];o.traverse(m=>{m.layers.enable(WARM_LAYER);if(m.frustumCulled){fc.push(m);m.frustumCulled=false}});
+  scene.traverse(l=>{if(l.isLight&&!l.layers.isEnabled(WARM_LAYER)){l.layers.enable(WARM_LAYER);ls.push(l)}});
+  warmDrawCam.copy(camera);warmDrawCam.layers.set(WARM_LAYER);const t=renderer.getRenderTarget(),au=renderer.shadowMap.autoUpdate,nu=renderer.shadowMap.needsUpdate;
+  try{renderer.shadowMap.autoUpdate=false;if(postOn()&&postRT)renderer.setRenderTarget(postRT);renderer.render(scene,warmDrawCam)}
+  finally{renderer.setRenderTarget(t);renderer.shadowMap.autoUpdate=au;renderer.shadowMap.needsUpdate=nu;
+    o.traverse(m=>m.layers.disable(WARM_LAYER));for(const m of fc)m.frustumCulled=true;for(const l of ls)l.layers.disable(WARM_LAYER)}}
+function warmDrawTick(){const F=warmFar;if(!F.pre)return;const e=F.pre.pop();
+  if(e&&e[0].parent&&!vrOn()&&!edOn)try{const t0=performance.now();warmDraw(e[0]);const ms=performance.now()-t0;if(ms>100)pfMark('Far thing first drawn',t0,e[0].name||e[0].type)}catch(x){}
+  if(F.pre.length)return;const done=new Set(F.preB);F.pre=F.preB=null;F.busy=false;F.t=performance.now()+200;if(F.L)F.L=F.L.filter(x=>!done.has(x))}
+
 // the loading report: once a visit, when the far world is built (or 2 minutes after the cover lifted), how the getting
 // ready went on this device goes to the shared board (island_tour_put, kind 'load'; the Vercel site only, as sync is):
 // the graphics card, the steps' times, the long stalls, the shaders built and the slowest parts of the timeline. Only
@@ -518,7 +535,9 @@ function loadReportTick(){if(loadRep||!LOADP.done||!(warmFar.done||performance.n
   try{const E=window.EFFORT,v=E&&E.versions?+E.versions[E.versions.length-1].v||0:0,gl=renderer.getContext();
     const d={cover:Math.round(PF_BOOT.done),steps:PF_BOOT.steps,programs:renderer.info.programs.length,
       parallel:!!gl.getExtension('KHR_parallel_shader_compile'),long:PF_BOOT.long.filter(l=>l[1]>=200).slice(0,80).map(l=>[Math.round(l[0]),Math.round(l[1])]),
-      tl:PF_BOOT.tl.filter(r=>r[2]>=200||/Far world|Shader pass/.test(r[0])).slice(0,120)};
+      tl:PF_BOOT.tl.filter(r=>r[2]>=200||/Far world|Shader pass/.test(r[0])).slice(0,120),
+      // (what the browser says held each freeze over 0.3 s: prof.js's long animation frames, script and function)
+      loaf:typeof PF==='object'?PF.loaf.filter(l=>l.ms>=300).slice(0,60).map(l=>[Math.round(l.t),Math.round(l.ms),l.sc.join(' · ').slice(0,240)]):[]};
     const dev=`${typeof gpuName==='function'?gpuName():''} · ${renderer.domElement.width}×${renderer.domElement.height} px · Graphics ${typeof gfxName==='function'?gfxName():''} · ${navigator.platform||''}`;
     syncRpc('island_tour_put',{p_v:v,p_device:dev,p_gfx:typeof gfxKey!=='undefined'?gfxKey:'',p_kind:'load',p_fps:null,p_data:d},true).catch(()=>{})}catch(e){}}
 // the shader timing test (open the site with ?shaderbench): while loading, a few sample shaders are built here one at a
