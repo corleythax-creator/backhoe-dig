@@ -87,24 +87,48 @@ function btName(g,[t,col,script]){const cv=document.createElement('canvas');cv.w
 // boats: where each is, its speed (m/s along the bow), how it sits (y, pitch, roll) and its model
 const boats=BT_SPOTS.map((s,i)=>{const d=BT_DOCKS[i],t=d.len-(s.at||3.4),u=(s.side||1)*(d.hw+BT_B/2+0.12);
   const home={x:d.x0+d.ux*t-d.uz*u,z:d.z0+d.uz*t+d.ux*u,yaw:Math.atan2(d.ux,d.uz)};
-  return {n:s.n,home,x:home.x,z:home.z,yaw:home.yaw,v:0,y:WATER,pitch:0,roll:0,g:btName(btModel(s.hull),s.nm)}});
+  return {n:s.n,home,x:home.x,z:home.z,yaw:home.yaw,v:0,y:WATER,pitch:0,roll:0,g:btName(btModel(s.hull),s.nm),L:BT_L,B:BT_B,draft:BT_DRAFT,C:BT_C,R:BT_R,seat:[0,0,-0.47],eye:[0,1.62,-0.47]}});
+// ---------- the beach's craft, tied up along the open (west) side of the town marina's pier ----------
+// The Beach Simulator's jet ski, wakeboard boat and kayak (its fourth is this game's runabout): the Vehicle Forge's
+// models (forge-studio vehicle/library, loaded live as the beach loads them, bow +z, bottom at y 0), fetched once the
+// camera is within MDL_NEAR and not on Low graphics; a plain hull stands in till then. Each kind: the file, what to call
+// it, length and beam, draft (waterline above the model's bottom), the circles along the hull and their radius, where
+// the driver sits (x, y above the bottom, z; astride a saddle, legs out in a kayak, else on a seat) and how he sits,
+// top speed, turning and pick-up as multiples of the runabout's (TU.btSpeed, TU.btTurn), the placeholder's colour; no
+// engine in a kayak. t: metres out along the pier from the bank
+const BT_KINDS={
+  wakeboat:{file:'yamaha_212x',n:'wakeboard boat',L:7.07,B:2.6,draft:0.42,C:[-2.5,-1.25,0,1.25,2.5],R:1.15,seat:[-0.8,0.8,0.05],sp:1.25,tk:0.9,ac:1.1,col:0x1f2a44,t:39},
+  jetski:{file:'seadoo_gti',n:'jet ski',L:3.33,B:1.26,draft:0.28,C:[-1.0,0,1.0],R:0.62,seat:[0,0.76,-0.3],sit:'astride',sp:1.5,tk:1.9,ac:2.2,col:0xd8dde0,t:27},
+  kayak:{file:'kayak',n:'kayak',L:3.52,B:0.71,draft:0.1,C:[-1.2,0,1.2],R:0.42,seat:[0,0.09,-0.1],sit:'low',sp:0.17,tk:1.3,ac:3,quiet:1,col:0xe8762c,t:17}};
+for(const k in BT_KINDS){const K=BT_KINDS[k],d=BT_DOCKS[4],u=-(d.hw+K.B/2+0.2),home={x:d.x0+d.ux*K.t-d.uz*u,z:d.z0+d.uz*K.t+d.ux*u,yaw:Math.atan2(d.ux,d.uz)};
+  const g=new THREE.Group(),lo=new THREE.Mesh(new THREE.BoxGeometry(K.B*0.8,0.5,K.L*0.92),new THREE.MeshStandardMaterial({color:K.col,roughness:0.4}));lo.position.y=0.25-K.draft;lo.castShadow=true;g.add(lo);scene.add(g);
+  const eye=K.sit==='low'?0.72:K.sit==='astride'?0.74:0.78;
+  boats.push({n:'Marina',k,K,home,x:home.x,z:home.z,yaw:home.yaw,v:0,y:WATER,pitch:0,roll:0,g,lo,L:K.L,B:K.B,draft:K.draft,C:K.C,R:K.R,quiet:K.quiet,
+    seat:[K.seat[0],K.seat[1]-K.draft-(K.sit==='low'?0.12:K.sit==='astride'?0.62:0.46),K.seat[2]],eye:[K.seat[0],K.seat[1]-K.draft+eye,K.seat[2]]})}
+// their models: asked for once near, the stand-in hull put away as each arrives (its shaders built first, gpuWarm)
+function btKindTick(){if(typeof LOADP==='undefined'||!LOADP.done||gfxKey==='low')return;
+  for(const b of boats){if(!b.K||b.asked||Math.hypot(b.x-camera.position.x,b.z-camera.position.z)>MDL_NEAR)continue;b.asked=1;
+    mdlLoaderReady(()=>new THREE.GLTFLoader().load('https://corley-forge-studio.vercel.app/vehicle/library/'+b.K.file+'.glb',gl=>{const o=gl.scene;o.position.y=-b.draft;
+      o.traverse(m=>{if(!m.isMesh)return;m.castShadow=true;m.receiveShadow=true;for(const mt of [].concat(m.material)){mt.envMap=skyEnv;mt.envMapIntensity=0.8;if(mt.transparent){m.castShadow=false;m.renderOrder=2}}});
+      const add=()=>{b.g.add(o);b.lo.visible=false};if(typeof gpuWarm==='function')gpuWarm(o).then(add,add);else add()},undefined,e=>{b.asked=0;console.warn(b.K.file+':',e)}))}}
+setInterval(btKindTick,1500);
 // the detailed model (models.js, tools/models/boat.js): each boat's topsides in its own hull colour (glossy gelcoat, MDL_GEL), the windscreen see-through
 const btScreen=new THREE.MeshStandardMaterial({color:0xcfe3ea,transparent:true,opacity:0.28,roughness:0.05,metalness:0,envMap:skyEnv,depthWrite:false});
-MDL_KIT.boat={sets:()=>boats.map(b=>({body:b.g})),after(on){if(!on)return;const hull=mdlMatOf('gel#e8b923'),scr=mdlMatOf('glass#b9d4dc');
-  boats.forEach((b,i)=>{for(const m of b.g.children){if(!m.name.startsWith('mdl_'))continue;
+MDL_KIT.boat={sets:()=>boats.filter(b=>!b.K).map(b=>({body:b.g})),after(on){if(!on)return;const hull=mdlMatOf('gel#e8b923'),scr=mdlMatOf('glass#b9d4dc');
+  boats.forEach((b,i)=>{if(b.K)return;for(const m of b.g.children){if(!m.name.startsWith('mdl_'))continue;
     if(m.material===hull)m.material=mdlMatOf('gel#'+BT_SPOTS[i].hull.toString(16).padStart(6,'0'));else if(m.material===scr){m.material=btScreen;m.castShadow=false}}})}};
 let btI=0;
 const btCur=()=>boats[btI];
 // the walker climbs in at any of them (walker.js): the boats join WK_RIDES as boat0, boat1…
 // at the helm (simple shapes; the detailed model has its own): the wheel on its tilted shaft, turning as you steer
 // (boatTick), and the throttle and shift lever on the starboard side of the console
-boats.forEach(b=>{ctlWheel(b,b.g,0,1.0,0.22,0.67,0.17,2.2);
+boats.forEach(b=>{if(b.K)return;ctlWheel(b,b.g,0,1.0,0.22,0.67,0.17,2.2);
   ctlGroup(b.g,k=>{k.box(0.08,0.14,0.14,CTL_DARK,-0.43,0.82,0.3);k.cyl(0.012,0.012,0.18,6,0xb8bcc0,-0.47,0.9,0.3,0.5);k.cyl(0.025,0.025,0.08,8,CTL_RUB,-0.47,0.98,0.26,0,Math.PI/2)})});
-boats.forEach((b,i)=>{WK_RIDES['boat'+i]={o:b,c:BT_C,r:BT_R,reach:0.8,m:'boat',n:'boat',pick(){btI=i},out:()=>btOut(b)}});
+boats.forEach((b,i)=>{WK_RIDES['boat'+i]={o:b,c:b.C,r:b.R,reach:0.8,m:'boat',n:b.K?b.K.n:'boat',pick(){btI=i},out:()=>btOut(b)}});
 // climbing out: onto the dock or the sand beside it if there is one (dry ground first, then shallow water), else into the lake
-function btOut(b){const sy=Math.sin(b.yaw),cy=Math.cos(b.yaw),gap=BT_B/2+WK_R+0.3,len=BT_L/2+0.5;
+function btOut(b){const sy=Math.sin(b.yaw),cy=Math.cos(b.yaw),gap=b.B/2+WK_R+0.3,len=b.L/2+0.5;
   const spots=[[gap,0],[-gap,0],[0,len],[gap,1.2],[-gap,1.2],[gap,-1.2],[-gap,-1.2],[0,-len-0.4]].map(([sx,sz])=>{const x=b.x+cy*sx+sy*sz,z=b.z-sy*sx+cy*sz;return {x,z,f:wkFloor(x,z,0,1e9)}});
-  const free=p=>!SOLIDS.some(s=>solidOut(s,p.x,p.z,WK_R))&&!boats.some(o=>o!==b&&Math.hypot(o.x-p.x,o.z-p.z)<BT_L/2+0.4);
+  const free=p=>!SOLIDS.some(s=>solidOut(s,p.x,p.z,WK_R))&&!boats.some(o=>o!==b&&Math.hypot(o.x-p.x,o.z-p.z)<o.L/2+0.4);
   const p=spots.find(p=>p.f>=WATER+0.15&&free(p))||spots.find(p=>p.f>=WATER-1&&free(p))||spots[0];
   Object.assign(wk,{x:p.x,z:p.z,y:Math.max(p.f,Math.min(b.y,WATER-WK_FLOAT)),vy:0,ground:p.f>=WATER-1,swim:false,yaw:b.yaw,airT:0});return true}
 // what is in the way on the water this frame: the fixed piers and hulls, each trestle span's bents as it stands (timber
@@ -121,26 +145,26 @@ function btGround(x,z){return farGround?farGround(x,z):baseHeight(x,z)}
 // thr: throttle (+ ahead), steer (+ right). Idle boats bob where they are left
 function boatTick(dt,thr,steer){
   for(let i=0;i<boats.length;i++){const b=boats[i],drive=mode==='boat'&&btI===i&&wk.inside==='boat'+i&&!bench.on,th=drive?thr:0,sr=drive?steer:0;b.thr=th;b.swS=(b.swS||0)+(sr-(b.swS||0))*Math.min(1,dt*4);if(b.swG)b.swG.rotation.z=b.swS*b.swK;
-    const sy=Math.sin(b.yaw),cy=Math.cos(b.yaw),h=BT_L/2-0.4;
+    const sy=Math.sin(b.yaw),cy=Math.cos(b.yaw),h=b.L/2-0.4,BK=b.K,top=TU.btSpeed*(BK?BK.sp:1),BT_DRAFT=b.draft,BT_B=b.B,BT_R=b.R;
     const bx=b.x+sy*h,bz=b.z+cy*h,sx=b.x-sy*h,sz=b.z-cy*h,wB=lakeY(bx,bz),wS=lakeY(sx,sz),gB=btGround(bx,bz),gS=btGround(sx,sz),gM=btGround(b.x,b.z);
     // how much of the hull sits on the bottom (a beach): there it only creeps, as if shoved along, and comes to a stop a
     // few feet up the sand; it won't climb the rocks or the bank behind the beach. Reverse pushes it back off
-    const sand=ss(-0.05,0.3,Math.max(gB,gM)+BT_DRAFT-(wB+wS)/2),onSand=ss(0,0.25,sand),cap=TU.btSpeed+(1.3-TU.btSpeed)*onSand;
-    const want=(th>=0?th:th*0.35)*TU.btSpeed;b.v+=(want-b.v)*Math.min(1,dt*(Math.abs(want)>Math.abs(b.v)?0.55:0.35+4*onSand));
+    const sand=ss(-0.05,0.3,Math.max(gB,gM)+BT_DRAFT-(wB+wS)/2),onSand=ss(0,0.25,sand),cap=top+(Math.min(top,1.3)-top)*onSand;
+    const want=(th>=0?th:th*0.35)*top;b.v+=(want-b.v)*Math.min(1,dt*(Math.abs(want)>Math.abs(b.v)?0.55*(BK?BK.ac:1):0.35+4*onSand));
     if(Math.abs(b.v)>cap)b.v=Math.sign(b.v)*(cap+(Math.abs(b.v)-cap)*Math.exp(-dt*6));
     if(b.v>0&&gB>wB+0.55)b.v=0;if(b.v<0&&gS>wS+0.55)b.v=0;
-    if(Math.abs(b.v)>0.02)b.yaw-=sr*TU.btTurn*Math.min(1,Math.abs(b.v)/2.5)*Math.sign(b.v)*(1-0.85*sand)*dt;
+    if(Math.abs(b.v)>0.02)b.yaw-=sr*TU.btTurn*(BK?BK.tk:1)*Math.min(1,Math.abs(b.v)/Math.min(2.5,top*0.6))*Math.sign(b.v)*(1-0.85*sand)*dt;
     b.x+=Math.sin(b.yaw)*b.v*dt;b.z+=Math.cos(b.yaw)*b.v*dt;
     b.x=clamp(b.x,-WK_BOUND.x,WK_BOUND.x);b.z=clamp(b.z,WK_BOUND.z0,WK_BOUND.z1);
     // the docks, piers and pile bents, the crane's barge and the other boats are in the way: push the hull's circles out
     let hit=false;const s2=Math.sin(b.yaw),c2=Math.cos(b.yaw),walls=btWalls();
-    for(const lz of BT_C){let px=b.x+s2*lz,pz=b.z+c2*lz;
+    for(const lz of b.C){let px=b.x+s2*lz,pz=b.z+c2*lz;
       for(const w of walls){if(Math.abs(px-w.ax)>60&&Math.abs(px-w.bx)>60||Math.abs(pz-w.az)>60&&Math.abs(pz-w.bz)>60)continue;
         const ex=w.bx-w.ax,ez=w.bz-w.az,f=clamp(((px-w.ax)*ex+(pz-w.az)*ez)/(ex*ex+ez*ez||1),0,1),dx=px-w.ax-ex*f,dz=pz-w.az-ez*f,dd=Math.hypot(dx,dz),m=w.r+BT_R;
         if(dd<m&&dd>1e-4){const k=(m-dd)/dd;b.x+=dx*k;b.z+=dz*k;px+=dx*k;pz+=dz*k;hit=true}}
       for(const d of BRIDGES){if(!d.dock)continue;const [t,u]=deckLocal(d,px,pz);if(t<-BT_R||t>d.len+BT_R||Math.abs(u)>=d.hw+BT_R)continue;
         if(t>0){const push=Math.sign(u||1)*(d.hw+BT_R)-u;b.x-=d.uz*push;b.z+=d.ux*push;px-=d.uz*push;pz+=d.ux*push;hit=true}}
-      for(const o of boats){if(o===b)continue;for(const lo of BT_C){const qx=o.x+Math.sin(o.yaw)*lo,qz=o.z+Math.cos(o.yaw)*lo,dx=px-qx,dz=pz-qz,dd=Math.hypot(dx,dz),m=BT_R*2;
+      for(const o of boats){if(o===b)continue;for(const lo of o.C){const qx=o.x+Math.sin(o.yaw)*lo,qz=o.z+Math.cos(o.yaw)*lo,dx=px-qx,dz=pz-qz,dd=Math.hypot(dx,dz),m=BT_R+o.R;
         if(dd<m&&dd>1e-4){b.x+=dx/dd*(m-dd)*0.5;b.z+=dz/dd*(m-dd)*0.5;hit=true}}}}
     if(hit)b.v*=Math.exp(-dt*4);
     // how it sits: afloat on the swells, or with its keel on the sand; bow lifts when it is going fast, leans into turns
@@ -154,10 +178,10 @@ function boatTick(dt,thr,steer){
       if(b.v>4&&Math.random()<r*1.5)for(const sd of [-1,1]){const a=Math.random()*0.4;spDrop(bx-sy*0.6+sd*cy*0.6,wB+0.05,bz-cy*0.6-sd*sy*0.6,sd*cy*(1.2+a)-sy*0.5,1+Math.random()*1.2,-sd*sy*(1.2+a)-cy*0.5,0.04+Math.random()*0.04)}}
   }
   // the worker at the helm: seated behind the console, hands on the wheel
-  const R=WK_RIDES[wk.inside];if(R&&R.m==='boat'){const b=R.o;b.g.updateMatrixWorld();b.g.localToWorld(btV.set(0,0,-0.47));
+  const R=WK_RIDES[wk.inside];if(R&&R.m==='boat'){const b=R.o;b.g.updateMatrixWorld();b.g.localToWorld(btV.fromArray(b.seat));const sit=b.K&&b.K.sit;
     Object.assign(wk,{x:b.x,z:b.z,y:b.y,yaw:b.yaw});walker.position.copy(btV);walker.rotation.set(-b.pitch,b.yaw,b.roll,'YXZ');
     walker.visible=!(mode==='boat'&&camMode==='cab');wkBody.position.y=0;wkBody.rotation.x=0;wkHead.rotation.x=0;
-    for(let s=0;s<2;s++){wkLegs[s].top.rotation.x=-1.45;wkLegs[s].low.rotation.x=1.4;wkArms[s].top.rotation.x=-0.9;wkArms[s].low.rotation.x=-0.5}}
+    for(let s=0;s<2;s++){wkLegs[s].top.rotation.x=sit==='low'?-1.5:sit==='astride'?-1.05:-1.45;wkLegs[s].low.rotation.x=sit==='low'?0.12:sit==='astride'?1.15:1.4;wkArms[s].top.rotation.x=sit==='astride'?-1.1:-0.9;wkArms[s].low.rotation.x=sit==='astride'?-0.3:-0.5}}
   else if(walker.rotation.x||walker.rotation.z)walker.rotation.set(0,walker.rotation.y,0,'XYZ')}
 const btV=new THREE.Vector3();
 // a hull rocked by a passing wave: a damped swing about its keel, added to its roll (rk, rkv)

@@ -226,7 +226,7 @@ function updateSound(dt){
   {const R=WK_RIDES[wk.inside],ob=R&&R.m==='boat'?R.o:null,oe=snd.engO;
     if(ob){const sy=Math.sin(ob.yaw),cy=Math.cos(ob.yaw);sndPlace(snd.O,ob.x-sy*2.6,ob.y+0.6,ob.z-cy*2.6,t)}
     const sp=ob?Math.abs(ob.v):0,th=ob?Math.abs(ob.thr||0):0,oT=800+1600*Math.min(1,Math.max(th,sp/TU.btSpeed));oe.rpm+=(oT-oe.rpm)*Math.min(1,dt*(oT>oe.rpm?3:2));
-    sndEngineTo(oe,oe.rpm,th,quiet*(ob?0.75:0),t);
+    sndEngineTo(oe,oe.rpm,th,quiet*(ob&&!ob.quiet?0.75:0),t);
     snd.wash.playbackRate.setTargetAtTime(0.7+0.05*sp,t,0.2);snd.washF.frequency.setTargetAtTime(700+250*sp,t,0.1);snd.washG.gain.setTargetAtTime(quiet*(ob?0.08+0.6*ss(0.3,9,sp):0),t,0.15);
     if(ob&&!bench.on){snd.slapT-=dt*(0.4+sp*0.35+Math.abs(ob.rkv||0)*3);if(snd.slapT<=0){snd.slapT=0.4+Math.random()*1.4;
       sndShot('slap',snd.O.fx,t+0.01,0.8+0.3*Math.random(),(0.3+0.5*ss(0,8,sp))*(0.6+0.4*Math.random()))}}}

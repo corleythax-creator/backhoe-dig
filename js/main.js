@@ -294,7 +294,7 @@ function frame(now){
     // the seat's eye point and its straight-ahead look, turned by where you have turned your head (fpl)
     if(mode==='truck')fpEye(sprung,-0.55,1.6,1.72,0.25,-1.5,12.05);
     else if(mode==='skid')fpEye(skid,0,1.72,0.0,0,-0.9,4.5);
-    else if(mode==='boat')fpEye(btCur().g,0,1.62,-0.47,0,-1.5,8);
+    else if(mode==='boat'){const b=btCur();fpEye(b.g,b.eye[0],b.eye[1],b.eye[2],0,-1.5,8)}
     else if(mode==='heavy')fpEye(hvCur().g,...(hvCur().eye||hvCur().K.eye));
     else if(mode==='bike')fpEye(bike,0,1.62-bk.comp,-0.12,0,-0.35,1);
     else if(mode==='mow')fpEye(mower,0,1.42,-0.12,0,-1.45,4.48);
