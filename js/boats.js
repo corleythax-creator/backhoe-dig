@@ -98,7 +98,7 @@ const boats=BT_SPOTS.map((s,i)=>{const d=BT_DOCKS[i],t=d.len-(s.at||3.4),u=(s.si
 // engine in a kayak. t: metres out along the pier from the bank
 const BT_KINDS={
   wakeboat:{file:'yamaha_212x',n:'wakeboard boat',L:7.07,B:2.6,draft:0.42,C:[-2.5,-1.25,0,1.25,2.5],R:1.15,seat:[-0.8,0.8,0.05],sp:1.25,tk:0.9,ac:1.1,col:0x1f2a44,t:39},
-  jetski:{file:'seadoo_gti',n:'jet ski',L:3.33,B:1.26,draft:0.28,C:[-1.0,0,1.0],R:0.62,seat:[0,0.76,-0.3],sit:'astride',sp:1.5,tk:1.9,ac:2.2,col:0xd8dde0,t:27},
+  jetski:{file:'seadoo_gti',n:'jet ski',L:3.33,B:1.26,draft:0.28,C:[-1.0,0,1.0],R:0.62,seat:[0,0.76,-0.3],sit:'astride',sp:1.5,tk:1.35,ac:2.2,col:0xd8dde0,t:27},
   kayak:{file:'kayak',n:'kayak',L:3.52,B:0.71,draft:0.1,C:[-1.2,0,1.2],R:0.42,seat:[0,0.09,-0.1],sit:'low',sp:0.17,tk:1.3,ac:3,quiet:1,col:0xe8762c,t:17}};
 for(const k in BT_KINDS){const K=BT_KINDS[k],d=BT_DOCKS[4],u=-(d.hw+K.B/2+0.2),home={x:d.x0+d.ux*K.t-d.uz*u,z:d.z0+d.uz*K.t+d.ux*u,yaw:Math.atan2(d.ux,d.uz)};
   const g=new THREE.Group(),lo=new THREE.Mesh(new THREE.BoxGeometry(K.B*0.8,0.5,K.L*0.92),new THREE.MeshStandardMaterial({color:K.col,roughness:0.4}));lo.position.y=0.25-K.draft;lo.castShadow=true;g.add(lo);scene.add(g);
