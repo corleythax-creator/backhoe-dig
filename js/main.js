@@ -390,7 +390,9 @@ function drawSlow(t0,a){drawNew.slow=performance.now();const P=new Set(drawNew.L
 // built ahead (ltOtherTick); the effects passes are built with the shader pass
 const shGate={ok:new WeakMap(),wait:new Map(),busy:0,seeded:false,n:0,ms:0};
 function shKind(o,m){const a=o.geometry&&o.geometry.attributes||{};return (o.isInstancedMesh?'i':'')+(o.instanceColor?'c':'')+(o.isSkinnedMesh?'s':'')+(o.isBatchedMesh?'b':'')+
-  (o.isPoints?'p':o.isLine?'l':o.isSprite?'S':'')+(a.color?'v':'')+(a.tangent?'t':'')+(o.morphTargetInfluences?'m':'')+(o.receiveShadow?'r':'')+'|'+m.version}
+  (o.isPoints?'p':o.isLine?'l':o.isSprite?'S':'')+(a.color?'v':'')+(a.tangent?'t':'')+(o.morphTargetInfluences?'m':'')+(o.receiveShadow?'r':'')}
+// (not the material's version: some are marked for an update every few seconds, which keeps the same shader, and each
+// one hid them again for a frame or two: the windows flickering in the owner's v442 play)
 function shOk(o,m,add){let s=shGate.ok.get(m);if(!s){if(!add)return false;shGate.ok.set(m,s=new Set())}const k=shKind(o,m);if(add){s.add(k);return true}return s.has(k)}
 function shGateTick(){const G=shGate;if(!LOADP.done||bench.on||vrOn()||TU.shGate===0)return;const t0=performance.now();
   // (what was built before play is trusted: the loading's passes built it)
