@@ -390,13 +390,13 @@ function drawSlow(t0,a){drawNew.slow=performance.now();const P=new Set(drawNew.L
 // built ahead (ltOtherTick); the effects passes are built with the shader pass
 const shGate={ok:new WeakMap(),wait:new Map(),busy:0,seeded:false,n:0,ms:0};
 function shKind(o,m){const a=o.geometry&&o.geometry.attributes||{};return (o.isInstancedMesh?'i':'')+(o.instanceColor?'c':'')+(o.isSkinnedMesh?'s':'')+(o.isBatchedMesh?'b':'')+
-  (o.isPoints?'p':o.isLine?'l':o.isSprite?'S':'')+(a.color?'v':'')+(a.tangent?'t':'')+(o.morphTargetInfluences?'m':'')+(o.receiveShadow?'r':'')}
+  (o.isPoints?'p':o.isLine?'l':o.isSprite?'S':'')+(a.color?'v':'')+(a.tangent?'t':'')+(o.morphTargetInfluences?'m':'')+(o.receiveShadow?'r':'')+(ltSl.night?'N':'D')}
 // (not the material's version: some are marked for an update every few seconds, which keeps the same shader, and each
 // one hid them again for a frame or two: the windows flickering in the owner's v442 play)
-function shOk(o,m,add){let s=shGate.ok.get(m);if(!s){if(!add)return false;shGate.ok.set(m,s=new Set())}const k=shKind(o,m);if(add){s.add(k);return true}return s.has(k)}
+function shOk(o,m,add,both){let s=shGate.ok.get(m);if(!s){if(!add)return false;shGate.ok.set(m,s=new Set())}const k=shKind(o,m);if(add){s.add(k);if(both)s.add(k.slice(0,-1)+(k.endsWith('N')?'D':'N'));return true}return s.has(k)}
 function shGateTick(){const G=shGate;if(!LOADP.done||bench.on||vrOn()||TU.shGate===0)return;const t0=performance.now();
   // (what was built before play is trusted: the loading's passes built it)
-  if(!G.seeded){G.seeded=true;scene.traverse(o=>{if(!o.material)return;for(const m of [].concat(o.material)){if(!m)continue;const pr=renderer.properties.get(m);if(pr&&pr.programs&&pr.programs.size)shOk(o,m,true)}});return}
+  if(!G.seeded){G.seeded=true;scene.traverse(o=>{if(!o.material)return;for(const m of [].concat(o.material)){if(!m)continue;const pr=renderer.properties.get(m);if(pr&&pr.programs&&pr.programs.size)shOk(o,m,true,ltOther.done)}});return}
   const L=[];scene.traverseVisible(o=>{if(!o.material||G.wait.has(o)||!(o.isMesh||o.isPoints||o.isLine||o.isSprite)||!o.layers.mask)return;
     for(const m of [].concat(o.material))if(m&&m.visible!==false&&!shOk(o,m)){L.push(o);break}});
   if(L.length){G.n+=L.length;for(const o of L)G.wait.set(o,o.layers.mask),o.layers.mask=0;
@@ -468,6 +468,9 @@ function ltOtherTick(){const O=ltOther;if(O.busy||bench.on||vrOn()||!warmAll&&!L
   // (in play only while nothing else is being built and no frame has been slow for 10 s: four of the freezes in the
   // owner's v440 play were frames waiting while a slice of it was building)
   if(LOADP.done&&(warmAll&&warmAll.pend||gpuQ.length||warmLater.busy||now-drawNew.slow<10000)){O.t=now+1000;return}
+  // (and in play not at all while the shader gate is on: what turns up later gets the lamps' other set from the gate when
+  // the lamps change, held back a moment, rather than built ahead while you play, where frames waited behind it)
+  if(LOADP.done&&TU.shGate!==0){O.t=now+5000;return}
   const by=new Map();warmRoot().traverse(o=>{if(!o.material)return;for(const m of [].concat(o.material)){if(O.seen.has(m))continue;
     let l=by.get(m);if(!l)by.set(m,l=[]);l.push(o)}});
   if(!by.size){if(O.n){pfMark('Shader pass, other lamp set',O.t0,O.n+' materials, shaders to '+renderer.info.programs.length);O.n=0}O.done=true;O.t=now+5000;return}
@@ -511,7 +514,11 @@ function warmShadows(root){if(!renderer.shadowMap.enabled)return null;const swap
   for(const o of kinds.values())o.material=o.material.concat(shared);
   // (the shadow pass draws with no scene behind it, so no fog: part of the shader's key even for a depth material)
   if(!L.length)return null;const t=renderer.getRenderTarget(),fog=scene.fog;let p=null;
-  try{renderer.setRenderTarget(warmShRT);scene.fog=null;p=renderer.compileAsync({isObject3D:true,traverseVisible(){},traverse(cb){for(const o of L)cb(o)}},camera,scene)}
+  // (both lamp sets, gfx.js ltSl: a shader's key counts the scene's lights, so the shadows' depth shaders differ with the
+// lamps lit or dark; only the lit set was built, the rest at their first shadow in play: the 10 and 6 s freezes of
+// the owner's v443 report, each "(MeshDepthMaterial)")
+  try{renderer.setRenderTarget(warmShRT);scene.fog=null;const r={isObject3D:true,traverseVisible(){},traverse(cb){for(const o of L)cb(o)}},p1=renderer.compileAsync(r,camera,scene);
+    let p2=null;ltHide(true);try{p2=renderer.compileAsync(r,camera,scene)}finally{ltShow()}p=Promise.all([p1,p2])}
   finally{scene.fog=fog;renderer.setRenderTarget(t);for(const [o,m] of swap)o.material=m}
   // (kept a while: disposing them now would drop the very shaders built, before the shadow pass takes them up)
   const drop=()=>{if(!LOADP.done){setTimeout(drop,2000);return}setTimeout(()=>{for(const d of made.values())d.dispose()},15000)};drop();return p}
@@ -583,10 +590,11 @@ function warmDrawTick(){const F=warmFar;if(!F.pre)return;const T=performance.now
 // the graphics card, the steps' times, the long stalls, the shaders built and the slowest parts of the timeline. Only
 // timings, nothing of the save. It shows how the loading really goes on the owner's PC, which the test machine can't
 let loadRep=false;
-function loadReportTick(){if(loadRep||!LOADP.done||performance.now()-PF_BOOT.done<60000)return;loadRep=true;
+// (and again 5 minutes in, owner Nov 21: the first only covers a minute of play; same row kind, data.at says which)
+function loadReportTick(){if(!LOADP.done||loadRep===2)return;const at=performance.now()-PF_BOOT.done;if(at<(loadRep?300000:60000))return;loadRep=loadRep?2:1;if(loadRep===2)repHud.st='sending';
   if(typeof sync==='undefined'||!sync.on||typeof syncRpc!=='function'){repHud.st='off';return}
   try{const E=window.EFFORT,v=E&&E.versions?+E.versions[E.versions.length-1].v||0:0,gl=renderer.getContext();
-    const d={cover:Math.round(PF_BOOT.done),steps:PF_BOOT.steps,programs:renderer.info.programs.length,
+    const d={at:loadRep===2?300:60,cover:Math.round(PF_BOOT.done),steps:PF_BOOT.steps,programs:renderer.info.programs.length,
       parallel:!!gl.getExtension('KHR_parallel_shader_compile'),long:PF_BOOT.long.filter(l=>l[1]>=200).slice(0,80).map(l=>[Math.round(l[0]),Math.round(l[1])]),
       tl:PF_BOOT.tl.filter(r=>r[2]>=200||/Far world|Shader pass/.test(r[0])).slice(0,120),
       // (what the browser says held each freeze over 0.3 s: prof.js's long animation frames, script and function)
@@ -599,10 +607,10 @@ const repHud={el:null,st:'wait',t:0};
 function repHudTick(){const H=repHud;if(!LOADP.done||H.st==='gone')return;const now=performance.now();if(now<H.t)return;H.t=now+500;
   let e=H.el;if(!e){e=H.el=document.createElement('div');e.id='repHud';e.style.cssText='position:fixed;left:50%;top:8px;transform:translateX(-50%);z-index:60;background:rgba(0,0,0,.75);color:#fff;font:600 20px system-ui,sans-serif;padding:6px 16px;border-radius:8px;pointer-events:none;white-space:nowrap';document.body.appendChild(e)}
   const s=Math.round((now-PF_BOOT.done)/1000),F=PF_BOOT.long.filter(l=>l[0]>PF_BOOT.done&&l[1]>=300),mx=F.reduce((a,l)=>Math.max(a,l[1]),0);
-  const st=H.st==='sent'?'✓ report sent':H.st==='fail'?'✗ report failed':H.st==='off'?'no report on this site':'report in '+Math.max(0,60-s)+' s';
+  const st=H.st==='sent'&&loadRep===1?'✓ report 1 sent · report 2 in '+Math.max(0,300-s)+' s':H.st==='sent'?'✓ both reports sent':H.st==='sending'?'sending report 2':H.st==='fail'?'✗ report failed':H.st==='off'?'no report on this site':'report in '+Math.max(0,60-s)+' s';
   e.style.color=H.st==='sent'?'#8f8':H.st==='fail'?'#f88':'#fff';
   e.textContent=`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')} since loading · freezes ${F.length}${F.length?' (longest '+(mx/1000).toFixed(1)+' s)':''} · ${st}`;
-  if(s>300){e.remove();H.st='gone'}}
+  if(s>320){e.remove();H.st='gone'}}
 // the shader timing test (open the site with ?shaderbench): while loading, a few sample shaders are built here one at a
 // time, each with a mark of its own so nothing is reused from before, and how long each took to build goes to the
 // shared board (kind 'shaderbench'): plain, with the wet look, with all the lamps or just the sun, a heavy one with
