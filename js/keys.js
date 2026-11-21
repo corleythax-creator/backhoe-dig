@@ -24,7 +24,7 @@ const KEY_ACTIONS=[
   {id:'mwLB',g:'Mower',n:'Left lap bar back',d:'Left wheel only, in reverse',k:['Numpad1'],s:'ride'},
   {id:'mwRF',g:'Mower',n:'Right lap bar forward',d:'Right wheel only: pivots left',k:['Numpad9'],s:'ride'},
   {id:'mwRB',g:'Mower',n:'Right lap bar back',d:'Right wheel only, in reverse',k:['Numpad3'],s:'ride'},
-  {id:'dig',g:'Machines',n:'Excavator: arm',d:'Climb into the excavator, with the sticks on the arm',k:['Digit1']},
+  {id:'dig',g:'Machines',n:'Excavator: arm',d:'Climb into the excavator, with the sticks on the arm',k:[]},
   {id:'drive',g:'Machines',n:'Excavator: tracks',d:'Climb into the excavator, with the left stick on the tracks',k:['Digit2']},
   {id:'exSwap',g:'Machines',n:'Tracks / Arm',d:'In the excavator: switch between driving the tracks and running the arm; in the backhoe: swivel between the wheel and the hoe (Wheel / Hoe)',k:['Enter'],s:'ride'},
   {id:'bhOut',g:'Machines',n:'Outriggers',d:'In the backhoe: lower or raise the outriggers (they come down by themselves at the hoe)',k:['Semicolon'],s:'ride'},
@@ -78,6 +78,8 @@ function keyDefaults(){for(const a of KEY_ACTIONS)keyBind[a.id]=[a.k[0]||'',a.k[
 function keySave(){try{localStorage.setItem('bhd_keys',JSON.stringify(keyBind))}catch(e){}}
 keyDefaults();
 try{const s=JSON.parse(localStorage.getItem('bhd_keys')||'null');if(s)for(const id in s)if(KEY_BY[id]&&Array.isArray(s[id]))keyBind[id]=[s[id][0]||'',s[id][1]||'']}catch(e){}
+// (owner, Nov 21: 1 no longer climbs into the excavator; taken off saved keys too, as a save holds every key)
+if(keyBind.dig)keyBind.dig=keyBind.dig.map(c=>c==='Digit1'?'':c);
 // actions a key code runs (a key belongs to one action at a time)
 function keyActs(code){const out=[];for(const id in keyBind)if(keyBind[id].includes(code))out.push(id);return out}
 function keyIs(code,id){return !!code&&keyBind[id].includes(code)}
