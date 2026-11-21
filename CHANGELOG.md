@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Saturday, November 21, 2026
 
+- **v448** (5:29 PM) Harbor Light Brewing larger (58 by 38 ft), one open taproom with the brewhouse in it, more windows, pale siding
 - **v447** (5:03 PM) A bar and brewery on the water in the Harbor House's place: taproom, brewhouse, covered deck, bar staff and the brewery's menu
 
 ## Friday, November 20, 2026
