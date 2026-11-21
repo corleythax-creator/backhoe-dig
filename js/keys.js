@@ -24,22 +24,16 @@ const KEY_ACTIONS=[
   {id:'mwLB',g:'Mower',n:'Left lap bar back',d:'Left wheel only, in reverse',k:['Numpad1'],s:'ride'},
   {id:'mwRF',g:'Mower',n:'Right lap bar forward',d:'Right wheel only: pivots left',k:['Numpad9'],s:'ride'},
   {id:'mwRB',g:'Mower',n:'Right lap bar back',d:'Right wheel only, in reverse',k:['Numpad3'],s:'ride'},
-  {id:'dig',g:'Machines',n:'Excavator: arm',d:'Climb into the excavator, with the sticks on the arm',k:[]},
-  {id:'drive',g:'Machines',n:'Excavator: tracks',d:'Climb into the excavator, with the left stick on the tracks',k:['Digit2']},
   {id:'exSwap',g:'Machines',n:'Tracks / Arm',d:'In the excavator: switch between driving the tracks and running the arm; in the backhoe: swivel between the wheel and the hoe (Wheel / Hoe)',k:['Enter'],s:'ride'},
   {id:'bhOut',g:'Machines',n:'Outriggers',d:'In the backhoe: lower or raise the outriggers (they come down by themselves at the hoe)',k:['Semicolon'],s:'ride'},
-  {id:'truck',g:'Machines',n:'Dump truck',d:'Climb into the dump truck',k:['Digit3']},
-  {id:'mow',g:'Machines',n:'Mower',d:'Climb onto the mower',k:['Digit4']},
-  {id:'skid',g:'Machines',n:'Skid steer',d:'Climb into Dexter\'s skid steer',k:['Digit6']},
-  {id:'walk',g:'Machines',n:'On foot',d:'Get out and walk',k:['Digit5']},
-  {id:'nextMode',g:'Machines',n:'Next machine',d:'Climbs into the next machine within about 400 ft, then back on foot (with Shift held, the other way)',k:['Tab']},
-  {id:'prevMode',g:'Machines',n:'Previous machine',d:'The other way round the machines within about 400 ft (Shift and Next machine does it too)',k:[]},
+  {id:'walk',g:'Machines',n:'Get out',d:'Climb out of the machine you are in and stand beside it. You are always on foot: to drive a machine, walk up to it and press Use',k:['Digit5']},
   {id:'enter',b:'#seatBtn',g:'On foot',n:'Use',d:'Does what the Use button over the left stick says: climbs into the machine you are next to or out of the one you are in, loads or unloads a pickup, buys, orders, talks, sits down at a game table',k:['KeyF']},
   {id:'jump',b:'#jumpBtn',g:'On foot',n:'Jump',d:'About 6 ft: onto blocks and up stacks',k:['Space'],s:'walk'},
   {id:'sprint',g:'On foot',n:'Sprint',d:'Hold to run flat out, about 12 mph',k:['ShiftLeft','ShiftRight'],s:'walk'},
   {id:'plant',b:'#plantBtn',g:'On foot',n:'Plant a tree',d:'A sapling of the chosen kind in front of you (next to one of yours: dig it up). Slide ☰ Time, Date ahead to see it grow',k:['Digit7'],s:'walk'},
   {id:'trim',b:'#trimBtn',g:'On foot',n:'String trimmer',d:'Take out or put away the string trimmer: it cuts the grass and weeds it swings over (a fresh spool each time you put it away)',k:['Digit9'],s:'walk'},
-  {id:'gun',b:'#gunBtn',g:'On foot',n:'Gun',d:'Take out or put away your gun; while it is out, a click on the view fires it',k:['KeyG'],s:'walk'},
+  {id:'punch',b:'#punchBtn',g:'On foot',n:'Fists: punch',d:'Puts your fists up (the gun away) and throws a punch at whoever is in front of you, within arm\'s reach: it knocks them down, and more punches kill. While your fists are up a click on the view punches too',k:['Digit1'],s:'walk'},
+  {id:'gun',b:'#gunBtn',g:'On foot',n:'Gun',d:'Take out or put away your gun; while it is out, a click on the view fires it',k:['Digit2','KeyG'],s:'walk'},
   {id:'gunShoot',g:'On foot',n:'Fire',d:'Shoots the way you face (in first person, at the crosshair), like a click on the view while a gun is out; the carbine fires while held',k:[],s:'walk'},
   {id:'talk',g:'On foot',n:'Talk',d:'Says something to the townsperson nearest you, when Townsfolk talk is on (☰ menu): a box opens to type in',k:['Enter'],s:'walk'},
   {id:'gunReload',b:'#reloadBtn',g:'On foot',n:'Reload',d:'Loads the gun in your hands from the rounds you carry (more at Lakeside Guns on Main Street)',k:['KeyR'],s:'walk'},
@@ -78,8 +72,13 @@ function keyDefaults(){for(const a of KEY_ACTIONS)keyBind[a.id]=[a.k[0]||'',a.k[
 function keySave(){try{localStorage.setItem('bhd_keys',JSON.stringify(keyBind))}catch(e){}}
 keyDefaults();
 try{const s=JSON.parse(localStorage.getItem('bhd_keys')||'null');if(s)for(const id in s)if(KEY_BY[id]&&Array.isArray(s[id]))keyBind[id]=[s[id][0]||'',s[id][1]||'']}catch(e){}
-// (owner, Nov 21: 1 no longer climbs into the excavator; taken off saved keys too, as a save holds every key)
-if(keyBind.dig)keyBind.dig=keyBind.dig.map(c=>c==='Digit1'?'':c);
+// (owner, Nov 21: you are always on foot, so the keys that put you in a machine from anywhere are gone; 1 punches and
+// 2 takes the gun out. A save holds every key, so saved keys are moved over once: 1 and 2 go to Punch and Gun unless
+// the player gave them to something else that is still there)
+try{if(localStorage.getItem('bhd_keys_v')!=='2'){const free=c=>!Object.keys(keyBind).some(id=>keyBind[id].includes(c));
+  if(free('Digit1'))keyBind.punch=['Digit1',keyBind.punch[1]==='Digit1'?'':keyBind.punch[1]];
+  if(!keyBind.gun.includes('Digit2')&&free('Digit2'))keyBind.gun=['Digit2',keyBind.gun[0]||keyBind.gun[1]];
+  localStorage.setItem('bhd_keys_v','2');if(localStorage.getItem('bhd_keys'))keySave()}}catch(e){}
 // actions a key code runs (a key belongs to one action at a time)
 function keyActs(code){const out=[];for(const id in keyBind)if(keyBind[id].includes(code))out.push(id);return out}
 function keyIs(code,id){return !!code&&keyBind[id].includes(code)}
@@ -132,7 +131,7 @@ const CTRL_MOUSE=[['Mouse',[['Drag the scene','Turns the camera round the machin
     ['Buttons','Every button on the screen does the same as its key: Blocks, Drive, Chase / Cab, Get in or out, Sprint, Jump and the rest']]]];
 // the controller's buttons (standard mapping index -> action, on foot / in a machine); padButton (controls.js) runs them
 // through act, and the Controls panel lists them from here, so the two can't drift apart
-const PAD_MAP=[[0,'A','jump','place'],[1,'B','back','back'],[2,'X','place','box'],[3,'Y','cam','cam'],[4,'LB','prevMode','prevMode'],[5,'RB','nextMode','nextMode'],
+const PAD_MAP=[[0,'A','jump','place'],[1,'B','back','back'],[2,'X','place','box'],[3,'Y','cam','cam'],[4,'LB','punch','exSwap'],[5,'RB','gun','coupler'],
   [8,'View (Back)','map','map'],[9,'Menu (Start)','help','help'],[11,'Right stick click','lookAhead','lookAhead'],
   [12,'D-pad up','blocks','blocks'],[13,'D-pad down','lift','lift'],[14,'D-pad left','sizeDown','sizeDown'],[15,'D-pad right','size','size']];
 // names for what only the controller does

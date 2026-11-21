@@ -34,7 +34,7 @@ const GUNS={
   carbine:{n:'Carbine',s:'Carbine',mag:30,max:300,dm:'gunDmgC',rt:0.095,spr:0.006,bl:0.007,pel:1,rng:2.2,rl:2.2,auto:1,long:1,muz:[0,0.06,0.69],fore:[0,0.032,0.29],mg:[0,-0.07,0.13],
     bang:{lp:8200,hp:200,r:1.08,th:105,v:1.7,e:1.1,dk:10},rc:0.022,rk:0.009,sh:0.28,v:900,zero:100,pen:0.3,ej:[-0.02,0.07,0.07],cs:'c',ejT:0,d:'30 rounds. Hold to fire'}};
 const GUN_K=Object.keys(GUNS);
-const gun={dr:1,hol:0,pmp:0,bolt:0,pm:0,bo:0,bw:0,eq:true,on:false,fp:false,aim:0,cool:0,kick:0,flash:0,told:false,shots:0,downs:0,k:'pistol',own:{pistol:1},am:{},rl:0,rlT:0,rlC:0,bl:0,trig:false,shop:null,racked:0};
+const gun={dr:1,hol:0,pmp:0,bolt:0,pm:0,bo:0,bw:0,eq:false,on:false,fp:false,aim:0,cool:0,kick:0,flash:0,told:false,shots:0,downs:0,k:'pistol',own:{pistol:1},am:{},rl:0,rlT:0,rlC:0,bl:0,trig:false,shop:null,racked:0};
 for(const k of GUN_K)gun.am[k]=[GUNS[k].mag,GUNS[k].mag*3];
 const gunW=()=>GUNS[gun.k];
 // ---------- the models: Poly Haven's photo-scanned service pistol and bolt-action rifle (models/pistol, models/rifle,
@@ -176,13 +176,15 @@ function gunVmBody(on){const g=wkMdl.g;if(!g||gun.vmBody===on)return;gun.vmBody=
     if(!u.vb)u.vb={ro:o.renderOrder,tr:M.map(m=>m.transparent),ob:o.onBeforeRender};
     o.renderOrder=on?1e6:u.vb.ro;M.forEach((m,i)=>{m.transparent=on||u.vb.tr[i]});o.onBeforeRender=on?gunVmClr:u.vb.ob})}
 function gunPlace(){const show=(gunHas()||gun.hol>0&&mode==='walk'&&!wk.inside&&!wk.swim)&&walker.visible,J=wkMdl.j,fp=show&&camMode==='cab',W=gunW();gunMdl.visible=show;
+  // his fists up (punch.js): drawn in first person as with a gun, the fingers closed
+  const fu=!show&&fistUp()&&walker.visible,fpB=fp||fu&&camMode==='cab';
   for(const k of GUN_K)gunM[k].visible=k===gun.k;
   // put away: the hands back to their easy curl (wkRig)
-  if(!show&&J&&gun.fist){for(const s of [0,1]){const A=gunArm(J,s);if(!A)continue;A.hand.quaternion.copy(A.h0);A.curl=null;gunThumbRest(A);
+  if(!show&&!fu&&J&&gun.fist){for(const s of [0,1]){const A=gunArm(J,s);if(!A)continue;A.hand.quaternion.copy(A.h0);A.curl=null;gunThumbRest(A);
     for(const f of J.fingers)if(f.b.name.endsWith(A.sf))f.b.quaternion.copy(f.q0).multiply(gunQF.setFromAxisAngle(WK_X,0.35))}gun.fist=null}
   // in first person he is drawn too (walker.js) and the camera is in his head: the head is shrunk away
-  if(J&&J.head&&gun.headOff!==fp){gun.headOff=fp;J.head.b.scale.setScalar(fp?0.001:1)}
-  gunVmOn=fp;gunVmBody(fp);if(!show)return;if(fp)gunMdl.traverse(gunVm);walker.updateMatrixWorld(true);gunFlash.position.fromArray(W.muz);
+  if(J&&J.head&&gun.headOff!==fpB){gun.headOff=fpB;J.head.b.scale.setScalar(fpB?0.001:1)}
+  gunVmOn=fpB;gunVmBody(fpB);if(fu&&J)for(const s of [0,1]){const A=gunArm(J,s);if(A){gunCurl(J,A,1.5,1.5);gun.fist=1}}if(!show)return;if(fp)gunMdl.traverse(gunVm);walker.updateMatrixWorld(true);gunFlash.position.fromArray(W.muz);
   gunFlash.visible=gun.flash>0;if(gunFlash.visible)gunFlash.rotation.z=Math.random()*6.28;
   const R=J&&gunArm(J,0),L=J&&gunArm(J,1),aim=gun.aim>0||fp,posed=R&&L,dv=gun.hol>0?gun.hol/0.35:gun.dr,one=!W.long&&!aim&&gun.rl<=0;gunAnim(W);
   if(!posed){// one hand: the grip in the palm, half way from the wrist to the middle finger's knuckle, the wrist turned so
@@ -703,7 +705,7 @@ $('#gsClose').addEventListener('click',gunShopClose);
 function gunSave(){return {k:gun.k,e:gun.eq?1:0,o:GUN_K.filter(k=>gun.own[k]),a:GUN_K.map(k=>gun.am[k].slice())}}
 function gunLoad(d){if(!d||typeof d!=='object')return;if(Array.isArray(d.o))for(const k of d.o)if(GUNS[k])gun.own[k]=1;gun.own.pistol=1;
   if(Array.isArray(d.a))GUN_K.forEach((k,i)=>{const a=d.a[i];if(Array.isArray(a)&&a.length===2&&a.every(isFinite))gun.am[k]=[clamp(a[0]|0,0,GUNS[k].mag),clamp(a[1]|0,0,GUNS[k].max)]});
-  if(GUNS[d.k]&&gun.own[d.k])gun.k=d.k;if(d.e===0)gun.eq=false;$('#gunBtn').setAttribute('aria-pressed',gun.eq);gunHudDraw()}
+  if(GUNS[d.k]&&gun.own[d.k])gun.k=d.k;$('#gunBtn').setAttribute('aria-pressed',gun.eq);gunHudDraw()}
 // its button runs it through act (keys.js b, controls.js)
 $('#fireBtn').addEventListener('pointerdown',e=>{e.preventDefault();gun.trig=true;gunFire()});
 for(const ev of ['pointerup','pointercancel','pointerleave'])$('#fireBtn').addEventListener(ev,()=>{gun.trig=false});

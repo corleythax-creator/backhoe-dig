@@ -162,7 +162,7 @@ function removeBlock(){if(!blkOn){toast(say('blkIsOff'),'tip',1800);return}
   toast(say('blkLifted',{size:blkFt(b),n:blocks.length}),'good',1600)}
 // ---------- the block bar ----------
 // any change of mode or machine puts them away (setMode), so they are on only right after B or the block button
-function setBlocks(on){if(on&&!$('#blkWhat').options.length)blkWhatOpts();if(on&&mode!=='dig'&&mode!=='walk')setMode('dig');
+function setBlocks(on){if(on&&!$('#blkWhat').options.length)blkWhatOpts();if(on&&mode!=='dig'&&mode!=='walk'){toast(say('blkOnFoot'),'tip',2200);return}
   blkOn=on;const btn=$('#blkBtn');btn.setAttribute('aria-pressed',on);$('#blkBar').hidden=!on;blkUI()}
 const blkReachEl=$('#blkReach');
 function blkUI(){for(const k of ['w','d','h'])$(`#blkBar .bstep[data-k="${k}"] b`).textContent=blkInTxt(blkDim[k]);

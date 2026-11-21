@@ -205,7 +205,7 @@ function mdlFlatPbr(m){if(mdlFlat.has(m))return mdlFlat.get(m);let r=null;
     if(r)r.side=m.side}
   mdlFlat.set(m,r);return r}
 // the machines this covers, and what on them is not paintwork (the loads, tinted as they fill)
-function mdlOthers(){return [mower,skid,bike,...boats.map(b=>b.g),...hvs.flatMap(h=>h.trailer?[h.g,h.trailer]:[h.g])]}
+function mdlOthers(){return [mower,skid,bike,...boats.filter(b=>!b.K).map(b=>b.g),...hvs.flatMap(h=>h.trailer?[h.g,h.trailer]:[h.g])]}
 function mdlOthersOn(on){const skip=new Set([skLoad,...hvs.flatMap(h=>[h.heap,h.hheap])]),gm=typeof grimeMats!=='undefined'&&grimeMats;
   for(const root of mdlOthers())root.traverse(o=>{if(!o.isMesh||skip.has(o)||o.isInstancedMesh)return;const u=mdlSide(o);
     if(on){if(u.mdlO)return;const mt=o.material;if(Array.isArray(mt))return;

@@ -86,7 +86,7 @@ function rigLoad(){let d=null;try{d=JSON.parse(localStorage.getItem(RIG_KEY))}ca
     Object.assign(sk,{x:SK_START.x,z:SK_START.z,yaw:SK_START.yaw,stuck:0});sk.y=surfAt(sk.x,sk.z);skidPose();
     if(TB.hooked){TB.hooked=false;chain.visible=false;TB.ty=boxRest();TB.y=Math.max(TB.y,TB.ty);boxMask()}}
   else twLoad(d.tw);
-  if(d.wk&&[d.wk.x,d.wk.z,d.wk.yaw].every(isFinite)){trimLoad(d.wk.tm);gunEquip(d.wk.gn!==0,1);Object.assign(wk,{x:d.wk.x,z:d.wk.z,yaw:d.wk.yaw,view:d.wk.yaw});wk.y=wkFloor(wk.x,wk.z,0,1e9);wk.inside=['ex','truck','mow','skid','bike',...boats.map((b,i)=>'boat'+i),...hvs.map((h,i)=>'hv'+i)].includes(d.wk.in)&&home?d.wk.in:null;if(wk.inside&&WK_RIDES[wk.inside].pick)WK_RIDES[wk.inside].pick()}
+  if(d.wk&&[d.wk.x,d.wk.z,d.wk.yaw].every(isFinite)){trimLoad(d.wk.tm);gunEquip(false,1);Object.assign(wk,{x:d.wk.x,z:d.wk.z,yaw:d.wk.yaw,view:d.wk.yaw});wk.y=wkFloor(wk.x,wk.z,0,1e9);wk.inside=['ex','truck','mow','skid','bike',...boats.map((b,i)=>'boat'+i),...hvs.map((h,i)=>'hv'+i)].includes(d.wk.in)&&home?d.wk.in:null;if(wk.inside&&WK_RIDES[wk.inside].pick)WK_RIDES[wk.inside].pick()}
   if(home&&Array.isArray(d.bk)&&d.bk.length===3&&d.bk.every(isFinite)){Object.assign(bk,{x:d.bk[0],z:d.bk[1],yaw:d.bk[2],v:0,vy:0,air:false});bk.y=surfAt(bk.x,bk.z);bikePose()}
   // Dexter's heavy machines (heavy.js): where each is, the semi's trailer and the blade or arms and bucket
   if(home&&Array.isArray(d.hv))d.hv.forEach((p,i)=>{const h=hvs[i];if(h&&Array.isArray(p)&&p.length>=6&&p.every(isFinite)){

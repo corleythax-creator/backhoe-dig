@@ -17,6 +17,7 @@ const CTX=[
   ['plantBtn',ctxFoot,()=>3],
   ['trimBtn',ctxFoot,()=>trim.on?9:3],
   ['bumpBtn',()=>ctxFoot()&&trim.on,()=>trim.line<TU.trimMin?10:6],
+  ['punchBtn',ctxFoot,()=>fistUp()?8:2],
   ['gunBtn',ctxFoot,()=>gun.eq?7:2],
   ['reloadBtn',()=>ctxFoot()&&gunHas(),()=>gun.am[gun.k][0]<gunW().mag?7:4],
   ['fireBtn',()=>ctxFoot()&&gunHas(),()=>10]];

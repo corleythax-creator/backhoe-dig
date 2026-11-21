@@ -58,6 +58,7 @@ Every sound is cut from CC0 (public domain) field recordings on Freesound by `to
 | Service pistol (`models/pistol/`) | [Poly Haven](https://polyhaven.com/a/service_pistol): service_pistol, by Mateusz Sadek | CC0 |
 | Screams, cries of pain and dying groans (`sounds/voice_f.mp3`, `sounds/voice_m.mp3`, cut and levelled from the originals) | [OpenGameArt](https://opengameart.org): Female High Pitched Scream SFX, Female Scream 1, High pitch scream sounds, 15 vocal male strain/hurt/pain/jump sounds, Grunts: male death and pain, Female hurt grunts & groans | CC0 |
 | Bolt-action rifle (`models/rifle/`) | [Poly Haven](https://polyhaven.com/a/bolt_action_rifle_7_62): bolt_action_rifle_7_62, by Mateusz Sadek | CC0 |
+| The marina's jet ski, wakeboard boat and kayak (loaded live from the Vehicle Forge, corley-forge-studio.vercel.app/vehicle/library: `seadoo_gti`, `yamaha_212x`, `kayak`) | "2012 Sea-Doo GTI SE 130" and "2008 212X Yamaha Wakeboard Boat" by the BoatUS Foundation (@boatusfoundation) on Sketchfab (https://sketchfab.com/3d-models/2012-sea-doo-gti-se-130-d7b3e903d7dc43a694720bd347f4fadf, https://sketchfab.com/3d-models/2008-212x-yamaha-wakeboard-boat-df598113531f4c74ac48c6e0a530b6c0); the kayak is the owner's own | CC BY 4.0 |
 | Your own textures (uploaded in the map editor) | Whoever uploads them | Theirs; only upload images you have the right to use |
 
 ## Services
