@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-21T01:18:00Z",
+ "updated": "2026-11-21T01:57:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -168,9 +168,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-20",
-   "dh": 7.75,
-   "act": 2.5,
-   "versions": 6
+   "dh": 9.75,
+   "act": 3,
+   "versions": 7
   }
  ],
  "extra": [
@@ -4185,6 +4185,15 @@ window.EFFORT = {
    "tris": 7200419,
    "chars": 2730659,
    "what": "Shadow shaders are built for both lamp sets; the second lamp set no longer builds during play; a second freeze report at 5 minutes"
+  },
+  {
+   "v": 446,
+   "asked": "2026-11-20T19:45:00-06:00",
+   "live": "2026-11-20T19:57:51-06:00",
+   "dh": 2,
+   "tris": 7352931,
+   "chars": 2732352,
+   "what": "The shader gate builds on the spot whatever it hasn't checked for the current lamps and hides only things that got a new shader (covers the dawn and dusk switch, the ground and water included); warm-up shadow shaders are kept; slow frames report mode, place and draws"
   }
  ]
 };
