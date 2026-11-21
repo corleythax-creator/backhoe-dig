@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Friday, November 20, 2026
 
+- **v445** (7:18 PM) Shadow shaders are built for both lamp sets; the second lamp set no longer builds during play; a second freeze report at 5 minutes
 - **v444** (6:59 PM) Key 1 no longer climbs into the excavator
 - **v443** (6:45 PM) The shader gate no longer hides a thing again each time its material is refreshed (the flickering windows)
 - **v442** (5:15 PM) Anything whose shader isn't built yet is kept out of the picture until it is, instead of the whole game freezing while it builds
