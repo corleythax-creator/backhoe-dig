@@ -366,7 +366,7 @@ let warmAll=null;
 // the last ones made named the lamp set's, built in the background at the same moment (v440 report)
 const drawNew={on:false,L:[],slow:-1e9,hooked:false};
 const drawInfo=()=>{const P=renderer.info.programs;if(!drawNew.hooked){drawNew.hooked=true;const push=P.push;
-    P.push=function(...a){if(drawNew.on)drawNew.L.push(...a);return push.apply(this,a)}}
+    P.push=function(...a){if(drawNew.on)drawNew.L.push(...a);if(shGate.cap)shGate.cap.push(...a);return push.apply(this,a)}}
   drawNew.L.length=0;drawNew.on=true;return [P.length,renderer.info.memory.geometries,renderer.info.memory.textures]};
 // (owner's v439 report: two freezes of 3.3 and 1.6 s in play, each "1 shader", and no saying which: now the slow frame
 // names the things whose shaders were new in it, and what was being built in the background then)
@@ -381,6 +381,8 @@ function drawSlow(t0,a){drawNew.slow=performance.now();const P=new Set(drawNew.L
     if(L.length)who=' · '+L.join(', ')}
   const bg=[];if(ltOther.busy)bg.push('lamp set');if(warmLater.busy)bg.push('island machine');if(warmAll&&warmAll.pend)bg.push('shader pass');if(gpuQ.length)bg.push('warming '+gpuQ.length);if(shGate.busy)bg.push('held back '+shGate.wait.size);
   if(bg.length)who=' · building then: '+bg.join(', ')+who}catch(e){}
+  // (what else the frame was: for the slow frames that made nothing new, v445)
+  try{const R=renderer.info.render,c=camera.position;who=` · ${mode} @${Math.round(c.x)},${Math.round(c.z)} · ${R.calls} draws${typeof shc==='object'&&shc.build?' · shadows rebuilt':''}${shGate.ms>20?' · gate '+Math.round(shGate.ms)+' ms':''}`+who}catch(e){}
   pfMark('Slow frame drawn',t0,`new on the card: ${n} shaders, ${b[1]-a[1]} meshes, ${b[2]-a[2]} pictures${ltSl.night?' · lamps lit':''}${who}`.slice(0,600))}
 // NEVER WAIT FOR A SHADER (owner, Nov 20: days of freezes, each a frame waiting for a shader the warm-ups missed; on
 // Windows each takes 1 to 3 s to build). Every frame in play, anything about to be drawn whose material (with that kind
@@ -388,23 +390,33 @@ function drawSlow(t0,a){drawNew.slow=performance.now();const P=new Set(drawNew.L
 // for every camera and the shadows), its shaders built in the background (warmCompile, warmShadows), and shown when
 // they are ready: a thing turns up a moment late instead of the whole game stopping. The lamps' other set is still
 // built ahead (ltOtherTick); the effects passes are built with the shader pass
-const shGate={ok:new WeakMap(),wait:new Map(),busy:0,seeded:false,n:0,ms:0};
+const shGate={ok:new WeakMap(),wait:new Map(),busy:0,seeded:false,n:0,ms:0,cap:null,checked:0};
 function shKind(o,m){const a=o.geometry&&o.geometry.attributes||{};return (o.isInstancedMesh?'i':'')+(o.instanceColor?'c':'')+(o.isSkinnedMesh?'s':'')+(o.isBatchedMesh?'b':'')+
-  (o.isPoints?'p':o.isLine?'l':o.isSprite?'S':'')+(a.color?'v':'')+(a.tangent?'t':'')+(o.morphTargetInfluences?'m':'')+(o.receiveShadow?'r':'')+(ltSl.night?'N':'D')}
-// (not the material's version: some are marked for an update every few seconds, which keeps the same shader, and each
-// one hid them again for a frame or two: the windows flickering in the owner's v442 play)
-function shOk(o,m,add,both){let s=shGate.ok.get(m);if(!s){if(!add)return false;shGate.ok.set(m,s=new Set())}const k=shKind(o,m);if(add){s.add(k);if(both)s.add(k.slice(0,-1)+(k.endsWith('N')?'D':'N'));return true}return s.has(k)}
+  (o.isPoints?'p':o.isLine?'l':o.isSprite?'S':'')+(a.color?'v':'')+(a.tangent?'t':'')+(o.morphTargetInfluences?'m':'')+(o.receiveShadow?'r':'')+(ltSl.night?'N':'D')+m.version}
+function shOk(o,m,add){let s=shGate.ok.get(m);if(!s){if(!add)return false;shGate.ok.set(m,s=new Set())}const k=shKind(o,m);if(add){s.add(k);return true}return s.has(k)}
+// Anything not checked yet for the lamp set and material version it is drawn with now is first built right here
+// (warmCompile and warmShadows over just those things). A shader that already exists is simply reused, so most of the
+// time nothing new is made and nothing is hidden (a refreshed material, the lamps' other set that the loading built).
+// Only the things that got a NEW shader are kept out of the picture (their layers off, for every camera and the
+// shadows) until it is ready. v443/v445 trusted the loading to have built both lamp sets for everything; the ground
+// and the water had not been, and the dawn switch built theirs in the frame: the 8 and 5.6 s freezes
 function shGateTick(){const G=shGate;if(!LOADP.done||bench.on||vrOn()||TU.shGate===0)return;const t0=performance.now();
-  // (what was built before play is trusted: the loading's passes built it)
-  if(!G.seeded){G.seeded=true;scene.traverse(o=>{if(!o.material)return;for(const m of [].concat(o.material)){if(!m)continue;const pr=renderer.properties.get(m);if(pr&&pr.programs&&pr.programs.size)shOk(o,m,true,ltOther.done)}});return}
+  // (what the loading built for the lamps as they are now is trusted)
+  if(!G.seeded){G.seeded=true;scene.traverse(o=>{if(!o.material)return;for(const m of [].concat(o.material)){if(!m)continue;const pr=renderer.properties.get(m);if(pr&&pr.programs&&pr.programs.size)shOk(o,m,true)}});return}
   const L=[];scene.traverseVisible(o=>{if(!o.material||G.wait.has(o)||!(o.isMesh||o.isPoints||o.isLine||o.isSprite)||!o.layers.mask)return;
     for(const m of [].concat(o.material))if(m&&m.visible!==false&&!shOk(o,m)){L.push(o);break}});
-  if(L.length){G.n+=L.length;for(const o of L)G.wait.set(o,o.layers.mask),o.layers.mask=0;
-    const root={isObject3D:true,traverseVisible(){},traverse(cb){for(const o of L)cb(o)}},end=()=>{G.busy--;
-      for(const o of L){for(const m of [].concat(o.material))if(m)shOk(o,m,true);o.layers.mask|=G.wait.get(o);G.wait.delete(o)}};
-    G.busy++;let p=null,q=null;
-    // (three.js builds them whatever their layers: compile goes by the list it is given)
-    try{p=warmCompile(root,scene)}catch(e){}try{q=warmShadows(root)}catch(e){}
+  if(!L.length){G.ms=performance.now()-t0;return}
+  G.checked+=L.length;const root={isObject3D:true,traverseVisible(){},traverse(cb){for(const o of L)cb(o)}};let p=null,q=null;
+  G.cap=[];try{p=warmCompile(root,scene)}catch(e){}try{q=warmShadows(root)}catch(e){}const nw=new Set(G.cap);G.cap=null;
+  const ok=o=>{for(const m of [].concat(o.material))if(m)shOk(o,m,true)};
+  if(!nw.size){for(const o of L)ok(o);G.ms=performance.now()-t0;return}
+  // (which things the new shaders are for: their material's; a new shadow shader belongs to no material of theirs, so
+  // then every one of them that casts a shadow waits too)
+  let dep=false,H=[];for(const pr of nw)dep=dep||!!(pr.type&&/Depth|Distance/.test(pr.type));
+  for(const o of L){let h=dep&&o.castShadow;if(!h)for(const m of [].concat(o.material)){const pr=m&&renderer.properties.get(m);if(pr&&pr.programs)for(const x of pr.programs.values())if(nw.has(x)){h=true;break}if(h)break}
+    if(h)H.push(o);else ok(o)}
+  if(H.length){G.n+=H.length;G.busy++;for(const o of H)G.wait.set(o,o.layers.mask),o.layers.mask=0;
+    const end=()=>{G.busy--;for(const o of H){ok(o);o.layers.mask|=G.wait.get(o);G.wait.delete(o)}};
     Promise.all([p&&p.then?p.catch(()=>{}):null,q&&q.then?q.catch(()=>{}):null]).then(end,end)}
   G.ms=performance.now()-t0}
 // the places a player gets to (where the island tour test goes): the rain cover's top-down pass draws what is there
@@ -521,7 +533,11 @@ function warmShadows(root){if(!renderer.shadowMap.enabled)return null;const swap
     let p2=null;ltHide(true);try{p2=renderer.compileAsync(r,camera,scene)}finally{ltShow()}p=Promise.all([p1,p2])}
   finally{scene.fog=fog;renderer.setRenderTarget(t);for(const [o,m] of swap)o.material=m}
   // (kept a while: disposing them now would drop the very shaders built, before the shadow pass takes them up)
-  const drop=()=>{if(!LOADP.done){setTimeout(drop,2000);return}setTimeout(()=>{for(const d of made.values())d.dispose()},15000)};drop();return p}
+  // (kept: three.js shares a shader between materials alike, and these were thrown away 15 s on, which dropped the very
+// shaders built if the shadow pass had not used them yet, the lamps' other set above all; it built them again at its
+// first shadow in play: the depth shader freezes of the owner's v445 report)
+  for(const d of made.values())warmShKeep.push(d);return p}
+const warmShKeep=[];
 // the islands' machines (gfxMachines standing on an island: about a third of the game's shaders) are not drawn from town,
 // where every visit starts (controls.js START_AT, gfxAway): the warming passes leave them out (warmRoot, a stand-in root
 // that walks the scene without them) and, once you are in, they are built one machine at a time in the background
