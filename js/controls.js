@@ -38,10 +38,9 @@ const keys={};
 // keyboard: every key runs the action it is bound to in keys.js (standard: WASD/arrows the left stick, IJKL the right stick);
 // the sticks' captions show the keys once one is pressed
 let kbUsed=false;
-const KEY_RUN={dig:()=>{rideIn('ex');setMode('dig')},drive:()=>{rideIn('ex');setMode('drive')},exSwap:()=>exSwap(),bhOut:()=>bhOut(),truck:()=>rideIn('truck'),mow:()=>rideIn('mow'),skid:()=>rideIn('skid'),walk:()=>rideIn('walk'),
-  nextMode:e=>machCycle(e&&e.shiftKey?-1:1),prevMode:()=>machCycle(-1),
+const KEY_RUN={exSwap:()=>exSwap(),bhOut:()=>bhOut(),walk:()=>getOut(),punch:()=>punch(),
   stats:()=>showStats(statBox.hidden),heat:()=>{if(!heat.on)setHeat(true);else if(heat.mode!==HEAT_MODES[HEAT_MODES.length-1][0])heatNext();else setHeat(false)},
-  enter:()=>useAct(),jump:()=>walkJump(),plant:()=>plantHere(),trim:()=>trimSet(!trim.on),trimBump:()=>trimBump(),gun:()=>gunEquip(!gun.eq),gunShoot:()=>gunFire(),gunReload:()=>gunReload(),talk:()=>talkOpen(),gunNext:()=>gunNext(),plantKind:()=>plantNext(),carry:e=>{if(blkOn&&e&&keyBind.blkWhat.includes(e.code))return;pbAct()},blocks:()=>setBlocks(!blkOn),place:()=>placeBlock(),lift:()=>removeBlock(),size:()=>blkCube(1),blkTurn:()=>blkTurn(),blkLock:()=>toast(say('blkSnap',{snap:blkLockNext()}),'',1400),blkFar:()=>blkReachBy(2),blkNear:()=>blkReachBy(-2),sizeDown:()=>blkCube(-1),
+  enter:()=>useAct(),jump:()=>walkJump(),plant:()=>plantHere(),trim:()=>trimSet(!trim.on),trimBump:()=>trimBump(),gun:()=>{fist.on=false;gunEquip(!gun.eq)},gunShoot:()=>gunFire(),gunReload:()=>gunReload(),talk:()=>talkOpen(),gunNext:()=>gunNext(),plantKind:()=>plantNext(),carry:e=>{if(blkOn&&e&&keyBind.blkWhat.includes(e.code))return;pbAct()},blocks:()=>setBlocks(!blkOn),place:()=>placeBlock(),lift:()=>removeBlock(),size:()=>blkCube(1),blkTurn:()=>blkTurn(),blkLock:()=>toast(say('blkSnap',{snap:blkLockNext()}),'',1400),blkFar:()=>blkReachBy(2),blkNear:()=>blkReachBy(-2),sizeDown:()=>blkCube(-1),
   blkWhat:e=>{if(!blkOn){if(!(e&&keyBind.carry.includes(e.code)))toast(say('blkIsOff'),'tip',1800);return}const ks=['',...Object.keys(PROPS)];setBlkThing(ks[(ks.indexOf(blkThing)+1)%ks.length]);toast(say('blkWhat',{what:blkThing?PROPS[blkThing].n:'Block'}),'',1200)},
   blkMat:()=>{let m=blkMat;do m=(m+1)%MAT_MAX;while(m&&!MAT_LIST[m-1]);setBlkMat(m);toast(say('blkMat',{mat:blkMatName(blkMat)}),'',1400)},
   box:()=>hookBox(),coupler:()=>cplAct(),grip:()=>cplGrip(),lookAhead:()=>{if(camMode==='cab')fpl.home=true;fpl.zt=1},pump:()=>setPump(!pumpOn),wipers:()=>setWipers(!wipeOn),cam:()=>{if(camMode==='cab')camSet('chase',true);else if(camFree)camSet('chase',false);else camSet('cab')},
@@ -141,6 +140,7 @@ canvas.addEventListener('pointerdown',e=>{if(edOn)return;camPtrs.set(e.pointerId
   drag={id:e.pointerId,x:e.clientX,y:e.clientY,x0:e.clientX,y0:e.clientY,t0:performance.now(),btn:e.button,mouse:e.pointerType==='mouse',locked:document.pointerLockElement===canvas};
   // with the pistol out on foot, a click with the mouse taken fires it (pistol.js)
   if(document.pointerLockElement===canvas&&e.button===0&&gunReady()){gun.trig=true;gunFire();return}
+  if(document.pointerLockElement===canvas&&e.button===0&&fistUp()){punch();return}
   // with the mouse taken on foot and blocks on, a click sets a block where the dot is and a right click lifts one
   if(document.pointerLockElement===canvas&&blkOn&&blkFP()){if(e.button===0)placeBlock();else if(e.button===2)removeBlock();return}
   // with a mouse, a click on the scene takes it for mouse look in any view (Esc lets it go); with blocks on in chase
@@ -157,7 +157,7 @@ const dend=e=>{if(e.button===0||e.type==='pointercancel')gun.trig=false;camPtrs.
 // with blocks on, a left click on the scene (not a drag) sets a block, in Dig or Walk mode and either view (the click
 // that takes the mouse in cab view sets one too; once it is taken, pointerdown above does it)
 canvas.addEventListener('pointerup',e=>{const d=drag;if(!d||e.pointerId!==d.id||!d.mouse||d.btn!==0||d.locked||edOn)return;
-  if(Math.hypot(e.clientX-d.x0,e.clientY-d.y0)<6&&performance.now()-d.t0<400){if(gunReady())gunFire();else if(blkOn&&(mode==='dig'||mode==='walk'))placeBlock()}});
+  if(Math.hypot(e.clientX-d.x0,e.clientY-d.y0)<6&&performance.now()-d.t0<400){if(gunReady())gunFire();else if(fistUp())punch();else if(blkOn&&(mode==='dig'||mode==='walk'))placeBlock()}});
 canvas.addEventListener('pointerup',dend);canvas.addEventListener('pointercancel',dend);
 canvas.addEventListener('wheel',e=>{if(edOn)return;e.preventDefault();
   // in first person on foot with blocks on, the wheel pushes the block out and pulls it back instead of zooming
@@ -236,28 +236,32 @@ $('#exDrive').onclick=()=>{if(mode==='dig'||bhIn()&&hvCur().hoe)exSwap()};$('#ex
 function camSet(m,free){camMode=m;camFree=!!free&&m==='chase';camBase=null;fpReset();
   if(!camFree){camDist=clamp(camDist,5,22);orbitPitch=clamp(orbitPitch,0.08,1.3)}$('#camBtn').dataset.cam=camMode==='cab'?'cab':camFree?'orbit':'chase';
   if(camFree&&!camSet.told){camSet.told=true;toast(say('orbitTip'),'tip',4200)}}
-// Machines (top right) drops the list of every machine you can climb into, nearest first, and On foot; picking one puts
-// you in its seat wherever it is, as walking up and tapping Use would. Picking one, or tapping the scene, closes it
-const MACH_KEY={ex:'dig',truck:'truck',mow:'mow',skid:'skid'};
+// Machines (top right) drops the list of every machine you can climb into, nearest first, with how far off and which
+// way each one is. You are always on foot (owner, Nov 21): nothing here puts you in a seat from a distance. Picking a
+// machine you are standing next to climbs in, as Use does; any other says where it is, to walk to. In a machine the
+// first row climbs out. Picking one, or tapping the scene, closes it
 // where you are: the machine you sit in, or you on foot
 function machFrom(){const R=wk.inside&&WK_RIDES[wk.inside];return R?R.o:wk}
 function machFt(m){const f=m/FT;return f<1000?Math.round(f/10)*10+' ft':(f/5280).toFixed(1)+' mi'}
-// every machine, nearest first: [ride key, its name, metres away]
-function machList(){const o=machFrom();return Object.keys(WK_RIDES).map(k=>{const R=WK_RIDES[k];try{const p=R.o;return [k,R.n,Math.hypot(p.x-o.x,p.z-o.z)]}catch(e){return [k,R.n,NaN]}}).filter(r=>isFinite(r[2])).sort((a,b)=>a[2]-b[2])}
-function machDraw(){const cap=t=>t.charAt(0).toUpperCase()+t.slice(1),cur=wk.inside||(mode==='walk'?'walk':'');
-  let h=`<button data-r="walk" data-k="${keyLabel('walk')}" aria-pressed="${cur==='walk'}"><span>On foot</span></button>`;
-  for(const [k,n,d] of machList())h+=`<button data-r="${k}"${MACH_KEY[k]?` data-k="${keyLabel(MACH_KEY[k])}"`:''} aria-pressed="${cur===k}"><span>${cap(n)}</span><small>${cur===k?'You are in it':machFt(d)}</small></button>`;
+// which way from you: north is -z
+const machDir=(dx,dz)=>['north','north-east','east','south-east','south','south-west','west','north-west'][Math.round(Math.atan2(dx,-dz)/(Math.PI/4)+8)%8];
+const MACH_DIR={north:'N','north-east':'NE',east:'E','south-east':'SE',south:'S','south-west':'SW',west:'W','north-west':'NW'};
+// every machine, nearest first: [ride key, its name, metres away, which way]
+function machList(){const o=machFrom();return Object.keys(WK_RIDES).map(k=>{const R=WK_RIDES[k];try{const p=R.o;return [k,R.n,Math.hypot(p.x-o.x,p.z-o.z),machDir(p.x-o.x,p.z-o.z)]}catch(e){return [k,R.n,NaN,'']}}).filter(r=>isFinite(r[2])).sort((a,b)=>a[2]-b[2])}
+function machDraw(){const cap=t=>t.charAt(0).toUpperCase()+t.slice(1),cur=wk.inside||(mode==='walk'?'walk':''),at=cur==='walk'?wkNear():null;
+  let h=cur==='walk'?`<button data-r="walk" aria-pressed="true"><span>On foot</span><small>Walk up to a machine</small></button>`
+    :`<button data-r="walk" data-k="${keyLabel('enter')}" aria-pressed="false"><span>Get out</span></button>`;
+  for(const [k,n,d,w] of machList())h+=`<button data-r="${k}"${at===k?` data-k="${keyLabel('enter')}"`:''} aria-pressed="${cur===k}"><span>${cap(n)}</span><small>${cur===k?'You are in it':at===k?'Get in':machFt(d)+' '+MACH_DIR[w]}</small></button>`;
   $('#ctlMenu').innerHTML=h}
-// climb into machine k from wherever you are (out of the one you were in), or 'walk' to get out
-function rideIn(k){if(k==='walk'){if(wk.inside)seatToggle();else if(mode!=='walk')setMode('walk');return}
-  const R=WK_RIDES[k];if(!R||wk.inside===k)return;
-  wk.inside=k;walker.visible=false;if(R.pick)R.pick();setMode(R.m);toast(say('inMachine',{machine:R.n,key:kbUsed?keyLabel('enter'):padUsed?'B':say('useOut')}),'tip',2600)}
-// Tab, LB / RB: the next machine within 120 m (in the list's own order, so it steps round them), then On foot
-function machCycle(dir){const o=machFrom(),near=Object.keys(WK_RIDES).filter(k=>{try{const p=WK_RIDES[k].o;return k===wk.inside||Math.hypot(p.x-o.x,p.z-o.z)<120}catch(e){return false}}),list=['walk',...near],
-    i=Math.max(0,list.indexOf(wk.inside||'walk'));rideIn(list[(i+dir+list.length)%list.length])}
+// climb out of the machine you are in, to stand beside it
+function getOut(){if(wk.inside)seatToggle();else if(mode!=='walk')setMode('walk')}
+// a row of the list: Get out, the machine at hand (climb in), or where a machine is
+function machPick(k){if(k==='walk'){getOut();return}const R=WK_RIDES[k];if(!R||wk.inside===k)return;
+  if(mode==='walk'&&wkNear()===k){seatToggle();return}
+  const o=machFrom(),p=R.o;toast(say(wk.inside?'machOut':'machWalk',{machine:R.n,ft:machFt(Math.hypot(p.x-o.x,p.z-o.z)),way:machDir(p.x-o.x,p.z-o.z),key:kbUsed?keyLabel('enter'):padUsed?'B':say('useIn')}),'tip',4200)}
 function showCtl(on){if(on)machDraw();$('#ctlMenu').hidden=!on;$('#ctlBtn').setAttribute('aria-expanded',on)}
 $('#ctlBtn').onclick=()=>{showCtl($('#ctlMenu').hidden);showMenu(false)};
-$('#ctlMenu').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;showCtl(false);rideIn(b.dataset.r)});
+$('#ctlMenu').addEventListener('click',e=>{const b=e.target.closest('button');if(!b)return;showCtl(false);machPick(b.dataset.r)});
 $('#ctrlsBtn').onclick=()=>{showCtrls(true);showCtl(false);showMenu(false)};
 let resetArm=0;
 $('#resetBtn').onclick=()=>{const b=$('#resetBtn');
@@ -346,11 +350,12 @@ const startReady=()=>LOADP.done&&typeof tpGo==='function'&&typeof warmIdle==='fu
 SPICK.go=()=>{const p=SPICK.pick;if(!p)return;if(!startReady()){$('#startMapHint').textContent='Starting there as soon as the island has loaded…';return}
   SPICK.pick=null;startLay();if(!landIn(p.x,p.z,0,0,true)&&!tpSpot('foot',p.x,p.z)){toast(say('tpLake'),'bad');return}
   tpPick={x:p.x,z:p.z};tpGo('foot',true);tpSet(null);startIn('walk');toast(say('startIsl',{island:mapPlace(p.x,p.z),how:'on foot'}),'good',2600)};
-// each time the game opens it starts you on foot at the brewery's front door, looking at it (owner, Nov 10: no spot to
-// pick every time); the map comes back with ☰ → the start card for going somewhere else. Not for the tests opened from
-// the address (?digtest, ?speedtest…) or the headless checks (play.test). START_AT: metres, about 15 ft out from the
-// front door (Building Forge's lakeside_brewery, door on its -z side), yaw 0 facing +z, at the door
-const START_AT={x:52,z:653.6,yaw:0};
+// each time the game opens it starts you on foot down by the boat dock at the town marina, at the head of the pier's
+// gangway looking out along it (owner, Nov 21; before that the brewery's front door, Nov 10: no spot to pick every
+// time); the map comes back with ☰ → the start card for going somewhere else. Not for the tests opened from the address
+// (?digtest, ?speedtest…) or the headless checks (play.test). START_AT: metres, on the boardwalk about 14 ft back from
+// where the pier starts (MAR, marina.js: x 72, z0 about 556.3), yaw π facing -z, north, out over the lake
+const START_AT={x:72,z:560.5,yaw:Math.PI};
 const startAuto=()=>!/test/.test(location.search)&&!/^(localhost|127\.|play\.test)/.test(location.hostname)&&!SPICK.pick;
 function startAt(){tpPick={x:START_AT.x,z:START_AT.z};wk.yaw=START_AT.yaw;tpGo('foot',true);tpSet(null);wk.yaw=START_AT.yaw;startIn('walk');toast(say('startBrew'),'good',2600)}
 // (on the site, you are put at the start spot as soon as the game can move you, behind the loading cover: what is made

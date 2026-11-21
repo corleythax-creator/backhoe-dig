@@ -248,6 +248,8 @@ function tpSpot(k,x,z){const y0=k==='foot'?wk.yaw:WK_RIDES[k].o.yaw;
     for(let q=0;q<(k==='foot'?1:4);q++){const yaw=y0+q*Math.PI/2;if(tpFits(k,px,pz,yaw))return {x:px,z:pz,yaw}}}
   return null}
 function tpGo(k,quiet){if(!tpPick||bench.on)return;
+  // from a machine: he climbs out first (you are always on foot; the machine stays where it is)
+  if(k==='foot'&&wk.inside)wk.inside=null;
   const p=tpSpot(k,tpPick.x,tpPick.z);if(!p){toast(say('tpNoRoom'),'bad');return}
   const from=wk.inside?WK_RIDES[wk.inside].o:wk,dist=Math.hypot(p.x-from.x,p.z-from.z)/FT;
   if(k==='foot'){Object.assign(wk,{x:p.x,z:p.z,vy:0,ground:true,airT:0,jumpQ:0,landT:0,spd:0,inside:null});wk.y=wkFloor(p.x,p.z,0,1e9);setMode('walk')}

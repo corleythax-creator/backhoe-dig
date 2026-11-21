@@ -201,7 +201,7 @@ function updateWalker(dt,mx,mz,lookX,lookY){
     for(let s=0;s<2;s++){const L=wkLegs[s],A=wkArms[s],k=s?Math.PI:0;L.top.rotation.x=-0.25+Math.sin(p*2+k)*(0.3+0.2*mv);L.low.rotation.x=0.45+Math.sin(p*2+k+1)*0.25;
       A.top.rotation.x=-1.1-mv*0.5+Math.sin(p)*0.6;A.low.rotation.x=-0.5+Math.cos(p)*0.4}
     wkBody.position.y=Math.sin(p*2)*0.02;wkBody.rotation.x=0.15+0.45*mv;wkHead.rotation.x=-0.2-0.4*mv;
-    walker.position.set(wk.x,wk.y,wk.z);walker.rotation.y=wk.yaw;walker.visible=!(on&&camMode==='cab'&&!gunHas());return}
+    walker.position.set(wk.x,wk.y,wk.z);walker.rotation.y=wk.yaw;walker.visible=!(on&&camMode==='cab'&&!gunHas()&&!fistUp());return}
   const run=Math.min(1,wk.spd/TU.wkRun),fast=clamp((wk.spd-TU.wkRun)/(TU.wkSprint-TU.wkRun),0,1);if(wk.ground)wk.phase+=dt*(4+6*run+4*fast)*Math.min(1,wk.spd*2);
   // the stride grows and dies away smoothly as he sets off and stops (G.amp), rather than freezing mid-step; G.run
   // eases between the walk's and the run's way of moving
@@ -232,7 +232,7 @@ function updateWalker(dt,mx,mz,lookX,lookY){
   G.spYaw=-0.2*A*Math.sin(p-0.15);G.sway=0.025*amp*(1-0.6*R)*Math.sin(p)+idle*0.02*Math.sin(G.t*0.45);
   G.roll=wk.ground?clamp(-G.turn*wk.spd*0.035,-0.22,0.22):0;G.breath=idle*0.018*br;
   walker.position.set(wk.x,wk.y,wk.z);walker.rotation.y=wk.yaw;
-  walker.visible=!(on&&camMode==='cab'&&!gunHas())}
+  walker.visible=!(on&&camMode==='cab'&&!gunHas()&&!fistUp())}
 function walkJump(){if(mode!=='walk')return;wk.jumpQ=0.15;started()}
 // its button runs it through act (keys.js b, controls.js)
 function setSprint(on){wk.sprint=on;wk.stillT=0;$('#sprintBtn').setAttribute('aria-pressed',on)}

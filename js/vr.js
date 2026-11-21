@@ -61,7 +61,7 @@ function vrPoll(){const s=renderer.xr.getSession();if(!s)return;
   if(used)usePad()}
 // the hand controllers' buttons: game actions run through act (controls.js) like keys and the gamepad; the panel and
 // leaving VR are VR's own
-const VR_MAP={right5:['enter','enter'],right4:['jump','exSwap'],left4:['nextMode','nextMode'],left1:['box','box']};
+const VR_MAP={right5:['enter','enter'],right4:['jump','exSwap'],left4:['punch','exSwap'],left1:['box','box']};
 function vrButton(h,i){const m=VR_MAP[h+i];
   if(m)act(mode==='walk'?m[0]:m[1]);
   else if(h==='right'&&i===3)vr.panel=!vr.panel;
