@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-21T01:57:00Z",
+ "updated": "2026-11-21T23:03:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -171,6 +171,12 @@ window.EFFORT = {
    "dh": 9.75,
    "act": 3,
    "versions": 7
+  },
+  {
+   "d": "2026-11-21",
+   "dh": 6,
+   "act": 0.5,
+   "versions": 1
   }
  ],
  "extra": [
@@ -4194,6 +4200,15 @@ window.EFFORT = {
    "tris": 7352931,
    "chars": 2732352,
    "what": "The shader gate builds on the spot whatever it hasn't checked for the current lamps and hides only things that got a new shader (covers the dawn and dusk switch, the ground and water included); warm-up shadow shaders are kept; slow frames report mode, place and draws"
+  },
+  {
+   "v": 447,
+   "asked": "2026-11-21T15:15:00-06:00",
+   "live": "2026-11-21T17:03:44-06:00",
+   "dh": 6,
+   "tris": 7200966,
+   "chars": 2732596,
+   "what": "A bar and brewery on the water in the Harbor House's place: taproom, brewhouse, covered deck, bar staff and the brewery's menu"
   }
  ]
 };

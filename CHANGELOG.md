@@ -2,6 +2,10 @@
 
 Every version of Corley's Island, newest first, grouped by the day it went live (Central time). Made from `data/effort.js` by `tools/changelog.py`; don't edit it by hand. [Play any old version](https://corleys-island.vercel.app/versions/) · [Build log with charts](https://corleys-island.vercel.app/build.html)
 
+## Saturday, November 21, 2026
+
+- **v447** (5:03 PM) A bar and brewery on the water in the Harbor House's place: taproom, brewhouse, covered deck, bar staff and the brewery's menu
+
 ## Friday, November 20, 2026
 
 - **v446** (7:57 PM) The shader gate builds on the spot whatever it hasn't checked for the current lamps and hides only things that got a new shader (covers the dawn and dusk switch, the ground and water included); warm-up shadow shaders are kept; slow frames report mode, place and draws
