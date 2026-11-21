@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-20T23:15:00Z",
+ "updated": "2026-11-21T00:45:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -168,9 +168,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-20",
-   "dh": 5.5,
-   "act": 1.5,
-   "versions": 3
+   "dh": 6,
+   "act": 2,
+   "versions": 4
   }
  ],
  "extra": [
@@ -4158,6 +4158,15 @@ window.EFFORT = {
    "tris": 7208668,
    "chars": 2729138,
    "what": "Anything whose shader isn't built yet is kept out of the picture until it is, instead of the whole game freezing while it builds"
+  },
+  {
+   "v": 443,
+   "asked": "2026-11-20T18:00:00-06:00",
+   "live": "2026-11-20T18:45:08-06:00",
+   "dh": 0.5,
+   "tris": 7349725,
+   "chars": 2729334,
+   "what": "The shader gate no longer hides a thing again each time its material is refreshed (the flickering windows)"
   }
  ]
 };
