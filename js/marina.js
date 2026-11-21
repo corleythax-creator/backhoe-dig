@@ -3,7 +3,7 @@
 // lamps, life rings and cleats; four finger piers off its east side hold the moored boats (cabin cruisers, a pontoon,
 // a bowrider, a sloop, a centre console, a fishing boat), each riding the swells at its lines (marinaTick); a rubble
 // breakwater curls round the basin from the shore to a little lighthouse at its tip, whose beam turns after dark. Ashore:
-// the Harbor House (the marina office with its bait and tackle shop, porch and cupola), the Dockside Grill with its
+// Harbor Light Brewing Co. (a taproom and brewhouse on the water with its porch and cupola), the Dockside Grill with its
 // deck, umbrellas and string lights, an ice cream stand, a boat ramp, a dry-stack boat rack and the marina's car park.
 // Mooring balls and channel buoys lie off the pier, with a sloop out on one of them.
 // The decks walk (BRIDGES, dock set), the boats and the breakwater are walls to a boat you drive (BOAT_WALLS), and the
@@ -223,7 +223,7 @@ function marBoat(kind,o,x,z,yaw){const K=famKit();MAR_KIND[kind](K,o);const g=ne
   const beam=new THREE.Group();for(const a of [0,Math.PI]){const m=new THREE.Mesh(g,mat);m.rotation.y=a;m.rotation.x=0.04;beam.add(m)}
   beam.position.set(lx,y0+7.3,lz);beam.visible=false;scene.add(beam);MAR.beam=beam})();
 
-// ---------- ashore: the Harbor House, the Dockside Grill, the ice cream stand, the boat ramp, the rack and the car park ----------
+// ---------- ashore: Harbor Light Brewing, the Dockside Grill, the ice cream stand, the boat ramp, the rack and the car park ----------
 (function(){const K=shopKit(),F=famKit(),BK=famKit(),shing=shopLib('shingles'),conc=shopLib('concrete_broom'),asph=shopLib('asphalt'),
     corr=shopLib('corrugated'),galv=shopStd(0x9aa0a4,0.9,0.38),paint=shopStd(0xe9e6dc,0,0.75),groove=shopStd(0x6b6a64,0,0.95);
   // decks and steps in the grey dock planks (bridge kit, through the famKit)
@@ -235,8 +235,11 @@ function marBoat(kind,o,x,z,yaw){const K=famKit();MAR_KIND[kind](K,o);const g=ne
     F.box(w+0.4,0.07,0.16,0xf4f3ef,x+fx*0.12,y-h/2-0.15,z+fz*0.12,yaw);
     if(shut)for(const s of [-1,1])F.box(w*0.5,h+0.1,0.05,shut,x+fx*0.08+rx*s*(w*0.75+0.15),y,z+fz*0.08+rz*s*(w*0.75+0.15),yaw)};
 
-  // the Harbor House: two floors of grey-blue lap siding with white corner boards, a shingled gable roof along x with a
-  // cupola and weathervane on the ridge, a porch along the water side under its own roof, the marina's sign above it
+  // Harbor Light Brewing Co. (Nov 21, the owner, in the Harbor House's place; on High and Ultra its Daylight design,
+  // harbor_brewery, stands here and this is only the stand-in): lap siding with white corner boards, a shingled gable roof
+  // along x with a cupola and weathervane on the ridge, a porch along the water side under its own roof, the sign above
+  // it (kept when the town from Building Forge stands in). Its taproom is a room for the townsfolk (TF_ROOMS: staff
+  // behind the bar, drinkers at the tables; the bar's menu is the brewery's, town.js), walked into from the promenade
   {const hx=93,hz=572,W=15,D=10,g0=Math.min(G(hx-W/2,hz-D/2),G(hx+W/2,hz-D/2),G(hx-W/2,hz+D/2),G(hx+W/2,hz+D/2)),fl=g0+0.45,H=6.4,SID=0x8fa3ad,TR=0xf4f3ef;
     F.box(W+0.2,fl-g0+0.6,D+0.2,0x8d8a82,hx,(fl+g0-0.6)/2,hz);
     F.box(W+0.04,H,D+0.04,'sidingG',hx,fl+H/2,hz);for(const sx of [-1,1])for(const sz of [-1,1])F.box(0.22,H,0.22,TR,hx+sx*W/2,fl+H/2,hz+sz*D/2);
@@ -262,18 +265,18 @@ function marBoat(kind,o,x,z,yaw){const K=famKit();MAR_KIND[kind](K,o);const g=ne
     for(const [a,b] of [[-7.4,-4.4],[-4.4,-1.6],[1.6,4.4],[4.4,7.4]]){F.box(b-a,0.08,0.1,TR,hx+(a+b)/2,py+0.95,pz-1.45);F.box(b-a,0.06,0.06,TR,hx+(a+b)/2,py+0.12,pz-1.45);
       for(let x=a+0.18;x<b-0.1;x+=0.18)F.box(0.04,0.8,0.04,TR,hx+x,py+0.53,pz-1.45)}
     K.box(shing,W+1.4,0.1,3.6,hx,py+3.1,pz-0.1,0,-0.2);F.box(W+1.4,0.32,0.08,TR,hx,py+2.78,pz-1.86);
-    famSign(['LAKESIDE MARINA','Harbor Master · Bait & Tackle · Ice'],7.4,1.5,hx,fl+4.75,hz-D/2-0.1,Math.PI,'#1f3a5f','#f4f1e6');
-    // rocking chairs on the porch, the ice chest and bait cooler by the door
+    famSign(['HARBOR LIGHT BREWING CO.','Taproom · Brewhouse · On the Water'],7.4,1.5,hx,fl+4.75,hz-D/2-0.1,Math.PI,'#1f2a30','#e8c27a').userData.sign=1;
+    // rocking chairs on the porch
     for(const dx of [-6.2,-3.2,3.2,6.2]){const x=hx+dx,z=pz+0.3;F.box(0.55,0.06,0.5,0x2f4a3a,x,py+0.45,z);F.box(0.55,0.65,0.06,0x2f4a3a,x,py+0.8,z+0.24,0,-0.15);
       for(const s of [-1,1]){F.box(0.05,0.08,0.75,0x2f4a3a,x+s*0.26,py+0.06,z);F.box(0.04,0.4,0.04,0x2f4a3a,x+s*0.26,py+0.26,z)}}
-    F.box(1.4,1.3,0.75,0xf2f1ec,hx+2.0,py+0.65,hz-D/2-0.5);F.box(1.3,0.35,0.05,0x2a6f9a,hx+2.0,py+1.0,hz-D/2-0.88);F.box(0.9,0.9,0.6,0x2a6f9a,hx-2.1,py+0.45,hz-D/2-0.45);
     SOLIDS.push({x:hx,z:hz,hx:W/2+0.1,hz:D/2+0.1});
-    // the flagpole with a yardarm, between the porch and the boardwalk
-    {const X=hx+9.5,Z=hz-7,y=G(X,Z);F.box(1,0.3,1,0x9b9a94,X,y+0.15,Z);F.cyl(0.06,0.1,11,8,0xf2f1ec,X,y+5.5,Z);F.box(3,0.08,0.08,0xf2f1ec,X,y+8.4,Z);
-      F.geo(new THREE.IcosahedronGeometry(0.15,0),0xd8b04a,X,y+11.1,Z);const fw=2.2,fh=1.2,fx=X+fw/2+0.08,fy=y+10.3;
-      for(let i=0;i<7;i++)F.box(fw,fh/7,0.03,i%2?0xf4f2ee:0xb3263a,fx,fy+fh/2-fh/14-i*fh/7,Z);F.box(fw*0.42,fh*4/7,0.04,0x2b3d78,X+0.08+fw*0.21,fy+fh/2-fh*2/7,Z);
-      for(const s of [-1,1]){F.box(0.02,0.4,0.55,s<0?0x1f3a5f:0xd8a42a,X+s*1.3,y+8.1,Z+0.3);F.box(0.025,0.14,0.56,0xf4f2ee,X+s*1.3,y+8.1,Z+0.3)}
-      SOLIDS.push({x:X,z:Z,hx:0.5,hz:0.5})}}
+    // the taproom for the townsfolk (o out through the front door, s across): two behind the bar down the west end, the
+    // rest at the tables; open 11 AM to 11 PM and never quiet while it is (minC). With the Daylight design these become
+    // its own bar's and tables' spots (forgetown.js bfRoomSet), its front door the way in
+    {const R=rmKit(F,hx,hz,fl,Math.PI);R.spot(-1.2,5.6,-Math.PI/2,{staff:1});R.spot(1.4,5.6,-Math.PI/2,{staff:1});
+      for(const o of [-1.6,0.2,2.0])R.spot(o,4.2,Math.PI/2);
+      for(const o of [-2.2,1.6])for(const s of [-4,-0.5,2.6])R.spot(o,s,s<0?-Math.PI/2:Math.PI/2);
+      R.dO=D/2;R.W=W/2;rmAdd(R,8,[0,4,8,12]).hrs=[11,23];R.nm='Harbor Light Brewing Co.';R.minC=6}}
 
   // the Dockside Grill: dark red board-and-batten under a standing-seam roof, roll-up glass doors to a deck over the
   // beach with tables, umbrellas and string lights

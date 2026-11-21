@@ -79,7 +79,7 @@ function townRegsTick(){const day=fuelDayNo(),h=townHour();
     if(G.si!=null){const p=tf.people.find(p=>p.room&&p.room.si===G.si&&p.spot.staff&&!p.reg&&!p.dead&&!p.hurt&&(!tfSeen(p.x,p.z,1.5)||Math.hypot(p.x-wk.x,p.z-wk.z)>30));if(p)townMake(p,G)}
     else if(h>=G.walk[0]&&h<G.walk[1]&&!(G.noSun&&townDow()===0)){const p=tfSpawnWalker(false);if(p)townMake(p,G)}}}
 // ---------- what Carry does near people: order at a counter, or talk ----------
-function townMenu(R){return R.si!=null?TOWN_MENU[R.si]||null:R.nm==='Lakeside Brewing Co.'?TOWN_BREW:null}
+function townMenu(R){return R.si!=null?TOWN_MENU[R.si]||null:/Brewing Co\.$/.test(R.nm||'')?TOWN_BREW:null}
 function townShopName(R){return R.si!=null?MAIN_SHOPS[R.si][0]:R.nm||'the shop'}
 const townFace=p=>{const fx=Math.sin(wk.yaw),fz=Math.cos(wk.yaw),dx=p.x-wk.x,dz=p.z-wk.z,d=Math.hypot(dx,dz)||1;return (dx*fx+dz*fz)/d};
 function townCtx(){if(!tf.on||pbS.hold)return null;let best=null,bd=1e9;
