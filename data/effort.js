@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-22T20:30:00Z",
+ "updated": "2026-11-22T21:13:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -180,9 +180,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-22",
-   "dh": 19.5,
-   "act": 2,
-   "versions": 4
+   "dh": 21.5,
+   "act": 2.5,
+   "versions": 5
   }
  ],
  "extra": [
@@ -4314,6 +4314,15 @@ window.EFFORT = {
    "tris": 7481586,
    "chars": 2780649,
    "what": "Rain no longer falls inside the town's Daylight buildings (they now count as shelter, so drops and splashes stop at the roof), and the first lightning strike no longer freezes the game (its shader is built at loading)."
+  },
+  {
+   "v": 459,
+   "asked": "2026-11-22T14:20:00-06:00",
+   "live": "2026-11-22T15:13:10-06:00",
+   "dh": 2,
+   "tris": 7352887,
+   "chars": 2786864,
+   "what": "F8 records the last few seconds frame by frame and F9 saves them as a file, to catch glitches that flash by (townsfolk hopping on their seats)"
   }
  ]
 };

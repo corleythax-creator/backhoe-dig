@@ -718,6 +718,10 @@ body.fps #hud .bbar .stats{display:block}
 #tipCard button{flex:1;height:44px;font-size:var(--t2);border-radius:var(--r);border:0;background:var(--machine);color:#1c1309}
 #tipCard button.ghost{background:rgba(255,255,255,.06);color:var(--ink);border:1px solid var(--hud-line)}
 
+/* the frame recorder's badge (recorder.js) */
+#recBadge{position:absolute;top:calc(env(safe-area-inset-top,0px) + 70px);left:50%;transform:translateX(-50%);z-index:4;font:700 var(--t2)/1 var(--f-display);letter-spacing:.08em;color:#fff;background:rgba(190,20,20,.85);padding:6px 12px;border-radius:var(--r);pointer-events:none}
+#recBadge[hidden]{display:none}
+
 </style>
 <div class="app">
   <div class="side">
@@ -892,6 +896,7 @@ body.fps #hud .bbar .stats{display:block}
     <button id="updBtn" hidden></button>
     <div id="lockHint" hidden></div>
     <div id="toast"><span id="toastText"></span><span id="toastText2"></span></div>
+    <div id="recBadge" hidden>● REC</div>
   </div>
   <!-- gun overlays: the crosshair in first person and the hurt glow (pistol.js); straight in #hud so they draw over the bars -->
   <div id="gunCross" hidden></div><div id="gunHurtFx"></div>
@@ -1493,6 +1498,8 @@ tune.live=tuneParse(tuneLs(TUNE_LIVE_LS));tune.draft=tuneParse(tuneLs(TUNE_LS));
 // so the claude.ai screen editor can load it alone.
 // [id, group, words, what fills the {names}]
 const WORDS=[
+  ['recOn','Frame recorder','Recording the last few seconds. When the glitch happens, press [recSave] to save it; [recFrames] stops',''],['recOff','Frame recorder','Frame recorder off',''],
+  ['recSaved','Frame recorder','Saved {n} frames: upload the hop file to Claude','{n}: frames in the file'],['recNone','Frame recorder','Nothing recorded: press [recFrames] to start the frame recorder first',''],
   ['capL_dig','Captions','{lh} Swing\n{lv} Stick out / in','Left stick, Dig'],['capR_dig','Captions','{rh} Curl / dump\n{rv} Boom down / up','Right stick, Dig'],
   ['capL_drive','Captions','{lh} Turn\n{lv} Drive fwd / back','Left stick, Drive'],
   ['capL_truck','Captions','{lh} Steer\n{lv} Gas / reverse','Left stick, Truck'],['capR_truck','Captions','{rv} Bed up / down','Right stick, Truck'],

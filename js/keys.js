@@ -64,6 +64,8 @@ const KEY_ACTIONS=[
   {id:'sound',g:'View',n:'Sound',d:'Sound on or off',k:['KeyN']},
   {id:'help',g:'View',n:'How to play',d:'Open or close the help card',k:['KeyH']},
   {id:'stats',b:'#statsTop',g:'View',n:'Stats',d:'Open or close your stats: grass mowed, distance walked and driven, dirt moved',k:['KeyO']},
+  {id:'recFrames',g:'View',n:'Frame recorder',d:'Start or stop recording the last few seconds, frame by frame, to catch a glitch',k:['F8']},
+  {id:'recSave',g:'View',n:'Save recording',d:'Download the last few seconds the frame recorder kept (a file to hand to Claude)',k:['F9']},
   {id:'heat',g:'View',n:'Lawn heatmap',d:'Show the lawn heatmap; press again to change what it shows, then to hide it',k:['KeyU']}];
 const KEY_BY={};for(const a of KEY_ACTIONS)KEY_BY[a.id]=a;
 // the player's keys: action id -> [key code or '', key code or '']

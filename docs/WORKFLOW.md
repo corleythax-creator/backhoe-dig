@@ -41,6 +41,9 @@ New behaviour, new things in the world, fixes, and anything the editors can't re
   session passes about 300k tokens; that's the moment to start over.
 - **Quick questions go in a fresh session too.** "How big is X?" costs a few hundred thousand tokens late in a long
   session, and a few tens of thousands in a new one.
+- **A glitch that flashes by (someone hops, pops or flickers for a frame)?** Press F8 to start the frame recorder, wait for
+  it to happen, press F9: a `hop-<time>.json` file downloads with the last few seconds, frame by frame. Upload that file
+  instead of a screen recording; it shows Claude exactly what each nearby person was doing in each frame.
 - **Batch the small stuff.** Ten one-line tweaks in one message cost a little more than one tweak; ten messages cost ten
   times as much. Keep a list, then send it.
 - **Ask for the release in the same message.** Sessions release on their own when done (CLAUDE.md), so one message can
