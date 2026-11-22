@@ -341,7 +341,7 @@ function bfTick(dt){const ri=TU.bfIn||0,rd=TU.bfDoor||0;for(const L of bf.lots){
 function bfInstSync(id){const K=bf.kinds[id]&&bf.kinds[id].K;if(!K)return;let I=bf.inst[id];
   const on=bf.lots.filter(L=>L.id===id&&L.b&&L.b.g.visible),cap=Math.max(on.length,bf.lots.filter(L=>L.id===id).length,1);
   if(I&&I.cap<cap){for(const m of I.ms){scene.remove(m);m.dispose()}I=null}
-  if(!I){I=bf.inst[id]={cap,ms:K.stat.filter(x=>!x.inside).map(x=>{const m=new THREE.InstancedMesh(x.geo,x.mat,cap);m.castShadow=m.receiveShadow=true;m.name='bf:'+id;m.count=0;scene.add(m);return m})}}
+  if(!I){I=bf.inst[id]={cap,ms:K.stat.filter(x=>!x.inside).map(x=>{const m=new THREE.InstancedMesh(x.geo,x.mat,cap);m.castShadow=m.receiveShadow=true;m.name='bf:'+id;m.count=0;if(!x.mat.transparent)m.layers.enable(RAIN_LAYER);scene.add(m);return m})}}
   for(const m of I.ms){on.forEach((L,i)=>{L.b.g.updateMatrixWorld();m.setMatrixAt(i,L.b.g.matrixWorld)});m.count=on.length;m.visible=on.length>0;m.instanceMatrix.needsUpdate=true;if(on.length)m.computeBoundingSphere()}}
 // the fixed thing (fixed.js) a place's building is: the smallest building, structure, large thing or site office round its middle
 const BF_FX=new Set(['fxbuilding','fxstruct','fxbig','fxoffice']);
