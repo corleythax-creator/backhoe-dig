@@ -184,7 +184,7 @@ function gunPlace(){const show=(gunHas()||gun.hol>0&&mode==='walk'&&!wk.inside&&
     for(const f of J.fingers)if(f.b.name.endsWith(A.sf))f.b.quaternion.copy(f.q0).multiply(gunQF.setFromAxisAngle(WK_X,0.35))}gun.fist=null}
   // in first person he is drawn too (walker.js) and the camera is in his head: the head is shrunk away
   if(J&&J.head&&gun.headOff!==fpB){gun.headOff=fpB;J.head.b.scale.setScalar(fpB?0.001:1)}
-  gunVmOn=fpB;gunVmBody(fpB);if(fu&&J)for(const s of [0,1]){const A=gunArm(J,s);if(A){gunCurl(J,A,1.5,1.5);gun.fist=1}}if(!show)return;if(fp)gunMdl.traverse(gunVm);walker.updateMatrixWorld(true);gunFlash.position.fromArray(W.muz);
+  gunVmOn=fpB;gunVmBody(fpB);if(fu&&J){walker.updateMatrixWorld(true);punchPose(J)}if(!show)return;if(fp)gunMdl.traverse(gunVm);walker.updateMatrixWorld(true);gunFlash.position.fromArray(W.muz);
   gunFlash.visible=gun.flash>0;if(gunFlash.visible)gunFlash.rotation.z=Math.random()*6.28;
   const R=J&&gunArm(J,0),L=J&&gunArm(J,1),aim=gun.aim>0||fp,posed=R&&L,dv=gun.hol>0?gun.hol/0.35:gun.dr,one=!W.long&&!aim&&gun.rl<=0;gunAnim(W);
   if(!posed){// one hand: the grip in the palm, half way from the wrist to the middle finger's knuckle, the wrist turned so
@@ -705,7 +705,9 @@ $('#gsClose').addEventListener('click',gunShopClose);
 function gunSave(){return {k:gun.k,e:gun.eq?1:0,o:GUN_K.filter(k=>gun.own[k]),a:GUN_K.map(k=>gun.am[k].slice())}}
 function gunLoad(d){if(!d||typeof d!=='object')return;if(Array.isArray(d.o))for(const k of d.o)if(GUNS[k])gun.own[k]=1;gun.own.pistol=1;
   if(Array.isArray(d.a))GUN_K.forEach((k,i)=>{const a=d.a[i];if(Array.isArray(a)&&a.length===2&&a.every(isFinite))gun.am[k]=[clamp(a[0]|0,0,GUNS[k].mag),clamp(a[1]|0,0,GUNS[k].max)]});
-  if(GUNS[d.k]&&gun.own[d.k])gun.k=d.k;$('#gunBtn').setAttribute('aria-pressed',gun.eq);gunHudDraw()}
+  if(GUNS[d.k]&&gun.own[d.k])gun.k=d.k;
+  // (he never opens the game with nothing at all for the pistol: a save with none gets a magazine and one spare)
+  if(gun.am.pistol[0]+gun.am.pistol[1]<=0)gun.am.pistol=[GUNS.pistol.mag,GUNS.pistol.mag];$('#gunBtn').setAttribute('aria-pressed',gun.eq);gunHudDraw()}
 // its button runs it through act (keys.js b, controls.js)
 $('#fireBtn').addEventListener('pointerdown',e=>{e.preventDefault();gun.trig=true;gunFire()});
 for(const ev of ['pointerup','pointercancel','pointerleave'])$('#fireBtn').addEventListener(ev,()=>{gun.trig=false});
