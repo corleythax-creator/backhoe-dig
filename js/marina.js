@@ -336,7 +336,7 @@ function marBoat(kind,o,x,z,yaw){const K=famKit();MAR_KIND[kind](K,o);const g=ne
     for(const ly of levels)for(let k=0;k<NB;k++,n++){if(n===6||n===12)continue;const L=5.6+(n%3)*0.4,B=2.3,c=COLS[n%COLS.length],K2=famKit();
       marHullKit(K2,L,B,0.85,0.45,c,0xf2f1ec,0x2a2c2f);K2.geo(marDeck(L,B,0.85,0.35,0.03,0.9),0xdedbd4,0,0,0);K2.box(0.6,0.6,0.5,0xf2f1ec,0,0.95,0);
       for(const g of K2.solid){g.translate(x0+k*BW+BW/2,y+ly+0.55,rz+0.2);RK.solid.push(g)}}
-    famAdd(RK)}
+    famAdd(RK);fxDecl('Boat rack',x0+NB*BW/2,rz,NB*BW/2+0.5,3.9)}
   // the car park: asphalt with painted stalls between the buildings and the cross street, lamp poles at its middle,
   // and a boat on its trailer waiting by the ramp
   {K.sheet(asph,58,131,582,612,0.04);walkPad(94.5,597,36.5,15,0,0,{l:0.04});for(let x=60.5;x<129;x+=3)for(const [z0,z1] of [[583,588.5],[605.5,611]])K.sheet(paint,x-0.06,x+0.06,z0,z1,0.055);
