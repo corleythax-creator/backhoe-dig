@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Sunday, November 22, 2026
 
+- **v460** (4:53 PM) The marina's dry-stack boat rack is one thing in the map editor: tap it and the posts, arms, boats and roof move and turn together.
 - **v459** (3:13 PM) F8 records the last few seconds frame by frame and F9 saves them as a file, to catch glitches that flash by (townsfolk hopping on their seats)
 - **v458** (2:30 PM) Rain no longer falls inside the town's Daylight buildings (they now count as shelter, so drops and splashes stop at the roof), and the first lightning strike no longer freezes the game (its shader is built at loading).
 - **v457** (11:54 AM) The bar's stairs can be walked up at any speed: the rooftop floor overhead no longer reads as a wall at the foot of the flight, and a sprint on a slow frame no longer stops partway
