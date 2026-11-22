@@ -50,8 +50,8 @@ const BF_KSPOT={
   pew:(w,d)=>Array.from({length:Math.max(1,Math.floor(w/2.2))},(_,i)=>[-w/2+1.1+i*2.2,0.15,0,'s'])};
 // a lone chair or stool (Daylight's dchair and stool, round a table or along a bar): one seat on it, turned to face the
 // table or bar it stands at (bfSeatAim)
-BF_KSPOT.dchair=BF_KSPOT.stool=(w,d)=>[[0,0,0,'s']];
-const BF_SEATS=new Set(['dchair','stool']),BF_ROUND=new Set(['round','cafetable']);
+BF_KSPOT.dchair=BF_KSPOT.stool=BF_KSPOT.pchair=(w,d)=>[[0,0,0,'s']];
+const BF_SEATS=new Set(['dchair','stool','pchair']),BF_ROUND=new Set(['round','cafetable','ptable']);
 // each lone seat turned to the table or bar beside it (a piece with a top 2 to 4 ft up, within 3 ft): facing the middle
 // of a round table, else the nearest point of its edge. The seat spot gets [x, z, facing, 's', dy (a bar stool's seat
 // above the 18 in a chair's is, lifting the sitter), [f, h] (where their glass and plate go: f ahead of the seat, h
@@ -413,14 +413,17 @@ function bfBuild(L,K,item){const it=bf.lib[L.id],face=L.turn*Math.PI/180,c=Math.
   const mine={solids:[]},yr=(S,a,b)=>{S.by0=a;S.by1=b;S.y0=a;S.y1=b};
   const solid=(x,z,f,hs,ho,lo,hi,top)=>{rmSolid(X(x,z),Z(x,z),f,hs,ho,top);const S=SOLIDS[SOLIDS.length-1];S.bf=1;yr(S,lo,hi);
     G.solids.push({s:S,o:{x:S.x,z:S.z,hx:S.hx,hz:S.hz,f:Math.atan2(S.sn,S.cs),lx:S.lx,lz:S.lz}});mine.solids.push(S)};
-  const pad=(x,z,hx,hz,yaw,t,o)=>{const p=walkPad(X(x,z),Z(x,z),hx,hz,yaw,t,o);p.bf=1;if(o&&o.up)p.up=1;G.pads.push({p,o:{x:p.x,z:p.z,f:yaw,t:p.t}})};
+  const pad=(x,z,hx,hz,yaw,t,o)=>{const p=walkPad(X(x,z),Z(x,z),hx,hz,yaw,t,o);p.bf=1;if(o&&o.up)p.up=1;G.pads.push({p,o:{x:p.x,z:p.z,f:yaw,t:p.t}});return p};
+  // the stairs: a floor rising from one level to the next, foot to head (and a hole in the floor it comes up through)
+  const wells=[];for(const st of it.stairs||[]){const [fx,fz]=st.foot,[hx,hz]=st.head,ux=hx-fx,uz=hz-fz,len=Math.hypot(ux,uz),wx=ux*c+uz*s,wz=-ux*s+uz*c,a=fy(st.level),b=fy(st.up);
+    wells.push({up:st.up,p:pad((fx+hx)/2,(fz+hz)/2,st.width/2,len/2,Math.atan2(wx,wz),a,{rise:b-a})})}
   for(let lv=0;lv<nl;lv++){const W=it.walls.filter(w=>(w[5]||0)===lv);if(!W.length)continue;
     // the floor's walls, standing from it to the next (the ground floor's from below the ground)
     const lo=lv?fy(lv):y0-2,hi=lv+1<nl?fy(lv+1):fy(lv)+it.levels[lv].height+0.3;
     for(const [x0,z0,x1,z1,t] of W){const ux=x1-x0,uz=z1-z0,len=Math.hypot(ux,uz);if(len<0.05)continue;const wx=ux*c+uz*s,wz=-ux*s+uz*c;solid((x0+x1)/2,(z0+z1)/2,Math.atan2(-wz,wx),len/2,t/2+0.04,lo,hi)}
     // its floor (the upper ones stood on only from within a step) and rooms
     const xs=W.flatMap(w=>[w[0],w[2]]),zs=W.flatMap(w=>[w[1],w[3]]),ax=(Math.min(...xs)+Math.max(...xs))/2,az=(Math.min(...zs)+Math.max(...zs))/2;
-    pad(ax,az,(Math.max(...xs)-Math.min(...xs))/2,(Math.max(...zs)-Math.min(...zs))/2,face,fy(lv),lv?{up:1}:null);
+    pad(ax,az,(Math.max(...xs)-Math.min(...xs))/2,(Math.max(...zs)-Math.min(...zs))/2,face,fy(lv),lv?{up:1,holes:wells.filter(w=>w.up===lv).map(w=>w.p)}:null);
     // (a room open to the sky, a roof deck, is no room to the camera: nothing over it to stay under)
     for(const r of it.rooms)if(r.level===lv&&!r.open){const a=r.outline.map(q=>q[0]),b=r.outline.map(q=>q[1]),cx=(Math.min(...a)+Math.max(...a))/2,cz=(Math.min(...b)+Math.max(...b))/2;
       const R=rmRoom(X(cx,cz),Z(cx,cz),face,(Math.max(...a)-Math.min(...a))/2,(Math.max(...b)-Math.min(...b))/2,y0+r.floorY,y0+r.ceilingY);R.bf=1;R.bfL=L;bfEnc(R,it,K,cx,cz,r.floorY);R.clad=it.clad||((it.tags||[]).includes('brick')?'brick':(it.tags||[]).includes('steel')?'steel':'siding');G.rooms.push({r:R,o:{x:R.x,z:R.z,f:R.f,y:R.y,top:R.top}})}
@@ -429,9 +432,6 @@ function bfBuild(L,K,item){const it=bf.lib[L.id],face=L.turn*Math.PI/180,c=Math.
       if(P.kind==='porch'||P.kind==='deck'){if(!lv)pad(x,z,hx,hz,face,fy(0));continue}
       if(P.kind==='platform'&&!lv&&b1<it.levels[0].floorY+0.05){pad(x,z,hx,hz,face,y0+b1);continue}   // a step up to the porch: stood on at its own height
       if(P.kind==='stairs'||P.kind==='rug'||b1-b0<0.3||hx>3||hz>3)continue;solid(x,z,face,hx,hz,y0+b0-0.05,y0+b1,y0+b1)}}
-  // the stairs: a floor rising from one level to the next, foot to head
-  for(const st of it.stairs||[]){const [fx,fz]=st.foot,[hx,hz]=st.head,ux=hx-fx,uz=hz-fz,len=Math.hypot(ux,uz),wx=ux*c+uz*s,wz=-ux*s+uz*c,a=fy(st.level),b=fy(st.up);
-    pad((fx+hx)/2,(fz+hz)/2,st.width/2,len/2,Math.atan2(wx,wz),a,{rise:b-a})}
   // the doors with leaves: each one of RM_DOORS (kind bf: its hinge's foot and the way it faces out), its leaves following
   const doors=[];for(const d of it.doors){const ls=leaves.get(d.id);if(!ls)continue;const n=d.normal,fo=face+Math.atan2(n[0],n[2]),hw=d.width/2;
     const mx=X(d.center[0],d.center[2]),mz=Z(d.center[0],d.center[2]),D=rmDoor('bf',mx-Math.cos(fo)*hw,fy(d.level||0),mz+Math.sin(fo)*hw,fo,d.width);D.bf=1;
@@ -448,13 +448,28 @@ function bfBuild(L,K,item){const it=bf.lib[L.id],face=L.turn*Math.PI/180,c=Math.
     if(gameR.dO!=null&&fd&&fd.normal[2]>0.7){const dx0=fd.center[0],dz0=fd.center[2],back=Math.min(...W0.flatMap(w=>[w[1],w[3]])),dO=(dz0-back)/2+0.3,K0=rmKit(null,X(dx0,dz0-dO),Z(dx0,dz0-dO),fy(0),face),sol=[];
       const box=(cx,cz,hx,hz)=>sol.push([cz-(dz0-dO),cx-dx0,hx,hz]);
       for(const [x0,z0,x1,z1,t] of W0)box((x0+x1)/2,(z0+z1)/2,Math.abs(x1-x0)/2+t/2,Math.abs(z1-z0)/2+t/2);
-      for(const st of it.stairs||[])if(!st.level){const [fx,fz]=st.foot,[hx,hz]=st.head;box((fx+hx)/2,(fz+hz)/2,Math.abs(hx-fx)/2+st.width/2,Math.abs(hz-fz)/2+st.width/2)}
+      let stBox=null;for(const st of it.stairs||[])if(!st.level){const [fx,fz]=st.foot,[hx,hz]=st.head;box((fx+hx)/2,(fz+hz)/2,Math.abs(hx-fx)/2+st.width/2,Math.abs(hz-fz)/2+st.width/2);if(st.up===1&&!stBox)stBox=sol[sol.length-1]}
       for(const P of K.items)if(!P.lvl&&P.kind!=='rug'&&P.kind!=='porch'&&P.kind!=='stairs')box(P.box[0],P.box[1],P.box[2],P.box[3]);
-      Object.assign(rs,{x:K0.x,z:K0.z,f:face,P:K0.P,dO,W:it.width/2+Math.abs(dx0),sol,at0:{x:K0.x,z:K0.z}})}}
+      Object.assign(rs,{x:K0.x,z:K0.z,f:face,P:K0.P,dO,W:it.width/2+Math.abs(dx0),sol,at0:{x:K0.x,z:K0.z}});
+      // upstairs too (a rooftop bar): the seats of the floor a flight from the ground floor comes up to, each a spot
+      // walked to by that flight (townfolk.js tfInPath: R.up, the flight's foot and head and that floor's walls and
+      // furniture in the room's frame)
+      const st=(it.stairs||[]).find(t=>!t.level&&t.up===1&&nl>1);
+      if(st){const fr=(x,z)=>[z-(dz0-dO),x-dx0],sol1=[],b1=(cx,cz,hx,hz)=>sol1.push([cz-(dz0-dO),cx-dx0,hx,hz]),[fx,fz]=st.foot,[hx,hz]=st.head,sl=Math.hypot(hx-fx,hz-fz)||1,ux=(hx-fx)/sl,uz=(hz-fz)/sl;
+        for(const [x0,z0,x1,z1,t,l] of it.walls)if(l===1)b1((x0+x1)/2,(z0+z1)/2,Math.abs(x1-x0)/2+t/2,Math.abs(z1-z0)/2+t/2);
+        let n=0;for(const P of K.items){if(P.lvl!==1)continue;if(!BF_OVER.has(P.kind)&&P.kind!=='rug')b1(P.box[0],P.box[1],P.box[2],P.box[3]);
+          for(const q of P.spots||[]){if(q[3]!=='s'||n>=BF_UPMAX)continue;n++;const sp={x:X(q[0],q[1]),z:Z(q[0],q[1]),y:fy(1)+(q[4]||0),yaw:face+q[2],sit:1,up:1,bf:1};if(q[4])sp.dy=q[4];if(q[5]){sp.tf=q[5][0];sp.th=q[5][1]}
+            rs.spots.push(sp);G.spots.push({sp,o:{x:sp.x,z:sp.z,y:sp.y,yaw:sp.yaw}})}}
+        // (on the way to the foot the flight is its own size, not R.sol's box with half its width added all round)
+        if(n){const [fo,fs]=fr(fx,fz),[ho,hs]=fr(hx,hz),[ao,as]=fr(fx-ux*0.6,fz-uz*0.6),[bo,bs]=fr(hx+ux*0.6,hz+uz*0.6),w2=st.width/2,sol0=sol.filter(b=>b!==stBox);
+          sol0.push([(fo+ho)/2,(fs+hs)/2,Math.abs(hs-fs)/2+(Math.abs(ux)>0.5?0:w2),Math.abs(ho-fo)/2+(Math.abs(uz)>0.5?0:w2)]);rs.up={fo,fs,ho,hs,ao,as,bo,bs,sol:sol1,sol0}}}}}
   L.b={g,furn,ins,lvs,doors,gameR,rs,o:{x:ox,z:oz,y:y0,f:face},mine,K,rad:Math.hypot(it.width,it.length)/2};item.bf=L;bfLt.dirty=1}
 // a game room given the building's spots and door frame while it is swapped (on), its own put back after; whoever was
 // in it or on the way leaves first
-const BF_RKEYS=['spots','dO','W','sol','P','x','z','f','y'];
+const BF_RKEYS=['spots','dO','W','sol','P','x','z','f','y','up'];
+// pieces overhead that nobody walks into (a pergola's and an umbrella's boxes cover what stands under them), and how
+// many upstairs seats the townsfolk get
+const BF_OVER=new Set(['pergola','umbrella','porch','deck']),BF_UPMAX=16;
 function bfRoomSet(B,on){const R=B.gameR;if(!R||!B.rs||!!R.bfOn===on)return;
   if(typeof tf!=='undefined')for(const p of tf.people.slice())if(p.room===R||(p.go||p.goTo)&&(p.go||p.goTo).R===R)tfDrop(p);
   if(on){R.bfOrig={};for(const k of BF_RKEYS)R.bfOrig[k]=R[k];for(const k of BF_RKEYS)if(k in B.rs)R[k]=B.rs[k]}
