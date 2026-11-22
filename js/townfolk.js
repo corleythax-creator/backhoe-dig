@@ -660,7 +660,7 @@ function tfInPath(R,E,sp){const k=sp.x*7+sp.z*13+E.mx*3+E.mz;if(sp.inK===k)retur
     const out=[P[0]];for(let i=0;i<P.length-1;){let j=P.length-1;while(j>i+1&&!sees(P[i],P[j]))j--;out.push(P[j]);i=j}return out};
   let best;const U=R.up;
   if(sp.up){// upstairs: in to the foot of the flight, up it, and on from its head
-    const A=U&&way(f,0,U.ao,U.as,U.sol0),B=A&&grid(U.bo,U.bs,so,ss,U.sol);best=B?A.concat([[U.fo,U.fs],[U.ho,U.hs]],B):null}
+    const A=U&&way(f,0,U.ao,U.as,U.sol0),B=A&&grid(U.bo,U.bs,so,ss,U.sol);best=B?A.concat(U.via,B):null}
   else best=way(f,0,so,ss,R.sol);
   return sp.inP=best&&best.map(([o,s])=>[E.mx+(o-D)*E.ux+s*vx,E.mz+(o-D)*E.uz+s*vz])}
 // the whole way from the walk to spot sp (world points), or null

@@ -415,7 +415,19 @@ function bfBuild(L,K,item){const it=bf.lib[L.id],face=L.turn*Math.PI/180,c=Math.
     G.solids.push({s:S,o:{x:S.x,z:S.z,hx:S.hx,hz:S.hz,f:Math.atan2(S.sn,S.cs),lx:S.lx,lz:S.lz}});mine.solids.push(S)};
   const pad=(x,z,hx,hz,yaw,t,o)=>{const p=walkPad(X(x,z),Z(x,z),hx,hz,yaw,t,o);p.bf=1;if(o&&o.up)p.up=1;G.pads.push({p,o:{x:p.x,z:p.z,f:yaw,t:p.t}});return p};
   // the stairs: a floor rising from one level to the next, foot to head (and a hole in the floor it comes up through)
-  const wells=[];for(const st of it.stairs||[]){const [fx,fz]=st.foot,[hx,hz]=st.head,ux=hx-fx,uz=hz-fz,len=Math.hypot(ux,uz),wx=ux*c+uz*s,wz=-ux*s+uz*c,a=fy(st.level),b=fy(st.up);
+  const wells=[];for(const st of it.stairs||[]){const a=fy(st.level),b=fy(st.up);
+    // a flight with landings (st.runs: Daylight's stairs, each run and landing going up): a pad a run, stood on only
+    // from within a step (so the floor under an upper flight is still the floor), a rail's solid along each side and
+    // round a landing's open edges, and the whole of it the hole in the floor above
+    if(st.runs){const ends=[];for(const q of st.runs)ends.push([q,q.a],[q,q.b]);
+      const near=(q,px,pz,qx,qz)=>ends.some(([o,e])=>{if(o===q)return false;const vx=qx-px,vz=qz-pz,L2=vx*vx+vz*vz||1,k=Math.max(0,Math.min(1,((e[0]-px)*vx+(e[1]-pz)*vz)/L2));return Math.hypot(e[0]-px-vx*k,e[1]-pz-vz*k)<0.15});
+      const rail=(px,pz,qx,qz,lo,hi)=>{const vx=qx-px,vz=qz-pz,L=Math.hypot(vx,vz);if(L<0.05)return;const wx=vx*c+vz*s,wz=-vx*s+vz*c;solid((px+qx)/2,(pz+qz)/2,Math.atan2(-wz,wx),L/2,0.04,lo,hi)};
+      for(const q of st.runs){const [ax,az]=q.a,[bx,bz]=q.b,ux=bx-ax,uz=bz-az,len=Math.hypot(ux,uz)||1,wx=ux*c+uz*s,wz=-ux*s+uz*c,nx=-uz/len*q.width/2,nz=ux/len*q.width/2,lo=a+Math.min(q.y0,q.y1)-0.05,hi=a+Math.max(q.y0,q.y1)+1.1;
+        // (a landing reaches 2 in back under the flight that comes onto it, so there is no seam to step into)
+        const e=q.land?0.05:0;pad((ax+bx)/2-ux/len*e/2,(az+bz)/2-uz/len*e/2,q.width/2+e,len/2+e/2,Math.atan2(wx,wz),a+q.y0,{up:1,rise:q.y1-q.y0});
+        for(const [px,pz,qx,qz] of [[ax+nx,az+nz,bx+nx,bz+nz],[ax-nx,az-nz,bx-nx,bz-nz]].concat(q.land?[[bx+nx,bz+nz,bx-nx,bz-nz],[ax+nx,az+nz,ax-nx,az-nz]]:[]))if(!q.land||!near(q,px,pz,qx,qz))rail(px,pz,qx,qz,lo,hi)}
+      const B=bfStBox(st);wells.push({up:st.up,p:pad(B[0],B[1],B[2],B[3],face,-1e5)});continue}
+    const [fx,fz]=st.foot,[hx,hz]=st.head,ux=hx-fx,uz=hz-fz,len=Math.hypot(ux,uz),wx=ux*c+uz*s,wz=-ux*s+uz*c;
     wells.push({up:st.up,p:pad((fx+hx)/2,(fz+hz)/2,st.width/2,len/2,Math.atan2(wx,wz),a,{rise:b-a})})}
   for(let lv=0;lv<nl;lv++){const W=it.walls.filter(w=>(w[5]||0)===lv);if(!W.length)continue;
     // the floor's walls, standing from it to the next (the ground floor's from below the ground)
@@ -448,22 +460,32 @@ function bfBuild(L,K,item){const it=bf.lib[L.id],face=L.turn*Math.PI/180,c=Math.
     if(gameR.dO!=null&&fd&&fd.normal[2]>0.7){const dx0=fd.center[0],dz0=fd.center[2],back=Math.min(...W0.flatMap(w=>[w[1],w[3]])),dO=(dz0-back)/2+0.3,K0=rmKit(null,X(dx0,dz0-dO),Z(dx0,dz0-dO),fy(0),face),sol=[];
       const box=(cx,cz,hx,hz)=>sol.push([cz-(dz0-dO),cx-dx0,hx,hz]);
       for(const [x0,z0,x1,z1,t] of W0)box((x0+x1)/2,(z0+z1)/2,Math.abs(x1-x0)/2+t/2,Math.abs(z1-z0)/2+t/2);
-      let stBox=null;for(const st of it.stairs||[])if(!st.level){const [fx,fz]=st.foot,[hx,hz]=st.head;box((fx+hx)/2,(fz+hz)/2,Math.abs(hx-fx)/2+st.width/2,Math.abs(hz-fz)/2+st.width/2);if(st.up===1&&!stBox)stBox=sol[sol.length-1]}
+      let stBox=null;for(const st of it.stairs||[])if(!st.level){box(...bfStBox(st,st.width/2));if(st.up===1&&!stBox)stBox=sol[sol.length-1]}
       for(const P of K.items)if(!P.lvl&&P.kind!=='rug'&&P.kind!=='porch'&&P.kind!=='stairs')box(P.box[0],P.box[1],P.box[2],P.box[3]);
       Object.assign(rs,{x:K0.x,z:K0.z,f:face,P:K0.P,dO,W:it.width/2+Math.abs(dx0),sol,at0:{x:K0.x,z:K0.z}});
       // upstairs too (a rooftop bar): the seats of the floor a flight from the ground floor comes up to, each a spot
       // walked to by that flight (townfolk.js tfInPath: R.up, the flight's foot and head and that floor's walls and
       // furniture in the room's frame)
       const st=(it.stairs||[]).find(t=>!t.level&&t.up===1&&nl>1);
-      if(st){const fr=(x,z)=>[z-(dz0-dO),x-dx0],sol1=[],b1=(cx,cz,hx,hz)=>sol1.push([cz-(dz0-dO),cx-dx0,hx,hz]),[fx,fz]=st.foot,[hx,hz]=st.head,sl=Math.hypot(hx-fx,hz-fz)||1,ux=(hx-fx)/sl,uz=(hz-fz)/sl;
+      if(st){const fr=(x,z)=>[z-(dz0-dO),x-dx0],sol1=[],b1=(cx,cz,hx,hz)=>sol1.push([cz-(dz0-dO),cx-dx0,hx,hz]);
         for(const [x0,z0,x1,z1,t,l] of it.walls)if(l===1)b1((x0+x1)/2,(z0+z1)/2,Math.abs(x1-x0)/2+t/2,Math.abs(z1-z0)/2+t/2);
         let n=0;for(const P of K.items){if(P.lvl!==1)continue;if(!BF_OVER.has(P.kind)&&P.kind!=='rug')b1(P.box[0],P.box[1],P.box[2],P.box[3]);
           for(const q of P.spots||[]){if(q[3]!=='s'||n>=BF_UPMAX)continue;n++;const sp={x:X(q[0],q[1]),z:Z(q[0],q[1]),y:fy(1)+(q[4]||0),yaw:face+q[2],sit:1,up:1,bf:1};if(q[4])sp.dy=q[4];if(q[5]){sp.tf=q[5][0];sp.th=q[5][1]}
             rs.spots.push(sp);G.spots.push({sp,o:{x:sp.x,z:sp.z,y:sp.y,yaw:sp.yaw}})}}
-        // (on the way to the foot the flight is its own size, not R.sol's box with half its width added all round)
-        if(n){const [fo,fs]=fr(fx,fz),[ho,hs]=fr(hx,hz),[ao,as]=fr(fx-ux*0.6,fz-uz*0.6),[bo,bs]=fr(hx+ux*0.6,hz+uz*0.6),w2=st.width/2,sol0=sol.filter(b=>b!==stBox);
-          sol0.push([(fo+ho)/2,(fs+hs)/2,Math.abs(hs-fs)/2+(Math.abs(ux)>0.5?0:w2),Math.abs(ho-fo)/2+(Math.abs(uz)>0.5?0:w2)]);rs.up={fo,fs,ho,hs,ao,as,bo,bs,sol:sol1,sol0}}}}}
+        // the way up: the middle of each run going up (a landing by its middle), come to from 0.6 m before its foot and
+        // left 0.6 m past its head (on the way to the foot the flight is its own size, not R.sol's box with half its
+        // width added all round)
+        if(n){const V=st.runs?st.runs.flatMap(q=>q.land?[[(q.a[0]+q.b[0])/2,(q.a[1]+q.b[1])/2]]:[q.a,q.b]):[st.foot,st.head],m=V.length,
+            dir=(p,q)=>{const L=Math.hypot(q[0]-p[0],q[1]-p[1])||1;return [(q[0]-p[0])/L,(q[1]-p[1])/L]},d0=dir(V[0],V[1]),d1=dir(V[m-2],V[m-1]),
+            [ao,as]=fr(V[0][0]-d0[0]*0.6,V[0][1]-d0[1]*0.6),[bo,bs]=fr(V[m-1][0]+d1[0]*0.6,V[m-1][1]+d1[1]*0.6),sol0=sol.filter(b=>b!==stBox),B=bfStBox(st);
+          sol0.push([B[1]-(dz0-dO),B[0]-dx0,B[2],B[3]]);rs.up={via:V.map(q=>fr(q[0],q[1])),ao,as,bo,bs,sol:sol1,sol0}}}}}
   L.b={g,furn,ins,lvs,doors,gameR,rs,o:{x:ox,z:oz,y:y0,f:face},mine,K,rad:Math.hypot(it.width,it.length)/2};item.bf=L;bfLt.dirty=1}
+// the box round a flight in the building's space [cx, cz, hx, hz]: its runs' and landings' own, or a straight flight's
+// foot to head (pad: that much added all round a straight one)
+function bfStBox(st,pad){if(st.runs){let x0=1e9,x1=-1e9,z0=1e9,z1=-1e9;for(const q of st.runs){const ux=q.b[0]-q.a[0],uz=q.b[1]-q.a[1],L=Math.hypot(ux,uz)||1,nx=-uz/L*q.width/2,nz=ux/L*q.width/2;
+      for(const [x,z] of [[q.a[0]+nx,q.a[1]+nz],[q.a[0]-nx,q.a[1]-nz],[q.b[0]+nx,q.b[1]+nz],[q.b[0]-nx,q.b[1]-nz]]){x0=Math.min(x0,x);x1=Math.max(x1,x);z0=Math.min(z0,z);z1=Math.max(z1,z)}}
+    return [(x0+x1)/2,(z0+z1)/2,(x1-x0)/2,(z1-z0)/2]}
+  const [fx,fz]=st.foot,[hx,hz]=st.head,w=st.width/2,p=pad||0,ax=Math.abs(hx-fx)>Math.abs(hz-fz);return [(fx+hx)/2,(fz+hz)/2,Math.abs(hx-fx)/2+(pad?p:ax?0:w),Math.abs(hz-fz)/2+(pad?p:ax?w:0)]}
 // a game room given the building's spots and door frame while it is swapped (on), its own put back after; whoever was
 // in it or on the way leaves first
 const BF_RKEYS=['spots','dO','W','sol','P','x','z','f','y','up'];
