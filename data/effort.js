@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-22T03:19:00Z",
+ "updated": "2026-11-22T05:08:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -174,9 +174,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-21",
-   "dh": 23.5,
-   "act": 3,
-   "versions": 7
+   "dh": 27.5,
+   "act": 3.5,
+   "versions": 8
   }
  ],
  "extra": [
@@ -4263,6 +4263,15 @@ window.EFFORT = {
    "tris": 7364372,
    "chars": 2744623,
    "what": "Harbor Light Brewing's porch is bigger (62 by 16 ft) and open, with no pergola, its tables and chairs standing on the deck, and broad steps you can walk up from the grass"
+  },
+  {
+   "v": 454,
+   "asked": "2026-11-21T21:25:00-06:00",
+   "live": "2026-11-21T23:08:13-06:00",
+   "dh": 4,
+   "tris": 7352865,
+   "chars": 2749203,
+   "what": "Harbor Light Brewing's stairs to the rooftop are wider and easier, you can walk back down them (the roof's floor used to cover the stairwell in every two-storey building), and townsfolk now walk up, sit at the rooftop tables and bar, and come back down"
   }
  ]
 };

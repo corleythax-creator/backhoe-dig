@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Saturday, November 21, 2026
 
+- **v454** (11:08 PM) Harbor Light Brewing's stairs to the rooftop are wider and easier, you can walk back down them (the roof's floor used to cover the stairwell in every two-storey building), and townsfolk now walk up, sit at the rooftop tables and bar, and come back down
 - **v453** (9:19 PM) Harbor Light Brewing's porch is bigger (62 by 16 ft) and open, with no pergola, its tables and chairs standing on the deck, and broad steps you can walk up from the grass
 - **v452** (8:45 PM) Harbor Light Brewing's old white porch is gone from the front: the Daylight design's own deck and pergola stand there instead
 - **v451** (8:05 PM) Harbor Light Brewing has a 22 ft taproom with 16 ft glass all round and stairs up to a rooftop bar: an open deck with its own bar under a pergola, stools, and tables under umbrellas over the water
