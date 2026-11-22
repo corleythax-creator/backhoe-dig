@@ -7,6 +7,8 @@
 // so the claude.ai screen editor can load it alone.
 // [id, group, words, what fills the {names}]
 const WORDS=[
+  ['recOn','Frame recorder','Recording the last few seconds. When the glitch happens, press [recSave] to save it; [recFrames] stops',''],['recOff','Frame recorder','Frame recorder off',''],
+  ['recSaved','Frame recorder','Saved {n} frames: upload the hop file to Claude','{n}: frames in the file'],['recNone','Frame recorder','Nothing recorded: press [recFrames] to start the frame recorder first',''],
   ['capL_dig','Captions','{lh} Swing\n{lv} Stick out / in','Left stick, Dig'],['capR_dig','Captions','{rh} Curl / dump\n{rv} Boom down / up','Right stick, Dig'],
   ['capL_drive','Captions','{lh} Turn\n{lv} Drive fwd / back','Left stick, Drive'],
   ['capL_truck','Captions','{lh} Steer\n{lv} Gas / reverse','Left stick, Truck'],['capR_truck','Captions','{rv} Bed up / down','Right stick, Truck'],

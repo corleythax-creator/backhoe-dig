@@ -682,3 +682,7 @@ body.fps #hud .bbar .stats{display:block}
 #tipCard p{margin:0;font-size:var(--t2);line-height:1.35}
 #tipCard button{flex:1;height:44px;font-size:var(--t2);border-radius:var(--r);border:0;background:var(--machine);color:#1c1309}
 #tipCard button.ghost{background:rgba(255,255,255,.06);color:var(--ink);border:1px solid var(--hud-line)}
+
+/* the frame recorder's badge (recorder.js) */
+#recBadge{position:absolute;top:calc(env(safe-area-inset-top,0px) + 70px);left:50%;transform:translateX(-50%);z-index:4;font:700 var(--t2)/1 var(--f-display);letter-spacing:.08em;color:#fff;background:rgba(190,20,20,.85);padding:6px 12px;border-radius:var(--r);pointer-events:none}
+#recBadge[hidden]{display:none}
