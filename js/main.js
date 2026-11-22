@@ -393,6 +393,9 @@ function drawSlow(t0,a){drawNew.slow=performance.now();const P=new Set(drawNew.L
 const shGate={ok:new WeakMap(),wait:new Map(),busy:0,seeded:false,n:0,ms:0,cap:null,checked:0};
 function shKind(o,m){const a=o.geometry&&o.geometry.attributes||{};return (o.isInstancedMesh?'i':'')+(o.instanceColor?'c':'')+(o.isSkinnedMesh?'s':'')+(o.isBatchedMesh?'b':'')+
   (o.isPoints?'p':o.isLine?'l':o.isSprite?'S':'')+(a.color?'v':'')+(a.tangent?'t':'')+(o.morphTargetInfluences?'m':'')+(o.receiveShadow?'r':'')+(ltSl.night?'N':'D')+m.version}
+// the same as a number, for the every-frame check: a thing passed with this material and this number is passed again
+// without building the text (2.4 ms a frame at the harbor, v461's Profiler)
+function shSig(o,m){const a=o.geometry&&o.geometry.attributes;return ((o.instanceColor?1:0)|(a&&a.color?2:0)|(a&&a.tangent?4:0)|(o.morphTargetInfluences?8:0)|(o.receiveShadow?16:0)|(ltSl.night?32:0))+m.version*64}
 function shOk(o,m,add){let s=shGate.ok.get(m);if(!s){if(!add)return false;shGate.ok.set(m,s=new Set())}const k=shKind(o,m);if(add){s.add(k);return true}return s.has(k)}
 // Anything not checked yet for the lamp set and material version it is drawn with now is first built right here
 // (warmCompile and warmShadows over just those things). A shader that already exists is simply reused, so most of the
@@ -404,7 +407,8 @@ function shGateTick(){const G=shGate;if(!LOADP.done||bench.on||vrOn()||TU.shGate
   // (what the loading built for the lamps as they are now is trusted)
   if(!G.seeded){G.seeded=true;scene.traverse(o=>{if(!o.material)return;for(const m of [].concat(o.material)){if(!m)continue;const pr=renderer.properties.get(m);if(pr&&pr.programs&&pr.programs.size)shOk(o,m,true)}});return}
   const L=[];scene.traverseVisible(o=>{if(!o.material||G.wait.has(o)||!(o.isMesh||o.isPoints||o.isLine||o.isSprite)||!o.layers.mask)return;
-    for(const m of [].concat(o.material))if(m&&m.visible!==false&&!shOk(o,m)){L.push(o);break}});
+    const m1=o.material;if(!Array.isArray(m1)){const g=shSig(o,m1);if(o.shM===m1&&o.shS===g)return;if(m1.visible===false)return;if(shOk(o,m1)){o.shM=m1;o.shS=g}else L.push(o);return}
+    for(const m of m1)if(m&&m.visible!==false&&!shOk(o,m)){L.push(o);break}});
   if(!L.length){G.ms=performance.now()-t0;return}
   G.checked+=L.length;const root={isObject3D:true,traverseVisible(){},traverse(cb){for(const o of L)cb(o)}};let p=null,q=null;
   G.cap=[];try{p=warmCompile(root,scene)}catch(e){}try{q=warmShadows(root)}catch(e){}const nw=new Set(G.cap);G.cap=null;
