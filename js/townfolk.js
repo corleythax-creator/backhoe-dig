@@ -638,11 +638,30 @@ function tfViaPath(R,sp){const V=R.via,d=(R.f||0)-V.f,c=Math.cos(d),n=Math.sin(d
 // kept on the spot until it or the door moves
 function tfInPath(R,E,sp){const k=sp.x*7+sp.z*13+E.mx*3+E.mz;if(sp.inK===k)return sp.inP;sp.inK=k;if(!E.d)return sp.inP=E.via?tfViaPath(R,sp):[[sp.x,sp.z]];
   const D=R.dO+0.03,vx=E.uz,vz=-E.ux,lo=(x,z)=>[D+(x-E.mx)*E.ux+(z-E.mz)*E.uz,(x-E.mx)*vx+(z-E.mz)*vz],[so,ss]=lo(sp.x,sp.z),f=R.dO-0.45,lim=R.W-0.2,m0=R.W-0.45;
-  const clear=c=>{for(let i=1;i<c.length;i++){const [a0,b0]=c[i-1],[a1,b1]=c[i],n=Math.max(1,Math.ceil(Math.hypot(a1-a0,b1-b0)/0.15));
-      for(let j=0;j<=n;j++){const o=a0+(a1-a0)*j/n,s=b0+(b1-b0)*j/n;if((o-so)**2+(s-ss)**2<0.36)continue;if(Math.abs(s)>lim||o<0.3-R.dO)return false;
-        for(const [bo,bs,hs,ho] of R.sol)if(Math.abs(o-bo)<ho+0.22&&Math.abs(s-bs)<hs+0.22)return false}}return true};
-  const C=[[[f,0],[so,0],[so,ss]],[[f,0],[f,ss],[so,ss]]];for(let m=-m0;m<=m0+1e-6;m+=0.5)C.push([[f,0],[f,m],[so,m],[so,ss]]);
-  let best=null,bl=1e9;for(const c of C){let L=0;for(let i=1;i<c.length;i++)L+=Math.abs(c[i][0]-c[i-1][0])+Math.abs(c[i][1]-c[i-1][1]);if(L<bl&&clear(c)){bl=L;best=c}}
+  // the shortest clear way of two or three straight legs from a, b to to, ts round the boxes of sol (a seat's own
+  // piece let be, within 0.6 m of it)
+  const way=(a,b,to,ts,sol)=>{
+    const clear=c=>{for(let i=1;i<c.length;i++){const [a0,b0]=c[i-1],[a1,b1]=c[i],n=Math.max(1,Math.ceil(Math.hypot(a1-a0,b1-b0)/0.15));
+        for(let j=0;j<=n;j++){const o=a0+(a1-a0)*j/n,s=b0+(b1-b0)*j/n;if((o-to)**2+(s-ts)**2<0.36)continue;if(Math.abs(s)>lim||o<0.3-R.dO)return false;
+          for(const [bo,bs,hs,ho] of sol)if(Math.abs(o-bo)<ho+0.22&&Math.abs(s-bs)<hs+0.22)return false}}return true};
+    const C=[[[a,b],[to,b],[to,ts]],[[a,b],[a,ts],[to,ts]]];for(let m=-m0;m<=m0+1e-6;m+=0.5)C.push([[a,b],[a,m],[to,m],[to,ts]]);
+    let best=null,bl=1e9;for(const c of C){let L=0;for(let i=1;i<c.length;i++)L+=Math.abs(c[i][0]-c[i-1][0])+Math.abs(c[i][1]-c[i-1][1]);if(L<bl&&clear(c)){bl=L;best=c}}return best};
+  // upstairs the tables stand in rows, and no way of three straight legs gets to most seats: the shortest way over a
+  // 10 in grid of what is clear (4-way flood from a, b), then straightened wherever two of its points see each other
+  const grid=(a,b,to,ts,sol)=>{const h=0.25,o0=0.3-R.dO,nO=Math.ceil((R.dO-o0)/h)+1,nS=Math.ceil(2*lim/h)+1,
+    free=(o,s)=>{if((o-to)**2+(s-ts)**2<0.36||(o-a)**2+(s-b)**2<0.1)return true;if(Math.abs(s)>lim||o<o0||o>R.dO)return false;
+      for(const [bo,bs,hs,ho] of sol)if(Math.abs(o-bo)<ho+0.22&&Math.abs(s-bs)<hs+0.22)return false;return true},
+    ci=v=>Math.max(0,Math.min(nO-1,Math.round((v-o0)/h))),cj=v=>Math.max(0,Math.min(nS-1,Math.round((v+lim)/h))),pt=k=>[o0+((k/nS)|0)*h,(k%nS)*h-lim],
+    k0=ci(a)*nS+cj(b),k1=ci(to)*nS+cj(ts),prev=new Int32Array(nO*nS).fill(-1),Q=[k0];prev[k0]=k0;
+    for(let q=0;q<Q.length&&prev[k1]<0;q++){const k=Q[q],i=(k/nS)|0,j=k%nS;
+      for(const [di,dj] of [[1,0],[-1,0],[0,1],[0,-1]]){const i2=i+di,j2=j+dj;if(i2<0||j2<0||i2>=nO||j2>=nS)continue;const k2=i2*nS+j2;if(prev[k2]>=0)continue;const [o,s]=pt(k2);if(!free(o,s))continue;prev[k2]=k;Q.push(k2)}}
+    if(prev[k1]<0)return null;const P=[[to,ts]];for(let k=k1;k!==k0;k=prev[k])P.push(pt(k));P.push([a,b]);P.reverse();
+    const sees=(p,q)=>{const n=Math.max(1,Math.ceil(Math.hypot(q[0]-p[0],q[1]-p[1])/0.1));for(let j=1;j<n;j++)if(!free(p[0]+(q[0]-p[0])*j/n,p[1]+(q[1]-p[1])*j/n))return false;return true};
+    const out=[P[0]];for(let i=0;i<P.length-1;){let j=P.length-1;while(j>i+1&&!sees(P[i],P[j]))j--;out.push(P[j]);i=j}return out};
+  let best;const U=R.up;
+  if(sp.up){// upstairs: in to the foot of the flight, up it, and on from its head
+    const A=U&&way(f,0,U.ao,U.as,U.sol0),B=A&&grid(U.bo,U.bs,so,ss,U.sol);best=B?A.concat([[U.fo,U.fs],[U.ho,U.hs]],B):null}
+  else best=way(f,0,so,ss,R.sol);
   return sp.inP=best&&best.map(([o,s])=>[E.mx+(o-D)*E.ux+s*vx,E.mz+(o-D)*E.uz+s*vz])}
 // the whole way from the walk to spot sp (world points), or null
 function tfRoute(R,E,sp){const P=tfInPath(R,E,sp);if(!P)return null;const L=[[E.wx,E.wz]];if(E.d)L.push([E.mx+E.ux*0.7,E.mz+E.uz*0.7],[E.mx,E.mz]);return L.concat(P)}
@@ -694,7 +713,7 @@ function tfGoStep(p,dt){const G=p.go,P=G.path,E=G.E;
   p.spd+=((bl?0:p.vt)-p.spd)*Math.min(1,dt*(bl?8:3));G.s+=p.spd*dt;p.x+=(x-p.x)*Math.min(1,dt*10);p.z+=(z-p.z)*Math.min(1,dt*10);
   let a=Math.atan2(dx,dz)-p.yaw;a=Math.atan2(Math.sin(a),Math.cos(a));p.yaw+=a*Math.min(1,dt*7);
   p.amp+=(Math.min(1,p.spd/1.2)*0.42-p.amp)*Math.min(1,dt*6);p.ph+=p.spd*dt*Math.PI*2/(1.5*p.sc);
-  let gy=baseHeight(p.x,p.z)+tfLift(p.x,p.z);if(E.via){const q=padAt(p.x,p.z);if(q>gy)gy=q}if(E.d){const ox=p.x-E.mx,oz=p.z-E.mz;if(ox*ox+oz*oz<6.8)E.d.hold=Math.max(E.d.hold,0.5);if(ox*E.ux+oz*E.uz<0)gy=E.d.y}
+  let gy=baseHeight(p.x,p.z)+tfLift(p.x,p.z);if(E.via){const q=padAt(p.x,p.z);if(q>gy)gy=q}if(E.d){const ox=p.x-E.mx,oz=p.z-E.mz;if(ox*ox+oz*oz<6.8)E.d.hold=Math.max(E.d.hold,0.5);if(ox*E.ux+oz*E.uz<0)gy=G.sp.up?Math.max(E.d.y,padAt(p.x,p.z,p.y+0.4)):E.d.y}   // (bound upstairs: the flight's and that floor's own height)
   p.y+=(gy-p.y)*Math.min(1,dt*8)}
 // what people carry: a paper coffee cup or a shopping bag at the right hand (as it swings walking, in the lap seated),
 // one instanced mesh each, for those drawn this frame (tfDraw)
