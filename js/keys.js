@@ -75,10 +75,11 @@ try{const s=JSON.parse(localStorage.getItem('bhd_keys')||'null');if(s)for(const 
 // (owner, Nov 21: you are always on foot, so the keys that put you in a machine from anywhere are gone; 1 punches and
 // 2 takes the gun out. A save holds every key, so saved keys are moved over once: 1 and 2 go to Punch and Gun unless
 // the player gave them to something else that is still there)
-try{if(localStorage.getItem('bhd_keys_v')!=='2'){const free=c=>!Object.keys(keyBind).some(id=>keyBind[id].includes(c));
-  if(free('Digit1'))keyBind.punch=['Digit1',keyBind.punch[1]==='Digit1'?'':keyBind.punch[1]];
-  if(!keyBind.gun.includes('Digit2')&&free('Digit2'))keyBind.gun=['Digit2',keyBind.gun[0]||keyBind.gun[1]];
-  localStorage.setItem('bhd_keys_v','2');if(localStorage.getItem('bhd_keys'))keySave()}}catch(e){}
+try{if(localStorage.getItem('bhd_keys_v')!=='3'){
+  // (v450: for sure, taking 1 and 2 from whatever else on foot held them)
+  for(const [id,c] of [['punch','Digit1'],['gun','Digit2']]){for(const o in keyBind)if(o!==id&&KEY_BY[o].s!=='ride')keyBind[o]=keyBind[o].map(k=>k===c?'':k);
+    if(!keyBind[id].includes(c))keyBind[id]=[c,keyBind[id][0]||keyBind[id][1]]}
+  localStorage.setItem('bhd_keys_v','3');if(localStorage.getItem('bhd_keys'))keySave()}}catch(e){}
 // actions a key code runs (a key belongs to one action at a time)
 function keyActs(code){const out=[];for(const id in keyBind)if(keyBind[id].includes(code))out.push(id);return out}
 function keyIs(code,id){return !!code&&keyBind[id].includes(code)}

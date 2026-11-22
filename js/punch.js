@@ -31,3 +31,23 @@ function punchTick(dt){fist.cool=Math.max(0,fist.cool-dt);
   for(let s=0;s<2;s++){const A=wkArms[s];let top=-0.95-pt*0.6,low=-1.8;
     if(u>=0&&s===fist.hand){const k=Math.sin(Math.PI*Math.min(1,u*1.2));top+=(-1.52-pt*0.9-top)*k;low+=(-0.08-low)*k}
     A.top.rotation.x=top;A.low.rotation.x=low}}
+// after wkMdlPose, from gunPlace (pistol.js): the rigged worker's fists. Both arms reach (gunIK) to a guard just in
+// front of his face and close together, knuckles up, palms in, elbows down, where first person sees them at the bottom
+// of the view; the punching arm drives straight out along the way he looks, to the middle, and comes back
+const pnO=new THREE.Vector3(),pnD=new THREE.Vector3(),pnR=new THREE.Vector3(),pnU=new THREE.Vector3(),pnP=new THREE.Vector3(),pnF=new THREE.Vector3(),pnN=new THREE.Vector3(),pnPole=new THREE.Vector3();
+function punchPose(J){const fp=camMode==='cab',y=wk.yaw;
+  if(fp){camera.updateMatrixWorld();camera.getWorldDirection(pnD);pnO.copy(camera.position)}
+  else{pnD.set(Math.sin(y),0,Math.cos(y));if(J.head)J.head.b.getWorldPosition(pnO);else pnO.set(wk.x,wk.y+1.62,wk.z)}
+  pnR.crossVectors(pnD,GUN_UP).normalize();pnU.crossVectors(pnR,pnD);
+  const u=fist.t>=0?Math.sin(Math.PI*Math.min(1,fist.t/PUNCH_T*1.2)):0;
+  for(const s of [0,1]){const A=gunArm(J,s);if(!A)continue;const sd=s?-1:1,k=s===fist.hand?u:0;
+    pnP.copy(pnO).addScaledVector(pnD,TU.fistOut+0.3*k).addScaledVector(pnR,sd*TU.fistWide*(1-0.8*k)).addScaledVector(pnU,-TU.fistLow+0.09*k);
+    pnF.copy(pnU).multiplyScalar(1-k).addScaledVector(pnD,0.35+k).normalize();
+    pnN.copy(pnR).multiplyScalar(-sd);pnN.addScaledVector(pnF,-pnN.dot(pnF)).normalize();
+    pnPole.copy(pnR).multiplyScalar(sd*0.6).addScaledVector(GUN_UP,-1);
+    gunIK(A,pnP,pnF,pnN,pnPole,0.02);gun.fist=1;A.curl=null;
+    // the fingers shut tight on the palm, every joint (the gun's grip curl, gunCurl, leaves them half open)
+    for(const f of J.fingers)if(f.b.name.endsWith(A.sf))f.b.quaternion.copy(f.q0).multiply(gunQF.setFromAxisAngle(WK_X,1.45))}}
+// a click on the view on foot with nothing in his hands: say which keys take the fists and the gun out (now and then)
+let handsTipT=0;
+function handsTip(){if(mode!=='walk'||wk.inside||wk.swim||bench.on||trim.on||blkOn||gun.eq||fist.on)return;const t=performance.now();if(t-handsTipT<15000)return;handsTipT=t;toast(say('handsTip'),'',3600)}
