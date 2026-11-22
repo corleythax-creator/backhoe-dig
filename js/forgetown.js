@@ -421,7 +421,8 @@ function bfBuild(L,K,item){const it=bf.lib[L.id],face=L.turn*Math.PI/180,c=Math.
     // its floor (the upper ones stood on only from within a step) and rooms
     const xs=W.flatMap(w=>[w[0],w[2]]),zs=W.flatMap(w=>[w[1],w[3]]),ax=(Math.min(...xs)+Math.max(...xs))/2,az=(Math.min(...zs)+Math.max(...zs))/2;
     pad(ax,az,(Math.max(...xs)-Math.min(...xs))/2,(Math.max(...zs)-Math.min(...zs))/2,face,fy(lv),lv?{up:1}:null);
-    for(const r of it.rooms)if(r.level===lv){const a=r.outline.map(q=>q[0]),b=r.outline.map(q=>q[1]),cx=(Math.min(...a)+Math.max(...a))/2,cz=(Math.min(...b)+Math.max(...b))/2;
+    // (a room open to the sky, a roof deck, is no room to the camera: nothing over it to stay under)
+    for(const r of it.rooms)if(r.level===lv&&!r.open){const a=r.outline.map(q=>q[0]),b=r.outline.map(q=>q[1]),cx=(Math.min(...a)+Math.max(...a))/2,cz=(Math.min(...b)+Math.max(...b))/2;
       const R=rmRoom(X(cx,cz),Z(cx,cz),face,(Math.max(...a)-Math.min(...a))/2,(Math.max(...b)-Math.min(...b))/2,y0+r.floorY,y0+r.ceilingY);R.bf=1;R.bfL=L;bfEnc(R,it,K,cx,cz,r.floorY);R.clad=it.clad||((it.tags||[]).includes('brick')?'brick':(it.tags||[]).includes('steel')?'steel':'siding');G.rooms.push({r:R,o:{x:R.x,z:R.z,f:R.f,y:R.y,top:R.top}})}
     // its furniture (a porch a floor to stand on; rugs and stairs left to the floor)
     for(const P of K.items){if(P.lvl!==lv)continue;const [x,z,hx,hz,b0,b1]=P.box;

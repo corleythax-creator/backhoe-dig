@@ -238,9 +238,10 @@ function marBoat(kind,o,x,z,yaw){const K=famKit();MAR_KIND[kind](K,o);const g=ne
   // Harbor Light Brewing Co. (Nov 21, the owner, in the Harbor House's place; on High and Ultra its Daylight design,
   // harbor_brewery, stands here and this is only the stand-in): lap siding with white corner boards, a shingled gable roof
   // along x with a cupola and weathervane on the ridge, a porch along the water side under its own roof, the sign above
-  // it (kept when the town from Building Forge stands in). Its taproom is a room for the townsfolk (TF_ROOMS: staff
+  // it (kept when the town from Building Forge stands in: high on the wall, over the design's 18 ft glass and under
+  // its rooftop bar's wall). Its taproom is a room for the townsfolk (TF_ROOMS: staff
   // behind the bar, drinkers at the tables; the bar's menu is the brewery's, town.js), walked into from the promenade
-  {const hx=93,hz=572,W=15,D=10,g0=Math.min(G(hx-W/2,hz-D/2),G(hx+W/2,hz-D/2),G(hx-W/2,hz+D/2),G(hx+W/2,hz+D/2)),fl=g0+0.45,H=6.4,SID=0x8fa3ad,TR=0xf4f3ef;
+  {const hx=93,hz=572,W=15,D=10,g0=Math.min(G(hx-W/2,hz-D/2),G(hx+W/2,hz-D/2),G(hx-W/2,hz+D/2),G(hx+W/2,hz+D/2)),fl=g0+0.45,H=8.2,SID=0x8fa3ad,TR=0xf4f3ef;
     F.box(W+0.2,fl-g0+0.6,D+0.2,0x8d8a82,hx,(fl+g0-0.6)/2,hz);
     F.box(W+0.04,H,D+0.04,'sidingG',hx,fl+H/2,hz);for(const sx of [-1,1])for(const sz of [-1,1])F.box(0.22,H,0.22,TR,hx+sx*W/2,fl+H/2,hz+sz*D/2);
     F.box(W+0.3,0.3,D+0.3,TR,hx,fl+H-0.05,hz);F.box(W+0.25,0.18,D+0.25,TR,hx,fl+3.35,hz);
@@ -265,7 +266,7 @@ function marBoat(kind,o,x,z,yaw){const K=famKit();MAR_KIND[kind](K,o);const g=ne
     for(const [a,b] of [[-7.4,-4.4],[-4.4,-1.6],[1.6,4.4],[4.4,7.4]]){F.box(b-a,0.08,0.1,TR,hx+(a+b)/2,py+0.95,pz-1.45);F.box(b-a,0.06,0.06,TR,hx+(a+b)/2,py+0.12,pz-1.45);
       for(let x=a+0.18;x<b-0.1;x+=0.18)F.box(0.04,0.8,0.04,TR,hx+x,py+0.53,pz-1.45)}
     K.box(shing,W+1.4,0.1,3.6,hx,py+3.1,pz-0.1,0,-0.2);F.box(W+1.4,0.32,0.08,TR,hx,py+2.78,pz-1.86);
-    famSign(['HARBOR LIGHT BREWING CO.','Taproom · Brewhouse · On the Water'],7.4,1.5,hx,fl+4.75,hz-D/2-0.1,Math.PI,'#1f2a30','#e8c27a').userData.sign=1;
+    famSign(['HARBOR LIGHT BREWING CO.','Taproom · Brewhouse · On the Water'],7.4,1.5,hx,fl+6.75,hz-D/2-0.1,Math.PI,'#1f2a30','#e8c27a').userData.sign=1;
     // rocking chairs on the porch
     for(const dx of [-6.2,-3.2,3.2,6.2]){const x=hx+dx,z=pz+0.3;F.box(0.55,0.06,0.5,0x2f4a3a,x,py+0.45,z);F.box(0.55,0.65,0.06,0x2f4a3a,x,py+0.8,z+0.24,0,-0.15);
       for(const s of [-1,1]){F.box(0.05,0.08,0.75,0x2f4a3a,x+s*0.26,py+0.06,z);F.box(0.04,0.4,0.04,0x2f4a3a,x+s*0.26,py+0.26,z)}}
