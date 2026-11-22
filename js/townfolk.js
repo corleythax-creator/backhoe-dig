@@ -391,7 +391,7 @@ function tfSpawnWalker(fill){for(let t=0;t<8;t++){const w=TF_WALK[(Math.random()
     const p=tfPerson({w,s,dir:Math.random()<0.5?1:-1,x,z});p.side=0.32*(Math.random()<0.8?1:-1);if(Math.random()<0.08)p.carry=Math.random()<0.5?'cup':'bag';return p}}
 // in view of the camera (within r of a point seen) and not too far off
 const _tfSph=new THREE.Sphere();
-function tfSeen(x,z,r){_tfSph.center.set(x,baseHeight(x,z)+1,z);_tfSph.radius=r||2;return tf.fr.intersectsSphere(_tfSph)}
+function tfSeen(x,z,r,y){_tfSph.center.set(x,(y??baseHeight(x,z))+1,z);_tfSph.radius=r||2;return tf.fr.intersectsSphere(_tfSph)}
 // what someone walking at (x, z) toward (dx, dz) would bump into within reach: another person, the worker, a car
 function tfBlocked(p,dx,dz,reach){const rx=-dz,rz=dx;
   const hit=(x,z,r)=>{const ox=x-p.x,oz=z-p.z,f=ox*dx+oz*dz;return f>0&&f<reach+r&&Math.abs(ox*rx+oz*rz)<0.32+r};
@@ -781,7 +781,7 @@ function tfDraw(dt){const M=tf.M,o3=tf.o,cx=camera.position.x,cz=camera.position
   const uh=fo&&tfUhOn()?tfUhPick(cx,cz):null;if(!uh&&tf.F&&tf.F.uh)tfUhOff();
   const CL=tf.carL||(tf.carL=[]),TL=tf.tblL||(tf.tblL=[]);CL.length=TL.length=0;
   for(const p of tf.people){if(p.inside)continue;const B=M[p.body];if(!B)continue;
-    if((p.x-cx)**2+(p.z-cz)**2>(p.room?TF_RFAR*TF_RFAR:p.drv?TF_CAR_HI*TF_CAR_HI:220*220)||!tfSeen(p.x,p.z,1.3)||!gfxSees(p.x,p.y+0.9,p.z,0.9*p.sc))continue;
+    if((p.x-cx)**2+(p.z-cz)**2>(p.room?TF_RFAR*TF_RFAR:p.drv?TF_CAR_HI*TF_CAR_HI:220*220)||!tfSeen(p.x,p.z,1.3,p.y)||!gfxSees(p.x,p.y+0.9,p.z,0.9*p.sc))continue;
     if(p.carry){if(p.dead||p.hurt||p.hit||p.drv)p.carry=null;else if((p.x-cx)**2+(p.z-cz)**2<3600)CL.push(p)}
     if(p.room&&p.sit&&p.spot.tf&&!(p.dead||p.hurt||p.hit)&&(p.x-cx)**2+(p.z-cz)**2<1600)TL.push(p);
     const hp=p.dead||p.hurt||p.hit?tfHitPose(p):null,kn=hp&&hp.kneel||!hp&&p.cower>0;o3.position.set(p.x,p.y+(p.sit||kn?-0.42*p.sc:Math.abs(Math.cos(p.ph))*0.025*p.amp*p.sc),p.z);

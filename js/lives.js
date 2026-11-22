@@ -42,7 +42,7 @@ function lifeInit(){if(LIFE.ok||typeof tf!=='object'||!tf.chars||!tf.chars.lengt
   for(const id of adults)if(!groups.some(g=>g.includes(id)))groups.push([id]);
   for(const g of groups){let i=Math.floor(lifeH(g[0]+'home')*homes.length);for(let t=0;t<homes.length&&used.has(i);t++)i=(i+1)%homes.length;used.add(i);for(const id of g)house[id]=homes[i%homes.length]}
   for(const id of adults){const R=house[id],G=TOWN_REGS.find(G=>G.look===id);let J=LIFE_JOBS[id]||null;
-    if(G)J=G.si!=null?{si:G.si,reg:G}:{out:'out on their rounds',h:G.walk,reg:G};
+    if(G)J=G.si!=null?{si:G.si,reg:G}:G.nm?{away:G.at,h:G.h,reg:G}:{out:'out on their rounds',h:G.walk,reg:G};
     const room=J&&J.si!=null?TF_ROOMS.find(r=>r.si===J.si)||null:null;if(J&&J.si!=null)J.at=MAIN_SHOPS[J.si][0];
     // a counter's hours, a long day cut to an early or a late shift
     let h=J&&(J.h||room&&townHrs(room))||null;if(h&&!J.h&&!J.reg&&h[1]-h[0]>9)h=lifeH(id+'shift')<0.5?[h[0],h[0]+8]:[h[1]-8,h[1]];

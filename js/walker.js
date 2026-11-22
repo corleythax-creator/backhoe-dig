@@ -145,6 +145,8 @@ function updateWalker(dt,mx,mz,lookX,lookY){
   if(wk.inside){walker.visible=false;return}
   const on=mode==='walk'&&!bench.on;
   if(on){const z=camMode==='cab'?1/fpl.zoom:1;wk.view-=lookX*2.2*TU.wkLook*dt*z;if(camMode==='cab'){fpl.pitch=clamp(fpl.pitch+lookY*1.2*TU.wkLook*dt*z,-FP_DOWN,FP_UP);if(lookX||lookY)fpl.home=false}else orbitPitch=clamp(orbitPitch-lookY*1.2*TU.wkLook*dt,0.08,1.3)}
+  // seated at a bar or a table (barlife.js): he stays put till he stands up or walks off
+  if(on&&wk.sit&&barSit(dt,mx,mz))return;
   // moves relative to where the camera looks; the worker turns to face the way he walks
   let vx=0,vz=0;
   // wading slows him the deeper it gets; swimming has its own speed (Sprint swims harder)

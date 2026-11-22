@@ -280,7 +280,7 @@ function marBoat(kind,o,x,z,yaw){const K=famKit();MAR_KIND[kind](K,o);const g=ne
     {const R=rmKit(F,hx,hz,fl,Math.PI);R.spot(-1.2,5.6,-Math.PI/2,{staff:1});R.spot(1.4,5.6,-Math.PI/2,{staff:1});
       for(const o of [-1.6,0.2,2.0])R.spot(o,4.2,Math.PI/2);
       for(const o of [-2.2,1.6])for(const s of [-4,-0.5,2.6])R.spot(o,s,s<0?-Math.PI/2:Math.PI/2);
-      R.dO=D/2;R.W=W/2;rmAdd(R,8,[0,4,8,12]).hrs=[11,23];R.nm='Harbor Light Brewing Co.';R.minC=6}}
+      R.dO=D/2;R.W=W/2;rmAdd(R,8,[0,5,10,16]).hrs=[11,23];R.nm='Harbor Light Brewing Co.';R.minC=6}}
 
   // the Dockside Grill: dark red board-and-batten under a standing-seam roof, roll-up glass doors to a deck over the
   // beach with tables, umbrellas and string lights

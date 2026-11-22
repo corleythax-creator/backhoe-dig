@@ -116,6 +116,9 @@ const TUNE=[
   // the town's life (town.js): money, shop hours, greetings and talk
   ['cashStart','Town','Money in your wallet when you start (added to what the work has paid)',250,'usd',0,10000,10],
   ['pepBoost','Town','A coffee or a meal from a shop: walking and running faster by',0.12,'pct',0,50,1],['pepTime','Town','A coffee or a meal lasts',180,'s',10,900,10],
+  ['barCrowd','Town','The bar: how loud the crowd is',0.6,'pct',0,100,5],['barMusic','Town','The bar: how loud the band is',0.7,'pct',0,100,5],
+  ['barBand','Town','The bar: nights a week with a band on the roof (Friday and Saturday first)',2,'n',0,7,1],
+  ['barBuzz','Town','The bar: how much a few beers sway your view',1,'pct',0,200,10],['barBuzzTime','Town','The bar: a beer wears off in',240,'s',30,1200,30],
   // street life (street.js): the town bus and the delivery van, and the town's sounds and night light
   ['stlBusGap','Town','The town bus comes by every',240,'s',60,1800,10],['stlBusWait','Town','Most townsfolk waiting at the bus stop',4,'n',0,8,1],
   ['stlVanGap','Town','A delivery van pulls up at a shop every',300,'s',60,1800,10],

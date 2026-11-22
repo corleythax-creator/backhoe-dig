@@ -27,13 +27,16 @@ const ctxEl={};for(const c of CTX)ctxEl[c[0]]=$('#'+c[0]);
 // the best thing to do here: {lbl, run}, or null
 function useCtx(){
   if(!ctxFoot())return wk.inside&&rideOf(mode)?{lbl:say('useOut'),run:seatToggle}:null;
+  if(wk.sit){const b=barCtx(true);if(b)return b}
   const c=pbCtx(),lbl=c&&(c.lbl||(c.a==='buy'?'Buy '+PB_KINDS[c.k].s+' '+usd(TOWN_PB[c.k]):PB_BTN[c.a]));
   // something in your hands, or a pickup's load at its tailgate, comes first
   if(c&&(pbS.hold||c.a==='unload'))return {lbl,run:pbAct};
   if(wkNear())return {lbl:say('useIn'),run:seatToggle};
   const g=famGameNear();if(g)return {lbl:g.b,run:seatToggle};
+  // a free seat at a bar within reach comes before talking to whoever is at the next one (not before the counter, till he has a drink in his hand)
+  if(!(c&&c.a==='order'&&!bar.drink)){const b=barCtx(false,true);if(b)return b}
   if(TALK.mode!=='off'&&TALK.M&&TALK.lib&&tf.on&&TALK.near)return {lbl:say('useTalk',{name:talkName(TALK.near)}),run:talkOpen};
-  return c?{lbl,run:pbAct}:null}
+  return c?{lbl,run:pbAct}:barCtx(false)}
 function useAct(){const u=useCtx();if(u)u.run();else seatToggle()}
 function ctxTick(){const av=CTX.filter(c=>c[1]()),many=av.length>CTX_MAX;
   if(!many)ctxOpen=false;

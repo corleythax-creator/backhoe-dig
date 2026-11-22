@@ -32,6 +32,11 @@ server.listen(0,async()=>{const port=server.address().port,errs=[],[w,h]=opt.siz
     {const fl=process.env.FORGE_LOCAL,fs2=fl==='0'?'':path.resolve(fl||path.join(root,'../forge-studio')),FS='https://corley-forge-studio.vercel.app/';
       if(fs2&&fs.existsSync(path.join(fs2,'building/library/library.json')))await p.route(FS+'**',r=>{const f=path.join(fs2,decodeURIComponent(new URL(r.request().url()).pathname));
         if(!f.startsWith(fs2)||!fs.existsSync(f)||fs.statSync(f).isDirectory())return r.fulfill({status:404,body:''});r.fulfill({status:200,path:f,headers:{'access-control-allow-origin':'*'}})})}
+    // three.js comes from jsDelivr; where a sandbox can't reach it, a `three` of the same version in the global npm
+    // folder (npm i -g three@<version>) is served in its place
+    {const T='https://cdn.jsdelivr.net/npm/three@',td=path.join(require('child_process').execSync('npm root -g').toString().trim(),'three');
+      if(fs.existsSync(path.join(td,'build')))await p.route(T+'**',r=>{const f0=path.join(td,new URL(r.request().url()).pathname.replace(/^\/npm\/three@[^/]+\//,'')),f=fs.existsSync(f0)?f0:f0.replace(/\.min\.js$/,'.js');
+        if(!f.startsWith(td)||!fs.existsSync(f))return r.continue();r.fulfill({status:200,path:f,contentType:'text/javascript',headers:{'access-control-allow-origin':'*'}})})}
     if(opt.init)await p.addInitScript({path:opt.init});
     if(opt.gfx0)await p.addInitScript(g=>{try{localStorage.setItem('bhd_gfx',g)}catch(e){}},opt.gfx0);
     await p.goto(`http://play.test:${port}/index.html`,{waitUntil:'load',timeout:120000});
