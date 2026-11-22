@@ -162,7 +162,7 @@ const WORDS=[
   ['edLinePlacedCap','Map editor','{n} placed (the map holds {cap}). They are picked: move, turn or delete them like any thing.','{n}: how many; {cap}: the most'],
   ['edRoomFor','Map editor','Only room for {n} more on the map.','{n}: how many'],['edNoRoom','Map editor','The map holds no more of these.'],
   ['edCut','Map editor','Cut {what}. Paste with {paste}.','{what}: the thing or how many; {paste}: Paste or Ctrl+V'],['edCopied','Map editor','Copied {what}. Paste with {paste}.','{what}: the thing or how many; {paste}: Paste or Ctrl+V'],
-  ['edSaveFull','Map editor','Could not save the map on this device (storage is full or blocked).'],['edSaveFail','Map editor','Could not save the map on this device.'],
+  ['edCloud','Map editor','Map saved on the server.'],['edCloudNo','Map editor','Saved on this device, but the server could not be reached. It will go up when it can.'],['edSaveFull','Map editor','Could not save the map on this device (storage is full or blocked).'],['edSaveFail','Map editor','Could not save the map on this device.'],
   ['edCopyByHand','Map editor','Select all of the text and copy it.'],['edMapCopied','Map editor','Map copied ({kb} KB of text). Paste it anywhere to keep it.','{kb}: its size'],
   ['edNotMapText','Map editor','That is not a Corley\'s Island map. Copy one with Copy map first.'],['edNotMapFile','Map editor','That file is not a Corley\'s Island map.'],
   ['edNoMapRoom','Map editor','Not enough room on this device for another map. Delete one or download it as a file.'],['edMapNameTaken','Map editor','There is already a map with that name.'],
