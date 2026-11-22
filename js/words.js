@@ -111,7 +111,7 @@ const WORDS=[
   ['gunNoAmmo','On foot','Out of {gun} rounds: Lakeside Guns on Main Street has more','{gun}: which gun'],['gunFull','On foot','The {gun} is already loaded','{gun}: which gun'],
   ['gunOne','On foot','Only the pistol so far: Lakeside Guns on Main Street has a shotgun, a rifle and a carbine',''],
   ['gunGot','On foot','Took the {gun}. [gunNext] (or a tap on the round count) switches guns, [gunReload] reloads','{gun}: which gun'],['gunAmmoGot','On foot','{gun} rounds topped up (+{n})','{gun}: which gun; {n}: how many'],
-  ['gunTip','On foot','Pistol out: a click on the view fires the way you face; [gun] puts it away',''],['fistsUp','On foot','Fists up: [punch] or a click throws a punch. [gun] takes your gun out',''],['gunTrim','On foot','Put the trimmer away ([trim]) to use the pistol',''],
+  ['gunTip','On foot','Pistol out: a click on the view fires the way you face; [gun] puts it away',''],['handsTip','On foot','Your hands are empty: [gun] takes your gun out, [punch] puts your fists up',''],['fistsUp','On foot','Fists up: [punch] or a click throws a punch. [gun] takes your gun out',''],['gunTrim','On foot','Put the trimmer away ([trim]) to use the pistol',''],
   ['trimWalk','On foot','Get out and walk to use the string trimmer',''],
   ['swimming','On foot','Swimming. Head for a beach to wade out; [sprint] swims harder.',''],
   ['fromTable','On foot','Back from {game} at the pavilion.','{game}: chess or checkers'],

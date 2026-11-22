@@ -141,6 +141,7 @@ canvas.addEventListener('pointerdown',e=>{if(edOn)return;camPtrs.set(e.pointerId
   // with the pistol out on foot, a click with the mouse taken fires it (pistol.js)
   if(document.pointerLockElement===canvas&&e.button===0&&gunReady()){gun.trig=true;gunFire();return}
   if(document.pointerLockElement===canvas&&e.button===0&&fistUp()){punch();return}
+  if(document.pointerLockElement===canvas&&e.button===0)handsTip();
   // with the mouse taken on foot and blocks on, a click sets a block where the dot is and a right click lifts one
   if(document.pointerLockElement===canvas&&blkOn&&blkFP()){if(e.button===0)placeBlock();else if(e.button===2)removeBlock();return}
   // with a mouse, a click on the scene takes it for mouse look in any view (Esc lets it go); with blocks on in chase
@@ -157,7 +158,7 @@ const dend=e=>{if(e.button===0||e.type==='pointercancel')gun.trig=false;camPtrs.
 // with blocks on, a left click on the scene (not a drag) sets a block, in Dig or Walk mode and either view (the click
 // that takes the mouse in cab view sets one too; once it is taken, pointerdown above does it)
 canvas.addEventListener('pointerup',e=>{const d=drag;if(!d||e.pointerId!==d.id||!d.mouse||d.btn!==0||d.locked||edOn)return;
-  if(Math.hypot(e.clientX-d.x0,e.clientY-d.y0)<6&&performance.now()-d.t0<400){if(gunReady())gunFire();else if(fistUp())punch();else if(blkOn&&(mode==='dig'||mode==='walk'))placeBlock()}});
+  if(Math.hypot(e.clientX-d.x0,e.clientY-d.y0)<6&&performance.now()-d.t0<400){if(gunReady())gunFire();else if(fistUp())punch();else if(mode==='walk'&&!blkOn)handsTip();else if(blkOn&&(mode==='dig'||mode==='walk'))placeBlock()}});
 canvas.addEventListener('pointerup',dend);canvas.addEventListener('pointercancel',dend);
 canvas.addEventListener('wheel',e=>{if(edOn)return;e.preventDefault();
   // in first person on foot with blocks on, the wheel pushes the block out and pulls it back instead of zooming
