@@ -767,7 +767,8 @@ function padAt(x,z,lim){const L=WP_G.get(wpKey(Math.floor(x/WP_C),Math.floor(z/W
 // below, with 1 in of floor kept inside its edge): no floor there, so the way down is the flight's own
 function wpHoled(p,x,z){for(const h of p.holes){const dx=x-h.x,dz=z-h.z,u=dx*h.c-dz*h.s,v=dx*h.s+dz*h.c;const m=h.t<-9e4?0.03:0;if(u>=-h.hx+m&&u<=h.hx-m&&v>=-h.hz+m&&v<h.hz-(m||0.05))return true}return false}
 // how far the raised floors (groundLift, the walk pads) stand above the ground at x, z: a rise in it is a step, not a slope
-function raiseAt(x,z){const g=farGround?farGround(x,z):baseHeight(x,z),r=(groundLift?groundLift(x,z):0)+Math.max(0,rsAt(x,z)),p=padAt(x,z);return p>g+r?p-g:r}
+// (lim: an upper floor only counts when within a step of the feet, as padAt; else the floor overhead reads as a wall)
+function raiseAt(x,z,lim){const g=farGround?farGround(x,z):baseHeight(x,z),r=(groundLift?groundLift(x,z):0)+Math.max(0,rsAt(x,z)),p=padAt(x,z,lim);return p>g+r?p-g:r}
 function hAt(x,z,lim){
   if(!inDig(x,z)){let g=(farGround?farGround(x,z):baseHeight(x,z))+(groundLift?groundLift(x,z):0)+rsAt(x,z);const p=padAt(x,z,lim),d=deckAt(x,z);if(p>g)g=p;return d>g?d:g}
   let fx=gI(x),fz=gJ(z);
