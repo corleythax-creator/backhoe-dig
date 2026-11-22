@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-21T23:55:00Z",
+ "updated": "2026-11-22T00:23:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -174,9 +174,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-21",
-   "dh": 15,
-   "act": 1,
-   "versions": 3
+   "dh": 16.5,
+   "act": 1.5,
+   "versions": 4
   }
  ],
  "extra": [
@@ -4227,6 +4227,15 @@ window.EFFORT = {
    "tris": 7183092,
    "chars": 2741230,
    "what": "You are always on foot now: no key, menu or map pick puts you in a machine from a distance, you walk up to it and get in. Machines lists each one with how far off it is and which way, and the site map's Go there is on foot only. The game opens down by the boat dock at the town marina. 1 puts your fists up and punches: the first punch knocks a townsperson down, more kill. 2 takes your gun out (G still does), and it starts put away. The Beach Simulator's jet ski, wakeboard boat and kayak are tied up along the open side of the marina pier: walk up to one and get in to drive it."
+  },
+  {
+   "v": 450,
+   "asked": "2026-11-21T17:47:00-06:00",
+   "live": "2026-11-21T18:23:03-06:00",
+   "dh": 1.5,
+   "tris": 7316879,
+   "chars": 2744011,
+   "what": "On foot in first person your fists are held up close together at the bottom of the view, closed, and the punching arm drives out to the middle. A click with empty hands now says which keys take the gun (2) and the fists (1) out; 1 and 2 are taken for Punch and Gun even if a saved key held them, and the pistol never opens the game with no rounds at all."
   }
  ]
 };
