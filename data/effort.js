@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-22T02:05:00Z",
+ "updated": "2026-11-22T02:45:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -174,9 +174,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-21",
-   "dh": 21.5,
-   "act": 2,
-   "versions": 5
+   "dh": 22,
+   "act": 2.5,
+   "versions": 6
   }
  ],
  "extra": [
@@ -4245,6 +4245,15 @@ window.EFFORT = {
    "tris": 7205532,
    "chars": 2744209,
    "what": "Harbor Light Brewing has a 22 ft taproom with 16 ft glass all round and stairs up to a rooftop bar: an open deck with its own bar under a pergola, stools, and tables under umbrellas over the water"
+  },
+  {
+   "v": 452,
+   "asked": "2026-11-21T20:30:00-06:00",
+   "live": "2026-11-21T20:45:15-06:00",
+   "dh": 0.5,
+   "tris": 7189110,
+   "chars": 2744446,
+   "what": "Harbor Light Brewing's old white porch is gone from the front: the Daylight design's own deck and pergola stand there instead"
   }
  ]
 };

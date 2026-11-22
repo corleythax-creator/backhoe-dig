@@ -271,6 +271,9 @@ function marBoat(kind,o,x,z,yaw){const K=famKit();MAR_KIND[kind](K,o);const g=ne
     for(const dx of [-6.2,-3.2,3.2,6.2]){const x=hx+dx,z=pz+0.3;F.box(0.55,0.06,0.5,0x2f4a3a,x,py+0.45,z);F.box(0.55,0.65,0.06,0x2f4a3a,x,py+0.8,z+0.24,0,-0.15);
       for(const s of [-1,1]){F.box(0.05,0.08,0.75,0x2f4a3a,x+s*0.26,py+0.06,z);F.box(0.04,0.4,0.04,0x2f4a3a,x+s*0.26,py+0.26,z)}}
     SOLIDS.push({x:hx,z:hz,hx:W/2+0.1,hz:D/2+0.1});
+    // one thing with its porch, steps and roof overhang: the Daylight design standing in takes the porch away too (it
+    // has its own deck and pergola on the water side)
+    fxDecl('Harbor Light Brewing',hx,hz-1.8,W/2+1.0,D/2+2.45);
     // the taproom for the townsfolk (o out through the front door, s across): two behind the bar down the west end, the
     // rest at the tables; open 11 AM to 11 PM and never quiet while it is (minC). With the Daylight design these become
     // its own bar's and tables' spots (forgetown.js bfRoomSet), its front door the way in

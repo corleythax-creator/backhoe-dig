@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Saturday, November 21, 2026
 
+- **v452** (8:45 PM) Harbor Light Brewing's old white porch is gone from the front: the Daylight design's own deck and pergola stand there instead
 - **v451** (8:05 PM) Harbor Light Brewing has a 22 ft taproom with 16 ft glass all round and stairs up to a rooftop bar: an open deck with its own bar under a pergola, stools, and tables under umbrellas over the water
 - **v450** (6:23 PM) On foot in first person your fists are held up close together at the bottom of the view, closed, and the punching arm drives out to the middle. A click with empty hands now says which keys take the gun (2) and the fists (1) out; 1 and 2 are taken for Punch and Gun even if a saved key held them, and the pistol never opens the game with no rounds at all.
 - **v449** (5:55 PM) You are always on foot now: no key, menu or map pick puts you in a machine from a distance, you walk up to it and get in. Machines lists each one with how far off it is and which way, and the site map's Go there is on foot only. The game opens down by the boat dock at the town marina. 1 puts your fists up and punches: the first punch knocks a townsperson down, more kill. 2 takes your gun out (G still does), and it starts put away. The Beach Simulator's jet ski, wakeboard boat and kayak are tied up along the open side of the marina pier: walk up to one and get in to drive it.
