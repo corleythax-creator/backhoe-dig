@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-22T22:53:00Z",
+ "updated": "2026-11-22T23:19:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -180,9 +180,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-22",
-   "dh": 21.75,
-   "act": 3,
-   "versions": 6
+   "dh": 26.75,
+   "act": 3.5,
+   "versions": 7
   }
  ],
  "extra": [
@@ -4332,6 +4332,15 @@ window.EFFORT = {
    "tris": 7263449,
    "chars": 2786914,
    "what": "The marina's dry-stack boat rack is one thing in the map editor: tap it and the posts, arms, boats and roof move and turn together."
+  },
+  {
+   "v": 461,
+   "asked": "2026-11-22T17:05:00-06:00",
+   "live": "2026-11-22T17:19:24-06:00",
+   "dh": 5,
+   "tris": 7259257,
+   "chars": 2797047,
+   "what": "Boardwalks you can build: eleven pieces under Dock and water (standard, narrow, wide, railed, a square, a railed corner, raised on piles, steps, a ramp), each in one of six photo-scanned plank woods from the Wood swatches. The town's own boardwalk is in the same real planks, can be picked, moved or deleted a 20 ft section at a time, and takes its wood from a new tuning."
   }
  ]
 };
