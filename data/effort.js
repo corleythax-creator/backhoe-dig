@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-22T00:23:00Z",
+ "updated": "2026-11-22T02:05:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -174,9 +174,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-21",
-   "dh": 16.5,
-   "act": 1.5,
-   "versions": 4
+   "dh": 21.5,
+   "act": 2,
+   "versions": 5
   }
  ],
  "extra": [
@@ -4236,6 +4236,15 @@ window.EFFORT = {
    "tris": 7316879,
    "chars": 2744011,
    "what": "On foot in first person your fists are held up close together at the bottom of the view, closed, and the punching arm drives out to the middle. A click with empty hands now says which keys take the gun (2) and the fists (1) out; 1 and 2 are taken for Punch and Gun even if a saved key held them, and the pistol never opens the game with no rounds at all."
+  },
+  {
+   "v": 451,
+   "asked": "2026-11-21T17:40:00-06:00",
+   "live": "2026-11-21T20:05:14-06:00",
+   "dh": 5,
+   "tris": 7205532,
+   "chars": 2744209,
+   "what": "Harbor Light Brewing has a 22 ft taproom with 16 ft glass all round and stairs up to a rooftop bar: an open deck with its own bar under a pergola, stools, and tables under umbrellas over the water"
   }
  ]
 };
