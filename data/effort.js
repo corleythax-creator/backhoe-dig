@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-22T09:08:00Z",
+ "updated": "2026-11-22T17:54:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -180,9 +180,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-22",
-   "dh": 17,
-   "act": 1,
-   "versions": 2
+   "dh": 18.5,
+   "act": 1.5,
+   "versions": 3
   }
  ],
  "extra": [
@@ -4296,6 +4296,15 @@ window.EFFORT = {
    "tris": 7200085,
    "chars": 2779792,
    "what": "Harbor Light Brewing comes alive: a full drink menu with house beers and a guest tap that changes daily, string lights over the rooftop and the porch at night, a crowd that fills the place after five with the murmur of the room, a drink that is a glass in your hand (sip it, and sit down with it at any free stool or chair), Owen the brewer behind the bar, and a band on the roof Friday and Saturday nights, 7 to 10 PM"
+  },
+  {
+   "v": 457,
+   "asked": "2026-11-22T10:50:00-06:00",
+   "live": "2026-11-22T11:54:19-06:00",
+   "dh": 1.5,
+   "tris": 7481610,
+   "chars": 2780364,
+   "what": "The bar's stairs can be walked up at any speed: the rooftop floor overhead no longer reads as a wall at the foot of the flight, and a sprint on a slow frame no longer stops partway"
   }
  ]
 };
