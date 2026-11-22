@@ -424,9 +424,10 @@ function bfBuild(L,K,item){const it=bf.lib[L.id],face=L.turn*Math.PI/180,c=Math.
     // (a room open to the sky, a roof deck, is no room to the camera: nothing over it to stay under)
     for(const r of it.rooms)if(r.level===lv&&!r.open){const a=r.outline.map(q=>q[0]),b=r.outline.map(q=>q[1]),cx=(Math.min(...a)+Math.max(...a))/2,cz=(Math.min(...b)+Math.max(...b))/2;
       const R=rmRoom(X(cx,cz),Z(cx,cz),face,(Math.max(...a)-Math.min(...a))/2,(Math.max(...b)-Math.min(...b))/2,y0+r.floorY,y0+r.ceilingY);R.bf=1;R.bfL=L;bfEnc(R,it,K,cx,cz,r.floorY);R.clad=it.clad||((it.tags||[]).includes('brick')?'brick':(it.tags||[]).includes('steel')?'steel':'siding');G.rooms.push({r:R,o:{x:R.x,z:R.z,f:R.f,y:R.y,top:R.top}})}
-    // its furniture (a porch a floor to stand on; rugs and stairs left to the floor)
+    // its furniture (a porch a floor to stand on, a step below it too; rugs and stairs left to the floor)
     for(const P of K.items){if(P.lvl!==lv)continue;const [x,z,hx,hz,b0,b1]=P.box;
       if(P.kind==='porch'||P.kind==='deck'){if(!lv)pad(x,z,hx,hz,face,fy(0));continue}
+      if(P.kind==='platform'&&!lv&&b1<it.levels[0].floorY+0.05){pad(x,z,hx,hz,face,y0+b1);continue}   // a step up to the porch: stood on at its own height
       if(P.kind==='stairs'||P.kind==='rug'||b1-b0<0.3||hx>3||hz>3)continue;solid(x,z,face,hx,hz,y0+b0-0.05,y0+b1,y0+b1)}}
   // the stairs: a floor rising from one level to the next, foot to head
   for(const st of it.stairs||[]){const [fx,fz]=st.foot,[hx,hz]=st.head,ux=hx-fx,uz=hz-fz,len=Math.hypot(ux,uz),wx=ux*c+uz*s,wz=-ux*s+uz*c,a=fy(st.level),b=fy(st.up);
