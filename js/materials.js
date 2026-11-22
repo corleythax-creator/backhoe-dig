@@ -67,7 +67,7 @@ const MAT_GL2=true; // three.js draws with WebGL 2 only (since r163)
 // the ground shader's material uniforms: the painted-id and cover maps (one texel per editor cell, ED_M and ED_A, set
 // up in terrain.js), the texture array holding just the materials the map uses, each id's mean colour and tiles per
 // metre, and its layer; for Mud, the layers of its drier looks and their colours over its own
-const matU={tMatId:{value:null},tMatCov:{value:null},tMatR:{value:null},uPom:{value:0},tMatArr:{value:null},uMatInfo:{value:[]},uMatLS:{value:new Float32Array(MAT_MAX*2)},uMudL:{value:new THREE.Vector2(-1,-1)},
+const matU={tMatTd:{value:null},tMatId:{value:null},tMatCov:{value:null},tMatR:{value:null},uPom:{value:0},tMatArr:{value:null},uMatInfo:{value:[]},uMatLS:{value:new Float32Array(MAT_MAX*2)},uMudL:{value:new THREE.Vector2(-1,-1)},
   uMatN:{value:new Float32Array(MAT_MAX).fill(-1)},texPbr:{value:0},uPbr:{value:new THREE.Vector4(1,1,1,55)},uMudC1:{value:new THREE.Vector3()},uMudC2:{value:new THREE.Vector3()},tSkyEnv:{value:skyEnv}};
 // uMatLS: each id's texture layer (-1 none loaded) and shine
 {const w=MAT_LIST.find(m=>m&&m.id==='mud').c,r=(c,i)=>c[i]/w[i];matU.uMudC1.value.set(r(MUD_STAGES[0].c,0),r(MUD_STAGES[0].c,1),r(MUD_STAGES[0].c,2));matU.uMudC2.value.set(r(MUD_STAGES[1].c,0),r(MUD_STAGES[1].c,1),r(MUD_STAGES[1].c,2))}
@@ -79,6 +79,10 @@ const MAT_GLSL_HEAD=MAT_GL2?`precision highp sampler2DArray;
 uniform sampler2D tMatId;
 uniform sampler2D tMatCov;
 uniform sampler2D tMatR;
+uniform sampler2D tMatTd;
+float mCvF(bool t,ivec2 b){return t?texelFetch(tMatTd,b,0).g:texelFetch(tMatCov,b,0).r;}
+float mIdF(bool t,ivec2 b){return t?texelFetch(tMatTd,b,0).r:texelFetch(tMatId,b,0).r;}
+float mRsF(bool t,ivec2 b){return t?texelFetch(tMatTd,b,0).b:texelFetch(tMatR,b,0).r;}
 uniform float uPom;
 uniform sampler2DArray tMatArr;
 uniform vec4 uMatInfo[${MAT_MAX}];
@@ -103,11 +107,12 @@ uniform vec3 uMudC2;
 const matGlsl=()=>MAT_GL2?`float matP=0.0,matS=0.0,matT=1.0,matG=1.0,matNp=0.0;vec3 matC=vec3(1.0),matNt=vec3(0.0,0.0,1.0);
 vec2 mLk=vWXZ,mUv=vWXZ;float mA=vMatA;bool mWall=false;
 if(vMatA>1.5){mA=1.0;int mo=int(vMatA+0.5);if(mo>2){mWall=true;vec2 wn=mo==3?vec2(1.0,0.0):mo==4?vec2(-1.0,0.0):mo==5?vec2(0.0,1.0):vec2(0.0,-1.0);mLk-=wn*0.05;mUv=vec2(dot(vWXZ,vec2(-wn.y,wn.x)),vWP.y);}}
-vec2 mfF=(mLk-vec2(${ED_X0.toFixed(1)},${ED_Z0.toFixed(1)}))/${ED_C.toFixed(2)};vec2 mfW=fwidth(mfF);
-if(vMatA>0.5&&vMatA<1.5&&texelFetch(tMatR,ivec2(floor(mfF+0.5)),0).r>0.002)discard;
+bool mTd=vWXZ.y>${TD_BOX[2].toFixed(1)}&&vWXZ.y<${TD_BOX[3].toFixed(1)}&&vWXZ.x>${TD_BOX[0].toFixed(1)}&&vWXZ.x<${TD_BOX[1].toFixed(1)};
+vec2 mfF=(mLk-(mTd?vec2(${TD_BOX[0].toFixed(1)},${TD_BOX[2].toFixed(1)}):vec2(${ED_X0.toFixed(1)},${ED_Z0.toFixed(1)})))/${ED_C.toFixed(2)};vec2 mfW=fwidth(mfF);
+if(vMatA>0.5&&vMatA<1.5&&mRsF(mTd,ivec2(floor(mfF+0.5)))>0.002)discard;
 if(mA>0.001){
   ivec2 b=ivec2(floor(mfF));vec2 u=fract(mfF);
-  float a0=texelFetch(tMatCov,b,0).r,a1=texelFetch(tMatCov,b+ivec2(1,0),0).r,a2=texelFetch(tMatCov,b+ivec2(0,1),0).r,a3=texelFetch(tMatCov,b+ivec2(1,1),0).r;
+  float a0=mCvF(mTd,b),a1=mCvF(mTd,b+ivec2(1,0)),a2=mCvF(mTd,b+ivec2(0,1)),a3=mCvF(mTd,b+ivec2(1,1));
   vec4 aa=vec4(a0,a1,a2,a3);vec4 pa=step(0.002,aa)*step(aa,vec4(252.5/255.0));bool soft=pa.x+pa.y+pa.z+pa.w>0.0;
   vec4 sq=step(253.5/255.0,aa)*step(aa,vec4(254.5/255.0));bool box=!soft&&sq.x+sq.y+sq.z+sq.w>0.0;
   aa=min(aa*(255.0/253.0),vec4(1.0));
@@ -117,7 +122,7 @@ if(mA>0.001){
   float p=soft||box?c:clamp((c-0.5)/max(g,1e-4)+0.5,0.0,1.0);
   vec4 w=aa*vec4((1.0-u.x)*(1.0-u.y),u.x*(1.0-u.y),(1.0-u.x)*u.y,u.x*u.y);
   ivec2 bm=b;float wm=w.x;if(w.y>wm){wm=w.y;bm=b+ivec2(1,0);}if(w.z>wm){wm=w.z;bm=b+ivec2(0,1);}if(w.w>wm){wm=w.w;bm=b+ivec2(1,1);}
-  int mi=int(texelFetch(tMatId,bm,0).r*255.0+0.5);
+  int mi=int(mIdF(mTd,bm)*255.0+0.5);
   if(mi>0&&p>0.0){vec4 inf=uMatInfo[mi];matC=inf.rgb;matP=p*min(mA,1.0);vec2 ls=uMatLS[mi];float ly=ls.x;matS=ls.y*matP*(1.0-mudF);
     // Mud: damp then cracked as the soil water drops (its colour alone where its textures aren't drawn)
     vec3 mk=vec3(1.0);float d1=0.0,d2=0.0;
@@ -180,7 +185,7 @@ function matImgOf(m,cb){let im=matImg[m];
 // rebuilds the texture array when the materials painted on the map (and loaded) change; the images load on first use.
 // Skipped while the ground detail is off (Low graphics), where the shader never reads it
 function matTexUpdate(){if(!MAT_GL2||!texOn||!gfxDetail)return;
-  const used=new Uint8Array(MAT_MAX);for(let q=0;q<ED_M.length;q++)used[ED_M[q]]=1;
+  const used=new Uint8Array(MAT_MAX);for(let q=0;q<ED_M.length;q++)used[ED_M[q]]=1;if(TP.any)for(let q=0;q<TP.M.length;q++)used[TP.M[q]]=1;
   // ids for the library, names for Mud's drier looks
   const want=[];for(let m=1;m<MAT_MAX;m++)if(used[m]&&matDef(m))want.push(m);
   // relief and sheen maps (normal map as a layer of its own, roughness into the alpha of the colour layer) for the materials that have them
