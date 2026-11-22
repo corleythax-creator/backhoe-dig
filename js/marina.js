@@ -350,7 +350,7 @@ function marBoat(kind,o,x,z,yaw){const K=famKit();MAR_KIND[kind](K,o);const g=ne
   K.add();famAdd(F);famAddSpot('bench',BK)})();
 
 // the moored boats and buoys ride the swells at their lines; the lighthouse's beam turns after dark. Only near enough to see
-function marinaTick(dt){const cx=camera.position.x-95,cz=camera.position.z-520;if(cx*cx+cz*cz>650*650){MAR.beam.visible=false;return}
+function marinaTick(dt){boardTownSync();const cx=camera.position.x-95,cz=camera.position.z-520;if(cx*cx+cz*cz>650*650){MAR.beam.visible=false;return}
   const t=performance.now()/1000;
   for(const b of MAR.boats){const y=lakeY(b.x,b.z);b.g.position.y=y-0.02;b.g.rotation.x=0.012*Math.sin(t*0.8+b.ph);b.g.rotation.z=0.02*Math.sin(t*0.65+b.ph*1.7)}
   for(const b of MAR.buoys){b.g.position.y=lakeY(b.x,b.z)-0.1;b.g.rotation.x=0.06*Math.sin(t*1.1+b.ph);b.g.rotation.z=0.06*Math.sin(t*0.9+b.ph*1.3)}

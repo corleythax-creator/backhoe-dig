@@ -432,13 +432,64 @@ const FF_KIT={
   fence:(B,F)=>{for(const x of [-1,1])B.box(0.08,F.h,Math.max(0.08,F.d),0x8c9094,x*(F.w/2-0.04),F.h/2,0);B.box(F.w-0.16,F.h*0.8,0.04,F.col,0,F.h*0.55,0)},
   frame:(B,F)=>{for(const x of [-1,1])for(const z of [-1,1])B.box(0.1,F.h,0.1,F.col,x*(F.w/2-0.05),F.h/2,z*(F.d/2-0.05));B.box(F.w,0.1,F.d,F.col,0,F.h-0.05,0)}};
 for(const k in PROP_FF){const F=PROP_FF[k];if(!PROPS[k])PROP_MODELS[k]=B=>FF_KIT[F.sh](B,F);PROPS[k]=Object.assign(PROPS[k]||{},F)}
+// ---------- boardwalk pieces ----------
+// Timber decks to lay anywhere (Dock and water): each kind is drawn in real planks, one InstancedMesh a wood
+// (BOARD_WOODS, mainland.js; a piece's c picks its wood: the editor's Wood swatches, the block bar's Colour list).
+// wood: 1 marks them; rails: extra solids [x, z, half length along x, half depth] on the model for the railings;
+// a pad's fourth number is how much higher its far (+z) end is (steps, a ramp).
+const BW_L=6.1,BW_W=3.66,BW_H=1.0;
+Object.assign(PROPS,{
+  bwalk:{n:'Boardwalk (12 × 20 ft)',cat:9,w:BW_L,d:BW_W,cap:300,run:1,deep:1,wood:1,pad:[0.15,BW_L/2,BW_W/2]},
+  bwalk6:{n:'Boardwalk, narrow (6 × 20 ft)',cat:9,w:BW_L,d:1.83,cap:300,run:1,deep:1,wood:1,pad:[0.15,BW_L/2,0.915]},
+  bwalk16:{n:'Boardwalk, wide (16 × 20 ft)',cat:9,w:BW_L,d:4.88,cap:200,run:1,deep:1,wood:1,pad:[0.15,BW_L/2,2.44]},
+  bwrail:{n:'Boardwalk with a rail (12 × 20 ft)',cat:9,w:BW_L,d:BW_W,cap:300,run:1,deep:1,wood:1,pad:[0.15,BW_L/2,BW_W/2],rails:[[0,-1.75,BW_L/2,0.07]]},
+  bwrail2:{n:'Boardwalk with two rails (12 × 20 ft)',cat:9,w:BW_L,d:BW_W,cap:300,run:1,deep:1,wood:1,pad:[0.15,BW_L/2,BW_W/2],rails:[[0,-1.75,BW_L/2,0.07],[0,1.75,BW_L/2,0.07]]},
+  bwsq:{n:'Boardwalk square (12 × 12 ft)',cat:9,w:BW_W,d:BW_W,cap:200,deep:1,wood:1,pad:[0.15,BW_W/2,BW_W/2]},
+  bwcorner:{n:'Boardwalk corner with rails (12 × 12 ft)',cat:9,w:BW_W,d:BW_W,cap:200,deep:1,wood:1,pad:[0.15,BW_W/2,BW_W/2],rails:[[0,-1.75,BW_W/2,0.07],[-1.75,0,0.07,BW_W/2]]},
+  bwpier:{n:'Raised boardwalk on piles (12 × 20 ft)',cat:9,w:BW_L,d:BW_W,cap:200,run:1,float:0.001,wood:1,pad:[BW_H,BW_L/2,BW_W/2]},
+  bwpierr:{n:'Raised boardwalk on piles, railed (12 × 20 ft)',cat:9,w:BW_L,d:BW_W,cap:200,run:1,float:0.001,wood:1,pad:[BW_H,BW_L/2,BW_W/2],rails:[[0,-1.75,BW_L/2,0.07],[0,1.75,BW_L/2,0.07]]},
+  bwsteps:{n:'Boardwalk steps (12 ft wide, up 3 ft 3 in)',cat:9,w:BW_W,d:1.8,cap:100,wood:1,pad:[0.05,BW_W/2,0.9,BW_H-0.05]},
+  bwramp:{n:'Boardwalk ramp (12 × 20 ft, up 3 ft 3 in)',cat:9,w:BW_W,d:BW_L,cap:100,wood:1,pad:[0.02,BW_W/2,BW_L/2,BW_H-0.02]}});
+// a timber model: boxes and round piles with uvs in metres, the grain (the planks' length) along the axis given
+function bwModel(fn){const parts=[],a=new THREE.Vector3(),b=new THREE.Vector3(),n=new THREE.Vector3();
+  const put=(g,x,y,z,gr,rx)=>{g=g.toNonIndexed();if(rx)g.rotateX(rx);g.translate(x,y,z);const P=g.attributes.position.array,uv=new Float32Array(P.length/3*2),G='xyz'.indexOf(gr);
+    for(let i=0;i<P.length;i+=9){a.set(P[i+3]-P[i],P[i+4]-P[i+1],P[i+5]-P[i+2]);b.set(P[i+6]-P[i],P[i+7]-P[i+1],P[i+8]-P[i+2]);n.crossVectors(a,b);
+      const m=[Math.abs(n.x),Math.abs(n.y),Math.abs(n.z)],N=m.indexOf(Math.max(...m)),ax=[0,1,2].filter(k=>k!==N),V=ax.includes(G)?G:ax[1],U=ax.find(k=>k!==V);
+      for(let k=0;k<3;k++){uv[(i/3+k)*2]=P[i+k*3+U];uv[(i/3+k)*2+1]=P[i+k*3+V]}}
+    g.setAttribute('uv',new THREE.BufferAttribute(uv,2));parts.push(g)};
+  fn({box:(w,h,d,x,y,z,gr,rx)=>put(new THREE.BoxGeometry(w,h,d),x,y,z,gr,rx),pile:(r,h,x,y,z)=>put(new THREE.CylinderGeometry(r,r*1.08,h,10),x,y,z,'y')});
+  let c=0;for(const g of parts)c+=g.attributes.position.count;const P=new Float32Array(c*3),N=new Float32Array(c*3),U=new Float32Array(c*2);let o=0;
+  for(const g of parts){g.computeVertexNormals();P.set(g.attributes.position.array,o*3);N.set(g.attributes.normal.array,o*3);U.set(g.attributes.uv.array,o*2);o+=g.attributes.position.count;g.dispose()}
+  const m=new THREE.BufferGeometry();m.setAttribute('position',new THREE.BufferAttribute(P,3));m.setAttribute('normal',new THREE.BufferAttribute(N,3));m.setAttribute('uv',new THREE.BufferAttribute(U,2));return m}
+// a deck L long (x) and W across at height y (its top), on stringers; legs down into the ground under it
+const bwDeck=(B,L,W,y,legs)=>{B.box(L,0.16,W,0,y-0.08,0,'z');for(const z of W>2?[-(W/2-0.25),0,W/2-0.25]:[-(W/2-0.2),W/2-0.2])B.box(L-0.1,0.24,0.1,0,y-0.28,z,'x');
+    if(legs)for(const x of L>4?[-(L/2-0.3),0,L/2-0.3]:[-(L/2-0.3),L/2-0.3])for(const z of [-(W/2-0.25),W/2-0.25])B.box(0.16,1.6,0.16,x,y-0.96,z,'y')},
+  // a post-and-rail railing L long at z (along x) or at x (along z, turn 1), standing on a deck at y
+  bwRail=(B,L,q,y,turn)=>{const n=Math.max(2,Math.round(L/1.9)+1);for(let i=0;i<n;i++){const u=-(L/2-0.07)+(L-0.14)*i/(n-1);B.box(0.1,1.1,0.1,turn?q:u,y+0.55,turn?u:q,'y')}
+    for(const [h,t,w] of [[1.13,0.05,0.14],[0.62,0.09,0.04],[0.2,0.09,0.04]])B.box(turn?w:L,t,turn?L:w,turn?q:0,y+h,turn?0:q,turn?'z':'x')},
+  bwPier=(B,rail)=>{bwDeck(B,BW_L,BW_W,BW_H);for(const x of [-2.3,2.3]){B.box(0.2,0.26,BW_W+0.3,x,BW_H-0.53,0,'z');for(const z of [-(BW_W/2-0.05),BW_W/2-0.05])B.pile(0.14,4.4,x,BW_H-2.0,z)}
+    if(rail)for(const z of [-1.75,1.75])bwRail(B,BW_L,z,BW_H)};
+const BW_MODELS={
+  bwalk:B=>bwDeck(B,BW_L,BW_W,0.15,1),bwalk6:B=>bwDeck(B,BW_L,1.83,0.15,1),bwalk16:B=>bwDeck(B,BW_L,4.88,0.15,1),
+  bwrail:B=>{bwDeck(B,BW_L,BW_W,0.15,1);bwRail(B,BW_L,-1.75,0.15)},bwrail2:B=>{bwDeck(B,BW_L,BW_W,0.15,1);for(const z of [-1.75,1.75])bwRail(B,BW_L,z,0.15)},
+  bwsq:B=>bwDeck(B,BW_W,BW_W,0.15,1),bwcorner:B=>{bwDeck(B,BW_W,BW_W,0.15,1);bwRail(B,BW_W,-1.75,0.15);bwRail(B,BW_W-0.2,-1.75,0.15,1)},
+  bwpier:B=>bwPier(B),bwpierr:B=>bwPier(B,1),
+  // six steps climbing to the far (+z) side, closed risers, a post under each end
+  bwsteps:B=>{for(let i=0;i<6;i++){const t=(i+1)*BW_H/6,z=-0.75+i*0.3;B.box(BW_W,0.05,0.34,0,t-0.025,z,'x');B.box(BW_W-0.1,t+0.4,0.04,0,(t-0.4)/2-0.03,z-0.15,'x')}
+    for(const x of [-(BW_W/2-0.05),BW_W/2-0.05])B.box(0.08,BW_H+0.6,1.8,x,BW_H/2-0.33,0,'z')},
+  // a deck sloping up to the far (+z) side on bents of posts
+  bwramp:B=>{const th=-Math.atan2(BW_H,BW_L);B.box(BW_W,0.16,Math.hypot(BW_L,BW_H),0,BW_H/2-0.08,0,'x',th);for(const x of [-(BW_W/2-0.2),BW_W/2-0.2])B.box(0.1,0.24,Math.hypot(BW_L,BW_H)-0.1,x,BW_H/2-0.28,0,'z',th);
+    for(const z of [-2.6,-0.9,0.9,2.6])for(const x of [-(BW_W/2-0.2),BW_W/2-0.2]){const h=BW_H/2+z*BW_H/BW_L+1.1;B.box(0.16,h,0.16,x,h/2-1.4,z,'y')}}};
+const PROP_WIM={};
 // a kind's box-built model; a Forge kind's is fitted to the Forge model's size, standing on the ground about its middle
 function propGeo(k){const g=propModel(PROP_MODELS[k]),F=PROP_FF[k];if(!F)return g;g.computeBoundingBox();const b=g.boundingBox,c=b.getCenter(new THREE.Vector3());
   g.translate(-c.x,-b.min.y,-c.z);g.scale(F.w/Math.max(0.01,b.max.x-b.min.x),F.h/Math.max(0.01,b.max.y-b.min.y),F.d/Math.max(0.01,b.max.z-b.min.z));g.computeVertexNormals();return g}
 {const mt=M(0xffffff,{vertexColors:true});
-  for(const k in PROPS){const im=new THREE.InstancedMesh(propGeo(k),mt,PROPS[k].cap);
+  const one=(k,geo,mat)=>{const im=new THREE.InstancedMesh(geo,mat,PROPS[k].cap);
     im.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(PROPS[k].cap*3),3);
-    im.castShadow=im.receiveShadow=true;im.frustumCulled=false;im.count=0;im.visible=false;im.layers.enable(RAIN_LAYER);scene.add(im);propIMs[k]=im}}
+    im.castShadow=im.receiveShadow=true;im.frustumCulled=false;im.count=0;im.visible=false;im.layers.enable(RAIN_LAYER);scene.add(im);return im};
+  // (a boardwalk piece: one mesh a wood, the first standing for the kind where one is asked for)
+  for(const k in PROPS)if(PROPS[k].wood){const g=bwModel(BW_MODELS[k]);PROP_WIM[k]=BOARD_WOODS.map((_,i)=>one(k,g,boardMat(i)));propIMs[k]=PROP_WIM[k][0]}else propIMs[k]=one(k,propGeo(k),mt)}
 // how tall each model is (the outline when placing on foot)
 const PROP_H={};for(const k in PROPS){const g=propIMs[k].geometry;g.computeBoundingBox();PROP_H[k]=g.boundingBox.max.y}
 // (a kind's id is 2 to 16 lower-case letters, or the map leaves it out on loading: mapDecode, terrain.js)
@@ -461,15 +512,18 @@ function propY(a){const P=PROPS[a.t];if(P.float)return Math.max(surfAt(a.x,a.z),
 // the instances and the solid boxes from the asset list; assetsBuild (scenery.js) calls it after every change
 function propsBuild(){const o=new THREE.Object3D(),col=new THREE.Color(),n={};
   for(let i=SOLIDS.length-1;i>=0;i--)if(SOLIDS[i].prop)SOLIDS.splice(i,1);walkPadsDrop('prop');
-  for(const k in PROPS)n[k]=0;
-  for(const a of assets){const P=PROPS[a.t];if(a.hd||!P||n[a.t]>=P.cap)continue;const im=propIMs[a.t],i=n[a.t]++;
+  for(const k in PROPS)n[k]=0;for(const k in PROP_WIM)for(const im of PROP_WIM[k])im.userData.n=0;
+  for(const a of assets){const P=PROPS[a.t];if(a.hd||!P||n[a.t]>=P.cap)continue;const wd=P.wood?boardIx(a.c):-1,im=wd<0?propIMs[a.t]:PROP_WIM[a.t][wd],i=wd<0?n[a.t]++:(n[a.t]++,im.userData.n++);if(wd>=0)boardNeed(wd);
     const py=propY(a);o.position.set(a.x,py,a.z);o.rotation.set(0,a.yaw,0);
     // what you can stand on (a pallet, the gazebo's floor, the sandbox): its top (pad: [height, half width, half depth])
-    if(P.pad)walkPad(a.x,a.z,P.pad[1]*a.s,P.pad[2]*a.s,a.yaw,py+P.pad[0]*a.s,{tag:'prop'});o.scale.setScalar(a.s);o.updateMatrix();im.setMatrixAt(i,o.matrix);
+    if(P.pad)walkPad(a.x,a.z,P.pad[1]*a.s,P.pad[2]*a.s,a.yaw,py+P.pad[0]*a.s,{tag:'prop',rise:(P.pad[3]||0)*a.s});o.scale.setScalar(a.s);o.updateMatrix();im.setMatrixAt(i,o.matrix);
     const t=P.tint?PROP_TINT[(a.c|0)%PROP_TINT.length]:[1,1,1];im.setColorAt(i,col.setRGB(t[0],t[1],t[2]));
     if(P.solid){const [lx,lz]=Array.isArray(P.solid)?P.solid:[P.w/2,P.d/2],c=Math.cos(a.yaw),s=Math.sin(a.yaw),L=lx*a.s,Z=lz*a.s;
-      SOLIDS.push({x:a.x,z:a.z,lx:L,lz:Z,cs:c,sn:s,hx:Math.abs(c)*L+Math.abs(s)*Z,hz:Math.abs(s)*L+Math.abs(c)*Z,prop:1})}}
-  for(const k in PROPS){const im=propIMs[k];im.count=n[k];im.visible=n[k]>0;im.instanceMatrix.needsUpdate=true;im.instanceColor.needsUpdate=true}
+      SOLIDS.push({x:a.x,z:a.z,lx:L,lz:Z,cs:c,sn:s,hx:Math.abs(c)*L+Math.abs(s)*Z,hz:Math.abs(s)*L+Math.abs(c)*Z,prop:1})}
+    // (a railing: a turned box of its own off the middle)
+    if(P.rails)for(const [u,v,lx,lz] of P.rails){const c=Math.cos(a.yaw),s=Math.sin(a.yaw),L=lx*a.s,Z=lz*a.s;
+      SOLIDS.push({x:a.x+(u*c+v*s)*a.s,z:a.z+(-u*s+v*c)*a.s,lx:L,lz:Z,cs:c,sn:s,hx:Math.abs(c)*L+Math.abs(s)*Z,hz:Math.abs(s)*L+Math.abs(c)*Z,prop:1})}}
+  for(const k in PROPS)for(const im of PROP_WIM[k]||[propIMs[k]]){const c=PROP_WIM[k]?im.userData.n:n[k];im.count=c;im.visible=c>0;im.instanceMatrix.needsUpdate=true;im.instanceColor.needsUpdate=true}
   propLampsBuild();if(typeof sqSpots==='function')sqSpots();ffNeed()}
 // the Forge models of the kinds standing on the map, each fetched once (forgetown.js's loader: meshopt glTF), with
 // Machine models on Detailed: one mesh and one material of its own (colour, normal and roughness pictures, kept as

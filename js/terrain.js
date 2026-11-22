@@ -278,7 +278,7 @@ function landClamp(x,z,lim,side,walk){if(landIn(x,z,lim,side,walk))return [x,z];
 const SOLIDS=[];
 // a fixed thing's box, declared by the code that builds it, for the map editor to pick and move as one with all that
 // stands in it (fixed.js): n its name, x, z its middle, hx, hz half its size
-const FX_DECL=[],fxDecl=(n,x,z,hx,hz)=>FX_DECL.push({n,x,z,hx,hz});
+const FX_DECL=[],fxDecl=(n,x,z,hx,hz,o)=>FX_DECL.push(Object.assign({n,x,z,hx,hz},o));
 // what a boat can't get past on the water (boats.js): bridge piers, pile bents and moored hulls, each a thick line from
 // ax,az to bx,bz, r out from it. family.js, jessica.js and boats.js fill it as they build them; a trestle's bents are kept
 // with its spans instead (crnSpans in mainland.js), as they change from timber to steel
