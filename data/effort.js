@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-22T05:08:00Z",
+ "updated": "2026-11-22T06:31:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -177,6 +177,12 @@ window.EFFORT = {
    "dh": 27.5,
    "act": 3.5,
    "versions": 8
+  },
+  {
+   "d": "2026-11-22",
+   "dh": 3,
+   "act": 0.5,
+   "versions": 1
   }
  ],
  "extra": [
@@ -4272,6 +4278,15 @@ window.EFFORT = {
    "tris": 7352865,
    "chars": 2749203,
    "what": "Harbor Light Brewing's stairs to the rooftop are wider and easier, you can walk back down them (the roof's floor used to cover the stairwell in every two-storey building), and townsfolk now walk up, sit at the rooftop tables and bar, and come back down"
+  },
+  {
+   "v": 455,
+   "asked": "2026-11-22T00:05:00-06:00",
+   "live": "2026-11-22T00:31:20-06:00",
+   "dh": 3,
+   "tris": 7325096,
+   "chars": 2751962,
+   "what": "Harbor Light Brewing's rooftop is reached by a proper staircase: two flights with a landing where it turns back, open treads and iron rails you can't walk through; you and the townsfolk walk up and down it, and you can walk under the upper flight"
   }
  ]
 };

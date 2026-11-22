@@ -2,6 +2,10 @@
 
 Every version of Corley's Island, newest first, grouped by the day it went live (Central time). Made from `data/effort.js` by `tools/changelog.py`; don't edit it by hand. [Play any old version](https://corleys-island.vercel.app/versions/) · [Build log with charts](https://corleys-island.vercel.app/build.html)
 
+## Sunday, November 22, 2026
+
+- **v455** (12:31 AM) Harbor Light Brewing's rooftop is reached by a proper staircase: two flights with a landing where it turns back, open treads and iron rails you can't walk through; you and the townsfolk walk up and down it, and you can walk under the upper flight
+
 ## Saturday, November 21, 2026
 
 - **v454** (11:08 PM) Harbor Light Brewing's stairs to the rooftop are wider and easier, you can walk back down them (the roof's floor used to cover the stairwell in every two-storey building), and townsfolk now walk up, sit at the rooftop tables and bar, and come back down
