@@ -165,7 +165,10 @@ function updateWalker(dt,mx,mz,lookX,lookY){
   const ox=wk.x,oz=wk.z,lim=wk.y+WK_STEP,g0=wkGround(ox,oz,lim);wk.x+=vx*dt;wk.z+=vz*dt;
   // too steep to walk up stops you; the edge of a raised floor (a curb, a slab, a stair: raiseAt) is a step up if it is
   // no higher than a step, and a wall if it is, so the slope is the ground's under it
-  {const g1=wkGround(wk.x,wk.z,lim),run=Math.hypot(wk.x-ox,wk.z-oz),st=raiseAt(wk.x,wk.z)-raiseAt(ox,oz);
+  // (raiseAt with lim: the floor overhead, a rooftop's, is not the one under the feet; the rise taken in pieces of 3 in
+  // at most, since a flight's floor climbs as you go and a slow frame's sprint up it adds up to more than a step)
+  {const g1=wkGround(wk.x,wk.z,lim),run=Math.hypot(wk.x-ox,wk.z-oz),n=Math.min(8,Math.ceil(run/0.08));let st=raiseAt(wk.x,wk.z,lim)-raiseAt(ox,oz,lim);
+    if(n>1&&st>WK_STEP){st=0;let r0=raiseAt(ox,oz,lim);for(let i=1;i<=n;i++){const r1=raiseAt(ox+(wk.x-ox)*i/n,oz+(wk.z-oz)*i/n,lim);st=Math.max(st,r1-r0);r0=r1}}
     if(run>1e-5&&g1>wk.y+0.02&&(st>WK_STEP||(g1-g0-st)/run>(inDig(wk.x,wk.z)?1.3:2.5))){wk.x=ox;wk.z=oz}}
   wk.x=clamp(wk.x,-WK_BOUND.x,WK_BOUND.x);wk.z=clamp(wk.z,WK_BOUND.z0,WK_BOUND.z1);
   // a bridge's railings keep him on the deck unless he jumps over them (the covered footbridge's walls always do)
