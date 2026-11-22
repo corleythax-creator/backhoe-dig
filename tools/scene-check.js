@@ -17,7 +17,8 @@ const server=http.createServer((req,res)=>{const f=path.join(root,decodeURICompo
 server.listen(0,async()=>{const port=server.address().port,errs=[];
   const b=await chromium.launch({args:['--use-gl=angle','--use-angle=swiftshader','--enable-unsafe-swiftshader']});
   try{const p=await b.newPage({viewport:{width:800,height:500}});
-    p.on('pageerror',e=>errs.push(e.message));p.on('console',m=>{if(m.type()==='error')errs.push(m.text())});
+    p.on('pageerror',e=>errs.push(e.message));// (a sandbox's proxy refusing an outside host, fonts or a live service, is not the game's error)
+    p.on('console',m=>{if(m.type()==='error'&&!/ERR_TUNNEL_CONNECTION_FAILED/.test(m.text()))errs.push(m.text())});
     // Main Street's buildings (forgetown.js) come from forge-studio's live site; with a forge-studio checkout beside this
     // repo they are served from it instead, for sandboxes that can't reach Vercel
     const fs2=path.resolve(root,'../forge-studio'),FS='https://corley-forge-studio.vercel.app/';
