@@ -216,7 +216,9 @@ function curtPlace(m,c,far){const a=Math.random()*Math.PI*2,d=far?1100+Math.rand
 
 // ---------- lightning ----------
 const boltMat=new THREE.LineBasicMaterial({color:0xeef3ff,transparent:true,opacity:1,fog:false,blending:THREE.AdditiveBlending,depthWrite:false});
-const bolt=new THREE.LineSegments(new THREE.BufferGeometry(),boltMat);bolt.frustumCulled=false;bolt.visible=false;bolt.renderOrder=-0.7;scene.add(bolt);
+// (always drawn, see-through between strikes: hidden until the first strike, its shader was built in the middle of that
+// flash, which froze the game for a moment)
+boltMat.opacity=0;const bolt=new THREE.LineSegments(new THREE.BufferGeometry().setAttribute('position',new THREE.Float32BufferAttribute([0,-900,0,0,-900,0],3)),boltMat);bolt.frustumCulled=false;bolt.renderOrder=-0.7;scene.add(bolt);
 // a jagged line from a to b, halving each piece and pushing its middle aside; a couple of shorter forks off it
 function boltPath(ax,ay,az,bx,by,bz,rough,out){let pts=[[ax,ay,az],[bx,by,bz]];
   for(let l=0;l<6;l++){const n=[pts[0]];for(let i=1;i<pts.length;i++){const p=pts[i-1],q=pts[i],len=Math.hypot(q[0]-p[0],q[1]-p[1],q[2]-p[2]);
@@ -249,6 +251,6 @@ function stormTick(dt){const c=camera.position,cv=weather.c,r=weather.r,u=cloudM
   // lightning in a hard shower, about every 15 to 60 s
   if(r>0.55&&!bench.on&&(lgT-=dt*r)<=0){lgT=10+Math.random()*30;lightning()}
   lgAge+=dt;let f=0;for(const p of lgPulse){const t=lgAge-p;if(t>=0)f+=Math.exp(-t*22)*(t<0.05?1:0.7)}
-  bolt.visible=f>0.05;boltMat.opacity=Math.min(1,f);u.uFlash.value=f;
+  boltMat.opacity=f>0.05?Math.min(1,f):0;u.uFlash.value=f;
   if(f>0.01){if(hemiL)hemiL.intensity+=f*1.4*LI;scene.background.lerp(stormFog.setRGB(0.85,0.88,0.95),Math.min(0.6,f*0.5));scene.fog.color.copy(scene.background)}
   clVolTick(dt,cv,u.uOff.value)}

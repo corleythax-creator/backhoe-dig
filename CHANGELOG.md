@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Sunday, November 22, 2026
 
+- **v458** (2:30 PM) Rain no longer falls inside the town's Daylight buildings (they now count as shelter, so drops and splashes stop at the roof), and the first lightning strike no longer freezes the game (its shader is built at loading).
 - **v457** (11:54 AM) The bar's stairs can be walked up at any speed: the rooftop floor overhead no longer reads as a wall at the foot of the flight, and a sprint on a slow frame no longer stops partway
 - **v456** (3:08 AM) Harbor Light Brewing comes alive: a full drink menu with house beers and a guest tap that changes daily, string lights over the rooftop and the porch at night, a crowd that fills the place after five with the murmur of the room, a drink that is a glass in your hand (sip it, and sit down with it at any free stool or chair), Owen the brewer behind the bar, and a band on the roof Friday and Saturday nights, 7 to 10 PM
 - **v455** (12:31 AM) Harbor Light Brewing's rooftop is reached by a proper staircase: two flights with a landing where it turns back, open treads and iron rails you can't walk through; you and the townsfolk walk up and down it, and you can walk under the upper flight
