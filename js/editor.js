@@ -409,9 +409,9 @@ function edTreeBlock(){const C=treeCensus('main');if(!C.n)return '';
 function edTreeLine(a){const v=treeVitalsOf(a);return `${TREE_STAGES[v.st]} · ${sN(v.age)} yr old · trunk ${sIn(v.D)} · crown ${edFmt(v.crown,0)} ft wide · grows ${(v.grow/2.54).toFixed(1)} in a year · holds ${sLb(v.co2)} of CO₂`}
 const edSlider=(id,lab,min,max,step,val,unit)=>`<span class="edopt"><label for="${id}">${lab}</label><input id="${id}" type="range" min="${min}" max="${max}" step="${step}" value="${val}"><output id="${id}V">${val}${unit}</output></span>`;
 // the colours a kind can take (scenery.js tints the trees, props.js the buildings' walls), as swatches
-const edFam=t=>t==='pine'||t==='leafy'?t:PROPS[t]&&PROPS[t].tint?'house':propGlow(t)?'glow':null;
+const edFam=t=>t==='pine'||t==='leafy'?t:PROPS[t]&&PROPS[t].tint?'house':PROPS[t]&&PROPS[t].wood?'wood':propGlow(t)?'glow':null;
 function edFams(){return {pine:{n:'Needles',c:ASSET_PT.map(t=>[0.3*t[0],0.46*t[1],0.26*t[2]])},leafy:{n:'Leaves',c:ASSET_LT},house:{n:'Walls',c:PROP_TINT.map(t=>[0.9*t[0],0.88*t[1],0.84*t[2]])},
-  glow:{n:'Light',c:LAMP_COLS.map(h=>{const c=new THREE.Color(h);return [c.r,c.g,c.b]})}}}
+  wood:{n:'Wood',c:BOARD_WOODS.map(w=>w.c)},glow:{n:'Light',c:LAMP_COLS.map(h=>{const c=new THREE.Color(h);return [c.r,c.g,c.b]})}}}
 function edInspector(){const S=ed.sel,el=$('#edInfo');edBottomSync();if(!S.length){el.innerHTML='';return}
   const L=edSelL(),nl=L.length-edSelA().length;
   // only locked things picked: they can be unlocked or hidden, nothing else

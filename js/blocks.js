@@ -173,7 +173,7 @@ function blkUI(){for(const k of ['w','d','h'])$(`#blkBar .bstep[data-k="${k}"] b
   // a thing: no size or material, but a colour for the lights and the ones that take the house colours
   const th=!!blkThing,P=PROPS[blkThing];for(const e of document.querySelectorAll('#blkBar .bstep[data-k="w"],#blkBar .bstep[data-k="d"],#blkBar .bstep[data-k="h"],#blkMat'))e.hidden=th;
   const w=$('#blkWhat');if(w.value!==blkThing)w.value=blkThing;
-  const cs=$('#blkCol'),cl=th&&(propGlow(blkThing)?LAMP_COL_N:P.tint?PROP_TINT.map((_,i)=>i?'Colour '+i:'White'):null);cs.hidden=!cl;
+  const cs=$('#blkCol'),cl=th&&(propGlow(blkThing)?LAMP_COL_N:P.tint?PROP_TINT.map((_,i)=>i?'Colour '+i:'White'):P.wood?BOARD_WOODS.map(w=>w.n):null);cs.hidden=!cl;
   if(cl&&cs.dataset.k!==blkThing){cs.dataset.k=blkThing;cs.innerHTML=cl.map((n,i)=>`<option value="${i}">${n}</option>`).join('');thCol=Math.min(thCol,cl.length-1)}
   if(cl)cs.value=thCol;$('#blkTurn').setAttribute('aria-label',th?'Turn the thing an eighth of a turn':'Turn the block a quarter turn')}
 // the What list: a block, then every kind of thing by its group in the Things library
