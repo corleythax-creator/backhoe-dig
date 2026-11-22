@@ -420,6 +420,28 @@ function mainSignsAdd(from){from=from||0;const L=mainSignList.slice(from),ids=fr
   const geo=new THREE.BufferGeometry();geo.setAttribute('position',new THREE.Float32BufferAttribute(P,3));geo.setAttribute('uv',new THREE.Float32BufferAttribute(U,2));geo.computeVertexNormals();
   const m=new THREE.Mesh(geo,famSignMat(tex));m.receiveShadow=true;m.userData.sign=1;scene.add(m);return m}
 
+// ---------- the boardwalk's woods ----------
+// Photo-scanned planks (ambientCG, tools/cc0.py: colour, relief and sheen at 1024 px; the planks run down the picture,
+// so across a deck built along x). The placed boardwalk pieces (props.js, the Wood swatches: a piece's c) and the town's
+// own boardwalk (BOARD.town, the Town boardwalk wood tuning) draw in them. Append only: a piece's saved c is an index.
+// k: how much a scan's colour is lifted (the scans are dark beside the game's flat colours).
+// Their meshes carry uvs in metres; each wood's own tile size is its texture's repeat. Loaded when first drawn.
+const BOARD_WOODS=[{id:'board_brown',k:2.0,n:'Brown weathered',ft:9,c:[0.44,0.35,0.26]},{id:'board_grey',k:2.0,n:'Silver grey',ft:5,c:[0.35,0.31,0.27]},
+  {id:'board_drift',k:1.7,n:'Driftwood',ft:5.5,c:[0.50,0.47,0.41]},{id:'board_tan',k:1.8,n:'Mossy tan',ft:6.5,c:[0.46,0.41,0.30]},
+  {id:'board_cedar',k:1.4,n:'New cedar',ft:8.5,c:[0.74,0.56,0.41]},{id:'board_dark',k:1.6,n:'Dark stained',ft:9,c:[0.31,0.24,0.18]}];
+const boardStd=()=>{const m=new THREE.MeshStandardMaterial({color:0xffffff,roughness:0.85,envMap:skyEnv,envMapIntensity:0.4});m.userData.ft=1/0.3048;return m};
+const boardFlat=(m,d)=>m.color.setRGB(...d.c.map(v=>v**2.2*d.k)),BOARD={m:[],town:boardStd(),ti:-1};boardFlat(BOARD.town,BOARD_WOODS[0]);
+const boardIx=i=>Math.max(0,Math.min(BOARD_WOODS.length-1,Math.round(+i||0)));
+function boardMat(i){i=boardIx(i);let m=BOARD.m[i];if(!m){m=BOARD.m[i]=boardStd();boardFlat(m,BOARD_WOODS[i]);m.userData.wood=i}return m}
+// a wood's material with its pictures asked for (once)
+function boardNeed(i){const m=boardMat(i);if(m.userData.ld)return m;m.userData.ld=1;const d=BOARD_WOODS[m.userData.wood],r=1/(d.ft*0.3048),
+    L=k=>{const t=new THREE.TextureLoader().load(`textures/${d.id}${k}.jpg`);t.wrapS=t.wrapT=THREE.RepeatWrapping;t.anisotropy=8;t.repeat.set(r,r);if(!k)t.colorSpace=THREE.SRGBColorSpace;return t};
+  m.map=L('');m.color.setScalar(d.k);m.userData.n=L('_n');m.userData.r=L('_r');boardPbr();return m}
+// relief and sheen on (High graphics, shopPbr) or off
+function boardPbr(){const on=typeof SHOP!=='undefined'&&SHOP.pbr;for(const m of [...BOARD.m,BOARD.town])if(m&&m.userData.ld){m.normalMap=on?m.userData.n:null;m.roughnessMap=on?m.userData.r:null;m.roughness=on?1:0.85;m.needsUpdate=true}}
+// the town's own boardwalk takes the wood of the Town boardwalk wood tuning, once the town's pictures are in (marinaTick)
+function boardTownSync(){if(!SHOP.loaded)return;const i=boardIx(TU.townBoard);if(i===BOARD.ti)return;BOARD.ti=i;const s=boardNeed(i),t=BOARD.town;
+  t.map=s.map;t.color.copy(s.color);t.userData.n=s.userData.n;t.userData.r=s.userData.r;t.userData.ld=1;boardPbr()}
 (function(){let sd=31;const rnd=()=>{sd=(sd+0x6D2B79F5)|0;let t=Math.imul(sd^(sd>>>15),1|sd);t=(t+Math.imul(t^(t>>>7),61|t))^t;return((t^(t>>>14))>>>0)/4294967296};
   // ---------- north: the field and woods ----------
   const N=famKit();
@@ -461,11 +483,13 @@ function mainSignsAdd(from){from=from||0;const L=mainSignList.slice(from),ids=fr
   for(const s of [-1,1])for(let i=0;i<5;i++){const x=s*(30+i*22);lot(x,652-13,16,12,5+((i*3)%4)*1.4,0);if(s>0&&i===1)continue;lot(x,652+13,16,12,5.5+((i*2)%3)*1.5,Math.PI)}
   // (the brewery stands in place of the cross street's second lot east, south side: mainBrewery)
   // a boardwalk along the top of the beach, and a few benches on it looking out at the islands
+  // (each 20 ft section a thing of its own in the map editor, with its bench: fxDecl; in the wood of BOARD.town)
+  const BWK=shopKit();
   // (a gap where the marina's boat ramp crosses it, marina.js)
   // (and none where it would lie on the beach road west of Main Street, nor along Harbor Square's promenade, square.js,
   // nor from there east to the boat ramp, where the waterfront promenade runs: waterfront.js)
   for(let x=-160;x<160;x+=6){if(Math.abs(x)<7||Math.abs(x+3-107)<4||x+3>-119&&x+3<102)continue;if(x+3<0&&Math.abs(mainRimS(x+3)+3-(x+3<-60?576-2*(x+173)/110:574))<4.4)continue;const z0=mainRimS(x)+3,z1=mainRimS(x+6)+3,y=Math.max(baseHeight(x+3,(z0+z1)/2),WATER+1.8);
-    T.box(6.1,0.16,3.6,0x8c6e4c,x+3,y+0.07,(z0+z1)/2,-Math.atan2(z1-z0,6));walkPad(x+3,(z0+z1)/2,3.05,1.8,-Math.atan2(z1-z0,6),y+0.15);
+    BWK.box(BOARD.town,6.1,0.16,3.6,x+3,y+0.07,(z0+z1)/2,-Math.atan2(z1-z0,6));fxDecl('Boardwalk',x+3,(z0+z1)/2,3.1,1.85+Math.abs(z1-z0)/2,{all:1});walkPad(x+3,(z0+z1)/2,3.05,1.8,-Math.atan2(z1-z0,6),y+0.15);
     if(((x+160)/6|0)%5===2){BK.box(1.6,0.45,0.5,0x5c4632,x+3,y+0.37,(z0+z1)/2+1.2);famSpot('bench',x+3,y+0.15,(z0+z1)/2+1.2,Math.PI,0.9)}}
   // street trees along Main Street in the gaps between the shops (clear of the awnings and walls), each in a square of
   // brick pavers with an iron grate
@@ -479,7 +503,7 @@ function mainSignsAdd(from){from=from||0;const L=mainSignList.slice(from),ids=fr
     SOLIDS.push({x:X,z:Z,hx:0.4,hz:0.4})}
   famSign(['LAKESIDE','Main Street'],4.2,1.5,7.5,baseHeight(7.5,568)+2.0,568,Math.PI,'#1f4d6b','#ffffff');
   for(const s of [-1,1])T.box(0.12,2.5,0.12,0x8a8a86,7.5+s*1.9,baseHeight(7.5,568)+1.25,568);
-  famAdd(T);famAddSpot('lamp',LK);famAddSpot('bench',BK);mainSignsAdd();rmWinsBuild();
+  BWK.add();famAdd(T);famAddSpot('lamp',LK);famAddSpot('bench',BK);mainSignsAdd();rmWinsBuild();
 })();
 
 // ---------- the Lakeside Brewing Co. and its beer garden, south of the cross street ----------
@@ -618,7 +642,7 @@ function shopLoad(){if(SHOP.loaded)return;SHOP.loaded=true;
     m.map=L('');m.color.setScalar(1);m.roughness=1;m.userData.n=L('_n');m.userData.r=L('_r');m.needsUpdate=true}
   for(const d of ST_SURF)if(d&&d.m)stSurfLoad(d.m);shopPbr(SHOP.pbr)}
 // relief and sheen maps on (High graphics) or off
-function shopPbr(on){SHOP.pbr=!!on;if(!SHOP.loaded)return;for(const m of SHOP.lib){m.normalMap=on?m.userData.n:null;m.roughnessMap=on?m.userData.r:null;m.roughness=on?1:0.85;m.needsUpdate=true}
+function shopPbr(on){SHOP.pbr=!!on;boardPbr();if(!SHOP.loaded)return;for(const m of SHOP.lib){m.normalMap=on?m.userData.n:null;m.roughnessMap=on?m.userData.r:null;m.roughness=on?1:0.85;m.needsUpdate=true}
   for(const d of ST_SURF)if(d&&d.m)stSurfPbr(d.m)}
 // street paving besides asphalt (Main Street's brick, and sf on a map editor street: 1 brick, 2 cobblestone, 3 fan
 // cobbles, 4 old brick, streets.js): CC0 photo-scanned paving

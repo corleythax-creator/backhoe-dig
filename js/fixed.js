@@ -20,7 +20,7 @@ const FX=[],FX_BY=new Map(),FX_MESH=[],FX_OBJ=[],fxOf=a=>FX_KN[a.t]?FX_BY.get(a.
 function fxHash(s){let h=2166136261;for(let i=0;i<s.length;i++){h^=s.charCodeAt(i);h=Math.imul(h,16777619)}return h>>>1}
 function fxIndex(){const cm=v=>Math.round(v*100),S=SOLIDS.filter(s=>!s.prop&&!s.dw),C=[];
   const box=(x0,x1,z0,z1,o)=>Object.assign({x0,x1,z0,z1,solids:[]},o),inB=(b,x,z,m)=>x>=b.x0-m&&x<=b.x1+m&&z>=b.z0-m&&z<=b.z1+m,area=b=>(b.x1-b.x0)*(b.z1-b.z0);
-  for(const d of FX_DECL)C.push(box(d.x-d.hx,d.x+d.hx,d.z-d.hz,d.z+d.hz,{n:d.n,decl:1}));
+  for(const d of FX_DECL)C.push(box(d.x-d.hx,d.x+d.hx,d.z-d.hz,d.z+d.hz,{n:d.n,decl:1,all:d.all}));
   for(const s of S)if(s.foot&&!C.some(c=>c.decl&&inB(c,s.x,s.z,0)))C.push(box(s.x-s.hx,s.x+s.hx,s.z-s.hz,s.z+s.hz,{}));
   // rooms: in the building whose box holds their middle, else clustered with the rooms they touch into one
   const loose=[];for(const r of IN_ROOMS){const ex=Math.abs(r.cf)*r.hw+Math.abs(r.sf)*r.hd+0.4,ez=Math.abs(r.sf)*r.hw+Math.abs(r.cf)*r.hd+0.4;
@@ -52,7 +52,7 @@ function fxGather(it){if(it.g)return it.g;const g=it.g={tris:[],solids:[],pads:[
   let y1=-1e9;
   for(const F of FX_MESH){const bx=F.m.geometry.boundingBox;if(bx.max.x<x0||bx.min.x>x1||bx.max.z<z0||bx.min.z>z1)continue;
     const P=F.m.geometry.attributes.position.array,N=F.m.geometry.attributes.normal.array,list=[];
-    for(let i=0,t=0;i<P.length;i+=9,t++){if(F.own[t]||!inn(P[i],P[i+2])||!inn(P[i+3],P[i+5])||!inn(P[i+6],P[i+8]))continue;if(low(P,i)&&low(P,i+3)&&low(P,i+6))continue;
+    for(let i=0,t=0;i<P.length;i+=9,t++){if(F.own[t]||!inn(P[i],P[i+2])||!inn(P[i+3],P[i+5])||!inn(P[i+6],P[i+8]))continue;if(!it.all&&low(P,i)&&low(P,i+3)&&low(P,i+6))continue;
       F.own[t]=it.id+1;list.push(i);y1=Math.max(y1,P[i+1],P[i+4],P[i+7])}
     if(list.length){const op=new Float32Array(list.length*9),on=new Float32Array(list.length*9);list.forEach((i,k)=>{op.set(P.subarray(i,i+9),k*9);on.set(N.subarray(i,i+9),k*9)});g.tris.push({F,list,op,on})}}
   const taken=o=>o.fx&&o.fx!==it;

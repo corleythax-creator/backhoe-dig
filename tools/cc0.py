@@ -52,6 +52,10 @@ SCANS = {
     'mach_paint': ('PaintedMetal001', None, 'G', 0.582, 'k0.5'), 'mach_steel': ('Metal038', None, 'G', 0.317, 'k3'),
     'mach_rubber': ('Rubber004', None, 'G', 0.243, 'k0.7'),
     'yellowsteel': ('PaintedMetal001', 4), 'steel_polished': ('Metal009', 4),
+    # the boardwalk's woods (BOARD_WOODS in mainland.js; not library materials, so written at 1024 px): planks run down
+    # the picture (transposed), so on a deck built along x they lie across the walk
+    'board_brown': ('Planks036A', None, 'T'), 'board_grey': ('Planks023A', None, 'T'), 'board_drift': ('Planks027A', None, 'T'),
+    'board_tan': ('Planks030A', None, 'T'), 'board_cedar': ('Planks035A', None, 'T'), 'board_dark': ('Planks037A', None, 'T'),
     'mud': ('ph:muddy_tracks', 7.4), 'mud_drying': ('ph:brown_mud_dry', None), 'mud_cracked': ('ph:mud_cracked_dry_03', None)}
 PH = {'Color': 'diff', 'NormalDX': 'nor_dx', 'Roughness': 'rough'}
 
