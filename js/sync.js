@@ -42,15 +42,16 @@ async function syncPush(keepalive){if(!sync.code||sync.busy||window.syncHold||(t
 function syncNewCode(){const b=new Uint8Array(8);crypto.getRandomValues(b);let c='';for(const x of b)c+=SYNC_ABC[x%SYNC_ABC.length];return c}
 async function syncStart(){const c=syncNewCode();syncSet('Making a code…');
   try{const t=await syncRpc('island_put',{p_code:c,p_data:syncPayload(),p_base:0});if(!(t>0))throw 0;
-    sync.code=c;sync.base=t;sync.last=syncPayload();syncLs('bhd_sync',c);syncLs('bhd_sync_t',String(t));syncLs('bhd_sync_h',syncHash(sync.last));sync.okT=Date.now();syncSet('ok')}
+    sync.code=c;sync.base=t;sync.last=syncPayload();syncLs('bhd_sync',c);syncLs('bhd_sync_off',null);syncLs('bhd_sync_t',String(t));syncLs('bhd_sync_h',syncHash(sync.last));sync.okT=Date.now();syncSet('ok')}
   catch(e){syncSet('Could not reach the sync server. Try again in a minute.')}}
 async function syncJoin(raw){const c=raw.toUpperCase().replace(/[^0-9A-Z]/g,'');
   if(c.length!==8){syncSet('A code is 8 letters and numbers, like 7Q4K-M2XP.');return}
   syncSet('Looking for that code…');
   try{const rows=await syncRpc('island_get',{p_code:c});if(!rows||!rows[0]){syncSet('No save with that code. Check it on your other device.');return}
-    syncLs('bhd_sync',c);syncApply(rows[0])}
+    syncLs('bhd_sync',c);syncLs('bhd_sync_off',null);syncApply(rows[0])}
   catch(e){syncSet('Could not reach the sync server. Try again in a minute.')}}
-function syncStop(){sync.code='';sync.base=0;sync.last=null;for(const k of ['bhd_sync','bhd_sync_t','bhd_sync_h'])syncLs(k,null);syncSet('')}
+// (stopping it here is remembered, bhd_sync_off, so the device does not start saving to the server again by itself)
+function syncStop(){sync.code='';sync.base=0;sync.last=null;for(const k of ['bhd_sync','bhd_sync_t','bhd_sync_h'])syncLs(k,null);syncLs('bhd_sync_off','1');syncSet('')}
 // ---------- the Sync panel ----------
 const syncBox=$('#syncBox');
 function syncShow(){if(syncBox.hidden)return;const on=!!sync.code;
@@ -70,6 +71,10 @@ syncBox.addEventListener('pointerdown',e=>{if(e.target===syncBox)showSync(false)
 // ---------- start, then keep in step ----------
 if(sync.on){sync.code=syncLs('bhd_sync')||'';sync.base=+syncLs('bhd_sync_t')||0;
   if(sync.code){const p=syncPayload();if(syncLs('bhd_sync_h')===syncHash(p))sync.last=p;syncPull().then(()=>syncPush())}
+  // saved on the server by default: a device with no code makes its own a little after opening (and tries again each
+  // few minutes while it can't reach the server), unless syncing was stopped here; never for a test browser. The Sync
+  // panel shows the code, to type into another device
+  else if(!syncLs('bhd_sync_off')&&!navigator.webdriver){const auto=()=>{if(!sync.code&&!syncLs('bhd_sync_off')&&!sync.busy&&!window.syncHold)syncStart().then(()=>{if(!sync.code){syncSet('');setTimeout(auto,180000)}})};setTimeout(auto,20000)}
   setInterval(()=>{if(!document.hidden)syncPush()},15000);
   document.addEventListener('visibilitychange',()=>{if(document.hidden)syncPush(true);else syncPull()});
   addEventListener('pagehide',()=>syncPush(true))}

@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-22T23:37:00Z",
+ "updated": "2026-11-22T23:51:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -180,9 +180,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-22",
-   "dh": 29.75,
+   "dh": 30.25,
    "act": 4,
-   "versions": 8
+   "versions": 9
   }
  ],
  "extra": [
@@ -4350,6 +4350,15 @@ window.EFFORT = {
    "tris": 7372633,
    "chars": 2802810,
    "what": "Two cats live outside Harbor Light Brewing by the lake: Milo the tuxedo cat and a brown tabby Maine coon, Forge Studio's own animals. They wander round the bar, sit, wash, stretch, loaf and sleep, come over to you on foot now and then, and trot out of a machine's way."
+  },
+  {
+   "v": 463,
+   "asked": "2026-11-22T17:45:00-06:00",
+   "live": "2026-11-22T17:51:22-06:00",
+   "dh": 0.5,
+   "tris": 7471974,
+   "chars": 2803545,
+   "what": "Your site and map editor changes are saved on the server without asking: a device with no sync code makes its own about 20 seconds after opening (☰ → Sync devices shows it, to type into another device). Stop syncing here turns it off for that device."
   }
  ]
 };
