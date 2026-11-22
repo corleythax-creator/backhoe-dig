@@ -40,7 +40,12 @@ const TOWN_MENU={0:[['Coffee',2.5,'p'],['Cinnamon roll',3.75,'p'],['Slice of pie
   // the waterfront (waterfront.js)
   32:[['Clam chowder',6.5,'p'],['Fish and chips',14,'p'],['Walleye sandwich',12.5,'p'],['Lemonade',3,'p']],33:[['Postcard',1.5],['Lakeside T-shirt',19.99],['Snow globe',12]],
   34:[['Draft beer',6],['Lemonade',3,'p'],['Wings',11,'p'],['Burger',14,'p']],35:[['Kayak, an hour',25],['Bike, a day',35],['Paddleboard, an hour',30]]};
-const TOWN_BREW=[['Lager',7],['Flight of four',12],['Soft pretzel',9,'p'],['Root beer',3,'p']];
+// the breweries' bars (rooms with a name, not a sign): 'd' a beer and 'c' a soft drink are a glass in your hand
+// (barlife.js: sip it, sit down with it); a guest tap changes with the day of the week
+const TOWN_BREW=[['Lakeside Lager',7,'d'],['Mesa Amber',7.5,'d'],['Hayfield Pale Ale',7.5,'d'],['Flight of four',12,'d'],['Soft pretzel',9,'p'],['Bratwurst plate',12,'p'],['Root beer',3,'c']];
+const TOWN_HARBOR=[['Harbor Light Lager',7,'d'],['Breakwater IPA',8,'d'],['Foghorn Stout',8,'d'],['Dockside Wheat',7.5,'d'],['Flight of four',12,'d'],
+  ['Pretzel and beer cheese',9,'p'],['Smoked whitefish dip',11,'p'],['Fish tacos',14,'p'],['House root beer',4,'c'],['Lemonade',3.5,'c']];
+const TOWN_TAPS=['Cherry Sour','Maple Porter','Lake Fog Hazy IPA','Honey Kolsch','Rye Saison','Smoked Helles','Blueberry Wheat'];
 // ---------- hours (24 h clock; a close of 24 is midnight) by sign, else by kind (RM_KIND, interiors.js) ----------
 const TOWN_HRS={0:[6,15],2:[7,17],5:[6,21],11:[6,16],12:[11,22],15:[10,20],17:[8,17],21:[11,23],23:[0,24],24:[7,22],28:[10,19],29:[8,17],31:[12,23],32:[11,21],33:[9,20],34:[11,24],35:[8,19]};
 const TOWN_KHRS={eat:[7,20],shop:[9,18],salon:[9,18],office:[9,17],wash:[6,22],art:[10,18],gun:[9,19]};
@@ -55,6 +60,8 @@ const townAmPm=h=>h%24===0?'midnight':h===12?'noon':(h%12||12)+(h<12?' AM':' PM'
 const TOWN_CURVE=[[0,0.05],[5,0.05],[6.5,0.35],[8,0.8],[10,0.7],[12,1],[14,0.85],[17,0.95],[19,0.75],[21,0.45],[23,0.15],[24,0.05]];
 function townBusy(R){const h=townHour();let i=1;while(i<TOWN_CURVE.length-1&&TOWN_CURVE[i][0]<h)i++;const [a,u]=TOWN_CURVE[i-1],[b,w]=TOWN_CURVE[i];
   let v=u+(w-u)*Math.min(1,Math.max(0,(h-a)/(b-a)));if(townWeekend())v*=h<10?0.7:1.1;
+  // a pub or a brewery fills by its own evening (townfolk.js tfShopW), whatever the streets are doing
+  if(R&&!R.home&&!R.grp&&typeof tfShopW==='function'){const w=tfShopW(R);if(R.vk==='pm')v=Math.max(v*0.6,w)}
   return R?Math.min(1,Math.max(0.3,v)):Math.min(1,Math.max(TU.tfQuiet??0.12,v))}
 // a room with more people than it wants now (shut, or quieter): customers go first, then staff, the regular last, and only
 // out of sight (or well away from the worker) so nobody vanishes in front of him
@@ -66,6 +73,7 @@ const townPep=()=>town.pep>0?1+(TU.pepBoost||0):1;
 const TOWN_REGS=[{id:'ruth',n:'Ruth Halvorsen',look:'f70_cardigan',si:0},{id:'marisol',n:'Marisol Vega',look:'f28_maroon',si:11},
   {id:'dot',n:'Dot Kowalski',look:'f55_teal',si:5},{id:'hank',n:'Hank Dubois',look:'m60_cap',si:4},{id:'earl',n:'Earl Pruitt',look:'m70_flannel',si:27},
   {id:'gus',n:'Gus Lindqvist',look:'m50_tie',si:8},{id:'mick',n:'Mick O\'Rourke',look:'m40_cargo',si:21},
+  {id:'owen',n:'Owen Brandt',look:'m35_vest',nm:/^Harbor Light/,at:'Harbor Light Brewing Co.',h:[11,23]},
   {id:'walt',n:'Walt Ames',look:'m65_church',walk:[8,18]},{id:'jenna',n:'Jenna Park',look:'f35_denim',walk:[9,15],noSun:1}];
 const townFirst=G=>G.n.split(' ')[0];
 // turn p into regular G: G's own look (the character count moves with it)
@@ -76,10 +84,14 @@ function townMake(p,G){const i=tf.chars.findIndex(c=>c.id===G.look);if(i<0)retur
 function townRegsTick(){const day=fuelDayNo(),h=townHour();
   for(const G of TOWN_REGS){if(G.p&&(G.p.dead||tf.people.indexOf(G.p)<0)){if(G.p.dead)G.gone=day;G.p.reg=null;G.p=null}
     if(G.p||G.gone===day)continue;
-    if(G.si!=null){const p=tf.people.find(p=>p.room&&p.room.si===G.si&&p.spot.staff&&!p.reg&&!p.dead&&!p.hurt&&(!tfSeen(p.x,p.z,1.5)||Math.hypot(p.x-wk.x,p.z-wk.z)>30));if(p)townMake(p,G)}
+    if(G.si!=null||G.nm){const p=tf.people.find(p=>p.room&&townRegAt(G,p.room)&&p.spot.staff&&!p.spot.band&&!p.reg&&!p.dead&&!p.hurt&&(!tfSeen(p.x,p.z,1.5)||Math.hypot(p.x-wk.x,p.z-wk.z)>30));if(p)townMake(p,G)}
     else if(h>=G.walk[0]&&h<G.walk[1]&&!(G.noSun&&townDow()===0)){const p=tfSpawnWalker(false);if(p)townMake(p,G)}}}
 // ---------- what Carry does near people: order at a counter, or talk ----------
-function townMenu(R){return R.si!=null?TOWN_MENU[R.si]||null:/Brewing Co\.$/.test(R.nm||'')?TOWN_BREW:null}
+function townMenu(R){if(R.si!=null)return TOWN_MENU[R.si]||null;if(!/Brewing Co\.$/.test(R.nm||''))return null;
+  const hb=/^Harbor/.test(R.nm),M=hb?TOWN_HARBOR:TOWN_BREW,d=townDow();
+  return hb?[...M.slice(0,4),['On tap today: '+TOWN_TAPS[d],8.5,'d'],...M.slice(4)]:M}
+// is this regular's place R: a shop by its sign (si), a bar by its name (nm)
+const townRegAt=(G,R)=>G.si!=null?R.si===G.si:!!G.nm&&G.nm.test(R.nm||'');
 function townShopName(R){return R.si!=null?MAIN_SHOPS[R.si][0]:R.nm||'the shop'}
 const townFace=p=>{const fx=Math.sin(wk.yaw),fz=Math.cos(wk.yaw),dx=p.x-wk.x,dz=p.z-wk.z,d=Math.hypot(dx,dz)||1;return (dx*fx+dz*fz)/d};
 function townCtx(){if(!tf.on||pbS.hold)return null;let best=null,bd=1e9;
@@ -107,7 +119,7 @@ function townTalk(p){townLook(p);const G=p.reg,C=tf.chars[p.ci]||{},h=townHour()
   else if(K)line=talkKidSay(p,'');
   else if(C.age==='kid')line=say('tkKid');
   else if(p.talked&&known)line=say('tkAgain');
-  else{const L=['tkWeather','tkTrain','tkBrew','tkBand','tkRuth','tkHank','tkLake'];if(weather.r>0.15)L.push('tkRain','tkRain');if(h<9)L.push('tkMorning');if(h>=21||h<5)L.push('tkNight','tkNight');
+  else{const L=['tkWeather','tkTrain','tkBrew','tkBand','tkRoof','tkRuth','tkHank','tkLake'];if(weather.r>0.15)L.push('tkRain','tkRain');if(h<9)L.push('tkMorning');if(h>=21||h<5)L.push('tkNight','tkNight');
     if(stats.dDug>0.8)L.push('tkDug','tkDug');if(stats.dMow>500)L.push('tkMow');const k=L[(Math.random()*L.length)|0];
     line=say(k,{yd:sYd(stats.dDug),sqft:Math.round(stats.dMow).toLocaleString()+' sq ft'})}
   // a first talk: they say who they are (a regular does it in their own first line)
@@ -115,13 +127,13 @@ function townTalk(p){townLook(p);const G=p.reg,C=tf.chars[p.ci]||{},h=townHour()
   p.talked=1;toast(say('say',{who,line}),'',intro?6400:5600)}
 // ---------- the counter: a shop's menu ----------
 // 10% off at a regular's after five talks; and what the one at the counter thinks of him (repPrice, lives.js)
-function townOff(R){const G=TOWN_REGS.find(G=>G.si!=null&&G.si===R.si);return (G&&G.p&&(town.met[G.id]||0)>=5?0.1:0)+(typeof repPrice==='function'&&town.shop?repPrice(town.shop.p):0)}
+function townOff(R){const G=TOWN_REGS.find(G=>townRegAt(G,R));return (G&&G.p&&(town.met[G.id]||0)>=5?0.1:0)+(typeof repPrice==='function'&&town.shop?repPrice(town.shop.p):0)}
 function townOpen(R,p){town.shop={R,p};if(document.pointerLockElement)document.exitPointerLock();const G=p.reg;
   const mem=G?null:fmLine(p,R),wel=mem||say('shopWelcome',{shop:townShopName(R)});
   $('#tsHead').textContent=townShopName(R);$('#tsWho').textContent=G?say('say',{who:town.met[G.id]?townFirst(G):'Clerk',line:townRegLine(G)}):fmKnown(p)||mem?say('say',{who:fmWho(p,'Clerk'),line:wel}):wel;townDraw();$('#townShop').hidden=false}
 function townClose(){town.shop=null;$('#townShop').hidden=true}
 function townDraw(){const S=town.shop;if(!S)return;const M=townMenu(S.R)||[],off=townOff(S.R);
-  $('#tsList').innerHTML=M.map((m,i)=>{const pr=m[1]*(1-off);return `<div class="gsRow"><div class="gsTxt"><b>${m[0]}</b><small>${m[2]==='p'?'A spring in your step':m[2]==='s'?'Sleep till 7 AM':m[2]==='b'?'What you have to spend':''}${off&&m[1]?(m[2]?' · ':'')+(off>0?Math.round(off*100)+'% off, a friend':Math.round(-off*100)+'% more: they don\'t trust you'):''}</small></div>`+
+  $('#tsList').innerHTML=M.map((m,i)=>{const pr=m[1]*(1-off);return `<div class="gsRow"><div class="gsTxt"><b>${m[0]}</b><small>${m[2]==='p'?'A spring in your step':m[2]==='d'?'A glass in your hand':m[2]==='c'?'A cold glass in your hand':m[2]==='s'?'Sleep till 7 AM':m[2]==='b'?'What you have to spend':''}${off&&m[1]?(m[2]?' · ':'')+(off>0?Math.round(off*100)+'% off, a friend':Math.round(-off*100)+'% more: they don\'t trust you'):''}</small></div>`+
     `<button data-i="${i}">${m[1]?'Buy '+usd(pr):m[2]==='b'?'Ask':'Take'}</button></div>`}).join('')+`<div class="gsCash">In your wallet: <b>${usd(townCash())}</b></div>`}
 $('#tsList').addEventListener('click',e=>{const b=e.target.closest('button'),S=town.shop;if(!b||!S)return;const m=(townMenu(S.R)||[])[+b.dataset.i];if(!m)return;
   const pr=Math.round(m[1]*(1-townOff(S.R))*100)/100;
@@ -129,6 +141,7 @@ $('#tsList').addEventListener('click',e=>{const b=e.target.closest('button'),S=t
   if(!townPay(pr,m[0]))return;
   if(pr&&typeof repDeed==='function')repDeed('buy',[tfWho(S.p)]);
   if(m[2]==='p'){town.pep=TU.pepTime||180;toast(say('shopPep',{item:m[0]}),'good',3600)}
+  else if((m[2]==='d'||m[2]==='c')&&typeof barDrink==='function'){barDrink(m[0].replace(/^On tap today: /,''),m[2]==='d'?'beer':'soft');townClose();return}
   else if(m[2]==='s'){townClose();dn.t+=((420-dnMin(dn.t))%1440+1440)%1440*60000;dnSave();toast(say('shopSleep'),'good',4200);return}
   else if(!pr)toast(say('shopFree',{item:m[0]}),'',2600);
   else toast(say('shopBought',{item:m[0],price:usd(pr),cash:usd(townCash())}),'good',3000);

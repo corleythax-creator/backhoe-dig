@@ -23,6 +23,11 @@ server.listen(0,async()=>{const port=server.address().port,errs=[];
     const fs2=path.resolve(root,'../forge-studio'),FS='https://corley-forge-studio.vercel.app/';
     if(fs.existsSync(path.join(fs2,'building/library/library.json')))await p.route(FS+'**',r=>{const f=path.join(fs2,new URL(r.request().url()).pathname);
       if(!f.startsWith(fs2)||!fs.existsSync(f))return r.fulfill({status:404,body:''});r.fulfill({status:200,path:f,headers:{'access-control-allow-origin':'*'}})});
+    // three.js comes from jsDelivr; where a sandbox can't reach it, a `three` of the same version in the global npm
+    // folder (npm i -g three@<version>) is served in its place
+    {const T='https://cdn.jsdelivr.net/npm/three@',td=path.join(require('child_process').execSync('npm root -g').toString().trim(),'three');
+      if(fs.existsSync(path.join(td,'build')))await p.route(T+'**',r=>{const f0=path.join(td,new URL(r.request().url()).pathname.replace(/^\/npm\/three@[^/]+\//,'')),f=fs.existsSync(f0)?f0:f0.replace(/\.min\.js$/,'.js');
+        if(!f.startsWith(td)||!fs.existsSync(f))return r.continue();r.fulfill({status:200,path:f,contentType:'text/javascript',headers:{'access-control-allow-origin':'*'}})})}
     // no saves: cleared before the page's scripts run (a reload can stall while the page saves on its way out)
     await p.addInitScript(()=>{for(const k of Object.keys(localStorage))if(k.startsWith('bhd_'))localStorage.removeItem(k)});
     const t0=Date.now();await p.goto(`http://localhost:${port}/index.html`,{waitUntil:'load',timeout:120000});const loadMs=Date.now()-t0;

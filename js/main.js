@@ -248,7 +248,7 @@ function frame(now){
   // flying dirt
   particlesTick(dt);dustTick(dt);grimeTick();pebTick(dt);mtnTick();mdlTick(dt);wkMdlPose();
   // groundwater, the tailgate stream and the dirt sounds
-  digTilesTick(dt);if(!bench.on)waterTick(dt);mudTick(dt);rainTick(dt);lakeTick(dt);grassTick(dt);jesTick(dt);mainTick(dt);marinaTick(dt);tfTick(dt);stlTick(dt);talkTick(dt);townTick(dt);brTick(dt);treesTick(dt);plantTick();
+  digTilesTick(dt);if(!bench.on)waterTick(dt);mudTick(dt);rainTick(dt);lakeTick(dt);grassTick(dt);jesTick(dt);mainTick(dt);marinaTick(dt);tfTick(dt);stlTick(dt);talkTick(dt);townTick(dt);barTick(dt);brTick(dt);treesTick(dt);plantTick();
   pourStream(streams[1],tr.pourP,hAt(tr.pourP.x,tr.pourP.z),tr.pourRate,tr.loadC,now/1000);
   dirtSndTick(dt);
   // bucket load visual
@@ -305,7 +305,7 @@ function frame(now){
   }
   // the gun into his hands once the camera is where it will be drawn from: in first person it is held in the view, and
   // placed before the camera moved it trailed a frame behind (jittering, and swinging out of sight on a quick turn)
-  gunPlace();
+  gunPlace();barPlace();
   fpTick(dt);
   if(bench.on)benchCamera();
   if(viewPin)viewPinApply();

@@ -22,7 +22,7 @@ const AC_DO={
   homeStand:[['stir',2],['chop',2],['wipe',2],['',1]],homeSeat:[['read',3],['phone',3],['sit_drink',1],['',1]]};
 const AC_HOLD={sit_eat:[25,60],sit_drink:[12,30],read:[30,80],phone:[15,45],reach_high:[2.2,2.2],pick_up_low:[1.8,1.8],sit_down:[1.3,1.3],stand_up:[1.3,1.3]};
 // which list fits p where they are now
-function acKind(p){const R=p.room,sp=p.spot;if(!R||!sp)return null;tfShopW(R);const k=R.vk;
+function acKind(p){const R=p.room,sp=p.spot;if(!R||!sp||sp.band)return null;tfShopW(R);const k=R.vk;
   if(R.home)return sp.sit?'homeSeat':'homeStand';
   if(sp.staff)return k==='pm'?'barStaff':k==='am'||k==='treat'?'cafeStaff':R.kind==='eat'||k==='meal'?'eatStaff':'shopStaff';
   if(sp.sit)return k==='pm'?'barSeat':k==='am'||k==='treat'?'cafeSeat':k==='meal'||R.kind==='eat'?'eatSeat':'seat';
@@ -34,7 +34,7 @@ function acPick(p){const L=AC_DO[acKind(p)];if(!L){p.act='';return}let k=acW(L);
 
 // ---------- the restroom ----------
 // up from the seat, round the furniture to the back of the room, out of sight a while, and back
-function acTrip(p){const R=p.room,sp=p.spot,E=R&&R.ent&&tfEnt(R);if(!E||!E.d||!sp||!sp.sit||sp.path)return false;
+function acTrip(p){const R=p.room,sp=p.spot,E=R&&R.ent&&tfEnt(R);if(!E||!E.d||!sp||!sp.sit||sp.path||sp.band)return false;
   const mine=tfInPath(R,E,sp);if(!mine)return false;let far=null,fd=0;
   for(const q of R.spots){if(q===sp||q.staff||q.path)continue;const d=Math.hypot(q.x-E.mx,q.z-E.mz);if(d>fd){fd=d;far=q}}
   if(!far||fd<3)return false;const there=tfInPath(R,E,far);if(!there)return false;
