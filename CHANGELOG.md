@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Sunday, November 22, 2026
 
+- **v468** (7:00 PM) From the owner's v465 freeze report (four freezes of 4 to 6 s in the first two minutes): the shader check now holds back a thing whose shader is still being built instead of drawing it and waiting, the marina boats beside the start load behind the loading cover, and the ground-bounce probe's own ground and water shaders are built in the background when the lamps change
 - **v467** (6:55 PM) Map editor Things: picture tiles of every kind under folding categories, with a Find box
 - **v466** (6:23 PM) The map editor's Shape and Paint now work on the mainland's town and waterfront: raise, lower, flatten and smooth the open ground between the buildings and paving (lawns, verges, back lots, the bank and beach), and paint any material, dirt or grass there, with soft or hard edges and Raise / inset. Buildings, paving and streets stay where they were built. Saved with the map, with undo. Also fixes ground strokes begun right after another not showing until later.
 - **v465** (6:07 PM) From the owner's Profiler recording at the harbor (processor 23 ms a frame, graphics card 11.8): parked machines no longer check all 4,000 solids every frame, the every-frame shader check passes known things by a number, and the Profiler's Frames report splits Drawing the frame into shadows and placing every part
