@@ -52,7 +52,7 @@ function editorOpen(){if(edOn||bench.on)return;edOn=true;mapAssets=assets;
   ed.yaw=Math.atan2(camera.position.x-fv.x,camera.position.z-fv.z);ed.dist=45;ed.pitch=0.95;
   ed.home={x:ed.x,z:ed.z,yaw:ed.yaw,dist:ed.dist,pitch:ed.pitch};ed.drawer=!edNarrow();ed.pane=ED_GROUPS[ed.group].pane?ed.group:'';
   edTool(ed.tool);edCard(null);edSelSet([]);edMapsDraw();edUndoBtns();toast(say('edOpen'),'',2600)}
-function editorClose(){if(!edOn)return;$('#edHistList').hidden=true;$('#edAll').hidden=true;edStrokeEnd();edScatterEnd();edRoadFinish();edOn=false;document.body.classList.remove('editing');$('#editor').hidden=true;
+function editorClose(){if(!edOn)return;ed.tlock=null;$('#edHistList').hidden=true;$('#edAll').hidden=true;edStrokeEnd();edScatterEnd();edRoadFinish();edOn=false;document.body.classList.remove('editing');$('#editor').hidden=true;
   edBrushRing.visible=edSelRings.visible=edSelShade[0].visible=edSelShade[1].visible=edSoftRing.visible=edHRing.visible=edHKnob.visible=edMeasDots.visible=edMeasLine.visible=false;ed.sel=[];ed.box=null;ed.lp=null;$('#edBox').hidden=true;ed.road=null;ed.rpt=-1;edRoadsDraw();clearKeys();firstCam=true;last=performance.now();
   if(assets.some(a=>a.hd)){for(const a of assets)delete a.hd;assetsBuild();shpTreesRefresh();edHiddenSync()}
   if(ed.changed){edSave();syncSoon(1);mapReset();mapDirty=true;ed.changed=false}}
@@ -253,10 +253,41 @@ function edHit(x,z){let best=null,bd=1;
 
 // ---------- reshaping and painting ----------
 const edGrow=(r,a,b,c,d)=>r?[Math.min(r[0],a),Math.max(r[1],b),Math.min(r[2],c),Math.max(r[3],d)]:[a,b,c,d];
-function edStrokeStart(x,z){ed.stroke0=ed.tool;ed.stroke={h:ED_H.slice(),p:ED_P.slice(),m:ED_M.slice(),a:ED_A.slice(),r:ED_R.slice(),g:ED_G.slice(),ij:null,tn:0,tb:null};
+// the grid a stroke is on (terrain.js): in the mainland's town TS for the shape tools, Dirt and Grass, and TP for Paint;
+// anywhere else the island's EG. A stroke stays on the grid it started on. The brush, undo and stroke code below is
+// written on the island's names (ED_X0, ED_H...), which each function takes from its stroke's grid
+function edGridOf(t,x,z){return tdIn(x,z)&&t!=='tall'&&t!=='notall'?(t==='paint'?TP:TS):EG}
+// the town's built ground, which Shape leaves alone: its buildings, paving, streets, walls and steps were built at load
+// on the ground as it was and do not follow it, so a TS vertex within 2 m of any of them is locked (1). They are found
+// by drawing the town once from straight above without the ground, the water and what does follow the ground (placed
+// things and trees are instanced, the editor's own streets are ST.grp, the lawns' grass turfGroup), at 0.5 m a pixel, each pixel its height (what
+// lies under the ground, like the mountains' roots, doesn't count), and adding every walk pad
+// and built solid (a building not loaded yet still has its footprint). Made when a Shape stroke starts in the town
+// and kept until the editor closes
+function edTownLock(){if(ed.tlock)return ed.tlock;const W=(TS.NX-1)*4,Hh=(TS.NZ-1)*4,B=new Uint8Array(W*Hh),L=new Uint8Array(TS.NX*TS.NZ);
+  const mark=(x0,x1,z0,z1)=>{const a=Math.max(0,Math.floor((x0-TS.X0)*2)),b=Math.min(W-1,Math.ceil((x1-TS.X0)*2)),c=Math.max(0,Math.floor((z0-TS.Z0)*2)),d=Math.min(Hh-1,Math.ceil((z1-TS.Z0)*2));for(let j=c;j<=d;j++)B.fill(1,j*W+a,j*W+b+1)};
+  try{const rt=new THREE.WebGLRenderTarget(W,Hh),cam=new THREE.OrthographicCamera(-W/4,W/4,Hh/4,-Hh/4,1,400),on=[],px=new Uint8Array(W*Hh*4);
+    cam.position.set((TD_BOX[0]+TD_BOX[1])/2,150,(TD_BOX[2]+TD_BOX[3])/2);cam.up.set(0,0,-1);cam.lookAt(cam.position.x,0,cam.position.z);cam.updateMatrixWorld();cam.layers.set(7);
+    const skip=new Set([RS.grp,ST.grp,turfGroup,skirtMesh,edBrushRing,edSelRings,edSelShade[0],edSelShade[1],edSoftRing,edHRing,edHKnob]);
+    (function walk(o){if(!o.visible||skip.has(o))return;
+      if(o.isMesh&&!o.isInstancedMesh&&!o.isSkinnedMesh&&o.material!==groundMat&&!o.material.transparent&&o.material.colorWrite!==false&&o.material.visible!==false){
+        if(!o.geometry.boundingSphere)o.geometry.computeBoundingSphere();if(o.geometry.boundingSphere.radius*Math.max(o.scale.x,o.scale.z)<900){o.layers.enable(7);on.push(o)}}
+      for(const c of o.children)walk(c)})(scene);
+    const bg=scene.background,ov=scene.overrideMaterial,fog=scene.fog,au=renderer.shadowMap.autoUpdate,tg=renderer.getRenderTarget(),cc=new THREE.Color(),ca=renderer.getClearAlpha();renderer.getClearColor(cc);
+    scene.background=null;scene.fog=null;scene.overrideMaterial=new THREE.ShaderMaterial({side:THREE.DoubleSide,vertexShader:'varying float vY;void main(){vec4 w=modelMatrix*vec4(position,1.0);vY=w.y;gl_Position=projectionMatrix*viewMatrix*w;}',fragmentShader:'varying float vY;void main(){float h=clamp((vY+60.0)/400.0,0.0,1.0)*65535.0;gl_FragColor=vec4(floor(h/256.0)/255.0,mod(h,256.0)/255.0,0.0,1.0);}'});renderer.shadowMap.autoUpdate=false;
+    renderer.setRenderTarget(rt);renderer.setClearColor(0,0);renderer.clear();renderer.render(scene,cam);renderer.readRenderTargetPixels(rt,0,0,W,Hh,px);
+    renderer.setRenderTarget(tg);renderer.setClearColor(cc,ca);scene.overrideMaterial.dispose();scene.background=bg;scene.fog=fog;scene.overrideMaterial=ov;renderer.shadowMap.autoUpdate=au;for(const o of on)o.layers.disable(7);rt.dispose();
+    // (the picture's rows run from the south edge north)
+    for(let j=0;j<Hh;j++)for(let i=0;i<W;i++){const o=((Hh-1-j)*W+i)*4;if(px[o+3]>127&&(px[o]*256+px[o+1])/65535*400-60>baseHeight(TS.X0+(i+0.5)/2,TS.Z0+(j+0.5)/2)-0.25)B[j*W+i]=1}}catch(e){console.warn('town lock',e)}
+  for(const p of WALK_PADS)if(p.tag!=='street'&&p.tag!=='prop'){const r=Math.hypot(p.hx,p.hz);if(Math.abs(p.c)>0.99||Math.abs(p.s)>0.99){const hx=Math.abs(p.c)>0.99?p.hx:p.hz,hz=Math.abs(p.c)>0.99?p.hz:p.hx;mark(p.x-hx,p.x+hx,p.z-hz,p.z+hz)}else mark(p.x-r,p.x+r,p.z-r,p.z+r)}
+  for(const q of SOLIDS)if(!q.prop&&!q.rk&&(q.foot||q.hx>0.8||q.hz>0.8))mark(q.x-q.hx,q.x+q.hx,q.z-q.hz,q.z+q.hz);
+  for(let j=0;j<TS.NZ;j++)for(let i=0;i<TS.NX;i++){let v=0;for(let b=Math.max(0,j*4-4);b<=Math.min(Hh-1,j*4+4)&&!v;b++)for(let a=Math.max(0,i*4-4);a<=Math.min(W-1,i*4+4);a++)if(B[b*W+a]){v=1;break}L[j*TS.NX+i]=v}
+  return ed.tlock=L}
+function edStrokeStart(x,z){const G=edGridOf(ed.tool,x,z),{X0:ED_X0,Z0:ED_Z0,C:ED_C,NX:ED_NX,NZ:ED_NZ,H:ED_H,P:ED_P,M:ED_M,A:ED_A,R:ED_R,G:ED_G}=G;ed.stroke0=ed.tool;ed.stroke={G,lock:G===TS&&ED_BRUSH.indexOf(ed.tool)<4?edTownLock():null,told:0,h:ED_H.slice(),p:ED_P.slice(),m:ED_M.slice(),a:ED_A.slice(),r:ED_R.slice(),g:ED_G.slice(),ij:null,tn:0,tb:null};
   if(ed.tool==='tall')for(let q=0;q<ED_G.length;q++)if(ED_G[q]){const x=ED_X0+q%ED_NX*ED_C,z=ED_Z0+((q/ED_NX)|0)*ED_C,b=ed.stroke.tb;ed.stroke.tn++;ed.stroke.tb=b?[Math.min(b[0],x),Math.max(b[1],x),Math.min(b[2],z),Math.max(b[3],z)]:[x,x,z,z]}ed.bx=x;ed.bz=z;ed.flatH=baseHeight(x,z)}
 // one frame of the brush: a soft round brush, strongest in the middle
-function edBrush(dt){const R=ed.size,cx=ed.bx,cz=ed.bz,t=ed.tool,k=ed.str/10;
+// (on the town's 2 m grid TS the brush is never smaller than 8 ft, so it always takes hold of a few vertices)
+function edBrush(dt){const G=ed.stroke.G,{X0:ED_X0,Z0:ED_Z0,C:ED_C,NX:ED_NX,NZ:ED_NZ,H:ED_H,P:ED_P,M:ED_M,A:ED_A,R:ED_R,G:ED_G}=G,lock=ed.stroke.lock,R=G===TS?Math.max(ed.size,2.5):ed.size,cx=ed.bx,cz=ed.bz,t=ed.tool,k=ed.str/10;
   const i0=Math.max(3,Math.floor((cx-R-ED_X0)/ED_C)),i1=Math.min(ED_NX-4,Math.ceil((cx+R-ED_X0)/ED_C)),j0=Math.max(3,Math.floor((cz-R-ED_Z0)/ED_C)),j1=Math.min(ED_NZ-4,Math.ceil((cz+R-ED_Z0)/ED_C));
   if(i0>i1||j0>j1)return;
   // painting turns ruts into what is painted, except Mud, and Dirt on ground that is already wet (mud.js); a material
@@ -292,9 +323,9 @@ function edBrush(dt){const R=ed.size,cx=ed.bx,cz=ed.bz,t=ed.tool,k=ed.str/10;
       else if(m0===mat){a=Math.max(a0,w);r=0}
       else if(!m0||w>=a0){m=mat;a=w;r=0}
       if(m!==m0||a!==a0||r!==r0){ED_M[q]=m;ED_A[q]=a;ED_R[q]=r;n++;if(m!==m0)ids=true}}
-    if(!n)return;if(ids)matU.tMatId.value.needsUpdate=true;matU.tMatCov.value.needsUpdate=true}
-  else for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const x=ED_X0+i*ED_C,z=ED_Z0+j*ED_C,d=Math.hypot(x-cx,z-cz);if(d>R)continue;
-    const f=0.5*(1+Math.cos(Math.PI*d/R)),q=j*ED_NX+i;
+    if(!n)return;if(G===TP){TP.any=true;tdTexSync(i0,i1,j0,j1)}else{if(ids)matU.tMatId.value.needsUpdate=true;matU.tMatCov.value.needsUpdate=true}}
+  else{let nl=0,nf=0;for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const x=ED_X0+i*ED_C,z=ED_Z0+j*ED_C,d=Math.hypot(x-cx,z-cz);if(d>R)continue;
+    const f=0.5*(1+Math.cos(Math.PI*d/R)),q=j*ED_NX+i;if(lock&&lock[q]){nl++;continue}nf++;
     if(t==='raise')ED_H[q]+=1.5*k*dt*f;
     else if(t==='lower')ED_H[q]-=1.5*k*dt*f;
     else if(t==='flatten')ED_H[q]+=(ed.flatH-hs[(j-j0+1)*W+i-i0+1])*Math.min(1,dt*6*k)*f;
@@ -302,6 +333,8 @@ function edBrush(dt){const R=ed.size,cx=ed.bx,cz=ed.bz,t=ed.tool,k=ed.str/10;
     else if(t==='dirt')ED_P[q]=Math.min(1,ED_P[q]+2*k*dt*f);
     else if(t==='grass')ED_P[q]=Math.max(-1,ED_P[q]-2*k*dt*f);
     ED_H[q]=Math.max(-60,Math.min(60,ED_H[q]))}
+    // a brush wholly on the town's built ground does nothing: say why, once a stroke
+    if(nl&&!nf){if(!ed.stroke.told){ed.stroke.told=1;toast(say('edTownBuilt'),'',3500)}return}}
   ed.stroke.ij=edGrow(ed.stroke.ij,i0,i1,j0,j1);
   ed.pend=edGrow(ed.pend,ED_X0+i0*ED_C-0.6,ED_X0+i1*ED_C+0.6,ED_Z0+j0*ED_C-0.6,ED_Z0+j1*ED_C+0.6);ed.changed=true}
 // everything built from the ground over an area (metres) follows the edit: the dig grid (dug holes keep their depth;
@@ -316,6 +349,8 @@ function edRefresh(r,full){if(!r)return;const [X0,X1,Z0,Z1]=r;baseCacheClear();
   if(i0<=i1&&j0<=j1){for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const k=j*V+i,b=baseHeight(gX(i),gZ(j));H[k]=H[k]===H0[k]?b:H[k]+b-H0[k];H0[k]=b;digBase(k)}
     touch(i0,i1,j0,j1);updateTufts(i0-1,i1+1,j0-1,j1+1);lawnTerrain();updateTerrain();winOn=false;blkTerrainMoved()}
   midUpdate(x0,x1,z0,z1);mudEdRefresh(x0,x1,z0,z1);rsEdRefresh(x0,x1,z0,z1);tileEdRefresh(x0,x1,z0,z1);rainEdRefresh(x0,x1,z0,z1);lkBedEdit(x0,x1,z0,z1);wallBuild(x0,x1,z0,z1);tuftsRefresh(x0,x1,z0,z1);lawnsStale()}
+  // the town's own layers (TS, TP): its ground meshes, raised paint, dug tiles and lawns
+  if(X1>TD_BOX[0]&&X0<TD_BOX[1]&&Z1>TD_BOX[2]&&Z0<TD_BOX[3]){tdRefresh(X0,X1,Z0,Z1,full);tileEdRefresh(X0,X1,Z0,Z1);lawnsStale()}
   if(assets.some(a=>a.x>X0-6&&a.x<X1+6&&a.z>Z0-6&&a.z<Z1+6)){assetsBuild();shpTreesRefresh()}
   streetsEdRefresh(X0,X1,Z0,Z1,full);turfEdRefresh(X0,X1,Z0,Z1);
   // the hayfield's margin grass sits on the ground and keeps off the roads (mainland.js)
@@ -324,11 +359,11 @@ function edRefresh(r,full){if(!r)return;const [X0,X1,Z0,Z1]=r;baseCacheClear();
   if(full&&X1>RT_BOX[0]&&X0<RT_BOX[1]&&Z1>RT_BOX[2]&&Z0<RT_BOX[3])rocksTown();
   if(x0<x1&&z0<z1&&full&&(x0<GX0+1||x1>GX1-1||z0<GZ0+1||z1>GZ1-1||x0<MID[0]+1||x1>MID[1]-1||z0<MID[2]+1||z1>MID[3]-1||x0<OUTER_MID[0]+1||x1>OUTER_MID[1]-1||z0<OUTER_MID[2]+1||z1>OUTER_MID[3]-1))buildSkirts()}
 function edStrokeEnd(){const s=ed.stroke;if(!s)return;ed.stroke=null;edRefresh(ed.pend,true);ed.pend=null;
-  if(!s.ij)return;const [i0,i1,j0,j1]=s.ij,w=i1-i0+1,h=new Float32Array(w*(j1-j0+1)),p=new Float32Array(h.length),m=new Uint8Array(h.length),c=new Uint8Array(h.length),tg=new Uint8Array(h.length),rr=new Int8Array(h.length);
+  if(!s.ij)return;const ED_NX=s.G.NX,[i0,i1,j0,j1]=s.ij,w=i1-i0+1,h=new Float32Array(w*(j1-j0+1)),p=new Float32Array(h.length),m=new Uint8Array(h.length),c=new Uint8Array(h.length),tg=new Uint8Array(h.length),rr=new Int8Array(h.length);
   for(let j=j0;j<=j1;j++){const a=j*ED_NX+i0,b=j*ED_NX+i1+1,o=(j-j0)*w;h.set(s.h.subarray(a,b),o);p.set(s.p.subarray(a,b),o);m.set(s.m.subarray(a,b),o);c.set(s.a.subarray(a,b),o);tg.set(s.g.subarray(a,b),o);rr.set(s.r.subarray(a,b),o)}
   const t=ed.stroke0,mt=matDef(ed.mat);
   if(t==='tall'||t==='notall')lawnLayout();
-  edPush({g:[i0,i1,j0,j1],h,p,m,a:c,tg,r:rr,n:t==='paint'?(mt?`Painted ${mt.n.toLowerCase()}`:'Cleared paint'):ED_STROKE_N[t]||'Edited the ground'});edQueueSave();matTexUpdate()}
+  edPush({g:[i0,i1,j0,j1],G:s.G,h,p,m,a:c,tg,r:rr,n:t==='paint'?(mt?`Painted ${mt.n.toLowerCase()}`:'Cleared paint'):ED_STROKE_N[t]||'Edited the ground'});edQueueSave();matTexUpdate()}
 
 // ---------- undo ----------
 function edPush(u){const th=!u.g&&!u.roads&&!u.pl;if(!u.n)u.n=th?'Changed things':u.roads?edRoadsName(u.roads):'Edit';if(th)queueMicrotask(()=>{u.n=edThingsName(u.a)});ed.undo.push(u);if(ed.undo.length>30)ed.undo.shift();ed.redo.length=0;edUndoBtns()}
@@ -363,11 +398,11 @@ $('#edHist').onclick=()=>{const el=$('#edHistList'),open=el.hidden;el.hidden=!op
 addEventListener('pointerdown',e=>{const el=$('#edHistList');if(!el.hidden&&!el.contains(e.target)&&e.target!==$('#edHist')){el.hidden=true;$('#edHist').setAttribute('aria-expanded',false)}},true);
 // swaps the saved state with the current one, so the same entry undoes and redoes
 function edSwap(u){
-  if(u.g){const [i0,i1,j0,j1]=u.g,w=i1-i0+1;let tall=false;
+  if(u.g){const G=u.G||EG,{X0:ED_X0,Z0:ED_Z0,C:ED_C,NX:ED_NX,NZ:ED_NZ,H:ED_H,P:ED_P,M:ED_M,A:ED_A,R:ED_R,G:ED_G}=G,[i0,i1,j0,j1]=u.g,w=i1-i0+1;let tall=false;
     for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const q=j*ED_NX+i,o=(j-j0)*w+i-i0,a=ED_H[q],b=ED_P[q],c=ED_M[q],d=ED_A[q];ED_H[q]=u.h[o];ED_P[q]=u.p[o];ED_M[q]=u.m[o];ED_A[q]=u.a[o];u.h[o]=a;u.p[o]=b;u.m[o]=c;u.a[o]=d;
       if(u.r){const e=ED_R[q];ED_R[q]=u.r[o];u.r[o]=e}
       if(u.tg&&u.tg[o]!==ED_G[q]){const e=ED_G[q];ED_G[q]=u.tg[o];u.tg[o]=e;tall=true}}
-    matU.tMatId.value.needsUpdate=true;matU.tMatCov.value.needsUpdate=true;matTexUpdate();if(tall)lawnLayout();
+    if(G===TP){TP.any=true;tdTexSync(i0,i1,j0,j1)}else if(G===EG){matU.tMatId.value.needsUpdate=true;matU.tMatCov.value.needsUpdate=true}matTexUpdate();if(tall)lawnLayout();
     edRefresh([ED_X0+i0*ED_C-0.6,ED_X0+i1*ED_C+0.6,ED_Z0+j0*ED_C-0.6,ED_Z0+j1*ED_C+0.6],true)}
   else if(u.pl){const now=JSON.stringify(plant.list);plant.list.length=0;plant.list.push(...JSON.parse(u.pl));u.pl=now;plantChanged()}
   else if(u.roads){const now=edRoadsSnap();edRoadsSet(u.roads);u.roads=now;ed.road=null;ed.rpt=-1;edRoadCard();edRoadsDraw();edRefresh(u.rect,true)}
@@ -387,7 +422,7 @@ function edQuery(x,z){const g=baseHeight(x,z),h=hAt(x,z),r=mesaR(x,z);
   const top=r<EDGE||famR(x,z)<FAM_R||jesR(x,z)<JES_R||dexR(x,z)<DEX_R,deck=deckAt(x,z)>g;
   const surf=deck?'Bridge deck':paintAt(x,z)?matDef(paintAt(x,z)).n:g<WATER?'Lake':roadAmt(x,z)>0.5?'Road':sl>0.9?'Rock face':yardAt(x,z)>0.5?'Dirt yard':top?'Grass':g<WATER+2?'Beach':'Bank';
   const drive=!landIn(x,z,1,0)?'No, off the island':wallAt(x,z)?'No, too steep':'Yes';
-  const dh=edSample(ED_H,x,z),dp=edSample(ED_P,x,z),mine=[];
+  const dh=edSample(ED_H,x,z)+tsSample(TS.H,x,z),dp=edSample(ED_P,x,z)+tsSample(TS.P,x,z),mine=[];
   if(Math.abs(dh)>0.02)mine.push(`${dh>0?'raised':'lowered'} ${edFmt(Math.abs(dh))} ft`);if(dp>0.05)mine.push('painted dirt');if(dp<-0.05)mine.push('painted grass');
   const mt=paintAt(x,z);if(mt)mine.push(matDef(mt).n.toLowerCase());
   const rows=[['Spot',edWhere(x,z)],['Ground',`${g>=0?'+':'−'}${edFmt(Math.abs(g))} ft (mesa top is 0)`],['Slope',`${Math.round(sl*100)}% · ${Math.round(Math.atan(sl)*57.3)}°`],
@@ -998,9 +1033,9 @@ addEventListener('keydown',e=>{const tg=e.target&&e.target.tagName;if(tg==='TEXT
   else{const i=['Digit1','Digit2','Digit3','Digit4','Digit5','Digit6'].indexOf(c);if(i===5)edMapPane();else if(i>=0)edGroup(Object.keys(ED_GROUPS)[i])}});
 
 // ---------- saving, copying and loading ----------
-function edQueueSave(){clearTimeout(ed.saveT);ed.pend=true;ed.saveT=setTimeout(edSave,800)}
+function edQueueSave(){clearTimeout(ed.saveT);ed.savePend=true;ed.saveT=setTimeout(edSave,800)}
 // not while a synced save is being put in (it reloads the page), or the old map would be written back over it
-function edSave(){clearTimeout(ed.saveT);ed.pend=false;if(window.syncHold)return;mapAssets=assets;if(ed.roadsEdited)mapRoads=ROADS;try{localStorage.setItem('bhd_map',mapEncode())}catch(e){toast(say('edSaveFull'),'bad',4000)}syncSoon()}
+function edSave(){clearTimeout(ed.saveT);ed.savePend=false;if(window.syncHold)return;mapAssets=assets;if(ed.roadsEdited)mapRoads=ROADS;try{localStorage.setItem('bhd_map',mapEncode())}catch(e){toast(say('edSaveFull'),'bad',4000)}syncSoon()}
 $('#edCopy').onclick=()=>{edSave();const t=mapEncode(),box=$('#edCopyBox');
   const show=()=>{box.value=t;box.hidden=false;box.focus();box.select();toast(say('edCopyByHand'),'',3000)};
   try{navigator.clipboard.writeText(t).then(()=>toast(say('edMapCopied',{kb:Math.round(t.length/1024)}),'good',3500),show)}catch(e){show()}};
@@ -1051,7 +1086,7 @@ function edStatsDraw(){const c={};for(const a of assets)c[a.t]=(c[a.t]||0)+1;let
 $('#edReset').onclick=e=>{const b=e.target.closest('button');if(!b)return;
   if(!b.dataset.arm){b.dataset.arm=1;const t=b.textContent;b.textContent='Tap again';setTimeout(()=>{if(b.dataset.arm){delete b.dataset.arm;b.textContent=t}},2500);return}
   const k=b.dataset.clear;if(k==='all'){try{localStorage.removeItem('bhd_map')}catch(e){}location.reload();return}
-  edSave();if(k==='shape')ED_H.fill(0);if(k==='paint'){ED_P.fill(0);ED_M.fill(0);ED_A.fill(0);ED_R.fill(0);tallDefault()}if(k==='things')mapAssets=null;if(k==='roads')mapRoads=null;
+  edSave();if(k==='shape'){ED_H.fill(0);TS.H.fill(0)}if(k==='paint'){ED_P.fill(0);ED_M.fill(0);ED_A.fill(0);ED_R.fill(0);TS.P.fill(0);TP.M.fill(0);TP.A.fill(0);TP.R.fill(0);tallDefault()}if(k==='things')mapAssets=null;if(k==='roads')mapRoads=null;
   try{localStorage.setItem('bhd_map',mapEncode())}catch(e){toast(say('edSaveFail'),'bad');return}location.reload()};
 
 // ---------- each frame while the editor is open (main.js hands it the frame) ----------
