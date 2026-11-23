@@ -82,11 +82,17 @@ function blkHit(x,y,z){for(const b of blocks)if(Math.abs(x-b.x)<b.w/2&&Math.abs(
 // a machine is a row of circles of radius r along its heading (offsets lz); pushes it out of blocks too tall to climb
 function blkCircleD(o,lz,b){const cx=o.x+Math.sin(o.yaw)*lz,cz=o.z+Math.cos(o.yaw)*lz,hx=b.w/2,hz=b.d/2;
   return Math.hypot(cx-Math.max(b.x-hx,Math.min(b.x+hx,cx)),cz-Math.max(b.z-hz,Math.min(b.z+hz,cz)))}
+const blkNear=new WeakMap();
 function blkPush(o,lzs,r){let hit=false;
   // the islands' buildings and the things placed in the map editor; the ones nowhere near (beyond the machine's reach
   // plus the solid's own) are skipped first: there are a few thousand and this runs for every machine every frame
   let R=r;for(const lz of lzs)R=Math.max(R,Math.abs(lz)+r);
-  for(const s of SOLIDS){if(s.foot)continue;const e=R+(s.sn!==undefined?Math.hypot(s.lx,s.lz):Math.max(s.hx,s.hz)*1.42);
+  // (and the few that are near are kept for a quarter second, or until the machine has gone 13 ft or a solid was added
+  // or taken: six parked machines each read all 4,000 every frame, 1.8 ms at the harbor, v461's Profiler)
+  let N=blkNear.get(o);const now=performance.now();
+  if(!N||N.n!==SOLIDS.length||N.R<R||now-N.t>250||Math.abs(o.x-N.x)>4||Math.abs(o.z-N.z)>4){if(!N)blkNear.set(o,N={L:[]});N.n=SOLIDS.length;N.R=R;N.t=now;N.x=o.x;N.z=o.z;N.L.length=0;
+    for(const s of SOLIDS){if(s.foot)continue;const e=R+10+(s.sn!==undefined?Math.hypot(s.lx,s.lz):Math.max(s.hx,s.hz)*1.42);if(Math.abs(o.x-s.x)>e||Math.abs(o.z-s.z)>e)continue;N.L.push(s)}}
+  for(const s of N.L){if(s.foot)continue;const e=R+(s.sn!==undefined?Math.hypot(s.lx,s.lz):Math.max(s.hx,s.hz)*1.42);
     if(Math.abs(o.x-s.x)>e||Math.abs(o.z-s.z)>e)continue;
     for(const lz of lzs){const p=solidOut(s,o.x+Math.sin(o.yaw)*lz,o.z+Math.cos(o.yaw)*lz,r);if(!p)continue;hit=true;o.x+=p[0];o.z+=p[1]}}
   for(const b of blocks){if(b.y+b.h<o.y+BLK_CLIMB||b.y>o.y+3)continue;const hx=b.w/2,hz=b.d/2;

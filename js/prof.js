@@ -70,6 +70,11 @@ function pfRecord(sec){if(PF.on)return Promise.resolve(null);sec=sec||10;PF.on=t
   let G=null;try{const gl=renderer.getContext(),ext=gl.getExtension('EXT_disjoint_timer_query_webgl2');if(ext)G={gl,ext,free:[],busy:[],ms:[]}}catch(e){}
   if(G){const pr=window.postRender;window.postRender=function(){let q=null;if(G.busy.length<6){q=G.free.pop()||G.gl.createQuery();G.gl.beginQuery(G.ext.TIME_ELAPSED_EXT,q)}
     try{return pr.apply(this,arguments)}finally{if(q){G.gl.endQuery(G.ext.TIME_ELAPSED_EXT);G.busy.push(q)}}}}
+  // inside Drawing the frame: the sun's shadow pass and the placing of every part (three.js's own matrix pass), timed
+  // apart so a recording says which of them the processor's drawing time goes to
+  const undo=[],wrapO=(o,k,label)=>{const f=o[k];if(typeof f!=='function')return;const own=Object.prototype.hasOwnProperty.call(o,k);
+    o[k]=function(){const t=performance.now();try{return f.apply(this,arguments)}finally{acc[label]=(acc[label]||0)+performance.now()-t}};undo.push(()=>{if(own)o[k]=f;else delete o[k]})};
+  wrapO(renderer.shadowMap,'render','Drawing: shadows');wrapO(scene,'updateMatrixWorld','Drawing: placing every part');
   const gpuPoll=()=>{if(!G)return;const gl=G.gl,dis=gl.getParameter(G.ext.GPU_DISJOINT_EXT);while(G.busy.length){const q=G.busy[0];if(!gl.getQueryParameter(q,gl.QUERY_RESULT_AVAILABLE))break;G.busy.shift();
     if(!dis)G.ms.push(gl.getQueryParameter(q,gl.QUERY_RESULT)/1e6);G.free.push(q)}};
   const S={};let lastNow=0,t0=performance.now(),calls=0,tris=0,nf=0;const loaf0=PF.loaf.length;
@@ -86,7 +91,7 @@ function pfRecord(sec){if(PF.on)return Promise.resolve(null);sec=sec||10;PF.on=t
       if(ft)run.frames.push({ft,cpu,sh,top:[`${Math.round(cpu)} ms in the game's frame`].concat(poll>=5?[`${Math.round(poll)} ms reading the graphics card's timer`]:[],up.some(v=>v>0)?[`new on the card: ${up[0]} meshes, ${up[1]} pictures, ${up[2]} shaders`]:[],sh?['building shaders']:[]).concat(Object.entries(acc).filter(e=>e[1]>=2).sort((a,b)=>b[1]-a[1]).slice(0,4).map(([k,v])=>pfName(k)+' '+Math.round(v)+' ms'))})}if(ran&&typeof toast==='function'&&nf%15===0)toast(`Profiler: recording ${Math.max(0,Math.ceil(sec-el/1000))} s…`,'',800);
       if(el<sec*1000)return false;
       // put everything back
-      for(const n of parts)if(window[n]&&window[n].pfW)window[n]=orig[n];if(G)window.postRender=orig.postRender;
+      for(const n of parts)if(window[n]&&window[n].pfW)window[n]=orig[n];if(G)window.postRender=orig.postRender;for(const u of undo)u();
       const F=run.frames.map(f=>f.ft).sort((a,b)=>a-b),n=F.length||1,avg=F.reduce((a,b)=>a+b,0)/n,low=F[Math.floor(n*0.99)]||0,cpuAvg=run.frames.reduce((a,f)=>a+f.cpu,0)/n;
       run.fps=1000/avg;run.low=1000/(low||1);run.worst=F[n-1]||0;
       // the same without the frames that built shaders: what this place plays like once it has been seen
