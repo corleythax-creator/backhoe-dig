@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-23T00:05:00Z",
+ "updated": "2026-11-23T00:07:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -180,9 +180,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-22",
-   "dh": 30.75,
+   "dh": 33.75,
    "act": 4.5,
-   "versions": 10
+   "versions": 11
   }
  ],
  "extra": [
@@ -4368,6 +4368,15 @@ window.EFFORT = {
    "tris": 7474105,
    "chars": 2804506,
    "what": "Map editor changes go up to the server a moment after each one, and Done sends the map at once and tells you: Map saved on the server (or that it could not be reached and will go up later)."
+  },
+  {
+   "v": 465,
+   "asked": "2026-11-22T17:05:00-06:00",
+   "live": "2026-11-22T18:07:05-06:00",
+   "dh": 3,
+   "tris": 7207934,
+   "chars": 2805466,
+   "what": "From the owner's Profiler recording at the harbor (processor 23 ms a frame, graphics card 11.8): parked machines no longer check all 4,000 solids every frame, the every-frame shader check passes known things by a number, and the Profiler's Frames report splits Drawing the frame into shadows and placing every part"
   }
  ]
 };
