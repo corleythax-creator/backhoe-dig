@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-22T23:51:00Z",
+ "updated": "2026-11-23T01:45:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -180,9 +180,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-22",
-   "dh": 30.25,
-   "act": 4,
-   "versions": 9
+   "dh": 68.75,
+   "act": 6,
+   "versions": 15
   }
  ],
  "extra": [
@@ -4359,6 +4359,60 @@ window.EFFORT = {
    "tris": 7471974,
    "chars": 2803545,
    "what": "Your site and map editor changes are saved on the server without asking: a device with no sync code makes its own about 20 seconds after opening (☰ → Sync devices shows it, to type into another device). Stop syncing here turns it off for that device."
+  },
+  {
+   "v": 464,
+   "asked": "2026-11-22T18:00:00-06:00",
+   "live": "2026-11-22T18:05:55-06:00",
+   "dh": 0.5,
+   "tris": 7474105,
+   "chars": 2804506,
+   "what": "Map editor changes go up to the server a moment after each one, and Done sends the map at once and tells you: Map saved on the server (or that it could not be reached and will go up later)."
+  },
+  {
+   "v": 465,
+   "asked": "2026-11-22T17:05:00-06:00",
+   "live": "2026-11-22T18:07:05-06:00",
+   "dh": 3,
+   "tris": 7207934,
+   "chars": 2805466,
+   "what": "From the owner's Profiler recording at the harbor (processor 23 ms a frame, graphics card 11.8): parked machines no longer check all 4,000 solids every frame, the every-frame shader check passes known things by a number, and the Profiler's Frames report splits Drawing the frame into shadows and placing every part"
+  },
+  {
+   "v": 466,
+   "asked": "2026-11-22T17:17:00-06:00",
+   "live": "2026-11-22T18:23:12-06:00",
+   "dh": 16,
+   "tris": 7257966,
+   "chars": 2818796,
+   "what": "The map editor's Shape and Paint now work on the mainland's town and waterfront: raise, lower, flatten and smooth the open ground between the buildings and paving (lawns, verges, back lots, the bank and beach), and paint any material, dirt or grass there, with soft or hard edges and Raise / inset. Buildings, paving and streets stay where they were built. Saved with the map, with undo. Also fixes ground strokes begun right after another not showing until later."
+  },
+  {
+   "v": 467,
+   "asked": "2026-11-22T17:55:00-06:00",
+   "live": "2026-11-22T18:55:12-06:00",
+   "dh": 4,
+   "tris": 7389803,
+   "chars": 2826052,
+   "what": "Map editor Things: picture tiles of every kind under folding categories, with a Find box"
+  },
+  {
+   "v": 468,
+   "asked": "2026-11-22T18:20:00-06:00",
+   "live": "2026-11-22T19:00:39-06:00",
+   "dh": 5,
+   "tris": 7275568,
+   "chars": 2820588,
+   "what": "From the owner's v465 freeze report (four freezes of 4 to 6 s in the first two minutes): the shader check now holds back a thing whose shader is still being built instead of drawing it and waiting, the marina boats beside the start load behind the loading cover, and the ground-bounce probe's own ground and water shaders are built in the background when the lamps change"
+  },
+  {
+   "v": 469,
+   "asked": "2026-11-22T18:15:00-06:00",
+   "live": "2026-11-22T19:45:00-06:00",
+   "dh": 10,
+   "tris": 7298268,
+   "chars": 2851485,
+   "what": "Map editor → Roads has two new tools. Lots & slabs: pick any parking lot or concrete pad (the General Store's lot and the garden centre pad, the Overlook's lot, the marina car park) to move it, size it, turn it, change its surface or delete it, or lay new ones. Parking stripes: drag along the paving to stripe a row of stalls, straight in or angled, on one or both sides."
   }
  ]
 };

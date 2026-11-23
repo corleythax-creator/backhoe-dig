@@ -4,7 +4,7 @@
 // reached by temporary crossings, a timber trestle (BRIDGES with temp set) and a rock causeway (CAUSEWAYS); the crane
 // on its barge replaces the trestles with steel spans one at a time (mainTick).
 const mainGround=[groundPatch(-514,514,-640,-196,4,[MAIN_FINE[0]]),groundPatch(...MAIN_FINE[0],1,[]),
-  groundPatch(...MAIN_TOWN,4,[MAIN_FINE[1]]),groundPatch(...MAIN_FINE[1],1,[]),groundPatch(-702,702,480,1068,6,[MAIN_TOWN,MAIN_FOOT]),
+  groundPatch(...MAIN_TOWN,4,[MAIN_FINE[1],TD_BOX]),groundPatch(...MAIN_FINE[1],1,[]),groundPatch(-702,702,480,1068,6,[MAIN_TOWN,MAIN_FOOT]),
   groundPatch(...MAIN_FOOT,4,[MAIN_ROAD]),groundPatch(...MAIN_ROAD,2,[])];
 // where a finer mesh meets a coarser one, its edge takes the coarser one's straight runs (the side x0, x1, z0 or z1 of
 // patch P, from lo to hi along it, against cells of CO metres from o), so no crack opens between them
@@ -15,6 +15,15 @@ function mainStitch(P,side,lo,hi,CO,o){const pa=P.g.attributes.position,ax=side[
 {const [,,T,,,Fo,R]=mainGround;for(const sd of ['x0','x1'])mainStitch(R,sd,780,952,4,780);for(const sd of ['z0','z1'])mainStitch(R,sd,-110,110,4,-258);
   for(const sd of ['x0','x1']){mainStitch(Fo,sd,780,1068,6,480);mainStitch(T,sd,480,780,6,480)}mainStitch(Fo,'z1',-258,258,6,-702);
   for(const [a,b] of [[-450,-258],[258,450]])mainStitch(T,'z1',a,b,6,-702)}
+// the town and waterfront on a 2 m mesh of their own (TD_BOX, terrain.js), which the map editor's Shape and Paint work
+// on (the layers TS and TP): fine enough to grade a lot, a berm or a bank, and for painted ground to lie on
+const townGround=groundPatch(...TD_BOX,2,[MAIN_FINE[1]]);
+for(const sd of ['x0','x1'])mainStitch(townGround,sd,TD_BOX[2],TD_BOX[3],4,480);for(const sd of ['z0','z1'])mainStitch(townGround,sd,TD_BOX[0],TD_BOX[1],4,-450);
+// after the editor reshapes or repaints the town over an area (metres): its ground (and the 1 m ground where the
+// causeway lands) takes the new heights and colours, the raised paint follows, and the seams round the 1 m ground
+function tdRefresh(x0,x1,z0,z1,full){const a=Math.max(x0-2.6,TD_BOX[0]+2.01),b=Math.min(x1+2.6,TD_BOX[1]-2.01),c=Math.max(z0-2.6,TD_BOX[2]+2.01),d=Math.min(z1+2.6,TD_BOX[3]-2.01);if(a>b||c>d)return;
+  patchUpdate(townGround,a,b,c,d);patchUpdate(mainGround[3],a,b,c,d);rsEdRefresh(a,b,c,d,TP);
+  if(full&&b>MAIN_FINE[1][0]-2&&a<MAIN_FINE[1][1]+2&&c<MAIN_FINE[1][3]+2)buildSkirts()}
 
 // a kit's meshes in a group that can be shown or hidden
 function mainGroup(K){const g=new THREE.Group();
@@ -727,14 +736,13 @@ function shopKit(){const parts=new Map(),O=new THREE.Object3D(),n=new THREE.Vect
   for(const x of [-11,-5.5,0,5.5,11])F.lit(new THREE.BoxGeometry(0.5,0.04,0.5),0xfff1c8,x,cy-0.03,fz-1.9);
   // the walk in front: broom-finish concrete with its curb; the lot: asphalt with painted stalls, two lamp poles
   K.sheet(conc,-15.5,15.5,fz-3.8,fz+0.02,0.12);walkPad(0,fz-1.89,15.5,1.91,0,0,{l:0.12});K.box(conc,31,0.3,0.16,0,baseHeight(0,fz-3.8)-0.03,fz-3.8);
-  K.sheet(asph,-27.5,17.5,724.5,fz-3.8,0.04);walkPad(-5,(724.5+fz-3.8)/2,22.5,(fz-3.8-724.5)/2,0,0,{l:0.04});
-  for(let x=-25.4;x<16;x+=3.2)if(Math.abs(x)>4.2)K.sheet(paint,x-0.06,x+0.06,fz-10.4,fz-4.6,0.055);
+  // (the lot and its stalls, and the garden centre's pad, are paving the map editor can change: paving.js)
   for(const [x,z] of [[-13,731],[10,731]]){const y=baseHeight(x,z);F.cyl(0.25,0.3,0.6,10,0xa3a19a,x,y+0.3,z);F.cyl(0.08,0.11,8,8,0x3a3d40,x,y+4.3,z);
     for(const s of [-1,1]){F.box(1.0,0.08,0.08,0x3a3d40,x+s*0.5,y+8.2,z);F.box(0.55,0.14,0.32,0x2f3236,x+s*1.05,y+8.15,z);F.lit(new THREE.BoxGeometry(0.45,0.03,0.24),0xfff1c8,x+s*1.05,y+8.07,z)}
     SOLIDS.push({x,z,hx:0.3,hz:0.3})}
   // the garden centre: a concrete pad under a shade roof of corrugated steel on galvanized posts, two pallets of bagged
   // mulch, and benches of potted shrubs along the back
-  const gy=baseHeight(-21,749)+3.4;K.sheet(conc,-27.4,-15.2,fz-3.8,fz+14.2,0.07);walkPad(-21.3,fz+5.2,6.1,9,0,0,{l:0.07});
+  const gy=baseHeight(-21,749)+3.4;
   K.box(corr,11.6,0.05,17.6,-21.3,gy,fz+5.2);for(const z of [fz-3.7,fz+14])K.box(green,11.8,0.28,0.1,-21.3,gy-0.08,z);K.box(green,0.1,0.28,17.8,-27.15,gy-0.08,fz+5.2);
   for(const x of [-26.9,-21.3,-15.7])for(const z of [fz-3.4,fz+5.2,fz+13.7]){if(x===-15.7&&z>fz)continue;const y=baseHeight(x,z);K.cyl(galv,0.06,gy-y,x,(gy+y)/2,z);SOLIDS.push({x,z,hx:0.1,hz:0.1})}
   for(const px of [-21.9,-19.3]){const y=baseHeight(px,fz+2.2)+0.07;walkPad(px,fz+2.2,0.6,0.5,0,y+0.13);for(const dz of [-0.45,0,0.45])K.box(wood,1.2,0.1,0.14,px,y+0.05,fz+2.2+dz);for(let dx=-0.52;dx<0.6;dx+=0.26)K.box(wood,0.12,0.03,1.0,px+dx,y+0.115,fz+2.2)}

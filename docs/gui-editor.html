@@ -452,7 +452,19 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
 .edsec h3,.edpanel h3{margin:0;font:700 18px/1.1 var(--f-display);letter-spacing:.03em;color:var(--machine)}
 .edsec h3 small{font:600 14px/1 var(--f-display);color:var(--muted);letter-spacing:0;margin-left:6px}
 .edsec h4{margin:3px 0 0;font:700 12px/1 var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
-.edkinds{display:flex;flex-direction:column;gap:4px}.edkinds .row{flex-wrap:wrap;gap:4px}
+.edkinds{display:flex;flex-direction:column;gap:6px}.edkinds .row{flex-wrap:wrap;gap:4px}
+#edKindFind{font:600 15px/1.2 var(--f-display);padding:6px 9px;border-radius:7px;border:1px solid var(--hud-line);background:rgba(0,0,0,.25);color:inherit}
+.edkinds,.edcat,.edtiles,.edtile{flex:none}
+.edcat{border-top:1px solid var(--hud-line);padding-top:4px}
+.edcat>summary{cursor:pointer;list-style:none;font:700 13px/1.4 var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:3px 0}
+.edcat>summary::-webkit-details-marker{display:none}.edcat>summary::before{content:'\25B8';display:inline-block;width:14px;transition:transform .15s}
+.edcat[open]>summary::before{transform:rotate(90deg)}.edcat>summary small{letter-spacing:0;opacity:.7}
+.edtiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:5px;padding:3px 0 6px}
+.edtile{display:flex;flex-direction:column;align-items:stretch;gap:3px;padding:4px;height:auto;text-transform:none;letter-spacing:0;border-radius:8px;min-width:0}
+.edtile[hidden]{display:none}
+.edthumb{display:block;aspect-ratio:1;border-radius:5px;background:radial-gradient(circle at 50% 40%,#5d6f80,#2c3640) center/cover no-repeat}
+.edtname{font:600 12.5px/1.15 var(--f-display);text-align:center;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;min-height:2.3em}
+.edtile[aria-pressed=true]{outline:2px solid var(--machine);outline-offset:-1px}
 .edbottom{grid-column:1/-1;grid-row:3;pointer-events:auto;display:flex;flex-direction:column;background:var(--hud);border-top:1px solid var(--hud-line)}
 .edpanel{box-sizing:border-box;width:100%;display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;padding:7px var(--ed-r) 7px var(--ed-l);font:600 15px/1.25 var(--f-display)}
 .edpanel+.edpanel{border-top:1px solid var(--hud-line)}
@@ -990,6 +1002,8 @@ body.fps #hud .bbar .stats{display:block}
       <span class="edopt" data-for="plant"><label for="edPlantAge">Planted</label><input id="edPlantAge" type="range" min="0" max="80" step="1"><output id="edPlantAgeV"></output></span>
       <span class="row" data-for="plant"><button id="edPlantDig" class="sm" aria-pressed="false">Dig up</button></span>
       <span class="row" data-for="roads"><button id="edRoadNew" class="sm">New road</button><button id="edStreetNew" class="sm">New street</button><button id="edRoadFin" class="sm go" hidden>Finish road</button></span>
+      <span class="row" data-for="paving"><button id="edPvNew" class="sm" aria-pressed="false">New lot</button><button id="edPvSlab" class="sm" aria-pressed="false">New slab</button></span>
+      <span class="row" data-for="stripes"><select id="edPsW" aria-label="Stall width"><option value="7.5">7.5 ft wide</option><option value="8">8 ft wide</option><option value="8.5">8.5 ft wide</option><option value="9" selected>9 ft wide</option><option value="9.5">9.5 ft wide</option><option value="10">10 ft wide</option><option value="12">12 ft wide</option></select><select id="edPsL" aria-label="Stall depth"><option value="16">16 ft deep</option><option value="17">17 ft deep</option><option value="18" selected>18 ft deep</option><option value="19">19 ft deep</option><option value="20">20 ft deep</option><option value="22">22 ft deep</option></select><select id="edPsA" aria-label="Stall angle"><option value="90" selected>Straight in</option><option value="60">60° angled</option><option value="45">45° angled</option></select><select id="edPsSd" aria-label="Which side"><option value="0" selected>On the paved side</option><option value="2">Both sides</option></select></span>
       <span class="row" data-for="select"><button id="edBoxBtn" class="sm edico" data-ic="box" aria-pressed="false">Box select</button><button id="edAllBtn" class="sm">Select all in view</button><button id="edClipPaste" class="sm" hidden>Paste</button><button id="edShowAll" class="sm" hidden>Show hidden</button></span>
     </div>
   </div>
@@ -1635,6 +1649,7 @@ const WORDS=[
   ['edTip_flatten','Map editor','Flatten: hold and drag to level the ground to the height where you start.'],['edTip_smooth','Map editor','Smooth: hold and drag to even out bumps.'],
   ['edTip_paint','Map editor','Hold and drag to lay the material. Natural ground takes it back up; digging cuts through it.'],
   ['edTip_dirt','Map editor','Hold and drag to paint worked dirt.'],['edTip_grass','Map editor','Hold and drag to paint grass, over the dirt yards too.'],['edTip_tall','Map editor','Hold and drag to grow tall grass to mow. It grows back after mowing.'],['edTip_notall','Map editor','Hold and drag to take tall grass away.'],
+  ['edTownBuilt','Map editor','The town\'s buildings, paving and streets stay where they were built. Shape the open ground between them.'],
   ['edTallFull','Map editor','That is as much tall grass as the island holds (about 8,300 sq ft, within {ft} ft each way). Take some away to paint more.'],
   ['edTip_select','Map editor','Tap to pick. Shift-tap or a long press picks more; drag on empty ground (Box select on touch) to pick many; drag a picked one to move them all, its ring to turn or size them; the arrow keys nudge, H hides, L locks.'],
   ['edTip_plant','Map editor','Tap the ground to plant the picked tree; it grows with ☰ Time, Date. Planted sets how many years ago it went in. Dig up (or Alt and a tap) takes one of yours out.'],
@@ -1654,12 +1669,15 @@ const WORDS=[
   ['edLinePlacedCap','Map editor','{n} placed (the map holds {cap}). They are picked: move, turn or delete them like any thing.','{n}: how many; {cap}: the most'],
   ['edRoomFor','Map editor','Only room for {n} more on the map.','{n}: how many'],['edNoRoom','Map editor','The map holds no more of these.'],
   ['edCut','Map editor','Cut {what}. Paste with {paste}.','{what}: the thing or how many; {paste}: Paste or Ctrl+V'],['edCopied','Map editor','Copied {what}. Paste with {paste}.','{what}: the thing or how many; {paste}: Paste or Ctrl+V'],
-  ['edSaveFull','Map editor','Could not save the map on this device (storage is full or blocked).'],['edSaveFail','Map editor','Could not save the map on this device.'],
+  ['edCloud','Map editor','Map saved on the server.'],['edCloudNo','Map editor','Saved on this device, but the server could not be reached. It will go up when it can.'],['edSaveFull','Map editor','Could not save the map on this device (storage is full or blocked).'],['edSaveFail','Map editor','Could not save the map on this device.'],
   ['edCopyByHand','Map editor','Select all of the text and copy it.'],['edMapCopied','Map editor','Map copied ({kb} KB of text). Paste it anywhere to keep it.','{kb}: its size'],
   ['edNotMapText','Map editor','That is not a Corley\'s Island map. Copy one with Copy map first.'],['edNotMapFile','Map editor','That file is not a Corley\'s Island map.'],
   ['edNoMapRoom','Map editor','Not enough room on this device for another map. Delete one or download it as a file.'],['edMapNameTaken','Map editor','There is already a map with that name.'],
   ['ownMatAdded','Map editor','{name} is in the library under {cat}. Every device gets it the next time the game opens.','{name}: the material; {cat}: its group'],
   ['ownMatSaved','Map editor','{name} is in the library. Every device gets it the next time the game opens.','{name}: the material'],
+  ['edTip_paving','Map editor','Tap a lot or slab to pick it, drag it to move it, drag its dots to size it; its card sets the surface, turn and height. New lot or New slab, then drag on the ground.'],
+  ['edTip_stripes','Map editor','Drag along the paving to stripe a row of parking stalls. Tap a row to pick it and drag its end dots; its card sets width, depth, angle and sides.'],
+  ['edPvDrag','Map editor','Drag on the ground to lay the new lot.'],['edPsDrag','Map editor','Drag along the paving, at least one stall long, to stripe a row.'],
   ['edTip_roads','Map editor','Tap a road or street to pick it, drag its dots, tap it between dots to add one. New street lays a paved one with curbs and sidewalks; its card can make it brick or cobblestone.'],
   ['vrIn','VR','In VR: sticks as on a controller, triggers gas / reverse. B gets in and out, X next machine, Y leaves VR.'],['vrFail','VR','Could not start VR on this device.'],
   ['vrHintWalk','VR','B get in · A jump · X next machine · Y leave VR'],['vrHintEx','VR','B get out · A drive / dig · X next machine · Y leave VR'],['vrHintRide','VR','B get out · X next machine · Y leave VR'],

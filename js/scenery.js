@@ -455,7 +455,7 @@ const MAIN_FINE=[[-42,42,-300,-196],[-42,42,480,600]];
 // the town side in four meshes (mainland.js): 6 m out to where it runs under the mountains, 4 m over the town and the
 // foothills, 2 m over the switchback road; [rect, step] where a finer one meets a coarser one, for the skirts
 const MAIN_TOWN=[-450,450,480,780],MAIN_FOOT=[-258,258,780,1068],MAIN_ROAD=[-110,110,780,952];
-const MAIN_SEAMS=[[MAIN_TOWN,2],[MAIN_FOOT,4],[MAIN_ROAD,2]];
+const MAIN_SEAMS=[[MAIN_TOWN,2],[MAIN_FOOT,4],[MAIN_ROAD,2],[TD_BOX,2]];
 groundPatch(-160,160,-160,160,2,[OUTER_MID,[FAM_PATCH[0],FAM_PATCH[1],FAM_PATCH[2],160]]);
 midPatch=groundPatch(MID[0],MID[1],MID[2],MID[3],0.5,[[GX0,GX1,GZ0,GZ1]]);
 const outPatch=groundPatch(OUTER_MID[0],OUTER_MID[1],OUTER_MID[2],OUTER_MID[3],1,[MID]);
