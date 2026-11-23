@@ -334,7 +334,7 @@ function bfPack(root,merge,it){const col=root.getObjectByName('Collision');if(co
 // every frame (mainTick): each door's leaves follow its door (opened by rmDoorsTick), and furniture shows only near
 // (and its insides within TU.bfIn, its door leaves within TU.bfDoor)
 function bfTick(dt){const ri=TU.bfIn||0,rd=TU.bfDoor||0;for(const L of bf.lots){const B=L.b;if(!B||!B.g.visible)continue;const dx=camera.position.x-B.g.position.x,dz=camera.position.z-B.g.position.z,d2=dx*dx+dz*dz;
-    B.furn.visible=d2<BF_NEAR*BF_NEAR;B.ins.visible=!ri||d2<(ri+B.rad)*(ri+B.rad);B.lvs.visible=!rd||d2<(rd+B.rad)*(rd+B.rad);
+    B.furn.visible=B.cut||d2<BF_NEAR*BF_NEAR;B.ins.visible=B.cut||!ri||d2<(ri+B.rad)*(ri+B.rad);B.lvs.visible=!rd||d2<(rd+B.rad)*(rd+B.rad);
     for(const D of B.doors){const a=D.d.a;if(a===D.a)continue;D.a=a;for(const l of D.leaves)l.o.quaternion.copy(l.q).multiply(bf.qa.setFromAxisAngle(bf.ay,l.swing*BF_OPEN*a))}}}
 // Each kind's shell, one draw per material for every building of that kind standing (not hidden in the map editor):
 // an instanced mesh per material, its instances the buildings' places, laid again when one is built, moved or hidden
