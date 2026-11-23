@@ -4,6 +4,8 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Sunday, November 22, 2026
 
+- **v465** (6:07 PM) From the owner's Profiler recording at the harbor (processor 23 ms a frame, graphics card 11.8): parked machines no longer check all 4,000 solids every frame, the every-frame shader check passes known things by a number, and the Profiler's Frames report splits Drawing the frame into shadows and placing every part
+- **v464** (6:05 PM) Map editor changes go up to the server a moment after each one, and Done sends the map at once and tells you: Map saved on the server (or that it could not be reached and will go up later).
 - **v463** (5:51 PM) Your site and map editor changes are saved on the server without asking: a device with no sync code makes its own about 20 seconds after opening (☰ → Sync devices shows it, to type into another device). Stop syncing here turns it off for that device.
 - **v462** (5:37 PM) Two cats live outside Harbor Light Brewing by the lake: Milo the tuxedo cat and a brown tabby Maine coon, Forge Studio's own animals. They wander round the bar, sit, wash, stretch, loaf and sleep, come over to you on foot now and then, and trot out of a machine's way.
 - **v461** (5:19 PM) Boardwalks you can build: eleven pieces under Dock and water (standard, narrow, wide, railed, a square, a railed corner, raised on piles, steps, a ramp), each in one of six photo-scanned plank woods from the Wood swatches. The town's own boardwalk is in the same real planks, can be picked, moved or deleted a 20 ft section at a time, and takes its wood from a new tuning.

@@ -55,7 +55,7 @@ function editorOpen(){if(edOn||bench.on)return;edOn=true;mapAssets=assets;
 function editorClose(){if(!edOn)return;ed.tlock=null;$('#edHistList').hidden=true;$('#edAll').hidden=true;edStrokeEnd();edScatterEnd();edRoadFinish();edOn=false;document.body.classList.remove('editing');$('#editor').hidden=true;
   edBrushRing.visible=edSelRings.visible=edSelShade[0].visible=edSelShade[1].visible=edSoftRing.visible=edHRing.visible=edHKnob.visible=edMeasDots.visible=edMeasLine.visible=false;ed.sel=[];ed.box=null;ed.lp=null;$('#edBox').hidden=true;ed.road=null;ed.rpt=-1;edRoadsDraw();clearKeys();firstCam=true;last=performance.now();
   if(assets.some(a=>a.hd)){for(const a of assets)delete a.hd;assetsBuild();shpTreesRefresh();edHiddenSync()}
-  if(ed.changed){edSave();mapReset();mapDirty=true;ed.changed=false}}
+  if(ed.changed){edSave();syncSoon(1);mapReset();mapDirty=true;ed.changed=false}}
 $('#edDone').onclick=editorClose;
 $('#editBtn').onclick=editorOpen;
 
@@ -982,7 +982,7 @@ addEventListener('keydown',e=>{const tg=e.target&&e.target.tagName;if(tg==='TEXT
 // ---------- saving, copying and loading ----------
 function edQueueSave(){clearTimeout(ed.saveT);ed.savePend=true;ed.saveT=setTimeout(edSave,800)}
 // not while a synced save is being put in (it reloads the page), or the old map would be written back over it
-function edSave(){clearTimeout(ed.saveT);ed.savePend=false;if(window.syncHold)return;mapAssets=assets;if(ed.roadsEdited)mapRoads=ROADS;try{localStorage.setItem('bhd_map',mapEncode())}catch(e){toast(say('edSaveFull'),'bad',4000)}}
+function edSave(){clearTimeout(ed.saveT);ed.savePend=false;if(window.syncHold)return;mapAssets=assets;if(ed.roadsEdited)mapRoads=ROADS;try{localStorage.setItem('bhd_map',mapEncode())}catch(e){toast(say('edSaveFull'),'bad',4000)}syncSoon()}
 $('#edCopy').onclick=()=>{edSave();const t=mapEncode(),box=$('#edCopyBox');
   const show=()=>{box.value=t;box.hidden=false;box.focus();box.select();toast(say('edCopyByHand'),'',3000)};
   try{navigator.clipboard.writeText(t).then(()=>toast(say('edMapCopied',{kb:Math.round(t.length/1024)}),'good',3500),show)}catch(e){show()}};
