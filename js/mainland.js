@@ -4,7 +4,7 @@
 // reached by temporary crossings, a timber trestle (BRIDGES with temp set) and a rock causeway (CAUSEWAYS); the crane
 // on its barge replaces the trestles with steel spans one at a time (mainTick).
 const mainGround=[groundPatch(-514,514,-640,-196,4,[MAIN_FINE[0]]),groundPatch(...MAIN_FINE[0],1,[]),
-  groundPatch(...MAIN_TOWN,4,[MAIN_FINE[1]]),groundPatch(...MAIN_FINE[1],1,[]),groundPatch(-702,702,480,1068,6,[MAIN_TOWN,MAIN_FOOT]),
+  groundPatch(...MAIN_TOWN,4,[MAIN_FINE[1],TD_BOX]),groundPatch(...MAIN_FINE[1],1,[]),groundPatch(-702,702,480,1068,6,[MAIN_TOWN,MAIN_FOOT]),
   groundPatch(...MAIN_FOOT,4,[MAIN_ROAD]),groundPatch(...MAIN_ROAD,2,[])];
 // where a finer mesh meets a coarser one, its edge takes the coarser one's straight runs (the side x0, x1, z0 or z1 of
 // patch P, from lo to hi along it, against cells of CO metres from o), so no crack opens between them
@@ -15,6 +15,15 @@ function mainStitch(P,side,lo,hi,CO,o){const pa=P.g.attributes.position,ax=side[
 {const [,,T,,,Fo,R]=mainGround;for(const sd of ['x0','x1'])mainStitch(R,sd,780,952,4,780);for(const sd of ['z0','z1'])mainStitch(R,sd,-110,110,4,-258);
   for(const sd of ['x0','x1']){mainStitch(Fo,sd,780,1068,6,480);mainStitch(T,sd,480,780,6,480)}mainStitch(Fo,'z1',-258,258,6,-702);
   for(const [a,b] of [[-450,-258],[258,450]])mainStitch(T,'z1',a,b,6,-702)}
+// the town and waterfront on a 2 m mesh of their own (TD_BOX, terrain.js), which the map editor's Shape and Paint work
+// on (the layers TS and TP): fine enough to grade a lot, a berm or a bank, and for painted ground to lie on
+const townGround=groundPatch(...TD_BOX,2,[MAIN_FINE[1]]);
+for(const sd of ['x0','x1'])mainStitch(townGround,sd,TD_BOX[2],TD_BOX[3],4,480);for(const sd of ['z0','z1'])mainStitch(townGround,sd,TD_BOX[0],TD_BOX[1],4,-450);
+// after the editor reshapes or repaints the town over an area (metres): its ground (and the 1 m ground where the
+// causeway lands) takes the new heights and colours, the raised paint follows, and the seams round the 1 m ground
+function tdRefresh(x0,x1,z0,z1,full){const a=Math.max(x0-2.6,TD_BOX[0]+2.01),b=Math.min(x1+2.6,TD_BOX[1]-2.01),c=Math.max(z0-2.6,TD_BOX[2]+2.01),d=Math.min(z1+2.6,TD_BOX[3]-2.01);if(a>b||c>d)return;
+  patchUpdate(townGround,a,b,c,d);patchUpdate(mainGround[3],a,b,c,d);rsEdRefresh(a,b,c,d,TP);
+  if(full&&b>MAIN_FINE[1][0]-2&&a<MAIN_FINE[1][1]+2&&c<MAIN_FINE[1][3]+2)buildSkirts()}
 
 // a kit's meshes in a group that can be shown or hidden
 function mainGroup(K){const g=new THREE.Group();
