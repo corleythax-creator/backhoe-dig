@@ -459,7 +459,7 @@ function tfSpawnCar(){const ks=Object.keys(tf.cars);if(!ks.length)return;const e
     !tf.drive.some(c=>Math.hypot(c.x-x,c.z-z)<c.len+6)});
   // (and clear of any car still pulling away from it, so two never start inside each other)
   // (the rest only pass through: all of them once a third of the cars, or every stall, are parking)
-  const free=TF_STALLS.filter(s=>!s.car);if(!ends.length)return;
+  const free=TF_STALLS.filter(s=>!s.car&&paveHas(s.x,s.z));if(!ends.length)return;
   // (and while the four-way stop is backed up, only trips round the neighbourhoods, which keep off it)
   const jam=tf.drive.filter(q=>q.st!=='park'&&q.v<0.3&&Math.abs(q.x)<40&&Math.abs(q.z-MST.cz)<40).length>=4,
     from=ends[(Math.random()*ends.length)|0],mar=free.filter(s=>s.k==='mar');if(jam&&from==='B')return;

@@ -8,10 +8,10 @@ const ed={lineK:'streetlt',lineS:'both',lineG:80,tool:'raise',group:'shape',gtoo
   stroke:null,flatH:0,road:null,rpt:-1,drawing:false,roadSnap:null,bx:0,bz:0,hover:false,pend:null,refT:0,sel:[],drag:null,snap:null,changed:false,saveT:0,undo:[],redo:[],
   look:false,pane:'',drawer:true,boxMode:false,box:null,lp:null,fly:null,home:null,grp:false,listF:'all',open:{},statT:0,listT:0,place:'one',gap:12,dens:5,erase:false,scat:null,meas:[],measClosed:false,
   grid:0,cur:null,curMouse:false,clip:null,xf:null,knob:null,hYaw:0,nudgeT:0,rowOpen:false,rowN:4,rowGap:0,rowDir:'along'};
-const ED_TOOLS={raise:'Raise',lower:'Lower',flatten:'Flatten',smooth:'Smooth',dirt:'Worked dirt',grass:'Grass',tall:'Tall grass',notall:'No tall grass',select:'Select',add:'Add',plant:'Plant',query:'Query',measure:'Measure',roads:'Roads',paint:'Paint'};
+const ED_TOOLS={raise:'Raise',lower:'Lower',flatten:'Flatten',smooth:'Smooth',dirt:'Worked dirt',grass:'Grass',tall:'Tall grass',notall:'No tall grass',select:'Select',add:'Add',plant:'Plant',query:'Query',measure:'Measure',roads:'Roads',paving:'Lots & slabs',stripes:'Parking stripes',paint:'Paint'};
 // the left bar's groups: their tools (picked in the bottom bar, or for Paint by the library's swatches), and whether the
 // drawer beside the bar has a part for them (the material library, the things to add and the On the map list, the roads)
-const ED_GROUPS={shape:{tools:['raise','lower','flatten','smooth']},paint:{tools:['paint','dirt','grass','tall','notall'],pane:1},things:{tools:['select','add','plant'],pane:1},roads:{tools:['roads'],pane:1},inspect:{tools:['query','measure']}};
+const ED_GROUPS={shape:{tools:['raise','lower','flatten','smooth']},paint:{tools:['paint','dirt','grass','tall','notall'],pane:1},things:{tools:['select','add','plant'],pane:1},roads:{tools:['roads','paving','stripes'],pane:1},inspect:{tools:['query','measure']}};
 // the editor's icons (24 px, drawn with lines), put in front of the words of every part with a data-ic
 const ED_ICONS={done:'M15 5l-7 7 7 7',undo:'M9 14L4 9l5-5M4 9h10a6 6 0 010 12h-3',redo:'M15 14l5-5-5-5M20 9H10a6 6 0 000 12h3',
   look:'M12 3v18M3 12h18M9 6l3-3 3 3M9 18l3 3 3-3M6 9l-3 3 3 3M18 9l3 3-3 3',zin:'M10.5 4a6.5 6.5 0 100 13 6.5 6.5 0 000-13zM15.5 15.5L21 21M7.5 10.5h6M10.5 7.5v6',
@@ -52,7 +52,7 @@ function editorOpen(){if(edOn||bench.on)return;edOn=true;mapAssets=assets;
   ed.yaw=Math.atan2(camera.position.x-fv.x,camera.position.z-fv.z);ed.dist=45;ed.pitch=0.95;
   ed.home={x:ed.x,z:ed.z,yaw:ed.yaw,dist:ed.dist,pitch:ed.pitch};ed.drawer=!edNarrow();ed.pane=ED_GROUPS[ed.group].pane?ed.group:'';
   edTool(ed.tool);edCard(null);edSelSet([]);edMapsDraw();edUndoBtns();toast(say('edOpen'),'',2600)}
-function editorClose(){if(!edOn)return;ed.tlock=null;$('#edHistList').hidden=true;$('#edAll').hidden=true;edStrokeEnd();edScatterEnd();edRoadFinish();edOn=false;document.body.classList.remove('editing');$('#editor').hidden=true;
+function editorClose(){if(!edOn)return;ed.tlock=null;$('#edHistList').hidden=true;$('#edAll').hidden=true;edStrokeEnd();edScatterEnd();edRoadFinish();edOn=false;if(typeof pvDraw==='function')pvDraw();document.body.classList.remove('editing');$('#editor').hidden=true;
   edBrushRing.visible=edSelRings.visible=edSelShade[0].visible=edSelShade[1].visible=edSoftRing.visible=edHRing.visible=edHKnob.visible=edMeasDots.visible=edMeasLine.visible=false;ed.sel=[];ed.box=null;ed.lp=null;$('#edBox').hidden=true;ed.road=null;ed.rpt=-1;edRoadsDraw();clearKeys();firstCam=true;last=performance.now();
   if(assets.some(a=>a.hd)){for(const a of assets)delete a.hd;assetsBuild();shpTreesRefresh();edHiddenSync()}
   if(ed.changed){edSave();syncSoon(1);mapReset();mapDirty=true;ed.changed=false}}
@@ -67,7 +67,7 @@ function edTool(t){if(t!=='roads'){edRoadFinish();ed.road=null;ed.rpt=-1}ed.tool
   document.querySelectorAll('#edOpts [data-for]').forEach(el=>el.hidden=!el.dataset.for.split(' ').includes(t));
   $('#edSoftOpt').hidden=!(t==='paint'&&ed.soft);edPlaceSync();
   if(t!=='query')edCard(null);edBrushRing.visible=edSoftRing.visible=false;if(t==='roads')edRoadCard();edRoadsDraw();
-  edMatMark();edKindMark();edPaneSync();edTipSet();if(edOn){edRingSel();edMeasDraw()}}
+  edMatMark();edKindMark();edPaneSync();edTipSet();if(edOn){edRingSel();edMeasDraw()}if(typeof pvTool==='function')pvTool(t)}
 // tapping the picked group again folds the drawer away (or the bottom bar's options, for a group without a drawer part)
 function edGroup(g){const G=ED_GROUPS[g];
   if(g===ed.group&&ed.pane!=='map'){if(G.pane)ed.drawer=!ed.drawer;else{const o=$('#edOpts');o.hidden=!o.hidden}edPaneSync();return}
@@ -215,7 +215,7 @@ function edTownLock(){if(ed.tlock)return ed.tlock;const W=(TS.NX-1)*4,Hh=(TS.NZ-
   const mark=(x0,x1,z0,z1)=>{const a=Math.max(0,Math.floor((x0-TS.X0)*2)),b=Math.min(W-1,Math.ceil((x1-TS.X0)*2)),c=Math.max(0,Math.floor((z0-TS.Z0)*2)),d=Math.min(Hh-1,Math.ceil((z1-TS.Z0)*2));for(let j=c;j<=d;j++)B.fill(1,j*W+a,j*W+b+1)};
   try{const rt=new THREE.WebGLRenderTarget(W,Hh),cam=new THREE.OrthographicCamera(-W/4,W/4,Hh/4,-Hh/4,1,400),on=[],px=new Uint8Array(W*Hh*4);
     cam.position.set((TD_BOX[0]+TD_BOX[1])/2,150,(TD_BOX[2]+TD_BOX[3])/2);cam.up.set(0,0,-1);cam.lookAt(cam.position.x,0,cam.position.z);cam.updateMatrixWorld();cam.layers.set(7);
-    const skip=new Set([RS.grp,ST.grp,turfGroup,skirtMesh,edBrushRing,edSelRings,edSelShade[0],edSelShade[1],edSoftRing,edHRing,edHKnob]);
+    const skip=new Set([RS.grp,ST.grp,PAVE.grp,turfGroup,skirtMesh,edBrushRing,edSelRings,edSelShade[0],edSelShade[1],edSoftRing,edHRing,edHKnob]);
     (function walk(o){if(!o.visible||skip.has(o))return;
       if(o.isMesh&&!o.isInstancedMesh&&!o.isSkinnedMesh&&o.material!==groundMat&&!o.material.transparent&&o.material.colorWrite!==false&&o.material.visible!==false){
         if(!o.geometry.boundingSphere)o.geometry.computeBoundingSphere();if(o.geometry.boundingSphere.radius*Math.max(o.scale.x,o.scale.z)<900){o.layers.enable(7);on.push(o)}}
@@ -226,7 +226,7 @@ function edTownLock(){if(ed.tlock)return ed.tlock;const W=(TS.NX-1)*4,Hh=(TS.NZ-
     renderer.setRenderTarget(tg);renderer.setClearColor(cc,ca);scene.overrideMaterial.dispose();scene.background=bg;scene.fog=fog;scene.overrideMaterial=ov;renderer.shadowMap.autoUpdate=au;for(const o of on)o.layers.disable(7);rt.dispose();
     // (the picture's rows run from the south edge north)
     for(let j=0;j<Hh;j++)for(let i=0;i<W;i++){const o=((Hh-1-j)*W+i)*4;if(px[o+3]>127&&(px[o]*256+px[o+1])/65535*400-60>baseHeight(TS.X0+(i+0.5)/2,TS.Z0+(j+0.5)/2)-0.25)B[j*W+i]=1}}catch(e){console.warn('town lock',e)}
-  for(const p of WALK_PADS)if(p.tag!=='street'&&p.tag!=='prop'){const r=Math.hypot(p.hx,p.hz);if(Math.abs(p.c)>0.99||Math.abs(p.s)>0.99){const hx=Math.abs(p.c)>0.99?p.hx:p.hz,hz=Math.abs(p.c)>0.99?p.hz:p.hx;mark(p.x-hx,p.x+hx,p.z-hz,p.z+hz)}else mark(p.x-r,p.x+r,p.z-r,p.z+r)}
+  for(const p of WALK_PADS)if(p.tag!=='street'&&p.tag!=='prop'&&p.tag!=='pave'){const r=Math.hypot(p.hx,p.hz);if(Math.abs(p.c)>0.99||Math.abs(p.s)>0.99){const hx=Math.abs(p.c)>0.99?p.hx:p.hz,hz=Math.abs(p.c)>0.99?p.hz:p.hx;mark(p.x-hx,p.x+hx,p.z-hz,p.z+hz)}else mark(p.x-r,p.x+r,p.z-r,p.z+r)}
   for(const q of SOLIDS)if(!q.prop&&!q.rk&&(q.foot||q.hx>0.8||q.hz>0.8))mark(q.x-q.hx,q.x+q.hx,q.z-q.hz,q.z+q.hz);
   for(let j=0;j<TS.NZ;j++)for(let i=0;i<TS.NX;i++){let v=0;for(let b=Math.max(0,j*4-4);b<=Math.min(Hh-1,j*4+4)&&!v;b++)for(let a=Math.max(0,i*4-4);a<=Math.min(W-1,i*4+4);a++)if(B[b*W+a]){v=1;break}L[j*TS.NX+i]=v}
   return ed.tlock=L}
@@ -299,7 +299,7 @@ function edRefresh(r,full){if(!r)return;const [X0,X1,Z0,Z1]=r;baseCacheClear();
   // the town's own layers (TS, TP): its ground meshes, raised paint, dug tiles and lawns
   if(X1>TD_BOX[0]&&X0<TD_BOX[1]&&Z1>TD_BOX[2]&&Z0<TD_BOX[3]){tdRefresh(X0,X1,Z0,Z1,full);tileEdRefresh(X0,X1,Z0,Z1);lawnsStale()}
   if(assets.some(a=>a.x>X0-6&&a.x<X1+6&&a.z>Z0-6&&a.z<Z1+6)){assetsBuild();shpTreesRefresh()}
-  streetsEdRefresh(X0,X1,Z0,Z1,full);turfEdRefresh(X0,X1,Z0,Z1);
+  paveEdRefresh(X0,X1,Z0,Z1);streetsEdRefresh(X0,X1,Z0,Z1,full);turfEdRefresh(X0,X1,Z0,Z1);
   // the hayfield's margin grass sits on the ground and keeps off the roads (mainland.js)
   if(X1>-10&&Z0<-290)fmGrassBuild();
   // the town's boulders keep to its open grass (scenery.js)
@@ -313,7 +313,7 @@ function edStrokeEnd(){const s=ed.stroke;if(!s)return;ed.stroke=null;edRefresh(e
   edPush({g:[i0,i1,j0,j1],G:s.G,h,p,m,a:c,tg,r:rr,n:t==='paint'?(mt?`Painted ${mt.n.toLowerCase()}`:'Cleared paint'):ED_STROKE_N[t]||'Edited the ground'});edQueueSave();matTexUpdate()}
 
 // ---------- undo ----------
-function edPush(u){const th=!u.g&&!u.roads&&!u.pl;if(!u.n)u.n=th?'Changed things':u.roads?edRoadsName(u.roads):'Edit';if(th)queueMicrotask(()=>{u.n=edThingsName(u.a)});ed.undo.push(u);if(ed.undo.length>30)ed.undo.shift();ed.redo.length=0;edUndoBtns()}
+function edPush(u){const th=!u.g&&!u.roads&&!u.pl&&!u.pave;if(!u.n)u.n=th?'Changed things':u.roads?edRoadsName(u.roads):'Edit';if(th)queueMicrotask(()=>{u.n=edThingsName(u.a)});ed.undo.push(u);if(ed.undo.length>30)ed.undo.shift();ed.redo.length=0;edUndoBtns()}
 function edUndoBtns(){$('#edUndo').disabled=!ed.undo.length;$('#edRedo').disabled=!ed.redo.length;$('#edHist').disabled=!ed.undo.length&&!ed.redo.length;if(!$('#edHistList').hidden)edHistDraw()}
 // each step's name for History: a brush stroke by its tool, roads and things by what changed from the copy kept for undo
 const ED_STROKE_N={raise:'Raised ground',lower:'Lowered ground',flatten:'Flattened ground',smooth:'Smoothed ground',dirt:'Painted worked dirt',grass:'Painted grass',tall:'Painted tall grass',notall:'Took away tall grass'};
@@ -352,6 +352,7 @@ function edSwap(u){
     if(G===TP){TP.any=true;tdTexSync(i0,i1,j0,j1)}else if(G===EG){matU.tMatId.value.needsUpdate=true;matU.tMatCov.value.needsUpdate=true}matTexUpdate();if(tall)lawnLayout();
     edRefresh([ED_X0+i0*ED_C-0.6,ED_X0+i1*ED_C+0.6,ED_Z0+j0*ED_C-0.6,ED_Z0+j1*ED_C+0.6],true)}
   else if(u.pl){const now=JSON.stringify(plant.list);plant.list.length=0;plant.list.push(...JSON.parse(u.pl));u.pl=now;plantChanged()}
+  else if(u.pave){const now=pvSnap();pvSet(u.pave);u.pave=now;edRefresh(u.rect,true);pvCard()}
   else if(u.roads){const now=edRoadsSnap();edRoadsSet(u.roads);u.roads=now;ed.road=null;ed.rpt=-1;edRoadCard();edRoadsDraw();edRefresh(u.rect,true)}
   else{const now=JSON.stringify(assets);assets.length=0;assets.push(...JSON.parse(u.a));u.a=now;assetsBuild();shpTreesRefresh();edSelSet([])}
   ed.changed=true;edQueueSave()}
@@ -890,6 +891,7 @@ function edDown(x,y,e){const p=edPick(x,y),t=ed.tool,mod=e&&(e.shiftKey||e.ctrlK
   if(ed.look||!p){edMouse={pan:true,x,y};return}
   if(ED_BRUSH.includes(t)){edStrokeStart(p.x,p.z);edBrushAt(p.x,p.z);return}
   if(t==='roads'){edRoadDown(p,x,y);return}
+  if(t==='paving'||t==='stripes'){pvDown(p,x,y,e);return}
   if(t==='measure'){edMeasDown(p,x,y);return}
   if(t==='plant'){edPlantAt(p.x,p.z,e&&e.altKey);return}
   if(t==='query'){edQuery(p.x,p.z);edRingAt(edBrushRing,p.x,p.z,0.5);ed.drag={query:true};return}
@@ -920,6 +922,7 @@ function edMove(x,y){
   if(ed.tool==='measure'&&ed.meas.length&&!d){edMeasDraw(p);return}
   if(d&&d.query){edQuery(p.x,p.z);edRingAt(edBrushRing,p.x,p.z,0.5);return}
   if(d&&d.road){edRoadDrag(d,p);return}
+  if(d&&d.pv){pvDrag(d,p);return}
   if(d&&d.ring){edHandleMove(d,p);return}
   // with Snap on, the first one picked lands on the grid and the rest keep their places round it; one thing on its own
   // can also meet a fence end or a road edge
@@ -931,6 +934,7 @@ function edMove(x,y){
   if(ED_BRUSH.includes(ed.tool)||ed.tool==='add'&&ed.place==='scatter'){edBrushAt(p.x,p.z)}}
 function edUp(){edMouse=null;ed.lp=null;edStrokeEnd();edScatterEnd();if(ed.box){edBoxEnd();return}const d=ed.drag;ed.drag=null;
   if(d&&d.road){edRoadUp(d);return}
+  if(d&&d.pv){pvUp(d);return}
   if(d&&d.ring){edXfEnd();edRingSel();edInspector();return}
   // a laid line is one undo step, and picked when done
   if(d&&d.line){if(d.line.items.length){edPush({a:d.snap});ed.changed=true;edQueueSave();edSelSet(d.line.items.map(a=>({a})))}return}
@@ -982,7 +986,7 @@ addEventListener('keydown',e=>{const tg=e.target&&e.target.tagName;if(tg==='TEXT
 // ---------- saving, copying and loading ----------
 function edQueueSave(){clearTimeout(ed.saveT);ed.savePend=true;ed.saveT=setTimeout(edSave,800)}
 // not while a synced save is being put in (it reloads the page), or the old map would be written back over it
-function edSave(){clearTimeout(ed.saveT);ed.savePend=false;if(window.syncHold)return;mapAssets=assets;if(ed.roadsEdited)mapRoads=ROADS;try{localStorage.setItem('bhd_map',mapEncode())}catch(e){toast(say('edSaveFull'),'bad',4000)}syncSoon()}
+function edSave(){clearTimeout(ed.saveT);ed.savePend=false;if(window.syncHold)return;mapAssets=assets;if(ed.roadsEdited)mapRoads=ROADS;if(ed.paveEdited){mapPaves=PAVES;mapStripes=STRIPES}try{localStorage.setItem('bhd_map',mapEncode())}catch(e){toast(say('edSaveFull'),'bad',4000)}syncSoon()}
 $('#edCopy').onclick=()=>{edSave();const t=mapEncode(),box=$('#edCopyBox');
   const show=()=>{box.value=t;box.hidden=false;box.focus();box.select();toast(say('edCopyByHand'),'',3000)};
   try{navigator.clipboard.writeText(t).then(()=>toast(say('edMapCopied',{kb:Math.round(t.length/1024)}),'good',3500),show)}catch(e){show()}};
@@ -1033,7 +1037,7 @@ function edStatsDraw(){const c={};for(const a of assets)c[a.t]=(c[a.t]||0)+1;let
 $('#edReset').onclick=e=>{const b=e.target.closest('button');if(!b)return;
   if(!b.dataset.arm){b.dataset.arm=1;const t=b.textContent;b.textContent='Tap again';setTimeout(()=>{if(b.dataset.arm){delete b.dataset.arm;b.textContent=t}},2500);return}
   const k=b.dataset.clear;if(k==='all'){try{localStorage.removeItem('bhd_map')}catch(e){}location.reload();return}
-  edSave();if(k==='shape'){ED_H.fill(0);TS.H.fill(0)}if(k==='paint'){ED_P.fill(0);ED_M.fill(0);ED_A.fill(0);ED_R.fill(0);TS.P.fill(0);TP.M.fill(0);TP.A.fill(0);TP.R.fill(0);tallDefault()}if(k==='things')mapAssets=null;if(k==='roads')mapRoads=null;
+  edSave();if(k==='shape'){ED_H.fill(0);TS.H.fill(0)}if(k==='paint'){ED_P.fill(0);ED_M.fill(0);ED_A.fill(0);ED_R.fill(0);TS.P.fill(0);TP.M.fill(0);TP.A.fill(0);TP.R.fill(0);tallDefault()}if(k==='things')mapAssets=null;if(k==='roads'){mapRoads=null;mapPaves=null;mapStripes=null}
   try{localStorage.setItem('bhd_map',mapEncode())}catch(e){toast(say('edSaveFail'),'bad');return}location.reload()};
 
 // ---------- each frame while the editor is open (main.js hands it the frame) ----------
