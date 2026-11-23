@@ -45,14 +45,35 @@ tallDefault();
 function tallAt(x,z){const i=Math.round((x-ED_X0)/ED_C),j=Math.round((z-ED_Z0)/ED_C);return i>=0&&j>=0&&i<ED_NX&&j<ED_NZ&&ED_G[j*ED_NX+i]===1}
 function edSample(A,x,z){const fx=(x-ED_X0)/ED_C,fz=(z-ED_Z0)/ED_C;if(fx<0||fz<0||fx>=ED_NX-1||fz>=ED_NZ-1)return 0;
   const i=fx|0,j=fz|0,u=fx-i,v=fz-j,k=j*ED_NX+i;return A[k]*(1-u)*(1-v)+A[k+1]*u*(1-v)+A[k+ED_NX]*(1-u)*v+A[k+ED_NX+1]*u*v}
+// ---------- the town's layers ----------
+// The mainland's town and waterfront (TD_BOX: from the beach and marina back to the last street, 1,590 by 920 ft) take
+// Shape and Paint too, on layers of their own: TS, 2 m cells on the town's 2 m ground mesh (mainland.js), holds the
+// height offset H and the dirt / grass paint P, which are drawn per vertex; TP, 0.5 m cells like the island's, holds
+// the painted materials M, their cover A and Raise / inset R, which the ground shader draws per pixel from one RGBA
+// texture (tMatTd: id, cover, raise; tdTexSync). EG is the island's grid in the same shape, so the editor's brush, undo
+// and the map file run on whichever grid a stroke is in; the arrays a grid doesn't have are empty (reads give
+// undefined, writes do nothing). No tall grass off the island. The outer 3 cells stay 0, as on the island.
+const TD_BOX=[-266,218,496,776];
+const EG={X0:ED_X0,Z0:ED_Z0,C:ED_C,NX:ED_NX,NZ:ED_NZ,H:ED_H,P:ED_P,M:ED_M,A:ED_A,R:ED_R,G:ED_G};
+const TS={X0:TD_BOX[0],Z0:TD_BOX[2],C:2,NX:243,NZ:141,H:new Float32Array(243*141),P:new Float32Array(243*141),M:new Uint8Array(0),A:new Uint8Array(0),R:new Int8Array(0),G:new Uint8Array(0)};
+const TP={X0:TD_BOX[0],Z0:TD_BOX[2],C:0.5,NX:969,NZ:561,H:new Float32Array(0),P:new Float32Array(0),M:new Uint8Array(969*561),A:new Uint8Array(969*561),R:new Int8Array(969*561),G:new Uint8Array(0),any:false};
+function tdIn(x,z){return z>TD_BOX[2]&&z<TD_BOX[3]&&x>TD_BOX[0]&&x<TD_BOX[1]}
+// a TS layer at x, z, across each cell's two triangles as the ground mesh splits it (so feet stand on what is drawn)
+function tsSample(A,x,z){const fx=(x-TS.X0)/TS.C,fz=(z-TS.Z0)/TS.C;if(fx<0||fz<0||fx>=TS.NX-1||fz>=TS.NZ-1)return 0;
+  const i=fx|0,j=fz|0,u=fx-i,v=fz-j,k=j*TS.NX+i,b=A[k+1],c=A[k+TS.NX];
+  return u+v<=1?A[k]+(b-A[k])*u+(c-A[k])*v:A[k+TS.NX+1]+(c-A[k+TS.NX+1])*(1-u)+(b-A[k+TS.NX+1])*(1-v)}
 // the material painted on the cell nearest a point (0: natural ground, or a soft edge fading out to less than half)
-function paintAt(x,z){const i=Math.round((x-ED_X0)/ED_C),j=Math.round((z-ED_Z0)/ED_C);if(i<0||j<0||i>=ED_NX||j>=ED_NZ)return 0;const q=j*ED_NX+i;return ED_A[q]>=128?ED_M[q]:0}
+function paintAt(x,z){const {X0:ED_X0,Z0:ED_Z0,NX:ED_NX,NZ:ED_NZ,M:ED_M,A:ED_A}=tdIn(x,z)?TP:EG;
+  const i=Math.round((x-ED_X0)/ED_C),j=Math.round((z-ED_Z0)/ED_C);if(i<0||j<0||i>=ED_NX||j>=ED_NZ)return 0;const q=j*ED_NX+i;return ED_A[q]>=128?ED_M[q]:0}
 // a ground vertex under the painted materials. With WebGL2 the shader draws them per pixel (materials.js): the colour
 // c is left alone and this says only whether paint is near (1 when any of the 4 x 4 cells around it is painted), which
 // the matA attribute carries. Without it, c (rgb array) is blended toward each nearby cell's material colour as the
 // cells' corners blend, tightened so an edge turns over about 0.25 m, and this returns how much is covered (0 to 1);
 // soft-edged paint (ED_A below 255) scales that cover down, so it fades out
-function matTint(x,z,c){const fx=(x-ED_X0)/ED_C,fz=(z-ED_Z0)/ED_C;if(fx<0||fz<0||fx>=ED_NX-1||fz>=ED_NZ-1)return 0;
+// (in the town the ground mesh is 2 m, so there it is any paint within 2.5 m: every corner of a triangle with paint on it)
+function matTint(x,z,c){if(tdIn(x,z)){if(!TP.any)return 0;const i=Math.round((x-TP.X0)/TP.C),j=Math.round((z-TP.Z0)/TP.C);
+    for(let b=Math.max(0,j-5);b<=Math.min(TP.NZ-1,j+5);b++)for(let a=Math.max(0,i-5);a<=Math.min(TP.NX-1,i+5);a++)if(TP.M[b*TP.NX+a])return 1;return 0}
+  const fx=(x-ED_X0)/ED_C,fz=(z-ED_Z0)/ED_C;if(fx<0||fz<0||fx>=ED_NX-1||fz>=ED_NZ-1)return 0;
   if(MAT_GL2){const i=fx|0,j=fz|0;for(let b=Math.max(0,j-1);b<=Math.min(ED_NZ-1,j+2);b++)for(let a=Math.max(0,i-1);a<=Math.min(ED_NX-1,i+2);a++)if(ED_M[b*ED_NX+a])return 1;return 0}
   const i=fx|0,j=fz|0,u=fx-i,v=fz-j,k=j*ED_NX+i;let cov=0,al=0,r=0,g=0,b=0;
   for(const [q,w] of [[k,(1-u)*(1-v)],[k+1,u*(1-v)],[k+ED_NX,(1-u)*v],[k+ED_NX+1,u*v]]){const m=ED_M[q];if(!m||w<=0)continue;const mc=matDef(m).c;cov+=w;al+=w*ED_A[q];r+=mc[0]*w;g+=mc[1]*w;b+=mc[2]*w}
@@ -61,7 +82,7 @@ function matTint(x,z,c){const fx=(x-ED_X0)/ED_C,fz=(z-ED_Z0)/ED_C;if(fx<0||fz<0|
   return sc}
 // how much of x,z one material covers (0 to 1, smoothed like matTint); painted Mud is saturated ground (water.js)
 const MUD_ID=MAT_LIST.findIndex(m=>m&&m.id==='mud')+1;
-function matCovOf(x,z,id){const fx=(x-ED_X0)/ED_C,fz=(z-ED_Z0)/ED_C;if(fx<0||fz<0||fx>=ED_NX-1||fz>=ED_NZ-1)return 0;
+function matCovOf(x,z,id){const {X0:ED_X0,Z0:ED_Z0,NX:ED_NX,NZ:ED_NZ,M:ED_M,A:ED_A}=tdIn(x,z)?TP:EG;const fx=(x-ED_X0)/ED_C,fz=(z-ED_Z0)/ED_C;if(fx<0||fz<0||fx>=ED_NX-1||fz>=ED_NZ-1)return 0;
   const i=fx|0,j=fz|0,u=fx-i,v=fz-j,k=j*ED_NX+i;let cov=0,al=0;
   for(const [q,w] of [[k,(1-u)*(1-v)],[k+1,u*(1-v)],[k+ED_NX,(1-u)*v],[k+ED_NX+1,u*v]])if(ED_M[q]===id){cov+=w;al+=w*ED_A[q]}
   return cov>0?ss(0.25,0.75,cov)*al/(cov*255):0}
@@ -69,19 +90,22 @@ function b64Bytes(b){let s='';for(let i=0;i<b.length;i+=0x8000)s+=String.fromCha
 function bytesB64(t){const s=atob(t),b=new Uint8Array(s.length);for(let i=0;i<s.length;i++)b[i]=s.charCodeAt(i);return b}
 // a map as text: each edit layer as the smallest box holding its edits (heights in centimetres, paint in hundredths,
 // materials as ids, and how much less than full each painted cell is covered, for soft edges; tg the tall grass, 0 for none), the assets as [type, x, z, turn, size, tint] and the roads as [width, grass up the middle, [[x, z, height if graded], ...]]
-function edBox(A,scale,Arr){let i0=ED_NX,i1=-1,j0=ED_NZ,j1=-1;
+function edBox(A,scale,Arr,G=EG){const ED_NX=G.NX,ED_NZ=G.NZ;let i0=ED_NX,i1=-1,j0=ED_NZ,j1=-1;
   for(let j=0;j<ED_NZ;j++)for(let i=0;i<ED_NX;i++)if(Math.round(A[j*ED_NX+i]*scale)!==0){if(i<i0)i0=i;if(i>i1)i1=i;if(j<j0)j0=j;if(j>j1)j1=j}
   if(i1<0)return null;const w=i1-i0+1,h=j1-j0+1,q=new Arr(w*h),lim=Arr===Int8Array?127:32767;
   for(let j=0;j<h;j++)for(let i=0;i<w;i++)q[j*w+i]=Math.max(-lim,Math.min(lim,Math.round(A[(j+j0)*ED_NX+i+i0]*scale)));
   return {r:[i0,j0,w,h],d:b64Bytes(new Uint8Array(q.buffer))}}
 // oi, oj: where the map's own grid starts in this one, in cells (maps from before v116 start at -58, -32)
-function edUnbox(o,A,scale,Arr,oi=0,oj=0){if(!o)return;let [i0,j0,w,h]=o.r;i0+=oi;j0+=oj;const q=new Arr(bytesB64(o.d).buffer);
+function edUnbox(o,A,scale,Arr,oi=0,oj=0,G=EG){if(!o)return;const ED_NX=G.NX,ED_NZ=G.NZ;let [i0,j0,w,h]=o.r;i0+=oi;j0+=oj;const q=new Arr(bytesB64(o.d).buffer);
   if(!(w>0&&h>0&&i0>=0&&j0>=0&&i0+w<=ED_NX&&j0+h<=ED_NZ&&q.length===w*h))throw new Error('bad layer');
   for(let j=0;j<h;j++)for(let i=0;i<w;i++)A[(j+j0)*ED_NX+i+i0]=q[j*w+i]/scale}
 function mapEncode(){const doc={game:'backhoe-dig',v:1,g:[ED_X0,ED_Z0]},h=edBox(ED_H,100,Int16Array),p=edBox(ED_P,100,Int8Array);
   const m=edBox(ED_M,1,Uint8Array),fa=new Uint8Array(ED_A.length);for(let q=0;q<fa.length;q++)if(ED_M[q])fa[q]=255-ED_A[q];
   const a=edBox(fa,1,Uint8Array),rz=edBox(ED_R,1,Int8Array);if(rz)doc.r=rz;if(h)doc.h=h;if(p)doc.p=p;if(m)doc.m=m;if(a)doc.a=a;doc.tg=edBox(ED_G,1,Uint8Array)||0;
   // sq: its things include Harbor Square's furniture (sqThings, scenery.js); st: the town's street furniture (stlThings)
+  // t: the town's layers (h, p on TS; m, a, r on TP), each the box holding its edits, as the island's
+  {const t={},th=edBox(TS.H,100,Int16Array,TS),tp=edBox(TS.P,100,Int8Array,TS),tm=edBox(TP.M,1,Uint8Array,TP),ta=new Uint8Array(TP.A.length);for(let q=0;q<ta.length;q++)if(TP.M[q])ta[q]=255-TP.A[q];
+    const tc=edBox(ta,1,Uint8Array,TP),tr=edBox(TP.R,1,Int8Array,TP);if(th)t.h=th;if(tp)t.p=tp;if(tm)t.m=tm;if(tc)t.a=tc;if(tr)t.r=tr;if(th||tp||tm)doc.t=t}
   if(mapAssets){doc.sq=1;doc.st=1;doc.assets=(typeof fxSaveList==='function'?fxSaveList(mapAssets):mapAssets).map(a=>[a.t,+a.x.toFixed(2),+a.z.toFixed(2),+a.yaw.toFixed(2),+a.s.toFixed(2),a.c,...(a.lk?[1]:[])])}
   if(mapRoads)doc.roads=mapRoads.map(r=>[+r.w.toFixed(2),r.mid,r.pts.map(q=>q.map(v=>+v.toFixed(2))),...(r.pv?[{c:r.cb?1:0,s:+(r.sw||0).toFixed(2),l:r.cl?1:0,...(r.sf?{f:r.sf}:{})}]:[])]);
   return JSON.stringify(doc)}
@@ -105,8 +129,13 @@ function mapDecode(text){const doc=JSON.parse(text);if(!doc||doc.game!=='backhoe
   const rs=Array.isArray(doc.roads)?doc.roads.slice(0,60).filter(r=>Array.isArray(r)&&isFinite(r[0])&&Array.isArray(r[2])&&r[2].length>=2&&r[2].length<=200&&r[2].every(q=>Array.isArray(q)&&q.length>=2&&q.slice(0,3).every(isFinite)))
     .map(r=>{const g=r[2].every(q=>q.length>2),o=r[3]&&typeof r[3]==='object'?r[3]:null,pv=o?{pv:1,cb:o.c?1:0,sw:Math.max(0,Math.min(5,+o.s||0)),cl:o.l?1:0,...(o.f>=1&&o.f<=4?{sf:o.f|0}:{})}:{};
       return Object.assign({w:Math.max(1.5,Math.min(o?12:8,+r[0])),mid:o?0:r[1]?1:0,pts:r[2].map(q=>g?[+q[0],+q[1],+q[2]]:[+q[0],+q[1]])},pv)}):null;
-  return {h,p,m,a,r,tg,as,rs,sq:doc.sq===1,st:doc.st===1}}
-try{const t=localStorage.getItem('bhd_map');if(t){const m=mapDecode(t);ED_H.set(m.h);ED_P.set(m.p);ED_M.set(m.m);ED_A.set(m.a);ED_R.set(m.r);if(m.tg)ED_G.set(m.tg);mapAssets=m.as;mapRoads=m.rs;mapSq=m.sq;mapSt=m.st}}catch(e){}
+  // the town's layers, checked the same way
+  const T=doc.t&&typeof doc.t==='object'?doc.t:{},t={h:new Float32Array(TS.H.length),p:new Float32Array(TS.P.length),m:new Uint8Array(TP.M.length),a:new Uint8Array(TP.A.length),r:new Int8Array(TP.R.length)};
+  edUnbox(T.h,t.h,100,Int16Array,0,0,TS);edUnbox(T.p,t.p,100,Int8Array,0,0,TS);edUnbox(T.m,t.m,1,Uint8Array,0,0,TP);edUnbox(T.a,t.a,1,Uint8Array,0,0,TP);edUnbox(T.r,t.r,1,Int8Array,0,0,TP);
+  for(let q=0;q<t.m.length;q++){if(t.m[q]&&!matIdOk(t.m[q]))t.m[q]=0;t.a[q]=t.m[q]?255-t.a[q]:0;if(!t.a[q])t.m[q]=0;t.r[q]=t.m[q]?Math.max(-12,Math.min(12,t.r[q])):0}
+  for(const [G,L] of [[TS,[t.h,t.p]],[TP,[t.m,t.a,t.r]]])for(let j=0;j<G.NZ;j++)for(let i=0;i<G.NX;i++)if(i<3||j<3||i>G.NX-4||j>G.NZ-4)for(const A of L)A[j*G.NX+i]=0;
+  return {h,p,m,a,r,tg,t,as,rs,sq:doc.sq===1,st:doc.st===1}}
+try{const t=localStorage.getItem('bhd_map');if(t){const m=mapDecode(t);ED_H.set(m.h);ED_P.set(m.p);ED_M.set(m.m);ED_A.set(m.a);ED_R.set(m.r);if(m.tg)ED_G.set(m.tg);TS.H.set(m.t.h);TS.P.set(m.t.p);TP.M.set(m.t.m);TP.A.set(m.t.a);TP.R.set(m.t.r);TP.any=TP.M.some(v=>v!==0);mapAssets=m.as;mapRoads=m.rs;mapSq=m.sq;mapSt=m.st}}catch(e){}
 // the painted ids for the ground shader, one texel per cell (materials.js); editor.js flags it when they change
 matU.tMatId.value=new THREE.DataTexture(ED_M,ED_NX,ED_NZ,THREE.RedFormat,THREE.UnsignedByteType);
 matU.tMatId.value.unpackAlignment=1;matU.tMatId.value.needsUpdate=true;
@@ -115,8 +144,15 @@ matU.tMatCov.value.unpackAlignment=1;matU.tMatCov.value.needsUpdate=true;
 // the raised and sunk cells (ED_R): the ground leaves them out and raised.js draws them at their height
 matU.tMatR.value=new THREE.DataTexture(new Uint8Array(ED_R.buffer),ED_NX,ED_NZ,THREE.RedFormat,THREE.UnsignedByteType);
 matU.tMatR.value.unpackAlignment=1;matU.tMatR.value.needsUpdate=true;
+// the town's painted cells for the shader, one RGBA texel each: id, cover, raise (TP.M, TP.A, TP.R); tdTexSync packs
+// the cells i0..i1, j0..j1 again after they change (all of them with no arguments)
+const TD_TEX=new Uint8Array(TP.NX*TP.NZ*4);
+matU.tMatTd.value=new THREE.DataTexture(TD_TEX,TP.NX,TP.NZ,THREE.RGBAFormat,THREE.UnsignedByteType);
+function tdTexSync(i0=0,i1=TP.NX-1,j0=0,j1=TP.NZ-1){for(let j=Math.max(0,j0);j<=Math.min(TP.NZ-1,j1);j++)for(let i=Math.max(0,i0);i<=Math.min(TP.NX-1,i1);i++){const q=j*TP.NX+i;TD_TEX[q*4]=TP.M[q];TD_TEX[q*4+1]=TP.A[q];TD_TEX[q*4+2]=TP.R[q]&255}
+  matU.tMatTd.value.needsUpdate=true}
+tdTexSync();
 // how far the painted cell at x, z is raised (or sunk, below 0) in metres: 0 off paint
-function rsAt(x,z){const i=Math.round((x-ED_X0)/ED_C),j=Math.round((z-ED_Z0)/ED_C);if(i<0||j<0||i>=ED_NX||j>=ED_NZ)return 0;const q=j*ED_NX+i,r=ED_R[q];return r&&ED_M[q]?r*RS_Q:0}
+function rsAt(x,z){const {X0:ED_X0,Z0:ED_Z0,NX:ED_NX,NZ:ED_NZ,M:ED_M,R:ED_R}=tdIn(x,z)?TP:EG;const i=Math.round((x-ED_X0)/ED_C),j=Math.round((z-ED_Z0)/ED_C);if(i<0||j<0||i>=ED_NX||j>=ED_NZ)return 0;const q=j*ED_NX+i,r=ED_R[q];return r&&ED_M[q]?r*RS_Q:0}
 // the site sits on a grassy island 24 ft above the lake: a rocky bank drops to a sand beach all round (shore). It is
 // about 525 ft across, centred north of the dig so its south rim (where the bridge starts) stays put, with wide lawns
 // and the spoil yard to the north. Round the dig is the high top with two low hills; across the south a grassy scarp
@@ -364,14 +400,14 @@ function scarpZ(x){return 45+2.5*Math.sin(x*0.09+0.5)}
 function hill(x,z,cx,cz,rx,rz,h){const t=Math.hypot((x-cx)/rx,(z-cz)/rz);return t>=1?0:h*0.5*(1+Math.cos(Math.PI*t))}
 // worked dirt: the Lower Bench yard, a laydown pad west of the dig and the spoil yard on the north lawn; 0 to 1
 function yardAt(x,z){const r=coreR(x,z),sp=1-ss(1,4,Math.hypot(Math.max(0,Math.abs(x)-12),Math.max(0,Math.abs(z+52)-8))),zs=scarpZ(x),dx=Math.abs(x-DEX_X)<DEX_R+8&&Math.abs(z-DEX_Z)<DEX_R+8?1-ss(DEX_R-9,DEX_R-4,dexR(x,z)):0;
-  return Math.max(0,Math.min(1,Math.max(ss(zs+3,zs+6,z)*(1-ss(37,42,r)),ss(0.15,0.4,hill(x,z,-22,4,9,6,1)),dx,sp)+edSample(ED_P,x,z)))}
+  return Math.max(0,Math.min(1,Math.max(ss(zs+3,zs+6,z)*(1-ss(37,42,r)),ss(0.15,0.4,hill(x,z,-22,4,9,6,1)),dx,sp)+edSample(ED_P,x,z)+(z>TD_BOX[2]?tsSample(TS.P,x,z):0)))}
 // colour c (rgb array) toward packed dirt by the yard amount; returns the amount
 function yardTint(x,z,c,n){let a=yardAt(x,z);if(a<=0)return 0;
   // the yard's edge, ragged: dirt pushed out into the grass in places, grass creeping in at others
   if(a<1)a=Math.max(0,Math.min(1,a+2.4*a*(1-a)*(tintNoise(x*0.45+2,z*0.45+9)+0.6*tintNoise(x*1.6,z*1.6)-0.8)));if(a<=0)return 0;const v=0.86+0.2*n;
   c[0]+=(0.55*v-c[0])*a;c[1]+=(0.42*v-c[1])*a;c[2]+=(0.29*v-c[2])*a;return a}
 // the generated ground plus the editor's raise and lower
-function baseHeight(x,z){return groundHeight(x,z)+edSample(ED_H,x,z)}
+function baseHeight(x,z){return groundHeight(x,z)+edSample(ED_H,x,z)+(z>TD_BOX[2]?tsSample(TS.H,x,z):0)}
 // the mesa and, rising from the lake to its south, the Family Island
 function groundHeight(x,z){let h=mesaHeight(x,z);
   if(Math.abs(x-FAM_X)<FAM_R+50&&Math.abs(z-FAM_Z)<FAM_R+50){const f=famHeight(x,z);if(f>h)h=f}
