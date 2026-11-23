@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-23T01:45:00Z",
+ "updated": "2026-11-23T02:11:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -180,9 +180,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-22",
-   "dh": 68.75,
-   "act": 6,
-   "versions": 15
+   "dh": 70.75,
+   "act": 6.5,
+   "versions": 16
   }
  ],
  "extra": [
@@ -4413,6 +4413,15 @@ window.EFFORT = {
    "tris": 7298268,
    "chars": 2851485,
    "what": "Map editor → Roads has two new tools. Lots & slabs: pick any parking lot or concrete pad (the General Store's lot and the garden centre pad, the Overlook's lot, the marina car park) to move it, size it, turn it, change its surface or delete it, or lay new ones. Parking stripes: drag along the paving to stripe a row of stalls, straight in or angled, on one or both sides."
+  },
+  {
+   "v": 470,
+   "asked": "2026-11-22T19:20:00-06:00",
+   "live": "2026-11-22T20:11:44-06:00",
+   "dh": 2,
+   "tris": 7297692,
+   "chars": 2853122,
+   "what": "The freeze report names the things a slow frame drew for the first time and how long each took, and frames over 80 ms are reported (150 before), so the freeze as the game starts can be found from the owner's own play"
   }
  ]
 };
