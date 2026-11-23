@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-23T01:00:00Z",
+ "updated": "2026-11-23T01:45:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -180,9 +180,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-22",
-   "dh": 58.75,
-   "act": 5.5,
-   "versions": 14
+   "dh": 68.75,
+   "act": 6,
+   "versions": 15
   }
  ],
  "extra": [
@@ -4404,6 +4404,15 @@ window.EFFORT = {
    "tris": 7275568,
    "chars": 2820588,
    "what": "From the owner's v465 freeze report (four freezes of 4 to 6 s in the first two minutes): the shader check now holds back a thing whose shader is still being built instead of drawing it and waiting, the marina boats beside the start load behind the loading cover, and the ground-bounce probe's own ground and water shaders are built in the background when the lamps change"
+  },
+  {
+   "v": 469,
+   "asked": "2026-11-22T18:15:00-06:00",
+   "live": "2026-11-22T19:45:00-06:00",
+   "dh": 10,
+   "tris": 7298268,
+   "chars": 2851485,
+   "what": "Map editor → Roads has two new tools. Lots & slabs: pick any parking lot or concrete pad (the General Store's lot and the garden centre pad, the Overlook's lot, the marina car park) to move it, size it, turn it, change its surface or delete it, or lay new ones. Parking stripes: drag along the paving to stripe a row of stalls, straight in or angled, on one or both sides."
   }
  ]
 };
