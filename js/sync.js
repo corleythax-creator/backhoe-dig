@@ -52,6 +52,14 @@ async function syncJoin(raw){const c=raw.toUpperCase().replace(/[^0-9A-Z]/g,'');
   catch(e){syncSet('Could not reach the sync server. Try again in a minute.')}}
 // (stopping it here is remembered, bhd_sync_off, so the device does not start saving to the server again by itself)
 function syncStop(){sync.code='';sync.base=0;sync.last=null;for(const k of ['bhd_sync','bhd_sync_t','bhd_sync_h'])syncLs(k,null);syncLs('bhd_sync_off','1');syncSet('')}
+// a save just made on this device goes up now rather than at the next 15 s (the map editor: each saved change a
+// moment later, and Done at once, tell: a caption says it is on the server, or that it could not get there). A
+// device with no code yet makes its own first
+let syncT=0;
+function syncSoon(tell){if(!sync.on||navigator.webdriver||window.syncHold)return;clearTimeout(syncT);syncT=setTimeout(async()=>{
+  if(!sync.code&&syncLs('bhd_sync_off'))return;for(let i=0;i<8&&sync.busy;i++)await new Promise(r=>setTimeout(r,500));
+  if(!sync.code){await syncStart();if(!sync.code)syncSet('')}else await syncPush();
+  if(tell&&!window.syncHold){const ok=!!sync.code&&syncPayload()===sync.last;toast(say(ok?'edCloud':'edCloudNo'),ok?'':'bad',ok?2500:5000)}},tell?0:1500)}
 // ---------- the Sync panel ----------
 const syncBox=$('#syncBox');
 function syncShow(){if(syncBox.hidden)return;const on=!!sync.code;
