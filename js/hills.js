@@ -51,9 +51,7 @@ function fhDense(P,step){const out=[];for(let i=0;i<P.length-1;i++){const [ax,az
 
   // ---------- the overlook ----------
   const O=FH_OV,oy=O.y,LOT=[-16,28,931,947],TER=[-16,28,923.2,931];
-  K.sheet(asph,LOT[0],LOT[1],LOT[2],LOT[3],0.045);walkPad((LOT[0]+LOT[1])/2,(LOT[2]+LOT[3])/2,(LOT[1]-LOT[0])/2,(LOT[3]-LOT[2])/2,0,0,{l:0.045});
-  // the stalls along the lot's south side, nose to the trees
-  for(let x=LOT[0]+3;x<=LOT[1]-2;x+=2.8)K.sheet(wht,x-0.05,x+0.05,LOT[3]-5.4,LOT[3]-0.4,0.052);
+  // (the lot and its stalls along the south side, nose to the trees, are paving the map editor can change: paving.js)
   for(const x of [-8.6,0.8,10.2])TF_PARKED.push({x:x+1.4,y:G(x+1.4,LOT[3]-2.9)+0.06,z:LOT[3]-2.9,yaw:0});
   // the terrace: flagstone a step up from the lot, a fieldstone wall along its edge with an iron rail on top
   K.sheet(flag,TER[0],TER[1],TER[2],TER[3],0.16);walkPad((TER[0]+TER[1])/2,(TER[2]+TER[3])/2,(TER[1]-TER[0])/2,(TER[3]-TER[2])/2,0,0,{l:0.16});
