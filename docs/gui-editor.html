@@ -452,7 +452,19 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
 .edsec h3,.edpanel h3{margin:0;font:700 18px/1.1 var(--f-display);letter-spacing:.03em;color:var(--machine)}
 .edsec h3 small{font:600 14px/1 var(--f-display);color:var(--muted);letter-spacing:0;margin-left:6px}
 .edsec h4{margin:3px 0 0;font:700 12px/1 var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted)}
-.edkinds{display:flex;flex-direction:column;gap:4px}.edkinds .row{flex-wrap:wrap;gap:4px}
+.edkinds{display:flex;flex-direction:column;gap:6px}.edkinds .row{flex-wrap:wrap;gap:4px}
+#edKindFind{font:600 15px/1.2 var(--f-display);padding:6px 9px;border-radius:7px;border:1px solid var(--hud-line);background:rgba(0,0,0,.25);color:inherit}
+.edkinds,.edcat,.edtiles,.edtile{flex:none}
+.edcat{border-top:1px solid var(--hud-line);padding-top:4px}
+.edcat>summary{cursor:pointer;list-style:none;font:700 13px/1.4 var(--f-display);letter-spacing:.1em;text-transform:uppercase;color:var(--muted);padding:3px 0}
+.edcat>summary::-webkit-details-marker{display:none}.edcat>summary::before{content:'\25B8';display:inline-block;width:14px;transition:transform .15s}
+.edcat[open]>summary::before{transform:rotate(90deg)}.edcat>summary small{letter-spacing:0;opacity:.7}
+.edtiles{display:grid;grid-template-columns:repeat(auto-fill,minmax(84px,1fr));gap:5px;padding:3px 0 6px}
+.edtile{display:flex;flex-direction:column;align-items:stretch;gap:3px;padding:4px;height:auto;text-transform:none;letter-spacing:0;border-radius:8px;min-width:0}
+.edtile[hidden]{display:none}
+.edthumb{display:block;aspect-ratio:1;border-radius:5px;background:radial-gradient(circle at 50% 40%,#5d6f80,#2c3640) center/cover no-repeat}
+.edtname{font:600 12.5px/1.15 var(--f-display);text-align:center;overflow:hidden;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;min-height:2.3em}
+.edtile[aria-pressed=true]{outline:2px solid var(--machine);outline-offset:-1px}
 .edbottom{grid-column:1/-1;grid-row:3;pointer-events:auto;display:flex;flex-direction:column;background:var(--hud);border-top:1px solid var(--hud-line)}
 .edpanel{box-sizing:border-box;width:100%;display:flex;flex-wrap:wrap;align-items:center;gap:6px 16px;padding:7px var(--ed-r) 7px var(--ed-l);font:600 15px/1.25 var(--f-display)}
 .edpanel+.edpanel{border-top:1px solid var(--hud-line)}
@@ -1635,6 +1647,7 @@ const WORDS=[
   ['edTip_flatten','Map editor','Flatten: hold and drag to level the ground to the height where you start.'],['edTip_smooth','Map editor','Smooth: hold and drag to even out bumps.'],
   ['edTip_paint','Map editor','Hold and drag to lay the material. Natural ground takes it back up; digging cuts through it.'],
   ['edTip_dirt','Map editor','Hold and drag to paint worked dirt.'],['edTip_grass','Map editor','Hold and drag to paint grass, over the dirt yards too.'],['edTip_tall','Map editor','Hold and drag to grow tall grass to mow. It grows back after mowing.'],['edTip_notall','Map editor','Hold and drag to take tall grass away.'],
+  ['edTownBuilt','Map editor','The town\'s buildings, paving and streets stay where they were built. Shape the open ground between them.'],
   ['edTallFull','Map editor','That is as much tall grass as the island holds (about 8,300 sq ft, within {ft} ft each way). Take some away to paint more.'],
   ['edTip_select','Map editor','Tap to pick. Shift-tap or a long press picks more; drag on empty ground (Box select on touch) to pick many; drag a picked one to move them all, its ring to turn or size them; the arrow keys nudge, H hides, L locks.'],
   ['edTip_plant','Map editor','Tap the ground to plant the picked tree; it grows with ☰ Time, Date. Planted sets how many years ago it went in. Dig up (or Alt and a tap) takes one of yours out.'],
@@ -1654,7 +1667,7 @@ const WORDS=[
   ['edLinePlacedCap','Map editor','{n} placed (the map holds {cap}). They are picked: move, turn or delete them like any thing.','{n}: how many; {cap}: the most'],
   ['edRoomFor','Map editor','Only room for {n} more on the map.','{n}: how many'],['edNoRoom','Map editor','The map holds no more of these.'],
   ['edCut','Map editor','Cut {what}. Paste with {paste}.','{what}: the thing or how many; {paste}: Paste or Ctrl+V'],['edCopied','Map editor','Copied {what}. Paste with {paste}.','{what}: the thing or how many; {paste}: Paste or Ctrl+V'],
-  ['edSaveFull','Map editor','Could not save the map on this device (storage is full or blocked).'],['edSaveFail','Map editor','Could not save the map on this device.'],
+  ['edCloud','Map editor','Map saved on the server.'],['edCloudNo','Map editor','Saved on this device, but the server could not be reached. It will go up when it can.'],['edSaveFull','Map editor','Could not save the map on this device (storage is full or blocked).'],['edSaveFail','Map editor','Could not save the map on this device.'],
   ['edCopyByHand','Map editor','Select all of the text and copy it.'],['edMapCopied','Map editor','Map copied ({kb} KB of text). Paste it anywhere to keep it.','{kb}: its size'],
   ['edNotMapText','Map editor','That is not a Corley\'s Island map. Copy one with Copy map first.'],['edNotMapFile','Map editor','That file is not a Corley\'s Island map.'],
   ['edNoMapRoom','Map editor','Not enough room on this device for another map. Delete one or download it as a file.'],['edMapNameTaken','Map editor','There is already a map with that name.'],
