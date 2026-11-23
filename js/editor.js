@@ -118,9 +118,9 @@ function edThParts(k){
 const edThReady=parts=>parts.every(([,m])=>[].concat(m).every(q=>!q.map||!!q.map.image));
 function edThDraw(k,el){const parts=edThParts(k);if(!edThReady(parts))return false;const S=edTh.S,g=new THREE.Group();
   for(const [geo,mat,col] of parts){const m=new THREE.InstancedMesh(geo,mat,1);m.setMatrixAt(0,new THREE.Matrix4());m.frustumCulled=false;
-    if(col||geo.attributes.color)m.setColorAt(0,new THREE.Color().setRGB(...(col||[1,1,1])));g.add(m);if(!geo.boundingBox)geo.computeBoundingBox()}
+    if(col||geo.attributes.color)m.setColorAt(0,new THREE.Color().setRGB(...(col||[1,1,1])));g.add(m)}
   g.rotation.y=-0.6;edTh.scene.add(g);g.updateMatrixWorld(true);
-  const bb=new THREE.Box3();for(const m of g.children){const q=m.geometry.boundingBox.clone().applyMatrix4(m.matrixWorld);bb.union(q)}
+  const sp=k==='pine'?TREE_SP[0]:k==='leafy'?TREE_SP[2]:null,bb=new THREE.Box3();const tw=k==='pine'?0.22:0.45;if(sp)bb.set(new THREE.Vector3(-tw*sp.h,0,-tw*sp.h),new THREE.Vector3(tw*sp.h,sp.h,tw*sp.h));else for(const m of g.children){const q=new THREE.Box3().setFromBufferAttribute(m.geometry.attributes.position).applyMatrix4(m.matrixWorld);bb.union(q)}
   const c=bb.getCenter(new THREE.Vector3()),r=Math.max(0.3,bb.getSize(new THREE.Vector3()).length()/2),cam=edTh.cam,d=r/Math.sin(cam.fov*Math.PI/360)*1.02;
   cam.position.set(c.x,c.y+d*0.42,c.z+d*0.91);cam.near=d/50;cam.far=d*4;cam.lookAt(c);cam.updateProjectionMatrix();
   edTh.scene.environment=scene.environment;
