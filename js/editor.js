@@ -76,7 +76,7 @@ function edMapPane(){if(ed.pane==='map'&&ed.drawer)ed.pane=ED_GROUPS[ed.group].p
 function edPaneSync(){const d=$('#edDrawer'),on=ed.drawer&&!!ed.pane;d.hidden=!on;
   d.querySelectorAll('.edsec').forEach(s=>s.hidden=s.dataset.g!==ed.pane);$('#edPanelBtn').setAttribute('aria-pressed',on);
   document.querySelectorAll('#edRail button').forEach(b=>b.setAttribute('aria-pressed',b.dataset.g==='map'?on&&ed.pane==='map':b.dataset.g===ed.group));
-  if(on&&ed.pane==='things')edListDraw();if(on&&ed.pane==='roads')edRoadList();if(on&&ed.pane==='map'){edMapsDraw();edStatsDraw()}}
+  if(on&&ed.pane==='things'){edListDraw();edThumbsWant()}if(on&&ed.pane==='roads')edRoadList();if(on&&ed.pane==='map'){edMapsDraw();edStatsDraw()}}
 // on a phone the drawer gets out of the way once something in it is picked
 const edPicked=()=>{if(edNarrow()&&ed.drawer){ed.drawer=false;edPaneSync()}};
 document.querySelectorAll('#edRail button').forEach(b=>b.onclick=()=>b.dataset.g==='map'?edMapPane():edGroup(b.dataset.g));
@@ -91,10 +91,63 @@ const edKindName=t=>PROPS[t]?PROPS[t].n:typeof FX_KN!=='undefined'&&FX_KN[t]||ED
 const edFx=a=>typeof fxOf==='function'?fxOf(a):null;
 // Daylight House Studio, where Building Forge's buildings are designed (the Edit in Daylight button)
 const DHS_URL='https://daylight-house-studio.vercel.app/';
-{const all=[...Object.keys(ED_KINDS).map(k=>[k,0]),...Object.keys(PROPS).map(k=>[k,PROPS[k].cat||3])];
-  $('#edKinds').innerHTML=ED_KIND_CATS.map((c,ci)=>`<h4>${c}</h4><div class="row">${all.filter(q=>q[1]===ci).map(q=>`<button class="sm" data-k="${q[0]}">${edKindName(q[0])}</button>`).join('')}</div>`).join('');
-  document.querySelectorAll('#edKinds button').forEach(b=>b.onclick=()=>{ed.kind=b.dataset.k;edTool('add');edPicked()})}
-function edKindMark(){document.querySelectorAll('#edKinds button').forEach(b=>b.setAttribute('aria-pressed',ed.tool==='add'&&b.dataset.k===ed.kind));$('#edKindV').textContent=edKindName(ed.kind);edPlaceSync()}
+// the Things library: a tile with a picture of each kind, under its category (folds open and shut), and a Find box
+const edKindAll=[...Object.keys(ED_KINDS).map(k=>[k,0]),...Object.keys(PROPS).map(k=>[k,PROPS[k].cat||3])];
+{const shut=new Set();try{for(const c of JSON.parse(localStorage.getItem('bhd_edcats')||'[]'))shut.add(c)}catch(e){}
+  $('#edKinds').innerHTML=`<input id="edKindFind" type="search" placeholder="Find a thing" autocomplete="off" aria-label="Find a thing">`+ED_KIND_CATS.map((c,ci)=>{const ks=edKindAll.filter(q=>q[1]===ci);if(!ks.length)return'';
+    return `<details class="edcat" data-c="${ci}"${shut.has(ci)?'':' open'}><summary>${c} <small>${ks.length}</small></summary><div class="edtiles">${ks.map(q=>
+      `<button class="edtile" data-k="${q[0]}" title="${edKindName(q[0])}"><span class="edthumb"></span><span class="edtname">${edKindName(q[0])}</span></button>`).join('')}</div></details>`}).join('');
+  document.querySelectorAll('#edKinds .edtile').forEach(b=>b.onclick=()=>{ed.kind=b.dataset.k;edTool('add');edPicked()});
+  document.querySelectorAll('#edKinds details').forEach(d=>d.ontoggle=()=>{d.open?shut.delete(+d.dataset.c):shut.add(+d.dataset.c);
+    try{localStorage.setItem('bhd_edcats',JSON.stringify([...shut]))}catch(e){}if(d.open)edThumbsWant()});
+  $('#edKindFind').oninput=e=>{const q=e.target.value.trim().toLowerCase();
+    document.querySelectorAll('#edKinds .edcat').forEach(d=>{let n=0;d.querySelectorAll('.edtile').forEach(b=>{const on=!q||b.title.toLowerCase().includes(q);b.hidden=!on;n+=on});
+      d.hidden=!n;if(q&&n)d.open=true})}}
+// the pictures: each kind's own model drawn once into a small picture (three-quarter view, the game's sky light and
+// ACES look), a few a frame while the library is open; the detailed model where it is loaded, else the simple one
+const edTh={done:new Set(),busy:false,S:160,scene:new THREE.Scene(),cam:new THREE.PerspectiveCamera(28,1,0.05,500),rt:null};
+{const L=new THREE.DirectionalLight(0xfff4e0,2.4);L.position.set(5,9,7);edTh.scene.add(L,new THREE.HemisphereLight(0xcfe3ff,0x6b5a45,1.1))}
+function edThParts(k){
+  if(k==='pine'||k==='leafy'){const sp=TREE_SP[k==='pine'?0:2],c=treeEntry(k,0,0,0,1,0).c;return sp.lo.map((m,i)=>[m.geometry,m.material,i?c:null])}
+  if(k==='rock')return [[assetIMs.rock[0].geometry,assetIMs.rock[0].material,[0.95,0.95,0.95]]];
+  const det=typeof mdl!=='undefined'&&mdl.spotsOn&&mdl.propIM&&mdl.propIM[k];
+  if(det)return det.map(m=>[m.geometry,m.material,null]);
+  if(PROPS[k].wood&&typeof boardNeed==='function')boardNeed(0);
+  const im=propIMs[k];return [[im.geometry,im.material,PROPS[k].tint?PROP_TINT[0]:[1,1,1]]]}
+// a material still waiting on its pictures waits for a later pass
+const edThReady=parts=>parts.every(([,m])=>[].concat(m).every(q=>!q.map||!!q.map.image));
+function edThDraw(k,el){const parts=edThParts(k);if(!edThReady(parts))return false;const S=edTh.S,g=new THREE.Group();
+  for(const [geo,mat,col] of parts){const m=new THREE.InstancedMesh(geo,mat,1);m.setMatrixAt(0,new THREE.Matrix4());m.frustumCulled=false;
+    if(col||geo.attributes.color)m.setColorAt(0,new THREE.Color().setRGB(...(col||[1,1,1])));g.add(m);if(!geo.boundingBox)geo.computeBoundingBox()}
+  g.rotation.y=-0.6;edTh.scene.add(g);g.updateMatrixWorld(true);
+  const bb=new THREE.Box3();for(const m of g.children){const q=m.geometry.boundingBox.clone().applyMatrix4(m.matrixWorld);bb.union(q)}
+  const c=bb.getCenter(new THREE.Vector3()),r=Math.max(0.3,bb.getSize(new THREE.Vector3()).length()/2),cam=edTh.cam,d=r/Math.sin(cam.fov*Math.PI/360)*1.02;
+  cam.position.set(c.x,c.y+d*0.42,c.z+d*0.91);cam.near=d/50;cam.far=d*4;cam.lookAt(c);cam.updateProjectionMatrix();
+  edTh.scene.environment=scene.environment;
+  if(!edTh.rt)edTh.rt=new THREE.WebGLRenderTarget(S,S,{type:THREE.HalfFloatType,samples:4});
+  const was=renderer.getRenderTarget(),cc=renderer.getClearColor(new THREE.Color()),ca=renderer.getClearAlpha();
+  renderer.setRenderTarget(edTh.rt);renderer.setClearColor(0,0);renderer.clear();renderer.render(edTh.scene,cam);
+  const px=new Uint16Array(S*S*4);renderer.readRenderTargetPixels(edTh.rt,0,0,S,S,px);
+  renderer.setRenderTarget(was);renderer.setClearColor(cc,ca);edTh.scene.remove(g);for(const m of g.children)m.dispose();
+  const cv=document.createElement('canvas');cv.width=cv.height=S;const x2=cv.getContext('2d'),id=x2.createImageData(S,S),h=THREE.DataUtils.fromHalfFloat;
+  // ACES filmic (three's fit) at the game's exposure, then sRGB; the target is drawn upside down
+  const mul=(M,v)=>[M[0]*v[0]+M[1]*v[1]+M[2]*v[2],M[3]*v[0]+M[4]*v[1]+M[5]*v[2],M[6]*v[0]+M[7]*v[1]+M[8]*v[2]];
+  const IN=[0.59719,0.35458,0.04823,0.07600,0.90834,0.01566,0.02840,0.13383,0.83777],OUT=[1.60475,-0.53108,-0.07367,-0.10208,1.10813,-0.00605,-0.00327,-0.07276,1.07602];
+  const fit=v=>(v*(v+0.0245786)-0.000090537)/(v*(0.983729*v+0.4329510)+0.238081),srgb=v=>v<=0.0031308?v*12.92:1.055*Math.pow(v,1/2.4)-0.055;
+  for(let y=0;y<S;y++)for(let x=0;x<S;x++){const i=((S-1-y)*S+x)*4,o=(y*S+x)*4,a=h(px[i+3]);if(a<=0.002)continue;
+    let v=[h(px[i])/a,h(px[i+1])/a,h(px[i+2])/a].map(q=>q*renderer.toneMappingExposure/0.6);v=mul(OUT,mul(IN,v).map(fit));
+    for(let j=0;j<3;j++)id.data[o+j]=Math.round(255*srgb(Math.min(1,Math.max(0,v[j]))));id.data[o+3]=Math.round(255*Math.min(1,a))}
+  x2.putImageData(id,0,0);const u=cv.toDataURL();edTh[k]=u;el.style.backgroundImage=`url(${u})`;return true}
+// the open categories' tiles not yet drawn, three a frame
+function edThumbsWant(){if(edTh.busy)return;edTh.busy=true;let tries=0;
+  const step=()=>{const box=$('#edKinds');if(!edOn||box.offsetParent===null){edTh.busy=false;return}
+    const todo=[...box.querySelectorAll('details[open] .edtile')].filter(b=>!edTh.done.has(b.dataset.k));
+    if(!todo.length){edTh.busy=false;return}let n=0,miss=0;
+    for(const b of todo){if(n>=3)break;n++;let ok=false;try{ok=edThDraw(b.dataset.k,b.firstChild)}catch(e){console.warn('thumb',b.dataset.k,e);ok=true}
+      if(ok)edTh.done.add(b.dataset.k);else miss++}
+    if(miss&&miss===n&&++tries>200){edTh.busy=false;return}requestAnimationFrame(step)};
+  requestAnimationFrame(step)}
+function edKindMark(){document.querySelectorAll('#edKinds .edtile').forEach(b=>b.setAttribute('aria-pressed',ed.tool==='add'&&b.dataset.k===ed.kind));$('#edKindV').textContent=edKindName(ed.kind);edPlaceSync()}
 // ---------- placing in bulk (Add): One (then it is picked), Stamp (each tap another), Line (along a drag), Scatter (a brush) ----------
 const edCap=t=>PROPS[t]?PROPS[t].cap:ASSET_CAP[t]||300;
 const edRand=()=>({y:Math.random()*6.28,s:Math.random(),c:Math.random()});
