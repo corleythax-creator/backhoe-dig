@@ -106,11 +106,15 @@ for(const k in BT_KINDS){const K=BT_KINDS[k],d=BT_DOCKS[4],u=-(d.hw+K.B/2+0.2),h
   boats.push({n:'Marina',k,K,home,x:home.x,z:home.z,yaw:home.yaw,v:0,y:WATER,pitch:0,roll:0,g,lo,L:K.L,B:K.B,draft:K.draft,C:K.C,R:K.R,quiet:K.quiet,
     seat:[K.seat[0],K.seat[1]-K.draft-(K.sit==='low'?0.12:K.sit==='astride'?0.62:0.46),K.seat[2]],eye:[K.seat[0],K.seat[1]-K.draft+eye,K.seat[2]]})}
 // their models: asked for once near, the stand-in hull put away as each arrives (its shaders built first, gpuWarm)
-function btKindTick(){if(typeof LOADP==='undefined'||!LOADP.done||gfxKey==='low')return;
-  for(const b of boats){if(!b.K||b.asked||Math.hypot(b.x-camera.position.x,b.z-camera.position.z)>MDL_NEAR)continue;b.asked=1;
+// (behind the loading cover too, which waits for them, btBusy: you start on the marina dock beside them, and asked for
+// only once the cover had lifted they arrived in the first minute of play, each first drawn there and then: the 4 and 5 s
+// freezes at 81 and 91 s in the owner's v465 report)
+const btBusy=()=>boats.some(b=>b.asked===1&&!b.got&&performance.now()-b.askT<30000);
+function btKindTick(){if(typeof LOADP==='undefined'||gfxKey==='low')return;
+  for(const b of boats){if(!b.K||b.asked||Math.hypot(b.x-camera.position.x,b.z-camera.position.z)>MDL_NEAR)continue;b.asked=1;b.askT=performance.now();
     mdlLoaderReady(()=>new THREE.GLTFLoader().load('https://corley-forge-studio.vercel.app/vehicle/library/'+b.K.file+'.glb',gl=>{const o=gl.scene;o.position.y=-b.draft;
       o.traverse(m=>{if(!m.isMesh)return;m.castShadow=true;m.receiveShadow=true;for(const mt of [].concat(m.material)){mt.envMap=skyEnv;mt.envMapIntensity=0.8;if(mt.transparent){m.castShadow=false;m.renderOrder=2}}});
-      const add=()=>{b.g.add(o);b.lo.visible=false};if(typeof gpuWarm==='function')gpuWarm(o).then(add,add);else add()},undefined,e=>{b.asked=0;console.warn(b.K.file+':',e)}))}}
+      const add=()=>{b.g.add(o);b.lo.visible=false;b.got=1};if(typeof gpuWarm==='function')gpuWarm(o).then(add,add);else add()},undefined,e=>{b.asked=0;console.warn(b.K.file+':',e)}))}}
 setInterval(btKindTick,1500);
 // the detailed model (models.js, tools/models/boat.js): each boat's topsides in its own hull colour (glossy gelcoat, MDL_GEL), the windscreen see-through
 const btScreen=new THREE.MeshStandardMaterial({color:0xcfe3ea,transparent:true,opacity:0.28,roughness:0.05,metalness:0,envMap:skyEnv,depthWrite:false});
