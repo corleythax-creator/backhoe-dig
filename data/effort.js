@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-23T00:23:00Z",
+ "updated": "2026-11-23T01:00:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -180,9 +180,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-22",
-   "dh": 49.75,
-   "act": 4.5,
-   "versions": 12
+   "dh": 58.75,
+   "act": 5.5,
+   "versions": 14
   }
  ],
  "extra": [
@@ -4386,6 +4386,24 @@ window.EFFORT = {
    "tris": 7257966,
    "chars": 2818796,
    "what": "The map editor's Shape and Paint now work on the mainland's town and waterfront: raise, lower, flatten and smooth the open ground between the buildings and paving (lawns, verges, back lots, the bank and beach), and paint any material, dirt or grass there, with soft or hard edges and Raise / inset. Buildings, paving and streets stay where they were built. Saved with the map, with undo. Also fixes ground strokes begun right after another not showing until later."
+  },
+  {
+   "v": 467,
+   "asked": "2026-11-22T17:55:00-06:00",
+   "live": "2026-11-22T18:55:12-06:00",
+   "dh": 4,
+   "tris": 7389803,
+   "chars": 2826052,
+   "what": "Map editor Things: picture tiles of every kind under folding categories, with a Find box"
+  },
+  {
+   "v": 468,
+   "asked": "2026-11-22T18:20:00-06:00",
+   "live": "2026-11-22T19:00:39-06:00",
+   "dh": 5,
+   "tris": 7275568,
+   "chars": 2820588,
+   "what": "From the owner's v465 freeze report (four freezes of 4 to 6 s in the first two minutes): the shader check now holds back a thing whose shader is still being built instead of drawing it and waiting, the marina boats beside the start load behind the loading cover, and the ground-bounce probe's own ground and water shaders are built in the background when the lamps change"
   }
  ]
 };

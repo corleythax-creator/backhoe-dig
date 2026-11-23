@@ -411,14 +411,17 @@ function shGateTick(){const G=shGate;if(!LOADP.done||bench.on||vrOn()||TU.shGate
     for(const m of m1)if(m&&m.visible!==false&&!shOk(o,m)){L.push(o);break}});
   if(!L.length){G.ms=performance.now()-t0;return}
   G.checked+=L.length;const root={isObject3D:true,traverseVisible(){},traverse(cb){for(const o of L)cb(o)}};let p=null,q=null;
+  if(typeof bnWarm==='function')try{bnWarm(L)}catch(e){}
   G.cap=[];try{p=warmCompile(root,scene)}catch(e){}try{q=warmShadows(root)}catch(e){}const nw=new Set(G.cap);G.cap=null;
   const ok=o=>{for(const m of [].concat(o.material))if(m)shOk(o,m,true)};
-  if(!nw.size){for(const o of L)ok(o);G.ms=performance.now()-t0;return}
   // (which things the new shaders are for: their material's; a new shadow shader belongs to no material of theirs, so
   // then every one of them that casts a shadow waits too)
   let dep=false,H=[];for(const pr of nw)dep=dep||!!(pr.type&&/Depth|Distance/.test(pr.type));
-  for(const o of L){let h=dep&&o.castShadow;if(!h)for(const m of [].concat(o.material)){const pr=m&&renderer.properties.get(m);if(pr&&pr.programs)for(const x of pr.programs.values())if(nw.has(x)){h=true;break}if(h)break}
+  for(const o of L){let h=dep&&o.castShadow;if(!h)for(const m of [].concat(o.material)){const pr=m&&renderer.properties.get(m);if(pr&&pr.programs)for(const x of pr.programs.values())if(nw.has(x)||x.isReady&&!x.isReady()){h=true;break}if(h)break}
     if(h)H.push(o);else ok(o)}
+  // (or a shader that exists but is still being built: one another warm-up began a moment before, as for a model that has
+  // just loaded. Passed as "already there", the thing was drawn at once and the frame waited out the build: the 4.9 s
+  // freeze half a second after the cover lifted in the owner's v465 report, 0 new shaders in it)
   if(H.length){G.n+=H.length;G.busy++;for(const o of H)G.wait.set(o,o.layers.mask),o.layers.mask=0;
     const end=()=>{G.busy--;for(const o of H){ok(o);o.layers.mask|=G.wait.get(o);G.wait.delete(o)}};
     Promise.all([p&&p.then?p.catch(()=>{}):null,q&&q.then?q.catch(()=>{}):null]).then(end,end)}
