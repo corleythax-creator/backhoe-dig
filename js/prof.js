@@ -17,6 +17,20 @@ try{new PerformanceObserver(l=>{for(const e of l.getEntries()){if(e.duration<100
   const sc=(e.scripts||[]).slice().sort((a,b)=>b.duration-a.duration).slice(0,3).map(s=>{const f=String(s.sourceURL||'').split('/').pop().split('?')[0];
     return (/^three\./.test(f)?'three.js drawing (building shaders, uploading to the graphics card)':(s.sourceFunctionName||s.invoker||s.invokerType||'script')+' ('+f+')')+' '+Math.round(s.duration)+' ms'});
   PF.loaf.push({t:e.startTime,ms:e.duration,sc});if(PF.loaf.length>600)PF.loaf.shift()}}).observe({type:'long-animation-frame',buffered:true})}catch(e){}
+// always on in play: every part of the game's frame is timed (two clock reads a part), and a frame that took over 80 ms
+// with under 80 of it in the drawing goes in the timeline with its slowest parts. (The owner's v471 report: a 5.3 s
+// freeze a minute into play that the drawing's own slow-frame mark never saw, and the browser's long-frame timing only
+// names three.js, whose loop calls the whole frame.) gfxFrame is the frame's first call: it closes the frame before
+const pfAlways={acc:{},on:false,t0:0,t1:0};
+function pfAlwaysOn(){const A=pfAlways;if(A.on||typeof frame!=='function')return;A.on=true;
+  for(const n of pfParts()){const f=window[n];if(typeof f!=='function'||f.pfA||f.pfW||!/Tick$|^update|Frame$|Step$|Lod$|^(postRender|rainCover|pollPad|vrPoll|resize|blkPush|keyAxes|warmPre|drawSlow|wkMdlPose|fpEye|rmCamClip|viewPinApply)$/.test(n))continue;// (the big parts only: not the small helpers the whole game calls, hAt, toast, setTimeout)
+    const w=n==='gfxFrame'?function(){const t=performance.now();
+        try{const d=A.t1-A.t0,dr=A.acc.postRender||0;if(A.t0&&d>80&&dr<80&&!PF.on){const top=Object.entries(A.acc).filter(e=>e[1]>=5).sort((a,b)=>b[1]-a[1]).slice(0,5).map(e=>pfName(e[0])+' '+Math.round(e[1])+' ms').join(', '),c=camera.position;
+          const T=PF_BOOT.tl;if(T.length<900)T.push(['Slow frame, not the drawing',Math.round(A.t0),Math.round(d),`${top||'no part over 5 ms'} · ${mode} @${Math.round(c.x)},${Math.round(c.z)}`])}}catch(e){}
+        for(const k in A.acc)A.acc[k]=0;A.t0=t;try{return f.apply(this,arguments)}finally{A.t1=performance.now()}}
+      :function(){const t=performance.now();try{return f.apply(this,arguments)}finally{const e=performance.now();A.acc[n]=(A.acc[n]||0)+e-t;A.t1=e}};
+    w.pfA=1;window[n]=w}}
+{const iv=setInterval(()=>{if(typeof LOADP!=='undefined'&&LOADP.done&&typeof frame==='function'&&!PF.on){clearInterval(iv);try{pfAlwaysOn()}catch(e){}}},2000)}
 const pfMs=v=>v>=1000?(v/1000).toFixed(1)+' s':Math.round(v)+' ms',pfKB=b=>b>=1048576?(b/1048576).toFixed(1)+' MB':Math.round(b/1024)+' KB',pfFile=u=>String(u||'').split('?')[0].replace(location.origin+'/','').replace(/^https?:\/\//,'');
 const pfEsc=s=>String(s).replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'})[c]);
 // ---------- Loading ----------
