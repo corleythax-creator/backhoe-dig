@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Sunday, November 22, 2026
 
+- **v466** (6:23 PM) The map editor's Shape and Paint now work on the mainland's town and waterfront: raise, lower, flatten and smooth the open ground between the buildings and paving (lawns, verges, back lots, the bank and beach), and paint any material, dirt or grass there, with soft or hard edges and Raise / inset. Buildings, paving and streets stay where they were built. Saved with the map, with undo. Also fixes ground strokes begun right after another not showing until later.
 - **v465** (6:07 PM) From the owner's Profiler recording at the harbor (processor 23 ms a frame, graphics card 11.8): parked machines no longer check all 4,000 solids every frame, the every-frame shader check passes known things by a number, and the Profiler's Frames report splits Drawing the frame into shadows and placing every part
 - **v464** (6:05 PM) Map editor changes go up to the server a moment after each one, and Done sends the map at once and tells you: Map saved on the server (or that it could not be reached and will go up later).
 - **v463** (5:51 PM) Your site and map editor changes are saved on the server without asking: a device with no sync code makes its own about 20 seconds after opening (☰ → Sync devices shows it, to type into another device). Stop syncing here turns it off for that device.
