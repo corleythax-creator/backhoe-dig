@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Sunday, November 22, 2026
 
+- **v469** (7:45 PM) Map editor → Roads has two new tools. Lots & slabs: pick any parking lot or concrete pad (the General Store's lot and the garden centre pad, the Overlook's lot, the marina car park) to move it, size it, turn it, change its surface or delete it, or lay new ones. Parking stripes: drag along the paving to stripe a row of stalls, straight in or angled, on one or both sides.
 - **v468** (7:00 PM) From the owner's v465 freeze report (four freezes of 4 to 6 s in the first two minutes): the shader check now holds back a thing whose shader is still being built instead of drawing it and waiting, the marina boats beside the start load behind the loading cover, and the ground-bounce probe's own ground and water shaders are built in the background when the lamps change
 - **v467** (6:55 PM) Map editor Things: picture tiles of every kind under folding categories, with a Find box
 - **v466** (6:23 PM) The map editor's Shape and Paint now work on the mainland's town and waterfront: raise, lower, flatten and smooth the open ground between the buildings and paving (lawns, verges, back lots, the bank and beach), and paint any material, dirt or grass there, with soft or hard edges and Raise / inset. Buildings, paving and streets stay where they were built. Saved with the map, with undo. Also fixes ground strokes begun right after another not showing until later.

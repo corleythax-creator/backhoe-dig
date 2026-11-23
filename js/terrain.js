@@ -35,7 +35,7 @@ const ED_X0=-112,ED_Z0=-122,ED_C=0.5,ED_NX=449,ED_NZ=433,ED_H=new Float32Array(E
 // ED_R: how far each painted cell is raised (+) or sunk (-) from the ground, in quarter inches (-12 to 12, the Paint
 // brush's Raise / inset; raised.js draws the slab and its sides, rsAt is the step for feet and wheels)
 const ED_R=new Int8Array(ED_NX*ED_NZ),RS_Q=0.00635;
-let mapAssets=null,mapRoads=null,mapSq=0,mapSt=0;
+let mapAssets=null,mapRoads=null,mapPaves=null,mapStripes=null,mapSq=0,mapSt=0;
 // ED_G: where tall grass grows (1), on the same grid (the editor's Tall grass brush; mower.js grows it). A map from
 // before it has the first patch, 52 x 39 ft north-east of the trench
 const ED_G=new Uint8Array(ED_NX*ED_NZ);
@@ -108,6 +108,9 @@ function mapEncode(){const doc={game:'backhoe-dig',v:1,g:[ED_X0,ED_Z0]},h=edBox(
     const tc=edBox(ta,1,Uint8Array,TP),tr=edBox(TP.R,1,Int8Array,TP);if(th)t.h=th;if(tp)t.p=tp;if(tm)t.m=tm;if(tc)t.a=tc;if(tr)t.r=tr;if(th||tp||tm)doc.t=t}
   if(mapAssets){doc.sq=1;doc.st=1;doc.assets=(typeof fxSaveList==='function'?fxSaveList(mapAssets):mapAssets).map(a=>[a.t,+a.x.toFixed(2),+a.z.toFixed(2),+a.yaw.toFixed(2),+a.s.toFixed(2),a.c,...(a.lk?[1]:[])])}
   if(mapRoads)doc.roads=mapRoads.map(r=>[+r.w.toFixed(2),r.mid,r.pts.map(q=>q.map(v=>+v.toFixed(2))),...(r.pv?[{c:r.cb?1:0,s:+(r.sw||0).toFixed(2),l:r.cl?1:0,...(r.sf?{f:r.sf}:{})}]:[])]);
+  // pv, ps: the paved lots and slabs and the parking stripes (paving.js), once the map has changed them
+  if(mapPaves)doc.pv=mapPaves.map(p=>[+p.x.toFixed(2),+p.z.toFixed(2),+p.w.toFixed(2),+p.d.toFixed(2),+p.r.toFixed(3),p.s,+p.l.toFixed(3)]);
+  if(mapStripes)doc.ps=mapStripes.map(S=>[...S.a,...S.b].map(v=>+v.toFixed(2)).concat([+S.w.toFixed(2),+S.L.toFixed(2),S.an,S.sd]));
   return JSON.stringify(doc)}
 // reads a map into new layers; throws on anything that is not one
 function mapDecode(text){const doc=JSON.parse(text);if(!doc||doc.game!=='backhoe-dig'||doc.v!==1)throw new Error('not a Corley\'s Island map');
@@ -134,8 +137,13 @@ function mapDecode(text){const doc=JSON.parse(text);if(!doc||doc.game!=='backhoe
   edUnbox(T.h,t.h,100,Int16Array,0,0,TS);edUnbox(T.p,t.p,100,Int8Array,0,0,TS);edUnbox(T.m,t.m,1,Uint8Array,0,0,TP);edUnbox(T.a,t.a,1,Uint8Array,0,0,TP);edUnbox(T.r,t.r,1,Int8Array,0,0,TP);
   for(let q=0;q<t.m.length;q++){if(t.m[q]&&!matIdOk(t.m[q]))t.m[q]=0;t.a[q]=t.m[q]?255-t.a[q]:0;if(!t.a[q])t.m[q]=0;t.r[q]=t.m[q]?Math.max(-12,Math.min(12,t.r[q])):0}
   for(const [G,L] of [[TS,[t.h,t.p]],[TP,[t.m,t.a,t.r]]])for(let j=0;j<G.NZ;j++)for(let i=0;i<G.NX;i++)if(i<3||j<3||i>G.NX-4||j>G.NZ-4)for(const A of L)A[j*G.NX+i]=0;
-  return {h,p,m,a,r,tg,t,as,rs,sq:doc.sq===1,st:doc.st===1}}
-try{const t=localStorage.getItem('bhd_map');if(t){const m=mapDecode(t);ED_H.set(m.h);ED_P.set(m.p);ED_M.set(m.m);ED_A.set(m.a);ED_R.set(m.r);if(m.tg)ED_G.set(m.tg);TS.H.set(m.t.h);TS.P.set(m.t.p);TP.M.set(m.t.m);TP.A.set(m.t.a);TP.R.set(m.t.r);TP.any=TP.M.some(v=>v!==0);mapAssets=m.as;mapRoads=m.rs;mapSq=m.sq;mapSt=m.st}}catch(e){}
+  // paving: lots 0.5 to 300 m a side, 0 to 0.3 m up; stripe rows with stalls 1.5 to 6 m wide, 2 to 12 m deep, at 30 to 90 degrees
+  const pv=Array.isArray(doc.pv)?doc.pv.slice(0,200).filter(q=>Array.isArray(q)&&[0,1,2,3,4,6].every(k=>isFinite(q[k]))&&typeof q[5]==='string')
+    .map(q=>({x:+q[0],z:+q[1],w:Math.max(0.5,Math.min(300,+q[2])),d:Math.max(0.5,Math.min(300,+q[3])),r:+q[4],s:q[5],l:Math.max(0,Math.min(0.3,+q[6]))})):null;
+  const ps=Array.isArray(doc.ps)?doc.ps.slice(0,300).filter(q=>Array.isArray(q)&&q.length>=8&&q.slice(0,8).every(isFinite))
+    .map(q=>({a:[+q[0],+q[1]],b:[+q[2],+q[3]],w:Math.max(1.5,Math.min(6,+q[4])),L:Math.max(2,Math.min(12,+q[5])),an:Math.max(30,Math.min(90,+q[6])),sd:[1,-1,2].includes(+q[7])?+q[7]:1})):null;
+  return {h,p,m,a,r,tg,t,as,rs,pv,ps,sq:doc.sq===1,st:doc.st===1}}
+try{const t=localStorage.getItem('bhd_map');if(t){const m=mapDecode(t);ED_H.set(m.h);ED_P.set(m.p);ED_M.set(m.m);ED_A.set(m.a);ED_R.set(m.r);if(m.tg)ED_G.set(m.tg);TS.H.set(m.t.h);TS.P.set(m.t.p);TP.M.set(m.t.m);TP.A.set(m.t.a);TP.R.set(m.t.r);TP.any=TP.M.some(v=>v!==0);mapAssets=m.as;mapRoads=m.rs;mapPaves=m.pv;mapStripes=m.ps;mapSq=m.sq;mapSt=m.st}}catch(e){}
 // the painted ids for the ground shader, one texel per cell (materials.js); editor.js flags it when they change
 matU.tMatId.value=new THREE.DataTexture(ED_M,ED_NX,ED_NZ,THREE.RedFormat,THREE.UnsignedByteType);
 matU.tMatId.value.unpackAlignment=1;matU.tMatId.value.needsUpdate=true;

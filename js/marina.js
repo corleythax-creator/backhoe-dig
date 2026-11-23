@@ -339,7 +339,8 @@ function marBoat(kind,o,x,z,yaw){const K=famKit();MAR_KIND[kind](K,o);const g=ne
     famAdd(RK);fxDecl('Boat rack',x0+NB*BW/2,rz,NB*BW/2+0.5,3.9)}
   // the car park: asphalt with painted stalls between the buildings and the cross street, lamp poles at its middle,
   // and a boat on its trailer waiting by the ramp
-  {K.sheet(asph,58,131,582,612,0.04);walkPad(94.5,597,36.5,15,0,0,{l:0.04});for(let x=60.5;x<129;x+=3)for(const [z0,z1] of [[583,588.5],[605.5,611]])K.sheet(paint,x-0.06,x+0.06,z0,z1,0.055);
+  {// (the asphalt and its stalls are paving the map editor can change: paving.js)
+
     for(const [x,z] of [[72,597],[91,597],[110,597]]){const y=G(x,z);F.cyl(0.25,0.3,0.6,10,0xa3a19a,x,y+0.3,z);F.cyl(0.08,0.11,8,8,0x3a3d40,x,y+4.3,z);
       for(const s of [-1,1]){F.box(1.0,0.08,0.08,0x3a3d40,x+s*0.5,y+8.2,z);F.box(0.55,0.14,0.32,0x2f3236,x+s*1.05,y+8.15,z);F.lit(new THREE.BoxGeometry(0.45,0.03,0.24),0xfff1c8,x+s*1.05,y+8.07,z)}
       SOLIDS.push({x,z,hx:0.3,hz:0.3})}
