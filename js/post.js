@@ -239,7 +239,16 @@ function bnLayers(){if(bnTagN--%20)return;bnTagN=19;
   scene.traverse(o=>{if(o.isLight){o.layers.enable(BN_LAYER);return}if(!o.isMesh||o.isInstancedMesh)return;const m=o.material,g=o.geometry;
     if(m===groundMat||g&&g.attributes&&g.attributes.dirt||m&&m.defines&&m.defines.LK_TOP!==undefined)o.layers.enable(BN_LAYER)})}
 function bounceGfx(on){if(bnOn===!!on)return;bnOn=!!on;bnHave=false;if(!on&&bnRT){bnRT.dispose();bnRT=null}}
-function bnProbe(){const now=performance.now();if(bnBusy||now<bnNext||renderer.xr.isPresenting)return;bnNext=now+1500;
+// The probe draws the ground with shaders of its own kind (its picture is not the screen's), which nothing built ahead:
+// when the lamps went dark the ground's and the water's were built in the frame of the next probe, the 5.9 s freeze two
+// minutes into the owner's v465 play. The shader check (shGateTick, main.js) hands what it is about to pass to bnWarm,
+// which builds the probe's kind in the background; the probe waits meanwhile (the bounce holds its last colour)
+let bnWait=0;
+function bnWarm(L){if(!bnOn||!bnRT||!renderer.compileAsync)return;const B=L.filter(o=>o.layers.test(bnCam.layers));if(!B.length)return;
+  const root={isObject3D:true,traverseVisible(){},traverse(cb){for(const o of B)cb(o)}},t=renderer.getRenderTarget(),lt=!ltSl.hid.length&&!ltSl.night;
+  if(lt)ltHide(true);renderer.setRenderTarget(bnRT);bnWait++;const end=()=>{bnWait--};
+  try{renderer.compileAsync(root,bnCam,scene).then(end,end)}catch(e){end()}finally{renderer.setRenderTarget(t);if(lt)ltShow()}}
+function bnProbe(){const now=performance.now();if(bnBusy||bnWait||now<bnNext||renderer.xr.isPresenting)return;bnNext=now+1500;
   if(!bnRT){const f=renderer.extensions.has('EXT_color_buffer_float');bnRT=new THREE.WebGLRenderTarget(4,4,{type:f?THREE.FloatType:THREE.UnsignedByteType});bnBuf=f?new Float32Array(64):new Uint8Array(64)}
   bnLayers();const c=sun.target.position;bnCam.position.set(c.x,c.y+70,c.z);bnCam.lookAt(c.x,c.y,c.z);bnCam.updateMatrixWorld();
   const rt=renderer.getRenderTarget(),au=renderer.shadowMap.autoUpdate,bg=scene.background;

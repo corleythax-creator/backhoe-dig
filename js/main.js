@@ -411,6 +411,7 @@ function shGateTick(){const G=shGate;if(!LOADP.done||bench.on||vrOn()||TU.shGate
     for(const m of m1)if(m&&m.visible!==false&&!shOk(o,m)){L.push(o);break}});
   if(!L.length){G.ms=performance.now()-t0;return}
   G.checked+=L.length;const root={isObject3D:true,traverseVisible(){},traverse(cb){for(const o of L)cb(o)}};let p=null,q=null;
+  if(typeof bnWarm==='function')try{bnWarm(L)}catch(e){}
   G.cap=[];try{p=warmCompile(root,scene)}catch(e){}try{q=warmShadows(root)}catch(e){}const nw=new Set(G.cap);G.cap=null;
   const ok=o=>{for(const m of [].concat(o.material))if(m)shOk(o,m,true)};
   // (which things the new shaders are for: their material's; a new shadow shader belongs to no material of theirs, so
