@@ -318,7 +318,7 @@ function frame(now){
   const fv=mode==='boat'?btCur():mode==='heavy'?hvCur():mode==='bike'?bk:mode==='truck'?tr:mode==='mow'?mw:mode==='skid'?sk:mode==='walk'?wk:st;sun.position.set(fv.x,fv.y,fv.z).addScaledVector(LIGHT_DIR,SUN_D); sun.target.position.set(fv.x,fv.y,fv.z);
   {const o=groundOcc.value;o[0].set(st.x,st.z,st.yaw,0);o[2].set(tr.x,tr.z,tr.yaw,0)}
   timeU.value=now/1000;
-  shadowProxyTick();lawnLod();tuftLod();turfLod();rainCover();if(vr.fake)vrFakeHead();warmAllTick();warmLaterTick();warmDrawTick();warmFarTick();ltOtherTick();loadReportTick();repHudTick();shBenchTick();gpuWarmTick();shGateTick();if(!loadHold()){const wm=warmPre(),d0=performance.now(),di=drawInfo();postRender();drawNew.on=false;warmPost(wm);if(performance.now()-d0>150)drawSlow(d0,di)}if(vrOn())vrAfter();
+  shadowProxyTick();lawnLod();tuftLod();turfLod();rainCover();if(vr.fake)vrFakeHead();warmAllTick();warmLaterTick();warmDrawTick();warmFarTick();ltOtherTick();loadReportTick();repHudTick();shBenchTick();gpuWarmTick();shGateTick();if(!loadHold()){const wm=warmPre(),d0=performance.now(),di=drawInfo();postRender();drawNew.on=false;warmPost(wm);if(performance.now()-d0>80)drawSlow(d0,di)}if(vrOn())vrAfter();
   if(bench.on)benchSample(dt);
   fpsFrames++;fpsTime+=dt;
   if(fpsTime>=0.5){
@@ -361,13 +361,23 @@ const texReady=()=>{applyTextures();warmN=Math.max(warmN,3);warmAll={t0:performa
 // frame while the start card is up, where a hitch can't be felt. (The island tour test, tourtest.js, waits for this and
 // times it; warmIdle says when nothing is left to do)
 let warmAll=null;
-// a drawn frame that took over 150 ms goes in the Profiler's timeline with what was new on the graphics card in it
+// a drawn frame that took over 80 ms (150 until v468: the stutters went unnamed) goes in the Profiler's timeline with what was new on the graphics card in it
 // the shaders made while the frame is drawn, exactly (three.js adds each new one to renderer.info.programs): counting
 // the last ones made named the lamp set's, built in the background at the same moment (v440 report)
 const drawNew={on:false,L:[],slow:-1e9,hooked:false};
 const drawInfo=()=>{const P=renderer.info.programs;if(!drawNew.hooked){drawNew.hooked=true;const push=P.push;
     P.push=function(...a){if(drawNew.on)drawNew.L.push(...a);if(shGate.cap)shGate.cap.push(...a);return push.apply(this,a)}}
-  drawNew.L.length=0;drawNew.on=true;return [P.length,renderer.info.memory.geometries,renderer.info.memory.textures]};
+  drawNew.L.length=0;drawFirst.L.length=0;drawFirst.n=0;drawNew.on=true;return [P.length,renderer.info.memory.geometries,renderer.info.memory.textures]};
+// (owner's v468 report: one 1.9 s frame as the cover lifted, 0 new shaders, and nothing to say what it drew. Every draw
+// of a thing with a material, material version or lamp set it was not last drawn with is timed, and a slow frame names
+// those that took 30 ms or more, or failing that the first few drawn so for the first time)
+const drawFirst={L:[],n:0};
+function drawNm(o,m,ms){let q=o,nm='';while(q&&!nm){nm=q.name;q=q.parent}const e=o.matrixWorld.elements,g=o.geometry,vc=g&&g.attributes&&g.attributes.position?g.attributes.position.count:0,rt=renderer.getRenderTarget();
+  return `${nm||o.type}/${m.name||m.type} ${vc}v @${Math.round(e[12])},${Math.round(e[14])}${o.isInstancedMesh?' inst':''}${o.isSkinnedMesh?' skin':''}${rt?rt===sun.shadow.map?' shadow':typeof postRT!=='undefined'&&rt===postRT?'':' '+rt.width+'px':' screen'}${ms>=1?' '+Math.round(ms)+' ms':''}`}
+{const rbd0=renderer.renderBufferDirect;renderer.renderBufferDirect=function(cam,sc,g,mt,o,gr){
+    if(o.dwM===mt&&o.dwV===mt.version&&o.dwN===ltSl.night)return rbd0.call(this,cam,sc,g,mt,o,gr);
+    o.dwM=mt;o.dwV=mt.version;o.dwN=ltSl.night;const t=performance.now();
+    try{return rbd0.call(this,cam,sc,g,mt,o,gr)}finally{const ms=performance.now()-t,F=drawFirst;F.n++;if(drawNew.on&&(ms>=30||F.L.length<6))try{F.L.push([ms,drawNm(o,mt,ms)])}catch(e){}}}}
 // (owner's v439 report: two freezes of 3.3 and 1.6 s in play, each "1 shader", and no saying which: now the slow frame
 // names the things whose shaders were new in it, and what was being built in the background then)
 function drawSlow(t0,a){drawNew.slow=performance.now();const P=new Set(drawNew.L),b=[renderer.info.programs.length,renderer.info.memory.geometries,renderer.info.memory.textures],n=P.size;let who='';
@@ -383,7 +393,8 @@ function drawSlow(t0,a){drawNew.slow=performance.now();const P=new Set(drawNew.L
   if(bg.length)who=' · building then: '+bg.join(', ')+who}catch(e){}
   // (what else the frame was: for the slow frames that made nothing new, v445)
   try{const R=renderer.info.render,c=camera.position;who=` · ${mode} @${Math.round(c.x)},${Math.round(c.z)} · ${R.calls} draws${typeof shc==='object'&&shc.build?' · shadows rebuilt':''}${shGate.ms>20?' · gate '+Math.round(shGate.ms)+' ms':''}`+who}catch(e){}
-  pfMark('Slow frame drawn',t0,`new on the card: ${n} shaders, ${b[1]-a[1]} meshes, ${b[2]-a[2]} pictures${ltSl.night?' · lamps lit':''}${who}`.slice(0,600))}
+  try{const F=drawFirst,S=F.L.filter(e=>e[0]>=30).sort((x,y)=>y[0]-x[0]).slice(0,5);if(F.n)who+=` · ${F.n} first drawn${S.length?', slow: ':': '}`+(S.length?S:F.L.slice(0,4)).map(e=>e[1]).join(', ')}catch(e){}
+  pfMark('Slow frame drawn',t0,`new on the card: ${n} shaders, ${b[1]-a[1]} meshes, ${b[2]-a[2]} pictures${ltSl.night?' · lamps lit':''}${who}`.slice(0,900))}
 // NEVER WAIT FOR A SHADER (owner, Nov 20: days of freezes, each a frame waiting for a shader the warm-ups missed; on
 // Windows each takes 1 to 3 s to build). Every frame in play, anything about to be drawn whose material (with that kind
 // of object: instanced, skinned, vertex colours...) has not been built yet is kept out of the picture (its layers off,
@@ -619,7 +630,7 @@ function loadReportTick(){if(!LOADP.done||loadRep===2)return;const at=performanc
   try{const E=window.EFFORT,v=E&&E.versions?+E.versions[E.versions.length-1].v||0:0,gl=renderer.getContext();
     const d={at:loadRep===2?300:60,cover:Math.round(PF_BOOT.done),steps:PF_BOOT.steps,programs:renderer.info.programs.length,
       parallel:!!gl.getExtension('KHR_parallel_shader_compile'),long:PF_BOOT.long.filter(l=>l[1]>=200).slice(0,80).map(l=>[Math.round(l[0]),Math.round(l[1])]),
-      tl:PF_BOOT.tl.filter(r=>r[2]>=200||/Far world|Shader pass/.test(r[0])).slice(0,120),
+      tl:PF_BOOT.tl.filter(r=>r[2]>=200||/Far world|Shader pass|Slow frame/.test(r[0])).slice(0,120),
       // (what the browser says held each freeze over 0.3 s: prof.js's long animation frames, script and function)
       loaf:typeof PF==='object'?PF.loaf.filter(l=>l.ms>=300).slice(0,60).map(l=>[Math.round(l.t),Math.round(l.ms),l.sc.join(' · ').slice(0,240)]):[]};
     const dev=`${typeof gpuName==='function'?gpuName():''} · ${renderer.domElement.width}×${renderer.domElement.height} px · Graphics ${typeof gfxName==='function'?gfxName():''} · ${navigator.platform||''}`;
