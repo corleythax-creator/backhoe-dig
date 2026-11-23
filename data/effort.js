@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-23T02:11:00Z",
+ "updated": "2026-11-23T02:41:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -180,9 +180,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-22",
-   "dh": 70.75,
-   "act": 6.5,
-   "versions": 16
+   "dh": 74.75,
+   "act": 7,
+   "versions": 17
   }
  ],
  "extra": [
@@ -4422,6 +4422,15 @@ window.EFFORT = {
    "tris": 7297692,
    "chars": 2853122,
    "what": "The freeze report names the things a slow frame drew for the first time and how long each took, and frames over 80 ms are reported (150 before), so the freeze as the game starts can be found from the owner's own play"
+  },
+  {
+   "v": 471,
+   "asked": "2026-11-22T19:55:00-06:00",
+   "live": "2026-11-22T20:41:07-06:00",
+   "dh": 4,
+   "tris": 7382797,
+   "chars": 2858741,
+   "what": "Map editor: a picked building gets a thin outline of its real walls and roof instead of the tall orange block, and Floors shows a Building Forge building one floor at a time (roof and floors above cut away)"
   }
  ]
 };

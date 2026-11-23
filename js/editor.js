@@ -52,8 +52,8 @@ function editorOpen(){if(edOn||bench.on)return;edOn=true;mapAssets=assets;
   ed.yaw=Math.atan2(camera.position.x-fv.x,camera.position.z-fv.z);ed.dist=45;ed.pitch=0.95;
   ed.home={x:ed.x,z:ed.z,yaw:ed.yaw,dist:ed.dist,pitch:ed.pitch};ed.drawer=!edNarrow();ed.pane=ED_GROUPS[ed.group].pane?ed.group:'';
   edTool(ed.tool);edCard(null);edSelSet([]);edMapsDraw();edUndoBtns();toast(say('edOpen'),'',2600)}
-function editorClose(){if(!edOn)return;ed.tlock=null;$('#edHistList').hidden=true;$('#edAll').hidden=true;edStrokeEnd();edScatterEnd();edRoadFinish();edOn=false;if(typeof pvDraw==='function')pvDraw();document.body.classList.remove('editing');$('#editor').hidden=true;
-  edBrushRing.visible=edSelRings.visible=edSelShade[0].visible=edSelShade[1].visible=edSoftRing.visible=edHRing.visible=edHKnob.visible=edMeasDots.visible=edMeasLine.visible=false;ed.sel=[];ed.box=null;ed.lp=null;$('#edBox').hidden=true;ed.road=null;ed.rpt=-1;edRoadsDraw();clearKeys();firstCam=true;last=performance.now();
+function editorClose(){if(!edOn)return;if(ed.cut)edCutSet(null);ed.tlock=null;$('#edHistList').hidden=true;$('#edAll').hidden=true;edStrokeEnd();edScatterEnd();edRoadFinish();edOn=false;if(typeof pvDraw==='function')pvDraw();document.body.classList.remove('editing');$('#editor').hidden=true;
+  edBrushRing.visible=edSelRings.visible=edSelEdges.visible=edSelShade[0].visible=edSelShade[1].visible=edSoftRing.visible=edHRing.visible=edHKnob.visible=edMeasDots.visible=edMeasLine.visible=false;ed.sel=[];ed.box=null;ed.lp=null;$('#edBox').hidden=true;ed.road=null;ed.rpt=-1;edRoadsDraw();clearKeys();firstCam=true;last=performance.now();
   if(assets.some(a=>a.hd)){for(const a of assets)delete a.hd;assetsBuild();shpTreesRefresh();edHiddenSync()}
   if(ed.changed){edSave();syncSoon(1);mapReset();mapDirty=true;ed.changed=false}}
 $('#edDone').onclick=editorClose;
@@ -452,8 +452,26 @@ const edSelShade=[new THREE.BoxGeometry(1,1,1),new THREE.CylinderGeometry(1,1,1,
   const m=new THREE.InstancedMesh(g,new THREE.MeshBasicMaterial({color:0xf07a22,transparent:true,opacity:0.3,depthTest:false,depthWrite:false,fog:false,toneMapped:false}),1200);
   m.renderOrder=19;m.frustumCulled=false;m.visible=false;m.count=0;scene.add(m);return m});
 const edShadeH={pine:9,leafy:7,rock:1.1},edShadeO=new THREE.Object3D(),edShadeB=new THREE.Box3();
-function edShadeSel(){const n=[0,0],o=edShadeO;
+// a picked building gets an outline of its real box instead (a Forge building's own walls and roof, cut down to the floor
+// shown with Floors), so the shade doesn't stand as a tall orange block over the town
+const edSelEdges=(function(){const g=new THREE.BufferGeometry();g.setAttribute('position',new THREE.BufferAttribute(new Float32Array(200*24*3),3));g.setDrawRange(0,0);
+  const l=new THREE.LineSegments(g,new THREE.LineBasicMaterial({color:0xf07a22,depthTest:false,transparent:true,opacity:0.85,fog:false,toneMapped:false}));l.renderOrder=20;l.frustumCulled=false;l.visible=false;scene.add(l);return l})();
+const edBoxV=[...Array(8)].map(()=>new THREE.Vector3()),edBoxM=new THREE.Matrix4(),edBoxQ=new THREE.Quaternion(),edBoxP=new THREE.Vector3(),edBoxS=new THREE.Vector3(1,1,1);
+// the 12 edges of box b (local) under matrix M into the line set's array from vertex n; gives the new n
+function edBoxEdges(P,n,M,b){if(n+24>P.length/3)return n;
+  edBoxV.forEach((v,i)=>v.set(i&1?b.max.x:b.min.x,i&2?b.max.y:b.min.y,i&4?b.max.z:b.min.z).applyMatrix4(M));
+  for(const [i,j] of [[0,1],[2,3],[4,5],[6,7],[0,2],[1,3],[4,6],[5,7],[0,4],[1,5],[2,6],[3,7]])for(const v of [edBoxV[i],edBoxV[j]]){P[n*3]=v.x;P[n*3+1]=v.y;P[n*3+2]=v.z;n++}
+  return n}
+// a Forge building's box in its own space: its shell, insides and furniture (kept on the kind)
+function edBfBox(B){const K=B.K;if(!K.bb){K.bb=new THREE.Box3();for(const x of [...K.stat,...K.furn]){if(!x.geo.boundingBox)x.geo.computeBoundingBox();K.bb.union(x.geo.boundingBox)}}return K.bb}
+function edShadeSel(){const n=[0,0],o=edShadeO,EP=edSelEdges.geometry.attributes.position;let ne=0;
   for(const s of ed.sel){if(s.a&&s.a.hd)continue;let k=0;
+    const F0=s.a&&!PROPS[s.a.t]&&edFx(s.a);
+    if(F0&&!F0.tree){const B=F0.bf&&F0.bf.b;
+      if(B&&B.g.visible){B.g.updateMatrixWorld();const b=edShadeB.copy(edBfBox(B));if(ed.cut&&ed.cut.B===B)b.max.y=Math.min(b.max.y,ed.cut.y-B.g.position.y);ne=edBoxEdges(EP.array,ne,B.g.matrixWorld,b)}
+      else{const D=fxDims(F0);edBoxP.set(s.a.x,hAt(s.a.x,s.a.z)-0.1,s.a.z);edBoxQ.setFromAxisAngle(bf.ay,s.a.yaw||0);edBoxM.compose(edBoxP,edBoxQ,edBoxS);
+        edShadeB.min.set(-D.w/2-0.1,0,-D.d/2-0.1);edShadeB.max.set(D.w/2+0.1,D.h+0.1,D.d/2+0.1);ne=edBoxEdges(EP.array,ne,edBoxM,edShadeB)}
+      continue}
     if(s.m){const g=s.m.m();if(!g.visible)continue;edShadeB.setFromObject(g);if(edShadeB.isEmpty())continue;
       o.position.set((edShadeB.min.x+edShadeB.max.x)/2,edShadeB.min.y,(edShadeB.min.z+edShadeB.max.z)/2);o.rotation.set(0,0,0);o.scale.set(edShadeB.max.x-edShadeB.min.x+0.2,edShadeB.max.y-edShadeB.min.y+0.2,edShadeB.max.z-edShadeB.min.z+0.2)}
     else{const a=s.a,P=PROPS[a.t],y=hAt(a.x,a.z);o.position.set(a.x,y-0.1,a.z);o.rotation.set(0,a.yaw||0,0);
@@ -461,7 +479,35 @@ function edShadeSel(){const n=[0,0],o=edShadeO;
       if(P)o.scale.set(P.w*a.s+0.2,(P.cat===1?4.5:1.6)*a.s,P.d*a.s+0.2);else if(D)o.scale.set(D.w+0.2,D.h+0.2,D.d+0.2);
       else{k=1;const r=(a.t==='rock'?0.9:1.4)*a.s;o.scale.set(r,(edShadeH[a.t]||3)*a.s,r)}}
     if(n[k]>=1200)continue;o.updateMatrix();edSelShade[k].setMatrixAt(n[k]++,o.matrix)}
-  edSelShade.forEach((m,i)=>{m.count=n[i];m.instanceMatrix.needsUpdate=true;m.visible=n[i]>0})}
+  edSelShade.forEach((m,i)=>{m.count=n[i];m.instanceMatrix.needsUpdate=true;m.visible=n[i]>0});
+  EP.needsUpdate=true;edSelEdges.geometry.setDrawRange(0,ne);edSelEdges.visible=ne>0;edCutPlace()}
+// ---------- Floors: a picked Forge building seen one floor at a time ----------
+// everything of that building above the chosen floor (its walls cut about 8 ft up, the floors and roof over it) is
+// clipped away by a box over the building alone (clip planes on its own materials, all of them needed to clip a point,
+// so other buildings sharing a material are untouched). Only while the map editor is open; never saved.
+const edCutPl=[...Array(5)].map(()=>new THREE.Plane()),edCutAx=new THREE.Vector3(),edCutAz=new THREE.Vector3(),edCutO=new THREE.Vector3();
+function edCutMats(B){const ms=new Set(),add=o=>{if(o.isMesh)for(const m of [].concat(o.material))if(m)ms.add(m)};B.g.traverse(add);
+  const I=bf.inst[B.L.id];if(I)for(const m of I.ms)add(m);return ms}
+// the floors of the building as Daylight names them: [name, cut height], each cut about 8 ft over its floor (the top
+// one too, which takes the roof off; a roof deck shows with All)
+function edCutFloors(L){const it=bf.lib&&bf.lib[L.id],lv=it&&it.levels;if(!lv||!lv.length||!L.b)return null;const y0=L.b.g.position.y;
+  return lv.map((l,i)=>[l.name||(i===0?'Ground':`Floor ${i+1}`),y0+l.floorY+Math.min(2.4,Math.max(1.2,(l.height||3)-0.2))])}
+function edCutSet(L,lv){const old=ed.cut;
+  if(old){for(const m of old.ms){m.clippingPlanes=null;m.clipIntersection=false;m.clipShadows=false;m.needsUpdate=true}old.B.cut=false;ed.cut=null}
+  const fl=L&&edCutFloors(L),y=fl&&fl[lv]&&fl[lv][1];
+  if(y!=null){const B=L.b;B.L=L;renderer.localClippingEnabled=true;const ms=edCutMats(B);
+    for(const m of ms){m.clippingPlanes=edCutPl;m.clipIntersection=true;m.clipShadows=true;m.needsUpdate=true}
+    B.cut=true;ed.cut={L,B,lv,y,ms}}
+  edCutPlace();edShadeSel()}
+// the clip box follows the building (moved, turned) and its floor's height
+function edCutPlace(){const c=ed.cut;if(!c)return;const B=c.B,it=bf.lib[c.L.id],b=edBfBox(B);B.g.updateMatrixWorld();
+  c.y=(edCutFloors(c.L)[c.lv]||[])[1]??c.y;const M=B.g.matrixWorld;edCutO.setFromMatrixPosition(M);
+  edCutAx.setFromMatrixColumn(M,0).normalize();edCutAz.setFromMatrixColumn(M,2).normalize();const ox=edCutAx.dot(edCutO),oz=edCutAz.dot(edCutO),m=0.5;
+  edCutPl[0].set(new THREE.Vector3(0,-1,0),c.y);                                // above the cut
+  edCutPl[1].normal.copy(edCutAx);edCutPl[1].constant=-ox-(b.max.x+m);           // and within its box, each side
+  edCutPl[2].normal.copy(edCutAx).negate();edCutPl[2].constant=ox+(b.min.x-m);
+  edCutPl[3].normal.copy(edCutAz);edCutPl[3].constant=-oz-(b.max.z+m);
+  edCutPl[4].normal.copy(edCutAz).negate();edCutPl[4].constant=oz+(b.min.z-m)}
 function edRingSel(){const at=edSelRings.geometry.attributes.position,P=at.array,k=ed.sel.length>60?12:24;let n=0;
   for(const s of ed.sel){if(n+2*k>at.count)break;const o=s.a||s.m.o(),r=s.a?edRad(s.a):s.m.r;
     for(let i=0;i<k;i++)for(const e of [i,i+1]){const t=e/k*Math.PI*2,x=o.x+Math.cos(t)*r,z=o.z+Math.sin(t)*r;P[n*3]=x;P[n*3+1]=hAt(x,z)+0.15;P[n*3+2]=z;n++}}
@@ -526,7 +572,12 @@ function edInspector(){const S=ed.sel,el=$('#edInfo');edBottomSync();if(!S.lengt
   // a building from Building Forge (forgetown.js): open its design in Daylight House Studio, at this copy in the town
   const bfL=one&&one.a&&edFx(one.a)&&edFx(one.a).bf;
   if(bfL)h+=`<span class="row"><button id="edSelDhs" class="sm" title="Open this building's design in Daylight House Studio, with what stands round it here">Edit in Daylight</button></span>`;
+  // Floors: see the building one floor at a time (ed.cut); picking anything else shows it whole again
+  if(ed.cut&&ed.cut.L!==bfL)edCutSet(null);
+  const fls=bfL&&edCutFloors(bfL);
+  if(fls)h+=`<span class="edopt"><label>Floors</label><span class="row" id="edFloors" role="group" aria-label="Floors"><button class="sm" data-fl="-1" aria-pressed="${!ed.cut}">All</button>${fls.map((f,i)=>`<button class="sm" data-fl="${i}" aria-pressed="${!!ed.cut&&ed.cut.lv===i}">${f[0]}</button>`).join('')}</span></span>`;
   el.innerHTML=h;edIcons(el);
+  for(const b of el.querySelectorAll('#edFloors [data-fl]'))b.onclick=()=>{const i=+b.dataset.fl;edCutSet(i<0||fls[i][1]==null?null:bfL,i);edInspector()};
   const dh=$('#edSelDhs');if(dh)dh.onclick=()=>{const G=bfL.b&&bfL.b.g,x=G?G.position.x:bfL.x,z=G?G.position.z:bfL.z;
     window.open(`${DHS_URL}#forge=${bfL.id}&at=${x.toFixed(2)},${z.toFixed(2)}`,'daylight')};
   // turning and sizing start from where each one was when the slider was taken hold of (edXf); several turn and size each

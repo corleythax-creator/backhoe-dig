@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Sunday, November 22, 2026
 
+- **v471** (8:41 PM) Map editor: a picked building gets a thin outline of its real walls and roof instead of the tall orange block, and Floors shows a Building Forge building one floor at a time (roof and floors above cut away)
 - **v470** (8:11 PM) The freeze report names the things a slow frame drew for the first time and how long each took, and frames over 80 ms are reported (150 before), so the freeze as the game starts can be found from the owner's own play
 - **v469** (7:45 PM) Map editor → Roads has two new tools. Lots & slabs: pick any parking lot or concrete pad (the General Store's lot and the garden centre pad, the Overlook's lot, the marina car park) to move it, size it, turn it, change its surface or delete it, or lay new ones. Parking stripes: drag along the paving to stripe a row of stalls, straight in or angled, on one or both sides.
 - **v468** (7:00 PM) From the owner's v465 freeze report (four freezes of 4 to 6 s in the first two minutes): the shader check now holds back a thing whose shader is still being built instead of drawing it and waiting, the marina boats beside the start load behind the loading cover, and the ground-bounce probe's own ground and water shaders are built in the background when the lamps change
