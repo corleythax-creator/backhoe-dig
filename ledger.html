@@ -1,0 +1,522 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="The Low Tide Ledger, a Corley's Island mystery: the book, the case file and a map of the town.">
+<style>*,*::before,*::after{box-sizing:border-box}html{-webkit-text-size-adjust:100%}body{margin:0}img{max-width:100%}[hidden]{display:none!important}</style>
+<title>The Low Tide Ledger · Corley's Island</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Source+Serif+4:ital,opsz,wght@0,8..60,400;0,8..60,600;1,8..60,400&family=Public+Sans:wght@400;600&display=swap">
+<style>
+/* Layout: a neighbourhood map on top, then one block per street with its houses as rows */
+:root{
+  --bg:#eef2f0; --panel:#ffffff; --fg:#17231f; --muted:#5b6b66; --line:#d3ddd9;
+  --accent:#1d6b5c; --water:#d6e6ea; --chip:#e2ece8;
+  --ink:#14201d; --paper:#f1ede4; --clue:#a3402b; --clue2:#e0a458;
+  --land:#cfdcc0; --road:#7d8580; --bldg:#b7aa98; --sand:#e6d9b4; --sea:#9fc3cf;
+  --amber:#b9772a; --serif:"Source Serif 4",Georgia,"Times New Roman",serif;
+  --display:"Public Sans",ui-sans-serif,system-ui,sans-serif;
+  --body:"Public Sans",ui-sans-serif,system-ui,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#101816; --panel:#17221f; --fg:#e4ece9; --muted:#97a8a2; --line:#2a3a35;
+  --accent:#5fc3ab; --water:#15262b; --chip:#22322e; --ink:#0a1210; --clue:#e07a5f; --amber:#e0a458; --land:#24352b; --road:#4d5753; --bldg:#4a4339; --sand:#4a4433; --sea:#1b3540; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#101816; --panel:#17221f; --fg:#e4ece9; --muted:#97a8a2; --line:#2a3a35;
+  --accent:#5fc3ab; --water:#15262b; --chip:#22322e; --ink:#0a1210; --clue:#e07a5f; --amber:#e0a458; --land:#24352b; --road:#4d5753; --bldg:#4a4339; --sand:#4a4433; --sea:#1b3540; color-scheme:dark}
+body{background:var(--bg);color:var(--fg);font:16px/1.5 var(--body)}
+.wrap{max-width:1040px;margin:0 auto;padding-block:32px 56px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:28px}
+h1{font:600 clamp(24px,3.4vw,30px)/1.2 var(--display);margin:0;text-wrap:balance}
+h2{font:600 19px/1.3 var(--display);margin:0}
+.lede{color:var(--muted);max-width:65ch;margin:8px 0 0}
+.stats{display:flex;flex-wrap:wrap;gap:8px 20px;margin-top:14px;font-size:15px}
+.stats b{font:600 16px var(--body);color:var(--fg);margin-right:4px;font-variant-numeric:tabular-nums}
+.map{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;overflow-x:auto}
+.map svg{display:block;width:100%;min-width:560px;height:auto}
+.map text{font-family:var(--body);fill:var(--fg)}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:14px;color:var(--muted);margin-top:10px}
+.legend span{display:inline-flex;align-items:center;gap:6px}
+.legend i{width:11px;height:11px;border-radius:50%;display:inline-block}
+.controls{display:flex;flex-wrap:wrap;gap:10px;align-items:center}
+.controls input{font:inherit;padding:9px 12px;border:1px solid var(--line);border-radius:8px;background:var(--panel);color:var(--fg);min-width:0;flex:1 1 220px}
+.controls input:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.streets{display:grid;gap:22px}
+.street{display:grid;gap:10px}
+.street h2{display:flex;align-items:center;gap:10px}
+.street h2 i{width:14px;height:14px;border-radius:50%}
+.street h2 small{font:400 14px var(--body);color:var(--muted)}
+.house{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px 16px;display:grid;grid-template-columns:72px 1fr;gap:14px}
+.house .no{font:600 14px var(--body);color:var(--muted)}
+.house .no span{display:block;font:400 13px var(--body)}
+.people{display:grid;gap:10px;min-width:0}
+.p{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 12px;align-items:baseline}
+.p .n{font-weight:600;font-size:17px}
+.p .role{color:var(--muted);font-size:14px;grid-column:1/-1}
+.p .hrs{font-size:13px;font-variant-numeric:tabular-nums;color:var(--muted);text-align:right}
+.tag{font-size:12px;background:var(--chip);color:var(--accent);padding:2px 7px;border-radius:99px;margin-left:6px;vertical-align:2px;font-weight:600}
+.house.hl{outline:2px solid var(--accent)}
+.note{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px;display:grid;gap:8px;font-size:15px}
+.note h2{font-size:18px}
+.note p{margin:0;color:var(--muted);max-width:75ch}
+.empty{color:var(--muted)}
+@media (max-width:520px){.house{grid-template-columns:1fr;gap:8px}.p{grid-template-columns:1fr}.p .hrs{text-align:left}}
+@media (prefers-reduced-motion:no-preference){.house{transition:outline-color .2s}}
+
+.tabs{display:flex;gap:4px;border-bottom:1px solid var(--line)}
+.tabs a{font:500 15px var(--body);color:var(--muted);text-decoration:none;padding:10px 16px;border-bottom:3px solid transparent;margin-bottom:-1px}
+.tabs a[aria-selected="true"]{color:var(--fg);font-weight:600;border-bottom-color:var(--accent)}
+.tabs a:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.view{display:grid;gap:28px}
+.ledger .cover{background:var(--ink);color:var(--paper);border-radius:12px;padding-block:28px 26px}
+.ledger .in{padding-left:max(18px,4vw);padding-right:max(18px,4vw)}
+.ledger .eyebrow{font:400 14px var(--body);color:#c9c1b2}
+.ledger .h1{font:600 clamp(26px,4vw,34px)/1.15 var(--serif);margin:6px 0 12px;text-wrap:balance}
+.ledger .hook{font:400 17px/1.6 var(--serif);max-width:58ch;margin:0;color:#e4ddcf}
+.ledger .meta{display:flex;flex-wrap:wrap;gap:6px 22px;margin-top:22px;font-size:14px;color:#b8b0a1}
+.ledger .meta a{color:#e0a458}
+.ledger main{padding-left:0!important;padding-right:0!important;display:grid;gap:48px;padding-block:36px 8px}
+.ledger h2{font:600 20px/1.3 var(--display);margin:0 0 6px}
+.ledger .sub{color:var(--muted);margin:0 0 18px}
+.ledger .chapter{max-width:66ch;display:grid;gap:16px;font:400 17.5px/1.7 var(--serif)}
+.ledger .chapter p{margin:0}
+.ledger .stamp{font:500 14px ui-monospace,Menlo,monospace;letter-spacing:.04em;border:1px solid var(--line);color:var(--muted);padding:4px 10px;justify-self:start}
+.ledger .note-card{font:italic 17.5px var(--serif);border-left:2px solid var(--line);padding:2px 0 2px 16px;justify-self:start}
+.ledger .break{text-align:center;color:var(--muted);letter-spacing:.6em}
+.ledger .clues{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px}
+.ledger .clue{background:var(--panel);border:1px solid var(--line);padding:16px;display:grid;gap:6px;align-content:start;min-width:0}
+.ledger .clue b{font:600 16px var(--body);color:var(--fg)}
+.ledger .clue .no{font:600 12px var(--body);color:var(--muted)}
+.ledger .clue p{margin:0}
+.ledger .board{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.ledger .card{background:var(--panel);border:1px solid var(--line);padding:16px;display:grid;gap:8px;align-content:start;min-width:0}
+.ledger .card h3{font:600 17px var(--body);margin:0}
+.ledger .card .where{font-size:13px;color:var(--muted)}
+.ledger .card .sec{font:400 16px/1.5 var(--serif);border-left:3px solid var(--amber);padding-left:10px}
+
+.ledger .card .role{font:400 13px var(--body);color:var(--muted)}
+.ledger .toggle{display:inline-flex;gap:8px;align-items:center;font-size:15px;cursor:pointer;margin-bottom:14px}
+.ledger .toggle input{width:18px;height:18px;accent-color:var(--clue)}
+.ledger .hide .sec{filter:blur(6px);user-select:none}
+.ledger .foot{color:var(--muted);font-size:14px}
+.ledger .foot a{color:var(--clue)}
+@media (prefers-reduced-motion:reduce){.ledger .stamp,.ledger .note-card{transform:none}}
+.ledger .book{display:grid;justify-items:center;gap:0}
+.ledger .book .chapter{justify-self:center;margin-top:22px}
+.ledger .chno{font:400 14px var(--body);color:var(--muted);margin:0}
+.ledger .chtitle{font:500 24px/1.25 var(--serif);margin:6px 0 0;text-align:center}
+.ledger .end{font:italic 400 16px var(--serif);color:var(--muted);margin:40px 0 0}
+.ledger .next{color:var(--muted);text-align:center;max-width:52ch;margin:10px 0 0}
+.ledger .next a,.ledger .hook a{font-weight:500}
+.ledger .next a{color:var(--clue)}
+.ledger .hook a{text-decoration:underline}
+.ledger .toc{justify-self:center;width:min(100%,66ch);border-block:1px solid var(--line);padding-block:14px}
+.ledger .toc li.pro{list-style:none;margin-left:-1.6em}
+.ledger .toc ol{margin:8px 0 0;padding-left:1.6em;columns:2 220px;column-gap:24px;font:400 16px/1.8 var(--serif)}
+.ledger .toc a{color:var(--fg);text-decoration:none;border-bottom:1px solid var(--line)}
+.ledger .toc a:hover,.ledger .toc a:focus-visible{border-bottom-color:var(--clue)}
+.ledger .book+.book{margin-top:28px}
+.ledger .book .chapter{scroll-margin-top:24px}
+.ledger section.book{scroll-margin-top:16px}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <h1>Corley's Island Townsfolk</h1>
+    <p class="lede">The people of the town across the water from the island, where they live, and the mystery they’re caught up in.</p>
+  </header>
+  <nav class="tabs" role="tablist" aria-label="Sections">
+    <a href="#book" id="t-book" role="tab" aria-controls="book">Book</a>
+    <a href="#case" id="t-case" role="tab" aria-controls="case">Case File</a>
+    <a href="#map" id="t-map" role="tab" aria-controls="map">Map &amp; Townsfolk</a>
+  </nav>
+  <section class="view ledger" id="book" role="tabpanel" aria-labelledby="t-book">
+<header class="cover"><div class="in">
+  <span class="eyebrow">A Corley's Island mystery</span>
+  <h2 class="h1">The Low Tide Ledger</h2>
+  <p class="hook">The morning after your backhoe hits a rusted strongbox on Corley's Island, Gus Lindqvist doesn't open First Lake Bank. Gus has opened that bank at nine sharp every weekday for twenty-two years.</p>
+  <div class="meta"><span>Part One: a prologue and five chapters</span><span>About 30 minutes to read</span></div>
+</div></header>
+
+<main class="in">
+  <nav class="toc" aria-label="Chapters">
+    <p class="chno">Contents</p>
+    <ol>
+      <li class="pro"><a href="#book" data-ch="ch0">Prologue: Low Water</a></li>
+      <li value="1"><a href="#book" data-ch="ch1">Boat Seven</a></li>
+      <li><a href="#book" data-ch="ch2">The Coil</a></li>
+      <li><a href="#book" data-ch="ch3">The Missing Page</a></li>
+      <li><a href="#book" data-ch="ch4">Exact Change</a></li>
+      <li><a href="#book" data-ch="ch5">Lesson Plans</a></li>
+    </ol>
+  </nav>
+  <section class="book" id="ch0">
+    <p class="chno">Prologue</p>
+    <h2 class="chtitle">Low Water</h2>
+    <div class="chapter">
+      <p>The town sits on the mainland side of the channel, facing Corley's Island across a half mile of brown water that turns silver for about ten minutes every evening and then goes dark. It has one main street, a bank, a bakery, a diner, a hardware store, a church with a bell that is always two minutes slow, and about the same number of people it had in 1987. Most of them are the same people. That is the first thing to understand about it.</p>
+      <p>You came in October with a backhoe on a trailer and a contract to cut a building pad on the island's mesa. Nobody asked who had hired you. In a town this size, people already know, or they know who to ask, and either way they would rather find out quietly.</p>
+      <p class="break">* * *</p>
+      <p><strong>Ruth Halvorsen</strong> taught third grade at the school on Pine Court for forty-one years. She taught half the town to read, including several people who are now grandparents and still call her Miss Halvorsen. When she retired she bought the bakery on Main Street because, she said, she had spent her whole life getting up at five anyway. She lives alone on Magnolia Lane, four doors down from Gus Lindqvist, and she has never once been seen to look at his house.</p>
+      <p><strong>Gus Lindqvist</strong> came to First Lake Bank in the summer of 1987 as a twenty-five-year-old teller trainee from Hattiesburg. He was made manager in 2004 and has opened the front door at nine o'clock sharp every weekday since. He never married. He eats lunch at the Main St. Diner at a quarter past twelve, always the counter seat nearest the register, always the special, always a dollar tip, and he carries a carpenter's pencil in his shirt pocket because, he says, a man who works with numbers ought to be able to erase them.</p>
+      <p><strong>Earl Pruitt</strong> captained the island ferry for twenty-one years and never missed a crossing. The ferry company gave him a gold watch for twenty of those years at a supper in the church hall in 1986. The next fall he stopped driving the boat, said his knees were gone, and opened the gun shop. People who were around then will tell you his knees were fine. They will also tell you it was none of their business.</p>
+      <p><strong>Hank and Pearl Dubois</strong> have been married fifty-six years and have lived in the same house on Live Oak Drive for fifty of them. Hank shrimped out of this harbor until the boats got too expensive and the shrimp got too few, then bought the hardware store from his uncle. He learned his knots from Earl Pruitt and taught them to Cal Mercer. Pearl taught Sunday school, won the county fair for pear preserves eleven years running, and keeps a scrapbook of everything that has happened in town since 1966. She is the only person in town who will tell you exactly what she thinks, and she usually does it while handing you something to eat.</p>
+      <p><strong>Cal Mercer</strong> rents boats and sells bait behind Tackle &amp; Trail and has done it for thirty years, ever since he came home from the Navy and found he couldn't sleep more than a mile from salt water. His wife Callie runs the Toy Chest across the street. They have one boy, Cody, who is nine and already ties a better bowline than most of Cal's customers.</p>
+      <p><strong>Dot Kowalski</strong> has run the Main St. Diner for twenty-six years. Before that she painted: landscapes of the marsh, mostly, some of which still hang on the diner walls with prices on them that nobody has paid. She knows what everyone in town orders and roughly what they can afford to tip, and she can tell you which of those two things has changed lately.</p>
+      <p><strong>Walt Ames</strong> is the deacon at the church, which means he visits the sick, drives the old ones to their appointments, unlocks the hall for suppers and hears more than anyone in town except Dot. He said the blessing at Earl's watch supper in 1986. He said the blessing at Lucia Vega's memorial service in 1988, which only nine people attended.</p>
+      <p><strong>Owen Brandt</strong> spent fifteen years as a state game warden working the north marsh, where his father had fished a flat-bottomed skiff before him. He knows every channel out there by the sound the hull makes. Three years ago he hung up the badge and opened Harbor Light Brewing in the old ice house. He says he got tired of writing tickets to men he went to school with.</p>
+      <p><strong>Nathan</strong> is the loan officer at First Lake Bank and the only other person who works there full time. He grew up in Pascagoula, came over for the job six years ago, and still hasn't been invited to a single house for supper. He is very good with numbers and has never been told the vault combination.</p>
+      <p><strong>Denise</strong> works nights as a nurse at the hospital in Pascagoula, seven to seven, and sleeps when her daughter <strong>Brianna</strong> is at school. Brianna is sixteen and notices everything that happens on Bayou Lane between midnight and dawn, because that is when she is home alone and not sleeping either.</p>
+      <p><strong>Jayden</strong> works the ferry ramp from six in the morning. He is twenty-four, saving for a boat of his own, and has lately been saving faster than a dock hand's wages should allow. <strong>Travis</strong> crews on the charter boats out of the marina and is on the water before anyone else in town is awake. Between the two of them they see every boat that comes and goes.</p>
+      <p>And then there is <strong>Marisol Vega</strong>, who came six months ago from Mobile, leased the empty storefront on Main Street and opened Mountain Coffee. She is friendly, quick and good at her job, and the town has decided it likes her. She has asked three different people, at three different times, what this town was like in 1987. Each of them has changed the subject, and each of them went home that night and thought about the name Vega.</p>
+      <p class="break">* * *</p>
+      <p>That was the town on the evening your backhoe hit the box. Everyone in it was where they always were. The bell was two minutes slow. The water went silver for ten minutes and then went dark.</p>
+      <p>Nobody in town had said the name Lucia Vega aloud in thirty-nine years. By the end of the week, everyone would be saying it.</p>
+    </div>
+  </section>
+
+  <section class="book" id="ch1">
+    <p class="chno">Chapter One</p>
+    <h2 class="chtitle">Boat Seven</h2>
+    <div class="chapter dropcap">
+<p>The bucket teeth hit metal at a quarter to six, just as the last light went off the water.</p>
+      <p>You felt it through the seat before you heard it, a dull clank that wasn't rock. You set the bucket down, climbed out and knelt in the cut. Four feet down in the grey clay was a steel box about the size of a bread loaf. Its handle had rusted to lace. Through the scale on the lid you could just read the stamp:</p>
+    
+    <span class="stamp">FIRST LAKE BANK &middot; 1987</span>
+<p>It was too heavy for what it was. When you shook it, something inside slid and settled like a deck of cards.</p>
+      <p>You took it across on the last ferry. Jayden was working the ramp, hood up against the wind. He looked at the box under your arm a beat too long and said nothing, which wasn't like Jayden.</p>
+      <p class="break">* * *</p>
+<p>At 5:10 the next morning, Cal Mercer walked down to the rental slips behind Tackle &amp; Trail with his coffee and counted his boats the way he'd done every morning for thirty years. He got to six and stopped.</p>
+      <p>Boat Seven was gone. The line hadn't been cut. Someone had untied it neatly and coiled it on the dock the way Cal himself would.</p>
+      <p>Travis spotted it half an hour later from the charter boat, drifting off the north marsh with the engine tilted up. It was empty except for a man's wristwatch on the bench seat, still ticking, and a First Lake Bank deposit slip folded into a square. Someone had written one line on the back in pencil:</p>
+    
+    <span class="note-card">She knows about the box.</span>
+<p class="break">* * *</p>
+<p>By 9:20 there was a small crowd outside the bank. Nathan, the loan officer, stood on the steps with his keys out and his face pale. He didn't have the vault code. Only Gus did.</p>
+      <p>&ldquo;He's never late,&rdquo; Nathan said, to nobody. &ldquo;He's never <em>anything</em>.&rdquo;</p>
+      <p>Across the street, Marisol Vega had stopped wiping the window of Mountain Coffee. Dot Kowalski came out of the Main St. Diner in her apron and stood with her arms folded. Up the block, Earl Pruitt unlocked Lakeside Guns as if it were any other morning. He didn't look over once.</p>
+      <p>Ruth Halvorsen brought a tray of day-old rolls from the bakery for the people waiting, because that's what Ruth did. When she reached you, she glanced at the bulge in your jacket where the strongbox sat wrapped in a shop rag.</p>
+      <p>&ldquo;You found something on the island,&rdquo; she said quietly. It wasn't a question. &ldquo;Don't open it in town, dear. Not here.&rdquo;</p>
+      <p>Then she moved on down the line, smiling and handing out rolls.</p>
+      <p class="break">* * *</p>
+<p>Denise came home from the night shift in Pascagoula at 7:40, still in her scrubs, and heard the news from Brianna at the kitchen table. She sat down without taking her shoes off.</p>
+      <p>&ldquo;I passed his car,&rdquo; she said. &ldquo;Gus's. At the ferry lot, about three this morning. The dome light was on.&rdquo; She rubbed her eyes. &ldquo;There was somebody sitting in it. I figured it was him.&rdquo;</p>
+      <p>&ldquo;Was it?&rdquo;</p>
+      <p>Denise was quiet for a long moment.</p>
+      <p>&ldquo;It was a woman,&rdquo; she said.</p>
+    </div>
+  </section>
+
+  <section class="book" id="ch2">
+    <p class="chno">Chapter Two</p>
+    <h2 class="chtitle">The Coil</h2>
+    <div class="chapter dropcap">
+      <p>Cal Mercer had the rope laid out on the tailgate of his truck when you found him, the way a doctor lays out an X-ray.</p>
+      <p>&ldquo;Look at that,&rdquo; he said. &ldquo;Go on. Look at it.&rdquo;</p>
+      <p>It was Boat Seven's bow line, twenty feet of three-strand nylon, gone green at the eye. Whoever untied it had coiled it clockwise into a flat spiral, each turn tight against the last, the tail tucked under so the whole thing lay flat on the planks like a dinner plate.</p>
+      <p>&ldquo;Flemish coil,&rdquo; Cal said. &ldquo;Nobody does that anymore. Takes a minute and a half and it don't do a thing but look nice. Weekend people throw a line in a heap. Kids throw it in the water.&rdquo; He touched the tucked tail with one finger. &ldquo;And there's only three men I ever saw tuck the end like that.&rdquo;</p>
+      <p>&ldquo;Who?&rdquo;</p>
+      <p>&ldquo;Me.&rdquo; He held up one finger. &ldquo;Hank Dubois, who taught me when I was eleven years old and dumber than that piling.&rdquo; Second finger. He looked out at the water a long time before the third came up. &ldquo;And Earl Pruitt. Who taught Hank.&rdquo;</p>
+      <p>A pelican dropped into the channel behind him and came up with nothing.</p>
+      <p>&ldquo;I was home asleep,&rdquo; Cal said, before you could ask. &ldquo;Callie'll tell you. She'll tell you I snore, too.&rdquo;</p>
+      <p class="break">* * *</p>
+      <p>Lakeside Guns smelled of gun oil and burnt coffee. Earl Pruitt was behind the counter with a lever-action broken down on a towel in front of him, working a brass rod through the barrel with slow, even strokes. He didn't look up when the bell over the door rang.</p>
+      <p>You set the watch on the glass.</p>
+      <p>The rod stopped. Just for a second, the length of one breath, and then it went on again, in and out.</p>
+      <p>&ldquo;Where'd you get that.&rdquo;</p>
+      <p>&ldquo;Boat Seven. This morning. Travis found it on the seat.&rdquo;</p>
+      <p>Earl set the rod down. He picked the watch up by its band, as if it were hot, and turned it over to the engraving. <em>E.P. 1986.</em> His thumb moved across the letters once.</p>
+      <p>&ldquo;The ferry company gave me this,&rdquo; he said. &ldquo;Twenty years without a missed crossing. They had a supper for it at the church hall. Walt said the blessing.&rdquo; He put it back on the glass, face down. &ldquo;I lost it in the water off the north marsh in the fall of '87. Went over the rail reaching for a line. Never saw it again.&rdquo;</p>
+      <p>&ldquo;It's still running.&rdquo;</p>
+      <p>&ldquo;Then somebody wound it.&rdquo; He picked the brass rod back up. &ldquo;Which means somebody's had it thirty-nine years and kept it wound. You go figure out who that is, and you come tell me, because I'd like to know too.&rdquo;</p>
+      <p>You were at the door when he spoke again, still not looking up.</p>
+      <p>&ldquo;That box you dug up. You still got it?&rdquo;</p>
+      <p>You didn't answer.</p>
+      <p>&ldquo;Good,&rdquo; Earl said. &ldquo;Keep not saying.&rdquo;</p>
+      <p class="break">* * *</p>
+      <p>The locksmith from the mainland couldn't come until Thursday. Nathan told you that on the bank steps at closing time, his tie loosened, his keys still in his hand as if he'd forgotten he was holding them.</p>
+      <p>&ldquo;The vault's on a time lock and a combination,&rdquo; he said. &ldquo;Gus changed the combination every quarter and he never wrote it down. Never. He used to say a number on paper is a number in somebody else's pocket.&rdquo; He laughed, a short, unhappy sound. &ldquo;Corporate wants a report. What am I supposed to tell them? Our manager went fishing in a rental boat at three in the morning and forgot to come back?&rdquo;</p>
+      <p>&ldquo;Did Gus fish?&rdquo;</p>
+      <p>Nathan thought about it.</p>
+      <p>&ldquo;No,&rdquo; he said slowly. &ldquo;No. He got seasick on the ferry.&rdquo;</p>
+    </div>
+  </section>
+
+  <section class="book" id="ch3">
+    <p class="chno">Chapter Three</p>
+    <h2 class="chtitle">The Missing Page</h2>
+    <div class="chapter dropcap">
+      <p>Hometown Hardware sold carpenter's pencils from a coffee can by the register, flat red ones with the store's name stamped on the side in gold that rubbed off after a week. Hank Dubois kept the can filled himself. He also kept a spiral notebook under the counter where he wrote down every sale over five dollars and most of the ones under, in a hand so square it looked printed.</p>
+      <p>&ldquo;Pencils,&rdquo; Hank said, running his thumb down the column. &ldquo;Wes bought two in September. The Park girl bought one for her clipboard. Bobby bought a box of twelve for the lawn crew. That's it since summer.&rdquo; He closed the notebook. &ldquo;And I keep one in my shirt pocket and so does every man who ever worked a boat out of this town, because a pen won't write wet.&rdquo;</p>
+      <p>His hand went to his shirt pocket as he said it. The pocket was empty.</p>
+      <p>He saw you notice. He didn't explain.</p>
+      <p class="break">* * *</p>
+      <p>Mrs. Pearl Dubois received you in the front room on Live Oak Drive with iced tea in glasses so thin you were afraid to set yours down. She was eighty and sat as straight as a girl at a piano lesson. The scrapbook was already on the coffee table between you, as if she'd been expecting someone to ask.</p>
+      <p>&ldquo;Hank says I shouldn't talk to you,&rdquo; she said. &ldquo;Hank has said that about one thing or another for fifty-six years, and I have mostly ignored him, and we have done just fine.&rdquo;</p>
+      <p>She opened the book to August 1987. Church suppers. A blue ribbon for pear preserves. A clipping about the new ferry ramp, with Earl Pruitt squinting at the camera in his captain's hat. And then a stub: a page cut out so close to the binding that only a quarter inch of paper was left, sliced clean with a razor.</p>
+      <p>&ldquo;I didn't do that,&rdquo; Pearl said. &ldquo;I want you to know that first. Somebody sat in this room, at this table, while I was in the kitchen making tea, and cut it out of my book. I didn't notice for a month.&rdquo;</p>
+      <p>&ldquo;When?&rdquo;</p>
+      <p>&ldquo;Last spring.&rdquo;</p>
+      <p>&ldquo;Who was here last spring?&rdquo;</p>
+      <p>She smiled at you as if you were a slow but promising student.</p>
+      <p>&ldquo;Everyone, dear. It was my eightieth birthday. Half the town came through that door.&rdquo; She turned the stub over with one fingernail. &ldquo;But I remember what was on the page. I've a good memory for the things I glue down. It was the <em>Mississippi Press</em>, the twenty-second of August. A teller from First Lake Bank, a young woman, had gone missing. The paper said the bank was short two hundred and eleven thousand dollars, and the paper said it like the two things went together.&rdquo;</p>
+      <p>&ldquo;What was her name?&rdquo;</p>
+      <p>&ldquo;Lucia. Lucia Vega.&rdquo; Pearl folded her hands. &ldquo;She used to buy my preserves at the church sale and she always paid with exact change. I never believed a word of that article. Never. I kept it because I wanted to remember that I didn't believe it.&rdquo;</p>
+      <p>The ice settled in your glass.</p>
+      <p>Vega.</p>
+      <p>&ldquo;Mrs. Dubois,&rdquo; you said, &ldquo;does Hank know what happened to her?&rdquo;</p>
+      <p>Pearl looked at the window, at the street, where Hank's truck was just now turning into the drive.</p>
+      <p>&ldquo;Hank was on the water that night,&rdquo; she said quietly. &ldquo;Everybody who mattered was on the water that night. Earl, and Hank, and that skiff of Owen's daddy's. I was home with the radio. Ruth was home with her lesson plans.&rdquo; She closed the book. &ldquo;Ask Ruth what she was grading at two in the morning. I always wondered.&rdquo;</p>
+    </div>
+  </section>
+
+  <section class="book" id="ch4">
+    <p class="chno">Chapter Four</p>
+    <h2 class="chtitle">Exact Change</h2>
+    <div class="chapter dropcap">
+      <p>Mountain Coffee closed at four. At five past, Marisol Vega was alone behind the counter, stacking cups, and she didn't turn around when you came in.</p>
+      <p>&ldquo;We're closed.&rdquo;</p>
+      <p>&ldquo;Lucia Vega,&rdquo; you said.</p>
+      <p>The cup in her hand stopped halfway to the stack. She set it down carefully, the way Earl had set down the watch, and for a moment the only sound was the drip of the espresso machine cooling.</p>
+      <p>&ldquo;She was my mother,&rdquo; Marisol said. &ldquo;I was a baby. My aunt raised me in Mobile and told me my mother ran off with a man and a bag of money, and I believed it until last year, when my aunt was dying and told me she never believed it either.&rdquo; She turned around. Her eyes were dry and very tired. &ldquo;So, yes. I came here to ask about 1987. And everybody here is so nice to me. They tip well. They ask about my day. And not one of them will tell me anything.&rdquo;</p>
+      <p>&ldquo;You were in Gus's car.&rdquo;</p>
+      <p>She didn't deny it.</p>
+      <p>&ldquo;He called me at midnight,&rdquo; she said. &ldquo;I didn't even know he had my number. He said, &lsquo;Miss Vega, I've been a coward for thirty-nine years and I'm too old to keep at it. Meet me at the ferry lot at two and I'll tell you what happened to your mother.&rsquo; He said someone had dug something up on the island and there wasn't any more time.&rdquo;</p>
+      <p>She meant you. You both knew it.</p>
+      <p>&ldquo;I got there at quarter to two. His car was there, unlocked, keys on the seat. He wasn't. I sat in it because it was cold and because I thought he'd come back.&rdquo; She wrapped her arms around herself. &ldquo;Around three I saw a light on the water. A little boat, going north toward the marsh with no running lights, just a flashlight. Then the flashlight went off. I sat there until half past three and then I drove home and I didn't sleep.&rdquo;</p>
+      <p>&ldquo;Why didn't you tell anyone?&rdquo;</p>
+      <p>Marisol laughed. It wasn't a good sound.</p>
+      <p>&ldquo;The last time a Vega was near a lot of trouble in this town,&rdquo; she said, &ldquo;they wrote it in the paper as if she'd caused it.&rdquo;</p>
+      <p class="break">* * *</p>
+      <p>She walked you to the door and unlocked it. Then, with her hand still on the bolt, she said one more thing.</p>
+      <p>&ldquo;He wrote something down. On the phone. I could hear the pencil. When he said &lsquo;someone dug something up,&rsquo; he stopped and I heard him write, and then he said, &lsquo;She knows about the box. I've just put it in writing so I don't lose my nerve.&rsquo;&rdquo;</p>
+      <p>You thought of the deposit slip folded into a square on the seat of Boat Seven.</p>
+      <p>&ldquo;Who's &lsquo;she&rsquo;?&rdquo;</p>
+      <p>&ldquo;I thought he meant me,&rdquo; Marisol said. &ldquo;I don't anymore.&rdquo;</p>
+    </div>
+  </section>
+
+  <section class="book" id="ch5">
+    <p class="chno">Chapter Five</p>
+    <h2 class="chtitle">Lesson Plans</h2>
+    <div class="chapter dropcap">
+      <p>Ruth Halvorsen's porch light was on, and Ruth was sitting under it in a cardigan with a plate of shortbread on her knees, as if she had known exactly when you'd come up the walk. Maybe she had. It was a small town and Ruth had been watching it for a long time.</p>
+      <p>&ldquo;Sit down,&rdquo; she said. &ldquo;Have one. They're better than the rolls.&rdquo;</p>
+      <p>You sat. You didn't take one.</p>
+      <p>&ldquo;Pearl says to ask what you were grading at two in the morning on the twenty-first of August, 1987.&rdquo;</p>
+      <p>Ruth smiled down at the shortbread.</p>
+      <p>&ldquo;Pearl has been wanting to ask me that herself for thirty-nine years,&rdquo; she said. &ldquo;She's too polite. That's the whole trouble with this town, you know. Everybody is too polite to ask and too ashamed to tell, and in between the two a young woman just disappears.&rdquo;</p>
+      <p>A truck went by slowly on Magnolia Lane, then another. Ruth watched them both until their taillights turned the corner.</p>
+      <p>&ldquo;I wasn't grading anything,&rdquo; she said. &ldquo;I was at the bank. Lucia had a key and she'd asked me to come, because she'd found something in the vault that she couldn't take to Gus, and she trusted me because I'd taught her to read.&rdquo; Ruth's hands were very still on the plate. &ldquo;She'd found the box. A box that wasn't on any ledger. Somebody had been running money through it, other people's money, for years. She wanted a witness before she took it to the state.&rdquo;</p>
+      <p>&ldquo;What was in it?&rdquo;</p>
+      <p>&ldquo;Cards,&rdquo; said Ruth. &ldquo;Index cards. A name on each one and a number. Who'd paid, who'd been paid. Half this town's grandfathers were in that box, and a few of the fathers.&rdquo; She looked at you directly for the first time. &ldquo;And it was sitting in your backhoe's cab right now, I expect, if you were half as careful as Earl told you to be.&rdquo;</p>
+      <p>You hadn't told anyone where it was.</p>
+      <p>&ldquo;What happened to Lucia?&rdquo;</p>
+      <p>&ldquo;We were in the vault when the front door opened,&rdquo; Ruth said. &ldquo;I hid. God forgive me, I hid behind the safe-deposit wall like a child, and Lucia went out to see who it was, and I heard voices, two men's, and then her voice, and then the door. I waited an hour. When I came out the box was gone and so was she.&rdquo; Her voice didn't break. You had the sense that it had broken so many times over the years that there was nothing left in it to break. &ldquo;I never said. Not to the police, not to the paper, not to Walt in his church. I had a job and a mother to look after and I was afraid. I've been afraid every day since.&rdquo;</p>
+      <p>&ldquo;Whose voices?&rdquo;</p>
+      <p>Ruth set the plate down on the porch boards.</p>
+      <p>&ldquo;One of them was Gus,&rdquo; she said. &ldquo;He was twenty-five and he'd been at the bank a month. He sounded scared to death.&rdquo; She stood, slowly, one hand on the porch rail. &ldquo;The other one I'd known all my life. Go home, dear. Lock your door. I've told you more tonight than I've told anyone, and I am too old to be brave twice in one week.&rdquo;</p>
+      <p>She went inside. The porch light went off.</p>
+      <p class="break">* * *</p>
+      <p>You took the last ferry back to the island at eleven. Jayden wasn't on the ramp. A boy you didn't know waved you on.</p>
+      <p>Halfway across, you saw the light.</p>
+      <p>It was on Corley's Island, on the mesa, right where your cut was. A single flashlight beam, low to the ground, sweeping back and forth across the dug clay. Then a second beam joined it. And then, carrying across the dark water so clearly it might have been next to you, came a sound you knew better than your own voice.</p>
+      <p>Your backhoe's engine, turning over.</p>
+    </div>
+  </section>
+  <div class="book">
+    <p class="end">End of Part One</p>
+    <p class="next">The story continues in Part Two. To go over the evidence so far, open the <a href="#case">Case File</a>.</p>
+  </div>
+</main>
+  </section>
+  <section class="view ledger" id="case" role="tabpanel" aria-labelledby="t-case" hidden>
+<header class="cover"><div class="in">
+  <span class="eyebrow">The Low Tide Ledger &middot; Case file 1</span>
+  <h2 class="h1">Case File</h2>
+  <p class="hook">The evidence so far and everyone the story touches. Read <a href="#book" style="color:#e0a458">the book</a> first: this tab gives away what each person is hiding.</p>
+  <div class="meta"><span>3 clues</span><span>15 people involved</span><span>Where they all live: <a href="#map">the Map tab</a></span></div>
+</div></header>
+
+<main class="in">
+  <section>
+    <h2>The first three clues</h2>
+    <p class="sub">What the player has to work with by the end of Chapter One.</p>
+    <div class="clues">
+<div class="clue"><b>The watch in Boat Seven</b><p>It stopped at 3:47 a.m., not long after Denise passed the ferry lot. It isn't Gus's. It's engraved <em>E.P. 1986</em>.</p></div>
+      <div class="clue"><b>The deposit slip</b><p>The pencil on it matches the carpenter's pencils sold at Hometown Hardware. Hank sells about one a month.</p></div>
+      <div class="clue"><b>The strongbox</b><p>It won't open with tools. It needs a key, and the bank's 1987 key ledger is in the vault that only Gus can open.</p></div>
+    </div>
+  </section>
+
+  <section>
+    <h2>The suspect board</h2>
+    <p class="sub">Everyone the story touches, where they live and what they aren't saying.</p>
+    <label class="toggle" for="sec"><input id="sec" type="checkbox" checked> Show secrets</label>
+    <div class="board" id="board"></div>
+  </section>
+
+  <p class="foot">Characters, homes and jobs come from the game. Their houses are on the <a href="#map">Map tab</a>.</p>
+</main>
+  </section>
+  <section class="view" id="map" role="tabpanel" aria-labelledby="t-map" hidden>
+    <p class="lede" style="margin:0">Everyone who lives in the neighbourhood, which house they live in, who they live with, and where they go to work. Names are the ones each person tells you the first time you talk to them.</p>
+    <div class="stats" id="stats"></div>
+
+
+  <section class="map" aria-label="Map of the houses">
+    <svg id="map" viewBox="0 0 640 392" role="img" aria-label="Houses plotted by where they stand, north at the top"></svg>
+    <div class="legend" id="legend"></div>
+  </section>
+
+  <div class="controls">
+    <input id="q" type="search" placeholder="Find a name, street or job" aria-label="Find a name, street or job">
+  </div>
+
+  <section class="streets" id="streets"></section>
+
+  <section class="note">
+    <h2>Not on the map</h2>
+    <p id="kids"></p>
+    <p>When the Townsfolk setting is on Busy, the town needs more people than there are looks, so some people appear twice. Each of these "twins" gets a name of its own, made up when it appears, and no house.</p>
+  </section>
+  </section>
+</div>
+
+<script>
+// homes as the game assigns them (lives.js lifeInit); x east, z south, in metres
+const ST={'Magnolia Lane':'#d08a2e','Live Oak Drive':'#3f8f4a','Cypress Street':'#8a5bb5','Bayou Lane':'#2f7fb8','Shrimp Boat Road':'#c4504a','Pelican Avenue':'#b2367a','Gull Street':'#6b7f2a','Marsh Drive':'#1f9a96'};
+const H=[
+ {st:'Magnolia Lane',x:-49,z:683,p:[['Cal Mercer','bait shop and boat rental owner','Tackle & Trail',[9,18]],['Callie','shopkeeper','Toy Chest',[9,18]]]},
+ {st:'Magnolia Lane',x:-78,z:681,p:[['Gus Lindqvist','regular','First Lake Bank',[9,17],1]]},
+ {st:'Magnolia Lane',x:-78,z:732,p:[['Marisol Vega','regular','Mountain Coffee',[6,16]]]},
+ {st:'Magnolia Lane',x:-48,z:733,p:[['Ruth Halvorsen','regular','Lakeside Bakery',[6,15]]]},
+ {st:'Live Oak Drive',x:-140,z:630,p:[['Hank Dubois','regular','Hometown Hardware',[9,18]],['Mrs. Pearl Dubois','retired',null,null]]},
+ {st:'Live Oak Drive',x:-141,z:669,p:[['Bobby','groundskeeper','mowing the town’s lawns',[7,15],1],['Jace','teen, skateboarder',null,null]]},
+ {st:'Live Oak Drive',x:-170,z:700,p:[['Heather','stay-at-home mom',null,null],['Tyler','teen, plays basketball',null,null],['Kayla','teen',null,null],['Mason','teen',null,null]]},
+ {st:'Live Oak Drive',x:-170,z:719,p:[['Earl Pruitt','regular','Lakeside Guns',[9,19]]]},
+ {st:'Live Oak Drive',x:-140,z:732,p:[['Jenna Park','regular','out on her rounds',[9,15]]]},
+ {st:'Live Oak Drive',x:-169,z:738,p:[['Mick O’Rourke','regular','Copper Kettle',[11,23]]]},
+ {st:'Cypress Street',x:-122,z:681,p:[['Travis','charter fishing deckhand','the charter boats at the marina',[5,13]]]},
+ {st:'Cypress Street',x:-121,z:715,p:[['Amber','waitress','the seafood shack by the marina',[11,21]]]},
+ {st:'Cypress Street',x:-121,z:734,p:[['Walt Ames','regular','out on his rounds',[8,18]]]},
+ {st:'Pelican Avenue',x:-78,z:714,p:[['Megan','physical therapist','the clinic on the mainland',[8,17],1]]},
+ {st:'Gull Street',x:-121,z:612,p:[['Owen Brandt','regular','Harbor Light Brewing Co.',[11,23]]]},
+ {st:'Bayou Lane',x:121,z:682,p:[['Kevin','high school coach','the high school on the mainland',[7,16],1]]},
+ {st:'Bayou Lane',x:122,z:699,p:[['Denise','night nurse','the hospital in Pascagoula',[19,31]],['Brianna','teen',null,null]]},
+ {st:'Bayou Lane',x:121,z:718,p:[['Destiny','ice cream server','The Sweet Shop',[12,20]]]},
+ {st:'Shrimp Boat Road',x:119,z:749,p:[['Nathan','bank loan officer','First Lake Bank',[9,17],1]]},
+ {st:'Shrimp Boat Road',x:136,z:749,p:[['Jayden','ferry dock hand','the ferry dock',[6,14]]]},
+ {st:'Marsh Drive',x:146,z:687,p:[['Dot Kowalski','regular','Main St. Diner',[6,21]]]}
+];
+const KIDS=['Cody','Eli','Lily','Maddie'];
+const ORDER=Object.keys(ST);
+const hr=h=>{h=h%24;const s=h<12?'am':'pm';const v=h%12||12;return v+' '+s};
+const hrs=(h,wk)=>h?hr(h[0])+'–'+hr(h[1])+(wk?', weekdays':''):'';
+const roleOf=p=>p[1]==='regular'?(p[2].startsWith('out on')?'':'behind the counter'):p[1];
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+H.forEach((h,i)=>{h.id='h'+i});
+// house numbers within each street, west to east, north to south
+for(const s of ORDER){H.filter(h=>h.st===s).sort((a,b)=>a.x-b.x||a.z-b.z).forEach((h,i)=>h.no=i+1)}
+
+const people=H.reduce((n,h)=>n+h.p.length,0);
+document.getElementById('stats').innerHTML=
+ `<span><b>${people}</b>live in town</span><span><b>${H.length}</b>houses</span><span><b>${ORDER.length}</b>streets</span><span><b>${KIDS.length}</b>children with no house yet</span>`;
+document.getElementById('kids').textContent=`The four youngest children, ${KIDS.slice(0,-1).join(', ')} and ${KIDS.at(-1)}, are in the game but the game doesn't give children a house yet, so they only appear out and about.`;
+
+// map
+const svg=document.getElementById('map'),NS='http://www.w3.org/2000/svg';
+// drawn from the game's own layout: Main Street on x=0, the cross street at z 652, the side streets (suburbs.js SUB_STREETS)
+const X0=-195,X1=180,Z0=560,Z1=790,W=640,Hh=392,P=0;
+const M=(W-2*P)/(X1-X0),sx=x=>P+(x-X0)*M,sz=z=>P+(z-Z0)*M;
+const el=(t,a,parent=svg)=>{const e=document.createElementNS(NS,t);for(const k in a)e.setAttribute(k,a[k]);parent.appendChild(e);return e};
+const rect=(x0,z0,x1,z1,fill,extra)=>el('rect',Object.assign({x:sx(x0),y:sz(z0),width:(x1-x0)*M,height:(z1-z0)*M,fill},extra||{}));
+const lbl=(x,z,t,o)=>{const e=el('text',Object.assign({x:sx(x),y:sz(z),'text-anchor':'middle','font-size':9.5,style:'fill:var(--muted)','font-weight':600,'letter-spacing':'.04em'},o||{}));e.textContent=t;return e};
+rect(X0,Z0,X1,Z1,'var(--land)');
+rect(X0,Z0,X1,572,'var(--sea)');rect(X0,572,X1,581,'var(--sand)');
+lbl(-7,567,'WATERFRONT');
+const road=(ax,az,bx,bz,w,c)=>el('line',{x1:sx(ax),y1:sz(az),x2:sx(bx),y2:sz(bz),stroke:c||'var(--road)','stroke-width':w*M,'stroke-linecap':'square'});
+const SS=[[-63,658.8,-63,750],[-63,750,-63,782],[-107,598,-107,645.2],[-107,658.8,-107,750],[-155,598,-155,750],[-155,598,-107,598],[-155,700,-30,700],[-155,750,-63,750],[-140,652,-155,652],[107,658.8,107,734],[17.5,734,160,734],[160,618,160,750],[140,652,160,652]];
+const SN=['Magnolia Lane','Magnolia Lane','Cypress Street','Cypress Street','Live Oak Drive','Gull Street','Pelican Avenue','Heron Street','Pine Court','Bayou Lane','Shrimp Boat Road','Marsh Drive','Egret Court'];
+// downtown shop rows along Main Street
+for(const [a,b] of [[588,643],[661,728]])for(const s of [-1,1])rect(s<0?-38:8,a,s<0?-8:38,b,'var(--bldg)',{rx:1.5});
+road(0,581,0,790,10.6);road(-155,652,160,652,10.3);
+for(const s of SS)road(s[0],s[1],s[2],s[3],7);
+el('line',{x1:sx(0),y1:sz(584),x2:sx(0),y2:sz(788),stroke:'var(--sand)','stroke-width':1,'stroke-dasharray':'6 6'});
+lbl(-1.6,616,'MAIN ST',{transform:`rotate(-90 ${sx(-1.6)} ${sz(616)})`,style:'fill:var(--panel)','font-size':8.5});
+lbl(23,640,'SHOPS');lbl(-23,640,'SHOPS');
+for(const i of [0,3,4,5,6,7,9,10,11]){const s=SS[i],v=s[0]===s[2],mx=(s[0]+s[2])/2,mz=(s[1]+s[3])/2;
+  const o=v?{transform:`rotate(-90 ${sx(mx+1.2)} ${sz(mz)})`}:{};const t=lbl(v?mx+1.2:mx,v?mz:mz+1.3,SN[i].toUpperCase(),Object.assign({style:'fill:var(--panel)','font-size':7.5},o));}
+// scale bar: 200 ft, and north
+const ft200=200/3.28084*M,bx=W-14-ft200,by=Hh-14;
+el('rect',{x:bx-6,y:by-16,width:ft200+12,height:24,rx:4,fill:'var(--panel)',opacity:.85});
+el('line',{x1:bx,y1:by,x2:bx+ft200,y2:by,stroke:'var(--fg)','stroke-width':2});
+el('text',{x:bx+ft200/2,y:by-5,'text-anchor':'middle','font-size':10,style:'fill:var(--fg)'}).textContent='200 ft';
+el('text',{x:14,y:Hh-14,'font-size':11,'font-weight':700,style:'fill:var(--fg)'}).textContent='N ↑';
+for(const h of H){
+  const g=el('g',{tabindex:0,role:'button','aria-label':h.p.map(p=>p[0]).join(', ')+', '+h.st,style:'cursor:pointer'});
+  const hw=6*M,hd=5*M,r=hw;
+  el('rect',{x:sx(h.x)-hw,y:sz(h.z)-hd,width:hw*2,height:hd*2,rx:2,fill:ST[h.st],stroke:'var(--panel)','stroke-width':1.5},g);
+  el('line',{x1:sx(h.x)-hw+3,y1:sz(h.z),x2:sx(h.x)+hw-3,y2:sz(h.z),stroke:'rgba(255,255,255,.45)','stroke-width':1},g);
+  if(h.p.length>1)el('text',{x:sx(h.x),y:sz(h.z)+3.5,'text-anchor':'middle','font-size':10,'font-weight':700,style:'fill:#fff;paint-order:stroke',stroke:'rgba(0,0,0,.35)','stroke-width':2},g).textContent=h.p.length;
+  const left=h.x<0,first=h.p[0][0].replace(/^(Mrs?\.|Miss) /,'').split(' ')[0];
+  const LB={Heather:'n',Jenna:'s',Walt:'s',Cal:'e',Ruth:'e',Kevin:'n',Dot:'n',Nathan:'w',Jayden:'e'},sd=LB[first]||(left?'w':'e');
+  el('text',{x:sx(h.x)+(sd==='w'?-(r+4):sd==='e'?r+4:0),y:sz(h.z)+(sd==='n'?-hd-4:sd==='s'?hd+11:4),'text-anchor':sd==='w'?'end':sd==='e'?'start':'middle','font-size':10.5,'font-weight':600,style:'fill:var(--fg);paint-order:stroke',stroke:'var(--land)','stroke-width':3},g).textContent=first+(h.p.length>1?' +'+(h.p.length-1):'');
+  const go=()=>{const c=document.getElementById(h.id);document.querySelectorAll('.house.hl').forEach(e=>e.classList.remove('hl'));c.classList.add('hl');c.scrollIntoView({behavior:'smooth',block:'center'})};
+  g.addEventListener('click',go);g.addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();go()}});
+}
+document.getElementById('legend').innerHTML=ORDER.map(s=>`<span><i style="background:${ST[s]}"></i>${s}</span>`).join('')+'<span>The number on a house is how many live there. Click a house to find it below.</span>';
+
+// list
+function render(q){
+  q=q.trim().toLowerCase();let out='';
+  for(const s of ORDER){
+    const hs=H.filter(h=>h.st===s).sort((a,b)=>a.no-b.no).filter(h=>!q||(s+' '+h.p.flat().join(' ')).toLowerCase().includes(q));
+    if(!hs.length)continue;
+    const n=hs.reduce((a,h)=>a+h.p.length,0);
+    out+=`<div class="street"><h2><i style="background:${ST[s]}"></i>${esc(s)} <small>${hs.length} ${hs.length>1?'houses':'house'}, ${n} ${n>1?'people':'person'}</small></h2>`;
+    for(const h of hs){
+      out+=`<article class="house" id="${h.id}"><div class="no">No. ${h.no}<span>${h.p.length>1?'family of '+h.p.length:'lives alone'}</span></div><div class="people">`;
+      for(const p of h.p){
+        const role=roleOf(p),work=p[2]?(p[2].startsWith('out on')||p[2].startsWith('mowing')?p[2]:'works at '+p[2]):'';
+        out+=`<div class="p"><span class="n">${esc(p[0])}${p[1]==='regular'?'<span class="tag">Shop regular</span>':''}</span><span class="hrs">${hrs(p[3],p[4])}</span><span class="role">${esc([role,work].filter(Boolean).join(', '))||'&nbsp;'}</span></div>`;
+      }
+      out+='</div></article>';
+    }
+    out+='</div>';
+  }
+  document.getElementById('streets').innerHTML=out||'<p class="empty">Nobody matches that. Try a first name, a street or a shop.</p>';
+}
+const q=document.getElementById('q');q.addEventListener('input',()=>render(q.value));render('');
+
+const PEOPLE=[
+ ['Gus Lindqvist','The missing man','Magnolia Lane','Runs First Lake Bank','In 1987 he signed for a safe-deposit box that the bank’s records say never existed.',1],
+ ['Ruth Halvorsen','Suspect','Magnolia Lane, four doors from Gus','Lakeside Bakery','She taught school back then. She knows what the box holds and is frightened of who else knows.'],
+ ['Marisol Vega','Suspect','Magnolia Lane','Mountain Coffee','She came to town six months ago and has asked three people about 1987.'],
+ ['Earl Pruitt','Suspect','Live Oak Drive','Lakeside Guns','He captained the ferry in ’87. The ferry log for that August is missing a night.'],
+ ['Hank Dubois','Suspect','Live Oak Drive, with Pearl','Hometown Hardware','He shrimped those waters for forty years. The pencil on the deposit slip came from his store.'],
+ ['Mrs. Pearl Dubois','Suspect','Live Oak Drive, with Hank','Retired','She keeps a scrapbook with one page cut out.'],
+ ['Cal Mercer','Witness','Magnolia Lane, with Callie','Tackle & Trail, boat rentals','Boat Seven was untied by someone who knew his knots. Very few people do.'],
+ ['Jayden','Witness','Shrimp Boat Road','Ferry dock hand','He saw who got off the 2 a.m. crossing. He’s been paid not to say.'],
+ ['Denise','Witness','Bayou Lane, with Brianna','Night nurse in Pascagoula','She saw a woman in Gus’s car at the ferry lot at 3 a.m.'],
+ ['Brianna','Witness','Bayou Lane, with Denise','Teen','She saw the same woman leave their street an hour earlier.'],
+ ['Travis','Witness','Cypress Street','Charter fishing deckhand','He found Boat Seven drifting off the north marsh, with the watch and the note.'],
+ ['Dot Kowalski','Knows something','Marsh Drive','Main St. Diner','Gus ate at her diner every day at 12:15. Yesterday he left a cash tip of $500.'],
+ ['Walt Ames','Knows something','Cypress Street','Deacon, out on his rounds','Gus came to him two days ago asking how to make a confession. Walt is bound to keep it.'],
+ ['Owen Brandt','Knows something','Gull Street','Harbor Light Brewing Co.','Before the brewery he was a game warden. He still knows every channel in the north marsh.'],
+ ['Nathan','Knows something','Shrimp Boat Road','First Lake Bank, loan officer','He has the bank keys but not the vault code. Only Gus has that.']
+];
+const board=document.getElementById('board');
+board.innerHTML=PEOPLE.map(p=>`<article class="card${p[5]?' key':''}"><span class="role">${esc(p[1])}</span><h3>${esc(p[0])}</h3><span class="where">${esc(p[2])} &middot; ${esc(p[3])}</span><p class="sec" style="margin:0">${esc(p[4])}</p></article>`).join('');
+const sec=document.getElementById('sec');
+sec.addEventListener('change',()=>board.classList.toggle('hide',!sec.checked));
+
+// tabs: .ledger (default) and #map
+const TABS=['book','case','map'];
+function showTab(){const h=location.hash.slice(1),id=TABS.includes(h)?h:'book';for(const v of TABS){document.getElementById(v).hidden=v!==id;document.getElementById('t-'+v).setAttribute('aria-selected',v===id)}}
+document.querySelectorAll('.toc a').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();document.getElementById(a.dataset.ch).scrollIntoView({behavior:'smooth'})}));
+addEventListener('hashchange',()=>{showTab();scrollTo(0,0)});showTab();
+</script>
+
+</body>
+</html>
