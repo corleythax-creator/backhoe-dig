@@ -118,6 +118,22 @@ h2{font:600 19px/1.3 var(--display);margin:0}
 .ledger .book .chapter{scroll-margin-top:24px}
 .ledger section.book{scroll-margin-top:16px}
 .ledger .pov{font-style:italic;color:var(--muted);font-size:16px;border-bottom:1px solid var(--line);padding-bottom:16px}
+
+/* reader: one chapter at a time, sticky bar, text size, night */
+.ledger{--fs:20px}
+@media (max-width:600px){.ledger{--fs:19px}}
+.ledger .chapter{font-size:var(--fs);max-width:34em}
+.ledger .pov{font-size:.9em}
+.rbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--bg);border-bottom:1px solid var(--line);display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding-block:10px}
+.rbar select{flex:1 1 120px;min-width:0;font:500 16px var(--body);color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:8px;min-height:44px;padding:0 10px}
+.rbar button,.rnav button{font:600 15px var(--body);color:var(--fg);background:var(--panel);border:1px solid var(--line);border-radius:8px;min-height:44px;min-width:44px;padding:0 12px;cursor:pointer}
+.rbar button:focus-visible,.rnav button:focus-visible,.rbar select:focus-visible{outline:2px solid var(--clue);outline-offset:2px}
+.rnav{width:min(100%,34em);justify-self:center;display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:36px}
+.rnav button{min-height:64px;display:grid;gap:2px;text-align:left;padding:10px 14px;font:400 17px var(--serif);border-radius:10px}
+.rnav button small{font:600 12px var(--body);letter-spacing:.08em;text-transform:uppercase;color:var(--muted)}
+.rnav .nx{grid-column:2;text-align:right}
+.rnav button[disabled]{visibility:hidden}
+.ledger.reading .cover,.ledger.reading .toc{display:none}
 </style>
 </head>
 <body>
@@ -140,6 +156,12 @@ h2{font:600 19px/1.3 var(--display);margin:0}
 </div></header>
 
 <main class="in">
+  <div class="rbar" id="rbar">
+    <select id="rsel" aria-label="Chapter"></select>
+    <button id="rdn" aria-label="Smaller text">A&minus;</button>
+    <button id="rup" aria-label="Larger text">A+</button>
+    <button id="rnight" aria-label="Switch day or night">Night</button>
+  </div>
   <nav class="toc" aria-label="Chapters">
     <p class="chno">Contents</p>
     <ol>
@@ -343,7 +365,8 @@ h2{font:600 19px/1.3 var(--display);margin:0}
       <p>Your backhoe's engine, turning over.</p>
     </div>
   </section>
-  <div class="book">
+  <div class="rnav" id="rnav"><button class="pv" id="rpv"><small>Previous</small><span></span></button><button class="nx" id="rnx"><small>Next</small><span></span></button></div>
+  <div class="book" id="rend">
     <p class="end">End of Part One</p>
     <p class="next">The story continues in Part Two. To go over the evidence so far, open the <a href="#case">Case File</a>.</p>
   </div>
@@ -532,8 +555,33 @@ sec.addEventListener('change',()=>board.classList.toggle('hide',!sec.checked));
 
 // tabs: .ledger (default) and #map
 const TABS=['book','case','map'];
-function showTab(){const h=location.hash.slice(1),id=TABS.includes(h)?h:'book';for(const v of TABS){document.getElementById(v).hidden=v!==id;document.getElementById('t-'+v).setAttribute('aria-selected',v===id)}}
-document.querySelectorAll('.toc a').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();document.getElementById(a.dataset.ch).scrollIntoView({behavior:'smooth'})}));
+function showTab(){const h=location.hash.slice(1),id=TABS.includes(h)?h:'book';if(/^ch\d$/.test(h))rdShow(+h[2]);for(const v of TABS){document.getElementById(v).hidden=v!==id;document.getElementById('t-'+v).setAttribute('aria-selected',v===id)}}
+// reader: one chapter at a time
+const RCH=[...document.querySelectorAll('#book section.book')],rsel=document.getElementById('rsel'),rroot=document.documentElement;
+function rls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
+let rcur=0,rfs=+rls('ltl-fs')||0;
+function rName(c){return c.querySelector('.chno').textContent+': '+c.querySelector('.chtitle').textContent}
+RCH.forEach((c,i)=>{const o=document.createElement('option');o.value=i;o.textContent=rName(c);rsel.appendChild(o)});
+function rSize(d){const b=document.getElementById('book');if(!rfs)rfs=parseFloat(getComputedStyle(b).getPropertyValue('--fs'))||20;rfs=Math.max(15,Math.min(30,rfs+d));b.style.setProperty('--fs',rfs+'px');rls('ltl-fs',rfs)}
+if(rfs)rSize(0);
+function rdShow(i,top){rcur=Math.max(0,Math.min(RCH.length-1,i));RCH.forEach((c,j)=>c.hidden=j!==rcur);
+  document.getElementById('book').classList.toggle('reading',rcur>0);document.getElementById('rend').hidden=rcur!==RCH.length-1;
+  rsel.value=rcur;const pv=document.getElementById('rpv'),nx=document.getElementById('rnx');
+  pv.disabled=rcur===0;nx.disabled=rcur===RCH.length-1;
+  if(rcur>0)pv.lastChild.textContent=RCH[rcur-1].querySelector('.chtitle').textContent;
+  if(rcur<RCH.length-1)nx.lastChild.textContent=RCH[rcur+1].querySelector('.chtitle').textContent;
+  rls('ltl-ch',rcur);if(top)scrollTo({top:0,behavior:'instant'})}
+function rGo(i){rdShow(i,true)}
+rsel.onchange=()=>rGo(+rsel.value);
+document.getElementById('rpv').onclick=()=>rGo(rcur-1);document.getElementById('rnx').onclick=()=>rGo(rcur+1);
+document.getElementById('rdn').onclick=()=>rSize(-1);document.getElementById('rup').onclick=()=>rSize(1);
+const rth=rls('ltl-theme');if(rth)rroot.setAttribute('data-theme',rth);
+function rNightLabel(){const d=rroot.dataset.theme?rroot.dataset.theme==='dark':matchMedia('(prefers-color-scheme: dark)').matches;document.getElementById('rnight').textContent=d?'Day':'Night';return d}
+rNightLabel();document.getElementById('rnight').onclick=()=>{const n=rNightLabel()?'light':'dark';rroot.setAttribute('data-theme',n);rls('ltl-theme',n);rNightLabel()};
+document.addEventListener('keydown',e=>{if(document.getElementById('book').hidden||e.target.closest('input,select,textarea'))return;
+  if(e.key==='ArrowRight'&&rcur<RCH.length-1)rGo(rcur+1);if(e.key==='ArrowLeft'&&rcur>0)rGo(rcur-1)});
+rdShow(+rls('ltl-ch')||0,false);
+document.querySelectorAll('.toc a').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();rGo(+a.dataset.ch.slice(2))}));
 addEventListener('hashchange',()=>{showTab();scrollTo(0,0)});showTab();
 </script>
 
