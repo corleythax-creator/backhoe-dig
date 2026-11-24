@@ -2,6 +2,10 @@
 
 Every version of Corley's Island, newest first, grouped by the day it went live (Central time). Made from `data/effort.js` by `tools/changelog.py`; don't edit it by hand. [Play any old version](https://corleys-island.vercel.app/versions/) · [Build log with charts](https://corleys-island.vercel.app/build.html)
 
+## Monday, November 23, 2026
+
+- **v472** (6:05 PM) From the owner's v471 report: the cats by the start load behind the loading cover (their fur's first draw was a 0.8 s freeze in play); a slow frame outside the drawing is now reported with its slowest parts (a 5.3 s freeze went unnamed), and every draw is timed and named by its game file
+
 ## Sunday, November 22, 2026
 
 - **v471** (8:41 PM) Map editor: a picked building gets a thin outline of its real walls and roof instead of the tall orange block, and Floors shows a Building Forge building one floor at a time (roof and floors above cut away)
