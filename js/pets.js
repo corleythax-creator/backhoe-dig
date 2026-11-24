@@ -25,16 +25,21 @@ function petSpot(c){const H=PET_HOME;for(let k=0;k<30;k++){const x=H.x+(Math.ran
 function petRest(c,clip){const R=clip?PET_REST.find(r=>r[0]===clip):(()=>{let t=0;for(const r of PET_REST)t+=r[1];let q=Math.random()*t;for(const r of PET_REST)if((q-=r[1])<=0)return r;return PET_REST[0]})();
   c.goal=null;c.t=R[2]+Math.random()*(R[3]-R[2]);c.a.play(R[0])}
 function petGo(c,g,gait){c.goal=g;c.gait=gait||'walk';c.a.play(c.gait);c.v=pets.zoo.gaitSpeed(c.id,c.gait)}
-async function petsLoad(){pets.st=1;
+// (the loading cover waits for them, petsBusy: their house is by the start, and arriving half a minute into play the
+// first cat's fur was first drawn there and then, a 0.8 s freeze in the owner's v471 report. Each cat's shaders are
+// built and pictures sent before it is added (gpuWarm), and behind the cover it is drawn once at once, petsTick)
+const petsBusy=()=>pets.st===1&&performance.now()-pets.t0<30000;
+async function petsLoad(){pets.st=1;pets.t0=performance.now();
   try{if(!window.AnimalForge)await new Promise((ok,no)=>{const s=document.createElement('script');s.src=PET_SITE+'runtime/animal-forge.js';s.onload=ok;s.onerror=no;document.head.appendChild(s)});
     const zoo=await AnimalForge.load(THREE,PET_SITE+'library/',{fur:typeof gfxDetail!=='undefined'&&gfxDetail?3:0,contact:0.45});
     for(const d of PET_CATS){const a=await zoo.animal(d.id),p=petSpot()||{x:PET_HOME.x,z:PET_HOME.z+PET_HOME.hz+3},c={id:d.id,n:d.n,a,x:p.x,z:p.z,h:Math.random()*6.28,goal:null,t:0,v:1,gait:'walk',shy:0};
-      a.object.traverse(o=>{if(o.isMesh){o.castShadow=true;o.frustumCulled=false}});scene.add(a.object);petRest(c);pets.cats.push(c)}
+      a.object.traverse(o=>{if(o.isMesh){o.castShadow=true;o.frustumCulled=false}});if(typeof gpuWarm==='function')try{await gpuWarm(a.object)}catch(e){}scene.add(a.object);(pets.warm||(pets.warm=[])).push(a.object);petRest(c);pets.cats.push(c)}
     pets.zoo=zoo;pets.st=2}
   catch(e){console.warn('The cats did not load',e);pets.st=3}}
 // every frame (main.js): load when the camera first comes near; then each cat rests or walks to a spot of its choosing
 function petsTick(dt){const H=PET_HOME,far=Math.hypot(camera.position.x-H.x,camera.position.z-H.z)>PET_NEAR;
   if(!pets.st){if(!far)petsLoad();return}
+  if(pets.warm&&pets.warm.length&&typeof LOADP!=='undefined'&&!LOADP.done&&typeof warmDraw==='function')try{warmDraw(pets.warm.pop())}catch(e){}
   if(pets.st!==2)return;for(const c of pets.cats)c.a.object.visible=!far;if(far)return;
   // who is about: the worker on foot (a cat may come over), or whatever machine he is in (a cat gets out of its way)
   const foot=mode==='walk',px=foot?wk.x:camera.position.x,pz=foot?wk.z:camera.position.z;

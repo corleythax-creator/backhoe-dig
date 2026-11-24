@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-23T02:41:00Z",
+ "updated": "2026-11-24T00:05:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -183,6 +183,12 @@ window.EFFORT = {
    "dh": 74.75,
    "act": 7,
    "versions": 17
+  },
+  {
+   "d": "2026-11-23",
+   "dh": 3,
+   "act": 0.5,
+   "versions": 1
   }
  ],
  "extra": [
@@ -4431,6 +4437,15 @@ window.EFFORT = {
    "tris": 7382797,
    "chars": 2858741,
    "what": "Map editor: a picked building gets a thin outline of its real walls and roof instead of the tall orange block, and Floors shows a Building Forge building one floor at a time (roof and floors above cut away)"
+  },
+  {
+   "v": 472,
+   "asked": "2026-11-23T17:45:00-06:00",
+   "live": "2026-11-23T18:05:17-06:00",
+   "dh": 3,
+   "tris": 7243005,
+   "chars": 2861608,
+   "what": "From the owner's v471 report: the cats by the start load behind the loading cover (their fur's first draw was a 0.8 s freeze in play); a slow frame outside the drawing is now reported with its slowest parts (a 5.3 s freeze went unnamed), and every draw is timed and named by its game file"
   }
  ]
 };

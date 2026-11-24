@@ -372,12 +372,12 @@ const drawInfo=()=>{const P=renderer.info.programs;if(!drawNew.hooked){drawNew.h
 // of a thing with a material, material version or lamp set it was not last drawn with is timed, and a slow frame names
 // those that took 30 ms or more, or failing that the first few drawn so for the first time)
 const drawFirst={L:[],n:0};
-function drawNm(o,m,ms){let q=o,nm='';while(q&&!nm){nm=q.name;q=q.parent}const e=o.matrixWorld.elements,g=o.geometry,vc=g&&g.attributes&&g.attributes.position?g.attributes.position.count:0,rt=renderer.getRenderTarget();
+function drawNm(o,m,ms){let q=o,nm='',src='';while(q){if(!nm)nm=q.name;if(q.userData&&q.userData.pfSrc)src=q.userData.pfSrc;q=q.parent}if(src)nm=src+'.js:'+nm;const e=o.matrixWorld.elements,g=o.geometry,vc=g&&g.attributes&&g.attributes.position?g.attributes.position.count:0,rt=renderer.getRenderTarget();
   return `${nm||o.type}/${m.name||m.type} ${vc}v @${Math.round(e[12])},${Math.round(e[14])}${o.isInstancedMesh?' inst':''}${o.isSkinnedMesh?' skin':''}${rt?rt===sun.shadow.map?' shadow':typeof postRT!=='undefined'&&rt===postRT?'':' '+rt.width+'px':' screen'}${ms>=1?' '+Math.round(ms)+' ms':''}`}
 {const rbd0=renderer.renderBufferDirect;renderer.renderBufferDirect=function(cam,sc,g,mt,o,gr){
-    if(o.dwM===mt&&o.dwV===mt.version&&o.dwN===ltSl.night)return rbd0.call(this,cam,sc,g,mt,o,gr);
-    o.dwM=mt;o.dwV=mt.version;o.dwN=ltSl.night;const t=performance.now();
-    try{return rbd0.call(this,cam,sc,g,mt,o,gr)}finally{const ms=performance.now()-t,F=drawFirst;F.n++;if(drawNew.on&&(ms>=30||F.L.length<6))try{F.L.push([ms,drawNm(o,mt,ms)])}catch(e){}}}}
+    const nw=o.dwM!==mt||o.dwV!==mt.version||o.dwN!==ltSl.night;if(nw){o.dwM=mt;o.dwV=mt.version;o.dwN=ltSl.night}const t=performance.now();
+    // (every draw is timed, v471: a thing drawn before can still need a new shader, as when the lights about it change)
+    try{return rbd0.call(this,cam,sc,g,mt,o,gr)}finally{const ms=performance.now()-t,F=drawFirst;if(nw)F.n++;if(drawNew.on&&(ms>=30||nw&&F.L.length<6))try{F.L.push([ms,drawNm(o,mt,ms)])}catch(e){}}}}
 // (owner's v439 report: two freezes of 3.3 and 1.6 s in play, each "1 shader", and no saying which: now the slow frame
 // names the things whose shaders were new in it, and what was being built in the background then)
 function drawSlow(t0,a){drawNew.slow=performance.now();const P=new Set(drawNew.L),b=[renderer.info.programs.length,renderer.info.memory.geometries,renderer.info.memory.textures],n=P.size;let who='';
@@ -393,7 +393,7 @@ function drawSlow(t0,a){drawNew.slow=performance.now();const P=new Set(drawNew.L
   if(bg.length)who=' · building then: '+bg.join(', ')+who}catch(e){}
   // (what else the frame was: for the slow frames that made nothing new, v445)
   try{const R=renderer.info.render,c=camera.position;who=` · ${mode} @${Math.round(c.x)},${Math.round(c.z)} · ${R.calls} draws${typeof shc==='object'&&shc.build?' · shadows rebuilt':''}${shGate.ms>20?' · gate '+Math.round(shGate.ms)+' ms':''}`+who}catch(e){}
-  try{const F=drawFirst,S=F.L.filter(e=>e[0]>=30).sort((x,y)=>y[0]-x[0]).slice(0,5);if(F.n)who+=` · ${F.n} first drawn${S.length?', slow: ':': '}`+(S.length?S:F.L.slice(0,4)).map(e=>e[1]).join(', ')}catch(e){}
+  try{const F=drawFirst,S=F.L.filter(e=>e[0]>=30).sort((x,y)=>y[0]-x[0]).slice(0,5);if(F.n||S.length)who+=` · ${F.n} first drawn${S.length?', slow: ':': '}`+(S.length?S:F.L.slice(0,4)).map(e=>e[1]).join(', ')}catch(e){}
   pfMark('Slow frame drawn',t0,`new on the card: ${n} shaders, ${b[1]-a[1]} meshes, ${b[2]-a[2]} pictures${ltSl.night?' · lamps lit':''}${who}`.slice(0,900))}
 // NEVER WAIT FOR A SHADER (owner, Nov 20: days of freezes, each a frame waiting for a shader the warm-ups missed; on
 // Windows each takes 1 to 3 s to build). Every frame in play, anything about to be drawn whose material (with that kind
