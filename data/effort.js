@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-25T04:02:00Z",
+ "updated": "2026-11-25T04:25:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -192,9 +192,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-24",
-   "dh": 20.5,
+   "dh": 23.5,
    "act": 2.5,
-   "versions": 5
+   "versions": 6
   }
  ],
  "extra": [
@@ -4497,6 +4497,15 @@ window.EFFORT = {
    "tris": 7408790,
    "chars": 2881480,
    "what": "Machines stop at porches and slabs instead of jumping onto them and climb only curbs and steps they can, corners count when they hit things, they leave the ground over crests and land with a thump, tip over on steep side slopes or hard turns and get set back up, and hard hits damage them (drag, pull, smoke) until fixed at a fuel pump or home (Tuning: Machines)"
+  },
+  {
+   "v": 478,
+   "asked": "2026-11-24T21:45:00-06:00",
+   "live": "2026-11-24T22:25:15-06:00",
+   "dh": 3,
+   "tris": 7513900,
+   "chars": 2884101,
+   "what": "The town has a story now, and it comes out in what people say: once Ruth, Marisol, Dot, Hank, Earl and Gus know you, they let slip a line or two about Gus, Pearl's scrapbook and the boats at night, and Pearl, Cal, Jayden and Denise carry their part of it in talk."
   }
  ]
 };
