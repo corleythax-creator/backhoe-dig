@@ -422,7 +422,7 @@ function edQuery(x,z){const g=baseHeight(x,z),h=hAt(x,z),r=mesaR(x,z);
   const sx=(baseHeight(x+0.5,z)-baseHeight(x-0.5,z)),sz=(baseHeight(x,z+0.5)-baseHeight(x,z-0.5)),sl=Math.hypot(sx,sz);
   const top=r<EDGE||famR(x,z)<FAM_R||jesR(x,z)<JES_R||dexR(x,z)<DEX_R,deck=deckAt(x,z)>g;
   const surf=deck?'Bridge deck':paintAt(x,z)?matDef(paintAt(x,z)).n:g<WATER?'Lake':roadAmt(x,z)>0.5?'Road':sl>0.9?'Rock face':yardAt(x,z)>0.5?'Dirt yard':top?'Grass':g<WATER+2?'Beach':'Bank';
-  const drive=!landIn(x,z,1,0)?'No, off the island':wallAt(x,z)?'No, too steep':'Yes';
+  const drive=!landIn(x,z,1,0)?'No, off the island':wallAt(x,z,wallLim(1))?'No, too steep':'Yes';
   const dh=edSample(ED_H,x,z)+tsSample(TS.H,x,z),dp=edSample(ED_P,x,z)+tsSample(TS.P,x,z),mine=[];
   if(Math.abs(dh)>0.02)mine.push(`${dh>0?'raised':'lowered'} ${edFmt(Math.abs(dh))} ft`);if(dp>0.05)mine.push('painted dirt');if(dp<-0.05)mine.push('painted grass');
   const mt=paintAt(x,z);if(mt)mine.push(matDef(mt).n.toLowerCase());

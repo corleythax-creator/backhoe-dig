@@ -510,11 +510,15 @@ function wallBuild(x0,x1,z0,z1){
   for(let j=j0-1;j<=j1+1;j++)for(let i=i0-1;i<=i1+1;i++)hh[(j-j0+1)*W+i-i0+1]=baseHeight(WG_X0+i*WG_C,WG_Z0+j*WG_C);
   for(let j=j0;j<=j1;j++)for(let i=i0;i<=i1;i++){const k=j*WG_NX+i;WALL[k]=0;
     if(mesaR(WG_X0+i*WG_C,WG_Z0+j*WG_C)>EDGE-1)continue;
-    const sl=Math.hypot(hv(i+1,j)-hv(i-1,j),hv(i,j+1)-hv(i,j-1))/(2*WG_C);if(sl>0.85)WALL[k]=1}}
+    const sl=Math.hypot(hv(i+1,j)-hv(i-1,j),hv(i,j+1)-hv(i,j-1))/(2*WG_C);WALL[k]=Math.min(255,Math.round(sl*50))}}
 wallBuild(WG_X0,WG_X0+(WG_NX-1)*WG_C,WG_Z0,WG_Z0+(WG_NZ-1)*WG_C);
-function wallAt(x,z){const i=Math.round((x-WG_X0)/WG_C),j=Math.round((z-WG_Z0)/WG_C);return i>=0&&j>=0&&i<WG_NX&&j<WG_NZ&&WALL[j*WG_NX+i]===1}
-// how many of a machine's probe points (local [side, forward] offsets) stand on ground too steep to drive
-function wallCount(x,z,yaw,P){const s=Math.sin(yaw),c=Math.cos(yaw);let n=0;for(const [lx,lz] of P)if(wallAt(x+lx*c+lz*s,z-lx*s+lz*c))n++;return n}
+// (WALL holds each point's slope, rise over run times 50). wallAt: steeper than lim there (rise over run; 0.85, about
+// 40 degrees, the steep look grass and lawns keep off); the machines pass their own climb (wallLim)
+function wallAt(x,z,lim){const i=Math.round((x-WG_X0)/WG_C),j=Math.round((z-WG_Z0)/WG_C);return i>=0&&j>=0&&i<WG_NX&&j<WG_NZ&&WALL[j*WG_NX+i]>(lim===undefined?0.85:lim)*50}
+// the steepest ground a machine climbs: Tuning's climbSlope for wheels, a quarter more on tracks (k 1.25)
+const wallLim=k=>TU.climbSlope*(k||1);
+// how many of a machine's probe points (local [side, forward] offsets) stand on ground too steep for it to drive (k: as wallLim)
+function wallCount(x,z,yaw,P,k){const s=Math.sin(yaw),c=Math.cos(yaw),L=wallLim(k);let n=0;for(const [lx,lz] of P)if(wallAt(x+lx*c+lz*s,z-lx*s+lz*c,L))n++;return n}
 const PIPE_Z=-5.5, TRENCH_Z0=-8.5, TRENCH_Z1=-3.0;
 // a dig-grid vertex's undug colour (grass, rock on steep ground, sand, the yards and roads, painted materials), its
 // dirt-texture amount and how much material covers it. digBaseAt works from where the point is on the map alone (its
