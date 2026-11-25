@@ -607,12 +607,15 @@ function warmFarTick(){const F=warmFar;if(!F.L&&!F.done&&warmAll)warmFarList();i
 // far batch is drawn once, alone, into the picture about to be drawn over (layer WARM_LAYER, with every light, nothing
 // culled, the shadow map left as it is), one a frame, so that set-up comes a thing at a time; then the batch is shown
 const WARM_LAYER=30,warmDrawCam=new THREE.PerspectiveCamera();
-function warmDraw(o){const fc=[],ls=[];o.traverse(m=>{m.layers.enable(WARM_LAYER);if(m.frustumCulled){fc.push(m);m.frustumCulled=false}});
+// (all: every part drawn, hidden ones too, then hidden again: a cat's close-up body and fur shells are hidden while it is
+// far, as it is behind the loading cover, so they were first drawn when you walked up to it, a 4.6 s freeze in the
+// owner's v472 report)
+function warmDraw(o,all){const fc=[],ls=[],hid=[];o.traverse(m=>{m.layers.enable(WARM_LAYER);if(m.frustumCulled){fc.push(m);m.frustumCulled=false}if(all&&!m.visible){hid.push(m);m.visible=true}});
   scene.traverse(l=>{if(l.isLight&&!l.layers.isEnabled(WARM_LAYER)){l.layers.enable(WARM_LAYER);ls.push(l)}});
   warmDrawCam.copy(camera);warmDrawCam.layers.set(WARM_LAYER);const t=renderer.getRenderTarget(),au=renderer.shadowMap.autoUpdate,nu=renderer.shadowMap.needsUpdate;
   try{renderer.shadowMap.autoUpdate=false;if(postOn()&&postRT)renderer.setRenderTarget(postRT);renderer.render(scene,warmDrawCam)}
   finally{renderer.setRenderTarget(t);renderer.shadowMap.autoUpdate=au;renderer.shadowMap.needsUpdate=nu;
-    o.traverse(m=>m.layers.disable(WARM_LAYER));for(const m of fc)m.frustumCulled=true;for(const l of ls)l.layers.disable(WARM_LAYER)}}
+    o.traverse(m=>m.layers.disable(WARM_LAYER));for(const m of fc)m.frustumCulled=true;for(const m of hid)m.visible=false;for(const l of ls)l.layers.disable(WARM_LAYER)}}
 // (one a frame in play; behind the loading cover as many as fit in 30 ms)
 function warmDrawTick(){const F=warmFar;if(!F.pre)return;const T=performance.now();
   do{const e=F.pre.pop();if(e&&e[0].parent&&!vrOn()&&!edOn)try{const t0=performance.now();warmDraw(e[0]);const ms=performance.now()-t0;if(ms>100)pfMark('Far thing first drawn',t0,e[0].name||e[0].type)}catch(x){}}
