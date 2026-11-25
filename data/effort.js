@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-25T04:25:00Z",
+ "updated": "2026-11-25T23:17:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -195,6 +195,12 @@ window.EFFORT = {
    "dh": 23.5,
    "act": 2.5,
    "versions": 6
+  },
+  {
+   "d": "2026-11-25",
+   "dh": 2,
+   "act": 0.5,
+   "versions": 1
   }
  ],
  "extra": [
@@ -4506,6 +4512,15 @@ window.EFFORT = {
    "tris": 7513900,
    "chars": 2884101,
    "what": "The town has a story now, and it comes out in what people say: once Ruth, Marisol, Dot, Hank, Earl and Gus know you, they let slip a line or two about Gus, Pearl's scrapbook and the boats at night, and Pearl, Cal, Jayden and Denise carry their part of it in talk."
+  },
+  {
+   "v": 479,
+   "asked": "2026-11-25T16:41:00-06:00",
+   "live": "2026-11-25T17:17:00-06:00",
+   "dh": 2,
+   "tris": 7439242,
+   "chars": 2886447,
+   "what": "Everything near where you start (the town's buildings, the pebbles, the townsfolk) is drawn once behind the loading cover, so it no longer freezes the game for seconds the first time you see it"
   }
  ]
 };

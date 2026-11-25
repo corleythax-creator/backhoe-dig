@@ -2,6 +2,10 @@
 
 Every version of Corley's Island, newest first, grouped by the day it went live (Central time). Made from `data/effort.js` by `tools/changelog.py`; don't edit it by hand. [Play any old version](https://corleys-island.vercel.app/versions/) · [Build log with charts](https://corleys-island.vercel.app/build.html)
 
+## Wednesday, November 25, 2026
+
+- **v479** (5:17 PM) Everything near where you start (the town's buildings, the pebbles, the townsfolk) is drawn once behind the loading cover, so it no longer freezes the game for seconds the first time you see it
+
 ## Tuesday, November 24, 2026
 
 - **v478** (10:25 PM) The town has a story now, and it comes out in what people say: once Ruth, Marisol, Dot, Hank, Earl and Gus know you, they let slip a line or two about Gus, Pearl's scrapbook and the boats at night, and Pearl, Cal, Jayden and Denise carry their part of it in talk.
