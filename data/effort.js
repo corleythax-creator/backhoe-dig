@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-25T03:41:00Z",
+ "updated": "2026-11-25T04:02:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -192,9 +192,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-24",
-   "dh": 12.5,
-   "act": 2,
-   "versions": 4
+   "dh": 20.5,
+   "act": 2.5,
+   "versions": 5
   }
  ],
  "extra": [
@@ -4488,6 +4488,15 @@ window.EFFORT = {
    "tris": 7533118,
    "chars": 2872693,
    "what": "Machines bounce back off what they hit and scrape along walls at a glance, a corner hit turns them, machines shove each other by weight, hits thump and clang and scraping grinds with camera shake and rumble, and the bigger machines knock over drums, barricades, signs and bins, which stand back up later (Tuning: Machines)"
+  },
+  {
+   "v": 477,
+   "asked": "2026-11-24T21:35:00-06:00",
+   "live": "2026-11-24T22:02:03-06:00",
+   "dh": 8,
+   "tris": 7408790,
+   "chars": 2881480,
+   "what": "Machines stop at porches and slabs instead of jumping onto them and climb only curbs and steps they can, corners count when they hit things, they leave the ground over crests and land with a thump, tip over on steep side slopes or hard turns and get set back up, and hard hits damage them (drag, pull, smoke) until fixed at a fuel pump or home (Tuning: Machines)"
   }
  ]
 };
