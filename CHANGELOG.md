@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Tuesday, November 24, 2026
 
+- **v474** (7:40 PM) From the owner's v472 report: the cats' close-up body and fur are drawn once behind the loading cover too (hidden while they are far, they first went to the graphics card when you walked up to them, a 4.8 s freeze); the game's tools run without asking for permission
 - **v473** (6:58 PM) Machines roll over logs, stumps, small boulders and sandbags, the bigger ones push through traffic drums, barricades, signs and bins, and they climb steeper ground with hills holding them back less (Tuning: Machines)
 
 ## Monday, November 23, 2026
