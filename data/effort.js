@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-25T02:40:00Z",
+ "updated": "2026-11-25T03:41:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -192,9 +192,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-24",
-   "dh": 6.5,
-   "act": 1.5,
-   "versions": 3
+   "dh": 12.5,
+   "act": 2,
+   "versions": 4
   }
  ],
  "extra": [
@@ -4479,6 +4479,15 @@ window.EFFORT = {
    "tris": 7331444,
    "chars": 2864755,
    "what": "The shadows are drawn again for the moving sun every 1.5 degrees (about every 12 s), not every 2 s (near) and every second (far); the far shadows follow the near ones' sun so the two always fall the same way"
+  },
+  {
+   "v": 476,
+   "asked": "2026-11-24T21:00:00-06:00",
+   "live": "2026-11-24T21:41:21-06:00",
+   "dh": 6,
+   "tris": 7533118,
+   "chars": 2872693,
+   "what": "Machines bounce back off what they hit and scrape along walls at a glance, a corner hit turns them, machines shove each other by weight, hits thump and clang and scraping grinds with camera shake and rumble, and the bigger machines knock over drums, barricades, signs and bins, which stand back up later (Tuning: Machines)"
   }
  ]
 };

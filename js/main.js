@@ -78,7 +78,7 @@ function frame(now){
   updateTruck(dt,tThr,tSteer,tBed);updateMower(dt,mL,mR);if(bench.on){sDrive=sTurn=sArm=sCurl=0}updateSkid(dt,sDrive,sTurn,sArm,sCurl);
   siteTick();
   if(mode==='walk'&&!bench.on)updateWalker(dt,Lx,Ly,Rx*Ts,Ry);else updateWalker(dt,0,0,0,0);trimTick(dt);gunTick(dt);punchTick(dt);
-  boatTick(dt,bThr,bSteer);lakeBoatsTick(dt);trainTick(dt);bikeTick(dt,kThr,kSteer);hvTick(dt,hDrive,hTurn,hArm,hCurl);pbTick(dt);twinTick();
+  boatTick(dt,bThr,bSteer);lakeBoatsTick(dt);trainTick(dt);bikeTick(dt,kThr,kSteer);hvTick(dt,hDrive,hTurn,hArm,hCurl);crTick(dt);pbTick(dt);twinTick();
   statTick(dt);
   // what the mixer hears: hydraulic demand, a ram pushed against its stop (relief valve), tracks moving
   {const end=(v,l,i)=>(i>0.1&&v>=l[1]-1e-4)||(i<-0.1&&v<=l[0]+1e-4);
@@ -96,7 +96,7 @@ function frame(now){
   [st.x,st.z]=landClamp(st.x,st.z,3.5,1.9);
   // the scarp face, ramp banks and stockpiles are too steep to climb: the tracks stop at their foot
   if(wallCount(st.x,st.z,st.yaw,EX_P,1.25)>w0){st.x=ox;st.z=oz}
-  blkPush(st,EX_C,EX_R,0.6);
+  st.v=driveIn*TU.exTrack*mudK;blkPush(st,EX_C,EX_R,0.6);hvPush(st,EX_C,EX_R);
   const sy=Math.sin(st.yaw),cy=Math.cos(st.yaw);
   // tracks rut loose fill and mud, crush clods, pick up mud and kick up a little dust (not off mud)
   if(!bench.on&&(Math.abs(driveIn)>0.05||Math.abs(turnIn)>0.05))for(const sd of [-1,1]){const tx=st.x+sd*1.1*cy,tz=st.z-sd*1.1*sy;

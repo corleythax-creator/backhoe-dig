@@ -169,10 +169,13 @@ function hvGround(h,k){const K=h.K,sy=Math.sin(h.yaw),cy=Math.cos(h.yaw),S=(lx,l
   const fl=S(-K.hw,K.af),fr=S(K.hw,K.af),bl=S(-K.hw,K.ab),br=S(K.hw,K.ab),hf=(fl+fr)/2,hb=(bl+br)/2,L=K.af-K.ab,y=hb+(hf-hb)*(-K.ab/L);
   h.y+=(y-h.y)*k;h.pitch+=(-Math.atan2(hf-hb,L)-h.pitch)*k;h.roll+=(Math.atan2((fr+br)-(fl+bl),4*K.hw)-h.roll)*k}
 // pushes o (its circles at lzs along it, radius r) out of every heavy machine but skip; true if it touched one
-function hvPush(o,lzs,r,skip){let hit=false;const sy=Math.sin(o.yaw||0),cy=Math.cos(o.yaw||0);
-  for(const h of hvs){if(h===skip)continue;
+// the worker (o is wk) is only kept out; a machine shares the overlap with the one it meets by their weights (crMass,
+// crash.js): the lighter is shoved the further, and crBump trades their speeds
+function hvPush(o,lzs,r,skip){let hit=false;const sy=Math.sin(o.yaw||0),cy=Math.cos(o.yaw||0),mach=o!==wk;
+  for(const h of hvs){if(h===skip)continue;let hx=0,hz=0,ls=0,ln=0;
     for(const lz of lzs)for(const [qx,qz,qr] of h.circ){const dx=o.x+sy*lz-qx,dz=o.z+cy*lz-qz,d=Math.hypot(dx,dz),m=r+qr;
-      if(d<m&&d>1e-3){o.x+=dx/d*(m-d);o.z+=dz/d*(m-d);hit=true}}}
+      if(d<m&&d>1e-3){const f=mach?crShare(o,h):1;o.x+=dx/d*(m-d)*f;o.z+=dz/d*(m-d)*f;if(mach){h.x-=dx/d*(m-d)*(1-f);h.z-=dz/d*(m-d)*(1-f)}hx+=dx/d;hz+=dz/d;ls+=lz;ln++;hit=true}}
+    if(ln&&mach)crBump(o,h,hx,hz,ls/ln,r)}
   return hit}
 // the trailer's corners in a wall or off the land
 function hvTrailOut(h){h.g.localToWorld(hvV.set(0,0,-HV_KP));const ts=Math.sin(h.ty),tc=Math.cos(h.ty);let n=0;
@@ -226,11 +229,11 @@ function hvDrive(h,dt,drive,turn,arm,curl,on){const K=h.K;
   // on the islands and decks, off steep ground, out of buildings, blocks and the other machines
   if(h.v||h.w){for(const lz of [K.P[0][1],K.P[2][1]]){const px=h.x+sy*lz,pz=h.z+cy*lz,q=landClamp(px,pz,1.0,1.4);if(q[0]!==px||q[1]!==pz){h.x+=q[0]-px;h.z+=q[1]-pz;h.v*=0.5}}
     if(wallCount(h.x,h.z,h.yaw,K.P,K.track?1.25:1)+(K.trail?hvTrailOut(h):0)>bad0){h.x=ox;h.z=oz;h.yaw=oyaw;h.ty=oty;h.mv=omv;h.v=0;h.w=0}
-    if(blkPush(h,K.C,K.R,K.ov||0.4))h.v*=0.5;
+    blkPush(h,K.C,K.R,K.ov||0.4);
     for(const lz of K.C){const cx=h.x+sy*lz,cz=h.z+cy*lz;
       for(const [o,cs,r] of [[st,EX_C,EX_R],[tr,TR_C,TR_R],[mw,MW_C,MW_R],[sk,SK_C,SK_R],[bk,BK_C,BK_R]])for(const q of cs){const dx=cx-o.x-Math.sin(o.yaw)*q,dz=cz-o.z-Math.cos(o.yaw)*q,d=Math.hypot(dx,dz),m=K.R+r;
         if(d<m&&d>1e-3){h.x+=dx/d*(m-d);h.z+=dz/d*(m-d);h.v*=0.6}}}
-    if(hvPush(h,K.C,K.R,h))h.v*=0.6}
+    hvPush(h,K.C,K.R,h)}
   // tracks and tyres rut soft ground and splash through puddles (mud.js)
   if(Math.abs(h.v)+Math.abs(h.w)>0.05)for(const sd of [-1,1]){const rx=h.x+sd*K.hw*cy,rz=h.z-sd*K.hw*sy,tv=h.v-sd*h.w*K.hw;
     if(K.track){stampRut(rx,rz,h.yaw,0.28,1.5,dt);splashMud(rx+sy*1.5*Math.sign(tv||1),rz+cy*1.5*Math.sign(tv||1),h.yaw,tv,0.3,0.8,dt)}

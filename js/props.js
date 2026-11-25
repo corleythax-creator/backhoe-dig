@@ -9,8 +9,8 @@
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 // n: name; w, d: footprint in metres (x across, z front to back) at size 100%; cap: most of that kind; solid: blocks
 // machines and the worker (with the solid box's half sizes, if not the footprint); deep: a footing below the ground, so
-// it sits on the highest ground under it and a slope never shows a gap; lo: its height (m), so machines that
-// roll over that much drive over it; soft: light enough that the bigger machines push through it (blkPush); tint: takes the house colours; cat: its group in the
+// it sits on the highest ground under it and a slope never shows a gap; (machines roll over the low ones: their
+// solid's lo, the model's height, blkPush); soft: light enough that the bigger machines push through it (blkPush); tint: takes the house colours; cat: its group in the
 // editor's Things library (ED_KIND_CATS below); run: laid end to end along a line (the editor's Line); sit: where
 // townsfolk sit or stand by it, [x, z, turn from its own, 1 staff or 2 standing] on the model (Harbor Square's people use them: sqSpots)
 const PROPS={
@@ -59,8 +59,8 @@ const PROPS={
   windsock:{n:'Windsock',cat:6,w:0.3,d:0.3,soft:1,cap:20,solid:[0.06,0.06]},
   // site gear
   pipes:{n:'Culvert pipes',cat:3,w:1.9,d:2.4,cap:60,solid:1,deep:1},
-  lumber:{n:'Lumber stack',cat:3,w:1.25,d:3.6,lo:0.55,cap:80,solid:1,deep:1},
-  sandbags:{n:'Sandbag wall',cat:3,run:1,w:1.8,d:0.5,lo:0.5,cap:300,solid:[0.9,0.22]},
+  lumber:{n:'Lumber stack',cat:3,w:1.25,d:3.6,cap:80,solid:1,deep:1},
+  sandbags:{n:'Sandbag wall',cat:3,run:1,w:1.8,d:0.5,cap:300,solid:[0.9,0.22]},
   jobbox:{n:'Job box',cat:3,w:1.25,d:0.7,cap:60,solid:1},
   genset:{n:'Generator',cat:3,w:1.4,d:0.8,cap:40,solid:1},
   container:{n:'Shipping container',cat:3,w:2.44,d:6.06,cap:30,solid:1,deep:1},
@@ -72,8 +72,8 @@ const PROPS={
   office:{n:'Site office trailer',cat:3,w:12,d:3.4,cap:10,solid:1,deep:1},
   // farm and garden
   haybale:{n:'Round hay bale',cat:7,w:1.55,d:1.87,cap:120,solid:1},
-  straw:{n:'Straw bales',cat:7,w:1.1,d:1.06,lo:0.5,cap:200,solid:1},
-  planter:{n:'Flower planter',cat:7,w:1.2,d:0.45,lo:0.5,cap:200,solid:1},
+  straw:{n:'Straw bales',cat:7,w:1.1,d:1.06,cap:200,solid:1},
+  planter:{n:'Flower planter',cat:7,w:1.2,d:0.45,cap:200,solid:1},
   raisedbed:{n:'Raised garden bed',cat:7,w:2.4,d:1.2,cap:80,pad:[0.3,1.2,0.6]},
   birdbath:{n:'Bird bath',cat:7,w:0.65,d:0.65,soft:1,cap:60,solid:[0.2,0.2]},
   birdhouse:{n:'Birdhouse',cat:7,w:0.3,d:0.3,soft:1,cap:60,solid:[0.05,0.05]},
@@ -510,9 +510,12 @@ function propPts(a){const p=PROPS[a.t],hw=p.w/2*a.s,hd=p.d/2*a.s,c=Math.cos(a.ya
   for(const [u,v] of [[-hw,-hd],[hw,-hd],[-hw,hd],[hw,hd]])out.push([a.x+u*c+v*s,a.z-u*s+v*c]);return out}
 // the ground it stands on: the highest under its footprint for ones with a footing, else under its middle
 function propY(a){const P=PROPS[a.t];if(P.float)return Math.max(surfAt(a.x,a.z),WATER-P.float*a.s);if(!P.deep)return surfAt(a.x,a.z);let y=-1e9;for(const [x,z] of propPts(a))y=Math.max(y,surfAt(x,z));return y}
+// each laid-out asset's instance and the height it stands at ({im, i, py}), for knocking it over (crash.js); kept off
+// the asset itself, which the editor copies as JSON
+const propInst=new WeakMap();
 // the instances and the solid boxes from the asset list; assetsBuild (scenery.js) calls it after every change
 function propsBuild(){const o=new THREE.Object3D(),col=new THREE.Color(),n={};
-  for(let i=SOLIDS.length-1;i>=0;i--)if(SOLIDS[i].prop)SOLIDS.splice(i,1);walkPadsDrop('prop');
+  for(let i=SOLIDS.length-1;i>=0;i--)if(SOLIDS[i].prop)SOLIDS.splice(i,1);walkPadsDrop('prop');if(typeof crReset==='function')crReset();
   for(const k in PROPS)n[k]=0;for(const k in PROP_WIM)for(const im of PROP_WIM[k])im.userData.n=0;
   for(const a of assets){const P=PROPS[a.t];if(a.hd||!P||n[a.t]>=P.cap)continue;const wd=P.wood?boardIx(a.c):-1,im=wd<0?propIMs[a.t]:PROP_WIM[a.t][wd],i=wd<0?n[a.t]++:(n[a.t]++,im.userData.n++);if(wd>=0)boardNeed(wd);
     const py=propY(a);o.position.set(a.x,py,a.z);o.rotation.set(0,a.yaw,0);
@@ -520,7 +523,8 @@ function propsBuild(){const o=new THREE.Object3D(),col=new THREE.Color(),n={};
     if(P.pad)walkPad(a.x,a.z,P.pad[1]*a.s,P.pad[2]*a.s,a.yaw,py+P.pad[0]*a.s,{tag:'prop',rise:(P.pad[3]||0)*a.s});o.scale.setScalar(a.s);o.updateMatrix();im.setMatrixAt(i,o.matrix);
     const t=P.tint?PROP_TINT[(a.c|0)%PROP_TINT.length]:[1,1,1];im.setColorAt(i,col.setRGB(t[0],t[1],t[2]));
     if(P.solid){const [lx,lz]=Array.isArray(P.solid)?P.solid:[P.w/2,P.d/2],c=Math.cos(a.yaw),s=Math.sin(a.yaw),L=lx*a.s,Z=lz*a.s;
-      SOLIDS.push({x:a.x,z:a.z,lx:L,lz:Z,cs:c,sn:s,hx:Math.abs(c)*L+Math.abs(s)*Z,hz:Math.abs(s)*L+Math.abs(c)*Z,prop:1,lo:P.lo!==undefined?P.lo*a.s:undefined,soft:P.soft})}
+      SOLIDS.push({x:a.x,z:a.z,lx:L,lz:Z,cs:c,sn:s,hx:Math.abs(c)*L+Math.abs(s)*Z,hz:Math.abs(s)*L+Math.abs(c)*Z,prop:1,lo:PROP_H[a.t]*a.s,soft:P.soft,a})}
+    propInst.set(a,{im,i,py});
     // (a railing: a turned box of its own off the middle)
     if(P.rails)for(const [u,v,lx,lz] of P.rails){const c=Math.cos(a.yaw),s=Math.sin(a.yaw),L=lx*a.s,Z=lz*a.s;
       SOLIDS.push({x:a.x+(u*c+v*s)*a.s,z:a.z+(-u*s+v*c)*a.s,lx:L,lz:Z,cs:c,sn:s,hx:Math.abs(c)*L+Math.abs(s)*Z,hz:Math.abs(s)*L+Math.abs(c)*Z,prop:1})}}
