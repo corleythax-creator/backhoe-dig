@@ -104,8 +104,9 @@ function townCtx(){if(!tf.on||pbS.hold)return null;let best=null,bd=1e9;
 function townAct(c){if(c.a==='order'){townLook(c.p);townOpen(c.R,c.p);return}townTalk(c.p)}
 // p turns to the worker and holds still a few seconds
 function townLook(p){const yw=Math.atan2(wk.x-p.x,wk.z-p.z);if(p.room){if(!p.spot.path){p.look=yw-p.spot.yaw;p.t=Math.max(p.t||0,6)}else p.wait=5}else{p.wait=Math.max(p.wait||0,5);p.look=yw}}
-// what a regular says now: the first time who they are, then their lines in turn
-function townRegLine(G){const n=town.met[G.id]||0;town.met[G.id]=n+1;town.sig++;return n?say('reg_'+G.id+'_'+(1+(n-1)%3)):say('regHi',{line:say('reg_'+G.id+'_0'),name:G.n})}
+// what a regular says now: the first time who they are, then their lines in turn (three everyday ones, then any of
+// the town's story, words.js 'Town: the story')
+function townRegLine(G){const n=town.met[G.id]||0;let c=3;while(WORDS_BY['reg_'+G.id+'_'+(c+1)])c++;town.met[G.id]=n+1;town.sig++;return n?say('reg_'+G.id+'_'+(1+(n-1)%c)):say('regHi',{line:say('reg_'+G.id+'_0'),name:G.n})}
 function townTalk(p){townLook(p);const G=p.reg,C=tf.chars[p.ci]||{},h=townHour(),K=typeof talkKid==='function'&&talkKid(p),staff=p.room&&p.spot.staff;
   // a stranger is Passerby, Kid or Clerk until they have told you their name (fmWho, lives.js)
   const known=G?!!town.met[G.id]:fmKnown(p),name=fmName(p);let who=fmWho(p,staff?'Clerk':C.age==='kid'||K&&!K.teen?'Kid':'Passerby'),line,intro=false;
