@@ -17,17 +17,17 @@
 // walls), where its wheels or tracks touch the ground (hw out from the middle, af and ab ahead and behind), the cab's
 // eye, the work light, the chase camera's distance and the colour on the map
 const HV_KINDS={
-  dozer:{n:'dozer',x:-212,z:247,yaw:0,C:[1.0,-0.9],R:1.6,P:[[-1.55,2.25],[1.55,2.25],[-1.35,-1.95],[1.35,-1.95]],hw:1.05,af:1.45,ab:-1.45,
+  dozer:{n:'dozer',x:-212,z:247,yaw:0,ov:0.7,C:[1.0,-0.9],R:1.6,P:[[-1.55,2.25],[1.55,2.25],[-1.35,-1.95],[1.35,-1.95]],hw:1.05,af:1.45,ab:-1.45,
     eye:[0,2.35,-0.75,0,-1.46,4.5],lamp:[0,1.6,1.3,0,-1,10],cam:0.9,col:'#f2b705',len:4.4,wid:3.1,track:true},
-  loader:{n:'wheel loader',x:-198,z:246,yaw:0,C:[2.4,0.4,-1.8],R:1.4,P:[[-1.4,3.9],[1.4,3.9],[-1.2,-2.75],[1.2,-2.75]],hw:1.15,af:1.4,ab:-1.3,wb:2.7,
+  loader:{n:'wheel loader',x:-198,z:246,yaw:0,ov:0.6,C:[2.4,0.4,-1.8],R:1.4,P:[[-1.4,3.9],[1.4,3.9],[-1.2,-2.75],[1.2,-2.75]],hw:1.15,af:1.4,ab:-1.3,wb:2.7,
     eye:[0,2.75,-0.15,0,-0.8,5],lamp:[0,2.2,0.6,0,-1,12],cam:1.0,col:'#f2b705',len:6.6,wid:2.7},
-  semi:{n:'semi',x:-178,z:268,yaw:Math.PI/2,C:[3.0,1.0,-1.0],R:1.35,P:[[-1.2,4.5],[1.2,4.5],[-1.2,-2.6],[1.2,-2.6]],hw:1.05,af:3.4,ab:-1.75,wb:5.15,
+  semi:{n:'semi',x:-178,z:268,yaw:Math.PI/2,ov:0.5,C:[3.0,1.0,-1.0],R:1.35,P:[[-1.2,4.5],[1.2,4.5],[-1.2,-2.6],[1.2,-2.6]],hw:1.05,af:3.4,ab:-1.75,wb:5.15,
     eye:[0.5,2.9,1.45,0,-1.76,10],lamp:[0,1.2,4.4,0,-1.2,16],cam:1.5,col:'#b3262c',len:7.0,wid:2.5,trail:true},
   // a full-size crew-cab pickup: 19 ft 4 in long, a 12 ft 2 in wheelbase, 32 in tyres
-  pickup:{n:'pickup',x:-186,z:236,yaw:Math.PI/2,C:[1.7,0,-1.7],R:1.05,P:[[-1.0,2.95],[1.0,2.95],[-1.0,-2.95],[1.0,-2.95]],hw:0.86,af:1.85,ab:-1.85,wb:3.7,
+  pickup:{n:'pickup',x:-186,z:236,yaw:Math.PI/2,ov:0.35,C:[1.7,0,-1.7],R:1.05,P:[[-1.0,2.95],[1.0,2.95],[-1.0,-2.95],[1.0,-2.95]],hw:0.86,af:1.85,ab:-1.85,wb:3.7,
     eye:[0.4,1.62,0.25,0,-0.12,10],lamp:[0,0.95,2.95,0,-1,16],cam:0.95,col:'#1d3557',len:5.9,wid:2.0,car:'pk',acc:4.2,brake:7.5},
   // a utility four-wheeler: 7 ft long, a 50 in wheelbase, 25 in tyres
-  atv:{n:'four-wheeler',x:-190,z:256,yaw:0,C:[0.5,-0.5],R:0.66,P:[[-0.6,1.05],[0.6,1.05],[-0.6,-1.05],[0.6,-1.05]],hw:0.47,af:0.64,ab:-0.64,wb:1.28,
+  atv:{n:'four-wheeler',x:-190,z:256,yaw:0,ov:0.25,C:[0.5,-0.5],R:0.66,P:[[-0.6,1.05],[0.6,1.05],[-0.6,-1.05],[0.6,-1.05]],hw:0.47,af:0.64,ab:-0.64,wb:1.28,
     eye:[0,1.68,-0.2,0,-3,10],lamp:[0,0.95,1.0,0,-1,10],cam:0.55,col:'#c0392b',len:2.1,wid:1.2,car:'at',acc:5.5,brake:8,rider:true}};
 // the lowboy hangs on the fifth wheel HV_KP behind the semi's middle; its axles are HV_LT behind that
 const HV_KP=1.8,HV_LT=13.2,HV_TC=[-1.2,-4.4,-7.6,-10.8,-13.4];
@@ -226,7 +226,7 @@ function hvDrive(h,dt,drive,turn,arm,curl,on){const K=h.K;
   // on the islands and decks, off steep ground, out of buildings, blocks and the other machines
   if(h.v||h.w){for(const lz of [K.P[0][1],K.P[2][1]]){const px=h.x+sy*lz,pz=h.z+cy*lz,q=landClamp(px,pz,1.0,1.4);if(q[0]!==px||q[1]!==pz){h.x+=q[0]-px;h.z+=q[1]-pz;h.v*=0.5}}
     if(wallCount(h.x,h.z,h.yaw,K.P)+(K.trail?hvTrailOut(h):0)>bad0){h.x=ox;h.z=oz;h.yaw=oyaw;h.ty=oty;h.mv=omv;h.v=0;h.w=0}
-    if(blkPush(h,K.C,K.R))h.v*=0.5;
+    if(blkPush(h,K.C,K.R,K.ov||0.4))h.v*=0.5;
     for(const lz of K.C){const cx=h.x+sy*lz,cz=h.z+cy*lz;
       for(const [o,cs,r] of [[st,EX_C,EX_R],[tr,TR_C,TR_R],[mw,MW_C,MW_R],[sk,SK_C,SK_R],[bk,BK_C,BK_R]])for(const q of cs){const dx=cx-o.x-Math.sin(o.yaw)*q,dz=cz-o.z-Math.cos(o.yaw)*q,d=Math.hypot(dx,dz),m=K.R+r;
         if(d<m&&d>1e-3){h.x+=dx/d*(m-d);h.z+=dz/d*(m-d);h.v*=0.6}}}

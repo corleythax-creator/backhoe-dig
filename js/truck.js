@@ -308,7 +308,7 @@ function updateTruck(dt,thr,steerIn,bedIn){
     if(d<m&&d>1e-3){tr.x+=dx/d*(m-d);tr.z+=dz/d*(m-d);tr.v*=0.5}}}
   // and off Dexter's heavy machines (heavy.js)
   if(hvPush(tr,TR_C,TR_R))tr.v*=0.5;
-  if(blkPush(tr,TR_C,TR_R)){if(Math.abs(tr.v)>1.2){shake=reduceMotion?0:0.15;rumble(250,0.7)}tr.v*=-0.15}
+  if(blkPush(tr,TR_C,TR_R,0.5)){if(Math.abs(tr.v)>1.2){shake=reduceMotion?0:0.15;rumble(250,0.7)}tr.v*=-0.15}
   tr.aL+=((tr.v-vPrev)/Math.max(dt,1e-3)-tr.aL)*Math.min(1,dt*6);
   // hydraulics lift slower under load; the bed comes down on its own weight
   {const b=tr.bed;tr.bed=clamp(tr.bed+bedIn*(bedIn>0?TU.trBedUp*(1-0.4*f):TU.trBedDown)*dt,0,0.9);tr.bedV=dt>0?(tr.bed-b)/dt:0}

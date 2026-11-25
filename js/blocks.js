@@ -79,11 +79,14 @@ function moveDeckAt(x,z,y){for(const d of MOVE_DECKS){const dx=x-d.x,dz=z-d.z;if
     if(yl>-1e8){const wy=d.y+yl*d.cp-u*d.sp;if(wy>y)y=wy}}
   return y}
 function blkHit(x,y,z){for(const b of blocks)if(Math.abs(x-b.x)<b.w/2&&Math.abs(z-b.z)<b.d/2&&y>b.y-0.05&&y<b.y+b.h)return b;return null}
-// a machine is a row of circles of radius r along its heading (offsets lz); pushes it out of blocks too tall to climb
+// a machine is a row of circles of radius r along its heading (offsets lz); pushes it out of blocks too tall to climb.
+// over: how tall a thing (m) the machine rolls straight over (its tires or tracks: a log, a stump, a small boulder, a
+// sandbag wall; solids carrying lo, their height), scaled by Tuning's overH; and a machine that rolls over 1 ft or more
+// also pushes through the light things (soft: traffic drums, cones, barricades, signs, bins), with a jolt as it goes
 function blkCircleD(o,lz,b){const cx=o.x+Math.sin(o.yaw)*lz,cz=o.z+Math.cos(o.yaw)*lz,hx=b.w/2,hz=b.d/2;
   return Math.hypot(cx-Math.max(b.x-hx,Math.min(b.x+hx,cx)),cz-Math.max(b.z-hz,Math.min(b.z+hz,cz)))}
 const blkNear=new WeakMap();
-function blkPush(o,lzs,r){let hit=false;
+function blkPush(o,lzs,r,over){let hit=false,ov=false;const up=(over||0)*TU.overH;
   // the islands' buildings and the things placed in the map editor; the ones nowhere near (beyond the machine's reach
   // plus the solid's own) are skipped first: there are a few thousand and this runs for every machine every frame
   let R=r;for(const lz of lzs)R=Math.max(R,Math.abs(lz)+r);
@@ -93,9 +96,12 @@ function blkPush(o,lzs,r){let hit=false;
   if(!N||N.n!==SOLIDS.length||N.R<R||now-N.t>250||Math.abs(o.x-N.x)>4||Math.abs(o.z-N.z)>4){if(!N)blkNear.set(o,N={L:[]});N.n=SOLIDS.length;N.R=R;N.t=now;N.x=o.x;N.z=o.z;N.L.length=0;
     for(const s of SOLIDS){if(s.foot)continue;const e=R+10+(s.sn!==undefined?Math.hypot(s.lx,s.lz):Math.max(s.hx,s.hz)*1.42);if(Math.abs(o.x-s.x)>e||Math.abs(o.z-s.z)>e)continue;N.L.push(s)}}
   for(const s of N.L){if(s.foot)continue;const e=R+(s.sn!==undefined?Math.hypot(s.lx,s.lz):Math.max(s.hx,s.hz)*1.42);
-    if(Math.abs(o.x-s.x)>e||Math.abs(o.z-s.z)>e)continue;
-    for(const lz of lzs){const p=solidOut(s,o.x+Math.sin(o.yaw)*lz,o.z+Math.cos(o.yaw)*lz,r);if(!p)continue;hit=true;o.x+=p[0];o.z+=p[1]}}
-  for(const b of blocks){if(b.y+b.h<o.y+BLK_CLIMB||b.y>o.y+3)continue;const hx=b.w/2,hz=b.d/2;
+    if(Math.abs(o.x-s.x)>e||Math.abs(o.z-s.z)>e)continue;const pass=up>0&&((s.lo!==undefined&&s.lo<=up)||(s.soft&&up>=0.3));
+    for(const lz of lzs){const p=solidOut(s,o.x+Math.sin(o.yaw)*lz,o.z+Math.cos(o.yaw)*lz,r*(pass?0.6:1));if(!p)continue;if(pass){ov=true;continue}hit=true;o.x+=p[0];o.z+=p[1]}}
+  // rolling over: a jolt and a little drag as it goes on, none while it stays over
+  if(ov){if(!o.ovOn&&Math.abs(o.v||0)>0.6){if(blkRidden(o)){shake=Math.max(shake,reduceMotion?0:0.08);rumble(160,0.45)}o.v*=0.8}o.v*=0.995}o.ovOn=ov;
+  const climb=Math.max(BLK_CLIMB,up);
+  for(const b of blocks){if(b.y+b.h<o.y+climb||b.y>o.y+3)continue;const hx=b.w/2,hz=b.d/2;
     for(const lz of lzs){const cx=o.x+Math.sin(o.yaw)*lz,cz=o.z+Math.cos(o.yaw)*lz,dx=cx-b.x,dz=cz-b.z,px=hx+r-Math.abs(dx),pz=hz+r-Math.abs(dz);
       if(px<=0||pz<=0)continue;
       const nx=dx-Math.max(-hx,Math.min(hx,dx)),nz=dz-Math.max(-hz,Math.min(hz,dz)),d=Math.hypot(nx,nz);
@@ -103,6 +109,8 @@ function blkPush(o,lzs,r){let hit=false;
       else if(px<pz)o.x+=Math.sign(dx||1)*px;else o.z+=Math.sign(dz||1)*pz;
       hit=true}}
   return hit}
+// the machine the worker is driving (only it shakes the camera)
+function blkRidden(o){if(typeof wk==='undefined'||!wk.inside||typeof WK_RIDES==='undefined')return false;const R=WK_RIDES[wk.inside];return !!R&&R.o===o}
 const EX_C=[0.85,-0.85],EX_R=1.25,TR_C=[2.2,-0.4,-2.6,-3.6],TR_R=1.25;
 // points round each machine's footprint ([side, forward] metres) that must stay off ground too steep to drive
 const EX_P=[[-1.1,1.9],[1.1,1.9],[-1.1,-1.9],[1.1,-1.9],[0,2.1],[0,-2.1]],TR_P=[[-1.1,3.6],[1.1,3.6],[0,3.8],[-1.1,-3.3],[1.1,-3.3]],MW_P=[[-0.5,1.6],[0.5,1.6],[-0.6,-0.3],[0.6,-0.3]];

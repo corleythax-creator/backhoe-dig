@@ -345,7 +345,7 @@ function dwStump(seed,r,h){const K=treeKit(seed),V=K.V,E={p:[],n:[],u:[],i:[]},y
   for(let k=0,nr=4+Math.floor(K.rnd()*2);k<nr;k++){const a=k/nr*6.283+K.rnd()*0.6,d=new V(Math.cos(a),0,Math.sin(a)),f=0.8+0.4*K.rnd();
     K.tube([new V(d.x*r*0.75,0.22,d.z*r*0.75),new V(d.x*r*1.55*f,0.05,d.z*r*1.55*f),new V(d.x*r*2.3*f,-0.12,d.z*r*2.3*f)],[r*0.34,r*0.2,r*0.07],5,1)}
   dwCap(E,new V(0,h,0),new V(0,1,0),r,12);
-  return{wood:K.done().wood,end:dwGeo(E),log:0,r}}
+  return{wood:K.done().wood,end:dwGeo(E),log:0,r,h}}
 // the shapes: two logs and two stumps; per shape a mesh for each bark (leaf-tree bark, pine bark) and one for the ends
 const dwShapes=[dwLog(601,6.4,0.24,3),dwLog(602,3.6,0.18,2),dwStump(603,0.27,0.55),dwStump(604,0.2,0.38)];
 const dwIMs=(function(){const endMat=new THREE.MeshLambertMaterial({map:treeTex.end}),mk=(g,m,col)=>{const im=new THREE.InstancedMesh(g,m,DW_CAP);im.count=0;
@@ -372,8 +372,8 @@ function dwLayout(){for(let i=SOLIDS.length-1;i>=0;i--)if(SOLIDS[i].dw)SOLIDS.sp
     if(sh.log){L=sh.len*s/2;const c=Math.cos(yaw),sn=Math.sin(yaw),x1=x+c*L,z1=z-sn*L,x2=x-c*L,z2=z+sn*L;
       if(!free(x1,z1)||!free(x2,z2))continue;const y1=baseHeight(x1,z1),y2=baseHeight(x2,z2);if(Math.abs(y1-y2)>1.2)continue;
       let hit=false;for(let t=0;t<=4&&!hit;t++)hit=near(x2+(x1-x2)*t/4,z2+(z1-z2)*t/4,1.2)[1]<0.9;if(hit)continue;
-      pitch=Math.atan2(y1-y2,2*L);y=(y1+y2)/2;const lz=sh.r*s+0.05;sol={x,z,lx:L,lz,cs:c,sn,hx:Math.abs(c)*L+Math.abs(sn)*lz,hz:Math.abs(sn)*L+Math.abs(c)*lz,dw:1}}
-    else{if(near(x,z,2)[1]<1.2)continue;yaw=h2*40;sol={x,z,hx:sh.r*s*1.2,hz:sh.r*s*1.2,dw:1}}
+      pitch=Math.atan2(y1-y2,2*L);y=(y1+y2)/2;const lz=sh.r*s+0.05;sol={x,z,lx:L,lz,cs:c,sn,hx:Math.abs(c)*L+Math.abs(sn)*lz,hz:Math.abs(sn)*L+Math.abs(c)*lz,dw:1,lo:2*sh.r*s}}
+    else{if(near(x,z,2)[1]<1.2)continue;yaw=h2*40;sol={x,z,hx:sh.r*s*1.2,hz:sh.r*s*1.2,dw:1,lo:sh.h*s}}
     if(others.some(q=>solidOut(q,x,z,L+0.5)))continue;
     const w=a.t==='pine'?1:0;if(nw[k][w]>=DW_CAP||ne[k]>=DW_CAP)continue;
     o.position.set(x,y-0.06,z);o.rotation.set(0,yaw,pitch,'YZX');o.scale.set(s,s,s);o.updateMatrix();

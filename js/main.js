@@ -96,7 +96,7 @@ function frame(now){
   [st.x,st.z]=landClamp(st.x,st.z,3.5,1.9);
   // the scarp face, ramp banks and stockpiles are too steep to climb: the tracks stop at their foot
   if(wallCount(st.x,st.z,st.yaw,EX_P)>w0){st.x=ox;st.z=oz}
-  blkPush(st,EX_C,EX_R);
+  blkPush(st,EX_C,EX_R,0.6);
   const sy=Math.sin(st.yaw),cy=Math.cos(st.yaw);
   // tracks rut loose fill and mud, crush clods, pick up mud and kick up a little dust (not off mud)
   if(!bench.on&&(Math.abs(driveIn)>0.05||Math.abs(turnIn)>0.05))for(const sd of [-1,1]){const tx=st.x+sd*1.1*cy,tz=st.z-sd*1.1*sy;
