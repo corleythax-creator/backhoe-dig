@@ -2,6 +2,10 @@
 
 Every version of Corley's Island, newest first, grouped by the day it went live (Central time). Made from `data/effort.js` by `tools/changelog.py`; don't edit it by hand. [Play any old version](https://corleys-island.vercel.app/versions/) · [Build log with charts](https://corleys-island.vercel.app/build.html)
 
+## Tuesday, November 24, 2026
+
+- **v473** (6:58 PM) Machines roll over logs, stumps, small boulders and sandbags, the bigger ones push through traffic drums, barricades, signs and bins, and they climb steeper ground with hills holding them back less (Tuning: Machines)
+
 ## Monday, November 23, 2026
 
 - **v472** (6:05 PM) From the owner's v471 report: the cats by the start load behind the loading cover (their fur's first draw was a 0.8 s freeze in play); a slow frame outside the drawing is now reported with its slowest parts (a 5.3 s freeze went unnamed), and every draw is timed and named by its game file

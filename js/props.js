@@ -9,7 +9,8 @@
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 // n: name; w, d: footprint in metres (x across, z front to back) at size 100%; cap: most of that kind; solid: blocks
 // machines and the worker (with the solid box's half sizes, if not the footprint); deep: a footing below the ground, so
-// it sits on the highest ground under it and a slope never shows a gap; tint: takes the house colours; cat: its group in the
+// it sits on the highest ground under it and a slope never shows a gap; lo: its height (m), so machines that
+// roll over that much drive over it; soft: light enough that the bigger machines push through it (blkPush); tint: takes the house colours; cat: its group in the
 // editor's Things library (ED_KIND_CATS below); run: laid end to end along a line (the editor's Line); sit: where
 // townsfolk sit or stand by it, [x, z, turn from its own, 1 staff or 2 standing] on the model (Harbor Square's people use them: sqSpots)
 const PROPS={
@@ -23,7 +24,7 @@ const PROPS={
   barrel:{n:'Barrel',cat:3,w:0.6,d:0.6,cap:300,solid:[0.3,0.3]},
   pallet:{n:'Pallet',cat:3,w:1.22,d:1.02,cap:300,pad:[0.11,0.61,0.51]},
   potty:{n:'Porta-potty',cat:3,w:1.12,d:1.12,cap:40,solid:1},
-  sign:{n:'Sign',cat:3,w:0.9,d:0.12,cap:200,solid:[0.08,0.08]},
+  sign:{n:'Sign',cat:3,w:0.9,d:0.12,soft:1,cap:200,solid:[0.08,0.08]},
   bench:{n:'Bench',cat:4,w:1.8,d:0.6,cap:120,solid:1,sit:[[-0.45,0,0],[0.45,0,0]]},
   cafe:{n:'Café table',cat:4,w:2.0,d:2.0,cap:80,solid:[0.45,0.45],sit:[0,1,2].map(i=>{const a=i*2.09+0.4,x=Math.cos(a)*0.75,z=Math.sin(a)*0.75;return [x,z,Math.atan2(-x,-z)]})},
   stall:{n:'Market stall',cat:4,w:2.8,d:2.8,cap:40,solid:[1.4,1.3],sit:[[0,-0.3,0,1],[0.5,2.2,Math.PI,2],[-0.6,2.3,Math.PI,2]]},
@@ -41,25 +42,25 @@ const PROPS={
   stringlts:{n:'String lights (20 ft)',cat:5,run:1,w:6.1,d:0.2,cap:120,lamp:['bulb',null]},
   lantern:{n:'Lantern hook',cat:5,w:0.6,d:0.3,cap:150,lamp:['lantern',[[0.35,1.55,0]]]},
   // road and traffic
-  barricade:{n:'Barricade',cat:6,run:1,w:2.4,d:0.5,cap:200,solid:[1.2,0.1]},
+  barricade:{n:'Barricade',cat:6,run:1,w:2.4,d:0.5,soft:1,cap:200,solid:[1.2,0.1]},
   jersey:{n:'Jersey barrier (10 ft)',cat:6,run:1,w:3.05,d:0.6,cap:400,solid:[1.52,0.3],deep:1},
-  drum:{n:'Traffic drum',cat:6,w:0.75,d:0.75,cap:400,solid:[0.3,0.3]},
+  drum:{n:'Traffic drum',cat:6,w:0.75,d:0.75,soft:1,cap:400,solid:[0.3,0.3]},
   arrowbd:{n:'Arrow board',cat:6,w:2.2,d:2.8,cap:30,solid:1,lamp:['arrow',[[-0.75,2.9,-0.43],[-0.45,2.9,-0.43],[-0.15,2.9,-0.43],[0.15,2.9,-0.43],[0.45,2.9,-0.43],[0.75,2.9,-0.43],[0.5,3.12,-0.43],[0.5,2.68,-0.43],[0.27,3.3,-0.43],[0.27,2.5,-0.43]]]},
-  stopsign:{n:'Stop sign',cat:6,w:0.8,d:0.1,cap:100,solid:[0.05,0.05]},
-  speedsign:{n:'Speed limit sign',cat:6,w:0.65,d:0.1,cap:100,solid:[0.05,0.05]},
+  stopsign:{n:'Stop sign',cat:6,w:0.8,d:0.1,soft:1,cap:100,solid:[0.05,0.05]},
+  speedsign:{n:'Speed limit sign',cat:6,w:0.65,d:0.1,soft:1,cap:100,solid:[0.05,0.05]},
   hydrant:{n:'Fire hydrant',cat:6,w:0.4,d:0.4,cap:80,solid:[0.15,0.15]},
-  mailbox:{n:'Mailbox',cat:6,w:0.3,d:0.5,cap:80,solid:[0.08,0.08]},
-  trashcan:{n:'Trash can',cat:6,w:0.6,d:0.6,cap:150,solid:[0.28,0.28]},
-  recycle:{n:'Recycling bin',cat:6,w:0.6,d:0.6,cap:150,solid:[0.28,0.28]},
+  mailbox:{n:'Mailbox',cat:6,w:0.3,d:0.5,soft:1,cap:80,solid:[0.08,0.08]},
+  trashcan:{n:'Trash can',cat:6,w:0.6,d:0.6,soft:1,cap:150,solid:[0.28,0.28]},
+  recycle:{n:'Recycling bin',cat:6,w:0.6,d:0.6,soft:1,cap:150,solid:[0.28,0.28]},
   newsbox:{n:'Newspaper boxes',cat:6,w:1.05,d:0.5,cap:60,solid:[0.52,0.24]},
-  aframe:{n:'Chalkboard sign',cat:6,w:0.62,d:0.56,cap:80,solid:[0.3,0.27]},
+  aframe:{n:'Chalkboard sign',cat:6,w:0.62,d:0.56,soft:1,cap:80,solid:[0.3,0.27]},
   bikerack:{n:'Bike rack with bikes',cat:6,w:2.4,d:1.8,cap:40,solid:[1.2,0.85]},
   utilbox:{n:'Utility box',cat:6,w:0.55,d:0.45,cap:80,solid:[0.27,0.22]},
-  windsock:{n:'Windsock',cat:6,w:0.3,d:0.3,cap:20,solid:[0.06,0.06]},
+  windsock:{n:'Windsock',cat:6,w:0.3,d:0.3,soft:1,cap:20,solid:[0.06,0.06]},
   // site gear
   pipes:{n:'Culvert pipes',cat:3,w:1.9,d:2.4,cap:60,solid:1,deep:1},
-  lumber:{n:'Lumber stack',cat:3,w:1.25,d:3.6,cap:80,solid:1,deep:1},
-  sandbags:{n:'Sandbag wall',cat:3,run:1,w:1.8,d:0.5,cap:300,solid:[0.9,0.22]},
+  lumber:{n:'Lumber stack',cat:3,w:1.25,d:3.6,lo:0.55,cap:80,solid:1,deep:1},
+  sandbags:{n:'Sandbag wall',cat:3,run:1,w:1.8,d:0.5,lo:0.5,cap:300,solid:[0.9,0.22]},
   jobbox:{n:'Job box',cat:3,w:1.25,d:0.7,cap:60,solid:1},
   genset:{n:'Generator',cat:3,w:1.4,d:0.8,cap:40,solid:1},
   container:{n:'Shipping container',cat:3,w:2.44,d:6.06,cap:30,solid:1,deep:1},
@@ -71,21 +72,21 @@ const PROPS={
   office:{n:'Site office trailer',cat:3,w:12,d:3.4,cap:10,solid:1,deep:1},
   // farm and garden
   haybale:{n:'Round hay bale',cat:7,w:1.55,d:1.87,cap:120,solid:1},
-  straw:{n:'Straw bales',cat:7,w:1.1,d:1.06,cap:200,solid:1},
-  planter:{n:'Flower planter',cat:7,w:1.2,d:0.45,cap:200,solid:1},
+  straw:{n:'Straw bales',cat:7,w:1.1,d:1.06,lo:0.5,cap:200,solid:1},
+  planter:{n:'Flower planter',cat:7,w:1.2,d:0.45,lo:0.5,cap:200,solid:1},
   raisedbed:{n:'Raised garden bed',cat:7,w:2.4,d:1.2,cap:80,pad:[0.3,1.2,0.6]},
-  birdbath:{n:'Bird bath',cat:7,w:0.65,d:0.65,cap:60,solid:[0.2,0.2]},
-  birdhouse:{n:'Birdhouse',cat:7,w:0.3,d:0.3,cap:60,solid:[0.05,0.05]},
+  birdbath:{n:'Bird bath',cat:7,w:0.65,d:0.65,soft:1,cap:60,solid:[0.2,0.2]},
+  birdhouse:{n:'Birdhouse',cat:7,w:0.3,d:0.3,soft:1,cap:60,solid:[0.05,0.05]},
   arbor:{n:'Garden arbor',cat:7,w:1.5,d:0.7,cap:40},
   shrub:{n:'Shrub',cat:7,w:1.2,d:1.2,cap:400},
   hedge:{n:'Hedge (8 ft)',cat:7,run:1,w:2.44,d:0.8,cap:400,solid:[1.22,0.4]},
   flowers:{n:'Flower bed',cat:7,w:1.9,d:1.9,cap:200,pad:[0.06,0.67,0.67]},
   pumpkins:{n:'Jack-o\'-lanterns',cat:7,w:1.0,d:0.8,cap:200,lamp:['jack',[[0,0.24,0.18]]]},
-  scarecrow:{n:'Scarecrow',cat:7,w:1.4,d:0.3,cap:40,solid:[0.06,0.06]},
+  scarecrow:{n:'Scarecrow',cat:7,w:1.4,d:0.3,soft:1,cap:40,solid:[0.06,0.06]},
   gnome:{n:'Garden gnome',cat:7,w:0.25,d:0.25,cap:200},
   beehive:{n:'Beehives',cat:7,w:1.4,d:0.6,cap:40,solid:1},
   well:{n:'Wishing well',cat:7,w:1.6,d:1.6,cap:20,solid:[0.75,0.75],deep:1},
-  bookbox:{n:'Little free library',cat:7,w:0.65,d:0.45,cap:40,solid:[0.06,0.06]},
+  bookbox:{n:'Little free library',cat:7,w:0.65,d:0.45,soft:1,cap:40,solid:[0.06,0.06]},
   coop:{n:'Chicken coop',cat:7,w:1.4,d:2.2,cap:10,solid:[0.7,0.5],deep:1},
   // the yard and play
   firepit:{n:'Fire pit',cat:4,w:1.3,d:1.3,cap:40,lamp:['fire',[[0,0.45,0]]]},
@@ -519,7 +520,7 @@ function propsBuild(){const o=new THREE.Object3D(),col=new THREE.Color(),n={};
     if(P.pad)walkPad(a.x,a.z,P.pad[1]*a.s,P.pad[2]*a.s,a.yaw,py+P.pad[0]*a.s,{tag:'prop',rise:(P.pad[3]||0)*a.s});o.scale.setScalar(a.s);o.updateMatrix();im.setMatrixAt(i,o.matrix);
     const t=P.tint?PROP_TINT[(a.c|0)%PROP_TINT.length]:[1,1,1];im.setColorAt(i,col.setRGB(t[0],t[1],t[2]));
     if(P.solid){const [lx,lz]=Array.isArray(P.solid)?P.solid:[P.w/2,P.d/2],c=Math.cos(a.yaw),s=Math.sin(a.yaw),L=lx*a.s,Z=lz*a.s;
-      SOLIDS.push({x:a.x,z:a.z,lx:L,lz:Z,cs:c,sn:s,hx:Math.abs(c)*L+Math.abs(s)*Z,hz:Math.abs(s)*L+Math.abs(c)*Z,prop:1})}
+      SOLIDS.push({x:a.x,z:a.z,lx:L,lz:Z,cs:c,sn:s,hx:Math.abs(c)*L+Math.abs(s)*Z,hz:Math.abs(s)*L+Math.abs(c)*Z,prop:1,lo:P.lo!==undefined?P.lo*a.s:undefined,soft:P.soft})}
     // (a railing: a turned box of its own off the middle)
     if(P.rails)for(const [u,v,lx,lz] of P.rails){const c=Math.cos(a.yaw),s=Math.sin(a.yaw),L=lx*a.s,Z=lz*a.s;
       SOLIDS.push({x:a.x+(u*c+v*s)*a.s,z:a.z+(-u*s+v*c)*a.s,lx:L,lz:Z,cs:c,sn:s,hx:Math.abs(c)*L+Math.abs(s)*Z,hz:Math.abs(s)*L+Math.abs(c)*Z,prop:1})}}

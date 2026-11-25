@@ -628,11 +628,11 @@ function rocksTown(){for(let i=SOLIDS.length-1;i>=0;i--)if(SOLIDS[i].rk)SOLIDS.s
   for(let cx=RT_BOX[0];cx<RT_BOX[1];cx+=RT_CELL)for(let cz=RT_BOX[2];cz<RT_BOX[3];cz+=RT_CELL){const h=hash(cx*0.37+4.1,cz*0.53-2.7);if(h>0.3)continue;
     const x=cx+RT_CELL*hash(cx*1.7,cz*0.9+5),z=cz+RT_CELL*hash(cz*1.3-3,cx*0.7),s=1.0+1.0*hash(x*2.1,z*1.1);
     if(!open(x,z,1.2*s))continue;
-    put(Math.floor(h/0.1)%3,x,z,s,0.2,hash(x,z+1),hash(z,x+2));SOLIDS.push({x,z,hx:0.75*s,hz:0.75*s,rk:1});
+    put(Math.floor(h/0.1)%3,x,z,s,0.2,hash(x,z+1),hash(z,x+2));SOLIDS.push({x,z,hx:0.75*s,hz:0.75*s,rk:1,lo:0.55*s});
     // a medium one alongside, and the small stones round them
     const nm=hash(x+3,z)<0.6?1:0,nsm=2+Math.floor(hash(x,z+3)*5);
     for(let i=0;i<nm;i++){const a=hash(x*0.3+i,z)*6.28,d=1.2*s+0.6,mx=x+Math.cos(a)*d,mz=z+Math.sin(a)*d,ms=s*(0.4+0.25*hash(mx,mz));
-      if(!open(mx,mz,0.9*ms))continue;put((Math.floor(h/0.1)+1)%3,mx,mz,ms,0.25,hash(mx,mz+1),hash(mz,mx+2));SOLIDS.push({x:mx,z:mz,hx:0.75*ms,hz:0.75*ms,rk:1})}
+      if(!open(mx,mz,0.9*ms))continue;put((Math.floor(h/0.1)+1)%3,mx,mz,ms,0.25,hash(mx,mz+1),hash(mz,mx+2));SOLIDS.push({x:mx,z:mz,hx:0.75*ms,hz:0.75*ms,rk:1,lo:0.55*ms})}
     for(let i=0;i<nsm;i++){const a=hash(x*0.7-i,z*1.3+i)*6.28,d=1.0*s+0.4+1.8*hash(x+i,z-i),sx=x+Math.cos(a)*d,sz=z+Math.sin(a)*d;
       if(raiseAt(sx,sz)>0.01||paintAt(sx,sz)||Math.abs(roadOff(sx,sz))<ROAD_W/2+1)continue;put(3+(i&1),sx,sz,0.18+0.22*hash(sx,sz),0.3,hash(sx,sz+1),hash(sz,sx+2))}}
   rtIMs.forEach((P,k)=>P.forEach((im,m)=>{im.count=n[k][m];im.instanceMatrix.needsUpdate=true;im.instanceColor.needsUpdate=true}));
