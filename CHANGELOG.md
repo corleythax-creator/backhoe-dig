@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Tuesday, November 24, 2026
 
+- **v477** (10:02 PM) Machines stop at porches and slabs instead of jumping onto them and climb only curbs and steps they can, corners count when they hit things, they leave the ground over crests and land with a thump, tip over on steep side slopes or hard turns and get set back up, and hard hits damage them (drag, pull, smoke) until fixed at a fuel pump or home (Tuning: Machines)
 - **v476** (9:41 PM) Machines bounce back off what they hit and scrape along walls at a glance, a corner hit turns them, machines shove each other by weight, hits thump and clang and scraping grinds with camera shake and rumble, and the bigger machines knock over drums, barricades, signs and bins, which stand back up later (Tuning: Machines)
 - **v475** (8:40 PM) The shadows are drawn again for the moving sun every 1.5 degrees (about every 12 s), not every 2 s (near) and every second (far); the far shadows follow the near ones' sun so the two always fall the same way
 - **v474** (7:40 PM) From the owner's v472 report: the cats' close-up body and fur are drawn once behind the loading cover too (hidden while they are far, they first went to the graphics card when you walked up to them, a 4.8 s freeze); the game's tools run without asking for permission

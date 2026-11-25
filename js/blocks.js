@@ -86,21 +86,32 @@ function blkHit(x,y,z){for(const b of blocks)if(Math.abs(x-b.x)<b.w/2&&Math.abs(
 function blkCircleD(o,lz,b){const cx=o.x+Math.sin(o.yaw)*lz,cz=o.z+Math.cos(o.yaw)*lz,hx=b.w/2,hz=b.d/2;
   return Math.hypot(cx-Math.max(b.x-hx,Math.min(b.x+hx,cx)),cz-Math.max(b.z-hz,Math.min(b.z+hz,cz)))}
 const blkNear=new WeakMap();
-function blkPush(o,lzs,r,over){let hit=false,ov=false,px0=o.x,pz0=o.z,lzS=0,lzN=0;const up=(over||0)*TU.overH;
+function blkPush(o,lzs,r,over,P){let hit=false,ov=false,px0=o.x,pz0=o.z,lzS=0,lzN=0;const up=(over||0)*TU.overH,climb=Math.max(BLK_CLIMB,up);o.crStep=climb;
   // the islands' buildings and the things placed in the map editor; the ones nowhere near (beyond the machine's reach
   // plus the solid's own) are skipped first: there are a few thousand and this runs for every machine every frame
-  let R=r;for(const lz of lzs)R=Math.max(R,Math.abs(lz)+r);
+  let R=r;for(const lz of lzs)R=Math.max(R,Math.abs(lz)+r);if(P)for(const [a,b] of P)R=Math.max(R,Math.hypot(a,b));
   // (and the few that are near are kept for a quarter second, or until the machine has gone 13 ft or a solid was added
   // or taken: six parked machines each read all 4,000 every frame, 1.8 ms at the harbor, v461's Profiler)
   let N=blkNear.get(o);const now=performance.now();
-  if(!N||N.n!==SOLIDS.length||N.R<R||now-N.t>250||Math.abs(o.x-N.x)>4||Math.abs(o.z-N.z)>4){if(!N)blkNear.set(o,N={L:[]});N.n=SOLIDS.length;N.R=R;N.t=now;N.x=o.x;N.z=o.z;N.L.length=0;
-    for(const s of SOLIDS){if(s.foot)continue;const e=R+10+(s.sn!==undefined?Math.hypot(s.lx,s.lz):Math.max(s.hx,s.hz)*1.42);if(Math.abs(o.x-s.x)>e||Math.abs(o.z-s.z)>e)continue;N.L.push(s)}}
+  if(!N||N.n!==SOLIDS.length||N.R<R||now-N.t>250||Math.abs(o.x-N.x)>4||Math.abs(o.z-N.z)>4){if(!N)blkNear.set(o,N={L:[],W:[]});N.n=SOLIDS.length;N.R=R;N.t=now;N.x=o.x;N.z=o.z;N.L.length=0;N.W.length=0;
+    for(const s of SOLIDS){if(s.foot)continue;const e=R+10+(s.sn!==undefined?Math.hypot(s.lx,s.lz):Math.max(s.hx,s.hz)*1.42);if(Math.abs(o.x-s.x)>e||Math.abs(o.z-s.z)>e)continue;N.L.push(s)}
+    // and the raised floors near (walk pads: porches, slabs, steps, decks of things), as turned boxes
+    const seen=new Set(),e=R+10;for(let a=Math.floor((o.x-e)/WP_C);a<=Math.floor((o.x+e)/WP_C);a++)for(let b=Math.floor((o.z-e)/WP_C);b<=Math.floor((o.z+e)/WP_C);b++){const L=WP_G.get(wpKey(a,b));
+      if(L)for(const q of L){if(q.up||seen.has(q))continue;seen.add(q);N.W.push({p:q,x:q.x,z:q.z,lx:q.hx,lz:q.hz,cs:q.c,sn:q.s,hx:Math.abs(q.c)*q.hx+Math.abs(q.s)*q.hz,hz:Math.abs(q.s)*q.hx+Math.abs(q.c)*q.hz})}}}
+  const sy=Math.sin(o.yaw),cy=Math.cos(o.yaw),pts=[];for(const lz of lzs)pts.push([o.x+sy*lz,o.z+cy*lz,r,lz]);
+  // the footprint's corners too (P: [side, forward]), so a square corner can't cut into a post the round ends miss
+  if(P)for(const [lx,lz] of P)pts.push([o.x+lx*cy+lz*sy,o.z-lx*sy+lz*cy,0.12,lz]);
   for(const s of N.L){if(s.foot)continue;const e=R+(s.sn!==undefined?Math.hypot(s.lx,s.lz):Math.max(s.hx,s.hz)*1.42);
     if(Math.abs(o.x-s.x)>e||Math.abs(o.z-s.z)>e)continue;const pass=up>0&&((s.lo!==undefined&&s.lo<=up)||(s.soft&&up>=0.3));
-    for(const lz of lzs){const p=solidOut(s,o.x+Math.sin(o.yaw)*lz,o.z+Math.cos(o.yaw)*lz,r*(pass?0.6:1));if(!p)continue;if(pass){ov=true;if(s.soft&&s.a)crKnock(s,o);continue}hit=true;o.x+=p[0];o.z+=p[1];lzS+=lz;lzN++}}
+    for(const q of pts){const p=solidOut(s,q[0]+o.x-px0,q[1]+o.z-pz0,q[2]*(pass?0.6:1));if(!p)continue;if(pass){ov=true;if(s.soft&&s.a)crKnock(s,o);continue}hit=true;o.x+=p[0];o.z+=p[1];lzS+=q[3];lzN++}}
+  // a raised floor whose edge is more than the machine's step above the ground beside it (a porch, a loading dock, a
+  // slab): a ledge, stopped against like a wall. Up to one it climbs (mGround); one far above is overhead
+  for(const w of N.W){const e=R+Math.hypot(w.lx,w.lz);if(Math.abs(o.x-w.x)>e||Math.abs(o.z-w.z)>e)continue;
+    for(const q of pts){const x=q[0]+o.x-px0,z=q[1]+o.z-pz0,p=solidOut(w,x,z,q[2]);if(!p)continue;
+      const top=padTopNear(w.p,x,z),ex=x+p[0],ez=z+p[1];if(top<o.y+climb||top>o.y+2.5)continue;PAD_ALL=true;const g=surfAt(ex,ez,top-climb);PAD_ALL=false;
+      if(top-g<=climb)continue;hit=true;o.x+=p[0];o.z+=p[1];lzS+=q[3];lzN++}}
   // rolling over: a jolt and a little drag as it goes on, none while it stays over
-  if(ov){if(!o.ovOn&&Math.abs(o.v||0)>0.6){if(blkRidden(o)){shake=Math.max(shake,reduceMotion?0:0.08);rumble(160,0.45)}o.v*=0.8}o.v*=0.995}o.ovOn=ov;
-  const climb=Math.max(BLK_CLIMB,up);
+  if(ov){if(!o.crOv&&Math.abs(o.v||0)>0.6){if(blkRidden(o)){shake=Math.max(shake,reduceMotion?0:0.08);rumble(160,0.45)}o.v*=0.8}o.v*=0.995}o.crOv=ov;
   for(const b of blocks){if(b.y+b.h<o.y+climb||b.y>o.y+3)continue;const hx=b.w/2,hz=b.d/2;
     for(const lz of lzs){const cx=o.x+Math.sin(o.yaw)*lz,cz=o.z+Math.cos(o.yaw)*lz,dx=cx-b.x,dz=cz-b.z,px=hx+r-Math.abs(dx),pz=hz+r-Math.abs(dz);
       if(px<=0||pz<=0)continue;
@@ -111,6 +122,16 @@ function blkPush(o,lzs,r,over){let hit=false,ov=false,px0=o.x,pz0=o.z,lzS=0,lzN=
   // the hit: which way it was pushed out is the wall's face; crash.js bounces, scrapes and sounds it
   if(hit)crHit(o,o.x-px0,o.z-pz0,lzS/lzN,r);
   return hit}
+// a walk pad's top at its point nearest x, z (a stair or ramp pad rises along it)
+function padTopNear(p,x,z){const dx=x-p.x,dz=z-p.z,u=Math.max(-p.hx,Math.min(p.hx,dx*p.c-dz*p.s)),v=Math.max(-p.hz,Math.min(p.hz,dx*p.s+dz*p.c));
+  const wx=p.x+u*p.c+v*p.s,wz=p.z-u*p.s+v*p.c;return (p.l===null?p.t:baseHeight(wx,wz)+p.l)+(p.rise?p.rise*(v+p.hz)/(2*p.hz):0)}
+// a machine's ground under one of its wheels or track ends (i: which one, the same each frame): surfAt, but a raised
+// floor (a walk pad: a curb, a step, a porch, a slab) only if its top is within the machine's step (mStep, set by
+// blkPush) of where that wheel stood a moment ago, so it climbs a curb or a low step and never jumps up onto a porch
+// it is still beside (blkPush stops it there)
+function mGround(o,i,x,z){const G=o.crMg||(o.crMg=[]),c=G[i],st=o.crStep||BLK_CLIMB;PAD_ALL=true;
+  const ref=c&&Math.abs(c[0]-x)+Math.abs(c[1]-z)<1.5?c[2]:Math.max(surfAt(x,z,-1e9),Math.min(o.y===undefined?-1e9:o.y,surfAt(x,z)));
+  const y=surfAt(x,z,ref+st);PAD_ALL=false;if(c){c[0]=x;c[1]=z;c[2]=y}else G[i]=[x,z,y];return y}
 // the machine the worker is driving (only it shakes the camera)
 function blkRidden(o){if(typeof wk==='undefined'||!wk.inside||typeof WK_RIDES==='undefined')return false;const R=WK_RIDES[wk.inside];return !!R&&R.o===o}
 const EX_C=[0.85,-0.85],EX_R=1.25,TR_C=[2.2,-0.4,-2.6,-3.6],TR_R=1.25;

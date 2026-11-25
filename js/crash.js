@@ -12,6 +12,11 @@
 // - The light things the bigger machines push through (soft props: drums, barricades, signs, bins) are knocked over:
 //   they fall the way the machine was going, slide a little, and stand back up after a while (crKnockBack) once
 //   nobody is near. Only the look: where they stand is still the asset's, so saves and the editor are unchanged.
+// - Jumps: over a crest at speed or off a ledge a machine leaves the ground and lands with a thump (crFly, crAir).
+// - Tipping: a side slope or a hard turn past what its track and height can hold rolls it on its side; it is set
+//   back on its wheels a few seconds later (crTip, crTipAt).
+// - Damage: hard hits, hard landings and roll-overs knock it about (crDamage): it drags, pulls to a side and smokes,
+//   until it stops at a fuel pump or its home spot.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
 const CR_KG={dozer:20000,loader:17000,semi:16000,pickup:2700,atv:400,backhoe:8200,golf:450,kart:180};
 const CR={v:null,kn:[],st:new Map(),o:new THREE.Object3D(),q:new THREE.Quaternion(),q2:new THREE.Quaternion(),ax:new THREE.Vector3(),up:new THREE.Vector3(0,1,0)};
@@ -42,7 +47,7 @@ function crBump(o,h,nx,nz,lz,r){const l=Math.hypot(nx,nz);if(l<1e-6)return;nx/=l
 function crFx(o,s,t,x,z){const now=performance.now(),me=blkRidden(o);
   if(s>0.7&&now-(o.crT||0)>350){o.crT=now;
     if(me){shake=Math.max(shake,reduceMotion?0:Math.min(0.35,0.03+0.045*s));rumble(100+40*Math.min(6,s),Math.min(1,0.2+0.13*s))}
-    crSound(x,z,me,s>1.6?'gate':null,Math.min(1,0.15+s/6),0.75+0.25*Math.random()-Math.min(0.25,s*0.03))}
+    crSound(x,z,me,s>1.6?'gate':null,Math.min(1,0.15+s/6),0.75+0.25*Math.random()-Math.min(0.25,s*0.03));crDamage(o,s-2.5)}
   if(t>1.2&&now-(o.crS||0)>230){o.crS=now;if(crPrep(x,z,me))sndShot('scrape',CR.v.fx,actx.currentTime,0.75+0.15*Math.random(),Math.min(0.55,t/9))}}
 function crPrep(x,z,me){if(!(snd&&snd.ready&&actx&&actx.state==='running'))return false;if(!CR.v)CR.v=sndVoice();const t=actx.currentTime;
   CR.v.fx.gain.setTargetAtTime(sndVol(sndCfg.fx),t,0.01);sndPlace(CR.v,x,surfAt(x,z)+0.8,z,t,me&&camMode==='cab');return true}
@@ -56,7 +61,7 @@ function crKnock(s,o){const a=s.a,I=propInst.get(a);if(CR.st.has(a)||!I||Math.ab
   CR.st.set(a,{t:0,dx:dx/m,dz:dz/m,sp:Math.min(5,Math.abs(o.v)),w:0,I});CR.kn.push(a);
   if(crPrep(a.x,a.z,blkRidden(o)))sndShot('thud',CR.v.fx,actx.currentTime,1.3+0.3*Math.random(),0.35)}
 // every frame: the knocked things fall and slide, and stand back up a while later when nobody is near
-function crTick(dt){if(!CR.kn.length)return;const o=CR.o;
+function crTick(dt){crWear(dt);if(!CR.kn.length)return;const o=CR.o;
   for(let i=CR.kn.length-1;i>=0;i--){const a=CR.kn[i],k=CR.st.get(a),P=PROPS[a.t];if(!k){CR.kn.splice(i,1);continue}const I=k.I;k.t+=dt;
     if(k.t>TU.crKnockBack&&Math.hypot(camera.position.x-a.x,camera.position.z-a.z)>30){CR.st.delete(a);CR.kn.splice(i,1);
       o.position.set(a.x,I.py,a.z);o.rotation.set(0,a.yaw,0);o.scale.setScalar(a.s);o.updateMatrix();I.im.setMatrixAt(I.i,o.matrix);I.im.instanceMatrix.needsUpdate=true;continue}
@@ -68,3 +73,47 @@ function crTick(dt){if(!CR.kn.length)return;const o=CR.o;
     I.im.setMatrixAt(I.i,o.matrix);I.im.instanceMatrix.needsUpdate=true}}
 // propsBuild lays every asset out again: none stays knocked
 function crReset(){CR.st=new Map();CR.kn.length=0}
+// ---------- jumps and landings ----------
+// a machine's height over the ground under it (Y, from its wheels) each frame: on the ground it follows Y (k: how fast);
+// when the ground falls away faster than gravity could follow (over a crest at speed, off a ledge) it leaves it with the
+// upward speed it had and flies until it comes down, landing with a thump by how hard (crLand). True while in the air
+function crFly(o,Y,k,dt){if(!dt||!isFinite(o.y)){o.y+=(Y-o.y)*k;o.crGy=Y;o.crGv=0;o.crFl=false;return false}
+  const gv=o.crGy===undefined?0:Math.max(-12,Math.min(12,(Y-o.crGy)/dt));o.crGy=Y;
+  if(!o.crFl){const was=o.crGv||0;o.crGv+=(gv-o.crGv)*Math.min(1,dt*20);
+    if(Math.abs(o.v||0)>2.5&&(o.crGv-was)/dt<-9.8*TU.crAir&&Y<o.y-0.04){o.crFl=true;o.crVy=Math.max(0,was)}
+    else{o.y+=(Y-o.y)*k;return false}}
+  o.crVy-=9.8*dt;o.y+=o.crVy*dt;o.crAt=(o.crAt||0)+dt;
+  if(o.y<=Y){const s=-o.crVy;o.y=Y;o.crVy=0;o.crFl=false;o.crGv=0;if(o.crAt>0.12)crLand(o,s);o.crAt=0;return false}
+  return true}
+function crLand(o,s){if(s<1.2)return;const me=blkRidden(o);
+  if(me){shake=Math.max(shake,reduceMotion?0:Math.min(0.4,0.04+0.04*s));rumble(140+30*Math.min(8,s),Math.min(1,0.25+0.1*s))}
+  crSound(o.x,o.z,me,s>3?'gate':null,Math.min(1,0.2+s/7),0.65+0.15*Math.random());crDamage(o,s-4)}
+// ---------- tipping over ----------
+// the centre of mass (m above the ground) of each kind, for when a side slope or a hard turn rolls it over: past the
+// angle whose tangent is half the track over that height it goes over on its side (Tuning crTipAt scales it, 0: never)
+const CR_CG={dozer:1.0,loader:1.35,semi:1.55,pickup:0.9,atv:0.6,backhoe:1.3,golf:0.65,kart:0.3};
+// roll: the ground's roll under it (+: its right side, +x along it, higher), hw half its track, w how fast it turns;
+// gives the extra roll to draw (T.a) and how far to lift it (T.lift) so it lies on its side rather than in the ground
+function crTip(o,roll,dt,hw,cg,w){const T=o.crTp||(o.crTp={a:0,av:0,s:0,t:0,on:0,lift:0});if(!dt){T.on=0;T.a=0;T.lift=0;return T}
+  if(!T.on){const eff=roll+Math.atan((o.v||0)*(w||0)/9.8),lim=Math.atan(hw/cg)*TU.crTipAt;
+    if(TU.crTipAt>0&&Math.abs(eff)>lim&&!o.crFl){T.on=1;T.s=Math.sign(eff);T.t=0;T.av=0.6;if(blkRidden(o))say('crTipped',{m:crName(o)})}}
+  if(T.on===1){T.av+=dt*5;T.a+=T.s*T.av*dt;o.v=0;o.w=0;
+    if(Math.abs(T.a)>=Math.PI/2-0.05){T.a=T.s*(Math.PI/2-0.05);T.on=2;T.t=0;crSound(o.x,o.z,blkRidden(o),'gate',0.9,0.6);crDamage(o,3);
+      if(blkRidden(o)){shake=Math.max(shake,reduceMotion?0:0.3);rumble(300,1)}}}
+  else if(T.on===2){o.v=0;o.w=0;T.t+=dt;if(T.t>3.5)T.on=3}
+  else if(T.on===3){o.v=0;o.w=0;T.a-=T.s*dt*1.4;if(T.a*T.s<=0){T.a=0;T.on=0;if(blkRidden(o))say('crRighted',{m:crName(o)})}}
+  T.lift=hw*Math.sin(Math.abs(T.a));return T}
+function crName(o){if(o.K)return o.K.n;return o===tr?'dump truck':o===st?'excavator':o===sk?'skid steer':o===mw?'mower':o===bk?'dirt bike':'machine'}
+// ---------- damage ----------
+// a hit past a fast walk (or a hard landing, a roll-over) knocks it about: o.crDmg, 0 to 1. A knocked-about machine
+// drags (its top speed falls), pulls to one side and, badly hurt, smokes; stopping at a fuel pump (FUEL_PUMPS) or
+// its home spot puts it right. Tuning crDamage scales it (0: no damage). Kept on the machine, not saved
+function crDamage(o,x){if(x<=0||TU.crDamage<=0)return;const was=o.crDmg||0;o.crDmg=Math.min(1,was+TU.crDamage*Math.pow(x/12,1.3));
+  if(o.crDs===undefined)o.crDs=Math.random()<0.5?-1:1;
+  if(blkRidden(o)&&Math.floor(o.crDmg*10)>Math.floor(was*10))say('crDamaged',{m:crName(o),n:Math.round(o.crDmg*100)})}
+const crMachines=()=>{const L=[];for(const o of [st,tr,sk,mw,bk])if(o)L.push(o);for(const h of hvs)L.push(h);return L};
+function crWear(dt){for(const o of crMachines()){if(!o.crDmg)continue;const d=o.crDmg,v=Math.abs(o.v||0);
+    if(v>0.4&&typeof o.v==='number'){o.v*=1-d*0.5*dt;if(o!==st&&o.yaw!==undefined)o.yaw+=o.crDs*d*0.06*dt*Math.sign(o.v)}
+    if(d>0.5&&Math.random()<dt*(2+6*d))smokePuff(o.x,(o.y||0)+1.8,o.z,1,0.8);
+    // fixed at a pump or back home, stopped
+    if(v<0.2&&(FUEL_PUMPS.some(p=>Math.hypot(o.x-p.x,o.z-p.z)<7)||o.home&&Math.hypot(o.x-o.home.x,o.z-o.home.z)<4)){o.crDmg=Math.max(0,d-dt*0.25);if(!o.crDmg&&blkRidden(o))say('crFixed',{m:crName(o)})}}}

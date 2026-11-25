@@ -7,6 +7,8 @@
 // so the claude.ai screen editor can load it alone.
 // [id, group, words, what fills the {names}]
 const WORDS=[
+  ['crTipped','Machines','The {m} rolled over! It gets set back on its wheels in a moment','{m}: the machine'],['crRighted','Machines','The {m} is back on its wheels','{m}: the machine'],
+  ['crDamaged','Machines','The {m} is {n}% damaged: stop at a fuel pump or its home spot to fix it','{m}: the machine, {n}: how damaged'],['crFixed','Machines','The {m} is fixed','{m}: the machine'],
   ['recOn','Frame recorder','Recording the last few seconds. When the glitch happens, press [recSave] to save it; [recFrames] stops',''],['recOff','Frame recorder','Frame recorder off',''],
   ['recSaved','Frame recorder','Saved {n} frames: upload the hop file to Claude','{n}: frames in the file'],['recNone','Frame recorder','Nothing recorded: press [recFrames] to start the frame recorder first',''],
   ['capL_dig','Captions','{lh} Swing\n{lv} Stick out / in','Left stick, Dig'],['capR_dig','Captions','{rh} Curl / dump\n{rv} Boom down / up','Right stick, Dig'],

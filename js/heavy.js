@@ -165,9 +165,11 @@ function hvPose(h){h.g.position.set(h.x,h.y,h.z);h.g.rotation.set(h.pitch,h.yaw,
     for(const lz of HV_TC)h.circ.push([hvV.x+ts*lz,hvV.z+tc*lz,1.45])}}
 function hvReset(h){const H=h.home;if(h.K.hoe)bhReset(h);Object.assign(h,{x:H.x,z:H.z,yaw:H.yaw,ty:H.yaw,mv:H.yaw,v:0,w:0,steer:0,a:0,c:0.1,rip:0,drag:1,load:0,loadWet:0,run:0});hvGround(h,1);hvPose(h)}
 // sits it on the ground under its wheels or tracks (k: how far toward it this frame)
-function hvGround(h,k){const K=h.K,sy=Math.sin(h.yaw),cy=Math.cos(h.yaw),S=(lx,lz)=>surfAt(h.x+lx*cy+lz*sy,h.z-lx*sy+lz*cy);
+function hvGround(h,k,dt){const K=h.K,sy=Math.sin(h.yaw),cy=Math.cos(h.yaw);let gi=0;const S=(lx,lz)=>mGround(h,gi++,h.x+lx*cy+lz*sy,h.z-lx*sy+lz*cy);
   const fl=S(-K.hw,K.af),fr=S(K.hw,K.af),bl=S(-K.hw,K.ab),br=S(K.hw,K.ab),hf=(fl+fr)/2,hb=(bl+br)/2,L=K.af-K.ab,y=hb+(hf-hb)*(-K.ab/L);
-  h.y+=(y-h.y)*k;h.pitch+=(-Math.atan2(hf-hb,L)-h.pitch)*k;h.roll+=(Math.atan2((fr+br)-(fl+bl),4*K.hw)-h.roll)*k}
+  // in the air it keeps its lean; over on its side it lies there (crash.js: crFly, crTip)
+  const rl=Math.atan2((fr+br)-(fl+bl),4*K.hw),T=crTip(h,rl,dt,K.hw,CR_CG[h.k]||1.2,h.w);
+  if(crFly(h,y+T.lift,k,dt))return;h.pitch+=(-Math.atan2(hf-hb,L)-h.pitch)*k;h.roll+=(rl+T.a-h.roll)*(T.on?1:k)}
 // pushes o (its circles at lzs along it, radius r) out of every heavy machine but skip; true if it touched one
 // the worker (o is wk) is only kept out; a machine shares the overlap with the one it meets by their weights (crMass,
 // crash.js): the lighter is shoved the further, and crBump trades their speeds
@@ -229,7 +231,7 @@ function hvDrive(h,dt,drive,turn,arm,curl,on){const K=h.K;
   // on the islands and decks, off steep ground, out of buildings, blocks and the other machines
   if(h.v||h.w){for(const lz of [K.P[0][1],K.P[2][1]]){const px=h.x+sy*lz,pz=h.z+cy*lz,q=landClamp(px,pz,1.0,1.4);if(q[0]!==px||q[1]!==pz){h.x+=q[0]-px;h.z+=q[1]-pz;h.v*=0.5}}
     if(wallCount(h.x,h.z,h.yaw,K.P,K.track?1.25:1)+(K.trail?hvTrailOut(h):0)>bad0){h.x=ox;h.z=oz;h.yaw=oyaw;h.ty=oty;h.mv=omv;h.v=0;h.w=0}
-    blkPush(h,K.C,K.R,K.ov||0.4);
+    blkPush(h,K.C,K.R,K.ov||0.4,K.P);
     for(const lz of K.C){const cx=h.x+sy*lz,cz=h.z+cy*lz;
       for(const [o,cs,r] of [[st,EX_C,EX_R],[tr,TR_C,TR_R],[mw,MW_C,MW_R],[sk,SK_C,SK_R],[bk,BK_C,BK_R]])for(const q of cs){const dx=cx-o.x-Math.sin(o.yaw)*q,dz=cz-o.z-Math.cos(o.yaw)*q,d=Math.hypot(dx,dz),m=K.R+r;
         if(d<m&&d>1e-3){h.x+=dx/d*(m-d);h.z+=dz/d*(m-d);h.v*=0.6}}}
@@ -238,7 +240,7 @@ function hvDrive(h,dt,drive,turn,arm,curl,on){const K=h.K;
   if(Math.abs(h.v)+Math.abs(h.w)>0.05)for(const sd of [-1,1]){const rx=h.x+sd*K.hw*cy,rz=h.z-sd*K.hw*sy,tv=h.v-sd*h.w*K.hw;
     if(K.track){stampRut(rx,rz,h.yaw,0.28,1.5,dt);splashMud(rx+sy*1.5*Math.sign(tv||1),rz+cy*1.5*Math.sign(tv||1),h.yaw,tv,0.3,0.8,dt)}
     else for(const lz of [K.af,K.ab]){stampRut(rx+sy*lz,rz+cy*lz,h.yaw,0.3,0.45,dt);splashMud(rx+sy*lz,rz+cy*lz,h.yaw,tv,0.3,0.6,dt)}}
-  hvGround(h,Math.min(1,dt*10));
+  hvGround(h,Math.min(1,dt*10),dt);
   if(K.mini)mnWork(h,dt,arm,curl,on);else if(K.track)hvBlade(h,dt,arm,curl,on);else if(h.arm)hvBucket(h,dt,arm,curl,on);else if(K.hoe)bhWork(h,dt,arm,curl,on);else hvPose(h);
   if(K.rider&&wk.inside==='hv'+hvs.indexOf(h))hvRider(h)}
 // the pickup and the four-wheeler (K.car: their Tuning keys start with it). The gas pulls with K.acc m/s² from a stop,
