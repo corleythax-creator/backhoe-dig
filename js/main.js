@@ -96,7 +96,7 @@ function frame(now){
   [st.x,st.z]=landClamp(st.x,st.z,3.5,1.9);
   // the scarp face, ramp banks and stockpiles are too steep to climb: the tracks stop at their foot
   if(wallCount(st.x,st.z,st.yaw,EX_P,1.25)>w0){st.x=ox;st.z=oz}
-  st.v=driveIn*TU.exTrack*mudK;blkPush(st,EX_C,EX_R,0.6);hvPush(st,EX_C,EX_R);
+  st.v=driveIn*TU.exTrack*mudK;blkPush(st,EX_C,EX_R,0.6,EX_P);hvPush(st,EX_C,EX_R);
   const sy=Math.sin(st.yaw),cy=Math.cos(st.yaw);
   // tracks rut loose fill and mud, crush clods, pick up mud and kick up a little dust (not off mud)
   if(!bench.on&&(Math.abs(driveIn)>0.05||Math.abs(turnIn)>0.05))for(const sd of [-1,1]){const tx=st.x+sd*1.1*cy,tz=st.z-sd*1.1*sy;
@@ -107,7 +107,7 @@ function frame(now){
     if(mudN>RUT_MUD){const bk=-Math.sign(driveIn||1)*1.7;flingMud(tx+sy*bk,hAt(tx,tz)+0.25,tz+cy*bk,st.yaw+(driveIn<0?Math.PI:0),2+5*st.spin,(st.spin*40+Math.abs(driveIn)*4)*mudN,dt)}}
   packTick(dt,bench.on?0:driveIn,bench.on?0:turnIn);
   if(crushT<=0)crushT=0.1;
-  const sample=(lx,lz)=>surfAt(st.x+lx*cy+lz*sy,st.z-lx*sy+lz*cy);
+  let gi=0;const sample=(lx,lz)=>mGround(st,gi++,st.x+lx*cy+lz*sy,st.z-lx*sy+lz*cy);
   const hf=(sample(-1.1,1.8)+sample(1.1,1.8))/2,hb=(sample(-1.1,-1.8)+sample(1.1,-1.8))/2;
   const hr=(sample(1.1,1.8)+sample(1.1,-1.8))/2,hl=(sample(-1.1,1.8)+sample(-1.1,-1.8))/2;
   const k=Math.min(1,dt*8);

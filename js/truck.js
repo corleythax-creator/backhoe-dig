@@ -308,18 +308,20 @@ function updateTruck(dt,thr,steerIn,bedIn){
     if(d<m&&d>1e-3){tr.x+=dx/d*(m-d);tr.z+=dz/d*(m-d);tr.v*=0.5}}}
   // and off Dexter's heavy machines (heavy.js)
   hvPush(tr,TR_C,TR_R);
-  blkPush(tr,TR_C,TR_R,0.5);
+  blkPush(tr,TR_C,TR_R,0.5,TR_P);
   tr.aL+=((tr.v-vPrev)/Math.max(dt,1e-3)-tr.aL)*Math.min(1,dt*6);
   // hydraulics lift slower under load; the bed comes down on its own weight
   {const b=tr.bed;tr.bed=clamp(tr.bed+bedIn*(bedIn>0?TU.trBedUp*(1-0.4*f):TU.trBedDown)*dt,0,0.9);tr.bedV=dt>0?(tr.bed-b)/dt:0}
   // spinning tyres turn faster than the truck moves
   tr.rollA+=(tr.v+tr.gear*tr.spin*5)*dt/0.55;
   // axles follow the ground (the rear tandem averages its two axles like a walking beam)
-  const smp=(lx,lz)=>surfAt(tr.x+lx*cy+lz*sy,tr.z-lx*sy+lz*cy);
+  let gi=0;const smp=(lx,lz)=>mGround(tr,gi++,tr.x+lx*cy+lz*sy,tr.z-lx*sy+lz*cy);
   const fL=smp(1.05,3.1),fR=smp(-1.05,3.1),bL=(smp(0.95,-1.6)+smp(0.95,-2.8))/2,bR=(smp(-0.95,-1.6)+smp(-0.95,-2.8))/2;
   const hf=(fL+fR)/2,hb=(bL+bR)/2,k=Math.min(1,dt*14);
-  const dy=((hf+hb)/2-0.15*tr.sink-tr.y)*k,dp=(-Math.atan2(hf-hb,WB)-tr.pitch)*k,dr=(Math.atan2((fL+bL)/2-(fR+bR)/2,2.0)-tr.roll)*k;
-  tr.y+=dy;tr.pitch+=dp;tr.roll+=dr;
+  // (it can leave the ground over a crest, and roll over on its side: crFly, crTip in crash.js)
+  const rl=Math.atan2((fL+bL)/2-(fR+bR)/2,2.0),T=crTip(tr,rl,dt,1.05,1.45+0.5*f,yawRate),y0=tr.y,fly=crFly(tr,(hf+hb)/2-0.15*tr.sink+T.lift,k,dt);
+  const dy=tr.y-y0,dp=fly?0:(-Math.atan2(hf-hb,WB)-tr.pitch)*k,dr=fly?0:(rl+T.a-tr.roll)*(T.on?1:k);
+  tr.pitch+=dp;tr.roll+=dr;
   // the sprung body lags the axles over bumps, squats and dives with the throttle and brakes, leans out of turns, and sags under load
   tr.sh=clamp(tr.sh-dy,-0.16,0.16);tr.sp=clamp(tr.sp-dp,-0.06,0.06);tr.sr=clamp(tr.sr-dr,-0.06,0.06);
   const cg=1+0.7*f,c=2*0.32*10.5,spring=(x,xv,t)=>((t-x)*110-xv*c)*dt;

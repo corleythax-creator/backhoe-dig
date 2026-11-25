@@ -796,6 +796,9 @@ let groundLift=null;
 // o.l metres above the ground under it (it follows the ground); o.rise: how much higher its far (+z) end is (a stair
 // or a ramp). Kept on a 4 m grid; padAt is the highest pad top at x, z
 const WALK_PADS=[],WP_C=4,WP_G=new Map(),wpKey=(i,j)=>(i+4096)*8192+(j+4096);
+// (o.up: an upper floor, stood on only from within a step of it: padAt's lim, the walker's floor; while PAD_ALL is
+// set every pad is, the machines' wheels: mGround, blocks.js)
+let PAD_ALL=false;
 // (o.up: an upper floor, stood on only from within a step of it: padAt's lim, the walker's floor)
 function walkPad(x,z,hx,hz,yaw,top,o){const c=Math.cos(yaw||0),s=Math.sin(yaw||0),p={x,z,hx,hz,c,s,t:top,l:o&&o.l!==undefined?o.l:null,rise:o&&o.rise||0,tag:o&&o.tag,up:o&&o.up?1:0,holes:o&&o.holes||null};
   WALK_PADS.push(p);const ex=Math.abs(c)*hx+Math.abs(s)*hz,ez=Math.abs(s)*hx+Math.abs(c)*hz;
@@ -809,7 +812,7 @@ function walkPadsDrop(tag){for(let i=WALK_PADS.length-1;i>=0;i--)if(WALK_PADS[i]
 function walkStrip(b,u,hw,dy){walkPad(b.x0+b.ux*b.len/2-b.uz*u,b.z0+b.uz*b.len/2+b.ux*u,hw,b.len/2,Math.atan2(b.ux,b.uz),b.y+dy,{rise:b.y1-b.y})}
 function padAt(x,z,lim){const L=WP_G.get(wpKey(Math.floor(x/WP_C),Math.floor(z/WP_C)));if(!L)return -1e9;let y=-1e9;
   for(const p of L){const dx=x-p.x,dz=z-p.z,u=dx*p.c-dz*p.s,v=dx*p.s+dz*p.c;if(u<-p.hx||u>p.hx||v<-p.hz||v>p.hz)continue;
-    const t=(p.l===null?p.t:baseHeight(x,z)+p.l)+(p.rise?p.rise*(v+p.hz)/(2*p.hz):0);if(p.up&&lim!==undefined&&t>lim)continue;if(p.holes&&wpHoled(p,x,z))continue;if(t>y)y=t}
+    const t=(p.l===null?p.t:baseHeight(x,z)+p.l)+(p.rise?p.rise*(v+p.hz)/(2*p.hz):0);if((p.up||PAD_ALL)&&lim!==undefined&&t>lim)continue;if(p.holes&&wpHoled(p,x,z))continue;if(t>y)y=t}
   return y}
 // an upper floor's stairwells (o.holes: the pads of the flights coming up to it, or a whole stairwell's marker pad far
 // below, with 1 in of floor kept inside its edge): no floor there, so the way down is the flight's own

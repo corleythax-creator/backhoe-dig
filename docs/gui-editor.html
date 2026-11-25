@@ -1323,6 +1323,7 @@ const TUNE=[
   ['climbSlope','Machines','Steepest ground the machines climb (rise over run; tracks a quarter more)',1.15,'pct',30,250,5],
   ['hillPull','Machines','How hard hills hold the machines back going up (and pull them going down)',0.7,'pct',0,100,5],
   ['crBounce','Machines','How much a machine bounces back off what it hits',0.25,'pct',0,100,5],['crSpin','Machines','How much a hit off the middle turns a machine',1,'pct',0,300,5],
+  ['crDamage','Machines','How much hard hits and landings damage a machine',1,'pct',0,300,5],['crTipAt','Machines','How far a machine leans before it tips over (0: never)',1,'pct',0,200,5],['crAir','Machines','How easily a machine leaves the ground over a crest',1,'pct',50,300,5],
   ['crKnockBack','Machines','Knocked-over drums and signs stand back up after',90,'s',5,900,5],
   ['overH','Machines','How tall a thing (log, stump, rock, sandbags) the machines roll over',1,'pct',0,300,5],
   ['rutWet','Mud and water','How wet ground must be before it ruts',0.15,'pct',0,100,5],['rutRate','Mud and water','How fast ruts cut in',1,'pct',10,500,5],
@@ -1518,6 +1519,8 @@ tune.live=tuneParse(tuneLs(TUNE_LIVE_LS));tune.draft=tuneParse(tuneLs(TUNE_LS));
 // so the claude.ai screen editor can load it alone.
 // [id, group, words, what fills the {names}]
 const WORDS=[
+  ['crTipped','Machines','The {m} rolled over! It gets set back on its wheels in a moment','{m}: the machine'],['crRighted','Machines','The {m} is back on its wheels','{m}: the machine'],
+  ['crDamaged','Machines','The {m} is {n}% damaged: stop at a fuel pump or its home spot to fix it','{m}: the machine, {n}: how damaged'],['crFixed','Machines','The {m} is fixed','{m}: the machine'],
   ['recOn','Frame recorder','Recording the last few seconds. When the glitch happens, press [recSave] to save it; [recFrames] stops',''],['recOff','Frame recorder','Frame recorder off',''],
   ['recSaved','Frame recorder','Saved {n} frames: upload the hop file to Claude','{n}: frames in the file'],['recNone','Frame recorder','Nothing recorded: press [recFrames] to start the frame recorder first',''],
   ['capL_dig','Captions','{lh} Swing\n{lv} Stick out / in','Left stick, Dig'],['capR_dig','Captions','{rh} Curl / dump\n{rv} Boom down / up','Right stick, Dig'],

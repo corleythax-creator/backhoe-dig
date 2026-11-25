@@ -71,7 +71,7 @@ function updateSkid(dt,drive,turn,arm,curl){
   // on the islands and decks (never the footbridge), off steep ground, out of buildings, blocks and the other machines
   [sk.x,sk.z]=landClamp(sk.x,sk.z,1.2,1.0);
   if(wallCount(sk.x,sk.z,sk.yaw,SK_P)>w0){sk.x=ox;sk.z=oz;sk.yaw=oyaw;sk.v=0}
-  blkPush(sk,SK_C,SK_R,0.3);hvPush(sk,SK_C,SK_R);
+  blkPush(sk,SK_C,SK_R,0.3,SK_P);hvPush(sk,SK_C,SK_R);
   for(const lz of SK_C){const cx=sk.x+Math.sin(sk.yaw)*lz,cz=sk.z+Math.cos(sk.yaw)*lz;
     for(const [o,cs,r] of [[st,EX_C,EX_R],[tr,TR_C,TR_R],[mw,MW_C,MW_R]])for(const q of cs){const qx=o.x+Math.sin(o.yaw)*q,qz=o.z+Math.cos(o.yaw)*q,dx=cx-qx,dz=cz-qz,d=Math.hypot(dx,dz),m=SK_R+r;
       if(d<m&&d>1e-3){sk.x+=dx/d*(m-d);sk.z+=dz/d*(m-d);sk.v*=0.6}}}
@@ -82,7 +82,7 @@ function updateSkid(dt,drive,turn,arm,curl){
   if(Math.abs(sk.v)+Math.abs(sk.w)>0.05)for(const sd of [-1,1])stampRut(sk.x+sd*0.9*cy,sk.z-sd*0.9*sy,sk.yaw,0.16,1.05,dt);
   // the front of each track splashes through puddles (mud.js)
   for(const sd of [-1,1]){const tv=sk.v-sd*sk.w*0.9,f=Math.sign(tv||1)*0.9;splashMud(sk.x+sd*0.9*cy+sy*f,sk.z-sd*0.9*sy+cy*f,sk.yaw,tv,0.2,0.7,dt)}
-  const sample=(lx,lz)=>surfAt(sk.x+lx*cy+lz*sy,sk.z-lx*sy+lz*cy);
+  let gi=0;const sample=(lx,lz)=>mGround(sk,gi++,sk.x+lx*cy+lz*sy,sk.z-lx*sy+lz*cy);
   const hf=(sample(-0.9,0.7)+sample(0.9,0.7))/2,hb=(sample(-0.9,-0.7)+sample(0.9,-0.7))/2,hr=(sample(0.9,0.7)+sample(0.9,-0.7))/2,hl=(sample(-0.9,0.7)+sample(-0.9,-0.7))/2,kk=Math.min(1,dt*10);
   sk.y+=((hf+hb)/2-sk.y)*kk;sk.pitch+=(-Math.atan2(hf-hb,1.4)-sk.pitch)*kk;sk.roll+=(Math.atan2(hr-hl,1.8)-sk.roll)*kk;
   // the loader: hydraulics slow a little with a full bucket

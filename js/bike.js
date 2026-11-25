@@ -76,7 +76,7 @@ const bkV=new THREE.Vector3();
 function bikeTick(dt,thr,steer){
   const b=bk,on=mode==='bike'&&wk.inside==='bike'&&!bench.on;if(!on){thr=0;steer=0}
   b.run=on?1:0;b.thr=thr;
-  const ground=()=>{const sy=Math.sin(b.yaw),cy=Math.cos(b.yaw),h=BK_WB/2,f=surfAt(b.x+sy*h,b.z+cy*h),r=surfAt(b.x-sy*h,b.z-cy*h);return [(f+r)/2,Math.atan2(f-r,BK_WB)]};
+  const ground=()=>{const sy=Math.sin(b.yaw),cy=Math.cos(b.yaw),h=BK_WB/2,f=mGround(b,0,b.x+sy*h,b.z+cy*h),r=mGround(b,1,b.x-sy*h,b.z-cy*h);return [(f+r)/2,Math.atan2(f-r,BK_WB)]};
   let [gm,gp]=ground();
   const mudN=mudAt(b.x,b.z),grip=1-0.45*mudN*TU.mudDrag;
   // the engine, the brakes, the hill and the drag of the dirt, with both wheels down
