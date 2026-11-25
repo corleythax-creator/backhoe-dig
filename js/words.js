@@ -310,6 +310,15 @@ const WORDS=[
   ['reg_walt_2','Town: regulars','I walk Main Street every day. Doctor\'s orders. Ten thousand steps.',''],['reg_walt_3','Town: regulars','You run that excavator smooth. Real smooth. I notice these things.',''],
   ['reg_jenna_0','Town: regulars','Mail carrier. Nobody gets mail out on your island, you know.',''],['reg_jenna_1','Town: regulars','Rain or shine. Mostly rain this week.',''],
   ['reg_jenna_2','Town: regulars','The dog on Maple Street hates me. Personal, I think.',''],['reg_jenna_3','Town: regulars','Package for the hardware store. Hank orders a lot of gloves.',''],
+  // the town's story (docs/STORY.md): what the regulars let slip once they know you, after their three everyday lines
+  ['reg_ruth_4','Town: the story','I speak to Pearl. I just don\'t sit in that kitchen.',''],['reg_ruth_5','Town: the story','People stayed quiet about that girl longer than made any sense.',''],
+  ['reg_marisol_4','Town: the story','Gus says he wants to talk about my mother. He never gets around to it.',''],
+  ['reg_marisol_5','Town: the story','Saw a boat heading north with no lights the other night. I told the deputy. He wrote it down.',''],
+  ['reg_dot_4','Town: the story','Gus takes his coffee to go, lid off. Leaves a ring on everything he owns.',''],
+  ['reg_hank_4','Town: the story','Pearl\'s got the scrapbook out. Says a page is missing.',''],['reg_hank_5','Town: the story','Pearl stopped asking me about that night on the water a long time ago. Don\'t you start.',''],
+  ['reg_earl_4','Town: the story','I go by the boat ramp some nights, after midnight. Don\'t ride. Just watch.',''],
+  ['reg_gus_4','Town: the story','Ruth has lived four doors down from me all these years. There\'s something I never asked her.',''],
+  ['reg_gus_5','Town: the story','I keep meaning to talk to Marisol about her mother. Keep meaning to.',''],
   ['reg_back','Town: regulars','Good to see you again.',''],
   // what the townsfolk remember of seeing you in the shops (lives.js fmLine: by how long ago and what you bought), and the young ones' own lines (talk.js talkKidSay)
   ['tkIntro','Town: talk','{line} I\'m {name}, by the way.','{line}: their first words; {name}'],['kdIntro','Town: kids','{line} I\'m {name}!','{line}: their first words; {name}'],

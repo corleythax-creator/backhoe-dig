@@ -31,6 +31,15 @@ const LIFE_JOBS={cal_f:{si:19},cal_m:{si:14},f25_capri:{away:'the seafood shack 
   f30_jog:{away:'the clinic over on the mainland',h:[8,17],wk:1},f50_scrubs:{away:'the hospital in Pascagoula',h:[19,31]},
   m25_hoodie:{away:'the ferry dock',h:[6,14]},m30_run:{away:'the high school on the mainland',h:[7,16],wk:1},m30_tee:{away:'the charter boats at the marina',h:[5,13]},
   m35_office:{si:8,wk:1},m35_vest:{away:'the north marsh',h:[6,15]},m40_yard:{out:'mowing the town\'s lawns',h:[7,15],wk:1}};
+// the town's story (docs/STORY.md), by look: what each one carries of it, laid over their library mind in lifeItem
+// (a: a line for their card's about; w: what is on their mind, in place of the library's worry), so it comes out in talk
+const LIFE_STORY={f70_cardigan:{a:'Speaks to Pearl Dubois but will not sit in her kitchen.',w:'what was heard the night that girl went missing, and nobody ever asking'},
+  f28_maroon:{a:'Sat with Pearl\'s scrapbook once and left quick.',w:'whatever Gus Lindqvist wants to say about her mother'},
+  m60_cap:{a:'Shares a house with Pearl Dubois.',w:'a night on the water that never gets talked about'},
+  f80_jacket:{a:'Sells preserves and keeps a scrapbook, begun the spring Lucia first bought a jar.',w:'the page cut clean out of the scrapbook'},
+  m70_flannel:{w:'what goes out from the boat ramp after midnight'},m50_tie:{w:'what never got asked about Lucia, all these years'},
+  cal_m:{w:'who took Boat Seven out at night and coiled the line so neat'},m25_hoodie:{w:'the lights in the ferry lot after four in the morning'},
+  f50_scrubs:{w:'the woman seen in Gus Lindqvist\'s car'}};
 const LIFE={ok:false,who:{},items:{}};
 // a number 0..1 from a string, the same every time
 function lifeH(s){let h=2166136261;for(const c of String(s))h=Math.imul(h^c.charCodeAt(0),16777619);return (h>>>0)/4294967296}
@@ -70,6 +79,7 @@ function lifeScore(id,o){const L=lifeOf(id);if(!L||!o)return 0;const n=lifeNow(i
 function lifeItem(it,id){if(LIFE.items[id])return LIFE.items[id];const L=lifeOf(id);if(!L||!it||!it.mind)return it;
   const m=Object.assign({},it.mind),J=L.job,G=J&&J.reg,hr=L.shift?` (${townAmPm(L.shift[0]%24)} to ${townAmPm(L.shift[1]%24)})`:'';
   if(G){m.name=G.n;if(J.at)m.job='runs '+J.at}
+  const S=LIFE_STORY[id];if(S){if(S.a)m.about=((m.about||'')+' '+S.a).trim();if(S.w)m.worry=S.w}
   m.about=((m.about||'')+` Lives on ${L.st||'the island'}.`+(J?(J.out?` Works ${J.out.replace(/^(out )?/,'')}${hr}.`:` Works at ${J.away||J.at}${hr}${J.wk?', weekdays':''}.`):'')).trim().slice(0,300);
   return LIFE.items[id]=Object.assign({},it,{mind:m})}
 // for a model: where they are in their day, as it really is (behind their counter, at home, or out)
