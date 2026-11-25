@@ -366,14 +366,16 @@ function sunFarSmall(o){if(o.userData.csmSm||!o.isInstancedMesh||!o.castShadow)r
   o.onAfterShadow=function(r,ob,c,sc,ge,dm,gr){if(sc===sunFar.shadow.camera)this.count=this.userData.csmN;else a.call(this,r,ob,c,sc,ge,dm,gr)}}
 function sunFarTick(){if(!sunFar.visible)return;
   const now=performance.now();if(now>sunFarScanT){sunFarScanT=now+3000;scene.traverse(sunFarSmall)}
-  const fc=sunFar.shadow.camera,R=fc.right,turn=sunFarL.distanceToSquared(LIGHT_DIR)>4e-6;
-  if(!turn&&++sunFarN<TU.csmEvery)return;sunFarN=0;sunFarL.copy(LIGHT_DIR);
+  // (the sun as the near map holds it, so the two maps' shadows fall the same way and the far one too is drawn again
+  // for the sun only when the near one is: every TU.shTurn degrees, not each tenth of a degree, about every second)
+  const D=sunHold.on?sunHold.d:LIGHT_DIR,fc=sunFar.shadow.camera,R=fc.right,turn=sunFarL.distanceToSquared(D)>4e-6;
+  if(!turn&&++sunFarN<TU.csmEvery)return;sunFarN=0;sunFarL.copy(D);
   // the middle: where the near map is, pushed ahead along the camera's view, where most of what you see lies
   camera.getWorldDirection(sunFarV);sunFarV.y=0;if(sunFarV.lengthSq()>1e-6)sunFarV.normalize();
   sunFarC.copy(sun.target.position).addScaledVector(sunFarV,R*0.45);
   // held to the map's own texel grid (the shadow camera's sideways and up axes), so its edges don't crawl as you move
-  sunSnap(sunFarC,R,sunFar.shadow.mapSize.x,sunFarX,sunFarY);
-  sunFar.target.position.copy(sunFarC);sunFar.position.copy(sunFarC).addScaledVector(LIGHT_DIR,fc.far/2);
+  sunSnap(sunFarC,R,sunFar.shadow.mapSize.x,sunFarX,sunFarY,D);
+  sunFar.target.position.copy(sunFarC);sunFar.position.copy(sunFarC).addScaledVector(D,fc.far/2);
   sunFar.updateMatrixWorld();sunFar.target.updateMatrixWorld();sunFar.shadow.needsUpdate=true}
 // sky reflections: the dome over a dull ground, caught into a small cube map for glass, paint, chrome and water; daynight.js
 // catches it again as the sky changes (skyEnvUpdate), from a scene of its own that holds only the dome and the ground
