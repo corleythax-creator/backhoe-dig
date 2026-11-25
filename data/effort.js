@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-25T01:40:00Z",
+ "updated": "2026-11-25T02:40:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -192,9 +192,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-24",
-   "dh": 5.5,
-   "act": 1,
-   "versions": 2
+   "dh": 6.5,
+   "act": 1.5,
+   "versions": 3
   }
  ],
  "extra": [
@@ -4470,6 +4470,15 @@ window.EFFORT = {
    "tris": 7377943,
    "chars": 2864430,
    "what": "From the owner's v472 report: the cats' close-up body and fur are drawn once behind the loading cover too (hidden while they are far, they first went to the graphics card when you walked up to them, a 4.8 s freeze); the game's tools run without asking for permission"
+  },
+  {
+   "v": 475,
+   "asked": "2026-11-24T21:00:00-06:00",
+   "live": "2026-11-24T20:40:45-06:00",
+   "dh": 1,
+   "tris": 7331444,
+   "chars": 2864755,
+   "what": "The shadows are drawn again for the moving sun every 1.5 degrees (about every 12 s), not every 2 s (near) and every second (far); the far shadows follow the near ones' sun so the two always fall the same way"
   }
  ]
 };
