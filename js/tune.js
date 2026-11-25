@@ -219,7 +219,7 @@ const TUNE=[
   ['csmEvery','Light and haze','Far shadows: drawn again every this many frames (more is faster, but they lag behind moving things)',3,'n',1,10,1],
   ['hazeSun','Light and haze','How strongly the haze takes the sky\'s colour round the horizon: warm toward the sun, bluer away from it',1,'pct',0,200,5],
   ['hazeLow','Light and haze','How much thinner the haze is up high than low over the lake',0.6,'pct',0,100,5],
-  ['shHold','Light and haze','The near shadows stay put until you move this far, so the still world\'s shadow is kept, not drawn again each frame (0 off)',3,'ft',0,30,1],['shGate','Light and haze','Never wait for a shader: something whose shader is not built yet is kept out of the picture until it is (1 on, 0 off)',1,'n',0,1,1],['shTurn','Light and haze','…or until the sun has turned this many degrees',0.25,'n',0.05,2,0.05],
+  ['shHold','Light and haze','The near shadows stay put until you move this far, so the still world\'s shadow is kept, not drawn again each frame (0 off)',3,'ft',0,30,1],['shGate','Light and haze','Never wait for a shader: something whose shader is not built yet is kept out of the picture until it is (1 on, 0 off)',1,'n',0,1,1],['shTurn','Light and haze','…or until the sun has turned this many degrees (a game day is 48 real minutes by default, so 1.5 is a redraw about every 12 s)',1.5,'n',0.05,6,0.05],
   ['shAhead','Light and haze','How far the sharp near shadows are pushed ahead of the camera, as a share of their reach',0.35,'pct',0,60,5],
   // the eye adjusting outdoors (post.js aeRead)
   ['autoExp','Light and haze','Eye adjusting: how much of the way the brightness follows what you look at (0% = off)',1,'pct',0,200,5],
