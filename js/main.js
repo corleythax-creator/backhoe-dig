@@ -89,13 +89,13 @@ function frame(now){
   const packK=1-Math.min(0.9,TU.packDrag*(st.pack||0)/PACK_CAP);
   st.yaw-=turnIn*TU.exTurn*dt*(1-0.5*(1-packK));
   // mud slows the tracks, and pushing on in it digs them in until they spin (bogTick, mud.js)
-  const mudN=mudAt(st.x,st.z),mudK=packK**0.5*Math.max(0,1-0.5*mudN*TU.mudDrag)*bogTick(st,mudN,bench.on?0:driveIn,0.03,dt),ox=st.x,oz=st.z,w0=wallCount(st.x,st.z,st.yaw,EX_P);
+  const mudN=mudAt(st.x,st.z),mudK=packK**0.5*Math.max(0,1-0.5*mudN*TU.mudDrag)*bogTick(st,mudN,bench.on?0:driveIn,0.03,dt),ox=st.x,oz=st.z,w0=wallCount(st.x,st.z,st.yaw,EX_P,1.25);
   st.x+=Math.sin(st.yaw)*driveIn*TU.exTrack*mudK*dt;
   st.z+=Math.cos(st.yaw)*driveIn*TU.exTrack*mudK*dt;
   // stays on the mesa, the Family Island or a bridge deck
   [st.x,st.z]=landClamp(st.x,st.z,3.5,1.9);
   // the scarp face, ramp banks and stockpiles are too steep to climb: the tracks stop at their foot
-  if(wallCount(st.x,st.z,st.yaw,EX_P)>w0){st.x=ox;st.z=oz}
+  if(wallCount(st.x,st.z,st.yaw,EX_P,1.25)>w0){st.x=ox;st.z=oz}
   blkPush(st,EX_C,EX_R,0.6);
   const sy=Math.sin(st.yaw),cy=Math.cos(st.yaw);
   // tracks rut loose fill and mud, crush clods, pick up mud and kick up a little dust (not off mud)

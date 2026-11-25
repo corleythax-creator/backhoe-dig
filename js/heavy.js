@@ -176,7 +176,7 @@ function hvPush(o,lzs,r,skip){let hit=false;const sy=Math.sin(o.yaw||0),cy=Math.
   return hit}
 // the trailer's corners in a wall or off the land
 function hvTrailOut(h){h.g.localToWorld(hvV.set(0,0,-HV_KP));const ts=Math.sin(h.ty),tc=Math.cos(h.ty);let n=0;
-  for(const lz of [-4,-9,-15])for(const lx of [-1.3,1.3]){const x=hvV.x+tc*lx+ts*lz,z=hvV.z-ts*lx+tc*lz;if(wallAt(x,z)||!landIn(x,z,0.5,1.4))n++}
+  for(const lz of [-4,-9,-15])for(const lx of [-1.3,1.3]){const x=hvV.x+tc*lx+ts*lz,z=hvV.z-ts*lx+tc*lz;if(wallAt(x,z,wallLim(1))||!landIn(x,z,0.5,1.4))n++}
   return n}
 // what the dozer cut or the loader scooped mixes into its load (the colour, the soil kinds and how wet it is)
 function hvTake(h,got,p){const f=got/(h.load+got);for(let q=0;q<3;q++)h.loadC[q]+=(digC[q]-h.loadC[q])*f;for(let q=0;q<4;q++)h.loadMix[q]+=(digMix[q]-h.loadMix[q])*f;
@@ -198,7 +198,7 @@ function hvTick(dt,drive,turn,arm,curl){hvRR=(hvRR+1)%HV_IDLE_N;
 function hvDrive(h,dt,drive,turn,arm,curl,on){const K=h.K;
   h.run+=((on?1:0)-h.run)*Math.min(1,dt*(on?2:0.7));h.thr=drive;h.hyd=Math.min(1,Math.abs(arm)+Math.abs(curl));
   const mudN=mudAt(h.x,h.z),k=Math.max(0,1-0.45*mudN*TU.mudDrag);
-  const ox=h.x,oz=h.z,oyaw=h.yaw,oty=h.ty,omv=h.mv,bad0=wallCount(h.x,h.z,h.yaw,K.P)+(K.trail?hvTrailOut(h):0);
+  const ox=h.x,oz=h.z,oyaw=h.yaw,oty=h.ty,omv=h.mv,bad0=wallCount(h.x,h.z,h.yaw,K.P,K.track?1.25:1)+(K.trail?hvTrailOut(h):0);
   if(K.car)hvCar(h,dt,drive,turn,k,on);
   else if(K.track){h.top=K.mini?TU.mnSpd:TU.hvDzSpd;h.v+=(drive*h.top*k*h.drag-h.v)*Math.min(1,dt*(drive?2:4));h.w+=(-turn*(K.mini?TU.mnTurn:TU.hvDzTurn)*k-h.w)*Math.min(1,dt*5);h.yaw+=h.w*dt}
   else{// the gas pulls it up to speed (the semi slowly), the brakes stop it harder; the wheel locks less the faster it goes
@@ -212,7 +212,7 @@ function hvDrive(h,dt,drive,turn,arm,curl,on){const K=h.K;
       // swivelled to the hoe) the transmission is out
       const dem=Math.min(1,Math.max(h.hyd||0,K.hoe?h.hydW||0:0)),hard=h.digR||0,work=dem>0.05||hard>0;if(work)ped=Math.max(ped,0.8);
       const neutral=!!h.hoe||!drive&&Math.abs(v0)<0.3;
-      h.v+=(ebPull(E,dt,ped,dir,v0,k,false,{load:ebHydLoad(E,dem,hard),neutral})+(neutral?0:9.8*Math.sin(h.pitch)))*dt;
+      h.v+=(ebPull(E,dt,ped,dir,v0,k,false,{load:ebHydLoad(E,dem,hard),neutral})+(neutral?0:9.8*Math.sin(h.pitch)*TU.hillPull))*dt;
       if(brk||!drive){const b=(brk?acc*3*h.top*Math.abs(drive):0.5)*dt;h.v=Math.abs(h.v)<=b?0:h.v-Math.sign(h.v)*b}}
     else h.v+=(tgt-h.v)*Math.min(1,dt*(up?acc:acc*3));
     const lock=(K.trail?TU.hvSmLock:K.hoe?TU.bhLock:TU.hvLdLock)/(1+Math.abs(h.v)*0.06);h.steer+=(turn*lock-h.steer)*Math.min(1,dt*4);
@@ -225,7 +225,7 @@ function hvDrive(h,dt,drive,turn,arm,curl,on){const K=h.K;
   if(K.trail){h.ty+=h.v/HV_LT*Math.sin(h.yaw-h.ty)*dt;const d=Math.atan2(Math.sin(h.yaw-h.ty),Math.cos(h.yaw-h.ty));if(Math.abs(d)>1.3)h.ty=h.yaw-Math.sign(d)*1.3}
   // on the islands and decks, off steep ground, out of buildings, blocks and the other machines
   if(h.v||h.w){for(const lz of [K.P[0][1],K.P[2][1]]){const px=h.x+sy*lz,pz=h.z+cy*lz,q=landClamp(px,pz,1.0,1.4);if(q[0]!==px||q[1]!==pz){h.x+=q[0]-px;h.z+=q[1]-pz;h.v*=0.5}}
-    if(wallCount(h.x,h.z,h.yaw,K.P)+(K.trail?hvTrailOut(h):0)>bad0){h.x=ox;h.z=oz;h.yaw=oyaw;h.ty=oty;h.mv=omv;h.v=0;h.w=0}
+    if(wallCount(h.x,h.z,h.yaw,K.P,K.track?1.25:1)+(K.trail?hvTrailOut(h):0)>bad0){h.x=ox;h.z=oz;h.yaw=oyaw;h.ty=oty;h.mv=omv;h.v=0;h.w=0}
     if(blkPush(h,K.C,K.R,K.ov||0.4))h.v*=0.5;
     for(const lz of K.C){const cx=h.x+sy*lz,cz=h.z+cy*lz;
       for(const [o,cs,r] of [[st,EX_C,EX_R],[tr,TR_C,TR_R],[mw,MW_C,MW_R],[sk,SK_C,SK_R],[bk,BK_C,BK_R]])for(const q of cs){const dx=cx-o.x-Math.sin(o.yaw)*q,dz=cz-o.z-Math.cos(o.yaw)*q,d=Math.hypot(dx,dz),m=K.R+r;
@@ -249,7 +249,7 @@ function hvCar(h,dt,drive,turn,k,on){const K=h.K,P=K.car,top=TU[P+'Spd']*k,rev=T
   const E=on?ebLive(P):null;
   if(E){const brk=drive*v<0&&Math.abs(v)>0.2,dir=v>0.2?1:v<-0.2?-1:drive<0?-1:1,ped=!brk&&drive*dir>0?Math.abs(drive):0;
     // the hill (along the way it points) and the air: what the engine climbs and pushes through
-    h.v+=(ebPull(E,dt,ped,dir,v,k,false)+9.8*Math.sin(h.pitch)-(P==='pk'?0.00025:0.0012)*v*Math.abs(v))*dt;
+    h.v+=(ebPull(E,dt,ped,dir,v,k,false)+9.8*Math.sin(h.pitch)*TU.hillPull-(P==='pk'?0.00025:0.0012)*v*Math.abs(v))*dt;
     if(brk){const b=K.brake*TU[P+'Brake']*Math.abs(drive)*dt;h.v=Math.abs(h.v)<=b?0:h.v-Math.sign(h.v)*b}
     else if(!drive){const c=(0.12+0.004*h.v*h.v)*dt;h.v=Math.abs(h.v)<=c?0:h.v-Math.sign(h.v)*c}}
   else if(drive*v<0&&Math.abs(v)>0.2){const b=K.brake*TU[P+'Brake']*Math.abs(drive)*dt;h.v=Math.abs(v)<=b?0:v-Math.sign(v)*b}

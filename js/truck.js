@@ -276,7 +276,7 @@ function updateTruck(dt,thr,steerIn,bedIn){
   // diesel: traction-limited at low speed, power-limited above, governed top speed (20 mph, 6 mph in reverse or with the bed up)
   const vTop=tr.gear>0&&tr.bed<0.06?TU.trTop:TU.trRev,along=tr.v*tr.gear;
   const Fd=drive*Math.min(36000,230000/Math.max(1,Math.abs(tr.v)))*clamp(vTop-along,0,1)*grip;
-  tr.v+=(tr.gear*Fd/mass+G*Math.sin(tr.pitch))*dt;
+  tr.v+=(tr.gear*Fd/mass+G*Math.sin(tr.pitch)*TU.hillPull)*dt;
   const dec=(crr*G+(drive?0:0.35)+brake*65000*TU.trBrake/mass)*dt;
   tr.v=Math.abs(tr.v)<=dec?0:tr.v-Math.sign(tr.v)*dec;
   tr.drive=drive;tr.soft=soft;tr.road=road;tr.bedIn=bedIn;sndIn.dump=0;tr.brakeOn=brake>0.2&&(Math.abs(tr.v)>0.05||tr.shiftT>0||!!thr);
@@ -286,11 +286,11 @@ function updateTruck(dt,thr,steerIn,bedIn){
   if(v2*Math.abs(curv)>latMax)curv=Math.sign(curv)*latMax/v2;
   // the rear tandem rolls along its heading and the cab swings around it, so the back end cuts inside the turn
   const sy0=Math.sin(tr.yaw),cy0=Math.cos(tr.yaw),rx=tr.x+sy0*REAR+sy0*tr.v*dt,rz=tr.z+cy0*REAR+cy0*tr.v*dt;
-  const ox=tr.x,oz=tr.z,oyaw=tr.yaw,w0=wallCount(tr.x,tr.z,tr.yaw,TR_P);
+  const ox=tr.x,oz=tr.z,oyaw=tr.yaw,w0=wallCount(tr.x,tr.z,tr.yaw,TR_P,1);
   const yawRate=-tr.v*curv;tr.yaw+=yawRate*dt;
   tr.x=rx-Math.sin(tr.yaw)*REAR;tr.z=rz-Math.cos(tr.yaw)*REAR;
   // the scarp face, ramp banks and stockpiles are too steep to climb: the truck stops against them
-  if(wallCount(tr.x,tr.z,tr.yaw,TR_P)>w0){tr.x=ox;tr.z=oz;tr.yaw=oyaw;if(Math.abs(tr.v)>1.2){shake=reduceMotion?0:0.12;rumble(200,0.5)}tr.v=0}
+  if(wallCount(tr.x,tr.z,tr.yaw,TR_P,1)>w0){tr.x=ox;tr.z=oz;tr.yaw=oyaw;if(Math.abs(tr.v)>1.2){shake=reduceMotion?0:0.12;rumble(200,0.5)}tr.v=0}
   // the rim berm keeps both axles on the mesa (the tail can still hang over the edge to dump): head-on it stops
   // the truck, at a glancing angle it scrapes along and keeps most of its speed
   // (and the railings keep it on a bridge deck)

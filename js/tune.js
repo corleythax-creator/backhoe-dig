@@ -98,6 +98,8 @@ const TUNE=[
   ['wtDepth','Mud and water','Water table depth',1.85,'ft',1,40,0.5],
   ['rutDepth','Mud and water','How deep tracks and tires sink',0.23,'in',1,24,0.5],['mudDrag','Mud and water','How much mud slows the machines',1,'pct',0,200,5],
   ['stuck','Mud and water','How easily machines get stuck',1,'pct',0,500,5],
+  ['climbSlope','Machines','Steepest ground the machines climb (rise over run; tracks a quarter more)',1.15,'pct',30,250,5],
+  ['hillPull','Machines','How hard hills hold the machines back going up (and pull them going down)',0.7,'pct',0,100,5],
   ['overH','Machines','How tall a thing (log, stump, rock, sandbags) the machines roll over',1,'pct',0,300,5],
   ['rutWet','Mud and water','How wet ground must be before it ruts',0.15,'pct',0,100,5],['rutRate','Mud and water','How fast ruts cut in',1,'pct',10,500,5],
   ['rutBerm','Mud and water','How high mud piles up beside the ruts',0.2,'in',0,24,0.5],
