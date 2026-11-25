@@ -318,7 +318,7 @@ function frame(now){
   const fv=mode==='boat'?btCur():mode==='heavy'?hvCur():mode==='bike'?bk:mode==='truck'?tr:mode==='mow'?mw:mode==='skid'?sk:mode==='walk'?wk:st;sun.position.set(fv.x,fv.y,fv.z).addScaledVector(LIGHT_DIR,SUN_D); sun.target.position.set(fv.x,fv.y,fv.z);
   {const o=groundOcc.value;o[0].set(st.x,st.z,st.yaw,0);o[2].set(tr.x,tr.z,tr.yaw,0)}
   timeU.value=now/1000;
-  shadowProxyTick();lawnLod();tuftLod();turfLod();rainCover();if(vr.fake)vrFakeHead();warmAllTick();warmLaterTick();warmDrawTick();warmFarTick();ltOtherTick();loadReportTick();repHudTick();shBenchTick();gpuWarmTick();shGateTick();if(!loadHold()){const wm=warmPre(),d0=performance.now(),di=drawInfo();postRender();drawNew.on=false;warmPost(wm);if(performance.now()-d0>80)drawSlow(d0,di)}if(vrOn())vrAfter();
+  shadowProxyTick();lawnLod();tuftLod();turfLod();rainCover();if(vr.fake)vrFakeHead();warmAllTick();warmLaterTick();warmDrawTick();warmNearTick();warmFarTick();ltOtherTick();loadReportTick();repHudTick();shBenchTick();gpuWarmTick();shGateTick();if(!loadHold()){const wm=warmPre(),d0=performance.now(),di=drawInfo();postRender();drawNew.on=false;warmPost(wm);if(performance.now()-d0>80)drawSlow(d0,di)}if(vrOn())vrAfter();
   if(bench.on)benchSample(dt);
   fpsFrames++;fpsTime+=dt;
   if(fpsTime>=0.5){
@@ -616,6 +616,25 @@ function warmDraw(o,all){const fc=[],ls=[],hid=[];o.traverse(m=>{m.layers.enable
   try{renderer.shadowMap.autoUpdate=false;if(postOn()&&postRT)renderer.setRenderTarget(postRT);renderer.render(scene,warmDrawCam)}
   finally{renderer.setRenderTarget(t);renderer.shadowMap.autoUpdate=au;renderer.shadowMap.needsUpdate=nu;
     o.traverse(m=>m.layers.disable(WARM_LAYER));for(const m of fc)m.frustumCulled=true;for(const m of hid)m.visible=false;for(const l of ls)l.layers.disable(WARM_LAYER)}}
+// everything near too, behind the loading cover (owner's v478 report: the Main Street salon, the pebbles and a
+// person's skinned parts each froze 3 to 7 s the first time they were drawn in play, 0 new shaders: the far batches
+// were drawn ahead, warmDrawTick, but what stands round where you start was only compiled). Once the cover's other
+// waits are done, each thing in the scene is drawn once, alone, hidden parts too and an empty instance set as one
+// instance, as many as fit in 40 ms a frame; the cover waits for it (warmNearDone, start.js). Things drawn are
+// remembered (by mesh), so whatever arrives later is drawn the same way behind the cover and nothing twice
+const warmNear={done:false,seen:new WeakSet(),L:null,t0:0};
+function warmNearOne(o){const zero=[];o.traverse(m=>{if(m.isInstancedMesh&&m.count===0){zero.push(m);m.count=1}});
+  try{warmDraw(o,true)}finally{for(const m of zero)m.count=0}o.traverse(m=>{if(m.isMesh||m.isPoints||m.isLine)warmNear.seen.add(m)})}
+function warmNearTick(){const N=warmNear;if(LOADP.done||N.done||vrOn()||edOn)return;
+  if(!N.L){const W=warmAll;if(!W||!warmCover()||typeof warmFar==='object'&&!warmFar.done)return;N.L=[];N.t0=performance.now();
+    for(const o of scene.children){if(o.isLight||o.isCamera)continue;let fresh=false;o.traverse(m=>{if((m.isMesh||m.isPoints||m.isLine)&&!N.seen.has(m))fresh=true});if(fresh)N.L.push(o)}
+    pfMark('Near world to draw',N.t0,N.L.length+' things')}
+  const T=performance.now();while(N.L.length&&performance.now()-T<40){const o=N.L.pop();if(o.parent)try{const t0=performance.now();warmNearOne(o);const ms=performance.now()-t0;if(ms>150)pfMark('Near thing first drawn',t0,(o.name||o.type)+' '+Math.round(ms)+' ms')}catch(e){}}
+  // (then a look again for things added meanwhile; done when a look finds none)
+  if(!N.L.length){N.L=null;let more=false;for(const o of scene.children){if(o.isLight||o.isCamera)continue;o.traverse(m=>{if(!more&&(m.isMesh||m.isPoints||m.isLine)&&!N.seen.has(m))more=true});if(more)break}
+    // (at most 4 looks or 30 s: things that keep turning up are drawn ahead in play, as before)
+    N.n=(N.n||0)+1;if(!more||N.n>=4||performance.now()-N.t0>30000){N.done=true;pfMark('Near world all drawn',N.t0,N.n+' looks')}}}
+const warmNearDone=()=>warmNear.done;
 // (one a frame in play; behind the loading cover as many as fit in 30 ms)
 function warmDrawTick(){const F=warmFar;if(!F.pre)return;const T=performance.now();
   do{const e=F.pre.pop();if(e&&e[0].parent&&!vrOn()&&!edOn)try{const t0=performance.now();warmDraw(e[0]);const ms=performance.now()-t0;if(ms>100)pfMark('Far thing first drawn',t0,e[0].name||e[0].type)}catch(x){}}
