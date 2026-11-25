@@ -6,6 +6,12 @@ lines, `townRegLine` in town.js); what each townsperson carries of it is `LIFE_S
 mind so the built-in mind and a talk model both have it. New lines must agree with the text below and stay as sidelong
 as it is: nobody explains what happened to Lucia.
 
+The full telling is the book, `ledger.html` (the Low Tide Ledger): its "Third pass" draft (owner's v3.2, Nov 25, seven
+chapters) is the whole story, solved: Lucia was Marisol's mother, thirty-nine years ago; Earl killed her in the bank
+vault over the cards that showed who was paid to keep the marsh deals quiet; Hank helped carry her to the skiff, Ruth
+heard it from behind the boxes, Gus signed the box off the books, and the cards are buried on the island. In the game
+nobody says any of that outright: talk stays at the level of the first telling below.
+
 Who is who in the game: Ruth (bakery), Marisol (coffee), Dot (diner), Hank (hardware), Earl (gun shop) and Gus (bank)
 are `TOWN_REGS`; Pearl (`f80_jacket`, shares Hank's house), Cal (`cal_m`, bait and boat rental), Brianna (`f16_teen`),
 her grandmother Denise (`f50_scrubs`) and Jayden (`m25_hoodie`, the ferry dock) are library people. Lucia is nobody you

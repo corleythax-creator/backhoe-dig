@@ -154,12 +154,15 @@ h2{font:600 19px/1.3 var(--display);margin:0}
 <header class="cover"><div class="in">
   <span class="eyebrow">A Corley's Island mystery</span>
   <h2 class="h1">The Low Tide Ledger</h2>
-  <p class="hook">The morning after your backhoe hits a rusted strongbox on Corley's Island, Gus Lindqvist doesn't open First Lake Bank. Gus has opened that bank at nine sharp every weekday for twenty-two years.</p>
-  <div class="meta"><span>Part One: a prologue and five chapters</span><span>About 40 minutes to read</span></div>
+  <p class="hook" data-ed="3">You stepped off the last ferry a little after eleven. Gus’s car sat crooked under the single pole light, the driver’s window rolled all the way down and the door open a few inches.</p>
+  <div class="meta" data-ed="3"><span>Third pass: seven chapters, the whole story</span><span>About 8 minutes to read</span></div>
+  <p class="hook" data-ed="1">The morning after your backhoe hits a rusted strongbox on Corley's Island, Gus Lindqvist doesn't open First Lake Bank. Gus has opened that bank at nine sharp every weekday for twenty-two years.</p>
+  <div class="meta" data-ed="1"><span>Part One: a prologue and five chapters</span><span>About 40 minutes to read</span></div>
 </div></header>
 
 <main class="in">
   <div class="rbar" id="rbar">
+    <select id="red" aria-label="Draft"><option value="3">Third pass</option><option value="1">Part One (earlier draft)</option></select>
     <select id="rsel" aria-label="Chapter"></select>
     <button id="rdn" aria-label="Smaller text">A&minus;</button>
     <button id="rup" aria-label="Larger text">A+</button>
@@ -168,7 +171,16 @@ h2{font:600 19px/1.3 var(--display);margin:0}
   </div>
   <nav class="toc" aria-label="Chapters">
     <p class="chno">Contents</p>
-    <ol>
+    <ol data-ed="3">
+      <li><a href="#book" data-ch="ch0">The Ferry Lot</a></li>
+      <li><a href="#book" data-ch="ch1">Bayou Lane</a></li>
+      <li><a href="#book" data-ch="ch2">The Note</a></li>
+      <li><a href="#book" data-ch="ch3">The Clinic</a></li>
+      <li><a href="#book" data-ch="ch4">What Ruth Heard</a></li>
+      <li><a href="#book" data-ch="ch5">The Old Ramp</a></li>
+      <li><a href="#book" data-ch="ch6">Her Name in the Report</a></li>
+    </ol>
+    <ol data-ed="1">
       <li class="pro"><a href="#book" data-ch="ch0">Prologue: What Hank Remembers</a></li>
       <li value="1"><a href="#book" data-ch="ch1">Boat Seven</a></li>
       <li><a href="#book" data-ch="ch2">The Coil</a></li>
@@ -367,10 +379,82 @@ h2{font:600 19px/1.3 var(--display);margin:0}
       <p>Your backhoe's engine, turning over.</p>
     </div>
   </section>
+  <section class="book" id="tp0" data-ed="3">
+    <p class="chno">Chapter One</p>
+    <h2 class="chtitle">The Ferry Lot</h2>
+    <div class="chapter dropcap">
+      <p>You stepped off the last ferry a little after eleven. The ramp boards were slick under your boots and smelled of wet rope and diesel. The lot was almost empty. Gus’s car sat crooked under the single pole light, the driver’s window rolled all the way down and the door open a few inches so the interior light stayed dark. You walked over because the open door looked wrong, and because you had already decided, somewhere between the ferry and the lot, that you were tired of driving past things.</p>
+      <p>The seat was racked far back. Keys lay on the passenger cushion. A paper cup from Dot’s sat on the floorboard, coffee gone cold, a dark ring on the mat. His jacket was wadded on the back seat. The radio murmured a Mo-beel station under static. You smelled coffee, mildew, and cigarette smoke that wasn’t his. Tucked under the jacket was a single sheet of bank stationery, folded once. You took it. On the inside, in Gus’s tight hand: “If I don’t come back, ask Ruth what she heard. Tell Marisol I’m sorry. The cards are still where we left them.” You stood with the paper in your hand longer than you needed to. Then you put it in your pocket and left the door as you found it.</p>
+    </div>
+  </section>
+
+  <section class="book" id="tp1" data-ed="3">
+    <p class="chno">Chapter Two</p>
+    <h2 class="chtitle">Bayou Lane</h2>
+    <div class="chapter dropcap">
+      <p>On Bayou Lane the only porch light still burning was Denise’s. Brianna sat on the steps with her knees up, hoodie sleeves over her hands, phone face-down beside her. Cicadas were loud. She watched you come up the walk instead of letting you pass, and for a second you saw how young she still was under the careful face.</p>
+      <p>“You saw his car,” she said. Her voice was low so it wouldn’t carry inside. “I saw who took it. After four. They got in and drove off toward the marsh road.” She didn’t say the name. She looked at the dark window behind her. “Don’t tell my mom I talked to you.” You showed her the note. Her eyes moved over the lines. She went still, then smaller.</p>
+      <p>“Earl,” she said, barely above the cicadas. “It was Earl. He didn’t look around. Just got in and left.” She pulled the hoodie tighter, fingers working the cuffs. “If my mom finds out I said that, she’ll never let me out again. And if he finds out, he’ll know it was me.” You told her you would not use her name. She nodded once, like she was agreeing to something she already regretted.</p>
+    </div>
+  </section>
+
+  <section class="book" id="tp2" data-ed="3">
+    <p class="chno">Chapter Three</p>
+    <h2 class="chtitle">The Note</h2>
+    <div class="chapter dropcap">
+      <p>In the morning Marisol poured your coffee and stayed behind the counter. You set the note on the Formica between you. She read it twice. The second time her thumb stayed on the line about the cards.</p>
+      <p>“He called me at midnight,” she said. Her hands stayed flat on the counter, but the knuckles had gone pale. “Said he’d been a coward for thirty-nine years. Wanted to tell me about my mother before he lost his nerve. I thought he meant he was finally going to say her name out loud in this town.” She folded the note carefully and pushed it back. “I waited in that car until the seat was damp. He never came. If Ruth knows something, she has never said it to me. Not once.”</p>
+      <p>You told her what Brianna had seen, without the name attached. Marisol’s mouth tightened. “Earl taught half the men in this town how to handle a boat. He also taught them how to keep quiet. My mother used to buy Pearl’s preserves with exact change. That is the only story anyone tells.” She looked past you at the door. “If you’re going to Ruth, go before dark. After dark Earl drives the marsh road, and I do not want to be the one who finds out what he does when he is finished driving.”</p>
+    </div>
+  </section>
+
+  <section class="book" id="tp3" data-ed="3">
+    <p class="chno">Chapter Four</p>
+    <h2 class="chtitle">The Clinic</h2>
+    <div class="chapter dropcap">
+      <p>Denise was in the parking lot of the clinic when you stopped for gas. She crossed to your truck before you could get out, moving like someone who had already rehearsed the distance.</p>
+      <p>“Brianna told me you talked,” she said. Her arms were folded tight enough that the fabric pulled. “She doesn’t know what she saw. She’s sixteen. You leave her out of it.” She waited until you met her eyes. “I mean it. Whatever this is with Gus, it doesn’t come through my porch. Earl already asked me this morning if anyone had been by the house last night. He asked it the way a man asks when he already knows the answer.”</p>
+      <p>The name landed between you. She saw that you understood, and for a moment the hardness in her face slipped into something closer to fear. She walked back inside. The door swung shut hard enough to rattle the glass.</p>
+    </div>
+  </section>
+
+  <section class="book" id="tp4" data-ed="3">
+    <p class="chno">Chapter Five</p>
+    <h2 class="chtitle">What Ruth Heard</h2>
+    <div class="chapter dropcap">
+      <p>Ruth was on her porch when you arrived. She did not invite you up. You held out the note. She read it without touching it, eyes moving once across the lines, then looked at the street as if measuring how much time she had left.</p>
+      <p>“I was in the vault with Lucia that night,” she said. Her voice was steady and low, but her hands had closed around the railing. “Earl and Hank came in. Lucia had found the cards—the ones that showed who had been paid to keep the marsh deals quiet. Half the grandfathers in this town. A few of the fathers. Earl hit her when she would not give them over. Hank helped carry her out to the skiff. I stayed behind the boxes and did not move until the door closed. I have not sat with my back to a window since.” She finally looked at you. “Gus signed the papers the next morning so the box would never show on the books. He has carried it ever since. If he is gone, Earl is the reason. The cards are still in the ground on the island. That is what he meant.”</p>
+      <p>A truck passed slow on Magnolia. Ruth’s eyes followed it until it was gone. Her shoulders had dropped, as if the words had weight she had been holding alone. “If you tell Marisol, tell her I am sorry I waited this long. I was afraid. I am still afraid. If you tell anyone else, do it where Earl cannot hear you first.”</p>
+    </div>
+  </section>
+
+  <section class="book" id="tp5" data-ed="3">
+    <p class="chno">Chapter Six</p>
+    <h2 class="chtitle">The Old Ramp</h2>
+    <div class="chapter dropcap">
+      <p>You drove the marsh road at dusk with the note in your pocket and Ruth’s voice still in your ears. Earl’s truck was already at the old ramp. You killed your lights and stopped short. He was standing at the edge of the concrete, looking at the water. The pale shape you had seen the night before was closer now—something wrapped and weighted, rocking just under the surface with the incoming tide.</p>
+      <p>Earl turned when your door opened. He did not reach for anything. The cigarette in his hand had burned down to the filter. “Brianna talks too much,” he said. “Denise should have kept her inside.” He nodded at the water. “Gus wanted to confess. I gave him the chance to change his mind on the way out here. He didn’t. He kept saying Marisol deserved to know her mother’s name said right.”</p>
+      <p>You stayed by the truck. The mosquitoes were thick against your neck and arms. Earl lit a fresh cigarette, the flare brief and orange. “Hank won’t speak. Ruth might, now that you’ve been to her. You can walk away right now and this stays where it has stayed for thirty-nine years. Or you can make me decide what to do with you too.” The wrapped shape shifted. Water lapped the concrete. You thought of Marisol’s thumb on the note and Brianna’s fingers working her cuffs, and you did not get back in the truck.</p>
+    </div>
+  </section>
+
+  <section class="book" id="tp6" data-ed="3">
+    <p class="chno">Chapter Seven</p>
+    <h2 class="chtitle">Her Name in the Report</h2>
+    <div class="chapter dropcap">
+      <p>You left the ramp with the headlights off until you hit pavement, hands tight on the wheel, the smell of Earl’s cigarette still in your clothes. At the diner Dot was still behind the counter. You set Gus’s note and a short written account of what Ruth had said on the counter in front of her. She read both without expression, then looked at you for a long moment.</p>
+      <p>“I’ll call the deputy when you walk out,” she said. “Not before. Earl eats here three mornings a week. I want him to see the door open and know it was already too late to stop it.” She folded the papers once and put them under the register. Her hand stayed there a second longer than necessary. “Marisol is at the coffee shop. Tell her yourself. She has waited long enough to hear it from someone who is not afraid of the telling.”</p>
+      <p>You drove to Mountain Coffee. Marisol was locking up, keys in her hand, shoulders set against the evening. You told her what Ruth had said, what Earl had admitted, and what was in the water at the ramp. She stood very still. The keys clicked once against each other. After a moment she nodded, eyes bright but dry.</p>
+      <p>“Take me to the deputy,” she said. “I want to hear it written down while someone is still alive to sign it. And I want my mother’s name in the report the way it should have been thirty-nine years ago.” Behind you the marsh road stayed dark. Somewhere out on it Earl’s truck was either still parked or already moving. You opened the passenger door. She got in without looking back at the shop, and you pulled away with both of you watching the mirrors.</p>
+    </div>
+  </section>
+
   <div class="rnav" id="rnav"><button class="pv" id="rpv"><small>Previous</small><span></span></button><button class="nx" id="rnx"><small>Next</small><span></span></button></div>
   <div class="book" id="rend">
-    <p class="end">End of Part One</p>
-    <p class="next">The story continues in Part Two. To go over the evidence so far, open the <a href="#case">Case File</a>.</p>
+    <p class="end" data-ed="3">The End</p>
+    <p class="next" data-ed="3">To go over the evidence, open the <a href="#case">Case File</a>.</p>
+    <p class="end" data-ed="1">End of Part One</p>
+    <p class="next" data-ed="1">The story continues in Part Two. To go over the evidence so far, open the <a href="#case">Case File</a>.</p>
   </div>
 </main>
   </section>
@@ -559,11 +643,16 @@ sec.addEventListener('change',()=>board.classList.toggle('hide',!sec.checked));
 const TABS=['book','case','map'];
 function showTab(){const h=location.hash.slice(1),id=TABS.includes(h)?h:'book';if(/^ch\d$/.test(h))rdShow(+h[2]);for(const v of TABS){document.getElementById(v).hidden=v!==id;document.getElementById('t-'+v).setAttribute('aria-selected',v===id)}}
 // reader: one chapter at a time
-const RCH=[...document.querySelectorAll('#book section.book')],rsel=document.getElementById('rsel'),rroot=document.documentElement;
+// two drafts of the book (data-ed on the chapters, cover lines and contents; none = 1): the third pass is shown unless the reader picks the earlier one
+const RALL=[...document.querySelectorAll('#book section.book')],rsel=document.getElementById('rsel'),rroot=document.documentElement;
 function rls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}}
-let rcur=0,rfs=+rls('ltl-fs')||0;
+let rcur=0,rfs=+rls('ltl-fs')||0,red=rls('ltl-ed')==='1'?'1':'3',RCH=[];
+const rChKey=()=>'ltl-ch'+(red==='1'?'':red);
 function rName(c){return c.querySelector('.chno').textContent+': '+c.querySelector('.chtitle').textContent}
-RCH.forEach((c,i)=>{const o=document.createElement('option');o.value=i;o.textContent=rName(c);rsel.appendChild(o)});
+function rEd(e){red=e==='1'?'1':'3';rls('ltl-ed',red);document.getElementById('red').value=red;RCH=RALL.filter(c=>(c.dataset.ed||'1')===red);RALL.forEach(c=>c.hidden=true);
+  document.querySelectorAll('#book [data-ed]').forEach(x=>{if(!x.matches('section.book'))x.hidden=x.dataset.ed!==red});
+  rsel.textContent='';RCH.forEach((c,i)=>{const o=document.createElement('option');o.value=i;o.textContent=rName(c);rsel.appendChild(o)})}
+rEd(red);document.getElementById('red').onchange=e=>{rEd(e.target.value);rdShow(+rls(rChKey())||0,true)};
 function rSize(d){const b=document.getElementById('book');if(!rfs)rfs=parseFloat(getComputedStyle(b).getPropertyValue('--fs'))||20;rfs=Math.max(15,Math.min(30,rfs+d));b.style.setProperty('--fs',rfs+'px');rls('ltl-fs',rfs)}
 if(rfs)rSize(0);
 function rdShow(i,top){rcur=Math.max(0,Math.min(RCH.length-1,i));RCH.forEach((c,j)=>c.hidden=j!==rcur);
@@ -572,7 +661,7 @@ function rdShow(i,top){rcur=Math.max(0,Math.min(RCH.length-1,i));RCH.forEach((c,
   pv.disabled=rcur===0;nx.disabled=rcur===RCH.length-1;
   if(rcur>0)pv.lastChild.textContent=RCH[rcur-1].querySelector('.chtitle').textContent;
   if(rcur<RCH.length-1)nx.lastChild.textContent=RCH[rcur+1].querySelector('.chtitle').textContent;
-  rls('ltl-ch',rcur);if(top)scrollTo({top:0,behavior:'instant'})}
+  rls(rChKey(),rcur);if(top)scrollTo({top:0,behavior:'instant'})}
 function rGo(i){rdShow(i,true)}
 rsel.onchange=()=>rGo(+rsel.value);
 document.getElementById('rpv').onclick=()=>rGo(rcur-1);document.getElementById('rnx').onclick=()=>rGo(rcur+1);
@@ -582,18 +671,18 @@ function rNightLabel(){const d=rroot.dataset.theme?rroot.dataset.theme==='dark':
 rNightLabel();document.getElementById('rnight').onclick=()=>{const n=rNightLabel()?'light':'dark';rroot.setAttribute('data-theme',n);rls('ltl-theme',n);rNightLabel()};
 document.addEventListener('keydown',e=>{if(document.getElementById('book').hidden||e.target.closest('input,select,textarea'))return;
   if(e.key==='ArrowRight'&&rcur<RCH.length-1)rGo(rcur+1);if(e.key==='ArrowLeft'&&rcur>0)rGo(rcur-1)});
-rdShow(+rls('ltl-ch')||0,false);
+rdShow(+rls(rChKey())||0,false);
 // Save the whole book: a Word document, a PDF (the browser's print, every chapter shown), or plain text
-function rBook(){const parts=[['The Low Tide Ledger','A Corley\'s Island mystery · Part One']];
+function rBook(){const parts=[['The Low Tide Ledger','A Corley\'s Island mystery · '+(red==='1'?'Part One':'Third pass')]];
   for(const c of RCH){const no=c.querySelector('.chno').textContent,t=c.querySelector('.chtitle').textContent,ps=[...c.querySelectorAll('.chapter > *')].map(e=>({cls:e.className,txt:e.textContent.trim()})).filter(e=>e.txt);parts.push([no+': '+t,ps])}
   return parts}
 function rDown(name,type,data){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000)}
 const rEsc=t=>t.replace(/&/g,'&amp;').replace(/</g,'&lt;');
 document.getElementById('rsave').onchange=e=>{const k=e.target.value;e.target.value='';if(!k)return;const B=rBook();
-  if(k==='txt'){let o=B[0][0]+'\n'+B[0][1]+'\n';for(const [h,ps] of B.slice(1)){o+='\n\n'+h.toUpperCase()+'\n\n';for(const p of ps)o+=(p.cls.includes('break')?'* * *':p.txt)+'\n\n'}o+='End of Part One\n';rDown('The Low Tide Ledger.txt','text/plain;charset=utf-8',o)}
+  if(k==='txt'){let o=B[0][0]+'\n'+B[0][1]+'\n';for(const [h,ps] of B.slice(1)){o+='\n\n'+h.toUpperCase()+'\n\n';for(const p of ps)o+=(p.cls.includes('break')?'* * *':p.txt)+'\n\n'}o+=(red==='1'?'End of Part One':'The End')+'\n';rDown('The Low Tide Ledger.txt','text/plain;charset=utf-8',o)}
   else if(k==='doc'){let o='<html><head><meta charset="utf-8"><title>The Low Tide Ledger</title><style>body{font-family:Georgia,serif;font-size:12pt;line-height:1.5}h1{text-align:center}h2{text-align:center;page-break-before:always}.c{text-align:center}.pov{font-style:italic}</style></head><body><h1>'+B[0][0]+'</h1><p class="c">'+rEsc(B[0][1])+'</p>';
     for(const [h,ps] of B.slice(1)){o+='<h2>'+rEsc(h)+'</h2>';for(const p of ps)o+=p.cls.includes('break')?'<p class="c">* * *</p>':'<p'+(p.cls.includes('pov')?' class="pov"':'')+'>'+rEsc(p.txt)+'</p>'}
-    o+='<p class="c"><i>End of Part One</i></p></body></html>';rDown('The Low Tide Ledger.doc','application/msword',o)}
+    o+='<p class="c"><i>'+(red==='1'?'End of Part One':'The End')+'</i></p></body></html>';rDown('The Low Tide Ledger.doc','application/msword',o)}
   else if(k==='pdf'){const was=RCH.map(c=>c.hidden);RCH.forEach(c=>c.hidden=false);document.getElementById('book').classList.remove('reading');
     const back=()=>{RCH.forEach((c,i)=>c.hidden=was[i]);rdShow(rcur,false);removeEventListener('afterprint',back)};addEventListener('afterprint',back);print()}};
 document.querySelectorAll('.toc a').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();rGo(+a.dataset.ch.slice(2))}));
