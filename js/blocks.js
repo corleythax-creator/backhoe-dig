@@ -86,7 +86,7 @@ function blkHit(x,y,z){for(const b of blocks)if(Math.abs(x-b.x)<b.w/2&&Math.abs(
 function blkCircleD(o,lz,b){const cx=o.x+Math.sin(o.yaw)*lz,cz=o.z+Math.cos(o.yaw)*lz,hx=b.w/2,hz=b.d/2;
   return Math.hypot(cx-Math.max(b.x-hx,Math.min(b.x+hx,cx)),cz-Math.max(b.z-hz,Math.min(b.z+hz,cz)))}
 const blkNear=new WeakMap();
-function blkPush(o,lzs,r,over){let hit=false,ov=false;const up=(over||0)*TU.overH;
+function blkPush(o,lzs,r,over){let hit=false,ov=false,px0=o.x,pz0=o.z,lzS=0,lzN=0;const up=(over||0)*TU.overH;
   // the islands' buildings and the things placed in the map editor; the ones nowhere near (beyond the machine's reach
   // plus the solid's own) are skipped first: there are a few thousand and this runs for every machine every frame
   let R=r;for(const lz of lzs)R=Math.max(R,Math.abs(lz)+r);
@@ -97,7 +97,7 @@ function blkPush(o,lzs,r,over){let hit=false,ov=false;const up=(over||0)*TU.over
     for(const s of SOLIDS){if(s.foot)continue;const e=R+10+(s.sn!==undefined?Math.hypot(s.lx,s.lz):Math.max(s.hx,s.hz)*1.42);if(Math.abs(o.x-s.x)>e||Math.abs(o.z-s.z)>e)continue;N.L.push(s)}}
   for(const s of N.L){if(s.foot)continue;const e=R+(s.sn!==undefined?Math.hypot(s.lx,s.lz):Math.max(s.hx,s.hz)*1.42);
     if(Math.abs(o.x-s.x)>e||Math.abs(o.z-s.z)>e)continue;const pass=up>0&&((s.lo!==undefined&&s.lo<=up)||(s.soft&&up>=0.3));
-    for(const lz of lzs){const p=solidOut(s,o.x+Math.sin(o.yaw)*lz,o.z+Math.cos(o.yaw)*lz,r*(pass?0.6:1));if(!p)continue;if(pass){ov=true;continue}hit=true;o.x+=p[0];o.z+=p[1]}}
+    for(const lz of lzs){const p=solidOut(s,o.x+Math.sin(o.yaw)*lz,o.z+Math.cos(o.yaw)*lz,r*(pass?0.6:1));if(!p)continue;if(pass){ov=true;if(s.soft&&s.a)crKnock(s,o);continue}hit=true;o.x+=p[0];o.z+=p[1];lzS+=lz;lzN++}}
   // rolling over: a jolt and a little drag as it goes on, none while it stays over
   if(ov){if(!o.ovOn&&Math.abs(o.v||0)>0.6){if(blkRidden(o)){shake=Math.max(shake,reduceMotion?0:0.08);rumble(160,0.45)}o.v*=0.8}o.v*=0.995}o.ovOn=ov;
   const climb=Math.max(BLK_CLIMB,up);
@@ -107,7 +107,9 @@ function blkPush(o,lzs,r,over){let hit=false,ov=false;const up=(over||0)*TU.over
       const nx=dx-Math.max(-hx,Math.min(hx,dx)),nz=dz-Math.max(-hz,Math.min(hz,dz)),d=Math.hypot(nx,nz);
       if(d>1e-4){if(d>=r)continue;o.x+=nx/d*(r-d);o.z+=nz/d*(r-d)}
       else if(px<pz)o.x+=Math.sign(dx||1)*px;else o.z+=Math.sign(dz||1)*pz;
-      hit=true}}
+      hit=true;lzS+=lz;lzN++}}
+  // the hit: which way it was pushed out is the wall's face; crash.js bounces, scrapes and sounds it
+  if(hit)crHit(o,o.x-px0,o.z-pz0,lzS/lzN,r);
   return hit}
 // the machine the worker is driving (only it shakes the camera)
 function blkRidden(o){if(typeof wk==='undefined'||!wk.inside||typeof WK_RIDES==='undefined')return false;const R=WK_RIDES[wk.inside];return !!R&&R.o===o}
