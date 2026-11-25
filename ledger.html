@@ -134,6 +134,9 @@ h2{font:600 19px/1.3 var(--display);margin:0}
 .rnav .nx{grid-column:2;text-align:right}
 .rnav button[disabled]{visibility:hidden}
 .ledger.reading .cover,.ledger.reading .toc{display:none}
+.rbar #rsave{flex:0 0 auto}
+@media print{.tabs,.rbar,.rnav,.toc,header:not(.cover),#case,#map{display:none!important}.ledger section.book{display:block!important}
+  body{background:#fff;color:#000}.ledger .cover{background:#fff;color:#000}.ledger .hook,.ledger .eyebrow{color:#333}.ledger section.book{break-before:page}.ledger .chapter{font-size:12pt;max-width:none}}
 </style>
 </head>
 <body>
@@ -161,6 +164,7 @@ h2{font:600 19px/1.3 var(--display);margin:0}
     <button id="rdn" aria-label="Smaller text">A&minus;</button>
     <button id="rup" aria-label="Larger text">A+</button>
     <button id="rnight" aria-label="Switch day or night">Night</button>
+    <select id="rsave" aria-label="Save the book"><option value="">Save…</option><option value="doc">Word document</option><option value="pdf">PDF (print)</option><option value="txt">Text file</option></select>
   </div>
   <nav class="toc" aria-label="Chapters">
     <p class="chno">Contents</p>
@@ -579,6 +583,19 @@ rNightLabel();document.getElementById('rnight').onclick=()=>{const n=rNightLabel
 document.addEventListener('keydown',e=>{if(document.getElementById('book').hidden||e.target.closest('input,select,textarea'))return;
   if(e.key==='ArrowRight'&&rcur<RCH.length-1)rGo(rcur+1);if(e.key==='ArrowLeft'&&rcur>0)rGo(rcur-1)});
 rdShow(+rls('ltl-ch')||0,false);
+// Save the whole book: a Word document, a PDF (the browser's print, every chapter shown), or plain text
+function rBook(){const parts=[['The Low Tide Ledger','A Corley\'s Island mystery · Part One']];
+  for(const c of RCH){const no=c.querySelector('.chno').textContent,t=c.querySelector('.chtitle').textContent,ps=[...c.querySelectorAll('.chapter > *')].map(e=>({cls:e.className,txt:e.textContent.trim()})).filter(e=>e.txt);parts.push([no+': '+t,ps])}
+  return parts}
+function rDown(name,type,data){const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([data],{type}));a.download=name;document.body.appendChild(a);a.click();setTimeout(()=>{URL.revokeObjectURL(a.href);a.remove()},1000)}
+const rEsc=t=>t.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+document.getElementById('rsave').onchange=e=>{const k=e.target.value;e.target.value='';if(!k)return;const B=rBook();
+  if(k==='txt'){let o=B[0][0]+'\n'+B[0][1]+'\n';for(const [h,ps] of B.slice(1)){o+='\n\n'+h.toUpperCase()+'\n\n';for(const p of ps)o+=(p.cls.includes('break')?'* * *':p.txt)+'\n\n'}o+='End of Part One\n';rDown('The Low Tide Ledger.txt','text/plain;charset=utf-8',o)}
+  else if(k==='doc'){let o='<html><head><meta charset="utf-8"><title>The Low Tide Ledger</title><style>body{font-family:Georgia,serif;font-size:12pt;line-height:1.5}h1{text-align:center}h2{text-align:center;page-break-before:always}.c{text-align:center}.pov{font-style:italic}</style></head><body><h1>'+B[0][0]+'</h1><p class="c">'+rEsc(B[0][1])+'</p>';
+    for(const [h,ps] of B.slice(1)){o+='<h2>'+rEsc(h)+'</h2>';for(const p of ps)o+=p.cls.includes('break')?'<p class="c">* * *</p>':'<p'+(p.cls.includes('pov')?' class="pov"':'')+'>'+rEsc(p.txt)+'</p>'}
+    o+='<p class="c"><i>End of Part One</i></p></body></html>';rDown('The Low Tide Ledger.doc','application/msword',o)}
+  else if(k==='pdf'){const was=RCH.map(c=>c.hidden);RCH.forEach(c=>c.hidden=false);document.getElementById('book').classList.remove('reading');
+    const back=()=>{RCH.forEach((c,i)=>c.hidden=was[i]);rdShow(rcur,false);removeEventListener('afterprint',back)};addEventListener('afterprint',back);print()}};
 document.querySelectorAll('.toc a').forEach(a=>a.addEventListener('click',e=>{e.preventDefault();rGo(+a.dataset.ch.slice(2))}));
 addEventListener('hashchange',()=>{showTab();scrollTo(0,0)});showTab();
 </script>
