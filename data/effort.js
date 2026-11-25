@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-25T00:58:00Z",
+ "updated": "2026-11-25T01:40:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -192,9 +192,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-24",
-   "dh": 4,
-   "act": 0.5,
-   "versions": 1
+   "dh": 5.5,
+   "act": 1,
+   "versions": 2
   }
  ],
  "extra": [
@@ -4461,6 +4461,15 @@ window.EFFORT = {
    "tris": 7408451,
    "chars": 2863953,
    "what": "Machines roll over logs, stumps, small boulders and sandbags, the bigger ones push through traffic drums, barricades, signs and bins, and they climb steeper ground with hills holding them back less (Tuning: Machines)"
+  },
+  {
+   "v": 474,
+   "asked": "2026-11-24T18:45:00-06:00",
+   "live": "2026-11-24T19:40:32-06:00",
+   "dh": 1.5,
+   "tris": 7377943,
+   "chars": 2864430,
+   "what": "From the owner's v472 report: the cats' close-up body and fur are drawn once behind the loading cover too (hidden while they are far, they first went to the graphics card when you walked up to them, a 4.8 s freeze); the game's tools run without asking for permission"
   }
  ]
 };
