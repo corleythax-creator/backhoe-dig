@@ -70,7 +70,7 @@ function loadStep(bad){if(LOADP.done)return;if(bad){loadEnd();return}const jsN=d
   if(game&&!LOADP.gameT)LOADP.gameT=now;let al=0,at=0;for(const [l,t] of LOADP.mgr){al+=l;at+=t}
   if(LOADP.gameT&&now-LOADP.gameT>2000&&LOADP.goal===undefined)LOADP.goal=at;if(LOADP.goal!==undefined)at=LOADP.goal;al=Math.min(al,at);
   const a=at?al/at:0,w=typeof warmFrac==='function'?warmFrac():0;
-  const done=LOADP.goal!==undefined&&al>=at&&LOADP.warm&&(typeof warmCover==='function'?warmCover():warmIdle())&&loadTownIn()&&loadFolkIn()&&(typeof warmFar!=='object'||warmFar.done)&&(typeof ltOther!=='object'||ltOther.done)&&(typeof brBusy!=='function'||!brBusy())&&(typeof btBusy!=='function'||!btBusy())&&(typeof petsBusy!=='function'||!petsBusy())||now>LOADP.cap*1000||LOADP.err&&now-LOADP.errT>4000;
+  const done=LOADP.goal!==undefined&&al>=at&&LOADP.warm&&(typeof warmCover==='function'?warmCover():warmIdle())&&loadTownIn()&&loadFolkIn()&&(typeof warmFar!=='object'||warmFar.done)&&(typeof warmNearDone!=='function'||warmNearDone())&&(typeof ltOther!=='object'||ltOther.done)&&(typeof brBusy!=='function'||!brBusy())&&(typeof btBusy!=='function'||!btBusy())&&(typeof petsBusy!=='function'||!petsBusy())||now>LOADP.cap*1000||LOADP.err&&now-LOADP.errT>4000;
   const p=done?100:Math.min(99,45*js+30*a*(game?1:.8)+25*w);LOADP.shown=done?100:Math.max(LOADP.shown,LOADP.shown+(p-LOADP.shown)*.35);// counts up smoothly, never back
   const pct=Math.floor(LOADP.shown),L=document.getElementById('startLoad');
   document.getElementById('startLoadPct').textContent=pct+'%';document.getElementById('startLoadFill').style.width=LOADP.shown+'%';L.setAttribute('aria-valuenow',pct);
