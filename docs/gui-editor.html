@@ -1324,6 +1324,7 @@ const TUNE=[
   ['hillPull','Machines','How hard hills hold the machines back going up (and pull them going down)',0.7,'pct',0,100,5],
   ['crBounce','Machines','How much a machine bounces back off what it hits',0.25,'pct',0,100,5],['crSpin','Machines','How much a hit off the middle turns a machine',1,'pct',0,300,5],
   ['crDamage','Machines','How much hard hits and landings damage a machine',1,'pct',0,300,5],['crTipAt','Machines','How far a machine leans before it tips over (0: never)',1,'pct',0,200,5],['crAir','Machines','How easily a machine leaves the ground over a crest',1,'pct',50,300,5],
+  ['crDent','Machines','How deep hard hits dent a machine or a car',1,'pct',0,300,5],
   ['crKnockBack','Machines','Knocked-over drums and signs stand back up after',90,'s',5,900,5],
   ['overH','Machines','How tall a thing (log, stump, rock, sandbags) the machines roll over',1,'pct',0,300,5],
   ['rutWet','Mud and water','How wet ground must be before it ruts',0.15,'pct',0,100,5],['rutRate','Mud and water','How fast ruts cut in',1,'pct',10,500,5],
@@ -1520,7 +1521,7 @@ tune.live=tuneParse(tuneLs(TUNE_LIVE_LS));tune.draft=tuneParse(tuneLs(TUNE_LS));
 // [id, group, words, what fills the {names}]
 const WORDS=[
   ['crTipped','Machines','The {m} rolled over! It gets set back on its wheels in a moment','{m}: the machine'],['crRighted','Machines','The {m} is back on its wheels','{m}: the machine'],
-  ['crDamaged','Machines','The {m} is {n}% damaged: stop at a fuel pump or its home spot to fix it','{m}: the machine, {n}: how damaged'],['crFixed','Machines','The {m} is fixed','{m}: the machine'],
+  ['crDamaged','Machines','The {m} is {n}% damaged: stop at a fuel pump or its home spot to fix it','{m}: the machine, {n}: how damaged'],['crFixed','Machines','The {m} is fixed','{m}: the machine'],['crCarWreck','Machines','You wrecked a car with the {m}!','{m}: the machine'],
   ['recOn','Frame recorder','Recording the last few seconds. When the glitch happens, press [recSave] to save it; [recFrames] stops',''],['recOff','Frame recorder','Frame recorder off',''],
   ['recSaved','Frame recorder','Saved {n} frames: upload the hop file to Claude','{n}: frames in the file'],['recNone','Frame recorder','Nothing recorded: press [recFrames] to start the frame recorder first',''],
   ['capL_dig','Captions','{lh} Swing\n{lv} Stick out / in','Left stick, Dig'],['capR_dig','Captions','{rh} Curl / dump\n{rv} Boom down / up','Right stick, Dig'],
@@ -1822,6 +1823,15 @@ const WORDS=[
   ['reg_walt_2','Town: regulars','I walk Main Street every day. Doctor\'s orders. Ten thousand steps.',''],['reg_walt_3','Town: regulars','You run that excavator smooth. Real smooth. I notice these things.',''],
   ['reg_jenna_0','Town: regulars','Mail carrier. Nobody gets mail out on your island, you know.',''],['reg_jenna_1','Town: regulars','Rain or shine. Mostly rain this week.',''],
   ['reg_jenna_2','Town: regulars','The dog on Maple Street hates me. Personal, I think.',''],['reg_jenna_3','Town: regulars','Package for the hardware store. Hank orders a lot of gloves.',''],
+  // the town's story (docs/STORY.md): what the regulars let slip once they know you, after their three everyday lines
+  ['reg_ruth_4','Town: the story','I speak to Pearl. I just don\'t sit in that kitchen.',''],['reg_ruth_5','Town: the story','People stayed quiet about that girl longer than made any sense.',''],
+  ['reg_marisol_4','Town: the story','Gus says he wants to talk about my mother. He never gets around to it.',''],
+  ['reg_marisol_5','Town: the story','Saw a boat heading north with no lights the other night. I told the deputy. He wrote it down.',''],
+  ['reg_dot_4','Town: the story','Gus takes his coffee to go, lid off. Leaves a ring on everything he owns.',''],
+  ['reg_hank_4','Town: the story','Pearl\'s got the scrapbook out. Says a page is missing.',''],['reg_hank_5','Town: the story','Pearl stopped asking me about that night on the water a long time ago. Don\'t you start.',''],
+  ['reg_earl_4','Town: the story','I go by the boat ramp some nights, after midnight. Don\'t ride. Just watch.',''],
+  ['reg_gus_4','Town: the story','Ruth has lived four doors down from me all these years. There\'s something I never asked her.',''],
+  ['reg_gus_5','Town: the story','I keep meaning to talk to Marisol about her mother. Keep meaning to.',''],
   ['reg_back','Town: regulars','Good to see you again.',''],
   // what the townsfolk remember of seeing you in the shops (lives.js fmLine: by how long ago and what you bought), and the young ones' own lines (talk.js talkKidSay)
   ['tkIntro','Town: talk','{line} I\'m {name}, by the way.','{line}: their first words; {name}'],['kdIntro','Town: kids','{line} I\'m {name}!','{line}: their first words; {name}'],
