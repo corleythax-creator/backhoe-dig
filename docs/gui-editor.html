@@ -580,10 +580,10 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
 .gstats{font:700 var(--t2)/1.4 var(--f-display)!important;color:var(--muted);font-variant-numeric:tabular-nums;background:var(--well);border-radius:var(--r);padding:8px 10px}
 .gstats b{color:var(--ink)}
 /* Stats panel: the lawn heatmap with its modes and key, then each group of numbers */
-#statBox{position:fixed;inset:0;z-index:7;background:rgba(6,8,11,.74);display:flex;align-items:center;justify-content:center;pointer-events:auto;box-sizing:border-box;
+#statBox,#jobBox{position:fixed;inset:0;z-index:7;background:rgba(6,8,11,.74);display:flex;align-items:center;justify-content:center;pointer-events:auto;box-sizing:border-box;
   padding-block:calc(env(safe-area-inset-top,0px) + 16px) calc(env(safe-area-inset-bottom,0px) + 16px);
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-#statBox .card{max-width:620px;overscroll-behavior:contain;touch-action:pan-y}
+#statBox .card,#jobBox .card{max-width:620px;overscroll-behavior:contain;touch-action:pan-y}
 #statBox h2{margin:6px 0 0;font:700 var(--t3)/1 var(--f-display);letter-spacing:.06em;text-transform:uppercase;color:var(--machine);border-bottom:1px solid var(--hud-line);padding-bottom:6px}
 #statHeat{display:flex;flex-direction:column;gap:8px}
 #heatCv{display:block;width:100%;aspect-ratio:4/3;image-rendering:pixelated;border-radius:var(--r);border:1px solid var(--hud-line);background:var(--well)}
@@ -734,6 +734,19 @@ body.fps #hud .bbar .stats{display:block}
 #recBadge{position:absolute;top:calc(env(safe-area-inset-top,0px) + 70px);left:50%;transform:translateX(-50%);z-index:4;font:700 var(--t2)/1 var(--f-display);letter-spacing:.08em;color:#fff;background:rgba(190,20,20,.85);padding:6px 12px;border-radius:var(--r);pointer-events:none}
 #recBadge[hidden]{display:none}
 
+/* jobs (jobs.js): the chip under the wallet and the board */
+#hud .lpane>#jobChip{position:static;margin:0;height:auto;min-height:0;line-height:1.2;white-space:normal;display:flex;flex-direction:column;align-items:stretch;gap:3px;min-width:200px;max-width:260px;padding:8px 12px;border:0;border-radius:var(--r);background:var(--chip);color:#fff;text-align:left;font-weight:700;cursor:pointer;pointer-events:auto}
+#jobChip b{font-size:var(--t1);letter-spacing:.08em;text-transform:uppercase;opacity:.85}#jobChip span{font-size:var(--t2)}#jobChip small{font-size:var(--t1);font-weight:600;opacity:.9;font-variant-numeric:tabular-nums}
+#jobChip .jbar{display:none;height:6px;border-radius:var(--r);background:rgba(255,255,255,.16);overflow:hidden}#jobChip.on .jbar{display:block}#jobChip .jbar i{display:block;height:100%;width:0;background:var(--machine)}
+#jobRankLine{margin:0;font-size:var(--t2)}
+#jobList{display:flex;flex-direction:column;gap:6px}
+.jrow{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:8px 10px;border:1px solid var(--hud-line);border-radius:var(--r)}
+.jrow.on{border-color:var(--machine)}.jrow.lock{opacity:.5}
+.jrow>div{display:flex;flex-direction:column;gap:2px}.jrow span{font-size:var(--t1);color:var(--muted)}
+.jrow .jpay{align-items:flex-end;flex:none}.jrow .jpay b{color:var(--money);font-variant-numeric:tabular-nums}.jrow button{margin-top:4px}
+/* long help topics come as short titled paragraphs */
+#howList .keys dd p{margin:0 0 8px}#howList .keys dd p:last-child{margin:0}#howList .keys dd .hsec{color:var(--machine);margin-right:4px}
+
 </style>
 <div class="app">
   <div class="side">
@@ -774,6 +787,7 @@ body.fps #hud .bbar .stats{display:block}
         <button id="vrBtn" hidden>🥽 Play in VR</button>
         <button id="mapBtn">Site map</button>
         <button id="helpBtn">How to play</button>
+        <button id="jobsBtn">Jobs</button>
         <button id="statsBtn">Stats</button>
       </div>
       <div class="mtab" data-mt="build" role="tabpanel" hidden>
@@ -826,6 +840,8 @@ body.fps #hud .bbar .stats{display:block}
        on a desktop, the townsfolk counts -->
   <aside class="lpane" id="lpane">
     <div id="cashChip" hidden><b>Wallet</b><span id="cashVal">$0</span></div>
+    <!-- the job you are on (jobs.js); it opens the job board -->
+    <button id="jobChip" aria-label="Jobs"><b>Job</b><span id="jobName">No job</span><i class="jbar"><i id="jobBar"></i></i><small id="jobSub"></small></button>
   <div class="status" id="status" title="Tap to show less or more" hidden>
     <div class="srow" id="bucketPanel">
       <div class="line"><span class="lbl">Bucket</span><span class="val" id="bucketVal">0.00 yd³ · 0%</span></div>
@@ -1078,6 +1094,7 @@ body.fps #hud .bbar .stats{display:block}
     <input id="howFind" type="search" placeholder="Search: mud, trench box, keys…" aria-label="Search the help" autocomplete="off">
     <div id="howList">
     <dl class="keys">
+      <dt id="hkJobs">Jobs</dt><dd id="hdJobs">The job chip at the top left (or ☰ → Play → Jobs) opens the job board. Take a job: so much dirt to dig, haul or move, or grass to mow. Finishing pays a bonus on top of the pay by the yard, and earns up to three stars: one for the work, one for finishing inside the par time, one for a clean job (no line strike or cave-in). Late still pays. Stars raise your rank, from Greenhorn to Superintendent; each rank opens bigger jobs and lifts every bonus.</dd>
       <dt id="hkLeftStick">Left stick</dt><dd id="hdLeftStick">Swing left/right. Push up to reach the stick out, pull down to bring it in.</dd>
       <dt id="hkRightStick">Right stick</dt><dd id="hdRightStick">Left curls the bucket in (scoop), right dumps. Push up for boom down, pull for boom up.</dd>
       <dt id="hkDrive">Drive</dt><dd id="hdDrive">In the excavator, the Tracks / Arm switch over the right stick (or Enter) flips between driving: the left stick moves the tracks, and digging: the sticks run the arm. It digs anywhere on Corley's, down the bank and in the beach sand to the water's edge.</dd>
@@ -1102,7 +1119,7 @@ body.fps #hud .bbar .stats{display:block}
       <dt id="hkStats">Stats</dt><dd id="hdStats">☰ then Stats (or O) shows everything you've done: grass mowed, lawns finished and your best time, distance walked, sprinted and driven in each machine, jumps, dirt dug and hauled, time in each machine and top speeds. It also counts your trees: how many of each species, their ages (worked out from their real size with a forestry growth curve), trunks, shade, wood and carbon held, plus a Tree guide of age by height for every species. Its lawn heatmap shows how many times each spot has been cut, how far the grass has grown back, or the way it was last mowed; turn it on to see it over the lawn itself (U, press again to change what it shows). Tap the key at the top of the screen to switch what it shows.</dd>
       <dt id="hkLook">Look</dt><dd id="hdLook">Drag the scene to look around.</dd>
       <dt id="hkMap">Map</dt><dd id="hdMap">Tap the minimap or press M for the big map. Its Soil wetness row shows how wet the soil on the mesa is: All shades it from dry (clear) to soaked (deep blue), and Damp+, Wet+ or Soaked show only the ground at least that wet; standing water shows bright blue. Show on the ground too tints the ground itself the same way.</dd>
-      <dt id="hkMapEditor">Map editor</dt><dd id="hdMapEditor">☰ menu, then Map editor (or G). The game pauses while you edit. The tool groups run down the left (keys 1 to 5), with a drawer beside them for the group's library or list; the picked tool's options and whatever you have selected sit in the bar along the bottom. Shape: Raise, Lower, Flatten and Smooth reshape the ground under a round brush. Paint lays a material from the library (gravel, concrete, steel plate, brick, wood and more, and worked dirt and grass) under a round or square brush, hard edged or soft edged (Softness sets how much of the brush fades out into the ground); Natural ground clears it, and digging cuts through it; + Your own texture adds a picture of yours to the library. Things: Add places trees, boulders and things from the catalogue (houses, sheds, garages, fences, gates, light towers, cones, barrels, pallets, porta-potties, signs, benches, picnic tables, dumpsters): One at a time, Stamp (a tap each), Line (drag a line and fences and gates go end to end along it, other things at the spacing) or Scatter (a brush that scatters them; Erase takes them away). Select picks a tree, boulder, placed thing or machine; Shift-tap or a long press picks more, and a drag on empty ground (Box select on touch) picks everything in the box. Drag a picked one to move them all; the bottom bar turns, sizes, colours, copies or deletes them. Exact edits: East and South type one thing's spot in feet from the trench; Snap in the top bar (off, 1, 2, 5 or 10 ft) puts moves and new things on the grid, turns in 15° steps, fence and gate ends together and things beside a road at its edge facing it; with Select, a ring round the picked things turns them (drag its knob) or sizes them (drag its edge); the arrow keys nudge them 1 ft (Shift 10 ft); Line up, Space evenly and Face one way tidy several; Row makes copies in a line (along or across, end to end or at a spacing); Copy (Ctrl+C), Ctrl+X and Paste (Ctrl+V, at the pointer, or the middle of the view on touch) keep their shape, and Duplicate (Ctrl+D) puts a copy alongside. Hide (H) leaves the picked things out of the view while you edit, to get at what is behind them (Show hidden, tapping a hidden one's row, or closing the editor brings them back; it isn't saved). Lock (L) is saved with the map: a locked thing can't be picked on the ground or in a box, moved, turned, sized, copied or deleted until it is unlocked; On the map has 👁 and 🔒 on each row and for each kind, and a Locked filter. On the map, in the drawer, lists every thing and machine by kind: tap one to go to it, tick several, select or delete a whole kind. Roads: tap a road to pick it (or pick it from the list), drag its dots to move them, tap the picked road between dots to add one, or tap New road and lay one point by point; set its width, grass up the middle and grading. Inspect: Query reads the height, slope and surface of any spot. Measure lays points on the ground (tap; drag one to move it; Snap puts them on the grid) and gives the length of the path, straight and over the ground, the start-to-end rise or fall and slope, and with three or more points the area inside (in square feet, and acres once it is big); tap the first point or Close the shape to go round, Delete takes away the last point, Esc clears. Back to start, in the bottom bar with a machine picked, sends it (or you, on foot) to where it starts the game; the Machines group in On the map sends them all. Move the view with two fingers (pinch to zoom, twist to turn), or turn Look on to move it with one finger; Closer, Farther, North up and Start view are in the top bar (mouse: right button turns, wheel zooms; keys WASD, Q E, R F). Undo and Redo step through your edits, and History lists them by name to jump back to any. The map saves on this device as you edit. Map keeps several named maps (rename this one, make a new one or a duplicate, open or delete the others), downloads the map as a file or opens one, copies it as text or loads copied text, shows what the map holds, and starts over: everything, or just the shape, paint, things or roads. Every item (top bar, or ☰ → Every item) lists every thing, building, tree and machine in the game: search it, sort it, tap one to go to it and pick it. Anything the game built (buildings, benches, posts, walls, the town's trees) can be picked, moved, turned and deleted too; Put back returns it.</dd>
+      <dt id="hkMapEditor">Map editor</dt><dd id="hdMapEditor"><p>☰ menu, then Map editor (or G). The game pauses while you edit. The tool groups run down the left (keys 1 to 5), with a drawer beside them for the group's library or list; the picked tool's options and whatever you have selected sit in the bar along the bottom.</p><p><b class="hsec">Shape</b> Shape: Raise, Lower, Flatten and Smooth reshape the ground under a round brush.</p><p><b class="hsec">Paint</b> Paint lays a material from the library (gravel, concrete, steel plate, brick, wood and more, and worked dirt and grass) under a round or square brush, hard edged or soft edged (Softness sets how much of the brush fades out into the ground); Natural ground clears it, and digging cuts through it; + Your own texture adds a picture of yours to the library.</p><p><b class="hsec">Things</b> Things: Add places trees, boulders and things from the catalogue (houses, sheds, garages, fences, gates, light towers, cones, barrels, pallets, porta-potties, signs, benches, picnic tables, dumpsters): One at a time, Stamp (a tap each), Line (drag a line and fences and gates go end to end along it, other things at the spacing) or Scatter (a brush that scatters them; Erase takes them away).</p><p><b class="hsec">Select</b> Select picks a tree, boulder, placed thing or machine; Shift-tap or a long press picks more, and a drag on empty ground (Box select on touch) picks everything in the box. Drag a picked one to move them all; the bottom bar turns, sizes, colours, copies or deletes them.</p><p><b class="hsec">Exact edits</b> Exact edits: East and South type one thing's spot in feet from the trench; Snap in the top bar (off, 1, 2, 5 or 10 ft) puts moves and new things on the grid, turns in 15° steps, fence and gate ends together and things beside a road at its edge facing it; with Select, a ring round the picked things turns them (drag its knob) or sizes them (drag its edge); the arrow keys nudge them 1 ft (Shift 10 ft); Line up, Space evenly and Face one way tidy several; Row makes copies in a line (along or across, end to end or at a spacing); Copy (Ctrl+C), Ctrl+X and Paste (Ctrl+V, at the pointer, or the middle of the view on touch) keep their shape, and Duplicate (Ctrl+D) puts a copy alongside.</p><p><b class="hsec">Hide and lock</b> Hide (H) leaves the picked things out of the view while you edit, to get at what is behind them (Show hidden, tapping a hidden one's row, or closing the editor brings them back; it isn't saved). Lock (L) is saved with the map: a locked thing can't be picked on the ground or in a box, moved, turned, sized, copied or deleted until it is unlocked; On the map has 👁 and 🔒 on each row and for each kind, and a Locked filter.</p><p><b class="hsec">On the map</b> On the map, in the drawer, lists every thing and machine by kind: tap one to go to it, tick several, select or delete a whole kind.</p><p><b class="hsec">Roads</b> Roads: tap a road to pick it (or pick it from the list), drag its dots to move them, tap the picked road between dots to add one, or tap New road and lay one point by point; set its width, grass up the middle and grading.</p><p><b class="hsec">Inspect</b> Inspect: Query reads the height, slope and surface of any spot. Measure lays points on the ground (tap; drag one to move it; Snap puts them on the grid) and gives the length of the path, straight and over the ground, the start-to-end rise or fall and slope, and with three or more points the area inside (in square feet, and acres once it is big); tap the first point or Close the shape to go round, Delete takes away the last point, Esc clears.</p><p><b class="hsec">Back to start</b> Back to start, in the bottom bar with a machine picked, sends it (or you, on foot) to where it starts the game; the Machines group in On the map sends them all.</p><p><b class="hsec">The view</b> Move the view with two fingers (pinch to zoom, twist to turn), or turn Look on to move it with one finger; Closer, Farther, North up and Start view are in the top bar (mouse: right button turns, wheel zooms; keys WASD, Q E, R F).</p><p><b class="hsec">Undo</b> Undo and Redo step through your edits, and History lists them by name to jump back to any. The map saves on this device as you edit.</p><p><b class="hsec">Maps</b> Map keeps several named maps (rename this one, make a new one or a duplicate, open or delete the others), downloads the map as a file or opens one, copies it as text or loads copied text, shows what the map holds, and starts over: everything, or just the shape, paint, things or roads.</p><p><b class="hsec">Every item</b> Every item (top bar, or ☰ → Every item) lists every thing, building, tree and machine in the game: search it, sort it, tap one to go to it and pick it. Anything the game built (buildings, benches, posts, walls, the town's trees) can be picked, moved, turned and deleted too; Put back returns it.</p></dd>
       <dt id="hkScreen">Screen</dt><dd id="hdScreen">Controls (☰ menu) lists every key, mouse, touch and controller input, and its Turn slider sets how fast left and right turn in the mode you are in, from 25% to 200%; each mode keeps its own (the mower starts at 60%, the rest at 100%): the excavator swing and tracks, the truck steering, the mower spin and looking round on foot. Each device remembers its own. Speed test, Reset, Sound (on/off and volume sliders), Graphics and UI size (1x, 1.5x, 2x) are in the ☰ menu. Graphics has Low for phones, Medium for laptops and High for desktop PCs, and under them every setting on its own to play with: resolution, frame cap, field of view, shadows, lighting, brightness, haze, texture size and sharpness, ground detail, grass blades, Dirt detail (16x is for screenshots and fast computers), puddle water and raindrops, with the frame rate and triangle count shown live, an estimate of the GPU memory in use (textures, geometry and the screen) and a graph of the frame rate over the last 10 seconds (average, 1% low and slowest frame). Each device remembers its own. The site is saved in this browser: the dig, the dumped dirt, the excavator, the truck and its load, the trench box, blocks and the mowing are all still there when you come back. Reset starts fresh ground. To play the same site on your phone and computer, open ☰ then Sync devices: get a code on one and type it on the other.</dd>
       <dt id="hkLookingAround">Looking around</dt><dd id="hdLookingAround">In cab view (C) drag the scene to turn your head, in any machine or on foot: look out the side windows, behind you, up at the boom or down at the bucket. On a PC, click the scene to take the mouse for mouse look; Esc gives it back. Zoom with the mouse wheel, a two-finger pinch, or hold Z for a quick look. R turns your head back to straight ahead.</dd>
       <dt id="hkController">Controller</dt><dd id="hdController">Sticks work like the two on-screen sticks. Triggers are gas and reverse when driving. LB / RB switch machine · Y cab view · right stick click looks ahead · A place block (in Walk mode A jumps, X places and a left stick click sprints) · D-pad up blocks on/off, left/right block size (cubes, 1 to 10 ft), down pick up · View map · Menu this help · B closes, or gets you in and out of machines.</dd>
@@ -1163,6 +1180,15 @@ body.fps #hud .bbar .stats{display:block}
       <button id="statTrail" class="ghost">Where I've walked and driven</button>
     </div>
     <div class="row"><button id="statDone">Done</button><button id="statClear" class="ghost">Clear stats</button></div>
+  </div>
+</div>
+<div id="jobBox" hidden>
+  <div class="card">
+    <h1>Jobs</h1>
+    <p class="devline">Take a job, do the work, get the bonus. Stars: one for the work, one inside par, one for no line strike or cave-in. Late still pays.</p>
+    <p id="jobRankLine"></p>
+    <div id="jobList"></div>
+    <div class="row"><button id="jobDone">Done</button></div>
   </div>
 </div>
 <div id="sndBox" hidden>
@@ -1324,6 +1350,7 @@ const TUNE=[
   ['hillPull','Machines','How hard hills hold the machines back going up (and pull them going down)',0.7,'pct',0,100,5],
   ['crBounce','Machines','How much a machine bounces back off what it hits',0.25,'pct',0,100,5],['crSpin','Machines','How much a hit off the middle turns a machine',1,'pct',0,300,5],
   ['crDamage','Machines','How much hard hits and landings damage a machine',1,'pct',0,300,5],['crTipAt','Machines','How far a machine leans before it tips over (0: never)',1,'pct',0,200,5],['crAir','Machines','How easily a machine leaves the ground over a crest',1,'pct',50,300,5],
+  ['crDent','Machines','How deep hard hits dent a machine or a car',1,'pct',0,300,5],
   ['crKnockBack','Machines','Knocked-over drums and signs stand back up after',90,'s',5,900,5],
   ['overH','Machines','How tall a thing (log, stump, rock, sandbags) the machines roll over',1,'pct',0,300,5],
   ['rutWet','Mud and water','How wet ground must be before it ruts',0.15,'pct',0,100,5],['rutRate','Mud and water','How fast ruts cut in',1,'pct',10,500,5],
@@ -1338,7 +1365,7 @@ const TUNE=[
   ['packShed','Excavator','How fast packed clay drops off',1,'pct',0,500,5],
   ['caveDepth','Cave-ins','Walls start to cave in deeper than',1.2,'ft',1,30,0.5],['caveSpoil','Cave-ins','Spoil this close to the edge loads the wall',0.64,'ft',0,10,0.5],
   // the townsfolk (townfolk.js): how fast the town's cars drive its streets and its people walk
-  ['tfCarV','Town','Town traffic speed',11.2,'mph',5,45,1],['tfWalk','Town','Townsfolk walking pace',1.3,'mph',1,5,0.1],['tfUltraR','Town','Ultra graphics: townsfolk shown in full detail within',6,'ft',6,40,1],['tfUltraPre','Town','Ultra graphics: full-detail townsfolk loaded ahead within',25,'ft',20,250,5],['tfUltraKeep','Town','Ultra graphics: full-detail townsfolk looks kept loaded (each about 60 MB of graphics memory)',8,'n',2,24,1],['townZ','Town','Machines on the islands hidden once you are this far south (town)',420,'ft',1000,2300,10],
+  ['tfCarV','Town','Town traffic speed',11.2,'mph',5,45,1],['tfWalk','Town','Townsfolk walking pace',1.3,'mph',1,5,0.1],['stEvery','Town','Shop windows: how often the street they reflect is taken again (High and Ultra)',6,'s',1,60,1],['tfLook','Town','Townsfolk skin and cloth: light through skin edges and the sheen of cloth',1,'pct',0,200,5],['tfUltraR','Town','Ultra graphics: townsfolk shown in full detail within',6,'ft',6,40,1],['tfUltraPre','Town','Ultra graphics: full-detail townsfolk loaded ahead within',25,'ft',20,250,5],['tfUltraKeep','Town','Ultra graphics: full-detail townsfolk looks kept loaded (each about 60 MB of graphics memory)',8,'n',2,24,1],['townZ','Town','Machines on the islands hidden once you are this far south (town)',420,'ft',1000,2300,10],
   // which townsfolk characters stay home: one bit per character, in models/peds/peds.json order (bit 0 = cal_m); set on the Townsfolk page
   ['tfOut','Town','Townsfolk left out (a bit per character; set it on the Townsfolk page)',0,'n',0,4294967295,1],
   // the town's life (town.js): money, shop hours, greetings and talk
@@ -1433,7 +1460,7 @@ const TUNE=[
   ['machWear','Machines','How worn the machines look: chipped paint, polished and rusty steel, dust (High)',1,'pct',0,200,5],['machCoat','Machines','Gloss of the clear coat on machine paint (High)',0.6,'pct',0,100,5],
   ['fxBounce','Screen effects','Light bounced off nearby things onto others, taking their colour (Ultra, with Contact shade)',1,'pct',0,300,5],
   ['fxContact','Screen effects','Fine sun shadows where small things touch (Ultra, with Contact shade)',0.55,'pct',0,100,5],['fxContactL','Screen effects','How far those fine shadows reach',0.6,'ft',0.1,3,0.05],
-  ['fxWarm','Screen effects','Warm light and cool shade in the colour grade',0.4,'pct',0,100,5],['fxSharp','Screen effects','Sharpening (with the colour grade)',0.35,'pct',0,100,5],
+  ['fxWarm','Screen effects','Warm light and cool shade in the colour grade',0.4,'pct',0,100,5],['fxSharp','Screen effects','Sharpening (with the colour grade)',0.35,'pct',0,100,5],['fxAA','Screen effects','Edge smoothing strength',1,'pct',0,100,5],
   ['fxDof','Screen effects','Far blur, like a camera lens (with the colour grade; 0% = off)',0.5,'pct',0,100,5],
   // Ultra lighting (post.js): how much the sky colours the shade, how soft the sun's shadows get, the rain on the machines
   ['ultraSky','Ultra','Sky lighting: how much the sky as it is colours the shade and reflections',1,'pct',0,200,5],
@@ -1454,7 +1481,7 @@ const TUNE=[
   ['aeMin','Light and haze','Eye adjusting: the most it darkens the picture',0.7,'pct',30,100,5],
   ['bounce','Light and haze','Sunlight thrown back up off the ground onto the shady undersides and sides of things',1,'pct',0,300,5],
   ['pbrFar','Ground look','Relief fades out by',180*0.3048,'ft',60,600,10],
-  ['treeSway','Trees','How much the trees and undergrowth sway in the breeze',1,'pct',0,400,5],['treeGlow','Trees','How much sunlight shines through the leaves',1,'pct',0,300,5],
+  ['treeSway','Trees','How much the trees and undergrowth sway in the breeze',1,'pct',0,400,5],['treeGlow','Trees','How much sunlight shines through the leaves',1,'pct',0,300,5],['treeMidK','Trees','Trees in full detail out to this share of the tree distance (Graphics); past it, out to the tree distance, they keep their branches with half the leaf cards, each larger',0.45,'pct',10,100,5],
   // the freight line far across the lake (train.js)
   ['trSpeed','Train','The distant trains run at',35*0.44704,'mph',10,80,1],['trEvery','Train','A train comes out of the tunnel every',300,'min',1,60,1],
   // how the clock runs (☰ menu, Time) and how dark the night gets
@@ -1486,6 +1513,10 @@ const TUNE=[
   ['fuelPrice','Work and pay','Fuel price, a gallon (does nothing while fuel burn is off)',3.85,'usd',0,20,0.05],
   ['payDig','Work and pay','Pay for dirt dug, a yd³',9,'usd',0,200,0.5],['payHaul','Work and pay','Pay for dirt hauled off in the truck, a yd³',14,'usd',0,200,0.5],
   ['paySkid','Work and pay','Pay for dirt moved by the skid steer, a yd³',6,'usd',0,200,0.5],['payMow','Work and pay','Pay for grass mowed, a 1,000 sq ft',8,'usd',0,200,0.5],
+  ['farCull','Screen effects','Far parts left out: a separate part smaller than this many pixels across on screen is not drawn (0 draws everything)',5,'n',0,30,0.5],
+  ['jobPar','Work and pay','Job par times (100% is the game\'s own; more gives longer to earn the on-time star)',1,'pct',25,400,5],
+  ['jobOnTime','Work and pay','Job bonus for finishing inside par',0.25,'pct',0,200,5],['jobClean','Work and pay','Job bonus for a clean job (no line strike or cave-in)',0.25,'pct',0,200,5],
+  ['jobRankPay','Work and pay','Job bonus added for each rank you hold',0.05,'pct',0,100,1],
   // VR headset (vr.js): how the right stick turns you on foot
   ['vrTurn','VR','Turn speed on foot with the right stick (0 = 30° snap steps)',120*Math.PI/180,'deg',0,360,5],
   ['vrComfort','VR','Comfort vignette: how far the view darkens at its edges while you drive fast or turn (0 = off)',0.5,'pct',0,100,5]];
@@ -1520,7 +1551,7 @@ tune.live=tuneParse(tuneLs(TUNE_LIVE_LS));tune.draft=tuneParse(tuneLs(TUNE_LS));
 // [id, group, words, what fills the {names}]
 const WORDS=[
   ['crTipped','Machines','The {m} rolled over! It gets set back on its wheels in a moment','{m}: the machine'],['crRighted','Machines','The {m} is back on its wheels','{m}: the machine'],
-  ['crDamaged','Machines','The {m} is {n}% damaged: stop at a fuel pump or its home spot to fix it','{m}: the machine, {n}: how damaged'],['crFixed','Machines','The {m} is fixed','{m}: the machine'],
+  ['crDamaged','Machines','The {m} is {n}% damaged: stop at a fuel pump or its home spot to fix it','{m}: the machine, {n}: how damaged'],['crFixed','Machines','The {m} is fixed','{m}: the machine'],['crCarWreck','Machines','You wrecked a car with the {m}!','{m}: the machine'],
   ['recOn','Frame recorder','Recording the last few seconds. When the glitch happens, press [recSave] to save it; [recFrames] stops',''],['recOff','Frame recorder','Frame recorder off',''],
   ['recSaved','Frame recorder','Saved {n} frames: upload the hop file to Claude','{n}: frames in the file'],['recNone','Frame recorder','Nothing recorded: press [recFrames] to start the frame recorder first',''],
   ['capL_dig','Captions','{lh} Swing\n{lv} Stick out / in','Left stick, Dig'],['capR_dig','Captions','{rh} Curl / dump\n{rv} Boom down / up','Right stick, Dig'],
@@ -1700,6 +1731,10 @@ const WORDS=[
   ['fuelLow','Work','The {machine} is down to {pct}% fuel. Fill up at {where}: stop beside the pump.','{machine}, {pct}: fuel left, {where}: the nearest pump'],
   ['fuelOut','Work','The {machine} has run out of fuel. Fill it at {where}: bring fuel in the truck, or drive another machine there.','{machine}, {where}: the nearest pump'],
   ['fuelFilled','Work','Filled the {machine}: {gal} gal for {cost}. Tank {left}% full.','{machine}, {gal}, {cost}, {left}'],
+  ['jobTook','Work','Job taken: {job}. {what}. Par {par}.','{job}; {what}: the work; {par}: the par time'],
+  ['jobDone','Work','{job} done {stars} ({how}). Bonus {pay}.','{job}; {stars}; {how}: on time, clean; {pay}'],
+  ['jobRank','Work','Promoted: you are now {rank}. Bigger jobs are on the board.','{rank}'],
+  ['jobSpoiled','Work','That costs {job} its clean star.','{job}'],['jobDropped','Work','Dropped: {job}.','{job}'],
   ['payDay','Work','A new day. Yesterday paid {pay}.','{pay}: what the day paid'],
   ['ultraSlow','Other','Ultra was too slow here ({fps} fps), so Graphics went to High. Pick Ultra again in Graphics to keep it.','{fps}: frames per second'],
   ['gfxSlow','Other','{from} was too slow here ({fps} fps), so Graphics went to {name}. Pick {from} again in Graphics to keep it.','{fps}: frames per second; {from}, {name}: the Graphics levels'],
@@ -1822,6 +1857,15 @@ const WORDS=[
   ['reg_walt_2','Town: regulars','I walk Main Street every day. Doctor\'s orders. Ten thousand steps.',''],['reg_walt_3','Town: regulars','You run that excavator smooth. Real smooth. I notice these things.',''],
   ['reg_jenna_0','Town: regulars','Mail carrier. Nobody gets mail out on your island, you know.',''],['reg_jenna_1','Town: regulars','Rain or shine. Mostly rain this week.',''],
   ['reg_jenna_2','Town: regulars','The dog on Maple Street hates me. Personal, I think.',''],['reg_jenna_3','Town: regulars','Package for the hardware store. Hank orders a lot of gloves.',''],
+  // the town's story (docs/STORY.md): what the regulars let slip once they know you, after their three everyday lines
+  ['reg_ruth_4','Town: the story','I speak to Pearl. I just don\'t sit in that kitchen.',''],['reg_ruth_5','Town: the story','People stayed quiet about that girl longer than made any sense.',''],
+  ['reg_marisol_4','Town: the story','Gus says he wants to talk about my mother. He never gets around to it.',''],
+  ['reg_marisol_5','Town: the story','Saw a boat heading north with no lights the other night. I told the deputy. He wrote it down.',''],
+  ['reg_dot_4','Town: the story','Gus takes his coffee to go, lid off. Leaves a ring on everything he owns.',''],
+  ['reg_hank_4','Town: the story','Pearl\'s got the scrapbook out. Says a page is missing.',''],['reg_hank_5','Town: the story','Pearl stopped asking me about that night on the water a long time ago. Don\'t you start.',''],
+  ['reg_earl_4','Town: the story','I go by the boat ramp some nights, after midnight. Don\'t ride. Just watch.',''],
+  ['reg_gus_4','Town: the story','Ruth has lived four doors down from me all these years. There\'s something I never asked her.',''],
+  ['reg_gus_5','Town: the story','I keep meaning to talk to Marisol about her mother. Keep meaning to.',''],
   ['reg_back','Town: regulars','Good to see you again.',''],
   // what the townsfolk remember of seeing you in the shops (lives.js fmLine: by how long ago and what you bought), and the young ones' own lines (talk.js talkKidSay)
   ['tkIntro','Town: talk','{line} I\'m {name}, by the way.','{line}: their first words; {name}'],['kdIntro','Town: kids','{line} I\'m {name}!','{line}: their first words; {name}'],
