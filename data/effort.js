@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-26T03:41:00Z",
+ "updated": "2026-11-26T03:44:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -198,9 +198,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-25",
-   "dh": 10.5,
+   "dh": 12.5,
    "act": 2,
-   "versions": 4
+   "versions": 5
   }
  ],
  "extra": [
@@ -4548,6 +4548,15 @@ window.EFFORT = {
    "tris": 7487189,
    "chars": 2894466,
    "what": "Taking the gun out (or putting fists up) in first person no longer freezes: the gun and your own body are drawn once behind the loading screen, and a gun that loads later is drawn once when it arrives"
+  },
+  {
+   "v": 483,
+   "asked": "2026-11-25T20:50:00-06:00",
+   "live": "2026-11-25T21:44:42-06:00",
+   "dh": 2,
+   "tris": 6883128,
+   "chars": 2895380,
+   "what": "About 650,000 fewer triangles every frame: the shrubs round the trees are drawn only near you (500 ft on High, 720 ft on Ultra, less on the lower levels; Graphics: Undergrowth distance), shrinking away at the edge, where before every shrub on every island was drawn all the time"
   }
  ]
 };
