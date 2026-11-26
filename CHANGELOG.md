@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Wednesday, November 25, 2026
 
+- **v483** (9:44 PM) About 650,000 fewer triangles every frame: the shrubs round the trees are drawn only near you (500 ft on High, 720 ft on Ultra, less on the lower levels; Graphics: Undergrowth distance), shrinking away at the edge, where before every shrub on every island was drawn all the time
 - **v482** (9:41 PM) Taking the gun out (or putting fists up) in first person no longer freezes: the gun and your own body are drawn once behind the loading screen, and a gun that loads later is drawn once when it arrives
 - **v481** (9:07 PM) Edge smoothing on High and Ultra graphics: the stair-steps and shimmer left on leaves, fences, wires and bright glints are smoothed on the finished picture, on top of the 4x anti-aliasing every level already has (Graphics: Edge smoothing; Tuning: Screen effects)
 - **v480** (7:58 PM) Hard hits dent the machines where they struck and damage is kept in the save; the town's cars are solid to the machines: a bump stops the car with its horn going and dents it, a hard or heavy hit wrecks it (Tuning: Machines)
