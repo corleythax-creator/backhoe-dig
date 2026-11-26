@@ -337,10 +337,11 @@ function mdlSpotsOn(on){mdl.spotsOn=on;mdl.spotsDirty=false;
 // packed in and drawn. Before, every copy on
 // the map drew in every frame, across the whole island
 const MDL_FR=new THREE.Frustum(),MDL_PV=new THREE.Matrix4(),MDL_SP=new THREE.Sphere();
-function mdlSpotCull(cam){if(!mdl.spotsOn||!cam||!cam.isPerspectiveCamera)return;const all=renderer.xr.isPresenting;
+function mdlSpotCull(cam){if(!mdl.spotsOn||!cam)return;const all=renderer.xr.isPresenting||!cam.isPerspectiveCamera;
   if(!all){cam.updateMatrixWorld();MDL_FR.setFromProjectionMatrix(MDL_PV.multiplyMatrices(cam.projectionMatrix,cam.matrixWorldInverse))}
   const cx=cam.position.x,cy=cam.position.y,cz=cam.position.z,h=renderer.domElement.clientHeight||innerHeight,
-    k=h*cam.zoom/Math.tan(cam.fov*Math.PI/360)/Math.max(2,gfxCur.cull||0);
+    k=all?0:h*cam.zoom/Math.tan(cam.fov*Math.PI/360)/Math.max(2,gfxCur.cull||0);
+  mdlPropCull(all,cx,cy,cz,k);if(!cam.isPerspectiveCamera)return;
   for(const key in mdl.spotIM){const ims=mdl.spotIM[key],L=MDL_SPOTS[key];if(!ims||!ims.show)continue;
     let R=ims.r;if(R===undefined){R=0;for(const im of ims){const b=im.geometry.boundingSphere;im.r=b.center.length()+b.radius;R=Math.max(R,im.r)}ims.r=R}
     for(const im of ims)im.n=0;
@@ -351,9 +352,26 @@ function mdlSpotCull(cam){if(!mdl.spotsOn||!cam||!cam.isPerspectiveCamera)return
       for(const im of ims){const r=im.r*s;if(!all&&(gfxCull.on?!gfxSees(x,y,z,r):Math.hypot(x-cx,y-cy,z-cz)>r*k))continue;
         const e=im.instanceMatrix.array,o=16*im.n++;e[o]=c;e[o+1]=0;e[o+2]=-sn;e[o+3]=0;e[o+4]=0;e[o+5]=s;e[o+6]=0;e[o+7]=0;e[o+8]=sn;e[o+9]=0;e[o+10]=c;e[o+11]=0;e[o+12]=x;e[o+13]=y;e[o+14]=z;e[o+15]=1}}
     for(const im of ims){if(im.count!==im.n||im.n){im.count=im.n;im.instanceMatrix.needsUpdate=true}im.frustumCulled=false;im.visible=im.n>0}}}
-// every frame: the placed things' detailed copies keep the count the editor's list gives (propsBuild)
+// the map editor's placed things in their detailed models (mdl.propIM) the same way: each render, of the copies in the
+// kind's own list (propIMs, the editor's, read live) only those in view and big enough on screen are packed into the
+// detailed parts' own buffers. Before, every placed copy on the map was drawn in every frame (about 125,000 triangles
+// at the start on High)
+function mdlPropCull(all,cx,cy,cz,k){for(const key in mdl.propIM){const src=propIMs[key],ims=mdl.propIM[key];if(!src||!ims||!ims.length)continue;
+    if(!ims.own){ims.own=1;const cap=src.instanceMatrix.count;for(const m of ims){m.instanceMatrix=new THREE.InstancedBufferAttribute(new Float32Array(cap*16),16);
+      m.instanceMatrix.setUsage(THREE.DynamicDrawUsage);if(src.instanceColor)m.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(cap*3),3)}}
+    let R=ims.r;if(R===undefined){R=0;for(const im of ims){const g=im.geometry;if(!g.boundingSphere)g.computeBoundingSphere();const b=g.boundingSphere;im.r=b.center.length()+b.radius;R=Math.max(R,im.r)}ims.r=R}
+    for(const im of ims)im.n=0;
+    if(mdl.spotsOn&&src.count){const A=src.instanceMatrix.array,C=src.instanceColor&&src.instanceColor.array;
+      for(let i=0;i<src.count;i++){const b=i*16,x=A[b+12],y=A[b+13],z=A[b+14],s=Math.hypot(A[b],A[b+1],A[b+2]);if(!s)continue;
+        if(!all){MDL_SP.center.set(x,y,z);MDL_SP.radius=R*s+4;if(!MDL_FR.intersectsSphere(MDL_SP))continue}
+        for(const im of ims){const r=im.r*s;if(!all&&(gfxCull.on?!gfxSees(x,y,z,r):Math.hypot(x-cx,y-cy,z-cz)>r*k))continue;
+          im.instanceMatrix.array.set(A.subarray(b,b+16),im.n*16);if(C&&im.instanceColor)im.instanceColor.array.set(C.subarray(i*3,i*3+3),im.n*3);im.n++}}}
+    for(const im of ims){im.count=im.n;im.instanceMatrix.clearUpdateRanges();im.instanceMatrix.addUpdateRange(0,im.n*16);im.instanceMatrix.needsUpdate=true;
+      if(im.instanceColor){im.instanceColor.clearUpdateRanges();im.instanceColor.addUpdateRange(0,im.n*3);im.instanceColor.needsUpdate=true}im.visible=im.n>0}}}
+// every frame: the placed things' simple meshes drawn only while the detailed ones are off (the detailed copies are
+// packed at each render, mdlPropCull)
 function mdlPropsSync(){for(const k in mdl.propIM){const im=propIMs[k],det=mdl.spotsOn;
-  for(const m of mdl.propIM[k]){m.count=im.count;m.visible=det&&im.count>0}im.visible=!det&&im.count>0}}
+  if(!det)for(const m of mdl.propIM[k])m.visible=false;im.visible=!det&&im.count>0}}
 // gfx.js: Detailed or Simple machine models (the other machines change on the next frame, once they all exist)
 function mdlGfx(detail){mdl.want=!!detail;mdlExOn(mdl.want);mdlTrOn(mdl.want)}
 // once a few seconds, the cab display's clock (only while the detailed model shows)

@@ -321,6 +321,7 @@ function stProbeTick(dt){if(!stPr.on||renderer.xr.isPresenting||(typeof edOn!=='
   if(++stPr.face<6)return;stPr.face=-1;stPr.t=Math.max(1,TU.stEvery??6);
   const i=stPr.i;stPr.pms[i]=stPr.pm.fromCubemap(stPr.rt.texture,stPr.pms[i]);stPr.i^=1;stPr.live=true;const tex=stPr.pms[i].texture;
   for(const m of bfMats.values())if(bfShiny(m)&&!inRL.mats.has(m)){m.envMap=tex;stPr.mats.add(m)}}
+stProbeGfx(gfxCur.stProbe);
 let bfEnvK=-1;function bfEnvTick(){if(TU.bfEnv===bfEnvK)return;bfEnvK=TU.bfEnv;for(const m of bfMats.values()){m.envMapIntensity=bfEnvK;m.userData.envI0=bfEnvK}}
 function bfPack(root,merge,it){const col=root.getObjectByName('Collision');if(col)col.removeFromParent();root.updateMatrixWorld(true);
   // its lights (the library entry's, or the same list in the model's own extras.forge.game): with a list, each fixture
