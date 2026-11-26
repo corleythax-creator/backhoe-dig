@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-25T23:17:00Z",
+ "updated": "2026-11-26T01:58:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -198,9 +198,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-25",
-   "dh": 2,
-   "act": 0.5,
-   "versions": 1
+   "dh": 7,
+   "act": 1,
+   "versions": 2
   }
  ],
  "extra": [
@@ -4521,6 +4521,15 @@ window.EFFORT = {
    "tris": 7439242,
    "chars": 2886447,
    "what": "Everything near where you start (the town's buildings, the pebbles, the townsfolk) is drawn once behind the loading cover, so it no longer freezes the game for seconds the first time you see it"
+  },
+  {
+   "v": 480,
+   "asked": "2026-11-25T19:28:00-06:00",
+   "live": "2026-11-25T19:58:56-06:00",
+   "dh": 5,
+   "tris": 7241817,
+   "chars": 2891746,
+   "what": "Hard hits dent the machines where they struck and damage is kept in the save; the town's cars are solid to the machines: a bump stops the car with its horn going and dents it, a hard or heavy hit wrecks it (Tuning: Machines)"
   }
  ]
 };

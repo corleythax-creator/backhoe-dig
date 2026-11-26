@@ -64,7 +64,7 @@ function sitePick(o,keys){const r={};for(const k of keys){const v=o[k];r[k]=Arra
 function rigSave(){if(window.syncHold)return;site.rigT=performance.now();site.rigSig=rigSig();const now=performance.now();
   const S0=sitePick(st,ST_KEYS);S0.el=st.startT?Math.round(((st.done?st.doneT:now)-st.startT)/1000):0;
   try{localStorage.setItem(RIG_KEY,JSON.stringify({v:1,home:1,tw:twSave(),t:Date.now(),st:S0,tr:sitePick(tr,TR_KEYS),
-    tb:sitePick(TB,['x','z','y','ty','yaw','hooked','seated']),cp:cplSave(),gn:gunSave(),tn:townSave(),sk:sitePick(sk,SK_KEYS),bt:boats.map(b=>[+b.x.toFixed(3),+b.z.toFixed(3),+b.yaw.toFixed(4)]),bk:[+bk.x.toFixed(3),+bk.z.toFixed(3),+bk.yaw.toFixed(4)],hv:hvs.map(h=>[h.x,h.z,h.yaw,h.ty,h.a,h.c,h.rip].map(v=>+v.toFixed(4))),bh:bhSave(),wk:Object.assign(sitePick(wk,['x','z','yaw']),{in:wk.inside,gn:gun.eq?1:0,tm:[trim.on?1:0,+trim.line.toFixed(4),+trim.spool.toFixed(3)]}),pk:pbSave(),
+    tb:sitePick(TB,['x','z','y','ty','yaw','hooked','seated']),cp:cplSave(),gn:gunSave(),tn:townSave(),sk:sitePick(sk,SK_KEYS),cd:typeof crSave==='function'?crSave():null,bt:boats.map(b=>[+b.x.toFixed(3),+b.z.toFixed(3),+b.yaw.toFixed(4)]),bk:[+bk.x.toFixed(3),+bk.z.toFixed(3),+bk.yaw.toFixed(4)],hv:hvs.map(h=>[h.x,h.z,h.yaw,h.ty,h.a,h.c,h.rip].map(v=>+v.toFixed(4))),bh:bhSave(),wk:Object.assign(sitePick(wk,['x','z','yaw']),{in:wk.inside,gn:gun.eq?1:0,tm:[trim.on?1:0,+trim.line.toFixed(4),+trim.spool.toFixed(3)]}),pk:pbSave(),
     blocks:blocks.map(b=>({x:b.x,z:b.z,y:+b.y.toFixed(4),w:b.w,d:b.d,h:b.h,m:b.m,c:b.c.map(x=>+x.toFixed(3))}))}))}catch(e){}}
 function rigLoad(){let d=null;try{d=JSON.parse(localStorage.getItem(RIG_KEY))}catch(e){}
   if(!d||d.v!==1)return;const ok=v=>typeof v==='number'?isFinite(v):typeof v==='boolean'||Array.isArray(v)&&v.every(isFinite);
@@ -93,6 +93,8 @@ function rigLoad(){let d=null;try{d=JSON.parse(localStorage.getItem(RIG_KEY))}ca
     Object.assign(h,{x:p[0],z:p[1],yaw:p[2],ty:p[3],a:clamp(p[4],...(h.K.track?HV_BLIM:HV_ALIM)),c:clamp(p[5],...HV_CLIM),rip:clamp(p[6]||0,0,1),v:0,w:0});hvGround(h,1);hvPose(h)}});
   // Corley's backhoe (backhoe.js): the hoe, outriggers, seat and both buckets' loads
   if(home)bhLoad(d.bh);
+  // how damaged each machine is (crash.js)
+  if(home&&typeof crLoad==='function')crLoad(d.cd);
   if(home)pbLoad(d.pk);
   if(home)gunLoad(d.gn);
   if(home)townLoad(d.tn);

@@ -110,6 +110,10 @@ function blkPush(o,lzs,r,over,P){let hit=false,ov=false,px0=o.x,pz0=o.z,lzS=0,lz
     for(const q of pts){const x=q[0]+o.x-px0,z=q[1]+o.z-pz0,p=solidOut(w,x,z,q[2]);if(!p)continue;
       const top=padTopNear(w.p,x,z),ex=x+p[0],ez=z+p[1];if(top<o.y+climb||top>o.y+2.5)continue;PAD_ALL=true;const g=surfAt(ex,ez,top-climb);PAD_ALL=false;
       if(top-g<=climb)continue;hit=true;o.x+=p[0];o.z+=p[1];lzS+=q[3];lzN++}}
+  // the town's cars, driving or parked (townfolk.js), as turned boxes; the car takes the hit too (crCarHit, crash.js)
+  if(typeof tf!=='undefined'&&tf.drive)for(const c of tf.drive){const e=R+c.len;if(Math.abs(o.x-c.x)>e||Math.abs(o.z-c.z)>e)continue;
+    const w={x:c.x,z:c.z,lx:c.wid/2,lz:c.len/2,cs:Math.cos(c.yaw),sn:Math.sin(c.yaw)};
+    for(const q of pts){const p=solidOut(w,q[0]+o.x-px0,q[1]+o.z-pz0,q[2]);if(!p)continue;hit=true;o.x+=p[0];o.z+=p[1];lzS+=q[3];lzN++;crCarHit(o,c,p)}}
   // rolling over: a jolt and a little drag as it goes on, none while it stays over
   if(ov){if(!o.crOv&&Math.abs(o.v||0)>0.6){if(blkRidden(o)){shake=Math.max(shake,reduceMotion?0:0.08);rumble(160,0.45)}o.v*=0.8}o.v*=0.995}o.crOv=ov;
   for(const b of blocks){if(b.y+b.h<o.y+climb||b.y>o.y+3)continue;const hx=b.w/2,hz=b.d/2;
