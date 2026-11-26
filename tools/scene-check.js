@@ -34,7 +34,9 @@ server.listen(0,async()=>{const port=server.address().port,errs=[];
     const t0=Date.now();await p.goto(`http://localhost:${port}/index.html`,{waitUntil:'load',timeout:120000});const loadMs=Date.now()-t0;
     await p.waitForTimeout(5000);
     // the town's buildings come in one at a time behind the game (forgetown.js bfSync1): counted once they are all in
-    const t1=Date.now();await p.waitForFunction(()=>typeof bf==='undefined'||(bf.ready&&bf.done!==false),null,{timeout:600000,polling:1000}).catch(()=>errs.push('the town was not all in after 10 minutes'));const townMs=Date.now()-t1+5000;
+    // (10 minutes is plenty on most machines; TOWN_WAIT_MIN=25 in the environment gives a slow container longer)
+    const TOWN_MIN=+process.env.TOWN_WAIT_MIN||10;
+    const t1=Date.now();await p.waitForFunction(()=>typeof bf==='undefined'||(bf.ready&&bf.done!==false),null,{timeout:TOWN_MIN*60000,polling:1000}).catch(()=>errs.push('the town was not all in after '+TOWN_MIN+' minutes'));const townMs=Date.now()-t1+5000;
     const r=await p.evaluate(()=>{let tris=0;scene.traverse(o=>{if(!o.isMesh||o.userData.shProxy)return;for(let q=o;q;q=q.parent)if(!q.visible)return;
       const g=o.geometry;let t=(g.index?g.index.count:g.attributes.position.count)/3;if(o.isInstancedMesh)t*=o.count;tris+=t});
       const E=window.EFFORT,v=E&&E.versions[E.versions.length-1];return {tris:Math.round(tris),version:v&&v.v}});
