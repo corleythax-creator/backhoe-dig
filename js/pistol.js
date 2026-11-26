@@ -400,7 +400,7 @@ function gunCamFx(dt){if(gun.cp<1e-4&&gun.sh<1e-3&&Math.abs(gun.cy)<1e-4)return;
   camera.position.y+=Math.sin(t*83)*0.006*s;camera.updateMatrixWorld()}
 // the flash's light: a warm point light at the muzzle for a frame or two, on High and Ultra graphics (a light more for
 // every material to shade, so not on Low and Medium; it joins and leaves the scene when the setting changes)
-const gunFlashL=new THREE.PointLight(0xffb060,0,9,2);gunFlashL.castShadow=false;
+const gunFlashL=new THREE.PointLight(0xffb060,0,9,2);gunFlashL.castShadow=false;gunFlashL.userData.flash=1;
 function gunLightTick(dt){const want=!!(gfxCur&&gfxCur.pbr);if(want!==!!gunFlashL.parent){if(want)scene.add(gunFlashL);else scene.remove(gunFlashL)}
   gun.ft+=dt;if(gunFlashL.parent)gunFlashL.intensity=gunFlashL.intensity>0.05&&gun.ft<0.08?gunFlashL.intensity*Math.exp(-dt*45):0}
 // the empty cases: brass (pistol, rifle, carbine) and the shotgun's red hulls with brass heads, thrown out to his right
