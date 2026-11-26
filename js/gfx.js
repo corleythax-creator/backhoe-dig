@@ -40,6 +40,9 @@ GFX.low.mtnQ=0;GFX.med.mtnQ=GFX.high.mtnQ=1;GFX.low.peb=0;GFX.med.peb=0.5;GFX.hi
 GFX.low.wild=0.35;GFX.med.wild=0.65;GFX.high.wild=0.85;
 // the town's lawn clumps, weeds and fallen leaves (turf.js): the share drawn and how far out (m)
 // brushR how far out the undergrowth is drawn (m, brush.js brushLod)
+// tuftD past this far (m) a square of grass and weeds is drawn a Grass quality step simpler, and two past 2.5 times it
+// (scenery.js tuftLod; 0 the full quality everywhere)
+GFX.low.tuftD=GFX.med.tuftD=GFX.high.tuftD=12;
 GFX.low.brushR=60;GFX.med.brushR=100;GFX.high.brushR=150;
 GFX.low.turf=0.35;GFX.med.turf=0.65;GFX.high.turf=1;GFX.low.turfR=22;GFX.med.turfR=40;GFX.high.turfR=60;
 // street life at night (street.js): the coloured glow of the neon signs on the walk and the van's hazard halos (the
@@ -66,7 +69,7 @@ GFX.low.autoExp=GFX.med.autoExp=false;GFX.high.autoExp=true;
 // what that misses (leaf and fence cut-outs, glints, shader edges). High and Ultra, which draw off-screen already
 GFX.low.aa=GFX.med.aa=false;GFX.high.aa=true;GFX.high.shR=36;
 // Ultra: the few townsfolk nearest the camera (at most fgUltra, within TU.tfUltraR) swap to their ultra mesh (townfolk.js tfUh)
-GFX.ultra=Object.assign({},GFX.high,{csm:240,csmSh:4096,name:'Ultra',forge:'hi',fgUltra:3,wild:1,turfR:75,brushR:220,tuftQ:3,ao:true,bloom:true,grade:true,treeR:220,skyLight:true,shSoft:true,wetDrops:true,wetGround:true,cloudQ:3,inSh:true});
+GFX.ultra=Object.assign({},GFX.high,{csm:240,csmSh:4096,name:'Ultra',forge:'hi',fgUltra:3,wild:1,turfR:75,brushR:220,tuftD:18,tuftQ:3,ao:true,bloom:true,grade:true,treeR:220,skyLight:true,shSoft:true,wetDrops:true,wetGround:true,cloudQ:3,inSh:true});
 GFX.ultra.cull=2;GFX.ultra.headSh=1024;
 // VR through a PC: the eye buffer drawn larger than the headset's own and scaled down (supersampling), for sharper edges
 // and fine detail; only the levels for strong graphics do it
@@ -298,6 +301,7 @@ const GFX_ROWS=[
   {id:'inSh',label:'Lamp shadows',hint:'The lamps and ceiling lights nearest you cast shadows, so walls and furniture block their light. For strong graphics cards.',opts:onOff},
   {id:'bfLt',label:'Building lights',hint:'After dark, real light from the lamps and ceiling lights of the Building Forge buildings nearest you (2 on Medium, 4 on High, 6 on Ultra unless the Tuning says otherwise; each costs every pixel a little). Off leaves the fixtures glowing only.',opts:onOff},
   {id:'turf',label:'Town lawns',hint:'Grass blades, clover, weeds and fallen leaves on the town\'s lawns. Thicker costs triangles.',opts:[[0,'Off'],[0.35,'Sparse'],[0.65,'Some'],[1,'Full']]},
+  {id:'tuftD',label:'Grass detail distance',hint:'Grass and weeds farther than this are drawn with simpler blades (a Grass quality step down, and two steps past two and a half times as far). Farther costs triangles; 0 keeps the full quality everywhere.',min:0,max:80,step:2,fmt:v=>v?`${Math.round(v*FT_M)} ft`:'Everywhere'},
   {id:'brushR',label:'Undergrowth distance',hint:'How far out the shrubs round the trees are drawn. Farther costs triangles.',min:40,max:400,step:10,fmt:v=>`${Math.round(v*FT_M)} ft`},
   {id:'turfR',label:'Town lawn distance',hint:'How far out the town\'s lawn grass and leaves are drawn.',min:10,max:120,step:5,fmt:v=>`${Math.round(v*FT_M)} ft`},
   {id:'model',label:'Machine models',hint:'Detailed models (every machine and boat, the excavator with a full cab inside, the trench box and attachments, and the yards\' and towns\' cones, light towers, barriers, lamps, benches and tables) or the simple ones. Detailed downloads about 17 MB once.',opts:[[true,'Detailed'],[false,'Simple']]},
