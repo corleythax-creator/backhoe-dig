@@ -60,11 +60,11 @@ The town, its streets and its traffic shipped in v240 to v246. Next, give it pla
 
 Kept from the old roadmap and pushed to the end.
 
-- [ ] **J01 Work orders:** a job card with pay and a finish check
+- [x] **J01 Work orders:** the job board: take a job, do the work, get the bonus and stars
 - [ ] **J44 Production targets:** yards per hour, scored at the end
 - [ ] **J24 Bid the job**
 - [ ] **Y14 Daily walk-around check**
-- [ ] **Y13 Operator certification ladder**
+- [ ] **Y13 Operator certification ladder** (started: stars from jobs raise your rank, Greenhorn to Superintendent; skill tests still to come)
 
 ## Done
 
