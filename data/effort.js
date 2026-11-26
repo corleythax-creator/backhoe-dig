@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-26T03:07:00Z",
+ "updated": "2026-11-26T03:41:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -198,9 +198,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-25",
-   "dh": 9,
-   "act": 1.5,
-   "versions": 3
+   "dh": 10.5,
+   "act": 2,
+   "versions": 4
   }
  ],
  "extra": [
@@ -4539,6 +4539,15 @@ window.EFFORT = {
    "tris": 7536973,
    "chars": 2893622,
    "what": "Edge smoothing on High and Ultra graphics: the stair-steps and shimmer left on leaves, fences, wires and bright glints are smoothed on the finished picture, on top of the 4x anti-aliasing every level already has (Graphics: Edge smoothing; Tuning: Screen effects)"
+  },
+  {
+   "v": 482,
+   "asked": "2026-11-25T20:49:00-06:00",
+   "live": "2026-11-25T21:41:47-06:00",
+   "dh": 1.5,
+   "tris": 7487189,
+   "chars": 2894466,
+   "what": "Taking the gun out (or putting fists up) in first person no longer freezes: the gun and your own body are drawn once behind the loading screen, and a gun that loads later is drawn once when it arrives"
   }
  ]
 };
