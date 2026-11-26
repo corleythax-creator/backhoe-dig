@@ -154,9 +154,12 @@ function gfxAway(cam){if(cam!==camera||edOn||renderer.xr.isPresenting)return;con
 // On every Graphics level (v426 to v431 had High and up keep the dark lamps in every shader, one set: the owner's
 // shader timing test, ?shaderbench, showed each shader then took about six times as long to build on his Windows PC,
 // 334 ms against 52, so the loading got no quicker). The other set is built once you are in (main.js warmAllTick)
+// (a light marked userData.flash, the gun's muzzle flash, never lights the lamps by itself: one shot by day swapped
+// the whole scene to the lamps-lit shaders, each drawn for the first time there and then, the 15 s freeze of the owner's
+// v484 report; it shows only while some real lamp is lit)
 const ltSl={L:[],t:0,night:false,hold:0,hid:[]};
 function ltTick(now){if(now>=ltSl.t){ltSl.t=now+1000;ltSl.L.length=0;scene.traverse(o=>{if(o.isSpotLight||o.isPointLight)ltSl.L.push(o)})}
-  let lit=false;for(const l of ltSl.L)if(l.visible&&l.intensity>0){lit=true;break}
+  let lit=false;for(const l of ltSl.L)if(l.visible&&l.intensity>0&&!l.userData.flash){lit=true;break}
   if(lit){ltSl.night=true;ltSl.hold=now+20000}else if(now>ltSl.hold)ltSl.night=false}
 // hide the lamps for a draw or a shader pass (dark: true for the day set, false for none hidden); ltShow puts them back
 function ltHide(dark){if(dark)for(const l of ltSl.L)if(l.visible){l.visible=false;ltSl.hid.push(l)}}

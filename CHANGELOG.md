@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Wednesday, November 25, 2026
 
+- **v485** (10:40 PM) Firing the gun by day no longer freezes: the muzzle flash used to count as a lit lamp, which swapped the whole scene to its night-lamp shaders, each drawn for the first time there and then (15 s in the owner's report); it now lights only while a real lamp is lit
 - **v484** (10:07 PM) About 680,000 fewer triangles round the dig site on High: grass and weeds more than 40 ft off are drawn with simpler blades (a Grass quality step down, two steps past 100 ft), full detail coming back as you near (Graphics: Grass detail distance)
 - **v483** (9:44 PM) About 650,000 fewer triangles every frame: the shrubs round the trees are drawn only near you (500 ft on High, 720 ft on Ultra, less on the lower levels; Graphics: Undergrowth distance), shrinking away at the edge, where before every shrub on every island was drawn all the time
 - **v482** (9:41 PM) Taking the gun out (or putting fists up) in first person no longer freezes: the gun and your own body are drawn once behind the loading screen, and a gun that loads later is drawn once when it arrives

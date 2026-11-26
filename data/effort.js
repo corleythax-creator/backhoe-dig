@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-26T04:07:00Z",
+ "updated": "2026-11-26T04:40:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -198,9 +198,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-25",
-   "dh": 14.5,
-   "act": 2.5,
-   "versions": 6
+   "dh": 16,
+   "act": 3,
+   "versions": 7
   }
  ],
  "extra": [
@@ -4566,6 +4566,15 @@ window.EFFORT = {
    "tris": 6206216,
    "chars": 2897412,
    "what": "About 680,000 fewer triangles round the dig site on High: grass and weeds more than 40 ft off are drawn with simpler blades (a Grass quality step down, two steps past 100 ft), full detail coming back as you near (Graphics: Grass detail distance)"
+  },
+  {
+   "v": 485,
+   "asked": "2026-11-25T22:20:00-06:00",
+   "live": "2026-11-25T22:40:14-06:00",
+   "dh": 1.5,
+   "tris": 6150425,
+   "chars": 2897756,
+   "what": "Firing the gun by day no longer freezes: the muzzle flash used to count as a lit lamp, which swapped the whole scene to its night-lamp shaders, each drawn for the first time there and then (15 s in the owner's report); it now lights only while a real lamp is lit"
   }
  ]
 };
