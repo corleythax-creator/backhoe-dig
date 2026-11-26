@@ -47,7 +47,7 @@ function crBump(o,h,nx,nz,lz,r){const l=Math.hypot(nx,nz);if(l<1e-6)return;nx/=l
 function crFx(o,s,t,x,z){const now=performance.now(),me=blkRidden(o);
   if(s>0.7&&now-(o.crT||0)>350){o.crT=now;
     if(me){shake=Math.max(shake,reduceMotion?0:Math.min(0.35,0.03+0.045*s));rumble(100+40*Math.min(6,s),Math.min(1,0.2+0.13*s))}
-    crSound(x,z,me,s>1.6?'gate':null,Math.min(1,0.15+s/6),0.75+0.25*Math.random()-Math.min(0.25,s*0.03));crDamage(o,s-2.5)}
+    crSound(x,z,me,s>1.6?'gate':null,Math.min(1,0.15+s/6),0.75+0.25*Math.random()-Math.min(0.25,s*0.03));crDamage(o,s-2.5);if(s>2.5)crDent(crGroup(o),x,(o.y||0)+0.9,z,Math.min(0.18,0.018*s),0.45+0.06*s)}
   if(t>1.2&&now-(o.crS||0)>230){o.crS=now;if(crPrep(x,z,me))sndShot('scrape',CR.v.fx,actx.currentTime,0.75+0.15*Math.random(),Math.min(0.55,t/9))}}
 function crPrep(x,z,me){if(!(snd&&snd.ready&&actx&&actx.state==='running'))return false;if(!CR.v)CR.v=sndVoice();const t=actx.currentTime;
   CR.v.fx.gain.setTargetAtTime(sndVol(sndCfg.fx),t,0.01);sndPlace(CR.v,x,surfAt(x,z)+0.8,z,t,me&&camMode==='cab');return true}
@@ -87,7 +87,7 @@ function crFly(o,Y,k,dt){if(!dt||!isFinite(o.y)){o.y+=(Y-o.y)*k;o.crGy=Y;o.crGv=
   return true}
 function crLand(o,s){if(s<1.2)return;const me=blkRidden(o);
   if(me){shake=Math.max(shake,reduceMotion?0:Math.min(0.4,0.04+0.04*s));rumble(140+30*Math.min(8,s),Math.min(1,0.25+0.1*s))}
-  crSound(o.x,o.z,me,s>3?'gate':null,Math.min(1,0.2+s/7),0.65+0.15*Math.random());crDamage(o,s-4)}
+  crSound(o.x,o.z,me,s>3?'gate':null,Math.min(1,0.2+s/7),0.65+0.15*Math.random());crDamage(o,s-4);if(s>5)crDent(crGroup(o),o.x,(o.y||0)+0.3,o.z,Math.min(0.1,0.01*s),1.2)}
 // ---------- tipping over ----------
 // the centre of mass (m above the ground) of each kind, for when a side slope or a hard turn rolls it over: past the
 // angle whose tangent is half the track over that height it goes over on its side (Tuning crTipAt scales it, 0: never)
@@ -98,7 +98,7 @@ function crTip(o,roll,dt,hw,cg,w){const T=o.crTp||(o.crTp={a:0,av:0,s:0,t:0,on:0
   if(!T.on){const eff=roll+Math.atan((o.v||0)*(w||0)/9.8),lim=Math.atan(hw/cg)*TU.crTipAt;
     if(TU.crTipAt>0&&Math.abs(eff)>lim&&!o.crFl){T.on=1;T.s=Math.sign(eff);T.t=0;T.av=0.6;if(blkRidden(o))say('crTipped',{m:crName(o)})}}
   if(T.on===1){T.av+=dt*5;T.a+=T.s*T.av*dt;o.v=0;o.w=0;
-    if(Math.abs(T.a)>=Math.PI/2-0.05){T.a=T.s*(Math.PI/2-0.05);T.on=2;T.t=0;crSound(o.x,o.z,blkRidden(o),'gate',0.9,0.6);crDamage(o,3);
+    if(Math.abs(T.a)>=Math.PI/2-0.05){T.a=T.s*(Math.PI/2-0.05);T.on=2;T.t=0;crSound(o.x,o.z,blkRidden(o),'gate',0.9,0.6);crDamage(o,3);{const hw=1.1,px=Math.cos(o.yaw),pz=-Math.sin(o.yaw);crDent(crGroup(o),o.x-px*T.s*hw,(o.y||0)+1.2,o.z-pz*T.s*hw,0.15,1.0)}
       if(blkRidden(o)){shake=Math.max(shake,reduceMotion?0:0.3);rumble(300,1)}}}
   else if(T.on===2){o.v=0;o.w=0;T.t+=dt;if(T.t>3.5)T.on=3}
   else if(T.on===3){o.v=0;o.w=0;T.a-=T.s*dt*1.4;if(T.a*T.s<=0){T.a=0;T.on=0;if(blkRidden(o))say('crRighted',{m:crName(o)})}}
@@ -116,4 +116,39 @@ function crWear(dt){for(const o of crMachines()){if(!o.crDmg)continue;const d=o.
     if(v>0.4&&typeof o.v==='number'){o.v*=1-d*0.5*dt;if(o!==st&&o.yaw!==undefined)o.yaw+=o.crDs*d*0.06*dt*Math.sign(o.v)}
     if(d>0.5&&Math.random()<dt*(2+6*d))smokePuff(o.x,(o.y||0)+1.8,o.z,1,0.8);
     // fixed at a pump or back home, stopped
-    if(v<0.2&&(FUEL_PUMPS.some(p=>Math.hypot(o.x-p.x,o.z-p.z)<7)||o.home&&Math.hypot(o.x-o.home.x,o.z-o.home.z)<4)){o.crDmg=Math.max(0,d-dt*0.25);if(!o.crDmg&&blkRidden(o))say('crFixed',{m:crName(o)})}}}
+    if(v<0.2&&(FUEL_PUMPS.some(p=>Math.hypot(o.x-p.x,o.z-p.z)<7)||o.home&&Math.hypot(o.x-o.home.x,o.z-o.home.z)<4)){o.crDmg=Math.max(0,d-dt*0.25);if(!o.crDmg){crUndent(crGroup(o));if(blkRidden(o))say('crFixed',{m:crName(o)})}}}}
+// ---------- dents ----------
+// a hard hit pushes the body in where it struck: the machine's (or a car's) own meshes near the point, their corners
+// moved in toward its middle, the most at the point and none past r. A mesh gets its own copy of its shape the first
+// time (models share theirs), kept until it is fixed (crUndent). Wheels and tyres are left round
+function crGroup(o){return o===tr?truck:o===st?machine:o===sk?skid:o===mw?mower:o===bk?bike:o.g||null}
+const CR_V=new THREE.Vector3(),CR_D=new THREE.Vector3(),CR_M=new THREE.Matrix4(),CR_S=new THREE.Sphere();
+function crDent(g,x,y,z,depth,r){if(!g||TU.crDent<=0)return;depth*=TU.crDent;g.updateMatrixWorld(true);const cx=g.position.x,cz=g.position.z;
+  g.traverse(m=>{if(!m.isMesh||m.isSkinnedMesh||m.isInstancedMesh||/wheel|tire|tyre|rim|hub/i.test(m.name+' '+(m.parent&&m.parent.name||'')))return;
+    const G=m.geometry,P=G&&G.attributes.position;if(!P)return;if(!G.boundingSphere)G.computeBoundingSphere();
+    const sc=m.matrixWorld.getMaxScaleOnAxis()||1;CR_S.copy(G.boundingSphere).applyMatrix4(m.matrixWorld);if(CR_S.center.distanceTo(CR_V.set(x,y,z))>CR_S.radius+r)return;
+    CR_M.copy(m.matrixWorld).invert();const lp=CR_V.set(x,y,z).applyMatrix4(CR_M).clone(),ld=CR_D.set(cx-x,0,cz-z).normalize().transformDirection(CR_M).clone(),R=r/sc,dp=depth/sc;
+    let Q=P,any=false;for(let i=0;i<Q.count;i++){const vx=Q.getX(i),vy=Q.getY(i),vz=Q.getZ(i),d=Math.hypot(vx-lp.x,vy-lp.y,vz-lp.z);if(d>=R)continue;
+      if(!m.userData.crOrig){m.userData.crOrig=G;m.geometry=G.clone();Q=m.geometry.attributes.position}
+      const f=(1-d/R)**2*dp;Q.setXYZ(i,vx+ld.x*f,vy+ld.y*f,vz+ld.z*f);any=true}
+    if(any){Q.needsUpdate=true;m.geometry.computeBoundingSphere()}})}
+function crUndent(g){if(!g)return;g.traverse(m=>{const O=m.userData&&m.userData.crOrig;if(!O)return;m.geometry.dispose();m.geometry=O;delete m.userData.crOrig})}
+// ---------- the town's traffic ----------
+// a machine meeting one of the town's cars (townfolk.js tf.drive): it is kept out as from a wall (blkPush), and the car
+// takes it: stopped a few seconds with its horn going, dented, and in a hard enough hit (or by a heavy machine) wrecked
+// (tfCarStep's wreck: it rolls to a stop, and is taken away once out of sight)
+function crCarHit(o,c,p){const now=performance.now();if(now-(c.crT||0)<500)return;const l=Math.hypot(p[0],p[1])||1,nx=p[0]/l,nz=p[1]/l,[hx,hz]=crHead(o),
+    cv=(c.v||0)*(Math.sin(c.yaw)*-nx+Math.cos(c.yaw)*-nz),s=Math.max(0,-(o.v||0)*(hx*nx+hz*nz))+Math.max(0,-cv);if(s<0.5)return;c.crT=now;
+  const heavy=crMass(o)>=8000,cs=Math.cos(c.yaw),sn=Math.sin(c.yaw),dx=o.x-c.x,dz=o.z-c.z,u=Math.max(-c.wid/2,Math.min(c.wid/2,dx*cs-dz*sn)),v=Math.max(-c.len/2,Math.min(c.len/2,dx*sn+dz*cs));
+  crDent(c.g,c.x+u*cs+v*sn,(c.g.position.y||0)+0.6,c.z-u*sn+v*cs,Math.min(0.25,0.03*s*(heavy?1.6:1)),0.5+0.08*s);
+  if(!c.wreck&&(s>4.5||heavy&&s>2.5)){c.wreck=true;c.hold=0;if(c.drv&&typeof say==='function'&&blkRidden(o))say('crCarWreck',{m:crName(o)})}
+  else if(!c.wreck){c.hold=Math.max(c.hold||0,3+s);crHorn(c.x,c.z,blkRidden(o))}}
+// a car's horn: two reedy notes together, a short blast
+function crHorn(x,z,me){if(!crPrep(x,z,me))return;const t=actx.currentTime,g=actx.createGain(),f=sndFilter('lowpass',2400,0.7,g);g.connect(CR.v.fx);
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(0.16,t+0.02);g.gain.setValueAtTime(0.16,t+0.5);g.gain.linearRampToValueAtTime(0,t+0.6);
+  for(const hz of [392,494]){const s=actx.createOscillator();s.type='sawtooth';s.frequency.value=hz;s.connect(f);s.start(t);s.stop(t+0.62)}setTimeout(()=>g.disconnect(),900)}
+// ---------- saved ----------
+// how damaged each machine is goes with the machines in the save (save.js cd): [excavator, truck, skid steer, mower,
+// bike, then Dexter's machines in order]; the dents themselves are not kept, only how bad
+function crSave(){return crMachines().map(o=>+(o.crDmg||0).toFixed(3))}
+function crLoad(a){if(!Array.isArray(a))return;crMachines().forEach((o,i)=>{const v=+a[i];if(isFinite(v)&&v>0)o.crDmg=Math.min(1,v)})}

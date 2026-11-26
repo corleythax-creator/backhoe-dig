@@ -102,6 +102,7 @@ const TUNE=[
   ['hillPull','Machines','How hard hills hold the machines back going up (and pull them going down)',0.7,'pct',0,100,5],
   ['crBounce','Machines','How much a machine bounces back off what it hits',0.25,'pct',0,100,5],['crSpin','Machines','How much a hit off the middle turns a machine',1,'pct',0,300,5],
   ['crDamage','Machines','How much hard hits and landings damage a machine',1,'pct',0,300,5],['crTipAt','Machines','How far a machine leans before it tips over (0: never)',1,'pct',0,200,5],['crAir','Machines','How easily a machine leaves the ground over a crest',1,'pct',50,300,5],
+  ['crDent','Machines','How deep hard hits dent a machine or a car',1,'pct',0,300,5],
   ['crKnockBack','Machines','Knocked-over drums and signs stand back up after',90,'s',5,900,5],
   ['overH','Machines','How tall a thing (log, stump, rock, sandbags) the machines roll over',1,'pct',0,300,5],
   ['rutWet','Mud and water','How wet ground must be before it ruts',0.15,'pct',0,100,5],['rutRate','Mud and water','How fast ruts cut in',1,'pct',10,500,5],

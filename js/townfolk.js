@@ -473,7 +473,7 @@ function tfCarNew(k,M,path,S,paint){const g=M.g.clone(true);scene.add(g);const w
   // (a clone's userData is a JSON copy, so each wheel's rest turn is taken again from its own quaternion)
   const c={k,g,wheels,len:M.len,wid:M.wid,S,path,s:0,i:0,v:8,yaw:0,x:0,z:0,st:S?'in':'out',si:0,wait:0,arr:0,stuck:0,rot:0,yld:0};
   if(S)S.car=c;tf.drive.push(c);c.drv=tfPerson({drv:c,car:c,sit:1});tfCarPlace(c);return c}
-function tfCarDrop(c){scene.remove(c.g);if(c.S&&c.S.car===c)c.S.car=null;tf.drive.splice(tf.drive.indexOf(c),1);if(c.ped)tfDrop(c.ped);if(c.drv)tfDrop(c.drv)}
+function tfCarDrop(c){scene.remove(c.g);if(typeof crUndent==='function')crUndent(c.g);if(c.S&&c.S.car===c)c.S.car=null;tf.drive.splice(tf.drive.indexOf(c),1);if(c.ped)tfDrop(c.ped);if(c.drv)tfDrop(c.drv)}
 // the driver in the seat, sitting, facing the way the car faces
 function tfDriverPlace(c){const p=c.drv,[sz,sy]=TF_SEAT[c.k]||TF_SEAT.sedan,h=c.yaw,k=Math.cos(h),n=Math.sin(h);
   p.x=c.x+k*TF_SEAT_X+n*sz;p.z=c.z-n*TF_SEAT_X+k*sz;p.y=c.g.position.y+sy;p.yaw=h;p.amp=0}
@@ -534,6 +534,8 @@ function tfCarStep(c,dt){const P=c.path;
   // waiting at the stop sign or letting people over. qd: how many cars back in such a queue (worked out along it
   // frame by frame; round a knot it only grows)
   const B=c.by;c.qd=lim>=0.3?0:!B?(c.yw?0:1e9):B.atSign||B.yw||B.v>0.3?1:(B.qd??1e9)+1;c.stuck=vt<0.3&&!c.atSign&&c.qd>25?c.stuck+dt:0;
+  // (hit by a machine: stopped a few seconds, crash.js crCarHit)
+  if(c.hold>0){c.hold-=dt;vt=0}
   c.v+=Math.max(-5*dt,Math.min(2*dt,vt-c.v));if(c.v<0.02&&vt<0.02)c.v=0;
   c.s=Math.min(P.len,c.s+c.v*dt);tfCarPlace(c);c.rot+=c.v*dt*(P.R[c.i+1]?-1:1);
   for(const w of c.wheels){w.quaternion.setFromAxisAngle(WK_X,c.rot/(w.userData.r||0.35)).multiply(w.userData.q0)}

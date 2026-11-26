@@ -4,6 +4,7 @@ Every version of Corley's Island, newest first, grouped by the day it went live 
 
 ## Wednesday, November 25, 2026
 
+- **v480** (7:58 PM) Hard hits dent the machines where they struck and damage is kept in the save; the town's cars are solid to the machines: a bump stops the car with its horn going and dents it, a hard or heavy hit wrecks it (Tuning: Machines)
 - **v479** (5:17 PM) Everything near where you start (the town's buildings, the pebbles, the townsfolk) is drawn once behind the loading cover, so it no longer freezes the game for seconds the first time you see it
 
 ## Tuesday, November 24, 2026
