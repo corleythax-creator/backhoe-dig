@@ -706,9 +706,18 @@ function warmLaterTick(){const L=warmLater;if(L.done||!L.list||!LOADP.done||L.bu
 // in first person the gun and the worker's own body are drawn last, as see-through (gunVm, gunVmBody, pistol.js), which
 // gives their materials other shaders than the opaque ones (three.js keys them on it): those are built here too, or the
 // first steps on foot built a dozen of them at once, the stutter after dropping in
-function warmVm(){if(typeof gunVm!=='function')return;gunMdl.traverse(gunVm);const g=wkMdl.g;if(!g)return;const flip=[];
+// (and drawn once, warmDraw: built was not enough on the owner's PC, where a thing's first draw does its graphics-card
+// set-up there and then; taking the gun out in first person drew his whole body and the gun that way for the first
+// time, the freeze of the owner's v480 report. Each gun's parts and the body are drawn once, as they are found: the
+// pistol and the body behind the loading cover, a gun that loads later, the rifle, when it arrives)
+const warmVmSeen=new WeakSet();
+function warmVmNew(o){let n=false;o.traverse(m=>{if(m.isMesh&&!warmVmSeen.has(m)){warmVmSeen.add(m);n=true}});return n}
+function warmVm(){if(typeof gunVm!=='function')return;gunMdl.traverse(gunVm);
+  if(warmVmNew(gunMdl))try{warmDraw(gunMdl,true)}catch(e){}
+  const g=wkMdl.g;if(!g)return;const flip=[],hid=[],draw=warmVmNew(g);
   g.traverse(o=>{if(o.isMesh)for(const m of [].concat(o.material))if(!m.transparent){m.transparent=true;flip.push(m)}});
-  try{warmCompile(g,scene)}finally{for(const m of flip)m.transparent=false}}
+  try{warmCompile(g,scene);if(draw){for(let p=g.parent;p&&p!==scene;p=p.parent)if(!p.visible){p.visible=true;hid.push(p)}warmDraw(g,true)}}
+  finally{for(const m of flip)m.transparent=false;for(const p of hid)p.visible=false}}
 // warming one thing before it first shows (the town's cars, a townsperson's look or crowd, a close-up hero), at any
 // time in the game: its shaders built in the background (compileAsync, hidden parts too) and its textures uploaded one
 // a frame (gpuWarmTick), then the promise resolves and the caller shows it. Without it the frame it first appears in
