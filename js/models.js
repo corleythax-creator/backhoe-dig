@@ -298,7 +298,7 @@ function mdlKitOn(on){mdl.kitOn=on;mdl.kitDirty=false;mdl.kitN++;if(on)mdlKitLoa
         u.kit=parts.map(([g,mt])=>{const ms=new THREE.Mesh(g,mt);ms.name='mdl_'+name;ms.castShadow=mdlShadeOk(mt);ms.receiveShadow=true;
           ms.layers.enable(RAIN_LAYER);if(mt.envMapIntensity>1.3)ms.renderOrder=2;par.add(ms);return ms})}
       if(!u.kit)continue;
-      for(const c of par.children)if((c.isMesh||c.userData.simple)&&!keep.has(c))c.visible=c.name.startsWith('mdl_')?on:!on}
+      u.far=false;for(const c of par.children)if((c.isMesh||c.userData.simple)&&!keep.has(c))c.visible=c.name.startsWith('mdl_')?on:!on}
     if(K.after)K.after(on&&!!src)}}
 // ---- things standing in many places (MDL_SPOTS, family.js) and things placed from the map editor (props.js): a kind
 // whose node is in one of these files is drawn as one instanced mesh per material in place of its simple parts
@@ -375,7 +375,18 @@ function mdlPropsSync(){for(const k in mdl.propIM){const im=propIMs[k],det=mdl.s
 // gfx.js: Detailed or Simple machine models (the other machines change on the next frame, once they all exist)
 function mdlGfx(detail){mdl.want=!!detail;mdlExOn(mdl.want);mdlTrOn(mdl.want)}
 // once a few seconds, the cab display's clock (only while the detailed model shows)
-function mdlTick(dt){if(mdl.want&&(mdl.kitT=(mdl.kitT||0)-dt)<=0){mdl.kitT=1;mdlKitLoad()}if(!!mdl.othersOn!==mdl.want)mdlOthersOn(mdl.want);if(mdl.kitOn!==mdl.want||mdl.kitDirty)mdlKitOn(mdl.want);
+// a loaded machine (or other kit) more than MDL_FAR from the camera takes its simple shapes again, part group by part
+// group, until you come back within 20 m less (checked each second): from town the machines across the water cost
+// over a hundred draws in detail where they are a few pixels. Kits with their own after() swap (boats, the mini
+// excavator) stay as they are
+const MDL_FAR=240;
+function mdlKitFar(){if(!mdl.kitOn)return;const cp=camera.position;
+  for(const f in MDL_KIT){const K=MDL_KIT[f];if(K.after||!mdl.kit[f])continue;const keep=K.keep?new Set(K.keep()):null;
+    for(const set of K.sets()){let g0=null;for(const n in set)if(set[n]){g0=set[n];break}if(!g0)continue;const d=g0.getWorldPosition(_mdlV).distanceTo(cp);
+      for(const name in set){const par=set[name];if(!par)continue;const u=mdlSide(par);if(!u.kit)continue;
+        const far=u.far?d>MDL_FAR-20:d>MDL_FAR;if(far===!!u.far)continue;u.far=far;
+        for(const c of par.children)if((c.isMesh||c.userData.simple)&&!(keep&&keep.has(c)))c.visible=c.name.startsWith('mdl_')?!far:far}}}}
+function mdlTick(dt){if(mdl.want&&(mdl.kitT=(mdl.kitT||0)-dt)<=0){mdl.kitT=1;mdlKitLoad();mdlKitFar()}if(!!mdl.othersOn!==mdl.want)mdlOthersOn(mdl.want);if(mdl.kitOn!==mdl.want||mdl.kitDirty)mdlKitOn(mdl.want);
   if(mdl.spotsOn!==mdl.want||mdl.spotsDirty)mdlSpotsOn(mdl.want);else if(mdl.want)mdlPropsSync();if(mdl.lit)mdlLitTick();if(mdl.hvOn!==mdl.want||mdl.want&&hvs.some(h=>MDL_HV.includes(h.k)&&!h.mdl&&mdl.hv[h.k]))mdlHvOn(mdl.want);if(!mdl.on)return;mdlScrT+=dt;if(mdlScrT>5){mdlScrT=0;mdlScreenDraw()}}
 // ---------- the trench box, and the quick coupler with its thumb, hammer and auger (tools/models/tbox.js and
 // attach.js). trenchbox.js and coupler.js load before this file, so they are registered here; the crane chain stays
