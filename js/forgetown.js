@@ -300,12 +300,12 @@ function bfPhong(m){if(!m||!m.isMeshStandardMaterial)return m;if(bfMats.has(m))r
 // the street in the town's glass (gfx.js stProbe, High and Ultra): near the town a 360° picture of the street is taken
 // where you are (at most 6 m up), one of its six sides a frame at 128 px with the grass and undergrowth left out, every
 // TU.stEvery s or after you move 15 m, made into an environment (PMREM) and given to the buildings' glass and polished
-// metal (bfShiny) in place of the sky, so shop windows and steel show the buildings, cars and lamps across the street,
+// metal (bfShiny) and the town's paving with its puddles in place of the sky, so shop windows and steel show the buildings, cars and lamps across the street,
 // lit as they are now (night too). Away from the town (130 m from any building) they take the sky again. Looks only
 const stPr={on:false,rt:null,cam:null,pm:null,pms:[null,null],i:0,face:-1,t:0,x:1e9,z:1e9,live:false,mats:new Set()};
 const bfShiny=m=>m&&m.isMeshStandardMaterial&&(m.transmission>0||(m.transparent&&m.opacity<0.9)||m.metalness>0.5||m.roughness<0.3||/glass|window|mirror|chrome/i.test(m.name||''));
 function stProbeGfx(on){stPr.on=!!on;if(!on)stProbeOff()}
-function stProbeOff(){for(const m of stPr.mats)if(!inRL.mats.has(m))m.envMap=skyEnv;stPr.mats.clear();stPr.live=false;stPr.face=-1}
+function stProbeOff(){for(const m of stPr.mats)if(!inRL.mats.has(m))m.envMap=skyEnv;stPr.mats.clear();stPr.pud=null;stPr.live=false;stPr.face=-1}
 function stProbeTick(dt){if(!stPr.on||renderer.xr.isPresenting||(typeof edOn!=='undefined'&&edOn)||!bf.lots||!bf.lots.length)return;
   const c=camera.position;
   if(stPr.face<0){if((stPr.t-=dt)>0&&Math.hypot(c.x-stPr.x,c.z-stPr.z)<15)return;
@@ -320,7 +320,11 @@ function stProbeTick(dt){if(!stPr.on||renderer.xr.isPresenting||(typeof edOn!=='
   finally{renderer.setRenderTarget(rt0);renderer.shadowMap.autoUpdate=au;renderer.xr.enabled=xr;hide.forEach(o=>o.visible=true)}
   if(++stPr.face<6)return;stPr.face=-1;stPr.t=Math.max(1,TU.stEvery??6);
   const i=stPr.i;stPr.pms[i]=stPr.pm.fromCubemap(stPr.rt.texture,stPr.pms[i]);stPr.i^=1;stPr.live=true;const tex=stPr.pms[i].texture;
-  for(const m of bfMats.values())if(bfShiny(m)&&!inRL.mats.has(m)){m.envMap=tex;stPr.mats.add(m)}}
+  for(const m of bfMats.values())if(bfShiny(m)&&!inRL.mats.has(m)){m.envMap=tex;stPr.mats.add(m)}
+  // the paving that takes puddles (rain.js pudPatch): its puddles and wet sheen show the street too where the
+  // on-screen reflection runs out (looked for again every fifth picture, as the town's paving can change)
+  if(!stPr.pud||(stPr.n=(stPr.n||0)+1)%5===0){const S=new Set();scene.traverse(o=>{if(o.isMesh)for(const m of [].concat(o.material))if(m&&m.userData&&m.userData.pudP&&(m.envMap===skyEnv||stPr.mats.has(m)))S.add(m)});stPr.pud=S}
+  for(const m of stPr.pud){m.envMap=tex;stPr.mats.add(m)}}
 stProbeGfx(gfxCur.stProbe);
 let bfEnvK=-1;function bfEnvTick(){if(TU.bfEnv===bfEnvK)return;bfEnvK=TU.bfEnv;for(const m of bfMats.values()){m.envMapIntensity=bfEnvK;m.userData.envI0=bfEnvK}}
 function bfPack(root,merge,it){const col=root.getObjectByName('Collision');if(col)col.removeFromParent();root.updateMatrixWorld(true);
