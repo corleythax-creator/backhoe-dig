@@ -211,7 +211,7 @@ const TUNE=[
   ['machWear','Machines','How worn the machines look: chipped paint, polished and rusty steel, dust (High)',1,'pct',0,200,5],['machCoat','Machines','Gloss of the clear coat on machine paint (High)',0.6,'pct',0,100,5],
   ['fxBounce','Screen effects','Light bounced off nearby things onto others, taking their colour (Ultra, with Contact shade)',1,'pct',0,300,5],
   ['fxContact','Screen effects','Fine sun shadows where small things touch (Ultra, with Contact shade)',0.55,'pct',0,100,5],['fxContactL','Screen effects','How far those fine shadows reach',0.6,'ft',0.1,3,0.05],
-  ['fxWarm','Screen effects','Warm light and cool shade in the colour grade',0.4,'pct',0,100,5],['fxSharp','Screen effects','Sharpening (with the colour grade)',0.35,'pct',0,100,5],
+  ['fxWarm','Screen effects','Warm light and cool shade in the colour grade',0.4,'pct',0,100,5],['fxSharp','Screen effects','Sharpening (with the colour grade)',0.35,'pct',0,100,5],['fxAA','Screen effects','Edge smoothing strength',1,'pct',0,100,5],
   ['fxDof','Screen effects','Far blur, like a camera lens (with the colour grade; 0% = off)',0.5,'pct',0,100,5],
   // Ultra lighting (post.js): how much the sky colours the shade, how soft the sun's shadows get, the rain on the machines
   ['ultraSky','Ultra','Sky lighting: how much the sky as it is colours the shade and reflections',1,'pct',0,200,5],

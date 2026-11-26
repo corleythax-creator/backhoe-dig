@@ -6,7 +6,7 @@
 // these work on that picture on the way to the screen; with all off, or in VR, it draws straight to the screen.
 // Strengths are the Screen effects tunings in TUNE (TU). Only how things look, never what they do (CLAUDE.md).
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
-const POST={ao:false,bloom:false,grade:false};
+const POST={ao:false,bloom:false,grade:false,aa:false};
 let postRT=null,postAO=null,postAOB=null,postBl=[],postDf=[];
 const postCam=new THREE.OrthographicCamera(-1,1,1,-1,0,1),postScene=new THREE.Scene(),postSz=new THREE.Vector2();
 // one triangle over the whole screen
@@ -71,11 +71,20 @@ const postUp=postMat('uniform sampler2D tSrc;uniform vec2 uTexel;varying vec2 vU
 // that falls on it times its own: its colour over a guess at how lit it already is, so the shade, where bounce shows, gets
 // the most), its glow added, turned into screen colours, then the grade (a gentle S curve, warm
 // light and cool shade, saturation, vignette) on the colours as shown, and a little dither against banding
-const postOut=postMat('#include <packing>\nuniform sampler2D tScene,tAO,tBloom,tDepth,tDf0,tDf1;uniform vec2 uTexel;uniform float uBloom,uGI,uCon,uSat,uVig,uGrade,uSharp,uDof,uWarm,uNear,uFar;varying vec2 vUv;\n'+POST_HASH+
+const postOut=postMat('#include <packing>\nuniform sampler2D tScene,tAO,tBloom,tDepth,tDf0,tDf1;uniform vec2 uTexel;uniform float uBloom,uGI,uCon,uSat,uVig,uGrade,uSharp,uDof,uWarm,uNear,uFar,uAA;varying vec2 vUv;\n'+POST_HASH+
+  'float aaL(vec3 c){return sqrt(max(dot(c,vec3(0.299,0.587,0.114)),0.0));}\n'+
   'float oZ(vec2 uv){return -perspectiveDepthToViewZ(texture2D(tDepth,uv).x,uNear,uFar);}\n'+
   'void main(){vec3 c=texture2D(tScene,vUv).rgb;\n'+
+  // edge smoothing (gfx.js aa; FXAA): where the four diagonal neighbours differ enough in brightness, the pixel is
+  // blended along the edge's direction (two taps near, two far; the far pair dropped if it reaches past the edge)
+  ' float aaK=0.0;if(uAA>0.0){vec3 a=texture2D(tScene,vUv-uTexel).rgb,b=texture2D(tScene,vUv+vec2(uTexel.x,-uTexel.y)).rgb,d=texture2D(tScene,vUv+vec2(-uTexel.x,uTexel.y)).rgb,e=texture2D(tScene,vUv+uTexel).rgb;\n'+
+  '  float lA=aaL(a),lB=aaL(b),lD=aaL(d),lE=aaL(e),lM=aaL(c),lo=min(lM,min(min(lA,lB),min(lD,lE))),hi=max(lM,max(max(lA,lB),max(lD,lE)));\n'+
+  '  if(hi-lo>max(0.04,hi*0.125)){vec2 dir=vec2(-((lA+lB)-(lD+lE)),(lA+lD)-(lB+lE));\n'+
+  '   float r=1.0/(min(abs(dir.x),abs(dir.y))+max((lA+lB+lD+lE)*0.03125,0.0078125));dir=clamp(dir*r,-8.0,8.0)*uTexel;\n'+
+  '   vec3 p=0.5*(texture2D(tScene,vUv-dir/6.0).rgb+texture2D(tScene,vUv+dir/6.0).rgb),q=p*0.5+0.25*(texture2D(tScene,vUv-dir*0.5).rgb+texture2D(tScene,vUv+dir*0.5).rgb);\n'+
+  '   float lQ=aaL(q);c=mix(c,(lQ<lo||lQ>hi)?p:q,uAA);aaK=uAA;}}\n'+
   ' if(uSharp>0.0){vec3 n0=texture2D(tScene,vUv+vec2(uTexel.x,0.0)).rgb,n1=texture2D(tScene,vUv-vec2(uTexel.x,0.0)).rgb,n2=texture2D(tScene,vUv+vec2(0.0,uTexel.y)).rgb,n3=texture2D(tScene,vUv-vec2(0.0,uTexel.y)).rgb;\n'+
-  '  c=clamp(c+(c-0.25*(n0+n1+n2+n3))*uSharp,min(min(n0,n1),min(n2,min(n3,c))),max(max(n0,n1),max(n2,max(n3,c))));}\n'+
+  '  c=clamp(c+(c-0.25*(n0+n1+n2+n3))*uSharp*(1.0-aaK),min(min(n0,n1),min(n2,min(n3,c))),max(max(n0,n1),max(n2,max(n3,c))));}\n'+
   ' if(uDof>0.0){float f=min(min(oZ(vec2(0.5,0.5)),oZ(vec2(0.45,0.45))),min(min(oZ(vec2(0.55,0.45)),oZ(vec2(0.45,0.55))),oZ(vec2(0.55,0.55))));\n'+
   '  float s=clamp((oZ(vUv)-(3.0*f+30.0))/(4.0*f+120.0),0.0,1.0)*uDof;\n'+
   '  c=mix(c,mix(texture2D(tDf0,vUv).rgb,texture2D(tDf1,vUv).rgb,smoothstep(0.4,1.0,s)),smoothstep(0.0,0.4,s));}\n'+
@@ -87,7 +96,7 @@ const postOut=postMat('#include <packing>\nuniform sampler2D tScene,tAO,tBloom,t
   '  vec2 q=vUv-0.5;c*=1.0-uVig*smoothstep(0.1,0.8,dot(q,q)*2.0);}\n'+
   ' gl_FragColor=vec4(c+(pHash(gl_FragCoord.xy)-0.5)/255.0,1.0);}',
   {tScene:{value:null},tAO:{value:null},tBloom:{value:null},tDepth:{value:null},tDf0:{value:null},tDf1:{value:null},uTexel:{value:new THREE.Vector2()},
-   uBloom:{value:0},uGI:{value:0},uCon:{value:0},uSat:{value:1},uVig:{value:0},uGrade:{value:0},uSharp:{value:0},uDof:{value:0},uWarm:{value:0},uNear:{value:0.05},uFar:{value:2400}});
+   uBloom:{value:0},uGI:{value:0},uCon:{value:0},uSat:{value:1},uVig:{value:0},uGrade:{value:0},uSharp:{value:0},uAA:{value:0},uDof:{value:0},uWarm:{value:0},uNear:{value:0.05},uFar:{value:2400}});
 // a blank for the shade or glow when that effect is off
 const postWhite=new THREE.DataTexture(new Uint8Array([255,255,255,255]),1,1),postBlack=new THREE.DataTexture(new Uint8Array([0,0,0,255]),1,1);
 postWhite.needsUpdate=postBlack.needsUpdate=true;
@@ -117,7 +126,7 @@ function pudSsrTick(){const on=pudLvl>0.001&&gfxCur.wmFine;pudSsrU.uSsr.value.x=
   const u=pudSsrMat.uniforms;u.tSrc.value=postRT.texture;u.tDepth.value=postRT.depthTexture;u.uNear.value=camera.near;u.uFar.value=camera.far;postPass(pudSsrMat,pudSsrRT);
   pudSsrU.uPrevVP.value.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse)}
 // the eye adjusting (aeOn) reads the picture off-screen too
-function postOn(){return (POST.ao||POST.bloom||POST.grade||aeOn)&&!renderer.xr.isPresenting}
+function postOn(){return (POST.ao||POST.bloom||POST.grade||POST.aa||aeOn)&&!renderer.xr.isPresenting}
 // shaders built ahead of time (main.js's warm-up) for the picture the frame is really drawn into: through the effects
 // that is postRT, whose colour space differs from the screen's, and three.js builds a separate shader for each. Built
 // for the screen instead, they were never used (a hundred or so on High) and the real ones still compiled the first
@@ -173,11 +182,11 @@ function postRender(){shadowCadence();ultraTick();hazeTick();bounceTick();clVolR
   const u=postOut.uniforms;u.tScene.value=postRT.texture;u.tAO.value=POST.ao?postAOB.texture:postWhite;u.tBloom.value=POST.bloom?postBl[0].texture:postBlack;
   u.tDepth.value=postRT.depthTexture;u.tDf0.value=postDf[0].texture;u.tDf1.value=postDf[1].texture;u.uTexel.value.set(1/W,1/H);u.uNear.value=camera.near;u.uFar.value=camera.far;
   u.uGI.value=POST.ao?TU.fxBounce:0;u.uBloom.value=POST.bloom?TU.fxBloom:0;u.uGrade.value=POST.grade?1:0;u.uCon.value=TU.fxCon;u.uSat.value=TU.fxSat;u.uVig.value=TU.fxVig;
-  u.uSharp.value=POST.grade?TU.fxSharp:0;u.uDof.value=dof;u.uWarm.value=TU.fxWarm;
+  u.uSharp.value=POST.grade?TU.fxSharp:0;u.uAA.value=POST.aa?TU.fxAA:0;u.uDof.value=dof;u.uWarm.value=TU.fxWarm;
   aeMeasure();postPass(postOut,null);renderer.info.autoReset=ar;aeTick()}
 // gfx.js: which effects the Graphics setting has on; with none, the off-screen pictures are let go
-function postGfx(ao,bloom,grade){POST.ao=!!ao;POST.bloom=!!bloom;POST.grade=!!grade;
-  if(!(ao||bloom||grade||aeOn)&&postRT){for(const t of [postRT,postAO,postAOB,...postBl,...postDf])t.dispose();postRT.depthTexture.dispose();postRT=postAO=postAOB=null;postBl=[];postDf=[]}}
+function postGfx(ao,bloom,grade,aa){POST.ao=!!ao;POST.bloom=!!bloom;POST.grade=!!grade;POST.aa=!!aa;
+  if(!(ao||bloom||grade||aa||aeOn)&&postRT){for(const t of [postRT,postAO,postAOB,...postBl,...postDf])t.dispose();postRT.depthTexture.dispose();postRT=postAO=postAOB=null;postBl=[];postDf=[]}}
 
 // ---------- Ultra lighting (gfx.js skyLight, shSoft, wetDrops) ----------
 // Sky lighting: the sky fill (the hemisphere light daynight.js sets each frame) takes the colour of the sky as it is
