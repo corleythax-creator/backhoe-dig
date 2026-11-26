@@ -39,6 +39,8 @@ GFX.low.grime=false;GFX.med.grime=GFX.high.grime=true;
 GFX.low.mtnQ=0;GFX.med.mtnQ=GFX.high.mtnQ=1;GFX.low.peb=0;GFX.med.peb=0.5;GFX.high.peb=1;
 GFX.low.wild=0.35;GFX.med.wild=0.65;GFX.high.wild=0.85;
 // the town's lawn clumps, weeds and fallen leaves (turf.js): the share drawn and how far out (m)
+// brushR how far out the undergrowth is drawn (m, brush.js brushLod)
+GFX.low.brushR=60;GFX.med.brushR=100;GFX.high.brushR=150;
 GFX.low.turf=0.35;GFX.med.turf=0.65;GFX.high.turf=1;GFX.low.turfR=22;GFX.med.turfR=40;GFX.high.turfR=60;
 // street life at night (street.js): the coloured glow of the neon signs on the walk and the van's hazard halos (the
 // shop light on the walk and the signs themselves are on every level)
@@ -64,7 +66,7 @@ GFX.low.autoExp=GFX.med.autoExp=false;GFX.high.autoExp=true;
 // what that misses (leaf and fence cut-outs, glints, shader edges). High and Ultra, which draw off-screen already
 GFX.low.aa=GFX.med.aa=false;GFX.high.aa=true;GFX.high.shR=36;
 // Ultra: the few townsfolk nearest the camera (at most fgUltra, within TU.tfUltraR) swap to their ultra mesh (townfolk.js tfUh)
-GFX.ultra=Object.assign({},GFX.high,{csm:240,csmSh:4096,name:'Ultra',forge:'hi',fgUltra:3,wild:1,turfR:75,tuftQ:3,ao:true,bloom:true,grade:true,treeR:220,skyLight:true,shSoft:true,wetDrops:true,wetGround:true,cloudQ:3,inSh:true});
+GFX.ultra=Object.assign({},GFX.high,{csm:240,csmSh:4096,name:'Ultra',forge:'hi',fgUltra:3,wild:1,turfR:75,brushR:220,tuftQ:3,ao:true,bloom:true,grade:true,treeR:220,skyLight:true,shSoft:true,wetDrops:true,wetGround:true,cloudQ:3,inSh:true});
 GFX.ultra.cull=2;GFX.ultra.headSh=1024;
 // VR through a PC: the eye buffer drawn larger than the headset's own and scaled down (supersampling), for sharper edges
 // and fine detail; only the levels for strong graphics do it
@@ -74,7 +76,7 @@ GFX.low.vrSS=GFX.med.vrSS=1;GFX.high.vrSS=1.25;GFX.ultra.vrSS=1.4;
 // costs the most cut back: grass blades, undergrowth and full-detail trees only near you, a shorter haze so less is
 // drawn far off, the plain puddle surface and fewer raindrops. Picked for you in the headset, never on a screen
 GFX.quest=Object.assign({},GFX.med,{name:'Quest',pr:1,auto:false,sh:2048,shR:16,tex:'med',aniso:4,dirt:2,lawnFar:8,fog:0.7,wmFine:false,lakeQ:0,cloudQ:0,
-  rainN:700,rainSp:180,splashN:260,wakeN:160,brush:0.3,wild:0.35,turf:0.35,turfR:22,model:true,treeR:50,tuft:[0.5,10,30,0.15],vrSS:0.9});
+  rainN:700,rainSp:180,splashN:260,wakeN:160,brush:0.3,brushR:60,wild:0.35,turf:0.35,turfR:22,model:true,treeR:50,tuft:[0.5,10,30,0.15],vrSS:0.9});
 GFX.quest.town=1;
 GFX.quest.extraLt=false;GFX.quest.bfLt=false;
 // Work: for a weaker PC (an office laptop or desktop with built-in graphics), the High look where it is cheap: the
@@ -85,7 +87,7 @@ GFX.quest.extraLt=false;GFX.quest.bfLt=false;
 // pack, a slightly shorter haze, fewer, simpler townsfolk (the light one past 25 m, not 40) and paint without its clear coat. Picked for you on Intel graphics
 GFX.work=Object.assign({},GFX.high,{name:'Work',aa:false,shEvery:2,pr:1,sh:2048,shR:28,soft:false,csm:0,bounce:false,autoExp:false,inLight:false,
   tex:'med',aniso:4,dirt:2,lawnFar:10,fog:0.75,cloudQ:1,lakeQ:1,rainN:900,rainSp:240,splashN:350,wakeN:200,brush:0.15,wild:0.35,
-  turf:0.35,turfR:22,peb:0,treeR:45,tuftQ:0,tuft:[0.6,12,40,0.2],town:1,forge:'',cull:6,rmNear:25,extraLt:false,headSh:0,propLt:false,bfLt:false,vrSS:1,coat:false,folkHi:25});
+  turf:0.35,turfR:22,brushR:60,peb:0,treeR:45,tuftQ:0,tuft:[0.6,12,40,0.2],town:1,forge:'',cull:6,rmNear:25,extraLt:false,headSh:0,propLt:false,bfLt:false,vrSS:1,coat:false,folkHi:25});
 // the bridges' detail parts: gusset and cover plates, lacing and lattice, braces, lamp trim, the covered bridge's
 // lattice and rafters, batter piles (bridges.js); Low and Work leave them out
 GFX.low.brDet=false;GFX.med.brDet=GFX.high.brDet=GFX.ultra.brDet=GFX.quest.brDet=true;GFX.work.brDet=false;
@@ -219,7 +221,7 @@ function gfxApply(){const g=gfxCur=Object.assign({},GFX[gfxKey],gfxOver);
   // the neon's glow on the walk (street.js)
   if(typeof stlGfx==='function')stlGfx(g);
   // undergrowth round the trees (brush.js)
-  brushGfx(g.brush);
+  brushGfx(g.brush,g.brushR);
   // how finely the grass and weeds are shaped (scenery.js)
   tuftQuality(g.tuftQ);
   // raindrops drawn (rain.js); the rain itself is the same
@@ -296,6 +298,7 @@ const GFX_ROWS=[
   {id:'inSh',label:'Lamp shadows',hint:'The lamps and ceiling lights nearest you cast shadows, so walls and furniture block their light. For strong graphics cards.',opts:onOff},
   {id:'bfLt',label:'Building lights',hint:'After dark, real light from the lamps and ceiling lights of the Building Forge buildings nearest you (2 on Medium, 4 on High, 6 on Ultra unless the Tuning says otherwise; each costs every pixel a little). Off leaves the fixtures glowing only.',opts:onOff},
   {id:'turf',label:'Town lawns',hint:'Grass blades, clover, weeds and fallen leaves on the town\'s lawns. Thicker costs triangles.',opts:[[0,'Off'],[0.35,'Sparse'],[0.65,'Some'],[1,'Full']]},
+  {id:'brushR',label:'Undergrowth distance',hint:'How far out the shrubs round the trees are drawn. Farther costs triangles.',min:40,max:400,step:10,fmt:v=>`${Math.round(v*FT_M)} ft`},
   {id:'turfR',label:'Town lawn distance',hint:'How far out the town\'s lawn grass and leaves are drawn.',min:10,max:120,step:5,fmt:v=>`${Math.round(v*FT_M)} ft`},
   {id:'model',label:'Machine models',hint:'Detailed models (every machine and boat, the excavator with a full cab inside, the trench box and attachments, and the yards\' and towns\' cones, light towers, barriers, lamps, benches and tables) or the simple ones. Detailed downloads about 17 MB once.',opts:[[true,'Detailed'],[false,'Simple']]},
   {id:'cull',label:'Tiny far detail',hint:'Skips drawing parts too small to see: far machines\' bolts, hoses and handles, signs and lamps a few pixels across. Lower keeps more; Off draws everything.',min:0,max:8,step:0.5,fmt:v=>v?`Under ${v} px`:'Off'},
