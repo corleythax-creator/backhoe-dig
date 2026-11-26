@@ -117,7 +117,7 @@ const TUNE=[
   ['packShed','Excavator','How fast packed clay drops off',1,'pct',0,500,5],
   ['caveDepth','Cave-ins','Walls start to cave in deeper than',1.2,'ft',1,30,0.5],['caveSpoil','Cave-ins','Spoil this close to the edge loads the wall',0.64,'ft',0,10,0.5],
   // the townsfolk (townfolk.js): how fast the town's cars drive its streets and its people walk
-  ['tfCarV','Town','Town traffic speed',11.2,'mph',5,45,1],['tfWalk','Town','Townsfolk walking pace',1.3,'mph',1,5,0.1],['tfUltraR','Town','Ultra graphics: townsfolk shown in full detail within',6,'ft',6,40,1],['tfUltraPre','Town','Ultra graphics: full-detail townsfolk loaded ahead within',25,'ft',20,250,5],['tfUltraKeep','Town','Ultra graphics: full-detail townsfolk looks kept loaded (each about 60 MB of graphics memory)',8,'n',2,24,1],['townZ','Town','Machines on the islands hidden once you are this far south (town)',420,'ft',1000,2300,10],
+  ['tfCarV','Town','Town traffic speed',11.2,'mph',5,45,1],['tfWalk','Town','Townsfolk walking pace',1.3,'mph',1,5,0.1],['stEvery','Town','Shop windows: how often the street they reflect is taken again (High and Ultra)',6,'s',1,60,1],['tfLook','Town','Townsfolk skin and cloth: light through skin edges and the sheen of cloth',1,'pct',0,200,5],['tfUltraR','Town','Ultra graphics: townsfolk shown in full detail within',6,'ft',6,40,1],['tfUltraPre','Town','Ultra graphics: full-detail townsfolk loaded ahead within',25,'ft',20,250,5],['tfUltraKeep','Town','Ultra graphics: full-detail townsfolk looks kept loaded (each about 60 MB of graphics memory)',8,'n',2,24,1],['townZ','Town','Machines on the islands hidden once you are this far south (town)',420,'ft',1000,2300,10],
   // which townsfolk characters stay home: one bit per character, in models/peds/peds.json order (bit 0 = cal_m); set on the Townsfolk page
   ['tfOut','Town','Townsfolk left out (a bit per character; set it on the Townsfolk page)',0,'n',0,4294967295,1],
   // the town's life (town.js): money, shop hours, greetings and talk
@@ -233,7 +233,7 @@ const TUNE=[
   ['aeMin','Light and haze','Eye adjusting: the most it darkens the picture',0.7,'pct',30,100,5],
   ['bounce','Light and haze','Sunlight thrown back up off the ground onto the shady undersides and sides of things',1,'pct',0,300,5],
   ['pbrFar','Ground look','Relief fades out by',180*0.3048,'ft',60,600,10],
-  ['treeSway','Trees','How much the trees and undergrowth sway in the breeze',1,'pct',0,400,5],['treeGlow','Trees','How much sunlight shines through the leaves',1,'pct',0,300,5],
+  ['treeSway','Trees','How much the trees and undergrowth sway in the breeze',1,'pct',0,400,5],['treeGlow','Trees','How much sunlight shines through the leaves',1,'pct',0,300,5],['treeMidK','Trees','Trees in full detail out to this share of the tree distance (Graphics); past it, out to the tree distance, they keep their branches with half the leaf cards, each larger',0.45,'pct',10,100,5],
   // the freight line far across the lake (train.js)
   ['trSpeed','Train','The distant trains run at',35*0.44704,'mph',10,80,1],['trEvery','Train','A train comes out of the tunnel every',300,'min',1,60,1],
   // how the clock runs (☰ menu, Time) and how dark the night gets

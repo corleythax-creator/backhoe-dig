@@ -254,6 +254,17 @@ function treeFarGeo(g){const P=g.attributes.position.array,N=g.attributes.normal
     const b=k*4;ix.push(b,b+1,b+2,b+1,b+3,b+2, b,b+2,b+1,b+1,b+2,b+3);k++}
   const f=new THREE.BufferGeometry();f.setAttribute('position',new THREE.Float32BufferAttribute(p,3));f.setAttribute('normal',new THREE.Float32BufferAttribute(n,3));
   f.setAttribute('uv',new THREE.Float32BufferAttribute(u,2));f.setAttribute('color',new THREE.Float32BufferAttribute(c,3));f.setIndex(ix);f.computeBoundingSphere();return f}
+// the middle model's foliage (treeMid): the full model's leaf cards, about half of them kept (by a hash of each card,
+// so the crown thins evenly) and each kept card grown about its middle so the crown keeps its fullness. The same bark.
+// Drawn from TU.treeMidK of the full model's distance out to that distance (treesTick)
+function treeThin(g,keep,grow){const I=g.index.array,P=g.attributes.position.array,nv=P.length/3,par=new Int32Array(nv).map((v,i)=>i);
+  const f=i=>{while(par[i]!==i)i=par[i]=par[par[i]];return i};
+  for(let t=0;t<I.length;t+=3){const a=f(I[t]),b=f(I[t+1]),c=f(I[t+2]);par[b]=a;par[f(c)]=a}
+  const cen=new Map();for(let v=0;v<nv;v++){const r=f(v);let e=cen.get(r);if(!e)cen.set(r,e=[0,0,0,0]);e[0]+=P[v*3];e[1]+=P[v*3+1];e[2]+=P[v*3+2];e[3]++}
+  const o=g.clone(),Q=o.attributes.position.array,ix=[];let n=0;
+  for(let t=0;t<I.length;t+=3){const r=f(I[t]);if(hash(r*0.731+0.17,r*0.377+0.61)<keep)ix.push(I[t],I[t+1],I[t+2])}
+  for(let v=0;v<nv;v++){const e=cen.get(f(v));for(let k=0;k<3;k++)Q[v*3+k]=e[k]/e[3]+(P[v*3+k]-e[k]/e[3])*grow}
+  o.setIndex(ix);o.computeBoundingSphere();return o}
 // where the far model starts: half again the full model's distance, and never nearer than 120 m
 const treeFarR=()=>Math.max(120,treeNearR*1.5);
 // trees knocked over by digging (digtiles.js), by treeKey: left out of the groups, drawn lying down
@@ -261,7 +272,7 @@ const treeFallen=new Map(),treeKey=(x,z)=>Math.round(x*100)+','+Math.round(z*100
 (function(){const hullMat=new THREE.MeshBasicMaterial();
   for(const sp of TREE_SP){const H=sp.build(true),L=sp.build(false),mk=(g,m,col)=>{const im=new THREE.InstancedMesh(g,m,TREE_CAP);im.count=0;im.frustumCulled=false;
       im.receiveShadow=true;im.castShadow=false;if(col)im.instanceColor=new THREE.InstancedBufferAttribute(new Float32Array(TREE_CAP*3),3);scene.add(im);treeDraw.push(im);return im};
-    sp.hi=[mk(H.wood,treeMats[sp.wood],false),mk(H.fol,treeMats.fol,true)];sp.lo=[mk(L.wood,treeMats[sp.wood],false),mk(L.fol,treeMats.fol,true)];
+    sp.hi=[mk(H.wood,treeMats[sp.wood],false),mk(H.fol,treeMats.fol,true)];sp.mid=[mk(H.wood,treeMats[sp.wood],false),mk(treeThin(H.fol,0.5,1.32),treeMats.fol,true)];sp.lo=[mk(L.wood,treeMats[sp.wood],false),mk(L.fol,treeMats.fol,true)];
     sp.far=[mk(treeFarGeo(L.fol),treeMats.fol,true)];
     sp.all=new THREE.InstancedMesh(treeHull(sp.hull),hullMat,TREE_CAP);sp.all.count=0;sp.all.castShadow=true;sp.col=new Float32Array(TREE_CAP*3);treeIMs.push(sp.all);
     sp.tris=[H.wood,H.fol,L.wood,L.fol].map(g=>g.index.count/3)}})();
@@ -301,15 +312,15 @@ function treesTick(dt){const sw=TU.treeSway===undefined?1:TU.treeSway;
   treeSunV.value.copy(SUN_DIR).transformDirection(camera.matrixWorldInverse);
   const cx=camera.position.x,cz=camera.position.z,cull=!vrOn(),fv=cull?camera.fov*camera.aspect:0;camera.getWorldDirection(treeCamF);
   if(!treeLodDirty&&Math.hypot(cx-treeLodX,cz-treeLodZ)<Math.max(4,treeNearR*0.06)&&(!cull||treeCamF.dot(treeLodF)>0.985)&&fv===treeLodV&&scene.fog.far===treeLodFog)return;
-  treeLodDirty=false;treeLodX=cx;treeLodZ=cz;treeLodF.copy(treeCamF);treeLodV=fv;treeLodFog=scene.fog.far;const R2=treeNearR*treeNearR,FR=treeFarR(),F2=FR*FR;
+  treeLodDirty=false;treeLodX=cx;treeLodZ=cz;treeLodF.copy(treeCamF);treeLodV=fv;treeLodFog=scene.fog.far;const R2=treeNearR*treeNearR,FR=treeFarR(),F2=FR*FR,mk=TU.treeMidK==null?0.45:TU.treeMidK,M2=R2*mk*mk;
   // past the haze's far edge a tree is all haze colour: not drawn (its shadow hull stays)
   const H2=(scene.fog.far+30)*(scene.fog.far+30);
   if(cull){camera.updateMatrixWorld();treeFrM.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse);treeFr.setFromProjectionMatrix(treeFrM)}
-  for(const sp of TREE_SP){const A=sp.all.instanceMatrix.array,C=sp.col,parts=[[sp.hi,0],[sp.lo,0],[sp.far,0]];
+  for(const sp of TREE_SP){const A=sp.all.instanceMatrix.array,C=sp.col,parts=[[sp.hi,0],[sp.lo,0],[sp.far,0],[sp.mid,0]];
     for(let i=0;i<sp.all.count;i++){const dx=A[i*16+12]-cx,dz=A[i*16+14]-cz,d2=dx*dx+dz*dz;if(d2>H2)continue;
       if(cull){const s=Math.hypot(A[i*16+4],A[i*16+5],A[i*16+6]);treeSph.center.set(A[i*16+12],A[i*16+13]+sp.h*0.5*s,A[i*16+14]);
         treeSph.radius=sp.h*0.6*s+Math.sqrt(d2)*TREE_CULL;if(!treeFr.intersectsSphere(treeSph))continue}
-      const P=parts[d2<R2?0:d2<F2?1:2],j=P[1]++;
+      const P=parts[d2<M2?0:d2<R2?3:d2<F2?1:2],j=P[1]++;
       for(const im of P[0])im.instanceMatrix.array.set(A.subarray(i*16,i*16+16),j*16);P[0][P[0].length-1].instanceColor.array.set(C.subarray(i*3,i*3+3),j*3)}
     for(const [ims,n] of parts)for(const im of ims){im.count=n;im.instanceMatrix.clearUpdateRanges();im.instanceMatrix.addUpdateRange(0,n*16);im.instanceMatrix.needsUpdate=true;
       if(im.instanceColor){im.instanceColor.clearUpdateRanges();im.instanceColor.addUpdateRange(0,n*3);im.instanceColor.needsUpdate=true}}}}

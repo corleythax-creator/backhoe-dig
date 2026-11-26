@@ -88,7 +88,7 @@ function tuftNoise(x,z){const i=Math.floor(x),j=Math.floor(z),fx=x-i,fz=z-j,u=fx
 // the clump's aTuft instead of its green, and their stalks (2); clumps without heads (aTuft.y below 0) fold both away.
 // Each shape is built at the Grass quality setting (gfx.js, tuftQuality): Simple is the first look (5 blades of 3
 // triangles); Good, Fine and Best add blades, bend them in more steps, and shape leaves, petals and seed heads finer
-const TUFT_Q=[{bl:5,seg:2,lf:1,pt:4,rs:6},{bl:7,seg:3,lf:2,pt:6,rs:7},{bl:10,seg:4,lf:3,pt:10,rs:8},{bl:13,seg:6,lf:4,pt:14,rs:9}];
+const TUFT_Q=[{bl:5,seg:2,lf:1,pt:4,rs:6},{bl:7,seg:3,lf:2,pt:6,rs:7},{bl:10,seg:4,lf:3,pt:10,rs:8},{bl:12,seg:5,lf:4,pt:12,rs:9}];
 // grass (seed stalks as heads), broadleaf (dandelion and chicory: rosette and a flower), clover (trefoils and a round
 // head), thistle (spiny stem, purple tuft), plantain (broad upright leaves and a seed spike), sedge (stiff dark blades by
 // damp ground, brown seed clusters), and the wild growth of the rough ground: tall grass (knee to waist high, long

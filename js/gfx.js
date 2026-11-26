@@ -53,6 +53,8 @@ GFX.low.rmNear=25;GFX.med.rmNear=35;GFX.high.rmNear=45;
 GFX.low.extraLt=false;GFX.med.extraLt=GFX.high.extraLt=true;
 // four real spotlights from the lit lamps nearest the camera, placed ones and the street lamps alike (props.js); the glow and the pools of light are on every level
 GFX.low.propLt=GFX.med.propLt=false;GFX.high.propLt=true;
+// propLtN how many of them (up to 8), propLtSh how many of the nearest cast shadows (people, cars, posts in the pool)
+GFX.low.propLtN=GFX.med.propLtN=GFX.high.propLtN=4;GFX.low.propLtSh=GFX.med.propLtSh=GFX.high.propLtSh=0;
 // the headlights' shadows (daynight.js dnHeadGfx): the side of their shadow map in pixels, 0 for none
 GFX.low.headSh=GFX.med.headSh=GFX.high.headSh=0;
 // real light from the lamps and ceiling lights of the Building Forge buildings nearest the camera (forgetown.js
@@ -68,8 +70,13 @@ GFX.low.autoExp=GFX.med.autoExp=false;GFX.high.autoExp=true;
 // aa edge smoothing on the finished picture (post.js, FXAA), on top of the 4x multisampling every level has: it catches
 // what that misses (leaf and fence cut-outs, glints, shader edges). High and Ultra, which draw off-screen already
 GFX.low.aa=GFX.med.aa=false;GFX.high.aa=true;GFX.high.shR=36;
+// High has Ultra's lighting too (post.js): contact shade (and its bounced colour), sky lighting and soft sun shadows,
+// what sets buildings, machines and people down on the ground; Ultra keeps the glow, the grade and the rain looks
+GFX.high.ao=GFX.high.skyLight=GFX.high.shSoft=true;
+// stProbe the street reflected in the town's glass and polished metal (forgetown.js stProbeTick)
+GFX.low.stProbe=GFX.med.stProbe=false;GFX.high.stProbe=true;
 // Ultra: the few townsfolk nearest the camera (at most fgUltra, within TU.tfUltraR) swap to their ultra mesh (townfolk.js tfUh)
-GFX.ultra=Object.assign({},GFX.high,{csm:240,csmSh:4096,name:'Ultra',forge:'hi',fgUltra:3,wild:1,turfR:75,brushR:220,tuftD:18,tuftQ:3,ao:true,bloom:true,grade:true,treeR:220,skyLight:true,shSoft:true,wetDrops:true,wetGround:true,cloudQ:3,inSh:true});
+GFX.ultra=Object.assign({},GFX.high,{csm:240,csmSh:4096,name:'Ultra',forge:'hi',fgUltra:3,wild:1,turfR:75,brushR:220,tuftD:14,propLtN:8,propLtSh:2,tuftQ:3,ao:true,bloom:true,grade:true,treeR:220,skyLight:true,shSoft:true,wetDrops:true,wetGround:true,cloudQ:3,inSh:true});
 GFX.ultra.cull=2;GFX.ultra.headSh=1024;
 // VR through a PC: the eye buffer drawn larger than the headset's own and scaled down (supersampling), for sharper edges
 // and fine detail; only the levels for strong graphics do it
@@ -88,7 +95,7 @@ GFX.quest.extraLt=false;GFX.quest.bfLt=false;
 // most is cut back: 1x resolution, one smaller shadow map drawn every other frame, no far shadows, bounced light or
 // lamps that cast light, grass blades and undergrowth like Low, full-detail trees only near you, the medium texture
 // pack, a slightly shorter haze, fewer, simpler townsfolk (the light one past 25 m, not 40) and paint without its clear coat. Picked for you on Intel graphics
-GFX.work=Object.assign({},GFX.high,{name:'Work',aa:false,shEvery:2,pr:1,sh:2048,shR:28,soft:false,csm:0,bounce:false,autoExp:false,inLight:false,
+GFX.work=Object.assign({},GFX.high,{name:'Work',aa:false,stProbe:false,ao:false,skyLight:false,shSoft:false,shEvery:2,pr:1,sh:2048,shR:28,soft:false,csm:0,bounce:false,autoExp:false,inLight:false,
   tex:'med',aniso:4,dirt:2,lawnFar:10,fog:0.75,cloudQ:1,lakeQ:1,rainN:900,rainSp:240,splashN:350,wakeN:200,brush:0.15,wild:0.35,
   turf:0.35,turfR:22,brushR:60,peb:0,treeR:45,tuftQ:0,tuft:[0.6,12,40,0.2],town:1,forge:'',cull:6,rmNear:25,extraLt:false,headSh:0,propLt:false,bfLt:false,vrSS:1,coat:false,folkHi:25});
 // the bridges' detail parts: gusset and cover plates, lacing and lattice, braces, lamp trim, the covered bridge's
@@ -202,13 +209,14 @@ function gfxApply(){const g=gfxCur=Object.assign({},GFX[gfxKey],gfxOver);
   autoExpGfx(g.autoExp);
   postGfx(g.ao,g.bloom,g.grade,g.aa);
   // the warm light in Jessica's library (jessica.js) and the boom's work light (daynight.js)
-  jesLightGfx(g.extraLt);dnBoomGfx(g.extraLt);dnHeadGfx(g.extraLt,g.headSh);if(typeof propLampGfx==='function')propLampGfx(g.propLt);
+  jesLightGfx(g.extraLt);dnBoomGfx(g.extraLt);dnHeadGfx(g.extraLt,g.headSh);if(typeof propLampGfx==='function')propLampGfx(g.propLt,g.propLtN,g.propLtSh);
   // sky lighting, soft sun shadows and rain on the machines (post.js)
   ultraGfx(g.skyLight,g.shSoft&&g.sh>0,g.wetDrops,g.wetGround);
   // the light thrown up off the ground measured from the ground itself, or an earth colour (post.js)
   bounceGfx(g.bounce);
   // a room's own bounced light, reflections and shadows (forgetown.js)
   if(typeof inLightGfx==='function')inLightGfx(g.inLight,g.inSh&&g.sh>0);
+  if(typeof stProbeGfx==='function')stProbeGfx(g.stProbe);
   // machine models: the detailed one from its file, or the simple shapes (models.js)
   mdlGfx(g.model);
   // the mountains and the pebbles (scenery.js, pebbles.js)
@@ -281,6 +289,7 @@ const GFX_ROWS=[
   ['Screen effects'],
   {id:'autoExp',label:'Eye adjusts to light',hint:'The picture brightens as you look into shade, under a bridge or into the woods, and darkens over bright water or open sky, as your eyes would. Draws the picture off-screen first, which costs a little.',opts:onOff},
   {id:'bounce',label:'Measured ground bounce',hint:'The light thrown up off the ground onto the undersides of things takes the colour and brightness of the ground round you (grass, dirt, the lake, shade), measured every second and a half.',opts:onOff},
+  {id:'stProbe',label:'Street in shop windows',hint:'The town\'s glass and polished metal reflect the street round you (buildings, cars, lamps), taken again every few seconds, instead of only the sky. Costs a little each frame near town.',opts:onOff},
   {id:'aa',label:'Edge smoothing',hint:'Smooths the stair-steps and shimmer left on leaves, fences, wires and bright glints (anti-aliasing on the finished picture, on top of the 4x every level has). Costs little; strength is on the screen editor\'s Tuning tab (Screen effects).',opts:onOff},
   {id:'ao',label:'Contact shade',hint:'Soft shade where things meet the ground and in hollows (ambient occlusion), fine sun shadows where small things touch, and light bounced off nearby things in their colour. Costs a strong graphics card.',opts:onOff},
   {id:'bloom',label:'Glow',hint:'A soft glow round the sun, lamps and bright glints.',opts:onOff},

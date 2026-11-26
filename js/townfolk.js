@@ -156,11 +156,26 @@ function tfMeshOne(c,buf,lod,texDir,cap){const f=c.folk,J=f.joint,uJ={value:new 
   const mat=tfMat(uJ),g=tfGeo(buf,f[lod]),walk=new THREE.InstancedBufferAttribute(new Float32Array(cap*4),4);walk.setUsage(THREE.DynamicDrawUsage);g.setAttribute('aWalk',walk);
   const m=new THREE.InstancedMesh(g,mat,cap);m.count=0;m.frustumCulled=false;m.castShadow=!!gfxCur.pbr;m.receiveShadow=true;m.instanceMatrix.setUsage(THREE.DynamicDrawUsage);m.visible=false;
   scene.add(m);return {m,walk,n:0,cap,tex:texDir+c.id+'.webp'}}
+// skin and cloth (tfLook, on every townsperson's material): their texture holds both, so skin is told from the colour
+// (warm, moderately saturated: tfSkin); skin takes a softer, slightly glossier finish and light glowing warm through
+// its edges against the light, cloth a soft sheen of fibres at its edges. Both only add to light already falling on
+// them, so a person in shade or at night stays dark. How strongly: Tuning tfLook (read live)
+const tfLookU={value:1};
+const TF_LOOK_F=`uniform float uTfLook;
+float tfSkin(vec3 c){float mx=max(c.r,max(c.g,c.b)),mn=min(c.r,min(c.g,c.b)),s=(mx-mn)/max(mx,1e-3);
+  return step(c.b,c.g)*step(c.g,c.r)*smoothstep(0.18,0.3,s)*(1.0-smoothstep(0.62,0.78,s))*smoothstep(0.04,0.1,mx)*smoothstep(0.02,0.06,c.r-c.b);}`;
+function tfLook(M){if(!M||M.userData.tfLook||!M.isMeshStandardMaterial)return M;M.userData.tfLook=1;const ob=M.onBeforeCompile,ck=M.customProgramCacheKey;
+  M.onBeforeCompile=(sh,r)=>{if(ob)ob.call(M,sh,r);sh.uniforms.uTfLook=tfLookU;
+    sh.fragmentShader=sh.fragmentShader.replace('#include <common>','#include <common>\n'+TF_LOOK_F)
+      .replace('#include <roughnessmap_fragment>','#include <roughnessmap_fragment>\nfloat tfSk=tfSkin(diffuseColor.rgb)*min(uTfLook,1.0);roughnessFactor=mix(roughnessFactor,0.55,tfSk);')
+      .replace('#include <aomap_fragment>','#include <aomap_fragment>\n{float rim=pow(1.0-clamp(abs(dot(normal,normalize(vViewPosition))),0.0,1.0),3.0);vec3 lit=reflectedLight.directDiffuse+reflectedLight.indirectDiffuse;\n'+
+        'reflectedLight.indirectDiffuse+=lit*rim*mix(vec3(0.16),vec3(0.42,0.16,0.09),tfSk)*uTfLook;reflectedLight.directDiffuse*=mix(vec3(1.0),vec3(1.05,0.985,0.96),tfSk*min(uTfLook,1.0));}')};
+  M.customProgramCacheKey=()=>(ck?ck.call(M):'')+'|tfLook';M.needsUpdate=true;return M}
 function tfMat(uJ){const mat=new THREE.MeshStandardMaterial({roughness:0.86,envMap:skyEnv,envMapIntensity:0.5,alphaTest:0.5,side:THREE.DoubleSide,color:0x808080});
   mat.onBeforeCompile=sh=>{sh.uniforms.uJ=uJ;sh.vertexShader=sh.vertexShader.replace('#include <common>','#include <common>\n'+TF_GLSL)
     .replace('#include <beginnormal_vertex>','#include <beginnormal_vertex>\nvec3 pdP=position,pdN=objectNormal;pdSkin(pdP,pdN);objectNormal=pdN;')
     .replace('#include <begin_vertex>','#include <begin_vertex>\ntransformed=pdP;')};
-  mat.customProgramCacheKey=()=>'townfolk2';return mat}
+  mat.customProgramCacheKey=()=>'townfolk2';return tfLook(mat)}
 // a character's texture, the first time someone in town wears it
 function tfTex(B){if(B.texing)return;B.texing=1;new THREE.TextureLoader().load(B.tex,t=>{t.colorSpace=THREE.SRGBColorSpace;t.anisotropy=4;
   gpuUp([t]).then(()=>{const M=B.m.material;M.map=t;M.color.set(0xffffff);M.needsUpdate=true})},undefined,()=>{})}
@@ -177,7 +192,7 @@ function tfForge(){const F=tf.F||(tf.F={st:0});if(F.st||!gfxCur.forge)return;F.s
 // person's size (the clip's own speed is a 6 ft person's)
 function tfForgeCrowd(B,id){B.fg=1;const F=tf.F,pm0=performance.now();tf.fgBusy=(tf.fgBusy||0)+1;
   F.f.preload(['island_'+id]).then(([t])=>{pfMark('Townsperson '+id+' loaded',pm0);const pm1=performance.now();tfDieClips(t);return F.f.crowd('island_'+id,{max:B.cap,clips:TF_FG_CLIPS,lod:gfxCur.forge,castShadow:true,receiveShadow:true}).then(c=>{const m=c.object,M=m.material;
-    M.roughness=0.86;M.envMap=skyEnv;M.envMapIntensity=0.5;m.castShadow=!!gfxCur.pbr;m.visible=false;c.stride=F.f.clips.walk.speed*c.type.hip/F.ref;c.runS=(F.f.clips.run||F.f.clips.walk).speed*c.type.hip/F.ref;scene.add(m);pfMark('Townsperson '+id+' crowd built',pm1);
+    M.roughness=0.86;M.envMap=skyEnv;M.envMapIntensity=0.5;tfLook(M);m.castShadow=!!gfxCur.pbr;m.visible=false;c.stride=F.f.clips.walk.speed*c.type.hip/F.ref;c.runS=(F.f.clips.run||F.f.clips.walk).speed*c.type.hip/F.ref;scene.add(m);pfMark('Townsperson '+id+' crowd built',pm1);
       return gpuWarm(m).then(()=>{B.fg=c})})})
     .catch(e=>{B.fgErr=1;console.warn('townsfolk forge:',id,e)}).finally(()=>{tf.fgBusy--})}
 // built ahead, wherever the camera is (from the first frames, behind the start card): every character's look and, on
@@ -248,7 +263,7 @@ function tfUhBoot(){const F=tf.F;if(!tfUhOn()||F.uhBoot||!tf.chars||!tf.chars.le
 function tfUhUse(id){const U=tf.F.uh,i=U.res.indexOf(id);if(i>=0)U.res.splice(i,1);U.res.push(id)}
 function tfUhLoad(body,done){const F=tf.F,U=F.uh,id='island_'+body,fin=()=>{if(done)done()};U.busy=1;tfUhUse(id);
   F.f.hero(id,{ultra:true,autoLod:false,castShadow:!!gfxCur.pbr,receiveShadow:true}).then(h=>{U.busy=0;if(!h.ultra){h.dispose();fin();return}
-    h.object.traverse(o=>{if(o.isMesh){const M=o.material;M.envMap=skyEnv;M.envMapIntensity=0.5;o.castShadow=!!gfxCur.pbr}});h.object.visible=false;scene.add(h.object);(U.types||(U.types={}))[id]=h.type;
+    h.object.traverse(o=>{if(o.isMesh){const M=o.material;M.envMap=skyEnv;M.envMapIntensity=0.5;tfLook(M);o.castShadow=!!gfxCur.pbr}});h.object.visible=false;scene.add(h.object);(U.types||(U.types={}))[id]=h.type;
     U.busy=1;return gpuWarm(h.object).then(()=>{U.busy=0;tfUhPool(h);fin()})})
     .catch(e=>{U.busy=0;fin();console.warn('townsfolk ultra:',id,e)})}
 function tfUhFree(p){const h=p.uh;p.uh=null;h.object.visible=false;tfUhPool(h)}
@@ -759,7 +774,7 @@ function tfParkedShow(on){if(on===tf.parkedOn)return;tf.parkedOn=on;const ks=Obj
   if(on&&!tf.parked.length){tf.parkedOn=false;return}
   for(const c of tf.parked){c.g.visible=on;const i=SOLIDS.indexOf(c.sol);if(on&&i<0)SOLIDS.push(c.sol);else if(!on&&i>=0)SOLIDS.splice(i,1)}}
 // ---------- each frame ----------
-function tfTick(dt){if(!tf.q){if(tf.on)tfShow(false);return}tfPrep(dt);
+function tfTick(dt){tfLookU.value=TU.tfLook??1;if(!tf.q){if(tf.on)tfShow(false);return}tfPrep(dt);
   const cx=camera.position.x,cz=camera.position.z,B=TF_BOX,dd=Math.hypot(Math.max(B[0]-cx,0,cx-B[1]),Math.max(B[2]-cz,0,cz-B[3]));
   if(dd>TF_NEAR){if(tf.on)tfShow(false);return}
   if(!tf.load)tfLoad();if(tf.load!==2)return;if(gfxCur.forge&&!(tf.F&&tf.F.st))tfForge();

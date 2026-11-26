@@ -594,10 +594,13 @@ const propHalos=new THREE.Points(new THREE.BufferGeometry(),propHaloMat),propPoo
 propHalos.frustumCulled=propPools.frustumCulled=false;propHalos.visible=propPools.visible=false;propPools.renderOrder=1;scene.add(propHalos,propPools);
 // the lit lamps, one a thing: middle of its heads, aim, colour and kind (for the real spotlights)
 const propLamps=[];
-// the real spotlights; always in the scene on High (dark by day), so nothing compiles again when one comes on
-const propSpots=[0,1,2,3].map(()=>{const l=new THREE.SpotLight(0xffffff,0,20,1,0.5,0);l.castShadow=false;l.visible=false;scene.add(l,l.target);return l});
-function propLampGfx(on){for(const l of propSpots)l.visible=!!on}
-propLampGfx(gfxCur.propLt);
+// the real spotlights; always in the scene on High (dark by day), so nothing compiles again when one comes on: four on
+// High, eight on Ultra (gfx.js propLtN), the nearest propLtSh of them casting shadows (an idle one parked far below the
+// world, so its shadow pass draws nothing)
+const propSpots=[0,1,2,3,4,5,6,7].map(()=>{const l=new THREE.SpotLight(0xffffff,0,20,1,0.5,0);l.castShadow=false;l.visible=false;
+  l.shadow.mapSize.set(512,512);l.shadow.bias=-0.0015;l.shadow.normalBias=0.04;l.shadow.camera.near=0.3;scene.add(l,l.target);return l});
+function propLampGfx(on,n,sh){n=n||4;propSpots.forEach((l,i)=>{l.visible=!!on&&i<n;l.castShadow=l.visible&&i<(sh||0)})}
+propLampGfx(gfxCur.propLt,gfxCur.propLtN,gfxCur.propLtSh);
 function propLampsBuild(){const H={p:[],c:[],s:[],f:[]},Q={p:[],c:[],f:[],u:[],i:[]},col=new THREE.Color(),v=new THREE.Vector3(),o=new THREE.Object3D();propLamps.length=0;
   for(const a of assets){const P=PROPS[a.t];if(a.hd||!P||!P.lamp)continue;const K=LAMP_K[P.lamp[0]],fx=K.fx||0;
     col.setHex(K.col||LAMP_COLS[(a.c|0)%LAMP_COLS.length]);o.position.set(a.x,propY(a),a.z);o.rotation.set(0,a.yaw,0);o.scale.setScalar(a.s);o.updateMatrix();
@@ -632,7 +635,7 @@ function propLampTick(lamp,ll,dt){const dark=lamp>0.01,on=dark&&propHalos.geomet
     for(const L of propLamps){const d=(L.x-propCamP.x)**2+(L.z-propCamP.z)**2;if(d<6400)near.push([d,L])}
     for(const l of FAM_LAMPS){const d=(l[0]-propCamP.x)**2+(l[2]-propCamP.z)**2,K=FAM_SPOT_K[l[3]];if(d<6400&&K)near.push([d,l.sp&&l.sp.x===l[0]&&l.sp.z===l[2]?l.sp:(l.sp={x:l[0],y:l[1]-0.15,z:l[2],dx:K.d[0],dy:K.d[1],dz:K.d[2],col:K.col,K})])}
     near.sort((a,b)=>a[0]-b[0]);
-    propSpots.forEach((l,i)=>{const L=near[i]&&near[i][1];l.userData.L=L;if(!L)return;
+    propSpots.forEach((l,i)=>{const L=l.visible&&near[i]&&near[i][1];l.userData.L=L;if(!L){if(l.castShadow){l.position.set(0,-2000,0);l.target.position.set(0,-2010,0)}return}
       l.position.set(L.x,L.y,L.z);l.target.position.set(L.x+L.dx*5,L.y+L.dy*5,L.z+L.dz*5);l.color.setHex(L.col);l.angle=L.K.ang;l.distance=L.K.dist})}
   const t=timeU.value;
   for(const l of propSpots){const L=l.userData.L;if(!L){l.intensity=0;continue}
