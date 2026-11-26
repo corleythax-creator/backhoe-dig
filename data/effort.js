@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-26T04:40:00Z",
+ "updated": "2026-11-26T05:12:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -198,9 +198,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-25",
-   "dh": 16,
-   "act": 3,
-   "versions": 7
+   "dh": 28,
+   "act": 3.5,
+   "versions": 8
   }
  ],
  "extra": [
@@ -4575,6 +4575,15 @@ window.EFFORT = {
    "tris": 6150425,
    "chars": 2897756,
    "what": "Firing the gun by day no longer freezes: the muzzle flash used to count as a lit lamp, which swapped the whole scene to its night-lamp shaders, each drawn for the first time there and then (15 s in the owner's report); it now lights only while a real lamp is lit"
+  },
+  {
+   "v": 486,
+   "asked": "2026-11-25T22:20:00-06:00",
+   "live": "2026-11-25T23:12:15-06:00",
+   "dh": 12,
+   "tris": 5824877,
+   "chars": 2907837,
+   "what": "High graphics gets Ultra's lighting (contact shade, sky light, soft sun shadows); the town's shop windows and polished metal reflect the street round you instead of only the sky (High and Ultra; Graphics: Street in shop windows); on Ultra eight street lamps nearest you light the ground for real and the nearest two cast shadows; townsfolk skin glows warm at its edges and their clothes have a soft sheen (Tuning: Town); fewer triangles: trees past a third of the tree distance keep their branches with half the leaf cards (Tuning: Trees), Ultra's finest grass is a quarter lighter, and the map editor's placed things are drawn only when in view"
   }
  ]
 };

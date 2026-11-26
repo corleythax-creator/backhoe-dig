@@ -360,7 +360,7 @@ function wetPatch(m){if(m&&!m.userData.wetP&&WET_GLASS.includes(m)){wetGlassPatc
   m.customProgramCacheKey=()=>(keyF?keyF.call(m):key)+'|wet'+(drops()?'|drops':'');m.needsUpdate=true}
 // post.js turns the beads on or off; the materials that have them are built again
 function wetDropsSet(on){on=!!on;if(on===wetDropsOn)return;wetDropsOn=on;
-  scene.traverse(o=>{if(o.isMesh)for(const m of [].concat(o.material))if(m&&m.userData.wetP&&(m.isMeshStandardMaterial||m.userData.glassP)){m.needsUpdate=true;if(m.userData.side2)m.side=on?THREE.DoubleSide:THREE.FrontSide}})}
+  scene.traverse(o=>{if(o.isMesh)for(const m of [].concat(o.material))if(m&&m.userData&&m.userData.wetP&&(m.isMeshStandardMaterial||m.userData.glassP)){m.needsUpdate=true;if(m.userData.side2)m.side=on?THREE.DoubleSide:THREE.FrontSide}})}
 // ---------- puddles on the paving ----------
 // the town's paving and roads (the library's asphalt, concrete, pavers and brick: shopLib, mainland.js) take puddles in
 // the rain: they gather in the low spots of a fixed pattern on level ground, spreading the longer it rains (pudLvl, a few

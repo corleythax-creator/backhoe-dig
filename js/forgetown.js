@@ -189,7 +189,7 @@ function bfLightTick(lamp,ll,dt){bfEnvTick();
   bfLt.fillK+=(bfLt.fill-bfLt.fillK)*Math.min(1,dt*3);BF_FILL.intensity=bfLt.fillK*(TU.bfLtFill??1)*BF_FILL_I*LI*(1-0.7*inRL.k);
   const g=ll*TU.bfLight*BF_LT_I*LI,f=Math.min(1,dt*4);
   for(const s of bfLt.all){const l=s.l;if(!l)continue;s.k=Math.min(1,s.k+f);s.o.intensity=g*l.k*(l.auto?lamp:1)*s.k*s.e*(s.o.isSpotLight&&l.d?1.5:1)}
-  bfGlTick(lamp);inRoomTick(dt)}
+  bfGlTick(lamp);inRoomTick(dt);stProbeTick(dt)}
 // ---------- lit buildings glow (Medium graphics and up: GFX bfLt) ----------
 // The pool's few real lights go to the fixtures nearest the camera, so from the street a shop's room stood dark however
 // many lamps it has. Each building whose lights are on now glows inside (core.js glShade): its floors, inside walls and
@@ -297,6 +297,31 @@ function inCapture(R,B){
 // darker than the game's own buildings. How much sky they take is the Tuning bfEnv (read live: bfEnvTick)
 function bfPhong(m){if(!m||!m.isMeshStandardMaterial)return m;if(bfMats.has(m))return bfMats.get(m);lmOn(m);
   m.envMap=skyEnv;m.envMapIntensity=TU.bfEnv;m.needsUpdate=true;bfMats.set(m,m);return m}
+// the street in the town's glass (gfx.js stProbe, High and Ultra): near the town a 360° picture of the street is taken
+// where you are (at most 6 m up), one of its six sides a frame at 128 px with the grass and undergrowth left out, every
+// TU.stEvery s or after you move 15 m, made into an environment (PMREM) and given to the buildings' glass and polished
+// metal (bfShiny) in place of the sky, so shop windows and steel show the buildings, cars and lamps across the street,
+// lit as they are now (night too). Away from the town (130 m from any building) they take the sky again. Looks only
+const stPr={on:false,rt:null,cam:null,pm:null,pms:[null,null],i:0,face:-1,t:0,x:1e9,z:1e9,live:false,mats:new Set()};
+const bfShiny=m=>m&&m.isMeshStandardMaterial&&(m.transmission>0||(m.transparent&&m.opacity<0.9)||m.metalness>0.5||m.roughness<0.3||/glass|window|mirror|chrome/i.test(m.name||''));
+function stProbeGfx(on){stPr.on=!!on;if(!on)stProbeOff()}
+function stProbeOff(){for(const m of stPr.mats)if(!inRL.mats.has(m))m.envMap=skyEnv;stPr.mats.clear();stPr.live=false;stPr.face=-1}
+function stProbeTick(dt){if(!stPr.on||renderer.xr.isPresenting||(typeof edOn!=='undefined'&&edOn)||!bf.lots||!bf.lots.length)return;
+  const c=camera.position;
+  if(stPr.face<0){if((stPr.t-=dt)>0&&Math.hypot(c.x-stPr.x,c.z-stPr.z)<15)return;
+    let d=1e9;for(const L of bf.lots)d=Math.min(d,(L.x-c.x)**2+(L.z-c.z)**2);d=Math.sqrt(d);
+    if(d>(stPr.live?130:90)){if(stPr.live)stProbeOff();stPr.t=2;return}
+    if(!stPr.rt){stPr.rt=new THREE.WebGLCubeRenderTarget(128,{type:THREE.HalfFloatType,generateMipmaps:false});stPr.cam=new THREE.CubeCamera(0.3,400,stPr.rt);stPr.pm=new THREE.PMREMGenerator(renderer)}
+    const g=surfAt(c.x,c.z);stPr.cam.position.set(c.x,Math.min(c.y,g+6),c.z);stPr.cam.updateMatrixWorld();stPr.x=c.x;stPr.z=c.z;stPr.face=0}
+  const cc=stPr.cam;if(cc.coordinateSystem!==renderer.coordinateSystem){cc.coordinateSystem=renderer.coordinateSystem;cc.updateCoordinateSystem()}
+  const hide=[tufts,turfGroup,...brushIMs].filter(o=>o.visible),rt0=renderer.getRenderTarget(),au=renderer.shadowMap.autoUpdate,xr=renderer.xr.enabled;
+  hide.forEach(o=>o.visible=false);renderer.shadowMap.autoUpdate=false;renderer.xr.enabled=false;
+  try{renderer.setRenderTarget(stPr.rt,stPr.face);renderer.render(scene,cc.children[stPr.face])}
+  finally{renderer.setRenderTarget(rt0);renderer.shadowMap.autoUpdate=au;renderer.xr.enabled=xr;hide.forEach(o=>o.visible=true)}
+  if(++stPr.face<6)return;stPr.face=-1;stPr.t=Math.max(1,TU.stEvery??6);
+  const i=stPr.i;stPr.pms[i]=stPr.pm.fromCubemap(stPr.rt.texture,stPr.pms[i]);stPr.i^=1;stPr.live=true;const tex=stPr.pms[i].texture;
+  for(const m of bfMats.values())if(bfShiny(m)&&!inRL.mats.has(m)){m.envMap=tex;stPr.mats.add(m)}}
+stProbeGfx(gfxCur.stProbe);
 let bfEnvK=-1;function bfEnvTick(){if(TU.bfEnv===bfEnvK)return;bfEnvK=TU.bfEnv;for(const m of bfMats.values()){m.envMapIntensity=bfEnvK;m.userData.envI0=bfEnvK}}
 function bfPack(root,merge,it){const col=root.getObjectByName('Collision');if(col)col.removeFromParent();root.updateMatrixWorld(true);
   // its lights (the library entry's, or the same list in the model's own extras.forge.game): with a list, each fixture
