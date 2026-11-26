@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-26T01:58:00Z",
+ "updated": "2026-11-26T03:07:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -198,9 +198,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-25",
-   "dh": 7,
-   "act": 1,
-   "versions": 2
+   "dh": 9,
+   "act": 1.5,
+   "versions": 3
   }
  ],
  "extra": [
@@ -4530,6 +4530,15 @@ window.EFFORT = {
    "tris": 7241817,
    "chars": 2891746,
    "what": "Hard hits dent the machines where they struck and damage is kept in the save; the town's cars are solid to the machines: a bump stops the car with its horn going and dents it, a hard or heavy hit wrecks it (Tuning: Machines)"
+  },
+  {
+   "v": 481,
+   "asked": "2026-11-25T20:15:00-06:00",
+   "live": "2026-11-25T21:07:51-06:00",
+   "dh": 2,
+   "tris": 7536973,
+   "chars": 2893622,
+   "what": "Edge smoothing on High and Ultra graphics: the stair-steps and shimmer left on leaves, fences, wires and bright glints are smoothed on the finished picture, on top of the 4x anti-aliasing every level already has (Graphics: Edge smoothing; Tuning: Screen effects)"
   }
  ]
 };
