@@ -265,6 +265,10 @@ const TUNE=[
   ['fuelPrice','Work and pay','Fuel price, a gallon (does nothing while fuel burn is off)',3.85,'usd',0,20,0.05],
   ['payDig','Work and pay','Pay for dirt dug, a yd³',9,'usd',0,200,0.5],['payHaul','Work and pay','Pay for dirt hauled off in the truck, a yd³',14,'usd',0,200,0.5],
   ['paySkid','Work and pay','Pay for dirt moved by the skid steer, a yd³',6,'usd',0,200,0.5],['payMow','Work and pay','Pay for grass mowed, a 1,000 sq ft',8,'usd',0,200,0.5],
+  ['farCull','Screen effects','Far parts left out: a separate part smaller than this many pixels across on screen is not drawn (0 draws everything)',5,'n',0,30,0.5],
+  ['jobPar','Work and pay','Job par times (100% is the game\'s own; more gives longer to earn the on-time star)',1,'pct',25,400,5],
+  ['jobOnTime','Work and pay','Job bonus for finishing inside par',0.25,'pct',0,200,5],['jobClean','Work and pay','Job bonus for a clean job (no line strike or cave-in)',0.25,'pct',0,200,5],
+  ['jobRankPay','Work and pay','Job bonus added for each rank you hold',0.05,'pct',0,100,1],
   // VR headset (vr.js): how the right stick turns you on foot
   ['vrTurn','VR','Turn speed on foot with the right stick (0 = 30° snap steps)',120*Math.PI/180,'deg',0,360,5],
   ['vrComfort','VR','Comfort vignette: how far the view darkens at its edges while you drive fast or turn (0 = off)',0.5,'pct',0,100,5]];

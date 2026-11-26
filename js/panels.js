@@ -3,7 +3,7 @@
 // was opened from: the ☰ menu (on the tab it was on), or the panel it replaced (Controls, for Keys). Each panel keeps its
 // own show function; it is wrapped here, so every way of opening or closing it counts.
 // Game scripts share one global scope and load in index.html order; see CLAUDE.md.
-const PANELS=[['howBox','showHow'],['ctrlsBox','showCtrls'],['keysBox','showKeys'],['gfxBox','showGfx'],['statBox','showStats'],['sndBox','showSound'],['syncBox','showSync'],['bigmap','toggleMap']];
+const PANELS=[['howBox','showHow'],['ctrlsBox','showCtrls'],['keysBox','showKeys'],['gfxBox','showGfx'],['statBox','showStats'],['jobBox','showJobs'],['sndBox','showSound'],['syncBox','showSync'],['bigmap','toggleMap']];
 const panelStack=[],panelFrom={};let panelShut=null;
 const panelFn=id=>PANELS.find(p=>p[0]===id)[1];
 // after a show function ran: put the panel on the stack or take it off, noting what it was opened from

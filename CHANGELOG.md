@@ -2,6 +2,10 @@
 
 Every version of Corley's Island, newest first, grouped by the day it went live (Central time). Made from `data/effort.js` by `tools/changelog.py`; don't edit it by hand. [Play any old version](https://corleys-island.vercel.app/versions/) · [Build log with charts](https://corleys-island.vercel.app/build.html)
 
+## Thursday, November 26, 2026
+
+- **v487** (5:25 PM) Jobs: the job chip at the top left (or ☰ Play, Jobs, or the 6 key) opens a job board of 18 jobs: dirt to dig, haul or move, grass to mow; finishing pays a bonus on top of the pay by the yard and up to three stars (the work, inside par, and clean: no line strike or cave-in), and stars raise your rank from Greenhorn to Superintendent, which opens bigger jobs and lifts bonuses (Tuning: Work and pay); far parts only a few pixels across are no longer drawn (about a tenth fewer draw calls down Main Street; Tuning: Screen effects, Far parts left out); the map editor's help is in short titled paragraphs; the check that runs after each change now tests jobs too
+
 ## Wednesday, November 25, 2026
 
 - **v486** (11:12 PM) High graphics gets Ultra's lighting (contact shade, sky light, soft sun shadows); the town's shop windows and polished metal reflect the street round you instead of only the sky (High and Ultra; Graphics: Street in shop windows); on Ultra eight street lamps nearest you light the ground for real and the nearest two cast shadows; townsfolk skin glows warm at its edges and their clothes have a soft sheen (Tuning: Town); fewer triangles: trees past a third of the tree distance keep their branches with half the leaf cards (Tuning: Trees), Ultra's finest grass is a quarter lighter, and the map editor's placed things are drawn only when in view

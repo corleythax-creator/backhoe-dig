@@ -31,6 +31,8 @@ A true-to-life construction sim on a set of islands in a mountain lake. You run 
 3. **See the result:** stats count dirt moved, grass mowed, time in each machine; every hole is kept and saved.
 4. **Free time:** mow, plant trees that grow over real days, ride, boat, visit the family islands, play chess at the pavilion.
 
+*Since v487 the job board closes the loop a first way: jobs pay a bonus and stars, and stars raise your operator rank, which opens bigger jobs.*
+
 **Owner to decide:** what pulls you back tomorrow? Today the loop ends at step 4. The ideas that close it are work orders (J01), pay and the day's log (J15, 40% done), bidding a job (J24), production targets (J44) and an operator certification ladder (Y13). Pick one: **money** (earn, buy machines and land), **mastery** (certifications, scored jobs) or **the island itself** (build it up job by job).
 
 ## The world

@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-26T05:12:00Z",
+ "updated": "2026-11-26T23:25:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -201,6 +201,12 @@ window.EFFORT = {
    "dh": 28,
    "act": 3.5,
    "versions": 8
+  },
+  {
+   "d": "2026-11-26",
+   "dh": 13,
+   "act": 0.5,
+   "versions": 1
   }
  ],
  "extra": [
@@ -4584,6 +4590,15 @@ window.EFFORT = {
    "tris": 5824877,
    "chars": 2907837,
    "what": "High graphics gets Ultra's lighting (contact shade, sky light, soft sun shadows); the town's shop windows and polished metal reflect the street round you instead of only the sky (High and Ultra; Graphics: Street in shop windows); on Ultra eight street lamps nearest you light the ground for real and the nearest two cast shadows; townsfolk skin glows warm at its edges and their clothes have a soft sheen (Tuning: Town); fewer triangles: trees past a third of the tree distance keep their branches with half the leaf cards (Tuning: Trees), Ultra's finest grass is a quarter lighter, and the map editor's placed things are drawn only when in view"
+  },
+  {
+   "v": 487,
+   "asked": "2026-11-26T15:39:00-06:00",
+   "live": "2026-11-26T17:25:57-06:00",
+   "dh": 13,
+   "tris": 5821095,
+   "chars": 2924531,
+   "what": "Jobs: the job chip at the top left (or ☰ Play, Jobs, or the 6 key) opens a job board of 18 jobs: dirt to dig, haul or move, grass to mow; finishing pays a bonus on top of the pay by the yard and up to three stars (the work, inside par, and clean: no line strike or cave-in), and stars raise your rank from Greenhorn to Superintendent, which opens bigger jobs and lifts bonuses (Tuning: Work and pay); far parts only a few pixels across are no longer drawn (about a tenth fewer draw calls down Main Street; Tuning: Screen effects, Far parts left out); the map editor's help is in short titled paragraphs; the check that runs after each change now tests jobs too"
   }
  ]
 };
