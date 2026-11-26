@@ -312,8 +312,9 @@ function tuftPut(n,show){const im=tuftMeshes[tMi[n]];tuftDirty.add(im);tVis[n]=s
   const s=tS[n];tO.position.set(tX[n],hAt(tX[n],tZ[n])-0.02,tZ[n]);tO.rotation.set((hash(n,1.7)-0.5)*0.24,tR[n],(hash(n,4.3)-0.5)*0.24);tO.scale.set(s,s*tH[n]*tuftCutK(n),s);
   tO.updateMatrix();im.setMatrixAt(tSl[n],tO.matrix)}
 // the Grass quality setting (gfx.js): every square's meshes take that build of their shape (made the first time it is picked)
-function tuftQuality(q){q=Math.max(0,Math.min(TUFT_Q.length-1,q|0));if(q===tuftQ)return;tuftQ=q;const G=TUFT_GQ[q]||(TUFT_GQ[q]=tuftGeos(q));
-  for(const im of tuftMeshes){const g=im.geometry,sg=G[im.userData.k];for(const a of ['position','color','normal','aHead'])g.setAttribute(a,sg.attributes[a]);g.setIndex(sg.index)}}
+function tuftGeoSet(im,q){const G=TUFT_GQ[q]||(TUFT_GQ[q]=tuftGeos(q)),g=im.geometry,sg=G[im.userData.k];im.userData.ql=q;
+  for(const a of ['position','color','normal','aHead'])g.setAttribute(a,sg.attributes[a]);g.setIndex(sg.index)}
+function tuftQuality(q){q=Math.max(0,Math.min(TUFT_Q.length-1,q|0));if(q===tuftQ)return;tuftQ=q;for(const im of tuftMeshes)tuftGeoSet(im,q)}
 function tuftFlush(){for(const im of tuftDirty)im.instanceMatrix.needsUpdate=true;tuftDirty.clear()}
 function updateTufts(i0,i1,j0,j1){
   for(let n=0;n<TUFTS;n++){const i=tI[n],j=tJ[n];if(i<0)continue;if(i<i0||i>i1||j<j0||j>j1)continue;const k=j*V+i;
@@ -334,13 +335,18 @@ function tuftFarMark(x0,x1,z0,z1){const b=tuftFarBox;tuftFarBox=b?[Math.min(b[0]
 // clump in it would be shrunk away)
 // the wild growth (tall grass and bushes) takes its own share from the Graphics setting's Wild growth (wild), and stays
 // in view far off like the field grass, being big
-function tuftLod(){const g=typeof gfxCur!=='undefined'?gfxCur.tuft:[1,25,80,0.35],wl=typeof gfxCur!=='undefined'&&gfxCur.wild!=null?gfxCur.wild:1,cx=camera.position.x,cz=camera.position.z;
+function tuftLod(){const g=typeof gfxCur!=='undefined'?gfxCur.tuft:[1,25,80,0.35],wl=typeof gfxCur!=='undefined'&&gfxCur.wild!=null?gfxCur.wild:1,cx=camera.position.x,cz=camera.position.z,D=typeof gfxCur!=='undefined'&&!edOn?gfxCur.tuftD||0:0;
   const amt=k=>k>5?g[0]*wl:g[0],far=k=>k===0||k>5?g[3]:0;
   for(let k=0;k<TUFT_KINDS;k++)tuftMats[k].userData.thin.value.set(amt(k),g[1]*TUFT_KR[k],g[2]*TUFT_KR[k],far(k));
   for(const im of tuftMeshes){const k=im.userData.k,n=im.userData.n;if(!n)continue;
     const d=Math.hypot(Math.max(0,Math.abs(cx-im.userData.cx)-TC_W/2),Math.max(0,Math.abs(cz-im.userData.cz)-TC_W/2)),fl=far(k);
     const f=amt(k)*(fl+(1-fl)*(1-ss(g[1]*TUFT_KR[k],g[2]*TUFT_KR[k],d)));
-    im.count=Math.min(n,Math.ceil(f*n)+1);im.visible=f>0.002}}
+    im.count=Math.min(n,Math.ceil(f*n)+1);im.visible=f>0.002;
+    // simpler blades on the farther squares (Graphics, Grass detail distance tuftD): a step down the Grass quality past
+    // it and another past two and a half times it, coming back at once as you near and going 2 m later as you leave
+    if(D>0&&tuftQ>0){const cur=im.userData.ql==null?tuftQ:im.userData.ql,want=tuftQ-(d>D)-(d>2.5*D),lo=tuftQ-(d>D+2)-(d>2.5*D+2),q=Math.max(0,want>cur?want:lo<cur?lo:cur);
+      if(q!==cur)tuftGeoSet(im,q)}
+    else if(im.userData.ql!=null&&im.userData.ql!==tuftQ)tuftGeoSet(im,tuftQ)}}
 // ---------- trampled grass ----------
 // a 0.5 m grid over the field grass: how flat it is (0 standing, 1 laid flat) and which way it was pushed. Tracks and
 // tyres lay it flat (stampRut, dirt.js), the mower's wheels nearly and the worker's feet partway; it springs back over
