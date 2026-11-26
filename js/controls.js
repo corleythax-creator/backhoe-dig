@@ -39,7 +39,7 @@ const keys={};
 // the sticks' captions show the keys once one is pressed
 let kbUsed=false;
 const KEY_RUN={exSwap:()=>exSwap(),bhOut:()=>bhOut(),walk:()=>getOut(),punch:()=>punch(),
-  recFrames:()=>frecToggle(),recSave:()=>frecSave(),stats:()=>showStats(statBox.hidden),heat:()=>{if(!heat.on)setHeat(true);else if(heat.mode!==HEAT_MODES[HEAT_MODES.length-1][0])heatNext();else setHeat(false)},
+  recFrames:()=>frecToggle(),recSave:()=>frecSave(),stats:()=>showStats(statBox.hidden),jobs:()=>showJobs(jobBox.hidden),heat:()=>{if(!heat.on)setHeat(true);else if(heat.mode!==HEAT_MODES[HEAT_MODES.length-1][0])heatNext();else setHeat(false)},
   enter:()=>useAct(),jump:()=>walkJump(),plant:()=>plantHere(),trim:()=>trimSet(!trim.on),trimBump:()=>trimBump(),gun:()=>{fist.on=false;gunEquip(!gun.eq)},gunShoot:()=>gunFire(),gunReload:()=>gunReload(),talk:()=>talkOpen(),gunNext:()=>gunNext(),plantKind:()=>plantNext(),carry:e=>{if(blkOn&&e&&keyBind.blkWhat.includes(e.code))return;pbAct()},blocks:()=>setBlocks(!blkOn),place:()=>placeBlock(),lift:()=>removeBlock(),size:()=>blkCube(1),blkTurn:()=>blkTurn(),blkLock:()=>toast(say('blkSnap',{snap:blkLockNext()}),'',1400),blkFar:()=>blkReachBy(2),blkNear:()=>blkReachBy(-2),sizeDown:()=>blkCube(-1),
   blkWhat:e=>{if(!blkOn){if(!(e&&keyBind.carry.includes(e.code)))toast(say('blkIsOff'),'tip',1800);return}const ks=['',...Object.keys(PROPS)];setBlkThing(ks[(ks.indexOf(blkThing)+1)%ks.length]);toast(say('blkWhat',{what:blkThing?PROPS[blkThing].n:'Block'}),'',1200)},
   blkMat:()=>{let m=blkMat;do m=(m+1)%MAT_MAX;while(m&&!MAT_LIST[m-1]);setBlkMat(m);toast(say('blkMat',{mat:blkMatName(blkMat)}),'',1400)},

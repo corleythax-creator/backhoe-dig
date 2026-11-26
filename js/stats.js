@@ -15,7 +15,9 @@ const STAT_ZERO={mowCuts:0,mowTall:0,mowLawns:0,mowBest:0,mowDist:0,mowTime:0,mo
   // fuel, hour meters and pay (fuel.js): engine game-seconds and gallons used since the last fill per machine, dollars;
   // the day's log (d…) for the day dDay, and what yesterday paid
   exHrs:0,trHrs:0,skHrs:0,mwHrs:0,exUse:0,trUse:0,skUse:0,mwUse:0,fuelGal:0,fuelCost:0,earned:0,spent:0,
-  dDay:0,dDug:0,dHaul:0,dSkid:0,dMow:0,dGal:0,dHrs:0,dEarn:0,dFuelCost:0,yEarn:0};
+  dDay:0,dDug:0,dHaul:0,dSkid:0,dMow:0,dGal:0,dHrs:0,dEarn:0,dFuelCost:0,yEarn:0,
+  // jobs and the operator ladder (jobs.js)
+  jobN:0,jobGot:0,jobSec:0,jobBad:0,jobsDone:0,jobStars:0,jobPay:0};
 const stats=Object.assign({},STAT_ZERO);
 // how many times each tall grass cell has been cut (on the lawn's grid, made again with it: statLayout)
 let statCuts=new Uint16Array(LAWN_N);
@@ -79,7 +81,7 @@ function statTick(dt){if(bench.on)return;const now=performance.now(),P=statPrev;
   up('hauled',tr.hauled,'trHauled',payHaul);up('dumped',sk.dumped,'skMoved',paySkid);up('strikes',st.strikes,'strikes');up('caves',st.caves,'caves');up('blocks',blocks.length,'blocks');
   if(!fresh&&st.pouring&&!P.pour){stats.exDumps++;statDirty=true}
   P.pour=st.pouring;P.ground=wk.ground;P.m=mode;P.x=o.x;P.z=o.z;P.yaw=o.yaw;P.arm=arm;P.t=now;
-  fuelTick(dt,busy);
+  fuelTick(dt,busy);jobTick(dt);
   if(statDirty&&now-statSaveT>5000)statSave();
   heatTick(dt)}
 

@@ -44,10 +44,10 @@ function payRoll(){const d=fuelDayNo();if(stats.dDay===d)return;
 const usd=v=>(v<0?'−$':'$')+Math.abs(v).toLocaleString([],{minimumFractionDigits:2,maximumFractionDigits:2});
 function payAdd(v){if(!(v>0))return;payRoll();stats.earned+=v;stats.dEarn+=v;statDirty=true}
 // the work that pays (stats.js calls these): volumes in cubic metres, mowing by the lawn cell
-function payDug(v){payRoll();stats.dDug+=v;payAdd(v*1.307951*TU.payDig)}
-function payHaul(v){payRoll();stats.dHaul+=v;payAdd(v*1.307951*TU.payHaul)}
-function paySkid(v){payRoll();stats.dSkid+=v;payAdd(v*1.307951*TU.paySkid)}
-function payMow(sqft){payRoll();stats.dMow+=sqft;payAdd(sqft/1000*TU.payMow)}
+function payDug(v){payRoll();stats.dDug+=v;payAdd(v*1.307951*TU.payDig);jobWork('dig',v*1.307951)}
+function payHaul(v){payRoll();stats.dHaul+=v;payAdd(v*1.307951*TU.payHaul);jobWork('haul',v*1.307951)}
+function paySkid(v){payRoll();stats.dSkid+=v;payAdd(v*1.307951*TU.paySkid);jobWork('skid',v*1.307951)}
+function payMow(sqft){payRoll();stats.dMow+=sqft;payAdd(sqft/1000*TU.payMow);jobWork('mow',sqft)}
 const fuel={load:0,warn:{},fill:null};
 function fuelTick(dt,busy){payRoll();const k=fuelKey(mode);
   if(!k){fuelFillEnd();return}

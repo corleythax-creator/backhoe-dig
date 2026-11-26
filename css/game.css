@@ -545,10 +545,10 @@ body.editing #hud>:is(.tbar,.rpane,.sticks,.bbar){display:none}
 .gstats{font:700 var(--t2)/1.4 var(--f-display)!important;color:var(--muted);font-variant-numeric:tabular-nums;background:var(--well);border-radius:var(--r);padding:8px 10px}
 .gstats b{color:var(--ink)}
 /* Stats panel: the lawn heatmap with its modes and key, then each group of numbers */
-#statBox{position:fixed;inset:0;z-index:7;background:rgba(6,8,11,.74);display:flex;align-items:center;justify-content:center;pointer-events:auto;box-sizing:border-box;
+#statBox,#jobBox{position:fixed;inset:0;z-index:7;background:rgba(6,8,11,.74);display:flex;align-items:center;justify-content:center;pointer-events:auto;box-sizing:border-box;
   padding-block:calc(env(safe-area-inset-top,0px) + 16px) calc(env(safe-area-inset-bottom,0px) + 16px);
   padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
-#statBox .card{max-width:620px;overscroll-behavior:contain;touch-action:pan-y}
+#statBox .card,#jobBox .card{max-width:620px;overscroll-behavior:contain;touch-action:pan-y}
 #statBox h2{margin:6px 0 0;font:700 var(--t3)/1 var(--f-display);letter-spacing:.06em;text-transform:uppercase;color:var(--machine);border-bottom:1px solid var(--hud-line);padding-bottom:6px}
 #statHeat{display:flex;flex-direction:column;gap:8px}
 #heatCv{display:block;width:100%;aspect-ratio:4/3;image-rendering:pixelated;border-radius:var(--r);border:1px solid var(--hud-line);background:var(--well)}
@@ -698,3 +698,16 @@ body.fps #hud .bbar .stats{display:block}
 /* the frame recorder's badge (recorder.js) */
 #recBadge{position:absolute;top:calc(env(safe-area-inset-top,0px) + 70px);left:50%;transform:translateX(-50%);z-index:4;font:700 var(--t2)/1 var(--f-display);letter-spacing:.08em;color:#fff;background:rgba(190,20,20,.85);padding:6px 12px;border-radius:var(--r);pointer-events:none}
 #recBadge[hidden]{display:none}
+
+/* jobs (jobs.js): the chip under the wallet and the board */
+#hud .lpane>#jobChip{position:static;margin:0;height:auto;min-height:0;line-height:1.2;white-space:normal;display:flex;flex-direction:column;align-items:stretch;gap:3px;min-width:200px;max-width:260px;padding:8px 12px;border:0;border-radius:var(--r);background:var(--chip);color:#fff;text-align:left;font-weight:700;cursor:pointer;pointer-events:auto}
+#jobChip b{font-size:var(--t1);letter-spacing:.08em;text-transform:uppercase;opacity:.85}#jobChip span{font-size:var(--t2)}#jobChip small{font-size:var(--t1);font-weight:600;opacity:.9;font-variant-numeric:tabular-nums}
+#jobChip .jbar{display:none;height:6px;border-radius:var(--r);background:rgba(255,255,255,.16);overflow:hidden}#jobChip.on .jbar{display:block}#jobChip .jbar i{display:block;height:100%;width:0;background:var(--machine)}
+#jobRankLine{margin:0;font-size:var(--t2)}
+#jobList{display:flex;flex-direction:column;gap:6px}
+.jrow{display:flex;justify-content:space-between;align-items:center;gap:12px;padding:8px 10px;border:1px solid var(--hud-line);border-radius:var(--r)}
+.jrow.on{border-color:var(--machine)}.jrow.lock{opacity:.5}
+.jrow>div{display:flex;flex-direction:column;gap:2px}.jrow span{font-size:var(--t1);color:var(--muted)}
+.jrow .jpay{align-items:flex-end;flex:none}.jrow .jpay b{color:var(--money);font-variant-numeric:tabular-nums}.jrow button{margin-top:4px}
+/* long help topics come as short titled paragraphs */
+#howList .keys dd p{margin:0 0 8px}#howList .keys dd p:last-child{margin:0}#howList .keys dd .hsec{color:var(--machine);margin-right:4px}
