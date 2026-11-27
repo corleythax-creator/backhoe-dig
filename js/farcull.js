@@ -17,6 +17,9 @@ function fcullList(){const L=[];let n=0;scene.traverse(o=>{if(!o.isMesh||o.isIns
 function fcullShow(o){const U=o.userData;if(U.fcMask!==undefined){o.layers.mask|=U.fcMask;U.fcMask=undefined;fcull.n--}}
 function fcullAll(){for(const o of fcull.list)fcullShow(o);fcull.off=true}
 function fcullTick(){const px=TU.farCull,now=performance.now();
+  // nothing while the game loads: the loading builds every shader by drawing what is there, and a part left out then
+  // is built later, one hitch at a time (and v487's loading took minutes); it starts a few seconds after the cover lifts
+  if(!LOADP.done){fcull.go=0;return}if(!fcull.go)fcull.go=now+4000;if(now<fcull.go)return;
   if(!(px>0)||edOn||bench.on||renderer.xr.isPresenting){if(!fcull.off)fcullAll();return}
   fcull.off=false;if(now-fcull.at>6000||!fcull.list.length){fcull.at=now;fcullList()}
   const L=fcull.list,n=Math.ceil(L.length/4),v=fcull.v||(fcull.v=new THREE.Vector3()),c=camera.position,
