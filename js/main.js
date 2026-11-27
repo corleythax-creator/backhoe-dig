@@ -318,7 +318,7 @@ function frame(now){
   const fv=mode==='boat'?btCur():mode==='heavy'?hvCur():mode==='bike'?bk:mode==='truck'?tr:mode==='mow'?mw:mode==='skid'?sk:mode==='walk'?wk:st;sun.position.set(fv.x,fv.y,fv.z).addScaledVector(LIGHT_DIR,SUN_D); sun.target.position.set(fv.x,fv.y,fv.z);
   {const o=groundOcc.value;o[0].set(st.x,st.z,st.yaw,0);o[2].set(tr.x,tr.z,tr.yaw,0)}
   timeU.value=now/1000;
-  shadowProxyTick();lawnLod();tuftLod();brushLod();turfLod();rainCover();if(vr.fake)vrFakeHead();warmAllTick();warmLaterTick();warmDrawTick();warmNearTick();warmFarTick();ltOtherTick();loadReportTick();repHudTick();shBenchTick();gpuWarmTick();shGateTick();if(!loadHold()){const wm=warmPre(),d0=performance.now(),di=drawInfo();postRender();drawNew.on=false;warmPost(wm);if(performance.now()-d0>80)drawSlow(d0,di)}if(vrOn())vrAfter();
+  shadowProxyTick();lawnLod();tuftLod();brushLod();turfLod();rainCover();if(vr.fake)vrFakeHead();warmAllTick();warmLaterTick();warmDrawTick();warmNearTick();warmFarTick();ltOtherTick();loadReportTick();repHudTick();shBenchTick();gpuWarmTick();shGateTick();if(!loadHold()){if(typeof stProbeDraw==='function')stProbeDraw();const wm=warmPre(),d0=performance.now(),di=drawInfo();postRender();drawNew.on=false;warmPost(wm);if(performance.now()-d0>80)drawSlow(d0,di)}if(vrOn())vrAfter();
   if(bench.on)benchSample(dt);
   fpsFrames++;fpsTime+=dt;
   if(fpsTime>=0.5){
@@ -589,7 +589,8 @@ function warmFarList(){const F=warmFar;if(F.L||F.done||typeof bfWant==='function
     F.L.push([o,s.center.x-o.position.x,s.center.z-o.position.z,s.radius])}
   F.n0=F.L.length;pfMark('Far world held back',performance.now(),F.L.length+' things')}
 const warmFarD=(e,c)=>Math.hypot(e[0].position.x+e[1]-c.x,e[0].position.z+e[2]-c.z)-e[3];
-function warmFarHide(cam){const F=warmFar;if(!F.L||!F.L.length||cam!==camera||edOn||renderer.xr.isPresenting)return;const c=cam.position;
+// (and out of the street's reflection, forgetown.js stProbeDraw: its six cameras drew all of it, each thing built in that frame)
+function warmFarHide(cam){const F=warmFar,pr=!!cam.userData.stProbe;if(!F.L||!F.L.length||cam!==camera&&!pr||edOn||renderer.xr.isPresenting)return;const c=pr?cam.parent.position:cam.position;
   for(const e of F.L)if(e[0].visible&&warmFarD(e,c)>WARM_SHOW){e[0].visible=false;gfxHid.push(e[0])}}
 // (owner, Nov 19: the loading cover waits for it, start.js; its batches start once the cover's own shader passes are done,
 // loadHold. Built while you walked round town, every batch coming into view froze the game a second or two on Windows)
@@ -652,7 +653,7 @@ function loadReportTick(){if(!LOADP.done||loadRep===2)return;const at=performanc
   try{const E=window.EFFORT,v=E&&E.versions?+E.versions[E.versions.length-1].v||0:0,gl=renderer.getContext();
     const d={at:loadRep===2?300:60,cover:Math.round(PF_BOOT.done),steps:PF_BOOT.steps,programs:renderer.info.programs.length,
       parallel:!!gl.getExtension('KHR_parallel_shader_compile'),long:PF_BOOT.long.filter(l=>l[1]>=200).slice(0,80).map(l=>[Math.round(l[0]),Math.round(l[1])]),
-      tl:PF_BOOT.tl.filter(r=>r[2]>=200||/Far world|Shader pass|Slow frame/.test(r[0])).slice(0,120),
+      tl:PF_BOOT.tl.filter(r=>r[2]>=200||/Far world|Shader pass|Slow frame|Street/.test(r[0])).slice(0,120),
       // (what the browser says held each freeze over 0.3 s: prof.js's long animation frames, script and function)
       loaf:typeof PF==='object'?PF.loaf.filter(l=>l.ms>=300).slice(0,60).map(l=>[Math.round(l.t),Math.round(l.ms),l.sc.join(' · ').slice(0,240)]):[]};
     const dev=`${typeof gpuName==='function'?gpuName():''} · ${renderer.domElement.width}×${renderer.domElement.height} px · Graphics ${typeof gfxName==='function'?gfxName():''} · ${navigator.platform||''}`;
