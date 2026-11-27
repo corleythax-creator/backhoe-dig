@@ -70,7 +70,11 @@ function loadStep(bad){if(LOADP.done)return;if(bad){loadEnd();return}const jsN=d
   if(game&&!LOADP.gameT)LOADP.gameT=now;let al=0,at=0;for(const [l,t] of LOADP.mgr){al+=l;at+=t}
   if(LOADP.gameT&&now-LOADP.gameT>2000&&LOADP.goal===undefined)LOADP.goal=at;if(LOADP.goal!==undefined)at=LOADP.goal;al=Math.min(al,at);
   const a=at?al/at:0,w=typeof warmFrac==='function'?warmFrac():0;
-  const done=LOADP.goal!==undefined&&al>=at&&LOADP.warm&&(typeof warmCover==='function'?warmCover():warmIdle())&&loadTownIn()&&loadFolkIn()&&(typeof warmFar!=='object'||warmFar.done)&&(typeof warmNearDone!=='function'||warmNearDone())&&(typeof ltOther!=='object'||ltOther.done)&&(typeof brBusy!=='function'||!brBusy())&&(typeof btBusy!=='function'||!btBusy())&&(typeof petsBusy!=='function'||!petsBusy())||now>LOADP.cap*1000||LOADP.err&&now-LOADP.errT>4000;
+  const rest=LOADP.goal!==undefined&&al>=at&&LOADP.warm&&(typeof warmCover==='function'?warmCover():warmIdle())&&loadTownIn()&&loadFolkIn()&&(typeof warmFar!=='object'||warmFar.done)&&(typeof warmNearDone!=='function'||warmNearDone())&&(typeof ltOther!=='object'||ltOther.done)&&(typeof brBusy!=='function'||!brBusy())&&(typeof btBusy!=='function'||!btBusy())&&(typeof petsBusy!=='function'||!petsBusy());
+  // the last step, once all of that is done (LOADP.rest, when): the street's reflection takes its first picture
+  // (forgetown.js stProbeDraw, six frames), so what it draws for the first time is drawn behind the cover; 15 s at most
+  if(rest&&!LOADP.rest)LOADP.rest=now;
+  const done=rest&&(typeof stProbeWait!=='function'||!stProbeWait()||now-LOADP.rest>15000)||now>LOADP.cap*1000||LOADP.err&&now-LOADP.errT>4000;
   const p=done?100:Math.min(99,45*js+30*a*(game?1:.8)+25*w);LOADP.shown=done?100:Math.max(LOADP.shown,LOADP.shown+(p-LOADP.shown)*.35);// counts up smoothly, never back
   const pct=Math.floor(LOADP.shown),L=document.getElementById('startLoad');
   document.getElementById('startLoadPct').textContent=pct+'%';document.getElementById('startLoadFill').style.width=LOADP.shown+'%';L.setAttribute('aria-valuenow',pct);
@@ -91,7 +95,9 @@ function loadPicsIn(){let al=0,at=0;for(const [l,t] of LOADP.mgr){al+=l;at+=t}if
 const loadFolkIn=()=>{if(typeof tfReady!=='function')return true;const [n,t]=tfReady();return n>=t};
 // (the whole town, bf.done, not just what is round your start: the rest came in a building at a time as you walked,
 // each drawn for the first time there and then; owner, Nov 19: a longer load, no stutter)
-const loadTownIn=()=>typeof bf!=='undefined'?!!bf.ready&&bf.done!==false:LOADP.js>=document.querySelectorAll('script[defer]').length;
+// (before the game's scripts have run it is not in: counted by the scripts loaded against the script tags, it read as in on
+// a tick that came before the page had its script tags, 0 of 0, and the report's town step said 0.2 s: v484's)
+const loadTownIn=()=>typeof bf!=='undefined'?!!bf.ready&&bf.done!==false:!!LOADP.gameT;
 function loadSteps(js,jsN,al,at,done){const W=typeof warmAll!=='undefined'?warmAll:null,F=loadFiles(),now=performance.now(),S=PF_BOOT.steps,rows=[];
   const row=(id,name,ok,txt)=>{if(ok&&S[id]===undefined)S[id]=Math.round(now);rows.push([name,ok,txt])};
   row('code','Game code',js>=1,`${Math.min(LOADP.js,jsN)} of ${jsN}`);
@@ -104,6 +110,7 @@ function loadSteps(js,jsN,al,at,done){const W=typeof warmAll!=='undefined'?warmA
   {const [n,t]=typeof tfReady==='function'?tfReady():[0,1];row('folk','Townsfolk',n>=t,t>1?`${n} of ${t}`:'')}
   row('town',"Town's buildings",loadTownIn(),typeof bf!=='undefined'&&bf.lots.length?`${bf.lots.length}`:'');
   const bq=typeof brQ!=='undefined'?brQ.length:0;row('bridges',"Bridges' and docks' pictures",typeof brBusy==='function'&&!brBusy()&&LOADP.warm,bq?`${bq} left`:'');
+  if(typeof stProbeCan==='function'&&stProbeCan())row('street','Street in the shop windows',!stProbeWait(),'');
   let cur=done?-1:rows.findIndex(r=>!r[1]);
   const ul=document.getElementById('startLoadSteps'),h=rows.map(([nm,ok,t],i)=>`<li class="${ok?'ok':i===cur?'now':''}"><b>${nm}</b><span>${t}</span></li>`).join('');
   if(ul.dataset.h!==h){ul.dataset.h=h;ul.innerHTML=h}}

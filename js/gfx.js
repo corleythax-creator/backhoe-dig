@@ -75,7 +75,7 @@ GFX.low.aa=GFX.med.aa=false;GFX.high.aa=true;GFX.high.shR=36;
 GFX.high.ao=GFX.high.skyLight=GFX.high.shSoft=true;
 // the mown lawn (mower.js lawnLod) in full detail within 120 m on High (it was everywhere: 234,000 triangles from town)
 GFX.high.lawnFar=120;
-// stProbe the street reflected in the town's glass and polished metal (forgetown.js stProbeTick)
+// stProbe the street reflected in the town's glass and polished metal (forgetown.js stProbeDraw)
 GFX.low.stProbe=GFX.med.stProbe=false;GFX.high.stProbe=true;
 // Ultra: the few townsfolk nearest the camera (at most fgUltra, within TU.tfUltraR) swap to their ultra mesh (townfolk.js tfUh)
 GFX.ultra=Object.assign({},GFX.high,{csm:240,csmSh:4096,name:'Ultra',forge:'hi',fgUltra:3,wild:1,turfR:75,brushR:220,tuftD:14,lawnFar:200,propLtN:8,propLtSh:2,tuftQ:3,ao:true,bloom:true,grade:true,treeR:220,skyLight:true,shSoft:true,wetDrops:true,wetGround:true,cloudQ:3,inSh:true});

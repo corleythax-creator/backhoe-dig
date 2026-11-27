@@ -2,6 +2,10 @@
 
 Every version of Corley's Island, newest first, grouped by the day it went live (Central time). Made from `data/effort.js` by `tools/changelog.py`; don't edit it by hand. [Play any old version](https://corleys-island.vercel.app/versions/) · [Build log with charts](https://corleys-island.vercel.app/build.html)
 
+## Friday, November 27, 2026
+
+- **v489** (9:28 AM) The loading on High is quick again (v488's took 112 s against v484's 74 on the owner's PC): the street reflected in the town's glass and puddles no longer draws behind the loading cover while shaders are being built (the 13 s freeze at 7 s, another at 48 s, about 180 wasted shaders, and the lamps' shaders slowed from 19 to 27 s); it takes its first picture as the loading's last step and in play is drawn with the frame, after the check that nothing waits for a shader, so the 12 and 16 s freezes near town go too. Reflections are the sky's size, so glass taking the street builds no new shader, and far small parts are no longer left out while the game loads
+
 ## Thursday, November 26, 2026
 
 - **v488** (6:09 PM) The town's wet paving and puddles reflect the street round you (High and Ultra); and fewer triangles and draws: machines more than about 800 ft away take their simple shapes, the mown lawn on Corley's uses its far version past 400 ft on High (650 ft on Ultra), and the shrubs round the trees are drawn only in view (on High, about 3.5 million triangles drawn at the start and 3.0 million on Main Street, from 3.7 and 3.2)

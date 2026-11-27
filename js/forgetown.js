@@ -189,7 +189,7 @@ function bfLightTick(lamp,ll,dt){bfEnvTick();
   bfLt.fillK+=(bfLt.fill-bfLt.fillK)*Math.min(1,dt*3);BF_FILL.intensity=bfLt.fillK*(TU.bfLtFill??1)*BF_FILL_I*LI*(1-0.7*inRL.k);
   const g=ll*TU.bfLight*BF_LT_I*LI,f=Math.min(1,dt*4);
   for(const s of bfLt.all){const l=s.l;if(!l)continue;s.k=Math.min(1,s.k+f);s.o.intensity=g*l.k*(l.auto?lamp:1)*s.k*s.e*(s.o.isSpotLight&&l.d?1.5:1)}
-  bfGlTick(lamp);inRoomTick(dt);stProbeTick(dt)}
+  bfGlTick(lamp);inRoomTick(dt)}
 // ---------- lit buildings glow (Medium graphics and up: GFX bfLt) ----------
 // The pool's few real lights go to the fixtures nearest the camera, so from the street a shop's room stood dark however
 // many lamps it has. Each building whose lights are on now glows inside (core.js glShade): its floors, inside walls and
@@ -284,8 +284,9 @@ function inRoomTick(dt){let R=null,B=null;
   inRL.k+=((B&&inRL.n?1:0)-inRL.k)*Math.min(1,dt*3);if(inRL.k<0.002)inRL.k=0;
   if(R&&(inRL.t-=dt)<=0){inRL.t=inRL.n<2?0.15:Math.max(1,TU.inEvery||4);try{inCapture(R,B)}catch(e){console.warn('room light',e);inRL.t=5}}}
 function inCapture(R,B){
-  if(!inRL.rt){inRL.rt=new THREE.WebGLCubeRenderTarget(128,{type:THREE.HalfFloatType,generateMipmaps:false});
-    inRL.cam=new THREE.CubeCamera(0.05,80,inRL.rt);inRL.cam.layers.set(IN_LAYER);inRL.pm=new THREE.PMREMGenerator(renderer)}
+  // (its cube the sky's size, envCubeRT below: at 128 px every material of a room was built again as you first walked in)
+  inRL.rt=envCubeRT(inRL.rt);
+  if(!inRL.cam){inRL.cam=new THREE.CubeCamera(0.05,80,inRL.rt);inRL.cam.layers.set(IN_LAYER);inRL.pm=new THREE.PMREMGenerator(renderer)}inRL.cam.renderTarget=inRL.rt;
   B.g.traverse(o=>o.layers.enable(IN_LAYER));const L=inRL.R&&inRL.R.bfL,I=L&&bf.inst[L.id];if(I)for(const m of I.ms)m.layers.enable(IN_LAYER);
   scene.traverse(o=>{if(o.isLight)o.layers.enable(IN_LAYER)});
   inRL.cam.position.set(R.x,Math.min(R.y+1.6,R.top-0.3),R.z);inRL.cam.updateMatrixWorld();
@@ -306,25 +307,45 @@ const stPr={on:false,rt:null,cam:null,pm:null,pms:[null,null],i:0,face:-1,t:0,x:
 const bfShiny=m=>m&&m.isMeshStandardMaterial&&(m.transmission>0||(m.transparent&&m.opacity<0.9)||m.metalness>0.5||m.roughness<0.3||/glass|window|mirror|chrome/i.test(m.name||''));
 function stProbeGfx(on){stPr.on=!!on;if(!on)stProbeOff()}
 function stProbeOff(){for(const m of stPr.mats)if(!inRL.mats.has(m))m.envMap=skyEnv;stPr.mats.clear();stPr.pud=null;stPr.live=false;stPr.face=-1}
-function stProbeTick(dt){if(!stPr.on||renderer.xr.isPresenting||(typeof edOn!=='undefined'&&edOn)||!bf.lots||!bf.lots.length)return;
-  const c=camera.position;
-  if(stPr.face<0){if((stPr.t-=dt)>0&&Math.hypot(c.x-stPr.x,c.z-stPr.z)<15)return;
-    let d=1e9;for(const L of bf.lots)d=Math.min(d,(L.x-c.x)**2+(L.z-c.z)**2);d=Math.sqrt(d);
-    if(d>(stPr.live?130:90)){if(stPr.live)stProbeOff();stPr.t=2;return}
-    if(!stPr.rt){stPr.rt=new THREE.WebGLCubeRenderTarget(128,{type:THREE.HalfFloatType,generateMipmaps:false});stPr.cam=new THREE.CubeCamera(0.3,400,stPr.rt);stPr.pm=new THREE.PMREMGenerator(renderer)}
+// a reflection's cube (the street's here, a room's above) is the size of the sky's own (core.js skyEnvRT): three.js
+// builds a material's shader for the size of the environment it holds, so a picture of another size (128 px against the
+// sky's 256 on High since v486) was another shader for every material that took it, built in the frame that first drew it
+function envCubeRT(rt){const n=skyEnvRT.width;if(rt&&rt.width===n)return rt;if(rt)rt.dispose();return new THREE.WebGLCubeRenderTarget(n,{type:THREE.HalfFloatType,generateMipmaps:false})}
+const stProbeCan=()=>stPr.on&&!renderer.xr.isPresenting&&!(typeof edOn!=='undefined'&&edOn)&&!!bf.lots&&bf.lots.length>0;
+function stProbeNear(){const c=camera.position;let d=1e9;for(const L of bf.lots)d=Math.min(d,(L.x-c.x)**2+(L.z-c.z)**2);return Math.sqrt(d)}
+// for the loading cover (start.js): you start near the town and its first picture is still to take
+function stProbeWait(){return stProbeCan()&&!stPr.live&&!document.hidden&&(stPr.face>=0||stProbeNear()<=90)}
+// Drawn with the frame (main.js, straight before the picture itself), never from the lights' tick as v486 to v488 did.
+// There it drew behind the loading cover from the moment the first building arrived, whatever was being built: each
+// side waited for every shader in its view, one after another (the 13 s and 7 s freezes at 7 s into the owner's v488
+// loading and the 11 s one at 48 s, 40 and 56 s on a first visit), built about 180 shaders for materials whose pictures
+// had not arrived (never used again), kept landing in the lamps' other set (19 s grown to 27) and held up the town's
+// buildings behind it all. In play it drew ahead of the shader gate (main.js shGateTick) and drew the far world still
+// held back: the 12 and 16 s "Rain" freezes of the same report. Now: behind the cover it takes its first picture as
+// the last step, once everything else is built (LOADP.rest; the cover waits for it, stProbeWait); a frame that is
+// not drawn (loadHold) draws no side either; the gate has already kept back what has no shader yet; and the far
+// world not built yet is left out of it as it is of the frame (main.js warmFarHide)
+function stProbeDraw(){if(!stProbeCan()||!LOADP.done&&!LOADP.rest)return;
+  const c=camera.position,now=performance.now();
+  if(stPr.face<0){if(now<stPr.t&&Math.hypot(c.x-stPr.x,c.z-stPr.z)<15)return;
+    if(stProbeNear()>(stPr.live?130:90)){if(stPr.live)stProbeOff();stPr.t=now+2000;return}
+    if(stPr.rt&&stPr.rt.width!==skyEnvRT.width)stProbeOff();stPr.rt=envCubeRT(stPr.rt);
+    if(!stPr.cam){stPr.cam=new THREE.CubeCamera(0.3,400,stPr.rt);stPr.cam.children.forEach(k=>k.userData.stProbe=1);stPr.pm=new THREE.PMREMGenerator(renderer)}
     const g=surfAt(c.x,c.z);stPr.cam.position.set(c.x,Math.min(c.y,g+6),c.z);stPr.cam.updateMatrixWorld();stPr.x=c.x;stPr.z=c.z;stPr.face=0}
   const cc=stPr.cam;if(cc.coordinateSystem!==renderer.coordinateSystem){cc.coordinateSystem=renderer.coordinateSystem;cc.updateCoordinateSystem()}
-  const hide=[tufts,turfGroup,...brushIMs].filter(o=>o.visible),rt0=renderer.getRenderTarget(),au=renderer.shadowMap.autoUpdate,xr=renderer.xr.enabled;
+  const hide=[tufts,turfGroup,...brushIMs].filter(o=>o.visible),rt0=renderer.getRenderTarget(),au=renderer.shadowMap.autoUpdate,xr=renderer.xr.enabled,f=stPr.face;
   hide.forEach(o=>o.visible=false);renderer.shadowMap.autoUpdate=false;renderer.xr.enabled=false;
-  try{renderer.setRenderTarget(stPr.rt,stPr.face);renderer.render(scene,cc.children[stPr.face])}
+  try{renderer.setRenderTarget(stPr.rt,f);renderer.render(scene,cc.children[f])}
   finally{renderer.setRenderTarget(rt0);renderer.shadowMap.autoUpdate=au;renderer.xr.enabled=xr;hide.forEach(o=>o.visible=true)}
-  if(++stPr.face<6)return;stPr.face=-1;stPr.t=Math.max(1,TU.stEvery??6);
+  if(++stPr.face<6){if(performance.now()-now>80)pfMark('Street reflection drawn',now,'side '+(f+1));return}
+  stPr.face=-1;stPr.t=performance.now()+1000*Math.max(1,TU.stEvery??6);
   const i=stPr.i;stPr.pms[i]=stPr.pm.fromCubemap(stPr.rt.texture,stPr.pms[i]);stPr.i^=1;stPr.live=true;const tex=stPr.pms[i].texture;
   for(const m of bfMats.values())if(bfShiny(m)&&!inRL.mats.has(m)){m.envMap=tex;stPr.mats.add(m)}
   // the paving that takes puddles (rain.js pudPatch): its puddles and wet sheen show the street too where the
   // on-screen reflection runs out (looked for again every fifth picture, as the town's paving can change)
   if(!stPr.pud||(stPr.n=(stPr.n||0)+1)%5===0){const S=new Set();scene.traverse(o=>{if(o.isMesh)for(const m of [].concat(o.material))if(m&&m.userData&&m.userData.pudP&&(m.envMap===skyEnv||stPr.mats.has(m)))S.add(m)});stPr.pud=S}
-  for(const m of stPr.pud){m.envMap=tex;stPr.mats.add(m)}}
+  for(const m of stPr.pud){m.envMap=tex;stPr.mats.add(m)}
+  if(performance.now()-now>80)pfMark('Street reflection drawn',now,'side 6 and the picture made')}
 stProbeGfx(gfxCur.stProbe);
 let bfEnvK=-1;function bfEnvTick(){if(TU.bfEnv===bfEnvK)return;bfEnvK=TU.bfEnv;for(const m of bfMats.values()){m.envMapIntensity=bfEnvK;m.userData.envI0=bfEnvK}}
 function bfPack(root,merge,it){const col=root.getObjectByName('Collision');if(col)col.removeFromParent();root.updateMatrixWorld(true);
