@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-27T00:09:00Z",
+ "updated": "2026-11-27T15:28:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -207,6 +207,12 @@ window.EFFORT = {
    "dh": 18,
    "act": 1,
    "versions": 2
+  },
+  {
+   "d": "2026-11-27",
+   "dh": 4,
+   "act": 0.5,
+   "versions": 1
   }
  ],
  "extra": [
@@ -4608,6 +4614,15 @@ window.EFFORT = {
    "tris": 5732686,
    "chars": 2926955,
    "what": "The town's wet paving and puddles reflect the street round you (High and Ultra); and fewer triangles and draws: machines more than about 800 ft away take their simple shapes, the mown lawn on Corley's uses its far version past 400 ft on High (650 ft on Ultra), and the shrubs round the trees are drawn only in view (on High, about 3.5 million triangles drawn at the start and 3.0 million on Main Street, from 3.7 and 3.2)"
+  },
+  {
+   "v": 489,
+   "asked": "2026-11-27T08:20:00-06:00",
+   "live": "2026-11-27T09:28:45-06:00",
+   "dh": 4,
+   "tris": 5452964,
+   "chars": 2930558,
+   "what": "The loading on High is quick again (v488's took 112 s against v484's 74 on the owner's PC): the street reflected in the town's glass and puddles no longer draws behind the loading cover while shaders are being built (the 13 s freeze at 7 s, another at 48 s, about 180 wasted shaders, and the lamps' shaders slowed from 19 to 27 s); it takes its first picture as the loading's last step and in play is drawn with the frame, after the check that nothing waits for a shader, so the 12 and 16 s freezes near town go too. Reflections are the sky's size, so glass taking the street builds no new shader, and far small parts are no longer left out while the game loads"
   }
  ]
 };
