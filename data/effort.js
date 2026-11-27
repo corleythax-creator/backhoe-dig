@@ -1,7 +1,7 @@
 // Corley's Island build-time tracking, read as data by build.html and the master dashboard. Add a version entry when one ships.
 window.EFFORT = {
  "project": "Corley's Island",
- "updated": "2026-11-26T23:25:00Z",
+ "updated": "2026-11-27T00:09:00Z",
  "rateUsd": 100,
  "method": {
   "dh": "Developer hours without AI: what one experienced three.js developer would need to build each version's features by hand, judged feature by feature.",
@@ -204,9 +204,9 @@ window.EFFORT = {
   },
   {
    "d": "2026-11-26",
-   "dh": 13,
-   "act": 0.5,
-   "versions": 1
+   "dh": 18,
+   "act": 1,
+   "versions": 2
   }
  ],
  "extra": [
@@ -4599,6 +4599,15 @@ window.EFFORT = {
    "tris": 5821095,
    "chars": 2924531,
    "what": "Jobs: the job chip at the top left (or ☰ Play, Jobs, or the 6 key) opens a job board of 18 jobs: dirt to dig, haul or move, grass to mow; finishing pays a bonus on top of the pay by the yard and up to three stars (the work, inside par, and clean: no line strike or cave-in), and stars raise your rank from Greenhorn to Superintendent, which opens bigger jobs and lifts bonuses (Tuning: Work and pay); far parts only a few pixels across are no longer drawn (about a tenth fewer draw calls down Main Street; Tuning: Screen effects, Far parts left out); the map editor's help is in short titled paragraphs; the check that runs after each change now tests jobs too"
+  },
+  {
+   "v": 488,
+   "asked": "2026-11-26T15:30:00-06:00",
+   "live": "2026-11-26T18:09:24-06:00",
+   "dh": 5,
+   "tris": 5732686,
+   "chars": 2926955,
+   "what": "The town's wet paving and puddles reflect the street round you (High and Ultra); and fewer triangles and draws: machines more than about 800 ft away take their simple shapes, the mown lawn on Corley's uses its far version past 400 ft on High (650 ft on Ultra), and the shrubs round the trees are drawn only in view (on High, about 3.5 million triangles drawn at the start and 3.0 million on Main Street, from 3.7 and 3.2)"
   }
  ]
 };
