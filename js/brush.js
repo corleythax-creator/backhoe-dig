@@ -12,6 +12,8 @@ const BRUSH_CAP=7000;let brushK=1;
 // every shrub laid out (its matrix, colour, shape and spot), and what brushLod last filled the meshes from
 const brM=new Float32Array(BRUSH_CAP*3*16),brC=new Float32Array(BRUSH_CAP*3*3),brKd=new Uint8Array(BRUSH_CAP*3),brX=new Float32Array(BRUSH_CAP*3),brZ=new Float32Array(BRUSH_CAP*3);
 let brN=0,brR=150,brDirty=true,brRNow=-1,brCX=0,brCZ=0;
+// and only those in view, the view widened as the trees' is (TREE_CULL), packed again once the camera turns about 10°
+const brFr=new THREE.Frustum(),brPV=new THREE.Matrix4(),brSp=new THREE.Sphere(),brF=new THREE.Vector3(),brF0=new THREE.Vector3();
 // the leaf texture is grey and takes these as [r, g, b] multipliers, as the trees' tints are
 const BRUSH_TINT=[[0.55,0.72,0.28],[0.42,0.6,0.25],[0.7,0.7,0.3],[0.95,0.72,0.25],[0.85,0.42,0.18],[0.6,0.66,0.26]];
 // the leaf material swaying from just above the ground, leaning more and fluttering harder than a tree's crown
@@ -45,10 +47,12 @@ function brushLayout(){const o=new THREE.Object3D(),n=[0,0,0],col=new THREE.Colo
       col.toArray(brC,brN*3);brN++;n[k]++}}
   brDirty=true}
 // every frame (main.js): the meshes are filled again with the shrubs near the camera once it has moved a few metres
-function brushLod(){const R=edOn?1e9:brR,cx=camera.position.x,cz=camera.position.z;
-  if(!brDirty&&R===brRNow&&Math.hypot(cx-brCX,cz-brCZ)<Math.min(8,R*0.05))return;
-  brDirty=false;brRNow=R;brCX=cx;brCZ=cz;const n=[0,0,0],R0=R*0.8;
+function brushLod(){const R=edOn?1e9:brR,cx=camera.position.x,cz=camera.position.z,cull=!edOn&&!vrOn();camera.getWorldDirection(brF);
+  if(!brDirty&&R===brRNow&&Math.hypot(cx-brCX,cz-brCZ)<Math.min(8,R*0.05)&&(!cull||brF.dot(brF0)>0.985))return;
+  brDirty=false;brRNow=R;brCX=cx;brCZ=cz;brF0.copy(brF);const n=[0,0,0],R0=R*0.8;
+  if(cull){camera.updateMatrixWorld();brFr.setFromProjectionMatrix(brPV.multiplyMatrices(camera.projectionMatrix,camera.matrixWorldInverse))}
   for(let i=0;i<brN;i++){const d=Math.hypot(brX[i]-cx,brZ[i]-cz);if(d>=R)continue;
+    if(cull){brSp.center.set(brX[i],brM[i*16+13]+0.8,brZ[i]);brSp.radius=2+d*TREE_CULL;if(!brFr.intersectsSphere(brSp))continue}
     const k=brKd[i],im=brushIMs[k],a=im.instanceMatrix.array,o=n[k]*16,b=i*16,sc=1-ss(R0,R,d);
     for(let j=0;j<12;j++)a[o+j]=brM[b+j]*sc;for(let j=12;j<16;j++)a[o+j]=brM[b+j];
     const c=im.instanceColor.array,q=n[k]*3;c[q]=brC[i*3];c[q+1]=brC[i*3+1];c[q+2]=brC[i*3+2];n[k]++}

@@ -73,10 +73,12 @@ GFX.low.aa=GFX.med.aa=false;GFX.high.aa=true;GFX.high.shR=36;
 // High has Ultra's lighting too (post.js): contact shade (and its bounced colour), sky lighting and soft sun shadows,
 // what sets buildings, machines and people down on the ground; Ultra keeps the glow, the grade and the rain looks
 GFX.high.ao=GFX.high.skyLight=GFX.high.shSoft=true;
+// the mown lawn (mower.js lawnLod) in full detail within 120 m on High (it was everywhere: 234,000 triangles from town)
+GFX.high.lawnFar=120;
 // stProbe the street reflected in the town's glass and polished metal (forgetown.js stProbeTick)
 GFX.low.stProbe=GFX.med.stProbe=false;GFX.high.stProbe=true;
 // Ultra: the few townsfolk nearest the camera (at most fgUltra, within TU.tfUltraR) swap to their ultra mesh (townfolk.js tfUh)
-GFX.ultra=Object.assign({},GFX.high,{csm:240,csmSh:4096,name:'Ultra',forge:'hi',fgUltra:3,wild:1,turfR:75,brushR:220,tuftD:14,propLtN:8,propLtSh:2,tuftQ:3,ao:true,bloom:true,grade:true,treeR:220,skyLight:true,shSoft:true,wetDrops:true,wetGround:true,cloudQ:3,inSh:true});
+GFX.ultra=Object.assign({},GFX.high,{csm:240,csmSh:4096,name:'Ultra',forge:'hi',fgUltra:3,wild:1,turfR:75,brushR:220,tuftD:14,lawnFar:200,propLtN:8,propLtSh:2,tuftQ:3,ao:true,bloom:true,grade:true,treeR:220,skyLight:true,shSoft:true,wetDrops:true,wetGround:true,cloudQ:3,inSh:true});
 GFX.ultra.cull=2;GFX.ultra.headSh=1024;
 // VR through a PC: the eye buffer drawn larger than the headset's own and scaled down (supersampling), for sharper edges
 // and fine detail; only the levels for strong graphics do it
